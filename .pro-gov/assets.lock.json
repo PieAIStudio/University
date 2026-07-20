@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "host": "codex",
+  "placement": "registry",
+  "bundleIds": [
+    "base-governance",
+    "frontend-app"
+  ],
+  "assets": [
+    {
+      "id": "npx-skills/agent-browser",
+      "sourcePath": "skills/npx-skills/.agents/skills/agent-browser",
+      "contentHash": "sha256:ecc7641aea05f85ca3b11e7759d32aaf52fe05946ab4b63739c7bf78a41237a2",
+      "targetPath": ".agents/skills/agent-browser"
+    },
+    {
+      "id": "npx-skills/frontend-design",
+      "sourcePath": "skills/npx-skills/.agents/skills/frontend-design",
+      "contentHash": "sha256:665c585455decbcb02116bc928adf5148b9cd0f67b7eb4908c8c0d647c00f68a",
+      "targetPath": ".agents/skills/frontend-design"
+    },
+    {
+      "id": "npx-skills/impeccable",
+      "sourcePath": "skills/npx-skills/.agents/skills/impeccable",
+      "contentHash": "sha256:c805d991346c3831a1c04908311d7b0c48cb00c00772e669ea3252fec47bc2e2",
+      "targetPath": ".agents/skills/impeccable"
+    },
+    {
+      "id": "npx-skills/ui-ux-pro-max",
+      "sourcePath": "skills/npx-skills/.agents/skills/ui-ux-pro-max",
+      "contentHash": "sha256:48131e13c54e2c443abb2de3a6e359aee461f39fdce1c9cf578fd59873741755",
+      "targetPath": ".agents/skills/ui-ux-pro-max"
+    },
+    {
+      "id": "pie-commands/generate-handoff",
+      "sourcePath": "commands/pie-commands/generate-handoff.md",
+      "contentHash": "sha256:438266546b6e4880a83b681684b47e2515f82a9c6f49dacf0a22809db0c8815d",
+      "targetPath": ".pro-gov/agent-assets/commands/generate-handoff.md"
+    },
+    {
+      "id": "pie-rules/ai-in-the-loop",
+      "sourcePath": "rules/pie-rules/ai-in-the-loop.md",
+      "contentHash": "sha256:493f4308d121d6fdca667b0312809cb68dca0055825b42c187781cbed267f02f",
+      "targetPath": ".pro-gov/agent-assets/rules/ai-in-the-loop.md"
+    },
+    {
+      "id": "pie-rules/clean-image-generation-rules",
+      "sourcePath": "rules/pie-rules/clean-image-generation-rules.md",
+      "contentHash": "sha256:d77fc3823e7406036550b0b13a921e4c5a579011a5023ecaacfd2fb6fa456b86",
+      "targetPath": ".pro-gov/agent-assets/rules/clean-image-generation-rules.md"
+    },
+    {
+      "id": "pie-rules/rule-evolution-methodology",
+      "sourcePath": "rules/pie-rules/rule-evolution-methodology.md",
+      "contentHash": "sha256:694758a2f3ce15ffc9f38c5a0e6fe6696bfb8128b952afec6c0963cc803f5b9c",
+      "targetPath": ".pro-gov/agent-assets/rules/rule-evolution-methodology.md"
+    },
+    {
+      "id": "pie-skills/screenwalk",
+      "sourcePath": "skills/pie-skills/screenwalk",
+      "contentHash": "sha256:4d2ccbffdba26191cfc1b64d4f070c351f34a729e9ffb28c7dca00759a4837f7",
+      "targetPath": ".agents/skills/screenwalk"
+    }
+  ]
+}

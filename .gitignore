@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.university-local-build/
+coverage/
+*.log
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
+.scratch/
+university-local.config.local.json
+
+# Personal campus data stays visible at ./studies but must never enter source control.
+studies/

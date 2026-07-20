@@ -1,0 +1,333 @@
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { describe, expect, it } from "vitest";
+
+import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
+import { getStudyPaths } from "./studies/paths.js";
+import { createStudy } from "./studies/repository.js";
+import { executeUniversityLocalCli, main, parseUniversityLocalCli } from "./cli.js";
+
+const STUDY_ID = "sample-study";
+
+function setupCliStudy(): { readonly projectRoot: string; readonly studiesRoot: string } {
+  const projectRoot = join(mkdtempSync(join(tmpdir(), "university-local-cli-")), "project");
+  const studiesRoot = join(projectRoot, "studies");
+  mkdirSync(projectRoot);
+  writeFileSync(
+    join(projectRoot, "university-local.config.json"),
+    `${JSON.stringify({ schemaVersion: 1, studiesRoot: "./studies" })}\n`,
+  );
+  createStudy(studiesRoot, { id: STUDY_ID, title: "Sample Study" });
+  return { projectRoot, studiesRoot };
+}
+
+function record(value: unknown): Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("Expected an object result");
+  }
+  return value as Record<string, unknown>;
+}
+
+describe("UniversityLocal CLI parser", () => {
+  it.each([
+    [["status", "--study", "supaluv"], { kind: "status", studyId: "supaluv" }],
+    [
+      ["capture", "--study", "supaluv", "--input", "capture.json", "--dry-run"],
+      {
+        kind: "capture",
+        studyId: "supaluv",
+        inputPath: "capture.json",
+        dryRun: true,
+      },
+    ],
+    [
+      ["refresh", "prepare", "--study", "supaluv", "--ref", "HEAD", "--acknowledge-dirty-excluded"],
+      {
+        kind: "refresh-prepare",
+        studyId: "supaluv",
+        reference: "HEAD",
+        acknowledgeDirtyExcluded: true,
+      },
+    ],
+    [
+      ["refresh", "finalize", "--study", "supaluv", "--analysis", "ua-analysis"],
+      { kind: "refresh-finalize", studyId: "supaluv", analysisId: "ua-analysis" },
+    ],
+    [
+      [
+        "refresh",
+        "audit",
+        "--study",
+        "supaluv",
+        "--snapshot",
+        "git-aaaaaaaaaaaa",
+        "--analysis",
+        "ua-analysis",
+        "--apply",
+      ],
+      {
+        kind: "refresh-audit",
+        studyId: "supaluv",
+        snapshotId: "git-aaaaaaaaaaaa",
+        analysisId: "ua-analysis",
+        apply: true,
+      },
+    ],
+    [
+      ["course", "revise", "--study", "supaluv", "--input", "revision.json", "--dry-run"],
+      {
+        kind: "course-revise",
+        studyId: "supaluv",
+        inputPath: "revision.json",
+        dryRun: true,
+      },
+    ],
+    [
+      [
+        "course",
+        "reactivate",
+        "--study",
+        "supaluv",
+        "--course",
+        "founder-engineer",
+        "--snapshot",
+        "git-aaaaaaaaaaaa",
+        "--analysis",
+        "ua-analysis",
+      ],
+      {
+        kind: "course-reactivate",
+        studyId: "supaluv",
+        courseId: "founder-engineer",
+        snapshotId: "git-aaaaaaaaaaaa",
+        analysisId: "ua-analysis",
+      },
+    ],
+    [
+      [
+        "session",
+        "start",
+        "--study",
+        "supaluv",
+        "--host",
+        "grok-build",
+        "--objective",
+        "Understand auth",
+      ],
+      {
+        kind: "session-start",
+        studyId: "supaluv",
+        host: "grok-build",
+        objective: "Understand auth",
+      },
+    ],
+    [["session", "status", "--study", "supaluv"], { kind: "session-status", studyId: "supaluv" }],
+    [
+      ["session", "end", "--study", "supaluv", "--session", "session-123"],
+      { kind: "session-end", studyId: "supaluv", sessionId: "session-123" },
+    ],
+    [["learner", "backup", "--study", "supaluv"], { kind: "learner-backup", studyId: "supaluv" }],
+    [
+      ["learner", "reset", "--study", "supaluv", "--confirm", "supaluv"],
+      { kind: "learner-reset", studyId: "supaluv", confirmStudyId: "supaluv" },
+    ],
+    [
+      ["learner", "restore", "--study", "supaluv", "--from", "/tmp/backup.sqlite"],
+      { kind: "learner-restore", studyId: "supaluv", fromPath: "/tmp/backup.sqlite" },
+    ],
+  ] as const)("parses %j", (argv, expected) => {
+    expect(parseUniversityLocalCli(argv)).toEqual(expected);
+  });
+
+  it("rejects missing, unknown, and command-specific options", () => {
+    expect(() => parseUniversityLocalCli(["status"])).toThrow(/--study/);
+    expect(() => parseUniversityLocalCli(["unknown", "--study", "supaluv"])).toThrow(
+      /Unknown command/,
+    );
+    expect(() => parseUniversityLocalCli(["status", "--study", "supaluv", "--apply"])).toThrow(
+      /does not belong/,
+    );
+    expect(() =>
+      parseUniversityLocalCli(["refresh", "prepare", "--study", "supaluv", "--acknowledge-dirty"]),
+    ).toThrow();
+    expect(() =>
+      parseUniversityLocalCli(["learner", "backup", "--study", "supaluv", "--confirm", "supaluv"]),
+    ).toThrow(/does not belong/);
+    expect(() =>
+      parseUniversityLocalCli(["session", "start", "--study", "supaluv", "--host", "grok-build"]),
+    ).toThrow(/--objective/);
+    expect(() =>
+      parseUniversityLocalCli([
+        "course",
+        "revise",
+        "--study",
+        "supaluv",
+        "--input",
+        "revision.json",
+        "--snapshot",
+        "git-aaaaaaaaaaaa",
+      ]),
+    ).toThrow(/does not belong/);
+    expect(() =>
+      parseUniversityLocalCli([
+        "course",
+        "reactivate",
+        "--study",
+        "supaluv",
+        "--course",
+        "founder-engineer",
+      ]),
+    ).toThrow(/--snapshot/);
+  });
+
+  it("returns a non-zero beginner-readable error without throwing from main", async () => {
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await main(["status"], {
+      io: {
+        stdout: { write: (value) => (stdout += value) },
+        stderr: { write: (value) => (stderr += value) },
+      },
+    });
+    expect(exitCode).toBe(2);
+    expect(stdout).toBe("");
+    expect(JSON.parse(stderr)).toMatchObject({
+      ok: false,
+      error: expect.stringContaining("--study"),
+      hint: expect.stringContaining("--help"),
+    });
+  });
+
+  it("routes session commands through the session workflow", async () => {
+    const { projectRoot, studiesRoot } = setupCliStudy();
+    const database = getStudyPaths(studiesRoot, STUDY_ID).learner.database;
+
+    const emptyStatus = record(
+      await executeUniversityLocalCli({
+        projectRoot,
+        command: { kind: "session-status", studyId: STUDY_ID },
+      }),
+    );
+    expect(emptyStatus).toMatchObject({
+      operation: "session-status",
+      databaseExists: false,
+      openSession: null,
+    });
+    expect(existsSync(database)).toBe(false);
+
+    const started = record(
+      await executeUniversityLocalCli({
+        projectRoot,
+        command: {
+          kind: "session-start",
+          studyId: STUDY_ID,
+          host: "grok-build",
+          objective: "Understand authentication",
+        },
+      }),
+    );
+    expect(started).toMatchObject({
+      operation: "session-start",
+      sessionId: expect.any(String),
+      session: { host: "grok-build", objective: "Understand authentication" },
+    });
+
+    const ended = record(
+      await executeUniversityLocalCli({
+        projectRoot,
+        command: { kind: "session-end", studyId: STUDY_ID },
+      }),
+    );
+    expect(ended).toMatchObject({
+      operation: "session-end",
+      summary: { sessionId: started["sessionId"], host: "grok-build" },
+    });
+  });
+
+  it("routes guarded learner backup, reset, and exact-file restore without bypassing confirmation", async () => {
+    const { projectRoot, studiesRoot } = setupCliStudy();
+    const paths = getStudyPaths(studiesRoot, STUDY_ID);
+    await executeUniversityLocalCli({
+      projectRoot,
+      command: {
+        kind: "session-start",
+        studyId: STUDY_ID,
+        host: "grok-build",
+        objective: "Preserve this session",
+      },
+    });
+    await executeUniversityLocalCli({
+      projectRoot,
+      command: { kind: "session-end", studyId: STUDY_ID },
+    });
+
+    const backup = record(
+      await executeUniversityLocalCli({
+        projectRoot,
+        command: { kind: "learner-backup", studyId: STUDY_ID },
+      }),
+    );
+    const backupPath = backup["databasePath"];
+    expect(backup).toMatchObject({ operation: "backup", studyId: STUDY_ID, integrityCheck: "ok" });
+    expect(backupPath).toEqual(expect.any(String));
+    expect(existsSync(backupPath as string)).toBe(true);
+
+    const backupCount = readdirSync(paths.learner.backups).filter((entry) =>
+      entry.endsWith(".sqlite"),
+    ).length;
+    await expect(
+      executeUniversityLocalCli({
+        projectRoot,
+        command: {
+          kind: "learner-reset",
+          studyId: STUDY_ID,
+          confirmStudyId: `wrong-${STUDY_ID}`,
+        },
+      }),
+    ).rejects.toThrow(/exactly equal/);
+    expect(
+      readdirSync(paths.learner.backups).filter((entry) => entry.endsWith(".sqlite")),
+    ).toHaveLength(backupCount);
+
+    const reset = record(
+      await executeUniversityLocalCli({
+        projectRoot,
+        command: {
+          kind: "learner-reset",
+          studyId: STUDY_ID,
+          confirmStudyId: STUDY_ID,
+        },
+      }),
+    );
+    expect(reset).toMatchObject({
+      operation: "reset",
+      preResetBackup: { purpose: "pre-reset" },
+      activeCardReenrollmentRequired: true,
+    });
+    const empty = new SqliteLearningStore(paths.learner.database);
+    expect(empty.listSessions()).toEqual([]);
+    empty.close();
+
+    const restored = record(
+      await executeUniversityLocalCli({
+        projectRoot,
+        command: {
+          kind: "learner-restore",
+          studyId: STUDY_ID,
+          fromPath: backupPath as string,
+        },
+      }),
+    );
+    expect(restored).toMatchObject({
+      operation: "restore",
+      candidatePath: backupPath,
+      preRestoreBackup: { purpose: "pre-restore" },
+      activeCardReenrollmentRequired: false,
+    });
+    const installed = new SqliteLearningStore(paths.learner.database);
+    expect(installed.listSessions()).toHaveLength(1);
+    installed.close();
+  });
+});

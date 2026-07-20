@@ -1,0 +1,153 @@
+# docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
+# Regenerate: pnpm doc-gov scan
+generated_at: 2026-07-20T14:55:11.235Z
+generator_version: doc-gov@0.8.0
+docs_count: 21
+docs:
+  - id: ADR-0001
+    path: docs/adr/ADR-0001-local-study-containers.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: true
+  - id: ADR-0002
+    path: docs/adr/ADR-0002-small-durable-study-core.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: true
+  - id: ADR-0003
+    path: docs/adr/ADR-0003-permanently-local-only.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: true
+  - id: ADR-0004
+    path: docs/adr/ADR-0004-donor-first-engineering.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: true
+  - id: CANON-UNIVERSITY-LOCAL-MISSION
+    path: docs/canon/mission-brief.md
+    type: canon
+    status: stable
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: true
+  - id: GOV-AGENTS-ROUTING-ENGINEERING-RUNTIME-V1-1
+    path: docs/governance/agents-routing/engineering-runtime-v1.1.md
+    type: policy
+    status: stable
+    canonical: true
+    last_reviewed: 2026-07-16
+    pinned: true
+  - id: REF-DOC-GOVERNANCE-BOUNDARY
+    path: docs/governance/boundary.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-05-08
+    pinned: true
+  - id: POLICY-DOC-AGENT-RULES
+    path: docs/governance/doc-agent-rules.md
+    type: policy
+    status: stable
+    canonical: true
+    last_reviewed: 2026-06-12
+    pinned: true
+  - id: POLICY-DOC-TYPES
+    path: docs/governance/doc-types.md
+    type: policy
+    status: stable
+    canonical: true
+    last_reviewed: 2026-05-08
+    pinned: true
+  - id: GOV-SSOT-V1-1
+    path: docs/governance/ssot-v1.1.md
+    type: policy
+    status: stable
+    canonical: true
+    last_reviewed: 2026-07-13
+    pinned: true
+  - id: PLAN-0002
+    path: docs/plans/active/PLAN-0002-grok-daily-learning-bridge.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: true
+  - id: PLAN-0001
+    path: docs/plans/completed/PLAN-0001-university-local-vertical-slice.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: true
+  - id: POLICY-PROJECT-BEST-PRACTICE
+    path: docs/policy/best-practice-for-this-project.md
+    type: policy
+    status: stable
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: true
+  - id: REF-UNIVERSITY-LOCAL-ARCHITECTURE-REFLECTION-2026-07-20
+    path: docs/reference/architecture-reflection-2026-07-20.md
+    type: reference
+    status: active
+    canonical: false
+    last_reviewed: 2026-07-20
+    pinned: false
+  - id: REF-UNIVERSITY-LOCAL-ARCHITECTURE-RESEARCH-2026-07-20
+    path: docs/reference/architecture-research-2026-07-20.md
+    type: reference
+    status: active
+    canonical: false
+    last_reviewed: 2026-07-20
+    pinned: false
+  - id: REF-DOCUMENTATION-MAP
+    path: docs/reference/documentation-map.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: false
+  - id: REF-CURRENT-WORK
+    path: docs/reference/execution/current-work.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: true
+  - id: REF-UNIVERSITY-LOCAL-LEARNING-DONOR-MAP-2026-07-20
+    path: docs/reference/learning-donor-map-2026-07-20.md
+    type: reference
+    status: active
+    canonical: false
+    last_reviewed: 2026-07-20
+    pinned: false
+  - id: REF-USING-UNIVERSITY-LOCAL-WITH-GROK
+    path: docs/reference/using-university-local-with-grok.md
+    type: reference
+    status: active
+    canonical: false
+    last_reviewed: 2026-07-20
+    pinned: true
+  - id: SPEC-0002
+    path: docs/specs/active/SPEC-0002-grok-daily-learning-bridge.md
+    type: spec
+    status: active
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: true
+  - id: SPEC-0001
+    path: docs/specs/completed/SPEC-0001-university-local-foundation.md
+    type: spec
+    status: completed
+    canonical: true
+    last_reviewed: 2026-07-20
+    pinned: true

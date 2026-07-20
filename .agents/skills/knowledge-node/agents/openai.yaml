@@ -1,0 +1,4 @@
+interface:
+  display_name: "保存学习知识"
+  short_description: "把AI对话中的一个知识点安全保存为本地笔记和FSRS复习卡片"
+  default_prompt: "把刚才讨论中最值得长期复习的一个知识点保存到当前 study。"

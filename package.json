@@ -1,0 +1,55 @@
+{
+  "name": "@pieai/university-local",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite",
+    "dev:api": "tsc -p tsconfig.server.build.json && node .university-local-build/server/http-server.js",
+    "bootstrap:supaluv": "tsc -p tsconfig.server.build.json && node scripts/bootstrap-supaluv.mjs",
+    "prepare:supaluv:ua": "tsc -p tsconfig.server.build.json && node scripts/prepare-supaluv-ua.mjs",
+    "finalize:supaluv:ua": "tsc -p tsconfig.server.build.json && node scripts/finalize-supaluv-ua.mjs",
+    "create:supaluv:course": "tsc -p tsconfig.server.build.json && node scripts/create-supaluv-course.mjs",
+    "studies:init": "tsc -p tsconfig.server.build.json && node scripts/init-studies-root.mjs",
+    "university": "tsc -p tsconfig.server.build.json && node scripts/university-local.mjs",
+    "build": "tsc -b && tsc -p tsconfig.server.build.json && vite build",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "oxlint --deny-warnings src server vite.config.ts vitest.config.ts",
+    "format": "oxfmt --write package.json university-local.config.json university-local.config.local.example.json tsconfig.json tsconfig.app.json tsconfig.server.json tsconfig.server.build.json vite.config.ts vitest.config.ts src server scripts",
+    "format:check": "oxfmt --check package.json university-local.config.json university-local.config.local.example.json tsconfig.json tsconfig.app.json tsconfig.server.json tsconfig.server.build.json vite.config.ts vitest.config.ts src server scripts",
+    "test": "vitest run --passWithNoTests",
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build && pnpm docs:check",
+    "pro-gov": "pro-gov",
+    "doc-gov": "doc-gov",
+    "docs:check": "pnpm pro-gov doctor && pnpm doc-gov router-check && pnpm doc-gov check && pnpm doc-gov scan --check && pnpm doc-gov links && pnpm doc-gov audit && pnpm doc-gov doctor"
+  },
+  "dependencies": {
+    "@pieai/swimmer-ui-kit": "1.2.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
+    "shiki": "4.3.1",
+    "ts-fsrs": "5.4.1",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@pieai/doc-gov": "0.8.0",
+    "@pieai/pro-gov": "0.8.0",
+    "@types/node": "24.13.2",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.3",
+    "oxfmt": "0.58.0",
+    "oxlint": "1.73.0",
+    "typescript": "6.0.3",
+    "vite": "8.1.4",
+    "vitest": "4.1.10"
+  },
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=11.9.0 <12"
+  },
+  "packageManager": "pnpm@11.9.0"
+}

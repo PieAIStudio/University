@@ -1,0 +1,4 @@
+interface:
+  display_name: "刷新学习项目"
+  short_description: "从新的本地Git提交安全刷新UA图谱、课程和知识笔记"
+  default_prompt: "被学习项目已经提交了新版本，请刷新对应 study 的 UA 和学习资料。"

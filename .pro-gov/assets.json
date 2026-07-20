@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "host": "codex",
+  "placement": "registry",
+  "bundleIds": [
+    "base-governance",
+    "frontend-app"
+  ],
+  "assetIds": [
+    "npx-skills/agent-browser",
+    "npx-skills/frontend-design",
+    "npx-skills/impeccable",
+    "npx-skills/ui-ux-pro-max",
+    "pie-commands/generate-handoff",
+    "pie-rules/ai-in-the-loop",
+    "pie-rules/clean-image-generation-rules",
+    "pie-rules/rule-evolution-methodology",
+    "pie-skills/screenwalk"
+  ]
+}
