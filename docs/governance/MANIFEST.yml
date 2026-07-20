@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-07-20T18:10:33.991Z
+generated_at: 2026-07-20T18:13:47.920Z
 generator_version: doc-gov@0.8.0
-docs_count: 21
+docs_count: 22
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-local-study-containers.md
@@ -129,6 +129,13 @@ docs:
     status: active
     canonical: false
     last_reviewed: 2026-07-21
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-PREVENT-MOBILE-OVERFLOW-FROM-CSS-GRID-MIN-CONTENT-FLOORS
+    path: docs/reference/learnings/workflow-issues/prevent-mobile-overflow-from-css-grid-min-content-floors.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-07-20
     pinned: false
   - id: REF-USING-UNIVERSITY-LOCAL-WITH-GROK
     path: docs/reference/using-university-local-with-grok.md
