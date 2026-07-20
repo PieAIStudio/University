@@ -2,11 +2,11 @@
 id: SPEC-0002
 title: Grok Daily Learning And Knowledge Bridge
 type: spec
-status: active
+status: completed
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-20
+last_reviewed: 2026-07-21
 domain: product
 tags:
   - grok
@@ -194,3 +194,19 @@ execution, cloud sync, accounts, and native shells are not part of this spec.
   duplicate `.grok` configuration is introduced.
 - Full `pnpm verify`, a real Grok smoke, browser QA, and before/after SupaLuv Git
   status all pass.
+
+## Acceptance Receipt
+
+All acceptance items passed on 2026-07-21. The evidence chain combines focused
+repository/workflow/API tests, a 173-test full gate, a real Grok Build skill
+discovery and knowledge-capture dry run, and a copy-on-write browser session that
+performed the actual capture/retrieval/review/exercise/restart path without
+touching owner learner state.
+
+The Web pass also verified the product distinction in the interface: UA remains
+research evidence, formal courses remain deliberately structured teaching, and
+Grok conversation captures appear under `My Questions / Class Notes` while their
+active cards share the same Today/FSRS queue. The dirty-source refusal, immutable
+evidence viewer, backup/reset/restore scope, session summary, and source
+before/after receipts were all exercised. Exact hashes, backup paths, commands,
+test counts, host versions, and browser outcomes live in completed PLAN-0002.

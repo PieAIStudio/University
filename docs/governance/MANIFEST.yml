@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-07-20T14:55:11.235Z
+generated_at: 2026-07-20T18:10:33.991Z
 generator_version: doc-gov@0.8.0
 docs_count: 21
 docs:
@@ -74,19 +74,19 @@ docs:
     canonical: true
     last_reviewed: 2026-07-13
     pinned: true
-  - id: PLAN-0002
-    path: docs/plans/active/PLAN-0002-grok-daily-learning-bridge.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-07-20
-    pinned: true
   - id: PLAN-0001
     path: docs/plans/completed/PLAN-0001-university-local-vertical-slice.md
     type: plan
     status: completed
     canonical: true
     last_reviewed: 2026-07-20
+    pinned: true
+  - id: PLAN-0002
+    path: docs/plans/completed/PLAN-0002-grok-daily-learning-bridge.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-07-21
     pinned: true
   - id: POLICY-PROJECT-BEST-PRACTICE
     path: docs/policy/best-practice-for-this-project.md
@@ -114,35 +114,28 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-07-20
+    last_reviewed: 2026-07-21
     pinned: false
   - id: REF-CURRENT-WORK
     path: docs/reference/execution/current-work.md
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-07-20
+    last_reviewed: 2026-07-21
     pinned: true
   - id: REF-UNIVERSITY-LOCAL-LEARNING-DONOR-MAP-2026-07-20
     path: docs/reference/learning-donor-map-2026-07-20.md
     type: reference
     status: active
     canonical: false
-    last_reviewed: 2026-07-20
+    last_reviewed: 2026-07-21
     pinned: false
   - id: REF-USING-UNIVERSITY-LOCAL-WITH-GROK
     path: docs/reference/using-university-local-with-grok.md
     type: reference
     status: active
     canonical: false
-    last_reviewed: 2026-07-20
-    pinned: true
-  - id: SPEC-0002
-    path: docs/specs/active/SPEC-0002-grok-daily-learning-bridge.md
-    type: spec
-    status: active
-    canonical: true
-    last_reviewed: 2026-07-20
+    last_reviewed: 2026-07-21
     pinned: true
   - id: SPEC-0001
     path: docs/specs/completed/SPEC-0001-university-local-foundation.md
@@ -150,4 +143,11 @@ docs:
     status: completed
     canonical: true
     last_reviewed: 2026-07-20
+    pinned: true
+  - id: SPEC-0002
+    path: docs/specs/completed/SPEC-0002-grok-daily-learning-bridge.md
+    type: spec
+    status: completed
+    canonical: true
+    last_reviewed: 2026-07-21
     pinned: true

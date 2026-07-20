@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-20
+last_reviewed: 2026-07-21
 domain: execution
 tags:
   - current-work
@@ -21,12 +21,13 @@ This file is the current project work index. It is not the agents-routing algori
 
 ## Current Focus
 
-- Current phase: Grok daily-use bridge and trustworthy knowledge compounding.
-- Current active plan: PLAN-0002.
-- Current active spec: SPEC-0002.
-- Current proof target: complete one real Grok Build session that teaches from a
-  committed SupaLuv snapshot, captures an evidence-backed atomic note, derives a
-  review card, persists the learner's retrieval attempt, and survives restart.
+- Current phase: operate the completed Grok daily-learning bridge and collect
+  real owner evidence before adding more exercise formats.
+- Current active plan: none.
+- Current active spec: none.
+- Current proof target: complete three normal owner learning sessions and record
+  friction before deciding whether Predict Output, Micro-Parsons, or Explain with
+  Rubric deserves the next bounded spec.
 
 ## Accepted Direction (2026-07-20)
 
@@ -83,9 +84,9 @@ This file is the current project work index. It is not the agents-routing algori
 - The architecture must align with HQ's TypeScript/Vite/React direction and the
   relevant Swimmer kits without introducing a backend or irrelevant game
   infrastructure.
-- The completed SPEC-0001 and PLAN-0001 remain the foundation receipt. New product
-  scope is governed by SPEC-0002 and PLAN-0002; cloud sync is outside this
-  repository's permanent product boundary.
+- The completed SPEC-0001/PLAN-0001 foundation and SPEC-0002/PLAN-0002 daily
+  bridge remain the current receipts. Cloud sync is outside this repository's
+  permanent product boundary.
 
 ## Implementation Receipt (2026-07-20)
 
@@ -109,6 +110,26 @@ This file is the current project work index. It is not the agents-routing algori
   the isolated UniversityLocal workspace.
 - The project-local `teach-from-study` skill defines the shared teaching workflow
   for Grok Build, Codex, and Claude Code.
+
+## Daily Bridge Completion Receipt (2026-07-21)
+
+- PLAN-0002 and SPEC-0002 are completed. Grok Build 0.2.106 discovers the project
+  router, all three UniversityLocal learning skills, and Understand Anything
+  2.9.4 without a duplicate `.grok/` tree.
+- Natural-language “记一下” produced a validated atomic note/card proposal and a
+  safe dry-run receipt. The isolated Web session then proved actual note review,
+  pre-reveal answer persistence, FSRS rating, formal lesson completion, session
+  event grouping, and persistence across local-service restart.
+- Browser QA passed at desktop and 390 px after fixing two responsive overflow
+  seams. The complete implementation gate passes 22 test files / 173 tests plus
+  typecheck, zero-warning lint, format, build, and documentation governance.
+- The real learner database remains reset and empty; recoverable local backups
+  remain under the ignored `studies/supaluv/learner/backups/` shelf. SupaLuv's
+  HEAD, tree, and full dirty-state receipt remain unchanged.
+- UniversityLocal's initial baseline is
+  `2d07593bf943801dd5ce2dfb39a52981c5a0fea4`; PGS registration is committed as
+  `39ea12c370f7790da84cf157eac82b9fab2e0532` and the portfolio scanner reports
+  UniversityLocal healthy with no backend capability.
 
 ## Completed Proof History
 

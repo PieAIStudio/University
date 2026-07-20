@@ -6,7 +6,7 @@ status: active
 canonical: false
 owner: ai-assisted
 created: 2026-07-20
-last_reviewed: 2026-07-20
+last_reviewed: 2026-07-21
 domain: architecture
 tags:
   - donor-map
@@ -32,7 +32,7 @@ UniversityLocal by this decision.
 | Atomic conversation notes | Foam, MIT, active TypeScript project | pattern | One concept per Markdown note with stable identity; no VS Code runtime |
 | Local content truth | SilverBullet, MIT, active local-first project | pattern | Markdown content is durable truth; indexes and review projections are derived |
 | Spaced repetition | ts-fsrs 5.4.1, MIT | direct dependency | Keep one scheduler and its learning/relearning steps; no second relearn queue |
-| Source presentation | Shiki, MIT, active TypeScript project | direct dependency candidate | Highlight bounded snippets read from immutable Git blobs, not live worktrees |
+| Source presentation | Shiki 4.3.1, MIT, active TypeScript project | direct dependency | Highlight bounded snippets read from immutable Git blobs, not live worktrees; load the pinned minimal language/theme bundles lazily |
 | Project map | Understand Anything 2.9.4 | direct tool plus adapter | Run only in UniversityLocal's isolated commit workspace and record exact engine provenance |
 
 Primary sources:

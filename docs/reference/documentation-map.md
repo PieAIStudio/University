@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-20
+last_reviewed: 2026-07-21
 domain: meta
 tags:
   - navigation
