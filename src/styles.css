@@ -730,6 +730,40 @@ summary:focus-visible {
   background: rgb(12 8 6 / 72%);
 }
 
+.mermaid-diagram {
+  overflow-x: auto;
+  margin: 1.6em 0;
+  padding: 18px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 12px;
+  background: rgb(12 8 6 / 72%);
+}
+
+.mermaid-diagram figcaption {
+  color: var(--game-ui-text-muted);
+  font-size: 0.9rem;
+}
+
+.mermaid-diagram__canvas {
+  min-width: 0;
+}
+
+.mermaid-diagram__canvas svg {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.mermaid-diagram--error figcaption {
+  color: #f3c58c;
+}
+
+.markdown-body .mermaid-diagram--error pre {
+  margin: 14px 0 0;
+}
+
 .markdown-body table {
   width: 100%;
   border-collapse: collapse;

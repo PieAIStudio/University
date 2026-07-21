@@ -1,4 +1,4 @@
 interface:
   display_name: "开始项目学习"
   short_description: "从固定源码快照和正式课程开始一段有证据的本地教学会话"
-  default_prompt: "用当前 UniversityLocal study 带我学习下一个概念，先类比再结合真实源码。"
+  default_prompt: "用当前 UniversityLocal study 带我学习下一个概念，用初学者能懂的顺序解释，并结合固定快照中的真实证据。"

@@ -56,6 +56,18 @@
       "targetPath": ".pro-gov/agent-assets/rules/rule-evolution-methodology.md"
     },
     {
+      "id": "pie-skills/comm-coach",
+      "sourcePath": "skills/pie-skills/comm-coach",
+      "contentHash": "sha256:e52af1057c0afffa3cd0b14edc840659eb7d76ccfee9c69c46180d411d437179",
+      "targetPath": ".agents/skills/comm-coach"
+    },
+    {
+      "id": "pie-skills/mermaid-diagrams",
+      "sourcePath": "skills/pie-skills/mermaid-diagrams",
+      "contentHash": "sha256:290c599d15e221ebcd33f4d442188e1ef8077c36eecf4f4a542b2fa520410f14",
+      "targetPath": ".agents/skills/mermaid-diagrams"
+    },
+    {
       "id": "pie-skills/screenwalk",
       "sourcePath": "skills/pie-skills/screenwalk",
       "contentHash": "sha256:4d2ccbffdba26191cfc1b64d4f070c351f34a729e9ffb28c7dca00759a4837f7",

@@ -1,11 +1,12 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
 import type { EvidenceReference } from "../../src/domain/schemas.js";
+import { writeKnowledgeNoteRevision } from "../knowledge/repository.js";
 import { SqliteLearningStore } from "../learning/sqlite-learning-store.js";
 import { knowledgeCardContentKey } from "../learning/types.js";
 import { getKnowledgeNotePaths, getStudyPaths } from "../studies/paths.js";
@@ -51,11 +52,12 @@ function proposal(
     readonly claimType?: "source-fact" | "personal-understanding";
     readonly captureId?: string;
     readonly contentRevision?: number;
+    readonly cardCount?: number;
   } = {},
 ) {
   return {
     note: {
-      schemaVersion: 1,
+      schemaVersion: 1 as const,
       id: "auth-owner",
       title: "Authentication ownership",
       question: "Which module owns authentication?",
@@ -64,22 +66,20 @@ function proposal(
       status: options.status ?? "draft",
       contentRevision: options.contentRevision ?? 1,
       tags: ["auth"],
-      evidence: options.evidence ?? [],
+      evidence: [...(options.evidence ?? [])],
       origin: {
-        kind: "ai-conversation",
+        kind: "ai-conversation" as const,
         host: "Grok",
         capturedAt: NOW,
         captureId: options.captureId ?? "capture-auth-1",
       },
-      cards: [
-        {
-          id: "auth-owner-card",
-          kind: "basic",
-          front: "Which module owns authentication?",
-          back: "The session service.",
-          tags: ["auth"],
-        },
-      ],
+      cards: Array.from({ length: options.cardCount ?? 1 }, (_, index) => ({
+        id: index === 0 ? "auth-owner-card" : `auth-owner-card-${index + 1}`,
+        kind: "basic" as const,
+        front: `Which module owns authentication? (${index + 1})`,
+        back: "The session service.",
+        tags: ["auth"],
+      })),
       createdAt: NOW,
       updatedAt: NOW,
     },
@@ -108,6 +108,44 @@ describe("capture knowledge workflow", () => {
     });
     expect(existsSync(getKnowledgeNotePaths(studiesRoot, "sample", "auth-owner").root)).toBe(false);
     expect(existsSync(paths.learner.database)).toBe(false);
+  });
+
+  it("limits new captures to three cards without narrowing the version-1 read schema", () => {
+    const { studiesRoot } = setup();
+
+    expect(() =>
+      captureKnowledge({
+        studiesRoot,
+        studyId: "sample",
+        proposal: proposal({ cardCount: 4 }),
+        dryRun: true,
+      }),
+    ).toThrow(/at most 3 cards/);
+    expect(existsSync(getKnowledgeNotePaths(studiesRoot, "sample", "auth-owner").root)).toBe(false);
+  });
+
+  it("reuses and recovers an exact legacy capture with more than three cards", () => {
+    const { studiesRoot } = setup();
+    const legacyProposal = proposal({ cardCount: 4 });
+    writeKnowledgeNoteRevision(studiesRoot, "sample", legacyProposal);
+
+    const dryRun = captureKnowledge({
+      studiesRoot,
+      studyId: "sample",
+      proposal: legacyProposal,
+      dryRun: true,
+    });
+    expect(dryRun).toMatchObject({ disposition: "reused", revision: 1 });
+
+    const paths = getKnowledgeNotePaths(studiesRoot, "sample", "auth-owner");
+    unlinkSync(paths.latest);
+    const recovered = captureKnowledge({
+      studiesRoot,
+      studyId: "sample",
+      proposal: legacyProposal,
+    });
+    expect(recovered).toMatchObject({ disposition: "reused", revision: 1 });
+    expect(existsSync(paths.latest)).toBe(true);
   });
 
   it("stores drafts without enrollment and enrolls every active derived card", () => {

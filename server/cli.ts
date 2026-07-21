@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
 import { loadUniversityLocalConfig } from "./config/load-config.js";
+import { listKnowledgeNotes } from "./knowledge/repository.js";
 import { captureKnowledge } from "./workflows/capture-knowledge.js";
 import { getHostStudyStatus } from "./workflows/host-status.js";
 import { backupLearner, resetLearner, restoreLearner } from "./workflows/learner.js";
@@ -29,6 +30,7 @@ const HELP = `UniversityLocal local host bridge
 Commands:
   status --study <study-id>
   capture --study <study-id> --input <proposal.json> [--dry-run]
+  knowledge list --study <study-id>
   refresh prepare --study <study-id> [--ref <git-ref>] [--acknowledge-dirty-excluded]
   refresh finalize --study <study-id> --analysis <analysis-id>
   refresh audit --study <study-id> --snapshot <snapshot-id> [--analysis <analysis-id>] [--apply]
@@ -56,6 +58,11 @@ interface CaptureCommand {
   readonly studyId: string;
   readonly inputPath: string;
   readonly dryRun: boolean;
+}
+
+interface KnowledgeListCommand {
+  readonly kind: "knowledge-list";
+  readonly studyId: string;
 }
 
 interface RefreshPrepareCommand {
@@ -136,6 +143,7 @@ interface HelpCommand {
 export type UniversityLocalCliCommand =
   | StatusCommand
   | CaptureCommand
+  | KnowledgeListCommand
   | RefreshPrepareCommand
   | RefreshFinalizeCommand
   | RefreshAuditCommand
@@ -232,6 +240,10 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       inputPath: required(values.input, "input"),
       dryRun: values["dry-run"] ?? false,
     };
+  }
+  if (positionals.length === 2 && positionals[0] === "knowledge" && positionals[1] === "list") {
+    rejectUnrelatedOptions(values, ["study"]);
+    return { kind: "knowledge-list", studyId: required(values.study, "study") };
   }
   if (positionals.length === 2 && positionals[0] === "refresh") {
     if (positionals[1] === "prepare") {
@@ -370,6 +382,23 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         ),
         dryRun: input.command.dryRun,
       });
+    case "knowledge-list":
+      return {
+        schemaVersion: 1,
+        operation: "knowledge-list",
+        studyId: input.command.studyId,
+        notes: [...listKnowledgeNotes(config.studiesRoot, input.command.studyId)]
+          .sort((left, right) => left.id.localeCompare(right.id))
+          .map((note) => ({
+            id: note.id,
+            title: note.title,
+            question: note.question,
+            summary: note.summary,
+            tags: note.tags,
+            status: note.status,
+            contentRevision: note.contentRevision,
+          })),
+      };
     case "refresh-prepare":
       return prepareStudyRefresh({
         studiesRoot: config.studiesRoot,

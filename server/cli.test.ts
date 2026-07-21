@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
+import { writeKnowledgeNoteRevision } from "./knowledge/repository.js";
 import { getStudyPaths } from "./studies/paths.js";
 import { createStudy } from "./studies/repository.js";
 import { executeUniversityLocalCli, main, parseUniversityLocalCli } from "./cli.js";
@@ -42,6 +43,7 @@ describe("UniversityLocal CLI parser", () => {
         dryRun: true,
       },
     ],
+    [["knowledge", "list", "--study", "supaluv"], { kind: "knowledge-list", studyId: "supaluv" }],
     [
       ["refresh", "prepare", "--study", "supaluv", "--ref", "HEAD", "--acknowledge-dirty-excluded"],
       {
@@ -150,6 +152,16 @@ describe("UniversityLocal CLI parser", () => {
       /does not belong/,
     );
     expect(() =>
+      parseUniversityLocalCli([
+        "knowledge",
+        "list",
+        "--study",
+        "supaluv",
+        "--input",
+        "capture.json",
+      ]),
+    ).toThrow(/does not belong/);
+    expect(() =>
       parseUniversityLocalCli(["refresh", "prepare", "--study", "supaluv", "--acknowledge-dirty"]),
     ).toThrow();
     expect(() =>
@@ -244,6 +256,97 @@ describe("UniversityLocal CLI parser", () => {
       operation: "session-end",
       summary: { sessionId: started["sessionId"], host: "grok-build" },
     });
+  });
+
+  it("lists stable minimal knowledge metadata without teaching content or card answers", async () => {
+    const { projectRoot, studiesRoot } = setupCliStudy();
+    const makeNote = (input: {
+      readonly id: string;
+      readonly title: string;
+      readonly updatedAt: string;
+      readonly cardBack: string;
+    }) => ({
+      schemaVersion: 1 as const,
+      id: input.id,
+      title: input.title,
+      question: `Question for ${input.title}`,
+      summary: `Summary for ${input.title}`,
+      claimType: "personal-understanding" as const,
+      status: "active" as const,
+      contentRevision: 1,
+      tags: ["learning"],
+      evidence: [],
+      origin: {
+        kind: "ai-conversation" as const,
+        host: "Grok",
+        capturedAt: input.updatedAt,
+        captureId: `capture-${input.id}`,
+      },
+      cards: [
+        {
+          id: `${input.id}-card`,
+          kind: "basic" as const,
+          front: `Card question for ${input.title}`,
+          back: input.cardBack,
+          tags: ["learning"],
+        },
+      ],
+      createdAt: input.updatedAt,
+      updatedAt: input.updatedAt,
+    });
+    writeKnowledgeNoteRevision(studiesRoot, STUDY_ID, {
+      note: makeNote({
+        id: "zeta-note",
+        title: "Zeta note",
+        updatedAt: "2026-07-20T10:00:00.000Z",
+        cardBack: "PRIVATE_ZETA_CARD_ANSWER",
+      }),
+      content: "# Zeta\n\nPRIVATE_ZETA_TEACHING_CONTENT\n",
+    });
+    writeKnowledgeNoteRevision(studiesRoot, STUDY_ID, {
+      note: makeNote({
+        id: "alpha-note",
+        title: "Alpha note",
+        updatedAt: "2026-07-20T11:00:00.000Z",
+        cardBack: "PRIVATE_ALPHA_CARD_ANSWER",
+      }),
+      content: "# Alpha\n\nPRIVATE_ALPHA_TEACHING_CONTENT\n",
+    });
+
+    const result = await executeUniversityLocalCli({
+      projectRoot,
+      command: { kind: "knowledge-list", studyId: STUDY_ID },
+    });
+
+    expect(result).toEqual({
+      schemaVersion: 1,
+      operation: "knowledge-list",
+      studyId: STUDY_ID,
+      notes: [
+        {
+          id: "alpha-note",
+          title: "Alpha note",
+          question: "Question for Alpha note",
+          summary: "Summary for Alpha note",
+          tags: ["learning"],
+          status: "active",
+          contentRevision: 1,
+        },
+        {
+          id: "zeta-note",
+          title: "Zeta note",
+          question: "Question for Zeta note",
+          summary: "Summary for Zeta note",
+          tags: ["learning"],
+          status: "active",
+          contentRevision: 1,
+        },
+      ],
+    });
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain("PRIVATE_");
+    expect(serialized).not.toContain("cards");
+    expect(serialized).not.toContain("origin");
   });
 
   it("routes guarded learner backup, reset, and exact-file restore without bypassing confirmation", async () => {

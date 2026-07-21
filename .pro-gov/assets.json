@@ -15,6 +15,8 @@
     "pie-rules/ai-in-the-loop",
     "pie-rules/clean-image-generation-rules",
     "pie-rules/rule-evolution-methodology",
+    "pie-skills/comm-coach",
+    "pie-skills/mermaid-diagrams",
     "pie-skills/screenwalk"
   ]
 }

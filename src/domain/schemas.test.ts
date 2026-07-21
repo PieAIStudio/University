@@ -5,6 +5,7 @@ import {
   CourseManifestSchema,
   EvidenceReferenceSchema,
   ExerciseSchema,
+  KnowledgeNoteSchema,
   SnapshotManifestSchema,
   UaAnalysisManifestSchema,
   UaEngineProvenanceSchema,
@@ -165,5 +166,55 @@ describe("study domain schemas", () => {
     });
     expect(card).not.toHaveProperty("due");
     expect(card).not.toHaveProperty("stability");
+  });
+
+  it("keeps version-1 knowledge notes with any historical card count readable", () => {
+    const knowledgeCard = (id: string) => ({
+      id,
+      kind: "basic" as const,
+      front: `Question ${id}`,
+      back: `Answer ${id}`,
+      tags: [],
+    });
+    const note = {
+      schemaVersion: 1,
+      id: "auth-boundary",
+      title: "Authentication boundary",
+      question: "Which boundary owns authentication?",
+      summary: "Authentication belongs to the session boundary.",
+      claimType: "personal-understanding",
+      status: "active",
+      contentRevision: 1,
+      contentHash: hash,
+      tags: ["auth"],
+      evidence: [],
+      origin: {
+        kind: "ai-conversation",
+        host: "Grok",
+        capturedAt: now,
+        captureId: "capture-auth-boundary",
+      },
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    expect(KnowledgeNoteSchema.parse({ ...note, cards: [] }).cards).toEqual([]);
+    expect(
+      KnowledgeNoteSchema.parse({
+        ...note,
+        cards: [knowledgeCard("card-one"), knowledgeCard("card-two"), knowledgeCard("card-three")],
+      }).cards,
+    ).toHaveLength(3);
+    expect(
+      KnowledgeNoteSchema.parse({
+        ...note,
+        cards: [
+          knowledgeCard("card-one"),
+          knowledgeCard("card-two"),
+          knowledgeCard("card-three"),
+          knowledgeCard("card-four"),
+        ],
+      }).cards,
+    ).toHaveLength(4);
   });
 });

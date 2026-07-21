@@ -13,6 +13,7 @@ import { getKnowledgeNotePaths, getStudyPaths } from "../studies/paths.js";
 import { readStudy } from "../studies/repository.js";
 
 const MAX_CAPTURE_CONTENT_BYTES = 512 * 1024;
+const MAX_CAPTURE_CARDS = 3;
 const CaptureEnvelopeSchema = z
   .object({
     note: z.record(z.string(), z.unknown()),
@@ -231,6 +232,9 @@ export function captureKnowledge(input: CaptureKnowledgeInput): CaptureKnowledge
   }
   const state = readRevisionState(input.studiesRoot, input.studyId, proposal.note.id);
   const decision = decideCapture(state, proposal.note);
+  if (decision.disposition === "created" && proposal.note.cards.length > MAX_CAPTURE_CARDS) {
+    throw new Error(`Knowledge capture may include at most ${MAX_CAPTURE_CARDS} cards`);
+  }
   const previewKeys =
     decision.stored.status === "active"
       ? decision.stored.cards.map((card) =>

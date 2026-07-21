@@ -302,6 +302,7 @@ export const KnowledgeNoteSchema = z
     tags: z.array(StableId).default([]),
     evidence: z.array(EvidenceReferenceSchema).default([]),
     origin: KnowledgeOriginSchema,
+    // Keep schema v1 readable for notes created before the capture workflow adopted a 3-card limit.
     cards: z.array(KnowledgeCardSchema).default([]),
     createdAt: IsoDateTime,
     updatedAt: IsoDateTime,

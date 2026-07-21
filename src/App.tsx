@@ -7,8 +7,8 @@ import {
   GameProgress,
   GameTabs,
 } from "@pieai/swimmer-ui-kit";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+
+import { MarkdownContent } from "./MarkdownContent.js";
 
 type SectionId = "today" | "studies";
 
@@ -763,7 +763,7 @@ function LessonReader({
       <div className="lesson-layout">
         <div className="lesson-main">
           <div className="markdown-body">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{view.lesson.content}</ReactMarkdown>
+            <MarkdownContent>{view.lesson.content}</MarkdownContent>
           </div>
           {view.lesson.exercises.map((exercise) => (
             <ExerciseBlock
@@ -997,7 +997,7 @@ export function KnowledgeNotesSection({
                 <details className="knowledge-note__details">
                   <summary>展开笔记正文与证据</summary>
                   <div className="knowledge-note__body markdown-body">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.content}</ReactMarkdown>
+                    <MarkdownContent>{note.content}</MarkdownContent>
                   </div>
                   {note.evidence.length > 0 ? (
                     <EvidenceRail

@@ -1,0 +1,22 @@
+{
+  "recommended_threshold": 0.3,
+  "should_trigger": [
+    {"text": "把刚才这个认证边界知识点记一下。", "family": "explicit_save_zh"},
+    {"text": "Save that insight to the current UniversityLocal study and add useful review cards.", "family": "explicit_save"},
+    {"text": "整理今天学的，但先给我候选清单，不要直接写。", "family": "batch_preview_zh"},
+    {"text": "把我的复述沉淀到 UniversityLocal，标为个人理解。", "family": "personal_understanding"},
+    {"text": "加入复习；如果已经有同义笔记就修订原来的。", "family": "dedupe_revision"}
+  ],
+  "should_not_trigger": [
+    {"text": "继续教我下一个概念。", "family": "ordinary_teaching"},
+    {"text": "我只是随便问问，别保存。", "family": "explicit_no_save"},
+    {"text": "点评我的表达是否清楚。", "family": "communication_coach"},
+    {"text": "画出这四个服务之间的调用关系。", "family": "diagram"},
+    {"text": "Refresh the study snapshot after the source commit changed.", "family": "refresh"}
+  ],
+  "near_neighbor": [
+    {"text": "总结刚才的讨论，但不要写入文件。", "family": "summary_only"},
+    {"text": "任务完成后决定是否沉淀一条工程经验。", "family": "capture_learning"},
+    {"text": "创建一门包含十节课的正式课程。", "family": "course_authoring"}
+  ]
+}

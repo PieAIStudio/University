@@ -1,0 +1,24 @@
+{
+  "optimizer_hints": {
+    "capability": "Persist explicitly selected learning insights into the current UniversityLocal study as atomic evidence-backed notes and optional review cards.",
+    "inputs": ["explicit save request", "one learned insight", "batch candidate request", "current study context"],
+    "trigger_actions": ["save this insight", "remember this", "add to review", "organize today's learning", "记一下", "保存知识点", "加入复习", "整理今天学的"],
+    "exclusions": ["ordinary teaching", "do not save", "communication coaching", "diagram creation", "study refresh", "course authoring"]
+  },
+  "fallback_positive_concepts": ["explicit_capture"],
+  "positive_concepts": {
+    "explicit_capture": {
+      "weight": 0.7,
+      "phrases": ["save", "add useful review cards", "记一下", "保存", "沉淀到 UniversityLocal", "加入复习", "整理今天学的", "批量整理", "同义笔记就修订"]
+    }
+  },
+  "negative_concepts": {
+    "teaching": {"weight": 0.35, "exclusive": true, "phrases": ["继续教我", "ordinary teaching"]},
+    "no_save": {"weight": 0.8, "exclusive": true, "phrases": ["别保存", "不要写入文件", "do not save"]},
+    "communication": {"weight": 0.35, "exclusive": true, "phrases": ["点评我的表达", "communication coach"]},
+    "diagram": {"weight": 0.35, "exclusive": true, "phrases": ["画出", "diagram"]},
+    "refresh": {"weight": 0.35, "exclusive": true, "phrases": ["refresh the study", "source commit changed"]},
+    "capture_learning": {"weight": 0.35, "exclusive": true, "phrases": ["工程经验", "capture learning"]},
+    "course_authoring": {"weight": 0.35, "exclusive": true, "phrases": ["创建一门", "正式课程"]}
+  }
+}
