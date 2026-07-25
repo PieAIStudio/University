@@ -1,3 +1,13 @@
+# pnpm only runs a dependency's install scripts when it is allowed here, so
+# this list is a supply-chain gate: deny by default, allow what is proven
+# necessary.
 allowBuilds:
-  esbuild: set this to true or false
+  # Denied. esbuild arrives only as a transitive dependency of vite/tsx, and
+  # its postinstall is a fallback for installers that cannot resolve the
+  # platform package. pnpm does resolve it (@esbuild/darwin-arm64), so both
+  # the `esbuild` binary and the JS transform API work with the script
+  # skipped — verified before setting this.
+  esbuild: false
+  # Allowed. lefthook's postinstall is what fetches the binary and syncs the
+  # Git hooks; without it the commit gate in lefthook.yml never runs.
   lefthook: true

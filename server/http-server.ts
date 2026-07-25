@@ -1,5 +1,5 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -53,6 +53,8 @@ import { inspectStudyShelf, readStudy } from "./studies/repository.js";
 const DEFAULT_PORT = 4317;
 /** Wrong attempts allowed before the reference answer is shown. */
 const EXERCISE_ATTEMPTS_BEFORE_REVEAL = 2;
+/** Progress shown for a lesson that has been attempted but not yet solved. */
+const ATTEMPTED_LESSON_PROGRESS = 0.25;
 const MAX_JSON_BODY_BYTES = 64 * 1024;
 const LOOPBACK_HOST = /^(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/;
 const CommandId = z.string().uuid();
@@ -81,6 +83,12 @@ const CardReviewSchema = z
     rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
   })
   .strict();
+
+interface OpenLearningStore {
+  readonly store: SqliteLearningStore;
+  /** `dev:ino` of the file this store opened, so a swapped file is detectable. */
+  readonly fileId: string;
+}
 
 interface LearningRoute {
   readonly studyId: string;
@@ -626,6 +634,22 @@ function reviewReviewableCard(
  * accepted answers, not in a grader heuristic that could start accepting
  * genuinely wrong responses.
  */
+/**
+ * Reusing a command ID with a different body is a client conflict, not a
+ * server fault. The card paths already mapped it to 409; the exercise path
+ * let it escape as a generic 500, which tells a retrying client nothing.
+ */
+function runWithCommandConflictMapped<T>(message: string, operation: () => T): T {
+  try {
+    return operation();
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Command ID conflict:")) {
+      throw new HttpError(409, message);
+    }
+    throw error;
+  }
+}
+
 export function normalizeAnswer(value: string): string {
   return value
     .normalize("NFKC")
@@ -728,15 +752,44 @@ function defaultProjectRoot(): string {
 export function createUniversityLocalHttpServer(projectRoot: string): Server {
   const config = loadUniversityLocalConfig({ projectRoot });
   const requestToken = randomBytes(32).toString("base64url");
-  const stores = new Map<string, SqliteLearningStore>();
+  const stores = new Map<string, OpenLearningStore>();
+
+  /**
+   * Identity of the file behind a path, not the path itself. `learner restore`
+   * and `learner reset` install a database by renaming a new file over the old
+   * one; on POSIX the old inode stays alive for anyone still holding it open.
+   * Without this check the server kept serving — and writing to — a database
+   * that had already been replaced, so everything the learner did after a
+   * restore landed in an unlinked file nobody would ever read again.
+   * `assertQuiescent` in the restore workflow cannot catch this: it looks for
+   * active transactions, and an idle open connection has none.
+   */
+  const databaseIdentity = (path: string): string | null => {
+    try {
+      const stats = statSync(path);
+      return `${stats.dev}:${stats.ino}`;
+    } catch {
+      return null;
+    }
+  };
 
   const getStore = (studyId: string, create = false): SqliteLearningStore | null => {
-    const current = stores.get(studyId);
-    if (current) return current;
     const path = getStudyPaths(config.studiesRoot, studyId).learner.database;
-    if (!create && !existsSync(path)) return null;
+    const identity = databaseIdentity(path);
+    const open = stores.get(studyId);
+    if (open) {
+      if (identity !== null && identity === open.fileId) return open.store;
+      try {
+        open.store.close();
+      } catch {
+        // Already closed, or closed under us. Dropping the handle is the point.
+      }
+      stores.delete(studyId);
+    }
+    if (!create && identity === null) return null;
     const store = new SqliteLearningStore(path);
-    stores.set(studyId, store);
+    const openedId = databaseIdentity(path);
+    if (openedId !== null) stores.set(studyId, { store, fileId: openedId });
     return store;
   };
 
@@ -1010,49 +1063,92 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
           lessonId: exerciseRoute.lessonId,
           exerciseId: exercise.id,
         });
-        const attemptId = store.recordExerciseAttempt({
-          commandId: body.commandId,
-          exerciseKey,
-          contentRevision: exercise.contentRevision,
-          score: correct ? 1 : 0,
-          maxScore: 1,
-          response: { answer: body.answer },
-        });
         const lesson = requireActiveLesson(config.studiesRoot, exerciseRoute).lesson;
         const lessonKey = lessonContentKey({
           courseId: exerciseRoute.courseId,
           unitId: exerciseRoute.unitId,
           lessonId: exerciseRoute.lessonId,
         });
-        const previous = store.getLessonProgress(lessonKey);
-        if (
-          previous?.contentRevision !== lesson.contentRevision ||
-          previous.status !== "completed"
-        ) {
-          store.recordLessonProgress({
-            lessonKey,
-            contentRevision: lesson.contentRevision,
-            status: correct ? "completed" : "in-progress",
-            progress: correct ? 1 : 0.75,
-          });
-        }
-        if (correct) {
-          for (const cardId of lesson.cardIds) {
-            const card = requireActiveCard(config.studiesRoot, {
-              ...exerciseRoute,
-              contentId: cardId,
-            });
-            store.ensureCard(
-              cardContentKey({
-                courseId: exerciseRoute.courseId,
-                unitId: exerciseRoute.unitId,
-                lessonId: exerciseRoute.lessonId,
-                cardId,
-              }),
-              card.contentRevision,
-            );
-          }
-        }
+        // Only short-answer exercises can be graded without a human, so they
+        // are what lesson completion is measured against. Rubric exercises are
+        // excluded until the grader exists; counting them would make any
+        // lesson containing one impossible to finish.
+        const gradable = lesson.exerciseIds
+          .map((id) =>
+            requireActiveExercise(config.studiesRoot, { ...exerciseRoute, contentId: id }),
+          )
+          .filter((candidate) => candidate.kind === "short-answer");
+
+        // One outcome, one transaction. Recording the attempt, advancing the
+        // lesson, and enrolling its cards used to be three independent writes,
+        // so a crash between them could leave a lesson marked complete with
+        // half its cards missing from the review queue.
+        const attemptId = runWithCommandConflictMapped(
+          "Command ID was already used for another exercise attempt",
+          () =>
+            store.transaction(() => {
+              const recordedAttemptId = store.recordExerciseAttempt({
+                commandId: body.commandId,
+                exerciseKey,
+                contentRevision: exercise.contentRevision,
+                score: correct ? 1 : 0,
+                maxScore: 1,
+                response: { answer: body.answer },
+              });
+              // Read completion back from the attempt log rather than from "this
+              // answer was right": a lesson with three exercises is finished when
+              // all three have been answered correctly, in any order, across any
+              // number of sittings.
+              const solved = gradable.filter((candidate) =>
+                store.hasCorrectExerciseAttempt(
+                  exerciseContentKey({
+                    courseId: exerciseRoute.courseId,
+                    unitId: exerciseRoute.unitId,
+                    lessonId: exerciseRoute.lessonId,
+                    exerciseId: candidate.id,
+                  }),
+                  candidate.contentRevision,
+                ),
+              ).length;
+              const lessonComplete = gradable.length > 0 && solved === gradable.length;
+              const previous = store.getLessonProgress(lessonKey);
+              if (
+                previous?.contentRevision !== lesson.contentRevision ||
+                previous.status !== "completed"
+              ) {
+                store.recordLessonProgress({
+                  lessonKey,
+                  contentRevision: lesson.contentRevision,
+                  status: lessonComplete ? "completed" : "in-progress",
+                  // The store requires an in-progress lesson to sit strictly
+                  // between 0 and 1, and the learner has just attempted
+                  // something, so an unsolved lesson shows the engagement
+                  // floor rather than a flat zero.
+                  progress: lessonComplete
+                    ? 1
+                    : Math.max(solved / gradable.length, ATTEMPTED_LESSON_PROGRESS),
+                });
+              }
+              if (lessonComplete) {
+                for (const cardId of lesson.cardIds) {
+                  const card = requireActiveCard(config.studiesRoot, {
+                    ...exerciseRoute,
+                    contentId: cardId,
+                  });
+                  store.ensureCard(
+                    cardContentKey({
+                      courseId: exerciseRoute.courseId,
+                      unitId: exerciseRoute.unitId,
+                      lessonId: exerciseRoute.lessonId,
+                      cardId,
+                    }),
+                    card.contentRevision,
+                  );
+                }
+              }
+              return recordedAttemptId;
+            }),
+        );
         // Retrieval practice only works if the learner gets to retrieve. The
         // reference answer used to come back on every response, so one wrong
         // guess ended the exercise: there was nothing left to recall. It is
@@ -1164,7 +1260,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
   server.requestTimeout = 10_000;
   server.headersTimeout = 5_000;
   server.on("close", () => {
-    for (const store of stores.values()) store.close();
+    for (const open of stores.values()) open.store.close();
     stores.clear();
   });
   return server;

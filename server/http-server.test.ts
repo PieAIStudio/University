@@ -1,6 +1,6 @@
 import { once } from "node:events";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { get } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
@@ -190,6 +190,53 @@ function makeLearningProject(enrollCard = true): {
     lessonPath:
       "/api/studies/sample/courses/founder-engineer/units/auth-architecture/lessons/auth-owner",
   };
+}
+
+/**
+ * Adds a second short-answer exercise to the fixture lesson, so completion can
+ * be tested against a lesson that asks more than one question. Content is
+ * immutable while a course is active, so this walks the same
+ * active -> stale -> edit -> active path the revise workflow uses.
+ */
+function addSecondExercise(fixture: ReturnType<typeof makeLearningProject>): void {
+  const { studiesRoot, evidence } = fixture;
+  const createdAt = "2026-07-20T02:00:00.000Z";
+  updateCourseStatus(studiesRoot, "sample", "founder-engineer", "stale");
+  updateUnitStatus(studiesRoot, "sample", "founder-engineer", "auth-architecture", "stale");
+  // The lesson must declare the exercise before the exercise can be written.
+  writeLessonRevision(studiesRoot, "sample", {
+    manifest: {
+      schemaVersion: 1,
+      id: "auth-owner",
+      title: "Who owns authentication?",
+      courseId: "founder-engineer",
+      unitId: "auth-architecture",
+      exerciseIds: ["name-auth-owner", "name-auth-store"],
+      cardIds: ["auth-owner-card"],
+      contentRevision: 2,
+      status: "active",
+      evidence: [evidence],
+      createdAt,
+      updatedAt: createdAt,
+    },
+    content: "# Authentication\n\nThe identity service owns authentication.\n",
+  });
+  writeExerciseRevision(studiesRoot, "sample", {
+    schemaVersion: 1,
+    id: "name-auth-store",
+    kind: "short-answer",
+    title: "Name the store",
+    courseId: "founder-engineer",
+    unitId: "auth-architecture",
+    lessonId: "auth-owner",
+    prompt: "Name the session store.",
+    expectedAnswer: "session-store",
+    contentRevision: 1,
+    status: "active",
+    evidence: [evidence],
+  });
+  updateUnitStatus(studiesRoot, "sample", "founder-engineer", "auth-architecture", "active");
+  updateCourseStatus(studiesRoot, "sample", "founder-engineer", "active");
 }
 
 function addKnowledgeNotes(fixture: ReturnType<typeof makeLearningProject>): void {
@@ -668,6 +715,102 @@ describe("UniversityLocal loopback API", () => {
         dueCount: 1,
         card: { cardId: "auth-owner-card", contentRevision: 1 },
       },
+    });
+  });
+
+  it("completes a multi-exercise lesson only when every exercise is answered", async () => {
+    const fixture = makeLearningProject(false);
+    addSecondExercise(fixture);
+    const { base } = await start(fixture.projectRoot);
+    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      requestToken: string;
+    };
+    const headers = {
+      "Content-Type": "application/json",
+      "X-University-Local-Token": bootstrap.requestToken,
+    };
+    const answer = async (exerciseId: string, commandId: string, text: string) =>
+      fetch(`${base}${fixture.lessonPath}/exercises/${exerciseId}/attempt`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ commandId, contentRevision: 1, answer: text }),
+      });
+    const lessonProgress = async () =>
+      (
+        (await (await fetch(`${base}${fixture.lessonPath}`)).json()) as {
+          lesson: { progress: { status: string } | null };
+        }
+      ).lesson.progress;
+
+    const first = await answer(
+      "name-auth-owner",
+      "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "identity-service",
+    );
+    expect(first.status).toBe(200);
+    expect(await lessonProgress()).toMatchObject({ status: "in-progress" });
+    // One of two exercises answered must not open the review queue.
+    expect((await (await fetch(`${base}/api/bootstrap`)).json()) as unknown).toMatchObject({
+      today: { dueCount: 0 },
+    });
+
+    const second = await answer(
+      "name-auth-store",
+      "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      "session-store",
+    );
+    expect(second.status).toBe(200);
+    expect(await lessonProgress()).toMatchObject({ status: "completed", progress: 1 });
+    expect((await (await fetch(`${base}/api/bootstrap`)).json()) as unknown).toMatchObject({
+      today: { dueCount: 1 },
+    });
+  });
+
+  it("answers a reused command ID with 409 instead of a server error", async () => {
+    const fixture = makeLearningProject();
+    const { base } = await start(fixture.projectRoot);
+    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      requestToken: string;
+    };
+    const headers = {
+      "Content-Type": "application/json",
+      "X-University-Local-Token": bootstrap.requestToken,
+    };
+    const commandId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const attemptPath = `${fixture.lessonPath}/exercises/name-auth-owner/attempt`;
+    const send = async (answer: string) =>
+      fetch(`${base}${attemptPath}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ commandId, contentRevision: 1, answer }),
+      });
+
+    expect((await send("first guess")).status).toBe(200);
+    // Same command ID, different body: a client conflict, not a 500.
+    expect((await send("different guess")).status).toBe(409);
+  });
+
+  it("serves the restored database after the learner file is replaced under it", async () => {
+    const fixture = makeLearningProject();
+    const { base } = await start(fixture.projectRoot);
+    const learnerPath = getStudyPaths(fixture.studiesRoot, "sample").learner.database;
+
+    // Opening the shelf makes the server hold this database open.
+    expect((await (await fetch(`${base}/api/bootstrap`)).json()) as unknown).toMatchObject({
+      today: { dueCount: 1 },
+    });
+
+    // What `learner restore` / `learner reset` do: rename a different file
+    // into place. The old inode stays alive for anyone still holding it, so a
+    // server that trusts its cached handle keeps reading the replaced database
+    // and writes into a file that is no longer reachable by path.
+    const replacementPath = join(mkdtempSync(join(tmpdir(), "ul-restore-")), "learning.sqlite");
+    new SqliteLearningStore(replacementPath).close();
+    for (const suffix of ["-wal", "-shm"]) rmSync(`${learnerPath}${suffix}`, { force: true });
+    renameSync(replacementPath, learnerPath);
+
+    expect((await (await fetch(`${base}/api/bootstrap`)).json()) as unknown).toMatchObject({
+      today: { dueCount: 0, card: null },
     });
   });
 

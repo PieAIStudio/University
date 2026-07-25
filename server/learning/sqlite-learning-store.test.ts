@@ -1470,3 +1470,66 @@ describe("SqliteLearningStore", () => {
     expect(readdirSync(dirname(destination)).filter((entry) => entry.endsWith(".tmp"))).toEqual([]);
   });
 });
+
+describe("composable transactions", () => {
+  it("commits several already-transactional writes as one unit", () => {
+    const store = new SqliteLearningStore(":memory:");
+
+    store.transaction(() => {
+      store.recordExerciseAttempt({
+        commandId: "11111111-1111-4111-8111-111111111111",
+        exerciseKey: exerciseKey("compose-commit"),
+        contentRevision: 1,
+        score: 1,
+        maxScore: 1,
+      });
+      store.recordLessonProgress({
+        lessonKey: lessonKey(LESSON_ID),
+        contentRevision: 1,
+        status: "completed",
+        progress: 1,
+      });
+      store.ensureCard(cardKey("compose-commit-card"), 1, NOW);
+    });
+
+    expect(store.countExerciseAttempts(exerciseKey("compose-commit"), 1)).toBe(1);
+    expect(store.getLessonProgress(lessonKey(LESSON_ID))).toMatchObject({ status: "completed" });
+    expect(store.getCard(cardKey("compose-commit-card"))).not.toBeNull();
+    store.close();
+  });
+
+  it("rolls every nested write back when the unit of work throws", () => {
+    const store = new SqliteLearningStore(":memory:");
+
+    expect(() =>
+      store.transaction(() => {
+        store.recordExerciseAttempt({
+          commandId: "22222222-2222-4222-8222-222222222222",
+          exerciseKey: exerciseKey("compose-rollback"),
+          contentRevision: 1,
+          score: 1,
+          maxScore: 1,
+        });
+        store.ensureCard(cardKey("compose-rollback-card"), 1, NOW);
+        throw new Error("card enrolment failed");
+      }),
+    ).toThrow("card enrolment failed");
+
+    // A partially applied outcome is exactly what the transaction prevents:
+    // no attempt without its card, no card without its attempt.
+    expect(store.countExerciseAttempts(exerciseKey("compose-rollback"), 1)).toBe(0);
+    expect(store.getCard(cardKey("compose-rollback-card"))).toBeNull();
+    store.close();
+  });
+
+  it("still works for a plain single write after a nested unit of work", () => {
+    const store = new SqliteLearningStore(":memory:");
+
+    store.transaction(() => store.ensureCard(cardKey("nested-then-plain"), 1, NOW));
+    store.ensureCard(cardKey("plain-after-nested"), 1, NOW);
+
+    expect(store.getCard(cardKey("nested-then-plain"))).not.toBeNull();
+    expect(store.getCard(cardKey("plain-after-nested"))).not.toBeNull();
+    store.close();
+  });
+});

@@ -523,6 +523,8 @@ export class SqliteLearningStore implements LearningStore {
 
   readonly #database: DatabaseSync;
   readonly #scheduler;
+  /** 0 = no open transaction; >0 = nesting level, driving SAVEPOINT naming. */
+  #transactionDepth = 0;
 
   constructor(path: string, parameters: Partial<FSRSParameters> = {}) {
     const fileBacked = path !== ":memory:";
@@ -1004,8 +1006,34 @@ export class SqliteLearningStore implements LearningStore {
     for (const row of sessionRows) rowToLearningSession(row);
   }
 
+  /**
+   * Re-entrant unit of work. The outermost call is a real `BEGIN IMMEDIATE`;
+   * anything nested inside it becomes a SAVEPOINT, so a caller can compose
+   * several already-transactional store methods into one all-or-nothing
+   * write without the inner `BEGIN` failing. Recording an exercise attempt,
+   * advancing lesson progress, and enrolling the lesson's cards are one
+   * outcome and must not be able to half-happen.
+   */
   #transaction<T>(operation: () => T): T {
+    if (this.#transactionDepth > 0) {
+      const savepoint = `university_local_sp_${this.#transactionDepth}`;
+      this.#database.exec(`SAVEPOINT ${savepoint}`);
+      this.#transactionDepth += 1;
+      try {
+        const result = operation();
+        this.#database.exec(`RELEASE ${savepoint}`);
+        return result;
+      } catch (error) {
+        this.#database.exec(`ROLLBACK TO ${savepoint}`);
+        this.#database.exec(`RELEASE ${savepoint}`);
+        throw error;
+      } finally {
+        this.#transactionDepth -= 1;
+      }
+    }
+
     this.#database.exec("BEGIN IMMEDIATE");
+    this.#transactionDepth = 1;
     try {
       const result = operation();
       this.#database.exec("COMMIT");
@@ -1013,7 +1041,18 @@ export class SqliteLearningStore implements LearningStore {
     } catch (error) {
       if (this.#database.isTransaction) this.#database.exec("ROLLBACK");
       throw error;
+    } finally {
+      this.#transactionDepth = 0;
     }
+  }
+
+  /**
+   * Run several store writes as one unit. Nested store calls join this
+   * transaction rather than starting their own; if `operation` throws, every
+   * write inside it is rolled back together.
+   */
+  transaction<T>(operation: () => T): T {
+    return this.#transaction(operation);
   }
 
   #getCard(cardKey: ReviewContentKey): StoredCardState | null {
@@ -1408,6 +1447,25 @@ export class SqliteLearningStore implements LearningStore {
       `)
       .get(exerciseKey, contentRevision) as { readonly attempts: number } | undefined;
     return row?.attempts ?? 0;
+  }
+
+  /**
+   * Whether this exercise has ever been answered fully correctly at this
+   * content revision. Lesson completion is the AND of this across the
+   * lesson's auto-gradable exercises, so answering one exercise cannot
+   * complete a lesson that asks several questions.
+   */
+  hasCorrectExerciseAttempt(exerciseKey: ExerciseContentKey, contentRevision: number): boolean {
+    parseExerciseContentKey(exerciseKey);
+    validateRevision(contentRevision);
+    const row = this.#database
+      .prepare(`
+        SELECT 1 AS solved FROM exercise_attempt
+        WHERE exercise_id = ? AND content_revision = ? AND score >= max_score
+        LIMIT 1
+      `)
+      .get(exerciseKey, contentRevision) as { readonly solved: number } | undefined;
+    return row !== undefined;
   }
 
   recordLessonProgress(input: RecordLessonProgressInput): string {

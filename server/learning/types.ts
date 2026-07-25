@@ -267,6 +267,8 @@ export interface LearningStore {
   recordLessonProgress(input: RecordLessonProgressInput): string;
   recordExerciseAttempt(input: RecordExerciseAttemptInput): string;
   countExerciseAttempts(exerciseKey: ExerciseContentKey, contentRevision: number): number;
+  hasCorrectExerciseAttempt(exerciseKey: ExerciseContentKey, contentRevision: number): boolean;
+  transaction<T>(operation: () => T): T;
   recordRetrievalAttempt(input: RecordRetrievalAttemptInput): StoredRetrievalAttempt;
   getRetrievalAttempt(attemptId: string): StoredRetrievalAttempt | null;
   getRetrievalAttemptByCommandId(commandId: string): StoredRetrievalAttempt | null;
