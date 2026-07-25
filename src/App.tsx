@@ -362,7 +362,7 @@ function ReviewCard({
   const [nextDue, setNextDue] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [revealAttempted, setRevealAttempted] = useState(false);
+  const [revealFailed, setRevealFailed] = useState(false);
   const [retrievalDraft, setRetrievalDraft] = useState(createRetrievalAttemptDraft);
   const cardIdentity = reviewCardIdentity(card);
   const previousCardIdentity = useRef(cardIdentity);
@@ -374,7 +374,7 @@ function ReviewCard({
     setBack(null);
     setNextDue(null);
     setError(null);
-    setRevealAttempted(false);
+    setRevealFailed(false);
     setRetrievalDraft(createRetrievalAttemptDraft());
   }, [cardIdentity]);
 
@@ -391,7 +391,6 @@ function ReviewCard({
 
   async function reveal() {
     setPending(true);
-    setRevealAttempted(true);
     setError(null);
     try {
       const response = await post(
@@ -400,9 +399,20 @@ function ReviewCard({
       );
       const result = await readJson<{ readonly back: string }>(response);
       setBack(result.back);
+      setRevealFailed(false);
       setRetrievalDraft(createRetrievalAttemptDraft());
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "暂时无法揭示答案");
+      // The answer field stays editable on failure. Locking it on *attempt*
+      // used to strand the learner: a 409 revision conflict disabled the
+      // field and every retry replayed the same stale contentRevision.
+      const message = reason instanceof Error ? reason.message : "暂时无法揭示答案";
+      setRevealFailed(true);
+      setError(message);
+      if (/revision/i.test(message)) {
+        // Card content moved underneath us; pull the fresh revision so the
+        // retry has something valid to send.
+        await onReviewed().catch(() => undefined);
+      }
     } finally {
       setPending(false);
     }
@@ -419,9 +429,17 @@ function ReviewCard({
       });
       const result = await readJson<{ readonly state: { readonly dueAt: string } }>(response);
       setNextDue(result.state.dueAt);
-      await onReviewed();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "暂时无法保存复习结果");
+      setPending(false);
+      return;
+    }
+    // The grade is committed at this point. A failure refreshing the rest of
+    // the campus must not be reported as "the grade was not saved".
+    try {
+      await onReviewed();
+    } catch {
+      setError("评分已保存，但界面没能刷新，请重新加载页面。");
     } finally {
       setPending(false);
     }
@@ -442,7 +460,7 @@ function ReviewCard({
         <textarea
           value={answer}
           onChange={(event) => setAnswer(event.target.value)}
-          disabled={revealAttempted || back !== null || nextDue !== null}
+          disabled={pending || back !== null || nextDue !== null}
           placeholder="先写下自己的答案；非空后才能揭示。"
           rows={4}
         />
@@ -453,7 +471,7 @@ function ReviewCard({
           onClick={() => void reveal()}
           disabled={!answer.trim() || pending}
         >
-          {pending ? "正在核对…" : revealAttempted ? "重试揭示" : "揭示答案"}
+          {pending ? "正在核对…" : revealFailed ? "重试揭示" : "揭示答案"}
         </GameButton>
       ) : (
         <div className="answer-reveal" aria-live="polite">
@@ -481,7 +499,11 @@ function ReviewCard({
           )}
         </div>
       )}
-      {error ? <p className="inline-error">{error}</p> : null}
+      {error ? (
+        <p className="inline-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </GamePanel>
   );
 }
@@ -525,7 +547,11 @@ function ExerciseBlock({
         response,
       );
       setResult(body);
-      if (body.correct) await onCompleted();
+      if (body.correct) {
+        // The attempt is already recorded server-side; a refresh failure is a
+        // display problem, not a lost answer.
+        await onCompleted().catch(() => setError("答案已记录，但界面没能刷新，请重新加载页面。"));
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "暂时无法提交练习");
     } finally {
@@ -551,9 +577,9 @@ function ExerciseBlock({
       <GameButton
         variant="primary"
         onClick={() => void submit()}
-        disabled={!answer.trim() || pending}
+        disabled={!answer.trim() || pending || result?.correct === true}
       >
-        {pending ? "正在提交…" : "提交答案"}
+        {pending ? "正在提交…" : result?.correct ? "已完成" : "提交答案"}
       </GameButton>
       {result ? (
         <GameCallout
@@ -564,7 +590,11 @@ function ExerciseBlock({
           {!result.correct ? "。看清差异后可以修改并重试。" : "。课程进度已经保存。"}
         </GameCallout>
       ) : null}
-      {error ? <p className="inline-error">{error}</p> : null}
+      {error ? (
+        <p className="inline-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </GamePanel>
   );
 }
@@ -704,7 +734,11 @@ function EvidenceRail({
               {expanded ? (
                 <div className="evidence-snippet" id={panelId} aria-live="polite">
                   {loading ? <p>正在从固定提交读取源码…</p> : null}
-                  {error ? <p className="inline-error">{error}</p> : null}
+                  {error ? (
+                    <p className="inline-error" role="alert">
+                      {error}
+                    </p>
+                  ) : null}
                   {snippet ? (
                     <>
                       <div className="evidence-snippet__meta">
@@ -843,6 +877,18 @@ function TodaySection({
         </GamePanel>
       ) : null}
 
+      {/* The review card is the day's actual work, so it leads the row and the
+          tab order; the due-count metric is the supporting rail beside it. */}
+      {card ? (
+        <ReviewCard card={card} requestToken={data.requestToken} onReviewed={onReviewed} />
+      ) : (
+        <GameCallout heading="今天没有到期卡片" tone="success" className="today-empty">
+          {data.today.nextLesson
+            ? "完成上面的课程后，新卡片会进入 FSRS 复习安排。"
+            : "今天的复习已经清空，可以继续研究下一门课。"}
+        </GameCallout>
+      )}
+
       <div className="today-metric">
         <span>{data.today.dueCount}</span>
         <div>
@@ -850,16 +896,6 @@ function TodaySection({
           <p>今天到期的复习卡片</p>
         </div>
       </div>
-
-      {card ? (
-        <ReviewCard card={card} requestToken={data.requestToken} onReviewed={onReviewed} />
-      ) : (
-        <GameCallout heading="今天没有到期卡片" tone="success">
-          {data.today.nextLesson
-            ? "完成上面的课程后，新卡片会进入 FSRS 复习安排。"
-            : "今天的复习已经清空，可以继续研究下一门课。"}
-        </GameCallout>
-      )}
       {data.today.issues.length > 0 ? (
         <GameCallout heading="有学习数据暂时无法使用" tone="warning">
           {data.today.issues.join("；")}
@@ -1133,6 +1169,14 @@ export function App() {
   const [lessonView, setLessonView] = useState<LessonView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lessonError, setLessonError] = useState<string | null>(null);
+
+  // Monotonic request ids. Every study/lesson response is checked against the
+  // latest issued id before it is allowed to touch state, so a slow response
+  // for the study or lesson the learner just navigated away from can never
+  // overwrite the one they are actually looking at.
+  const studyRequestId = useRef(0);
+  const lessonRequestId = useRef(0);
 
   async function loadBootstrap() {
     const next = await readJson<BootstrapData>(await fetch("/api/bootstrap"));
@@ -1140,16 +1184,28 @@ export function App() {
     setSelectedStudyId((current) => current ?? next.studies[0]?.id ?? null);
   }
 
-  async function loadStudy(studyId: string) {
-    setStudyView(await readJson<StudyView>(await fetch(`/api/studies/${studyId}`)));
+  async function loadStudy(studyId: string, signal?: AbortSignal) {
+    const requestId = (studyRequestId.current += 1);
+    const next = await readJson<StudyView>(await fetch(`/api/studies/${studyId}`, { signal }));
+    if (studyRequestId.current !== requestId) return;
+    setStudyView(next);
   }
 
-  async function loadLesson(locator: LessonLocator) {
-    setLessonView(await readJson<LessonView>(await fetch(lessonPath(locator))));
+  async function loadLesson(locator: LessonLocator, signal?: AbortSignal) {
+    const requestId = (lessonRequestId.current += 1);
+    const next = await readJson<LessonView>(await fetch(lessonPath(locator), { signal }));
+    if (lessonRequestId.current !== requestId) return;
+    setLessonView(next);
+  }
+
+  /** Ignore the rejection an in-flight fetch produces when we abort it. */
+  function isAbort(reason: unknown): boolean {
+    return reason instanceof DOMException && reason.name === "AbortError";
   }
 
   useEffect(() => {
     void loadBootstrap()
+      .then(() => setError(null))
       .catch((reason: unknown) =>
         setError(reason instanceof Error ? reason.message : "无法连接 UniversityLocal 服务"),
       )
@@ -1158,19 +1214,35 @@ export function App() {
 
   useEffect(() => {
     if (activeSection !== "studies" || !selectedStudyId) return;
-    void loadStudy(selectedStudyId).catch((reason: unknown) =>
-      setError(reason instanceof Error ? reason.message : "无法读取学习项目"),
-    );
+    const controller = new AbortController();
+    // Drop the previous study's detail immediately, so the header never shows
+    // one project's metrics next to another project's units.
+    setStudyView(null);
+    void loadStudy(selectedStudyId, controller.signal)
+      .then(() => setError(null))
+      .catch((reason: unknown) => {
+        if (isAbort(reason)) return;
+        setError(reason instanceof Error ? reason.message : "无法读取学习项目");
+      });
+    return () => controller.abort();
   }, [activeSection, selectedStudyId]);
 
   useEffect(() => {
     if (!lessonLocator) {
       setLessonView(null);
+      setLessonError(null);
       return;
     }
-    void loadLesson(lessonLocator).catch((reason: unknown) =>
-      setError(reason instanceof Error ? reason.message : "无法读取课程"),
-    );
+    const controller = new AbortController();
+    setLessonView(null);
+    setLessonError(null);
+    void loadLesson(lessonLocator, controller.signal)
+      .then(() => setError(null))
+      .catch((reason: unknown) => {
+        if (isAbort(reason)) return;
+        setLessonError(reason instanceof Error ? reason.message : "无法读取课程");
+      });
+    return () => controller.abort();
   }, [lessonLocator]);
 
   const completedStudies = useMemo(
@@ -1225,10 +1297,25 @@ export function App() {
         />
       </nav>
 
-      <main id={`panel-${activeSection}`} role="tabpanel" className="campus-main">
+      <main
+        id={`panel-${activeSection}`}
+        role="tabpanel"
+        aria-labelledby={`campus-section-${activeSection}`}
+        className="campus-main"
+      >
         {error ? (
-          <GameCallout heading="有一项操作没有完成" tone="warning" className="global-error">
+          <GameCallout
+            heading="有一项操作没有完成"
+            tone="warning"
+            className="global-error"
+            role="alert"
+          >
             {error}
+          </GameCallout>
+        ) : null}
+        {data && data.shelfIssues.length > 0 ? (
+          <GameCallout heading="书架上有资料读不出来" tone="warning" className="global-error">
+            {data.shelfIssues.join("；")}
           </GameCallout>
         ) : null}
         {loading ? <p className="loading-copy">正在打开校园档案…</p> : null}
@@ -1237,17 +1324,25 @@ export function App() {
           <TodaySection data={data} onOpenLesson={openLesson} onReviewed={refreshLearning} />
         ) : null}
         {data && data.studies.length > 0 && activeSection === "studies" ? (
-          lessonLocator && lessonView ? (
+          lessonLocator ? (
             <div>
               <GameButton variant="ghost" onClick={() => setLessonLocator(null)}>
                 ← 返回课程
               </GameButton>
-              <LessonReader
-                locator={lessonLocator}
-                view={lessonView}
-                requestToken={data.requestToken}
-                onLearningChanged={refreshLearning}
-              />
+              {lessonView ? (
+                <LessonReader
+                  locator={lessonLocator}
+                  view={lessonView}
+                  requestToken={data.requestToken}
+                  onLearningChanged={refreshLearning}
+                />
+              ) : lessonError ? (
+                <GameCallout heading="这节课打不开" tone="warning" role="alert">
+                  {lessonError}
+                </GameCallout>
+              ) : (
+                <p className="loading-copy">正在打开这节课…</p>
+              )}
             </div>
           ) : (
             <div className="studies-layout">

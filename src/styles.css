@@ -35,6 +35,22 @@ summary:focus-visible {
   min-height: 100vh;
 }
 
+/*
+ * TEMPORARY — remove when @pieai/swimmer-ui-kit is upgraded to >= 1.3.0.
+ *
+ * In kit 1.2.0, styles.css declares `.game-ui-callout` twice: once as an
+ * absolutely-positioned demo-table speech bubble, once as the real
+ * <GameCallout>. The component rule never re-declares `position` or
+ * `white-space`, so the cascade leaves every callout out of flow — on Today
+ * it floated over the page heading and covered it. Fixed upstream in kit
+ * 1.3.0 (the bubble moved to preview.css as `.game-ui-seat-callout`); this
+ * override only restates that default until the dependency bump lands.
+ */
+.game-ui-callout {
+  position: static;
+  white-space: normal;
+}
+
 .campus {
   --campus-rule: rgb(246 231 211 / 14%);
   --campus-surface: rgb(53 39 29 / 80%);
@@ -166,9 +182,17 @@ summary:focus-visible {
   color: #ffb4a4;
 }
 
+/*
+ * Today is a work surface, not a dashboard: the review card is what the
+ * learner actually does here, so it takes the wide column and the supporting
+ * due-count metric sits in the narrow rail. The previous split gave the
+ * metric 841px of the grid and squeezed the card — the only interactive
+ * thing on the page — into 319px, leaving most of the viewport empty.
+ */
 .today-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.55fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(264px, 0.4fr);
+  align-items: start;
   gap: 20px;
 }
 
@@ -224,6 +248,7 @@ summary:focus-visible {
 }
 
 .today-metric {
+  grid-column: 2;
   display: flex;
   align-items: center;
   gap: 18px;
@@ -237,7 +262,7 @@ summary:focus-visible {
 .today-metric > span {
   color: #fff2dc;
   font-family: var(--game-ui-font-display);
-  font-size: 4rem;
+  font-size: clamp(2.8rem, 4.4vw, 4rem);
   line-height: 1;
 }
 
@@ -246,8 +271,12 @@ summary:focus-visible {
   color: var(--game-ui-text-muted);
 }
 
+.review-card,
+.today-empty {
+  grid-column: 1;
+}
+
 .review-card {
-  grid-row: span 2;
   padding: clamp(24px, 4vw, 38px);
 }
 
@@ -950,8 +979,10 @@ summary:focus-visible {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .review-card {
-    grid-row: auto;
+  .review-card,
+  .today-empty,
+  .today-metric {
+    grid-column: 1;
   }
 
   .study-shelf,
