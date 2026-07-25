@@ -23,6 +23,7 @@ import {
   parseLessonContentKey,
   reviewContentKey,
   type CardProjectionReplayResult,
+  type ExerciseContentKey,
   type LearningSessionMetadata,
   type LearningSessionSummary,
   type LessonContentKey,
@@ -1389,6 +1390,24 @@ export class SqliteLearningStore implements LearningStore {
       progress: row.progress,
       updatedAt: new Date(row.updated_at),
     };
+  }
+
+  /**
+   * How many attempts the learner has already recorded against one exercise
+   * at one content revision. Drives the reveal policy: the reference answer
+   * is withheld on the first miss so the learner gets a second retrieval
+   * attempt, which is the whole point of the exercise.
+   */
+  countExerciseAttempts(exerciseKey: ExerciseContentKey, contentRevision: number): number {
+    parseExerciseContentKey(exerciseKey);
+    validateRevision(contentRevision);
+    const row = this.#database
+      .prepare(`
+        SELECT COUNT(*) AS attempts
+        FROM exercise_attempt WHERE exercise_id = ? AND content_revision = ?
+      `)
+      .get(exerciseKey, contentRevision) as { readonly attempts: number } | undefined;
+    return row?.attempts ?? 0;
   }
 
   recordLessonProgress(input: RecordLessonProgressInput): string {

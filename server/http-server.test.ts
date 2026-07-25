@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { EvidenceReference, KnowledgeNote } from "../src/domain/schemas.js";
-import { createUniversityLocalHttpServer } from "./http-server.js";
+import { createUniversityLocalHttpServer, normalizeAnswer } from "./http-server.js";
 import {
   updateCourseStatus,
   updateUnitStatus,
@@ -668,6 +668,84 @@ describe("UniversityLocal loopback API", () => {
         dueCount: 1,
         card: { cardId: "auth-owner-card", contentRevision: 1 },
       },
+    });
+  });
+
+  it("forgives typing noise but not different answers", () => {
+    const expected = normalizeAnswer("Ink");
+
+    expect(normalizeAnswer("ink")).toBe(expected);
+    expect(normalizeAnswer("  INK  ")).toBe(expected);
+    expect(normalizeAnswer("ink.")).toBe(expected);
+    expect(normalizeAnswer("ink。")).toBe(expected);
+    expect(normalizeAnswer('"ink"')).toBe(expected);
+    expect(normalizeAnswer("「ink」")).toBe(expected);
+    expect(normalizeAnswer("ｉｎｋ")).toBe(expected);
+
+    expect(normalizeAnswer("inkjs")).not.toBe(expected);
+    expect(normalizeAnswer("react")).not.toBe(expected);
+    expect(normalizeAnswer("ink runner")).not.toBe(expected);
+  });
+
+  it("withholds the reference answer until the second wrong attempt", async () => {
+    const fixture = makeLearningProject();
+    const { base } = await start(fixture.projectRoot);
+    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      requestToken: string;
+    };
+    const headers = {
+      "Content-Type": "application/json",
+      "X-University-Local-Token": bootstrap.requestToken,
+    };
+    const attemptPath = `${fixture.lessonPath}/exercises/name-auth-owner/attempt`;
+    const attempt = async (commandId: string, answer: string) =>
+      (await (
+        await fetch(`${base}${attemptPath}`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ commandId, contentRevision: 1, answer }),
+        })
+      ).json()) as {
+        readonly correct: boolean;
+        readonly attemptCount: number;
+        readonly expectedAnswer?: string;
+      };
+
+    const first = await attempt("11111111-1111-4111-8111-111111111111", "wrong");
+    expect(first).toMatchObject({ correct: false, attemptCount: 1 });
+    expect(first.expectedAnswer).toBeUndefined();
+
+    const second = await attempt("22222222-2222-4222-8222-222222222222", "still wrong");
+    expect(second).toMatchObject({
+      correct: false,
+      attemptCount: 2,
+      expectedAnswer: "identity-service",
+    });
+  });
+
+  it("returns the reference answer as soon as the attempt is correct", async () => {
+    const fixture = makeLearningProject();
+    const { base } = await start(fixture.projectRoot);
+    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      requestToken: string;
+    };
+    const correct = await fetch(`${base}${fixture.lessonPath}/exercises/name-auth-owner/attempt`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-University-Local-Token": bootstrap.requestToken,
+      },
+      body: JSON.stringify({
+        commandId: "33333333-3333-4333-8333-333333333333",
+        contentRevision: 1,
+        answer: "identity-service",
+      }),
+    });
+
+    expect(await correct.json()).toMatchObject({
+      correct: true,
+      attemptCount: 1,
+      expectedAnswer: "identity-service",
     });
   });
 

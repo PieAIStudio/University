@@ -172,6 +172,17 @@ export interface CardRevealPayload extends RetrievalAttemptDraft {
   readonly confidence?: number;
 }
 
+/**
+ * `expectedAnswer` is deliberately optional: the API withholds the reference
+ * answer until the attempt is correct or the learner has tried twice, so a
+ * single wrong guess does not end the retrieval practice.
+ */
+interface ExerciseAttemptResult {
+  readonly correct: boolean;
+  readonly attemptCount: number;
+  readonly expectedAnswer?: string;
+}
+
 interface LessonView {
   readonly lesson: {
     readonly id: string;
@@ -520,10 +531,7 @@ function ExerciseBlock({
   readonly onCompleted: () => Promise<void>;
 }) {
   const [answer, setAnswer] = useState("");
-  const [result, setResult] = useState<{
-    readonly correct: boolean;
-    readonly expectedAnswer: string;
-  } | null>(null);
+  const [result, setResult] = useState<ExerciseAttemptResult | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -543,9 +551,7 @@ function ExerciseBlock({
           answer,
         }),
       });
-      const body = await readJson<{ readonly correct: boolean; readonly expectedAnswer: string }>(
-        response,
-      );
+      const body = await readJson<ExerciseAttemptResult>(response);
       setResult(body);
       if (body.correct) {
         // The attempt is already recorded server-side; a refresh failure is a
@@ -585,9 +591,13 @@ function ExerciseBlock({
         <GameCallout
           heading={result.correct ? "回答正确" : "这次还没答对"}
           tone={result.correct ? "success" : "warning"}
+          role="status"
         >
-          参考答案：{result.expectedAnswer}
-          {!result.correct ? "。看清差异后可以修改并重试。" : "。课程进度已经保存。"}
+          {result.expectedAnswer !== undefined
+            ? `参考答案：${result.expectedAnswer}${
+                result.correct ? "。课程进度已经保存。" : "。看清差异后可以修改并重试。"
+              }`
+            : "先不看答案，再自己回想一次。回到上面的课文找依据，然后重新作答；再答错一次会给出参考答案。"}
         </GameCallout>
       ) : null}
       {error ? (

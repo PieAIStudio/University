@@ -51,6 +51,8 @@ import { getStudyPaths } from "./studies/paths.js";
 import { inspectStudyShelf, readStudy } from "./studies/repository.js";
 
 const DEFAULT_PORT = 4317;
+/** Wrong attempts allowed before the reference answer is shown. */
+const EXERCISE_ATTEMPTS_BEFORE_REVEAL = 2;
 const MAX_JSON_BODY_BYTES = 64 * 1024;
 const LOOPBACK_HOST = /^(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/;
 const CommandId = z.string().uuid();
@@ -615,8 +617,24 @@ function reviewReviewableCard(
   }
 }
 
-function normalizeAnswer(value: string): string {
-  return value.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
+/**
+ * Short answers are compared exactly after normalising the noise a learner
+ * cannot be expected to guess: unicode form, case, run-together whitespace,
+ * wrapping quotes or backticks, and sentence-final punctuation. Marking
+ * `ink.` or `"ink"` wrong teaches typing, not the material. Anything past
+ * that — synonyms, alternative spellings — belongs in the content as
+ * accepted answers, not in a grader heuristic that could start accepting
+ * genuinely wrong responses.
+ */
+export function normalizeAnswer(value: string): string {
+  return value
+    .normalize("NFKC")
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/^[`'"“”‘’「『【（([]+|[`'"“”‘’」』】）)\]]+$/g, "")
+    .replace(/[.。!！?？;；,，、]+$/u, "")
+    .trim()
+    .toLocaleLowerCase("en-US");
 }
 
 function buildStudyView(
@@ -1035,12 +1053,20 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
             );
           }
         }
+        // Retrieval practice only works if the learner gets to retrieve. The
+        // reference answer used to come back on every response, so one wrong
+        // guess ended the exercise: there was nothing left to recall. It is
+        // now withheld until the answer is right or the learner has genuinely
+        // tried twice at this revision.
+        const attemptCount = store.countExerciseAttempts(exerciseKey, exercise.contentRevision);
+        const revealAnswer = correct || attemptCount >= EXERCISE_ATTEMPTS_BEFORE_REVEAL;
         sendJson(response, 200, {
           attemptId,
           correct,
           score: correct ? 1 : 0,
           maxScore: 1,
-          expectedAnswer: exercise.expectedAnswer,
+          attemptCount,
+          ...(revealAnswer ? { expectedAnswer: exercise.expectedAnswer } : {}),
         });
         return;
       }
