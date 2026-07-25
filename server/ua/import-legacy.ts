@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { createHash, randomUUID } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 import {
   SnapshotManifestSchema,
@@ -78,14 +78,25 @@ export function importLegacyUaAnalysis(input: ImportLegacyUaInput): UaAnalysisMa
     throw new Error("Legacy UA meta commit does not match its source snapshot");
   }
 
-  mkdirSync(paths.data, { recursive: true, mode: 0o700 });
-  for (const relativePath of COPY_PATHS) {
-    const source = join(input.sourceUaDirectory, relativePath);
-    if (existsSync(source)) {
-      writeTextAtomically(join(paths.data, relativePath), readFileSync(source, "utf8"));
-    }
-  }
+  // Stage the whole analysis beside its destination and move it in one
+  // rename. Copying files into `paths.root` first meant a crash mid-import
+  // left a directory with no manifest: every retry hit "UA analysis already
+  // exists" and the import could never be completed or repaired.
+  const staging = `${paths.root}.importing-${randomUUID()}`;
+  const stagingData = join(staging, "data");
   const completedAt = meta.lastAnalyzedAt ?? new Date().toISOString();
+  try {
+    mkdirSync(stagingData, { recursive: true, mode: 0o700 });
+    for (const relativePath of COPY_PATHS) {
+      const source = join(input.sourceUaDirectory, relativePath);
+      if (existsSync(source)) {
+        writeTextAtomically(join(stagingData, relativePath), readFileSync(source, "utf8"));
+      }
+    }
+  } catch (error) {
+    rmSync(staging, { recursive: true, force: true });
+    throw error;
+  }
   const manifest = UaAnalysisManifestSchema.parse({
     schemaVersion: 1,
     id: input.analysisId,
@@ -102,6 +113,13 @@ export function importLegacyUaAnalysis(input: ImportLegacyUaInput): UaAnalysisMa
     createdAt: completedAt,
     completedAt,
   });
-  writeJsonAtomically(paths.manifest, manifest);
+  try {
+    writeJsonAtomically(join(staging, "manifest.json"), manifest);
+    mkdirSync(dirname(paths.root), { recursive: true, mode: 0o700 });
+    renameSync(staging, paths.root);
+  } catch (error) {
+    rmSync(staging, { recursive: true, force: true });
+    throw error;
+  }
   return manifest;
 }

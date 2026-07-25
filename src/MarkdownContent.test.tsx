@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { MarkdownContent } from "./MarkdownContent.js";
+import { isLocalUrl, MarkdownContent } from "./MarkdownContent.js";
 
 const mermaidMock = vi.hoisted(() => ({
   initialize: vi.fn(),
@@ -196,5 +196,62 @@ describe("MarkdownContent Mermaid rendering", () => {
 
     const ids = [...container.querySelectorAll("figure.mermaid-diagram")].map(({ id }) => id);
     expect(new Set(ids).size).toBe(2);
+  });
+});
+
+describe("local-only link and image policy", () => {
+  it("classifies URLs by whether rendering them can leave the machine", () => {
+    for (const local of [
+      "",
+      "#section",
+      "/api/studies/supaluv",
+      "./notes/a.md",
+      "notes/a.md",
+      "http://127.0.0.1:4317/api/health",
+      "http://localhost:5173/x.png",
+    ]) {
+      expect(isLocalUrl(local), local).toBe(true);
+    }
+
+    for (const remote of [
+      "//evil.example/track.png",
+      "https://evil.example/track.png",
+      "http://192.168.1.10/x.png",
+      "https://localhost.evil.example/x.png",
+      "ftp://example.com/x",
+    ]) {
+      expect(isLocalUrl(remote), remote).toBe(false);
+    }
+  });
+
+  it("does not render an external image, and says what it blocked", async () => {
+    await renderMarkdown("![tracking pixel](https://evil.example/track.png)\n");
+
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.textContent).toContain("外部图片已拦截");
+    expect(container.textContent).toContain("https://evil.example/track.png");
+  });
+
+  it("still renders a relative image", async () => {
+    await renderMarkdown("![diagram](./diagram.png)\n");
+
+    expect(container.querySelector("img")?.getAttribute("src")).toBe("./diagram.png");
+  });
+
+  it("marks an external link and withholds the referrer", async () => {
+    await renderMarkdown("[docs](https://example.com/docs)\n");
+    const link = container.querySelector("a");
+
+    expect(link?.getAttribute("href")).toBe("https://example.com/docs");
+    expect(link?.getAttribute("rel")).toContain("noreferrer");
+    expect(link?.getAttribute("target")).toBe("_blank");
+  });
+
+  it("leaves an in-page link untouched", async () => {
+    await renderMarkdown("[top](#top)\n");
+    const link = container.querySelector("a");
+
+    expect(link?.getAttribute("target")).toBeNull();
+    expect(link?.getAttribute("rel")).toBeNull();
   });
 });

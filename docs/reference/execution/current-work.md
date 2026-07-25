@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-21
+last_reviewed: 2026-07-25
 domain: execution
 tags:
   - current-work
@@ -130,6 +130,48 @@ This file is the current project work index. It is not the agents-routing algori
   `2d07593bf943801dd5ce2dfb39a52981c5a0fea4`; PGS registration is committed as
   `39ea12c370f7790da84cf157eac82b9fab2e0532` and the portfolio scanner reports
   UniversityLocal healthy with no backend capability.
+
+## Hardening Receipt (2026-07-25)
+
+First end-to-end owner-style pass over the built product, plus a defect audit of
+the API, learner store, and Web client. Fixed and covered by tests:
+
+- `pnpm verify` was failing at random. Two filesystem-bound suites land at 5-6s
+  against Vitest's 5s default; `testTimeout` is now 20s.
+- The HTTP server cached learner stores by path, so `learner restore` and
+  `learner reset` left it reading and writing a replaced SQLite inode. Stores are
+  now keyed on `dev:ino` and reopen when the file identity changes.
+- Any one correct exercise completed the whole lesson and enrolled every card.
+  Completion is now the AND over the lesson's auto-gradable exercises, read back
+  from the attempt log.
+- Attempt, lesson progress, and card enrolment were three independent writes.
+  `#transaction` is re-entrant (SAVEPOINT under an outer `BEGIN IMMEDIATE`), so
+  the outcome commits or rolls back whole.
+- The exercise endpoint returned the reference answer on every response, which
+  ends retrieval practice after one wrong guess. It is withheld until the answer
+  is correct or two attempts are recorded at that revision.
+- Study and lesson loads had no request guard, so a slow response could render
+  one lesson's content under another lesson's locator.
+- Today gave the due-count metric the wide column and squeezed the review card
+  into a 319 px rail.
+- `lefthook.yml` and `.github/workflows/docs-check.yml` were missing;
+  `doc-gov doctor` now passes with 0 warnings.
+
+## Open Questions
+
+- **Card schedule across content revisions.** `ensureCard` carries FSRS state
+  forward when a card's `contentRevision` advances, and
+  `rebuildCardStateFromReviewEvents` encodes the same rule, so the projection
+  survives a rebuild. The cost is that a card due far out will not show
+  rewritten text until that due date arrives. Changing the policy is not a
+  projection edit — a reset would be undone by the next rebuild — it needs the
+  reset recorded as an event in the append-only log. Decide whether that is
+  worth a schema migration before the course content starts being revised
+  regularly.
+- **Accepted answers.** Short-answer grading compares one `expectedAnswer` after
+  normalising case, spacing, wrapping quotes, and trailing punctuation.
+  Synonyms are deliberately out of the grader; if they are wanted, they belong
+  in `ExerciseSchema` as an accepted-answer list plus generator support.
 
 ## Completed Proof History
 

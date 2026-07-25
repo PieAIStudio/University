@@ -26,7 +26,11 @@ textarea {
 
 button:focus-visible,
 textarea:focus-visible,
-summary:focus-visible {
+summary:focus-visible,
+/* Programmatic landing targets after a view change (lesson title, main panel)
+   carry tabindex="-1"; a sighted keyboard user still needs to see where focus
+   went. */
+[tabindex="-1"]:focus-visible {
   outline: 3px solid rgb(246 193 119 / 72%);
   outline-offset: 3px;
 }
@@ -948,7 +952,10 @@ summary:focus-visible {
 
 .evidence-code__line-number {
   padding-right: 1.2ch;
-  color: rgb(225 228 232 / 38%);
+  /* 38% on the #24292e code surface measured about 2.9:1 — under the 4.5:1
+     WCAG AA floor. Line numbers are how a reader ties "L123–219" in the
+     evidence list back to the snippet, so they have to be readable. */
+  color: rgb(225 228 232 / 72%);
   text-align: right;
   user-select: none;
 }
@@ -1071,4 +1078,30 @@ summary:focus-visible {
   .campus-footer code {
     text-align: left;
   }
+}
+
+/* Markdown safety affordances: an external destination should look different
+   from an in-app one, and a blocked image should read as content, not as a
+   broken page. */
+.markdown-external-link__mark {
+  margin-left: 3px;
+  font-size: 0.78em;
+  vertical-align: super;
+}
+
+.markdown-blocked-image {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--campus-rule);
+  border-radius: var(--game-ui-radius-panel);
+  background: rgb(42 30 22 / 45%);
+  color: var(--game-ui-text-muted);
+  font-size: 0.86rem;
+}
+
+.markdown-blocked-image code {
+  overflow-wrap: anywhere;
+  color: #e5c49a;
 }

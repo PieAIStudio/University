@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -61,5 +61,57 @@ describe("legacy UA import", () => {
     });
     expect(existsSync(join(target.data, "intermediate", "scan-result.json"))).toBe(true);
     expect(existsSync(join(target.data, ".trash-old"))).toBe(false);
+  });
+
+  it("leaves nothing behind when an import fails, so a retry can succeed", () => {
+    const container = mkdtempSync(join(tmpdir(), "university-local-legacy-retry-"));
+    const studiesRoot = join(container, "studies");
+    const sourceRoot = join(container, "source");
+    execFileSync("git", ["init", "-q", sourceRoot]);
+    git(sourceRoot, ["config", "user.name", "UniversityLocal Test"]);
+    git(sourceRoot, ["config", "user.email", "test@university.local"]);
+    writeFileSync(join(sourceRoot, "app.ts"), "export const app = true;\n");
+    git(sourceRoot, ["add", "app.ts"]);
+    git(sourceRoot, ["commit", "-q", "-m", "Initial"]);
+    const commit = git(sourceRoot, ["rev-parse", "HEAD"]);
+    const legacy = join(sourceRoot, ".ua");
+    mkdirSync(legacy, { recursive: true });
+    writeFileSync(join(legacy, "knowledge-graph.json"), '{"nodes":[{"id":"app"}],"edges":[]}');
+    writeFileSync(
+      join(legacy, "meta.json"),
+      JSON.stringify({ gitCommitHash: commit, lastAnalyzedAt: "2026-07-19T00:00:00.000Z" }),
+    );
+    writeFileSync(join(legacy, "fingerprints.json"), "{}");
+    writeFileSync(join(legacy, "config.json"), '{"outputLanguage":"zh"}');
+    // A copy source that is a directory makes the copy loop throw partway
+    // through, standing in for a crash or a full disk.
+    mkdirSync(join(legacy, "intermediate"), { recursive: true });
+    mkdirSync(join(legacy, "intermediate", "scan-result.json"));
+
+    createStudy(studiesRoot, { id: "sample", title: "Sample" });
+    registerLocalGitSource(studiesRoot, "sample", sourceRoot);
+    const snapshot = createCleanSnapshot(studiesRoot, "sample");
+    const importInput = {
+      studiesRoot,
+      studyId: "sample",
+      snapshotId: snapshot.id,
+      analysisId: "ua-legacy-retry",
+      sourceUaDirectory: legacy,
+      engineVersion: "2.9.4",
+    };
+
+    expect(() => importLegacyUaAnalysis(importInput)).toThrow();
+
+    const target = getUaAnalysisPaths(studiesRoot, "sample", "ua-legacy-retry");
+    expect(existsSync(target.root)).toBe(false);
+    expect(readdirSync(join(studiesRoot, "sample", "ua"))).toEqual([]);
+
+    // Once the source is repaired the same import id works; before staging it
+    // failed forever with "UA analysis already exists".
+    rmSync(join(legacy, "intermediate", "scan-result.json"), { recursive: true });
+    writeFileSync(join(legacy, "intermediate", "scan-result.json"), "{}");
+
+    expect(importLegacyUaAnalysis(importInput)).toMatchObject({ status: "legacy-import" });
+    expect(existsSync(target.manifest)).toBe(true);
   });
 });

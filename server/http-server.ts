@@ -184,7 +184,12 @@ function countUaAnalyses(directory: string): { readonly total: number; readonly 
     try {
       const manifest = UaAnalysisManifestSchema.parse(readJson(path));
       total += 1;
-      if (manifest.status === "ready" || manifest.status === "legacy-import") ready += 1;
+      // Only a `ready` analysis can back evidence: `validateEvidence` rejects
+      // everything else, and the CLI's `readyIds` agrees. Counting
+      // `legacy-import` here made Studies promise analyses that would then be
+      // refused at binding time with a 422 — the display was the thing that
+      // was wrong, not the integrity rule.
+      if (manifest.status === "ready") ready += 1;
     } catch {
       // Invalid analysis directories are isolated from the usable count.
     }

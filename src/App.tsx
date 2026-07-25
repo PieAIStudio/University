@@ -783,10 +783,18 @@ function LessonReader({
   readonly onLearningChanged: () => Promise<void>;
 }) {
   const [completed, setCompleted] = useState(view.lesson.progress?.status === "completed");
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     setCompleted(view.lesson.progress?.status === "completed");
   }, [view.lesson.id, view.lesson.contentRevision, view.lesson.progress?.status]);
+
+  // Opening a lesson swaps the whole main region. Without moving focus, a
+  // keyboard or screen-reader user is left on a control that just unmounted
+  // and has to tab through the entire chrome to reach the new content.
+  useEffect(() => {
+    titleRef.current?.focus();
+  }, [view.lesson.id]);
 
   async function complete() {
     setCompleted(true);
@@ -798,7 +806,9 @@ function LessonReader({
       <header className="lesson-reader__header">
         <div>
           <p className="eyebrow">LESSON · REV {view.lesson.contentRevision}</p>
-          <h2>{view.lesson.title}</h2>
+          <h2 ref={titleRef} tabIndex={-1}>
+            {view.lesson.title}
+          </h2>
         </div>
         <GameBadge tone={completed ? "success" : "warning"}>
           {completed ? "已完成" : "学习中"}
@@ -933,6 +943,9 @@ function StudyShelf({
           type="button"
           className="study-shelf__item"
           data-active={selectedStudyId === study.id}
+          // `data-active` only reaches CSS. Screen-reader users need the
+          // selected project announced, not just tinted.
+          aria-current={selectedStudyId === study.id ? "true" : undefined}
           onClick={() => onSelect(study.id)}
         >
           <span>{study.title}</span>
@@ -1187,6 +1200,7 @@ export function App() {
   // overwrite the one they are actually looking at.
   const studyRequestId = useRef(0);
   const lessonRequestId = useRef(0);
+  const mainRef = useRef<HTMLElement>(null);
 
   async function loadBootstrap() {
     const next = await readJson<BootstrapData>(await fetch("/api/bootstrap"));
@@ -1255,6 +1269,18 @@ export function App() {
     return () => controller.abort();
   }, [lessonLocator]);
 
+  // Closing a lesson unmounts the button that was focused, which drops focus
+  // to <body>. Hand it to the panel the learner lands on instead. This runs
+  // as an effect rather than after requestAnimationFrame on the click: rAF
+  // does not fire while the tab is hidden, so the focus move would silently
+  // be skipped for anyone who switched away and back.
+  const lessonWasOpen = useRef(false);
+  useEffect(() => {
+    const lessonIsOpen = lessonLocator !== null;
+    if (lessonWasOpen.current && !lessonIsOpen) mainRef.current?.focus();
+    lessonWasOpen.current = lessonIsOpen;
+  }, [lessonLocator]);
+
   const completedStudies = useMemo(
     () => data?.studies.filter((study) => study.defaultCourse?.status === "active").length ?? 0,
     [data],
@@ -1308,8 +1334,10 @@ export function App() {
       </nav>
 
       <main
+        ref={mainRef}
         id={`panel-${activeSection}`}
         role="tabpanel"
+        tabIndex={-1}
         aria-labelledby={`campus-section-${activeSection}`}
         className="campus-main"
       >

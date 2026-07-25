@@ -1143,6 +1143,14 @@ export class SqliteLearningStore implements LearningStore {
       if (nowMs < existing.updatedAt.getTime()) {
         throw new Error(`Card update time cannot move backward for card ${cardKey}`);
       }
+      // Deliberate: a revision bump carries the FSRS state forward and only
+      // advances the revision. `card_state` is a projection of the append-only
+      // `review_event` log, and `rebuildCardStateFromReviewEvents` encodes the
+      // same rule — a card whose stored revision is ahead of its events keeps
+      // its replayed schedule. Resetting the schedule here would therefore be
+      // undone by the next projection rebuild. Changing the policy means
+      // recording the reset as an event, not editing the projection; see the
+      // open question in docs/reference/execution/current-work.md.
       this.#database
         .prepare("UPDATE card_state SET content_revision = ?, updated_at = ? WHERE card_id = ?")
         .run(contentRevision, nowMs, cardKey);
