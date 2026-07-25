@@ -429,6 +429,12 @@ export function updateCourseStatus(
 ): CourseManifest {
   const course = readCourse(studiesRoot, studyId, courseId);
   const status = ContentStatus.parse(candidateStatus);
+  // Asking for the status a course already has is a no-op, not an error.
+  // Reactivation walks units and then the course; if it failed partway, the
+  // retry used to die on "Invalid content status transition: active -> active"
+  // for the units it had already done, leaving the shelf stuck half-activated
+  // with no command able to finish the job.
+  if (course.status === status) return course;
   assertStatusTransition(course.status, status);
   if (status === "active") {
     assertCourseReadyForActivation(studiesRoot, studyId, course);
@@ -452,6 +458,9 @@ export function updateUnitStatus(
   const course = readCourse(studiesRoot, studyId, courseId);
   const unit = readUnit(studiesRoot, studyId, courseId, unitId);
   const status = ContentStatus.parse(candidateStatus);
+  // Same idempotency as `updateCourseStatus`: re-requesting the current status
+  // is what a retry after a partial reactivation looks like.
+  if (unit.status === status) return unit;
   assertStatusTransition(unit.status, status);
   if (course.status === "active" && status !== "active") {
     throw new Error(`Course must be marked stale before changing an active unit: ${course.id}`);

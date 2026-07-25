@@ -593,6 +593,15 @@ describe("course content repository", () => {
       "active",
     );
     expect(updateCourseStatus(studiesRoot, "sample", COURSE_ID, "active").status).toBe("active");
+
+    // Re-requesting the current status is what a retry after a partially
+    // applied reactivation looks like: it must be a no-op, not
+    // "Invalid content status transition: active -> active".
+    expect(updateUnitStatus(studiesRoot, "sample", COURSE_ID, UNIT_ID, "active").status).toBe(
+      "active",
+    );
+    expect(updateCourseStatus(studiesRoot, "sample", COURSE_ID, "active").status).toBe("active");
+
     expect(updateCourseStatus(studiesRoot, "sample", COURSE_ID, "retired").status).toBe("retired");
     expect(() => updateCourseStatus(studiesRoot, "sample", COURSE_ID, "active")).toThrow(
       /retired -> active/,

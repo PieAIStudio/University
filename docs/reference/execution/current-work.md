@@ -157,6 +157,20 @@ the API, learner store, and Web client. Fixed and covered by tests:
 - `lefthook.yml` and `.github/workflows/docs-check.yml` were missing;
   `doc-gov doctor` now passes with 0 warnings.
 
+## Accepted Risks
+
+- **The API request token does not defend against other local processes.**
+  `GET /api/bootstrap` hands the token out unauthenticated, so anything running
+  as the same user can obtain it. That is deliberate and not a gap: the same
+  process could read `studies/` directly, so a token cannot be the boundary
+  there. What it does defend against is a web page in the browser — combined
+  with the loopback `Host` allowlist, the loopback `Origin` check, the
+  `application/json` requirement and a timing-safe comparison, it blocks
+  cross-site requests and DNS-rebinding, which is the threat a local server
+  actually faces. Adding OS-level authentication would only be warranted if
+  UniversityLocal ever stopped being single-user and local-only, which the
+  product boundary says it will not.
+
 ## Open Questions
 
 - **Card schedule across content revisions.** `ensureCard` carries FSRS state
