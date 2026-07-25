@@ -146,6 +146,32 @@ describe("MarkdownContent Mermaid rendering", () => {
     expect(svg?.querySelector('[data-safe="yes"]')?.hasAttribute("style")).toBe(false);
   });
 
+  it("removes SMIL animation that could rewrite an attribute after sanitising", async () => {
+    mermaidMock.render.mockResolvedValue({
+      svg: [
+        '<svg xmlns="http://www.w3.org/2000/svg">',
+        '<defs><marker id="arrow"><path d="M0 0" /></marker></defs>',
+        // Mermaid's own output shapes, which must survive.
+        '<foreignObject width="80" height="20"><div>Local label</div></foreignObject>',
+        '<use href="#arrow" />',
+        // The bypass: rewrite href to something the attribute pass never saw.
+        '<a href="#local"><set attributeName="href" to="https://evil.example" /><text>x</text></a>',
+        '<rect><animate attributeName="fill" to="url(https://evil.example/x)" /></rect>',
+        "</svg>",
+      ].join(""),
+    });
+
+    await renderMarkdown("```mermaid\nflowchart LR\n  Safe --> Local\n```");
+    await waitFor(() => expect(container.querySelector("svg")).not.toBeNull());
+
+    const svg = container.querySelector("svg");
+    expect(svg?.querySelector("set")).toBeNull();
+    expect(svg?.querySelector("animate")).toBeNull();
+    // Diagram content Mermaid actually produces is untouched.
+    expect(svg?.querySelector("foreignObject")?.textContent).toBe("Local label");
+    expect(svg?.querySelector("use")?.getAttribute("href")).toBe("#arrow");
+  });
+
   it("ignores a stale render after the source changes quickly", async () => {
     let resolveOldRender: ((value: { svg: string }) => void) | undefined;
     const oldRender = new Promise<{ svg: string }>((resolve) => {

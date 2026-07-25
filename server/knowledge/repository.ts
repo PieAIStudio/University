@@ -36,6 +36,14 @@ const KnowledgeLatestPointerSchema = z
   })
   .strict();
 
+/**
+ * How long a note write lock is believed even while its PID looks alive.
+ * A single note write is a handful of local file operations; ten minutes is
+ * far beyond that, so crossing it means the holder is gone and the PID has
+ * been reused.
+ */
+const WRITE_LOCK_MAX_AGE_MS = 10 * 60 * 1000;
+
 const KnowledgeWriteLockSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -156,7 +164,15 @@ function withKnowledgeWriteLock<T>(
         error instanceof Error && "code" in error ? (error as NodeJS.ErrnoException).code : null;
       if (code !== "EEXIST") throw error;
       const existing = KnowledgeWriteLockSchema.parse(readJson(lockPath));
-      if (processIsAlive(existing.pid)) {
+      // PID liveness alone is not enough to decide a lock is held. PIDs get
+      // reused: if a writer crashes and the OS later hands its number to an
+      // unrelated long-lived process, the lock looks alive forever and that
+      // note can never be written again. An age limit gives the lock a way
+      // out, while liveness still keeps a genuinely running writer safe for
+      // as long as it plausibly needs.
+      const age = Date.now() - Date.parse(existing.createdAt);
+      const withinLifetime = Number.isFinite(age) && age < WRITE_LOCK_MAX_AGE_MS;
+      if (processIsAlive(existing.pid) && withinLifetime) {
         throw new Error(`Knowledge note write is already in progress: ${noteId}`);
       }
       rmSync(lockPath, { force: true });

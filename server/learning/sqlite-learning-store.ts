@@ -1,5 +1,14 @@
 import { createHash, randomUUID } from "node:crypto";
-import { chmodSync, closeSync, existsSync, mkdirSync, openSync, renameSync, rmSync } from "node:fs";
+import {
+  chmodSync,
+  closeSync,
+  existsSync,
+  fsyncSync,
+  mkdirSync,
+  openSync,
+  renameSync,
+  rmSync,
+} from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { backup, DatabaseSync } from "node:sqlite";
 
@@ -513,6 +522,16 @@ function createPrivateFile(path: string): void {
 function protectSqliteFiles(path: string): void {
   for (const candidate of [path, `${path}-wal`, `${path}-shm`]) {
     if (existsSync(candidate)) chmodSync(candidate, 0o600);
+  }
+}
+
+/** Make a rename's directory entry durable, the way `atomic-json` does. */
+function syncDirectory(directory: string): void {
+  const descriptor = openSync(directory, "r");
+  try {
+    fsyncSync(descriptor);
+  } finally {
+    closeSync(descriptor);
   }
 }
 
@@ -1856,6 +1875,11 @@ export class SqliteLearningStore implements LearningStore {
       protectSqliteFiles(temporaryDestination);
       renameSync(temporaryDestination, destination);
       protectSqliteFiles(destination);
+      // A backup that is only reported as written is not a backup. The rename
+      // is durable but the directory entry naming it is not until the parent
+      // directory is synced — mirrors `writeTextAtomically`, which is what the
+      // receipt beside this file already relies on.
+      syncDirectory(dirname(destination));
       return pages;
     } catch (error) {
       rmSync(temporaryDestination, { force: true });

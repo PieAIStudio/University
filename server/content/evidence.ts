@@ -308,13 +308,14 @@ export function validateEvidence(
   const entry = requireRegularBlob(repository, evidence.sourceCommit, evidence.sourcePath);
 
   if (evidence.lineStart || evidence.lineEnd) {
-    const source = readBlob(repository, entry.objectId);
-    if (source.includes(0)) {
-      throw new Error(`Line evidence cannot reference a binary blob: ${evidence.sourcePath}`);
-    }
-    const text = source.toString("utf8");
-    const lineCount =
-      text.length === 0 ? 0 : text.split(/\r?\n/).length - (/\r?\n$/.test(text) ? 1 : 0);
+    // Decode and split exactly the way the snippet endpoint will. Validation
+    // used to be the lenient one — `toString("utf8")` and `/\r?\n/` — so a
+    // blob with invalid UTF-8 or classic Mac `\r` endings could pass here and
+    // then fail with a 422, or be counted with a different number of lines
+    // than the reader would show. Evidence that validates must be displayable.
+    const lineCount = sourceLines(
+      decodeTextBlob(readBlob(repository, entry.objectId), evidence.sourcePath),
+    ).length;
     if ((evidence.lineStart ?? 1) > lineCount || (evidence.lineEnd ?? 1) > lineCount) {
       throw new Error(`Evidence line range exceeds ${evidence.sourcePath}`);
     }

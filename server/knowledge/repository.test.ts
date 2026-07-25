@@ -425,13 +425,14 @@ describe("atomic knowledge note repository", () => {
       `.write-${NOTE_ID}.lock`,
     );
     mkdirSync(getStudyPaths(activeWriter.studiesRoot, STUDY_ID).notes, { recursive: true });
+    // An actually-running writer: live PID and a lock taken just now.
     writeFileSync(
       activeLock,
       `${JSON.stringify({
         schemaVersion: 1,
         pid: process.pid,
         token: "00000000-0000-4000-8000-000000000000",
-        createdAt: CREATED_AT,
+        createdAt: new Date().toISOString(),
       })}\n`,
     );
     expect(() =>
@@ -441,6 +442,30 @@ describe("atomic knowledge note repository", () => {
       }),
     ).toThrow(/write is already in progress/);
     expect(existsSync(activeLock)).toBe(true);
+
+    // A crashed writer whose PID the OS has since handed to something else:
+    // liveness says "held" forever, so the age limit is the only way out.
+    const reusedPidWriter = setup();
+    const reusedPidLock = join(
+      getStudyPaths(reusedPidWriter.studiesRoot, STUDY_ID).notes,
+      `.write-${NOTE_ID}.lock`,
+    );
+    mkdirSync(getStudyPaths(reusedPidWriter.studiesRoot, STUDY_ID).notes, { recursive: true });
+    writeFileSync(
+      reusedPidLock,
+      `${JSON.stringify({
+        schemaVersion: 1,
+        pid: process.pid,
+        token: "00000000-0000-4000-8000-000000000001",
+        createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      })}\n`,
+    );
+    expect(
+      writeKnowledgeNoteRevision(reusedPidWriter.studiesRoot, STUDY_ID, {
+        note: noteCandidate(),
+        content,
+      }),
+    ).toMatchObject({ contentRevision: 1 });
 
     const crashedWriter = setup();
     const staleLock = join(

@@ -11,8 +11,19 @@ const MAX_MERMAID_SOURCE_CHARS = 32_000;
 const MAX_MERMAID_NONEMPTY_LINES = 300;
 const MERMAID_RENDER_DEBOUNCE_MS = 80;
 const UNSAFE_SOURCE_URI = /(?:https?|data|javascript|file|blob):|(?:^|[\s"'(=])\/\/[^\s]/i;
+// Removed before the SVG is injected. The SMIL animation elements are the
+// addition: `<set attributeName="href" to="javascript:…">` rewrites an
+// attribute after this sanitiser has already inspected it, which is a known
+// way past attribute-level filtering. Mermaid never emits them.
+//
+// Deliberately NOT removed: `foreignObject` and `use`. Mermaid renders node
+// labels inside foreignObject and arrow markers with `<use href="#…">`, so
+// stripping either would silently delete the content of every diagram.
+// They are covered by the rules below instead — nested `script`/`iframe`/…
+// are removed wherever they appear, every `on*` handler is dropped, and any
+// `href`/`src`/`srcset` that is not a local `#fragment` is removed.
 const REMOTE_CAPABLE_ELEMENTS =
-  "script, iframe, object, embed, image, audio, video, source, track, link, feImage";
+  "script, iframe, object, embed, image, audio, video, source, track, link, feImage, set, animate, animateTransform, animateMotion";
 
 let mermaidRendererPromise: Promise<MermaidRenderer> | undefined;
 
