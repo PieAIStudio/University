@@ -212,6 +212,36 @@ A second pass closed two gaps the first one left:
 
 `pnpm verify` passes at 24 test files / 239 tests.
 
+## SupaLuv Re-analysis Receipt (2026-08-04)
+
+The gate found the same disease in SupaLuv's `ready` analysis
+`ua-feeb848f-v294-zh-full`, recorded earlier as covering "all 606 eligible
+files": 605 graph nodes against 606 fingerprints, and 936 function and class
+summaries collapsing onto 329 skeletons at a 0.80 duplicate ratio, 34 of them
+sharing `创建或组装该模块需要的结构化结果与依赖`. The same project's
+`legacy-import` analysis was healthy at 0.02, which is what made the defect
+legible rather than looking like a property of the codebase.
+
+SupaLuv was re-analyzed at its current HEAD `c9f0ec8d` as
+`ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5`: 622/622 files,
+1579 nodes, 3745 edges, 8 layers, a 12-step Tour, no dangling edges, and every
+one of the 622 container nodes assigned to exactly one layer. Template collapse
+went from 0.80 to 0.014 — 957 summaries over 948 distinct skeletons. The only
+duplicates are genuinely symmetric code: seven one-line getters, and matching
+pairs like `stopMusic`/`stopAmbient`. That is the heuristic's known and accepted
+false-positive class, and it is why the threshold is 0.30 rather than 0.
+
+The run was watched with the new batch stage rather than throwaway scripts, and
+the stage switched from `batches` to `graph` on its own once Phase 3 merged.
+
+The old analysis was retired with `refresh retire`, superseded by the new one.
+`refresh audit --apply` moved `founder-engineer` and its `narrative-authority`
+unit to `stale`. Every stale reason was `UA node changed` — none were source
+level, because the four files its 19 evidence references point to are
+byte-identical between `feeb848f` and `c9f0ec8d`. Rebinding is therefore a
+revision, not a rewrite: paths and line ranges survive, only the analysis
+identity moves.
+
 ## Accepted Risks
 
 - **The API request token does not defend against other local processes.**
@@ -228,17 +258,6 @@ A second pass closed two gaps the first one left:
 
 ## Open Questions
 
-- **SupaLuv's ready analysis fails the new content gate.**
-  `ua-feeb848f-v294-zh-full` — recorded above as covering "all 606 eligible
-  files" — actually has 605 graph nodes against 606 fingerprints, and 936
-  function and class nodes collapsing onto 329 skeletons at a 0.80 duplicate
-  ratio. 34 of them share `创建或组装该模块需要的结构化结果与依赖`. The same
-  project's `legacy-import` analysis is healthy at 0.02. Nothing breaks today,
-  because the gate runs at finalize and this analysis is already `ready` — but
-  the active `founder-engineer` course is bound to partially templated evidence,
-  and the system would now refuse to reproduce what it already holds. Decide
-  whether to re-run UA on SupaLuv and retire this analysis, which stales that
-  course, or accept it and record why.
 - **Card schedule across content revisions.** `ensureCard` carries FSRS state
   forward when a card's `contentRevision` advances, and
   `rebuildCardStateFromReviewEvents` encodes the same rule, so the projection
