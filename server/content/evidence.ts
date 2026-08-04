@@ -324,8 +324,10 @@ export function validateEvidence(
   if (evidence.analysisId && evidence.graphHash) {
     const analysisPaths = getUaAnalysisPaths(studiesRoot, studyId, evidence.analysisId);
     const analysis = UaAnalysisManifestSchema.parse(readJson(analysisPaths.manifest));
+    // Integrity (binding still matches) is independent of authority (still current).
+    // Superseded analyses remain readable for bound evidence; freshness marks them stale.
     if (
-      analysis.status !== "ready" ||
+      (analysis.status !== "ready" && analysis.status !== "superseded") ||
       analysis.sourceCommit !== evidence.sourceCommit ||
       analysis.graphHash !== evidence.graphHash
     ) {
@@ -382,7 +384,11 @@ export function evaluateEvidenceFreshness(
         throw new Error("Target UA analysis is not ready or does not match target snapshot");
       }
       const oldManifest = UaAnalysisManifestSchema.parse(readJson(oldPaths.manifest));
-      if (oldManifest.status !== "ready") throw new Error("Evidence UA analysis is not ready");
+      if (oldManifest.status === "superseded") {
+        reasons.push(`Evidence UA analysis is superseded: ${evidence.analysisId}`);
+      } else if (oldManifest.status !== "ready") {
+        throw new Error("Evidence UA analysis is not ready");
+      }
       const oldNodes = readVerifiedGraphNodes(
         `${oldPaths.data}/knowledge-graph.json`,
         oldManifest.graphHash,

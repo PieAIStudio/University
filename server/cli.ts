@@ -8,6 +8,7 @@ import { listKnowledgeNotes } from "./knowledge/repository.js";
 import { captureKnowledge } from "./workflows/capture-knowledge.js";
 import { getHostStudyStatus } from "./workflows/host-status.js";
 import { backupLearner, resetLearner, restoreLearner } from "./workflows/learner.js";
+import { retireUaAnalysis, verifyUaAnalysisQuality } from "./ua/adapter.js";
 import {
   auditStudyRefresh,
   finalizeStudyRefresh,
@@ -33,6 +34,8 @@ Commands:
   knowledge list --study <study-id>
   refresh prepare --study <study-id> [--ref <git-ref>] [--acknowledge-dirty-excluded]
   refresh finalize --study <study-id> --analysis <analysis-id>
+  refresh verify --study <study-id> --analysis <analysis-id>
+  refresh retire --study <study-id> --analysis <analysis-id> --reason <text> [--superseded-by <analysis-id>] [--force]
   refresh audit --study <study-id> --snapshot <snapshot-id> [--analysis <analysis-id>] [--apply]
   course revise --study <study-id> --input <proposal.json> [--dry-run]
   course reactivate --study <study-id> --course <course-id> --snapshot <snapshot-id> [--analysis <analysis-id>]
@@ -76,6 +79,21 @@ interface RefreshFinalizeCommand {
   readonly kind: "refresh-finalize";
   readonly studyId: string;
   readonly analysisId: string;
+}
+
+interface RefreshVerifyCommand {
+  readonly kind: "refresh-verify";
+  readonly studyId: string;
+  readonly analysisId: string;
+}
+
+interface RefreshRetireCommand {
+  readonly kind: "refresh-retire";
+  readonly studyId: string;
+  readonly analysisId: string;
+  readonly reason: string;
+  readonly supersededBy?: string;
+  readonly force: boolean;
 }
 
 interface RefreshAuditCommand {
@@ -146,6 +164,8 @@ export type UniversityLocalCliCommand =
   | KnowledgeListCommand
   | RefreshPrepareCommand
   | RefreshFinalizeCommand
+  | RefreshVerifyCommand
+  | RefreshRetireCommand
   | RefreshAuditCommand
   | CourseReviseCommand
   | CourseReactivateCommand
@@ -171,8 +191,11 @@ type ParsedValues = {
   readonly session?: string;
   readonly confirm?: string;
   readonly from?: string;
+  readonly reason?: string;
+  readonly "superseded-by"?: string;
   readonly "dry-run"?: boolean;
   readonly apply?: boolean;
+  readonly force?: boolean;
   readonly "acknowledge-dirty-excluded"?: boolean;
   readonly help?: boolean;
 };
@@ -215,8 +238,11 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         session: { type: "string" },
         confirm: { type: "string" },
         from: { type: "string" },
+        reason: { type: "string" },
+        "superseded-by": { type: "string" },
         "dry-run": { type: "boolean" },
         apply: { type: "boolean" },
+        force: { type: "boolean" },
         "acknowledge-dirty-excluded": { type: "boolean" },
         help: { type: "boolean" },
       },
@@ -261,6 +287,25 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         kind: "refresh-finalize",
         studyId: required(values.study, "study"),
         analysisId: required(values.analysis, "analysis"),
+      };
+    }
+    if (positionals[1] === "verify") {
+      rejectUnrelatedOptions(values, ["study", "analysis"]);
+      return {
+        kind: "refresh-verify",
+        studyId: required(values.study, "study"),
+        analysisId: required(values.analysis, "analysis"),
+      };
+    }
+    if (positionals[1] === "retire") {
+      rejectUnrelatedOptions(values, ["study", "analysis", "reason", "superseded-by", "force"]);
+      return {
+        kind: "refresh-retire",
+        studyId: required(values.study, "study"),
+        analysisId: required(values.analysis, "analysis"),
+        reason: required(values.reason, "reason"),
+        ...(values["superseded-by"] ? { supersededBy: values["superseded-by"] } : {}),
+        force: values.force ?? false,
       };
     }
     if (positionals[1] === "audit") {
@@ -412,6 +457,33 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         studyId: input.command.studyId,
         analysisId: input.command.analysisId,
       });
+    case "refresh-verify": {
+      const report = verifyUaAnalysisQuality(
+        config.studiesRoot,
+        input.command.studyId,
+        input.command.analysisId,
+      );
+      return {
+        schemaVersion: 1,
+        operation: "refresh-verify",
+        studyId: input.command.studyId,
+        analysisId: input.command.analysisId,
+        ...report,
+      };
+    }
+    case "refresh-retire":
+      return {
+        schemaVersion: 1,
+        operation: "refresh-retire",
+        analysis: retireUaAnalysis({
+          studiesRoot: config.studiesRoot,
+          studyId: input.command.studyId,
+          analysisId: input.command.analysisId,
+          reason: input.command.reason,
+          ...(input.command.supersededBy ? { supersededBy: input.command.supersededBy } : {}),
+          force: input.command.force,
+        }),
+      };
     case "refresh-audit":
       return auditStudyRefresh({
         studiesRoot: config.studiesRoot,
@@ -508,6 +580,16 @@ export async function main(
       env: options.env,
     });
     io.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    if (
+      command.kind === "refresh-verify" &&
+      result !== null &&
+      typeof result === "object" &&
+      "failures" in result &&
+      Array.isArray((result as { failures: unknown }).failures) &&
+      (result as { failures: unknown[] }).failures.length > 0
+    ) {
+      return 1;
+    }
     return 0;
   } catch (error) {
     const usage = error instanceof CliUsageError;

@@ -58,6 +58,33 @@ describe("UniversityLocal CLI parser", () => {
       { kind: "refresh-finalize", studyId: "supaluv", analysisId: "ua-analysis" },
     ],
     [
+      ["refresh", "verify", "--study", "supaluv", "--analysis", "ua-analysis"],
+      { kind: "refresh-verify", studyId: "supaluv", analysisId: "ua-analysis" },
+    ],
+    [
+      [
+        "refresh",
+        "retire",
+        "--study",
+        "supaluv",
+        "--analysis",
+        "ua-analysis",
+        "--reason",
+        "template collapse",
+        "--superseded-by",
+        "ua-successor",
+        "--force",
+      ],
+      {
+        kind: "refresh-retire",
+        studyId: "supaluv",
+        analysisId: "ua-analysis",
+        reason: "template collapse",
+        supersededBy: "ua-successor",
+        force: true,
+      },
+    ],
+    [
       [
         "refresh",
         "audit",

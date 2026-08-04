@@ -157,6 +157,44 @@ the API, learner store, and Web client. Fixed and covered by tests:
 - `lefthook.yml` and `.github/workflows/docs-check.yml` were missing;
   `doc-gov doctor` now passes with 0 warnings.
 
+## UA Content Gate Receipt (2026-08-04)
+
+Two full UA analyses of the same TuringPact snapshot were accepted as `ready`
+and neither was usable. `assertUaGraphComplete` passed both, because it checks
+structure — unique ids, no dangling edges, one layer per file-level node, valid
+Tour — and neither defect was structural.
+
+- 85% of one analysis's function summaries were template-generated. 964 function
+  and class nodes collapsed onto 40 prose skeletons.
+- The other silently skipped 56 of 766 files, including `world-runtime`
+  scenes, layout, venues, movement, input and performance. Quality metrics
+  cannot see this: a skipped file emits no nodes to score.
+
+Built and covered by tests:
+
+- `server/ua/quality.ts` is a pure function with no I/O, consumed both by
+  `finalizeUaAnalysis` as a hard gate and by the new `refresh verify` verb.
+  One implementation, no second source of truth.
+- Coverage compares `fingerprints.json` keys against graph top-level nodes as
+  exact set equality. Both files were already read by finalize, so the gate adds
+  no I/O. Top-level nodes are identified by `id === "<type>:<filePath>"`, since
+  UA emits `pipeline` for `.yml` and `document` for `.md`.
+- Template collapse strips code-like tokens and counts distinct prose skeletons.
+  Stripping *all* ASCII was rejected: it leaves an empty skeleton for every
+  English summary and would permanently reject any `--language en` analysis.
+- Analyses gained a `superseded` status, `refresh retire`, and dependency
+  refusal with `--force`. The variant mirrors `ready`'s shape so existing
+  readers of `graphHash` keep narrowing.
+- `evaluateEvidenceFreshness` threw on a non-ready bound analysis, so retiring an
+  analysis a course depended on deadlocked the very `refresh audit --apply` path
+  meant to mark that content stale. Integrity and authority are now separate:
+  `validateEvidence` accepts `superseded`, freshness reports it as a stale reason.
+
+Verified on real data, not fixtures: `refresh verify` exits 1 on the templated
+analysis (duplicateRatio 0.968) and 0 on the re-analyzed one (766/766 coverage,
+965 distinct skeletons). The templated analysis was retired, then deleted.
+`pnpm verify` passes at 24 test files / 227 tests.
+
 ## Accepted Risks
 
 - **The API request token does not defend against other local processes.**
@@ -173,6 +211,22 @@ the API, learner store, and Web client. Fixed and covered by tests:
 
 ## Open Questions
 
+- **SupaLuv's ready analysis fails the new content gate.**
+  `ua-feeb848f-v294-zh-full` — recorded above as covering "all 606 eligible
+  files" — actually has 605 graph nodes against 606 fingerprints, and 936
+  function and class nodes collapsing onto 329 skeletons at a 0.80 duplicate
+  ratio. 34 of them share `创建或组装该模块需要的结构化结果与依赖`. The same
+  project's `legacy-import` analysis is healthy at 0.02. Nothing breaks today,
+  because the gate runs at finalize and this analysis is already `ready` — but
+  the active `founder-engineer` course is bound to partially templated evidence,
+  and the system would now refuse to reproduce what it already holds. Decide
+  whether to re-run UA on SupaLuv and retire this analysis, which stales that
+  course, or accept it and record why.
+- **Mid-run analysis checking has no product path.** `refresh verify` needs a
+  merged `knowledge-graph.json`, which does not exist until Phase 3. A long
+  Phase 2 can therefore run for an hour before any gate can see it. Batch-level
+  checking currently lives in throwaway scripts. Decide whether that belongs in
+  the product before the next full analysis.
 - **Card schedule across content revisions.** `ensureCard` carries FSRS state
   forward when a card's `contentRevision` advances, and
   `rebuildCardStateFromReviewEvents` encodes the same rule, so the projection

@@ -5,6 +5,7 @@ import {
   lstatSync,
   mkdirSync,
   readFileSync,
+  readdirSync,
   readlinkSync,
   rmSync,
   symlinkSync,
@@ -14,14 +15,25 @@ import { dirname, join, resolve } from "node:path";
 import {
   IsoDateTime,
   SnapshotManifestSchema,
+  StableId,
   UaAnalysisManifestSchema,
   UaEngineProvenanceSchema,
+  type EvidenceReference,
   type UaAnalysisManifest,
   type UaEngineProvenance,
 } from "../../src/domain/schemas.js";
+import {
+  readCourse,
+  readLatestCard,
+  readLatestExercise,
+  readLatestLesson,
+  readUnit,
+} from "../content/repository.js";
+import { listKnowledgeNotes } from "../knowledge/repository.js";
 import { writeJsonAtomically, writeTextAtomically } from "../storage/atomic-json.js";
-import { getSnapshotPaths, getUaAnalysisPaths } from "../studies/paths.js";
+import { getSnapshotPaths, getStudyPaths, getUaAnalysisPaths } from "../studies/paths.js";
 import { openStudyRepository } from "../studies/snapshots.js";
+import { fileLevelTypes, inspectUaQuality, type UaQualityReport } from "./quality.js";
 
 interface UaGraph {
   readonly project?: {
@@ -31,6 +43,8 @@ interface UaGraph {
   readonly nodes?: readonly {
     readonly id?: unknown;
     readonly type?: unknown;
+    readonly filePath?: unknown;
+    readonly summary?: unknown;
   }[];
   readonly edges?: readonly {
     readonly source?: unknown;
@@ -58,6 +72,7 @@ interface UaMeta {
 interface UaFingerprints {
   readonly gitCommitHash?: string;
   readonly generatedAt?: string;
+  readonly files?: Readonly<Record<string, unknown>>;
 }
 
 export interface PrepareUaAnalysisInput {
@@ -372,17 +387,6 @@ function assertUaGraphComplete(
 
   const nodeIds = new Set<string>();
   const fileNodeIds = new Set<string>();
-  const fileLevelTypes = new Set([
-    "file",
-    "config",
-    "document",
-    "service",
-    "pipeline",
-    "table",
-    "schema",
-    "resource",
-    "endpoint",
-  ]);
   for (const node of graph.nodes) {
     if (typeof node.id !== "string" || node.id.length === 0) {
       throw new Error("UA knowledge graph contains a node without an ID");
@@ -569,6 +573,11 @@ export function finalizeUaAnalysis(
   assertOutputTime("meta lastAnalyzedAt", meta.lastAnalyzedAt, current.createdAt, now);
   assertOutputTime("fingerprints generatedAt", fingerprints.generatedAt, current.createdAt, now);
 
+  const quality = inspectUaQuality({ graph, fingerprints });
+  if (quality.failures.length > 0) {
+    throw new Error(quality.failures.join(" | "));
+  }
+
   const repository = openStudyRepository(studiesRoot, studyId);
   cleanupUaWorkspace(repository, paths.workspace);
   const ready = UaAnalysisManifestSchema.parse({
@@ -581,6 +590,174 @@ export function finalizeUaAnalysis(
   });
   writeJsonAtomically(paths.manifest, ready);
   return ready;
+}
+
+export function verifyUaAnalysisQuality(
+  studiesRoot: string,
+  studyId: string,
+  analysisId: string,
+): UaQualityReport {
+  const paths = getUaAnalysisPaths(studiesRoot, studyId, analysisId);
+  if (!existsSync(paths.manifest)) {
+    throw new Error(`UA analysis does not exist: ${analysisId}`);
+  }
+  // Manifest may be preparing — verification is allowed before finalize.
+  UaAnalysisManifestSchema.parse(readJson(paths.manifest));
+  const graphPath = join(paths.data, "knowledge-graph.json");
+  const fingerprintsPath = join(paths.data, "fingerprints.json");
+  const missing: string[] = [];
+  if (!existsSync(graphPath)) missing.push("knowledge-graph.json");
+  if (!existsSync(fingerprintsPath)) missing.push("fingerprints.json");
+  if (missing.length > 0) {
+    throw new Error(
+      `UA quality verification requires ${missing.join(" and ")} under the analysis data directory`,
+    );
+  }
+  const graph = readJson(graphPath) as UaGraph;
+  const fingerprints = readJson(fingerprintsPath) as UaFingerprints;
+  return inspectUaQuality({ graph, fingerprints });
+}
+
+function evidenceReferencesAnalysis(
+  evidence: readonly EvidenceReference[],
+  analysisId: string,
+): boolean {
+  return evidence.some((reference) => reference.analysisId === analysisId);
+}
+
+function courseActiveContentReferencesAnalysis(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  analysisId: string,
+): boolean {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  for (const unitId of course.unitIds) {
+    const unit = readUnit(studiesRoot, studyId, courseId, unitId);
+    for (const lessonId of unit.lessonIds) {
+      const lesson = readLatestLesson(studiesRoot, studyId, courseId, unitId, lessonId).manifest;
+      if (evidenceReferencesAnalysis(lesson.evidence, analysisId)) return true;
+      for (const cardId of lesson.cardIds) {
+        const card = readLatestCard(studiesRoot, studyId, courseId, unitId, lessonId, cardId);
+        if (evidenceReferencesAnalysis(card.evidence, analysisId)) return true;
+      }
+      for (const exerciseId of lesson.exerciseIds) {
+        const exercise = readLatestExercise(
+          studiesRoot,
+          studyId,
+          courseId,
+          unitId,
+          lessonId,
+          exerciseId,
+        );
+        if (evidenceReferencesAnalysis(exercise.evidence, analysisId)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function listActiveContentReferencingAnalysis(
+  studiesRoot: string,
+  studyId: string,
+  analysisId: string,
+): readonly string[] {
+  const references: string[] = [];
+  const coursesRoot = getStudyPaths(studiesRoot, studyId).courses;
+  if (existsSync(coursesRoot)) {
+    for (const entry of readdirSync(coursesRoot, { withFileTypes: true })) {
+      if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
+      if (!StableId.safeParse(entry.name).success) continue;
+      const course = readCourse(studiesRoot, studyId, entry.name);
+      if (course.status !== "active") continue;
+      if (courseActiveContentReferencesAnalysis(studiesRoot, studyId, course.id, analysisId)) {
+        references.push(`course:${course.id}`);
+      }
+    }
+  }
+  for (const note of listKnowledgeNotes(studiesRoot, studyId)) {
+    if (note.status !== "active") continue;
+    if (evidenceReferencesAnalysis(note.evidence, analysisId)) {
+      references.push(`note:${note.id}`);
+    }
+  }
+  return references.sort((left, right) => left.localeCompare(right));
+}
+
+export interface RetireUaAnalysisInput {
+  readonly studiesRoot: string;
+  readonly studyId: string;
+  readonly analysisId: string;
+  readonly reason: string;
+  readonly supersededBy?: string | null;
+  readonly force?: boolean;
+  readonly now?: Date;
+}
+
+export function retireUaAnalysis(input: RetireUaAnalysisInput): UaAnalysisManifest {
+  const paths = getUaAnalysisPaths(input.studiesRoot, input.studyId, input.analysisId);
+  const current = UaAnalysisManifestSchema.parse(readJson(paths.manifest));
+  if (current.status !== "ready" && current.status !== "legacy-import") {
+    throw new Error(
+      `UA analysis ${input.analysisId} cannot be retired from status: ${current.status}`,
+    );
+  }
+
+  const supersededBy = input.supersededBy ?? null;
+  if (supersededBy !== null) {
+    if (supersededBy === input.analysisId) {
+      throw new Error("UA analysis cannot be superseded by itself");
+    }
+    const successorPaths = getUaAnalysisPaths(input.studiesRoot, input.studyId, supersededBy);
+    if (!existsSync(successorPaths.manifest)) {
+      throw new Error(`Successor UA analysis does not exist: ${supersededBy}`);
+    }
+    const successor = UaAnalysisManifestSchema.parse(readJson(successorPaths.manifest));
+    if (successor.status !== "ready") {
+      throw new Error(
+        `Successor UA analysis ${supersededBy} must be ready (current status: ${successor.status})`,
+      );
+    }
+  }
+
+  const dependents = listActiveContentReferencingAnalysis(
+    input.studiesRoot,
+    input.studyId,
+    input.analysisId,
+  );
+  if (dependents.length > 0 && !input.force) {
+    const listed =
+      dependents.length <= 10
+        ? dependents.join(", ")
+        : `${dependents.slice(0, 10).join(", ")}…还有 ${dependents.length - 10} 个`;
+    throw new Error(
+      `UA analysis ${input.analysisId} is referenced by active content (${listed}). ` +
+        `Pass --force to retire anyway, then run refresh audit --apply so dependent content becomes stale.`,
+    );
+  }
+
+  const superseded = UaAnalysisManifestSchema.parse({
+    schemaVersion: current.schemaVersion,
+    id: current.id,
+    engine: current.engine,
+    engineVersion: current.engineVersion,
+    snapshotId: current.snapshotId,
+    sourceCommit: current.sourceCommit,
+    outputLanguage: current.outputLanguage,
+    configHash: current.configHash,
+    ...(current.engineProvenance ? { engineProvenance: current.engineProvenance } : {}),
+    createdAt: current.createdAt,
+    status: "superseded",
+    graphHash: current.graphHash,
+    nodeCount: current.nodeCount,
+    edgeCount: current.edgeCount,
+    completedAt: current.completedAt,
+    supersededAt: (input.now ?? new Date()).toISOString(),
+    supersededBy,
+    supersededReason: input.reason,
+  });
+  writeJsonAtomically(paths.manifest, superseded);
+  return superseded;
 }
 
 export function failUaAnalysis(

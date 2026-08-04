@@ -37,6 +37,7 @@ export interface HostStudyStatus {
     readonly counts: Readonly<Record<UaAnalysisManifest["status"], number>>;
     readonly preparingIds: readonly string[];
     readonly readyIds: readonly string[];
+    readonly supersededIds: readonly string[];
   };
   readonly courses: {
     readonly count: number;
@@ -180,6 +181,7 @@ export function getHostStudyStatus(input: HostStatusInput): HostStudyStatus {
     failed: 0,
     ready: 0,
     "legacy-import": 0,
+    superseded: 0,
   };
   for (const analysis of analyses) uaCounts[analysis.status] += 1;
   const courses = countCourses(paths.courses);
@@ -211,6 +213,9 @@ export function getHostStudyStatus(input: HostStatusInput): HostStudyStatus {
         .map((analysis) => analysis.id),
       readyIds: analyses
         .filter((analysis) => analysis.status === "ready")
+        .map((analysis) => analysis.id),
+      supersededIds: analyses
+        .filter((analysis) => analysis.status === "superseded")
         .map((analysis) => analysis.id),
     },
     courses,

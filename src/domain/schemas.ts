@@ -114,6 +114,16 @@ export const UaAnalysisManifestSchema = z.discriminatedUnion("status", [
     edgeCount: z.number().int().nonnegative(),
     completedAt: IsoDateTime,
   }).strict(),
+  UaAnalysisBaseSchema.extend({
+    status: z.literal("superseded"),
+    graphHash: Sha256,
+    nodeCount: z.number().int().nonnegative(),
+    edgeCount: z.number().int().nonnegative(),
+    completedAt: IsoDateTime,
+    supersededAt: IsoDateTime,
+    supersededBy: StableId.nullable(),
+    supersededReason: z.string().min(1).max(1_000),
+  }).strict(),
 ]);
 
 export const ContentStatus = z.enum(["draft", "active", "stale", "retired"]);

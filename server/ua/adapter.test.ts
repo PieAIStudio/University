@@ -15,11 +15,13 @@ import { describe, expect, it } from "vitest";
 import { getUaAnalysisPaths } from "../studies/paths.js";
 import { createStudy, registerLocalGitSource } from "../studies/repository.js";
 import { createCleanSnapshot } from "../studies/snapshots.js";
+import { writeKnowledgeNoteRevision } from "../knowledge/repository.js";
 import {
   createUaAnalysisIdentity,
   failUaAnalysis,
   finalizeUaAnalysis,
   prepareUaAnalysis,
+  retireUaAnalysis,
 } from "./adapter.js";
 
 function git(repository: string, args: string[]): string {
@@ -61,7 +63,7 @@ function writeCompleteUaOutput(
         gitCommitHash: overrides.graphCommit ?? sourceCommit,
         analyzedAt,
       },
-      nodes: [{ id: "file:app.ts", type: "file" }],
+      nodes: [{ id: "file:app.ts", type: "file", filePath: "app.ts" }],
       edges: [],
       layers: [
         {
@@ -93,7 +95,7 @@ function writeCompleteUaOutput(
     JSON.stringify({
       gitCommitHash: overrides.fingerprintsCommit ?? sourceCommit,
       generatedAt: analyzedAt,
-      files: {},
+      files: { "app.ts": { contentHash: "fixture" } },
     }),
   );
 }
@@ -388,6 +390,244 @@ describe("UA adapter", () => {
     expect(JSON.parse(readFileSync(paths.manifest, "utf8"))).toMatchObject({
       status: "failed",
       failure: expect.stringMatching(/tracked \.ua path/),
+    });
+  });
+
+  function createReadyAnalysis(
+    studiesRoot: string,
+    snapshot: { readonly id: string; readonly sourceCommit: string },
+    analysisId: string,
+  ) {
+    prepareUaAnalysis({
+      studiesRoot,
+      studyId: "sample",
+      snapshotId: snapshot.id,
+      analysisId,
+      engineVersion: "2.9.4",
+      outputLanguage: "en",
+      now: new Date("2026-07-20T00:00:00.000Z"),
+    });
+    const paths = getUaAnalysisPaths(studiesRoot, "sample", analysisId);
+    writeCompleteUaOutput(paths.data, snapshot.sourceCommit);
+    const ready = finalizeUaAnalysis(
+      studiesRoot,
+      "sample",
+      analysisId,
+      new Date("2026-07-20T00:02:00.000Z"),
+    );
+    if (ready.status !== "ready") throw new Error("Expected ready analysis");
+    return { paths, ready };
+  }
+
+  describe("retireUaAnalysis", () => {
+    it("supersedes a ready analysis and keeps the data directory", () => {
+      const { studiesRoot, snapshot } = setup();
+      const { paths, ready } = createReadyAnalysis(studiesRoot, snapshot, "ua-retire-ready");
+      const retired = retireUaAnalysis({
+        studiesRoot,
+        studyId: "sample",
+        analysisId: "ua-retire-ready",
+        reason: "quality gate failed after finalize",
+        now: new Date("2026-07-20T00:03:00.000Z"),
+      });
+      expect(retired.status).toBe("superseded");
+      if (retired.status !== "superseded") throw new Error("expected superseded");
+      expect(retired.supersededAt).toBe("2026-07-20T00:03:00.000Z");
+      expect(retired.supersededReason).toBe("quality gate failed after finalize");
+      expect(retired.supersededBy).toBeNull();
+      expect(retired.graphHash).toBe(ready.graphHash);
+      expect(existsSync(paths.data)).toBe(true);
+      expect(existsSync(join(paths.data, "knowledge-graph.json"))).toBe(true);
+    });
+
+    it("refuses to retire a preparing analysis", () => {
+      const { studiesRoot, snapshot } = setup();
+      prepareUaAnalysis({
+        studiesRoot,
+        studyId: "sample",
+        snapshotId: snapshot.id,
+        analysisId: "ua-retire-preparing",
+        engineVersion: "2.9.4",
+        outputLanguage: "en",
+        now: new Date("2026-07-20T00:00:00.000Z"),
+      });
+      expect(() =>
+        retireUaAnalysis({
+          studiesRoot,
+          studyId: "sample",
+          analysisId: "ua-retire-preparing",
+          reason: "should not work",
+        }),
+      ).toThrow(/cannot be retired from status: preparing/);
+    });
+
+    it("refuses a successor analysis that does not exist", () => {
+      const { studiesRoot, snapshot } = setup();
+      createReadyAnalysis(studiesRoot, snapshot, "ua-retire-missing-successor");
+      expect(() =>
+        retireUaAnalysis({
+          studiesRoot,
+          studyId: "sample",
+          analysisId: "ua-retire-missing-successor",
+          reason: "replaced",
+          supersededBy: "ua-does-not-exist",
+        }),
+      ).toThrow(/does not exist: ua-does-not-exist/);
+    });
+
+    it("refuses a successor analysis that is not ready", () => {
+      const { studiesRoot, snapshot } = setup();
+      createReadyAnalysis(studiesRoot, snapshot, "ua-retire-bad-successor");
+      prepareUaAnalysis({
+        studiesRoot,
+        studyId: "sample",
+        snapshotId: snapshot.id,
+        analysisId: "ua-successor-preparing",
+        engineVersion: "2.9.4",
+        outputLanguage: "en",
+        now: new Date("2026-07-20T00:00:00.000Z"),
+      });
+      expect(() =>
+        retireUaAnalysis({
+          studiesRoot,
+          studyId: "sample",
+          analysisId: "ua-retire-bad-successor",
+          reason: "replaced",
+          supersededBy: "ua-successor-preparing",
+        }),
+      ).toThrow(/must be ready.*preparing/);
+    });
+
+    it("refuses to supersede an analysis by itself", () => {
+      const { studiesRoot, snapshot } = setup();
+      createReadyAnalysis(studiesRoot, snapshot, "ua-retire-self");
+      expect(() =>
+        retireUaAnalysis({
+          studiesRoot,
+          studyId: "sample",
+          analysisId: "ua-retire-self",
+          reason: "self",
+          supersededBy: "ua-retire-self",
+        }),
+      ).toThrow(/cannot be superseded by itself/);
+    });
+
+    it("refuses to retire an analysis referenced by active content without force", () => {
+      const { studiesRoot, snapshot } = setup();
+      const { ready } = createReadyAnalysis(studiesRoot, snapshot, "ua-retire-referenced");
+      writeKnowledgeNoteRevision(studiesRoot, "sample", {
+        note: {
+          schemaVersion: 1,
+          id: "note-refs-analysis",
+          title: "Bound note",
+          question: "What owns auth?",
+          summary: "Session service.",
+          claimType: "source-fact",
+          status: "active",
+          contentRevision: 1,
+          tags: ["ua"],
+          evidence: [
+            {
+              kind: "fact",
+              snapshotId: snapshot.id,
+              sourceCommit: snapshot.sourceCommit,
+              sourcePath: "app.ts",
+              lineStart: 1,
+              lineEnd: 1,
+              analysisId: "ua-retire-referenced",
+              graphHash: ready.graphHash,
+              nodeIds: ["file:app.ts"],
+            },
+          ],
+          origin: {
+            kind: "ai-conversation",
+            host: "Grok",
+            capturedAt: "2026-07-20T00:00:00.000Z",
+            captureId: "capture-ua-ref",
+          },
+          cards: [
+            {
+              id: "note-refs-analysis-card",
+              kind: "basic",
+              front: "Owner?",
+              back: "Session.",
+              tags: ["ua"],
+            },
+          ],
+          createdAt: "2026-07-20T00:00:00.000Z",
+          updatedAt: "2026-07-20T00:00:00.000Z",
+        },
+        content: "# Bound note\n\nSession service.\n",
+      });
+
+      expect(() =>
+        retireUaAnalysis({
+          studiesRoot,
+          studyId: "sample",
+          analysisId: "ua-retire-referenced",
+          reason: "quality",
+        }),
+      ).toThrow(/note:note-refs-analysis/);
+    });
+
+    it("allows forced retirement when active content still references the analysis", () => {
+      const { studiesRoot, snapshot } = setup();
+      const { ready, paths } = createReadyAnalysis(studiesRoot, snapshot, "ua-retire-force");
+      writeKnowledgeNoteRevision(studiesRoot, "sample", {
+        note: {
+          schemaVersion: 1,
+          id: "note-force-retire",
+          title: "Bound note",
+          question: "What owns auth?",
+          summary: "Session service.",
+          claimType: "source-fact",
+          status: "active",
+          contentRevision: 1,
+          tags: ["ua"],
+          evidence: [
+            {
+              kind: "fact",
+              snapshotId: snapshot.id,
+              sourceCommit: snapshot.sourceCommit,
+              sourcePath: "app.ts",
+              lineStart: 1,
+              lineEnd: 1,
+              analysisId: "ua-retire-force",
+              graphHash: ready.graphHash,
+              nodeIds: ["file:app.ts"],
+            },
+          ],
+          origin: {
+            kind: "ai-conversation",
+            host: "Grok",
+            capturedAt: "2026-07-20T00:00:00.000Z",
+            captureId: "capture-ua-force",
+          },
+          cards: [
+            {
+              id: "note-force-retire-card",
+              kind: "basic",
+              front: "Owner?",
+              back: "Session.",
+              tags: ["ua"],
+            },
+          ],
+          createdAt: "2026-07-20T00:00:00.000Z",
+          updatedAt: "2026-07-20T00:00:00.000Z",
+        },
+        content: "# Bound note\n\nSession service.\n",
+      });
+
+      const retired = retireUaAnalysis({
+        studiesRoot,
+        studyId: "sample",
+        analysisId: "ua-retire-force",
+        reason: "force retire for audit path",
+        force: true,
+        now: new Date("2026-07-20T00:04:00.000Z"),
+      });
+      expect(retired.status).toBe("superseded");
+      expect(existsSync(paths.data)).toBe(true);
     });
   });
 });

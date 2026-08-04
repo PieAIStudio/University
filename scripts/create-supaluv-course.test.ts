@@ -230,9 +230,23 @@ function setupFixture(ready: boolean, graphNodes = REQUIRED_GRAPH_NODES): Fixtur
     join(invocation.dataDirectory, "meta.json"),
     JSON.stringify({ gitCommitHash: snapshot.sourceCommit, lastAnalyzedAt: GENERATED_AT }),
   );
+  const fingerprintFiles = Object.fromEntries(
+    graphNodes
+      .filter(
+        (node) =>
+          typeof node.type === "string" &&
+          typeof node.filePath === "string" &&
+          node.id === `${node.type}:${node.filePath}`,
+      )
+      .map((node) => [node.filePath, { contentHash: "fixture" }]),
+  );
   writeFileSync(
     join(invocation.dataDirectory, "fingerprints.json"),
-    JSON.stringify({ gitCommitHash: snapshot.sourceCommit, generatedAt: GENERATED_AT, files: {} }),
+    JSON.stringify({
+      gitCommitHash: snapshot.sourceCommit,
+      generatedAt: GENERATED_AT,
+      files: fingerprintFiles,
+    }),
   );
   const analysis = finalizeUaAnalysis(
     studiesRoot,

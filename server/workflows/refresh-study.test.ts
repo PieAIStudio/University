@@ -201,9 +201,21 @@ function createReadyUaAnalysis(
     join(invocation.dataDirectory, "meta.json"),
     JSON.stringify({ gitCommitHash: snapshot.sourceCommit, lastAnalyzedAt: generatedAt }),
   );
+  const filePath = typeof node["filePath"] === "string" ? node["filePath"] : null;
+  const fingerprintFiles =
+    filePath &&
+    typeof node["type"] === "string" &&
+    typeof node["id"] === "string" &&
+    node["id"] === `${node["type"]}:${filePath}`
+      ? { [filePath]: { contentHash: "fixture" } }
+      : {};
   writeFileSync(
     join(invocation.dataDirectory, "fingerprints.json"),
-    JSON.stringify({ gitCommitHash: snapshot.sourceCommit, generatedAt, files: {} }),
+    JSON.stringify({
+      gitCommitHash: snapshot.sourceCommit,
+      generatedAt,
+      files: fingerprintFiles,
+    }),
   );
   const ready = finalizeUaAnalysis(
     studiesRoot,

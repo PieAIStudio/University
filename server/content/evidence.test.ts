@@ -9,7 +9,7 @@ import type { EvidenceReference } from "../../src/domain/schemas.js";
 import { getSnapshotPaths, getUaAnalysisPaths } from "../studies/paths.js";
 import { createStudy, registerLocalGitSource } from "../studies/repository.js";
 import { createCleanSnapshot, refreshStudyRepository } from "../studies/snapshots.js";
-import { finalizeUaAnalysis, prepareUaAnalysis } from "../ua/adapter.js";
+import { finalizeUaAnalysis, prepareUaAnalysis, retireUaAnalysis } from "../ua/adapter.js";
 import {
   EVIDENCE_SNIPPET_LIMITS,
   evaluateEvidenceFreshness,
@@ -247,7 +247,7 @@ describe("Git-object evidence", () => {
       join(invocation.dataDirectory, "knowledge-graph.json"),
       JSON.stringify({
         project: { gitCommitHash: snapshot.sourceCommit, analyzedAt: generatedAt },
-        nodes: [{ id: "file:folder/auth.ts", type: "file" }],
+        nodes: [{ id: "file:folder/auth.ts", type: "file", filePath: "folder/auth.ts" }],
         edges: [],
         layers: [
           {
@@ -276,7 +276,7 @@ describe("Git-object evidence", () => {
       JSON.stringify({
         gitCommitHash: snapshot.sourceCommit,
         generatedAt,
-        files: {},
+        files: { "folder/auth.ts": { contentHash: "fixture" } },
       }),
     );
     const ready = finalizeUaAnalysis(
@@ -302,5 +302,188 @@ describe("Git-object evidence", () => {
     expect(() => validateEvidence(studiesRoot, "sample", boundEvidence)).toThrow(
       /immutable graphHash/,
     );
+  });
+
+  it("still validates evidence after its bound analysis is superseded", () => {
+    const { studiesRoot, snapshot, evidence } = setup();
+    const analysisId = "ua-superseded-validate";
+    const invocation = prepareUaAnalysis({
+      studiesRoot,
+      studyId: "sample",
+      snapshotId: snapshot.id,
+      analysisId,
+      engineVersion: "2.9.4",
+      outputLanguage: "en",
+      now: new Date("2026-07-20T00:00:00.000Z"),
+    });
+    const generatedAt = "2026-07-20T00:01:00.000Z";
+    writeFileSync(
+      join(invocation.dataDirectory, "knowledge-graph.json"),
+      JSON.stringify({
+        project: { gitCommitHash: snapshot.sourceCommit, analyzedAt: generatedAt },
+        nodes: [{ id: "file:folder/auth.ts", type: "file", filePath: "folder/auth.ts" }],
+        edges: [],
+        layers: [
+          {
+            id: "application",
+            name: "Application",
+            description: "Application files",
+            nodeIds: ["file:folder/auth.ts"],
+          },
+        ],
+        tour: [
+          {
+            order: 1,
+            title: "Authentication",
+            description: "Authentication ownership",
+            nodeIds: ["file:folder/auth.ts"],
+          },
+        ],
+      }),
+    );
+    writeFileSync(
+      join(invocation.dataDirectory, "meta.json"),
+      JSON.stringify({ gitCommitHash: snapshot.sourceCommit, lastAnalyzedAt: generatedAt }),
+    );
+    writeFileSync(
+      join(invocation.dataDirectory, "fingerprints.json"),
+      JSON.stringify({
+        gitCommitHash: snapshot.sourceCommit,
+        generatedAt,
+        files: { "folder/auth.ts": { contentHash: "fixture" } },
+      }),
+    );
+    const ready = finalizeUaAnalysis(
+      studiesRoot,
+      "sample",
+      analysisId,
+      new Date("2026-07-20T00:02:00.000Z"),
+    );
+    if (ready.status !== "ready") throw new Error("Expected a ready test analysis");
+    const boundEvidence = {
+      ...evidence,
+      analysisId,
+      graphHash: ready.graphHash,
+      nodeIds: ["file:folder/auth.ts"],
+    };
+    expect(validateEvidence(studiesRoot, "sample", boundEvidence)).toEqual(boundEvidence);
+
+    retireUaAnalysis({
+      studiesRoot,
+      studyId: "sample",
+      analysisId,
+      reason: "quality gate failed",
+      now: new Date("2026-07-20T00:03:00.000Z"),
+    });
+    expect(validateEvidence(studiesRoot, "sample", boundEvidence)).toEqual(boundEvidence);
+  });
+
+  it("marks UA-bound evidence stale when the bound analysis is superseded, without throwing", () => {
+    const { studiesRoot, snapshot, evidence } = setup();
+    const oldAnalysisId = "ua-old-for-freshness";
+    const targetAnalysisId = "ua-target-for-freshness";
+    for (const analysisId of [oldAnalysisId, targetAnalysisId]) {
+      const invocation = prepareUaAnalysis({
+        studiesRoot,
+        studyId: "sample",
+        snapshotId: snapshot.id,
+        analysisId,
+        engineVersion: "2.9.4",
+        outputLanguage: "en",
+        now: new Date("2026-07-20T00:00:00.000Z"),
+      });
+      const generatedAt = "2026-07-20T00:01:00.000Z";
+      writeFileSync(
+        join(invocation.dataDirectory, "knowledge-graph.json"),
+        JSON.stringify({
+          project: { gitCommitHash: snapshot.sourceCommit, analyzedAt: generatedAt },
+          nodes: [{ id: "file:folder/auth.ts", type: "file", filePath: "folder/auth.ts" }],
+          edges: [],
+          layers: [
+            {
+              id: "application",
+              name: "Application",
+              description: "Application files",
+              nodeIds: ["file:folder/auth.ts"],
+            },
+          ],
+          tour: [
+            {
+              order: 1,
+              title: "Authentication",
+              description: "Authentication ownership",
+              nodeIds: ["file:folder/auth.ts"],
+            },
+          ],
+        }),
+      );
+      writeFileSync(
+        join(invocation.dataDirectory, "meta.json"),
+        JSON.stringify({ gitCommitHash: snapshot.sourceCommit, lastAnalyzedAt: generatedAt }),
+      );
+      writeFileSync(
+        join(invocation.dataDirectory, "fingerprints.json"),
+        JSON.stringify({
+          gitCommitHash: snapshot.sourceCommit,
+          generatedAt,
+          files: { "folder/auth.ts": { contentHash: "fixture" } },
+        }),
+      );
+      finalizeUaAnalysis(studiesRoot, "sample", analysisId, new Date("2026-07-20T00:02:00.000Z"));
+    }
+    const oldPaths = getUaAnalysisPaths(studiesRoot, "sample", oldAnalysisId);
+    const oldReady = JSON.parse(readFileSync(oldPaths.manifest, "utf8")) as {
+      graphHash: string;
+    };
+    const boundEvidence = {
+      ...evidence,
+      analysisId: oldAnalysisId,
+      graphHash: oldReady.graphHash,
+      nodeIds: ["file:folder/auth.ts"],
+    };
+
+    retireUaAnalysis({
+      studiesRoot,
+      studyId: "sample",
+      analysisId: oldAnalysisId,
+      reason: "replaced by better analysis",
+      now: new Date("2026-07-20T00:03:00.000Z"),
+    });
+
+    const freshness = evaluateEvidenceFreshness(
+      studiesRoot,
+      "sample",
+      boundEvidence,
+      snapshot.id,
+      targetAnalysisId,
+    );
+    expect(freshness.status).toBe("stale");
+    expect(freshness.reasons.some((reason) => /superseded/i.test(reason))).toBe(true);
+  });
+
+  it("still throws when the bound analysis is preparing", () => {
+    const { studiesRoot, snapshot, evidence } = setup();
+    const analysisId = "ua-preparing-bound";
+    prepareUaAnalysis({
+      studiesRoot,
+      studyId: "sample",
+      snapshotId: snapshot.id,
+      analysisId,
+      engineVersion: "2.9.4",
+      outputLanguage: "en",
+      now: new Date("2026-07-20T00:00:00.000Z"),
+    });
+    const preparingEvidence = {
+      ...evidence,
+      analysisId,
+      graphHash: `sha256:${"a".repeat(64)}`,
+      nodeIds: ["file:folder/auth.ts"],
+    };
+    expect(() => validateEvidence(studiesRoot, "sample", preparingEvidence)).toThrow(
+      /not ready or does not match/,
+    );
+    expect(() =>
+      evaluateEvidenceFreshness(studiesRoot, "sample", preparingEvidence, snapshot.id, analysisId),
+    ).toThrow(/not ready or does not match|not ready/);
   });
 });

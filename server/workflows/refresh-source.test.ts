@@ -50,7 +50,7 @@ function writeCompleteUaOutput(dataDirectory: string, sourceCommit: string): voi
     join(dataDirectory, "knowledge-graph.json"),
     JSON.stringify({
       project: { gitCommitHash: sourceCommit, analyzedAt: GENERATED_AT },
-      nodes: [{ id: "file:app.ts", type: "file" }],
+      nodes: [{ id: "file:app.ts", type: "file", filePath: "app.ts" }],
       edges: [],
       layers: [
         {
@@ -76,7 +76,11 @@ function writeCompleteUaOutput(dataDirectory: string, sourceCommit: string): voi
   );
   writeFileSync(
     join(dataDirectory, "fingerprints.json"),
-    JSON.stringify({ gitCommitHash: sourceCommit, generatedAt: GENERATED_AT, files: {} }),
+    JSON.stringify({
+      gitCommitHash: sourceCommit,
+      generatedAt: GENERATED_AT,
+      files: { "app.ts": { contentHash: "fixture" } },
+    }),
   );
 }
 
