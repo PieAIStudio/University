@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  batchIndexFromOutputFilename,
   extractSummarySkeleton,
   fileLevelTypes,
+  inspectUaBatchProgress,
   inspectUaQuality,
   type UaFingerprints,
   type UaGraph,
+  type UaQualityGraphNode,
 } from "./quality.js";
 
 function fileNode(path: string, type = "file") {
@@ -251,5 +254,126 @@ describe("UA quality gates", () => {
     expect(extractSummarySkeleton("reads performance.memory value")).toBe("readsvalue");
     // Kebab-case
     expect(extractSummarySkeleton("enters portal-entry path")).toBe("enterspath");
+  });
+});
+
+describe("UA batch progress gates", () => {
+  function outputs(
+    entries: ReadonlyArray<readonly [number, readonly UaQualityGraphNode[]]>,
+  ): Map<number, readonly UaQualityGraphNode[]> {
+    return new Map(entries);
+  }
+
+  it("marks every batch pending with no failures when nothing is produced yet", () => {
+    const report = inspectUaBatchProgress({
+      batches: [{ files: ["a.ts"] }, { files: ["b.ts", "c.ts"] }, { files: ["d.ts"] }],
+      outputsByBatchIndex: outputs([]),
+    });
+    expect(report.totalBatches).toBe(3);
+    expect(report.producedBatches).toBe(0);
+    expect(report.plannedFileCount).toBe(4);
+    expect(report.coveredFileCount).toBe(0);
+    expect(report.batches.every((batch) => batch.status === "pending")).toBe(true);
+    expect(report.failures).toEqual([]);
+  });
+
+  it("marks a fully covered produced batch complete and leaves the rest pending", () => {
+    const report = inspectUaBatchProgress({
+      batches: [{ files: ["a.ts", "b.ts"] }, { files: ["c.ts"] }],
+      outputsByBatchIndex: outputs([
+        [1, [fileNode("a.ts"), fileNode("b.ts"), functionNode("a.ts", "run", "unique work")]],
+      ]),
+    });
+    expect(report.producedBatches).toBe(1);
+    expect(report.batches[0]).toMatchObject({
+      batchIndex: 1,
+      status: "complete",
+      plannedFiles: 2,
+      producedFiles: 2,
+      missingFiles: [],
+    });
+    expect(report.batches[1]).toMatchObject({ batchIndex: 2, status: "pending" });
+    expect(report.coveredFileCount).toBe(2);
+    expect(report.failures).toEqual([]);
+  });
+
+  it("marks a produced batch incomplete and records missing planned paths", () => {
+    const report = inspectUaBatchProgress({
+      batches: [{ files: ["kept.ts", "missing.ts", "also-missing.ts"] }],
+      outputsByBatchIndex: outputs([[1, [fileNode("kept.ts")]]]),
+    });
+    expect(report.batches[0]).toMatchObject({
+      status: "incomplete",
+      plannedFiles: 3,
+      producedFiles: 1,
+    });
+    expect(report.batches[0]!.missingFiles).toEqual(["missing.ts", "also-missing.ts"]);
+    expect(report.failures).toHaveLength(1);
+    expect(report.failures[0]).toMatch(/batch 1 incomplete/);
+    expect(report.failures[0]).toMatch(/missing\.ts/);
+    expect(report.failures[0]).toMatch(/also-missing\.ts/);
+    expect(report.coveredFileCount).toBe(1);
+  });
+
+  it("merges multiple part outputs for the same batch index before judging coverage", () => {
+    const report = inspectUaBatchProgress({
+      batches: [{ files: ["a.ts", "b.ts"] }],
+      outputsByBatchIndex: outputs([
+        // Simulates merging batch-1-part-1.json and batch-1-part-2.json upstream.
+        [1, [fileNode("a.ts"), fileNode("b.ts")]],
+      ]),
+    });
+    expect(report.batches[0]!.status).toBe("complete");
+    expect(report.failures).toEqual([]);
+  });
+
+  it("fails when function/class summaries across produced batches collapse templates", () => {
+    const template =
+      "This function processes the data in path/to/file.ts using HelperName and returns ResultType.";
+    const nodes = manyFunctions(25, () => template);
+    const report = inspectUaBatchProgress({
+      batches: [
+        { files: ["src/f0.ts"] },
+        { files: Array.from({ length: 24 }, (_, index) => `src/f${index + 1}.ts`) },
+      ],
+      outputsByBatchIndex: outputs([
+        [1, [fileNode("src/f0.ts"), ...nodes.slice(0, 10)]],
+        [
+          2,
+          [
+            ...nodes.slice(10),
+            ...Array.from({ length: 24 }, (_, i) => fileNode(`src/f${i + 1}.ts`)),
+          ],
+        ],
+      ]),
+    });
+    expect(report.templateCollapse.sampleSize).toBe(25);
+    expect(report.templateCollapse.duplicateRatio).toBe(1);
+    expect(report.failures.some((failure) => /template collapse/i.test(failure))).toBe(true);
+  });
+
+  it("reads planned files when batches.json elements are plain string arrays", () => {
+    const report = inspectUaBatchProgress({
+      batches: [["a.ts", "b.ts"], ["c.ts"]],
+      outputsByBatchIndex: outputs([[1, [fileNode("a.ts"), fileNode("b.ts")]]]),
+    });
+    expect(report.batches[0]).toMatchObject({
+      status: "complete",
+      plannedFiles: 2,
+    });
+    expect(report.batches[1]!.status).toBe("pending");
+    expect(report.plannedFileCount).toBe(3);
+    expect(report.failures).toEqual([]);
+  });
+
+  it("ignores intermediate filenames that do not match batch-<i> patterns", () => {
+    expect(batchIndexFromOutputFilename("batch-1.json")).toBe(1);
+    expect(batchIndexFromOutputFilename("batch-12-part-3.json")).toBe(12);
+    expect(batchIndexFromOutputFilename("batch-0.json")).toBeNull();
+    expect(batchIndexFromOutputFilename("batches.json")).toBeNull();
+    expect(batchIndexFromOutputFilename("scan-result.json")).toBeNull();
+    expect(batchIndexFromOutputFilename("batch-1.txt")).toBeNull();
+    expect(batchIndexFromOutputFilename("batch-1-extra.json")).toBeNull();
+    expect(batchIndexFromOutputFilename("notes-batch-1.json")).toBeNull();
   });
 });

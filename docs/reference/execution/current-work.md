@@ -193,7 +193,24 @@ Built and covered by tests:
 Verified on real data, not fixtures: `refresh verify` exits 1 on the templated
 analysis (duplicateRatio 0.968) and 0 on the re-analyzed one (766/766 coverage,
 965 distinct skeletons). The templated analysis was retired, then deleted.
-`pnpm verify` passes at 24 test files / 227 tests.
+
+A second pass closed two gaps the first one left:
+
+- `refresh verify` needed a merged `knowledge-graph.json`, which does not exist
+  until Phase 3, so a long Phase 2 ran unwatched. It now picks its stage from
+  disk — graph when the graph exists, otherwise `intermediate/batches.json` —
+  and reports per-batch coverage plus cross-batch template collapse. Batches
+  with no output yet are `pending`, not failures. Replaying the historical run
+  with the repair outputs removed reproduces the incident exactly: 710/766,
+  four incomplete batches missing 15, 24, 9 and 8 files.
+- Analysis identity is deterministic, and `prepare` threw on any status other
+  than ready or preparing, so retiring an analysis made its identity slot
+  permanently unusable. Since analysis quality depends on how the host drives
+  its subagents — which is not in the identity hash — re-running an identical
+  configuration is a legitimate need. `prepare` now allocates `-retryN`,
+  resuming an interrupted retry rather than orphaning it.
+
+`pnpm verify` passes at 24 test files / 239 tests.
 
 ## Accepted Risks
 
@@ -222,11 +239,6 @@ analysis (duplicateRatio 0.968) and 0 on the re-analyzed one (766/766 coverage,
   and the system would now refuse to reproduce what it already holds. Decide
   whether to re-run UA on SupaLuv and retire this analysis, which stales that
   course, or accept it and record why.
-- **Mid-run analysis checking has no product path.** `refresh verify` needs a
-  merged `knowledge-graph.json`, which does not exist until Phase 3. A long
-  Phase 2 can therefore run for an hour before any gate can see it. Batch-level
-  checking currently lives in throwaway scripts. Decide whether that belongs in
-  the product before the next full analysis.
 - **Card schedule across content revisions.** `ensureCard` carries FSRS state
   forward when a card's `contentRevision` advances, and
   `rebuildCardStateFromReviewEvents` encodes the same rule, so the projection

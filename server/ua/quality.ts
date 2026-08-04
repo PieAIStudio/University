@@ -1,6 +1,7 @@
 /**
- * Pure UA analysis quality gates: coverage vs fingerprints and template-collapse detection.
- * Callers own all I/O; this module only inspects already-parsed objects.
+ * Pure UA analysis quality gates: coverage vs fingerprints, batch progress, and
+ * template-collapse detection. Callers own all I/O; this module only inspects
+ * already-parsed objects.
  */
 
 /** File-level node types that participate in architecture-layer coverage and fingerprint equality. */
@@ -19,6 +20,9 @@ export const UA_FILE_LEVEL_TYPES = [
 export type UaFileLevelType = (typeof UA_FILE_LEVEL_TYPES)[number];
 
 export const fileLevelTypes: ReadonlySet<string> = new Set(UA_FILE_LEVEL_TYPES);
+
+/** Matches `batch-<i>.json` and `batch-<i>-part-<k>.json`; capture group 1 is the batch index. */
+export const UA_BATCH_OUTPUT_FILENAME = /^batch-(\d+)(?:-part-\d+)?\.json$/;
 
 export interface UaQualityGraphNode {
   readonly id?: unknown;
@@ -53,6 +57,24 @@ export interface UaQualityReport {
   readonly failures: readonly string[];
 }
 
+export interface UaBatchProgressEntry {
+  readonly batchIndex: number;
+  readonly plannedFiles: number;
+  readonly producedFiles: number;
+  readonly missingFiles: readonly string[];
+  readonly status: "pending" | "complete" | "incomplete";
+}
+
+export interface UaBatchProgressReport {
+  readonly totalBatches: number;
+  readonly producedBatches: number;
+  readonly plannedFileCount: number;
+  readonly coveredFileCount: number;
+  readonly batches: readonly UaBatchProgressEntry[];
+  readonly templateCollapse: UaTemplateCollapse;
+  readonly failures: readonly string[];
+}
+
 /** Candidate tokens that may be code identifiers or prose words. */
 const CODE_OR_PROSE_TOKEN = /[A-Za-z0-9_][A-Za-z0-9_./\\-]*/g;
 const WHITESPACE = /\s+/g;
@@ -63,6 +85,7 @@ const TEMPLATE_DUPLICATE_RATIO_THRESHOLD = 0.3;
 const TOP_SKELETONS_IN_REPORT = 5;
 const TOP_SKELETONS_IN_FAILURE = 3;
 
+/** Shared: top-level file-layer node with id === `${type}:${filePath}`. */
 function isTopLevelFileNode(node: UaQualityGraphNode): node is UaQualityGraphNode & {
   readonly id: string;
   readonly type: string;
@@ -121,10 +144,13 @@ export function extractSummarySkeleton(summary: string): string {
     .replace(WHITESPACE, "");
 }
 
+/** Shared: collect sorted unique paths from top-level file-layer nodes. */
+function topLevelFilePaths(nodes: readonly UaQualityGraphNode[]): string[] {
+  return sortedUnique(nodes.filter(isTopLevelFileNode).map((node) => node.filePath));
+}
+
 function inspectCoverage(graph: UaGraph, fingerprints: UaFingerprints): UaCoverageGap {
-  const graphPaths = sortedUnique(
-    (graph.nodes ?? []).filter(isTopLevelFileNode).map((node) => node.filePath),
-  );
+  const graphPaths = topLevelFilePaths(graph.nodes ?? []);
   const fingerprintPaths = sortedUnique(Object.keys(fingerprints.files ?? {}));
   const graphSet = new Set(graphPaths);
   const fingerprintSet = new Set(fingerprintPaths);
@@ -134,10 +160,11 @@ function inspectCoverage(graph: UaGraph, fingerprints: UaFingerprints): UaCovera
   };
 }
 
-function inspectTemplateCollapse(graph: UaGraph): UaTemplateCollapse {
+/** Shared: template-collapse stats over function/class nodes (uses extractSummarySkeleton). */
+function inspectTemplateCollapse(nodes: readonly UaQualityGraphNode[]): UaTemplateCollapse {
   const counts = new Map<string, number>();
   let sampleSize = 0;
-  for (const node of graph.nodes ?? []) {
+  for (const node of nodes) {
     if (node.type !== "function" && node.type !== "class") continue;
     sampleSize += 1;
     const summary = typeof node.summary === "string" ? node.summary : "";
@@ -179,12 +206,61 @@ function templateCollapseFailure(collapse: UaTemplateCollapse): string {
   );
 }
 
+function maybeTemplateCollapseFailure(collapse: UaTemplateCollapse): string | null {
+  if (
+    collapse.sampleSize >= TEMPLATE_MIN_SAMPLE &&
+    collapse.duplicateRatio > TEMPLATE_DUPLICATE_RATIO_THRESHOLD
+  ) {
+    return templateCollapseFailure(collapse);
+  }
+  return null;
+}
+
+/**
+ * Parse planned file paths from one batches.json element.
+ * Accepts a string array, `{ files: string[] }`, or `{ files: { path: string }[] }`.
+ */
+function plannedFilesFromBatchEntry(entry: unknown): string[] {
+  if (Array.isArray(entry)) {
+    return entry.filter((item): item is string => typeof item === "string");
+  }
+  if (entry === null || typeof entry !== "object") return [];
+  const files = (entry as { readonly files?: unknown }).files;
+  if (!Array.isArray(files)) return [];
+  const paths: string[] = [];
+  for (const item of files) {
+    if (typeof item === "string") {
+      paths.push(item);
+      continue;
+    }
+    if (
+      item !== null &&
+      typeof item === "object" &&
+      typeof (item as { readonly path?: unknown }).path === "string"
+    ) {
+      paths.push((item as { readonly path: string }).path);
+    }
+  }
+  return paths;
+}
+
+/**
+ * Extract 1-based batch index from an intermediate output filename, or null if
+ * the name does not match `batch-<i>.json` / `batch-<i>-part-<k>.json`.
+ */
+export function batchIndexFromOutputFilename(filename: string): number | null {
+  const match = UA_BATCH_OUTPUT_FILENAME.exec(filename);
+  if (!match) return null;
+  const index = Number(match[1]);
+  return Number.isInteger(index) && index > 0 ? index : null;
+}
+
 export function inspectUaQuality(input: {
   readonly graph: UaGraph;
   readonly fingerprints: UaFingerprints;
 }): UaQualityReport {
   const coverage = inspectCoverage(input.graph, input.fingerprints);
-  const templateCollapse = inspectTemplateCollapse(input.graph);
+  const templateCollapse = inspectTemplateCollapse(input.graph.nodes ?? []);
   const failures: string[] = [];
 
   if (coverage.missingFromGraph.length > 0) {
@@ -193,12 +269,85 @@ export function inspectUaQuality(input: {
   if (coverage.missingFromFingerprints.length > 0) {
     failures.push(coverageFailure("missingFromFingerprints", coverage.missingFromFingerprints));
   }
-  if (
-    templateCollapse.sampleSize >= TEMPLATE_MIN_SAMPLE &&
-    templateCollapse.duplicateRatio > TEMPLATE_DUPLICATE_RATIO_THRESHOLD
-  ) {
-    failures.push(templateCollapseFailure(templateCollapse));
-  }
+  const templateFailure = maybeTemplateCollapseFailure(templateCollapse);
+  if (templateFailure) failures.push(templateFailure);
 
   return { coverage, templateCollapse, failures };
+}
+
+export function inspectUaBatchProgress(input: {
+  readonly batches: readonly unknown[];
+  readonly outputsByBatchIndex: ReadonlyMap<number, readonly UaQualityGraphNode[]>;
+}): UaBatchProgressReport {
+  const totalBatches = input.batches.length;
+  const batchEntries: UaBatchProgressEntry[] = [];
+  const failures: string[] = [];
+  const producedNodes: UaQualityGraphNode[] = [];
+  let producedBatches = 0;
+  let plannedFileCount = 0;
+  let coveredFileCount = 0;
+
+  for (let offset = 0; offset < totalBatches; offset += 1) {
+    const batchIndex = offset + 1;
+    const planned = plannedFilesFromBatchEntry(input.batches[offset]);
+    plannedFileCount += planned.length;
+
+    const hasOutput = input.outputsByBatchIndex.has(batchIndex);
+    if (!hasOutput) {
+      batchEntries.push({
+        batchIndex,
+        plannedFiles: planned.length,
+        producedFiles: 0,
+        missingFiles: [],
+        status: "pending",
+      });
+      continue;
+    }
+
+    const nodes = input.outputsByBatchIndex.get(batchIndex) ?? [];
+    producedBatches += 1;
+    producedNodes.push(...nodes);
+
+    const producedPaths = topLevelFilePaths(nodes);
+    const producedSet = new Set(producedPaths);
+    const missingFiles = planned.filter((path) => !producedSet.has(path));
+    const covered = planned.length - missingFiles.length;
+    coveredFileCount += covered;
+
+    if (missingFiles.length > 0) {
+      const status = "incomplete" as const;
+      batchEntries.push({
+        batchIndex,
+        plannedFiles: planned.length,
+        producedFiles: producedPaths.length,
+        missingFiles,
+        status,
+      });
+      failures.push(
+        `UA batch ${batchIndex} incomplete: missing ${missingFiles.length} planned file(s): ${formatPathList(missingFiles)}`,
+      );
+    } else {
+      batchEntries.push({
+        batchIndex,
+        plannedFiles: planned.length,
+        producedFiles: producedPaths.length,
+        missingFiles: [],
+        status: "complete",
+      });
+    }
+  }
+
+  const templateCollapse = inspectTemplateCollapse(producedNodes);
+  const templateFailure = maybeTemplateCollapseFailure(templateCollapse);
+  if (templateFailure) failures.push(templateFailure);
+
+  return {
+    totalBatches,
+    producedBatches,
+    plannedFileCount,
+    coveredFileCount,
+    batches: batchEntries,
+    templateCollapse,
+    failures,
+  };
 }

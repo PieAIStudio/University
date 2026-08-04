@@ -33,7 +33,15 @@ import { listKnowledgeNotes } from "../knowledge/repository.js";
 import { writeJsonAtomically, writeTextAtomically } from "../storage/atomic-json.js";
 import { getSnapshotPaths, getStudyPaths, getUaAnalysisPaths } from "../studies/paths.js";
 import { openStudyRepository } from "../studies/snapshots.js";
-import { fileLevelTypes, inspectUaQuality, type UaQualityReport } from "./quality.js";
+import {
+  batchIndexFromOutputFilename,
+  fileLevelTypes,
+  inspectUaBatchProgress,
+  inspectUaQuality,
+  type UaBatchProgressReport,
+  type UaQualityGraphNode,
+  type UaQualityReport,
+} from "./quality.js";
 
 interface UaGraph {
   readonly project?: {
@@ -592,11 +600,51 @@ export function finalizeUaAnalysis(
   return ready;
 }
 
+export type UaVerifyReport =
+  | (UaQualityReport & { readonly stage: "graph" })
+  | (UaBatchProgressReport & { readonly stage: "batches" });
+
+function readBatchesPlan(raw: unknown): readonly unknown[] {
+  if (Array.isArray(raw)) return raw;
+  if (
+    raw !== null &&
+    typeof raw === "object" &&
+    Array.isArray((raw as { readonly batches?: unknown }).batches)
+  ) {
+    return (raw as { readonly batches: readonly unknown[] }).batches;
+  }
+  throw new Error(
+    "UA batch verification requires intermediate/batches.json to be an array or an object with a batches array",
+  );
+}
+
+function loadOutputsByBatchIndex(intermediateDir: string): Map<number, UaQualityGraphNode[]> {
+  const outputs = new Map<number, UaQualityGraphNode[]>();
+  for (const name of readdirSync(intermediateDir)) {
+    const batchIndex = batchIndexFromOutputFilename(name);
+    if (batchIndex === null) continue;
+    const parsed = readJson(join(intermediateDir, name)) as {
+      readonly nodes?: readonly UaQualityGraphNode[];
+    };
+    const nodes = Array.isArray(parsed.nodes) ? parsed.nodes : [];
+    const existing = outputs.get(batchIndex);
+    if (existing) existing.push(...nodes);
+    else outputs.set(batchIndex, [...nodes]);
+  }
+  return outputs;
+}
+
+/**
+ * Verify UA analysis quality from disk. Stage is chosen automatically:
+ * 1. knowledge-graph.json present → full graph + fingerprints gate
+ * 2. else intermediate/batches.json present → in-progress batch coverage gate
+ * 3. neither → clear error (nothing verifiable yet)
+ */
 export function verifyUaAnalysisQuality(
   studiesRoot: string,
   studyId: string,
   analysisId: string,
-): UaQualityReport {
+): UaVerifyReport {
   const paths = getUaAnalysisPaths(studiesRoot, studyId, analysisId);
   if (!existsSync(paths.manifest)) {
     throw new Error(`UA analysis does not exist: ${analysisId}`);
@@ -605,17 +653,32 @@ export function verifyUaAnalysisQuality(
   UaAnalysisManifestSchema.parse(readJson(paths.manifest));
   const graphPath = join(paths.data, "knowledge-graph.json");
   const fingerprintsPath = join(paths.data, "fingerprints.json");
-  const missing: string[] = [];
-  if (!existsSync(graphPath)) missing.push("knowledge-graph.json");
-  if (!existsSync(fingerprintsPath)) missing.push("fingerprints.json");
-  if (missing.length > 0) {
-    throw new Error(
-      `UA quality verification requires ${missing.join(" and ")} under the analysis data directory`,
-    );
+  const batchesPath = join(paths.data, "intermediate", "batches.json");
+
+  if (existsSync(graphPath)) {
+    if (!existsSync(fingerprintsPath)) {
+      throw new Error(
+        "UA quality verification (stage graph) requires fingerprints.json under the analysis data directory",
+      );
+    }
+    const graph = readJson(graphPath) as UaGraph;
+    const fingerprints = readJson(fingerprintsPath) as UaFingerprints;
+    return { stage: "graph", ...inspectUaQuality({ graph, fingerprints }) };
   }
-  const graph = readJson(graphPath) as UaGraph;
-  const fingerprints = readJson(fingerprintsPath) as UaFingerprints;
-  return inspectUaQuality({ graph, fingerprints });
+
+  if (existsSync(batchesPath)) {
+    const batches = readBatchesPlan(readJson(batchesPath));
+    const intermediateDir = join(paths.data, "intermediate");
+    const outputsByBatchIndex = loadOutputsByBatchIndex(intermediateDir);
+    return {
+      stage: "batches",
+      ...inspectUaBatchProgress({ batches, outputsByBatchIndex }),
+    };
+  }
+
+  throw new Error(
+    "UA quality verification requires knowledge-graph.json (stage graph) or intermediate/batches.json (stage batches); analysis has not produced verifiable output yet",
+  );
 }
 
 function evidenceReferencesAnalysis(

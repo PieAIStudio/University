@@ -40,7 +40,7 @@ export interface PrepareStudyRefreshInput {
 export interface PrepareStudyRefreshReceipt {
   readonly schemaVersion: 1;
   readonly operation: "refresh-prepare";
-  readonly disposition: "prepared" | "resumed" | "ready-reused";
+  readonly disposition: "prepared" | "resumed" | "ready-reused" | "retried";
   readonly source: SourceStatus & {
     readonly pushRequired: false;
     readonly acknowledged: boolean;
@@ -204,6 +204,62 @@ export function prepareStudyRefresh(input: PrepareStudyRefreshInput): PrepareStu
       });
       disposition = "resumed";
       analysis = invocation.analysis;
+    } else if (existing.status === "superseded") {
+      // Identity is deterministic; retiring the base slot used to block identical
+      // re-runs forever. Allocate a free -retryN id and prepare a fresh analysis
+      // without mutating the superseded predecessor.
+      // Scan retry slots in order so an interrupted retry keeps the same
+      // resume/reuse semantics the base slot has, instead of orphaning its
+      // partial work behind a freshly minted id.
+      let retryAnalysisId: string | undefined;
+      let retryExisting: UaAnalysisManifest | undefined;
+      for (let attempt = 2; attempt < 10_000; attempt += 1) {
+        const candidate = `${identity.analysisId}-retry${attempt}`;
+        const candidatePaths = getUaAnalysisPaths(input.studiesRoot, input.studyId, candidate);
+        if (!existsSync(candidatePaths.manifest)) {
+          retryAnalysisId = candidate;
+          break;
+        }
+        const candidateManifest = readAnalysisManifest(candidatePaths.manifest);
+        if (candidateManifest.status === "ready" || candidateManifest.status === "preparing") {
+          retryAnalysisId = candidate;
+          retryExisting = candidateManifest;
+          break;
+        }
+      }
+      if (!retryAnalysisId) {
+        throw new Error(
+          `UA analysis ${identity.analysisId} is superseded and no free -retryN analysis id remains`,
+        );
+      }
+      if (retryExisting?.status === "ready") {
+        assertReadyAnalysisMatches(retryExisting, {
+          analysisId: retryAnalysisId,
+          snapshotId: snapshot.id,
+          sourceCommit: snapshot.sourceCommit,
+          engineVersion,
+          outputLanguage,
+          configHash: identity.configHash,
+          engineProvenance,
+        });
+        disposition = "ready-reused";
+        analysis = retryExisting;
+        invocation = null;
+      } else {
+        invocation = prepareUaAnalysis({
+          studiesRoot: input.studiesRoot,
+          studyId: input.studyId,
+          snapshotId: snapshot.id,
+          analysisId: retryAnalysisId,
+          engineVersion,
+          outputLanguage,
+          config: input.config,
+          engineProvenance,
+          now: input.now,
+        });
+        disposition = retryExisting ? "resumed" : "retried";
+        analysis = invocation.analysis;
+      }
     } else {
       throw new Error(
         `UA analysis ${identity.analysisId} is ${existing.status}; it cannot be prepared or reused`,

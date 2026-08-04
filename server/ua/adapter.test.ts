@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   readlinkSync,
@@ -22,6 +23,7 @@ import {
   finalizeUaAnalysis,
   prepareUaAnalysis,
   retireUaAnalysis,
+  verifyUaAnalysisQuality,
 } from "./adapter.js";
 
 function git(repository: string, args: string[]): string {
@@ -628,6 +630,48 @@ describe("UA adapter", () => {
       });
       expect(retired.status).toBe("superseded");
       expect(existsSync(paths.data)).toBe(true);
+    });
+  });
+
+  describe("verifyUaAnalysisQuality", () => {
+    it("returns stage batches when only intermediate outputs exist", () => {
+      const { studiesRoot, snapshot } = setup();
+      prepareUaAnalysis({
+        studiesRoot,
+        studyId: "sample",
+        snapshotId: snapshot.id,
+        analysisId: "ua-verify-batches",
+        engineVersion: "2.9.4",
+        outputLanguage: "en",
+        now: new Date("2026-07-20T00:00:00.000Z"),
+      });
+      const paths = getUaAnalysisPaths(studiesRoot, "sample", "ua-verify-batches");
+      const intermediate = join(paths.data, "intermediate");
+      mkdirSync(intermediate, { recursive: true });
+      writeFileSync(
+        join(intermediate, "batches.json"),
+        JSON.stringify([{ files: ["app.ts"] }, { files: ["extra.ts"] }]),
+      );
+      writeFileSync(
+        join(intermediate, "batch-1.json"),
+        JSON.stringify({
+          nodes: [{ id: "file:app.ts", type: "file", filePath: "app.ts" }],
+          edges: [],
+        }),
+      );
+      writeFileSync(
+        join(intermediate, "noise.json"),
+        JSON.stringify({ nodes: [{ id: "file:noise.ts", type: "file", filePath: "noise.ts" }] }),
+      );
+
+      const report = verifyUaAnalysisQuality(studiesRoot, "sample", "ua-verify-batches");
+      expect(report.stage).toBe("batches");
+      if (report.stage !== "batches") throw new Error("expected batches stage");
+      expect(report.totalBatches).toBe(2);
+      expect(report.producedBatches).toBe(1);
+      expect(report.batches[0]).toMatchObject({ status: "complete", batchIndex: 1 });
+      expect(report.batches[1]).toMatchObject({ status: "pending", batchIndex: 2 });
+      expect(report.failures).toEqual([]);
     });
   });
 });
