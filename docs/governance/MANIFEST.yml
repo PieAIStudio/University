@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-04T13:03:33.095Z
+generated_at: 2026-08-04T17:30:31.879Z
 generator_version: doc-gov@0.8.0
 docs_count: 24
 docs:
@@ -156,7 +156,7 @@ docs:
     type: reference
     status: active
     canonical: false
-    last_reviewed: 2026-07-21
+    last_reviewed: 2026-08-05
     pinned: true
   - id: SPEC-0001
     path: docs/specs/completed/SPEC-0001-university-local-foundation.md
