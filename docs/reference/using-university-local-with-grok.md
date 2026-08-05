@@ -154,7 +154,46 @@ pnpm university course reactivate --study <study-id> --course <course-id> --snap
 
 提案里的顺序就是课时里的顺序。提案必须仍然列出该课时现有的全部卡片和练习——**只能加，不能少**。想去掉一个条目要走退役流程，因为直接省略会让它已经排好的复习状态指向课时不再声明的内容。
 
-结构上还有一条边界：**课程和单元是一次性建成的容器。** 可以给已有课时加卡片和练习，但不能给已有单元加课时、也不能给已有课程加单元。要加新的课时或单元，只能新建一门课。
+### 给已有课程加课时和单元
+
+`course revise` 只能改已经存在的东西。要让课程长出新的一节课，用 `add-lessons`：
+
+```bash
+pnpm university course add-lessons --study <study-id> --input <proposal.json> --dry-run
+```
+
+提案的形状和 `course create` 里的课时一模一样（同一份 schema，所以规则完全一致），外面套一层「加到哪」：
+
+```json
+{
+  "schemaVersion": 1,
+  "proposalId": "add-retry-safety-lesson",
+  "targetSnapshotId": "git-...",
+  "targetAnalysisId": "ua-...",
+  "courseId": "testing-strategy",
+  "unit": { "id": "degraded-design" },
+  "lessons": [ { "id": "...", "title": "...", "content": "...", "evidence": [...], "cards": [...], "exercises": [...] } ]
+}
+```
+
+- **加到已有单元**：`unit` 只写 `id`。多写 `title`/`objective` 会被拒绝——免得你以为改了标题其实没改。
+- **顺便建新单元**：`unit` 写全 `id` + `title` + `objective`（可选 `prerequisiteUnitIds`）。新单元以 `draft` 落地，由 `reactivate` 激活。
+- 课时 ID 在**整门课范围内**唯一，不只是单元内——它们都是同一个课程目录下的文件夹名。
+- 同样要先 `open-for-edit`，改完 `reactivate`。
+
+### 完整的编辑循环
+
+不管是改内容、加卡片还是加课时，都是同一个三步：
+
+```bash
+pnpm university course open-for-edit --study <study-id> --course <course-id>
+# …… revise / add-lessons，可以连着做很多次 ……
+pnpm university course reactivate --study <study-id> --course <course-id> --snapshot <snapshot-id> --analysis <analysis-id>
+```
+
+**真正把关的是第三步。** 它会把课程里每一条证据重新对着快照验一遍，有一条不新鲜就拒绝激活，课程停在 `stale` 上。所以中途出错不可怕——课程不会以半成品的样子被发布出去，把出错的地方修好再 `reactivate` 就行。
+
+写入顺序是「先声明、后内容」：课程声明单元 → 单元声明课时 → 才写课时。这样任何读取方都能从上往下走而不会遇到断掉的引用。代价是中断时会留下一个「声明了但内容还没写」的状态——它会让 `reactivate` 明确报错，而不是让课程看起来是完整的。重跑同一份提案即可补齐。
 
 ### 把追问保存为知识点
 

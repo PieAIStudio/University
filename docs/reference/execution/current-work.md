@@ -316,15 +316,50 @@ Proven end to end on a live course: `testing-strategy` was opened, its
 `analytics-privacy-contract.test.ts`, and the course reactivated as fresh. The
 shelf is 7 courses, 21 lessons, 57 cards, 24 exercises, 153 evidence references.
 
+## Curriculum Growth Receipt (2026-08-05)
+
+The container limit recorded as an accepted risk in the previous receipt is
+gone. `writeUnit` and `writeCourse` go through `createManifestRoot`, which is
+create-once — right for creation, but it meant a published course could never
+gain a unit and a published unit could never gain a lesson. `updateCourseManifest`
+and `updateUnitManifest` now cover the editable window that `course open-for-edit`
+opens, and both take their input as `Omit<…, "status">` so a manifest update
+cannot become a back door around the status transition table.
+
+`course add-lessons` adds lessons to a course that is already published, into an
+existing unit or into a new unit created alongside them. Its lesson shape is the
+schema `course create` uses, extracted to `server/workflows/lesson-proposal.ts`
+along with the code that writes a lesson bundle, so a rule like the
+cards-need-an-exercise refinement cannot hold at one entry point and not the
+other. `create-course.ts` was rewired onto the shared module with its nine tests
+unchanged, which is what makes the extraction a refactor rather than a rewrite.
+
+Reactivation used to refuse a `draft` unit, because the only way to get one was
+an interrupted `course create`. A unit added to a published course is legitimately
+draft, so the check now refuses only `retired`: the real gate is the freshness
+audit plus `assertUnitReadyForActivation`, which walks every lesson, card and
+exercise and re-checks its evidence, and a half-built unit fails those.
+
+Writes go declaration-first — course names the unit, unit names the lesson, then
+the lesson is written — because that is the order every reader walks. An
+interrupted run therefore leaves a declaration pointing at missing content, which
+makes reactivation fail loudly rather than leaving a course that looks whole;
+re-running the same proposal completes it.
+
+Proven on the real curriculum: `testing-strategy` grew a third lesson,
+`retry-safety`, built on `degraded-idempotency.test.ts` — the idempotency debt
+that the previous lesson's retry affordance creates. The shelf is 7 courses,
+22 lessons, 62 cards, 26 exercises, 164 evidence references.
+
+`scripts/dev.mjs` also stopped being hostile on a taken port. Two `pnpm dev`
+sessions at once produced an unhandled `EADDRINUSE` error event and an endless
+restart loop with a Node stack trace. It now probes both fixed ports first and
+prints which process holds them and how to end it. Vite gained `strictPort` for
+the same reason: silently moving to 5174 would leave the campus at an address
+nobody bookmarked.
+
 ## Accepted Risks
 
-- **Course and unit containers are created once and cannot grow.** A lesson can
-  gain cards and exercises, but `writeUnit` and `writeCourse` both require
-  `draft` status and `createManifestRoot` refuses a manifest that differs from
-  what is stored, so an existing unit cannot gain a lesson and an existing
-  course cannot gain a unit. Adding either means publishing a new course. That
-  is a real constraint on how curricula grow, and changing it would mean giving
-  the containers revisions the way lessons have them.
 - **The API request token does not defend against other local processes.**
   `GET /api/bootstrap` hands the token out unauthenticated, so anything running
   as the same user can obtain it. That is deliberate and not a gap: the same

@@ -1002,8 +1002,14 @@ function reactivateCourseUnchecked(input: ReactivateCourseInput): ReactivateCour
   if (course.status !== "stale") {
     throw new Error(`Course must be stale before reactivation: ${course.id} is ${course.status}`);
   }
+  // `draft` used to mean only one thing — an interrupted `course create` — and
+  // was refused for that reason. `course add-lessons` gives it a second, valid
+  // meaning: a unit added to this course and never published. Both are safe to
+  // let through here because the gate is not the status, it is the audit above
+  // plus `assertUnitReadyForActivation`, which walks every lesson, card and
+  // exercise and re-checks its evidence. A half-built unit fails those.
   for (const unit of unitStatuses) {
-    if (unit.status !== "active" && unit.status !== "stale") {
+    if (unit.status === "retired") {
       throw new Error(`Unit cannot be reactivated from ${unit.status}: ${unit.id}`);
     }
   }
@@ -1012,7 +1018,7 @@ function reactivateCourseUnchecked(input: ReactivateCourseInput): ReactivateCour
   try {
     for (const unitId of course.unitIds) {
       const unit = readUnit(input.studiesRoot, input.studyId, course.id, unitId);
-      if (unit.status === "stale") {
+      if (unit.status === "stale" || unit.status === "draft") {
         updateUnitStatus(input.studiesRoot, input.studyId, course.id, unit.id, "active");
         activatedUnitIds.push(unit.id);
       }

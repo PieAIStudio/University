@@ -428,13 +428,68 @@ function assertCourseReadyForActivation(
   }
 }
 
-function assertContentContainerIsEditable(course: CourseManifest, unit: UnitManifest): void {
+function assertCourseIsEditable(course: CourseManifest): void {
   if (course.status === "active" || course.status === "retired") {
     throw new Error(`Course must be draft or stale before content can change: ${course.id}`);
   }
+}
+
+function assertContentContainerIsEditable(course: CourseManifest, unit: UnitManifest): void {
+  assertCourseIsEditable(course);
   if (unit.status === "active" || unit.status === "retired") {
     throw new Error(`Unit must be draft or stale before content can change: ${unit.id}`);
   }
+}
+
+/**
+ * Adds to what a course declares — a new unit, a changed title — while it sits
+ * in the editable window that `course open-for-edit` opens. `writeCourse` is
+ * create-once by design, which is right for creation but meant a published
+ * course could never gain a unit. Correctness is not bought by immutability
+ * here; it is bought by the freshness audit that reactivation runs on the way
+ * out.
+ *
+ * `status` and `createdAt` are absent from the input on purpose: status belongs
+ * to `updateCourseStatus`, which owns the transition table, and a creation date
+ * that could be edited is not a creation date.
+ */
+export function updateCourseManifest(
+  studiesRoot: string,
+  studyId: string,
+  candidate: Omit<CourseManifest, "status" | "createdAt">,
+  now = new Date(),
+): CourseManifest {
+  const current = readCourse(studiesRoot, studyId, candidate.id);
+  assertCourseIsEditable(current);
+  const updated = CourseManifestSchema.parse({
+    ...candidate,
+    status: current.status,
+    createdAt: current.createdAt,
+    updatedAt: now.toISOString(),
+  });
+  assertCourseStructure(updated);
+  writeJsonAtomically(getCoursePaths(studiesRoot, studyId, updated.id).manifest, updated);
+  return updated;
+}
+
+/**
+ * The unit-level counterpart: lets a unit declare a lesson it did not have
+ * before. A lesson cannot be written until its unit names it, so this is the
+ * step that makes a lesson addable at all.
+ */
+export function updateUnitManifest(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  candidate: Omit<UnitManifest, "status">,
+): UnitManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const current = readUnit(studiesRoot, studyId, courseId, candidate.id);
+  assertContentContainerIsEditable(course, current);
+  const updated = UnitManifestSchema.parse({ ...candidate, status: current.status });
+  assertUnitStructure(course, updated);
+  writeJsonAtomically(getUnitPaths(studiesRoot, studyId, courseId, updated.id).manifest, updated);
+  return updated;
 }
 
 export function updateCourseStatus(

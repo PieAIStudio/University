@@ -15,6 +15,7 @@ import {
   finalizeStudyRefresh,
   prepareStudyRefresh,
 } from "./workflows/refresh-source.js";
+import { addCourseLessons } from "./workflows/add-lessons.js";
 import { createCourse } from "./workflows/create-course.js";
 import {
   CourseRevisionPartialError,
@@ -45,6 +46,7 @@ Commands:
   course reactivate --study <study-id> --course <course-id> --snapshot <snapshot-id> [--analysis <analysis-id>]
   course set-default --study <study-id> --course <course-id>
   course open-for-edit --study <study-id> --course <course-id>
+  course add-lessons --study <study-id> --input <proposal.json> [--dry-run]
   session start --study <study-id> --host grok-build --objective <text>
   session status --study <study-id>
   session end --study <study-id> [--session <session-id>]
@@ -144,6 +146,13 @@ interface CourseOpenForEditCommand {
   readonly courseId: string;
 }
 
+interface CourseAddLessonsCommand {
+  readonly kind: "course-add-lessons";
+  readonly studyId: string;
+  readonly inputPath: string;
+  readonly dryRun: boolean;
+}
+
 interface SessionStartCommand {
   readonly kind: "session-start";
   readonly studyId: string;
@@ -197,6 +206,7 @@ export type UniversityLocalCliCommand =
   | CourseReactivateCommand
   | CourseSetDefaultCommand
   | CourseOpenForEditCommand
+  | CourseAddLessonsCommand
   | SessionStartCommand
   | SessionStatusCommand
   | SessionEndCommand
@@ -390,6 +400,15 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         kind: "course-open-for-edit",
         studyId: required(values.study, "study"),
         courseId: required(values.course, "course"),
+      };
+    }
+    if (positionals[1] === "add-lessons") {
+      rejectUnrelatedOptions(values, ["study", "input", "dry-run"]);
+      return {
+        kind: "course-add-lessons",
+        studyId: required(values.study, "study"),
+        inputPath: required(values.input, "input"),
+        dryRun: values["dry-run"] ?? false,
       };
     }
   }
@@ -590,6 +609,16 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         updatedAt: study.updatedAt,
       };
     }
+    case "course-add-lessons":
+      return addCourseLessons({
+        studiesRoot: config.studiesRoot,
+        studyId: input.command.studyId,
+        proposal: readProposal(
+          resolve(input.cwd ?? process.cwd(), input.command.inputPath),
+          "Lesson addition",
+        ),
+        dryRun: input.command.dryRun,
+      });
     case "course-open-for-edit":
       return openCourseForEdit({
         studiesRoot: config.studiesRoot,

@@ -169,6 +169,15 @@ describe("UniversityLocal CLI parser", () => {
       },
     ],
     [
+      ["course", "add-lessons", "--study", "supaluv", "--input", "lessons.json", "--dry-run"],
+      {
+        kind: "course-add-lessons",
+        studyId: "supaluv",
+        inputPath: "lessons.json",
+        dryRun: true,
+      },
+    ],
+    [
       [
         "session",
         "start",
