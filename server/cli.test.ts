@@ -105,6 +105,24 @@ describe("UniversityLocal CLI parser", () => {
       },
     ],
     [
+      ["course", "create", "--study", "turing-pact", "--input", "course.json"],
+      {
+        kind: "course-create",
+        studyId: "turing-pact",
+        inputPath: "course.json",
+        dryRun: false,
+      },
+    ],
+    [
+      ["course", "create", "--study", "turing-pact", "--input", "course.json", "--dry-run"],
+      {
+        kind: "course-create",
+        studyId: "turing-pact",
+        inputPath: "course.json",
+        dryRun: true,
+      },
+    ],
+    [
       ["course", "revise", "--study", "supaluv", "--input", "revision.json", "--dry-run"],
       {
         kind: "course-revise",

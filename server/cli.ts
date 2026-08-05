@@ -14,6 +14,7 @@ import {
   finalizeStudyRefresh,
   prepareStudyRefresh,
 } from "./workflows/refresh-source.js";
+import { createCourse } from "./workflows/create-course.js";
 import {
   CourseRevisionPartialError,
   reactivateCourse,
@@ -37,6 +38,7 @@ Commands:
   refresh verify --study <study-id> --analysis <analysis-id>
   refresh retire --study <study-id> --analysis <analysis-id> --reason <text> [--superseded-by <analysis-id>] [--force]
   refresh audit --study <study-id> --snapshot <snapshot-id> [--analysis <analysis-id>] [--apply]
+  course create --study <study-id> --input <proposal.json> [--dry-run]
   course revise --study <study-id> --input <proposal.json> [--dry-run]
   course reactivate --study <study-id> --course <course-id> --snapshot <snapshot-id> [--analysis <analysis-id>]
   session start --study <study-id> --host grok-build --objective <text>
@@ -104,6 +106,13 @@ interface RefreshAuditCommand {
   readonly apply: boolean;
 }
 
+interface CourseCreateCommand {
+  readonly kind: "course-create";
+  readonly studyId: string;
+  readonly inputPath: string;
+  readonly dryRun: boolean;
+}
+
 interface CourseReviseCommand {
   readonly kind: "course-revise";
   readonly studyId: string;
@@ -167,6 +176,7 @@ export type UniversityLocalCliCommand =
   | RefreshVerifyCommand
   | RefreshRetireCommand
   | RefreshAuditCommand
+  | CourseCreateCommand
   | CourseReviseCommand
   | CourseReactivateCommand
   | SessionStartCommand
@@ -320,6 +330,15 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
     }
   }
   if (positionals.length === 2 && positionals[0] === "course") {
+    if (positionals[1] === "create") {
+      rejectUnrelatedOptions(values, ["study", "input", "dry-run"]);
+      return {
+        kind: "course-create",
+        studyId: required(values.study, "study"),
+        inputPath: required(values.input, "input"),
+        dryRun: values["dry-run"] ?? false,
+      };
+    }
     if (positionals[1] === "revise") {
       rejectUnrelatedOptions(values, ["study", "input", "dry-run"]);
       return {
@@ -491,6 +510,16 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         snapshotId: input.command.snapshotId,
         ...(input.command.analysisId ? { analysisId: input.command.analysisId } : {}),
         apply: input.command.apply,
+      });
+    case "course-create":
+      return createCourse({
+        studiesRoot: config.studiesRoot,
+        studyId: input.command.studyId,
+        proposal: readProposal(
+          resolve(input.cwd ?? process.cwd(), input.command.inputPath),
+          "Course creation",
+        ),
+        dryRun: input.command.dryRun,
       });
     case "course-revise":
       return reviseCourseLesson({

@@ -126,7 +126,7 @@ type ExerciseWithoutHash = Exercise extends infer Item
     : never
   : never;
 
-interface TargetIdentity {
+export interface TargetIdentity {
   readonly snapshotId: string;
   readonly sourceCommit: string;
   readonly analysisId: string | null;
@@ -248,10 +248,13 @@ function assertSameIds(
   }
 }
 
-function readTargetIdentity(
+export function readTargetIdentity(
   studiesRoot: string,
   studyId: string,
-  proposal: CourseRevisionProposal,
+  proposal: {
+    readonly targetSnapshotId: string;
+    readonly targetAnalysisId?: string | undefined;
+  },
 ): TargetIdentity {
   const snapshot = SnapshotManifestSchema.parse(
     readJson(getSnapshotPaths(studiesRoot, studyId, proposal.targetSnapshotId).manifest),
@@ -282,7 +285,7 @@ function readTargetIdentity(
   };
 }
 
-function validateTargetEvidence(
+export function validateTargetEvidence(
   studiesRoot: string,
   studyId: string,
   evidence: readonly EvidenceReference[],
