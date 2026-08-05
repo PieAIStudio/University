@@ -46,7 +46,7 @@
 | 6 | `foundations-quality` | 怎么知道没写错 | 测试与断言、类型检查、lint、CI 门禁 | `tests/*`、`scripts/qa/*` |
 | 7 | `foundations-product` | 代码之外 | 埋点与隐私、转化漏斗、内容治理、成本 | `product-analytics`、`roomFunnelTracking`、`moderation`、`ai-budget-client` |
 
-每门 2–3 个单元，每单元 3–5 节，合计约 60–90 节。
+**已全部建成**：24 个单元、98 节课、294 张卡片、157 道练习、679 条证据。
 **这是「抓大放小」之后的规模，不是把几百节当成目标。**
 
 ## 学习顺序
@@ -71,3 +71,21 @@ ai-cost-and-boundaries · generated-assets · founder-engineer   （SupaLuv，�
 5. **一节课只讲一件事。** 零基础读者的预算是一次一个新概念。
 6. **练习两种**：`short-answer` 给参考答案；`explain` 给 3–4 条评分要点。
    零基础阶段以 `short-answer` 为主，概念性强的用 `explain`。
+7. **UA 图没索引到的文件不要写 `nodeIds`。** 知识图谱只覆盖 572 个文件，
+   `package.json`、`tsconfig*.json`、`.env.example`、`.gitignore`、`lefthook.yml`、
+   `vercel.json`、`.oxlintrc.json`、`.github/workflows/**` 都不在里面。
+   引用这类文件时只留 `snapshotId` / `sourceCommit` / `sourcePath` / 行号，
+   把 `analysisId`、`graphHash`、`nodeIds` 一起去掉——git 快照本身就是完整的证据绑定。
+   写了不存在的节点，`course create` 会以 `unknown UA node` 拒收。
+
+## 校验
+
+两个脚本，缺一不可：
+
+```bash
+node scripts/check-proposal-evidence.mjs course-proposals/<file>.json   # 引用指向的代码是否真实存在
+node scripts/check-proposal-shape.mjs course-proposals/<file>.json      # 课程本身是否可用
+```
+
+第二个查的是 schema 管不到的事：ID 是否重复、正文六段结构是否齐全、
+`short-answer` 的答案是不是短到能公平比对、每条证据有没有写 `note`。

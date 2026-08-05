@@ -1,0 +1,1563 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-foundations-terrain",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "foundations-terrain",
+    "title": "《认识地形》",
+    "description": "零基础主干第 0 阶段：打开图灵密约这一陌生项目时，先认清项目由什么组成、怎么跑起来、配置与提交边界在哪——不写业务代码，只建立地图。",
+    "audience": "零基础重建地基的独立开发者",
+    "objectives": [
+      "打开 package.json 说出 name、private、scripts 与两类依赖的作用，并指出日常开发与验收要敲的门牌",
+      "说明根 tsconfig 如何用 references 串起 app/node 两份配置，以及 .gitignore 挡在版本库外的主要类别",
+      "沿着 index.html → Vite dev/build → vercel rewrite → Capacitor webDir 描述「源码如何变成网页与进壳」",
+      "解释 .env.example 与 .env 的分工，以及 verify 链条如何定义「做完」；理解证据为何钉在固定 commit 上"
+    ],
+    "units": [
+      {
+        "id": "what-a-project-is",
+        "title": "一个项目由什么组成",
+        "objective": "用 package.json、tsconfig 与 .gitignore 建立「身份证、门牌、工具箱、版本库边界」四张底图。",
+        "lessons": [
+          {
+            "id": "package-json-is-an-id-card",
+            "title": "package.json：项目的身份证",
+            "content": "# package.json：项目的身份证\n\n## 学习目标\n完成本课后，你能打开 `package.json` 的前五行，指出项目叫什么、版本号是多少、`private: true` 和 `type: \"module\"` 各在说什么；并知道 JSON 文件大致长什么样。\n\n## 先给结论\n- **事实：`package.json` 第 2–5 行写着 `\"name\": \"turing-pact\"`、`\"version\": \"0.1.0\"`、`\"private\": true`、`\"type\": \"module\"`。**\n- **推论：这份文件是项目的「身份证」——先登记身份与边界，后面的 scripts、依赖都挂在同一张身份证上。**\n\n## 一个类比\n进公司办工牌时，前台先登记：姓名、工号、是不是内部员工、工牌能不能刷出大门。`package.json` 开头几行就是这张工牌上的固定信息；名字和版本让人和工具认得出「这是谁」，`private` 决定会不会拿去对外发售。\n\n## 工作示例\n`package.json` 是一份 **JSON** 文件。JSON 用花括号 `{ }` 包住一堆「键: 值」；键和字符串值都要用双引号包起来，中间用冒号，条目之间用逗号。\n\n前五行：\n\n```json\n{\n  \"name\": \"turing-pact\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"type\": \"module\",\n```\n\n逐行读：\n\n1. `\"name\": \"turing-pact\"` —— 项目在包管理器语境下的名字。\n2. `\"version\": \"0.1.0\"` —— 当前版本号（语义化版本的常见写法）。\n3. `\"private\": true` —— 标记为私有，**不要**发布到 npm 公共仓库。\n4. `\"type\": \"module\"` —— 告诉 Node：这个项目的 `.js` 按 ES 模块（`import`/`export`）处理，而不是旧的 CommonJS。\n\n后面还有 `scripts`、`dependencies` 等大段；本课只认身份证上这几格。`scripts` 是下一节的门。\n\n## 自检\n**问：** 把 `\"private\": true` 改成 `false`，项目会立刻坏掉吗？\n**答：** 一般不会立刻坏掉。它改的是「能不能 / 该不该发到 npm」的边界声明，不是运行时开关。一人公司本地跑起来不依赖这一行；发错包才是风险。\n\n## 重点\n**打开陌生项目，先读 `package.json` 开头：名字、版本、私有与否，是认地形的第一步。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "package.json",
+                "lineStart": 1,
+                "lineEnd": 5,
+                "nodeIds": [],
+                "note": "name / version / private / type：项目身份证的前几格。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "pkg-name-field",
+                "front": "`package.json` 里哪个字段登记了这个项目叫什么？",
+                "back": "`name` 字段。图灵密约里写的是 `\"name\": \"turing-pact\"`。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "name 字段的值是 turing-pact。"
+                  }
+                ]
+              },
+              {
+                "id": "pkg-private-true",
+                "front": "`\"private\": true` 主要在防止什么？",
+                "back": "防止（或声明不应）把这个包发布到 npm 公共仓库。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "private 为 true。"
+                  }
+                ]
+              },
+              {
+                "id": "pkg-json-shape",
+                "front": "JSON 里字符串键和字符串值要用什么包起来？",
+                "back": "双引号。例如 `\"name\": \"turing-pact\"`。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "键与值都是双引号字符串。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "pkg-private-keyword",
+                "title": "写出 private 字段的字面值",
+                "kind": "short-answer",
+                "prompt": "图灵密约的 `package.json` 里，`private` 字段的值是什么？只写 true 或 false。",
+                "expectedAnswer": "true",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "\"private\": true。"
+                  }
+                ]
+              },
+              {
+                "id": "pkg-name-value",
+                "title": "写出项目 name",
+                "kind": "short-answer",
+                "prompt": "`package.json` 的 `name` 字段值是什么字符串？只写名字本身。",
+                "expectedAnswer": "turing-pact",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "name 为 turing-pact。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "scripts-are-the-doors",
+            "title": "scripts：项目所有能敲的门",
+            "content": "# scripts：项目所有能敲的门\n\n## 学习目标\n完成本课后，你能在 `package.json` 的 `scripts` 段里指出：日常开发敲哪条、打包敲哪条、一键验收敲哪条。\n\n## 先给结论\n- **事实：`scripts` 从第 7 行起列出 `dev`、`build`、`verify` 等键；每个键对应一条可在终端执行的命令字符串。**\n- **推论：你不必记住底层工具链怎么拼——项目把门牌写在 `scripts` 里，你按门牌敲 `pnpm <名字>`。**\n\n## 一个类比\n公寓一楼有一排带标签的按钮：访客、快递、管理处。你不需要知道每扇门后面的电路怎么走，按标签就行。`scripts` 就是这排标签；`pnpm dev` 等于按「访客」——门开了，开发服务器起来。\n\n## 工作示例\n```json\n\"scripts\": {\n  \"dev\": \"vite\",\n  \"build\": \"tsc -b && vite build\",\n  ...\n  \"verify:web\": \"pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build\",\n  \"verify\": \"pnpm verify:web\",\n```\n\n读三扇最常用的门：\n\n| 门牌 | 命令在干什么（本课只认门牌） |\n| --- | --- |\n| `dev` | 启动 Vite 开发服务器，改代码能热更新 |\n| `build` | 先类型检查构建信息，再打包出可部署产物 |\n| `verify` | 转调 `verify:web`，串起「类型 / lint / 格式 / 测试 / 构建」一整条验收 |\n\n在项目根目录敲：\n\n```bash\npnpm dev\npnpm build\npnpm verify\n```\n\n`scripts` 里还有 `cap:sync`、`test:e2e`、一堆 `smoke:*`——以后维护时按名字搜门牌即可，不必一次背完。\n\n## 自检\n**问：** `scripts` 里的 `\"dev\": \"vite\"`，是说文件名必须叫 `dev` 吗？\n**答：** 不是。左边是你起的门牌名，右边才是真正执行的命令。约定俗成用 `dev` / `build`，换名字也能跑，只是别人会找不到门。\n\n## 重点\n**`scripts` 是项目对外的命令目录：先找门牌，再敲 `pnpm <门牌>`。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "package.json",
+                "lineStart": 7,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "scripts 段开头：dev 与 build 两条门牌。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "package.json",
+                "lineStart": 40,
+                "lineEnd": 41,
+                "nodeIds": [],
+                "note": "verify:web 与 verify：一键验收门牌。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "scripts-dev-command",
+                "front": "本地日常开发，`package.json` 里对应的 script 名是什么？",
+                "back": "`dev`。值为 `vite`，用来起开发服务器。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "\"dev\": \"vite\"。"
+                  }
+                ]
+              },
+              {
+                "id": "scripts-how-to-run",
+                "front": "要执行名为 `build` 的 script，终端大致敲什么？",
+                "back": "`pnpm build`（在项目根目录、已安装依赖的前提下）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "build 门牌对应 tsc -b && vite build。"
+                  }
+                ]
+              },
+              {
+                "id": "scripts-verify-alias",
+                "front": "`verify` 和 `verify:web` 是什么关系？",
+                "back": "`verify` 的值是 `pnpm verify:web`，它只是转调那条更长的验收链。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 40,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "verify 指向 verify:web。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "scripts-dev-name",
+                "title": "开发门牌名",
+                "kind": "short-answer",
+                "prompt": "日常起本地开发服务器时，应敲的 script 名称是什么？只写名字。",
+                "expectedAnswer": "dev",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "dev 门牌。"
+                  }
+                ]
+              },
+              {
+                "id": "scripts-verify-name",
+                "title": "验收门牌名",
+                "kind": "short-answer",
+                "prompt": "一键跑类型检查、lint、格式、测试和构建时，常用的 script 名称是什么？",
+                "expectedAnswer": "verify",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 41,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "verify 门牌。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "dependencies-vs-dev",
+            "title": "两类依赖：跑起来要的 vs 开发才要的",
+            "content": "# 两类依赖：跑起来要的 vs 开发才要的\n\n## 学习目标\n完成本课后，你能区分 `dependencies` 与 `devDependencies`，并各举出图灵密约里一个真实包名说明为什么放在那一侧。\n\n## 先给结论\n- **事实：`package.json` 有 `dependencies`（约第 54 行起）和 `devDependencies`（约第 80 行起）两段；例如 `react` 在前者，`vite` 与 `typescript` 在后者。**\n- **推论：装进用户浏览器、构成产品本身的库进 `dependencies`；只在写代码、检查、打包时用到的工具进 `devDependencies`。**\n\n## 一个类比\n开一家咖啡店：咖啡豆和杯子是**卖给客人时必须在场的东西**；收银机说明书、装修电钻只在店还没开张或晚上盘点时用。前者像 `dependencies`，后者像 `devDependencies`。客人进店时不需要看到电钻。\n\n## 工作示例\n`dependencies` 里能直接看到产品骨架：\n\n```json\n\"react\": \"19.2.7\",\n\"react-dom\": \"19.2.7\",\n\"@supabase/supabase-js\": \"2.110.3\",\n\"zustand\": \"^5.0.14\"\n```\n\n用户打开网页时，界面由 React 渲染，数据客户端用到 Supabase SDK，本地状态用到 Zustand——这些属于「跑起来要带上的」。\n\n`devDependencies` 里是开发与构建工具：\n\n```json\n\"vite\": \"8.1.4\",\n\"typescript\": \"6.0.3\",\n\"vitest\": \"4.1.10\",\n\"@vitejs/plugin-react\": \"6.0.3\"\n```\n\nVite 负责开发服务器和打包，TypeScript 负责类型检查，Vitest 负责跑测试——最终用户打开线上站点时，通常不需要再单独「安装」这些工具。\n\n读陌生项目时：先扫 `dependencies` 知道「产品站在谁肩膀上」，再扫 `devDependencies` 知道「作者用什么工具链维护它」。\n\n## 自检\n**问：** 把 `vite` 误放进 `dependencies`，项目一定跑不起来吗？\n**答：** 多半仍能开发与构建，但边界乱了：依赖树变胖、语义变糊，部署与审计时也更难判断「哪些是产品运行时真正需要的」。分类是为了边界清晰，不是语法强制。\n\n## 重点\n**`dependencies` 是产品运行时的队友；`devDependencies` 是工地工具箱——别把电钻塞进外卖袋。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "package.json",
+                "lineStart": 54,
+                "lineEnd": 78,
+                "nodeIds": [],
+                "note": "dependencies：react、supabase、zustand 等运行时依赖。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "package.json",
+                "lineStart": 80,
+                "lineEnd": 111,
+                "nodeIds": [],
+                "note": "devDependencies：vite、typescript、vitest 等开发工具。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "deps-react-side",
+                "front": "`react` 在图灵密约里属于 `dependencies` 还是 `devDependencies`？",
+                "back": "`dependencies`。它是界面运行时的核心库。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 73,
+                    "lineEnd": 74,
+                    "nodeIds": [],
+                    "note": "react 与 react-dom 在 dependencies。"
+                  }
+                ]
+              },
+              {
+                "id": "deps-vite-side",
+                "front": "`vite` 为什么更适合放在 `devDependencies`？",
+                "back": "它主要服务开发服务器与打包过程，不是最终用户页面里直接 import 的产品逻辑库。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 109,
+                    "lineEnd": 109,
+                    "nodeIds": [],
+                    "note": "vite 在 devDependencies。"
+                  }
+                ]
+              },
+              {
+                "id": "deps-two-sections",
+                "front": "打开 `package.json`，用哪两个字段名区分「跑起来要」和「开发才要」？",
+                "back": "`dependencies` 与 `devDependencies`。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 54,
+                    "lineEnd": 54,
+                    "nodeIds": [],
+                    "note": "dependencies 字段开头。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 80,
+                    "lineEnd": 80,
+                    "nodeIds": [],
+                    "note": "devDependencies 字段开头。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "deps-runtime-field",
+                "title": "运行时依赖字段名",
+                "kind": "short-answer",
+                "prompt": "登记「产品跑起来需要的包」的字段名是什么？",
+                "expectedAnswer": "dependencies",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 54,
+                    "lineEnd": 54,
+                    "nodeIds": [],
+                    "note": "dependencies 字段。"
+                  }
+                ]
+              },
+              {
+                "id": "deps-dev-field",
+                "title": "开发依赖字段名",
+                "kind": "short-answer",
+                "prompt": "登记「只在开发与构建时需要的包」的字段名是什么？",
+                "expectedAnswer": "devDependencies",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 80,
+                    "lineEnd": 80,
+                    "nodeIds": [],
+                    "note": "devDependencies 字段。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "two-tsconfigs",
+            "title": "两份 tsconfig：应用一半，工具一半",
+            "content": "# 两份 tsconfig：应用一半，工具一半\n\n## 学习目标\n完成本课后，你能解释根目录 `tsconfig.json` 为什么只有 4 行、几乎「什么都不编译」，以及 `references` 如何把 `tsconfig.app.json` 与 `tsconfig.node.json` 串起来。\n\n## 先给结论\n- **事实：根 `tsconfig.json` 只有 `\"files\": []` 和 `references` 指向 `./tsconfig.app.json` 与 `./tsconfig.node.json`；应用代码在 app 配置的 `include: [\"src\"]`，构建相关入口在 node 配置的 `include` 里。**\n- **推论：一份配置可以只做「目录索引」，真正的编译选项分放在不同场景的配置文件里——应用代码与 Vite/Capacitor 配置文件环境不同，所以拆开。**\n\n## 一个类比\n公司前台只有一张导览图：「业务部在 3 楼，行政在 1 楼」。前台自己不办公，只指路。根 `tsconfig.json` 就是前台导览图；真正办公的是 app 与 node 两份细则。\n\n## 工作示例\n根文件全文几乎就是：\n\n```json\n{\n  \"files\": [],\n  \"references\": [{ \"path\": \"./tsconfig.app.json\" }, { \"path\": \"./tsconfig.node.json\" }]\n}\n```\n\n- `\"files\": []` —— 根配置自己不直接收录源文件。\n- `references` —— 告诉 TypeScript 项目引用（project references）：去看另外两份配置。\n\n`tsconfig.app.json` 面向浏览器应用：\n\n- `\"include\": [\"src\"]` —— 管 `src` 下的应用代码。\n- 带 `jsx: \"react-jsx\"`、`lib` 含 `DOM` 等浏览器相关选项。\n\n`tsconfig.node.json` 面向 Node 侧配置文件：\n\n- `\"include\": [\"vite.config.ts\", \"capacitor.config.ts\", \"middleware.ts\"]` —— 管构建与壳配置，而不是 `src` 业务。\n\n本课**不讲**每个 compilerOptions 的语法含义（那是后面 TypeScript 相关课的事）。你只要建立地图：**根文件串线，app 管界面代码，node 管工具配置文件。**\n\n## 自检\n**问：** 为什么不把所有选项塞进一个 `tsconfig.json`？\n**答：** 应用代码跑在浏览器语境，Vite/Capacitor 配置跑在 Node 语境；需要的库（如 DOM）和收录文件集合不同。拆开后，工具能按场景分别检查，而不是用一份「大锅饭」配置硬套。\n\n## 重点\n**根 `tsconfig.json` 可以只是索引；真正的规则在被 `references` 指向的那几份里。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tsconfig.json",
+                "lineStart": 1,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "根 tsconfig：files 为空，references 指向 app 与 node。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tsconfig.app.json",
+                "lineStart": 1,
+                "lineEnd": 32,
+                "nodeIds": [],
+                "note": "应用侧配置：含 jsx、DOM lib，include 为 src。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tsconfig.node.json",
+                "lineStart": 1,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "工具侧配置：include vite/capacitor/middleware 配置文件。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "tsconfig-root-role",
+                "front": "根目录 `tsconfig.json` 的 `files` 是空数组，说明什么？",
+                "back": "根配置自己不直接收录源文件；真正收录关系在 references 指向的子配置里。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tsconfig.json",
+                    "lineStart": 2,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "files 为空，靠 references 串线。"
+                  }
+                ]
+              },
+              {
+                "id": "tsconfig-app-include",
+                "front": "`tsconfig.app.json` 主要 include 哪一棵目录？",
+                "back": "`src`（应用源码）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tsconfig.app.json",
+                    "lineStart": 31,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "include: [\"src\"]。"
+                  }
+                ]
+              },
+              {
+                "id": "tsconfig-node-include",
+                "front": "`tsconfig.node.json` 的 include 里有哪些文件名？",
+                "back": "`vite.config.ts`、`capacitor.config.ts`、`middleware.ts`。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tsconfig.node.json",
+                    "lineStart": 20,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "include 列出三份配置入口。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "tsconfig-references-key",
+                "title": "串线字段名",
+                "kind": "short-answer",
+                "prompt": "根 `tsconfig.json` 用哪个字段指向另外两份配置？只写字段名。",
+                "expectedAnswer": "references",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tsconfig.json",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "references 数组。"
+                  }
+                ]
+              },
+              {
+                "id": "tsconfig-app-dir",
+                "title": "应用 include 目录",
+                "kind": "short-answer",
+                "prompt": "`tsconfig.app.json` 的 include 指向哪一个目录名？",
+                "expectedAnswer": "src",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tsconfig.app.json",
+                    "lineStart": 31,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "include src。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "gitignore-is-a-boundary",
+            "title": ".gitignore：哪些东西不进版本库",
+            "content": "# .gitignore：哪些东西不进版本库\n\n## 学习目标\n完成本课后，你能说出 `.gitignore` 至少三类「不该提交」的东西，并各举图灵密约里的一条真实规则。\n\n## 先给结论\n- **事实：`.gitignore` 列出 `node_modules/`、`dist/`、`.env`、`.DS_Store`、`playwright-report/` 等模式；匹配到的路径默认不会被 Git 跟踪。**\n- **推论：版本库只应保存「人写的、可复现的源」；生成物、密钥、本机垃圾进库只会让仓库变脏、变危险。**\n\n## 一个类比\n搬家时，你装进纸箱的是衣服和证件，不会把垃圾桶、外卖残留和邻居家的钥匙一并封箱托运。`.gitignore` 就是「这箱不装」清单：生成物像垃圾体积大，密钥像别人的钥匙危险，本机文件像只在你房间才有用的便签。\n\n## 工作示例\n文件开头几类（按用途归堆，不必背全表）：\n\n| 类别 | 例子 | 为什么忽略 |\n| --- | --- | --- |\n| 依赖安装结果 | `node_modules/` | 体积巨大，可用锁文件重新安装 |\n| 构建产物 | `dist/`、`out/`、`release/` | 由源码生成，应可复现 |\n| 密钥与本地环境 | `.env`、`.env.local` | 含本机或密钥，不能进公共历史 |\n| 本机/工具垃圾 | `.DS_Store`、`*.tsbuildinfo` | 与业务无关，污染 diff |\n| 测试与部署缓存 | `playwright-report/`、`.vercel` | 运行后的报告或平台缓存 |\n\n带 `!` 的行是例外：例如某些设计参考 PNG 被允许提交——「默认忽略一类，再放行少数必须进库的」。\n\n本课建立边界意识即可：打开项目时先看 `.gitignore`，知道**仓库故意不装什么**。\n\n## 自检\n**问：** `dist/` 被忽略，是不是意味着线上网站没有前端文件？\n**答：** 不是。忽略的是「不要把构建结果当源码存进 Git」。部署时仍会在 CI 或本机执行 `build` 生成 `dist/`，再把产物交给托管平台。\n\n## 重点\n**`.gitignore` 画的是版本库边界：源码进箱，生成物、密钥、本机垃圾留在箱外。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".gitignore",
+                "lineStart": 1,
+                "lineEnd": 30,
+                "nodeIds": [],
+                "note": ".gitignore 全文：依赖、产物、环境变量、本机垃圾与测试报告等。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "gitignore-node-modules",
+                "front": "为什么几乎所有前端项目都会忽略 `node_modules/`？",
+                "back": "它是安装出来的依赖树，体积大且可用锁文件复现，不该当源码提交。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".gitignore",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "忽略 node_modules/。"
+                  }
+                ]
+              },
+              {
+                "id": "gitignore-env",
+                "front": "`.env` 出现在 `.gitignore` 里，主要防什么？",
+                "back": "防止含密钥或本机配置的文件进入 Git 历史。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".gitignore",
+                    "lineStart": 7,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "忽略 .env 与 .env.local。"
+                  }
+                ]
+              },
+              {
+                "id": "gitignore-dist",
+                "front": "`dist/` 被忽略说明版本库保存的是什么？",
+                "back": "保存源码与配置，而不是构建输出；产物应能由 build 重新生成。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".gitignore",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "忽略 dist/。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "gitignore-env-name",
+                "title": "被忽略的环境文件名",
+                "kind": "short-answer",
+                "prompt": "图灵密约 `.gitignore` 里，直接写出的环境变量文件名之一是什么？（例如常见的那一个）",
+                "expectedAnswer": ".env",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".gitignore",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "列出 .env。"
+                  }
+                ]
+              },
+              {
+                "id": "gitignore-modules",
+                "title": "依赖目录名",
+                "kind": "short-answer",
+                "prompt": "被忽略的依赖安装目录叫什么？",
+                "expectedAnswer": "node_modules",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".gitignore",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "node_modules/。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "how-it-runs",
+        "title": "这堆文件怎么变成能跑的东西",
+        "objective": "从 HTML 挂载点走到 Vite 开发/构建、Vercel rewrite 与 Capacitor 复用 dist。",
+        "lessons": [
+          {
+            "id": "the-first-page",
+            "title": "index.html：浏览器最先拿到的那一页",
+            "content": "# index.html：浏览器最先拿到的那一页\n\n## 学习目标\n完成本课后，你能指出 `index.html` 里 React 的挂载点在哪、应用脚本从哪一行引入，并说明为什么页面主体几乎是空的。\n\n## 先给结论\n- **事实：`index.html` 的 body 里有 `<div id=\"root\"></div>`，下一行是 `<script type=\"module\" src=\"/src/main.tsx\"></script>`。**\n- **推论：浏览器先拿到这张几乎空白的壳；真正的界面由脚本启动后，往 `#root` 里「挂」上去。**\n\n## 一个类比\n剧场开场前，舞台上只有一个写着「主舞台」的空台位和一张节目单入口。演员（React 组件）还没上场，但台位和入口已经定好了。`#root` 是空台位，`main.tsx` 是检票入场的那道门。\n\n## 工作示例\n文件末尾核心三行：\n\n```html\n<body>\n  <div id=\"root\"></div>\n  <script type=\"module\" src=\"/src/main.tsx\"></script>\n</body>\n```\n\n逐项读：\n\n1. `<div id=\"root\"></div>` —— 挂载点（mount point）。React 会把应用渲染进这个节点。\n2. `script type=\"module\"` —— 以 ES 模块方式加载脚本。\n3. `src=\"/src/main.tsx\"` —— 开发时由 Vite 接管这条入口；真正的启动逻辑在 `main.tsx`（本课不展开 TSX）。\n\nhead 里还有标题、主题脚本、社交媒体描述等——那是给浏览器标签和分享预览用的「说明书」，不是界面结构本身。界面结构几乎全在 JS 跑起来之后生成。\n\n之后学《界面是怎么长出来的》时，会从 `#root` 再往下追组件树。\n\n## 自检\n**问：** 如果删掉 `<div id=\"root\">`，只留 script，会怎样？\n**答：** 脚本仍可能执行，但 React 找不到约定好的挂载节点，页面通常就是空白或启动失败——壳上的台位丢了。\n\n## 重点\n**`index.html` 是壳：`#root` 是挂载点，`main.tsx` 是入口脚本。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "index.html",
+                "lineStart": 29,
+                "lineEnd": 32,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:index.html"
+                ],
+                "note": "body 内 root 挂载点与 main.tsx 入口脚本。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "html-root-id",
+                "front": "React 挂载点的元素 id 是什么？",
+                "back": "`root`（`<div id=\"root\">`）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "index.html",
+                    "lineStart": 30,
+                    "lineEnd": 30,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:index.html"
+                    ],
+                    "note": "div#root。"
+                  }
+                ]
+              },
+              {
+                "id": "html-entry-script",
+                "front": "应用入口脚本在 `index.html` 里写的路径是什么？",
+                "back": "`/src/main.tsx`。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "index.html",
+                    "lineStart": 31,
+                    "lineEnd": 31,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:index.html"
+                    ],
+                    "note": "script src 指向 /src/main.tsx。"
+                  }
+                ]
+              },
+              {
+                "id": "html-why-empty",
+                "front": "为什么 body 里几乎看不到按钮、列表等界面结构？",
+                "back": "界面由入口脚本启动后动态挂到 `#root`，HTML 只提供壳和挂载点。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "index.html",
+                    "lineStart": 29,
+                    "lineEnd": 32,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:index.html"
+                    ],
+                    "note": "body 只有 root 与 script。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "html-root-id-answer",
+                "title": "挂载点 id",
+                "kind": "short-answer",
+                "prompt": "`index.html` 里作为 React 挂载点的 div，其 id 属性值是什么？",
+                "expectedAnswer": "root",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "index.html",
+                    "lineStart": 30,
+                    "lineEnd": 30,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:index.html"
+                    ],
+                    "note": "id=\"root\"。"
+                  }
+                ]
+              },
+              {
+                "id": "html-entry-file",
+                "title": "入口文件名",
+                "kind": "short-answer",
+                "prompt": "入口 script 的 src 指向的文件名是什么？（含扩展名）",
+                "expectedAnswer": "main.tsx",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "index.html",
+                    "lineStart": 31,
+                    "lineEnd": 31,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:index.html"
+                    ],
+                    "note": "src/main.tsx。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "dev-server-vs-build",
+            "title": "开发服务器 vs 打包产物",
+            "content": "# 开发服务器 vs 打包产物\n\n## 学习目标\n完成本课后，你能对照 `package.json` 的 `dev`/`build` 与 `vite.config.ts`，说明开发时 Vite 做什么、`vite build` 把结果放到哪。\n\n## 先给结论\n- **事实：`dev` 脚本是 `vite`；`build` 是 `tsc -b && vite build`。`vite.config.ts` 里 `server.port` 为 5183，`build.outDir` 为 `dist`。**\n- **推论：开发模式偏向「改了立刻看见」；构建模式偏向「产出可部署的静态目录」。两者都是 Vite，职责不同。**\n\n## 一个类比\n彩排和正式演出：彩排时灯光师坐在场边随时调灯（开发服务器 + 热更新）；正式演出要把布景固定装箱运到剧场（`build` 写入 `dist`）。同一套剧本，两种工作方式。\n\n## 工作示例\n脚本侧：\n\n```json\n\"dev\": \"vite\",\n\"build\": \"tsc -b && vite build\",\n```\n\n配置侧：\n\n```ts\nbuild: {\n  chunkSizeWarningLimit: CHUNK_SIZE_WARNING_LIMIT_KIB,\n  outDir: 'dist',\n  ...\n},\nserver: {\n  port: 5183,\n  strictPort: true,\n  host: true,\n},\n```\n\n对照读：\n\n| 模式 | 你敲的门 | 关键配置 | 你得到什么 |\n| --- | --- | --- | --- |\n| 开发 | `pnpm dev` | `server.port: 5183` | 本机开发服务器，源码按需编译 |\n| 构建 | `pnpm build` | `build.outDir: 'dist'` | `dist/` 目录里的静态产物 |\n\n`plugins: [react(), tailwindcss()]` 表示 Vite 通过插件理解 React 与 Tailwind——开发与构建都会走这套管线。`base` 在 `native` 模式下变成 `./`，是为了手机壳用相对路径加载资源；网页默认 `/`。\n\n`dist/` 被 `.gitignore` 忽略：产物不进 Git，但部署与 Capacitor 都认这个目录。\n\n## 自检\n**问：** 只跑 `vite build`、不跑 `tsc -b`，和项目的 `build` script 一样吗？\n**答：** 不一样。项目的 `build` 先 `tsc -b` 再 `vite build`，把类型项目构建/检查也算进「打包」门牌。直接跑底层命令会跳过项目约定的前半段。\n\n## 重点\n**`dev` 起服务器给人改；`build` 写出 `dist` 给人部署——看 `vite.config.ts` 的 `server` 与 `build.outDir` 就对上了。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "package.json",
+                "lineStart": 8,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "dev 与 build 两条 script。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "vite.config.ts",
+                "lineStart": 28,
+                "lineEnd": 46,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:vite.config.ts"
+                ],
+                "note": "plugins、base、build.outDir、server.port 等核心配置。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "vite-dev-port",
+                "front": "开发服务器默认端口在配置里写的是多少？",
+                "back": "5183。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "vite.config.ts",
+                    "lineStart": 42,
+                    "lineEnd": 45,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:vite.config.ts"
+                    ],
+                    "note": "server.port 为 5183。"
+                  }
+                ]
+              },
+              {
+                "id": "vite-outdir",
+                "front": "`vite build` 默认把产物写到哪个目录名？",
+                "back": "`dist`（`build.outDir: 'dist'`）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "vite.config.ts",
+                    "lineStart": 34,
+                    "lineEnd": 34,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:vite.config.ts"
+                    ],
+                    "note": "outDir: 'dist'。"
+                  }
+                ]
+              },
+              {
+                "id": "vite-build-script",
+                "front": "`package.json` 的 `build` script 在 `vite build` 之前还跑什么？",
+                "back": "`tsc -b`（与 `vite build` 用 `&&` 串联）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "tsc -b && vite build。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "vite-port-number",
+                "title": "开发端口",
+                "kind": "short-answer",
+                "prompt": "vite 开发服务器配置的端口号是多少？只写数字。",
+                "expectedAnswer": "5183",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "vite.config.ts",
+                    "lineStart": 43,
+                    "lineEnd": 43,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:vite.config.ts"
+                    ],
+                    "note": "port: 5183。"
+                  }
+                ]
+              },
+              {
+                "id": "vite-out-dir",
+                "title": "产物目录",
+                "kind": "short-answer",
+                "prompt": "构建输出目录配置值是什么？",
+                "expectedAnswer": "dist",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "vite.config.ts",
+                    "lineStart": 34,
+                    "lineEnd": 34,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:vite.config.ts"
+                    ],
+                    "note": "outDir: 'dist'。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "one-rewrite-rule",
+            "title": "vercel.json：一条 rewrite 救刷新 404",
+            "content": "# vercel.json：一条 rewrite 救刷新 404\n\n## 学习目标\n完成本课后，你能说明 `vercel.json` 里 `framework` / `buildCommand` / `outputDirectory` 各管什么，以及为什么 SPA 需要把未知路径 rewrite 回 `/`。\n\n## 先给结论\n- **事实：`vercel.json` 声明 `framework: \"vite\"`、`buildCommand` 用 pnpm 执行 build、`outputDirectory: \"dist\"`，并用 `rewrites` 把多数路径指到 `\"/\"`。**\n- **推论：单页应用（SPA）在浏览器里自己做路由；服务器若按「每个路径都有真实文件」去找，刷新深链接会 404——rewrite 让服务器始终交回那张壳，再交给前端路由。**\n\n## 一个类比\n博物馆只有一个大门，馆内用导览图跳转展厅。若访客在「三号展厅」刷新手机，保安若按「三号展厅」去大门外找一扇独立建筑，会说「没有这个门」。正确做法是：刷新也从大门进，再由导览图带到三号展厅。`rewrites` 就是「刷新也走大门」。\n\n## 工作示例\n```json\n{\n  \"framework\": \"vite\",\n  \"installCommand\": \"corepack pnpm@11.9.0 install --frozen-lockfile\",\n  \"buildCommand\": \"corepack pnpm@11.9.0 build\",\n  \"outputDirectory\": \"dist\",\n  \"rewrites\": [\n    {\n      \"source\": \"/((?!_vercel/|assets/).*)\",\n      \"destination\": \"/\"\n    }\n  ]\n}\n```\n\n逐项：\n\n1. `framework` —— 告诉 Vercel 这是 Vite 项目，沿用对应约定。\n2. `buildCommand` —— 云端怎么打包。\n3. `outputDirectory: \"dist\"` —— 打包结果在哪（与 Vite `outDir` 对齐）。\n4. `rewrites` —— 把匹配到的路径**在服务器侧改写**到 `/`（仍交给前端），排除 `_vercel/` 与 `assets/` 等不该改写的前缀。\n\n用户访问 `/daily` 并刷新时：没有名为 `daily/index.html` 的静态文件也没关系——rewrite 把请求指回 `/`，浏览器仍加载 SPA 壳，再由前端路由显示 daily。\n\n之后《一套代码，多端交付》会继续讲多端托管差异；这里先钉住「为什么需要这一条 rewrite」。\n\n## 自检\n**问：** rewrite 到 `/` 是不是把用户网址栏也改成首页？\n**答：** 不是同一回事。这里是服务器决定用哪份响应内容；浏览器地址栏仍可以是 `/daily`。前端路由继续根据地址栏渲染对应页面。\n\n## 重点\n**SPA 深链接刷新要靠服务器 rewrite 回壳页；`vercel.json` 的这一条就是在做那件事。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "vercel.json",
+                "lineStart": 1,
+                "lineEnd": 13,
+                "nodeIds": [],
+                "note": "framework、buildCommand、outputDirectory 与 rewrites 全文。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "vercel-outdir",
+                "front": "`vercel.json` 声明的输出目录是什么？",
+                "back": "`dist`。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "vercel.json",
+                    "lineStart": 6,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "outputDirectory: dist。"
+                  }
+                ]
+              },
+              {
+                "id": "vercel-rewrite-dest",
+                "front": "rewrite 规则的 destination 写的是什么？",
+                "back": "`/`，即交回站点根壳页。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "vercel.json",
+                    "lineStart": 9,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "destination 为 /。"
+                  }
+                ]
+              },
+              {
+                "id": "vercel-spa-why",
+                "front": "为什么单页应用刷新 `/some/path` 可能 404？",
+                "back": "服务器按路径找静态文件找不到；若无 rewrite，就不会回退到 SPA 的 index 壳。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "vercel.json",
+                    "lineStart": 7,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "rewrites 把路径指回 /。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "vercel-framework",
+                "title": "framework 字段值",
+                "kind": "short-answer",
+                "prompt": "`vercel.json` 的 `framework` 字段值是什么？",
+                "expectedAnswer": "vite",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "vercel.json",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "framework: vite。"
+                  }
+                ]
+              },
+              {
+                "id": "vercel-output",
+                "title": "输出目录字段值",
+                "kind": "short-answer",
+                "prompt": "`outputDirectory` 的值是什么？",
+                "expectedAnswer": "dist",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "vercel.json",
+                    "lineStart": 6,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "outputDirectory: dist。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "same-dist-in-a-native-shell",
+            "title": "同一份 dist，塞进原生壳",
+            "content": "# 同一份 dist，塞进原生壳\n\n## 学习目标\n完成本课后，你能说明 Capacitor 的 `webDir: 'dist'` 意味着什么，以及 `CAP_SERVER_URL` 开发直连和「打包进壳」两种模式差在哪。\n\n## 先给结论\n- **事实：`capacitor.config.ts` 设置 `webDir: 'dist'`；若环境变量 `CAP_SERVER_URL` 存在，则 `server.url` 指向该地址，否则使用打包进应用的本地资源。**\n- **推论：手机壳不重新实现一套 UI——它加载与 Web 构建相同的 `dist`（或开发时直连 Vite）；多端共享同一份前端产物。**\n\n## 一个类比\n同一场话剧，可以在城市剧场演，也可以把布景缩装进巡回货车在乡镇演。剧本和布景箱是同一套（`dist`）；剧场建筑或货车外壳是 Capacitor 原生壳。彩排时你甚至可以不装进货车，直接让演员在排练厅（dev server）演，外壳用对讲机连过去（`CAP_SERVER_URL`）。\n\n## 工作示例\n```ts\nconst devServerUrl = process.env.CAP_SERVER_URL;\nconst usesBundledAssets = !devServerUrl;\n\nconst config: CapacitorConfig = {\n  appId: 'com.pieai.turingpact',\n  appName: 'Turing Pact',\n  webDir: 'dist',\n  server: {\n    androidScheme: usesBundledAssets ? 'http' : 'https',\n    cleartext: true,\n    ...(devServerUrl ? { url: devServerUrl } : {}),\n  },\n  ...\n};\n```\n\n读三处：\n\n1. `webDir: 'dist'` —— 原生项目同步时，去哪找 Web 构建产物（与 Vite `outDir`、Vercel `outputDirectory` 同一名字）。\n2. `CAP_SERVER_URL` —— 若设置了，壳里的 WebView 打开这个开发服务器地址，方便真机/模拟器热更新。\n3. 未设置时 —— 使用捆绑的本地静态资源（发布取向）。\n\n`package.json` 里也有配套门牌，例如 `build:native`、`cap:sync`、`dev:ios` / `dev:android`（后者会带上 `CAP_SERVER_URL`）。本课只认配置语义：\n**一份 dist，多种壳。**\n\n更完整的多端故事在《一套代码，多端交付》；这里先认地形上的汇合点。\n\n## 自检\n**问：** 改了 React 组件但没重新 build，也没开 `CAP_SERVER_URL`，手机里的壳会自动变吗？\n**答：** 不会。捆绑模式读的是上次同步进壳的 `dist`。要么重新 build + sync，要么开发期指向 dev server。\n\n## 重点\n**Capacitor 用 `webDir: 'dist'` 吃同一份 Web 产物；`CAP_SERVER_URL` 只是开发时改走直播线路。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "capacitor.config.ts",
+                "lineStart": 5,
+                "lineEnd": 19,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:capacitor.config.ts"
+                ],
+                "note": "CAP_SERVER_URL、webDir: dist 与 server.url 条件展开。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "package.json",
+                "lineStart": 10,
+                "lineEnd": 10,
+                "nodeIds": [],
+                "note": "build:native 产出原生模式的前端构建。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "package.json",
+                "lineStart": 47,
+                "lineEnd": 52,
+                "nodeIds": [],
+                "note": "cap:sync 与 dev:ios/android 门牌。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "cap-webdir",
+                "front": "Capacitor 配置里 Web 资源目录字段 `webDir` 的值是什么？",
+                "back": "`dist`。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "capacitor.config.ts",
+                    "lineStart": 11,
+                    "lineEnd": 11,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:capacitor.config.ts"
+                    ],
+                    "note": "webDir: 'dist'。"
+                  }
+                ]
+              },
+              {
+                "id": "cap-server-url",
+                "front": "`CAP_SERVER_URL` 有值时，壳会怎样加载页面？",
+                "back": "WebView 打开该开发服务器 URL，而不是只读捆绑的本地 dist。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "capacitor.config.ts",
+                    "lineStart": 5,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:capacitor.config.ts"
+                    ],
+                    "note": "devServerUrl 存在时写入 server.url。"
+                  }
+                ]
+              },
+              {
+                "id": "cap-same-dist",
+                "front": "Web 部署的 `dist` 和进手机壳的资源是什么关系？",
+                "back": "同一类构建产物：壳通过 webDir 指向 dist（发布）或开发期直连 dev server。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "capacitor.config.ts",
+                    "lineStart": 11,
+                    "lineEnd": 11,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:capacitor.config.ts"
+                    ],
+                    "note": "webDir 指向 dist。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "cap-webdir-value",
+                "title": "webDir 值",
+                "kind": "short-answer",
+                "prompt": "`webDir` 配置的目录名是什么？",
+                "expectedAnswer": "dist",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "capacitor.config.ts",
+                    "lineStart": 11,
+                    "lineEnd": 11,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:capacitor.config.ts"
+                    ],
+                    "note": "webDir: 'dist'。"
+                  }
+                ]
+              },
+              {
+                "id": "cap-env-name",
+                "title": "开发直连环境变量名",
+                "kind": "short-answer",
+                "prompt": "开发时让原生壳指向 Vite 的环境变量叫什么？",
+                "expectedAnswer": "CAP_SERVER_URL",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "capacitor.config.ts",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:capacitor.config.ts"
+                    ],
+                    "note": "process.env.CAP_SERVER_URL。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "configuration-and-commits",
+        "title": "配置在哪、改动怎么盖章",
+        "objective": "分清环境变量示例与真值、用 verify 定义完成，并把提交理解成可引用的戳。",
+        "lessons": [
+          {
+            "id": "env-example-not-env",
+            "title": "仓库里只有 .env.example",
+            "content": "# 仓库里只有 .env.example\n\n## 学习目标\n完成本课后，你能解释为什么 Git 里提交 `.env.example` 却忽略 `.env`，并指出示例文件里哪些是占位、哪个开关默认关闭。\n\n## 先给结论\n- **事实：`.env.example` 列出 `VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY` 等键；`VITE_ENABLE_POSTHOG=false` 默认关闭；`.gitignore` 忽略 `.env` 与 `.env.local`。**\n- **推论：示例告诉后来者「需要哪些变量」；真值留在每人本地的 `.env`，绝不能当源码提交。**\n\n## 一个类比\n公寓大堂贴一张「信箱编号一览」，告诉你信箱在哪、编号规则是什么；但不会把每户钥匙挂在告示栏上。`.env.example` 是编号一览，`.env` 是钥匙串。\n\n## 工作示例\n示例文件（节选）：\n\n```bash\nVITE_SUPABASE_URL=https://lgoknzuxefecikfyvpzk.supabase.co\nVITE_SUPABASE_ANON_KEY=your-swimmer-core-public-anon-key-here\nVITE_AI_SERVICE_URL=https://turing-pact-mastra.vercel.app\nVITE_TURNSTILE_SITE_KEY=\n\n# Optional privacy-first PostHog product analytics...\nVITE_ENABLE_POSTHOG=false\nVITE_POSTHOG_KEY=\nVITE_POSTHOG_HOST=https://eu.i.posthog.com\n```\n\n怎么读：\n\n1. 键名（`VITE_...`）是约定：Vite 只会把带此前缀的变量暴露给前端代码。\n2. `your-...-here` 或空值是占位——提醒你填自己的值，不是让你提交真密钥。\n3. `VITE_ENABLE_POSTHOG=false` —— 产品分析默认关，避免误开采集。\n4. 注释写明：不要把 personal API key 或 secret 放进这类文件。\n\n对照 `.gitignore`：\n\n```\n.env\n.env.local\n```\n\n流程是：复制 `.env.example` → 改名为或另存为本地 `.env` → 填真值 → 真值永不提交。\n\n## 自检\n**问：** 示例里出现了一个 Supabase URL，是不是就可以把 anon key 的真值也写进 example 并提交？\n**答：** 不要把密钥真值写进会进仓库的示例。URL 与「public anon」边界要按项目安全说明处理；example 的职责是形状与占位，不是分发秘密。\n\n## 重点\n**`.env.example` 是钥匙孔示意图；`.env` 是真钥匙，且被 `.gitignore` 挡在仓库外。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".env.example",
+                "lineStart": 1,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": ".env.example 全文：变量键、占位与 PostHog 默认关。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".gitignore",
+                "lineStart": 7,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "忽略 .env 与 .env.local。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "env-example-role",
+                "front": "为什么仓库提交 `.env.example` 而不是 `.env`？",
+                "back": "example 描述需要哪些变量与默认形状；`.env` 含本机真值，被 gitignore 排除以免泄密。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".env.example",
+                    "lineStart": 5,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "示例中的 URL 与占位 key。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".gitignore",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "忽略 .env。"
+                  }
+                ]
+              },
+              {
+                "id": "env-posthog-default",
+                "front": "`VITE_ENABLE_POSTHOG` 在示例里的默认值是什么？",
+                "back": "`false`（默认关闭）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".env.example",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "VITE_ENABLE_POSTHOG=false。"
+                  }
+                ]
+              },
+              {
+                "id": "env-vite-prefix",
+                "front": "这些变量名为什么多以 `VITE_` 开头？",
+                "back": "Vite 约定：只有此前缀的变量会暴露给前端代码。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".env.example",
+                    "lineStart": 5,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "多个 VITE_ 前缀变量。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "env-posthog-flag",
+                "title": "PostHog 默认开关值",
+                "kind": "short-answer",
+                "prompt": "`VITE_ENABLE_POSTHOG` 在 `.env.example` 里的值是什么？",
+                "expectedAnswer": "false",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".env.example",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "false。"
+                  }
+                ]
+              },
+              {
+                "id": "env-ignored-file",
+                "title": "被忽略的本地环境文件",
+                "kind": "short-answer",
+                "prompt": "`.gitignore` 里直接列出的、存放真值的环境文件名是什么？",
+                "expectedAnswer": ".env",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".gitignore",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": ".env。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "what-done-means",
+            "title": "verify：什么叫「做完了」",
+            "content": "# verify：什么叫「做完了」\n\n## 学习目标\n完成本课后，你能按顺序说出 `verify:web` 链条上的五步各在验什么，并知道 `verify` 只是它的别名。\n\n## 先给结论\n- **事实：`verify:web` 为 `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build`；`verify` 等于 `pnpm verify:web`。**\n- **推论：这个项目把「完成」定义成一条可执行清单，而不是口头感觉——五关都过才算过。**\n\n## 一个类比\n飞机起飞前的检查单：襟翼、燃油、舱门……飞行员不能说「感觉能飞」。`verify` 就是起飞检查单：类型、风格、格式、测试、构建，按固定顺序勾完。\n\n## 工作示例\n```json\n\"verify:web\": \"pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build\",\n\"verify\": \"pnpm verify:web\",\n```\n\n`&&` 表示：前一步成功才继续下一步。任一步失败，整条链停住。\n\n| 步骤 | script | 在验什么（本课点到为止） |\n| --- | --- | --- |\n| 1 | `typecheck` | TypeScript 类型能否对上 |\n| 2 | `lint` | 静态规则是否违规 |\n| 3 | `format:check` | 代码格式是否符合项目格式化约定 |\n| 4 | `test` | 自动化测试是否通过 |\n| 5 | `build` | 能否完整打包出产物 |\n\n本课**不展开** oxlint 规则细节、测试策略或 CI 配置——那是《怎么知道没写错》的范围。你在这里只建立：\n**地图上有一条叫 verify 的验收河，过河才叫到岸。**\n\n维护图灵密约时，改完一撮代码，优先想的是「我能不能 `pnpm verify`」，而不是「我觉得没写错」。\n\n## 自检\n**问：** 只跑 `pnpm test` 通过了，能说 verify 过了吗？\n**答：** 不能。verify 还要求 typecheck、lint、format:check 与 build。测试只是五关之一。\n\n## 重点\n**`verify` 把「做完」钉成五步可执行检查；别名背后是同一条链。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "package.json",
+                "lineStart": 15,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "typecheck、lint、format:check、test 等子门牌。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "package.json",
+                "lineStart": 40,
+                "lineEnd": 41,
+                "nodeIds": [],
+                "note": "verify:web 五步链与 verify 别名。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "verify-five-steps",
+                "front": "`verify:web` 按顺序包含哪五步？",
+                "back": "typecheck → lint → format:check → test → build。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 40,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "五步用 && 串联。"
+                  }
+                ]
+              },
+              {
+                "id": "verify-alias",
+                "front": "`verify` 实际执行什么？",
+                "back": "`pnpm verify:web`。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 41,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "verify 转调 verify:web。"
+                  }
+                ]
+              },
+              {
+                "id": "verify-and-meaning",
+                "front": "链条里的 `&&` 表示什么？",
+                "back": "前一步成功才执行下一步；任一步失败则整链停止。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 40,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "&& 连接五步。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "verify-first-step",
+                "title": "链条第一步",
+                "kind": "short-answer",
+                "prompt": "`verify:web` 链条的第一个 script 名是什么？",
+                "expectedAnswer": "typecheck",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 40,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "以 typecheck 开头。"
+                  }
+                ]
+              },
+              {
+                "id": "verify-last-step",
+                "title": "链条最后一步",
+                "kind": "short-answer",
+                "prompt": "`verify:web` 链条的最后一个 script 名是什么？",
+                "expectedAnswer": "build",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 40,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "以 build 结尾。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-commit-is-a-stamp",
+            "title": "一次提交是一枚可引用的戳",
+            "content": "# 一次提交是一枚可引用的戳\n\n## 学习目标\n完成本课后，你能用自己的话说明：Git 提交把一组改动钉成可引用的点；并知道本课程所有证据为什么都钉在同一个 commit 哈希上。\n\n## 先给结论\n- **事实：项目用 lefthook 在 `pre-commit` / `commit-msg` 阶段自动跑文档治理检查；`.gitignore` 决定哪些路径根本不会进提交。**\n- **推论：提交不是「随便存个档」，而是盖戳——戳上有固定内容哈希，后人可以准确指回「那一版长什么样」。UniversityLocal 的证据引用正是这种盖戳。**\n\n## 一个类比\n图书馆善本修复记录：每一次修复结束，管理员盖章并写下编号。后人说「按 2024 年第 37 号记录的状态」时，指的不是「大概那一阵」，而是那一枚戳对应的固定页面。Git commit 哈希就是那枚编号戳。\n\n## 工作示例\n本门课（以及零基础主干）里，每条证据都带：\n\n```text\nsourceCommit: 3b402e069a5db5fe9eb82dbc03aa05152b3d298b\n```\n\n这表示：我们讨论的 `package.json`、`index.html`、`vercel.json`……都以**这一次提交**里的内容为准，而不是你磁盘上可能改过的工作区。行号、文件内容都相对于这枚戳。\n\n提交前，仓库还用钩子挡一道：\n\n```yaml\npre-commit:\n  ...\n  commands:\n    01-doc-gov-router-check:\n      ...\n    02-doc-gov-check:\n      ...\ncommit-msg:\n  commands:\n    doc-gov-commit-msg:\n      run: corepack pnpm@11.9.0 doc-gov verify-commit-msg \"{1}\"\n```\n\n你不必在本课学会 lefthook 语法细节；只要知道：**盖戳前可以自动跑检查**，让进入历史的快照更干净。结合 `.gitignore`：戳只盖在该进库的文件上，密钥与 `node_modules` 不在戳内。\n\n读地形时养成习惯：说「某文件某行」时，问一句「相对于哪一次提交？」——有戳才有证据。\n\n## 自检\n**问：** 为什么学习材料要钉死某个 commit，而不是永远读「最新文件」？\n**答：** 「最新」会变，行号与行为会漂。钉死后，课程、卡片、练习与仓库内容可以对齐复核；否则今天写的证据明天可能指空。\n\n## 重点\n**提交是可引用的戳；证据钉在戳上，地形才不会在讨论中漂移。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "lefthook.yml",
+                "lineStart": 5,
+                "lineEnd": 26,
+                "nodeIds": [],
+                "note": "pre-commit 与 commit-msg 钩子：提交前/提交说明检查。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".gitignore",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "提交边界：依赖、产物与 .env 不进戳。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "commit-stamp-idea",
+                "front": "课程证据里的 `sourceCommit` 长哈希代表什么？",
+                "back": "某一次 Git 提交的固定快照；证据按该快照核对文件与行号。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "lefthook.yml",
+                    "lineStart": 5,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "提交相关钩子提醒：提交是受控动作。"
+                  }
+                ]
+              },
+              {
+                "id": "commit-gitignore",
+                "front": "`.gitignore` 与「一次提交盖了什么」有什么关系？",
+                "back": "被忽略的路径默认不会进入提交，戳里不含那些文件。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".gitignore",
+                    "lineStart": 1,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "node_modules、dist、.env 等不进库。"
+                  }
+                ]
+              },
+              {
+                "id": "commit-lefthook",
+                "front": "`lefthook.yml` 在提交流程里扮演什么角色？",
+                "back": "在 pre-commit / commit-msg 自动跑约定检查，减少把坏状态盖进历史。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "lefthook.yml",
+                    "lineStart": 5,
+                    "lineEnd": 26,
+                    "nodeIds": [],
+                    "note": "pre-commit 与 commit-msg 命令。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "commit-pre-hook",
+                "title": "提交前钩子段名",
+                "kind": "short-answer",
+                "prompt": "`lefthook.yml` 里，提交之前运行的那段配置顶层键名是什么？",
+                "expectedAnswer": "pre-commit",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "lefthook.yml",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "pre-commit:。"
+                  }
+                ]
+              },
+              {
+                "id": "commit-why-pin",
+                "title": "为什么证据要钉 commit",
+                "kind": "explain",
+                "prompt": "用两三句话说明：零基础课程为什么要把证据的 sourceCommit 钉死，而不是总是读取工作区最新文件？",
+                "rubric": [
+                  "提到提交/快照使内容与行号固定",
+                  "提到最新文件会变导致证据漂移或对不上",
+                  "提到学习材料需要可复核、可指回同一版"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "lefthook.yml",
+                    "lineStart": 5,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "提交是带检查的盖戳动作。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".gitignore",
+                    "lineStart": 7,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "边界清晰的内容才会进历史。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

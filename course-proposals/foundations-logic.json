@@ -1,0 +1,1739 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-foundations-logic",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "foundations-logic",
+    "title": "《读懂一段逻辑》",
+    "description": "零基础主干第 2 阶段：在能读懂一行之后，用图灵密约里的真实分支、遍历与情况列表，建立「一段逻辑」的读法——条件、顺序、早返回、列表处理、以及把允许的情况写死。",
+    "audience": "零基础重建地基的独立开发者",
+    "objectives": [
+      "指着一段 if / 三元表达式，说出条件真假时程序走哪条路、为什么顺序不能随便调",
+      "读完 forEach / Map / reduce / sort 后，说明列表如何被遍历、索引、折叠与排序",
+      "解释字面量联合类型、`as const` 推导与类型守卫如何把「允许的情况」写死并在运行时收窄",
+      "在真实代码里认出防护坏输入（guard）、早返回（early return）与 `&&` / `||` / `!` 的组合"
+    ],
+    "units": [
+      {
+        "id": "branching",
+        "title": "代码怎么做选择",
+        "objective": "用真实 if 梯子与防护条件，建立分支、顺序、早返回与逻辑运算符的读法。",
+        "lessons": [
+          {
+            "id": "a-fork-in-the-road",
+            "title": "岔路口：if 与三元表达式",
+            "content": "# 岔路口：if 与三元表达式\n\n## 学习目标\n完成本课后，你能指着一个三元表达式（ternary）说出：条件在哪、为真走哪边、为假走哪边；并知道它和 `if` 在「二选一返回值」时的对应关系。\n\n## 先给结论\n- **事实：`resolveProductLocale` 的函数体只有一行：`return language.startsWith('en') ? 'en' : 'zh-CN';`。**\n- **推论：当函数只需要在两种结果里挑一个交回去时，三元表达式是「带返回值的岔路口」；`if` 则更适合多步动作或超过两种出口。**\n\n## 一个类比\n餐厅门口的双语指示牌：看到英文菜单就引向英文桌，否则引向中文桌。门卫只问一件事——「是不是英文？」——然后只指向两个方向之一。三元表达式就是这块指示牌：`条件 ? 真时的值 : 假时的值`。\n\n## 工作示例\n```ts\nexport function resolveProductLocale(language: string): ProductLocale {\n  return language.startsWith('en') ? 'en' : 'zh-CN';\n}\n```\n\n从左往右拆：\n\n1. `language.startsWith('en')` —— 条件（condition）：语言字符串是否以 `en` 开头。\n2. `? 'en'` —— 条件为真时，整段表达式的值是 `'en'`。\n3. `: 'zh-CN'` —— 条件为假时，值是 `'zh-CN'`。\n4. `return` —— 把这个值交回给调用方。\n\n若改写成 `if`，意思相同：\n\n```ts\nif (language.startsWith('en')) return 'en';\nreturn 'zh-CN';\n```\n\n仓库里选了三元，是因为这里没有第三种结果、也没有额外步骤——一整条路就是「算出一个字符串再返回」。\n\n## 自检\n**问：** `language` 是 `'en-US'` 时，返回值是什么？是 `'zh'` 时呢？\n**答：** `'en-US'` 以 `en` 开头 → 返回 `'en'`。`'zh'` 不以 `en` 开头 → 返回 `'zh-CN'`。注意假分支写死的是 `'zh-CN'`，不是把原字符串原样交回。\n\n## 重点\n**三元表达式 = 条件 + 真值 + 假值，整段本身就是一个值，常直接接在 `return` 后面。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/product-analytics/context.ts",
+                "lineStart": 6,
+                "lineEnd": 8,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/product-analytics/context.ts"
+                ],
+                "note": "resolveProductLocale：一行三元表达式完成语言二选一。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "ternary-three-parts",
+                "front": "三元表达式 `条件 ? A : B` 里，条件为假时取哪一边？",
+                "back": "取冒号后面的 `B`。问号后是真值，冒号后是假值。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/context.ts"
+                    ],
+                    "note": "language.startsWith('en') ? 'en' : 'zh-CN'。"
+                  }
+                ]
+              },
+              {
+                "id": "ternary-is-a-value",
+                "front": "`resolveProductLocale` 为什么能把三元表达式直接写在 `return` 后面？",
+                "back": "因为三元表达式整体就是一个值（这里是字符串），可以当作返回值交出去。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/context.ts"
+                    ],
+                    "note": "return 后面直接跟三元表达式。"
+                  }
+                ]
+              },
+              {
+                "id": "starts-with-en",
+                "front": "条件 `language.startsWith('en')` 在检查什么？",
+                "back": "检查 `language` 是否以字符 `en` 开头（例如 `en`、`en-US` 都为真）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/context.ts"
+                    ],
+                    "note": "startsWith('en') 作为三元的条件。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ternary-false-branch",
+                "title": "假分支返回什么",
+                "kind": "short-answer",
+                "prompt": "`resolveProductLocale` 在语言不以 `en` 开头时返回哪个字符串字面量？照代码原样写，含连字符。",
+                "expectedAnswer": "zh-CN",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/context.ts"
+                    ],
+                    "note": "假分支字面量是 zh-CN。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "order-is-the-rule",
+            "title": "顺序就是规则",
+            "content": "# 顺序就是规则\n\n## 学习目标\n完成本课后，你能解释 `bucketPlayerCount` 里四个出口的先后顺序为什么不能随便对调，以及「先写的规则优先命中」意味着什么。\n\n## 先给结论\n- **事实：函数从上到下依次判断 `>= 6`、`>= 4`、`>= 2`，最后兜底返回 `'1'`。**\n- **推论：多层 `if` 是在排队：第一个为真的分支立刻 `return`，后面的分支再也走不到。阈值大的条件必须写在前面，否则会被更松的条件提前截走。**\n\n## 一个类比\n机场安检：先查「携带违禁品」这种最严规则，再查「液体超标」，最后才是「普通旅客放行」。若把「普通旅客放行」写在最上面，几乎人人第一关就过了，后面的严规则等于没写。`bucketPlayerCount` 也是：先锁「6 人及以上」，再锁「4–5」，再锁「2–3」，剩下才是「1」。\n\n## 工作示例\n```ts\nexport function bucketPlayerCount(playerCount: number): ProductPlayerCountBucket {\n  if (playerCount >= 6) return '6+';\n  if (playerCount >= 4) return '4-5';\n  if (playerCount >= 2) return '2-3';\n  return '1';\n}\n```\n\n用 `playerCount === 5` 走一遍：\n\n1. `5 >= 6`？假，继续。\n2. `5 >= 4`？真 → 立刻 `return '4-5'`，函数结束。\n3. 后面的 `>= 2` 和兜底根本不会执行。\n\n若有人把 `>= 2` 挪到最上面：`5 >= 2` 为真，会错误返回 `'2-3'`，`6+` 与 `4-5` 的桶永远装不到 5 人局。**规则的优先级 = 源码里的行序。**\n\n最后一行没有 `if`：前面三条都没拦住时，只可能是 0 或 1（以及负数等异常输入），统一打成 `'1'` 桶。\n\n## 自检\n**问：** `playerCount` 为 6 时，会不会既满足 `>= 6` 又满足 `>= 4`？函数返回哪个？\n**答：** 数值上两个条件都为真，但代码先写 `>= 6` 并 `return`，所以只返回 `'6+'`，不会落到 `'4-5'`。\n\n## 重点\n**一串从上到下的 `if … return`，先匹配的规则赢；调换顺序等于改产品规则。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/product-analytics/context.ts",
+                "lineStart": 10,
+                "lineEnd": 15,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/product-analytics/context.ts"
+                ],
+                "note": "bucketPlayerCount：四个出口按从大到小排列。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "first-true-wins",
+                "front": "一串 `if … return` 里，多个条件同时为真时，实际走哪条？",
+                "back": "走源码里最先写到、且条件为真的那一条；它 return 后后面的分支不再执行。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 11,
+                    "lineEnd": 13,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/context.ts"
+                    ],
+                    "note": "先写 >= 6，再写 >= 4，再写 >= 2。"
+                  }
+                ]
+              },
+              {
+                "id": "swap-breaks-bucket",
+                "front": "若把 `>= 2` 写到 `>= 6` 前面，5 人局会错成哪个桶标签？",
+                "back": "会错误返回 `'2-3'`，因为 5 >= 2 先命中并 return。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 11,
+                    "lineEnd": 14,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/context.ts"
+                    ],
+                    "note": "顺序依赖从大到小的阈值。"
+                  }
+                ]
+              },
+              {
+                "id": "fallback-one",
+                "front": "`bucketPlayerCount` 最后一行单独的 `return '1'` 在什么情况下执行？",
+                "back": "当前面三条 if 都未命中时（人数小于 2）执行，作为兜底桶。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 14,
+                    "lineEnd": 14,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/context.ts"
+                    ],
+                    "note": "无 if 的 return '1' 兜底。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "bucket-for-five",
+                "title": "5 人局落入哪个桶",
+                "kind": "short-answer",
+                "prompt": "`bucketPlayerCount(5)` 按现有代码顺序返回哪个字符串？照字面量写，含连字符。",
+                "expectedAnswer": "4-5",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/context.ts"
+                    ],
+                    "note": ">= 4 时返回 4-5。"
+                  }
+                ]
+              },
+              {
+                "id": "bucket-six-plus-label",
+                "title": "最大桶的标签",
+                "kind": "short-answer",
+                "prompt": "`playerCount >= 6` 命中时返回的字符串字面量是什么？",
+                "expectedAnswer": "6+",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 11,
+                    "lineEnd": 11,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/context.ts"
+                    ],
+                    "note": "return '6+'。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "return-early",
+            "title": "早返回：命中就离开",
+            "content": "# 早返回：命中就离开\n\n## 学习目标\n完成本课后，你能在 `worldQualityTierForViewport` 的 if 梯子上指出：为什么几乎每条都是「条件为真就 `return`」，以及这种写法如何代替层层嵌套的 `else`。\n\n## 先给结论\n- **事实：函数从 L25 到 L32 是一串独立的 `if (…) return …`，最后 L33 `return 'medium'` 兜底。**\n- **推论：早返回（early return）把「特殊情况」在门口拦下并离开函数；读者不必在脑子里叠很多层 else，优先级仍然等于行序。**\n\n## 一个类比\n医院分诊：来了先问「是否强制低画质？是→直接去低配通道」。不是，再问「用户是否手选了档位？」……每一站只决定「要不要现在就送走」，而不是把所有人推进一间越嵌越深的房间。走完所有关卡还没被送走的人，才进默认的中配通道。\n\n## 工作示例\n```ts\n  if (forceLow) return 'low';\n  if (preference !== 'auto') return preference;\n  if (deviceMemory !== undefined && deviceMemory <= 4) return 'low';\n  if (hardwareConcurrency !== undefined && hardwareConcurrency <= 4) return 'low';\n  if (/swiftshader|llvmpipe|software/i.test(rendererName)) return 'low';\n  if (coarsePointer && Math.min(width, height) <= 940) return 'low';\n  if (width < 760 || pixelRatio > 2) return 'low';\n  if (width >= 1200 && pixelRatio <= 1.5) return 'high';\n  return 'medium';\n```\n\n读法：\n\n1. **每一行都是一道门。** 条件为真 → `return`，函数结束；为假 → 看下一行。\n2. **没有 `else`。** 不需要写 `else if`，因为上一条已经 return 走了；写到下一行时，隐含前提就是「上面都没命中」。\n3. **多数门导向 `'low'`。** 强制低配、内存小、核数少、软件渲染、小屏触控、窄屏或高像素比——任一条命中都降到 low。\n4. **只有一条门导向 `'high'`。** 宽屏且像素比不高时才升档。\n5. **最后的 `return 'medium'`** 是默认档：既不是明显弱设备，也不满足 high 的条件。\n\n若改成深层 `if/else`，真值表相同，但缩进会把「优先级」藏进嵌套层级，零基础读者更难从上往下扫。\n\n## 自检\n**问：** `forceLow === true` 且同时 `width >= 1200` 时，返回 `'high'` 还是 `'low'`？\n**答：** `'low'`。第一行 `if (forceLow) return 'low'` 已经离开函数，后面的 high 规则根本不会执行。\n\n## 重点\n**早返回 = 命中规则就立刻离开；后面的代码只服务「还没被送走」的情况。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-runtime/assets/worldQualityTier.ts",
+                "lineStart": 25,
+                "lineEnd": 33,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/world-runtime/assets/worldQualityTier.ts"
+                ],
+                "note": "worldQualityTierForViewport：if 梯子每条命中即 return，最后兜底 medium。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "early-return-meaning",
+                "front": "什么叫早返回（early return）？",
+                "back": "在函数中途因条件成立而 return，不再执行后面的语句；用「先处理特殊情况并离开」代替深嵌套 else。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-runtime/assets/worldQualityTier.ts",
+                    "lineStart": 25,
+                    "lineEnd": 26,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/world-runtime/assets/worldQualityTier.ts"
+                    ],
+                    "note": "forceLow 与 preference 两条都是命中即 return。"
+                  }
+                ]
+              },
+              {
+                "id": "no-else-needed",
+                "front": "这串 if 为什么几乎不写 `else`？",
+                "back": "上一条 if 在命中时已经 return；执行到下一行时，隐含「上面都未命中」，else 是多余的。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-runtime/assets/worldQualityTier.ts",
+                    "lineStart": 25,
+                    "lineEnd": 33,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/world-runtime/assets/worldQualityTier.ts"
+                    ],
+                    "note": "连续独立 if … return，无 else 链。"
+                  }
+                ]
+              },
+              {
+                "id": "default-medium",
+                "front": "所有 if 都未命中时，画质档位是什么？",
+                "back": "返回 `'medium'`，这是梯子底部的默认档。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-runtime/assets/worldQualityTier.ts",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/world-runtime/assets/worldQualityTier.ts"
+                    ],
+                    "note": "最后一行 return 'medium'。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "force-low-wins",
+                "title": "强制低配优先",
+                "kind": "short-answer",
+                "prompt": "`forceLow` 为 true 时，`worldQualityTierForViewport` 返回哪个字符串档位？",
+                "expectedAnswer": "low",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-runtime/assets/worldQualityTier.ts",
+                    "lineStart": 25,
+                    "lineEnd": 25,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/world-runtime/assets/worldQualityTier.ts"
+                    ],
+                    "note": "if (forceLow) return 'low'。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "guarding-bad-input",
+            "title": "先挡住坏输入",
+            "content": "# 先挡住坏输入\n\n## 学习目标\n完成本课后，你能解释 `getConversationGap` 里为何在算分钟数之前先用 `Number.isFinite` 与最小间隔做防护（guard），以及防护失败时为什么返回 `null`。\n\n## 先给结论\n- **事实：L16–L18 在 `gapMs` 不是有限数、或间隔小于 90_000 毫秒时，直接 `return null`。**\n- **推论：防护条件把「没法展示对话间隔」的情况挡在门口，后面的对象构造只服务合法、足够长的间隔。**\n\n## 一个类比\n快递站称重贴单：先看包裹能不能过安检（重量数字是否正常、是否超过最小可寄尺寸）。不合格就贴「不收件」标签退回，而不是硬算出一个运费再发现包裹是空的。`return null` 就是「这一单不展示间隔气泡」。\n\n## 工作示例\n```ts\nconst previous = Date.parse(previousCreatedAt);\nconst current = Date.parse(currentCreatedAt);\nconst gapMs = current - previous;\n\nif (!Number.isFinite(gapMs) || gapMs < MIN_VISIBLE_GAP_MS) {\n  return null;\n}\n\nreturn {\n  key: 'conversationGap',\n  minutes: Math.max(1, Math.floor(gapMs / 60_000)),\n};\n```\n\n逐步：\n\n1. `Date.parse` 把时间字符串变成毫秒时间戳；解析失败会得到 `NaN`。\n2. `gapMs = current - previous`：两段时间之差。任一端是 `NaN` 时，差值也是 `NaN`。\n3. `Number.isFinite(gapMs)`：只有有限数字才算「算得出来的间隔」。`NaN`、`Infinity` 都会让它为假。\n4. `!Number.isFinite(gapMs)`：在「不是有限数」时为真——要挡住。\n5. `gapMs < MIN_VISIBLE_GAP_MS`：间隔短于 90 秒（文件顶部 `90_000`）也不展示。\n6. 两个条件用 `||` 连接：任一成立就 `return null`。\n7. 通过防护后，才构造 `{ key, minutes }` 对象。\n\n返回类型是 `ConversationGap | null`：有间隔气泡，或没有。`null` 在这里表示「UI 不要画这段间隔」，不是程序崩溃。\n\n## 自检\n**问：** 为什么不先算 `minutes` 再判断要不要返回？\n**答：** 坏输入下 `gapMs` 可能是 `NaN`，继续 `Math.floor(NaN / …)` 只会得到无意义数字。先防护，保证后面算术只在有限、足够大的 `gapMs` 上运行。\n\n## 重点\n**先问「能不能继续算」，不能就早返回 `null`；通过之后再构造正常结果。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                "lineStart": 6,
+                "lineEnd": 6,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/chat-signals/conversationGap.ts"
+                ],
+                "note": "MIN_VISIBLE_GAP_MS = 90_000：最短可见间隔。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                "lineStart": 12,
+                "lineEnd": 18,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/chat-signals/conversationGap.ts"
+                ],
+                "note": "算 gapMs 后用 isFinite 与阈值防护，失败 return null。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "guard-returns-null",
+                "front": "防护条件命中时，`getConversationGap` 返回什么？",
+                "back": "`null`，表示没有可展示的对话间隔。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                    "lineStart": 16,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/chat-signals/conversationGap.ts"
+                    ],
+                    "note": "if 条件成立则 return null。"
+                  }
+                ]
+              },
+              {
+                "id": "is-finite-role",
+                "front": "`Number.isFinite(gapMs)` 为假时通常意味着什么？",
+                "back": "`gapMs` 不是有限数字（常见于时间字符串解析失败得到 NaN，或出现 Infinity）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                    "lineStart": 16,
+                    "lineEnd": 16,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/chat-signals/conversationGap.ts"
+                    ],
+                    "note": "!Number.isFinite(gapMs) 作为防护条件之一。"
+                  }
+                ]
+              },
+              {
+                "id": "min-gap-constant",
+                "front": "最短可见间隔 `MIN_VISIBLE_GAP_MS` 的数值是多少毫秒？",
+                "back": "90000 毫秒（90 秒）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                    "lineStart": 6,
+                    "lineEnd": 6,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/chat-signals/conversationGap.ts"
+                    ],
+                    "note": "const MIN_VISIBLE_GAP_MS = 90_000。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "guard-null-keyword",
+                "title": "防护失败返回什么",
+                "kind": "short-answer",
+                "prompt": "当间隔非法或太短时，`getConversationGap` 用哪个关键字作为返回值表示「不展示」？",
+                "expectedAnswer": "null",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/chat-signals/conversationGap.ts"
+                    ],
+                    "note": "return null。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "and-or-not",
+            "title": "&&、||、!：条件怎么组合",
+            "content": "# &&、||、!：条件怎么组合\n\n## 学习目标\n完成本课后，你能读懂真实代码里的 `&&`（与）、`||`（或）、`!`（非），并指出「要几个条件同时成立」还是「一个成立就够」。\n\n## 先给结论\n- **事实：`conversationGap` 用 `!Number.isFinite(gapMs) || gapMs < MIN_VISIBLE_GAP_MS`；`worldQualityTier` 里既有 `deviceMemory !== undefined && deviceMemory <= 4`，也有 `width < 760 || pixelRatio > 2`。**\n- **推论：`&&` 收紧（两边都真才真），`||` 放宽（一边真就真），`!` 取反；读条件时先圈出每个子句，再看连接词。**\n\n## 一个类比\n- **与 `&&`：** 进机房要「工牌有效 **并且** 门锁密码正确」——少一样进不去。\n- **或 `||`：** 请假条可以是「医生证明 **或者** 辅导员签字」——有一张就行。\n- **非 `!`：** 门上写「非工作人员勿入」——把「是工作人员」反过来。\n\n## 工作示例\n**1. 非 + 或（防护）**\n```ts\nif (!Number.isFinite(gapMs) || gapMs < MIN_VISIBLE_GAP_MS) {\n  return null;\n}\n```\n- `Number.isFinite(gapMs)`：gapMs 是有限数吗？\n- `!…`：取反 → 「不是有限数吗？」\n- `|| gapMs < …`：或者间隔太短。\n- 整句：坏数字 **或** 太短 → 挡掉。\n\n**2. 与（两道门槛都要过）**\n```ts\nif (deviceMemory !== undefined && deviceMemory <= 4) return 'low';\n```\n- 先确认内存字段**有值**，再确认 **≤ 4**。\n- 若只有 `deviceMemory <= 4`，在 `undefined` 时比较结果往往不符合你的直觉；`&&` 左边先排除「没报内存」。\n\n**3. 或（一条命中就降配）**\n```ts\nif (width < 760 || pixelRatio > 2) return 'low';\n```\n- 屏太窄 **或** 像素比太高 → low。不必两个同时成立。\n\n**4. 与 + 触控**\n```ts\nif (coarsePointer && Math.min(width, height) <= 940) return 'low';\n```\n- 粗指针（常见于触控）**并且** 短边不超过 940 才降配。\n\n## 自检\n**问：** `A || B` 在 `A` 已为真时，还会不会算 `B`？\n**答：** 在 JavaScript 里通常不会再算 `B`（短路，short-circuit）。读代码时仍要把整句理解成「A 或 B 成立即可」，但要知道右边可能被跳过。\n\n## 重点\n**`&&` 要全真，`||` 有一真，`!` 翻转真假；复合条件先拆子句再看连接词。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                "lineStart": 16,
+                "lineEnd": 18,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/chat-signals/conversationGap.ts"
+                ],
+                "note": "!Number.isFinite(gapMs) || gapMs < MIN_VISIBLE_GAP_MS。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-runtime/assets/worldQualityTier.ts",
+                "lineStart": 27,
+                "lineEnd": 27,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/world-runtime/assets/worldQualityTier.ts"
+                ],
+                "note": "deviceMemory !== undefined && deviceMemory <= 4。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-runtime/assets/worldQualityTier.ts",
+                "lineStart": 31,
+                "lineEnd": 31,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/world-runtime/assets/worldQualityTier.ts"
+                ],
+                "note": "width < 760 || pixelRatio > 2。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "and-both",
+                "front": "`&&`（逻辑与）要求几个子条件为真，整句才为真？",
+                "back": "所有被 `&&` 连接的子条件都为真，整句才为真。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-runtime/assets/worldQualityTier.ts",
+                    "lineStart": 27,
+                    "lineEnd": 27,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/world-runtime/assets/worldQualityTier.ts"
+                    ],
+                    "note": "undefined 检查与 <= 4 用 && 连接。"
+                  }
+                ]
+              },
+              {
+                "id": "or-either",
+                "front": "`||`（逻辑或）在什么情况下整句为真？",
+                "back": "任意一个子条件为真，整句就为真。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-runtime/assets/worldQualityTier.ts",
+                    "lineStart": 31,
+                    "lineEnd": 31,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/world-runtime/assets/worldQualityTier.ts"
+                    ],
+                    "note": "width 与 pixelRatio 两条件用 || 连接。"
+                  }
+                ]
+              },
+              {
+                "id": "not-flips",
+                "front": "`!Number.isFinite(gapMs)` 中的 `!` 在做什么？",
+                "back": "逻辑非：把 `Number.isFinite(gapMs)` 的真假翻转；有限数时为假，非有限数时为真。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                    "lineStart": 16,
+                    "lineEnd": 16,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/chat-signals/conversationGap.ts"
+                    ],
+                    "note": "!Number.isFinite(gapMs) 出现在条件里。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "operator-or-symbol",
+                "title": "逻辑或的写法",
+                "kind": "short-answer",
+                "prompt": "在 TypeScript/JavaScript 里表示「逻辑或」的两个字符运算符是什么？只写符号。",
+                "expectedAnswer": "||",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                    "lineStart": 16,
+                    "lineEnd": 16,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/chat-signals/conversationGap.ts"
+                    ],
+                    "note": "条件中使用 ||。"
+                  }
+                ]
+              },
+              {
+                "id": "operator-and-symbol",
+                "title": "逻辑与的写法",
+                "kind": "short-answer",
+                "prompt": "表示「逻辑与」的两个字符运算符是什么？只写符号。",
+                "expectedAnswer": "&&",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-runtime/assets/worldQualityTier.ts",
+                    "lineStart": 27,
+                    "lineEnd": 27,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/world-runtime/assets/worldQualityTier.ts"
+                    ],
+                    "note": "条件中使用 &&。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "collections",
+        "title": "一堆东西怎么处理",
+        "objective": "用计票、头像配色与 class 拼接，建立 forEach、Map、两趟遍历、reduce 与 sort 的读法。",
+        "lessons": [
+          {
+            "id": "a-list-and-a-loop",
+            "title": "列表与 forEach",
+            "content": "# 列表与 forEach\n\n## 学习目标\n完成本课后，你能说明 `forEach` 在对数组做什么，并能指着 `buildVoteCountsFromPlayers` 的第一趟循环说出：每个玩家被访问时写入了什么。\n\n## 先给结论\n- **事实：第一趟 `playerList.forEach((player) => { counts.set(player.id, { … votes: 0, voters: [] }) })` 为每个玩家建一行空计票。**\n- **推论：`forEach` 不负责「算出一个新数组交回去」，它负责「对现有列表里的每一个元素执行同一段动作」。**\n\n## 一个类比\n班会前点名：老师拿着名单，从第一个名字念到最后一个，每念到一个就在黑板上画一个空表格行（姓名、得票 0、投票人列表空）。点名本身不统计谁投了谁，只保证「每个人先有一格」。`forEach` 就是按名单逐个执行动作。\n\n## 工作示例\n```ts\nconst counts = new Map<string, VoteCount>();\nplayerList.forEach((player) => {\n  counts.set(player.id, {\n    playerId: player.id,\n    alias: player.alias,\n    votes: 0,\n    voters: [],\n  });\n});\n```\n\n读法：\n\n1. `playerList` —— 一排玩家对象。\n2. `.forEach((player) => { … })` —— 对每一个元素调用箭头函数；当前元素名叫 `player`。\n3. 函数体里的 `counts.set(...)` —— 每个玩家执行一次「登记空计票行」。\n4. 列表有 N 人，这段动作就发生 N 次，顺序与数组下标顺序一致。\n\n同文件稍后还有第二趟 `forEach`（下一课）。同一方法名，动作不同：第一趟建表，第二趟加票。\n\n## 自检\n**问：** `forEach` 会不会把 `return` 的值收集成新数组？\n**答：** 不会。`forEach` 的返回值是 `undefined`；它为的是副作用（改 `counts`、打日志等）。若要「每个元素变一个新元素并得到新数组」，应使用 `map`（后话）。\n\n## 重点\n**`forEach` = 按顺序对列表每一项执行同一段动作，重点是过程，不是交回新列表。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                "lineStart": 10,
+                "lineEnd": 18,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/live-room/domain/buildVoteCounts.ts"
+                ],
+                "note": "第一趟 forEach：为每个 player 在 Map 里 set 空 VoteCount。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "foreach-visits-each",
+                "front": "`array.forEach(fn)` 会对数组做什么？",
+                "back": "按顺序对每个元素调用一次 `fn`，把当前元素（以及可选的下标）传进去。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 11,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "playerList.forEach((player) => { … })。"
+                  }
+                ]
+              },
+              {
+                "id": "first-pass-zeros",
+                "front": "第一趟循环写入的 `votes` 初始值是多少？",
+                "back": "0。先建空行，得票在第二趟再累加。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 15,
+                    "lineEnd": 15,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "votes: 0。"
+                  }
+                ]
+              },
+              {
+                "id": "foreach-not-map",
+                "front": "`forEach` 的主要目的是交回一个新数组，还是执行动作？",
+                "back": "执行动作（副作用）。它不收集回调的返回值成新数组。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 11,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "回调内 set，无 return 新数组。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "foreach-method-name",
+                "title": "逐个执行动作的方法名",
+                "kind": "short-answer",
+                "prompt": "在 `playerList` 上调用、对每个玩家执行回调的那个数组方法叫什么？只写方法名。",
+                "expectedAnswer": "forEach",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 11,
+                    "lineEnd": 11,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "playerList.forEach(...)。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "two-passes",
+            "title": "为什么要走两趟",
+            "content": "# 为什么要走两趟\n\n## 学习目标\n完成本课后，你能说明 `buildVoteCountsFromPlayers` 为什么先整表初始化、再统计投票，以及若合成一趟会踩到什么坑。\n\n## 先给结论\n- **事实：第一趟只 `set` 空行；第二趟读 `player.current_vote`，`get` 到目标后 `votes += 1` 并 `voters.push`。**\n- **推论：两趟把「保证每个人都有一行」和「按票累加」拆开，避免「被投的人还没建行」或「没投票的人从结果里消失」。**\n\n## 一个类比\n选举唱票：先给每位候选人摆一张空白计票卡（包括可能零票的人），再根据每张选票在对应卡上画正字。若边读选票边临时建卡，零票候选人不会出现在最终榜上；若有人把票投给「不在本局的 id」，计票员应丢弃而不是报错崩溃——第二趟里的 `if (!target) return` 就是丢弃废票。\n\n## 工作示例\n```ts\nplayerList.forEach((player) => {\n  counts.set(player.id, { playerId: player.id, alias: player.alias, votes: 0, voters: [] });\n});\nplayerList.forEach((player) => {\n  if (!player.current_vote) return;\n  const target = counts.get(player.current_vote);\n  if (!target) return;\n  target.votes += 1;\n  target.voters.push(player.alias);\n});\n```\n\n第二趟逐步：\n\n1. `if (!player.current_vote) return` —— 这人没投票，跳过（`forEach` 回调里的 `return` 只结束**这一次**回调，不是结束整个函数）。\n2. `counts.get(player.current_vote)` —— 用「投给谁的 id」去表里找那一行。\n3. `if (!target) return` —— 投给了不在本局名单里的 id，废票，跳过。\n4. `target.votes += 1` 与 `voters.push` —— 真正改那一行。\n\n**一次行不行？** 理论上可以在一趟里「若行不存在就先建再加票」，但零票玩家若从未作为 `current_vote` 目标、自己又没机会被访问到建行逻辑，仍可能缺席。先全员建行，规则更直：结果集 = 全员，票数可以是 0。\n\n## 自检\n**问：** 第二趟回调里的 `return` 会不会让 `buildVoteCountsFromPlayers` 直接结束、后面的玩家不再计票？\n**答：** 不会。它只退出当前玩家的回调；`forEach` 仍会继续下一个玩家。\n\n## 重点\n**第一趟保证「有行」，第二趟保证「有票」；拆开后每趟只做一件事，边界更好讲。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                "lineStart": 11,
+                "lineEnd": 25,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/live-room/domain/buildVoteCounts.ts"
+                ],
+                "note": "两趟 forEach：先 set 空行，再按 current_vote 累加。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "pass-one-vs-two",
+                "front": "两趟循环各负责什么？",
+                "back": "第一趟为每个玩家建 votes 为 0 的行；第二趟根据 current_vote 给目标行加票并记录 voters。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 11,
+                    "lineEnd": 25,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "两段 forEach 分工不同。"
+                  }
+                ]
+              },
+              {
+                "id": "callback-return",
+                "front": "`forEach` 回调里的 `return` 结束的是谁？",
+                "back": "只结束当前这一次回调，不结束外层函数，也不取消后续元素的遍历。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 20,
+                    "lineEnd": 22,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "if (!player.current_vote) return 与 if (!target) return。"
+                  }
+                ]
+              },
+              {
+                "id": "invalid-vote-skip",
+                "front": "若 `current_vote` 指向不在 Map 里的 id，代码怎么做？",
+                "back": "`counts.get` 得到 undefined，随后 `if (!target) return` 跳过该票。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 21,
+                    "lineEnd": 22,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "get 后检查 target。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "current-vote-field",
+                "title": "票投向谁的字段名",
+                "kind": "short-answer",
+                "prompt": "第二趟里表示「这个玩家把票投给谁」的字段名是什么？照代码写。",
+                "expectedAnswer": "current_vote",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 20,
+                    "lineEnd": 21,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "player.current_vote。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-map-is-an-index",
+            "title": "Map：用钥匙找格子",
+            "content": "# Map：用钥匙找格子\n\n## 学习目标\n完成本课后，你能对比「数组下标查找」与 `Map` 的 `set` / `get`，并说明计票表为什么用玩家 id 当钥匙（key）。\n\n## 先给结论\n- **事实：`const counts = new Map<string, VoteCount>()`，用 `counts.set(player.id, …)` 写入、用 `counts.get(player.current_vote)` 读出。**\n- **推论：Map 是键值索引：钥匙是字符串 id，值是整行计票对象；不必在数组里线性扫描「id 等于谁」。**\n\n## 一个类比\n图书馆按索书号放书：你拿着号码直接去对应格子，而不是从第一架扫到最后一架。数组下标像「第 0、1、2 本」——适合按顺序排队；Map 像「名字 → 抽屉」——适合「我已知这个 id，要那一行」。\n\n## 工作示例\n```ts\nconst counts = new Map<string, VoteCount>();\n// …\ncounts.set(player.id, {\n  playerId: player.id,\n  alias: player.alias,\n  votes: 0,\n  voters: [],\n});\n// …\nconst target = counts.get(player.current_vote);\n```\n\n要点：\n\n1. `new Map<string, VoteCount>()` —— 钥匙类型是 `string`，值类型是 `VoteCount`。\n2. `set(key, value)` —— 登记或覆盖这一对。\n3. `get(key)` —— 按钥匙取回值；没有这把钥匙时得到 `undefined`。\n4. 第二趟用 **被投者的 id**（`current_vote`）去 get，而不是用投票者自己的 `player.id`。\n5. 最后 `Array.from(counts.values())` 把所有值收成数组，再排序（排序课细讲）。\n\n若只用数组 `VoteCount[]`，每次加票都要 `find(row => row.playerId === current_vote)`，人一多就变成反复扫表。Map 把「按 id 找行」变成一次钥匙查询。\n\n## 自检\n**问：** `counts.get(player.id)` 和 `counts.get(player.current_vote)` 取的是同一行吗？\n**答：** 只有在「投给自己」时才可能是同一行。一般 `player.id` 是投票者，`current_vote` 是目标；第二趟要改的是目标那一行。\n\n## 重点\n**Map 用钥匙索引值：`set` 登记，`get` 取回；计票表的钥匙是玩家 id。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                "lineStart": 10,
+                "lineEnd": 10,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/live-room/domain/buildVoteCounts.ts"
+                ],
+                "note": "new Map<string, VoteCount>() 建索引表。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                "lineStart": 12,
+                "lineEnd": 17,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/live-room/domain/buildVoteCounts.ts"
+                ],
+                "note": "counts.set(player.id, { … })。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                "lineStart": 21,
+                "lineEnd": 21,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/live-room/domain/buildVoteCounts.ts"
+                ],
+                "note": "counts.get(player.current_vote) 按 id 取目标行。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "map-set-get",
+                "front": "`Map` 的 `set` 和 `get` 分别做什么？",
+                "back": "`set(key, value)` 写入键值对；`get(key)` 按键取值，没有则得到 undefined。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 12,
+                    "lineEnd": 21,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "同文件内 set 与 get 成对出现。"
+                  }
+                ]
+              },
+              {
+                "id": "map-key-is-id",
+                "front": "计票 Map 的钥匙用的是什么？",
+                "back": "玩家 id 字符串（`player.id` / `current_vote` 指向的 id）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "counts.set(player.id, …)。"
+                  }
+                ]
+              },
+              {
+                "id": "get-missing",
+                "front": "`Map.get` 找不到钥匙时返回什么？",
+                "back": "`undefined`（代码再用 `if (!target) return` 处理）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 21,
+                    "lineEnd": 22,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "get 后检查 !target。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "map-constructor-name",
+                "title": "键值索引结构的名字",
+                "kind": "short-answer",
+                "prompt": "`const counts = new ???<string, VoteCount>()` 里，构造的是哪种内置结构？只写类型名。",
+                "expectedAnswer": "Map",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 10,
+                    "lineEnd": 10,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "new Map<string, VoteCount>()。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "folding-a-list",
+            "title": "reduce：把列表折成一个值",
+            "content": "# reduce：把列表折成一个值\n\n## 学习目标\n完成本课后，你能指出 `reduce` 的累加器（accumulator）在哪、初始值在哪，并用 `PlayerAvatar` 的配色计算说明「同样输入永远得到同样输出」。\n\n## 先给结论\n- **事实：`seed.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % colors.length` 把字符串折成一个数字下标。**\n- **推论：`reduce` 从初始值出发，逐个元素更新累加器，最后得到一个值；这里没有随机数，同一 `seed` 永远映射到同一颜色。**\n\n## 一个类比\n把一串珠子的编号逐个加进计算器：计算器初始显示 0，每来一颗珠子就加上它的编号，最后得到总和。`acc` 就是计算器上当前的数；`0` 是开机时的初始读数。最后再对颜色数量取模，像把总和映射到「色盘上第几格」。\n\n## 工作示例\n```ts\nconst colors = [\n  '#ff4500',\n  '#5eead4',\n  // …共 8 个颜色\n];\nconst colorIndex = seed.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % colors.length;\nconst bgColor = colors[colorIndex]!;\n```\n\n拆开流水线：\n\n1. `seed.split('')` —— 把字符串拆成字符数组，例如 `'ab'` → `['a', 'b']`。\n2. `.reduce((acc, c) => acc + c.charCodeAt(0), 0)`\n   - 第二个参数 `0`：累加器初始值。\n   - `acc`：到目前为止的和。\n   - `c`：当前字符。\n   - `c.charCodeAt(0)`：该字符的编码数字。\n   - 箭头函数返回新的 `acc`，交给下一轮。\n3. `% colors.length` —— 对 8 取模，得到 0–7 的下标。\n4. `colors[colorIndex]` —— 稳定选出背景色。\n\n同一 `seed` 每次计算结果相同，所以头像颜色不会「刷新一次换一色」。这是纯函数式的读法：只靠输入，不靠外部随机源。\n\n（文件后半是 React 组件 JSX，属后续界面课；本课只读 L18 这条折叠流水线。）\n\n## 自检\n**问：** 若漏写初始值 `0`，`reduce` 还保证从 0 开始加吗？\n**答：** 不保证。不传初始值时，会用数组第一个元素当初始累加器，行为容易和「从 0 累加编码」不一致。这里显式传入 `0` 是刻意的。\n\n## 重点\n**`reduce` = 初始值 + 逐个更新的累加器 → 折成一个结果；稳定输入产生稳定输出。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/components/game/PlayerAvatar.tsx",
+                "lineStart": 8,
+                "lineEnd": 19,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/components/game/PlayerAvatar.tsx"
+                ],
+                "note": "colors 数组与 reduce 算出 colorIndex，再取 bgColor。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "reduce-accumulator",
+                "front": "`reduce((acc, c) => …, 0)` 里的 `acc` 通常叫什么？`0` 是什么？",
+                "back": "`acc` 是累加器（accumulator），保存折到当前的中间结果；`0` 是初始值。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/components/game/PlayerAvatar.tsx",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/components/game/PlayerAvatar.tsx"
+                    ],
+                    "note": "reduce((acc, c) => acc + c.charCodeAt(0), 0)。"
+                  }
+                ]
+              },
+              {
+                "id": "reduce-stable-color",
+                "front": "为什么同一 `seed` 总得到同一头像颜色？",
+                "back": "颜色下标由 seed 字符编码求和再取模得到，计算过程无随机数，输入相同则输出相同。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/components/game/PlayerAvatar.tsx",
+                    "lineStart": 18,
+                    "lineEnd": 19,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/components/game/PlayerAvatar.tsx"
+                    ],
+                    "note": "colorIndex 仅依赖 seed 与 colors.length。"
+                  }
+                ]
+              },
+              {
+                "id": "modulo-index",
+                "front": "`% colors.length` 在这里起什么作用？",
+                "back": "把可能很大的和压进 0 到 colors.length-1 的合法下标范围。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/components/game/PlayerAvatar.tsx",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/components/game/PlayerAvatar.tsx"
+                    ],
+                    "note": "对 colors.length 取模。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "reduce-method-name",
+                "title": "折叠数组的方法名",
+                "kind": "short-answer",
+                "prompt": "把字符数组「折成一个数字和」时，在 `seed.split('')` 后面调用的方法名是什么？",
+                "expectedAnswer": "reduce",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/components/game/PlayerAvatar.tsx",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/components/game/PlayerAvatar.tsx"
+                    ],
+                    "note": ".reduce(...)。"
+                  }
+                ]
+              },
+              {
+                "id": "reduce-initial-zero",
+                "title": "累加器初始值",
+                "kind": "short-answer",
+                "prompt": "这条 reduce 的初始值（第二个参数）是哪个数字？",
+                "expectedAnswer": "0",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/components/game/PlayerAvatar.tsx",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/components/game/PlayerAvatar.tsx"
+                    ],
+                    "note": "reduce 的初始值为 0。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "sorting",
+            "title": "sort：谁排在前面",
+            "content": "# sort：谁排在前面\n\n## 学习目标\n完成本课后，你能解释 `sort((a, b) => b.votes - a.votes)` 里比较函数返回正负（或 0）分别意味着什么，以及为何是「b 减 a」而不是「a 减 b」。\n\n## 先给结论\n- **事实：计票结果 `Array.from(counts.values()).sort((a, b) => b.votes - a.votes)` 按得票数排序。**\n- **推论：比较函数用「负数 / 零 / 正数」告诉排序算法 a 应在 b 前、相等、还是 a 应在 b 后；`b.votes - a.votes` 让票多的排前面（降序）。**\n\n## 一个类比\n运动会颁奖：裁判每次拿出两张成绩单比一比，决定谁站左边（更靠前）。若你规定「分数高的站左边」，比较时就会用「乙的分数 − 甲的分数」这类规则，让分高者排前。`sort` 的比较函数就是这位裁判的口头禅。\n\n## 工作示例\n```ts\nreturn Array.from(counts.values()).sort((a, b) => b.votes - a.votes);\n```\n\n拆开：\n\n1. `counts.values()` —— 取出 Map 里所有计票行。\n2. `Array.from(...)` —— 变成真正的数组（`sort` 是数组方法）。\n3. `.sort((a, b) => b.votes - a.votes)` —— 传入比较函数（compare function）。\n\n比较函数约定（从 `a`、`b` 两个元素的视角）：\n\n| 返回值 | 含义 |\n| --- | --- |\n| 负数 | `a` 排在 `b` 前面 |\n| 零 | 顺序视为相等（相对位置按实现细节） |\n| 正数 | `a` 排在 `b` 后面 |\n\n当 `b.votes` 大于 `a.votes` 时，`b.votes - a.votes` 为正 → `a` 靠后 → 票少的在后，票多的在前。\n若写成 `a.votes - b.votes`，则变成升序：票少的在前。\n\n补充：`src/ui/utils.ts` 里的 `filter(Boolean).join(' ')` 也是在处理列表，但重点是过滤与拼接；`sort` 则是在已有元素上**重排位置**，不删元素。\n\n## 自检\n**问：** `a.votes === b.votes` 时比较函数返回什么？排序会怎样？\n**答：** 返回 `0`。二者视为相等；稳定排序会保持原先相对顺序，但你读代码时不应依赖未写明的稳定性假设。\n\n## 重点\n**比较函数用正负零描述「a 相对 b」；`b - a` 常见于数字降序。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                "lineStart": 26,
+                "lineEnd": 26,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/live-room/domain/buildVoteCounts.ts"
+                ],
+                "note": "Array.from(counts.values()).sort((a, b) => b.votes - a.votes)。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/ui/utils.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/ui/utils.ts"
+                ],
+                "note": "filter 遍历的对照：处理列表但不按数值重排。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "sort-negative",
+                "front": "比较函数返回负数时，`a` 和 `b` 谁更靠前？",
+                "back": "`a` 排在 `b` 前面。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 26,
+                    "lineEnd": 26,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "sort 比较函数 b.votes - a.votes。"
+                  }
+                ]
+              },
+              {
+                "id": "sort-desc-votes",
+                "front": "为什么写成 `b.votes - a.votes` 而不是 `a.votes - b.votes`？",
+                "back": "为了降序：票多的（b 更大时）让 a 靠后，高票排前。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 26,
+                    "lineEnd": 26,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "b.votes - a.votes 实现得票降序。"
+                  }
+                ]
+              },
+              {
+                "id": "array-from-values",
+                "front": "排序前为什么要 `Array.from(counts.values())`？",
+                "back": "Map 的 values 不是数组；先变成数组才能调用数组的 sort 方法。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 26,
+                    "lineEnd": 26,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": "Array.from(counts.values()).sort(...)。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "sort-method-name",
+                "title": "重排数组的方法名",
+                "kind": "short-answer",
+                "prompt": "对计票数组按得票重排时调用的方法名是什么？只写方法名。",
+                "expectedAnswer": "sort",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                    "lineStart": 26,
+                    "lineEnd": 26,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/live-room/domain/buildVoteCounts.ts"
+                    ],
+                    "note": ".sort((a, b) => …)。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "naming-the-cases",
+        "title": "把情况列全",
+        "objective": "用字面量联合、as const 推导与类型守卫，建立「允许的情况写死、运行时再收窄」的读法。",
+        "lessons": [
+          {
+            "id": "a-closed-set",
+            "title": "封闭集合：字面量联合类型",
+            "content": "# 封闭集合：字面量联合类型\n\n## 学习目标\n完成本课后，你能解释 `type GamePhase = 'idle' | 'waiting' | 'playing' | 'finished'` 为什么比随便写 `string` 更安全，并列出这四个允许值。\n\n## 先给结论\n- **事实：`GamePhase` 被定义成四个字符串字面量的联合（union）。**\n- **推论：类型在编译期把「游戏阶段」收成封闭集合；拼错成 `'playng'` 或写 `'paused'` 会被 TypeScript 拦住。**\n\n## 一个类比\n洗衣机面板上只有四个档：「空闲 / 注水 / 洗涤 / 完成」。没有第五个空白旋钮让你随手拧到「起飞」。字面量联合类型就是把旋钮刻度刻死：只能是列出的那几格。\n\n## 工作示例\n```ts\ntype GamePhase = 'idle' | 'waiting' | 'playing' | 'finished';\n```\n\n读法：\n\n1. `type GamePhase =` —— 声明类型别名（第 1 门已见 `type`）。\n2. `'idle' | 'waiting' | 'playing' | 'finished'` —— 竖线仍是「或」，但每一侧是**具体字符串字面量**，不是宽泛的 `string`。\n3. 变量若标注为 `GamePhase`，只能赋这四个值之一。\n\n同文件稍后出现 `gamePhase: GamePhase` 与 `setGamePhase: (phase: GamePhase) => void`（L7、L10）：状态和改状态的函数都走同一封闭集合。\n\n**本课边界：** 文件底部有 `create` 与 zustand 商店——那是后续数据/状态课的内容，现在只需看见「阶段名被类型钉死」这一层。\n\n## 自检\n**问：** 把 `GamePhase` 改成 `string` 程序运行时会怎样？类型层面呢？\n**答：** 运行时 JavaScript 本来就不拦字符串内容；但改成 `string` 后，编译期不再阻止错误阶段名，拼写错误会漏到线上。\n\n## 重点\n**字面量联合 = 把允许的字符串值写成封闭清单，让类型检查员帮你盯拼写与非法状态。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/gameStore.ts",
+                "lineStart": 4,
+                "lineEnd": 4,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/gameStore.ts"
+                ],
+                "note": "type GamePhase = 'idle' | 'waiting' | 'playing' | 'finished'。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/gameStore.ts",
+                "lineStart": 6,
+                "lineEnd": 10,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/gameStore.ts"
+                ],
+                "note": "GameState 中 gamePhase 与 setGamePhase 使用 GamePhase。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "union-four-phases",
+                "front": "`GamePhase` 允许哪四个字符串？",
+                "back": "`idle`、`waiting`、`playing`、`finished`。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/gameStore.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/gameStore.ts"
+                    ],
+                    "note": "四个字面量用 | 连接。"
+                  }
+                ]
+              },
+              {
+                "id": "why-not-string",
+                "front": "为什么阶段类型不直接写成 `string`？",
+                "back": "`string` 接受任意字符串，包括拼错和未定义阶段；字面量联合把合法值收成封闭集合，编译期可拦截。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/gameStore.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/gameStore.ts"
+                    ],
+                    "note": "GamePhase 是字面量联合而非 string。"
+                  }
+                ]
+              },
+              {
+                "id": "pipe-still-or",
+                "front": "这里的 `|` 和参数类型里的 `|` 是否同一含义？",
+                "back": "是，都读作「或」：值属于其中一种字面量即可。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/gameStore.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/gameStore.ts"
+                    ],
+                    "note": "字面量之间用 | 分隔。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "idle-literal",
+                "title": "初始阶段字面量",
+                "kind": "short-answer",
+                "prompt": "`GamePhase` 联合里表示空闲的那个字符串字面量是什么？不要引号。",
+                "expectedAnswer": "idle",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/gameStore.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/gameStore.ts"
+                    ],
+                    "note": "'idle' 是联合的第一项。"
+                  }
+                ]
+              },
+              {
+                "id": "game-phase-type-name",
+                "title": "阶段联合的类型名",
+                "kind": "short-answer",
+                "prompt": "四个阶段字面量联合的类型别名是什么？照代码写。",
+                "expectedAnswer": "GamePhase",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/gameStore.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/gameStore.ts"
+                    ],
+                    "note": "type GamePhase = …。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "derive-do-not-repeat",
+            "title": "推导，不要抄两遍",
+            "content": "# 推导，不要抄两遍\n\n## 学习目标\n完成本课后，你能读懂 `as const` 与 `keyof typeof` / 索引访问如何从一个对象**推导**出类型，并说明这样改一处即可处处跟着变。\n\n## 先给结论\n- **事实：`REALTIME_BROADCAST_EVENT` 对象后写了 `as const`；类型 `RealtimeBroadcastEvent` 写成 `(typeof REALTIME_BROADCAST_EVENT)[keyof typeof REALTIME_BROADCAST_EVENT]`。**\n- **推论：运行时的名字表是唯一真相；类型从对象推导，避免「对象里改了字符串、类型联合忘记改」的双份维护。**\n\n## 一个类比\n公司通讯录只维护一份：改了分机号，所有「从通讯录打印出来的分机列表」自动变。若你手抄一份「分机联合类型」、再维护一份对象，就像有人改了通讯录却忘了改打印稿——两边会漂（drift）。`as const` + 从对象取类型，就是只认通讯录原件。\n\n## 工作示例\n```ts\nexport const REALTIME_BROADCAST_EVENT = {\n  typing: 'typing',\n  coldOpenNudge: 'cold-open-nudge',\n} as const;\n\nexport type RealtimeBroadcastEvent =\n  (typeof REALTIME_BROADCAST_EVENT)[keyof typeof REALTIME_BROADCAST_EVENT];\n```\n\n分层读：\n\n1. **对象字面量** —— 钥匙 `typing` / `coldOpenNudge`，值是线上协议字符串。\n2. **`as const`** —— 告诉 TypeScript：把属性值收成只读字面量（`typing` 字段的值类型就是字面量 `'typing'`），不要放宽成普通 `string`。\n3. **`typeof REALTIME_BROADCAST_EVENT`** —— 取出这个常量的类型形状。\n4. **`keyof typeof …`** —— 取出所有钥匙名的联合（`'typing' | 'coldOpenNudge'`）。\n5. **`(typeof …)[keyof typeof …]`** —— 用所有钥匙去索引值类型，得到值的联合：`'typing' | 'cold-open-nudge'`。\n\n举报原因文件用了同族写法的近亲：\n```ts\nexport const REPORT_REASONS = ['abuse', 'harassment', 'spam', 'other'] as const;\nexport type ReportReason = (typeof REPORT_REASONS)[number];\n```\n数组版用 `[number]` 表示「任意下标上的元素类型」，同样从一处数据推导类型。\n\n## 自检\n**问：** 去掉 `as const` 后，`RealtimeBroadcastEvent` 容易变成什么？\n**答：** 属性值常被推断成宽 `string`，联合收不成精确字面量，类型失去「只能是这两个线上名字」的约束。\n\n## 重点\n**先写一份运行时表，再用 `as const` + `typeof` 推导类型，避免手写第二份清单。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/realtimeEvents.ts",
+                "lineStart": 11,
+                "lineEnd": 19,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/realtimeEvents.ts"
+                ],
+                "note": "REALTIME_BROADCAST_EVENT as const 与 RealtimeBroadcastEvent 推导。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 4,
+                "lineEnd": 5,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/moderation.ts"
+                ],
+                "note": "REPORT_REASONS as const 与 ReportReason = (typeof …)[number]。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "as-const-literal",
+                "front": "对象后面的 `as const` 主要带来什么类型效果？",
+                "back": "把值收成只读的字面量类型，而不是放宽成普通 string 等宽类型。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtimeEvents.ts",
+                    "lineStart": 11,
+                    "lineEnd": 16,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtimeEvents.ts"
+                    ],
+                    "note": "对象以 as const 结束。"
+                  }
+                ]
+              },
+              {
+                "id": "keyof-typeof-values",
+                "front": "`(typeof OBJ)[keyof typeof OBJ]` 大致得到什么？",
+                "back": "对象所有属性值的类型联合（在 as const 下通常是各字符串字面量的联合）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtimeEvents.ts",
+                    "lineStart": 18,
+                    "lineEnd": 19,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtimeEvents.ts"
+                    ],
+                    "note": "RealtimeBroadcastEvent 的定义。"
+                  }
+                ]
+              },
+              {
+                "id": "array-number-index",
+                "front": "`(typeof REPORT_REASONS)[number]` 在表达什么？",
+                "back": "数组任意数字下标上的元素类型，即所有元素字面量的联合。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 4,
+                    "lineEnd": 5,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "ReportReason 从 REPORT_REASONS 推导。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "as-const-keyword",
+                "title": "收窄字面量的断言",
+                "kind": "short-answer",
+                "prompt": "写在对象或数组字面量后面、用来把值收成只读字面量的两个单词是什么？",
+                "expectedAnswer": "as const",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtimeEvents.ts",
+                    "lineStart": 16,
+                    "lineEnd": 16,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtimeEvents.ts"
+                    ],
+                    "note": "} as const。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "narrowing",
+            "title": "类型守卫：运行时检查收窄类型",
+            "content": "# 类型守卫：运行时检查收窄类型\n\n## 学习目标\n完成本课后，你能读懂 `reason is ReportReason` 这种返回类型，并说明运行时的 `includes` 检查如何让 TypeScript 在分支里收窄（narrow）参数类型。\n\n## 先给结论\n- **事实：`function isReportReason(reason: string): reason is ReportReason` 内部 `return REPORT_REASONS.includes(reason as ReportReason)`。**\n- **推论：普通 `boolean` 返回值只告诉「真假」；`value is Type` 还告诉编译器——为真时，value 可当成 Type 用。这就是用户定义的类型守卫（type guard）。**\n\n## 一个类比\n安检口扫描仪：屏幕显示「通过 / 不通过」。若只是普通布尔，安检后系统仍把你当「任意访客」。类型守卫像扫描仪和门禁联动：显示通过时，门禁记录升级为「已验证员工」，后面的门按员工权限放行。运行时查了一次，类型系统记住结果。\n\n## 工作示例\n```ts\nexport const REPORT_REASONS = ['abuse', 'harassment', 'spam', 'other'] as const;\nexport type ReportReason = (typeof REPORT_REASONS)[number];\n\nfunction isReportReason(reason: string): reason is ReportReason {\n  return REPORT_REASONS.includes(reason as ReportReason);\n}\n```\n\n读签名：\n\n1. 参数 `reason: string` —— 进来时可以是任意字符串（例如用户输入）。\n2. 返回类型 `reason is ReportReason` —— 不是单纯的 `boolean` 标注；它声明：「若返回真，则 `reason` 是 `ReportReason`」。\n3. 函数体用运行时 `includes` 检查字符串是否落在允许列表里。\n\n调用处（同文件稍后，不必展开 async 细节）会写：\n```ts\nif (!isReportReason(reason)) {\n  throw new Error('Unsupported report reason');\n}\n```\n过了这个 if 之后，TypeScript 把 `reason` 收窄成 `ReportReason`，后面才能安全当合法原因用。\n\n**本课边界：** `reportMessage` 含 `async` / `await` 与网络调用——属《等待与失败》；这里只取 L4–L19 的同步名单与守卫。\n\n## 自检\n**问：** 若把返回类型改成普通 `: boolean`，运行时行为会变吗？类型行为呢？\n**答：** 运行时 `includes` 结果一样；但 TypeScript 不再因 `if (isReportReason(reason))` 而把 `reason` 收窄为 `ReportReason`，后面仍当普通 `string`。\n\n## 重点\n**`value is Type` 类型守卫 = 运行时查一次，编译期在为真的分支里记住更窄的类型。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 4,
+                "lineEnd": 5,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/moderation.ts"
+                ],
+                "note": "REPORT_REASONS 与 ReportReason 定义。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 17,
+                "lineEnd": 19,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/moderation.ts"
+                ],
+                "note": "isReportReason：reason is ReportReason 类型守卫。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 29,
+                "lineEnd": 31,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/moderation.ts"
+                ],
+                "note": "调用 isReportReason 失败则 throw（同步守卫用法）。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "type-guard-predicate",
+                "front": "返回类型写成 `reason is ReportReason` 而不写 `boolean`，多提供了什么信息？",
+                "back": "告诉 TypeScript：当函数返回 true 时，可以把 reason 当作 ReportReason 使用（类型收窄）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "reason is ReportReason 谓词返回类型。"
+                  }
+                ]
+              },
+              {
+                "id": "includes-runtime",
+                "front": "`isReportReason` 在运行时靠什么判断字符串合不合法？",
+                "back": "靠 `REPORT_REASONS.includes(...)` 检查是否落在允许列表里。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "return REPORT_REASONS.includes(...)。"
+                  }
+                ]
+              },
+              {
+                "id": "narrow-after-check",
+                "front": "`if (!isReportReason(reason)) throw …` 之后，reason 在类型上更像什么？",
+                "back": "被收窄为 ReportReason：非法情况已抛出，后面按合法原因处理。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 29,
+                    "lineEnd": 31,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "守卫失败即 throw。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "type-guard-function-name",
+                "title": "举报原因守卫函数名",
+                "kind": "short-answer",
+                "prompt": "判断字符串是否为合法举报原因的函数名是什么？照代码写。",
+                "expectedAnswer": "isReportReason",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "function isReportReason(...)。"
+                  }
+                ]
+              },
+              {
+                "id": "report-reason-abuse",
+                "title": "合法原因之一",
+                "kind": "short-answer",
+                "prompt": "`REPORT_REASONS` 数组的第一个字符串元素是什么？不要引号。",
+                "expectedAnswer": "abuse",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "首元素 'abuse'。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
