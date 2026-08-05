@@ -44,10 +44,16 @@ import { auditStudyFreshness, inspectSourceStatus } from "./refresh-study.js";
 const EMPTY_SHA256 = `sha256:${"0".repeat(64)}`;
 const MAX_LESSON_CONTENT_BYTES = 512 * 1024;
 
+/**
+ * `expectedRevision` is the optimistic-concurrency check against the stored
+ * item. Omitting it declares the item as new: a course that could only revise
+ * what it already had could never grow, so adding a card or an exercise meant
+ * rebuilding the whole course.
+ */
 const CardRevisionProposalSchema = z
   .object({
     id: StableId,
-    expectedRevision: z.number().int().positive(),
+    expectedRevision: z.number().int().positive().optional(),
     kind: z.enum(["basic", "cloze"]).optional(),
     front: z.string().min(1).max(20_000),
     back: z.string().min(1).max(20_000),
@@ -58,7 +64,7 @@ const CardRevisionProposalSchema = z
 
 const ExerciseRevisionBaseSchema = z.object({
   id: StableId,
-  expectedRevision: z.number().int().positive(),
+  expectedRevision: z.number().int().positive().optional(),
   title: z.string().min(1).max(200).optional(),
   prompt: z.string().min(1).max(20_000),
   evidence: z.array(EvidenceReferenceSchema).min(1),
@@ -193,6 +199,62 @@ export interface ReactivateCourseResult {
   readonly courseStatus: "active";
 }
 
+export interface OpenCourseForEditInput {
+  readonly studiesRoot: string;
+  readonly studyId: string;
+  readonly courseId: string;
+  readonly now?: Date;
+}
+
+export interface OpenCourseForEditResult {
+  readonly schemaVersion: 1;
+  readonly operation: "course-open-for-edit";
+  readonly disposition: "opened" | "reused";
+  readonly studyId: string;
+  readonly courseId: string;
+  readonly staleUnitIds: readonly string[];
+  readonly courseStatus: "stale";
+}
+
+/**
+ * Moves an active course and its units to `stale` so their content can be
+ * edited. `course revise` refuses to touch active containers, and until now the
+ * only thing that produced `stale` was a freshness audit finding the source had
+ * moved — so a course whose evidence was still perfectly current could not be
+ * improved at all. This is the deliberate half of the same transition, and
+ * `course reactivate` remains the only way back, with its full audit intact.
+ */
+export function openCourseForEdit(input: OpenCourseForEditInput): OpenCourseForEditResult {
+  const course = readCourse(input.studiesRoot, input.studyId, input.courseId);
+  if (course.status !== "active" && course.status !== "stale") {
+    throw new Error(
+      `Only an active course can be opened for editing: ${course.id} is ${course.status}`,
+    );
+  }
+  const alreadyOpen =
+    course.status === "stale" &&
+    course.unitIds.every(
+      (unitId) => readUnit(input.studiesRoot, input.studyId, course.id, unitId).status === "stale",
+    );
+  const now = input.now ?? new Date();
+  // The course goes first: `updateUnitStatus` refuses to move a unit out of
+  // `active` while its course is still active. Reactivation runs the mirror
+  // image, units first and the course last.
+  const updated = updateCourseStatus(input.studiesRoot, input.studyId, course.id, "stale", now);
+  for (const unitId of course.unitIds) {
+    updateUnitStatus(input.studiesRoot, input.studyId, course.id, unitId, "stale");
+  }
+  return {
+    schemaVersion: 1,
+    operation: "course-open-for-edit",
+    disposition: alreadyOpen ? "reused" : "opened",
+    studyId: input.studyId,
+    courseId: course.id,
+    staleUnitIds: course.unitIds,
+    courseStatus: updated.status as "stale",
+  };
+}
+
 export class CourseRevisionPartialError extends Error {
   readonly receipt: OperationReceipt;
 
@@ -234,16 +296,28 @@ function assertUniqueIds(items: readonly { readonly id: string }[], label: strin
   if (new Set(ids).size !== ids.length) throw new Error(`${label} must not contain duplicate IDs`);
 }
 
-function assertSameIds(
-  actual: readonly string[],
-  expected: readonly string[],
+/**
+ * A revision may add items but never lose them. Dropping a card would leave its
+ * scheduled review state pointing at content the lesson no longer declares, so
+ * removal has to go through retirement rather than through an omission in a
+ * proposal. Duplicates are rejected for the same reason `create-course` rejects
+ * them: two entries would write into one directory.
+ */
+function assertCoversExisting(
+  proposed: readonly string[],
+  existing: readonly string[],
   label: string,
 ): void {
-  const sortedActual = [...actual].sort((left, right) => left.localeCompare(right));
-  const sortedExpected = [...expected].sort((left, right) => left.localeCompare(right));
-  if (canonicalJson(sortedActual) !== canonicalJson(sortedExpected)) {
+  const seen = new Set<string>();
+  for (const id of proposed) {
+    if (seen.has(id)) throw new Error(`${label} must not contain duplicate IDs: ${id}`);
+    seen.add(id);
+  }
+  const missing = existing.filter((id) => !seen.has(id));
+  if (missing.length > 0) {
     throw new Error(
-      `${label} must contain every existing ID exactly once; IDs cannot be added or removed`,
+      `${label} must still contain every existing ID; missing: ${missing.join(", ")}. ` +
+        `Retire an item instead of dropping it from a revision.`,
     );
   }
 }
@@ -320,33 +394,52 @@ function normalizeExercise(candidate: ExerciseWithoutHash): Exercise {
   return ExerciseSchema.parse({ ...content, contentHash: sha256(canonicalJson(content)) });
 }
 
-function createCardRevision(current: CardContent, proposal: CardRevisionProposal): CardContent {
+/** Where an item lives, for the case where there is no stored item to copy it from. */
+interface ContentLocation {
+  readonly courseId: string;
+  readonly unitId: string;
+  readonly lessonId: string;
+}
+
+function createCardRevision(
+  current: CardContent | null,
+  proposal: CardRevisionProposal,
+  location: ContentLocation,
+): CardContent {
   return normalizeCard({
     schemaVersion: 1,
-    id: current.id,
-    kind: proposal.kind ?? current.kind,
-    courseId: current.courseId,
-    unitId: current.unitId,
-    lessonId: current.lessonId,
+    id: proposal.id,
+    kind: proposal.kind ?? current?.kind ?? "basic",
+    courseId: location.courseId,
+    unitId: location.unitId,
+    lessonId: location.lessonId,
     front: proposal.front,
     back: proposal.back,
-    contentRevision: proposal.expectedRevision + 1,
+    contentRevision: current === null ? 1 : (proposal.expectedRevision ?? 0) + 1,
     status: "active",
-    tags: proposal.tags ?? current.tags,
+    tags: proposal.tags ?? current?.tags ?? [],
     evidence: proposal.evidence,
   });
 }
 
-function createExerciseRevision(current: Exercise, proposal: ExerciseRevisionProposal): Exercise {
+function createExerciseRevision(
+  current: Exercise | null,
+  proposal: ExerciseRevisionProposal,
+  location: ContentLocation,
+): Exercise {
+  const title = proposal.title ?? current?.title;
+  if (title === undefined) {
+    throw new Error(`Exercise ${proposal.id} is new and must declare a title`);
+  }
   const common = {
     schemaVersion: 1 as const,
-    id: current.id,
-    title: proposal.title ?? current.title,
-    courseId: current.courseId,
-    unitId: current.unitId,
-    lessonId: current.lessonId,
+    id: proposal.id,
+    title,
+    courseId: location.courseId,
+    unitId: location.unitId,
+    lessonId: location.lessonId,
     prompt: proposal.prompt,
-    contentRevision: proposal.expectedRevision + 1,
+    contentRevision: current === null ? 1 : (proposal.expectedRevision ?? 0) + 1,
     status: "active" as const,
     evidence: proposal.evidence,
   };
@@ -389,12 +482,14 @@ function buildBundle(
   ).manifest;
   assertUniqueIds(proposal.lesson.cards, "Proposed cards");
   assertUniqueIds(proposal.lesson.exercises, "Proposed exercises");
-  assertSameIds(
+  const existingCardIds = new Set(currentLesson.cardIds);
+  const existingExerciseIds = new Set(currentLesson.exerciseIds);
+  assertCoversExisting(
     proposal.lesson.cards.map((card) => card.id),
     currentLesson.cardIds,
     `Lesson ${currentLesson.id} cards`,
   );
-  assertSameIds(
+  assertCoversExisting(
     proposal.lesson.exercises.map((exercise) => exercise.id),
     currentLesson.exerciseIds,
     `Lesson ${currentLesson.id} exercises`,
@@ -423,35 +518,57 @@ function buildBundle(
     `Lesson ${currentLesson.id}`,
   );
 
+  const location: ContentLocation = {
+    courseId: course.id,
+    unitId: unit.id,
+    lessonId: currentLesson.id,
+  };
+  /**
+   * An omitted `expectedRevision` claims the item is new, so the claim is
+   * checked against the lesson rather than trusted: an ID the lesson already
+   * declares must come with the revision it is at, and an ID it does not
+   * declare must not pretend to have one.
+   */
+  const assertNewness = (label: string, id: string, expected: number | undefined): boolean => {
+    const known = existingCardIds.has(id) || existingExerciseIds.has(id);
+    if (known && expected === undefined) {
+      throw new Error(`${label} already exists; declare its expectedRevision to revise it`);
+    }
+    if (!known && expected !== undefined) {
+      throw new Error(`${label} does not exist yet; omit expectedRevision to add it`);
+    }
+    return !known;
+  };
+
   const cards = proposal.lesson.cards.map((item) => {
-    const current = readLatestCard(
-      studiesRoot,
-      studyId,
-      course.id,
-      unit.id,
-      currentLesson.id,
-      item.id,
-    );
-    assertExpected(`Card ${item.id}`, current.contentRevision, item.expectedRevision);
+    const isNew = assertNewness(`Card ${item.id}`, item.id, item.expectedRevision);
+    const current = isNew
+      ? null
+      : readLatestCard(studiesRoot, studyId, course.id, unit.id, currentLesson.id, item.id);
+    if (current !== null) {
+      assertExpected(`Card ${item.id}`, current.contentRevision, item.expectedRevision!);
+    }
     validateTargetEvidence(studiesRoot, studyId, item.evidence, target, `Card ${item.id}`);
-    return createCardRevision(current, item);
+    return createCardRevision(current, item, location);
   });
   const exercises = proposal.lesson.exercises.map((item) => {
-    const current = readLatestExercise(
-      studiesRoot,
-      studyId,
-      course.id,
-      unit.id,
-      currentLesson.id,
-      item.id,
-    );
-    assertExpected(`Exercise ${item.id}`, current.contentRevision, item.expectedRevision);
+    const isNew = assertNewness(`Exercise ${item.id}`, item.id, item.expectedRevision);
+    const current = isNew
+      ? null
+      : readLatestExercise(studiesRoot, studyId, course.id, unit.id, currentLesson.id, item.id);
+    if (current !== null) {
+      assertExpected(`Exercise ${item.id}`, current.contentRevision, item.expectedRevision!);
+    }
     validateTargetEvidence(studiesRoot, studyId, item.evidence, target, `Exercise ${item.id}`);
-    return createExerciseRevision(current, item);
+    return createExerciseRevision(current, item, location);
   });
   const lesson = LessonManifestSchema.parse({
     ...currentLesson,
     title: proposal.lesson.title ?? currentLesson.title,
+    // The proposal's order is the lesson's order, and it is where a newly added
+    // card or exercise becomes part of the lesson rather than an orphan file.
+    cardIds: cards.map((card) => card.id),
+    exerciseIds: exercises.map((exercise) => exercise.id),
     contentRevision: proposal.lesson.expectedRevision + 1,
     contentHash: sha256(proposal.lesson.content),
     status: "active",
@@ -529,6 +646,38 @@ function assertStoredBundle(studiesRoot: string, studyId: string, bundle: Revisi
   }
 }
 
+function readLatestCardIfPresent(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  unitId: string,
+  lessonId: string,
+  cardId: string,
+): CardContent | null {
+  try {
+    return readLatestCard(studiesRoot, studyId, courseId, unitId, lessonId, cardId);
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+function readLatestExerciseIfPresent(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  unitId: string,
+  lessonId: string,
+  exerciseId: string,
+): Exercise | null {
+  try {
+    return readLatestExercise(studiesRoot, studyId, courseId, unitId, lessonId, exerciseId);
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
 function assertInstalledTargetComponentsMatch(
   studiesRoot: string,
   studyId: string,
@@ -548,8 +697,11 @@ function assertInstalledTargetComponentsMatch(
   ) {
     throw new Error("Installed lesson target revision conflicts with the pending proposal");
   }
+  // A proposal may introduce items the lesson does not have yet, so "not on
+  // disk" is the expected state for them rather than a fault. Nothing that is
+  // absent can conflict with what is about to be written.
   for (const card of bundle.cards) {
-    const latest = readLatestCard(
+    const latest = readLatestCardIfPresent(
       studiesRoot,
       studyId,
       card.courseId,
@@ -558,6 +710,7 @@ function assertInstalledTargetComponentsMatch(
       card.id,
     );
     if (
+      latest !== null &&
       latest.contentRevision === card.contentRevision &&
       canonicalJson(latest) !== canonicalJson(card)
     ) {
@@ -567,7 +720,7 @@ function assertInstalledTargetComponentsMatch(
     }
   }
   for (const exercise of bundle.exercises) {
-    const latest = readLatestExercise(
+    const latest = readLatestExerciseIfPresent(
       studiesRoot,
       studyId,
       exercise.courseId,
@@ -576,6 +729,7 @@ function assertInstalledTargetComponentsMatch(
       exercise.id,
     );
     if (
+      latest !== null &&
       latest.contentRevision === exercise.contentRevision &&
       canonicalJson(latest) !== canonicalJson(exercise)
     ) {
@@ -738,8 +892,12 @@ function reviseCourseLessonUnchecked(input: ReviseCourseInput): CourseRevisionRe
     }
     complete(`lesson:${bundle.lesson.id}`);
 
+    // Each write is skipped when the target revision is already installed, so a
+    // retry resumes rather than repeats. A newly added item has nothing stored
+    // yet, and its target revision is 1, so absence is exactly the state that
+    // means "still to write".
     for (const card of bundle.cards) {
-      const latest = readLatestCard(
+      const latest = readLatestCardIfPresent(
         input.studiesRoot,
         input.studyId,
         card.courseId,
@@ -747,14 +905,14 @@ function reviseCourseLessonUnchecked(input: ReviseCourseInput): CourseRevisionRe
         card.lessonId,
         card.id,
       );
-      if (latest.contentRevision === card.contentRevision - 1) {
+      if ((latest?.contentRevision ?? 0) === card.contentRevision - 1) {
         const { contentHash: _contentHash, ...candidate } = card;
         writeCardRevision(input.studiesRoot, input.studyId, candidate);
       }
       complete(`card:${card.id}`);
     }
     for (const exercise of bundle.exercises) {
-      const latest = readLatestExercise(
+      const latest = readLatestExerciseIfPresent(
         input.studiesRoot,
         input.studyId,
         exercise.courseId,
@@ -762,7 +920,7 @@ function reviseCourseLessonUnchecked(input: ReviseCourseInput): CourseRevisionRe
         exercise.lessonId,
         exercise.id,
       );
-      if (latest.contentRevision === exercise.contentRevision - 1) {
+      if ((latest?.contentRevision ?? 0) === exercise.contentRevision - 1) {
         const { contentHash: _contentHash, ...candidate } = exercise;
         writeExerciseRevision(input.studiesRoot, input.studyId, candidate);
       }

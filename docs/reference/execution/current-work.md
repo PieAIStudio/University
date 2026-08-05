@@ -285,8 +285,46 @@ cards into the due queue. The learner database was restored to the user's own
 records afterwards — the verification run's rows were removed and
 `learner backup` re-validated the file.
 
+## Course Editability Receipt (2026-08-05)
+
+Adding content to a published course turned out to be impossible in two
+independent ways, both found while trying to enrich `testing-strategy`.
+
+`course revise` read every proposed card and exercise with `readLatestCard` /
+`readLatestExercise` and required an `expectedRevision` for each, so a proposal
+could only ever restate what the lesson already had — `assertSameIds` rejected
+any addition outright. The storage layer never had this limit: the lesson
+manifest is revisioned, and the test fixture `addSecondExercise` had been adding
+an exercise through the repository functions all along. `expectedRevision` is
+now optional and its absence declares the item new; the claim is checked against
+the lesson, so an existing ID must carry a revision and a new one must not.
+Removal stays refused — dropping a card would strand its scheduled review state
+— and the proposal's order becomes the lesson's order. Both the idempotency
+check and the resume-aware write loop now treat "absent" as the expected state
+for a new item rather than a fault.
+
+The second wall was the lifecycle. `course revise` requires `stale` containers,
+and the only producer of `stale` was a freshness audit finding the source had
+moved. A course whose evidence was still current therefore could not be edited
+at all. `active -> stale` was already a legal transition with no command behind
+it; `course open-for-edit` is now that command, and `course reactivate` remains
+the only way back with its audit intact. Opening twice is a no-op so an
+interrupted edit session resumes.
+
+Proven end to end on a live course: `testing-strategy` was opened, its
+`unit-vs-e2e` lesson gained two cards and an `explain` exercise built on
+`analytics-privacy-contract.test.ts`, and the course reactivated as fresh. The
+shelf is 7 courses, 21 lessons, 57 cards, 24 exercises, 153 evidence references.
+
 ## Accepted Risks
 
+- **Course and unit containers are created once and cannot grow.** A lesson can
+  gain cards and exercises, but `writeUnit` and `writeCourse` both require
+  `draft` status and `createManifestRoot` refuses a manifest that differs from
+  what is stored, so an existing unit cannot gain a lesson and an existing
+  course cannot gain a unit. Adding either means publishing a new course. That
+  is a real constraint on how curricula grow, and changing it would mean giving
+  the containers revisions the way lessons have them.
 - **The API request token does not defend against other local processes.**
   `GET /api/bootstrap` hands the token out unauthenticated, so anything running
   as the same user can obtain it. That is deliberate and not a gap: the same

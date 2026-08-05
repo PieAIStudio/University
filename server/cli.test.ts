@@ -161,6 +161,14 @@ describe("UniversityLocal CLI parser", () => {
       },
     ],
     [
+      ["course", "open-for-edit", "--study", "supaluv", "--course", "ai-cost-and-boundaries"],
+      {
+        kind: "course-open-for-edit",
+        studyId: "supaluv",
+        courseId: "ai-cost-and-boundaries",
+      },
+    ],
+    [
       [
         "session",
         "start",

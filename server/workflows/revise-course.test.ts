@@ -25,6 +25,7 @@ import { createCleanSnapshot } from "../studies/snapshots.js";
 import { auditStudyFreshness, inspectSourceStatus } from "./refresh-study.js";
 import {
   CourseRevisionPartialError,
+  openCourseForEdit,
   reactivateCourse,
   reviseCourseLesson,
 } from "./revise-course.js";
@@ -274,7 +275,7 @@ describe("course revision workflow", () => {
     ).toBe(1);
   });
 
-  it("rejects expected-revision conflicts and structural additions or removals", () => {
+  it("rejects expected-revision conflicts and dropped items", () => {
     const { studiesRoot, targetSnapshot } = setup();
     const wrongRevision = proposal(targetSnapshot);
     wrongRevision.lesson.expectedRevision = 7;
@@ -282,11 +283,132 @@ describe("course revision workflow", () => {
       reviseCourseLesson({ studiesRoot, studyId: STUDY_ID, proposal: wrongRevision }),
     ).toThrow(/expected current revision 7/);
 
+    // Dropping a card would strand its scheduled review state, so a revision
+    // may add items but never lose them.
     const missingCard = proposal(targetSnapshot);
     missingCard.lesson.cards = [];
     expect(() =>
       reviseCourseLesson({ studiesRoot, studyId: STUDY_ID, proposal: missingCard }),
-    ).toThrow(/cannot be added or removed/);
+    ).toThrow(/must still contain every existing ID/);
+    expect(
+      readLatestLesson(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID).manifest
+        .contentRevision,
+    ).toBe(1);
+  });
+
+  it("opens an active course for editing and closes it again", () => {
+    const { studiesRoot, targetSnapshot } = setup();
+    // Close the refresh cycle first, so the course is active and fresh — the
+    // state in which content could previously never be touched.
+    reviseCourseLesson({ studiesRoot, studyId: STUDY_ID, proposal: proposal(targetSnapshot) });
+    reactivateCourse({
+      studiesRoot,
+      studyId: STUDY_ID,
+      courseId: COURSE_ID,
+      targetSnapshotId: targetSnapshot.id,
+    });
+    expect(readCourse(studiesRoot, STUDY_ID, COURSE_ID).status).toBe("active");
+
+    const edit = proposal(targetSnapshot);
+    edit.proposalId = "second-pass";
+    edit.lesson.expectedRevision = 2;
+    edit.lesson.cards[0]!.expectedRevision = 2;
+    edit.lesson.exercises[0]!.expectedRevision = 2;
+    edit.lesson.content = "# Source of truth\n\nA second pass over the same lesson.\n";
+    expect(() => reviseCourseLesson({ studiesRoot, studyId: STUDY_ID, proposal: edit })).toThrow(
+      /must both be stale/,
+    );
+
+    const opened = openCourseForEdit({ studiesRoot, studyId: STUDY_ID, courseId: COURSE_ID });
+    expect(opened).toMatchObject({
+      disposition: "opened",
+      courseStatus: "stale",
+      staleUnitIds: [UNIT_ID],
+    });
+    expect(readUnit(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID).status).toBe("stale");
+    // Opening twice is a no-op, so an interrupted edit session can be resumed.
+    expect(
+      openCourseForEdit({ studiesRoot, studyId: STUDY_ID, courseId: COURSE_ID }).disposition,
+    ).toBe("reused");
+
+    reviseCourseLesson({ studiesRoot, studyId: STUDY_ID, proposal: edit });
+    const closed = reactivateCourse({
+      studiesRoot,
+      studyId: STUDY_ID,
+      courseId: COURSE_ID,
+      targetSnapshotId: targetSnapshot.id,
+    });
+    expect(closed.courseStatus).toBe("active");
+    const lesson = readLatestLesson(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID);
+    expect(lesson.manifest.contentRevision).toBe(3);
+    expect(lesson.content).toContain("A second pass");
+  });
+
+  it("adds a new card and exercise to an existing lesson", () => {
+    const { studiesRoot, targetSnapshot } = setup();
+    const candidate = proposal(targetSnapshot);
+    candidate.lesson.cards.push({
+      id: "added-card",
+      front: "新增的卡片问题？",
+      back: "新增的卡片答案。",
+      evidence: [evidence(targetSnapshot)],
+    } as (typeof candidate.lesson.cards)[number]);
+    candidate.lesson.exercises.push({
+      id: "added-exercise",
+      title: "新增练习",
+      kind: "explain",
+      prompt: "解释一下。",
+      rubric: ["说出要点"],
+      evidence: [evidence(targetSnapshot)],
+    } as unknown as (typeof candidate.lesson.exercises)[number]);
+
+    reviseCourseLesson({ studiesRoot, studyId: STUDY_ID, proposal: candidate });
+
+    const lesson = readLatestLesson(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID).manifest;
+    expect(lesson.cardIds).toEqual([CARD_ID, "added-card"]);
+    expect(lesson.exerciseIds).toEqual([EXERCISE_ID, "added-exercise"]);
+    // A brand-new item starts at revision 1 while the revised one advances.
+    expect(
+      readLatestCard(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID, "added-card")
+        .contentRevision,
+    ).toBe(1);
+    expect(
+      readLatestCard(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID, CARD_ID).contentRevision,
+    ).toBe(2);
+    const added = readLatestExercise(
+      studiesRoot,
+      STUDY_ID,
+      COURSE_ID,
+      UNIT_ID,
+      LESSON_ID,
+      "added-exercise",
+    );
+    expect(added.kind).toBe("explain");
+    expect(added.contentRevision).toBe(1);
+  });
+
+  it("refuses a revision whose newness claim disagrees with the lesson", () => {
+    const { studiesRoot, targetSnapshot } = setup();
+
+    const existingWithoutRevision = proposal(targetSnapshot);
+    delete (existingWithoutRevision.lesson.cards[0] as { expectedRevision?: number })
+      .expectedRevision;
+    expect(() =>
+      reviseCourseLesson({ studiesRoot, studyId: STUDY_ID, proposal: existingWithoutRevision }),
+    ).toThrow(/already exists; declare its expectedRevision/);
+
+    const newWithRevision = proposal(targetSnapshot);
+    newWithRevision.lesson.cards.push({
+      id: "not-yet-here",
+      expectedRevision: 1,
+      front: "问题？",
+      back: "答案。",
+      evidence: [evidence(targetSnapshot)],
+    } as (typeof newWithRevision.lesson.cards)[number]);
+    expect(() =>
+      reviseCourseLesson({ studiesRoot, studyId: STUDY_ID, proposal: newWithRevision }),
+    ).toThrow(/does not exist yet; omit expectedRevision/);
+
     expect(
       readLatestLesson(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID).manifest
         .contentRevision,

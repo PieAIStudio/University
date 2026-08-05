@@ -127,6 +127,35 @@ pnpm university course set-default --study <study-id> --course <course-id>
 
 这是刻意的：卡片的正面背面可能已经变了，让旧记忆继续按旧内容复习，比让你重做一次代价更大。
 
+### 想改一门正在用的课
+
+active 课程的内容是锁住的——`course revise` 只接受 `stale` 的课程与单元。以前只有「被学习项目更新了、刷新审计判定过期」才会产生 `stale`，所以一门证据依然新鲜的课，反而完全改不了。
+
+现在有对称的两步：
+
+```bash
+pnpm university course open-for-edit --study <study-id> --course <course-id>
+```
+
+改完之后用原来那条命令关上，它仍然会跑完整的新鲜度审计：
+
+```bash
+pnpm university course reactivate --study <study-id> --course <course-id> --snapshot <snapshot-id> --analysis <analysis-id>
+```
+
+`open-for-edit` 重复执行是安全的，中断的编辑可以接着做。
+
+### 给已有课时加卡片和练习
+
+`course revise` 的提案里，每个卡片和练习都带 `expectedRevision`——那是乐观并发校验。**省略它就表示「这是新增的」。**
+
+- 已存在的条目必须带 `expectedRevision`，漏了会被拒绝；
+- 不存在的条目必须不带，带了也会被拒绝。
+
+提案里的顺序就是课时里的顺序。提案必须仍然列出该课时现有的全部卡片和练习——**只能加，不能少**。想去掉一个条目要走退役流程，因为直接省略会让它已经排好的复习状态指向课时不再声明的内容。
+
+结构上还有一条边界：**课程和单元是一次性建成的容器。** 可以给已有课时加卡片和练习，但不能给已有单元加课时、也不能给已有课程加单元。要加新的课时或单元，只能新建一门课。
+
 ### 把追问保存为知识点
 
 理解了一个值得长期保留的内容后，对 Grok 说：

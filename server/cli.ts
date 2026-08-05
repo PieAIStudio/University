@@ -18,6 +18,7 @@ import {
 import { createCourse } from "./workflows/create-course.js";
 import {
   CourseRevisionPartialError,
+  openCourseForEdit,
   reactivateCourse,
   reviseCourseLesson,
 } from "./workflows/revise-course.js";
@@ -43,6 +44,7 @@ Commands:
   course revise --study <study-id> --input <proposal.json> [--dry-run]
   course reactivate --study <study-id> --course <course-id> --snapshot <snapshot-id> [--analysis <analysis-id>]
   course set-default --study <study-id> --course <course-id>
+  course open-for-edit --study <study-id> --course <course-id>
   session start --study <study-id> --host grok-build --objective <text>
   session status --study <study-id>
   session end --study <study-id> [--session <session-id>]
@@ -136,6 +138,12 @@ interface CourseSetDefaultCommand {
   readonly courseId: string;
 }
 
+interface CourseOpenForEditCommand {
+  readonly kind: "course-open-for-edit";
+  readonly studyId: string;
+  readonly courseId: string;
+}
+
 interface SessionStartCommand {
   readonly kind: "session-start";
   readonly studyId: string;
@@ -188,6 +196,7 @@ export type UniversityLocalCliCommand =
   | CourseReviseCommand
   | CourseReactivateCommand
   | CourseSetDefaultCommand
+  | CourseOpenForEditCommand
   | SessionStartCommand
   | SessionStatusCommand
   | SessionEndCommand
@@ -371,6 +380,14 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       rejectUnrelatedOptions(values, ["study", "course"]);
       return {
         kind: "course-set-default",
+        studyId: required(values.study, "study"),
+        courseId: required(values.course, "course"),
+      };
+    }
+    if (positionals[1] === "open-for-edit") {
+      rejectUnrelatedOptions(values, ["study", "course"]);
+      return {
+        kind: "course-open-for-edit",
         studyId: required(values.study, "study"),
         courseId: required(values.course, "course"),
       };
@@ -573,6 +590,12 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         updatedAt: study.updatedAt,
       };
     }
+    case "course-open-for-edit":
+      return openCourseForEdit({
+        studiesRoot: config.studiesRoot,
+        studyId: input.command.studyId,
+        courseId: input.command.courseId,
+      });
     case "session-start":
       return startLearningSession({
         studiesRoot: config.studiesRoot,
