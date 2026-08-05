@@ -358,6 +358,66 @@ prints which process holds them and how to end it. Vite gained `strictPort` for
 the same reason: silently moving to 5174 would leave the campus at an address
 nobody bookmarked.
 
+## Zero-Basics Tier Receipt (2026-08-06)
+
+The shelf held seven courses that all assumed the reader could already read
+TypeScript, knew what async meant, and had seen React. The owner could not
+start. There is now a tier under them: 认识地形 · 读懂一行代码 · 读懂一段逻辑 ·
+等待与失败 · 界面是怎么长出来的 · 数据从哪来 · 怎么知道没写错 · 代码之外 —
+24 units, 98 lessons, 294 cards, 157 exercises, 679 evidence references. The
+whole shelf across both studies is 15 courses, 120 lessons, 356 cards,
+183 exercises.
+
+Every lesson, card and exercise carries at least one evidence reference, and
+the schema means it. A lesson on "what is a variable" therefore cannot exist:
+it has nothing to cite. Rather than exempt the tier from evidence — which would
+have removed the only property that makes this system worth trusting — the
+basics are taught through the smallest real files in TuringPact. `src/ui/utils.ts`
+is three lines and one function, which is a better place to learn what a
+function is than any invented example, and the same files come back in the
+formal courses as old friends instead of new material.
+
+Generation was Grok's, seven isolated worktrees in parallel, one per stage.
+What made the output usable was not the model but the briefs: each named the
+exact files, their line counts, and what each one could teach. Two mechanical
+gates carried the review, because 294 cards is past what reading can check —
+`check-proposal-evidence.mjs` resolves every citation against the real file at
+its pinned commit, and the new `check-proposal-shape.mjs` checks what the schema
+cannot: duplicate ids, the six-section lesson skeleton, an evidence note on
+every reference, and answers short enough for a normalized comparison to be
+fair. A third, throwaway audit compared every quoted code line against the
+cited files; 24 of 441 differed and all 24 were legitimate abbreviations.
+
+Import surfaced a boundary worth recording: the UA knowledge graph indexes 572
+files and none of the build configuration. Evidence pointing at `package.json`
+or `.env.example` had to drop `analysisId`/`graphHash`/`nodeIds` and rest on the
+git snapshot alone, which is still a complete binding. `course create` rejects
+a fabricated node, which is how this was caught rather than shipped.
+
+Two defects fell out of putting the tier in front of a learner:
+
+- **Focus pinned one course, but a focus is a route.** Finishing the pinned
+  course dropped the walk back into alphabetical order, which would have handed
+  a beginner `contracts-and-drift` next. `focus.courseIds` is an ordered list
+  now; unnamed courses keep their own order behind it.
+- **A dev-server restart made the campus look broken.** The API mints its
+  request token per process, so any server edit left an open tab unable to
+  submit, saying only "Missing or invalid UniversityLocal request token". The
+  tab now pulls a fresh bootstrap and says one more click will do it. The repair
+  goes through a refresh-only callback: the completion callback would have
+  marked the lesson 已完成 on a submission that never reached the server.
+
+Renaming the focus field also proved that a strict config read at startup can
+brick the tool it configures — the failing key stopped the whole CLI, including
+the `focus set` that would have repaired it. A focus only reorders what today
+reaches for first, so an unreadable one is reported and ignored rather than
+fatal.
+
+Verified in a real browser against a deliberately restarted API: 今日学习 opens
+on 《认识地形》, the evidence rail shows the note and the copy-location button
+for a config file with no UA binding, the first submit explains the stale token,
+the second submits, and the lesson does not falsely complete.
+
 ## Accepted Risks
 
 - **The API request token does not defend against other local processes.**
