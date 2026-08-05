@@ -63,7 +63,19 @@ const LessonCreationProposalSchema = z
     cards: z.array(CardCreationProposalSchema).default([]),
     exercises: z.array(ExerciseCreationProposalSchema).default([]),
   })
-  .strict();
+  .strict()
+  /**
+   * Cards enter the spaced-repetition queue when their lesson is completed, and
+   * a lesson is completed by answering its exercises. A lesson that carries
+   * cards but no exercises can therefore never be completed, so those cards are
+   * written to disk and never scheduled — silently invisible work. Refuse the
+   * shape rather than let the course look finished while part of it is inert.
+   */
+  .refine((lesson) => lesson.cards.length === 0 || lesson.exercises.length > 0, {
+    message:
+      "A lesson with cards needs at least one exercise; cards are only enrolled for review once the lesson is completed",
+    path: ["exercises"],
+  });
 
 const UnitCreationProposalSchema = z
   .object({

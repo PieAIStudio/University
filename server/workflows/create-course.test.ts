@@ -190,6 +190,18 @@ describe("course creation workflow", () => {
     expect(result.courseStatus).toBe("active");
   });
 
+  it("refuses a lesson that has cards but no exercise to unlock them", () => {
+    const { studiesRoot, snapshot } = setup();
+    const proposal = minimalProposal(snapshot);
+    // Cards are enrolled for review when their lesson completes, and a lesson
+    // completes by answering its exercises. Without one, these cards would be
+    // stored and never scheduled.
+    proposal.course.units[0]!.lessons[0]!.exercises = [];
+    expect(() => createCourse({ studiesRoot, studyId: STUDY_ID, proposal })).toThrow(
+      /at least one exercise/,
+    );
+  });
+
   it("creates an explain exercise with a rubric", () => {
     const { studiesRoot, snapshot } = setup();
     const proposal = minimalProposal(snapshot);

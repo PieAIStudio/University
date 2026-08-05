@@ -6,6 +6,7 @@ import {
   mkdirSync,
   openSync,
   readFileSync,
+  readdirSync,
   renameSync,
   rmSync,
   statSync,
@@ -29,7 +30,7 @@ import {
   type UnitManifest,
 } from "../../src/domain/schemas.js";
 import { writeJsonAtomically, writeTextAtomically } from "../storage/atomic-json.js";
-import { getCoursePaths, getLessonPaths, getUnitPaths } from "../studies/paths.js";
+import { getCoursePaths, getLessonPaths, getStudyPaths, getUnitPaths } from "../studies/paths.js";
 import { readStudy } from "../studies/repository.js";
 import { validateEvidence } from "./evidence.js";
 
@@ -286,6 +287,22 @@ export function writeCourse(
   const paths = getCoursePaths(studiesRoot, studyId, course.id);
   createManifestRoot(paths.root, paths.units, paths.manifest, course);
   return course;
+}
+
+/**
+ * Every course directory in a study, in a stable order. A study is a shelf of
+ * courses, not a container for one: `defaultCourseId` says which course opens
+ * first, and this says which ones exist at all. Directories without a manifest
+ * are skipped rather than reported, so a half-written course cannot break the
+ * shelf for the courses beside it.
+ */
+export function listCourseIds(studiesRoot: string, studyId: string): readonly string[] {
+  const root = getStudyPaths(studiesRoot, studyId).courses;
+  if (!existsSync(root)) return [];
+  return readdirSync(root, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(join(root, entry.name, "course.json")))
+    .map((entry) => entry.name)
+    .sort();
 }
 
 export function readCourse(studiesRoot: string, studyId: string, courseId: string): CourseManifest {

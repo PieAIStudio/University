@@ -25,6 +25,7 @@ import {
 import { loadUniversityLocalConfig } from "./config/load-config.js";
 import { readEvidenceSnippet } from "./content/evidence.js";
 import {
+  listCourseIds,
   readCourse,
   readLatestCard,
   readLatestExercise,
@@ -47,7 +48,7 @@ import {
   type StoredCardState,
   type StoredLessonProgress,
 } from "./learning/types.js";
-import { getStudyPaths } from "./studies/paths.js";
+import { getCoursePaths, getStudyPaths } from "./studies/paths.js";
 import { inspectStudyShelf, readStudy } from "./studies/repository.js";
 
 const DEFAULT_PORT = 4317;
@@ -62,6 +63,18 @@ const Answer = z.string().trim().min(1).max(20_000);
 const ExerciseAttemptSchema = z
   .object({
     commandId: CommandId,
+    contentRevision: z.number().int().positive(),
+    answer: Answer,
+    /**
+     * Rubric points the learner claims their written answer covered. Present
+     * only for `explain` exercises, which have no reference string to compare
+     * against; the learner grades themselves against the rubric after writing.
+     */
+    met: z.array(z.number().int().nonnegative()).optional(),
+  })
+  .strict();
+const ExerciseRubricSchema = z
+  .object({
     contentRevision: z.number().int().positive(),
     answer: Answer,
   })
@@ -417,18 +430,49 @@ function publicKnowledgeNote(note: KnowledgeNote, content: string): unknown {
   };
 }
 
+/**
+ * `defaultCourseId` decides which course a study opens on, not which course a
+ * study is allowed to teach. Gating every route on it turned a study into a
+ * single-course container: a second course was written, validated and stored,
+ * and then answered 404 on every read. Membership is already established by the
+ * path — `StableId` rejects traversal in both `parseRoute` and `getCoursePaths`
+ * — so the only questions left are whether the course exists and is active.
+ */
 function requireActiveCourse(
   studiesRoot: string,
   studyId: string,
   courseId: string,
 ): CourseManifest {
-  const study = readStudy(studiesRoot, studyId);
-  if (study.defaultCourseId !== courseId) {
-    throw new HttpError(404, "Course is not the study's current default course");
+  readStudy(studiesRoot, studyId);
+  if (!existsSync(getCoursePaths(studiesRoot, studyId, courseId).manifest)) {
+    throw new HttpError(404, "Course does not exist in this study");
   }
   const course = readCourse(studiesRoot, studyId, courseId);
   if (course.status !== "active") throw new HttpError(409, "Course is not active");
   return course;
+}
+
+/**
+ * The study's active courses, default first. Ordering is what makes "next
+ * lesson" meaningful across a shelf: without it the learner's next step would
+ * hop between courses by whatever order the filesystem happened to return.
+ */
+function listActiveCourses(studiesRoot: string, study: StudyManifest): readonly CourseManifest[] {
+  const courses: CourseManifest[] = [];
+  for (const courseId of listCourseIds(studiesRoot, study.id)) {
+    try {
+      const course = readCourse(studiesRoot, study.id, courseId);
+      if (course.status === "active") courses.push(course);
+    } catch {
+      // A course that cannot be parsed is reported by the route that reads it,
+      // not by every shelf listing that walks past it.
+    }
+  }
+  return courses.sort((left, right) => {
+    if (left.id === study.defaultCourseId) return -1;
+    if (right.id === study.defaultCourseId) return 1;
+    return left.id.localeCompare(right.id);
+  });
 }
 
 function requireActiveUnit(
@@ -671,9 +715,7 @@ function buildStudyView(
   study: StudyManifest,
   store: SqliteLearningStore | null,
 ): unknown {
-  let courseView: unknown = null;
-  if (study.defaultCourseId) {
-    const course = readCourse(studiesRoot, study.id, study.defaultCourseId);
+  const courseViews = listActiveCourses(studiesRoot, study).map((course) => {
     const units = course.unitIds.map((unitId) => {
       const unit = readUnit(studiesRoot, study.id, course.id, unitId);
       return {
@@ -699,13 +741,13 @@ function buildStudyView(
         }),
       };
     });
-    courseView = { ...course, units };
-  }
+    return { ...course, units, isDefault: course.id === study.defaultCourseId };
+  });
   const notes = listKnowledgeNotes(studiesRoot, study.id).map((note) => {
     const stored = readLatestKnowledgeNote(studiesRoot, study.id, note.id);
     return publicKnowledgeNote(stored.note, stored.content);
   });
-  return { study, course: courseView, notes };
+  return { study, courses: courseViews, notes };
 }
 
 function buildLessonView(
@@ -839,6 +881,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
             uaAnalysisCount: ua.total,
             readyUaAnalysisCount: ua.ready,
             courseCount: countCourseManifests(paths.courses),
+            activeCourseCount: listActiveCourses(config.studiesRoot, study).length,
             defaultCourse,
             hasLearningDatabase: existsSync(paths.learner.database),
           };
@@ -849,10 +892,10 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         const learningIssues: string[] = [];
         for (const study of shelf.studies) {
           const store = getStore(study.id);
-          let course: CourseManifest | null = null;
-          if (study.defaultCourseId) {
+          const activeCourses = listActiveCourses(config.studiesRoot, study);
+          const coursesById = new Map(activeCourses.map((course) => [course.id, course]));
+          for (const course of activeCourses) {
             try {
-              course = requireActiveCourse(config.studiesRoot, study.id, study.defaultCourseId);
               for (const unitId of course.unitIds) {
                 const unit = readUnit(config.studiesRoot, study.id, course.id, unitId);
                 if (unit.status !== "active") continue;
@@ -867,7 +910,15 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
                   if (lesson.status !== "active") continue;
                   const key = lessonContentKey({ courseId: course.id, unitId: unit.id, lessonId });
                   const progress = store?.getLessonProgress(key) ?? null;
-                  if (!nextLesson && progress?.status !== "completed") {
+                  // Completion belongs to the revision it was earned on. A
+                  // revised lesson re-enrolls its cards only when it is
+                  // completed again, so treating an old completion as current
+                  // left the learner with a course that looked finished and a
+                  // review queue that had quietly gone empty.
+                  const finished =
+                    progress?.status === "completed" &&
+                    progress.contentRevision === lesson.contentRevision;
+                  if (!nextLesson && !finished) {
                     nextLesson = {
                       studyId: study.id,
                       studyTitle: study.title,
@@ -876,6 +927,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
                       unitId: unit.id,
                       lessonId,
                       lessonTitle: lesson.title,
+                      contentRevision: lesson.contentRevision,
                       progress: serializeProgress(progress),
                     };
                   }
@@ -883,7 +935,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
               }
             } catch (error) {
               learningIssues.push(
-                `${study.id}: course: ${error instanceof Error ? error.message : "invalid course learning data"}`,
+                `${study.id}/${course.id}: course: ${error instanceof Error ? error.message : "invalid course learning data"}`,
               );
             }
           }
@@ -900,7 +952,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
             try {
               const identity = parseReviewContentKey(state.cardKey);
               if (identity.kind === "course-card") {
-                if (!course || identity.courseId !== course.id) continue;
+                if (!coursesById.has(identity.courseId)) continue;
                 const card = requireActiveCard(config.studiesRoot, {
                   studyId: study.id,
                   ...identity,
@@ -1057,10 +1109,40 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         if (exercise.contentRevision !== body.contentRevision) {
           throw new HttpError(409, "Exercise content revision changed; reload before submitting");
         }
-        if (exercise.kind !== "short-answer") {
-          throw new HttpError(409, "This exercise requires a future rubric-based grader");
+        // Two grading routes, one attempt log. A short-answer exercise is
+        // graded against its reference string; an `explain` exercise has no
+        // reference string, so the learner writes first, reads the rubric, and
+        // then reports which points the answer covered.
+        let score: number;
+        let maxScore: number;
+        let met: readonly number[] | null = null;
+        if (exercise.kind === "short-answer") {
+          if (body.met !== undefined) {
+            throw new HttpError(400, "Rubric self-assessment does not apply to this exercise");
+          }
+          maxScore = 1;
+          score = normalizeAnswer(body.answer) === normalizeAnswer(exercise.expectedAnswer) ? 1 : 0;
+        } else {
+          if (body.met === undefined) {
+            throw new HttpError(
+              400,
+              `Read the rubric first: POST ${url.pathname.replace(/\/attempt$/, "/rubric")}`,
+            );
+          }
+          // Duplicated indices would otherwise let one covered point be
+          // reported several times and push the score past the rubric length.
+          const claimed = [...new Set(body.met)];
+          if (claimed.some((index) => index >= exercise.rubric.length)) {
+            throw new HttpError(
+              400,
+              "Rubric self-assessment refers to a point that does not exist",
+            );
+          }
+          met = claimed;
+          maxScore = exercise.rubric.length;
+          score = claimed.length;
         }
-        const correct = normalizeAnswer(body.answer) === normalizeAnswer(exercise.expectedAnswer);
+        const correct = score >= maxScore;
         const store = getStore(exerciseRoute.studyId, true)!;
         const exerciseKey = exerciseContentKey({
           courseId: exerciseRoute.courseId,
@@ -1074,15 +1156,14 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
           unitId: exerciseRoute.unitId,
           lessonId: exerciseRoute.lessonId,
         });
-        // Only short-answer exercises can be graded without a human, so they
-        // are what lesson completion is measured against. Rubric exercises are
-        // excluded until the grader exists; counting them would make any
-        // lesson containing one impossible to finish.
-        const gradable = lesson.exerciseIds
-          .map((id) =>
-            requireActiveExercise(config.studiesRoot, { ...exerciseRoute, contentId: id }),
-          )
-          .filter((candidate) => candidate.kind === "short-answer");
+        // Every exercise counts toward completion now that rubric exercises are
+        // self-assessed. While they were excluded, a lesson whose exercises were
+        // all rubric-based had nothing to measure: it could never complete, so
+        // its cards were never enrolled and the whole lesson was unreachable
+        // from the review queue.
+        const gradable = lesson.exerciseIds.map((id) =>
+          requireActiveExercise(config.studiesRoot, { ...exerciseRoute, contentId: id }),
+        );
 
         // One outcome, one transaction. Recording the attempt, advancing the
         // lesson, and enrolling its cards used to be three independent writes,
@@ -1096,9 +1177,9 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
                 commandId: body.commandId,
                 exerciseKey,
                 contentRevision: exercise.contentRevision,
-                score: correct ? 1 : 0,
-                maxScore: 1,
-                response: { answer: body.answer },
+                score,
+                maxScore,
+                response: met === null ? { answer: body.answer } : { answer: body.answer, met },
               });
               // Read completion back from the attempt log rather than from "this
               // answer was right": a lesson with three exercises is finished when
@@ -1160,15 +1241,39 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         // now withheld until the answer is right or the learner has genuinely
         // tried twice at this revision.
         const attemptCount = store.countExerciseAttempts(exerciseKey, exercise.contentRevision);
-        const revealAnswer = correct || attemptCount >= EXERCISE_ATTEMPTS_BEFORE_REVEAL;
+        const revealAnswer =
+          exercise.kind === "short-answer" &&
+          (correct || attemptCount >= EXERCISE_ATTEMPTS_BEFORE_REVEAL);
         sendJson(response, 200, {
           attemptId,
           correct,
-          score: correct ? 1 : 0,
-          maxScore: 1,
+          score,
+          maxScore,
           attemptCount,
           ...(revealAnswer ? { expectedAnswer: exercise.expectedAnswer } : {}),
         });
+        return;
+      }
+
+      // The rubric is the answer key for an `explain` exercise, so it is a
+      // separate request that costs the learner a written answer first. Handing
+      // it back beside the prompt would turn "explain it yourself" into
+      // "paraphrase the list on screen".
+      const exerciseRubricRoute = parseRoute(
+        url.pathname,
+        /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/exercises\/([^/]+)\/rubric$/,
+      );
+      if (request.method === "POST" && exerciseRubricRoute) {
+        requireMutationAccess(request, requestToken);
+        const body = ExerciseRubricSchema.parse(await readJsonBody(request));
+        const exercise = requireActiveExercise(config.studiesRoot, exerciseRubricRoute);
+        if (exercise.contentRevision !== body.contentRevision) {
+          throw new HttpError(409, "Exercise content revision changed; reload before submitting");
+        }
+        if (exercise.kind !== "explain") {
+          throw new HttpError(409, "This exercise is graded against a reference answer");
+        }
+        sendJson(response, 200, { rubric: exercise.rubric });
         return;
       }
 

@@ -29,6 +29,7 @@ interface StudySummary {
   readonly uaAnalysisCount: number;
   readonly readyUaAnalysisCount: number;
   readonly courseCount: number;
+  readonly activeCourseCount: number;
   readonly defaultCourse: DefaultCourseSummary | null;
   readonly hasLearningDatabase: boolean;
 }
@@ -66,6 +67,7 @@ interface NextLesson extends LessonLocator {
   readonly studyTitle: string;
   readonly courseTitle: string;
   readonly lessonTitle: string;
+  readonly contentRevision: number;
   readonly progress: LessonProgress | null;
 }
 
@@ -108,17 +110,20 @@ interface UnitView {
   readonly lessons: readonly LessonSummary[];
 }
 
+interface CourseView {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly audience: string;
+  readonly objectives: readonly string[];
+  readonly status: string;
+  readonly isDefault: boolean;
+  readonly units: readonly UnitView[];
+}
+
 interface StudyView {
   readonly study: StudySummary;
-  readonly course: null | {
-    readonly id: string;
-    readonly title: string;
-    readonly description: string;
-    readonly audience: string;
-    readonly objectives: readonly string[];
-    readonly status: string;
-    readonly units: readonly UnitView[];
-  };
+  readonly courses: readonly CourseView[];
   readonly notes: readonly KnowledgeNoteView[];
 }
 
@@ -180,6 +185,8 @@ export interface CardRevealPayload extends RetrievalAttemptDraft {
 interface ExerciseAttemptResult {
   readonly correct: boolean;
   readonly attemptCount: number;
+  readonly score: number;
+  readonly maxScore: number;
   readonly expectedAnswer?: string;
 }
 
@@ -338,9 +345,17 @@ function reviewCardIdentity(card: ReviewCardLocator): string {
   return `course/${card.studyId}/${card.courseId}/${card.unitId}/${card.lessonId}/${card.cardId}@${card.contentRevision}`;
 }
 
-function progressLabel(progress: LessonProgress | null): string {
+/**
+ * `contentRevision` is the revision the lesson is on now. Progress earned on an
+ * earlier revision is real history but not current standing: the lesson's cards
+ * are re-enrolled for review only when it is completed again, so calling it
+ * "已完成" would hide the one action that puts the cards back in the queue.
+ */
+function progressLabel(progress: LessonProgress | null, contentRevision?: number): string {
   if (!progress) return "尚未开始";
-  if (progress.status === "completed") return "已完成";
+  const stale = contentRevision !== undefined && progress.contentRevision !== contentRevision;
+  if (progress.status === "completed") return stale ? "课文已更新 · 需重做" : "已完成";
+  if (stale) return "课文已更新 · 需重做";
   return `进行中 · ${Math.round(progress.progress * 100)}%`;
 }
 
@@ -534,24 +549,45 @@ function ExerciseBlock({
   const [result, setResult] = useState<ExerciseAttemptResult | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // `explain` exercises are self-assessed: the rubric arrives only after an
+  // answer has been written, and `met` is what the learner claims it covered.
+  const [rubric, setRubric] = useState<readonly string[] | null>(null);
+  const [met, setMet] = useState<readonly number[]>([]);
+  const isExplain = exercise.kind === "explain";
+  const solved = result?.correct === true;
+
+  function post(action: "attempt" | "rubric", payload: Record<string, unknown>) {
+    return fetch(`${lessonPath(locator)}/exercises/${exercise.id}/${action}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-University-Local-Token": requestToken },
+      body: JSON.stringify({ contentRevision: exercise.contentRevision, answer, ...payload }),
+    });
+  }
+
+  async function revealRubric() {
+    setPending(true);
+    setError(null);
+    try {
+      const body = await readJson<{ readonly rubric: readonly string[] }>(await post("rubric", {}));
+      setRubric(body.rubric);
+      setMet([]);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "暂时无法读取评分标准");
+    } finally {
+      setPending(false);
+    }
+  }
 
   async function submit() {
     setPending(true);
     setError(null);
     try {
-      const response = await fetch(`${lessonPath(locator)}/exercises/${exercise.id}/attempt`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-University-Local-Token": requestToken,
-        },
-        body: JSON.stringify({
+      const body = await readJson<ExerciseAttemptResult>(
+        await post("attempt", {
           commandId: crypto.randomUUID(),
-          contentRevision: exercise.contentRevision,
-          answer,
+          ...(isExplain ? { met } : {}),
         }),
-      });
-      const body = await readJson<ExerciseAttemptResult>(response);
+      );
       setResult(body);
       if (body.correct) {
         // The attempt is already recorded server-side; a refresh failure is a
@@ -565,6 +601,12 @@ function ExerciseBlock({
     }
   }
 
+  function retry() {
+    setRubric(null);
+    setMet([]);
+    setResult(null);
+  }
+
   return (
     <GamePanel className="exercise-panel" title={exercise.title}>
       <p>{exercise.prompt}</p>
@@ -576,30 +618,86 @@ function ExerciseBlock({
             setAnswer(event.target.value);
             setResult(null);
           }}
-          placeholder="用自己的话先回答。"
-          rows={3}
+          placeholder={isExplain ? "用自己的话完整解释一遍。" : "用自己的话先回答。"}
+          rows={isExplain ? 6 : 3}
+          // Editing the answer after the rubric is on screen would turn
+          // self-assessment into copying, so the text is frozen once revealed.
+          readOnly={rubric !== null}
         />
       </label>
-      <GameButton
-        variant="primary"
-        onClick={() => void submit()}
-        disabled={!answer.trim() || pending || result?.correct === true}
-      >
-        {pending ? "正在提交…" : result?.correct ? "已完成" : "提交答案"}
-      </GameButton>
+
+      {isExplain && rubric === null ? (
+        <GameButton
+          variant="primary"
+          onClick={() => void revealRubric()}
+          disabled={!answer.trim() || pending}
+        >
+          {pending ? "正在读取…" : "写完了，看评分标准"}
+        </GameButton>
+      ) : null}
+
+      {rubric !== null ? (
+        <fieldset className="rubric-field" disabled={solved || pending}>
+          <legend>对照评分标准，勾选你真的答到的点</legend>
+          {rubric.map((point, index) => (
+            <label key={point} className="rubric-point">
+              <input
+                type="checkbox"
+                checked={met.includes(index)}
+                onChange={(event) =>
+                  setMet((current) =>
+                    event.target.checked
+                      ? [...current, index]
+                      : current.filter((value) => value !== index),
+                  )
+                }
+              />
+              <span>{point}</span>
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
+
+      {!isExplain || rubric !== null ? (
+        <GameButton
+          variant="primary"
+          onClick={() => void submit()}
+          disabled={!answer.trim() || pending || solved}
+        >
+          {pending ? "正在提交…" : solved ? "已完成" : isExplain ? "提交自评" : "提交答案"}
+        </GameButton>
+      ) : null}
+
       {result ? (
         <GameCallout
-          heading={result.correct ? "回答正确" : "这次还没答对"}
-          tone={result.correct ? "success" : "warning"}
+          heading={
+            solved
+              ? "回答正确"
+              : isExplain
+                ? `${result.score}/${result.maxScore} 个要点`
+                : "这次还没答对"
+          }
+          tone={solved ? "success" : "warning"}
           role="status"
         >
-          {result.expectedAnswer !== undefined
-            ? `参考答案：${result.expectedAnswer}${
-                result.correct ? "。课程进度已经保存。" : "。看清差异后可以修改并重试。"
-              }`
-            : "先不看答案，再自己回想一次。回到上面的课文找依据，然后重新作答；再答错一次会给出参考答案。"}
+          {isExplain
+            ? solved
+              ? "课程进度已经保存。"
+              : "还有要点没答到。回到课文补上缺的部分，再重新解释一遍。"
+            : result.expectedAnswer !== undefined
+              ? `参考答案：${result.expectedAnswer}${
+                  solved ? "。课程进度已经保存。" : "。看清差异后可以修改并重试。"
+                }`
+              : "先不看答案，再自己回想一次。回到上面的课文找依据，然后重新作答；再答错一次会给出参考答案。"}
         </GameCallout>
       ) : null}
+
+      {isExplain && rubric !== null && !solved ? (
+        <GameButton variant="ghost" onClick={retry} disabled={pending}>
+          重新作答
+        </GameButton>
+      ) : null}
+
       {error ? (
         <p className="inline-error" role="alert">
           {error}
@@ -889,7 +987,9 @@ function TodaySection({
             </p>
           </div>
           <div className="next-lesson__action">
-            <GameBadge tone="warning">{progressLabel(data.today.nextLesson.progress)}</GameBadge>
+            <GameBadge tone="warning">
+              {progressLabel(data.today.nextLesson.progress, data.today.nextLesson.contentRevision)}
+            </GameBadge>
             <GameButton variant="primary" onClick={() => onOpenLesson(data.today.nextLesson!)}>
               {data.today.nextLesson.progress ? "继续学习" : "开始学习"}
             </GameButton>
@@ -949,7 +1049,9 @@ function StudyShelf({
           onClick={() => onSelect(study.id)}
         >
           <span>{study.title}</span>
-          <small>{study.defaultCourse?.status === "active" ? "可学习" : "准备中"}</small>
+          <small>
+            {study.activeCourseCount > 0 ? `${study.activeCourseCount} 门课可学习` : "准备中"}
+          </small>
         </button>
       ))}
     </aside>
@@ -1083,6 +1185,89 @@ export function KnowledgeNotesSection({
   );
 }
 
+function CourseSection({
+  studyId,
+  course,
+  onOpenLesson,
+}: {
+  readonly studyId: string;
+  readonly course: CourseView;
+  readonly onOpenLesson: (locator: LessonLocator) => void;
+}) {
+  const lessons = course.units.flatMap((unit) => unit.lessons);
+  const completed = lessons.filter((lesson) => lesson.progress?.status === "completed").length;
+  const titleId = `course-title-${course.id}`;
+  return (
+    <section className="formal-course" aria-labelledby={titleId}>
+      <header className="formal-course__header">
+        <div>
+          <p className="eyebrow">FORMAL CURRICULUM</p>
+          <h2 id={titleId}>正式课程 · {course.title}</h2>
+          <p>{course.description}</p>
+        </div>
+        <GameBadge tone="success">
+          {completed === lessons.length ? "已学完" : "课程已发布"}
+        </GameBadge>
+      </header>
+      <GameProgress value={completed} max={Math.max(lessons.length, 1)} label="课程完成度" />
+      <div className="course-objectives">
+        <p className="eyebrow">LEARNING OUTCOMES</p>
+        <ul>
+          {course.objectives.map((objective) => (
+            <li key={objective}>{objective}</li>
+          ))}
+        </ul>
+      </div>
+      <div className="unit-list">
+        {course.units.map((unit, unitIndex) => (
+          <section className="unit-card" key={unit.id}>
+            <div className="unit-card__number">{String(unitIndex + 1).padStart(2, "0")}</div>
+            <div className="unit-card__body">
+              <p className="eyebrow">UNIT</p>
+              <h3>{unit.title}</h3>
+              <p>{unit.objective}</p>
+              <div className="lesson-list">
+                {unit.lessons.map((lesson) => (
+                  <button
+                    type="button"
+                    className="lesson-row"
+                    key={lesson.id}
+                    onClick={() =>
+                      onOpenLesson({
+                        studyId,
+                        courseId: course.id,
+                        unitId: unit.id,
+                        lessonId: lesson.id,
+                      })
+                    }
+                  >
+                    <span>
+                      <strong>{lesson.title}</strong>
+                      <small>
+                        {lesson.exerciseCount} 道练习 · {lesson.cardCount} 张卡片
+                      </small>
+                    </span>
+                    <GameBadge
+                      tone={
+                        lesson.progress?.status === "completed" &&
+                        lesson.progress.contentRevision === lesson.contentRevision
+                          ? "success"
+                          : "neutral"
+                      }
+                    >
+                      {progressLabel(lesson.progress, lesson.contentRevision)}
+                    </GameBadge>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function StudyDetail({
   view,
   summary,
@@ -1092,9 +1277,6 @@ function StudyDetail({
   readonly summary: StudySummary;
   readonly onOpenLesson: (locator: LessonLocator) => void;
 }) {
-  const course = view.course;
-  const lessons = course?.units.flatMap((unit) => unit.lessons) ?? [];
-  const completed = lessons.filter((lesson) => lesson.progress?.status === "completed").length;
   return (
     <section className="study-detail">
       <header className="study-detail__header">
@@ -1108,69 +1290,15 @@ function StudyDetail({
         snapshotCount={summary.snapshotCount}
         readyUaAnalysisCount={summary.readyUaAnalysisCount}
       />
-      {course ? (
-        <section className="formal-course" aria-labelledby="formal-course-title">
-          <header className="formal-course__header">
-            <div>
-              <p className="eyebrow">FORMAL CURRICULUM</p>
-              <h2 id="formal-course-title">正式课程 · {course.title}</h2>
-              <p>{course.description}</p>
-            </div>
-            <GameBadge tone={course.status === "active" ? "success" : "warning"}>
-              {course.status === "active" ? "课程已发布" : course.status}
-            </GameBadge>
-          </header>
-          <GameProgress value={completed} max={Math.max(lessons.length, 1)} label="课程完成度" />
-          <div className="course-objectives">
-            <p className="eyebrow">LEARNING OUTCOMES</p>
-            <ul>
-              {course.objectives.map((objective) => (
-                <li key={objective}>{objective}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="unit-list">
-            {course.units.map((unit, unitIndex) => (
-              <section className="unit-card" key={unit.id}>
-                <div className="unit-card__number">{String(unitIndex + 1).padStart(2, "0")}</div>
-                <div className="unit-card__body">
-                  <p className="eyebrow">UNIT</p>
-                  <h3>{unit.title}</h3>
-                  <p>{unit.objective}</p>
-                  <div className="lesson-list">
-                    {unit.lessons.map((lesson) => (
-                      <button
-                        type="button"
-                        className="lesson-row"
-                        key={lesson.id}
-                        onClick={() =>
-                          onOpenLesson({
-                            studyId: view.study.id,
-                            courseId: course.id,
-                            unitId: unit.id,
-                            lessonId: lesson.id,
-                          })
-                        }
-                      >
-                        <span>
-                          <strong>{lesson.title}</strong>
-                          <small>
-                            {lesson.exerciseCount} 道练习 · {lesson.cardCount} 张卡片
-                          </small>
-                        </span>
-                        <GameBadge
-                          tone={lesson.progress?.status === "completed" ? "success" : "neutral"}
-                        >
-                          {progressLabel(lesson.progress)}
-                        </GameBadge>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            ))}
-          </div>
-        </section>
+      {view.courses.length > 0 ? (
+        view.courses.map((course) => (
+          <CourseSection
+            key={course.id}
+            studyId={view.study.id}
+            course={course}
+            onOpenLesson={onOpenLesson}
+          />
+        ))
       ) : (
         <GamePanel className="formal-course-empty" tone="strong">
           <p className="eyebrow">FORMAL CURRICULUM</p>
@@ -1282,7 +1410,7 @@ export function App() {
   }, [lessonLocator]);
 
   const completedStudies = useMemo(
-    () => data?.studies.filter((study) => study.defaultCourse?.status === "active").length ?? 0,
+    () => data?.studies.filter((study) => study.activeCourseCount > 0).length ?? 0,
     [data],
   );
   const selectedStudySummary = useMemo(

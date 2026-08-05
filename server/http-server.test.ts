@@ -21,7 +21,7 @@ import {
 } from "./content/repository.js";
 import { writeKnowledgeNoteRevision } from "./knowledge/repository.js";
 import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
-import { cardContentKey, knowledgeCardContentKey } from "./learning/types.js";
+import { cardContentKey, knowledgeCardContentKey, lessonContentKey } from "./learning/types.js";
 import { getStudyPaths } from "./studies/paths.js";
 import { createStudy, registerLocalGitSource, setDefaultCourse } from "./studies/repository.js";
 import { createCleanSnapshot } from "./studies/snapshots.js";
@@ -237,6 +237,85 @@ function addSecondExercise(fixture: ReturnType<typeof makeLearningProject>): voi
   });
   updateUnitStatus(studiesRoot, "sample", "founder-engineer", "auth-architecture", "active");
   updateCourseStatus(studiesRoot, "sample", "founder-engineer", "active");
+}
+
+/**
+ * Adds a whole second course to the fixture study. The study's default course
+ * stays `founder-engineer`, so anything this course can do is something a
+ * non-default course can do.
+ */
+function addSecondCourse(fixture: ReturnType<typeof makeLearningProject>): string {
+  const { studiesRoot, evidence } = fixture;
+  const createdAt = "2026-07-20T03:00:00.000Z";
+  writeCourse(studiesRoot, "sample", {
+    schemaVersion: 1,
+    id: "cost-boundaries",
+    title: "Cost Boundaries",
+    description: "Where the money stops.",
+    audience: "Founder",
+    objectives: ["Name the spend gate"],
+    unitIds: ["spend"],
+    status: "draft",
+    createdAt,
+    updatedAt: createdAt,
+  });
+  writeUnit(studiesRoot, "sample", "cost-boundaries", {
+    schemaVersion: 1,
+    id: "spend",
+    title: "Spend",
+    objective: "Locate the gate.",
+    prerequisiteUnitIds: [],
+    lessonIds: ["spend-gate"],
+    status: "draft",
+  });
+  writeLessonRevision(studiesRoot, "sample", {
+    manifest: {
+      schemaVersion: 1,
+      id: "spend-gate",
+      title: "Where does spending stop?",
+      courseId: "cost-boundaries",
+      unitId: "spend",
+      exerciseIds: ["explain-spend-gate"],
+      cardIds: ["spend-gate-card"],
+      contentRevision: 1,
+      status: "active",
+      evidence: [evidence],
+      createdAt,
+      updatedAt: createdAt,
+    },
+    content: "# Spend\n\nThe gate runs before the call, not after.\n",
+  });
+  writeCardRevision(studiesRoot, "sample", {
+    schemaVersion: 1,
+    id: "spend-gate-card",
+    kind: "basic",
+    courseId: "cost-boundaries",
+    unitId: "spend",
+    lessonId: "spend-gate",
+    front: "When does the spend gate run?",
+    back: "SPEND-GATE-BACK-SECRET",
+    contentRevision: 1,
+    status: "active",
+    tags: [],
+    evidence: [evidence],
+  });
+  writeExerciseRevision(studiesRoot, "sample", {
+    schemaVersion: 1,
+    id: "explain-spend-gate",
+    kind: "explain",
+    title: "Explain the gate",
+    courseId: "cost-boundaries",
+    unitId: "spend",
+    lessonId: "spend-gate",
+    prompt: "Explain why the gate runs before the call.",
+    rubric: ["names the ordering", "says what fails closed"],
+    contentRevision: 1,
+    status: "active",
+    evidence: [evidence],
+  });
+  updateUnitStatus(studiesRoot, "sample", "cost-boundaries", "spend", "active");
+  updateCourseStatus(studiesRoot, "sample", "cost-boundaries", "active");
+  return "/api/studies/sample/courses/cost-boundaries/units/spend/lessons/spend-gate";
 }
 
 function addKnowledgeNotes(fixture: ReturnType<typeof makeLearningProject>): void {
@@ -948,5 +1027,241 @@ describe("UniversityLocal loopback API", () => {
     };
     expect(refreshed.today.dueCount).toBe(0);
     expect(refreshed.today.nextLesson).toBeNull();
+  });
+
+  it("teaches every active course in a study, not only the default one", async () => {
+    const fixture = makeLearningProject(false);
+    const secondLessonPath = addSecondCourse(fixture);
+    const { base } = await start(fixture.projectRoot);
+
+    // The gate used to be `defaultCourseId`, so this lesson answered 404 even
+    // though its course was written, validated and marked active.
+    const lesson = await fetch(`${base}${secondLessonPath}`);
+    expect(lesson.status).toBe(200);
+    expect(await lesson.text()).toContain("Where does spending stop?");
+
+    const study = (await (await fetch(`${base}/api/studies/sample`)).json()) as {
+      courses: Array<{ id: string; isDefault: boolean }>;
+    };
+    expect(study.courses.map((course) => course.id)).toEqual([
+      "founder-engineer",
+      "cost-boundaries",
+    ]);
+    expect(study.courses.map((course) => course.isDefault)).toEqual([true, false]);
+
+    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      studies: Array<{ activeCourseCount: number }>;
+    };
+    expect(bootstrap.studies[0]?.activeCourseCount).toBe(2);
+
+    const missing = await fetch(
+      `${base}/api/studies/sample/courses/no-such-course/units/spend/lessons/spend-gate`,
+    );
+    expect(missing.status).toBe(404);
+  });
+
+  it("surfaces due cards from a non-default course", async () => {
+    const fixture = makeLearningProject(false);
+    addSecondCourse(fixture);
+    const store = new SqliteLearningStore(
+      getStudyPaths(fixture.studiesRoot, "sample").learner.database,
+    );
+    store.ensureCard(
+      cardContentKey({
+        courseId: "cost-boundaries",
+        unitId: "spend",
+        lessonId: "spend-gate",
+        cardId: "spend-gate-card",
+      }),
+      1,
+      new Date("2026-07-20T00:00:00.000Z"),
+    );
+    store.close();
+
+    const { base } = await start(fixture.projectRoot);
+    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      today: { dueCount: number; card: { courseId: string; front: string } | null };
+    };
+    // The due queue used to drop any card whose course was not the default, so
+    // reviews scheduled for a second course silently never came back.
+    expect(bootstrap.today.dueCount).toBe(1);
+    expect(bootstrap.today.card?.courseId).toBe("cost-boundaries");
+    expect(JSON.stringify(bootstrap)).not.toContain("SPEND-GATE-BACK-SECRET");
+  });
+
+  it("grades an explain exercise by rubric self-assessment and enrolls its cards", async () => {
+    const fixture = makeLearningProject(false);
+    const lessonPath = addSecondCourse(fixture);
+    const { base } = await start(fixture.projectRoot);
+    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      requestToken: string;
+    };
+    const headers = {
+      "Content-Type": "application/json",
+      "X-University-Local-Token": bootstrap.requestToken,
+    };
+    const exercisePath = `${lessonPath}/exercises/explain-spend-gate`;
+
+    // The rubric is the answer key, so it must not travel with the prompt.
+    expect(await (await fetch(`${base}${lessonPath}`)).text()).not.toContain("fails closed");
+
+    const withoutSelfAssessment = await fetch(`${base}${exercisePath}/attempt`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        commandId: "44444444-4444-4444-8444-444444444444",
+        contentRevision: 1,
+        answer: "The gate runs first.",
+      }),
+    });
+    expect(withoutSelfAssessment.status).toBe(400);
+
+    const rubric = await fetch(`${base}${exercisePath}/rubric`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ contentRevision: 1, answer: "The gate runs first." }),
+    });
+    expect(rubric.status).toBe(200);
+    expect(await rubric.json()).toMatchObject({
+      rubric: ["names the ordering", "says what fails closed"],
+    });
+
+    const partial = await fetch(`${base}${exercisePath}/attempt`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        commandId: "55555555-5555-4555-8555-555555555555",
+        contentRevision: 1,
+        answer: "The gate runs first.",
+        met: [0],
+      }),
+    });
+    expect(await partial.json()).toMatchObject({ correct: false, score: 1, maxScore: 2 });
+    expect(
+      ((await (await fetch(`${base}/api/bootstrap`)).json()) as { today: { dueCount: number } })
+        .today.dueCount,
+    ).toBe(0);
+
+    // Repeating one covered point must not be able to buy the missing one.
+    const inflated = await fetch(`${base}${exercisePath}/attempt`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        commandId: "66666666-6666-4666-8666-666666666666",
+        contentRevision: 1,
+        answer: "The gate runs first.",
+        met: [0, 0],
+      }),
+    });
+    expect(await inflated.json()).toMatchObject({ correct: false, score: 1, maxScore: 2 });
+
+    const outOfRange = await fetch(`${base}${exercisePath}/attempt`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        commandId: "77777777-7777-4777-8777-777777777777",
+        contentRevision: 1,
+        answer: "The gate runs first.",
+        met: [0, 9],
+      }),
+    });
+    expect(outOfRange.status).toBe(400);
+
+    const full = await fetch(`${base}${exercisePath}/attempt`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        commandId: "88888888-8888-4888-8888-888888888888",
+        contentRevision: 1,
+        answer: "The gate runs first, and an unavailable meter refuses the call.",
+        met: [0, 1],
+      }),
+    });
+    expect(await full.json()).toMatchObject({ correct: true, score: 2, maxScore: 2 });
+
+    // A lesson whose only exercise is rubric-based used to be uncompletable, so
+    // its cards were written and then never scheduled.
+    const after = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      today: { dueCount: number; card: { cardId: string } | null };
+    };
+    expect(after.today.dueCount).toBe(1);
+    expect(after.today.card?.cardId).toBe("spend-gate-card");
+  });
+
+  it("re-offers a lesson whose content was revised after it was completed", async () => {
+    const fixture = makeLearningProject(false);
+    const store = new SqliteLearningStore(
+      getStudyPaths(fixture.studiesRoot, "sample").learner.database,
+    );
+    store.recordLessonProgress({
+      lessonKey: lessonContentKey({
+        courseId: "founder-engineer",
+        unitId: "auth-architecture",
+        lessonId: "auth-owner",
+      }),
+      contentRevision: 1,
+      status: "completed",
+      progress: 1,
+    });
+    store.close();
+
+    const before = await start(fixture.projectRoot);
+    expect(
+      (
+        (await (await fetch(`${before.base}/api/bootstrap`)).json()) as {
+          today: { nextLesson: unknown };
+        }
+      ).today.nextLesson,
+    ).toBeNull();
+    await stop(before.server);
+
+    // A revise bumps the lesson to revision 2 and re-enrols its cards only when
+    // the lesson is completed again. Carrying the revision-1 completion forward
+    // left the course looking finished with nothing left in the review queue.
+    addSecondExercise(fixture);
+    const after = await start(fixture.projectRoot);
+    const bootstrap = (await (await fetch(`${after.base}/api/bootstrap`)).json()) as {
+      today: {
+        nextLesson: { lessonId: string; contentRevision: number; progress: unknown } | null;
+      };
+    };
+    expect(bootstrap.today.nextLesson?.lessonId).toBe("auth-owner");
+    expect(bootstrap.today.nextLesson?.contentRevision).toBe(2);
+    expect(bootstrap.today.nextLesson?.progress).toMatchObject({
+      contentRevision: 1,
+      status: "completed",
+    });
+  });
+
+  it("keeps rubric self-assessment away from short-answer exercises", async () => {
+    const fixture = makeLearningProject(false);
+    const { base } = await start(fixture.projectRoot);
+    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      requestToken: string;
+    };
+    const headers = {
+      "Content-Type": "application/json",
+      "X-University-Local-Token": bootstrap.requestToken,
+    };
+    const exercisePath = `${fixture.lessonPath}/exercises/name-auth-owner`;
+
+    const rubric = await fetch(`${base}${exercisePath}/rubric`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ contentRevision: 1, answer: "identity-service" }),
+    });
+    expect(rubric.status).toBe(409);
+
+    const selfAssessed = await fetch(`${base}${exercisePath}/attempt`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        commandId: "99999999-9999-4999-8999-999999999999",
+        contentRevision: 1,
+        answer: "identity-service",
+        met: [0],
+      }),
+    });
+    expect(selfAssessed.status).toBe(400);
   });
 });

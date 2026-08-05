@@ -332,6 +332,53 @@ summary:focus-visible,
   color: rgb(247 234 214 / 38%);
 }
 
+.answer-field textarea[readonly] {
+  border-style: dashed;
+  color: rgb(255 245 232 / 72%);
+  background: rgb(20 14 10 / 45%);
+}
+
+/* Rubric self-assessment for `explain` exercises: the answer is already
+   written and frozen above, and these are the points it is measured against. */
+.rubric-field {
+  display: grid;
+  gap: 12px;
+  margin: 4px 0 18px;
+  border: 1px solid rgb(246 231 211 / 20%);
+  border-radius: 14px;
+  padding: 18px 20px;
+  background: rgb(20 14 10 / 45%);
+}
+
+.rubric-field legend {
+  padding: 0 8px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.rubric-field:disabled {
+  opacity: 0.72;
+}
+
+.rubric-point {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 12px;
+  color: #fff0dc;
+  font-size: 1rem;
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.rubric-point input {
+  width: 18px;
+  height: 18px;
+  margin-top: 4px;
+  accent-color: var(--game-ui-accent, #f5a623);
+}
+
 .answer-reveal {
   margin-top: 22px;
   padding-top: 22px;
