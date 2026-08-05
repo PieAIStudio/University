@@ -5,6 +5,7 @@ import { parseArgs } from "node:util";
 
 import { loadUniversityLocalConfig } from "./config/load-config.js";
 import { listKnowledgeNotes } from "./knowledge/repository.js";
+import { setDefaultCourse } from "./studies/repository.js";
 import { captureKnowledge } from "./workflows/capture-knowledge.js";
 import { getHostStudyStatus } from "./workflows/host-status.js";
 import { backupLearner, resetLearner, restoreLearner } from "./workflows/learner.js";
@@ -41,6 +42,7 @@ Commands:
   course create --study <study-id> --input <proposal.json> [--dry-run]
   course revise --study <study-id> --input <proposal.json> [--dry-run]
   course reactivate --study <study-id> --course <course-id> --snapshot <snapshot-id> [--analysis <analysis-id>]
+  course set-default --study <study-id> --course <course-id>
   session start --study <study-id> --host grok-build --objective <text>
   session status --study <study-id>
   session end --study <study-id> [--session <session-id>]
@@ -128,6 +130,12 @@ interface CourseReactivateCommand {
   readonly analysisId?: string;
 }
 
+interface CourseSetDefaultCommand {
+  readonly kind: "course-set-default";
+  readonly studyId: string;
+  readonly courseId: string;
+}
+
 interface SessionStartCommand {
   readonly kind: "session-start";
   readonly studyId: string;
@@ -179,6 +187,7 @@ export type UniversityLocalCliCommand =
   | CourseCreateCommand
   | CourseReviseCommand
   | CourseReactivateCommand
+  | CourseSetDefaultCommand
   | SessionStartCommand
   | SessionStatusCommand
   | SessionEndCommand
@@ -356,6 +365,14 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         courseId: required(values.course, "course"),
         snapshotId: required(values.snapshot, "snapshot"),
         ...(values.analysis ? { analysisId: values.analysis } : {}),
+      };
+    }
+    if (positionals[1] === "set-default") {
+      rejectUnrelatedOptions(values, ["study", "course"]);
+      return {
+        kind: "course-set-default",
+        studyId: required(values.study, "study"),
+        courseId: required(values.course, "course"),
       };
     }
   }
@@ -539,6 +556,23 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         targetSnapshotId: input.command.snapshotId,
         ...(input.command.analysisId ? { targetAnalysisId: input.command.analysisId } : {}),
       });
+    case "course-set-default": {
+      // A study is a shelf: every active course on it is learnable, and the
+      // default only decides which one the campus opens on and which lesson
+      // "today" reaches for first.
+      const study = setDefaultCourse(
+        config.studiesRoot,
+        input.command.studyId,
+        input.command.courseId,
+      );
+      return {
+        schemaVersion: 1 as const,
+        operation: "course-set-default" as const,
+        studyId: study.id,
+        defaultCourseId: study.defaultCourseId,
+        updatedAt: study.updatedAt,
+      };
+    }
     case "session-start":
       return startLearningSession({
         studiesRoot: config.studiesRoot,

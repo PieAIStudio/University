@@ -242,6 +242,49 @@ byte-identical between `feeb848f` and `c9f0ec8d`. Rebinding is therefore a
 revision, not a rewrite: paths and line ranges survive, only the analysis
 identity moves.
 
+## Curriculum Reachability Receipt (2026-08-05)
+
+Four courses existed on disk and the web app taught none of them. Three gates
+each removed part of the path from content to review queue; together they closed
+it. `GET /api/bootstrap` returned `nextLesson: null`, `dueCount: 0`, and one
+issue, `supaluv: course: Course is not active`.
+
+`requireActiveCourse` gated every read on `defaultCourseId`, so
+`turing-pact` — whose default was `null` — answered 404 for both its courses,
+and SupaLuv's `ai-cost-and-boundaries` was unreachable behind a `stale`
+default. Due cards were filtered by the same rule, so a card scheduled for a
+non-default course never came back. The default now only orders the shelf;
+membership is established by the path, since `StableId` rejects traversal in
+both `parseRoute` and `getCoursePaths`.
+
+`explain` exercises answered 409 and were excluded from the completion check.
+That inverted the problem: five of nine lessons had only rubric exercises, so
+they could never complete and their eleven cards were never enrolled. They are
+now self-assessed through `POST .../exercises/:id/rubric`, which returns the
+rubric only after an answer is submitted, and `create-course` refuses a lesson
+that carries cards without an exercise.
+
+Lesson completion was not scoped to the revision it was earned on, so the
+`founder-engineer` rebind left the course looking finished with an empty queue.
+
+`founder-engineer` was rebound to `git-c9f0ec8d57a1` /
+`ua-c9f0ec8d-...-d0c838f811a5` and reactivated; all four evidence files were
+confirmed byte-identical across the two commits before the rebind.
+
+Three courses were added on top of the existing four: `state-and-process` and
+`one-codebase-many-hosts` on TuringPact, `generated-assets` on SupaLuv. The
+shelf is now 7 courses, 21 lessons, 55 cards, 23 exercises, 149 evidence
+references, with no lesson holding unreachable cards. Every evidence line range
+was checked against the file at its pinned commit before the proposals were
+applied.
+
+Verified in a real browser: the header reports 7 learnable courses, both
+studies list all their courses, and a full pass through the previously dead
+`explain` path recorded 1/3, then 3/3, completed the lesson, and put its two
+cards into the due queue. The learner database was restored to the user's own
+records afterwards — the verification run's rows were removed and
+`learner backup` re-validated the file.
+
 ## Accepted Risks
 
 - **The API request token does not defend against other local processes.**

@@ -1195,7 +1195,14 @@ function CourseSection({
   readonly onOpenLesson: (locator: LessonLocator) => void;
 }) {
   const lessons = course.units.flatMap((unit) => unit.lessons);
-  const completed = lessons.filter((lesson) => lesson.progress?.status === "completed").length;
+  // Progress counts only against the revision the lesson is on now, matching
+  // the per-lesson badge and the server's choice of next lesson. Counting an
+  // old completion would call a course finished while it still has work in it.
+  const completed = lessons.filter(
+    (lesson) =>
+      lesson.progress?.status === "completed" &&
+      lesson.progress.contentRevision === lesson.contentRevision,
+  ).length;
   const titleId = `course-title-${course.id}`;
   return (
     <section className="formal-course" aria-labelledby={titleId}>
@@ -1409,8 +1416,11 @@ export function App() {
     lessonWasOpen.current = lessonIsOpen;
   }, [lessonLocator]);
 
-  const completedStudies = useMemo(
-    () => data?.studies.filter((study) => study.activeCourseCount > 0).length ?? 0,
+  // The header counts courses, not studies with courses. It used to read the
+  // study's single default course, so the number could never exceed the number
+  // of studies no matter how many courses were published.
+  const learnableCourses = useMemo(
+    () => data?.studies.reduce((total, study) => total + study.activeCourseCount, 0) ?? 0,
     [data],
   );
   const selectedStudySummary = useMemo(
@@ -1445,7 +1455,7 @@ export function App() {
         <div className="campus-status" aria-label="校园状态">
           <GameBadge tone="success">资料仅在本机</GameBadge>
           <span>{data?.studies.length ?? 0} 个 study</span>
-          <span>{completedStudies} 门可学课程</span>
+          <span>{learnableCourses} 门可学课程</span>
         </div>
       </header>
 
