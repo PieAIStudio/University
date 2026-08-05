@@ -24,7 +24,11 @@ export const IsoDateTime = z.string().datetime({ offset: true });
 export const LearningFocusSchema = z
   .object({
     studyId: StableId,
-    courseId: StableId.optional(),
+    // An ordered run, not a single pin. What a learner focuses on is usually a
+    // sequence — finish the zero-basics tier, then the formal courses — and a
+    // single course would hand them back to alphabetical order the moment they
+    // finished it.
+    courseIds: z.array(StableId).default([]),
   })
   .strict();
 

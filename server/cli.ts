@@ -48,7 +48,7 @@ Commands:
   course set-default --study <study-id> --course <course-id>
   course open-for-edit --study <study-id> --course <course-id>
   course add-lessons --study <study-id> --input <proposal.json> [--dry-run]
-  focus set --study <study-id> [--course <course-id>]
+  focus set --study <study-id> [--course <course-id>[,<course-id>...]]
   focus show
   focus clear
   session start --study <study-id> --host grok-build --objective <text>
@@ -160,7 +160,7 @@ interface CourseAddLessonsCommand {
 interface FocusCommand {
   readonly kind: "focus-set" | "focus-clear" | "focus-show";
   readonly studyId?: string;
-  readonly courseId?: string;
+  readonly courseIds?: readonly string[];
 }
 
 interface SessionStartCommand {
@@ -426,11 +426,13 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
   if (positionals.length === 2 && positionals[0] === "focus") {
     if (positionals[1] === "set") {
       rejectUnrelatedOptions(values, ["study", "course"]);
-      return {
-        kind: "focus-set",
-        studyId: required(values.study, "study"),
-        ...(values.course ? { courseId: values.course } : {}),
-      };
+      // Comma-separated because a focus is a run in order, and typing the run
+      // out is the whole point: the learner is saying "these, in this order".
+      const courseIds = (values.course ?? "")
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0);
+      return { kind: "focus-set", studyId: required(values.study, "study"), courseIds };
     }
     if (positionals[1] === "show") {
       rejectUnrelatedOptions(values, []);
@@ -659,7 +661,7 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         projectRoot: config.projectRoot,
         studiesRoot: config.studiesRoot,
         studyId: input.command.studyId!,
-        ...(input.command.courseId ? { courseId: input.command.courseId } : {}),
+        courseIds: input.command.courseIds ?? [],
       });
     case "focus-show":
       return showLearningFocus(config.projectRoot);

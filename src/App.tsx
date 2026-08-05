@@ -88,14 +88,22 @@ interface BootstrapData {
 
 interface LearningFocus {
   readonly studyId: string;
-  readonly courseId?: string;
+  readonly courseIds: readonly string[];
 }
 
-/** Prefers human titles, but never hides a focus that points at nothing. */
+/**
+ * Prefers human titles, but never hides a focus that points at nothing. A long
+ * run is summarised by where it starts and how much is left, because the banner
+ * answers "what am I on now", not "what did I sign up for".
+ */
 function focusLabel(focus: LearningFocus, studies: readonly StudySummary[]): string {
   const study = studies.find((candidate) => candidate.id === focus.studyId);
   const studyLabel = study?.title ?? `${focus.studyId}（不在书架上）`;
-  return focus.courseId ? `${studyLabel} · ${focus.courseId}` : studyLabel;
+  const [head, ...rest] = focus.courseIds;
+  if (!head) return studyLabel;
+  return rest.length === 0
+    ? `${studyLabel} · ${head}`
+    : `${studyLabel} · ${head} 起，共 ${focus.courseIds.length} 门`;
 }
 
 interface LessonProgress {
@@ -400,6 +408,19 @@ function EmptyCampus() {
   );
 }
 
+/**
+ * The API mints its request token once per process, so restarting it — which
+ * `pnpm dev` does on every server edit — invalidates the token an already-open
+ * tab is still sending. The raw 403 tells a learner nothing they can act on,
+ * and the page looks broken until they think to reload it. Pulling a fresh
+ * bootstrap puts a valid token back in place, so the repair is one more click.
+ */
+const STALE_TOKEN_NOTICE = "本地服务重启过，安全令牌换新了。再点一次就能提交。";
+
+function isStaleTokenFailure(message: string): boolean {
+  return /request token/i.test(message);
+}
+
 function ReviewCard({
   card,
   requestToken,
@@ -459,7 +480,10 @@ function ReviewCard({
       // field and every retry replayed the same stale contentRevision.
       const message = reason instanceof Error ? reason.message : "暂时无法揭示答案";
       setRevealFailed(true);
-      setError(message);
+      setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);
+      if (isStaleTokenFailure(message)) {
+        await onReviewed().catch(() => undefined);
+      }
       if (/revision/i.test(message)) {
         // Card content moved underneath us; pull the fresh revision so the
         // retry has something valid to send.
@@ -482,7 +506,9 @@ function ReviewCard({
       const result = await readJson<{ readonly state: { readonly dueAt: string } }>(response);
       setNextDue(result.state.dueAt);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "暂时无法保存复习结果");
+      const message = reason instanceof Error ? reason.message : "暂时无法保存复习结果";
+      setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);
+      if (isStaleTokenFailure(message)) await onReviewed().catch(() => undefined);
       setPending(false);
       return;
     }
@@ -565,11 +591,18 @@ function ExerciseBlock({
   exercise,
   requestToken,
   onCompleted,
+  onRefresh,
 }: {
   readonly locator: LessonLocator;
   readonly exercise: LessonView["lesson"]["exercises"][number];
   readonly requestToken: string;
   readonly onCompleted: () => Promise<void>;
+  /**
+   * Reloads campus data without claiming the lesson is finished. `onCompleted`
+   * also flips the lesson to 已完成, which is a lie to tell after a submission
+   * that never reached the server.
+   */
+  readonly onRefresh: () => Promise<void>;
 }) {
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<ExerciseAttemptResult | null>(null);
@@ -598,7 +631,9 @@ function ExerciseBlock({
       setRubric(body.rubric);
       setMet([]);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "暂时无法读取评分标准");
+      const message = reason instanceof Error ? reason.message : "暂时无法读取评分标准";
+      setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);
+      if (isStaleTokenFailure(message)) await onRefresh().catch(() => undefined);
     } finally {
       setPending(false);
     }
@@ -621,7 +656,9 @@ function ExerciseBlock({
         await onCompleted().catch(() => setError("答案已记录，但界面没能刷新，请重新加载页面。"));
       }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "暂时无法提交练习");
+      const message = reason instanceof Error ? reason.message : "暂时无法提交练习";
+      setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);
+      if (isStaleTokenFailure(message)) await onRefresh().catch(() => undefined);
     } finally {
       setPending(false);
     }
@@ -977,6 +1014,7 @@ function LessonReader({
               exercise={exercise}
               requestToken={requestToken}
               onCompleted={complete}
+              onRefresh={onLearningChanged}
             />
           ))}
           {completed && view.lesson.cards.length > 0 ? (

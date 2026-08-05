@@ -906,10 +906,15 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         });
         for (const study of focusedStudies) {
           const store = getStore(study.id);
+          // A focused run is walked in the order it was written, and everything
+          // it does not name keeps its own order behind it.
+          const focusedCourseIds = study.id === config.focus?.studyId ? config.focus.courseIds : [];
           const activeCourses = [...listActiveCourses(config.studiesRoot, study)].sort(
             (left, right) => {
-              if (study.id !== config.focus?.studyId || !config.focus.courseId) return 0;
-              const rank = (id: string): number => (id === config.focus?.courseId ? 0 : 1);
+              const rank = (id: string): number => {
+                const position = focusedCourseIds.indexOf(id);
+                return position === -1 ? focusedCourseIds.length : position;
+              };
               return rank(left.id) - rank(right.id);
             },
           );

@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync } from "
 import { basename, dirname, isAbsolute, join, parse, relative, resolve } from "node:path";
 
 import {
+  LearningFocusSchema,
   UniversityLocalConfigSchema,
   type UniversityLocalConfig,
 } from "../../src/domain/schemas.js";
@@ -24,7 +25,20 @@ export interface ResolvedUniversityLocalConfig extends UniversityLocalConfig {
 
 function readConfig(path: string): Partial<UniversityLocalConfig> {
   if (!existsSync(path)) return {};
-  return PartialUniversityLocalConfigSchema.parse(JSON.parse(readFileSync(path, "utf8")));
+  const raw = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
+  const { focus, ...others } = raw;
+  const rest = PartialUniversityLocalConfigSchema.omit({ focus: true }).parse(others);
+  if (focus === undefined) return rest;
+  const parsed = LearningFocusSchema.safeParse(focus);
+  if (parsed.success) return { ...rest, focus: parsed.data };
+  // The focus only reorders what "今日学习" reaches for first. Refusing to start
+  // over it would make a preference written by an older version brick the tool
+  // — including the `focus set` command that would repair it. Say so and carry
+  // on unfocused.
+  process.stderr.write(
+    `Ignoring the focus in ${path}: this version does not understand it. Reset it with \`pnpm university focus set\`.\n`,
+  );
+  return rest;
 }
 
 function hasValidStudiesRootMarker(studiesRoot: string): boolean {

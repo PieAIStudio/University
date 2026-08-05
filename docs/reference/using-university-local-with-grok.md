@@ -101,11 +101,14 @@ pnpm dev
 pnpm university focus set --study turing-pact
 ```
 
-想连课程一起钉住：
+想连课程顺序一起钉住——`--course` 收一串用逗号分隔的课程 ID，**顺序就是你要走的顺序**：
 
 ```bash
-pnpm university focus set --study turing-pact --course contracts-and-drift
+pnpm university focus set --study turing-pact --course foundations-terrain,foundations-reading-code,foundations-logic
 ```
+
+这一串里的课排在最前面，走完第一门自然接到第二门；没被点名的课保持原来的次序留在后面。
+只写一门也可以，那就是一条长度为 1 的路线。
 
 查看和清除：
 

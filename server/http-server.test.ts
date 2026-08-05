@@ -24,6 +24,7 @@ import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
 import { cardContentKey, knowledgeCardContentKey, lessonContentKey } from "./learning/types.js";
 import { getStudyPaths } from "./studies/paths.js";
 import { createStudy, registerLocalGitSource, setDefaultCourse } from "./studies/repository.js";
+import { setLearningFocus } from "./workflows/focus.js";
 import { createCleanSnapshot } from "./studies/snapshots.js";
 
 const servers: ReturnType<typeof createUniversityLocalHttpServer>[] = [];
@@ -1073,24 +1074,28 @@ describe("UniversityLocal loopback API", () => {
     expect(before.today.nextLesson?.courseId).toBe("founder-engineer");
     expect(before.today.focus).toBeNull();
 
-    writeFileSync(
-      join(fixture.projectRoot, "university-local.config.local.json"),
-      JSON.stringify({
-        schemaVersion: 1,
-        focus: { studyId: "sample", courseId: "cost-boundaries" },
-      }),
-    );
+    // Written through the workflow rather than by hand, so the run the learner
+    // would actually type is the one the server then walks.
+    setLearningFocus({
+      projectRoot: fixture.projectRoot,
+      studiesRoot: fixture.studiesRoot,
+      studyId: "sample",
+      courseIds: ["cost-boundaries", "founder-engineer"],
+    });
 
     const focused = await start(fixture.projectRoot);
     const after = (await (await fetch(`${focused.base}/api/bootstrap`)).json()) as {
       today: {
         nextLesson: { courseId: string } | null;
-        focus: { studyId: string; courseId?: string } | null;
+        focus: { studyId: string; courseIds: readonly string[] } | null;
       };
       studies: Array<{ activeCourseCount: number }>;
     };
     expect(after.today.nextLesson?.courseId).toBe("cost-boundaries");
-    expect(after.today.focus).toEqual({ studyId: "sample", courseId: "cost-boundaries" });
+    expect(after.today.focus).toEqual({
+      studyId: "sample",
+      courseIds: ["cost-boundaries", "founder-engineer"],
+    });
     // Focus reorders; it must not remove anything from the shelf.
     expect(after.studies[0]?.activeCourseCount).toBe(2);
   });

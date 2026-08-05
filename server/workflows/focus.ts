@@ -18,13 +18,19 @@ import { writeJsonAtomically } from "../storage/atomic-json.js";
  */
 const LOCAL_CONFIG = "university-local.config.local.json";
 
-const PartialConfigSchema = UniversityLocalConfigSchema.partial().strict();
+/**
+ * Everything in the local config except the focus itself. `focus set` and
+ * `focus clear` are on their way to replacing that key, so validating the value
+ * they are about to discard would let a focus written by an older version wedge
+ * the only two commands able to repair it.
+ */
+const OtherLocalKeysSchema = UniversityLocalConfigSchema.omit({ focus: true }).partial().strict();
 
 export interface SetFocusInput {
   readonly projectRoot: string;
   readonly studiesRoot: string;
   readonly studyId: string;
-  readonly courseId?: string;
+  readonly courseIds?: readonly string[];
 }
 
 export interface FocusResult {
@@ -48,12 +54,11 @@ function listStudyIds(studiesRoot: string): readonly string[] {
   }
 }
 
-function readLocalConfig(path: string): Record<string, unknown> {
-  if (!existsSync(path)) return {};
-  return PartialConfigSchema.parse(JSON.parse(readFileSync(path, "utf8"))) as Record<
-    string,
-    unknown
-  >;
+function readLocalConfig(path: string): { rest: Record<string, unknown>; focus: unknown } {
+  if (!existsSync(path)) return { rest: {}, focus: undefined };
+  const raw = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
+  const { focus, ...others } = raw;
+  return { rest: OtherLocalKeysSchema.parse(others) as Record<string, unknown>, focus };
 }
 
 /**
@@ -72,39 +77,41 @@ export function setLearningFocus(input: SetFocusInput): FocusResult {
       `No study named ${input.studyId}. Available: ${available.join(", ") || "(none)"}`,
     );
   }
-  if (input.courseId) {
+  const courseIds = input.courseIds ?? [];
+  // A repeated id is wrong about the list itself, so it is reported before any
+  // question about what the shelf holds.
+  const duplicate = courseIds.find((id, index) => courseIds.indexOf(id) !== index);
+  if (duplicate) {
+    throw new Error(`Course ${duplicate} is listed twice; a run has one position per course`);
+  }
+  for (const courseId of courseIds) {
     let course;
     try {
-      course = readCourse(input.studiesRoot, study.id, input.courseId);
+      course = readCourse(input.studiesRoot, study.id, courseId);
     } catch {
-      throw new Error(`No course named ${input.courseId} in study ${study.id}`);
+      throw new Error(`No course named ${courseId} in study ${study.id}`);
     }
     if (course.status !== "active") {
       throw new Error(`Only an active course can be focused: ${course.id} is ${course.status}`);
     }
   }
-  const focus = LearningFocusSchema.parse({
-    studyId: study.id,
-    ...(input.courseId ? { courseId: input.courseId } : {}),
-  });
+  const focus = LearningFocusSchema.parse({ studyId: study.id, courseIds });
   const configPath = resolve(input.projectRoot, LOCAL_CONFIG);
-  const current = readLocalConfig(configPath);
-  writeJsonAtomically(configPath, { schemaVersion: 1, ...current, focus });
+  const { rest } = readLocalConfig(configPath);
+  writeJsonAtomically(configPath, { schemaVersion: 1, ...rest, focus });
   return { schemaVersion: 1, operation: "focus-set", focus, configPath };
 }
 
 export function clearLearningFocus(projectRoot: string): FocusResult {
   const configPath = resolve(projectRoot, LOCAL_CONFIG);
-  const current = readLocalConfig(configPath);
-  const { focus: _focus, ...rest } = current;
+  const { rest } = readLocalConfig(configPath);
   writeJsonAtomically(configPath, { schemaVersion: 1, ...rest });
   return { schemaVersion: 1, operation: "focus-clear", focus: null, configPath };
 }
 
 export function showLearningFocus(projectRoot: string): FocusResult {
   const configPath = resolve(projectRoot, LOCAL_CONFIG);
-  const current = readLocalConfig(configPath);
-  const focus = current["focus"];
+  const { focus } = readLocalConfig(configPath);
   return {
     schemaVersion: 1,
     operation: "focus-show",

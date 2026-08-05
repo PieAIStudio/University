@@ -179,9 +179,22 @@ describe("UniversityLocal CLI parser", () => {
     ],
     [
       ["focus", "set", "--study", "turing-pact", "--course", "contracts-and-drift"],
-      { kind: "focus-set", studyId: "turing-pact", courseId: "contracts-and-drift" },
+      { kind: "focus-set", studyId: "turing-pact", courseIds: ["contracts-and-drift"] },
     ],
-    [["focus", "set", "--study", "turing-pact"], { kind: "focus-set", studyId: "turing-pact" }],
+    [
+      // A run, in the order it was typed — and a stray space after a comma is
+      // a typing habit, not a different course.
+      ["focus", "set", "--study", "turing-pact", "--course", "state-and-process, testing-strategy"],
+      {
+        kind: "focus-set",
+        studyId: "turing-pact",
+        courseIds: ["state-and-process", "testing-strategy"],
+      },
+    ],
+    [
+      ["focus", "set", "--study", "turing-pact"],
+      { kind: "focus-set", studyId: "turing-pact", courseIds: [] },
+    ],
     [["focus", "show"], { kind: "focus-show" }],
     [["focus", "clear"], { kind: "focus-clear" }],
     [
