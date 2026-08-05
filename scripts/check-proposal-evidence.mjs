@@ -65,7 +65,10 @@ function findStudyRepository(studiesRoot, snapshotId) {
       return join(candidate, "source/repository.git");
     }
     const snapshotDirectory = join(candidate, "source/snapshots");
-    if (existsSync(snapshotDirectory) && readdirSync(snapshotDirectory).some((n) => n.includes(snapshotId))) {
+    if (
+      existsSync(snapshotDirectory) &&
+      readdirSync(snapshotDirectory).some((n) => n.includes(snapshotId))
+    ) {
       return join(candidate, "source/repository.git");
     }
   }
@@ -94,7 +97,10 @@ function countLines(commit, path) {
       encoding: "utf8",
       maxBuffer: 128 * 1024 * 1024,
     });
-    lineCounts.set(key, text.endsWith("\n") ? text.split("\n").length - 1 : text.split("\n").length);
+    lineCounts.set(
+      key,
+      text.endsWith("\n") ? text.split("\n").length - 1 : text.split("\n").length,
+    );
   }
   return lineCounts.get(key);
 }
@@ -106,7 +112,9 @@ for (const reference of references) {
   try {
     total = countLines(reference.sourceCommit, reference.sourcePath);
   } catch {
-    failures.push(`${reference.where}: ${reference.sourcePath} does not exist at ${reference.sourceCommit?.slice(0, 12)}`);
+    failures.push(
+      `${reference.where}: ${reference.sourcePath} does not exist at ${reference.sourceCommit?.slice(0, 12)}`,
+    );
     continue;
   }
   const { lineStart, lineEnd } = reference;

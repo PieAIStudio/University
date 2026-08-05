@@ -19,7 +19,13 @@ pre-commit:
       glob: "{docs/**/*.md,docs/governance/**/*.{md,yml,yaml},docs/policy/**/*.md,AGENTS.md,CLAUDE.md}"
       run: pnpm doc-gov check && pnpm doc-gov scan --check && pnpm doc-gov links && pnpm doc-gov audit
     03-source-lint:
-      glob: "{src,server,scripts}/**/*.{ts,tsx,mjs,css}"
+      # `**` here has to sit directly after the directory, not as `**/*.ext`:
+      # that form needs a slash after `**`, so it silently skips files that live
+      # at the top of the directory. `scripts/check-proposal-evidence.mjs` broke
+      # `pnpm verify` after passing this hook for exactly that reason. Both
+      # commands check the whole project anyway, so the glob only has to answer
+      # "did this commit touch source at all".
+      glob: "{src,server,scripts}/**"
       run: pnpm lint && pnpm format:check
 
 commit-msg:
