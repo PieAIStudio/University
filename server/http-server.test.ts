@@ -1060,6 +1060,41 @@ describe("UniversityLocal loopback API", () => {
     expect(missing.status).toBe(404);
   });
 
+  it("offers the focused course first without hiding the rest", async () => {
+    const fixture = makeLearningProject(false);
+    addSecondCourse(fixture);
+
+    const unfocused = await start(fixture.projectRoot);
+    const before = (await (await fetch(`${unfocused.base}/api/bootstrap`)).json()) as {
+      today: { nextLesson: { courseId: string } | null; focus: unknown };
+    };
+    // Walk order decides the offer, and by default that is just whichever
+    // course the shelf listed first.
+    expect(before.today.nextLesson?.courseId).toBe("founder-engineer");
+    expect(before.today.focus).toBeNull();
+
+    writeFileSync(
+      join(fixture.projectRoot, "university-local.config.local.json"),
+      JSON.stringify({
+        schemaVersion: 1,
+        focus: { studyId: "sample", courseId: "cost-boundaries" },
+      }),
+    );
+
+    const focused = await start(fixture.projectRoot);
+    const after = (await (await fetch(`${focused.base}/api/bootstrap`)).json()) as {
+      today: {
+        nextLesson: { courseId: string } | null;
+        focus: { studyId: string; courseId?: string } | null;
+      };
+      studies: Array<{ activeCourseCount: number }>;
+    };
+    expect(after.today.nextLesson?.courseId).toBe("cost-boundaries");
+    expect(after.today.focus).toEqual({ studyId: "sample", courseId: "cost-boundaries" });
+    // Focus reorders; it must not remove anything from the shelf.
+    expect(after.studies[0]?.activeCourseCount).toBe(2);
+  });
+
   it("surfaces due cards from a non-default course", async () => {
     const fixture = makeLearningProject(false);
     addSecondCourse(fixture);

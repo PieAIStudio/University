@@ -125,10 +125,15 @@ export function loadUniversityLocalConfig(
   const projectRoot = realpathSync.native(options.projectRoot);
   const base = readConfig(resolve(projectRoot, BASE_CONFIG));
   const local = readConfig(resolve(projectRoot, LOCAL_CONFIG));
+  const focus = local.focus ?? base.focus;
   const merged = UniversityLocalConfigSchema.parse({
     schemaVersion: local.schemaVersion ?? base.schemaVersion ?? 1,
     studiesRoot:
       env["UNIVERSITY_LOCAL_STUDIES_ROOT"] ?? local.studiesRoot ?? base.studiesRoot ?? "./studies",
+    // Focus is a personal preference, so the local file wins outright rather
+    // than merging field by field: a local focus naming only a study should
+    // clear a course pinned in the base file, not silently inherit it.
+    ...(focus ? { focus } : {}),
   });
   const studiesRoot = canonicalizePotentialPath(
     resolveFromProject(projectRoot, merged.studiesRoot),

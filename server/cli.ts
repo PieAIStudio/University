@@ -16,6 +16,7 @@ import {
   prepareStudyRefresh,
 } from "./workflows/refresh-source.js";
 import { addCourseLessons } from "./workflows/add-lessons.js";
+import { clearLearningFocus, setLearningFocus, showLearningFocus } from "./workflows/focus.js";
 import { createCourse } from "./workflows/create-course.js";
 import {
   CourseRevisionPartialError,
@@ -47,6 +48,9 @@ Commands:
   course set-default --study <study-id> --course <course-id>
   course open-for-edit --study <study-id> --course <course-id>
   course add-lessons --study <study-id> --input <proposal.json> [--dry-run]
+  focus set --study <study-id> [--course <course-id>]
+  focus show
+  focus clear
   session start --study <study-id> --host grok-build --objective <text>
   session status --study <study-id>
   session end --study <study-id> [--session <session-id>]
@@ -153,6 +157,12 @@ interface CourseAddLessonsCommand {
   readonly dryRun: boolean;
 }
 
+interface FocusCommand {
+  readonly kind: "focus-set" | "focus-clear" | "focus-show";
+  readonly studyId?: string;
+  readonly courseId?: string;
+}
+
 interface SessionStartCommand {
   readonly kind: "session-start";
   readonly studyId: string;
@@ -207,6 +217,7 @@ export type UniversityLocalCliCommand =
   | CourseSetDefaultCommand
   | CourseOpenForEditCommand
   | CourseAddLessonsCommand
+  | FocusCommand
   | SessionStartCommand
   | SessionStatusCommand
   | SessionEndCommand
@@ -410,6 +421,24 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         inputPath: required(values.input, "input"),
         dryRun: values["dry-run"] ?? false,
       };
+    }
+  }
+  if (positionals.length === 2 && positionals[0] === "focus") {
+    if (positionals[1] === "set") {
+      rejectUnrelatedOptions(values, ["study", "course"]);
+      return {
+        kind: "focus-set",
+        studyId: required(values.study, "study"),
+        ...(values.course ? { courseId: values.course } : {}),
+      };
+    }
+    if (positionals[1] === "show") {
+      rejectUnrelatedOptions(values, []);
+      return { kind: "focus-show" };
+    }
+    if (positionals[1] === "clear") {
+      rejectUnrelatedOptions(values, []);
+      return { kind: "focus-clear" };
     }
   }
   if (positionals.length === 2 && positionals[0] === "session") {
@@ -625,6 +654,17 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         studyId: input.command.studyId,
         courseId: input.command.courseId,
       });
+    case "focus-set":
+      return setLearningFocus({
+        projectRoot: config.projectRoot,
+        studiesRoot: config.studiesRoot,
+        studyId: input.command.studyId!,
+        ...(input.command.courseId ? { courseId: input.command.courseId } : {}),
+      });
+    case "focus-show":
+      return showLearningFocus(config.projectRoot);
+    case "focus-clear":
+      return clearLearningFocus(config.projectRoot);
     case "session-start":
       return startLearningSession({
         studiesRoot: config.studiesRoot,

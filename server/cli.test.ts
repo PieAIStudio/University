@@ -178,6 +178,13 @@ describe("UniversityLocal CLI parser", () => {
       },
     ],
     [
+      ["focus", "set", "--study", "turing-pact", "--course", "contracts-and-drift"],
+      { kind: "focus-set", studyId: "turing-pact", courseId: "contracts-and-drift" },
+    ],
+    [["focus", "set", "--study", "turing-pact"], { kind: "focus-set", studyId: "turing-pact" }],
+    [["focus", "show"], { kind: "focus-show" }],
+    [["focus", "clear"], { kind: "focus-clear" }],
+    [
       [
         "session",
         "start",

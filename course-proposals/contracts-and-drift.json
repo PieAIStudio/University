@@ -1,0 +1,308 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-contracts-and-drift",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "contracts-and-drift",
+    "title": "契约与防漂移",
+    "description": "一个人写代码没有同事提醒你改坏了什么。这门课讲怎么把承诺写成机器能检查的形式，证据来自图灵密约的真实实现。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "说明冻结面（freeze surface）与普通文档的区别",
+      "解释契约测试为什么必须排除自身所在目录",
+      "用依赖方向而不是目录名判断分层是否真实存在"
+    ],
+    "units": [
+      {
+        "id": "freeze-surface",
+        "title": "把承诺写下来",
+        "objective": "理解集中声明产品契约的价值与边界",
+        "lessons": [
+          {
+            "id": "why-freeze-surface",
+            "title": "把不能改的东西写在一个地方",
+            "content": "# 把不能改的东西写在一个地方\n\n## 学习目标\n\n完成本课后，你能说出「冻结面」是什么、它和普通文档的区别，\n并能指出为什么它必须放在代码里而不是 wiki 里。\n\n## 先给结论\n\n- **事实：契约集中声明。** `src/contracts/public-surface.ts` 用几个 `as const` 数组\n  列出路由、`data-testid`、`data-action`、DOM 标记、localStorage 键、\n  Realtime 线上事件名、漏斗埋点名、实验 id、window 调试钩子。\n- **事实：它自己声明了自己的边界。** 文件头写明「Owns: 稳定产品契约的单一清单」，\n  以及「Does not own: 运行时接线、架构 SSOT、i18n 文案」。\n- **事实：它不是第二份实现。** 注释明确写着这是 freeze surface + test oracle，\n  值必须与产品代码里已在使用的字符串一致。\n- **推论：一人公司需要这个，恰恰因为没有别人提醒你。** 团队里改坏了契约会有人骂你，\n  一个人干活时只有机器会。\n\n## 一个类比\n\n这像是租房合同后面附的《房屋交接清单》：墙上几个插座、厨房几个柜门，\n逐条列清楚。不是因为这些东西重要到要写进正文，\n而是因为**退租那天，没写下来的东西没法争辩**。\n\n## 工作示例\n\n1. 你重构 UI，顺手把某个 `data-testid` 改了个更好听的名字。\n2. e2e 测试在 CI 里挂掉——但它可能挂在很远的地方，报错难懂。\n3. 而契约测试会直接告诉你：`data-testid \"vote-moment-banner\" must still appear in product source`。\n4. 你要么改回来，要么明确地把清单也一起改——**这一步变成了有意识的决定**。\n\n## 自检\n\n为什么这个清单必须放在代码仓库里、而不是记在 Notion 上？\n\n答案：因为只有在仓库里，它才能被测试读取并强制执行。\n放在 Notion 上的清单没有任何机制阻止代码漂移，它只是一份会过期的备忘录。\n\n## 重点\n\n**承诺要写在能被机器检查的地方。**\n这门课程反复出现的那条线：不可检查的约束等于没有约束。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/contracts/public-surface.ts",
+                "lineStart": 1,
+                "lineEnd": 13,
+                "nodeIds": [],
+                "note": "文件头声明 Owns / Does not own"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/contracts/public-surface.ts",
+                "lineStart": 15,
+                "lineEnd": 45,
+                "nodeIds": [],
+                "note": "路由与 data-testid 清单"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/contracts/public-surface.ts",
+                "lineStart": 118,
+                "lineEnd": 142,
+                "nodeIds": [],
+                "note": "Realtime 线上名、漏斗事件与实验 id"
+              }
+            ],
+            "cards": [
+              {
+                "id": "freeze-surface-def",
+                "front": "什么是 freeze surface？它和架构文档有什么不同？",
+                "back": "集中声明不可悄悄漂移的产品契约，放在代码里供测试读取强制执行；架构文档没有强制机制。",
+                "tags": [
+                  "contracts"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/contracts/public-surface.ts",
+                    "lineStart": 1,
+                    "lineEnd": 13,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "not-second-impl",
+                "front": "public-surface.ts 为什么强调自己不是第二份实现？",
+                "back": "它只登记产品代码里已在使用的字符串，是测试预言机；若它自己定义行为就会出现两个真相。",
+                "tags": [
+                  "contracts"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/contracts/public-surface.ts",
+                    "lineStart": 8,
+                    "lineEnd": 13,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "freeze-surface-recall",
+                "title": "为什么不能放 Notion",
+                "prompt": "这份契约清单为什么必须在代码仓库里，而不是记在 Notion？",
+                "expectedAnswer": "只有在仓库里它才能被测试读取并强制执行，否则只是会过期的备忘录。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/contracts/public-surface.ts",
+                    "lineStart": 1,
+                    "lineEnd": 13,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "machine-checked",
+        "title": "让机器检查",
+        "objective": "掌握契约测试的实现方式与自指陷阱",
+        "lessons": [
+          {
+            "id": "contract-test",
+            "title": "让机器替你检查承诺",
+            "content": "# 让机器替你检查承诺\n\n## 学习目标\n\n完成本课后，你能说明契约测试如何扫描源码验证清单，\n并能解释测试语料库为什么必须排除契约文件自身。\n\n## 先给结论\n\n- **事实：测试把 `src/` 全量读进内存。** `collectSourceFiles` 递归收集\n  所有 `.ts` / `.tsx`（排除 `.d.ts`），组成语料库。\n- **事实：语料库刻意排除契约目录。** 第 39 行的\n  `.filter((file) => !file.startsWith(CONTRACTS_DIR))` 把 `src/contracts/` 剔了出去。\n- **事实：断言是「还出现在产品代码里」。** `assertPresentInSource`\n  只检查标记是否仍存在于语料库中，失败信息直接点名是哪个标记。\n- **推论：这是一道防漂移网，不是行为测试。** 它不验证功能对不对，\n  只验证你没有悄悄拿掉承诺过的东西。\n\n## 一个类比\n\n盘点仓库时，清单本身不能算作库存。\n如果你拿着清单说「清单上写了有 10 箱，所以有 10 箱」，那盘点就没有意义了。\n**必须去货架上数。**\n\n## 工作示例\n\n1. `PUBLIC_DATA_TESTIDS` 里写着 `'hot-seat-overlay'`。\n2. 测试遍历 `src/` 下除 `src/contracts/` 外的所有源码。\n3. 只要还有任何一个产品文件包含这个字符串，断言通过。\n4. 你删掉了最后一处使用 → 断言失败，报错指名道姓。\n\n## 自检\n\n如果第 39 行那个 filter 被删掉，这个测试会变成什么？\n\n答案：会变成永远通过的空测试。因为 `public-surface.ts` 自己就包含全部标记字符串，\n语料库里只要有它，每条断言都自动成立。\n**声明会自我满足，防漂移能力归零。**\n\n## 重点\n\n**测试预言机不能把自己算进被检查的范围。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/public-dom-contracts.test.ts",
+                "lineStart": 18,
+                "lineEnd": 48,
+                "nodeIds": [],
+                "note": "语料库收集与自排除"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/public-dom-contracts.test.ts",
+                "lineStart": 67,
+                "lineEnd": 89,
+                "nodeIds": [],
+                "note": "逐条断言仍存在于产品源码"
+              }
+            ],
+            "cards": [
+              {
+                "id": "self-exclusion",
+                "front": "契约测试的语料库为什么要排除 src/contracts/ 目录？",
+                "back": "否则声明文件自身包含全部标记，每条断言都自动成立，测试永远通过、防漂移能力归零。",
+                "tags": [
+                  "contracts",
+                  "testing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/public-dom-contracts.test.ts",
+                    "lineStart": 38,
+                    "lineEnd": 43,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "drift-not-behavior",
+                "front": "契约测试验证的是行为正确性吗？",
+                "back": "不是。它只验证你没有悄悄拿掉承诺过的东西，是防漂移网而非行为测试。",
+                "tags": [
+                  "testing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/public-dom-contracts.test.ts",
+                    "lineStart": 45,
+                    "lineEnd": 48,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "self-exclusion-explain",
+                "title": "解释自指陷阱",
+                "kind": "explain",
+                "prompt": "如果删掉排除契约目录的那行 filter，这个测试会发生什么？为什么这类问题很难被发现？",
+                "rubric": [
+                  "指出声明文件自身包含全部标记字符串",
+                  "得出断言全部自动成立、测试永远通过的结论",
+                  "说明「永远通过的测试」不会报错，所以不会引起注意"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/public-dom-contracts.test.ts",
+                    "lineStart": 38,
+                    "lineEnd": 48,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "layers-are-dependencies",
+            "title": "分层不是画图，是限制依赖方向",
+            "content": "# 分层不是画图，是限制依赖方向\n\n## 学习目标\n\n完成本课后，你能用图灵密约的层结构说明「特性域」与「运行时」为什么要分开，\n并能说出判断分层是否真实存在的检验方法。\n\n## 先给结论\n\n- **事实：图灵密约把 766 个文件分成 9 层。** 其中游戏特性域 113 个节点、\n  三维世界运行时 48 个节点、应用核心层 62 个节点，各自独立成层。\n- **事实：契约层是独立的一层内文件。** `src/contracts/public-surface.ts`\n  属于应用核心层，被测试层引用，但它不引用任何特性域代码。\n- **推论：层的意义在于依赖方向，不在于目录名。** 把文件挪进\n  `features/` 目录不产生分层；只有当上层可以替换而下层不用改，分层才真实存在。\n- **推论：可检验才算数。** 与本课程前两课同一条线——\n  分层如果没有任何机制阻止反向依赖，它就只是一张会过期的架构图。\n\n## 一个类比\n\n公寓楼的承重墙和隔断墙长得差不多，但你能拆隔断墙，不能拆承重墙。\n**图纸上的线条不决定哪面墙承重，力的传递方向才决定。**\n代码同理：import 的方向就是力的方向。\n\n## 工作示例\n\n1. 你想把三维世界运行时从 React Three Fiber 换成别的实现。\n2. 如果游戏特性域大量直接 import 运行时内部模块，你要改 113 个节点里的一大片。\n3. 如果两者之间只隔着一层契约，你只需要让新实现满足同一份契约。\n4. 检验方法很朴素：**试着删掉下层，看上层报多少错。**\n\n## 自检\n\n怎么判断「分层」是真的存在，还是只是目录结构好看？\n\n答案：看依赖方向是否被强制。能被机器检查的分层（lint 规则、契约测试、\n构建边界）才是真的；只靠约定和自觉的，会在赶工期的那一周失效。\n\n## 重点\n\n**可检查的约束才是约束——第三次出现同一条线。**\n分层、契约、成本闸门，本质上都是同一件事：把承诺放到机器能验证的位置。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/contracts/public-surface.ts",
+                "lineStart": 1,
+                "lineEnd": 13,
+                "nodeIds": [],
+                "note": "契约层不引用特性域代码"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/public-dom-contracts.test.ts",
+                "lineStart": 18,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "测试从 src 根收集语料，跨层引用契约"
+              }
+            ],
+            "cards": [
+              {
+                "id": "layer-reality-test",
+                "front": "怎么判断分层是真实的还是只是目录好看？",
+                "back": "看依赖方向是否被机器强制。试着删掉下层，看上层报多少错。",
+                "tags": [
+                  "architecture"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/contracts/public-surface.ts",
+                    "lineStart": 1,
+                    "lineEnd": 13,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "same-line-three-times",
+                "front": "成本闸门、契约清单、架构分层，这三者的共同点是什么？",
+                "back": "都是把承诺放到机器能验证的位置。不可检查的约束等于没有约束。",
+                "tags": [
+                  "architecture",
+                  "contracts"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/contracts/public-surface.ts",
+                    "lineStart": 1,
+                    "lineEnd": 13,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "layer-check-recall",
+                "title": "分层检验法",
+                "prompt": "用一句话说出检验分层是否真实存在的方法。",
+                "expectedAnswer": "看依赖方向是否被机器强制，试着删掉下层看上层报多少错。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/contracts/public-surface.ts",
+                    "lineStart": 1,
+                    "lineEnd": 13,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

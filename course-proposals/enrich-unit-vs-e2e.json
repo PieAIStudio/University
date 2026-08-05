@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "enrich-unit-vs-e2e-privacy",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "lesson": {
+    "courseId": "testing-strategy",
+    "unitId": "layer-choice",
+    "id": "unit-vs-e2e",
+    "expectedRevision": 1,
+    "title": "单元测试和 e2e 各管什么",
+    "content": "# 单元测试和 e2e 各管什么\n\n## 学习目标\n\n完成本课后，你能说出图灵密约的单元测试与 e2e 数量比例，\n并能用「这件事能不能不开浏览器验证」判断一个测试该写在哪一层。\n\n## 先给结论\n\n- **事实：比例是 171 比 20。** 图灵密约有 171 个 `.test.ts` 单元/集成测试，\n  只有 20 个 `.spec.ts` e2e。测试层在知识图谱里占 194 个节点，是最大的一层。\n- **事实：e2e 只覆盖必须开浏览器才能验的东西。** 20 个 e2e 全部集中在\n  开场仪式、揭面序列、投票时刻、可访问性、视觉回归、降级恢复——\n  这些是 DOM 行为、时序和视觉，纯函数测不了。\n- **事实：契约检查放在单元层。** `public-dom-contracts.test.ts` 靠读文件字符串完成，\n  不需要浏览器，所以它是单元测试而不是 e2e。\n- **事实：连隐私承诺也在单元层。** `analytics-privacy-contract.test.ts` 拦截埋点\n  transport，逐条检查每次上报：字段名必须在允许清单里，值必须是枚举而不是自由文本，\n  连长得像房间码的值（`ABC234`）都会被拒绝。全程不开浏览器。\n- **推论：分层依据是「验证手段」，不是「重要程度」。** 很重要的东西也可能用单元测试验，\n  不重要的东西也可能必须开浏览器。\n\n## 一个类比\n\n体检里抽血和拍片是两种手段：抽血能查的指标就别拍片，\n因为拍片贵、慢、还有辐射。**但骨折是抽血查不出来的。**\n不是按重要程度分，是按「这个手段能不能看见这个问题」分。\n\n## 工作示例\n\n1. 你要验「投票横幅在正确时机出现」——涉及时序和 DOM，写 e2e。\n2. 你要验「某个 data-testid 还在产品代码里」——读文件就够，写单元测试。\n3. 你要验「座位分配算法跳过已占座位」——纯函数，写单元测试。\n4. 你要验「没有 WebGL 时仍能完成 2D 对局」——必须真实浏览器，写 e2e。\n5. 你要验「埋点永远不会带出房间码或聊天内容」——拦一个假 transport 就够，写单元测试。\n\n第 5 条最值得停一下：**「用户隐私不能泄漏」听上去像个必须端到端验证的严肃承诺，\n实际上它是这一批里最便宜的测试。** 因为泄漏发生在数据离开你的代码之前，\n而那一刻是纯函数可以拦住的。\n\n## 自检\n\n一个测试很重要，是不是就应该写成 e2e？\n\n答案：不是。重要程度不决定层级，**验证手段**才决定。\n把能用单元测试验的东西写成 e2e，只会让套件更慢更脆，\n而且失败时更难定位。\n\n## 重点\n\n**按「能不能用更便宜的手段看见」分层。**\n",
+    "evidence": [
+      {
+        "kind": "fact",
+        "snapshotId": "git-3b402e069a5d",
+        "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+        "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+        "lineStart": 1,
+        "lineEnd": 10,
+        "nodeIds": [],
+        "note": "e2e 覆盖降级恢复这类必须开浏览器的场景"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-3b402e069a5d",
+        "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+        "sourcePath": "tests/public-dom-contracts.test.ts",
+        "lineStart": 18,
+        "lineEnd": 48,
+        "nodeIds": [],
+        "note": "契约检查靠读文件完成，属于单元层"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-3b402e069a5d",
+        "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+        "sourcePath": "tests/analytics-privacy-contract.test.ts",
+        "lineStart": 76,
+        "lineEnd": 133,
+        "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+        "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+        "nodeIds": [
+          "file:tests/analytics-privacy-contract.test.ts"
+        ],
+        "note": "隐私契约在单元层完成：拦截 transport，拒绝禁用字段名、禁用值形态与允许键上的自由文本。"
+      }
+    ],
+    "cards": [
+      {
+        "id": "layer-criterion",
+        "expectedRevision": 1,
+        "kind": "basic",
+        "front": "决定一个测试写单元还是 e2e，依据是什么？",
+        "back": "验证手段，不是重要程度。能不开浏览器验证的就别写 e2e。",
+        "tags": [
+          "testing"
+        ],
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-3b402e069a5d",
+            "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+            "sourcePath": "tests/public-dom-contracts.test.ts",
+            "lineStart": 18,
+            "lineEnd": 48,
+            "nodeIds": []
+          }
+        ]
+      },
+      {
+        "id": "unit-e2e-ratio",
+        "expectedRevision": 1,
+        "kind": "basic",
+        "front": "图灵密约的单元测试与 e2e 数量比例大致是多少？说明了什么？",
+        "back": "171 比 20。e2e 只留给 DOM 时序、视觉、可访问性、降级恢复这类纯函数测不了的场景。",
+        "tags": [
+          "testing"
+        ],
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-3b402e069a5d",
+            "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+            "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+            "lineStart": 1,
+            "lineEnd": 10,
+            "nodeIds": []
+          }
+        ]
+      },
+      {
+        "id": "privacy-is-cheap-to-test",
+        "kind": "basic",
+        "front": "「埋点不能泄漏用户数据」这个承诺，该写在哪一层测试？",
+        "back": "单元层。泄漏发生在数据离开你的代码之前，拦一个假 transport 就能逐条检查，不需要浏览器。听上去严肃不等于验证手段昂贵。",
+        "tags": [],
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-3b402e069a5d",
+            "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+            "sourcePath": "tests/analytics-privacy-contract.test.ts",
+            "lineStart": 76,
+            "lineEnd": 92,
+            "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+            "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+            "nodeIds": [
+              "file:tests/analytics-privacy-contract.test.ts"
+            ],
+            "note": "拦截 transport 并断言 transport 从未被调用，全程无浏览器。"
+          }
+        ]
+      },
+      {
+        "id": "allowlist-and-value-shape",
+        "kind": "basic",
+        "front": "埋点隐私检查为什么光有字段名允许清单还不够？",
+        "back": "字段名合法、值仍可能是泄漏的。`experimentTag: 'ABC234'` 的键在清单里，值却长得像房间码，所以还要检查值的形态和枚举范围。",
+        "tags": [],
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-3b402e069a5d",
+            "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+            "sourcePath": "tests/analytics-privacy-contract.test.ts",
+            "lineStart": 94,
+            "lineEnd": 133,
+            "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+            "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+            "nodeIds": [
+              "file:tests/analytics-privacy-contract.test.ts"
+            ],
+            "note": "既拒绝像房间码的值，也拒绝允许键上的自由文本 resultCategory。"
+          }
+        ]
+      }
+    ],
+    "exercises": [
+      {
+        "id": "layer-choice-recall",
+        "expectedRevision": 1,
+        "title": "分层判据",
+        "prompt": "一个功能很重要，是不是就该写成 e2e？为什么？",
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-3b402e069a5d",
+            "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+            "sourcePath": "tests/public-dom-contracts.test.ts",
+            "lineStart": 18,
+            "lineEnd": 48,
+            "nodeIds": []
+          }
+        ],
+        "kind": "short-answer",
+        "expectedAnswer": "不是。重要程度不决定层级，验证手段才决定；能用单元测试验的写成 e2e 只会更慢更脆。"
+      },
+      {
+        "id": "privacy-layer-explain",
+        "kind": "explain",
+        "title": "解释隐私契约为什么属于单元层",
+        "prompt": "「埋点绝不泄漏用户数据」是产品级承诺，听起来像要端到端验证。请解释图灵密约为什么把它写成不开浏览器的单元测试，以及这个测试除了检查字段名之外还检查什么、为什么必须检查。",
+        "rubric": [
+          "指出泄漏发生在数据离开代码之前，拦住假 transport 就能在纯函数层完整验证",
+          "说明除了字段名允许清单，还检查值的形态（像房间码的值会被拒）与允许键上是否为枚举而非自由文本",
+          "指出分层依据是验证手段而不是承诺的严肃程度"
+        ],
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-3b402e069a5d",
+            "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+            "sourcePath": "tests/analytics-privacy-contract.test.ts",
+            "lineStart": 76,
+            "lineEnd": 133,
+            "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+            "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+            "nodeIds": [
+              "file:tests/analytics-privacy-contract.test.ts"
+            ],
+            "note": "字段名、值形态、枚举范围三重检查，且断言 transport 未被调用。"
+          }
+        ]
+      }
+    ]
+  }
+}

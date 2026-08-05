@@ -81,8 +81,21 @@ interface BootstrapData {
     readonly dueCount: number;
     readonly card: TodayCard | null;
     readonly nextLesson: NextLesson | null;
+    readonly focus: LearningFocus | null;
     readonly issues: readonly string[];
   };
+}
+
+interface LearningFocus {
+  readonly studyId: string;
+  readonly courseId?: string;
+}
+
+/** Prefers human titles, but never hides a focus that points at nothing. */
+function focusLabel(focus: LearningFocus, studies: readonly StudySummary[]): string {
+  const study = studies.find((candidate) => candidate.id === focus.studyId);
+  const studyLabel = study?.title ?? `${focus.studyId}（不在书架上）`;
+  return focus.courseId ? `${studyLabel} · ${focus.courseId}` : studyLabel;
 }
 
 interface LessonProgress {
@@ -147,6 +160,19 @@ interface EvidenceView {
   readonly lineEnd: number | null;
   readonly sourceCommit: string;
   readonly nodeIds: readonly string[];
+  readonly note: string | null;
+}
+
+/**
+ * What to paste into an editor or hand to an AI host to go read this properly.
+ * The panel is for recognising a reference in passing; real study happens
+ * elsewhere, so the useful thing it can offer is the coordinates.
+ */
+function evidenceLocator(reference: EvidenceView): string {
+  const lines = reference.lineStart
+    ? `:${reference.lineStart}${reference.lineEnd ? `-${reference.lineEnd}` : ""}`
+    : "";
+  return `${reference.sourcePath}${lines} @ ${reference.sourceCommit.slice(0, 12)}`;
 }
 
 export interface EvidenceSnippetView {
@@ -758,6 +784,31 @@ export function EvidenceCode({
   );
 }
 
+/** Copies the coordinates so they can be pasted into an editor or an AI host. */
+function CopyLocatorButton({ locator }: { readonly locator: string }) {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 1600);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  return (
+    <button
+      type="button"
+      className="evidence-item__copy"
+      title={locator}
+      onClick={() => {
+        void navigator.clipboard?.writeText(locator).then(
+          () => setCopied(true),
+          () => setCopied(false),
+        );
+      }}
+    >
+      {copied ? "已复制位置" : "复制位置"}
+    </button>
+  );
+}
+
 function EvidenceRail({
   basePath,
   evidence,
@@ -839,6 +890,8 @@ function EvidenceRail({
                 <small>{reference.sourceCommit.slice(0, 8)}</small>
                 <strong aria-hidden="true">{expanded ? "收起" : "查看"}</strong>
               </button>
+              {reference.note ? <p className="evidence-item__note">{reference.note}</p> : null}
+              <CopyLocatorButton locator={evidenceLocator(reference)} />
               {expanded ? (
                 <div className="evidence-snippet" id={panelId} aria-live="polite">
                   {loading ? <p>正在从固定提交读取源码…</p> : null}
@@ -975,6 +1028,14 @@ function TodaySection({
         <p className="eyebrow">TODAY · PERSONAL CAMPUS</p>
         <h2>{data.today.nextLesson ? "先完成一节课，再巩固记忆。" : "今天，从回忆开始。"}</h2>
         <p>课程负责建立理解，卡片只负责把重要知识留在长期记忆里。</p>
+        {/* Without this the ordering looks arbitrary: the learner sees a lesson
+            from one study and has no way to tell whether that was a choice. */}
+        {data.today.focus ? (
+          <p className="today-focus">
+            主攻 <strong>{focusLabel(data.today.focus, data.studies)}</strong>
+            <span> · 复习卡片仍来自全部 study</span>
+          </p>
+        ) : null}
       </section>
 
       {data.today.nextLesson ? (

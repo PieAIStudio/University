@@ -92,6 +92,39 @@ pnpm dev
 
 两者不是竞争关系：AI 像老师，Web UI 像课本、题册和复习桌。
 
+### 决定「今日学习」先给你哪一门
+
+书架上有多个 study 时，「今日学习」默认给出它遇到的第一节未完成课程——那个顺序和你
+实际想主攻什么没有关系。设定主攻方向：
+
+```bash
+pnpm university focus set --study turing-pact
+```
+
+想连课程一起钉住：
+
+```bash
+pnpm university focus set --study turing-pact --course contracts-and-drift
+```
+
+查看和清除：
+
+```bash
+pnpm university focus show
+pnpm university focus clear
+```
+
+它写进 `university-local.config.local.json`（这个文件不进版本管理，因为它讲的是你此刻在
+干什么，不是项目本身），下次启动自动读取。
+
+两个刻意的行为：
+
+- **只排序，不过滤。** 主攻的 study 学完了，会自然接到下一个，而不是告诉你「没课了」。
+- **复习卡片仍然来自全部 study。** 卡片是你已经学过的东西，主攻别处的时候把它忘掉，
+  正是间隔重复要防止的事。
+
+「今日学习」页面顶部会显示当前主攻的是谁——否则那个顺序看起来就是随机的。
+
 ### 一个 study 可以有多门课
 
 `学习项目` 页会列出该 study 下**全部** active 课程；`defaultCourseId` 只决定校园先打开哪一门，以及「今日学习」优先从哪一门里取下一节课。它不限制其余课程可不可以学。

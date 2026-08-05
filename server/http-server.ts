@@ -412,6 +412,11 @@ function publicEvidence(evidence: readonly EvidenceReference[]): unknown {
     lineEnd: reference.lineEnd ?? null,
     sourceCommit: reference.sourceCommit,
     nodeIds: reference.nodeIds,
+    // Every reference is written with a sentence saying what this code proves.
+    // It was stored and never served, so the rail could only ever show a file
+    // path — the learner had to open the snippet and work out the relevance
+    // themselves, for a question the author had already answered.
+    note: reference.note ?? null,
   }));
 }
 
@@ -890,9 +895,24 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         const dueCards: DueCard[] = [];
         let nextLesson: Record<string, unknown> | null = null;
         const learningIssues: string[] = [];
-        for (const study of shelf.studies) {
+        // `nextLesson` is whatever incomplete lesson the walk meets first, so the
+        // walk order is the curriculum order. Focus moves the chosen study and
+        // course to the front rather than filtering the rest out: finishing the
+        // focused study should roll on to the next one, not report nothing left.
+        // Due cards are unaffected — they are sorted by due date afterwards.
+        const focusedStudies = [...shelf.studies].sort((left, right) => {
+          const rank = (id: string): number => (id === config.focus?.studyId ? 0 : 1);
+          return rank(left.id) - rank(right.id);
+        });
+        for (const study of focusedStudies) {
           const store = getStore(study.id);
-          const activeCourses = listActiveCourses(config.studiesRoot, study);
+          const activeCourses = [...listActiveCourses(config.studiesRoot, study)].sort(
+            (left, right) => {
+              if (study.id !== config.focus?.studyId || !config.focus.courseId) return 0;
+              const rank = (id: string): number => (id === config.focus?.courseId ? 0 : 1);
+              return rank(left.id) - rank(right.id);
+            },
+          );
           const coursesById = new Map(activeCourses.map((course) => [course.id, course]));
           for (const course of activeCourses) {
             try {
@@ -1018,6 +1038,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
             dueCount: dueCards.length,
             card: dueCards[0] ?? null,
             nextLesson,
+            focus: config.focus ?? null,
             issues: learningIssues,
           },
         });

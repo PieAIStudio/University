@@ -206,6 +206,21 @@ summary:focus-visible,
   padding: 10px 0 22px;
 }
 
+.today-focus {
+  margin: 14px 0 0;
+  font-size: 0.92rem;
+  color: rgba(255, 245, 232, 0.62);
+}
+
+.today-focus strong {
+  color: var(--game-ui-color-accent, #f0894f);
+  font-weight: 600;
+}
+
+.today-focus span {
+  color: rgba(255, 245, 232, 0.38);
+}
+
 .today-intro h2 {
   max-width: 780px;
   margin-top: 12px;
@@ -909,6 +924,34 @@ summary:focus-visible,
   margin-top: 18px;
   padding-top: 18px;
   border-top: 1px solid var(--campus-rule);
+}
+
+.evidence-item__note {
+  margin: 8px 0 0;
+  color: rgba(255, 245, 232, 0.7);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.evidence-item__copy {
+  appearance: none;
+  margin-top: 8px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 999px;
+  padding: 3px 11px;
+  background: transparent;
+  color: rgba(255, 245, 232, 0.55);
+  font-family: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.evidence-item__copy:hover {
+  border-color: rgba(255, 245, 232, 0.4);
+  color: rgba(255, 245, 232, 0.9);
 }
 
 .evidence-item__trigger {

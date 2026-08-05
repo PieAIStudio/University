@@ -11,10 +11,28 @@ export const GitCommit = z.string().regex(/^[a-f0-9]{40}$/);
 export const GitTree = z.string().regex(/^[a-f0-9]{40}$/);
 export const IsoDateTime = z.string().datetime({ offset: true });
 
+/**
+ * What the learner is working through right now. The shelf can hold more than
+ * one study, and without this "今日学习" simply picks whichever incomplete
+ * lesson it meets first — an order that has nothing to do with what the learner
+ * has decided to focus on.
+ *
+ * It only reorders which lesson is offered next. Due cards keep coming from
+ * every study, because a card is something already learned and forgetting it
+ * while focused elsewhere is exactly what spaced repetition exists to prevent.
+ */
+export const LearningFocusSchema = z
+  .object({
+    studyId: StableId,
+    courseId: StableId.optional(),
+  })
+  .strict();
+
 export const UniversityLocalConfigSchema = z
   .object({
     schemaVersion: SchemaVersion,
     studiesRoot: z.string().min(1),
+    focus: LearningFocusSchema.optional(),
   })
   .strict();
 
@@ -365,6 +383,7 @@ export const KnowledgeNoteSchema = z
   });
 
 export type UniversityLocalConfig = z.infer<typeof UniversityLocalConfigSchema>;
+export type LearningFocus = z.infer<typeof LearningFocusSchema>;
 export type StudyManifest = z.infer<typeof StudyManifestSchema>;
 export type SourceRegistration = z.infer<typeof SourceRegistrationSchema>;
 export type SnapshotManifest = z.infer<typeof SnapshotManifestSchema>;

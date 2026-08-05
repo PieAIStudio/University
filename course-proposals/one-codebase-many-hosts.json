@@ -1,0 +1,539 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-one-codebase-many-hosts",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "one-codebase-many-hosts",
+    "title": "一套代码，多端交付",
+    "description": "一个人做产品，最大的杠杆是同一份代码同时跑在网页、桌面和手机上。这门课讲适配层怎么设计才不会退化成 if 地狱，以及外壳的安全与可测。",
+    "audience": "一人公司 / 独立开发者，需要把一个产品同时投放到多个宿主",
+    "objectives": [
+      "按最难的平台设计接口，而不是按最方便的那个",
+      "把平台探测收敛到一处纯函数，让它可以在没有设备时被测试",
+      "说出 Electron 外壳必须设定的安全开关，以及漏掉的后果",
+      "把决策从跑不动测试的外壳里挪出来"
+    ],
+    "units": [
+      {
+        "id": "adapter-layer",
+        "title": "适配层",
+        "objective": "让平台差异集中在一层里，并且这一层可测、会降级。",
+        "lessons": [
+          {
+            "id": "hardest-platform-wins",
+            "title": "接口按最难的平台设计",
+            "content": "# 接口按最难的平台设计\n\nTuringPact 的存储接口长这样：\n\n```ts\nexport interface PlatformStorage {\n  getItem(key: string): Promise<string | null>;\n  setItem(key: string, value: string): Promise<void>;\n  removeItem(key: string): Promise<void>;\n}\n```\n\n全是 `Promise`。但在浏览器里，底下就是 `localStorage`，**它是同步的**。这里加 `async` 纯属多余——如果你只做网页版的话。\n\n它不是多余的，因为还有原生端：Capacitor 的 `Preferences` 是异步的，没法同步读。\n\n所以接口按 **Capacitor 的形状**定，而不是按 `localStorage` 的形状定。网页实现只是把同步调用包进 Promise：\n\n```ts\nexport function createWebStorage(syncStorage: SyncStorageLike | null | undefined): PlatformStorage {\n  if (!syncStorage) return noopStorage;\n  return {\n    async getItem(key: string) { return syncStorage.getItem(key); },\n    // ...\n  };\n}\n```\n\n## 反过来会怎样\n\n假设你先做网页版，接口定成同步：\n\n```ts\ninterface PlatformStorage {\n  getItem(key: string): string | null;   // 同步\n}\n```\n\n半年后要上 iOS。Capacitor 的 `Preferences.get()` 返回 Promise，**你没有任何办法把它塞进同步签名里**。于是只剩三条路：\n\n1. 改接口为异步——每一个调用点都要跟着改，几十上百处。\n2. 在原生端加一层内存缓存，启动时预加载所有键——引入缓存一致性问题，从此有一类只在原生端出现的诡异 bug。\n3. 原生端不用这个接口，另写一套——两套存储逻辑，从此每个功能写两遍。\n\n三条都很贵，而且都是在你已经有用户之后才付。\n\n## 这条规则的一般形式\n\n> **共享接口的形状，由约束最强的那个实现决定。**\n\n异步 vs 同步只是最常见的一种。同类还有：\n\n- **可能失败 vs 一定成功**——原生分享会被用户取消，网页分享可能不被支持，所以 `shareContent` 返回 `ShareResult` 而不是 `void`。\n- **有权限 vs 无权限**——某个平台需要先申请权限，接口就得允许「被拒绝」这个结果。\n- **有上限 vs 无上限**——某个平台的存储有配额，接口就得允许写入失败。\n\n对一个人来说，这条的价值在于：**它是少数几个「现在多想十分钟、以后省两周」的决定之一。** 你不需要现在就支持所有平台，你只需要现在就按未来那个平台的约束定义接口。\n\n这和《AI 产品的成本与边界》里的 fail-closed 是同一种思路：**默认值要选那个「后来发现选错了、代价也小」的。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 4,
+                "lineEnd": 8,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:src/platform/storage.ts"],
+                "note": "PlatformStorage 三个方法全部返回 Promise，形状由 Capacitor Preferences 决定。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 34,
+                "lineEnd": 66,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/platform/storage.ts",
+                  "function:src/platform/storage.ts:createWebStorage",
+                  "function:src/platform/storage.ts:createNativeStorage"
+                ],
+                "note": "网页实现把同步 localStorage 包成 Promise；原生实现直接转发异步 Preferences。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/index.ts",
+                "lineStart": 13,
+                "lineEnd": 30,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/platform/index.ts",
+                  "function:src/platform/index.ts:shareContent"
+                ],
+                "note": "shareContent 返回 ShareResult 而不是 void，因为分享可能被取消或不被支持。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "interface-shape-rule",
+                "front": "多平台共享接口的形状，应该由谁决定？",
+                "back": "由约束最强的那个实现决定。TuringPact 的 PlatformStorage 全异步，是因为 Capacitor Preferences 没法同步读，而不是因为 localStorage 需要。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 4,
+                    "lineEnd": 8,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/platform/storage.ts"],
+                    "note": "接口全异步。"
+                  }
+                ]
+              },
+              {
+                "id": "sync-interface-trap",
+                "front": "先按 localStorage 定了同步接口，之后要上原生端，三条出路各自的代价是什么？",
+                "back": "改接口为异步——所有调用点都要改；加内存缓存预加载——引入一致性问题和只在原生端出现的 bug；另写一套——每个功能写两遍。三条都在有用户之后才付账。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 34,
+                    "lineEnd": 66,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "function:src/platform/storage.ts:createWebStorage",
+                      "function:src/platform/storage.ts:createNativeStorage"
+                    ],
+                    "note": "异步接口让两种实现可以共存，网页端只需包一层。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "hardest-platform-recall",
+                "title": "回忆接口设计规则",
+                "prompt": "多平台共享接口的形状由哪个实现决定？填一个短语。",
+                "expectedAnswer": "约束最强的那个",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 4,
+                    "lineEnd": 8,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/platform/storage.ts"],
+                    "note": "接口按 Capacitor 的异步约束定义。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "detect-once-degrade-always",
+            "title": "探测收敛到一处，降级不抛错",
+            "content": "# 探测收敛到一处，降级不抛错\n\n多端项目最容易烂的地方，是 `if (isIOS)` 这类判断散进了三十个文件。TuringPact 把它收进了一个函数：\n\n```ts\nexport function resolveRuntimeDescriptor(options: {\n  hasElectronBridge: boolean;\n  isNativePlatform: boolean;\n  capacitorPlatform: string;\n  locationOrigin: string | null;\n}): RuntimeDescriptor {\n  let platform: RuntimePlatform = 'web';\n  if (options.hasElectronBridge) platform = 'electron';\n  else if (options.isNativePlatform && options.capacitorPlatform === 'ios') platform = 'ios';\n  else if (options.isNativePlatform && options.capacitorPlatform === 'android') platform = 'android';\n\n  return {\n    platform,\n    isNativePlatform: platform === 'ios' || platform === 'android',\n    isElectron: platform === 'electron',\n    usesHashRouter: platform !== 'web',\n    locationOrigin: options.locationOrigin,\n  };\n}\n```\n\n注意它**不读任何全局变量**。`window`、`Capacitor` 都以参数传进来。读全局的是另一个薄薄的函数：\n\n```ts\nexport function getCurrentRuntimeDescriptor(): RuntimeDescriptor {\n  return resolveRuntimeDescriptor({\n    hasElectronBridge: hasElectronBridge(),\n    isNativePlatform: Capacitor.isNativePlatform(),\n    capacitorPlatform: Capacitor.getPlatform(),\n    locationOrigin: getRuntimeLocationOrigin(),\n  });\n}\n```\n\n这是**决策与读取分离**：所有分支逻辑在纯函数里，可以在笔记本上把四种平台各测一遍，不需要 iPhone、不需要打包 Electron。\n\n## `usesHashRouter` 是这层真正的价值\n\n看这一行：\n\n```ts\nusesHashRouter: platform !== 'web',\n```\n\n它不是「探测结果」，是**由探测结果推出的一个决定**。非网页宿主是从 `file://` 加载页面的，history 路由在那里会坏掉，所以必须用 hash 路由。\n\n如果没有这一层，这个判断会以 `if (Capacitor.isNativePlatform() || window.electronAPI)` 的形式出现在路由配置里，然后在某次重构中有人只改了其中一半。放在这里，它有名字、有单一出处、能被断言。\n\n**适配层的产出不该只是「我在哪个平台」，而应该是「因此我该怎么做」。**\n\n同一个文件里还有一个：\n\n```ts\nexport function resolveRoomOperationTimeoutMs(\n  runtime: Pick<RuntimeDescriptor, 'isNativePlatform'>,\n  options: { browserMs?: number; nativeMs?: number } = {},\n): number {\n  return runtime.isNativePlatform ? (options.nativeMs ?? 15000) : (options.browserMs ?? 5000);\n}\n```\n\n原生端 15 秒，浏览器 5 秒。手机网络更慢更抖，同一个超时值在两端意味着完全不同的用户体验。注意它的第一个参数用了 `Pick<..., 'isNativePlatform'>`——**只要它真正需要的那一个字段**，所以测试可以传 `{ isNativePlatform: true }` 而不用编造整个描述符。\n\n## 降级：`shareContent` 的三层回退\n\n```ts\nexport async function shareContent(payload: SharePayload): Promise<ShareResult> {\n  const runtime = getCurrentRuntimeDescriptor();\n  if (runtime.isElectron) return shareOnElectron(payload);\n  if (runtime.isNativePlatform) {\n    try {\n      await shareOnCapacitor(payload);\n      return 'shared';\n    } catch {\n      return shareOnWeb(payload);\n    }\n  }\n  return shareOnWeb(payload);\n}\n```\n\n原生分享失败时，**不往上抛，退回网页分享**。用户依然分享得出去，只是换了个方式。\n\n旁边的 `triggerHaptic` 更狠——整个函数体包在 `try { ... } catch { void 0; }` 里。震动失败就当没这回事，因为**震动失败不该让一次点击失败**。\n\n## 这里有一条要自己划的线\n\n这两个函数吞掉异常是对的，因为它们都是「锦上添花」的能力。但**同样的写法用在扣款、存档、鉴权上就是灾难**——那些地方必须 fail-closed，失败就要停下来（《AI 产品的成本与边界》讲的就是这条）。\n\n判断标准：\n\n> **这个能力失败了，用户还能完成他本来要做的事吗？**\n>\n> 能——降级。不能——停下来报错。\n\n分享失败还能复制链接，震动失败不影响任何事，所以降级。扣款失败还继续调用模型，你就在赔钱。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/runtimeInfo.ts",
+                "lineStart": 32,
+                "lineEnd": 54,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/platform/runtimeInfo.ts",
+                  "function:src/platform/runtimeInfo.ts:resolveRuntimeDescriptor"
+                ],
+                "note": "纯函数：不读全局，全部依赖以参数传入；并推导出 usesHashRouter 这个决定。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/runtimeInfo.ts",
+                "lineStart": 56,
+                "lineEnd": 73,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "function:src/platform/runtimeInfo.ts:getCurrentRuntimeDescriptor",
+                  "function:src/platform/runtimeInfo.ts:resolveRoomOperationTimeoutMs"
+                ],
+                "note": "读取全局的薄封装，以及原生 15s / 浏览器 5s 的超时决定。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/index.ts",
+                "lineStart": 13,
+                "lineEnd": 49,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "function:src/platform/index.ts:shareContent",
+                  "function:src/platform/index.ts:triggerHaptic"
+                ],
+                "note": "原生分享失败回退网页分享；震动整体吞掉异常。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "pure-detect",
+                "front": "`resolveRuntimeDescriptor` 为什么把 window 和 Capacitor 当参数传进来，而不是直接读？",
+                "back": "决策与读取分离。所有分支逻辑在纯函数里，四种平台都能在笔记本上测一遍，不需要 iPhone 也不需要打包 Electron。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/runtimeInfo.ts",
+                    "lineStart": 32,
+                    "lineEnd": 63,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "function:src/platform/runtimeInfo.ts:resolveRuntimeDescriptor",
+                      "function:src/platform/runtimeInfo.ts:getCurrentRuntimeDescriptor"
+                    ],
+                    "note": "纯函数与薄封装成对出现。"
+                  }
+                ]
+              },
+              {
+                "id": "adapter-outputs-decisions",
+                "front": "适配层的产出应该是「我在哪个平台」还是别的？举 TuringPact 的例子。",
+                "back": "应该是「因此我该怎么做」。例如 `usesHashRouter: platform !== 'web'`——非网页宿主从 file:// 加载，history 路由会坏，这个决定有名字、单一出处、可断言。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/runtimeInfo.ts",
+                    "lineStart": 46,
+                    "lineEnd": 53,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["function:src/platform/runtimeInfo.ts:resolveRuntimeDescriptor"],
+                    "note": "描述符里同时给出平台与由平台推出的决定。"
+                  }
+                ]
+              },
+              {
+                "id": "degrade-or-stop",
+                "front": "什么时候该吞掉异常降级，什么时候该 fail-closed 停下来？",
+                "back": "问：这个能力失败了，用户还能完成他本来要做的事吗？能就降级（分享、震动），不能就停下来（扣款、鉴权、存档）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/index.ts",
+                    "lineStart": 13,
+                    "lineEnd": 49,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "function:src/platform/index.ts:shareContent",
+                      "function:src/platform/index.ts:triggerHaptic"
+                    ],
+                    "note": "分享与震动都属于失败也不阻断主流程的能力。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "degrade-line-explain",
+                "title": "解释降级与停止的分界",
+                "kind": "explain",
+                "prompt": "`triggerHaptic` 把整个函数体包进 try/catch 并吞掉异常。请解释为什么这在这里是对的，以及把同样的写法搬到钱包扣款上会发生什么。给出你用来区分两者的判断标准。",
+                "rubric": [
+                  "说明震动属于锦上添花，失败不影响用户完成本来要做的事",
+                  "指出扣款吞掉异常会导致调用继续进行却没有收到钱，必须 fail-closed",
+                  "给出判断标准：该能力失败后用户能否完成原本的目标"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/index.ts",
+                    "lineStart": 32,
+                    "lineEnd": 49,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["function:src/platform/index.ts:triggerHaptic"],
+                    "note": "triggerHaptic 整体 try/catch，catch 体是 void 0。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "the-shell",
+        "title": "外壳",
+        "objective": "把桌面外壳锁紧，并把决策挪到能被测试的地方。",
+        "lessons": [
+          {
+            "id": "electron-three-switches",
+            "title": "Electron 的三个开关",
+            "content": "# Electron 的三个开关\n\n把网页装进 Electron，等于把浏览器沙箱换成了「一个能读写你整块硬盘的运行时」。TuringPact 的窗口是这样开的：\n\n```ts\nconst mainWindow = new BrowserWindow({\n  width: 420,\n  height: 800,\n  webPreferences: {\n    preload: join(__dirname, '../preload/index.mjs'),\n    contextIsolation: true,\n    nodeIntegration: false,\n    sandbox: false,\n  },\n  // ...\n});\n```\n\n加上另一处：\n\n```ts\nmainWindow.webContents.setWindowOpenHandler(({ url }) => {\n  shell.openExternal(url);\n  return { action: 'deny' };\n});\n```\n\n三个必须理解的设置。\n\n## `nodeIntegration: false`\n\n开着的话，页面里的 JavaScript 能直接 `require('fs')`。任何被注入的脚本——一个被投毒的 npm 依赖、一段第三方广告代码、一个存储型 XSS——都获得了读写用户全部文件的能力。\n\n**在浏览器里是「弹个窗」的漏洞，在这里是「加密你的文档」的漏洞。**\n\n## `contextIsolation: true`\n\n让 preload 脚本和页面脚本跑在两个独立的 JS 上下文里。没有它，页面可以改写 preload 暴露的对象，绕过你在 preload 里写的任何检查。\n\n这两个是 Electron 现代版本的默认值，但**默认值会被抄来的旧代码覆盖**——网上大量教程还是 2018 年的写法。看到 `nodeIntegration: true` 就要停下来。\n\n## `setWindowOpenHandler` 返回 `deny`\n\n这是最容易漏的一个。默认情况下，页面里的 `target=\"_blank\"` 链接会**在你的应用里开一个新的 Electron 窗口**。那个窗口加载的是任意远程网址，却带着你应用的权限设置。\n\n这里的处理是：交给系统浏览器 `shell.openExternal(url)`，然后 `deny` 掉应用内的打开。**外部链接永远在外部打开。**\n\n## 关于 `sandbox: false`\n\n这一项是放松的，因为 preload 需要用到 Node 的能力。这是一个真实的权衡，不是疏漏：它靠 `contextIsolation` 和一个只暴露必要接口的 preload 来兜底。\n\n列出它是为了说明一件事：**安全设置不是「全部调到最严」，是「知道自己关掉了什么，以及靠什么补上」。**\n\n## 一个人做桌面版时最实际的建议\n\n你不会有安全团队做上线评审。所以把这四行连同理由抄进你的项目清单里，每次建窗口时对一遍。这份清单本身，就是《契约与防漂移》里说的那种「写在机器能读到的地方的承诺」——最好是一个 lint 规则或一个测试，而不是你的记忆。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "electron/main.ts",
+                "lineStart": 19,
+                "lineEnd": 30,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:electron/main.ts", "function:electron/main.ts:createWindow"],
+                "note": "webPreferences：contextIsolation true、nodeIntegration false、sandbox false 并配 preload。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "electron/main.ts",
+                "lineStart": 41,
+                "lineEnd": 44,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["function:electron/main.ts:createWindow"],
+                "note": "setWindowOpenHandler 把外链交给系统浏览器并 deny 掉应用内新窗口。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "node-integration-risk",
+                "front": "Electron 里 `nodeIntegration: true` 把什么级别的漏洞变成了什么级别？",
+                "back": "把浏览器里「弹个窗」的注入漏洞，变成「读写用户全部文件」。被投毒的依赖、第三方脚本、存储型 XSS 都直接拿到磁盘权限。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "electron/main.ts",
+                    "lineStart": 19,
+                    "lineEnd": 30,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["function:electron/main.ts:createWindow"],
+                    "note": "此处显式设为 false。"
+                  }
+                ]
+              },
+              {
+                "id": "window-open-handler",
+                "front": "不设 `setWindowOpenHandler`，页面里的 `target=\"_blank\"` 链接会发生什么？",
+                "back": "会在你的应用里开一个新的 Electron 窗口，加载任意远程网址却带着你应用的权限设置。正确做法是 shell.openExternal 后返回 deny。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "electron/main.ts",
+                    "lineStart": 41,
+                    "lineEnd": 44,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["function:electron/main.ts:createWindow"],
+                    "note": "外链一律交给系统浏览器。"
+                  }
+                ]
+              },
+              {
+                "id": "sandbox-tradeoff",
+                "front": "TuringPact 把 `sandbox` 设成了 false。该怎么理解这一项？",
+                "back": "是权衡不是疏漏：preload 需要 Node 能力，由 contextIsolation 和只暴露必要接口的 preload 兜底。安全设置不是全部调到最严，是知道自己关掉了什么、靠什么补上。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "electron/main.ts",
+                    "lineStart": 19,
+                    "lineEnd": 30,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["function:electron/main.ts:createWindow"],
+                    "note": "sandbox false 与 preload、contextIsolation 同时出现。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "electron-switch-recall",
+                "title": "回忆最容易漏掉的一项",
+                "prompt": "为了不让页面里的外链在应用内打开新 Electron 窗口，要设置哪个处理器？填函数名。",
+                "expectedAnswer": "setWindowOpenHandler",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "electron/main.ts",
+                    "lineStart": 41,
+                    "lineEnd": 44,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["function:electron/main.ts:createWindow"],
+                    "note": "setWindowOpenHandler 返回 deny。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "decisions-out-of-the-shell",
+            "title": "把决定挪出外壳",
+            "content": "# 把决定挪出外壳\n\n`electron/userDataPath.ts` 整个文件只有这些：\n\n```ts\nexport function resolveElectronUserDataPath(\n  env: Record<string, string | undefined>,\n): string | null {\n  const override = env.SUPACHATS_ELECTRON_USER_DATA_DIR?.trim();\n  if (!override) return null;\n  return override;\n}\n```\n\n六行。它做的事很小：如果环境变量里给了一个非空的路径，就用它，否则返回 null 表示走默认。\n\n`electron/main.ts` 顶部这样用：\n\n```ts\nconst userDataPathOverride = resolveElectronUserDataPath(process.env);\nif (userDataPathOverride) {\n  app.setPath('userData', userDataPathOverride);\n}\n```\n\n## 为什么值得单独一个文件\n\n因为旁边有 `tests/electron-user-data.test.ts`：\n\n```ts\nit('returns null when no override is provided', () => {\n  expect(resolveElectronUserDataPath({})).toBeNull();\n  expect(resolveElectronUserDataPath({ SUPACHATS_ELECTRON_USER_DATA_DIR: '   ' })).toBeNull();\n});\n\nit('returns the trimmed override path for fresh-session electron runs', () => {\n  expect(\n    resolveElectronUserDataPath({ SUPACHATS_ELECTRON_USER_DATA_DIR: ' /tmp/supachats-electron-fresh ' }),\n  ).toBe('/tmp/supachats-electron-fresh');\n});\n```\n\n**这个测试用 Vitest 跑，几毫秒，不启动 Electron。**\n\n留在 `main.ts` 里的话，要测它就得启动整个 Electron 主进程、注入环境变量、再想办法把 `app.getPath('userData')` 读出来。那种测试跑得慢、容易抖、在 CI 上会时不时挂掉，于是最后没人写——这个逻辑就永远没被测过。\n\n## 那两个「空白」用例才是重点\n\n第一个测试里有 `'   '`——三个空格。没有 `.trim()` 的话，这就是一个「非空」的字符串，Electron 会去创建一个名字是空白的目录，或者直接崩。\n\n这种输入永远不会在你手动测试时出现，只会在某人的 `.env` 文件里多了个空格时出现。**纯函数让写这种边界用例的成本降到接近零，于是你真的会去写。**\n\n## 一般形式\n\n> **凡是「跑不动测试的地方」，就把决定挪出来，只留执行。**\n\n- Electron 主进程 → 挪出路径解析、窗口尺寸计算、菜单结构\n- CI 脚本 → 挪出版本号推导、产物路径拼接\n- 服务器启动代码 → 挪出配置合并、端口选择\n- React 组件 → 挪出该显示什么的判断\n\n这和上一课的 `resolveRuntimeDescriptor` 是同一个动作：**纯函数做决定，薄壳负责读世界和写世界。**\n\n判断标准是一个很土的问题：\n\n> **这段逻辑，我能不能不启动任何东西就测它？**\n>\n> 不能，就说明决定和执行还粘在一起。\n\n## 附带一提：一个真实的遗留痕迹\n\n环境变量叫 `SUPACHATS_ELECTRON_USER_DATA_DIR`，而项目叫 TuringPact。这是改名前留下的。\n\n它无害——但它提醒你一件事：**环境变量名、缓存键、数据库表名这类东西，改起来比代码贵得多**，因为它们已经写进了别人的机器、别人的 CI 配置、别人的部署脚本。一个人做产品时，这类名字值得在第一天多想三分钟。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "electron/userDataPath.ts",
+                "lineStart": 1,
+                "lineEnd": 11,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:electron/userDataPath.ts",
+                  "function:electron/userDataPath.ts:resolveElectronUserDataPath"
+                ],
+                "note": "六行纯函数，带 trim，空白返回 null。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/electron-user-data.test.ts",
+                "lineStart": 1,
+                "lineEnd": 22,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:tests/electron-user-data.test.ts"],
+                "note": "不启动 Electron 的单元测试，覆盖空对象与三个空格两种空白输入。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "electron/main.ts",
+                "lineStart": 1,
+                "lineEnd": 12,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:electron/main.ts"],
+                "note": "外壳只负责调用纯函数并执行 app.setPath。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "pure-out-of-shell",
+                "front": "「跑不动测试的地方」该怎么处理？",
+                "back": "把决定挪出来做成纯函数，外壳只留执行。判断标准：这段逻辑我能不能不启动任何东西就测它？不能，说明决定和执行还粘在一起。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "electron/userDataPath.ts",
+                    "lineStart": 1,
+                    "lineEnd": 11,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "function:electron/userDataPath.ts:resolveElectronUserDataPath"
+                    ],
+                    "note": "六行纯函数被单独成文件就是为了可测。"
+                  }
+                ]
+              },
+              {
+                "id": "whitespace-case",
+                "front": "`resolveElectronUserDataPath` 的测试里为什么要有 `'   '`（三个空格）这个用例？",
+                "back": "没有 trim 的话空白串是「非空」的，Electron 会去创建名字空白的目录或直接崩。这种输入只在别人 .env 多打一个空格时出现，手动测试永远碰不到。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/electron-user-data.test.ts",
+                    "lineStart": 5,
+                    "lineEnd": 13,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:tests/electron-user-data.test.ts"],
+                    "note": "空对象与三空格两种空白输入都断言为 null。"
+                  }
+                ]
+              },
+              {
+                "id": "names-are-expensive",
+                "front": "环境变量还叫 `SUPACHATS_...` 而项目已改名 TuringPact，说明什么？",
+                "back": "环境变量名、缓存键、表名这类外部契约改起来比代码贵得多——它们已经写进别人的机器、CI 配置和部署脚本。第一天值得多想三分钟。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "electron/userDataPath.ts",
+                    "lineStart": 1,
+                    "lineEnd": 11,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:electron/userDataPath.ts"],
+                    "note": "变量名 SUPACHATS_ELECTRON_USER_DATA_DIR 是改名前的遗留。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "shell-extraction-explain",
+                "title": "解释为什么单独一个文件",
+                "kind": "explain",
+                "prompt": "`resolveElectronUserDataPath` 只有六行，却单独占一个文件。请解释这么做换来了什么，如果把它内联回 `electron/main.ts`，测试会变成什么样，以及最终的实际后果。",
+                "rubric": [
+                  "指出它可以用 Vitest 毫秒级测试，不需要启动 Electron",
+                  "说明内联后要测就得启动主进程、注入环境变量、再读回 app 的路径，慢且不稳定",
+                  "指出这类测试最终没人写，于是这段逻辑永远没被测过"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/electron-user-data.test.ts",
+                    "lineStart": 1,
+                    "lineEnd": 22,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:tests/electron-user-data.test.ts"],
+                    "note": "测试直接 import 纯函数，不涉及 Electron 运行时。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
