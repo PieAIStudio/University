@@ -1,0 +1,91 @@
+TuringPact 词表扩充自查报告
+================================
+日期：2026-08-07
+输出：course-proposals/lexicon-expansion.json
+
+## 规模与分布
+
+- 新增词条：120（目标区间 80–140）
+- track：technical 109 / general 11
+- partOfSpeech：noun 69 / verb 38 / adjective 13
+- 覆盖课程：12 门（async / data / logic / ui / quality / product / terrain / reading-code / contracts-and-drift / one-codebase-many-hosts / state-and-process / testing-strategy）
+
+## 1. 零重复
+
+- 与 existing-senses.txt（120）及 data/vocabulary/en.json 的 senseId 交集：空
+- 输出内部 senseId 去重：通过
+- 允许同 headword 不同义项：如 race.promise（相对已有 race.concurrency）、replace.state（相对已有 replace.action）、hook.react（React 钩子）
+
+## 2. 落点抽查（15/15 通过）
+
+每条均在真实 content.md 中找到可标注中文/英文落点：
+
+1. async.function → foundations-async / await-means-wait-here → 「异步」
+2. await.pause → 同上 → 「await」
+3. throw.error → foundations-async / throw-or-absorb → 「抛」
+4. absorb.failure → 同上 → 「吸收」
+5. race.promise → foundations-async / racing-a-clock → 「赛跑」
+6. contract.api → contracts-and-drift / why-freeze-surface → 「契约」
+7. drift.divergence → contracts-and-drift / contract-test → 「漂移」
+8. store.state → foundations-data / a-store-is-values-plus-setters → 「store」
+9. poll.repeat → foundations-data / push-instead-of-pull → 「轮询」
+10. props.parameters → foundations-ui / props-are-parameters → 「props」
+11. cleanup.effect → foundations-ui / cleanup-is-not-optional → 「清理」
+12. type-guard.check → foundations-logic / narrowing → 「类型守卫」
+13. analytics.tracking → foundations-product / why-measure-at-all → 「埋点」
+14. degrade.fallback → one-codebase-many-hosts / detect-once-degrade-always → 「降级」
+15. matrix.table → testing-strategy / degraded-matrix → 「矩阵」
+
+全量 120 条均做了落点信号扫描（中文词义头 / headword / 课文专名）；曾出现弱信号的 5 条已改 gloss 或删除。
+
+## 3. 音标抽查（10/10 通过）
+
+对照常见 BrE IPA（与现网 en.json 风格一致：ɒ / əʊ / 非卷舌）：
+
+1. async → /əˈsɪŋk/
+2. await → /əˈweɪt/
+3. reject → /rɪˈdʒekt/
+4. dependency → /dɪˈpendənsi/
+5. subscribe → /səbˈskraɪb/
+6. component → /kəmˈpəʊnənt/
+7. destructure → /diːˈstrʌktʃə/
+8. analytics → /ˌænəˈlɪtɪks/
+9. authoritative → /ɔːˈθɒrətətɪv/
+10. overwrite → /ˌəʊvəˈraɪt/
+
+不确定的词未收入（例如未单独收 backoff：课文几乎无稳定中文落点）。
+
+## 4. gloss / usage 质量
+
+- 通读检查：无「XX：一种 XX 的机制」零信息量模板
+- gloss 统一「中文词：一句话技术解释」
+- usage 统一给「读到时该想什么」的思考角度，而非同义词替换
+- 字段严格 7 项；schema 长度与 senseId 正则已校验
+
+## 5. 删掉或改掉的候选（及原因）
+
+质量优先，草稿约 154 条，删并后 120：
+
+- telemetry / funnel / spoiler / scaffold：落点薄或非技术阅读高频
+- consistent / authority / terminal / spot-check / inventory：与更强条目重叠或锚点不清
+- noop / include / void / lifecycle / idle / bootstrap / session：可后补，本批优先级低
+- freeze surface / oracle / corpus：课程术语中文落点过少
+- accessibility / regression：各约 1 处，不够稳
+- coalesce：与 nullish 重复
+- alias：课文里兼指昵称，易误标
+- hook.git：与 React hook 同形，本批只保留 hook.react
+- detect / pattern / marker / index / sort / package / format / concurrency / rewrite：有更核心邻居或落点偏工具细节
+- isolate.test：中文正文无稳定「隔离」落点 → 删除
+- 非法 senseId `devDependency.tool` → `dev-dependency.tool`
+- `overlap.replace` → `overwrite.update`，gloss 对齐课文「覆盖」
+
+## 6. 选词原则回顾
+
+只收「将来读英文文档 / 报错 / GitHub 会反复撞见」且能在 TuringPact 中文课文找到自然落点的词。
+不收四六级空词、不收无落点的「看起来专业」的词、不抄已有 120 条。
+
+## 交付物
+
+- course-proposals/lexicon-expansion.json
+- course-proposals/LEXICON-REPORT.txt（本文件）
+- 未 git commit；未改动上述两文件以外的仓库文件
