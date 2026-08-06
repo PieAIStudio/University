@@ -582,8 +582,13 @@ describe("study and airlock verbs", () => {
     });
   });
 
-  it("keeps study options away from airlock verbs", () => {
-    expect(() =>
+  /**
+   * `--study` earns its place on the airlock verbs: it names the shelf whose
+   * course clock is being compared against the seal. Options that mean nothing
+   * to an airlock still have to be refused rather than ignored.
+   */
+  it("accepts the study whose courses are being checked, and nothing else", () => {
+    expect(
       parseUniversityLocalCli([
         "airlock",
         "doctor",
@@ -592,6 +597,17 @@ describe("study and airlock verbs", () => {
         "--study",
         "turing-pact",
       ]),
-    ).toThrow(/--study/);
+    ).toEqual({ kind: "airlock-doctor", airlockRoot: "/tmp/air", studyId: "turing-pact" });
+
+    expect(() =>
+      parseUniversityLocalCli([
+        "airlock",
+        "status",
+        "--airlock",
+        "/tmp/air",
+        "--course",
+        "foundations",
+      ]),
+    ).toThrow(/--course/);
   });
 });

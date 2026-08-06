@@ -3,7 +3,6 @@ import { DatabaseSync } from "node:sqlite";
 
 import {
   CourseManifestSchema,
-  SnapshotManifestSchema,
   UaAnalysisManifestSchema,
   type SnapshotManifest,
   type UaAnalysisManifest,
@@ -11,6 +10,7 @@ import {
 import { listKnowledgeNotes } from "../knowledge/repository.js";
 import { getStudyPaths } from "../studies/paths.js";
 import { readStudy } from "../studies/repository.js";
+import { listSnapshots } from "../studies/snapshots.js";
 import { inspectSourceStatus, type SourceStatus } from "./refresh-study.js";
 
 type StatusName = "draft" | "active" | "stale" | "retired";
@@ -77,17 +77,6 @@ function readJson(path: string): unknown {
 
 function emptyStatusCounts(): Record<StatusName, number> {
   return { draft: 0, active: 0, stale: 0, retired: 0 };
-}
-
-function listSnapshots(directory: string): readonly SnapshotManifest[] {
-  if (!existsSync(directory)) return [];
-  return readdirSync(directory, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-    .map((entry) => SnapshotManifestSchema.parse(readJson(`${directory}/${entry.name}`)))
-    .sort(
-      (left, right) =>
-        right.createdAt.localeCompare(left.createdAt) || left.id.localeCompare(right.id),
-    );
 }
 
 function listUa(directory: string): readonly UaAnalysisManifest[] {
@@ -174,7 +163,7 @@ export function getHostStudyStatus(input: HostStatusInput): HostStudyStatus {
   const study = readStudy(input.studiesRoot, input.studyId);
   const paths = getStudyPaths(input.studiesRoot, input.studyId);
   const sourceStatus = inspectSourceStatus(input.studiesRoot, input.studyId);
-  const snapshots = listSnapshots(paths.source.snapshots);
+  const snapshots = listSnapshots(input.studiesRoot, input.studyId);
   const analyses = listUa(paths.ua);
   const uaCounts: Record<UaAnalysisManifest["status"], number> = {
     preparing: 0,

@@ -325,6 +325,23 @@ export const EvidenceReferenceSchema = z
     }
   });
 
+/**
+ * Whether a course is supposed to keep up with the repository or to stay where
+ * it is.
+ *
+ * `follow-ref` is the normal case: the course teaches the current state of the
+ * code, so when the cited files move underneath it the audit marks it stale and
+ * someone revises it. `pinned-history` is a course that is *about* a past state
+ * on purpose — how a bug looked before it was fixed, what the architecture was
+ * before a migration. Marking that stale is not a warning, it is a false alarm
+ * that never goes away, because the thing it points at is finished changing.
+ *
+ * The distinction has to be recorded rather than inferred. From the outside a
+ * pinned course and a neglected course look identical: both cite an old commit.
+ * Only the author knows which one it is.
+ */
+export const CourseCurrency = z.enum(["follow-ref", "pinned-history"]);
+
 export const CourseManifestSchema = z
   .object({
     schemaVersion: SchemaVersion,
@@ -335,6 +352,7 @@ export const CourseManifestSchema = z
     objectives: z.array(z.string().min(1).max(500)).min(1),
     unitIds: z.array(StableId),
     status: ContentStatus,
+    currency: CourseCurrency.default("follow-ref"),
     createdAt: IsoDateTime,
     updatedAt: IsoDateTime,
   })
@@ -523,6 +541,12 @@ export type UaAnalysisManifest = z.infer<typeof UaAnalysisManifestSchema>;
 export type UaEngineProvenance = z.infer<typeof UaEngineProvenanceSchema>;
 export type EvidenceReference = z.infer<typeof EvidenceReferenceSchema>;
 export type CourseManifest = z.infer<typeof CourseManifestSchema>;
+/**
+ * What a caller has to supply to write a course, as opposed to what it gets
+ * back. Fields with defaults — `currency` — are optional going in and settled
+ * coming out, so writers built before a default existed keep compiling.
+ */
+export type CourseManifestInput = z.input<typeof CourseManifestSchema>;
 export type UnitManifest = z.infer<typeof UnitManifestSchema>;
 export type LessonManifest = z.infer<typeof LessonManifestSchema>;
 export type Exercise = z.infer<typeof ExerciseSchema>;

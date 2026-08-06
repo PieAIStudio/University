@@ -18,6 +18,7 @@ import { z } from "zod";
 import {
   CardContentSchema,
   ContentStatus,
+  CourseCurrency,
   CourseManifestSchema,
   ExerciseSchema,
   LessonManifestSchema,
@@ -25,6 +26,7 @@ import {
   UnitManifestSchema,
   type CardContent,
   type CourseManifest,
+  type CourseManifestInput,
   type Exercise,
   type LessonManifest,
   type UnitManifest,
@@ -276,7 +278,7 @@ function assertContentIdentity(
 export function writeCourse(
   studiesRoot: string,
   studyId: string,
-  candidate: CourseManifest,
+  candidate: CourseManifestInput,
 ): CourseManifest {
   readStudy(studiesRoot, studyId);
   const course = CourseManifestSchema.parse(candidate);
@@ -514,6 +516,38 @@ export function updateCourseStatus(
   const updated = CourseManifestSchema.parse({
     ...course,
     status,
+    updatedAt: now.toISOString(),
+  });
+  writeJsonAtomically(getCoursePaths(studiesRoot, studyId, courseId).manifest, updated);
+  return updated;
+}
+
+/**
+ * Declares whether a course is meant to track the repository or to stay put.
+ *
+ * Pinning is not a way to silence a course that has genuinely rotted: a course
+ * that is already `stale` is one the audit judged out of date, and freezing it
+ * there would leave a broken course wearing a label that says it is fine on
+ * purpose. Retire or revise it instead, then pin.
+ */
+export function setCourseCurrency(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  candidate: CourseManifest["currency"],
+  now = new Date(),
+): CourseManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const currency = CourseCurrency.parse(candidate);
+  if (course.currency === currency) return course;
+  if (currency === "pinned-history" && course.status === "stale") {
+    throw new Error(
+      `Course ${courseId} is stale; revise or retire it before pinning it as history`,
+    );
+  }
+  const updated = CourseManifestSchema.parse({
+    ...course,
+    currency,
     updatedAt: now.toISOString(),
   });
   writeJsonAtomically(getCoursePaths(studiesRoot, studyId, courseId).manifest, updated);

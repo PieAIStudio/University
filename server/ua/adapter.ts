@@ -33,6 +33,7 @@ import { listKnowledgeNotes } from "../knowledge/repository.js";
 import { writeJsonAtomically, writeTextAtomically } from "../storage/atomic-json.js";
 import { getSnapshotPaths, getStudyPaths, getUaAnalysisPaths } from "../studies/paths.js";
 import { openStudyRepository } from "../studies/snapshots.js";
+import { acquireUaLease, releaseUaLease } from "./lease.js";
 import {
   batchIndexFromOutputFilename,
   fileLevelTypes,
@@ -92,6 +93,8 @@ export interface PrepareUaAnalysisInput {
   readonly outputLanguage: string;
   readonly config?: Readonly<Record<string, unknown>>;
   readonly engineProvenance?: UaEngineProvenance;
+  /** Take a lease another host still holds. Only a person can know it is dead. */
+  readonly takeover?: boolean;
   readonly now?: Date;
 }
 
@@ -499,6 +502,9 @@ export function prepareUaAnalysis(input: PrepareUaAnalysisInput): UaHostInvocati
   if (existsSync(paths.manifest)) {
     const current = UaAnalysisManifestSchema.parse(readJson(paths.manifest));
     assertSamePreparingAnalysis(current, expected);
+    // Claimed before the workspace is touched: rebuilding it is the step that
+    // two concurrent hosts would corrupt.
+    acquireUaLease(paths.root, input.takeover ? { takeover: true } : {});
     if (!existsSync(paths.data)) mkdirSync(paths.data, { recursive: true, mode: 0o700 });
     const configPath = join(paths.data, "config.json");
     if (!existsSync(configPath)) {
@@ -514,6 +520,7 @@ export function prepareUaAnalysis(input: PrepareUaAnalysisInput): UaHostInvocati
 
   mkdirSync(paths.root, { recursive: true, mode: 0o700 });
   writeJsonAtomically(paths.manifest, expected);
+  acquireUaLease(paths.root);
 
   try {
     mkdirSync(paths.data, { recursive: true, mode: 0o700 });
@@ -597,6 +604,7 @@ export function finalizeUaAnalysis(
     completedAt: now.toISOString(),
   });
   writeJsonAtomically(paths.manifest, ready);
+  releaseUaLease(paths.root);
   return ready;
 }
 
@@ -842,5 +850,6 @@ export function failUaAnalysis(
     completedAt: now.toISOString(),
   });
   writeJsonAtomically(paths.manifest, failed);
+  releaseUaLease(paths.root);
   return failed;
 }

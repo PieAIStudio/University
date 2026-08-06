@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
-import { dirname, posix } from "node:path";
+import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
+import { dirname, join, posix } from "node:path";
 
 import { SnapshotManifestSchema, type SnapshotManifest } from "../../src/domain/schemas.js";
 import { assertSafeGitArgument, gitBuffer, gitText } from "../git/run.js";
@@ -187,6 +187,27 @@ export function refreshStudyRepository(
     gitText(["--git-dir", repository, "repack", "-ad"]);
   }
   return { repository, sourceCommit, sourceTree };
+}
+
+/**
+ * Every snapshot a study holds, newest first.
+ *
+ * Ties on `createdAt` are broken by id so the order is total: two snapshots
+ * taken in the same millisecond would otherwise swap places between calls, and
+ * callers that ask for "the latest" would get different answers on each read.
+ */
+export function listSnapshots(studiesRoot: string, studyId: string): readonly SnapshotManifest[] {
+  const directory = getStudyPaths(studiesRoot, studyId).source.snapshots;
+  if (!existsSync(directory)) return [];
+  return readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .map((entry) =>
+      SnapshotManifestSchema.parse(JSON.parse(readFileSync(join(directory, entry.name), "utf8"))),
+    )
+    .sort(
+      (left, right) =>
+        right.createdAt.localeCompare(left.createdAt) || left.id.localeCompare(right.id),
+    );
 }
 
 export function createCleanSnapshot(

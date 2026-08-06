@@ -2,7 +2,12 @@ import { existsSync } from "node:fs";
 
 import { z } from "zod";
 
-import { StableId, type CourseManifest, type UnitManifest } from "../../src/domain/schemas.js";
+import {
+  StableId,
+  type CourseManifest,
+  type CourseManifestInput,
+  type UnitManifest,
+} from "../../src/domain/schemas.js";
 import {
   readCourse,
   updateCourseStatus,
@@ -120,7 +125,10 @@ function validateAllEvidence(
   }
 }
 
-function buildCourseManifest(proposal: CourseCreationProposal, timestamp: string): CourseManifest {
+function buildCourseManifest(
+  proposal: CourseCreationProposal,
+  timestamp: string,
+): CourseManifestInput {
   return {
     schemaVersion: 1,
     id: proposal.course.id,

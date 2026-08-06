@@ -35,6 +35,8 @@ import {
 } from "./workflows/host-exercise-grade.js";
 import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
 import { getStudyPaths } from "./studies/paths.js";
+import { setCourseCurrency } from "./content/repository.js";
+import { readCourseClock } from "./airlock/course-clock.js";
 import { inspectAirlock } from "./airlock/inspect.js";
 import { promoteAirlock } from "./airlock/promote.js";
 import { createStudyWithSource } from "./workflows/create-study.js";
@@ -48,7 +50,7 @@ Commands:
   status --study <study-id>
   capture --study <study-id> --input <proposal.json> [--dry-run]
   knowledge list --study <study-id>
-  refresh prepare --study <study-id> [--ref <git-ref>] [--acknowledge-dirty-excluded]
+  refresh prepare --study <study-id> [--ref <git-ref>] [--acknowledge-dirty-excluded] [--takeover]
   refresh finalize --study <study-id> --analysis <analysis-id>
   refresh verify --study <study-id> --analysis <analysis-id>
   refresh retire --study <study-id> --analysis <analysis-id> --reason <text> [--superseded-by <analysis-id>] [--force]
@@ -57,6 +59,8 @@ Commands:
   course revise --study <study-id> --input <proposal.json> [--dry-run]
   course reactivate --study <study-id> --course <course-id> --snapshot <snapshot-id> [--analysis <analysis-id>]
   course set-default --study <study-id> --course <course-id>
+  course pin --study <study-id> --course <course-id>
+  course follow --study <study-id> --course <course-id>
   course open-for-edit --study <study-id> --course <course-id>
   course add-lessons --study <study-id> --input <proposal.json> [--dry-run]
   focus set --study <study-id> [--course <course-id>[,<course-id>...]]
@@ -69,8 +73,8 @@ Commands:
   study archive --study <study-id>
   study unarchive --study <study-id>
   airlock promote --airlock <absolute-path> --upstream <absolute-path> [--ref <git-ref>] [--acknowledge-dirty-excluded]
-  airlock doctor --airlock <absolute-path>
-  airlock status --airlock <absolute-path>
+  airlock doctor --airlock <absolute-path> [--study <study-id>]
+  airlock status --airlock <absolute-path> [--study <study-id>]
   language annotate --study <study-id> --input <overlay.json>
   express review --study <study-id> [--limit <n>] [--goal <text>]
   learner backup --study <study-id>
@@ -105,6 +109,7 @@ interface RefreshPrepareCommand {
   readonly studyId: string;
   readonly reference?: string;
   readonly acknowledgeDirtyExcluded: boolean;
+  readonly takeover?: boolean;
 }
 
 interface RefreshFinalizeCommand {
@@ -160,6 +165,12 @@ interface CourseReactivateCommand {
 
 interface CourseSetDefaultCommand {
   readonly kind: "course-set-default";
+  readonly studyId: string;
+  readonly courseId: string;
+}
+
+interface CourseCurrencyCommand {
+  readonly kind: "course-pin" | "course-follow";
   readonly studyId: string;
   readonly courseId: string;
 }
@@ -225,6 +236,7 @@ interface AirlockPromoteCommand {
 interface AirlockInspectCommand {
   readonly kind: "airlock-doctor" | "airlock-status";
   readonly airlockRoot: string;
+  readonly studyId?: string;
 }
 
 interface LanguageAnnotateCommand {
@@ -280,6 +292,7 @@ export type UniversityLocalCliCommand =
   | CourseReviseCommand
   | CourseReactivateCommand
   | CourseSetDefaultCommand
+  | CourseCurrencyCommand
   | CourseOpenForEditCommand
   | CourseAddLessonsCommand
   | FocusCommand
@@ -318,6 +331,7 @@ type ParsedValues = {
   readonly apply?: boolean;
   readonly force?: boolean;
   readonly "acknowledge-dirty-excluded"?: boolean;
+  readonly takeover?: boolean;
   readonly title?: string;
   readonly source?: string;
   readonly airlock?: string;
@@ -371,6 +385,7 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         apply: { type: "boolean" },
         force: { type: "boolean" },
         "acknowledge-dirty-excluded": { type: "boolean" },
+        takeover: { type: "boolean" },
         title: { type: "string" },
         source: { type: "string" },
         airlock: { type: "string" },
@@ -406,12 +421,13 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
   }
   if (positionals.length === 2 && positionals[0] === "refresh") {
     if (positionals[1] === "prepare") {
-      rejectUnrelatedOptions(values, ["study", "ref", "acknowledge-dirty-excluded"]);
+      rejectUnrelatedOptions(values, ["study", "ref", "acknowledge-dirty-excluded", "takeover"]);
       return {
         kind: "refresh-prepare",
         studyId: required(values.study, "study"),
         ...(values.ref ? { reference: values.ref } : {}),
         acknowledgeDirtyExcluded: values["acknowledge-dirty-excluded"] ?? false,
+        ...(values.takeover ? { takeover: true } : {}),
       };
     }
     if (positionals[1] === "finalize") {
@@ -485,6 +501,14 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       rejectUnrelatedOptions(values, ["study", "course"]);
       return {
         kind: "course-set-default",
+        studyId: required(values.study, "study"),
+        courseId: required(values.course, "course"),
+      };
+    }
+    if (positionals[1] === "pin" || positionals[1] === "follow") {
+      rejectUnrelatedOptions(values, ["study", "course"]);
+      return {
+        kind: positionals[1] === "pin" ? "course-pin" : "course-follow",
         studyId: required(values.study, "study"),
         courseId: required(values.course, "course"),
       };
@@ -595,10 +619,11 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       };
     }
     if (positionals[1] === "doctor" || positionals[1] === "status") {
-      rejectUnrelatedOptions(values, ["airlock"]);
+      rejectUnrelatedOptions(values, ["airlock", "study"]);
       return {
         kind: positionals[1] === "doctor" ? "airlock-doctor" : "airlock-status",
         airlockRoot: required(values.airlock, "airlock"),
+        ...(values.study ? { studyId: values.study } : {}),
       };
     }
   }
@@ -710,6 +735,7 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         studyId: input.command.studyId,
         ...(input.command.reference ? { reference: input.command.reference } : {}),
         acknowledgeDirtyExcluded: input.command.acknowledgeDirtyExcluded,
+        ...(input.command.takeover ? { takeover: true } : {}),
       });
     case "refresh-finalize":
       return finalizeStudyRefresh({
@@ -780,6 +806,23 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         targetSnapshotId: input.command.snapshotId,
         ...(input.command.analysisId ? { targetAnalysisId: input.command.analysisId } : {}),
       });
+    case "course-pin":
+    case "course-follow": {
+      const course = setCourseCurrency(
+        config.studiesRoot,
+        input.command.studyId,
+        input.command.courseId,
+        input.command.kind === "course-pin" ? "pinned-history" : "follow-ref",
+      );
+      return {
+        schemaVersion: 1 as const,
+        operation: input.command.kind,
+        courseId: course.id,
+        currency: course.currency,
+        status: course.status,
+        updatedAt: course.updatedAt,
+      };
+    }
     case "course-set-default": {
       // A study is a shelf: every active course on it is learnable, and the
       // default only decides which one the campus opens on and which lesson
@@ -942,6 +985,11 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
       if (input.command.kind === "airlock-doctor" && inspection.verdict === "blocked") {
         throw new Error(["airlock 未通过检查：", ...inspection.problems].join("\n  - "));
       }
+      // The third clock only exists when a study is named: the airlock has no
+      // idea which shelf, if any, is being taught from it.
+      const course = input.command.studyId
+        ? readCourseClock(config.studiesRoot, input.command.studyId, inspection.seal.promotedCommit)
+        : null;
       return {
         schemaVersion: 1 as const,
         operation: input.command.kind,
@@ -954,6 +1002,7 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
             promotedAt: inspection.seal.promotedAt,
             allowedRef: inspection.seal.allowedRef,
           },
+          course,
         },
         seal: inspection.seal,
       };

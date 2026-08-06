@@ -525,6 +525,11 @@ function applyReport(
   if (report.status === "fresh") return [];
   const transitions: FreshnessTransition[] = [];
   let course = readCourse(studiesRoot, studyId, report.courseId);
+  // A pinned-history course cites an old commit on purpose. The report above is
+  // still written, because "how far behind is it" stays worth knowing, but
+  // acting on it would mark the course stale every single audit forever, and a
+  // warning that can never be cleared trains the reader to ignore all of them.
+  if (course.currency === "pinned-history") return transitions;
   if (course.status === "active") {
     course = updateCourseStatus(studiesRoot, studyId, course.id, "stale");
     transitions.push({ kind: "course", courseId: course.id, from: "active", to: "stale" });

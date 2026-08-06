@@ -353,6 +353,12 @@ export function buildSupaluvCourseDefinition(analysis) {
       ],
       unitIds: [COURSE_IDS.unitId],
       status: "draft",
+      // This course teaches the current SupaLuv, so it follows the ref. The
+      // field is stated rather than left to the schema default because the
+      // manifest read back from disk is compared field for field against this
+      // definition, and a field that only one side knows about reads as a
+      // conflicting course.
+      currency: "follow-ref",
       createdAt: timestamp,
       updatedAt: timestamp,
     },
