@@ -1,0 +1,1261 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-bilingual-by-design",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "bilingual-by-design",
+    "title": "双语不是翻译表",
+    "description": "用 TuringPact 的 i18n 配置与四命名空间文案，讲清命名空间切分、绝不能进翻译文件的内容、以及缺译时的回退锚点——不是教 API，而是教做错会怎样。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "按产品表面设计 i18n 命名空间并说明 defaultNS 的边界",
+      "区分句子骨架与运行时插值，列出绝不能进 locale 的数据与机密",
+      "解释 fallbackLng 与语言检测顺序如何决定缺译时的用户可见形态",
+      "用键集合对齐定义「双语完成」，并能指出 fallback 如何掩盖漏译"
+    ],
+    "units": [
+      {
+        "id": "namespace-partition",
+        "title": "命名空间怎么切",
+        "objective": "能按产品表面切开 common/game/auth/puzzle，并保持 resources 与磁盘同构",
+        "lessons": [
+          {
+            "id": "four-namespaces-not-one",
+            "title": "四个命名空间，不是一张大表",
+            "content": "# 四个命名空间，不是一张大表\n\n## 学习目标\n\n完成本课后，你能解释为什么 TuringPact 把文案拆成 `common` / `game` / `auth` / `puzzle` 四个命名空间，而不是塞进一个 `translations.json`，并能说出拆错时的典型事故。\n\n## 先给结论\n\n- **事实：命名空间在初始化时被显式枚举。** `config.ts` 里 `ns: ['common', 'game', 'auth', 'puzzle']`，每种语言的 `resources` 也按这四个键挂载 JSON。\n- **事实：磁盘目录与命名空间一一对应。** `locales/en/` 与 `locales/zh-CN/` 下各有同名的 `common.json`、`game.json`、`auth.json`、`puzzle.json`。\n- **推论：切分轴是「产品表面」，不是「语言」。** 语言是资源树的外层键（`en` / `zh-CN`），命名空间是内层键——同一命名空间在两种语言里结构必须对称。\n- **推论：一张大表会让冲突不可见。** 若把 `loading`、`vote`、`login` 全堆进一个平面字典，游戏文案与认证文案会争用同名 key，改一处就踩另一处。\n\n## 一个类比\n\n把翻译表想成仓库货架。语言是「哪栋仓库」（中文仓 / 英文仓），命名空间是「哪个货区」（前台公共区、对局区、登录区、每日谜题区）。一人公司最容易犯的错是：只建两栋仓库，却不分区——最后「电池」和「投票」都叫 `status`，上线后才发现中英混在一起修。\n\n## 工作示例\n\n1. 打开 `src/i18n/config.ts`，看到四种 JSON 分别 import。\n2. `resources['zh-CN']` 与 `resources.en` 都挂 `common` / `game` / `auth` / `puzzle`。\n3. 对局相关字符串进 `game.json`（如 `createRoom`、`vote`）；登录进 `auth.json`（如 `login`、`signup`）；壳层导航进 `common.json`；每日谜题进 `puzzle.json`。\n4. 若你把 `vote` 误放进 `common`，调用方若仍按 `game` 命名空间取 key，会拿不到文案，只能掉进回退链——这是「切错区」而不是「没翻译」。\n\n## 自检\n\n如果只保留一个命名空间 `all`，`auth.login` 与某条游戏内 `login` 提示撞名时，谁会赢？谁会悄悄被覆盖？\n\n答案：后写入或合并策略决定的那一方会赢；另一方的文案在运行时消失，但类型系统和编译都不会报错——这就是命名空间污染的形状。\n\n## 重点\n\n**双语的第一刀不是中英对照表，而是命名空间边界。** 边界按产品表面切开，语言只是同一表面的两份填充。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/config.ts",
+                "lineStart": 18,
+                "lineEnd": 34,
+                "nodeIds": [],
+                "note": "resources 与 ns 枚举四个命名空间"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/auth.json",
+                "lineStart": 1,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "auth 命名空间只收登录相关 key"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 1,
+                "lineEnd": 10,
+                "nodeIds": [],
+                "note": "game 命名空间收对局入口文案"
+              }
+            ],
+            "cards": [
+              {
+                "id": "ns-axis",
+                "front": "TuringPact 的 i18n 是按语言切命名空间，还是按产品表面切？错了会怎样？",
+                "back": "按产品表面切（common/game/auth/puzzle）。按语言切会导致同一表面内 key 冲突不可见，运行时静默盖写。",
+                "tags": [
+                  "i18n-namespace"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 32,
+                    "lineEnd": 34,
+                    "nodeIds": [],
+                    "note": "ns 与 defaultNS 声明四个产品表面"
+                  }
+                ]
+              },
+              {
+                "id": "four-ns-list",
+                "front": "config.ts 里 `ns` 数组固定了哪四个命名空间？少挂一个 JSON 会怎样？",
+                "back": "common、game、auth、puzzle。少挂一个时，该表面的 t() 取 key 会 miss，掉进 fallback 或显示 key 本身。",
+                "tags": [
+                  "i18n-namespace"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 18,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "resources 与 ns 对齐挂载"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "list-four-ns",
+                "kind": "short-answer",
+                "title": "默写四个命名空间",
+                "prompt": "写出 config.ts 中 ns 数组里的四个命名空间 id（空格分隔，按文件中顺序）。",
+                "expectedAnswer": "common game auth puzzle",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "ns 数组字面量"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "default-ns-is-common",
+            "title": "默认命名空间为什么是 common",
+            "content": "# 默认命名空间为什么是 common\n\n## 学习目标\n\n完成本课后，你能说明 `defaultNS: 'common'` 的设计意图，并能判断一段文案该不该放进默认命名空间。\n\n## 先给结论\n\n- **事实：默认命名空间是 `common`。** `config.ts` 写明 `defaultNS: 'common'`，与 `ns` 列表第一项一致。\n- **事实：`common` 装的是跨表面复用的壳层文案。** 例如 `navHome`、`loading`、`error`、`settings`、`language`、`battery`，以及启动屏长文案。\n- **事实：`auth` 与 `puzzle` 是窄表面。** `auth.json` 只有登录注册相关十几个 key；`puzzle.json` 只服务每日谜题页。\n- **推论：默认 NS 决定「偷懒调用」落点。** 未显式指定命名空间的 `t('loading')` 会去 `common` 找。把对局专用词放进 `common`，等于污染全局默认字典。\n\n## 一个类比\n\n`common` 像公司前台话术手册：欢迎语、洗手间在哪、出错了请重试。对局规则、登录条款、每日谜题说明各有专用手册。前台手册越大，新人越容易把「投票」也写进前台——结果每个页面都能误用到错误的「投票」。\n\n## 工作示例\n\n1. 需要「加载中」：放 `common.loading`（en: `Loading...` / zh-CN: `加载中...`）。\n2. 需要「创建房间」：放 `game.createRoom`，不要放进 `common`。\n3. 需要「登录」：放 `auth.login`。\n4. 判断规则：**两个以上无关表面都会用到 → common；只有一个表面用 → 该表面的 NS。**\n\n## 自检\n\n`insufficientBattery`（电池不足）在 en/game.json 里。它该不该搬到 common？为什么？\n\n答案：不应搬。它绑定开房/对局计费语境，只有 game 表面消费；放进 common 会让无关页面也能 `t('insufficientBattery')`，命名空间边界失效。\n\n## 重点\n\n**defaultNS 不是「杂物抽屉」，是「跨表面最小公约数」。** 放错一层，污染会顺着默认查找扩散到全应用。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/config.ts",
+                "lineStart": 33,
+                "lineEnd": 34,
+                "nodeIds": [],
+                "note": "defaultNS 设为 common"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/common.json",
+                "lineStart": 5,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "common 收导航与通用错误态"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 50,
+                "lineEnd": 52,
+                "nodeIds": [],
+                "note": "insufficientBattery 留在 game 而非 common"
+              }
+            ],
+            "cards": [
+              {
+                "id": "default-ns-value",
+                "front": "未指定命名空间时 t('loading') 会查哪个 NS？依据是哪行配置？",
+                "back": "查 common，因为 defaultNS 设为 'common'。",
+                "tags": [
+                  "i18n-namespace"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 34,
+                    "lineEnd": 34,
+                    "nodeIds": [],
+                    "note": "defaultNS: 'common'"
+                  }
+                ]
+              },
+              {
+                "id": "common-membership",
+                "front": "一条文案同时被启动屏和房间页使用时，应优先放进哪个命名空间？",
+                "back": "common。只有单表面使用的文案才进 game/auth/puzzle。",
+                "tags": [
+                  "i18n-namespace"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/common.json",
+                    "lineStart": 8,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "跨表面 loading/error 在 common"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-ns-name",
+                "kind": "short-answer",
+                "title": "默认命名空间",
+                "prompt": "写出 defaultNS 的字符串值。",
+                "expectedAnswer": "common",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 34,
+                    "lineEnd": 34,
+                    "nodeIds": [],
+                    "note": "defaultNS 字面量"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "resources-mirror-disk",
+            "title": "resources 树必须镜像磁盘",
+            "content": "# resources 树必须镜像磁盘\n\n## 学习目标\n\n完成本课后，你能画出 `resources[lng][ns]` 与 `locales/<lng>/<ns>.json` 的对应关系，并能诊断「文件在、界面仍显示 key」类故障。\n\n## 先给结论\n\n- **事实：每种语言四个 import，再装进 resources。** 例如 `zhCommon` → `resources['zh-CN'].common`，`enGame` → `resources.en.game`。\n- **事实：语言码是 `zh-CN` 与 `en`，不是 `zh` / `en-US`。** 键名写错会导致 LanguageDetector 命中失败后整棵树对不上。\n- **事实：中英文件名完全同构。** 两边都是 auth/common/game/puzzle 四个文件，没有「中文多一个 admin.json」。\n- **推论：镜像断裂 = 静默缺文案。** import 了文件却忘了挂到 resources，或挂错键名，运行时不会 TypeScript 报错（JSON 模块当值用），只会在 UI 上露出 key 或 fallback。\n\n## 一个类比\n\n这像快递分拣：箱子（JSON 文件）到了，但分拣码（resources 上的键）贴错。仓库里明明有货，出库单却写「无此 SKU」。i18n 的坑在于：**货在磁盘上，分拣码在 JS 对象里，两边没有编译器强制对齐。**\n\n## 工作示例\n\n1. 新增语言 `ja`：先建 `locales/ja/*.json`，再 import，再在 `resources.ja` 挂四个 NS，最后把语言码加入产品语言列表。\n2. 只建文件不改 `config.ts`：打包可能带上 JSON，但 i18n 运行时仍看不到。\n3. 只改 `resources` 不改 `ns` 数组：部分 API 仍按 `ns` 列表解析，表现依版本而异——显式双写最稳。\n\n## 自检\n\n若把 `resources` 里的键写成 `zh` 而文件目录与 fallbackLng 仍是 `zh-CN`，用户选中文时会怎样？\n\n答案：查 `zh-CN` 资源树为空或未定义，触发 `fallbackLng` 或显示缺失——语言切换 UI 与资源键不一致是经典事故。\n\n## 重点\n\n**i18n 初始化对象是第二份清单。** 磁盘清单与 resources 清单必须人工保持同构；漏同步不会在 build 阶段替你哭。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/config.ts",
+                "lineStart": 5,
+                "lineEnd": 30,
+                "nodeIds": [],
+                "note": "import 与 resources 挂载一一对应"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/zh-CN/common.json",
+                "lineStart": 1,
+                "lineEnd": 6,
+                "nodeIds": [],
+                "note": "zh-CN/common.json 磁盘实体存在"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/puzzle.json",
+                "lineStart": 1,
+                "lineEnd": 6,
+                "nodeIds": [],
+                "note": "en/puzzle.json 与 NS 名 puzzle 对齐"
+              }
+            ],
+            "cards": [
+              {
+                "id": "lng-keys",
+                "front": "resources 外层语言键是 `zh` 还是 `zh-CN`？写错会怎样？",
+                "back": "是 zh-CN。写错则检测/回退命中的语言码对不上资源树，界面缺文案。",
+                "tags": [
+                  "i18n-config"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 18,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "resources 使用 'zh-CN' 键"
+                  }
+                ]
+              },
+              {
+                "id": "mirror-break",
+                "front": "JSON 文件已创建并被 import，但忘了写入 resources 对象，运行时典型现象是什么？",
+                "back": "该语言该 NS 下 t(key) 取不到值，显示 key 或掉进 fallbackLng 的同名 key。",
+                "tags": [
+                  "i18n-config"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 18,
+                    "lineEnd": 30,
+                    "nodeIds": [],
+                    "note": "resources 是运行时唯一挂载点"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "zh-resource-key",
+                "kind": "short-answer",
+                "title": "中文资源键名",
+                "prompt": "写出 resources 对象里中文语言使用的外层键（与 fallbackLng 相同）。",
+                "expectedAnswer": "zh-CN",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 19,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "resources['zh-CN'] 块"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "nested-keys-within-ns",
+            "title": "命名空间之内还要再分层",
+            "content": "# 命名空间之内还要再分层\n\n## 学习目标\n\n完成本课后，你能区分「命名空间切分」与「JSON 内嵌套」，并能解释 `worldLobby.seatErrors.invalid_seat` 这种路径为什么比扁平 `seatErrorInvalidSeat` 更稳。\n\n## 先给结论\n\n- **事实：game 命名空间内部大量使用嵌套对象。** 例如 `tableWaiting`、`shareStatus`、`worldLobby.seatErrors`、`aiPersonaPreview.safety`。\n- **事实：错误码作为嵌套叶子键。** `worldLobby.seatErrors` 下是 `invalid_seat`、`room_not_found`、`phase_locked` 等机器码。\n- **事实：puzzle 的 `shareStatus` 也是嵌套。** `shared` / `copied` / `error` 三个分享结果态收在同一对象。\n- **推论：嵌套表达的是领域子图，不是第二套 i18n。** 命名空间防跨表面污染；嵌套防同表面内数百 key 扁平撞车，并让「错误码 → 文案」映射可搜索。\n\n## 一个类比\n\n命名空间是大楼分区；嵌套是楼层与房间号。你不会把「3 楼会议室A的投影仪故障」写成整栋楼唯一的全局字符串 `projectorBroken`——因为别的楼层也有投影仪。\n\n## 工作示例\n\n1. 座位错误：`t('worldLobby.seatErrors.invalid_seat')`（在 `game` NS 下）。\n2. 分享成功：`t('shareStatus.copied')`（game 结算区）或 puzzle 里同名结构。\n3. 扁平化替代方案 `seatErrorInvalidSeat` 在 300+ key 的 game.json 里会失去「这是座位子系统」的视觉边界，code review 更难。\n\n## 自检\n\n为什么 `invalid_seat` 适合做 JSON 键，而不适合直接当用户可见字符串写死在组件里？\n\n答案：键是协议稳定面，服务端/客户端可共用同一码；用户可见句要随语言变，必须落在 locale 值里。\n\n## 重点\n\n**两层边界：NS 防表面污染，嵌套防子系统污染。** 扁平大字典是一人公司三个月后的定时炸弹。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 25,
+                "lineEnd": 29,
+                "nodeIds": [],
+                "note": "tableWaiting 嵌套子键"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 320,
+                "lineEnd": 329,
+                "nodeIds": [],
+                "note": "worldLobby.seatErrors 以错误码为键"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/puzzle.json",
+                "lineStart": 24,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "puzzle.shareStatus 嵌套结果态"
+              }
+            ],
+            "cards": [
+              {
+                "id": "nested-vs-ns",
+                "front": "命名空间和 JSON 嵌套各解决什么污染问题？",
+                "back": "NS 隔开 common/game/auth/puzzle 等产品表面；嵌套隔开同一表面内子系统（如 seatErrors）。",
+                "tags": [
+                  "i18n-namespace"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/game.json",
+                    "lineStart": 320,
+                    "lineEnd": 329,
+                    "nodeIds": [],
+                    "note": "seatErrors 子系统嵌套"
+                  }
+                ]
+              },
+              {
+                "id": "error-code-key",
+                "front": "seatErrors 里为什么用 invalid_seat 这种蛇形码当键？",
+                "back": "错误码是机器稳定协议；键保持码本身，值才是各语言的人话。",
+                "tags": [
+                  "i18n-keys"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/game.json",
+                    "lineStart": 321,
+                    "lineEnd": 323,
+                    "nodeIds": [],
+                    "note": "invalid_seat 等码作键"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "seat-error-key",
+                "kind": "short-answer",
+                "title": "座位错误码键",
+                "prompt": "写出 seatErrors 中表示「座位不可用」的那个 key。",
+                "expectedAnswer": "invalid_seat",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/game.json",
+                    "lineStart": 321,
+                    "lineEnd": 321,
+                    "nodeIds": [],
+                    "note": "invalid_seat 键"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "what-stays-out",
+        "title": "什么绝不能进翻译文件",
+        "objective": "能把动态数据、机器错误码、机密与剧透边界挡在 locale 之外或正确槽位上",
+        "lessons": [
+          {
+            "id": "interpolate-dynamic-data",
+            "title": "动态数据走插值，不进表",
+            "content": "# 动态数据走插值，不进表\n\n## 学习目标\n\n完成本课后，你能列出至少三类绝不能写进 locale JSON 的运行时数据，并能说明 `{{alias}}` / `{{code}}` 插值如何把「句子骨架」与「实例数据」拆开。\n\n## 先给结论\n\n- **事实：文案用 `{{var}}` 占位。** 例如 game 的 `inviteLinkCopied`: `Invite link copied — room {{code}}`；`votedFor`: `Voted for {{alias}}`。\n- **事实：puzzle 同样插值。** `dailyLabel`: `Daily #{{number}}`；`answerLine`: `Correct answer: {{alias}}.`。\n- **事实：common 也有计数插值。** `venuePreviewCount`: `{{count}} places ready now`。\n- **推论：房间码、玩家别名、得分数是实例数据。** 写进翻译表会爆炸成无穷 key，且泄露/剧透风险上升；插值让译者只翻骨架。\n\n## 一个类比\n\n译的是判决书模板「被告人 {{name}} 判处…」，不是把每个被告人姓名各做一张表。姓名来自案卷系统，模板来自法务部——两边职责分离。\n\n## 工作示例\n\n1. 复制邀请链接成功：骨架在 `game.inviteLinkCopied`，`code` 由房间状态注入。\n2. 投票确认：`votedFor` 只含 `{{alias}}`，别名来自玩家列表 API，不是 locale。\n3. 错误示范：为每个房间码生成 `inviteCopied-AB12CD` 这种 key——表不可维护，且房间码会进入 git 历史。\n\n## 自检\n\n为什么「把别名直接拼进中文字符串」在组件里用 `别名 + ' 已投票'` 也很糟？\n\n答案：语序因语言而异（英语可能是 `Voted for X`），硬拼接无法本地化；必须用带占位符的整句模板。\n\n## 重点\n\n**翻译表只存句子骨架。** 实例身份、房间码、计数、时长一律运行时注入。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 14,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "inviteLinkCopied 使用 {{code}}"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 38,
+                "lineEnd": 38,
+                "nodeIds": [],
+                "note": "votedFor 使用 {{alias}}"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/puzzle.json",
+                "lineStart": 3,
+                "lineEnd": 13,
+                "nodeIds": [],
+                "note": "dailyLabel/answerLine 插值"
+              }
+            ],
+            "cards": [
+              {
+                "id": "what-interpolates",
+                "front": "房间码应该写进 locale JSON 的值里，还是通过插值注入？为什么？",
+                "back": "插值注入。房间码是运行时实例数据，写进表既不可维护又可能进入版本库。",
+                "tags": [
+                  "i18n-interpolation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/game.json",
+                    "lineStart": 14,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "{{code}} 占位"
+                  }
+                ]
+              },
+              {
+                "id": "alias-template",
+                "front": "英文 votedFor 的模板是什么形态？它证明了哪条原则？",
+                "back": "Voted for {{alias}}。原则：整句模板可调语序，动态别名不进表。",
+                "tags": [
+                  "i18n-interpolation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/game.json",
+                    "lineStart": 38,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "votedFor 模板"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "alias-placeholder",
+                "kind": "short-answer",
+                "title": "别名占位符",
+                "prompt": "写出 votedFor 模板里表示玩家别名的占位符（含花括号）。",
+                "expectedAnswer": "{{alias}}",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/game.json",
+                    "lineStart": 38,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "votedFor 占位符"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "machine-keys-human-values",
+            "title": "机器码做键，人话做值",
+            "content": "# 机器码做键，人话做值\n\n## 学习目标\n\n完成本课后，你能设计「错误码 → 多语文案」映射，并解释为什么绝不能把用户可见句子当作协议码在前后端传递。\n\n## 先给结论\n\n- **事实：座位错误以蛇形码为键。** `invalid_seat`、`room_not_found`、`phase_locked`、`occupied` 等出现在 `worldLobby.seatErrors`。\n- **事实：值是完整人话句子。** 英文 `That seat is not available.`，中文侧同键对应中文句（键集合与 en 对齐）。\n- **事实：auth 的失败文案是产品句，不是 HTTP 码。** 如 `loginFailed`: `Login failed`——这里 key 是产品语义名；而 seatErrors 的 key 更贴近后端错误枚举。\n- **推论：协议面与展示面分离。** 后端抛 `phase_locked`，前端只查表展示；若后端抛中文「游戏开始后不能换座」，英文客户端无法映射，国际化从根上破产。\n\n## 一个类比\n\n医院内部用 ICD 编码指疾病，给患者看的是解释说明。你不会让国际部同事用中文诊断名当主键去对账。\n\n## 工作示例\n\n1. 客户端收到 `phase_locked`。\n2. 调用 `t('worldLobby.seatErrors.phase_locked')`（game NS）。\n3. 中文用户看到「游戏开始后不能更换座位。」类文案；英文用户看到 `Seats are locked after the game starts.`\n4. 新增错误码时：前后端先加码，再在 en/zh-CN 的 seatErrors 同步加键——缺一边会在该语言露出码或 fallback。\n\n## 自检\n\n把 `room_not_found` 的英文句子改成更友好的语气，需要改后端吗？\n\n答案：不需要。键稳定则后端不动；只改 locale 值。这正是码键人话值的红利。\n\n## 重点\n\n**能进协议的是稳定码；能进翻译值的是人话。** 反了就等于用文案当 API。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 320,
+                "lineEnd": 328,
+                "nodeIds": [],
+                "note": "seatErrors 机器码键与人话值"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/zh-CN/game.json",
+                "lineStart": 320,
+                "lineEnd": 328,
+                "nodeIds": [],
+                "note": "中文 seatErrors 同键不同值"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/auth.json",
+                "lineStart": 15,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "auth 产品语义键 loginFailed 等"
+              }
+            ],
+            "cards": [
+              {
+                "id": "code-as-key",
+                "front": "后端返回 phase_locked 时，前端应展示码本身还是查 locale？",
+                "back": "查 locale（seatErrors.phase_locked）。码是协议，值才是用户语言。",
+                "tags": [
+                  "i18n-keys"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/game.json",
+                    "lineStart": 323,
+                    "lineEnd": 323,
+                    "nodeIds": [],
+                    "note": "phase_locked 映射句子"
+                  }
+                ]
+              },
+              {
+                "id": "why-not-chinese-code",
+                "front": "为什么不能让 API 直接返回中文错误句当唯一错误标识？",
+                "back": "英文客户端无法映射；改写文案会变成破坏性 API 变更。",
+                "tags": [
+                  "i18n-keys"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/zh-CN/game.json",
+                    "lineStart": 321,
+                    "lineEnd": 324,
+                    "nodeIds": [],
+                    "note": "中文值依赖稳定键"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "phase-locked-key",
+                "kind": "short-answer",
+                "title": "阶段锁定错误码",
+                "prompt": "写出表示「开局后不能换座」的 seatErrors 键名。",
+                "expectedAnswer": "phase_locked",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/game.json",
+                    "lineStart": 323,
+                    "lineEnd": 323,
+                    "nodeIds": [],
+                    "note": "phase_locked 键"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "never-leak-in-locale",
+            "title": "locale 里也不能塞机密",
+            "content": "# locale 里也不能塞机密\n\n## 学习目标\n\n完成本课后，你能指出哪些内容即使「看起来像文案」也绝不能放进前端翻译文件，并能对照 TuringPact 在 `aiPersonaPreview.safety` 里写下的四条红线。\n\n## 先给结论\n\n- **事实：产品用文案声明安全边界。** `aiPersonaPreview.safety` 含 `noSystemPrompt`、`noHiddenRoleLeak`、`noPrivateHintLeak`、`noContradiction`。\n- **事实：`noSystemPrompt` 的值写明。** 英文：`No raw system prompt or provider instruction text.`——这是给 QA/玩家看的说明，不是 prompt 本身。\n- **事实：lede 也划界。** `aiPersonaPreview.lede` 说展示的是玩家可感知的伪装层，不是 private system prompt。\n- **推论：翻译文件会进前端包。** 任何写进 JSON 的字符串都会被下载、被搜、被爬。system prompt、未公开身份、共生者私信提示若进 locale，等于公开仓库泄密。\n\n## 一个类比\n\n菜单上可以写「主厨特调不公开配方」，但不能把配方印在菜单背面还指望客人看不到——菜单本来就是给人看的印刷品。locale JSON 就是前端菜单。\n\n## 工作示例\n\n1. 需要解释 AI 面具：只放 profile/chatHabit 等**可公开人设摘要**（仍是产品文案，不是真实 hidden prompt）。\n2. 真实 system prompt：留在服务端或受控配置，永不进入 `src/i18n/locales/**`。\n3. 未结算隐藏身份：不进任何「预览文案」；结算后再用 `unmask.revealAi` 等模板 + `{{alias}}` 展示。\n\n## 自检\n\n有人提议「把 system prompt 放进 zh-CN/game.json 方便运营改中文」——你会怎么否决？\n\n答案：locale 随前端分发，无访问控制；运营改文案渠道应是受鉴权的服务端配置，且 prompt 不属于 UI 文案域。\n\n## 重点\n\n**双语系统的机密边界与文案边界重合。** 能进翻译文件的，默认视为全世界可读。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 390,
+                "lineEnd": 417,
+                "nodeIds": [],
+                "note": "aiPersonaPreview 与 safety 四条红线"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/zh-CN/game.json",
+                "lineStart": 411,
+                "lineEnd": 417,
+                "nodeIds": [],
+                "note": "中文 safety 同步声明不泄露"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 197,
+                "lineEnd": 199,
+                "nodeIds": [],
+                "note": "unmask 揭示句用插值而非写死身份"
+              }
+            ],
+            "cards": [
+              {
+                "id": "no-system-prompt",
+                "front": "为什么 system prompt 不能当作「长文案」放进 game.json？",
+                "back": "locale 进前端包，无服务端鉴权；等于把供应商指令公开分发。",
+                "tags": [
+                  "i18n-security"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/game.json",
+                    "lineStart": 414,
+                    "lineEnd": 414,
+                    "nodeIds": [],
+                    "note": "noSystemPrompt 红线文案"
+                  }
+                ]
+              },
+              {
+                "id": "safety-four",
+                "front": "aiPersonaPreview.safety 点名了哪四类绝不能在该页泄露的内容？",
+                "back": "原始 system prompt、结算前隐藏身份、共生者私信提示、与聊天记录矛盾的人设事实。",
+                "tags": [
+                  "i18n-security"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/game.json",
+                    "lineStart": 413,
+                    "lineEnd": 417,
+                    "nodeIds": [],
+                    "note": "safety 四个子键"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "no-system-prompt-key",
+                "kind": "short-answer",
+                "title": "安全红线键名",
+                "prompt": "写出 safety 对象中表示「禁止原始 system prompt」的键名。",
+                "expectedAnswer": "noSystemPrompt",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/game.json",
+                    "lineStart": 414,
+                    "lineEnd": 414,
+                    "nodeIds": [],
+                    "note": "noSystemPrompt 键"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "spoiler-free-share-copy",
+            "title": "分享文案是产品决策，不是附赠翻译",
+            "content": "# 分享文案是产品决策，不是附赠翻译\n\n## 学习目标\n\n完成本课后，你能解释为什么「可分享字符串」必须在 locale 设计阶段就定剧透边界，并能指出 puzzle/game 里 spoiler-free 文案守住了什么。\n\n## 先给结论\n\n- **事实：Daily 分享明确无剧透。** `puzzle.shareHint`：只分享分数格子与 Daily 链接，不泄露别名或正确答案。\n- **事实：分享状态文案也强调 spoiler-free。** `shareStatus.copied`: `Spoiler-free Daily result copied.`\n- **事实：对局结算分享同样约束。** game 的 `shareStatus.copied` 写明不含 aliases、roles、final-answer spoilers。\n- **推论：分享串是第二产品表面。** 它离开 App 进入微信/Twitter，受众可能是未开玩的人；翻译时若「顺便」带上 `{{alias}}` 答案，剧透会随语言包固化。\n\n## 一个类比\n\n影评海报可以写「年度最佳反转」，不能把凶手名字印在海报标题上还说「我们有中英双语海报」。双语放大的是你写进模板的东西——包括错误。\n\n## 工作示例\n\n1. 设计分享模板时先列禁止字段：进行中房号、别名、隐藏身份、谜底。\n2. 允许字段：结果情绪、连续天数、无剧透格子、官网邀请。\n3. 中英都要过同一禁止清单；`roastShare.shareText.*` 各语言变体都声明 no active room code。\n\n## 自检\n\n`answerLine`: `Correct answer: {{alias}}.` 可以用于站内揭晓，为什么不该复用为系统分享正文？\n\n答案：站内揭晓受众是已玩完的人；系统分享受众不确定。模板复用会把谜底送进外部分享渠。\n\n## 重点\n\n**剧透边界写在 locale 里，就和写在产品说明里一样硬。** 分享文案是设计决策，不是翻译加班附赠。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/puzzle.json",
+                "lineStart": 21,
+                "lineEnd": 27,
+                "nodeIds": [],
+                "note": "Daily spoiler-free 分享提示与状态"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 176,
+                "lineEnd": 179,
+                "nodeIds": [],
+                "note": "结算分享声明不含剧透字段"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 218,
+                "lineEnd": 223,
+                "nodeIds": [],
+                "note": "roastShare.shareText 无进行中房号"
+              }
+            ],
+            "cards": [
+              {
+                "id": "share-boundary",
+                "front": "puzzle.shareHint 允许分享什么？明确禁止什么？",
+                "back": "允许分数格子与 Daily 链接；禁止别名与正确答案剧透。",
+                "tags": [
+                  "i18n-product"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/puzzle.json",
+                    "lineStart": 22,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "shareHint 边界"
+                  }
+                ]
+              },
+              {
+                "id": "reuse-answer-line",
+                "front": "能否把 answerLine 模板直接当作系统分享正文？为什么？",
+                "back": "不能。answerLine 含正确答案别名，外发即剧透。",
+                "tags": [
+                  "i18n-product"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/puzzle.json",
+                    "lineStart": 13,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "answerLine 含 {{alias}} 谜底"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "share-hint-key",
+                "kind": "short-answer",
+                "title": "无剧透提示键",
+                "prompt": "写出 puzzle 命名空间中说明「只分享分数格子与链接」的键名。",
+                "expectedAnswer": "shareHint",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/puzzle.json",
+                    "lineStart": 22,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "shareHint 键"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "fallback-and-detection",
+        "title": "缺翻译时退到什么",
+        "objective": "能配置并辩护 fallbackLng、检测顺序、escapeValue 与键对齐门禁",
+        "lessons": [
+          {
+            "id": "fallback-is-zh-cn",
+            "title": "缺翻译时退回中文，不是英文",
+            "content": "# 缺翻译时退回中文，不是英文\n\n## 学习目标\n\n完成本课后，你能解释 TuringPact 将 `fallbackLng` 设为 `zh-CN` 而非 `en` 的产品含义，并能画出「当前语言缺 key → 回退语言 → 仍缺」的决策链。\n\n## 先给结论\n\n- **事实：`fallbackLng: 'zh-CN'`。** 写在 `config.ts` 的 init 选项里，与 resources 的中文键一致。\n- **事实：英文是一等资源，但不是回退锚点。** `resources.en` 完整挂载四 NS，可是缺 key 时 i18next 先找当前语言，再找 fallbackLng。\n- **推论：回退语言 = 产品母语决策。** 这个项目的开发与主市场文案以中文为源；英文可以滞后，但不应在中文用户界面上突然冒出半截 English——所以锚在 zh-CN。\n- **推论：教程默认 `fallbackLng: 'en'` 在这里是错的。** 抄西方脚手架会让中文用户在缺译时看到英文，品牌语气撕裂。\n\n## 一个类比\n\n机场广播主语言是本地语言，外语是附加轨。主话筒坏了不是自动改播英语电台，而是切到本地备用话筒。`fallbackLng` 就是备用话筒的语言。\n\n## 工作示例\n\n下面是缺 key 时的主路径（简化）：\n\n```mermaid\nflowchart TD\n  A[\"t(key) 在当前语言 NS 查找\"] --> B{命中?}\n  B -->|是| C[\"渲染该语言文案\"]\n  B -->|否| D[\"在 fallbackLng=zh-CN 同 NS 查找\"]\n  D --> E{命中?}\n  E -->|是| F[\"渲染中文文案\"]\n  E -->|否| G[\"露出 key 或空串 取决于配置\"]\n```\n\n图里最关键的是 **B→D 那条边**：回退目标被写死为 `zh-CN`，不是「任意其他已加载语言」，更不是浏览器语言。一人公司若删掉这行或抄成 `en`，整条边的终点会变，事故从「偶发中文」变成「偶发英文」。\n\n## 自检\n\n英文包缺了某个新 key、中文包有，用户正使用 `en` 时会看到什么？\n\n答案：该 key 回退显示中文句。这比显示原始 key 更可读，但会暴露「英译未同步」——这是有意用可感知降级逼你补译。\n\n## 重点\n\n**fallbackLng 是产品母语锚点，不是技术默认值。** TuringPact 锚在 `zh-CN`，与主市场和文案生产方向一致。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/config.ts",
+                "lineStart": 32,
+                "lineEnd": 34,
+                "nodeIds": [],
+                "note": "fallbackLng 为 zh-CN 且 defaultNS 为 common"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/config.ts",
+                "lineStart": 18,
+                "lineEnd": 30,
+                "nodeIds": [],
+                "note": "en 与 zh-CN 均为完整 resources"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/zh-CN/common.json",
+                "lineStart": 2,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "中文母语文案实体 appName/tagline"
+              }
+            ],
+            "cards": [
+              {
+                "id": "fallback-lng-value",
+                "front": "TuringPact 的 fallbackLng 是 en 还是 zh-CN？这对中文用户意味着什么？",
+                "back": "zh-CN。当前语言缺 key 时回退中文，避免中文界面突然夹英文（除非用户本就在用 en）。",
+                "tags": [
+                  "i18n-fallback"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 32,
+                    "lineEnd": 32,
+                    "nodeIds": [],
+                    "note": "fallbackLng: 'zh-CN'"
+                  }
+                ]
+              },
+              {
+                "id": "fallback-vs-resource",
+                "front": "en 资源树完整存在，为什么缺译回退仍可能显示中文？",
+                "back": "回退看的是 fallbackLng 配置，不是「哪个语言文件更全」。en 缺 key 时仍跳到 zh-CN。",
+                "tags": [
+                  "i18n-fallback"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 25,
+                    "lineEnd": 32,
+                    "nodeIds": [],
+                    "note": "en resources 与 fallbackLng 并存"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "fallback-lng",
+                "kind": "short-answer",
+                "title": "回退语言码",
+                "prompt": "写出 fallbackLng 的配置值。",
+                "expectedAnswer": "zh-CN",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 32,
+                    "lineEnd": 32,
+                    "nodeIds": [],
+                    "note": "fallbackLng 字面量"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "detect-local-storage-first",
+            "title": "语言检测：先记忆，后浏览器",
+            "content": "# 语言检测：先记忆，后浏览器\n\n## 学习目标\n\n完成本课后，你能说明 `detection.order` 为何是 `localStorage` 再 `navigator`，并能指出 locale 持久化键名 `turing-pact-locale` 的作用。\n\n## 先给结论\n\n- **事实：检测顺序写死。** `order: ['localStorage', 'navigator']`——先读本地记忆，再读浏览器语言。\n- **事实：localStorage 键名定制。** `lookupLocalStorage: 'turing-pact-locale'`，不是 i18next 默认的 `i18nextLng`。\n- **事实：语言切换控件文案在 common。** `startLanguageChinese` / `startLanguageEnglish` 的值分别是 `中文` 与 `English`——用目标语言的自称，减少误点。\n- **推论：用户显式选择必须压过系统语言。** 若顺序反了，中文用户在英文系统浏览器上会每次被拽回 en，设置形同虚设。\n\n## 一个类比\n\n酒店房卡记你的温度偏好。你上次调到 24°C，不能每次进门都按「当地气候默认」重设。localStorage 是房卡；navigator 只是「新客人没房卡时」的猜测。\n\n## 工作示例\n\n1. 首次访问：无 `turing-pact-locale`，走 `navigator`，可能得到 `zh-CN` 或 `en` 等。\n2. 用户在设置里选 English：写入 `turing-pact-locale=en` 并 `changeLanguage`。\n3. 再次打开：localStorage 命中，忽略浏览器此时是中文系统。\n4. E2E 测试直接 `localStorage.setItem('turing-pact-locale', 'en')` 固定语言——键名成为测试契约。\n\n## 自检\n\n为什么键名要叫 `turing-pact-locale` 而不是默认 `i18nextLng`？\n\n答案：同域多应用时避免抢写；键名成为产品契约，可在合约/测试中引用，不与其他 i18next 站点冲突。\n\n## 重点\n\n**检测顺序 = 产品优先级。** 记忆中的用户选择永远排在浏览器猜测前面。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/config.ts",
+                "lineStart": 38,
+                "lineEnd": 41,
+                "nodeIds": [],
+                "note": "detection order 与 lookupLocalStorage"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/common.json",
+                "lineStart": 78,
+                "lineEnd": 79,
+                "nodeIds": [],
+                "note": "语言选项标签中英自称"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/zh-CN/common.json",
+                "lineStart": 78,
+                "lineEnd": 79,
+                "nodeIds": [],
+                "note": "中文包中语言选项同为中文/English"
+              }
+            ],
+            "cards": [
+              {
+                "id": "detect-order",
+                "front": "LanguageDetector 的 order 数组第一项是什么？若改成先 navigator 会怎样？",
+                "back": "localStorage。先 navigator 会让系统语言压过用户上次选择，设置无法持久。",
+                "tags": [
+                  "i18n-detection"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 38,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "order 与 lookup 配置"
+                  }
+                ]
+              },
+              {
+                "id": "locale-storage-key",
+                "front": "持久化语言用的 localStorage 键名是什么？",
+                "back": "turing-pact-locale。",
+                "tags": [
+                  "i18n-detection"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 40,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "lookupLocalStorage 键名"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "locale-key-name",
+                "kind": "short-answer",
+                "title": "locale 存储键",
+                "prompt": "写出 lookupLocalStorage 配置的键名字符串。",
+                "expectedAnswer": "turing-pact-locale",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 40,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "lookupLocalStorage 字面量"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "escape-value-false",
+            "title": "为什么 escapeValue 要关掉",
+            "content": "# 为什么 escapeValue 要关掉\n\n## 学习目标\n\n完成本课后，你能说明 `interpolation.escapeValue: false` 在 React 栈里的理由，并能指出关掉之后翻译字符串里的 HTML/特殊字符由谁负责安全。\n\n## 先给结论\n\n- **事实：配置写明 `escapeValue: false`。** 位于 `interpolation` 块。\n- **事实：项目使用 `initReactI18next`。** React 在把文本放入 JSX 时默认转义，i18next 再转义会双重实体化（`&amp;amp;` 类问题）。\n- **推论：关闭转义 ≠ 允许译者写 HTML 注入。** 若用 `dangerouslySetInnerHTML` 渲染 t() 结果，风险立刻回来；默认路径应是文本节点。\n- **推论：插值变量仍可能带用户内容。** `{{alias}}` 若来自其他玩家昵称，靠 React 文本转义挡住 HTML；不要改成 HTML 模板拼接。\n\n## 一个类比\n\n洗碗机（React）已经洗过碗，再让另一台洗碗机（i18next）洗一遍，碗会留下洗涤剂味（`&amp;`）。关掉第二台，但前提是你仍然用洗碗机出口——别改用手把脏碗直接端上桌（`dangerouslySetInnerHTML`）。\n\n## 工作示例\n\n1. 文案 `Voted for {{alias}}`，alias 为 `Bob <script>`。\n2. JSX：`{t('votedFor', { alias })}` 作为文本子节点 → 页面显示字面尖括号，不执行脚本。\n3. 若有人改成 `dangerouslySetInnerHTML={{ __html: t(...) }}` 且 escapeValue false → XSS 门敞开。\n4. 代码审查清单：搜 `dangerouslySetInnerHTML` 与 t() 的交集。\n\n## 自检\n\n把 escapeValue 改回 true 而不改调用方，用户可能看到什么视觉 bug？\n\n答案：文案中的 `&`、`'` 等显示成 `&amp;`、`&#39;` 等实体，品牌标点与多语言引号变难看。\n\n## 重点\n\n**escapeValue: false 是 React 协作约定，不是「翻译可以含 HTML」。** 安全边界仍在「只当文本渲染」。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/config.ts",
+                "lineStart": 14,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "initReactI18next 接入"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/config.ts",
+                "lineStart": 35,
+                "lineEnd": 37,
+                "nodeIds": [],
+                "note": "interpolation.escapeValue: false"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/game.json",
+                "lineStart": 38,
+                "lineEnd": 38,
+                "nodeIds": [],
+                "note": "含插值的用户可见模板 votedFor"
+              }
+            ],
+            "cards": [
+              {
+                "id": "escape-false-why",
+                "front": "在 React + i18next 里为什么常设 escapeValue: false？",
+                "back": "React 已对 JSX 文本转义；i18next 再转义会双重编码。",
+                "tags": [
+                  "i18n-security"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 35,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "escapeValue: false"
+                  }
+                ]
+              },
+              {
+                "id": "escape-false-risk",
+                "front": "escapeValue 为 false 时，什么用法会重新引入 XSS？",
+                "back": "把 t() 结果塞进 dangerouslySetInnerHTML 或非转义 HTML 管道。",
+                "tags": [
+                  "i18n-security"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 35,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "关闭 i18n 层转义"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "escape-value-setting",
+                "kind": "short-answer",
+                "title": "插值转义开关",
+                "prompt": "写出 escapeValue 的布尔配置值。",
+                "expectedAnswer": "false",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 36,
+                    "lineEnd": 36,
+                    "nodeIds": [],
+                    "note": "escapeValue: false"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "key-parity-both-locales",
+            "title": "中英键集合必须对齐",
+            "content": "# 中英键集合必须对齐\n\n## 学习目标\n\n完成本课后，你能定义「双语完成」的可检验标准：不是「大概都有字」，而是 en 与 zh-CN 在每个命名空间的键集合一致，并能说明不对齐时 fallback 如何掩盖问题。\n\n## 先给结论\n\n- **事实：四对文件同构。** 每个 NS 在 en 与 zh-CN 下文件名相同，本快照中 auth/common/game/puzzle 键集合对齐（无 en-only / zh-only 叶子键）。\n- **事实：值可以完全不同，键不能。** 例如 `appName` en 为 `Turing Pact`，zh-CN 为 `图灵密约`；`batteryUnit` 两边都是 `🔋`——键同值可同可异。\n- **事实：嵌套结构也要对齐。** `seatErrors`、`shareStatus`、`safety` 等子树在两边镜像。\n- **推论：fallback 会藏漏译。** 若 en 缺键而 fallback 是 zh-CN，英文 UI 会「正常显示中文」；若无人做键差分 CI，漏译会活到用户举报。\n\n## 一个类比\n\n双语菜单必须菜品编号一致。中文有 37 号、英文没有，服务员用中文菜单顶上——外国客人以为自己点到了，实际在吃「回退菜」。\n\n## 工作示例\n\n1. 合并 PR 前：对四个 JSON 做 flatten key diff。\n2. 允许：值不同、标点不同、甚至 en 暂用稍短营销句。\n3. 禁止：只在 zh-CN 加 `newFeatureTip` 却忘了 en。\n4. 与 `fallbackLng: 'zh-CN'` 联动：英文漏键 → 中文回退 → 看起来「有时中英混排」；应用键差分才能从根上抓。\n\n## 自检\n\n`batteryUnit` 两边都是 `🔋`。这还需要留在翻译文件里吗？\n\n答案：需要。它仍是 token 位，未来可能改成文字「电池」或地区变体；更重要的是占住 common 里的语义槽，避免组件硬编码 emoji。\n\n## 重点\n\n**完成双语 = 键集合对齐 + 回退策略正确 + 值符合剧透/安全边界。** 只翻句子而不对键，是假双语。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/common.json",
+                "lineStart": 2,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "en appName 等键"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/zh-CN/common.json",
+                "lineStart": 2,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "zh-CN 同键不同产品名"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/en/auth.json",
+                "lineStart": 1,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "auth 全量键在 en"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/i18n/locales/zh-CN/auth.json",
+                "lineStart": 1,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "auth 全量键在 zh-CN 对齐"
+              }
+            ],
+            "cards": [
+              {
+                "id": "parity-definition",
+                "front": "如何用一句话检验「这两个 locale 文件双语完成」？",
+                "back": "flatten 后的键集合完全一致；允许值不同，不允许单边缺键。",
+                "tags": [
+                  "i18n-parity"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/en/auth.json",
+                    "lineStart": 1,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "auth 键集合样本"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/zh-CN/auth.json",
+                    "lineStart": 1,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "zh auth 对齐"
+                  }
+                ]
+              },
+              {
+                "id": "fallback-masks-gap",
+                "front": "fallbackLng 为 zh-CN 时，英文包缺键的用户可见症状是什么？",
+                "back": "英文界面个别句子突然变中文，而不是崩掉——容易误判为「偶发正常」。",
+                "tags": [
+                  "i18n-fallback"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/config.ts",
+                    "lineStart": 32,
+                    "lineEnd": 32,
+                    "nodeIds": [],
+                    "note": "fallbackLng 掩盖 en 缺键"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "zh-app-name",
+                "kind": "short-answer",
+                "title": "中文产品名",
+                "prompt": "写出 zh-CN common.appName 的值。",
+                "expectedAnswer": "图灵密约",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/i18n/locales/zh-CN/common.json",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "appName 中文值"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

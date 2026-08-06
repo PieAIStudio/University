@@ -1,0 +1,92 @@
+platform-capabilities course proposal — delivery report
+========================================================
+
+Course id:     platform-capabilities
+Title:         同一个能力，三种实现
+Proposal file: course-proposals/platform-capabilities.json
+Snapshot:      git-3b402e069a5d
+Commit:        3b402e069a5db5fe9eb82dbc03aa05152b3d298b
+Analysis:      ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a
+
+Scale
+-----
+Units:     3
+Lessons:   12
+Cards:     24 (2 per lesson)
+Exercises: 12 (1 per lesson)
+Evidence:  69 references (lesson + card + exercise)
+
+Units
+-----
+- one-capability-entry: 一个能力，一个入口 (4 lessons)
+    · why-one-entry: 为什么能力必须一个入口
+    · runtime-descriptor: 运行时探测是决策输入，不是装饰字段
+    · share-three-paths: 分享：三条实现，两种结果码
+    · haptic-degrade: 震动：不能震就安静失败
+- runtime-and-hosts: 运行时壳与启动宿主 (4 lessons)
+    · electron-not-native: Electron 不是原生，也不是「就是个浏览器」
+    · hash-router-timeout: 非 Web：hash 路由与更长超时
+    · status-bar-keyboard: 状态栏与键盘：只在有意义的平台配置
+    · host-adapters: 宿主嵌套：Telegram/Discord 不是第四个壳
+- storage-degrade: 存储降级与决策图 (4 lessons)
+    · safe-local-storage: localStorage 会抛：先包一层再谈业务
+    · platform-storage-split: 同一 PlatformStorage，两套后端
+    · noop-and-defaults: 存不了就 noop，读不懂就默认值
+    · capability-decision-map: 决策图：从一次点击到平台实现
+
+Gate 1 — check-proposal-shape.mjs
+---------------------------------
+ok  course-proposals/platform-capabilities.json
+
+Gate 2 — check-proposal-evidence.mjs --study turing-pact
+-------------------------------------------------------
+ok  src/platform/capacitor/haptics.ts:3-14
+ok  src/platform/capacitor/keyboard.ts:8-18
+ok  src/platform/capacitor/share.ts:4-11
+ok  src/platform/capacitor/statusBar.ts:9-27
+ok  src/platform/electron/share.ts:3-9
+ok  src/platform/hostAdapters.ts:102-116
+ok  src/platform/hostAdapters.ts:118-126
+ok  src/platform/hostAdapters.ts:68-100
+ok  src/platform/index.ts:11-28
+ok  src/platform/index.ts:32-49
+ok  src/platform/runtimeInfo.ts:13-17
+ok  src/platform/runtimeInfo.ts:32-54
+ok  src/platform/runtimeInfo.ts:57-64
+ok  src/platform/runtimeInfo.ts:66-74
+ok  src/platform/safeLocalStorage.ts:15-25
+ok  src/platform/safeLocalStorage.ts:27-38
+ok  src/platform/safeLocalStorage.ts:6-13
+ok  src/platform/storage.ts:22-32
+ok  src/platform/storage.ts:34-50
+ok  src/platform/storage.ts:4-8
+ok  src/platform/storage.ts:52-65
+ok  src/platform/storage.ts:79-97
+ok  src/platform/web/haptics.ts:1-3
+ok  src/platform/web/share.ts:11-37
+ok  src/platform/web/share.ts:9-9
+ok  src/platform/worldGraphicsPreference.ts:15-20
+ok  src/platform/worldGraphicsPreference.ts:9-12
+
+all 69 references resolve at their pinned commits
+
+Most counter-intuitive finding (taught in course)
+-------------------------------------------------
+Electron 不是「半个原生」也不是「就是浏览器」，而是必须单独表态的第三态：
+
+1. 探测靠 window.electronAPI（hasElectronBridge），且在 resolveRuntimeDescriptor
+   里优先于 Capacitor 标签，platform 直接定为 'electron'。
+2. 存储条件是 isNativePlatform && !isElectron 才走 Preferences——Electron 即使
+   被误标 native，也仍应走 createWebStorage(localStorage)。这与「原生壳 = App
+   存储」的直觉相反。
+3. 分享不走 navigator.share，只写剪贴板并返回 ShareResult 'copied'（永远不是
+   'shared'）。
+4. 触觉在 triggerHaptic 入口对 isElectron 直接 return；房间超时却因
+   isNativePlatform===false 走浏览器默认 5s，而不是原生 15s。
+
+同一描述符上，路由/存储/分享/超时/触觉五条决策对 Electron 的切法不一致——
+这是刻意的物理限制映射，不是漏写 if。一人公司若用单一 isApp 布尔覆盖全部
+能力，桌面端会同时出现「假原生存储」和「假系统分享」两类幽灵 bug。
+
+该点写在课时 electron-not-native、hash-router-timeout、share-three-paths、
+capability-decision-map 中；决策图最关键的降级边是原生分享失败 → shareOnWeb。

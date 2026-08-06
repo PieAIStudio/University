@@ -1,0 +1,1282 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-identity-and-accounts",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "identity-and-accounts",
+    "title": "身份、账号、和「你是谁」",
+    "description": "登录只是入口。一人公司做 AI 产品时，真正要提前做对的是：展示身份与真实身份分离、登录态如何结算与同步、退出时到底清掉什么——证据全部来自 TuringPact 的认证实现。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "能指出展示名（displayName）为何绝不能充当鉴权身份，并说出 resolveAuthPresentation 的优先级顺序",
+      "能解释 AuthUserIdentity 与 AuthPresentation 的字段边界，以及 is_anonymous 已结算值如何覆盖陈旧 flag",
+      "能描述 settleOperation 的软超时→reconcile 路径，以及 matchesExpectedSession 防止半截登录",
+      "能说明会话丢失时 clearAuthStoreState + runtime reset + bootstrap 的清理顺序，以及瞬时 null 为何必须忽略"
+    ],
+    "units": [
+      {
+        "id": "presentation-vs-real-identity",
+        "title": "展示身份 ≠ 真实身份",
+        "objective": "读完本单元，你能把「屏幕上写谁」和「系统认谁」拆成两条链路，并说明桌内 alias 为何不能当账号。",
+        "lessons": [
+          {
+            "id": "three-fields-of-truth",
+            "title": "真实身份只认三个字段",
+            "content": "# 真实身份只认三个字段\n\n## 学习目标\n\n完成本课后，你能写出 TuringPact 把「系统认你是谁」收成哪三个字段，并说明为什么它们不能被昵称替换。\n\n## 先给结论\n\n- **事实：真实身份是 `AuthUserIdentity`。** 类型只暴露 `id`、`email`、`is_anonymous` 三个字段——没有 nickname、没有 displayName。\n- **事实：会话记录也只包这一层。** `AuthSessionRecord` 的形状是 `{ user: AuthUserIdentity | null }`，结算结果 `AuthSettlementResult` 里的 `user` 同样是这个类型。\n- **事实：就绪相位只看匿名与否。** `AuthReadyPhase` 只有 `anonymous_ready` 与 `authenticated_ready`；`resolveReadyPhase` 用 `user.is_anonymous` 二选一。\n- **推论：鉴权链路不读展示名。** 你改昵称、随机桌内花名，都不会让系统以为你是另一个人——因为那条链根本没有这些字段。\n\n## 一个类比\n\n这像机场安检：登机牌上的座位号可以换，但护照号码不能换。展示名是座位贴纸；`id` / `email` / `is_anonymous` 是护照页。\n\n## 工作示例\n\n1. 匿名用户完成 bootstrap 后，`session.user` 有 `id`，`is_anonymous === true`，`email` 可能为空。\n2. 绑定邮箱并登录成功后，同一套 `AuthUserIdentity` 上 `is_anonymous` 变为 false，并带上 `email`。\n3. 全程没有任何地方把 `profile.nickname` 写进 `AuthUserIdentity`——昵称走另一条展示链路。\n\n## 自检\n\n如果你把「用户是谁」存在 `localStorage` 的 `displayName` 里，并在每次请求里用它当 userId，会发生什么？\n\n答案：任何人改本地字符串就能冒充别人。真实身份必须来自会话里的 `id`（以及服务端校验），不能来自可编辑展示字段。\n\n## 重点\n\n**先定「认谁」的最小字段集，再谈「显示谁」。** 类型边界是安全边界的草稿。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/types.ts",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "AuthUserIdentity 与 AuthSessionRecord：真实身份只有 id/email/is_anonymous"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/types.ts",
+                "lineStart": 11,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "AuthReadyPhase 与 AuthRuntimePhase：就绪态只分匿名/已认证"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 126,
+                "lineEnd": 128,
+                "nodeIds": [],
+                "note": "resolveReadyPhase：仅用 is_anonymous 判定就绪相位"
+              }
+            ],
+            "cards": [
+              {
+                "id": "identity-three-fields",
+                "front": "AuthUserIdentity 允许出现 nickname 吗？为什么？",
+                "back": "不允许。类型只有 id、email、is_anonymous；展示名另走 AuthPresentation。",
+                "tags": [
+                  "identity",
+                  "types"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/types.ts",
+                    "lineStart": 1,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "AuthUserIdentity 三字段定义"
+                  }
+                ]
+              },
+              {
+                "id": "ready-phase-binary",
+                "front": "resolveReadyPhase 根据什么字段在 anonymous_ready 与 authenticated_ready 之间选择？",
+                "back": "根据 user.is_anonymous：真则为 anonymous_ready，否则 authenticated_ready。",
+                "tags": [
+                  "identity",
+                  "phases"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 126,
+                    "lineEnd": 128,
+                    "nodeIds": [],
+                    "note": "resolveReadyPhase 实现"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "list-identity-fields",
+                "kind": "short-answer",
+                "title": "默写身份字段",
+                "prompt": "AuthUserIdentity 的三个字段名是什么（英文，空格分隔）？",
+                "expectedAnswer": "id email is_anonymous",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/types.ts",
+                    "lineStart": 1,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "AuthUserIdentity 字段列表"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "display-name-cascade",
+            "title": "展示名是一条优先级链",
+            "content": "# 展示名是一条优先级链\n\n## 学习目标\n\n完成本课后，你能按顺序背出 `resolveAuthPresentation` 如何选出 `displayName` 与 `displaySource`，并解释为什么链的终点仍可能是 null。\n\n## 先给结论\n\n- **事实：展示层单独建模。** `AuthPresentation` 只有 `isAnonymous`、`displayName`、`displaySource`；`displaySource` 是联合类型：`anonymous` | `profile_nickname` | `email_local_part` | `email` | `authenticated_fallback`。\n- **事实：匿名直接短路。** 判定为匿名时返回 `displayName: null`、`displaySource: 'anonymous'`，不读昵称、不读邮箱。\n- **事实：已登录按固定顺序降级。** 有 trim 后的 `profile.nickname` → `profile_nickname`；否则 email 的 `@` 前本地部分 → `email_local_part`；再否则完整 email → `email`；都没有则 `authenticated_fallback` 且 `displayName: null`。\n- **推论：展示失败不等于未登录。** `authenticated_fallback` 仍是 `isAnonymous: false`——系统认你，只是此刻没有可显示的字符串。\n\n## 一个类比\n\n这像会议胸牌：有外号贴外号，没有就贴邮箱前缀，再没有贴完整邮箱；若印刷机坏了，你仍然是与会者，只是胸牌空白——保安看的是入场码，不是胸牌字。\n\n## 工作示例\n\n首页 footer 调用 `resolveAuthPresentation({ user, profile, isAnonymous })`，渲染时写：\n\n`authPresentation.displayName ?? tAuth('anonymousUser')`。\n\n有昵称「火星人」就显示火星人；只有 `native.user@example.com` 就显示 `native.user`；匿名则落到翻译键 `anonymousUser`。\n\n## 自检\n\n产品经理要求「把 user.id 前 8 位当展示名，方便支持排查」。你会在哪一层拒绝？\n\n答案：拒绝把它写进鉴权身份或当唯一真相；若仅作调试展示，也必须标成 debug 源，绝不能让 UI 把它当可冒充的「你是谁」。\n\n## 重点\n\n**展示是降级链，鉴权是硬字段。** 混在一个对象里，迟早有人用 nickname 做权限判断。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/presentation.ts",
+                "lineStart": 9,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "AuthPresentation 与 displaySource 联合类型"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/presentation.ts",
+                "lineStart": 30,
+                "lineEnd": 73,
+                "nodeIds": [],
+                "note": "resolveAuthPresentation：匿名短路与展示降级全链"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/pages/HomePage.tsx",
+                "lineStart": 122,
+                "lineEnd": 122,
+                "nodeIds": [],
+                "note": "首页用 resolveAuthPresentation 取展示态"
+              }
+            ],
+            "cards": [
+              {
+                "id": "display-priority",
+                "front": "已登录且同时有 nickname 与 email 时，displaySource 取哪个？",
+                "back": "profile_nickname。昵称 trim 非空时优先于 email_local_part 与完整 email。",
+                "tags": [
+                  "presentation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/presentation.ts",
+                    "lineStart": 42,
+                    "lineEnd": 48,
+                    "nodeIds": [],
+                    "note": "昵称优先分支"
+                  }
+                ]
+              },
+              {
+                "id": "fallback-still-auth",
+                "front": "displaySource 为 authenticated_fallback 时，用户算匿名吗？",
+                "back": "不算。isAnonymous 仍为 false，只是没有可显示的 displayName。",
+                "tags": [
+                  "presentation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/presentation.ts",
+                    "lineStart": 69,
+                    "lineEnd": 73,
+                    "nodeIds": [],
+                    "note": "authenticated_fallback 返回值"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "first-display-source",
+                "kind": "short-answer",
+                "title": "展示源优先",
+                "prompt": "已登录时 displaySource 优先级最高的非 anonymous 值是？（英文标识）",
+                "expectedAnswer": "profile_nickname",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/presentation.ts",
+                    "lineStart": 42,
+                    "lineEnd": 48,
+                    "nodeIds": [],
+                    "note": "nickname → profile_nickname"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "settled-flag-beats-stale",
+            "title": "已结算的 is_anonymous 覆盖陈旧 flag",
+            "content": "# 已结算的 is_anonymous 覆盖陈旧 flag\n\n## 学习目标\n\n完成本课后，你能解释为什么 `resolveAuthPresentation` 不盲目信任 store 里的 `isAnonymous`，以及「陈旧 flag」会制造什么 UI 事故。\n\n## 先给结论\n\n- **事实：结算值优先。** `settledIsAnonymous` 的计算是：若 `input.user?.is_anonymous` 已是 boolean，就用它；否则才退回 `input.isAnonymous`。\n- **事实：测试钉死了这种错位。** 用例里 `user.is_anonymous: false` 但 `isAnonymous: true`（flag 过期），结果仍是 `isAnonymous: false`，并从 email 导出 `displayName: 'native.user'`。\n- **事实：UI 也吃同一套。** `LoginModal` 用 `authPresentation.isAnonymous` 决定标题是「升级账号」还是「登录」，并把该值传给 `submitEmailAuth` 的 `isAnonymous`——不是直接读 store 布尔值。\n- **推论：双源真相必须有优先级。** store 的 `isAnonymous` 可能落后于会话；展示与登录分支应以会话字段为准。\n\n## 一个类比\n\n导航显示「仍在高速上」，但 GPS 已说你进了服务区。正确做法是信 GPS（已结算会话），不是信上一帧的「高速 flag」。\n\n## 工作示例\n\n1. 用户完成邮箱登录，会话 `is_anonymous === false`，但某次 store 更新顺序导致 `isAnonymous` 仍为 true。\n2. 若 UI 读 store flag，会继续展示「游客 / 升级账号」，甚至走匿名升级路径。\n3. 实际代码先看 `user.is_anonymous`，于是正确显示已登录展示名，登录模态也不会误判。\n\n## 自检\n\n为什么不干脆删掉 store 的 `isAnonymous`，只留 `user.is_anonymous`？\n\n答案：bootstrapping 阶段可能还没有 user，需要一个默认布尔驱动早期 UI；但一旦会话字段可用，必须以它为准。\n\n## 重点\n\n**多份状态并存时，写清「谁覆盖谁」。** 不写优先级，陈旧 flag 会把已登录用户当游客。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/presentation.ts",
+                "lineStart": 30,
+                "lineEnd": 39,
+                "nodeIds": [],
+                "note": "settledIsAnonymous：会话 is_anonymous 优先于 store flag"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/components/auth/LoginModal.tsx",
+                "lineStart": 20,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "LoginModal 用 resolveAuthPresentation 而非裸 isAnonymous"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/components/auth/LoginModal.tsx",
+                "lineStart": 50,
+                "lineEnd": 55,
+                "nodeIds": [],
+                "note": "submitEmailAuth 的 isAnonymous 来自 authPresentation"
+              }
+            ],
+            "cards": [
+              {
+                "id": "stale-flag-case",
+                "front": "user.is_anonymous 为 false 但 store isAnonymous 仍为 true 时，展示层会怎样？",
+                "back": "按已登录处理：settledIsAnonymous 取 false，继续走昵称/邮箱展示链。",
+                "tags": [
+                  "presentation",
+                  "staleness"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/presentation.ts",
+                    "lineStart": 31,
+                    "lineEnd": 32,
+                    "nodeIds": [],
+                    "note": "boolean 的 user.is_anonymous 覆盖 isAnonymous"
+                  }
+                ]
+              },
+              {
+                "id": "modal-uses-presentation",
+                "front": "LoginModal 判断「升级还是登录」时读的是 store 的 isAnonymous 吗？",
+                "back": "不是直接读。它读 authPresentation.isAnonymous，由 resolveAuthPresentation 结算。",
+                "tags": [
+                  "presentation",
+                  "ui"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/components/auth/LoginModal.tsx",
+                    "lineStart": 35,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "标题分支依赖 authPresentation.isAnonymous"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "settled-wins-field",
+                "kind": "short-answer",
+                "title": "覆盖规则",
+                "prompt": "resolveAuthPresentation 里优先于 input.isAnonymous 的字段路径是？（user.xxx）",
+                "expectedAnswer": "user.is_anonymous",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/presentation.ts",
+                    "lineStart": 31,
+                    "lineEnd": 32,
+                    "nodeIds": [],
+                    "note": "settledIsAnonymous 优先读 user.is_anonymous"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "table-alias-is-costume",
+            "title": "桌内花名是戏服，不是账号",
+            "content": "# 桌内花名是戏服，不是账号\n\n## 学习目标\n\n完成本课后，你能说明 `generateAlias` 在产品里扮演什么角色，以及为什么它和 `AuthUserIdentity.id` 必须分轨。\n\n## 先给结论\n\n- **事实：花名是随机组合。** `generateAlias` 从形容词表与名词表各抽一个，拼成如「冷静的水獭」；`generateAvatarSeed` 另给头像种子。\n- **事实：入座时绑定 user_id + alias。** `insertMembership` 写入 `room_players` 的字段是 `room_id`、`user_id`、`alias`、`avatar_seed`——权限靠 `user_id`，桌上显示靠 `alias`。\n- **事实：AI 也拿同一套花名生成器。** `startGame` 给 AI 传 `aiAlias: generateAlias()`。桌上看起来人人都是花名，系统仍用真实 id 区分人类账号。\n- **推论：社交展示与账号身份解耦。** 图灵局要的是「桌上匿名感」；若桌名等于邮箱，既破坏游戏也诱导玩家用展示名当信任信号。\n\n## 一个类比\n\n假面舞会：面具上写「快乐的猫咪」，门禁腕带上是条码。你可以换面具，腕带不能换；侍者点单看面具，查账看腕带。\n\n## 工作示例\n\n1. 玩家 A 的账号 `id` 固定。\n2. 他创建房间时 `createRoom` 调用 `generateAlias()`，本局桌上叫「勇敢的企鹅」。\n3. 下一局再 `generateAlias()`，可能变成「害羞的狐狸」——账号没变，戏服变了。\n4. 服务端扣电池、记胜负仍挂在 `user_id` / profile 上，不挂在 alias 字符串。\n\n## 自检\n\n若产品把 alias 设成可用户自定义且全局唯一，并在「添加好友」时用 alias 查找，会引入什么风险？\n\n答案：展示名变成可抢注的身份主键；改名、撞名、冒充都会变成账号问题。TuringPact 选择随机、局内、非唯一花名，就是拒绝这条路。\n\n## 重点\n\n**局内人设可以是戏服；账号必须是腕带。** 一人公司最容易犯的错是「省一个字段」，把两者捏成一个字符串。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/player-identity/aliases.ts",
+                "lineStart": 39,
+                "lineEnd": 46,
+                "nodeIds": [],
+                "note": "generateAlias / generateAvatarSeed：随机展示身份"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/room.ts",
+                "lineStart": 148,
+                "lineEnd": 160,
+                "nodeIds": [],
+                "note": "insertMembership：user_id 与 alias 同时写入但职责分离"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/room.ts",
+                "lineStart": 446,
+                "lineEnd": 448,
+                "nodeIds": [],
+                "note": "startGame 给 AI 也生成 alias，桌面身份统一为戏服"
+              }
+            ],
+            "cards": [
+              {
+                "id": "alias-vs-userid",
+                "front": "room_players 里哪一列决定「这是哪个账号」，哪一列只是桌上显示？",
+                "back": "user_id 决定账号；alias（与 avatar_seed）只是局内展示。",
+                "tags": [
+                  "player-identity",
+                  "rooms"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/room.ts",
+                    "lineStart": 157,
+                    "lineEnd": 159,
+                    "nodeIds": [],
+                    "note": "insert 字段含 user_id 与 alias"
+                  }
+                ]
+              },
+              {
+                "id": "ai-gets-alias",
+                "front": "AI 玩家为什么也走 generateAlias？",
+                "back": "让桌上展示层统一为花名戏服，避免 AI 用「系统账号」形态破坏匿名局体验。",
+                "tags": [
+                  "player-identity"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/room.ts",
+                    "lineStart": 446,
+                    "lineEnd": 448,
+                    "nodeIds": [],
+                    "note": "aiAlias: generateAlias()"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "alias-function-name",
+                "kind": "short-answer",
+                "title": "花名函数",
+                "prompt": "生成桌内花名的函数名是？（英文）",
+                "expectedAnswer": "generateAlias",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/player-identity/aliases.ts",
+                    "lineStart": 39,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "generateAlias 导出"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "login-as-settlement",
+        "title": "登录是结算，不是一次 await",
+        "objective": "读完本单元，你能设计带软超时、期望会话校验与匿名升级回退的登录结算，而不是「调完 SDK 就算登录成功」。",
+        "lessons": [
+          {
+            "id": "soft-timeout-then-reconcile",
+            "title": "软超时之后进入对账",
+            "content": "# 软超时之后进入对账\n\n## 学习目标\n\n完成本课后，你能说明 `settleOperation` 为何在 `AUTH_SOFT_TIMEOUT_MS`（10000）后不立刻失败，而是转入 `reconcileSession`。\n\n## 先给结论\n\n- **事实：软超时不杀请求。** `withSoftTimeout` 到点返回 `{ status: 'timed_out' }`，底层 promise 仍可继续；它 resolve 超时，而不是 abort。\n- **事实：超时即对账。** `settleOperation` 在 timed_out 时直接 `return reconcileSession(config)`；若返回的 session 不匹配期望，同样进入 reconcile。\n- **事实：对账有窗口与双通道。** `AUTH_RECONCILE_WINDOW_MS = 15000`，轮询间隔 `AUTH_RECONCILE_POLL_MS = 250`，并同时 `subscribeToAuthChanges`；到期失败信息含 `while ${config.operation}`。\n- **推论：登录成功的定义是「期望会话可见」，不是「SDK 调用返回」。** 移动端、WebView、存储锁都会让「写会话」晚于「函数返回」。\n\n## 一个类比\n\n你在银行柜面办完业务，柜员说「系统还在过账」。软超时是你看表等了 10 秒；对账是你盯着账户流水和短信通知再等 15 秒。过账成功以流水为准，不以柜员口头「提交了」为准。\n\n## 工作示例\n\n1. 用户提交邮箱登录，`signInWithEmail` 超过 10 秒未返回匹配会话。\n2. `settleOperation` 进入 `reconciling`，`statusKey: 'syncingSession'`。\n3. 轮询 `getSession` 或 `onAuthStateChange` 任一先看到匹配会话 → `syncSessionIntoAuthStore` → ready。\n4. 15 秒仍看不到 → 抛 `Auth reconciliation timed out after 15000ms while logging in`。\n\n## 自检\n\n若把软超时改成 hard abort（取消请求并立即 failed），在「SDK 其实已成功写会话、只是回调慢」的设备上会发生什么？\n\n答案：UI 报失败，但存储里已有会话；下次冷启动又变成已登录，用户会以为「失败却进了号」——状态机与事实分叉。\n\n## 重点\n\n**登录的完成条件是可观察的会话结算，不是单次 Promise 的返回时机。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 20,
+                "lineEnd": 24,
+                "nodeIds": [],
+                "note": "AUTH_SOFT_TIMEOUT_MS / AUTH_RECONCILE_WINDOW_MS 等时间常数"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 55,
+                "lineEnd": 74,
+                "nodeIds": [],
+                "note": "withSoftTimeout：超时 resolve timed_out 而非 reject"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 483,
+                "lineEnd": 517,
+                "nodeIds": [],
+                "note": "settleOperation：超时或未匹配则 reconcileSession"
+              }
+            ],
+            "cards": [
+              {
+                "id": "soft-timeout-ms",
+                "front": "AUTH_SOFT_TIMEOUT_MS 是多少？超时后 settleOperation 立刻 failed 吗？",
+                "back": "10000ms。不会立刻 failed，而是进入 reconcileSession。",
+                "tags": [
+                  "settlement",
+                  "timeout"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 20,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "AUTH_SOFT_TIMEOUT_MS = 10000"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 490,
+                    "lineEnd": 491,
+                    "nodeIds": [],
+                    "note": "timed_out → reconcileSession"
+                  }
+                ]
+              },
+              {
+                "id": "reconcile-channels",
+                "front": "reconcileSession 用哪两种方式等待期望会话？",
+                "back": "带超时的 getSession 轮询，以及 subscribeToAuthChanges 推送；二者任一匹配即可成功。",
+                "tags": [
+                  "settlement"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 337,
+                    "lineEnd": 372,
+                    "nodeIds": [],
+                    "note": "轮询 checkSession 与 auth 订阅并行"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "soft-timeout-value",
+                "kind": "short-answer",
+                "title": "软超时常数",
+                "prompt": "AUTH_SOFT_TIMEOUT_MS 的毫秒数是？",
+                "expectedAnswer": "10000",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 20,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "软超时 10000ms"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "expected-session-guard",
+            "title": "期望会话：防半截登录",
+            "content": "# 期望会话：防半截登录\n\n## 学习目标\n\n完成本课后，你能解释 `matchesExpectedSession` 检查哪些条件，以及缺少它时「旧会话残留」会怎样骗过 UI。\n\n## 先给结论\n\n- **事实：匹配是类型守卫。** `matchesExpectedSession` 在通过后把 `session` 收窄为 `AuthSessionRecord`；无 user 直接 false。\n- **事实：邮箱要全等（忽略大小写）。** 若配置了 `expectedEmail`，则 `user.email?.toLowerCase()` 必须等于期望值。\n- **事实：匿名性必须对齐。** 若 `expectedAnonymous != null`，则 `Boolean(user.is_anonymous)` 必须等于期望。\n- **事实：登录与升级都带期望。** `logging in` / `upgrading account` 使用 `expectedEmail` + `expectedAnonymous: false`；匿名 bootstrap 使用 `expectedAnonymous: true`。\n- **推论：任何「当前有会话」都不算成功。** 成功必须是「有你这次操作所期望的那一类会话」。\n\n## 一个类比\n\n快递柜取出件：屏幕显示「柜门已开」不够，你要核对运单号是不是你的。旧包裹还在柜里不代表这次下单成功。\n\n## 工作示例\n\n1. 设备里仍有匿名会话。\n2. 用户输入邮箱密码做正式登录；若 SDK 短暂返回或存储读到的仍是匿名 user。\n3. `matchesExpectedSession` 因 `expectedAnonymous: false` 失败，不进入 ready，继续 reconcile。\n4. 直到会话变成该邮箱且非匿名，才 `syncSessionIntoAuthStore` 并 `authenticated_ready`。\n\n## 自检\n\n只检查 `session !== null`、不检查 email 与 is_anonymous，最危险的半截状态是什么？\n\n答案：UI 显示「登录成功」，实际仍是匿名或别的账号会话——权限、资产、房主身份全部挂错人。\n\n## 重点\n\n**结算条件要写成可机器检查的期望，而不是「有 session 就行」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 103,
+                "lineEnd": 124,
+                "nodeIds": [],
+                "note": "matchesExpectedSession：email 与 is_anonymous 期望校验"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 613,
+                "lineEnd": 624,
+                "nodeIds": [],
+                "note": "正式登录 settle 配置 expectedEmail 与 expectedAnonymous false"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 545,
+                "lineEnd": 548,
+                "nodeIds": [],
+                "note": "匿名 bootstrap 期望 expectedAnonymous true"
+              }
+            ],
+            "cards": [
+              {
+                "id": "match-email-case",
+                "front": "matchesExpectedSession 比较 email 时如何处理大小写？",
+                "back": "两侧都 toLowerCase 后再比较，避免大小写导致的假不匹配。",
+                "tags": [
+                  "settlement"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 112,
+                    "lineEnd": 113,
+                    "nodeIds": [],
+                    "note": "email 小写比较"
+                  }
+                ]
+              },
+              {
+                "id": "any-session-not-enough",
+                "front": "为什么「getSession 返回非空」仍可能不算登录成功？",
+                "back": "可能仍是匿名或邮箱不匹配的旧会话；必须通过 expectedEmail/expectedAnonymous。",
+                "tags": [
+                  "settlement"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 116,
+                    "lineEnd": 120,
+                    "nodeIds": [],
+                    "note": "is_anonymous 期望比对"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "expected-anon-login",
+                "kind": "short-answer",
+                "title": "登录期望",
+                "prompt": "邮箱登录 settle 时 expectedAnonymous 应设为？（true/false）",
+                "expectedAnswer": "false",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 617,
+                    "lineEnd": 619,
+                    "nodeIds": [],
+                    "note": "logging in 配置 expectedAnonymous false"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "anonymous-upgrade-path",
+            "title": "匿名升级：link 失败仍要能登录",
+            "content": "# 匿名升级：link 失败仍要能登录\n\n## 学习目标\n\n完成本课后，你能画出匿名用户提交邮箱时的双段路径，并说明为什么对账超时会被吞掉再走 `signInWithEmail`。\n\n## 先给结论\n\n- **事实：入口很薄。** `emailAuth.submitEmailAuth` 只是把参数转给 `authController.submitEmailAuth`；超时常数 `EMAIL_AUTH_TIMEOUT_MS` 直接等于 `AUTH_SOFT_TIMEOUT_MS`。\n- **事实：非匿名只走登录。** `!options.isAnonymous` 时只 `settleOperation(signInWithEmail, { operation: 'logging in', ... })`。\n- **事实：匿名先 upgrade 再 login。** 匿名分支先 `linkEmail` + `operation: 'upgrading account'`；若错误是 `isUpgradeReconciliationTimeout`（消息同时含 reconciliation timed out 与 while upgrading account），**catch 后不抛出**，重置为 submitting/signingIn，再强制 `signInWithEmail`。\n- **事实：linkEmail 实现先尝试密码登录。** 注释写明优先 `signInWithPassword`，仅当失败才 `updateUser` 绑定邮箱，避免已注册邮箱先 update 触发嘈杂的 email_exists。\n- **推论：升级与登录不是同一成功定义。** 把匿名会话绑成邮箱账号可能卡在对账；但用户目标是「用这个邮箱进入已认证会话」——所以超时后仍给登录结算一次机会。\n\n## 一个类比\n\n你办会员卡：前台想把「游客手环」升级成会员（link）。系统对账卡住时，前台不会说「你永远进不了门」，而是再刷一次会员码登录。目标是进门，不是完成某一种后台操作名词。\n\n## 工作示例\n\n```mermaid\nflowchart TD\n  A[submitEmailAuth] --> B{isAnonymous?}\n  B -->|no| C[signInWithEmail + settle logging in]\n  B -->|yes| D[linkEmail + settle upgrading account]\n  D --> E{upgrade reconcile timeout?}\n  E -->|no other error| F[failAuthRuntime]\n  E -->|yes timeout swallowed| G[signInWithEmail + settle logging in]\n  D --> H[upgrade settled]\n  H --> G\n  C --> I[authenticated_ready]\n  G --> I\n```\n\n图里最关键的线是 **E → G**：升级对账超时被故意吞掉，再走登录结算。没有这条线，弱网用户会卡在「升级中」却永远到不了可用会话。\n\n## 自检\n\n为什么超时错误要靠 message 字符串包含 `while upgrading account` 来识别？\n\n答案：这是当前 `isUpgradeReconciliationTimeout` 的实现方式——它把「可恢复的升级对账超时」从其他失败里挑出来。更干净的做法可以是错误码；但行为意图是：只有这类超时可回退登录。\n\n## 重点\n\n**用户要的是「可用的已认证会话」，不是某个内部动词（link）的成功回执。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/emailAuth.ts",
+                "lineStart": 1,
+                "lineEnd": 16,
+                "nodeIds": [],
+                "note": "emailAuth 薄封装 authController.submitEmailAuth"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 596,
+                "lineEnd": 661,
+                "nodeIds": [],
+                "note": "submitEmailAuth：匿名 upgrade 超时后回退 signInWithEmail"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/supabase.ts",
+                "lineStart": 228,
+                "lineEnd": 247,
+                "nodeIds": [],
+                "note": "linkEmail：先 signInWithPassword 再 updateUser"
+              }
+            ],
+            "cards": [
+              {
+                "id": "upgrade-timeout-swallow",
+                "front": "匿名升级对账超时后，submitEmailAuth 会直接 failed 吗？",
+                "back": "不会。isUpgradeReconciliationTimeout 时吞掉错误，再 settle 一次 signInWithEmail。",
+                "tags": [
+                  "upgrade",
+                  "settlement"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 638,
+                    "lineEnd": 660,
+                    "nodeIds": [],
+                    "note": "timeout catch 后继续 signInWithEmail"
+                  }
+                ]
+              },
+              {
+                "id": "link-email-order",
+                "front": "linkEmail 为什么先 signInWithPassword 再 updateUser？",
+                "back": "已注册邮箱更常见；先 updateUser 会触发嘈杂的 email_exists，再回退登录。",
+                "tags": [
+                  "upgrade"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/supabase.ts",
+                    "lineStart": 228,
+                    "lineEnd": 238,
+                    "nodeIds": [],
+                    "note": "优先密码登录的注释与实现"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "upgrade-fallback-fn",
+                "kind": "short-answer",
+                "title": "升级回退",
+                "prompt": "匿名升级对账超时后回退调用的依赖方法名是？",
+                "expectedAnswer": "signInWithEmail",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 650,
+                    "lineEnd": 651,
+                    "nodeIds": [],
+                    "note": "回退 settle signInWithEmail"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "bootstrap-token-fork",
+            "title": "冷启动：有没有持久化 token 是两条路",
+            "content": "# 冷启动：有没有持久化 token 是两条路\n\n## 学习目标\n\n完成本课后，你能根据 `readPersistedSessionToken` 的结果描述 bootstrap 的分叉，并说明「有 token 但 getSession 慢」时为何先 recover 而不是立刻新建匿名会话。\n\n## 先给结论\n\n- **事实：bootstrap 从 checkingSession 开始。** phase 设为 `bootstrapping`，`statusKey: 'checkingSession'`。\n- **事实：无 token → 直接匿名。** `!persistedSessionToken` 时 status 改为 `creatingAnonymousSession`，`settleOperation(signInAnonymously, { expectedAnonymous: true })`。\n- **事实：有 token 先读现会话。** `readSessionWithTimeout`（默认 `AUTH_SESSION_READ_TIMEOUT_MS = 1000`）若已有 user，同步 store 并 ready，`reconciled: false`。\n- **事实：读超时则 recover，再失败才匿名。** `existing.timedOut` 时走 `recoverExistingBootstrapSession`（窗口还被 `AUTH_BOOTSTRAP_EXISTING_SESSION_WINDOW_MS = 1500` 封顶）；仍无会话才创建匿名。\n- **推论：有持久化痕迹时，系统偏向「找回旧身份」而不是「图省事新开游客」。** 否则刷新页面会丢账号态，用户以为被踢下线。\n\n## 一个类比\n\n回家开门：口袋没钥匙 → 走访客登记（匿名）。口袋有钥匙但锁芯涩 → 再拧两下（recover）。确认钥匙无效才去前台办临时卡。绝不是「口袋有钥匙却直接办临时卡」——那会制造两个身份。\n\n## 工作示例\n\n1. App 启动，`useAuth` → `authController.bootstrap()`。\n2. storage 里有 `SUPABASE_STORAGE_KEY` 对应 token。\n3. 1 秒内 `getSession` 未返回 → recover 短窗口继续等。\n4. 等到已登录 user → 进 `authenticated_ready`；若彻底没有 → 才 `signInAnonymously`。\n\n## 自检\n\n为什么 recover 窗口要用 `Math.min(..., AUTH_BOOTSTRAP_EXISTING_SESSION_WINDOW_MS)` 压到最多 1.5 秒？\n\n答案：冷启动体验有预算。有 token 值得多等一会儿，但不能按完整 15 秒对账窗口堵在启动路径上。\n\n## 重点\n\n**持久化 token 是「可能已有身份」的证据；忽略它等于在每次启动制造身份漂移。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 521,
+                "lineEnd": 549,
+                "nodeIds": [],
+                "note": "bootstrap：无持久化 token 则创建匿名会话"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 552,
+                "lineEnd": 590,
+                "nodeIds": [],
+                "note": "有 token：读会话 / recover / 最后才匿名"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 377,
+                "lineEnd": 391,
+                "nodeIds": [],
+                "note": "recoverExistingBootstrapSession 窗口被 1500ms 封顶"
+              }
+            ],
+            "cards": [
+              {
+                "id": "no-token-anon",
+                "front": "bootstrap 发现没有 persistedSessionToken 时下一步做什么？",
+                "back": "statusKey 改为 creatingAnonymousSession，settle 一次 signInAnonymously。",
+                "tags": [
+                  "bootstrap"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 538,
+                    "lineEnd": 548,
+                    "nodeIds": [],
+                    "note": "无 token 匿名分支"
+                  }
+                ]
+              },
+              {
+                "id": "recover-window-cap",
+                "front": "recoverExistingBootstrapSession 的对账窗口上限常数是？",
+                "back": "AUTH_BOOTSTRAP_EXISTING_SESSION_WINDOW_MS（1500ms），用 Math.min 压住。",
+                "tags": [
+                  "bootstrap"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 24,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "AUTH_BOOTSTRAP_EXISTING_SESSION_WINDOW_MS = 1500"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 388,
+                    "lineEnd": 390,
+                    "nodeIds": [],
+                    "note": "Math.min 封顶 recover 窗口"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "bootstrap-read-timeout",
+                "kind": "short-answer",
+                "title": "启动读会话",
+                "prompt": "bootstrap 读现有会话的默认超时毫秒数是？（AUTH_SESSION_READ_TIMEOUT_MS）",
+                "expectedAnswer": "1000",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 23,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "AUTH_SESSION_READ_TIMEOUT_MS = 1000"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "sync-and-logout-cleanup",
+        "title": "多端同步与退出时清什么",
+        "objective": "读完本单元，你能说明双 store 分工、会话变 null 时的清理顺序，以及为何瞬时空会话必须忽略。",
+        "lessons": [
+          {
+            "id": "two-stores-two-jobs",
+            "title": "双 store：身份事实 vs 运行相位",
+            "content": "# 双 store：身份事实 vs 运行相位\n\n## 学习目标\n\n完成本课后，你能区分 `useAuthStore` 与 `useAuthRuntimeStore` 各自持有什么，并解释为什么登录 loading 不该和 user 对象塞在同一个「是否登录」布尔里。\n\n## 先给结论\n\n- **事实：authStore 持身份与档案。** 字段含 `user`、`profile`、`isAnonymous` 以及 set/reset；默认 `isAnonymous: true`，`user/profile` 为 null。\n- **事实：runtimeStore 持相位与错误。** `phase: AuthRuntimePhase`、`statusKey: AuthRuntimeStatusKey`、`error`；初始 `bootstrapping` + `checkingSession`。\n- **事实：相位比「已登录」更细。** runtime 可处于 `submitting`、`reconciling`、`failed` 等；LoginModal 用 `authPhase === 'submitting' || authPhase === 'reconciling'` 作为 loading。\n- **推论：把 loading 编码进 user==null 会误伤。** 对账中可能暂时读不到 session，不等于用户不存在；相位机避免 UI 在「游客 / 登录中 / 失败」之间乱跳。\n\n## 一个类比\n\n机场有两块牌：一块是「你的护照信息」（身份 store），一块是「安检进度：排队 / 检查中 / 通过 / 失败」（runtime store）。进度牌变「检查中」时，不会把护照撕掉。\n\n## 工作示例\n\n1. 用户点登录 → runtime `phase: submitting`，`statusKey: signingIn`。\n2. 进入对账 → `reconciling` + `syncingSession`。\n3. 成功 → runtime 进 `authenticated_ready`，authStore 写入 user/profile。\n4. 失败 → `failAuthRuntime` 设 `phase: failed` 与 error message，并 throw。\n\n## 自检\n\n若只有一个 `isLoading` 布尔而没有 `reconciling` 相位，软超时后的 15 秒对账 UI 会缺什么？\n\n答案：无法区分「还在提交密码」和「提交可能已完成、正在同步会话」——文案、取消策略与是否允许重复提交都会错。\n\n## 重点\n\n**身份事实与流程相位分库存放。** 一人公司常为省事合并，合并后最难修的是「加载中把用户登出了」。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/authStore.ts",
+                "lineStart": 4,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "authStore：user/profile/isAnonymous 与 reset"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/authRuntimeStore.ts",
+                "lineStart": 5,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "authRuntimeStore：phase/statusKey/error"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/types.ts",
+                "lineStart": 13,
+                "lineEnd": 26,
+                "nodeIds": [],
+                "note": "AuthRuntimePhase 与 AuthRuntimeStatusKey 枚举边界"
+              }
+            ],
+            "cards": [
+              {
+                "id": "which-store-loading",
+                "front": "LoginModal 的 loading 状态读的是哪个 store 的什么字段？",
+                "back": "useAuthRuntimeStore 的 phase 是否为 submitting 或 reconciling。",
+                "tags": [
+                  "runtime",
+                  "ui"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/components/auth/LoginModal.tsx",
+                    "lineStart": 26,
+                    "lineEnd": 34,
+                    "nodeIds": [],
+                    "note": "loading 绑定 runtime phase"
+                  }
+                ]
+              },
+              {
+                "id": "status-key-examples",
+                "front": "AuthRuntimeStatusKey 举两个与启动/同步相关的值",
+                "back": "例如 checkingSession、creatingAnonymousSession、syncingSession、recoveringSession、signingIn（答出其二即可理解分工）。",
+                "tags": [
+                  "runtime"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/types.ts",
+                    "lineStart": 20,
+                    "lineEnd": 26,
+                    "nodeIds": [],
+                    "note": "statusKey 联合类型列表"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "initial-runtime-phase",
+                "kind": "short-answer",
+                "title": "初始相位",
+                "prompt": "authRuntimeStore 的初始 phase 是？（英文）",
+                "expectedAnswer": "bootstrapping",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/authRuntimeStore.ts",
+                    "lineStart": 15,
+                    "lineEnd": 16,
+                    "nodeIds": [],
+                    "note": "初始 phase bootstrapping"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "logout-clear-and-rebootstrap",
+            "title": "退出：清 store 之后还要再 bootstrap",
+            "content": "# 退出：清 store 之后还要再 bootstrap\n\n## 学习目标\n\n完成本课后，你能按顺序列出会话变 null 且不可恢复时系统做的事，并指出 `signOut()` 本身为什么只有一行。\n\n## 先给结论\n\n- **事实：SDK 登出很薄。** `signOut` 只 `supabase.auth.signOut()`；真正的产品清理在 `handleAuthStateChange`。\n- **事实：clearAuthStoreState 清三件事。** `setUser(null)`、`setProfile(null)`、`setIsAnonymous(true)`——把身份 store 打回游客默认。\n- **事实：不可恢复的 null 会话会重建。** 在非瞬时相位下，若无 persisted token 或 recover 失败：`clearAuthStoreState()` → `useAuthRuntimeStore.reset()` → `await this.bootstrap()`。\n- **推论：产品不停留在「无人状态」。** 退出正式账号后，系统倾向立刻再开匿名会话，保证后续进房/玩法仍有 Supabase 用户上下文。\n\n## 一个类比\n\n酒店退房：你交回房卡（signOut），前台注销房态（clear store），但大厅仍会给你一张访客通行证（bootstrap 匿名），而不是让你在大堂「无身份游荡」——因为电梯仍要刷证件。\n\n## 工作示例\n\n```mermaid\nstateDiagram-v2\n  [*] --> Ready: session user present\n  Ready --> TransientNull: null during bootstrap/submit/reconcile\n  TransientNull --> Ready: ignore null keep waiting\n  Ready --> Recover: null but token persists\n  Recover --> Ready: recoverExistingBootstrapSession ok\n  Recover --> Cleared: recover failed\n  Ready --> Cleared: null and no token\n  Cleared --> AnonymousReady: clearAuthStoreState + reset + bootstrap\n```\n\n图里最关键的线是 **Cleared → AnonymousReady**：退出不是停在空 store，而是清完再 bootstrap。漏掉这条线，首页与房间接口会面对「user 永 null」的第三种非法态。\n\n## 自检\n\n只调用 `setUser(null)` 不 `setProfile(null)`，下一位游客会看到什么？\n\n答案：可能仍显示上一用户的昵称、电池与战绩——这是展示层串号，也是「退出时到底清什么」的经典事故。\n\n## 重点\n\n**退出要定义目标态。** TuringPact 的目标态是「干净的匿名可玩会话」，不是「所有字段 undefined 的真空」。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/supabase.ts",
+                "lineStart": 250,
+                "lineEnd": 252,
+                "nodeIds": [],
+                "note": "signOut 仅调用 supabase.auth.signOut"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 130,
+                "lineEnd": 135,
+                "nodeIds": [],
+                "note": "clearAuthStoreState：user/profile/isAnonymous 三清"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 667,
+                "lineEnd": 702,
+                "nodeIds": [],
+                "note": "handleAuthStateChange：null 会话时 recover 或 clear+reset+bootstrap"
+              }
+            ],
+            "cards": [
+              {
+                "id": "signout-thin",
+                "front": "为什么 UI 调用 signOut 之后还要依赖 handleAuthStateChange？",
+                "back": "signOut 只清 SDK 会话；store 清理、runtime reset 与重新 bootstrap 由状态变化处理器完成。",
+                "tags": [
+                  "logout"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/supabase.ts",
+                    "lineStart": 250,
+                    "lineEnd": 252,
+                    "nodeIds": [],
+                    "note": "薄 signOut"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 700,
+                    "lineEnd": 702,
+                    "nodeIds": [],
+                    "note": "clear + reset + bootstrap"
+                  }
+                ]
+              },
+              {
+                "id": "clear-three",
+                "front": "clearAuthStoreState 具体清哪些 store 字段？",
+                "back": "user→null，profile→null，isAnonymous→true。",
+                "tags": [
+                  "logout"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 130,
+                    "lineEnd": 135,
+                    "nodeIds": [],
+                    "note": "三字段清理"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "after-clear-next",
+                "kind": "short-answer",
+                "title": "退出后下一步",
+                "prompt": "不可恢复的 null 会话在 clear 与 runtime reset 之后调用的方法名是？",
+                "expectedAnswer": "bootstrap",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 700,
+                    "lineEnd": 702,
+                    "nodeIds": [],
+                    "note": "await this.bootstrap()"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "ignore-transient-null",
+            "title": "瞬时空会话必须忽略",
+            "content": "# 瞬时空会话必须忽略\n\n## 学习目标\n\n完成本课后，你能指出 `isTransientMissingSessionPhase` 包含哪些相位，并解释在这些相位里收到 null session 时为什么直接 return。\n\n## 先给结论\n\n- **事实：瞬时相位有三个。** `bootstrapping`、`submitting`、`reconciling` 被 `isTransientMissingSessionPhase` 视为「允许暂时没有 session」。\n- **事实：瞬时 null 不清理。** `handleAuthStateChange` 在 `!session?.user` 时，若当前 phase 属瞬时，直接 return——不 clear、不 bootstrap。\n- **事实：订阅侧也会推 null。** `useAuth` 把 `onAuthStateChange` 转给 `handleAuthStateChange`；登录切换账号过程中 SDK 可能先推空再推新会话。\n- **推论：把每一次 null 都当登出，会在登录路径上自杀。** 你刚开始 upgrade/login，中间的空事件会把 store 清掉并拉起新匿名，期望会话永远对不上。\n\n## 一个类比\n\n地铁过站台屏蔽门：列车进站前信号灯会闪「空隙」。你不能把每一次闪灯都解释成「本线停运、全体疏散」。只有在非施工、非进站的稳态下，空轨才意味停运。\n\n## 工作示例\n\n1. 用户在 `submitting` 中，`linkEmail` / `signInWithEmail` 进行时。\n2. Supabase 发出一次中间态 `session = null`。\n3. 若错误地 `clearAuthStoreState + bootstrap`，会新建匿名会话，和紧接着到达的邮箱会话打架。\n4. 正确实现：瞬时相位忽略 null；稳态下的 null 才走 recover/清理。\n\n## 自检\n\n`failed` 相位收到 null session 时会忽略吗？\n\n答案：不会。`failed` 不在瞬时列表里；会继续走 token 检查与 clear/bootstrap 逻辑（或保持失败处理路径），避免失败后又卡在脏状态。\n\n## 重点\n\n**空会话事件要分「流程中的空隙」和「稳态的登出」。** 这是多端同步与登录态机里最反直觉、也最伤人的分叉。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 137,
+                "lineEnd": 139,
+                "nodeIds": [],
+                "note": "isTransientMissingSessionPhase：bootstrap/submit/reconcile"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/authController.ts",
+                "lineStart": 679,
+                "lineEnd": 681,
+                "nodeIds": [],
+                "note": "瞬时相位收到 null 直接 return"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/hooks/useAuth.ts",
+                "lineStart": 37,
+                "lineEnd": 51,
+                "nodeIds": [],
+                "note": "onAuthStateChange 把 session/null 交给 handleAuthStateChange"
+              }
+            ],
+            "cards": [
+              {
+                "id": "transient-phases",
+                "front": "哪些 phase 下的 null session 会被忽略？",
+                "back": "bootstrapping、submitting、reconciling。",
+                "tags": [
+                  "session",
+                  "races"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 137,
+                    "lineEnd": 139,
+                    "nodeIds": [],
+                    "note": "三个瞬时相位"
+                  }
+                ]
+              },
+              {
+                "id": "why-ignore-null",
+                "front": "登录过程中忽略 null 是为了防止什么？",
+                "back": "防止把流程中间态当成登出，误 clear 并 bootstrap 出新匿名，与即将到达的目标会话冲突。",
+                "tags": [
+                  "session",
+                  "races"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 679,
+                    "lineEnd": 681,
+                    "nodeIds": [],
+                    "note": "瞬时 null 早退"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "transient-phase-one",
+                "kind": "short-answer",
+                "title": "瞬时相位",
+                "prompt": "isTransientMissingSessionPhase 包含的三个 phase 之一：提交登录中的是？",
+                "expectedAnswer": "submitting",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/authController.ts",
+                    "lineStart": 137,
+                    "lineEnd": 139,
+                    "nodeIds": [],
+                    "note": "submitting 属瞬时相位"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "init-once-across-mounts",
+            "title": "初始化只做一次，变化靠订阅",
+            "content": "# 初始化只做一次，变化靠订阅\n\n## 学习目标\n\n完成本课后，你能说明 `initAuthOnce` 为何用模块级 Promise 单例，以及认证运行时如何把「启动结算」与「后续同步」拆开。\n\n## 先给结论\n\n- **事实：bootstrap 只调度一次。** `authInitPromise` 在模块作用域；`initAuthOnce` 已有 promise 则直接返回，避免 React StrictMode 双挂载触发 Supabase auth lock 竞态（文件头注释写明）。\n- **事实：钩子负责订阅。** `useAuth` 在 effect 里调用 `initAuthOnce()`，并 `onAuthStateChange` → `authController.handleAuthStateChange`；卸载时 `subscription.unsubscribe()`。\n- **事实：运行时入口极瘦。** `AuthenticatedRuntime` 只调用 `useAuth()` 后渲染 children——认证是进程级横切，不是某个页面私货。\n- **推论：多端/多挂载的真相来源是订阅，不是反复 bootstrap。** 重复 bootstrap 会并发创建匿名会话；重复订阅则要在卸载时退订。\n\n## 一个类比\n\n公司只开一次晨会（bootstrap），然后靠群消息同步后续变化（onAuthStateChange）。每人进会议室再开一轮晨会，只会发出两份互相打架的纪要。\n\n## 工作示例\n\n1. 根组件挂载 `AuthenticatedRuntime` → `useAuth`。\n2. StrictMode 开发态 effect 跑两次：`initAuthOnce` 第二次命中同一 promise，不二次 `bootstrap`。\n3. 用户在另一标签页登出，本页订阅收到 null → 稳态清理并再匿名。\n4. 组件卸载（路由级）只退订，不重置模块级 init 标志——热切换页面不应重放冷启动。\n\n## 自检\n\n把 `authInitPromise = null` 放在 effect cleanup 里会怎样？\n\n答案：每次卸载/重挂都会再 bootstrap，StrictMode 与路由切换会放大竞态，注释里警告的 auth lock 问题会回来。\n\n## 重点\n\n**启动结算单例化，会话变化订阅化。** 这是登录态在多挂载、多端事件下仍收敛的骨架。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/hooks/useAuth.ts",
+                "lineStart": 5,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "模块级 authInitPromise 与 initAuthOnce 幂等"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/hooks/useAuth.ts",
+                "lineStart": 28,
+                "lineEnd": 56,
+                "nodeIds": [],
+                "note": "useAuth：init + onAuthStateChange 订阅/退订"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/components/auth/AuthenticatedRuntime.tsx",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "AuthenticatedRuntime 仅挂载 useAuth"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-init-once",
+                "front": "authInitPromise 单例主要防止什么？",
+                "back": "React StrictMode 双挂载导致重复 bootstrap 与 Supabase auth lock 竞态。",
+                "tags": [
+                  "bootstrap",
+                  "react"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/hooks/useAuth.ts",
+                    "lineStart": 5,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "单例注释与早退"
+                  }
+                ]
+              },
+              {
+                "id": "subscribe-not-poll",
+                "front": "登录后其他标签页的登出如何到达本页 store？",
+                "back": "通过 supabase.auth.onAuthStateChange 订阅回调进入 handleAuthStateChange，而非再次 bootstrap 轮询。",
+                "tags": [
+                  "sync"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/hooks/useAuth.ts",
+                    "lineStart": 37,
+                    "lineEnd": 51,
+                    "nodeIds": [],
+                    "note": "订阅转发 handleAuthStateChange"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "init-once-name",
+                "kind": "short-answer",
+                "title": "单例函数",
+                "prompt": "保证 bootstrap 只调度一次的函数名是？",
+                "expectedAnswer": "initAuthOnce",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/hooks/useAuth.ts",
+                    "lineStart": 11,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "initAuthOnce 定义"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

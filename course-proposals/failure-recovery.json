@@ -1,0 +1,1221 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-failure-recovery",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "failure-recovery",
+    "title": "用户那边出错时，产品怎么自己爬起来",
+    "description": "网断、chunk 加载失败、localStorage 被禁不是异常而是常态；用 TuringPact 的分块自救、安全存储与平台降级，学会有限自动恢复与明确下一步。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "说明动态 import 失败如何被模式识别，以及为何只自动恢复一次",
+      "描述错误边界在自救失败后如何给出带操作的失败 UI",
+      "解释 safeLocalStorage 用 null/false 消化存储故障的原因",
+      "对照 createPlatformStorage 说明 noop、Web 与原生 Preferences 的分支取舍"
+    ],
+    "units": [
+      {
+        "id": "chunk-self-heal",
+        "title": "代码分块失败时先自救",
+        "objective": "掌握懒加载 chunk 故障的识别、一次自动恢复与失败 UI",
+        "lessons": [
+          {
+            "id": "chunk-failure-is-normal",
+            "title": "代码分块加载失败是常态",
+            "content": "# 代码分块加载失败是常态\n\n## 学习目标\n\n完成本课后，你能说明 SPA 为什么会在「用户那边」出现 chunk 加载失败，并指出\nTuringPact 用哪组字符串识别这类错误。\n\n## 先给结论\n\n- **事实：页面是懒加载的。** `App.tsx` 里 `RoomPage`、`HomePage` 等用 `lazy(() => import(...))`，\n  首屏不下载全部代码，路由切换才拉 chunk。\n- **事实：可恢复错误靠消息模式匹配。** `DYNAMIC_IMPORT_ERROR_PATTERNS` 只认三类文案：\n  `Failed to fetch dynamically imported module`、`Importing a module script failed`、\n  `Loading chunk`。\n- **事实：识别函数是 `isRecoverableDynamicImportError`。** 它从 `Error.message` 或字符串错误里取文案，\n  再 `includes` 匹配；不匹配的渲染错误一律不当作 chunk 故障。\n- **推论：部署更新 + 旧标签页 = 稳定复现。** 用户开着旧页，你发了新包，旧 HTML 仍指向已删 hash 文件，\n  网络一抖也会触发同样文案——这不是偶发 bug，是分发模型的副产品。\n\n## 一个类比\n\n图书馆把大部头拆成多册按需借阅。读者手里还捏着旧目录页码，你已经换了新架位编号——\n他按旧号取书，前台只能说「这本不在了」。**目录（入口 HTML）和书册（chunk）必须同一版本，否则失败是预期。**\n\n## 工作示例\n\n1. 用户昨晚打开了站点，标签页没关。\n2. 你今天发布了新构建，CDN 上旧 `HomePage-xxxx.js` 被替换或删除。\n3. 用户点进房间，`lazy` 去拉旧路径，浏览器抛出含 `Failed to fetch dynamically imported module` 的错误。\n4. `isRecoverableDynamicImportError` 返回 true——产品进入恢复路径，而不是当成未知崩溃。\n\n## 自检\n\n若错误信息是 `Unexpected render failure`，会不会被当成可恢复的 chunk 错误？\n\n答案：不会。它不匹配 `DYNAMIC_IMPORT_ERROR_PATTERNS`，`isRecoverableDynamicImportError` 返回 false。\n\n## 重点\n\n**先识别「可恢复的分发故障」，再谈 reload。** 把所有 Error 都 reload，会把真正的业务 bug 洗成无限刷新。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 15,
+                "lineEnd": 29,
+                "nodeIds": [],
+                "note": "DYNAMIC_IMPORT_ERROR_PATTERNS 与 isRecoverableDynamicImportError"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/App.tsx",
+                "lineStart": 21,
+                "lineEnd": 31,
+                "nodeIds": [],
+                "note": "App 用 lazy 按路由拆 chunk"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-lazy-chunks",
+                "front": "为什么懒加载路由会让「发版」变成用户侧故障源？",
+                "back": "旧标签页仍指向旧 chunk URL；新部署删改后，lazy import 会稳定失败。",
+                "tags": [
+                  "failure-recovery"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/App.tsx",
+                    "lineStart": 21,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "lazy 导入页面 chunk"
+                  }
+                ]
+              },
+              {
+                "id": "pattern-whitelist",
+                "front": "DYNAMIC_IMPORT_ERROR_PATTERNS 只匹配三类文案的好处是什么？",
+                "back": "只对分发/加载类失败自动恢复，避免把普通渲染 bug 误当成 chunk 故障去 reload。",
+                "tags": [
+                  "failure-recovery"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 15,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "模式列表与匹配逻辑"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "loading-chunk-pattern",
+                "kind": "short-answer",
+                "title": "模式关键词",
+                "prompt": "DYNAMIC_IMPORT_ERROR_PATTERNS 中以 Loading 开头的那条完整字符串是什么？",
+                "expectedAnswer": "Loading chunk",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "Loading chunk 模式"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "recover-once-only",
+            "title": "自动恢复只许一次",
+            "content": "# 自动恢复只许一次\n\n## 学习目标\n\n完成本课后，你能解释 `recoverDynamicImportOnce` 如何用存储标记防止无限 reload，并说出标记键常量名。\n\n## 先给结论\n\n- **事实：键名是 `turing-pact:dynamic-import-recovery`。** 常量 `RECOVERY_STORAGE_KEY`，\n  配合调用方传入的 `marker`（当前页用 `window.location.href`）。\n- **事实：流程是「认错 → 看标记 → 写标记 → reload」。** 不可恢复直接 false；若\n  `storage.getItem(RECOVERY_STORAGE_KEY) === marker` 也 false；否则 `setItem` 再 `reload()`，返回 true。\n- **事实：成功启动后会清标记。** `clearDynamicImportRecovery` / `clearCurrentPageDynamicImportRecovery`\n  在页面挂载时 `removeItem`，让「下一次真故障」还能再自动试一次。\n- **推论：无限 reload 比白屏更糟。** 若每次失败都 reload 且不记状态，用户会卡在闪屏循环里，\n  连手动重试按钮都点不到。\n\n## 一个类比\n\n电梯故障时允许自动再试关门一次；若仍夹住，就停梯报警，**绝不会反复猛关门夹人**。\n标记就是「已经自动试过了」的粉笔字。\n\n## 工作示例\n\n1. chunk 加载失败，`recoverDynamicImportOnce` 看到可恢复错误，且 storage 里还没有当前 marker。\n2. 写入 `RECOVERY_STORAGE_KEY = marker`，调用 `reload()`。\n3. 若 reload 后仍失败且 marker 仍在，第二次返回 false——不再自动刷。\n4. 若中间成功挂载，`clearDynamicImportRecovery` 清掉标记，未来发版还可再自动救一次。\n\n## 自检\n\n为什么 marker 用整页 URL，而不是一个全局固定字符串？\n\n答案：不同路由/查询可能对应不同 chunk；按 URL 标记，避免 A 页失败后 B 页也被误判为「已试过」。\n\n## 重点\n\n**自动恢复的上限是 1 次。** 第二次必须把控制权交还给用户可见的失败态。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 14,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "RECOVERY_STORAGE_KEY 键名"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 31,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "recoverDynamicImportOnce：一次标记与 reload"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 45,
+                "lineEnd": 47,
+                "nodeIds": [],
+                "note": "clearDynamicImportRecovery 清除标记"
+              }
+            ],
+            "cards": [
+              {
+                "id": "once-guard",
+                "front": "storage 里已有与 marker 相同的值时，recoverDynamicImportOnce 做什么？",
+                "back": "直接返回 false，不再 reload，打断无限刷新。",
+                "tags": [
+                  "failure-recovery"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 37,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "标记相等则拒绝再次恢复"
+                  }
+                ]
+              },
+              {
+                "id": "clear-after-boot",
+                "front": "成功进入应用后为何还要 clearDynamicImportRecovery？",
+                "back": "清掉「已试过」标记，让以后真发生的 chunk 故障仍可自动救一次。",
+                "tags": [
+                  "failure-recovery"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 45,
+                    "lineEnd": 47,
+                    "nodeIds": [],
+                    "note": "clear 删除恢复键"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "recovery-storage-key",
+                "kind": "short-answer",
+                "title": "恢复键常量",
+                "prompt": "保存「已自动恢复过」标记时用的常量名是什么？",
+                "expectedAnswer": "RECOVERY_STORAGE_KEY",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 14,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "RECOVERY_STORAGE_KEY 字面量"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "boundary-then-fallback-ui",
+            "title": "边界捕获后：要么自救，要么明确下一步",
+            "content": "# 边界捕获后：要么自救，要么明确下一步\n\n## 学习目标\n\n完成本课后，你能描述 `DynamicImportRecoveryBoundary` 在 `componentDidCatch` 里的分支，\n以及自动失败后用户看到什么。\n\n## 先给结论\n\n- **事实：错误边界包住整棵路由树。** `App` 在 `Router` 内用 `DynamicImportRecoveryBoundary`，\n  fallback 是 `DynamicImportRecoveryFailure`。\n- **事实：先自救再认输。** `componentDidCatch` 里若 `tryRecoverCurrentPageDynamicImport(error)` 为 true，\n  直接 return，不 `setState({ hasFailed: true })`。\n- **事实：认输时有文案和按钮。** 失败 UI 带 `role=\"alert\"`、`chunkRecoveryTitle` / `chunkRecoveryBody`，\n  以及 `window.location.reload()` 的手动重试按钮。\n- **推论：白屏是产品选择，不是浏览器宿命。** 懒加载失败完全可以变成「说明 + 下一步」；\n  不接线时用户只看到空白或开发者错误页。\n\n## 一个类比\n\n客服热线：系统自动回拨一次（自救）；仍不通就转人工并告诉你工单号（明确下一步）。\n**最差体验是电话直接断、没有任何提示。**\n\n## 工作示例\n\n1. lazy 页面抛出 chunk 错误，边界 `componentDidCatch` 接到。\n2. `tryRecoverCurrentPageDynamicImport` 用 `sessionStorage` + 当前 href 尝试一次 reload。\n3. 若返回 true：整页刷新，用户可能无感恢复。\n4. 若返回 false：`hasFailed=true`，渲染带重试按钮的告警卡，而不是空白。\n\n## 自检\n\n`tryRecoverCurrentPageDynamicImport` 成功时，错误边界会不会立刻显示 failure UI？\n\n答案：不会。成功分支 `return`，不更新 `hasFailed`，页面进入 reload。\n\n## 重点\n\n**恢复策略 = 自动一次 + 失败时可见操作。** 缺任一半都是半成品韧性。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/App.tsx",
+                "lineStart": 44,
+                "lineEnd": 51,
+                "nodeIds": [],
+                "note": "Boundary 包住 Suspense 与路由"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/App.tsx",
+                "lineStart": 71,
+                "lineEnd": 74,
+                "nodeIds": [],
+                "note": "componentDidCatch：先 tryRecover 再 hasFailed"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/App.tsx",
+                "lineStart": 89,
+                "lineEnd": 105,
+                "nodeIds": [],
+                "note": "DynamicImportRecoveryFailure：告警与手动 reload"
+              }
+            ],
+            "cards": [
+              {
+                "id": "catch-order",
+                "front": "componentDidCatch 里 tryRecover 为 true 时为什么不 setState？",
+                "back": "即将整页 reload；设置失败态只会闪一下无用 UI。",
+                "tags": [
+                  "failure-recovery"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/App.tsx",
+                    "lineStart": 71,
+                    "lineEnd": 74,
+                    "nodeIds": [],
+                    "note": "成功恢复直接 return"
+                  }
+                ]
+              },
+              {
+                "id": "failure-has-next-step",
+                "front": "自动恢复失败后，UI 至少要提供什么？",
+                "back": "可读说明加上用户可点的下一步（这里是手动 reload 按钮）。",
+                "tags": [
+                  "failure-recovery"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/App.tsx",
+                    "lineStart": 95,
+                    "lineEnd": 103,
+                    "nodeIds": [],
+                    "note": "标题正文与 retry 按钮"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "boundary-method-name",
+                "kind": "short-answer",
+                "title": "捕获钩子",
+                "prompt": "React 类错误边界里接入动态 import 恢复的方法名是什么？",
+                "expectedAnswer": "componentDidCatch",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/App.tsx",
+                    "lineStart": 71,
+                    "lineEnd": 74,
+                    "nodeIds": [],
+                    "note": "componentDidCatch 调用 tryRecover"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "recovery-state-machine",
+            "title": "恢复状态机：从抛错到用户可控",
+            "content": "# 恢复状态机：从抛错到用户可控\n\n## 学习目标\n\n完成本课后，你能画出 chunk 故障从捕获到结束的状态分支，并指出最关键的「禁止再刷」边。\n\n## 先给结论\n\n- **事实：入口在边界，核心在 `recoverDynamicImportOnce`。** 浏览器封装在\n  `tryRecoverCurrentPageDynamicImport`：无 window 则 false；storage 抛错也 catch 成 false。\n- **事实：sessionStorage 承载标记。** 当前页恢复注入 `window.sessionStorage`，不是 localStorage——\n  关标签即丢，不会把「已试过」永久钉死在设备上。\n- **事实：成功路径会清标记。** `DynamicImportRecoveryMarkerClearer` 在 `useEffect` 里调用\n  `clearCurrentPageDynamicImportRecovery()`。\n- **推论：最危险的边是「失败却继续自动 reload」。** 代码用 marker 相等显式切断这条边。\n\n## 一个类比\n\n机场摆渡车：误站可自动再跑一圈；若仍找不到登机口，停在问讯处，**不会载着你永动机式绕跑道**。\n\n## 工作示例\n\n下面状态机对应源码路径（读图时盯住「已标记 → 显示失败 UI」那条边）：\n\n```mermaid\nstateDiagram-v2\n  [*] --> Catch: componentDidCatch\n  Catch --> Reject: 非 chunk 模式\n  Catch --> CheckMark: isRecoverable\n  CheckMark --> Reload: 无 marker\n  CheckMark --> FailUI: marker 已存在\n  Reload --> Boot: location.reload\n  Boot --> Clear: 挂载成功 clear\n  Boot --> Catch: 仍失败\n  Clear --> [*]\n  FailUI --> Manual: 用户点 retry\n  Manual --> Boot\n  Reject --> FailUI\n```\n\n图里**最关键的线是 `CheckMark → FailUI`**：同一 URL 已写过 `RECOVERY_STORAGE_KEY` 时禁止再自动 reload。\n没有这条边，用户会困在闪屏；有了它，第二次失败变成带按钮的 `role=\"alert\"`。\n\n## 自检\n\n`sessionStorage` 不可用（隐私模式限制）时，自动恢复会怎样？\n\n答案：`tryRecoverCurrentPageDynamicImport` 的 try/catch 返回 false，走失败 UI，而不是抛穿应用。\n\n## 重点\n\n**韧性设计的核心不是「多试几次」，而是「试几次、失败后谁接管」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 49,
+                "lineEnd": 61,
+                "nodeIds": [],
+                "note": "tryRecoverCurrentPageDynamicImport：sessionStorage 与 catch"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/App.tsx",
+                "lineStart": 81,
+                "lineEnd": 86,
+                "nodeIds": [],
+                "note": "成功挂载时 clear 标记"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 31,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "once 逻辑切断无限 reload"
+              }
+            ],
+            "cards": [
+              {
+                "id": "session-not-local",
+                "front": "动态 import 恢复标记为何放在 sessionStorage 而不是 localStorage？",
+                "back": "标记只需跨一次 reload；会话级存储关标签即清，避免永久钉死。",
+                "tags": [
+                  "failure-recovery"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 53,
+                    "lineEnd": 57,
+                    "nodeIds": [],
+                    "note": "注入 window.sessionStorage"
+                  }
+                ]
+              },
+              {
+                "id": "critical-edge",
+                "front": "恢复状态机里哪条边防止无限刷新？",
+                "back": "marker 已存在时从检查标记直接进入失败 UI，不再自动 reload。",
+                "tags": [
+                  "failure-recovery"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 37,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "标记命中返回 false"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "storage-for-marker",
+                "kind": "short-answer",
+                "title": "标记存在哪",
+                "prompt": "tryRecoverCurrentPageDynamicImport 把恢复标记写进哪种 Web Storage？",
+                "expectedAnswer": "sessionStorage",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 53,
+                    "lineEnd": 57,
+                    "nodeIds": [],
+                    "note": "storage: window.sessionStorage"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "storage-may-die",
+        "title": "存储不可用时继续跑",
+        "objective": "用 safe API 与可选持久化语义，让偏好类功能失败不白屏",
+        "lessons": [
+          {
+            "id": "storage-can-throw",
+            "title": "localStorage 不是永远可用",
+            "content": "# localStorage 不是永远可用\n\n## 学习目标\n\n完成本课后，你能列出浏览器存储会失败的典型场景，并指出 `browserLocalStorage` 如何连「读引用」都包在 try 里。\n\n## 先给结论\n\n- **事实：拿 `window.localStorage` 本身就可能抛。** `browserLocalStorage()` 在\n  `typeof window === 'undefined'` 时返回 null；在 try 里访问 `window.localStorage`，catch 也返回 null。\n- **事实：读写各自再包一层。** `safeLocalStorageGet` / `safeLocalStorageSet` 在 storage 为 null\n  时立刻返回 null / false；真正 `getItem`/`setItem` 仍包 try/catch。\n- **推论：隐私模式、企业策略、配额满、iframe 限制都会让「同步存储」变成地雷。**\n  业务代码若直接 `localStorage.setItem`，一次禁用就能白屏整条设置链路。\n\n## 一个类比\n\n你以为口袋里永远有笔，但安检会没收笔。**安全写法是：先确认有笔，写不出就改口述，而不是掏空口袋时当众崩溃。**\n\n## 工作示例\n\n1. 用户开了严格跟踪防护，访问 `localStorage` 抛 SecurityError。\n2. `browserLocalStorage()` catch 后返回 null。\n3. `safeLocalStorageGet('theme')` 因 `!storage` 返回 null——主题走默认值。\n4. 应用继续渲染；没有未捕获异常。\n\n## 自检\n\n只在 `setItem` 外包 try、却直接读 `window.localStorage` 引用，还够不够？\n\n答案：不够。部分环境在访问属性时就抛，必须在取得 storage 对象时也降级。\n\n## 重点\n\n**把「存储不可用」当成一等公民输入，而不是异常分支里的注释。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 6,
+                "lineEnd": 13,
+                "nodeIds": [],
+                "note": "browserLocalStorage：访问 localStorage 也 try/catch"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 15,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "safeLocalStorageGet：null 与 catch 均降级"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 27,
+                "lineEnd": 38,
+                "nodeIds": [],
+                "note": "safeLocalStorageSet：失败返回 false"
+              }
+            ],
+            "cards": [
+              {
+                "id": "access-can-throw",
+                "front": "为什么 browserLocalStorage 连读取 window.localStorage 都放进 try？",
+                "back": "部分环境访问该属性即抛 SecurityError，不只是 setItem 会失败。",
+                "tags": [
+                  "safe-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 8,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "try 返回 localStorage，catch 返回 null"
+                  }
+                ]
+              },
+              {
+                "id": "two-layers",
+                "front": "storage 为 null 与 getItem 抛错，对外表现有何统一？",
+                "back": "get 都变成 null，调用方只处理「没读到」，不必区分原因。",
+                "tags": [
+                  "safe-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 19,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "双路径均返回 null"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "get-on-missing-storage",
+                "kind": "short-answer",
+                "title": "读失败返回值",
+                "prompt": "safeLocalStorageGet 在 storage 不可用时返回什么？",
+                "expectedAnswer": "null",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 19,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "if (!storage) return null"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "boolean-not-exception",
+            "title": "写失败返回 false，不要抛给 UI",
+            "content": "# 写失败返回 false，不要抛给 UI\n\n## 学习目标\n\n完成本课后，你能说明 `safeLocalStorageSet` 的返回值契约，以及为何比「静默 void」更利于产品决策。\n\n## 先给结论\n\n- **事实：成功 true，失败 false。** `setItem` 正常则 `return true`；无 storage 或 catch 则 `return false`。\n- **事实：接口允许注入 storage。** 第三个参数 `storage: SyncStorageAccess | null = browserLocalStorage()`，\n  测试可塞假对象，生产默认真浏览器。\n- **推论：调用方可以选择降级策略。** 返回 boolean 后，功能可「记住失败就当次有效」、\n  可提示「无法持久化」，而不是让异常冲出 React 事件处理器。\n\n## 一个类比\n\n快递柜满了应回传「投递失败」，而不是把包裹砸在快递员脸上还让整条分拣线停机。\n**失败信号要可控，不要变成未处理异常。**\n\n## 工作示例\n\n1. 主题切换调用 `safeLocalStorageSet(THEME_STORAGE_KEY, theme)`。\n2. 配额满，`setItem` 抛 QuotaExceededError，被 catch，返回 false。\n3. 内存里主题可能已变，刷新后回退默认——产品仍可用。\n4. 若这里直接抛，设置面板可能整页错误边界。\n\n## 自检\n\n把 `safeLocalStorageSet` 改成失败时 throw，对一人公司最大的产品伤害是什么？\n\n答案：任何存储故障升级为用户可见崩溃，而本可降级的偏好类功能本不该死掉主流程。\n\n## 重点\n\n**降级 API 的返回值是契约的一部分：用 false/null 表达失败，把异常留在平台层消化。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 27,
+                "lineEnd": 38,
+                "nodeIds": [],
+                "note": "safeLocalStorageSet 返回 boolean"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 1,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "SyncStorageAccess：可注入的同步存储接口"
+              }
+            ],
+            "cards": [
+              {
+                "id": "set-returns-bool",
+                "front": "safeLocalStorageSet 成功与失败分别返回什么？",
+                "back": "成功 true，无存储或抛错时 false。",
+                "tags": [
+                  "safe-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 32,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "true/false 分支"
+                  }
+                ]
+              },
+              {
+                "id": "injectable-storage",
+                "front": "为什么 safe 读写允许传入 storage 参数？",
+                "back": "便于测试注入假存储，也便于调用方指定实现，而不是写死 window。",
+                "tags": [
+                  "safe-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 15,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "storage 默认参数可覆盖"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "set-fail-return",
+                "kind": "short-answer",
+                "title": "写失败返回值",
+                "prompt": "safeLocalStorageSet 在 catch 到异常时返回什么？",
+                "expectedAnswer": "false",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 36,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "catch 返回 false"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "callers-degrade-features",
+            "title": "业务只依赖「读到/写上」，不依赖存储一定存在",
+            "content": "# 业务只依赖「读到/写上」，不依赖存储一定存在\n\n## 学习目标\n\n完成本课后，你能举出 TuringPact 中如何用 safe API 表达「可选持久化」的功能语义。\n\n## 先给结论\n\n- **事实：引导「看过」靠读写约定值。** `hasSeenAiFeedIntro` 用\n  `safeLocalStorageGet(...) === DISMISSED_VALUE`；`markAiFeedIntroSeen` 直接返回\n  `safeLocalStorageSet(...)` 的 boolean。\n- **事实：无 roomId 时的默认偏安全。** `hasSeenAiFeedIntro` 在 `!roomId` 时返回 true（当作已看过，\n  不反复打扰）；`markAiFeedIntroSeen` 在 `!roomId` 返回 false。\n- **推论：存储失败时最糟是「多展示一次引导」，不是整页挂掉。** 这是刻意的产品权衡：\n  偏好类状态允许丢失，交互连续性优先。\n\n## 一个类比\n\n咖啡馆会员卡写不上时，店员仍可给你做咖啡，最多下次再问一遍偏好——\n**不会因为写卡机坏了就停止营业。**\n\n## 工作示例\n\n1. 用户展开 AI feed，`shouldShowAiFeedIntro` 在 expanded 且未 dismiss 时为 true。\n2. 关闭引导调用 `markAiFeedIntroSeen`；若 set 返回 false，下次还可能再显示。\n3. 主聊天与对局逻辑完全不依赖这次写入成功。\n4. 开发测试可传入假 `SyncStorageAccess`，不断言真实 localStorage。\n\n## 自检\n\n若把「存储失败」设计成阻断发消息，错在哪里？\n\n答案：把非关键路径的基础设施故障抬升成核心流程失败，违背「可选持久化」边界。\n\n## 重点\n\n**先给功能分级：丢了状态能否继续？** 能继续的，就必须接 safe 存储而不是硬依赖。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/chat-signals/aiFeedIntro.ts",
+                "lineStart": 15,
+                "lineEnd": 31,
+                "nodeIds": [],
+                "note": "AI feed intro：get 比较与 set 返回 boolean"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 15,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "safeLocalStorageGet 契约"
+              }
+            ],
+            "cards": [
+              {
+                "id": "dismiss-value",
+                "front": "hasSeenAiFeedIntro 如何判断「已看过」？",
+                "back": "safeLocalStorageGet 的结果严格等于 DISMISSED_VALUE（dismissed）。",
+                "tags": [
+                  "safe-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/chat-signals/aiFeedIntro.ts",
+                    "lineStart": 19,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "=== DISMISSED_VALUE"
+                  }
+                ]
+              },
+              {
+                "id": "worst-case-extra-intro",
+                "front": "存储一直写失败时，引导类功能可接受的最坏结果是什么？",
+                "back": "多展示几次引导；不能让主流程崩溃。",
+                "tags": [
+                  "safe-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/chat-signals/aiFeedIntro.ts",
+                    "lineStart": 25,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "mark 仅返回 set 结果"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "dismissed-literal",
+                "kind": "short-answer",
+                "title": "已读标记值",
+                "prompt": "AI feed intro 写入 storage 表示已关闭时的字符串常量值是什么？",
+                "expectedAnswer": "dismissed",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/chat-signals/aiFeedIntro.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "DISMISSED_VALUE = 'dismissed'"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "sync-vs-platform-storage",
+            "title": "两套存储：同步偏好 vs 平台抽象",
+            "content": "# 两套存储：同步偏好 vs 平台抽象\n\n## 学习目标\n\n完成本课后，你能区分 `safeLocalStorage` 与 `platform/storage` 各自解决什么问题，避免混用错层。\n\n## 先给结论\n\n- **事实：safeLocalStorage 是同步、偏 Web、偏「能读则读」。** `SyncStorageAccess` 同步 get/set，\n  适合主题、音量、一次性引导等允许丢失的偏好。\n- **事实：PlatformStorage 是异步统一接口。** `getItem/setItem/removeItem` 全是 `Promise`，\n  适配 Capacitor `Preferences` 与 Web 包装。\n- **推论：不是「有一个存储工具函数就够」。** 同步 API 塞进原生 Preferences 会假异步；\n  异步平台层硬塞进首屏同步读主题会卡住设计。分层是为了失败模式不同。\n\n## 一个类比\n\n钱包里的零钱（随时摸得到、丢了不致命）vs 银行账户（跨设备、协议更重）。\n**不能用翻钱包的方式操作银行，也不能每次买咖啡都走电汇。**\n\n## 工作示例\n\n1. 设置主题：启动同步可读，走 `safeLocalStorageGet/Set`。\n2. 需要跨原生壳持久化的键：走 `createPlatformStorage` 返回的 `storage`。\n3. Web 无 localStorage 时平台层给 `noopStorage`；safe 层给 null/false——语义都是「没存上」。\n4. 一人公司若只封装一种，往往会在原生壳上踩「同步 API 实际是异步」的隐性 bug。\n\n## 自检\n\n为什么动态 import 恢复标记没有复用 `PlatformStorage`？\n\n答案：恢复路径必须在错误边界里同步决策并立刻 reload；异步 Preferences 不适合这一跳。\n\n## 重点\n\n**按失败时延与运行时选存储层，不要按「都能存字符串」合成一个上帝模块。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 1,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "SyncStorageAccess 同步接口"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 4,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "PlatformStorage 异步接口"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 49,
+                "lineEnd": 58,
+                "nodeIds": [],
+                "note": "恢复路径同步使用 sessionStorage"
+              }
+            ],
+            "cards": [
+              {
+                "id": "async-platform",
+                "front": "PlatformStorage 的方法为什么全是 async？",
+                "back": "原生 Preferences 本身是异步；统一 Promise 才能一套业务代码多端跑。",
+                "tags": [
+                  "storage-layers"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 4,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "Promise 签名"
+                  }
+                ]
+              },
+              {
+                "id": "sync-for-prefs",
+                "front": "主题这类偏好为何更适合 safeLocalStorage？",
+                "back": "需要启动时同步读取默认值，且丢失可降级，不必上原生 Preferences。",
+                "tags": [
+                  "storage-layers"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 15,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "同步 get 契约"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "platform-storage-type",
+                "kind": "short-answer",
+                "title": "异步接口名",
+                "prompt": "platform/storage.ts 导出的异步存储接口类型名是什么？",
+                "expectedAnswer": "PlatformStorage",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 4,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "export interface PlatformStorage"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "platform-storage-matrix",
+        "title": "多端存储与空实现",
+        "objective": "用 PlatformStorage 路由 Web/原生/Electron，并在无存储时 noop 降级",
+        "lessons": [
+          {
+            "id": "noop-storage-degrade",
+            "title": "没有存储时：假装成功，绝不炸",
+            "content": "# 没有存储时：假装成功，绝不炸\n\n## 学习目标\n\n完成本课后，你能说明 `noopStorage` 的行为，以及 `createWebStorage` 在 syncStorage 缺失时如何选择它。\n\n## 先给结论\n\n- **事实：`noopStorage` 读永远 null，写/删空操作。** `getItem` async 返回 null；\n  `setItem`/`removeItem` async 直接 return。\n- **事实：`createWebStorage` 在 `!syncStorage` 时返回 `noopStorage`。** 不是抛错，不是 undefined。\n- **推论：上层 await setItem 会「成功结束」，但数据没落地。** 这要求产品语义允许丢失；\n  若你在 noop 上存支付凭证，那是分层用错，不是 noop 写错。\n\n## 一个类比\n\n酒店前台电脑宕机时仍可口头办入住：登记「成功」发生了，档案可能没进系统。\n**前台不会因为电脑坏了就锁死大门；但你也不该把房卡密码只记在那台坏电脑上。**\n\n## 工作示例\n\n1. SSR 或异常环境拿不到 `window.localStorage`，`getBrowserLocalStorage` 返回 null。\n2. `createWebStorage(null)` → `noopStorage`。\n3. 业务 `await storage.setItem('x','y')` 不抛；随后 `getItem` 得到 null。\n4. UI 用默认值继续；唯一代价是偏好不持久。\n\n## 自检\n\nnoop 的 `setItem` 若改成 throw，会破坏什么设计目标？\n\n答案：破坏「存储缺失时应用仍可运行」——所有调用方都得再包 try，等于把降级责任推回去。\n\n## 重点\n\n**降级实现要满足接口契约，让调用方无分支地「当存储用」。** 有无持久化是另一层产品问题。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 22,
+                "lineEnd": 32,
+                "nodeIds": [],
+                "note": "noopStorage：读 null、写空操作"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 34,
+                "lineEnd": 37,
+                "nodeIds": [],
+                "note": "createWebStorage 在缺失时返回 noopStorage"
+              }
+            ],
+            "cards": [
+              {
+                "id": "noop-get",
+                "front": "noopStorage.getItem 固定返回什么？",
+                "back": "null（异步）。",
+                "tags": [
+                  "platform-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 23,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "getItem 返回 null"
+                  }
+                ]
+              },
+              {
+                "id": "create-web-null",
+                "front": "createWebStorage(null) 的返回值是什么策略？",
+                "back": "返回 noopStorage，保证接口可用且不抛。",
+                "tags": [
+                  "platform-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 35,
+                    "lineEnd": 36,
+                    "nodeIds": [],
+                    "note": "if (!syncStorage) return noopStorage"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "noop-symbol-name",
+                "kind": "short-answer",
+                "title": "空实现名字",
+                "prompt": "storage 不可用时 createWebStorage 返回的对象常量名是什么？",
+                "expectedAnswer": "noopStorage",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 22,
+                    "lineEnd": 36,
+                    "nodeIds": [],
+                    "note": "noopStorage 定义与选用"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "native-vs-web-routing",
+            "title": "原生走 Preferences，Web 走 localStorage",
+            "content": "# 原生走 Preferences，Web 走 localStorage\n\n## 学习目标\n\n完成本课后，你能根据 `createPlatformStorage` 的分支，说出 iOS/Android 与 Web 各自落在哪套实现。\n\n## 先给结论\n\n- **事实：原生非 Electron 用 `createNativeStorage(preferences)`。** 条件是\n  `isNativePlatform && !isElectron`，默认 `preferences = Preferences`（Capacitor）。\n- **事实：其余情况走 `createWebStorage(webStorage)`。** 默认 `webStorage = getBrowserLocalStorage()`。\n- **事实：原生封装把 Preferences 的 `{ key }` 对象 API 适配成字符串 get/set/remove。**\n  业务只看见 `PlatformStorage`，不看见 Capacitor 形状。\n- **推论：一人公司多端时，最贵的是「Web 能跑就以为壳也能跑」。** 不抽象会在原生上直接打 localStorage，\n  行为与审核/持久化预期都不稳。\n\n## 一个类比\n\n同一张「存外套」字条：在商场用自助柜，在酒店用前台。\n**顾客只说存取，前台系统负责选柜。** `createPlatformStorage` 就是前台。\n\n## 工作示例\n\n1. Capacitor iOS：`isNativePlatform=true`，`isElectron=false` → Native Preferences。\n2. 普通浏览器：走 Web localStorage 包装。\n3. 业务 `await storage.getItem('k')` 无需 if (iOS)。\n4. 测试可注入假 `preferences` / `webStorage`，不碰真设备。\n\n## 自检\n\n为什么 native 分支要显式 `!isElectron`，而不是凡是「像桌面」都走 Preferences？\n\n答案：Electron 仍是 Chromium Web 存储模型；代码把 Electron 归 Web 路径，见下一课。\n\n## 重点\n\n**运行时探测决定存储后端，业务代码禁止 if (iOS) 散落。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 52,
+                "lineEnd": 64,
+                "nodeIds": [],
+                "note": "createNativeStorage 适配 Preferences"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 79,
+                "lineEnd": 96,
+                "nodeIds": [],
+                "note": "createPlatformStorage 分支选择后端"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 71,
+                "lineEnd": 77,
+                "nodeIds": [],
+                "note": "getBrowserLocalStorage 探测"
+              }
+            ],
+            "cards": [
+              {
+                "id": "native-condition",
+                "front": "createPlatformStorage 何时选择 Native Preferences？",
+                "back": "isNativePlatform 为 true 且 isElectron 为 false。",
+                "tags": [
+                  "platform-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 92,
+                    "lineEnd": 93,
+                    "nodeIds": [],
+                    "note": "if (isNativePlatform && !isElectron)"
+                  }
+                ]
+              },
+              {
+                "id": "adapter-shape",
+                "front": "createNativeStorage 适配了 Preferences 的什么差异？",
+                "back": "把 {key}/{key,value} 对象参数转成 PlatformStorage 的字符串 API。",
+                "tags": [
+                  "platform-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 54,
+                    "lineEnd": 62,
+                    "nodeIds": [],
+                    "note": "get/set/remove 适配"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "native-branch-predicate",
+                "kind": "short-answer",
+                "title": "原生分支条件",
+                "prompt": "选择 createNativeStorage 时，除 isNativePlatform 外还必须为 false 的标志名是什么？",
+                "expectedAnswer": "isElectron",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 92,
+                    "lineEnd": 93,
+                    "nodeIds": [],
+                    "note": "&& !isElectron"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "electron-is-web-storage",
+            "title": "Electron 故意走 Web 存储路径",
+            "content": "# Electron 故意走 Web 存储路径\n\n## 学习目标\n\n完成本课后，你能解释为何 `isElectron` 为 true 时不会进入 Capacitor Preferences 分支。\n\n## 先给结论\n\n- **事实：导出 `storage` 时同时传入 native 与 electron 探测。**\n  `isNativePlatform: getCurrentRuntimeDescriptor().isNativePlatform`，\n  `isElectron: isElectronRuntime()`（内部 `hasElectronBridge()`）。\n- **事实：分支是 native 且非 electron 才 Preferences。** Electron 落到 `createWebStorage`。\n- **推论：桌面壳 ≠ 移动原生存储。** Electron 有 `localStorage`；硬塞 Preferences 会引入\n  错误依赖与双份持久化语义。代码用 `!isElectron` 把这条坑焊死。\n\n## 一个类比\n\n同样叫「客户端」：手机 App 用系统钥匙串，桌面套壳浏览器仍用浏览器本地仓库。\n**名字像，仓库不是同一个。**\n\n## 工作示例\n\n1. 桌面 Electron 注入 `window.electronAPI`，`hasElectronBridge` 为 true。\n2. 即便错误地把某标志弄成 native，只要 `isElectron` true，仍走 Web storage。\n3. 实际装配：`createPlatformStorage({ isNativePlatform, isElectron })` 在模块加载时执行一次。\n4. 结果：桌面与浏览器共享 web 语义，移动端单独 Preferences。\n\n## 自检\n\n若去掉 `!isElectron` 条件，在「被误判为 native 的 Electron」上会怎样？\n\n答案：可能去调 Capacitor Preferences，桌面环境未正确配置时存储行为异常或运行失败。\n\n## 重点\n\n**多运行时矩阵里，例外要用布尔条件写死，不要靠约定「Electron 不会 isNative」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 67,
+                "lineEnd": 69,
+                "nodeIds": [],
+                "note": "isElectronRuntime 基于 bridge"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 92,
+                "lineEnd": 96,
+                "nodeIds": [],
+                "note": "Electron 排除在 native Preferences 外"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 99,
+                "lineEnd": 102,
+                "nodeIds": [],
+                "note": "模块级 storage 装配"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-exclude-electron",
+                "front": "为什么 native 分支要写 && !isElectron？",
+                "back": "Electron 应使用 Web 存储模型，不能误走 Capacitor Preferences。",
+                "tags": [
+                  "platform-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 92,
+                    "lineEnd": 96,
+                    "nodeIds": [],
+                    "note": "分支条件与 web 回落"
+                  }
+                ]
+              },
+              {
+                "id": "bridge-detect",
+                "front": "isElectronRuntime 如何判断桌面壳？",
+                "back": "检测 window 上是否存在 electronAPI 桥（hasElectronBridge）。",
+                "tags": [
+                  "platform-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 67,
+                    "lineEnd": 69,
+                    "nodeIds": [],
+                    "note": "hasElectronBridge()"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "module-storage-export",
+                "kind": "short-answer",
+                "title": "默认实例名",
+                "prompt": "storage.ts 在模块底部导出的平台存储单例常量名是什么？",
+                "expectedAnswer": "storage",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 99,
+                    "lineEnd": 102,
+                    "nodeIds": [],
+                    "note": "export const storage = createPlatformStorage(...)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "design-for-client-failure",
+            "title": "客户端故障设计清单",
+            "content": "# 客户端故障设计清单\n\n## 学习目标\n\n完成本课后，你能用 TuringPact 三份平台代码，给自己的 AI 产品列一份上线前检查清单。\n\n## 先给结论\n\n- **事实：分块失败有识别、有一次自救、有失败 UI。** `DYNAMIC_IMPORT_ERROR_PATTERNS` +\n  `recoverDynamicImportOnce` + `DynamicImportRecoveryFailure`。\n- **事实：同步偏好读写全部可失败。** `safeLocalStorage*` 返回 null/false，业务按可选状态处理。\n- **事实：跨端存储有后端路由与 noop 降级。** `createPlatformStorage` + `noopStorage`。\n- **推论：一人公司没有 SRE 盯白屏，这些代码就是你的「用户侧 on-call」。**\n  不写它们等于默认用户自己会开控制台。\n\n## 一个类比\n\n开飞机不只练起飞，还要练单发失效与备降。\n**客户端韧性课练的是备降程序，不是理想气象下的巡航。**\n\n## 工作示例\n\n上线前自问三句，并用源码对照：\n\n1. 发版后旧标签页挂了，会不会无限刷新？（marker 只许一次）\n2. 禁用 cookie/storage 时，核心玩法是否仍可点？（safe + noop）\n3. iOS / Electron / Web 是否误用同一后端？（`isNativePlatform && !isElectron`）\n\n若三句都答得出对应符号名，你的设计才算落地，而不是口头「我们有错误处理」。\n\n## 自检\n\n只加 Error Boundary 文案、不做 chunk 识别与一次 reload，缺了哪一层？\n\n答案：缺「可自动恢复的分发故障」层——把本可无感修复的更新窗口问题，全部推给用户手动刷新。\n\n## 重点\n\n**用户侧故障是产品功能，不是日志里的 edge case。** 识别 → 有限自救 → 明确下一步 → 存储可无。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 15,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "识别 + 一次恢复"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 15,
+                "lineEnd": 38,
+                "nodeIds": [],
+                "note": "同步存储降级契约"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 22,
+                "lineEnd": 96,
+                "nodeIds": [],
+                "note": "noop 与多端路由"
+              }
+            ],
+            "cards": [
+              {
+                "id": "three-layers",
+                "front": "TuringPact 客户端韧性可概括为哪三层？",
+                "back": "chunk 有限自救、同步存储 safe 降级、平台存储 noop/多端路由。",
+                "tags": [
+                  "failure-recovery"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 31,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "一次恢复"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 27,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "set 降级"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 34,
+                    "lineEnd": 36,
+                    "nodeIds": [],
+                    "note": "noop"
+                  }
+                ]
+              },
+              {
+                "id": "solo-dev-oncall",
+                "front": "为什么一人公司更要在客户端写这些恢复代码？",
+                "back": "没有同事值白屏；自动一次恢复和明确下一步就是用户侧 on-call。",
+                "tags": [
+                  "failure-recovery"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/App.tsx",
+                    "lineStart": 89,
+                    "lineEnd": 105,
+                    "nodeIds": [],
+                    "note": "失败 UI 给下一步"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "failure-role-alert",
+                "kind": "short-answer",
+                "title": "失败 UI 角色",
+                "prompt": "DynamicImportRecoveryFailure 根节点的 role 属性值是什么？",
+                "expectedAnswer": "alert",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/App.tsx",
+                    "lineStart": 93,
+                    "lineEnd": 93,
+                    "nodeIds": [],
+                    "note": "role=alert"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

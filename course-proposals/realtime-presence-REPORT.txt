@@ -1,0 +1,58 @@
+realtime-presence 课程提案交付报告
+========================================
+
+规模
+----
+- 单元数：3
+  1. presence-contract（在场包是合同）— 4 节
+  2. disconnect-and-roster（断线与名册）— 4 节
+  3. signals-not-truth（信号不是真相）— 3 节
+- 课时总数：11
+- 每节：2 张卡片、1 道 short-answer 练习
+- 证据引用总数：63（lesson + card + exercise 合计）
+- 含 mermaid 状态图：1 节（missing-then-prune：Present → Missing → Gone）
+
+输出文件
+--------
+- course-proposals/realtime-presence.json
+- course-proposals/realtime-presence-REPORT.txt
+
+证据来源（commit 3b402e069a5db5fe9eb82dbc03aa05152b3d298b / snapshot git-3b402e069a5d）
+--------------------------------------------------------------------------------
+主要：
+- src/features/world-presence/domain/presencePayload.ts
+- src/features/world-presence/domain/seatArrivalDiff.ts
+- src/features/world-presence/domain/emoteCooldown.ts
+- src/features/world-presence/transport/worldPresenceTransport.ts
+- src/features/chat-signals/conversationGap.ts
+- src/features/live-room/domain/coldOpenSilence.ts
+- src/features/live-room/domain/voteMoments.ts
+- src/features/live-room/domain/buildVoteCounts.ts
+辅助（打字节奏实现落在 callout 域，与 chat-signals 边界互补）：
+- src/features/world-callouts/domain/typingRhythm.ts
+
+门禁结果（最终）
+----------------
+$ node scripts/check-proposal-shape.mjs course-proposals/realtime-presence.json
+ok  course-proposals/realtime-presence.json
+
+$ node scripts/check-proposal-evidence.mjs course-proposals/realtime-presence.json --study turing-pact
+（全部 63 条 sourcePath:lineStart-lineEnd 均为 ok）
+all 63 references resolve at their pinned commits
+
+读代码时最反直觉的一点（已写进课）
+------------------------------------
+「安静站桩」不等于「可以删掉」。
+
+pruneStaleRemotePresence 在 missingSinceMs === null 时**永远保留**远端实体；
+只有确认缺席并打上 missingSinceMs 之后，超时才真正 Gone。
+也就是说：离开是两阶段（失踪戳 → 到期修剪），不是「最后收包时间超时就杀」。
+测试明确写了 idle 无移动包 60 秒后 prune 仍 size=1。
+
+若一人公司按「心跳沉默 = 离线」做，弱网下站桩玩家会闪烁消失——
+这正是 missing-then-prune 一课的核心。
+
+同步相关的姊妹反直觉点（也在课内）：
+- leave 事件仍要 queueMicrotask 后对照 presenceState，假离开直接吞掉；
+- seat arrival 首屏 / reseed 必须静默，否则重连欢迎风暴；
+- typing 是 live 呈现时钟，禁止污染 history 的权威时间。
