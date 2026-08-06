@@ -1533,3 +1533,110 @@ describe("composable transactions", () => {
     store.close();
   });
 });
+
+describe("learner submissions versus host grades", () => {
+  /**
+   * The reference answer is disclosed on "you have really tried N times". A
+   * host grade is also a row in `exercise_attempt`, so total attempts advance
+   * without the learner doing anything — counting them would hand the answer
+   * over after a single try.
+   */
+  it("counts only the rows the learner actually produced", () => {
+    const store = new SqliteLearningStore(temporaryDatabase());
+    const key = exerciseKey("disclosure-count");
+
+    store.recordExerciseAttempt({
+      commandId: "submit-1",
+      exerciseKey: key,
+      contentRevision: 1,
+      score: 0,
+      maxScore: 1,
+      response: { phase: "learner-submit", answer: "first guess" },
+      occurredAt: NOW,
+    });
+    store.recordExerciseAttempt({
+      commandId: "grade-1",
+      exerciseKey: key,
+      contentRevision: 1,
+      score: 0,
+      maxScore: 1,
+      response: { phase: "host-grade", answer: "first guess", evaluation: "还不对" },
+      occurredAt: TOMORROW,
+    });
+
+    expect(store.countExerciseAttempts(key, 1)).toBe(2);
+    expect(store.countLearnerSubmissions(key, 1)).toBe(1);
+    store.close();
+  });
+
+  it("ignores attempts recorded without a response body", () => {
+    const store = new SqliteLearningStore(temporaryDatabase());
+    const key = exerciseKey("no-response-body");
+    store.recordExerciseAttempt({
+      commandId: "legacy-attempt",
+      exerciseKey: key,
+      contentRevision: 1,
+      score: 1,
+      maxScore: 1,
+      occurredAt: NOW,
+    });
+    expect(store.countLearnerSubmissions(key, 1)).toBe(0);
+    expect(store.getLatestLearnerSubmission(key, 1)).toBeNull();
+    store.close();
+  });
+
+  it("returns the newest answer, not the one the host happened to echo back", () => {
+    const store = new SqliteLearningStore(temporaryDatabase());
+    const key = exerciseKey("newest-answer");
+
+    store.recordExerciseAttempt({
+      commandId: "submit-old",
+      exerciseKey: key,
+      contentRevision: 2,
+      score: 0,
+      maxScore: 1,
+      response: { phase: "learner-submit", answer: "old answer" },
+      occurredAt: NOW,
+    });
+    store.recordExerciseAttempt({
+      commandId: "submit-new",
+      exerciseKey: key,
+      contentRevision: 2,
+      score: 0,
+      maxScore: 1,
+      response: { phase: "learner-submit", answer: "new answer" },
+      occurredAt: TOMORROW,
+    });
+    store.recordExerciseAttempt({
+      commandId: "grade-echo",
+      exerciseKey: key,
+      contentRevision: 2,
+      score: 1,
+      maxScore: 1,
+      response: { phase: "host-grade", answer: "old answer", evaluation: "对了" },
+      occurredAt: DAY_AFTER_TOMORROW,
+    });
+
+    expect(store.getLatestLearnerSubmission(key, 2)?.answer).toBe("new answer");
+    expect(store.countLearnerSubmissions(key, 2)).toBe(2);
+    store.close();
+  });
+
+  it("keeps submissions scoped to their content revision", () => {
+    const store = new SqliteLearningStore(temporaryDatabase());
+    const key = exerciseKey("revision-scoped");
+    store.recordExerciseAttempt({
+      commandId: "submit-rev-1",
+      exerciseKey: key,
+      contentRevision: 1,
+      score: 0,
+      maxScore: 1,
+      response: { phase: "learner-submit", answer: "answered before the rewrite" },
+      occurredAt: NOW,
+    });
+    expect(store.countLearnerSubmissions(key, 1)).toBe(1);
+    expect(store.countLearnerSubmissions(key, 2)).toBe(0);
+    expect(store.getLatestLearnerSubmission(key, 2)).toBeNull();
+    store.close();
+  });
+});

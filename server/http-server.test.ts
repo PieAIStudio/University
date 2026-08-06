@@ -194,6 +194,35 @@ function makeLearningProject(enrollCard = true): {
 }
 
 /**
+ * Writes an AI host's verdict back the way a host would: the route ids come
+ * from the URL, the judgement from the body. Pass/fail is the host's call, so
+ * every completion test has to go through here rather than through an answer
+ * string the server would have to grade itself.
+ */
+function hostGrade(
+  base: string,
+  headers: Record<string, string>,
+  exercisePath: string,
+  body: {
+    readonly commandId: string;
+    readonly passed: boolean;
+    readonly evaluation: string;
+    readonly contentRevision?: number;
+  },
+): Promise<Response> {
+  return fetch(`${base}${exercisePath}/host-grade`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      commandId: body.commandId,
+      contentRevision: body.contentRevision ?? 1,
+      passed: body.passed,
+      evaluation: body.evaluation,
+    }),
+  });
+}
+
+/**
  * Adds a second short-answer exercise to the fixture lesson, so completion can
  * be tested against a lesson that asks more than one question. Content is
  * immutable while a course is active, so this walks the same
@@ -753,7 +782,12 @@ describe("UniversityLocal loopback API", () => {
     });
   });
 
-  it("enrolls active lesson cards only after a correct completion", async () => {
+  /**
+   * Submitting is no longer the same act as passing. The page records what the
+   * learner wrote and stops; the pass comes back from an AI host. A card that
+   * enrolled on submission would put an unlearned fact into the review queue.
+   */
+  it("enrolls active lesson cards only after the host grades a pass", async () => {
     const fixture = makeLearningProject(false);
     const { base } = await start(fixture.projectRoot);
     const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
@@ -765,31 +799,40 @@ describe("UniversityLocal loopback API", () => {
       "Content-Type": "application/json",
       "X-University-Local-Token": bootstrap.requestToken,
     };
-    const attemptPath = `${fixture.lessonPath}/exercises/name-auth-owner/attempt`;
-    const wrong = await fetch(`${base}${attemptPath}`, {
+    const exercisePath = `${fixture.lessonPath}/exercises/name-auth-owner`;
+
+    const submitted = await fetch(`${base}${exercisePath}/attempt`, {
       method: "POST",
       headers,
       body: JSON.stringify({
         commandId: "55555555-5555-4555-8555-555555555555",
         contentRevision: 1,
-        answer: "wrong",
+        answer: "identity-service",
       }),
     });
-    expect(wrong.status).toBe(200);
+    expect(submitted.status).toBe(200);
+    // Even a verbatim-correct answer waits for the host.
+    expect(await submitted.json()).toMatchObject({ correct: false, awaitingHostGrade: true });
     expect((await (await fetch(`${base}/api/bootstrap`)).json()) as unknown).toMatchObject({
       today: { dueCount: 0 },
     });
 
-    const correct = await fetch(`${base}${attemptPath}`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        commandId: "66666666-6666-4666-8666-666666666666",
-        contentRevision: 1,
-        answer: "identity-service",
-      }),
+    const failed = await hostGrade(base, headers, exercisePath, {
+      commandId: "66666666-6666-4666-8666-666666666666",
+      passed: false,
+      evaluation: "少了一个关键点",
     });
-    expect(correct.status).toBe(200);
+    expect(failed.status).toBe(200);
+    expect((await (await fetch(`${base}/api/bootstrap`)).json()) as unknown).toMatchObject({
+      today: { dueCount: 0 },
+    });
+
+    const passed = await hostGrade(base, headers, exercisePath, {
+      commandId: "77777777-7777-4777-8777-777777777777",
+      passed: true,
+      evaluation: "对了：identity-service 拥有认证。",
+    });
+    expect(passed.status).toBe(200);
     expect((await (await fetch(`${base}/api/bootstrap`)).json()) as unknown).toMatchObject({
       today: {
         dueCount: 1,
@@ -798,7 +841,56 @@ describe("UniversityLocal loopback API", () => {
     });
   });
 
-  it("completes a multi-exercise lesson only when every exercise is answered", async () => {
+  /**
+   * Regression: the HTTP layer and the grade workflow each kept their own
+   * "attempted but unsolved" progress floor, at 0.25 and 0.05. Submitting wrote
+   * the higher one, and a `passed: false` grade then tried to write the lower
+   * one, which the store rightly refuses as moving progress backward. The
+   * learner got a 409 and no explanation at all — on the most common path there
+   * is, a first answer that is wrong.
+   */
+  it("records a failing grade after a submission instead of refusing it", async () => {
+    const fixture = makeLearningProject(false);
+    const { base } = await start(fixture.projectRoot);
+    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      requestToken: string;
+    };
+    const headers = {
+      "Content-Type": "application/json",
+      "X-University-Local-Token": bootstrap.requestToken,
+    };
+    const exercisePath = `${fixture.lessonPath}/exercises/name-auth-owner`;
+
+    await fetch(`${base}${exercisePath}/attempt`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        commandId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+        contentRevision: 1,
+        answer: "a first, wrong answer",
+      }),
+    });
+    const failed = await hostGrade(base, headers, exercisePath, {
+      commandId: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+      passed: false,
+      evaluation: "认证的拥有者不是这个。",
+    });
+    expect(failed.status).toBe(200);
+
+    const lesson = (await (await fetch(`${base}${fixture.lessonPath}`)).json()) as {
+      lesson: {
+        progress: { status: string } | null;
+        exercises: readonly { hostGrade: { evaluation: string; passed: boolean } | null }[];
+      };
+    };
+    expect(lesson.lesson.progress).toMatchObject({ status: "in-progress" });
+    expect(lesson.lesson.exercises[0]?.hostGrade).toMatchObject({
+      passed: false,
+      evaluation: "认证的拥有者不是这个。",
+    });
+  });
+
+  it("completes a multi-exercise lesson only when every exercise is graded a pass", async () => {
     const fixture = makeLearningProject(false);
     addSecondExercise(fixture);
     const { base } = await start(fixture.projectRoot);
@@ -809,12 +901,6 @@ describe("UniversityLocal loopback API", () => {
       "Content-Type": "application/json",
       "X-University-Local-Token": bootstrap.requestToken,
     };
-    const answer = async (exerciseId: string, commandId: string, text: string) =>
-      fetch(`${base}${fixture.lessonPath}/exercises/${exerciseId}/attempt`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ commandId, contentRevision: 1, answer: text }),
-      });
     const lessonProgress = async () =>
       (
         (await (await fetch(`${base}${fixture.lessonPath}`)).json()) as {
@@ -822,22 +908,32 @@ describe("UniversityLocal loopback API", () => {
         }
       ).lesson.progress;
 
-    const first = await answer(
-      "name-auth-owner",
-      "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-      "identity-service",
+    const first = await hostGrade(
+      base,
+      headers,
+      `${fixture.lessonPath}/exercises/name-auth-owner`,
+      {
+        commandId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        passed: true,
+        evaluation: "对",
+      },
     );
     expect(first.status).toBe(200);
     expect(await lessonProgress()).toMatchObject({ status: "in-progress" });
-    // One of two exercises answered must not open the review queue.
+    // One of two exercises passed must not open the review queue.
     expect((await (await fetch(`${base}/api/bootstrap`)).json()) as unknown).toMatchObject({
       today: { dueCount: 0 },
     });
 
-    const second = await answer(
-      "name-auth-store",
-      "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
-      "session-store",
+    const second = await hostGrade(
+      base,
+      headers,
+      `${fixture.lessonPath}/exercises/name-auth-store`,
+      {
+        commandId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        passed: true,
+        evaluation: "也对",
+      },
     );
     expect(second.status).toBe(200);
     expect(await lessonProgress()).toMatchObject({ status: "completed", progress: 1 });
@@ -868,6 +964,69 @@ describe("UniversityLocal loopback API", () => {
     expect((await send("first guess")).status).toBe(200);
     // Same command ID, different body: a client conflict, not a 500.
     expect((await send("different guess")).status).toBe(409);
+  });
+
+  it("refuses a coaching packet before the learner has submitted anything", async () => {
+    const fixture = makeLearningProject();
+    const { base } = await start(fixture.projectRoot);
+    const response = await fetch(
+      `${base}${fixture.lessonPath}/exercises/name-auth-owner/coaching-packet`,
+    );
+    expect(response.status).toBe(409);
+  });
+
+  /**
+   * The packet is what an assistant in a fresh chat window grades from. It has
+   * to carry the cited source, because that assistant usually cannot open the
+   * repository, and it must not carry the reference answer on a first try,
+   * because handing it over ends the retrieval practice the exercise exists for.
+   */
+  it("packs cited source but withholds the reference until the learner has really tried", async () => {
+    const fixture = makeLearningProject();
+    const { base } = await start(fixture.projectRoot);
+    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      readonly requestToken: string;
+    };
+    const headers = {
+      "Content-Type": "application/json",
+      "X-University-Local-Token": bootstrap.requestToken,
+    };
+    const attemptPath = `${fixture.lessonPath}/exercises/name-auth-owner/attempt`;
+    const packetPath = `${fixture.lessonPath}/exercises/name-auth-owner/coaching-packet`;
+    const submit = (commandId: string, answer: string) =>
+      fetch(`${base}${attemptPath}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ commandId, contentRevision: 1, answer }),
+      });
+
+    expect((await submit("aaaaaaa1-1111-4111-8111-111111111111", "first guess")).status).toBe(200);
+    const first = (await (await fetch(`${base}${packetPath}`)).json()) as {
+      readonly packet: string;
+      readonly referenceDisclosed: boolean;
+      readonly evidenceCount: number;
+      readonly submissionCount: number;
+    };
+    expect(first.submissionCount).toBe(1);
+    expect(first.referenceDisclosed).toBe(false);
+    expect(first.evidenceCount).toBe(1);
+    expect(first.packet).toContain("export const owner = 'identity-service';");
+    expect(first.packet).toContain("first guess");
+    expect(first.packet).toContain("本次不提供参考答案");
+    expect(first.packet).toContain('"passed": false');
+
+    expect((await submit("aaaaaaa2-2222-4222-8222-222222222222", "second guess")).status).toBe(200);
+    const second = (await (await fetch(`${base}${packetPath}`)).json()) as {
+      readonly packet: string;
+      readonly referenceDisclosed: boolean;
+      readonly submissionCount: number;
+    };
+    expect(second.submissionCount).toBe(2);
+    expect(second.referenceDisclosed).toBe(true);
+    expect(second.packet).toContain("identity-service");
+    expect(second.packet).toContain("参考答案（学习者已多次尝试，可以揭晓）");
+    // The newest answer, not the one the first packet was built from.
+    expect(second.packet).toContain("second guess");
   });
 
   it("serves the restored database after the learner file is replaced under it", async () => {
@@ -910,7 +1069,14 @@ describe("UniversityLocal loopback API", () => {
     expect(normalizeAnswer("ink runner")).not.toBe(expected);
   });
 
-  it("withholds the reference answer until the second wrong attempt", async () => {
+  /**
+   * The attempt endpoint used to grade by string equality and hand back the
+   * reference answer once the learner had tried twice. Grading moved to the AI
+   * host, and disclosure moved to the coaching packet, which the server builds.
+   * Neither the reference answer nor a verdict may leak from this route now —
+   * a client that still reads `expectedAnswer` here must find nothing.
+   */
+  it("records the answer without judging it or leaking the reference", async () => {
     const fixture = makeLearningProject();
     const { base } = await start(fixture.projectRoot);
     const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
@@ -921,55 +1087,33 @@ describe("UniversityLocal loopback API", () => {
       "X-University-Local-Token": bootstrap.requestToken,
     };
     const attemptPath = `${fixture.lessonPath}/exercises/name-auth-owner/attempt`;
-    const attempt = async (commandId: string, answer: string) =>
-      (await (
-        await fetch(`${base}${attemptPath}`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ commandId, contentRevision: 1, answer }),
-        })
-      ).json()) as {
-        readonly correct: boolean;
-        readonly attemptCount: number;
-        readonly expectedAnswer?: string;
+    const attempt = async (commandId: string, answer: string) => {
+      const response = await fetch(`${base}${attemptPath}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ commandId, contentRevision: 1, answer }),
+      });
+      const text = await response.text();
+      return {
+        text,
+        body: JSON.parse(text) as {
+          readonly correct: boolean;
+          readonly awaitingHostGrade: boolean;
+          readonly attemptCount: number;
+          readonly expectedAnswer?: string;
+        },
       };
-
-    const first = await attempt("11111111-1111-4111-8111-111111111111", "wrong");
-    expect(first).toMatchObject({ correct: false, attemptCount: 1 });
-    expect(first.expectedAnswer).toBeUndefined();
-
-    const second = await attempt("22222222-2222-4222-8222-222222222222", "still wrong");
-    expect(second).toMatchObject({
-      correct: false,
-      attemptCount: 2,
-      expectedAnswer: "identity-service",
-    });
-  });
-
-  it("returns the reference answer as soon as the attempt is correct", async () => {
-    const fixture = makeLearningProject();
-    const { base } = await start(fixture.projectRoot);
-    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
-      requestToken: string;
     };
-    const correct = await fetch(`${base}${fixture.lessonPath}/exercises/name-auth-owner/attempt`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-University-Local-Token": bootstrap.requestToken,
-      },
-      body: JSON.stringify({
-        commandId: "33333333-3333-4333-8333-333333333333",
-        contentRevision: 1,
-        answer: "identity-service",
-      }),
-    });
 
-    expect(await correct.json()).toMatchObject({
-      correct: true,
-      attemptCount: 1,
-      expectedAnswer: "identity-service",
-    });
+    const wrong = await attempt("11111111-1111-4111-8111-111111111111", "wrong");
+    expect(wrong.body).toMatchObject({ correct: false, awaitingHostGrade: true, attemptCount: 1 });
+    expect(wrong.body.expectedAnswer).toBeUndefined();
+    expect(wrong.text).not.toContain("identity-service");
+
+    // A verbatim-correct answer is still only an answer until the host says so.
+    const verbatim = await attempt("22222222-2222-4222-8222-222222222222", "identity-service");
+    expect(verbatim.body).toMatchObject({ correct: false, awaitingHostGrade: true });
+    expect(verbatim.body.expectedAnswer).toBeUndefined();
   });
 
   it("persists idempotent exercise and FSRS review commands", async () => {
@@ -1001,7 +1145,8 @@ describe("UniversityLocal loopback API", () => {
       headers,
       body: JSON.stringify(attemptBody),
     });
-    expect(firstAttemptBody.correct).toBe(true);
+    // Submitting records; it never decides. The verdict belongs to the host.
+    expect(firstAttemptBody.correct).toBe(false);
     expect(await duplicateAttempt.json()).toMatchObject({ attemptId: firstAttemptBody.attemptId });
 
     const reviewBody = {
@@ -1024,10 +1169,12 @@ describe("UniversityLocal loopback API", () => {
     expect(await duplicateReview.json()).toMatchObject({ eventId: firstReviewBody.eventId });
 
     const refreshed = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
-      today: { dueCount: number; nextLesson: unknown };
+      today: { dueCount: number; nextLesson: { lessonId: string } | null };
     };
     expect(refreshed.today.dueCount).toBe(0);
-    expect(refreshed.today.nextLesson).toBeNull();
+    // Submitting no longer finishes a lesson, so today still reaches for it —
+    // the learner has written an answer but nothing has judged it yet.
+    expect(refreshed.today.nextLesson?.lessonId).toBe("auth-owner");
   });
 
   it("teaches every active course in a study, not only the default one", async () => {
@@ -1129,7 +1276,13 @@ describe("UniversityLocal loopback API", () => {
     expect(JSON.stringify(bootstrap)).not.toContain("SPEND-GATE-BACK-SECRET");
   });
 
-  it("grades an explain exercise by rubric self-assessment and enrolls its cards", async () => {
+  /**
+   * `explain` used to be graded by the learner ticking rubric points about
+   * their own answer, which is not a check — it is a self-report. It now takes
+   * the same host-grade path as `short-answer`, and the rubric is answer-key
+   * material the coaching packet discloses under the same rule.
+   */
+  it("grades an explain exercise through host write-back and enrolls its cards", async () => {
     const fixture = makeLearningProject(false);
     const lessonPath = addSecondCourse(fixture);
     const { base } = await start(fixture.projectRoot);
@@ -1145,79 +1298,51 @@ describe("UniversityLocal loopback API", () => {
     // The rubric is the answer key, so it must not travel with the prompt.
     expect(await (await fetch(`${base}${lessonPath}`)).text()).not.toContain("fails closed");
 
-    const withoutSelfAssessment = await fetch(`${base}${exercisePath}/attempt`, {
+    const selfAssessed = await fetch(`${base}${exercisePath}/attempt`, {
       method: "POST",
       headers,
       body: JSON.stringify({
         commandId: "44444444-4444-4444-8444-444444444444",
         contentRevision: 1,
         answer: "The gate runs first.",
+        met: [0],
       }),
     });
-    expect(withoutSelfAssessment.status).toBe(400);
+    expect(selfAssessed.status).toBe(400);
 
-    const rubric = await fetch(`${base}${exercisePath}/rubric`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ contentRevision: 1, answer: "The gate runs first." }),
-    });
-    expect(rubric.status).toBe(200);
-    expect(await rubric.json()).toMatchObject({
-      rubric: ["names the ordering", "says what fails closed"],
-    });
-
-    const partial = await fetch(`${base}${exercisePath}/attempt`, {
+    const submitted = await fetch(`${base}${exercisePath}/attempt`, {
       method: "POST",
       headers,
       body: JSON.stringify({
         commandId: "55555555-5555-4555-8555-555555555555",
         contentRevision: 1,
         answer: "The gate runs first.",
-        met: [0],
       }),
     });
-    expect(await partial.json()).toMatchObject({ correct: false, score: 1, maxScore: 2 });
+    expect(await submitted.json()).toMatchObject({ correct: false, awaitingHostGrade: true });
     expect(
       ((await (await fetch(`${base}/api/bootstrap`)).json()) as { today: { dueCount: number } })
         .today.dueCount,
     ).toBe(0);
 
-    // Repeating one covered point must not be able to buy the missing one.
-    const inflated = await fetch(`${base}${exercisePath}/attempt`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        commandId: "66666666-6666-4666-8666-666666666666",
-        contentRevision: 1,
-        answer: "The gate runs first.",
-        met: [0, 0],
-      }),
+    // A partial answer is the host's call, and a fail keeps the queue closed.
+    const partial = await hostGrade(base, headers, exercisePath, {
+      commandId: "66666666-6666-4666-8666-666666666666",
+      passed: false,
+      evaluation: "只说了顺序，没说不可用时会怎样。",
     });
-    expect(await inflated.json()).toMatchObject({ correct: false, score: 1, maxScore: 2 });
+    expect(partial.status).toBe(200);
+    expect(
+      ((await (await fetch(`${base}/api/bootstrap`)).json()) as { today: { dueCount: number } })
+        .today.dueCount,
+    ).toBe(0);
 
-    const outOfRange = await fetch(`${base}${exercisePath}/attempt`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        commandId: "77777777-7777-4777-8777-777777777777",
-        contentRevision: 1,
-        answer: "The gate runs first.",
-        met: [0, 9],
-      }),
+    const full = await hostGrade(base, headers, exercisePath, {
+      commandId: "88888888-8888-4888-8888-888888888888",
+      passed: true,
+      evaluation: "顺序和 fail-closed 都说到了。",
     });
-    expect(outOfRange.status).toBe(400);
-
-    const full = await fetch(`${base}${exercisePath}/attempt`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        commandId: "88888888-8888-4888-8888-888888888888",
-        contentRevision: 1,
-        answer: "The gate runs first, and an unavailable meter refuses the call.",
-        met: [0, 1],
-      }),
-    });
-    expect(await full.json()).toMatchObject({ correct: true, score: 2, maxScore: 2 });
+    expect(full.status).toBe(200);
 
     // A lesson whose only exercise is rubric-based used to be uncompletable, so
     // its cards were written and then never scheduled.
@@ -1226,6 +1351,14 @@ describe("UniversityLocal loopback API", () => {
     };
     expect(after.today.dueCount).toBe(1);
     expect(after.today.card?.cardId).toBe("spend-gate-card");
+
+    // The rubric endpoint is retired for every kind, not just short-answer.
+    const rubric = await fetch(`${base}${exercisePath}/rubric`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ contentRevision: 1, answer: "The gate runs first." }),
+    });
+    expect(rubric.status).toBe(410);
   });
 
   it("re-offers a lesson whose content was revised after it was completed", async () => {
@@ -1273,7 +1406,11 @@ describe("UniversityLocal loopback API", () => {
     });
   });
 
-  it("keeps rubric self-assessment away from short-answer exercises", async () => {
+  /**
+   * A client left over from before host grading must fail loudly rather than
+   * quietly self-assess its way to a completed lesson.
+   */
+  it("retires rubric self-assessment rather than leaving it half-wired", async () => {
     const fixture = makeLearningProject(false);
     const { base } = await start(fixture.projectRoot);
     const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
@@ -1290,7 +1427,7 @@ describe("UniversityLocal loopback API", () => {
       headers,
       body: JSON.stringify({ contentRevision: 1, answer: "identity-service" }),
     });
-    expect(rubric.status).toBe(409);
+    expect(rubric.status).toBe(410);
 
     const selfAssessed = await fetch(`${base}${exercisePath}/attempt`, {
       method: "POST",

@@ -901,6 +901,13 @@ summary:focus-visible,
   font-weight: 600;
 }
 
+.coaching-packet__contents {
+  margin: -4px 0 10px;
+  color: rgba(255, 245, 232, 0.72);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
 .coaching-packet__steps {
   margin: 0 0 10px;
   padding-left: 1.25rem;
@@ -969,6 +976,16 @@ summary:focus-visible,
   color: rgba(255, 245, 232, 0.82);
   font-size: 0.88rem;
   line-height: 1.5;
+}
+
+/* Each extension is one sentence rendered as Markdown, so its paragraph must
+   not reintroduce block spacing inside a list item. */
+.host-grade__extensions li > .markdown-body > :first-child {
+  margin-top: 0;
+}
+
+.host-grade__extensions li > .markdown-body > :last-child {
+  margin-bottom: 0;
 }
 
 .lesson-practice {

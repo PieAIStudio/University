@@ -216,6 +216,12 @@ export interface StoredHostExerciseGrade {
   readonly attemptId: string;
 }
 
+export interface StoredLearnerSubmission {
+  readonly attemptId: string;
+  readonly answer: string;
+  readonly occurredAt: Date;
+}
+
 export interface RecordRetrievalAttemptInput {
   readonly commandId: string;
   readonly cardKey: ReviewContentKey;
@@ -278,6 +284,11 @@ export interface LearningStore {
   recordLessonProgress(input: RecordLessonProgressInput): string;
   recordExerciseAttempt(input: RecordExerciseAttemptInput): string;
   countExerciseAttempts(exerciseKey: ExerciseContentKey, contentRevision: number): number;
+  countLearnerSubmissions(exerciseKey: ExerciseContentKey, contentRevision: number): number;
+  getLatestLearnerSubmission(
+    exerciseKey: ExerciseContentKey,
+    contentRevision: number,
+  ): StoredLearnerSubmission | null;
   hasCorrectExerciseAttempt(exerciseKey: ExerciseContentKey, contentRevision: number): boolean;
   getLatestHostExerciseGrade(
     exerciseKey: ExerciseContentKey,

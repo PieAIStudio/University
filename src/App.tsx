@@ -191,10 +191,15 @@ function evidenceRangeLabel(reference: EvidenceView): string | null {
 }
 
 function editorJumpShortcutLabel(): string {
-  const platform =
-    typeof navigator !== "undefined"
-      ? (navigator.userAgentData?.platform ?? navigator.platform ?? "")
-      : "";
+  if (typeof navigator === "undefined") return "Ctrl+P";
+  // `userAgentData` is User-Agent Client Hints, which the DOM lib this project
+  // compiles against does not declare — reading it as a typed property fails
+  // `pnpm typecheck`. It is still the accurate source on current Chrome, so it
+  // is read defensively rather than dropped or given a global declaration for
+  // one shortcut label.
+  const hints = (navigator as { readonly userAgentData?: { readonly platform?: string } })
+    .userAgentData;
+  const platform = hints?.platform ?? navigator.platform ?? "";
   return /mac|iphone|ipad/i.test(platform) ? "Cmd+P" : "Ctrl+P";
 }
 
@@ -226,11 +231,7 @@ export interface CardRevealPayload extends RetrievalAttemptDraft {
   readonly confidence?: number;
 }
 
-/**
- * `expectedAnswer` is deliberately optional: the API withholds the reference
- * answer until the attempt is correct or the learner has tried twice, so a
- * single wrong guess does not end the retrieval practice.
- */
+/** An AI host's verdict, written back through the CLI or the loopback API. */
 interface HostExerciseGradeView {
   readonly passed: boolean;
   readonly evaluation: string;
@@ -240,6 +241,12 @@ interface HostExerciseGradeView {
   readonly occurredAt: string;
 }
 
+/**
+ * What submitting returns. `correct` is always false here — the page records
+ * the answer and nothing more, and the verdict arrives later from a host. The
+ * reference answer never comes back on this route; it is disclosed, under the
+ * tried-twice rule, only inside the server-built coaching packet.
+ */
 interface ExerciseAttemptResult {
   readonly correct: boolean;
   readonly attemptCount: number;
@@ -247,84 +254,23 @@ interface ExerciseAttemptResult {
   readonly maxScore: number;
   readonly awaitingHostGrade?: boolean;
   readonly hostGrade?: HostExerciseGradeView | null;
-  readonly expectedAnswer?: string;
 }
 
 /**
- * Host-agnostic packet: AI judges pass/fail, teaches, and writes back via CLI.
+ * The packet is built by the server, not here.
+ *
+ * It has to carry the real source lines the question is about — an assistant in
+ * a fresh chat window usually cannot open the repository, and grading code it
+ * cannot see is guesswork. It also has to carry the reference answer, but only
+ * once the learner has really tried; that rule decides what the learner is
+ * allowed to see, so it cannot live in code the learner's own page runs.
  */
-export function buildExerciseCoachingPacket(input: {
-  readonly locator: LessonLocator;
-  readonly exercise: {
-    readonly id: string;
-    readonly kind: string;
-    readonly title: string;
-    readonly prompt: string;
-    readonly contentRevision: number;
-  };
-  readonly answer: string;
-  readonly result: ExerciseAttemptResult;
-}): string {
-  const { locator, exercise, answer, result } = input;
-  const commandId = crypto.randomUUID();
-  const gradeJson = {
-    schemaVersion: 1,
-    commandId,
-    contentRevision: exercise.contentRevision,
-    passed: true,
-    evaluation: "（在此写对学生的评估：对错原因 + 讲解，中文）",
-    extensions: ["（引申知识点 1）", "（引申知识点 2）"],
-    learnerAnswer: answer,
-    host: "ai-host",
-    courseId: locator.courseId,
-    unitId: locator.unitId,
-    lessonId: locator.lessonId,
-    exerciseId: exercise.id,
-  };
-  return [
-    "# UniversityLocal 练习答疑包（AI 判分 + 写回）",
-    "",
-    "## 给 AI 助手的任务（请直接执行）",
-    "你是本地学习教练。网页**不会**用字符串比对判对错。",
-    "请你：",
-    "1. **判定**学习者答案是否达到题目要求（允许合理表述差异，勿因多写解释就判错）。",
-    "2. **讲解**：对错原因、易混点，用白话。",
-    "3. **引申** 1～3 个相关知识点（extensions）。",
-    "4. **写回** UniversityLocal（见文末命令），否则 Web 不会显示你的评估、课也不会完成。",
-    "",
-    "不要假设你是某一个品牌的 IDE。",
-    "",
-    "## 题目上下文",
-    `- studyId: \`${locator.studyId}\``,
-    `- courseId: \`${locator.courseId}\``,
-    `- unitId: \`${locator.unitId}\``,
-    `- lessonId: \`${locator.lessonId}\``,
-    `- exerciseId: \`${exercise.id}\``,
-    `- contentRevision: \`${exercise.contentRevision}\``,
-    `- exerciseTitle: ${exercise.title}`,
-    `- kind: \`${exercise.kind}\``,
-    `- prompt: ${JSON.stringify(exercise.prompt)}`,
-    `- learnerAnswer: ${JSON.stringify(answer)}`,
-    `- attemptCount: \`${result.attemptCount}\``,
-    "",
-    "## 写回步骤（必做，否则 Web 无评估）",
-    "1. 在 **UniversityLocal 项目根目录** 新建文件，例如 `/tmp/ul-host-grade.json`",
-    "2. 写入下面 JSON（改 `passed` / `evaluation` / `extensions` / `host`；**保留 commandId 与 contentRevision**）",
-    "3. 执行：",
-    "```bash",
-    `pnpm university exercise host-grade --study ${locator.studyId} --input /tmp/ul-host-grade.json`,
-    "```",
-    "4. 告诉学习者：回到浏览器刷新本课，即可看到评估。",
-    "",
-    "### 写回 JSON 模板",
-    "```json",
-    JSON.stringify(gradeJson, null, 2),
-    "```",
-    "",
-    "## 人类可读摘要",
-    "请判对错、讲解、引申，并按上面 CLI 写回 UniversityLocal。",
-    "",
-  ].join("\n");
+interface CoachingPacketResponse {
+  readonly packet: string;
+  readonly referenceDisclosed: boolean;
+  readonly evidenceCount: number;
+  readonly evidenceOmitted: number;
+  readonly submissionCount: number;
 }
 
 interface LessonView {
@@ -521,6 +467,13 @@ function EmptyCampus() {
  * bootstrap puts a valid token back in place, so the repair is one more click.
  */
 const STALE_TOKEN_NOTICE = "本地服务重启过，安全令牌换新了。再点一次就能提交。";
+/**
+ * How long the page keeps watching for a host grade on its own. Past this the
+ * learner is no longer waiting on an assistant that is about to answer, and a
+ * page that polls forever is a page that never stops. Returning to the tab
+ * still refreshes immediately.
+ */
+const HOST_GRADE_POLL_LIMIT_MS = 10 * 60 * 1000;
 
 function isStaleTokenFailure(message: string): boolean {
   return /request token/i.test(message);
@@ -715,6 +668,7 @@ function ExerciseBlock({
   const [error, setError] = useState<string | null>(null);
   const [packetCopied, setPacketCopied] = useState(false);
   const [packetCopyFailed, setPacketCopyFailed] = useState(false);
+  const [packetInfo, setPacketInfo] = useState<CoachingPacketResponse | null>(null);
   const [hostGrade, setHostGrade] = useState<HostExerciseGradeView | null>(
     exercise.hostGrade ?? null,
   );
@@ -741,6 +695,55 @@ function ExerciseBlock({
     void onCompleted().catch(() => undefined);
   }, [solved, onCompleted]);
 
+  /**
+   * Where the host grade stood when this answer was submitted. Polling stops
+   * when a grade newer than this arrives — including a failing one, which is
+   * feedback the learner came back for just as much as a pass.
+   */
+  const [gradeWatermark, setGradeWatermark] = useState<string | null>(null);
+  useEffect(() => {
+    setGradeWatermark(null);
+  }, [exercise.id, exercise.contentRevision]);
+  const awaitingGrade = gradeWatermark !== null && (hostGrade?.occurredAt ?? "") <= gradeWatermark;
+
+  // `onRefresh` is rebuilt on every render of the campus, so depending on it
+  // here would clear and restart the timer before it could ever fire.
+  const refreshRef = useRef(onRefresh);
+  refreshRef.current = onRefresh;
+
+  useEffect(() => {
+    if (!awaitingGrade) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const startedAt = Date.now();
+
+    const poll = async () => {
+      if (cancelled) return;
+      await refreshRef.current().catch(() => undefined);
+      if (cancelled) return;
+      const elapsed = Date.now() - startedAt;
+      if (elapsed >= HOST_GRADE_POLL_LIMIT_MS) return;
+      // Quick at first to catch a fast write-back, then slower so a long wait
+      // does not spend ten minutes hammering the local API.
+      timer = setTimeout(() => void poll(), elapsed < 60_000 ? 3_000 : 10_000);
+    };
+    timer = setTimeout(() => void poll(), 3_000);
+
+    // The learner is in the assistant's window while it grades, so a hidden tab
+    // is the normal case here rather than a reason to stop. Coming back is the
+    // moment the answer should already be on screen.
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void refreshRef.current().catch(() => undefined);
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [awaitingGrade]);
+
   function post(action: "attempt" | "rubric", payload: Record<string, unknown>) {
     return fetch(`${lessonPath(locator)}/exercises/${exercise.id}/${action}`, {
       method: "POST",
@@ -749,16 +752,14 @@ function ExerciseBlock({
     });
   }
 
-  async function copyCoachingPacket(attempt: ExerciseAttemptResult, submittedAnswer: string) {
-    const packet = buildExerciseCoachingPacket({
-      locator,
-      exercise,
-      answer: submittedAnswer,
-      result: attempt,
-    });
+  async function copyCoachingPacket() {
     try {
+      const body = await readJson<CoachingPacketResponse>(
+        await fetch(`${lessonPath(locator)}/exercises/${exercise.id}/coaching-packet`),
+      );
       if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
-      await navigator.clipboard.writeText(packet);
+      await navigator.clipboard.writeText(body.packet);
+      setPacketInfo(body);
       setPacketCopied(true);
       setPacketCopyFailed(false);
     } catch {
@@ -772,7 +773,7 @@ function ExerciseBlock({
     setError(null);
     setPacketCopied(false);
     setPacketCopyFailed(false);
-    const submittedAnswer = answer;
+    setPacketInfo(null);
     try {
       const body = await readJson<ExerciseAttemptResult>(
         await post("attempt", {
@@ -781,7 +782,8 @@ function ExerciseBlock({
       );
       setResult(body);
       if (body.hostGrade) setHostGrade(body.hostGrade);
-      await copyCoachingPacket(body, submittedAnswer);
+      setGradeWatermark(body.hostGrade?.occurredAt ?? "");
+      await copyCoachingPacket();
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : "暂时无法提交练习";
       setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);
@@ -836,7 +838,9 @@ function ExerciseBlock({
 
       {result && !hostGrade?.passed ? (
         <GameCallout heading="答案已记录 · 等 AI 评估" tone="warning" role="status">
-          本页不做字符串/自评判分。请把答疑包贴到任意 AI 宿主；写回后点「刷新评估」。
+          {awaitingGrade
+            ? "本页不自己判对错。把答疑包贴给任意 AI 宿主，它写回后这里会自动出现评估 —— 不用守着，回到这个页面时也会立刻刷新。"
+            : "本页不自己判对错。请把答疑包贴到任意 AI 宿主，让它判分并写回。"}
         </GameCallout>
       ) : null}
 
@@ -858,7 +862,13 @@ function ExerciseBlock({
               <p className="eyebrow">引申</p>
               <ul>
                 {hostGrade.extensions.map((item) => (
-                  <li key={item}>{item}</li>
+                  // Same Markdown treatment the evaluation above gets. An
+                  // assistant writing about `pnpm dev` naturally reaches for
+                  // backticks, and rendering them raw here made the two halves
+                  // of one answer look like they came from different products.
+                  <li key={item} className="markdown-body">
+                    <MarkdownContent>{item}</MarkdownContent>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -875,32 +885,39 @@ function ExerciseBlock({
                 ? "自动复制失败，请点下面按钮手动复制"
                 : "复制答疑包 → 任意 AI 宿主判分并写回"}
           </p>
+          {packetCopied && packetInfo ? (
+            // An assistant in a fresh chat cannot open the repository, so the
+            // packet carries the cited code with it. Saying so is what stops
+            // the learner from wondering whether the AI is judging blind.
+            <p className="coaching-packet__contents">
+              包里带了 {packetInfo.evidenceCount} 段本课引用的真实源码
+              {packetInfo.evidenceOmitted > 0
+                ? `（另有 ${packetInfo.evidenceOmitted} 段略过）`
+                : ""}
+              ，
+              {packetInfo.referenceDisclosed
+                ? "以及参考答案 —— 你已经答过多次了。"
+                : "但不含参考答案 —— 第一次尝试时提前给答案会让这道题白做。"}
+            </p>
+          ) : null}
           <ol className="coaching-packet__steps">
             <li>打开 AI 助手（Grok Build、Claude Code、Antigravity、Codex 等）。</li>
             <li>新开一条对话，粘贴（⌘V / Ctrl+V）→ 发送。</li>
             <li>让 AI 按包内说明写 `/tmp/ul-host-grade.json` 并执行 host-grade 命令。</li>
-            <li>回到本页点「刷新评估」查看结果。</li>
+            <li>回到本页，评估写回后会自动出现。</li>
           </ol>
           <div className="coaching-packet__actions">
             <GameButton
               variant="secondary"
-              onClick={() =>
-                void copyCoachingPacket(
-                  result ?? {
-                    correct: false,
-                    attemptCount: 0,
-                    score: 0,
-                    maxScore: 1,
-                  },
-                  answer,
-                )
-              }
-              disabled={pending || !answer.trim()}
+              onClick={() => void copyCoachingPacket()}
+              disabled={pending}
             >
               {packetCopied ? "已复制，可再复制" : "复制答疑包"}
             </GameButton>
+            {/* The page polls on its own; this stays as the escape hatch for a
+                write-back that lands after polling has given up. */}
             <GameButton variant="ghost" onClick={() => void refreshHostGrade()} disabled={pending}>
-              刷新评估
+              {awaitingGrade ? "正在等评估 · 手动刷新" : "刷新评估"}
             </GameButton>
           </div>
         </div>

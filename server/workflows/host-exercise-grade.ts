@@ -9,7 +9,19 @@ import {
   type ExerciseContentKey,
 } from "../learning/types.js";
 
-const ATTEMPTED_LESSON_PROGRESS = 0.05;
+/**
+ * What an attempted-but-unsolved lesson shows, so a learner who has started
+ * does not see a flat zero. It stays small on purpose: a lesson with four
+ * exercises reads 0.25 once one is passed, and a floor that high would make
+ * "typed something" look identical to "answered a quarter of it".
+ *
+ * There used to be a second copy of this number in the HTTP layer, at 0.25.
+ * Submitting wrote 0.25, then a host grade of `passed: false` tried to write
+ * 0.05, and the store correctly refused to move progress backward — so every
+ * failing grade came back 409 and the learner got no feedback at all. One
+ * constant and one advancement function is the fix; see `advanceLessonProgress`.
+ */
+export const ATTEMPTED_LESSON_PROGRESS = 0.05;
 
 export const HostExerciseGradeProposalSchema = z
   .object({
@@ -135,7 +147,7 @@ export function applyHostExerciseGrade(input: {
       maxScore,
       response,
     });
-    advanceLessonFromGradable(input.store, input.studiesRoot, input.route, lesson, lessonKey);
+    advanceLessonProgress(input.store, input.studiesRoot, input.route, lesson, lessonKey);
     return recorded;
   });
 
@@ -181,7 +193,15 @@ function isLessonComplete(
   });
 }
 
-function advanceLessonFromGradable(
+/**
+ * Recomputes lesson progress from the attempt log and enrols the lesson's cards
+ * once every exercise has been graded a pass.
+ *
+ * Both entry points — the learner submitting an answer and a host writing back
+ * a verdict — go through here. When they had separate copies the two disagreed
+ * about the unsolved floor, which made a failing grade unrecordable.
+ */
+export function advanceLessonProgress(
   store: SqliteLearningStore,
   studiesRoot: string,
   route: HostExerciseRoute,
@@ -219,13 +239,20 @@ function advanceLessonFromGradable(
   const lessonComplete = gradableKeys.length > 0 && solved === gradableKeys.length;
   const previous = store.getLessonProgress(lessonKey);
   if (previous?.contentRevision !== lesson.contentRevision || previous.status !== "completed") {
+    // Progress within one revision is monotonic by contract, and the store
+    // enforces it. Honour that here rather than compute a value it will reject:
+    // a failing grade after an earlier submission legitimately recomputes to
+    // the same floor or lower, and refusing to record it would throw away the
+    // one thing the learner came back for — the explanation.
+    const earned = lessonComplete
+      ? 1
+      : Math.max(solved / Math.max(gradableKeys.length, 1), ATTEMPTED_LESSON_PROGRESS);
+    const floor = previous?.contentRevision === lesson.contentRevision ? previous.progress : 0;
     store.recordLessonProgress({
       lessonKey,
       contentRevision: lesson.contentRevision,
       status: lessonComplete ? "completed" : "in-progress",
-      progress: lessonComplete
-        ? 1
-        : Math.max(solved / Math.max(gradableKeys.length, 1), ATTEMPTED_LESSON_PROGRESS),
+      progress: Math.max(earned, floor),
     });
   }
   if (!lessonComplete) return;

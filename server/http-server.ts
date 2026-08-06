@@ -1,4 +1,4 @@
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { dirname, resolve } from "node:path";
@@ -50,11 +50,14 @@ import {
 } from "./learning/types.js";
 import { getCoursePaths, getStudyPaths } from "./studies/paths.js";
 import { inspectStudyShelf, readStudy } from "./studies/repository.js";
-import { applyHostExerciseGrade } from "./workflows/host-exercise-grade.js";
+import {
+  buildExerciseCoachingPacket,
+  disclosesReference,
+  type CoachingPacketEvidence,
+} from "./workflows/exercise-coaching-packet.js";
+import { advanceLessonProgress, applyHostExerciseGrade } from "./workflows/host-exercise-grade.js";
 
 const DEFAULT_PORT = 4317;
-/** Progress shown for a lesson that has been attempted but not yet solved. */
-const ATTEMPTED_LESSON_PROGRESS = 0.25;
 const MAX_JSON_BODY_BYTES = 64 * 1024;
 const LOOPBACK_HOST = /^(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/;
 const CommandId = z.string().uuid();
@@ -809,6 +812,118 @@ function buildLessonView(
   };
 }
 
+/**
+ * Evidence carried by the packet. The exercise's own references come first
+ * because they are what the question is about; the lesson's references follow
+ * as context. Five is a clipboard budget, not a correctness limit — a packet
+ * nobody can paste teaches nothing.
+ */
+const PACKET_EVIDENCE_LIMIT = 5;
+const PACKET_EVIDENCE_CONTEXT_LINES = 2;
+
+function evidenceIdentity(reference: EvidenceReference): string {
+  return `${reference.sourcePath}:${reference.lineStart ?? ""}-${reference.lineEnd ?? ""}`;
+}
+
+function collectPacketEvidence(
+  studiesRoot: string,
+  studyId: string,
+  references: readonly EvidenceReference[],
+): { readonly evidence: readonly CoachingPacketEvidence[]; readonly omitted: number } {
+  const evidence: CoachingPacketEvidence[] = [];
+  const seen = new Set<string>();
+  let omitted = 0;
+  for (const reference of references) {
+    const identity = evidenceIdentity(reference);
+    if (seen.has(identity)) continue;
+    seen.add(identity);
+    if (evidence.length >= PACKET_EVIDENCE_LIMIT) {
+      omitted += 1;
+      continue;
+    }
+    try {
+      evidence.push({
+        note: reference.note ?? null,
+        snippet: readEvidenceSnippet(
+          studiesRoot,
+          studyId,
+          reference,
+          PACKET_EVIDENCE_CONTEXT_LINES,
+        ),
+      });
+    } catch {
+      // A reference can point at a file too large to display, or at build
+      // configuration outside the UA graph. One unreadable snippet must not
+      // cost the learner the whole packet.
+      omitted += 1;
+    }
+  }
+  return { evidence, omitted };
+}
+
+function buildCoachingPacketResponse(
+  studiesRoot: string,
+  route: LearningRoute,
+  getStore: (studyId: string, create?: boolean) => SqliteLearningStore | null,
+): unknown {
+  const exercise = requireActiveExercise(studiesRoot, route);
+  const lesson = requireActiveLesson(studiesRoot, route).lesson;
+  const store = getStore(route.studyId);
+  const exerciseKey = exerciseContentKey({
+    courseId: route.courseId,
+    unitId: route.unitId,
+    lessonId: route.lessonId,
+    exerciseId: exercise.id,
+  });
+  const submission = store?.getLatestLearnerSubmission(exerciseKey, exercise.contentRevision);
+  if (!submission) {
+    throw new HttpError(409, "Submit an answer before copying the coaching packet");
+  }
+  const submissionCount = store!.countLearnerSubmissions(exerciseKey, exercise.contentRevision);
+  const passed = store!.hasCorrectExerciseAttempt(exerciseKey, exercise.contentRevision);
+  const disclose = disclosesReference({ passed, submissionCount });
+
+  const { evidence, omitted } = collectPacketEvidence(studiesRoot, route.studyId, [
+    ...exercise.evidence,
+    ...lesson.evidence,
+  ]);
+
+  const packet = buildExerciseCoachingPacket({
+    locator: {
+      studyId: route.studyId,
+      courseId: route.courseId,
+      unitId: route.unitId,
+      lessonId: route.lessonId,
+    },
+    lessonTitle: lesson.title,
+    exercise: {
+      id: exercise.id,
+      kind: exercise.kind,
+      title: exercise.title,
+      prompt: exercise.prompt,
+      contentRevision: exercise.contentRevision,
+    },
+    learnerAnswer: submission.answer,
+    submissionCount,
+    commandId: randomUUID(),
+    evidence,
+    evidenceOmitted: omitted,
+    reference: !disclose
+      ? null
+      : exercise.kind === "short-answer"
+        ? { kind: "short-answer", expectedAnswer: exercise.expectedAnswer }
+        : { kind: "explain", rubric: exercise.rubric },
+  });
+
+  return {
+    packet,
+    referenceDisclosed: disclose,
+    evidenceCount: evidence.length,
+    evidenceOmitted: omitted,
+    submissionCount,
+  };
+}
+
 function defaultProjectRoot(): string {
   return resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 }
@@ -1173,10 +1288,6 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
           unitId: exerciseRoute.unitId,
           lessonId: exerciseRoute.lessonId,
         });
-        const gradable = lesson.exerciseIds.map((id) =>
-          requireActiveExercise(config.studiesRoot, { ...exerciseRoute, contentId: id }),
-        );
-
         const attemptId = runWithCommandConflictMapped(
           "Command ID was already used for another exercise attempt",
           () =>
@@ -1189,32 +1300,16 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
                 maxScore,
                 response: { phase: "learner-submit", answer: body.answer },
               });
-              const previous = store.getLessonProgress(lessonKey);
-              if (
-                previous?.contentRevision !== lesson.contentRevision ||
-                previous.status !== "completed"
-              ) {
-                const solved = gradable.filter((candidate) =>
-                  store.hasCorrectExerciseAttempt(
-                    exerciseContentKey({
-                      courseId: exerciseRoute.courseId,
-                      unitId: exerciseRoute.unitId,
-                      lessonId: exerciseRoute.lessonId,
-                      exerciseId: candidate.id,
-                    }),
-                    candidate.contentRevision,
-                  ),
-                ).length;
-                store.recordLessonProgress({
-                  lessonKey,
-                  contentRevision: lesson.contentRevision,
-                  status: "in-progress",
-                  progress: Math.max(
-                    solved / Math.max(gradable.length, 1),
-                    ATTEMPTED_LESSON_PROGRESS,
-                  ),
-                });
-              }
+              // Same advancement the host-grade write-back runs. Two copies of
+              // this drifted once already, and the drift made every failing
+              // grade unrecordable.
+              advanceLessonProgress(
+                store,
+                config.studiesRoot,
+                { ...exerciseRoute, exerciseId: exercise.id },
+                lesson,
+                lessonKey,
+              );
               return recordedAttemptId;
             }),
         );
@@ -1294,6 +1389,19 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
           410,
           "Self-assessment rubric is retired; submit the answer and use host-grade write-back",
         );
+      }
+
+      const coachingPacketRoute = parseRoute(
+        url.pathname,
+        /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/exercises\/([^/]+)\/coaching-packet$/,
+      );
+      if (request.method === "GET" && coachingPacketRoute) {
+        sendJson(
+          response,
+          200,
+          buildCoachingPacketResponse(config.studiesRoot, coachingPacketRoute, getStore),
+        );
+        return;
       }
 
       const cardRevealRoute = parseRoute(

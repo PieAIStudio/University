@@ -45,6 +45,7 @@ import {
   type ReviewReceipt,
   type StoredCardState,
   type StoredHostExerciseGrade,
+  type StoredLearnerSubmission,
   type StoredLessonProgress,
   type StoredLearningSession,
   type StoredRetrievalAttempt,
@@ -1475,6 +1476,68 @@ export class SqliteLearningStore implements LearningStore {
       `)
       .get(exerciseKey, contentRevision) as { readonly attempts: number } | undefined;
     return row?.attempts ?? 0;
+  }
+
+  /**
+   * How many times the learner has actually answered this exercise at this
+   * revision. `countExerciseAttempts` counts every row, and a host grade is
+   * also a row, so it advances without the learner trying again. The reference
+   * answer is disclosed on a "you have really tried N times" rule, which only
+   * this count can express.
+   */
+  countLearnerSubmissions(exerciseKey: ExerciseContentKey, contentRevision: number): number {
+    parseExerciseContentKey(exerciseKey);
+    validateRevision(contentRevision);
+    const row = this.#database
+      .prepare(`
+        SELECT COUNT(*) AS submissions
+        FROM exercise_attempt
+        WHERE exercise_id = ? AND content_revision = ?
+          AND json_extract(response_json, '$.phase') = 'learner-submit'
+      `)
+      .get(exerciseKey, contentRevision) as { readonly submissions: number } | undefined;
+    return row?.submissions ?? 0;
+  }
+
+  /**
+   * Newest answer the learner submitted at this revision. The coaching packet
+   * is built on the server so the disclosure rule lives in one place, which
+   * means the server has to read the answer back rather than trust the client
+   * to resend it.
+   */
+  getLatestLearnerSubmission(
+    exerciseKey: ExerciseContentKey,
+    contentRevision: number,
+  ): StoredLearnerSubmission | null {
+    parseExerciseContentKey(exerciseKey);
+    validateRevision(contentRevision);
+    const row = this.#database
+      .prepare(`
+        SELECT attempt_id, response_json, occurred_at
+        FROM exercise_attempt
+        WHERE exercise_id = ? AND content_revision = ?
+          AND json_extract(response_json, '$.phase') = 'learner-submit'
+        ORDER BY occurred_at DESC, rowid DESC
+        LIMIT 1
+      `)
+      .get(exerciseKey, contentRevision) as
+      | {
+          readonly attempt_id: string;
+          readonly response_json: string;
+          readonly occurred_at: number;
+        }
+      | undefined;
+    if (!row) return null;
+    let response: unknown;
+    try {
+      response = JSON.parse(row.response_json) as unknown;
+    } catch {
+      return null;
+    }
+    if (!response || typeof response !== "object") return null;
+    const answer = (response as Record<string, unknown>)["answer"];
+    if (typeof answer !== "string") return null;
+    return { attemptId: row.attempt_id, answer, occurredAt: new Date(row.occurred_at) };
   }
 
   /**
