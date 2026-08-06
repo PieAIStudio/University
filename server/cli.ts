@@ -35,7 +35,7 @@ import {
 } from "./workflows/host-exercise-grade.js";
 import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
 import { getStudyPaths } from "./studies/paths.js";
-import { setCourseCurrency } from "./content/repository.js";
+import { setCourseCurrency, setCoursePrerequisites } from "./content/repository.js";
 import { readCourseClock } from "./airlock/course-clock.js";
 import { inspectAirlock } from "./airlock/inspect.js";
 import { promoteAirlock } from "./airlock/promote.js";
@@ -61,6 +61,7 @@ Commands:
   course set-default --study <study-id> --course <course-id>
   course pin --study <study-id> --course <course-id>
   course follow --study <study-id> --course <course-id>
+  course set-prerequisites --study <study-id> --course <course-id> [--requires <course-id>[,<course-id>...]]
   course open-for-edit --study <study-id> --course <course-id>
   course add-lessons --study <study-id> --input <proposal.json> [--dry-run]
   focus set --study <study-id> [--course <course-id>[,<course-id>...]]
@@ -173,6 +174,13 @@ interface CourseCurrencyCommand {
   readonly kind: "course-pin" | "course-follow";
   readonly studyId: string;
   readonly courseId: string;
+}
+
+interface CourseSetPrerequisitesCommand {
+  readonly kind: "course-set-prerequisites";
+  readonly studyId: string;
+  readonly courseId: string;
+  readonly prerequisiteCourseIds: readonly string[];
 }
 
 interface CourseOpenForEditCommand {
@@ -293,6 +301,7 @@ export type UniversityLocalCliCommand =
   | CourseReactivateCommand
   | CourseSetDefaultCommand
   | CourseCurrencyCommand
+  | CourseSetPrerequisitesCommand
   | CourseOpenForEditCommand
   | CourseAddLessonsCommand
   | FocusCommand
@@ -319,6 +328,7 @@ type ParsedValues = {
   readonly analysis?: string;
   readonly snapshot?: string;
   readonly course?: string;
+  readonly requires?: string;
   readonly ref?: string;
   readonly host?: string;
   readonly objective?: string;
@@ -373,6 +383,7 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         analysis: { type: "string" },
         snapshot: { type: "string" },
         course: { type: "string" },
+        requires: { type: "string" },
         ref: { type: "string" },
         host: { type: "string" },
         objective: { type: "string" },
@@ -511,6 +522,21 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         kind: positionals[1] === "pin" ? "course-pin" : "course-follow",
         studyId: required(values.study, "study"),
         courseId: required(values.course, "course"),
+      };
+    }
+    if (positionals[1] === "set-prerequisites") {
+      rejectUnrelatedOptions(values, ["study", "course", "requires"]);
+      // Comma-separated, same convention as `focus set --course`. Omitting
+      // --requires clears the list — the course becomes a fresh starting point.
+      const prerequisiteCourseIds = (values.requires ?? "")
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0);
+      return {
+        kind: "course-set-prerequisites",
+        studyId: required(values.study, "study"),
+        courseId: required(values.course, "course"),
+        prerequisiteCourseIds,
       };
     }
     if (positionals[1] === "open-for-edit") {
@@ -820,6 +846,21 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         courseId: course.id,
         currency: course.currency,
         status: course.status,
+        updatedAt: course.updatedAt,
+      };
+    }
+    case "course-set-prerequisites": {
+      const course = setCoursePrerequisites(
+        config.studiesRoot,
+        input.command.studyId,
+        input.command.courseId,
+        input.command.prerequisiteCourseIds,
+      );
+      return {
+        schemaVersion: 1 as const,
+        operation: "course-set-prerequisites" as const,
+        courseId: course.id,
+        prerequisiteCourseIds: course.prerequisiteCourseIds,
         updatedAt: course.updatedAt,
       };
     }

@@ -178,6 +178,34 @@ describe("UniversityLocal CLI parser", () => {
       },
     ],
     [
+      [
+        "course",
+        "set-prerequisites",
+        "--study",
+        "turing-pact",
+        "--course",
+        "foundations-terrain",
+        "--requires",
+        "foundations-before-zero",
+      ],
+      {
+        kind: "course-set-prerequisites",
+        studyId: "turing-pact",
+        courseId: "foundations-terrain",
+        prerequisiteCourseIds: ["foundations-before-zero"],
+      },
+    ],
+    [
+      // Omitting --requires clears the list, same as an empty focus run.
+      ["course", "set-prerequisites", "--study", "turing-pact", "--course", "foundations-terrain"],
+      {
+        kind: "course-set-prerequisites",
+        studyId: "turing-pact",
+        courseId: "foundations-terrain",
+        prerequisiteCourseIds: [],
+      },
+    ],
+    [
       ["focus", "set", "--study", "turing-pact", "--course", "contracts-and-drift"],
       { kind: "focus-set", studyId: "turing-pact", courseIds: ["contracts-and-drift"] },
     ],

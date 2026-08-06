@@ -554,6 +554,93 @@ export function setCourseCurrency(
   return updated;
 }
 
+/**
+ * Declares which courses a learner should already have finished. This is the
+ * one place course order comes from — see `orderCoursesByPrerequisite` — so a
+ * newly added course only needs its author to answer "what does this assume",
+ * the same question `objectives` already asks; it never needs anyone to go
+ * back and renumber the rest of the shelf.
+ */
+export function setCoursePrerequisites(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  prerequisiteCourseIds: readonly string[],
+  now = new Date(),
+): CourseManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const requested = [...new Set(prerequisiteCourseIds.map((id) => StableId.parse(id)))];
+  if (requested.includes(courseId)) {
+    throw new Error(`Course ${courseId} cannot depend on itself`);
+  }
+  const others = new Map(
+    listCourseIds(studiesRoot, studyId)
+      .filter((id) => id !== courseId)
+      .map((id) => [id, readCourse(studiesRoot, studyId, id)]),
+  );
+  for (const id of requested) {
+    if (!others.has(id)) throw new Error(`No course named ${id} in study ${studyId}`);
+  }
+  const graph = new Map<string, readonly string[]>(
+    [...others.entries()].map(([id, manifest]) => [id, manifest.prerequisiteCourseIds]),
+  );
+  graph.set(courseId, requested);
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const hasCycleFrom = (id: string): boolean => {
+    if (visited.has(id)) return false;
+    if (visiting.has(id)) return true;
+    visiting.add(id);
+    for (const prerequisite of graph.get(id) ?? []) {
+      if (hasCycleFrom(prerequisite)) return true;
+    }
+    visiting.delete(id);
+    visited.add(id);
+    return false;
+  };
+  if (hasCycleFrom(courseId)) {
+    throw new Error(`Setting ${courseId}'s prerequisites would create a cycle`);
+  }
+  const updated = CourseManifestSchema.parse({
+    ...course,
+    prerequisiteCourseIds: requested,
+    updatedAt: now.toISOString(),
+  });
+  writeJsonAtomically(getCoursePaths(studiesRoot, studyId, courseId).manifest, updated);
+  return updated;
+}
+
+/**
+ * Courses with no unmet prerequisite come first; ties go to whichever was
+ * created earlier, then by id. A prerequisite outside the given set (retired,
+ * or simply not part of what is being ordered) never blocks a course — only a
+ * prerequisite present in the same set does.
+ *
+ * Prerequisites are validated acyclic when they are set, so the "nothing is
+ * ready" branch below is a defensive fallback for a cycle that reached disk
+ * some other way — it breaks the tie deterministically instead of looping.
+ */
+export function orderCoursesByPrerequisite(
+  courses: readonly CourseManifest[],
+): readonly CourseManifest[] {
+  const byId = new Map(courses.map((course) => [course.id, course]));
+  const remaining = new Set(byId.keys());
+  const tieBreak = (left: string, right: string): number =>
+    byId.get(left)!.createdAt.localeCompare(byId.get(right)!.createdAt) ||
+    left.localeCompare(right);
+
+  const ordered: CourseManifest[] = [];
+  while (remaining.size > 0) {
+    const ready = [...remaining]
+      .filter((id) => byId.get(id)!.prerequisiteCourseIds.every((p) => !remaining.has(p)))
+      .sort(tieBreak);
+    const next = ready.length > 0 ? ready[0]! : [...remaining].sort(tieBreak)[0]!;
+    ordered.push(byId.get(next)!);
+    remaining.delete(next);
+  }
+  return ordered;
+}
+
 export function updateUnitStatus(
   studiesRoot: string,
   studyId: string,

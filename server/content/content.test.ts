@@ -10,12 +10,15 @@ import { getCoursePaths, getLessonPaths, getUnitPaths } from "../studies/paths.j
 import { createStudy, registerLocalGitSource } from "../studies/repository.js";
 import { createCleanSnapshot } from "../studies/snapshots.js";
 import { evaluateEvidenceFreshness, validateEvidence } from "./evidence.js";
+import type { CourseManifest } from "../../src/domain/schemas.js";
 import {
+  orderCoursesByPrerequisite,
   readCourse,
   readLatestCard,
   readLatestExercise,
   readLatestLesson,
   readUnit,
+  setCoursePrerequisites,
   updateCourseStatus,
   updateUnitStatus,
   writeCardRevision,
@@ -653,5 +656,119 @@ describe("course content repository", () => {
     expect(nextSnapshot.sourceCommit).not.toBe(snapshot.sourceCommit);
     expect(freshness.status).toBe("stale");
     expect(freshness.reasons[0]).toContain("auth.ts");
+  });
+});
+
+function courseManifest(
+  overrides: { id: string; createdAt: string } & Partial<CourseManifest>,
+): CourseManifest {
+  return {
+    schemaVersion: 1,
+    title: overrides.id,
+    description: "",
+    audience: "Anyone",
+    objectives: ["Objective"],
+    unitIds: [],
+    status: "active",
+    currency: "follow-ref",
+    prerequisiteCourseIds: [],
+    updatedAt: overrides.createdAt,
+    ...overrides,
+  };
+}
+
+function writeSecondCourse(studiesRoot: string, id: string): void {
+  writeCourse(studiesRoot, "sample", {
+    schemaVersion: 1,
+    id,
+    title: id,
+    description: "",
+    audience: "Anyone",
+    objectives: ["Objective"],
+    unitIds: [],
+    status: "draft",
+    createdAt: CREATED_AT,
+    updatedAt: CREATED_AT,
+  });
+}
+
+describe("course prerequisite order", () => {
+  it("places courses with no unmet prerequisite first, earliest creation wins ties", () => {
+    const early = courseManifest({ id: "early", createdAt: "2026-07-01T00:00:00.000Z" });
+    const late = courseManifest({ id: "late", createdAt: "2026-07-02T00:00:00.000Z" });
+    const dependent = courseManifest({
+      id: "dependent",
+      // Created before either of the others, but it still must sort after its
+      // prerequisite — creation time only breaks ties among courses that are
+      // equally ready to be learned.
+      createdAt: "2026-06-01T00:00:00.000Z",
+      prerequisiteCourseIds: ["late"],
+    });
+    const ordered = orderCoursesByPrerequisite([dependent, late, early]);
+    expect(ordered.map((course) => course.id)).toEqual(["early", "late", "dependent"]);
+  });
+
+  it("does not let a prerequisite outside the given set block a course", () => {
+    const course = courseManifest({
+      id: "solo",
+      createdAt: "2026-07-01T00:00:00.000Z",
+      prerequisiteCourseIds: ["retired-elsewhere"],
+    });
+    expect(orderCoursesByPrerequisite([course]).map((c) => c.id)).toEqual(["solo"]);
+  });
+
+  it("terminates on a cycle instead of looping forever", () => {
+    // A cycle can only reach this function if a manifest was edited outside
+    // `setCoursePrerequisites`, which rejects one — this is the defensive path.
+    const a = courseManifest({
+      id: "a",
+      createdAt: "2026-07-01T00:00:00.000Z",
+      prerequisiteCourseIds: ["b"],
+    });
+    const b = courseManifest({
+      id: "b",
+      createdAt: "2026-07-02T00:00:00.000Z",
+      prerequisiteCourseIds: ["a"],
+    });
+    expect(orderCoursesByPrerequisite([a, b]).map((c) => c.id)).toEqual(["a", "b"]);
+  });
+});
+
+describe("setCoursePrerequisites", () => {
+  it("records a valid prerequisite", () => {
+    const { studiesRoot } = setup();
+    writeHierarchy(studiesRoot);
+    writeSecondCourse(studiesRoot, "second-course");
+    const updated = setCoursePrerequisites(studiesRoot, "sample", "second-course", [COURSE_ID]);
+    expect(updated.prerequisiteCourseIds).toEqual([COURSE_ID]);
+    expect(readCourse(studiesRoot, "sample", "second-course").prerequisiteCourseIds).toEqual([
+      COURSE_ID,
+    ]);
+  });
+
+  it("rejects a prerequisite that does not exist in the study", () => {
+    const { studiesRoot } = setup();
+    writeHierarchy(studiesRoot);
+    expect(() => setCoursePrerequisites(studiesRoot, "sample", COURSE_ID, ["ghost"])).toThrow(
+      /No course named ghost/,
+    );
+  });
+
+  it("rejects a course depending on itself", () => {
+    const { studiesRoot } = setup();
+    writeHierarchy(studiesRoot);
+    expect(() => setCoursePrerequisites(studiesRoot, "sample", COURSE_ID, [COURSE_ID])).toThrow(
+      /cannot depend on itself/,
+    );
+  });
+
+  it("rejects a prerequisite that would create a cycle", () => {
+    const { studiesRoot } = setup();
+    writeHierarchy(studiesRoot);
+    writeSecondCourse(studiesRoot, "second-course");
+    setCoursePrerequisites(studiesRoot, "sample", "second-course", [COURSE_ID]);
+    expect(() =>
+      setCoursePrerequisites(studiesRoot, "sample", COURSE_ID, ["second-course"]),
+    ).toThrow(/would create a cycle/);
   });
 });

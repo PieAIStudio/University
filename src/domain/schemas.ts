@@ -353,6 +353,7 @@ export const CourseManifestSchema = z
     unitIds: z.array(StableId),
     status: ContentStatus,
     currency: CourseCurrency.default("follow-ref"),
+    prerequisiteCourseIds: z.array(StableId).default([]),
     createdAt: IsoDateTime,
     updatedAt: IsoDateTime,
   })

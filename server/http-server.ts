@@ -26,6 +26,7 @@ import { loadUniversityLocalConfig } from "./config/load-config.js";
 import { readEvidenceSnippet } from "./content/evidence.js";
 import {
   listCourseIds,
+  orderCoursesByPrerequisite,
   readCourse,
   readLatestCard,
   readLatestExercise,
@@ -478,9 +479,11 @@ function requireActiveCourse(
 }
 
 /**
- * The study's active courses, default first. Ordering is what makes "next
- * lesson" meaningful across a shelf: without it the learner's next step would
- * hop between courses by whatever order the filesystem happened to return.
+ * The study's active courses, in prerequisite order. Ordering is what makes
+ * "next lesson" meaningful across a shelf: without it the learner's next step
+ * would hop between courses by whatever order the filesystem happened to
+ * return. `study.defaultCourseId` picks which course the study opens on, not
+ * this order — see `requireActiveCourse` above — so it plays no part here.
  */
 function listActiveCourses(studiesRoot: string, study: StudyManifest): readonly CourseManifest[] {
   const courses: CourseManifest[] = [];
@@ -493,11 +496,7 @@ function listActiveCourses(studiesRoot: string, study: StudyManifest): readonly 
       // not by every shelf listing that walks past it.
     }
   }
-  return courses.sort((left, right) => {
-    if (left.id === study.defaultCourseId) return -1;
-    if (right.id === study.defaultCourseId) return 1;
-    return left.id.localeCompare(right.id);
-  });
+  return orderCoursesByPrerequisite(courses);
 }
 
 function requireActiveUnit(

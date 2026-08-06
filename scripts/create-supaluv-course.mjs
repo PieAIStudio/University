@@ -359,6 +359,9 @@ export function buildSupaluvCourseDefinition(analysis) {
       // definition, and a field that only one side knows about reads as a
       // conflicting course.
       currency: "follow-ref",
+      // Same reasoning as `currency` above: stated rather than left to the
+      // schema default so the field-for-field comparison against disk agrees.
+      prerequisiteCourseIds: [],
       createdAt: timestamp,
       updatedAt: timestamp,
     },
