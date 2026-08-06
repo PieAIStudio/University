@@ -1,0 +1,112 @@
+moment-design course proposal — delivery report
+================================================
+
+Course id: moment-design
+Title: 产品的「时刻」是怎么搭出来的
+Proposal: course-proposals/moment-design.json
+Snapshot: git-3b402e069a5d
+Analysis: ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a
+Source commit: 3b402e069a5db5fe9eb82dbc03aa05152b3d298b
+
+Scale
+-----
+Units: 3
+Lessons: 12
+Evidence references (lesson + card + exercise): 69
+
+Unit map
+--------
+1. opening-and-cover — 开场：仪式感怎么进门 (4 lessons)
+   - first-gesture-unlock
+   - mute-orthogonal-to-unlock
+   - silent-placeholder-playing
+   - cover-diorama-before-engine
+2. unmask-climax — 高潮：按什么顺序揭开 (4 lessons)
+   - reveal-order-is-drama
+   - timing-constants-are-product
+   - settlement-behind-climax
+   - skip-and-reduced-motion (includes mermaid state diagram)
+3. roast-and-share — 复盘：离开后还记得什么 (4 lessons)
+   - report-message-contract
+   - share-without-next-room-spoilers
+   - share-image-fallback-ladder
+   - portrait-card-and-cjk-width
+
+Gate outputs (final)
+--------------------
+### check-proposal-shape.mjs
+ok  course-proposals/moment-design.json
+
+### check-proposal-evidence.mjs --study turing-pact
+ok  src/features/opening-ritual/domain/openingRitualState.ts:11-11
+ok  src/features/opening-ritual/domain/openingRitualState.ts:19-24
+ok  src/features/opening-ritual/domain/openingRitualState.ts:24-24
+ok  src/features/opening-ritual/domain/openingRitualState.ts:38-44
+ok  src/features/opening-ritual/domain/openingRitualState.ts:47-54
+ok  src/features/opening-ritual/domain/openingRitualState.ts:47-74
+ok  src/features/opening-ritual/domain/openingRitualState.ts:56-68
+ok  src/features/opening-ritual/domain/openingRitualState.ts:76-100
+ok  src/features/opening-ritual/domain/openingRitualState.ts:81-88
+ok  src/features/opening-ritual/domain/openingRitualState.ts:90-99
+ok  src/features/opening-ritual/services/ambienceAudio.ts:80-102
+ok  src/features/opening-ritual/services/ambienceAudio.ts:93-102
+ok  src/features/opening-ritual/services/openingRitualSession.ts:213-265
+ok  src/features/opening-ritual/services/openingRitualSession.ts:69-82
+ok  src/features/opening-ritual/ui/useOpeningRitual.ts:91-95
+ok  src/features/roast-report/roastReport.ts:10-10
+ok  src/features/roast-report/roastReport.ts:17-19
+ok  src/features/roast-report/roastReport.ts:25-44
+ok  src/features/roast-report/roastReport.ts:8-23
+ok  src/features/roast-report/roastReport.ts:8-8
+ok  src/features/roast-report/shareCopy.ts:13-28
+ok  src/features/roast-report/shareCopy.ts:17-17
+ok  src/features/roast-report/shareCopy.ts:80-84
+ok  src/features/roast-report/shareCopy.ts:96-108
+ok  src/features/roast-report/shareCopy.ts:96-99
+ok  src/features/roast-report/shareImage.ts:103-105
+ok  src/features/roast-report/shareImage.ts:342-348
+ok  src/features/roast-report/shareImage.ts:41-53
+ok  src/features/roast-report/shareImage.ts:42-47
+ok  src/features/roast-report/shareImage.ts:45-45
+ok  src/features/roast-report/shareImage.ts:470-507
+ok  src/features/roast-report/shareImage.ts:483-506
+ok  src/features/roast-report/shareImage.ts:51-53
+ok  src/features/roast-report/shareImage.ts:536-574
+ok  src/features/roast-report/shareImage.ts:541-546
+ok  src/features/roast-report/shareImage.ts:98-111
+ok  src/features/start-presentation/StartTableDiorama.tsx:56-60
+ok  src/features/start-presentation/StartTableDiorama.tsx:56-89
+ok  src/features/start-presentation/StartTableDiorama.tsx:6-6
+ok  src/features/start-presentation/StartTableDiorama.tsx:62-105
+ok  src/features/start-presentation/StartTableDiorama.tsx:62-63
+ok  src/features/unmask-climax/domain/unmaskOrder.ts:19-21
+ok  src/features/unmask-climax/domain/unmaskOrder.ts:45-73
+ok  src/features/unmask-climax/domain/unmaskOrder.ts:48-52
+ok  src/features/unmask-climax/domain/unmaskOrder.ts:53-54
+ok  src/features/unmask-climax/domain/unmaskOrder.ts:75-78
+ok  src/features/unmask-climax/domain/unmaskOrder.ts:76-78
+ok  src/features/unmask-climax/domain/unmaskTiming.ts:1-25
+ok  src/features/unmask-climax/domain/unmaskTiming.ts:10-14
+ok  src/features/unmask-climax/domain/unmaskTiming.ts:4-8
+ok  src/features/unmask-climax/domain/unmaskTiming.ts:8-8
+ok  src/features/unmask-climax/index.ts:1-14
+ok  src/features/unmask-climax/ui/SettlementWithUnmask.tsx:10-15
+ok  src/features/unmask-climax/ui/SettlementWithUnmask.tsx:25-52
+ok  src/features/unmask-climax/ui/SettlementWithUnmask.tsx:41-48
+ok  src/features/unmask-climax/ui/UnmaskSequence.tsx:100-132
+ok  src/features/unmask-climax/ui/UnmaskSequence.tsx:51-73
+ok  src/features/unmask-climax/ui/UnmaskSequence.tsx:62-73
+ok  src/features/unmask-climax/ui/UnmaskSequence.tsx:76-89
+
+all 69 references resolve at their pinned commits
+
+Most counter-intuitive finding (taught in lesson silent-placeholder-playing)
+---------------------------------------------------------------------------
+AMBIENCE_LOOP_URL is deliberately null (asset gap under a ~300KB loop budget),
+yet the opening ritual still reaches audioPhase "playing". ambienceAudio starts a
+zero-gain OscillatorNode so the Web Audio graph and product state machine complete
+without a real tavern loop. The memorable "moment" is gated on state completion,
+not on media assets being ready — without the silent placeholder, unlock would
+stall and e2e data-attributes would never observe playing.
+
+No git commit made. TuringPact left untouched (read-only via git show).

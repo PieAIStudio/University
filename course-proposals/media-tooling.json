@@ -1,0 +1,1211 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-media-tooling",
+  "targetSnapshotId": "git-c9f0ec8d57a1",
+  "targetAnalysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+  "course": {
+    "id": "media-tooling",
+    "title": "一个人的媒体流水线",
+    "description": "立绘抠像与语音预生成如何工具化：白名单、门禁、计划审批与事务提交，让一人公司的媒体产出稳定可重复。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "用白名单与互斥输出模式界定媒体工具的产品边界",
+      "解释色键参数、主体锁定与 per-target 覆盖如何共同保证立绘可验收",
+      "说明语音付费生成为何必须 plan digest 与合成规格同源",
+      "按阶段复述 catalog 激活提交点与失败整单回滚"
+    ],
+    "units": [
+      {
+        "id": "pipeline-boundary",
+        "title": "流水线边界",
+        "objective": "把「处理什么、写到哪、叫什么名、多大画布」写成机器可执行的契约",
+        "lessons": [
+          {
+            "id": "allowlist-is-the-product",
+            "title": "白名单就是产品范围",
+            "content": "# 白名单就是产品范围\n\n## 学习目标\n\n完成本课后，你能解释为什么媒体工具的第一行决策是「允许处理哪些文件」，\n而不是「尽量自动发现全部图片」。\n\n## 先给结论\n\n- **事实：`FIX_TARGETS` 是冻结的输入表。** 每条记录有 `id`、`raw` 绿幕原图路径、`output` 运行时文件名。\n  工具只遍历这张表，不会扫目录、不会猜角色。\n- **事实：处理入口只认白名单。** `processAllowlistedPortraits` 的循环是 `for (const target of FIX_TARGETS)`，\n  再 `resolveRawPath` 读入、写出 `target.output`。\n- **推论：工具不创造角色。** README 写得很死：不下载、不生成、不分割、不重新诠释角色；\n  输入必须已经是 `832×1248` 的 CG 绿幕板。抠像只是把已批准的素材变成可上线的透明 PNG。\n\n## 一个类比\n\n工厂传送带只接贴了工单条码的零件。你把一箱杂货扔上去，机器不会「智能识别」——它会停机。\n**媒体流水线的安全来自拒绝未登记的输入，而不是靠模型猜你想要什么。**\n\n## 工作示例\n\n1. 美术交了 23 张绿幕立绘（苏铭 8 + 师佩欣 4 + NPC 11）。\n2. 你把每张登记进 `FIX_TARGETS`：raw 指向 `packages/content/.../*-green.png`，output 是稳定文件名。\n3. 跑 `process.mjs`，只会产出表里那 23 个 `output`。\n4. 若有人往 `refs/` 多丢一张没登记的图，流水线当它不存在——不会悄悄进 `public/assets/portraits`。\n\n## 自检\n\n为什么「扫目录自动处理所有 png」对一人公司更危险？\n\n答案：未审核的草稿、测试图、错误导出都会进入运行时资源，产品里出现错脸、半成品、泄密素材，\n而且你很难事后还原「当时为什么这张图会被吃进去」。\n\n## 重点\n\n**工具的产品边界写在白名单里，不写在操作者的记性里。**\n登记一次，处理一百次仍是同一集合。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/config.mjs",
+                "lineStart": 16,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "FIX_TARGETS 冻结表：id/raw/output 定义唯一可处理立绘"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/matte.mjs",
+                "lineStart": 226,
+                "lineEnd": 239,
+                "nodeIds": [],
+                "note": "processAllowlistedPortraits 只遍历 FIX_TARGETS"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-allowlist",
+                "front": "为什么抠像工具不扫目录、只读 FIX_TARGETS？",
+                "back": "只有登记过的原图才能进入运行时资源；扫目录会把草稿和误放文件悄悄上线。",
+                "tags": [
+                  "media-pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/config.mjs",
+                    "lineStart": 16,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "白名单是唯一输入契约"
+                  }
+                ]
+              },
+              {
+                "id": "tool-does-not-invent",
+                "front": "portrait-matte 的职责边界是什么？",
+                "back": "只对已批准的绿幕 CG 做确定性抠像；不下载、不生成、不分割、不重新诠释角色。",
+                "tags": [
+                  "media-pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/matte.mjs",
+                    "lineStart": 226,
+                    "lineEnd": 239,
+                    "nodeIds": [],
+                    "note": "处理循环绑定固定目标表"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "allowlist-loop",
+                "kind": "short-answer",
+                "title": "处理循环读什么",
+                "prompt": "processAllowlistedPortraits 遍历的常量叫什么？",
+                "expectedAnswer": "FIX_TARGETS",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/matte.mjs",
+                    "lineStart": 226,
+                    "lineEnd": 239,
+                    "nodeIds": [],
+                    "note": "for (const target of FIX_TARGETS)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "one-output-mode",
+            "title": "输出模式必须二选一",
+            "content": "# 输出模式必须二选一\n\n## 学习目标\n\n完成本课后，你能说明为什么批处理命令要强制「恰好一种输出」，\n以及把候选结果和正式资源混写会带来什么事故。\n\n## 先给结论\n\n- **事实：`parseArguments` 要求恰好一个输出。** `writeRuntime === Boolean(outputDirectory)` 为真就抛错：\n  `choose exactly one output: --write-runtime or --out-dir <directory>`。\n- **事实：两种模式路径不同。** `--write-runtime` 写到 `PORTRAIT_ROOT`（`apps/web/public/assets/portraits`）；\n  `--out-dir` 写到调用者指定的证据目录。\n- **推论：候选与正式是故意隔离的。** 校准、对比、调试应落在 out-dir；只有你确认结果后才 `--write-runtime`。\n\n## 一个类比\n\n暗房有「试纸条」和「正式冲印」两套流程。如果允许同时往相册和垃圾桶写同一批负片，\n你分不清哪张已经发布。**命令行的互斥 flag 就是这道闸。**\n\n## 工作示例\n\n1. 你改了 `MATTE_PARAMETERS`，想看效果。\n2. 跑 `node tools/portrait-matte/process.mjs --out-dir .devspace-visual/portrait-matte/candidate`。\n3. 肉眼与 `gate.mjs` 对照候选图。\n4. 满意后再跑 `--write-runtime` 覆盖公开资源。\n5. 若同时传两个 flag 或一个都不传，进程直接抛错，什么都不写。\n\n## 自检\n\n如果默认「两个都写」或「不写也不报错」，最坏会发生什么？\n\n答案：要么半调参结果污染线上 `public/`，要么你以为跑过了其实磁盘没变——两种都让「稳定可重复」破产。\n\n## 重点\n\n**可重复流水线先把「写哪里」变成显式、互斥的决定。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/process.mjs",
+                "lineStart": 10,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "parseArguments 强制 --write-runtime 与 --out-dir 二选一"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/config.mjs",
+                "lineStart": 3,
+                "lineEnd": 6,
+                "nodeIds": [],
+                "note": "EXPECTED 尺寸与 PORTRAIT_ROOT 运行时路径常量"
+              }
+            ],
+            "cards": [
+              {
+                "id": "two-output-modes",
+                "front": "process.mjs 的两种输出分别服务什么？",
+                "back": "--out-dir 写候选证据目录；--write-runtime 写 public 运行时立绘。两者必须恰好选一个。",
+                "tags": [
+                  "media-pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/process.mjs",
+                    "lineStart": 19,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "互斥检查抛错文案"
+                  }
+                ]
+              },
+              {
+                "id": "no-silent-default",
+                "front": "为什么输出模式不能静默默认？",
+                "back": "默认写 runtime 会污染线上资源；默认不写会让你以为已更新。显式互斥才能审计。",
+                "tags": [
+                  "media-pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/process.mjs",
+                    "lineStart": 10,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "未知参数与缺模式都会失败"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "output-mutex",
+                "kind": "short-answer",
+                "title": "互斥条件",
+                "prompt": "process.mjs 要求几个输出模式同时生效？填数字。",
+                "expectedAnswer": "1",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/process.mjs",
+                    "lineStart": 19,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "exactly one output"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "stable-consumer-keys",
+            "title": "运行时文件名不能跟着改名",
+            "content": "# 运行时文件名不能跟着改名\n\n## 学习目标\n\n完成本课后，你能指出 SupaLuv 如何用「输出别名」保住消费方路径，\n并说明角色内部命名变化时为什么不该波及前端键。\n\n## 先给结论\n\n- **事实：师佩欣中性态映射到 `zhou-neutral.png`。** `FIX_TARGETS` 里\n  `raw` 是 `.../shipeixin/refs/neutral-green.png`，`output` 却是 `zhou-neutral.png`。\n- **事实：注释写明动机。** `stable runtime key, zero consumer renames`——稳定运行时键，消费方零改名。\n- **推论：内容命名与产品键可以脱钩。** 剧情侧角色 id 可以叫 shipeixin，\n  历史前端/资源表已经认 `zhou-neutral` 时，工具层用 output 字段扛住兼容，而不是全仓搜索替换。\n\n## 一个类比\n\n数据库主键是 `user_id=42`，展示名从「小周」改成「师佩欣」不应改主键。\n**媒体流水线的 `output` 就是产品主键；`raw` 才是工作室室文件名。**\n\n## 工作示例\n\n1. 内容包路径按角色目录 `shipeixin/` 组织。\n2. 浏览器与资源清单早已引用 `/assets/portraits/zhou-neutral.png`。\n3. 抠像输出写 `zhou-neutral.png`，消费方一行代码都不用动。\n4. 额外情绪用新键 `shipeixin-calm-smile.png` 等——新能力用新键，旧键永不偷换语义。\n\n## 自检\n\n如果把 output 也改成 `shipeixin-neutral.png` 却漏改某一处引用，用户会看到什么？\n\n答案：缺图、回退到错误默认立绘、或半屏破图——而且只在特定分支出现，最难复现。\n\n## 重点\n\n**稳定的是消费契约，不是素材文件夹的美学命名。**\n工具表同时服务两边：raw 跟内容组织，output 跟产品契约。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/config.mjs",
+                "lineStart": 8,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "注释：zhou-neutral 为稳定 runtime key 零改名"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/config.mjs",
+                "lineStart": 58,
+                "lineEnd": 61,
+                "nodeIds": [],
+                "note": "shipeixin neutral-green 映射输出 zhou-neutral.png"
+              }
+            ],
+            "cards": [
+              {
+                "id": "zhou-neutral-why",
+                "front": "为什么师佩欣中性态输出叫 zhou-neutral.png？",
+                "back": "保留历史消费键，避免全仓改名；内容路径可叫 shipeixin，产品键保持稳定。",
+                "tags": [
+                  "media-pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/config.mjs",
+                    "lineStart": 58,
+                    "lineEnd": 61,
+                    "nodeIds": [],
+                    "note": "raw/output 故意不一致"
+                  }
+                ]
+              },
+              {
+                "id": "raw-vs-output",
+                "front": "FIX_TARGETS 的 raw 与 output 各自服务谁？",
+                "back": "raw 服务内容仓库组织；output 服务运行时与前端引用契约。",
+                "tags": [
+                  "media-pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/config.mjs",
+                    "lineStart": 8,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "注释区分 content 路径与 runtime key"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "zhou-output-name",
+                "kind": "short-answer",
+                "title": "稳定输出名",
+                "prompt": "师佩欣中性态的 output 文件名是？",
+                "expectedAnswer": "zhou-neutral.png",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/config.mjs",
+                    "lineStart": 58,
+                    "lineEnd": 61,
+                    "nodeIds": [],
+                    "note": "output: zhou-neutral.png"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "fixed-canvas-contract",
+            "title": "画布尺寸是硬契约",
+            "content": "# 画布尺寸是硬契约\n\n## 学习目标\n\n完成本课后，你能说明为什么抠像流水线把 `832×1248` 写成硬失败，\n而不是「自动缩放将就一下」。\n\n## 先给结论\n\n- **事实：期望尺寸是常量。** `EXPECTED_WIDTH = 832`，`EXPECTED_HEIGHT = 1248`。\n- **事实：尺寸不符直接抛错。** `ensureExpectedDimensions` 在 `renderPortrait` 读图后检查，\n  错误形如 `is WxH; expected 832x1248`。\n- **事实：PNG 写出参数固定。** `compressionLevel: 9`、`adaptiveFiltering: false`、`palette: false`、`effort: 10`，\n  为字节级可复现服务，而不是追求「看起来差不多」。\n- **推论：几何归一化应发生在流水线之外。** 注释写 cover-crop `864×1152 → 832×1248` 是校准前提；\n  抠像工具拒绝在模糊几何上做 alpha 数学。\n\n## 一个类比\n\n印刷厂只收规定开本的印版。你拿一张裁歪的纸去印，印刷机不会「帮你拉伸」——\n拉伸会毁版心。**尺寸契约把「构图错误」挡在抠像之前。**\n\n## 工作示例\n\n1. 某次导出忘了 cover-crop，变成 `864×1152`。\n2. `renderPortrait` 调用 `ensureExpectedDimensions` 失败。\n3. 整批 `processAllowlistedPortraits` 中断；`public` 不会留下半套新旧尺寸混搭。\n4. 你回到内容侧修好画布，再跑同一条命令——输出哈希才与上次可比。\n\n## 自检\n\n「自动 resize 到 832×1248」看起来更省事，为什么反而破坏流水线目标？\n\n答案：裁切策略（居中/顶对齐/变形）会改主体位置，门禁里的 top-band、subject coverage、dominant top 全部失真，\n你再也无法用同一组阈值验收。\n\n## 重点\n\n**确定性媒体工具把几何契约前置；抠像只做 alpha，不做构图补救。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/config.mjs",
+                "lineStart": 3,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "EXPECTED_WIDTH/HEIGHT = 832×1248"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/matte.mjs",
+                "lineStart": 40,
+                "lineEnd": 46,
+                "nodeIds": [],
+                "note": "ensureExpectedDimensions 尺寸不符即抛错"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/matte.mjs",
+                "lineStart": 216,
+                "lineEnd": 221,
+                "nodeIds": [],
+                "note": "PNG 写出固定 compression/filtering 以利确定性"
+              }
+            ],
+            "cards": [
+              {
+                "id": "no-auto-resize",
+                "front": "为什么抠像拒绝自动缩放输入图？",
+                "back": "缩放会改变主体几何，使覆盖率与顶带门禁失效；尺寸错误应在上游修。",
+                "tags": [
+                  "media-pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/matte.mjs",
+                    "lineStart": 40,
+                    "lineEnd": 46,
+                    "nodeIds": [],
+                    "note": "硬失败而非 resize"
+                  }
+                ]
+              },
+              {
+                "id": "png-flags-determinism",
+                "front": "renderPortrait 固定 PNG 参数是为了什么？",
+                "back": "让同输入同参数产生相同字节，便于哈希比对与 runtime 一致性证明。",
+                "tags": [
+                  "media-pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/matte.mjs",
+                    "lineStart": 216,
+                    "lineEnd": 221,
+                    "nodeIds": [],
+                    "note": "compressionLevel 9 与 adaptiveFiltering false"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "expected-size",
+                "kind": "short-answer",
+                "title": "期望尺寸",
+                "prompt": "立绘期望宽高是多少？写成 WxH。",
+                "expectedAnswer": "832x1248",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/config.mjs",
+                    "lineStart": 3,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "EXPECTED_WIDTH/HEIGHT"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "matte-quality",
+        "title": "抠像质量可验收",
+        "objective": "掌握色键估计、主体锁定、例外覆盖与门禁/确定性验证",
+        "lessons": [
+          {
+            "id": "key-from-top-strip",
+            "title": "色键从画面顶带估出来",
+            "content": "# 色键从画面顶带估出来\n\n## 学习目标\n\n完成本课后，你能描述 `estimateKey` 如何从顶带采样推出 `innerRadius`，\n并解释为什么半径要随噪声自适应而不是写死一个魔法数。\n\n## 先给结论\n\n- **事实：采样高度 = 画布高度 × `keySampleTopFraction`（0.1）。** 顶 10% 条带的 R/G/B 中位数成为 key RGB。\n- **事实：`innerRadius` 自适应。** 对顶带像素算 `keyRayDistance`，取 p99 噪声，再\n  `max(minimumInnerRadius, ceil(noiseP99 + backgroundNoisePadding))`。\n- **事实：与 outer 重叠会失败。** `innerRadius >= outerRadius` 时直接抛错，防止 soft 过渡带塌缩。\n- **推论：纯 `#00B140` 板子会落在下限 14。** 校准注释写 flat plate → 14；头发侵入采样带时 p99 升高，半径跟着涨。\n\n## 一个类比\n\n摄影师测光先瞄灰卡，不瞄人物衣服。顶带是「背景灰卡」：\n角色头发偶尔伸进去会抬高噪声估计，于是透明带加宽——**宁可多抠一点背景，也不要把头发边缘当绿幕硬切。**\n\n## 工作示例\n\n1. `calibrate.mjs` 对 raw 跑 `estimateKey`，写出 `topStripGreenDominance` 分位数。\n2. 纯绿板：key ≈ `[0,177,64]`，p99 距离 ≈ 0，`innerRadius` 落到 `minimumInnerRadius` 14。\n3. 某张 crop 后头发进顶带：p99 可到约 41，inner 变成 `ceil(41+4)=45`，仍小于 `outerRadius` 48。\n4. 若参数配崩导致 inner≥outer，流水线拒绝开工。\n\n## 自检\n\n如果永远写死 `innerRadius=20`，两类板子各出什么问题？\n\n答案：纯绿板可能边缘过硬或过软不匹配校准；头发侵入顶带的板子会把 greener 噪声当主体，出现破洞或绿边。\n\n## 重点\n\n**色键参数来自样本统计，写进 config 的是校准结果，不是拍脑袋。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/matte.mjs",
+                "lineStart": 48,
+                "lineEnd": 89,
+                "nodeIds": [],
+                "note": "estimateKey：顶带中位数 key 与 p99 自适应 innerRadius"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/config.mjs",
+                "lineStart": 176,
+                "lineEnd": 180,
+                "nodeIds": [],
+                "note": "keySampleTopFraction/minimumInnerRadius/outerRadius 常量"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/calibrate.mjs",
+                "lineStart": 123,
+                "lineEnd": 131,
+                "nodeIds": [],
+                "note": "calibrationRules 记录 innerRadius 推导式"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-top-strip",
+                "front": "为什么用画面顶部 10% 估色键，而不是全图像素？",
+                "back": "顶带通常是纯背景；全图会把主体颜色混进 key，半径与抠像边界失真。",
+                "tags": [
+                  "matte-quality"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/matte.mjs",
+                    "lineStart": 48,
+                    "lineEnd": 60,
+                    "nodeIds": [],
+                    "note": "sampleHeight 来自 keySampleTopFraction"
+                  }
+                ]
+              },
+              {
+                "id": "inner-vs-outer",
+                "front": "innerRadius 相对 outerRadius 过近时系统怎样？",
+                "back": "estimateKey 抛错：calibrated inner radius overlaps outer radius，拒绝生成软边塌缩的 alpha。",
+                "tags": [
+                  "matte-quality"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/matte.mjs",
+                    "lineStart": 78,
+                    "lineEnd": 80,
+                    "nodeIds": [],
+                    "note": "inner>=outer 硬失败"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "top-fraction",
+                "kind": "short-answer",
+                "title": "顶带比例",
+                "prompt": "keySampleTopFraction 的数值是多少？",
+                "expectedAnswer": "0.1",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/config.mjs",
+                    "lineStart": 176,
+                    "lineEnd": 180,
+                    "nodeIds": [],
+                    "note": "keySampleTopFraction: 0.1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "force-opaque-subject",
+            "title": "非绿主体强制不透明",
+            "content": "# 非绿主体强制不透明\n\n## 学习目标\n\n完成本课后，你能解释仅靠色键距离做 alpha 会误伤头发/皮肤，\n以及 `foregroundGreenDominanceCeiling` 如何把「不像绿幕的像素」锁成不透明。\n\n## 先给结论\n\n- **事实：基础 alpha 来自距离的 smoothstep。**\n  `opacity = smoothstep(innerRadius, outerRadius, distance)`。\n- **事实：绿优势低则强制 opaque。** `greenDominance = G - max(R,B)`；\n  当 `dominance <= foregroundGreenDominanceCeiling`（12）时 `opacity = 1`。\n- **事实：去溢色只动过量的绿。** 边界带内若 `G - max(R,B) > despillNeutralMargin`，\n  把 G 拉向 `max(R,B)`，strength 为 1。\n- **推论：门禁盯的是绿边比率。** `evaluateGate` 在边缘带统计 green edge，超过 `maximumGreenEdgeRatio` 0.005 即失败。\n\n## 一个类比\n\n抠像不是「离绿越近越透明」的一维尺子。人像上总有接近绿的阴影。\n**强制不透明规则说：只要它不像绿幕（绿优势不够），就当它是主体。**\n\n## 工作示例\n\n1. 某像素距离 key 落在 soft 带，按距离本应半透明。\n2. 但它的 `greenDominance` 只有 5（皮肤/头发），≤ 12。\n3. 被强制 `opacity = 1`，不会出现「脸半透明」的恐怖谷。\n4. 真正的绿幕像素 dominance 很高，继续走距离曲线变透明；边缘再 despill 去绿边。\n\n## 自检\n\n如果删掉 foreground lock，只留距离 smoothstep，最常见的产品事故是什么？\n\n答案：发丝、阴影、深色衣服边缘被吃成半透明或破洞，角色像贴了劣质贴纸。\n\n## 重点\n\n**距离负责背景，色优势负责主体锁定；两道规则缺一不可。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/matte.mjs",
+                "lineStart": 97,
+                "lineEnd": 115,
+                "nodeIds": [],
+                "note": "buildAlphaMask：距离 smoothstep + greenDominance 强制 opaque"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/config.mjs",
+                "lineStart": 183,
+                "lineEnd": 190,
+                "nodeIds": [],
+                "note": "foregroundGreenDominanceCeiling 与 despill 参数"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/matte.mjs",
+                "lineStart": 480,
+                "lineEnd": 482,
+                "nodeIds": [],
+                "note": "evaluateGate 拒绝过高 greenEdgeRatio"
+              }
+            ],
+            "cards": [
+              {
+                "id": "dominance-lock",
+                "front": "foregroundGreenDominanceCeiling 在保护什么？",
+                "back": "保护非绿主体像素（皮肤/头发）不被色键距离误判为半透明背景。",
+                "tags": [
+                  "matte-quality"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/matte.mjs",
+                    "lineStart": 109,
+                    "lineEnd": 113,
+                    "nodeIds": [],
+                    "note": "dominance<=ceiling 则 opacity=1"
+                  }
+                ]
+              },
+              {
+                "id": "despill-goal",
+                "front": "边界 despill 的目标是什么？",
+                "back": "把过量绿色拉向 max(R,B)，去掉贴在主体边缘的绿溢，而不是把主体抠掉。",
+                "tags": [
+                  "matte-quality"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/matte.mjs",
+                    "lineStart": 188,
+                    "lineEnd": 195,
+                    "nodeIds": [],
+                    "note": "excess green 向 neutralTarget 拉回"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "dominance-ceiling",
+                "kind": "short-answer",
+                "title": "绿优势上限",
+                "prompt": "foregroundGreenDominanceCeiling 的数值？",
+                "expectedAnswer": "12",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/config.mjs",
+                    "lineStart": 183,
+                    "lineEnd": 185,
+                    "nodeIds": [],
+                    "note": "ceiling 12"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "exception-as-override",
+            "title": "例外写在目标上，不改全局默认",
+            "content": "# 例外写在目标上，不改全局默认\n\n## 学习目标\n\n完成本课后，你能说明为什么个别立绘的特殊绿溢要用 `matteOverrides`，\n而不是调低全局 `despillNeutralMargin`。\n\n## 先给结论\n\n- **事实：黄老太条目带本地覆盖。** `huanglaotai-neutral` 设置\n  `interiorDespill: true`、`interiorDespillMaxY: 700`、`despillNeutralMargin: 4`。\n- **事实：注释写清病因与边界。** 卷发缝隙渗入淡绿块（dominance ≈ 5–12），\n  默认边界 despill 够不着；夹克上的叶绿色是合法前景，必须限制 `MaxY`。\n- **事实：合并发生在处理时。** `processAllowlistedPortraits` 若有 `matteOverrides`，\n  则 `{ ...MATTE_PARAMETERS, ...matteOverrides }`，否则用全局冻结参数。\n- **推论：全局默认保持严格。** 为一张图放宽全局，会让其他 22 张的边缘与夹克绿一并失真。\n\n## 一个类比\n\n公司法务模板默认很严，个别合同贴「附录例外」。\n你不会为了一个客户改主模板所有条款。**`matteOverrides` 就是附录。**\n\n## 工作示例\n\n1. 默认只对 alpha 边界 16px 带 despill；卷发内部渗绿仍残留。\n2. 给黄老太开 `interiorDespill`，但 `interiorDespillMaxY: 700` 不碰下半身花夹克。\n3. `despillNeutralMargin` 降到 4，让淡绿块也触发中和。\n4. 其他角色继续 margin 12、不内区 despill——回归测试只盯这一条 override。\n\n## 自检\n\n为什么 `interiorDespillMaxY` 和 `interiorDespill` 要绑在一起设计？\n\n答案：内区 despill 会误伤合法绿色服饰；MaxY 把例外空间限制在头发/上半身渗绿区。\n\n## 重点\n\n**校准默认值服务整体；例外必须可定位到具体 asset id。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/config.mjs",
+                "lineStart": 113,
+                "lineEnd": 126,
+                "nodeIds": [],
+                "note": "huanglaotai-neutral 的 matteOverrides 与注释病因"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/matte.mjs",
+                "lineStart": 226,
+                "lineEnd": 233,
+                "nodeIds": [],
+                "note": "按目标合并 MATTE_PARAMETERS 与 matteOverrides"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/matte.mjs",
+                "lineStart": 166,
+                "lineEnd": 169,
+                "nodeIds": [],
+                "note": "interiorDespill 行上限限制内区处理范围"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-not-global",
+                "front": "卷发渗绿为什么不直接改全局 despillNeutralMargin？",
+                "back": "全局放宽会伤害其他立绘的边缘与合法绿色；例外应挂在具体 target 上。",
+                "tags": [
+                  "matte-quality"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/config.mjs",
+                    "lineStart": 117,
+                    "lineEnd": 126,
+                    "nodeIds": [],
+                    "note": "仅 huanglaotai 覆盖 margin 与 interiorDespill"
+                  }
+                ]
+              },
+              {
+                "id": "maxy-guard",
+                "front": "interiorDespillMaxY:700 在防什么？",
+                "back": "防止内区去绿把花夹克上的叶绿色中和掉，那些是合法前景。",
+                "tags": [
+                  "matte-quality"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/config.mjs",
+                    "lineStart": 119,
+                    "lineEnd": 125,
+                    "nodeIds": [],
+                    "note": "jacket leaf greens 注释"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "override-flag",
+                "kind": "short-answer",
+                "title": "内区去绿开关",
+                "prompt": "启用内区 despill 的字段名是？",
+                "expectedAnswer": "interiorDespill",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/config.mjs",
+                    "lineStart": 122,
+                    "lineEnd": 124,
+                    "nodeIds": [],
+                    "note": "interiorDespill: true"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "gate-then-verify",
+            "title": "门禁验收与确定性证明",
+            "content": "# 门禁验收与确定性证明\n\n## 学习目标\n\n完成本课后，你能画出立绘从处理到验证的流水线，并指出「门禁通过」与「字节可复现」是两件不同的事。\n\n## 先给结论\n\n- **事实：`evaluateGate` 累积 failures。** 尺寸、背景探针透明、覆盖率区间、最大连通主体、\n  主体顶缘、封闭透明孔、绿边比率——任一失败则 `pass: false`。\n- **事实：`gate.mjs` 扫全部 runtime 肖像，失败设 `exitCode = 1`。**\n- **事实：`verify.mjs` 额外证三件事：** 两遍处理 sha256 一致；生成字节等于 runtime；\n  不透明品红 fixture 必须被拒绝（`!fixtureGate.pass` 才算总 pass）。\n- **推论：好工具同时防「丑」和防「飘」。** 门禁防质量回退；确定性防同命令不同字节。\n\n## 一个类比\n\n餐厅既试菜（好不好吃），又复称（分量是否每次一样）。\n只试菜会得到「今天碰巧好吃」；只复称会得到「每次一样难吃」。**两个检查都要。**\n\n## 工作示例\n\n```mermaid\nflowchart LR\n  raw[FIX_TARGETS raw] --> process[process.mjs]\n  process --> runtime[write-runtime]\n  runtime --> gate[gate.mjs]\n  runtime --> verify[verify.mjs]\n  process --> verify\n  verify --> det[两遍哈希一致]\n  verify --> reject[品红 fixture 必须失败]\n  gate -->|pass| ship[可发布]\n  verify -->|pass| ship\n```\n\n图中最关键的线是 **verify 要求品红 fixture 失败**：它证明门禁真的会拒绝整板垃圾图，\n而不是一个永远 `pass: true` 的空壳。\n\n1. 调参先 `--out-dir`，确认后再 `--write-runtime`。\n2. `gate.mjs` 跑 `ALL_RUNTIME_PORTRAITS`。\n3. `verify.mjs` 临时目录两遍处理，比哈希，比 runtime，再投毒 fixture。\n\n## 自检\n\n若删掉「fixture 必须失败」，门禁被误改成永远通过时谁先发现？\n\n答案：可能很久没人发现——直到绿边立绘上线。负例是门禁自己的熔断丝。\n\n## 重点\n\n**门禁验收像不像产品；确定性验证能不能复现；负例证明门禁还活着。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/matte.mjs",
+                "lineStart": 419,
+                "lineEnd": 483,
+                "nodeIds": [],
+                "note": "evaluateGate 全部分项 failures 与 pass"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/gate.mjs",
+                "lineStart": 24,
+                "lineEnd": 40,
+                "nodeIds": [],
+                "note": "遍历 ALL_RUNTIME_PORTRAITS 并在失败时 exitCode=1"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/portrait-matte/verify.mjs",
+                "lineStart": 76,
+                "lineEnd": 87,
+                "nodeIds": [],
+                "note": "确定性 + 官方门禁 + 品红 fixture 拒绝 三者合成 pass"
+              }
+            ],
+            "cards": [
+              {
+                "id": "gate-vs-verify",
+                "front": "gate.mjs 与 verify.mjs 分工有何不同？",
+                "back": "gate 验收 runtime 质量指标；verify 再证两遍确定性、与 runtime 一致，并用坏 fixture 证明门禁会拒绝。",
+                "tags": [
+                  "matte-quality"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/verify.mjs",
+                    "lineStart": 76,
+                    "lineEnd": 83,
+                    "nodeIds": [],
+                    "note": "pass 条件含 determinism 与 !fixtureGate.pass"
+                  }
+                ]
+              },
+              {
+                "id": "bad-fixture",
+                "front": "不透明品红 fixture 在验证什么？",
+                "back": "验证门禁不会对明显错误的整板不透明图误报通过。",
+                "tags": [
+                  "matte-quality"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/verify.mjs",
+                    "lineStart": 62,
+                    "lineEnd": 83,
+                    "nodeIds": [],
+                    "note": "opaque-magenta 创建并要求 rejected"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "fixture-must-fail",
+                "kind": "short-answer",
+                "title": "负例结果",
+                "prompt": "verify 要求 fixtureGate.pass 为真还是假？填 true 或 false。",
+                "expectedAnswer": "false",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/portrait-matte/verify.mjs",
+                    "lineStart": 76,
+                    "lineEnd": 83,
+                    "nodeIds": [],
+                    "note": "!fixtureGate.pass 计入总 pass"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "paid-voice-sync",
+        "title": "付费语音同步",
+        "objective": "在计划审批、规格同源、治理洁净与事务提交下安全量产语音",
+        "lessons": [
+          {
+            "id": "modes-before-money",
+            "title": "先审计划，再允许花钱",
+            "content": "# 先审计划，再允许花钱\n\n## 学习目标\n\n完成本课后，你能列出 voice-pregen 的四种模式，并说明 `--sync` 为何强制绑定\n`--expected-missing` 与 `--expected-plan-digest`。\n\n## 先给结论\n\n- **事实：恰好一种安全模式。** `--plan` / `--dry-run` / `--dump` / `--sync` 必须且只能选一个，否则抛错。\n- **事实：`--sync` 禁止 scoped。** 带 `--chapter` 或非 `all` 的 `--language` 会报\n  `Scoped --sync is forbidden`——付费写入必须覆盖全部已配置语言与章节。\n- **事实：计划漂移即中止。** `expectedMissing !== missingLines.length` 或\n  `expectedPlanDigest !== currentPlanDigest` 时抛 `Voice plan drift`，**此时还没打 API**。\n- **事实：花费上限显式。** 估算花费 > 0 时必须给 `--max-cost-usd`，超预算则 `no API calls made`。\n\n## 一个类比\n\n施工前先出工程量清单，甲方签字后再采购。\n工人不能「到了工地再看买多少水泥」——那是无限授权。**plan digest 就是签字页的哈希。**\n\n## 工作示例\n\n1. 跑 `pnpm voice:plan --language=all`，得到 `planDigest` 与 `missingClips`。\n2. 人眼审计划：条数、角色、估算美元。\n3. 再跑 `--sync --expected-missing=N --expected-plan-digest=... --max-cost-usd=... --operator=...`。\n4. 若你在两步之间改了剧情或银行文件，digest 对不上，sync 拒绝开工。\n\n## 自检\n\n为什么付费模式禁止「只同步某一章」？\n\n答案：局部 sync 会留下全局 catalog/orphan/治理不一致，下次全量计划与磁盘真相分叉，更贵也更危险。\n\n## 重点\n\n**付费媒体生成的第一道闸不是 API key，而是「你刚审过的那份计划还在不在」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/generate.ts",
+                "lineStart": 809,
+                "lineEnd": 813,
+                "nodeIds": [],
+                "note": "四种模式必须恰好选一个"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/generate.ts",
+                "lineStart": 828,
+                "lineEnd": 835,
+                "nodeIds": [],
+                "note": "scoped --sync 被禁止"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/generate.ts",
+                "lineStart": 1065,
+                "lineEnd": 1114,
+                "nodeIds": [],
+                "note": "expected-missing/digest/预算 全部先于 API"
+              }
+            ],
+            "cards": [
+              {
+                "id": "plan-digest-gate",
+                "front": "--sync 为什么要求 --expected-plan-digest？",
+                "back": "确保磁盘上的计划与你审过的 plan 输出一致；漂移说明剧情或资产变了，禁止静默花钱。",
+                "tags": [
+                  "voice-pregen"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/generate.ts",
+                    "lineStart": 1076,
+                    "lineEnd": 1085,
+                    "nodeIds": [],
+                    "note": "digest 不匹配抛 Voice plan drift"
+                  }
+                ]
+              },
+              {
+                "id": "no-scoped-sync",
+                "front": "为什么不能 --sync --chapter=某一章？",
+                "back": "付费写入必须覆盖全部配置语言与章节，避免局部更新造成全局银行不一致。",
+                "tags": [
+                  "voice-pregen"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/generate.ts",
+                    "lineStart": 828,
+                    "lineEnd": 835,
+                    "nodeIds": [],
+                    "note": "Scoped --sync is forbidden"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "mode-count",
+                "kind": "short-answer",
+                "title": "模式互斥",
+                "prompt": "voice-pregen 安全模式必须选几个？填数字。",
+                "expectedAnswer": "1",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/generate.ts",
+                    "lineStart": 809,
+                    "lineEnd": 813,
+                    "nodeIds": [],
+                    "note": "modes.length !== 1 抛错"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "one-synthesis-spec",
+            "title": "合成规格只有一份真理",
+            "content": "# 合成规格只有一份真理\n\n## 学习目标\n\n完成本课后，你能说明为什么 `VOICE_SYNTHESIS_SPEC` 必须同时喂给计划摘要和 MiniMax 请求体，\n以及回写校验如何挡住「计划批准了 A、实际合成了 B」。\n\n## 先给结论\n\n- **事实：规格冻结在一处。** `VOICE_SYNTHESIS_SPEC` 固定 provider/model、`stream: false`、\n  音量 1、音频 `32000/64000/mp3/mono`。\n- **事实：请求体从同一规格生成。** `createMiniMaxSynthesisBody` 的 model、stream、output_format、\n  audio_setting 全部引用该常量；cast 只提供 voice_id/speed/pitch/language_boost。\n- **事实：计划合同嵌入同一 `synthesis` 字段。** `buildPlanContract` 含 `synthesis: VOICE_SYNTHESIS_SPEC`，\n  因而改比特率会改变 `planDigest`。\n- **事实：落盘前校验容器契约。** `metadataMatchesSynthesisContract` 要求 MPEG Layer3、采样率/声道/码率一致且 duration>0。\n\n## 一个类比\n\n建筑图纸和采购单必须引用同一材料表。\n若施工队另有「现场习惯参数」，验收时你拿着旧图纸会永远对不上。**一份 Object.freeze 就是材料表。**\n\n## 工作示例\n\n1. 你审过的 plan 声明 `speech-02-turbo` + 32kHz mono 64kbps。\n2. sync 调 API 时 `createMiniMaxSynthesisBody` 只能发出同一组数字。\n3. 返回 buffer 经 `validateVoiceBuffer`；不符则抛\n   `MiniMax MP3 violates the reviewed output contract`。\n4. 该条计入 failed，最终可触发整批中止（见下一课），公开银行不动。\n\n## 自检\n\n若请求字面量散落在 generate.ts 各处，最大的系统性风险是什么？\n\n答案：有人只改了 API 调用忘了改 plan 字段——digest 仍绿，音频规格已变，审核失去意义。\n\n## 重点\n\n**审批对象与执行对象必须是同一常量；校验再用同一常量验收字节。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/synthesisContract.ts",
+                "lineStart": 15,
+                "lineEnd": 27,
+                "nodeIds": [],
+                "note": "VOICE_SYNTHESIS_SPEC 注释：防止 digest 授权不同音频设置"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/synthesisContract.ts",
+                "lineStart": 29,
+                "lineEnd": 52,
+                "nodeIds": [],
+                "note": "createMiniMaxSynthesisBody 从同一 SPEC 组装请求"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/generate.ts",
+                "lineStart": 475,
+                "lineEnd": 506,
+                "nodeIds": [],
+                "note": "metadataMatchesSynthesisContract 与 validateVoiceBuffer"
+              }
+            ],
+            "cards": [
+              {
+                "id": "spec-dual-use",
+                "front": "VOICE_SYNTHESIS_SPEC 同时服务哪两件事？",
+                "back": "写入 reviewed plan digest，并生成 MiniMax 请求字面量，避免审批与执行分叉。",
+                "tags": [
+                  "voice-pregen"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/synthesisContract.ts",
+                    "lineStart": 15,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "注释写明 dual feed"
+                  }
+                ]
+              },
+              {
+                "id": "reject-wrong-mp3",
+                "front": "返回的 MP3 采样率不对时会发生什么？",
+                "back": "validateVoiceBuffer 抛契约违反错误，该 clip 不计为成功生成。",
+                "tags": [
+                  "voice-pregen"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/generate.ts",
+                    "lineStart": 500,
+                    "lineEnd": 505,
+                    "nodeIds": [],
+                    "note": "violates the reviewed output contract"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "voice-model",
+                "kind": "short-answer",
+                "title": "默认模型",
+                "prompt": "VOICE_SYNTHESIS_SPEC.model 的值是？",
+                "expectedAnswer": "speech-02-turbo",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/synthesisContract.ts",
+                    "lineStart": 20,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "model: speech-02-turbo"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "no-api-until-clean",
+            "title": "不干净就不打付费 API",
+            "content": "# 不干净就不打付费 API\n\n## 学习目标\n\n完成本课后，你能列举 sync 在调用 MiniMax 之前的治理与互斥检查，\n并说明生成中途失败时为什么公开银行必须保持原样。\n\n## 先给结论\n\n- **事实：治理不干净则零 API。** `voiceGovernanceIsClean` 要求 legacy baseline 匹配、\n  无 ledger 错配/悬空、无 provenance 缺失或孤儿；否则抛错并写明 `no API calls made`。\n- **事实：文件锁互斥。** `openSync(lockPath, \"wx\")` 创建 `.voice-sync.lock`；已存在则\n  `Another voice sync owns ...; no API calls made`。\n- **事实：锁内再次核对 plan digest。** 获取锁后重读银行，digest 变了就要求 rerun reviewed plan。\n- **事实：任一条合成失败则整批停。** `failed > 0` 时抛\n  `public bank, ledger and provenance unchanged`——暂存区稍后删除，提交事务不会开始。\n\n## 一个类比\n\n手术室在切口前核对器械清单；有一件对不上就不开刀。\n开刀中途大出血则结束手术、不把「半台手术」写进出院病历。**公开银行就是病历正本。**\n\n## 工作示例\n\n1. ledger 与 mp3 哈希不一致 → sync 在预检死亡，MINIMAX_API_KEY 甚至不必有效。\n2. 另一进程持锁 → 你的进程立即退出。\n3. 合成到第 40 条触发非 1002 错误，重试耗尽 → failed++ → 抛错，catalog 未激活。\n4. 仅 RPM `1002` 会 sleep 15s 同条重试；成功路径仍有 1.2s 间隔控速。\n\n## 自检\n\n为什么失败时强调「ledger and provenance unchanged」，而不只是「少几条 mp3」？\n\n答案：账本与溯源若部分更新，你会以为资产已治理，实际上文件与记录分叉，后续 plan 更难修。\n\n## 重点\n\n**付费侧的失败默认是「整单作废」，不是「能写多少写多少」。**\n一人公司没有 SRE 替你扫半成功状态。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/generate.ts",
+                "lineStart": 1087,
+                "lineEnd": 1096,
+                "nodeIds": [],
+                "note": "governance 不干净则 no API calls made"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/generate.ts",
+                "lineStart": 1124,
+                "lineEnd": 1136,
+                "nodeIds": [],
+                "note": "wx 锁与获取锁后 plan digest 复核"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/generate.ts",
+                "lineStart": 1201,
+                "lineEnd": 1204,
+                "nodeIds": [],
+                "note": "failed>0 时公开银行/ledger/provenance 不变"
+              }
+            ],
+            "cards": [
+              {
+                "id": "clean-before-pay",
+                "front": "voiceGovernanceIsClean 失败时允许调用 MiniMax 吗？",
+                "back": "不允许。抛错文案明确 no API calls made，先修账本与溯源。",
+                "tags": [
+                  "voice-pregen"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/generate.ts",
+                    "lineStart": 1087,
+                    "lineEnd": 1096,
+                    "nodeIds": [],
+                    "note": "治理门禁在合成循环之前"
+                  }
+                ]
+              },
+              {
+                "id": "fail-all-or-nothing",
+                "front": "部分 clip 合成失败时公开语音库会怎样？",
+                "back": "事务未提交，公开银行、ledger、provenance 保持变更前状态。",
+                "tags": [
+                  "voice-pregen"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/generate.ts",
+                    "lineStart": 1201,
+                    "lineEnd": 1204,
+                    "nodeIds": [],
+                    "note": "unchanged 错误信息"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "lock-flag",
+                "kind": "short-answer",
+                "title": "锁打开模式",
+                "prompt": "创建 .voice-sync.lock 时 openSync 的 flag 是？",
+                "expectedAnswer": "wx",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/generate.ts",
+                    "lineStart": 1124,
+                    "lineEnd": 1128,
+                    "nodeIds": [],
+                    "note": "openSync(lockPath, \"wx\")"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "catalog-activation-commit",
+            "title": "目录激活才是提交点",
+            "content": "# 目录激活才是提交点\n\n## 学习目标\n\n完成本课后，你能按顺序列出语音银行事务的阶段，并解释为何孤儿删除必须发生在 catalog 激活之后。\n\n## 先给结论\n\n- **事实：注释定义提交点。** `commitVoiceBankTransaction`：catalog activation 是 commit point；\n  新文件/ledger/provenance 在激活前落地；因新 catalog 变成孤儿的文件在激活后删除。\n- **事实：执行顺序固定。** preActivation 安装 → `install(catalogReplacement)` →\n  postActivation 替换 → deletions → `validate`。\n- **事实：失败倒序回滚。** catch 中 reverse mutations：删当前目标，有 backup 则 rename 回去。\n- **事实：治理行与溯源一并预装。** generate 把 mp3、provenance md、interim ledger 放进\n  `preActivationReplacements`，catalog 单独作为 activation。\n\n## 一个类比\n\n电商「仓库到货」不等于「上架可售」。\n货先入仓，最后点「上架」按钮，消费者才看得到。**catalog.json 就是上架按钮。**\n\n## 工作示例\n\n1. 全部 missing 合成成功且校验通过，写入 stage。\n2. preActivation：新 mp3 与 provenance 进位，interim ledger 更新。\n3. 激活新 `catalog.json`——产品开始按新键解析。\n4. postActivation：最终 ledger/legacy baseline，删除 orphan mp3 与其 provenance。\n5. `validate` 重跑 `inspectStaticBank` + `voiceGovernanceIsClean`；失败则整单回滚。\n\n## 自检\n\n若先删 orphan 再激活 catalog 且激活失败，回滚后系统处于什么危险态？\n\n答案：旧 catalog 仍引用已被删的文件——产品缺音频，且你以为回滚已恢复。\n\n## 重点\n\n**批量媒体上线的原子性来自「指针翻转」，不是来自「复制很快」。**\n新增在前、删除在后、校验垫后，是一人公司活得下去的默认姿势。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                "lineStart": 31,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "catalog activation 为 commit point 的文档契约"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                "lineStart": 89,
+                "lineEnd": 107,
+                "nodeIds": [],
+                "note": "pre → catalog → post → validate 顺序"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/generate.ts",
+                "lineStart": 1299,
+                "lineEnd": 1323,
+                "nodeIds": [],
+                "note": "调用事务并在 validate 中检查 bank/governance 后置条件"
+              }
+            ],
+            "cards": [
+              {
+                "id": "commit-is-catalog",
+                "front": "语音银行事务的提交点是哪一步？",
+                "back": "安装新的 catalog.json（catalog activation），不是写完第一个 mp3。",
+                "tags": [
+                  "voice-pregen"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                    "lineStart": 31,
+                    "lineEnd": 36,
+                    "nodeIds": [],
+                    "note": "catalog activation as the commit point"
+                  }
+                ]
+              },
+              {
+                "id": "delete-after-activate",
+                "front": "为什么 orphan 删除在 catalog 激活之后？",
+                "back": "激活前删会让仍被旧 catalog 引用的文件消失；激活失败回滚后会出现引用悬空。",
+                "tags": [
+                  "voice-pregen"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                    "lineStart": 31,
+                    "lineEnd": 35,
+                    "nodeIds": [],
+                    "note": "orphans removed only afterwards"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "commit-step-name",
+                "kind": "short-answer",
+                "title": "提交点名称",
+                "prompt": "bankTransaction 注释里的提交点英文短语是？",
+                "expectedAnswer": "catalog activation",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                    "lineStart": 31,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "catalog activation as the commit point"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

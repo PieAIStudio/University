@@ -1,0 +1,57 @@
+world-navigation 课程提案交付报告
+========================================
+
+规模
+----
+- 单元数：3
+  1. portal-as-gate（传送门是产品闸门）— 4 节
+  2. lobby-as-structure（大厅是空间结构）— 4 节
+  3. attention-in-room（房内注意力导航）— 4 节
+- 课时总数：12
+- 每节：2 张卡片、1 道 short-answer 练习
+- 证据引用总数：79（lesson + card + exercise 合计）
+- 含 mermaid 状态图：1 节（portal-state-machine：idle/invitation/resume → joining → success|invalid|error）
+
+输出文件
+--------
+- course-proposals/world-navigation.json
+- course-proposals/world-navigation-REPORT.txt
+
+证据来源（commit 3b402e069a5db5fe9eb82dbc03aa05152b3d298b / snapshot git-3b402e069a5d）
+--------------------------------------------------------------------------------
+主要：
+- src/features/world-portal/domain/portalStateMachine.ts
+- src/features/world-portal/domain/portalEntry.ts
+- src/features/world-portal/domain/portalJoin.ts
+- src/features/world-portal/domain/portalHost.ts
+- src/features/world-portal/WorldPortalOverlay.tsx
+- src/features/world-lobby/avatarPlacement.ts
+- src/features/world-lobby/worldRuntimeGate.ts
+- src/features/world-lobby/WorldRoomShell.tsx
+- src/features/world-lobby/WorldLobbyCanvas.tsx
+- src/features/world-lobby/tavernInteraction.ts
+- src/features/room-topics/topics.ts
+- src/features/world-callouts/domain/calloutSchedule.ts
+- src/features/world-callouts/domain/typingRhythm.ts
+- src/features/world-callouts/domain/worldConversation.ts
+- src/features/world-callouts/domain/worldMedia.ts
+- src/features/world-callouts/runtime/WorldCalloutLayer.ts
+
+门禁结果（最终）
+----------------
+$ node scripts/check-proposal-shape.mjs course-proposals/world-navigation.json
+ok  course-proposals/world-navigation.json
+
+$ node scripts/check-proposal-evidence.mjs course-proposals/world-navigation.json --study turing-pact
+ok  src/features/world-portal/domain/portalStateMachine.ts:78-80
+ok  src/features/world-portal/domain/portalStateMachine.ts:87-90
+ok  src/features/world-portal/domain/portalStateMachine.ts:91-94
+
+all 79 references resolve at their pinned commits
+
+最反直觉的一点（已写入 failure-taxonomy 课）
+------------------------------------------
+join 失败不是统一的「Toast + 重试」。portalReducer 在 join-failed 时把 expired/not-found
+打进 invalid（UI 只有改码/dismiss），把 full/network/unknown 打进 error（UI 有 retry-join）。
+同一条网络调用失败，产品故意拆成两条导航路：永久语义错误 vs 可恢复故障。
+独立开发者常把所有错误做成一个 Retry 按钮——这里用状态机把「别白点」写进类型与 UI。
