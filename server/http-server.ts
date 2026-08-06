@@ -50,8 +50,11 @@ import {
 } from "./learning/types.js";
 import { selectLexicon } from "./language/lexicon.js";
 import { readLessonLanguageLayer } from "./language/overlay.js";
+import { VocabularyStore, getVocabularyDatabasePath } from "./language/vocabulary-store.js";
+import { readCourseClock } from "./airlock/course-clock.js";
+import { inspectAirlock } from "./airlock/inspect.js";
 import { getCoursePaths, getStudyPaths } from "./studies/paths.js";
-import { inspectStudyShelf, readStudy } from "./studies/repository.js";
+import { inspectStudyShelf, readSourceRegistration, readStudy } from "./studies/repository.js";
 import {
   buildExerciseCoachingPacket,
   disclosesReference,
@@ -77,6 +80,24 @@ const ExerciseAttemptSchema = z
      */
     met: z.array(z.number().int().nonnegative()).optional(),
   })
+  .strict();
+const VOCABULARY_DUE_LIMIT = 50;
+const VocabularyPresentedSchema = z
+  .object({
+    studyId: StableId,
+    lessonId: StableId,
+    senseIds: z.array(z.string().min(1).max(200)).min(1).max(64),
+  })
+  .strict();
+const VocabularyStageSchema = z
+  .object({
+    // `candidate` is absent on purpose: it means "never touched", and once a
+    // learner has said something about a word there is no honest way back to it.
+    stage: z.enum(["learning", "familiar", "stable", "paused"]),
+  })
+  .strict();
+const VocabularyGradeSchema = z
+  .object({ rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]) })
   .strict();
 const CardRevealSchema = z
   .object({
@@ -974,6 +995,25 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
     return store;
   };
 
+  // Opened on first use rather than at boot: a campus where nobody has turned
+  // English mode on should not create a database to hold nothing.
+  let vocabulary: VocabularyStore | null = null;
+  const getVocabulary = (): VocabularyStore => {
+    vocabulary ??= new VocabularyStore(getVocabularyDatabasePath(config.studiesRoot));
+    return vocabulary;
+  };
+
+  /**
+   * A sense id that is not in the lexicon cannot be scheduled, because nothing
+   * could ever render it back to the learner — it would be an invisible row
+   * accruing due dates for a word the campus cannot show.
+   */
+  const assertKnownSense = (senseId: string): void => {
+    if (selectLexicon([senseId]).length === 0) {
+      throw new HttpError(404, `Unknown vocabulary sense: ${senseId}`);
+    }
+  };
+
   // Archived studies keep their data but leave the shelf; a superseded study
   // that still greets the learner every day is clutter wearing a title.
   for (const study of inspectStudyShelf(config.studiesRoot).studies.filter(
@@ -1439,6 +1479,78 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
           // learner's next step, not a server fault.
           throw new HttpError(409, error instanceof Error ? error.message : "No writing yet");
         }
+        return;
+      }
+
+      /**
+       * The three clocks, for a study whose source happens to be an airlock.
+       *
+       * No new configuration: a study already records where its source lives,
+       * and an airlock is a source with a seal in it. A study pointed at an
+       * ordinary checkout simply has no seal, which is reported as "not an
+       * airlock" rather than as a fault — most studies are not.
+       */
+      const airlockRoute = /^\/api\/studies\/([^/]+)\/airlock$/.exec(url.pathname);
+      if (request.method === "GET" && airlockRoute) {
+        const studyId = StableId.parse(decodeURIComponent(airlockRoute[1]!));
+        try {
+          const registration = readSourceRegistration(config.studiesRoot, studyId);
+          const inspection = inspectAirlock(registration.sourceRoot);
+          sendJson(response, 200, {
+            airlock: true,
+            verdict: inspection.verdict,
+            problems: inspection.problems,
+            upstream: inspection.upstream,
+            promotedCommit: inspection.seal.promotedCommit,
+            promotedAt: inspection.seal.promotedAt,
+            course: readCourseClock(config.studiesRoot, studyId, inspection.seal.promotedCommit),
+          });
+        } catch {
+          sendJson(response, 200, { airlock: false });
+        }
+        return;
+      }
+
+      // Vocabulary is not scoped to a study: one word, one state, wherever it
+      // was met. These routes therefore sit outside /api/studies/:id.
+      if (request.method === "GET" && url.pathname === "/api/vocabulary") {
+        const vocabulary = getVocabulary();
+        sendJson(response, 200, {
+          budget: vocabulary.budget(),
+          due: vocabulary.listDue(VOCABULARY_DUE_LIMIT),
+          states: vocabulary.listStates(),
+        });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/api/vocabulary/presented") {
+        requireMutationAccess(request, requestToken);
+        const body = VocabularyPresentedSchema.parse(await readJsonBody(request));
+        getVocabulary().recordPresented(body.senseIds, {
+          studyId: body.studyId,
+          lessonId: body.lessonId,
+        });
+        sendJson(response, 202, { recorded: body.senseIds.length });
+        return;
+      }
+
+      const vocabularyStageRoute = /^\/api\/vocabulary\/([^/]+)\/stage$/.exec(url.pathname);
+      if (request.method === "POST" && vocabularyStageRoute) {
+        requireMutationAccess(request, requestToken);
+        const body = VocabularyStageSchema.parse(await readJsonBody(request));
+        const senseId = decodeURIComponent(vocabularyStageRoute[1]!);
+        assertKnownSense(senseId);
+        sendJson(response, 200, { state: getVocabulary().setStage(senseId, body.stage) });
+        return;
+      }
+
+      const vocabularyGradeRoute = /^\/api\/vocabulary\/([^/]+)\/grade$/.exec(url.pathname);
+      if (request.method === "POST" && vocabularyGradeRoute) {
+        requireMutationAccess(request, requestToken);
+        const body = VocabularyGradeSchema.parse(await readJsonBody(request));
+        const senseId = decodeURIComponent(vocabularyGradeRoute[1]!);
+        assertKnownSense(senseId);
+        sendJson(response, 200, { state: getVocabulary().grade(senseId, body.rating as Grade) });
         return;
       }
 

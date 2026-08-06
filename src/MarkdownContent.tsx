@@ -3,7 +3,7 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { MermaidDiagram } from "./MermaidDiagram.js";
-import { WordPopover, type LexiconEntry } from "./language/WordPopover.js";
+import { WordPopover, type LexiconEntry, type VocabularyStage } from "./language/WordPopover.js";
 import { remarkLanguageAnchors, type LanguageRange } from "./language/remark-language-anchors.js";
 
 function codeText(children: ReactNode): string {
@@ -116,10 +116,14 @@ export function MarkdownContent({
   children,
   language,
   englishEnabled = false,
+  vocabularyStages,
+  onStageWord,
 }: {
   readonly children: string;
   readonly language?: LanguageLayer;
   readonly englishEnabled?: boolean;
+  readonly vocabularyStages?: ReadonlyMap<string, string>;
+  readonly onStageWord?: (senseId: string, stage: VocabularyStage) => void;
 }) {
   const [openSenseId, setOpenSenseId] = useState<string | null>(null);
   const active = englishEnabled && language?.status === "annotated" ? language : null;
@@ -158,12 +162,21 @@ export function MarkdownContent({
               <span lang="en">{entry.headword}</span>
               <span className="word-anchor__original">（{value}）</span>
             </button>
-            {open ? <WordPopover entry={entry} onDismiss={() => setOpenSenseId(null)} /> : null}
+            {open ? (
+              <WordPopover
+                entry={entry}
+                stage={vocabularyStages?.get(senseId)}
+                onDismiss={() => setOpenSenseId(null)}
+                {...(onStageWord
+                  ? { onStage: (stage: VocabularyStage) => onStageWord(senseId, stage) }
+                  : {})}
+              />
+            ) : null}
           </span>
         );
       },
     }),
-    [lexicon, openSenseId],
+    [lexicon, openSenseId, vocabularyStages, onStageWord],
   );
 
   const plugins = useMemo(

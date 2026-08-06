@@ -1220,8 +1220,53 @@ function LessonReader({
 }) {
   const [completed, setCompleted] = useState(view.lesson.progress?.status === "completed");
   const [englishMode, setEnglishMode] = useState(readEnglishMode);
+  const [vocabularyStages, setVocabularyStages] = useState<ReadonlyMap<string, string>>(new Map());
   const titleRef = useRef<HTMLHeadingElement>(null);
   const annotated = view.lesson.language?.status === "annotated";
+
+  const senseIds = view.lesson.language?.lexicon?.map((entry) => entry.senseId) ?? [];
+  const senseKey = senseIds.join(",");
+
+  useEffect(() => {
+    if (!englishMode || senseKey.length === 0) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const body = await readJson<{
+          readonly states: readonly { readonly senseId: string; readonly stage: string }[];
+        }>(await fetch("/api/vocabulary"));
+        if (cancelled) return;
+        setVocabularyStages(new Map(body.states.map((state) => [state.senseId, state.stage])));
+      } catch {
+        // Word stages are decoration on top of a lesson that reads fine without
+        // them. Failing to load them must not take the lesson down with it.
+      }
+      // Recording that words appeared is deliberately fire-and-forget, and the
+      // server counts one appearance per word per lesson per day however many
+      // times this fires.
+      void fetch("/api/vocabulary/presented", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-University-Local-Token": requestToken },
+        body: JSON.stringify({
+          studyId: locator.studyId,
+          lessonId: locator.lessonId,
+          senseIds: senseKey.split(","),
+        }),
+      }).catch(() => undefined);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [englishMode, senseKey, locator.studyId, locator.lessonId, requestToken]);
+
+  function stageWord(senseId: string, stage: "learning" | "familiar" | "paused") {
+    setVocabularyStages((previous) => new Map(previous).set(senseId, stage));
+    void fetch(`/api/vocabulary/${encodeURIComponent(senseId)}/stage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-University-Local-Token": requestToken },
+      body: JSON.stringify({ stage }),
+    }).catch(() => undefined);
+  }
 
   useEffect(() => {
     setCompleted(view.lesson.progress?.status === "completed");
@@ -1276,6 +1321,8 @@ function LessonReader({
             <MarkdownContent
               {...(view.lesson.language ? { language: view.lesson.language } : {})}
               englishEnabled={englishMode}
+              vocabularyStages={vocabularyStages}
+              onStageWord={stageWord}
             >
               {view.lesson.content}
             </MarkdownContent>
@@ -1647,6 +1694,84 @@ function CourseSection({
   );
 }
 
+interface AirlockView {
+  readonly airlock: boolean;
+  readonly verdict?: string;
+  readonly problems?: readonly string[];
+  readonly promotedCommit?: string;
+  readonly upstream?: { readonly headCommit: string; readonly commitsAhead: number | null } | null;
+  readonly course?: { readonly matchesAirlock: boolean | null } | null;
+}
+
+/**
+ * The three clocks, for a study that is being taught out of an airlock.
+ *
+ * Being behind is the normal, correct state — the campus teaches the last
+ * commit that was promoted, not whatever is in the editor right now — so this
+ * reads as a fact rather than a warning. What does deserve attention is a seal
+ * that no longer matches its checkout, and that is the only thing coloured as a
+ * problem.
+ */
+function AirlockClocks({ studyId }: { readonly studyId: string }) {
+  const [view, setView] = useState<AirlockView | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const body = await readJson<AirlockView>(await fetch(`/api/studies/${studyId}/airlock`));
+        if (!cancelled) setView(body);
+      } catch {
+        if (!cancelled) setView({ airlock: false });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [studyId]);
+
+  if (!view?.airlock) return null;
+  const ahead = view.upstream?.commitsAhead ?? null;
+  return (
+    <section className="airlock-clocks">
+      <p className="eyebrow">AIRLOCK</p>
+      <dl>
+        <div>
+          <dt>教材钉在</dt>
+          <dd>
+            <code>{view.promotedCommit?.slice(0, 8)}</code>
+          </dd>
+        </div>
+        <div>
+          <dt>上游走到</dt>
+          <dd>
+            <code>{view.upstream?.headCommit.slice(0, 8) ?? "读不到"}</code>
+          </dd>
+        </div>
+        <div>
+          <dt>相差</dt>
+          <dd>{ahead === null ? "算不出（上游历史被改写过）" : `${ahead} 个提交`}</dd>
+        </div>
+        <div>
+          <dt>课程快照</dt>
+          <dd>{view.course?.matchesAirlock === false ? "落后于 airlock" : "与 airlock 一致"}</dd>
+        </div>
+      </dl>
+      {view.verdict === "blocked" ? (
+        <ul className="airlock-clocks__problems">
+          {(view.problems ?? []).map((problem) => (
+            <li key={problem}>{problem}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="airlock-clocks__note">
+          落后是正常的：这里教的永远是上一次提升的那个提交，不是你编辑器里那份。
+        </p>
+      )}
+    </section>
+  );
+}
+
 function StudyDetail({
   view,
   summary,
@@ -1669,6 +1794,7 @@ function StudyDetail({
         snapshotCount={summary.snapshotCount}
         readyUaAnalysisCount={summary.readyUaAnalysisCount}
       />
+      <AirlockClocks studyId={view.study.id} />
       {view.courses.length > 0 ? (
         view.courses.map((course) => (
           <CourseSection

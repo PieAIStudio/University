@@ -26,12 +26,18 @@ function findLocalEnglishVoice(): SpeechSynthesisVoice | null {
   return voices.find((voice) => voice.localService && /^en(-|$)/i.test(voice.lang)) ?? null;
 }
 
+export type VocabularyStage = "learning" | "familiar" | "paused";
+
 export function WordPopover({
   entry,
+  stage,
   onDismiss,
+  onStage,
 }: {
   readonly entry: LexiconEntry;
+  readonly stage?: string | undefined;
   readonly onDismiss: () => void;
+  readonly onStage?: ((stage: VocabularyStage) => void) | undefined;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
@@ -91,6 +97,40 @@ export function WordPopover({
           关闭
         </button>
       </div>
+      {onStage ? (
+        <div className="word-popover__stages">
+          {/*
+            Three buttons, no scoring. Opening this popover already says the
+            learner stopped for the word; what it cannot say is why, so the
+            learner says it. "认识" quiets the word without claiming mastery —
+            it stays scheduled until a retrieval on a later day earns that.
+          */}
+          <button
+            type="button"
+            className="word-popover__stage"
+            aria-pressed={stage === "learning"}
+            onClick={() => onStage("learning")}
+          >
+            不熟 · 加入复习
+          </button>
+          <button
+            type="button"
+            className="word-popover__stage"
+            aria-pressed={stage === "familiar" || stage === "stable"}
+            onClick={() => onStage("familiar")}
+          >
+            认识
+          </button>
+          <button
+            type="button"
+            className="word-popover__stage"
+            aria-pressed={stage === "paused"}
+            onClick={() => onStage("paused")}
+          >
+            暂不学这个
+          </button>
+        </div>
+      ) : null}
       {voice ? null : (
         <p className="word-popover__note">
           只用本机语音朗读。系统里没装英语语音时不联网合成 —— 音标仍然可以照着念。
