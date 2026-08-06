@@ -1,0 +1,82 @@
+asset-pipeline course proposal — delivery report
+================================================
+
+Files
+-----
+- course-proposals/asset-pipeline.json
+- course-proposals/asset-pipeline-REPORT.txt
+
+Scale
+-----
+- Units: 3
+  1. organize-before-scale（先组织，再堆量）— 4 lessons
+  2. acquire-generate-check（接入、钉死、校验）— 4 lessons
+  3. budget-the-boot-shape（用预算锁住加载形状）— 4 lessons
+- Lessons: 12
+- Cards: 24 (2 per lesson)
+- Exercises: 12 (1 per lesson)
+- Evidence references: 72 (all kind fact/inference with note; nodeIds [])
+
+Target
+------
+- snapshotId: git-3b402e069a5d
+- sourceCommit: 3b402e069a5db5fe9eb82dbc03aa05152b3d298b
+- targetAnalysisId: ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a
+- study: turing-pact
+
+Lesson ids
+----------
+organize-before-scale:
+  two-roots-two-problems
+  catalog-is-the-inventory
+  tags-decide-when-it-loads
+  provenance-is-payload
+acquire-generate-check:
+  refuse-to-overwrite   (includes mermaid acquire flowchart)
+  generate-locks-bytes
+  stale-is-a-hard-fail
+  three-unique-keys
+budget-the-boot-shape:
+  boot-path-is-a-filter
+  four-budget-ceilings
+  manor-boot-one-avatar
+  verify-is-check-and-budget
+
+Gate 1 — check-proposal-shape.mjs
+---------------------------------
+Command:
+  node scripts/check-proposal-shape.mjs course-proposals/asset-pipeline.json
+
+Final output:
+  ok  course-proposals/asset-pipeline.json
+
+(exit 0; zero problems listed)
+
+Gate 2 — check-proposal-evidence.mjs
+------------------------------------
+Command:
+  node scripts/check-proposal-evidence.mjs course-proposals/asset-pipeline.json --study turing-pact
+
+Final output (summary):
+  ok  <path:lineStart-lineEnd>  × 68 unique ranges
+  all 72 references resolve at their pinned commits
+
+(exit 0; no MISS / no out-of-range lines)
+
+Most counterintuitive finding (taught in three-unique-keys)
+-----------------------------------------------------------
+check-world-assets 不只要求 id 与 url 唯一，还对 **sha256 做全局唯一**：
+`duplicateValue(entries, 'sha256', 'content hash')`。
+
+这与常见 content-addressed「同一 blob 多名字共享」相反。catalog 里两个 id
+若指向字节完全相同的文件，门禁直接失败。一人公司「先复制改名占位」会被机器
+拒绝——每条库存必须是可单独演进的独特字节，避免一改双伤的伪独立资产。
+
+Related hard edges also in the course
+-------------------------------------
+- acquire: 目标已存在且哈希不同 → throw Refusing to overwrite（不静默覆盖）
+- check: 单条哈希/体积 + 全文重算 catalog 输出，双层 stale
+- budget: manor boot 只取 largestCharacter + manor-critical/portal 环境，默认 3 MiB
+- clay kit: rawPsdCommitted:false，351 规模 UI 树与 world-lobby 分根
+
+No git commit made. TuringPact left read-only.

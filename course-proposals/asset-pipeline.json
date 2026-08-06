@@ -1,0 +1,1241 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-asset-pipeline",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "asset-pipeline",
+    "title": "351 个素材怎么进产品而不失控",
+    "description": "素材一多，问题从「好不好看」变成「谁最新、谁在用、删了会不会崩」——用 TuringPact 的目录、catalog、生成与预算门禁，学会在进产品前把组织、校验和加载形状做对。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "区分 UI 资产树与世界资产树，并说明为何不能共用同一套元数据",
+      "用 WORLD_ASSET_CATALOG 与生成清单解释「磁盘有文件」为何不等于「产品认账」",
+      "说明 acquire 拒绝覆盖与 check 双层 stale 如何防止静默改坏素材",
+      "根据 qualityTiers/sceneGroups 与四条 MiB 预算，判断一条素材会不会拖垮首包"
+    ],
+    "units": [
+      {
+        "id": "organize-before-scale",
+        "title": "先组织，再堆量",
+        "objective": "建立根目录边界、catalog 库存账、加载标签与出处字段",
+        "lessons": [
+          {
+            "id": "two-roots-two-problems",
+            "title": "两套根目录，两套失控方式",
+            "content": "# 两套根目录，两套失控方式\n\n## 学习目标\n\n完成本课后，你能区分 TuringPact 里 `public/assets` 与 `public/world-lobby` 各自解决什么问题，\n并说明「把所有图丢进一个 public 文件夹」为什么会在规模上来后失效。\n\n## 先给结论\n\n- **事实：UI 黏土包有自己的清单。** `public/assets/game/ui/clay/asset-manifest.json` 记录\n  `fileCount: 350`、`byUsage`（buttons/icons/…）以及每条的 `target` / `runtimePath` / `status`。\n- **事实：原始 PSD 故意不进仓。** 同一清单里 `rawPsdCommitted: false`，运行时只认\n  `copied-web-safe` 的 PNG。\n- **事实：世界大厅是另一棵树。** `public/world-lobby/` 按 `models/`、`ui/`、`vfx/` 分开放\n  GLB 与贴图，并有独立的 `CREDITS.md`。\n- **推论：根目录分离就是问题边界。** UI 批量导入与 3D 策展入库的失败模式不同——混在一起，\n  你会用错校验、错归因、错删。\n\n## 一个类比\n\n仓库是两间库房：一间是「贴纸与按钮」（扁平、海量、按 usage 分类），\n另一间是「家具与角色」（少量、重、带许可证与上游 commit）。\n把两间合成一间大杂货铺，盘点时你永远不知道少的是贴纸还是整张桌子。\n\n## 工作示例\n\n1. 打开 `asset-manifest.json`：`summary.fileCount` 是 350，icons 独占 274。\n2. 看单条文件：`status` 全是 `copied-web-safe`，`runtimePath` 以 `/assets/game/ui/clay/...` 开头。\n3. 再列 `public/world-lobby/models/chars/players/`：8 个角色 GLB，路径规则完全不同。\n4. 你若只按文件名在全仓搜索 `crown`，会同时撞上 UI icon 与可能的 3D 命名——清单才告诉你它属于哪条产品线。\n\n## 自检\n\n若把 world-lobby 的 GLB 也塞进 `public/assets/game/ui/clay/`，清单的 `byUsage` 字段还够用吗？\n\n答案：不够。`byUsage` 只有 buttons/catalog/components/icons 等 UI 维度，没有\n`characters` / `environment` / 场景加载组。世界素材需要另一套元数据。\n\n## 重点\n\n**素材失控的第一步，往往是「只有目录、没有产品边界」。**\n两套根目录不是洁癖，是让后续校验脚本知道该问什么问题。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "public/assets/game/ui/clay/asset-manifest.json",
+                "lineStart": 1,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "黏土 UI 清单：fileCount/byUsage 与 rawPsdCommitted"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "public/assets/game/ui/clay/asset-manifest.json",
+                "lineStart": 22,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "单条 copied-web-safe 文件的 target/runtimePath/usage"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "public/world-lobby/CREDITS.md",
+                "lineStart": 1,
+                "lineEnd": 12,
+                "nodeIds": [],
+                "note": "world-lobby 独立根与上游/运行时清单指向"
+              }
+            ],
+            "cards": [
+              {
+                "id": "which-root-for-glb",
+                "front": "角色 GLB 应落在 public/assets 还是 public/world-lobby？依据是什么？",
+                "back": "public/world-lobby。那是世界运行时树；public/assets 的黏土清单只服务 UI usage 分类。",
+                "tags": [
+                  "asset-layout"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "public/world-lobby/CREDITS.md",
+                    "lineStart": 8,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "CREDITS 指向 world-lobby 与 generated manifest"
+                  }
+                ]
+              },
+              {
+                "id": "why-psd-out",
+                "front": "asset-manifest 写 rawPsdCommitted:false，对仓库体积与可构建性意味着什么？",
+                "back": "源 PSD 不进 Git；仓里只保留 web-safe PNG，构建不依赖本机 PSD 路径。",
+                "tags": [
+                  "asset-layout"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "public/assets/game/ui/clay/asset-manifest.json",
+                    "lineStart": 6,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "rawPsdCommitted 明确为 false"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "clay-filecount-term",
+                "kind": "short-answer",
+                "title": "读清单字段",
+                "prompt": "asset-manifest.json 的 summary 里，统计已拷贝文件数的字段名是什么？",
+                "expectedAnswer": "fileCount",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "public/assets/game/ui/clay/asset-manifest.json",
+                    "lineStart": 8,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "summary.fileCount=350"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "catalog-is-the-inventory",
+            "title": "目录只是货架，清单才是库存账",
+            "content": "# 目录只是货架，清单才是库存账\n\n## 学习目标\n\n完成本课后，你能说明为什么 `WORLD_ASSET_CATALOG` 才是世界素材的权威库存，\n以及「文件在磁盘上」为何不等于「产品认这笔资产」。\n\n## 先给结论\n\n- **事实：目录是一张表。** `scripts/world-assets/world-assets.config.mjs` 导出\n  `WORLD_ASSET_CATALOG`，每一行由工厂函数（`characterAsset` / `environmentAsset` 等）生成。\n- **事实：每条有稳定 id。** 例如角色：`id: character.${name}`，环境：`id: environment.${id}`。\n- **事实：本地路径与上游路径成对。** `localPath` 落在 `public/world-lobby/...`，\n  `sourcePath` 指向 WOC 仓库的 `public/models/...`。\n- **推论：磁盘上的孤儿文件对运行时不存在。** acquire 与 generate 都只遍历 catalog；\n  多拷一个 GLB 进文件夹，不会自动变成可加载资产。\n\n## 一个类比\n\n超市货架上可以随便多放一箱可乐，但收银系统扫不出条码就卖不了。\n**catalog 是条码系统，文件夹只是货架。**\n\n## 工作示例\n\n1. 在 catalog 里登记 `characterAsset('knight.glb')`。\n2. 工厂写出 `id: character.knight` 与\n   `localPath: public/world-lobby/models/chars/players/knight.glb`。\n3. `acquire-world-assets.mjs` 只 for 这个数组拷贝；不在表里的文件不会被拉取。\n4. `buildWorldAssetManifest` 同样 map catalog——漏登记 = 清单里没有 = 加载器找不到 id。\n\n## 自检\n\n同事把 `dragon.glb` 丢进 `public/world-lobby/models/chars/players/` 并提交。\n游戏里能选到这条龙吗？缺哪一步？\n\n答案：不能。必须先写入 `WORLD_ASSET_CATALOG`（并完成 generate/check），否则没有\n`character.dragon` 这条库存记录。\n\n## 重点\n\n**文件夹是物理存放，catalog 是业务真相。**\n一人公司最容易犯的错：用「我看到文件了」代替「系统认账了」。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                "lineStart": 9,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "WORLD_ASSET_CATALOG 以 characterAsset 列表开篇"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                "lineStart": 81,
+                "lineEnd": 91,
+                "nodeIds": [],
+                "note": "characterAsset 生成 id/localPath/sourcePath/license"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/acquire-world-assets.mjs",
+                "lineStart": 14,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "acquire 只遍历 WORLD_ASSET_CATALOG"
+              }
+            ],
+            "cards": [
+              {
+                "id": "catalog-vs-folder",
+                "front": "磁盘上有 GLB 但 catalog 没登记，acquire 会怎样？",
+                "back": "忽略它。acquire 只按 WORLD_ASSET_CATALOG 拷贝，孤儿文件不是资产。",
+                "tags": [
+                  "catalog"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/acquire-world-assets.mjs",
+                    "lineStart": 14,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "for (const asset of WORLD_ASSET_CATALOG)"
+                  }
+                ]
+              },
+              {
+                "id": "stable-asset-id",
+                "front": "knight.glb 在 catalog 里的业务 id 长什么样？",
+                "back": "character.knight——由 characterAsset 用文件名去后缀拼出。",
+                "tags": [
+                  "catalog"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                    "lineStart": 82,
+                    "lineEnd": 88,
+                    "nodeIds": [],
+                    "note": "id: character.${name} 与 localPath"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "catalog-export-name",
+                "kind": "short-answer",
+                "title": "权威表名",
+                "prompt": "世界素材权威库存数组在 config 里导出的常量名是什么？",
+                "expectedAnswer": "WORLD_ASSET_CATALOG",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                    "lineStart": 9,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "export const WORLD_ASSET_CATALOG"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "tags-decide-when-it-loads",
+            "title": "标签决定它何时上场",
+            "content": "# 标签决定它何时上场\n\n## 学习目标\n\n完成本课后，你能解释 `qualityTiers` 与 `sceneGroups` 如何把「仓库里有」改成「这次启动要加载」，\n并指出 high-only 素材在低画质路径上会发生什么。\n\n## 先给结论\n\n- **事实：角色默认全档。** `characterAsset` 写死\n  `qualityTiers: ['low','medium','high']`，且 `sceneGroups` 含\n  `manor-critical` / `tavern-arrival` / `table`。\n- **事实：花园装饰只上高档。** `gardenAsset` 只有 `qualityTiers: ['high']`，\n  `sceneGroups: ['manor-deferred','high-tier']`。\n- **事实：桌椅分级。** `environmentPlacement` 里 `bench`/`bookcase` 等是\n  `['high']` + `tavern-deferred`；地板/墙是 `tavern-arrival` 且含 low。\n- **推论：路径与文件名不决定加载。** 同在 `models/foliage/` 下，花园与 terrain foliage\n  的 tier/group 策略可以完全不同。\n\n## 一个类比\n\n剧团仓库里人人有戏服，但节目单写着「第一场只需主角与桌椅」。\n**sceneGroups 是场次，qualityTiers 是票价档——不是货架分区。**\n\n## 工作示例\n\n1. 用户以 low 档进入酒馆：`tavern-arrival` + `table` 的素材会进 boot 集合。\n2. `bench` 只有 high → low 路径直接跳过，酒馆仍可开，只是少长凳。\n3. `bushFlowers`（garden）同理：deferred + high，不挡首屏。\n4. 若你把 `bench` 误标成 `tavern-arrival` 且含 low，boot 体积立刻被家具拖垮——预算课会抓到。\n\n## 自检\n\n为什么 `gardenAsset` 不给 low？删掉 high-only 限制会坏什么？\n\n答案：装饰性植被会挤进低端机 boot 路径，首包变重；标签存在的意义就是让「好看」默认不绑架「能玩」。\n\n## 重点\n\n**元数据是加载策略，不是注释。** 标错 group/tier，比文件丢了更危险——因为表面「都在」，启动却已经超预算或空白。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                "lineStart": 81,
+                "lineEnd": 91,
+                "nodeIds": [],
+                "note": "角色全 qualityTiers 与关键 sceneGroups"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                "lineStart": 107,
+                "lineEnd": 116,
+                "nodeIds": [],
+                "note": "gardenAsset 仅 high + manor-deferred"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                "lineStart": 201,
+                "lineEnd": 205,
+                "nodeIds": [],
+                "note": "bench 等家具 high-only + tavern-deferred"
+              }
+            ],
+            "cards": [
+              {
+                "id": "high-only-boot",
+                "front": "qualityTiers 只有 high 的素材，在 low 档 boot 里会出现吗？",
+                "back": "不会。过滤要求 asset.qualityTiers.includes(tier)，high-only 被排除。",
+                "tags": [
+                  "loading-tags"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                    "lineStart": 111,
+                    "lineEnd": 112,
+                    "nodeIds": [],
+                    "note": "garden 仅 high tier"
+                  }
+                ]
+              },
+              {
+                "id": "scene-group-purpose",
+                "front": "sceneGroups 解决的是「文件在哪」还是「何时加载」？",
+                "back": "何时加载。同一文件夹里的资产可以挂完全不同的场次标签。",
+                "tags": [
+                  "loading-tags"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                    "lineStart": 195,
+                    "lineEnd": 198,
+                    "nodeIds": [],
+                    "note": "tavern-arrival 与 table 的分组差异"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "garden-tier-only",
+                "kind": "short-answer",
+                "title": "花园档位",
+                "prompt": "gardenAsset 写入的 qualityTiers 数组里唯一的档位是什么？",
+                "expectedAnswer": "high",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                    "lineStart": 111,
+                    "lineEnd": 112,
+                    "nodeIds": [],
+                    "note": "qualityTiers: ['high']"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "provenance-is-payload",
+            "title": "出处不是 README 点缀",
+            "content": "# 出处不是 README 点缀\n\n## 学习目标\n\n完成本课后，你能指出许可证与上游 commit 如何进入生成清单，\n并解释「多 commit 摄入」为什么必须写在 catalog 条目上而不是口头约定。\n\n## 先给结论\n\n- **事实：默认上游钉死在 WOC_SOURCE。** `commit: '415f67a5...'` 与 repository URL 写在 config 顶。\n- **事实：后补植被用另一枚 commit。** `FRESH_WOC_COMMIT = '0f0a4c53...'`，\n  `foliageAsset` / `biomeAsset` 带 `sourceCommit: FRESH_WOC_COMMIT`。\n- **事实：生成时写入每条 credit。** `buildWorldAssetManifest` 填\n  `license` / `project` / `repository` / `sourceCommit` / `sourcePath`。\n- **事实：人工 CREDITS 也钉 commit。** `public/world-lobby/CREDITS.md` 分节写\n  主摄入与 2026-07-10 nature intake 的 verified commit。\n- **推论：出处是机器可校验的字段。** 不是写完就忘的致谢页。\n\n## 一个类比\n\n进口货每箱贴原产地与批次号；混批次时不能只在仓库门口挂一块「都是合法进口」的牌子。\n**每箱自己的标签（sourceCommit）才能对账。**\n\n## 工作示例\n\n1. 角色 GLB：manifest 里 `credit.sourceCommit` 回落到 `WOC_SOURCE.commit`。\n2. `pine_1.glb`：catalog 覆盖为 `FRESH_WOC_COMMIT`，与 CREDITS 第二节一致。\n3. 有人「更新了全部模型」却只改文件不改 commit 字段 → check 可能因哈希变化报 stale，\n   但法律叙事仍指向错误上游版本——双账本一起维护。\n\n## 自检\n\n为什么 foliage 不能默默沿用 `WOC_SOURCE.commit`？\n\n答案：它们来自另一次 verified intake（`0f0a4c53...`）。混用默认 commit 会让 credit 指错上游快照。\n\n## 重点\n\n**许可与批次是资产记录的一部分，与 png/glb 同级。** 一人公司没有法务盯着，字段化是最低成本的自保。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                "lineStart": 1,
+                "lineEnd": 7,
+                "nodeIds": [],
+                "note": "WOC_SOURCE 与 FRESH_WOC_COMMIT 双钉 commit"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                "lineStart": 119,
+                "lineEnd": 128,
+                "nodeIds": [],
+                "note": "foliageAsset 覆盖 sourceCommit"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets-lib.mjs",
+                "lineStart": 27,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "生成 credit 对象含 sourceCommit/sourcePath/license"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "public/world-lobby/CREDITS.md",
+                "lineStart": 23,
+                "lineEnd": 33,
+                "nodeIds": [],
+                "note": "Nature intake 独立 verified commit 与 CC0"
+              }
+            ],
+            "cards": [
+              {
+                "id": "two-commits-one-catalog",
+                "front": "同一 catalog 里为什么会出现两个不同的 sourceCommit？",
+                "back": "主包与后补 foliage/biome 分批 verified intake，条目级覆盖默认 WOC_SOURCE。",
+                "tags": [
+                  "provenance"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                    "lineStart": 1,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "默认 commit 与 FRESH_WOC_COMMIT"
+                  }
+                ]
+              },
+              {
+                "id": "credit-in-manifest",
+                "front": "运行时清单里 license 存在哪一层字段？",
+                "back": "每条 asset 的 credit.license（生成时从 catalog.license 写入）。",
+                "tags": [
+                  "provenance"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-assets-lib.mjs",
+                    "lineStart": 29,
+                    "lineEnd": 34,
+                    "nodeIds": [],
+                    "note": "credit.license 与 sourceCommit"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "fresh-commit-const",
+                "kind": "short-answer",
+                "title": "后补常量名",
+                "prompt": "后补 foliage/biome 使用的 commit 常量叫什么？",
+                "expectedAnswer": "FRESH_WOC_COMMIT",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "const FRESH_WOC_COMMIT = ..."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "acquire-generate-check",
+        "title": "接入、钉死、校验",
+        "objective": "掌握拒绝覆盖的获取、内容锁定的生成、以及三重唯一+stale 门禁",
+        "lessons": [
+          {
+            "id": "refuse-to-overwrite",
+            "title": "已改过的文件，禁止悄悄覆盖",
+            "content": "# 已改过的文件，禁止悄悄覆盖\n\n## 学习目标\n\n完成本课后，你能画出 acquire 的三条分支，并说明「目标已存在且哈希不同」时为什么必须失败而不是覆盖。\n\n## 先给结论\n\n- **事实：源不存在就炸。** `Missing WOC source asset: ${asset.sourcePath}`。\n- **事实：目标已存在则比 sha256。** `sha256For(source) !== sha256For(destination)` 时\n  throw `Refusing to overwrite changed world asset`。\n- **事实：哈希相同则跳过。** `continue`，不重写。\n- **事实：仅缺失时 copyFileSync。** 先 `mkdirSync(..., { recursive: true })`。\n- **推论：更新素材是显式决策。** 管线拒绝把「再跑一遍 acquire」变成静默改二进制。\n\n## 一个类比\n\n快递柜里已有你的包裹。新快递员不能因为单号相同就撬开旧柜塞新货。\n**哈希不同 = 柜里已经是另一件东西，必须人工处理。**\n\n## 工作示例\n\n```mermaid\nflowchart TD\n  A[WORLD_ASSET_CATALOG 条目] --> B{源文件存在?}\n  B -->|否| X[throw Missing WOC source]\n  B -->|是| C{目标已存在?}\n  C -->|否| D[mkdir + copyFileSync]\n  C -->|是| E{源与目标 sha256 相同?}\n  E -->|是| F[continue 跳过]\n  E -->|否| Y[throw Refusing to overwrite]\n```\n\n图里最关键的那条线是 **E→Y**：不是「覆盖并 log 警告」，而是硬失败。\n一人公司没有 code review 拦住误跑脚本，这道闸就是 review。\n\n## 自检\n\n本地改过 `knight.glb` 做实验，又跑了 acquire，会发生什么？正确恢复姿势是什么？\n\n答案：抛 `Refusing to overwrite changed world asset`。要么删掉目标让它重拷，要么接受本地版并走正式变更流程（改源、重新 generate/check），绝不能让脚本默默盖掉你的实验或盖掉正式文件。\n\n## 重点\n\n**可重复的获取脚本，必须对「已有且不同」不友好。** 友好覆盖是资产事故的经典入口。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/acquire-world-assets.mjs",
+                "lineStart": 14,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "acquire：缺失源/拒绝覆盖/跳过同哈希/拷贝"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets-lib.mjs",
+                "lineStart": 9,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "sha256For 用文件字节算内容哈希"
+              }
+            ],
+            "cards": [
+              {
+                "id": "overwrite-policy",
+                "front": "目标文件已存在且与源 sha256 不同时，acquire 做什么？",
+                "back": "throw Refusing to overwrite changed world asset，拒绝覆盖。",
+                "tags": [
+                  "acquire"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/acquire-world-assets.mjs",
+                    "lineStart": 18,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "哈希不同则 throw"
+                  }
+                ]
+              },
+              {
+                "id": "same-hash-skip",
+                "front": "目标已存在且哈希相同，为什么还要 continue 而不是再 copy 一次？",
+                "back": "内容已一致，重写无收益还放大时间戳噪音；跳过保持幂等。",
+                "tags": [
+                  "acquire"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/acquire-world-assets.mjs",
+                    "lineStart": 18,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "同哈希 continue"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "refuse-error-keyword",
+                "kind": "short-answer",
+                "title": "失败关键词",
+                "prompt": "acquire 拒绝覆盖时，Error 文案里紧跟的两个英文词是什么？",
+                "expectedAnswer": "Refusing to",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/acquire-world-assets.mjs",
+                    "lineStart": 19,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "Refusing to overwrite changed world asset"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "generate-locks-bytes",
+            "title": "生成清单，就是把字节钉死",
+            "content": "# 生成清单，就是把字节钉死\n\n## 学习目标\n\n完成本课后，你能说明 `generate-world-assets` 产出什么，以及为什么清单里要同时有\n`sha256`、`byteSize` 与 `url`。\n\n## 先给结论\n\n- **事实：输出路径固定。** `GENERATED_WORLD_ASSET_MANIFEST_PATH` =\n  `src/features/world-runtime/assets/worldAssetManifest.generated.ts`。\n- **事实：从磁盘读真相。** `buildWorldAssetManifest` 对每条 catalog 查文件，\n  写入 `byteSize`、`sha256`、`url`（由 `public/` 前缀切成 URL）。\n- **事实：生成物禁止手改。** 文件头注释：\n  `Generated by ... Do not edit by hand.` 并以\n  `as const satisfies WorldAssetManifest` 约束类型。\n- **推论：清单是内容锁。** 运行时信任的是钉死的哈希与大小，不是「目录里好像有个文件」。\n\n## 一个类比\n\n出厂检验贴上序列号与重量；以后验收只扫标签，不靠「看起来像同一箱」。\n**sha256 是序列号，byteSize 是重量双检。**\n\n## 工作示例\n\n1. 跑 `pnpm world-assets:generate`。\n2. `buildWorldAssetManifest` 缺文件直接 throw `Missing world asset file`。\n3. `urlForLocalPath` 拒绝非 `public/` 前缀——资产必须能被静态服务。\n4. 写出带 `as const satisfies WorldAssetManifest` 的生成文件。\n\n## 自检\n\n只改 GLB 不重新 generate，运行时可能出现什么分裂？\n\n答案：加载器仍按旧 url/旧预期工作，但字节已变；check 会报 `Stale generated metadata`，\n若跳过 check 则出现「清单说 A、磁盘是 B」的幽灵 bug。\n\n## 重点\n\n**生成步骤的价值不是「写个 JSON 方便读」，而是把可变的文件系统冻成可 diff 的契约。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets-lib.mjs",
+                "lineStart": 6,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "生成路径常量与 urlForLocalPath 的 public/ 约束"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets-lib.mjs",
+                "lineStart": 20,
+                "lineEnd": 44,
+                "nodeIds": [],
+                "note": "buildWorldAssetManifest 写入 byteSize/sha256/url/credit"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/generate-world-assets.mjs",
+                "lineStart": 12,
+                "lineEnd": 16,
+                "nodeIds": [],
+                "note": "generate 写盘并打印条数"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets-lib.mjs",
+                "lineStart": 47,
+                "lineEnd": 55,
+                "nodeIds": [],
+                "note": "generatedManifestSource 头注释与 satisfies 类型锁"
+              }
+            ],
+            "cards": [
+              {
+                "id": "manifest-path",
+                "front": "生成清单默认写到哪个路径常量？",
+                "back": "GENERATED_WORLD_ASSET_MANIFEST_PATH，指向 worldAssetManifest.generated.ts。",
+                "tags": [
+                  "generate"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-assets-lib.mjs",
+                    "lineStart": 6,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "GENERATED_WORLD_ASSET_MANIFEST_PATH"
+                  }
+                ]
+              },
+              {
+                "id": "why-byte-and-hash",
+                "front": "为什么既要 sha256 又要 byteSize？",
+                "back": "双检防 stale：哈希变或体积变任一不符就失败，避免半更新。",
+                "tags": [
+                  "generate"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-assets-lib.mjs",
+                    "lineStart": 28,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "同时记录 byteSize 与 sha256"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "public-prefix-rule",
+                "kind": "short-answer",
+                "title": "URL 派生前缀",
+                "prompt": "urlForLocalPath 要求 localPath 必须以什么前缀开头？",
+                "expectedAnswer": "public/",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-assets-lib.mjs",
+                    "lineStart": 13,
+                    "lineEnd": 16,
+                    "nodeIds": [],
+                    "note": "localPath must live under public/"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "stale-is-a-hard-fail",
+            "title": "过期元数据是硬错误",
+            "content": "# 过期元数据是硬错误\n\n## 学习目标\n\n完成本课后，你能列出 `check-world-assets` 的两层 stale 检测，\n并解释为什么「文件还在」不足以通过门禁。\n\n## 先给结论\n\n- **事实：逐条对盘。** 文件缺失 → `Missing world asset file`；\n  `sha256` 或 `byteSize` 与磁盘不符 → `Stale generated metadata: ${entry.id}`。\n- **事实：整表重算比字符串。** 对默认路径，把 `buildWorldAssetManifest` 再生成一遍，\n  与文件原文 `!==` 则报\n  `generated manifest differs from the catalog output`。\n- **事实：sceneGroups/qualityTiers 不得空。** 空数组直接 throw。\n- **推论：check 同时防「人手改生成物」与「改 catalog 忘 generate」。** 两条路都会 stale。\n\n## 一个类比\n\n海关不只看箱在不在，还要核对铅封号，并且要求申报单与系统重算一致。\n**单文件哈希是铅封，全文重生成是第二台磅秤。**\n\n## 工作示例\n\n1. 有人手改 generated.ts 里某个 url → 全文字符串比对失败。\n2. 只替换 GLB 不跑 generate → 单条 sha256/byteSize 失败。\n3. catalog 新增条目但未 generate → 重算产物与旧文件不一致。\n4. 通过时打印 `world asset check passed (N assets)`。\n\n## 自检\n\n为什么需要「全文重算」而不只做逐文件哈希？\n\n答案：哈希只证明「清单里的文件仍匹配磁盘」，不能证明「清单仍等于当前 catalog 的完整输出」\n（例如丢字段、改 credit、条目增删却残留旧文件）。\n\n## 重点\n\n**门禁的工作是制造即时疼痛，把「好像还能跑」变成「今天必须修」。**\nstale 不是警告级卫生问题。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/check-world-assets.mjs",
+                "lineStart": 39,
+                "lineEnd": 59,
+                "nodeIds": [],
+                "note": "路径/标签校验与 sha256+byteSize stale"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/check-world-assets.mjs",
+                "lineStart": 71,
+                "lineEnd": 78,
+                "nodeIds": [],
+                "note": "默认路径下与 catalog 重算结果全文比对"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/check-world-assets.mjs",
+                "lineStart": 84,
+                "lineEnd": 89,
+                "nodeIds": [],
+                "note": "失败设 process.exitCode=1"
+              }
+            ],
+            "cards": [
+              {
+                "id": "two-stale-layers",
+                "front": "check 的两层 stale 分别抓什么？",
+                "back": "逐条哈希/体积对盘；整份 generated 文本是否等于 catalog 重算输出。",
+                "tags": [
+                  "check"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/check-world-assets.mjs",
+                    "lineStart": 55,
+                    "lineEnd": 78,
+                    "nodeIds": [],
+                    "note": "Stale generated metadata 两种报错"
+                  }
+                ]
+              },
+              {
+                "id": "empty-scene-groups",
+                "front": "sceneGroups 为空数组时 check 如何处理？",
+                "back": "throw Missing world asset scene groups，直接失败。",
+                "tags": [
+                  "check"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/check-world-assets.mjs",
+                    "lineStart": 43,
+                    "lineEnd": 45,
+                    "nodeIds": [],
+                    "note": "sceneGroups 非空校验"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "stale-error-prefix",
+                "kind": "short-answer",
+                "title": "stale 报错前缀",
+                "prompt": "单条哈希不符时，Error 消息的前三个英文单词是什么？",
+                "expectedAnswer": "Stale generated metadata",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/check-world-assets.mjs",
+                    "lineStart": 57,
+                    "lineEnd": 58,
+                    "nodeIds": [],
+                    "note": "Stale generated metadata: ${entry.id}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "three-unique-keys",
+            "title": "id、URL、内容哈希必须三独",
+            "content": "# id、URL、内容哈希必须三独\n\n## 学习目标\n\n完成本课后，你能说出 check 对 `id` / `url` / `sha256` 的唯一性要求，\n并解释「禁止相同内容挂两个 id」为何反直觉却必要。\n\n## 先给结论\n\n- **事实：`duplicateValue` 扫三遍。** 分别对 `id`、`url`、`sha256` 建 Map，\n  撞车即 `Duplicate ${label}: ${value} (A and B)`。\n- **事实：缺字段也失败。** 空字符串 id/url/hash → `Missing world asset ${label}`。\n- **事实：url 来自路径。** `urlForLocalPath` 一对一映射 `public/...` → `/...`，\n  所以两条不同 localPath 才会有两个 url。\n- **推论：内容也不能重复。** 与「content-addressed 共享同一 blob」相反——这里每个 catalog\n  条目必须是独特字节，避免「改一份拷贝、另一 id 跟着脏」的隐性耦合。\n\n## 一个类比\n\n公司工号、工牌二维码、指纹都不得共享。\n两人共用一个指纹（相同 sha256）在安检看来就是身份事故。\n\n## 工作示例\n\n1. 复制 `knight.glb` 为 `knight_alt.glb`，字节完全相同，登记两个 id。\n2. generate 后两条 sha256 一样。\n3. check 在 `duplicateValue(..., 'sha256')` 失败。\n4. 你必须真正做出差异文件，或只保留一个 id——不能靠「同文件两个名字」偷懒。\n\n## 自检\n\n若去掉 sha256 唯一性，只保留 id/url 唯一，会引入什么风险？\n\n答案：两个逻辑资产共享磁盘字节时，一次替换会静默影响另一业务 id，库存账出现伪独立。\n\n## 重点\n\n**这是本课最反直觉的门禁：资产条目按内容也必须互异。**\n一人公司的「先复制一份改名再说」在这里会被机器当场拒绝。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/check-world-assets.mjs",
+                "lineStart": 19,
+                "lineEnd": 37,
+                "nodeIds": [],
+                "note": "duplicateValue 与 id/url/sha256 三重唯一"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets-lib.mjs",
+                "lineStart": 13,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "url 由 localPath 唯一派生"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-unique-hash",
+                "front": "为什么 check 要求 sha256 全局唯一，而不允许多 id 共享同一文件内容？",
+                "back": "防止伪独立资产：一改双伤。每条 catalog 必须是可单独演进的字节。",
+                "tags": [
+                  "uniqueness"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/check-world-assets.mjs",
+                    "lineStart": 34,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "duplicateValue sha256"
+                  }
+                ]
+              },
+              {
+                "id": "duplicate-error-shape",
+                "front": "两条 asset 撞 url 时，错误信息会带上什么定位信息？",
+                "back": "重复的 url 值，以及前后两个 entry.id。",
+                "tags": [
+                  "uniqueness"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/check-world-assets.mjs",
+                    "lineStart": 26,
+                    "lineEnd": 29,
+                    "nodeIds": [],
+                    "note": "Duplicate label 含 previous 与 entry.id"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "three-unique-fields",
+                "kind": "short-answer",
+                "title": "三独字段",
+                "prompt": "validateGeneratedEntries 里做唯一性检查的三个字段名，用斜杠写出。",
+                "expectedAnswer": "id/url/sha256",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/check-world-assets.mjs",
+                    "lineStart": 35,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "duplicateValue 三次调用"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "budget-the-boot-shape",
+        "title": "用预算锁住加载形状",
+        "objective": "把首屏/庄园/单文件体积写成可执行上限，并用 verify 串起正确性与承诺",
+        "lessons": [
+          {
+            "id": "boot-path-is-a-filter",
+            "title": "启动路径是过滤器，不是全仓打包",
+            "content": "# 启动路径是过滤器，不是全仓打包\n\n## 学习目标\n\n完成本课后，你能用 `qualityTiers` × `sceneGroups` 描述 boot 集合如何从全量 manifest 滤出，\n并指出默认 boot 参数是什么。\n\n## 先给结论\n\n- **事实：预算脚本先滤 bootAssets。**\n  `qualityTiers.includes(tier)` 且 `sceneGroups` 与请求 groups 有交集。\n- **事实：默认参数偏酒馆首屏。** `--tier` 默认 `low`，\n  `--groups` 默认 `tavern-arrival,table`。\n- **事实：角色进关键场。** catalog 里角色带 `tavern-arrival` 与 `table`，低档仍可能进 boot。\n- **推论：总包体积与首屏体积是两个问题。** 全仓可以较大，只要 boot 过滤后仍瘦。\n\n## 一个类比\n\n图书馆可以很大，但「开馆第一分钟读者能拿到的书」只是服务台那一叠。\n**budget 盯的是服务台，不是整栋楼。**\n\n## 工作示例\n\n1. manifest 含 high-only 的 bookcase、garden。\n2. 默认 low + tavern-arrival,table → 这些装饰不进 `bootAssets`。\n3. `summarizeAssets(bootAssets)` 得到 boot MiB，再和 `DEFAULT_BOOT_BUDGET_MIB` 比。\n4. 你若把 groups 改成包含 `optional-cosmetic`，boot 报告会突然膨胀——过滤器被你自己打开了。\n\n## 自检\n\n把默认 tier 改成 high 却不改预算上限，最可能先爆哪类失败？\n\n答案：`boot path exceeds budget`——high 会让更多仅 high 的 deferred 资产进入集合（若 groups 覆盖到），\n体积上升。\n\n## 重点\n\n**加载策略写在 catalog，预算脚本只是执行过滤器。** 调预算数字前，先问标签是否标对。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                "lineStart": 62,
+                "lineEnd": 72,
+                "nodeIds": [],
+                "note": "bootAssets 按 tier 与 sceneGroups 过滤"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                "lineStart": 86,
+                "lineEnd": 87,
+                "nodeIds": [],
+                "note": "角色 sceneGroups 含 tavern-arrival 与 table"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                "lineStart": 9,
+                "lineEnd": 12,
+                "nodeIds": [],
+                "note": "默认 total/boot/manor/largest 预算常数"
+              }
+            ],
+            "cards": [
+              {
+                "id": "default-boot-groups",
+                "front": "world-asset-budget 默认的 scene groups 字符串是什么？",
+                "back": "tavern-arrival,table——偏酒馆首屏与桌面。",
+                "tags": [
+                  "budget"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                    "lineStart": 63,
+                    "lineEnd": 66,
+                    "nodeIds": [],
+                    "note": "默认 --groups"
+                  }
+                ]
+              },
+              {
+                "id": "filter-predicate",
+                "front": "一个 asset 进入 bootAssets 必须同时满足哪两个条件？",
+                "back": "qualityTiers 含当前 tier，且 sceneGroups 与请求 groups 有交集。",
+                "tags": [
+                  "budget"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                    "lineStart": 68,
+                    "lineEnd": 71,
+                    "nodeIds": [],
+                    "note": "includes(tier) 与 some(group)"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-boot-tier",
+                "kind": "short-answer",
+                "title": "默认档位",
+                "prompt": "world-asset-budget 的 --tier 默认值是什么？",
+                "expectedAnswer": "low",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                    "lineStart": 62,
+                    "lineEnd": 62,
+                    "nodeIds": [],
+                    "note": "argValue('--tier', 'low')"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "four-budget-ceilings",
+            "title": "四条天花板，而不是一条总预算",
+            "content": "# 四条天花板，而不是一条总预算\n\n## 学习目标\n\n完成本课后，你能背出四条默认 MiB 上限及其环境变量名，并说明为什么最大单文件也要单独封顶。\n\n## 先给结论\n\n- **事实：四常数。** `DEFAULT_TOTAL_BUDGET_MIB = 12`，\n  `BOOT = 10`，`MANOR_BOOT = 3`，`LARGEST_FILE = 2`。\n- **事实：可用 env 覆盖。** `WORLD_ASSET_TOTAL_BUDGET_MIB` 等；非法数字直接 throw。\n- **事实：失败可多选。** `failures` 数组可同时塞 total/boot/manor/largest 超限文案，\n  最后 `exitCode = 1`。\n- **推论：单指标会撒谎。** 总包合格但单文件 5MiB 仍可能毁掉首屏；\n  分项封顶逼你拆资产，而不是只盯合计。\n\n## 一个类比\n\n搬家不只看「整车吨位」，还要看「电梯限重」「走廊拐角」和「最重那一件能不能抬」。\n**四条预算是四道物理约束。**\n\n## 工作示例\n\n1. 全量 `summarizeAssets(manifest)` → 比 total。\n2. 过滤后 boot → 比 boot。\n3. manor 路径（下节）→ 比 manorBoot。\n4. `largest[0].mib` → 比 largestFile；报错带 `localPath`。\n\n## 自检\n\n只把 `WORLD_ASSET_TOTAL_BUDGET_MIB` 调高，能否掩盖一个 3MiB 的角色 GLB？\n\n答案：不能。`largest file exceeds budget` 仍按 `WORLD_ASSET_LARGEST_FILE_BUDGET_MIB`（默认 2）拦截。\n\n## 重点\n\n**预算是产品承诺的机器化：首屏多重、庄园多重、单件多重。** 调 env 逃避前，先承认你在改承诺。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                "lineStart": 9,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "四条默认预算与 numberEnv 校验"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                "lineStart": 95,
+                "lineEnd": 127,
+                "nodeIds": [],
+                "note": "budgets 装配与四类 failures.push"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                "lineStart": 164,
+                "lineEnd": 171,
+                "nodeIds": [],
+                "note": "有 failures 则 exitCode=1"
+              }
+            ],
+            "cards": [
+              {
+                "id": "largest-file-why",
+                "front": "为什么除了 total 还要 largest-file 预算？",
+                "back": "单文件过大仍会卡首屏与解码；总包合格掩盖不了单件炸弹。",
+                "tags": [
+                  "budget"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                    "lineStart": 122,
+                    "lineEnd": 126,
+                    "nodeIds": [],
+                    "note": "largest file exceeds budget"
+                  }
+                ]
+              },
+              {
+                "id": "default-total-mib",
+                "front": "默认全量体积上限是多少 MiB？",
+                "back": "12 MiB（DEFAULT_TOTAL_BUDGET_MIB）。",
+                "tags": [
+                  "budget"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "DEFAULT_TOTAL_BUDGET_MIB = 12"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "largest-default-mib",
+                "kind": "short-answer",
+                "title": "单文件默认上限",
+                "prompt": "DEFAULT_LARGEST_FILE_BUDGET_MIB 的数值是多少？",
+                "expectedAnswer": "2",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "DEFAULT_LARGEST_FILE_BUDGET_MIB = 2"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "manor-boot-one-avatar",
+            "title": "庄园首包只带一个角色",
+            "content": "# 庄园首包只带一个角色\n\n## 学习目标\n\n完成本课后，你能描述 manor boot 集合如何从「最大的低档角色 + 关键环境」拼出，\n并解释为什么不是 8 个角色全塞进 3MiB 预算。\n\n## 先给结论\n\n- **事实：环境侧。** `manorEnvironment` =\n  `group !== 'characters'` 且 low 档，且 sceneGroups 含 `manor-critical` 或 `portal`。\n- **事实：角色侧只取一个。** 所有 `group === 'characters'` 且含 low 的条目按 `byteSize` 降序，\n  取 `[0]` 为 `largestCharacter`。\n- **事实：拼装。** `manorBootAssets = [largestCharacter, ...manorEnvironment]`（有角色时）。\n- **事实：预算 3MiB。** 超限文案：`manor boot path exceeds budget`。\n- **推论：catalog 可以有 8 个可玩角色，首包策略仍是「先塞得下最重的那一个」。**\n  其余角色延后加载——产品可玩性与体积在这里显式交换。\n\n## 一个类比\n\n开业剪彩只请一位嘉宾上台，不是全公司站台；后台可以有很多人候场。\n**largestCharacter 是剪彩嘉宾。**\n\n## 工作示例\n\n1. 8 个角色都在 catalog，且都 low。\n2. 预算脚本排序后只保留体积最大的那一个进 manor boot。\n3. 环境只收 manor-critical/portal 的非角色（如 inn、fence）。\n4. 总和必须 ≤ `DEFAULT_MANOR_BOOT_BUDGET_MIB`（3）。\n\n## 自检\n\n若误把全部角色 `group` 标成 `environment`，manor boot 会怎样？\n\n答案：它们不再走「只取最大一个」的角色分支，可能全部进入 manorEnvironment 过滤逻辑；\n只要 sceneGroups 匹配就会整批计入，3MiB 上限几乎必然爆掉。\n\n## 重点\n\n**预算代码里的「一个角色」是产品决策，不是实现偷懒。** 读到 sort+取最大时，要读成加载策略。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                "lineStart": 73,
+                "lineEnd": 84,
+                "nodeIds": [],
+                "note": "manorEnvironment 与 largestCharacter 拼装 manorBootAssets"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                "lineStart": 117,
+                "lineEnd": 120,
+                "nodeIds": [],
+                "note": "manor boot 超预算失败文案"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-assets.config.mjs",
+                "lineStart": 10,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "catalog 登记 8 个角色资产"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-one-character",
+                "front": "manor boot 为什么只注入 largestCharacter 而不是全部角色？",
+                "back": "3MiB 庄园首包装不下全角色；先保证最重那一个+关键场景能启动。",
+                "tags": [
+                  "manor-boot"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                    "lineStart": 79,
+                    "lineEnd": 84,
+                    "nodeIds": [],
+                    "note": "sort 后取最大角色再拼接"
+                  }
+                ]
+              },
+              {
+                "id": "manor-env-filter",
+                "front": "哪些非角色资产会进入 manorEnvironment？",
+                "back": "low 档且 sceneGroups 含 manor-critical 或 portal 的条目。",
+                "tags": [
+                  "manor-boot"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                    "lineStart": 73,
+                    "lineEnd": 78,
+                    "nodeIds": [],
+                    "note": "manorEnvironment 过滤条件"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "manor-boot-default-mib",
+                "kind": "short-answer",
+                "title": "庄园首包上限",
+                "prompt": "DEFAULT_MANOR_BOOT_BUDGET_MIB 默认是多少？",
+                "expectedAnswer": "3",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                    "lineStart": 11,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "DEFAULT_MANOR_BOOT_BUDGET_MIB = 3"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "verify-is-check-and-budget",
+            "title": "verify = 正确性 × 体积承诺",
+            "content": "# verify = 正确性 × 体积承诺\n\n## 学习目标\n\n完成本课后，你能说明 `world-assets:verify` 如何串起 check 与 budget，\n并判断「只跑其中一半」会漏掉哪类事故。\n\n## 先给结论\n\n- **事实：npm 脚本四件套。** `package.json` 中 `generate` / `acquire` / `check` / `budget` 分列，\n  `world-assets:verify` = `pnpm world-assets:check && pnpm world-assets:budget`。\n- **事实：顺序是正确性优先。** check 不过则 budget 不跑（`&&`）。\n- **事实：二者失败都是退出码。** check catch 设 `exitCode=1`；budget 有 failures 同样。\n- **推论：半套门禁制造假安全感。** 只 check 会放过超重首包；只 budget 会在错误清单上算体积。\n\n## 一个类比\n\n起飞前：机械师签字（系统正确）+ 配载单（重量平衡）。\n**少一项都叫「没放飞许可」。**\n\n## 工作示例\n\n1. 改了 catalog → `generate` → `verify`。\n2. check 捕获重复 id 或 stale 哈希。\n3. budget 打印 total/boot/manor 与 largest files，超限非零退出。\n4. CI 或本地钩子应绑 `verify`，而不是只绑 generate。\n\n## 自检\n\n清单与磁盘一致，但 boot 11MiB、上限 10MiB——哪条命令失败？error 文案关键字？\n\n答案：`world-assets:budget`（经 verify 第二段）失败；`boot path exceeds budget`。\n\n## 重点\n\n**素材管线的「完成」定义为双重绿灯：账对，且承诺的加载形状仍成立。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "package.json",
+                "lineStart": 21,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "world-assets:verify = check && budget"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/check-world-assets.mjs",
+                "lineStart": 84,
+                "lineEnd": 89,
+                "nodeIds": [],
+                "note": "check 失败 exitCode=1"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                "lineStart": 157,
+                "lineEnd": 171,
+                "nodeIds": [],
+                "note": "budget 打印 failures 并 exitCode=1"
+              }
+            ],
+            "cards": [
+              {
+                "id": "verify-composition",
+                "front": "world-assets:verify 由哪两个脚本用 && 串起来？",
+                "back": "world-assets:check 然后 world-assets:budget。",
+                "tags": [
+                  "verify"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 23,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "check/budget/verify 脚本串联"
+                  }
+                ]
+              },
+              {
+                "id": "half-gate-risk",
+                "front": "只跑 budget 不跑 check，可能得到什么假象？",
+                "back": "在过期或错误的 generated 清单上算出「体积合格」，掩盖内容已漂。",
+                "tags": [
+                  "verify"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/world-assets/world-asset-budget.mjs",
+                    "lineStart": 67,
+                    "lineEnd": 72,
+                    "nodeIds": [],
+                    "note": "budget 直接 parse generated manifest"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "verify-second-script",
+                "kind": "short-answer",
+                "title": "verify 后半段",
+                "prompt": "world-assets:verify 在 check 之后调用的 pnpm 脚本名是什么？",
+                "expectedAnswer": "world-assets:budget",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "package.json",
+                    "lineStart": 24,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "verify 调用 world-assets:budget"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

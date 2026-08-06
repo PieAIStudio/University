@@ -1,0 +1,94 @@
+media-tooling course proposal — delivery report
+==============================================
+
+Scale
+-----
+- Units: 3
+  1. pipeline-boundary（流水线边界）— 4 lessons
+  2. matte-quality（抠像质量可验收）— 4 lessons
+  3. paid-voice-sync（付费语音同步）— 4 lessons
+- Lessons: 12
+- Cards: 24 (2 per lesson)
+- Exercises: 12 (1 per lesson)
+- Evidence references: 69 (all kind fact/inference with note; nodeIds [])
+
+Mermaid
+-------
+- Lesson gate-then-verify includes a flowchart (raw → process → gate/verify → ship)
+  and explains the critical edge: fixture must fail.
+
+Gate: check-proposal-shape.mjs
+------------------------------
+ok  course-proposals/media-tooling.json
+
+Gate: check-proposal-evidence.mjs --study supaluv
+------------------------------------------------
+ok  tools/portrait-matte/calibrate.mjs:123-131
+ok  tools/portrait-matte/config.mjs:113-126
+ok  tools/portrait-matte/config.mjs:117-126
+ok  tools/portrait-matte/config.mjs:119-125
+ok  tools/portrait-matte/config.mjs:122-124
+ok  tools/portrait-matte/config.mjs:16-21
+ok  tools/portrait-matte/config.mjs:176-180
+ok  tools/portrait-matte/config.mjs:183-185
+ok  tools/portrait-matte/config.mjs:183-190
+ok  tools/portrait-matte/config.mjs:3-4
+ok  tools/portrait-matte/config.mjs:3-6
+ok  tools/portrait-matte/config.mjs:58-61
+ok  tools/portrait-matte/config.mjs:8-14
+ok  tools/portrait-matte/gate.mjs:24-40
+ok  tools/portrait-matte/matte.mjs:109-113
+ok  tools/portrait-matte/matte.mjs:166-169
+ok  tools/portrait-matte/matte.mjs:188-195
+ok  tools/portrait-matte/matte.mjs:216-221
+ok  tools/portrait-matte/matte.mjs:226-233
+ok  tools/portrait-matte/matte.mjs:226-239
+ok  tools/portrait-matte/matte.mjs:40-46
+ok  tools/portrait-matte/matte.mjs:419-483
+ok  tools/portrait-matte/matte.mjs:48-60
+ok  tools/portrait-matte/matte.mjs:48-89
+ok  tools/portrait-matte/matte.mjs:480-482
+ok  tools/portrait-matte/matte.mjs:78-80
+ok  tools/portrait-matte/matte.mjs:97-115
+ok  tools/portrait-matte/process.mjs:10-22
+ok  tools/portrait-matte/process.mjs:19-21
+ok  tools/portrait-matte/verify.mjs:62-83
+ok  tools/portrait-matte/verify.mjs:76-83
+ok  tools/portrait-matte/verify.mjs:76-87
+ok  tools/voice-pregen/bankTransaction.ts:31-33
+ok  tools/voice-pregen/bankTransaction.ts:31-35
+ok  tools/voice-pregen/bankTransaction.ts:31-36
+ok  tools/voice-pregen/bankTransaction.ts:89-107
+ok  tools/voice-pregen/generate.ts:1065-1114
+ok  tools/voice-pregen/generate.ts:1076-1085
+ok  tools/voice-pregen/generate.ts:1087-1096
+ok  tools/voice-pregen/generate.ts:1124-1128
+ok  tools/voice-pregen/generate.ts:1124-1136
+ok  tools/voice-pregen/generate.ts:1201-1204
+ok  tools/voice-pregen/generate.ts:1299-1323
+ok  tools/voice-pregen/generate.ts:475-506
+ok  tools/voice-pregen/generate.ts:500-505
+ok  tools/voice-pregen/generate.ts:809-813
+ok  tools/voice-pregen/generate.ts:828-835
+ok  tools/voice-pregen/synthesisContract.ts:15-19
+ok  tools/voice-pregen/synthesisContract.ts:15-27
+ok  tools/voice-pregen/synthesisContract.ts:20-22
+ok  tools/voice-pregen/synthesisContract.ts:29-52
+
+all 69 references resolve at their pinned commits
+
+Most counter-intuitive finding (also taught in-course)
+------------------------------------------------------
+portrait-matte does not treat "green distance" as the only alpha signal.
+Pixels with low greenDominance (G - max(R,B) ≤ 12) are force-opaque even when
+they sit inside the soft key-ray band. Without foregroundGreenDominanceCeiling,
+hair and skin would go semi-transparent under pure distance matting—the failure
+mode that shows up only after batching dozens of plates.
+
+A second sharp edge on the voice side: --sync refuses scoped chapter/language
+runs and requires a reviewed planDigest + expected-missing before any MiniMax
+call. Partial paid writes are treated as more dangerous than a hard stop.
+
+Sources pinned to commit c9f0ec8d57a10484acf547ffc2d3458c955e8068
+(tools/portrait-matte/*, tools/voice-pregen/*). No git commit made; SupaLuv
+untouched.
