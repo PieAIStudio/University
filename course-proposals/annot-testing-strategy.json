@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "lessons": [
+    {
+      "courseId": "testing-strategy",
+      "unitId": "layer-choice",
+      "lessonId": "unit-vs-e2e",
+      "anchors": [
+        {
+          "quote": "单元",
+          "occurrence": 1,
+          "senseId": "unit.test"
+        },
+        {
+          "quote": "e2e",
+          "occurrence": 1,
+          "senseId": "e2e.test"
+        },
+        {
+          "quote": "隐私",
+          "occurrence": 1,
+          "senseId": "privacy.protection"
+        },
+        {
+          "quote": "允许清单",
+          "occurrence": 1,
+          "senseId": "allowlist.fields"
+        },
+        {
+          "quote": "纯函数",
+          "occurrence": 1,
+          "senseId": "pure.function"
+        }
+      ]
+    },
+    {
+      "courseId": "testing-strategy",
+      "unitId": "degraded-design",
+      "lessonId": "degraded-matrix",
+      "anchors": [
+        {
+          "quote": "降级",
+          "occurrence": 1,
+          "senseId": "degrade.fallback"
+        },
+        {
+          "quote": "矩阵",
+          "occurrence": 1,
+          "senseId": "matrix.table"
+        },
+        {
+          "quote": "断言",
+          "occurrence": 1,
+          "senseId": "assert.test"
+        },
+        {
+          "quote": "静默",
+          "occurrence": 1,
+          "senseId": "silent.gap"
+        },
+        {
+          "quote": "占位",
+          "occurrence": 1,
+          "senseId": "placeholder.value"
+        }
+      ]
+    },
+    {
+      "courseId": "testing-strategy",
+      "unitId": "degraded-design",
+      "lessonId": "retry-safety",
+      "anchors": [
+        {
+          "quote": "幂等",
+          "occurrence": 1,
+          "senseId": "idempotent.retry"
+        },
+        {
+          "quote": "重试",
+          "occurrence": 1,
+          "senseId": "retry.network"
+        },
+        {
+          "quote": "断言",
+          "occurrence": 1,
+          "senseId": "assert.test"
+        },
+        {
+          "quote": "扇出",
+          "occurrence": 1,
+          "senseId": "fan-out.side"
+        },
+        {
+          "quote": "权威",
+          "occurrence": 1,
+          "senseId": "authoritative.source"
+        }
+      ]
+    }
+  ]
+}

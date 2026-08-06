@@ -1,0 +1,93 @@
+foundations-reading-code 英文标注 overlay 自查报告
+==================================================
+日期：2026-08-07
+输出：course-proposals/annot-foundations-reading-code.json
+
+## 规模
+
+- 课时数：11（与 studies 下 content.md 数量一致，无遗漏）
+- 锚点总数：45
+- 每课锚点数：2–5（export-makes-public 为 2，其余 3–5）
+- language: en / schemaVersion: 1
+
+## 1. senseId 校验
+
+- 对照 data/vocabulary/en.json（240 条）：全部 45 个 senseId 均存在
+- 未新增词条，未修改 en.json
+
+## 2. occurrence / 落点校验（resolve-anchors 同逻辑）
+
+- 计入全文纯字符串匹配（含代码块与行内代码）
+- 落点避开 fenced code / inline code / 表格行（与 resolve-anchors 保护区一致）
+- 全量 resolve：45/45 成功，0 个 not-found / occurrence-missing / inside-code / overlaps
+
+## 3. 随机抽查 8 个锚点（手工数位置）
+
+1. default-param-and-noop | quote='默认参数' occ=2 → default.value (default)
+   落点上下文：…标↵完成本课后，你能指出默认参数（default paramet…
+   结果：通过（exact='默认参数'）
+2. default-param-and-noop | quote='参数' occ=3 → parameter.input (parameter)
+   落点上下文：…gerHaptic` 的参数写成 `_style: 'lig…
+   结果：通过（exact='参数'）
+3. params-and-return | quote='返回值' occ=2 → return.value (return)
+   落点上下文：…ring`，表示这个函数返回值的类型是字符串；括号里的 `..…
+   结果：通过（exact='返回值'）
+4. params-and-return | quote='类型' occ=2 → type.kind (type)
+   落点上下文：…`，表示这个函数返回值的类型是字符串；括号里的 `...pa…
+   结果：通过（exact='类型'）
+5. rest-params-and-union | quote='剩余参数' occ=2 → rest.params (rest)
+   落点上下文：…拼在一起：↵↵1. **剩余参数（rest parameters…
+   结果：通过（exact='剩余参数'）
+6. barrel-and-why-split | quote='依赖' occ=1 → dependency.module (dependency)
+   落点上下文：…文件是为了分开责任和收窄依赖，而不是为了让目录看起来更满。↵…
+   结果：通过（exact='依赖'）
+7. import-type-and-coalesce | quote='可选链' occ=2 → optional-chaining.access (optional chaining)
+   落点上下文：…用了类型。↵↵2. **可选链（optional chaini…
+   结果：通过（exact='可选链'）
+8. owns-does-not-own | quote='允许列表' occ=1 → allowlist.fields (allowlist)
+   落点上下文：… 怎么接、事件目录、隐私允许列表。那些问题去别的文件找。↵↵ex…
+   结果：通过（exact='允许列表'）
+
+抽查结果：8/8 通过
+
+## 4. 子串碰撞处理（调整过的 quote）
+
+- 参数 vs 默认参数/剩余参数/可选参数：凡用短 quote「参数」时，occurrence 都跳过包在更长词里的匹配，落到独立「参数」。
+- 类型 vs 联合类型/函数类型/返回类型/类型别名/类型检查：用长 quote「联合类型」「类型别名」优先；短「类型」只取不在长词内的 occurrence。
+- 返回 vs 返回值/返回类型：params 课用「返回值」而非「返回」。
+- 导入 vs 具名导入：handshake 课用「具名导入」整词，避免标在「具名导入」的后两字上。
+- 导出 vs 再导出：barrel 课用「再导出」整词。
+- 运行 vs 运行时：一律用「运行时」，避免把 runtime 标成「运行」。
+- 空值 vs 空值合并：用「空值合并」整词 → nullish，避免「nullish合并」破碎显示。
+- 文件 vs 文件夹：barrel 课重点句含「空文件夹」，故该课不用「文件」作 quote，改标依赖/木桶/再导出等。
+- 允许 vs 允许列表：owns 课用「允许列表」→ allowlist。
+- 桶 vs 木桶：barrel 用「木桶」整词，避免「木barrel」。
+- 合并 ≠ merge.git：空值合并不标「合并」。
+- 收窄 ≠ narrow.type：barrel 的「依赖收窄」不标「收窄」（类型收窄义）。
+
+## 5. 分课锚点一览
+
+- a-function/default-param-and-noop (4): 默认参数→default.value, 参数→parameter.input, 平台→platform.target, 契约→contract.api
+- a-function/export-makes-public (2): 导出→export.share, 文件→file.storage
+- a-function/filter-and-join (3): 过滤→filter.select, 顺序→order.sequence, 返回→return.value
+- a-function/params-and-return (4): 参数→parameter.input, 返回值→return.value, 类型→type.kind, 约定→convention.agreed
+- a-function/rest-params-and-union (3): 剩余参数→rest.params, 联合类型→union.type, 参数→parameter.input
+- files-talking/barrel-and-why-split (5): 依赖→dependency.module, 木桶→barrel.reexport, 再导出→export.share, 路径→path.location, 导入→import.borrow
+- files-talking/import-export-handshake (5): 导出→export.share, 具名导入→import.borrow, 路径→path.location, 组件→component.ui, 依赖→dependency.module
+- naming-things/function-type-and-record (5): 可选参数→optional.choice, 参数→parameter.input, 返回值→return.value, 合同→contract.api, 类型→type.kind
+- naming-things/import-type-and-coalesce (5): 可选链→optional-chaining.access, 空值合并→nullish.coalesce, 运行时→runtime.environment, 导入→import.borrow, 默认值→default.value
+- naming-things/owns-does-not-own (5): 边界→boundary.scope, 载荷→payload.api, 合同→contract.api, 隐私→privacy.protection, 允许列表→allowlist.fields
+- naming-things/type-alias-and-union (4): 类型别名→type.kind, 联合类型→union.type, 运行时→runtime.environment, 导出→export.share
+
+## 6. 选词说明
+
+- 优先 technical 轨术语（export/import/parameter/union/filter/dependency/optional chaining 等）
+- general 轨仅在本节确为焦点时使用（如 order、return、file、default、optional、convention）
+- 同课同一 sense 只标一次；occurrence 取第一次有教学意义的非代码落点
+- 宁可少标：export-makes-public 正文几乎全是 export 英文关键字，中文可标术语少，只标 2 个
+
+## 交付
+
+- course-proposals/annot-foundations-reading-code.json
+- course-proposals/annot-foundations-reading-code-REPORT.txt（本文件）
+- 未 git commit；未改动上述两文件以外的任何文件

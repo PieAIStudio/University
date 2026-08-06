@@ -1,0 +1,112 @@
+annot-state-and-process self-check report
+==========================================
+Course: state-and-process (TuringPact)
+Output: course-proposals/annot-state-and-process.json
+Vocabulary: data/vocabulary/en.json (240 senses; only existing senseIds used)
+Date: 2026-08-07
+
+1. Coverage
+-----------
+Lessons found under studies/turing-pact/courses/state-and-process:
+  1. fact-vs-process / two-stores-not-one
+  2. fact-vs-process / one-definition-of-empty
+  3. name-the-waiting / phases-not-loading
+  4. name-the-waiting / keys-not-sentences
+
+Processed: 4 / 4 (no missing lessons; matches course.json unitIds + lesson folders)
+Anchors total: 20 (5 per lesson, within 2–5 rule)
+
+2. senseId existence
+--------------------
+All 20 senseIds verified present in en.json:
+  fact.durable, process.transient, reset.state, state.memory, fail.status,
+  empty.state, constraint.design, replace.state, default.value,
+  phase.process, wait.action, type.kind, anonymous.user, matrix.table,
+  identifier.key, render.ui, explicit.stated, check.action
+
+No invented senseIds. Vocabulary file was not modified.
+
+3. Occurrence spot-check (8 anchors, full string recount)
+---------------------------------------------------------
+Method: pure content.find loop from index 0 stepping +1 (same as resolve-anchors.ts);
+code fences and inline code still count toward occurrence; landing must be prose.
+
+  (1) two-stores-not-one 「事实」#1
+      All 5 hits: 1 **事实**：你是谁 | 2 只存事实 | 3 事实要活得久 |
+      4 事实不动 | 5 事实 store
+      Selected #1 = opening definition of fact store. OK.
+
+  (2) two-stores-not-one 「失败」#3
+      All 3 hits: 1 一次失败的登录 | 2 清掉失败状态 | 3 在操作失败后应该消失
+      Selected #3 = decision criterion at end of lesson. OK.
+
+  (3) one-definition-of-empty 「替换」#2
+      All 2 hits: 1 表示整个替换 | 2 重置是替换而不是合并
+      Selected #2 deliberately (see substring section). Landing: standalone 替换. OK.
+
+  (4) one-definition-of-empty 「空」#1
+      All 2 hits: 1 title 「空」只能有一个定义 | 2 「空」在整个文件里只有一处
+      Selected #1 = title concept. Neither is 空格/空字符串. OK.
+
+  (5) phases-not-loading 「等待」#2
+      All 3 hits: 1 用户在等待时 | 2 每一种等待都要有名字 | 3 没名字的等待
+      Selected #2 = lesson thesis. OK.
+
+  (6) phases-not-loading 「阶段」#1
+      All 2 hits: 1 七个阶段意味着 | 2 阶段名就是你唯一的现场
+      Selected #1 (not #2, which is prefix of 阶段名). OK.
+
+  (7) keys-not-sentences 「标识符」#1
+      Single hit: 它们是**标识符**，不是给人看的句子. OK.
+
+  (8) keys-not-sentences 「显式的」#1
+      Single hit of full quote 显式的: 这种复用是显式的
+      (There is also 显式写出 later; longer quote avoids orphan 的.) OK.
+
+Result: 8/8 spot-checks match intended landing.
+
+4. Substring / collision adjustments
+------------------------------------
+Avoided or retargeted (would have broken display if left naive):
+
+  - 「替换」: #1 sits inside 「整个替换」→ would show 整个replace.
+    → used occurrence 2 (重置是替换而不是合并).
+  - 「显式」: #1 is prefix of 「显式的」→ would show explicit的.
+    → quote lengthened to 「显式的」.
+  - 「加载」: both hits are inside 「加载中」only → would show load中.
+    → dropped; used 「阶段」「等待」 instead (true topic of the lesson).
+  - 「空」 in keys-not-sentences: hits are 空格 / 空字符串 / 空白 only.
+    → never annotated 空 in that lesson.
+  - 「过程」#4 = 「过程字段」prefix → not selected; used #1 **过程**：.
+  - 「状态」 in keys: #4 is prefix of 「状态提示」→ used #1 title 状态存 key.
+  - 「阶段」#2 = prefix of 「阶段名」→ used #1.
+  - 「降级」#1 = prefix of 「降级矩阵」→ annotated 「矩阵」 instead
+    (matrix.table; section is the degraded-matrix analogy).
+  - 「值」: would hit inside 值得 / 值钱 → never used.
+  - 「合并」: appears (Zustand merge) but only sense is merge.git (Git merge) → skipped.
+  - 「文件」/「文件夹」: only 文件 appears; not a lesson concept → skipped.
+  - 「类型」/「类型守卫」: no 类型守卫 in text; #1 类型是这么写的 is clean.
+
+Also simulated resolve-anchors protected-region rules: no anchor lands inside
+fenced blocks or inline code; no overlaps between anchors in the same lesson.
+
+5. Selection rationale (brief)
+------------------------------
+  two-stores-not-one: fact / process / reset / state / fail — the split and the
+    “does it disappear after failure?” test.
+  one-definition-of-empty: empty / reset / constraint / replace / default — single
+    empty definition and replace-not-merge.
+  phases-not-loading: phase / wait / type / anonymous / matrix — named phases,
+    not one loading boolean; link to degraded matrix.
+  keys-not-sentences: identifier / state / render / explicit / check — store keys
+    not human sentences; explicit null; machine-checkable.
+
+6. Files touched
+----------------
+  Wrote:
+    course-proposals/annot-state-and-process.json
+    course-proposals/annot-state-and-process-REPORT.txt
+  Not modified:
+    data/vocabulary/en.json
+    studies/** (any path)
+  No git commit.

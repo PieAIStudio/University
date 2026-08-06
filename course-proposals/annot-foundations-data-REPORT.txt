@@ -1,0 +1,104 @@
+foundations-data English annotation overlay report
+============================================================
+
+Course: foundations-data (TuringPact)
+Lessons processed: 13 / 13 (complete)
+Total anchors: 52
+Anchors per lesson: 3–5 (target 2–5)
+Unique senseIds used: 43
+Lexicon size: 240 (source: data/vocabulary/en.json)
+
+Lesson inventory
+----------------------------------------
+  data-from-a-server/a-row-is-not-an-object: 4  [表行→row.database, 拼装→compose.assemble, 接口→interface.shape, 线缆→wire.protocol]
+  data-from-a-server/data-and-error-together: 4  [解构→destructure.unpack, 远程调用→rpc.remote, 错误→error.status, 校验→validate.check]
+  data-from-a-server/everything-might-be-missing: 4  [安全下钻→optional-chaining.access, 后备→fallback.plan, 缺失→missing.state, null→nullish.coalesce]
+  data-from-a-server/three-tables-one-screen: 4  [拼装→compose.assemble, 边界→boundary.scope, 组件→component.ui, 可选的→optional.choice]
+  data-from-a-server/where-the-keys-come-from: 4  [环境变量→environment.variable, 私密密钥→secret.security, 匿名→anonymous.user, 占位→placeholder.value]
+  data-that-arrives-by-itself/a-name-on-the-wire-is-a-promise: 4  [契约→contract.api, 线上→wire.protocol, 字面量→literal.type, 约定→convention.agreed]
+  data-that-arrives-by-itself/from-the-wire-to-the-screen: 5  [回调→callback.async, 共享记忆→store.state, 推送→push.delivery, 通道→channel.realtime, 订阅→subscribe.events]
+  data-that-arrives-by-itself/push-instead-of-pull: 4  [推送→push.delivery, 轮询→poll.repeat, 订阅→subscribe.events, 广播→broadcast.event]
+  shared-memory/a-store-is-values-plus-setters: 4  [改值的方法→setter.update, 形状合同→interface.shape, 状态→state.memory, 参数→parameter.input]
+  shared-memory/replace-do-not-mutate: 4  [展开→spread.copy, 原地→mutate.inplace, 不可变→immutable.data, 重画→render.ui]
+  shared-memory/reset-is-a-feature: 4  [重置→reset.state, 联合类型→union.type, 阶段→phase.process, 快照→snapshot.git]
+  shared-memory/sharing-the-initial-values: 4  [整体替换→replace.state, 覆盖→overwrite.update, 参数→parameter.input, 默认→default.value]
+  shared-memory/why-not-usestate: 3  [共享记忆→store.state, 组件→component.ui, 状态→state.memory]
+
+Self-check 1: senseId existence
+----------------------------------------
+  All 52 anchors map to existing senseIds: YES
+  Missing: (none)
+
+Self-check 2: occurrence spot-check (8 anchors)
+----------------------------------------
+  [1] data-that-arrives-by-itself/a-name-on-the-wire-is-a-promise
+      quote='契约' occurrence=1/4 senseId=contract.api (headword=contract)
+      CJK-run at hit: '线上的名字是契约'
+      context: ...# 线上的名字是契约⏎⏎## 学习目标⏎完成本课后，...
+      verdict: lands on intended prose token, not inside protected code/table
+  [2] data-from-a-server/everything-might-be-missing
+      quote='后备' occurrence=1/3 senseId=fallback.plan (headword=fallback)
+      CJK-run at hit: '缺了就用后备'
+      context: ...现，并读出一条「缺了就用后备」的链式写法。⏎⏎## 先给结论...
+      verdict: lands on intended prose token, not inside protected code/table
+  [3] data-that-arrives-by-itself/from-the-wire-to-the-screen
+      quote='共享记忆' occurrence=1/2 senseId=store.state (headword=store)
+      CJK-run at hit: '本机共享记忆'
+      context: ...调 → store（本机共享记忆）→ 界面重画，并指出代码中的对...
+      verdict: lands on intended prose token, not inside protected code/table
+  [4] shared-memory/reset-is-a-feature
+      quote='重置' occurrence=1/1 senseId=reset.state (headword=reset)
+      CJK-run at hit: '初始与重置'
+      context: ...d';⏎```⏎⏎初始与重置：⏎⏎```ts⏎export ...
+      verdict: lands on intended prose token, not inside protected code/table
+  [5] data-from-a-server/a-row-is-not-an-object
+      quote='线缆' occurrence=1/1 senseId=wire.protocol (headword=wire)
+      CJK-run at hit: '线缆那边传来的名字'
+      context: ...QL。只要建立直觉：**线缆那边传来的名字，往往不是你在 R...
+      verdict: lands on intended prose token, not inside protected code/table
+  [6] data-from-a-server/data-and-error-together
+      quote='解构' occurrence=1/1 senseId=destructure.unpack (headword=destructure)
+      CJK-run at hit: '解构出'
+      context: ...e', {...})`，解构出 `data` 与 `erro...
+      verdict: lands on intended prose token, not inside protected code/table
+  [7] shared-memory/a-store-is-values-plus-setters
+      quote='形状合同' occurrence=1/1 senseId=interface.shape (headword=interface)
+      CJK-run at hit: '先看形状合同'
+      context: ...⏎⏎## 工作示例⏎先看形状合同：⏎⏎```ts⏎interfa...
+      verdict: lands on intended prose token, not inside protected code/table
+  [8] data-from-a-server/data-and-error-together
+      quote='错误' occurrence=1/9 senseId=error.status (headword=error)
+      CJK-run at hit: '而是把错误放在同一返回值的'
+      context: ...异常表示业务失败，而是把错误放在同一返回值的 `error`...
+      verdict: lands on intended prose token, not inside protected code/table
+
+Self-check 3: substring-collision adjustments
+----------------------------------------
+  - where-the-keys-come-from: 匿名 occ 1 落在「匿名密钥」→ 改为 occ 2「这是匿名公开侧」
+  - push-instead-of-pull: 订阅 occ 1 落在「订阅推送」→ 改为 occ 3「Realtime 订阅就是装门铃」
+  - sharing-the-initial-values: 放弃 quote「状态」（occ1 在「初始状态」内）→ 改用「默认」occ 2
+  - three-tables-one-screen: 用「可选的」而非「可选」，避免「可选的」被拆成 optional(可选)的
+  - why-not-usestate: 放弃「消息」（仅出现在「消息列表」）
+  - data-and-error-together: 「错误」用 occ 1「把错误放在」，避开后面多次「错误码」
+
+  Additional notes:
+  - Code blocks / inline code / tables excluded by resolver; all chosen
+    occurrences verified as prose (not inside-code).
+  - "不可变" appears only as head of "不可变更新"; kept intentionally —
+    the technical term being taught is immutable (update).
+  - "快照" in reset lesson appears inside "开局快照"; kept — teaches
+    snapshot as the reset target mental model.
+  - "错误" occ 1 is free "把错误放在…", later 错误码 occurrences avoided.
+
+Self-check 4: lesson coverage
+----------------------------------------
+  Found on disk: 13 content.md files
+  Written in overlay: 13 lesson records
+  Match: YES
+
+Output files
+----------------------------------------
+  course-proposals/annot-foundations-data.json
+  course-proposals/annot-foundations-data-REPORT.txt
+
+No other files modified. No git commit made.

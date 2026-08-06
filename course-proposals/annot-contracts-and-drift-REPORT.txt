@@ -1,0 +1,91 @@
+annot-contracts-and-drift — self-check report
+==============================================
+
+Course: contracts-and-drift（契约与防漂移）
+Output: course-proposals/annot-contracts-and-drift.json
+Lexicon: data/vocabulary/en.json (240 entries; read-only)
+
+1. Coverage
+-----------
+Lessons on disk: 3
+Lessons in overlay: 3 (no missing lesson)
+
+  unitId              lessonId                   anchors
+  freeze-surface      why-freeze-surface         5
+  machine-checked     contract-test              4
+  machine-checked     layers-are-dependencies    5
+
+Total anchors: 14
+All anchors: 2–5 per lesson (within policy)
+
+2. senseId check
+----------------
+Every senseId checked against en.json entries. None missing.
+
+  contract.api, boundary.scope, refactor.code, drift.divergence,
+  constraint.design, assert.test, verify.suite, dependency.module,
+  layer.architecture, runtime.environment, import.borrow, lint.code
+
+3. Occurrence spot checks (8)
+-----------------------------
+Re-counted with pure string find (indexOf, step +1), matching
+server/language/resolve-anchors.ts. Also re-ran protected-region
+filter (inline code / fences); all 14 anchors resolve, 0 rejected.
+
+  #  lesson                     quote     occ  lands on
+  1  why-freeze-surface         契约       1   「契约集中声明」
+  2  why-freeze-surface         边界       1   「自己的边界」
+  3  why-freeze-surface         重构       1   「你重构 UI」
+  4  why-freeze-surface         漂移       1   「代码漂移」
+  5  contract-test              契约       2   「排除契约文件」
+  6  contract-test              断言       1   「断言是「还出现…」」
+  7  layers-are-dependencies    层         2   「层结构」
+  8  layers-are-dependencies    import     1   「import 的方向」
+
+Result: 8/8 PASS
+
+4. Substring-collision adjustments
+----------------------------------
+These quotes were considered and then changed or avoided:
+
+  - layers-are-dependencies / 层:
+      occurrence 1 is the 层 inside 「分层」(title).
+      Adjusted to occurrence 2 → 「层结构」(first standalone teaching hit).
+      Vocabulary gloss is 层; there is no 分层 senseId.
+
+  - layers-are-dependencies / 运行时:
+      Chose the longer quote 运行时 (runtime.environment), never 运行.
+      All four 「运行」 hits in this lesson are prefixes of 「运行时」;
+      annotating 运行 would break into 「运行(时)」.
+
+  - why-freeze-surface / 文件:
+      Only hit is 「文件头」. Avoided (would become 「文件(头)」).
+
+  - why-freeze-surface / 运行:
+      Only hit is inside 「运行时」. Avoided; 运行时 itself is not a
+      lesson focus here (only appears in a Does-not-own list).
+
+  - contract-test / 契约:
+      occurrence 1 is inside 「契约测试」(learning-goal line).
+      Adjusted to occurrence 2 → 「排除契约文件自身」, so the
+      highlight is the free-standing 契约, not the first two
+      characters of 契约测试.
+
+  - Not a bug, documented: contract-test 漂移#1 sits inside
+    「防漂移网」. Kept — 漂移 is the lexicon head concept; 防 is
+    only a prefix. Display becomes 防drift网, which still teaches
+    the right English token for reading docs/errors.
+
+5. Selection notes
+------------------
+Anchors track this course’s real teaching spine (contract / drift /
+layer / dependency / assert), not generic filler (file, use, check).
+Same quote annotated at most once per lesson.
+Technical track preferred; no general-track filler retained.
+
+6. Files touched
+----------------
+  course-proposals/annot-contracts-and-drift.json   (created)
+  course-proposals/annot-contracts-and-drift-REPORT.txt (this file)
+
+No other files modified. en.json and studies/ left untouched. No git commit.

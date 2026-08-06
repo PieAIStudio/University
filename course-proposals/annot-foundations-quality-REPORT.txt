@@ -1,0 +1,138 @@
+foundations-quality English overlay self-check report
+============================================================
+Lessons processed: 13 (must equal course lesson count)
+Total anchors: 57
+Vocabulary entries available: 240 (only existing senseIds used)
+
+## a-test-is-a-sentence/describe-it-expect  (4 anchors)
+  OK  'describe' occ=1 -> describe.suite  |# describe、it、expect：测试三件套|
+  OK  '断言' occ=1 -> assert.test  |t`，然后用它们包住一行断言。**↵- **推论：自动化测试|
+  OK  '验证' occ=1 -> verify.suite  |为没有断言失败。但那不是验证，只是空跑。测试的价值在断言，不|
+  OK  '失败' occ=1 -> fail.status  |两者不相等，这整条用例就失败。↵↵一人公司没有同事帮你 re|
+
+## a-test-is-a-sentence/fake-clocks-and-fake-storage  (5 anchors)
+  OK  '超时' occ=1 -> timeout.network  |本课后，你能说明：为什么超时测试要用假时钟，为什么 `saf|
+  OK  '注入' occ=1 -> inject.dependency  |第二个参数带默认值却允许注入假 storage。↵↵## 先|
+  OK  '边界情况' occ=1 -> edge.boundary  |参数（或可替换的时间）让边界情况不必真的等 50ms、也不必改浏|
+  OK  '参数' occ=1 -> parameter.input  |# 假时钟与假存储：参数是为了可测↵↵## 学习目标↵完|
+  OK  '依赖' occ=1 -> dependency.module  |ri 的存储权限。可注入依赖 + 假时钟，替代的是「只能手工|
+
+## a-test-is-a-sentence/pinning-a-promise  (4 anchors)
+  OK  '约定' occ=1 -> convention.agreed  |「全项目不许悄悄改掉」的约定——改了就立刻红，而不是等线上串|
+  OK  '运行时' occ=1 -> runtime.environment  |。它测的是**约定**：运行时必须连到名为 `turing_p|
+  OK  '类型检查' occ=1 -> typecheck.static  | `'public'`，类型检查会不会拦？↵**答：** 不会。|
+  OK  '断言' occ=1 -> assert.test  |_pact')` 的行为断言，不是类型。↵↵## 重点↵**|
+
+## a-test-is-a-sentence/test-the-edges  (4 anchors)
+  OK  '边界' occ=1 -> edge.boundary  |# 测边界，不测中间：三个 isNoRow|
+  OK  '断言' occ=1 -> assert.test  |wsError` 的三条断言分别在防哪一类误判，并说明「边界|
+  OK  '期望' occ=1 -> expect.action  |符串 `'nope'`，期望分别是 true、false、f|
+  OK  '失败' occ=1 -> fail.status  |条断言替代的是「记得想想失败形态」——写进测试后，改实现时机|
+
+## a-test-is-a-sentence/where-tests-live  (5 anchors)
+  OK  '配置' occ=1 -> config.settings  |先给结论↵- **事实：配置里写了 `include: ['|
+  OK  '门禁' occ=1 -> gate.ci  |是那份提醒：名字和位置是门禁的一部分。↵↵## 自检↵**问|
+  OK  '匹配' occ=1 -> match.compare  |.ts` 都会跑」；只有匹配 include 模式的文件会进|
+  OK  '构建产物' occ=1 -> artifact.build  |` —— 明确不扫依赖和构建产物等目录。↵↵所以 `tests/|
+  OK  '依赖' occ=1 -> dependency.module  |..]` —— 明确不扫依赖和构建产物等目录。↵↵所以 `t|
+
+## gates-beyond-your-laptop/clicking-through-for-real  (4 anchors)
+  OK  '单元' occ=1 -> unit.test  |# 单元测试与端到端：谁贵、谁管什么↵↵|
+  OK  '端到端' occ=1 -> e2e.test  |# 单元测试与端到端：谁贵、谁管什么↵↵## 学习目|
+  OK  '开发服务器' occ=1 -> dev-server.local  |` 如何真的拉起浏览器与开发服务器。↵↵## 先给结论↵- **事|
+  OK  '配置' occ=1 -> config.settings  |right test` 配置多个浏览器视口，并可启动 `pn|
+
+## gates-beyond-your-laptop/even-config-can-be-wrong  (5 anchors)
+  OK  '配置' occ=1 -> config.settings  |# 配置也会写错：测配置本身↵↵## 学|
+  OK  '契约' occ=1 -> contract.api  |或误报。它钉的是源码文本契约，适合稳定的字面配置；配置生成方|
+  OK  '门禁' occ=1 -> gate.ci  |你见过钉常量、钉边界、钉门禁脚本；现在看到**连配置文本也可|
+  OK  '显式' occ=1 -> explicit.stated  |↵- 复用已有服务器必须显式环境变量打开，不能默默 `reu|
+  OK  '静默' occ=1 -> silent.gap  |部分；它也会漂。把「不许静默复用别人 worktree 的服|
+
+## gates-beyond-your-laptop/someone-elses-computer  (4 anchors)
+  OK  '持续集成' occ=1 -> ci.automation  |你能用一句话说清 CI（持续集成，Continuous Inte|
+  OK  '锁文件' occ=1 -> lockfile.deps  | git 拉干净代码，用锁文件装依赖，按工作流步骤跑——这些「|
+  OK  '依赖' occ=1 -> dependency.module  |上 checkout、装依赖、跑一系列 `doc-gov` |
+  OK  '提交' occ=1 -> commit.git  |```↵↵本机可能有：未提交的脏文件、全局工具版本、缓存下来|
+
+## gates-beyond-your-laptop/when-and-what  (4 anchors)
+  OK  '触发' occ=1 -> trigger.event  |ush 到 main 时触发，但都带 `paths` 过滤；|
+  OK  '权限' occ=1 -> privilege.security  |动都全量跑」；触发条件与权限同样是设计的一部分。**↵↵##|
+  OK  '路径' occ=1 -> path.location  |s`** —— 只有这些路径变更才值得跑文档检查；改纯业务代|
+  OK  '过滤' occ=1 -> filter.select  |但都带 `paths` 过滤；`permissions.co|
+
+## machines-that-read-your-code/a-gate-before-the-commit  (5 anchors)
+  OK  '门禁' occ=1 -> gate.ci  |# 提交前的门禁：lefthook 跑什么、不跑|
+  OK  '提交' occ=1 -> commit.git  |# 提交前的门禁：lefthook 跑什|
+  OK  '构建' occ=1 -> build.action  |。每次提交都跑全量测试/构建会拖垮节奏；完整 `verify|
+  OK  '触发' occ=1 -> trigger.event  |↵- **推论：门禁要按触发频率权衡速度。每次提交都跑全量测|
+  OK  '匹配' occ=1 -> match.compare  |pre-commit 在匹配文档相关 glob 时跑 `do|
+
+## machines-that-read-your-code/four-different-questions  (4 anchors)
+  OK  'typecheck' occ=2 -> typecheck.static  |son` 里分别定义了 typecheck、lint、format:che|
+  OK  'lint' occ=2 -> lint.code  |了 typecheck、lint、format:check、te|
+  OK  '顺序' occ=1 -> order.sequence  |erify:web` 按顺序跑 typecheck → li|
+  OK  '检查' occ=1 -> check.action  |↵↵## 一个类比↵出厂检查四道工序：量尺寸（类型）、看有没|
+
+## machines-that-read-your-code/style-is-not-worth-arguing-about  (4 anchors)
+  OK  '配置' occ=1 -> config.settings  |实：项目用 oxfmt，配置了单引号、分号、尾随逗号等；`f|
+  OK  '验证' occ=1 -> verify.suite  | `--check` 只验证不改写。**↵- **推论：格式|
+  OK  '门禁' occ=1 -> gate.ci  |verify 里亮红灯。门禁用的是后者：发现不一致就失败，而|
+  OK  '静默' occ=1 -> silent.gap  |发现不一致就失败，而不是静默改你的工作区。↵↵格式化抓的是排|
+
+## machines-that-read-your-code/types-are-a-test-you-do-not-write  (5 anchors)
+  OK  '类型检查' occ=1 -> typecheck.static  |# 类型检查：你不用手写的测试↵↵## 学习|
+  OK  '断言' occ=1 -> assert.test  |t`，类型系统已经在替你断言。**↵↵## 一个类比↵插座只|
+  OK  '契约' occ=1 -> contract.api  |**推论：类型是编译期的契约检查——很多「形状不对」的错，不|
+  OK  '字面量' occ=1 -> literal.type  |管「这个字符串该是哪一个字面量」「超时是否触发」等运行时约定。|
+  OK  '运行时' occ=1 -> runtime.environment  |字段是否对得上」，不是「运行时业务对不对」。↵↵同时，lint|
+
+## Spot checks (8 anchors re-counted by pure string indexOf)
+  a-test-is-a-sentence/describe-it-expect
+    quote='断言' occ=1/6 [PROSE-OK] senseId=assert.test
+    context: ...`、`it`，然后用它们包住一行断言。**↵- **推论：自动化测试不是另一...
+    gloss: 断言：测试里声明「这里必须是这样」，否则算失败
+  a-test-is-a-sentence/fake-clocks-and-fake-storage
+    quote='边界情况' occ=1/1 [PROSE-OK] senseId=edge.boundary
+    context: ...可注入的参数（或可替换的时间）让边界情况不必真的等 50ms、也不必改浏览器隐私...
+    gloss: 边界情况：刚好临界、异常形态或最小/最大输入
+  a-test-is-a-sentence/pinning-a-promise
+    quote='类型检查' occ=1/1 [PROSE-OK] senseId=typecheck.static
+    context: ...常量改成 `'public'`，类型检查会不会拦？↵**答：** 不会。两边都是...
+    gloss: 类型检查：在不运行程序时用类型系统抓一批错误
+  a-test-is-a-sentence/test-the-edges
+    quote='边界' occ=1/7 [PROSE-OK] senseId=edge.boundary
+    context: ...# 测边界，不测中间：三个 isNoRowsErr...
+    gloss: 边界情况：刚好临界、异常形态或最小/最大输入
+  a-test-is-a-sentence/where-tests-live
+    quote='构建产物' occ=1/1 [PROSE-OK] senseId=artifact.build
+    context: ......]` —— 明确不扫依赖和构建产物等目录。↵↵所以 `tests/turi...
+    gloss: 产物：构建步骤产出的、可安装或可部署的文件
+  gates-beyond-your-laptop/clicking-through-for-real
+    quote='端到端' occ=1/4 [PROSE-OK] senseId=e2e.test
+    context: ...# 单元测试与端到端：谁贵、谁管什么↵↵## 学习目标↵完成...
+    gloss: 端到端测试：真开浏览器（或真链路）把主路径点通的测试
+  machines-that-read-your-code/four-different-questions
+    quote='typecheck' occ=2/7 [PROSE-OK] senseId=typecheck.static
+    context: ...ge.json` 里分别定义了 typecheck、lint、format:check、t...
+    gloss: 类型检查：在不运行程序时用类型系统抓一批错误
+  machines-that-read-your-code/types-are-a-test-you-do-not-write
+    quote='字面量' occ=1/1 [PROSE-OK] senseId=literal.type
+    context: ...。类型不管「这个字符串该是哪一个字面量」「超时是否触发」等运行时约定。↵↵##...
+    gloss: 字面量：源代码里直接写出的固定值，如 'en' 或 20_000
+
+## Substring / sense adjustments (why some quotes were lengthened or dropped)
+- fake-clocks-and-fake-storage: quote "边界情况" not bare "边界" (first 边界 is prefix of 边界情况).
+- fake-clocks-and-fake-storage: never quote "假" — always prefix of 假时钟/假存储/假烟.
+- where-tests-live: quote "构建产物" (whole compound) → artifact.build, not bare "产物" inside 构建产物.
+- test-the-edges: dropped "错误" (would land in 错误码/错误对象); used "期望"→expect.action instead.
+- test-the-edges: senseId edge.boundary (not boundary.scope) — lesson is edge cases.
+- pinning-a-promise & types-are-a-test-you-do-not-write: quote full "类型检查" not "类型".
+- four-different-questions: typecheck/lint occurrence=2 (#1 is inside `backticks`); dropped "错误" (prefix of 错误类型); used "检查".
+- style-is-not-worth-arguing-about: "门禁" not "禁用" (禁用 matches inside 门禁用的).
+- someone-elses-computer: skipped 状态/环境 (wrong sense: not React state / not env vars).
+- when-and-what: "路径" is file paths here (OK for path.location); avoided 广播 (analogy ≠ realtime).
+- a-gate-before-the-commit: skipped 钩子 (hook.react is React hooks, not git hooks).
+- clicking-through-for-real: skipped bare 路径 for 主路径 (execution path).
+
+## Final verdict: all_ok=True

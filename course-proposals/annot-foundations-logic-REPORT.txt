@@ -1,0 +1,82 @@
+annot-foundations-logic self-check report
+==================================================
+courseId: foundations-logic
+lessons processed: 13 (disk also has 13)
+total anchors: 49
+anchors per lesson: min 3, max 5, target 2–5 ✓
+
+senseId check: ALL anchors exist in data/vocabulary/en.json ✓
+unique senseIds used: 34
+
+resolve-anchors simulation (indexOf + occurrence + protected regions + overlap):
+  all anchors: placed (0 not-found / occurrence-missing / inside-code / overlaps) ✓
+
+Substring collision adjustments:
+  - a-list-and-a-loop: 用「返回值」而非「返回」，避免标在「返回值」的前两字上
+  - return-early / guarding-bad-input: 用「早返回」整词；若用「返回」则 occurrence 避开「早返回」内的子串命中
+  - return-early: 「返回」选 occurrence=3（「返回 'high'」），跳过 #1/#2/#4 落在「早返回」内的命中
+  - guarding-bad-input: 「返回」选 occurrence=1（「为什么返回 null」），不选会撞上「早返回」的 #4
+  - narrowing: 用「类型守卫」整词，不用「守卫」或「类型」（二者都是「类型守卫」的子串）
+  - a-closed-set: 「联合」选 occurrence=2（「联合（union）」），不用标题里「联合类型」中的「联合」以免与更长词纠缠；不用裸「类型」
+  - a-fork-in-the-road: 用「三元表达式」而非「三元」，避免只标前两字
+  - a-fork-in-the-road: 「返回」选 occurrence=3（「再返回」），避开 #1/#2/#4 的「返回值」子串
+
+Spot-check (8 collision-sensitive anchors; hand-counted with the same
+indexOf/+1 occurrence algorithm as server/language/resolve-anchors.ts):
+  1. branching/a-fork-in-the-road
+     quote='返回' occurrence=3 senseId=return.value → return
+     landing: ...算出一个字符串再⟦返回⟧。...
+     note: skipped #1/#2/#4 which sit inside「返回值」; #3 is standalone
+     verdict: OK
+  2. branching/return-early
+     quote='返回' occurrence=3 senseId=return.value → return
+     landing: ...时，⟦返回⟧ 'high' 还是 'low'？...
+     note: #1/#2/#4 are the 返回 inside「早返回」; #3 is the self-check verb
+     verdict: OK
+  3. branching/return-early
+     quote='早返回' occurrence=2 senseId=early-return.control → early return
+     landing: ...推论：⟦早返回⟧（early return）把「特殊情况」...
+     verdict: OK
+  4. branching/guarding-bad-input
+     quote='早返回' occurrence=1 + quote='返回' occurrence=1
+     landing early-return: ...不能就⟦早返回⟧ null...
+     landing return: ...为什么⟦返回⟧ null...
+     note: two different positions; #4 of 返回 would collide with 早返回 — unused
+     verdict: OK
+  5. collections/a-list-and-a-loop
+     quote='返回值' occurrence=1 senseId=return.value → return
+     landing: ...forEach 的⟦返回值⟧是 undefined...
+     note: deliberately full compound, not bare「返回」
+     verdict: OK
+  6. naming-the-cases/narrowing
+     quote='类型守卫' occurrence=2 senseId=type-guard.check → type guard
+     landing: ...用户定义的⟦类型守卫⟧（type guard）...
+     note: not bare「守卫」/「类型」
+     verdict: OK
+  7. naming-the-cases/a-closed-set
+     quote='联合' occurrence=2 senseId=union.type → union
+     landing: ...字面量的⟦联合⟧（union）...
+     note: #1 is title「联合类型」substring; #2 is the explicit union mention
+     verdict: OK
+  8. branching/and-or-not
+     quote='短路' occurrence=1 senseId=short-circuit.logic → short-circuit
+     landing: ...不会再算 B（⟦短路⟧，short-circuit）...
+     verdict: OK
+
+Lesson inventory:
+  - branching/a-fork-in-the-road: 3 anchors
+  - branching/and-or-not: 3 anchors
+  - branching/guarding-bad-input: 4 anchors
+  - branching/order-is-the-rule: 4 anchors
+  - branching/return-early: 4 anchors
+  - collections/a-list-and-a-loop: 3 anchors
+  - collections/a-map-is-an-index: 4 anchors
+  - collections/folding-a-list: 4 anchors
+  - collections/sorting: 4 anchors
+  - collections/two-passes: 3 anchors
+  - naming-the-cases/a-closed-set: 4 anchors
+  - naming-the-cases/derive-do-not-repeat: 5 anchors
+  - naming-the-cases/narrowing: 4 anchors
+
+Output: course-proposals/annot-foundations-logic.json
+No other files modified. No git commit.
