@@ -28,9 +28,14 @@ const BANNED_PHRASES = ["众所周知", "显而易见", "简单来说", "不言�
 const DANGLING_REFERENCES = ["见上文", "见前文", "如上所述", "参见上面"];
 const ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-const paths = process.argv.slice(2);
-if (paths.length === 0) {
-  console.error("usage: node scripts/check-proposal-shape.mjs <proposal.json> [...]");
+const args = process.argv.slice(2);
+const flagIndex = args.indexOf("--min-lessons");
+const minLessons = flagIndex === -1 ? 1 : Number(args[flagIndex + 1]);
+const paths = args.filter((value, index) => value !== "--min-lessons" && index !== flagIndex + 1);
+if (paths.length === 0 || !Number.isInteger(minLessons) || minLessons < 1) {
+  console.error(
+    "usage: node scripts/check-proposal-shape.mjs <proposal.json> [...] [--min-lessons <n>]",
+  );
   process.exit(2);
 }
 
@@ -79,7 +84,7 @@ function check(proposal) {
         );
       }
       if (cards.length > 4)
-        problems.push(`${where}: ${cards.length} cards is past the 2-3 the brief asks for`);
+        problems.push(`${where}: ${cards.length} cards on one lesson floods the review queue`);
 
       for (const card of cards) {
         claimId(cardIds, card.id, "card", where);
@@ -104,8 +109,15 @@ function check(proposal) {
     }
   }
 
-  if (lessonCount < 8)
-    problems.push(`course has only ${lessonCount} lessons; the brief asks for 10-12`);
+  // Structural minimum only. How many lessons a course *should* have belongs
+  // to the brief that commissioned it, not to a gate every proposal passes
+  // through — a hardcoded 8 here forced a four-lesson course to pad itself
+  // with filler, which is worse content wearing a green checkmark.
+  if (lessonCount < minLessons) {
+    problems.push(
+      `course has only ${lessonCount} lessons; this run requires at least ${minLessons}`,
+    );
+  }
   if ((course.objectives ?? []).length < 3) problems.push("course needs at least 3 objectives");
   return problems;
 }
