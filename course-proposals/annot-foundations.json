@@ -285,9 +285,9 @@
           "senseId": "file.storage"
         },
         {
-          "quote": "运行",
+          "quote": "运行时",
           "occurrence": 1,
-          "senseId": "run.action"
+          "senseId": "runtime.environment"
         },
         {
           "quote": "修改",
@@ -653,7 +653,7 @@
         },
         {
           "quote": "运行",
-          "occurrence": 2,
+          "occurrence": 1,
           "senseId": "run.action"
         },
         {
@@ -790,7 +790,7 @@
       "anchors": [
         {
           "quote": "运行",
-          "occurrence": 1,
+          "occurrence": 2,
           "senseId": "run.action"
         },
         {
@@ -979,7 +979,7 @@
         },
         {
           "quote": "更新",
-          "occurrence": 1,
+          "occurrence": 3,
           "senseId": "update.action"
         },
         {

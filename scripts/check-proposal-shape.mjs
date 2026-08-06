@@ -86,6 +86,16 @@ function check(proposal) {
     set.add(id);
   };
 
+  // Tags are `StableId` in the schema, so a camelCase tag fails at write time
+  // like a bad id does. Checking only ids meant a proposal could pass every
+  // gate here and still be refused by the writer on its last step, after the
+  // whole course had been generated.
+  const checkTags = (tags, where) => {
+    for (const tag of tags ?? []) {
+      if (!ID_PATTERN.test(tag ?? "")) problems.push(`${where}: tag "${tag}" is not kebab-case`);
+    }
+  };
+
   for (const unit of units) {
     for (const lesson of unit.lessons ?? []) {
       lessonCount += 1;
@@ -106,6 +116,7 @@ function check(proposal) {
 
       for (const card of cards) {
         claimId(cardIds, card.id, "card", where);
+        checkTags(card.tags, `${where} → card ${card.id}`);
         checkEvidence(card.evidence, `${where} → card ${card.id}`, problems);
         if (!card.front?.trim()) problems.push(`${where} → card ${card.id}: empty front`);
         if (!card.back?.trim()) problems.push(`${where} → card ${card.id}: empty back`);
