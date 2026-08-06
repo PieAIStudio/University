@@ -911,23 +911,27 @@ function ExerciseBlock({
               </ul>
             </div>
           ) : null}
-          <div className="host-grade__coach">
-            {/* Grading answered "was it right"; this offers "was it clear". The
-                page only prepares the material — the coaching itself happens in
-                whatever AI host the learner pastes into, same as grading. */}
-            <GameButton
-              variant="ghost"
-              onClick={() => void copyExpressionPacket()}
-              disabled={pending}
-            >
-              {expressionCopied ? "已复制表达点评包" : "让 AI 点评我这段表达"}
-            </GameButton>
-            {expressionCopied ? (
-              <span className="host-grade__coach-hint">
-                贴到任意 AI 宿主。它只评你怎么说，不改判对错。
-              </span>
-            ) : null}
-          </div>
+          {isExplain ? (
+            <div className="host-grade__coach">
+              {/* Grading answered "was it right"; this offers "was it clear". The
+                  page only prepares the material — the coaching itself happens in
+                  whatever AI host the learner pastes into, same as grading.
+                  short-answer exercises have no prose to critique, so the
+                  invitation only makes sense where the answer is free text. */}
+              <GameButton
+                variant="ghost"
+                onClick={() => void copyExpressionPacket()}
+                disabled={pending}
+              >
+                {expressionCopied ? "已复制表达点评包" : "让 AI 点评我这段表达"}
+              </GameButton>
+              {expressionCopied ? (
+                <span className="host-grade__coach-hint">
+                  贴到任意 AI 宿主。它只评你怎么说，不改判对错。
+                </span>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
 
