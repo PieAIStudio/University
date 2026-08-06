@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { EvidenceReference, KnowledgeNote } from "../src/domain/schemas.js";
-import { createUniversityLocalHttpServer, normalizeAnswer } from "./http-server.js";
+import { createUniversityLocalHttpServer } from "./http-server.js";
 import {
   updateCourseStatus,
   updateUnitStatus,
@@ -1051,22 +1051,6 @@ describe("UniversityLocal loopback API", () => {
     expect((await (await fetch(`${base}/api/bootstrap`)).json()) as unknown).toMatchObject({
       today: { dueCount: 0, card: null },
     });
-  });
-
-  it("forgives typing noise but not different answers", () => {
-    const expected = normalizeAnswer("Ink");
-
-    expect(normalizeAnswer("ink")).toBe(expected);
-    expect(normalizeAnswer("  INK  ")).toBe(expected);
-    expect(normalizeAnswer("ink.")).toBe(expected);
-    expect(normalizeAnswer("ink。")).toBe(expected);
-    expect(normalizeAnswer('"ink"')).toBe(expected);
-    expect(normalizeAnswer("「ink」")).toBe(expected);
-    expect(normalizeAnswer("ｉｎｋ")).toBe(expected);
-
-    expect(normalizeAnswer("inkjs")).not.toBe(expected);
-    expect(normalizeAnswer("react")).not.toBe(expected);
-    expect(normalizeAnswer("ink runner")).not.toBe(expected);
   });
 
   /**

@@ -679,15 +679,6 @@ function reviewReviewableCard(
 }
 
 /**
- * Short answers are compared exactly after normalising the noise a learner
- * cannot be expected to guess: unicode form, case, run-together whitespace,
- * wrapping quotes or backticks, and sentence-final punctuation. Marking
- * `ink.` or `"ink"` wrong teaches typing, not the material. Anything past
- * that — synonyms, alternative spellings — belongs in the content as
- * accepted answers, not in a grader heuristic that could start accepting
- * genuinely wrong responses.
- */
-/**
  * Reusing a command ID with a different body is a client conflict, not a
  * server fault. The card paths already mapped it to 409; the exercise path
  * let it escape as a generic 500, which tells a retrying client nothing.
@@ -701,17 +692,6 @@ function runWithCommandConflictMapped<T>(message: string, operation: () => T): T
     }
     throw error;
   }
-}
-
-export function normalizeAnswer(value: string): string {
-  return value
-    .normalize("NFKC")
-    .trim()
-    .replace(/\s+/g, " ")
-    .replace(/^[`'"“”‘’「『【（([]+|[`'"“”‘’」』】）)\]]+$/g, "")
-    .replace(/[.。!！?？;；,，、]+$/u, "")
-    .trim()
-    .toLocaleLowerCase("en-US");
 }
 
 function buildStudyView(

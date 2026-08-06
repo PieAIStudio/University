@@ -28,14 +28,17 @@ This file is the current project work index. It is not the agents-routing algori
 - Current proof target: complete three normal owner learning sessions and record
   friction before deciding whether Predict Output, Micro-Parsons, or Explain with
   Rubric deserves the next bounded spec.
-- Owner direction recorded 2026-08-06 (not yet a bounded spec): prefer **B1 host
-  feedback bridge** (copy exercise packet → new host session → CLI write-back →
-  Web coach panel) over embedding a second runtime model or requiring pi for
-  coaching. Research note:
-  `docs/reference/下一阶段/Grok/04-host-feedback-bridge-b1.md`.
-- Meta-learning curriculum factory (outside this repo): 
-  `/Users/yuanfei/PieAI/UniversityLocal-SpecialStudies` — Course A lesson 1
-  delivered; not yet registered as a UniversityLocal study.
+- **B1 host feedback bridge is built** (delivered 2026-08-06, direction recorded
+  the same day). Copy exercise packet → any host session → CLI write-back → Web
+  coach panel, with no second runtime model and no dependency on one particular
+  host. Research note:
+  `docs/reference/下一阶段/Grok/04-host-feedback-bridge-b1.md`. The same shape
+  now carries expression coaching, minus the write-back step.
+- Meta-learning curriculum factory (outside this repo):
+  `/Users/yuanfei/PieAI/UniversityLocal-SpecialStudies`. Its four-layer material
+  has been rebound onto real code inside the `university-local` airlock study,
+  so it no longer cites its own prose. The `ul-meta` study that held the earlier
+  self-referential version is archived, not deleted.
 
 ## Accepted Direction (2026-07-20)
 
@@ -426,6 +429,71 @@ on 《认识地形》, the evidence rail shows the note and the copy-location bu
 for a config file with no UA binding, the first submit explains the stale token,
 the second submits, and the lesson does not falsely complete.
 
+## Self-Study, Language and Expression Receipt (2026-08-06)
+
+Four capabilities landed together, plus one repository defect that had been
+hiding since the beginning.
+
+**The repository could not be cloned into a working state.** `.gitignore`
+carried an unanchored `studies/` rule, written for the personal campus data at
+the root. Git matches an unanchored directory name at any depth, so it also
+swallowed `server/studies/` — `paths.ts`, `repository.ts`, `snapshots.ts` and
+two test files, imported by around twenty modules including the CLI and the HTTP
+server. Five source files had never been committed. Nothing reported it, because
+ignored files do not appear in `git status`, and oxfmt reads `.gitignore` too, so
+the module had never been linted or format-checked either. The rule is now
+`/studies/`; a fresh clone was taken to a scratch directory and typechecks
+clean, which is the only form of proof that counts here.
+
+**Self-study through an airlock.** `assertSeparatedRoots` exists so a study can
+never write into its own subject. Studying this project meant either weakening
+that guard or working around it. Neither: a sealed read-only checkout of one
+exact commit lives outside both the live repo and `studies/`, fetched a single
+commit at a time rather than cloned, with the seal in `.git/` so the checkout
+stays clean enough to pass its own tamper check, and identity taken from the
+root commit rather than a path a person can delete and refill. The import gate
+refuses rather than skips: a repository that really does track a secret is a
+problem the owner has to see, and `.gitignore` is no help for a file already
+tracked.
+
+**English reading layer.** Annotations live in a parallel tree keyed by both
+`contentRevision` and a hash of the content, so turning English mode on cannot
+bump a revision and therefore cannot invalidate completion or FSRS scheduling.
+A hash mismatch renders as if unannotated, because every anchor position was
+chosen by someone looking at the old bytes. Two independent locks keep anchors
+out of code — a server-side protected-region check, and a plugin that only
+visits text nodes, which puts code structurally out of reach. The lexicon is
+keyed by sense rather than spelling: "commit" in Git and "commit" in a database
+are different words, and one gloss per headword would be wrong about half the
+time. The popover speaks only through a voice reporting `localService === true`,
+since Chrome lists cloud voices in the same array and speaking through one would
+put lesson text on the network.
+
+**Expression coaching.** The same packet-to-any-host shape as exercise grading,
+with one deliberate difference: it ends without a write-back command. Coaching
+changes nothing structurally, and a packet that auto-saves would make the
+learner perform for the coach. Saving stays an explicit `capture`.
+
+**Content.** Five courses applied and re-verified on this branch rather than
+trusted from the worktrees they were drafted in: a 41-lesson tier below the
+zero-basics tier, two courses on how this campus itself works, a four-layer
+course rebound onto real code, and eight lessons on writing requests an AI can
+execute. The superseded `ul-meta` study was archived rather than deleted —
+`study archive` keeps every course, snapshot and learner row and only drops the
+study out of the three places the shelf is enumerated.
+
+Two tools were wrong in the same way and were fixed rather than worked around.
+`check-proposal-shape.mjs` hard-coded "at least 8 lessons" from one campaign's
+brief and failed a course that is correctly four lessons, demanding filler to
+satisfy a number unrelated to the content; length is a `--min-lessons` flag now.
+And `lexicon.ts` located its data file by counting relative directory hops,
+which was right in one of the two runtimes it runs under and wrong in the other;
+it walks up to `package.json` instead.
+
+Verified: 348 tests across 33 files, full `pnpm verify`, a fresh clone that
+typechecks, and a browser pass confirming word anchors render as buttons with a
+working popover while code blocks stay untouched.
+
 ## Accepted Risks
 
 - **The API request token does not defend against other local processes.**
@@ -451,10 +519,15 @@ the second submits, and the lesson does not falsely complete.
   reset recorded as an event in the append-only log. Decide whether that is
   worth a schema migration before the course content starts being revised
   regularly.
-- **Accepted answers.** Short-answer grading compares one `expectedAnswer` after
-  normalising case, spacing, wrapping quotes, and trailing punctuation.
-  Synonyms are deliberately out of the grader; if they are wanted, they belong
-  in `ExerciseSchema` as an accepted-answer list plus generator support.
+- **Nothing grades an answer except a host.** Every exercise kind now records
+  the learner's answer at score 0 and waits for host write-back. The normalising
+  string comparison that used to decide short answers is gone, along with the
+  question of accepted-answer lists that only existed to patch it — a host
+  reading the reference answer handles synonyms without a grader heuristic that
+  could start accepting genuinely wrong responses. The open question this
+  replaces it with is availability, not fairness: an exercise cannot complete
+  while no host is around to grade it, and whether that is acceptable in normal
+  use has not been tested across a real week yet.
 
 ## Completed Proof History
 
