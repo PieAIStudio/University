@@ -12,4 +12,8 @@ coverage/
 university-local.config.local.json
 
 # Personal campus data stays visible at ./studies but must never enter source control.
-studies/
+# The leading slash is load-bearing: an unanchored `studies/` matches a directory
+# of that name at any depth, and this repository has a source module at
+# server/studies/. Without the anchor Git silently swallowed it, and a fresh
+# clone could not build.
+/studies/
