@@ -1,0 +1,296 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "comm-transfer",
+  "targetSnapshotId": "git-90cf76c1177f",
+  "courseId": "communicate-with-ai",
+  "unit": {
+    "id": "transfer-to-people",
+    "title": "同一件事，说给人听",
+    "objective": "主练对 AI 之后的迁移注释带：哪些结构可直接搬、哪些会坏事、给人时为何结论先行。不建人际沟通主线。",
+    "prerequisiteUnitIds": []
+  },
+  "lessons": [
+    {
+      "id": "structures-that-transfer",
+      "title": "哪些结构可以直接搬过去",
+      "content": "# 哪些结构可以直接搬过去\n\n## 学习目标\n\n完成本课后，你能：\n\n1. 列出对人对 AI 都成立的五类结构信息。\n2. 从答疑包任务段指出目标、步骤、边界如何被写清。\n3. 解释为什么「非目标 / 约束」对人同样值钱。\n\n## 先给结论\n\n- **事实：练习答疑包用「给 AI 助手的任务」写清判定、讲解、引申、写回四步，并写边界（不要假设 IDE、不要假设能打开代码库）。** 这是目标 + 步骤 + 约束的活样本。\n- **事实：`AGENTS.md` 的 UniversityLocal Rules 用条目写死只读外部仓、local-only、不擅自加模型调用等硬边界。** 对人交代任务时，「不做什么」同样防止好心办坏事。\n- **推论：目标、约束、上下文、成功标准、非目标——这五件对人对 AI 都成立。** 迁移带搬的是结构，不是把 prompt 模板整段念给人听。\n\n## 一个类比\n\n寄快递单：收件人、禁运品、包裹里有什么、签收怎样算完成、不送上门的备注——对驿站小哥和自动分拣都要写清。\n换「读单的是人还是机器」，单上的栏目种类不变；变的是语气与篇幅。\n\n## 工作示例\n\n五件结构 → 对人短汇报的写法：\n\n1. **目标** —— 你要对方交付什么结果（不是「帮忙看看」）。\n2. **约束** —— 时间、权限、工具、格式上限。\n3. **上下文** —— 对方不知道、但决策必需的三行事实（点名文件/现状）。\n4. **成功标准** —— 怎样算做完（可检查，不是「差不多就行」）。\n5. **非目标** —— 这次明确不做的事（防止加戏）。\n\n答疑包里的对应物：任务四步是目标拆解；「不要假设…」是约束；题目上下文是上下文；写回与 `passed` 是成功标准；不要猜是失败路径下的非目标。\n\n教学技能也呼应同一骨架：先 objective/prerequisite，再 evidence，再 boundaries/failures——结构完整，人读、AI 读都跟得上。\n\n## 自检\n\n**问：** 只给人讲「目标」不讲「非目标」，最容易发生什么？\n\n**答：** 对方按自己的好意加范围（多改文件、多同步、多加功能），返工来自没画出禁行线。\n\n## 重点\n\n**目标、约束、上下文、成功标准、非目标——五件结构对人对 AI 都成立；搬结构，不搬口吻模板。**\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "snapshotId": "git-90cf76c1177f",
+          "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+          "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+          "lineStart": 162,
+          "lineEnd": 171,
+          "nodeIds": [],
+          "note": "任务四步 + 边界：目标/步骤/约束的可执行写法。"
+        },
+        {
+          "kind": "fact",
+          "snapshotId": "git-90cf76c1177f",
+          "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+          "sourcePath": "AGENTS.md",
+          "lineStart": 57,
+          "lineEnd": 76,
+          "nodeIds": [],
+          "note": "Rules 把只读、local-only 等写成硬边界（非目标清单）。"
+        },
+        {
+          "kind": "fact",
+          "snapshotId": "git-90cf76c1177f",
+          "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+          "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+          "lineStart": 23,
+          "lineEnd": 28,
+          "nodeIds": [],
+          "note": "教学顺序含 objective、evidence、boundaries——结构骨架。"
+        }
+      ],
+      "exercises": [
+        {
+          "id": "name-five-structures",
+          "kind": "short-answer",
+          "title": "五件结构",
+          "prompt": "对人对 AI 都成立的五类结构，用顿号连接五个词：目标、约束、上下文、成功标准、？",
+          "expectedAnswer": "非目标",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": "AGENTS.md",
+              "lineStart": 57,
+              "lineEnd": 76,
+              "nodeIds": [],
+              "note": "Rules 示范：硬边界与非目标比空泛目标更能防返工。"
+            }
+          ]
+        }
+      ],
+      "cards": [
+        {
+          "id": "five-structures-list",
+          "front": "迁移到对人沟通时，哪五类结构仍然成立？",
+          "back": "目标、约束、上下文、成功标准、非目标。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+              "lineStart": 162,
+              "lineEnd": 171,
+              "nodeIds": [],
+              "note": "答疑包写清任务、边界与上下文。"
+            }
+          ]
+        },
+        {
+          "id": "transfer-structure-not-template",
+          "front": "迁移带搬的是什么？不是什么？",
+          "back": "搬的是信息结构（目标/约束/上下文/验收/非目标）；不是把 prompt 模板原样念给人听。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+              "lineStart": 23,
+              "lineEnd": 28,
+              "nodeIds": [],
+              "note": "结构顺序可复用；交付形态仍按受众调整。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "what-breaks-on-people",
+      "title": "哪些搬过去会坏事",
+      "content": "# 哪些搬过去会坏事\n\n## 学习目标\n\n完成本课后，你能：\n\n1. 对比 AI 与同事在「重试成本」和「信任成本」上的差别。\n2. 说明为什么不能把人当成可编程 API。\n3. 指出「显式同意才保存」如何体现对人的边界感。\n\n## 先给结论\n\n- **事实：knowledge-node 写明只有用户明确要求保存时才落盘，不得暗中记忆；一份笔记只回答一个核心问题，禁止整段聊天入库。** 对人协作同样：未经同意的「我帮你记进系统/群公告」会消耗信任。\n- **事实：外部仓库默认只读；学习产物不写回被检项目，除非用户明确授权。** 权限边界写进规则，而不是靠对方猜你的好意。\n- **推论：AI 可以廉价重试、没有真实利益；同事每次沟通都在动用信任。** 把 prompt 模板原样念给人听（「你是某某角色，必须输出 JSON…」）会显得控制欲强，像把人当 API。\n\n## 一个类比\n\n对自动售货机：按钮按错了再按一次，机器不记账恨。\n对值班同事：同一指令连发五次、每次改三个参数，对方会觉得被当调试对象——信任被磨掉，不是「多采样几次」那么简单。\n\n## 工作示例\n\n| 对 AI 常见习惯 | 搬到人会怎样 |\n| --- | --- |\n| 同一请求连发多版对比 | 像 spam；应先对齐一版再改 |\n| 「你必须 / 禁止 / 输出严格 JSON」口吻 | 像训机器人；人需要礼貌与理由 |\n| 默认持久化对话里的一切 | 像偷记小本本；要显式同意 |\n| 假设能打开对方整个仓库/日历 | 越权；只给本次必需上下文 |\n| 证据不足时猜一个好听的答案 | 对人是谎言风险；应说「不确定」 |\n\n本项目的克制写法可当反例教材的正面：\n\n1. **显式同意** —— 保存、写回被学仓库、调用沟通教练，都要用户点头或点名。\n2. **默认只读** —— 不把「我能改」当成默认能力。\n3. **一问一记** —— 不把整段聊天甩给对方当任务。\n\n迁移启发（点到为止）：对人先问目标与受众，再给 1～2 个最高杠杆改法；不要倾倒框架，不要假装百分百进步。\n\n## 自检\n\n**问：** 为什么「把 prompt 模板念给同事听」常常坏事？\n\n**答：** 模板为可编程接口设计，口吻像下指令；同事是信任关系，不是可廉价重试的 API。\n\n## 重点\n\n**AI 可廉价重试；人的每次沟通都花信任。不要把人当 API，不要暗中记忆，不要用 prompt 口吻下命令。**\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "snapshotId": "git-90cf76c1177f",
+          "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+          "sourcePath": ".agents/skills/knowledge-node/SKILL.md",
+          "lineStart": 10,
+          "lineEnd": 18,
+          "nodeIds": [],
+          "note": "显式同意才保存；一问一记；不整段聊天、不暗中记忆。"
+        },
+        {
+          "kind": "fact",
+          "snapshotId": "git-90cf76c1177f",
+          "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+          "sourcePath": "AGENTS.md",
+          "lineStart": 59,
+          "lineEnd": 61,
+          "nodeIds": [],
+          "note": "外部仓默认只读；未经明确授权不写回。"
+        },
+        {
+          "kind": "fact",
+          "snapshotId": "git-90cf76c1177f",
+          "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+          "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+          "lineStart": 30,
+          "lineEnd": 36,
+          "nodeIds": [],
+          "note": "先核实再表达；consent 后才 knowledge-node；默认不同时开跑。"
+        }
+      ],
+      "exercises": [
+        {
+          "id": "why-not-api-people",
+          "kind": "short-answer",
+          "title": "信任成本",
+          "prompt": "knowledge-node 是否允许在用户未要求时暗中把对话记成笔记？答「允许」或「不允许」。",
+          "expectedAnswer": "不允许",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": ".agents/skills/knowledge-node/SKILL.md",
+              "lineStart": 12,
+              "lineEnd": 12,
+              "nodeIds": [],
+              "note": "只有用户明确要求保存时才落盘；不得暗中记忆。"
+            }
+          ]
+        }
+      ],
+      "cards": [
+        {
+          "id": "retry-cost-diff",
+          "front": "AI 与同事在「重试」上最关键的差别是什么？",
+          "back": "AI 重试便宜且无真实利益；同事每次沟通都动用信任，不能当可编程 API 连发调试。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": ".agents/skills/knowledge-node/SKILL.md",
+              "lineStart": 10,
+              "lineEnd": 13,
+              "nodeIds": [],
+              "note": "对人侧边界：显式同意、原子笔记，禁止整段聊天甩锅。"
+            }
+          ]
+        },
+        {
+          "id": "no-prompt-voice-to-humans",
+          "front": "为什么不建议把 prompt 模板原样念给同事？",
+          "back": "模板口吻像控制可编程接口；对人会显得控制欲强，应改成请求、理由与协商。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": "AGENTS.md",
+              "lineStart": 59,
+              "lineEnd": 61,
+              "nodeIds": [],
+              "note": "默认只读与显式授权：权限关系不能靠「模板命令」硬推。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lead-with-conclusion-for-people",
+      "title": "结论先行：给人的版本要倒过来写",
+      "content": "# 结论先行：给人的版本要倒过来写\n\n## 学习目标\n\n完成本课后，你能：\n\n1. 对比「对 AI」与「对人」在信息顺序上的差别。\n2. 说明为什么人的注意力预算通常比模型上下文窗口更紧。\n3. 把同一份委托改写成「结论/请求在前，背景在后」的人读版。\n\n## 先给结论\n\n- **事实：教学技能要求 reveal progressively：`why → situation → concept → project evidence → boundaries/failures`，并 prefer one concept per lesson。** 对 AI 的可执行包也可以先铺上下文再下任务（答疑包正是先任务意图、再大段上下文与证据）。\n- **事实：答疑包把「给 AI 助手的任务」放在题目上下文与证据片段之前——对模型，先给可执行意图仍然有效。** 对人则要更狠：对方可能只读前三行。\n- **推论：跟 AI 可以先铺上下文再提要求；跟人要先给结论/请求，再补背景。** 对方的注意力预算比模型小得多；背景太长，请求会被淹没。\n\n## 一个类比\n\n会议室门口拦人：先说「需要你周五前批这个预算」，再补项目背景。\n若先讲二十分钟历史，对方在电梯里只听到噪音，没听到请求。\n模型像能吞长上下文的档案室；人像只肯停三秒的过路人。\n\n## 工作示例\n\n**同一件事，两种顺序：**\n\n对 AI（可先结构后细节）：\n\n1. 任务步骤与边界  \n2. 题目上下文与证据  \n3. 写回形状  \n\n对人（结论先行）：\n\n1. **请求** —— 「请你周五前确认：练习判分是否改为宿主写回。」  \n2. **成功标准** —— 「回我 yes/no + 一个风险。」  \n3. **必要背景** —— 两行：现状 Web 只记提交；政策要求宿主教。  \n4. **非目标** —— 「这次不讨论换模型厂商。」\n\n工作简报里的教训同构：并行生成能跑，是因为 briefs 先点名 exact files 与能教什么——读者（含未来的你）先看见「要什么」，再进细节。对人短汇报，把「要什么」再往前拔一行。\n\n改写口诀：\n\n- 第一句：请求或结论  \n- 第二句：成功长什么样  \n- 其余：背景、约束、非目标（可折叠）\n\n## 自检\n\n**问：** 给人发长消息时，为什么「先讲故事再提请求」容易失败？\n\n**答：** 人的注意力预算紧，请求若在文末常被跳过；应倒过来：请求/结论在前，背景在后。\n\n## 重点\n\n**对人结论先行：先请求与成功标准，再补背景；模型吞得下长上下文，过路人只停三秒。**\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "snapshotId": "git-90cf76c1177f",
+          "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+          "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+          "lineStart": 23,
+          "lineEnd": 30,
+          "nodeIds": [],
+          "note": "渐进揭示与 one concept per lesson；顺序可教但受众不同要重排。"
+        },
+        {
+          "kind": "fact",
+          "snapshotId": "git-90cf76c1177f",
+          "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+          "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+          "lineStart": 159,
+          "lineEnd": 178,
+          "nodeIds": [],
+          "note": "答疑包先任务段再上下文：对 AI 有效；对人需更前置请求。"
+        },
+        {
+          "kind": "fact",
+          "snapshotId": "git-90cf76c1177f",
+          "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+          "sourcePath": "docs/reference/execution/current-work.md",
+          "lineStart": 388,
+          "lineEnd": 396,
+          "nodeIds": [],
+          "note": "briefs 先点名文件与能教什么，读者先看见要什么。"
+        }
+      ],
+      "exercises": [
+        {
+          "id": "human-first-line",
+          "kind": "short-answer",
+          "title": "人读第一句",
+          "prompt": "给人的短汇报，第一句应优先放「请求/结论」还是「完整背景」？只答四字：请求结论 或 完整背景。",
+          "expectedAnswer": "请求结论",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": "docs/reference/execution/current-work.md",
+              "lineStart": 388,
+              "lineEnd": 390,
+              "nodeIds": [],
+              "note": "可用产出靠先点名要什么（files/能教什么），不是先堆过程。"
+            }
+          ]
+        }
+      ],
+      "cards": [
+        {
+          "id": "ai-vs-human-order",
+          "front": "对 AI 与对人，信息顺序上最关键的差别是什么？",
+          "back": "对 AI 可先铺上下文再下任务；对人应结论/请求先行，背景后置，因为注意力预算更紧。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+              "lineStart": 162,
+              "lineEnd": 178,
+              "nodeIds": [],
+              "note": "对 AI：任务段可接大段上下文；对人需把请求再提前。"
+            }
+          ]
+        },
+        {
+          "id": "human-rewrite-motto",
+          "front": "给人短汇报的改写口诀是什么？",
+          "back": "第一句请求或结论；第二句成功标准；其余才是背景、约束与非目标。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+              "lineStart": 23,
+              "lineEnd": 30,
+              "nodeIds": [],
+              "note": "结构完整仍要按受众裁剪；人读优先检索式前几行。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

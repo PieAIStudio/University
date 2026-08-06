@@ -1,0 +1,998 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "lessons": [
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "files-and-folders",
+      "lessonId": "config-files-are-files-too",
+      "anchors": [
+        {
+          "quote": "文件",
+          "occurrence": 3,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "构建",
+          "occurrence": 1,
+          "senseId": "build.action"
+        },
+        {
+          "quote": "默认",
+          "occurrence": 1,
+          "senseId": "default.value"
+        },
+        {
+          "quote": "部署",
+          "occurrence": 2,
+          "senseId": "deploy.release"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "files-and-folders",
+      "lessonId": "file-vs-folder",
+      "anchors": [
+        {
+          "quote": "文件",
+          "occurrence": 5,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "路径",
+          "occurrence": 1,
+          "senseId": "path.location"
+        },
+        {
+          "quote": "找到",
+          "occurrence": 1,
+          "senseId": "find.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "files-and-folders",
+      "lessonId": "gitignore-is-a-do-not-pack-list",
+      "anchors": [
+        {
+          "quote": "忽略",
+          "occurrence": 1,
+          "senseId": "ignore.action"
+        },
+        {
+          "quote": "提交",
+          "occurrence": 2,
+          "senseId": "commit.git"
+        },
+        {
+          "quote": "机密",
+          "occurrence": 1,
+          "senseId": "secret.security"
+        },
+        {
+          "quote": "产物",
+          "occurrence": 1,
+          "senseId": "artifact.build"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "files-and-folders",
+      "lessonId": "package-json-as-directory-of-parts",
+      "anchors": [
+        {
+          "quote": "打开",
+          "occurrence": 1,
+          "senseId": "open.action"
+        },
+        {
+          "quote": "运行",
+          "occurrence": 1,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "构建",
+          "occurrence": 1,
+          "senseId": "build.action"
+        },
+        {
+          "quote": "需要",
+          "occurrence": 1,
+          "senseId": "require.need"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "files-and-folders",
+      "lessonId": "same-name-different-folders",
+      "anchors": [
+        {
+          "quote": "文件",
+          "occurrence": 2,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "运行",
+          "occurrence": 1,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "匹配",
+          "occurrence": 1,
+          "senseId": "match.compare"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "files-and-folders",
+      "lessonId": "src-is-source-room",
+      "anchors": [
+        {
+          "quote": "文件",
+          "occurrence": 1,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "启动",
+          "occurrence": 1,
+          "senseId": "run.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "files-and-folders",
+      "lessonId": "styles-split-across-files",
+      "anchors": [
+        {
+          "quote": "打开",
+          "occurrence": 1,
+          "senseId": "open.action"
+        },
+        {
+          "quote": "顺序",
+          "occurrence": 1,
+          "senseId": "order.sequence"
+        },
+        {
+          "quote": "文件",
+          "occurrence": 2,
+          "senseId": "file.storage"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "how-change-happens",
+      "lessonId": "env-example-steers-backends",
+      "anchors": [
+        {
+          "quote": "忽略",
+          "occurrence": 1,
+          "senseId": "ignore.action"
+        },
+        {
+          "quote": "提交",
+          "occurrence": 2,
+          "senseId": "commit.git"
+        },
+        {
+          "quote": "运行",
+          "occurrence": 1,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "类型",
+          "occurrence": 1,
+          "senseId": "type.kind"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "how-change-happens",
+      "lessonId": "git-remembers-why-ignore-matters",
+      "anchors": [
+        {
+          "quote": "提交",
+          "occurrence": 2,
+          "senseId": "commit.git"
+        },
+        {
+          "quote": "快照",
+          "occurrence": 1,
+          "senseId": "snapshot.git"
+        },
+        {
+          "quote": "忽略",
+          "occurrence": 2,
+          "senseId": "ignore.action"
+        },
+        {
+          "quote": "检查",
+          "occurrence": 1,
+          "senseId": "check.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "how-change-happens",
+      "lessonId": "hooks-catch-before-history",
+      "anchors": [
+        {
+          "quote": "提交",
+          "occurrence": 3,
+          "senseId": "commit.git"
+        },
+        {
+          "quote": "检查",
+          "occurrence": 2,
+          "senseId": "check.action"
+        },
+        {
+          "quote": "失败",
+          "occurrence": 2,
+          "senseId": "fail.status"
+        },
+        {
+          "quote": "尝试",
+          "occurrence": 1,
+          "senseId": "attempt.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "how-change-happens",
+      "lessonId": "one-line-can-steer-behavior",
+      "anchors": [
+        {
+          "quote": "路径",
+          "occurrence": 2,
+          "senseId": "path.location"
+        },
+        {
+          "quote": "构建",
+          "occurrence": 1,
+          "senseId": "build.action"
+        },
+        {
+          "quote": "加载",
+          "occurrence": 1,
+          "senseId": "load.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "how-change-happens",
+      "lessonId": "save-is-the-first-action",
+      "anchors": [
+        {
+          "quote": "保存",
+          "occurrence": 4,
+          "senseId": "save.action"
+        },
+        {
+          "quote": "文件",
+          "occurrence": 2,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "运行",
+          "occurrence": 1,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "修改",
+          "occurrence": 1,
+          "senseId": "change.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "how-change-happens",
+      "lessonId": "verify-defines-done",
+      "anchors": [
+        {
+          "quote": "检查",
+          "occurrence": 3,
+          "senseId": "check.action"
+        },
+        {
+          "quote": "类型",
+          "occurrence": 1,
+          "senseId": "type.kind"
+        },
+        {
+          "quote": "构建",
+          "occurrence": 1,
+          "senseId": "build.action"
+        },
+        {
+          "quote": "成功",
+          "occurrence": 1,
+          "senseId": "success.status"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "talking-to-machines",
+      "lessonId": "commands-are-precise-sentences",
+      "anchors": [
+        {
+          "quote": "执行",
+          "occurrence": 2,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "检查",
+          "occurrence": 1,
+          "senseId": "check.action"
+        },
+        {
+          "quote": "类型",
+          "occurrence": 1,
+          "senseId": "type.kind"
+        },
+        {
+          "quote": "文件",
+          "occurrence": 2,
+          "senseId": "file.storage"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "talking-to-machines",
+      "lessonId": "install-then-dev",
+      "anchors": [
+        {
+          "quote": "顺序",
+          "occurrence": 2,
+          "senseId": "order.sequence"
+        },
+        {
+          "quote": "失败",
+          "occurrence": 1,
+          "senseId": "fail.status"
+        },
+        {
+          "quote": "跳过",
+          "occurrence": 1,
+          "senseId": "skip.action"
+        },
+        {
+          "quote": "忽略",
+          "occurrence": 1,
+          "senseId": "ignore.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "talking-to-machines",
+      "lessonId": "ready-for-terrain",
+      "anchors": [
+        {
+          "quote": "文件",
+          "occurrence": 4,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "运行",
+          "occurrence": 3,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "构建",
+          "occurrence": 2,
+          "senseId": "build.action"
+        },
+        {
+          "quote": "忽略",
+          "occurrence": 1,
+          "senseId": "ignore.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "talking-to-machines",
+      "lessonId": "scripts-are-nicknames",
+      "anchors": [
+        {
+          "quote": "找到",
+          "occurrence": 1,
+          "senseId": "find.action"
+        },
+        {
+          "quote": "约定",
+          "occurrence": 1,
+          "senseId": "constraint.design"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "talking-to-machines",
+      "lessonId": "what-is-a-terminal",
+      "anchors": [
+        {
+          "quote": "启动",
+          "occurrence": 2,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "开放",
+          "occurrence": 1,
+          "senseId": "allow.permit"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "talking-to-machines",
+      "lessonId": "why-not-only-buttons",
+      "anchors": [
+        {
+          "quote": "执行",
+          "occurrence": 1,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "理由",
+          "occurrence": 1,
+          "senseId": "reason.explain"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-an-app",
+      "lessonId": "app-is-a-pile-of-files",
+      "anchors": [
+        {
+          "quote": "文件",
+          "occurrence": 3,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "打开",
+          "occurrence": 2,
+          "senseId": "open.action"
+        },
+        {
+          "quote": "加载",
+          "occurrence": 4,
+          "senseId": "load.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-an-app",
+      "lessonId": "empty-box-called-root",
+      "anchors": [
+        {
+          "quote": "空的",
+          "occurrence": 1,
+          "senseId": "empty.state"
+        },
+        {
+          "quote": "加载",
+          "occurrence": 3,
+          "senseId": "load.action"
+        },
+        {
+          "quote": "找到",
+          "occurrence": 1,
+          "senseId": "find.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-an-app",
+      "lessonId": "from-icon-to-files-journey",
+      "anchors": [
+        {
+          "quote": "构建",
+          "occurrence": 2,
+          "senseId": "build.action"
+        },
+        {
+          "quote": "产物",
+          "occurrence": 2,
+          "senseId": "artifact.build"
+        },
+        {
+          "quote": "顺序",
+          "occurrence": 1,
+          "senseId": "order.sequence"
+        },
+        {
+          "quote": "文件",
+          "occurrence": 3,
+          "senseId": "file.storage"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-an-app",
+      "lessonId": "product-sentence-and-gate",
+      "anchors": [
+        {
+          "quote": "运行",
+          "occurrence": 1,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "顺序",
+          "occurrence": 1,
+          "senseId": "order.sequence"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-an-app",
+      "lessonId": "same-product-many-shells",
+      "anchors": [
+        {
+          "quote": "构建",
+          "occurrence": 1,
+          "senseId": "build.action"
+        },
+        {
+          "quote": "产物",
+          "occurrence": 1,
+          "senseId": "artifact.build"
+        },
+        {
+          "quote": "打开",
+          "occurrence": 1,
+          "senseId": "open.action"
+        },
+        {
+          "quote": "文件",
+          "occurrence": 1,
+          "senseId": "file.storage"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-an-app",
+      "lessonId": "why-so-many-files-preview",
+      "anchors": [
+        {
+          "quote": "文件",
+          "occurrence": 4,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "修改",
+          "occurrence": 1,
+          "senseId": "change.action"
+        },
+        {
+          "quote": "准备",
+          "occurrence": 1,
+          "senseId": "prepare.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-an-app",
+      "lessonId": "you-already-know-apps",
+      "anchors": [
+        {
+          "quote": "打开",
+          "occurrence": 1,
+          "senseId": "open.action"
+        },
+        {
+          "quote": "文件",
+          "occurrence": 2,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "运行",
+          "occurrence": 3,
+          "senseId": "run.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-code",
+      "lessonId": "a-three-line-function",
+      "anchors": [
+        {
+          "quote": "返回",
+          "occurrence": 1,
+          "senseId": "return.value"
+        },
+        {
+          "quote": "处理",
+          "occurrence": 1,
+          "senseId": "handle.action"
+        },
+        {
+          "quote": "结果",
+          "occurrence": 1,
+          "senseId": "result.outcome"
+        },
+        {
+          "quote": "类型",
+          "occurrence": 1,
+          "senseId": "type.kind"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-code",
+      "lessonId": "code-is-text",
+      "anchors": [
+        {
+          "quote": "打开",
+          "occurrence": 3,
+          "senseId": "open.action"
+        },
+        {
+          "quote": "运行",
+          "occurrence": 2,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "允许",
+          "occurrence": 1,
+          "senseId": "allow.permit"
+        },
+        {
+          "quote": "检查",
+          "occurrence": 1,
+          "senseId": "check.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-code",
+      "lessonId": "comments-are-for-humans",
+      "anchors": [
+        {
+          "quote": "空的",
+          "occurrence": 1,
+          "senseId": "empty.state"
+        },
+        {
+          "quote": "执行",
+          "occurrence": 1,
+          "senseId": "run.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-code",
+      "lessonId": "data-files-are-not-only-code",
+      "anchors": [
+        {
+          "quote": "文件",
+          "occurrence": 2,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "查找",
+          "occurrence": 1,
+          "senseId": "find.action"
+        },
+        {
+          "quote": "需要",
+          "occurrence": 1,
+          "senseId": "require.need"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-code",
+      "lessonId": "export-means-share",
+      "anchors": [
+        {
+          "quote": "允许",
+          "occurrence": 2,
+          "senseId": "allow.permit"
+        },
+        {
+          "quote": "边界",
+          "occurrence": 1,
+          "senseId": "boundary.scope"
+        },
+        {
+          "quote": "默认",
+          "occurrence": 1,
+          "senseId": "default.value"
+        },
+        {
+          "quote": "返回",
+          "occurrence": 1,
+          "senseId": "return.value"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-code",
+      "lessonId": "import-means-borrow",
+      "anchors": [
+        {
+          "quote": "文件",
+          "occurrence": 3,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "路径",
+          "occurrence": 1,
+          "senseId": "path.location"
+        },
+        {
+          "quote": "需要",
+          "occurrence": 1,
+          "senseId": "require.need"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-code",
+      "lessonId": "types-are-notes-for-machines",
+      "anchors": [
+        {
+          "quote": "类型",
+          "occurrence": 3,
+          "senseId": "type.kind"
+        },
+        {
+          "quote": "检查",
+          "occurrence": 2,
+          "senseId": "check.action"
+        },
+        {
+          "quote": "允许",
+          "occurrence": 1,
+          "senseId": "allow.permit"
+        },
+        {
+          "quote": "失败",
+          "occurrence": 1,
+          "senseId": "fail.status"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "what-is-code",
+      "lessonId": "who-turns-text-into-motion",
+      "anchors": [
+        {
+          "quote": "运行",
+          "occurrence": 1,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "打开",
+          "occurrence": 1,
+          "senseId": "open.action"
+        },
+        {
+          "quote": "加载",
+          "occurrence": 1,
+          "senseId": "load.action"
+        },
+        {
+          "quote": "构建",
+          "occurrence": 2,
+          "senseId": "build.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "who-runs-it",
+      "lessonId": "browser-reads-the-page",
+      "anchors": [
+        {
+          "quote": "打开",
+          "occurrence": 3,
+          "senseId": "open.action"
+        },
+        {
+          "quote": "默认",
+          "occurrence": 1,
+          "senseId": "default.value"
+        },
+        {
+          "quote": "文件",
+          "occurrence": 3,
+          "senseId": "file.storage"
+        },
+        {
+          "quote": "证据",
+          "occurrence": 1,
+          "senseId": "evidence.study"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "who-runs-it",
+      "lessonId": "build-fills-dist",
+      "anchors": [
+        {
+          "quote": "构建",
+          "occurrence": 1,
+          "senseId": "build.action"
+        },
+        {
+          "quote": "产物",
+          "occurrence": 1,
+          "senseId": "artifact.build"
+        },
+        {
+          "quote": "失败",
+          "occurrence": 2,
+          "senseId": "fail.status"
+        },
+        {
+          "quote": "修复",
+          "occurrence": 1,
+          "senseId": "fix.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "who-runs-it",
+      "lessonId": "node-runs-tool-scripts",
+      "anchors": [
+        {
+          "quote": "执行",
+          "occurrence": 1,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "检查",
+          "occurrence": 1,
+          "senseId": "check.action"
+        },
+        {
+          "quote": "副作用",
+          "occurrence": 1,
+          "senseId": "side-effect.code"
+        },
+        {
+          "quote": "尝试",
+          "occurrence": 1,
+          "senseId": "attempt.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "who-runs-it",
+      "lessonId": "pipeline-one-picture",
+      "anchors": [
+        {
+          "quote": "流水线",
+          "occurrence": 2,
+          "senseId": "pipeline.ci"
+        },
+        {
+          "quote": "构建",
+          "occurrence": 1,
+          "senseId": "build.action"
+        },
+        {
+          "quote": "结果",
+          "occurrence": 1,
+          "senseId": "result.outcome"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "who-runs-it",
+      "lessonId": "runtime-detects-host",
+      "anchors": [
+        {
+          "quote": "运行",
+          "occurrence": 2,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "选择",
+          "occurrence": 1,
+          "senseId": "choose.select"
+        },
+        {
+          "quote": "结果",
+          "occurrence": 1,
+          "senseId": "result.outcome"
+        },
+        {
+          "quote": "默认",
+          "occurrence": 1,
+          "senseId": "default.value"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "who-runs-it",
+      "lessonId": "vercel-hosts-web",
+      "anchors": [
+        {
+          "quote": "构建",
+          "occurrence": 1,
+          "senseId": "build.action"
+        },
+        {
+          "quote": "产物",
+          "occurrence": 1,
+          "senseId": "artifact.build"
+        },
+        {
+          "quote": "路径",
+          "occurrence": 1,
+          "senseId": "path.location"
+        },
+        {
+          "quote": "处理",
+          "occurrence": 1,
+          "senseId": "handle.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-before-zero",
+      "unitId": "who-runs-it",
+      "lessonId": "vite-dev-server",
+      "anchors": [
+        {
+          "quote": "启动",
+          "occurrence": 1,
+          "senseId": "run.action"
+        },
+        {
+          "quote": "更新",
+          "occurrence": 1,
+          "senseId": "update.action"
+        },
+        {
+          "quote": "允许",
+          "occurrence": 1,
+          "senseId": "allow.permit"
+        },
+        {
+          "quote": "失败",
+          "occurrence": 1,
+          "senseId": "fail.status"
+        }
+      ]
+    }
+  ]
+}

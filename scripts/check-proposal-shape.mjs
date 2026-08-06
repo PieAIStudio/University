@@ -31,7 +31,11 @@ const ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const args = process.argv.slice(2);
 const flagIndex = args.indexOf("--min-lessons");
 const minLessons = flagIndex === -1 ? 1 : Number(args[flagIndex + 1]);
-const paths = args.filter((value, index) => value !== "--min-lessons" && index !== flagIndex + 1);
+// Guard the "flag absent" case explicitly. With flagIndex === -1 the value slot
+// is index 0, so a positional filter would silently eat the first file path and
+// the script would print usage for a perfectly valid invocation.
+const valueIndex = flagIndex === -1 ? -1 : flagIndex + 1;
+const paths = args.filter((value, index) => index !== flagIndex && index !== valueIndex);
 if (paths.length === 0 || !Number.isInteger(minLessons) || minLessons < 1) {
   console.error(
     "usage: node scripts/check-proposal-shape.mjs <proposal.json> [...] [--min-lessons <n>]",
@@ -52,10 +56,24 @@ for (const path of paths) {
 }
 process.exit(failed ? 1 : 0);
 
+/**
+ * Both proposal shapes carry the same lesson objects, so both get the same
+ * checks. Only reading `course` used to mean add-lessons proposals — the normal
+ * way a course grows after day one — passed the gate by not being looked at,
+ * which is the worst possible way to pass.
+ */
+function unitsOf(proposal) {
+  if (proposal.course) return proposal.course.units ?? [];
+  if (proposal.unit && proposal.lessons) return [{ ...proposal.unit, lessons: proposal.lessons }];
+  return null;
+}
+
 function check(proposal) {
   const problems = [];
-  const course = proposal.course;
-  if (!course) return ["no `course` key — this checker only reads course-creation proposals"];
+  const units = unitsOf(proposal);
+  if (!units) {
+    return ["neither a `course` nor a `unit` + `lessons` pair — not a course proposal"];
+  }
 
   const lessonIds = new Set();
   const cardIds = new Set();
@@ -68,7 +86,7 @@ function check(proposal) {
     set.add(id);
   };
 
-  for (const unit of course.units ?? []) {
+  for (const unit of units) {
     for (const lesson of unit.lessons ?? []) {
       lessonCount += 1;
       const where = `lesson ${lesson.id}`;
@@ -118,7 +136,11 @@ function check(proposal) {
       `course has only ${lessonCount} lessons; this run requires at least ${minLessons}`,
     );
   }
-  if ((course.objectives ?? []).length < 3) problems.push("course needs at least 3 objectives");
+  // Objectives belong to the course manifest, which an add-lessons proposal
+  // does not carry and must not be asked to restate.
+  if (proposal.course && (proposal.course.objectives ?? []).length < 3) {
+    problems.push("course needs at least 3 objectives");
+  }
   return problems;
 }
 

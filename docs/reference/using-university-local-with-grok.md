@@ -243,6 +243,140 @@ pnpm university course reactivate --study <study-id> --course <course-id> --snap
 
 如果 AI 找不到可靠源码证据，它应保存为 `draft`，而不是把猜测放入复习队列。事实、推论、个人理解三者必须明确区分。
 
+### 沟通教练怎么用
+
+AI 像老师，但有时你要的不是「说得对不对」，而是「这句话听的人能不能接住」。那是沟通教练的工作，不是教学技能的工作。
+
+它是 `.agents/skills/comm-coach`，一条指向 PGS 共享技能库的符号链接，和别的共享技能一样集中管理。三种模式，选最轻的一种就够，不要一次全开：
+
+- **表达门诊**：手里有一段现成文字，只评这一段。
+- **角色扮演**：短回合对练，对方是你指定的角色。
+- **复述教学**：事实已经核实过了，只评清晰度、结构和表达缺口。
+
+**顺序是硬的。** 事实归 `teach-from-study`，表达归 `comm-coach`。事实还没过关就谈表达，会把错误说得更顺——那是误导，不是辅导。`teach-from-study` 的契约写得很清楚：需要排练或表达反馈时，先对着证据核实，过关了再调沟通教练；两边默认不同时跑。事实错误不是表达问题。
+
+它**默认不自动落盘**，这是刻意设计不是缺陷——一个会自动存你写的东西的教练，会让你写的时候开始自我审查。要保存走 `knowledge-node` / `capture`。
+
+它**不扫描整段对话**，只看你明确交给它的那一段。没有选中、没有贴上，就等于没交给它。
+
+三个可直接复制的调用示例：
+
+```text
+用 comm-coach 做表达门诊。
+目标：让读者三秒内知道我要他做什么。
+受众：同组的工程师。
+约束：不超过 5 行，不要客套，不要开头寒暄。
+这段话：
+「改完之后记得跑 pnpm verify，绿了再提 PR。」
+```
+
+```text
+用 comm-coach 角色扮演。
+目标：向同事说清为什么先 commit 再改下一处。
+受众：刚接手仓库、习惯本地攒一大包再提交的同学。
+约束：每轮只回一两句；你来扮演那个同学，先问我一个具体问题。
+我先开口：
+「我想先把边界修好再一起提交，不然 diff 里分不清哪次改坏的。」
+```
+
+```text
+teach-from-study 已经核实过我对「snapshot 与 live 源码边界」的复述，事实没问题。
+现在用 comm-coach 做复述教学：只评清晰度与结构，不要再查事实。
+目标：讲给下周才进组的人听懂。
+受众：新人。
+约束：先说一个具体优点，再给最多两条改法，并让我重说一遍。
+我的复述：
+「快照是盖过章的图纸；编辑器里没提交的改动还在白板上，不能当教材引用。」
+```
+
+产品侧只负责**准备素材**，不自己点评——Web 端没有模型，也不该有：
+
+- 课程页练习经宿主批改后，按钮「让 AI 点评我这段表达」会把点评包复制到剪贴板；
+- 命令行同样只产出可粘贴的包：
+
+```bash
+pnpm university express review --study <study-id> [--limit <n>] [--goal <text>]
+```
+
+把包贴进任意 AI 宿主，由 `comm-coach` 接手。它评的是你怎么说，不改判对错。
+
+### 英文模式怎么用
+
+读课文时顺带认词。默认**关闭**。开关在课程页顶部，**只在这节课有标注时才出现**——没标注的课不显示空开关，免得你点了什么都没有。
+
+它是**旁注层**，不改课文一个字节。标注按 `contentRevision` + 内容哈希绑定；哈希对不上就当没标注渲染，绝不拿旧位置去标新课文。因此开关英文模式**永远不会**影响课程完成状态和复习排期——完成与排期绑在课文 revision 上，旁注不进那条账。
+
+点词看到：音标、词性、中文释义、用法、朗读。**朗读只用本机语音**（`localService === true`）。系统里没装英语语音时按钮置灰并说明原因，不联网合成——这和课程内容里外部图片被拦是同一条边界：页面自己不往外送要渲染的字。
+
+词库按**词义**索引，不按拼写：`commit` 在 Git 和在数据库里是两条不同的词（例如 `commit.git`），一份拼写对上两套释义只会教错一半。
+
+怎么给课加标注：
+
+```bash
+pnpm university language annotate --study <study-id> --input <overlay.json>
+```
+
+`overlay.json` 的形状：
+
+```json
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "lessons": [
+    {
+      "courseId": "foundations-terrain",
+      "unitId": "reading-code",
+      "lessonId": "snapshot-vs-live",
+      "anchors": [
+        { "quote": "commit", "occurrence": 1, "senseId": "commit.git" }
+      ]
+    }
+  ]
+}
+```
+
+`occurrence` 是第几次出现（从 1 起）；`senseId` 必须已在词表里。落在**代码块、行内代码、链接、HTML 标签、表格**里的锚点会被拒绝——防止标注弄坏代码。写不进去的锚点会在回执里标 `rejected`，不会静默假装标上了。
+
+### 学这个项目自己（airlock）
+
+想把 UniversityLocal 自己注册成 study 会直接失败：`assertSeparatedRoots` 不允许学习数据目录和被学项目目录互相包含。本仓的 `studies/` 就在仓库里，源和成绩册叠在同一棵树上，守卫会拒绝。
+
+**这条守卫不能放松。** 它守的是真实的数据边界——分析跑过的源码不能和成绩册、笔记缠在一起；缠在一起之后，刷新、归档、误删都会波及另一边。
+
+解法是 airlock：仓外一份封存的、只读的、钉在某个确切提交上的副本。提升、体检、看状态（命令形状与 CLI HELP 一致）：
+
+```bash
+pnpm university airlock promote --airlock <绝对路径> --upstream <绝对路径> [--ref <git-ref>] [--acknowledge-dirty-excluded]
+pnpm university airlock doctor --airlock <绝对路径> [--study <study-id>]
+pnpm university airlock status --airlock <绝对路径> [--study <study-id>]
+```
+
+`--upstream` 只在 `promote` 上需要。加上 `--study` 会多出**第三只钟**：前两只是「上游走到哪」和「airlock 钉在哪」，第三只是「这个 study 的课程用的是哪个快照、跟 airlock 对不对得上」。只看前两只会漏掉一种情况——封条完好、上游也不远，但课程还挂在两次提升之前的快照上。同样的三只钟也显示在 Web 的 study 页面上。通过后用 **airlock 路径**（不是 live 仓库路径）注册 study：
+
+```bash
+pnpm university study create --study <study-id> --title <text> --source <airlock 绝对路径> [--ref <git-ref>]
+```
+
+**airlock 落后于 live 是特性不是缺陷。** 教材讲的永远是「上一次提交」，不是你编辑器里那份。使用纪律：改代码 → commit → `airlock promote` → 再走 `refresh-study`；不要把手伸进 airlock 直接改，改了 `doctor` 会判 blocked，只能重新 promote 还原。
+
+导入门禁是**拒绝**不是跳过：仓库里真跟踪了密钥、`.env`、sqlite 等，工具不会绕开接着导——因为 `.gitignore` 对已跟踪文件无效。先把它们从跟踪中拿掉并提交，再重新提升。
+
+### 讲历史的课：pin 住它
+
+有的课**故意**讲旧代码——某个 bug 修好之前长什么样、某次重构之前架构是怎么分层的。这种课永远追不上最新提交，而 `refresh audit` 每跑一次就会把它判成 stale。一个永远清不掉的警告，最后的效果是让人把所有警告都当没看见。
+
+所以课程有一个「当前性」声明：
+
+```bash
+pnpm university course pin --study <study-id> --course <course-id>
+pnpm university course follow --study <study-id> --course <course-id>
+```
+
+- `follow`（默认）：这门课教的是当前的代码，落后了就该被判 stale、该被修订。
+- `pin`：这门课讲的是历史，审计不再动它的状态。
+
+**pin 不是用来堵嘴的。** 已经 stale 的课不能直接 pin——那等于给一门确实烂掉的课贴一张「这是故意的」标签。先修订或退休，再 pin。
+
 ### 被学习项目更新后刷新
 
 先在被学习项目完成并提交你希望学习的代码：
