@@ -93,8 +93,8 @@ interface LearningFocus {
 
 /**
  * Prefers human titles, but never hides a focus that points at nothing. A long
- * run is summarised by where it starts and how much is left, because the banner
- * answers "what am I on now", not "what did I sign up for".
+ * run is summarised by where it starts and how long the pinned route is — not
+ * the study's total course count (that lives on the shelf).
  */
 function focusLabel(focus: LearningFocus, studies: readonly StudySummary[]): string {
   const study = studies.find((candidate) => candidate.id === focus.studyId);
@@ -103,7 +103,7 @@ function focusLabel(focus: LearningFocus, studies: readonly StudySummary[]): str
   if (!head) return studyLabel;
   return rest.length === 0
     ? `${studyLabel} · ${head}`
-    : `${studyLabel} · ${head} 起，共 ${focus.courseIds.length} 门`;
+    : `${studyLabel} · ${head} 起 · 主攻路线 ${focus.courseIds.length} 门`;
 }
 
 interface LessonProgress {
@@ -172,15 +172,30 @@ interface EvidenceView {
 }
 
 /**
- * What to paste into an editor or hand to an AI host to go read this properly.
- * The panel is for recognising a reference in passing; real study happens
- * elsewhere, so the useful thing it can offer is the coordinates.
+ * Clipboard payload for editor jump (Cmd/Ctrl+P). Start line only — VS Code–
+ * style Quick Open accepts `path:line`, not `path:7-9` or a trailing commit.
+ * Commit pin and full line range stay in the post-copy hint, not the paste.
  */
-function evidenceLocator(reference: EvidenceView): string {
-  const lines = reference.lineStart
-    ? `:${reference.lineStart}${reference.lineEnd ? `-${reference.lineEnd}` : ""}`
-    : "";
-  return `${reference.sourcePath}${lines} @ ${reference.sourceCommit.slice(0, 12)}`;
+function evidenceEditorLocator(reference: EvidenceView): string {
+  return reference.lineStart
+    ? `${reference.sourcePath}:${reference.lineStart}`
+    : reference.sourcePath;
+}
+
+function evidenceRangeLabel(reference: EvidenceView): string | null {
+  if (!reference.lineStart) return null;
+  if (reference.lineEnd && reference.lineEnd !== reference.lineStart) {
+    return `L${reference.lineStart}–${reference.lineEnd}`;
+  }
+  return `L${reference.lineStart}`;
+}
+
+function editorJumpShortcutLabel(): string {
+  const platform =
+    typeof navigator !== "undefined"
+      ? (navigator.userAgentData?.platform ?? navigator.platform ?? "")
+      : "";
+  return /mac|iphone|ipad/i.test(platform) ? "Cmd+P" : "Ctrl+P";
 }
 
 export interface EvidenceSnippetView {
@@ -216,12 +231,100 @@ export interface CardRevealPayload extends RetrievalAttemptDraft {
  * answer until the attempt is correct or the learner has tried twice, so a
  * single wrong guess does not end the retrieval practice.
  */
+interface HostExerciseGradeView {
+  readonly passed: boolean;
+  readonly evaluation: string;
+  readonly extensions: readonly string[];
+  readonly host: string | null;
+  readonly learnerAnswer: string | null;
+  readonly occurredAt: string;
+}
+
 interface ExerciseAttemptResult {
   readonly correct: boolean;
   readonly attemptCount: number;
   readonly score: number;
   readonly maxScore: number;
+  readonly awaitingHostGrade?: boolean;
+  readonly hostGrade?: HostExerciseGradeView | null;
   readonly expectedAnswer?: string;
+}
+
+/**
+ * Host-agnostic packet: AI judges pass/fail, teaches, and writes back via CLI.
+ */
+export function buildExerciseCoachingPacket(input: {
+  readonly locator: LessonLocator;
+  readonly exercise: {
+    readonly id: string;
+    readonly kind: string;
+    readonly title: string;
+    readonly prompt: string;
+    readonly contentRevision: number;
+  };
+  readonly answer: string;
+  readonly result: ExerciseAttemptResult;
+}): string {
+  const { locator, exercise, answer, result } = input;
+  const commandId = crypto.randomUUID();
+  const gradeJson = {
+    schemaVersion: 1,
+    commandId,
+    contentRevision: exercise.contentRevision,
+    passed: true,
+    evaluation: "（在此写对学生的评估：对错原因 + 讲解，中文）",
+    extensions: ["（引申知识点 1）", "（引申知识点 2）"],
+    learnerAnswer: answer,
+    host: "ai-host",
+    courseId: locator.courseId,
+    unitId: locator.unitId,
+    lessonId: locator.lessonId,
+    exerciseId: exercise.id,
+  };
+  return [
+    "# UniversityLocal 练习答疑包（AI 判分 + 写回）",
+    "",
+    "## 给 AI 助手的任务（请直接执行）",
+    "你是本地学习教练。网页**不会**用字符串比对判对错。",
+    "请你：",
+    "1. **判定**学习者答案是否达到题目要求（允许合理表述差异，勿因多写解释就判错）。",
+    "2. **讲解**：对错原因、易混点，用白话。",
+    "3. **引申** 1～3 个相关知识点（extensions）。",
+    "4. **写回** UniversityLocal（见文末命令），否则 Web 不会显示你的评估、课也不会完成。",
+    "",
+    "不要假设你是某一个品牌的 IDE。",
+    "",
+    "## 题目上下文",
+    `- studyId: \`${locator.studyId}\``,
+    `- courseId: \`${locator.courseId}\``,
+    `- unitId: \`${locator.unitId}\``,
+    `- lessonId: \`${locator.lessonId}\``,
+    `- exerciseId: \`${exercise.id}\``,
+    `- contentRevision: \`${exercise.contentRevision}\``,
+    `- exerciseTitle: ${exercise.title}`,
+    `- kind: \`${exercise.kind}\``,
+    `- prompt: ${JSON.stringify(exercise.prompt)}`,
+    `- learnerAnswer: ${JSON.stringify(answer)}`,
+    `- attemptCount: \`${result.attemptCount}\``,
+    "",
+    "## 写回步骤（必做，否则 Web 无评估）",
+    "1. 在 **UniversityLocal 项目根目录** 新建文件，例如 `/tmp/ul-host-grade.json`",
+    "2. 写入下面 JSON（改 `passed` / `evaluation` / `extensions` / `host`；**保留 commandId 与 contentRevision**）",
+    "3. 执行：",
+    "```bash",
+    `pnpm university exercise host-grade --study ${locator.studyId} --input /tmp/ul-host-grade.json`,
+    "```",
+    "4. 告诉学习者：回到浏览器刷新本课，即可看到评估。",
+    "",
+    "### 写回 JSON 模板",
+    "```json",
+    JSON.stringify(gradeJson, null, 2),
+    "```",
+    "",
+    "## 人类可读摘要",
+    "请判对错、讲解、引申，并按上面 CLI 写回 UniversityLocal。",
+    "",
+  ].join("\n");
 }
 
 interface LessonView {
@@ -238,6 +341,8 @@ interface LessonView {
       readonly title: string;
       readonly prompt: string;
       readonly contentRevision: number;
+      readonly awaitingHostGrade?: boolean;
+      readonly hostGrade?: HostExerciseGradeView | null;
     }[];
     readonly cards: readonly {
       readonly id: string;
@@ -608,12 +713,33 @@ function ExerciseBlock({
   const [result, setResult] = useState<ExerciseAttemptResult | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // `explain` exercises are self-assessed: the rubric arrives only after an
-  // answer has been written, and `met` is what the learner claims it covered.
-  const [rubric, setRubric] = useState<readonly string[] | null>(null);
-  const [met, setMet] = useState<readonly number[]>([]);
+  const [packetCopied, setPacketCopied] = useState(false);
+  const [packetCopyFailed, setPacketCopyFailed] = useState(false);
+  const [hostGrade, setHostGrade] = useState<HostExerciseGradeView | null>(
+    exercise.hostGrade ?? null,
+  );
   const isExplain = exercise.kind === "explain";
-  const solved = result?.correct === true;
+  const solved = hostGrade?.passed === true;
+
+  useEffect(() => {
+    setHostGrade(exercise.hostGrade ?? null);
+  }, [exercise.id, exercise.contentRevision, exercise.hostGrade]);
+
+  useEffect(() => {
+    if (!packetCopied) return;
+    const timer = setTimeout(() => setPacketCopied(false), 8_000);
+    return () => clearTimeout(timer);
+  }, [packetCopied]);
+
+  const hostCompleteNotified = useRef(false);
+  useEffect(() => {
+    hostCompleteNotified.current = false;
+  }, [exercise.id, exercise.contentRevision]);
+  useEffect(() => {
+    if (!solved || hostCompleteNotified.current) return;
+    hostCompleteNotified.current = true;
+    void onCompleted().catch(() => undefined);
+  }, [solved, onCompleted]);
 
   function post(action: "attempt" | "rubric", payload: Record<string, unknown>) {
     return fetch(`${lessonPath(locator)}/exercises/${exercise.id}/${action}`, {
@@ -623,38 +749,39 @@ function ExerciseBlock({
     });
   }
 
-  async function revealRubric() {
-    setPending(true);
-    setError(null);
+  async function copyCoachingPacket(attempt: ExerciseAttemptResult, submittedAnswer: string) {
+    const packet = buildExerciseCoachingPacket({
+      locator,
+      exercise,
+      answer: submittedAnswer,
+      result: attempt,
+    });
     try {
-      const body = await readJson<{ readonly rubric: readonly string[] }>(await post("rubric", {}));
-      setRubric(body.rubric);
-      setMet([]);
-    } catch (reason) {
-      const message = reason instanceof Error ? reason.message : "暂时无法读取评分标准";
-      setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);
-      if (isStaleTokenFailure(message)) await onRefresh().catch(() => undefined);
-    } finally {
-      setPending(false);
+      if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(packet);
+      setPacketCopied(true);
+      setPacketCopyFailed(false);
+    } catch {
+      setPacketCopied(false);
+      setPacketCopyFailed(true);
     }
   }
 
   async function submit() {
     setPending(true);
     setError(null);
+    setPacketCopied(false);
+    setPacketCopyFailed(false);
+    const submittedAnswer = answer;
     try {
       const body = await readJson<ExerciseAttemptResult>(
         await post("attempt", {
           commandId: crypto.randomUUID(),
-          ...(isExplain ? { met } : {}),
         }),
       );
       setResult(body);
-      if (body.correct) {
-        // The attempt is already recorded server-side; a refresh failure is a
-        // display problem, not a lost answer.
-        await onCompleted().catch(() => setError("答案已记录，但界面没能刷新，请重新加载页面。"));
-      }
+      if (body.hostGrade) setHostGrade(body.hostGrade);
+      await copyCoachingPacket(body, submittedAnswer);
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : "暂时无法提交练习";
       setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);
@@ -664,10 +791,16 @@ function ExerciseBlock({
     }
   }
 
-  function retry() {
-    setRubric(null);
-    setMet([]);
-    setResult(null);
+  async function refreshHostGrade() {
+    setPending(true);
+    setError(null);
+    try {
+      await onRefresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "刷新失败");
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -680,85 +813,97 @@ function ExerciseBlock({
           onChange={(event) => {
             setAnswer(event.target.value);
             setResult(null);
+            setPacketCopied(false);
+            setPacketCopyFailed(false);
           }}
-          placeholder={isExplain ? "用自己的话完整解释一遍。" : "用自己的话先回答。"}
+          placeholder={
+            isExplain
+              ? "用自己的话完整解释；对错与点评由 AI 宿主完成。"
+              : "用自己的话回答；对错由 AI 宿主判定，不要求一字不差。"
+          }
           rows={isExplain ? 6 : 3}
-          // Editing the answer after the rubric is on screen would turn
-          // self-assessment into copying, so the text is frozen once revealed.
-          readOnly={rubric !== null}
+          readOnly={solved}
         />
       </label>
 
-      {isExplain && rubric === null ? (
-        <GameButton
-          variant="primary"
-          onClick={() => void revealRubric()}
-          disabled={!answer.trim() || pending}
-        >
-          {pending ? "正在读取…" : "写完了，看评分标准"}
-        </GameButton>
-      ) : null}
+      <GameButton
+        variant="primary"
+        onClick={() => void submit()}
+        disabled={!answer.trim() || pending || solved}
+      >
+        {pending ? "正在提交…" : solved ? "已完成" : "提交并复制给 AI 判"}
+      </GameButton>
 
-      {rubric !== null ? (
-        <fieldset className="rubric-field" disabled={solved || pending}>
-          <legend>对照评分标准，勾选你真的答到的点</legend>
-          {rubric.map((point, index) => (
-            <label key={point} className="rubric-point">
-              <input
-                type="checkbox"
-                checked={met.includes(index)}
-                onChange={(event) =>
-                  setMet((current) =>
-                    event.target.checked
-                      ? [...current, index]
-                      : current.filter((value) => value !== index),
-                  )
-                }
-              />
-              <span>{point}</span>
-            </label>
-          ))}
-        </fieldset>
-      ) : null}
-
-      {!isExplain || rubric !== null ? (
-        <GameButton
-          variant="primary"
-          onClick={() => void submit()}
-          disabled={!answer.trim() || pending || solved}
-        >
-          {pending ? "正在提交…" : solved ? "已完成" : isExplain ? "提交自评" : "提交答案"}
-        </GameButton>
-      ) : null}
-
-      {result ? (
-        <GameCallout
-          heading={
-            solved
-              ? "回答正确"
-              : isExplain
-                ? `${result.score}/${result.maxScore} 个要点`
-                : "这次还没答对"
-          }
-          tone={solved ? "success" : "warning"}
-          role="status"
-        >
-          {isExplain
-            ? solved
-              ? "课程进度已经保存。"
-              : "还有要点没答到。回到课文补上缺的部分，再重新解释一遍。"
-            : result.expectedAnswer !== undefined
-              ? `参考答案：${result.expectedAnswer}${
-                  solved ? "。课程进度已经保存。" : "。看清差异后可以修改并重试。"
-                }`
-              : "先不看答案，再自己回想一次。回到上面的课文找依据，然后重新作答；再答错一次会给出参考答案。"}
+      {result && !hostGrade?.passed ? (
+        <GameCallout heading="答案已记录 · 等 AI 评估" tone="warning" role="status">
+          本页不做字符串/自评判分。请把答疑包贴到任意 AI 宿主；写回后点「刷新评估」。
         </GameCallout>
       ) : null}
 
-      {isExplain && rubric !== null && !solved ? (
-        <GameButton variant="ghost" onClick={retry} disabled={pending}>
-          重新作答
-        </GameButton>
+      {hostGrade ? (
+        <div
+          className={`host-grade host-grade--${hostGrade.passed ? "pass" : "fail"}`}
+          role="region"
+          aria-label="AI 宿主评估"
+        >
+          <p className="host-grade__eyebrow">
+            AI 评估 · {hostGrade.passed ? "通过" : "未通过"}
+            {hostGrade.host ? ` · ${hostGrade.host}` : ""}
+          </p>
+          <div className="host-grade__body markdown-body">
+            <MarkdownContent>{hostGrade.evaluation}</MarkdownContent>
+          </div>
+          {hostGrade.extensions.length > 0 ? (
+            <div className="host-grade__extensions">
+              <p className="eyebrow">引申</p>
+              <ul>
+                {hostGrade.extensions.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {result && !hostGrade?.passed ? (
+        <div className="coaching-packet" role="region" aria-label="答疑包与粘贴步骤">
+          <p className="coaching-packet__status">
+            {packetCopied
+              ? "已复制「练习答疑包」到剪贴板"
+              : packetCopyFailed
+                ? "自动复制失败，请点下面按钮手动复制"
+                : "复制答疑包 → 任意 AI 宿主判分并写回"}
+          </p>
+          <ol className="coaching-packet__steps">
+            <li>打开 AI 助手（Grok Build、Claude Code、Antigravity、Codex 等）。</li>
+            <li>新开一条对话，粘贴（⌘V / Ctrl+V）→ 发送。</li>
+            <li>让 AI 按包内说明写 `/tmp/ul-host-grade.json` 并执行 host-grade 命令。</li>
+            <li>回到本页点「刷新评估」查看结果。</li>
+          </ol>
+          <div className="coaching-packet__actions">
+            <GameButton
+              variant="secondary"
+              onClick={() =>
+                void copyCoachingPacket(
+                  result ?? {
+                    correct: false,
+                    attemptCount: 0,
+                    score: 0,
+                    maxScore: 1,
+                  },
+                  answer,
+                )
+              }
+              disabled={pending || !answer.trim()}
+            >
+              {packetCopied ? "已复制，可再复制" : "复制答疑包"}
+            </GameButton>
+            <GameButton variant="ghost" onClick={() => void refreshHostGrade()} disabled={pending}>
+              刷新评估
+            </GameButton>
+          </div>
+        </div>
       ) : null}
 
       {error ? (
@@ -821,28 +966,59 @@ export function EvidenceCode({
   );
 }
 
-/** Copies the coordinates so they can be pasted into an editor or an AI host. */
-function CopyLocatorButton({ locator }: { readonly locator: string }) {
+/**
+ * Copies a clean editor locator; shows commit pin + how-to beside the button.
+ * Keeping version out of the clipboard is deliberate — paste must work in Quick Open.
+ */
+function CopyLocatorButton({ reference }: { readonly reference: EvidenceView }) {
   const [copied, setCopied] = useState(false);
+  const locator = evidenceEditorLocator(reference);
+  const range = evidenceRangeLabel(reference);
+  const commitShort = reference.sourceCommit.slice(0, 12);
+  const jumpKey = editorJumpShortcutLabel();
+
   useEffect(() => {
     if (!copied) return;
-    const timer = setTimeout(() => setCopied(false), 1600);
+    const timer = setTimeout(() => setCopied(false), 4500);
     return () => clearTimeout(timer);
   }, [copied]);
+
   return (
-    <button
-      type="button"
-      className="evidence-item__copy"
-      title={locator}
-      onClick={() => {
-        void navigator.clipboard?.writeText(locator).then(
-          () => setCopied(true),
-          () => setCopied(false),
-        );
-      }}
-    >
-      {copied ? "已复制位置" : "复制位置"}
-    </button>
+    <div className="evidence-item__copy-wrap">
+      <button
+        type="button"
+        className="evidence-item__copy"
+        title={`复制 ${locator}，供编辑器 ${jumpKey} 跳转`}
+        aria-describedby={copied ? `copy-hint-${locator}` : undefined}
+        onClick={() => {
+          void navigator.clipboard?.writeText(locator).then(
+            () => setCopied(true),
+            () => setCopied(false),
+          );
+        }}
+      >
+        {copied ? "已复制" : "复制位置"}
+      </button>
+      {copied ? (
+        <p
+          className="evidence-item__copy-hint"
+          id={`copy-hint-${locator}`}
+          role="status"
+          aria-live="polite"
+        >
+          <span className="evidence-item__copy-hint-line">
+            已复制 <code>{locator}</code>
+          </span>
+          <span className="evidence-item__copy-hint-line">
+            {range ? `证据范围 ${range} · ` : null}
+            钉在提交 <code>{commitShort}</code>
+          </span>
+          <span className="evidence-item__copy-hint-line">
+            在被学项目工作区按 {jumpKey}，粘贴后回车即可跳转
+          </span>
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -928,7 +1104,7 @@ function EvidenceRail({
                 <strong aria-hidden="true">{expanded ? "收起" : "查看"}</strong>
               </button>
               {reference.note ? <p className="evidence-item__note">{reference.note}</p> : null}
-              <CopyLocatorButton locator={evidenceLocator(reference)} />
+              <CopyLocatorButton reference={reference} />
               {expanded ? (
                 <div className="evidence-snippet" id={panelId} aria-live="polite">
                   {loading ? <p>正在从固定提交读取源码…</p> : null}

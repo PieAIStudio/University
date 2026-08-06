@@ -205,6 +205,17 @@ export interface RecordExerciseAttemptInput {
   readonly occurredAt?: Date;
 }
 
+/** Latest host (AI) grade written back for an exercise at one content revision. */
+export interface StoredHostExerciseGrade {
+  readonly passed: boolean;
+  readonly evaluation: string;
+  readonly extensions: readonly string[];
+  readonly host: string | null;
+  readonly learnerAnswer: string | null;
+  readonly occurredAt: Date;
+  readonly attemptId: string;
+}
+
 export interface RecordRetrievalAttemptInput {
   readonly commandId: string;
   readonly cardKey: ReviewContentKey;
@@ -268,6 +279,10 @@ export interface LearningStore {
   recordExerciseAttempt(input: RecordExerciseAttemptInput): string;
   countExerciseAttempts(exerciseKey: ExerciseContentKey, contentRevision: number): number;
   hasCorrectExerciseAttempt(exerciseKey: ExerciseContentKey, contentRevision: number): boolean;
+  getLatestHostExerciseGrade(
+    exerciseKey: ExerciseContentKey,
+    contentRevision: number,
+  ): StoredHostExerciseGrade | null;
   transaction<T>(operation: () => T): T;
   recordRetrievalAttempt(input: RecordRetrievalAttemptInput): StoredRetrievalAttempt;
   getRetrievalAttempt(attemptId: string): StoredRetrievalAttempt | null;

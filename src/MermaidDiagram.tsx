@@ -31,10 +31,15 @@ async function loadMermaidRenderer(): Promise<MermaidRenderer> {
   mermaidRendererPromise ??= import("mermaid")
     .then(({ default: mermaid }) => {
       mermaid.initialize({
-        securityLevel: "strict",
+        // antiscript: allow HTML labels (<br/>) that flowcharts need, still block scripts.
+        securityLevel: "antiscript",
         startOnLoad: false,
         suppressErrorRendering: true,
         theme: "dark",
+        flowchart: {
+          htmlLabels: true,
+          useMaxWidth: true,
+        },
       });
       return mermaid;
     })
@@ -73,10 +78,19 @@ function containsUnsafeCss(css: string): boolean {
   return targets.some((target) => !target.startsWith("#"));
 }
 
+/**
+ * Mermaid 11 flowchart SVGs embed HTML labels (`foreignObject` + real tags).
+ * That markup is not well-formed XML, so `image/svg+xml` DOMParser fails with
+ * "unexpected close tag" and the whole diagram falls back to source. Parse as
+ * HTML instead, then extract the root `<svg>`.
+ */
 function sanitizeRenderedSvg(svg: string): string {
-  const documentNode = new DOMParser().parseFromString(svg, "image/svg+xml");
-  const root = documentNode.documentElement;
-  if (root.localName !== "svg" || documentNode.querySelector("parsererror")) {
+  const htmlDocument = new DOMParser().parseFromString(
+    `<div id="university-mermaid-root">${svg}</div>`,
+    "text/html",
+  );
+  const root = htmlDocument.querySelector("#university-mermaid-root > svg");
+  if (!root) {
     throw new Error("Mermaid returned an invalid SVG document");
   }
 
@@ -91,20 +105,20 @@ function sanitizeRenderedSvg(svg: string): string {
       const localName = attribute.localName.toLowerCase();
       const value = attribute.value.trim();
       if (name.startsWith("on")) {
-        element.removeAttributeNode(attribute);
+        element.removeAttribute(attribute.name);
         continue;
       }
-      if (["href", "src", "srcset"].includes(localName) && !value.startsWith("#")) {
-        element.removeAttributeNode(attribute);
+      if (["href", "src", "srcset", "xlink:href"].includes(localName) && !value.startsWith("#")) {
+        element.removeAttribute(attribute.name);
         continue;
       }
       if ((name === "style" || /url\(/i.test(value)) && containsUnsafeCss(value)) {
-        element.removeAttributeNode(attribute);
+        element.removeAttribute(attribute.name);
       }
     }
   });
 
-  return new XMLSerializer().serializeToString(root);
+  return root.outerHTML;
 }
 
 export function MermaidDiagram({ source }: { readonly source: string }) {
@@ -138,11 +152,12 @@ export function MermaidDiagram({ source }: { readonly source: string }) {
         if (cancelled || version !== renderVersion.current) return;
 
         setState({ status: "ready", svg: sanitizeRenderedSvg(rendered.svg) });
-      } catch {
+      } catch (error) {
         if (cancelled || version !== renderVersion.current) return;
+        const detail = error instanceof Error ? error.message : "unknown error";
         setState({
           status: "error",
-          message: "这张关系图暂时无法渲染。原始 Mermaid 源码已保留，可以继续阅读或修复。",
+          message: `这张关系图暂时无法渲染（${detail}）。原始 Mermaid 源码已保留，可以继续阅读或修复。`,
         });
       }
     }

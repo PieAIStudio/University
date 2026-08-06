@@ -44,6 +44,7 @@ import {
   type ReviewCardInput,
   type ReviewReceipt,
   type StoredCardState,
+  type StoredHostExerciseGrade,
   type StoredLessonProgress,
   type StoredLearningSession,
   type StoredRetrievalAttempt,
@@ -1493,6 +1494,67 @@ export class SqliteLearningStore implements LearningStore {
       `)
       .get(exerciseKey, contentRevision) as { readonly solved: number } | undefined;
     return row !== undefined;
+  }
+
+  /**
+   * Newest host-grade attempt at this revision. Learner-submit rows (phase
+   * learner-submit, score always 0) are skipped so the UI can show the AI
+   * evaluation without inventing a second table.
+   */
+  getLatestHostExerciseGrade(
+    exerciseKey: ExerciseContentKey,
+    contentRevision: number,
+  ): StoredHostExerciseGrade | null {
+    parseExerciseContentKey(exerciseKey);
+    validateRevision(contentRevision);
+    const rows = this.#database
+      .prepare(`
+        SELECT attempt_id, score, max_score, response_json, occurred_at
+        FROM exercise_attempt
+        WHERE exercise_id = ? AND content_revision = ?
+        ORDER BY occurred_at DESC
+        LIMIT 40
+      `)
+      .all(exerciseKey, contentRevision) as Array<{
+      readonly attempt_id: string;
+      readonly score: number;
+      readonly max_score: number;
+      readonly response_json: string;
+      readonly occurred_at: number;
+    }>;
+    for (const row of rows) {
+      let response: unknown;
+      try {
+        response = JSON.parse(row.response_json) as unknown;
+      } catch {
+        continue;
+      }
+      if (!response || typeof response !== "object") continue;
+      const body = response as Record<string, unknown>;
+      if (body.phase !== "host-grade") continue;
+      const evaluation = typeof body.evaluation === "string" ? body.evaluation.trim() : "";
+      if (!evaluation) continue;
+      const extensions = Array.isArray(body.extensions)
+        ? body.extensions.filter(
+            (item): item is string => typeof item === "string" && item.trim().length > 0,
+          )
+        : [];
+      return {
+        passed: row.score >= row.max_score,
+        evaluation,
+        extensions,
+        host: typeof body.host === "string" && body.host.trim() ? body.host.trim() : null,
+        learnerAnswer:
+          typeof body.answer === "string"
+            ? body.answer
+            : typeof body.learnerAnswer === "string"
+              ? body.learnerAnswer
+              : null,
+        occurredAt: new Date(row.occurred_at),
+        attemptId: row.attempt_id,
+      };
+    }
+    return null;
   }
 
   recordLessonProgress(input: RecordLessonProgressInput): string {

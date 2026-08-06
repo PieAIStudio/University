@@ -886,6 +886,91 @@ summary:focus-visible,
   margin-top: 18px;
 }
 
+.coaching-packet {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(247, 211, 160, 0.28);
+  border-radius: 12px;
+  background: rgba(247, 211, 160, 0.07);
+}
+
+.coaching-packet__status {
+  margin: 0 0 10px;
+  color: #f7d3a0;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.coaching-packet__steps {
+  margin: 0 0 10px;
+  padding-left: 1.25rem;
+  color: rgba(255, 245, 232, 0.88);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.coaching-packet__steps li + li {
+  margin-top: 4px;
+}
+
+.coaching-packet__note {
+  margin: 0 0 12px;
+  color: rgba(255, 245, 232, 0.62);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.coaching-packet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.host-grade {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(247, 211, 160, 0.28);
+  background: rgba(247, 211, 160, 0.08);
+}
+
+.host-grade--pass {
+  border-color: rgba(120, 200, 140, 0.45);
+  background: rgba(80, 160, 100, 0.12);
+}
+
+.host-grade--fail {
+  border-color: rgba(230, 150, 100, 0.4);
+  background: rgba(160, 90, 50, 0.12);
+}
+
+.host-grade__eyebrow {
+  margin: 0 0 10px;
+  color: #f7d3a0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.host-grade__body {
+  color: rgba(255, 245, 232, 0.9);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.host-grade__extensions {
+  margin-top: 12px;
+}
+
+.host-grade__extensions ul {
+  margin: 6px 0 0;
+  padding-left: 1.2rem;
+  color: rgba(255, 245, 232, 0.82);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
 .lesson-practice {
   display: grid;
   gap: 18px;
@@ -933,9 +1018,12 @@ summary:focus-visible,
   line-height: 1.5;
 }
 
+.evidence-item__copy-wrap {
+  margin-top: 8px;
+}
+
 .evidence-item__copy {
   appearance: none;
-  margin-top: 8px;
   border: 1px solid var(--campus-rule);
   border-radius: 999px;
   padding: 3px 11px;
@@ -952,6 +1040,30 @@ summary:focus-visible,
 .evidence-item__copy:hover {
   border-color: rgba(255, 245, 232, 0.4);
   color: rgba(255, 245, 232, 0.9);
+}
+
+.evidence-item__copy-hint {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(247, 211, 160, 0.22);
+  border-radius: 10px;
+  background: rgba(247, 211, 160, 0.06);
+  color: rgba(255, 245, 232, 0.78);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.evidence-item__copy-hint-line {
+  display: block;
+}
+
+.evidence-item__copy-hint-line + .evidence-item__copy-hint-line {
+  margin-top: 3px;
+}
+
+.evidence-item__copy-hint code {
+  color: #f7d3a0;
+  font-size: 0.72rem;
 }
 
 .evidence-item__trigger {

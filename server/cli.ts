@@ -29,6 +29,12 @@ import {
   inspectLearningSession,
   startLearningSession,
 } from "./workflows/session.js";
+import {
+  applyHostExerciseGrade,
+  HostExerciseGradeCliProposalSchema,
+} from "./workflows/host-exercise-grade.js";
+import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
+import { getStudyPaths } from "./studies/paths.js";
 
 const MAX_CAPTURE_FILE_BYTES = 1024 * 1024;
 const HELP = `UniversityLocal local host bridge
@@ -57,6 +63,7 @@ Commands:
   learner backup --study <study-id>
   learner reset --study <study-id> --confirm <study-id>
   learner restore --study <study-id> --from <exact-sqlite-path>
+  exercise host-grade --study <study-id> --input <grade.json>
 
 Notes:
   A local Git commit is sufficient; GitHub push is never required.
@@ -198,6 +205,12 @@ interface LearnerRestoreCommand {
   readonly fromPath: string;
 }
 
+interface ExerciseHostGradeCommand {
+  readonly kind: "exercise-host-grade";
+  readonly studyId: string;
+  readonly inputPath: string;
+}
+
 interface HelpCommand {
   readonly kind: "help";
 }
@@ -224,6 +237,7 @@ export type UniversityLocalCliCommand =
   | LearnerBackupCommand
   | LearnerResetCommand
   | LearnerRestoreCommand
+  | ExerciseHostGradeCommand
   | HelpCommand;
 
 export class CliUsageError extends Error {}
@@ -466,6 +480,18 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       };
     }
   }
+  if (
+    positionals.length === 2 &&
+    positionals[0] === "exercise" &&
+    positionals[1] === "host-grade"
+  ) {
+    rejectUnrelatedOptions(values, ["study", "input"]);
+    return {
+      kind: "exercise-host-grade",
+      studyId: required(values.study, "study"),
+      inputPath: required(values.input, "input"),
+    };
+  }
   if (positionals.length === 2 && positionals[0] === "learner") {
     if (positionals[1] === "backup") {
       rejectUnrelatedOptions(values, ["study"]);
@@ -702,6 +728,38 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         studyId: input.command.studyId,
         candidate: resolve(input.cwd ?? process.cwd(), input.command.fromPath),
       });
+    case "exercise-host-grade": {
+      const raw = readProposal(
+        resolve(input.cwd ?? process.cwd(), input.command.inputPath),
+        "Host exercise grade",
+      );
+      const proposal = HostExerciseGradeCliProposalSchema.parse(raw);
+      const store = new SqliteLearningStore(
+        getStudyPaths(config.studiesRoot, input.command.studyId).learner.database,
+      );
+      try {
+        const result = applyHostExerciseGrade({
+          studiesRoot: config.studiesRoot,
+          store,
+          route: {
+            studyId: input.command.studyId,
+            courseId: proposal.courseId,
+            unitId: proposal.unitId,
+            lessonId: proposal.lessonId,
+            exerciseId: proposal.exerciseId,
+          },
+          proposal,
+        });
+        return {
+          schemaVersion: 1 as const,
+          operation: "exercise-host-grade" as const,
+          studyId: input.command.studyId,
+          ...result,
+        };
+      } finally {
+        store.close();
+      }
+    }
   }
 }
 

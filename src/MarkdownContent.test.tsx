@@ -95,10 +95,14 @@ describe("MarkdownContent Mermaid rendering", () => {
     await waitFor(() => expect(container.querySelector("svg")).not.toBeNull());
 
     expect(mermaidMock.initialize).toHaveBeenCalledWith({
-      securityLevel: "strict",
+      securityLevel: "antiscript",
       startOnLoad: false,
       suppressErrorRendering: true,
       theme: "dark",
+      flowchart: {
+        htmlLabels: true,
+        useMaxWidth: true,
+      },
     });
     expect(mermaidMock.render).toHaveBeenCalledWith(
       expect.stringMatching(/^university-mermaid-[a-zA-Z0-9_-]+-render-1$/),

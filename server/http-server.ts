@@ -50,10 +50,9 @@ import {
 } from "./learning/types.js";
 import { getCoursePaths, getStudyPaths } from "./studies/paths.js";
 import { inspectStudyShelf, readStudy } from "./studies/repository.js";
+import { applyHostExerciseGrade } from "./workflows/host-exercise-grade.js";
 
 const DEFAULT_PORT = 4317;
-/** Wrong attempts allowed before the reference answer is shown. */
-const EXERCISE_ATTEMPTS_BEFORE_REVEAL = 2;
 /** Progress shown for a lesson that has been attempted but not yet solved. */
 const ATTEMPTED_LESSON_PROGRESS = 0.25;
 const MAX_JSON_BODY_BYTES = 64 * 1024;
@@ -71,12 +70,6 @@ const ExerciseAttemptSchema = z
      * against; the learner grades themselves against the rubric after writing.
      */
     met: z.array(z.number().int().nonnegative()).optional(),
-  })
-  .strict();
-const ExerciseRubricSchema = z
-  .object({
-    contentRevision: z.number().int().positive(),
-    answer: Answer,
   })
   .strict();
 const CardRevealSchema = z
@@ -776,12 +769,31 @@ function buildLessonView(
       progress: serializeProgress(store?.getLessonProgress(lessonKey) ?? null),
       exercises: lesson.exerciseIds.map((exerciseId) => {
         const exercise = requireActiveExercise(studiesRoot, { ...route, contentId: exerciseId });
+        const exerciseKey = exerciseContentKey({
+          courseId: route.courseId,
+          unitId: route.unitId,
+          lessonId: route.lessonId,
+          exerciseId: exercise.id,
+        });
+        const hostGrade = store?.getLatestHostExerciseGrade(exerciseKey, exercise.contentRevision);
+        const hostPassed = store?.hasCorrectExerciseAttempt(exerciseKey, exercise.contentRevision);
         return {
           id: exercise.id,
           kind: exercise.kind,
           title: exercise.title,
           prompt: exercise.prompt,
           contentRevision: exercise.contentRevision,
+          awaitingHostGrade: !hostPassed,
+          hostGrade: hostGrade
+            ? {
+                passed: hostGrade.passed,
+                evaluation: hostGrade.evaluation,
+                extensions: hostGrade.extensions,
+                host: hostGrade.host,
+                learnerAnswer: hostGrade.learnerAnswer,
+                occurredAt: hostGrade.occurredAt.toISOString(),
+              }
+            : null,
         };
       }),
       cards: lesson.cardIds.map((cardId) => {
@@ -1135,40 +1147,19 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         if (exercise.contentRevision !== body.contentRevision) {
           throw new HttpError(409, "Exercise content revision changed; reload before submitting");
         }
-        // Two grading routes, one attempt log. A short-answer exercise is
-        // graded against its reference string; an `explain` exercise has no
-        // reference string, so the learner writes first, reads the rubric, and
-        // then reports which points the answer covered.
-        let score: number;
-        let maxScore: number;
-        let met: readonly number[] | null = null;
-        if (exercise.kind === "short-answer") {
-          if (body.met !== undefined) {
-            throw new HttpError(400, "Rubric self-assessment does not apply to this exercise");
-          }
-          maxScore = 1;
-          score = normalizeAnswer(body.answer) === normalizeAnswer(exercise.expectedAnswer) ? 1 : 0;
-        } else {
-          if (body.met === undefined) {
-            throw new HttpError(
-              400,
-              `Read the rubric first: POST ${url.pathname.replace(/\/attempt$/, "/rubric")}`,
-            );
-          }
-          // Duplicated indices would otherwise let one covered point be
-          // reported several times and push the score past the rubric length.
-          const claimed = [...new Set(body.met)];
-          if (claimed.some((index) => index >= exercise.rubric.length)) {
-            throw new HttpError(
-              400,
-              "Rubric self-assessment refers to a point that does not exist",
-            );
-          }
-          met = claimed;
-          maxScore = exercise.rubric.length;
-          score = claimed.length;
+        // All exercise kinds: record learner answer only (score 0). Semantic
+        // pass/fail comes from AI host write-back (host-grade). Self-rubric is
+        // no longer used for completion.
+        if (body.met !== undefined) {
+          throw new HttpError(
+            400,
+            "Self-assessment is disabled; submit the answer and use host-grade write-back",
+          );
         }
-        const correct = score >= maxScore;
+        const maxScore = 1;
+        const score = 0;
+        const awaitingHostGrade = true;
+        const correct = false;
         const store = getStore(exerciseRoute.studyId, true)!;
         const exerciseKey = exerciseContentKey({
           courseId: exerciseRoute.courseId,
@@ -1182,19 +1173,10 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
           unitId: exerciseRoute.unitId,
           lessonId: exerciseRoute.lessonId,
         });
-        // Every exercise counts toward completion now that rubric exercises are
-        // self-assessed. While they were excluded, a lesson whose exercises were
-        // all rubric-based had nothing to measure: it could never complete, so
-        // its cards were never enrolled and the whole lesson was unreachable
-        // from the review queue.
         const gradable = lesson.exerciseIds.map((id) =>
           requireActiveExercise(config.studiesRoot, { ...exerciseRoute, contentId: id }),
         );
 
-        // One outcome, one transaction. Recording the attempt, advancing the
-        // lesson, and enrolling its cards used to be three independent writes,
-        // so a crash between them could leave a lesson marked complete with
-        // half its cards missing from the review queue.
         const attemptId = runWithCommandConflictMapped(
           "Command ID was already used for another exercise attempt",
           () =>
@@ -1205,102 +1187,113 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
                 contentRevision: exercise.contentRevision,
                 score,
                 maxScore,
-                response: met === null ? { answer: body.answer } : { answer: body.answer, met },
+                response: { phase: "learner-submit", answer: body.answer },
               });
-              // Read completion back from the attempt log rather than from "this
-              // answer was right": a lesson with three exercises is finished when
-              // all three have been answered correctly, in any order, across any
-              // number of sittings.
-              const solved = gradable.filter((candidate) =>
-                store.hasCorrectExerciseAttempt(
-                  exerciseContentKey({
-                    courseId: exerciseRoute.courseId,
-                    unitId: exerciseRoute.unitId,
-                    lessonId: exerciseRoute.lessonId,
-                    exerciseId: candidate.id,
-                  }),
-                  candidate.contentRevision,
-                ),
-              ).length;
-              const lessonComplete = gradable.length > 0 && solved === gradable.length;
               const previous = store.getLessonProgress(lessonKey);
               if (
                 previous?.contentRevision !== lesson.contentRevision ||
                 previous.status !== "completed"
               ) {
-                store.recordLessonProgress({
-                  lessonKey,
-                  contentRevision: lesson.contentRevision,
-                  status: lessonComplete ? "completed" : "in-progress",
-                  // The store requires an in-progress lesson to sit strictly
-                  // between 0 and 1, and the learner has just attempted
-                  // something, so an unsolved lesson shows the engagement
-                  // floor rather than a flat zero.
-                  progress: lessonComplete
-                    ? 1
-                    : Math.max(solved / gradable.length, ATTEMPTED_LESSON_PROGRESS),
-                });
-              }
-              if (lessonComplete) {
-                for (const cardId of lesson.cardIds) {
-                  const card = requireActiveCard(config.studiesRoot, {
-                    ...exerciseRoute,
-                    contentId: cardId,
-                  });
-                  store.ensureCard(
-                    cardContentKey({
+                const solved = gradable.filter((candidate) =>
+                  store.hasCorrectExerciseAttempt(
+                    exerciseContentKey({
                       courseId: exerciseRoute.courseId,
                       unitId: exerciseRoute.unitId,
                       lessonId: exerciseRoute.lessonId,
-                      cardId,
+                      exerciseId: candidate.id,
                     }),
-                    card.contentRevision,
-                  );
-                }
+                    candidate.contentRevision,
+                  ),
+                ).length;
+                store.recordLessonProgress({
+                  lessonKey,
+                  contentRevision: lesson.contentRevision,
+                  status: "in-progress",
+                  progress: Math.max(
+                    solved / Math.max(gradable.length, 1),
+                    ATTEMPTED_LESSON_PROGRESS,
+                  ),
+                });
               }
               return recordedAttemptId;
             }),
         );
-        // Retrieval practice only works if the learner gets to retrieve. The
-        // reference answer used to come back on every response, so one wrong
-        // guess ended the exercise: there was nothing left to recall. It is
-        // now withheld until the answer is right or the learner has genuinely
-        // tried twice at this revision.
         const attemptCount = store.countExerciseAttempts(exerciseKey, exercise.contentRevision);
-        const revealAnswer =
-          exercise.kind === "short-answer" &&
-          (correct || attemptCount >= EXERCISE_ATTEMPTS_BEFORE_REVEAL);
+        const hostGrade = store.getLatestHostExerciseGrade(exerciseKey, exercise.contentRevision);
         sendJson(response, 200, {
           attemptId,
           correct,
           score,
           maxScore,
           attemptCount,
-          ...(revealAnswer ? { expectedAnswer: exercise.expectedAnswer } : {}),
+          awaitingHostGrade,
+          hostGrade: hostGrade
+            ? {
+                passed: hostGrade.passed,
+                evaluation: hostGrade.evaluation,
+                extensions: hostGrade.extensions,
+                host: hostGrade.host,
+                learnerAnswer: hostGrade.learnerAnswer,
+                occurredAt: hostGrade.occurredAt.toISOString(),
+              }
+            : null,
         });
         return;
       }
 
-      // The rubric is the answer key for an `explain` exercise, so it is a
-      // separate request that costs the learner a written answer first. Handing
-      // it back beside the prompt would turn "explain it yourself" into
-      // "paraphrase the list on screen".
+      const hostGradeRoute = parseRoute(
+        url.pathname,
+        /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/exercises\/([^/]+)\/host-grade$/,
+      );
+      if (request.method === "POST" && hostGradeRoute) {
+        requireMutationAccess(request, requestToken);
+        if (!hostGradeRoute.contentId) throw new HttpError(404, "Exercise ID is missing");
+        const body = await readJsonBody(request);
+        const store = getStore(hostGradeRoute.studyId, true)!;
+        try {
+          const result = runWithCommandConflictMapped(
+            "Command ID was already used for another exercise attempt",
+            () =>
+              applyHostExerciseGrade({
+                studiesRoot: config.studiesRoot,
+                store,
+                route: {
+                  studyId: hostGradeRoute.studyId,
+                  courseId: hostGradeRoute.courseId,
+                  unitId: hostGradeRoute.unitId,
+                  lessonId: hostGradeRoute.lessonId,
+                  exerciseId: hostGradeRoute.contentId!,
+                },
+                proposal: body,
+              }),
+          );
+          sendJson(response, 200, {
+            attemptId: result.attemptId,
+            correct: result.passed,
+            passed: result.passed,
+            lessonComplete: result.lessonComplete,
+            hostGrade: result.hostGrade,
+          });
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            throw new HttpError(400, error.issues.map((issue) => issue.message).join("; "));
+          }
+          throw new HttpError(409, error instanceof Error ? error.message : "Host grade failed");
+        }
+        return;
+      }
+
+      // Rubric self-assessment retired: explain exercises use host-grade like
+      // short-answer. Keep the route as a clear 410 so old clients do not hang.
       const exerciseRubricRoute = parseRoute(
         url.pathname,
         /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/exercises\/([^/]+)\/rubric$/,
       );
       if (request.method === "POST" && exerciseRubricRoute) {
-        requireMutationAccess(request, requestToken);
-        const body = ExerciseRubricSchema.parse(await readJsonBody(request));
-        const exercise = requireActiveExercise(config.studiesRoot, exerciseRubricRoute);
-        if (exercise.contentRevision !== body.contentRevision) {
-          throw new HttpError(409, "Exercise content revision changed; reload before submitting");
-        }
-        if (exercise.kind !== "explain") {
-          throw new HttpError(409, "This exercise is graded against a reference answer");
-        }
-        sendJson(response, 200, { rubric: exercise.rubric });
-        return;
+        throw new HttpError(
+          410,
+          "Self-assessment rubric is retired; submit the answer and use host-grade write-back",
+        );
       }
 
       const cardRevealRoute = parseRoute(

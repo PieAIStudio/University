@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-25
+last_reviewed: 2026-08-06
 domain: execution
 tags:
   - current-work
@@ -28,6 +28,14 @@ This file is the current project work index. It is not the agents-routing algori
 - Current proof target: complete three normal owner learning sessions and record
   friction before deciding whether Predict Output, Micro-Parsons, or Explain with
   Rubric deserves the next bounded spec.
+- Owner direction recorded 2026-08-06 (not yet a bounded spec): prefer **B1 host
+  feedback bridge** (copy exercise packet → new host session → CLI write-back →
+  Web coach panel) over embedding a second runtime model or requiring pi for
+  coaching. Research note:
+  `docs/reference/下一阶段/Grok/04-host-feedback-bridge-b1.md`.
+- Meta-learning curriculum factory (outside this repo): 
+  `/Users/yuanfei/PieAI/UniversityLocal-SpecialStudies` — Course A lesson 1
+  delivered; not yet registered as a UniversityLocal study.
 
 ## Accepted Direction (2026-07-20)
 
