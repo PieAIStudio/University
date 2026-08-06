@@ -46,6 +46,7 @@ import {
   type StoredCardState,
   type StoredHostExerciseGrade,
   type StoredLearnerSubmission,
+  type WrittenAttempt,
   type StoredLessonProgress,
   type StoredLearningSession,
   type StoredRetrievalAttempt,
@@ -1538,6 +1539,52 @@ export class SqliteLearningStore implements LearningStore {
     const answer = (response as Record<string, unknown>)["answer"];
     if (typeof answer !== "string") return null;
     return { attemptId: row.attempt_id, answer, occurredAt: new Date(row.occurred_at) };
+  }
+
+  /**
+   * The learner's own recent writing, newest first.
+   *
+   * Every explain answer the learner has ever typed is already on disk; until
+   * now nothing could read it back, so the one honest source of material for
+   * coaching someone's expression was unreachable. Read-only and capped: this
+   * is for looking at a handful of recent answers, not for exporting a life.
+   */
+  listRecentWrittenAttempts(limit = 20): readonly WrittenAttempt[] {
+    const capped = Math.max(1, Math.min(Math.trunc(limit), 200));
+    const rows = this.#database
+      .prepare(`
+        SELECT attempt_id, exercise_id, content_revision, response_json, occurred_at
+        FROM exercise_attempt
+        WHERE json_extract(response_json, '$.phase') = 'learner-submit'
+          AND length(trim(coalesce(json_extract(response_json, '$.answer'), ''))) > 0
+        ORDER BY occurred_at DESC, rowid DESC
+        LIMIT ?
+      `)
+      .all(capped) as Array<{
+      readonly attempt_id: string;
+      readonly exercise_id: string;
+      readonly content_revision: number;
+      readonly response_json: string;
+      readonly occurred_at: number;
+    }>;
+    return rows.flatMap((row) => {
+      let answer: unknown;
+      try {
+        answer = (JSON.parse(row.response_json) as Record<string, unknown>)["answer"];
+      } catch {
+        return [];
+      }
+      if (typeof answer !== "string") return [];
+      return [
+        {
+          attemptId: row.attempt_id,
+          exerciseKey: exerciseContentKey(parseExerciseContentKey(row.exercise_id)),
+          contentRevision: row.content_revision,
+          answer,
+          occurredAt: new Date(row.occurred_at),
+        },
+      ];
+    });
   }
 
   /**

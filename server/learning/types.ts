@@ -222,6 +222,21 @@ export interface StoredLearnerSubmission {
   readonly occurredAt: Date;
 }
 
+/**
+ * One thing the learner actually wrote, with enough context to talk about it.
+ *
+ * The coaching material for expression is not authored: it is what the learner
+ * already typed. The system has stored every one of these since the exercise
+ * log existed and has never had a way to read them back.
+ */
+export interface WrittenAttempt {
+  readonly attemptId: string;
+  readonly exerciseKey: ExerciseContentKey;
+  readonly contentRevision: number;
+  readonly answer: string;
+  readonly occurredAt: Date;
+}
+
 export interface RecordRetrievalAttemptInput {
   readonly commandId: string;
   readonly cardKey: ReviewContentKey;
@@ -289,6 +304,7 @@ export interface LearningStore {
     exerciseKey: ExerciseContentKey,
     contentRevision: number,
   ): StoredLearnerSubmission | null;
+  listRecentWrittenAttempts(limit?: number): readonly WrittenAttempt[];
   hasCorrectExerciseAttempt(exerciseKey: ExerciseContentKey, contentRevision: number): boolean;
   getLatestHostExerciseGrade(
     exerciseKey: ExerciseContentKey,

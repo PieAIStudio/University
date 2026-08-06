@@ -115,6 +115,83 @@ export const AirlockSealSchema = z
 
 export type AirlockSeal = z.infer<typeof AirlockSealSchema>;
 
+/**
+ * One English word placed at one exact spot in one exact lesson revision.
+ *
+ * `quote` is the Chinese text being annotated and `occurrence` says which
+ * appearance of it, counting from one. That pair is a position, and it is a
+ * stable position only because lesson revisions are immutable: the overlay
+ * records the `contentHash` it was written against, so a match proves the text
+ * is byte-identical and the anchor cannot have drifted. A mismatch is not a
+ * repair job — it means this revision has not been annotated yet.
+ */
+export const LanguageAnchorSchema = z
+  .object({
+    quote: z.string().min(1).max(200),
+    occurrence: z.number().int().positive(),
+    senseId: z
+      .string()
+      .min(1)
+      .max(64)
+      .regex(/^[a-z0-9]+(?:[-.][a-z0-9]+)*$/, "sense id must be lowercase dotted-kebab"),
+  })
+  .strict();
+
+/**
+ * The English layer for one lesson revision.
+ *
+ * It is stored beside the study's courses rather than inside them, and the
+ * lesson's own bytes never change. That is the whole design: turning English
+ * mode on, off, or up must not produce a new `contentRevision`, because
+ * completion and review scheduling are scoped to the revision they were earned
+ * on — a lesson that gains a revision goes back to unfinished, and with host
+ * grading that costs a full round trip to an assistant to earn back.
+ */
+export const LanguageOverlaySchema = z
+  .object({
+    schemaVersion: SchemaVersion,
+    language: z.literal("en"),
+    courseId: StableId,
+    unitId: StableId,
+    lessonId: StableId,
+    contentRevision: z.number().int().positive(),
+    contentHash: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+    anchors: z.array(LanguageAnchorSchema).max(200),
+    updatedAt: IsoDateTime,
+  })
+  .strict();
+
+export type LanguageAnchor = z.infer<typeof LanguageAnchorSchema>;
+export type LanguageOverlay = z.infer<typeof LanguageOverlaySchema>;
+
+/**
+ * What a learner sees when they tap an annotated word.
+ *
+ * A sense, not a word: `commit` in Git and `commit` in a database are different
+ * things to learn, and a single gloss per spelling would teach the wrong one
+ * roughly half the time.
+ */
+export const LexiconEntrySchema = z
+  .object({
+    senseId: z
+      .string()
+      .min(1)
+      .max(64)
+      .regex(/^[a-z0-9]+(?:[-.][a-z0-9]+)*$/),
+    headword: z.string().min(1).max(80),
+    /** IPA. Shown even when no local voice is available to speak it. */
+    phonetic: z.string().min(1).max(80),
+    partOfSpeech: z.string().min(1).max(32),
+    /** One meaning, in this context. Not a dictionary dump. */
+    gloss: z.string().min(1).max(200),
+    /** Where this sense comes up in real work, so the word has somewhere to live. */
+    usage: z.string().min(1).max(300),
+    track: z.enum(["technical", "general"]),
+  })
+  .strict();
+
+export type LexiconEntry = z.infer<typeof LexiconEntrySchema>;
+
 export const RepositoryRelativePath = z
   .string()
   .min(1)

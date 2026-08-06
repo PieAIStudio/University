@@ -1,8 +1,10 @@
-import { Children, isValidElement, type ReactNode } from "react";
+import { Children, isValidElement, useMemo, useState, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { MermaidDiagram } from "./MermaidDiagram.js";
+import { WordPopover, type LexiconEntry } from "./language/WordPopover.js";
+import { remarkLanguageAnchors, type LanguageRange } from "./language/remark-language-anchors.js";
 
 function codeText(children: ReactNode): string {
   return Children.toArray(children)
@@ -96,9 +98,84 @@ const markdownComponents: Components = {
   },
 };
 
-export function MarkdownContent({ children }: { readonly children: string }) {
+export interface LanguageLayer {
+  readonly status: "annotated" | "not-annotated" | "stale";
+  readonly ranges: readonly LanguageRange[];
+  readonly lexicon: readonly LexiconEntry[];
+}
+
+/**
+ * Renders lesson Markdown, optionally with the English layer switched on.
+ *
+ * The layer is additive by construction: with it off, or absent, the output is
+ * exactly what it was before. That is not a convenience — it is why turning
+ * English mode on can never cost a content revision, and so can never send a
+ * finished lesson back to unfinished.
+ */
+export function MarkdownContent({
+  children,
+  language,
+  englishEnabled = false,
+}: {
+  readonly children: string;
+  readonly language?: LanguageLayer;
+  readonly englishEnabled?: boolean;
+}) {
+  const [openSenseId, setOpenSenseId] = useState<string | null>(null);
+  const active = englishEnabled && language?.status === "annotated" ? language : null;
+
+  const lexicon = useMemo(
+    () => new Map((active?.lexicon ?? []).map((entry) => [entry.senseId, entry])),
+    [active],
+  );
+
+  const components = useMemo<Components>(
+    () => ({
+      ...markdownComponents,
+      // The key is the hast element name the plugin's `data.hName` produces —
+      // react-markdown dispatches on that, never on the mdast node type.
+      "word-anchor"({
+        node,
+        children,
+      }: {
+        readonly node?: { readonly properties?: { readonly senseId?: unknown } };
+        readonly children?: ReactNode;
+      }) {
+        const value = children;
+        const senseId =
+          typeof node?.properties?.senseId === "string" ? node.properties.senseId : "";
+        const entry = lexicon.get(senseId);
+        if (!entry) return <>{value}</>;
+        const open = openSenseId === senseId;
+        return (
+          <span className="word-anchor">
+            <button
+              type="button"
+              className="word-anchor__trigger"
+              aria-expanded={open}
+              onClick={() => setOpenSenseId(open ? null : senseId)}
+            >
+              <span lang="en">{entry.headword}</span>
+              <span className="word-anchor__original">（{value}）</span>
+            </button>
+            {open ? <WordPopover entry={entry} onDismiss={() => setOpenSenseId(null)} /> : null}
+          </span>
+        );
+      },
+    }),
+    [lexicon, openSenseId],
+  );
+
+  const plugins = useMemo(
+    () =>
+      active
+        ? [remarkGfm, [remarkLanguageAnchors, { ranges: active.ranges }] as const]
+        : [remarkGfm],
+    [active],
+  );
+
   return (
-    <ReactMarkdown components={markdownComponents} remarkPlugins={[remarkGfm]}>
+    <ReactMarkdown components={components} remarkPlugins={plugins as never}>
       {children}
     </ReactMarkdown>
   );

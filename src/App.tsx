@@ -8,7 +8,7 @@ import {
   GameTabs,
 } from "@pieai/swimmer-ui-kit";
 
-import { MarkdownContent } from "./MarkdownContent.js";
+import { MarkdownContent, type LanguageLayer } from "./MarkdownContent.js";
 
 type SectionId = "today" | "studies";
 
@@ -279,6 +279,7 @@ interface LessonView {
     readonly title: string;
     readonly contentRevision: number;
     readonly content: string;
+    readonly language?: LanguageLayer;
     readonly progress: LessonProgress | null;
     readonly evidence: readonly EvidenceView[];
     readonly exercises: readonly {
@@ -474,6 +475,28 @@ const STALE_TOKEN_NOTICE = "本地服务重启过，安全令牌换新了。再�
  * still refreshes immediately.
  */
 const HOST_GRADE_POLL_LIMIT_MS = 10 * 60 * 1000;
+/**
+ * English mode is a way of reading, not a fact about the course, so the
+ * preference lives in the browser rather than in the learner database. Default
+ * off: a lesson has to read exactly as it did before anybody opts in.
+ */
+const ENGLISH_MODE_KEY = "university-local.english-mode";
+
+function readEnglishMode(): boolean {
+  try {
+    return window.localStorage.getItem(ENGLISH_MODE_KEY) === "on";
+  } catch {
+    return false;
+  }
+}
+
+function writeEnglishMode(enabled: boolean): void {
+  try {
+    window.localStorage.setItem(ENGLISH_MODE_KEY, enabled ? "on" : "off");
+  } catch {
+    // A browser with storage disabled still gets the toggle, just not the memory.
+  }
+}
 
 function isStaleTokenFailure(message: string): boolean {
   return /request token/i.test(message);
@@ -669,6 +692,7 @@ function ExerciseBlock({
   const [packetCopied, setPacketCopied] = useState(false);
   const [packetCopyFailed, setPacketCopyFailed] = useState(false);
   const [packetInfo, setPacketInfo] = useState<CoachingPacketResponse | null>(null);
+  const [expressionCopied, setExpressionCopied] = useState(false);
   const [hostGrade, setHostGrade] = useState<HostExerciseGradeView | null>(
     exercise.hostGrade ?? null,
   );
@@ -750,6 +774,20 @@ function ExerciseBlock({
       headers: { "Content-Type": "application/json", "X-University-Local-Token": requestToken },
       body: JSON.stringify({ contentRevision: exercise.contentRevision, answer, ...payload }),
     });
+  }
+
+  async function copyExpressionPacket() {
+    try {
+      const body = await readJson<{ readonly packet: string }>(
+        await fetch(`/api/studies/${locator.studyId}/expression-packet`),
+      );
+      if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(body.packet);
+      setExpressionCopied(true);
+      setTimeout(() => setExpressionCopied(false), 8_000);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "暂时无法生成点评包");
+    }
   }
 
   async function copyCoachingPacket() {
@@ -873,6 +911,23 @@ function ExerciseBlock({
               </ul>
             </div>
           ) : null}
+          <div className="host-grade__coach">
+            {/* Grading answered "was it right"; this offers "was it clear". The
+                page only prepares the material — the coaching itself happens in
+                whatever AI host the learner pastes into, same as grading. */}
+            <GameButton
+              variant="ghost"
+              onClick={() => void copyExpressionPacket()}
+              disabled={pending}
+            >
+              {expressionCopied ? "已复制表达点评包" : "让 AI 点评我这段表达"}
+            </GameButton>
+            {expressionCopied ? (
+              <span className="host-grade__coach-hint">
+                贴到任意 AI 宿主。它只评你怎么说，不改判对错。
+              </span>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -1164,7 +1219,9 @@ function LessonReader({
   readonly onLearningChanged: () => Promise<void>;
 }) {
   const [completed, setCompleted] = useState(view.lesson.progress?.status === "completed");
+  const [englishMode, setEnglishMode] = useState(readEnglishMode);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const annotated = view.lesson.language?.status === "annotated";
 
   useEffect(() => {
     setCompleted(view.lesson.progress?.status === "completed");
@@ -1191,14 +1248,37 @@ function LessonReader({
             {view.lesson.title}
           </h2>
         </div>
-        <GameBadge tone={completed ? "success" : "warning"}>
-          {completed ? "已完成" : "学习中"}
-        </GameBadge>
+        <div className="lesson-reader__header-actions">
+          {annotated ? (
+            // Only offered where there is something to offer. A toggle that
+            // does nothing on most lessons teaches the learner to ignore it.
+            <button
+              type="button"
+              className="english-toggle"
+              aria-pressed={englishMode}
+              onClick={() => {
+                const next = !englishMode;
+                setEnglishMode(next);
+                writeEnglishMode(next);
+              }}
+            >
+              {englishMode ? "英文模式 · 开" : "英文模式 · 关"}
+            </button>
+          ) : null}
+          <GameBadge tone={completed ? "success" : "warning"}>
+            {completed ? "已完成" : "学习中"}
+          </GameBadge>
+        </div>
       </header>
       <div className="lesson-layout">
         <div className="lesson-main">
           <div className="markdown-body">
-            <MarkdownContent>{view.lesson.content}</MarkdownContent>
+            <MarkdownContent
+              {...(view.lesson.language ? { language: view.lesson.language } : {})}
+              englishEnabled={englishMode}
+            >
+              {view.lesson.content}
+            </MarkdownContent>
           </div>
           {view.lesson.exercises.map((exercise) => (
             <ExerciseBlock

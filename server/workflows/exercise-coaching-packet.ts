@@ -1,4 +1,5 @@
 import type { EvidenceSnippet } from "../content/evidence.js";
+import { fence, HOST_AGNOSTIC_NOTICE } from "./packet-format.js";
 
 /**
  * Everything the packet is allowed to say about one exercise.
@@ -59,17 +60,6 @@ export function disclosesReference(input: {
   readonly submissionCount: number;
 }): boolean {
   return input.passed || input.submissionCount >= 2;
-}
-
-function fence(language: string, body: string): readonly string[] {
-  // A snippet that itself contains a fence would end the block early and turn
-  // the rest of the packet into prose the AI reads as instructions.
-  const longest = [...body.matchAll(/^`{3,}/gm)].reduce(
-    (widest, match) => Math.max(widest, match[0].length),
-    2,
-  );
-  const marker = "`".repeat(Math.max(3, longest + 1));
-  return [`${marker}${language}`, body, marker];
 }
 
 function evidenceHeading(index: number, evidence: CoachingPacketEvidence): string {
@@ -168,7 +158,7 @@ export function buildExerciseCoachingPacket(input: BuildCoachingPacketInput): st
     "3. **引申** 1～3 个相关知识点。",
     "4. **写回** UniversityLocal（见文末命令），否则 Web 不会显示你的评估、课也不会完成。",
     "",
-    "不要假设你是某一个品牌的 IDE，也不要假设你能打开学习者的代码库——判分需要的代码已经附在下面。",
+    `${HOST_AGNOSTIC_NOTICE}也不要假设你能打开学习者的代码库——判分需要的代码已经附在下面。`,
     "",
     "## 题目上下文",
     "",

@@ -1324,3 +1324,134 @@ summary:focus-visible,
   overflow-wrap: anywhere;
   color: #e5c49a;
 }
+
+/* ---- English mode: an additive layer over the lesson, never a rewrite ---- */
+
+.lesson-reader__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.english-toggle {
+  padding: 6px 12px;
+  border: 1px solid rgba(247, 211, 160, 0.32);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 245, 232, 0.78);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.english-toggle[aria-pressed="true"] {
+  border-color: rgba(247, 211, 160, 0.7);
+  background: rgba(247, 211, 160, 0.14);
+  color: #f7d3a0;
+}
+
+.word-anchor {
+  position: relative;
+  display: inline;
+}
+
+.word-anchor__trigger {
+  padding: 0;
+  border: 0;
+  border-bottom: 1px dotted currentcolor;
+  background: none;
+  color: #f7d3a0;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* The Chinese stays visible beside the English on first encounter: a reader who
+   does not know the word must never be stuck, only invited. */
+.word-anchor__original {
+  color: rgba(255, 245, 232, 0.55);
+  font-size: 0.85em;
+}
+
+.word-popover {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(320px, 78vw);
+  padding: 12px 14px;
+  border: 1px solid rgba(247, 211, 160, 0.34);
+  border-radius: 12px;
+  background: #1a1512;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
+  text-align: left;
+}
+
+.word-popover__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0 0 8px;
+}
+
+.word-popover__word {
+  color: #f7d3a0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.word-popover__phonetic,
+.word-popover__pos {
+  color: rgba(255, 245, 232, 0.6);
+  font-size: 0.82rem;
+}
+
+.word-popover__gloss {
+  margin: 0 0 6px;
+  color: rgba(255, 245, 232, 0.92);
+  font-size: 0.9rem;
+}
+
+.word-popover__usage,
+.word-popover__note {
+  margin: 0 0 10px;
+  color: rgba(255, 245, 232, 0.62);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.word-popover__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.word-popover__actions button {
+  padding: 5px 12px;
+  border: 1px solid rgba(247, 211, 160, 0.3);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 245, 232, 0.85);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.word-popover__actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.host-grade__coach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(247, 211, 160, 0.18);
+}
+
+.host-grade__coach-hint {
+  color: rgba(255, 245, 232, 0.6);
+  font-size: 0.8rem;
+}

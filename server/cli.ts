@@ -5,7 +5,7 @@ import { parseArgs } from "node:util";
 
 import { loadUniversityLocalConfig } from "./config/load-config.js";
 import { listKnowledgeNotes } from "./knowledge/repository.js";
-import { setDefaultCourse } from "./studies/repository.js";
+import { setDefaultCourse, setStudyStatus } from "./studies/repository.js";
 import { captureKnowledge } from "./workflows/capture-knowledge.js";
 import { getHostStudyStatus } from "./workflows/host-status.js";
 import { backupLearner, resetLearner, restoreLearner } from "./workflows/learner.js";
@@ -38,6 +38,8 @@ import { getStudyPaths } from "./studies/paths.js";
 import { inspectAirlock } from "./airlock/inspect.js";
 import { promoteAirlock } from "./airlock/promote.js";
 import { createStudyWithSource } from "./workflows/create-study.js";
+import { reviewExpression } from "./workflows/expression-review.js";
+import { annotateLanguage } from "./workflows/annotate-language.js";
 
 const MAX_CAPTURE_FILE_BYTES = 1024 * 1024;
 const HELP = `UniversityLocal local host bridge
@@ -64,9 +66,13 @@ Commands:
   session status --study <study-id>
   session end --study <study-id> [--session <session-id>]
   study create --study <study-id> --title <text> --source <absolute-path> [--ref <git-ref>]
+  study archive --study <study-id>
+  study unarchive --study <study-id>
   airlock promote --airlock <absolute-path> --upstream <absolute-path> [--ref <git-ref>] [--acknowledge-dirty-excluded]
   airlock doctor --airlock <absolute-path>
   airlock status --airlock <absolute-path>
+  language annotate --study <study-id> --input <overlay.json>
+  express review --study <study-id> [--limit <n>] [--goal <text>]
   learner backup --study <study-id>
   learner reset --study <study-id> --confirm <study-id>
   learner restore --study <study-id> --from <exact-sqlite-path>
@@ -195,6 +201,11 @@ interface SessionEndCommand {
   readonly sessionId?: string;
 }
 
+interface StudyStatusCommand {
+  readonly kind: "study-archive" | "study-unarchive";
+  readonly studyId: string;
+}
+
 interface StudyCreateCommand {
   readonly kind: "study-create";
   readonly studyId: string;
@@ -214,6 +225,19 @@ interface AirlockPromoteCommand {
 interface AirlockInspectCommand {
   readonly kind: "airlock-doctor" | "airlock-status";
   readonly airlockRoot: string;
+}
+
+interface LanguageAnnotateCommand {
+  readonly kind: "language-annotate";
+  readonly studyId: string;
+  readonly inputPath: string;
+}
+
+interface ExpressReviewCommand {
+  readonly kind: "express-review";
+  readonly studyId: string;
+  readonly limit?: number;
+  readonly goal?: string;
 }
 
 interface LearnerBackupCommand {
@@ -267,8 +291,11 @@ export type UniversityLocalCliCommand =
   | LearnerRestoreCommand
   | ExerciseHostGradeCommand
   | StudyCreateCommand
+  | StudyStatusCommand
   | AirlockPromoteCommand
   | AirlockInspectCommand
+  | ExpressReviewCommand
+  | LanguageAnnotateCommand
   | HelpCommand;
 
 export class CliUsageError extends Error {}
@@ -295,6 +322,8 @@ type ParsedValues = {
   readonly source?: string;
   readonly airlock?: string;
   readonly upstream?: string;
+  readonly limit?: string;
+  readonly goal?: string;
   readonly help?: boolean;
 };
 
@@ -346,6 +375,8 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         source: { type: "string" },
         airlock: { type: "string" },
         upstream: { type: "string" },
+        limit: { type: "string" },
+        goal: { type: "string" },
         help: { type: "boolean" },
       },
     });
@@ -531,6 +562,17 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       inputPath: required(values.input, "input"),
     };
   }
+  if (
+    positionals.length === 2 &&
+    positionals[0] === "study" &&
+    (positionals[1] === "archive" || positionals[1] === "unarchive")
+  ) {
+    rejectUnrelatedOptions(values, ["study"]);
+    return {
+      kind: positionals[1] === "archive" ? "study-archive" : "study-unarchive",
+      studyId: required(values.study, "study"),
+    };
+  }
   if (positionals.length === 2 && positionals[0] === "study" && positionals[1] === "create") {
     rejectUnrelatedOptions(values, ["study", "title", "source", "ref"]);
     return {
@@ -559,6 +601,27 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         airlockRoot: required(values.airlock, "airlock"),
       };
     }
+  }
+  if (positionals.length === 2 && positionals[0] === "language" && positionals[1] === "annotate") {
+    rejectUnrelatedOptions(values, ["study", "input"]);
+    return {
+      kind: "language-annotate",
+      studyId: required(values.study, "study"),
+      inputPath: required(values.input, "input"),
+    };
+  }
+  if (positionals.length === 2 && positionals[0] === "express" && positionals[1] === "review") {
+    rejectUnrelatedOptions(values, ["study", "limit", "goal"]);
+    const limit = values.limit === undefined ? undefined : Number(values.limit);
+    if (limit !== undefined && (!Number.isInteger(limit) || limit < 1)) {
+      throw new CliUsageError("--limit must be a positive whole number");
+    }
+    return {
+      kind: "express-review",
+      studyId: required(values.study, "study"),
+      ...(limit === undefined ? {} : { limit }),
+      ...(values.goal ? { goal: values.goal } : {}),
+    };
   }
   if (positionals.length === 2 && positionals[0] === "learner") {
     if (positionals[1] === "backup") {
@@ -828,6 +891,30 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         store.close();
       }
     }
+    case "language-annotate":
+      return annotateLanguage({
+        studiesRoot: config.studiesRoot,
+        studyId: input.command.studyId,
+        inputPath: resolve(input.cwd ?? process.cwd(), input.command.inputPath),
+      });
+    case "express-review":
+      return reviewExpression({
+        studiesRoot: config.studiesRoot,
+        studyId: input.command.studyId,
+        ...(input.command.limit === undefined ? {} : { limit: input.command.limit }),
+        ...(input.command.goal === undefined ? {} : { goal: input.command.goal }),
+      });
+    case "study-archive":
+    case "study-unarchive":
+      return {
+        schemaVersion: 1 as const,
+        operation: input.command.kind,
+        study: setStudyStatus(
+          config.studiesRoot,
+          input.command.studyId,
+          input.command.kind === "study-archive" ? "archived" : "active",
+        ),
+      };
     case "study-create":
       return createStudyWithSource({
         studiesRoot: config.studiesRoot,

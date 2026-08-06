@@ -32,6 +32,9 @@ importers:
       ts-fsrs:
         specifier: 5.4.1
         version: 5.4.1
+      unist-util-visit:
+        specifier: 5.1.0
+        version: 5.1.0
       zod:
         specifier: 4.4.3
         version: 4.4.3
@@ -42,6 +45,9 @@ importers:
       '@pieai/pro-gov':
         specifier: 0.8.0
         version: 0.8.0
+      '@types/mdast':
+        specifier: 4.0.4
+        version: 4.0.4
       '@types/node':
         specifier: 24.13.2
         version: 24.13.2

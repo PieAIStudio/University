@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "note": "Curated by hand, one meaning per entry. A word is not an entry — a sense is. `commit` in Git and `commit` in a database are different things to learn, and one gloss per spelling would teach the wrong one about half the time. Twenty entries is the deliberate size of the first experiment: enough to see whether reading two things at once holds up, small enough that every gloss was checked by a person.",
+  "entries": [
+    { "senseId": "snapshot.git", "headword": "snapshot", "phonetic": "/ˈsnæpʃɒt/", "partOfSpeech": "noun", "gloss": "快照：某一刻的完整副本，之后不再改变", "usage": "读到 snapshot 时，问的通常是「哪一刻的副本」，而不是「现在什么样」。", "track": "technical" },
+    { "senseId": "commit.git", "headword": "commit", "phonetic": "/kəˈmɪt/", "partOfSpeech": "noun", "gloss": "提交：一次存档，带着「谁、什么时候、改了什么」", "usage": "Git 里一个 commit 就是历史上的一个点，可以随时回到它。", "track": "technical" },
+    { "senseId": "evidence.study", "headword": "evidence", "phonetic": "/ˈevɪdəns/", "partOfSpeech": "noun", "gloss": "证据：一句话凭什么算数，指向真实存在的文件和行", "usage": "报错和文档里常说 no evidence，意思是「你说的这件事没有依据」。", "track": "technical" },
+    { "senseId": "stale.cache", "headword": "stale", "phonetic": "/steɪl/", "partOfSpeech": "adjective", "gloss": "过期的：内容还在，但已经跟不上真相了", "usage": "stale cache、stale data、stale branch —— 都是「旧了，别信」。", "track": "technical" },
+    { "senseId": "revision.content", "headword": "revision", "phonetic": "/rɪˈvɪʒn/", "partOfSpeech": "noun", "gloss": "修订版：同一份东西的第几版", "usage": "跟 version 的区别：revision 常指同一条内容被改过几次。", "track": "technical" },
+    { "senseId": "guard.code", "headword": "guard", "phonetic": "/ɡɑːd/", "partOfSpeech": "noun", "gloss": "守卫：挡在入口的检查，不合格就不让往下走", "usage": "guard clause 是常见写法：先把不合法的情况挡掉，剩下的才是正常路径。", "track": "technical" },
+    { "senseId": "schema.data", "headword": "schema", "phonetic": "/ˈskiːmə/", "partOfSpeech": "noun", "gloss": "结构定义：规定一份数据必须长什么样", "usage": "schema validation 失败，意思是数据的形状不对，不是内容不对。", "track": "technical" },
+    { "senseId": "threshold.limit", "headword": "threshold", "phonetic": "/ˈθreʃhəʊld/", "partOfSpeech": "noun", "gloss": "阈值：越过这条线，行为就变了", "usage": "超过 threshold 常常触发告警、限流或拒绝。", "track": "technical" },
+    { "senseId": "deterministic.build", "headword": "deterministic", "phonetic": "/dɪˌtɜːmɪˈnɪstɪk/", "partOfSpeech": "adjective", "gloss": "确定性的：同样的输入永远给同样的输出", "usage": "deterministic build 意味着别人在别的机器上能造出一模一样的东西。", "track": "technical" },
+    { "senseId": "idempotent.retry", "headword": "idempotent", "phonetic": "/aɪˈdempətənt/", "partOfSpeech": "adjective", "gloss": "幂等的：做一次和做十次结果一样", "usage": "重试安全的接口都是 idempotent 的 —— 网络抖一下重发也不会出乱子。", "track": "technical" },
+    { "senseId": "upstream.repo", "headword": "upstream", "phonetic": "/ˌʌpˈstriːm/", "partOfSpeech": "noun", "gloss": "上游：你这份东西是从哪儿来的", "usage": "「去 upstream 提」意思是去源头那个仓库提，而不是在自己的副本里改。", "track": "technical" },
+    { "senseId": "coverage.test", "headword": "coverage", "phonetic": "/ˈkʌvərɪdʒ/", "partOfSpeech": "noun", "gloss": "覆盖率：有多少代码真的被测试跑到过", "usage": "coverage 高不等于测得好，只说明跑到了，没说明验对了。", "track": "technical" },
+    { "senseId": "fallback.plan", "headword": "fallback", "phonetic": "/ˈfɔːlbæk/", "partOfSpeech": "noun", "gloss": "兜底方案：首选不行时退而求其次的那条路", "usage": "silent fallback 是危险的 —— 悄悄降级，你还以为一切正常。", "track": "technical" },
+    { "senseId": "boundary.scope", "headword": "boundary", "phonetic": "/ˈbaʊndri/", "partOfSpeech": "noun", "gloss": "边界：这一侧归我管，那一侧不归", "usage": "谈架构时 boundary 几乎总是在说「谁不该知道谁的事」。", "track": "technical" },
+    { "senseId": "constraint.design", "headword": "constraint", "phonetic": "/kənˈstreɪnt/", "partOfSpeech": "noun", "gloss": "约束：不能违反的条件", "usage": "跟 AI 提需求时写清 constraint，比写清目标更能决定产出可不可用。", "track": "technical" },
+    { "senseId": "trade-off.decision", "headword": "trade-off", "phonetic": "/ˈtreɪd ɒf/", "partOfSpeech": "noun", "gloss": "取舍：要了这个就得放弃那个", "usage": "没有 trade-off 的方案通常是还没想清楚，不是真的免费。", "track": "technical" },
+    { "senseId": "failure-mode.risk", "headword": "failure mode", "phonetic": "/ˈfeɪljə məʊd/", "partOfSpeech": "noun", "gloss": "失效方式：坏的时候是怎么个坏法", "usage": "问「它的 failure mode 是什么」比问「它会不会坏」有用得多。", "track": "technical" },
+    { "senseId": "source-of-truth.data", "headword": "source of truth", "phonetic": "/sɔːs əv truːθ/", "partOfSpeech": "noun", "gloss": "真相源：说法不一致时以谁为准", "usage": "同一件事有两个 source of truth，等于没有。", "track": "technical" },
+    { "senseId": "retire.lifecycle", "headword": "retire", "phonetic": "/rɪˈtaɪə/", "partOfSpeech": "verb", "gloss": "退役：标记为不再使用，但不删除", "usage": "retire 而不是 delete，是为了让历史还能查得到。", "track": "technical" },
+    { "senseId": "receipt.record", "headword": "receipt", "phonetic": "/rɪˈsiːt/", "partOfSpeech": "noun", "gloss": "回执：一次操作留下的可查记录", "usage": "日常英语里是购物小票；工程里是「这事做过、这是凭证」。", "track": "technical" }
+  ]
+}

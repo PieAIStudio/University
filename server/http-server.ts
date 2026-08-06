@@ -48,6 +48,8 @@ import {
   type StoredCardState,
   type StoredLessonProgress,
 } from "./learning/types.js";
+import { selectLexicon } from "./language/lexicon.js";
+import { readLessonLanguageLayer } from "./language/overlay.js";
 import { getCoursePaths, getStudyPaths } from "./studies/paths.js";
 import { inspectStudyShelf, readStudy } from "./studies/repository.js";
 import {
@@ -56,6 +58,7 @@ import {
   type CoachingPacketEvidence,
 } from "./workflows/exercise-coaching-packet.js";
 import { advanceLessonProgress, applyHostExerciseGrade } from "./workflows/host-exercise-grade.js";
+import { buildExpressionReview } from "./workflows/expression-review.js";
 
 const DEFAULT_PORT = 4317;
 const MAX_JSON_BODY_BYTES = 64 * 1024;
@@ -762,12 +765,31 @@ function buildLessonView(
     unitId: route.unitId,
     lessonId: route.lessonId,
   });
+  // The English layer travels with every lesson and costs a few hundred bytes:
+  // ranges plus the senses those ranges use. Whether any of it is shown is the
+  // reader's choice, made in the browser, because it changes nothing about what
+  // the lesson is — only about how it reads.
+  const language = readLessonLanguageLayer({
+    studiesRoot,
+    studyId: route.studyId,
+    language: "en",
+    courseId: route.courseId,
+    unitId: route.unitId,
+    lessonId: route.lessonId,
+    contentRevision: lesson.contentRevision,
+    content,
+  });
   return {
     lesson: {
       id: lesson.id,
       title: lesson.title,
       contentRevision: lesson.contentRevision,
       content,
+      language: {
+        status: language.status,
+        ranges: language.ranges,
+        lexicon: selectLexicon(language.senseIds),
+      },
       evidence: publicEvidence(lesson.evidence),
       progress: serializeProgress(store?.getLessonProgress(lessonKey) ?? null),
       exercises: lesson.exerciseIds.map((exerciseId) => {
@@ -972,7 +994,11 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
     return store;
   };
 
-  for (const study of inspectStudyShelf(config.studiesRoot).studies) {
+  // Archived studies keep their data but leave the shelf; a superseded study
+  // that still greets the learner every day is clutter wearing a title.
+  for (const study of inspectStudyShelf(config.studiesRoot).studies.filter(
+    (candidate) => candidate.status === "active",
+  )) {
     if (existsSync(getStudyPaths(config.studiesRoot, study.id).learner.database)) {
       getStore(study.id);
     }
@@ -994,30 +1020,34 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
 
       if (request.method === "GET" && url.pathname === "/api/bootstrap") {
         const shelf = inspectStudyShelf(config.studiesRoot);
-        const studies = shelf.studies.map((study) => {
-          const paths = getStudyPaths(config.studiesRoot, study.id);
-          const ua = countUaAnalyses(paths.ua);
-          let defaultCourse: { id: string; title: string; status: string } | null = null;
-          if (study.defaultCourseId) {
-            try {
-              const course = readCourse(config.studiesRoot, study.id, study.defaultCourseId);
-              defaultCourse = { id: course.id, title: course.title, status: course.status };
-            } catch {
-              defaultCourse = null;
+        // Same rule as the store warm-up above: archived studies keep their
+        // data and stay off the shelf.
+        const studies = shelf.studies
+          .filter((study) => study.status === "active")
+          .map((study) => {
+            const paths = getStudyPaths(config.studiesRoot, study.id);
+            const ua = countUaAnalyses(paths.ua);
+            let defaultCourse: { id: string; title: string; status: string } | null = null;
+            if (study.defaultCourseId) {
+              try {
+                const course = readCourse(config.studiesRoot, study.id, study.defaultCourseId);
+                defaultCourse = { id: course.id, title: course.title, status: course.status };
+              } catch {
+                defaultCourse = null;
+              }
             }
-          }
-          return {
-            ...study,
-            sourceRegistered: existsSync(paths.source.registration),
-            snapshotCount: countSnapshotManifests(paths.source.snapshots),
-            uaAnalysisCount: ua.total,
-            readyUaAnalysisCount: ua.ready,
-            courseCount: countCourseManifests(paths.courses),
-            activeCourseCount: listActiveCourses(config.studiesRoot, study).length,
-            defaultCourse,
-            hasLearningDatabase: existsSync(paths.learner.database),
-          };
-        });
+            return {
+              ...study,
+              sourceRegistered: existsSync(paths.source.registration),
+              snapshotCount: countSnapshotManifests(paths.source.snapshots),
+              uaAnalysisCount: ua.total,
+              readyUaAnalysisCount: ua.ready,
+              courseCount: countCourseManifests(paths.courses),
+              activeCourseCount: listActiveCourses(config.studiesRoot, study).length,
+              defaultCourse,
+              hasLearningDatabase: existsSync(paths.learner.database),
+            };
+          });
 
         const dueCards: DueCard[] = [];
         let nextLesson: Record<string, unknown> | null = null;
@@ -1027,10 +1057,12 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         // course to the front rather than filtering the rest out: finishing the
         // focused study should roll on to the next one, not report nothing left.
         // Due cards are unaffected — they are sorted by due date afterwards.
-        const focusedStudies = [...shelf.studies].sort((left, right) => {
-          const rank = (id: string): number => (id === config.focus?.studyId ? 0 : 1);
-          return rank(left.id) - rank(right.id);
-        });
+        const focusedStudies = shelf.studies
+          .filter((study) => study.status === "active")
+          .sort((left, right) => {
+            const rank = (id: string): number => (id === config.focus?.studyId ? 0 : 1);
+            return rank(left.id) - rank(right.id);
+          });
         for (const study of focusedStudies) {
           const store = getStore(study.id);
           // A focused run is walked in the order it was written, and everything
@@ -1401,6 +1433,32 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
           200,
           buildCoachingPacketResponse(config.studiesRoot, coachingPacketRoute, getStore),
         );
+        return;
+      }
+
+      const expressionPacketRoute = /^\/api\/studies\/([^/]+)\/expression-packet$/.exec(
+        url.pathname,
+      );
+      if (request.method === "GET" && expressionPacketRoute) {
+        const studyId = StableId.parse(decodeURIComponent(expressionPacketRoute[1]!));
+        const store = getStore(studyId);
+        if (!store) throw new HttpError(404, "Study has no learning data yet");
+        const goal = url.searchParams.get("goal");
+        try {
+          const review = buildExpressionReview(store, {
+            studiesRoot: config.studiesRoot,
+            studyId,
+            ...(goal ? { goal } : {}),
+          });
+          sendJson(response, 200, {
+            packet: review.packet,
+            sampleCount: review.sampleCount,
+          });
+        } catch (error) {
+          // The one expected failure is an empty writing history, and it is the
+          // learner's next step, not a server fault.
+          throw new HttpError(409, error instanceof Error ? error.message : "No writing yet");
+        }
         return;
       }
 
