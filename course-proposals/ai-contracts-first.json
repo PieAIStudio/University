@@ -1,0 +1,1326 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-ai-contracts-first",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "ai-contracts-first",
+    "title": "先定契约，再接模型",
+    "description": "把模型当不稳定外部系统：用网关、处理器、调度核心三层契约关住不确定性，而不是让 SDK 渗进业务每一层。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "说明契约先行如何把模型不确定性关进端口，而不是散落在业务路由",
+      "列出 RuntimeDeps 关键端口并解释预算预扣必须先于 complete/stream 的原因",
+      "解释 complete 失败时 NonBillableProviderError 与默认 commit 预扣的差异",
+      "按顺序描述调度在 runAgentDecision 前的密钥、租约、成本与冷却闸门"
+    ],
+    "units": [
+      {
+        "id": "contract-boxes",
+        "title": "契约盒子：先隔离再接线",
+        "objective": "能说明网关、处理器、鉴权各自认什么接口，以及模型注册表为何是授权边界",
+        "lessons": [
+          {
+            "id": "why-contracts-first",
+            "title": "模型是外部系统，不是你的业务层",
+            "content": "# 模型是外部系统，不是你的业务层\n\n## 学习目标\n\n完成本课后，你能说明「契约先行」要隔离的是什么风险，并能指出 TuringPact 把 AI 拆成哪几类契约面。\n\n## 先给结论\n\n- **事实：聊天链路有独立契约文件。** 网关在 `ai-chat-gateway.ts`，处理器在 `ai-chat-handler.ts`，调度在 `ai-scheduler-core.ts`——三者不是「一个大服务里顺手写的函数」，而是各自定义类型与入口。\n- **事实：处理器入口吃的是 `RuntimeDeps`，不是 SDK。** `handleAiChatRequest(req, deps)` 通过 `deps.complete` / `deps.stream` / `deps.budget` 工作，契约层不 import OpenAI 客户端。\n- **事实：调度入口吃的是 `SchedulerDeps`。** `runAgentDecision` 是依赖上的一个函数槽，核心只认 `AgentDecisionEnvelope` 形状。\n- **推论：契约的价值是可替换与可测。** 你换模型供应商、换存储、换鉴权实现时，改的是注入，不是把业务 if/else 写进厂商 SDK 回调里。\n\n## 一个类比\n\n把大模型直接 `import` 进路由，像是把「不可靠的快递小哥」的手机号写进你的会计账本每一页。账本应该只认「收货单格式」：谁送的可以换，单上字段不能乱。契约就是那张收货单。\n\n## 工作示例\n\n1. 你要接一个新聊天模型：先改 `MODEL_REGISTRY` 与网关解析，不碰房间逻辑。\n2. 你要测预算失败：给 `handleAiChatRequest` 注入假 `budget.reserve` 抛 `AiBudgetRpcError`，无需起真实钱包。\n3. 你要测「房间不该再说话」：给调度注入假 `loadRoom` / `getRoomTotalCost`，核心仍走 `handleAiSchedulerRequest`。\n\n## 自检\n\n如果所有 AI 调用都散落在 `routes/*.ts` 里直接 `fetch(provider)`，换供应商或加预扣预算时，你会改几处？契约先行后，目标是改几处？\n\n答案：散落时 N 处；契约先行后，业务只面对 `RuntimeDeps` / `SchedulerDeps`，实现集中在 runtime 装配处。\n\n## 重点\n\n**先定「谁认什么接口」，再决定「哪家模型填这个接口」。** 顺序反了，不确定性会渗进每一层。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 49,
+                "lineEnd": 71,
+                "nodeIds": [],
+                "note": "RuntimeDeps：处理器只依赖 complete/stream/budget 等端口"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 259,
+                "lineEnd": 285,
+                "nodeIds": [],
+                "note": "SchedulerDeps：调度核心通过 runAgentDecision 等端口工作"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 237,
+                "lineEnd": 240,
+                "nodeIds": [],
+                "note": "handleAiChatRequest 签名显式要求 RuntimeDeps"
+              }
+            ],
+            "cards": [
+              {
+                "id": "contract-vs-sdk",
+                "front": "为什么 AI 入口要吃 deps 接口，而不是直接 import 厂商 SDK？",
+                "back": "接口把模型与预算变成可替换实现；业务只测契约行为，不绑死某一家 HTTP 客户端。",
+                "tags": [
+                  "contracts-first"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 49,
+                    "lineEnd": 71,
+                    "nodeIds": [],
+                    "note": "RuntimeDeps 端口清单"
+                  }
+                ]
+              },
+              {
+                "id": "three-surfaces",
+                "front": "TuringPact 把 AI 拆成哪三类契约面？各自挡住什么？",
+                "back": "网关挡模型身份与格式；处理器挡请求边界与预算时序；调度挡触发闸门与副作用写入。",
+                "tags": [
+                  "contracts-first"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 259,
+                    "lineEnd": 285,
+                    "nodeIds": [],
+                    "note": "调度端口与 runAgentDecision"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "contract-deps-name",
+                "kind": "short-answer",
+                "title": "处理器依赖名",
+                "prompt": "聊天处理器入口依赖接口叫什么？",
+                "expectedAnswer": "RuntimeDeps",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 49,
+                    "lineEnd": 71,
+                    "nodeIds": [],
+                    "note": "RuntimeDeps 接口定义"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "registry-is-the-menu",
+            "title": "能点的模型必须先上菜单",
+            "content": "# 能点的模型必须先上菜单\n\n## 学习目标\n\n完成本课后，你能解释 `MODEL_REGISTRY` 为什么是安全边界而不只是配置便利，并能指出默认模型 id 实际走哪条路由。\n\n## 先给结论\n\n- **事实：对外 modelId 是注册表键，不是厂商原始名。** `MODEL_REGISTRY` 把 `google:gemini`、`or:claude-sonnet` 等映射成 `ModelRoute`（provider、transport、apiKeyEnvs、baseUrl）。\n- **事实：未知模型在解析阶段被拒。** `resolveModelRoute` 查不到就返回 `undefined`；处理器据此 400，并附上 `listAvailableModelIds()`。\n- **事实：默认 id 叫 `google:gemini`，路由却是 OpenRouter。** 该条目 `provider: \"openrouter\"`、`model: \"google/gemini-2.5-flash\"`、`apiKeyEnvs: [\"OPENROUTER_API_KEY\"]`——名字是产品语义，传输是实现细节。\n- **推论：菜单即授权。** 客户端不能靠拼厂商 URL 绕过；没登记的模型永远到不了 `complete`。\n\n## 一个类比\n\n餐厅菜单上没有的菜，后厨不接单——不是服务员「尽量帮忙做」。AI 产品里，注册表就是菜单：没写上的模型，连预扣预算都不该发生。\n\n## 工作示例\n\n1. 请求 `modelId: \"gpt-secret-finetune\"`。\n2. `resolveModelRoute` 返回 `undefined`。\n3. 处理器返回 400：`Unknown model: ... Available: ...`。\n4. 全程没有 `budget.reserve`，也没有上游 HTTP。\n\n## 自检\n\n产品默认展示「Gemini」，但密钥环境变量却要求 `OPENROUTER_API_KEY`。这是 bug 还是契约设计？\n\n答案：是设计——`google:gemini` 是产品 id，路由指向 OpenRouter 的 Gemini 模型，密钥跟传输走。\n\n## 重点\n\n**对外模型 id 是你的词汇表；厂商模型名关在 `ModelRoute` 里。** 混淆两者，密钥与计费会绑错对象。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-gateway.ts",
+                "lineStart": 105,
+                "lineEnd": 120,
+                "nodeIds": [],
+                "note": "DEFAULT_MODEL_ID 与 MODEL_REGISTRY 开头条目"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-gateway.ts",
+                "lineStart": 154,
+                "lineEnd": 161,
+                "nodeIds": [],
+                "note": "google:gemini 实际走 openrouter 与 OPENROUTER_API_KEY"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-gateway.ts",
+                "lineStart": 218,
+                "lineEnd": 220,
+                "nodeIds": [],
+                "note": "resolveModelRoute 只做注册表解析"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 277,
+                "lineEnd": 285,
+                "nodeIds": [],
+                "note": "未知 modelId 返回 400 并列出可用 id"
+              }
+            ],
+            "cards": [
+              {
+                "id": "menu-not-passthrough",
+                "front": "客户端传来任意厂商模型名时，系统应在哪一步拒绝？",
+                "back": "在 resolveModelRoute / 注册表解析失败时拒绝，而不是把字符串原样转发给上游。",
+                "tags": [
+                  "gateway"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 277,
+                    "lineEnd": 285,
+                    "nodeIds": [],
+                    "note": "未知模型 400"
+                  }
+                ]
+              },
+              {
+                "id": "gemini-via-openrouter",
+                "front": "默认 modelId google:gemini 实际使用哪家传输与密钥环境变量？",
+                "back": "OpenRouter 传输，读取 OPENROUTER_API_KEY；产品名与线路解耦。",
+                "tags": [
+                  "gateway"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-gateway.ts",
+                    "lineStart": 154,
+                    "lineEnd": 161,
+                    "nodeIds": [],
+                    "note": "google:gemini 路由细节"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-model-id",
+                "kind": "short-answer",
+                "title": "默认模型 id",
+                "prompt": "DEFAULT_MODEL_ID 的字面值是什么？",
+                "expectedAnswer": "google:gemini",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-gateway.ts",
+                    "lineStart": 105,
+                    "lineEnd": 106,
+                    "nodeIds": [],
+                    "note": "DEFAULT_MODEL_ID 常量"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "gateway-normalizes",
+            "title": "网关的工作是归一，不是透传",
+            "content": "# 网关的工作是归一，不是透传\n\n## 学习目标\n\n完成本课后，你能说明 `buildPiContext` 与 `buildGatewayModel` 各自消灭哪一类上游差异，以及为什么处理器只应看到归一后的类型。\n\n## 先给结论\n\n- **事实：上下文被改写成 Pi 形状。** `buildPiContext` 把 system 消息并入 `systemPrompt`，assistant 变成 `{type:\"text\"}` 块，并打上 `timestamp`。\n- **事实：传输分 builtin 与 custom-openai 两支。** `buildGatewayModel` 对 builtin 调 `getBuiltinModel`；对 custom 组装 `api: \"openai-completions\"` 与 `baseUrl`。\n- **事实：出站文本只抽 text 块。** `extractAssistantText` 过滤 `type === \"text\"`，thinking/toolCall 不会当聊天正文返回。\n- **推论：处理器不该知道「这是哪家的消息 JSON」。** 它只编排校验、预算与 `complete`/`stream`；格式战争关在网关。\n\n## 一个类比\n\n海关不让你直接把各国包裹扔进仓库货架——先统一贴仓标、拆危险品。网关就是海关：上游五花八门，仓里只认一种货卡。\n\n## 工作示例\n\n1. 请求里同时有 `systemPrompt` 字段和 `role:\"system\"` 消息。\n2. `buildPiContext` 把两者 trim 后 join 成单一 system。\n3. user/assistant 进入 `messages` 数组；assistant content 已是结构化块。\n4. `complete` 返回含 thinking 的内容时，HTTP JSON 只给 `extractAssistantText` 的纯文本。\n\n## 自检\n\n若处理器直接把上游 SSE 原样转给浏览器，换一家 reasoning 模型时，前端要改什么？网关归一后呢？\n\n答案：原样透传时前端要懂每家事件形态；归一后前端只认网关约定的 chunk（如 `createOpenAiCompatibleChunk`）。\n\n## 重点\n\n**网关契约消灭格式差异；处理器契约消灭时序与计费差异。** 两者混在一个文件里，换模型会逼你重写业务。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-gateway.ts",
+                "lineStart": 242,
+                "lineEnd": 277,
+                "nodeIds": [],
+                "note": "buildPiContext：system 合并与消息归一"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-gateway.ts",
+                "lineStart": 307,
+                "lineEnd": 360,
+                "nodeIds": [],
+                "note": "buildGatewayModel：builtin 与 custom-openai 两分支"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-gateway.ts",
+                "lineStart": 280,
+                "lineEnd": 292,
+                "nodeIds": [],
+                "note": "extractAssistantText 只拼接 text 块"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-normalize",
+                "front": "为什么要把 system 消息并进 systemPrompt，而不是原样塞给所有供应商？",
+                "back": "各上游对 system 位置与条数约定不同；合并成单一 systemPrompt 降低传输分支复杂度。",
+                "tags": [
+                  "gateway"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-gateway.ts",
+                    "lineStart": 242,
+                    "lineEnd": 277,
+                    "nodeIds": [],
+                    "note": "buildPiContext 合并 system"
+                  }
+                ]
+              },
+              {
+                "id": "text-only-out",
+                "front": "extractAssistantText 故意丢掉哪类 content block？为什么？",
+                "back": "thinking 与 toolCall。聊天响应契约只承诺可见文本，避免把内部推理当用户可见回复。",
+                "tags": [
+                  "gateway"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-gateway.ts",
+                    "lineStart": 280,
+                    "lineEnd": 292,
+                    "nodeIds": [],
+                    "note": "只保留 type text"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "gateway-api-field",
+                "kind": "short-answer",
+                "title": "custom 传输的 api 字段",
+                "prompt": "custom-openai 路径里 GatewayModel.api 固定写成什么？",
+                "expectedAnswer": "openai-completions",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-gateway.ts",
+                    "lineStart": 341,
+                    "lineEnd": 346,
+                    "nodeIds": [],
+                    "note": "custom 路径固定 api 字段"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "three-boxes-flow",
+            "title": "三层盒子：请求怎么穿过契约",
+            "content": "# 三层盒子：请求怎么穿过契约\n\n## 学习目标\n\n完成本课后，你能按调用顺序画出「鉴权 → 处理器 → 网关类型 → 运行时 complete」的边界，并指出预算预扣插在哪两个步骤之间。\n\n## 先给结论\n\n- **事实：鉴权是独立盒子。** `handleAuthenticatedAiChatRequest` 验 Bearer、得到 `AiChatIdentity` 后，才 `deps.handleRequest(request, context)`。\n- **事实：装配时才接上预算与运行时。** `createAiChatAuthDeps` 在 `handleRequest` 闭包里 `createAiBudgetClient` + `createAiChatRuntimeDeps`，再调 `handleAiChatRequest`。\n- **事实：预扣发生在 `deps.complete` 之前。** 处理器先 `validateRequestBounds`、`resolveModelRoute`、估最坏成本，再 `budget.reserve`，最后才 `complete`/`stream`。\n- **推论：越靠近模型的代码越不该拥有身份与钱包语义。** 身份在 auth，钱在 budget 端口，模型形态在 gateway 类型。\n\n## 一个类比\n\n机场安检 → 登机口核票 → 机型与航线手册 → 飞行员操作。把「查护照」写进驾驶舱清单，或把「油量结算」写进护照章，都会让事故无法定位。\n\n## 工作示例\n\n```mermaid\nsequenceDiagram\n  participant C as Client\n  participant A as ai-chat-auth\n  participant H as ai-chat-handler\n  participant G as ai-chat-gateway types\n  participant R as Runtime complete/stream\n  C->>A: Authorization Bearer\n  A->>A: authenticate\n  A->>H: handleAiChatRequest + RuntimeDeps\n  H->>H: bounds + resolveModelRoute\n  H->>H: budget.reserve\n  H->>G: buildGatewayModel / buildPiContext\n  H->>R: complete or stream\n  R-->>H: assistant message\n  H->>H: budget.commit or refund\n  H-->>C: JSON or SSE\n```\n\n图里**最关键的一条线**是 `budget.reserve` 画在 `complete/stream` 之前：钱的闸门属于处理器契约时序，不属于鉴权，也不属于模型 SDK。\n\n## 自检\n\n若把 `budget.reserve` 挪到 `complete` 成功之后，失败模式会变成什么？\n\n答案：上游已计费、本地预扣未发生或失败时，出现「厂商收了钱、用户未扣款」的敞口。\n\n## 重点\n\n**边界图不是装饰：每条箭头都在回答「这一层允许依赖什么」。** 箭头画错，代码审查时你甚至说不清该改哪一文件。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                "lineStart": 52,
+                "lineEnd": 75,
+                "nodeIds": [],
+                "note": "鉴权成功后才把 request 交给 handleRequest"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                "lineStart": 108,
+                "lineEnd": 120,
+                "nodeIds": [],
+                "note": "装配：budget + createAiChatRuntimeDeps 再进处理器"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 313,
+                "lineEnd": 350,
+                "nodeIds": [],
+                "note": "reserve 成功后才 build 模型并 complete"
+              }
+            ],
+            "cards": [
+              {
+                "id": "reserve-before-complete",
+                "front": "在三层盒子里，budget.reserve 必须出现在哪一步之前？",
+                "back": "必须在 deps.complete / deps.stream 调用之前；预扣失败则根本不触达上游。",
+                "tags": [
+                  "handler",
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 313,
+                    "lineEnd": 350,
+                    "nodeIds": [],
+                    "note": "reserve 后才 complete"
+                  }
+                ]
+              },
+              {
+                "id": "auth-not-budget",
+                "front": "为什么鉴权层 createAiChatAuthDeps 只在有 identity 时创建 budget client？",
+                "back": "匿名/未登录请求在 auth 已 401；预算客户端需要 accessToken，只应在已认证 context 上创建。",
+                "tags": [
+                  "auth"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                    "lineStart": 108,
+                    "lineEnd": 120,
+                    "nodeIds": [],
+                    "note": "context 存在才 createAiBudgetClient"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "auth-context-token-field",
+                "kind": "short-answer",
+                "title": "身份上下文 token 字段",
+                "prompt": "AiChatRequestContext 里携带给预算客户端的 token 字段名是？",
+                "expectedAnswer": "accessToken",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                    "lineStart": 30,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "AiChatRequestContext 含 accessToken"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "handler-contract",
+        "title": "处理器契约：边界、预算、身份",
+        "objective": "能按契约时序排列校验、预扣、调用与结算，并分清鉴权盒与处理盒",
+        "lessons": [
+          {
+            "id": "runtime-deps-port",
+            "title": "处理器只认 RuntimeDeps 端口",
+            "content": "# 处理器只认 RuntimeDeps 端口\n\n## 学习目标\n\n完成本课后，你能列出 `RuntimeDeps` 的必需端口，并说明为什么 `complete`/`stream` 与 `budget` 必须同级注入而不是写死在文件顶部。\n\n## 先给结论\n\n- **事实：调用模型的能力是函数端口。** `complete` 与 `stream` 接收已归一的 `GatewayModel` 与 `GatewayPiContext`，返回 `GatewayAssistantMessage` 或事件流。\n- **事实：环境与内置模型也是端口。** `envGet` 读密钥；`getBuiltinModel` 由运行时提供，契约不绑死某 SDK 的 model table。\n- **事实：预算是一等依赖。** `budget: AiBudgetLifecycle` 与 complete 并列——计费不是 afterthought 日志。\n- **推论：测试时你可以假 complete 真 budget，或反过来。** 若它们耦合在一个单例里，你只能 E2E。\n\n## 一个类比\n\n插座板规定电压与孔型（端口），不规定你插台灯还是充电器。`RuntimeDeps` 是插座板；OpenAI/OpenRouter 适配器是插头。\n\n## 工作示例\n\n1. 单测构造 `RuntimeDeps`：`complete` 固定返回一段 text；`budget.reserve` 返回 `{status:\"reserved\",...}`。\n2. 调用 `handleAiChatRequest` 走非 stream 分支。\n3. 断言响应 JSON 的 `content`，并断言 `commit` 被调用且 `actualMicroUsd` 合理。\n4. 全程不起真实 HTTP，也不读真实 env 密钥。\n\n## 自检\n\n如果 `handleAiChatRequest` 内部直接 `process.env.OPENAI_API_KEY` 并 `fetch`，你失去的测试能力是什么？\n\n答案：无法在不改代码的情况下模拟缺密钥、上游超时、预算拒绝；契约被环境与网络绑死。\n\n## 重点\n\n**端口清单就是这层的权限边界。** 清单上没有的能力，处理器实现就不该偷偷拿。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 49,
+                "lineEnd": 71,
+                "nodeIds": [],
+                "note": "RuntimeDeps 全端口：complete/stream/getBuiltinModel/envGet/budget"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 237,
+                "lineEnd": 240,
+                "nodeIds": [],
+                "note": "handleAiChatRequest 强制注入 RuntimeDeps"
+              }
+            ],
+            "cards": [
+              {
+                "id": "deps-ports-list",
+                "front": "RuntimeDeps 里与「调用模型」直接对应的两个方法名是什么？",
+                "back": "complete 与 stream。其余是辅助端口：getBuiltinModel、envGet、budget、log。",
+                "tags": [
+                  "handler"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 49,
+                    "lineEnd": 59,
+                    "nodeIds": [],
+                    "note": "complete 与 stream 签名"
+                  }
+                ]
+              },
+              {
+                "id": "budget-first-class",
+                "front": "为什么 budget 要放进 RuntimeDeps，而不是在 commit 时再动态 import 钱包模块？",
+                "back": "预扣/提交/退款是请求主路径的一部分；作为端口才能统一假实现与替换计量后端。",
+                "tags": [
+                  "handler",
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 65,
+                    "lineEnd": 65,
+                    "nodeIds": [],
+                    "note": "budget: AiBudgetLifecycle"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "stream-port-name",
+                "kind": "short-answer",
+                "title": "流式端口名",
+                "prompt": "RuntimeDeps 上负责流式输出的字段名是？",
+                "expectedAnswer": "stream",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 55,
+                    "lineEnd": 59,
+                    "nodeIds": [],
+                    "note": "stream 端口定义"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "bounds-before-money",
+            "title": "边界校验必须在花钱之前",
+            "content": "# 边界校验必须在花钱之前\n\n## 学习目标\n\n完成本课后，你能背出 TuringPact 聊天请求的关键数值边界，并说明它们为何排在 `budget.reserve` 之前。\n\n## 先给结论\n\n- **事实：消息与体积有硬顶。** `MAX_MESSAGES = 40`，消息内容合计 `MAX_MESSAGE_BYTES = 32 * 1024`，system prompt `8 * 1024` 字节。\n- **事实：输出与温度有区间。** `maxTokens` 必须是 1–500 的整数；`temperature` 在 0–2。\n- **事实：校验失败直接 400。** `validateRequestBounds` 返回字符串错误信息；处理器在解析 route、估费、预扣之前就返回。\n- **推论：边界是成本与安全的第一道便宜闸门。** 拒绝一个 2MB prompt 比预扣后再发现便宜几个数量级。\n\n## 一个类比\n\n游乐园身高线在售票窗口——不够高的孩子根本不进队伍。若先买票再量身高，退票成本与队伍拥堵都是你的。\n\n## 工作示例\n\n1. 客户端塞入 41 条 messages。\n2. `isAiChatMessageArray` 通过（形状合法）。\n3. `validateRequestBounds` 返回 at most 40 messages。\n4. 响应 400；`resolveModelRoute` 与 `budget.reserve` 未执行。\n\n## 自检\n\n`maxTokens` 默认是 500，上限也是 500。若产品经理要求「偶尔 4000 tokens」，你该改哪一层、同时改什么？\n\n答案：改处理器常量与估费/预扣逻辑；只改前端占位符无效，因为服务端会 400。\n\n## 重点\n\n**可机器检查的拒绝条件，一律放在不可逆成本之前。** 边界常量写在契约文件里，是为了审查时一眼看见上限。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 95,
+                "lineEnd": 103,
+                "nodeIds": [],
+                "note": "MAX_MESSAGES / MAX_MESSAGE_BYTES / maxTokens / temperature 常量"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 121,
+                "lineEnd": 157,
+                "nodeIds": [],
+                "note": "validateRequestBounds 逐项检查并返回错误字符串"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 267,
+                "lineEnd": 275,
+                "nodeIds": [],
+                "note": "bounds 错误在 route 解析与预扣之前返回 400"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-bounds-first",
+                "front": "为什么消息条数校验要在 budget.reserve 之前？",
+                "back": "非法请求不该占用预扣额度或触发估费；边界失败是廉价 400，预扣是有副作用的远程调用。",
+                "tags": [
+                  "handler"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 267,
+                    "lineEnd": 318,
+                    "nodeIds": [],
+                    "note": "先 bounds 后 reserve 的顺序"
+                  }
+                ]
+              },
+              {
+                "id": "max-output-tokens",
+                "front": "TuringPact AI chat 允许的 maxTokens 上限是多少？默认是多少？",
+                "back": "上限 500，默认也是 500。输出长度被故意钉死，防止单次请求成本失控。",
+                "tags": [
+                  "handler",
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 98,
+                    "lineEnd": 99,
+                    "nodeIds": [],
+                    "note": "MIN/MAX_OUTPUT_TOKENS"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 258,
+                    "lineEnd": 259,
+                    "nodeIds": [],
+                    "note": "maxTokens 默认 500"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "max-messages-num",
+                "kind": "short-answer",
+                "title": "消息条数上限",
+                "prompt": "MAX_MESSAGES 的数值是？",
+                "expectedAnswer": "40",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 95,
+                    "lineEnd": 95,
+                    "nodeIds": [],
+                    "note": "MAX_MESSAGES = 40"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "budget-lifecycle-in-handler",
+            "title": "失败时：退款还是按预扣入账？",
+            "content": "# 失败时：退款还是按预扣入账？\n\n## 学习目标\n\n完成本课后，你能说明非流式路径上 `commit` 与 `refund` 的分支条件，并解释为何「上游报错」不等于「用户全额退款」。\n\n## 先给结论\n\n- **事实：先估最坏成本再预扣。** `estimateWorstCaseModelCostMicroUsd` 后 `budget.reserve({requestId, reservedMicroUsd})`；`idempotent` 或状态不是 `reserved` 则 409。\n- **事实：成功按实际用量 commit，但封顶预扣。** `usageCostMicroUsd` 在有合法 token 用量时 `Math.min(reserved, metered)`，否则退回 reserved。\n- **事实：普通上游错误会 commit 预扣额。** 非 `NonBillableProviderError` 的 complete 失败走 `commitBudget(..., reservation.reservedMicroUsd)`；只有 `NonBillableProviderError` 才 `refundBudget`。\n- **推论：契约把「厂商可能已计费」编码进错误类型。** 默认假设失败仍可能产生成本，退款是显式例外，不是默认同情。\n\n## 一个类比\n\n酒店预授权 1000 元：入住成功按账单结算；你损坏物品被赶出去，酒店仍可能扣预授权。只有「订单根本未创建」才全额解冻——对应 `NonBillableProviderError`。\n\n## 工作示例\n\n1. 预扣成功，`complete` 抛普通 `Error(\"rate limit\")`。\n2. 处理器识别**不是** `NonBillableProviderError`。\n3. `commitBudget(requestId, reservedMicroUsd)`，再 502 返回 provider 错误。\n4. 若抛的是 `NonBillableProviderError`，则 `refundBudget`，用户不被记最坏成本。\n\n## 自检\n\n为什么不能「凡是 catch 就 refund」？\n\n答案：许多失败发生在上游已开始计费或你无法证明未计费时；默认 refund 会造成系统性亏钱。契约用错误类型区分可证明未计费的路径。\n\n## 重点\n\n**计费语义属于处理器契约，不是运维事后对账的补丁。** 最反直觉的一点：上游 API error 默认按预扣入账，而不是退款。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 292,
+                "lineEnd": 328,
+                "nodeIds": [],
+                "note": "估费、reserve、idempotent 时 409"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 169,
+                "lineEnd": 189,
+                "nodeIds": [],
+                "note": "usageCostMicroUsd：有用量则 min(reserved, metered)"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 368,
+                "lineEnd": 383,
+                "nodeIds": [],
+                "note": "complete 失败：NonBillable 才 refund，否则 commit 预扣额"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 73,
+                "lineEnd": 78,
+                "nodeIds": [],
+                "note": "NonBillableProviderError 错误类型定义"
+              }
+            ],
+            "cards": [
+              {
+                "id": "when-refund",
+                "front": "非流式 complete 失败时，什么错误类型会触发 refund 而不是 commit？",
+                "back": "仅 NonBillableProviderError。其他错误按 reservedMicroUsd commit。",
+                "tags": [
+                  "handler",
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 373,
+                    "lineEnd": 378,
+                    "nodeIds": [],
+                    "note": "NonBillable 分支 refund 否则 commit"
+                  }
+                ]
+              },
+              {
+                "id": "why-409-reserve",
+                "front": "reservation.idempotent 为 true 时为何返回 409 而不是直接返回旧结果？",
+                "back": "处理器把「同一 requestId 已预扣/已终结」视为冲突，避免在契约层静默复用不明状态的调用。",
+                "tags": [
+                  "handler"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 326,
+                    "lineEnd": 328,
+                    "nodeIds": [],
+                    "note": "idempotent 或非 reserved 返回 409"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "fail-default-settle",
+                "kind": "short-answer",
+                "title": "普通上游错误的结算",
+                "prompt": "非 NonBillable 的 complete 失败默认做 commit 还是 refund？",
+                "expectedAnswer": "commit",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 373,
+                    "lineEnd": 378,
+                    "nodeIds": [],
+                    "note": "else 分支 commitBudget 预扣额"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "auth-is-separate-box",
+            "title": "认证边界：身份不进模型层",
+            "content": "# 认证边界：身份不进模型层\n\n## 学习目标\n\n完成本课后，你能描述 `AiChatAuthDeps` 如何把「验身份」与「处理 AI 请求」拆开，并说明鉴权失败时的 fail-closed 行为。\n\n## 先给结论\n\n- **事实：鉴权依赖只有两件事。** `AiChatAuthDeps`：`authenticate(accessToken)` 与 `handleRequest(request, context?)`。\n- **事实：无 Bearer 或身份为空都是 401。** `getBearerToken` 失败、`authenticate` 返回 null、甚至 `catch` 任意异常，一律 `unauthorizedResponse()`（文案 `Unauthorized AI request`）。\n- **事实：身份上下文很窄。** `AiChatRequestContext` 只有 `accessToken` 与 `AiChatIdentity`（`userId`、`isAnonymous`），不含模型参数。\n- **推论：模型层永远不该自己「顺便」解析 JWT。** 身份在盒子边缘完成；里面的处理器只拿已注入的 budget/runtime。\n\n## 一个类比\n\n公司前台核工牌，实验室只认「已登记访客单」。如果每个仪器自己刷身份证，你会得到十套不一致的门禁，且仪器固件里塞满了 HR 逻辑。\n\n## 工作示例\n\n1. 请求缺 `Authorization` → 401，不进入 `handleAiChatRequest`。\n2. Token 有但 `verifyAccessToken` 失败 → `authenticate` 返回 null → 401。\n3. 成功时 `handleRequest` 带上 context，闭包创建带 `accessToken` 的 budget client。\n4. OPTIONS 预检直接 `handleRequest` 不鉴权，避免 CORS 预检被 401。\n\n## 自检\n\n鉴权 `catch` 为什么不返回 500「认证服务异常」，而仍是 401？\n\n答案：对外不区分「坏 token」与「认证后端抖了一下」，避免信息泄漏与半开状态；代价是运维要靠日志区分，对调用方则 fail-closed。\n\n## 重点\n\n**认证是契约边界上的门，不是 AI 特性开关。** 门后的代码不应再猜测「这人到底是谁」。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                "lineStart": 17,
+                "lineEnd": 33,
+                "nodeIds": [],
+                "note": "AiChatAuthDeps / AiChatIdentity / AiChatRequestContext"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                "lineStart": 52,
+                "lineEnd": 75,
+                "nodeIds": [],
+                "note": "Bearer 校验、authenticate、失败与异常皆 401"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                "lineStart": 45,
+                "lineEnd": 50,
+                "nodeIds": [],
+                "note": "unauthorizedResponse 固定 401 文案"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                "lineStart": 93,
+                "lineEnd": 121,
+                "nodeIds": [],
+                "note": "createAiChatAuthDeps 装配 authenticate 与 handleRequest"
+              }
+            ],
+            "cards": [
+              {
+                "id": "auth-catch-401",
+                "front": "authenticate 抛异常时，handleAuthenticatedAiChatRequest 返回什么状态码？",
+                "back": "401。catch 与 null identity 走同一 unauthorized 路径，默认拒绝。",
+                "tags": [
+                  "auth"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                    "lineStart": 65,
+                    "lineEnd": 74,
+                    "nodeIds": [],
+                    "note": "try/catch 中失败返回 unauthorized"
+                  }
+                ]
+              },
+              {
+                "id": "context-shape",
+                "front": "AiChatRequestContext 包含哪些字段？为什么不包含 modelId？",
+                "back": "accessToken 与 identity。modelId 属于请求 body，由处理器契约解析，不该混进身份上下文。",
+                "tags": [
+                  "auth"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                    "lineStart": 30,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "AiChatRequestContext 字段"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "auth-fail-status",
+                "kind": "short-answer",
+                "title": "鉴权失败状态码",
+                "prompt": "无 Bearer 时 AI 鉴权响应的 HTTP 状态码？",
+                "expectedAnswer": "401",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                    "lineStart": 60,
+                    "lineEnd": 63,
+                    "nodeIds": [],
+                    "note": "无 token 返回 unauthorizedResponse"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "scheduler-contract",
+        "title": "调度契约：注入、闸门、交还租约",
+        "objective": "能描述 SchedulerDeps 注入点、模型前闸门与 buildPatch 交还租约的原因",
+        "lessons": [
+          {
+            "id": "scheduler-deps-surface",
+            "title": "调度核心只认 SchedulerDeps",
+            "content": "# 调度核心只认 SchedulerDeps\n\n## 学习目标\n\n完成本课后，你能说明 `SchedulerDeps` 把「读世界」「跑模型」「写副作用」分成哪些端口，以及为什么 `runAgentDecision` 的返回类型是 `AgentDecisionEnvelope`。\n\n## 先给结论\n\n- **事实：读端口覆盖房间运行所需快照。** `loadRuntimeState`、`loadRoom`、`loadPlayers`、消息与 prompts、以及 `getRoomTotalCost`。\n- **事实：模型决策是单一端口。** `runAgentDecision(input) => Promise<AgentDecisionEnvelope>`，envelope 含 decision、promptSnapshot、toolTrace、usage 等。\n- **事实：写端口与可选原子提交并存。** 默认可 `insertMessage` / `insertUsageLog` / `updateRuntimeState`；若提供 `applySchedulerResult` 则走原子路径。\n- **推论：调度核心是状态机编排器，不是 ORM，也不是 Prompt 文件。** 它编排顺序与闸门，细节交给 deps。\n\n## 一个类比\n\n足球教练的战术板只写「谁传给谁」，不写草皮供应商与球衣品牌。`SchedulerDeps` 是战术板接口；Supabase 或 Postgres 实现是球衣与场地。\n\n## 工作示例\n\n1. 实现一个内存版 `SchedulerDeps`：固定 room status=playing、cost=0、空消息。\n2. `runAgentDecision` 返回 `shouldSpeak: true` 与一句 publicMessage。\n3. 调 `handleAiSchedulerRequest`（配好 secret 与 lease）。\n4. 断言 `insertMessage` 被调用，且 `updateRuntimeState` 清掉 lease。\n\n## 自检\n\n为什么不让核心直接 `import { supabase }`？\n\n答案：换存储、做单测、或用 `applySchedulerResult` 原子写时都要改核心；端口把存储决策关在 runtime 工厂。\n\n## 重点\n\n**调度契约的主语是「何时说话、如何落库」，不是「如何调用某 LLM SDK」。** 模型被关在 `runAgentDecision` 盒子里。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 259,
+                "lineEnd": 311,
+                "nodeIds": [],
+                "note": "SchedulerDeps 完整端口面"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 160,
+                "lineEnd": 175,
+                "nodeIds": [],
+                "note": "AgentDecisionEnvelope 形状：decision 与可观测字段"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 123,
+                "lineEnd": 130,
+                "nodeIds": [],
+                "note": "AgentDecision 决策字段 shouldSpeak/publicMessage/..."
+              }
+            ],
+            "cards": [
+              {
+                "id": "run-agent-port",
+                "front": "调度核心通过哪个 deps 方法触发模型决策？返回类型名是什么？",
+                "back": "runAgentDecision，返回 AgentDecisionEnvelope。",
+                "tags": [
+                  "scheduler"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 283,
+                    "lineEnd": 285,
+                    "nodeIds": [],
+                    "note": "runAgentDecision 签名"
+                  }
+                ]
+              },
+              {
+                "id": "apply-optional",
+                "front": "applySchedulerResult 为何是可选端口？",
+                "back": "有则走原子应用；无则核心回退为 insertMessage/insertUsageLog/updateRuntimeState 分步写。",
+                "tags": [
+                  "scheduler"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 300,
+                    "lineEnd": 302,
+                    "nodeIds": [],
+                    "note": "applySchedulerResult 可选"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 445,
+                    "lineEnd": 454,
+                    "nodeIds": [],
+                    "note": "有 apply 则走原子路径"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "agent-envelope-name",
+                "kind": "short-answer",
+                "title": "决策返回类型",
+                "prompt": "runAgentDecision 的 Promise 结果类型名？",
+                "expectedAnswer": "AgentDecisionEnvelope",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 160,
+                    "lineEnd": 175,
+                    "nodeIds": [],
+                    "note": "AgentDecisionEnvelope 接口"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "factory-injection",
+            "title": "工厂注入：实现细节停在 runtime",
+            "content": "# 工厂注入：实现细节停在 runtime\n\n## 学习目标\n\n完成本课后，你能指出 `createSchedulerDeps` 如何按模式装配实现，以及 `runAgentDecision` 在哪一层被绑到 Mastra。\n\n## 先给结论\n\n- **事实：公共能力在 `createCommonSchedulerDeps`。** 注入 `now`、`sleep`，以及 `runAgentDecision -> runMastraAgentDecision`（再注入 `createMastraDecisionAgent`）。\n- **事实：工厂按 DB 模式分支。** `getSchedulerDbMode` 为 `supabase` 时走 `createSupabaseSchedulerDeps`；否则要求 `TURING_PACT_DATABASE_URL` 并走 Postgres 工厂。\n- **事实：测试可替换工厂。** `SchedulerDepsFactoryOptions` 允许传入 `createSupabaseDeps` / `createPostgresDeps` / `envGet`，不必改核心。\n- **推论：契约文件保持纯编排；SDK 与 SQL 停在 runtime。** 这是「先定契约再接模型」在代码目录上的落点。\n\n## 一个类比\n\n电源总闸箱（工厂）决定这层楼接市电还是发电机；楼里电器（调度核心）只认插座电压。你不会让冰箱自己选择变电站。\n\n## 工作示例\n\n1. 生产：`createSchedulerDeps()` 读 env，mode=supabase，返回带真实 load/insert 的 deps。\n2. 测试：传入 `createSupabaseDeps: () => fakeDeps`。\n3. `handleAiSchedulerRequest` 仍只调用端口，不知道 Mastra 类名。\n4. 换 agent 实现时改 `createCommonSchedulerDeps` 的绑定，不改闸门顺序。\n\n## 自检\n\nPostgres 分支传入的 `loadRoom: async () => null` 等占位，意图是什么？\n\n答案：满足类型与展开结构，真正实现由 `createPostgresSchedulerDeps` 覆盖；占位防止「半接线」的 deps 漏字段时静默 undefined 行为难查。\n\n## 重点\n\n**注入点是唯一允许出现厂商名字的地方之一。** 若 Mastra 标识散落进 `handleAiSchedulerRequest`，契约已泄漏。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/scheduler-deps.ts",
+                "lineStart": 70,
+                "lineEnd": 87,
+                "nodeIds": [],
+                "note": "createCommonSchedulerDeps 绑定 runMastraAgentDecision"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/scheduler-deps.ts",
+                "lineStart": 270,
+                "lineEnd": 302,
+                "nodeIds": [],
+                "note": "createSchedulerDeps：supabase/postgres 分支与可替换工厂"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/scheduler-deps.ts",
+                "lineStart": 23,
+                "lineEnd": 29,
+                "nodeIds": [],
+                "note": "SchedulerDepsFactoryOptions 允许注入替身工厂"
+              }
+            ],
+            "cards": [
+              {
+                "id": "where-mastra-binds",
+                "front": "runMastraAgentDecision 是在契约核心里 import 使用的，还是在 runtime 工厂绑定的？",
+                "back": "在 runtime 的 createCommonSchedulerDeps 绑定到 runAgentDecision 端口；核心只调端口。",
+                "tags": [
+                  "scheduler"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/scheduler-deps.ts",
+                    "lineStart": 83,
+                    "lineEnd": 87,
+                    "nodeIds": [],
+                    "note": "runAgentDecision 绑定 Mastra"
+                  }
+                ]
+              },
+              {
+                "id": "mode-switch",
+                "front": "createSchedulerDeps 依据什么在 Supabase 与 Postgres 实现之间切换？",
+                "back": "getSchedulerDbMode(envGet)；supabase 走一套，否则要求 database URL 走 Postgres。",
+                "tags": [
+                  "scheduler"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/scheduler-deps.ts",
+                    "lineStart": 273,
+                    "lineEnd": 278,
+                    "nodeIds": [],
+                    "note": "mode 分支"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "mastra-bind-port",
+                "kind": "short-answer",
+                "title": "Mastra 绑定的端口名",
+                "prompt": "createCommonSchedulerDeps 把 Mastra 决策绑到 SchedulerDeps 的哪个字段？",
+                "expectedAnswer": "runAgentDecision",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/scheduler-deps.ts",
+                    "lineStart": 83,
+                    "lineEnd": 87,
+                    "nodeIds": [],
+                    "note": "runAgentDecision 绑定 Mastra"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "gates-before-agent",
+            "title": "模型调用前的硬闸门",
+            "content": "# 模型调用前的硬闸门\n\n## 学习目标\n\n完成本课后，你能按顺序说出调度在调用 `runAgentDecision` 之前检查的关键闸门，并解释 `stale_dispatch` 与 `cost_threshold_exceeded` 的产品含义。\n\n## 先给结论\n\n- **事实：共享密钥挡外部乱调。** `AI_SCHEDULER_SHARED_SECRET` 与头 `x-scheduler-secret` 不一致（或未配置）→ 401。\n- **事实：租约挡过期派发。** `runtimeState.lease_token === payload.lease_token` 且 `lease_until` 仍在未来，否则 409 `stale_dispatch`。\n- **事实：成本与冷却挡无效推理。** `totalCost >= COST_THRESHOLD_USD`（0.02）则 skip 并 `next_check_at: null`；距上次公聊不足 `MIN_PUBLIC_SPEAK_INTERVAL_MS`（15s）则 `too_soon`。\n- **推论：最贵的操作（跑 agent）被多道便宜检查保护。** 闸门写在契约核心，保证任何存储实现都无法「忘了检查」。\n\n## 一个类比\n\n手术室进门要刷工牌、核对接台病人、查禁食与凝血——都在麻醉开始之前。麻醉（模型调用）一旦开始，成本与风险陡增。\n\n## 工作示例\n\n1. cron 带过期 `lease_token` 重试 → 409 `stale_dispatch`，不跑模型。\n2. 房间累计 AI 成本已 ≥ $0.02 → skip `cost_threshold_exceeded`，释放后续检查（`next_check_at: null`）。\n3. 14 秒前刚发过公聊 → skip `too_soon`，安排下次 `next_check_at`。\n4. 全部通过才 `deps.runAgentDecision(...)`。\n\n## 自检\n\n为什么成本超限时仍调用 `applySchedulerEffects` 而不是直接 return？\n\n答案：需要把原因写入 runtime（`last_decision_reason`）并清掉 `next_check_at`，否则调度会空转重试烧钱或状态不可观测。\n\n## 重点\n\n**闸门顺序本身就是契约。** 先租约后成本后冷却——你调换顺序，失败模式与账单形状会一起变。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 618,
+                "lineEnd": 623,
+                "nodeIds": [],
+                "note": "调度共享密钥校验失败返回 401"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 646,
+                "lineEnd": 649,
+                "nodeIds": [],
+                "note": "lease 不匹配或过期返回 stale_dispatch 409"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 3,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "COST_THRESHOLD_USD 与 MIN_PUBLIC_SPEAK_INTERVAL_MS 等常量"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 679,
+                "lineEnd": 740,
+                "nodeIds": [],
+                "note": "成本阈值与 too_soon 在 runAgentDecision 之前 skip"
+              }
+            ],
+            "cards": [
+              {
+                "id": "stale-dispatch",
+                "front": "lease_token 不匹配时，调度返回什么业务错误语义？HTTP 状态？",
+                "back": "stale_dispatch，HTTP 409。表示这份派发已过期或被抢占，不应再执行。",
+                "tags": [
+                  "scheduler"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 646,
+                    "lineEnd": 649,
+                    "nodeIds": [],
+                    "note": "stale_dispatch 409"
+                  }
+                ]
+              },
+              {
+                "id": "cost-gate-value",
+                "front": "房间总成本闸门 COST_THRESHOLD_USD 的数值是多少？超限后 next_check_at 设为什么？",
+                "back": "0.02 美元。超限后 next_check_at 设为 null，停止继续调度。",
+                "tags": [
+                  "scheduler",
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "COST_THRESHOLD_USD = 0.02"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 688,
+                    "lineEnd": 690,
+                    "nodeIds": [],
+                    "note": "next_check_at null"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "stale-http-code",
+                "kind": "short-answer",
+                "title": "过期派发状态码",
+                "prompt": "stale_dispatch 对应的 HTTP 状态码？",
+                "expectedAnswer": "409",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 647,
+                    "lineEnd": 648,
+                    "nodeIds": [],
+                    "note": "stale_dispatch 409"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "release-lease-on-exit",
+            "title": "每次决策结束都要交回租约",
+            "content": "# 每次决策结束都要交回租约\n\n## 学习目标\n\n完成本课后，你能解释 `buildPatch` 为何总是把 `lease_token`/`lease_until` 置空，以及 `atomicRuntimePatch` 在原子提交路径上如何避免租约字段冲突。\n\n## 先给结论\n\n- **事实：`buildPatch` 默认清空租约。** 返回对象先写 `lease_token: null`、`lease_until: null`，再写入 reason 与调用方 patch。\n- **事实：成功、跳过、失败都走 effects。** 无论 sent 还是 `ai_generation_failed`，最终 `applySchedulerEffects` 带着由 `buildPatch` 生成的 runtimePatch。\n- **事实：原子路径会剥掉租约字段。** `atomicRuntimePatch` 从 patch 中 omit `lease_token`/`lease_until` 再交给 `applySchedulerResult`——租约释放策略由原子实现约定，避免双写冲突。\n- **推论：租约是「单次派发权」，不是长期会话锁。** 不交回就会造成死锁式停更，或重复派发双响。\n\n## 一个类比\n\n会议室门禁卡：你进去开会（持 lease），会开完必须还卡。无论会议圆满、取消还是投影仪炸了，卡都得还——否则下一段预定无法进门。\n\n## 工作示例\n\n1. 合法派发进入核心，通过闸门，agent 成功发言。\n2. `buildPatch({ next_check_at, last_public_message_at }, reason)` 生成补丁，lease 字段为 null。\n3. `applySchedulerEffects` 更新 runtime，并写 orchestration run。\n4. 若 agent 抛错：同样 `buildPatch` 带 `ERROR_RETRY_MS` 的 `next_check_at` 与错误信息，lease 仍被清空。\n\n## 自检\n\n若成功路径忘记清空 `lease_token`，下一次 cron 用新 token 派发时会发生什么？\n\n答案：`runtimeState.lease_token === payload.lease_token` 失败 → 持续 `stale_dispatch`，AI 表面「死了」。\n\n## 重点\n\n**持有租约的作用域必须小于等于一次 `handleAiSchedulerRequest`。** 交还租约是契约的一部分，不是日志里的 nicety。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 359,
+                "lineEnd": 372,
+                "nodeIds": [],
+                "note": "buildPatch 固定清空 lease_token 与 lease_until"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 374,
+                "lineEnd": 384,
+                "nodeIds": [],
+                "note": "atomicRuntimePatch 剥除租约字段"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 438,
+                "lineEnd": 454,
+                "nodeIds": [],
+                "note": "applySchedulerEffects 优先走 applySchedulerResult"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 910,
+                "lineEnd": 917,
+                "nodeIds": [],
+                "note": "失败路径同样 buildPatch 并安排 ERROR_RETRY_MS"
+              }
+            ],
+            "cards": [
+              {
+                "id": "buildpatch-lease",
+                "front": "buildPatch 在合并调用方 patch 之前，固定把哪两个租约字段写成 null？",
+                "back": "lease_token 与 lease_until。确保每次决策结束交回派发权。",
+                "tags": [
+                  "scheduler"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 364,
+                    "lineEnd": 366,
+                    "nodeIds": [],
+                    "note": "lease 字段置 null"
+                  }
+                ]
+              },
+              {
+                "id": "why-atomic-strip",
+                "front": "为什么原子提交路径要用 atomicRuntimePatch 去掉租约字段？",
+                "back": "避免与 applySchedulerResult 内部的租约/锁协议双写冲突；租约策略由原子实现统一处理。",
+                "tags": [
+                  "scheduler"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 374,
+                    "lineEnd": 384,
+                    "nodeIds": [],
+                    "note": "omit lease 字段"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 445,
+                    "lineEnd": 451,
+                    "nodeIds": [],
+                    "note": "原子路径传入 atomicRuntimePatch"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "lease-null-fields",
+                "kind": "short-answer",
+                "title": "交回租约字段",
+                "prompt": "buildPatch 固定清空的两个字段名用加号连接",
+                "expectedAnswer": "lease_token+lease_until",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 364,
+                    "lineEnd": 366,
+                    "nodeIds": [],
+                    "note": "lease_token 与 lease_until 置 null"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

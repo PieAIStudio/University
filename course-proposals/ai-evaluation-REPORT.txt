@@ -1,0 +1,86 @@
+ai-evaluation course proposal — delivery report
+================================================
+
+Snapshot / analysis
+-------------------
+targetSnapshotId: git-3b402e069a5d
+sourceCommit:     3b402e069a5db5fe9eb82dbc03aa05152b3d298b
+targetAnalysisId: ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc
+study:            turing-pact (evidence checked against studies/.../repository.git)
+
+Scale
+-----
+units:     3
+lessons:   11
+cards:     22  (2 per lesson)
+exercises: 11  (1 short-answer per lesson)
+evidence:  69 total references (lesson + card + exercise), all kind fact|with note
+
+Units
+-----
+1. cases-before-feelings — 先有用例，才有「够好」 (4 lessons)
+   - feel-is-not-a-metric
+   - anatomy-of-a-case
+   - gold-and-poison
+   - pin-the-prompt-version
+
+2. scores-and-detectors — 分数与检测器 (4 lessons)
+   - nine-scorers-one-average  (includes clueDiversity trap)
+   - soft-fail-vs-hard-gate
+   - annotation-is-the-spec
+   - score-the-detector
+
+3. offline-vs-live — 离线锁尺子，线上考模型 (3 lessons)
+   - offline-scores-the-fixture
+   - live-scores-the-model
+   - offline-green-live-red  (mermaid pipeline)
+
+Evidence sources (only the six mandated paths)
+----------------------------------------------
+services/mastra/evals/m1-baseline.json
+services/mastra/evals/m2-dialogue-quality.json
+services/mastra/src/evals/m1-scorers.ts
+services/mastra/scripts/run-m1-eval.mjs
+services/mastra/scripts/run-m2-dialogue-eval.mjs
+services/mastra/scripts/run-m2-live-eval.mjs
+
+Gate 1 — check-proposal-shape.mjs
+---------------------------------
+$ node scripts/check-proposal-shape.mjs course-proposals/ai-evaluation.json
+ok  course-proposals/ai-evaluation.json
+
+(no problems listed; exit 0)
+
+Gate 2 — check-proposal-evidence.mjs
+------------------------------------
+$ node scripts/check-proposal-evidence.mjs course-proposals/ai-evaluation.json --study turing-pact
+
+All unique ranges printed as ok (see command output). Final line:
+
+all 69 references resolve at their pinned commits
+
+(exit 0; no MISS / out-of-range lines)
+
+Most counterintuitive finding (already in the course)
+-----------------------------------------------------
+clueDiversityScorer does NOT read publicMessage. Its entire score is:
+
+  styleSignal === annotation.expectedClueSignal ? 1 : 0
+
+So a dimension named like “style/clue quality” is actually a fixture
+metadata consistency check. You can ship robotic corporate copy and still
+get clueDiversity = 1 if the two metadata strings match. Real pressure on
+tone comes from humanChatStyle, quality violations (e.g.
+public_message_too_long), and live model output — not from this scorer id.
+
+Closely related (also taught): offline runM1EvalCase always scores
+output: input.output (the gold/poison written in the JSON). Offline green
+means the ruler + labels still agree; only live (runMastraAgentDecision)
+measures the current model — and fails if totalCostUsd >= 0.02.
+
+Outputs
+-------
+course-proposals/ai-evaluation.json
+course-proposals/ai-evaluation-REPORT.txt
+
+No git commit. TuringPact left untouched.

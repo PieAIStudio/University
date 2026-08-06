@@ -1514,9 +1514,23 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
       // was met. These routes therefore sit outside /api/studies/:id.
       if (request.method === "GET" && url.pathname === "/api/vocabulary") {
         const vocabulary = getVocabulary();
+        const due = vocabulary.listDue(VOCABULARY_DUE_LIMIT);
+        // A due row is a schedule, not a word: it carries a senseId and nothing
+        // a learner could read. The entry is attached here because a review
+        // screen that has to fetch each word separately is a review screen that
+        // shows blank cards while it waits.
+        const entries = new Map(
+          selectLexicon(due.map((state) => state.senseId)).map((entry) => [entry.senseId, entry]),
+        );
         sendJson(response, 200, {
           budget: vocabulary.budget(),
-          due: vocabulary.listDue(VOCABULARY_DUE_LIMIT),
+          due: due.flatMap((state) => {
+            const entry = entries.get(state.senseId);
+            // A word dropped from the lexicon keeps its state — the learner may
+            // have known it for months — but it cannot be asked, so it is not
+            // offered for review.
+            return entry ? [{ ...state, entry }] : [];
+          }),
           states: vocabulary.listStates(),
         });
         return;

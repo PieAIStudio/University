@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   GameBadge,
   GameButton,
@@ -9,6 +9,7 @@ import {
 } from "@pieai/swimmer-ui-kit";
 
 import { MarkdownContent, type LanguageLayer } from "./MarkdownContent.js";
+import type { LexiconEntry } from "./language/WordPopover.js";
 
 type SectionId = "today" | "studies";
 
@@ -500,6 +501,118 @@ function writeEnglishMode(enabled: boolean): void {
 
 function isStaleTokenFailure(message: string): boolean {
   return /request token/i.test(message);
+}
+
+interface DueWord {
+  readonly senseId: string;
+  readonly stage: string;
+  readonly entry: LexiconEntry;
+}
+
+/**
+ * The review queue for words the learner asked to be asked about.
+ *
+ * Without it the English layer is a trap door: marking a word 「不熟」 puts it on
+ * a schedule that nothing ever reads, so the promise to come back is silently
+ * broken. Recall is deliberately self-reported rather than typed — the claim
+ * being tested is "do I know this word", and typing it out tests spelling.
+ */
+function VocabularyReview({ requestToken }: { readonly requestToken: string }) {
+  const [due, setDue] = useState<readonly DueWord[]>([]);
+  const [revealed, setRevealed] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reviewedToday, setReviewedToday] = useState(0);
+
+  const load = useCallback(async () => {
+    try {
+      const body = await readJson<{
+        readonly due: readonly DueWord[];
+        readonly budget: { readonly reviewedToday: number };
+      }>(await fetch("/api/vocabulary"));
+      setDue(body.due);
+      setReviewedToday(body.budget.reviewedToday);
+    } catch {
+      // A learner without a vocabulary database yet simply has nothing due;
+      // that is not a failure worth interrupting the day with.
+      setDue([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const word = due[0];
+  if (!word) return null;
+
+  async function rate(rating: 1 | 2 | 3 | 4) {
+    setPending(true);
+    setError(null);
+    try {
+      await readJson(
+        await fetch(`/api/vocabulary/${encodeURIComponent(word!.senseId)}/grade`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-University-Local-Token": requestToken,
+          },
+          body: JSON.stringify({ rating }),
+        }),
+      );
+      setRevealed(false);
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "评分失败");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <GamePanel className="vocab-review" tone="strong">
+      <header className="vocab-review__header">
+        <div>
+          <p className="eyebrow">VOCABULARY · {due.length} 个待复习</p>
+          <h2 lang="en">{word.entry.headword}</h2>
+          <p className="vocab-review__phonetic">{word.entry.phonetic}</p>
+        </div>
+        <GameBadge tone={word.stage === "learning" ? "warning" : "success"}>
+          {word.stage === "learning" ? "还不熟" : "复习中"}
+        </GameBadge>
+      </header>
+      {revealed ? (
+        <div className="vocab-review__answer" aria-live="polite">
+          <p className="vocab-review__gloss">{word.entry.gloss}</p>
+          <p className="vocab-review__usage">{word.entry.usage}</p>
+          <div className="rating-row" aria-label="根据回忆难度评分">
+            <GameButton variant="danger" onClick={() => void rate(1)} disabled={pending}>
+              没想起来
+            </GameButton>
+            <GameButton variant="ghost" onClick={() => void rate(2)} disabled={pending}>
+              勉强想起
+            </GameButton>
+            <GameButton variant="secondary" onClick={() => void rate(3)} disabled={pending}>
+              想起来了
+            </GameButton>
+            <GameButton variant="success" onClick={() => void rate(4)} disabled={pending}>
+              一眼就懂
+            </GameButton>
+          </div>
+        </div>
+      ) : (
+        <GameButton variant="primary" onClick={() => setRevealed(true)}>
+          我想好了，看释义
+        </GameButton>
+      )}
+      <p className="vocab-review__meta">今天已复习 {reviewedToday} 个词</p>
+      {error ? (
+        <p className="inline-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </GamePanel>
+  );
 }
 
 function ReviewCard({
@@ -1431,6 +1544,8 @@ function TodaySection({
             : "今天的复习已经清空，可以继续研究下一门课。"}
         </GameCallout>
       )}
+
+      <VocabularyReview requestToken={data.requestToken} />
 
       <div className="today-metric">
         <span>{data.today.dueCount}</span>

@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-06T06:17:57.648Z
+generated_at: 2026-08-06T20:42:03.582Z
 generator_version: doc-gov@0.8.0
-docs_count: 34
+docs_count: 35
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-local-study-containers.md
@@ -158,6 +158,13 @@ docs:
     canonical: false
     last_reviewed: 2026-08-05
     pinned: true
+  - id: REF-WHAT-LIVES-WHERE
+    path: docs/reference/what-lives-where.md
+    type: reference
+    status: active
+    canonical: false
+    last_reviewed: 2026-08-07
+    pinned: false
   - id: REF-NEXT-GROK-EVOLUTION-INDEX-2026-08-06
     path: docs/reference/下一阶段/Grok/00-evolution-research-index.md
     type: reference

@@ -1,0 +1,1194 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-ai-evaluation",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "ai-evaluation",
+    "title": "怎么知道我的 AI 够好",
+    "description": "一人公司做 AI 产品时，把「感觉还行」换成可重复跑、能对比、会回归的评测：用例怎么设计、分怎么打、离线锁尺子与线上考模型有何不同。证据来自 TuringPact 的 Mastra eval。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "设计同时包含金标与毒样的对话 eval 用例，并能说明缺一边时检测器会怎样骗人",
+      "解释多维 scorer 与 overall 均值的分工，指出至少一处「分项名不等于测正文」的实现陷阱",
+      "说明 detectorMatchedExpectation 如何同时回归质量检测器与标注",
+      "区分离线 fixture 打分与 live 调模型打分，并说出 live 的费用硬门槛"
+    ],
+    "units": [
+      {
+        "id": "cases-before-feelings",
+        "title": "先有用例，才有「够好」",
+        "objective": "能把模糊的质量感觉落成带版本号的正负例 JSON",
+        "lessons": [
+          {
+            "id": "feel-is-not-a-metric",
+            "title": "「感觉还行」不是质量标准",
+            "content": "# 「感觉还行」不是质量标准\n\n## 学习目标\n\n完成本课后，你能说明：为什么一人公司改 prompt 时必须有可重复跑的用例集，而不是靠自己点几轮聊天下结论。\n\n## 先给结论\n\n- **事实：质量先落成 JSON 用例。** `m1-baseline.json` 是一组冻结用例，每条有 `id`、`transcript`、`output`、`styleSignal`、`annotation`。\n- **事实：离线跑分脚本只读这份表。** `run-m1-eval.mjs` 用 `readFile(.../evals/m1-baseline.json)` 载入全部 fixture，再逐条 `runM1EvalCase`。\n- **事实：结果写成可对比的 summary。** 脚本输出 `caseCount` 与 `overall` 均值，写到归档路径，而不是打印一句「看起来不错」。\n- **推论：没有用例表就没有回归。** 你改了模型或 prompt，若没有同一批输入/标注再跑一遍，你只能记住「上次好像行」——记忆会骗人，JSON 不会。\n\n## 一个类比\n\n这像做菜没有菜谱、没有称，只靠「尝一口还行」。客人多了你会发现：同一道菜今天咸明天淡，你还不知道是火候变了还是盐勺变了。用例集就是固定配方和称；分数就是称出来的克数。\n\n## 工作示例\n\n1. 产品经理（也是你）说：AI 回得「太客服」。\n2. 你改了 system prompt，手测三条对话，觉得好了。\n3. 一周后另一条压力场景又变假，你忘了上周为「自然」牺牲了什么。\n4. 若当时把「自然快回」「被指控时的 typo」「该闭嘴的回合」写进 `m1-baseline.json`，每次改 prompt 都跑 `run-m1-eval.mjs`，overall 掉了你立刻知道。\n\n## 自检\n\n只靠手测三条「感觉好了」再上线，最容易漏掉的是哪类失败？\n\n答案：你没手测到的回归——旧场景被新 prompt 弄坏。基线用例集的价值就是强制旧场景每次都再过一遍。\n\n## 重点\n\n**「够好」必须是可重复跑的数字，不是会话里的心情。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/evals/m1-baseline.json",
+                "lineStart": 1,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "m1-baseline 首条用例：id/output/annotation 完整结构"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m1-eval.mjs",
+                "lineStart": 10,
+                "lineEnd": 27,
+                "nodeIds": [],
+                "note": "run-m1-eval 读 baseline、汇总 overall 并落盘"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-baseline-json",
+                "front": "为什么要把 AI 质量写成 m1-baseline.json，而不是靠自己点几轮聊天？",
+                "back": "JSON 用例可重复跑、可对比、可回归；手测只覆盖你记得起来的场景，改 prompt 等于赌博。",
+                "tags": [
+                  "evaluation",
+                  "baseline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/evals/m1-baseline.json",
+                    "lineStart": 1,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "冻结用例集的字段形状"
+                  }
+                ]
+              },
+              {
+                "id": "what-run-m1-writes",
+                "front": "run-m1-eval.mjs 跑完之后，你手里留下的「够好」证据是什么？",
+                "back": "一份带 caseCount 与 overall 均值的 summary JSON，而不是聊天截图或口头感觉。",
+                "tags": [
+                  "evaluation",
+                  "baseline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m1-eval.mjs",
+                    "lineStart": 19,
+                    "lineEnd": 34,
+                    "nodeIds": [],
+                    "note": "summary 含 overall 并 writeFile"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "baseline-file-name",
+                "kind": "short-answer",
+                "title": "基线文件名",
+                "prompt": "M1 离线跑分默认读取的 fixture 文件名是什么？（只要文件名）",
+                "expectedAnswer": "m1-baseline.json",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m1-eval.mjs",
+                    "lineStart": 10,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "readFile 指向 m1-baseline.json"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "anatomy-of-a-case",
+            "title": "一条用例长什么样",
+            "content": "# 一条用例长什么样\n\n## 学习目标\n\n完成本课后，你能拆开一条 eval case 的字段，并指出哪一段是「系统输出」、哪一段是「你对好/坏的标注」。\n\n## 先给结论\n\n- **事实：类型写死了字段。** `M1EvalCase` 要求 `id`、`promptVersion`、`transcript`、`output`、`styleSignal`、`annotation`。\n- **事实：output 是结构化决策。** `M1EvalDecision` 含 `shouldSpeak`、`publicMessage`、`privateHint`、`decisionReason`、冷却秒数——不是自由文本故事。\n- **事实：annotation 才是判卷标准。** 如 `expectedHumanLike`、`expectedClueSignal`、`forbiddenPublicPhrases`、`contradictionPhrases`，可选 `requiredPublicConcepts`、`expectedAccepted`。\n- **推论：用例 = 输入场景 + 候选输出 + 标注期望。** 没有 annotation 的「样例回复」只能当 demo，不能当考试。\n\n## 一个类比\n\ntranscript 是考题，output 是学生答卷，annotation 是标准答案与扣分点。你不能只收藏漂亮答卷而不写标准答案——否则换人改分时，没有人知道「好」指什么。\n\n## 工作示例\n\n看 `typo-under-pressure`：transcript 是「你怎么像AI / 你回答也太快」；output 故意打成「你这推理也太随便了把」；annotation 要求 `expectedClueSignal: \"typo\"`，并把 privateHint 原文放进 `forbiddenPublicPhrases`——公开频道绝不能泄漏私聊指令。\n\n## 自检\n\n`privateHint` 写在 output 里、又出现在 `forbiddenPublicPhrases` 里，在测什么？\n\n答案：公开消息不得泄漏私有提示；泄漏则 private-feed-secrecy 等维度会扣到 0。\n\n## 重点\n\n**字段分家：场景、答卷、判卷标准。混在一起就没法自动化。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                "lineStart": 12,
+                "lineEnd": 41,
+                "nodeIds": [],
+                "note": "M1EvalCase / M1EvalDecision / annotation 字段定义"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/evals/m1-baseline.json",
+                "lineStart": 45,
+                "lineEnd": 63,
+                "nodeIds": [],
+                "note": "typo-under-pressure：压力场景 + forbidden 含 privateHint"
+              }
+            ],
+            "cards": [
+              {
+                "id": "output-vs-annotation",
+                "front": "output 和 annotation 谁是「答卷」、谁是「标准答案」？",
+                "back": "output 是候选决策（答卷）；annotation 是期望与禁区（标准答案/扣分点）。",
+                "tags": [
+                  "evaluation",
+                  "fixture"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 21,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "M1EvalCase 把 output 与 annotation 分字段"
+                  }
+                ]
+              },
+              {
+                "id": "typo-forbidden-hint",
+                "front": "typo-under-pressure 为什么把 privateHint 原文放进 forbiddenPublicPhrases？",
+                "back": "防止公开频道复述私聊指令；泄漏即私密上下文穿帮。",
+                "tags": [
+                  "evaluation",
+                  "secrecy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/evals/m1-baseline.json",
+                    "lineStart": 48,
+                    "lineEnd": 62,
+                    "nodeIds": [],
+                    "note": "privateHint 与 forbidden 对照"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "case-annotation-field",
+                "kind": "short-answer",
+                "title": "判卷字段名",
+                "prompt": "M1EvalCase 里承载期望与禁区的字段名是什么？",
+                "expectedAnswer": "annotation",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 28,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "annotation 对象字段"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "gold-and-poison",
+            "title": "金标与毒样：正例和反例都要入库",
+            "content": "# 金标与毒样：正例和反例都要入库\n\n## 学习目标\n\n完成本课后，你能解释为什么 eval 集必须同时有 `expectedAccepted: true` 的金标和 `false` 的毒样，缺一边会发生什么。\n\n## 先给结论\n\n- **事实：M2 同时收正负例。** `m2-dialogue-quality.json` 里正例如 `zh-direct-concrete-answer` 标 `expectedAccepted: true`；毒样如 `reject-overlong-corporate-copy` 标 `false` 并写 `expectedViolations`。\n- **事实：毒样带着预期违规码。** 过长客服腔用例期望 `public_message_too_long`；空话躲压力期望 `generic_pressure_dodge`。\n- **事实：离线脚本分开统计。** `run-m2-dialogue-eval.mjs` 数 `positiveCaseCount` 与 `negativeGuardCaseCount`，并对检测器准确率算 `detectorAccuracy`。\n- **推论：只有金标，检测器永远「放行」也能高分。** 只有毒样，你不知道好人能不能过。两边都要，才能测「该过的过、该拦的拦」。\n\n## 一个类比\n\n安检只练放行熟面孔，从不放仿真炸弹包过机——机器永远显示绿灯，你以为很安全。毒样就是定期投进的仿真炸弹。\n\n## 工作示例\n\n1. 金标：`zh-direct-concrete-answer` 短句答规则争执，`expectedAccepted: true`。\n2. 毒样：同一问题换成超长「我认为……主要还是……」客服腔，`expectedAccepted: false`，`expectedViolations: [\"public_message_too_long\"]`。\n3. 若你的质量检测器对毒样也 `ok: true`，`detectorMatchedExpectation` 会失败，门禁红。\n\n## 自检\n\n若用例集只有金标、没有 reject-* 毒样，检测器变松时你最先发现还是最后发现？\n\n答案：最后发现——全是正例时「全放行」仍可能高分，直到线上客服腔/泄漏已经伤到用户。\n\n## 重点\n\n**正例证明能力，反例证明边界。只留一边的 eval 是半套门禁。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/evals/m2-dialogue-quality.json",
+                "lineStart": 1,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "金标 zh-direct-concrete-answer：expectedAccepted true"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/evals/m2-dialogue-quality.json",
+                "lineStart": 256,
+                "lineEnd": 284,
+                "nodeIds": [],
+                "note": "毒样 reject-overlong-corporate-copy：expectedViolations"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                "lineStart": 19,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "正负例计数与 detectorAccuracy"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-negative-fixtures",
+                "front": "为什么 m2 要专门放 reject-overlong-corporate-copy 这类毒样？",
+                "back": "用来验证质量检测器会拦坏输出；只有金标时「全放行」也能看起来很高分。",
+                "tags": [
+                  "evaluation",
+                  "negative"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/evals/m2-dialogue-quality.json",
+                    "lineStart": 256,
+                    "lineEnd": 283,
+                    "nodeIds": [],
+                    "note": "毒样 expectedAccepted false 与违规码"
+                  }
+                ]
+              },
+              {
+                "id": "detector-accuracy-meaning",
+                "front": "run-m2-dialogue-eval 里的 detectorAccuracy 在平均什么？",
+                "back": "每条用例 detectorMatchedExpectation 是否为真（1/0）的均值——检测器与标注是否一致。",
+                "tags": [
+                  "evaluation",
+                  "detector"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                    "lineStart": 22,
+                    "lineEnd": 45,
+                    "nodeIds": [],
+                    "note": "detectorFailures 与 detectorAccuracy"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "poison-accepted-flag",
+                "kind": "short-answer",
+                "title": "毒样标志",
+                "prompt": "毒样用例 annotation 里 expectedAccepted 应是 true 还是 false？",
+                "expectedAnswer": "false",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/evals/m2-dialogue-quality.json",
+                    "lineStart": 280,
+                    "lineEnd": 283,
+                    "nodeIds": [],
+                    "note": "reject-overlong 的 expectedAccepted false"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "pin-the-prompt-version",
+            "title": "用 promptVersion 钉住「你在测哪一代」",
+            "content": "# 用 promptVersion 钉住「你在测哪一代」\n\n## 学习目标\n\n完成本课后，你能说明 `promptVersion` 字段解决什么混乱，以及 M1/M2 脚本如何把版本写进 summary。\n\n## 先给结论\n\n- **事实：每条用例自带版本号。** M1 基线大量是 `promptVersion: \"m1-style-signals-v1\"`；M2 对话集是 `\"commercial-dialogue-v2\"`。\n- **事实：汇总也钉版本。** `run-m1-eval.mjs` 的 summary 写死 `promptVersion: 'm1-style-signals-v1'`；M2 脚本写 `'commercial-dialogue-v2'`。\n- **事实：结果对象回传版本。** `runM1EvalCase` 返回的 `M1EvalResult` 含 `promptVersion`，方便按代切片。\n- **推论：分数必须带坐标系。** 0.91 若不知道是 v1 还是 v2 标注下的 0.91，就无法判断是模型变好了还是考题变了。\n\n## 一个类比\n\n考试改大纲后，去年的 90 分和今年的 90 分不能直接比。`promptVersion` 就是大纲版本号；混版本比分是自我欺骗。\n\n## 工作示例\n\n1. 你把对话策略从 style-signals 迁到 commercial-dialogue-v2，用例与标注规则都变了。\n2. 新 summary 的 `promptVersion` 字段标明 commercial-dialogue-v2。\n3. 你不会把旧 M1 overall 与新 M2 positiveOverall 画在同一条「越来越高」的曲线上假装进步。\n\n## 自检\n\n把两代用例混进同一文件却不改 promptVersion，最坏的分析错误是什么？\n\n答案：把「考题变难/变易」误读成「模型变强/变弱」，优化方向会指错。\n\n## 重点\n\n**分数没有版本锚就是不可比的装饰品。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/evals/m1-baseline.json",
+                "lineStart": 3,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "基线用例 promptVersion m1-style-signals-v1"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/evals/m2-dialogue-quality.json",
+                "lineStart": 3,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "对话用例 promptVersion commercial-dialogue-v2"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m1-eval.mjs",
+                "lineStart": 19,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "M1 summary 写入 promptVersion"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                "lineStart": 37,
+                "lineEnd": 39,
+                "nodeIds": [],
+                "note": "M2 summary 写入 promptVersion"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-prompt-version",
+                "front": "promptVersion 字段主要防止哪种错误对比？",
+                "back": "防止把不同代标注/考题下的分数当成同一坐标系里的进步或退步。",
+                "tags": [
+                  "evaluation",
+                  "versioning"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 21,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "M1EvalCase.promptVersion 必填"
+                  }
+                ]
+              },
+              {
+                "id": "m1-vs-m2-version",
+                "front": "M1 基线与 M2 对话集在用例里用的 promptVersion 字符串各是什么？",
+                "back": "M1 多为 m1-style-signals-v1；M2 为 commercial-dialogue-v2。",
+                "tags": [
+                  "evaluation",
+                  "versioning"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/evals/m1-baseline.json",
+                    "lineStart": 3,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "M1 版本串"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/evals/m2-dialogue-quality.json",
+                    "lineStart": 3,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "M2 版本串"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "m2-prompt-version",
+                "kind": "short-answer",
+                "title": "M2 版本串",
+                "prompt": "m2-dialogue-quality 用例与 summary 使用的 promptVersion 字符串是？",
+                "expectedAnswer": "commercial-dialogue-v2",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                    "lineStart": 37,
+                    "lineEnd": 39,
+                    "nodeIds": [],
+                    "note": "summary.promptVersion"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "scores-and-detectors",
+        "title": "分数与检测器",
+        "objective": "能读懂分项、硬门槛与检测器对齐，不被 overall 骗",
+        "lessons": [
+          {
+            "id": "nine-scorers-one-average",
+            "title": "九个打分器，一个 overall",
+            "content": "# 九个打分器，一个 overall\n\n## 学习目标\n\n完成本课后，你能列出 M1 评测的多个分数维度，说明 overall 如何合成，并指出其中一个「看起来在测风格、其实不读正文」的陷阱。\n\n## 先给结论\n\n- **事实：九个 scorer 并行跑。** `runM1EvalCase` 用 `Promise.all` 覆盖契约、口语、重复、线索、语言、私密、人设、语境、压力。\n- **事实：overall 是简单平均。** 各分项求和除以维度数，无权重。\n- **事实：clueDiversity 只比对元数据。** 它的实现是 `styleSignal === annotation.expectedClueSignal`，**并不阅读 publicMessage**。\n- **推论：分项名字会骗人。** 若夹具自己把 styleSignal 写错，clue 维直接 0；若正文完全没有「typo 感」但元数据一致，仍得 1。真正约束文风的是 humanChatStyle 与 quality 违规等。\n\n## 一个类比\n\n体检单上有一项叫「运动习惯」，护士只问你表格上有没有勾「常运动」，并不看你跑步机数据。勾对了就满分——这测的是填表，不是心肺。\n\n## 工作示例\n\n1. 用例写 `styleSignal: \"typo\"` 且 `expectedClueSignal: \"typo\"` → clueDiversity=1。\n2. 你把 publicMessage 改成完美客服长句，只要元数据不变，clue 维仍满分。\n3. 真正会痛的是 humanChatStyle / public_message_too_long，不是 clueDiversity。\n\n## 自检\n\n想验证「模型有没有按 quick_reply 风格说话」，能否只看 clueDiversity？\n\n答案：不能。该维不读正文；要靠文风相关 scorer、质量违规与 live 输出人工抽检。\n\n## 重点\n\n**读 scorer 实现，不要只信 id 字符串。overall 更是摘要，不是诊断。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                "lineStart": 44,
+                "lineEnd": 61,
+                "nodeIds": [],
+                "note": "九维 scores 字段"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                "lineStart": 216,
+                "lineEnd": 225,
+                "nodeIds": [],
+                "note": "clueDiversity 只比较 styleSignal 与 expectedClueSignal"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                "lineStart": 315,
+                "lineEnd": 359,
+                "nodeIds": [],
+                "note": "并行打分与 overall 平均"
+              }
+            ],
+            "cards": [
+              {
+                "id": "how-overall-computed",
+                "front": "runM1EvalCase 的 overall 是加权平均还是简单平均？",
+                "back": "简单平均：各分项相加除以维度个数，代码里没有权重表。",
+                "tags": [
+                  "evaluation",
+                  "scoring"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 357,
+                    "lineEnd": 359,
+                    "nodeIds": [],
+                    "note": "overall 为 values 均值"
+                  }
+                ]
+              },
+              {
+                "id": "clue-ignores-text",
+                "front": "clueDiversityScorer 会检查 publicMessage 是否像某种风格吗？",
+                "back": "不会。它只判断 styleSignal 是否等于 annotation.expectedClueSignal。",
+                "tags": [
+                  "evaluation",
+                  "scoring"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 223,
+                    "lineEnd": 225,
+                    "nodeIds": [],
+                    "note": "三元比较元数据"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "clue-compares-what",
+                "kind": "short-answer",
+                "title": "clue 比较对象",
+                "prompt": "clueDiversityScorer 比较相等的字段名之一是什么？",
+                "expectedAnswer": "styleSignal",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 223,
+                    "lineEnd": 225,
+                    "nodeIds": [],
+                    "note": "styleSignal === expectedClueSignal"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "soft-fail-vs-hard-gate",
+            "title": "0.5 的软失败与必须满分的硬门槛",
+            "content": "# 0.5 的软失败与必须满分的硬门槛\n\n## 学习目标\n\n完成本课后，你能区分「scorer 内部的软扣分」和「脚本层的硬门禁」，并指出 M2 把哪些维度当成 mandatory。\n\n## 先给结论\n\n- **事实：契约失败不是直接 0。** `contractValidityScorer` 在冷却或消息形态不合法时返回 `0.5`，合法才是 `1`。\n- **事实：M2 离线硬门槛另算。** `mandatoryPositiveFailures` 要求正例在 contractValidity、contextualResponse、pressureResponse、languageContinuity、privateFeedSecrecy、personaContinuity、repetitionAvoidance 上必须拿到满分（任一 `< 1` 即失败）。\n- **事实：失败会 exit 非零。** `mandatoryFailureCount > 0` 时 `process.exitCode = 1`。\n- **推论：平均分友好，门禁不友好。** 软分让曲线连续；硬门槛阻止「总分还行但关键科挂科」混进主线。\n\n## 一个类比\n\n作业平时分可以给一半分（交了但格式不对），期末及格线却要求核心题全对。0.5 是平时分逻辑；mandatory 是毕业答辩逻辑。\n\n## 工作示例\n\n1. 某正例 `shouldSpeak: true` 但 `publicMessage` 为空 → contractValidity 得 0.5。\n2. overall 可能仍 > 0.8。\n3. M2 脚本仍把它记入 `mandatoryPositiveFailureIds`，进程失败。\n\n## 自检\n\nhumanChatStyle 过长时返回 0.25，它在 M2 的 mandatory 列表里吗？\n\n答案：不在。过长更依赖 quality 违规与 detector；mandatory 列表点名的是契约、语境、压力、语言、私密、人设、重复等维度。\n\n## 重点\n\n**软分方便观察趋势；硬门槛决定能不能合并。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                "lineStart": 164,
+                "lineEnd": 178,
+                "nodeIds": [],
+                "note": "contractValidity 非法时返回 0.5"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                "lineStart": 25,
+                "lineEnd": 34,
+                "nodeIds": [],
+                "note": "mandatoryPositiveFailures 的满分维度列表"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                "lineStart": 73,
+                "lineEnd": 75,
+                "nodeIds": [],
+                "note": "mandatoryFailureCount 触发 exitCode 1"
+              }
+            ],
+            "cards": [
+              {
+                "id": "contract-half-score",
+                "front": "contractValidity 校验失败时返回几分？为什么不是 0？",
+                "back": "返回 0.5。它是软失败信号，真正卡死主线的是脚本层 mandatory 与 detector。",
+                "tags": [
+                  "evaluation",
+                  "gates"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 166,
+                    "lineEnd": 178,
+                    "nodeIds": [],
+                    "note": "return 0.5 分支"
+                  }
+                ]
+              },
+              {
+                "id": "mandatory-dimensions",
+                "front": "M2 正例 mandatory 检查点名了哪些 scorer 字段？（举三类即可）",
+                "back": "例如 contractValidity、contextualResponse、pressureResponse；还有语言、私密、人设、重复。",
+                "tags": [
+                  "evaluation",
+                  "gates"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                    "lineStart": 25,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "mandatory 维度条件"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "contract-fail-score",
+                "kind": "short-answer",
+                "title": "契约软分",
+                "prompt": "contractValidityScorer 在形态不合法时返回的分数是？",
+                "expectedAnswer": "0.5",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 178,
+                    "lineEnd": 178,
+                    "nodeIds": [],
+                    "note": "return 0.5"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "annotation-is-the-spec",
+            "title": "annotation 就是规格：禁语、矛盾、必谈概念",
+            "content": "# annotation 就是规格：禁语、矛盾、必谈概念\n\n## 学习目标\n\n完成本课后，你能说明三类 annotation 如何驱动 scorer，并指出 contextualResponse 用的是「命中任一」还是「命中全部」。\n\n## 先给结论\n\n- **事实：禁语查公开消息。** `privateFeedSecrecyScorer` 把 `forbiddenPublicPhrases` 与 quality 的 `public_private_context_leak` 合在一起，命中则 0。\n- **事实：矛盾短语查人设。** `personaContinuityScorer` 用 `contradictionPhrases` 与 `contradicts_recent_ai_claim`。\n- **事实：必谈概念用 some。** `contextualResponseScorer` 对 `requiredPublicConcepts` 做 `required.some(...)`——命中其中一个概念就给 1，不是 every。\n- **推论：标注写法决定考题难度。** 概念列表过宽会「好过」；过窄或同义不收录会「误杀」。规格本身需要设计，不是从 transcript 自动长出来。\n\n## 一个类比\n\n禁语像违禁词表，矛盾像「与上次口供冲突」，必谈概念像简答题采分点。采分点若写「命中任一即可」，学生答到一个点就满分——这是刻意选择，不是疏忽。\n\n## 工作示例\n\n`persona-continuity-cooking` 的 `contradictionPhrases` 含「我从来不会烧糊」类冲突表述（英文基线是 never burn food）。若模型公频说出矛盾句，personaContinuity 变 0。  \n`zh-direct-concrete-answer` 的 required 含「规则」「先走」等，公频只要沾上其中一个即可 contextual 满分。\n\n## 自检\n\n若产品要求「必须同时提到规则与算分」，当前 `contextualResponseScorer` 的 some 逻辑够不够？\n\n答案：不够。现逻辑命中任一即 1；要「全部出现」必须改 scorer 或另加检测，不能假装 annotation 已经表达了 every。\n\n## 重点\n\n**打分器忠于 annotation 的字面运算；规格写错，分数会一本正经地错。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                "lineStart": 243,
+                "lineEnd": 260,
+                "nodeIds": [],
+                "note": "privateFeedSecrecy 用 forbiddenPublicPhrases"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                "lineStart": 262,
+                "lineEnd": 280,
+                "nodeIds": [],
+                "note": "personaContinuity 用 contradictionPhrases"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                "lineStart": 282,
+                "lineEnd": 297,
+                "nodeIds": [],
+                "note": "contextualResponse 对 required 使用 some"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/evals/m1-baseline.json",
+                "lineStart": 87,
+                "lineEnd": 105,
+                "nodeIds": [],
+                "note": "persona-continuity-cooking 的 contradictionPhrases"
+              }
+            ],
+            "cards": [
+              {
+                "id": "contextual-some-not-every",
+                "front": "requiredPublicConcepts 在 contextualResponseScorer 里是 some 还是 every？",
+                "back": "some：命中任意一个概念就得 1。",
+                "tags": [
+                  "evaluation",
+                  "annotation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 290,
+                    "lineEnd": 296,
+                    "nodeIds": [],
+                    "note": "required.some 命中即 1"
+                  }
+                ]
+              },
+              {
+                "id": "forbidden-who-checks",
+                "front": "forbiddenPublicPhrases 主要由哪个 scorer 消费？",
+                "back": "privateFeedSecrecyScorer（外加 quality 的泄漏违规）。",
+                "tags": [
+                  "evaluation",
+                  "annotation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 250,
+                    "lineEnd": 259,
+                    "nodeIds": [],
+                    "note": "forbidden 与 qualityLeak"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "concept-match-mode",
+                "kind": "short-answer",
+                "title": "概念匹配模式",
+                "prompt": "contextualResponse 对 requiredPublicConcepts 用的数组方法名是？",
+                "expectedAnswer": "some",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 293,
+                    "lineEnd": 294,
+                    "nodeIds": [],
+                    "note": "required.some"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "score-the-detector",
+            "title": "连检测器也要被考：detectorMatchedExpectation",
+            "content": "# 连检测器也要被考：detectorMatchedExpectation\n\n## 学习目标\n\n完成本课后，你能解释 `detectorMatchedExpectation` 在测什么，以及它为什么可以是 `null`。\n\n## 先给结论\n\n- **事实：字段可空。** `expectedAccepted === undefined` 时，`detectorMatchedExpectation` 为 `null`——这道题不考检测器对齐。\n- **事实：有期望就比对。** 否则要求 `quality.ok === expectedAccepted`，且 `expectedViolations` 全部出现在 `quality.violations` 里。\n- **事实：M1 基线多数不设 expectedAccepted。** 早期用例侧重风格维度；M2 全面使用 true/false + 违规列表。\n- **推论：你在回归两套系统。** 一套是「输出好不好」的 scorer；一套是「线上决策质量闸」`evaluateDecisionQuality`。毒样主要在锁第二套。\n\n## 一个类比\n\n交警（检测器）和驾考评分表（scorer）是两套。你既要学员开得好，也要交警该拦的时候举手。只测学员、不测交警，会出现「违章车畅通无阻」。\n\n## 工作示例\n\n毒样 `reject-generic-pressure-dodge`：`expectedAccepted: false`，`expectedViolations: [\"generic_pressure_dodge\"]`。  \n若 quality 仍 `ok: true`，或违规列表缺少该码，则 `detectorMatchedExpectation` 为 false，计入 `detectorFailures`。\n\n## 自检\n\n为什么 expectedViolations 用 every 要求「标注的违规都出现」，而不是只看 ok 布尔值？\n\n答案：防止检测器「随便以别的理由拒绝」仍算通过——要对准具体病症码，避免假阴性/假阳性互抵。\n\n## 重点\n\n**AI 产品的 eval 常常要同时锁模型行为与锁质检器本身。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                "lineStart": 349,
+                "lineEnd": 356,
+                "nodeIds": [],
+                "note": "detectorMatchedExpectation 计算逻辑"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/evals/m2-dialogue-quality.json",
+                "lineStart": 287,
+                "lineEnd": 314,
+                "nodeIds": [],
+                "note": "reject-generic-pressure-dodge 的期望违规"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                "lineStart": 22,
+                "lineEnd": 24,
+                "nodeIds": [],
+                "note": "detectorFailures 过滤 detectorMatchedExpectation !== true"
+              }
+            ],
+            "cards": [
+              {
+                "id": "detector-null-when",
+                "front": "什么情况下 detectorMatchedExpectation 为 null？",
+                "back": "annotation.expectedAccepted 未定义时——该用例不参与检测器对齐考试。",
+                "tags": [
+                  "evaluation",
+                  "detector"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 352,
+                    "lineEnd": 353,
+                    "nodeIds": [],
+                    "note": "expectedAccepted === undefined 返回 null"
+                  }
+                ]
+              },
+              {
+                "id": "violations-every",
+                "front": "expectedViolations 与 quality.violations 如何对齐才算检测器答对？",
+                "back": "quality.ok 等于 expectedAccepted，且标注的每个违规码都出现在 quality.violations 中。",
+                "tags": [
+                  "evaluation",
+                  "detector"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 354,
+                    "lineEnd": 356,
+                    "nodeIds": [],
+                    "note": "ok 对齐且 every violation"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "detector-null-value",
+                "kind": "short-answer",
+                "title": "未标注时返回值",
+                "prompt": "expectedAccepted 未定义时 detectorMatchedExpectation 是什么？",
+                "expectedAnswer": "null",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 352,
+                    "lineEnd": 353,
+                    "nodeIds": [],
+                    "note": "返回 null"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "offline-vs-live",
+        "title": "离线锁尺子，线上考模型",
+        "objective": "能选择并解释离线/live 两条流水线及 live 费控",
+        "lessons": [
+          {
+            "id": "offline-scores-the-fixture",
+            "title": "离线跑分：考的是夹具里的答卷",
+            "content": "# 离线跑分：考的是夹具里的答卷\n\n## 学习目标\n\n完成本课后，你能指出离线 M1/M2 脚本在 `runM1EvalCase` 时 output 从哪里来，以及这对「模型有没有变好」意味着什么。\n\n## 先给结论\n\n- **事实：scorer 吃的是 fixture.output。** `runM1EvalCase` 调用形如 `contractValidityScorer.run({ input, output: input.output })`——输出就是用例里写死的决策。\n- **事实：M1/M2 离线都不调模型。** `run-m1-eval.mjs` 与 `run-m2-dialogue-eval.mjs` 只 `readFile` JSON 再循环 `runM1EvalCase`，无 API key 检查。\n- **事实：M2 默认写 tmp。** 无 `--archive` 时写到 `tmp/ai-playtest-cycles/m2-dialogue-latest.json`，避免日常循环弄脏受治理文档。\n- **推论：离线绿主要证明「标注 + 检测器 + 打分器」自洽。** 它不能单独证明当前线上模型变强了；那是 live 的职责。\n\n## 一个类比\n\n离线是「用标准答案卷再批改一遍阅卷规则」：确保尺子没坏、标准答案与扣分点仍对齐。现场考试（live）才是换一班新生进来做题。\n\n## 工作示例\n\n1. 你重构了 `evaluateDecisionQuality`。\n2. 跑 `run-m2-dialogue-eval.mjs`，毒样与金标的 detector 对齐仍全过。\n3. 你知道质检器没回归；但还不知道新 prompt 下模型会说什么——要再跑 live。\n\n## 自检\n\n只跑离线 M2 且 overall 很高，能否宣称「模型这周进步了」？\n\n答案：不能。离线在给夹具内写死的 output 打分；模型根本没出场。\n\n## 重点\n\n**先分清你在回归「尺子」还是在考试「考生」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                "lineStart": 327,
+                "lineEnd": 336,
+                "nodeIds": [],
+                "note": "各 scorer.run 使用 output: input.output"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m1-eval.mjs",
+                "lineStart": 10,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "M1 离线只读 JSON 循环打分"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                "lineStart": 10,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "M2 离线同样只读 JSON"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                "lineStart": 55,
+                "lineEnd": 63,
+                "nodeIds": [],
+                "note": "默认 tmp 与 --archive 归档路径分流"
+              }
+            ],
+            "cards": [
+              {
+                "id": "offline-output-source",
+                "front": "离线 runM1EvalCase 的 output 参数从哪来？",
+                "back": "来自用例自身的 input.output 字段，不是模型实时生成。",
+                "tags": [
+                  "evaluation",
+                  "offline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 328,
+                    "lineEnd": 329,
+                    "nodeIds": [],
+                    "note": "output: input.output"
+                  }
+                ]
+              },
+              {
+                "id": "m2-default-output-path",
+                "front": "run-m2-dialogue-eval 默认（无 --archive）把结果写到哪里一类路径？",
+                "back": "仓库 tmp/ai-playtest-cycles/ 下的 latest JSON，而不是 docs/archive。",
+                "tags": [
+                  "evaluation",
+                  "offline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                    "lineStart": 55,
+                    "lineEnd": 63,
+                    "nodeIds": [],
+                    "note": "tmp 与 archive 分支"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "offline-output-field",
+                "kind": "short-answer",
+                "title": "离线答卷字段",
+                "prompt": "离线 scorer 使用的决策输出对应用例的哪个字段名？",
+                "expectedAnswer": "output",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 328,
+                    "lineEnd": 329,
+                    "nodeIds": [],
+                    "note": "output: input.output"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "live-scores-the-model",
+            "title": "线上跑分：真调模型，并付费",
+            "content": "# 线上跑分：真调模型，并付费\n\n## 学习目标\n\n完成本课后，你能说明 live eval 与离线的三点关键差异：谁生成 output、跑哪些用例、失败条件多了什么。\n\n## 先给结论\n\n- **事实：先过滤正例。** `run-m2-live-eval.mjs` 只保留 `expectedAccepted === true` 的 fixture——毒样是考检测器的，不必花钱让模型「演坏」。\n- **事实：真调 agent。** 用 `buildEvalSchedulerInput` 搭场景，再 `runMastraAgentDecision` 拿 envelope，把决策填进 output 后才 `runM1EvalCase`。\n- **事实：缺 key 直接抛错。** 无 `OPENROUTER_API_KEY` 立即 `throw`，不会静默跳过变成假绿。\n- **事实：成本也是门禁。** `mandatoryPassCount !== caseCount` **或** `totalCostUsd >= 0.02` 都会 `exitCode = 1`。\n- **推论：live 同时管质量与单位经济。** 「回复能过」但一次评测烧穿预算，对一人公司仍是失败。\n\n## 一个类比\n\n模拟考（离线）用标准答卷练阅卷；联考（live）请真考生入场，还设了「整场考试经费上限」。超支一样算不及格。\n\n## 工作示例\n\n1. 设置 `OPENROUTER_API_KEY`，可选 `LIVE_M2_CASE_LIMIT` 先跑子集控费。\n2. 每条正例：合成 scheduler input → 模型决策 → 八个 mandatory 维度与 violations 检查。\n3. summary 记录 `mandatoryPassCount`、`repairCount`、`totalCostUsd`、`p95LatencyMs`。\n\n## 自检\n\n为什么 live 默认不跑 reject-* 毒样？\n\n答案：毒样的 output 是故意写坏的金反例，用来锁检测器；让模型去「生成坏样本」既贵又测错对象。\n\n## 重点\n\n**线上 eval 量的是「当前模型 + 当前路由」在正例上的强制项与成本。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-live-eval.mjs",
+                "lineStart": 15,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "只跑正例且强制 OPENROUTER_API_KEY"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-live-eval.mjs",
+                "lineStart": 52,
+                "lineEnd": 76,
+                "nodeIds": [],
+                "note": "runMastraAgentDecision 后打分并算 mandatoryPass"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-live-eval.mjs",
+                "lineStart": 140,
+                "lineEnd": 145,
+                "nodeIds": [],
+                "note": "全过且费用 < 0.02 才算过"
+              }
+            ],
+            "cards": [
+              {
+                "id": "live-filters-positive",
+                "front": "run-m2-live-eval 为什么 filter expectedAccepted === true？",
+                "back": "live 要考模型在金标场景上的表现；毒样是检测器的考试卷，不必付费生成。",
+                "tags": [
+                  "evaluation",
+                  "live"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m2-live-eval.mjs",
+                    "lineStart": 15,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "filter 正例"
+                  }
+                ]
+              },
+              {
+                "id": "live-cost-gate",
+                "front": "live summary 在什么费用条件下会把进程标失败？",
+                "back": "totalCostUsd >= 0.02（或 mandatory 未全过）时 exitCode = 1。",
+                "tags": [
+                  "evaluation",
+                  "live",
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m2-live-eval.mjs",
+                    "lineStart": 140,
+                    "lineEnd": 144,
+                    "nodeIds": [],
+                    "note": "费用与 mandatory 双门禁"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "live-cost-threshold",
+                "kind": "short-answer",
+                "title": "费用阈值",
+                "prompt": "live eval 使 exitCode=1 的费用阈值是多少美元？（填数字如 0.02）",
+                "expectedAnswer": "0.02",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m2-live-eval.mjs",
+                    "lineStart": 142,
+                    "lineEnd": 142,
+                    "nodeIds": [],
+                    "note": "totalCostUsd >= 0.02"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "offline-green-live-red",
+            "title": "离线绿、线上红：两条流水线怎么接",
+            "content": "# 离线绿、线上红：两条流水线怎么接\n\n## 学习目标\n\n完成本课后，你能画出离线与 live 的分工，并解释「离线全绿但 live 红」时应该先查哪一层。\n\n## 先给结论\n\n- **事实：离线路径不调用 agent。** M1/M2 dialogue 脚本只对 fixture 打分；M2 还合并 detector 失败与 mandatory 正例失败。\n- **事实：live 路径替换 output。** 模型决策覆盖用例里的金标 output，再走同一套 `runM1EvalCase`。\n- **事实：live 额外记账。** usage/cost/latency、repairCount 只在 live summary 出现。\n- **推论：两套绿灯含义不同。** 离线绿 = 尺子与标注仍对齐；live 绿 = 当前模型在正例上强制项过关且费控内。\n\n## 一个类比\n\n校准电子秤（离线）与称当日到货（live）是两件事。秤准但货不足，你该查货源，不是砸秤；货足但秤狂跳，你才该修秤。\n\n## 工作示例\n\n```mermaid\nflowchart TD\n  fixtures[\"m2-dialogue-quality.json\"]\n  offline[\"run-m2-dialogue-eval.mjs\"]\n  live[\"run-m2-live-eval.mjs\"]\n  goldOut[\"fixture.output 金标/毒样\"]\n  modelOut[\"runMastraAgentDecision 生成 output\"]\n  scorers[\"runM1EvalCase 九维 + detector\"]\n  offlineGate[\"detector + mandatory 正例\"]\n  liveGate[\"mandatoryPass 且 cost < 0.02\"]\n\n  fixtures --> offline\n  fixtures --> live\n  offline --> goldOut --> scorers\n  live --> modelOut --> scorers\n  scorers --> offlineGate\n  scorers --> liveGate\n```\n\n图中**最关键的分叉**是：进入 `runM1EvalCase` 之前，output 到底来自 `fixture.output` 还是模型。同一套 scorer，测的对象完全不同。离线绿只保证左边分支；live 红时优先查 prompt/模型/路由，而不是先怀疑 JSON 标注坏了——除非离线也红。\n\n## 自检\n\n离线 detectorAccuracy=1，live mandatoryPass 大量失败，你第一步改标注还是改 prompt？\n\n答案：先改 prompt/模型侧。离线已证明尺子与标注对齐；失败出在考生。\n\n## 重点\n\n**先确认尺子准，再考试生；两套结果不要互相冒充。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-dialogue-eval.mjs",
+                "lineStart": 15,
+                "lineEnd": 34,
+                "nodeIds": [],
+                "note": "离线：fixture 循环 + detector/mandatory 门禁"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-live-eval.mjs",
+                "lineStart": 52,
+                "lineEnd": 76,
+                "nodeIds": [],
+                "note": "live：模型决策替换 output 再打分"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/scripts/run-m2-live-eval.mjs",
+                "lineStart": 108,
+                "lineEnd": 125,
+                "nodeIds": [],
+                "note": "live summary 含 cost/latency/repair"
+              }
+            ],
+            "cards": [
+              {
+                "id": "which-branch-failed",
+                "front": "离线全绿、live 大量 mandatory 失败，优先怀疑哪一侧？",
+                "back": "模型/prompt/路由侧。离线绿说明标注与检测器仍自洽，考生没过关。",
+                "tags": [
+                  "evaluation",
+                  "pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m2-live-eval.mjs",
+                    "lineStart": 67,
+                    "lineEnd": 76,
+                    "nodeIds": [],
+                    "note": "live 用模型 output 计算 mandatoryPass"
+                  }
+                ]
+              },
+              {
+                "id": "shared-scorer-different-input",
+                "front": "离线与 live 共用 runM1EvalCase，真正不同的输入是什么？",
+                "back": "output：离线用夹具金标/毒样，live 用 runMastraAgentDecision 的决策。",
+                "tags": [
+                  "evaluation",
+                  "pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/evals/m1-scorers.ts",
+                    "lineStart": 328,
+                    "lineEnd": 329,
+                    "nodeIds": [],
+                    "note": "离线 output 来自 fixture"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m2-live-eval.mjs",
+                    "lineStart": 57,
+                    "lineEnd": 67,
+                    "nodeIds": [],
+                    "note": "live 组装模型 output"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "live-decision-fn",
+                "kind": "short-answer",
+                "title": "live 决策函数",
+                "prompt": "live 脚本调用哪个函数向模型要结构化决策？（函数名）",
+                "expectedAnswer": "runMastraAgentDecision",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/scripts/run-m2-live-eval.mjs",
+                    "lineStart": 53,
+                    "lineEnd": 56,
+                    "nodeIds": [],
+                    "note": "runMastraAgentDecision 调用"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

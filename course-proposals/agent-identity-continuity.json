@@ -1,0 +1,1133 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-agent-identity-continuity",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "agent-identity-continuity",
+    "title": "让 AI 角色像同一个人",
+    "description": "AI 角色前后不一会立刻出戏。身份连续性不是靠更长 prompt，而是把「是谁、怎么说、说过什么」变成可检查信号——证据来自 TuringPact 的编排实现。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "能说明为何人格要设计成服务端口吻纹理（禁止自报人设与照抄 sampleLine），并指出 determinism 选型锚在 room 而非 aiPlayerId",
+      "能解释 priorClaims 窗口与「我刚才说过」的许可条件，并对照重复/矛盾/伪造三条质量违规阈值",
+      "能描述消息风格信号如何同时携带措辞、投递延迟与冷却，且风格不得覆盖语言/长度/保密硬规则",
+      "能画出 agent 一次决策中「生成→结构解析→质量门→至多一次 repair」路径，并说出哪些结构错误码可重试"
+    ],
+    "units": [
+      {
+        "id": "identity-as-checkable-signals",
+        "title": "把「这个角色是谁」变成可检查信号",
+        "objective": "读完本单元，你能设计确定性人格、短 priorClaims 与压力档位，而不是只堆人设段落。",
+        "lessons": [
+          {
+            "id": "texture-not-character-sheet",
+            "title": "人格是口吻纹理，不是角色卡",
+            "content": "# 人格是口吻纹理，不是角色卡\n\n## 学习目标\n\n完成本课后，你能解释 TuringPact 为什么把 `PersonaArchetype` 设计成「口吻纹理」而不是可自报的角色卡，并指出字段里哪一个最容易被模型误用。\n\n## 先给结论\n\n- **事实：档案写在服务端。** `PersonaArchetype` 注释写明「Server-side voice textures only. Never shipped to the browser」——浏览器拿不到这套纹理，玩家只能听到公开消息。\n- **事实：字段是纹理，不是剧情。** 每个原型有 `profile`、`chatHabit`、`pressureBehavior`、`vulnerableDetail`、`sampleLine`；`sampleLine` 注释是「Sample line texture — never recite verbatim」。\n- **事实：系统提示再次钉死。** `buildSystemPrompt` 写入「人格是口吻纹理，不是角色卡；不要自报人设、不要念样本句」。\n- **推论：角色一致性首先靠「禁止表演身份」，不是靠更长的人设段落。** 模型最爱干的事是复读样本句或自报「我是冷面工程师」——那一瞬间玩家就出戏。\n\n## 一个类比\n\n这像配音指导给演员的备注：「你今天用沙哑、短句、偶尔吞字」，而不是把整本人物小传塞进提词器。观众要听到的是声音习惯，不是「我叫某某，性格内向」的自我介绍。\n\n## 工作示例\n\n`terse-gamer` 的中文纹理：\n\n- `profile`：「寡言玩家，爱碎句」\n- `chatHabit`：「小写碎句、游戏黑话、保留错字、讨厌展开」\n- `sampleLine`：「随便吃点 无所谓」\n\n正确用法：下一句公开消息听起来像碎片、带游戏黑话。错误用法：直接输出「随便吃点 无所谓」，或「我是一个寡言玩家」。\n\n## 自检\n\n如果产品经理要求「把五段人格全文塞进 system prompt 并让模型先复述人设再发言」，你会挡哪两件事？答案：挡「自报人设」和「照抄 sampleLine」——它们把纹理变成了可被识破的表演。\n\n## 重点\n\n**身份连续性的第一刀：人设只约束怎么说，不提供可背诵的台词。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                "lineStart": 31,
+                "lineEnd": 50,
+                "nodeIds": [],
+                "note": "PersonaArchetype：服务端口吻纹理；sampleLine 禁止照抄"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 196,
+                "lineEnd": 206,
+                "nodeIds": [],
+                "note": "system prompt 写明：人格是口吻纹理，勿自报人设、勿念样本句"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-not-recite-sample",
+                "front": "为什么 sampleLine 写进档案，却要禁止模型照抄？",
+                "back": "它是口吻参考纹理。照抄会让多轮消息撞同一句，玩家立刻听出脚本感。",
+                "tags": [
+                  "identity",
+                  "persona"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                    "lineStart": 48,
+                    "lineEnd": 49,
+                    "nodeIds": [],
+                    "note": "sampleLine 注释：texture，never recite verbatim"
+                  }
+                ]
+              },
+              {
+                "id": "server-side-only-persona",
+                "front": "PersonaArchetype 为什么写明 Never shipped to the browser？",
+                "back": "浏览器只应看到公开消息。人设细节下发会被抓包，也诱导前端「表演身份」。",
+                "tags": [
+                  "identity",
+                  "boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                    "lineStart": 31,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "Server-side voice textures only，不下发浏览器"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "sample-line-rule",
+                "kind": "short-answer",
+                "title": "样本句规则",
+                "prompt": "PersonaArchetype 注释要求对 sampleLine 做什么（两个英文词，来自 never recite verbatim）？",
+                "expectedAnswer": "never recite",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                    "lineStart": 48,
+                    "lineEnd": 49,
+                    "nodeIds": [],
+                    "note": "sampleLine：never recite verbatim"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "room-seed-not-player-id",
+            "title": "人格按房间定，不按 AI 玩家 id",
+            "content": "# 人格按房间定，不按 AI 玩家 id\n\n## 学习目标\n\n完成本课后，你能说明 `selectPersonaArchetype` 的种子从哪来、故意忽略了什么，以及同房重赛时声音为什么应保持稳定。\n\n## 先给结论\n\n- **事实：确定性选型。** `selectPersonaArchetype(roomCode, roomId)` 用 `seedForRoomCode`（FNV-1a 风格）对 `roomCode`（优先）或 `roomId` 取模，落到五个 `PERSONA_ARCHETYPES` 之一。\n- **事实：故意忽略 aiPlayerId。** 注释写「Intentionally ignores aiPlayerId so rematches in the same room keep the voice」。\n- **推论：身份锚点是房间，不是「这一局的 AI 槽位」。** 若按玩家 id 选人格，重开局或换槽位会换嗓子——玩家会觉得换了个人。\n- **推论：可复现比「更随机」更重要。** 同一 room code 永远同一原型，排障和评测才能对照。\n\n## 一个类比\n\n酒吧驻场乐队：今晚换鼓手，但场子还是这个场子，曲风应连续。如果每换一个人就从摇滚切到爵士，常客会以为走错店。房间码就是店名。\n\n## 工作示例\n\n1. 输入优先 `roomCode`（玩家可见的 6 位码），没有码才退回 `roomId`（评测夹具 / 库表缺口时）。\n2. `seedForRoomCode` 规范化大写；匹配 `^[A-Z0-9]{6}$` 用码本身，否则用 trim 后的串或 `DEFAULT`。\n3. `index = seed % PERSONA_ARCHETYPES.length`，得到例如 `dry-engineer`。\n4. 同码重赛：索引不变 → 仍是冷面工程师那套纹理。\n\n## 自检\n\n有人提议「用 aiPlayerId 哈希，这样更像每个 AI 独一无二」。你会反驳什么？答案：同房 rematch 会换嗓子，连续性比「每人不同」更值钱。\n\n## 重点\n\n**把「像同一个人」锚在房间，而不是锚在可变的玩家 id。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                "lineStart": 202,
+                "lineEnd": 214,
+                "nodeIds": [],
+                "note": "selectPersonaArchetype：按 roomCode/roomId 定型，故意忽略 aiPlayerId"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                "lineStart": 188,
+                "lineEnd": 200,
+                "nodeIds": [],
+                "note": "seedForRoomCode：FNV-1a 风格确定性种子"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-ignore-ai-player-id",
+                "front": "selectPersonaArchetype 为什么故意忽略 aiPlayerId？",
+                "back": "同房间 rematch 要保持同一嗓音。按 AI 玩家 id 选会在重赛时换人格。",
+                "tags": [
+                  "identity",
+                  "determinism"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                    "lineStart": 202,
+                    "lineEnd": 206,
+                    "nodeIds": [],
+                    "note": "注释：ignores aiPlayerId so rematches keep the voice"
+                  }
+                ]
+              },
+              {
+                "id": "seed-prefers-room-code",
+                "front": "选型种子优先用 roomCode 还是 roomId？没有 code 时怎么办？",
+                "back": "优先 player-facing roomCode；不可用时退回 roomId（评测/库表缺口）。",
+                "tags": [
+                  "identity",
+                  "seed"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                    "lineStart": 202,
+                    "lineEnd": 212,
+                    "nodeIds": [],
+                    "note": "preferred = roomCode 否则 roomId"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "persona-seed-ignores",
+                "kind": "short-answer",
+                "title": "选型忽略什么",
+                "prompt": "selectPersonaArchetype 的注释写明故意忽略哪个标识符（照代码字段名 camelCase）？",
+                "expectedAnswer": "aiPlayerId",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                    "lineStart": 205,
+                    "lineEnd": 205,
+                    "nodeIds": [],
+                    "note": "Intentionally ignores aiPlayerId"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "prior-claims-last-four",
+            "title": "priorClaims：只记住自己最近四句",
+            "content": "# priorClaims：只记住自己最近四句\n\n## 学习目标\n\n完成本课后，你能指出 `priorClaims` 从哪来、窗口多长，以及模型什么时候才被允许说「我刚才说过」。\n\n## 先给结论\n\n- **事实：来源是公开聊天里自己的话。** `buildIdentityContinuityContext` 过滤 `senderId === aiPlayerId`，再 `.slice(-4)`，映射为 `content` 列表。\n- **事实：工具可读。** `read_identity_continuity` 返回整份 `identityContext`，其中含 `priorClaims`。\n- **事实：提示词硬约束。** system prompt：「只有 read_identity_continuity 的 priorClaims 真有对应细节时，才可以说『我刚才/之前说过』。」repair prompt 再次强调不得虚构 priorClaims 里没有的细节。\n- **推论：连续性不是无限记忆。** 只钉最近四句，既够抓「刚说过的事实」，又避免把整段历史塞进上下文烧钱。\n\n## 一个类比\n\n法庭上的「刚才的证词」：证人可以引用自己刚刚说出口的话，但不能凭空说「我三小时前已经承认过」——除非记录里真有那句。`priorClaims` 就是那份短记录。\n\n## 工作示例\n\nAI 曾说「通勤23分钟」。`priorClaims` 含这句时，后续可以说「就像我说的，大概二十多分钟」。若窗口已滑走、列表里没有，却写「我刚才说过电梯计时」——属于伪造既有说法，后面质量门会用 `fabricates_prior_ai_claim` 拦住（下单元展开）。\n\n## 自检\n\n为什么不把整局所有 AI 消息都放进 priorClaims？答：上下文成本与噪声上升；近期四句才是玩家此刻对照的「是不是同一个人」。\n\n## 重点\n\n**可引用的历史必须是可枚举的短列表，而不是模型的幻觉记忆。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                "lineStart": 247,
+                "lineEnd": 250,
+                "nodeIds": [],
+                "note": "priorClaims：仅 AI 自己消息，slice(-4)"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 370,
+                "lineEnd": 376,
+                "nodeIds": [],
+                "note": "read_identity_continuity 工具返回含 priorClaims 的身份上下文"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 204,
+                "lineEnd": 205,
+                "nodeIds": [],
+                "note": "prompt：只有 priorClaims 有对应细节才可说「我刚才说过」"
+              }
+            ],
+            "cards": [
+              {
+                "id": "prior-claims-window",
+                "front": "priorClaims 默认保留自己最近几条公开消息？",
+                "back": "4 条。filter 自己后 slice(-4)。",
+                "tags": [
+                  "identity",
+                  "prior-claims"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                    "lineStart": 247,
+                    "lineEnd": 250,
+                    "nodeIds": [],
+                    "note": "slice(-4) 取最近四条自说内容"
+                  }
+                ]
+              },
+              {
+                "id": "when-can-say-i-said",
+                "front": "模型在什么条件下才可以说「我之前说过……」？",
+                "back": "read_identity_continuity 返回的 priorClaims 里真有对应细节；否则禁止。",
+                "tags": [
+                  "identity",
+                  "hallucination"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                    "lineStart": 204,
+                    "lineEnd": 205,
+                    "nodeIds": [],
+                    "note": "priorClaims 真有细节才可回溯自称"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "prior-claims-count",
+                "kind": "short-answer",
+                "title": "窗口长度",
+                "prompt": "buildIdentityContinuityContext 里 priorClaims 对 AI 自说消息 slice 的参数是几（只写数字）？",
+                "expectedAnswer": "4",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                    "lineStart": 249,
+                    "lineEnd": 249,
+                    "nodeIds": [],
+                    "note": "slice(-4)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "pressure-calm-watched-cornered",
+            "title": "压力三档：calm / watched / cornered",
+            "content": "# 压力三档：calm / watched / cornered\n\n## 学习目标\n\n完成本课后，你能根据票压与指控次数算出 `IdentityPressure`，并说明压力如何进入人格字段与后续质量校验。\n\n## 先给结论\n\n- **事实：三档枚举。** `IdentityPressure = 'calm' | 'watched' | 'cornered'`。\n- **事实：阈值写死在代码。** `votePressure >= 2` 或 `accusationCount >= 2` → `cornered`；任一 ≥1 → `watched`；否则 `calm`。\n- **事实：上游喂票与指控。** `buildSchedulerIdentityContext` 用 `buildSchedulerSuspicionSignals` 的 `myVotePressure` 与 `accusationCount` 填入 `buildIdentityContinuityContext`。\n- **推论：压力是可计算信号，不是让模型「自己感觉紧张」。** 有了档位，才能选对 `pressureBehavior` 文案（例如 terse-gamer：压力下更短）。\n\n## 一个类比\n\n游戏里的仇恨值条：0 是和平，进战斗是警戒，BOSS 点名是全力输出。AI 不需要「演紧张」，系统直接告诉它现在在第几档。\n\n## 工作示例\n\n- 0 票、0 指控 → `calm`，按日常 `chatHabit` 说话。\n- 1 票或 1 次「是AI」类指控 → `watched`，纹理收紧。\n- 2 票或 2 次指控 → `cornered`，`pressureBehavior` 主导（寡言者更短、工程师先认小错、段子手拿指控本身当梗）。\n\n这些字符串进入 system prompt 的「当前压力」行，和 `pressureBehavior` 一起约束本轮口吻。\n\n## 自检\n\n只有 1 票、指控 0 次，压力是哪一档？`watched`。不要凭感觉写成 cornered。\n\n## 重点\n\n**社交压力要先变成离散档位，人格纹理才有可切换的旋钮。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                "lineStart": 17,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "IdentityPressure 三档枚举"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                "lineStart": 223,
+                "lineEnd": 227,
+                "nodeIds": [],
+                "note": "resolvePressure：票压/指控阈值映射三档"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/scheduler-social-signals.ts",
+                "lineStart": 97,
+                "lineEnd": 112,
+                "nodeIds": [],
+                "note": "buildSchedulerIdentityContext 把票压与指控数喂给身份上下文"
+              }
+            ],
+            "cards": [
+              {
+                "id": "cornered-threshold",
+                "front": "什么条件下压力变成 cornered？",
+                "back": "votePressure≥2 或 accusationCount≥2。",
+                "tags": [
+                  "identity",
+                  "pressure"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                    "lineStart": 223,
+                    "lineEnd": 225,
+                    "nodeIds": [],
+                    "note": "cornered 阈值"
+                  }
+                ]
+              },
+              {
+                "id": "pressure-is-computed",
+                "front": "为什么压力不靠模型自述「我好慌」，而要服务端算？",
+                "back": "票与指控是可观察事实；算成档位后，pressureBehavior 与校验才可复现。",
+                "tags": [
+                  "identity",
+                  "signals"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                    "lineStart": 223,
+                    "lineEnd": 227,
+                    "nodeIds": [],
+                    "note": "resolvePressure 纯函数映射"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "pressure-one-vote",
+                "kind": "short-answer",
+                "title": "一票时的档位",
+                "prompt": "votePressure=1 且 accusationCount=0 时，resolvePressure 返回哪一个字符串字面量？",
+                "expectedAnswer": "watched",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/identity-continuity.ts",
+                    "lineStart": 225,
+                    "lineEnd": 225,
+                    "nodeIds": [],
+                    "note": "≥1 → watched"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "style-and-delivery-rhythm",
+        "title": "说话方式与交付节奏",
+        "objective": "读完本单元，你能用可复现的风格信号控制措辞与节奏，并守住硬规则优先级。",
+        "lessons": [
+          {
+            "id": "five-style-signals",
+            "title": "五条消息风格信号，附带延迟与冷却",
+            "content": "# 五条消息风格信号，附带延迟与冷却\n\n## 学习目标\n\n完成本课后，你能列出五种 `MessageStyleSignalId`，并解释每条信号同时携带「怎么说」与「何时再发」两层含义。\n\n## 先给结论\n\n- **事实：五个 id。** `typo` | `quick_reply` | `long_pause` | `overly_polite` | `casual`。\n- **事实：每条绑定交付参数。** 例如 `long_pause`：`deliveryDelayMs: 4800`、`nextPublicCooldownSec: 45`；`quick_reply`：350ms 与 12 秒冷却。\n- **事实：指令与节奏同源。** `buildStyleSignalInstruction` 生成中文 guidance，并写明「若发言，建议下一次公开发言冷却为 N 秒」。\n- **推论：像真人，不只改措辞，也改「打字停顿」和「发言频率」。** 只有文案、没有延迟，群聊仍像秒回的机器人。\n\n## 一个类比\n\n演员的一条 cue card 上写着：「这句带点口误」以及「说完后歇半拍再接戏」。风格信号就是那张 cue card，不是另一套人格。\n\n## 工作示例\n\n本轮抽到 `typo`：\n\n1. 文案层：偶尔保留一个自然小错字，不要每句都错。\n2. 交付层：约 1400ms 再真正发出。\n3. 节奏层：建议下次公开发言冷却 18 秒。\n\n`runMastraAgentDecision` 最终把 `styleSignal`、`typingDelayMs`、`nextPublicCooldownSec` 放进 envelope 的 `delivery` 字段，编排器按此投递。\n\n## 自检\n\n如果只做 `deliveryDelayMs`、不做 `nextPublicCooldownSec`，会漏掉哪类穿帮？答：AI 可以「打字很慢」却「句句连发」，频率仍像脚本。\n\n## 重点\n\n**风格信号 = 措辞提示 + 投递延迟 + 冷却建议，三者同表。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/message-style-signals.ts",
+                "lineStart": 3,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "五种 MessageStyleSignal 及 deliveryDelayMs / nextPublicCooldownSec"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/message-style-signals.ts",
+                "lineStart": 46,
+                "lineEnd": 59,
+                "nodeIds": [],
+                "note": "buildStyleSignalInstruction：措辞指导 + 冷却建议"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 540,
+                "lineEnd": 544,
+                "nodeIds": [],
+                "note": "envelope.delivery 带上 styleSignal 与延迟/冷却"
+              }
+            ],
+            "cards": [
+              {
+                "id": "style-carries-timing",
+                "front": "MessageStyleSignal 除了 id，还带哪两个与时间相关的字段？",
+                "back": "deliveryDelayMs 与 nextPublicCooldownSec。",
+                "tags": [
+                  "style",
+                  "delivery"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/message-style-signals.ts",
+                    "lineStart": 10,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "接口含 deliveryDelayMs 与 nextPublicCooldownSec"
+                  }
+                ]
+              },
+              {
+                "id": "long-pause-numbers",
+                "front": "long_pause 信号的 deliveryDelayMs 大约是多少？",
+                "back": "4800 毫秒，并建议 45 秒公开发言冷却。",
+                "tags": [
+                  "style",
+                  "timing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/message-style-signals.ts",
+                    "lineStart": 19,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "long_pause: 4800ms / 45s"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "long-pause-delay",
+                "kind": "short-answer",
+                "title": "长停顿毫秒",
+                "prompt": "SIGNALS 里 id 为 long_pause 的 deliveryDelayMs 是多少（只写数字）？",
+                "expectedAnswer": "4800",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/message-style-signals.ts",
+                    "lineStart": 19,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "long_pause deliveryDelayMs 4800"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "hash-not-true-random",
+            "title": "风格用哈希选，不用真随机",
+            "content": "# 风格用哈希选，不用真随机\n\n## 学习目标\n\n完成本课后，你能写出 `selectMessageStyleSignal` 的 `turnKey` 由哪些字段拼成，并说明为什么「可复现的伪随机」比 `Math.random()` 更适合产品与评测。\n\n## 先给结论\n\n- **事实：turnKey 五段拼接。** `room_id`、`ai_player_id`、`triggerReason`、`publicMessages.length`、最后一条消息 id（没有则用 `opening`）。\n- **事实：stableHash 再取模。** 简单多项式哈希后 `SIGNALS[hash % length]`。\n- **推论：同一输入同一风格。** 重放一次调度、复现一次 bug，风格信号不会飘。\n- **推论：换了最后一条消息 id 或长度，风格会变。** 这是「每轮可不同」，不是「每轮掷骰子」。\n\n## 一个类比\n\n剧组按场记板选滤镜：同一场戏、同一条 take，滤镜固定；切到下一条 take，滤镜可以换。哈希就是场记板编号，不是现场抽奖。\n\n## 工作示例\n\n同房间、同 AI、同 trigger、同历史长度、同 last message id → 永远同一信号。你本地单测断言「本轮必须是 typo」时，只要构造相同 turnKey，不必 mock 随机数。\n\n若用 `Math.random()`：线上一过性穿帮无法复现；A/B 评测也无法对齐。\n\n## 自检\n\nturnKey 为什么包含 `publicMessages.length` 和 last message id？答：让「新来一条消息」的轮次能换风格，同时保持该轮可复现。\n\n## 重点\n\n**产品里的「像随机」应当是可复现的哈希，而不是真随机。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/message-style-signals.ts",
+                "lineStart": 24,
+                "lineEnd": 44,
+                "nodeIds": [],
+                "note": "stableHash + turnKey 五段拼接后取模选信号"
+              }
+            ],
+            "cards": [
+              {
+                "id": "turn-key-parts",
+                "front": "selectMessageStyleSignal 的 turnKey 至少依赖哪类「会随对话推进」的输入？",
+                "back": "publicMessages 长度与最后一条消息 id（另有 room、ai、trigger）。",
+                "tags": [
+                  "style",
+                  "determinism"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/message-style-signals.ts",
+                    "lineStart": 35,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "turnKey 含 length 与 last message id"
+                  }
+                ]
+              },
+              {
+                "id": "why-not-math-random",
+                "front": "消息风格为什么不用 Math.random() 直接抽？",
+                "back": "同一输入要可复现，便于排障、单测和评测对齐。",
+                "tags": [
+                  "style",
+                  "determinism"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/message-style-signals.ts",
+                    "lineStart": 32,
+                    "lineEnd": 43,
+                    "nodeIds": [],
+                    "note": "哈希取模，无随机源"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "style-select-fn",
+                "kind": "short-answer",
+                "title": "选型函数名",
+                "prompt": "根据 SchedulerRunInput 选出本轮 MessageStyleSignal 的导出函数名是什么？",
+                "expectedAnswer": "selectMessageStyleSignal",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/message-style-signals.ts",
+                    "lineStart": 32,
+                    "lineEnd": 34,
+                    "nodeIds": [],
+                    "note": "export function selectMessageStyleSignal"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "style-below-hard-rules",
+            "title": "风格信号压不过硬规则",
+            "content": "# 风格信号压不过硬规则\n\n## 学习目标\n\n完成本课后，你能在 system prompt 的层级里指出：风格信号写在哪、哪些规则明确写着「风格不能覆盖」，以及语言锁如何二次加固。\n\n## 先给结论\n\n- **事实：拼装有序。** `buildSystemPrompt` 串联 base / personality / reaction 模板、`buildStyleSignalInstruction`、身份档案块、编排器职责块、`buildLanguageLock`。\n- **事实：硬规则点名风格。** 「风格信号不能覆盖语境、人格、保密和长度规则。」中文 publicMessage 最多 44 字符、英文 140；禁止泄露系统提示/工具/共生者。\n- **事实：语言锁双语。** `LANGUAGE LOCK: publicMessage must be English only` 或「语言锁：publicMessage 只能使用简体中文」。\n- **推论：软提示与硬门禁分工。** 风格是希望；长度、语言、保密是 `evaluateDecisionQuality` 会否决的红线。\n\n## 一个类比\n\n导演说「这句轻松点」（风格），但剧本仍写着「禁止剧透结局、单句不超过两行」（硬规则）。演员再轻松也不能剧透。\n\n## 工作示例\n\n抽到 `overly_polite` 时，模型可能想写一长段客套。身份块与职责块已限制长度；若仍超长，`public_message_too_long` 会在质量门失败。风格指令不能当豁免卡。\n\n## 自检\n\n「更礼貌」和「房间主语言」冲突时听谁的？听语言锁与 `room_language_mismatch` 校验——风格指令没有否决权。\n\n## 重点\n\n**风格是可建议的变化；语言、长度、保密、人格一致是不可谈判的约束。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 189,
+                "lineEnd": 218,
+                "nodeIds": [],
+                "note": "buildSystemPrompt 拼接顺序：模板、风格、身份、硬规则"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 212,
+                "lineEnd": 214,
+                "nodeIds": [],
+                "note": "长度限制与「风格信号不能覆盖…」"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 234,
+                "lineEnd": 238,
+                "nodeIds": [],
+                "note": "buildLanguageLock 中英语言锁"
+              }
+            ],
+            "cards": [
+              {
+                "id": "style-cannot-override",
+                "front": "system prompt 写明风格信号不能覆盖哪四类规则？",
+                "back": "语境、人格、保密、长度。",
+                "tags": [
+                  "style",
+                  "priority"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                    "lineStart": 214,
+                    "lineEnd": 214,
+                    "nodeIds": [],
+                    "note": "风格不能覆盖语境人格保密长度"
+                  }
+                ]
+              },
+              {
+                "id": "zh-max-chars",
+                "front": "中文 publicMessage 的字符上限是多少？",
+                "back": "44 个字符（英文 140）。",
+                "tags": [
+                  "quality",
+                  "length"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                    "lineStart": 212,
+                    "lineEnd": 212,
+                    "nodeIds": [],
+                    "note": "中文最多 44 英文最多 140"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "zh-char-cap",
+                "kind": "short-answer",
+                "title": "中文长度上限",
+                "prompt": "中文 publicMessage 的字符上限是多少（只写数字）？",
+                "expectedAnswer": "44",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                    "lineStart": 27,
+                    "lineEnd": 30,
+                    "nodeIds": [],
+                    "note": "zh-CN: 44"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                    "lineStart": 212,
+                    "lineEnd": 212,
+                    "nodeIds": [],
+                    "note": "中文最多 44 个字符"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "quality-gate-and-agent-wireup",
+        "title": "质量门与 agent 组装",
+        "objective": "读完本单元，你能把身份工具、提示词与质量门收成一次可修的决策闭环。",
+        "lessons": [
+          {
+            "id": "quality-violations-are-codes",
+            "title": "对话质量是枚举违规码，不是「感觉不对」",
+            "content": "# 对话质量是枚举违规码，不是「感觉不对」\n\n## 学习目标\n\n完成本课后，你能说明 `evaluateDecisionQuality` 返回的是什么，并举出至少三类「可自动否决」的违规，解释为什么要比「再写长一点 prompt」更稳。\n\n## 先给结论\n\n- **事实：结果形状固定。** `DecisionQualityResult = { ok, violations[] }`，违规是字符串联合类型，例如 `public_message_too_long`、`public_meta_disclosure`、`room_language_mismatch`、`pressure_response_required`。\n- **事实：静默也要自洽。** `shouldSpeak=false` 却带 `publicMessage` → `silent_decision_has_public_message`；被点名/指控却不说 → `pressure_response_required`。\n- **事实：失败即抛错。** `assertDecisionQuality` 在 `!ok` 时抛 `DecisionQualityError`，message 形如 `decision_quality_failed:code1,code2`。\n- **推论：一人公司没有 QA 同事盯聊天。** 把「出戏模式」写成可枚举码，机器才能替你挡。\n\n## 一个类比\n\n海关申报单：不是官员凭感觉说「你这人可疑」，而是清单上勾「超额现金 / 禁运品 / 证件不符」。每勾一项都能告诉你怎么改。\n\n## 工作示例\n\n模型输出「作为AI我不能…」并夹带 Markdown 标题：\n\n1. `META_DISCLOSURE_PATTERNS` 命中 → `public_meta_disclosure`\n2. `MARKDOWN_PATTERNS` 命中 → `public_markdown`\n3. `assertDecisionQuality` 抛错，进入唯一一次 repair（下节）\n\n## 自检\n\n为什么违规要用稳定字符串码而不是自由文本理由？答：repair prompt 要「只修复这些质量代码」；码稳定才能统计与回归。\n\n## 重点\n\n**质量门 = 命名过的红线列表；说不出码名的「感觉」进不了自动化。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                "lineStart": 7,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "DecisionQualityViolation 联合类型与 Result 形状"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                "lineStart": 242,
+                "lineEnd": 257,
+                "nodeIds": [],
+                "note": "静默与必回应：silent_decision / pressure_response / public_message_missing"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                "lineStart": 308,
+                "lineEnd": 315,
+                "nodeIds": [],
+                "note": "assertDecisionQuality 失败即抛 DecisionQualityError"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-violation-codes",
+                "front": "为什么决策质量失败要用 violations 字符串码，而不是一段自然语言？",
+                "back": "可枚举、可统计、repair 时能点名「只修这些码」，回归也能断言。",
+                "tags": [
+                  "quality",
+                  "codes"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                    "lineStart": 7,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "违规码联合类型"
+                  }
+                ]
+              },
+              {
+                "id": "silent-with-message",
+                "front": "shouldSpeak 为 false 但 publicMessage 非空，会记哪条违规？",
+                "back": "silent_decision_has_public_message。",
+                "tags": [
+                  "quality",
+                  "consistency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                    "lineStart": 242,
+                    "lineEnd": 245,
+                    "nodeIds": [],
+                    "note": "静默却带公开消息"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "quality-assert-fn",
+                "kind": "short-answer",
+                "title": "断言函数名",
+                "prompt": "提交决策后抛出 DecisionQualityError 的导出函数名是什么？",
+                "expectedAnswer": "assertDecisionQuality",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                    "lineStart": 308,
+                    "lineEnd": 315,
+                    "nodeIds": [],
+                    "note": "assertDecisionQuality 包装 evaluate 并抛错"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "continuity-hard-checks",
+            "title": "重复、自相矛盾、伪造「我说过」",
+            "content": "# 重复、自相矛盾、伪造「我说过」\n\n## 学习目标\n\n完成本课后，你能对照代码说出三条身份连续性硬检查各自用什么信号触发，以及阈值（相似度 / 锚点数量）卡在哪里。\n\n## 先给结论\n\n- **事实：重复发言。** `isRepeatedMessage`：规范化后全等，或长度≥8 且 Dice 相似度 ≥ **0.68** → `repeated_recent_ai_message`。\n- **事实：自相矛盾。** `contradictsRecentClaim`：否定极性相反且相似度 ≥ **0.48** → `contradicts_recent_ai_claim`。\n- **事实：伪造回溯。** 命中「我刚才/之前说过」类 `RETROSPECTIVE_CLAIM_PATTERN`，且与 `priorClaims` 的语境锚点 `< 2` → `fabricates_prior_ai_claim`。\n- **推论：连续性靠几何相似度 + 模式匹配，不靠模型自觉。** 把「像同一个人」从愿望变成门禁。\n\n## 一个类比\n\n剪辑审计：同一条台词重复两遍、前后肯定/否定打架、闪回画面却对不上素材库——三条都能自动打回，不用导演通宵审片。\n\n## 工作示例\n\n1. 上一轮：「通勤23分钟」。本轮几乎同样的短句 → 重复。\n2. 上一轮肯定「我会投 A」，本轮「我从不投 A」且用词很近 → 矛盾。\n3. 本轮「像我刚才说的，我养了三只猫」，但 priorClaims 里没有任何猫相关锚点 → 伪造既有说法。\n\n`evaluateDecisionQuality` 在通过长度/语言/保密检查后，用 `identity.priorClaims` 跑这三项。\n\n## 自检\n\n相似度阈值上，为什么「矛盾」门槛（0.48）低于「重复」（0.68）？答：矛盾只需足够像同一话题且极性反转；重复要求更接近复读。\n\n## 重点\n\n**身份连续性的硬核：最近自述可检索，且复读/打脸/假闪回可自动否决。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                "lineStart": 114,
+                "lineEnd": 134,
+                "nodeIds": [],
+                "note": "isRepeatedMessage(0.68) 与 contradictsRecentClaim(0.48)"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                "lineStart": 62,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "RETROSPECTIVE_CLAIM_PATTERN：我刚才/之前说过"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                "lineStart": 276,
+                "lineEnd": 287,
+                "nodeIds": [],
+                "note": "三项连续性违规写入 evaluateDecisionQuality"
+              }
+            ],
+            "cards": [
+              {
+                "id": "repeat-threshold",
+                "front": "判定「近似复读」的 Dice 相似度阈值是多少？",
+                "back": "≥ 0.68（且规范化后长度至少 8）。",
+                "tags": [
+                  "quality",
+                  "continuity"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                    "lineStart": 114,
+                    "lineEnd": 122,
+                    "nodeIds": [],
+                    "note": "diceSimilarity >= 0.68"
+                  }
+                ]
+              },
+              {
+                "id": "fabricate-needs-anchors",
+                "front": "什么情况下会触发 fabricates_prior_ai_claim？",
+                "back": "消息像在引用「我之前说过」，但 priorClaims 语境锚点少于 2。",
+                "tags": [
+                  "quality",
+                  "prior-claims"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                    "lineStart": 282,
+                    "lineEnd": 286,
+                    "nodeIds": [],
+                    "note": "回溯自称且锚点 < 2"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "repeat-dice-threshold",
+                "kind": "short-answer",
+                "title": "复读相似度",
+                "prompt": "isRepeatedMessage 里判定近似重复的 diceSimilarity 阈值是多少（写成 0.xx）？",
+                "expectedAnswer": "0.68",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/decision-quality.ts",
+                    "lineStart": 121,
+                    "lineEnd": 121,
+                    "nodeIds": [],
+                    "note": "diceSimilarity >= 0.68"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "one-repair-chance",
+            "title": "结构和质量：只给一次修复",
+            "content": "# 结构和质量：只给一次修复\n\n## 学习目标\n\n完成本课后，你能画出 `runMastraAgentDecision` 的尝试—修复路径，并说明哪些结构化错误可重试、为什么 `invalid_decision_schema` 不在可重试集合里。\n\n## 先给结论\n\n- **事实：主路径。** `runAttempt`：生成 → `resolveStructuredDecision` → `assertDecisionQuality`。\n- **事实：唯一修复。** catch 后若可修复，用 `buildRepairPrompt` 再 `runAttempt` 一次，并标记 `repaired: true`；不可修复则上抛。\n- **事实：可重试结构码只有三个。** `RETRYABLE_STRUCTURED_DECISION_CODES`：`missing_decision_submission`、`missing_json_object`、`invalid_decision_json`——**没有** `invalid_decision_schema`。\n- **推论：格式残骸值得再试；schema 语义错再试多半仍错。** 质量违规同样只修一轮，避免烧钱死循环。\n\n## 一个类比\n\n客服工单：地址填成乱码可以打回去让用户重填一次；若字段齐了但「年龄=-3」，再让填十次也不会变合法——应直接拒绝并记错误类型。\n\n## 工作示例\n\n```mermaid\nflowchart TD\n  A[buildDecisionPrompt] --> B[agent.generate]\n  B --> C[resolveStructuredDecision]\n  C --> D[assertDecisionQuality]\n  D -->|ok| E[返回 envelope]\n  D -->|DecisionQualityError| F{可修复?}\n  C -->|StructuredDecisionError| G{code 在 RETRYABLE 集合?}\n  G -->|是| H[buildRepairPrompt 再 runAttempt 一次]\n  G -->|否 如 invalid_decision_schema| I[抛 AgentDecisionRunError]\n  F -->|是| H\n  F -->|否| I\n  H --> E\n```\n\n图里最关键的一条线是 **G→I：schema 非法不重试**。模型已经吐出可解析 JSON，但字段类型/范围不对（例如 cooldown 不是 5–60 整数）——再生成一轮通常重复同一错误，却双倍计费。\n\n`buildRepairPrompt` 开头写死：「这是唯一一次修复机会」，并点名质量码或「缺少可解析的 submit_decision 结构」。\n\n## 自检\n\n`invalid_decision_json` 与 `invalid_decision_schema` 哪个可进 repair？只有前者（外加 missing_* 两个）。后者不在 Set 里。\n\n## 重点\n\n**重试预算是产品决策：只修「像是格式失手」的失败，不修「结构懂了但内容不合法」的失败。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 22,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "RETRYABLE_STRUCTURED_DECISION_CODES 仅三个，不含 invalid_decision_schema"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 476,
+                "lineEnd": 495,
+                "nodeIds": [],
+                "note": "catch 后最多一次 repair，成功则 repaired:true"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 289,
+                "lineEnd": 305,
+                "nodeIds": [],
+                "note": "buildRepairPrompt：唯一一次修复机会 + 点名质量码"
+              }
+            ],
+            "cards": [
+              {
+                "id": "not-retryable-schema",
+                "front": "为什么 invalid_decision_schema 不在 RETRYABLE_STRUCTURED_DECISION_CODES 里？",
+                "back": "JSON 已能解析但字段语义不合法；重试大概率重复同样错，却双倍成本。",
+                "tags": [
+                  "repair",
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 22,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "可重试集合无 invalid_decision_schema"
+                  }
+                ]
+              },
+              {
+                "id": "one-repair-only",
+                "front": "runMastraAgentDecision 在质量或可重试结构失败后最多再试几次？",
+                "back": "一次。repair prompt 写明「唯一一次修复机会」。",
+                "tags": [
+                  "repair",
+                  "budget"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                    "lineStart": 295,
+                    "lineEnd": 295,
+                    "nodeIds": [],
+                    "note": "这是唯一一次修复机会"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "non-retryable-code",
+                "kind": "short-answer",
+                "title": "不可重试的结构码",
+                "prompt": "四个 StructuredDecisionErrorCode 里哪个不在 RETRYABLE_STRUCTURED_DECISION_CODES？",
+                "expectedAnswer": "invalid_decision_schema",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 5,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "四码中仅 schema 不在可重试 Set"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "wire-identity-into-agent",
+            "title": "工具、提示词、门禁如何装成一个 agent",
+            "content": "# 工具、提示词、门禁如何装成一个 agent\n\n## 学习目标\n\n完成本课后，你能按调用链说明：身份上下文在哪构建、如何进入 prompt 与工具、又如何在提交后被质量门回读——整条闭环缺一环会发生什么。\n\n## 先给结论\n\n- **事实：构建一次、多处使用。** `runMastraAgentDecision` 内 `buildSystemPrompt`、`selectMessageStyleSignal`、`buildSchedulerIdentityContext` 并行准备；工具表 `createDecisionToolSpecs` 里 `read_identity_continuity` 直接返回同一套 `identityContext`。\n- **事实：决策必须走 submit_decision。** 终端工具捕获结构化 `AgentDecision`，再经 `resolveStructuredDecision` 与 `assertDecisionQuality`。\n- **事实：决策 prompt 也强调连续性。** 「先读取 identity continuity，避免与自己此前发言矛盾。」\n- **推论：身份不是「多写一段 system」就结束。** 可读工具 + 提示约束 + 提交后门禁，三层叠在一起，角色才像同一个人。\n\n## 一个类比\n\n剧组：化妆间定妆（身份上下文）、提词器（system/decision prompt）、监视器回放（quality gate）。只定妆不监视，演员仍可能念错；只监视不定妆，每条都在「纠正一个不存在的人设」。\n\n## 工作示例\n\n1. 调度输入进入 `runMastraAgentDecision`。\n2. 渲染 system：人格纹理、压力、priorClaims 规则、风格信号、语言锁。\n3. 模型按决策 prompt 调 `read_*`，其中 `read_identity_continuity` 给 priorClaims 与 persona。\n4. `submit_decision` 交卷 → 结构解析 → `evaluateDecisionQuality` 用同一身份源再查一遍。\n5. 失败则唯一 repair；成功则带上 `delivery` 节奏字段返回。\n\n缺工具：模型只能靠 prompt 摘要，易漏 priorClaims。缺门禁：违反纹理的话仍发出去。缺确定性人格：每轮换嗓子。\n\n## 自检\n\n质量门里的 `buildSchedulerIdentityContext(input)` 与工具返回的是不是同一套规则？是——都源于 `buildIdentityContinuityContext`，避免「工具一套、校验另一套」。\n\n## 重点\n\n**身份连续性 = 确定性人格 + 短 priorClaims + 风格节奏 + 可枚举质量门，在 agent 运行时闭环。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 428,
+                "lineEnd": 447,
+                "nodeIds": [],
+                "note": "runMastraAgentDecision：prompt、风格、身份与工具一并组装"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 370,
+                "lineEnd": 376,
+                "nodeIds": [],
+                "note": "read_identity_continuity 暴露身份连续性上下文"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                "lineStart": 279,
+                "lineEnd": 280,
+                "nodeIds": [],
+                "note": "decision prompt：先读 identity continuity 避免自相矛盾"
+              }
+            ],
+            "cards": [
+              {
+                "id": "identity-tool-name",
+                "front": "模型读取稳定人设、语言、priorClaims 与压力的工具 id 是什么？",
+                "back": "read_identity_continuity。",
+                "tags": [
+                  "agent",
+                  "tools"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                    "lineStart": 370,
+                    "lineEnd": 374,
+                    "nodeIds": [],
+                    "note": "read_identity_continuity 工具定义"
+                  }
+                ]
+              },
+              {
+                "id": "three-layers",
+                "front": "身份连续性最少需要哪三层机制一起工作？",
+                "back": "确定性人格与 priorClaims、提示/工具可读、提交后的质量门禁。",
+                "tags": [
+                  "agent",
+                  "architecture"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                    "lineStart": 428,
+                    "lineEnd": 473,
+                    "nodeIds": [],
+                    "note": "组装 prompt/工具后 assertDecisionQuality"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "identity-tool-id",
+                "kind": "short-answer",
+                "title": "身份工具 id",
+                "prompt": "createDecisionToolSpecs 里用于读取人设与 priorClaims 的工具 id 字符串是什么？",
+                "expectedAnswer": "read_identity_continuity",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/orchestration/turing-pact-agent.ts",
+                    "lineStart": 370,
+                    "lineEnd": 371,
+                    "nodeIds": [],
+                    "note": "id: read_identity_continuity"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

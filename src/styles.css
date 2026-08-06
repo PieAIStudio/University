@@ -1522,3 +1522,54 @@ summary:focus-visible,
   color: #f7b2a0;
   font-size: 0.84rem;
 }
+
+/* Vocabulary review: the queue that makes 「加入复习」 mean something. The word
+   itself is the largest thing on the panel, because recall is what is being
+   tested — everything else is scaffolding around that one moment. */
+.vocab-review {
+  display: grid;
+  gap: 1rem;
+}
+
+.vocab-review__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.vocab-review__header h2 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(2rem, 6vw, 3rem);
+  letter-spacing: -0.02em;
+}
+
+.vocab-review__phonetic {
+  margin: 0.15rem 0 0;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.vocab-review__answer {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.vocab-review__gloss {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.vocab-review__usage {
+  margin: 0;
+  opacity: 0.82;
+  line-height: 1.6;
+}
+
+.vocab-review__meta {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.6;
+}
