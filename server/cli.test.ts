@@ -524,3 +524,74 @@ describe("UniversityLocal CLI parser", () => {
     installed.close();
   });
 });
+
+describe("study and airlock verbs", () => {
+  it("parses study create with its source path", () => {
+    expect(
+      parseUniversityLocalCli([
+        "study",
+        "create",
+        "--study",
+        "university-local",
+        "--title",
+        "UniversityLocal 自身",
+        "--source",
+        "/tmp/ul-airlock",
+      ]),
+    ).toEqual({
+      kind: "study-create",
+      studyId: "university-local",
+      title: "UniversityLocal 自身",
+      sourceRoot: "/tmp/ul-airlock",
+    });
+  });
+
+  it("requires the source a study is about", () => {
+    expect(() =>
+      parseUniversityLocalCli(["study", "create", "--study", "x", "--title", "X"]),
+    ).toThrow(/--source/);
+  });
+
+  it("parses airlock promote with the dirty acknowledgement", () => {
+    expect(
+      parseUniversityLocalCli([
+        "airlock",
+        "promote",
+        "--airlock",
+        "/tmp/air",
+        "--upstream",
+        "/tmp/up",
+        "--acknowledge-dirty-excluded",
+      ]),
+    ).toEqual({
+      kind: "airlock-promote",
+      airlockRoot: "/tmp/air",
+      upstreamRoot: "/tmp/up",
+      acknowledgeDirtyExcluded: true,
+    });
+  });
+
+  it("separates the airlock gate from the airlock report", () => {
+    expect(parseUniversityLocalCli(["airlock", "doctor", "--airlock", "/tmp/air"])).toEqual({
+      kind: "airlock-doctor",
+      airlockRoot: "/tmp/air",
+    });
+    expect(parseUniversityLocalCli(["airlock", "status", "--airlock", "/tmp/air"])).toEqual({
+      kind: "airlock-status",
+      airlockRoot: "/tmp/air",
+    });
+  });
+
+  it("keeps study options away from airlock verbs", () => {
+    expect(() =>
+      parseUniversityLocalCli([
+        "airlock",
+        "doctor",
+        "--airlock",
+        "/tmp/air",
+        "--study",
+        "turing-pact",
+      ]),
+    ).toThrow(/--study/);
+  });
+});

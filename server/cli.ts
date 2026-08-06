@@ -35,6 +35,9 @@ import {
 } from "./workflows/host-exercise-grade.js";
 import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
 import { getStudyPaths } from "./studies/paths.js";
+import { inspectAirlock } from "./airlock/inspect.js";
+import { promoteAirlock } from "./airlock/promote.js";
+import { createStudyWithSource } from "./workflows/create-study.js";
 
 const MAX_CAPTURE_FILE_BYTES = 1024 * 1024;
 const HELP = `UniversityLocal local host bridge
@@ -60,6 +63,10 @@ Commands:
   session start --study <study-id> --host grok-build --objective <text>
   session status --study <study-id>
   session end --study <study-id> [--session <session-id>]
+  study create --study <study-id> --title <text> --source <absolute-path> [--ref <git-ref>]
+  airlock promote --airlock <absolute-path> --upstream <absolute-path> [--ref <git-ref>] [--acknowledge-dirty-excluded]
+  airlock doctor --airlock <absolute-path>
+  airlock status --airlock <absolute-path>
   learner backup --study <study-id>
   learner reset --study <study-id> --confirm <study-id>
   learner restore --study <study-id> --from <exact-sqlite-path>
@@ -188,6 +195,27 @@ interface SessionEndCommand {
   readonly sessionId?: string;
 }
 
+interface StudyCreateCommand {
+  readonly kind: "study-create";
+  readonly studyId: string;
+  readonly title: string;
+  readonly sourceRoot: string;
+  readonly reference?: string;
+}
+
+interface AirlockPromoteCommand {
+  readonly kind: "airlock-promote";
+  readonly airlockRoot: string;
+  readonly upstreamRoot: string;
+  readonly reference?: string;
+  readonly acknowledgeDirtyExcluded?: boolean;
+}
+
+interface AirlockInspectCommand {
+  readonly kind: "airlock-doctor" | "airlock-status";
+  readonly airlockRoot: string;
+}
+
 interface LearnerBackupCommand {
   readonly kind: "learner-backup";
   readonly studyId: string;
@@ -238,6 +266,9 @@ export type UniversityLocalCliCommand =
   | LearnerResetCommand
   | LearnerRestoreCommand
   | ExerciseHostGradeCommand
+  | StudyCreateCommand
+  | AirlockPromoteCommand
+  | AirlockInspectCommand
   | HelpCommand;
 
 export class CliUsageError extends Error {}
@@ -260,6 +291,10 @@ type ParsedValues = {
   readonly apply?: boolean;
   readonly force?: boolean;
   readonly "acknowledge-dirty-excluded"?: boolean;
+  readonly title?: string;
+  readonly source?: string;
+  readonly airlock?: string;
+  readonly upstream?: string;
   readonly help?: boolean;
 };
 
@@ -307,6 +342,10 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         apply: { type: "boolean" },
         force: { type: "boolean" },
         "acknowledge-dirty-excluded": { type: "boolean" },
+        title: { type: "string" },
+        source: { type: "string" },
+        airlock: { type: "string" },
+        upstream: { type: "string" },
         help: { type: "boolean" },
       },
     });
@@ -491,6 +530,35 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       studyId: required(values.study, "study"),
       inputPath: required(values.input, "input"),
     };
+  }
+  if (positionals.length === 2 && positionals[0] === "study" && positionals[1] === "create") {
+    rejectUnrelatedOptions(values, ["study", "title", "source", "ref"]);
+    return {
+      kind: "study-create",
+      studyId: required(values.study, "study"),
+      title: required(values.title, "title"),
+      sourceRoot: required(values.source, "source"),
+      ...(values.ref ? { reference: values.ref } : {}),
+    };
+  }
+  if (positionals.length === 2 && positionals[0] === "airlock") {
+    if (positionals[1] === "promote") {
+      rejectUnrelatedOptions(values, ["airlock", "upstream", "ref", "acknowledge-dirty-excluded"]);
+      return {
+        kind: "airlock-promote",
+        airlockRoot: required(values.airlock, "airlock"),
+        upstreamRoot: required(values.upstream, "upstream"),
+        ...(values.ref ? { reference: values.ref } : {}),
+        ...(values["acknowledge-dirty-excluded"] ? { acknowledgeDirtyExcluded: true } : {}),
+      };
+    }
+    if (positionals[1] === "doctor" || positionals[1] === "status") {
+      rejectUnrelatedOptions(values, ["airlock"]);
+      return {
+        kind: positionals[1] === "doctor" ? "airlock-doctor" : "airlock-status",
+        airlockRoot: required(values.airlock, "airlock"),
+      };
+    }
   }
   if (positionals.length === 2 && positionals[0] === "learner") {
     if (positionals[1] === "backup") {
@@ -759,6 +827,49 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
       } finally {
         store.close();
       }
+    }
+    case "study-create":
+      return createStudyWithSource({
+        studiesRoot: config.studiesRoot,
+        id: input.command.studyId,
+        title: input.command.title,
+        sourceRoot: resolve(input.cwd ?? process.cwd(), input.command.sourceRoot),
+        ...(input.command.reference ? { reference: input.command.reference } : {}),
+      });
+    case "airlock-promote":
+      return promoteAirlock({
+        airlockRoot: resolve(input.cwd ?? process.cwd(), input.command.airlockRoot),
+        upstreamRoot: resolve(input.cwd ?? process.cwd(), input.command.upstreamRoot),
+        studiesRoot: config.studiesRoot,
+        ...(input.command.reference ? { reference: input.command.reference } : {}),
+        ...(input.command.acknowledgeDirtyExcluded ? { acknowledgeDirtyExcluded: true } : {}),
+      });
+    case "airlock-doctor":
+    case "airlock-status": {
+      const inspection = inspectAirlock(
+        resolve(input.cwd ?? process.cwd(), input.command.airlockRoot),
+      );
+      // `doctor` is a gate and `status` is a report. They read the same state,
+      // so they share one implementation and differ only in whether a problem
+      // is allowed to pass silently.
+      if (input.command.kind === "airlock-doctor" && inspection.verdict === "blocked") {
+        throw new Error(["airlock 未通过检查：", ...inspection.problems].join("\n  - "));
+      }
+      return {
+        schemaVersion: 1 as const,
+        operation: input.command.kind,
+        verdict: inspection.verdict,
+        problems: inspection.problems,
+        clocks: {
+          upstream: inspection.upstream,
+          airlock: {
+            promotedCommit: inspection.seal.promotedCommit,
+            promotedAt: inspection.seal.promotedAt,
+            allowedRef: inspection.seal.allowedRef,
+          },
+        },
+        seal: inspection.seal,
+      };
     }
   }
 }

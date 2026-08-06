@@ -64,6 +64,57 @@ export const SourceRegistrationSchema = z
   })
   .strict();
 
+/**
+ * The identity card of an airlock: a sealed, read-only checkout of a repository
+ * that also happens to be this project, kept outside the project so that
+ * studying it needs no exception to the source/studies separation guard.
+ *
+ * Everything here exists to answer one question before an analysis runs: is the
+ * directory in front of me still the thing I promoted? A path alone cannot
+ * answer that — a path can be deleted and refilled with another repository. So
+ * the seal pins the upstream's canonical location, its Git directory, and its
+ * object format, and refuses to proceed when any of them has moved.
+ */
+export const AirlockSealSchema = z
+  .object({
+    schemaVersion: SchemaVersion,
+    airlockRoot: z.string().min(1),
+    upstream: z
+      .object({
+        root: z.string().min(1),
+        /** Resolved `.git` directory. Diagnostic only — see `rootCommit`. */
+        commonDir: z.string().min(1),
+        /**
+         * The root commit of the promoted history: the one identifier that
+         * survives renames and does not come back the same when a directory is
+         * deleted and refilled with a different project. `null` only when the
+         * upstream history is shallow enough to have no reachable root.
+         */
+        rootCommit: GitCommit.nullable(),
+        objectFormat: z.enum(["sha1", "sha256"]),
+      })
+      .strict(),
+    allowedRef: z.string().min(1).max(256),
+    promotedCommit: GitCommit,
+    promotedTree: GitCommit,
+    /** What the airlock held before this promotion; `null` on the first one. */
+    previousCommit: GitCommit.nullable(),
+    promotedAt: IsoDateTime,
+    toolVersion: z.string().min(1).max(32),
+    /** Proof that the import gate ran, and what it saw. */
+    scan: z
+      .object({
+        trackedFileCount: z.number().int().nonnegative(),
+        largestBlobBytes: z.number().int().nonnegative(),
+        /** Dirty upstream paths deliberately left out of this promotion. */
+        excludedDirtyPaths: z.array(z.string().min(1)).max(2000),
+      })
+      .strict(),
+  })
+  .strict();
+
+export type AirlockSeal = z.infer<typeof AirlockSealSchema>;
+
 export const RepositoryRelativePath = z
   .string()
   .min(1)
