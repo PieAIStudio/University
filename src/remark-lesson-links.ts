@@ -21,6 +21,16 @@ export interface LessonLinkRange {
  * name `data.hName` produces, never on the mdast node type.
  */
 export const LESSON_LINK_TAG = "lesson-link";
+export const EVIDENCE_ANCHOR_TAG = "evidence-anchor";
+
+export interface EvidenceAnchorRange {
+  readonly start: number;
+  readonly end: number;
+  readonly sourcePath: string;
+  readonly lineStart: number;
+  readonly lineEnd: number;
+  readonly resolved: boolean;
+}
 
 export interface LessonLinkNode {
   readonly type: "lessonLink";
@@ -37,13 +47,86 @@ export interface LessonLinkNode {
   };
 }
 
+export interface EvidenceAnchorNode {
+  readonly type: "evidenceAnchor";
+  readonly value: string;
+  readonly data: {
+    readonly hName: typeof EVIDENCE_ANCHOR_TAG;
+    readonly hProperties: {
+      readonly sourcePath: string;
+      readonly lines: string;
+      readonly broken?: string;
+    };
+    readonly hChildren: readonly { readonly type: "text"; readonly value: string }[];
+  };
+}
+
 declare module "mdast" {
   interface RootContentMap {
     lessonLink: LessonLinkNode;
+    evidenceAnchor: EvidenceAnchorNode;
   }
   interface PhrasingContentMap {
     lessonLink: LessonLinkNode;
+    evidenceAnchor: EvidenceAnchorNode;
   }
+}
+
+/**
+ * Turns `[[evidence:path:lines]]` into a marker beside the claim it supports.
+ *
+ * Same text-node-only traversal as the lesson links, for the same reason: a
+ * lesson teaching this syntax has to be able to show it.
+ */
+export function remarkEvidenceAnchors(options: {
+  readonly ranges: readonly EvidenceAnchorRange[];
+}) {
+  const sorted = [...options.ranges].sort((left, right) => left.start - right.start);
+  return (tree: Root): void => {
+    if (sorted.length === 0) return;
+    visit(tree, "text", (node: Text, index, parent) => {
+      const start = node.position?.start.offset;
+      const end = node.position?.end.offset;
+      if (start === undefined || end === undefined || parent === undefined || index === undefined) {
+        return;
+      }
+      const hits = sorted.filter((range) => range.start >= start && range.end <= end);
+      if (hits.length === 0) return;
+
+      const replacement: (Text | EvidenceAnchorNode)[] = [];
+      let cursor = start;
+      for (const hit of hits) {
+        if (hit.start > cursor) {
+          replacement.push({
+            type: "text",
+            value: node.value.slice(cursor - start, hit.start - start),
+          });
+        }
+        const lines =
+          hit.lineStart === hit.lineEnd ? `${hit.lineStart}` : `${hit.lineStart}-${hit.lineEnd}`;
+        const label = `${hit.sourcePath}:${lines}`;
+        replacement.push({
+          type: "evidenceAnchor",
+          value: label,
+          data: {
+            hName: EVIDENCE_ANCHOR_TAG,
+            hProperties: {
+              sourcePath: hit.sourcePath,
+              lines,
+              ...(hit.resolved ? {} : { broken: "true" }),
+            },
+            hChildren: [{ type: "text", value: label }],
+          },
+        });
+        cursor = hit.end;
+      }
+      if (cursor < end) {
+        replacement.push({ type: "text", value: node.value.slice(cursor - start) });
+      }
+      parent.children.splice(index, 1, ...replacement);
+      return index + replacement.length;
+    });
+  };
 }
 
 /**

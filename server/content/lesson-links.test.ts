@@ -116,9 +116,17 @@ describe("resolving wiki links", () => {
     expect(resolve("lesson:here")).toMatchObject({ kind: "broken", reason: "self" });
   });
 
-  it("never throws on malformed input", () => {
-    for (const token of ["", "lesson:", "note:a", "lesson:c1/u1", "lesson:a/b/c/d"]) {
+  it("never throws on a malformed lesson target", () => {
+    for (const token of ["lesson:", "lesson:c1/u1", "lesson:a/b/c/d"]) {
       expect(resolve(token)).toMatchObject({ kind: "broken", reason: "malformed" });
+    }
+  });
+
+  it("leaves other token kinds to their own resolver", () => {
+    // `[[evidence:…]]` is resolved elsewhere. Judging it here would report
+    // every inline evidence anchor in the corpus as a broken lesson link.
+    for (const token of ["", "note:a", "evidence:index.html:30"]) {
+      expect(resolve(token)).toBeUndefined();
     }
   });
 });

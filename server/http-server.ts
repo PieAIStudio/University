@@ -23,6 +23,7 @@ import {
   type UnitManifest,
 } from "../src/domain/schemas.js";
 import { loadUniversityLocalConfig } from "./config/load-config.js";
+import { resolveEvidenceAnchors } from "./content/evidence-anchors.js";
 import { readEvidenceSnippet } from "./content/evidence.js";
 import {
   backlinksOf,
@@ -872,6 +873,9 @@ function buildLessonView(
           : { start: item.link.start, end: item.link.end, label: item.link.label, target: null },
       ),
       backlinks: backlinksOf(linkIndex, route),
+      // Resolved against this lesson's own citations, so prose can only point
+      // at lines the manifest already pinned to the snapshot.
+      evidenceAnchors: resolveEvidenceAnchors(content, lesson.evidence),
       language: {
         status: language.status,
         ranges: language.ranges,

@@ -2120,3 +2120,33 @@ summary:focus-visible,
 .markdown-body > h1:first-child {
   display: none;
 }
+
+/* --- Inline evidence anchors ------------------------------------------ */
+
+/* Sits beside the claim it supports. The sidebar answers "what is this lesson
+   based on"; this answers "which line is *this sentence* about". */
+.evidence-anchor {
+  padding: 1px 7px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 22%);
+  color: var(--game-ui-text-muted, #cbb49c);
+  cursor: pointer;
+  font-family: var(--game-ui-font-mono, ui-monospace, monospace);
+  font-size: 0.78em;
+  white-space: nowrap;
+}
+
+.evidence-anchor:hover,
+.evidence-anchor:focus-visible {
+  border-color: #f0a868;
+  color: #f0a868;
+}
+
+/* An anchor naming lines the lesson never cited. Loud, because the evidence
+   rail is the whole reason to trust a generated lesson. */
+.evidence-anchor--broken {
+  border-color: #ffb4a4;
+  color: #ffb4a4;
+  cursor: not-allowed;
+}

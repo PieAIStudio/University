@@ -1,26 +1,32 @@
 # The five lesson shapes
 
-One template applied 481 times produces 481 lessons that feel like one lesson.
-These are the sanctioned variations. They are not free-form: each keeps every
-invariant from `SKILL.md`, and each exists because a different *kind of thing*
-is being taught. Choosing by content is the point — rotating for variety alone
-produces a contrived 对比 where a 现象 belonged.
+One template applied hundreds of times produces hundreds of lessons that feel
+like one lesson. These are the sanctioned variations. They are not free-form:
+each keeps every invariant from `SKILL.md`, and each exists because a different
+*kind of thing* is being taught. Choosing by content is the point — rotating for
+variety alone produces a contrived 对比 where a 现象 belonged.
 
 Every variant shares the same spine:
 
 ```
 标题（问句）
-现象 / 情境          ← 悬念坐实，可观察
+开场（悬念坐实，可观察）
 ## 先猜一下          ← 恰好一道，低成本
-## 答案              ← 立刻
+## 答案              ← 立刻；标题固定为「答案」二字
 <中段，因变体而异>
-## 再想想（可选）     ← 跨课链接放这里
-## 自检              ← 计入完成度
+## 再想想（可选）     ← 跨课链接优先放这里；若有，必在中段之后、自检之前
+## 自检              ← 只提问，不给答案
 ## 一句话
 ```
 
 Only the middle changes. That is the whole design: the parts that carry the
 learning psychology are fixed, the part that carries the subject matter flexes.
+
+After every real code block, use the product anchor — not a prose location line:
+
+```markdown
+[[evidence:index.html:29-31]]
+```
 
 ---
 
@@ -34,7 +40,7 @@ would expect. The default, and the best one when it fits.
 ## 先猜一下
 ## 答案
 ## 为什么是这样
-## 再想想
+## 再想想          ← 可选
 ## 自检
 ## 一句话
 ```
@@ -45,7 +51,8 @@ Opening that works:
 > 但你打开这个页面，看到的是一整套界面。
 
 **Trap:** writing 现象 as a summary of the mechanism. The 现象 section must
-contain no explanation at all — only what is observable.
+contain no explanation at all — only what is observable. If deleting everything
+from `## 答案` down still leaves the mechanism obvious, you leaked.
 
 ---
 
@@ -60,6 +67,7 @@ null vs undefined, `==` vs `===`.
 ## 答案
 ## 逐条对照
 ## 什么时候用哪个
+## 再想想          ← 可选
 ## 自检
 ## 一句话
 ```
@@ -81,16 +89,18 @@ reaching a handler, a build input becoming an output.
 ## 你看到的结果
 ## 先猜一下          ← 「它是从哪来的？」
 ## 答案
-## 一站一站往回走     ← 每站一个 evidence 锚点
+## 一站一站往回走     ← 每站：代码块 + [[evidence:…]]
+## 再想想          ← 可选
 ## 自检
 ## 一句话
 ```
 
 Each stop is one file, one line range, one sentence. **Every stop gets its own
-inline anchor** — this variant is the reason inline anchors exist.
+`[[evidence:path:lines]]`** — this variant is the reason inline anchors exist.
+Stops follow the order the value actually travels, not repository tree order.
 
-**Trap:** listing files in repository order instead of in the order the value
-actually travels.
+**Trap:** listing files in repository order, or marking stops with
+`（位置：…）` instead of `[[evidence:]]`.
 
 ---
 
@@ -102,9 +112,10 @@ the reasoning is the lesson.
 ```
 ## 情境和约束
 ## 先猜一下          ← 「你会怎么选？」
-## 答案（他们选了什么）
+## 答案              ← 第一句可以说「他们选了…」；标题仍是「答案」
 ## 代价和收益
 ## 什么时候该反过来
+## 再想想          ← 可选
 ## 自检
 ## 一句话
 ```
@@ -114,7 +125,9 @@ having one right answer is not a tradeoff, and teaching it that way produces
 someone who applies it where it does not belong.
 
 **Trap:** writing it as if the choice were obvious. If it were obvious, there
-would be no lesson.
+would be no lesson. **Also trap:** renaming the answer heading to
+`## 答案（他们选了什么）` — that breaks every check looking for exact
+`## 答案`.
 
 ---
 
@@ -127,8 +140,9 @@ state, render, build, mount.
 ## 一句真实出现的话   ← 从被学项目里原样引用
 ## 先猜一下          ← 「这里的 X 是什么意思？」
 ## 答案
-## 三个真实用例
+## 三个真实用例       ← 各带 [[evidence:…]]
 ## 它不是什么
+## 再想想          ← 可选
 ## 自检
 ## 一句话
 ```
@@ -137,7 +151,7 @@ state, render, build, mount.
 the boundary is what fixes it.
 
 **Trap:** a dictionary definition. The three uses must come from the studied
-project, with anchors.
+project, with product anchors — not paraphrases of docs alone.
 
 ---
 

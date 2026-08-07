@@ -6,7 +6,9 @@ import { MermaidDiagram } from "./MermaidDiagram.js";
 import { WordAnchor, type LexiconEntry, type VocabularyStage } from "./language/WordPopover.js";
 import { remarkLanguageAnchors, type LanguageRange } from "./language/remark-language-anchors.js";
 import {
+  remarkEvidenceAnchors,
   remarkLessonLinks,
+  type EvidenceAnchorRange,
   type LessonLinkRange,
   type LessonLinkTarget,
 } from "./remark-lesson-links.js";
@@ -128,6 +130,7 @@ export function MarkdownContent({
   inline = false,
   lessonLinks,
   onFollowLink,
+  evidenceAnchors,
 }: {
   readonly children: string;
   readonly language?: LanguageLayer;
@@ -136,6 +139,7 @@ export function MarkdownContent({
   readonly onStageWord?: (senseId: string, stage: VocabularyStage) => void;
   readonly lessonLinks?: readonly LessonLinkRange[];
   readonly onFollowLink?: (target: LessonLinkTarget) => void;
+  readonly evidenceAnchors?: readonly EvidenceAnchorRange[];
   /**
    * Drop the paragraph wrapper, for a question or prompt that is already inside
    * its own styled element. The Markdown still parses — which is the point:
@@ -158,6 +162,45 @@ export function MarkdownContent({
       ...(inline
         ? { p: ({ children }: { readonly children?: ReactNode }) => <>{children}</> }
         : {}),
+      "evidence-anchor"({
+        node,
+        children,
+      }: {
+        readonly node?: {
+          readonly properties?: {
+            readonly sourcePath?: unknown;
+            readonly lines?: unknown;
+            readonly broken?: unknown;
+          };
+        };
+        readonly children?: ReactNode;
+      }) {
+        const properties = node?.properties;
+        const broken = properties?.broken !== undefined;
+        const location = `${String(properties?.sourcePath ?? "")}:${String(properties?.lines ?? "")}`;
+        if (broken) {
+          return (
+            <span
+              className="evidence-anchor evidence-anchor--broken"
+              title="这个位置不在本课引用的证据范围内"
+            >
+              {children}
+            </span>
+          );
+        }
+        // Copying, not opening: the campus never launches an editor, and the
+        // sidebar's 复制位置 already taught this gesture.
+        return (
+          <button
+            type="button"
+            className="evidence-anchor"
+            title="复制位置，到编辑器里打开"
+            onClick={() => void navigator.clipboard?.writeText(location)}
+          >
+            {children}
+          </button>
+        );
+      },
       "lesson-link"({
         node,
         children,
@@ -237,8 +280,11 @@ export function MarkdownContent({
     if (lessonLinks && lessonLinks.length > 0) {
       list.push([remarkLessonLinks, { ranges: lessonLinks }]);
     }
+    if (evidenceAnchors && evidenceAnchors.length > 0) {
+      list.push([remarkEvidenceAnchors, { ranges: evidenceAnchors }]);
+    }
     return list;
-  }, [active, lessonLinks]);
+  }, [active, lessonLinks, evidenceAnchors]);
 
   return (
     <ReactMarkdown components={components} remarkPlugins={plugins as never}>

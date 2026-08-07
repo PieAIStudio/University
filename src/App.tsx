@@ -10,7 +10,11 @@ import {
 
 import { MarkdownContent, type LanguageLayer } from "./MarkdownContent.js";
 import { Tip } from "./Tip.js";
-import type { LessonLinkRange, LessonLinkTarget } from "./remark-lesson-links.js";
+import type {
+  EvidenceAnchorRange,
+  LessonLinkRange,
+  LessonLinkTarget,
+} from "./remark-lesson-links.js";
 import type { LexiconEntry } from "./language/WordPopover.js";
 import {
   readVoicePreference,
@@ -340,6 +344,7 @@ interface LessonView {
     readonly language?: LanguageLayer;
     readonly links?: readonly LessonLinkRange[];
     readonly backlinks?: readonly LessonLinkTarget[];
+    readonly evidenceAnchors?: readonly EvidenceAnchorRange[];
     readonly progress: LessonProgress | null;
     readonly evidence: readonly EvidenceView[];
     readonly exercises: readonly {
@@ -1816,6 +1821,9 @@ function LessonReader({
               onStageWord={stageWord}
               {...(view.lesson.links ? { lessonLinks: view.lesson.links } : {})}
               {...(onFollowLink ? { onFollowLink } : {})}
+              {...(view.lesson.evidenceAnchors
+                ? { evidenceAnchors: view.lesson.evidenceAnchors }
+                : {})}
             >
               {view.lesson.content}
             </MarkdownContent>

@@ -100,47 +100,55 @@ function pathKey(route: {
  * caller decides how long an index lives. Never throws: a broken link is data
  * the caller reports, not an exception that takes a lesson down with it.
  */
+export function tokenKind(link: ParsedLessonLink): string {
+  return link.rawTarget.split(":")[0] ?? "";
+}
+
 export function resolveLessonLinks(
   links: readonly ParsedLessonLink[],
   index: LessonIndex,
   from: { readonly courseId: string; readonly unitId: string; readonly lessonId: string },
 ): readonly LinkResolution[] {
-  return links.map((link): LinkResolution => {
-    const [kind, ...rest] = link.rawTarget.split(":");
-    const target = rest.join(":").trim();
-    if (kind !== "lesson" || target === "") return { kind: "broken", link, reason: "malformed" };
+  // Other token kinds (`evidence:`) have their own resolver. Judging them here
+  // would report every evidence anchor as a broken lesson link.
+  return links
+    .filter((link) => tokenKind(link) === "lesson")
+    .map((link): LinkResolution => {
+      const [kind, ...rest] = link.rawTarget.split(":");
+      const target = rest.join(":").trim();
+      if (kind !== "lesson" || target === "") return { kind: "broken", link, reason: "malformed" };
 
-    const segments = target.split("/");
-    if (segments.length === 2 || segments.length > 3) {
-      return { kind: "broken", link, reason: "malformed" };
-    }
+      const segments = target.split("/");
+      if (segments.length === 2 || segments.length > 3) {
+        return { kind: "broken", link, reason: "malformed" };
+      }
 
-    let found: LessonIndexEntry | undefined;
-    if (segments.length === 3) {
-      found = index.byPath.get(target);
-      if (!found) return { kind: "broken", link, reason: "not-found" };
-    } else {
-      // A bare id means "in this course". Lesson ids are unique per unit, not
-      // per course, so two units can legitimately both define one — and then
-      // guessing would silently send the reader to the wrong lesson.
-      const candidates = index.byCourseAndLesson.get(from.courseId)?.get(target) ?? [];
-      if (candidates.length === 0) return { kind: "broken", link, reason: "not-found" };
-      if (candidates.length > 1) return { kind: "broken", link, reason: "ambiguous" };
-      found = candidates[0]!;
-    }
+      let found: LessonIndexEntry | undefined;
+      if (segments.length === 3) {
+        found = index.byPath.get(target);
+        if (!found) return { kind: "broken", link, reason: "not-found" };
+      } else {
+        // A bare id means "in this course". Lesson ids are unique per unit, not
+        // per course, so two units can legitimately both define one — and then
+        // guessing would silently send the reader to the wrong lesson.
+        const candidates = index.byCourseAndLesson.get(from.courseId)?.get(target) ?? [];
+        if (candidates.length === 0) return { kind: "broken", link, reason: "not-found" };
+        if (candidates.length > 1) return { kind: "broken", link, reason: "ambiguous" };
+        found = candidates[0]!;
+      }
 
-    if (pathKey(found) === pathKey(from)) return { kind: "broken", link, reason: "self" };
-    return {
-      kind: "resolved",
-      link,
-      target: {
-        courseId: found.courseId,
-        unitId: found.unitId,
-        lessonId: found.lessonId,
-        title: found.title,
-      },
-    };
-  });
+      if (pathKey(found) === pathKey(from)) return { kind: "broken", link, reason: "self" };
+      return {
+        kind: "resolved",
+        link,
+        target: {
+          courseId: found.courseId,
+          unitId: found.unitId,
+          lessonId: found.lessonId,
+          title: found.title,
+        },
+      };
+    });
 }
 
 /** Which lessons link *to* this one. The reason associative linking is worth it. */
