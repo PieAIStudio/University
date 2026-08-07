@@ -1,6 +1,6 @@
 ---
 name: write-lesson
-description: Write or rewrite a UniversityLocal lesson content.md into the house teaching shape so a beginner can finish it. Use when authoring a new lesson, rewriting a wall-of-conclusions lesson, reviewing lesson prose against the five variants, or when the user says 读不进去, 重写这节课, 重写课文, or 改写成能读的. Covers question-first titles, one prediction, immediate answer, inline [[evidence:]] anchors, and cross-lesson links. Do not use for course/unit planning, card/exercise scheduling alone, UA analysis, refresh-study, knowledge-node saves, teach-from-study tutoring, or ordinary app engineering.
+description: Write or rewrite a UniversityLocal lesson content.md into the house teaching shape so a beginner can finish it. Use when authoring a new lesson, rewriting a wall-of-conclusions lesson, reviewing lesson prose against the five variants, or when the user says 读不进去, 重写这节课, 重写课文, 改写成能读的, 太干, or 语气再循循善诱一些. Covers question-first titles, one prediction, immediate answer, inline [[evidence:]] anchors, and cross-lesson links. Do not use for course/unit planning, card/exercise scheduling alone, UA analysis, refresh-study, knowledge-node saves, teach-from-study tutoring, or ordinary app engineering.
 ---
 
 # Write a lesson
@@ -50,6 +50,13 @@ Break one → rewrite.
 8. **No old-skeleton headings:** `## 学习目标` / `## 先给结论` / `## 一个类比` /
    `## 工作示例` / `## 重点`.
 9. **No HTML comments in `content.md`.** Variant lives only in `manifest.json`.
+10. **Warming an already-shaped lesson may not grow it past 115%.** If the
+    previous revision has no `variant`, this is a structural rewrite and the
+    lesson will roughly double — that is the new shape needing room, and the
+    rule does not apply. Once a lesson is in shape, warmth is phrasing, not
+    extra material. See 语气 below.
+11. **Talk to the reader**: at least 2 occurrences of 「你」 per 1000 characters.
+    A lesson with none is a lecture delivered to an empty room.
 
 One prediction + immediate answer is research-backed: benefit lands on what was
 asked; unguided struggle overloads beginners.
@@ -91,6 +98,40 @@ names. Never put it in `content.md`.
 - Daily-life analogies only; a new term inside an analogy means it failed.
 - Name the thing before naming the name.
 - Ban: 显然 / 简单来说 / 众所周知 / 显而易见 / 不言而喻.
+
+### 暖，是换说法，不是加内容
+
+对着读者说话，别对着空气讲课：
+
+- 用「你」。「你打开这个文件」胜过「用户打开该文件」；「我们」只在真的一起动手时用。
+- 用口语句式。写完念一遍，不像人话就改。
+- 难的地方明说难：「这里第一次看会绕，绕的是这一点：……」。承认难比假装简单更让人读下去。
+- 提问式过渡：「那问题来了——为什么不直接……？」
+
+**同时，绝不为了亲切加内容。** 有趣但与机制无关的小故事、趣闻、名人轶事、可爱的题外话，会把读者的注意力和脑容量抢走，实测让记忆和迁移**变差**。这不是风格偏好，是这一条与个人化语气强度相当的反向效应。
+
+判定方法很简单：**删掉这一句，读者对机制的理解会变差吗？** 不会，就删掉。
+
+因此改写有一条硬线：**当上一版已经是新形状（manifest 里有 `variant`）时，改写后正文不得超过上一版的 115%。** 语气变暖不需要更多字；变长了，说明加的是内容不是语气。
+
+上一版还是旧骨架（没有 `variant`）时不受这条约束——那是结构重写，新形状本来就需要地方装「先猜一下」和「答案」，实测长度会翻一倍左右，属正常。
+
+配套的下限：**每 1000 字至少 2 个「你」**。这条不是凑数，是个人化原则的可测代理。已经写好的课里有 5 节一个「你」都没有，读起来就是对着空气讲课。
+
+### 扶手要递减（同一单元内）
+
+一直扶着，读者永远学不会自己走。同一单元里：
+
+- **前 1/3 的课**：新词第一次出现给白话解释；`## 答案` 可以先复述一下情境再回答；`## 自检` 可以带一句提示。
+- **后 1/3 的课**：本单元已经解释过的词直接用，不再重讲；`## 答案` 一句话收；`## 自检` 不给提示。
+- 同一个词在同一单元里不要解释第二次。第二次解释等于告诉读者「我不指望你记住」。
+
+### 按课程层级调温
+
+同一种写法，对新手有效，对已经懂的人反而**有害**——过度解释会拖慢已经建立起理解的读者。
+
+- `foundations-*` 课程：读者可能从没写过代码，全套扶手。
+- 其余课程：读者已经读完 foundations。少铺垫，别把已知当未知；术语直接用，把篇幅花在这门课真正新的东西上。
 
 ## Output contract
 

@@ -87,7 +87,86 @@ function matches(heading, name) {
   return heading === name;
 }
 
-function lintLesson({ contentPath, manifestPath, content, manifest, id }) {
+/**
+ * Does `[[evidence:path:line]]` point at something the manifest actually cites?
+ *
+ * Checking that a code block is *followed by* an anchor catches a missing
+ * citation. It does not catch a wrong one, and a wrong one fails silently: the
+ * resolver only honours a range the manifest already pins to the snapshot
+ * commit, so an invented line number renders as literal text in the middle of a
+ * lesson. Six lessons could be checked by eye. Several hundred cannot.
+ */
+function checkEvidenceTokens(content, manifest, fail) {
+  const citations = manifest.evidence ?? [];
+  for (const match of content.matchAll(/\[\[evidence:([^\]\n]+)\]\]/g)) {
+    const token = match[1];
+    const at = token.lastIndexOf(":");
+    const path = at === -1 ? token : token.slice(0, at);
+    const span = at === -1 ? "" : token.slice(at + 1);
+    const [rawStart, rawEnd] = span.split("-");
+    const start = Number(rawStart);
+    const end = rawEnd === undefined ? start : Number(rawEnd);
+    if (at === -1 || !Number.isInteger(start) || !Number.isInteger(end) || start < 1) {
+      fail(12, `证据锚点格式不对：[[evidence:${token}]]`);
+      continue;
+    }
+    const covering = citations.filter((citation) => citation.sourcePath === path);
+    if (covering.length === 0) {
+      fail(12, `锚点指向 manifest 没有引用的文件：${path}`);
+      continue;
+    }
+    // A citation with no line range covers the whole file, matching the resolver.
+    const inside = covering.some(
+      (citation) =>
+        citation.lineStart == null ||
+        citation.lineEnd == null ||
+        (start >= citation.lineStart && end <= citation.lineEnd),
+    );
+    if (!inside) {
+      const ranges = covering.map((c) => `${c.lineStart}-${c.lineEnd}`).join(", ");
+      fail(12, `锚点 ${path}:${span} 落在 manifest 引用范围之外（manifest: ${ranges}）`);
+    }
+  }
+}
+
+/**
+ * Warmth is phrasing, not extra material.
+ *
+ * Adding interesting-but-irrelevant content to make a lesson feel friendlier
+ * measurably lowers retention and transfer, and it is what "make it warmer"
+ * turns into when nobody is checking. Length is the mechanical shadow of that
+ * mistake: a rewrite that only changes how sentences sound does not need more
+ * room, so growth means content was added.
+ *
+ * The ceiling applies only once a lesson is already in the new shape. Going
+ * from the old skeleton to this one roughly doubles a lesson — measured across
+ * the first 41, the median ratio was 2.03 — because the new shape has to hold a
+ * prediction and its answer. That growth is the point, not the defect.
+ */
+function checkGrowth(content, previous, fail) {
+  if (!previous?.hadVariant) return;
+  const ratio = content.length / previous.length;
+  if (ratio > 1.15) {
+    fail(
+      24,
+      `比上一版长了 ${Math.round((ratio - 1) * 100)}%（上限 15%）。语气变暖不该加内容——检查是不是加了与机制无关的故事或例子。`,
+    );
+  }
+}
+
+/** The personalization principle, as the one thing about it a script can see. */
+function checkSecondPerson(prose, fail) {
+  const count = (prose.match(/你/g) ?? []).length;
+  const density = (count / prose.length) * 1000;
+  if (density < 2) {
+    fail(
+      25,
+      `每千字只有 ${density.toFixed(1)} 个「你」（下限 2.0，共 ${count} 个）。对着读者说话，不是对着空气讲课。`,
+    );
+  }
+}
+
+function lintLesson({ contentPath, manifestPath, content, manifest, id, previous }) {
   const problems = [];
   const fail = (item, message) => problems.push({ item, message });
   const prose = stripCode(content);
@@ -174,6 +253,10 @@ function lintLesson({ contentPath, manifestPath, content, manifest, id }) {
     }
   }
 
+  checkEvidenceTokens(content, manifest, fail);
+  checkGrowth(content, previous, fail);
+  checkSecondPerson(prose, fail);
+
   // 23 — the bytes match what the manifest says they are.
   const digest = `sha256:${createHash("sha256").update(content).digest("hex")}`;
   if (manifest.contentHash !== digest) {
@@ -220,10 +303,23 @@ function* lessons(studiesRoot) {
           const contentPath = join(revisions, String(latest), "content.md");
           const manifestPath = join(revisions, String(latest), "manifest.json");
           if (!existsSync(contentPath) || !existsSync(manifestPath)) continue;
+          // The revision before this one, so the growth check has something to
+          // compare against — and can tell a structural rewrite from a reword.
+          const priorPath = join(revisions, String(latest - 1));
+          const priorContent = join(priorPath, "content.md");
+          const priorManifest = join(priorPath, "manifest.json");
+          const previous =
+            existsSync(priorContent) && existsSync(priorManifest)
+              ? {
+                  length: readFileSync(priorContent, "utf8").length,
+                  hadVariant: Boolean(JSON.parse(readFileSync(priorManifest, "utf8")).variant),
+                }
+              : null;
           yield {
             id: `${courseId}/${unitId}/${lessonId}`,
             contentPath,
             manifestPath,
+            previous,
             content: readFileSync(contentPath, "utf8"),
             manifest: JSON.parse(readFileSync(manifestPath, "utf8")),
           };

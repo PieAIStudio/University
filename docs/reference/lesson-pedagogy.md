@@ -70,6 +70,35 @@ tags:
 
 > 制造一个**很短**的悬念，让人**猜一次**，然后**立刻、完整地**讲清楚。
 
+## 1b. 语气：为什么「暖」必须配一条「不许变长」
+
+课文按上面的结构写出来是对的，但读起来干。「干」不是错觉，它对应一个有名字的
+效应，而顺着直觉去修会**把效果改差**。
+
+**该做的：personalization principle（个人化原则）。** 同样的内容，用口语、用
+「你」来写，比正式书面语学得更好。这是这个领域证据最硬的效应之一：Mayer 自己
+的 11 个实验 11 次都赢，迁移测验效应量中位数 d ≈ 1.11；跨媒介元分析 g = 0.70；
+专门针对「把教材改写成对话体」的元分析给出记忆 d = 0.30、迁移 d = 0.54。
+
+**绝不能做的：seductive details（诱人细节）。** 为了让文章不那么干而加进来的
+有趣但与要点无关的内容——小故事、趣闻、生动却不解释机制的比喻——会让记忆和
+迁移**双双下降**（Rey 2012 元分析：记忆小到中等负效应，迁移中等负效应）。机制
+是认知负荷：脑子的工作容量被无关的有趣东西占掉了。在 Mayer 系列的元分析里，
+「删掉诱人细节」是所有原则中效应最大的一条。
+
+这两条必须**成对**写进技能，否则「让语气暖一点」这条指令会被执行成「加故事」，
+而那正好是效应最大的负面操作。技能里的硬线——**改写后正文不得超过原文
+115%**——就是这一对规则的机械影子：换说法不需要更多字，变长了说明加的是内容。
+
+**「诱」的结构：scaffolding（脚手架）**，Wood、Bruner、Ross 1976 年提出。它有
+三个定义性特征：contingency（支持贴着学习者当前状态给）、fading（逐步撤走）、
+transfer of responsibility（把责任交还）。本结构的 `## 先猜一下` 已经承担了
+contingency；fading 是技能里「同一单元内扶手递减」那一节，缺了它，读者会一直
+被扶着，永远不练自己走。
+
+**边界条件仍然是 expertise reversal**（见 §1 末尾）：同一种写法对新手有效、对
+已经懂的人有害。所以温度按课程层级调，`foundations-*` 全套扶手，其余课程少铺垫。
+
 ## 2. 结构住在技能里，不在这份文档里
 
 **操作规范是 `.agents/skills/write-lesson/`**，不是这一节。写课文的人（我、Grok、
@@ -145,3 +174,13 @@ Run/Modify/Make 在「读懂别人项目」的场景里没有对应动作，因�
 - Pretesting 综述（Educational Psychology Review, 2023):
   <https://link.springer.com/article/10.1007/s10648-023-09814-5>
 - Expertise reversal effect: <https://link.springer.com/article/10.1007/s11251-009-9102-0>
+- Personalization principle（Mayer, *Multimedia Learning* ch.13）:
+  <https://www.cambridge.org/core/books/abs/multimedia-learning/personalization-voice-and-image-principles/97F9B31362E6491806A4718FECCADE3D>
+- 对话体改写元分析（Ginns et al., Educational Psychology Review 2013):
+  <https://link.springer.com/article/10.1007/s10648-013-9228-0>
+- Mayer 系列跨媒介元分析（2025，含各原则效应量排序）:
+  <https://www.sciencedirect.com/science/article/pii/S1747938X25000673>
+- Seductive detail 元分析（Rey, Educational Research Review 2012):
+  <https://www.sciencedirect.com/science/article/abs/pii/S1747938X12000413>
+- Scaffolding 三特征（Wood/Bruner/Ross 1976 起，van de Pol 等综述）:
+  <https://www.sciencedirect.com/science/article/pii/S2590291123002188>
