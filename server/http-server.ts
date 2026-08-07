@@ -1,26 +1,12 @@
-import { randomBytes, randomUUID } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { createServer, type Server, type ServerResponse } from "node:http";
+import { existsSync } from "node:fs";
+import { createServer, type Server } from "node:http";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { Grade } from "ts-fsrs";
 import { z } from "zod";
 
-import {
-  SnapshotManifestSchema,
-  StableId,
-  UaAnalysisManifestSchema,
-  type CardContent,
-  type CourseManifest,
-  type EvidenceReference,
-  type Exercise,
-  type KnowledgeCard,
-  type KnowledgeNote,
-  type LessonManifest,
-  type StudyManifest,
-  type UnitManifest,
-} from "../src/domain/schemas.js";
+import { StableId } from "../src/domain/schemas.js";
 import { loadUniversityLocalConfig } from "./config/load-config.js";
 import { HttpError } from "./http/errors.js";
 import {
@@ -37,8 +23,6 @@ import {
   parseKnowledgeCardRoute,
   parseKnowledgeEvidenceRoute,
   parseRoute,
-  type KnowledgeCardRoute,
-  type LearningRoute,
 } from "./http/routes.js";
 import {
   readJsonBody,
@@ -46,780 +30,42 @@ import {
   requireMutationAccess,
   sendJson,
 } from "./http/wire.js";
-import { resolveEvidenceAnchors } from "./content/evidence-anchors.js";
+import { createServerContext } from "./http/context.js";
+import { buildCoachingPacketResponse, buildLessonView, buildStudyView } from "./http/views.js";
+import { serializeProgress } from "./http/serialize.js";
+import {
+  countCourseManifests,
+  countSnapshotManifests,
+  countUaAnalyses,
+  courseReviewableCard,
+  knowledgeReviewableCard,
+  listActiveCourses,
+  requireActiveCard,
+  requireActiveExercise,
+  requireActiveLesson,
+  revealReviewableCard,
+  reviewReviewableCard,
+  runWithCommandConflictMapped,
+  type DueCard,
+} from "./http/content-access.js";
 import { readEvidenceSnippet } from "./content/evidence.js";
+import { readCourse, readLatestLesson, readUnit } from "./content/repository.js";
+import { readActiveKnowledgeCard, readLatestKnowledgeNote } from "./knowledge/repository.js";
 import {
-  backlinksOf,
-  buildLessonIndex,
-  parseLessonLinks,
-  resolveLessonLinks,
-  type LessonIndex,
-} from "./content/lesson-links.js";
-import {
-  listCourseIds,
-  orderCoursesByPrerequisite,
-  readCourse,
-  readLatestCard,
-  readLatestExercise,
-  readLatestLesson,
-  readUnit,
-} from "./content/repository.js";
-import {
-  listKnowledgeNotes,
-  readActiveKnowledgeCard,
-  readLatestKnowledgeNote,
-} from "./knowledge/repository.js";
-import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
-import {
-  cardContentKey,
   exerciseContentKey,
-  knowledgeCardContentKey,
   lessonContentKey,
   parseReviewContentKey,
-  type ReviewContentKey,
   type StoredCardState,
-  type StoredLessonProgress,
 } from "./learning/types.js";
-import { composeLanguageLayer } from "./language/layer.js";
 import { selectLexicon } from "./language/lexicon.js";
-import {
-  VocabularyStore,
-  getVocabularyDatabasePath,
-  type VocabularyState,
-} from "./language/vocabulary-store.js";
 import { readCourseClock } from "./airlock/course-clock.js";
 import { inspectAirlock } from "./airlock/inspect.js";
-import { getCoursePaths, getStudyPaths } from "./studies/paths.js";
+import { getStudyPaths } from "./studies/paths.js";
 import { inspectStudyShelf, readSourceRegistration, readStudy } from "./studies/repository.js";
-import {
-  buildExerciseCoachingPacket,
-  disclosesReference,
-  type CoachingPacketEvidence,
-} from "./workflows/exercise-coaching-packet.js";
 import { advanceLessonProgress, applyHostExerciseGrade } from "./workflows/host-exercise-grade.js";
 import { buildExpressionReview } from "./workflows/expression-review.js";
 
 const DEFAULT_PORT = 4317;
-
-interface OpenLearningStore {
-  readonly store: SqliteLearningStore;
-  /** `dev:ino` of the file this store opened, so a swapped file is detectable. */
-  readonly fileId: string;
-}
-
-interface ReviewableCard {
-  readonly key: ReviewContentKey;
-  readonly contentRevision: number;
-  readonly front: string;
-  readonly back: string;
-}
-
-interface DueCourseCard {
-  readonly kind: "course-card";
-  readonly studyId: string;
-  readonly courseId: string;
-  readonly unitId: string;
-  readonly lessonId: string;
-  readonly cardId: string;
-  readonly front: string;
-  readonly contentRevision: number;
-  readonly dueAt: string;
-}
-
-interface DueKnowledgeCard {
-  readonly kind: "knowledge-card";
-  readonly studyId: string;
-  readonly noteId: string;
-  readonly cardId: string;
-  readonly front: string;
-  readonly contentRevision: number;
-  readonly dueAt: string;
-}
-
-type DueCard = DueCourseCard | DueKnowledgeCard;
-
-function readJson(path: string): unknown {
-  return JSON.parse(readFileSync(path, "utf8")) as unknown;
-}
-
-function countSnapshotManifests(directory: string): number {
-  if (!existsSync(directory)) return 0;
-  return readdirSync(directory, { withFileTypes: true }).filter((entry) => {
-    if (!entry.isFile() || !entry.name.endsWith(".json")) return false;
-    try {
-      SnapshotManifestSchema.parse(readJson(`${directory}/${entry.name}`));
-      return true;
-    } catch {
-      return false;
-    }
-  }).length;
-}
-
-function countUaAnalyses(directory: string): { readonly total: number; readonly ready: number } {
-  if (!existsSync(directory)) return { total: 0, ready: 0 };
-  let total = 0;
-  let ready = 0;
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    if (!entry.isDirectory()) continue;
-    const path = `${directory}/${entry.name}/manifest.json`;
-    if (!existsSync(path)) continue;
-    try {
-      const manifest = UaAnalysisManifestSchema.parse(readJson(path));
-      total += 1;
-      // Only a `ready` analysis can back evidence: `validateEvidence` rejects
-      // everything else, and the CLI's `readyIds` agrees. Counting
-      // `legacy-import` here made Studies promise analyses that would then be
-      // refused at binding time with a 422 — the display was the thing that
-      // was wrong, not the integrity rule.
-      if (manifest.status === "ready") ready += 1;
-    } catch {
-      // Invalid analysis directories are isolated from the usable count.
-    }
-  }
-  return { total, ready };
-}
-
-function countCourseManifests(directory: string): number {
-  if (!existsSync(directory)) return 0;
-  return readdirSync(directory, { withFileTypes: true }).filter(
-    (entry) => entry.isDirectory() && existsSync(`${directory}/${entry.name}/course.json`),
-  ).length;
-}
-
-function serializeProgress(progress: StoredLessonProgress | null): unknown {
-  if (!progress) return null;
-  return {
-    contentRevision: progress.contentRevision,
-    status: progress.status,
-    progress: progress.progress,
-    updatedAt: progress.updatedAt.toISOString(),
-  };
-}
-
-function serializeCardState(state: StoredCardState): unknown {
-  return {
-    contentRevision: state.contentRevision,
-    dueAt: state.due.toISOString(),
-    reps: state.reps,
-    lapses: state.lapses,
-    state: state.state,
-    lastReviewAt: state.last_review?.toISOString() ?? null,
-  };
-}
-
-function publicEvidence(evidence: readonly EvidenceReference[]): unknown {
-  return evidence.map((reference) => ({
-    kind: reference.kind,
-    sourcePath: reference.sourcePath,
-    lineStart: reference.lineStart ?? null,
-    lineEnd: reference.lineEnd ?? null,
-    sourceCommit: reference.sourceCommit,
-    nodeIds: reference.nodeIds,
-    // Every reference is written with a sentence saying what this code proves.
-    // It was stored and never served, so the rail could only ever show a file
-    // path — the learner had to open the snippet and work out the relevance
-    // themselves, for a question the author had already answered.
-    note: reference.note ?? null,
-  }));
-}
-
-function publicKnowledgeNote(note: KnowledgeNote, content: string): unknown {
-  return {
-    id: note.id,
-    title: note.title,
-    question: note.question,
-    summary: note.summary,
-    claimType: note.claimType,
-    status: note.status,
-    contentRevision: note.contentRevision,
-    cardCount: note.cards.length,
-    evidence: publicEvidence(note.evidence),
-    content,
-  };
-}
-
-/**
- * `defaultCourseId` decides which course a study opens on, not which course a
- * study is allowed to teach. Gating every route on it turned a study into a
- * single-course container: a second course was written, validated and stored,
- * and then answered 404 on every read. Membership is already established by the
- * path — `StableId` rejects traversal in both `parseRoute` and `getCoursePaths`
- * — so the only questions left are whether the course exists and is active.
- */
-function requireActiveCourse(
-  studiesRoot: string,
-  studyId: string,
-  courseId: string,
-): CourseManifest {
-  readStudy(studiesRoot, studyId);
-  if (!existsSync(getCoursePaths(studiesRoot, studyId, courseId).manifest)) {
-    throw new HttpError(404, "Course does not exist in this study");
-  }
-  const course = readCourse(studiesRoot, studyId, courseId);
-  if (course.status !== "active") throw new HttpError(409, "Course is not active");
-  return course;
-}
-
-/**
- * The study's active courses, in prerequisite order. Ordering is what makes
- * "next lesson" meaningful across a shelf: without it the learner's next step
- * would hop between courses by whatever order the filesystem happened to
- * return. `study.defaultCourseId` picks which course the study opens on, not
- * this order — see `requireActiveCourse` above — so it plays no part here.
- */
-function listActiveCourses(studiesRoot: string, study: StudyManifest): readonly CourseManifest[] {
-  const courses: CourseManifest[] = [];
-  for (const courseId of listCourseIds(studiesRoot, study.id)) {
-    try {
-      const course = readCourse(studiesRoot, study.id, courseId);
-      if (course.status === "active") courses.push(course);
-    } catch {
-      // A course that cannot be parsed is reported by the route that reads it,
-      // not by every shelf listing that walks past it.
-    }
-  }
-  return orderCoursesByPrerequisite(courses);
-}
-
-function requireActiveUnit(
-  studiesRoot: string,
-  route: LearningRoute,
-  course: CourseManifest,
-): UnitManifest {
-  if (!course.unitIds.includes(route.unitId)) throw new HttpError(404, "Unit is not in the course");
-  const unit = readUnit(studiesRoot, route.studyId, route.courseId, route.unitId);
-  if (unit.status !== "active") throw new HttpError(409, "Unit is not active");
-  return unit;
-}
-
-function requireActiveLesson(
-  studiesRoot: string,
-  route: LearningRoute,
-): { readonly lesson: LessonManifest; readonly content: string } {
-  const course = requireActiveCourse(studiesRoot, route.studyId, route.courseId);
-  const unit = requireActiveUnit(studiesRoot, route, course);
-  if (!unit.lessonIds.includes(route.lessonId)) {
-    throw new HttpError(404, "Lesson is not in the unit");
-  }
-  const result = readLatestLesson(
-    studiesRoot,
-    route.studyId,
-    route.courseId,
-    route.unitId,
-    route.lessonId,
-  );
-  if (result.manifest.status !== "active") throw new HttpError(409, "Lesson is not active");
-  return { lesson: result.manifest, content: result.content };
-}
-
-function requireActiveCard(studiesRoot: string, route: LearningRoute): CardContent {
-  if (!route.contentId) throw new HttpError(404, "Card ID is missing");
-  const lesson = requireActiveLesson(studiesRoot, route).lesson;
-  if (!lesson.cardIds.includes(route.contentId)) throw new HttpError(404, "Card is not in lesson");
-  const card = readLatestCard(
-    studiesRoot,
-    route.studyId,
-    route.courseId,
-    route.unitId,
-    route.lessonId,
-    route.contentId,
-  );
-  if (card.status !== "active") throw new HttpError(409, "Card is not active");
-  return card;
-}
-
-function requireActiveExercise(studiesRoot: string, route: LearningRoute): Exercise {
-  if (!route.contentId) throw new HttpError(404, "Exercise ID is missing");
-  const lesson = requireActiveLesson(studiesRoot, route).lesson;
-  if (!lesson.exerciseIds.includes(route.contentId)) {
-    throw new HttpError(404, "Exercise is not in lesson");
-  }
-  const exercise = readLatestExercise(
-    studiesRoot,
-    route.studyId,
-    route.courseId,
-    route.unitId,
-    route.lessonId,
-    route.contentId,
-  );
-  if (exercise.status !== "active") throw new HttpError(409, "Exercise is not active");
-  return exercise;
-}
-
-function courseReviewableCard(studiesRoot: string, route: LearningRoute): ReviewableCard {
-  const card = requireActiveCard(studiesRoot, route);
-  return {
-    key: cardContentKey({
-      courseId: route.courseId,
-      unitId: route.unitId,
-      lessonId: route.lessonId,
-      cardId: card.id,
-    }),
-    contentRevision: card.contentRevision,
-    front: card.front,
-    back: card.back,
-  };
-}
-
-function knowledgeReviewableCard(
-  studiesRoot: string,
-  route: Pick<KnowledgeCardRoute, "studyId" | "noteId" | "cardId">,
-): ReviewableCard {
-  let result: { readonly note: KnowledgeNote; readonly card: KnowledgeCard };
-  try {
-    result = readActiveKnowledgeCard(studiesRoot, route.studyId, route.noteId, route.cardId);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Knowledge card is unavailable";
-    if (message.startsWith("Knowledge note is not active:")) throw new HttpError(409, message);
-    if (message.startsWith("Knowledge note does not declare card:")) {
-      throw new HttpError(404, message);
-    }
-    throw error;
-  }
-  return {
-    key: knowledgeCardContentKey({ noteId: result.note.id, cardId: result.card.id }),
-    contentRevision: result.note.contentRevision,
-    front: result.card.front,
-    back: result.card.back,
-  };
-}
-
-/**
- * How many earlier answers travel back with a reveal. Enough to see whether an
- * understanding moved; not so many that the panel becomes a transcript.
- */
-const PRIOR_ATTEMPT_LIMIT = 3;
-
-/**
- * What the learner wrote for this card before today.
- *
- * Deliberately part of the *reveal* response and of no other endpoint. A review
- * card only works if the recall is real, so the page must not be able to show
- * a previous answer while the question is still open — not as a default, not
- * behind a flag. Sending it at reveal makes the timing a property of the API
- * rather than a rule the UI has to keep remembering.
- */
-function priorAttemptsOf(
-  store: SqliteLearningStore,
-  card: ReviewableCard,
-  currentAttemptId: string,
-): readonly { answer: string; revealedAt: string; contentRevision: number }[] {
-  return store
-    .listRetrievalAttempts(card.key, PRIOR_ATTEMPT_LIMIT + 1)
-    .filter((attempt) => attempt.attemptId !== currentAttemptId)
-    .slice(0, PRIOR_ATTEMPT_LIMIT)
-    .map((attempt) => ({
-      answer: attempt.answer,
-      revealedAt: attempt.revealedAt.toISOString(),
-      contentRevision: attempt.contentRevision,
-    }));
-}
-
-function revealReviewableCard(
-  response: ServerResponse,
-  body: z.infer<typeof CardRevealSchema>,
-  card: ReviewableCard,
-  store: SqliteLearningStore,
-): void {
-  if (card.contentRevision !== body.contentRevision) {
-    throw new HttpError(409, "Card content revision changed; reload before revealing");
-  }
-  if (!store.getCard(card.key)) {
-    throw new HttpError(409, "Card is not enrolled in the learning schedule");
-  }
-
-  const startedAt = new Date(body.startedAt);
-  const duplicate = store.getRetrievalAttemptByCommandId(body.commandId);
-  if (duplicate) {
-    if (
-      duplicate.cardKey !== card.key ||
-      duplicate.contentRevision !== body.contentRevision ||
-      duplicate.answer !== body.answer ||
-      duplicate.startedAt.getTime() !== startedAt.getTime() ||
-      duplicate.usedHint !== body.usedHint ||
-      duplicate.confidence !== body.confidence
-    ) {
-      throw new HttpError(409, "Command ID was already used for another card reveal");
-    }
-    sendJson(response, 200, {
-      attemptId: duplicate.attemptId,
-      submittedAnswer: duplicate.answer,
-      back: card.back,
-      durationMs: duplicate.durationMs,
-      priorAttempts: priorAttemptsOf(store, card, duplicate.attemptId),
-    });
-    return;
-  }
-
-  const revealedAt = new Date();
-  if (startedAt.getTime() > revealedAt.getTime()) {
-    throw new HttpError(400, "Card retrieval start time cannot be in the future");
-  }
-  let attempt;
-  try {
-    attempt = store.recordRetrievalAttempt({
-      commandId: body.commandId,
-      cardKey: card.key,
-      contentRevision: body.contentRevision,
-      answer: body.answer,
-      startedAt,
-      revealedAt,
-      usedHint: body.usedHint,
-      ...(body.confidence === undefined ? {} : { confidence: body.confidence }),
-    });
-  } catch (error) {
-    if (error instanceof Error && error.message.startsWith("Command ID conflict:")) {
-      throw new HttpError(409, "Command ID was already used for another card reveal");
-    }
-    throw error;
-  }
-  sendJson(response, 200, {
-    attemptId: attempt.attemptId,
-    submittedAnswer: body.answer,
-    back: card.back,
-    durationMs: attempt.durationMs,
-    priorAttempts: priorAttemptsOf(store, card, attempt.attemptId),
-  });
-}
-
-function reviewReviewableCard(
-  response: ServerResponse,
-  body: z.infer<typeof CardReviewSchema>,
-  card: ReviewableCard,
-  store: SqliteLearningStore,
-): void {
-  if (card.contentRevision !== body.contentRevision) {
-    throw new HttpError(409, "Card content revision changed; reload before reviewing");
-  }
-  if (!store.getCard(card.key)) {
-    throw new HttpError(409, "Card is not enrolled in the learning schedule");
-  }
-  try {
-    const receipt = store.reviewCard({
-      commandId: body.commandId,
-      cardKey: card.key,
-      contentRevision: body.contentRevision,
-      rating: body.rating as Grade,
-    });
-    sendJson(response, 200, {
-      eventId: receipt.eventId,
-      state: serializeCardState(receipt.state),
-    });
-  } catch (error) {
-    if (error instanceof Error && error.message.startsWith("Command ID conflict:")) {
-      throw new HttpError(409, "Command ID was already used for another card review");
-    }
-    throw error;
-  }
-}
-
-/**
- * Reusing a command ID with a different body is a client conflict, not a
- * server fault. The card paths already mapped it to 409; the exercise path
- * let it escape as a generic 500, which tells a retrying client nothing.
- */
-function runWithCommandConflictMapped<T>(message: string, operation: () => T): T {
-  try {
-    return operation();
-  } catch (error) {
-    if (error instanceof Error && error.message.startsWith("Command ID conflict:")) {
-      throw new HttpError(409, message);
-    }
-    throw error;
-  }
-}
-
-function buildStudyView(
-  studiesRoot: string,
-  study: StudyManifest,
-  store: SqliteLearningStore | null,
-): unknown {
-  const courseViews = listActiveCourses(studiesRoot, study).map((course) => {
-    const units = course.unitIds.map((unitId) => {
-      const unit = readUnit(studiesRoot, study.id, course.id, unitId);
-      return {
-        ...unit,
-        lessons: unit.lessonIds.map((lessonId) => {
-          const lesson = readLatestLesson(
-            studiesRoot,
-            study.id,
-            course.id,
-            unit.id,
-            lessonId,
-          ).manifest;
-          const key = lessonContentKey({ courseId: course.id, unitId: unit.id, lessonId });
-          return {
-            id: lesson.id,
-            title: lesson.title,
-            status: lesson.status,
-            contentRevision: lesson.contentRevision,
-            cardCount: lesson.cardIds.length,
-            exerciseCount: lesson.exerciseIds.length,
-            progress: serializeProgress(store?.getLessonProgress(key) ?? null),
-          };
-        }),
-      };
-    });
-    return { ...course, units, isDefault: course.id === study.defaultCourseId };
-  });
-  const notes = listKnowledgeNotes(studiesRoot, study.id).map((note) => {
-    const stored = readLatestKnowledgeNote(studiesRoot, study.id, note.id);
-    return publicKnowledgeNote(stored.note, stored.content);
-  });
-  return { study, courses: courseViews, notes };
-}
-
-/**
- * One link index per study, built on demand.
- *
- * Building it reads every lesson in the study — 340 of them for TuringPact —
- * so doing it per request would turn opening a lesson into a directory walk.
- * Cached for the life of the process: lesson content is immutable per
- * revision, and a new revision arrives through a restart or a refresh command,
- * never underneath a running request.
- */
-const lessonIndexCache = new Map<string, LessonIndex>();
-
-function getLessonIndex(studiesRoot: string, studyId: string): LessonIndex {
-  const key = `${studiesRoot} ${studyId}`;
-  let index = lessonIndexCache.get(key);
-  if (!index) {
-    index = buildLessonIndex(studiesRoot, studyId);
-    lessonIndexCache.set(key, index);
-  }
-  return index;
-}
-
-function buildLessonView(
-  studiesRoot: string,
-  route: LearningRoute,
-  store: SqliteLearningStore | null,
-  vocabulary: readonly VocabularyState[],
-): unknown {
-  const { lesson, content } = requireActiveLesson(studiesRoot, route);
-  const lessonKey = lessonContentKey({
-    courseId: route.courseId,
-    unitId: route.unitId,
-    lessonId: route.lessonId,
-  });
-  // The foreign-language layer travels with every lesson and costs a few
-  // hundred bytes: ranges plus the senses those ranges use. Whether any of it
-  // is shown is the reader's choice, made in the browser, because it changes
-  // nothing about what the lesson is — only about how it reads.
-  //
-  // Composed rather than merely read: an authored overlay is honoured where one
-  // exists, and detection covers the rest, so which words a lesson can teach no
-  // longer depends on whether anyone annotated it.
-  const language = composeLanguageLayer({
-    studiesRoot,
-    studyId: route.studyId,
-    language: "en",
-    courseId: route.courseId,
-    unitId: route.unitId,
-    lessonId: route.lessonId,
-    contentRevision: lesson.contentRevision,
-    content,
-    vocabulary,
-  });
-  // Associative links, both directions. Resolution happens here rather than in
-  // the browser because a broken link has to be visible to whoever wrote it,
-  // and the browser has no way to know a target does not exist.
-  const linkIndex = getLessonIndex(studiesRoot, route.studyId);
-  const linkResolutions = resolveLessonLinks(parseLessonLinks(content), linkIndex, route);
-  return {
-    lesson: {
-      id: lesson.id,
-      title: lesson.title,
-      contentRevision: lesson.contentRevision,
-      content,
-      links: linkResolutions.map((item) =>
-        item.kind === "resolved"
-          ? {
-              start: item.link.start,
-              end: item.link.end,
-              label: item.link.label,
-              target: item.target,
-            }
-          : { start: item.link.start, end: item.link.end, label: item.link.label, target: null },
-      ),
-      backlinks: backlinksOf(linkIndex, route),
-      // Resolved against this lesson's own citations, so prose can only point
-      // at lines the manifest already pinned to the snapshot.
-      evidenceAnchors: resolveEvidenceAnchors(content, lesson.evidence),
-      language: {
-        status: language.status,
-        ranges: language.ranges,
-        lexicon: selectLexicon(language.senseIds),
-        // Why each word is here. The body dims the ones already retired and the
-        // sidebar sorts by it, so "认识" visibly quiets a word instead of only
-        // changing a number in a database.
-        reasons: language.reasons,
-      },
-      evidence: publicEvidence(lesson.evidence),
-      progress: serializeProgress(store?.getLessonProgress(lessonKey) ?? null),
-      exercises: lesson.exerciseIds.map((exerciseId) => {
-        const exercise = requireActiveExercise(studiesRoot, { ...route, contentId: exerciseId });
-        const exerciseKey = exerciseContentKey({
-          courseId: route.courseId,
-          unitId: route.unitId,
-          lessonId: route.lessonId,
-          exerciseId: exercise.id,
-        });
-        const hostGrade = store?.getLatestHostExerciseGrade(exerciseKey, exercise.contentRevision);
-        const hostPassed = store?.hasCorrectExerciseAttempt(exerciseKey, exercise.contentRevision);
-        // The store has kept every submission since the exercise log existed,
-        // and the reader has been throwing them away on every reload: a learner
-        // who answered yesterday came back to an empty box and a disabled
-        // button, with no way to tell "saved" from "lost". Unlike a review
-        // card, an exercise is answered once and then discussed, so restoring
-        // the text costs no retrieval — it is the same answer, still open.
-        const submission = store?.getLatestLearnerSubmission(exerciseKey, exercise.contentRevision);
-        return {
-          id: exercise.id,
-          kind: exercise.kind,
-          title: exercise.title,
-          prompt: exercise.prompt,
-          contentRevision: exercise.contentRevision,
-          awaitingHostGrade: !hostPassed,
-          latestSubmission: submission
-            ? { answer: submission.answer, occurredAt: submission.occurredAt.toISOString() }
-            : null,
-          hostGrade: hostGrade
-            ? {
-                passed: hostGrade.passed,
-                evaluation: hostGrade.evaluation,
-                extensions: hostGrade.extensions,
-                host: hostGrade.host,
-                learnerAnswer: hostGrade.learnerAnswer,
-                occurredAt: hostGrade.occurredAt.toISOString(),
-              }
-            : null,
-        };
-      }),
-      cards: lesson.cardIds.map((cardId) => {
-        const card = requireActiveCard(studiesRoot, { ...route, contentId: cardId });
-        return {
-          id: card.id,
-          kind: card.kind,
-          front: card.front,
-          contentRevision: card.contentRevision,
-        };
-      }),
-    },
-  };
-}
-
-/**
- * Evidence carried by the packet. The exercise's own references come first
- * because they are what the question is about; the lesson's references follow
- * as context. Five is a clipboard budget, not a correctness limit — a packet
- * nobody can paste teaches nothing.
- */
-const PACKET_EVIDENCE_LIMIT = 5;
-const PACKET_EVIDENCE_CONTEXT_LINES = 2;
-
-function evidenceIdentity(reference: EvidenceReference): string {
-  return `${reference.sourcePath}:${reference.lineStart ?? ""}-${reference.lineEnd ?? ""}`;
-}
-
-function collectPacketEvidence(
-  studiesRoot: string,
-  studyId: string,
-  references: readonly EvidenceReference[],
-): { readonly evidence: readonly CoachingPacketEvidence[]; readonly omitted: number } {
-  const evidence: CoachingPacketEvidence[] = [];
-  const seen = new Set<string>();
-  let omitted = 0;
-  for (const reference of references) {
-    const identity = evidenceIdentity(reference);
-    if (seen.has(identity)) continue;
-    seen.add(identity);
-    if (evidence.length >= PACKET_EVIDENCE_LIMIT) {
-      omitted += 1;
-      continue;
-    }
-    try {
-      evidence.push({
-        note: reference.note ?? null,
-        snippet: readEvidenceSnippet(
-          studiesRoot,
-          studyId,
-          reference,
-          PACKET_EVIDENCE_CONTEXT_LINES,
-        ),
-      });
-    } catch {
-      // A reference can point at a file too large to display, or at build
-      // configuration outside the UA graph. One unreadable snippet must not
-      // cost the learner the whole packet.
-      omitted += 1;
-    }
-  }
-  return { evidence, omitted };
-}
-
-function buildCoachingPacketResponse(
-  studiesRoot: string,
-  route: LearningRoute,
-  getStore: (studyId: string, create?: boolean) => SqliteLearningStore | null,
-): unknown {
-  const exercise = requireActiveExercise(studiesRoot, route);
-  const lesson = requireActiveLesson(studiesRoot, route).lesson;
-  const store = getStore(route.studyId);
-  const exerciseKey = exerciseContentKey({
-    courseId: route.courseId,
-    unitId: route.unitId,
-    lessonId: route.lessonId,
-    exerciseId: exercise.id,
-  });
-  const submission = store?.getLatestLearnerSubmission(exerciseKey, exercise.contentRevision);
-  if (!submission) {
-    throw new HttpError(409, "Submit an answer before copying the coaching packet");
-  }
-  const submissionCount = store!.countLearnerSubmissions(exerciseKey, exercise.contentRevision);
-  const passed = store!.hasCorrectExerciseAttempt(exerciseKey, exercise.contentRevision);
-  const disclose = disclosesReference({ passed, submissionCount });
-
-  const { evidence, omitted } = collectPacketEvidence(studiesRoot, route.studyId, [
-    ...exercise.evidence,
-    ...lesson.evidence,
-  ]);
-
-  const packet = buildExerciseCoachingPacket({
-    locator: {
-      studyId: route.studyId,
-      courseId: route.courseId,
-      unitId: route.unitId,
-      lessonId: route.lessonId,
-    },
-    lessonTitle: lesson.title,
-    exercise: {
-      id: exercise.id,
-      kind: exercise.kind,
-      title: exercise.title,
-      prompt: exercise.prompt,
-      contentRevision: exercise.contentRevision,
-    },
-    learnerAnswer: submission.answer,
-    submissionCount,
-    commandId: randomUUID(),
-    evidence,
-    evidenceOmitted: omitted,
-    reference: !disclose
-      ? null
-      : exercise.kind === "short-answer"
-        ? { kind: "short-answer", expectedAnswer: exercise.expectedAnswer }
-        : { kind: "explain", rubric: exercise.rubric },
-  });
-
-  return {
-    packet,
-    referenceDisclosed: disclose,
-    evidenceCount: evidence.length,
-    evidenceOmitted: omitted,
-    submissionCount,
-  };
-}
 
 function defaultProjectRoot(): string {
   return resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -827,85 +73,15 @@ function defaultProjectRoot(): string {
 
 export function createUniversityLocalHttpServer(projectRoot: string): Server {
   const config = loadUniversityLocalConfig({ projectRoot });
-  const requestToken = randomBytes(32).toString("base64url");
-  const stores = new Map<string, OpenLearningStore>();
-
-  /**
-   * Identity of the file behind a path, not the path itself. `learner restore`
-   * and `learner reset` install a database by renaming a new file over the old
-   * one; on POSIX the old inode stays alive for anyone still holding it open.
-   * Without this check the server kept serving — and writing to — a database
-   * that had already been replaced, so everything the learner did after a
-   * restore landed in an unlinked file nobody would ever read again.
-   * `assertQuiescent` in the restore workflow cannot catch this: it looks for
-   * active transactions, and an idle open connection has none.
-   */
-  const databaseIdentity = (path: string): string | null => {
-    try {
-      const stats = statSync(path);
-      return `${stats.dev}:${stats.ino}`;
-    } catch {
-      return null;
-    }
-  };
-
-  const getStore = (studyId: string, create = false): SqliteLearningStore | null => {
-    const path = getStudyPaths(config.studiesRoot, studyId).learner.database;
-    const identity = databaseIdentity(path);
-    const open = stores.get(studyId);
-    if (open) {
-      if (identity !== null && identity === open.fileId) return open.store;
-      try {
-        open.store.close();
-      } catch {
-        // Already closed, or closed under us. Dropping the handle is the point.
-      }
-      stores.delete(studyId);
-    }
-    if (!create && identity === null) return null;
-    const store = new SqliteLearningStore(path);
-    const openedId = databaseIdentity(path);
-    if (openedId !== null) stores.set(studyId, { store, fileId: openedId });
-    return store;
-  };
-
-  // Opened on first use rather than at boot: a campus where nobody has turned
-  // English mode on should not create a database to hold nothing.
-  let vocabulary: VocabularyStore | null = null;
-  const getVocabulary = (): VocabularyStore => {
-    vocabulary ??= new VocabularyStore(getVocabularyDatabasePath(config.studiesRoot));
-    return vocabulary;
-  };
-
-  /**
-   * Learner word states for read-only use, without bringing the database into
-   * existence. Opening a lesson must not create a vocabulary database: a
-   * learner who has never turned the mode on has no states, and "no states" and
-   * "empty database" have to stay distinguishable on disk.
-   */
-  const peekVocabularyStates = (): readonly VocabularyState[] => {
-    if (!vocabulary && !existsSync(getVocabularyDatabasePath(config.studiesRoot))) return [];
-    return getVocabulary().listStates();
-  };
-
-  /**
-   * A sense id that is not in the lexicon cannot be scheduled, because nothing
-   * could ever render it back to the learner — it would be an invisible row
-   * accruing due dates for a word the campus cannot show.
-   */
-  const assertKnownSense = (senseId: string): void => {
-    if (selectLexicon([senseId]).length === 0) {
-      throw new HttpError(404, `Unknown vocabulary sense: ${senseId}`);
-    }
-  };
+  const context = createServerContext(config.studiesRoot);
 
   // Archived studies keep their data but leave the shelf; a superseded study
   // that still greets the learner every day is clutter wearing a title.
-  for (const study of inspectStudyShelf(config.studiesRoot).studies.filter(
+  for (const study of inspectStudyShelf(context.studiesRoot).studies.filter(
     (candidate) => candidate.status === "active",
   )) {
-    if (existsSync(getStudyPaths(config.studiesRoot, study.id).learner.database)) {
-      getStore(study.id);
+    if (existsSync(getStudyPaths(context.studiesRoot, study.id).learner.database)) {
+      context.getStore(study.id);
     }
   }
 
@@ -924,18 +100,18 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
       }
 
       if (request.method === "GET" && url.pathname === "/api/bootstrap") {
-        const shelf = inspectStudyShelf(config.studiesRoot);
+        const shelf = inspectStudyShelf(context.studiesRoot);
         // Same rule as the store warm-up above: archived studies keep their
         // data and stay off the shelf.
         const studies = shelf.studies
           .filter((study) => study.status === "active")
           .map((study) => {
-            const paths = getStudyPaths(config.studiesRoot, study.id);
+            const paths = getStudyPaths(context.studiesRoot, study.id);
             const ua = countUaAnalyses(paths.ua);
             let defaultCourse: { id: string; title: string; status: string } | null = null;
             if (study.defaultCourseId) {
               try {
-                const course = readCourse(config.studiesRoot, study.id, study.defaultCourseId);
+                const course = readCourse(context.studiesRoot, study.id, study.defaultCourseId);
                 defaultCourse = { id: course.id, title: course.title, status: course.status };
               } catch {
                 defaultCourse = null;
@@ -948,14 +124,15 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
               uaAnalysisCount: ua.total,
               readyUaAnalysisCount: ua.ready,
               courseCount: countCourseManifests(paths.courses),
-              activeCourseCount: listActiveCourses(config.studiesRoot, study).length,
+              activeCourseCount: listActiveCourses(context.studiesRoot, study).length,
               defaultCourse,
               hasLearningDatabase: existsSync(paths.learner.database),
               // Derived from the events themselves rather than stored on open,
               // so it cannot drift from what the learner actually did. The
               // shelf needs it because a title-sorted list always opens on
               // whichever study sorts first, which is rarely the live one.
-              lastActivityAt: getStore(study.id)?.getLastActivityAt()?.toISOString() ?? null,
+              lastActivityAt:
+                context.getStore(study.id)?.getLastActivityAt()?.toISOString() ?? null,
             };
           });
 
@@ -974,11 +151,11 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
             return rank(left.id) - rank(right.id);
           });
         for (const study of focusedStudies) {
-          const store = getStore(study.id);
+          const store = context.getStore(study.id);
           // A focused run is walked in the order it was written, and everything
           // it does not name keeps its own order behind it.
           const focusedCourseIds = study.id === config.focus?.studyId ? config.focus.courseIds : [];
-          const activeCourses = [...listActiveCourses(config.studiesRoot, study)].sort(
+          const activeCourses = [...listActiveCourses(context.studiesRoot, study)].sort(
             (left, right) => {
               const rank = (id: string): number => {
                 const position = focusedCourseIds.indexOf(id);
@@ -991,11 +168,11 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
           for (const course of activeCourses) {
             try {
               for (const unitId of course.unitIds) {
-                const unit = readUnit(config.studiesRoot, study.id, course.id, unitId);
+                const unit = readUnit(context.studiesRoot, study.id, course.id, unitId);
                 if (unit.status !== "active") continue;
                 for (const lessonId of unit.lessonIds) {
                   const lesson = readLatestLesson(
-                    config.studiesRoot,
+                    context.studiesRoot,
                     study.id,
                     course.id,
                     unit.id,
@@ -1047,7 +224,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
               const identity = parseReviewContentKey(state.cardKey);
               if (identity.kind === "course-card") {
                 if (!coursesById.has(identity.courseId)) continue;
-                const card = requireActiveCard(config.studiesRoot, {
+                const card = requireActiveCard(context.studiesRoot, {
                   studyId: study.id,
                   ...identity,
                   contentId: identity.cardId,
@@ -1070,7 +247,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
               let active;
               try {
                 active = readActiveKnowledgeCard(
-                  config.studiesRoot,
+                  context.studiesRoot,
                   study.id,
                   identity.noteId,
                   identity.cardId,
@@ -1104,8 +281,8 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         dueCards.sort((left, right) => left.dueAt.localeCompare(right.dueAt));
         sendJson(response, 200, {
           product: "UniversityLocal",
-          requestToken,
-          studiesRoot: config.studiesRoot,
+          requestToken: context.requestToken,
+          studiesRoot: context.studiesRoot,
           studies,
           shelfIssues: shelf.issues,
           today: {
@@ -1131,8 +308,12 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         } catch {
           throw new HttpError(400, "Route contains an invalid study ID");
         }
-        const study = readStudy(config.studiesRoot, studyId);
-        sendJson(response, 200, buildStudyView(config.studiesRoot, study, getStore(study.id)));
+        const study = readStudy(context.studiesRoot, studyId);
+        sendJson(
+          response,
+          200,
+          buildStudyView(context.studiesRoot, study, context.getStore(study.id)),
+        );
         return;
       }
 
@@ -1145,10 +326,10 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
           response,
           200,
           buildLessonView(
-            config.studiesRoot,
+            context.studiesRoot,
             lessonRoute,
-            getStore(lessonRoute.studyId),
-            peekVocabularyStates(),
+            context.getStore(lessonRoute.studyId),
+            context.peekVocabularyStates(),
           ),
         );
         return;
@@ -1156,14 +337,14 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
 
       const evidenceRoute = parseEvidenceRoute(url.pathname);
       if (request.method === "GET" && evidenceRoute) {
-        const { lesson } = requireActiveLesson(config.studiesRoot, evidenceRoute.lesson);
+        const { lesson } = requireActiveLesson(context.studiesRoot, evidenceRoute.lesson);
         const evidence = lesson.evidence[evidenceRoute.index];
         if (!evidence) throw new HttpError(404, "Lesson evidence index does not exist");
         try {
           sendJson(
             response,
             200,
-            readEvidenceSnippet(config.studiesRoot, evidenceRoute.lesson.studyId, evidence),
+            readEvidenceSnippet(context.studiesRoot, evidenceRoute.lesson.studyId, evidence),
           );
         } catch (error) {
           throw new HttpError(
@@ -1177,7 +358,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
       const knowledgeEvidenceRoute = parseKnowledgeEvidenceRoute(url.pathname);
       if (request.method === "GET" && knowledgeEvidenceRoute) {
         const stored = readLatestKnowledgeNote(
-          config.studiesRoot,
+          context.studiesRoot,
           knowledgeEvidenceRoute.studyId,
           knowledgeEvidenceRoute.noteId,
         );
@@ -1187,7 +368,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
           sendJson(
             response,
             200,
-            readEvidenceSnippet(config.studiesRoot, knowledgeEvidenceRoute.studyId, evidence),
+            readEvidenceSnippet(context.studiesRoot, knowledgeEvidenceRoute.studyId, evidence),
           );
         } catch (error) {
           throw new HttpError(
@@ -1203,9 +384,9 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/exercises\/([^/]+)\/attempt$/,
       );
       if (request.method === "POST" && exerciseRoute) {
-        requireMutationAccess(request, requestToken);
+        requireMutationAccess(request, context.requestToken);
         const body = ExerciseAttemptSchema.parse(await readJsonBody(request));
-        const exercise = requireActiveExercise(config.studiesRoot, exerciseRoute);
+        const exercise = requireActiveExercise(context.studiesRoot, exerciseRoute);
         if (exercise.contentRevision !== body.contentRevision) {
           throw new HttpError(409, "Exercise content revision changed; reload before submitting");
         }
@@ -1222,14 +403,14 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         const score = 0;
         const awaitingHostGrade = true;
         const correct = false;
-        const store = getStore(exerciseRoute.studyId, true)!;
+        const store = context.getStore(exerciseRoute.studyId, true)!;
         const exerciseKey = exerciseContentKey({
           courseId: exerciseRoute.courseId,
           unitId: exerciseRoute.unitId,
           lessonId: exerciseRoute.lessonId,
           exerciseId: exercise.id,
         });
-        const lesson = requireActiveLesson(config.studiesRoot, exerciseRoute).lesson;
+        const lesson = requireActiveLesson(context.studiesRoot, exerciseRoute).lesson;
         const lessonKey = lessonContentKey({
           courseId: exerciseRoute.courseId,
           unitId: exerciseRoute.unitId,
@@ -1252,7 +433,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
               // grade unrecordable.
               advanceLessonProgress(
                 store,
-                config.studiesRoot,
+                context.studiesRoot,
                 { ...exerciseRoute, exerciseId: exercise.id },
                 lesson,
                 lessonKey,
@@ -1288,16 +469,16 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/exercises\/([^/]+)\/host-grade$/,
       );
       if (request.method === "POST" && hostGradeRoute) {
-        requireMutationAccess(request, requestToken);
+        requireMutationAccess(request, context.requestToken);
         if (!hostGradeRoute.contentId) throw new HttpError(404, "Exercise ID is missing");
         const body = await readJsonBody(request);
-        const store = getStore(hostGradeRoute.studyId, true)!;
+        const store = context.getStore(hostGradeRoute.studyId, true)!;
         try {
           const result = runWithCommandConflictMapped(
             "Command ID was already used for another exercise attempt",
             () =>
               applyHostExerciseGrade({
-                studiesRoot: config.studiesRoot,
+                studiesRoot: context.studiesRoot,
                 store,
                 route: {
                   studyId: hostGradeRoute.studyId,
@@ -1346,7 +527,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         sendJson(
           response,
           200,
-          buildCoachingPacketResponse(config.studiesRoot, coachingPacketRoute, getStore),
+          buildCoachingPacketResponse(context.studiesRoot, coachingPacketRoute, context.getStore),
         );
         return;
       }
@@ -1356,12 +537,12 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
       );
       if (request.method === "GET" && expressionPacketRoute) {
         const studyId = StableId.parse(decodeURIComponent(expressionPacketRoute[1]!));
-        const store = getStore(studyId);
+        const store = context.getStore(studyId);
         if (!store) throw new HttpError(404, "Study has no learning data yet");
         const goal = url.searchParams.get("goal");
         try {
           const review = buildExpressionReview(store, {
-            studiesRoot: config.studiesRoot,
+            studiesRoot: context.studiesRoot,
             studyId,
             ...(goal ? { goal } : {}),
           });
@@ -1389,7 +570,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
       if (request.method === "GET" && airlockRoute) {
         const studyId = StableId.parse(decodeURIComponent(airlockRoute[1]!));
         try {
-          const registration = readSourceRegistration(config.studiesRoot, studyId);
+          const registration = readSourceRegistration(context.studiesRoot, studyId);
           const inspection = inspectAirlock(registration.sourceRoot);
           sendJson(response, 200, {
             airlock: true,
@@ -1398,7 +579,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
             upstream: inspection.upstream,
             promotedCommit: inspection.seal.promotedCommit,
             promotedAt: inspection.seal.promotedAt,
-            course: readCourseClock(config.studiesRoot, studyId, inspection.seal.promotedCommit),
+            course: readCourseClock(context.studiesRoot, studyId, inspection.seal.promotedCommit),
           });
         } catch {
           sendJson(response, 200, { airlock: false });
@@ -1409,7 +590,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
       // Vocabulary is not scoped to a study: one word, one state, wherever it
       // was met. These routes therefore sit outside /api/studies/:id.
       if (request.method === "GET" && url.pathname === "/api/vocabulary") {
-        const vocabulary = getVocabulary();
+        const vocabulary = context.getVocabulary();
         const due = vocabulary.listDue(VOCABULARY_DUE_LIMIT);
         // A due row is a schedule, not a word: it carries a senseId and nothing
         // a learner could read. The entry is attached here because a review
@@ -1433,9 +614,9 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
       }
 
       if (request.method === "POST" && url.pathname === "/api/vocabulary/presented") {
-        requireMutationAccess(request, requestToken);
+        requireMutationAccess(request, context.requestToken);
         const body = VocabularyPresentedSchema.parse(await readJsonBody(request));
-        getVocabulary().recordPresented(body.senseIds, {
+        context.getVocabulary().recordPresented(body.senseIds, {
           studyId: body.studyId,
           lessonId: body.lessonId,
         });
@@ -1445,21 +626,23 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
 
       const vocabularyStageRoute = /^\/api\/vocabulary\/([^/]+)\/stage$/.exec(url.pathname);
       if (request.method === "POST" && vocabularyStageRoute) {
-        requireMutationAccess(request, requestToken);
+        requireMutationAccess(request, context.requestToken);
         const body = VocabularyStageSchema.parse(await readJsonBody(request));
         const senseId = decodeURIComponent(vocabularyStageRoute[1]!);
-        assertKnownSense(senseId);
-        sendJson(response, 200, { state: getVocabulary().setStage(senseId, body.stage) });
+        context.assertKnownSense(senseId);
+        sendJson(response, 200, { state: context.getVocabulary().setStage(senseId, body.stage) });
         return;
       }
 
       const vocabularyGradeRoute = /^\/api\/vocabulary\/([^/]+)\/grade$/.exec(url.pathname);
       if (request.method === "POST" && vocabularyGradeRoute) {
-        requireMutationAccess(request, requestToken);
+        requireMutationAccess(request, context.requestToken);
         const body = VocabularyGradeSchema.parse(await readJsonBody(request));
         const senseId = decodeURIComponent(vocabularyGradeRoute[1]!);
-        assertKnownSense(senseId);
-        sendJson(response, 200, { state: getVocabulary().grade(senseId, body.rating as Grade) });
+        context.assertKnownSense(senseId);
+        sendJson(response, 200, {
+          state: context.getVocabulary().grade(senseId, body.rating as Grade),
+        });
         return;
       }
 
@@ -1468,13 +651,13 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/cards\/([^/]+)\/reveal$/,
       );
       if (request.method === "POST" && cardRevealRoute) {
-        requireMutationAccess(request, requestToken);
+        requireMutationAccess(request, context.requestToken);
         const body = CardRevealSchema.parse(await readJsonBody(request));
-        const store = getStore(cardRevealRoute.studyId, true)!;
+        const store = context.getStore(cardRevealRoute.studyId, true)!;
         revealReviewableCard(
           response,
           body,
-          courseReviewableCard(config.studiesRoot, cardRevealRoute),
+          courseReviewableCard(context.studiesRoot, cardRevealRoute),
           store,
         );
         return;
@@ -1485,13 +668,13 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/cards\/([^/]+)\/review$/,
       );
       if (request.method === "POST" && cardReviewRoute) {
-        requireMutationAccess(request, requestToken);
+        requireMutationAccess(request, context.requestToken);
         const body = CardReviewSchema.parse(await readJsonBody(request));
-        const store = getStore(cardReviewRoute.studyId, true)!;
+        const store = context.getStore(cardReviewRoute.studyId, true)!;
         reviewReviewableCard(
           response,
           body,
-          courseReviewableCard(config.studiesRoot, cardReviewRoute),
+          courseReviewableCard(context.studiesRoot, cardReviewRoute),
           store,
         );
         return;
@@ -1499,25 +682,25 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
 
       const knowledgeCardRoute = parseKnowledgeCardRoute(url.pathname);
       if (request.method === "POST" && knowledgeCardRoute?.action === "reveal") {
-        requireMutationAccess(request, requestToken);
+        requireMutationAccess(request, context.requestToken);
         const body = CardRevealSchema.parse(await readJsonBody(request));
-        const store = getStore(knowledgeCardRoute.studyId, true)!;
+        const store = context.getStore(knowledgeCardRoute.studyId, true)!;
         revealReviewableCard(
           response,
           body,
-          knowledgeReviewableCard(config.studiesRoot, knowledgeCardRoute),
+          knowledgeReviewableCard(context.studiesRoot, knowledgeCardRoute),
           store,
         );
         return;
       }
       if (request.method === "POST" && knowledgeCardRoute?.action === "review") {
-        requireMutationAccess(request, requestToken);
+        requireMutationAccess(request, context.requestToken);
         const body = CardReviewSchema.parse(await readJsonBody(request));
-        const store = getStore(knowledgeCardRoute.studyId, true)!;
+        const store = context.getStore(knowledgeCardRoute.studyId, true)!;
         reviewReviewableCard(
           response,
           body,
-          knowledgeReviewableCard(config.studiesRoot, knowledgeCardRoute),
+          knowledgeReviewableCard(context.studiesRoot, knowledgeCardRoute),
           store,
         );
         return;
@@ -1556,8 +739,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
   server.requestTimeout = 10_000;
   server.headersTimeout = 5_000;
   server.on("close", () => {
-    for (const open of stores.values()) open.store.close();
-    stores.clear();
+    context.close();
   });
   return server;
 }
