@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Mechanical enforcement of the browser / server / shared-schema boundary.
+ * Mechanical enforcement of the browser / server / shared-schema boundary,
+ * plus the acyclic order of browser-side layers under `src/`.
  *
  * This repository has exactly one intentional cross-line import:
  * `server/**` may reach into `src/domain/**` (shared Zod schemas) and nowhere
@@ -13,8 +14,13 @@
  * refused to compile. The next violation might not be so lucky. A rule nobody
  * can verify is a rule that quietly stops being true.
  *
+ * The same sentence applies one level inward: the browser tree was split into
+ * layers (`shell/`, `lesson/`, …) with a clean acyclic order. Without a check,
+ * the next edit can add a back-edge that only becomes obvious once it closes a
+ * cycle. Rule 4 freezes that order so back-edges fail here, not later.
+ *
  * So this scans import/export/dynamic-import specifiers under `src/**` and
- * `server/**` (tests excluded) and fails on any of the three rules below. It
+ * `server/**` (tests excluded) and fails on any of the four rules below. It
  * resolves relative paths first: a naive string match on `"../src/"` misses
  * nested modules and misjudges `"./domain/..."` from inside `src/`.
  *
@@ -37,6 +43,27 @@ const SOURCE_EXTS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
  * are not relative and never cross these trees, so they are ignored.
  */
 const SPECIFIER_RE = /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)['"]([^'"]+)['"]/g;
+
+/**
+ * Browser-side layers under `src/`, shallow → deep.
+ *
+ * Derived from non-test relative imports as of the rule's introduction:
+ *   shell    → evidence, review, api, view
+ *   lesson   → evidence, review, language, api, view
+ *   evidence → api, view
+ *   review   → language, api, view
+ *   language → (none)
+ *   api      → view
+ *   view     → (none)
+ *
+ * A layer may import a later (deeper) layer or the same layer; never an earlier
+ * one. `src/domain/` is intentionally absent — it is the shared schema core
+ * enforced by rule 3, not a browser composition layer. Loose files at the top
+ * of `src/` (App.tsx, MarkdownContent.tsx, …) are not layers and are exempt.
+ */
+const BROWSER_LAYER_ORDER = ["shell", "lesson", "evidence", "review", "language", "api", "view"];
+
+const BROWSER_LAYER_INDEX = new Map(BROWSER_LAYER_ORDER.map((name, i) => [name, i]));
 
 function isTestFile(name) {
   return /\.test\./.test(name);
@@ -126,6 +153,23 @@ function collectSpecifiers(source) {
   return found;
 }
 
+/**
+ * Named browser layer for a path under `src/<layer>/...`, or null when the
+ * file is loose at the top of `src/`, under an unlisted directory (e.g.
+ * `domain/`), or outside `src/` entirely.
+ */
+function browserLayerOf(absPath) {
+  if (!isInside(absPath, SRC)) return null;
+  const rel = relative(SRC, absPath);
+  if (!rel || rel.startsWith(`..`)) return null;
+  const top = rel.split(sep)[0];
+  // A top-level file like `src/App.tsx` has top === the filename itself.
+  if (!BROWSER_LAYER_INDEX.has(top)) return null;
+  // Require at least one path segment under the layer directory.
+  if (rel === top) return null;
+  return top;
+}
+
 const RULES = {
   srcNoServer: {
     id: 1,
@@ -138,6 +182,10 @@ const RULES = {
   domainClosed: {
     id: 3,
     why: "src/domain/** must not import from any .tsx file, and must not import from outside src/domain/ — it is compiled by tsconfig.server.json, which has no --jsx, so a .tsx (or other browser-only) import there breaks the server build.",
+  },
+  browserLayerOrder: {
+    id: 4,
+    why: "a browser layer may import only from itself or from a deeper layer in BROWSER_LAYER_ORDER — an import that reaches upward reintroduces the coupling the layer split removed, and is much harder to unpick once it closes a cycle.",
   },
 };
 
@@ -158,6 +206,7 @@ for (const file of [...walk(SRC), ...walk(SERVER)]) {
   const inSrc = isInside(file, SRC);
   const inServer = isInside(file, SERVER);
   const inDomain = isInside(file, DOMAIN);
+  const fromLayer = browserLayerOf(file);
 
   for (const { specifier, index } of collectSpecifiers(source)) {
     const resolved = resolveSpecifier(file, specifier);
@@ -188,6 +237,18 @@ for (const file of [...walk(SRC), ...walk(SERVER)]) {
         // server/, or anywhere else in the repo). Package imports are non-relative
         // and already filtered out by resolveSpecifier.
         fail(file, line, specifier, RULES.domainClosed);
+      }
+    }
+
+    // Rule 4 — browser layers stay acyclic and one-way (shallow → deep).
+    if (fromLayer) {
+      const toLayer = browserLayerOf(resolved);
+      if (toLayer && toLayer !== fromLayer) {
+        const fromIndex = BROWSER_LAYER_INDEX.get(fromLayer);
+        const toIndex = BROWSER_LAYER_INDEX.get(toLayer);
+        if (fromIndex > toIndex) {
+          fail(file, line, specifier, RULES.browserLayerOrder);
+        }
       }
     }
   }
