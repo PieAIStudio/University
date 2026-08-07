@@ -6,7 +6,9 @@ the learner's curiosity and returns nothing.
 
 ## Structure
 
-1. Line 1 is `<!-- variant: X -->` with one of the five names.
+1. The revision's `manifest.json` has `"variant"` set to one of the five names,
+   and `content.md` contains **no** `<!-- variant … -->` comment — that renders
+   as visible text at the top of the lesson.
 2. The title is a question, and an outsider would want the answer.
    - Test: show the title alone to someone who has never programmed. Do they
      want to know? "id=\"root\" 是什么" fails. "明明什么都没写，页面为什么是满的"
@@ -37,6 +39,13 @@ the learner's curiosity and returns nothing.
 13. `溯源` lessons: every stop has its own anchor.
 14. No invented file paths, line numbers, or output. If you could not verify
     it, it does not go in.
+
+## Self-check
+
+14b. `## 自检` contains questions only — no 「**答：**」, no answer sentence,
+    no answer in parentheses.
+    - The graded exercises render below the prose. A question with its answer
+      printed underneath is not a self-check, it is a paragraph.
 
 ## Links
 

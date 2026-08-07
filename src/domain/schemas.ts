@@ -384,6 +384,16 @@ export const LessonManifestSchema = z
     contentHash: Sha256,
     status: ContentStatus,
     evidence: z.array(EvidenceReferenceSchema).min(1),
+    /**
+     * Which teaching shape this lesson uses. Metadata about the lesson, so it
+     * lives here rather than in the prose: an authoring marker inside
+     * `content.md` is a marker the reader can see — react-markdown renders a
+     * raw HTML comment as text, and stripping it before parsing would shift
+     * every character offset the language and link layers depend on.
+     *
+     * Optional because 475 lessons predate the shapes.
+     */
+    variant: z.enum(["现象", "对比", "溯源", "决策", "术语"]).optional(),
     createdAt: IsoDateTime,
     updatedAt: IsoDateTime,
   })

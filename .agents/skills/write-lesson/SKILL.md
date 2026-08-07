@@ -37,7 +37,13 @@ These hold in every variant. A lesson that breaks one gets rewritten.
    is not teaching, it is a hostage situation.
 5. **Every real code block gets an inline evidence anchor** right after it, so
    the reader can jump to that line without hunting the sidebar.
-6. **The last section is one sentence**, bold, the single thing worth keeping.
+6. **`## 自检` poses questions and never answers them.** The lesson's graded
+   exercises render below the prose and are where the reader answers; printing
+   the answer one line under the question turns a retrieval moment into a
+   sentence nobody reads. This is the one place a visible answer is wrong —
+   `## 答案` exists precisely so the *prediction* gets resolved immediately, and
+   the self-check is the opposite move.
+7. **The last section is one sentence**, bold, the single thing worth keeping.
 
 Why one prediction question and not three: the measured benefit lands on the
 content that was asked about, so a scattergun spends the learner's willingness
@@ -62,8 +68,10 @@ may use the same variant. If the content genuinely wants a third, say so in the
 commit message rather than forcing a bad fit — a contrived 对比 is worse than a
 third honest 现象.
 
-Record the chosen variant as an HTML comment on line 1:
-`<!-- variant: 现象 -->`. The checker reads it.
+Record the chosen variant in the revision's `manifest.json`, as
+`"variant": "现象"`. **Never in `content.md`** — react-markdown renders a raw
+HTML comment as visible text, and stripping it before parsing would shift every
+character offset the language and link layers index by.
 
 ## Cross-lesson links
 
