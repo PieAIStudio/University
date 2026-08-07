@@ -24,10 +24,9 @@ import {
   type Grade,
 } from "ts-fsrs";
 
+import { LEARNING_SCHEMA_VERSION, migrate } from "./schema.js";
 import {
-  cardContentKey,
   exerciseContentKey,
-  lessonContentKey,
   parseExerciseContentKey,
   parseLessonContentKey,
   reviewContentKey,
@@ -51,22 +50,14 @@ import {
   type StoredLearningSession,
   type StoredRetrievalAttempt,
 } from "./types.js";
+import { LESSON_STATUS_ORDER, validateLessonProgress } from "./lesson-progress.js";
 
-export const LEARNING_SCHEMA_VERSION = 4;
-const SCHEMA_VERSION = LEARNING_SCHEMA_VERSION;
+export { LEARNING_SCHEMA_VERSION };
 const MAX_RETRIEVAL_ANSWER_LENGTH = 100_000;
 const DEFAULT_PARAMETERS = generatorParameters({
   request_retention: 0.9,
   enable_fuzz: false,
 });
-const LEGACY_COURSE_ID = "legacy-course";
-const LEGACY_UNIT_ID = "legacy-unit";
-const LEGACY_LESSON_ID = "legacy-lesson";
-const LESSON_STATUS_ORDER = {
-  "not-started": 0,
-  "in-progress": 1,
-  completed: 2,
-} as const;
 
 interface CardStateRow {
   card_id: string;
@@ -336,24 +327,6 @@ function normalizeSessionMetadata(metadata: LearningSessionMetadata | undefined)
   };
 }
 
-function validateLessonProgress(status: string, progress: number): void {
-  if (!Number.isFinite(progress) || progress < 0 || progress > 1) {
-    throw new Error("Lesson progress must be between 0 and 1");
-  }
-  if (!(status in LESSON_STATUS_ORDER)) {
-    throw new Error("Lesson status must be not-started, in-progress, or completed");
-  }
-  if (status === "not-started" && progress !== 0) {
-    throw new Error("A not-started lesson must have zero progress");
-  }
-  if (status === "in-progress" && (progress <= 0 || progress >= 1)) {
-    throw new Error("An in-progress lesson must have progress greater than zero and less than one");
-  }
-  if (status === "completed" && progress !== 1) {
-    throw new Error("A completed lesson must have progress equal to one");
-  }
-}
-
 function validateRevision(value: number): void {
   if (!Number.isInteger(value) || value < 1) {
     throw new Error("Content revision must be a positive integer");
@@ -568,7 +541,11 @@ export class SqliteLearningStore implements LearningStore {
 
     try {
       this.#database.exec("PRAGMA journal_mode = WAL; PRAGMA synchronous = FULL;");
-      this.#migrate();
+      migrate(this.#database, {
+        schedulerVersion: this.schedulerVersion,
+        parametersJson: stableJson(this.schedulerParameters),
+        schedulerConfigHash: this.schedulerConfigHash,
+      });
       this.#validateSchedulerProfile();
       this.#validateCardSchedulerMetadata();
       this.#validateScopedContentKeys();
@@ -577,353 +554,6 @@ export class SqliteLearningStore implements LearningStore {
       this.#database.close();
       throw error;
     }
-  }
-
-  #createCurrentSchema(): void {
-    this.#database.exec(`
-      CREATE TABLE scheduler_profile (
-        singleton_id INTEGER PRIMARY KEY CHECK(singleton_id = 1),
-        scheduler_version TEXT NOT NULL,
-        parameters_json TEXT NOT NULL CHECK(json_valid(parameters_json)),
-        scheduler_config_hash TEXT NOT NULL
-      ) STRICT;
-
-      CREATE TABLE card_state (
-        card_id TEXT PRIMARY KEY,
-        content_revision INTEGER NOT NULL CHECK(content_revision > 0),
-        due_at INTEGER NOT NULL,
-        stability REAL NOT NULL,
-        difficulty REAL NOT NULL,
-        elapsed_days INTEGER NOT NULL,
-        scheduled_days INTEGER NOT NULL,
-        learning_steps INTEGER NOT NULL,
-        reps INTEGER NOT NULL,
-        lapses INTEGER NOT NULL,
-        state INTEGER NOT NULL CHECK(state BETWEEN 0 AND 3),
-        last_review_at INTEGER,
-        scheduler_version TEXT NOT NULL,
-        scheduler_config_hash TEXT NOT NULL,
-        updated_at INTEGER NOT NULL
-      ) STRICT;
-      CREATE INDEX card_state_due_idx ON card_state(due_at);
-
-      CREATE TABLE review_event (
-        event_id TEXT PRIMARY KEY,
-        command_id TEXT NOT NULL UNIQUE,
-        card_id TEXT NOT NULL,
-        content_revision INTEGER NOT NULL,
-        rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 4),
-        reviewed_at INTEGER NOT NULL,
-        previous_due_at INTEGER NOT NULL,
-        resulting_due_at INTEGER NOT NULL,
-        scheduler_version TEXT NOT NULL,
-        scheduler_config_hash TEXT NOT NULL,
-        payload_json TEXT NOT NULL CHECK(json_valid(payload_json)),
-        session_id TEXT REFERENCES learning_session(session_id)
-      ) STRICT;
-      CREATE INDEX review_event_card_idx ON review_event(card_id, reviewed_at);
-
-      CREATE TABLE lesson_progress (
-        lesson_id TEXT PRIMARY KEY,
-        content_revision INTEGER NOT NULL,
-        status TEXT NOT NULL CHECK(status IN ('not-started', 'in-progress', 'completed')),
-        progress REAL NOT NULL CHECK(progress >= 0 AND progress <= 1),
-        updated_at INTEGER NOT NULL
-      ) STRICT;
-
-      CREATE TABLE exercise_attempt (
-        attempt_id TEXT PRIMARY KEY,
-        command_id TEXT NOT NULL UNIQUE,
-        exercise_id TEXT NOT NULL,
-        content_revision INTEGER NOT NULL,
-        score REAL NOT NULL,
-        max_score REAL NOT NULL CHECK(max_score > 0),
-        response_json TEXT CHECK(response_json IS NULL OR json_valid(response_json)),
-        occurred_at INTEGER NOT NULL,
-        session_id TEXT REFERENCES learning_session(session_id)
-      ) STRICT;
-      CREATE INDEX exercise_attempt_exercise_idx
-        ON exercise_attempt(exercise_id, occurred_at);
-
-      CREATE TABLE learning_session (
-        session_id TEXT PRIMARY KEY,
-        started_at INTEGER NOT NULL,
-        ended_at INTEGER CHECK(ended_at IS NULL OR ended_at >= started_at),
-        host TEXT CHECK(host IS NULL OR (length(trim(host)) BETWEEN 1 AND 100)),
-        objective TEXT CHECK(
-          objective IS NULL OR (length(trim(objective)) BETWEEN 1 AND 2000)
-        )
-      ) STRICT;
-      CREATE UNIQUE INDEX learning_session_one_open_idx
-        ON learning_session((1)) WHERE ended_at IS NULL;
-
-      CREATE INDEX review_event_session_idx
-        ON review_event(session_id) WHERE session_id IS NOT NULL;
-      CREATE INDEX exercise_attempt_session_idx
-        ON exercise_attempt(session_id) WHERE session_id IS NOT NULL;
-
-      CREATE TABLE lesson_progress_event (
-        event_id TEXT PRIMARY KEY,
-        lesson_id TEXT NOT NULL,
-        content_revision INTEGER NOT NULL CHECK(content_revision > 0),
-        status TEXT NOT NULL CHECK(status IN ('not-started', 'in-progress', 'completed')),
-        progress REAL NOT NULL CHECK(progress >= 0 AND progress <= 1),
-        occurred_at INTEGER NOT NULL,
-        session_id TEXT REFERENCES learning_session(session_id)
-      ) STRICT;
-      CREATE INDEX lesson_progress_event_lesson_idx
-        ON lesson_progress_event(lesson_id, occurred_at);
-      CREATE INDEX lesson_progress_event_session_idx
-        ON lesson_progress_event(session_id) WHERE session_id IS NOT NULL;
-
-      CREATE TABLE retrieval_attempt (
-        attempt_id TEXT PRIMARY KEY,
-        command_id TEXT NOT NULL UNIQUE,
-        card_key TEXT NOT NULL,
-        content_revision INTEGER NOT NULL CHECK(content_revision > 0),
-        answer TEXT NOT NULL CHECK(length(trim(answer)) > 0),
-        started_at INTEGER NOT NULL,
-        revealed_at INTEGER NOT NULL CHECK(revealed_at >= started_at),
-        duration_ms INTEGER NOT NULL
-          CHECK(duration_ms >= 0 AND duration_ms = revealed_at - started_at),
-        used_hint INTEGER NOT NULL CHECK(used_hint IN (0, 1)),
-        confidence REAL CHECK(confidence IS NULL OR (confidence >= 0 AND confidence <= 1)),
-        session_id TEXT REFERENCES learning_session(session_id)
-      ) STRICT;
-      CREATE INDEX retrieval_attempt_card_idx
-        ON retrieval_attempt(card_key, started_at);
-      CREATE INDEX retrieval_attempt_session_idx
-        ON retrieval_attempt(session_id) WHERE session_id IS NOT NULL;
-
-      CREATE TABLE learner_setting (
-        key TEXT PRIMARY KEY,
-        value_json TEXT NOT NULL CHECK(json_valid(value_json)),
-        updated_at INTEGER NOT NULL
-      ) STRICT;
-    `);
-    this.#insertSchedulerProfile();
-  }
-
-  #migrate(): void {
-    this.#database.exec(`
-      CREATE TABLE IF NOT EXISTS schema_migrations (
-        version INTEGER PRIMARY KEY,
-        applied_at INTEGER NOT NULL
-      ) STRICT;
-    `);
-    const version = this.#database
-      .prepare("SELECT COALESCE(MAX(version), 0) AS version FROM schema_migrations")
-      .get() as { version: number };
-    if (version.version > SCHEMA_VERSION) {
-      throw new Error(`Learning database schema ${version.version} is newer than supported`);
-    }
-    if (version.version === 0) {
-      this.#transaction(() => {
-        this.#createCurrentSchema();
-        this.#database
-          .prepare("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)")
-          .run(SCHEMA_VERSION, Date.now());
-      });
-      return;
-    }
-    let currentVersion = version.version;
-    if (currentVersion === 1) {
-      this.#migrateVersionOne();
-      currentVersion = 2;
-    }
-    if (currentVersion === 2) {
-      this.#migrateVersionTwo();
-      currentVersion = 3;
-    }
-    if (currentVersion === 3) this.#migrateVersionThree();
-  }
-
-  #migrateVersionOne(): void {
-    this.#transaction(() => {
-      const pendingOutbox = this.#database
-        .prepare("SELECT COUNT(*) AS count FROM sync_outbox")
-        .get() as { count: number };
-      if (pendingOutbox.count > 0) {
-        throw new Error(
-          `Cannot migrate learning database: sync_outbox contains ${pendingOutbox.count} unprocessed row(s)`,
-        );
-      }
-
-      const schedulerRows = this.#database
-        .prepare(`
-          SELECT scheduler_version, scheduler_config_hash FROM card_state
-          UNION
-          SELECT scheduler_version, scheduler_config_hash FROM review_event
-        `)
-        .all() as unknown as Array<{
-        scheduler_version: string;
-        scheduler_config_hash: string;
-      }>;
-      const incompatible = schedulerRows.find(
-        (row) =>
-          row.scheduler_version !== this.schedulerVersion ||
-          row.scheduler_config_hash !== this.schedulerConfigHash,
-      );
-      if (incompatible) {
-        throw new Error(
-          `Scheduler profile mismatch: legacy database uses ${incompatible.scheduler_version} / ${incompatible.scheduler_config_hash}, requested ${this.schedulerVersion} / ${this.schedulerConfigHash}`,
-        );
-      }
-
-      const legacyCardIds = this.#database
-        .prepare(`
-          SELECT card_id AS id FROM card_state
-          UNION
-          SELECT card_id AS id FROM review_event
-        `)
-        .all() as unknown as Array<{ id: string }>;
-      for (const { id } of legacyCardIds) {
-        cardContentKey({
-          courseId: LEGACY_COURSE_ID,
-          unitId: LEGACY_UNIT_ID,
-          lessonId: LEGACY_LESSON_ID,
-          cardId: id,
-        });
-      }
-      const legacyLessonIds = this.#database
-        .prepare("SELECT lesson_id AS id, status, progress FROM lesson_progress")
-        .all() as unknown as Array<{ id: string; status: string; progress: number }>;
-      for (const { id, status, progress } of legacyLessonIds) {
-        lessonContentKey({
-          courseId: LEGACY_COURSE_ID,
-          unitId: LEGACY_UNIT_ID,
-          lessonId: id,
-        });
-        validateLessonProgress(status, progress);
-      }
-      const legacyExerciseIds = this.#database
-        .prepare("SELECT exercise_id AS id FROM exercise_attempt")
-        .all() as unknown as Array<{ id: string }>;
-      for (const { id } of legacyExerciseIds) {
-        exerciseContentKey({
-          courseId: LEGACY_COURSE_ID,
-          unitId: LEGACY_UNIT_ID,
-          lessonId: LEGACY_LESSON_ID,
-          exerciseId: id,
-        });
-      }
-
-      this.#database.exec(`
-        CREATE TABLE scheduler_profile (
-          singleton_id INTEGER PRIMARY KEY CHECK(singleton_id = 1),
-          scheduler_version TEXT NOT NULL,
-          parameters_json TEXT NOT NULL CHECK(json_valid(parameters_json)),
-          scheduler_config_hash TEXT NOT NULL
-        ) STRICT;
-        ALTER TABLE review_event ADD COLUMN command_id TEXT;
-        CREATE UNIQUE INDEX review_event_command_idx
-          ON review_event(command_id) WHERE command_id IS NOT NULL;
-        ALTER TABLE exercise_attempt ADD COLUMN command_id TEXT;
-        CREATE UNIQUE INDEX exercise_attempt_command_idx
-          ON exercise_attempt(command_id) WHERE command_id IS NOT NULL;
-        DROP TABLE sync_outbox;
-      `);
-      const cardPrefix = `${LEGACY_COURSE_ID}/${LEGACY_UNIT_ID}/${LEGACY_LESSON_ID}/`;
-      const lessonPrefix = `${LEGACY_COURSE_ID}/${LEGACY_UNIT_ID}/`;
-      this.#database.prepare("UPDATE card_state SET card_id = ? || card_id").run(cardPrefix);
-      this.#database.prepare("UPDATE review_event SET card_id = ? || card_id").run(cardPrefix);
-      this.#database
-        .prepare("UPDATE lesson_progress SET lesson_id = ? || lesson_id")
-        .run(lessonPrefix);
-      this.#database
-        .prepare("UPDATE exercise_attempt SET exercise_id = ? || exercise_id")
-        .run(cardPrefix);
-      this.#insertSchedulerProfile();
-      this.#database
-        .prepare("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)")
-        .run(2, Date.now());
-    });
-  }
-
-  #migrateVersionTwo(): void {
-    this.#transaction(() => {
-      this.#database.exec(`
-        CREATE TABLE retrieval_attempt (
-          attempt_id TEXT PRIMARY KEY,
-          command_id TEXT NOT NULL UNIQUE,
-          card_key TEXT NOT NULL,
-          content_revision INTEGER NOT NULL CHECK(content_revision > 0),
-          answer TEXT NOT NULL CHECK(length(trim(answer)) > 0),
-          started_at INTEGER NOT NULL,
-          revealed_at INTEGER NOT NULL CHECK(revealed_at >= started_at),
-          duration_ms INTEGER NOT NULL
-            CHECK(duration_ms >= 0 AND duration_ms = revealed_at - started_at),
-          used_hint INTEGER NOT NULL CHECK(used_hint IN (0, 1)),
-          confidence REAL CHECK(confidence IS NULL OR (confidence >= 0 AND confidence <= 1)),
-          session_id TEXT REFERENCES learning_session(session_id)
-        ) STRICT;
-        CREATE INDEX retrieval_attempt_card_idx
-          ON retrieval_attempt(card_key, started_at);
-        CREATE INDEX retrieval_attempt_session_idx
-          ON retrieval_attempt(session_id) WHERE session_id IS NOT NULL;
-      `);
-      this.#database
-        .prepare("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)")
-        .run(3, Date.now());
-    });
-  }
-
-  #migrateVersionThree(): void {
-    this.#transaction(() => {
-      const openSessions = this.#database
-        .prepare("SELECT COUNT(*) AS count FROM learning_session WHERE ended_at IS NULL")
-        .get() as { count: number };
-      if (openSessions.count > 1) {
-        throw new Error(
-          `Cannot migrate learning database: found ${openSessions.count} open learning sessions`,
-        );
-      }
-      this.#database.exec(`
-        ALTER TABLE learning_session ADD COLUMN host TEXT
-          CHECK(host IS NULL OR (length(trim(host)) BETWEEN 1 AND 100));
-        ALTER TABLE learning_session ADD COLUMN objective TEXT
-          CHECK(objective IS NULL OR (length(trim(objective)) BETWEEN 1 AND 2000));
-        CREATE UNIQUE INDEX learning_session_one_open_idx
-          ON learning_session((1)) WHERE ended_at IS NULL;
-
-        ALTER TABLE review_event ADD COLUMN session_id TEXT
-          REFERENCES learning_session(session_id);
-        CREATE INDEX review_event_session_idx
-          ON review_event(session_id) WHERE session_id IS NOT NULL;
-
-        ALTER TABLE exercise_attempt ADD COLUMN session_id TEXT
-          REFERENCES learning_session(session_id);
-        CREATE INDEX exercise_attempt_session_idx
-          ON exercise_attempt(session_id) WHERE session_id IS NOT NULL;
-
-        CREATE TABLE lesson_progress_event (
-          event_id TEXT PRIMARY KEY,
-          lesson_id TEXT NOT NULL,
-          content_revision INTEGER NOT NULL CHECK(content_revision > 0),
-          status TEXT NOT NULL CHECK(status IN ('not-started', 'in-progress', 'completed')),
-          progress REAL NOT NULL CHECK(progress >= 0 AND progress <= 1),
-          occurred_at INTEGER NOT NULL,
-          session_id TEXT REFERENCES learning_session(session_id)
-        ) STRICT;
-        CREATE INDEX lesson_progress_event_lesson_idx
-          ON lesson_progress_event(lesson_id, occurred_at);
-        CREATE INDEX lesson_progress_event_session_idx
-          ON lesson_progress_event(session_id) WHERE session_id IS NOT NULL;
-      `);
-      this.#database
-        .prepare("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)")
-        .run(SCHEMA_VERSION, Date.now());
-    });
-  }
-
-  #insertSchedulerProfile(): void {
-    this.#database
-      .prepare(`
-        INSERT INTO scheduler_profile (
-          singleton_id, scheduler_version, parameters_json, scheduler_config_hash
-        ) VALUES (1, ?, ?, ?)
-      `)
-      .run(this.schedulerVersion, stableJson(this.schedulerParameters), this.schedulerConfigHash);
   }
 
   #validateSchedulerProfile(): void {

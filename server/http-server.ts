@@ -1,6 +1,6 @@
-import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
+import { createServer, type Server, type ServerResponse } from "node:http";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -8,7 +8,6 @@ import type { Grade } from "ts-fsrs";
 import { z } from "zod";
 
 import {
-  IsoDateTime,
   SnapshotManifestSchema,
   StableId,
   UaAnalysisManifestSchema,
@@ -23,6 +22,30 @@ import {
   type UnitManifest,
 } from "../src/domain/schemas.js";
 import { loadUniversityLocalConfig } from "./config/load-config.js";
+import { HttpError } from "./http/errors.js";
+import {
+  CardRevealSchema,
+  CardReviewSchema,
+  ExerciseAttemptSchema,
+  VOCABULARY_DUE_LIMIT,
+  VocabularyGradeSchema,
+  VocabularyPresentedSchema,
+  VocabularyStageSchema,
+} from "./http/request-schemas.js";
+import {
+  parseEvidenceRoute,
+  parseKnowledgeCardRoute,
+  parseKnowledgeEvidenceRoute,
+  parseRoute,
+  type KnowledgeCardRoute,
+  type LearningRoute,
+} from "./http/routes.js";
+import {
+  readJsonBody,
+  rejectNonLoopbackHost,
+  requireMutationAccess,
+  sendJson,
+} from "./http/wire.js";
 import { resolveEvidenceAnchors } from "./content/evidence-anchors.js";
 import { readEvidenceSnippet } from "./content/evidence.js";
 import {
@@ -77,89 +100,11 @@ import { advanceLessonProgress, applyHostExerciseGrade } from "./workflows/host-
 import { buildExpressionReview } from "./workflows/expression-review.js";
 
 const DEFAULT_PORT = 4317;
-const MAX_JSON_BODY_BYTES = 64 * 1024;
-const LOOPBACK_HOST = /^(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/;
-const CommandId = z.string().uuid();
-const Answer = z.string().trim().min(1).max(20_000);
-const ExerciseAttemptSchema = z
-  .object({
-    commandId: CommandId,
-    contentRevision: z.number().int().positive(),
-    answer: Answer,
-    /**
-     * Rubric points the learner claims their written answer covered. Present
-     * only for `explain` exercises, which have no reference string to compare
-     * against; the learner grades themselves against the rubric after writing.
-     */
-    met: z.array(z.number().int().nonnegative()).optional(),
-  })
-  .strict();
-const VOCABULARY_DUE_LIMIT = 50;
-const VocabularyPresentedSchema = z
-  .object({
-    studyId: StableId,
-    lessonId: StableId,
-    senseIds: z.array(z.string().min(1).max(200)).min(1).max(64),
-  })
-  .strict();
-const VocabularyStageSchema = z
-  .object({
-    // `candidate` is absent on purpose: it means "never touched", and once a
-    // learner has said something about a word there is no honest way back to it.
-    stage: z.enum(["learning", "familiar", "stable", "paused"]),
-  })
-  .strict();
-const VocabularyGradeSchema = z
-  .object({ rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]) })
-  .strict();
-const CardRevealSchema = z
-  .object({
-    commandId: CommandId,
-    contentRevision: z.number().int().positive(),
-    answer: Answer,
-    startedAt: IsoDateTime,
-    usedHint: z.literal(false),
-    confidence: z.number().min(0).max(1).optional(),
-  })
-  .strict();
-const CardReviewSchema = z
-  .object({
-    commandId: CommandId,
-    contentRevision: z.number().int().positive(),
-    rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
-  })
-  .strict();
 
 interface OpenLearningStore {
   readonly store: SqliteLearningStore;
   /** `dev:ino` of the file this store opened, so a swapped file is detectable. */
   readonly fileId: string;
-}
-
-interface LearningRoute {
-  readonly studyId: string;
-  readonly courseId: string;
-  readonly unitId: string;
-  readonly lessonId: string;
-  readonly contentId?: string;
-}
-
-interface EvidenceRoute {
-  readonly lesson: LearningRoute;
-  readonly index: number;
-}
-
-interface KnowledgeCardRoute {
-  readonly studyId: string;
-  readonly noteId: string;
-  readonly cardId: string;
-  readonly action: "reveal" | "review";
-}
-
-interface KnowledgeEvidenceRoute {
-  readonly studyId: string;
-  readonly noteId: string;
-  readonly index: number;
 }
 
 interface ReviewableCard {
@@ -192,15 +137,6 @@ interface DueKnowledgeCard {
 }
 
 type DueCard = DueCourseCard | DueKnowledgeCard;
-
-class HttpError extends Error {
-  constructor(
-    readonly status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
 
 function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, "utf8")) as unknown;
@@ -248,172 +184,6 @@ function countCourseManifests(directory: string): number {
   return readdirSync(directory, { withFileTypes: true }).filter(
     (entry) => entry.isDirectory() && existsSync(`${directory}/${entry.name}/course.json`),
   ).length;
-}
-
-function securityHeaders(): Record<string, string> {
-  return {
-    "Cache-Control": "no-store",
-    "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
-    "Referrer-Policy": "no-referrer",
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
-  };
-}
-
-function sendJson(response: ServerResponse, status: number, body: unknown): void {
-  response.writeHead(status, {
-    ...securityHeaders(),
-    "Content-Type": "application/json; charset=utf-8",
-  });
-  response.end(`${JSON.stringify(body)}\n`);
-}
-
-function rejectNonLoopbackHost(request: IncomingMessage, response: ServerResponse): boolean {
-  const host = request.headers.host;
-  if (!host || !LOOPBACK_HOST.test(host)) {
-    sendJson(response, 403, { error: "UniversityLocal only accepts loopback Host headers" });
-    return true;
-  }
-  return false;
-}
-
-function isLoopbackOrigin(candidate: string): boolean {
-  try {
-    const origin = new URL(candidate);
-    return (
-      origin.protocol === "http:" &&
-      (origin.hostname === "127.0.0.1" ||
-        origin.hostname === "localhost" ||
-        origin.hostname === "[::1]" ||
-        origin.hostname === "::1")
-    );
-  } catch {
-    return false;
-  }
-}
-
-function tokensMatch(actual: string | undefined, expected: string): boolean {
-  if (!actual) return false;
-  const actualBytes = Buffer.from(actual);
-  const expectedBytes = Buffer.from(expected);
-  return actualBytes.length === expectedBytes.length && timingSafeEqual(actualBytes, expectedBytes);
-}
-
-function requireMutationAccess(request: IncomingMessage, requestToken: string): void {
-  const origin = request.headers.origin;
-  if (origin && !isLoopbackOrigin(origin)) {
-    throw new HttpError(403, "State-changing requests require a loopback Origin");
-  }
-  const tokenHeader = request.headers["x-university-local-token"];
-  const token = Array.isArray(tokenHeader) ? tokenHeader[0] : tokenHeader;
-  if (!tokensMatch(token, requestToken)) {
-    throw new HttpError(403, "Missing or invalid UniversityLocal request token");
-  }
-  if (request.headers["content-type"]?.split(";", 1)[0]?.trim() !== "application/json") {
-    throw new HttpError(415, "State-changing requests require application/json");
-  }
-}
-
-async function readJsonBody(request: IncomingMessage): Promise<unknown> {
-  const declaredLength = Number(request.headers["content-length"] ?? 0);
-  if (Number.isFinite(declaredLength) && declaredLength > MAX_JSON_BODY_BYTES) {
-    throw new HttpError(413, "Request body is too large");
-  }
-  const chunks: Buffer[] = [];
-  let total = 0;
-  let tooLarge = false;
-  for await (const chunk of request) {
-    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Uint8Array);
-    total += bytes.length;
-    if (total > MAX_JSON_BODY_BYTES) {
-      tooLarge = true;
-    } else {
-      chunks.push(bytes);
-    }
-  }
-  if (tooLarge) throw new HttpError(413, "Request body is too large");
-  if (total === 0) throw new HttpError(400, "Request body must be valid JSON");
-  try {
-    return JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown;
-  } catch {
-    throw new HttpError(400, "Request body must be valid JSON");
-  }
-}
-
-function parseRoute(pathname: string, expression: RegExp): LearningRoute | null {
-  const match = expression.exec(pathname);
-  if (!match) return null;
-  try {
-    const values = match.slice(1).map((value) => StableId.parse(decodeURIComponent(value)));
-    const [studyId, courseId, unitId, lessonId, contentId] = values;
-    if (!studyId || !courseId || !unitId || !lessonId) return null;
-    return { studyId, courseId, unitId, lessonId, ...(contentId ? { contentId } : {}) };
-  } catch {
-    throw new HttpError(400, "Route contains an invalid stable ID");
-  }
-}
-
-function parseEvidenceRoute(pathname: string): EvidenceRoute | null {
-  const match =
-    /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/evidence\/(\d+)$/.exec(
-      pathname,
-    );
-  if (!match) return null;
-  try {
-    const [studyId, courseId, unitId, lessonId] = match
-      .slice(1, 5)
-      .map((value) => StableId.parse(decodeURIComponent(value)));
-    const index = Number(match[5]);
-    if (
-      !studyId ||
-      !courseId ||
-      !unitId ||
-      !lessonId ||
-      !Number.isSafeInteger(index) ||
-      index < 0 ||
-      index > 9_999
-    ) {
-      throw new Error("invalid evidence route");
-    }
-    return { lesson: { studyId, courseId, unitId, lessonId }, index };
-  } catch {
-    throw new HttpError(400, "Route contains an invalid evidence location");
-  }
-}
-
-function parseKnowledgeCardRoute(pathname: string): KnowledgeCardRoute | null {
-  const match = /^\/api\/studies\/([^/]+)\/notes\/([^/]+)\/cards\/([^/]+)\/(reveal|review)$/.exec(
-    pathname,
-  );
-  if (!match) return null;
-  try {
-    const [studyId, noteId, cardId] = match
-      .slice(1, 4)
-      .map((value) => StableId.parse(decodeURIComponent(value)));
-    const action = match[4];
-    if (!studyId || !noteId || !cardId || (action !== "reveal" && action !== "review")) {
-      throw new Error("invalid knowledge card route");
-    }
-    return { studyId, noteId, cardId, action };
-  } catch {
-    throw new HttpError(400, "Route contains an invalid knowledge card location");
-  }
-}
-
-function parseKnowledgeEvidenceRoute(pathname: string): KnowledgeEvidenceRoute | null {
-  const match = /^\/api\/studies\/([^/]+)\/notes\/([^/]+)\/evidence\/(\d+)$/.exec(pathname);
-  if (!match) return null;
-  try {
-    const studyId = StableId.parse(decodeURIComponent(match[1] ?? ""));
-    const noteId = StableId.parse(decodeURIComponent(match[2] ?? ""));
-    const index = Number(match[3]);
-    if (!Number.isSafeInteger(index) || index < 0 || index > 9_999) {
-      throw new Error("invalid knowledge evidence index");
-    }
-    return { studyId, noteId, index };
-  } catch {
-    throw new HttpError(400, "Route contains an invalid knowledge evidence location");
-  }
 }
 
 function serializeProgress(progress: StoredLessonProgress | null): unknown {
