@@ -5,14 +5,16 @@ import {
   EvidenceCode,
   KnowledgeNotesSection,
   StudyEvidenceStatus,
-  buildCardCoachingPacket,
-  buildCardRevealPayload,
   cardActionPath,
-  highlightEvidenceCode,
   lessonNeighbours,
   recentStudies,
   relativeTimeLabel,
 } from "./App.js";
+import {
+  buildCardCoachingPacket,
+  buildCardRevealPayload,
+  highlightEvidenceCode,
+} from "./view/lesson-view.js";
 
 describe("StudyEvidenceStatus", () => {
   it("shows source and ready-UA counts without presenting UA as a course", () => {
