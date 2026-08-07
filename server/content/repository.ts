@@ -54,7 +54,7 @@ type ExerciseWithoutHash = Exercise extends infer Item
     : never
   : never;
 
-export interface WriteLessonRevisionInput {
+interface WriteLessonRevisionInput {
   readonly manifest: Omit<LessonManifest, "contentHash">;
   readonly content: string;
 }

@@ -22,10 +22,10 @@ import {
   type SourceStatus,
 } from "./refresh-study.js";
 
-export const DEFAULT_UA_ENGINE_VERSION = "2.9.4";
-export const DEFAULT_UA_OUTPUT_LANGUAGE = "zh";
+const DEFAULT_UA_ENGINE_VERSION = "2.9.4";
+const DEFAULT_UA_OUTPUT_LANGUAGE = "zh";
 
-export interface PrepareStudyRefreshInput {
+interface PrepareStudyRefreshInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly reference?: string;
@@ -37,7 +37,7 @@ export interface PrepareStudyRefreshInput {
   readonly now?: Date;
 }
 
-export interface PrepareStudyRefreshReceipt {
+interface PrepareStudyRefreshReceipt {
   readonly schemaVersion: 1;
   readonly operation: "refresh-prepare";
   readonly disposition: "prepared" | "resumed" | "ready-reused" | "retried";
@@ -55,14 +55,14 @@ export interface PrepareStudyRefreshReceipt {
   readonly uaWasExecuted: false;
 }
 
-export interface FinalizeStudyRefreshInput {
+interface FinalizeStudyRefreshInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly analysisId: string;
   readonly now?: Date;
 }
 
-export interface FinalizeStudyRefreshReceipt {
+interface FinalizeStudyRefreshReceipt {
   readonly schemaVersion: 1;
   readonly operation: "refresh-finalize";
   readonly source: SourceStatus;
@@ -70,7 +70,7 @@ export interface FinalizeStudyRefreshReceipt {
   readonly nextAction: "audit-freshness";
 }
 
-export interface AuditStudyRefreshInput {
+interface AuditStudyRefreshInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly snapshotId: string;
@@ -78,7 +78,7 @@ export interface AuditStudyRefreshInput {
   readonly apply?: boolean;
 }
 
-export interface AuditStudyRefreshReceipt {
+interface AuditStudyRefreshReceipt {
   readonly schemaVersion: 1;
   readonly operation: "refresh-audit";
   readonly applied: boolean;

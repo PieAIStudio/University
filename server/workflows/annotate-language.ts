@@ -26,7 +26,7 @@ export const LanguageOverlayProposalSchema = z
   })
   .strict();
 
-export interface AnnotateLanguageReceipt {
+interface AnnotateLanguageReceipt {
   readonly schemaVersion: 1;
   readonly operation: "language-annotate";
   readonly studyId: string;

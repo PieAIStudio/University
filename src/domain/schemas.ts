@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SchemaVersion = z.literal(1);
+const SchemaVersion = z.literal(1);
 export const StableId = z
   .string()
   .min(2)
@@ -8,7 +8,7 @@ export const StableId = z
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 export const Sha256 = z.string().regex(/^sha256:[a-f0-9]{64}$/);
 export const GitCommit = z.string().regex(/^[a-f0-9]{40}$/);
-export const GitTree = z.string().regex(/^[a-f0-9]{40}$/);
+const GitTree = z.string().regex(/^[a-f0-9]{40}$/);
 export const IsoDateTime = z.string().datetime({ offset: true });
 
 /**
@@ -192,7 +192,7 @@ export const LexiconEntrySchema = z
 
 export type LexiconEntry = z.infer<typeof LexiconEntrySchema>;
 
-export const RepositoryRelativePath = z
+const RepositoryRelativePath = z
   .string()
   .min(1)
   .refine(
@@ -277,7 +277,7 @@ export const UaAnalysisManifestSchema = z.discriminatedUnion("status", [
 ]);
 
 export const ContentStatus = z.enum(["draft", "active", "stale", "retired"]);
-export const EvidenceKind = z.enum(["fact", "inference"]);
+const EvidenceKind = z.enum(["fact", "inference"]);
 
 export const EvidenceReferenceSchema = z
   .object({
@@ -442,9 +442,9 @@ export const CardContentSchema = z
   })
   .strict();
 
-export const KnowledgeClaimType = z.enum(["source-fact", "inference", "personal-understanding"]);
+const KnowledgeClaimType = z.enum(["source-fact", "inference", "personal-understanding"]);
 
-export const KnowledgeOriginSchema = z
+const KnowledgeOriginSchema = z
   .object({
     kind: z.enum(["ai-conversation", "source-refresh"]),
     host: z.string().trim().min(1).max(100),

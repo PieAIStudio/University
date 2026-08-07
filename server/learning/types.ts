@@ -13,26 +13,26 @@ export type ReviewContentKey = string & { readonly [reviewContentKeyBrand]: true
 export type CardContentKey = ReviewContentKey & { readonly [cardContentKeyBrand]: true };
 export type ExerciseContentKey = string & { readonly [exerciseContentKeyBrand]: true };
 
-export interface LessonContentIdentity {
+interface LessonContentIdentity {
   readonly courseId: string;
   readonly unitId: string;
   readonly lessonId: string;
 }
 
-export interface CardContentIdentity extends LessonContentIdentity {
+interface CardContentIdentity extends LessonContentIdentity {
   readonly cardId: string;
 }
 
-export interface ExerciseContentIdentity extends LessonContentIdentity {
+interface ExerciseContentIdentity extends LessonContentIdentity {
   readonly exerciseId: string;
 }
 
-export interface KnowledgeCardContentIdentity {
+interface KnowledgeCardContentIdentity {
   readonly noteId: string;
   readonly cardId: string;
 }
 
-export type ReviewContentIdentity =
+type ReviewContentIdentity =
   | ({ readonly kind: "course-card" } & CardContentIdentity)
   | ({ readonly kind: "knowledge-card" } & KnowledgeCardContentIdentity);
 
@@ -101,7 +101,7 @@ export function parseLessonContentKey(value: string): LessonContentIdentity {
   return { courseId: courseId!, unitId: unitId!, lessonId: lessonId! };
 }
 
-export function parseCardContentKey(value: string): CardContentIdentity {
+function parseCardContentKey(value: string): CardContentIdentity {
   const [courseId, unitId, lessonId, cardId] = parseScopedContentKey(value, [
     "Course ID",
     "Unit ID",

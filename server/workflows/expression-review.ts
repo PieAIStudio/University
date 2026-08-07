@@ -8,14 +8,14 @@ import {
   type ExpressionPacketSample,
 } from "./expression-coaching-packet.js";
 
-export interface ExpressionReviewInput {
+interface ExpressionReviewInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly limit?: number;
   readonly goal?: string;
 }
 
-export interface ExpressionReviewReceipt {
+interface ExpressionReviewReceipt {
   readonly schemaVersion: 1;
   readonly operation: "express-review";
   readonly studyId: string;

@@ -22,7 +22,7 @@ export interface ExpressionPacketSample {
   readonly prompt: string | null;
 }
 
-export interface BuildExpressionPacketInput {
+interface BuildExpressionPacketInput {
   readonly studyId: string;
   readonly samples: readonly ExpressionPacketSample[];
   readonly goal: string | null;

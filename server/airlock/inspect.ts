@@ -5,16 +5,16 @@ import type { AirlockSeal } from "../../src/domain/schemas.js";
 import { gitText } from "../git/run.js";
 import { inspectUpstreamIdentity, readSeal } from "./seal.js";
 
-export type AirlockVerdict = "sealed" | "blocked";
+type AirlockVerdict = "sealed" | "blocked";
 
-export interface AirlockInspection {
+interface AirlockInspection {
   readonly verdict: AirlockVerdict;
   readonly seal: AirlockSeal;
   readonly problems: readonly string[];
   readonly upstream: UpstreamClock | null;
 }
 
-export interface UpstreamClock {
+interface UpstreamClock {
   readonly headCommit: string;
   readonly dirtyCount: number;
   /** How many upstream commits the airlock has not been promoted to yet. */

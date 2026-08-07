@@ -21,7 +21,7 @@ import {
  * failing grade came back 409 and the learner got no feedback at all. One
  * constant and one advancement function is the fix; see `advanceLessonProgress`.
  */
-export const ATTEMPTED_LESSON_PROGRESS = 0.05;
+const ATTEMPTED_LESSON_PROGRESS = 0.05;
 
 export const HostExerciseGradeProposalSchema = z
   .object({
@@ -61,7 +61,7 @@ export const HostExerciseGradeCliProposalSchema = z
   })
   .strict();
 
-export interface HostExerciseRoute {
+interface HostExerciseRoute {
   readonly studyId: string;
   readonly courseId: string;
   readonly unitId: string;

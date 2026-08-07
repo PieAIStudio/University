@@ -19,13 +19,13 @@ export interface ImportCandidate {
   readonly sizeBytes: number | null;
 }
 
-export interface ImportGateReport {
+interface ImportGateReport {
   readonly trackedFileCount: number;
   readonly largestBlobBytes: number;
   readonly blocked: readonly ImportGateFinding[];
 }
 
-export interface ImportGateFinding {
+interface ImportGateFinding {
   readonly path: string;
   readonly reason: string;
 }

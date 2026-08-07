@@ -29,7 +29,7 @@ const LatestPointerSchema = z
   })
   .strict();
 
-export interface CaptureKnowledgeInput {
+interface CaptureKnowledgeInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly proposal: unknown;
@@ -37,7 +37,7 @@ export interface CaptureKnowledgeInput {
   readonly now?: Date;
 }
 
-export interface CaptureKnowledgeReceipt {
+interface CaptureKnowledgeReceipt {
   readonly schemaVersion: 1;
   readonly operation: "capture-knowledge";
   readonly mode: "dry-run" | "apply";

@@ -9,7 +9,7 @@ export interface LearningRoute {
   readonly contentId?: string;
 }
 
-export interface EvidenceRoute {
+interface EvidenceRoute {
   readonly lesson: LearningRoute;
   readonly index: number;
 }
@@ -21,7 +21,7 @@ export interface KnowledgeCardRoute {
   readonly action: "reveal" | "review";
 }
 
-export interface KnowledgeEvidenceRoute {
+interface KnowledgeEvidenceRoute {
   readonly studyId: string;
   readonly noteId: string;
   readonly index: number;

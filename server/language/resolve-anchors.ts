@@ -20,18 +20,18 @@ import type { LanguageAnchor } from "../../src/domain/schemas.js";
  *    depend on array order. The later one is dropped and reported.
  */
 
-export interface ResolvedAnchor {
+interface ResolvedAnchor {
   readonly anchor: LanguageAnchor;
   readonly start: number;
   readonly end: number;
 }
 
-export interface AnchorResolution {
+interface AnchorResolution {
   readonly resolved: readonly ResolvedAnchor[];
   readonly unresolved: readonly UnresolvedAnchor[];
 }
 
-export interface UnresolvedAnchor {
+interface UnresolvedAnchor {
   readonly anchor: LanguageAnchor;
   readonly reason: "not-found" | "occurrence-missing" | "inside-code" | "overlaps";
 }
@@ -128,7 +128,7 @@ export function resolveAnchors(
   };
 }
 
-export interface RenderedSegment {
+interface RenderedSegment {
   readonly text: string;
   readonly senseId: string | null;
 }

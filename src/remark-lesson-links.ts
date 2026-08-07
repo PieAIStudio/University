@@ -20,8 +20,8 @@ export interface LessonLinkRange {
  * Same trick as the word anchor: react-markdown dispatches on the HTML element
  * name `data.hName` produces, never on the mdast node type.
  */
-export const LESSON_LINK_TAG = "lesson-link";
-export const EVIDENCE_ANCHOR_TAG = "evidence-anchor";
+const LESSON_LINK_TAG = "lesson-link";
+const EVIDENCE_ANCHOR_TAG = "evidence-anchor";
 
 export interface EvidenceAnchorRange {
   readonly start: number;
@@ -32,7 +32,7 @@ export interface EvidenceAnchorRange {
   readonly resolved: boolean;
 }
 
-export interface LessonLinkNode {
+interface LessonLinkNode {
   readonly type: "lessonLink";
   readonly value: string;
   readonly data: {
@@ -47,7 +47,7 @@ export interface LessonLinkNode {
   };
 }
 
-export interface EvidenceAnchorNode {
+interface EvidenceAnchorNode {
   readonly type: "evidenceAnchor";
   readonly value: string;
   readonly data: {

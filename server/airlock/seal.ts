@@ -18,7 +18,7 @@ const SEAL_FILENAME = "university-local-airlock.json";
  * moment it was written: `git status` would report an untracked file, and the
  * airlock would fail its own tamper check on the very first promotion.
  */
-export function getSealPath(airlockRoot: string): string {
+function getSealPath(airlockRoot: string): string {
   return join(airlockRoot, ".git", SEAL_FILENAME);
 }
 
@@ -38,7 +38,7 @@ export function sealExists(airlockRoot: string): boolean {
   return existsSync(getSealPath(airlockRoot));
 }
 
-export interface UpstreamIdentity {
+interface UpstreamIdentity {
   readonly root: string;
   readonly commonDir: string;
   readonly rootCommit: string | null;

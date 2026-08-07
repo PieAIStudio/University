@@ -84,7 +84,7 @@ interface UaFingerprints {
   readonly files?: Readonly<Record<string, unknown>>;
 }
 
-export interface PrepareUaAnalysisInput {
+interface PrepareUaAnalysisInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly snapshotId: string;
@@ -98,7 +98,7 @@ export interface PrepareUaAnalysisInput {
   readonly now?: Date;
 }
 
-export interface UaAnalysisIdentityInput {
+interface UaAnalysisIdentityInput {
   readonly snapshotId: string;
   readonly sourceCommit: string;
   readonly engineVersion: string;
@@ -107,7 +107,7 @@ export interface UaAnalysisIdentityInput {
   readonly engineProvenance?: UaEngineProvenance;
 }
 
-export interface UaAnalysisIdentity {
+interface UaAnalysisIdentity {
   readonly analysisId: string;
   readonly config: unknown;
   readonly configHash: string;
@@ -608,7 +608,7 @@ export function finalizeUaAnalysis(
   return ready;
 }
 
-export type UaVerifyReport =
+type UaVerifyReport =
   | (UaQualityReport & { readonly stage: "graph" })
   | (UaBatchProgressReport & { readonly stage: "batches" });
 
@@ -755,7 +755,7 @@ function listActiveContentReferencingAnalysis(
   return references.sort((left, right) => left.localeCompare(right));
 }
 
-export interface RetireUaAnalysisInput {
+interface RetireUaAnalysisInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly analysisId: string;

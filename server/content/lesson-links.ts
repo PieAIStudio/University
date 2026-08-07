@@ -33,7 +33,7 @@ export interface LessonLinkTarget {
   readonly title: string;
 }
 
-export type LinkResolution =
+type LinkResolution =
   | {
       readonly kind: "resolved";
       readonly link: ParsedLessonLink;

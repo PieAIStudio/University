@@ -8,7 +8,7 @@ import { UaEngineProvenanceSchema, type UaEngineProvenance } from "../../src/dom
 
 export type { UaEngineProvenance } from "../../src/domain/schemas.js";
 
-export interface InspectUaEngineProvenanceInput {
+interface InspectUaEngineProvenanceInput {
   readonly skillPath?: string;
   readonly source?: UaEngineProvenance["source"];
 }

@@ -20,7 +20,7 @@ import type { VocabularyStage, VocabularyState } from "./vocabulary-store.js";
  * got around to annotating this particular lesson.
  */
 
-export interface ComposedLanguageLayer {
+interface ComposedLanguageLayer {
   readonly status: OverlayStatus;
   readonly ranges: readonly {
     readonly start: number;

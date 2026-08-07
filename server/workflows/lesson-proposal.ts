@@ -72,7 +72,7 @@ export const LessonCreationProposalSchema = z
 export type LessonCreationProposal = z.infer<typeof LessonCreationProposalSchema>;
 
 /** Every ID a lesson brings with it, for uniqueness checks and result reporting. */
-export interface LessonProposalIds {
+interface LessonProposalIds {
   readonly lessonId: string;
   readonly cardIds: readonly string[];
   readonly exerciseIds: readonly string[];
@@ -108,7 +108,7 @@ export function validateLessonEvidence(
   }
 }
 
-export interface WriteLessonBundleInput {
+interface WriteLessonBundleInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly courseId: string;

@@ -20,12 +20,12 @@ export type VocabularyStage = "learning" | "familiar" | "paused";
 /** Why a word was surfaced. The UI styles `familiar` more quietly. */
 export type DetectionReason = "new" | "learning" | "familiar";
 
-export interface DetectedAnchor {
+interface DetectedAnchor {
   readonly anchor: LanguageAnchor;
   readonly reason: DetectionReason;
 }
 
-export interface DetectOptions {
+interface DetectOptions {
   /** senseId → what the learner has said about it. Absent means never seen. */
   readonly stages: ReadonlyMap<string, VocabularyStage>;
   /** How many senses to surface. See `adaptiveTargetCount`. */

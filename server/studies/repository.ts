@@ -27,7 +27,7 @@ function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, "utf8")) as unknown;
 }
 
-export interface CreateStudyInput {
+interface CreateStudyInput {
   readonly id: string;
   readonly title: string;
   readonly description?: string;
@@ -35,7 +35,7 @@ export interface CreateStudyInput {
   readonly now?: Date;
 }
 
-export interface RegisteredSource {
+interface RegisteredSource {
   readonly registration: SourceRegistration;
   readonly resolvedCommit: string;
 }
@@ -111,7 +111,7 @@ export function setDefaultCourse(
   return updated;
 }
 
-export interface StudyDiscovery {
+interface StudyDiscovery {
   readonly studies: readonly StudyManifest[];
   readonly issues: readonly string[];
 }

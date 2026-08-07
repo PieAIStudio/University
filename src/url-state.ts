@@ -31,7 +31,7 @@ export interface AppAddress {
   readonly lesson: LessonAddress | null;
 }
 
-export const HOME: AppAddress = { section: "today", studyId: null, lesson: null };
+const HOME: AppAddress = { section: "today", studyId: null, lesson: null };
 
 /**
  * A path segment that could not have come from `formatAddress`.

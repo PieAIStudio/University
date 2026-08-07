@@ -54,8 +54,6 @@ const CardReviewSchema = z
   .strict();
 
 export {
-  CommandId,
-  Answer,
   ExerciseAttemptSchema,
   VOCABULARY_DUE_LIMIT,
   VocabularyPresentedSchema,

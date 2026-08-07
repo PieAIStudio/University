@@ -30,30 +30,30 @@ export interface StudyPaths {
   };
 }
 
-export interface SnapshotPaths {
+interface SnapshotPaths {
   readonly manifest: string;
 }
 
-export interface UaAnalysisPaths {
+interface UaAnalysisPaths {
   readonly root: string;
   readonly manifest: string;
   readonly workspace: string;
   readonly data: string;
 }
 
-export interface CoursePaths {
+interface CoursePaths {
   readonly root: string;
   readonly manifest: string;
   readonly units: string;
 }
 
-export interface UnitPaths {
+interface UnitPaths {
   readonly root: string;
   readonly manifest: string;
   readonly lessons: string;
 }
 
-export interface LessonPaths {
+interface LessonPaths {
   readonly root: string;
   readonly latest: string;
   readonly revisions: string;
@@ -61,7 +61,7 @@ export interface LessonPaths {
   readonly cards: string;
 }
 
-export interface KnowledgeNotePaths {
+interface KnowledgeNotePaths {
   readonly root: string;
   readonly latest: string;
   readonly revisions: string;

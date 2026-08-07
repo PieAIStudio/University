@@ -13,12 +13,12 @@ const LOCAL_CONFIG = "university-local.config.local.json";
 export const STUDIES_ROOT_MARKER = ".university-local-root";
 const PartialUniversityLocalConfigSchema = UniversityLocalConfigSchema.partial().strict();
 
-export interface LoadConfigOptions {
+interface LoadConfigOptions {
   readonly projectRoot: string;
   readonly env?: Readonly<Record<string, string | undefined>>;
 }
 
-export interface ResolvedUniversityLocalConfig extends UniversityLocalConfig {
+interface ResolvedUniversityLocalConfig extends UniversityLocalConfig {
   readonly projectRoot: string;
   readonly studiesRoot: string;
 }
@@ -87,7 +87,7 @@ function assertSafeStudiesRootLocation(projectRoot: string, studiesRoot: string)
   }
 }
 
-export function assertSafeStudiesRoot(projectRoot: string, studiesRoot: string): void {
+function assertSafeStudiesRoot(projectRoot: string, studiesRoot: string): void {
   assertSafeStudiesRootLocation(projectRoot, studiesRoot);
   if (!isPathInside(projectRoot, studiesRoot) && !hasValidStudiesRootMarker(studiesRoot)) {
     throw new Error(

@@ -15,7 +15,7 @@ import { listSnapshots } from "../studies/snapshots.js";
  * Courses deliberately pinned to history are counted separately rather than
  * folded into "behind". They are not lagging; they are finished.
  */
-export interface CourseClock {
+interface CourseClock {
   readonly studyId: string;
   /** The newest snapshot the study has taken, or null when it has none. */
   readonly latestSnapshotId: string | null;
@@ -25,7 +25,7 @@ export interface CourseClock {
   readonly courses: readonly CourseCurrencyRow[];
 }
 
-export interface CourseCurrencyRow {
+interface CourseCurrencyRow {
   readonly courseId: string;
   readonly status: string;
   readonly currency: "follow-ref" | "pinned-history";

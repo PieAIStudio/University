@@ -42,7 +42,7 @@ export interface VocabularyState {
   readonly updatedAt: string;
 }
 
-export interface VocabularyBudget {
+interface VocabularyBudget {
   /** Words whose first-ever interaction happened today. */
   readonly introducedToday: number;
   /** Gradings recorded today. */
@@ -50,7 +50,7 @@ export interface VocabularyBudget {
   readonly dueNow: number;
 }
 
-export type VocabularyEventKind = "presented" | "opened" | "graded" | "stage-change";
+type VocabularyEventKind = "presented" | "opened" | "graded" | "stage-change";
 
 const SCHEMA_VERSION = 1;
 const PARAMETERS = generatorParameters({ request_retention: 0.9, enable_fuzz: false });

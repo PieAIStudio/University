@@ -26,14 +26,14 @@ const LOCAL_CONFIG = "university-local.config.local.json";
  */
 const OtherLocalKeysSchema = UniversityLocalConfigSchema.omit({ focus: true }).partial().strict();
 
-export interface SetFocusInput {
+interface SetFocusInput {
   readonly projectRoot: string;
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly courseIds?: readonly string[];
 }
 
-export interface FocusResult {
+interface FocusResult {
   readonly schemaVersion: 1;
   readonly operation: "focus-set" | "focus-clear" | "focus-show";
   readonly focus: LearningFocus | null;

@@ -50,10 +50,10 @@ export interface SourceStatus {
   readonly dirtyChangesIncluded: false;
 }
 
-export type FreshnessStatus = "fresh" | "stale";
-export type FreshnessItemKind = "lesson" | "card" | "exercise";
+type FreshnessStatus = "fresh" | "stale";
+type FreshnessItemKind = "lesson" | "card" | "exercise";
 
-export interface EvidenceIdentity {
+interface EvidenceIdentity {
   readonly snapshotId: string;
   readonly sourceCommit: string;
   readonly analysisId: string | null;
@@ -67,7 +67,7 @@ export interface TargetIdentity {
   readonly graphHash: string | null;
 }
 
-export interface FreshnessItem {
+interface FreshnessItem {
   readonly kind: FreshnessItemKind;
   readonly key: string;
   readonly courseId: string;
@@ -82,7 +82,7 @@ export interface FreshnessItem {
   readonly previousIdentities: readonly EvidenceIdentity[];
 }
 
-export interface UnitFreshness {
+interface UnitFreshness {
   readonly unitId: string;
   readonly status: FreshnessStatus;
   readonly reasons: readonly string[];
@@ -144,7 +144,7 @@ export type FreshnessTransition =
       readonly to: "stale";
     };
 
-export interface AuditStudyFreshnessInput {
+interface AuditStudyFreshnessInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly targetSnapshotId: string;

@@ -15,7 +15,7 @@ import { writeJsonAtomically } from "../storage/atomic-json.js";
  */
 export const UA_LEASE_TTL_MS = 6 * 60 * 60 * 1000;
 
-export const UaLeaseSchema = z
+const UaLeaseSchema = z
   .object({
     schemaVersion: z.literal(1),
     owner: z.string().min(1).max(200),
@@ -24,7 +24,7 @@ export const UaLeaseSchema = z
   })
   .strict();
 
-export type UaLease = z.infer<typeof UaLeaseSchema>;
+type UaLease = z.infer<typeof UaLeaseSchema>;
 
 export class UaBusyError extends Error {
   readonly lease: UaLease;
@@ -41,7 +41,7 @@ export class UaBusyError extends Error {
   }
 }
 
-export function describeUaOwner(): string {
+function describeUaOwner(): string {
   return `${hostname()}:${process.pid}`;
 }
 

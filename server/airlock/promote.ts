@@ -14,7 +14,7 @@ import {
   writeSeal,
 } from "./seal.js";
 
-export interface PromoteAirlockInput {
+interface PromoteAirlockInput {
   readonly airlockRoot: string;
   readonly upstreamRoot: string;
   readonly studiesRoot: string;
@@ -24,7 +24,7 @@ export interface PromoteAirlockInput {
   readonly now?: Date;
 }
 
-export interface PromoteAirlockReceipt {
+interface PromoteAirlockReceipt {
   readonly schemaVersion: 1;
   readonly operation: "airlock-promote";
   readonly disposition: "created" | "advanced" | "already-current";

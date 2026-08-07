@@ -13,7 +13,7 @@
  * - `detail` answers "why do I care", and is optional. Leave it out rather than
  *   padding — a tip nobody finishes reading teaches nothing.
  */
-export interface GlossaryEntry {
+interface GlossaryEntry {
   /** The heading shown in the tip. Usually the term itself, sometimes expanded. */
   readonly term: string;
   readonly summary: string;

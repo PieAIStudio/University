@@ -5,25 +5,25 @@ import type { LearningSessionSummary, StoredLearningSession } from "../learning/
 import { getStudyPaths } from "../studies/paths.js";
 import { readStudy } from "../studies/repository.js";
 
-export interface StartLearningSessionInput {
+interface StartLearningSessionInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly host: string;
   readonly objective: string;
 }
 
-export interface InspectLearningSessionInput {
+interface InspectLearningSessionInput {
   readonly studiesRoot: string;
   readonly studyId: string;
 }
 
-export interface EndLearningSessionInput {
+interface EndLearningSessionInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly sessionId?: string;
 }
 
-export interface SerializedLearningSession {
+interface SerializedLearningSession {
   readonly sessionId: string;
   readonly startedAt: string;
   readonly endedAt: string | null;
@@ -31,7 +31,7 @@ export interface SerializedLearningSession {
   readonly objective: string | null;
 }
 
-export interface SerializedLearningSessionSummary extends SerializedLearningSession {
+interface SerializedLearningSessionSummary extends SerializedLearningSession {
   readonly reviewCount: number;
   readonly retrievalAttemptCount: number;
   readonly exerciseAttemptCount: number;
@@ -40,7 +40,7 @@ export interface SerializedLearningSessionSummary extends SerializedLearningSess
   readonly exerciseMaxScore: number;
 }
 
-export interface SessionStartReceipt {
+interface SessionStartReceipt {
   readonly schemaVersion: 1;
   readonly operation: "session-start";
   readonly studyId: string;
@@ -48,7 +48,7 @@ export interface SessionStartReceipt {
   readonly session: SerializedLearningSessionSummary;
 }
 
-export interface SessionStatusReceipt {
+interface SessionStatusReceipt {
   readonly schemaVersion: 1;
   readonly operation: "session-status";
   readonly studyId: string;
@@ -57,7 +57,7 @@ export interface SessionStatusReceipt {
   readonly recentSessions: readonly SerializedLearningSessionSummary[];
 }
 
-export interface SessionEndReceipt {
+interface SessionEndReceipt {
   readonly schemaVersion: 1;
   readonly operation: "session-end";
   readonly studyId: string;

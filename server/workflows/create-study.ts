@@ -6,7 +6,7 @@ import { getStudyPaths } from "../studies/paths.js";
 import { createStudy, readStudy, registerLocalGitSource } from "../studies/repository.js";
 import { createCleanSnapshot } from "../studies/snapshots.js";
 
-export interface CreateStudyWorkflowInput {
+interface CreateStudyWorkflowInput {
   readonly studiesRoot: string;
   readonly id: string;
   readonly title: string;
@@ -17,7 +17,7 @@ export interface CreateStudyWorkflowInput {
   readonly now?: Date;
 }
 
-export interface CreateStudyReceipt {
+interface CreateStudyReceipt {
   readonly schemaVersion: 1;
   readonly operation: "study-create";
   readonly disposition: "created" | "resumed";

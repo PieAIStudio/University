@@ -56,10 +56,6 @@ export function loadLexicon(path = lexiconPath()): ReadonlyMap<string, LexiconEn
   return cached;
 }
 
-export function resetLexiconCache(): void {
-  cached = undefined;
-}
-
 /** The senses a lesson actually uses, so the page ships nothing it will not show. */
 export function selectLexicon(senseIds: readonly string[]): readonly LexiconEntry[] {
   const lexicon = loadLexicon();

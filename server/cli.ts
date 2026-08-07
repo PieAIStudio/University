@@ -6,9 +6,8 @@ import { CliUsageError, HELP } from "./cli/commands.js";
 import { executeUniversityLocalCli } from "./cli/execute.js";
 import { parseUniversityLocalCli } from "./cli/parse.js";
 
-export { CliUsageError, type UniversityLocalCliCommand } from "./cli/commands.js";
 export { parseUniversityLocalCli } from "./cli/parse.js";
-export { executeUniversityLocalCli, type ExecuteCliInput } from "./cli/execute.js";
+export { executeUniversityLocalCli } from "./cli/execute.js";
 
 export interface CliIo {
   readonly stdout: { write(value: string): unknown };

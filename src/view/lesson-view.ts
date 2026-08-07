@@ -135,7 +135,7 @@ export function progressLabel(progress: LessonProgress | null, contentRevision?:
   return `进行中 · ${Math.round(progress.progress * 100)}%`;
 }
 
-export interface LessonSummary {
+interface LessonSummary {
   readonly id: string;
   readonly title: string;
   readonly status: string;
@@ -241,12 +241,12 @@ export interface EvidenceToken {
   readonly color?: string;
 }
 
-export interface RetrievalAttemptDraft {
+interface RetrievalAttemptDraft {
   readonly commandId: string;
   readonly startedAt: string;
 }
 
-export interface CardRevealPayload extends RetrievalAttemptDraft {
+interface CardRevealPayload extends RetrievalAttemptDraft {
   readonly contentRevision: number;
   readonly answer: string;
   readonly usedHint: false;

@@ -15,12 +15,12 @@ import { inspectSourceStatus, type SourceStatus } from "./refresh-study.js";
 
 type StatusName = "draft" | "active" | "stale" | "retired";
 
-export interface HostStatusInput {
+interface HostStatusInput {
   readonly studiesRoot: string;
   readonly studyId: string;
 }
 
-export interface HostStudyStatus {
+interface HostStudyStatus {
   readonly schemaVersion: 1;
   readonly operation: "host-status";
   readonly study: ReturnType<typeof readStudy>;

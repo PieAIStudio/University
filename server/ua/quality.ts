@@ -5,7 +5,7 @@
  */
 
 /** File-level node types that participate in architecture-layer coverage and fingerprint equality. */
-export const UA_FILE_LEVEL_TYPES = [
+const UA_FILE_LEVEL_TYPES = [
   "file",
   "config",
   "document",
@@ -17,12 +17,10 @@ export const UA_FILE_LEVEL_TYPES = [
   "endpoint",
 ] as const;
 
-export type UaFileLevelType = (typeof UA_FILE_LEVEL_TYPES)[number];
-
 export const fileLevelTypes: ReadonlySet<string> = new Set(UA_FILE_LEVEL_TYPES);
 
 /** Matches `batch-<i>.json` and `batch-<i>-part-<k>.json`; capture group 1 is the batch index. */
-export const UA_BATCH_OUTPUT_FILENAME = /^batch-(\d+)(?:-part-\d+)?\.json$/;
+const UA_BATCH_OUTPUT_FILENAME = /^batch-(\d+)(?:-part-\d+)?\.json$/;
 
 export interface UaQualityGraphNode {
   readonly id?: unknown;

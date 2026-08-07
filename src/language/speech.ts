@@ -110,7 +110,7 @@ export function isNoveltyVoice(voice: SpeechSynthesisVoice): boolean {
  * blocks external images in lessons. A missing voice is a visible, explainable
  * gap; a voice that quietly phoned home would not be.
  */
-export function listEnglishVoices(): readonly SpeechSynthesisVoice[] {
+function listEnglishVoices(): readonly SpeechSynthesisVoice[] {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return [];
   return window.speechSynthesis
     .getVoices()
@@ -140,7 +140,7 @@ function scoreVoice(voice: SpeechSynthesisVoice): number {
 }
 
 /** English voices worth offering, best first. */
-export function rankEnglishVoices(): readonly SpeechSynthesisVoice[] {
+function rankEnglishVoices(): readonly SpeechSynthesisVoice[] {
   return listEnglishVoices()
     .filter((voice) => !isNoveltyVoice(voice))
     .sort((left, right) => scoreVoice(right) - scoreVoice(left));

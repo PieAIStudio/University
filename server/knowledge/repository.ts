@@ -56,22 +56,22 @@ const KnowledgeWriteLockSchema = z
 type KnowledgeLatestPointer = z.infer<typeof KnowledgeLatestPointerSchema>;
 type KnowledgeNoteCandidate = Omit<z.input<typeof KnowledgeNoteSchema>, "contentHash">;
 
-export interface WriteKnowledgeNoteRevisionInput {
+interface WriteKnowledgeNoteRevisionInput {
   readonly note: KnowledgeNoteCandidate;
   readonly content: string;
 }
 
-export interface StoredKnowledgeNote {
+interface StoredKnowledgeNote {
   readonly note: KnowledgeNote;
   readonly content: string;
 }
 
-export interface ActiveKnowledgeCard {
+interface ActiveKnowledgeCard {
   readonly note: KnowledgeNote;
   readonly card: KnowledgeCard;
 }
 
-export interface MarkKnowledgeNoteStaleInput {
+interface MarkKnowledgeNoteStaleInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly noteId: string;
@@ -79,7 +79,7 @@ export interface MarkKnowledgeNoteStaleInput {
   readonly now?: Date;
 }
 
-export interface MarkKnowledgeNoteStaleResult {
+interface MarkKnowledgeNoteStaleResult {
   readonly note: KnowledgeNote;
   readonly transitioned: boolean;
 }

@@ -24,7 +24,7 @@ interface LegacyGraph {
   readonly edges?: readonly unknown[];
 }
 
-export interface ImportLegacyUaInput {
+interface ImportLegacyUaInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly snapshotId: string;

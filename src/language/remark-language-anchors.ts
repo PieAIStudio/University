@@ -19,9 +19,9 @@ export interface LanguageRange {
  * raw HTML, which would require the one setting that turns generated lesson
  * text into a script-injection surface.
  */
-export const WORD_ANCHOR_TAG = "word-anchor";
+const WORD_ANCHOR_TAG = "word-anchor";
 
-export interface LanguageAnchorNode {
+interface LanguageAnchorNode {
   readonly type: "languageAnchor";
   readonly value: string;
   readonly senseId: string;

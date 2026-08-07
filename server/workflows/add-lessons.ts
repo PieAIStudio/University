@@ -55,7 +55,7 @@ export const AddLessonsProposalSchema = z
 
 export type AddLessonsProposal = z.infer<typeof AddLessonsProposalSchema>;
 
-export interface AddLessonsInput {
+interface AddLessonsInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly proposal: unknown;
@@ -63,7 +63,7 @@ export interface AddLessonsInput {
   readonly now?: Date;
 }
 
-export interface AddLessonsResult {
+interface AddLessonsResult {
   readonly schemaVersion: 1;
   readonly operation: "course-add-lessons";
   readonly mode: "apply" | "dry-run";

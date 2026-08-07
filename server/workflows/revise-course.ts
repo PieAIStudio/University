@@ -146,7 +146,7 @@ interface RevisionBundle {
   readonly exercises: readonly Exercise[];
 }
 
-export interface ReviseCourseInput {
+interface ReviseCourseInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly proposal: unknown;
@@ -156,7 +156,7 @@ export interface ReviseCourseInput {
   readonly onComponentWritten?: (component: string) => void;
 }
 
-export interface CourseRevisionResult {
+interface CourseRevisionResult {
   readonly schemaVersion: 1;
   readonly operation: "course-revise";
   readonly mode: "dry-run" | "apply";
@@ -178,7 +178,7 @@ export interface CourseRevisionResult {
   readonly retrySafe: true;
 }
 
-export interface ReactivateCourseInput {
+interface ReactivateCourseInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly courseId: string;
@@ -186,7 +186,7 @@ export interface ReactivateCourseInput {
   readonly targetAnalysisId?: string;
 }
 
-export interface ReactivateCourseResult {
+interface ReactivateCourseResult {
   readonly schemaVersion: 1;
   readonly operation: "course-reactivate";
   readonly disposition: "activated" | "reused";
@@ -199,14 +199,14 @@ export interface ReactivateCourseResult {
   readonly courseStatus: "active";
 }
 
-export interface OpenCourseForEditInput {
+interface OpenCourseForEditInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly courseId: string;
   readonly now?: Date;
 }
 
-export interface OpenCourseForEditResult {
+interface OpenCourseForEditResult {
   readonly schemaVersion: 1;
   readonly operation: "course-open-for-edit";
   readonly disposition: "opened" | "reused";

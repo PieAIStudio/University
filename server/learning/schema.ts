@@ -10,7 +10,7 @@ const LEGACY_COURSE_ID = "legacy-course";
 const LEGACY_UNIT_ID = "legacy-unit";
 const LEGACY_LESSON_ID = "legacy-lesson";
 
-export type LearningSchemaSchedulerSeed = {
+type LearningSchemaSchedulerSeed = {
   readonly schedulerVersion: string;
   readonly parametersJson: string;
   readonly schedulerConfigHash: string;
@@ -28,7 +28,7 @@ function transaction<T>(db: DatabaseSync, operation: () => T): T {
   }
 }
 
-export function createCurrentSchema(db: DatabaseSync, seed: LearningSchemaSchedulerSeed): void {
+function createCurrentSchema(db: DatabaseSync, seed: LearningSchemaSchedulerSeed): void {
   db.exec(`
       CREATE TABLE scheduler_profile (
         singleton_id INTEGER PRIMARY KEY CHECK(singleton_id = 1),

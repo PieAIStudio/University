@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 
@@ -15,7 +15,7 @@ import { resolveAnchors } from "./resolve-anchors.js";
 
 export type LanguageCode = "en";
 
-export function getOverlayPath(
+function getOverlayPath(
   studiesRoot: string,
   studyId: string,
   language: LanguageCode,
@@ -32,7 +32,7 @@ export function getOverlayPath(
   );
 }
 
-export interface WriteOverlayInput {
+interface WriteOverlayInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly language: LanguageCode;
@@ -43,7 +43,7 @@ export interface WriteOverlayInput {
   readonly now?: Date;
 }
 
-export interface WriteOverlayReceipt {
+interface WriteOverlayReceipt {
   readonly overlay: LanguageOverlay;
   readonly placed: number;
   readonly rejected: readonly { readonly senseId: string; readonly reason: string }[];
@@ -104,7 +104,7 @@ export interface LanguageRange {
   readonly senseId: string;
 }
 
-export interface LessonLanguageLayer {
+interface LessonLanguageLayer {
   readonly status: OverlayStatus;
   /**
    * Character ranges, not rewritten Markdown. The browser already has the
@@ -164,21 +164,4 @@ export function readLessonLanguageLayer(input: {
     })),
     senseIds: [...new Set(resolved.map((item) => item.anchor.senseId))].sort(),
   };
-}
-
-/** Every revision of a lesson that carries a layer, for reporting coverage. */
-export function listAnnotatedRevisions(
-  studiesRoot: string,
-  studyId: string,
-  language: LanguageCode,
-  route: { readonly courseId: string; readonly unitId: string; readonly lessonId: string },
-): readonly number[] {
-  const directory = dirname(getOverlayPath(studiesRoot, studyId, language, route, 1));
-  if (!existsSync(directory)) return [];
-  return readdirSync(directory)
-    .flatMap((name) => {
-      const match = /^(\d+)\.json$/.exec(name);
-      return match ? [Number(match[1])] : [];
-    })
-    .sort((left, right) => left - right);
 }

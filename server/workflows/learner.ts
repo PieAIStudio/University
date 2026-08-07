@@ -26,14 +26,14 @@ import { readStudy } from "../studies/repository.js";
 
 type BackupPurpose = "manual" | "pre-restore" | "pre-reset";
 
-export interface BackupLearnerInput {
+interface BackupLearnerInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly now?: Date;
   readonly purpose?: BackupPurpose;
 }
 
-export interface LearnerBackupReceipt {
+interface LearnerBackupReceipt {
   readonly schemaVersion: 1;
   readonly operation: "backup";
   readonly purpose: BackupPurpose;
@@ -50,14 +50,14 @@ export interface LearnerBackupReceipt {
   readonly schedulerConfigHash: string;
 }
 
-export interface RestoreLearnerInput {
+interface RestoreLearnerInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly candidate: string;
   readonly now?: Date;
 }
 
-export interface LearnerRestoreReceipt {
+interface LearnerRestoreReceipt {
   readonly schemaVersion: 1;
   readonly operation: "restore";
   readonly studyId: string;
@@ -73,14 +73,14 @@ export interface LearnerRestoreReceipt {
   readonly receiptPath: string;
 }
 
-export interface ResetLearnerInput {
+interface ResetLearnerInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly confirmStudyId: string;
   readonly now?: Date;
 }
 
-export interface LearnerResetReceipt {
+interface LearnerResetReceipt {
   readonly schemaVersion: 1;
   readonly operation: "reset";
   readonly studyId: string;

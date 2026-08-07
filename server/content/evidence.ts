@@ -36,7 +36,7 @@ export const EVIDENCE_SNIPPET_LIMITS = Object.freeze({
   maxReturnedLines: 160,
 });
 
-export interface EvidenceFreshness {
+interface EvidenceFreshness {
   readonly status: "fresh" | "stale";
   readonly reasons: readonly string[];
 }
