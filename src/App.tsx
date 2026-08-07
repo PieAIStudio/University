@@ -10,6 +10,13 @@ import {
 
 import { MarkdownContent, type LanguageLayer } from "./MarkdownContent.js";
 import type { LexiconEntry } from "./language/WordPopover.js";
+import {
+  readVoicePreference,
+  selectVoice,
+  speakWord,
+  useEnglishVoices,
+  writeVoicePreference,
+} from "./language/speech.js";
 
 type SectionId = "today" | "studies";
 
@@ -33,6 +40,8 @@ interface StudySummary {
   readonly activeCourseCount: number;
   readonly defaultCourse: DefaultCourseSummary | null;
   readonly hasLearningDatabase: boolean;
+  /** Last time anything was reviewed, answered, or completed here; null if never. */
+  readonly lastActivityAt: string | null;
 }
 
 interface LessonLocator {
@@ -232,6 +241,52 @@ export interface CardRevealPayload extends RetrievalAttemptDraft {
   readonly confidence?: number;
 }
 
+/** One earlier answer to a review card. Only ever sent back with a reveal. */
+export interface PriorAttempt {
+  readonly answer: string;
+  readonly revealedAt: string;
+  readonly contentRevision: number;
+}
+
+/**
+ * The clipboard text that hands a review card to an AI host.
+ *
+ * It asks for an explanation, never a grade. The four buttons underneath are
+ * FSRS ratings, and FSRS is asking how hard the recall felt — a question only
+ * the person doing the recalling can answer. An outside verdict pasted into
+ * that slot would schedule someone else's memory.
+ */
+export function buildCardCoachingPacket(input: {
+  readonly front: string;
+  readonly back: string;
+  readonly answer: string;
+  readonly priorAttempts: readonly PriorAttempt[];
+}): string {
+  const history = input.priorAttempts
+    .map(
+      (attempt) =>
+        `- ${new Date(attempt.revealedAt).toLocaleDateString("zh-CN")}：${attempt.answer}`,
+    )
+    .join("\n");
+  return [
+    "我在用间隔重复复习一张卡片，想请你**讲解**，不要判分。",
+    "",
+    `## 卡片问题\n${input.front}`,
+    `## 参考答案\n${input.back}`,
+    `## 我这次的回答\n${input.answer}`,
+    history ? `## 我以前的回答\n${history}` : "",
+    "",
+    "请：",
+    "1. 指出我的回答和参考答案之间**实质**的差距（措辞不同不算）。",
+    "2. 如果我以前答过，说说我的理解有没有变化。",
+    "3. 补一个能帮我记住它的具体例子或类比。",
+    "",
+    "不要给我打分，也不要说我该选「困难」还是「良好」——那个我自己判断。",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 /** An AI host's verdict, written back through the CLI or the loopback API. */
 interface HostExerciseGradeView {
   readonly passed: boolean;
@@ -291,6 +346,7 @@ interface LessonView {
       readonly contentRevision: number;
       readonly awaitingHostGrade?: boolean;
       readonly hostGrade?: HostExerciseGradeView | null;
+      readonly latestSubmission?: { readonly answer: string; readonly occurredAt: string } | null;
     }[];
     readonly cards: readonly {
       readonly id: string;
@@ -631,6 +687,18 @@ function ReviewCard({
   const [error, setError] = useState<string | null>(null);
   const [revealFailed, setRevealFailed] = useState(false);
   const [retrievalDraft, setRetrievalDraft] = useState(createRetrievalAttemptDraft);
+  /**
+   * Earlier answers to this card, and the reason the box above stays empty.
+   *
+   * Every answer typed here has always been stored; none of it was ever read
+   * back, so the learner had no way to tell "saved" from "gone". The fix is not
+   * to refill the box — a card whose answer is already in it on the next review
+   * is not a card, it is a page of notes. The history arrives with the reveal
+   * and is shown next to the reference answer, where seeing that last month you
+   * wrote something vaguer is the useful part.
+   */
+  const [priorAttempts, setPriorAttempts] = useState<readonly PriorAttempt[]>([]);
+  const [coachCopied, setCoachCopied] = useState(false);
   const cardIdentity = reviewCardIdentity(card);
   const previousCardIdentity = useRef(cardIdentity);
 
@@ -642,6 +710,8 @@ function ReviewCard({
     setNextDue(null);
     setError(null);
     setRevealFailed(false);
+    setPriorAttempts([]);
+    setCoachCopied(false);
     setRetrievalDraft(createRetrievalAttemptDraft());
   }, [cardIdentity]);
 
@@ -664,8 +734,12 @@ function ReviewCard({
         cardActionPath(card, "reveal"),
         buildCardRevealPayload(retrievalDraft, card.contentRevision, answer),
       );
-      const result = await readJson<{ readonly back: string }>(response);
+      const result = await readJson<{
+        readonly back: string;
+        readonly priorAttempts?: readonly PriorAttempt[];
+      }>(response);
       setBack(result.back);
+      setPriorAttempts(result.priorAttempts ?? []);
       setRevealFailed(false);
       setRetrievalDraft(createRetrievalAttemptDraft());
     } catch (reason) {
@@ -749,6 +823,52 @@ function ReviewCard({
         <div className="answer-reveal" aria-live="polite">
           <p className="eyebrow">参考答案</p>
           <p>{back}</p>
+          {priorAttempts.length > 0 ? (
+            <div className="answer-history">
+              <p className="eyebrow">你以前答过 {priorAttempts.length} 次</p>
+              <ul>
+                {priorAttempts.map((attempt) => (
+                  <li key={`${attempt.revealedAt}:${attempt.answer}`}>
+                    <time dateTime={attempt.revealedAt}>
+                      {new Date(attempt.revealedAt).toLocaleDateString("zh-CN")}
+                    </time>
+                    <span>{attempt.answer}</span>
+                    {attempt.contentRevision !== card.contentRevision ? (
+                      // The card has been rewritten since. The old answer is
+                      // still real history, but it answered a different card.
+                      <small>答的是旧版</small>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          <div className="answer-reveal__coach">
+            <GameButton
+              variant="ghost"
+              onClick={() => {
+                void navigator.clipboard
+                  ?.writeText(
+                    buildCardCoachingPacket({
+                      front: card.front,
+                      back,
+                      answer,
+                      priorAttempts,
+                    }),
+                  )
+                  .then(() => setCoachCopied(true))
+                  .catch(() => setError("复制失败，剪贴板不可用"));
+              }}
+            >
+              {coachCopied ? "已复制讲解包" : "让 AI 讲讲这张卡"}
+            </GameButton>
+            {coachCopied ? (
+              <span className="answer-reveal__coach-hint">
+                贴到任意 AI 宿主。它只负责讲解 —— 下面这四个按钮问的是「你回忆得费不费劲」，
+                只有你答得了。
+              </span>
+            ) : null}
+          </div>
           {nextDue ? (
             <GameCallout heading="复习结果已保存" tone="success">
               下一次安排：{new Date(nextDue).toLocaleString("zh-CN")}
@@ -798,7 +918,15 @@ function ExerciseBlock({
    */
   readonly onRefresh: () => Promise<void>;
 }) {
-  const [answer, setAnswer] = useState("");
+  /**
+   * The answer the server already has, or the one being typed now.
+   *
+   * `hostGrade.learnerAnswer` is the fallback because a grade written back
+   * through the CLI carries the answer it judged even when the submission row
+   * predates it.
+   */
+  const storedAnswer = exercise.latestSubmission?.answer ?? exercise.hostGrade?.learnerAnswer ?? "";
+  const [answer, setAnswer] = useState(storedAnswer);
   const [result, setResult] = useState<ExerciseAttemptResult | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -809,12 +937,33 @@ function ExerciseBlock({
   const [hostGrade, setHostGrade] = useState<HostExerciseGradeView | null>(
     exercise.hostGrade ?? null,
   );
+  /**
+   * A passed exercise is read-only until the learner asks for it back. Locking
+   * it forever was the wrong end of the trade: rehearsing an answer you already
+   * got right is how it sticks, and passing is recorded once — re-answering
+   * cannot take the pass away.
+   */
+  const [reopened, setReopened] = useState(false);
   const isExplain = exercise.kind === "explain";
-  const solved = hostGrade?.passed === true;
+  const passed = hostGrade?.passed === true;
+  const solved = passed && !reopened;
 
   useEffect(() => {
     setHostGrade(exercise.hostGrade ?? null);
   }, [exercise.id, exercise.contentRevision, exercise.hostGrade]);
+
+  // A different exercise, or the same one at new content, is a different
+  // question. Carrying the previous answer's text into it would be a lie about
+  // what was submitted.
+  const answeredExercise = useRef(`${exercise.id}@${exercise.contentRevision}`);
+  useEffect(() => {
+    const identity = `${exercise.id}@${exercise.contentRevision}`;
+    if (answeredExercise.current === identity) return;
+    answeredExercise.current = identity;
+    setAnswer(storedAnswer);
+    setReopened(false);
+    setResult(null);
+  }, [exercise.id, exercise.contentRevision, storedAnswer]);
 
   useEffect(() => {
     if (!packetCopied) return;
@@ -978,14 +1127,43 @@ function ExerciseBlock({
           readOnly={solved}
         />
       </label>
+      {exercise.latestSubmission && !result ? (
+        <p className="answer-field__saved">
+          这是你 {new Date(exercise.latestSubmission.occurredAt).toLocaleString("zh-CN")}{" "}
+          提交的答案， 已存在本机。
+        </p>
+      ) : null}
 
-      <GameButton
-        variant="primary"
-        onClick={() => void submit()}
-        disabled={!answer.trim() || pending || solved}
-      >
-        {pending ? "正在提交…" : solved ? "已完成" : "提交并复制给 AI 判"}
-      </GameButton>
+      <div className="exercise-actions">
+        <GameButton
+          variant="primary"
+          onClick={() => void submit()}
+          disabled={!answer.trim() || pending || solved}
+        >
+          {pending
+            ? "正在提交…"
+            : solved
+              ? "已完成"
+              : reopened
+                ? "重新提交并复制给 AI 判"
+                : "提交并复制给 AI 判"}
+        </GameButton>
+        {passed ? (
+          <GameButton
+            variant="ghost"
+            onClick={() => {
+              // Leaving the reopen restores what the server holds, so backing
+              // out cannot be the thing that loses the saved answer.
+              if (reopened) setAnswer(storedAnswer);
+              setReopened(!reopened);
+              setResult(null);
+            }}
+            disabled={pending}
+          >
+            {reopened ? "放弃重答" : "重新回答"}
+          </GameButton>
+        ) : null}
+      </div>
 
       {result && !hostGrade?.passed ? (
         <GameCallout heading="答案已记录 · 等 AI 评估" tone="warning" role="status">
@@ -1324,6 +1502,114 @@ function EvidenceRail({
   );
 }
 
+/**
+ * What each vocabulary stage means to someone reading the panel, rather than
+ * to the scheduler. "认识" is not "已掌握": the word stays scheduled until a
+ * retrieval on a later day earns that, and saying otherwise here would make
+ * the panel disagree with the queue.
+ */
+const STAGE_PRESENTATION: Readonly<
+  Record<string, { readonly label: string; readonly tone: "warning" | "success" | "neutral" }>
+> = {
+  learning: { label: "复习中", tone: "warning" },
+  familiar: { label: "认识", tone: "success" },
+  stable: { label: "已掌握", tone: "success" },
+  paused: { label: "已暂停", tone: "neutral" },
+  candidate: { label: "读到过", tone: "neutral" },
+};
+
+/**
+ * The English words this lesson actually annotates, and where each one stands.
+ *
+ * Turning English mode on used to change only the body text, which left the
+ * learner with no way to answer "how many words are in this lesson, and which
+ * ones have I already dealt with" short of hovering every underline. The rail
+ * beside the lesson had the room for it and was showing nothing.
+ */
+function LessonWordList({
+  lexicon,
+  stages,
+}: {
+  readonly lexicon: readonly LexiconEntry[];
+  readonly stages: ReadonlyMap<string, string>;
+}) {
+  const voices = useEnglishVoices();
+  const [voiceURI, setVoiceURI] = useState(readVoicePreference);
+  const active = selectVoice(voices, voiceURI);
+
+  const counts = useMemo(() => {
+    let handled = 0;
+    for (const entry of lexicon) {
+      const stage = stages.get(entry.senseId);
+      if (stage && stage !== "candidate") handled += 1;
+    }
+    return { handled, total: lexicon.length };
+  }, [lexicon, stages]);
+
+  if (lexicon.length === 0) return null;
+
+  return (
+    <section className="word-list" aria-label="本课英文词">
+      <p className="eyebrow">ENGLISH IN THIS LESSON</p>
+      <h3>
+        {counts.total} 个词 · 已处理 {counts.handled}
+      </h3>
+      {voices.length > 1 ? (
+        <label className="word-list__voice">
+          <span>朗读声音</span>
+          {/*
+            No ranking is right on every machine, and the person listening is
+            the only one who can hear the result. The default is the best-ranked
+            local voice; this is the escape hatch when that judgement is wrong.
+          */}
+          <select
+            value={active?.voiceURI ?? ""}
+            onChange={(event) => {
+              setVoiceURI(event.target.value);
+              writeVoicePreference(event.target.value);
+              const chosen = voices.find((voice) => voice.voiceURI === event.target.value);
+              if (chosen) speakWord("preview", chosen);
+            }}
+          >
+            {voices.map((voice) => (
+              <option key={voice.voiceURI} value={voice.voiceURI}>
+                {voice.name}（{voice.lang}）
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      <ul className="word-list__items">
+        {lexicon.map((entry) => {
+          const stage = stages.get(entry.senseId);
+          const presentation = stage ? STAGE_PRESENTATION[stage] : undefined;
+          return (
+            <li key={entry.senseId}>
+              <button
+                type="button"
+                className="word-list__word"
+                onClick={() => {
+                  const anchor = document.querySelector<HTMLElement>(
+                    `[data-sense-id="${CSS.escape(entry.senseId)}"]`,
+                  );
+                  anchor?.scrollIntoView({ block: "center", behavior: "smooth" });
+                  anchor?.focus();
+                }}
+              >
+                <span lang="en">{entry.headword}</span>
+                <small>{entry.gloss}</small>
+              </button>
+              {presentation ? (
+                <GameBadge tone={presentation.tone}>{presentation.label}</GameBadge>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 function LessonReader({
   locator,
   view,
@@ -1477,11 +1763,19 @@ function LessonReader({
             </section>
           ) : null}
         </div>
-        <EvidenceRail
-          basePath={lessonPath(locator)}
-          evidence={view.lesson.evidence}
-          panelIdPrefix={`${locator.studyId}-${locator.courseId}-${locator.unitId}-${locator.lessonId}`}
-        />
+        <div className="lesson-rail">
+          <EvidenceRail
+            basePath={lessonPath(locator)}
+            evidence={view.lesson.evidence}
+            panelIdPrefix={`${locator.studyId}-${locator.courseId}-${locator.unitId}-${locator.lessonId}`}
+          />
+          {englishMode && annotated ? (
+            <LessonWordList
+              lexicon={view.lesson.language?.lexicon ?? []}
+              stages={vocabularyStages}
+            />
+          ) : null}
+        </div>
       </div>
     </article>
   );
@@ -1563,6 +1857,50 @@ function TodaySection({
   );
 }
 
+/**
+ * How many projects the shortcut row carries. Three is the point where a
+ * shortcut stops being one: past that it is just the full list again, in an
+ * order that changes under you.
+ */
+const RECENT_STUDY_LIMIT = 3;
+
+/**
+ * The projects actually being worked through, most recent first.
+ *
+ * Ordered by real learning events rather than by a pin the learner has to
+ * maintain — the answer to "what am I in the middle of" is already written in
+ * the review and completion log, and asking someone to also keep a pin list
+ * current is asking them to restate what the system watched them do.
+ *
+ * The full list below stays alphabetical on purpose. A shelf that reorders
+ * itself is a shelf you have to re-read; the shortcut row absorbs the movement
+ * so the list underneath can stay somewhere you can point at from memory.
+ */
+export function recentStudies(studies: readonly StudySummary[]): readonly StudySummary[] {
+  return studies
+    .filter((study) => study.lastActivityAt !== null)
+    .toSorted((left, right) => Date.parse(right.lastActivityAt!) - Date.parse(left.lastActivityAt!))
+    .slice(0, RECENT_STUDY_LIMIT);
+}
+
+/** "3 小时前" — the unit a learner thinks in, not a timestamp they have to subtract. */
+export function relativeTimeLabel(iso: string, now = Date.now()): string {
+  const elapsedMs = now - Date.parse(iso);
+  const format = new Intl.RelativeTimeFormat("zh-CN", { numeric: "auto" });
+  const scale: readonly (readonly [Intl.RelativeTimeFormatUnit, number])[] = [
+    ["year", 365 * 24 * 3_600_000],
+    ["month", 30 * 24 * 3_600_000],
+    ["day", 24 * 3_600_000],
+    ["hour", 3_600_000],
+    ["minute", 60_000],
+  ];
+  for (const [unit, ms] of scale) {
+    const value = Math.trunc(elapsedMs / ms);
+    if (value >= 1) return format.format(-value, unit);
+  }
+  return "刚刚";
+}
+
 function StudyShelf({
   data,
   selectedStudyId,
@@ -1572,8 +1910,27 @@ function StudyShelf({
   readonly selectedStudyId: string | null;
   readonly onSelect: (studyId: string) => void;
 }) {
+  const recent = useMemo(() => recentStudies(data.studies), [data.studies]);
   return (
     <aside className="study-shelf" aria-label="学习项目列表">
+      {recent.length > 0 ? (
+        <nav className="study-shelf__recent" aria-label="正在学习中">
+          <p className="eyebrow">正在学习中</p>
+          {recent.map((study) => (
+            <button
+              key={study.id}
+              type="button"
+              className="study-shelf__recent-item"
+              data-active={selectedStudyId === study.id}
+              aria-current={selectedStudyId === study.id ? "true" : undefined}
+              onClick={() => onSelect(study.id)}
+            >
+              <span>{study.title}</span>
+              <small>{relativeTimeLabel(study.lastActivityAt!)}</small>
+            </button>
+          ))}
+        </nav>
+      ) : null}
       <p className="eyebrow">YOUR STUDIES</p>
       {data.studies.map((study) => (
         <button
@@ -1754,15 +2111,35 @@ function CourseSection({
           {completed === lessons.length ? "已学完" : "课程已发布"}
         </GameBadge>
       </header>
-      <GameProgress value={completed} max={Math.max(lessons.length, 1)} label="课程完成度" />
-      <div className="course-objectives">
-        <p className="eyebrow">LEARNING OUTCOMES</p>
+      {/* A bar with no number is decoration. "14%" is technically the same fact
+          as "3 / 21 节", but only one of them tells you how many evenings are
+          left — and lessons are the unit this progress is actually counted in. */}
+      <GameProgress
+        className="course-progress"
+        value={completed}
+        max={Math.max(lessons.length, 1)}
+        label="课程完成度"
+        tone={completed === lessons.length ? "success" : "accent"}
+        valueLabel={`${completed} / ${lessons.length} 节`}
+      />
+      {/*
+        Collapsed by default, and native <details> so it needs no script and
+        works with a screen reader for free. These lines are written for someone
+        who has finished the course; to someone opening it they are a wall of
+        terms they came here precisely because they do not know yet. Shown
+        unbidden that reads as "you are not ready for this".
+      */}
+      <details className="course-objectives">
+        <summary>
+          <span className="eyebrow">LEARNING OUTCOMES</span>
+          <span>学完能做到的 {course.objectives.length} 件事</span>
+        </summary>
         <ul>
           {course.objectives.map((objective) => (
             <li key={objective}>{objective}</li>
           ))}
         </ul>
-      </div>
+      </details>
       <div className="unit-list">
         {course.units.map((unit, unitIndex) => (
           <section className="unit-card" key={unit.id}>
@@ -1957,7 +2334,12 @@ export function App() {
   async function loadBootstrap() {
     const next = await readJson<BootstrapData>(await fetch("/api/bootstrap"));
     setData(next);
-    setSelectedStudyId((current) => current ?? next.studies[0]?.id ?? null);
+    // Open on the project last worked in. Falling straight to `studies[0]` meant
+    // the shelf always landed on whichever title sorts first, so the learner's
+    // first act every session was to navigate away from it.
+    setSelectedStudyId(
+      (current) => current ?? recentStudies(next.studies)[0]?.id ?? next.studies[0]?.id ?? null,
+    );
   }
 
   async function loadStudy(studyId: string, signal?: AbortSignal) {

@@ -1,4 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  autoUpdate,
+  flip,
+  FloatingFocusManager,
+  FloatingPortal,
+  offset,
+  safePolygon,
+  shift,
+  useDismiss,
+  useFloating,
+  useFocus,
+  useHover,
+  useInteractions,
+  useRole,
+} from "@floating-ui/react";
+import { useState } from "react";
+
+import { readVoicePreference, selectVoice, speakWord, useEnglishVoices } from "./speech.js";
 
 export interface LexiconEntry {
   readonly senseId: string;
@@ -10,76 +27,165 @@ export interface LexiconEntry {
   readonly track: "technical" | "general";
 }
 
-/**
- * Speaks a word using a voice that lives on this machine.
- *
- * Chrome lists cloud voices alongside local ones, and speaking through one
- * sends the text to a server. This project's whole promise is that nothing it
- * renders reaches the network on its own — the same reason external images are
- * blocked — so an unverified voice is not a fallback, it is the failure. When
- * no local English voice exists the button says so instead of quietly working
- * in a way the learner did not agree to.
- */
-function findLocalEnglishVoice(): SpeechSynthesisVoice | null {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
-  const voices = window.speechSynthesis.getVoices();
-  return voices.find((voice) => voice.localService && /^en(-|$)/i.test(voice.lang)) ?? null;
-}
-
 export type VocabularyStage = "learning" | "familiar" | "paused";
 
-export function WordPopover({
+/**
+ * How long the cursor has to sit still on a word before its card appears.
+ *
+ * `restMs` rather than a plain open delay because these words sit inline in
+ * prose: a delay opens a card for every word the pointer *crosses* on its way
+ * somewhere else, which turns reading into a slideshow. Requiring the cursor
+ * to come to rest asks the question the card answers — "what is this word?" —
+ * instead of guessing from a trajectory.
+ */
+const HOVER_REST_MS = 90;
+/**
+ * Grace period before a card closes after the pointer leaves. Paired with
+ * `safePolygon`, which keeps it open while the pointer travels *toward* the
+ * card: without that, moving diagonally from the word to the 「认识」 button
+ * exits both elements mid-journey and the card vanishes under the cursor.
+ */
+const HOVER_CLOSE_MS = 160;
+
+/**
+ * A word in the lesson body, and the card that explains it.
+ *
+ * Three ways in, because three kinds of reader arrive here. Resting the pointer
+ * opens it for a glance. Clicking *pins* it, so the pointer can leave without
+ * taking the card with it — the card holds buttons, and a panel that evaporates
+ * when you reach for its buttons is not a panel. Keyboard focus opens it too,
+ * which is the only route a keyboard user has; a hover-only card would put the
+ * vocabulary controls permanently out of their reach.
+ */
+export function WordAnchor({
+  entry,
+  original,
+  stage,
+  onStage,
+}: {
+  readonly entry: LexiconEntry;
+  readonly original: React.ReactNode;
+  readonly stage?: string | undefined;
+  readonly onStage?: ((stage: VocabularyStage) => void) | undefined;
+}) {
+  const [open, setOpen] = useState(false);
+  const [pinned, setPinned] = useState(false);
+
+  const { refs, floatingStyles, context } = useFloating({
+    open,
+    onOpenChange: (next) => {
+      setOpen(next);
+      if (!next) setPinned(false);
+    },
+    placement: "bottom-start",
+    // Without these a word near the right edge or the bottom of the viewport
+    // opens its card off-screen. The old card was absolutely positioned by CSS
+    // and had no idea where the viewport ended.
+    middleware: [offset(10), flip({ padding: 12 }), shift({ padding: 12 })],
+    whileElementsMounted: autoUpdate,
+  });
+
+  const hover = useHover(context, {
+    // A pinned card is a deliberate act; pointer movement must not undo it.
+    enabled: !pinned,
+    // Touch has no hover. Leaving this false makes a tap open *and* immediately
+    // re-trigger the card, so touch goes through the click path instead.
+    mouseOnly: true,
+    restMs: HOVER_REST_MS,
+    delay: { close: HOVER_CLOSE_MS },
+    handleClose: safePolygon({ buffer: 6 }),
+  });
+  const focus = useFocus(context);
+  const dismiss = useDismiss(context, { escapeKey: true, outsidePress: true });
+  const role = useRole(context, { role: "dialog" });
+  const { getReferenceProps, getFloatingProps } = useInteractions([hover, focus, dismiss, role]);
+
+  return (
+    <span className="word-anchor">
+      <button
+        type="button"
+        className="word-anchor__trigger"
+        // The side panel lists these words and scrolls to the one you pick;
+        // this is how it finds the occurrence in the body.
+        data-sense-id={entry.senseId}
+        data-pinned={pinned || undefined}
+        ref={refs.setReference}
+        {...getReferenceProps({
+          onClick: () => {
+            if (pinned) {
+              setPinned(false);
+              setOpen(false);
+              return;
+            }
+            setPinned(true);
+            setOpen(true);
+          },
+        })}
+      >
+        <span lang="en">{entry.headword}</span>
+        <span className="word-anchor__original">（{original}）</span>
+      </button>
+      {open ? (
+        <FloatingPortal>
+          {/*
+            `modal={false}` and `initialFocus={-1}`: the card must never steal
+            focus, because most of the time it opened because a pointer paused
+            nearby, not because anyone asked to go there. The manager is still
+            what routes Tab into the card for a keyboard user who did.
+          */}
+          <FloatingFocusManager context={context} modal={false} initialFocus={-1}>
+            <div
+              ref={refs.setFloating}
+              style={floatingStyles}
+              className="word-popover"
+              aria-label={`${entry.headword} 的释义`}
+              {...getFloatingProps()}
+            >
+              <WordPopoverBody
+                entry={entry}
+                stage={stage}
+                pinned={pinned}
+                onDismiss={() => {
+                  setPinned(false);
+                  setOpen(false);
+                }}
+                {...(onStage ? { onStage } : {})}
+              />
+            </div>
+          </FloatingFocusManager>
+        </FloatingPortal>
+      ) : null}
+    </span>
+  );
+}
+
+function WordPopoverBody({
   entry,
   stage,
+  pinned,
   onDismiss,
   onStage,
 }: {
   readonly entry: LexiconEntry;
   readonly stage?: string | undefined;
+  readonly pinned: boolean;
   readonly onDismiss: () => void;
   readonly onStage?: ((stage: VocabularyStage) => void) | undefined;
 }) {
-  const panelRef = useRef<HTMLDivElement>(null);
-  const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
-
-  useEffect(() => {
-    // Voices load asynchronously on first use, so the list is often empty on
-    // the first read and arrives on the event.
-    const update = () => setVoice(findLocalEnglishVoice());
-    update();
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.addEventListener("voiceschanged", update);
-      return () => window.speechSynthesis.removeEventListener("voiceschanged", update);
-    }
-    return undefined;
-  }, []);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onDismiss();
-    };
-    document.addEventListener("keydown", onKey);
-    panelRef.current?.focus();
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onDismiss]);
-
-  function speak() {
-    if (!voice) return;
-    const utterance = new SpeechSynthesisUtterance(entry.headword);
-    utterance.voice = voice;
-    utterance.lang = voice.lang;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }
+  const voices = useEnglishVoices();
+  const voice = selectVoice(voices, readVoicePreference());
 
   return (
-    <div
-      className="word-popover"
-      role="dialog"
-      aria-label={`${entry.headword} 的释义`}
-      ref={panelRef}
-      tabIndex={-1}
-    >
+    <>
+      <button
+        type="button"
+        className="word-popover__close"
+        onClick={onDismiss}
+        aria-label="关闭释义"
+        title={pinned ? "关闭（也可按 Esc）" : "移开鼠标即可关闭"}
+      >
+        ×
+      </button>
       <p className="word-popover__head">
         <span lang="en" className="word-popover__word">
           {entry.headword}
@@ -90,17 +196,18 @@ export function WordPopover({
       <p className="word-popover__gloss">{entry.gloss}</p>
       <p className="word-popover__usage">{entry.usage}</p>
       <div className="word-popover__actions">
-        <button type="button" onClick={speak} disabled={!voice}>
+        <button
+          type="button"
+          onClick={() => voice && speakWord(entry.headword, voice)}
+          disabled={!voice}
+        >
           {voice ? "🔊 朗读" : "本机没有英语语音"}
-        </button>
-        <button type="button" onClick={onDismiss}>
-          关闭
         </button>
       </div>
       {onStage ? (
         <div className="word-popover__stages">
           {/*
-            Three buttons, no scoring. Opening this popover already says the
+            Three buttons, no scoring. Opening this card already says the
             learner stopped for the word; what it cannot say is why, so the
             learner says it. "认识" quiets the word without claiming mastery —
             it stays scheduled until a retrieval on a later day earns that.
@@ -136,6 +243,6 @@ export function WordPopover({
           只用本机语音朗读。系统里没装英语语音时不联网合成 —— 音标仍然可以照着念。
         </p>
       )}
-    </div>
+    </>
   );
 }

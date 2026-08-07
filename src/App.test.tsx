@@ -5,9 +5,12 @@ import {
   EvidenceCode,
   KnowledgeNotesSection,
   StudyEvidenceStatus,
+  buildCardCoachingPacket,
   buildCardRevealPayload,
   cardActionPath,
   highlightEvidenceCode,
+  recentStudies,
+  relativeTimeLabel,
 } from "./App.js";
 
 describe("StudyEvidenceStatus", () => {
@@ -135,5 +138,105 @@ describe("classroom knowledge notes", () => {
     expect(markup).toContain('data-status="active"');
     expect(markup).toContain('data-status="draft"');
     expect(markup).toContain('data-status="stale"');
+  });
+});
+
+describe("recently-studied shelf", () => {
+  const study = (id: string, lastActivityAt: string | null) =>
+    ({
+      id,
+      title: id,
+      description: "",
+      goals: [],
+      defaultCourseId: null,
+      sourceRegistered: true,
+      snapshotCount: 0,
+      uaAnalysisCount: 0,
+      readyUaAnalysisCount: 0,
+      courseCount: 0,
+      activeCourseCount: 1,
+      defaultCourse: null,
+      hasLearningDatabase: true,
+      lastActivityAt,
+    }) as Parameters<typeof recentStudies>[0][number];
+
+  it("orders by most recent activity, not by title", () => {
+    const ordered = recentStudies([
+      study("a-supaluv", "2026-08-01T00:00:00.000Z"),
+      study("z-turing-pact", "2026-08-07T00:00:00.000Z"),
+      study("m-university-local", "2026-08-05T00:00:00.000Z"),
+    ]);
+
+    expect(ordered.map((entry) => entry.id)).toEqual([
+      "z-turing-pact",
+      "m-university-local",
+      "a-supaluv",
+    ]);
+  });
+
+  it("leaves out projects that were never opened, rather than sorting them last", () => {
+    const ordered = recentStudies([
+      study("touched", "2026-08-07T00:00:00.000Z"),
+      study("never", null),
+    ]);
+
+    expect(ordered.map((entry) => entry.id)).toEqual(["touched"]);
+  });
+
+  it("stops at three so the shortcut does not become the list again", () => {
+    const ordered = recentStudies([
+      study("one", "2026-08-07T04:00:00.000Z"),
+      study("two", "2026-08-07T03:00:00.000Z"),
+      study("three", "2026-08-07T02:00:00.000Z"),
+      study("four", "2026-08-07T01:00:00.000Z"),
+    ]);
+
+    expect(ordered.map((entry) => entry.id)).toEqual(["one", "two", "three"]);
+  });
+
+  it("reports elapsed time in the unit a learner thinks in", () => {
+    const now = Date.parse("2026-08-07T12:00:00.000Z");
+
+    expect(relativeTimeLabel("2026-08-07T11:59:40.000Z", now)).toBe("刚刚");
+    expect(relativeTimeLabel("2026-08-07T09:00:00.000Z", now)).toBe("3小时前");
+    expect(relativeTimeLabel("2026-08-05T12:00:00.000Z", now)).toBe("前天");
+  });
+});
+
+describe("review-card coaching packet", () => {
+  const packet = buildCardCoachingPacket({
+    front: "App 这个词通常是什么英文词的缩写？",
+    back: "application",
+    answer: "apply?",
+    priorAttempts: [
+      { answer: "applications", revealedAt: "2026-08-01T00:00:00.000Z", contentRevision: 1 },
+    ],
+  });
+
+  it("asks for an explanation and refuses to ask for a grade", () => {
+    // FSRS schedules on how hard the recall felt, which only the person
+    // recalling can report. A packet that invited a verdict would put someone
+    // else's judgement into that slot.
+    expect(packet).toContain("不要判分");
+    expect(packet).toContain("不要给我打分");
+    expect(packet).not.toContain("请判断对错");
+  });
+
+  it("carries the question, the reference answer, and both attempts", () => {
+    expect(packet).toContain("App 这个词通常是什么英文词的缩写？");
+    expect(packet).toContain("application");
+    expect(packet).toContain("apply?");
+    expect(packet).toContain("applications");
+  });
+
+  it("omits the history section for a card answered for the first time", () => {
+    const first = buildCardCoachingPacket({
+      front: "q",
+      back: "a",
+      answer: "mine",
+      priorAttempts: [],
+    });
+
+    expect(first).not.toContain("我以前的回答");
   });
 });

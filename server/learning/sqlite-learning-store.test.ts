@@ -1071,6 +1071,94 @@ describe("SqliteLearningStore", () => {
     secondConnection.close();
   });
 
+  it("lists retrieval attempts newest-first, across content revisions, with a limit", () => {
+    const store = new SqliteLearningStore(":memory:");
+    const listedCard = cardKey("listed-retrieval");
+    const otherCard = cardKey("other-listed-retrieval");
+
+    const oldest = store.recordRetrievalAttempt({
+      commandId: "list-retrieval-1",
+      cardKey: listedCard,
+      contentRevision: 1,
+      answer: "first attempt against original content",
+      startedAt: NOW,
+      revealedAt: new Date(NOW.getTime() + 1_000),
+      usedHint: false,
+    });
+    const middle = store.recordRetrievalAttempt({
+      commandId: "list-retrieval-2",
+      cardKey: listedCard,
+      contentRevision: 1,
+      answer: "second attempt, still revision one",
+      startedAt: TOMORROW,
+      revealedAt: new Date(TOMORROW.getTime() + 1_000),
+      usedHint: true,
+      confidence: 0.4,
+    });
+    const newest = store.recordRetrievalAttempt({
+      commandId: "list-retrieval-3",
+      cardKey: listedCard,
+      contentRevision: 2,
+      answer: "third attempt after content revised",
+      startedAt: DAY_AFTER_TOMORROW,
+      revealedAt: new Date(DAY_AFTER_TOMORROW.getTime() + 1_000),
+      usedHint: false,
+    });
+    store.recordRetrievalAttempt({
+      commandId: "list-retrieval-other-card",
+      cardKey: otherCard,
+      contentRevision: 1,
+      answer: "belongs to a different card",
+      startedAt: DAY_AFTER_TOMORROW,
+      revealedAt: new Date(DAY_AFTER_TOMORROW.getTime() + 2_000),
+      usedHint: false,
+    });
+
+    const listed = store.listRetrievalAttempts(listedCard);
+    expect(listed.map((attempt) => attempt.attemptId)).toEqual([
+      newest.attemptId,
+      middle.attemptId,
+      oldest.attemptId,
+    ]);
+    expect(listed.map((attempt) => attempt.contentRevision)).toEqual([2, 1, 1]);
+    expect(listed).toEqual([newest, middle, oldest]);
+    expect(store.listRetrievalAttempts(listedCard, 2).map((attempt) => attempt.attemptId)).toEqual([
+      newest.attemptId,
+      middle.attemptId,
+    ]);
+    expect(store.listRetrievalAttempts(cardKey("never-answered-card"))).toEqual([]);
+    store.close();
+  });
+
+  it("returns null last activity on a fresh store and the max across event tables", () => {
+    const store = new SqliteLearningStore(":memory:");
+    expect(store.getLastActivityAt()).toBeNull();
+
+    const exerciseAt = NOW;
+    const retrievalRevealedAt = TOMORROW;
+    store.recordExerciseAttempt({
+      commandId: "last-activity-exercise",
+      exerciseKey: exerciseKey("last-activity-exercise"),
+      contentRevision: 1,
+      score: 1,
+      maxScore: 1,
+      occurredAt: exerciseAt,
+    });
+    expect(store.getLastActivityAt()).toEqual(exerciseAt);
+
+    store.recordRetrievalAttempt({
+      commandId: "last-activity-retrieval",
+      cardKey: cardKey("last-activity-retrieval"),
+      contentRevision: 1,
+      answer: "later than the exercise",
+      startedAt: new Date(retrievalRevealedAt.getTime() - 5_000),
+      revealedAt: retrievalRevealedAt,
+      usedHint: false,
+    });
+    expect(store.getLastActivityAt()).toEqual(retrievalRevealedAt);
+    store.close();
+  });
+
   it("strictly validates retrieval identity, answer, timing, flags, confidence, and session", () => {
     const store = new SqliteLearningStore(":memory:");
     const valid = {

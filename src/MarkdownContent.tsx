@@ -1,9 +1,9 @@
-import { Children, isValidElement, useMemo, useState, type ReactNode } from "react";
+import { Children, isValidElement, useMemo, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { MermaidDiagram } from "./MermaidDiagram.js";
-import { WordPopover, type LexiconEntry, type VocabularyStage } from "./language/WordPopover.js";
+import { WordAnchor, type LexiconEntry, type VocabularyStage } from "./language/WordPopover.js";
 import { remarkLanguageAnchors, type LanguageRange } from "./language/remark-language-anchors.js";
 
 function codeText(children: ReactNode): string {
@@ -125,7 +125,6 @@ export function MarkdownContent({
   readonly vocabularyStages?: ReadonlyMap<string, string>;
   readonly onStageWord?: (senseId: string, stage: VocabularyStage) => void;
 }) {
-  const [openSenseId, setOpenSenseId] = useState<string | null>(null);
   const active = englishEnabled && language?.status === "annotated" ? language : null;
 
   const lexicon = useMemo(
@@ -150,33 +149,19 @@ export function MarkdownContent({
           typeof node?.properties?.senseId === "string" ? node.properties.senseId : "";
         const entry = lexicon.get(senseId);
         if (!entry) return <>{value}</>;
-        const open = openSenseId === senseId;
         return (
-          <span className="word-anchor">
-            <button
-              type="button"
-              className="word-anchor__trigger"
-              aria-expanded={open}
-              onClick={() => setOpenSenseId(open ? null : senseId)}
-            >
-              <span lang="en">{entry.headword}</span>
-              <span className="word-anchor__original">（{value}）</span>
-            </button>
-            {open ? (
-              <WordPopover
-                entry={entry}
-                stage={vocabularyStages?.get(senseId)}
-                onDismiss={() => setOpenSenseId(null)}
-                {...(onStageWord
-                  ? { onStage: (stage: VocabularyStage) => onStageWord(senseId, stage) }
-                  : {})}
-              />
-            ) : null}
-          </span>
+          <WordAnchor
+            entry={entry}
+            original={value}
+            stage={vocabularyStages?.get(senseId)}
+            {...(onStageWord
+              ? { onStage: (stage: VocabularyStage) => onStageWord(senseId, stage) }
+              : {})}
+          />
         );
       },
     }),
-    [lexicon, openSenseId, vocabularyStages, onStageWord],
+    [lexicon, vocabularyStages, onStageWord],
   );
 
   const plugins = useMemo(

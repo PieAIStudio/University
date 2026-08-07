@@ -314,6 +314,21 @@ export interface LearningStore {
   recordRetrievalAttempt(input: RecordRetrievalAttemptInput): StoredRetrievalAttempt;
   getRetrievalAttempt(attemptId: string): StoredRetrievalAttempt | null;
   getRetrievalAttemptByCommandId(commandId: string): StoredRetrievalAttempt | null;
+  /**
+   * Recent answers the learner typed for this card, newest first.
+   *
+   * `recordRetrievalAttempt` has been storing every answer since the table
+   * existed; nothing has read them back until now. The UI wants "what you
+   * wrote last time" under the revealed answer. Returns attempts across ALL
+   * content revisions — each row already carries `contentRevision`, so the
+   * caller can tell an older-content answer from a current one. Filtering
+   * revisions here would hide exactly the history that shows how the
+   * learner's understanding changed.
+   */
+  listRetrievalAttempts(
+    cardKey: ReviewContentKey,
+    limit?: number,
+  ): readonly StoredRetrievalAttempt[];
   retrievalAttemptCount(): number;
   startSession(
     startedAtOrMetadata?: Date | LearningSessionMetadata,
@@ -324,6 +339,16 @@ export interface LearningStore {
   listSessions(limit?: number): readonly StoredLearningSession[];
   getSessionSummary(sessionId: string): LearningSessionSummary | null;
   endSession(sessionId: string, endedAt?: Date): LearningSessionSummary;
+  /**
+   * Most recent moment this learner did anything in this study, or null if
+   * they never have.
+   *
+   * Derived from existing events rather than a stored "last opened" field —
+   * a stored field would be a second source of truth that can disagree with
+   * the events. Lets the shelf surface recently-studied projects instead of
+   * always opening whichever study sorts first alphabetically.
+   */
+  getLastActivityAt(): Date | null;
   reviewEventCount(): number;
   backup(destination: string): Promise<number>;
   close(): void;

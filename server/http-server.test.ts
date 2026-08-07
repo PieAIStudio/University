@@ -505,9 +505,43 @@ describe("UniversityLocal loopback API", () => {
     const revealedBody = (await revealed.json()) as {
       attemptId: string;
       durationMs: number;
+      priorAttempts: readonly { answer: string }[];
     };
     expect(revealedBody).toMatchObject({ back: "identity-service" });
     expect(revealedBody.durationMs).toBeGreaterThanOrEqual(0);
+    // First time through this card, so there is nothing behind it — and in
+    // particular the answer just submitted is not echoed back as its own
+    // history.
+    expect(revealedBody.priorAttempts).toEqual([]);
+
+    // Answering a second time is where the history has to appear, and it must
+    // arrive only with the reveal: a review card whose previous answer is
+    // readable while the question is still open is not testing recall.
+    const secondReveal = await fetch(`${base}${revealPath}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-University-Local-Token": bootstrap.requestToken,
+        Origin: "http://127.0.0.1:5173",
+      },
+      body: JSON.stringify({
+        ...revealBody,
+        commandId: "44444444-4444-4444-8444-444444444444",
+        answer: "a later, better answer",
+      }),
+    });
+    expect(secondReveal.status).toBe(200);
+    const secondBody = (await secondReveal.json()) as {
+      priorAttempts: readonly { answer: string }[];
+    };
+    expect(secondBody.priorAttempts.map((attempt) => attempt.answer)).toEqual(["my answer"]);
+
+    const lessonAfterReveal = (await (await fetch(`${base}${fixture.lessonPath}`)).json()) as {
+      lesson: { cards: readonly Record<string, unknown>[] };
+    };
+    for (const card of lessonAfterReveal.lesson.cards) {
+      expect(JSON.stringify(card)).not.toContain("my answer");
+    }
 
     const retried = await fetch(`${base}${revealPath}`, {
       method: "POST",
@@ -574,7 +608,9 @@ describe("UniversityLocal loopback API", () => {
     const store = new SqliteLearningStore(
       getStudyPaths(fixture.studiesRoot, "sample").learner.database,
     );
-    expect(store.retrievalAttemptCount()).toBe(1);
+    // Two genuine answers, and every replay of either command ID above folded
+    // back onto the row it already wrote rather than adding another.
+    expect(store.retrievalAttemptCount()).toBe(2);
     expect(store.getRetrievalAttemptByCommandId(revealBody.commandId)).toMatchObject({
       attemptId: revealedBody.attemptId,
       answer: revealBody.answer,

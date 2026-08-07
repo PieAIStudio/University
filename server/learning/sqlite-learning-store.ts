@@ -1893,6 +1893,33 @@ export class SqliteLearningStore implements LearningStore {
     return row ? rowToRetrievalAttempt(row) : null;
   }
 
+  /**
+   * Recent answers the learner typed for this card, newest first.
+   *
+   * `recordRetrievalAttempt` has been storing every answer since the table
+   * existed; nothing has read them back until now. The UI wants "what you
+   * wrote last time" under the revealed answer. Returns attempts across ALL
+   * content revisions — each row already carries `contentRevision`, so the
+   * caller can tell an older-content answer from a current one. Filtering
+   * revisions here would hide exactly the history that shows how the
+   * learner's understanding changed.
+   */
+  listRetrievalAttempts(cardKey: ReviewContentKey, limit = 5): readonly StoredRetrievalAttempt[] {
+    const key = reviewContentKey(cardKey);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 1_000) {
+      throw new Error("Retrieval-attempt limit must be an integer between 1 and 1000");
+    }
+    const rows = this.#database
+      .prepare(`
+        SELECT * FROM retrieval_attempt
+        WHERE card_key = ?
+        ORDER BY started_at DESC, rowid DESC
+        LIMIT ?
+      `)
+      .all(key, limit) as unknown as RetrievalAttemptRow[];
+    return rows.map(rowToRetrievalAttempt);
+  }
+
   retrievalAttemptCount(): number {
     return (
       this.#database.prepare("SELECT COUNT(*) AS count FROM retrieval_attempt").get() as {
@@ -2002,6 +2029,33 @@ export class SqliteLearningStore implements LearningStore {
       `)
       .get(sessionId) as LearningSessionSummaryRow | undefined;
     return row ? rowToLearningSessionSummary(row) : null;
+  }
+
+  /**
+   * Most recent moment this learner did anything in this study, or null if
+   * they never have.
+   *
+   * Derived from existing events rather than a stored "last opened" field —
+   * a stored field would be a second source of truth that can disagree with
+   * the events. Lets the shelf surface recently-studied projects instead of
+   * always opening whichever study sorts first alphabetically.
+   */
+  getLastActivityAt(): Date | null {
+    const row = this.#database
+      .prepare(`
+        SELECT MAX(last_at) AS last_activity_at FROM (
+          SELECT MAX(reviewed_at) AS last_at FROM review_event
+          UNION ALL
+          SELECT MAX(occurred_at) AS last_at FROM lesson_progress_event
+          UNION ALL
+          SELECT MAX(occurred_at) AS last_at FROM exercise_attempt
+          UNION ALL
+          SELECT MAX(revealed_at) AS last_at FROM retrieval_attempt
+        )
+      `)
+      .get() as { last_activity_at: number | null } | undefined;
+    if (row?.last_activity_at === null || row?.last_activity_at === undefined) return null;
+    return new Date(row.last_activity_at);
   }
 
   endSession(sessionId: string, endedAt = new Date()): LearningSessionSummary {

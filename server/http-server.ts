@@ -602,6 +602,37 @@ function knowledgeReviewableCard(
   };
 }
 
+/**
+ * How many earlier answers travel back with a reveal. Enough to see whether an
+ * understanding moved; not so many that the panel becomes a transcript.
+ */
+const PRIOR_ATTEMPT_LIMIT = 3;
+
+/**
+ * What the learner wrote for this card before today.
+ *
+ * Deliberately part of the *reveal* response and of no other endpoint. A review
+ * card only works if the recall is real, so the page must not be able to show
+ * a previous answer while the question is still open — not as a default, not
+ * behind a flag. Sending it at reveal makes the timing a property of the API
+ * rather than a rule the UI has to keep remembering.
+ */
+function priorAttemptsOf(
+  store: SqliteLearningStore,
+  card: ReviewableCard,
+  currentAttemptId: string,
+): readonly { answer: string; revealedAt: string; contentRevision: number }[] {
+  return store
+    .listRetrievalAttempts(card.key, PRIOR_ATTEMPT_LIMIT + 1)
+    .filter((attempt) => attempt.attemptId !== currentAttemptId)
+    .slice(0, PRIOR_ATTEMPT_LIMIT)
+    .map((attempt) => ({
+      answer: attempt.answer,
+      revealedAt: attempt.revealedAt.toISOString(),
+      contentRevision: attempt.contentRevision,
+    }));
+}
+
 function revealReviewableCard(
   response: ServerResponse,
   body: z.infer<typeof CardRevealSchema>,
@@ -633,6 +664,7 @@ function revealReviewableCard(
       submittedAnswer: duplicate.answer,
       back: card.back,
       durationMs: duplicate.durationMs,
+      priorAttempts: priorAttemptsOf(store, card, duplicate.attemptId),
     });
     return;
   }
@@ -664,6 +696,7 @@ function revealReviewableCard(
     submittedAnswer: body.answer,
     back: card.back,
     durationMs: attempt.durationMs,
+    priorAttempts: priorAttemptsOf(store, card, attempt.attemptId),
   });
 }
 
@@ -802,6 +835,13 @@ function buildLessonView(
         });
         const hostGrade = store?.getLatestHostExerciseGrade(exerciseKey, exercise.contentRevision);
         const hostPassed = store?.hasCorrectExerciseAttempt(exerciseKey, exercise.contentRevision);
+        // The store has kept every submission since the exercise log existed,
+        // and the reader has been throwing them away on every reload: a learner
+        // who answered yesterday came back to an empty box and a disabled
+        // button, with no way to tell "saved" from "lost". Unlike a review
+        // card, an exercise is answered once and then discussed, so restoring
+        // the text costs no retrieval — it is the same answer, still open.
+        const submission = store?.getLatestLearnerSubmission(exerciseKey, exercise.contentRevision);
         return {
           id: exercise.id,
           kind: exercise.kind,
@@ -809,6 +849,9 @@ function buildLessonView(
           prompt: exercise.prompt,
           contentRevision: exercise.contentRevision,
           awaitingHostGrade: !hostPassed,
+          latestSubmission: submission
+            ? { answer: submission.answer, occurredAt: submission.occurredAt.toISOString() }
+            : null,
           hostGrade: hostGrade
             ? {
                 passed: hostGrade.passed,
@@ -1065,6 +1108,11 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
               activeCourseCount: listActiveCourses(config.studiesRoot, study).length,
               defaultCourse,
               hasLearningDatabase: existsSync(paths.learner.database),
+              // Derived from the events themselves rather than stored on open,
+              // so it cannot drift from what the learner actually did. The
+              // shelf needs it because a title-sorted list always opens on
+              // whichever study sorts first, which is rarely the live one.
+              lastActivityAt: getStore(study.id)?.getLastActivityAt()?.toISOString() ?? null,
             };
           });
 

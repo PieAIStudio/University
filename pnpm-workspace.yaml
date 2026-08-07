@@ -11,3 +11,5 @@ allowBuilds:
   # Allowed. lefthook's postinstall is what fetches the binary and syncs the
   # Git hooks; without it the commit gate in lefthook.yml never runs.
   lefthook: true
+minimumReleaseAgeExclude:
+  - '@pieai/swimmer-ui-kit@1.3.0'

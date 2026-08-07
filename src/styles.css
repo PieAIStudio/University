@@ -39,22 +39,6 @@ summary:focus-visible,
   min-height: 100vh;
 }
 
-/*
- * TEMPORARY — remove when @pieai/swimmer-ui-kit is upgraded to >= 1.3.0.
- *
- * In kit 1.2.0, styles.css declares `.game-ui-callout` twice: once as an
- * absolutely-positioned demo-table speech bubble, once as the real
- * <GameCallout>. The component rule never re-declares `position` or
- * `white-space`, so the cascade leaves every callout out of flow — on Today
- * it floated over the page heading and covered it. Fixed upstream in kit
- * 1.3.0 (the bubble moved to preview.css as `.game-ui-seat-callout`); this
- * override only restates that default until the dependency bump lands.
- */
-.game-ui-callout {
-  position: static;
-  white-space: normal;
-}
-
 .campus {
   --campus-rule: rgb(246 231 211 / 14%);
   --campus-surface: rgb(53 39 29 / 80%);
@@ -489,6 +473,49 @@ summary:focus-visible,
   color: var(--game-ui-text-muted);
 }
 
+/* Kept visually apart from the list below it. The two answer different
+   questions — "where was I" and "what exists" — and a shortcut that looks like
+   the first three rows of the list just reads as a duplicate. */
+.study-shelf__recent {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--campus-rule);
+  margin-bottom: 10px;
+}
+
+.study-shelf__recent-item {
+  appearance: none;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.study-shelf__recent-item:hover,
+.study-shelf__recent-item[data-active="true"] {
+  border-color: rgb(246 193 119 / 34%);
+  background: rgb(246 193 119 / 10%);
+}
+
+.study-shelf__recent-item span {
+  font-weight: 800;
+}
+
+.study-shelf__recent-item small {
+  flex-shrink: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.76rem;
+}
+
 .study-detail__header h2,
 .lesson-reader__header h2 {
   margin-top: 7px;
@@ -696,6 +723,40 @@ summary:focus-visible,
   padding-left: 20px;
   color: var(--game-ui-text-muted);
   line-height: 1.55;
+}
+
+.course-objectives summary {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  cursor: pointer;
+  list-style: none;
+}
+
+/* Safari still paints its own triangle through ::-webkit-details-marker even
+   when `list-style: none` removes the standard one. */
+.course-objectives summary::-webkit-details-marker {
+  display: none;
+}
+
+.course-objectives summary::after {
+  color: var(--game-ui-text-muted);
+  content: "展开 ▾";
+  font-size: 0.82rem;
+}
+
+.course-objectives[open] summary::after {
+  content: "收起 ▴";
+}
+
+/* The bar sits between the course blurb and the units, so it needs room to read
+   as its own statement rather than as a rule between two paragraphs. */
+.course-progress {
+  margin-top: 24px;
+}
+
+.course-progress .game-ui-progress-track {
+  height: 20px;
 }
 
 .unit-list {
@@ -1372,11 +1433,11 @@ summary:focus-visible,
   font-size: 0.85em;
 }
 
+/* Placement is Floating UI's job now — it renders in a portal and writes
+   position/transform inline so a word near the viewport edge flips and shifts
+   instead of opening off-screen. Declaring top/left here would fight it. */
 .word-popover {
-  position: absolute;
   z-index: 20;
-  top: calc(100% + 6px);
-  left: 0;
   width: min(320px, 78vw);
   padding: 12px 14px;
   border: 1px solid rgba(247, 211, 160, 0.34);
@@ -1384,6 +1445,37 @@ summary:focus-visible,
   background: #1a1512;
   box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
   text-align: left;
+}
+
+/* Second way out, for the two readers the first one fails: a touch user with no
+   pointer to move away, and anyone who pinned the card on purpose. Escape and
+   an outside click also close it. */
+.word-popover__close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: rgba(255, 245, 232, 0.5);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.word-popover__close:hover {
+  background: rgba(247, 211, 160, 0.14);
+  color: #f7ead6;
+}
+
+/* A pinned card outlives the pointer, so the word it belongs to has to keep
+   saying which one it is after the cursor has gone somewhere else. */
+.word-anchor__trigger[data-pinned] {
+  border-bottom-style: solid;
+  color: #f6c177;
 }
 
 .word-popover__head {
@@ -1572,4 +1664,156 @@ summary:focus-visible,
   margin: 0;
   font-size: 0.85rem;
   opacity: 0.6;
+}
+
+/* The lesson's right-hand column: evidence first, then the English panel when
+   English mode is on. Both are sticky as one unit so the column does not scroll
+   away from a reader who is halfway down a long lesson. */
+.lesson-rail {
+  display: grid;
+  gap: 22px;
+  align-content: start;
+}
+
+.exercise-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Says the box is showing something the server kept, not something typed and
+   about to be lost. Without it a restored answer is indistinguishable from a
+   draft the page is holding in memory. */
+.answer-field__saved {
+  margin: -6px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+}
+
+.answer-history {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--campus-rule);
+}
+
+.answer-history ul {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.answer-history li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  color: var(--game-ui-text-muted);
+  font-size: 0.9rem;
+}
+
+.answer-history time {
+  color: rgb(246 193 119 / 78%);
+  font-variant-numeric: tabular-nums;
+}
+
+.answer-history small {
+  color: rgb(255 245 232 / 45%);
+  font-size: 0.74rem;
+}
+
+.answer-reveal__coach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.answer-reveal__coach-hint {
+  flex: 1 1 14rem;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.word-list {
+  padding: 18px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 14px;
+  background: var(--campus-surface);
+}
+
+.word-list h3 {
+  margin: 6px 0 0;
+  font-size: 1rem;
+}
+
+.word-list__voice {
+  display: grid;
+  gap: 5px;
+  margin-top: 14px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+}
+
+.word-list__voice select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 8px;
+  background: #1a1512;
+  color: #f7ead6;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.word-list__items {
+  display: grid;
+  gap: 4px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.word-list__items li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.word-list__word {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.word-list__word:hover {
+  background: rgb(247 211 160 / 10%);
+}
+
+.word-list__word span {
+  color: #f7d3a0;
+  font-weight: 700;
+}
+
+/* The gloss is the reason to scan this list at all, but it is the second thing
+   read; truncating keeps one word per row so the list stays scannable. */
+.word-list__word small {
+  overflow: hidden;
+  color: var(--game-ui-text-muted);
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
