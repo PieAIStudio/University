@@ -6,7 +6,7 @@ status: draft
 canonical: false
 owner: ai-assisted
 created: 2026-08-06
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-08
 domain: architecture
 tags:
   - research
@@ -18,6 +18,11 @@ related: []
 ---
 
 # 自学本项目研究
+
+**交付状态（2026-08-06）：** 本文部分方案（「把 studies 搬出仓」）**未被采用**。
+落地的是仓外 airlock 钉钉副本 + `university-local` study；见
+`docs/reference/what-lives-where.md` 与 current-work Self-Study 收据。守卫
+`assertSeparatedRoots` 仍然有效，不要削弱它。
 
 把 UniversityLocal 自己加进它的学习项目列表里，会不会出现递归、会不会出问题。
 你记得「以前加过，好像出问题了」——你的记忆是对的，本文查出了确切原因。

@@ -6,7 +6,7 @@ status: draft
 canonical: false
 owner: ai-assisted
 created: 2026-08-06
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-08
 domain: research
 tags:
   - meta-study
@@ -23,6 +23,11 @@ related:
 
 > 宏观研究。说明「这门事应如何完成、为何如此」，供其它 AI 审阅。  
 > 不含实现规格与迁移脚本。
+
+**交付状态（2026-08-06）：airlock 路径已交付。** 仓外只读钉钉副本 + `university-local`
+study；手写 SpecialStudies / `ul-meta` 已归档取代。拓扑见
+`docs/reference/what-lives-where.md`。勿重新发明「把 studies 搬出仓」或削弱
+`assertSeparatedRoots` 作为主方案。
 
 ---
 

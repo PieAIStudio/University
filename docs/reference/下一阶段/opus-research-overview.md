@@ -6,7 +6,7 @@ status: draft
 canonical: false
 owner: ai-assisted
 created: 2026-08-06
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-08
 domain: architecture
 tags:
   - research
@@ -20,12 +20,17 @@ related: []
 
 # Opus 下一阶段研究总览
 
-这一组文档研究三个方向：教程内嵌英文单词、沟通能力的提升机制、把 UniversityLocal
-自己变成可学习的项目。研究基于对当前代码的逐行查证，不是设想。
+**交付状态（2026-08-08）：三方向核心均已落地**——外语旁注层（检测合成）、表达
+点评包路径、airlock 自学。本文是 2026-08-06 研究总览；**「还没有实现」一句已过时**。
+以 `docs/reference/execution/current-work.md` 为在飞索引；勿把建议执行顺序当成
+未完成 backlog。
+
+这一组文档研究三个方向：教程内嵌外语词、沟通能力的提升机制、把 UniversityLocal
+自己变成可学习的项目。研究基于当时对代码的查证。
 
 三份深入文档：
 
-- [英文模式](opus-english-mode.md)
+- [英文模式](opus-english-mode.md)（产品名：外语模式；核心已交付）
 - [沟通能力](opus-communication-coaching.md)
 - [自学本项目](opus-self-study-recursion.md)
 
@@ -84,5 +89,6 @@ related: []
 
 ## 这三份文档不回答什么
 
-它们是研究，不是计划。每份文档末尾都有「待决问题」，那些问题需要你拍板之后才能
-写 SPEC 和 PLAN。研究文档里的任何设计都还没有实现，也不应该被当成已经决定的事。
+它们是研究，不是计划。拍板与实现已部分发生：旁注层 / airlock / 宿主包路径见
+current-work 收据。仍写在各文「待决问题」里、且 current-work 未收口的项，才算
+开放问题。

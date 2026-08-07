@@ -6,7 +6,7 @@ status: active
 canonical: false
 owner: ai-assisted
 created: 2026-08-07
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-08
 domain: learning
 tags:
   - pedagogy
@@ -77,6 +77,10 @@ tags:
 
 那里有：不变量、五个变体（`现象` / `对比` / `溯源` / `决策` / `术语`）、
 选变体的判据、轮换规则、跨课链接规则、25 条验收清单。
+
+机械可查的一半由 `pnpm lint:lessons`（`scripts/lint-lessons.mjs`）在
+`pnpm verify` 里强制执行；只检查声明了 `variant` 的课。判断力那一半仍在清单里，
+不进脚本。
 
 这份文档只负责回答**为什么是这个形状**——研究依据、被否掉的方案、以及那两条
 容易翻车的约束。两处不重复同一件事，是为了避免出现第二个真相源。

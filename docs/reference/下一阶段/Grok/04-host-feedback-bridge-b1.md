@@ -6,7 +6,7 @@ status: draft
 canonical: false
 owner: ai-assisted
 created: 2026-08-06
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-08
 domain: research
 tags:
   - next-stage
@@ -33,6 +33,8 @@ related:
 > **补充约束（同日）：**  
 > 1）复制后必须有**初学者可读**的「复制到了什么、下一步怎么贴」指引；  
 > 2）答疑包与指引必须**宿主无关**——Grok Build、Claude Code、Antigravity、Codex 等同一套，不得写成只服务某一家。
+
+**交付状态（2026-08-06）：已交付。** 见 current-work。勿重做第二套 runtime 模型或宿主专用桥。
 
 ---
 

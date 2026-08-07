@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-21
+last_reviewed: 2026-08-08
 domain: meta
 tags:
   - navigation
@@ -45,6 +45,19 @@ Use `AGENTS.md` for startup reading. It should point agents to:
 | `docs/reference/` | Guides and references |
 | `docs/archive/` | Retired history |
 | `docs/governance/` | Governance core rules, SSOT, agents routing, doc types, templates, and manifest |
+
+## Operational references (not shelves)
+
+| Doc | When |
+| --- | --- |
+| `docs/reference/execution/current-work.md` | What is in flight / already shipped |
+| `docs/reference/using-university-local-with-grok.md` | Daily host + campus use (外语模式, links, CLI) |
+| `docs/reference/lesson-pedagogy.md` | Why lessons look like they do (skill is SSOT for shape) |
+| `docs/reference/what-lives-where.md` | Airlock vs `studies/` vs live product |
+
+Lesson **authoring** contract is the skill `.agents/skills/write-lesson/`, not a
+second copy under `docs/**`. Research notes under `docs/reference/下一阶段/` are
+historical strategy; check `current-work.md` before treating them as backlog.
 
 UniversityLocal learning content and generated study artifacts under `studies/`
 are product data, not governed project documents merely because some are

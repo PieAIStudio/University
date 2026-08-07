@@ -1602,7 +1602,7 @@ function LessonWordList({
   if (lexicon.length === 0) return null;
 
   return (
-    <section className="word-list" aria-label="本课英文词">
+    <section className="word-list" aria-label="本课外语词">
       <p className="eyebrow">ENGLISH IN THIS LESSON</p>
       <h3>
         {counts.total} 个词 · 已处理 {counts.handled}

@@ -6,7 +6,7 @@ status: draft
 canonical: false
 owner: ai-assisted
 created: 2026-08-06
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-08
 domain: research
 tags:
   - next-stage
@@ -26,6 +26,11 @@ related:
 
 > 本文是研究结论，不是已批准的 SPEC、PLAN 或实现承诺。文中出现的阈值均会明确标成
 > “实验起点”，不能当作学习科学常数。用户原话中的“净化”按上下文理解为“进化”。
+
+**交付状态（2026-08-08）：** 下文「推荐顺序」中的 airlock、外语旁注层核心、
+`comm-coach` 使用路径均已落地（产品名外语模式；合成层见
+`server/language/`）。勿把文中「尚未实现」「Web 没有英文模式」等**研究当时**
+的陈述当成现状。现状索引：`docs/reference/execution/current-work.md`。
 
 ## 0. 结论先行
 
@@ -726,21 +731,20 @@ worktree 是 UA 临时分析区的成熟 donor，但不等于长期 airlock 应�
 | 并发/崩溃 | CAS、owner lease、fault injection | 当前实现尚未覆盖 |
 | 课程陈旧性 | 三层时钟、follow-ref/pinned-history | 现有 status/activation 语义需扩展 |
 
-### 可以确定的事
+### 研究当时可以确定的事（2026-08-06；若干项此后已交付）
 
-- 当前默认布局直接注册自身会失败；
-- `comm-coach` 已安装且边界清楚；
-- 现有 Web UI 没有英文模式或沟通教练桥；
-- 现有 FSRS 可以继续做唯一调度算法；
-- 仓外独立 Git source 能通过当前分离注册边界；
-- airlock 可以在不迁现有 studies 的前提下解决物理重叠。
+- 当前默认布局直接注册自身会失败（仍真；解法是 airlock，已交付）；
+- `comm-coach` 已安装且边界清楚（仍真；Web 包路径已接通）；
+- ~~现有 Web UI 没有英文模式或沟通教练桥~~ → **已过时**：外语模式 + 宿主包已交付；
+- 现有 FSRS 可以继续做唯一调度算法（仍真）；
+- 仓外独立 Git source 能通过当前分离注册边界（仍真；airlock 已交付）。
 
 ### 不能诚实地提前确定的事
 
-- 哪个英文密度最适合你；
+- 哪个外语密度最适合你（预算现已自适应；个人滑条仍开放）；
 - 7 天的词汇增益能否保持到 30 天；
 - AI roleplay 能否迁移到真实同事沟通；
-- 尚未实现的 airlock 在所有 crash/并发条件下是否可靠。
+- airlock 在所有 crash/并发条件下是否可靠（工具已有；极端故障面仍要实证）。
 
 所以最终策略不是“宣称 100% 正确”，而是：**对已知边界 fail-closed，对未知效果做小试验，对每个实验预先写
 停止线，对任何持久化和升级保留人工同意。**

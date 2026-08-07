@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-07T13:44:46.296Z
+generated_at: 2026-08-07T16:29:18.832Z
 generator_version: doc-gov@0.8.0
 docs_count: 36
 docs:
@@ -114,14 +114,14 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-07-21
+    last_reviewed: 2026-08-08
     pinned: false
   - id: REF-CURRENT-WORK
     path: docs/reference/execution/current-work.md
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-06
+    last_reviewed: 2026-08-08
     pinned: true
   - id: REF-UNIVERSITY-LOCAL-LEARNING-DONOR-MAP-2026-07-20
     path: docs/reference/learning-donor-map-2026-07-20.md
@@ -156,14 +156,14 @@ docs:
     type: reference
     status: active
     canonical: false
-    last_reviewed: 2026-08-07
+    last_reviewed: 2026-08-08
     pinned: false
   - id: REF-USING-UNIVERSITY-LOCAL-WITH-GROK
     path: docs/reference/using-university-local-with-grok.md
     type: reference
     status: active
     canonical: false
-    last_reviewed: 2026-08-05
+    last_reviewed: 2026-08-08
     pinned: true
   - id: REF-WHAT-LIVES-WHERE
     path: docs/reference/what-lives-where.md
@@ -177,35 +177,35 @@ docs:
     type: reference
     status: draft
     canonical: false
-    last_reviewed: 2026-08-06
+    last_reviewed: 2026-08-08
     pinned: false
   - id: REF-NEXT-GROK-ENGLISH-SUBSYSTEM-2026-08-06
     path: docs/reference/下一阶段/Grok/01-incidental-english-subsystem.md
     type: reference
     status: draft
     canonical: false
-    last_reviewed: 2026-08-06
+    last_reviewed: 2026-08-08
     pinned: false
   - id: REF-NEXT-GROK-COMM-SUBSYSTEM-2026-08-06
     path: docs/reference/下一阶段/Grok/02-collaboration-communication-subsystem.md
     type: reference
     status: draft
     canonical: false
-    last_reviewed: 2026-08-06
+    last_reviewed: 2026-08-08
     pinned: false
   - id: REF-NEXT-GROK-META-STUDY-MACRO-2026-08-06
     path: docs/reference/下一阶段/Grok/03-meta-study-self-learning.md
     type: reference
     status: draft
     canonical: false
-    last_reviewed: 2026-08-06
+    last_reviewed: 2026-08-08
     pinned: false
   - id: REF-NEXT-GROK-HOST-FEEDBACK-BRIDGE-B1-2026-08-06
     path: docs/reference/下一阶段/Grok/04-host-feedback-bridge-b1.md
     type: reference
     status: draft
     canonical: false
-    last_reviewed: 2026-08-06
+    last_reviewed: 2026-08-08
     pinned: false
   - id: REF-OPUS-COMMUNICATION-COACHING
     path: docs/reference/下一阶段/opus-communication-coaching.md
@@ -219,28 +219,28 @@ docs:
     type: reference
     status: draft
     canonical: false
-    last_reviewed: 2026-08-06
+    last_reviewed: 2026-08-08
     pinned: false
   - id: REF-OPUS-NEXT-PHASE-OVERVIEW
     path: docs/reference/下一阶段/opus-research-overview.md
     type: reference
     status: draft
     canonical: false
-    last_reviewed: 2026-08-06
+    last_reviewed: 2026-08-08
     pinned: false
   - id: REF-OPUS-SELF-STUDY-RECURSION
     path: docs/reference/下一阶段/opus-self-study-recursion.md
     type: reference
     status: draft
     canonical: false
-    last_reviewed: 2026-08-06
+    last_reviewed: 2026-08-08
     pinned: false
   - id: REF-NEXT-SOL-UNIVERSITY-LOCAL-EVOLUTION-2026-08-06
     path: docs/reference/下一阶段/Sol/university-local-evolution-research-2026-08-06.md
     type: reference
     status: draft
     canonical: false
-    last_reviewed: 2026-08-06
+    last_reviewed: 2026-08-08
     pinned: false
   - id: SPEC-0001
     path: docs/specs/completed/SPEC-0001-university-local-foundation.md

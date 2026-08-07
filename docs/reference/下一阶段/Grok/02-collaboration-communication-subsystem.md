@@ -6,7 +6,7 @@ status: draft
 canonical: false
 owner: ai-assisted
 created: 2026-08-06
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-08
 domain: research
 tags:
   - communication
@@ -22,6 +22,10 @@ related:
 
 > 宏观研究。说明「这门事应如何完成、为何如此」，供其它 AI 审阅。  
 > 不含实现规格。
+
+**交付状态（2026-08-06）：** 宿主无关点评包路径 + `comm-coach` 技能已接通；
+表达结果默认不自动写回。体系化「沟通原则」复习卡与正式沟通课程仍属研究开放项。
+见 current-work Expression 收据与 `using-university-local-with-grok.md`。
 
 ---
 

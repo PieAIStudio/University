@@ -6,7 +6,7 @@ status: draft
 canonical: false
 owner: ai-assisted
 created: 2026-08-06
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-08
 domain: architecture
 tags:
   - research
@@ -19,11 +19,18 @@ related: []
 
 # 英文模式研究
 
-一边读教程一边捡英文单词，点一下能看释义和读音，频率可调，学会了就换下一个词。
-本文研究这件事在 UniversityLocal 现有架构里怎么做才不会把系统弄坏。
+**交付状态（2026-08-07–08）：旁注层核心已交付，产品名是「外语模式」。** 实现路径是
+「词表检测 + 可选 overlay 合成 + 自适应预算」，不是下文部分章节设想的「只靠手写
+标注」或「往正文塞词」。入口：`server/language/`、
+`docs/reference/using-university-local-with-grok.md`、
+`docs/reference/execution/current-work.md` 的 Pedagogy And Reading Layer 收据。
+下文保留研究过程；冲突时以代码与 current-work 为准，不要重做。
 
-你已经拍板的两件事：**混合式**（生词先注释、熟词才替换）、**技术英语优先，通用
-英语作为第二轨**。下面的设计以这两条为前提。
+一边读教程一边捡外语词，点一下能看释义和读音，学会了就少打扰。
+本文原是研究这件事在 UniversityLocal 现有架构里怎么做才不会把系统弄坏。
+
+原拍板：**混合式**、**技术英语优先，通用英语第二轨**。已交付的是检测驱动的旁注
+层；双轨运营与混排展示仍可按研究继续，但不得推翻「不改 contentHash」硬约束。
 
 ## 一、先说一条不能绕过的硬约束
 

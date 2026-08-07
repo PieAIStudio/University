@@ -6,7 +6,7 @@ status: draft
 canonical: false
 owner: ai-assisted
 created: 2026-08-06
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-08
 domain: research
 tags:
   - next-stage
@@ -27,6 +27,14 @@ related:
 **性质：** 战略与子系统层研究，**不是**实现规格，**不是** API/数据表/文件路径设计。  
 **日期：** 2026-08-06（Grok 执笔）。
 
+**交付状态（2026-08-08）：** 这不是待办清单。P1 元学习（airlock）、P2 表达教练包、
+P3 外语旁注层核心、以及 B1 宿主答疑桥均已落地；细节与入口见
+`docs/reference/execution/current-work.md` 与
+`docs/reference/using-university-local-with-grok.md`。下文保留研究理由；
+**不要**按本文「下一阶段」措辞重新实现已交付能力。仓外 SpecialStudies 手写教材
+路径已被 `university-local` airlock study 取代（见
+`docs/reference/what-lives-where.md`）。
+
 ---
 
 ## 一句话
@@ -37,21 +45,12 @@ UniversityLocal 下一阶段不是「加三个小功能」，而是可能长出*
 
 ## 正文索引
 
-| 文档 | 子系统 / 主题 | 核心问题 |
-| --- | --- | --- |
-| [01-incidental-english-subsystem.md](./01-incidental-english-subsystem.md) | 附带英语习得 | 技术主课进行时，如何可持续、可调节地学英语，且不毁主课？ |
-| [02-collaboration-communication-subsystem.md](./02-collaboration-communication-subsystem.md) | 协作表达（主：对 AI） | 如何把「说清楚」练成可复习能力，而不是一次性点评？ |
-| [03-meta-study-self-learning.md](./03-meta-study-self-learning.md) | 元学习（学大学本身） | 如何把本系统当作学习对象，同时不破坏「工厂与书架分离」？ |
-| [04-host-feedback-bridge-b1.md](./04-host-feedback-bridge-b1.md) | **B1 宿主答疑桥** | 如何在不内嵌 runtime 模型、不安 pi 的前提下，让练习辅导写回 Web？ |
-
-### 仓外元学习教材厂（非本目录）
-
-对话沉淀的可学课文（含 Mermaid）在：
-
-`/Users/yuanfei/PieAI/UniversityLocal-SpecialStudies`
-
-- Course A《AI 时代的四层工作台》第 1 课已写
-- 与 03 元学习、04 B1 互补：那边是**课**，这边是**研究/产品方向**
+| 文档 | 子系统 / 主题 | 状态（2026-08） | 核心问题 |
+| --- | --- | --- | --- |
+| [01-incidental-english-subsystem.md](./01-incidental-english-subsystem.md) | 附带外语习得 | **核心已交付**（检测+合成层+复习） | 技术主课进行时，如何可持续、可调节地学外语，且不毁主课？ |
+| [02-collaboration-communication-subsystem.md](./02-collaboration-communication-subsystem.md) | 协作表达（主：对 AI） | **包路径已交付**；体系化复习卡仍开放 | 如何把「说清楚」练成可复习能力，而不是一次性点评？ |
+| [03-meta-study-self-learning.md](./03-meta-study-self-learning.md) | 元学习（学大学本身） | **airlock 路径已交付** | 如何把本系统当作学习对象，同时不破坏「工厂与书架分离」？ |
+| [04-host-feedback-bridge-b1.md](./04-host-feedback-bridge-b1.md) | **B1 宿主答疑桥** | **已交付** | 如何在不内嵌 runtime 模型的前提下，让练习辅导写回 Web？ |
 
 ---
 

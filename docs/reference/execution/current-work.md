@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-08
 domain: execution
 tags:
   - current-work
@@ -21,24 +21,25 @@ This file is the current project work index. It is not the agents-routing algori
 
 ## Current Focus
 
-- Current phase: operate the completed Grok daily-learning bridge and collect
-  real owner evidence before adding more exercise formats.
+- Current phase: rewrite active lessons into the five teaching variants, then
+  learn with them and record friction. Do **not** re-build the foreign-language
+  layer, lesson links, evidence anchors, URL addresses, or `write-lesson` skill
+  — those shipped 2026-08-07–08 (receipt below).
 - Current active plan: none.
 - Current active spec: none.
-- Current proof target: complete three normal owner learning sessions and record
-  friction before deciding whether Predict Output, Micro-Parsons, or Explain with
-  Rubric deserves the next bounded spec.
-- **B1 host feedback bridge is built** (delivered 2026-08-06, direction recorded
-  the same day). Copy exercise packet → any host session → CLI write-back → Web
-  coach panel, with no second runtime model and no dependency on one particular
-  host. Research note:
-  `docs/reference/下一阶段/Grok/04-host-feedback-bridge-b1.md`. The same shape
-  now carries expression coaching, minus the write-back step.
-- Meta-learning curriculum factory (outside this repo):
-  `/Users/yuanfei/PieAI/UniversityLocal-SpecialStudies`. Its four-layer material
-  has been rebound onto real code inside the `university-local` airlock study,
-  so it no longer cites its own prose. The `ul-meta` study that held the earlier
-  self-referential version is archived, not deleted.
+- Current content work: apply `.agents/skills/write-lesson/` (and
+  `pnpm lint:lessons`) to the remaining lessons that predate `variant`. First
+  six rewritten lessons already pass the linter; ~475 do not declare a variant
+  yet and are skipped by design.
+- Current proof target: real owner sessions on the rewritten lessons — reading
+  with 外语模式, following `[[lesson:]]` links, using URL restore after reload —
+  before inventing new exercise formats.
+- **B1 host feedback bridge is built** (2026-08-06). Research note:
+  `docs/reference/下一阶段/Grok/04-host-feedback-bridge-b1.md`. Expression
+  coaching uses the same packet shape without write-back.
+- **Self-study via airlock is built** (2026-08-06). The hand-authored
+  SpecialStudies / `ul-meta` path is superseded; topology is in
+  `docs/reference/what-lives-where.md`.
 
 ## Accepted Direction (2026-07-20)
 
@@ -59,8 +60,8 @@ This file is the current project work index. It is not the agents-routing algori
 - Integrate pinned Understand Anything through a UniversityLocal-owned full-analysis
   adapter. Keep runtime worktrees temporary and make small upstream fixes only when
   reproducible evidence proves a UA defect.
-- Keep UniversityLocal pinned to the verified portfolio SwimmerUIKit `1.2.0`
-  baseline.
+- Keep UniversityLocal on the portfolio SwimmerUIKit baseline currently declared
+  in `package.json` (presently `1.3.0`; earlier receipts below record `1.2.0`).
 - Keep personal study containers under root-level `studies/<study-id>/` by
   default, with an explicit configuration escape hatch for another data root.
 - Reserve `University` for a possible future consumer product in a separate
@@ -456,18 +457,14 @@ refuses rather than skips: a repository that really does track a secret is a
 problem the owner has to see, and `.gitignore` is no help for a file already
 tracked.
 
-**English reading layer.** Annotations live in a parallel tree keyed by both
-`contentRevision` and a hash of the content, so turning English mode on cannot
-bump a revision and therefore cannot invalidate completion or FSRS scheduling.
-A hash mismatch renders as if unannotated, because every anchor position was
-chosen by someone looking at the old bytes. Two independent locks keep anchors
-out of code — a server-side protected-region check, and a plugin that only
-visits text nodes, which puts code structurally out of reach. The lexicon is
-keyed by sense rather than spelling: "commit" in Git and "commit" in a database
-are different words, and one gloss per headword would be wrong about half the
-time. The popover speaks only through a voice reporting `localService === true`,
-since Chrome lists cloud voices in the same array and speaking through one would
-put lesson text on the network.
+**Foreign-language reading layer (first cut).** Authored overlays live in a
+parallel tree keyed by both `contentRevision` and a content hash, so turning the
+layer on cannot bump a revision or invalidate completion / FSRS. Two locks keep
+anchors out of code — server protected-region check, and a plugin that only
+visits text nodes. Lexicon is sense-keyed, not spelling-keyed. Popover speech is
+local-only (`localService === true`). **Extended 2026-08-07:** the layer is now
+composed (authored + detection); see the Pedagogy And Reading Layer receipt
+below — do not re-implement detection from this paragraph.
 
 **Expression coaching.** The same packet-to-any-host shape as exercise grading,
 with one deliberate difference: it ends without a write-back command. Coaching
@@ -493,6 +490,51 @@ it walks up to `package.json` instead.
 Verified: 348 tests across 33 files, full `pnpm verify`, a fresh clone that
 typechecks, and a browser pass confirming word anchors render as buttons with a
 working popover while code blocks stay untouched.
+
+
+## Pedagogy And Reading Layer Receipt (2026-08-07–08)
+
+Six product surfaces landed after the 2026-08-06 language cut. Agents must not
+rebuild them from research notes under `docs/reference/下一阶段/`.
+
+**Foreign-language layer is derived, not hand-authored-only.**
+`server/language/detect.ts` finds lexicon headwords already present in lesson
+prose (no stemmer; small inflection table; never inside code).
+`server/language/layer.ts` composes authored overlays first, then fills the
+learner budget with detection. `adaptiveTargetCount` starts at 3 and saturates
+at 12 as the learner retires words. Retired words render dimmed and cost no
+budget. A stale overlay degrades to a derived layer instead of nothing. UI
+label is **外语模式** (default off). Lexicon gaps:
+`scripts/vocabulary-coverage.mjs`. Optional authored overlays remain via
+`pnpm university language annotate`.
+
+**Cross-lesson links.** `[[lesson:id]]` or `[[lesson:course/unit/id]]` with
+optional label, resolved server-side in `server/content/lesson-links.ts`.
+Broken links are loud. Backlinks and an in-session return stack are in the Web
+reader.
+
+**Inline evidence anchors.** `[[evidence:path:line]]` in
+`server/content/evidence-anchors.ts`. Valid only inside a range the lesson
+manifest already cites; outside that range renders broken on purpose.
+
+**Lesson teaching shape.** Operation contract:
+`.agents/skills/write-lesson/` (five variants: 现象 / 对比 / 溯源 / 决策 / 术语).
+Research rationale only: `docs/reference/lesson-pedagogy.md`. Optional
+`variant` on `LessonManifestSchema` — absent means predate the shapes.
+
+**Mechanical gate.** `scripts/lint-lessons.mjs` (`pnpm lint:lessons`) enforces
+the machine-checkable half of the skill checklist and runs inside
+`pnpm verify`. Lessons without `variant` are skipped.
+
+**URL addresses.** `src/url-state.ts` — lesson paths parse on load, push on
+navigation, restore on popstate. Not a router library; ~80 lines of
+parse/format until a later component split.
+
+**Tips / glossary.** `src/Tip.tsx` + `src/glossary.ts` — single glossary so
+jargon (FSRS, 外语模式, REV, …) cannot mean two things on two screens.
+
+Do not invent a second language annotator, a second lesson template, or a
+router package on top of these without a new bounded decision.
 
 ## Accepted Risks
 

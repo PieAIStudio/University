@@ -6,7 +6,7 @@ status: draft
 canonical: false
 owner: ai-assisted
 created: 2026-08-06
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-08
 domain: research
 tags:
   - english
@@ -22,6 +22,13 @@ related:
 
 > 宏观研究。说明「这门事应如何完成、为何如此」，供其它 AI 审阅。  
 > 不含界面线框、存储 schema、接口清单。
+
+**交付状态（2026-08-07–08）：阶段 A/B 核心已交付。** 旁注层默认关；UI 名 **外语模式**；
+词来自词表检测 + 可选手写 overlay 的合成（`server/language/detect.ts`、
+`server/language/layer.ts`）；预算随学习者熟悉度自适应；统一词汇复习在
+`studies/.vocabulary/`。勿按本文当未开工 backlog。仍开放的研究点：用户可调密度
+滑条、introducing 混排展示、双轨词库运营。日常用法见
+`docs/reference/using-university-local-with-grok.md`。
 
 ---
 
