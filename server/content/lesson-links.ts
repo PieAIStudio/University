@@ -62,7 +62,20 @@ export function parseLessonLinks(content: string): readonly ParsedLessonLink[] {
     if (match.index === undefined) continue;
     const start = match.index;
     const end = start + match[0].length;
-    if (protectedRegions.some((region) => start < region.end && region.start < end)) continue;
+    // Wiki tokens are themselves protected regions (so the language layer never
+    // annotates inside them). Skip a match only when it sits inside a *larger*
+    // protected stretch — a fence, inline code, etc. — not when the only hit is
+    // the token's own range.
+    if (
+      protectedRegions.some(
+        (region) =>
+          start < region.end &&
+          region.start < end &&
+          !(region.start === start && region.end === end),
+      )
+    ) {
+      continue;
+    }
     links.push({
       start,
       end,

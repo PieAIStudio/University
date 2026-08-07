@@ -176,6 +176,63 @@ describe("detecting vocabulary from the lesson itself", () => {
       expect(content.slice(item.start, item.end)).toBe(item.anchor.quote);
     }
   });
+
+  /**
+   * `[[evidence:…]]` / `[[lesson:…]]` are markup tokens, not prose. Matching a
+   * lexicon headword inside one rewrites the token before the evidence or
+   * lesson resolvers can parse it — the foreign-language layer then shows the
+   * broken literal (`[[evidence（evidence）:readme（README）.md:1-4]]`) instead
+   * of a clickable reference.
+   */
+  it("never annotates a headword that only lives inside an evidence token", () => {
+    const content = "先看 [[evidence:readme.md:1-4]] 这段说明。";
+    const lexicon = [sense("evidence.study", "evidence"), sense("readme.doc", "readme")];
+    const found = detectAnchors(content, lexicon, { stages: noStages, targetCount: 10 });
+    const tokenStart = content.indexOf("[[evidence:readme.md:1-4]]");
+    const tokenEnd = tokenStart + "[[evidence:readme.md:1-4]]".length;
+    const { resolved } = resolveAnchors(
+      content,
+      found.map((item) => item.anchor),
+    );
+
+    expect(found).toHaveLength(0);
+    for (const item of resolved) {
+      expect(item.start < tokenEnd && item.end > tokenStart).toBe(false);
+    }
+  });
+
+  it("never annotates a headword that only lives inside a lesson token", () => {
+    // Bare id, qualified path, and label — any of them can hold a headword.
+    const content = "延伸阅读 [[lesson:load-files|open the file]]。";
+    const lexicon = [
+      sense("lesson.course", "lesson"),
+      sense("load.fs", "load"),
+      sense("open.fs", "open"),
+      sense("file.fs", "file"),
+    ];
+    const found = detectAnchors(content, lexicon, { stages: noStages, targetCount: 10 });
+    const token = "[[lesson:load-files|open the file]]";
+    const tokenStart = content.indexOf(token);
+    const tokenEnd = tokenStart + token.length;
+    const { resolved } = resolveAnchors(
+      content,
+      found.map((item) => item.anchor),
+    );
+
+    expect(found).toHaveLength(0);
+    for (const item of resolved) {
+      expect(item.start < tokenEnd && item.end > tokenStart).toBe(false);
+    }
+  });
+
+  it("still annotates the same headword when it appears in real prose next to a token", () => {
+    const content = "先看 [[evidence:readme.md:1-4]]，再 load 一次。";
+    const lexicon = [sense("readme.doc", "readme"), sense("load.fs", "load")];
+    const found = detectAnchors(content, lexicon, { stages: noStages, targetCount: 10 });
+
+    expect(found.map((item) => item.anchor.senseId)).toEqual(["load.fs"]);
+    expect(found[0]!.anchor.quote).toBe("load");
+  });
 });
 
 describe("how many words a learner gets", () => {

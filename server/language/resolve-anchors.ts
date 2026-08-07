@@ -9,10 +9,12 @@ import type { LanguageAnchor } from "../../src/domain/schemas.js";
  *
  * Two rules keep it exact:
  *
- * 1. **Never inside code.** A fenced block, an inline span, a link target, or
- *    an HTML tag can all contain the same characters as prose, and replacing
- *    text there changes what the code *does* rather than how it reads. These
- *    regions are found first and treated as if they were not there.
+ * 1. **Never inside markup the reader is not reading as prose.** A fenced
+ *    block, an inline span, a link target, an HTML tag, or a `[[…]]` wiki
+ *    token can all contain the same characters as prose. Replacing text in
+ *    code changes what the code *does*; replacing text inside a wiki token
+ *    destroys the token before the evidence or lesson resolver can parse it.
+ *    These regions are found first and treated as if they were not there.
  * 2. **Never overlapping.** Two anchors that claim the same characters cannot
  *    both be honoured, and honouring one silently would make the rendering
  *    depend on array order. The later one is dropped and reported.
@@ -40,10 +42,13 @@ export interface Region {
 }
 
 /**
- * Regions whose characters belong to machines rather than to the reader.
+ * Regions whose characters belong to machines or markup rather than to prose.
  *
  * Fenced blocks are matched first and greedily so that prose-looking text
- * inside them cannot be picked up by the later, narrower patterns.
+ * inside them cannot be picked up by the later, narrower patterns. Wiki tokens
+ * (`[[evidence:…]]`, `[[lesson:…]]`, and any future `[[kind:…]]`) are markup
+ * the detector and resolver must leave intact — the same reason code is
+ * protected — so they live here rather than only in the detector.
  */
 const PROTECTED_PATTERNS: readonly RegExp[] = [
   /^[ \t]*(`{3,}|~{3,})[\s\S]*?^[ \t]*\1[ \t]*$/gm,
@@ -51,6 +56,8 @@ const PROTECTED_PATTERNS: readonly RegExp[] = [
   /\]\([^)\n]*\)/g,
   /<[^>\n]+>/g,
   /^[ \t]*\|.*\|[ \t]*$/gm,
+  // Same shape as `parseLessonLinks`: optional `|label`, no newlines or `]`.
+  /\[\[[^\]\n|]*(?:\|[^\]\n]*)?\]\]/g,
 ];
 
 /**
