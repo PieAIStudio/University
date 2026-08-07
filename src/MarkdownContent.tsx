@@ -102,6 +102,8 @@ export interface LanguageLayer {
   readonly status: "annotated" | "not-annotated" | "stale";
   readonly ranges: readonly LanguageRange[];
   readonly lexicon: readonly LexiconEntry[];
+  /** senseId → why the word is on the page. Absent on older responses. */
+  readonly reasons?: Readonly<Record<string, "new" | "learning" | "familiar">>;
 }
 
 /**
@@ -166,6 +168,7 @@ export function MarkdownContent({
             entry={entry}
             original={value}
             stage={vocabularyStages?.get(senseId)}
+            reason={active?.reasons?.[senseId]}
             {...(onStageWord
               ? { onStage: (stage: VocabularyStage) => onStageWord(senseId, stage) }
               : {})}
@@ -173,7 +176,7 @@ export function MarkdownContent({
         );
       },
     }),
-    [lexicon, vocabularyStages, onStageWord, inline],
+    [lexicon, vocabularyStages, onStageWord, inline, active],
   );
 
   const plugins = useMemo(

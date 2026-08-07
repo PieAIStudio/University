@@ -1557,12 +1557,16 @@ const STAGE_PRESENTATION: Readonly<
  * ones have I already dealt with" short of hovering every underline. The rail
  * beside the lesson had the room for it and was showing nothing.
  */
+const REASON_RANK: Record<string, number> = { new: 0, learning: 1, familiar: 2 };
+
 function LessonWordList({
   lexicon,
   stages,
+  reasons,
 }: {
   readonly lexicon: readonly LexiconEntry[];
   readonly stages: ReadonlyMap<string, string>;
+  readonly reasons?: Readonly<Record<string, "new" | "learning" | "familiar">> | undefined;
 }) {
   const voices = useEnglishVoices();
   const [voiceURI, setVoiceURI] = useState(readVoicePreference);
@@ -1611,31 +1615,40 @@ function LessonWordList({
         </label>
       ) : null}
       <ul className="word-list__items">
-        {lexicon.map((entry) => {
-          const stage = stages.get(entry.senseId);
-          const presentation = stage ? STAGE_PRESENTATION[stage] : undefined;
-          return (
-            <li key={entry.senseId}>
-              <button
-                type="button"
-                className="word-list__word"
-                onClick={() => {
-                  const anchor = document.querySelector<HTMLElement>(
-                    `[data-sense-id="${CSS.escape(entry.senseId)}"]`,
-                  );
-                  anchor?.scrollIntoView({ block: "center", behavior: "smooth" });
-                  anchor?.focus();
-                }}
-              >
-                <span lang="en">{entry.headword}</span>
-                <small>{entry.gloss}</small>
-              </button>
-              {presentation ? (
-                <GameBadge tone={presentation.tone}>{presentation.label}</GameBadge>
-              ) : null}
-            </li>
-          );
-        })}
+        {/* Words the learner has not met lead the list. The ones they have
+            claimed stay visible — this is also where they take it back — but
+            they sink, so the list answers "what is new here" at a glance. */}
+        {lexicon
+          .toSorted(
+            (left, right) =>
+              (REASON_RANK[reasons?.[left.senseId] ?? "new"] ?? 0) -
+              (REASON_RANK[reasons?.[right.senseId] ?? "new"] ?? 0),
+          )
+          .map((entry) => {
+            const stage = stages.get(entry.senseId);
+            const presentation = stage ? STAGE_PRESENTATION[stage] : undefined;
+            return (
+              <li key={entry.senseId} data-reason={reasons?.[entry.senseId]}>
+                <button
+                  type="button"
+                  className="word-list__word"
+                  onClick={() => {
+                    const anchor = document.querySelector<HTMLElement>(
+                      `[data-sense-id="${CSS.escape(entry.senseId)}"]`,
+                    );
+                    anchor?.scrollIntoView({ block: "center", behavior: "smooth" });
+                    anchor?.focus();
+                  }}
+                >
+                  <span lang="en">{entry.headword}</span>
+                  <small>{entry.gloss}</small>
+                </button>
+                {presentation ? (
+                  <GameBadge tone={presentation.tone}>{presentation.label}</GameBadge>
+                ) : null}
+              </li>
+            );
+          })}
       </ul>
     </section>
   );
@@ -1826,6 +1839,7 @@ function LessonReader({
             <LessonWordList
               lexicon={view.lesson.language?.lexicon ?? []}
               stages={vocabularyStages}
+              reasons={view.lesson.language?.reasons}
             />
           ) : null}
         </div>

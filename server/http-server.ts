@@ -49,9 +49,13 @@ import {
   type StoredCardState,
   type StoredLessonProgress,
 } from "./learning/types.js";
+import { composeLanguageLayer } from "./language/layer.js";
 import { selectLexicon } from "./language/lexicon.js";
-import { readLessonLanguageLayer } from "./language/overlay.js";
-import { VocabularyStore, getVocabularyDatabasePath } from "./language/vocabulary-store.js";
+import {
+  VocabularyStore,
+  getVocabularyDatabasePath,
+  type VocabularyState,
+} from "./language/vocabulary-store.js";
 import { readCourseClock } from "./airlock/course-clock.js";
 import { inspectAirlock } from "./airlock/inspect.js";
 import { getCoursePaths, getStudyPaths } from "./studies/paths.js";
@@ -791,6 +795,7 @@ function buildLessonView(
   studiesRoot: string,
   route: LearningRoute,
   store: SqliteLearningStore | null,
+  vocabulary: readonly VocabularyState[],
 ): unknown {
   const { lesson, content } = requireActiveLesson(studiesRoot, route);
   const lessonKey = lessonContentKey({
@@ -798,11 +803,15 @@ function buildLessonView(
     unitId: route.unitId,
     lessonId: route.lessonId,
   });
-  // The English layer travels with every lesson and costs a few hundred bytes:
-  // ranges plus the senses those ranges use. Whether any of it is shown is the
-  // reader's choice, made in the browser, because it changes nothing about what
-  // the lesson is — only about how it reads.
-  const language = readLessonLanguageLayer({
+  // The foreign-language layer travels with every lesson and costs a few
+  // hundred bytes: ranges plus the senses those ranges use. Whether any of it
+  // is shown is the reader's choice, made in the browser, because it changes
+  // nothing about what the lesson is — only about how it reads.
+  //
+  // Composed rather than merely read: an authored overlay is honoured where one
+  // exists, and detection covers the rest, so which words a lesson can teach no
+  // longer depends on whether anyone annotated it.
+  const language = composeLanguageLayer({
     studiesRoot,
     studyId: route.studyId,
     language: "en",
@@ -811,6 +820,7 @@ function buildLessonView(
     lessonId: route.lessonId,
     contentRevision: lesson.contentRevision,
     content,
+    vocabulary,
   });
   return {
     lesson: {
@@ -822,6 +832,10 @@ function buildLessonView(
         status: language.status,
         ranges: language.ranges,
         lexicon: selectLexicon(language.senseIds),
+        // Why each word is here. The body dims the ones already retired and the
+        // sidebar sorts by it, so "认识" visibly quiets a word instead of only
+        // changing a number in a database.
+        reasons: language.reasons,
       },
       evidence: publicEvidence(lesson.evidence),
       progress: serializeProgress(store?.getLessonProgress(lessonKey) ?? null),
@@ -1043,6 +1057,17 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
   const getVocabulary = (): VocabularyStore => {
     vocabulary ??= new VocabularyStore(getVocabularyDatabasePath(config.studiesRoot));
     return vocabulary;
+  };
+
+  /**
+   * Learner word states for read-only use, without bringing the database into
+   * existence. Opening a lesson must not create a vocabulary database: a
+   * learner who has never turned the mode on has no states, and "no states" and
+   * "empty database" have to stay distinguishable on disk.
+   */
+  const peekVocabularyStates = (): readonly VocabularyState[] => {
+    if (!vocabulary && !existsSync(getVocabularyDatabasePath(config.studiesRoot))) return [];
+    return getVocabulary().listStates();
   };
 
   /**
@@ -1301,7 +1326,12 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
         sendJson(
           response,
           200,
-          buildLessonView(config.studiesRoot, lessonRoute, getStore(lessonRoute.studyId)),
+          buildLessonView(
+            config.studiesRoot,
+            lessonRoute,
+            getStore(lessonRoute.studyId),
+            peekVocabularyStates(),
+          ),
         );
         return;
       }

@@ -61,11 +61,18 @@ export function WordAnchor({
   entry,
   original,
   stage,
+  reason,
   onStage,
 }: {
   readonly entry: LexiconEntry;
   readonly original: React.ReactNode;
   readonly stage?: string | undefined;
+  /**
+   * Why this word is on the page. A word the learner has already claimed stays
+   * in the text — seeing it again in context is most of what makes it stick —
+   * but it stops competing for attention with the words they have not met.
+   */
+  readonly reason?: "new" | "learning" | "familiar" | undefined;
   readonly onStage?: ((stage: VocabularyStage) => void) | undefined;
 }) {
   const [open, setOpen] = useState(false);
@@ -109,6 +116,7 @@ export function WordAnchor({
         // this is how it finds the occurrence in the body.
         data-sense-id={entry.senseId}
         data-pinned={pinned || undefined}
+        data-reason={reason}
         ref={refs.setReference}
         {...getReferenceProps({
           onClick: () => {

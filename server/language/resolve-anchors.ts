@@ -34,7 +34,7 @@ export interface UnresolvedAnchor {
   readonly reason: "not-found" | "occurrence-missing" | "inside-code" | "overlaps";
 }
 
-interface Region {
+export interface Region {
   readonly start: number;
   readonly end: number;
 }
@@ -53,7 +53,14 @@ const PROTECTED_PATTERNS: readonly RegExp[] = [
   /^[ \t]*\|.*\|[ \t]*$/gm,
 ];
 
-function findProtectedRegions(content: string): readonly Region[] {
+/**
+ * Exported so the detector can skip these stretches too.
+ *
+ * Sharing the function rather than the rule: a detector with its own copy of
+ * "what counts as code" would drift from this one, and the symptom would be
+ * anchors that are silently dropped at read time with nothing to point at.
+ */
+export function findProtectedRegions(content: string): readonly Region[] {
   const regions: Region[] = [];
   for (const pattern of PROTECTED_PATTERNS) {
     for (const match of content.matchAll(pattern)) {

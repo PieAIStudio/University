@@ -2022,3 +2022,21 @@ summary:focus-visible,
 .exercise-prompt > :last-child {
   margin-bottom: 0;
 }
+
+/* A word the learner has claimed stays in the text — meeting it again in
+   context is most of what makes it stick — but it stops competing with the
+   words they have not met. Underline goes, colour softens, popover unchanged. */
+.word-anchor__trigger[data-reason="familiar"] {
+  border-bottom-color: transparent;
+  color: inherit;
+  opacity: 0.72;
+}
+
+.word-anchor__trigger[data-reason="familiar"]:hover,
+.word-anchor__trigger[data-reason="familiar"]:focus-visible {
+  opacity: 1;
+}
+
+.word-list__items > li[data-reason="familiar"] {
+  opacity: 0.6;
+}
