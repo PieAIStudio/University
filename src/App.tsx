@@ -10,6 +10,15 @@ import {
 
 import { MarkdownContent } from "./MarkdownContent.js";
 import { Tip } from "./Tip.js";
+import {
+  STALE_TOKEN_NOTICE,
+  cardActionPath,
+  isStaleTokenFailure,
+  lessonPath,
+  readJson,
+  reviewCardIdentity,
+} from "./api/client.js";
+import { readForeignLanguageMode, writeForeignLanguageMode } from "./language/reading-mode.js";
 import type { LessonLinkTarget } from "./remark-lesson-links.js";
 import { formatAddress, parseAddress, type AppAddress } from "./url-state.js";
 import type { LexiconEntry } from "./language/WordPopover.js";
@@ -28,7 +37,6 @@ import type {
   LessonLocator,
   ReviewCardLocator,
   BootstrapData,
-  LessonProgress,
   CourseView,
   StudyView,
   KnowledgeNoteView,
@@ -43,6 +51,7 @@ import type {
 } from "./view/lesson-view.js";
 import {
   focusLabel,
+  progressLabel,
   evidenceEditorLocator,
   evidenceRangeLabel,
   editorJumpShortcutLabel,
@@ -56,44 +65,6 @@ const tabs = [
   { id: "today", label: "今日学习", panelId: "panel-today" },
   { id: "studies", label: "学习项目", panelId: "panel-studies" },
 ] as const;
-
-async function readJson<T>(response: Response): Promise<T> {
-  const body = (await response.json()) as T & { readonly error?: string };
-  if (!response.ok) throw new Error(body.error ?? `请求失败（${response.status}）`);
-  return body;
-}
-
-function lessonPath(locator: LessonLocator): string {
-  return `/api/studies/${locator.studyId}/courses/${locator.courseId}/units/${locator.unitId}/lessons/${locator.lessonId}`;
-}
-
-export function cardActionPath(card: ReviewCardLocator, action: "reveal" | "review"): string {
-  if (card.kind === "knowledge-card") {
-    return `/api/studies/${card.studyId}/notes/${card.noteId}/cards/${card.cardId}/${action}`;
-  }
-  return `${lessonPath(card)}/cards/${card.cardId}/${action}`;
-}
-
-function reviewCardIdentity(card: ReviewCardLocator): string {
-  if (card.kind === "knowledge-card") {
-    return `knowledge/${card.studyId}/${card.noteId}/${card.cardId}@${card.contentRevision}`;
-  }
-  return `course/${card.studyId}/${card.courseId}/${card.unitId}/${card.lessonId}/${card.cardId}@${card.contentRevision}`;
-}
-
-/**
- * `contentRevision` is the revision the lesson is on now. Progress earned on an
- * earlier revision is real history but not current standing: the lesson's cards
- * are re-enrolled for review only when it is completed again, so calling it
- * "已完成" would hide the one action that puts the cards back in the queue.
- */
-function progressLabel(progress: LessonProgress | null, contentRevision?: number): string {
-  if (!progress) return "尚未开始";
-  const stale = contentRevision !== undefined && progress.contentRevision !== contentRevision;
-  if (progress.status === "completed") return stale ? "课文已更新 · 需重做" : "已完成";
-  if (stale) return "课文已更新 · 需重做";
-  return `进行中 · ${Math.round(progress.progress * 100)}%`;
-}
 
 function EmptyCampus() {
   return (
@@ -111,46 +82,12 @@ function EmptyCampus() {
 }
 
 /**
- * The API mints its request token once per process, so restarting it — which
- * `pnpm dev` does on every server edit — invalidates the token an already-open
- * tab is still sending. The raw 403 tells a learner nothing they can act on,
- * and the page looks broken until they think to reload it. Pulling a fresh
- * bootstrap puts a valid token back in place, so the repair is one more click.
- */
-const STALE_TOKEN_NOTICE = "本地服务重启过，安全令牌换新了。再点一次就能提交。";
-/**
  * How long the page keeps watching for a host grade on its own. Past this the
  * learner is no longer waiting on an assistant that is about to answer, and a
  * page that polls forever is a page that never stops. Returning to the tab
  * still refreshes immediately.
  */
 const HOST_GRADE_POLL_LIMIT_MS = 10 * 60 * 1000;
-/**
- * English mode is a way of reading, not a fact about the course, so the
- * preference lives in the browser rather than in the learner database. Default
- * off: a lesson has to read exactly as it did before anybody opts in.
- */
-const ENGLISH_MODE_KEY = "university-local.english-mode";
-
-function readEnglishMode(): boolean {
-  try {
-    return window.localStorage.getItem(ENGLISH_MODE_KEY) === "on";
-  } catch {
-    return false;
-  }
-}
-
-function writeEnglishMode(enabled: boolean): void {
-  try {
-    window.localStorage.setItem(ENGLISH_MODE_KEY, enabled ? "on" : "off");
-  } catch {
-    // A browser with storage disabled still gets the toggle, just not the memory.
-  }
-}
-
-function isStaleTokenFailure(message: string): boolean {
-  return /request token/i.test(message);
-}
 
 interface DueWord {
   readonly senseId: string;
@@ -1279,7 +1216,7 @@ function LessonReader({
   readonly onReturn?: (() => void) | undefined;
 }) {
   const [completed, setCompleted] = useState(view.lesson.progress?.status === "completed");
-  const [englishMode, setEnglishMode] = useState(readEnglishMode);
+  const [englishMode, setEnglishMode] = useState(readForeignLanguageMode);
   const [vocabularyStages, setVocabularyStages] = useState<ReadonlyMap<string, string>>(new Map());
   const titleRef = useRef<HTMLHeadingElement>(null);
   const annotated = view.lesson.language?.status === "annotated";
@@ -1383,7 +1320,7 @@ function LessonReader({
                 onClick={() => {
                   const next = !englishMode;
                   setEnglishMode(next);
-                  writeEnglishMode(next);
+                  writeForeignLanguageMode(next);
                 }}
               >
                 {englishMode ? "外语模式 · 开" : "外语模式 · 关"}

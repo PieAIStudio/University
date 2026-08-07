@@ -121,6 +121,20 @@ export interface LessonProgress {
   readonly updatedAt: string;
 }
 
+/**
+ * `contentRevision` is the revision the lesson is on now. Progress earned on an
+ * earlier revision is real history but not current standing: the lesson's cards
+ * are re-enrolled for review only when it is completed again, so calling it
+ * "已完成" would hide the one action that puts the cards back in the queue.
+ */
+export function progressLabel(progress: LessonProgress | null, contentRevision?: number): string {
+  if (!progress) return "尚未开始";
+  const stale = contentRevision !== undefined && progress.contentRevision !== contentRevision;
+  if (progress.status === "completed") return stale ? "课文已更新 · 需重做" : "已完成";
+  if (stale) return "课文已更新 · 需重做";
+  return `进行中 · ${Math.round(progress.progress * 100)}%`;
+}
+
 export interface LessonSummary {
   readonly id: string;
   readonly title: string;

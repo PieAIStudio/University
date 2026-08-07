@@ -5,11 +5,11 @@ import {
   EvidenceCode,
   KnowledgeNotesSection,
   StudyEvidenceStatus,
-  cardActionPath,
   lessonNeighbours,
   recentStudies,
   relativeTimeLabel,
 } from "./App.js";
+import { cardActionPath } from "./api/client.js";
 import {
   buildCardCoachingPacket,
   buildCardRevealPayload,
