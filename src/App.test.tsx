@@ -1,12 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import {
-  KnowledgeNotesSection,
-  StudyEvidenceStatus,
-  recentStudies,
-  relativeTimeLabel,
-} from "./App.js";
+import { KnowledgeNotesSection } from "./shell/KnowledgeNotesSection.js";
+import { StudyEvidenceStatus } from "./shell/StudyDetail.js";
+import { recentStudies, relativeTimeLabel } from "./shell/StudyShelf.js";
 import { EvidenceCode } from "./evidence/EvidenceCode.js";
 import { lessonNeighbours } from "./lesson/LessonNav.js";
 import { cardActionPath } from "./api/client.js";
