@@ -54,6 +54,7 @@ Use `AGENTS.md` for startup reading. It should point agents to:
 | `docs/reference/using-university-local-with-grok.md` | Daily host + campus use (外语模式, links, CLI) |
 | `docs/reference/lesson-pedagogy.md` | Why lessons look like they do (skill is SSOT for shape) |
 | `docs/reference/what-lives-where.md` | Airlock vs `studies/` vs live product |
+| `docs/reference/module-map.md` | Which source module may depend on which, and why three big files stay whole |
 
 Lesson **authoring** contract is the skill `.agents/skills/write-lesson/`, not a
 second copy under `docs/**`. Research notes under `docs/reference/下一阶段/` are

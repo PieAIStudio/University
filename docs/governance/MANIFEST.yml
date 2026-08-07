@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-07T16:29:18.832Z
+generated_at: 2026-08-07T19:14:45.191Z
 generator_version: doc-gov@0.8.0
-docs_count: 36
+docs_count: 37
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-local-study-containers.md
@@ -157,6 +157,13 @@ docs:
     status: active
     canonical: false
     last_reviewed: 2026-08-08
+    pinned: false
+  - id: REF-MODULE-MAP
+    path: docs/reference/module-map.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-08-07
     pinned: false
   - id: REF-USING-UNIVERSITY-LOCAL-WITH-GROK
     path: docs/reference/using-university-local-with-grok.md
