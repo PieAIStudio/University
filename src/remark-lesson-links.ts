@@ -1,0 +1,110 @@
+import type { Root, Text } from "mdast";
+import { visit } from "unist-util-visit";
+
+export interface LessonLinkTarget {
+  readonly courseId: string;
+  readonly unitId: string;
+  readonly lessonId: string;
+  readonly title: string;
+}
+
+export interface LessonLinkRange {
+  readonly start: number;
+  readonly end: number;
+  readonly label: string | null;
+  /** `null` when the server could not resolve it. */
+  readonly target: LessonLinkTarget | null;
+}
+
+/**
+ * Same trick as the word anchor: react-markdown dispatches on the HTML element
+ * name `data.hName` produces, never on the mdast node type.
+ */
+export const LESSON_LINK_TAG = "lesson-link";
+
+export interface LessonLinkNode {
+  readonly type: "lessonLink";
+  readonly value: string;
+  readonly data: {
+    readonly hName: typeof LESSON_LINK_TAG;
+    readonly hProperties: {
+      readonly courseId?: string;
+      readonly unitId?: string;
+      readonly lessonId?: string;
+      readonly broken?: string;
+    };
+    readonly hChildren: readonly { readonly type: "text"; readonly value: string }[];
+  };
+}
+
+declare module "mdast" {
+  interface RootContentMap {
+    lessonLink: LessonLinkNode;
+  }
+  interface PhrasingContentMap {
+    lessonLink: LessonLinkNode;
+  }
+}
+
+/**
+ * Turns `[[lesson:…]]` tokens into nodes the reader can follow.
+ *
+ * Ranges come from the server, which is the only side that knows whether a
+ * target exists. A link the server could not resolve is still rendered — as
+ * visibly broken rather than as a working link that goes nowhere, and never as
+ * the raw `[[lesson:x]]` text, which would look like a rendering failure and
+ * teach the reader to distrust the page.
+ *
+ * Only `text` nodes are visited, so a lesson that *shows* this syntax inside a
+ * code fence keeps it literal.
+ */
+export function remarkLessonLinks(options: { readonly ranges: readonly LessonLinkRange[] }) {
+  const sorted = [...options.ranges].sort((left, right) => left.start - right.start);
+  return (tree: Root): void => {
+    if (sorted.length === 0) return;
+    visit(tree, "text", (node: Text, index, parent) => {
+      const start = node.position?.start.offset;
+      const end = node.position?.end.offset;
+      if (start === undefined || end === undefined || parent === undefined || index === undefined) {
+        return;
+      }
+      const hits = sorted.filter((range) => range.start >= start && range.end <= end);
+      if (hits.length === 0) return;
+
+      const replacement: (Text | LessonLinkNode)[] = [];
+      let cursor = start;
+      for (const hit of hits) {
+        if (hit.start > cursor) {
+          replacement.push({
+            type: "text",
+            value: node.value.slice(cursor - start, hit.start - start),
+          });
+        }
+        // The label if the author wrote one, otherwise the target's real title
+        // — never the raw id, which means nothing to a reader.
+        const text = hit.label ?? hit.target?.title ?? "这一课还不存在";
+        replacement.push({
+          type: "lessonLink",
+          value: text,
+          data: {
+            hName: LESSON_LINK_TAG,
+            hProperties: hit.target
+              ? {
+                  courseId: hit.target.courseId,
+                  unitId: hit.target.unitId,
+                  lessonId: hit.target.lessonId,
+                }
+              : { broken: "true" },
+            hChildren: [{ type: "text", value: text }],
+          },
+        });
+        cursor = hit.end;
+      }
+      if (cursor < end) {
+        replacement.push({ type: "text", value: node.value.slice(cursor - start) });
+      }
+      parent.children.splice(index, 1, ...replacement);
+      return index + replacement.length;
+    });
+  };
+}

@@ -2040,3 +2040,71 @@ summary:focus-visible,
 .word-list__items > li[data-reason="familiar"] {
   opacity: 0.6;
 }
+
+/* --- Cross-lesson links ----------------------------------------------- */
+
+/* Inline in prose, so it has to read as part of the sentence rather than as a
+   control bolted into it. */
+.lesson-link {
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid rgb(240 168 104 / 45%);
+  background: none;
+  color: #f0a868;
+  cursor: pointer;
+  font: inherit;
+}
+
+.lesson-link:hover,
+.lesson-link:focus-visible {
+  border-bottom-color: #f0a868;
+}
+
+/* A link whose target does not exist. Loud on purpose: the only person who can
+   fix it is the one reading a page that would otherwise look fine. */
+.lesson-link--broken {
+  border-bottom: 1px dashed #ffb4a4;
+  color: #ffb4a4;
+  cursor: not-allowed;
+}
+
+.lesson-return {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 6px 14px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 999px;
+  background: rgb(240 168 104 / 12%);
+  color: #f0a868;
+  cursor: pointer;
+  font-size: 0.84rem;
+}
+
+.lesson-backlinks {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid var(--campus-rule);
+}
+
+.lesson-backlinks ul {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.lesson-backlinks button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--game-ui-text-muted, #cbb49c);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.lesson-backlinks button:hover,
+.lesson-backlinks button:focus-visible {
+  color: #f0a868;
+}

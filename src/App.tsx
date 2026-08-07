@@ -10,6 +10,7 @@ import {
 
 import { MarkdownContent, type LanguageLayer } from "./MarkdownContent.js";
 import { Tip } from "./Tip.js";
+import type { LessonLinkRange, LessonLinkTarget } from "./remark-lesson-links.js";
 import type { LexiconEntry } from "./language/WordPopover.js";
 import {
   readVoicePreference,
@@ -337,6 +338,8 @@ interface LessonView {
     readonly contentRevision: number;
     readonly content: string;
     readonly language?: LanguageLayer;
+    readonly links?: readonly LessonLinkRange[];
+    readonly backlinks?: readonly LessonLinkTarget[];
     readonly progress: LessonProgress | null;
     readonly evidence: readonly EvidenceView[];
     readonly exercises: readonly {
@@ -1557,6 +1560,15 @@ const STAGE_PRESENTATION: Readonly<
  * ones have I already dealt with" short of hovering every underline. The rail
  * beside the lesson had the room for it and was showing nothing.
  */
+/**
+ * How many nested detours to remember.
+ *
+ * Deep enough that following a link from a linked lesson still works, shallow
+ * enough that "返回" always means somewhere the reader recognises. A stack that
+ * remembers twenty hops is a stack nobody can predict.
+ */
+const LINK_RETURN_DEPTH = 5;
+
 const REASON_RANK: Record<string, number> = { new: 0, learning: 1, familiar: 2 };
 
 function LessonWordList({
@@ -1662,6 +1674,8 @@ function LessonReader({
   neighbours,
   onOpenLesson,
   onBackToCourse,
+  onFollowLink,
+  onReturn,
 }: {
   readonly locator: LessonLocator;
   readonly view: LessonView;
@@ -1671,6 +1685,9 @@ function LessonReader({
   readonly neighbours?: LessonNeighbours | null;
   readonly onOpenLesson?: (locator: LessonLocator) => void;
   readonly onBackToCourse?: () => void;
+  readonly onFollowLink?: ((target: LessonLinkTarget) => void) | undefined;
+  /** Present only when a cross-lesson link brought the reader here. */
+  readonly onReturn?: (() => void) | undefined;
 }) {
   const [completed, setCompleted] = useState(view.lesson.progress?.status === "completed");
   const [englishMode, setEnglishMode] = useState(readEnglishMode);
@@ -1740,6 +1757,11 @@ function LessonReader({
 
   return (
     <article className="lesson-reader">
+      {onReturn ? (
+        <button type="button" className="lesson-return" onClick={onReturn}>
+          ← 回到刚才那一课
+        </button>
+      ) : null}
       {neighbours && onOpenLesson && onBackToCourse ? (
         <LessonNav
           neighbours={neighbours}
@@ -1792,9 +1814,32 @@ function LessonReader({
               englishEnabled={englishMode}
               vocabularyStages={vocabularyStages}
               onStageWord={stageWord}
+              {...(view.lesson.links ? { lessonLinks: view.lesson.links } : {})}
+              {...(onFollowLink ? { onFollowLink } : {})}
             >
               {view.lesson.content}
             </MarkdownContent>
+            {view.lesson.backlinks && view.lesson.backlinks.length > 0 ? (
+              // The other half of associative linking. Without it, a link is a
+              // one-way exit and the lesson it points at never learns it is
+              // part of something.
+              <section className="lesson-backlinks" aria-label="哪些课提到了这一课">
+                <p className="eyebrow">MENTIONED BY</p>
+                <ul>
+                  {view.lesson.backlinks.map((entry) => (
+                    <li key={`${entry.courseId}/${entry.unitId}/${entry.lessonId}`}>
+                      <button
+                        type="button"
+                        onClick={() => onFollowLink?.(entry)}
+                        disabled={!onFollowLink}
+                      >
+                        {entry.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
           </div>
           {view.lesson.exercises.map((exercise) => (
             <ExerciseBlock
@@ -2527,6 +2572,8 @@ export function App() {
   const [selectedStudyId, setSelectedStudyId] = useState<string | null>(null);
   const [studyView, setStudyView] = useState<StudyView | null>(null);
   const [lessonLocator, setLessonLocator] = useState<LessonLocator | null>(null);
+  /** Lessons a cross-lesson link led away from, innermost last. */
+  const [returnStack, setReturnStack] = useState<readonly LessonLocator[]>([]);
   const [lessonView, setLessonView] = useState<LessonView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -2642,6 +2689,32 @@ export function App() {
     setActiveSection("studies");
   }
 
+  /**
+   * Following a cross-lesson link, with a way back.
+   *
+   * The whole promise of the linear-plus-associative design is that a detour
+   * is a detour. Without the stack, jumping to the lesson about how browsers
+   * parse HTML abandons the lesson that sent you — and next time the reader
+   * will not click, which costs the feature.
+   *
+   * Prev/next and the shelf deliberately clear the stack: those are decisions
+   * to move on, not detours, and a "return to" offer that survives them would
+   * be pointing somewhere the reader has stopped thinking about.
+   */
+  function followLessonLink(target: LessonLinkTarget) {
+    if (lessonLocator) {
+      setReturnStack((current) => [...current, lessonLocator].slice(-LINK_RETURN_DEPTH));
+    }
+    openLesson({ studyId: selectedStudyId ?? "", ...target });
+  }
+
+  function goBackFromLink() {
+    const previous = returnStack.at(-1);
+    if (!previous) return;
+    setReturnStack((current) => current.slice(0, -1));
+    openLesson(previous);
+  }
+
   async function refreshLearning() {
     await loadBootstrap();
     if (selectedStudyId) await loadStudy(selectedStudyId);
@@ -2734,8 +2807,16 @@ export function App() {
                   requestToken={data.requestToken}
                   onLearningChanged={refreshLearning}
                   neighbours={studyView ? lessonNeighbours(studyView.courses, lessonLocator) : null}
-                  onOpenLesson={openLesson}
-                  onBackToCourse={() => setLessonLocator(null)}
+                  onOpenLesson={(locator) => {
+                    setReturnStack([]);
+                    openLesson(locator);
+                  }}
+                  onBackToCourse={() => {
+                    setReturnStack([]);
+                    setLessonLocator(null);
+                  }}
+                  onFollowLink={followLessonLink}
+                  onReturn={returnStack.length > 0 ? goBackFromLink : undefined}
                 />
               ) : lessonError ? (
                 <GameCallout heading="这节课打不开" tone="warning" role="alert">

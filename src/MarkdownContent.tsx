@@ -5,6 +5,11 @@ import remarkGfm from "remark-gfm";
 import { MermaidDiagram } from "./MermaidDiagram.js";
 import { WordAnchor, type LexiconEntry, type VocabularyStage } from "./language/WordPopover.js";
 import { remarkLanguageAnchors, type LanguageRange } from "./language/remark-language-anchors.js";
+import {
+  remarkLessonLinks,
+  type LessonLinkRange,
+  type LessonLinkTarget,
+} from "./remark-lesson-links.js";
 
 function codeText(children: ReactNode): string {
   return Children.toArray(children)
@@ -121,12 +126,16 @@ export function MarkdownContent({
   vocabularyStages,
   onStageWord,
   inline = false,
+  lessonLinks,
+  onFollowLink,
 }: {
   readonly children: string;
   readonly language?: LanguageLayer;
   readonly englishEnabled?: boolean;
   readonly vocabularyStages?: ReadonlyMap<string, string>;
   readonly onStageWord?: (senseId: string, stage: VocabularyStage) => void;
+  readonly lessonLinks?: readonly LessonLinkRange[];
+  readonly onFollowLink?: (target: LessonLinkTarget) => void;
   /**
    * Drop the paragraph wrapper, for a question or prompt that is already inside
    * its own styled element. The Markdown still parses — which is the point:
@@ -149,6 +158,49 @@ export function MarkdownContent({
       ...(inline
         ? { p: ({ children }: { readonly children?: ReactNode }) => <>{children}</> }
         : {}),
+      "lesson-link"({
+        node,
+        children,
+      }: {
+        readonly node?: {
+          readonly properties?: {
+            readonly courseId?: unknown;
+            readonly unitId?: unknown;
+            readonly lessonId?: unknown;
+            readonly broken?: unknown;
+          };
+        };
+        readonly children?: ReactNode;
+      }) {
+        const properties = node?.properties;
+        if (properties?.broken !== undefined || typeof properties?.lessonId !== "string") {
+          // Visibly wrong, and not clickable. Silently swallowing it would let
+          // a bad link ship, since the only person who could notice is reading
+          // a page that looks fine.
+          return (
+            <span className="lesson-link lesson-link--broken" title="链接指向的课程不存在">
+              {children}
+            </span>
+          );
+        }
+        const target: LessonLinkTarget = {
+          courseId: String(properties.courseId),
+          unitId: String(properties.unitId),
+          lessonId: properties.lessonId,
+          title: typeof children === "string" ? children : "",
+        };
+        return (
+          <button
+            type="button"
+            className="lesson-link"
+            onClick={() => onFollowLink?.(target)}
+            disabled={!onFollowLink}
+          >
+            {children}
+            <span aria-hidden="true"> ↗</span>
+          </button>
+        );
+      },
       // The key is the hast element name the plugin's `data.hName` produces —
       // react-markdown dispatches on that, never on the mdast node type.
       "word-anchor"({
@@ -176,16 +228,17 @@ export function MarkdownContent({
         );
       },
     }),
-    [lexicon, vocabularyStages, onStageWord, inline, active],
+    [lexicon, vocabularyStages, onStageWord, inline, active, onFollowLink],
   );
 
-  const plugins = useMemo(
-    () =>
-      active
-        ? [remarkGfm, [remarkLanguageAnchors, { ranges: active.ranges }] as const]
-        : [remarkGfm],
-    [active],
-  );
+  const plugins = useMemo(() => {
+    const list: unknown[] = [remarkGfm];
+    if (active) list.push([remarkLanguageAnchors, { ranges: active.ranges }]);
+    if (lessonLinks && lessonLinks.length > 0) {
+      list.push([remarkLessonLinks, { ranges: lessonLinks }]);
+    }
+    return list;
+  }, [active, lessonLinks]);
 
   return (
     <ReactMarkdown components={components} remarkPlugins={plugins as never}>

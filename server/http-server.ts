@@ -25,6 +25,13 @@ import {
 import { loadUniversityLocalConfig } from "./config/load-config.js";
 import { readEvidenceSnippet } from "./content/evidence.js";
 import {
+  backlinksOf,
+  buildLessonIndex,
+  parseLessonLinks,
+  resolveLessonLinks,
+  type LessonIndex,
+} from "./content/lesson-links.js";
+import {
   listCourseIds,
   orderCoursesByPrerequisite,
   readCourse,
@@ -791,6 +798,27 @@ function buildStudyView(
   return { study, courses: courseViews, notes };
 }
 
+/**
+ * One link index per study, built on demand.
+ *
+ * Building it reads every lesson in the study — 340 of them for TuringPact —
+ * so doing it per request would turn opening a lesson into a directory walk.
+ * Cached for the life of the process: lesson content is immutable per
+ * revision, and a new revision arrives through a restart or a refresh command,
+ * never underneath a running request.
+ */
+const lessonIndexCache = new Map<string, LessonIndex>();
+
+function getLessonIndex(studiesRoot: string, studyId: string): LessonIndex {
+  const key = `${studiesRoot} ${studyId}`;
+  let index = lessonIndexCache.get(key);
+  if (!index) {
+    index = buildLessonIndex(studiesRoot, studyId);
+    lessonIndexCache.set(key, index);
+  }
+  return index;
+}
+
 function buildLessonView(
   studiesRoot: string,
   route: LearningRoute,
@@ -822,12 +850,28 @@ function buildLessonView(
     content,
     vocabulary,
   });
+  // Associative links, both directions. Resolution happens here rather than in
+  // the browser because a broken link has to be visible to whoever wrote it,
+  // and the browser has no way to know a target does not exist.
+  const linkIndex = getLessonIndex(studiesRoot, route.studyId);
+  const linkResolutions = resolveLessonLinks(parseLessonLinks(content), linkIndex, route);
   return {
     lesson: {
       id: lesson.id,
       title: lesson.title,
       contentRevision: lesson.contentRevision,
       content,
+      links: linkResolutions.map((item) =>
+        item.kind === "resolved"
+          ? {
+              start: item.link.start,
+              end: item.link.end,
+              label: item.link.label,
+              target: item.target,
+            }
+          : { start: item.link.start, end: item.link.end, label: item.link.label, target: null },
+      ),
+      backlinks: backlinksOf(linkIndex, route),
       language: {
         status: language.status,
         ranges: language.ranges,
