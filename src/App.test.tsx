@@ -9,6 +9,7 @@ import {
   buildCardRevealPayload,
   cardActionPath,
   highlightEvidenceCode,
+  lessonNeighbours,
   recentStudies,
   relativeTimeLabel,
 } from "./App.js";
@@ -238,5 +239,133 @@ describe("review-card coaching packet", () => {
     });
 
     expect(first).not.toContain("我以前的回答");
+  });
+});
+
+describe("lesson navigation", () => {
+  const courses = [
+    {
+      id: "before-zero",
+      title: "《在开始之前》",
+      description: "",
+      audience: "",
+      objectives: [],
+      status: "active",
+      isDefault: true,
+      units: [
+        {
+          id: "what-is-an-app",
+          title: "App 是什么",
+          objective: "",
+          status: "active",
+          lessons: [
+            {
+              id: "a",
+              title: "第一节",
+              status: "active",
+              contentRevision: 1,
+              cardCount: 0,
+              exerciseCount: 0,
+              progress: null,
+            },
+            {
+              id: "b",
+              title: "第二节",
+              status: "active",
+              contentRevision: 1,
+              cardCount: 0,
+              exerciseCount: 0,
+              progress: null,
+            },
+          ],
+        },
+        {
+          id: "what-is-code",
+          title: "代码是什么",
+          objective: "",
+          status: "active",
+          lessons: [
+            {
+              id: "c",
+              title: "第三节",
+              status: "active",
+              contentRevision: 1,
+              cardCount: 0,
+              exerciseCount: 0,
+              progress: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: "other-course",
+      title: "另一门课",
+      description: "",
+      audience: "",
+      objectives: [],
+      status: "active",
+      isDefault: false,
+      units: [
+        {
+          id: "u",
+          title: "单元",
+          objective: "",
+          status: "active",
+          lessons: [
+            {
+              id: "z",
+              title: "别的课的第一节",
+              status: "active",
+              contentRevision: 1,
+              cardCount: 0,
+              exerciseCount: 0,
+              progress: null,
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
+  const at = (lessonId: string, unitId: string) => ({
+    studyId: "turing-pact",
+    courseId: "before-zero",
+    unitId,
+    lessonId,
+  });
+
+  it("walks across unit boundaries, because a unit edge is not the end of the course", () => {
+    const neighbours = lessonNeighbours(courses, at("b", "what-is-an-app"));
+    expect(neighbours?.next?.lessonId).toBe("c");
+    expect(neighbours?.next?.unitId).toBe("what-is-code");
+    expect(neighbours?.previous?.lessonId).toBe("a");
+  });
+
+  it("counts position over the whole course, not the unit", () => {
+    const neighbours = lessonNeighbours(courses, at("c", "what-is-code"));
+    expect(neighbours?.position).toBe(3);
+    expect(neighbours?.total).toBe(3);
+  });
+
+  it("stops at the course edges rather than falling into another course", () => {
+    expect(lessonNeighbours(courses, at("a", "what-is-an-app"))?.previous).toBeNull();
+    const last = lessonNeighbours(courses, at("c", "what-is-code"));
+    expect(last?.next).toBeNull();
+  });
+
+  it("carries the study id forward so the neighbour is directly openable", () => {
+    expect(lessonNeighbours(courses, at("a", "what-is-an-app"))?.next).toMatchObject({
+      studyId: "turing-pact",
+      courseId: "before-zero",
+      unitId: "what-is-an-app",
+      lessonId: "b",
+      title: "第二节",
+    });
+  });
+
+  it("returns null for a lesson that is not in the tree yet", () => {
+    expect(lessonNeighbours(courses, at("missing", "what-is-an-app"))).toBeNull();
+    expect(lessonNeighbours([], at("a", "what-is-an-app"))).toBeNull();
   });
 });

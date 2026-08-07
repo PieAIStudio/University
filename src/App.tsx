@@ -9,6 +9,7 @@ import {
 } from "@pieai/swimmer-ui-kit";
 
 import { MarkdownContent, type LanguageLayer } from "./MarkdownContent.js";
+import { Tip } from "./Tip.js";
 import type { LexiconEntry } from "./language/WordPopover.js";
 import {
   readVoicePreference,
@@ -675,10 +676,20 @@ function ReviewCard({
   card,
   requestToken,
   onReviewed,
+  remaining,
 }: {
   readonly card: ReviewCardLocator;
   readonly requestToken: string;
   readonly onReviewed: () => Promise<void>;
+  /**
+   * How many cards are still due today, this one included.
+   *
+   * The queue has always advanced one card at a time — rating this one loads
+   * the next in its place. Nothing said so, so a learner looking at a card and
+   * a "4 due" metric on the other side of the page could only conclude the
+   * other three were unreachable.
+   */
+  readonly remaining?: number;
 }) {
   const [answer, setAnswer] = useState("");
   const [back, setBack] = useState<string | null>(null);
@@ -796,11 +807,22 @@ function ReviewCard({
       <div className="panel-heading">
         <div>
           <p className="eyebrow">ANSWER BEFORE REVEAL</p>
-          <h2>先想，再看答案</h2>
+          <Tip term="retrieval-practice">
+            <h2>先想，再看答案</h2>
+          </Tip>
+          {remaining !== undefined && remaining > 1 ? (
+            <p className="review-card__queue">
+              今天还剩 <strong>{remaining}</strong> 张 · 评分后自动换下一张
+            </p>
+          ) : null}
         </div>
-        <GameBadge tone="ai">FSRS</GameBadge>
+        <Tip term="fsrs">
+          <GameBadge tone="ai">FSRS</GameBadge>
+        </Tip>
       </div>
-      <p className="review-card__question">{card.front}</p>
+      <p className="review-card__question">
+        <MarkdownContent inline>{card.front}</MarkdownContent>
+      </p>
       <label className="answer-field">
         <span>你的回答</span>
         <textarea
@@ -822,7 +844,9 @@ function ReviewCard({
       ) : (
         <div className="answer-reveal" aria-live="polite">
           <p className="eyebrow">参考答案</p>
-          <p>{back}</p>
+          <div className="answer-reveal__body">
+            <MarkdownContent>{back}</MarkdownContent>
+          </div>
           {priorAttempts.length > 0 ? (
             <div className="answer-history">
               <p className="eyebrow">你以前答过 {priorAttempts.length} 次</p>
@@ -875,6 +899,11 @@ function ReviewCard({
             </GameCallout>
           ) : (
             <div className="rating-row" aria-label="根据回忆难度评分">
+              <Tip term="review-rating">
+                <span className="rating-row__help" aria-hidden="true">
+                  这四个按钮是什么意思？
+                </span>
+              </Tip>
               <GameButton variant="danger" onClick={() => void rate(1)} disabled={pending}>
                 重来
               </GameButton>
@@ -1107,7 +1136,9 @@ function ExerciseBlock({
 
   return (
     <GamePanel className="exercise-panel" title={exercise.title}>
-      <p>{exercise.prompt}</p>
+      <div className="exercise-prompt">
+        <MarkdownContent>{exercise.prompt}</MarkdownContent>
+      </div>
       <label className="answer-field">
         <span>你的答案</span>
         <textarea
@@ -1615,11 +1646,18 @@ function LessonReader({
   view,
   requestToken,
   onLearningChanged,
+  neighbours,
+  onOpenLesson,
+  onBackToCourse,
 }: {
   readonly locator: LessonLocator;
   readonly view: LessonView;
   readonly requestToken: string;
   readonly onLearningChanged: () => Promise<void>;
+  /** Absent until the study tree has loaded; the lesson reads fine without it. */
+  readonly neighbours?: LessonNeighbours | null;
+  readonly onOpenLesson?: (locator: LessonLocator) => void;
+  readonly onBackToCourse?: () => void;
 }) {
   const [completed, setCompleted] = useState(view.lesson.progress?.status === "completed");
   const [englishMode, setEnglishMode] = useState(readEnglishMode);
@@ -1689,9 +1727,22 @@ function LessonReader({
 
   return (
     <article className="lesson-reader">
+      {neighbours && onOpenLesson && onBackToCourse ? (
+        <LessonNav
+          neighbours={neighbours}
+          onOpenLesson={onOpenLesson}
+          onBackToCourse={onBackToCourse}
+          variant="top"
+        />
+      ) : null}
       <header className="lesson-reader__header">
         <div>
-          <p className="eyebrow">LESSON · REV {view.lesson.contentRevision}</p>
+          <p className="eyebrow">
+            LESSON ·{" "}
+            <Tip term="content-revision">
+              <span>REV {view.lesson.contentRevision}</span>
+            </Tip>
+          </p>
           <h2 ref={titleRef} tabIndex={-1}>
             {view.lesson.title}
           </h2>
@@ -1700,18 +1751,20 @@ function LessonReader({
           {annotated ? (
             // Only offered where there is something to offer. A toggle that
             // does nothing on most lessons teaches the learner to ignore it.
-            <button
-              type="button"
-              className="english-toggle"
-              aria-pressed={englishMode}
-              onClick={() => {
-                const next = !englishMode;
-                setEnglishMode(next);
-                writeEnglishMode(next);
-              }}
-            >
-              {englishMode ? "英文模式 · 开" : "英文模式 · 关"}
-            </button>
+            <Tip term="english-mode">
+              <button
+                type="button"
+                className="english-toggle"
+                aria-pressed={englishMode}
+                onClick={() => {
+                  const next = !englishMode;
+                  setEnglishMode(next);
+                  writeEnglishMode(next);
+                }}
+              >
+                {englishMode ? "外语模式 · 开" : "外语模式 · 关"}
+              </button>
+            </Tip>
           ) : null}
           <GameBadge tone={completed ? "success" : "warning"}>
             {completed ? "已完成" : "学习中"}
@@ -1777,7 +1830,144 @@ function LessonReader({
           ) : null}
         </div>
       </div>
+      {neighbours && onOpenLesson && onBackToCourse ? (
+        <LessonNav
+          neighbours={neighbours}
+          onOpenLesson={onOpenLesson}
+          onBackToCourse={onBackToCourse}
+          variant="bottom"
+        />
+      ) : null}
     </article>
+  );
+}
+
+export interface LessonNeighbour extends LessonLocator {
+  readonly title: string;
+}
+
+export interface LessonNeighbours {
+  readonly previous: LessonNeighbour | null;
+  readonly next: LessonNeighbour | null;
+  /** 1-based position within the course, for "第 7 节 / 共 41 节". */
+  readonly position: number;
+  readonly total: number;
+}
+
+/**
+ * The lesson before and after this one, within its own course.
+ *
+ * Flattened across units rather than stopping at unit boundaries, because a
+ * unit boundary is an authoring decision the learner never agreed to — running
+ * out of "next" three lessons in reads as the course ending.
+ *
+ * Deliberately does not cross into another course. Courses have their own
+ * audiences and prerequisites, so falling out of one into whichever happens to
+ * sort next would be a worse surprise than stopping.
+ */
+export function lessonNeighbours(
+  courses: readonly CourseView[],
+  locator: LessonLocator,
+): LessonNeighbours | null {
+  const course = courses.find((item) => item.id === locator.courseId);
+  if (!course) return null;
+  const flat = course.units.flatMap((unit) =>
+    unit.lessons.map((lesson) => ({
+      studyId: locator.studyId,
+      courseId: course.id,
+      unitId: unit.id,
+      lessonId: lesson.id,
+      title: lesson.title,
+    })),
+  );
+  const index = flat.findIndex((item) => item.lessonId === locator.lessonId);
+  if (index === -1) return null;
+  return {
+    previous: flat[index - 1] ?? null,
+    next: flat[index + 1] ?? null,
+    position: index + 1,
+    total: flat.length,
+  };
+}
+
+/**
+ * Where to go when this lesson is done.
+ *
+ * Rendered twice per lesson — once quietly above the title, once properly at
+ * the end. The bottom copy is the one that matters: finishing a lesson and
+ * finding nothing but whitespace is the moment a learner leaves, and asking
+ * them to scroll back up to a breadcrumb to continue is asking them to do the
+ * app's job.
+ */
+function LessonNav({
+  neighbours,
+  onOpenLesson,
+  onBackToCourse,
+  variant,
+}: {
+  readonly neighbours: LessonNeighbours;
+  readonly onOpenLesson: (locator: LessonLocator) => void;
+  readonly onBackToCourse: () => void;
+  readonly variant: "top" | "bottom";
+}) {
+  const { previous, next } = neighbours;
+  const position = (
+    <span className="lesson-nav__position">
+      第 {neighbours.position} 节 / 共 {neighbours.total} 节
+    </span>
+  );
+
+  // Above the title this is a breadcrumb: where am I, and how do I get out.
+  // Titles are left off on purpose — a second set of lesson names competing
+  // with the actual heading is exactly the noise this variant exists to avoid.
+  if (variant === "top") {
+    return (
+      <nav className="lesson-nav lesson-nav--top" aria-label="课程导航">
+        <GameButton variant="ghost" onClick={onBackToCourse}>
+          ← 返回课程
+        </GameButton>
+        {position}
+        <span className="lesson-nav__steps">
+          {previous ? (
+            <GameButton variant="ghost" onClick={() => onOpenLesson(previous)}>
+              上一节
+            </GameButton>
+          ) : null}
+          {next ? (
+            <GameButton variant="ghost" onClick={() => onOpenLesson(next)}>
+              下一节
+            </GameButton>
+          ) : null}
+        </span>
+      </nav>
+    );
+  }
+
+  return (
+    <nav className="lesson-nav lesson-nav--bottom" aria-label="学完这节之后">
+      <div className="lesson-nav__side">
+        {previous ? (
+          <GameButton variant="ghost" onClick={() => onOpenLesson(previous)}>
+            <span className="lesson-nav__step">← 上一节</span>
+            <span className="lesson-nav__title">{previous.title}</span>
+          </GameButton>
+        ) : null}
+      </div>
+      <div className="lesson-nav__centre">
+        <GameButton variant="ghost" onClick={onBackToCourse}>
+          回到目录
+        </GameButton>
+        {position}
+      </div>
+      <div className="lesson-nav__side lesson-nav__side--end">
+        {next ? (
+          <GameButton variant="primary" onClick={() => onOpenLesson(next)}>
+            <span className="lesson-nav__step">下一节 →</span>
+            <span className="lesson-nav__title">{next.title}</span>
+          </GameButton>
+        ) : null}
+      </div>
+    </nav>
   );
 }
 
@@ -1830,7 +2020,12 @@ function TodaySection({
       {/* The review card is the day's actual work, so it leads the row and the
           tab order; the due-count metric is the supporting rail beside it. */}
       {card ? (
-        <ReviewCard card={card} requestToken={data.requestToken} onReviewed={onReviewed} />
+        <ReviewCard
+          card={card}
+          requestToken={data.requestToken}
+          onReviewed={onReviewed}
+          remaining={data.today.dueCount}
+        />
       ) : (
         <GameCallout heading="今天没有到期卡片" tone="success" className="today-empty">
           {data.today.nextLesson
@@ -1843,10 +2038,10 @@ function TodaySection({
 
       <div className="today-metric">
         <span>{data.today.dueCount}</span>
-        <div>
+        <Tip term="due-cards" as="div">
           <p className="eyebrow">DUE CARDS</p>
           <p>今天到期的复习卡片</p>
-        </div>
+        </Tip>
       </div>
       {data.today.issues.length > 0 ? (
         <GameCallout heading="有学习数据暂时无法使用" tone="warning">
@@ -2439,8 +2634,13 @@ export function App() {
     if (lessonLocator) await loadLesson(lessonLocator);
   }
 
+  // Reading a lesson is the one screen with a single job. The section tabs and
+  // the campus-wide counters answer questions nobody has while they are three
+  // paragraphs into an explanation, and they cost the top of every page.
+  const reading = activeSection === "studies" && lessonLocator !== null;
+
   return (
-    <div className="campus" data-game-ui-theme="night">
+    <div className="campus" data-game-ui-theme="night" data-reading={reading || undefined}>
       <header className="campus-header">
         <div className="brand-lockup">
           <span className="brand-mark" aria-hidden="true">
@@ -2451,31 +2651,43 @@ export function App() {
             <h1>UniversityLocal</h1>
           </div>
         </div>
-        <div className="campus-status" aria-label="校园状态">
-          <GameBadge tone="success">资料仅在本机</GameBadge>
-          <span>{data?.studies.length ?? 0} 个 study</span>
-          <span>{learnableCourses} 门可学课程</span>
-        </div>
+        {reading ? null : (
+          <div className="campus-status" aria-label="校园状态">
+            <Tip term="airlock">
+              <GameBadge tone="success">资料仅在本机</GameBadge>
+            </Tip>
+            <Tip term="study">
+              <span>{data?.studies.length ?? 0} 个 study</span>
+            </Tip>
+            <span>{learnableCourses} 门可学课程</span>
+          </div>
+        )}
       </header>
 
-      <nav className="campus-nav" aria-label="UniversityLocal 主导航">
-        <GameTabs
-          id="campus-section"
-          tabs={tabs}
-          activeId={activeSection}
-          onSelect={(id) => {
-            setActiveSection(id as SectionId);
-            if (id === "today") setLessonLocator(null);
-          }}
-        />
-      </nav>
+      {reading ? null : (
+        <nav className="campus-nav" aria-label="UniversityLocal 主导航">
+          <GameTabs
+            id="campus-section"
+            tabs={tabs}
+            activeId={activeSection}
+            onSelect={(id) => {
+              setActiveSection(id as SectionId);
+              if (id === "today") setLessonLocator(null);
+            }}
+          />
+        </nav>
+      )}
 
       <main
         ref={mainRef}
         id={`panel-${activeSection}`}
-        role="tabpanel"
+        // Without the tab list on screen there is no tab for this panel to be
+        // labelled by, and claiming the role anyway points assistive tech at an
+        // element that is not there.
+        {...(reading
+          ? { "aria-label": "课程正文" }
+          : { role: "tabpanel", "aria-labelledby": `campus-section-${activeSection}` })}
         tabIndex={-1}
-        aria-labelledby={`campus-section-${activeSection}`}
         className="campus-main"
       >
         {error ? (
@@ -2501,15 +2713,15 @@ export function App() {
         {data && data.studies.length > 0 && activeSection === "studies" ? (
           lessonLocator ? (
             <div>
-              <GameButton variant="ghost" onClick={() => setLessonLocator(null)}>
-                ← 返回课程
-              </GameButton>
               {lessonView ? (
                 <LessonReader
                   locator={lessonLocator}
                   view={lessonView}
                   requestToken={data.requestToken}
                   onLearningChanged={refreshLearning}
+                  neighbours={studyView ? lessonNeighbours(studyView.courses, lessonLocator) : null}
+                  onOpenLesson={openLesson}
+                  onBackToCourse={() => setLessonLocator(null)}
                 />
               ) : lessonError ? (
                 <GameCallout heading="这节课打不开" tone="warning" role="alert">

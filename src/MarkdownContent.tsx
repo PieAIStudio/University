@@ -118,12 +118,21 @@ export function MarkdownContent({
   englishEnabled = false,
   vocabularyStages,
   onStageWord,
+  inline = false,
 }: {
   readonly children: string;
   readonly language?: LanguageLayer;
   readonly englishEnabled?: boolean;
   readonly vocabularyStages?: ReadonlyMap<string, string>;
   readonly onStageWord?: (senseId: string, stage: VocabularyStage) => void;
+  /**
+   * Drop the paragraph wrapper, for a question or prompt that is already inside
+   * its own styled element. The Markdown still parses — which is the point:
+   * these strings are authored with backticks around identifiers, and rendering
+   * them as plain text put the literal ` characters on screen, where a CJK font
+   * draws them as a stray accent over the next letter.
+   */
+  readonly inline?: boolean;
 }) {
   const active = englishEnabled && language?.status === "annotated" ? language : null;
 
@@ -135,6 +144,9 @@ export function MarkdownContent({
   const components = useMemo<Components>(
     () => ({
       ...markdownComponents,
+      ...(inline
+        ? { p: ({ children }: { readonly children?: ReactNode }) => <>{children}</> }
+        : {}),
       // The key is the hast element name the plugin's `data.hName` produces —
       // react-markdown dispatches on that, never on the mdast node type.
       "word-anchor"({
@@ -161,7 +173,7 @@ export function MarkdownContent({
         );
       },
     }),
-    [lexicon, vocabularyStages, onStageWord],
+    [lexicon, vocabularyStages, onStageWord, inline],
   );
 
   const plugins = useMemo(

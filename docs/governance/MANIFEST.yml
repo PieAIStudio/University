@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-06T20:42:03.582Z
+generated_at: 2026-08-07T13:44:46.296Z
 generator_version: doc-gov@0.8.0
-docs_count: 35
+docs_count: 36
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-local-study-containers.md
@@ -150,6 +150,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-07-20
+    pinned: false
+  - id: REF-LESSON-PEDAGOGY
+    path: docs/reference/lesson-pedagogy.md
+    type: reference
+    status: active
+    canonical: false
+    last_reviewed: 2026-08-07
     pinned: false
   - id: REF-USING-UNIVERSITY-LOCAL-WITH-GROK
     path: docs/reference/using-university-local-with-grok.md

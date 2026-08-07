@@ -1273,8 +1273,16 @@ summary:focus-visible,
   }
 
   .study-shelf,
-  .evidence-rail {
+  .evidence-rail,
+  .lesson-rail {
     position: static;
+  }
+
+  /* One column: the rail is just more page, so it must not trap scrolling in
+     its own box. */
+  .lesson-rail {
+    max-height: none;
+    overflow-y: visible;
   }
 
   .study-shelf {
@@ -1673,6 +1681,23 @@ summary:focus-visible,
   display: grid;
   gap: 22px;
   align-content: start;
+  /* The rail sticks as one block. Two independently sticky children in one grid
+     is exactly what produced the overlap: the evidence panel froze at the top
+     while the word list kept scrolling up into the space it was holding, and
+     the two drew over each other. */
+  position: sticky;
+  top: 24px;
+  /* Evidence plus a full word list can outgrow the viewport, and a sticky
+     element taller than the screen pins its own bottom permanently out of
+     reach. Let the rail scroll itself instead. */
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The container above does the sticking now. */
+.lesson-rail > .evidence-rail {
+  position: static;
 }
 
 .exercise-actions {
@@ -1816,4 +1841,184 @@ summary:focus-visible,
   font-size: 0.76rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* --- Tips ------------------------------------------------------------- */
+
+/* The trigger keeps the layout of whatever it wraps — a badge, a heading, a
+   metric label — and only adds the hint that there is something to read. */
+.tip-trigger {
+  cursor: help;
+  /* Dotted rather than solid so it never reads as a link the learner failed to
+     click. `from-font` keeps it clear of descenders in both scripts. */
+  text-decoration: underline dotted var(--campus-rule);
+  text-underline-offset: 4px;
+  text-decoration-thickness: from-font;
+}
+
+.tip-trigger:focus-visible {
+  outline: 2px solid var(--game-ui-accent, #f0a868);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.tip-panel {
+  z-index: 60;
+  max-width: 320px;
+  padding: 12px 14px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 12px;
+  background: #2a1e16;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 45%);
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+.tip-panel__term {
+  margin: 0 0 6px;
+  color: #f0a868;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.tip-panel__summary {
+  margin: 0;
+  color: #fff5e8;
+}
+
+.tip-panel__detail {
+  margin: 8px 0 0;
+  color: var(--game-ui-text-muted, #cbb49c);
+}
+
+/* --- Lesson navigation ------------------------------------------------ */
+
+.lesson-nav--top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--campus-rule);
+}
+
+.lesson-nav__steps {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.lesson-nav__position {
+  color: var(--game-ui-text-muted, #cbb49c);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.lesson-nav--bottom {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 16px;
+  margin-top: 44px;
+  padding-top: 26px;
+  border-top: 1px solid var(--campus-rule);
+}
+
+.lesson-nav__side {
+  display: flex;
+  min-width: 0;
+}
+
+.lesson-nav__side--end {
+  justify-content: flex-end;
+}
+
+/* Two lines inside one button: the direction, then what is actually there.
+   Knowing the next lesson's name is what makes it a decision rather than a
+   leap. */
+.lesson-nav--bottom .lesson-nav__side button {
+  display: grid;
+  gap: 3px;
+  max-width: 100%;
+  text-align: left;
+}
+
+.lesson-nav__side--end button {
+  text-align: right;
+}
+
+.lesson-nav__step {
+  font-size: 0.78rem;
+  opacity: 0.75;
+}
+
+.lesson-nav__title {
+  overflow: hidden;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lesson-nav__centre {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 600px) {
+  .lesson-nav--bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lesson-nav__side,
+  .lesson-nav__side--end {
+    justify-content: stretch;
+  }
+
+  .lesson-nav__centre {
+    order: 3;
+  }
+}
+
+/* --- Review queue + Markdown in prompts -------------------------------- */
+
+.review-card__queue {
+  margin: 6px 0 0;
+  color: var(--game-ui-text-muted, #cbb49c);
+  font-size: 0.84rem;
+}
+
+.review-card__queue strong {
+  color: #f0a868;
+}
+
+.rating-row__help {
+  flex-basis: 100%;
+  color: var(--game-ui-text-muted, #cbb49c);
+  font-size: 0.78rem;
+}
+
+/* Card and exercise text is authored Markdown. It used to be printed raw, so
+   the backticks around every identifier landed on screen — and a CJK font
+   draws a lone ` as an accent floating over the next letter. */
+.review-card__question code,
+.answer-reveal__body code,
+.exercise-prompt code {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: rgb(0 0 0 / 30%);
+  font-size: 0.92em;
+}
+
+.answer-reveal__body > :first-child,
+.exercise-prompt > :first-child {
+  margin-top: 0;
+}
+
+.answer-reveal__body > :last-child,
+.exercise-prompt > :last-child {
+  margin-bottom: 0;
 }
