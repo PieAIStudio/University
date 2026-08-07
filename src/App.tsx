@@ -15,6 +15,7 @@ import type {
   LessonLinkRange,
   LessonLinkTarget,
 } from "./remark-lesson-links.js";
+import { formatAddress, parseAddress, type AppAddress } from "./url-state.js";
 import type { LexiconEntry } from "./language/WordPopover.js";
 import {
   readVoicePreference,
@@ -2575,11 +2576,14 @@ function StudyDetail({
 }
 
 export function App() {
-  const [activeSection, setActiveSection] = useState<SectionId>("today");
+  // Seeded from the address bar, so a refresh or a pasted link lands where it
+  // says it will rather than dropping the reader back on Today.
+  const initialAddress = useMemo(() => parseAddress(window.location.pathname), []);
+  const [activeSection, setActiveSection] = useState<SectionId>(initialAddress.section);
   const [data, setData] = useState<BootstrapData | null>(null);
-  const [selectedStudyId, setSelectedStudyId] = useState<string | null>(null);
+  const [selectedStudyId, setSelectedStudyId] = useState<string | null>(initialAddress.studyId);
   const [studyView, setStudyView] = useState<StudyView | null>(null);
-  const [lessonLocator, setLessonLocator] = useState<LessonLocator | null>(null);
+  const [lessonLocator, setLessonLocator] = useState<LessonLocator | null>(initialAddress.lesson);
   /** Lessons a cross-lesson link led away from, innermost last. */
   const [returnStack, setReturnStack] = useState<readonly LessonLocator[]>([]);
   const [lessonView, setLessonView] = useState<LessonView | null>(null);
@@ -2728,6 +2732,36 @@ export function App() {
     if (selectedStudyId) await loadStudy(selectedStudyId);
     if (lessonLocator) await loadLesson(lessonLocator);
   }
+
+  const address: AppAddress = {
+    section: activeSection,
+    studyId: activeSection === "studies" ? selectedStudyId : null,
+    lesson: activeSection === "studies" ? lessonLocator : null,
+  };
+
+  // Push on navigation, and listen for the back button.
+  //
+  // Compared as formatted paths rather than as objects: two states that render
+  // the same screen must not stack duplicate history entries, or Back appears
+  // to do nothing and the reader presses it again.
+  useEffect(() => {
+    const next = formatAddress(address);
+    if (next !== window.location.pathname) window.history.pushState(null, "", next);
+  }, [address]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const restored = parseAddress(window.location.pathname);
+      setActiveSection(restored.section);
+      setSelectedStudyId(restored.studyId);
+      setLessonLocator(restored.lesson);
+      // The detour stack belongs to a reading session, not to a URL. Going Back
+      // past the lesson that offered a link makes "回到刚才那一课" meaningless.
+      setReturnStack([]);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   // Reading a lesson is the one screen with a single job. The section tabs and
   // the campus-wide counters answer questions nobody has while they are three
