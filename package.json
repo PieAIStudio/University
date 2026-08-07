@@ -19,11 +19,12 @@
     "format": "oxfmt --write package.json university-local.config.json university-local.config.local.example.json tsconfig.json tsconfig.app.json tsconfig.server.json tsconfig.server.build.json vite.config.ts vitest.config.ts src server scripts",
     "format:check": "oxfmt --check package.json university-local.config.json university-local.config.local.example.json tsconfig.json tsconfig.app.json tsconfig.server.json tsconfig.server.build.json vite.config.ts vitest.config.ts src server scripts",
     "test": "vitest run --passWithNoTests",
-    "verify": "pnpm typecheck && pnpm lint && pnpm lint:lessons && pnpm format:check && pnpm test && pnpm build && pnpm docs:check",
+    "verify": "pnpm typecheck && pnpm lint && pnpm check:boundaries && pnpm lint:lessons && pnpm format:check && pnpm test && pnpm build && pnpm docs:check",
     "pro-gov": "pro-gov",
     "doc-gov": "doc-gov",
     "docs:check": "pnpm pro-gov doctor && pnpm doc-gov router-check && pnpm doc-gov check && pnpm doc-gov scan --check && pnpm doc-gov links && pnpm doc-gov audit && pnpm doc-gov doctor",
-    "lint:lessons": "node scripts/lint-lessons.mjs"
+    "lint:lessons": "node scripts/lint-lessons.mjs",
+    "check:boundaries": "node scripts/check-module-boundaries.mjs"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",

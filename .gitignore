@@ -17,3 +17,6 @@ university-local.config.local.json
 # server/studies/. Without the anchor Git silently swallowed it, and a fresh
 # clone could not build.
 /studies/
+
+# Session handoff notes — working material, not project documentation.
+.handoff/
