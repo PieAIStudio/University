@@ -2108,3 +2108,15 @@ summary:focus-visible,
 .lesson-backlinks button:focus-visible {
   color: #f0a868;
 }
+
+/* The lesson header already states the title, and every lesson's Markdown
+   opens with the same line as an `# H1`. Two identical headings stacked is
+   the first thing a reader sees and the first thing they have to skip.
+
+   Hidden rather than stripped from the source: the language and link layers
+   index by character offset into the exact bytes, so removing the line would
+   move every anchor in the lesson. It stays in the file, where it also keeps
+   the Markdown readable on its own. */
+.markdown-body > h1:first-child {
+  display: none;
+}
