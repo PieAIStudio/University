@@ -199,7 +199,17 @@ function* lessons(studiesRoot) {
       for (const unitId of readdirSync(unitsRoot)) {
         const lessonsRoot = join(unitsRoot, unitId, "lessons");
         if (!existsSync(lessonsRoot)) continue;
-        for (const lessonId of readdirSync(lessonsRoot)) {
+        // Reading order, not directory order. `readdirSync` returns lesson ids
+        // alphabetically, which is not the order a learner meets them in — the
+        // rotation check (item 22) needs the real sequence or it invents
+        // violations between lessons that are not actually adjacent, and misses
+        // ones that are.
+        const unitManifestPath = join(unitsRoot, unitId, "unit.json");
+        const authoredOrder = existsSync(unitManifestPath)
+          ? (JSON.parse(readFileSync(unitManifestPath, "utf8")).lessonIds ?? null)
+          : null;
+        const lessonIds = authoredOrder ?? readdirSync(lessonsRoot);
+        for (const lessonId of lessonIds) {
           const revisions = join(lessonsRoot, lessonId, "revisions");
           if (!existsSync(revisions)) continue;
           const latest = readdirSync(revisions)
