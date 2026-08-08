@@ -24,7 +24,9 @@
     "doc-gov": "doc-gov",
     "docs:check": "pnpm pro-gov doctor && pnpm doc-gov router-check && pnpm doc-gov check && pnpm doc-gov scan --check && pnpm doc-gov links && pnpm doc-gov audit && pnpm doc-gov doctor",
     "lint:lessons": "node scripts/lint-lessons.mjs",
-    "check:boundaries": "node scripts/check-module-boundaries.mjs"
+    "check:boundaries": "node scripts/check-module-boundaries.mjs",
+    "check:lesson-anchors": "node scripts/check-lesson-anchors.mjs",
+    "check:lesson-drift": "node scripts/check-lesson-drift.mjs"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",
