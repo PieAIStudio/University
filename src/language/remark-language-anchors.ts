@@ -1,11 +1,9 @@
 import type { Root, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
-export interface LanguageRange {
-  readonly start: number;
-  readonly end: number;
-  readonly senseId: string;
-}
+import type { LanguageRange } from "../domain/lesson-marks.js";
+
+export type { LanguageRange } from "../domain/lesson-marks.js";
 
 /**
  * A word the reader can tap, standing exactly where the author put it.

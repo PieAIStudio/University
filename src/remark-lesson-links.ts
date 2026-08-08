@@ -1,12 +1,9 @@
 import type { Root, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
-export interface LessonLinkTarget {
-  readonly courseId: string;
-  readonly unitId: string;
-  readonly lessonId: string;
-  readonly title: string;
-}
+import type { EvidenceAnchorRange, LessonLinkTarget } from "./domain/lesson-marks.js";
+
+export type { EvidenceAnchorRange, LessonLinkTarget } from "./domain/lesson-marks.js";
 
 export interface LessonLinkRange {
   readonly start: number;
@@ -22,15 +19,6 @@ export interface LessonLinkRange {
  */
 const LESSON_LINK_TAG = "lesson-link";
 const EVIDENCE_ANCHOR_TAG = "evidence-anchor";
-
-export interface EvidenceAnchorRange {
-  readonly start: number;
-  readonly end: number;
-  readonly sourcePath: string;
-  readonly lineStart: number;
-  readonly lineEnd: number;
-  readonly resolved: boolean;
-}
 
 interface LessonLinkNode {
   readonly type: "lessonLink";

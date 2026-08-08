@@ -290,7 +290,8 @@ describe("course creation workflow", () => {
     // one thing the shape checker never inspected.
     const { studiesRoot, snapshot } = setup();
     const proposal = minimalProposal(snapshot);
-    proposal.course.units[0]!.lessons[0]!.variant = "对比";
+    const unit = proposal.course.units[0]!;
+    unit.lessons[0] = { ...unit.lessons[0]!, variant: "对比" } as (typeof unit.lessons)[number];
 
     createCourse({ studiesRoot, studyId: STUDY_ID, proposal });
 

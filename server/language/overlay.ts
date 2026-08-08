@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 
+import type { LanguageRange } from "../../src/domain/lesson-marks.js";
 import {
   LanguageOverlaySchema,
   StableId,
@@ -12,6 +13,8 @@ import { readLatestLesson } from "../content/repository.js";
 import { getStudyPaths } from "../studies/paths.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
 import { resolveAnchors } from "./resolve-anchors.js";
+
+export type { LanguageRange } from "../../src/domain/lesson-marks.js";
 
 export type LanguageCode = "en";
 
@@ -97,12 +100,6 @@ export function writeLanguageOverlay(input: WriteOverlayInput): WriteOverlayRece
 }
 
 export type OverlayStatus = "annotated" | "not-annotated" | "stale";
-
-export interface LanguageRange {
-  readonly start: number;
-  readonly end: number;
-  readonly senseId: string;
-}
 
 interface LessonLanguageLayer {
   readonly status: OverlayStatus;

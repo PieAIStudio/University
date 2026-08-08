@@ -1,8 +1,11 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
+import type { LessonLinkTarget } from "../../src/domain/lesson-marks.js";
 import { findProtectedRegions } from "../language/resolve-anchors.js";
 import { getStudyPaths } from "../studies/paths.js";
+
+export type { LessonLinkTarget } from "../../src/domain/lesson-marks.js";
 
 /**
  * Wiki links between lessons, so a course can be linear and associative at once.
@@ -24,13 +27,6 @@ export interface ParsedLessonLink {
   /** Everything between `lesson:` and `|`, untrimmed of meaning. */
   readonly rawTarget: string;
   readonly label: string | null;
-}
-
-export interface LessonLinkTarget {
-  readonly courseId: string;
-  readonly unitId: string;
-  readonly lessonId: string;
-  readonly title: string;
 }
 
 type LinkResolution =

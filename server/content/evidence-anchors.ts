@@ -1,4 +1,7 @@
+import type { EvidenceAnchorRange } from "../../src/domain/lesson-marks.js";
 import { parseLessonLinks, tokenKind, type ParsedLessonLink } from "./lesson-links.js";
+
+export type { EvidenceAnchorRange } from "../../src/domain/lesson-marks.js";
 
 /**
  * Inline "where does this come from" markers, standing next to the claim.
@@ -21,16 +24,6 @@ export interface EvidenceCitation {
   /** Absent or null both mean "the whole file", which the manifest allows. */
   readonly lineStart?: number | null | undefined;
   readonly lineEnd?: number | null | undefined;
-}
-
-export interface EvidenceAnchorRange {
-  readonly start: number;
-  readonly end: number;
-  readonly sourcePath: string;
-  readonly lineStart: number;
-  readonly lineEnd: number;
-  /** `null` when no cited evidence covers it — rendered as visibly broken. */
-  readonly resolved: boolean;
 }
 
 /** `path:line` or `path:start-end`. The path may itself contain colons on Windows-ish input. */
