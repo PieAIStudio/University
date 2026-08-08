@@ -238,7 +238,7 @@ describe("local-only link and image policy", () => {
       "./notes/a.md",
       "notes/a.md",
       "http://127.0.0.1:4317/api/health",
-      "http://localhost:5173/x.png",
+      "http://localhost:9999/x.png",
     ]) {
       expect(isLocalUrl(local), local).toBe(true);
     }

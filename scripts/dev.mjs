@@ -10,7 +10,7 @@ import { createServer } from "node:net";
  */
 const PORTS = [
   { port: 4317, label: "API 服务" },
-  { port: 5173, label: "网页界面" },
+  { port: 9999, label: "网页界面" },
 ];
 
 function isPortFree(port) {

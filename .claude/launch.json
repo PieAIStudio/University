@@ -5,7 +5,7 @@
       "name": "university-local",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev"],
-      "port": 5173
+      "port": 9999
     }
   ]
 }

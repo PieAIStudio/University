@@ -497,7 +497,7 @@ describe("UniversityLocal loopback API", () => {
       headers: {
         "Content-Type": "application/json",
         "X-University-Local-Token": bootstrap.requestToken,
-        Origin: "http://127.0.0.1:5173",
+        Origin: "http://127.0.0.1:9999",
       },
       body: JSON.stringify(revealBody),
     });
@@ -522,7 +522,7 @@ describe("UniversityLocal loopback API", () => {
       headers: {
         "Content-Type": "application/json",
         "X-University-Local-Token": bootstrap.requestToken,
-        Origin: "http://127.0.0.1:5173",
+        Origin: "http://127.0.0.1:9999",
       },
       body: JSON.stringify({
         ...revealBody,
@@ -1145,7 +1145,7 @@ describe("UniversityLocal loopback API", () => {
     const headers = {
       "Content-Type": "application/json",
       "X-University-Local-Token": bootstrap.requestToken,
-      Origin: "http://localhost:5173",
+      Origin: "http://localhost:9999",
     };
 
     const attemptBody = {
