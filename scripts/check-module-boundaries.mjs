@@ -48,10 +48,11 @@ const SPECIFIER_RE = /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)['"]([^'"]+)['"]
  * Browser-side layers under `src/`, shallow → deep.
  *
  * Derived from non-test relative imports as of the rule's introduction:
- *   shell    → evidence, review, api, view
- *   lesson   → evidence, review, language, api, view
+ *   shell    → evidence, review, markdown, api, view
+ *   lesson   → evidence, review, markdown, language, api, view
  *   evidence → api, view
- *   review   → language, api, view
+ *   review   → markdown, language, api, view
+ *   markdown → language
  *   language → (none)
  *   api      → view
  *   view     → (none)
@@ -59,9 +60,18 @@ const SPECIFIER_RE = /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)['"]([^'"]+)['"]
  * A layer may import a later (deeper) layer or the same layer; never an earlier
  * one. `src/domain/` is intentionally absent — it is the shared schema core
  * enforced by rule 3, not a browser composition layer. Loose files at the top
- * of `src/` (App.tsx, MarkdownContent.tsx, …) are not layers and are exempt.
+ * of `src/` (App.tsx, main.tsx, …) are not layers and are exempt.
  */
-const BROWSER_LAYER_ORDER = ["shell", "lesson", "evidence", "review", "language", "api", "view"];
+const BROWSER_LAYER_ORDER = [
+  "shell",
+  "lesson",
+  "evidence",
+  "review",
+  "markdown",
+  "language",
+  "api",
+  "view",
+];
 
 const BROWSER_LAYER_INDEX = new Map(BROWSER_LAYER_ORDER.map((name, i) => [name, i]));
 

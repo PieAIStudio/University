@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { GameBadge, GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 
-import { MarkdownContent } from "../MarkdownContent.js";
+import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
 import {
   STALE_TOKEN_NOTICE,

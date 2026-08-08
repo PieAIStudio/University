@@ -2,10 +2,10 @@ import { Children, isValidElement, useMemo, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import type { LanguageLayer } from "./domain/lesson-marks.js";
+import type { LanguageLayer } from "../domain/lesson-marks.js";
 import { MermaidDiagram } from "./MermaidDiagram.js";
-import { WordAnchor, type VocabularyStage } from "./language/WordPopover.js";
-import { remarkLanguageAnchors } from "./language/remark-language-anchors.js";
+import { WordAnchor, type VocabularyStage } from "../language/WordPopover.js";
+import { remarkLanguageAnchors } from "../language/remark-language-anchors.js";
 import {
   remarkEvidenceAnchors,
   remarkLessonLinks,

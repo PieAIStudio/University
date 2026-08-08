@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { GameBadge } from "@pieai/swimmer-ui-kit";
 
-import { MarkdownContent } from "../MarkdownContent.js";
+import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
 import { lessonPath, readJson } from "../api/client.js";
 import { EvidenceRail } from "../evidence/EvidenceRail.js";
 import { readForeignLanguageMode, writeForeignLanguageMode } from "../language/reading-mode.js";
-import type { LessonLinkTarget } from "../remark-lesson-links.js";
+import type { LessonLinkTarget } from "../markdown/remark-lesson-links.js";
 import { ExerciseBlock } from "../review/ExerciseBlock.js";
 import { ReviewCard } from "../review/ReviewCard.js";
 import type { LessonLocator, LessonView } from "../view/lesson-view.js";

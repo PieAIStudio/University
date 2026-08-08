@@ -3,7 +3,7 @@ import { GameBadge, GameCallout, GameTabs } from "@pieai/swimmer-ui-kit";
 
 import { Tip } from "./Tip.js";
 import { lessonPath, readJson } from "./api/client.js";
-import type { LessonLinkTarget } from "./remark-lesson-links.js";
+import type { LessonLinkTarget } from "./markdown/remark-lesson-links.js";
 import { formatAddress, parseAddress, type AppAddress } from "./url-state.js";
 import { LINK_RETURN_DEPTH, LessonReader } from "./lesson/LessonReader.js";
 import { lessonNeighbours } from "./lesson/LessonNav.js";

@@ -1,6 +1,6 @@
 import { GameBadge, GameCallout } from "@pieai/swimmer-ui-kit";
 
-import { MarkdownContent } from "../MarkdownContent.js";
+import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { EvidenceRail } from "../evidence/EvidenceRail.js";
 import type { KnowledgeNoteView } from "../view/lesson-view.js";
 

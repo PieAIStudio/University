@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 
-import { MarkdownContent } from "../MarkdownContent.js";
+import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { STALE_TOKEN_NOTICE, isStaleTokenFailure, lessonPath, readJson } from "../api/client.js";
 import type {
   CoachingPacketResponse,
