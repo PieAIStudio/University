@@ -1,17 +1,13 @@
 import type { Root, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
-import type { EvidenceAnchorRange, LessonLinkTarget } from "./domain/lesson-marks.js";
+import type { EvidenceAnchorRange, LessonLinkRange } from "./domain/lesson-marks.js";
 
-export type { EvidenceAnchorRange, LessonLinkTarget } from "./domain/lesson-marks.js";
-
-export interface LessonLinkRange {
-  readonly start: number;
-  readonly end: number;
-  readonly label: string | null;
-  /** `null` when the server could not resolve it. */
-  readonly target: LessonLinkTarget | null;
-}
+export type {
+  EvidenceAnchorRange,
+  LessonLinkRange,
+  LessonLinkTarget,
+} from "./domain/lesson-marks.js";
 
 /**
  * Same trick as the word anchor: react-markdown dispatches on the HTML element

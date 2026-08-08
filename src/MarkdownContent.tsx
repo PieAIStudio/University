@@ -2,9 +2,10 @@ import { Children, isValidElement, useMemo, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import type { LanguageLayer } from "./domain/lesson-marks.js";
 import { MermaidDiagram } from "./MermaidDiagram.js";
-import { WordAnchor, type LexiconEntry, type VocabularyStage } from "./language/WordPopover.js";
-import { remarkLanguageAnchors, type LanguageRange } from "./language/remark-language-anchors.js";
+import { WordAnchor, type VocabularyStage } from "./language/WordPopover.js";
+import { remarkLanguageAnchors } from "./language/remark-language-anchors.js";
 import {
   remarkEvidenceAnchors,
   remarkLessonLinks,
@@ -104,14 +105,6 @@ const markdownComponents: Components = {
     return <pre {...props}>{children}</pre>;
   },
 };
-
-export interface LanguageLayer {
-  readonly status: "annotated" | "not-annotated" | "stale";
-  readonly ranges: readonly LanguageRange[];
-  readonly lexicon: readonly LexiconEntry[];
-  /** senseId → why the word is on the page. Absent on older responses. */
-  readonly reasons?: Readonly<Record<string, "new" | "learning" | "familiar">>;
-}
 
 /**
  * Renders lesson Markdown, optionally with the English layer switched on.

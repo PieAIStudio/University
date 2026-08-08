@@ -1,20 +1,19 @@
-import type { LanguageLayer } from "../MarkdownContent.js";
 import type {
   EvidenceAnchorRange,
+  LanguageLayer,
   LessonLinkRange,
   LessonLinkTarget,
-} from "../remark-lesson-links.js";
+} from "../domain/lesson-marks.js";
 
 /**
  * The shapes the API returns, and the pure functions that turn them into what
  * the screen shows.
  *
- * Nothing here touches React, but it is not `src/domain/`: that directory is
- * the boundary `server/**` imports directly, and `LanguageLayer` below comes
- * from a `.tsx` module — pulling it into `src/domain/` would make a Node-side
- * import drag a JSX-only file into a compilation that has no `--jsx` flag to
- * handle it. This module is browser-only despite being framework-free, and
- * every symbol in it is exercised directly by `App.test.tsx` rather than
+ * Nothing here touches React. Wire marks (`LanguageLayer`, lesson/evidence
+ * ranges) live in `src/domain/lesson-marks` so the browser view layer and the
+ * server share one shape without either importing a renderer. This module is
+ * still browser-only: it owns composition of those marks into screen models,
+ * and every symbol in it is exercised directly by `App.test.tsx` rather than
  * through a rendered component tree.
  */
 

@@ -17,15 +17,16 @@ import { useState } from "react";
 
 import { readVoicePreference, selectVoice, speakWord, useEnglishVoices } from "./speech.js";
 
-export interface LexiconEntry {
-  readonly senseId: string;
-  readonly headword: string;
-  readonly phonetic: string;
-  readonly partOfSpeech: string;
-  readonly gloss: string;
-  readonly usage: string;
-  readonly track: "technical" | "general";
-}
+/**
+ * Re-exported, not redeclared. The lexicon entry this popover renders is the
+ * same one the server validates and sends, and it already has a home in
+ * `src/domain/schemas.ts`. A hand-written copy here was structurally identical,
+ * which is exactly why it was dangerous: TypeScript accepted both, so the two
+ * could have drifted a field apart without a single error.
+ */
+import type { LexiconEntry } from "../domain/schemas.js";
+
+export type { LexiconEntry };
 
 export type VocabularyStage = "learning" | "familiar" | "paused";
 
