@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -281,6 +281,33 @@ describe("course creation workflow", () => {
 
     expect(() => createCourse({ studiesRoot, studyId: STUDY_ID, proposal })).toThrow();
     expect(existsSync(getCoursePaths(studiesRoot, STUDY_ID, COURSE_ID).manifest)).toBe(false);
+  });
+
+  it("carries a lesson's teaching variant into the manifest it writes", () => {
+    // Without this, a course created through the workflow arrives with no
+    // variant, and `scripts/lint-lessons.mjs` skips variant-less lessons by
+    // design — so a brand-new course written in the house shape would be the
+    // one thing the shape checker never inspected.
+    const { studiesRoot, snapshot } = setup();
+    const proposal = minimalProposal(snapshot);
+    proposal.course.units[0]!.lessons[0]!.variant = "对比";
+
+    createCourse({ studiesRoot, studyId: STUDY_ID, proposal });
+
+    const manifestPath = join(
+      studiesRoot,
+      STUDY_ID,
+      "courses",
+      COURSE_ID,
+      "units",
+      proposal.course.units[0]!.id,
+      "lessons",
+      "why-boundaries",
+      "revisions",
+      "1",
+      "manifest.json",
+    );
+    expect(JSON.parse(readFileSync(manifestPath, "utf8")).variant).toBe("对比");
   });
 
   it("writes nothing on a dry run", () => {

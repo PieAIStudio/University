@@ -371,6 +371,17 @@ export const UnitManifestSchema = z
   })
   .strict();
 
+/**
+ * The five teaching shapes a lesson can be written in.
+ *
+ * Shared because two schemas need the same list: the manifest on disk, and the
+ * proposal a course-creation workflow accepts. They drifted once — the manifest
+ * could hold a variant that no proposal could supply, so a lesson created
+ * through the workflow silently arrived without one and the shape checker,
+ * which skips variant-less lessons by design, never looked at it.
+ */
+export const LessonVariantSchema = z.enum(["现象", "对比", "溯源", "决策", "术语"]);
+
 export const LessonManifestSchema = z
   .object({
     schemaVersion: SchemaVersion,
@@ -393,7 +404,7 @@ export const LessonManifestSchema = z
      *
      * Optional because 475 lessons predate the shapes.
      */
-    variant: z.enum(["现象", "对比", "溯源", "决策", "术语"]).optional(),
+    variant: LessonVariantSchema.optional(),
     createdAt: IsoDateTime,
     updatedAt: IsoDateTime,
   })

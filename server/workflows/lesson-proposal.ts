@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { EvidenceReferenceSchema, StableId } from "../../src/domain/schemas.js";
+import {
+  EvidenceReferenceSchema,
+  LessonVariantSchema,
+  StableId,
+} from "../../src/domain/schemas.js";
 import {
   writeCardRevision,
   writeExerciseRevision,
@@ -51,6 +55,17 @@ export const LessonCreationProposalSchema = z
     id: StableId,
     title: z.string().min(1).max(200),
     content: z.string().min(1),
+    /**
+     * Which of the five teaching shapes this lesson is written in.
+     *
+     * The manifest has always been able to hold it; the creation proposal could
+     * not express it, so a lesson born through this workflow arrived without
+     * one — and `scripts/lint-lessons.mjs` skips a lesson with no variant on
+     * purpose, treating it as pre-dating the shapes. The result was that a
+     * brand-new course, written in the house shape from revision 1, was the one
+     * thing the shape checker never looked at.
+     */
+    variant: LessonVariantSchema.optional(),
     evidence: z.array(EvidenceReferenceSchema).min(1),
     cards: z.array(CardCreationProposalSchema).default([]),
     exercises: z.array(ExerciseCreationProposalSchema).default([]),
@@ -136,6 +151,7 @@ export function writeLessonBundle(input: WriteLessonBundleInput): LessonProposal
       cardIds: lesson.cards.map((card) => card.id),
       contentRevision: 1,
       status: "active",
+      ...(lesson.variant ? { variant: lesson.variant } : {}),
       evidence: lesson.evidence,
       createdAt: timestamp,
       updatedAt: timestamp,
