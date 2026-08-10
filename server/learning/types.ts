@@ -195,6 +195,18 @@ export interface RecordLessonProgressInput {
   readonly occurredAt?: Date;
 }
 
+export interface RecordLessonCompletionInput {
+  readonly commandId: string;
+  readonly lessonKey: LessonContentKey;
+  readonly contentRevision: number;
+  readonly occurredAt?: Date;
+}
+
+export interface LessonCompletionReceipt {
+  readonly eventId: string;
+  readonly idempotent: boolean;
+}
+
 export interface RecordExerciseAttemptInput {
   readonly commandId: string;
   readonly exerciseKey: ExerciseContentKey;
@@ -296,6 +308,8 @@ export interface LearningStore {
   reviewCard(input: ReviewCardInput): ReviewReceipt;
   rebuildCardStateFromReviewEvents(): CardProjectionReplayResult;
   getLessonProgress(lessonKey: LessonContentKey): StoredLessonProgress | null;
+  hasLessonCompletion(lessonKey: LessonContentKey, contentRevision: number): boolean;
+  recordLessonCompletion(input: RecordLessonCompletionInput): LessonCompletionReceipt;
   recordLessonProgress(input: RecordLessonProgressInput): string;
   recordExerciseAttempt(input: RecordExerciseAttemptInput): string;
   countExerciseAttempts(exerciseKey: ExerciseContentKey, contentRevision: number): number;

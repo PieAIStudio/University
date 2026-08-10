@@ -7,9 +7,11 @@ function trustedThemeColor(color: string | undefined): string | undefined {
 export function EvidenceCode({
   snippet,
   lines,
+  findText = "",
 }: {
   readonly snippet: EvidenceSnippetView;
   readonly lines: readonly (readonly EvidenceToken[])[];
+  readonly findText?: string;
 }) {
   return (
     <pre
@@ -25,9 +27,16 @@ export function EvidenceCode({
             snippet.highlightEndLine !== null &&
             lineNumber >= snippet.highlightStartLine &&
             lineNumber <= snippet.highlightEndLine;
+          const found =
+            findText.trim().length > 0 &&
+            tokens
+              .map((token) => token.content)
+              .join("")
+              .toLocaleLowerCase()
+              .includes(findText.trim().toLocaleLowerCase());
           return (
             <span
-              className={`evidence-code__line${highlighted ? " evidence-code__line--highlighted" : ""}`}
+              className={`evidence-code__line${highlighted ? " evidence-code__line--highlighted" : ""}${found ? " evidence-code__line--found" : ""}`}
               key={lineNumber}
             >
               <span className="evidence-code__line-number" aria-hidden="true">

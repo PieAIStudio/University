@@ -15,6 +15,8 @@ export interface LessonLinkTarget {
   readonly unitId: string;
   readonly lessonId: string;
   readonly title: string;
+  /** Present only when the author declared and the server validated a stable section. */
+  readonly targetSectionId?: string;
 }
 
 export interface LessonLinkRange {
@@ -33,6 +35,8 @@ export interface EvidenceAnchorRange {
   readonly lineEnd: number;
   /** `null` when no cited evidence covers it — rendered as visibly broken. */
   readonly resolved: boolean;
+  /** Approved lesson evidence index; the browser never submits a raw path. */
+  readonly evidenceIndex: number | null;
 }
 
 export interface LanguageRange {

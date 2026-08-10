@@ -16,6 +16,33 @@ type SectionId = "today" | "studies";
 
 import type { LessonLocator, BootstrapData, StudyView, LessonView } from "./view/lesson-view.js";
 
+interface DisplayedStudy {
+  readonly locator: string;
+  readonly view: StudyView;
+}
+
+interface DisplayedLesson {
+  readonly locatorKey: string;
+  readonly locator: LessonLocator;
+  readonly view: LessonView;
+}
+
+function lessonLocatorKey(locator: LessonLocator): string {
+  return [locator.studyId, locator.courseId, locator.unitId, locator.lessonId].join("/");
+}
+
+function commitView(update: () => void): void {
+  const documentWithTransition = document as Document & {
+    startViewTransition?: (callback: () => void) => unknown;
+  };
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (documentWithTransition.startViewTransition && !reducedMotion) {
+    documentWithTransition.startViewTransition(update);
+    return;
+  }
+  update();
+}
+
 const tabs = [
   { id: "today", label: "今日学习", panelId: "panel-today" },
   { id: "studies", label: "学习项目", panelId: "panel-studies" },
@@ -28,11 +55,13 @@ export function App() {
   const [activeSection, setActiveSection] = useState<SectionId>(initialAddress.section);
   const [data, setData] = useState<BootstrapData | null>(null);
   const [selectedStudyId, setSelectedStudyId] = useState<string | null>(initialAddress.studyId);
-  const [studyView, setStudyView] = useState<StudyView | null>(null);
+  const [displayedStudy, setDisplayedStudy] = useState<DisplayedStudy | null>(null);
+  const [pendingStudyId, setPendingStudyId] = useState<string | null>(null);
   const [lessonLocator, setLessonLocator] = useState<LessonLocator | null>(initialAddress.lesson);
   /** Lessons a cross-lesson link led away from, innermost last. */
   const [returnStack, setReturnStack] = useState<readonly LessonLocator[]>([]);
-  const [lessonView, setLessonView] = useState<LessonView | null>(null);
+  const [displayedLesson, setDisplayedLesson] = useState<DisplayedLesson | null>(null);
+  const [pendingLessonKey, setPendingLessonKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lessonError, setLessonError] = useState<string | null>(null);
@@ -43,6 +72,13 @@ export function App() {
   // overwrite the one they are actually looking at.
   const studyRequestId = useRef(0);
   const lessonRequestId = useRef(0);
+  // A failed navigation is reverted to the last good lesson so the learner
+  // keeps a usable screen and a retry affordance. That state change itself
+  // would normally trigger the lesson loader again; mark the one intentional
+  // fallback so the error stays visible instead of immediately replacing it
+  // with a second request for the old lesson.
+  const skipLessonLoadRef = useRef<string | null>(null);
+  const pendingSectionIdRef = useRef<string | null>(null);
   const mainRef = useRef<HTMLElement>(null);
 
   async function loadBootstrap() {
@@ -60,14 +96,18 @@ export function App() {
     const requestId = (studyRequestId.current += 1);
     const next = await readJson<StudyView>(await fetch(`/api/studies/${studyId}`, { signal }));
     if (studyRequestId.current !== requestId) return;
-    setStudyView(next);
+    commitView(() => setDisplayedStudy({ locator: studyId, view: next }));
+    setPendingStudyId(null);
   }
 
   async function loadLesson(locator: LessonLocator, signal?: AbortSignal) {
     const requestId = (lessonRequestId.current += 1);
     const next = await readJson<LessonView>(await fetch(lessonPath(locator), { signal }));
     if (lessonRequestId.current !== requestId) return;
-    setLessonView(next);
+    commitView(() =>
+      setDisplayedLesson({ locatorKey: lessonLocatorKey(locator), locator, view: next }),
+    );
+    setPendingLessonKey(null);
   }
 
   /** Ignore the rejection an in-flight fetch produces when we abort it. */
@@ -87,13 +127,14 @@ export function App() {
   useEffect(() => {
     if (activeSection !== "studies" || !selectedStudyId) return;
     const controller = new AbortController();
-    // Drop the previous study's detail immediately, so the header never shows
-    // one project's metrics next to another project's units.
-    setStudyView(null);
+    const expectedRequestId = studyRequestId.current + 1;
+    setPendingStudyId(selectedStudyId);
     void loadStudy(selectedStudyId, controller.signal)
       .then(() => setError(null))
       .catch((reason: unknown) => {
         if (isAbort(reason)) return;
+        if (studyRequestId.current !== expectedRequestId) return;
+        setPendingStudyId(null);
         setError(reason instanceof Error ? reason.message : "无法读取学习项目");
       });
     return () => controller.abort();
@@ -101,18 +142,39 @@ export function App() {
 
   useEffect(() => {
     if (!lessonLocator) {
-      setLessonView(null);
+      setPendingLessonKey(null);
       setLessonError(null);
       return;
     }
     const controller = new AbortController();
-    setLessonView(null);
+    const requestedKey = lessonLocatorKey(lessonLocator);
+    if (skipLessonLoadRef.current === requestedKey) {
+      skipLessonLoadRef.current = null;
+      setPendingLessonKey(null);
+      return;
+    }
+    const expectedRequestId = lessonRequestId.current + 1;
+    setPendingLessonKey(requestedKey);
     setLessonError(null);
     void loadLesson(lessonLocator, controller.signal)
       .then(() => setError(null))
       .catch((reason: unknown) => {
         if (isAbort(reason)) return;
+        if (lessonRequestId.current !== expectedRequestId) return;
+        setPendingLessonKey(null);
         setLessonError(reason instanceof Error ? reason.message : "无法读取课程");
+        const fallback = displayedLesson;
+        if (fallback && fallback.locatorKey !== requestedKey) {
+          const fallbackAddress = formatAddress({
+            section: "studies",
+            studyId: fallback.locator.studyId,
+            lesson: fallback.locator,
+          });
+          window.history.replaceState(null, "", fallbackAddress);
+          setSelectedStudyId(fallback.locator.studyId);
+          skipLessonLoadRef.current = fallback.locatorKey;
+          setLessonLocator(fallback.locator);
+        }
       });
     return () => controller.abort();
   }, [lessonLocator]);
@@ -136,12 +198,16 @@ export function App() {
     () => data?.studies.reduce((total, study) => total + study.activeCourseCount, 0) ?? 0,
     [data],
   );
-  const selectedStudySummary = useMemo(
-    () => data?.studies.find((study) => study.id === selectedStudyId) ?? null,
-    [data, selectedStudyId],
+  const studyView = displayedStudy?.view ?? null;
+  const lessonView = displayedLesson?.view ?? null;
+  const displayedLessonIsCurrent = Boolean(
+    displayedLesson &&
+    lessonLocator &&
+    displayedLesson.locatorKey === lessonLocatorKey(lessonLocator),
   );
 
-  function openLesson(locator: LessonLocator) {
+  function openLesson(locator: LessonLocator, sectionId?: string) {
+    pendingSectionIdRef.current = sectionId ?? null;
     setSelectedStudyId(locator.studyId);
     setLessonLocator(locator);
     setActiveSection("studies");
@@ -160,10 +226,11 @@ export function App() {
    * be pointing somewhere the reader has stopped thinking about.
    */
   function followLessonLink(target: LessonLinkTarget) {
-    if (lessonLocator) {
-      setReturnStack((current) => [...current, lessonLocator].slice(-LINK_RETURN_DEPTH));
+    const sourceLesson = displayedLesson?.locator ?? lessonLocator;
+    if (sourceLesson) {
+      setReturnStack((current) => [...current, sourceLesson].slice(-LINK_RETURN_DEPTH));
     }
-    openLesson({ studyId: selectedStudyId ?? "", ...target });
+    openLesson({ studyId: selectedStudyId ?? "", ...target }, target.targetSectionId);
   }
 
   function goBackFromLink() {
@@ -173,10 +240,39 @@ export function App() {
     openLesson(previous);
   }
 
+  useEffect(() => {
+    const sectionId = pendingSectionIdRef.current;
+    if (!sectionId || !displayedLessonIsCurrent) return;
+    pendingSectionIdRef.current = null;
+    const reveal = () => {
+      const heading = [...document.querySelectorAll<HTMLElement>("[data-section-id]")].find(
+        (candidate) => candidate.dataset.sectionId === sectionId,
+      );
+      heading?.scrollIntoView({ block: "start", behavior: "smooth" });
+    };
+    if (typeof window.requestAnimationFrame === "function") window.requestAnimationFrame(reveal);
+    else reveal();
+  }, [displayedLessonIsCurrent, displayedLesson?.locatorKey]);
+
   async function refreshLearning() {
     await loadBootstrap();
     if (selectedStudyId) await loadStudy(selectedStudyId);
     if (lessonLocator) await loadLesson(lessonLocator);
+  }
+
+  function retryLesson() {
+    if (!lessonLocator) return;
+    const requested = lessonLocator;
+    const expectedRequestId = lessonRequestId.current + 1;
+    setLessonError(null);
+    setPendingLessonKey(lessonLocatorKey(requested));
+    void loadLesson(requested)
+      .then(() => setLessonError(null))
+      .catch((reason: unknown) => {
+        if (lessonRequestId.current !== expectedRequestId || isAbort(reason)) return;
+        setPendingLessonKey(null);
+        setLessonError(reason instanceof Error ? reason.message : "无法读取课程");
+      });
   }
 
   const address: AppAddress = {
@@ -288,13 +384,28 @@ export function App() {
         {data && data.studies.length > 0 && activeSection === "studies" ? (
           lessonLocator ? (
             <div>
-              {lessonView ? (
+              {pendingLessonKey && !displayedLessonIsCurrent ? (
+                <p className="loading-copy" role="status" aria-live="polite">
+                  正在打开下一节课；当前内容仍保留在屏幕上。
+                </p>
+              ) : null}
+              {lessonError ? (
+                <GameCallout heading="这节课打不开" tone="warning" role="alert">
+                  <p>{lessonError}</p>
+                  <button type="button" className="text-button" onClick={retryLesson}>
+                    重试这节课
+                  </button>
+                </GameCallout>
+              ) : null}
+              {lessonView && displayedLesson ? (
                 <LessonReader
-                  locator={lessonLocator}
+                  locator={displayedLesson.locator}
                   view={lessonView}
                   requestToken={data.requestToken}
                   onLearningChanged={refreshLearning}
-                  neighbours={studyView ? lessonNeighbours(studyView.courses, lessonLocator) : null}
+                  neighbours={
+                    studyView ? lessonNeighbours(studyView.courses, displayedLesson.locator) : null
+                  }
                   onOpenLesson={(locator) => {
                     setReturnStack([]);
                     openLesson(locator);
@@ -306,13 +417,9 @@ export function App() {
                   onFollowLink={followLessonLink}
                   onReturn={returnStack.length > 0 ? goBackFromLink : undefined}
                 />
-              ) : lessonError ? (
-                <GameCallout heading="这节课打不开" tone="warning" role="alert">
-                  {lessonError}
-                </GameCallout>
-              ) : (
+              ) : !lessonError ? (
                 <p className="loading-copy">正在打开这节课…</p>
-              )}
+              ) : null}
             </div>
           ) : (
             <div className="studies-layout">
@@ -324,12 +431,13 @@ export function App() {
                   setLessonLocator(null);
                 }}
               />
-              {studyView && selectedStudySummary ? (
-                <StudyDetail
-                  view={studyView}
-                  summary={selectedStudySummary}
-                  onOpenLesson={openLesson}
-                />
+              {pendingStudyId && displayedStudy && pendingStudyId !== displayedStudy.locator ? (
+                <p className="loading-copy" role="status" aria-live="polite">
+                  正在打开另一个学习项目；当前项目仍保留在屏幕上。
+                </p>
+              ) : null}
+              {studyView ? (
+                <StudyDetail view={studyView} summary={studyView.study} onOpenLesson={openLesson} />
               ) : null}
             </div>
           )

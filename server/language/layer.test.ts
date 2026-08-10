@@ -146,6 +146,13 @@ describe("composed foreign-language layer", () => {
     expect(layer.senseIds).not.toContain("file.storage");
   });
 
+  it("does not introduce new words while a learning backlog is active", () => {
+    const { studiesRoot } = setup();
+    const layer = compose(studiesRoot, [state("file.storage", "learning")]);
+
+    expect(layer.reasons).toEqual({ "file.storage": "learning" });
+  });
+
   it("treats a retired word as familiar rather than as unseen", () => {
     const { studiesRoot } = setup();
     // Nothing else is competing, so the retired word is the only thing left to

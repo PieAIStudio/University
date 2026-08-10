@@ -382,6 +382,87 @@ export const UnitManifestSchema = z
  */
 export const LessonVariantSchema = z.enum(["现象", "对比", "溯源", "决策", "术语"]);
 
+export const LessonSectionSchema = z
+  .object({
+    id: StableId,
+    title: z.string().min(1).max(200),
+  })
+  .strict();
+
+export const LessonAssetKindSchema = z.enum([
+  "real-screenshot",
+  "authorized-external",
+  "diagram",
+  "ai-illustration",
+  "screen-recording",
+]);
+
+const LessonAssetSourceSchema = z
+  .object({
+    sourceUrl: z.string().url().optional(),
+    license: z.string().min(1).max(500).optional(),
+    attribution: z.string().min(1).max(1_000).optional(),
+    aiNote: z.string().min(1).max(1_000).optional(),
+  })
+  .strict();
+
+const LessonAssetCaptureSchema = z
+  .object({
+    sourceCommit: GitCommit,
+    route: z.string().min(1).max(500),
+    state: z.string().min(1).max(1_000),
+    viewport: z
+      .object({ width: z.number().int().positive(), height: z.number().int().positive() })
+      .strict(),
+    locale: z.string().min(2).max(32),
+    captureRecipe: z.string().min(1).max(2_000),
+    capturedAt: IsoDateTime,
+  })
+  .strict();
+
+export const LessonAssetSchema = z
+  .object({
+    id: StableId,
+    kind: LessonAssetKindSchema,
+    path: RepositoryRelativePath,
+    sha256: Sha256,
+    mime: z.enum([
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+      "image/svg+xml",
+      "video/mp4",
+      "video/webm",
+    ]),
+    bytes: z
+      .number()
+      .int()
+      .positive()
+      .max(25 * 1024 * 1024),
+    width: z.number().int().positive().optional(),
+    height: z.number().int().positive().optional(),
+    durationMs: z.number().int().positive().optional(),
+    alt: z.string().min(1).max(500),
+    caption: z.string().max(1_000).optional(),
+    posterAssetId: StableId.optional(),
+    subtitlesPath: RepositoryRelativePath.optional(),
+    transcript: z.string().max(50_000).optional(),
+    source: LessonAssetSourceSchema.optional(),
+    capture: LessonAssetCaptureSchema.optional(),
+  })
+  .strict()
+  .superRefine((asset, context) => {
+    if (asset.kind === "real-screenshot" && !asset.capture) {
+      context.addIssue({ code: "custom", message: "Real screenshots require capture provenance" });
+    }
+    if (asset.kind === "ai-illustration" && !asset.source?.aiNote) {
+      context.addIssue({ code: "custom", message: "AI illustrations require a visible AI note" });
+    }
+    if (asset.kind === "screen-recording" && !asset.durationMs) {
+      context.addIssue({ code: "custom", message: "Screen recordings require durationMs" });
+    }
+  });
+
 export const LessonManifestSchema = z
   .object({
     schemaVersion: SchemaVersion,
@@ -395,6 +476,8 @@ export const LessonManifestSchema = z
     contentHash: Sha256,
     status: ContentStatus,
     evidence: z.array(EvidenceReferenceSchema).min(1),
+    sections: z.array(LessonSectionSchema).max(100).default([]),
+    assets: z.array(LessonAssetSchema).max(100).default([]),
     /**
      * Which teaching shape this lesson uses. Metadata about the lesson, so it
      * lives here rather than in the prose: an authoring marker inside
@@ -571,6 +654,8 @@ export type CourseManifest = z.infer<typeof CourseManifestSchema>;
 export type CourseManifestInput = z.input<typeof CourseManifestSchema>;
 export type UnitManifest = z.infer<typeof UnitManifestSchema>;
 export type LessonManifest = z.infer<typeof LessonManifestSchema>;
+export type LessonSection = z.infer<typeof LessonSectionSchema>;
+export type LessonAsset = z.infer<typeof LessonAssetSchema>;
 export type Exercise = z.infer<typeof ExerciseSchema>;
 export type CardContent = z.infer<typeof CardContentSchema>;
 export type KnowledgeClaim = z.infer<typeof KnowledgeClaimType>;

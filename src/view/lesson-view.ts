@@ -118,6 +118,12 @@ export interface LessonProgress {
   readonly status: "not-started" | "in-progress" | "completed";
   readonly progress: number;
   readonly updatedAt: string;
+  readonly readConfirmed: boolean;
+}
+
+export interface LessonSectionView {
+  readonly id: string;
+  readonly title: string;
 }
 
 /**
@@ -129,9 +135,21 @@ export interface LessonProgress {
 export function progressLabel(progress: LessonProgress | null, contentRevision?: number): string {
   if (!progress) return "尚未开始";
   const stale = contentRevision !== undefined && progress.contentRevision !== contentRevision;
-  if (progress.status === "completed") return stale ? "课文已更新 · 需重做" : "已完成";
-  if (stale) return "课文已更新 · 需重做";
+  if (stale) return "课文有新版 · 待阅读确认";
+  if (progress.status === "completed" && progress.readConfirmed) return "已完成";
+  if (progress.readConfirmed) return "课文已确认 · 练习待完成";
   return `进行中 · ${Math.round(progress.progress * 100)}%`;
+}
+
+export function isCurrentLessonCompleted(
+  progress: LessonProgress | null,
+  contentRevision: number,
+): boolean {
+  return Boolean(
+    progress?.readConfirmed &&
+    progress.status === "completed" &&
+    progress.contentRevision === contentRevision,
+  );
 }
 
 interface LessonSummary {
@@ -233,6 +251,36 @@ export interface EvidenceSnippetView {
   readonly highlightEndLine: number | null;
   readonly language: string;
   readonly code: string;
+  readonly truncatedBefore?: boolean;
+  readonly truncatedAfter?: boolean;
+}
+
+export interface LessonAssetView {
+  readonly id: string;
+  readonly kind:
+    | "real-screenshot"
+    | "authorized-external"
+    | "diagram"
+    | "ai-illustration"
+    | "screen-recording";
+  readonly mime: string;
+  readonly url: string;
+  readonly posterUrl?: string;
+  readonly alt: string;
+  readonly caption?: string;
+  readonly transcript?: string;
+  readonly sourceCommit?: string;
+  readonly capture?: {
+    readonly route: string;
+    readonly state: string;
+    readonly viewport: { readonly width: number; readonly height: number };
+    readonly locale: string;
+    readonly captureRecipe: string;
+    readonly capturedAt: string;
+  };
+  readonly attribution?: string;
+  readonly license?: string;
+  readonly aiNote?: string;
 }
 
 export interface EvidenceToken {
@@ -346,12 +394,14 @@ export interface LessonView {
     readonly title: string;
     readonly contentRevision: number;
     readonly content: string;
+    readonly sections: readonly LessonSectionView[];
     readonly language?: LanguageLayer;
     readonly links?: readonly LessonLinkRange[];
     readonly backlinks?: readonly LessonLinkTarget[];
     readonly evidenceAnchors?: readonly EvidenceAnchorRange[];
     readonly progress: LessonProgress | null;
     readonly evidence: readonly EvidenceView[];
+    readonly assets?: readonly LessonAssetView[];
     readonly exercises: readonly {
       readonly id: string;
       readonly kind: string;

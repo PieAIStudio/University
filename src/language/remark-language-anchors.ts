@@ -2,6 +2,7 @@ import type { Root, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
 import type { LanguageRange } from "../domain/lesson-marks.js";
+import { mergeAdjacentTextNodes } from "../domain/merge-text-runs.js";
 
 export type { LanguageRange } from "../domain/lesson-marks.js";
 
@@ -58,6 +59,7 @@ export function remarkLanguageAnchors(options: { readonly ranges: readonly Langu
   const sorted = [...options.ranges].sort((left, right) => left.start - right.start);
   return (tree: Root): void => {
     if (sorted.length === 0) return;
+    mergeAdjacentTextNodes(tree);
     visit(tree, "text", (node: Text, index, parent) => {
       const start = node.position?.start.offset;
       const end = node.position?.end.offset;

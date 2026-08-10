@@ -20,6 +20,7 @@ function fixture(
     readonly lessonId: string;
     readonly title: string;
     readonly content: string;
+    readonly sections?: readonly { readonly id: string; readonly title: string }[];
   }[],
 ): string {
   const studiesRoot = mkdtempSync(join(tmpdir(), "university-local-links-"));
@@ -38,7 +39,10 @@ function fixture(
     );
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, "content.md"), lesson.content);
-    writeFileSync(join(dir, "manifest.json"), JSON.stringify({ title: lesson.title }));
+    writeFileSync(
+      join(dir, "manifest.json"),
+      JSON.stringify({ title: lesson.title, sections: lesson.sections ?? [] }),
+    );
   }
   return studiesRoot;
 }
@@ -120,6 +124,38 @@ describe("resolving wiki links", () => {
     for (const token of ["lesson:", "lesson:c1/u1", "lesson:a/b/c/d"]) {
       expect(resolve(token)).toMatchObject({ kind: "broken", reason: "malformed" });
     }
+  });
+
+  it("resolves only declared stable target sections", () => {
+    const sectionIndex = indexOf(
+      { courseId: "c1", unitId: "u1", lessonId: "here", title: "本课", content: "" },
+      {
+        courseId: "c1",
+        unitId: "u1",
+        lessonId: "target",
+        title: "有稳定章节的课",
+        content: "",
+        sections: [{ id: "answer", title: "答案" }],
+      },
+    );
+
+    expect(
+      resolveLessonLinks(
+        parseLessonLinks("x [[lesson:c1/u1/target#answer]] y"),
+        sectionIndex,
+        AT,
+      )[0],
+    ).toMatchObject({
+      kind: "resolved",
+      target: { lessonId: "target", targetSectionId: "answer" },
+    });
+    expect(
+      resolveLessonLinks(
+        parseLessonLinks("x [[lesson:c1/u1/target#missing]] y"),
+        sectionIndex,
+        AT,
+      )[0],
+    ).toMatchObject({ kind: "broken", reason: "not-found" });
   });
 
   it("leaves other token kinds to their own resolver", () => {

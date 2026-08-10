@@ -99,6 +99,37 @@ describe("detecting vocabulary from the lesson itself", () => {
     expect(found.map((item) => item.anchor.senseId).toSorted()).toEqual(["load.fs", "open.fs"]);
   });
 
+  it("puts due learning words ahead of new words", () => {
+    const stages = new Map<string, VocabularyStage>([["run.proc", "learning"]]);
+    const found = detectAnchors("file, load, run 三个词。", LEXICON, {
+      stages,
+      targetCount: 2,
+    });
+
+    expect(found.map((item) => item.anchor.senseId)).toEqual(["file.fs", "run.proc"]);
+  });
+
+  it("can close the new-word gate while retaining learning words", () => {
+    const stages = new Map<string, VocabularyStage>([["run.proc", "learning"]]);
+    const found = detectAnchors("file, load, run 三个词。", LEXICON, {
+      stages,
+      targetCount: 5,
+      allowNew: false,
+    });
+
+    expect(found.map((item) => item.anchor.senseId)).toEqual(["run.proc"]);
+  });
+
+  it("introduces at most one new word per Markdown section", () => {
+    const found = detectAnchors(
+      "## 第一节\n\nfile 和 load。\n\n## 第二节\n\nopen 和 run。",
+      LEXICON,
+      { stages: noStages, targetCount: 5 },
+    );
+
+    expect(found.filter((item) => item.reason === "new")).toHaveLength(2);
+  });
+
   it("still surfaces familiar words when there is room, marked as familiar", () => {
     const stages = new Map<string, VocabularyStage>([["file.fs", "familiar"]]);
     const found = detectAnchors("file 和 load。", LEXICON, { stages, targetCount: 5 });
@@ -237,7 +268,7 @@ describe("detecting vocabulary from the lesson itself", () => {
 
 describe("how many words a learner gets", () => {
   it("starts small, because an unreadable page teaches nothing", () => {
-    expect(adaptiveTargetCount(0)).toBe(3);
+    expect(adaptiveTargetCount(0)).toBe(2);
   });
 
   it("never decreases as the learner retires more words", () => {
@@ -251,6 +282,6 @@ describe("how many words a learner gets", () => {
 
   it("saturates rather than growing without bound", () => {
     expect(adaptiveTargetCount(10_000)).toBe(adaptiveTargetCount(200));
-    expect(adaptiveTargetCount(10_000)).toBeLessThanOrEqual(12);
+    expect(adaptiveTargetCount(10_000)).toBeLessThanOrEqual(2);
   });
 });

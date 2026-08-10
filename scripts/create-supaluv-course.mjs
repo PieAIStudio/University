@@ -386,6 +386,8 @@ export function buildSupaluvCourseDefinition(analysis) {
         contentRevision: 1,
         status: "active",
         evidence: lessonEvidence,
+        sections: [],
+        assets: [],
         createdAt: timestamp,
         updatedAt: timestamp,
       },

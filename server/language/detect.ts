@@ -28,8 +28,10 @@ interface DetectedAnchor {
 interface DetectOptions {
   /** senseId → what the learner has said about it. Absent means never seen. */
   readonly stages: ReadonlyMap<string, VocabularyStage>;
-  /** How many senses to surface. See `adaptiveTargetCount`. */
+  /** How many senses to surface. The caller owns the lesson budget. */
   readonly targetCount: number;
+  /** Backlog and performance gates can make a lesson introduce no new words. */
+  readonly allowNew?: boolean;
 }
 
 /**
@@ -108,7 +110,7 @@ interface Candidate {
   readonly reason: DetectionReason;
 }
 
-const REASON_ORDER: Record<DetectionReason, number> = { new: 0, learning: 1, familiar: 2 };
+const REASON_ORDER: Record<DetectionReason, number> = { learning: 0, new: 1, familiar: 2 };
 
 /**
  * The anchors to render for one lesson.
@@ -133,9 +135,12 @@ export function detectAnchors(
     if (stage === "paused") continue;
     const reason: DetectionReason =
       stage === "familiar" ? "familiar" : stage === "learning" ? "learning" : "new";
+    if (reason === "new" && options.allowNew === false) continue;
 
     const hit = firstOccurrence(content, lowered, entry.headword, protectedRegions);
-    if (hit) candidates.push({ senseId: entry.senseId, ...hit, reason });
+    if (hit) {
+      candidates.push({ senseId: entry.senseId, ...hit, reason });
+    }
   }
 
   // Two senses can want the same characters — `commit` in Git and `commit` in a
@@ -147,11 +152,35 @@ export function detectAnchors(
 
   const claimed: Region[] = [];
   const chosen: Candidate[] = [];
-  for (const candidate of ranked) {
-    if (chosen.length >= options.targetCount) break;
-    if (claimed.some((region) => overlaps(region, candidate))) continue;
+  const newPerSection = new Map<number, number>();
+  const hasSections = /^#{1,3}\s+/m.test(content);
+  const chosenActive = new Set<string>();
+  const canChoose = (candidate: Candidate): boolean => {
+    if (chosen.length >= options.targetCount) return false;
+    if (claimed.some((region) => overlaps(region, candidate))) return false;
+    if (candidate.reason === "new") {
+      const section = sectionIndexAt(content, candidate.start);
+      if (hasSections && (newPerSection.get(section) ?? 0) >= 1) return false;
+      newPerSection.set(section, (newPerSection.get(section) ?? 0) + 1);
+    }
     claimed.push({ start: candidate.start, end: candidate.end });
     chosen.push(candidate);
+    return true;
+  };
+  for (const candidate of ranked.filter((item) => item.reason !== "familiar")) {
+    if (chosen.length >= options.targetCount) break;
+    if (canChoose(candidate)) chosenActive.add(candidate.senseId);
+  }
+  // Familiar words are a quiet fallback, never a reason to displace an
+  // unintroduced word. If a new candidate was skipped because the section
+  // already has one, leave the quiet history out of this response entirely.
+  const activeCandidates = ranked.filter((item) => item.reason !== "familiar");
+  const activeComplete = activeCandidates.every((item) => chosenActive.has(item.senseId));
+  if (activeComplete) {
+    for (const candidate of ranked.filter((item) => item.reason === "familiar")) {
+      if (chosen.length >= options.targetCount) break;
+      canChoose(candidate);
+    }
   }
 
   // Back into reading order, so the sidebar list matches the page.
@@ -213,30 +242,21 @@ function occurrenceIndexOf(content: string, quote: string, start: number): numbe
 }
 
 /**
- * How many words to surface, given how many the learner has already retired.
+ * The first release deliberately keeps this budget small and predictable.
  *
- * The shape matters more than the numbers. Starting high is the failure mode
- * that matters: a page with twenty unknown words is not a lesson with
- * vocabulary support, it is a page the learner cannot read, and the words are
- * what they will drop first. Comprehensible-input teaching puts the useful
- * zone just past current ability, which at zero known words is very few.
- *
- * It saturates because attention does. Past a dozen glossed words on one page
- * the learner is not learning more of them, they are skimming all of them.
+ * Familiarity is not a reason to increase the number of new annotations: that
+ * positive feedback loop turned “I recognised a word” into twelve competing
+ * actions on a page. A lesson gets at most two detected attention items, and
+ * the detector separately caps new items at one per authored section.
  */
-const TARGET_STEPS: readonly (readonly [familiarAtLeast: number, target: number])[] = [
-  [0, 3],
-  [10, 5],
-  [30, 7],
-  [60, 9],
-  [100, 11],
-  [160, 12],
-];
+export function adaptiveTargetCount(_familiarCount: number): number {
+  return 2;
+}
 
-export function adaptiveTargetCount(familiarCount: number): number {
-  let target = TARGET_STEPS[0]![1];
-  for (const [threshold, value] of TARGET_STEPS) {
-    if (familiarCount >= threshold) target = value;
-  }
-  return target;
+function sectionIndexAt(content: string, offset: number): number {
+  // Section identity is intentionally local to this placement calculation,
+  // not a public anchor. Stable authored IDs belong to the lesson manifest;
+  // this fallback only prevents a single short section from receiving every
+  // new word when the author has not declared IDs yet.
+  return (content.slice(0, offset).match(/^#{1,3}\s+/gm) ?? []).length;
 }

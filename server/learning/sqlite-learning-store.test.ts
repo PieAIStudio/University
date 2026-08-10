@@ -152,6 +152,9 @@ function createVersionTwoDatabase(path: string): void {
     DROP INDEX lesson_progress_event_session_idx;
     DROP INDEX lesson_progress_event_lesson_idx;
     DROP TABLE lesson_progress_event;
+    DROP INDEX lesson_completion_event_session_idx;
+    DROP INDEX lesson_completion_event_lesson_idx;
+    DROP TABLE lesson_completion_event;
     DROP INDEX review_event_session_idx;
     DROP INDEX exercise_attempt_session_idx;
     DROP INDEX learning_session_one_open_idx;
@@ -174,6 +177,9 @@ function createVersionThreeDatabase(path: string): void {
     DROP INDEX lesson_progress_event_session_idx;
     DROP INDEX lesson_progress_event_lesson_idx;
     DROP TABLE lesson_progress_event;
+    DROP INDEX lesson_completion_event_session_idx;
+    DROP INDEX lesson_completion_event_lesson_idx;
+    DROP TABLE lesson_completion_event;
     DROP INDEX review_event_session_idx;
     DROP INDEX exercise_attempt_session_idx;
     DROP INDEX learning_session_one_open_idx;
@@ -1231,7 +1237,7 @@ describe("SqliteLearningStore", () => {
     store.close();
   });
 
-  it("migrates a file-backed version-two database through append-only retrieval to schema four", () => {
+  it("migrates a file-backed version-two database through append-only retrieval to schema five", () => {
     const path = temporaryDatabase("schema-two.sqlite");
     createVersionTwoDatabase(path);
 
@@ -1255,7 +1261,7 @@ describe("SqliteLearningStore", () => {
           version: number;
         }
       ).version,
-    ).toBe(4);
+    ).toBe(5);
     expect(
       (
         database.prepare("SELECT COUNT(*) AS count FROM retrieval_attempt").get() as {
@@ -1298,7 +1304,7 @@ describe("SqliteLearningStore", () => {
           version: number;
         }
       ).version,
-    ).toBe(4);
+    ).toBe(5);
     expect(database.prepare("PRAGMA table_info(learning_session)").all()).toHaveLength(5);
     database.close();
   });
@@ -1385,7 +1391,7 @@ describe("SqliteLearningStore", () => {
           version: number;
         }
       ).version,
-    ).toBe(4);
+    ).toBe(5);
     expect(
       database
         .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'sync_outbox'")

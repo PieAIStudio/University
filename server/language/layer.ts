@@ -67,12 +67,21 @@ export function composeLanguageLayer(input: {
   readonly vocabulary: readonly VocabularyState[];
 }): ComposedLanguageLayer {
   const stages = new Map<string, DetectStage>();
-  let familiarCount = 0;
   for (const state of input.vocabulary) {
     const mapped = toDetectStage(state.stage);
     if (mapped) stages.set(state.senseId, mapped);
-    if (state.stage === "familiar" || state.stage === "stable") familiarCount += 1;
   }
+
+  const now = Date.now();
+  const hasLearningBacklog = input.vocabulary.some(
+    (state) =>
+      state.stage === "learning" &&
+      (state.dueAt === null ||
+        Number.isNaN(Date.parse(state.dueAt)) ||
+        Date.parse(state.dueAt) <= now),
+  );
+  const hasPerformanceBacklog = input.vocabulary.some((state) => state.lapses >= 3);
+  const allowNew = !hasLearningBacklog && !hasPerformanceBacklog;
 
   const authored = readLessonLanguageLayer(input);
   // A stale overlay was written against different bytes, so its positions mean
@@ -81,7 +90,12 @@ export function composeLanguageLayer(input: {
   const authoredAnchors: LanguageAnchor[] =
     authored.status === "annotated"
       ? authored.ranges
-          .filter((range) => stages.get(range.senseId) !== "paused")
+          .filter((range) => {
+            const stage = stages.get(range.senseId);
+            if (stage === "paused") return false;
+            if (!allowNew && stage === undefined) return false;
+            return true;
+          })
           .map((range) => ({
             quote: input.content.slice(range.start, range.end),
             occurrence: occurrenceAt(
@@ -93,14 +107,23 @@ export function composeLanguageLayer(input: {
           }))
       : [];
 
-  const target = adaptiveTargetCount(familiarCount);
+  const boundedAuthoredAnchors = limitAuthoredAttention(
+    input.content,
+    authoredAnchors,
+    stages,
+    allowNew,
+  );
+  const target = adaptiveTargetCount(0);
+  // Even an authored candidate that lost the attention budget remains covered
+  // for this response; rediscovering it would make the cap dependent on array
+  // order and could render the same sense twice.
   const covered = new Set(authoredAnchors.map((anchor) => anchor.senseId));
   // Only words that still ask for attention count against the budget. A word
   // the learner has retired is rendered dimmed and costs them nothing, so
   // letting it occupy a slot would spend a beginner's whole allowance on words
   // they already told us they know — which is what an authored overlay full of
   // familiar words was doing.
-  const authoredCost = authoredAnchors.filter(
+  const authoredCost = boundedAuthoredAnchors.filter(
     (anchor) => stages.get(anchor.senseId) !== "familiar",
   ).length;
   const remaining = Math.max(target - authoredCost, 0);
@@ -109,12 +132,12 @@ export function composeLanguageLayer(input: {
     ? detectAnchors(
         input.content,
         [...loadLexicon().values()].filter((entry) => !covered.has(entry.senseId)),
-        { stages, targetCount: remaining },
+        { stages, targetCount: remaining, allowNew },
       )
     : [];
 
   const reasons: Record<string, DetectionReason> = {};
-  for (const anchor of authoredAnchors) {
+  for (const anchor of boundedAuthoredAnchors) {
     const stage = stages.get(anchor.senseId);
     reasons[anchor.senseId] =
       stage === "familiar" ? "familiar" : stage === "learning" ? "learning" : "new";
@@ -125,7 +148,7 @@ export function composeLanguageLayer(input: {
   // here rather than merged, which keeps the invariant the renderer relies on:
   // no character belongs to two senses.
   const { resolved } = resolveAnchors(input.content, [
-    ...authoredAnchors,
+    ...boundedAuthoredAnchors,
     ...detected.map((item) => item.anchor),
   ]);
 
@@ -144,6 +167,52 @@ export function composeLanguageLayer(input: {
     senseIds,
     reasons: Object.fromEntries(senseIds.map((id) => [id, reasons[id] ?? "new"])),
   };
+}
+
+function limitAuthoredAttention(
+  content: string,
+  anchors: readonly LanguageAnchor[],
+  stages: ReadonlyMap<string, DetectStage>,
+  allowNew: boolean,
+): readonly LanguageAnchor[] {
+  const familiar = anchors.filter((anchor) => stages.get(anchor.senseId) === "familiar");
+  const attention = anchors
+    .filter((anchor) => stages.get(anchor.senseId) !== "familiar")
+    .filter((anchor) => allowNew || stages.get(anchor.senseId) !== undefined)
+    .toSorted((left, right) => {
+      const leftRank = stages.get(left.senseId) === "learning" ? 0 : 1;
+      const rightRank = stages.get(right.senseId) === "learning" ? 0 : 1;
+      return leftRank - rightRank || anchorOffset(content, left) - anchorOffset(content, right);
+    });
+  const chosen: LanguageAnchor[] = [];
+  const newSections = new Set<number>();
+  const hasSections = /^#{1,3}\s+/m.test(content);
+  for (const anchor of attention) {
+    if (chosen.length >= 2) break;
+    if (stages.get(anchor.senseId) === undefined) {
+      const section = sectionIndexAt(content, anchorOffset(content, anchor));
+      if (hasSections && newSections.has(section)) continue;
+      newSections.add(section);
+    }
+    chosen.push(anchor);
+  }
+  return [...familiar, ...chosen];
+}
+
+function anchorOffset(content: string, anchor: LanguageAnchor): number {
+  let occurrence = 0;
+  let from = 0;
+  for (;;) {
+    const found = content.indexOf(anchor.quote, from);
+    if (found < 0) return Number.MAX_SAFE_INTEGER;
+    occurrence += 1;
+    if (occurrence === anchor.occurrence) return found;
+    from = found + 1;
+  }
+}
+
+function sectionIndexAt(content: string, offset: number): number {
+  return (content.slice(0, offset).match(/^#{1,3}\s+/gm) ?? []).length;
 }
 
 function occurrenceAt(content: string, quote: string, start: number): number {

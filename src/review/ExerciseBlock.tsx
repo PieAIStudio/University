@@ -23,17 +23,15 @@ export function ExerciseBlock({
   locator,
   exercise,
   requestToken,
-  onCompleted,
   onRefresh,
 }: {
   readonly locator: LessonLocator;
   readonly exercise: LessonView["lesson"]["exercises"][number];
   readonly requestToken: string;
-  readonly onCompleted: () => Promise<void>;
   /**
-   * Reloads campus data without claiming the lesson is finished. `onCompleted`
-   * also flips the lesson to 已完成, which is a lie to tell after a submission
-   * that never reached the server.
+   * Reloads campus data after a submission or a host write-back. Completion is
+   * owned by the explicit lesson confirmation endpoint, never by rendering a
+   * passed exercise.
    */
   readonly onRefresh: () => Promise<void>;
 }) {
@@ -89,16 +87,6 @@ export function ExerciseBlock({
     const timer = setTimeout(() => setPacketCopied(false), 8_000);
     return () => clearTimeout(timer);
   }, [packetCopied]);
-
-  const hostCompleteNotified = useRef(false);
-  useEffect(() => {
-    hostCompleteNotified.current = false;
-  }, [exercise.id, exercise.contentRevision]);
-  useEffect(() => {
-    if (!solved || hostCompleteNotified.current) return;
-    hostCompleteNotified.current = true;
-    void onCompleted().catch(() => undefined);
-  }, [solved, onCompleted]);
 
   /**
    * Where the host grade stood when this answer was submitted. Polling stops
@@ -203,6 +191,7 @@ export function ExerciseBlock({
       if (body.hostGrade) setHostGrade(body.hostGrade);
       setGradeWatermark(body.hostGrade?.occurredAt ?? "");
       await copyCoachingPacket();
+      await onRefresh();
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : "暂时无法提交练习";
       setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);

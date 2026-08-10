@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import type { LessonLinkTarget } from "../../src/domain/lesson-marks.js";
+import type { LessonSection } from "../../src/domain/schemas.js";
 import { findProtectedRegions } from "../language/resolve-anchors.js";
 import { getStudyPaths } from "../studies/paths.js";
 
@@ -85,6 +86,7 @@ export function parseLessonLinks(content: string): readonly ParsedLessonLink[] {
 export interface LessonIndexEntry extends LessonLinkTarget {
   /** Lessons this one links to, resolved. Populated by `buildLessonIndex`. */
   readonly outgoing: readonly LessonLinkTarget[];
+  readonly sections: readonly LessonSection[];
 }
 
 export interface LessonIndex {
@@ -127,14 +129,15 @@ export function resolveLessonLinks(
       const target = rest.join(":").trim();
       if (kind !== "lesson" || target === "") return { kind: "broken", link, reason: "malformed" };
 
-      const segments = target.split("/");
+      const [pathTarget, targetSectionId] = target.split("#", 2);
+      const segments = pathTarget!.split("/");
       if (segments.length === 2 || segments.length > 3) {
         return { kind: "broken", link, reason: "malformed" };
       }
 
       let found: LessonIndexEntry | undefined;
       if (segments.length === 3) {
-        found = index.byPath.get(target);
+        found = index.byPath.get(pathTarget);
         if (!found) return { kind: "broken", link, reason: "not-found" };
       } else {
         // A bare id means "in this course". Lesson ids are unique per unit, not
@@ -147,6 +150,12 @@ export function resolveLessonLinks(
       }
 
       if (pathKey(found) === pathKey(from)) return { kind: "broken", link, reason: "self" };
+      if (
+        targetSectionId !== undefined &&
+        !found.sections.some((section) => section.id === targetSectionId)
+      ) {
+        return { kind: "broken", link, reason: "not-found" };
+      }
       return {
         kind: "resolved",
         link,
@@ -155,6 +164,7 @@ export function resolveLessonLinks(
           unitId: found.unitId,
           lessonId: found.lessonId,
           title: found.title,
+          ...(targetSectionId ? { targetSectionId } : {}),
         },
       };
     });
@@ -182,6 +192,7 @@ export function backlinksOf(
 
 interface RawLesson extends LessonLinkTarget {
   readonly content: string;
+  readonly sections: readonly LessonSection[];
 }
 
 /** The only function here that touches disk. */
@@ -194,7 +205,7 @@ export function buildLessonIndex(studiesRoot: string, studyId: string): LessonIn
   const skeleton = new Map<string, LessonIndexEntry>();
   const byCourseAndLesson = new Map<string, Map<string, LessonIndexEntry[]>>();
   for (const lesson of raw) {
-    const entry: LessonIndexEntry = { ...lesson, outgoing: [] };
+    const entry: LessonIndexEntry = { ...lesson, outgoing: [], sections: lesson.sections };
     skeleton.set(pathKey(lesson), entry);
     const course = byCourseAndLesson.get(lesson.courseId) ?? new Map<string, LessonIndexEntry[]>();
     course.set(lesson.lessonId, [...(course.get(lesson.lessonId) ?? []), entry]);
@@ -211,6 +222,7 @@ export function buildLessonIndex(studiesRoot: string, studyId: string): LessonIn
       lessonId: lesson.lessonId,
       title: lesson.title,
       outgoing: resolutions.flatMap((item) => (item.kind === "resolved" ? [item.target] : [])),
+      sections: lesson.sections,
     });
   }
   return { byPath, byCourseAndLesson };
@@ -235,9 +247,11 @@ function readLessons(studiesRoot: string, studyId: string): readonly RawLesson[]
   return lessons;
 }
 
-function readLatestRevision(
-  lessonRoot: string,
-): { readonly title: string; readonly content: string } | null {
+function readLatestRevision(lessonRoot: string): {
+  readonly title: string;
+  readonly content: string;
+  readonly sections: readonly LessonSection[];
+} | null {
   const revisionsRoot = join(lessonRoot, "revisions");
   if (!existsSync(revisionsRoot)) return null;
   const latest = readdirSync(revisionsRoot)
@@ -248,9 +262,13 @@ function readLatestRevision(
   const manifestPath = join(revisionsRoot, String(latest), "manifest.json");
   const contentPath = join(revisionsRoot, String(latest), "content.md");
   if (!existsSync(manifestPath) || !existsSync(contentPath)) return null;
-  const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { title?: unknown };
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
+    title?: unknown;
+    sections?: readonly LessonSection[];
+  };
   return {
     title: typeof manifest.title === "string" ? manifest.title : "",
     content: readFileSync(contentPath, "utf8"),
+    sections: manifest.sections ?? [],
   };
 }

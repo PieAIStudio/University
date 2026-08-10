@@ -61,11 +61,14 @@ export const HostExerciseGradeCliProposalSchema = z
   })
   .strict();
 
-interface HostExerciseRoute {
+interface LessonProgressRoute {
   readonly studyId: string;
   readonly courseId: string;
   readonly unitId: string;
   readonly lessonId: string;
+}
+
+interface HostExerciseRoute extends LessonProgressRoute {
   readonly exerciseId: string;
 }
 
@@ -165,14 +168,13 @@ export function applyHostExerciseGrade(input: {
   };
 }
 
-function isLessonComplete(
+export function isLessonComplete(
   store: SqliteLearningStore,
   studiesRoot: string,
-  route: HostExerciseRoute,
-  lesson: { readonly exerciseIds: readonly string[] },
+  route: LessonProgressRoute,
+  lesson: { readonly exerciseIds: readonly string[]; readonly contentRevision: number },
 ): boolean {
-  if (lesson.exerciseIds.length === 0) return false;
-  return lesson.exerciseIds.every((exerciseId) => {
+  const allExercisesPassed = lesson.exerciseIds.every((exerciseId) => {
     const exercise = readLatestExercise(
       studiesRoot,
       route.studyId,
@@ -181,6 +183,7 @@ function isLessonComplete(
       route.lessonId,
       exerciseId,
     );
+    if (exercise.status !== "active") return true;
     return store.hasCorrectExerciseAttempt(
       exerciseContentKey({
         courseId: route.courseId,
@@ -191,6 +194,17 @@ function isLessonComplete(
       exercise.contentRevision,
     );
   });
+  return (
+    allExercisesPassed &&
+    store.hasLessonCompletion(
+      lessonContentKey({
+        courseId: route.courseId,
+        unitId: route.unitId,
+        lessonId: route.lessonId,
+      }),
+      lesson.contentRevision,
+    )
+  );
 }
 
 /**
@@ -204,7 +218,7 @@ function isLessonComplete(
 export function advanceLessonProgress(
   store: SqliteLearningStore,
   studiesRoot: string,
-  route: HostExerciseRoute,
+  route: LessonProgressRoute,
   lesson: {
     readonly exerciseIds: readonly string[];
     readonly contentRevision: number;
@@ -236,7 +250,9 @@ export function advanceLessonProgress(
   const solved = gradableKeys.filter((item) =>
     store.hasCorrectExerciseAttempt(item.key, item.revision),
   ).length;
-  const lessonComplete = gradableKeys.length > 0 && solved === gradableKeys.length;
+  const exercisesComplete = solved === gradableKeys.length;
+  const readConfirmed = store.hasLessonCompletion(lessonKey, lesson.contentRevision);
+  const lessonComplete = exercisesComplete && readConfirmed;
   const previous = store.getLessonProgress(lessonKey);
   if (previous?.contentRevision !== lesson.contentRevision || previous.status !== "completed") {
     // Progress within one revision is monotonic by contract, and the store
@@ -246,7 +262,10 @@ export function advanceLessonProgress(
     // one thing the learner came back for — the explanation.
     const earned = lessonComplete
       ? 1
-      : Math.max(solved / Math.max(gradableKeys.length, 1), ATTEMPTED_LESSON_PROGRESS);
+      : Math.min(
+          0.95,
+          Math.max(solved / Math.max(gradableKeys.length, 1), ATTEMPTED_LESSON_PROGRESS),
+        );
     const floor = previous?.contentRevision === lesson.contentRevision ? previous.progress : 0;
     store.recordLessonProgress({
       lessonKey,

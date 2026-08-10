@@ -46,13 +46,14 @@ function parseTarget(
 function isCovered(
   citations: readonly EvidenceCitation[],
   target: { readonly sourcePath: string; readonly lineStart: number; readonly lineEnd: number },
-): boolean {
-  return citations.some((citation) => {
+): number | null {
+  const index = citations.findIndex((citation) => {
     if (citation.sourcePath !== target.sourcePath) return false;
     // A whole-file citation carries no lines and covers anything in that file.
     if (citation.lineStart == null || citation.lineEnd == null) return true;
     return target.lineStart >= citation.lineStart && target.lineEnd <= citation.lineEnd;
   });
+  return index === -1 ? null : index;
 }
 
 /**
@@ -78,13 +79,16 @@ export function resolveEvidenceAnchors(
           lineStart: 0,
           lineEnd: 0,
           resolved: false,
+          evidenceIndex: null,
         };
       }
+      const evidenceIndex = isCovered(citations, target);
       return {
         start: link.start,
         end: link.end,
         ...target,
-        resolved: isCovered(citations, target),
+        resolved: evidenceIndex !== null,
+        evidenceIndex,
       };
     });
 }

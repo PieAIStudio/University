@@ -227,7 +227,7 @@ function WordPopoverBody({
             aria-pressed={stage === "learning"}
             onClick={() => onStage("learning")}
           >
-            不熟 · 加入复习
+            还不熟 · 加入复习
           </button>
           <button
             type="button"
@@ -235,7 +235,7 @@ function WordPopoverBody({
             aria-pressed={stage === "familiar" || stage === "stable"}
             onClick={() => onStage("familiar")}
           >
-            认识
+            本来就会 · 以后不提示
           </button>
           <button
             type="button"
@@ -243,7 +243,7 @@ function WordPopoverBody({
             aria-pressed={stage === "paused"}
             onClick={() => onStage("paused")}
           >
-            暂不学这个
+            暂不学 · 这个词义不对
           </button>
         </div>
       ) : null}

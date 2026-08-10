@@ -13,13 +13,17 @@ import type { StoredCardState, StoredLessonProgress } from "../learning/types.js
  * from whatever the serializer happens to do.
  */
 
-export function serializeProgress(progress: StoredLessonProgress | null): unknown {
+export function serializeProgress(
+  progress: StoredLessonProgress | null,
+  readConfirmed = false,
+): unknown {
   if (!progress) return null;
   return {
     contentRevision: progress.contentRevision,
     status: progress.status,
     progress: progress.progress,
     updatedAt: progress.updatedAt.toISOString(),
+    readConfirmed,
   };
 }
 

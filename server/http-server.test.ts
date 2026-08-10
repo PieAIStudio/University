@@ -1,5 +1,6 @@
 import { once } from "node:events";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdtempSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { get } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -13,6 +14,7 @@ import { createUniversityLocalHttpServer } from "./http-server.js";
 import {
   updateCourseStatus,
   updateUnitStatus,
+  readLatestLesson,
   writeCardRevision,
   writeCourse,
   writeExerciseRevision,
@@ -219,6 +221,20 @@ function hostGrade(
       passed: body.passed,
       evaluation: body.evaluation,
     }),
+  });
+}
+
+function confirmLesson(
+  base: string,
+  headers: Record<string, string>,
+  lessonPath: string,
+  commandId: string,
+  contentRevision = 1,
+): Promise<Response> {
+  return fetch(`${base}${lessonPath}/complete`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ commandId, contentRevision }),
   });
 }
 
@@ -658,6 +674,104 @@ describe("UniversityLocal loopback API", () => {
     expect(pathInsteadOfIndex.status).toBe(404);
   });
 
+  it("serves only the active lesson revision's hashed local assets", async () => {
+    const fixture = makeLearningProject(false);
+    const sourceAsset = join(fixture.projectRoot, "captured-screen.svg");
+    const assetContents =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 4"><rect width="4" height="4" fill="red"/></svg>\n';
+    writeFileSync(sourceAsset, assetContents);
+    const assetHash = `sha256:${createHash("sha256").update(assetContents).digest("hex")}`;
+    const current = readLatestLesson(
+      fixture.studiesRoot,
+      "sample",
+      "founder-engineer",
+      "auth-architecture",
+      "auth-owner",
+    );
+    updateCourseStatus(fixture.studiesRoot, "sample", "founder-engineer", "stale");
+    updateUnitStatus(
+      fixture.studiesRoot,
+      "sample",
+      "founder-engineer",
+      "auth-architecture",
+      "stale",
+    );
+    writeLessonRevision(fixture.studiesRoot, "sample", {
+      manifest: {
+        ...current.manifest,
+        contentRevision: 2,
+        updatedAt: "2026-07-20T04:00:00.000Z",
+        assets: [
+          {
+            id: "captured-screen",
+            kind: "diagram",
+            path: "assets/captured-screen.svg",
+            sha256: assetHash,
+            mime: "image/svg+xml",
+            bytes: Buffer.byteLength(assetContents),
+            width: 4,
+            height: 4,
+            alt: "A local captured screen test asset.",
+            caption: "A local asset with a manifest identity.",
+            source: {
+              license: "Test fixture",
+              attribution: "UniversityLocal test fixture",
+            },
+          },
+        ],
+      },
+      content: current.content,
+      assetFiles: [{ path: "assets/captured-screen.svg", sourcePath: sourceAsset }],
+    });
+    updateUnitStatus(
+      fixture.studiesRoot,
+      "sample",
+      "founder-engineer",
+      "auth-architecture",
+      "active",
+    );
+    updateCourseStatus(fixture.studiesRoot, "sample", "founder-engineer", "active");
+
+    const { base } = await start(fixture.projectRoot);
+    const lesson = (await (await fetch(`${base}${fixture.lessonPath}`)).json()) as {
+      lesson: { contentRevision: number; assets: readonly { id: string; url: string }[] };
+    };
+    expect(lesson.lesson.contentRevision).toBe(2);
+    expect(lesson.lesson.assets[0]?.url).toBe(
+      `${fixture.lessonPath}/revisions/2/assets/captured-screen`,
+    );
+    expect(JSON.stringify(lesson)).not.toContain(fixture.studiesRoot);
+
+    const assetPath = `${fixture.lessonPath}/revisions/2/assets/captured-screen`;
+    const served = await fetch(`${base}${assetPath}`);
+    expect(served.status).toBe(200);
+    expect(served.headers.get("content-type")).toContain("image/svg+xml");
+    expect(served.headers.get("content-length")).toBe(String(Buffer.byteLength(assetContents)));
+    expect(served.headers.get("cache-control")).toContain("immutable");
+    expect(served.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(served.headers.get("etag")).toBe(`"${assetHash}"`);
+    expect(await served.text()).toBe(assetContents);
+
+    const oldRevision = await fetch(
+      `${base}${fixture.lessonPath}/revisions/1/assets/captured-screen`,
+    );
+    const unknownAsset = await fetch(`${base}${assetPath}-unknown`);
+    const traversal = await fetch(`${base}${fixture.lessonPath}/revisions/2/assets/%2E%2E`);
+    expect(oldRevision.status).toBe(409);
+    expect(unknownAsset.status).toBe(404);
+    expect([400, 404]).toContain(traversal.status);
+
+    writeFileSync(
+      join(
+        fixture.studiesRoot,
+        "sample/courses/founder-engineer/units/auth-architecture/lessons/auth-owner/revisions/2/assets/captured-screen.svg",
+      ),
+      "<svg>tampered</svg>\n",
+    );
+    const tampered = await fetch(`${base}${assetPath}`);
+    expect(tampered.status).toBe(422);
+  });
+
   it("lists classroom notes safely and reviews only active derived cards", async () => {
     const fixture = makeLearningProject(false);
     addKnowledgeNotes(fixture);
@@ -869,6 +983,13 @@ describe("UniversityLocal loopback API", () => {
       evaluation: "对了：identity-service 拥有认证。",
     });
     expect(passed.status).toBe(200);
+    const confirmed = await confirmLesson(
+      base,
+      headers,
+      fixture.lessonPath,
+      "99999999-9999-4999-8999-999999999999",
+    );
+    expect(confirmed.status).toBe(200);
     expect((await (await fetch(`${base}/api/bootstrap`)).json()) as unknown).toMatchObject({
       today: {
         dueCount: 1,
@@ -972,6 +1093,14 @@ describe("UniversityLocal loopback API", () => {
       },
     );
     expect(second.status).toBe(200);
+    const confirmed = await confirmLesson(
+      base,
+      headers,
+      fixture.lessonPath,
+      "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      2,
+    );
+    expect(confirmed.status).toBe(200);
     expect(await lessonProgress()).toMatchObject({ status: "completed", progress: 1 });
     expect((await (await fetch(`${base}/api/bootstrap`)).json()) as unknown).toMatchObject({
       today: { dueCount: 1 },
@@ -1363,6 +1492,14 @@ describe("UniversityLocal loopback API", () => {
       evaluation: "顺序和 fail-closed 都说到了。",
     });
     expect(full.status).toBe(200);
+
+    const confirmed = await confirmLesson(
+      base,
+      headers,
+      lessonPath,
+      "99999999-9999-4999-8999-999999999999",
+    );
+    expect(confirmed.status).toBe(200);
 
     // A lesson whose only exercise is rubric-based used to be uncompletable, so
     // its cards were written and then never scheduled.

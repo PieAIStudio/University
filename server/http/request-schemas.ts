@@ -17,6 +17,12 @@ const ExerciseAttemptSchema = z
     met: z.array(z.number().int().nonnegative()).optional(),
   })
   .strict();
+const LessonCompletionSchema = z
+  .object({
+    commandId: CommandId,
+    contentRevision: z.number().int().positive(),
+  })
+  .strict();
 const VOCABULARY_DUE_LIMIT = 50;
 const VocabularyPresentedSchema = z
   .object({
@@ -55,6 +61,7 @@ const CardReviewSchema = z
 
 export {
   ExerciseAttemptSchema,
+  LessonCompletionSchema,
   VOCABULARY_DUE_LIMIT,
   VocabularyPresentedSchema,
   VocabularyStageSchema,

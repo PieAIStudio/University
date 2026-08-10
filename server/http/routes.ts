@@ -14,6 +14,12 @@ interface EvidenceRoute {
   readonly index: number;
 }
 
+export interface LessonAssetRoute {
+  readonly lesson: LearningRoute;
+  readonly revision: number;
+  readonly assetId: string;
+}
+
 export interface KnowledgeCardRoute {
   readonly studyId: string;
   readonly noteId: string;
@@ -68,6 +74,40 @@ function parseEvidenceRoute(pathname: string): EvidenceRoute | null {
   }
 }
 
+function parseLessonAssetRoute(pathname: string): LessonAssetRoute | null {
+  const match =
+    /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/revisions\/(\d+)\/assets\/([^/]+)$/.exec(
+      pathname,
+    );
+  if (!match) return null;
+  try {
+    const [studyId, courseId, unitId, lessonId, assetId] = match
+      .slice(1, 5)
+      .concat(match[6] ?? "")
+      .map((value) => StableId.parse(decodeURIComponent(value)));
+    const revision = Number(match[5]);
+    if (
+      !studyId ||
+      !courseId ||
+      !unitId ||
+      !lessonId ||
+      !assetId ||
+      !Number.isSafeInteger(revision) ||
+      revision < 1 ||
+      revision > 10_000
+    ) {
+      throw new Error("invalid lesson asset route");
+    }
+    return {
+      lesson: { studyId, courseId, unitId, lessonId },
+      revision,
+      assetId,
+    };
+  } catch {
+    throw new HttpError(400, "Route contains an invalid lesson asset location");
+  }
+}
+
 function parseKnowledgeCardRoute(pathname: string): KnowledgeCardRoute | null {
   const match = /^\/api\/studies\/([^/]+)\/notes\/([^/]+)\/cards\/([^/]+)\/(reveal|review)$/.exec(
     pathname,
@@ -103,4 +143,10 @@ function parseKnowledgeEvidenceRoute(pathname: string): KnowledgeEvidenceRoute |
   }
 }
 
-export { parseRoute, parseEvidenceRoute, parseKnowledgeCardRoute, parseKnowledgeEvidenceRoute };
+export {
+  parseRoute,
+  parseEvidenceRoute,
+  parseLessonAssetRoute,
+  parseKnowledgeCardRoute,
+  parseKnowledgeEvidenceRoute,
+};

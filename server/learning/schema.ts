@@ -1,9 +1,10 @@
+import { randomUUID } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 
 import { cardContentKey, exerciseContentKey, lessonContentKey } from "./types.js";
 import { validateLessonProgress } from "./lesson-progress.js";
 
-export const LEARNING_SCHEMA_VERSION = 4;
+export const LEARNING_SCHEMA_VERSION = 5;
 const SCHEMA_VERSION = LEARNING_SCHEMA_VERSION;
 
 const LEGACY_COURSE_ID = "legacy-course";
@@ -125,6 +126,19 @@ function createCurrentSchema(db: DatabaseSync, seed: LearningSchemaSchedulerSeed
       CREATE INDEX lesson_progress_event_session_idx
         ON lesson_progress_event(session_id) WHERE session_id IS NOT NULL;
 
+      CREATE TABLE lesson_completion_event (
+        event_id TEXT PRIMARY KEY,
+        command_id TEXT NOT NULL UNIQUE,
+        lesson_id TEXT NOT NULL,
+        content_revision INTEGER NOT NULL CHECK(content_revision > 0),
+        occurred_at INTEGER NOT NULL,
+        session_id TEXT REFERENCES learning_session(session_id)
+      ) STRICT;
+      CREATE INDEX lesson_completion_event_lesson_idx
+        ON lesson_completion_event(lesson_id, content_revision, occurred_at);
+      CREATE INDEX lesson_completion_event_session_idx
+        ON lesson_completion_event(session_id) WHERE session_id IS NOT NULL;
+
       CREATE TABLE retrieval_attempt (
         attempt_id TEXT PRIMARY KEY,
         command_id TEXT NOT NULL UNIQUE,
@@ -185,7 +199,11 @@ export function migrate(db: DatabaseSync, seed: LearningSchemaSchedulerSeed): vo
     migrateVersionTwo(db);
     currentVersion = 3;
   }
-  if (currentVersion === 3) migrateVersionThree(db);
+  if (currentVersion === 3) {
+    migrateVersionThree(db);
+    currentVersion = 4;
+  }
+  if (currentVersion === 4) migrateVersionFour(db);
 }
 
 function migrateVersionOne(db: DatabaseSync, seed: LearningSchemaSchedulerSeed): void {
@@ -358,6 +376,59 @@ function migrateVersionThree(db: DatabaseSync): void {
         CREATE INDEX lesson_progress_event_session_idx
           ON lesson_progress_event(session_id) WHERE session_id IS NOT NULL;
       `);
+    db.prepare("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)").run(
+      4,
+      Date.now(),
+    );
+  });
+}
+
+function migrateVersionFour(db: DatabaseSync): void {
+  transaction(db, () => {
+    db.exec(`
+        CREATE TABLE lesson_completion_event (
+          event_id TEXT PRIMARY KEY,
+          command_id TEXT NOT NULL UNIQUE,
+          lesson_id TEXT NOT NULL,
+          content_revision INTEGER NOT NULL CHECK(content_revision > 0),
+          occurred_at INTEGER NOT NULL,
+          session_id TEXT REFERENCES learning_session(session_id)
+        ) STRICT;
+        CREATE INDEX lesson_completion_event_lesson_idx
+          ON lesson_completion_event(lesson_id, content_revision, occurred_at);
+        CREATE INDEX lesson_completion_event_session_idx
+          ON lesson_completion_event(session_id) WHERE session_id IS NOT NULL;
+      `);
+
+    // A completed projection written before the explicit-read contract is
+    // still a real historical completion. Backfill it once so old learners do
+    // not lose their standing, while all new browser completions use a
+    // command-idempotent event from the API.
+    const completed = db
+      .prepare(`
+        SELECT lesson_id, content_revision, updated_at
+        FROM lesson_progress WHERE status = 'completed'
+      `)
+      .all() as unknown as Array<{
+      lesson_id: string;
+      content_revision: number;
+      updated_at: number;
+    }>;
+    const insert = db.prepare(`
+      INSERT INTO lesson_completion_event (
+        event_id, command_id, lesson_id, content_revision, occurred_at, session_id
+      ) VALUES (?, ?, ?, ?, ?, NULL)
+    `);
+    for (const row of completed) {
+      const eventId = randomUUID();
+      insert.run(
+        eventId,
+        `legacy-completion-${eventId}`,
+        row.lesson_id,
+        row.content_revision,
+        row.updated_at,
+      );
+    }
     db.prepare("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)").run(
       SCHEMA_VERSION,
       Date.now(),

@@ -82,6 +82,8 @@ describe("Git-object evidence", () => {
       highlightEndLine: 7,
       language: "typescript",
       code: original.split("\n").slice(3, 9).join("\n"),
+      truncatedBefore: true,
+      truncatedAfter: true,
     });
     expect(result.code).not.toContain("replaced");
     expect(snapshot.sourceCommit).not.toBe(snippetSnapshot.sourceCommit);
@@ -91,7 +93,7 @@ describe("Git-object evidence", () => {
     const { studiesRoot, sourceRoot } = setup();
     writeFileSync(
       join(sourceRoot, "many-lines.ts"),
-      `${Array.from({ length: 170 }, (_, index) => `const value${index} = ${index};`).join("\n")}\n`,
+      `${Array.from({ length: 300 }, (_, index) => `const value${index} = ${index};`).join("\n")}\n`,
     );
     writeFileSync(join(sourceRoot, "wide.ts"), `// ${"x".repeat(70 * 1024)}\n`);
     writeFileSync(
@@ -112,6 +114,17 @@ describe("Git-object evidence", () => {
     expect(() => readEvidenceSnippet(studiesRoot, "sample", reference("many-lines.ts"))).toThrow(
       /cite a narrower range/,
     );
+    const fullWindow = readEvidenceSnippet(
+      studiesRoot,
+      "sample",
+      { ...reference("many-lines.ts"), lineStart: 120, lineEnd: 122 },
+      "full",
+    );
+    expect(fullWindow.startLine).toBeGreaterThan(1);
+    expect(fullWindow.endLine).toBeLessThan(300);
+    expect(fullWindow.code).toContain("const value119 = 119;");
+    expect(fullWindow.truncatedBefore).toBe(true);
+    expect(fullWindow.truncatedAfter).toBe(true);
     expect(() =>
       readEvidenceSnippet(studiesRoot, "sample", {
         ...reference("many-lines.ts"),

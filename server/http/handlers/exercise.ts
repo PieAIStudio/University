@@ -76,13 +76,7 @@ export const handleExercise: Handler = async (ctx, request, response, url) => {
           // Same advancement the host-grade write-back runs. Two copies of
           // this drifted once already, and the drift made every failing
           // grade unrecordable.
-          advanceLessonProgress(
-            store,
-            ctx.studiesRoot,
-            { ...exerciseRoute, exerciseId: exercise.id },
-            lesson,
-            lessonKey,
-          );
+          advanceLessonProgress(store, ctx.studiesRoot, exerciseRoute, lesson, lessonKey);
           return recordedAttemptId;
         }),
     );

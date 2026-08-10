@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import {
   closeSync,
+  copyFileSync,
   existsSync,
   fsyncSync,
   mkdirSync,
@@ -11,7 +12,7 @@ import {
   rmSync,
   statSync,
 } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 
 import { z } from "zod";
 
@@ -55,11 +56,17 @@ type ExerciseWithoutHash = Exercise extends infer Item
   : never;
 
 interface WriteLessonRevisionInput {
-  readonly manifest: Omit<LessonManifest, "contentHash">;
+  readonly manifest: Omit<z.input<typeof LessonManifestSchema>, "contentHash">;
   readonly content: string;
+  /** External capture paths are copied into the atomic revision staging tree. */
+  readonly assetFiles?: readonly { readonly path: string; readonly sourcePath: string }[];
 }
 
 function sha256(value: string): string {
+  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
+}
+
+function sha256Bytes(value: Buffer): string {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
 }
 
@@ -104,11 +111,27 @@ function assertUnitStructure(course: CourseManifest, unit: UnitManifest): void {
   }
 }
 
-function assertLessonStructure(unit: UnitManifest, lesson: LessonManifest): void {
+function assertLessonStructure(unit: UnitManifest, lesson: LessonManifest, content?: string): void {
   if (!unit.lessonIds.includes(lesson.id))
     throw new Error(`Unit does not declare lesson: ${lesson.id}`);
   assertUniqueIds(lesson.exerciseIds, `Lesson ${lesson.id} exerciseIds`);
   assertUniqueIds(lesson.cardIds, `Lesson ${lesson.id} cardIds`);
+  assertUniqueIds(
+    lesson.sections.map((section) => section.id),
+    `Lesson ${lesson.id} section IDs`,
+  );
+  if (content !== undefined && lesson.sections.length > 0) {
+    const headings = new Set(
+      [...content.matchAll(/^#{1,3}\s+(.+?)\s*$/gm)].map((match) =>
+        match[1]!.replace(/\s+\{#[a-z0-9-]+\}\s*$/, "").trim(),
+      ),
+    );
+    for (const section of lesson.sections) {
+      if (!headings.has(section.title)) {
+        throw new Error(`Lesson section title is not an H1-H3 heading: ${section.id}`);
+      }
+    }
+  }
 }
 
 function syncDirectory(directory: string): void {
@@ -679,8 +702,13 @@ export function writeLessonRevision(
   const course = readCourse(studiesRoot, studyId, lesson.courseId);
   const unit = readUnit(studiesRoot, studyId, lesson.courseId, lesson.unitId);
   assertContentContainerIsEditable(course, unit);
-  assertLessonStructure(unit, lesson);
+  assertLessonStructure(unit, lesson, input.content);
   for (const evidence of lesson.evidence) validateEvidence(studiesRoot, studyId, evidence);
+  const assetFiles = new Map((input.assetFiles ?? []).map((file) => [file.path, file.sourcePath]));
+  const declaredAssetPaths = new Set(lesson.assets.map((asset) => asset.path));
+  for (const file of assetFiles.keys()) {
+    if (!declaredAssetPaths.has(file)) throw new Error(`Asset file is not declared: ${file}`);
+  }
 
   const paths = getLessonPaths(studiesRoot, studyId, lesson.courseId, lesson.unitId, lesson.id);
   let previousRevision = 0;
@@ -703,6 +731,21 @@ export function writeLessonRevision(
     (stagingRoot) => {
       writeTextAtomically(join(stagingRoot, "content.md"), input.content);
       writeJsonAtomically(join(stagingRoot, "manifest.json"), lesson);
+      for (const asset of lesson.assets) {
+        const sourcePath = assetFiles.get(asset.path);
+        if (!sourcePath) throw new Error(`Missing source file for lesson asset: ${asset.id}`);
+        const bytes = readFileSync(sourcePath);
+        if (bytes.byteLength !== asset.bytes || sha256Bytes(bytes) !== asset.sha256) {
+          throw new Error(`Lesson asset hash/size mismatch: ${asset.id}`);
+        }
+        const destination = resolve(stagingRoot, asset.path);
+        const stagingRelative = relative(stagingRoot, destination);
+        if (stagingRelative.startsWith("..") || stagingRelative.includes("..")) {
+          throw new Error(`Lesson asset path escapes revision: ${asset.path}`);
+        }
+        mkdirSync(dirname(destination), { recursive: true, mode: 0o700 });
+        copyFileSync(sourcePath, destination);
+      }
     },
     (revisionRoot) => {
       const storedContent = readFileSync(join(revisionRoot, "content.md"), "utf8");
@@ -744,6 +787,7 @@ export function readLatestLesson(
   assertContentIdentity(manifest, courseId, unitId);
   assertLessonStructure(unit, manifest);
   const content = readFileSync(join(revisionRoot, "content.md"), "utf8");
+  assertLessonStructure(unit, manifest, content);
   if (manifest.contentHash !== sha256(content)) throw new Error("Lesson content hash mismatch");
   return { manifest, content };
 }

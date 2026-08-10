@@ -2,6 +2,7 @@ import type { Root, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
 import type { EvidenceAnchorRange, LessonLinkRange } from "../domain/lesson-marks.js";
+import { mergeAdjacentTextNodes } from "../domain/merge-text-runs.js";
 
 export type {
   EvidenceAnchorRange,
@@ -25,6 +26,7 @@ interface LessonLinkNode {
       readonly courseId?: string;
       readonly unitId?: string;
       readonly lessonId?: string;
+      readonly targetSectionId?: string;
       readonly broken?: string;
     };
     readonly hChildren: readonly { readonly type: "text"; readonly value: string }[];
@@ -39,6 +41,7 @@ interface EvidenceAnchorNode {
     readonly hProperties: {
       readonly sourcePath: string;
       readonly lines: string;
+      readonly evidenceIndex?: number;
       readonly broken?: string;
     };
     readonly hChildren: readonly { readonly type: "text"; readonly value: string }[];
@@ -68,6 +71,7 @@ export function remarkEvidenceAnchors(options: {
   const sorted = [...options.ranges].sort((left, right) => left.start - right.start);
   return (tree: Root): void => {
     if (sorted.length === 0) return;
+    mergeAdjacentTextNodes(tree);
     visit(tree, "text", (node: Text, index, parent) => {
       const start = node.position?.start.offset;
       const end = node.position?.end.offset;
@@ -97,6 +101,9 @@ export function remarkEvidenceAnchors(options: {
             hProperties: {
               sourcePath: hit.sourcePath,
               lines,
+              ...(hit.evidenceIndex === null || hit.evidenceIndex === undefined
+                ? {}
+                : { evidenceIndex: hit.evidenceIndex }),
               ...(hit.resolved ? {} : { broken: "true" }),
             },
             hChildren: [{ type: "text", value: label }],
@@ -129,6 +136,7 @@ export function remarkLessonLinks(options: { readonly ranges: readonly LessonLin
   const sorted = [...options.ranges].sort((left, right) => left.start - right.start);
   return (tree: Root): void => {
     if (sorted.length === 0) return;
+    mergeAdjacentTextNodes(tree);
     visit(tree, "text", (node: Text, index, parent) => {
       const start = node.position?.start.offset;
       const end = node.position?.end.offset;
@@ -160,6 +168,9 @@ export function remarkLessonLinks(options: { readonly ranges: readonly LessonLin
                   courseId: hit.target.courseId,
                   unitId: hit.target.unitId,
                   lessonId: hit.target.lessonId,
+                  ...(hit.target.targetSectionId
+                    ? { targetSectionId: hit.target.targetSectionId }
+                    : {}),
                 }
               : { broken: "true" },
             hChildren: [{ type: "text", value: text }],

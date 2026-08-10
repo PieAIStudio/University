@@ -50,6 +50,8 @@ export interface EvidenceSnippet {
   readonly highlightEndLine: number | null;
   readonly language: string;
   readonly code: string;
+  readonly truncatedBefore?: boolean;
+  readonly truncatedAfter?: boolean;
 }
 
 function readJson(path: string): unknown {
@@ -205,13 +207,14 @@ export function readEvidenceSnippet(
   studiesRoot: string,
   studyId: string,
   candidate: EvidenceReference,
-  contextLines: number = EVIDENCE_SNIPPET_LIMITS.defaultContextLines,
+  contextLines: number | "full" = EVIDENCE_SNIPPET_LIMITS.defaultContextLines,
 ): EvidenceSnippet {
   const evidence = validateEvidence(studiesRoot, studyId, candidate);
   if (
-    !Number.isInteger(contextLines) ||
-    contextLines < 0 ||
-    contextLines > EVIDENCE_SNIPPET_LIMITS.maxContextLines
+    contextLines !== "full" &&
+    (!Number.isInteger(contextLines) ||
+      contextLines < 0 ||
+      contextLines > EVIDENCE_SNIPPET_LIMITS.maxContextLines)
   ) {
     throw new Error(
       `Evidence context must be between 0 and ${EVIDENCE_SNIPPET_LIMITS.maxContextLines} lines`,
@@ -249,14 +252,34 @@ export function readEvidenceSnippet(
     );
   }
 
-  const startLine = hasLineRange ? Math.max(1, (highlightStartLine ?? 1) - contextLines) : 1;
-  const endLine = hasLineRange
-    ? Math.min(lines.length, (highlightEndLine ?? lines.length) + contextLines)
-    : lines.length;
-  if (endLine - startLine + 1 > EVIDENCE_SNIPPET_LIMITS.maxReturnedLines) {
+  const fullFile = contextLines === "full";
+  let startLine = fullFile
+    ? 1
+    : hasLineRange
+      ? Math.max(1, (highlightStartLine ?? 1) - contextLines)
+      : 1;
+  let endLine = fullFile
+    ? lines.length
+    : hasLineRange
+      ? Math.min(lines.length, (highlightEndLine ?? lines.length) + contextLines)
+      : lines.length;
+  if (!fullFile && endLine - startLine + 1 > EVIDENCE_SNIPPET_LIMITS.maxReturnedLines) {
     throw new Error(
       `Evidence snippet exceeds the ${EVIDENCE_SNIPPET_LIMITS.maxReturnedLines}-line display limit; cite a narrower range`,
     );
+  }
+
+  if (fullFile && endLine - startLine + 1 > EVIDENCE_SNIPPET_LIMITS.maxReturnedLines) {
+    // “Full source” is a reader affordance, not permission to stream an
+    // unbounded blob into the browser. Keep the approved range visible and
+    // use real line numbers to make the controlled window honest.
+    const rangeStart = highlightStartLine ?? 1;
+    const rangeEnd = highlightEndLine ?? rangeStart;
+    const rangeLength = rangeEnd - rangeStart + 1;
+    const maxStart = lines.length - EVIDENCE_SNIPPET_LIMITS.maxReturnedLines + 1;
+    const spareLines = EVIDENCE_SNIPPET_LIMITS.maxReturnedLines - rangeLength;
+    startLine = Math.min(Math.max(1, rangeStart - Math.floor(spareLines / 2)), maxStart);
+    endLine = Math.min(lines.length, startLine + EVIDENCE_SNIPPET_LIMITS.maxReturnedLines - 1);
   }
 
   const code = lines.slice(startLine - 1, endLine).join("\n");
@@ -266,7 +289,7 @@ export function readEvidenceSnippet(
     );
   }
 
-  return {
+  const result: EvidenceSnippet = {
     sourcePath: evidence.sourcePath,
     sourceCommit: evidence.sourceCommit,
     startLine,
@@ -275,7 +298,10 @@ export function readEvidenceSnippet(
     highlightEndLine,
     language: inferSnippetLanguage(evidence.sourcePath),
     code,
+    ...(startLine > 1 ? { truncatedBefore: true } : {}),
+    ...(endLine < lines.length ? { truncatedAfter: true } : {}),
   };
+  return result;
 }
 
 function readVerifiedGraphNodes(path: string, expectedHash: string): Map<string, GraphNode> {

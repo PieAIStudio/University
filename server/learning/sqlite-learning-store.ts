@@ -62,6 +62,7 @@ import {
   type LessonContentKey,
   type LearningStore,
   type RecordExerciseAttemptInput,
+  type RecordLessonCompletionInput,
   type RecordLessonProgressInput,
   type RecordRetrievalAttemptInput,
   type ReviewContentKey,
@@ -72,6 +73,7 @@ import {
   type StoredLearnerSubmission,
   type WrittenAttempt,
   type StoredLessonProgress,
+  type LessonCompletionReceipt,
   type StoredLearningSession,
   type StoredRetrievalAttempt,
 } from "./types.js";
@@ -126,6 +128,14 @@ interface LessonProgressRow {
   status: string;
   progress: number;
   updated_at: number;
+}
+
+interface LessonCompletionCommandRow {
+  event_id: string;
+  command_id: string;
+  lesson_id: string;
+  content_revision: number;
+  occurred_at: number;
 }
 
 function createPrivateFile(path: string): void {
@@ -730,6 +740,68 @@ export class SqliteLearningStore implements LearningStore {
     };
   }
 
+  hasLessonCompletion(lessonKey: LessonContentKey, contentRevision: number): boolean {
+    parseLessonContentKey(lessonKey);
+    validateRevision(contentRevision);
+    const row = this.#database
+      .prepare(`
+        SELECT 1 AS completed
+        FROM lesson_completion_event
+        WHERE lesson_id = ? AND content_revision = ?
+        LIMIT 1
+      `)
+      .get(lessonKey, contentRevision) as { completed: number } | undefined;
+    return row !== undefined;
+  }
+
+  recordLessonCompletion(input: RecordLessonCompletionInput): LessonCompletionReceipt {
+    validateId(input.commandId, "Command ID");
+    parseLessonContentKey(input.lessonKey);
+    validateRevision(input.contentRevision);
+    const requestedOccurredAt = input.occurredAt
+      ? timestamp(input.occurredAt, "Lesson completion time")
+      : undefined;
+
+    return this.#transaction(() => {
+      const duplicate = this.#database
+        .prepare(`
+          SELECT event_id, command_id, lesson_id, content_revision, occurred_at
+          FROM lesson_completion_event WHERE command_id = ?
+        `)
+        .get(input.commandId) as LessonCompletionCommandRow | undefined;
+      if (duplicate) {
+        if (
+          duplicate.lesson_id !== input.lessonKey ||
+          duplicate.content_revision !== input.contentRevision ||
+          (requestedOccurredAt !== undefined && duplicate.occurred_at !== requestedOccurredAt)
+        ) {
+          throw new Error(
+            `Command ID conflict: ${input.commandId} was already used for another lesson completion`,
+          );
+        }
+        return { eventId: duplicate.event_id, idempotent: true };
+      }
+
+      const occurredAtMs = requestedOccurredAt ?? Date.now();
+      const eventId = randomUUID();
+      this.#database
+        .prepare(`
+          INSERT INTO lesson_completion_event (
+            event_id, command_id, lesson_id, content_revision, occurred_at, session_id
+          ) VALUES (?, ?, ?, ?, ?, ?)
+        `)
+        .run(
+          eventId,
+          input.commandId,
+          input.lessonKey,
+          input.contentRevision,
+          occurredAtMs,
+          this.#getOpenSessionId(),
+        );
+      return { eventId, idempotent: false };
+    });
+  }
+
   /**
    * How many attempts the learner has already recorded against one exercise
    * at one content revision. Drives the reveal policy: the reference answer
@@ -995,6 +1067,26 @@ export class SqliteLearningStore implements LearningStore {
           occurredAtMs,
           this.#getOpenSessionId(),
         );
+      if (
+        input.status === "completed" &&
+        !this.hasLessonCompletion(input.lessonKey, input.contentRevision)
+      ) {
+        const completionEventId = randomUUID();
+        this.#database
+          .prepare(`
+            INSERT INTO lesson_completion_event (
+              event_id, command_id, lesson_id, content_revision, occurred_at, session_id
+            ) VALUES (?, ?, ?, ?, ?, ?)
+          `)
+          .run(
+            completionEventId,
+            `progress-completion-${completionEventId}`,
+            input.lessonKey,
+            input.contentRevision,
+            occurredAtMs,
+            this.#getOpenSessionId(),
+          );
+      }
     });
     return eventId;
   }

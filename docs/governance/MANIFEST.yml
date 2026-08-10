@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-07T19:14:45.191Z
+generated_at: 2026-08-08T20:03:18.927Z
 generator_version: doc-gov@0.8.0
-docs_count: 37
+docs_count: 38
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-local-study-containers.md
@@ -143,6 +143,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-04
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-LAND-STUDY-COURSES-THROUGH-EVIDENCE-LINT-AND-ACTIVE-STATUS-GATES
+    path: docs/reference/learnings/workflow-issues/land-study-courses-through-evidence-lint-and-active-status-gates.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-08
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-PREVENT-MOBILE-OVERFLOW-FROM-CSS-GRID-MIN-CONTENT-FLOORS
     path: docs/reference/learnings/workflow-issues/prevent-mobile-overflow-from-css-grid-min-content-floors.md

@@ -121,7 +121,10 @@ export function createBootstrapHandler(focus: LearningFocus | undefined): Handle
                 // completed again, so treating an old completion as current
                 // left the learner with a course that looked finished and a
                 // review queue that had quietly gone empty.
+                const readConfirmed =
+                  store?.hasLessonCompletion(key, lesson.contentRevision) ?? false;
                 const finished =
+                  readConfirmed &&
                   progress?.status === "completed" &&
                   progress.contentRevision === lesson.contentRevision;
                 if (!nextLesson && !finished) {
@@ -134,7 +137,7 @@ export function createBootstrapHandler(focus: LearningFocus | undefined): Handle
                     lessonId,
                     lessonTitle: lesson.title,
                     contentRevision: lesson.contentRevision,
-                    progress: serializeProgress(progress),
+                    progress: serializeProgress(progress, readConfirmed),
                   };
                 }
               }
