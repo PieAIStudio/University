@@ -59,6 +59,14 @@ const hasFlag = (name) => args.includes(`--${name}`);
 const onlyStudy = flag("study");
 const onlyCourse = flag("course");
 const updateBaseline = hasFlag("update-baseline");
+const strict = hasFlag("strict");
+
+/**
+ * Lessons passing only because the baseline still covers them.
+ *
+ * @type {{ id: string, rules: string[] }[]}
+ */
+const stillExempt = [];
 
 /** Checked-in debt file. Sorted on write so diffs stay reviewable. */
 const BASELINE_PATH = join("scripts", "lesson-debt.json");
@@ -792,6 +800,9 @@ for (const lesson of lessons("studies")) {
   for (const rule of suppressedRules) {
     if (rule in debtExempt) debtExempt[rule] += 1;
   }
+  if (suppressedRules.size > 0 && !updateBaseline) {
+    stillExempt.push({ id: lesson.id, rules: [...suppressedRules].sort() });
+  }
 
   if (reportable.length > 0) {
     failed += 1;
@@ -822,4 +833,24 @@ console.log(
   `存量豁免：无 detail ${debtExempt[DEBT_RULE.DETAIL]} / 手抄 fence ${debtExempt[DEBT_RULE.HAND_COPIED_FENCE]} / 系统词汇 ${debtExempt[DEBT_RULE.SYSTEM_VOCAB]} / 孤儿证据 ${debtExempt[DEBT_RULE.ORPHAN_EVIDENCE]}（改写后自动失效）`,
 );
 if (checked === 0) console.log("（没有带 variant 的课文——尚未按新辩体重写。）");
+
+/*
+ * --strict: a grandfathered lesson is a lesson nobody has rewritten yet.
+ *
+ * Without this, finishing a course looks identical to skipping a lesson in it:
+ * both print「0 节有问题」. That is not hypothetical — a 41-lesson upgrade
+ * reported 41/41 complete while one lesson kept its exemption from an older
+ * revision, so the linter told the agent it was already fine and it was left
+ * carrying every defect the upgrade existed to remove.
+ *
+ * The default run stays lenient because the debt is real and shrinks slowly.
+ * Use --strict as the "this scope is finished" gate, where any surviving
+ * exemption means it is not.
+ */
+if (strict && stillExempt.length > 0) {
+  console.log(`\n✗ --strict：${stillExempt.length} 节课只是因为存量豁免才通过，并没有被改写。`);
+  for (const { id, rules } of stillExempt) console.log(`    ${id}  (${rules.join(", ")})`);
+  console.log("\n改写它们并新建 revision，豁免会自动失效。不要改 baseline。");
+  process.exit(1);
+}
 process.exit(failed > 0 ? 1 : 0);
