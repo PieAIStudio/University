@@ -1,6 +1,6 @@
 # Acceptance checklist
 
-Run every item. Any "no" means rewrite, not patch. A lesson that fails item 6
+Run every item. Any "no" means rewrite, not patch. A lesson that fails item 13
 (leakage) is worse than the wall-of-conclusions version it replaced, because it
 spends the learner's curiosity and returns nothing.
 
@@ -56,14 +56,16 @@ failures a machine can catch before a human or model re-reads.
 
 14. `[judgment]` Every factual claim traces to a snapshot file and line you
     actually read.
-15. `[machine]` Every fenced code block that presents project source is followed
-    (before the next fence or `##` heading) by at least one
-    `[[evidence:path:line]]` or `[[evidence:path:start-end]]` token.
+15. `[machine]` **No fenced code block is immediately followed by an
+    `[[evidence:]]` token.** That pattern means the source was hand-copied into
+    the lesson and then pointed at — two stored copies, one of them verified by
+    nothing. Delete the fence; the token renders the real pinned source itself.
+    Fences that are *not* project source (your own example, a command,
+    pseudo-code, a counter-example) stay legal and are not flagged.
 16. `[machine]` `溯源`: every stop under `## 一站一站往回走` has its own
     `[[evidence:]]` token.
 17. `[machine]` No `（位置：` / `**位置：**` used as a substitute for
-    `[[evidence:]]` after a code block (prose may mention paths; it does not
-    count as the anchor).
+    `[[evidence:]]` (prose may mention paths; it does not count as the anchor).
 18. `[machine]` Every `[[evidence:]]` range is covered by this revision's
     manifest `evidence` (same `sourcePath`; lines inside a cited range, or any
     line when the citation has no line bounds).
@@ -107,15 +109,42 @@ failures a machine can catch before a human or model re-reads.
 34. `[judgment]` Mermaid blocks (if any) are valid and not the only carrier of a
     fact the prose omits.
 
+## Detail layer
+
+35. `[machine]` At least one `:::detail` block, and at most 8.
+36. `[machine]` Every block has a title in `[…]` ending in `？` or `?`.
+37. `[machine]` Every block is closed by a `:::` line.
+38. `[machine]` Detail body characters ≥ 60% of standard prose characters
+    (standard = body with detail blocks and code fences removed).
+39. `[judgment]` Deleting every block leaves a lesson that still reads as a
+    complete, connected whole — the standard layer is a summary, not a stump.
+    - Test: read the body with the blocks hidden. Does any sentence now dangle?
+40. `[judgment]` Each block answers only the question in its own title, in the
+    same voice as the prose. A block written as a dictionary entry
+    (「X（English）是指……」) fails, even if the definition is correct.
+41. `[judgment]` No block introduces a term the reader does not have in order to
+    explain the term it is about.
+
+## Speaking to a reader, not about the system
+
+42. `[machine]` None of: `固定快照`, `本课依据`, `这节课的证据`, `当成证据`,
+    `阅读层级`, `标准模式`, `细讲模式`, `内容修订`, `本课` (use `这节课`).
+43. `[judgment]` Read any sentence aloud to someone who does not know this app
+    exists. Would they ask「你在说什么」? Bare `证据` / `快照` are fine when the
+    **studied project** owns those words; they are banned only as this app
+    narrating itself.
+
 ## Machine vs judgment — linter handoff
 
 | Own with a linter first | Keep for model/human |
 | --- | --- |
 | variant enum; no HTML comments; exact section names/order; old-skeleton ban | title is a real question someone wants |
 | one 先猜一下 / 答案 adjacency; disclaimer line; no MC markers | prediction targets the core |
-| `[[evidence:]]` present after code; covered by manifest; no `（位置：` substitute | claim actually true on the snapshot |
+| no fence-then-token hand copy; tokens covered by manifest; no `（位置：` substitute | claim actually true on the snapshot |
 | 自检 has no answer markers; link count/placement; banned phrases | link is a real invitation, not a maze |
 | 一句话 last + bold; fence closure | voice, analogy quality, rotation exception quality |
+| detail block count, question titles, closure, 60% volume | detail answers only its title, in the prose voice |
+| system-vocabulary collocations | whether a bare 证据/快照 belongs to the studied project |
 | — | skip-rewrite when already compliant (progress thrash) |
 
 If the linter and this checklist disagree on a `[machine]` item, **fix the
