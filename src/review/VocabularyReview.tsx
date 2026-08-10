@@ -74,7 +74,7 @@ export function VocabularyReview({ requestToken }: { readonly requestToken: stri
     <GamePanel className="vocab-review" tone="strong">
       <header className="vocab-review__header">
         <div>
-          <p className="eyebrow">VOCABULARY · {due.length} 个待复习</p>
+          <p className="eyebrow">生词 · {due.length} 个待复习</p>
           <h2 lang="en">{word.entry.headword}</h2>
           <p className="vocab-review__phonetic">{word.entry.phonetic}</p>
         </div>

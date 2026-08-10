@@ -76,7 +76,7 @@ export function StudyShelf({
           ))}
         </nav>
       ) : null}
-      <p className="eyebrow">YOUR STUDIES</p>
+      <p className="eyebrow">你的学习项目</p>
       {data.studies.map((study) => (
         <button
           key={study.id}

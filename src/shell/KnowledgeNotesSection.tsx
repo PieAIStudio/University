@@ -38,7 +38,6 @@ export function KnowledgeNotesSection({
     <section className="knowledge-notes" aria-labelledby="knowledge-notes-title">
       <header className="knowledge-notes__header">
         <div>
-          <p className="eyebrow">MY QUESTIONS · CLASS NOTES</p>
           <h2 id="knowledge-notes-title">我的追问 / 课堂笔记</h2>
         </div>
         <GameBadge tone="ai">AI 宿主沉淀</GameBadge>
@@ -59,7 +58,7 @@ export function KnowledgeNotesSection({
                 <header className="knowledge-note__summary">
                   <div>
                     <p className="eyebrow">
-                      {claimTypeLabels[note.claimType]} · REV {note.contentRevision}
+                      {claimTypeLabels[note.claimType]} · 第 {note.contentRevision} 版
                     </p>
                     <h3>{note.title}</h3>
                   </div>

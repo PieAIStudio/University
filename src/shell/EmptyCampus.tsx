@@ -7,7 +7,6 @@ export function EmptyCampus() {
         U
       </span>
       <div>
-        <p className="eyebrow">CAMPUS SETUP</p>
         <h2>第一项学习还没有准备好。</h2>
         <p>用 AI 宿主注册一个真实项目后，它会出现在这里；源码不会被学习资料污染。</p>
       </div>

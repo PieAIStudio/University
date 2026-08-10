@@ -71,7 +71,7 @@ function AirlockClocks({ studyId }: { readonly studyId: string }) {
   const ahead = view.upstream?.commitsAhead ?? null;
   return (
     <section className="airlock-clocks">
-      <p className="eyebrow">AIRLOCK</p>
+      <p className="eyebrow">教材版本</p>
       <dl>
         <div>
           <dt>教材钉在</dt>
@@ -122,7 +122,7 @@ export function StudyDetail({
     <section className="study-detail">
       <header className="study-detail__header">
         <div>
-          <p className="eyebrow">STUDY · {view.study.id}</p>
+          <p className="eyebrow">项目 · {view.study.id}</p>
           <h2>{view.study.title}</h2>
           <p>{view.study.description}</p>
         </div>
@@ -143,7 +143,6 @@ export function StudyDetail({
         ))
       ) : (
         <GamePanel className="formal-course-empty" tone="strong">
-          <p className="eyebrow">FORMAL CURRICULUM</p>
           <h2>正式课程尚未发布</h2>
           <p>源码、UA 地图与课堂笔记可以先存在，但它们不会冒充经过编排的正式课程。</p>
         </GamePanel>

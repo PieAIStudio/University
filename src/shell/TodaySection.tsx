@@ -19,7 +19,6 @@ export function TodaySection({
   return (
     <div className="today-layout">
       <section className="today-intro">
-        <p className="eyebrow">TODAY · PERSONAL CAMPUS</p>
         <h2>{data.today.nextLesson ? "先完成一节课，再巩固记忆。" : "今天，从回忆开始。"}</h2>
         <p>课程负责建立理解，卡片只负责把重要知识留在长期记忆里。</p>
         {/* Without this the ordering looks arbitrary: the learner sees a lesson
@@ -35,7 +34,6 @@ export function TodaySection({
       {data.today.nextLesson ? (
         <GamePanel className="next-lesson" tone="strong">
           <div>
-            <p className="eyebrow">NEXT LESSON</p>
             <h2>{data.today.nextLesson.lessonTitle}</h2>
             <p>
               {data.today.nextLesson.studyTitle} · {data.today.nextLesson.courseTitle}
@@ -74,7 +72,6 @@ export function TodaySection({
       <div className="today-metric">
         <span>{data.today.dueCount}</span>
         <Tip term="due-cards" as="div">
-          <p className="eyebrow">DUE CARDS</p>
           <p>今天到期的复习卡片</p>
         </Tip>
       </div>

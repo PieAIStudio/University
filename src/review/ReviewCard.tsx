@@ -151,7 +151,6 @@ export function ReviewCard({
     <GamePanel className="review-card" tone="strong">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">ANSWER BEFORE REVEAL</p>
           <Tip term="retrieval-practice">
             <h2>先想，再看答案</h2>
           </Tip>
