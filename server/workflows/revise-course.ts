@@ -10,6 +10,8 @@ import {
   ExerciseSchema,
   IsoDateTime,
   LessonManifestSchema,
+  LessonAssetSchema,
+  LessonVariantSchema,
   Sha256,
   SnapshotManifestSchema,
   StableId,
@@ -81,6 +83,13 @@ const ExerciseRevisionProposalSchema = z.union([
   }).strict(),
 ]);
 
+const LessonAssetFileProposalSchema = z
+  .object({
+    path: z.string().min(1),
+    sourcePath: z.string().min(1),
+  })
+  .strict();
+
 export const CourseRevisionProposalSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -94,8 +103,11 @@ export const CourseRevisionProposalSchema = z
         id: StableId,
         expectedRevision: z.number().int().positive(),
         title: z.string().min(1).max(200).optional(),
+        variant: LessonVariantSchema.optional(),
         content: z.string().min(1),
         evidence: z.array(EvidenceReferenceSchema).min(1),
+        assets: z.array(LessonAssetSchema).max(100).optional(),
+        assetFiles: z.array(LessonAssetFileProposalSchema).optional(),
         cards: z.array(CardRevisionProposalSchema),
         exercises: z.array(ExerciseRevisionProposalSchema),
       })
@@ -125,6 +137,8 @@ const OperationReceiptSchema = z
 type CourseRevisionProposal = z.infer<typeof CourseRevisionProposalSchema>;
 type CardRevisionProposal = z.infer<typeof CardRevisionProposalSchema>;
 type ExerciseRevisionProposal = z.infer<typeof ExerciseRevisionProposalSchema>;
+type LessonAsset = z.infer<typeof LessonAssetSchema>;
+type LessonAssetFileProposal = z.infer<typeof LessonAssetFileProposalSchema>;
 type OperationReceipt = z.infer<typeof OperationReceiptSchema>;
 type ExerciseWithoutHash = Exercise extends infer Item
   ? Item extends { contentHash: string }
@@ -142,6 +156,7 @@ export interface TargetIdentity {
 interface RevisionBundle {
   readonly lesson: LessonManifest;
   readonly lessonContent: string;
+  readonly assetFiles: readonly { readonly path: string; readonly sourcePath: string }[];
   readonly cards: readonly CardContent[];
   readonly exercises: readonly Exercise[];
 }
@@ -322,6 +337,79 @@ function assertCoversExisting(
   }
 }
 
+function resolveLessonAssets(
+  currentLesson: LessonManifest,
+  proposedAssets: readonly LessonAsset[] | undefined,
+): readonly LessonAsset[] {
+  const assets = proposedAssets ?? currentLesson.assets;
+  assertUniqueIds(assets, "Proposed lesson assets");
+  assertUniqueIds(
+    assets.map((asset) => ({ id: asset.path })),
+    "Proposed lesson asset paths",
+  );
+  assertCoversExisting(
+    assets.map((asset) => asset.id),
+    currentLesson.assets.map((asset) => asset.id),
+    `Lesson ${currentLesson.id} assets`,
+  );
+
+  const proposedById = new Map(assets.map((asset) => [asset.id, asset]));
+  for (const current of currentLesson.assets) {
+    const replacement = proposedById.get(current.id);
+    if (replacement?.path !== current.path) {
+      throw new Error(`Existing lesson asset paths cannot change in a revision: ${current.id}`);
+    }
+  }
+  return assets;
+}
+
+function resolveLessonAssetFiles(
+  studiesRoot: string,
+  studyId: string,
+  currentLesson: LessonManifest,
+  assets: readonly LessonAsset[],
+  proposedFiles: readonly LessonAssetFileProposal[] | undefined,
+): readonly { readonly path: string; readonly sourcePath: string }[] {
+  const files = proposedFiles ?? [];
+  assertUniqueIds(
+    files.map((file) => ({ id: file.path })),
+    "Proposed lesson asset files",
+  );
+  const declaredPaths = new Set(assets.map((asset) => asset.path));
+  for (const file of files) {
+    if (!declaredPaths.has(file.path)) {
+      throw new Error(`Asset file is not declared by the lesson: ${file.path}`);
+    }
+  }
+
+  const explicitByPath = new Map(files.map((file) => [file.path, file.sourcePath]));
+  const currentById = new Map(currentLesson.assets.map((asset) => [asset.id, asset]));
+  const currentRevisionRoot = join(
+    getLessonPaths(
+      studiesRoot,
+      studyId,
+      currentLesson.courseId,
+      currentLesson.unitId,
+      currentLesson.id,
+    ).revisions,
+    String(currentLesson.contentRevision),
+  );
+
+  return assets.map((asset) => {
+    const sourcePath =
+      explicitByPath.get(asset.path) ??
+      (currentById.has(asset.id) ? join(currentRevisionRoot, asset.path) : undefined);
+    if (!sourcePath) {
+      throw new Error(`New lesson asset needs an assetFiles sourcePath: ${asset.id}`);
+    }
+    const bytes = readFileSync(sourcePath);
+    if (bytes.byteLength !== asset.bytes || sha256(bytes) !== asset.sha256) {
+      throw new Error(`Lesson asset hash/size mismatch: ${asset.id}`);
+    }
+    return { path: asset.path, sourcePath };
+  });
+}
+
 export function readTargetIdentity(
   studiesRoot: string,
   studyId: string,
@@ -480,6 +568,14 @@ function buildBundle(
     unit.id,
     proposal.lesson.id,
   ).manifest;
+  const assets = resolveLessonAssets(currentLesson, proposal.lesson.assets);
+  const assetFiles = resolveLessonAssetFiles(
+    studiesRoot,
+    studyId,
+    currentLesson,
+    assets,
+    proposal.lesson.assetFiles,
+  );
   assertUniqueIds(proposal.lesson.cards, "Proposed cards");
   assertUniqueIds(proposal.lesson.exercises, "Proposed exercises");
   const existingCardIds = new Set(currentLesson.cardIds);
@@ -565,6 +661,7 @@ function buildBundle(
   const lesson = LessonManifestSchema.parse({
     ...currentLesson,
     title: proposal.lesson.title ?? currentLesson.title,
+    variant: proposal.lesson.variant ?? currentLesson.variant,
     // The proposal's order is the lesson's order, and it is where a newly added
     // card or exercise becomes part of the lesson rather than an orphan file.
     cardIds: cards.map((card) => card.id),
@@ -573,9 +670,10 @@ function buildBundle(
     contentHash: sha256(proposal.lesson.content),
     status: "active",
     evidence: proposal.lesson.evidence,
+    assets,
     updatedAt: timestamp,
   });
-  return { lesson, lessonContent: proposal.lesson.content, cards, exercises };
+  return { lesson, lessonContent: proposal.lesson.content, assetFiles, cards, exercises };
 }
 
 function operationPath(
@@ -617,6 +715,16 @@ function assertStoredBundle(studiesRoot: string, studyId: string, bundle: Revisi
     storedLesson.contentHash !== sha256(storedContent)
   ) {
     throw new Error("Stored lesson target revision conflicts with the proposal");
+  }
+  for (const asset of bundle.lesson.assets) {
+    const storedAssetPath = join(lessonRoot, asset.path);
+    if (!existsSync(storedAssetPath)) {
+      throw new Error(`Stored lesson asset is missing: ${asset.id}`);
+    }
+    const bytes = readFileSync(storedAssetPath);
+    if (bytes.byteLength !== asset.bytes || sha256(bytes) !== asset.sha256) {
+      throw new Error(`Stored lesson asset conflicts with the proposal: ${asset.id}`);
+    }
   }
   for (const card of bundle.cards) {
     const stored = CardContentSchema.parse(
@@ -888,6 +996,7 @@ function reviseCourseLessonUnchecked(input: ReviseCourseInput): CourseRevisionRe
       writeLessonRevision(input.studiesRoot, input.studyId, {
         manifest,
         content: bundle.lessonContent,
+        assetFiles: bundle.assetFiles,
       });
     }
     complete(`lesson:${bundle.lesson.id}`);

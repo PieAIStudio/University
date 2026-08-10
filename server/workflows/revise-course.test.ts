@@ -1,5 +1,6 @@
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -43,6 +44,10 @@ function git(repository: string, args: readonly string[]): string {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
+}
+
+function sha256Bytes(value: Buffer): string {
+  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
 }
 
 function evidence(snapshot: SnapshotManifest): EvidenceReference {
@@ -254,6 +259,27 @@ describe("course revision workflow", () => {
     expect(git(sourceRoot, ["status", "--porcelain=v1"])).toBe(gitStatusBefore);
   });
 
+  it("carries or changes a lesson teaching variant without touching evidence", () => {
+    const { studiesRoot, targetSnapshot } = setup();
+    const base = proposal(targetSnapshot);
+    const candidate = {
+      ...base,
+      lesson: { ...base.lesson, variant: "对比" as const },
+    };
+
+    const revised = reviseCourseLesson({
+      studiesRoot,
+      studyId: STUDY_ID,
+      proposal: candidate,
+      now: new Date("2026-07-20T12:00:00.000Z"),
+    });
+    const stored = readLatestLesson(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID).manifest;
+
+    expect(revised.disposition).toBe("created");
+    expect(stored.variant).toBe("对比");
+    expect(stored.evidence).toEqual(candidate.lesson.evidence);
+  });
+
   it("rejects non-target evidence before writing any revision", () => {
     const { studiesRoot, initialSnapshot, targetSnapshot } = setup();
     const candidate = proposal(targetSnapshot);
@@ -385,6 +411,101 @@ describe("course revision workflow", () => {
     );
     expect(added.kind).toBe("explain");
     expect(added.contentRevision).toBe(1);
+  });
+
+  it("installs new asset files and carries them into later revisions", () => {
+    const { studiesRoot, targetSnapshot } = setup();
+    const assetSource = join(studiesRoot, "capture.png");
+    const assetBytes = Buffer.from("png test bytes");
+    writeFileSync(assetSource, assetBytes);
+    const candidate = proposal(targetSnapshot);
+    candidate.proposalId = "asset-revision";
+    Object.assign(candidate.lesson, {
+      assets: [
+        {
+          id: "captured-screen",
+          kind: "real-screenshot",
+          path: "assets/captured-screen.png",
+          sha256: sha256Bytes(assetBytes),
+          mime: "image/png",
+          bytes: assetBytes.byteLength,
+          width: 1,
+          height: 1,
+          alt: "Test capture of the project folder.",
+          source: {
+            license: "Project-local captured evidence; no remote asset",
+            attribution: "Local test capture",
+          },
+          capture: {
+            sourceCommit: targetSnapshot.sourceCommit,
+            route: "test-file-manager",
+            state: "Project folder open.",
+            viewport: { width: 1, height: 1 },
+            locale: "en-US",
+            captureRecipe: "Write a local fixture and pass it as an asset source.",
+            capturedAt: CREATED_AT,
+          },
+        },
+      ],
+      assetFiles: [{ path: "assets/captured-screen.png", sourcePath: assetSource }],
+    });
+
+    expect(
+      reviseCourseLesson({
+        studiesRoot,
+        studyId: STUDY_ID,
+        proposal: candidate,
+        dryRun: true,
+      }),
+    ).toMatchObject({ disposition: "validated", mode: "dry-run" });
+    reviseCourseLesson({ studiesRoot, studyId: STUDY_ID, proposal: candidate });
+
+    const lesson = readLatestLesson(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID);
+    expect(lesson.manifest.assets).toHaveLength(1);
+    expect(
+      readFileSync(
+        join(
+          studiesRoot,
+          STUDY_ID,
+          "courses",
+          COURSE_ID,
+          "units",
+          UNIT_ID,
+          "lessons",
+          LESSON_ID,
+          "revisions",
+          "2",
+          "assets",
+          "captured-screen.png",
+        ),
+      ),
+    ).toEqual(assetBytes);
+
+    const followUp = proposal(targetSnapshot);
+    followUp.proposalId = "asset-revision-follow-up";
+    followUp.lesson.expectedRevision = 2;
+    followUp.lesson.cards[0]!.expectedRevision = 2;
+    followUp.lesson.exercises[0]!.expectedRevision = 2;
+    followUp.lesson.content = "# Follow-up source truth\n\nThe asset survives.\n";
+    reviseCourseLesson({ studiesRoot, studyId: STUDY_ID, proposal: followUp });
+    expect(
+      readFileSync(
+        join(
+          studiesRoot,
+          STUDY_ID,
+          "courses",
+          COURSE_ID,
+          "units",
+          UNIT_ID,
+          "lessons",
+          LESSON_ID,
+          "revisions",
+          "3",
+          "assets",
+          "captured-screen.png",
+        ),
+      ),
+    ).toEqual(assetBytes);
   });
 
   it("refuses a revision whose newness claim disagrees with the lesson", () => {
