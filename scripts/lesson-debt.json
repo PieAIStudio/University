@@ -1,0 +1,2810 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "buzz/buzz-agents-as-members/agent-harness/cancel-and-steer-queue",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-agents-as-members/agent-harness/goose-and-codex-args",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-agents-as-members/agent-harness/harness-adapter-path",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-agents-as-members/agent-harness/system-prompt-transport",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-agents-as-members/agent-identity/agent-audit-trail",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-agents-as-members/agent-identity/agent-member-equality",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-agents-as-members/agent-identity/nip42-versus-nip98",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-agents-as-members/agent-identity/remote-agent-identity",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-agents-as-members/agent-queue/channel-fairness",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-agents-as-members/agent-queue/filter-fail-closed",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-agents-as-members/agent-queue/mention-becomes-queue",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-agents-as-members/agent-queue/one-prompt-per-channel",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-palette/community-palette-choice",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-palette/latte-macchiato-looks-related",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-palette/palette-name",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-palette/same-mauve-accent",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-reasoning/comments-as-design-reasoning",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-reasoning/nsec-key-size",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-reasoning/panel-left-shadow",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-reasoning/rem-versus-px",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-semantics/buzz-tokens-separate",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-semantics/components-avoid-hex",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-semantics/semantic-token",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-design-tokens/design-semantics/theme-value-trace",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/message-entry/auth-event-rejection",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/message-entry/duplicate-is-idempotent",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/message-entry/enter-to-signed-event",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/message-entry/pubkey-match-gate",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/read-and-deliver/empty-kinds-not-wildcard",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/read-and-deliver/global-cannot-see-channel",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/read-and-deliver/historical-and-live-paths",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/read-and-deliver/subscription-indexes",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/write-path/ephemeral-skips-storage",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/write-path/persistent-pipeline",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/write-path/search-is-persisted-row",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-one-message/write-path/workflow-loop-prevention",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-boundaries/channel-membership-gate",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-boundaries/community-isolation-boundary",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-boundaries/guest-scoped-token",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-boundaries/relay-single-source",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-protocol/event-not-message",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-protocol/event-six-fields",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-protocol/kind-as-switch",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-protocol/signed-event-choice",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-workspace/home-feed-on-read",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-workspace/seven-surfaces-one-log",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-workspace/stream-versus-forum",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-orientation/orientation-workspace/url-is-community",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-failures/question-mark-propagates",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-failures/result-is-outcome",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-failures/spawn-blocking-verification",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-failures/verify-event-order",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-signatures/async-handler-signature",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-signatures/borrowed-event",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-signatures/filter-or-and",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-signatures/if-let-option",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-structures/new-and-verified",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-structures/option-channel-id",
+      "contentRevision": 2,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-structures/pub-and-private-fields",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "buzz/buzz-reading-rust/rust-structures/tampered-id-and-signature",
+      "contentRevision": 1,
+      "rules": ["detail"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/ai-side-branch-bounds/beat-budget",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/ai-side-branch-bounds/branch-pipeline",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/ai-side-branch-bounds/model-output-not-authority",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/ai-side-branch-bounds/prompt-is-not-enforcement",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/author-owns-the-spine/author-brief-is-leash",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/author-owns-the-spine/closed-asset-pools",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/author-owns-the-spine/one-extra-choice",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/author-owns-the-spine/rejoin-is-authored",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/pull-back-when-drifts/dual-safety-gate",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/pull-back-when-drifts/ending-contract-terminal",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/pull-back-when-drifts/reject-then-repair",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-branching-narrative/pull-back-when-drifts/untrusted-player-action",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-cost-and-boundaries/model-constraints/layered-constraints",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-cost-and-boundaries/model-constraints/who-decides-rejoin",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-cost-and-boundaries/spend-control/fail-closed",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/ai-cost-and-boundaries/spend-control/reserve-then-spend",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/automated-playtesting/persona-strategies/ai-score-anti-skip",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/automated-playtesting/persona-strategies/chapter-chain-vars",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/automated-playtesting/persona-strategies/keyword-scoring-ties",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/automated-playtesting/persona-strategies/three-personas",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/automated-playtesting/receipts-and-gates/max-steps-guard",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/automated-playtesting/receipts-and-gates/summary-diff-matrix",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/automated-playtesting/receipts-and-gates/tests-lock-contract",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/automated-playtesting/receipts-and-gates/transcript-receipt",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/automated-playtesting/why-auto-play/deterministic-not-random",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/automated-playtesting/why-auto-play/solo-needs-replay",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/automated-playtesting/why-auto-play/two-playtest-lanes",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/content-as-package/build-and-validate/compile-not-ship-compiler",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/content-as-package/build-and-validate/coverage-fail-closed",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/content-as-package/build-and-validate/dual-source-sync",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/content-as-package/build-and-validate/fidelity-runtime-witness",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/content-as-package/export-and-compat/export-map-split",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/content-as-package/export-and-compat/player-opaque-graph",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/content-as-package/export-and-compat/retire-keep-id",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/content-as-package/why-content-package/catalog-as-ssot",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/content-as-package/why-content-package/load-one-chapter",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/content-as-package/why-content-package/package-boundary",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/content-as-package/why-content-package/pipeline-layers",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/founder-engineer/narrative-authority/story-direction",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/generated-assets/pay-once/content-addressed-key",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/generated-assets/safe-publish/budgets-as-gates",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/generated-assets/safe-publish/commit-point",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/matte-quality/exception-as-override",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/matte-quality/force-opaque-subject",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/matte-quality/gate-then-verify",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/matte-quality/key-from-top-strip",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/paid-voice-sync/catalog-activation-commit",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/paid-voice-sync/modes-before-money",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/paid-voice-sync/no-api-until-clean",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/paid-voice-sync/one-synthesis-spec",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/pipeline-boundary/allowlist-is-the-product",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/pipeline-boundary/fixed-canvas-contract",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/pipeline-boundary/one-output-mode",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "supaluv/media-tooling/pipeline-boundary/stable-consumer-keys",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/agent-identity-continuity/identity-as-checkable-signals/pressure-calm-watched-cornered",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/agent-identity-continuity/identity-as-checkable-signals/prior-claims-last-four",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/agent-identity-continuity/identity-as-checkable-signals/room-seed-not-player-id",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/agent-identity-continuity/identity-as-checkable-signals/texture-not-character-sheet",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/agent-identity-continuity/quality-gate-and-agent-wireup/continuity-hard-checks",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/agent-identity-continuity/quality-gate-and-agent-wireup/one-repair-chance",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/agent-identity-continuity/quality-gate-and-agent-wireup/quality-violations-are-codes",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/agent-identity-continuity/quality-gate-and-agent-wireup/wire-identity-into-agent",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/agent-identity-continuity/style-and-delivery-rhythm/five-style-signals",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/agent-identity-continuity/style-and-delivery-rhythm/hash-not-true-random",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/agent-identity-continuity/style-and-delivery-rhythm/style-below-hard-rules",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/budget-gate/gate-before-provider",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/budget-gate/request-id-idempotency",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/budget-gate/reserve-commit-refund",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/budget-gate/sqlstate-to-http",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/price-before-call/ceil-never-undercount",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/price-before-call/price-allowlist",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/price-before-call/two-cost-lanes",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/price-before-call/worst-case-before-call",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/settle-and-wire/env-and-request-bounds",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/settle-and-wire/failure-refund-or-charge",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/settle-and-wire/settle-with-usage",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-budget-and-cost/settle-and-wire/wire-budget-client",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/contract-boxes/gateway-normalizes",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/contract-boxes/registry-is-the-menu",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/contract-boxes/three-boxes-flow",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/contract-boxes/why-contracts-first",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/handler-contract/auth-is-separate-box",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/handler-contract/bounds-before-money",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/handler-contract/budget-lifecycle-in-handler",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/handler-contract/runtime-deps-port",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/scheduler-contract/factory-injection",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/scheduler-contract/gates-before-agent",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/scheduler-contract/release-lease-on-exit",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-contracts-first/scheduler-contract/scheduler-deps-surface",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-evaluation/cases-before-feelings/anatomy-of-a-case",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-evaluation/cases-before-feelings/feel-is-not-a-metric",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-evaluation/cases-before-feelings/gold-and-poison",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-evaluation/cases-before-feelings/pin-the-prompt-version",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-evaluation/offline-vs-live/live-scores-the-model",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-evaluation/offline-vs-live/offline-green-live-red",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-evaluation/offline-vs-live/offline-scores-the-fixture",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-evaluation/scores-and-detectors/annotation-is-the-spec",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-evaluation/scores-and-detectors/nine-scorers-one-average",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-evaluation/scores-and-detectors/score-the-detector",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/ai-evaluation/scores-and-detectors/soft-fail-vs-hard-gate",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/acquire-generate-check/generate-locks-bytes",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/acquire-generate-check/refuse-to-overwrite",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/acquire-generate-check/stale-is-a-hard-fail",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/acquire-generate-check/three-unique-keys",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/budget-the-boot-shape/boot-path-is-a-filter",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/budget-the-boot-shape/four-budget-ceilings",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/budget-the-boot-shape/manor-boot-one-avatar",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/budget-the-boot-shape/verify-is-check-and-budget",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/organize-before-scale/catalog-is-the-inventory",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/organize-before-scale/provenance-is-payload",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/organize-before-scale/tags-decide-when-it-loads",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/asset-pipeline/organize-before-scale/two-roots-two-problems",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/fallback-and-detection/detect-local-storage-first",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/fallback-and-detection/escape-value-false",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/fallback-and-detection/fallback-is-zh-cn",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/fallback-and-detection/key-parity-both-locales",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/namespace-partition/default-ns-is-common",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/namespace-partition/four-namespaces-not-one",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/namespace-partition/nested-keys-within-ns",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/namespace-partition/resources-mirror-disk",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/what-stays-out/interpolate-dynamic-data",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/what-stays-out/machine-keys-human-values",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/what-stays-out/never-leak-in-locale",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/bilingual-by-design/what-stays-out/spoiler-free-share-copy",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/contracts-and-drift/freeze-surface/why-freeze-surface",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/contracts-and-drift/machine-checked/contract-test",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/contracts-and-drift/machine-checked/layers-are-dependencies",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/directing-ai-agents/a-loop-needs-a-stop/a-loop-without-a-stop-is-a-bill",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/directing-ai-agents/a-loop-needs-a-stop/ask-before-the-irreversible",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/directing-ai-agents/a-loop-needs-a-stop/two-loops-two-ways-to-stop",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/directing-ai-agents/what-stays-yours/a-budget-is-part-of-the-grant",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/directing-ai-agents/what-stays-yours/a-machine-cannot-say-it-is-fun",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/directing-ai-agents/what-stays-yours/full-authority-and-four-gates",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/directing-ai-agents/what-stays-yours/pin-a-skill-by-its-hash",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/directing-ai-agents/what-the-agent-reads-first/a-reading-order-is-a-contract",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/directing-ai-agents/what-the-agent-reads-first/readme-is-not-the-startup-path",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/directing-ai-agents/what-the-agent-reads-first/recall-before-you-touch-anything",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/e2e-that-earn-cost/a11y-serious-only",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/e2e-that-earn-cost/matrix-no-silent-gaps",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/e2e-that-earn-cost/ritual-timing-e2e",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/e2e-that-earn-cost/visual-is-math",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/replace-hand-clicks/e2e-vs-smoke",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/replace-hand-clicks/health-is-not-fun",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/replace-hand-clicks/noise-is-not-failure",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/replace-hand-clicks/ui-preview-lab",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/smoke-and-ladder/no-webgl-dual-layer",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/smoke-and-ladder/real-backend-sparingly",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/smoke-and-ladder/smoke-ladder",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/e2e-and-qa-scripts/smoke-and-ladder/worst-device-release",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/hypothesis-and-promotion/ladder-null-means-default",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/hypothesis-and-promotion/no-new-timing-authority",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/hypothesis-and-promotion/promote-or-kill",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/hypothesis-and-promotion/shadow-not-real-votes",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/isolate-and-kill/badge-states-the-limit",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/isolate-and-kill/clear-is-the-kill-switch",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/isolate-and-kill/coarse-analytics-tag",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/isolate-and-kill/hosted-ignores-stray-url",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/register-before-ship/bind-at-create",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/register-before-ship/default-is-off",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/register-before-ship/registry-is-the-gate",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/experiments-and-rollout/register-before-ship/surfaces-are-the-contract",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/chunk-self-heal/boundary-then-fallback-ui",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/chunk-self-heal/chunk-failure-is-normal",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/chunk-self-heal/recover-once-only",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/chunk-self-heal/recovery-state-machine",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/platform-storage-matrix/design-for-client-failure",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/platform-storage-matrix/electron-is-web-storage",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/platform-storage-matrix/native-vs-web-routing",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/platform-storage-matrix/noop-storage-degrade",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/storage-may-die/boolean-not-exception",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/storage-may-die/callers-degrade-features",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/storage-may-die/storage-can-throw",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/failure-recovery/storage-may-die/sync-vs-platform-storage",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-async/both-at-once/a-way-back",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-async/both-at-once/the-shape-of-a-real-call",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-async/both-at-once/what-you-must-check",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-async/failing/an-empty-catch-owes-you-a-reason",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-async/failing/failure-as-a-value",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-async/failing/not-every-error-is-an-error",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-async/failing/throw-or-absorb",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-async/failing/try-and-catch",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-async/waiting/a-promise-is-a-receipt",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-async/waiting/await-means-wait-here",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-async/waiting/racing-a-clock",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-async/waiting/same-shape-different-speed",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/files-and-folders/config-files-are-files-too",
+      "contentRevision": 4,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/files-and-folders/file-vs-folder",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/files-and-folders/gitignore-is-a-do-not-pack-list",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/files-and-folders/package-json-as-directory-of-parts",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/files-and-folders/same-name-different-folders",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/files-and-folders/src-is-source-room",
+      "contentRevision": 4,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/files-and-folders/styles-split-across-files",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/how-change-happens/env-example-steers-backends",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/how-change-happens/git-remembers-why-ignore-matters",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/how-change-happens/hooks-catch-before-history",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/how-change-happens/one-line-can-steer-behavior",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/how-change-happens/save-is-the-first-action",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/how-change-happens/verify-defines-done",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/talking-to-machines/commands-are-precise-sentences",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/talking-to-machines/install-then-dev",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/talking-to-machines/ready-for-terrain",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/talking-to-machines/scripts-are-nicknames",
+      "contentRevision": 4,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/talking-to-machines/what-is-a-terminal",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/talking-to-machines/why-not-only-buttons",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-an-app/app-is-a-pile-of-files",
+      "contentRevision": 8,
+      "rules": ["hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-an-app/empty-box-called-root",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-an-app/from-icon-to-files-journey",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-an-app/product-sentence-and-gate",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-an-app/same-product-many-shells",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-an-app/why-so-many-files-preview",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-an-app/you-already-know-apps",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-code/a-three-line-function",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-code/code-is-text",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-code/comments-are-for-humans",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-code/data-files-are-not-only-code",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-code/export-means-share",
+      "contentRevision": 4,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-code/import-means-borrow",
+      "contentRevision": 4,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-code/types-are-notes-for-machines",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/what-is-code/who-turns-text-into-motion",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/who-runs-it/browser-reads-the-page",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/who-runs-it/build-fills-dist",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/who-runs-it/node-runs-tool-scripts",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/who-runs-it/pipeline-one-picture",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/who-runs-it/runtime-detects-host",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/who-runs-it/vercel-hosts-web",
+      "contentRevision": 4,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-before-zero/who-runs-it/vite-dev-server",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-data/data-from-a-server/a-row-is-not-an-object",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-data/data-from-a-server/data-and-error-together",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-data/data-from-a-server/everything-might-be-missing",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-data/data-from-a-server/three-tables-one-screen",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-data/data-from-a-server/where-the-keys-come-from",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-data/data-that-arrives-by-itself/a-name-on-the-wire-is-a-promise",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-data/data-that-arrives-by-itself/from-the-wire-to-the-screen",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-data/data-that-arrives-by-itself/push-instead-of-pull",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-data/shared-memory/a-store-is-values-plus-setters",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-data/shared-memory/replace-do-not-mutate",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-data/shared-memory/reset-is-a-feature",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-data/shared-memory/sharing-the-initial-values",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-data/shared-memory/why-not-usestate",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/branching/a-fork-in-the-road",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/branching/and-or-not",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/branching/guarding-bad-input",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/branching/order-is-the-rule",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/branching/return-early",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/collections/a-list-and-a-loop",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/collections/a-map-is-an-index",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/collections/folding-a-list",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/collections/sorting",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/collections/two-passes",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/naming-the-cases/a-closed-set",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/naming-the-cases/derive-do-not-repeat",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-logic/naming-the-cases/narrowing",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-product/experiments-and-coming-back/a-reason-to-come-back",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-product/experiments-and-coming-back/magic-numbers-that-are-not-magic",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-product/experiments-and-coming-back/register-before-you-ship",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-product/measuring-without-spying/a-typo-loses-a-month",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-product/measuring-without-spying/buckets-are-privacy",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-product/measuring-without-spying/off-by-default",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-product/measuring-without-spying/rules-that-throw",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-product/measuring-without-spying/why-measure-at-all",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-product/rules-and-safety/a-version-suffix-in-a-key",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-product/rules-and-safety/four-reasons-and-an-other",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-product/rules-and-safety/two-languages-two-costs",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-product/rules-and-safety/you-must-know-who-reported",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/a-test-is-a-sentence/describe-it-expect",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/a-test-is-a-sentence/fake-clocks-and-fake-storage",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/a-test-is-a-sentence/pinning-a-promise",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/a-test-is-a-sentence/test-the-edges",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/a-test-is-a-sentence/where-tests-live",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/gates-beyond-your-laptop/clicking-through-for-real",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/gates-beyond-your-laptop/even-config-can-be-wrong",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/gates-beyond-your-laptop/someone-elses-computer",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/gates-beyond-your-laptop/when-and-what",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/machines-that-read-your-code/a-gate-before-the-commit",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/machines-that-read-your-code/four-different-questions",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/machines-that-read-your-code/style-is-not-worth-arguing-about",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-quality/machines-that-read-your-code/types-are-a-test-you-do-not-write",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-reading-code/a-function/default-param-and-noop",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-reading-code/a-function/export-makes-public",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-reading-code/a-function/filter-and-join",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-reading-code/a-function/params-and-return",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-reading-code/a-function/rest-params-and-union",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-reading-code/files-talking/barrel-and-why-split",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-reading-code/files-talking/import-export-handshake",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-reading-code/naming-things/function-type-and-record",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-reading-code/naming-things/import-type-and-coalesce",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-reading-code/naming-things/owns-does-not-own",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-reading-code/naming-things/type-alias-and-union",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/configuration-and-commits/a-commit-is-a-stamp",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/configuration-and-commits/env-example-not-env",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/configuration-and-commits/what-done-means",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/how-it-runs/dev-server-vs-build",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/how-it-runs/one-rewrite-rule",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/how-it-runs/same-dist-in-a-native-shell",
+      "contentRevision": 7,
+      "rules": ["hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/how-it-runs/the-first-page",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/what-a-project-is/dependencies-vs-dev",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/what-a-project-is/gitignore-is-a-boundary",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/what-a-project-is/package-json-is-an-id-card",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/what-a-project-is/scripts-are-the-doors",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-terrain/what-a-project-is/two-tsconfigs",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/a-component-is-a-function/children-is-a-prop-too",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/a-component-is-a-function/compute-then-return",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/a-component-is-a-function/curly-braces-are-an-escape-hatch",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/a-component-is-a-function/jsx-is-not-html",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/a-component-is-a-function/props-are-parameters",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/composition/accessibility-in-two-attributes",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/composition/render-nothing-sometimes",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/composition/rest-props",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/composition/variants",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/state-and-effects/cleanup-is-not-optional",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/state-and-effects/ref-is-a-pocket",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/foundations-ui/state-and-effects/state-is-memory",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/login-as-settlement/anonymous-upgrade-path",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/login-as-settlement/bootstrap-token-fork",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/login-as-settlement/expected-session-guard",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/login-as-settlement/soft-timeout-then-reconcile",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/presentation-vs-real-identity/display-name-cascade",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/presentation-vs-real-identity/settled-flag-beats-stale",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/presentation-vs-real-identity/table-alias-is-costume",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/presentation-vs-real-identity/three-fields-of-truth",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/sync-and-logout-cleanup/ignore-transient-null",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/sync-and-logout-cleanup/init-once-across-mounts",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/sync-and-logout-cleanup/logout-clear-and-rebootstrap",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/identity-and-accounts/sync-and-logout-cleanup/two-stores-two-jobs",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/opening-and-cover/cover-diorama-before-engine",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/opening-and-cover/first-gesture-unlock",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/opening-and-cover/mute-orthogonal-to-unlock",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/opening-and-cover/silent-placeholder-playing",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/roast-and-share/portrait-card-and-cjk-width",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/roast-and-share/report-message-contract",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/roast-and-share/share-image-fallback-ladder",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/roast-and-share/share-without-next-room-spoilers",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/unmask-climax/reveal-order-is-drama",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/unmask-climax/settlement-behind-climax",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/unmask-climax/skip-and-reduced-motion",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/moment-design/unmask-climax/timing-constants-are-product",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/one-codebase-many-hosts/adapter-layer/detect-once-degrade-always",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/one-codebase-many-hosts/adapter-layer/hardest-platform-wins",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/one-codebase-many-hosts/the-shell/decisions-out-of-the-shell",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/one-codebase-many-hosts/the-shell/electron-three-switches",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/one-capability-entry/haptic-degrade",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/one-capability-entry/runtime-descriptor",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/one-capability-entry/share-three-paths",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/one-capability-entry/why-one-entry",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/runtime-and-hosts/electron-not-native",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/runtime-and-hosts/hash-router-timeout",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/runtime-and-hosts/host-adapters",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/runtime-and-hosts/status-bar-keyboard",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/storage-degrade/capability-decision-map",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/storage-degrade/noop-and-defaults",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/storage-degrade/platform-storage-split",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/platform-capabilities/storage-degrade/safe-local-storage",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/realtime-presence/disconnect-and-roster/confirm-leave-before-drop",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/realtime-presence/disconnect-and-roster/lerp-or-teleport-snap",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/realtime-presence/disconnect-and-roster/missing-then-prune",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/realtime-presence/disconnect-and-roster/silent-first-snapshot",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/realtime-presence/presence-contract/newest-wins-per-player",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/realtime-presence/presence-contract/parse-or-drop",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/realtime-presence/presence-contract/surface-only-payload",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/realtime-presence/presence-contract/throttle-the-publish",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/realtime-presence/signals-not-truth/bootstrap-blocks-false-moments",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/realtime-presence/signals-not-truth/shared-cadence-hides-ai",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/realtime-presence/signals-not-truth/typing-is-presentation",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/retention-engineering/daily-content-loop/practice-does-not-steal-daily",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/retention-engineering/daily-content-loop/streak-idempotent-by-date",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/retention-engineering/daily-content-loop/two-clocks-number-vs-slot",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/retention-engineering/daily-content-loop/utc-day-same-puzzle",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/retention-engineering/return-hooks/last-round-versioned-snapshot",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/retention-engineering/return-hooks/no-history-no-card",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/retention-engineering/return-hooks/source-shapes-the-hook",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/retention-engineering/return-hooks/write-on-finish-read-on-home",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/retention-engineering/share-and-rechallenge/challenge-spoiler-free",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/retention-engineering/share-and-rechallenge/reveal-then-teach",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/retention-engineering/share-and-rechallenge/share-grid-no-aliases",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/from-a-session-to-a-todo/five-classes-and-a-tiebreak",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/from-a-session-to-a-todo/one-row-one-observation",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/from-a-session-to-a-todo/only-you-can-call-it-fun",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/from-a-session-to-a-todo/what-must-never-be-copied",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/gates-before-you-push/a-glob-decides-which-gate",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/gates-before-you-push/a-hook-instead-of-a-habit",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/gates-before-you-push/local-gate-and-remote-gate",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/gates-before-you-push/skipping-quietly-outside-a-worktree",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/is-it-still-alive/a-probe-needs-a-deadline",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/is-it-still-alive/cheap-probe-expensive-round",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/is-it-still-alive/keep-a-snippet-not-the-body",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/solo-operations/is-it-still-alive/point-the-probe-somewhere-else",
+      "contentRevision": 1,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/state-and-process/fact-vs-process/one-definition-of-empty",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/state-and-process/fact-vs-process/two-stores-not-one",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/state-and-process/name-the-waiting/keys-not-sentences",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/state-and-process/name-the-waiting/phases-not-loading",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/structured-output-repair/contract-and-runtime/agent-decision-contract",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/structured-output-repair/contract-and-runtime/cost-of-retry",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/structured-output-repair/contract-and-runtime/repair-state-machine",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/structured-output-repair/contract-and-runtime/zod-then-normalize",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/structured-output-repair/local-vs-model-repair/extract-json-locally",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/structured-output-repair/local-vs-model-repair/repaired-means-path",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/structured-output-repair/local-vs-model-repair/semantic-schema-gates",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/structured-output-repair/local-vs-model-repair/two-intake-paths",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/structured-output-repair/three-failure-modes/four-error-codes",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/structured-output-repair/three-failure-modes/retry-whitelist",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/structured-output-repair/three-failure-modes/why-structure-breaks",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/testing-strategy/degraded-design/degraded-matrix",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/testing-strategy/degraded-design/retry-safety",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/testing-strategy/layer-choice/unit-vs-e2e",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/attention-in-room/callouts-are-punctuation",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/attention-in-room/history-vs-live-clock",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/attention-in-room/opening-topic-bilingual",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/attention-in-room/typing-same-for-all",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/lobby-as-structure/lazy-world-and-channels",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/lobby-as-structure/mystery-seat-in-lobby",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/lobby-as-structure/phase-to-mode",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/lobby-as-structure/webgl-gate",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/portal-as-gate/failure-taxonomy",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/portal-as-gate/host-is-not-guest",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/portal-as-gate/portal-state-machine",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "turing-pact/world-navigation/portal-as-gate/url-entry-is-contract",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "ul-meta/four-layer-workbench/layering-and-names/four-layers-names-and-auth",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/airlock-supply-chain/gate-and-inspect/gitignore-is-not-enough",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/airlock-supply-chain/gate-and-inspect/inspect-head-tree-dirty",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/airlock-supply-chain/gate-and-inspect/no-object-borrowing",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/airlock-supply-chain/gate-and-inspect/refuse-not-skip",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/airlock-supply-chain/promote-and-seal/dirty-must-be-named",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/airlock-supply-chain/promote-and-seal/fetch-not-clone",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/airlock-supply-chain/promote-and-seal/seal-lives-in-git",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/airlock-supply-chain/promote-and-seal/sole-write-entry",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/airlock-supply-chain/why-isolate-first/both-directions-and-realpath",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/airlock-supply-chain/why-isolate-first/dont-remove-the-guard",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/airlock-supply-chain/why-isolate-first/guard-that-blocks-self-study",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/executable-requests/brief-not-model",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/executable-requests/constraints-beat-goals",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/executable-requests/context-clipboard-budget",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/executable-requests/facts-before-expression",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/executable-requests/host-prepares-context",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/executable-requests/one-change-at-a-time",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/executable-requests/one-question-explicit-save",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/executable-requests/output-shape-and-acceptance",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/executable-requests/what-is-executable-request",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/transfer-to-people/lead-with-conclusion-for-people",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/transfer-to-people/structures-that-transfer",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/communicate-with-ai/transfer-to-people/what-breaks-on-people",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/content-governance/activate-and-retire/activate-evidence-gate",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/content-governance/activate-and-retire/never-drop-ids",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/content-governance/activate-and-retire/reactivate-and-idempotent",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/content-governance/crash-safe-writes/latest-pointer",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/content-governance/crash-safe-writes/revise-receipt",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/content-governance/crash-safe-writes/revision-chain",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/content-governance/crash-safe-writes/staging-rename",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/content-governance/status-machine/edit-window",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/content-governance/status-machine/four-statuses",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/content-governance/status-machine/open-for-edit-order",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/content-governance/status-machine/transition-table",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/evidence-and-freshness/audit-and-latch/audit-dry-vs-apply",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "university-local/evidence-and-freshness/audit-and-latch/cascade-active-to-stale",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "university-local/evidence-and-freshness/audit-and-latch/local-commit-not-dirty",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/evidence-and-freshness/judge-freshness/any-reason-means-stale",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/evidence-and-freshness/judge-freshness/freshness-by-object-id",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "university-local/evidence-and-freshness/judge-freshness/inference-needs-review",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/evidence-and-freshness/judge-freshness/ua-integrity-vs-authority",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/evidence-and-freshness/pin-to-git-blob/never-live-checkout",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/evidence-and-freshness/pin-to-git-blob/open-git-not-path",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/evidence-and-freshness/pin-to-git-blob/require-regular-blob",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/evidence-and-freshness/pin-to-git-blob/validate-same-as-display",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/four-layer-workbench/layers-and-bridge/evidence-hard-constraint",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "university-local/four-layer-workbench/layers-and-bridge/four-layers-map",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/four-layer-workbench/layers-and-bridge/host-grade-bridge-b1",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/four-layer-workbench/layers-and-bridge/local-boundary-and-credentials",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/how-this-campus-works-2/airlock-mechanics/fetch-not-clone",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/how-this-campus-works-2/airlock-mechanics/path-not-recursion",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "university-local/how-this-campus-works-2/airlock-mechanics/root-commit-identity",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/how-this-campus-works-2/airlock-mechanics/seal-in-git-dir",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/how-this-campus-works-2/import-gate/deny-rules",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/how-this-campus-works-2/import-gate/gitignore-not-enough",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/how-this-campus-works-2/import-gate/refuse-not-skip",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "university-local/how-this-campus-works-2/three-clocks/doctor-vs-status",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/how-this-campus-works-2/three-clocks/lag-is-feature",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+    },
+    {
+      "id": "university-local/how-this-campus-works-2/three-clocks/three-clocks",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/how-this-campus-works/airlock/the-guard-that-blocks-self-study",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/loopback-only-service/host-header-gate",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/loopback-only-service/listen-binds-loopback",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/loopback-only-service/origin-gate-for-mutations",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/loopback-only-service/security-headers-no-store",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/mutation-request-token/bootstrap-hands-out-token",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/mutation-request-token/database-file-identity",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/mutation-request-token/require-mutation-access-triple",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/mutation-request-token/token-born-in-process-memory",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/render-without-phoning-home/external-links-with-consent",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/render-without-phoning-home/images-fetch-without-click",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/render-without-phoning-home/is-local-url-protocol-relative",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/local-first-boundaries/render-without-phoning-home/three-layers-must-all-hold",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/fsrs-as-rows/card-state-is-memory",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/fsrs-as-rows/first-review-creates-empty-card",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/fsrs-as-rows/parameters-pinned-by-hash",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/fsrs-as-rows/revision-bump-keeps-schedule",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/idempotent-reviews/command-id-first",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/idempotent-reviews/conflict-is-hard-fail",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/idempotent-reviews/duplicate-returns-receipt",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/idempotent-reviews/event-log-rebuild",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/migration-and-files/legacy-keys-and-scope",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/migration-and-files/migrate-refuses-unsafe",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/migration-and-files/private-files-and-backup",
+      "contentRevision": 2,
+      "rules": ["detail", "hand-copied-fence"]
+    },
+    {
+      "id": "university-local/spaced-repetition/migration-and-files/schema-version-ladder",
+      "contentRevision": 3,
+      "rules": ["detail", "hand-copied-fence"]
+    }
+  ]
+}
