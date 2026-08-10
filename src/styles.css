@@ -51,9 +51,9 @@ summary:focus-visible,
 .campus-nav,
 .campus-main,
 .campus-footer {
-  /* Wide enough that a 1920 screen is not mostly margin; prose measure is
-     capped on the lesson column itself, not by crushing the whole shell. */
-  width: min(1600px, 100%);
+  /* Wide enough for two equal rails + the prose measure on a 1920 screen;
+     prose measure is capped on the lesson column itself, not the whole shell. */
+  width: min(1760px, 100%);
   margin-inline: auto;
 }
 
@@ -955,24 +955,23 @@ summary:focus-visible,
 }
 
 /*
- * Two columns: prose (capped measure) and the evidence rail.
- * Extra shell width goes to the rail and side air, not to 1400px lines.
+ * Three columns always: left rail · prose · right rail.
+ * Equal 1fr rails centre the prose even when a rail has nothing to show.
+ * Extra shell width goes to the rails and side air, not to longer lines.
  */
 .lesson-layout {
   display: grid;
-  grid-template-columns: minmax(0, 68rem) minmax(300px, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 68rem) minmax(0, 1fr);
   gap: clamp(28px, 3vw, 48px);
   align-items: start;
   margin-top: 8px;
 }
 
-.lesson-layout--solo {
-  grid-template-columns: minmax(0, 68rem);
-}
-
 .lesson-main {
   min-width: 0;
   max-width: 68rem;
+  justify-self: center;
+  width: 100%;
 }
 
 .lesson-reader__header {
@@ -2286,13 +2285,15 @@ summary:focus-visible,
   opacity: 0.6;
 }
 
-/* The lesson's right-hand column: evidence, vocabulary, related. Sticky as one
-   unit so the column does not scroll away mid-lesson. Clears the sticky
-   campus header + lesson toolbar when those are pinned. */
+/* Left and right lesson columns. Sticky as one unit so the column does not
+   scroll away mid-lesson. Clears sticky campus header + lesson toolbar.
+   Empty rails still occupy the grid track (that is what centres the prose)
+   but render no surface chrome. */
 .lesson-rail {
   display: grid;
   gap: 16px;
   align-content: start;
+  min-width: 0;
   position: sticky;
   top: calc(var(--campus-reading-header-h, 3.75rem) + var(--campus-reading-toolbar-h, 4rem));
   max-height: calc(
@@ -2300,11 +2301,6 @@ summary:focus-visible,
   );
   overflow-y: auto;
   overscroll-behavior: contain;
-}
-
-/* The container above does the sticking now. */
-.lesson-rail > .evidence-rail {
-  position: static;
 }
 
 .exercise-actions {
@@ -2391,10 +2387,23 @@ summary:focus-visible,
   background: var(--campus-surface);
 }
 
+.lesson-related__group + .lesson-related__group {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--campus-rule);
+}
+
+.lesson-related__group-label {
+  margin: 0 0 6px;
+  color: rgb(255 245 232 / 48%);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
 .lesson-related__list {
   display: grid;
   gap: 6px;
-  margin: 12px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -2672,15 +2681,24 @@ summary:focus-visible,
 }
 
 .lesson-return {
-  display: inline-block;
-  margin-bottom: 14px;
-  padding: 6px 14px;
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 8px 14px;
   border: 1px solid var(--campus-rule);
   border-radius: 999px;
   background: rgb(240 168 104 / 12%);
   color: #f0a868;
   cursor: pointer;
   font-size: 0.84rem;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.lesson-return:hover,
+.lesson-return:focus-visible {
+  border-color: rgb(240 168 104 / 40%);
+  color: #f7d3a0;
 }
 
 .lesson-backlinks {

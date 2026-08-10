@@ -51,8 +51,9 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   },
   "lesson-related": {
     term: "相关",
-    summary: "哪些其他课提到了本课。点开可以跳过去读，不必先回到目录。",
-    detail: "这是页级关系，不是自动推荐。列表为空时这一栏不会出现。",
+    summary: "本课指向哪些其他课，以及哪些课反过来指向本课。点开可以跳过去读，不必先回到目录。",
+    detail:
+      "「本课指向」来自课文里的跨课链接；「指向本课」是其他课写过来的反向引用。都是页级关系，不是自动推荐。两边都空时这一栏不会出现。",
   },
   "content-revision": {
     term: "REV · 课文版本号",

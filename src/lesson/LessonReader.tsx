@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
 import { lessonPath, readJson } from "../api/client.js";
-import { EvidenceRail } from "../evidence/EvidenceRail.js";
 import { EvidenceSourceSheet } from "../evidence/EvidenceSourceSheet.js";
 import { readDetailMode, writeDetailMode, type DetailMode } from "../language/detail-mode.js";
 import { readForeignLanguageMode, writeForeignLanguageMode } from "../language/reading-mode.js";
@@ -16,7 +15,7 @@ import {
   type LessonView,
 } from "../view/lesson-view.js";
 import { LessonToolbar, type LessonNeighbours } from "./LessonNav.js";
-import { LessonRelated } from "./LessonRelated.js";
+import { LessonRelated, uniqueOutgoingTargets } from "./LessonRelated.js";
 import { LessonWordList } from "./LessonWordList.js";
 
 /**
@@ -259,18 +258,12 @@ export function LessonReader({
 
   const lexicon = view.lesson.language?.lexicon ?? [];
   const backlinks = view.lesson.backlinks ?? [];
-  const showRail =
-    view.lesson.evidence.length > 0 ||
-    (englishMode && annotated && lexicon.length > 0) ||
-    backlinks.length > 0;
+  const outgoing = useMemo(() => uniqueOutgoingTargets(view.lesson.links), [view.lesson.links]);
+  const showLeftContent = Boolean(onReturn) || outgoing.length > 0 || backlinks.length > 0;
+  const showRightContent = englishMode && annotated && lexicon.length > 0;
 
   return (
     <article className="lesson-reader">
-      {onReturn ? (
-        <button type="button" className="lesson-return" onClick={onReturn}>
-          ← 回到刚才那一课
-        </button>
-      ) : null}
       {neighbours && onOpenLesson && onBackToCourse ? (
         <LessonToolbar
           neighbours={neighbours}
@@ -285,7 +278,22 @@ export function LessonReader({
           readConfirmed={readConfirmed}
         />
       ) : null}
-      <div className={`lesson-layout${showRail ? "" : " lesson-layout--solo"}`}>
+      {/*
+        Three columns always: empty rails still reserve width so the prose
+        column stays page-centred. Empty rails render no box, border, or heading.
+      */}
+      <div className="lesson-layout">
+        <aside
+          className="lesson-rail lesson-rail--left"
+          {...(showLeftContent ? { "aria-label": "去其他课" } : { "aria-hidden": true })}
+        >
+          {onReturn ? (
+            <button type="button" className="lesson-return" onClick={onReturn}>
+              ← 回到刚才那一课
+            </button>
+          ) : null}
+          <LessonRelated outgoing={outgoing} backlinks={backlinks} onFollowLink={onFollowLink} />
+        </aside>
         <div className="lesson-main">
           <header className="lesson-reader__header">
             <div className="lesson-reader__title">
@@ -382,32 +390,26 @@ export function LessonReader({
             </section>
           ) : null}
         </div>
-        {showRail ? (
-          <div className="lesson-rail">
-            <EvidenceRail
-              basePath={lessonPath(locator)}
-              evidence={view.lesson.evidence}
-              panelIdPrefix={`${locator.studyId}-${locator.courseId}-${locator.unitId}-${locator.lessonId}`}
-              onOpenSource={openSourceSheet}
-            />
-            {englishMode && annotated ? (
-              <>
-                {vocabularyError ? (
-                  <p className="inline-error" role="alert">
-                    {vocabularyError}
-                  </p>
-                ) : null}
-                <LessonWordList
-                  lexicon={lexicon}
-                  stages={vocabularyStages}
-                  reasons={liveReasons}
-                  onStageWord={stageWord}
-                />
-              </>
-            ) : null}
-            <LessonRelated backlinks={backlinks} onFollowLink={onFollowLink} />
-          </div>
-        ) : null}
+        <aside
+          className="lesson-rail lesson-rail--right"
+          {...(showRightContent ? { "aria-label": "阅读笔记" } : { "aria-hidden": true })}
+        >
+          {showRightContent ? (
+            <>
+              {vocabularyError ? (
+                <p className="inline-error" role="alert">
+                  {vocabularyError}
+                </p>
+              ) : null}
+              <LessonWordList
+                lexicon={lexicon}
+                stages={vocabularyStages}
+                reasons={liveReasons}
+                onStageWord={stageWord}
+              />
+            </>
+          ) : null}
+        </aside>
       </div>
       <EvidenceSourceSheet
         basePath={lessonPath(locator)}
