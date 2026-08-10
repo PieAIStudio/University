@@ -69,6 +69,11 @@ Break one → rewrite.
     `:::detail` blocks; each answers one named question. See 详细讲解层 below.
 14. **Never hand-copy project source into a fence.** The `[[evidence:]]` token
     renders the real pinned source itself.
+15. **Every picture must survive the delete test**: remove it, add one sentence
+    — is the reader worse off? Decorative images buy affection, not
+    understanding. Max 3 per lesson, never taken off the web, never AI-generated
+    where a real capture would do. See
+    [references/media.md](references/media.md).
 
 One prediction + immediate answer is research-backed: benefit lands on what was
 asked; unguided struggle overloads beginners.
