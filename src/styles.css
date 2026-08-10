@@ -11,7 +11,7 @@
 }
 
 body {
-  min-width: 320px;
+  min-width: 0;
   min-height: 100vh;
   margin: 0;
   background:
@@ -51,7 +51,9 @@ summary:focus-visible,
 .campus-nav,
 .campus-main,
 .campus-footer {
-  width: min(1180px, 100%);
+  /* Wide enough that a 1920 screen is not mostly margin; prose measure is
+     capped on the lesson column itself, not by crushing the whole shell. */
+  width: min(1600px, 100%);
   margin-inline: auto;
 }
 
@@ -75,6 +77,31 @@ summary:focus-visible,
   gap: 24px;
   padding-bottom: 22px;
   border-bottom: 1px solid var(--campus-rule);
+}
+
+/*
+ * Reading a lesson: campus header + lesson toolbar read as one continuous
+ * chrome band. Both stick so navigation and reading prefs stay reachable.
+ * --campus-reading-header-h is the stuck header's content height (brand row
+ * + its bottom padding); the toolbar pins immediately under it with no gap.
+ */
+.campus[data-reading] {
+  --campus-reading-header-h: 3.75rem;
+  --campus-reading-toolbar-h: 4rem;
+}
+
+.campus[data-reading] .campus-header {
+  position: sticky;
+  top: 0;
+  z-index: 42;
+  /* Opaque so prose never shows through while stuck. Matches body base. */
+  background: #17110d;
+  border-bottom: none;
+  padding-bottom: 14px;
+}
+
+.campus[data-reading] .campus-main {
+  padding-top: 0;
 }
 
 .brand-lockup,
@@ -152,6 +179,7 @@ summary:focus-visible,
 }
 
 .campus-main {
+  min-width: 0;
   min-height: 600px;
   padding: clamp(28px, 5vw, 58px) 0 80px;
 }
@@ -518,10 +546,12 @@ summary:focus-visible,
 
 .study-detail__header h2,
 .lesson-reader__header h2 {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   margin-top: 7px;
   color: #fff5e8;
   font-family: var(--game-ui-font-display);
-  font-size: clamp(2.3rem, 5vw, 4.4rem);
+  font-size: clamp(1.9rem, 4vw, 3.8rem);
   line-height: 1;
   letter-spacing: -0.045em;
 }
@@ -829,19 +859,136 @@ summary:focus-visible,
 }
 
 .lesson-reader {
-  margin-top: 32px;
+  min-width: 0;
+  margin-top: 0;
 }
 
+/* One sticky band of lesson chrome under the campus header. */
+.lesson-toolbar {
+  position: sticky;
+  top: var(--campus-reading-header-h, 3.75rem);
+  z-index: 41;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin: 0 0 28px;
+  padding: 10px 0 12px;
+  border-bottom: 1px solid var(--campus-rule);
+  background: #17110d;
+}
+
+.lesson-toolbar__nav,
+.lesson-toolbar__settings,
+.lesson-toolbar__steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+.lesson-toolbar__settings {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.lesson-toolbar__steps {
+  justify-content: flex-end;
+}
+
+.lesson-toolbar__position {
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.lesson-detail-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.76rem;
+}
+
+.lesson-detail-switch__label {
+  white-space: nowrap;
+}
+
+.lesson-detail-switch__control {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-width: 0;
+  padding: 3px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 999px;
+  background: rgb(12 8 6 / 40%);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.lesson-detail-switch__control:focus-visible {
+  outline: 3px solid rgb(246 193 119 / 72%);
+  outline-offset: 3px;
+}
+
+.lesson-detail-switch__option {
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: rgb(255 245 232 / 55%);
+  font-size: 0.76rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+}
+
+.lesson-detail-switch__option[data-active] {
+  background: rgb(246 193 119 / 16%);
+  color: #f7d3a0;
+}
+
+/*
+ * Two columns: prose (capped measure) and the evidence rail.
+ * Extra shell width goes to the rail and side air, not to 1400px lines.
+ */
 .lesson-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
-  gap: clamp(28px, 5vw, 64px);
+  grid-template-columns: minmax(0, 68rem) minmax(300px, 1fr);
+  gap: clamp(28px, 3vw, 48px);
   align-items: start;
-  margin-top: 36px;
+  margin-top: 8px;
+}
+
+.lesson-layout--solo {
+  grid-template-columns: minmax(0, 68rem);
 }
 
 .lesson-main {
   min-width: 0;
+  max-width: 68rem;
+}
+
+.lesson-reader__header {
+  display: block;
+  min-width: 0;
+  margin: 0 0 22px;
+  padding: 0;
+}
+
+.lesson-reader__title {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.lesson-reader__title h2 {
+  margin: 6px 0 0;
 }
 
 .markdown-body {
@@ -935,6 +1082,56 @@ summary:focus-visible,
 .exercise-panel {
   margin-top: 42px;
   padding: 26px;
+}
+
+.lesson-completion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px 24px;
+  align-items: center;
+  margin-top: 34px;
+  padding: 20px 22px;
+  border: 1px solid rgb(246 193 119 / 30%);
+  border-left: 3px solid #f6c177;
+  background: rgb(246 193 119 / 7%);
+}
+
+.lesson-completion h3 {
+  margin: 6px 0 0;
+  color: #fff5e8;
+  font-size: 1.18rem;
+}
+
+.lesson-completion p:not(.eyebrow):not(.inline-error) {
+  margin: 8px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.lesson-completion__action,
+.text-button {
+  border: 1px solid rgb(246 193 119 / 48%);
+  padding: 9px 14px;
+  background: rgb(246 193 119 / 13%);
+  color: #f7d3a0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lesson-completion__action:hover,
+.lesson-completion__action:focus-visible,
+.text-button:hover,
+.text-button:focus-visible {
+  border-color: #f6c177;
+  background: rgb(246 193 119 / 22%);
+}
+
+.lesson-completion__action:disabled,
+.text-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 
 .exercise-panel > p {
@@ -1066,27 +1263,64 @@ summary:focus-visible,
 .evidence-rail {
   position: sticky;
   top: 24px;
-  padding: 20px;
+  padding: 16px 18px;
   border: 1px solid var(--campus-rule);
   border-radius: 14px;
   background: rgb(39 28 21 / 60%);
 }
 
-.evidence-rail h3 {
-  margin-top: 6px;
-  font-size: 1.05rem;
+/* Quiet single-line rail panel chrome: label + ? */
+.rail-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.rail-panel__label {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.rail-panel__help {
+  display: inline-grid;
+  place-items: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  border: 1px solid rgb(247 211 160 / 28%);
+  color: rgb(247 211 160 / 72%);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  cursor: help;
+}
+
+.rail-panel__help:hover,
+.rail-panel__help:focus-visible {
+  border-color: rgb(246 193 119 / 65%);
+  color: #f7d3a0;
 }
 
 .evidence-list {
-  margin: 0;
+  margin: 10px 0 0;
   padding: 0;
   list-style: none;
 }
 
 .evidence-item {
-  margin-top: 18px;
-  padding-top: 18px;
+  margin-top: 14px;
+  padding-top: 14px;
   border-top: 1px solid var(--campus-rule);
+}
+
+.evidence-item:first-child {
+  margin-top: 10px;
 }
 
 .evidence-item__note {
@@ -1244,6 +1478,11 @@ summary:focus-visible,
   min-width: 1px;
 }
 
+.evidence-code__line--found {
+  outline: 1px solid rgb(80 200 185 / 66%);
+  outline-offset: -1px;
+}
+
 .campus-footer {
   justify-content: space-between;
   gap: 20px;
@@ -1259,10 +1498,366 @@ summary:focus-visible,
   text-align: right;
 }
 
+.lesson-detail {
+  margin: 24px 0;
+  border-top: 1px solid var(--campus-rule);
+  border-bottom: 1px solid var(--campus-rule);
+}
+
+/**
+ * A collapsed block has to look answerable.
+ *
+ * These rows are questions the reader may or may not have — 「什么叫「项目文件
+ * 夹」？」. Styled as a plain heading, a reader who does have that question has
+ * no reason to think the page will answer it, so the whole second reading level
+ * stays invisible to exactly the person it was written for. The chevron and the
+ * hover tint are the affordance; the native disclosure triangle is suppressed
+ * because it sits outside the flex row and breaks the alignment.
+ */
+.lesson-detail summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 4px 13px 0;
+  color: #f7d3a0;
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+  transition: background 140ms ease;
+}
+
+.lesson-detail summary::-webkit-details-marker {
+  display: none;
+}
+
+.lesson-detail summary:hover,
+.lesson-detail summary:focus-visible {
+  background: rgb(246 193 119 / 7%);
+}
+
+/* Sits after the flexible title, so it stays pinned to the right edge. */
+.lesson-detail summary::after {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  margin-right: 4px;
+  opacity: 0.65;
+  content: "";
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lesson-detail[open] summary::after {
+  transform: rotate(-135deg) translate(-2px, -2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-detail summary,
+  .lesson-detail summary::after {
+    transition: none;
+  }
+}
+
+.lesson-detail summary small {
+  color: var(--game-ui-text-muted);
+  font-weight: 500;
+}
+
+.lesson-detail__body {
+  padding: 0 0 16px;
+  color: var(--game-ui-text-muted);
+}
+
+.lesson-media {
+  margin: 28px 0;
+  border: 1px solid var(--campus-rule);
+  background: rgb(12 8 6 / 55%);
+}
+
+.lesson-media img,
+.lesson-media video {
+  display: block;
+  width: 100%;
+  max-height: min(620px, 72vh);
+  object-fit: contain;
+  background: #100b08;
+}
+
+.lesson-media figcaption {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.lesson-media figcaption strong {
+  color: #f7d3a0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lesson-media figcaption small {
+  color: rgb(255 245 232 / 50%);
+  overflow-wrap: anywhere;
+}
+
+.lesson-media figcaption details p {
+  margin: 5px 0 0;
+  white-space: pre-wrap;
+}
+
+.lesson-media--missing,
+.lesson-directive-unsupported {
+  padding: 12px 14px;
+  border: 1px dashed rgb(255 180 164 / 45%);
+  color: #ffb4a4;
+}
+
+/* In-prose [[evidence:…]] — real pinned snippet, not a chip that hides it. */
+.evidence-inline-source {
+  display: block;
+  margin: 0.9em 0;
+  overflow: hidden;
+  border: 1px solid rgb(246 231 211 / 14%);
+  border-radius: 12px;
+  background: #1f2428;
+  color: #e1e4e8;
+}
+
+.evidence-inline-source__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgb(246 231 211 / 10%);
+  background: rgb(0 0 0 / 22%);
+  color: rgb(225 228 232 / 78%);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.evidence-inline-source__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35em;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.evidence-inline-source__path {
+  overflow-wrap: anywhere;
+  color: #f0d2a8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+}
+
+.evidence-inline-source__lines {
+  color: rgb(225 228 232 / 62%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.evidence-inline-source__open {
+  flex: none;
+  margin-left: auto;
+  border: 0;
+  padding: 2px 0;
+  background: none;
+  color: #f7d3a0;
+  font: inherit;
+  font-size: 0.92em;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgb(247 211 160 / 40%);
+  text-underline-offset: 0.18em;
+}
+
+.evidence-inline-source__open:hover,
+.evidence-inline-source__open:focus-visible {
+  color: #ffe3b5;
+  text-decoration-color: #ffe3b5;
+}
+
+.evidence-inline-source__open:focus-visible {
+  outline: 2px solid #f0a868;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.evidence-inline-source > .evidence-code {
+  max-height: min(360px, 50vh);
+  border: 0;
+  border-radius: 0;
+  background: #24292e;
+}
+
+.evidence-inline-source__loading {
+  display: grid;
+  gap: 0.55em;
+  align-content: start;
+  padding: 12px 14px 14px;
+  background: #24292e;
+}
+
+.evidence-inline-source__loading-bar {
+  display: block;
+  height: 0.72em;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgb(225 228 232 / 8%) 0%,
+    rgb(225 228 232 / 16%) 50%,
+    rgb(225 228 232 / 8%) 100%
+  );
+  background-size: 200% 100%;
+  animation: evidence-inline-shimmer 1.2s ease-in-out infinite;
+}
+
+.evidence-inline-source__loading-bar--short {
+  width: 62%;
+}
+
+.evidence-inline-source__error {
+  margin: 0;
+  padding: 12px 14px;
+  color: rgb(225 228 232 / 78%);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.evidence-inline-source__error code {
+  color: #f0d2a8;
+  font-size: 0.95em;
+}
+
+.evidence-inline-source__error-detail {
+  display: inline;
+  margin-left: 0.25em;
+  color: rgb(225 228 232 / 52%);
+  font-size: 0.92em;
+}
+
+@keyframes evidence-inline-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.source-sheet {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.source-sheet__meta,
+.source-sheet__tools,
+.source-sheet__footer,
+.source-sheet__navigation,
+.source-sheet__copy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.source-sheet__meta {
+  justify-content: space-between;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+}
+
+.source-sheet__meta code {
+  overflow-wrap: anywhere;
+  color: #f7d3a0;
+}
+
+.source-sheet__tools {
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--campus-rule);
+  border-bottom: 1px solid var(--campus-rule);
+}
+
+.source-sheet__tools label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+}
+
+.source-sheet__tools input {
+  min-width: min(280px, 60vw);
+  border: 1px solid var(--campus-rule);
+  padding: 7px 9px;
+  color: #fff5e8;
+  background: #1a1512;
+  font: inherit;
+}
+
+.source-sheet__find-status,
+.source-sheet__truncation {
+  color: var(--game-ui-text-muted);
+  font-size: 0.76rem;
+}
+
+.source-sheet__truncation {
+  margin: 0;
+  color: #f7d3a0;
+}
+
+.source-sheet__footer {
+  justify-content: space-between;
+  width: 100%;
+}
+
+.source-sheet__navigation {
+  justify-content: center;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+}
+
+.evidence-source-open {
+  margin-top: 10px;
+  border: 1px solid rgb(246 193 119 / 32%);
+  padding: 6px 9px;
+  background: transparent;
+  color: #f7d3a0;
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+  .lesson-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lesson-toolbar {
+    top: 0;
+  }
+
+  .campus[data-reading] .campus-header {
+    position: static;
+  }
+}
+
 @media (max-width: 820px) {
   .today-layout,
-  .studies-layout,
-  .lesson-layout {
+  .studies-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -1366,6 +1961,29 @@ summary:focus-visible,
   .campus-footer code {
     text-align: left;
   }
+
+  .lesson-completion {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lesson-completion__action {
+    width: 100%;
+  }
+
+  .lesson-toolbar {
+    top: 0;
+  }
+
+  .source-sheet__meta,
+  .source-sheet__tools {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .source-sheet__tools input {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 /* Markdown safety affordances: an external destination should look different
@@ -1395,12 +2013,6 @@ summary:focus-visible,
 }
 
 /* ---- English mode: an additive layer over the lesson, never a rewrite ---- */
-
-.lesson-reader__header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
 .english-toggle {
   padding: 6px 12px;
@@ -1674,23 +2286,18 @@ summary:focus-visible,
   opacity: 0.6;
 }
 
-/* The lesson's right-hand column: evidence first, then the English panel when
-   English mode is on. Both are sticky as one unit so the column does not scroll
-   away from a reader who is halfway down a long lesson. */
+/* The lesson's right-hand column: evidence, vocabulary, related. Sticky as one
+   unit so the column does not scroll away mid-lesson. Clears the sticky
+   campus header + lesson toolbar when those are pinned. */
 .lesson-rail {
   display: grid;
-  gap: 22px;
+  gap: 16px;
   align-content: start;
-  /* The rail sticks as one block. Two independently sticky children in one grid
-     is exactly what produced the overlap: the evidence panel froze at the top
-     while the word list kept scrolling up into the space it was holding, and
-     the two drew over each other. */
   position: sticky;
-  top: 24px;
-  /* Evidence plus a full word list can outgrow the viewport, and a sticky
-     element taller than the screen pins its own bottom permanently out of
-     reach. Let the rail scroll itself instead. */
-  max-height: calc(100vh - 48px);
+  top: calc(var(--campus-reading-header-h, 3.75rem) + var(--campus-reading-toolbar-h, 4rem));
+  max-height: calc(
+    100vh - var(--campus-reading-header-h, 3.75rem) - var(--campus-reading-toolbar-h, 4rem) - 0.5rem
+  );
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -1765,15 +2372,98 @@ summary:focus-visible,
 }
 
 .word-list {
-  padding: 18px;
+  padding: 16px 18px;
   border: 1px solid var(--campus-rule);
   border-radius: 14px;
   background: var(--campus-surface);
 }
 
-.word-list h3 {
-  margin: 6px 0 0;
-  font-size: 1rem;
+.word-list__summary {
+  margin: 8px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.8rem;
+}
+
+.lesson-related {
+  padding: 16px 18px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 14px;
+  background: var(--campus-surface);
+}
+
+.lesson-related__list {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lesson-related__list button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--game-ui-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-align: left;
+  padding: 4px 0;
+}
+
+.lesson-related__list button:hover,
+.lesson-related__list button:focus-visible {
+  color: #f0a868;
+}
+
+.lesson-related__list button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.word-list--quiet {
+  padding: 14px 16px;
+}
+
+.word-list__history {
+  margin-top: 14px;
+  border-top: 1px solid rgb(247 211 160 / 16%);
+  padding-top: 10px;
+}
+
+.word-list__history summary {
+  color: var(--game-ui-text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.word-list__history .word-list__items {
+  margin-top: 8px;
+}
+
+.word-list__history-item {
+  flex-wrap: wrap;
+}
+
+.word-list__history-item > .word-list__word {
+  opacity: 0.72;
+}
+
+.word-list__undo {
+  flex: 0 0 auto;
+  border: 0;
+  background: none;
+  color: #f0a868;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.74rem;
+}
+
+.word-list__undo:hover,
+.word-list__undo:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .word-list__voice {
@@ -1892,97 +2582,6 @@ summary:focus-visible,
   color: var(--game-ui-text-muted, #cbb49c);
 }
 
-/* --- Lesson navigation ------------------------------------------------ */
-
-.lesson-nav--top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--campus-rule);
-}
-
-.lesson-nav__steps {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
-}
-
-.lesson-nav__position {
-  color: var(--game-ui-text-muted, #cbb49c);
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-.lesson-nav--bottom {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: start;
-  gap: 16px;
-  margin-top: 44px;
-  padding-top: 26px;
-  border-top: 1px solid var(--campus-rule);
-}
-
-.lesson-nav__side {
-  display: flex;
-  min-width: 0;
-}
-
-.lesson-nav__side--end {
-  justify-content: flex-end;
-}
-
-/* Two lines inside one button: the direction, then what is actually there.
-   Knowing the next lesson's name is what makes it a decision rather than a
-   leap. */
-.lesson-nav--bottom .lesson-nav__side button {
-  display: grid;
-  gap: 3px;
-  max-width: 100%;
-  text-align: left;
-}
-
-.lesson-nav__side--end button {
-  text-align: right;
-}
-
-.lesson-nav__step {
-  font-size: 0.78rem;
-  opacity: 0.75;
-}
-
-.lesson-nav__title {
-  overflow: hidden;
-  font-size: 0.92rem;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.lesson-nav__centre {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-}
-
-@media (max-width: 600px) {
-  .lesson-nav--bottom {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .lesson-nav__side,
-  .lesson-nav__side--end {
-    justify-content: stretch;
-  }
-
-  .lesson-nav__centre {
-    order: 3;
-  }
-}
-
 /* --- Review queue + Markdown in prompts -------------------------------- */
 
 .review-card__queue {
@@ -2029,7 +2628,11 @@ summary:focus-visible,
 .word-anchor__trigger[data-reason="familiar"] {
   border-bottom-color: transparent;
   color: inherit;
-  opacity: 0.72;
+  opacity: 1;
+}
+
+.word-anchor__trigger[data-reason="familiar"] .word-anchor__original {
+  display: none;
 }
 
 .word-anchor__trigger[data-reason="familiar"]:hover,
@@ -2149,4 +2752,15 @@ summary:focus-visible,
   border-color: #ffb4a4;
   color: #ffb4a4;
   cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

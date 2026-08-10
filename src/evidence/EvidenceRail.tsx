@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 
+import { Tip } from "../Tip.js";
 import { readJson } from "../api/client.js";
 import type { EvidenceSnippetView, EvidenceToken, EvidenceView } from "../view/lesson-view.js";
 import { highlightEvidenceCode } from "../view/lesson-view.js";
@@ -10,14 +11,16 @@ export function EvidenceRail({
   basePath,
   evidence,
   panelIdPrefix,
-  ariaLabel = "课程证据",
-  title = "这节课依据什么",
+  ariaLabel = "证据",
+  onOpenSource,
 }: {
   readonly basePath: string;
   readonly evidence: readonly EvidenceView[];
   readonly panelIdPrefix: string;
   readonly ariaLabel?: string;
+  /** @deprecated Prefer the quiet single-line header; kept so callers keep compiling. */
   readonly title?: string;
+  readonly onOpenSource?: (index: number, trigger: HTMLElement) => void;
 }) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [snippet, setSnippet] = useState<EvidenceSnippetView | null>(null);
@@ -25,6 +28,8 @@ export function EvidenceRail({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestSequence = useRef(0);
+
+  if (evidence.length === 0) return null;
 
   async function toggleEvidence(index: number) {
     if (expandedIndex === index) {
@@ -60,8 +65,12 @@ export function EvidenceRail({
 
   return (
     <aside className="evidence-rail" aria-label={ariaLabel}>
-      <p className="eyebrow">EVIDENCE</p>
-      <h3>{title}</h3>
+      <div className="rail-panel__header">
+        <h3 className="rail-panel__label">证据</h3>
+        <Tip term="evidence" className="rail-panel__help">
+          <span aria-label="关于证据">?</span>
+        </Tip>
+      </div>
       <ol className="evidence-list">
         {evidence.map((reference, index) => {
           const expanded = expandedIndex === index;
@@ -107,6 +116,18 @@ export function EvidenceRail({
                         <span>{snippet.sourceCommit.slice(0, 12)}</span>
                       </div>
                       <EvidenceCode snippet={snippet} lines={tokenLines} />
+                      {onOpenSource ? (
+                        <button
+                          type="button"
+                          className="evidence-source-open"
+                          data-evidence-index={index}
+                          data-evidence-trigger="rail"
+                          data-evidence-trigger-id={`rail-${index}`}
+                          onClick={(event) => onOpenSource(index, event.currentTarget)}
+                        >
+                          在源码查看器中打开完整固定提交
+                        </button>
+                      ) : null}
                     </>
                   ) : null}
                 </div>

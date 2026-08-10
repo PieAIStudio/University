@@ -5,6 +5,7 @@ import {
   offset,
   safePolygon,
   shift,
+  useClick,
   useDismiss,
   useFloating,
   useFocus,
@@ -36,16 +37,22 @@ const TIP_CLOSE_MS = 140;
  * The explanation lives in `glossary.ts` rather than at the call site, because
  * the same jargon shows up in several places and a learner who reads two
  * different definitions of FSRS has been taught that neither is trustworthy.
+ *
+ * Open on click (the contract for quiet `?` help), focus, or a deliberate hover
+ * rest. Escape and outside press dismiss.
  */
 export function Tip({
   term,
   children,
   as = "span",
+  className,
 }: {
   /** Key into the glossary. An unknown key renders the children unchanged. */
   readonly term: string;
   readonly children: ReactNode;
   readonly as?: "span" | "div";
+  /** Extra classes on the trigger (e.g. a quiet `?` without dotted underline). */
+  readonly className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const entry = GLOSSARY[term];
@@ -58,6 +65,7 @@ export function Tip({
     whileElementsMounted: autoUpdate,
   });
 
+  const click = useClick(context);
   const hover = useHover(context, {
     mouseOnly: true,
     restMs: TIP_REST_MS,
@@ -69,16 +77,23 @@ export function Tip({
   const focus = useFocus(context);
   const dismiss = useDismiss(context, { escapeKey: true, outsidePress: true });
   const role = useRole(context, { role: "tooltip" });
-  const { getReferenceProps, getFloatingProps } = useInteractions([hover, focus, dismiss, role]);
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    click,
+    hover,
+    focus,
+    dismiss,
+    role,
+  ]);
 
   // An undefined term is an authoring mistake, not a reason to break the page.
   if (!entry) return <>{children}</>;
 
   const Trigger = as;
+  const triggerClass = className ? `tip-trigger ${className}` : "tip-trigger";
   return (
     <>
       <Trigger
-        className="tip-trigger"
+        className={triggerClass}
         // Focusable so the explanation is reachable without a pointer. `button`
         // would be a lie — there is nothing to activate — so this is a plain
         // element with an explicit tab stop.

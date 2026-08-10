@@ -1,5 +1,7 @@
-import { GameButton } from "@pieai/swimmer-ui-kit";
+import { GameBadge, GameButton } from "@pieai/swimmer-ui-kit";
 
+import { Tip } from "../Tip.js";
+import type { DetailMode } from "../language/detail-mode.js";
 import type { CourseView, LessonLocator } from "../view/lesson-view.js";
 
 export interface LessonNeighbour extends LessonLocator {
@@ -51,82 +53,101 @@ export function lessonNeighbours(
 }
 
 /**
- * Where to go when this lesson is done.
- *
- * Rendered twice per lesson — once quietly above the title, once properly at
- * the end. The bottom copy is the one that matters: finishing a lesson and
- * finding nothing but whitespace is the moment a learner leaves, and asking
- * them to scroll back up to a breadcrumb to continue is asking them to do the
- * app's job.
+ * Every lesson control in one sticky band: leave, position, reading prefs,
+ * status, and prev/next. Sits under the campus header so the reader never has
+ * to scroll back up for navigation or the detail switch.
  */
-export function LessonNav({
+export function LessonToolbar({
   neighbours,
   onOpenLesson,
   onBackToCourse,
-  variant,
+  annotated,
+  englishMode,
+  onEnglishModeChange,
+  detailMode,
+  onDetailModeChange,
+  completed,
+  readConfirmed,
 }: {
   readonly neighbours: LessonNeighbours;
   readonly onOpenLesson: (locator: LessonLocator) => void;
   readonly onBackToCourse: () => void;
-  readonly variant: "top" | "bottom";
+  readonly annotated: boolean;
+  readonly englishMode: boolean;
+  readonly onEnglishModeChange: (enabled: boolean) => void;
+  readonly detailMode: DetailMode;
+  readonly onDetailModeChange: (mode: DetailMode) => void;
+  readonly completed: boolean;
+  readonly readConfirmed: boolean;
 }) {
   const { previous, next } = neighbours;
-  const position = (
-    <span className="lesson-nav__position">
-      第 {neighbours.position} 节 / 共 {neighbours.total} 节
-    </span>
-  );
+  const detailed = detailMode === "all";
 
-  // Above the title this is a breadcrumb: where am I, and how do I get out.
-  // Titles are left off on purpose — a second set of lesson names competing
-  // with the actual heading is exactly the noise this variant exists to avoid.
-  if (variant === "top") {
-    return (
-      <nav className="lesson-nav lesson-nav--top" aria-label="课程导航">
+  return (
+    <div className="lesson-toolbar">
+      <nav className="lesson-toolbar__nav" aria-label="课程导航">
         <GameButton variant="ghost" onClick={onBackToCourse}>
           ← 返回课程
         </GameButton>
-        {position}
-        <span className="lesson-nav__steps">
-          {previous ? (
-            <GameButton variant="ghost" onClick={() => onOpenLesson(previous)}>
-              上一节
-            </GameButton>
-          ) : null}
-          {next ? (
-            <GameButton variant="ghost" onClick={() => onOpenLesson(next)}>
-              下一节
-            </GameButton>
-          ) : null}
+        <span className="lesson-toolbar__position">
+          第 {neighbours.position} 节 / 共 {neighbours.total} 节
         </span>
       </nav>
-    );
-  }
 
-  return (
-    <nav className="lesson-nav lesson-nav--bottom" aria-label="学完这节之后">
-      <div className="lesson-nav__side">
+      <div className="lesson-toolbar__settings">
+        {annotated ? (
+          // Only offered where there is something to offer. A toggle that
+          // does nothing on most lessons teaches the learner to ignore it.
+          <Tip term="english-mode">
+            <button
+              type="button"
+              className="english-toggle"
+              aria-pressed={englishMode}
+              onClick={() => onEnglishModeChange(!englishMode)}
+            >
+              {englishMode ? "外语模式 · 开" : "外语模式 · 关"}
+            </button>
+          </Tip>
+        ) : null}
+
+        <div className="lesson-detail-switch">
+          <span className="lesson-detail-switch__label" id="lesson-detail-switch-label">
+            讲解层级
+          </span>
+          <button
+            type="button"
+            className="lesson-detail-switch__control"
+            role="switch"
+            aria-checked={detailed}
+            aria-labelledby="lesson-detail-switch-label"
+            onClick={() => onDetailModeChange(detailed ? "standard" : "all")}
+          >
+            <span className="lesson-detail-switch__option" data-active={!detailed || undefined}>
+              标准讲解
+            </span>
+            <span className="lesson-detail-switch__option" data-active={detailed || undefined}>
+              详细讲解
+            </span>
+          </button>
+        </div>
+
+        <GameBadge tone={completed ? "success" : "warning"}>
+          {completed ? "已完成" : readConfirmed ? "课文已确认 · 练习待完成" : "待确认本次更新"}
+        </GameBadge>
+      </div>
+
+      <div className="lesson-toolbar__steps">
         {previous ? (
           <GameButton variant="ghost" onClick={() => onOpenLesson(previous)}>
-            <span className="lesson-nav__step">← 上一节</span>
-            <span className="lesson-nav__title">{previous.title}</span>
+            上一节
           </GameButton>
         ) : null}
-      </div>
-      <div className="lesson-nav__centre">
-        <GameButton variant="ghost" onClick={onBackToCourse}>
-          回到目录
-        </GameButton>
-        {position}
-      </div>
-      <div className="lesson-nav__side lesson-nav__side--end">
         {next ? (
-          <GameButton variant="primary" onClick={() => onOpenLesson(next)}>
-            <span className="lesson-nav__step">下一节 →</span>
-            <span className="lesson-nav__title">{next.title}</span>
+          <GameButton variant="ghost" onClick={() => onOpenLesson(next)}>
+            下一节
           </GameButton>
         ) : null}
       </div>
-    </nav>
+    </div>
   );
 }

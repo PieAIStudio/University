@@ -44,6 +44,16 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     summary: "这节课的说法出自被学项目里的哪个文件、哪几行。点开就能看到原文。",
     detail: "课程内容由 AI 生成，证据是它的凭据——没有证据的说法，你有理由不信。",
   },
+  "lesson-vocabulary": {
+    term: "生词",
+    summary: "打开外语模式后，本课标出的英文词会汇总在这里，方便你扫一眼和标记状态。",
+    detail: "点某个词会滚到正文里第一次出现的位置。状态会影响之后复习队列里是否再见到它。",
+  },
+  "lesson-related": {
+    term: "相关",
+    summary: "哪些其他课提到了本课。点开可以跳过去读，不必先回到目录。",
+    detail: "这是页级关系，不是自动推荐。列表为空时这一栏不会出现。",
+  },
   "content-revision": {
     term: "REV · 课文版本号",
     summary: "这节课文改过几次。第 1 版就是 REV 1。",
