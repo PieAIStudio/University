@@ -1,9 +1,12 @@
-import { Children, isValidElement, useMemo, type ReactNode } from "react";
+import { Children, isValidElement, useEffect, useMemo, useState, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
+import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
 
 import type { LanguageLayer } from "../domain/lesson-marks.js";
+import { EvidenceInlineSource } from "../evidence/EvidenceInlineSource.js";
 import { MermaidDiagram } from "./MermaidDiagram.js";
+import type { LessonAssetView, LessonSectionView } from "../view/lesson-view.js";
 import { WordAnchor, type VocabularyStage } from "../language/WordPopover.js";
 import { remarkLanguageAnchors } from "../language/remark-language-anchors.js";
 import {
@@ -13,12 +16,117 @@ import {
   type LessonLinkRange,
   type LessonLinkTarget,
 } from "./remark-lesson-links.js";
+import { remarkUniversityDirectives } from "./remark-university-directives.js";
+
+function directiveProperty(
+  node: { readonly properties?: Record<string, unknown> } | undefined,
+  key: string,
+): string {
+  const value = node?.properties?.[key];
+  return typeof value === "string" ? value : "";
+}
+
+function LessonDetailBlock({
+  children,
+  title,
+  kind,
+  detailMode,
+}: {
+  readonly children?: ReactNode;
+  readonly title: string;
+  readonly kind: string;
+  readonly detailMode: "standard" | "all";
+}) {
+  const [open, setOpen] = useState(detailMode === "all");
+  useEffect(() => setOpen(detailMode === "all"), [detailMode]);
+  return (
+    <details
+      className="lesson-detail"
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary>
+        <span>{title || "补充说明"}</span>
+        <small>{kind}</small>
+      </summary>
+      <div className="lesson-detail__body">{children}</div>
+    </details>
+  );
+}
+
+function LessonMediaBlock({
+  asset,
+  children,
+  video = false,
+}: {
+  readonly asset: LessonAssetView | undefined;
+  readonly children?: ReactNode;
+  readonly video?: boolean;
+}) {
+  if (!asset) {
+    return (
+      <div className="lesson-media lesson-media--missing" role="alert">
+        这段媒体没有通过当前课文版本的本地资产清单。
+      </div>
+    );
+  }
+  const label =
+    asset.kind === "real-screenshot"
+      ? "真实截图"
+      : asset.kind === "ai-illustration"
+        ? "示意图 · AI 插图"
+        : asset.kind === "diagram"
+          ? "结构图"
+          : "本地媒体";
+  const caption = asset.caption ?? (typeof children === "string" ? children : undefined);
+  return (
+    <figure className={`lesson-media lesson-media--${video ? "video" : "figure"}`}>
+      {video ? (
+        <video controls preload="metadata" poster={asset.posterUrl} aria-label={asset.alt}>
+          <source src={asset.url} type={asset.mime} />
+          你的浏览器无法播放这段本地录屏。
+        </video>
+      ) : (
+        <img src={asset.url} alt={asset.alt} loading="lazy" />
+      )}
+      <figcaption>
+        <strong>{label}</strong>
+        {caption ? <span>{caption}</span> : null}
+        {asset.capture ? (
+          <small>
+            来源 {asset.sourceCommit?.slice(0, 12)} · {asset.capture.route} · {asset.capture.locale}{" "}
+            · {asset.capture.viewport.width}×{asset.capture.viewport.height}
+          </small>
+        ) : null}
+        {asset.aiNote ? <small>{asset.aiNote}</small> : null}
+        {asset.transcript ? (
+          <details>
+            <summary>文字稿</summary>
+            <p>{asset.transcript}</p>
+          </details>
+        ) : null}
+      </figcaption>
+    </figure>
+  );
+}
 
 function codeText(children: ReactNode): string {
   return Children.toArray(children)
     .map((child) => (typeof child === "string" || typeof child === "number" ? String(child) : ""))
     .join("")
     .replace(/\n$/, "");
+}
+
+function markdownText(children: ReactNode): string {
+  return Children.toArray(children)
+    .map((child) => {
+      if (typeof child === "string" || typeof child === "number") return String(child);
+      if (isValidElement<{ children?: ReactNode }>(child))
+        return markdownText(child.props.children);
+      return "";
+    })
+    .join("")
+    .trim();
 }
 
 /**
@@ -124,6 +232,11 @@ export function MarkdownContent({
   lessonLinks,
   onFollowLink,
   evidenceAnchors,
+  evidenceBasePath,
+  onOpenEvidence,
+  assets = [],
+  sections = [],
+  detailMode = "standard",
 }: {
   readonly children: string;
   readonly language?: LanguageLayer;
@@ -133,6 +246,11 @@ export function MarkdownContent({
   readonly lessonLinks?: readonly LessonLinkRange[];
   readonly onFollowLink?: (target: LessonLinkTarget) => void;
   readonly evidenceAnchors?: readonly EvidenceAnchorRange[];
+  readonly evidenceBasePath?: string;
+  readonly onOpenEvidence?: (index: number, trigger: HTMLElement) => void;
+  readonly assets?: readonly LessonAssetView[];
+  readonly sections?: readonly LessonSectionView[];
+  readonly detailMode?: "standard" | "all";
   /**
    * Drop the paragraph wrapper, for a question or prompt that is already inside
    * its own styled element. The Markdown still parses — which is the point:
@@ -148,10 +266,31 @@ export function MarkdownContent({
     () => new Map((active?.lexicon ?? []).map((entry) => [entry.senseId, entry])),
     [active],
   );
+  const assetsById = useMemo(() => new Map(assets.map((asset) => [asset.id, asset])), [assets]);
+  const sectionsByTitle = useMemo(
+    () => new Map(sections.map((section) => [section.title, section.id])),
+    [sections],
+  );
 
   const components = useMemo<Components>(
     () => ({
       ...markdownComponents,
+      h2({ children, node: _node, ...props }) {
+        const sectionId = sectionsByTitle.get(markdownText(children));
+        return (
+          <h2 {...props} {...(sectionId ? { "data-section-id": sectionId } : {})}>
+            {children}
+          </h2>
+        );
+      },
+      h3({ children, node: _node, ...props }) {
+        const sectionId = sectionsByTitle.get(markdownText(children));
+        return (
+          <h3 {...props} {...(sectionId ? { "data-section-id": sectionId } : {})}>
+            {children}
+          </h3>
+        );
+      },
       ...(inline
         ? { p: ({ children }: { readonly children?: ReactNode }) => <>{children}</> }
         : {}),
@@ -163,6 +302,7 @@ export function MarkdownContent({
           readonly properties?: {
             readonly sourcePath?: unknown;
             readonly lines?: unknown;
+            readonly evidenceIndex?: unknown;
             readonly broken?: unknown;
           };
         };
@@ -170,7 +310,9 @@ export function MarkdownContent({
       }) {
         const properties = node?.properties;
         const broken = properties?.broken !== undefined;
-        const location = `${String(properties?.sourcePath ?? "")}:${String(properties?.lines ?? "")}`;
+        const sourcePath = String(properties?.sourcePath ?? "");
+        const lines = String(properties?.lines ?? "");
+        const location = `${sourcePath}:${lines}`;
         if (broken) {
           return (
             <span
@@ -181,8 +323,22 @@ export function MarkdownContent({
             </span>
           );
         }
-        // Copying, not opening: the campus never launches an editor, and the
-        // sidebar's 复制位置 already taught this gesture.
+        const evidenceIndex =
+          typeof properties?.evidenceIndex === "number" ? properties.evidenceIndex : null;
+        if (evidenceIndex !== null && evidenceBasePath) {
+          return (
+            <EvidenceInlineSource
+              index={evidenceIndex}
+              basePath={evidenceBasePath}
+              sourcePath={sourcePath}
+              lines={lines}
+              onOpenEvidence={onOpenEvidence}
+            />
+          );
+        }
+        // An older API response without an approved index remains copyable, but
+        // cannot open an arbitrary path. The server is the only source of truth
+        // for source-sheet locations.
         return (
           <button
             type="button"
@@ -203,6 +359,7 @@ export function MarkdownContent({
             readonly courseId?: unknown;
             readonly unitId?: unknown;
             readonly lessonId?: unknown;
+            readonly targetSectionId?: unknown;
             readonly broken?: unknown;
           };
         };
@@ -224,6 +381,9 @@ export function MarkdownContent({
           unitId: String(properties.unitId),
           lessonId: properties.lessonId,
           title: typeof children === "string" ? children : "",
+          ...(typeof properties.targetSectionId === "string"
+            ? { targetSectionId: properties.targetSectionId }
+            : {}),
         };
         return (
           <button
@@ -235,6 +395,60 @@ export function MarkdownContent({
             {children}
             <span aria-hidden="true"> ↗</span>
           </button>
+        );
+      },
+      "lesson-detail"({
+        node,
+        children,
+      }: {
+        readonly node?: { readonly properties?: Record<string, unknown> };
+        readonly children?: ReactNode;
+      }) {
+        return (
+          <LessonDetailBlock
+            title={directiveProperty(node, "title")}
+            kind={directiveProperty(node, "kind")}
+            detailMode={detailMode}
+          >
+            {children}
+          </LessonDetailBlock>
+        );
+      },
+      "lesson-figure"({
+        node,
+        children,
+      }: {
+        readonly node?: { readonly properties?: Record<string, unknown> };
+        readonly children?: ReactNode;
+      }) {
+        return (
+          <LessonMediaBlock asset={assetsById.get(directiveProperty(node, "assetId"))}>
+            {children}
+          </LessonMediaBlock>
+        );
+      },
+      "lesson-video"({
+        node,
+        children,
+      }: {
+        readonly node?: { readonly properties?: Record<string, unknown> };
+        readonly children?: ReactNode;
+      }) {
+        return (
+          <LessonMediaBlock video asset={assetsById.get(directiveProperty(node, "assetId"))}>
+            {children}
+          </LessonMediaBlock>
+        );
+      },
+      "lesson-directive-unsupported"({
+        node,
+      }: {
+        readonly node?: { readonly properties?: Record<string, unknown> };
+      }) {
+        return (
+          <p className="lesson-directive-unsupported" role="note">
+            未启用的课程扩展：<code>{directiveProperty(node, "name")}</code>
+          </p>
         );
       },
       // The key is the hast element name the plugin's `data.hName` produces —
@@ -264,11 +478,23 @@ export function MarkdownContent({
         );
       },
     }),
-    [lexicon, vocabularyStages, onStageWord, inline, active, onFollowLink],
+    [
+      lexicon,
+      vocabularyStages,
+      onStageWord,
+      inline,
+      active,
+      onFollowLink,
+      evidenceBasePath,
+      onOpenEvidence,
+      assetsById,
+      sectionsByTitle,
+      detailMode,
+    ],
   );
 
   const plugins = useMemo(() => {
-    const list: unknown[] = [remarkGfm];
+    const list: unknown[] = [remarkGfm, remarkDirective, remarkUniversityDirectives];
     if (active) list.push([remarkLanguageAnchors, { ranges: active.ranges }]);
     if (lessonLinks && lessonLinks.length > 0) {
       list.push([remarkLessonLinks, { ranges: lessonLinks }]);

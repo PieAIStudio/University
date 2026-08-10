@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 
-import { act } from "react";
+import { act, type ComponentProps } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { clearEvidenceSnippetCache } from "../evidence/load-evidence-snippet.js";
+import type { LessonAssetView, LessonSectionView } from "../view/lesson-view.js";
 import { isLocalUrl, MarkdownContent } from "./MarkdownContent.js";
 
 const mermaidMock = vi.hoisted(() => ({
@@ -28,16 +30,32 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
+  clearEvidenceSnippetCache();
+  vi.unstubAllGlobals();
 });
 
-async function renderMarkdown(markdown: string) {
+async function renderMarkdown(
+  markdown: string,
+  props: Partial<ComponentProps<typeof MarkdownContent>> = {},
+) {
   await act(async () => {
-    root.render(<MarkdownContent>{markdown}</MarkdownContent>);
+    root.render(<MarkdownContent {...props}>{markdown}</MarkdownContent>);
   });
   await act(async () => {
     await new Promise((resolve) => window.setTimeout(resolve, 100));
   });
 }
+
+const diagramAsset: LessonAssetView = {
+  id: "local-diagram",
+  kind: "diagram",
+  mime: "image/svg+xml",
+  url: "/api/local-diagram",
+  alt: "A local diagram",
+  caption: "The local route map.",
+};
+
+const section: LessonSectionView = { id: "foundation", title: "Foundation" };
 
 async function waitFor(assertion: () => void) {
   await act(async () => {
@@ -283,5 +301,197 @@ describe("local-only link and image policy", () => {
 
     expect(link?.getAttribute("target")).toBeNull();
     expect(link?.getAttribute("rel")).toBeNull();
+  });
+
+  it("renders approved directives, stable section ids, and progressive detail", async () => {
+    await renderMarkdown(
+      [
+        "## Foundation",
+        "",
+        ":::detail[先补一个概念]{.foundation}",
+        "",
+        "只有需要时才展开的说明。",
+        ":::",
+        "",
+        ":::figure[路径图]{#local-diagram}",
+        "",
+        "课程作者的本地图。",
+        ":::",
+        "",
+        ":::unknown[不支持]",
+        "",
+        "这段仍要显式报错。",
+        ":::",
+      ].join("\n"),
+      { assets: [diagramAsset], sections: [section] },
+    );
+
+    expect(container.querySelector("h2")?.dataset.sectionId).toBe("foundation");
+    expect(container.querySelector("details")?.open).toBe(false);
+    expect(container.querySelector("summary")?.textContent).toContain("先补一个概念");
+    expect(container.querySelector('img[src="/api/local-diagram"]')?.getAttribute("alt")).toBe(
+      "A local diagram",
+    );
+    expect(container.querySelector(".lesson-directive-unsupported")?.textContent).toContain(
+      "unknown",
+    );
+
+    await renderMarkdown(":::detail[全部细节]{.deep-dive}\n\n现在展开。\n\n:::", {
+      detailMode: "all",
+    });
+    expect(container.querySelector("details")?.open).toBe(true);
+  });
+
+  it("renders fetched pinned source inline via the approved evidence index", async () => {
+    const markdown = "证据：[[evidence:src/app.ts:4-5]]";
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          sourcePath: "src/app.ts",
+          sourceCommit: "a".repeat(40),
+          startLine: 4,
+          endLine: 5,
+          highlightStartLine: 4,
+          highlightEndLine: 5,
+          language: "typescript",
+          code: "const first = true;\nconst second = false;\n",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const onOpenEvidence = vi.fn();
+    await renderMarkdown(markdown, {
+      evidenceBasePath: "/api/lesson",
+      onOpenEvidence,
+      evidenceAnchors: [
+        {
+          start: markdown.indexOf("[["),
+          end: markdown.length,
+          sourcePath: "src/app.ts",
+          lineStart: 4,
+          lineEnd: 5,
+          resolved: true,
+          evidenceIndex: 0,
+        },
+      ],
+    });
+    await waitFor(() =>
+      expect(
+        container.querySelector(".evidence-inline-source .evidence-code")?.textContent,
+      ).toContain("const first"),
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/lesson/evidence/0");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(container.querySelector(".evidence-inline-source__path")?.textContent).toBe(
+      "src/app.ts",
+    );
+    expect(container.textContent).toContain("L4–5");
+    expect(container.querySelector(".evidence-code__line--highlighted")).not.toBeNull();
+
+    const openButton = container.querySelector<HTMLButtonElement>(
+      'button[data-evidence-trigger="inline"]',
+    );
+    expect(openButton?.textContent).toContain("看完整文件");
+    expect(openButton?.getAttribute("data-evidence-index")).toBe("0");
+    expect(openButton?.getAttribute("data-evidence-trigger-id")).toBeTruthy();
+  });
+
+  it("degrades quietly when the pinned source cannot be read", async () => {
+    const markdown = "证据：[[evidence:src/missing.ts:10-12]]";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ error: "Lesson evidence index does not exist" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    );
+
+    await renderMarkdown(markdown, {
+      evidenceBasePath: "/api/lesson",
+      evidenceAnchors: [
+        {
+          start: markdown.indexOf("[["),
+          end: markdown.length,
+          sourcePath: "src/missing.ts",
+          lineStart: 10,
+          lineEnd: 12,
+          resolved: true,
+          evidenceIndex: 3,
+        },
+      ],
+    });
+    await waitFor(() =>
+      expect(container.querySelector(".evidence-inline-source__error")).not.toBeNull(),
+    );
+
+    const error = container.querySelector(".evidence-inline-source__error");
+    expect(error?.textContent).toContain("无法读取固定源码");
+    expect(error?.textContent).toContain("src/missing.ts");
+    expect(error?.textContent).toContain("L10–12");
+    expect(container.querySelector(".evidence-code")).toBeNull();
+    // Header + open control still present so the rest of the lesson can read
+    // and the reader can try the full-file sheet if offered.
+    expect(container.querySelector(".evidence-inline-source__path")?.textContent).toBe(
+      "src/missing.ts",
+    );
+  });
+
+  it("loads the same evidence index only once when cited twice", async () => {
+    const first = "[[evidence:src/app.ts:1-2]]";
+    const second = "[[evidence:src/app.ts:1-2]]";
+    const markdown = `先看 ${first} 再看 ${second}`;
+    const firstStart = markdown.indexOf(first);
+    const secondStart = markdown.indexOf(second, firstStart + 1);
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          sourcePath: "src/app.ts",
+          sourceCommit: "a".repeat(40),
+          startLine: 1,
+          endLine: 2,
+          highlightStartLine: 1,
+          highlightEndLine: 2,
+          language: "typescript",
+          code: "export const a = 1;\nexport const b = 2;\n",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await renderMarkdown(markdown, {
+      evidenceBasePath: "/api/lesson",
+      evidenceAnchors: [
+        {
+          start: firstStart,
+          end: firstStart + first.length,
+          sourcePath: "src/app.ts",
+          lineStart: 1,
+          lineEnd: 2,
+          resolved: true,
+          evidenceIndex: 0,
+        },
+        {
+          start: secondStart,
+          end: secondStart + second.length,
+          sourcePath: "src/app.ts",
+          lineStart: 1,
+          lineEnd: 2,
+          resolved: true,
+          evidenceIndex: 0,
+        },
+      ],
+    });
+    await waitFor(() =>
+      expect(container.querySelectorAll(".evidence-inline-source .evidence-code")).toHaveLength(2),
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith("/api/lesson/evidence/0");
   });
 });

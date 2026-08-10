@@ -49,10 +49,10 @@ const SPECIFIER_RE = /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)['"]([^'"]+)['"]
  *
  * Derived from non-test relative imports as of the rule's introduction:
  *   shell    → evidence, review, markdown, api, view
- *   lesson   → evidence, review, markdown, language, api, view
+ *   lesson   → review, markdown, evidence, language, api, view
+ *   review   → markdown, evidence, language, api, view
+ *   markdown → evidence, language, view
  *   evidence → api, view
- *   review   → markdown, language, api, view
- *   markdown → language
  *   language → (none)
  *   api      → view
  *   view     → (none)
@@ -61,13 +61,19 @@ const SPECIFIER_RE = /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)['"]([^'"]+)['"]
  * one. `src/domain/` is intentionally absent — it is the shared schema core
  * enforced by rule 3, not a browser composition layer. Loose files at the top
  * of `src/` (App.tsx, main.tsx, …) are not layers and are exempt.
+ *
+ * `evidence` sits below `markdown` because that is the direction the code
+ * actually runs: an evidence component depends on nothing but `api` and `view`,
+ * while lesson prose has to render a pinned-source block inline. The reverse
+ * import — evidence reaching into markdown — is still a failure here, which is
+ * the coupling worth preventing.
  */
 const BROWSER_LAYER_ORDER = [
   "shell",
   "lesson",
-  "evidence",
   "review",
   "markdown",
+  "evidence",
   "language",
   "api",
   "view",
