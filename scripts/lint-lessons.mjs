@@ -161,7 +161,10 @@ function stripEvidenceTokens(text) {
  * `checkDetailBlocks` reports them separately.
  */
 function withoutDetailBlocks(text) {
-  return text.replace(/^:::detail(?:\[[^\]]*\])?[ \t]*\n[\s\S]*?^:::[ \t]*$/gm, "\n");
+  return text.replace(
+    /^:::detail(?:\[[^\]]*\])?(?:\{[^}\n]*\})?[ \t]*\n[\s\S]*?^:::[ \t]*$/gm,
+    "\n",
+  );
 }
 
 /**
@@ -357,9 +360,22 @@ function checkDetailBlocks(content, fail) {
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
     if (open === null) {
-      const start = /^:::detail(?:\[([^\]]*)\])?[ \t]*$/.exec(line);
+      // `{.class}` and friends are legal remark-directive attributes and render
+      // fine. Leaving them out of this pattern did not produce a wrong error —
+      // it produced silence: the line matched the loose `anyOpener` guard below
+      // but never opened a block, so block count, titles, and volume were all
+      // measured against zero blocks and every detail rule passed vacuously.
+      const start = /^:::detail(?:\[([^\]]*)\])?(?:\{[^}\n]*\})?[ \t]*$/.exec(line);
       if (start) {
         open = { startLine: i + 1, title: start[1] === undefined ? null : start[1], body: [] };
+      } else if (/^:::detail\b/.test(line)) {
+        // Something meant to be a detail block that this parser cannot read.
+        // Failing loudly beats the silent pass that hid a whole missing layer.
+        fail(
+          26,
+          `第 ${i + 1} 行的 :::detail 写法解析不了：「${line.trim()}」。用 :::detail[读者会问的问句？] 或 :::detail[问句？]{.attr}。`,
+          DEBT_RULE.DETAIL,
+        );
       }
       continue;
     }
