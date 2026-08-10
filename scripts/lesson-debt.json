@@ -149,7 +149,7 @@
     {
       "id": "buzz/buzz-one-message/read-and-deliver/global-cannot-see-channel",
       "contentRevision": 2,
-      "rules": ["detail"]
+      "rules": ["detail", "orphan-evidence"]
     },
     {
       "id": "buzz/buzz-one-message/read-and-deliver/historical-and-live-paths",
@@ -624,7 +624,7 @@
     {
       "id": "turing-pact/agent-identity-continuity/style-and-delivery-rhythm/style-below-hard-rules",
       "contentRevision": 2,
-      "rules": ["detail", "hand-copied-fence"]
+      "rules": ["detail", "hand-copied-fence", "orphan-evidence"]
     },
     {
       "id": "turing-pact/ai-budget-and-cost/budget-gate/gate-before-provider",
@@ -984,7 +984,7 @@
     {
       "id": "turing-pact/directing-ai-agents/what-the-agent-reads-first/recall-before-you-touch-anything",
       "contentRevision": 1,
-      "rules": ["detail", "hand-copied-fence"]
+      "rules": ["detail", "hand-copied-fence", "orphan-evidence"]
     },
     {
       "id": "turing-pact/e2e-and-qa-scripts/e2e-that-earn-cost/a11y-serious-only",
@@ -1299,7 +1299,7 @@
     {
       "id": "turing-pact/foundations-before-zero/talking-to-machines/install-then-dev",
       "contentRevision": 3,
-      "rules": ["detail", "hand-copied-fence"]
+      "rules": ["detail", "hand-copied-fence", "orphan-evidence"]
     },
     {
       "id": "turing-pact/foundations-before-zero/talking-to-machines/ready-for-terrain",
@@ -1332,11 +1332,6 @@
       "rules": ["detail", "hand-copied-fence", "system-vocab"]
     },
     {
-      "id": "turing-pact/foundations-before-zero/what-is-an-app/from-icon-to-files-journey",
-      "contentRevision": 2,
-      "rules": ["detail", "hand-copied-fence"]
-    },
-    {
       "id": "turing-pact/foundations-before-zero/what-is-an-app/product-sentence-and-gate",
       "contentRevision": 2,
       "rules": ["detail", "hand-copied-fence", "system-vocab"]
@@ -1349,11 +1344,6 @@
     {
       "id": "turing-pact/foundations-before-zero/what-is-an-app/why-so-many-files-preview",
       "contentRevision": 3,
-      "rules": ["detail", "hand-copied-fence", "system-vocab"]
-    },
-    {
-      "id": "turing-pact/foundations-before-zero/what-is-an-app/you-already-know-apps",
-      "contentRevision": 2,
       "rules": ["detail", "hand-copied-fence", "system-vocab"]
     },
     {
@@ -2184,7 +2174,7 @@
     {
       "id": "turing-pact/solo-operations/from-a-session-to-a-todo/only-you-can-call-it-fun",
       "contentRevision": 1,
-      "rules": ["detail", "hand-copied-fence"]
+      "rules": ["detail", "hand-copied-fence", "orphan-evidence"]
     },
     {
       "id": "turing-pact/solo-operations/from-a-session-to-a-todo/what-must-never-be-copied",
@@ -2204,7 +2194,7 @@
     {
       "id": "turing-pact/solo-operations/gates-before-you-push/local-gate-and-remote-gate",
       "contentRevision": 1,
-      "rules": ["detail", "hand-copied-fence"]
+      "rules": ["detail", "hand-copied-fence", "orphan-evidence"]
     },
     {
       "id": "turing-pact/solo-operations/gates-before-you-push/skipping-quietly-outside-a-worktree",
@@ -2764,7 +2754,7 @@
     {
       "id": "university-local/spaced-repetition/fsrs-as-rows/revision-bump-keeps-schedule",
       "contentRevision": 2,
-      "rules": ["detail", "hand-copied-fence"]
+      "rules": ["detail", "hand-copied-fence", "orphan-evidence"]
     },
     {
       "id": "university-local/spaced-repetition/idempotent-reviews/command-id-first",

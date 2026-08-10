@@ -14,9 +14,9 @@
  * question mark" does not, and belongs here.
  *
  * Machine-owned rules include: variant/shape, prediction spine, evidence
- * tokens (coverage + no hand-copied fence before a token), `:::detail`
- * structure and volume, system-vocabulary ban, growth of standard prose, and
- * second-person density.
+ * tokens (token→manifest coverage, manifest→token coverage, no hand-copied
+ * fence before a token), `:::detail` structure and volume, system-vocabulary
+ * ban, growth of standard prose, and second-person density.
  *
  * Only lessons whose manifest declares a `variant` are linted. The other 475
  * predate the shapes, and failing them all would train everyone to ignore the
@@ -24,13 +24,14 @@
  *
  * ## Baseline ratchet (new rules only)
  *
- * Three rules arrived after hundreds of variant lessons already shipped:
+ * Four rules arrived after hundreds of variant lessons already shipped:
  * detail layer (26), hand-copied fence+anchor (12 hand-copy), system vocabulary
- * (27). Rules 1–25 (and evidence-token coverage under 12) stay hard — they
- * pass today and are never grandfathered.
+ * (27), orphan evidence citation (12 inverse). Rules 1–25 and the old hard
+ * half of item 12 (every token covered by the manifest) stay hard — they pass
+ * today and are never grandfathered.
  *
  * `scripts/lesson-debt.json` records, per lesson identity
- * (`study/course/unit/lesson`), which of those three currently fail and at
+ * (`study/course/unit/lesson`), which of those four currently fail and at
  * which `contentRevision`. A normal run suppresses a new-rule failure only
  * when that exact lesson is baselined for that exact rule at that exact
  * revision. Bump the revision (rewrite) and the grandfathering expires — the
@@ -66,15 +67,27 @@ const BASELINE_PATH = join("scripts", "lesson-debt.json");
  * New rules eligible for grandfathering. Stable keys in the baseline file —
  * not checklist item numbers, so a renumber does not silently reopen debt.
  *
- * `hand-copied-fence` is only the fence+token defect under item 12; evidence
- * token coverage under the same item number is an old hard rule.
+ * `hand-copied-fence` is only the fence+token defect under item 12.
+ * `orphan-evidence` is the inverse half of item 12 (manifest cites, no token).
+ * Token→manifest coverage under the same item number is an old hard rule.
+ *
+ * Cards and exercises carry their own `evidence` arrays in card.json /
+ * exercise.json; they never read the lesson manifest's list. This rule only
+ * inspects the lesson-level array against content.md — no card/exercise
+ * exemption is needed.
  */
 const DEBT_RULE = {
   DETAIL: "detail",
   HAND_COPIED_FENCE: "hand-copied-fence",
   SYSTEM_VOCAB: "system-vocab",
+  ORPHAN_EVIDENCE: "orphan-evidence",
 };
-const DEBT_RULE_ORDER = [DEBT_RULE.DETAIL, DEBT_RULE.HAND_COPIED_FENCE, DEBT_RULE.SYSTEM_VOCAB];
+const DEBT_RULE_ORDER = [
+  DEBT_RULE.DETAIL,
+  DEBT_RULE.HAND_COPIED_FENCE,
+  DEBT_RULE.SYSTEM_VOCAB,
+  DEBT_RULE.ORPHAN_EVIDENCE,
+];
 
 const VARIANTS = {
   现象: { open: "现象", middle: ["为什么是这样"] },
@@ -206,6 +219,28 @@ function matches(heading, name) {
  * number shows up as literal text in the middle of a lesson. Six lessons could
  * be checked by eye. Several hundred cannot.
  */
+/**
+ * Parse `[[evidence:…]]` tokens into path + line span. Malformed tokens are
+ * left out; `checkEvidenceTokens` already reports them.
+ * @returns {{ path: string, start: number, end: number, token: string }[]}
+ */
+function parseEvidenceTokens(content) {
+  const tokens = [];
+  for (const match of content.matchAll(/\[\[evidence:([^\]\n]+)\]\]/g)) {
+    const token = match[1];
+    const at = token.lastIndexOf(":");
+    if (at === -1) continue;
+    const path = token.slice(0, at);
+    const span = token.slice(at + 1);
+    const [rawStart, rawEnd] = span.split("-");
+    const start = Number(rawStart);
+    const end = rawEnd === undefined ? start : Number(rawEnd);
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1) continue;
+    tokens.push({ path, start, end, token });
+  }
+  return tokens;
+}
+
 function checkEvidenceTokens(content, manifest, fail) {
   const citations = manifest.evidence ?? [];
   for (const match of content.matchAll(/\[\[evidence:([^\]\n]+)\]\]/g)) {
@@ -236,6 +271,43 @@ function checkEvidenceTokens(content, manifest, fail) {
       const ranges = covering.map((c) => `${c.lineStart}-${c.lineEnd}`).join(", ");
       fail(12, `锚点 ${path}:${span} 落在 manifest 引用范围之外（manifest: ${ranges}）`);
     }
+  }
+}
+
+/**
+ * Inverse of token→manifest coverage: every manifest `evidence` entry must be
+ * reached by at least one `[[evidence:path:lines]]` token in content.md.
+ *
+ * The evidence rail is gone. A cited file with no inline token is invisible to
+ * the reader — the lesson claims to rest on it, and nobody can open it. Match
+ * on `sourcePath`; a token whose range lies anywhere inside the cited range
+ * counts (same containment as the forward check). Whole-file citations (no
+ * line range) are covered by any token on that path.
+ *
+ * Grandfathered as `orphan-evidence` until a rewrite bumps contentRevision.
+ */
+function checkOrphanEvidence(content, manifest, fail) {
+  const citations = manifest.evidence ?? [];
+  const tokens = parseEvidenceTokens(content);
+  for (const citation of citations) {
+    const path = citation.sourcePath;
+    const covered = tokens.some(
+      (token) =>
+        token.path === path &&
+        (citation.lineStart == null ||
+          citation.lineEnd == null ||
+          (token.start >= citation.lineStart && token.end <= citation.lineEnd)),
+    );
+    if (covered) continue;
+    const range =
+      citation.lineStart == null || citation.lineEnd == null
+        ? "（整文件）"
+        : `${citation.lineStart}-${citation.lineEnd}`;
+    fail(
+      12,
+      `manifest 引用了 ${path}:${range}，但 content.md 里没有 [[evidence:…]] 锚到这个范围。证据栏已移除，读者看不到这条引用——要么加锚点，要么从 manifest.evidence 删掉。`,
+      DEBT_RULE.ORPHAN_EVIDENCE,
+    );
   }
 }
 
@@ -504,9 +576,11 @@ function lintLesson({ contentPath, manifestPath, content, manifest, id, previous
   else if ((closing.match(/[。！？]/g) ?? []).length > 1) fail(21, "「一句话」超过一句");
 
   // 12 — hand-copied project source (fence + evidence token) is a defect;
-  //      every evidence token must still be covered by the manifest.
+  //      every evidence token must be covered by the manifest (hard);
+  //      every manifest citation must be anchored by a token (ratcheted).
   checkHandCopiedSource(content, fail);
   checkEvidenceTokens(content, manifest, fail);
+  checkOrphanEvidence(content, manifest, fail);
 
   // 26 — detail layer structure and volume.
   checkDetailBlocks(content, fail);
@@ -621,6 +695,9 @@ function isSuppressed(baseline, lessonId, contentRevision, debtRule) {
 /**
  * Write a stable, sorted baseline so humans can review the diff.
  * Keys ordered by lesson id; rules in DEBT_RULE_ORDER.
+ *
+ * Rule arrays are written on one line (`"rules": ["detail", …]`), matching
+ * oxfmt's compact style so `--update-baseline` does not trip `format:check`.
  */
 function writeBaselineFile(path, collected) {
   const entries = [...collected.entries()]
@@ -631,8 +708,15 @@ function writeBaselineFile(path, collected) {
     }))
     .filter((e) => e.rules.length > 0)
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const doc = { version: 1, entries };
-  writeFileSync(path, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+  const pretty = JSON.stringify({ version: 1, entries }, null, 2);
+  // oxfmt collapses short string arrays onto one line; match that style here.
+  const compact = pretty.replace(/"rules": \[\n(?:\s+"[^"]+",?\n)+\s*\]/g, (block) => {
+    const rules = [...block.matchAll(/"([^"]+)"/g)]
+      .map((m) => m[1])
+      .filter((name) => name !== "rules");
+    return `"rules": [${rules.map((name) => `"${name}"`).join(", ")}]`;
+  });
+  writeFileSync(path, `${compact}\n`, "utf8");
   return entries.length;
 }
 
@@ -655,6 +739,7 @@ const debtExempt = {
   [DEBT_RULE.DETAIL]: 0,
   [DEBT_RULE.HAND_COPIED_FENCE]: 0,
   [DEBT_RULE.SYSTEM_VOCAB]: 0,
+  [DEBT_RULE.ORPHAN_EVIDENCE]: 0,
 };
 
 for (const lesson of lessons("studies")) {
@@ -734,7 +819,7 @@ if (updateBaseline) {
 
 console.log(`\n${checked} 节课已检查，${failed} 节有问题。`);
 console.log(
-  `存量豁免：无 detail ${debtExempt[DEBT_RULE.DETAIL]} / 手抄 fence ${debtExempt[DEBT_RULE.HAND_COPIED_FENCE]} / 系统词汇 ${debtExempt[DEBT_RULE.SYSTEM_VOCAB]}（改写后自动失效）`,
+  `存量豁免：无 detail ${debtExempt[DEBT_RULE.DETAIL]} / 手抄 fence ${debtExempt[DEBT_RULE.HAND_COPIED_FENCE]} / 系统词汇 ${debtExempt[DEBT_RULE.SYSTEM_VOCAB]} / 孤儿证据 ${debtExempt[DEBT_RULE.ORPHAN_EVIDENCE]}（改写后自动失效）`,
 );
 if (checked === 0) console.log("（没有带 variant 的课文——尚未按新辩体重写。）");
 process.exit(failed > 0 ? 1 : 0);
