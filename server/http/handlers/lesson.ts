@@ -14,6 +14,7 @@ import {
 import { serializeProgress } from "../serialize.js";
 import { buildLessonView } from "../views.js";
 import { readJsonBody, requireMutationAccess, sendJson } from "../wire.js";
+import { matchesAssetMime } from "../../content/asset-bytes.js";
 import { readEvidenceSnippet } from "../../content/evidence.js";
 import { readLatestKnowledgeNote } from "../../knowledge/repository.js";
 import { lessonContentKey } from "../../learning/types.js";
@@ -189,21 +190,5 @@ export const handleLesson: Handler = async (ctx, request, response, url) => {
   return false;
 };
 
-function matchesAssetMime(bytes: Buffer, mime: string): boolean {
-  if (mime === "image/png")
-    return bytes
-      .subarray(0, 8)
-      .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
-  if (mime === "image/jpeg") return bytes.subarray(0, 2).equals(Buffer.from([0xff, 0xd8]));
-  if (mime === "image/webp")
-    return (
-      bytes.subarray(0, 4).toString("ascii") === "RIFF" &&
-      bytes.subarray(8, 12).toString("ascii") === "WEBP"
-    );
-  if (mime === "image/svg+xml")
-    return /^\s*(?:<\?xml[^>]*>\s*)?<svg(?:\s|>)/i.test(bytes.toString("utf8", 0, 2048));
-  if (mime === "video/mp4") return bytes.subarray(4, 8).toString("ascii") === "ftyp";
-  if (mime === "video/webm")
-    return bytes.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
-  return false;
-}
+// Moved to server/content/asset-bytes.ts so ingest enforces the same rule this
+// handler enforces. Keeping a private copy here is what let the two drift.

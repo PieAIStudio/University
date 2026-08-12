@@ -33,6 +33,7 @@ import {
   writeExerciseRevision,
   writeLessonRevision,
 } from "../content/repository.js";
+import { matchesAssetMime, sniffAssetMime } from "../content/asset-bytes.js";
 import { validateEvidence } from "../content/evidence.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
 import {
@@ -406,6 +407,15 @@ function resolveLessonAssetFiles(
     if (bytes.byteLength !== asset.bytes || sha256(bytes) !== asset.sha256) {
       throw new Error(`Lesson asset hash/size mismatch: ${asset.id}`);
     }
+    // Size and hash are both computed from this very file, so they agree with
+    // any declared MIME. The bytes are the only thing that can contradict it,
+    // and the serving path refuses a file that does — after it is already
+    // stored, where the failure is a broken image and nobody's build error.
+    if (!matchesAssetMime(bytes, asset.mime)) {
+      throw new Error(
+        `Lesson asset ${asset.id} declares ${asset.mime} but its bytes are ${sniffAssetMime(bytes)}: ${asset.path}`,
+      );
+    }
     return { path: asset.path, sourcePath };
   });
 }
@@ -724,6 +734,11 @@ function assertStoredBundle(studiesRoot: string, studyId: string, bundle: Revisi
     const bytes = readFileSync(storedAssetPath);
     if (bytes.byteLength !== asset.bytes || sha256(bytes) !== asset.sha256) {
       throw new Error(`Stored lesson asset conflicts with the proposal: ${asset.id}`);
+    }
+    if (!matchesAssetMime(bytes, asset.mime)) {
+      throw new Error(
+        `Stored lesson asset ${asset.id} declares ${asset.mime} but its bytes are ${sniffAssetMime(bytes)}`,
+      );
     }
   }
   for (const card of bundle.cards) {

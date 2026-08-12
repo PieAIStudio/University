@@ -416,7 +416,14 @@ describe("course revision workflow", () => {
   it("installs new asset files and carries them into later revisions", () => {
     const { studiesRoot, targetSnapshot } = setup();
     const assetSource = join(studiesRoot, "capture.png");
-    const assetBytes = Buffer.from("png test bytes");
+    // A real 1×1 PNG, not the string "png test bytes". Ingest now checks that
+    // an asset's leading bytes are the type it declares, because the serving
+    // path always did — and a fixture that declares `image/png` over arbitrary
+    // bytes is exactly the shape of the defect that check exists to stop.
+    const assetBytes = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      "base64",
+    );
     writeFileSync(assetSource, assetBytes);
     const candidate = proposal(targetSnapshot);
     candidate.proposalId = "asset-revision";

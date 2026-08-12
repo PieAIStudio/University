@@ -48,7 +48,7 @@
  */
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -527,6 +527,56 @@ function checkSecondPerson(prose, fail) {
   }
 }
 
+/**
+ * What a file's first bytes say it is, independent of what it is named.
+ *
+ * A screenshot saved as JPEG under a `.png` name passes every size and hash
+ * check — those are computed from the file itself, so they agree with any lie
+ * the manifest tells about its type. Only the leading bytes can disagree, and
+ * the server checks them when serving, which means the failure lands on a
+ * reader looking at a broken image instead of on the author who could fix it.
+ */
+function sniffMime(bytes) {
+  if (bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])))
+    return "image/png";
+  if (bytes.subarray(0, 2).equals(Buffer.from([0xff, 0xd8]))) return "image/jpeg";
+  if (
+    bytes.subarray(0, 4).toString("ascii") === "RIFF" &&
+    bytes.subarray(8, 12).toString("ascii") === "WEBP"
+  )
+    return "image/webp";
+  if (/^\s*(?:<\?xml[^>]*>\s*)?<svg(?:\s|>)/i.test(bytes.toString("utf8", 0, 2048)))
+    return "image/svg+xml";
+  if (bytes.subarray(4, 8).toString("ascii") === "ftyp") return "video/mp4";
+  if (bytes.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]))) return "video/webm";
+  return "无法识别的字节";
+}
+
+/** @param {string} manifestPath @param {{assets?: unknown[]}} manifest @param {Function} fail */
+function checkAssetsAreServable(manifestPath, manifest, fail) {
+  const root = dirname(manifestPath);
+  for (const asset of manifest.assets ?? []) {
+    const file = join(root, asset.path);
+    if (!existsSync(file)) {
+      fail(28, `资产文件不存在：${asset.path}（id ${asset.id}）`);
+      continue;
+    }
+    const bytes = readFileSync(file);
+    if (bytes.byteLength !== asset.bytes) {
+      fail(28, `资产大小对不上：${asset.path} 声明 ${asset.bytes} 字节，实际 ${bytes.byteLength}`);
+    }
+    const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+    if (asset.sha256 !== digest) fail(28, `资产 sha256 对不上：${asset.path}`);
+    const actual = sniffMime(bytes);
+    if (actual !== asset.mime) {
+      fail(
+        28,
+        `资产 ${asset.path} 声明 ${asset.mime}，实际字节是 ${actual} —— 服务端会拒绝它，读者看到裂图`,
+      );
+    }
+  }
+}
+
 function lintLesson({ contentPath, manifestPath, content, manifest, id, previous }) {
   const problems = [];
   /** @param {number} item @param {string} message @param {string|null} [debtRule] */
@@ -623,6 +673,9 @@ function lintLesson({ contentPath, manifestPath, content, manifest, id, previous
       `contentHash 对不上（manifest ${manifest.contentHash?.slice(0, 20)}… 实际 ${digest.slice(0, 20)}…）`,
     );
   }
+
+  // 28 — a picture the reader can actually see.
+  checkAssetsAreServable(manifestPath, manifest, fail);
 
   return problems;
 }
