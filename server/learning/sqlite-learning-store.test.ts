@@ -149,6 +149,9 @@ function createVersionTwoDatabase(path: string): void {
   current.close();
   const database = new DatabaseSync(path);
   database.exec(`
+    DROP INDEX reader_mark_open_idx;
+    DROP INDEX reader_mark_lesson_idx;
+    DROP TABLE reader_mark;
     DROP INDEX lesson_progress_event_session_idx;
     DROP INDEX lesson_progress_event_lesson_idx;
     DROP TABLE lesson_progress_event;
@@ -174,6 +177,9 @@ function createVersionThreeDatabase(path: string): void {
   current.close();
   const database = new DatabaseSync(path);
   database.exec(`
+    DROP INDEX reader_mark_open_idx;
+    DROP INDEX reader_mark_lesson_idx;
+    DROP TABLE reader_mark;
     DROP INDEX lesson_progress_event_session_idx;
     DROP INDEX lesson_progress_event_lesson_idx;
     DROP TABLE lesson_progress_event;
@@ -1237,7 +1243,7 @@ describe("SqliteLearningStore", () => {
     store.close();
   });
 
-  it("migrates a file-backed version-two database through append-only retrieval to schema five", () => {
+  it("migrates a file-backed version-two database through append-only retrieval to schema six", () => {
     const path = temporaryDatabase("schema-two.sqlite");
     createVersionTwoDatabase(path);
 
@@ -1261,7 +1267,7 @@ describe("SqliteLearningStore", () => {
           version: number;
         }
       ).version,
-    ).toBe(5);
+    ).toBe(6);
     expect(
       (
         database.prepare("SELECT COUNT(*) AS count FROM retrieval_attempt").get() as {
@@ -1304,7 +1310,7 @@ describe("SqliteLearningStore", () => {
           version: number;
         }
       ).version,
-    ).toBe(5);
+    ).toBe(6);
     expect(database.prepare("PRAGMA table_info(learning_session)").all()).toHaveLength(5);
     database.close();
   });
@@ -1391,7 +1397,7 @@ describe("SqliteLearningStore", () => {
           version: number;
         }
       ).version,
-    ).toBe(5);
+    ).toBe(6);
     expect(
       database
         .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'sync_outbox'")

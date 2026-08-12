@@ -66,7 +66,7 @@ describe("learner protection workflow", () => {
       studyId: STUDY_ID,
       createdAt: NOW.toISOString(),
       integrityCheck: "ok",
-      learningSchemaVersion: 5,
+      learningSchemaVersion: 6,
     });
     expect(receipt.databasePath).toMatch(/backup-20260720T120000000Z-.*\.sqlite$/);
     expect(receipt.sha256).toMatch(/^sha256:[a-f0-9]{64}$/);
@@ -224,7 +224,7 @@ describe("learner protection workflow", () => {
           version: number;
         }
       ).version,
-    ).toBe(5);
+    ).toBe(6);
     database.close();
   });
 

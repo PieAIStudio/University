@@ -59,9 +59,27 @@ const CardReviewSchema = z
   })
   .strict();
 
+/**
+ * A passage the reader marked. The quote is capped well above what anyone
+ * selects deliberately and well below "the whole lesson", so a stray
+ * triple-click cannot turn a note into a copy of the page.
+ */
+const ReaderMarkSchema = z
+  .object({
+    contentRevision: z.number().int().positive(),
+    kind: z.enum(["question", "highlight"]),
+    exact: z.string().trim().min(1).max(600),
+    prefix: z.string().max(200).default(""),
+    suffix: z.string().max(200).default(""),
+    sectionTitle: z.string().max(200).optional(),
+    note: z.string().max(2_000).optional(),
+  })
+  .strict();
+
 export {
   ExerciseAttemptSchema,
   LessonCompletionSchema,
+  ReaderMarkSchema,
   VOCABULARY_DUE_LIMIT,
   VocabularyPresentedSchema,
   VocabularyStageSchema,

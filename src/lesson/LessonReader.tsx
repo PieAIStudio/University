@@ -5,6 +5,11 @@ import { Tip } from "../Tip.js";
 import { lessonPath, readJson } from "../api/client.js";
 import { EvidenceSourceSheet } from "../evidence/EvidenceSourceSheet.js";
 import { readDetailMode, writeDetailMode, type DetailMode } from "../language/detail-mode.js";
+import {
+  readForeignSettings,
+  writeForeignSettings,
+  type ForeignSettings,
+} from "../language/foreign-settings.js";
 import { readForeignLanguageMode, writeForeignLanguageMode } from "../language/reading-mode.js";
 import type { LessonLinkTarget } from "../markdown/remark-lesson-links.js";
 import { ExerciseBlock } from "../review/ExerciseBlock.js";
@@ -15,8 +20,12 @@ import {
   type LessonView,
 } from "../view/lesson-view.js";
 import { LessonToolbar, type LessonNeighbours } from "./LessonNav.js";
-import { LessonRelated, uniqueOutgoingTargets } from "./LessonRelated.js";
+import { LessonMarkList } from "./LessonMarkList.js";
+import { LessonMargin } from "./LessonMargin.js";
+import { LessonBacklinks } from "./LessonRelated.js";
 import { LessonWordList } from "./LessonWordList.js";
+import { SelectionMenu, type SelectionTarget } from "./SelectionMenu.js";
+import { buildQuestionPrompt, type ReaderMark } from "../domain/reader-marks.js";
 
 /**
  * How many nested detours to remember.
@@ -68,6 +77,10 @@ export function LessonReader({
   const [detailMode, setDetailMode] = useState<DetailMode>(readDetailMode);
   const [vocabularyStages, setVocabularyStages] = useState<ReadonlyMap<string, string>>(new Map());
   const [vocabularyError, setVocabularyError] = useState<string | null>(null);
+  const [foreignSettings, setForeignSettings] = useState(readForeignSettings);
+  const [marks, setMarks] = useState<readonly ReaderMark[]>([]);
+  const [markError, setMarkError] = useState<string | null>(null);
+  const [markBusy, setMarkBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [confirmationError, setConfirmationError] = useState<string | null>(null);
   const [sourceIndex, setSourceIndex] = useState<number | null>(null);
@@ -75,6 +88,10 @@ export function LessonReader({
   const sourceHistoryOpen = useRef(false);
   const previousSourceIndex = useRef<number | null>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  /** The prose only. Selecting inside an exercise or the toolbar is not a mark. */
+  const bodyRef = useRef<HTMLDivElement>(null);
+  /** Margin notes are placed relative to this column's top edge. */
+  const marginRef = useRef<HTMLElement>(null);
   const annotated = view.lesson.language?.status === "annotated";
 
   const senseIds = view.lesson.language?.lexicon?.map((entry) => entry.senseId) ?? [];
@@ -126,6 +143,105 @@ export function LessonReader({
       cancelled = true;
     };
   }, [englishMode, senseKey, locator.studyId, locator.lessonId, requestToken]);
+
+  /**
+   * Marks are per-lesson here, even though the store keeps them per study: this
+   * rail belongs to the lesson on screen, and a list that grew across every
+   * lesson ever read would stop being a working set.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const body = await readJson<{ readonly marks: readonly ReaderMark[] }>(
+          await fetch(`/api/studies/${encodeURIComponent(locator.studyId)}/marks`),
+        );
+        if (!cancelled) setMarks(body.marks);
+      } catch {
+        // Marks are the reader's own annotations on top of a lesson that reads
+        // fine without them.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [locator.studyId, view.lesson.id]);
+
+  const lessonKey = `${locator.courseId}/${locator.unitId}/${locator.lessonId}`;
+  /*
+    Open marks on this lesson.
+
+    Resolved ones are filtered here rather than in each consumer. The server
+    already omits them, but marking one resolved sets `resolvedAt` on the copy
+    held in state instead of dropping it — so that the undo path has something
+    to put back — and a margin that kept rendering it would leave the note
+    sitting beside the passage after the reader said they were done with it.
+  */
+  const lessonMarks = useMemo(
+    () => marks.filter((mark) => mark.lessonKey === lessonKey && mark.resolvedAt === null),
+    [marks, lessonKey],
+  );
+
+  async function recordMark(kind: "question" | "highlight", target: SelectionTarget) {
+    setMarkBusy(true);
+    try {
+      const body = await readJson<{ readonly mark: ReaderMark }>(
+        await fetch(`${lessonPath(locator)}/marks`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-University-Local-Token": requestToken,
+          },
+          body: JSON.stringify({
+            contentRevision: view.lesson.contentRevision,
+            kind,
+            exact: target.quote.exact,
+            prefix: target.quote.prefix,
+            suffix: target.quote.suffix,
+            ...(target.sectionTitle ? { sectionTitle: target.sectionTitle } : {}),
+          }),
+        }),
+      );
+      setMarks((current) => [...current, body.mark]);
+    } catch (reason) {
+      setMarkError(reason instanceof Error ? reason.message : "这条标记没有保存");
+    } finally {
+      setMarkBusy(false);
+    }
+  }
+
+  async function mutateMark(markId: string, method: "POST" | "DELETE") {
+    const previous = marks;
+    // Removed from the list first: the rail is the reader's own scratch space,
+    // and a delete that waits on a round trip feels broken on a local app.
+    setMarks((current) =>
+      method === "DELETE"
+        ? current.filter((mark) => mark.markId !== markId)
+        : current.map((mark) =>
+            mark.markId === markId ? { ...mark, resolvedAt: new Date().toISOString() } : mark,
+          ),
+    );
+    try {
+      const response = await fetch(
+        `/api/studies/${encodeURIComponent(locator.studyId)}/marks/${encodeURIComponent(markId)}`,
+        {
+          method,
+          // Bodyless, but the server requires this on every state-changing
+          // request: a form-encoded POST is the shape a cross-site form can
+          // send without a preflight, so demanding JSON is part of what keeps
+          // the loopback API from being driven by a page in another tab.
+          headers: {
+            "Content-Type": "application/json",
+            "X-University-Local-Token": requestToken,
+          },
+        },
+      );
+      if (!response.ok) throw new Error("标记没有更新");
+    } catch (reason) {
+      setMarks(previous);
+      setMarkError(reason instanceof Error ? reason.message : "标记没有更新");
+    }
+  }
 
   async function stageWord(senseId: string, stage: "learning" | "familiar" | "paused") {
     const previous = vocabularyStages;
@@ -256,11 +372,32 @@ export function LessonReader({
     writeDetailMode(mode);
   }
 
+  function setForeignSettingsPersisted(next: ForeignSettings) {
+    setForeignSettings(next);
+    writeForeignSettings(next);
+  }
+
   const lexicon = view.lesson.language?.lexicon ?? [];
   const backlinks = view.lesson.backlinks ?? [];
-  const outgoing = useMemo(() => uniqueOutgoingTargets(view.lesson.links), [view.lesson.links]);
-  const showLeftContent = Boolean(onReturn) || outgoing.length > 0 || backlinks.length > 0;
-  const showRightContent = englishMode && annotated && lexicon.length > 0;
+  /*
+    Outgoing links are deliberately not listed anywhere.
+
+    Every `[[lesson:…]]` already renders as a styled, clickable button standing
+    in the sentence that motivated it — which is the context a list can never
+    reproduce. Across all 561 lessons there are 370 of these, at most three in
+    any one lesson, and 56% of lessons have none; a panel repeating up to three
+    links that are already on screen was a second copy competing with the
+    original. Backlinks are different: they are the only place a lesson can
+    learn that other lessons depend on it, and nothing in this prose points at
+    them, so they sit at the end rather than beside a paragraph they have no
+    relationship to.
+  */
+  const showLeftContent = Boolean(onReturn) || lessonMarks.length > 0;
+  const showWords = englishMode && annotated && lexicon.length > 0;
+  // Marks are not part of the English layer, so the rail has to open for them
+  // on their own. Tying them to `englishMode` would hide a reader's own notes
+  // the moment they turned vocabulary off.
+  const showRightContent = showWords || lessonMarks.length > 0;
 
   return (
     <article className="lesson-reader">
@@ -283,16 +420,28 @@ export function LessonReader({
         column stays page-centred. Empty rails render no box, border, or heading.
       */}
       <div className="lesson-layout">
+        {/*
+          Not a sticky rail any more. Notes are positioned against the prose, so
+          the column has to scroll with it — a sticky container would hold them
+          still while the passages they point at moved away.
+        */}
         <aside
-          className="lesson-rail lesson-rail--left"
-          {...(showLeftContent ? { "aria-label": "去其他课" } : { "aria-hidden": true })}
+          ref={marginRef}
+          className="lesson-margin-column"
+          {...(showLeftContent ? { "aria-label": "页边批注" } : { "aria-hidden": true })}
         >
           {onReturn ? (
             <button type="button" className="lesson-return" onClick={onReturn}>
               ← 回到刚才那一课
             </button>
           ) : null}
-          <LessonRelated outgoing={outgoing} backlinks={backlinks} onFollowLink={onFollowLink} />
+          <LessonMargin
+            marks={lessonMarks}
+            bodyRef={bodyRef}
+            columnRef={marginRef}
+            onResolve={(markId) => void mutateMark(markId, "POST")}
+            onDelete={(markId) => void mutateMark(markId, "DELETE")}
+          />
         </aside>
         <div className="lesson-main">
           <header className="lesson-reader__header">
@@ -307,7 +456,7 @@ export function LessonReader({
               </h2>
             </div>
           </header>
-          <div className="markdown-body">
+          <div className="markdown-body" ref={bodyRef}>
             <MarkdownContent
               {...(view.lesson.language
                 ? {
@@ -318,6 +467,7 @@ export function LessonReader({
                   }
                 : {})}
               englishEnabled={englishMode}
+              foreignSettings={foreignSettings}
               vocabularyStages={vocabularyStages}
               onStageWord={stageWord}
               {...(view.lesson.links ? { lessonLinks: view.lesson.links } : {})}
@@ -389,6 +539,7 @@ export function LessonReader({
               ))}
             </section>
           ) : null}
+          <LessonBacklinks backlinks={backlinks} {...(onFollowLink ? { onFollowLink } : {})} />
         </div>
         <aside
           className="lesson-rail lesson-rail--right"
@@ -401,16 +552,65 @@ export function LessonReader({
                   {vocabularyError}
                 </p>
               ) : null}
-              <LessonWordList
-                lexicon={lexicon}
-                stages={vocabularyStages}
-                reasons={liveReasons}
-                onStageWord={stageWord}
+              {markError ? (
+                <p className="inline-error" role="alert">
+                  {markError}
+                </p>
+              ) : null}
+              {/*
+                The batch, not a second copy of the notes. Each mark already
+                shows itself in the margin beside its passage; what the margin
+                cannot do is hand the whole set to someone to answer at once.
+              */}
+              <LessonMarkList
+                marks={lessonMarks}
+                studyTitle={locator.studyId}
+                lessonTitles={new Map([[lessonKey, view.lesson.title]])}
               />
+              {showWords ? (
+                <LessonWordList
+                  lexicon={lexicon}
+                  stages={vocabularyStages}
+                  reasons={liveReasons}
+                  onStageWord={stageWord}
+                  settings={foreignSettings}
+                  onSettingsChange={setForeignSettingsPersisted}
+                />
+              ) : null}
             </>
           ) : null}
         </aside>
       </div>
+      <SelectionMenu
+        containerRef={bodyRef}
+        busy={markBusy}
+        onMark={(kind, target) => void recordMark(kind, target)}
+        onAsk={(target) => {
+          // One passage, same prompt shape as the batch — so a single question
+          // and a batch of them read the same way to whoever answers.
+          void navigator.clipboard?.writeText(
+            buildQuestionPrompt(
+              [
+                {
+                  markId: "pending",
+                  lessonKey,
+                  contentRevision: view.lesson.contentRevision,
+                  kind: "question",
+                  quote: target.quote,
+                  sectionTitle: target.sectionTitle ?? null,
+                  note: null,
+                  createdAt: new Date().toISOString(),
+                  resolvedAt: null,
+                },
+              ],
+              {
+                studyTitle: locator.studyId,
+                lessonTitles: new Map([[lessonKey, view.lesson.title]]),
+              },
+            ),
+          );
+        }}
+      />
       <EvidenceSourceSheet
         basePath={lessonPath(locator)}
         evidence={view.lesson.evidence}

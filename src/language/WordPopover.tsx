@@ -25,6 +25,7 @@ import { readVoicePreference, selectVoice, speakWord, useEnglishVoices } from ".
  * could have drifted a field apart without a single error.
  */
 import type { LexiconEntry } from "../domain/schemas.js";
+import type { ForeignSettings } from "./foreign-settings.js";
 
 export type { LexiconEntry };
 
@@ -64,9 +65,11 @@ export function WordAnchor({
   stage,
   reason,
   onStage,
+  settings,
 }: {
   readonly entry: LexiconEntry;
   readonly original: React.ReactNode;
+  readonly settings: ForeignSettings;
   readonly stage?: string | undefined;
   /**
    * Why this word is on the page. A word the learner has already claimed stays
@@ -118,6 +121,7 @@ export function WordAnchor({
         data-sense-id={entry.senseId}
         data-pinned={pinned || undefined}
         data-reason={reason}
+        data-mark={settings.markStyle}
         ref={refs.setReference}
         {...getReferenceProps({
           onClick: () => {
@@ -132,7 +136,16 @@ export function WordAnchor({
         })}
       >
         <span lang="en">{entry.headword}</span>
-        <span className="word-anchor__original">（{original}）</span>
+        {/*
+          The Chinese is printed beside the English, or it is not, and that one
+          choice decides what the layer is for. Beside it, the reader is never
+          stuck. Absent, meeting the word is an attempt at recall — which is
+          what actually leaves a trace — and the meaning is still one hover
+          away, so the effort stays brief rather than punishing.
+        */}
+        {settings.showOriginal ? (
+          <span className="word-anchor__original">（{original}）</span>
+        ) : null}
       </button>
       {open ? (
         <FloatingPortal>
@@ -152,6 +165,7 @@ export function WordAnchor({
             >
               <WordPopoverBody
                 entry={entry}
+                settings={settings}
                 stage={stage}
                 pinned={pinned}
                 onDismiss={() => {
@@ -170,12 +184,14 @@ export function WordAnchor({
 
 function WordPopoverBody({
   entry,
+  settings,
   stage,
   pinned,
   onDismiss,
   onStage,
 }: {
   readonly entry: LexiconEntry;
+  readonly settings: ForeignSettings;
   readonly stage?: string | undefined;
   readonly pinned: boolean;
   readonly onDismiss: () => void;
@@ -199,21 +215,28 @@ function WordPopoverBody({
         <span lang="en" className="word-popover__word">
           {entry.headword}
         </span>
-        <span className="word-popover__phonetic">{entry.phonetic}</span>
+        {settings.showPhonetic ? (
+          <span className="word-popover__phonetic">{entry.phonetic}</span>
+        ) : null}
         <span className="word-popover__pos">{entry.partOfSpeech}</span>
       </p>
+      {/* The gloss is never optional: this card is the way out of a word the
+          reader does not know, and a card that can withhold the meaning is a
+          dead end rather than a setting. */}
       <p className="word-popover__gloss">{entry.gloss}</p>
-      <p className="word-popover__usage">{entry.usage}</p>
-      <div className="word-popover__actions">
-        <button
-          type="button"
-          onClick={() => voice && speakWord(entry.headword, voice)}
-          disabled={!voice}
-        >
-          {voice ? "🔊 朗读" : "本机没有英语语音"}
-        </button>
-      </div>
-      {onStage ? (
+      {settings.showUsage ? <p className="word-popover__usage">{entry.usage}</p> : null}
+      {settings.showSpeak ? (
+        <div className="word-popover__actions">
+          <button
+            type="button"
+            onClick={() => voice && speakWord(entry.headword, voice)}
+            disabled={!voice}
+          >
+            {voice ? "🔊 朗读" : "本机没有英语语音"}
+          </button>
+        </div>
+      ) : null}
+      {onStage && settings.showStageButtons ? (
         <div className="word-popover__stages">
           {/*
             Three buttons, no scoring. Opening this card already says the
@@ -247,11 +270,12 @@ function WordPopoverBody({
           </button>
         </div>
       ) : null}
-      {voice ? null : (
+      {/* Only worth explaining when speech was asked for and cannot be given. */}
+      {settings.showSpeak && !voice ? (
         <p className="word-popover__note">
           只用本机语音朗读。系统里没装英语语音时不联网合成 —— 音标仍然可以照着念。
         </p>
-      )}
+      ) : null}
     </>
   );
 }

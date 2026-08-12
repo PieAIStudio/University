@@ -6,86 +6,45 @@ function targetKey(entry: LessonLinkTarget): string {
 }
 
 /**
- * Quiet navigation out of this lesson: destinations the prose points to, and
- * lessons that point back. Renders nothing when both lists are empty — an empty
- * "related" panel is noise, not information.
+ * The lessons that point at this one, shown after the reader has finished it.
+ *
+ * Only backlinks. Outgoing links used to be listed here too, and were a second
+ * copy of something the reader had already walked past: a `[[lesson:…]]`
+ * renders as a button inside the sentence that motivated it, which is context
+ * no list can reproduce. Backlinks are the opposite case — nothing in this
+ * lesson's prose mentions them, so without this panel a lesson can never say
+ * "other lessons build on this".
+ *
+ * At the end rather than in the margin because a backlink has no position in
+ * this text to sit beside, and because "where does this lead" is a question the
+ * reader asks after reading, not during.
  */
-export function LessonRelated({
-  outgoing,
+export function LessonBacklinks({
   backlinks,
   onFollowLink,
 }: {
-  /** Unique targets of `[[lesson:…]]` in this lesson's prose. */
-  readonly outgoing: readonly LessonLinkTarget[];
   readonly backlinks: readonly LessonLinkTarget[];
   readonly onFollowLink?: ((target: LessonLinkTarget) => void) | undefined;
 }) {
-  if (outgoing.length === 0 && backlinks.length === 0) return null;
+  if (backlinks.length === 0) return null;
 
   return (
-    <section className="lesson-related" aria-label="相关">
+    <section className="lesson-backlinks" aria-label="哪些课用到这节">
       <div className="rail-panel__header">
-        <h3 className="rail-panel__label">相关</h3>
+        <h3 className="rail-panel__label">哪些课用到这节</h3>
         <Tip term="lesson-related" className="rail-panel__help">
-          <span aria-label="关于相关">?</span>
+          <span aria-label="关于反向链接">?</span>
         </Tip>
       </div>
-      {outgoing.length > 0 ? (
-        <div className="lesson-related__group">
-          <p className="lesson-related__group-label">本课指向</p>
-          <ul className="lesson-related__list">
-            {outgoing.map((entry) => (
-              <li key={`out:${targetKey(entry)}`}>
-                <button
-                  type="button"
-                  onClick={() => onFollowLink?.(entry)}
-                  disabled={!onFollowLink}
-                >
-                  {entry.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-      {backlinks.length > 0 ? (
-        <div className="lesson-related__group">
-          <p className="lesson-related__group-label">指向本课</p>
-          <ul className="lesson-related__list">
-            {backlinks.map((entry) => (
-              <li key={`back:${targetKey(entry)}`}>
-                <button
-                  type="button"
-                  onClick={() => onFollowLink?.(entry)}
-                  disabled={!onFollowLink}
-                >
-                  {entry.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <ul className="lesson-backlinks__list">
+        {backlinks.map((entry) => (
+          <li key={targetKey(entry)}>
+            <button type="button" onClick={() => onFollowLink?.(entry)} disabled={!onFollowLink}>
+              {entry.title}
+            </button>
+          </li>
+        ))}
+      </ul>
     </section>
   );
-}
-
-/**
- * Deduplicate resolved forward links from the prose ranges the view already
- * carries. Broken tokens (target null) stay visible only inline.
- */
-export function uniqueOutgoingTargets(
-  links: readonly { readonly target: LessonLinkTarget | null }[] | undefined,
-): LessonLinkTarget[] {
-  if (!links || links.length === 0) return [];
-  const seen = new Set<string>();
-  const out: LessonLinkTarget[] = [];
-  for (const link of links) {
-    if (!link.target) continue;
-    const key = targetKey(link.target);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(link.target);
-  }
-  return out;
 }

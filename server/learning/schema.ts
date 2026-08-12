@@ -4,7 +4,7 @@ import { DatabaseSync } from "node:sqlite";
 import { cardContentKey, exerciseContentKey, lessonContentKey } from "./types.js";
 import { validateLessonProgress } from "./lesson-progress.js";
 
-export const LEARNING_SCHEMA_VERSION = 5;
+export const LEARNING_SCHEMA_VERSION = 6;
 const SCHEMA_VERSION = LEARNING_SCHEMA_VERSION;
 
 const LEGACY_COURSE_ID = "legacy-course";
@@ -28,6 +28,40 @@ function transaction<T>(db: DatabaseSync, operation: () => T): T {
     throw error;
   }
 }
+
+/**
+ * What the reader marked while reading, and why.
+ *
+ * The selection is stored as a text quote — the exact string plus the text on
+ * either side of it — rather than as character offsets into the lesson. Offsets
+ * are the obvious choice and the wrong one: a lesson is revised by replacing its
+ * whole content, so every offset after an edited paragraph shifts, and a mark
+ * saved yesterday would quietly point at the wrong sentence today. A quote with
+ * its surroundings can still be *found*, and when it genuinely cannot be found
+ * any more that is a fact worth showing ("这段在新版里已经改写了") instead of a
+ * silent mis-anchor. The shape is the W3C Web Annotation TextQuoteSelector,
+ * which exists because everyone who stores highlights arrives at this problem.
+ *
+ * `content_revision` is kept alongside so a mark can say which version of the
+ * lesson the reader was actually looking at.
+ */
+const READER_MARK_TABLE = `
+      CREATE TABLE reader_mark (
+        mark_id TEXT PRIMARY KEY,
+        lesson_id TEXT NOT NULL,
+        content_revision INTEGER NOT NULL CHECK(content_revision > 0),
+        kind TEXT NOT NULL CHECK(kind IN ('question', 'highlight')),
+        quote_exact TEXT NOT NULL,
+        quote_prefix TEXT NOT NULL,
+        quote_suffix TEXT NOT NULL,
+        section_title TEXT,
+        note TEXT,
+        created_at INTEGER NOT NULL,
+        resolved_at INTEGER
+      ) STRICT;
+      CREATE INDEX reader_mark_lesson_idx ON reader_mark(lesson_id, created_at);
+      CREATE INDEX reader_mark_open_idx ON reader_mark(created_at) WHERE resolved_at IS NULL;
+`;
 
 function createCurrentSchema(db: DatabaseSync, seed: LearningSchemaSchedulerSeed): void {
   db.exec(`
@@ -139,6 +173,8 @@ function createCurrentSchema(db: DatabaseSync, seed: LearningSchemaSchedulerSeed
       CREATE INDEX lesson_completion_event_session_idx
         ON lesson_completion_event(session_id) WHERE session_id IS NOT NULL;
 
+      ${READER_MARK_TABLE}
+
       CREATE TABLE retrieval_attempt (
         attempt_id TEXT PRIMARY KEY,
         command_id TEXT NOT NULL UNIQUE,
@@ -203,7 +239,25 @@ export function migrate(db: DatabaseSync, seed: LearningSchemaSchedulerSeed): vo
     migrateVersionThree(db);
     currentVersion = 4;
   }
-  if (currentVersion === 4) migrateVersionFour(db);
+  if (currentVersion === 4) {
+    migrateVersionFour(db);
+    currentVersion = 5;
+  }
+  if (currentVersion === 5) migrateVersionFive(db);
+}
+
+/**
+ * Adds the reader's own marks. Purely additive: nothing existing is read or
+ * rewritten, so a learner who never selects a sentence is unaffected.
+ */
+function migrateVersionFive(db: DatabaseSync): void {
+  transaction(db, () => {
+    db.exec(READER_MARK_TABLE);
+    db.prepare("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)").run(
+      SCHEMA_VERSION,
+      Date.now(),
+    );
+  });
 }
 
 function migrateVersionOne(db: DatabaseSync, seed: LearningSchemaSchedulerSeed): void {
@@ -429,8 +483,13 @@ function migrateVersionFour(db: DatabaseSync): void {
         row.updated_at,
       );
     }
+    // The literal 5, not SCHEMA_VERSION. Every step records the version it
+    // actually produces; writing the constant here worked only while this was
+    // the last step, and silently claimed the new version the moment another
+    // one was appended — leaving the later table uncreated and the next insert
+    // colliding on the primary key.
     db.prepare("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)").run(
-      SCHEMA_VERSION,
+      5,
       Date.now(),
     );
   });

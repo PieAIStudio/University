@@ -364,6 +364,64 @@ export interface LearningStore {
    */
   getLastActivityAt(): Date | null;
   reviewEventCount(): number;
+  recordReaderMark(input: RecordReaderMarkInput): StoredReaderMark;
+  listReaderMarks(options?: ListReaderMarksOptions): readonly StoredReaderMark[];
+  resolveReaderMark(markId: string, resolvedAt?: Date): boolean;
+  deleteReaderMark(markId: string): boolean;
   backup(destination: string): Promise<number>;
   close(): void;
+}
+
+/**
+ * Why the reader stopped on this passage.
+ *
+ * Two kinds, kept apart because they lead somewhere different: a `question`
+ * wants an answer and belongs in the batch you hand to an assistant, while a
+ * `highlight` is "this mattered" and wants nothing. Folding them into one list
+ * would mean either pestering the reader about passages they understood
+ * perfectly, or burying the ones they did not.
+ */
+export type ReaderMarkKind = "question" | "highlight";
+
+/**
+ * A passage identified by what it says and what surrounds it.
+ *
+ * The W3C Web Annotation TextQuoteSelector shape. `prefix` and `suffix` are
+ * what make it survive an edit elsewhere in the lesson, and what disambiguate a
+ * sentence that occurs more than once.
+ */
+export interface TextQuote {
+  readonly exact: string;
+  readonly prefix: string;
+  readonly suffix: string;
+}
+
+export interface RecordReaderMarkInput {
+  readonly lessonKey: string;
+  readonly contentRevision: number;
+  readonly kind: ReaderMarkKind;
+  readonly quote: TextQuote;
+  /** Nearest heading above the selection, so a batched question reads in context. */
+  readonly sectionTitle?: string | undefined;
+  readonly note?: string | undefined;
+  readonly createdAt?: Date | undefined;
+}
+
+export interface StoredReaderMark {
+  readonly markId: string;
+  readonly lessonKey: string;
+  readonly contentRevision: number;
+  readonly kind: ReaderMarkKind;
+  readonly quote: TextQuote;
+  readonly sectionTitle: string | null;
+  readonly note: string | null;
+  readonly createdAt: string;
+  readonly resolvedAt: string | null;
+}
+
+export interface ListReaderMarksOptions {
+  readonly lessonKey?: string | undefined;
+  readonly kind?: ReaderMarkKind | undefined;
+  readonly includeResolved?: boolean | undefined;
+  readonly limit?: number | undefined;
 }

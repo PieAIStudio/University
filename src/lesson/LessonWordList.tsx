@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { GameBadge } from "@pieai/swimmer-ui-kit";
 
 import { Tip } from "../Tip.js";
+import { ForeignSettingsPanel } from "../language/ForeignSettingsPanel.js";
+import type { ForeignSettings } from "../language/foreign-settings.js";
 import type { LexiconEntry } from "../language/WordPopover.js";
 import {
   readVoicePreference,
@@ -45,6 +47,8 @@ export function LessonWordList({
   stages,
   reasons,
   onStageWord,
+  settings,
+  onSettingsChange,
 }: {
   readonly lexicon: readonly LexiconEntry[];
   readonly stages: ReadonlyMap<string, string>;
@@ -52,6 +56,8 @@ export function LessonWordList({
   readonly onStageWord?:
     | ((senseId: string, stage: "learning" | "familiar" | "paused") => void)
     | undefined;
+  readonly settings: ForeignSettings;
+  readonly onSettingsChange: (next: ForeignSettings) => void;
 }) {
   const voices = useEnglishVoices();
   const [voiceURI, setVoiceURI] = useState(readVoicePreference);
@@ -89,6 +95,7 @@ export function LessonWordList({
         <Tip term="lesson-vocabulary" className="rail-panel__help">
           <span aria-label="关于生词">?</span>
         </Tip>
+        <ForeignSettingsPanel settings={settings} onChange={onSettingsChange} />
       </div>
       {activeEntries.length > 0 ? (
         <p className="word-list__summary">
@@ -96,7 +103,8 @@ export function LessonWordList({
           {historyEntries.length > 0 ? ` · ${historyEntries.length} 个已处理` : ""}
         </p>
       ) : null}
-      {activeEntries.length > 0 && voices.length > 1 ? (
+      {/* Picking a voice is only a question for someone who is listening. */}
+      {settings.showSpeak && activeEntries.length > 0 && voices.length > 1 ? (
         <label className="word-list__voice">
           <span>朗读声音</span>
           {/*

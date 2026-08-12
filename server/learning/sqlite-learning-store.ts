@@ -61,6 +61,10 @@ import {
   type LearningSessionSummary,
   type LessonContentKey,
   type LearningStore,
+  type ListReaderMarksOptions,
+  type ReaderMarkKind,
+  type RecordReaderMarkInput,
+  type StoredReaderMark,
   type RecordExerciseAttemptInput,
   type RecordLessonCompletionInput,
   type RecordLessonProgressInput,
@@ -1474,7 +1478,146 @@ export class SqliteLearningStore implements LearningStore {
     }
   }
 
+  /**
+   * Records something the reader marked while reading.
+   *
+   * The quote is trimmed to a bounded length on the way in. A selection is
+   * whatever the reader's mouse happened to cover, which can be a whole
+   * section; storing that verbatim would turn a "I don't follow this" note into
+   * a duplicate of the lesson.
+   */
+  recordReaderMark(input: RecordReaderMarkInput): StoredReaderMark {
+    const exact = input.quote.exact.trim();
+    if (exact.length === 0) throw new Error("A reader mark needs a non-empty selection");
+    const markId = randomUUID();
+    const createdAt = (input.createdAt ?? new Date()).getTime();
+    const row: ReaderMarkRow = {
+      mark_id: markId,
+      lesson_id: input.lessonKey,
+      content_revision: input.contentRevision,
+      kind: input.kind,
+      quote_exact: exact.slice(0, MAX_QUOTE_CHARS),
+      quote_prefix: input.quote.prefix.slice(-QUOTE_CONTEXT_CHARS),
+      quote_suffix: input.quote.suffix.slice(0, QUOTE_CONTEXT_CHARS),
+      section_title: input.sectionTitle ?? null,
+      note: input.note ?? null,
+      created_at: createdAt,
+      resolved_at: null,
+    };
+    this.#database
+      .prepare(`
+        INSERT INTO reader_mark (
+          mark_id, lesson_id, content_revision, kind,
+          quote_exact, quote_prefix, quote_suffix,
+          section_title, note, created_at, resolved_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
+      `)
+      .run(
+        row.mark_id,
+        row.lesson_id,
+        row.content_revision,
+        row.kind,
+        row.quote_exact,
+        row.quote_prefix,
+        row.quote_suffix,
+        row.section_title,
+        row.note,
+        row.created_at,
+      );
+    return rowToReaderMark(row);
+  }
+
+  /**
+   * Open marks, newest last.
+   *
+   * Ascending, unlike every other listing here, because these are read as a
+   * batch and handed to someone to answer in order — and the order a reader met
+   * their own confusions in is the order that makes the batch legible.
+   */
+  listReaderMarks(options: ListReaderMarksOptions = {}): readonly StoredReaderMark[] {
+    const capped = Math.max(1, Math.min(Math.trunc(options.limit ?? 200), 1_000));
+    const clauses: string[] = [];
+    const parameters: (string | number)[] = [];
+    if (options.lessonKey !== undefined) {
+      clauses.push("lesson_id = ?");
+      parameters.push(options.lessonKey);
+    }
+    if (options.kind !== undefined) {
+      clauses.push("kind = ?");
+      parameters.push(options.kind);
+    }
+    if (!options.includeResolved) clauses.push("resolved_at IS NULL");
+    const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
+    parameters.push(capped);
+    const rows = this.#database
+      .prepare(`
+        SELECT mark_id, lesson_id, content_revision, kind,
+               quote_exact, quote_prefix, quote_suffix,
+               section_title, note, created_at, resolved_at
+        FROM reader_mark
+        ${where}
+        ORDER BY created_at ASC, rowid ASC
+        LIMIT ?
+      `)
+      .all(...parameters) as unknown as ReaderMarkRow[];
+    return rows.map(rowToReaderMark);
+  }
+
+  /**
+   * Marks one as dealt with. Kept rather than deleted: "I did not understand
+   * this once" is the whole signal this table exists to accumulate, and a row
+   * removed the moment it is answered erases exactly the history that would
+   * show which lessons keep producing questions.
+   */
+  resolveReaderMark(markId: string, resolvedAt = new Date()): boolean {
+    validateId(markId, "Mark ID");
+    const result = this.#database
+      .prepare("UPDATE reader_mark SET resolved_at = ? WHERE mark_id = ? AND resolved_at IS NULL")
+      .run(resolvedAt.getTime(), markId);
+    return Number(result.changes) > 0;
+  }
+
+  /** Removes one outright, for a mark made by accident. */
+  deleteReaderMark(markId: string): boolean {
+    validateId(markId, "Mark ID");
+    const result = this.#database.prepare("DELETE FROM reader_mark WHERE mark_id = ?").run(markId);
+    return Number(result.changes) > 0;
+  }
+
   close(): void {
     this.#database.close();
   }
+}
+
+/** Long enough for a paragraph, short enough that a mark is not a transcript. */
+const MAX_QUOTE_CHARS = 600;
+/** Enough surrounding text to find the quote again after the lesson is edited. */
+const QUOTE_CONTEXT_CHARS = 60;
+
+interface ReaderMarkRow {
+  readonly mark_id: string;
+  readonly lesson_id: string;
+  readonly content_revision: number;
+  readonly kind: string;
+  readonly quote_exact: string;
+  readonly quote_prefix: string;
+  readonly quote_suffix: string;
+  readonly section_title: string | null;
+  readonly note: string | null;
+  readonly created_at: number;
+  readonly resolved_at: number | null;
+}
+
+function rowToReaderMark(row: ReaderMarkRow): StoredReaderMark {
+  return {
+    markId: row.mark_id,
+    lessonKey: row.lesson_id,
+    contentRevision: row.content_revision,
+    kind: row.kind as ReaderMarkKind,
+    quote: { exact: row.quote_exact, prefix: row.quote_prefix, suffix: row.quote_suffix },
+    sectionTitle: row.section_title,
+    note: row.note,
+    createdAt: new Date(row.created_at).toISOString(),
+    resolvedAt: row.resolved_at === null ? null : new Date(row.resolved_at).toISOString(),
+  };
 }

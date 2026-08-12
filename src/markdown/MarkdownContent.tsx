@@ -8,6 +8,7 @@ import { EvidenceInlineSource } from "../evidence/EvidenceInlineSource.js";
 import { MermaidDiagram } from "./MermaidDiagram.js";
 import type { LessonAssetView, LessonSectionView } from "../view/lesson-view.js";
 import { WordAnchor, type VocabularyStage } from "../language/WordPopover.js";
+import { DEFAULT_FOREIGN_SETTINGS, type ForeignSettings } from "../language/foreign-settings.js";
 import { remarkLanguageAnchors } from "../language/remark-language-anchors.js";
 import {
   remarkEvidenceAnchors,
@@ -78,7 +79,25 @@ function LessonMediaBlock({
         : asset.kind === "diagram"
           ? "结构图"
           : "本地媒体";
-  const caption = asset.caption ?? (typeof children === "string" ? children : undefined);
+  /*
+    The directive body wins over the manifest caption, and `children` is kept as
+    nodes rather than collapsed to a string.
+
+    Both halves were bugs. `typeof children === "string"` is false the moment the
+    caption contains anything inline — a `**bold**`, a `code` span, or an English
+    word the language layer has annotated — because react-markdown hands over an
+    array of elements, so the authored caption was dropped exactly when it had
+    the most in it. And preferring `asset.caption` meant the sentence on screen
+    came from the manifest while the sentence the author wrote in Markdown was
+    never rendered at all: two captions, one of them invisible.
+
+    That invisibility is what broke vocabulary. The English layer's offsets point
+    into the Markdown, so a word inside a figure caption got a real anchor in the
+    tree — which was then discarded here. The reader saw no underline, and the
+    word list's scroll-to found no `[data-sense-id]` to scroll to.
+  */
+  const authored = Children.count(children) > 0 ? children : undefined;
+  const caption = authored ?? asset.caption;
   return (
     <figure className={`lesson-media lesson-media--${video ? "video" : "figure"}`}>
       {video ? (
@@ -91,7 +110,13 @@ function LessonMediaBlock({
       )}
       <figcaption>
         <strong>{label}</strong>
-        {caption ? <span>{caption}</span> : null}
+        {/*
+          A `div`, not a `span`: the authored caption arrives as block content
+          (react-markdown wraps a directive body in `<p>`), and `<span><p>` is
+          invalid nesting that the parser repairs by tearing the span apart.
+          `figcaption` takes flow content, so a div is simply correct here.
+        */}
+        {caption ? <div className="lesson-media__caption">{caption}</div> : null}
         {asset.capture ? (
           <small>
             来源 {asset.sourceCommit?.slice(0, 12)} · {asset.capture.route} · {asset.capture.locale}{" "}
@@ -226,6 +251,7 @@ export function MarkdownContent({
   children,
   language,
   englishEnabled = false,
+  foreignSettings = DEFAULT_FOREIGN_SETTINGS,
   vocabularyStages,
   onStageWord,
   inline = false,
@@ -241,6 +267,8 @@ export function MarkdownContent({
   readonly children: string;
   readonly language?: LanguageLayer;
   readonly englishEnabled?: boolean;
+  /** How the layer presents words; defaults to the least intrusive preset. */
+  readonly foreignSettings?: ForeignSettings;
   readonly vocabularyStages?: ReadonlyMap<string, string>;
   readonly onStageWord?: (senseId: string, stage: VocabularyStage) => void;
   readonly lessonLinks?: readonly LessonLinkRange[];
@@ -469,6 +497,7 @@ export function MarkdownContent({
           <WordAnchor
             entry={entry}
             original={value}
+            settings={foreignSettings}
             stage={vocabularyStages?.get(senseId)}
             reason={active?.reasons?.[senseId]}
             {...(onStageWord
@@ -490,6 +519,7 @@ export function MarkdownContent({
       assetsById,
       sectionsByTitle,
       detailMode,
+      foreignSettings,
     ],
   );
 

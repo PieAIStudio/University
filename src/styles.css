@@ -4,6 +4,31 @@
   font-family: var(--game-ui-font-body, Inter, ui-sans-serif, system-ui, sans-serif);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+
+  /* Tells the browser this page is dark, so everything it draws *itself* —
+     scrollbars, form controls, the flash before first paint — is drawn dark
+     too. Without it the UA keeps its light defaults and a bright scrollbar sits
+     against a near-black page, which is what a reader actually notices. */
+  color-scheme: dark;
+
+  /* The standard properties, not `::-webkit-scrollbar`: `scrollbar-width` has
+     been Baseline since Dec 2024 and `scrollbar-color` since Dec 2025, when
+     Safari 18.2 shipped it. The vendor pseudo-elements are the older, non-
+     standard path and would need a parallel Firefox rule anyway.
+
+     Thumb against track is 3.4:1, above the 3:1 WCAG 2.1 non-text contrast
+     floor — a scrollbar has to stay findable, which is also why the width is
+     left at `auto` rather than `thin`. */
+  scrollbar-color: rgb(247 211 160 / 32%) rgb(255 245 232 / 6%);
+}
+
+/* Hovering a scrollable region is when its thumb is about to be aimed at, so
+   that is when it earns more contrast. Scoped to the regions that actually
+   scroll — `scrollbar-color` inherits, so a blanket hover rule would repaint
+   every nested scroller on the page. */
+.lesson-rail:hover,
+pre:hover {
+  scrollbar-color: rgb(247 211 160 / 52%) rgb(255 245 232 / 6%);
 }
 
 * {
@@ -961,7 +986,15 @@ summary:focus-visible,
  */
 .lesson-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 68rem) minmax(0, 1fr);
+  /*
+    The rails carry a floor, and the prose column yields to it.
+    `minmax(0, 1fr)` let the 68rem centre take everything it wanted first, so
+    between the 1100px breakpoint and roughly 1700px the rails still existed —
+    at twelve pixels wide. Content in them was clipped to nothing, which reads
+    as "the panel is broken" rather than "the window is narrow". Above ~1700px
+    the 1fr still governs, so a wide screen looks exactly as it did.
+  */
+  grid-template-columns: minmax(14rem, 1fr) minmax(0, 68rem) minmax(14rem, 1fr);
   gap: clamp(28px, 3vw, 48px);
   align-items: start;
   margin-top: 8px;
@@ -1606,6 +1639,17 @@ summary:focus-visible,
   overflow-wrap: anywhere;
 }
 
+/* The authored caption arrives as Markdown blocks, so its paragraphs carry the
+   prose margins they would have in the body. Inside a grid figcaption that adds
+   a second gap on top of the row gap. */
+.lesson-media__caption > :first-child {
+  margin-top: 0;
+}
+
+.lesson-media__caption > :last-child {
+  margin-bottom: 0;
+}
+
 .lesson-media figcaption details p {
   margin: 5px 0 0;
   white-space: pre-wrap;
@@ -1845,6 +1889,40 @@ summary:focus-visible,
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /*
+     One column, so there is no margin to sit in. The notes become an ordinary
+     list below the lesson: absolute positioning against prose coordinates has
+     nothing to align to once the prose is the full width, and would stack every
+     note at the top of the page.
+  */
+  .lesson-margin-column {
+    order: 2;
+  }
+
+  /*
+     The batch button goes last, after the notes it summarises. And the rail
+     stops being sticky here rather than at 820px: single-column starts at this
+     breakpoint, and a sticky box in a one-column flow pins itself over the
+     prose the reader is trying to read.
+  */
+  .lesson-rail--right {
+    order: 3;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .margin-note {
+    position: static;
+    margin-bottom: 8px;
+    border-radius: 9px;
+  }
+
+  /* No hover on the way to a note on a touch screen, so the controls stay. */
+  .margin-note__actions {
+    opacity: 1;
+  }
+
   .lesson-toolbar {
     top: 0;
   }
@@ -2038,11 +2116,52 @@ summary:focus-visible,
 .word-anchor__trigger {
   padding: 0;
   border: 0;
-  border-bottom: 1px dotted currentcolor;
   background: none;
   color: #f7d3a0;
   font: inherit;
   cursor: pointer;
+}
+
+/*
+   A dotted underline is nearly invisible in Chinese prose. Chinese has no
+   spaces between words, so a line under a run of characters reads as one more
+   continuous rule among the strokes rather than as a mark on a particular word.
+   The marker style changes a *block* instead of a line, which is what survives
+   dense CJK setting — and is why it is the default for the 记忆 preset, where
+   finding the word again is the whole job.
+*/
+.word-anchor__trigger[data-mark="underline"] {
+  border-bottom: 1px dotted currentcolor;
+}
+
+.word-anchor__trigger[data-mark="marker"] {
+  /* Stopping the wash short of the cap height leaves the glyphs sitting on the
+     colour rather than drowning in it, the way a real marker behaves. */
+  padding: 0 2px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to top,
+    rgb(246 193 119 / 26%) 0%,
+    rgb(246 193 119 / 26%) 82%,
+    transparent 82%
+  );
+  color: #fbe6c4;
+}
+
+.word-anchor__trigger[data-mark="marker"]:hover,
+.word-anchor__trigger[data-mark="marker"]:focus-visible {
+  background: linear-gradient(
+    to top,
+    rgb(246 193 119 / 42%) 0%,
+    rgb(246 193 119 / 42%) 88%,
+    transparent 88%
+  );
+}
+
+/* No mark at all: the word is still a button, still hoverable, still keyboard
+   reachable — it simply stops advertising itself. */
+.word-anchor__trigger[data-mark="plain"] {
+  color: inherit;
 }
 
 /* The Chinese stays visible beside the English on first encounter: a reader who
@@ -2380,27 +2499,17 @@ summary:focus-visible,
   font-size: 0.8rem;
 }
 
-.lesson-related {
+/* ── Backlinks, at the end of the lesson ────────────────────────────────── */
+
+.lesson-backlinks {
+  margin-top: 28px;
   padding: 16px 18px;
   border: 1px solid var(--campus-rule);
   border-radius: 14px;
   background: var(--campus-surface);
 }
 
-.lesson-related__group + .lesson-related__group {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--campus-rule);
-}
-
-.lesson-related__group-label {
-  margin: 0 0 6px;
-  color: rgb(255 245 232 / 48%);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-}
-
-.lesson-related__list {
+.lesson-backlinks__list {
   display: grid;
   gap: 6px;
   margin: 0;
@@ -2408,27 +2517,136 @@ summary:focus-visible,
   list-style: none;
 }
 
-.lesson-related__list button {
+.lesson-backlinks__list button {
   width: 100%;
+  padding: 4px 0;
   border: 0;
   background: transparent;
   color: var(--game-ui-text-muted);
-  cursor: pointer;
   font: inherit;
   font-size: 0.82rem;
   line-height: 1.45;
   text-align: left;
-  padding: 4px 0;
+  cursor: pointer;
 }
 
-.lesson-related__list button:hover,
-.lesson-related__list button:focus-visible {
+.lesson-backlinks__list button:hover,
+.lesson-backlinks__list button:focus-visible {
   color: #f0a868;
 }
 
-.lesson-related__list button:disabled {
-  cursor: default;
+.lesson-backlinks__list button:disabled {
   opacity: 0.7;
+  cursor: default;
+}
+
+/* ── The margin, where notes sit beside their passages ──────────────────── */
+
+/*
+   Not sticky, unlike the right rail. Notes are placed against coordinates
+   measured from the prose, so this column has to travel with the prose; a
+   sticky container would pin them in place while the text they point at
+   scrolled away, which is the exact defect the margin exists to fix.
+*/
+.lesson-margin-column {
+  position: relative;
+  min-width: 0;
+}
+
+.lesson-margin {
+  position: relative;
+}
+
+/* Absolute, with `top` written by the layout pass. Notes are pushed apart
+   vertically when two passages sit too close to share a line. */
+.margin-note {
+  position: absolute;
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-left: 2px solid rgb(246 193 119 / 55%);
+  border-radius: 0 9px 9px 0;
+  background: rgb(255 245 232 / 4%);
+  transition: background 140ms ease;
+}
+
+/* A highlight is a note to self, not unfinished business, so it recedes. */
+.margin-note[data-kind="highlight"] {
+  border-left-color: rgb(255 245 232 / 22%);
+}
+
+/* The passage is gone from this revision — the note is kept, but it can no
+   longer claim to point at anything. */
+.margin-note[data-orphaned] {
+  border-left-style: dashed;
+  border-left-color: rgb(240 168 104 / 50%);
+  opacity: 0.72;
+}
+
+.margin-note:hover,
+.margin-note[data-active] {
+  background: rgb(247 211 160 / 12%);
+}
+
+.margin-note__body {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.margin-note__body small {
+  color: rgb(255 245 232 / 42%);
+  font-size: 0.68rem;
+}
+
+.margin-note__orphan {
+  color: #f0a868;
+}
+
+/* Two lines: enough to recognise the passage, not enough to re-read it here. */
+.margin-note__body span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.margin-note__actions {
+  display: flex;
+  gap: 8px;
+  /* Hidden until the note is being looked at: a permanent row of controls
+     beside every paragraph is chrome the reader never asked for. */
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.margin-note:hover .margin-note__actions,
+.margin-note:focus-within .margin-note__actions {
+  opacity: 1;
+}
+
+.margin-note__actions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(255 245 232 / 45%);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.margin-note__actions button:hover {
+  color: #f7d3a0;
 }
 
 .word-list--quiet {
@@ -2781,4 +2999,275 @@ summary:focus-visible,
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* ── The reader's own marks ─────────────────────────────────────────────── */
+
+/* Floats over the selection, so it sits above the source sheet's backdrop but
+   below a modal that has taken over the screen. */
+.selection-menu {
+  z-index: 25;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid rgb(247 211 160 / 30%);
+  border-radius: 10px;
+  background: #1a1512;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 50%);
+}
+
+.selection-menu__action {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: #f7ead6;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.selection-menu__action:hover:not(:disabled) {
+  background: rgb(247 211 160 / 14%);
+}
+
+.selection-menu__action:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* The one action this bar exists for reads as the default; the rest are
+   alternatives to it, not peers of it. */
+.selection-menu__action--primary {
+  color: #f6c177;
+  font-weight: 700;
+}
+
+.mark-list__summary {
+  margin: 0 0 8px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.85rem;
+}
+
+.mark-list__items {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mark-list__item {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 9px;
+  background: rgb(255 245 232 / 4%);
+}
+
+/* An open question is unfinished business and says so; a highlight is a note to
+   self and should not compete with it for attention. */
+.mark-list__item[data-kind="question"] {
+  border-left: 2px solid rgb(246 193 119 / 70%);
+}
+
+.mark-list__quote {
+  display: grid;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mark-list__quote small {
+  color: rgb(255 245 232 / 45%);
+  font-size: 0.72rem;
+}
+
+/* Three lines of the passage is enough to recognise it; the whole thing would
+   turn the rail into a second copy of the lesson. */
+.mark-list__quote span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.mark-list__quote:hover span {
+  color: #f7d3a0;
+}
+
+.mark-list__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mark-list__actions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(255 245 232 / 45%);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.mark-list__actions button:hover {
+  color: #f7d3a0;
+}
+
+.mark-list__missing {
+  margin: 0;
+  color: #f0a878;
+  font-size: 0.75rem;
+}
+
+.mark-list__copy-all {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgb(247 211 160 / 34%);
+  border-radius: 9px;
+  background: rgb(247 211 160 / 10%);
+  color: #f7d3a0;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.mark-list__copy-all:hover {
+  background: rgb(247 211 160 / 18%);
+}
+
+.mark-list__highlights {
+  margin-top: 12px;
+}
+
+.mark-list__highlights summary {
+  color: var(--game-ui-text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* ── Foreign-language settings ──────────────────────────────────────────── */
+
+/* Pushed to the far end of the header, away from the title and its help chip,
+   so "what is this panel" and "change how it works" do not read as one group. */
+.rail-panel__gear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: rgb(255 245 232 / 45%);
+  cursor: pointer;
+}
+
+.rail-panel__gear:hover,
+.rail-panel__gear[aria-expanded="true"] {
+  background: rgb(247 211 160 / 14%);
+  color: #f7d3a0;
+}
+
+.foreign-settings {
+  z-index: 30;
+  display: grid;
+  gap: 6px;
+  width: min(300px, 84vw);
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding: 14px;
+  border: 1px solid rgb(247 211 160 / 32%);
+  border-radius: 12px;
+  background: #1a1512;
+  box-shadow: 0 14px 36px rgb(0 0 0 / 50%);
+}
+
+.foreign-settings__group-label {
+  margin: 4px 0 2px;
+  color: rgb(255 245 232 / 45%);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+}
+
+.foreign-settings__group-label:not(:first-child) {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--campus-rule);
+}
+
+.foreign-settings__presets {
+  display: grid;
+  gap: 5px;
+}
+
+.foreign-settings__preset {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: rgb(255 245 232 / 4%);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.foreign-settings__preset:hover {
+  background: rgb(247 211 160 / 12%);
+}
+
+/* The chosen one is outlined rather than merely tinted: this panel is read at a
+   glance to answer "which of these am I in", and a fill alone loses that
+   against the hover state next to it. */
+.foreign-settings__preset[aria-pressed="true"] {
+  border-color: rgb(246 193 119 / 60%);
+  background: rgb(247 211 160 / 14%);
+}
+
+.foreign-settings__preset strong {
+  color: #f7d3a0;
+  font-size: 0.85rem;
+}
+
+.foreign-settings__preset small {
+  color: rgb(255 245 232 / 52%);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.foreign-settings__row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.foreign-settings__row select {
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+/* Says what the switch above it costs. These settings trade against each other,
+   and a panel that only lists them invites the reader to turn everything on and
+   wonder later why nothing stuck. */
+.foreign-settings__note {
+  margin: 0 0 2px;
+  color: rgb(255 245 232 / 42%);
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
