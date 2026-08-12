@@ -27,7 +27,8 @@
     "lint:lessons:baseline": "node scripts/lint-lessons.mjs --update-baseline",
     "check:boundaries": "node scripts/check-module-boundaries.mjs",
     "check:lesson-anchors": "node scripts/check-lesson-anchors.mjs",
-    "check:lesson-drift": "node scripts/check-lesson-drift.mjs"
+    "check:lesson-drift": "node scripts/check-lesson-drift.mjs",
+    "lesson:signals": "node scripts/lesson-signals.mjs"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",
