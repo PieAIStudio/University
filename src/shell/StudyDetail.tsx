@@ -5,6 +5,7 @@ import { readJson } from "../api/client.js";
 import type { LessonLocator, StudySummary, StudyView } from "../view/lesson-view.js";
 import { CourseSection } from "./CourseSection.js";
 import { KnowledgeNotesSection } from "./KnowledgeNotesSection.js";
+import { StudyMap } from "./StudyMap.js";
 
 export function StudyEvidenceStatus({
   snapshotCount,
@@ -115,7 +116,8 @@ export function StudyDetail({
   onOpenLesson,
 }: {
   readonly view: StudyView;
-  readonly summary: StudySummary;
+  /** Null only while the shelf is still loading; the study reads fine without it. */
+  readonly summary: StudySummary | null;
   readonly onOpenLesson: (locator: LessonLocator) => void;
 }) {
   return (
@@ -127,11 +129,14 @@ export function StudyDetail({
           <p>{view.study.description}</p>
         </div>
       </header>
-      <StudyEvidenceStatus
-        snapshotCount={summary.snapshotCount}
-        readyUaAnalysisCount={summary.readyUaAnalysisCount}
-      />
+      {summary ? (
+        <StudyEvidenceStatus
+          snapshotCount={summary.snapshotCount}
+          readyUaAnalysisCount={summary.readyUaAnalysisCount}
+        />
+      ) : null}
       <AirlockClocks studyId={view.study.id} />
+      <StudyMap studyId={view.study.id} />
       {view.courses.length > 0 ? (
         view.courses.map((course) => (
           <CourseSection

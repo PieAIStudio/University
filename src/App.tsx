@@ -215,6 +215,19 @@ export function App() {
     [data],
   );
   const studyView = displayedStudy?.view ?? null;
+  /*
+    The counters come from the shelf, not from the study page.
+
+    `/api/studies/:id` returns a study's identity and its courses; the snapshot
+    and UA-analysis counts are only ever computed by `/api/bootstrap`. The page
+    used to read them off its own study object, which was *typed* as the full
+    summary but had never carried those fields — so both counters rendered as
+    empty `<strong>` elements. Looking them up here keeps one source for them.
+  */
+  const studySummary = useMemo(
+    () => data?.studies.find((study) => study.id === studyView?.study.id) ?? null,
+    [data, studyView],
+  );
   const lessonView = displayedLesson?.view ?? null;
   const displayedLessonIsCurrent = Boolean(
     displayedLesson &&
@@ -453,7 +466,7 @@ export function App() {
                 </p>
               ) : null}
               {studyView ? (
-                <StudyDetail view={studyView} summary={studyView.study} onOpenLesson={openLesson} />
+                <StudyDetail view={studyView} summary={studySummary} onOpenLesson={openLesson} />
               ) : null}
             </div>
           )

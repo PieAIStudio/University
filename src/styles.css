@@ -3271,3 +3271,175 @@ summary:focus-visible,
   font-size: 0.72rem;
   line-height: 1.45;
 }
+
+/* ── Project map: how far the courses reach into the studied project ────── */
+
+.study-map {
+  margin-top: 26px;
+  padding: 20px 22px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 14px;
+  background: rgb(43 31 23 / 42%);
+}
+
+.study-map__header {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+
+.study-map__header h3 {
+  margin: 0;
+  color: #f7ead6;
+  font-size: 0.95rem;
+}
+
+/* Pushed to the end so the headline and its help chip stay one group. */
+.study-map__reach {
+  margin: 0 0 0 auto;
+  color: var(--game-ui-text-muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.study-map__layers {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.study-map__layer-head {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.study-map__layer-head:disabled {
+  cursor: default;
+}
+
+.study-map__layer-name {
+  color: #f7ead6;
+  font-size: 0.85rem;
+}
+
+.study-map__layer-head:hover:not(:disabled) .study-map__layer-name {
+  color: #f7d3a0;
+}
+
+/* Tabular figures so the counts form a column the eye can compare down. */
+.study-map__layer-count {
+  margin-left: auto;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.study-map__bar {
+  overflow: hidden;
+  height: 5px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgb(255 245 232 / 7%);
+}
+
+.study-map__bar-fill {
+  display: block;
+  block-size: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f0a868, #f6c177);
+}
+
+/*
+   A barely-entered layer is the finding, so it is the one thing that changes
+   colour. Amber rather than red: an untaught layer is often a correct choice,
+   and a warning colour would assert a defect this view cannot actually detect.
+*/
+.study-map__layer[data-thin] .study-map__bar-fill {
+  background: rgb(240 168 104 / 45%);
+}
+
+.study-map__layer[data-thin] .study-map__layer-count {
+  color: #f0a868;
+}
+
+.study-map__layer-desc {
+  margin: 5px 0 0;
+  color: rgb(255 245 232 / 42%);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.study-map__files {
+  display: grid;
+  gap: 3px;
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 22%);
+  list-style: none;
+}
+
+.study-map__files code {
+  color: #e5c49a;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.study-map__note {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--campus-rule);
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.study-map__note strong {
+  color: #f0a868;
+}
+
+/* ── Chinese line breaking ──────────────────────────────────────────────── */
+
+/*
+   Chinese has no spaces, so Unicode gives a browser permission to break
+   between any two Han characters — which is usually right and occasionally
+   awful. The home page headline split 「再巩／固记忆」, cutting 巩固 in half:
+   a reader hits the line end mid-word and has to reassemble it.
+
+   `balance` optimises for even line lengths across the whole block, so a short
+   heading tends to break at its natural pause (a comma, a clause boundary)
+   rather than wherever the box happens to run out. Capped at a handful of
+   lines by the spec, which is exactly the range headings live in.
+*/
+h1,
+h2,
+h3,
+.study-map__header h3,
+.lesson-reader__title h2 {
+  text-wrap: balance;
+}
+
+/*
+   Prose gets `pretty` instead: same engine, tuned for long text, and its job
+   here is the last line — a paragraph ending on one stranded character reads
+   as a mistake in Chinese just as a one-word widow does in English.
+*/
+p,
+li,
+figcaption,
+dd,
+blockquote {
+  text-wrap: pretty;
+}

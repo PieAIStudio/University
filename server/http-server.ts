@@ -14,6 +14,7 @@ import { handleCard } from "./http/handlers/card.js";
 import { handleExercise } from "./http/handlers/exercise.js";
 import { handleLesson } from "./http/handlers/lesson.js";
 import { handleReaderMark } from "./http/handlers/reader-mark.js";
+import { handleStudyMap } from "./http/handlers/study-map.js";
 import { handleAirlock, handleStudy } from "./http/handlers/study.js";
 import type { Handler } from "./http/handlers/types.js";
 import { handleVocabulary } from "./http/handlers/vocabulary.js";
@@ -52,9 +53,10 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
     handleAirlock,
     handleVocabulary,
     handleCard,
-    // Last: its routes are all `/marks` leaves that no earlier handler claims,
-    // so placing it here cannot change what any existing route does.
+    // Last: their routes are all leaves (`/marks`, `/map`) that no earlier
+    // handler claims, so placing them here cannot change any existing route.
     handleReaderMark,
+    handleStudyMap,
   ];
 
   const server = createServer((request, response) => {

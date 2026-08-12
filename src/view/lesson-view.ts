@@ -23,12 +23,26 @@ export interface DefaultCourseSummary {
   readonly status: "draft" | "active" | "stale" | "retired";
 }
 
-export interface StudySummary {
+/**
+ * What a study *is* — the fields `/api/studies/:id` actually returns.
+ *
+ * Split out from `StudySummary` because the two endpoints genuinely disagree
+ * about what a study is, and pretending otherwise cost real pixels: the study
+ * page typed its identity object as the full summary and read `snapshotCount`
+ * off it, which the detail endpoint has never sent. React renders `undefined`
+ * as nothing, so the counters shipped blank — a defect no type check could
+ * catch, because the lie was told at an HTTP boundary where nothing is checked.
+ */
+export interface StudyIdentity {
   readonly id: string;
   readonly title: string;
   readonly description: string;
   readonly goals: readonly string[];
   readonly defaultCourseId: string | null;
+}
+
+/** A study plus everything the shelf counts about it. Only `/api/bootstrap` sends this. */
+export interface StudySummary extends StudyIdentity {
   readonly sourceRegistered: boolean;
   readonly snapshotCount: number;
   readonly uaAnalysisCount: number;
@@ -182,7 +196,8 @@ export interface CourseView {
 }
 
 export interface StudyView {
-  readonly study: StudySummary;
+  /** Identity only — the counters live on the bootstrap summary, not here. */
+  readonly study: StudyIdentity;
   readonly courses: readonly CourseView[];
   readonly notes: readonly KnowledgeNoteView[];
 }
