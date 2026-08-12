@@ -1,4 +1,4 @@
-import type { Root, Text } from "mdast";
+import type { PhrasingContent, Root, RootContent, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
 import type { EvidenceAnchorRange, LessonLinkRange } from "../domain/lesson-marks.js";
@@ -117,7 +117,57 @@ export function remarkEvidenceAnchors(options: {
       parent.children.splice(index, 1, ...replacement);
       return index + replacement.length;
     });
+    hoistEvidenceAnchors(tree);
   };
+}
+
+/**
+ * Lifts evidence anchors out of the paragraphs they were parsed into.
+ *
+ * A resolved anchor renders as the pinned source: a panel with a header and a
+ * `<pre>`. Both are block content, and Markdown had wrapped the anchor in a
+ * `<p>` — so the page emitted `<p><div>…<pre>…</pre></div></p>`, which is
+ * invalid. Browsers do not reject that; they *repair* it, closing the paragraph
+ * early and leaving the rest as a sibling. That silently regroups the text
+ * around the panel, which is the kind of layout drift nobody can trace back to
+ * its cause.
+ *
+ * Splitting rather than merely unwrapping, because both shapes occur: across
+ * the shelf 1,735 anchors sit alone on their line and 14 sit mid-paragraph
+ * between two sentences. Cutting the paragraph at the anchor handles both with
+ * one rule, and gives the second case the block treatment its rendering was
+ * always going to take anyway.
+ */
+function hoistEvidenceAnchors(tree: Root): void {
+  visit(tree, "paragraph", (node, index, parent) => {
+    if (parent === undefined || index === undefined) return;
+    if (!node.children.some((child) => child.type === "evidenceAnchor")) return;
+
+    const pieces: RootContent[] = [];
+    let run: PhrasingContent[] = [];
+    const flush = () => {
+      // A run of nothing but whitespace is what sat between an anchor and its
+      // neighbours; keeping it would emit an empty paragraph.
+      if (run.some((child) => child.type !== "text" || child.value.trim() !== "")) {
+        pieces.push({ type: "paragraph", children: run });
+      }
+      run = [];
+    };
+    for (const child of node.children) {
+      if (child.type === "evidenceAnchor") {
+        flush();
+        pieces.push(child);
+        continue;
+      }
+      run.push(child);
+    }
+    flush();
+
+    parent.children.splice(index, 1, ...pieces);
+    // Continue past what was just inserted: revisiting it would walk the
+    // paragraphs this pass created, which by construction hold no anchors.
+    return index + pieces.length;
+  });
 }
 
 /**

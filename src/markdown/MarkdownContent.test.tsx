@@ -399,6 +399,91 @@ describe("local-only link and image policy", () => {
     expect(openButton?.getAttribute("data-evidence-trigger-id")).toBeTruthy();
   });
 
+  it("keeps the source panel out of the paragraph, so the browser does not regroup the prose", async () => {
+    // `<p><div>…<pre>…</pre></div></p>` is invalid, and a browser repairs it by
+    // closing the paragraph early — silently changing how the surrounding text
+    // is grouped. The anchor has to become a sibling of the prose, not a child.
+    const markdown = "前面一句。\n\n[[evidence:src/app.ts:4-5]]\n\n后面一句。";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            sourcePath: "src/app.ts",
+            sourceCommit: "a".repeat(40),
+            startLine: 4,
+            endLine: 5,
+            highlightStartLine: 4,
+            highlightEndLine: 5,
+            language: "typescript",
+            code: "const first = true;\n",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ),
+    );
+
+    const start = markdown.indexOf("[[");
+    await renderMarkdown(markdown, {
+      evidenceBasePath: "/api/lesson",
+      evidenceAnchors: [
+        {
+          start,
+          end: start + "[[evidence:src/app.ts:4-5]]".length,
+          sourcePath: "src/app.ts",
+          lineStart: 4,
+          lineEnd: 5,
+          resolved: true,
+          evidenceIndex: 0,
+        },
+      ],
+    });
+    await waitFor(() => expect(container.querySelector(".evidence-inline-source")).not.toBeNull());
+
+    expect(container.querySelector("p .evidence-inline-source")).toBeNull();
+    expect(container.querySelector("p pre")).toBeNull();
+    // The prose either side survives as its own paragraph rather than being
+    // absorbed into whatever the parser salvaged.
+    const paragraphs = [...container.querySelectorAll("p")].map((node) => node.textContent);
+    expect(paragraphs).toEqual(["前面一句。", "后面一句。"]);
+  });
+
+  it("splits a paragraph that holds an anchor mid-sentence, leaving no empty paragraph", async () => {
+    const markdown = "前面。[[evidence:src/app.ts:1-1]] 后面。";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ error: "not needed" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    );
+
+    const start = markdown.indexOf("[[");
+    await renderMarkdown(markdown, {
+      evidenceBasePath: "/api/lesson",
+      evidenceAnchors: [
+        {
+          start,
+          end: start + "[[evidence:src/app.ts:1-1]]".length,
+          sourcePath: "src/app.ts",
+          lineStart: 1,
+          lineEnd: 1,
+          resolved: true,
+          evidenceIndex: 0,
+        },
+      ],
+    });
+
+    // Prose paragraphs only — the panel renders its own `<p>` for the failure
+    // message, and that one is not part of the lesson text.
+    const paragraphs = [...container.querySelectorAll("p")]
+      .filter((node) => !node.closest(".evidence-inline-source"))
+      .map((node) => node.textContent);
+    expect(paragraphs).toEqual(["前面。", " 后面。"]);
+  });
+
   it("degrades quietly when the pinned source cannot be read", async () => {
     const markdown = "证据：[[evidence:src/missing.ts:10-12]]";
     vi.stubGlobal(

@@ -33,11 +33,27 @@ function lessonLocatorKey(locator: LessonLocator): string {
 
 function commitView(update: () => void): void {
   const documentWithTransition = document as Document & {
-    startViewTransition?: (callback: () => void) => unknown;
+    startViewTransition?: (callback: () => void) => {
+      readonly ready?: Promise<unknown>;
+      readonly finished?: Promise<unknown>;
+    };
   };
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (documentWithTransition.startViewTransition && !reducedMotion) {
-    documentWithTransition.startViewTransition(update);
+    const transition = documentWithTransition.startViewTransition(update);
+    /*
+      An interrupted transition is normal, not a failure. Opening a lesson while
+      the previous transition is still running skips the first one, and the spec
+      rejects its `ready` and `finished` promises when that happens — which,
+      unhandled, surfaced as `Uncaught (in promise) InvalidStateError` on every
+      quick second navigation. The DOM update is unaffected: a skipped
+      transition still runs its callback, so only the animation is lost.
+
+      Deliberately not catching `updateCallbackDone`: that one carries errors
+      thrown by `update` itself, and those are real.
+    */
+    transition?.ready?.catch(() => undefined);
+    transition?.finished?.catch(() => undefined);
     return;
   }
   update();
