@@ -20,3 +20,8 @@ university-local.config.local.json
 
 # Session handoff notes — working material, not project documentation.
 .handoff/
+
+# Quality-loop working material: screenshots, evidence dumps, and handoff notes
+# produced while investigating a session's findings. The path says `tmp` because
+# it is — the durable outcome is a learning under docs/reference/learnings/.
+/artifacts/**/tmp/

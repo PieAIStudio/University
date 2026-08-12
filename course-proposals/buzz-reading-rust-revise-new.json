@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-reading-rust-new",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-reading-rust",
+    "unitId": "rust-structures",
+    "id": "new-and-verified",
+    "expectedRevision": 1,
+    "title": "为什么 StoredEvent::new 要把 verified 设成 false？",
+    "content": "# 为什么 StoredEvent::new 要把 verified 设成 false？\n\n## 情境和约束\n\n一个事件刚被 relay 收到时，系统需要同时保存原始 event、接收时间和频道范围；但“收到”不等于“签名已经验证”。你在读这个构造函数时，先把“收到”和“可信”分成两件事。`StoredEvent::new` 因而创建一个 `verified = false` 的初始状态。\n\n[[evidence:crates/buzz-core/src/event.rs:21-30]]\n\n## 先猜一下\n\n如果构造函数一创建对象就把 verified 设成 true，后面的验签失败会不会让系统先把未验证事件当成可信事件？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会有这个风险，所以默认值选择保守的 false：接收流程必须显式完成验证，状态才有可信含义。\n\n## 代价和收益\n\n代价是调用方不能只看“对象已经存在”就把它当作已验证；它要继续走验证路径。收益是状态默认拒绝信任，漏掉验证步骤时更容易暴露问题。你可以把这个布尔值看成一个需要被证明的事实，而不是构造时赠送的标签。\n\n[[evidence:crates/buzz-core/src/event.rs:32-35]]\n\n同一个实现还提供 `with_received_at`，让测试、重放或需要明确时间与状态的路径传入完整值。这个入口把“我确实知道状态是什么”与“普通新事件还没有验证”分开；后半句是从两个构造函数的参数设计得到的阅读结论。\n\n[[evidence:crates/buzz-core/src/event.rs:37-49]]\n\n## 什么时候该反过来\n\n如果某条内部路径只接受已经完成验签的事件，并且它能在类型或调用约束上证明这一点，才值得考虑使用显式 verified 状态的构造入口；不要为了省一步就改变 `new` 的默认值。\n\n## 自检\n\n- `StoredEvent::new` 的 verified 初始值是什么？\n- `with_received_at` 为什么需要把 verified 作为参数？\n\n## 一句话\n\n**普通构造先把事件放在未验证状态，可信状态必须由后续验证路径明确建立。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 21, "lineEnd": 30, "note": "new 将 received_at 设为当前时间并把 verified 设为 false。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 32, "lineEnd": 35, "note": "is_verified 通过公开方法读取 new 建立的验证状态。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 37, "lineEnd": 49, "note": "with_received_at 允许调用方显式传入时间、频道和验证状态。" }
+    ],
+    "cards": [
+      { "id": "rust-new-default", "expectedRevision": 1, "front": "StoredEvent::new 的 verified 默认值是什么？", "back": "false。新收到的事件必须先经过验证，不能因对象已创建就获得可信状态。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 21, "lineEnd": 30, "note": "构造函数明确写入 verified: false。" } ] },
+      { "id": "rust-explicit-status", "expectedRevision": 1, "front": "哪个构造函数允许显式传入 verified？", "back": "with_received_at。它同时接收 received_at、channel_id 和 verified。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 37, "lineEnd": 49, "note": "显式构造入口列出 verified 参数并写入字段。" } ] }
+    ],
+    "exercises": [
+      { "id": "rust-conservative-default", "expectedRevision": 1, "kind": "short-answer", "title": "解释保守默认值", "prompt": "为什么 new 不把 verified 直接设为 true？", "expectedAnswer": "因为收到事件不等于已经验签，必须先保持未验证状态", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 21, "lineEnd": 30, "note": "new 的默认状态是 false。" } ] },
+      { "id": "rust-with-received-at", "expectedRevision": 1, "kind": "short-answer", "title": "选择显式构造入口", "prompt": "需要同时指定接收时间和验证状态时，应看哪个构造函数？", "expectedAnswer": "with_received_at", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 37, "lineEnd": 49, "note": "该函数接受显式 received_at 与 verified。" } ] }
+    ]
+  }
+}

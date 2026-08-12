@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-reading-rust-borrowed",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-reading-rust",
+    "unitId": "rust-signatures",
+    "id": "borrowed-event",
+    "expectedRevision": 1,
+    "title": "为什么过滤函数借用 &StoredEvent 而不接管 event？",
+    "content": "# 为什么过滤函数借用 &StoredEvent 而不接管 event？\n\n## 一句真实出现的话\n\n你在过滤器入口会看到 `filters_match(filters: &[Filter], event: &StoredEvent) -> bool`，内部函数也接收 `f: &Filter` 和 `ev: &StoredEvent`。这里的 `&` 是 Rust 的借用标记。\n\n[[evidence:crates/buzz-core/src/filter.rs:5-11]]\n\n## 先猜一下\n\n如果 filter_match_one 只是读取 event 的 kind、pubkey、时间和 tags，它有没有必要取得 StoredEvent 的所有权？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n没有必要。借用允许函数暂时读取已有对象，并把一个 bool 返回给调用方，不需要移动或复制整个 StoredEvent。\n\n## 三个真实用例\n\n第一个用例是列表入口借用 filter 切片和事件，调用 `.any` 逐个判断。第二个用例是单项函数继续借用 `&Filter` 与 `&StoredEvent`，所以每个条件都可以读同一个事件。\n\n[[evidence:crates/buzz-core/src/filter.rs:9-11]]\n\n第三个用例是字段读取：`ev.event.kind`、`ev.event.pubkey`、`ev.event.created_at` 和 `ev.channel_id` 都是在借用期间观察，不会改变事件。你可以把 `&StoredEvent` 理解成“给我临时查看权”，而不是“把对象交给我管理”。\n\n[[evidence:crates/buzz-core/src/filter.rs:35-103]]\n\n## 它不是什么\n\n借用不是一份深拷贝，也不是把事件变成不可访问的全局对象。你还可以把它理解成受生命周期约束的只读引用；调用方仍然拥有 StoredEvent，过滤函数只负责判断匹配结果。\n\n## 自检\n\n- `&StoredEvent` 与直接传 StoredEvent 的主要差别是什么？\n- filters_match 返回的是事件本身还是判断结果？\n\n## 一句话\n\n**过滤器借用事件来读字段，把所有权留给调用方，只返回是否匹配。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/filter.rs", "lineStart": 5, "lineEnd": 11, "note": "filters_match 的参数是借用的 Filter 切片和 StoredEvent。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/filter.rs", "lineStart": 35, "lineEnd": 103, "note": "filter_match_one 在借用期间读取事件字段并返回 bool。" }
+    ],
+    "cards": [
+      { "id": "rust-borrowed-signature", "expectedRevision": 1, "front": "filters_match 的 event 参数是什么形式？", "back": "是 &StoredEvent 的借用，函数不会取得事件所有权。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/filter.rs", "lineStart": 9, "lineEnd": 11, "note": "函数签名显示 event: &StoredEvent。" } ] },
+      { "id": "rust-borrowed-result", "expectedRevision": 1, "front": "过滤函数借用事件后返回什么？", "back": "返回 bool，表示事件是否匹配至少一个过滤条件。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/filter.rs", "lineStart": 9, "lineEnd": 12, "note": "函数签名返回 bool，并对列表使用 any。" } ] }
+    ],
+    "exercises": [
+      { "id": "rust-reference-mark", "expectedRevision": 1, "kind": "short-answer", "title": "识别借用标记", "prompt": "Rust 参数类型中的哪个符号表示借用？", "expectedAnswer": "&", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/filter.rs", "lineStart": 9, "lineEnd": 11, "note": "签名中的 &Filter 与 &StoredEvent 是借用。" } ] },
+      { "id": "rust-filter-return", "expectedRevision": 1, "kind": "short-answer", "title": "回忆过滤结果", "prompt": "filters_match 返回事件对象还是 bool？", "expectedAnswer": "bool", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/filter.rs", "lineStart": 9, "lineEnd": 12, "note": "返回类型和实现都表明结果是 bool。" } ] }
+    ]
+  }
+}

@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-buzz-one-message",
+  "targetSnapshotId": "git-02f640bc4559",
+  "course": {
+    "id": "buzz-one-message",
+    "title": "《一条消息怎样走完 Buzz？》",
+    "description": "把 Buzz 的事件入口、认证、验签、写入、分发、订阅和搜索连成一条可追踪的运行路径。",
+    "audience": "已经能读 Buzz 的基础 Rust 结构，希望理解 relay 事件生命周期和 NIP-01 投递语义的学习者。",
+    "objectives": [
+      "沿着真实 handler 代码解释认证、pubkey gate、ephemeral 与 persistent 分流",
+      "区分新写入、重复写入、持久化搜索和工作流触发的边界",
+      "解释 subscription registry 的索引、社区/频道隔离，以及历史与实时投递的接续"
+    ],
+    "units": [
+      {
+        "id": "message-entry",
+        "title": "事件怎样进入 relay",
+        "objective": "从 WebSocket EVENT 开始，读清认证、身份一致性、控制事件拒绝和重复写入。",
+        "lessons": [
+          {
+            "id": "enter-to-signed-event",
+            "title": "一条 WebSocket EVENT 怎样走到共享 ingest？",
+            "variant": "溯源",
+            "content": "# 一条 WebSocket EVENT 怎样走到共享 ingest？\n\n## 你看到的结果\n\n你从 WebSocket 发出一条 EVENT，relay 先读连接的 AuthState，再检查事件 pubkey，之后决定走 ephemeral handler 还是共享的 ingest_event。看起来只是一个入口，实际上它把身份、kind 和 transport 路径串起来。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:634-653]]\n\n## 先猜一下\n\n如果连接已经认证，事件还需要检查 event.pubkey 是否和认证身份一致吗？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n需要。认证连接只说明连接拥有一个身份，EVENT envelope 还必须证明自己代表同一个身份；gift wrap 是明确放行的例外。\n\n## 一站一站往回走\n\n第一站是 AuthState：未认证连接收到 `auth-required` 并立即返回，认证上下文则提供 pubkey、scopes、channel_ids 和 conn_id。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:634-653]]\n\n第二站是 pubkey gate：非 gift-wrap 事件如果 event.pubkey 不等于 auth_pubkey，就发送 invalid 并停止。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:656-667]]\n\n第三站是分流：ephemeral kind 进入 `handle_ephemeral_event`；其他事件被包装成 Nip42 ingest auth，进入 `ingest_event`。你沿着这三站读，能看到网络入口没有把所有业务塞在一个函数里。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:694-728]]\n\n## 自检\n\n- 未认证连接在哪一站被拒绝？\n- ephemeral 和 persistent 事件分别进入哪个函数？\n\n## 一句话\n\n**EVENT 先经过连接身份和事件身份检查，再按 kind 分到临时或持久化路径。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 634, "lineEnd": 653, "note": "handle_event 从 AuthState 读取认证上下文，未认证时发送拒绝并返回。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 656, "lineEnd": 667, "note": "EVENT 在临时/持久化分流前执行 pubkey 与认证身份一致性检查。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 694, "lineEnd": 728, "note": "ephemeral 事件进入专门 handler，其余事件构造 Nip42 auth 后进入 ingest_event。" }
+            ],
+            "cards": [
+              { "id": "message-auth-state", "front": "EVENT 进入业务分流前先读取什么？", "back": "连接的 AuthState；认证上下文提供 pubkey、scopes、channel_ids 和 conn_id。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 634, "lineEnd": 653, "note": "认证上下文解构出多个身份与权限字段。" } ] },
+              { "id": "message-kind-route", "front": "kind 如何影响入口路径？", "back": "ephemeral kind 走 handle_ephemeral_event，其他事件构造成 IngestAuth 后走 ingest_event。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 694, "lineEnd": 728, "note": "源码按 is_ephemeral 分支并在持久化分支调用 ingest_event。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-entry-auth", "kind": "short-answer", "title": "定位入口认证", "prompt": "未认证连接提交 EVENT 时，handler 会怎样处理？", "expectedAnswer": "发送 auth-required 的拒绝并返回", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 644, "lineEnd": 653, "note": "未认证分支发送 RelayMessage::ok(false) 后 return。" } ] },
+              { "id": "message-entry-route", "kind": "short-answer", "title": "复述 kind 分流", "prompt": "非 ephemeral 的 WebSocket EVENT 最终进入哪个共享函数？", "expectedAnswer": "ingest_event", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 721, "lineEnd": 728, "note": "持久化分支构造 Nip42 auth 后调用 ingest_event。" } ] }
+            ]
+          },
+          {
+            "id": "pubkey-match-gate",
+            "title": "为什么 relay 要在分流前检查 event.pubkey？",
+            "variant": "决策",
+            "content": "# 为什么 relay 要在分流前检查 event.pubkey？\n\n## 情境和约束\n\n连接认证后，relay 手里有 `auth_pubkey`；收到的 EVENT 又带自己的 `event.pubkey`。这两个身份必须在进入 ephemeral 或 persistent 路径前对齐，否则一个已认证连接可以尝试代发另一个身份的事件。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:656-667]]\n\n## 先猜一下\n\n你会把 pubkey 检查放在持久化 ingest 里就够了吗，还是让它也挡住绕过 ingest 的 ephemeral 路径？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n要放在共同入口的分流前。源码明确说明 persistent 会在 ingest 再检查一次，但 ephemeral 会绕过这个 pipeline，所以入口检查是两条路径共享的身份护栏。\n\n## 代价和收益\n\n收益是身份规则只要在共同入口成立，临时事件不能因为“不落库”而少一道检查；persistent 路径再检查一次，则把共享 pipeline 单独调用时的边界也守住。你会多看到一次比较，但换来的是两条入口路径不会出现不同的身份语义。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:656-667]]\n\n例外也被写在条件里：gift wrap 允许 envelope signer 与认证身份不同，因为它代表 NIP-59 的特殊包裹语义。你不能把这个例外推广到普通 kind。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:656-660]]\n\n## 什么时候该反过来\n\n如果未来所有事件类型都必须经过同一个不可绕过的 ingest pipeline，入口和 pipeline 的重复检查才可能合并；在当前源码仍让 ephemeral 直接分流时，不应移除共同入口的 gate。\n\n## 自检\n\n- 为什么 ephemeral 使入口 gate 不能省略？\n- 哪一种事件是 pubkey 不一致的明确例外？\n\n## 一句话\n\n**共同入口的 pubkey gate 让不落库的事件也遵守身份边界，gift wrap 只是明确的协议例外。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 656, "lineEnd": 667, "note": "入口在两条事件路径之前检查 event.pubkey 与 auth_pubkey。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 656, "lineEnd": 660, "note": "条件把 gift wrap 作为 pubkey 不一致的协议例外。" }
+            ],
+            "cards": [
+              { "id": "message-pubkey-gate", "front": "event.pubkey 不匹配 auth_pubkey 时怎样？", "back": "relay 发送 invalid 拒绝并 return，不再进入临时或持久化路径。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 660, "lineEnd": 667, "note": "不匹配分支明确 reject、发送 false 并返回。" } ] },
+              { "id": "message-gift-wrap", "front": "哪一种事件可以绕过普通 pubkey 一致性比较？", "back": "gift wrap；源码把它作为特殊包裹语义的例外。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 656, "lineEnd": 660, "note": "is_gift_wrap 参与一致性 gate 条件。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-pubkey-placement", "kind": "short-answer", "title": "选择 gate 位置", "prompt": "为什么 pubkey 检查必须在 ephemeral/persistent 分流之前？", "expectedAnswer": "因为 ephemeral 会绕过 ingest，只有共同入口才能覆盖两条路径", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 656, "lineEnd": 658, "note": "注释指出 ephemeral bypasses the pipeline。" } ] },
+              { "id": "message-pubkey-exception", "kind": "short-answer", "title": "回忆例外", "prompt": "event.pubkey 不匹配时，源码允许的例外是什么？", "expectedAnswer": "gift wrap", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 656, "lineEnd": 660, "note": "条件使用 !is_gift_wrap 保护普通事件。" } ] }
+            ]
+          },
+          {
+            "id": "auth-event-rejection",
+            "title": "为什么 AUTH 事件不能再通过 EVENT 提交？",
+            "variant": "术语",
+            "content": "# 为什么 AUTH 事件不能再通过 EVENT 提交？\n\n## 一句真实出现的话\n\n你在 EVENT handler 里会看到 `KIND_AUTH` 被单独识别，并返回 `invalid: AUTH events cannot be submitted via EVENT`。AUTH 是连接认证过程使用的控制消息，不是普通业务事件。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:670-677]]\n\n## 先猜一下\n\n如果连接已经用 AUTH 完成身份建立，再把 AUTH 当成普通事件写进事件日志，会不会把连接控制和业务数据混在一起？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会混在一起，所以 EVENT 路径把它当成拒绝类型，而不是交给验签、存储和 fan-out。\n\n## 三个真实用例\n\n第一个用例是入口层：KIND_AUTH 在 handle_event 里直接发送 false 的 OK 并返回。第二个用例是共享 ingest：内部函数也在开始阶段拒绝 AUTH，防止 HTTP 或其他 transport 绕过 WebSocket gate。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:670-677]]\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:1934-1937]]\n\n第三个用例是术语边界：`auth` 描述连接或请求的身份材料，`event` 描述要被验证、持久化或投递的业务 envelope。你把两者分开，才不会把“认证成功”误读成“认证消息应该成为聊天记录”。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:1849-1868]]\n\n## 它不是什么\n\nAUTH 拒绝不是说认证功能不存在，也不是拒绝所有带身份的请求。你仍然要先完成认证，再用认证上下文提交允许的事件；被拒绝的是把控制 kind 当成可存储事件。\n\n## 自检\n\n- AUTH 在协议里承担的是控制作用还是业务消息作用？\n- 为什么 ingest 还要再拒绝一次 AUTH？\n\n## 一句话\n\n**AUTH 用来建立身份，EVENT 用来承载业务事件，relay 不让两种边界互相冒充。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 670, "lineEnd": 677, "note": "WebSocket EVENT handler 直接拒绝 KIND_AUTH。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 1934, "lineEnd": 1937, "note": "共享 ingest_event_inner 也拒绝 AUTH events。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 1849, "lineEnd": 1868, "note": "ingest_event 将 transport auth 与 signed Nostr event 分成不同参数。" }
+            ],
+            "cards": [
+              { "id": "message-auth-kind", "front": "KIND_AUTH 通过 EVENT 时得到什么结果？", "back": "被拒绝，返回 invalid；它不能作为普通事件提交。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 670, "lineEnd": 677, "note": "入口分支返回 false 并说明 AUTH events cannot be submitted。" } ] },
+              { "id": "message-auth-double-gate", "front": "为什么 ingest_event_inner 也检查 AUTH？", "back": "为了让共享 pipeline 自己也守住控制事件边界，避免只依赖某个 transport 的入口检查。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 1934, "lineEnd": 1937, "note": "共享 ingest 内部独立拒绝 AUTH。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-auth-boundary", "kind": "short-answer", "title": "区分控制与业务", "prompt": "AUTH 与普通 EVENT 的边界是什么？", "expectedAnswer": "AUTH 建立连接身份，EVENT 承载要验证、存储或投递的业务事件", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 1849, "lineEnd": 1868, "note": "ingest 的 auth 参数和 event 参数分开。" } ] },
+              { "id": "message-auth-ingest", "kind": "short-answer", "title": "找出第二道拒绝", "prompt": "除了 WebSocket handler，哪个 ingest 函数还拒绝 AUTH？", "expectedAnswer": "ingest_event_inner", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 1923, "lineEnd": 1937, "note": "内部 ingest 函数开头定义并拒绝 AUTH。" } ] }
+            ]
+          },
+          {
+            "id": "duplicate-is-idempotent",
+            "title": "为什么重复事件仍然 accepted，却不会再次分发？",
+            "variant": "对比",
+            "content": "# 为什么重复事件仍然 accepted，却不会再次分发？\n\n## 两个东西\n\n你要比较的是新写入和重复写入：新事件在 `was_inserted` 为 true 时继续做 side effects、写 trace、post-commit dispatch；重复事件在 `was_inserted` 为 false 时返回 accepted=true，并带上 `duplicate:` 消息。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:2937-2943]]\n\n## 先猜一下\n\n同一个 event id 被客户端重试时，relay 应该把它当作失败，还是承认目标状态已经存在？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n承认它已经存在。重复写入是幂等成功：客户端得到 accepted，但系统不再重复触发副作用和 post-commit 分发。\n\n## 逐条对照\n\n新写入路径从数据库结果得到 `was_inserted=true`，之后才执行 side effects、发出 WriteInsert/WriteInsertGlobal trace，并调用 dispatch_persistent_event。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:2945-2957]]\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:2983-3011]]\n\n重复路径在 `if !was_inserted` 中立刻返回，绕过这些动作。你可以把 accepted 理解为“这次请求没有破坏事件状态”，而不是“这次请求一定新增了一行”。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:2937-2943]]\n\n## 什么时候用哪个\n\n客户端不确定网络重试是否成功时，可以安全重发相同事件；relay 通过数据库写入结果区分首次接受与重复确认。你不要把 duplicate 当成异常告警，除非上层业务还需要解释重复来源。\n\n## 自检\n\n- 新写入与重复写入的 `accepted` 分别是什么？\n- 哪条路径会调用 post-commit dispatch？\n\n## 一句话\n\n**重复事件以 accepted 的幂等结果结束，但只有新写入才继续副作用和分发。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 2937, "lineEnd": 2943, "note": "was_inserted 为 false 时返回 accepted=true 和 duplicate 消息。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 2945, "lineEnd": 2957, "note": "新插入事件才进入 side effects。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 2983, "lineEnd": 3011, "note": "写入 trace 与 dispatch 位于重复提前返回之后。" }
+            ],
+            "cards": [
+              { "id": "message-duplicate-accepted", "front": "重复事件的 accepted 值是什么？", "back": "仍然是 true，但 message 会标记 duplicate。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 2937, "lineEnd": 2943, "note": "重复分支显式返回 accepted: true。" } ] },
+              { "id": "message-duplicate-side-effects", "front": "为什么重复分支不再次 dispatch？", "back": "它在 was_inserted 为 false 时提前返回，副作用、trace 和 post-commit dispatch 都在后面。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 2937, "lineEnd": 2945, "note": "重复返回位于后续副作用和分发之前。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-duplicate-meaning", "kind": "short-answer", "title": "解释幂等成功", "prompt": "为什么 duplicate 不是一次失败？", "expectedAnswer": "因为目标事件已经存在，请求没有破坏状态，所以以 accepted=true 确认", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 2937, "lineEnd": 2943, "note": "重复结果明确 accepted=true。" } ] },
+              { "id": "message-new-dispatch", "kind": "short-answer", "title": "找出首次分发条件", "prompt": "什么条件成立时才会走到 dispatch_persistent_event？", "expectedAnswer": "was_inserted 为 true 的新写入路径", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 3003, "lineEnd": 3011, "note": "dispatch 调用在 duplicate 提前返回之后。" } ] }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "write-path",
+        "title": "持久化、临时事件与副作用",
+        "objective": "比较 persistent 和 ephemeral 的运行路径，并理解搜索行、工作流防回环和 post-commit 分发。",
+        "lessons": [
+          {
+            "id": "persistent-pipeline",
+            "title": "持久化事件在写入后还会经过哪些站？",
+            "variant": "溯源",
+            "content": "# 持久化事件在写入后还会经过哪些站？\n\n## 你看到的结果\n\n你发出一个需要保存的事件，relay 返回 accepted 之前要完成验证、数据库写入和写入结果判断；accepted 之后，post-commit dispatch 才负责 Redis、local fan-out、审计和工作流等后续动作。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:2878-2935]]\n\n## 先猜一下\n\n如果 Redis fan-out 暂时变慢，数据库已经成功写入的事件应该被算作写入失败吗？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不应该。源码把 durable write 和 post-commit delivery 分开：写入成功先得到接受结果，投递和副作用在提交之后运行。\n\n## 一站一站往回走\n\n第一站是数据库分支：replaceable 事件替换，parameterized replaceable 事件按 d-tag 替换，其他事件调用 insert_event_with_thread_metadata。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:2878-2935]]\n\n第二站是写入观察：新写入按 channel_id 选择 WriteInsert 或 WriteInsertGlobal，重复写入选择 WriteDuplicate。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:2973-3002]]\n\n第三站是 post-commit dispatch：先完成有界 audit enqueue，再 spawn 内部 dispatch；内部会发布 Redis、查找 fan-out recipients 并发送事件帧。你沿着这条路径能看出“存下来”和“送到谁”不是同一个同步动作。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:349-390]]\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:396-445]]\n\n## 自检\n\n- 哪一步决定事件是新写入还是重复？\n- 为什么 fan-out 不等于 durable write？\n\n## 一句话\n\n**持久化事件先完成可确认的写入，再由 post-commit 路径负责后续投递和副作用。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 2878, "lineEnd": 2935, "note": "持久化分支按事件 kind 选择替换或插入，并得到 was_inserted。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 2973, "lineEnd": 3002, "note": "写入结果根据 channel_id 与 was_inserted 生成不同 trace action。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 349, "lineEnd": 390, "note": "dispatch_persistent_event 先完成 audit enqueue，再异步调度内部 post-commit 工作。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 396, "lineEnd": 445, "note": "内部 dispatch 发布 Redis、计算订阅匹配并准备 fan-out。" }
+            ],
+            "cards": [
+              { "id": "message-persistent-write", "front": "持久化路径如何得到 was_inserted？", "back": "数据库替换或插入分支返回 stored_event 与 was_inserted，用它区分新写入与重复。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 2878, "lineEnd": 2935, "note": "数据库分支的 tuple 包含 was_inserted。" } ] },
+              { "id": "message-post-commit", "front": "post-commit dispatch 主要面对什么？", "back": "Redis publish、订阅 fan-out、事件帧发送，以及审计和工作流等写入后的副作用。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 396, "lineEnd": 445, "note": "内部 dispatch 负责 topic 发布和订阅匹配。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-persistent-stages", "kind": "short-answer", "title": "复述持久化三站", "prompt": "持久化事件从写入到投递，至少说出哪三个阶段？", "expectedAnswer": "数据库写入、写入 trace/重复判断、post-commit dispatch", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 2878, "lineEnd": 2935, "note": "第一阶段数据库写入。" }, { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 2973, "lineEnd": 3002, "note": "第二阶段写入观察。" }, { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs", "lineStart": 3003, "lineEnd": 3011, "note": "第三阶段调用 dispatch。" } ] },
+              { "id": "message-persistent-accepted", "kind": "short-answer", "title": "解释 accepted 时机", "prompt": "为什么数据库写入成功后可以先返回 accepted，而不等待所有 fan-out 完成？", "expectedAnswer": "因为 durable write 与 post-commit delivery 分离，accepted 表示事件已被可靠接受", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 340, "lineEnd": 347, "note": "注释明确 NIP-01 OK 表示 durably accepted，不表示 Redis/fan-out/workflow 已完成。" } ] }
+            ]
+          },
+          {
+            "id": "ephemeral-skips-storage",
+            "title": "为什么 ephemeral 事件可以实时送达却不写入数据库？",
+            "variant": "现象",
+            "content": "# 为什么 ephemeral 事件可以实时送达却不写入数据库？\n\n## 现象\n\n你在 `handle_ephemeral_event` 的注释里直接看到 kind 20000–29999 是 WS-only、never stored。函数仍然会验签、检查频道成员，再通过 Redis 和本地 fan-out 把事件送给在线订阅者。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:761-792]]\n\n## 先猜一下\n\n如果一条 presence 或实时状态事件只服务于在线观察者，你觉得它必须先生成数据库历史记录吗？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不必。ephemeral 的目标是 live delta；源码把它留在验证、权限、pubsub 和 fan-out 路径，不进入 persistent ingest 的数据库写入分支。\n\n## 为什么是这样\n\n函数先用 `spawn_blocking` 验证事件；有频道时检查 membership、发布到 `EventTopic::Channel`，再构造带 Some(ch_id) 的 StoredEvent 做本地 fan-out。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:771-865]]\n\n没有频道时则发布到 `EventTopic::Global`，构造 channel_id=None 的 StoredEvent，使用 global index 把在线订阅者找出来。注释还说明 Redis 的 nil UUID 只是路由 sentinel，不会进入数据库。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:866-893]]\n\n你因此要把“没有历史记录”和“没有权限检查”分开：ephemeral 不落库，但仍然验签、按频道检查成员，并受到 fan-out 的访问护栏。\n\n## 自检\n\n- ephemeral 事件是否经过验签？\n- 有频道和无频道的 ephemeral 分别发布到哪种 topic？\n\n## 一句话\n\n**ephemeral 省掉历史存储，保留验证、访问检查和面向在线订阅者的实时投递。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 761, "lineEnd": 792, "note": "ephemeral handler 的注释说明 WS-only、never stored，并先完成验证。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 771, "lineEnd": 865, "note": "有频道 ephemeral 检查 membership，发布 Channel topic 并进行本地 fan-out。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 866, "lineEnd": 893, "note": "无频道 ephemeral 发布 Global topic 并使用 None 的 StoredEvent 做 global fan-out。" }
+            ],
+            "cards": [
+              { "id": "message-ephemeral-storage", "front": "ephemeral 事件会写入数据库吗？", "back": "不会；它是 WS-only、never stored 的实时事件。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 761, "lineEnd": 762, "note": "函数文档明确写出 never stored。" } ] },
+              { "id": "message-ephemeral-topic", "front": "频道 ephemeral 事件发布到哪个 topic？", "back": "EventTopic::Channel(ch_id)，然后用 Some(ch_id) 进入频道 fan-out。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 830, "lineEnd": 865, "note": "频道分支完成 membership、Channel publish 和本地 fan-out。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-ephemeral-verify", "kind": "short-answer", "title": "判断实时事件护栏", "prompt": "ephemeral 不落库是否意味着可以跳过验签？", "expectedAnswer": "不可以，handler 仍先 spawn_blocking 调用 verify_event", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 761, "lineEnd": 792, "note": "落库前的 ephemeral handler 仍先完成验证。" } ] },
+              { "id": "message-ephemeral-global", "kind": "short-answer", "title": "找出全局分支", "prompt": "无频道 ephemeral 事件的 StoredEvent channel_id 用什么值？", "expectedAnswer": "None", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 866, "lineEnd": 893, "note": "全局分支显式构造 StoredEvent::new(event.clone(), None)。" } ] }
+            ]
+          },
+          {
+            "id": "search-is-persisted-row",
+            "title": "为什么 Buzz 的搜索可以把 persisted row 当成索引？",
+            "variant": "决策",
+            "content": "# 为什么 Buzz 的搜索可以把 persisted row 当成索引？\n\n## 情境和约束\n\n系统要支持历史检索，又不想让写入成功后再维护一套容易失同步的外部索引。当前架构使用 Postgres FTS，把 searchable row 直接作为 persisted event row，并由生成的 tsvector 填充搜索列。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:502-506]]\n\n## 先猜一下\n\n如果每个事件都要先写数据库，再投递一个独立的 search worker，你会得到更少的写入耦合，还是多一个需要重试和对账的状态？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\nBuzz 选择让持久化事件行同时成为搜索来源，不再把 Typesense worker 或 search_index_tx 当作写入后的必经步骤。\n\n## 代价和收益\n\n收益是事件行与搜索内容在同一个 Postgres 写入边界里，减少外部索引的同步状态；搜索 REQ 仍然走历史查询并在结果后发送 EOSE，不注册成实时 fan-out subscription。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:502-506]]\n\n[[evidence:crates/buzz-relay/src/handlers/req.rs:206-231]]\n\n代价是搜索查询要承担 FTS 规划、访问范围和结果过滤；它不是“写进去就自动出现在所有读者面前”。你还要沿着 req handler 看 auth、channel scope、reader visibility 和 EOSE。\n\n[[evidence:crates/buzz-relay/src/handlers/req.rs:206-231]]\n\n## 什么时候该反过来\n\n当搜索需要独立扩展、跨数据源聚合，或写入数据库与检索索引确实要分开伸缩时，外部索引可能值得引入；但那时必须补上重试、删除、权限和一致性策略。\n\n## 自检\n\n- 当前 searchable row 与什么是同一行？\n- 搜索 REQ 会注册 fan-out subscription 吗？\n\n## 一句话\n\n**Buzz 用 Postgres 的持久化事件行承载 FTS 搜索，并把搜索请求保持为历史读取路径。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 502, "lineEnd": 506, "note": "源码说明 searchable row 就是 persisted event row，旧 Typesense worker 已移除。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 206, "lineEnd": 231, "note": "带 search 的 REQ 进入历史搜索处理，完成后返回而不注册 fan-out subscription。" }
+            ],
+            "cards": [
+              { "id": "message-search-row", "front": "当前搜索索引与哪一行合并？", "back": "与 Postgres 中的 persisted event row 合并，生成的 tsvector 填充搜索列。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 502, "lineEnd": 506, "note": "注释直接说明 searchable row 与 persisted event row 的关系。" } ] },
+              { "id": "message-search-no-fanout", "front": "搜索 REQ 为什么不注册实时订阅？", "back": "它只查询历史 FTS 命中并发送 EOSE，源码随后 return，不进入 subscription registration。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 206, "lineEnd": 231, "note": "搜索分支调用 handle_search_req 后 return。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-search-design", "kind": "short-answer", "title": "说明搜索选择", "prompt": "把 searchable row 直接放在 persisted event row 上，主要减少了哪类状态？", "expectedAnswer": "外部搜索索引与数据库事件行之间的同步状态", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 502, "lineEnd": 506, "note": "旧的独立 Typesense index worker 已不再存在。" } ] },
+              { "id": "message-search-eose", "kind": "short-answer", "title": "回忆搜索结束信号", "prompt": "搜索请求完成历史命中后，是否继续保持实时 subscription？", "expectedAnswer": "不保持；搜索分支处理后返回，历史结果以 EOSE 结束", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 206, "lineEnd": 231, "note": "搜索分支被定义为历史搜索并在 handle_search_req 后 return。" } ] }
+            ]
+          },
+          {
+            "id": "workflow-loop-prevention",
+            "title": "为什么 post-commit dispatch 要跳过几类 workflow 事件？",
+            "variant": "术语",
+            "content": "# 为什么 post-commit dispatch 要跳过几类 workflow 事件？\n\n## 一句真实出现的话\n\n你在 dispatch 内部会看到 `is_relay_workflow_msg`，以及一个同时检查 `is_workflow_execution_kind`、`is_command_kind`、relay workflow tag 和 gift wrap 的条件。这个条件是 workflow trigger guard。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:520-555]]\n\n## 先猜一下\n\n如果 workflow 产生的执行消息再次触发 workflow，系统会不会把一次自动化越滚越大？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会有回环风险，所以已经属于 workflow execution、command、relay-signed workflow message 或 gift wrap 的事件不再启动普通 workflow trigger。\n\n## 三个真实用例\n\n第一个用例是 kind gate：workflow execution kind 和 command kind 直接排除。第二个用例是身份与 tag gate：事件由 relay key 签名并带 `buzz:workflow` tag 时，`is_relay_workflow_msg` 为真。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:520-532]]\n\n第三个用例是 gift wrap：即使它不是普通 workflow kind，条件也把它排除。通过所有 gate 后，才 clone StoredEvent 并 spawn workflow_engine.on_event。你可以把这个术语记成“触发器的反回环门”。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:528-555]]\n\n## 它不是什么\n\n这个 guard 不是拒绝存储事件，也不是禁止 workflow 读取事件。你看到的是“是否启动新的 workflow trigger”的门；事件可以已经写入并被其他 fan-out、audit 或搜索路径处理。\n\n## 自检\n\n- 哪几类事件会被 workflow trigger guard 排除？\n- 通过 guard 后调用哪个 workflow engine 方法？\n\n## 一句话\n\n**workflow trigger guard 让自动化产生的控制事件不再无条件启动下一轮自动化。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 520, "lineEnd": 532, "note": "源码定义 relay workflow message，并组合多个排除条件。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 528, "lineEnd": 555, "note": "通过 guard 后才 spawn workflow_engine.on_event。" }
+            ],
+            "cards": [
+              { "id": "message-workflow-guard", "front": "workflow trigger guard 主要防什么？", "back": "防止 workflow execution、command 或 relay 产生的 workflow 消息再次无条件触发下一轮自动化。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 520, "lineEnd": 532, "note": "多个排除条件共同组成触发门。" } ] },
+              { "id": "message-workflow-call", "front": "通过 guard 后会调用什么？", "back": "异步调用 workflow_engine.on_event，并记录 workflow run 指标。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 533, "lineEnd": 555, "note": "spawn 内调用 workflow_engine.on_event。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-workflow-skips", "kind": "short-answer", "title": "列出排除项", "prompt": "源码中至少说出两类不会启动普通 workflow trigger 的事件。", "expectedAnswer": "workflow execution kind、command kind、relay-signed workflow message、gift wrap 中任意两类", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 528, "lineEnd": 532, "note": "排除条件集中列出四类情况。" } ] },
+              { "id": "message-workflow-purpose", "kind": "short-answer", "title": "解释 guard 边界", "prompt": "workflow trigger guard 拒绝的是事件存储，还是新的 workflow trigger？", "expectedAnswer": "新的 workflow trigger", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 520, "lineEnd": 533, "note": "guard 包围的是 workflow_engine.on_event 调用。" } ] }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "read-and-deliver",
+        "title": "订阅怎样收到历史与实时事件",
+        "objective": "读懂订阅索引、频道与全局隔离、历史 REQ 流程以及空 kinds 的特殊语义。",
+        "lessons": [
+          {
+            "id": "subscription-indexes",
+            "title": "为什么 subscription registry 要维护多套索引？",
+            "variant": "对比",
+            "content": "# 为什么 subscription registry 要维护多套索引？\n\n## 两个东西\n\n你看到的不是一个 `subs` map 就结束了：registry 同时保存 channel-kind、channel wildcard、global-kind、global `#p` kind 和 global wildcard 索引。它们分别服务不同的事件 scope 与 filter 形状。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:43-59]]\n\n## 先猜一下\n\n如果每条事件都扫描所有连接上的所有 subscription，频道很多、kind 很多时，fan-out 会不会把无关订阅也逐个拿来比较？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会产生不必要的扫描，所以 registry 在注册时把订阅放进更窄的索引，fan_out 时先按 channel、kind 或 global scope 找候选。\n\n## 逐条对照\n\nchannel-kind index 对应有频道且指定 kind 的订阅；channel wildcard 对应有频道但没有 kind 限制的订阅。global-kind index 对应无频道的 kind filter，global wildcard 则接收所有 global events；global `#p` index 为收件人约束更窄的全局事件提供路径。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:49-58]]\n\nregister_scoped 会先保存订阅，再根据 channel_id 与 kinds 选择索引；如果 channel 有明确 kinds，就为每个 kind 建 IndexKey。你可以把索引看成“先缩小候选，再让 filters_match 做最终判断”的两层结构。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:67-143]]\n\n## 什么时候用哪个\n\n有频道且指定 kind 时走 channel-kind；有频道但 kindless 时走 channel wildcard；无频道则在 global-kind、global `#p` 或 global wildcard 之间选择。你先判断 scope，再判断 filter 是否有 kind。\n\n## 自检\n\n- channel wildcard 与 global wildcard 的差别是什么？\n- 为什么索引命中后还需要最终 filters_match？\n\n## 一句话\n\n**多套索引先按事件范围和 kind 缩小候选，最终过滤仍由订阅的完整条件确认。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 43, "lineEnd": 59, "note": "SubscriptionRegistry 定义 subs、频道 kind/wildcard、全局 kind/#p/wildcard 多套索引。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 67, "lineEnd": 143, "note": "register_scoped 按 channel_id、kinds 和 #p 形状选择索引。" }
+            ],
+            "cards": [
+              { "id": "message-channel-index", "front": "有频道且指定 kind 的订阅进哪个索引？", "back": "channel_kind_index，键由 community、channel_id 和 kind 组成。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 101, "lineEnd": 110, "note": "register_scoped 为每个 kind 构造 IndexKey 并写入 channel_kind_index。" } ] },
+              { "id": "message-global-wildcard", "front": "global wildcard 订阅表达什么？", "back": "没有频道 scope、也没有 kind filter，想接收该 community 的所有 global events。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 53, "lineEnd": 58, "note": "global_wildcard_index 的注释定义了 kindless global subscription。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-index-scope", "kind": "short-answer", "title": "选择索引", "prompt": "一个 channel-scoped、kindless subscription 应使用哪个索引？", "expectedAnswer": "channel_wildcard_index", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 85, "lineEnd": 94, "note": "channel_id 存在且 kinds 无约束时写入 channel_wildcard_index。" } ] },
+              { "id": "message-index-p", "kind": "short-answer", "title": "识别窄索引", "prompt": "global subscription 同时按 kind 和 #p 收件人约束时，可以使用哪套窄索引？", "expectedAnswer": "global_p_kind_index", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 114, "lineEnd": 124, "note": "全局分支优先写入 global_p_kind_index。" } ] }
+            ]
+          },
+          {
+            "id": "global-cannot-see-channel",
+            "title": "为什么 global subscription 看不到 channel event？",
+            "variant": "现象",
+            "content": "# 为什么 global subscription 看不到 channel event？\n\n## 现象\n\n你在 `fan_out_scoped` 里会看到：有 channel_id 的事件只查 channel kind index 和 channel wildcard；没有 channel_id 的事件才查 global indexes。最后的注释把这个方向写成双向的 scoping invariant。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:275-324]]\n\n## 先猜一下\n\n一个 global subscription 没有指定频道，是否应该顺便收到所有频道的消息，方便客户端少开几条订阅？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不应该。global 与 channel 是不同的 scope，global subscription 不接收 channel-scoped event，channel subscription 也不接收 global event。\n\n## 为什么是这样\n\nfan_out 的分支条件先看 `event.channel_id`：Some 只走频道候选，None 只走全局候选。因为两类订阅没有被放进对方的候选索引，所以即使完整 filters_match 还没执行，scope 已经先隔离。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:286-384]]\n\n源码把原因写成防止双向信息泄漏：频道内容不能漏给 global subscribers，全局基础设施事件也不能漏给 channel subscribers。你看到的不是性能优化的附带效果，而是访问边界的一部分。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:386-391]]\n\n## 自检\n\n- fan_out 如何决定走 global 还是 channel 索引？\n- 为什么这是信息隔离而不只是索引优化？\n\n## 一句话\n\n**subscription scope 先决定候选索引，global 与 channel 两个方向都被明确隔离。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 275, "lineEnd": 324, "note": "fan_out_scoped 对 Some(channel_id) 只查频道索引。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 324, "lineEnd": 384, "note": "channel-less 事件只查全局索引。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 386, "lineEnd": 391, "note": "注释明确记录 global/channel 双向隔离与信息泄漏风险。" }
+            ],
+            "cards": [
+              { "id": "message-global-channel", "front": "channel_id=Some 的事件会查 global wildcard 吗？", "back": "不会；它只进入频道 kind/wildcard 候选。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 286, "lineEnd": 324, "note": "Some 分支没有访问 global index。" } ] },
+              { "id": "message-channel-global", "front": "为什么 channel subscription 不能收到 global event？", "back": "因为 None 分支只访问 global indexes，channel-scoped subscriptions 不在其中。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 324, "lineEnd": 388, "note": "全局事件分支只查询 global_p_kind、global_kind 和 global_wildcard。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-scope-direction", "kind": "short-answer", "title": "判断 scope 方向", "prompt": "global subscription 能收到 channel-scoped event 吗？", "expectedAnswer": "不能", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 386, "lineEnd": 391, "note": "scoping invariant 明确写出 global 不接收 channel event。" } ] },
+              { "id": "message-scope-reason", "kind": "short-answer", "title": "解释隔离原因", "prompt": "源码把 global/channel 分离的安全原因描述为什么？", "expectedAnswer": "防止频道内容漏给 global subscribers，也防止全局基础设施事件漏给 channel subscribers", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 386, "lineEnd": 391, "note": "注释列出双向信息泄漏风险。" } ] }
+            ]
+          },
+          {
+            "id": "historical-and-live-paths",
+            "title": "REQ 怎样把历史结果接到之后的实时 fan-out？",
+            "variant": "溯源",
+            "content": "# REQ 怎样把历史结果接到之后的实时 fan-out？\n\n## 你看到的结果\n\n你发出 REQ 后，客户端希望先拿到已经存在的事件，再继续收到新事件。Buzz 的 handler 先注册 subscription，执行每个 filter 的历史读取与去重，发送 EOSE；之后新写入事件由 post-commit fan-out 进入同一个订阅 registry。\n\n[[evidence:crates/buzz-relay/src/handlers/req.rs:42-48]]\n\n## 先猜一下\n\n如果先查历史再注册订阅，历史查询期间刚写入的事件会不会落在两段路径之间？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会有丢事件的窗口，所以源码先 register，再做历史读取；实时事件随后可以按照已存在的 subscription 投递。\n\n## 一站一站往回走\n\n第一站是注册：REQ 通过认证和访问检查后，把订阅放进连接本地 map 和全局 `register_scoped`，并 retain 对应 Redis topic。\n\n[[evidence:crates/buzz-relay/src/handlers/req.rs:234-257]]\n\n第二站是历史读取：每个 filter 建立自己的 DB query，按 filter 顺序处理结果，执行匹配、访问检查、reader visibility 和 event-id dedupe，最后发送 EOSE。\n\n[[evidence:crates/buzz-relay/src/handlers/req.rs:259-300]]\n\n[[evidence:crates/buzz-relay/src/handlers/req.rs:372-419]]\n\n第三站是 live path：持久化事件 post-commit 调用 `fan_out_scoped`，根据 channel/global scope 找候选，再发送事件帧。你看到 EOSE 时，应该把它理解成历史阶段结束，不是 subscription 被删除。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:429-445]]\n\n## 自检\n\n- 为什么注册要发生在历史查询前？\n- EOSE 表示订阅结束还是历史阶段结束？\n\n## 一句话\n\n**REQ 先登记未来的接收位置，再补发历史并以 EOSE 标记历史完成。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 42, "lineEnd": 48, "note": "REQ handler 的职责注释是 register、历史投递、EOSE。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 234, "lineEnd": 257, "note": "历史查询前保存订阅并调用 register_scoped、retain_topic。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 259, "lineEnd": 300, "note": "注册后为每个 filter 构造历史查询。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 372, "lineEnd": 419, "note": "历史结果逐条做匹配、访问控制、去重并发送 EOSE。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 429, "lineEnd": 445, "note": "post-commit dispatch 调用 fan_out_scoped 并记录匹配数量。" }
+            ],
+            "cards": [
+              { "id": "message-req-register-first", "front": "REQ 为什么先 register 再查历史？", "back": "为了避免历史查询期间新写入事件落在历史与实时两段路径之间。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 234, "lineEnd": 257, "note": "register_scoped 位于历史 query 构造之前。" } ] },
+              { "id": "message-req-eose", "front": "历史投递末尾的 EOSE 表示什么？", "back": "表示本次历史读取阶段结束；subscription 仍然保留接收之后的 live fan-out。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 413, "lineEnd": 419, "note": "历史循环结束后发送 EOSE，并记录 historical delivery 完成。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-req-order", "kind": "short-answer", "title": "复述 REQ 顺序", "prompt": "REQ 的关键顺序是什么？", "expectedAnswer": "认证/访问检查、注册 subscription、历史读取、发送 EOSE、继续实时 fan-out", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 234, "lineEnd": 257, "note": "注册先于历史读取。" }, { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 413, "lineEnd": 419, "note": "历史处理后发送 EOSE。" }, { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 429, "lineEnd": 445, "note": "新事件由 post-commit fan-out 继续投递。" } ] },
+              { "id": "message-req-dedupe", "kind": "short-answer", "title": "找出历史去重依据", "prompt": "历史投递用什么标识避免多个 filter 重复发送同一事件？", "expectedAnswer": "event ID，通过 seen_ids 去重", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 396, "lineEnd": 405, "note": "seen_ids 以 stored.event.id 去重。" } ] }
+            ]
+          },
+          {
+            "id": "empty-kinds-not-wildcard",
+            "title": "为什么 kinds: [] 不是 wildcard？",
+            "variant": "对比",
+            "content": "# 为什么 kinds: [] 不是 wildcard？\n\n## 两个东西\n\n你要区分两种看起来都“没有 kind 可用”的情况：没有 kinds 约束时，源码把 subscription 当 wildcard；明确给出 `kinds: []` 时，源码把它解释为 match no kinds，并且不建立 fan-out 索引。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:85-113]]\n\n## 先猜一下\n\n如果客户端发送空数组 `kinds: []`，你会把它当成“所有 kind”以方便匹配，还是当成“没有任何 kind 满足”？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n在 Buzz 的注册逻辑里，空数组表示不匹配任何 kind；真正的 wildcard 是没有 kinds 约束，也就是 `None` 分支。\n\n## 逐条对照\n\n第一种是 `None`：至少一个 filter 没有 kinds constraint，channel subscription 进入 channel_wildcard_index；global subscription 进入 global_wildcard_index。第二种是 `Some(kinds) if kinds.is_empty()`：源码注释说它永远不会收到事件，因此不写入索引。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:85-100]]\n\n全局分支也保留同一语义：空 kinds 直接跳过，非空 kinds 才按每个 kind 写入 global_kind_index。你读 NIP-01 filter 时，数组缺失和数组为空必须分开。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:114-143]]\n\n## 什么时候用哪个\n\n要接收某 scope 的所有 kind，省略 kinds；要明确表达空集合，使用 `kinds: []`，它会得到“无事件”的结果。你不要用空数组代替 wildcard。\n\n## 自检\n\n- 缺少 kinds 与 kinds: [] 分别进入什么语义？\n- 为什么空 kinds 不建立索引？\n\n## 一句话\n\n**缺少 kinds 才是 wildcard，明确的空数组代表没有任何 kind 可以匹配。**",
+            "evidence": [
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 85, "lineEnd": 113, "note": "频道注册分支区分 None wildcard、空 kinds 无匹配和非空 kinds 索引。" },
+              { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 114, "lineEnd": 143, "note": "全局注册分支维持相同的 wildcard、空列表和 kind index 语义。" }
+            ],
+            "cards": [
+              { "id": "message-empty-kinds", "front": "kinds: [] 在 Buzz 中表示什么？", "back": "match no kinds；订阅不会收到事件，也不会被写入 kind index。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 95, "lineEnd": 100, "note": "注释明确说明空 kinds 永远不会收到事件。" } ] },
+              { "id": "message-missing-kinds", "front": "真正的 wildcard 条件是什么？", "back": "Filter 没有 kinds 约束，即 extract_kinds_from_filters 返回 None。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 85, "lineEnd": 94, "note": "None 分支把 channel subscription 放入 wildcard index。" } ] }
+            ],
+            "exercises": [
+              { "id": "message-kinds-empty", "kind": "short-answer", "title": "判断空数组", "prompt": "客户端想订阅所有 kind，能否发送 kinds: []？", "expectedAnswer": "不能，应省略 kinds；空数组表示没有匹配的 kind", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 85, "lineEnd": 100, "note": "None 是 wildcard，空列表是 match no kinds。" } ] },
+              { "id": "message-kinds-global", "kind": "short-answer", "title": "检查全局对称性", "prompt": "global subscription 对空 kinds 的处理是否与 channel subscription 同义？", "expectedAnswer": "是，空 kinds 同样跳过，不进入 global_kind_index", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 126, "lineEnd": 143, "note": "全局分支中 Some(kinds) if kinds.is_empty() 直接跳过。" } ] }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

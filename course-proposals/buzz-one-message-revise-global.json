@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-one-message-global",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-one-message",
+    "unitId": "read-and-deliver",
+    "id": "global-cannot-see-channel",
+    "expectedRevision": 1,
+    "title": "为什么 global subscription 看不到 channel event？",
+    "content": "# 为什么 global subscription 看不到 channel event？\n\n## 现象\n\n你在 `fan_out_scoped` 里会看到：有 channel_id 的事件只查 channel kind index 和 channel wildcard；没有 channel_id 的事件才查 global indexes。最后的注释把这个方向写成双向的 scoping invariant。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:275-324]]\n\n## 先猜一下\n\n一个 global subscription 没有指定频道，是否应该顺便收到所有频道的消息，方便客户端少开几条订阅？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不应该。global 与 channel 是不同的 scope，global subscription 不接收 channel-scoped event，channel subscription 也不接收 global event。\n\n## 为什么是这样\n\nfan_out 的分支条件先看 `event.channel_id`：Some 只走频道候选，None 只走全局候选。因为两类订阅没有被放进对方的候选索引，所以即使完整 filters_match 还没执行，scope 已经先隔离。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:286-384]]\n\n源码把原因写成防止双向信息泄漏：频道内容不能漏给 global subscribers，全局基础设施事件也不能漏给 channel subscribers。你看到的不是性能优化的附带效果，而是访问边界的一部分。\n\n[[evidence:crates/buzz-relay/src/subscription.rs:386-391]]\n\n## 自检\n\n- fan_out 如何决定走 global 还是 channel 索引？\n- 为什么这是信息隔离而不只是索引优化？\n\n## 一句话\n\n**subscription scope 先决定候选索引，global 与 channel 两个方向都被明确隔离。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 275, "lineEnd": 324, "note": "fan_out_scoped 对 Some(channel_id) 只查频道索引。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 286, "lineEnd": 384, "note": "fan_out_scoped 的频道与全局分支完整展示候选索引选择。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 324, "lineEnd": 384, "note": "channel-less 事件只查全局索引。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 386, "lineEnd": 391, "note": "注释明确记录 global/channel 双向隔离与信息泄漏风险。" }
+    ],
+    "cards": [
+      { "id": "message-global-channel", "expectedRevision": 1, "front": "channel_id=Some 的事件会查 global wildcard 吗？", "back": "不会；它只进入频道 kind/wildcard 候选。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 286, "lineEnd": 324, "note": "Some 分支没有访问 global index。" } ] },
+      { "id": "message-channel-global", "expectedRevision": 1, "front": "为什么 channel subscription 不能收到 global event？", "back": "因为 None 分支只访问 global indexes，channel-scoped subscriptions 不在其中。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 324, "lineEnd": 388, "note": "全局事件分支只查询 global_p_kind、global_kind 和 global_wildcard。" } ] }
+    ],
+    "exercises": [
+      { "id": "message-scope-direction", "expectedRevision": 1, "kind": "short-answer", "title": "判断 scope 方向", "prompt": "global subscription 能收到 channel-scoped event 吗？", "expectedAnswer": "不能", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 386, "lineEnd": 391, "note": "scoping invariant 明确写出 global 不接收 channel event。" } ] },
+      { "id": "message-scope-reason", "expectedRevision": 1, "kind": "short-answer", "title": "解释隔离原因", "prompt": "源码把 global/channel 分离的安全原因描述为什么？", "expectedAnswer": "防止频道内容漏给 global subscribers，也防止全局基础设施事件漏给 channel subscribers", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/subscription.rs", "lineStart": 386, "lineEnd": 391, "note": "注释列出双向信息泄漏风险。" } ] }
+    ]
+  }
+}
