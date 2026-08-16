@@ -1,7 +1,8 @@
 import { useEffect, useId, useState } from "react";
 
-import type { EvidenceSnippetView, EvidenceToken } from "../view/lesson-view.js";
+import type { EvidenceSnippetView, EvidenceToken, EvidenceUaView } from "../view/lesson-view.js";
 import { EvidenceCode } from "./EvidenceCode.js";
+import { EvidenceUaPlace } from "./EvidenceUaPlace.js";
 import { loadEvidenceSnippet } from "./load-evidence-snippet.js";
 
 function formatLineRange(start: number, end: number): string {
@@ -29,12 +30,14 @@ export function EvidenceInlineSource({
   basePath,
   sourcePath,
   lines,
+  ua,
   onOpenEvidence,
 }: {
   readonly index: number;
   readonly basePath: string;
   readonly sourcePath: string;
   readonly lines: string;
+  readonly ua?: EvidenceUaView | null;
   readonly onOpenEvidence?: (index: number, trigger: HTMLElement) => void;
 }) {
   const triggerId = useId();
@@ -103,6 +106,7 @@ export function EvidenceInlineSource({
           </button>
         ) : null}
       </div>
+      {ua ? <EvidenceUaPlace ua={ua} compact /> : null}
 
       {status === "loading" ? (
         <div

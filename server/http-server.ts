@@ -15,11 +15,13 @@ import { handleExercise } from "./http/handlers/exercise.js";
 import { handleLesson } from "./http/handlers/lesson.js";
 import { handleReaderMark } from "./http/handlers/reader-mark.js";
 import { handleStudyMap } from "./http/handlers/study-map.js";
+import { createUaDashboardHandler } from "./http/handlers/ua-dashboard.js";
 import { handleAirlock, handleStudy } from "./http/handlers/study.js";
 import type { Handler } from "./http/handlers/types.js";
 import { handleVocabulary } from "./http/handlers/vocabulary.js";
 import { getStudyPaths } from "./studies/paths.js";
 import { inspectStudyShelf } from "./studies/repository.js";
+import { UaDashboardManager } from "./ua/dashboard.js";
 
 const DEFAULT_PORT = 4317;
 
@@ -30,6 +32,7 @@ function defaultProjectRoot(): string {
 export function createUniversityLocalHttpServer(projectRoot: string): Server {
   const config = loadUniversityLocalConfig({ projectRoot });
   const context = createServerContext(config.studiesRoot);
+  const uaDashboard = new UaDashboardManager(config.studiesRoot);
 
   // Archived studies keep their data but leave the shelf; a superseded study
   // that still greets the learner every day is clutter wearing a title.
@@ -56,6 +59,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
     // Last: their routes are all leaves (`/marks`, `/map`) that no earlier
     // handler claims, so placing them here cannot change any existing route.
     handleReaderMark,
+    createUaDashboardHandler(uaDashboard),
     handleStudyMap,
   ];
 
@@ -101,6 +105,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
   server.requestTimeout = 10_000;
   server.headersTimeout = 5_000;
   server.on("close", () => {
+    uaDashboard.close();
     context.close();
   });
   return server;
@@ -113,4 +118,16 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   server.listen(port, "127.0.0.1", () => {
     console.log(`UniversityLocal API listening on http://127.0.0.1:${port}`);
   });
+
+  let shuttingDown = false;
+  const shutdown = (): void => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    server.close(() => process.exit(0));
+    // The close callback normally runs immediately for this local API. Keep a
+    // bounded escape hatch so a stuck request cannot leave the UA child alive.
+    setTimeout(() => process.exit(1), 2_000).unref();
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }

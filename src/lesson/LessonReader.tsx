@@ -4,6 +4,7 @@ import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
 import { lessonPath, readJson } from "../api/client.js";
 import { EvidenceSourceSheet } from "../evidence/EvidenceSourceSheet.js";
+import { LessonUaLayers } from "../evidence/EvidenceUaPlace.js";
 import { readDetailMode, writeDetailMode, type DetailMode } from "../language/detail-mode.js";
 import {
   readForeignSettings,
@@ -454,6 +455,7 @@ export function LessonReader({
               <h2 ref={titleRef} tabIndex={-1}>
                 {view.lesson.title}
               </h2>
+              <LessonUaLayers evidence={view.lesson.evidence} />
             </div>
           </header>
           <div className="markdown-body" ref={bodyRef}>
@@ -475,6 +477,7 @@ export function LessonReader({
               {...(view.lesson.evidenceAnchors
                 ? { evidenceAnchors: view.lesson.evidenceAnchors }
                 : {})}
+              evidence={view.lesson.evidence}
               evidenceBasePath={lessonPath(locator)}
               onOpenEvidence={(index, trigger) => openSourceSheet(index, trigger)}
               assets={view.lesson.assets}
@@ -612,6 +615,7 @@ export function LessonReader({
         }}
       />
       <EvidenceSourceSheet
+        studyId={locator.studyId}
         basePath={lessonPath(locator)}
         evidence={view.lesson.evidence}
         index={sourceIndex}

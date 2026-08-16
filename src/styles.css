@@ -581,11 +581,42 @@ summary:focus-visible,
   letter-spacing: -0.045em;
 }
 
+.study-detail__header {
+  justify-content: space-between;
+  gap: 28px;
+  align-items: flex-end;
+}
+
+.ua-dashboard-entry {
+  flex: 0 0 min(280px, 100%);
+}
+
+.ua-dashboard-entry__hint,
+.ua-dashboard-entry__error {
+  margin: 9px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.ua-dashboard-entry__error {
+  color: #ffb4a3;
+}
+
 .study-detail__header div > p:last-child {
   max-width: 670px;
   margin-top: 18px;
   color: var(--game-ui-text-muted);
   line-height: 1.7;
+}
+
+.study-detail__header .ua-dashboard-entry__hint,
+.study-detail__header .ua-dashboard-entry__error {
+  max-width: 280px;
+  margin-top: 9px;
+  line-height: 1.45;
 }
 
 .study-evidence-status {
@@ -1017,6 +1048,19 @@ summary:focus-visible,
 .lesson-reader__title {
   min-width: 0;
   max-width: 100%;
+}
+
+.lesson-ua-layers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  max-width: 40rem;
+  margin: 14px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  word-break: keep-all;
 }
 
 .lesson-reader__title h2 {
@@ -1685,6 +1729,70 @@ summary:focus-visible,
   color: rgb(225 228 232 / 78%);
   font-size: 0.78rem;
   line-height: 1.35;
+}
+
+.evidence-inline-source > .evidence-ua-place {
+  padding: 7px 12px 8px;
+  border-bottom: 1px solid rgb(246 231 211 / 10%);
+  background: rgb(0 0 0 / 14%);
+}
+
+.evidence-ua-place {
+  display: grid;
+  gap: 6px;
+}
+
+.evidence-ua-place__layer,
+.evidence-ua-place__summary {
+  margin: 0;
+  color: rgb(225 228 232 / 78%);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.evidence-ua-place__summary {
+  color: rgb(225 228 232 / 62%);
+}
+
+.evidence-ua-place__open {
+  justify-self: start;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: #f7d3a0;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgb(247 211 160 / 40%);
+  text-underline-offset: 0.18em;
+}
+
+.evidence-ua-place__open:hover,
+.evidence-ua-place__open:focus-visible {
+  color: #ffe3b5;
+  text-decoration-color: #ffe3b5;
+}
+
+.evidence-ua-place__open:focus-visible {
+  outline: 2px solid #f0a868;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.evidence-ua-place__error {
+  margin: 0;
+  color: #ffb4a3;
+  font-size: 0.78rem;
+}
+
+.source-sheet .evidence-ua-place {
+  margin: 12px 0 4px;
+  padding: 10px 12px;
+  border: 1px solid rgb(246 231 211 / 14%);
+  border-radius: 10px;
+  background: rgb(0 0 0 / 18%);
 }
 
 .evidence-inline-source__meta {

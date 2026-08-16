@@ -5,14 +5,17 @@ import { readJson } from "../api/client.js";
 import type { EvidenceSnippetView, EvidenceToken, EvidenceView } from "../view/lesson-view.js";
 import { highlightEvidenceCode } from "../view/lesson-view.js";
 import { EvidenceCode } from "./EvidenceCode.js";
+import { EvidenceUaPlace } from "./EvidenceUaPlace.js";
 
 export function EvidenceSourceSheet({
+  studyId,
   basePath,
   evidence,
   index,
   onClose,
   onSelectIndex,
 }: {
+  readonly studyId?: string;
   readonly basePath: string;
   readonly evidence: readonly EvidenceView[];
   readonly index: number | null;
@@ -131,6 +134,7 @@ export function EvidenceSourceSheet({
             </code>
           </span>
         </div>
+        {reference.ua ? <EvidenceUaPlace studyId={studyId} ua={reference.ua} /> : null}
         <div className="source-sheet__tools">
           <label>
             <span>在这份源码中查找</span>

@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-08T20:03:18.927Z
+generated_at: 2026-08-16T03:39:55.804Z
 generator_version: doc-gov@0.8.0
-docs_count: 38
+docs_count: 40
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-local-study-containers.md
@@ -144,6 +144,13 @@ docs:
     canonical: true
     last_reviewed: 2026-08-04
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-KEEP-GENERATED-UA-DASHBOARD-WORKSPACES-GIT-VERIFIABLE-WITHOUT-DIRTYING-FRESHNESS
+    path: docs/reference/learnings/workflow-issues/keep-generated-ua-dashboard-workspaces-git-verifiable-without-dirtying-freshness.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-14
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-LAND-STUDY-COURSES-THROUGH-EVIDENCE-LINT-AND-ACTIVE-STATUS-GATES
     path: docs/reference/learnings/workflow-issues/land-study-courses-through-evidence-lint-and-active-status-gates.md
     type: reference
@@ -157,6 +164,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-07-20
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-RESOLVE-LESSON-EVIDENCE-ONTO-THE-MATCHING-COMMIT-UA-GRAPH-AT-READ-TIME
+    path: docs/reference/learnings/workflow-issues/resolve-lesson-evidence-onto-the-matching-commit-ua-graph-at-read-time.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-16
     pinned: false
   - id: REF-LESSON-PEDAGOGY
     path: docs/reference/lesson-pedagogy.md

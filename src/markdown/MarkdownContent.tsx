@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 import type { LanguageLayer } from "../domain/lesson-marks.js";
 import { EvidenceInlineSource } from "../evidence/EvidenceInlineSource.js";
 import { MermaidDiagram } from "./MermaidDiagram.js";
-import type { LessonAssetView, LessonSectionView } from "../view/lesson-view.js";
+import type { EvidenceView, LessonAssetView, LessonSectionView } from "../view/lesson-view.js";
 import { WordAnchor, type VocabularyStage } from "../language/WordPopover.js";
 import { DEFAULT_FOREIGN_SETTINGS, type ForeignSettings } from "../language/foreign-settings.js";
 import { remarkLanguageAnchors } from "../language/remark-language-anchors.js";
@@ -258,6 +258,7 @@ export function MarkdownContent({
   lessonLinks,
   onFollowLink,
   evidenceAnchors,
+  evidence,
   evidenceBasePath,
   onOpenEvidence,
   assets = [],
@@ -274,6 +275,7 @@ export function MarkdownContent({
   readonly lessonLinks?: readonly LessonLinkRange[];
   readonly onFollowLink?: (target: LessonLinkTarget) => void;
   readonly evidenceAnchors?: readonly EvidenceAnchorRange[];
+  readonly evidence?: readonly EvidenceView[];
   readonly evidenceBasePath?: string;
   readonly onOpenEvidence?: (index: number, trigger: HTMLElement) => void;
   readonly assets?: readonly LessonAssetView[];
@@ -360,6 +362,7 @@ export function MarkdownContent({
               basePath={evidenceBasePath}
               sourcePath={sourcePath}
               lines={lines}
+              ua={evidence?.[evidenceIndex]?.ua ?? null}
               onOpenEvidence={onOpenEvidence}
             />
           );
@@ -515,6 +518,7 @@ export function MarkdownContent({
       active,
       onFollowLink,
       evidenceBasePath,
+      evidence,
       onOpenEvidence,
       assetsById,
       sectionsByTitle,

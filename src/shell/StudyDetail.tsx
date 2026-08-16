@@ -6,6 +6,7 @@ import type { LessonLocator, StudySummary, StudyView } from "../view/lesson-view
 import { CourseSection } from "./CourseSection.js";
 import { KnowledgeNotesSection } from "./KnowledgeNotesSection.js";
 import { StudyMap } from "./StudyMap.js";
+import { UaDashboardButton } from "./UaDashboardButton.js";
 
 export function StudyEvidenceStatus({
   snapshotCount,
@@ -128,6 +129,10 @@ export function StudyDetail({
           <h2>{view.study.title}</h2>
           <p>{view.study.description}</p>
         </div>
+        <UaDashboardButton
+          studyId={view.study.id}
+          available={(summary?.readyUaAnalysisCount ?? 0) > 0}
+        />
       </header>
       {summary ? (
         <StudyEvidenceStatus

@@ -215,6 +215,13 @@ export interface KnowledgeNoteView {
   readonly content: string;
 }
 
+export interface EvidenceUaView {
+  readonly nodeId: string;
+  readonly name: string;
+  readonly summary: string;
+  readonly layerName: string | null;
+}
+
 export interface EvidenceView {
   readonly kind: string;
   readonly sourcePath: string;
@@ -223,6 +230,20 @@ export interface EvidenceView {
   readonly sourceCommit: string;
   readonly nodeIds: readonly string[];
   readonly note: string | null;
+  readonly ua?: EvidenceUaView | null;
+}
+
+/** Unique layer names this lesson's citations landed on, in first-seen order. */
+export function evidenceUaLayers(evidence: readonly EvidenceView[]): readonly string[] {
+  const layers: string[] = [];
+  const seen = new Set<string>();
+  for (const item of evidence) {
+    const layer = item.ua?.layerName;
+    if (!layer || seen.has(layer)) continue;
+    seen.add(layer);
+    layers.push(layer);
+  }
+  return layers;
 }
 
 /**
