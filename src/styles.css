@@ -873,6 +873,49 @@ summary:focus-visible,
   content: "收起 ▴";
 }
 
+/*
+   The lesson list, folded so the shelf can be scanned.
+
+   Same affordance as the objectives above it — native `<details>`, no script,
+   screen-reader support for free — and deliberately quieter: no panel, no
+   border. The objectives are a thing you open and read; this is a door, and a
+   door drawn like a box competes with the course it belongs to.
+*/
+.course-units {
+  margin-top: 26px;
+}
+
+.course-units summary {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.86rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+/* Safari paints its own triangle even where `list-style: none` removed the
+   standard one. */
+.course-units summary::-webkit-details-marker {
+  display: none;
+}
+
+.course-units summary::after {
+  color: #f0a868;
+  content: "展开 ▾";
+  font-size: 0.82rem;
+}
+
+.course-units[open] summary::after {
+  content: "收起 ▴";
+}
+
+.course-units summary:hover {
+  color: #f7d3a0;
+}
+
 /* The bar sits between the course blurb and the units, so it needs room to read
    as its own statement rather than as a rule between two paragraphs. */
 .course-progress {

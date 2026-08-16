@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { GamePanel } from "@pieai/swimmer-ui-kit";
 
 import { readJson } from "../api/client.js";
+import { isCurrentLessonCompleted } from "../view/lesson-view.js";
 import type { LessonLocator, StudySummary, StudyView } from "../view/lesson-view.js";
 import { CourseSection } from "./CourseSection.js";
 import { KnowledgeNotesSection } from "./KnowledgeNotesSection.js";
@@ -121,6 +122,19 @@ export function StudyDetail({
   readonly summary: StudySummary | null;
   readonly onOpenLesson: (locator: LessonLocator) => void;
 }) {
+  /*
+    Whether any course has been started, which decides whether the first one
+    opens itself. Computed here rather than inside a course because no course
+    can see its siblings, and "open me only if nobody else is underway" is a
+    statement about the shelf.
+  */
+  const anyCourseInProgress = view.courses.some((course) => {
+    const lessons = course.units.flatMap((unit) => unit.lessons);
+    const done = lessons.filter((lesson) =>
+      isCurrentLessonCompleted(lesson.progress, lesson.contentRevision),
+    ).length;
+    return done > 0 && done < lessons.length;
+  });
   return (
     <section className="study-detail">
       <header className="study-detail__header">
@@ -143,12 +157,13 @@ export function StudyDetail({
       <AirlockClocks studyId={view.study.id} />
       <StudyMap studyId={view.study.id} />
       {view.courses.length > 0 ? (
-        view.courses.map((course) => (
+        view.courses.map((course, index) => (
           <CourseSection
             key={course.id}
             studyId={view.study.id}
             course={course}
             onOpenLesson={onOpenLesson}
+            openWhenNothingInProgress={index === 0 && !anyCourseInProgress}
           />
         ))
       ) : (
