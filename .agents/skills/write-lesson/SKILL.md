@@ -15,7 +15,10 @@ Why this shape (research, rejected alternatives):
 Read once; never restate it inside a lesson.
 
 Dispatching the work — which model writes, which one checks, and the CLI flags
-that silently fail: [references/pipeline.md](references/pipeline.md). Not needed
+that silently fail: [references/pipeline.md](references/pipeline.md), and the
+models and CLI calls it uses: [references/models.md](references/models.md) —
+read that one before dispatching, and never copy a version id out of it, because
+it deliberately holds none. Not needed
 if you are the one writing.
 
 ## Start

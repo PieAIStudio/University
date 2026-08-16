@@ -4,7 +4,7 @@ import { Tip } from "../Tip.js";
 import { ReviewCard } from "../review/ReviewCard.js";
 import { VocabularyReview } from "../review/VocabularyReview.js";
 import type { BootstrapData, LessonLocator } from "../view/lesson-view.js";
-import { focusLabel, progressLabel } from "../view/lesson-view.js";
+import { focusParts, progressLabel } from "../view/lesson-view.js";
 
 export function TodaySection({
   data,
@@ -25,7 +25,13 @@ export function TodaySection({
             from one study and has no way to tell whether that was a choice. */}
         {data.today.focus ? (
           <p className="today-focus">
-            主攻 <strong>{focusLabel(data.today.focus, data.studies)}</strong>
+            主攻 <strong>{focusParts(data.today.focus, data.studies).study}</strong>
+            {focusParts(data.today.focus, data.studies).detail ? (
+              <span className="today-focus__detail">
+                {" "}
+                · {focusParts(data.today.focus, data.studies).detail}
+              </span>
+            ) : null}
             <span> · 复习卡片仍来自全部 study</span>
           </p>
         ) : null}

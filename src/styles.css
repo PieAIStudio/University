@@ -243,8 +243,16 @@ summary:focus-visible,
   padding: 10px 0 22px;
 }
 
-.today-focus {
-  margin: 14px 0 0;
+/*
+   Specificity matched to the reset that would otherwise win.
+
+   `.today-intro > p` (0,1,1) zeroes the margins of everything in this block,
+   so a bare `.today-focus` (0,1,0) could never space itself and sat flush
+   against the lede. Same defect as the lede's own selector: a rule that reads
+   correctly and never applies.
+*/
+.today-intro > p.today-focus {
+  margin: 16px 0 0;
   font-size: 0.92rem;
   color: rgba(255, 245, 232, 0.62);
 }
@@ -258,6 +266,15 @@ summary:focus-visible,
   color: rgba(255, 245, 232, 0.38);
 }
 
+/*
+   The route sits one step above the trailing aside and one step below the
+   project name — three levels in one line, so it reads as an answer with
+   qualifications rather than as three competing announcements.
+*/
+.today-focus span.today-focus__detail {
+  color: rgba(255, 245, 232, 0.55);
+}
+
 .today-intro h2 {
   max-width: 780px;
   margin-top: 12px;
@@ -268,9 +285,23 @@ summary:focus-visible,
   letter-spacing: -0.055em;
 }
 
-.today-intro > p:last-child {
+/*
+   The lede, selected by what it is rather than by where it sits.
+
+   This was `> p:last-child`, which described the lede correctly until a focus
+   line was added after it — from then on the selector pointed at that line
+   instead, and the lede silently fell back to the `margin: 0` reset. It sat
+   flush against an 85px headline with a zero-pixel gap and two thirds of the
+   intended size, which read as a spacing bug and was really a selector aiming
+   at a position that had stopped meaning anything.
+
+   The space above it is proportional to the headline rather than a fixed 22px:
+   the title is `clamp(2.5rem, 6vw, 5.3rem)`, so a gap that looks generous at
+   the small end is a collision at the large one.
+*/
+.today-intro > p:not(.today-focus) {
   max-width: 620px;
-  margin-top: 22px;
+  margin-top: clamp(14px, 1.6vw, 26px);
   color: var(--game-ui-text-muted);
   font-size: 1.05rem;
   line-height: 1.7;
@@ -306,9 +337,16 @@ summary:focus-visible,
 .today-metric {
   grid-column: 2;
   display: flex;
-  align-items: center;
-  gap: 18px;
-  min-height: 128px;
+  /*
+     Baseline, not centre. The count is display-sized and its label is body
+     text; centring two things that different leaves the small one floating
+     beside the big one's midpoint, which is what made the card look
+     mis-proportioned. Sitting them on a shared baseline is what a number and
+     its unit do everywhere else.
+  */
+  align-items: baseline;
+  gap: 14px;
+  min-height: 118px;
   padding: 22px;
   border: 1px solid var(--campus-rule);
   border-radius: var(--game-ui-radius-panel);

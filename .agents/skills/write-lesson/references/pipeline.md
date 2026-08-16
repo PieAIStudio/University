@@ -58,60 +58,17 @@ lessons: if a run reports only defects the skill already names, stop running it.
 
 ## Commands
 
-Working directory is the repo root.
+**Which models, and how to invoke them: [models.md](models.md). Read it before
+dispatching a run.**
 
-**Writer / fixer — grok:**
+It is a separate file because model ids go stale every few weeks while the
+pipeline's shape does not, and a version number buried in this argument is a
+version number nobody updates. It names roles rather than versions, and says to
+ask `grok models` / `agy models` for what is current — always the newest in the
+family, always the highest effort it accepts.
 
-```bash
-grok -m grok-4.5 --effort high --always-approve --cwd <repo> --prompt-file <file>
-```
-
-**Detector — Antigravity CLI:**
-
-```bash
-agy -p "$(cat <file>)" --model gemini-3.6-flash-high --effort high --dangerously-skip-permissions
-```
-
-`agy` has no `--prompt-file`; pass the prompt through `-p`.
-
-### `--effort` is not universal — this is a real trap
-
-Verified 2026-08-10 by running each combination:
-
-| model | `--effort` |
-| --- | --- |
-| `gemini-3.6-flash-high` | accepted |
-| `gemini-3.1-pro-high` | accepted |
-| `claude-sonnet-4-6` | **rejected — the run fails immediately** |
-| `claude-opus-4-6-thinking` | **rejected — the run fails immediately** |
-
-The gemini ids already carry their level as a suffix (`-high` / `-medium` /
-`-low`); passing `--effort` as well is redundant but harmless. The Claude models
-in Antigravity fail outright, with
-`--effort is not supported for model "…"`.
-
-**Drop `--effort` whenever the model is a Claude one.** Two judging runs were
-lost to this before anyone read the error text.
-
-## Fallback
-
-If the Flash quota runs out, the detector falls back to:
-
-```bash
-agy -p "$(cat <file>)" --model claude-sonnet-4-6 --dangerously-skip-permissions
-```
-
-Note the missing `--effort`. Slower than Flash and at least as capable at this
-job — detection is careful reading, which is what the bigger model is better at.
-
-Do **not** fall back to `claude-opus-4-6-thinking` by default: it works (it was
-the independent judge in the experiment), but the detector runs once per lesson
-across hundreds of lessons and the extra capability is not what limits quality
-here — the limit is that a detector may only report.
-
-`gemini-3.1-pro-high` is a third option. It was the strongest voice in an earlier
-head-to-head but wrote too thin a detail layer to pass the 60% floor, so it is a
-better checker than a writer.
+Two things there are worth knowing before you read it: `--effort` makes Claude
+models under `agy` fail outright, and the detector may never propose wording.
 
 ## Never
 

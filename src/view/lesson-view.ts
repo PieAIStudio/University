@@ -117,14 +117,28 @@ export interface LearningFocus {
  * run is summarised by where it starts and how long the pinned route is — not
  * the study's total course count (that lives on the shelf).
  */
-export function focusLabel(focus: LearningFocus, studies: readonly StudySummary[]): string {
+/**
+ * The focus line, split into the part worth emphasising and the part that
+ * merely qualifies it.
+ *
+ * Previously one string inside one `<strong>`, so the project name, the entry
+ * course and the route length were all the same accent orange — three
+ * emphases in one sentence, which is the same as none. The question the line
+ * answers is "which project am I on"; everything after that is detail, and
+ * detail set in the loudest colour on the page competes with the answer.
+ */
+export function focusParts(
+  focus: LearningFocus,
+  studies: readonly StudySummary[],
+): { readonly study: string; readonly detail: string } {
   const study = studies.find((candidate) => candidate.id === focus.studyId);
   const studyLabel = study?.title ?? `${focus.studyId}（不在书架上）`;
   const [head, ...rest] = focus.courseIds;
-  if (!head) return studyLabel;
-  return rest.length === 0
-    ? `${studyLabel} · ${head}`
-    : `${studyLabel} · ${head} 起 · 主攻路线 ${focus.courseIds.length} 门`;
+  if (!head) return { study: studyLabel, detail: "" };
+  return {
+    study: studyLabel,
+    detail: rest.length === 0 ? head : `${head} 起 · 主攻路线 ${focus.courseIds.length} 门`,
+  };
 }
 
 export interface LessonProgress {
