@@ -89,11 +89,13 @@ const DEBT_RULE = {
   HAND_COPIED_FENCE: "hand-copied-fence",
   SYSTEM_VOCAB: "system-vocab",
   ORPHAN_EVIDENCE: "orphan-evidence",
+  SCREENSHOT_COMMIT: "screenshot-commit",
 };
 const DEBT_RULE_ORDER = [
   DEBT_RULE.DETAIL,
   DEBT_RULE.HAND_COPIED_FENCE,
   DEBT_RULE.SYSTEM_VOCAB,
+  DEBT_RULE.SCREENSHOT_COMMIT,
   DEBT_RULE.ORPHAN_EVIDENCE,
 ];
 
@@ -473,6 +475,7 @@ function checkSystemVocabulary(content, fail) {
         27,
         `第 ${i + 1} 行出现了系统词汇「${word}」。读者不知道本 App 存在——删掉或改成读者世界里的说法（「本课」写成「这节课」）。`,
         DEBT_RULE.SYSTEM_VOCAB,
+        DEBT_RULE.SCREENSHOT_COMMIT,
       );
       // Blank the match so a longer phrase already reported does not also fire
       // its shorter substring on the same line (e.g. 固定快照 → 快照).
@@ -577,6 +580,40 @@ function checkAssetsAreServable(manifestPath, manifest, fail) {
   }
 }
 
+/**
+ * A screenshot has to be of the version the lesson teaches.
+ *
+ * `capture.sourceCommit` is required and format-checked, and until now nothing
+ * anywhere compared it to anything — so it recorded a claim, not a fact. That
+ * matters more for pictures than for code: a citation can be re-read from the
+ * pinned blob and checked against the prose, while a screenshot is opaque. If
+ * it drifts, the only thing that notices is a reader who ends up looking at a
+ * screen the project no longer has.
+ *
+ * The rule is exact equality with the lesson's own commit, which is meaningful
+ * because across the whole shelf no lesson cites more than one: 561 of 561 pin
+ * every citation to a single commit, so "the lesson's commit" is unambiguous.
+ *
+ * Ratcheted rather than hard. Fixing an offender means rebuilding the studied
+ * project at that commit, running it, and re-shooting — real work that cannot
+ * happen inside a lint run. Existing cases become recorded debt; new ones fail.
+ */
+function checkScreenshotCommit(manifest, fail) {
+  const commits = new Set((manifest.evidence ?? []).map((entry) => entry.sourceCommit));
+  if (commits.size !== 1) return;
+  const lessonCommit = [...commits][0];
+  for (const asset of manifest.assets ?? []) {
+    const captured = asset.capture?.sourceCommit;
+    if (!captured || captured === lessonCommit) continue;
+    fail(
+      29,
+      `截图 ${asset.id} 拍于 ${captured.slice(0, 12)}，但本课的代码钉在 ${lessonCommit.slice(0, 12)}——` +
+        `读者会同时看到两个版本的项目。需要在课文钉住的那个版本上重拍。`,
+      DEBT_RULE.SCREENSHOT_COMMIT,
+    );
+  }
+}
+
 function lintLesson({ contentPath, manifestPath, content, manifest, id, previous }) {
   const problems = [];
   /** @param {number} item @param {string} message @param {string|null} [debtRule] */
@@ -676,6 +713,9 @@ function lintLesson({ contentPath, manifestPath, content, manifest, id, previous
 
   // 28 — a picture the reader can actually see.
   checkAssetsAreServable(manifestPath, manifest, fail);
+
+  // 29 — a picture of the version this lesson actually teaches.
+  checkScreenshotCommit(manifest, fail);
 
   return problems;
 }

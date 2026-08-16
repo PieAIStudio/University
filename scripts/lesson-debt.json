@@ -1228,8 +1228,8 @@
     },
     {
       "id": "turing-pact/foundations-before-zero/what-is-an-app/app-is-a-pile-of-files",
-      "contentRevision": 8,
-      "rules": ["detail", "hand-copied-fence", "system-vocab"]
+      "contentRevision": 10,
+      "rules": ["screenshot-commit"]
     },
     {
       "id": "turing-pact/foundations-data/data-from-a-server/a-row-is-not-an-object",
