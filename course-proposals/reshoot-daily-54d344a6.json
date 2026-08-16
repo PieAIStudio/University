@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "reshoot-daily-54d344a6",
+  "targetSnapshotId": "git-54d344a60c62",
+  "lesson": {
+    "courseId": "foundations-before-zero",
+    "unitId": "what-is-an-app",
+    "id": "app-is-a-pile-of-files",
+    "expectedRevision": 10,
+    "title": "能玩的「图灵密约」，在电脑里长什么样？",
+    "variant": "现象",
+    "content": "# 能玩的「图灵密约」，在电脑里长什么样？\n\n## 你看到的结果\n\n先看看图灵密约跑起来是什么样。这是它每天出一道题的那个页面——聊天记录、你选的人、最后的答案，全在同一屏里：\n\n:::figure[真实界面：每天一题的结果页]{#turing-pact-daily-result}\n\n真实截图 · 英文界面 · 每天一题那一页 · 已选中一名候选人，结果面板已展开。\n:::\n\n你在屏幕上看到的每一样东西，在做的人的文件里都能找到对应的那几行。外层有一块区域撑起「每天一题」这一整页；聊天记录和候选人按钮，是同一份名单和台词被一条一条摆出来的。[[evidence:src/pages/DailyPuzzlePage.tsx:266-345]] [[evidence:src/pages/DailyPuzzlePage.tsx:362-465]]\n\n:::detail[这些对话和按钮，是画在一张图片上的吗？]\n不是。要是它们是图片，你点上去不会有任何反应。你看到的每一句对话，是程序照着题库里的台词一条条摆出来的；每一个候选人按钮，来自同一份名单。你点完提交，你选的人和答案还留在这一页上，不会跳去另一张「结果海报」。所以真正要记住的是：一份名单变成了一个界面，这个界面又记住了你做过什么——而不是某张好看的卡片本身。[[evidence:src/pages/DailyPuzzlePage.tsx:362-465]] [[evidence:src/pages/DailyPuzzlePage.tsx:508-547]]\n:::\n\n:::figure[标注：三块区域各在哪]{#turing-pact-daily-result-annotated-crop}\n\n同一张截图加上标注：对话区、结果状态和候选人按钮分别落在哪。\n:::\n\n## 现象\n\n你点图标进游戏；做的人打开的，却是一堆能改的文字文件。在那一堆文件的最外层，有一份叫 `index.html` 的。它开头两行是这样：\n\n[[evidence:index.html:1-2]]\n\n:::detail[`index.html` 是什么？]\n你可以把它想成一份网页的「封面说明」。浏览器打开一个网址时，常常先读这一份，再照着里面的指示去找别的文件。它本身就是普通文字，用手机备忘录那类能显示纯文字的工具也能打开——只是里面写的是浏览器认识的记号，不是给你读的小说。做的人习惯把它放在总文件夹的最外层：打开文件夹，第一眼就能看见它。\n:::\n\n再往下，第 18 行写着一个短短的名字：\n\n[[evidence:index.html:18]]\n\n:::detail[这一行的名字会出现在哪？]\n出现在浏览器标签页那一小条上——你同时开很多网页的时候，就是靠那几个字分辨「这是哪一页」。改掉这一行、保存、再重新打开页面，那一小条上的字就跟着变了。它不负责画你看到的大标题和大按钮，它只管那条窄窄的标签。\n:::\n\n最让人意外的是文件末尾。留给「页面身体」的那块地方几乎是空的——只放了一个空位，和一行「接下来去读哪份文件」的指示：\n\n[[evidence:index.html:29-31]]\n\n:::detail[为什么入口文件几乎是空的？]\n因为真正的按钮、对话和排版，都不写在这份入口文件里，而写在后面被读进来的那些文件里。入口先占一个空位、点个名说「下一份读哪个」；那份文件跑起来之后，再往空位里把你看见的界面填进去。所以你盯着入口会觉得「这也太空了」——空，是故意的。\n:::\n\n## 先猜一下\n\n如果做的人手上没有这些能打开、能改的文字文件，他还能不能把标签页上那个名字改掉，然后自己先看一眼改得对不对？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n不能。他手上就只剩下你手机上那个已经做好的成品了，而成品是不给改的。要改那个名字，必须回到 `index.html` 这份文字文件里，改完再重新打开页面看一眼。\n\n## 为什么是这样\n\n网页是用一种带记号的文字写成的。\n\n:::detail[什么叫「记号」？]\n这里说的记号，是夹在尖括号里的短词，比如 `<title>`。它不是给你读的内容，是写给浏览器看的说明：这里是标题、这里是一块区域、这里到此为止。浏览器靠这些记号认出一页的骨架，再决定哪几个字大、哪几个字小、哪一块放在哪儿。做的人管它叫「标签」——跟商品上的价签、跟社交软件里的话题标记都没有关系，只是名字撞了。\n:::\n\n回头看你刚才见过的三处：第 1 行告诉浏览器「这份文件按网页的规矩读」；第 18 行决定标签页上那几个字；末尾那两行留好空位，并点名去读 `main.tsx`。真正那些按钮和对话，是被点名的那份文件继续画出来的。\n\n:::detail[`main.tsx` 那种文件又是什么？]\n它是另一类文字文件，里面写的是「先做什么、再做什么」的步骤。浏览器读完入口文件、看到「去读 main.tsx」这行指示，就会去照着那份文件里的步骤做——你看到的按钮和排版，多半是这样一步一步画出来的，而不是入口文件里事先写满的。下一节课会顺着这条线往回追。\n:::\n\n所以，App 不是一个打不开的黑盒子：图标是做完之后交到你手上的那个入口，`index.html` 是做的时候和网页加载时用的另一个入口。都是入口，只是给不同的人用。\n\n## 再想想\n\n那个几乎什么都没写的空位，最后怎么会变成满屏的界面？下一课会沿着 `main.tsx` 往回追。\n\n## 自检\n\n**问：** 你手机上点开的那个图标，是不是就等于 `index.html` 这个文件本身？\n\n## 一句话\n\n**在做的人眼里，App 首先是一堆能打开、能改的文字文件，不是一个打不开的黑盒子。**\n",
+    "evidence": [
+      {
+        "kind": "fact",
+        "snapshotId": "git-54d344a60c62",
+        "sourceCommit": "54d344a60c628b3151c87e87c334eb679b089e39",
+        "sourcePath": "index.html",
+        "lineStart": 1,
+        "lineEnd": 2,
+        "analysisId": "ua-54d344a6-v2-9-4-zh-full-e98206c7358f1ff1-a8d1331a4afa",
+        "graphHash": "sha256:a05d0878b766e2372d8d74942d4a4bbff3571f8675417f8314b351bf1ee6f40e",
+        "nodeIds": [
+          "file:index.html"
+        ],
+        "note": "HTML 文档声明与 html 根标签。"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-54d344a60c62",
+        "sourceCommit": "54d344a60c628b3151c87e87c334eb679b089e39",
+        "sourcePath": "index.html",
+        "lineStart": 18,
+        "lineEnd": 18,
+        "analysisId": "ua-54d344a6-v2-9-4-zh-full-e98206c7358f1ff1-a8d1331a4afa",
+        "graphHash": "sha256:a05d0878b766e2372d8d74942d4a4bbff3571f8675417f8314b351bf1ee6f40e",
+        "nodeIds": [
+          "file:index.html"
+        ],
+        "note": "页面 title 为 Turing Pact。"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-54d344a60c62",
+        "sourceCommit": "54d344a60c628b3151c87e87c334eb679b089e39",
+        "sourcePath": "index.html",
+        "lineStart": 29,
+        "lineEnd": 31,
+        "analysisId": "ua-54d344a6-v2-9-4-zh-full-e98206c7358f1ff1-a8d1331a4afa",
+        "graphHash": "sha256:a05d0878b766e2372d8d74942d4a4bbff3571f8675417f8314b351bf1ee6f40e",
+        "nodeIds": [
+          "file:index.html"
+        ],
+        "note": "body 内 root 容器与 main.tsx 脚本入口。"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-54d344a60c62",
+        "sourceCommit": "54d344a60c628b3151c87e87c334eb679b089e39",
+        "sourcePath": "src/pages/DailyPuzzlePage.tsx",
+        "lineStart": 266,
+        "lineEnd": 345,
+        "analysisId": "ua-54d344a6-v2-9-4-zh-full-e98206c7358f1ff1-a8d1331a4afa",
+        "graphHash": "sha256:a05d0878b766e2372d8d74942d4a4bbff3571f8675417f8314b351bf1ee6f40e",
+        "nodeIds": [
+          "file:src/pages/DailyPuzzlePage.tsx",
+          "function:src/pages/DailyPuzzlePage.tsx:DailyPuzzlePage"
+        ],
+        "note": "Daily 页面 surface、题目标题与任务提示。"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-54d344a60c62",
+        "sourceCommit": "54d344a60c628b3151c87e87c334eb679b089e39",
+        "sourcePath": "src/pages/DailyPuzzlePage.tsx",
+        "lineStart": 508,
+        "lineEnd": 547,
+        "analysisId": "ua-54d344a6-v2-9-4-zh-full-e98206c7358f1ff1-a8d1331a4afa",
+        "graphHash": "sha256:a05d0878b766e2372d8d74942d4a4bbff3571f8675417f8314b351bf1ee6f40e",
+        "nodeIds": [
+          "file:src/pages/DailyPuzzlePage.tsx",
+          "function:src/pages/DailyPuzzlePage.tsx:DailyPuzzlePage"
+        ],
+        "note": "对话 transcript、候选按钮与结果状态由同一页面数据渲染。"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-54d344a60c62",
+        "sourceCommit": "54d344a60c628b3151c87e87c334eb679b089e39",
+        "sourcePath": "src/pages/DailyPuzzlePage.tsx",
+        "lineStart": 362,
+        "lineEnd": 465,
+        "analysisId": "ua-54d344a6-v2-9-4-zh-full-e98206c7358f1ff1-a8d1331a4afa",
+        "graphHash": "sha256:a05d0878b766e2372d8d74942d4a4bbff3571f8675417f8314b351bf1ee6f40e",
+        "nodeIds": [
+          "file:src/pages/DailyPuzzlePage.tsx",
+          "function:src/pages/DailyPuzzlePage.tsx:DailyPuzzlePage"
+        ],
+        "note": "正文锚点覆盖。"
+      }
+    ],
+    "assets": [
+      {
+        "id": "turing-pact-daily-result",
+        "kind": "real-screenshot",
+        "path": "assets/turing-pact-daily-result.png",
+        "sha256": "sha256:c657f79768cb849eae03e7011602ea18dd27eaaff3867e9f4016ae58ad5718a6",
+        "mime": "image/png",
+        "bytes": 622263,
+        "width": 1440,
+        "height": 900,
+        "alt": "Turing Pact Daily result screen showing the transcript, the selected suspect, and the revealed answer.",
+        "caption": "真实项目截图：课文钉住那个版本的 /daily 结果页；它把对话、选择与答案放在同一界面中。",
+        "source": {
+          "license": "Project-local captured evidence; no remote asset",
+          "attribution": "Turing Pact fixed local Git snapshot"
+        },
+        "capture": {
+          "sourceCommit": "54d344a60c628b3151c87e87c334eb679b089e39",
+          "route": "/daily",
+          "state": "English locale; one suspect selected; result panel revealed; forensic readout visible",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "locale": "en-US",
+          "captureRecipe": "Detached worktree at the lesson's pinned commit, served by Vite on loopback; Playwright viewport 1440x900 locale en-US; click the first .tp-daily-choice; scroll .tp-daily-case to top; screenshot. The annotated frame draws its boxes from getBoundingClientRect of .tp-daily-transcript, .tp-daily-suspects and .tp-daily-choice-grid, so callouts are measured rather than drawn by eye. The daily puzzle rotates by date, so no caption names a specific alias.",
+          "capturedAt": "2026-08-16T05:35:00.000Z"
+        }
+      },
+      {
+        "id": "turing-pact-daily-result-annotated-crop",
+        "kind": "real-screenshot",
+        "path": "assets/turing-pact-daily-result-annotated-crop.png",
+        "sha256": "sha256:cf20ce2b2673f92de0ef78cb6999037e7084f0ce16e6c356c6c85238765a4e3f",
+        "mime": "image/png",
+        "bytes": 630439,
+        "width": 1440,
+        "height": 900,
+        "alt": "Turing Pact Daily result screen with three measured callouts: the transcript, the verdict panel, and the suspect buttons.",
+        "caption": "同一张截图加上标注：对话区、结果状态和候选人按钮分别落在哪。",
+        "source": {
+          "license": "Project-local captured evidence; no remote asset",
+          "attribution": "Derived locally from turing-pact-daily-result using agent-browser annotation and sips crop"
+        },
+        "capture": {
+          "sourceCommit": "54d344a60c628b3151c87e87c334eb679b089e39",
+          "route": "/daily",
+          "state": "English locale; one suspect selected; result panel revealed; forensic readout visible",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "locale": "en-US",
+          "captureRecipe": "Detached worktree at the lesson's pinned commit, served by Vite on loopback; Playwright viewport 1440x900 locale en-US; click the first .tp-daily-choice; scroll .tp-daily-case to top; screenshot. The annotated frame draws its boxes from getBoundingClientRect of .tp-daily-transcript, .tp-daily-suspects and .tp-daily-choice-grid, so callouts are measured rather than drawn by eye. The daily puzzle rotates by date, so no caption names a specific alias.",
+          "capturedAt": "2026-08-16T05:35:00.000Z"
+        }
+      }
+    ],
+    "assetFiles": [
+      {
+        "path": "assets/turing-pact-daily-result.png",
+        "sourcePath": "/private/tmp/claude-501/-Users-yuanfei-PieAI-UniversityLocal/058fe3d3-ebdc-46a7-a319-9d4b5c6a0650/scratchpad/shots/main.png"
+      },
+      {
+        "path": "assets/turing-pact-daily-result-annotated-crop.png",
+        "sourcePath": "/private/tmp/claude-501/-Users-yuanfei-PieAI-UniversityLocal/058fe3d3-ebdc-46a7-a319-9d4b5c6a0650/scratchpad/shots/annotated.png"
+      }
+    ],
+    "cards": [
+      {
+        "id": "entry-file-name",
+        "expectedRevision": 3,
+        "kind": "basic",
+        "front": "图灵密约网页入口 HTML 文件叫什么？",
+        "back": "`index.html`（在项目根目录）。",
+        "tags": [],
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-54d344a60c62",
+            "sourceCommit": "54d344a60c628b3151c87e87c334eb679b089e39",
+            "sourcePath": "index.html",
+            "lineStart": 1,
+            "lineEnd": 1,
+            "analysisId": "ua-54d344a6-v2-9-4-zh-full-e98206c7358f1ff1-a8d1331a4afa",
+            "graphHash": "sha256:a05d0878b766e2372d8d74942d4a4bbff3571f8675417f8314b351bf1ee6f40e",
+            "nodeIds": [
+              "file:index.html"
+            ],
+            "note": "根目录 index.html 存在。"
+          }
+        ]
+      },
+      {
+        "id": "title-tag-meaning",
+        "expectedRevision": 3,
+        "kind": "basic",
+        "front": "`<title>Turing Pact</title>` 主要影响用户看到的什么？",
+        "back": "浏览器标签页（或窗口）上显示的标题文字。",
+        "tags": [],
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-54d344a60c62",
+            "sourceCommit": "54d344a60c628b3151c87e87c334eb679b089e39",
+            "sourcePath": "index.html",
+            "lineStart": 18,
+            "lineEnd": 18,
+            "analysisId": "ua-54d344a6-v2-9-4-zh-full-e98206c7358f1ff1-a8d1331a4afa",
+            "graphHash": "sha256:a05d0878b766e2372d8d74942d4a4bbff3571f8675417f8314b351bf1ee6f40e",
+            "nodeIds": [
+              "file:index.html"
+            ],
+            "note": "title 标签内容。"
+          }
+        ]
+      }
+    ],
+    "exercises": [
+      {
+        "id": "doctype-first-line",
+        "expectedRevision": 3,
+        "title": "HTML 第一行",
+        "prompt": "`index.html` 的第 1 行完整写的是什么？（区分大小写，按文件原样）",
+        "kind": "short-answer",
+        "expectedAnswer": "<!doctype html>",
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-54d344a60c62",
+            "sourceCommit": "54d344a60c628b3151c87e87c334eb679b089e39",
+            "sourcePath": "index.html",
+            "lineStart": 1,
+            "lineEnd": 1,
+            "analysisId": "ua-54d344a6-v2-9-4-zh-full-e98206c7358f1ff1-a8d1331a4afa",
+            "graphHash": "sha256:a05d0878b766e2372d8d74942d4a4bbff3571f8675417f8314b351bf1ee6f40e",
+            "nodeIds": [
+              "file:index.html"
+            ],
+            "note": "doctype 声明。"
+          }
+        ]
+      }
+    ]
+  },
+  "targetAnalysisId": "ua-54d344a6-v2-9-4-zh-full-e98206c7358f1ff1-a8d1331a4afa"
+}
