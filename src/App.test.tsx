@@ -6,7 +6,7 @@ import { KnowledgeNotesSection } from "./shell/KnowledgeNotesSection.js";
 import { StudyEvidenceStatus } from "./shell/StudyDetail.js";
 import { recentStudies, relativeTimeLabel } from "./shell/StudyShelf.js";
 import { EvidenceCode } from "./evidence/EvidenceCode.js";
-import { lessonNeighbours } from "./lesson/LessonNav.js";
+import { lessonNeighbours, readProgress } from "./lesson/LessonNav.js";
 import { cardActionPath } from "./api/client.js";
 import {
   buildCardCoachingPacket,
@@ -385,5 +385,27 @@ describe("shortenHomePath", () => {
     expect(shortenHomePath("/Volumes/Archive/studies")).toBe("/Volumes/Archive/studies");
     expect(shortenHomePath("./studies")).toBe("./studies");
     expect(shortenHomePath("/Usersnotahome/studies")).toBe("/Usersnotahome/studies");
+  });
+});
+
+describe("readProgress", () => {
+  it("maps a scroll position onto the part of the page already passed", () => {
+    expect(readProgress(0, 5620, 900)).toBe(0);
+    expect(readProgress(2360, 5620, 900)).toBeCloseTo(0.5, 5);
+    expect(readProgress(4720, 5620, 900)).toBe(1);
+  });
+
+  it("clamps rather than overshooting on rubber-band scroll", () => {
+    // Both ends of an overscroll are real on a trackpad, and a bar wider than
+    // its track reads as a rendering fault rather than as "you are at the end".
+    expect(readProgress(-120, 5620, 900)).toBe(0);
+    expect(readProgress(5200, 5620, 900)).toBe(1);
+  });
+
+  it("reads empty, not full, on a page with nothing to scroll", () => {
+    // Nothing left to read either way, but a bar full on arrival tells someone
+    // who has not started that they finished.
+    expect(readProgress(0, 700, 900)).toBe(0);
+    expect(readProgress(0, 900, 900)).toBe(0);
   });
 });

@@ -1013,6 +1013,7 @@ summary:focus-visible,
 
 /* One sticky band of lesson chrome under the campus header. */
 .lesson-toolbar {
+  /* Also the containing block for the reading-progress bar below. */
   position: sticky;
   top: var(--campus-reading-header-h, 3.75rem);
   z-index: 41;
@@ -1025,6 +1026,34 @@ summary:focus-visible,
   padding: 10px 0 12px;
   border-bottom: 1px solid var(--campus-rule);
   background: #17110d;
+}
+
+/*
+ * How far through the lesson you are, drawn on the rule the toolbar already
+ * had.
+ *
+ * A lesson runs five thousand pixels and said nothing about how much of that
+ * was left. 「第 2 节 / 共 41 节」 answers a different question — where this
+ * lesson sits in the course — and the one a reader actually asks partway down
+ * a long page is whether they are near the end of *this* one.
+ *
+ * Width comes from `--lesson-read`, which the toolbar sets from the scroll
+ * position; see `readProgress` in `lesson/LessonNav.tsx` for why that is a
+ * listener rather than `animation-timeline: scroll(root)`.
+ *
+ * It is progress, not decoration: it maps position to width and does nothing
+ * else, which is also why it is not transitioned.
+ */
+.lesson-toolbar::after {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 2px;
+  background: #f6c177;
+  content: "";
+  transform: scaleX(var(--lesson-read, 0));
+  transform-origin: left;
 }
 
 .lesson-toolbar__nav,

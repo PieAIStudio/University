@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { GameBadge, GameButton } from "@pieai/swimmer-ui-kit";
 
 import { Tip } from "../Tip.js";
@@ -53,6 +54,74 @@ export function lessonNeighbours(
 }
 
 /**
+ * How far down a scrollable page a position is, as 0–1.
+ *
+ * Measured against the whole document rather than the lesson body: the page
+ * continues past the prose into the exercise and the next-lesson block, and a
+ * bar that filled before the page ended would answer a question nobody asked
+ * with a number that looks wrong.
+ *
+ * A page that does not scroll reads 0, not 1. There is nothing left to read,
+ * but a full bar on arrival says "finished" to someone who has not started.
+ */
+export function readProgress(
+  scrollY: number,
+  scrollHeight: number,
+  viewportHeight: number,
+): number {
+  const scrollable = scrollHeight - viewportHeight;
+  if (!(scrollable > 0)) return 0;
+  return Math.min(1, Math.max(0, scrollY / scrollable));
+}
+
+/**
+ * Publishes `readProgress` into `--lesson-read` on the toolbar.
+ *
+ * Reads and writes are coalesced into one animation frame, so a fast scroll
+ * costs one layout read and one style write per painted frame rather than one
+ * per scroll event, and the listener is passive so it can never delay a
+ * scroll.
+ *
+ * `animation-timeline: scroll(root)` would do all of this with no listener at
+ * all and no main-thread work, and is the better mechanism on paper. It is not
+ * used because it could not be confirmed working here: the review browser runs
+ * with `visibilityState: "hidden"`, which stops both the compositor and
+ * `requestAnimationFrame`, so a scroll timeline and a rAF loop are equally
+ * unobservable. That is a limitation of the harness rather than evidence
+ * against the CSS, but shipping the mechanism that also carries a unit test is
+ * the one that can be shown to be right.
+ */
+function useReadProgress() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let frame = 0;
+    const paint = () => {
+      frame = 0;
+      const node = ref.current;
+      if (!node) return;
+      const read = readProgress(
+        window.scrollY,
+        document.documentElement.scrollHeight,
+        window.innerHeight,
+      );
+      node.style.setProperty("--lesson-read", read.toFixed(4));
+    };
+    const schedule = () => {
+      frame ||= requestAnimationFrame(paint);
+    };
+    paint();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule, { passive: true });
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, []);
+  return ref;
+}
+
+/**
  * Every lesson control in one sticky band: leave, position, reading prefs,
  * status, and prev/next. Sits under the campus header so the reader never has
  * to scroll back up for navigation or the detail switch.
@@ -82,9 +151,10 @@ export function LessonToolbar({
 }) {
   const { previous, next } = neighbours;
   const detailed = detailMode === "all";
+  const barRef = useReadProgress();
 
   return (
-    <div className="lesson-toolbar">
+    <div className="lesson-toolbar" ref={barRef}>
       <nav className="lesson-toolbar__nav" aria-label="课程导航">
         <GameButton variant="ghost" onClick={onBackToCourse}>
           ← 返回课程
