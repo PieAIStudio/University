@@ -24,6 +24,7 @@ import { LessonToolbar, type LessonNeighbours } from "./LessonNav.js";
 import { LessonMarkList } from "./LessonMarkList.js";
 import { LessonMargin } from "./LessonMargin.js";
 import { LessonBacklinks } from "./LessonRelated.js";
+import { LessonNextStep } from "./LessonNextStep.js";
 import { LessonWordList } from "./LessonWordList.js";
 import { SelectionMenu, type SelectionTarget } from "./SelectionMenu.js";
 import { buildQuestionPrompt, type ReaderMark } from "../domain/reader-marks.js";
@@ -543,6 +544,14 @@ export function LessonReader({
             </section>
           ) : null}
           <LessonBacklinks backlinks={backlinks} {...(onFollowLink ? { onFollowLink } : {})} />
+          {neighbours && onOpenLesson && onBackToCourse ? (
+            <LessonNextStep
+              neighbours={neighbours}
+              completed={completed}
+              onOpenLesson={onOpenLesson}
+              onBackToCourse={onBackToCourse}
+            />
+          ) : null}
         </div>
         <aside
           className="lesson-rail lesson-rail--right"

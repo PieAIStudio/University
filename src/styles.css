@@ -562,49 +562,20 @@ summary:focus-visible,
 
 .study-shelf__item small {
   color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
 }
 
-/* Kept visually apart from the list below it. The two answer different
-   questions — "where was I" and "what exists" — and a shortcut that looks like
-   the first three rows of the list just reads as a duplicate. */
-.study-shelf__recent {
-  display: grid;
-  gap: 6px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--campus-rule);
-  margin-bottom: 10px;
-}
-
-.study-shelf__recent-item {
-  appearance: none;
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-  justify-content: space-between;
-  width: 100%;
-  padding: 9px 12px;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.study-shelf__recent-item:hover,
-.study-shelf__recent-item[data-active="true"] {
-  border-color: rgb(246 193 119 / 34%);
-  background: rgb(246 193 119 / 10%);
-}
-
-.study-shelf__recent-item span {
-  font-weight: 800;
-}
-
-.study-shelf__recent-item small {
-  flex-shrink: 0;
-  color: var(--game-ui-text-muted);
-  font-size: 0.76rem;
+/* A project touched recently enough to still be "in the middle of". This is
+   what the separate shortcut row above the list used to say, said in place. */
+.study-shelf__item[data-live="true"] span::before {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-inline-end: 8px;
+  border-radius: 50%;
+  background: #f6c177;
+  content: "";
+  vertical-align: 0.12em;
 }
 
 .study-detail__header h2,
@@ -735,6 +706,19 @@ summary:focus-visible,
   line-height: 1.08;
 }
 
+/*
+  A study lists nine of these, so a course title is an item in a list, not the
+  headline of a page. At 48px each one claimed the page for itself, and
+  《在开始之前：App、代码、和你》 broke as 《在开始之 / 前：… — a title split
+  inside its own brackets. Smaller, and balanced so the two lines share the
+  width instead of one running full and the next carrying three characters.
+*/
+.formal-course__header h2 {
+  font-size: clamp(1.5rem, 2.6vw, 2.05rem);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
 .formal-course__header div > p:last-child,
 .knowledge-notes__boundary {
   max-width: 680px;
@@ -832,27 +816,56 @@ summary:focus-visible,
   line-height: 1.6;
 }
 
+/*
+  The way into a course.
+
+  A course page carried a title, a description, a progress bar and two folds,
+  and no way to start. Beginning one meant unfolding the units, reading down to
+  a unit, and choosing the first lesson yourself — nine times over, for the
+  single action the page exists for. The button names where it lands, and the
+  lesson title next to it is what makes that a decision rather than a leap.
+*/
+.course-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 16px;
+  margin-top: 22px;
+}
+
+.course-entry__lesson {
+  min-width: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.92rem;
+}
+
+/*
+  Both folds are secondary to that button, so neither is drawn as a panel any
+  more. Two bordered boxes stacked under every course put more chrome on the
+  page than course, and the objectives box was the heavier of the two while
+  being the less useful — it is written for someone who has already finished.
+*/
 .course-objectives {
-  margin-top: 34px;
-  padding: 24px;
-  border: 1px solid var(--campus-rule);
-  border-radius: 14px;
-  background: rgb(43 31 23 / 52%);
+  margin-top: 18px;
 }
 
 .course-objectives ul {
   display: grid;
   gap: 9px;
-  margin: 15px 0 0;
+  margin: 12px 0 0;
   padding-left: 20px;
   color: var(--game-ui-text-muted);
-  line-height: 1.55;
+  font-size: 0.94rem;
+  line-height: 1.6;
 }
 
 .course-objectives summary {
   display: flex;
   gap: 12px;
   align-items: baseline;
+  padding: 8px 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.86rem;
   cursor: pointer;
   list-style: none;
 }
@@ -864,7 +877,7 @@ summary:focus-visible,
 }
 
 .course-objectives summary::after {
-  color: var(--game-ui-text-muted);
+  color: #f0a868;
   content: "展开 ▾";
   font-size: 0.82rem;
 }
@@ -876,13 +889,12 @@ summary:focus-visible,
 /*
    The lesson list, folded so the shelf can be scanned.
 
-   Same affordance as the objectives above it — native `<details>`, no script,
-   screen-reader support for free — and deliberately quieter: no panel, no
-   border. The objectives are a thing you open and read; this is a door, and a
-   door drawn like a box competes with the course it belongs to.
+   Same affordance and the same weight as the objectives above it — native
+   `<details>`, no script, screen-reader support for free. Both are doors, and
+   a door drawn as a box competes with the course it belongs to.
 */
 .course-units {
-  margin-top: 26px;
+  margin-top: 2px;
 }
 
 .course-units summary {
@@ -1145,6 +1157,7 @@ summary:focus-visible,
 
 .lesson-reader__header,
 .lesson-completion,
+.lesson-next,
 .lesson-main > .exercise-panel {
   width: min(var(--lesson-measure), 100%);
   margin-inline: auto;
@@ -1442,6 +1455,62 @@ summary:focus-visible,
 .text-button:disabled {
   opacity: 0.55;
   cursor: wait;
+}
+
+/*
+ * Where a lesson ends.
+ *
+ * The last thing on the page used to be the campus footer, so the reader who
+ * had just finished had to scroll back four thousand pixels to a ghost button
+ * that said 下一节 and nothing else. This names the lesson instead — a title is
+ * something you can decide about, "next" is something you take on faith.
+ *
+ * How loudly it says it depends on whether the lesson is actually done, since
+ * a bright exit above an unfinished lesson would be arguing with the rule that
+ * reading alone does not complete anything.
+ */
+.lesson-next {
+  margin-top: 46px;
+  padding-top: 26px;
+  border-top: 1px solid var(--campus-rule);
+}
+
+.lesson-next__eyebrow {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.lesson-next__title {
+  margin: 10px 0 0;
+  color: #fff5e8;
+  font-family: var(--game-ui-font-display);
+  font-size: clamp(1.32rem, 2.2vw, 1.66rem);
+  line-height: 1.28;
+}
+
+.lesson-next__note {
+  margin: 12px 0 0;
+  max-width: 34rem;
+  color: var(--game-ui-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.lesson-next :is(button, a) {
+  margin-top: 20px;
+}
+
+/* Done: the only thing left to decide is whether to keep going, so the block
+   gets the accent edge the completion callout uses for its own primary. */
+.lesson-next[data-state="ready"],
+.lesson-next[data-state="course-end"] {
+  padding: 26px 24px;
+  border: 1px solid rgb(246 193 119 / 26%);
+  border-left: 3px solid #f6c177;
+  background: rgb(246 193 119 / 6%);
 }
 
 .exercise-panel > p {

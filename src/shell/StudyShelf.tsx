@@ -55,27 +55,27 @@ export function StudyShelf({
   readonly selectedStudyId: string | null;
   readonly onSelect: (studyId: string) => void;
 }) {
-  const recent = useMemo(() => recentStudies(data.studies), [data.studies]);
+  /*
+    One list, not a shortcut row above the same list again.
+
+    The shortcut earns its space by being shorter than what it shortcuts. On a
+    shelf of four projects it named three of them, so TuringPact and SupaLuv
+    each appeared twice, a few centimetres apart, under two different headings —
+    which reads as a bug whatever the reasoning behind it. The information the
+    row carried was never the ordering anyway, it was "when did I last touch
+    this", and that can simply be written on the entry.
+
+    So the list keeps the alphabetical order that makes it pointable from
+    memory, and says both things at once. `recentStudies` stays exported: which
+    project to open on is a different question, and still the right one to
+    answer by recency.
+  */
+  const liveIds = useMemo(
+    () => new Set(recentStudies(data.studies).map((study) => study.id)),
+    [data.studies],
+  );
   return (
     <aside className="study-shelf" aria-label="学习项目列表">
-      {recent.length > 0 ? (
-        <nav className="study-shelf__recent" aria-label="正在学习中">
-          <p className="eyebrow">正在学习中</p>
-          {recent.map((study) => (
-            <button
-              key={study.id}
-              type="button"
-              className="study-shelf__recent-item"
-              data-active={selectedStudyId === study.id}
-              aria-current={selectedStudyId === study.id ? "true" : undefined}
-              onClick={() => onSelect(study.id)}
-            >
-              <span>{study.title}</span>
-              <small>{relativeTimeLabel(study.lastActivityAt!)}</small>
-            </button>
-          ))}
-        </nav>
-      ) : null}
       <p className="eyebrow">你的学习项目</p>
       {data.studies.map((study) => (
         <button
@@ -83,6 +83,7 @@ export function StudyShelf({
           type="button"
           className="study-shelf__item"
           data-active={selectedStudyId === study.id}
+          data-live={study.lastActivityAt !== null && liveIds.has(study.id)}
           // `data-active` only reaches CSS. Screen-reader users need the
           // selected project announced, not just tinted.
           aria-current={selectedStudyId === study.id ? "true" : undefined}
@@ -91,6 +92,7 @@ export function StudyShelf({
           <span>{study.title}</span>
           <small>
             {study.activeCourseCount > 0 ? `${study.activeCourseCount} 门课可学习` : "准备中"}
+            {study.lastActivityAt ? ` · ${relativeTimeLabel(study.lastActivityAt)}` : null}
           </small>
         </button>
       ))}
