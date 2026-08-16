@@ -76,6 +76,15 @@ export function createBootstrapHandler(focus: LearningFocus | undefined): Handle
       const dueCards: DueCard[] = [];
       let nextLesson: Record<string, unknown> | null = null;
       const learningIssues: string[] = [];
+      /*
+        The focus is stored as ids, because that is what survives a course
+        being renamed. The front page was printing one of them —
+        「主攻 TuringPact · foundations-before-zero 起」 — so the first thing a
+        learner read every morning was a slug. Titles are resolved here, where
+        the course manifests are already open, and the id stays as the fallback
+        for a focus that points at a course no longer on the shelf.
+      */
+      const focusCourseTitles = new Map<string, string>();
       // `nextLesson` is whatever incomplete lesson the walk meets first, so the
       // walk order is the curriculum order. Focus moves the chosen study and
       // course to the front rather than filtering the rest out: finishing the
@@ -100,6 +109,12 @@ export function createBootstrapHandler(focus: LearningFocus | undefined): Handle
           return rank(left.id) - rank(right.id);
         });
         const coursesById = new Map(activeCourses.map((course) => [course.id, course]));
+        if (study.id === focus?.studyId) {
+          for (const courseId of focus.courseIds) {
+            const title = coursesById.get(courseId)?.title;
+            if (title) focusCourseTitles.set(courseId, title);
+          }
+        }
         for (const course of activeCourses) {
           try {
             for (const unitId of course.unitIds) {
@@ -227,7 +242,15 @@ export function createBootstrapHandler(focus: LearningFocus | undefined): Handle
           dueCount: dueCards.length,
           card: dueCards[0] ?? null,
           nextLesson,
-          focus: focus ?? null,
+          focus: focus
+            ? {
+                ...focus,
+                courses: focus.courseIds.map((id) => ({
+                  id,
+                  title: focusCourseTitles.get(id) ?? id,
+                })),
+              }
+            : null,
           issues: learningIssues,
         },
       });

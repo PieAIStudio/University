@@ -110,6 +110,12 @@ export interface BootstrapData {
 export interface LearningFocus {
   readonly studyId: string;
   readonly courseIds: readonly string[];
+  /**
+   * The same courses with their titles, resolved by the server against the
+   * shelf. Optional because the ids are the stored form and the source of
+   * truth; a title that cannot be resolved falls back to its own id.
+   */
+  readonly courses?: readonly { readonly id: string; readonly title: string }[];
 }
 
 /**
@@ -135,9 +141,14 @@ export function focusParts(
   const studyLabel = study?.title ?? `${focus.studyId}（不在书架上）`;
   const [head, ...rest] = focus.courseIds;
   if (!head) return { study: studyLabel, detail: "" };
+  // The stored focus is a list of ids; a course id is not a thing to show
+  // someone. The server resolves them against the shelf, and an id that no
+  // longer matches a course is still better than saying nothing about it.
+  const headLabel = focus.courses?.find((course) => course.id === head)?.title ?? head;
   return {
     study: studyLabel,
-    detail: rest.length === 0 ? head : `${head} 起 · 主攻路线 ${focus.courseIds.length} 门`,
+    detail:
+      rest.length === 0 ? headLabel : `从${headLabel}开始 · 主攻路线 ${focus.courseIds.length} 门`,
   };
 }
 

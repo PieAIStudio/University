@@ -31,6 +31,18 @@ function lessonLocatorKey(locator: LessonLocator): string {
   return [locator.studyId, locator.courseId, locator.unitId, locator.lessonId].join("/");
 }
 
+/**
+ * `/Users/name/…` and `/home/name/…` collapsed to `~/…`.
+ *
+ * Matched on the shape of the path rather than against a home directory the
+ * browser cannot see. Anything that does not look like a home path is returned
+ * untouched, so a studies root somewhere else stays fully spelled out.
+ */
+export function shortenHomePath(path: string): string {
+  const match = /^\/(?:Users|home)\/[^/]+(?=\/|$)/.exec(path);
+  return match ? `~${path.slice(match[0].length)}` : path;
+}
+
 function commitView(update: () => void): void {
   const documentWithTransition = document as Document & {
     startViewTransition?: (callback: () => void) => {
@@ -475,7 +487,11 @@ export function App() {
 
       <footer className="campus-footer">
         <span>学习资料默认保存在</span>
-        <code>{data?.studiesRoot ?? "./studies"}</code>
+        {/* `~` rather than the literal home directory. The path is worth
+            keeping — it is the whole "资料仅在本机" promise, made checkable —
+            but it sits on every page, and the part that repeats on every
+            machine is the part nobody is reading it for. */}
+        <code>{shortenHomePath(data?.studiesRoot ?? "./studies")}</code>
       </footer>
     </div>
   );

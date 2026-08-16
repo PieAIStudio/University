@@ -1383,14 +1383,24 @@ describe("UniversityLocal loopback API", () => {
     const after = (await (await fetch(`${focused.base}/api/bootstrap`)).json()) as {
       today: {
         nextLesson: { courseId: string } | null;
-        focus: { studyId: string; courseIds: readonly string[] } | null;
+        focus: {
+          studyId: string;
+          courseIds: readonly string[];
+          courses: readonly { id: string; title: string }[];
+        } | null;
       };
       studies: Array<{ activeCourseCount: number }>;
     };
     expect(after.today.nextLesson?.courseId).toBe("cost-boundaries");
+    // The ids are what is stored; the titles ride along so the front page has
+    // something to show that is not a slug.
     expect(after.today.focus).toEqual({
       studyId: "sample",
       courseIds: ["cost-boundaries", "founder-engineer"],
+      courses: [
+        { id: "cost-boundaries", title: "Cost Boundaries" },
+        { id: "founder-engineer", title: "Founder Engineer" },
+      ],
     });
     // Focus reorders; it must not remove anything from the shelf.
     expect(after.studies[0]?.activeCourseCount).toBe(2);

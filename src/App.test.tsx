@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { shortenHomePath } from "./App.js";
 import { KnowledgeNotesSection } from "./shell/KnowledgeNotesSection.js";
 import { StudyEvidenceStatus } from "./shell/StudyDetail.js";
 import { recentStudies, relativeTimeLabel } from "./shell/StudyShelf.js";
@@ -366,5 +367,23 @@ describe("lesson navigation", () => {
   it("returns null for a lesson that is not in the tree yet", () => {
     expect(lessonNeighbours(courses, at("missing", "what-is-an-app"))).toBeNull();
     expect(lessonNeighbours([], at("a", "what-is-an-app"))).toBeNull();
+  });
+});
+
+describe("shortenHomePath", () => {
+  it("collapses a home directory it recognises by shape, not by lookup", () => {
+    expect(shortenHomePath("/Users/yuanfei/PieAI/UniversityLocal/studies")).toBe(
+      "~/PieAI/UniversityLocal/studies",
+    );
+    expect(shortenHomePath("/home/yuanfei/studies")).toBe("~/studies");
+    expect(shortenHomePath("/Users/yuanfei")).toBe("~");
+  });
+
+  it("leaves a root that is not under a home directory fully spelled out", () => {
+    // The path is the "资料仅在本机" promise made checkable, so a studies root
+    // somewhere unusual is exactly the case that must not be abbreviated away.
+    expect(shortenHomePath("/Volumes/Archive/studies")).toBe("/Volumes/Archive/studies");
+    expect(shortenHomePath("./studies")).toBe("./studies");
+    expect(shortenHomePath("/Usersnotahome/studies")).toBe("/Usersnotahome/studies");
   });
 });
