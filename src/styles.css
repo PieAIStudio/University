@@ -1106,23 +1106,56 @@ summary:focus-visible,
     as "the panel is broken" rather than "the window is narrow". Above ~1700px
     the 1fr still governs, so a wide screen looks exactly as it did.
   */
-  grid-template-columns: minmax(14rem, 1fr) minmax(0, 68rem) minmax(14rem, 1fr);
+  grid-template-columns:
+    minmax(var(--lesson-rail-left, 14rem), 1fr)
+    minmax(0, 68rem)
+    minmax(var(--lesson-rail-right, 14rem), 1fr);
   gap: clamp(28px, 3vw, 48px);
   align-items: start;
   margin-top: 8px;
 }
 
+/*
+  The floor is for a rail that has something in it. Most lessons carry no margin
+  notes and cite their source inline, so both rails render literally empty — and
+  at 1440 they were still holding 534px of a 1356px shell open to show nothing,
+  while the code in the centre column scrolled sideways to be read. An empty
+  rail gives its width back.
+*/
+.lesson-layout:has(> .lesson-margin-column:empty) {
+  --lesson-rail-left: 0px;
+}
+
+.lesson-layout:has(> .lesson-rail--right:empty) {
+  --lesson-rail-right: 0px;
+}
+
 .lesson-main {
+  /* Two measures, and only two, for the whole lesson: one for reading and one
+     for evidence. Declared here rather than on the prose so the title, the
+     completion callout and the exercise all sit on the same axis as the text
+     they belong to. */
+  --lesson-measure: 40rem;
+  --lesson-evidence-measure: 60rem;
   min-width: 0;
   max-width: 68rem;
   justify-self: center;
   width: 100%;
 }
 
+.lesson-reader__header,
+.lesson-completion,
+.lesson-main > .exercise-panel {
+  width: min(var(--lesson-measure), 100%);
+  margin-inline: auto;
+}
+
 .lesson-reader__header {
   display: block;
   min-width: 0;
-  margin: 0 0 22px;
+  /* Block-only, so the inline `auto` that puts the title on the reading axis
+     survives. */
+  margin-block: 0 22px;
   padding: 0;
 }
 
@@ -1166,6 +1199,126 @@ summary:focus-visible,
 .markdown-body h1:first-child,
 .markdown-body h2:first-child {
   margin-top: 0;
+}
+
+/*
+  Prose and evidence want opposite widths, and a single column can only be wrong
+  for one of them. The lesson body was inheriting whatever the rails left over —
+  807px — which put Chinese body text at about 48 characters a line, past the
+  point where the eye reliably finds the next line on the return sweep, while
+  the source code it was explaining still had to scroll sideways inside it.
+
+  So the body carries two measures. Everything sits in `text` (about 36
+  characters) by default; evidence, figures and diagrams opt out to `wide`.
+  Both stay centred on the same axis, so a reader's eye never has to go looking
+  for where the column restarted.
+*/
+.lesson-prose {
+  display: grid;
+  grid-template-columns:
+    [wide-start] minmax(0, 1fr)
+    [text-start] min(var(--lesson-measure), 100%) [text-end]
+    minmax(0, 1fr) [wide-end];
+  font-size: 1.1rem;
+  line-height: 1.85;
+}
+
+/*
+  Grid containers do not collapse their children's margins, so the inherited
+  `margin: 1em 0` rhythm would have doubled at every boundary. The rhythm is
+  stated once as a row gap instead, and blocks that want more air ask for it on
+  top of that — one direction only, which is also why the spacing below a
+  heading is now readable straight off the rule.
+*/
+.markdown-body.lesson-prose {
+  row-gap: 1.05em;
+}
+
+.markdown-body.lesson-prose > * {
+  grid-column: text;
+  min-width: 0;
+  margin-block: 0;
+}
+
+.markdown-body.lesson-prose > h2 {
+  margin-block-start: 1.15em;
+}
+
+.markdown-body.lesson-prose > h3 {
+  margin-block-start: 0.7em;
+}
+
+.markdown-body.lesson-prose > :first-child {
+  margin-block-start: 0;
+}
+
+.markdown-body.lesson-prose > .evidence-inline-source,
+.markdown-body.lesson-prose > .lesson-media,
+.markdown-body.lesson-prose > .mermaid-diagram,
+.markdown-body.lesson-prose > table {
+  grid-column: wide;
+  justify-self: center;
+  width: min(var(--lesson-evidence-measure), 100%);
+}
+
+/*
+ * The spine, made visible.
+ *
+ * Every lesson is built on the same sequence — guess, answer, explain, check
+ * yourself, one line to keep — and until now all five looked identical: same
+ * size, same weight, same colour. A reader who cannot see where the lesson
+ * stops asking and starts telling reads straight past the asking, which is the
+ * only part that does the teaching. So the three roles that change what the
+ * reader is supposed to *do* each get a treatment, and everything else keeps
+ * the plain one. Three, deliberately: a vocabulary only works if it is small
+ * enough to learn without being taught.
+ *
+ * Which heading carries which role is decided in `markdown/lesson-sections.ts`.
+ */
+
+/* Asking. `先猜一下`, `自检` — the reader owes an answer before reading on, so
+   this is drawn as a full stop: a rule, real air, and the only amber at heading
+   size anywhere in the body. */
+.markdown-body.lesson-prose > h2[data-role="ask"] {
+  margin-block-start: 2.1em;
+  padding-block-start: 1.15em;
+  border-block-start: 1px solid var(--campus-rule);
+  color: #f6c177;
+}
+
+/* Answering. The other half of the exchange above it, so it hangs off that
+   section's last paragraph instead of opening a new one — close spacing, no
+   rule, and a short amber stroke pointing back at the question. */
+.markdown-body.lesson-prose > h2[data-role="reveal"] {
+  margin-block-start: 0.75em;
+}
+
+.markdown-body.lesson-prose > h2[data-role="reveal"]::before {
+  content: "";
+  display: inline-block;
+  width: 0.66em;
+  height: 2px;
+  margin-inline-end: 0.5em;
+  vertical-align: 0.3em;
+  background: #f6c177;
+}
+
+/* Keeping. In `一句话` the heading is a label and the sentence under it is the
+   whole point, so the emphasis goes where the content is: the heading shrinks
+   to a caption and the line it introduces is set larger than body text. */
+.markdown-body.lesson-prose > h2[data-role="takeaway"] {
+  margin-block-start: 1.9em;
+  color: var(--game-ui-text-muted);
+  font-family: inherit;
+  font-size: 0.82em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.markdown-body.lesson-prose > h2[data-role="takeaway"] + p {
+  color: #fff5e8;
+  font-size: 1.26em;
+  line-height: 1.6;
 }
 
 .markdown-body code,
@@ -1595,11 +1748,17 @@ summary:focus-visible,
   border: 1px solid rgb(246 231 211 / 12%);
   border-radius: 10px;
   padding: 10px 0;
-  color: #e1e4e8;
-  background: #24292e;
+  color: #e6edf3;
+  background: #0d1117;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.7rem;
-  line-height: 1.55;
+  /*
+    11.2px was small enough that reading the studied source meant leaning in,
+    on the one surface this product exists to make readable. The evidence
+    column is wider than the prose now, so the code can afford to be legible
+    without giving up how much of a file fits on screen.
+  */
+  font-size: 0.82rem;
+  line-height: 1.6;
   overscroll-behavior: contain;
 }
 
@@ -1616,17 +1775,27 @@ summary:focus-visible,
   white-space: pre;
 }
 
+/*
+  The cited lines were the least readable lines in the block. A 14% amber wash
+  over the code surface lifted the background far enough that comments fell to
+  2.2:1 and keywords to 4.0:1 — so the lines a lesson was pointing at were
+  exactly the ones it had made hard to read.
+
+  The bar does the pointing now. It is a solid, high-contrast edge, which is
+  what a non-text indicator has to be anyway; the wash is only there to group
+  the run, and at 8% every token in the theme still clears 4.5:1 on top of it.
+*/
 .evidence-code__line--highlighted {
-  background: rgb(246 193 119 / 14%);
-  box-shadow: inset 3px 0 #f6c177;
+  background: rgb(246 193 119 / 8%);
+  box-shadow: inset 4px 0 #f6c177;
 }
 
 .evidence-code__line-number {
   padding-right: 1.2ch;
-  /* 38% on the #24292e code surface measured about 2.9:1 — under the 4.5:1
-     WCAG AA floor. Line numbers are how a reader ties "L123–219" in the
-     evidence list back to the snippet, so they have to be readable. */
-  color: rgb(225 228 232 / 72%);
+  /* 38% on the code surface measured about 2.9:1 — under the 4.5:1 WCAG AA
+     floor. Line numbers are how a reader ties "L123–219" in the evidence list
+     back to the snippet, so they have to be readable. */
+  color: rgb(230 237 243 / 64%);
   text-align: right;
   user-select: none;
 }
@@ -1655,10 +1824,16 @@ summary:focus-visible,
   text-align: right;
 }
 
+/*
+  One rule, on top. Bounding each of these on both sides put two hairlines
+  between every pair of them, and a lesson runs four or five — enough ruling
+  through the reading column that the one rule that means something, the break
+  above a `先猜一下`, stopped reading as a break at all. A row needs a line to
+  hang from, not a box.
+*/
 .lesson-detail {
   margin: 24px 0;
   border-top: 1px solid var(--campus-rule);
-  border-bottom: 1px solid var(--campus-rule);
 }
 
 /**
@@ -1723,8 +1898,13 @@ summary:focus-visible,
   font-weight: 500;
 }
 
+/* Indented under its own question, so an opened answer reads as belonging to
+   the row above rather than opening the section below it — which is the work
+   the bottom border used to be doing badly. */
 .lesson-detail__body {
-  padding: 0 0 16px;
+  margin-inline-start: 2px;
+  padding: 0 0 16px 14px;
+  border-inline-start: 2px solid rgb(246 193 119 / 22%);
   color: var(--game-ui-text-muted);
 }
 
@@ -1794,8 +1974,8 @@ summary:focus-visible,
   overflow: hidden;
   border: 1px solid rgb(246 231 211 / 14%);
   border-radius: 12px;
-  background: #1f2428;
-  color: #e1e4e8;
+  background: #161b22;
+  color: #e6edf3;
 }
 
 .evidence-inline-source__header {
@@ -1929,7 +2109,7 @@ summary:focus-visible,
   max-height: min(360px, 50vh);
   border: 0;
   border-radius: 0;
-  background: #24292e;
+  background: #0d1117;
 }
 
 .evidence-inline-source__loading {
@@ -1937,7 +2117,7 @@ summary:focus-visible,
   gap: 0.55em;
   align-content: start;
   padding: 12px 14px 14px;
-  background: #24292e;
+  background: #0d1117;
 }
 
 .evidence-inline-source__loading-bar {

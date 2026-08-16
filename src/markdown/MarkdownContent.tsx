@@ -5,8 +5,14 @@ import remarkGfm from "remark-gfm";
 
 import type { LanguageLayer } from "../domain/lesson-marks.js";
 import { EvidenceInlineSource } from "../evidence/EvidenceInlineSource.js";
+import { lessonSectionRole } from "./lesson-sections.js";
 import { MermaidDiagram } from "./MermaidDiagram.js";
-import type { EvidenceView, LessonAssetView, LessonSectionView } from "../view/lesson-view.js";
+import {
+  evidenceUaLayers,
+  type EvidenceView,
+  type LessonAssetView,
+  type LessonSectionView,
+} from "../view/lesson-view.js";
 import { WordAnchor, type VocabularyStage } from "../language/WordPopover.js";
 import { DEFAULT_FOREIGN_SETTINGS, type ForeignSettings } from "../language/foreign-settings.js";
 import { remarkLanguageAnchors } from "../language/remark-language-anchors.js";
@@ -324,6 +330,16 @@ export function MarkdownContent({
     [active],
   );
   const assetsById = useMemo(() => new Map(assets.map((asset) => [asset.id, asset])), [assets]);
+  /*
+    The lesson header already says which layer of the project this lesson lives
+    in. Repeating it above every snippet only says something new when the
+    snippets come from more than one layer; on a single-layer lesson it printed
+    the identical line five times and taught the reader to skip that row.
+  */
+  const placeTellsThemApart = useMemo(
+    () => evidenceUaLayers(evidence ?? []).length > 1,
+    [evidence],
+  );
   const sectionsByTitle = useMemo(
     () => new Map(sections.map((section) => [section.title, section.id])),
     [sections],
@@ -333,9 +349,15 @@ export function MarkdownContent({
     () => ({
       ...markdownComponents,
       h2({ children, node: _node, ...props }) {
-        const sectionId = sectionsByTitle.get(markdownText(children));
+        const title = markdownText(children);
+        const sectionId = sectionsByTitle.get(title);
+        const role = lessonSectionRole(title);
         return (
-          <h2 {...props} {...(sectionId ? { "data-section-id": sectionId } : {})}>
+          <h2
+            {...props}
+            {...(sectionId ? { "data-section-id": sectionId } : {})}
+            {...(role ? { "data-role": role } : {})}
+          >
             {children}
           </h2>
         );
@@ -389,7 +411,7 @@ export function MarkdownContent({
               basePath={evidenceBasePath}
               sourcePath={sourcePath}
               lines={lines}
-              ua={evidence?.[evidenceIndex]?.ua ?? null}
+              ua={placeTellsThemApart ? (evidence?.[evidenceIndex]?.ua ?? null) : null}
               onOpenEvidence={onOpenEvidence}
             />
           );

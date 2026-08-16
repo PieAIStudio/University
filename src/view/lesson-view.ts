@@ -485,6 +485,18 @@ const HIGHLIGHTED_EVIDENCE_LANGUAGES = new Set([
   "shellscript",
 ]);
 
+/*
+  GitHub's current dark theme, not the 2018 one shiki still ships as plain
+  `github-dark`. That older palette sets comments to #6a737d, which measures
+  3.0:1 on its own #24292e background — under the 4.5:1 floor before the lesson
+  has done anything to it, and 2.2:1 once a cited line carries a highlight.
+  Comments in the studied source are often the most teachable lines on screen,
+  so they cannot be the least readable ones. `github-dark-default` lifts them to
+  #8b949e over a darker #0d1117 (6.2:1), which also reads more clearly as
+  "someone else's code" against this warm campus.
+*/
+const EVIDENCE_THEME = "github-dark-default";
+
 let evidenceHighlighterPromise:
   | Promise<{
       codeToTokensBase(
@@ -507,7 +519,7 @@ function getEvidenceHighlighter() {
     import("shiki/langs/html.mjs"),
     import("shiki/langs/markdown.mjs"),
     import("shiki/langs/shellscript.mjs"),
-    import("shiki/themes/github-dark.mjs"),
+    import("shiki/themes/github-dark-default.mjs"),
   ]).then(
     async ([
       core,
@@ -521,7 +533,7 @@ function getEvidenceHighlighter() {
       html,
       markdown,
       shellscript,
-      githubDark,
+      evidenceTheme,
     ]) =>
       core.createHighlighterCore({
         langs: [
@@ -535,7 +547,7 @@ function getEvidenceHighlighter() {
           markdown.default,
           shellscript.default,
         ],
-        themes: [githubDark.default],
+        themes: [evidenceTheme.default],
         engine: engine.createJavaScriptRegexEngine(),
       }),
   );
@@ -572,5 +584,5 @@ export async function highlightEvidenceCode(
     return code.split("\n").map((line) => [{ content: line }]);
   }
   const highlighter = await getEvidenceHighlighter();
-  return highlighter.codeToTokensBase(code, { lang: language, theme: "github-dark" });
+  return highlighter.codeToTokensBase(code, { lang: language, theme: EVIDENCE_THEME });
 }

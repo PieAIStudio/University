@@ -458,7 +458,7 @@ export function LessonReader({
               <LessonUaLayers evidence={view.lesson.evidence} />
             </div>
           </header>
-          <div className="markdown-body" ref={bodyRef}>
+          <div className="markdown-body lesson-prose" ref={bodyRef}>
             <MarkdownContent
               {...(view.lesson.language
                 ? {
