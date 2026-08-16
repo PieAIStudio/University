@@ -306,6 +306,8 @@ export interface LessonAssetView {
   readonly caption?: string;
   readonly transcript?: string;
   readonly sourceCommit?: string;
+  /** ISO date of that commit. Absent when the study's mirror cannot resolve it. */
+  readonly sourceCommitDate?: string;
   readonly capture?: {
     readonly route: string;
     readonly state: string;

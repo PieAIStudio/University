@@ -55,6 +55,24 @@ function LessonDetailBlock({
   );
 }
 
+/**
+ * A commit date as a reader would say it: 「2026年7月22日」, or this year's
+ * dates without the year.
+ *
+ * Falls back to nothing when the date could not be resolved, so the caption
+ * reads「来源（3b402e06）」rather than「来源 未知日期（3b402e06）」— an absent
+ * date is not worth a word.
+ */
+function formatCaptureDate(iso: string | undefined): string {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return sameYear
+    ? `${date.getMonth() + 1}月${date.getDate()}日`
+    : `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
 function LessonMediaBlock({
   asset,
   children,
@@ -119,8 +137,17 @@ function LessonMediaBlock({
         {caption ? <div className="lesson-media__caption">{caption}</div> : null}
         {asset.capture ? (
           <small>
-            来源 {asset.sourceCommit?.slice(0, 12)} · {asset.capture.route} · {asset.capture.locale}{" "}
-            · {asset.capture.viewport.width}×{asset.capture.viewport.height}
+            {/*
+              The date leads and the hash follows, because only one of them can
+              be read. `3b402e06` and `54d344a6` look equally current; that they
+              are three weeks apart is the fact a reader needs, and it is
+              invisible until it is spelled out. The hash stays because it is
+              what anyone checking has to type.
+            */}
+            来源 {formatCaptureDate(asset.sourceCommitDate)}
+            {asset.sourceCommit ? `（${asset.sourceCommit.slice(0, 8)}）` : null} ·{" "}
+            {asset.capture.route} · {asset.capture.locale} · {asset.capture.viewport.width}×
+            {asset.capture.viewport.height}
           </small>
         ) : null}
         {asset.aiNote ? <small>{asset.aiNote}</small> : null}
