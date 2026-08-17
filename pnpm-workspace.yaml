@@ -12,4 +12,4 @@ allowBuilds:
   # Git hooks; without it the commit gate in lefthook.yml never runs.
   lefthook: true
 minimumReleaseAgeExclude:
-  - '@pieai/swimmer-ui-kit@1.3.0'
+  - '@pieai/swimmer-ui-kit@1.3.0 || 1.3.1 || 1.3.2'

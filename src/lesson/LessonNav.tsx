@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { GameBadge, GameButton, GameSegmentedControl } from "@pieai/swimmer-ui-kit";
+import { GameBadge, GameButton, GameSegmentedControl, GameToggle } from "@pieai/swimmer-ui-kit";
 
 import { Tip } from "../Tip.js";
 import type { DetailMode } from "../language/detail-mode.js";
@@ -188,21 +188,16 @@ export function LessonToolbar({
           // Only offered where there is something to offer. A toggle that
           // does nothing on most lessons teaches the learner to ignore it.
           //
-          // Still the local control rather than the kit's `GameToggle`, which
-          // this swap tried and reverted: `.game-ui-toggle-track` is declared
-          // once, with a fixed `--game-ui-secondary` fill, and the kit's
-          // stylesheet carries no `[aria-checked="true"]` rule for it at all.
-          // On and off render identically in every theme. Reported upstream;
-          // fixing it here would be patching a shared package locally.
+          // The kit's, now that it can show its own state. On 1.3.0
+          // `.game-ui-toggle-track` had one unconditional rule and no
+          // `[aria-checked="true"]` anywhere, so on and off were identical in
+          // every theme; 1.3.1 fixes that upstream rather than here.
           <Tip term="english-mode">
-            <button
-              type="button"
-              className="english-toggle"
-              aria-pressed={englishMode}
+            <GameToggle
+              checked={englishMode}
+              label="外语模式"
               onClick={() => onEnglishModeChange(!englishMode)}
-            >
-              {englishMode ? "外语模式 · 开" : "外语模式 · 关"}
-            </button>
+            />
           </Tip>
         ) : null}
 

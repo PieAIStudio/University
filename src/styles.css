@@ -2595,23 +2595,6 @@ summary:focus-visible,
 
 /* ---- English mode: an additive layer over the lesson, never a rewrite ---- */
 
-.english-toggle {
-  padding: 6px 12px;
-  border: 1px solid rgba(247, 211, 160, 0.32);
-  border-radius: 999px;
-  background: transparent;
-  color: rgba(255, 245, 232, 0.78);
-  font: inherit;
-  font-size: 0.82rem;
-  cursor: pointer;
-}
-
-.english-toggle[aria-pressed="true"] {
-  border-color: rgba(247, 211, 160, 0.7);
-  background: rgba(247, 211, 160, 0.14);
-  color: #f7d3a0;
-}
-
 .word-anchor {
   position: relative;
   display: inline;
