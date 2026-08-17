@@ -1,4 +1,12 @@
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  realpathSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -7,7 +15,12 @@ import { describe, expect, it } from "vitest";
 import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
 import { writeKnowledgeNoteRevision } from "./knowledge/repository.js";
 import { getStudyPaths } from "./studies/paths.js";
-import { createStudy } from "./studies/repository.js";
+import {
+  createStudy,
+  readSourceRegistration,
+  registerLocalGitSource,
+} from "./studies/repository.js";
+import { createCleanSnapshot } from "./studies/snapshots.js";
 import { executeUniversityLocalCli, main, parseUniversityLocalCli } from "./cli.js";
 
 const STUDY_ID = "sample-study";
@@ -225,6 +238,7 @@ describe("UniversityLocal CLI parser", () => {
     ],
     [["focus", "show"], { kind: "focus-show" }],
     [["focus", "clear"], { kind: "focus-clear" }],
+    [["teach", "next"], { kind: "teach-next" }],
     [
       [
         "session",
@@ -374,6 +388,26 @@ describe("UniversityLocal CLI parser", () => {
       operation: "session-end",
       summary: { sessionId: started["sessionId"], host: "grok-build" },
     });
+  });
+
+  it("reads the next teaching context without creating a learner database", async () => {
+    const { projectRoot, studiesRoot } = setupCliStudy();
+    const database = getStudyPaths(studiesRoot, STUDY_ID).learner.database;
+
+    const result = record(
+      await executeUniversityLocalCli({
+        projectRoot,
+        command: { kind: "teach-next" },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      operation: "teach-next",
+      teachingStudyId: STUDY_ID,
+      nextLesson: null,
+      openSession: null,
+    });
+    expect(existsSync(database)).toBe(false);
   });
 
   it("lists stable minimal knowledge metadata without teaching content or card answers", async () => {
@@ -578,6 +612,62 @@ describe("study and airlock verbs", () => {
     expect(() =>
       parseUniversityLocalCli(["study", "create", "--study", "x", "--title", "X"]),
     ).toThrow(/--source/);
+  });
+
+  it("parses a source rebind without conflating it with study creation", () => {
+    expect(
+      parseUniversityLocalCli([
+        "study",
+        "source",
+        "rebind",
+        "--study",
+        "turing-pact",
+        "--source",
+        "/tmp/turing-pact-clone",
+        "--ref",
+        "main",
+      ]),
+    ).toEqual({
+      kind: "study-source-rebind",
+      studyId: "turing-pact",
+      sourceRoot: "/tmp/turing-pact-clone",
+      reference: "main",
+    });
+  });
+
+  it("wires source rebind through the CLI after immutable snapshot proof", async () => {
+    const { projectRoot, studiesRoot } = setupCliStudy();
+    const sourceRoot = mkdtempSync(join(tmpdir(), "university-local-cli-source-"));
+    execFileSync("git", ["init", "-q", sourceRoot]);
+    execFileSync("git", ["-C", sourceRoot, "config", "user.name", "UniversityLocal Test"]);
+    execFileSync("git", ["-C", sourceRoot, "config", "user.email", "test@university.local"]);
+    writeFileSync(join(sourceRoot, "README.md"), "# CLI source rebind\n");
+    execFileSync("git", ["-C", sourceRoot, "add", "README.md"]);
+    execFileSync("git", ["-C", sourceRoot, "commit", "-q", "-m", "Initial"]);
+    registerLocalGitSource(studiesRoot, STUDY_ID, sourceRoot);
+    createCleanSnapshot(studiesRoot, STUDY_ID);
+    const cloneRoot = join(mkdtempSync(join(tmpdir(), "university-local-cli-clone-")), "source");
+    execFileSync("git", ["clone", "-q", sourceRoot, cloneRoot]);
+
+    const result = record(
+      await executeUniversityLocalCli({
+        projectRoot,
+        command: {
+          kind: "study-source-rebind",
+          studyId: STUDY_ID,
+          sourceRoot: cloneRoot,
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      operation: "study-source-rebind",
+      studyId: STUDY_ID,
+      verifiedSnapshotCount: 1,
+    });
+    expect(readSourceRegistration(studiesRoot, STUDY_ID).sourceRoot).toBe(
+      realpathSync.native(cloneRoot),
+    );
   });
 
   it("parses airlock promote with the dirty acknowledgement", () => {

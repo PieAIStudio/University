@@ -1,12 +1,20 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { getSnapshotPaths, getStudyPaths } from "./paths.js";
+import { inspectImportRisk, MAX_IMPORT_BLOB_BYTES } from "../airlock/import-gate.js";
 import { createStudy, registerLocalGitSource } from "./repository.js";
+import { getSnapshotPaths, getStudyPaths } from "./paths.js";
 import { createCleanSnapshot, openStudyRepository, refreshStudyRepository } from "./snapshots.js";
 
 function git(repository: string, args: string[]): string {
@@ -98,6 +106,84 @@ describe("clean snapshots", () => {
 
     const manifest = createCleanSnapshot(studiesRoot, "sample", "HEAD");
     expect(manifest.excludedPaths).toEqual(["external-link"]);
+  });
+
+  it("allows the example env file but refuses tracked secret-like paths without exposing content", () => {
+    const allowed = setup();
+    writeFileSync(join(allowed.sourceRoot, ".env.example"), "TOKEN=replace-me\n");
+    mkdirSync(join(allowed.sourceRoot, "mobile"));
+    writeFileSync(join(allowed.sourceRoot, "mobile", ".env.json.example"), "TOKEN=replace-me\n");
+    git(allowed.sourceRoot, ["add", ".env.example", "mobile/.env.json.example"]);
+    git(allowed.sourceRoot, ["commit", "-q", "-m", "Add example env"]);
+    expect(createCleanSnapshot(allowed.studiesRoot, "sample", "HEAD").status).toBe("ready");
+
+    const blocked = setup();
+    const secretContent = "PRODUCTION_TOKEN=do-not-print\n";
+    writeFileSync(join(blocked.sourceRoot, ".env.production"), secretContent);
+    mkdirSync(join(blocked.sourceRoot, "keys"));
+    writeFileSync(join(blocked.sourceRoot, "keys", "id_ed25519"), "PRIVATE KEY do-not-print\n");
+    writeFileSync(
+      join(blocked.sourceRoot, ".npmrc"),
+      "//registry.example/:_authToken=do-not-print\n",
+    );
+    git(blocked.sourceRoot, ["add", "-A"]);
+    git(blocked.sourceRoot, ["commit", "-q", "-m", "Add tracked credentials"]);
+
+    let message = "";
+    try {
+      createCleanSnapshot(blocked.studiesRoot, "sample", "HEAD");
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    expect(message).toMatch(/Git tracked tree/);
+    expect(message).toMatch(/\.env\.production/);
+    expect(message).toMatch(/keys\/id_ed25519/);
+    expect(message).toMatch(/\.npmrc/);
+    expect(message).toContain("不会读取或输出这些文件的具体内容");
+    expect(message).not.toContain(secretContent);
+    expect(message).not.toContain("do-not-print");
+  });
+
+  it("allows a large committed GLB in a clean snapshot while the airlock gate still rejects its size", () => {
+    const { studiesRoot, sourceRoot } = setup();
+    mkdirSync(join(sourceRoot, "assets"));
+    writeFileSync(
+      join(sourceRoot, "assets", "scene.glb"),
+      Buffer.alloc(MAX_IMPORT_BLOB_BYTES + 1, 0),
+    );
+    git(sourceRoot, ["add", "assets/scene.glb"]);
+    git(sourceRoot, ["commit", "-q", "-m", "Add study media"]);
+
+    expect(createCleanSnapshot(studiesRoot, "sample", "HEAD").status).toBe("ready");
+    expect(
+      inspectImportRisk([{ path: "assets/scene.glb", sizeBytes: MAX_IMPORT_BLOB_BYTES + 1 }])
+        .blocked,
+    ).toEqual([
+      {
+        path: "assets/scene.glb",
+        reason: "单个文件超过 5MB 导入上限",
+      },
+    ]);
+  });
+
+  it("rejects a tracked credential before fetching its commit or blob into the mirror", () => {
+    const { studiesRoot, sourceRoot } = setup();
+    const first = createCleanSnapshot(studiesRoot, "sample", "HEAD");
+    const repository = openStudyRepository(studiesRoot, "sample");
+
+    const secretContent = "PRODUCTION_TOKEN=must-not-enter-the-mirror\n";
+    writeFileSync(join(sourceRoot, ".env.production"), secretContent);
+    git(sourceRoot, ["add", ".env.production"]);
+    git(sourceRoot, ["commit", "-q", "-m", "Add tracked credential"]);
+    const blockedCommit = git(sourceRoot, ["rev-parse", "HEAD"]);
+    const secretBlob = git(sourceRoot, ["rev-parse", `${blockedCommit}:.env.production`]);
+
+    expect(() => createCleanSnapshot(studiesRoot, "sample", "HEAD")).toThrow(/\.env\.production/);
+    expect(bareGit(repository, ["rev-parse", `${first.sourceCommit}^{commit}`])).toBe(
+      first.sourceCommit,
+    );
+    expect(() => bareGit(repository, ["cat-file", "-e", `${blockedCommit}^{commit}`])).toThrow();
+    expect(() => bareGit(repository, ["cat-file", "-e", `${secretBlob}^{blob}`])).toThrow();
   });
 
   it("rejects submodules and Git LFS pointers instead of creating incomplete snapshots", () => {

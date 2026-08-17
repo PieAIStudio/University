@@ -24,28 +24,50 @@
 - Its selected agents routing file is `docs/governance/agents-routing/engineering-runtime-v1.1.md` under
   `docs/governance/agents-routing/`.
 
-## Read First
+## Startup Reading
 
-1. All Markdown under `docs/policy/**/*.md`.
-2. `docs/governance/boundary.md`.
-3. `docs/reference/execution/current-work.md` when priorities or in-flight work
-   matter.
-4. `docs/governance/agents-routing/engineering-runtime-v1.1.md` for workflow
-   depth.
-5. Before non-trivial implementation, debugging, architecture, or integration
-   work, run `pro-gov learn recall --query "<task summary>"` and read relevant
-   hits.
+Every task starts with this router and
+`docs/policy/best-practice-for-this-project.md`. The policy tree is an index,
+not a startup glob; load only the lane that the task actually touches.
+The discovery surface is `docs/policy/**/*.md`, including subdirectories and
+any symlinked shared-rule files; current PGS-managed shared rules are portable
+snapshots. This sentence describes what can be discovered, not a requirement
+to read the whole tree.
+
+| Task surface                                            | Read additionally                                                                                                                                                                                     |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Current priorities or in-flight work                    | `docs/reference/execution/current-work.md`                                                                                                                                                            |
+| Documentation, governance, router, or governed Markdown | `docs/governance/boundary.md`, `docs/governance/ssot-v1.1.md`, `docs/governance/doc-agent-rules.md`, `docs/governance/doc-types.md`, and `docs/governance/agents-routing/engineering-runtime-v1.1.md` |
+| UI, shared components, tokens, or brand behavior        | `docs/policy/shared-rules/brand-kit-first.md`                                                                                                                                                         |
+
+Before non-trivial implementation, debugging, architecture, or integration
+work, run `pnpm pro-gov learn recall --query "<task summary>"` and read relevant
+hits. Do not load unrelated policy or historical work by default.
+
+## Skill Availability
+
+`.pro-gov/assets.json` and `.pro-gov/assets.lock.json` record desired assets;
+they do not prove that an optional skill is installed, host-discoverable,
+loaded, or invoked. Use a skill only when its SKILL.md actually exists and
+can be read. Project-owned teaching skills are portable files; centrally
+managed generic skill links may need the PGS control plane to materialize them
+after a fresh clone.
 
 ## Documentation Tasks
 
 When the task creates, edits, moves, deletes, or governs documentation, read
-`docs/governance/boundary.md`, `docs/governance/ssot-v1.1.md`,
-`docs/governance/doc-agent-rules.md`, `docs/governance/doc-types.md`, the
-selected agents routing file, and all Markdown under `docs/policy/**/*.md`.
-That policy set includes subdirectories and symlinked shared-rule files; keep
-project AI development policy in `docs/policy/`.
+the documentation lane above before changing files. Keep project AI
+development policy in `docs/policy/`; a documentation task does not make every
+unrelated policy lane mandatory.
 
 <!-- PGS-ROUTER:END -->
+
+## Portfolio Laws
+
+- Brand kits first: `docs/policy/shared-rules/brand-kit-first.md`. Prefer
+  SwimmerUIKit when this teaching UI actually needs brand components. Skip
+  game-server and backend kits unless a real product surface appears. If a
+  needed kit cannot do the job, change the kit rather than forking it here.
 
 ## Upstream Rule
 

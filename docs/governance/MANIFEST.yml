@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-16T03:39:55.804Z
-generator_version: doc-gov@0.8.0
-docs_count: 40
+generated_at: 2026-08-17T09:49:34.252Z
+generator_version: doc-gov@0.9.0
+docs_count: 44
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-local-study-containers.md
@@ -32,6 +32,13 @@ docs:
     canonical: true
     last_reviewed: 2026-07-20
     pinned: true
+  - id: ARCH-CURRENT-WORK-RECEIPTS-2026-08
+    path: docs/archive/current-work-receipts-2026-07-20-to-2026-08-08.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-08-17
+    pinned: false
   - id: CANON-UNIVERSITY-LOCAL-MISSION
     path: docs/canon/mission-brief.md
     type: canon
@@ -44,7 +51,7 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-07-16
+    last_reviewed: 2026-08-17
     pinned: true
   - id: REF-DOC-GOVERNANCE-BOUNDARY
     path: docs/governance/boundary.md
@@ -93,8 +100,29 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-07-20
+    last_reviewed: 2026-08-17
     pinned: true
+  - id: POLICY-SHARED-AI-IN-THE-LOOP
+    path: docs/policy/shared-rules/ai-in-the-loop.md
+    type: policy
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-17
+    pinned: false
+  - id: POLICY-SHARED-BRAND-KIT-FIRST
+    path: docs/policy/shared-rules/brand-kit-first.md
+    type: policy
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-17
+    pinned: true
+  - id: POLICY-SHARED-CLEAN-IMAGE-GENERATION
+    path: docs/policy/shared-rules/clean-image-generation-rules.md
+    type: policy
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-17
+    pinned: false
   - id: REF-UNIVERSITY-LOCAL-ARCHITECTURE-REFLECTION-2026-07-20
     path: docs/reference/architecture-reflection-2026-07-20.md
     type: reference
@@ -121,7 +149,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-08
+    last_reviewed: 2026-08-17
     pinned: true
   - id: REF-UNIVERSITY-LOCAL-LEARNING-DONOR-MAP-2026-07-20
     path: docs/reference/learning-donor-map-2026-07-20.md
@@ -184,7 +212,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-07
+    last_reviewed: 2026-08-17
     pinned: false
   - id: REF-USING-UNIVERSITY-LOCAL-WITH-GROK
     path: docs/reference/using-university-local-with-grok.md

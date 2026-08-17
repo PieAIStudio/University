@@ -1,0 +1,1323 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "directing-ai-agents",
+    "title": "指挥 AI 干活",
+    "description": "AI 替你写代码时，你的工作从「写」变成「定规矩和验收」。这门课读图灵密约真实的三份文件：AI 开工前必须读什么、一个循环凭什么停下来、以及一份把全部创作权交出去的授权书为什么仍然留了四道只有本人能过的闸。",
+    "audience": "读完九门 foundations、用 AI 宿主替自己干活的独立开发者",
+    "objectives": [
+      "说清这个项目规定 AI 开工前的阅读顺序，以及为什么 README 不在其中",
+      "读一个 AI 循环，指出它的停止条件和「先问再动」的边界",
+      "列出授权书里仍然只有本人能过的闸，并解释每一道为什么不能交给机器",
+      "说明为什么依赖的技能要按内容哈希钉住"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [],
+    "units": [
+      {
+        "id": "what-the-agent-reads-first",
+        "title": "让 AI 先读什么",
+        "objective": "看懂这个项目怎么规定一个 AI 开工前必须读什么，以及为什么 README 不在其中",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "readme-is-not-the-startup-path",
+            "title": "仓根上有 README，AI 开工时该先读它吗？",
+            "content": "# 仓根上有 README，AI 开工时该先读它吗？\n\n## 现象\n\n你打开 Turing Pact 的仓根，几乎总会先看到 `README.md`。很多仓库也把「先读 README」写成默认习惯。\n\n可是这个项目的 `AGENTS.md` 在 **Startup Reading** 里，用英文写了另一条观察得到的规矩：`README.md` 是面向人的项目介绍；**不要**把它当作 AI 的默认开工路径——除非任务本身就是讲定位、对外说明，或就是改 README。\n\n```text\n`README.md` is the human-facing project introduction. Do not use it as the\ndefault AI startup path unless the task is about project positioning, public\nexplanation, or the README itself.\n```\n\n[[evidence:AGENTS.md:9-11]]\n\n同一节下面紧跟着编号清单，列的是另一批路径；README 不在那串编号里。\n\n## 先猜一下\n\n你把「通读 README」设成 AI 每次会话的默认第一步，下一次它去修登录相关 bug 时，上下文额度最容易先被哪一类文字占满？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n最容易先被给人看的定位、故事和对外说明占满；政策、边界和当前执行索引会被挤到后面，甚至根本读不到。\n\n## 为什么是这样\n\n`AGENTS.md` 把读者拆成两类，并且写死了默认路径：\n\n- **人**：需要项目是什么、怎么对外讲——那是 README 的活。\n- **AI 宿主**：需要在动文件前拿到约束——那是 Startup Reading 编号清单的活。\n\n你若把两类混成「仓根第一份 md 先读」，AI 会用宝贵的窗口去吸收宣传语气的句子，却还不知道 `docs/policy`、边界文件和当前工作索引里写了什么。一个人公司没有同事在旁边喊「你读错文件了」；错读的代价会直接变成错误改动。\n\n这条规矩不是禁止你打开 README。任务真的是改文案、对定位、写对外说明时，README 就是正主。默认路径排除的是「任何任务都先读它」。\n\n## 自检\n\n1. Startup Reading 把 README 标成什么角色？什么情况下它才变成 AI 该读的文件？\n2. 你让 AI 修一个与对外文案无关的 bug，却把 README 塞进默认开工包，你在赌什么会被挤掉？\n\n## 一句话\n\n**README 给人建立印象；AI 默认开工读的是约束清单，不是介绍页。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 7,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "Startup Reading：README 非默认 AI 路径，后接编号清单"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 9,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "README 面向人；非 default AI startup path 的例外条件"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "dir-readme-human-not-default-ai",
+                "kind": "basic",
+                "front": "Turing Pact 的 AGENTS.md 把 README.md 定成什么角色？AI 什么时候才该把它当开工材料？",
+                "back": "README 是面向人的项目介绍。只有任务本身涉及定位、对外说明，或就是改 README 时，它才进入 AI 开工路径；默认不算。",
+                "tags": [
+                  "startup-reading",
+                  "readme",
+                  "agents-md"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 9,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "human-facing + 非 default AI startup path"
+                  }
+                ]
+              },
+              {
+                "id": "dir-readme-default-first-cost",
+                "kind": "basic",
+                "front": "你强制 AI 每次先通读 README，再去改与对外文案无关的代码，最容易坏掉的是什么？",
+                "back": "上下文被介绍性文字占满，政策、边界、当前工作索引等约束文件被挤后或漏读，错误改动会直接落到你头上。",
+                "tags": [
+                  "startup-reading",
+                  "context-cost",
+                  "solo"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 9,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "README 排除与编号约束清单并列"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "dir-readme-role-word",
+                "kind": "short-answer",
+                "title": "README 的角色词",
+                "prompt": "AGENTS.md 用哪个英文短语描述 README 的读者对象？（两个词，连字符连接，如 human-facing）",
+                "expectedAnswer": "human-facing",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "human-facing project introduction"
+                  }
+                ]
+              },
+              {
+                "id": "dir-readme-default-path-yes-no",
+                "kind": "short-answer",
+                "title": "默认开工路径吗",
+                "prompt": "在任务与定位/对外说明/README 本身无关时，README 是不是 AI 的 default startup path？只答 yes 或 no。",
+                "expectedAnswer": "no",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 9,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "Do not use it as the default AI startup path"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-reading-order-is-a-contract",
+            "title": "开工要读一串文件，这是建议还是合同？",
+            "content": "# 开工要读一串文件，这是建议还是合同？\n\n## 情境和约束\n\n你一个人跑公司，AI 宿主每次新开会话都可能「忘记」上一轮读过什么。Turing Pact 在 `AGENTS.md` 的 Startup Reading 里，没有写「看着办」，而是写了一串**编号清单**：\n\n```text\n1. All Markdown files under `docs/policy/**/*.md`, including files in\n   subdirectories and symlinked shared-rule files.\n2. `docs/governance/boundary.md`\n3. `docs/governance/agents-routing/engineering-runtime-v1.1.md`\n4. `docs/reference/execution/current-work.md`\n5. Before non-trivial implementation, debugging, release, architecture, or\n   migration work, run `pro-gov learn recall --query \"<task summary>\"` and read\n   any relevant prior-learning hits before changing files.\n```\n\n[[evidence:AGENTS.md:13-20]]\n\n文档类任务还要再加读 SSOT、doc-agent-rules、doc-types——同样写在开工段，不是脚注。\n\n```text\nWhen the task creates, edits, moves, deletes, or governs documentation, also\nread `docs/governance/ssot-v1.1.md`,\n`docs/governance/doc-agent-rules.md`, and `docs/governance/doc-types.md` before\nchanging governed files.\n```\n\n[[evidence:AGENTS.md:22-25]]\n\n## 先猜一下\n\n如果把这份编号清单改成「AI 自己判断该读哪几份」，一个人公司最常见、也最贵的坏结果是什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不同会话会读不同子集；漏掉的边界或当前工作索引会在改文件之后才爆，没有第二个人替你兜底。\n\n## 代价和收益\n\n**他们选了固定顺序合同，而不是按需挑读。**\n\n代价你立刻能感到：非琐碎任务前，AI 要先吞一批政策与治理文件，会话开头变慢、变「重」。\n\n收益写在清单本身：\n\n1. **政策全集**（含子目录与共享规则软链）——规则不靠运气撞上。\n2. **边界**——仓库能碰什么、不能碰什么有单点文件。\n3. **agents 路由**——工程运行时档案先于零散 skill。\n4. **当前工作索引**——避免在过期优先级上使劲。\n5. **动手前的 recall**——下一课单独拆；这里只要知道它是清单的第 5 步，不是可选项。\n\n对你这种一人公司，合同的价值不是「读得好看」，而是**可重复**：换一个宿主、新开一条对话，开工读什么仍应同一套。建议可以被礼貌忽略；编号清单是在降低「这次碰巧漏了」的概率。\n\n## 什么时候该反过来\n\n反过来——允许跳过或打乱这份清单——只在任务真的落在例外里才说得通，例如：\n\n- 任务就是改 README / 对外定位说明（上一课的 README 例外）。\n- 任务被项目约定为琐碎到不触发「non-trivial」门槛，且不碰 governed 文档。\n- 你在**同一条**已读完清单的会话里做连续小步，上下文仍在，不必每敲一次字就重读全套。\n\n新开会话、换宿主、跨到实现/调试/发布/架构/迁移，或动 governed 文档时，把清单当建议就会把一人公司的记忆外包给运气。\n\n## 自检\n\n1. Startup Reading 编号清单的前四项路径各是什么角色（政策 / 边界 / 路由 / 当前工作）？\n2. 你新开一条 AI 会话去做架构改动，却只让它读了 `current-work.md`，合同被破坏的是哪一侧的保护？\n\n## 一句话\n\n**编号开工清单是可重复的合同，不是「有空再读」的建议。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 13,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "Startup Reading 编号 1–5：政策、边界、路由、当前工作、recall"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 22,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "文档治理任务额外必读 SSOT / doc-agent-rules / doc-types"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 7,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "Startup Reading 整段：默认路径与合同式清单"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "dir-startup-list-is-contract",
+                "kind": "basic",
+                "front": "AGENTS.md 把 AI 开工阅读写成编号清单，而不是「按需阅读」。对一人公司，这份清单更像建议还是合同？为什么？",
+                "back": "更像合同。固定顺序让不同会话、不同宿主重复同一套约束；按需挑读会导致子集不一致，漏读成本在改文件后才暴露且无人兜底。",
+                "tags": [
+                  "startup-reading",
+                  "contract",
+                  "solo"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 13,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "编号 1–5 固定开工序列"
+                  }
+                ]
+              },
+              {
+                "id": "dir-startup-four-plus-docs",
+                "kind": "basic",
+                "front": "非文档任务的 Startup Reading 前四项分别指向哪类材料？文档任务还要额外读哪三份？",
+                "back": "前四项：docs/policy/**、boundary.md、engineering-runtime 路由、current-work.md。文档任务额外：ssot-v1.1.md、doc-agent-rules.md、doc-types.md。",
+                "tags": [
+                  "startup-reading",
+                  "docs-governance"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 13,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "1–4 与文档附加三条"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "dir-startup-item-two-path",
+                "kind": "short-answer",
+                "title": "清单第 2 项路径",
+                "prompt": "Startup Reading 编号第 2 项的完整路径是什么？（从 docs/ 写起）",
+                "expectedAnswer": "docs/governance/boundary.md",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 15,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "2. docs/governance/boundary.md"
+                  }
+                ]
+              },
+              {
+                "id": "dir-startup-numbered-count",
+                "kind": "short-answer",
+                "title": "主清单几步",
+                "prompt": "Startup Reading 主编号清单一共几步？（只写数字）",
+                "expectedAnswer": "5",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 13,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "编号 1 到 5"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "recall-before-you-touch-anything",
+            "title": "政策都读完了，动手前为什么还要跑 recall？",
+            "content": "# 政策都读完了，动手前为什么还要跑 recall？\n\n## 两个东西\n\nStartup Reading 里其实叠了两道门，容易被你看成同一件事：\n\n**A. 固定文件清单（编号 1–4）**  \n政策目录、边界、agents 路由、当前工作索引——仓库里写死的路径，每次开工对齐「现在规则和优先级长什么样」。\n\n**B. 动手前的 recall（编号 5）**  \n在非琐碎的实现、调试、发布、架构或迁移之前，先跑一条命令，再读命中的既有教训，**然后**才改文件：\n\n```text\n5. Before non-trivial implementation, debugging, release, architecture, or\n   migration work, run `pro-gov learn recall --query \"<task summary>\"` and read\n   any relevant prior-learning hits before changing files.\n```\n\n[[evidence:AGENTS.md:18-20]]\n\nA 是「打开指定书」；B 是「按这次任务摘要，把仓库外/治理里沉淀过的坑再捞一遍」。两者都在 Startup Reading，职责却不同。\n\n## 先猜一下\n\n固定清单你已经让 AI 读完了，却跳过 recall 直接改一个「这仓库以前踩过坑」的模块——坏掉的主要是谁的时间，宿主会话的还是你的？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n主要是你的时间：AI 可能把旧坑再实现一遍，你要在 diff、返工和线上症状里买单。\n\n## 逐条对照\n\n| | 固定清单（1–4） | recall（5） |\n| --- | --- | --- |\n| 输入 | 写死的路径 | 你的任务摘要 query |\n| 对齐什么 | 现行政策、边界、路由、当前优先级 | 与本次任务相关的**既有教训** |\n| 何时 | 开工阅读 | 非琐碎工作、**改文件之前** |\n| 跳过的典型症状 | 违反现行边界/政策 | 重复已知失败路径 |\n\n编号 5 的英文把顺序钉死了：`before changing files`。读完 1–4 只证明「此刻的规章在场」；不证明「这个模块上一次为什么翻车」已经回到上下文。\n\n对你这种一人公司，recall 是把**跨会话记忆**接回当前工人的钩子。宿主换了、线程新了，1–4 仍在仓里；教训若不 recall，就等于没写过。\n\n## 什么时候用哪个\n\n- **只动琐碎、且你判断不触及非琐碎门槛的改动**：清单仍该在；recall 的触发条件写的是 non-trivial 实现/调试/发布/架构/迁移——不要把「改个错别字」和「迁架构」当成同一档。\n- **非琐碎实现、调试、发布、架构、迁移**：1–4 与 5 都要；5 在改文件前，query 用你自己的任务摘要，不要空跑。\n- **文档治理任务**：在 1–4 之外还要 SSOT 等附加文件（上一课）；那是另一条加读，不能拿来代替 recall。\n\n你指挥 AI 时，把「读规章」和「捞旧坑」说成两个勾选项，比说一句「先熟悉一下项目」更难被跳过。\n\n## 自检\n\n1. 编号 5 要求在什么动作之前完成 recall？英文原句里的三个词是什么？\n2. 你已经读完 policy 与 current-work，仍要 recall 的原因，用「规章 vs 教训」各一词怎么分？\n\n## 一句话\n\n**读固定清单对齐现行规章；跑 recall 是在改文件前把旧坑捞回当前会话。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 18,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "编号 5：non-trivial 工作前 pro-gov learn recall，before changing files"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 13,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "1–4 固定路径与 5 recall 同属 Startup Reading"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 22,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "文档附加阅读与 recall 是不同加码"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "dir-recall-before-changing-files",
+                "kind": "basic",
+                "front": "Startup Reading 第 5 步要求在什么时刻跑 `pro-gov learn recall`？触发的工作类型有哪些？",
+                "back": "在改文件之前。触发：非琐碎的 implementation、debugging、release、architecture、migration；query 用任务摘要，并阅读相关 prior-learning hits。",
+                "tags": [
+                  "recall",
+                  "startup-reading",
+                  "pro-gov"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 18,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "before changing files + 工作类型列表"
+                  }
+                ]
+              },
+              {
+                "id": "dir-list-vs-recall",
+                "kind": "basic",
+                "front": "固定开工清单（1–4）和 recall（5）各对齐什么？只读清单不跑 recall，一人公司最像在赌什么？",
+                "back": "1–4 对齐现行政策/边界/路由/当前工作；5 按任务捞既有教训。跳过 recall 是在赌旧坑不会在本次改动里重演，翻车时间由你付。",
+                "tags": [
+                  "recall",
+                  "startup-reading",
+                  "solo"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 13,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "1–4 路径文件 vs 5 recall 命令"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "dir-recall-command-name",
+                "kind": "short-answer",
+                "title": "recall 命令",
+                "prompt": "编号 5 要求运行的命令是什么？（写出 pro-gov 开头的完整子命令名，含 learn recall）",
+                "expectedAnswer": "pro-gov learn recall",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 19,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "run `pro-gov learn recall --query ...`"
+                  }
+                ]
+              },
+              {
+                "id": "dir-recall-before-phrase",
+                "kind": "short-answer",
+                "title": "改文件前的英文短语",
+                "prompt": "编号 5 用哪三个英文单词规定 recall 与读 hits 必须发生在改文件之前？",
+                "expectedAnswer": "before changing files",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 20,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "before changing files"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "a-loop-needs-a-stop",
+        "title": "一个循环要有停止条件",
+        "objective": "会读这个项目写下的两个 AI 循环，指出各自的停止条件和「先问再动」的那条线",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "a-loop-without-a-stop-is-a-bill",
+            "title": "只写「干什么」、不写「何时停」，烧的是谁的钱？",
+            "content": "# 只写「干什么」、不写「何时停」，烧的是谁的钱？\n\n## 现象\n\n你打开仓库根目录的 `LOOPS.md`，里面不是架构图，是两段给 AI 跑的循环说明。每段都有完整 Prompt：观察什么、修什么、怎么验证、证据写到哪。\n\n可是在 Prompt 上面，另有一句语气完全不同的话——它不列下一步任务，只描写循环在什么条件下结束。两段循环都有这种句子；Prompt 正文里，停的规则又被写了一遍。\n\n```\nHand-craft surfaces (layout, UI, entry flow, gestures, performance) with machine evidence until the weekly pack is ready; never claim H1 fun. Stops when the cycle gate is green or no measurable craft progress remains.\n```\n\n[[evidence:LOOPS.md:5]]\n\n## 先猜一下\n\n你把其中一段的 Prompt 整段贴进 AI 会话，却故意漏掉所有写「Stop / Stops when」的句子。门闸还没绿，界面上永远还能再抠一处。这一轮里，最先失控的是什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n最先失控的是账单和你的时间：AI 会把「还能改」当成继续干的理由，token、机时和你盯屏的注意力一起涨，却没有人负责喊停。\n\n## 为什么是这样\n\n循环要同时写清两件事：成功时怎么停，以及卡住时怎么停。commercial craft 在正文就写了双出口——门闸绿了停，可测手艺进展榨干了也停：\n\n```\nStops when the cycle gate is green or no measurable craft progress remains.\n```\n\n[[evidence:LOOPS.md:5]]\n\n缺了后半句，「我还能再抛光一点」会把循环拖成通宵。Prompt 里又把停写死一次，并且把「残留只剩只有你本人能拍板的事」也算进可以停：\n\n```\nStop when gates pass and residual work is only H1/owner-owned, or after no progress.\n```\n\n[[evidence:LOOPS.md:8]]\n\nH1 / owner-owned 在这里的意思是：剩下的活属于业主层，不是 AI 这轮该继续啃的。一人公司没有替你值夜班的同事；停止条件写进循环，就是你在文件里预埋的结账铃。\n\n另一条 maintainability 循环同一结构：成功停是抽出一个 seam、文档对齐、定向门闸过；否则「没有值得再动的高 churn 接缝」也停——成功口和空手口成对出现。\n\n```\nStops when one seam is extracted, docs/boundary notes match code, and targeted gates pass—or when no high-churn seam remains worth moving.\n```\n\n[[evidence:LOOPS.md:15]]\n\n你指挥 AI 时，漏写停不等于「它更努力」，等于「没有人知道这一轮什么时候该结账」。\n\n## 自检\n\n1. commercial craft 循环的两个停止出口分别是什么？\n2. 为什么「只剩 H1 / owner-owned」也算可以停？\n3. 若只写「把门闸跑绿」、不写「无可测进展也停」，最容易出现什么局面？\n\n## 一句话\n\n**停止条件是你预埋在循环里的结账铃，不是任务清单末尾的礼貌附言。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 5,
+                "lineEnd": 5,
+                "nodeIds": [],
+                "note": "craft 循环正文：双出口停止条件"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 8,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "craft Prompt：Stop when… 与 residual H1/owner-owned"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 15,
+                "lineEnd": 15,
+                "nodeIds": [],
+                "note": "maintain 循环正文：one seam 或 no high-churn 停止条件"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 3,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "commercial craft 整段循环（标题到 Source）"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 13,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "maintainability 整段循环（标题到 Source）"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "loop-stop-dual-exit",
+                "kind": "basic",
+                "front": "一个 AI 循环的停止条件为什么通常要写两个出口，而不是只写「成功了就停」？",
+                "back": "成功出口管门闸/交付达成；空转出口管「已经没有可测进展」。只写成功口时，AI 会把「还能再改一点」当成继续干的理由，账单和时间失控。",
+                "tags": [
+                  "stop-condition",
+                  "loops"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "craft：gate green 或 no measurable progress"
+                  }
+                ]
+              },
+              {
+                "id": "loop-stop-h1-owner",
+                "kind": "basic",
+                "front": "craft 循环为什么在门闸过且「residual work is only H1/owner-owned」时也可以停？",
+                "back": "残留已落到只有业主能拍板的层，不属于 AI 这轮该继续啃的范围；一人公司必须把这类残留交回你，而不是让 agent 假装还能代劳。",
+                "tags": [
+                  "stop-condition",
+                  "owner"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "Stop when… residual H1/owner-owned"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "loop-craft-stop-or",
+                "kind": "short-answer",
+                "title": "craft 停止条件的连接词",
+                "prompt": "commercial craft 正文停止句里，两个出口之间用的是哪个英文连接词？（小写）",
+                "expectedAnswer": "or",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "green or no measurable craft progress"
+                  }
+                ]
+              },
+              {
+                "id": "loop-maintain-seam-word",
+                "kind": "short-answer",
+                "title": "maintain 成功停的单元",
+                "prompt": "maintainability 循环成功停止条件里，完成几个 seam 就算一轮成功停？只写数字。",
+                "expectedAnswer": "1",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 15,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "one seam is extracted"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "ask-before-the-irreversible",
+            "title": "破坏性动作不禁止，为什么要写「先问你」？",
+            "content": "# 破坏性动作不禁止，为什么要写「先问你」？\n\n## 情境和约束\n\n你已经知道：`LOOPS.md` 里每个循环都有停止条件。停止条件管的是「这一轮何时结束」，不是「过程中哪一步可以自己做、哪一步必须回头找人」。\n\n两条 Prompt 的末尾都另起一句 `Ask before…`。列出来的不是普通小改，而是难回滚、或一碰就碰到渠道和钱的动作。\n\ncommercial craft 的 Prompt 末句是：\n\n```\nAsk before destructive or channel/payment opens.\n```\n\n[[evidence:LOOPS.md:8]]\n\nmaintainability 的 Prompt 末句是：\n\n```\nAsk before mass renames, dependency-rule hard gates, or multi-package rewrites.\n```\n\n[[evidence:LOOPS.md:18]]\n\n文件写的是「先问」，不是「本节禁止出现这些词」。\n\n## 先猜一下\n\n你自己写循环时，对「打开支付渠道」或「全仓批量改名」，可以硬禁止，也可以写成「可以做，但必须先问业主」。这个项目选了后者。选后者时，你实际上把哪一种权力留在自己手里？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n你留下的是签字权：这类动作有时确实该做，但 AI 只能准备到边界前，跨过去之前必须经过你点头。\n\n## 代价和收益\n\n收益：循环不会因为「太危险」把整条路封死。渠道终究要接，大范围重命名有时值得做；Prompt 仍允许走到那一步，只在不可逆边界上强制暂停。\n\n代价：你必须在线。一人公司没有值班同事；`Ask before` 生效的前提是你看得到提问并回答。整晚挂着无人值守的 agent 时，这句约束写在文件里，执行权仍在你——不在模型里自动生效。\n\n另一层收益是两套闸分开：`Stops when` 回答「这一轮还要不要继续」；`Ask before` 回答「这一步动之前要不要先经过业主」。别混成一句含糊的「小心点」。\n\n## 什么时候该反过来\n\n- 某个动作你确定永远不该由 agent 发起（例如把密钥打进日志），写成硬禁止比写成「先问」更合适——多一次点头也可能是一次事故。\n- 你人就在会话旁、且动作可逆（小步 commit、单文件改名），不必每步都 `Ask before`，否则循环被你拖成人工确认流水线。\n- 你准备无人值守跑完整循环：要么把不可逆项改成硬禁，要么别开那条循环——`Ask before` 不是自动安全网。\n\n## 自检\n\n1. craft 循环要求先问的方向有哪些？\n2. maintain 循环要求先问的动作有哪些？\n3. 「Ask before」和「Stops when」分别卡住的是什么决策？\n\n## 一句话\n\n**先问再动不是礼貌，是把不可逆签字权留在唯一在岗的你手里。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 8,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "craft Ask before destructive / channel / payment"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 18,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "maintain Ask before mass renames / hard gates / multi-package"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 3,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "craft 整段：停与先问同在 Prompt"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 13,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "maintain 整段：停与先问同在 Prompt"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "loop-ask-not-ban",
+                "kind": "basic",
+                "front": "「Ask before」和「永远禁止」差在机制上的哪一点？",
+                "back": "Ask before 允许动作在业主点头后发生，禁止则封死路径。项目用先问保留可行性，同时把不可逆签字权留在你手里。",
+                "tags": [
+                  "ask-before",
+                  "authority"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "Ask before destructive or channel/payment opens"
+                  }
+                ]
+              },
+              {
+                "id": "loop-ask-vs-stop",
+                "kind": "basic",
+                "front": "同一条循环里，Stops when 和 Ask before 各卡住哪一种决策？",
+                "back": "Stops when 卡住「这一轮还要不要继续」；Ask before 卡住「某一步不可逆动作动之前要不要先经过业主」。",
+                "tags": [
+                  "ask-before",
+                  "stop-condition"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "craft：Stop when 与 Ask before 同句段"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "maintain：Stop after 与 Ask before 同句段"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "loop-ask-craft-keyword",
+                "kind": "short-answer",
+                "title": "craft 先问：支付相关词",
+                "prompt": "craft 循环 Ask before 句里，与钱相关的英文词是哪一个？（写 payment）",
+                "expectedAnswer": "payment",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "channel/payment opens"
+                  }
+                ]
+              },
+              {
+                "id": "loop-ask-maintain-renames",
+                "kind": "short-answer",
+                "title": "maintain 先问：批量改名",
+                "prompt": "maintain 循环要求先问再做的「mass ___」——横线里是哪个英文词？",
+                "expectedAnswer": "renames",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "mass renames"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "two-loops-two-ways-to-stop",
+            "title": "两个循环的停止条件，是同一把尺吗？",
+            "content": "# 两个循环的停止条件，是同一把尺吗？\n\n## 两个东西\n\n`LOOPS.md` 里并排两个循环：commercial craft，和 AI/human-friendly maintainability。两段都有 `Stops when…`，Prompt 里也各自再写了一遍 `Stop…`。读起来都像「干完就停」，可是「干完」的定义并不共用同一句话。\n\ncraft 的停，跟门闸、可测手艺进展、以及是否只剩业主层残留绑在一起。maintain 的停，跟 seam 抽了几个、文档是否对齐、有没有还值得动的高 churn 接缝绑在一起。你若把两把尺当成一把，会在错误的时刻收工或加班。\n\n## 先猜一下\n\n同一下午你开了两个会话。maintain 已经抽出一个 seam，边界说明对齐了，定向测试也绿了。craft 门闸还没全绿，但已经修掉了本轮最高杠杆的那一处界面缺陷。按文件规定，哪一个应当立刻停？另一个为什么还不能仅凭「修了一处」就停？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\nmaintain 应当立刻停——成功停就是完成一个 seam 且检查绿。craft 还不能仅因修了一处就停；它要等到门闸绿，或已经没有可测手艺进展。\n\n## 逐条对照\n\n**成功怎么停**\n\ncraft 正文：\n\n```\nStops when the cycle gate is green or no measurable craft progress remains.\n```\n\n[[evidence:LOOPS.md:5]]\n\ncraft 的 Prompt 又补了一刀——门闸过且残留只剩 H1/owner-owned，或没有进展：\n\n```\nStop when gates pass and residual work is only H1/owner-owned, or after no progress.\n```\n\n[[evidence:LOOPS.md:8]]\n\nmaintain 正文：\n\n```\nStops when one seam is extracted, docs/boundary notes match code, and targeted gates pass—or when no high-churn seam remains worth moving.\n```\n\n[[evidence:LOOPS.md:15]]\n\nmaintain 的 Prompt 把成功停写得更短：一个 seam 做完且检查绿，或干净空操作：\n\n```\nStop after one completed seam with green checks, or clean no-op.\n```\n\n[[evidence:LOOPS.md:18]]\n\n**一轮允许多大**\n\n- craft：在门闸与进展允许的范围内推进可感知表面；Prompt 让你修「本轮最高杠杆的那一处」，但停的尺子仍是门闸/进展，不是「改完一处 = 整轮结束」。\n- maintain：成功侧明确 bound 在**一个** seam；做完就停，防止「既然在重构就顺手再抽三个」。\n\n**空转怎么停**\n\n两者都怕无限打磨。craft 盯「no measurable craft progress」；maintain 盯「no high-churn seam remains worth moving」或 clean no-op。信号不同，目的一样：没有进展就结账，别空转烧你的会话。\n\n## 什么时候用哪个\n\n- 你要压的是入口、live-room HUD、venues、presence 等可感知表面，并且本周要交带机器证据的手艺包 → craft；停在门闸绿或真的抠不动，且不宣称 H1 fun。\n- 你要压的是结构：让下一处正确改动对 AI 和人都更省认知，且不改产品行为 → maintain；停在一个 seam，别开重构狂欢。\n- 你想在 maintain 里改社交推理规则，或在 craft 里把「好玩」写进验收 → 两条 Prompt 都挡在外面；那不是停不停的问题，是循环根本不接这种活。\n\n## 自检\n\n1. maintain 成功停止条件里，「一个 seam」是硬上限还是随口建议？\n2. craft 在「最高杠杆缺陷已修」但门闸未绿时，按 Prompt 该不该停？\n3. 两条循环的空转停止，各盯什么信号？\n\n## 一句话\n\n**两个循环都有停，但 craft 停在门闸与进展，maintain 停在一个 seam——尺子不同，混用就会半截收工或重构到天亮。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 5,
+                "lineEnd": 5,
+                "nodeIds": [],
+                "note": "craft 正文停止条件"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 8,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "craft Prompt 停止与先问"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 15,
+                "lineEnd": 15,
+                "nodeIds": [],
+                "note": "maintain 正文停止条件"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 18,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "maintain Prompt：one completed seam 或 clean no-op"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "LOOPS.md",
+                "lineStart": 3,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "两个循环全文对照"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "loop-craft-vs-maintain-stop",
+                "kind": "basic",
+                "front": "craft 与 maintain 的成功停止条件，尺子各是什么？",
+                "back": "craft：门闸绿（且可强调残留仅 H1/owner-owned）或无可测手艺进展。maintain：抽出一个 seam、文档对齐、定向门闸过——成功侧 bound 在一个 seam。",
+                "tags": [
+                  "stop-condition",
+                  "comparison"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "craft stops"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 15,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "maintain stops"
+                  }
+                ]
+              },
+              {
+                "id": "loop-one-seam-hard-stop",
+                "kind": "basic",
+                "front": "maintain 循环为什么强调 Stop after one completed seam，而不是「把能抽的接缝抽完」？",
+                "back": "把一轮 bound 在单个 seam，防止重构范围膨胀；下一处接缝应开新一轮，而不是在同一次循环里顺手连环抽。",
+                "tags": [
+                  "maintainability",
+                  "scope"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "Stop after one completed seam with green checks"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "loop-which-stops-after-one-seam",
+                "kind": "short-answer",
+                "title": "哪个循环一个 seam 就停",
+                "prompt": "完成一个 seam 且检查绿就应停的是哪条循环？只写 craft 或 maintain。",
+                "expectedAnswer": "maintain",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "one completed seam with green checks"
+                  }
+                ]
+              },
+              {
+                "id": "loop-craft-no-progress-phrase",
+                "kind": "short-answer",
+                "title": "craft 空转停的关键词",
+                "prompt": "craft 正文空转停止写的是 no measurable craft ______ remains——横线里是哪个英文词？",
+                "expectedAnswer": "progress",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "LOOPS.md",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "no measurable craft progress remains"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "what-stays-yours",
+        "title": "授权之后，仍然只有你能做的事",
+        "objective": "说清这份授权书给了 AI 什么权限、留下了哪四道只有本人能过的闸，以及预算为什么是授权的一部分",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "full-authority-and-four-gates",
+            "title": "授权书说了 full authority，为什么付费渠道还是动不了？",
+            "content": "# 授权书说了 full authority，为什么付费渠道还是动不了？\n\n## 两个东西\n\n你打开 `.agents/creator-mandate.md`。上半截把创作权写得很满：\n\n```md\n- **Full creative authority:** gameplay rules, round structure, venue and UI\n  craft, entry flow, AI persona design, content, pacing. The director may\n  change the default experience directly when confident; experiment flags\n  remain the tool of choice for risky or unproven variants.\n- **Dispatch authority:** the director dispatches executor AIs (Grok CLI\n  headless sessions in dedicated worktrees, Claude subagents) for\n  implementation work and reserves its own cycles for design judgment,\n  review, and integration. Dispatch surface:\n  `docs/plans/active/PLAN-0020-commercial-push-work-orders.md`.\n```\n\n[[evidence:.agents/creator-mandate.md:10-18]]\n\n同一份文件，紧接着另一段标题叫 **Still owner/human-only**，列的是商业闸：\n\n```md\n- H1 human fun validation: only real human sessions can pass it; never claim\n  \"fun validated\" from machine evidence.\n- External channel activation (Telegram/Discord), paid acquisition, broad\n  promotion: blocked until H1 passes.\n- Real-money flows: blocked until G0; payment work stays research/stub-only.\n- SwimmerBackend schema/migration changes: report to owner, who dispatches\n  the backend AI.\n```\n\n[[evidence:.agents/creator-mandate.md:22-28]]\n\n一边是「你判断最好就改」，一边是「这些闸仍只有本人能过」。两段都在同一份授权书里。\n\n## 先猜一下\n\nAI 导演已经按 full creative authority 改了三轮玩法，自己也觉得更顺了。它接着想直接打开 Telegram 渠道做付费拉新。按这份授权书，它改玩法的权限还在不在？打开渠道这一步会卡在哪一道闸？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n改玩法的权限还在；打开 Telegram 付费渠道卡在第二道闸——外渠激活与付费获客在 H1 通过前被挡住。\n\n## 逐条对照\n\n| | Full creative / Dispatch | Still owner/human-only |\n| --- | --- | --- |\n| 写在哪 | Authority 小节 | 紧接的 commercial gates 小节 |\n| 对象 | 玩法、场馆与 UI、人格、节奏；以及把活派给执行型 AI | H1 好玩验证、外渠与推广、真钱、后端 schema |\n| 谁拍板 | 导演 AI 可以在自信时直接改默认体验；派工自己决定 | 只有你（owner/human）能过闸 |\n| 证据形态 | 改代码、改计划、开 worktree | 真人局、H1 过关、你下指令、你派后端 AI |\n| 越权长什么样 | 几乎不叫越权——授权就是让它改 | 机器证据宣称 fun、未过 H1 就开渠、动真钱、擅自改后端 schema |\n\n创作权覆盖的是**产品体验怎么长**。四道闸覆盖的是**商业与真人承诺**，授权书原话把它们标成 unchanged commercial gates：\n\n```md\n## Still owner/human-only (unchanged commercial gates)\n```\n\n[[evidence:.agents/creator-mandate.md:20]]\n\nDispatch 也在创作侧：导演可以派 Grok CLI / Claude 子代理去实现，自己留下设计判断、评审与集成。那是「怎么把活干完」，不是「替你点开发布与收款」。\n\n## 什么时候用哪个\n\n- **改默认局、改 UI、推翻旧计划、派执行 AI：** 走 Authority。你不在线时，导演仍应按这段继续推，而不是空等下一条提示。\n- **宣称「好玩已验证」、开 Telegram/Discord、付费投放、接真钱、动 SwimmerBackend schema：** 走四道闸。再自信也过不去；过闸的人是你。\n- **灰区——「我只是接了个测试 bot，还没推广」：** 授权书写的是 external channel **activation** 与 paid acquisition 在 H1 前 blocked。你若要放行测试渠，那是你改闸或给例外，不是导演自行解释宽松。\n\n一人公司最容易混的一步：创作权用得顺了，就顺手把商业闸也「顺」过去。授权书把两段拆开写，就是防你不在时那一顺。\n\n## 自检\n\n**问：** Full creative authority 明确覆盖哪些产品面？Dispatch authority 让导演保留自己的哪几类周期？\n\n**问：** 四道 human-only 闸分别卡什么？其中哪一道明确写了「不能拿机器证据宣称 fun validated」？\n\n**问：** 导演已改完玩法、尚未过 H1，它能否激活 Discord 做付费获客？依据是授权的哪一侧？\n\n## 一句话\n\n**创作与派工可以交给导演；H1、外渠、真钱、后端 schema 这四道闸仍只有你能过。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".agents/creator-mandate.md",
+                "lineStart": 8,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "Full creative + Dispatch authority"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".agents/creator-mandate.md",
+                "lineStart": 20,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "四道 owner/human-only commercial gates"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "wsy-authority-scope",
+                "kind": "basic",
+                "front": "creator-mandate 里 Full creative authority 覆盖哪些面？Dispatch 又授权导演做什么？",
+                "back": "创作权覆盖玩法规则、回合结构、场馆与 UI、入口流、AI 人格、内容与节奏，自信时可直接改默认体验。Dispatch 授权它把实现派给执行型 AI，自己留下设计判断、评审与集成。",
+                "tags": [
+                  "mandate",
+                  "authority"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 10,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "Authority 两条含 Dispatch surface"
+                  }
+                ]
+              },
+              {
+                "id": "wsy-four-gates",
+                "kind": "basic",
+                "front": "授权书留下的四道 owner/human-only 闸是什么？",
+                "back": "H1 真人好玩验证；外渠激活/付费获客/广泛推广（H1 前 blocked）；真钱流（G0 前 blocked，支付仅研究/桩）；SwimmerBackend schema/migration 须向 owner 报告并由其派后端 AI。",
+                "tags": [
+                  "mandate",
+                  "gates"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 22,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "四道闸原文"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "wsy-gate-blocks-telegram",
+                "kind": "short-answer",
+                "title": "哪道闸挡住外渠",
+                "prompt": "H1 尚未通过时，激活 Telegram 做 paid acquisition 被哪一类约束挡住？只写授权书小节标题里的关键词：owner/human-only 或 Full creative。",
+                "expectedAnswer": "owner/human-only",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 20,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "外渠在 human-only 闸"
+                  }
+                ]
+              },
+              {
+                "id": "wsy-count-human-gates",
+                "kind": "short-answer",
+                "title": "human-only 闸有几道",
+                "prompt": "Still owner/human-only 下列了几条 bullet？（H1、外渠、真钱、后端 schema）只写数字。",
+                "expectedAnswer": "4",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 22,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "四条 bullet"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-machine-cannot-say-it-is-fun",
+            "title": "烟雾测试全绿，为什么仍然不能写「好玩已验证」？",
+            "content": "# 烟雾测试全绿，为什么仍然不能写「好玩已验证」？\n\n## 现象\n\n你让导演 AI 跑完一周的证据包：截图齐了，手势条也出了，`gates.json` 里自动化项看起来不少是绿的。授权书却在 H1 这一条上写死了两句：\n\n```md\n- H1 human fun validation: only real human sessions can pass it; never claim\n  \"fun validated\" from machine evidence.\n```\n\n[[evidence:.agents/creator-mandate.md:22-23]]\n\n机器侧证据再厚，H1 这一格也**不会**因为它们自动翻成通过。\n\n## 先猜一下\n\n若你不在，导演为了推进商业计划，在周报里写了「fun validated（基于本周 smoke 与截图）」，并据此去开外渠——坏的是哪一层信任？是测试基础设施，还是你和渠道之间的承诺？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n坏的是你对「好玩」的商业承诺：授权书禁止用机器证据宣称 fun validated；外渠还要以 H1 通过为前提，伪称 H1 等于伪造开闸条件。\n\n## 为什么是这样\n\nH1 的通过条件写得很窄：**only real human sessions**。真人坐下来玩过，这一格才可能过。烟雾、截图、手势条证明的是「系统还能跑、画面还在」，不是「人觉得好玩」。\n\n同一条还带禁止语：**never claim \"fun validated\" from machine evidence。** 它防的不是「少跑了一次测试」，而是措辞越权——把可自动化的绿，说成不可自动化的结论。\n\n外渠闸绑在 H1 上：\n\n```md\n- External channel activation (Telegram/Discord), paid acquisition, broad\n  promotion: blocked until H1 passes.\n```\n\n[[evidence:.agents/creator-mandate.md:24-25]]\n\n所以 H1 不是荣誉徽章，是后面几道商业动作的钥匙。一人公司没有第二个产品经理帮你挡「看起来挺好玩」：授权书把挡板写进文件，省得你不在时导演用机器绿灯替你签字。\n\n周证据包仍然要做——同一文件 Review cadence 要求继续产出 WEEKLY-BRIEF、gates、截图等——但那些材料是给你**审**的，不是代替你**玩**的：\n\n```md\n- Weekly evidence pack continues at `tmp/weekly-evidence/YYYY-Www/`\n  (WEEKLY-BRIEF.md, gates.json, screenshots, gesture/presence frame strips via\n  `pnpm smoke:world-gesture-strip`, optional short video with `--video`).\n- Owner reviews packs and may veto or redirect; between packs the director\n  does not wait for prompts.\n```\n\n[[evidence:.agents/creator-mandate.md:32-36]]\n\n你审包可以否决或改方向；你本人的真人局才碰 H1。两件事都在授权结构里，不能互相冒充。\n\n## 自检\n\n**问：** H1 的通过证据被限定成什么？机器证据被明确禁止用来宣称什么措辞？\n\n**问：** 外渠激活与 H1 的先后关系是什么？\n\n**问：** 周证据包的作用是给你什么权力？它能否单独把 H1 打成通过？\n\n## 一句话\n\n**只有真人局能过 H1；机器证据再绿，也不能写成 fun validated。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".agents/creator-mandate.md",
+                "lineStart": 22,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "H1 与外渠依赖"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".agents/creator-mandate.md",
+                "lineStart": 32,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "周证据包与 owner 审阅/否决"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "wsy-h1-human-only",
+                "kind": "basic",
+                "front": "H1 human fun validation 允许用什么证据通过？禁止用什么宣称 fun validated？",
+                "back": "只允许 real human sessions 通过；明确禁止用 machine evidence 宣称 fun validated。",
+                "tags": [
+                  "mandate",
+                  "h1"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 22,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "H1 原文"
+                  }
+                ]
+              },
+              {
+                "id": "wsy-h1-unlocks-channels",
+                "kind": "basic",
+                "front": "为什么伪称 H1 通过会连带破坏外渠纪律？",
+                "back": "外渠激活、付费获客与广泛推广在 H1 通过前 blocked；用机器证据假称 fun validated，等于伪造开闸条件。",
+                "tags": [
+                  "mandate",
+                  "h1",
+                  "channels"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 22,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "H1 与外渠两条"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "wsy-h1-who-passes",
+                "kind": "short-answer",
+                "title": "谁能过 H1",
+                "prompt": "按授权书，H1 只能由哪类会话通过？写原文三个英文词：real human sessions。",
+                "expectedAnswer": "real human sessions",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 22,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "only real human sessions"
+                  }
+                ]
+              },
+              {
+                "id": "wsy-never-claim-phrase",
+                "kind": "short-answer",
+                "title": "禁止宣称的措辞",
+                "prompt": "授权书禁止从 machine evidence 宣称哪两个英文词？（引号里的原话，不含引号）",
+                "expectedAnswer": "fun validated",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 22,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "never claim fun validated"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-budget-is-part-of-the-grant",
+            "title": "创作权已经给满了，为什么还要写死每周 20 美元？",
+            "content": "# 创作权已经给满了，为什么还要写死每周 20 美元？\n\n## 情境和约束\n\n你是一人公司。授权书把创作与派工交给 AI 导演，并写明包与包之间**不必等你提示**也能继续：\n\n```md\n- Owner reviews packs and may veto or redirect; between packs the director\n  does not wait for prompts.\n```\n\n[[evidence:.agents/creator-mandate.md:35-36]]\n\n可继续干活就会烧付费生成：图、视频、模型调用。同一小节里，预算被写成硬顶：\n\n```md\n- Paid generation budget: ≤ $20/week across all paid outputs (PLAN-0020 §0).\n```\n\n[[evidence:.agents/creator-mandate.md:37]]\n\n创作权很满，花钱权却钉死在授权文件里。\n\n## 先猜一下\n\n若把「每周 ≤ $20」从授权书里删掉，只口头跟导演说「省着点花」，你出差两周不看周报时，最先失控的是产品方向，还是账单？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们把预算写进授权书：≤ $20/week 覆盖全部付费产出。你不在时最先要防的是账单在「继续推进」里被顺手烧穿。\n\n## 代价和收益\n\n**收益**\n\n- **授权完整：** 导演知道自己能改体验、能派工，也知道付费生成的天花板。预算不是事后骂一顿，是 grant 的一部分。\n- **一人可审：** 周包继续出；你审的是方向与否决，不是逐张发票问「这张图该不该画」。金额上限已经替你做了第一刀。\n- **与「不必等提示」配套：** 既然 between packs 不排队等你，就必须有不依赖你在线的刹车。$20/week 就是那道自动刹车。\n\n**代价**\n\n- **探索变慢：** 高价模型、大批量素材、长视频，一周额度很快见底；导演得挑，不能样样付费试。\n- **会计摩擦：** across all paid outputs 意味着图、视频、其它付费出口要共用水池，需要在工作订单里自己记账（授权指向 PLAN-0020 §0）。\n- **不能用钱砸过卡点：** 预算紧的时候，更依赖免费路径与本地证据，不能靠「再生成一百次」碰运气。\n\n对照 Authority：创作权鼓励在自信时改默认体验；预算把「自信」限制在你钱包能睡安稳的范围。\n\n## 什么时候该反过来\n\n- **该收得更紧：** 你在验证期、现金流紧，或刚被某次生成账单惊吓过——把周额度写低，或要求付费生成前必须你点头（那是你改授权，不是导演自行加码）。\n- **该放宽：** 你已过 H1、进入要量产素材的窗口，且你愿意每周盯账单——再提高上限或单列活动预算。放宽必须你改 grant；导演不得把 $20 读成「建议值」。\n- **不该反过来的情况：** 仅仅因为某次生成效果好，就当周默默超预算「下不为例」。授权书写的是 ≤，不是「平均大约」。\n\n一人公司没有财务同事在群里喊停。预算写进 creator-mandate，是把喊停变成文件，而不是变成你的记忆力。\n\n## 自检\n\n**问：** 付费生成预算的数字与周期是什么？覆盖范围写的是 all paid outputs 还是仅图片？\n\n**问：** 「between packs the director does not wait for prompts」和预算上限如何互相配套？\n\n**问：** 导演能否因为某次效果好就自行把当周额度当成软约束？授权书用的比较符是什么？\n\n## 一句话\n\n**满创作权搭配硬预算：≤ $20/week 是授权的一部分，不是事后提醒。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".agents/creator-mandate.md",
+                "lineStart": 30,
+                "lineEnd": 37,
+                "nodeIds": [],
+                "note": "Review cadence：周包、否决、预算"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "wsy-budget-cap",
+                "kind": "basic",
+                "front": "creator-mandate 里付费生成预算的上限与覆盖范围是什么？",
+                "back": "≤ $20/week，across all paid outputs（全部付费产出，不只单一模态）。",
+                "tags": [
+                  "mandate",
+                  "budget"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 37,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "Paid generation budget 行"
+                  }
+                ]
+              },
+              {
+                "id": "wsy-budget-with-autonomy",
+                "kind": "basic",
+                "front": "为什么「包与包之间不必等提示」会逼着预算必须写进授权书？",
+                "back": "导演被授权在两次 owner 审包之间继续推进；若没有写死的付费上限，继续推进会在你不在时烧穿账单。预算是与自主推进配套的刹车。",
+                "tags": [
+                  "mandate",
+                  "budget",
+                  "cadence"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 35,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "不候提示 + 预算"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "wsy-budget-dollars",
+                "kind": "short-answer",
+                "title": "周预算数字",
+                "prompt": "Paid generation budget 的周上限是多少美元？只写数字。",
+                "expectedAnswer": "20",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 37,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "$20/week"
+                  }
+                ]
+              },
+              {
+                "id": "wsy-budget-scope-word",
+                "kind": "short-answer",
+                "title": "预算覆盖范围",
+                "prompt": "预算行写 across all paid outputs。请写出这三个英文词：all paid outputs。",
+                "expectedAnswer": "all paid outputs",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".agents/creator-mandate.md",
+                    "lineStart": 37,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "across all paid outputs"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "pin-a-skill-by-its-hash",
+            "title": "技能从同一个 GitHub 仓库来，为什么还要钉一串 hash？",
+            "content": "# 技能从同一个 GitHub 仓库来，为什么还要钉一串 hash？\n\n## 一句真实出现的话\n\n你打开仓库根目录的 `skills-lock.json`，会看到同一来源仓库下面钉着不同的 `computedHash`：\n\n```json\n    \"agent-browser\": {\n      \"source\": \"vercel-labs/agent-browser\",\n      \"sourceType\": \"github\",\n      \"computedHash\": \"1d536cae2d53a425f094d7b4f5f3b15747a62292dd3ff3bdaa42d00c9c297c51\"\n    },\n```\n\n[[evidence:skills-lock.json:4-8]]\n\n同文件稍后，`electron` 的 source 也是 `vercel-labs/agent-browser`，hash 却是另一串。\n\n## 先猜一下\n\n若锁文件只写 source 仓库名、不写 computedHash，上游同一仓库第二天默认分支被推了一刀破坏性更新——你这边下次同步技能时，坏的是「还能找到仓库」，还是「你以为自己还在用上周那份技能」？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n坏的是内容同一性：仓库名仍在，字节可能已变；computedHash 钉的是算出来的内容指纹，不是「GitHub 上还有没有这个名字」。\n\n## 三个真实用例\n\n**1. 浏览器技能钉死内容**\n\n`agent-browser` 来自 `vercel-labs/agent-browser`，并带完整 computedHash。你派 AI 去开网页、点按钮时，锁的是这串指纹对应的技能正文，而不是「上游今天主分支长什么样」。\n\n```json\n    \"agent-browser\": {\n      \"source\": \"vercel-labs/agent-browser\",\n      \"sourceType\": \"github\",\n      \"computedHash\": \"1d536cae2d53a425f094d7b4f5f3b15747a62292dd3ff3bdaa42d00c9c297c51\"\n    },\n```\n\n[[evidence:skills-lock.json:4-8]]\n\n**2. 真机技能：另一来源，同样用 hash**\n\n`agent-device` 换了 source 组织，字段形状不变：source + sourceType + computedHash。换上游也不改「用哈希钉内容」这套合同。\n\n```json\n    \"agent-device\": {\n      \"source\": \"callstackincubator/agent-device\",\n      \"sourceType\": \"github\",\n      \"computedHash\": \"362d0888fc7ab1bd2df883d5b9511e949099cd4b658fc905ba2faf967cf37f71\"\n    },\n```\n\n[[evidence:skills-lock.json:9-13]]\n\n**3. 同仓不同技能名，不同 hash**\n\n`electron` 与 `agent-browser` 共用 `vercel-labs/agent-browser` 这个 source 字符串，computedHash 却不同。说明锁的粒度是**技能条目的内容**，不是「每个 GitHub 仓库只能有一个哈希」。\n\n```json\n    \"electron\": {\n      \"source\": \"vercel-labs/agent-browser\",\n      \"sourceType\": \"github\",\n      \"computedHash\": \"ece34a633aa7b40e8158e96fc17d643d72da54b9bc7a8a85767ed16a10129494\"\n    }\n```\n\n[[evidence:skills-lock.json:19-23]]\n\n你这边没有专人盯上游 release notes：hash 一不对上，你就应视为「这不是你授权过的那份技能」，而不是「大概差不多」。\n\n## 它不是什么\n\n- **不是** Git commit id 的别名。字段名是 computedHash，表示对技能内容算出的指纹；你在本文件里看不到它把 commit SHA 当作锁。\n- **不是** 「source 字符串唯一」。同 source 可以对应多条技能、多串 hash（`agent-browser` 与 `electron`）。\n- **不是** 运行时权限清单。它不规定 AI 能不能碰盘；它只冻结**技能文件到底是哪一版字节**。\n- **不是** 授权书里的商业闸。creator-mandate 管谁能开真钱与 H1；skills-lock 管技能内容有没有在你背后换心。\n\n## 自检\n\n**问：** skills-lock 每个技能条目除了 source，还用哪个字段钉内容？\n\n**问：** `agent-browser` 与 `electron` 的 source 相同吗？computedHash 相同吗？这说明锁的粒度是仓库还是条目内容？\n\n**问：** 只有 source、没有 hash 时，上游默认分支被改写，你失去的是定位能力还是内容同一性？\n\n## 一句话\n\n**computedHash 把技能钉在内容指纹上，不钉在「仓库名还在」上。**\n",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "skills-lock.json",
+                "lineStart": 1,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "skills-lock 全文件：version 与四条技能 hash"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "wsy-computed-hash-means",
+                "kind": "basic",
+                "front": "skills-lock.json 里的 computedHash 钉的是什么？它主要防哪类漂移？",
+                "back": "钉的是该技能条目内容的计算指纹。防的是上游仓库名仍在、字节已被改写时你仍误以为在用旧技能。",
+                "tags": [
+                  "skills-lock",
+                  "hash"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "skills-lock.json",
+                    "lineStart": 4,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "agent-browser 的 computedHash"
+                  }
+                ]
+              },
+              {
+                "id": "wsy-same-source-diff-hash",
+                "kind": "basic",
+                "front": "为什么 agent-browser 与 electron 可以 source 相同但 computedHash 不同？",
+                "back": "锁的粒度是技能条目内容，不是「每个 GitHub 仓库一串哈希」。同仓来源可对应不同技能正文，因此 hash 可以不同。",
+                "tags": [
+                  "skills-lock",
+                  "hash"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "skills-lock.json",
+                    "lineStart": 4,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "agent-browser"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "skills-lock.json",
+                    "lineStart": 19,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "electron"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "wsy-hash-field-name",
+                "kind": "short-answer",
+                "title": "钉内容的字段名",
+                "prompt": "skills-lock 里用来钉技能内容指纹的字段名是什么？（驼峰英文）",
+                "expectedAnswer": "computedHash",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "skills-lock.json",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "computedHash 字段"
+                  }
+                ]
+              },
+              {
+                "id": "wsy-electron-source",
+                "kind": "short-answer",
+                "title": "electron 的 source",
+                "prompt": "electron 条目的 source 字符串是什么？（owner/repo）",
+                "expectedAnswer": "vercel-labs/agent-browser",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "skills-lock.json",
+                    "lineStart": 19,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "electron source"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

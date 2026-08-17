@@ -2182,11 +2182,6 @@
       "rules": ["detail", "hand-copied-fence", "system-vocab"]
     },
     {
-      "id": "ul-meta/four-layer-workbench/layering-and-names/four-layers-names-and-auth",
-      "contentRevision": 2,
-      "rules": ["detail", "hand-copied-fence"]
-    },
-    {
       "id": "university-local/airlock-supply-chain/gate-and-inspect/gitignore-is-not-enough",
       "contentRevision": 2,
       "rules": ["detail", "hand-copied-fence"]

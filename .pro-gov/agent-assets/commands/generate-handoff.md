@@ -1,1 +1,0 @@
-../../../../ProjectGovernanceSystem/agent-assets/commands/pie-commands/generate-handoff.md

@@ -1,6 +1,6 @@
 ---
 name: refresh-study
-description: 在被学习项目产生新本地 Git commit 后，安全刷新 UniversityLocal 的固定源码快照、Understand Anything 知识图谱、课程与对话知识笔记。用户说“项目更新了”“重新跑 UA”“更新学习资料”“检查哪些课程过期”时使用；本地 commit 足够，绝不要求 GitHub push，也绝不分析或改写未提交文件。
+description: 在被学习项目产生新本地 Git commit 后，安全编排 UniversityLocal 的固定源码快照、Understand Anything 知识图谱、课程与对话知识笔记刷新。用户说“项目更新了”“重新跑 UA”“更新学习资料”“检查哪些课程过期”时使用；本地 commit 足够，绝不要求 GitHub push，也绝不分析或改写未提交文件。只负责 snapshot→UA→audit→stale/evidence/lifecycle；stale lesson 的正文、卡片和练习委托给 write-lesson。
 ---
 
 # Refresh Study
@@ -75,58 +75,38 @@ pnpm university -- refresh audit --study <study-id> --snapshot <snapshot-id> --a
 - `stale`：必须重新研究新快照后追加修订。
 - `waitingForUa`：UA 身份/节点尚未就绪，先解决 UA，不能靠猜测激活。
 
-## 5. 修订 stale 内容
+## 5. 把 stale 内容交给专门技能
+
+刷新技能只负责识别哪些证据已经失效，以及维护 snapshot、UA、audit 和内容生命周期。
+它不直接写讲义、卡片或练习；这样“源代码变了”和“怎么把课讲清楚”不会混成一个步骤。
 
 ### 正式课程
 
-对每个 stale lesson 重新读取目标快照和 UA 节点，生成“同一 lesson 的完整修订包”：正文、该 lesson 全部现有 cards、全部现有 exercises。保持 course/unit/lesson/card/exercise ID 与结构不变，只追加 revision；先 dry-run：
+对每个 `stale` lesson，向 `write-lesson` 发送一个明确的 handoff，至少包含：
 
-Proposal 使用下面的严格形状；`cards` 与 `exercises` 必须完整列出该 lesson 现有 ID，不能借刷新偷偷增删课程结构：
+- `study-id`、目标 `snapshot-id` 和 ready 的 `analysis-id`；
+- course/unit/lesson ID，以及当前 `content.md`、`manifest.json`、cards 和 exercises；
+- freshness audit 的失效原因；
+- 目标快照中已经读过、可绑定的完整 evidence objects。
 
-```json
-{
-  "schemaVersion": 1,
-  "proposalId": "stable-refresh-proposal-id",
-  "targetSnapshotId": "target-snapshot-id",
-  "targetAnalysisId": "optional-ready-analysis-id",
-  "lesson": {
-    "courseId": "course-id",
-    "unitId": "unit-id",
-    "id": "lesson-id",
-    "expectedRevision": 1,
-    "content": "# 新版讲义\n",
-    "evidence": ["完整的目标快照 evidence object"],
-    "cards": [
-      {
-        "id": "existing-card-id",
-        "expectedRevision": 1,
-        "front": "新版问题",
-        "back": "新版答案",
-        "evidence": ["完整的目标快照 evidence object"]
-      }
-    ],
-    "exercises": [
-      {
-        "id": "existing-exercise-id",
-        "expectedRevision": 1,
-        "kind": "short-answer",
-        "prompt": "新版题目",
-        "expectedAnswer": "答案",
-        "evidence": ["完整的目标快照 evidence object"]
-      }
-    ]
-  }
-}
-```
+`write-lesson` 负责读取目标证据、决定是否真的需要新 revision，并产出该 lesson 的完整修订包：
+正文、全部现有 card、全部现有 exercise。它必须保持既有 ID 与结构，只能追加 revision，
+并按自己的 checklist 运行 `course revise` dry-run。只有 freshness audit 证明正文与 evidence
+都仍然 fresh 时，它才可以返回 no-op。如果正文无需改写、但 evidence 仍指向旧 snapshot，
+就保留同一份正文、cards 和 exercises，追加一个同文 revision 来重新绑定目标 snapshot 的
+evidence；不能用“文字没变”跳过 freshness。
 
-示例里的 evidence 字符串只是位置说明，实际文件必须填写与 `knowledge-node` 相同的完整对象。`expectedRevision` 是当前 revision，不是新 revision；系统会原子地推导 `+1`、状态和 hash。`explain` 练习使用非空 `rubric`，不用 `expectedAnswer`。
+刷新技能收到结果后只做编排工作：确认 proposal 的 evidence 指向目标 snapshot，按项目 API
+应用通过 dry-run 的修订，并记录 evidence、revision 与 stale 原因。不得借刷新偷偷新增、删除
+课程结构，也不得把旧 commit 的证据冒充新证据。
 
 ```bash
 pnpm university -- course revise --study <study-id> --input .scratch/course-revisions/<proposal>.json --dry-run
 pnpm university -- course revise --study <study-id> --input .scratch/course-revisions/<proposal>.json
 ```
 
-同一次重试必须复用 proposal ID 和文件。不得只改讲义却留下引用旧事实的卡片或练习。内容真正没有变化时也要把证据重新绑定到目标快照，不能把旧 commit 冒充新证据。
+同一次重试必须复用 proposal ID 和文件。`write-lesson` 负责正文、卡片和练习的一致性；刷新技能
+负责把结果接回 freshness 流程，不重复实现写作规则。
 
 全部 stale lesson 修订后，使用系统的 freshness gate 激活：
 

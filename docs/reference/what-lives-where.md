@@ -23,7 +23,7 @@ tags:
 | `PieAI/UniversityLocal` | **产品本身**。应用的源码，我们干活的地方。 | 一直在变 |
 | `PieAI/UniversityLocal/studies/` | **成绩册**。课程、卡片、复习进度、词汇记忆。不进 git。 | 一直在变 |
 | `PieAI/.ul-airlock` | **产品代码的冻结副本**，钉在某个确切提交上。 | 只有 `airlock promote` 时才变 |
-| `PieAI/UniversityLocal-SpecialStudies` | **已废弃的第一次尝试**（见下） | 不再变 |
+| `PieAI/UniversityLocal-SpecialStudies` | **已删除的第一次尝试**（见下） | 不存在 |
 
 ## 为什么需要 airlock
 
@@ -63,20 +63,13 @@ SpecialStudies 里真正写完的只有 **1 节课**（`01-four-layers-names-and
 其余都是 README、大纲和占位符；Course B 从未动笔。而那 1 节课的主题，已经由
 `university-local` 里有真代码背书的版本覆盖。
 
-`ul-meta` 目前状态是 `archived`，书架上看不到它。
+`ul-meta` 曾先归档以退出书架；确认它没有任何学习进度、卡片、练习、复习、会话或笔记后，
+残留的本机 study 外壳也已退役。
 
 ## 结论
 
-- **保留**：`UniversityLocal`（产品）、`studies/`（成绩册）、`.ul-airlock`（自学用的冻结副本）。
-- **可以删**：`UniversityLocal-SpecialStudies` 与 `ul-meta` study。它们唯一的产出已被更好的
-  版本取代，留着只增加「这四个名字有什么区别」的困惑。
-
-删除是不可逆操作，由人来做：
-
-```bash
-rm -rf /Users/yuanfei/PieAI/UniversityLocal-SpecialStudies
-```
-
-删之前知道后果：`studies/ul-meta/source/registration.json` 会指向一个不存在的路径。这个 study
-已经 archived、不在书架上，所以不影响日常使用；将来若要彻底清理，连同 `studies/ul-meta/`
-一起删即可。
+- **保留**：`UniversityLocal`（产品）、`studies/`（当前成绩册）、`.ul-airlock`（自学用的冻结副本）。
+- **已退役**：`UniversityLocal-SpecialStudies` 与 `ul-meta` study。它们唯一的有效产出已由
+  `university-local/four-layer-workbench` 更准确地覆盖，不要为了旧路径兼容而重新创建它们。
+- **安全规则**：这次能清理 `ul-meta` 是因为数据库和 notes 都为空；这不是删除任意 archived
+  study 的通用许可。其它 archived study 必须先盘点个人学习数据。

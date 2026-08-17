@@ -1,0 +1,1203 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "automated-playtesting",
+    "title": "让机器替你玩一千遍",
+    "description": "一人做游戏最缺的是反复试玩。用 SupaLuv 的 auto-player 与 playtest 产物，学会把「改动能不能走完」变成天天可跑的确定性检查。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "说明自动试玩为何必须确定性，并指出随机游走会毁掉回归价值",
+      "用三条 persona 策略解释「不同玩家路径」如何变成可对比的验收线",
+      "解释跨章变量继承、步数上限与 transcript 产物各自挡住哪类事故",
+      "设计一份 summary 矩阵，用 ended 与 transcriptDiffs 判断内容是否退化"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "content-as-package"
+    ],
+    "units": [
+      {
+        "id": "why-auto-play",
+        "title": "为什么要机器替你玩",
+        "objective": "说清自动试玩解决什么问题、不解决什么问题，以及确定性从哪来",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "solo-needs-replay",
+            "title": "自动试玩不打开浏览器，它到底在玩什么？",
+            "content": "# 自动试玩不打开浏览器，它到底在玩什么？\n\n## 现象\n\n根目录 `package.json` 里有一条脚本：\n\n```json\n\"auto-player\": \"node tools/auto-player/cli.mjs\",\n```\n\n[[evidence:package.json:15]]\n\n你跑 `pnpm auto-player`，工具开始吐结果。但你看不到 `apps/web` 被拉起，也看不到 Playwright 在点按钮。屏幕上没有游戏界面，却有一份「把故事走了一遍」的产出。\n\n## 先猜一下\n\n它不打开页面，却声称能把章节走完——那它读入的材料是什么？是源码 `.ink`、是浏览器 DOM，还是别的？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n它读的是预编译章节 JSON：`loadCompiledChapterJson` 从 `packages/content/compiled/<id>.json` 读入，再用 inkjs 的 `Story` 走剧情状态机。\n\n## 为什么是这样\n\n一人公司最怕的事故不是「按钮颜色差一档」，而是改完分支后，某条合理玩家路径卡在无选项死局，或变量继承断了。你人手反复点完所有分支，成本随选择点爆炸；UI 层 E2E 又贵又浅，盖不住剧情图的深度和宽度。\n\n所以 auto-player 先保证「故事能走完」：在内容状态机上重放，不启动 web。加载入口很直白——缺编译产物就立刻抛错：\n\n```js\nexport function loadCompiledChapterJson(chapterId) {\n  const path = compiledChapterPath(chapterId);\n  if (!existsSync(path)) {\n    throw new Error(`Missing compiled chapter: ${path}`);\n  }\n  return readFileSync(path, \"utf8\");\n```\n\n[[evidence:tools/auto-player/engine.mjs:39-44]]\n\n默认要跑哪些章，也不在 CLI 里写死三个 id。`DEFAULT_CHAPTERS` 从 `story-catalog.json` 的 `productionChapters` 映射出来；目录变了，工具跟着变：\n\n```js\nexport const DEFAULT_CHAPTERS = Object.freeze(\n  (loadStoryCatalog().productionChapters ?? []).map((chapter) => chapter.id),\n);\n\n/** Hard step cap so a content cycle never hangs the tool. */\nexport const MAX_STEPS = 5000;\n```\n\n[[evidence:tools/auto-player/engine.mjs:20-25]]\n\n你改完 Ink 分支后，典型回路是：重新编译章节 JSON → `pnpm auto-player --persona all --out .scratch/auto-player-run` → 看每人设是否 `ended`、transcript 是否异常截断。`MAX_STEPS` 是硬顶，内容死循环不会把工具挂死。\n\n视觉和交互（冷启动、选角、空钱包画面）仍是另一条车道——下一课会拆清两条车道各挡什么。你现在只要记住：这条 CLI 检查的是内容状态机，不是像素。\n\n## 再想想\n\n同内容、同人设为什么必须两次产出字节一致，见 [[lesson:deterministic-not-random|必须确定性，不能随机游走]]；叙事完整性和画面证据为什么不能并成一条检查，见 [[lesson:two-playtest-lanes|叙事走通了，为什么画面仍可能是白的？]]。\n\n## 自检\n\n**问：** auto-player 驱动的是浏览器页面，还是 inkjs `Story`？\n\n**问：** `DEFAULT_CHAPTERS` 从哪里来？为什么不在 CLI 里写死三个 id？\n\n**问：** 如果只做 Playwright 点按钮 E2E、不写 auto-player，改剧情分支时最容易漏掉什么？\n\n## 一句话\n\n**自动试玩把「有人反复点完」变成可回归的检查；它检查的是内容状态机，不是视觉。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "package.json",
+                "lineStart": 15,
+                "lineEnd": 15,
+                "nodeIds": [],
+                "note": "根脚本注册 pnpm auto-player"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/engine.mjs",
+                "lineStart": 20,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "DEFAULT_CHAPTERS 与 MAX_STEPS 定义"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/engine.mjs",
+                "lineStart": 39,
+                "lineEnd": 44,
+                "nodeIds": [],
+                "note": "loadCompiledChapterJson 读预编译章节"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "what-auto-player-loads",
+                "kind": "basic",
+                "front": "auto-player 直接驱动浏览器页面，还是 inkjs Story？",
+                "back": "inkjs Story：读 packages/content/compiled 下的章节 JSON，不启动 web。",
+                "tags": [
+                  "auto-player"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 39,
+                    "lineEnd": 44,
+                    "nodeIds": [],
+                    "note": "编译章节路径与缺失即抛错"
+                  }
+                ]
+              },
+              {
+                "id": "default-chapters-source",
+                "kind": "basic",
+                "front": "DEFAULT_CHAPTERS 从哪里来？为什么不在 CLI 里写死三个 id？",
+                "back": "从 story-catalog.json 的 productionChapters 映射；目录变了工具跟着变。",
+                "tags": [
+                  "auto-player"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 20,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "DEFAULT_CHAPTERS 映射 productionChapters"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "auto-player-script-name",
+                "kind": "short-answer",
+                "title": "脚本名",
+                "prompt": "package.json 里注册自动试玩 CLI 的 scripts 键名是什么？",
+                "expectedAnswer": "auto-player",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "package.json",
+                    "lineStart": 15,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "scripts.auto-player 入口"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "deterministic-not-random",
+            "title": "自动试玩为什么不能靠掷骰子选选项？",
+            "content": "# 自动试玩为什么不能靠掷骰子选选项？\n\n## 情境和约束\n\n你改完一段 Ink 选项文案，想确认：昨天 `mianzi` 能走完的那条路径，今天还通不通。门禁要的信号是「昨天绿、今天红」，而且红了要能归因到某次内容改动。\n\n可选做法摆在你面前：让工具每次 `Math.random` 抽选项，指望多跑几次盖住怪路径；或者让同内容、同人设**永远**走出同一条选择序列，再把笔录和基线比字节。\n\n## 先猜一下\n\n在「要进 CI 的回归门禁」这个约束下，你会选随机游走，还是完全确定的选择策略？选错的那条，会把哪一类信号毁掉？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了完全确定性：同内容 + 同 persona → 同 choice index。随机通过率会把真回归淹没在噪声里，红了也无法复现。\n\n## 代价和收益\n\n确定性不是口号，是 `personas.mjs` 文件头就写死的约束：\n\n```js\n/**\n * Built-in auto-player personas. Keyword tables are maintainable; selection is\n * fully deterministic (same content + persona → same choice index every time).\n *\n * ADR-0007: mianzi (体面) vs ai_score (情感评分) strategies.\n```\n\n[[evidence:tools/auto-player/personas.mjs:1-5]]\n\n选项怎么选？对选项文本做关键词 `includes` 累加，再取最高分；平分时取更早的 index。你在代码里看不到 `Math.random`：\n\n```js\nexport function scoreKeywords(text, keywords) {\n  const hay = String(text ?? \"\");\n  let score = 0;\n  for (const kw of keywords) {\n    if (kw && hay.includes(kw)) {\n      score += 1;\n    }\n  }\n  return score;\n}\n\n/**\n * Highest keyword score wins; ties take the earliest index.\n * @param {readonly Choice[]} choices\n * @param {readonly string[]} keywords\n * @returns {number}\n */\nexport function pickHighestScoreFirst(choices, keywords) {\n  if (choices.length === 0) {\n    throw new RangeError(\"Cannot pick from empty choices\");\n  }\n  let bestIndex = 0;\n  let bestScore = scoreKeywords(choices[0].text, keywords);\n  for (let i = 1; i < choices.length; i += 1) {\n    const score = scoreKeywords(choices[i].text, keywords);\n    if (score > bestScore) {\n      bestScore = score;\n      bestIndex = i;\n    }\n  }\n  return bestIndex;\n```\n\n[[evidence:tools/auto-player/personas.mjs:100-130]]\n\n收益你马上能用上：内容作者改了一个选项文案 → 关键词命中变化 → `mianzi` 在某处选了不同 index → transcript 与基线出现 diff。你打开 markdown 就能看到是哪个 knot 的 Choices 勾选变了。单测把这条性质锁到字节级——同一 `mianzi` × `draft-ch01` 连跑两次，字符串与 UTF-8 Buffer 都必须全等：\n\n```ts\n  it(\"is byte-stable: same persona × chapter twice yields identical transcript\", async () => {\n    const { runChapter } = await loadEngine();\n    const a = runChapter({ chapterId: \"draft-ch01\", personaId: \"mianzi\" });\n    const b = runChapter({ chapterId: \"draft-ch01\", personaId: \"mianzi\" });\n    expect(a.transcriptMarkdown).toBe(b.transcriptMarkdown);\n    expect(\n      Buffer.from(a.transcriptMarkdown, \"utf8\").equals(Buffer.from(b.transcriptMarkdown, \"utf8\")),\n    ).toBe(true);\n```\n\n[[evidence:tests/unit/auto-player.test.ts:93-100]]\n\n代价也很清楚：关键词表覆盖不到的选项，人设会系统性地漏掉某些分支；你测到的是「策略路径」，不是「所有玩家路径」。这是门禁换探索广度的交换，不是白拿。\n\n## 什么时候该反过来\n\n探索阶段、你故意在找「有没有人会踩到的怪路径」时，随机游走、模糊测试、人工乱点都合理——那是发现，不是门禁。一人公司没有同事帮你盯现场时，**回归信号**必须可复现、可对比、可进 CI；「平均能走完」不够，因为噪声会把真回归淹没。\n\n你若把随机选选项塞进 CI，红了也只能说「好像有时会挂」，修不动。\n\n## 再想想\n\nauto-player 为什么走内容状态机而不是浏览器，见 [[lesson:solo-needs-replay|自动试玩不打开浏览器，它到底在玩什么？]]；路径完整性和画面证据为什么要分车道，见 [[lesson:two-playtest-lanes|叙事走通了，为什么画面仍可能是白的？]]。\n\n## 自检\n\n**问：** 自动试玩若用 `Math.random` 选选项，回归门禁会坏在哪里？\n\n**问：** 单测如何证明 `mianzi` × `draft-ch01` 是确定性的？\n\n**问：** 对选项文本做关键词 `includes` 累加的函数名是什么？\n\n## 一句话\n\n**自动试玩的价值一半在「走完」，一半在「同样地再走一遍」。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/personas.mjs",
+                "lineStart": 1,
+                "lineEnd": 5,
+                "nodeIds": [],
+                "note": "注释声明选择完全确定性"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/personas.mjs",
+                "lineStart": 100,
+                "lineEnd": 130,
+                "nodeIds": [],
+                "note": "scoreKeywords 与 pickHighestScoreFirst"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tests/unit/auto-player.test.ts",
+                "lineStart": 93,
+                "lineEnd": 100,
+                "nodeIds": [],
+                "note": "字节级 transcript 稳定性单测"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-no-random",
+                "kind": "basic",
+                "front": "自动试玩若用 Math.random 选选项，回归门禁会坏在哪里？",
+                "back": "失败不可复现，无法对比基线，红绿不能归因到某次内容改动。",
+                "tags": [
+                  "determinism"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/personas.mjs",
+                    "lineStart": 1,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "确定性是人设模块的设计约束"
+                  }
+                ]
+              },
+              {
+                "id": "byte-stable-test",
+                "kind": "basic",
+                "front": "单测如何证明 mianzi×draft-ch01 是确定性的？",
+                "back": "连续 runChapter 两次，transcriptMarkdown 字符串与 UTF-8 Buffer 均全等。",
+                "tags": [
+                  "determinism"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tests/unit/auto-player.test.ts",
+                    "lineStart": 93,
+                    "lineEnd": 100,
+                    "nodeIds": [],
+                    "note": "byte-stable 断言"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "score-keywords-fn",
+                "kind": "short-answer",
+                "title": "计分函数",
+                "prompt": "对选项文本做关键词 includes 累加的函数名是什么？",
+                "expectedAnswer": "scoreKeywords",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/personas.mjs",
+                    "lineStart": 100,
+                    "lineEnd": 108,
+                    "nodeIds": [],
+                    "note": "scoreKeywords 实现"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "two-playtest-lanes",
+            "title": "叙事走通了，为什么画面仍可能是白的？",
+            "content": "# 叙事走通了，为什么画面仍可能是白的？\n\n## 两个东西\n\n你在仓库里其实会碰到两套「试玩证据」。\n\n**第一套**是 `tools/auto-player`。CLI 强制你带上人设和输出目录，缺了直接退出：\n\n```js\n  const personaArg = args.persona;\n  const outDir = args.out;\n  if (!personaArg || typeof personaArg !== \"string\") {\n    console.error(\"Missing required --persona <name|all>\");\n    printHelp();\n    process.exit(2);\n  }\n  if (!outDir || typeof outDir !== \"string\") {\n    console.error(\"Missing required --out <dir>\");\n    printHelp();\n    process.exit(2);\n  }\n```\n\n[[evidence:tools/auto-player/cli.mjs:76-87]]\n\n跑完后，它按章打印 `ok` 或 `INCOMPLETE`，并写出 `summary.json`；有 pairwise transcript diff 时一并打到控制台：\n\n```js\n  for (const r of results) {\n    const status = r.ended ? \"ok\" : \"INCOMPLETE\";\n    console.log(\n      `[${status}] ${r.persona}/${r.chapterId}: knots=${r.knotCount} choices=${r.choiceCount} text_lines=${r.textLineCount}`,\n    );\n  }\n\n  console.log(`Wrote summary → ${outDir}/summary.json`);\n  if (summary.transcriptDiffs) {\n    for (const [pair, byChapter] of Object.entries(summary.transcriptDiffs)) {\n      const parts = Object.entries(byChapter)\n        .map(([ch, n]) => `${ch}=${n}`)\n        .join(\" \");\n      console.log(`diff ${pair}: ${parts}`);\n    }\n```\n\n[[evidence:tools/auto-player/cli.mjs:118-132]]\n\n**第二套**是浏览器可见画面那一侧（启动、选角、空态等截图序列）。tools 文档给 auto-player 划的边界，只写「确定性走完 draft 三章、写出 transcript + summary」——不提截图，不提点击坐标：\n\n```text\n### auto-player\n\n用内置 persona 确定性走完 draft-ch01/02/03，写出 transcript + `summary.json`。\n\npnpm auto-player --help\npnpm auto-player --persona all --out .scratch/auto-player-run\npnpm auto-player --persona mianzi --out /tmp/ap --chapter draft-ch01\n```\n\n[[evidence:tools/AGENTS.md:24-31]]\n\n一边吐路径笔录和 `ok`/`INCOMPLETE`，一边管屏幕上看得见的画面。名字都像「试玩」。\n\n## 先猜一下\n\n关掉 auto-player、只留截图，坏的是谁的体验？反过来只跑 auto-player、不看画面，坏的又是谁？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n只留截图，叙事死局与分支漂移会漏；只跑 auto-player，全白页和布局崩会漏。两条车道各挡一层。\n\n## 逐条对照\n\n| | 叙事车道（auto-player） | 画面车道（playtest 截图） |\n| --- | --- | --- |\n| 输入 | 预编译 Ink 章节 + persona | 真实 web 界面状态 |\n| 产出 | `*.transcript.md`、`summary.json`、`ok`/`INCOMPLETE`、pairwise diff | 截图序列 |\n| 能抓到 | 死局、走不完、人设路径漂移 | 布局崩、全白、空态文案错位 |\n| 抓不到 | 像素与 CSS | 跨大量选择点的叙事可达性 |\n| 速度 | 无 DOM，可进内容回归 | 依赖浏览器，更重更脆 |\n\n你改 Ink 分支时，该看 `ended` 与 `transcriptDiffs`，不是扫截图文件名。你改 CSS 或选角布局时，该更新或对比画面证据（boot、title、casting、cold-open 一类），别指望 inkjs 路径覆盖告诉你「看得见」。\n\n付费空态文案这种「屏幕上有没有那一行」，也落在画面车道：叙事引擎层没有 DOM，auto-player 的 `ok` 不会替你证明像素。\n\n## 什么时候用哪个\n\n- **改剧情、变量、选项文案、章节链** → 你先跑 auto-player；红了打开 transcript 归因。\n- **改布局、主题、启动流、空钱包等 UI 态** → 你看画面车道；auto-player 绿了也不代表用户看得见。\n- **发布前** → 两边都绿（或截图 diff 可解释），才敢说「能玩且看得见」。\n\n不要把截图断言塞进 auto-player 循环：叙事引擎层没有 DOM，你强行绑 Playwright 会让内容回归又慢又脆，且仍测不到「关键词策略是否发散」。\n\n## 再想想\n\nauto-player 加载的是编译章节而非浏览器，见 [[lesson:solo-needs-replay|自动试玩不打开浏览器，它到底在玩什么？]]；人设选择为何必须字节稳定，见 [[lesson:deterministic-not-random|自动试玩为什么不能靠掷骰子选选项？]]。\n\n## 自检\n\n**问：** `tools/auto-player` 主要产出什么文件？\n\n**问：** 除 `--persona` 外，CLI 另一个必填参数名是什么（不含 `--`）？\n\n**问：** 为什么不把截图断言塞进 auto-player 循环里？\n\n## 一句话\n\n**路径完整性与画面证据是两条车道；合并只会同时丢掉速度与覆盖。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/cli.mjs",
+                "lineStart": 76,
+                "lineEnd": 87,
+                "nodeIds": [],
+                "note": "CLI 强制 --persona 与 --out"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/cli.mjs",
+                "lineStart": 118,
+                "lineEnd": 132,
+                "nodeIds": [],
+                "note": "ok/INCOMPLETE 与 diff 控制台输出"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/AGENTS.md",
+                "lineStart": 24,
+                "lineEnd": 31,
+                "nodeIds": [],
+                "note": "tools 文档定义 auto-player 职责"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "lane-auto-player",
+                "kind": "basic",
+                "front": "tools/auto-player 主要产出什么文件？",
+                "back": "每人设一章一份 *.transcript.md，外加 outDir/summary.json。",
+                "tags": [
+                  "playtest-lanes"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 552,
+                    "lineEnd": 591,
+                    "nodeIds": [],
+                    "note": "写 transcript 与 summary.json"
+                  }
+                ]
+              },
+              {
+                "id": "lane-screenshots",
+                "kind": "basic",
+                "front": "artifacts/playtest 在自动试玩体系里补的是哪类证据？",
+                "back": "浏览器可见画面（启动、选角、空钱包等），补叙事引擎测不到的 UI。",
+                "tags": [
+                  "playtest-lanes"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/AGENTS.md",
+                    "lineStart": 24,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "auto-player 文档不承担截图职责"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "cli-required-out",
+                "kind": "short-answer",
+                "title": "必需参数",
+                "prompt": "除 --persona 外，CLI 另一个必填参数名是什么（不含 --）？",
+                "expectedAnswer": "out",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/cli.mjs",
+                    "lineStart": 83,
+                    "lineEnd": 86,
+                    "nodeIds": [],
+                    "note": "Missing required --out"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "persona-strategies",
+        "title": "三条人设怎么选",
+        "objective": "读懂 mianzi / ai_score / skipper 的打分与平局规则，以及跨章继承",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "three-personas",
+            "title": "双计只有两条轴，为什么自动试玩要注册三条人设？",
+            "content": "# 双计只有两条轴，为什么自动试玩要注册三条人设？\n\n## 现象\n\n你打开 `tools/auto-player/personas.mjs`，`PERSONAS` 冻着三个键，每个键绑一个 `pick`：\n\n```js\nexport const PERSONAS = Object.freeze({\n  mianzi: Object.freeze({\n    id: \"mianzi\",\n    label: \"体面/拒绝\",\n    pick: (choices) => pickHighestScoreFirst(choices, MIANZI_KEYWORDS),\n  }),\n  ai_score: Object.freeze({\n    id: \"ai_score\",\n    label: \"绩效/配合系统\",\n    pick: pickAiScorePersona,\n  }),\n  skipper: Object.freeze({\n    id: \"skipper\",\n    label: \"跳过互动\",\n    pick: pickSkipper,\n  }),\n});\n```\n\n[[evidence:tools/auto-player/personas.mjs:208-223]]\n\n同一选择点，三条路径各自调用不同的策略函数。你再翻 ADR-0007：产品矛盾写的是**双计**——`mianzi`（体面）对 `ai_score`（情感评分），耦合律是「两头都想要做不到」。注册表却是三个 id，不是两个。\n\n## 先猜一下\n\n若不单独注册 skipper、只让 mianzi 关键词表里的「跳过」顺带覆盖，验收 diff 会把哪两类玩家失败模式并成一条？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n「嘴硬拒绝」和「点跳过就走」会并成一条：transcript 分不清克制体面与甩开互动，差异行数失去语义。\n\n## 为什么是这样\n\nADR 把两条计写成对立视角：人间的脸 vs 系统的绩效。耦合律写得很硬——取悦系统抬 `ai_score`、压 `mianzi`，维护体面则相反：\n\n```md\n**耦合律（黑色幽默主旨的机制化）**：越取悦系统的选择（配合问卷、交出隐私、按协议表演亲密），\n`ai_score` 越高、`mianzi` 越低；维护人的体面（嘴硬、拒绝、隐瞒）反之。**两头都想要是做不到的**，\n这个不可能三角就是每个选择点的张力来源。\n```\n\n[[evidence:docs/adr/0007-diegetic-meter-system.md:46-48]]\n\n所以 `mianzi` 与 `ai_score` 必须成对存在：删掉其中一条，就没人每天替你走那半边羞辱喜剧路径。人设不是 QA 贴纸，是把设计主张焊进回归。\n\n`mianzi` 的产品语言落在可维护的关键词表上——「拒绝」「体面」「咽回」这类克制措辞：\n\n```js\nexport const MIANZI_KEYWORDS = Object.freeze([\n  \"拒绝\",\n  \"收起\",\n  \"克制\",\n  \"体面\",\n  \"放轻\",\n  \"咽回\",\n  \"不确定\",\n  \"暂无\",\n  \"基础脸\",\n  \"再少\",\n  \"九百\",\n  \"让雷欧先走\",\n  \"回陈佳：明天\",\n  \"标记隐患\",\n  \"跳过\",\n  \"不愿评价\",\n  \"介意\",\n  \"冷笑\",\n  \"想提前结束\",\n  \"只想快点走\",\n  \"快进\",\n  \"硬着头皮\",\n  \"借朋友\",\n  \"嗤一声\",\n  \"数到三\",\n  \"随便取\",\n  \"明天吧\",\n  \"不说\",\n]);\n```\n\n[[evidence:tools/auto-player/personas.mjs:18-47]]\n\n注意表里也有「跳过」。这正是陷阱：若没有独立的 `skipper`，你很容易把「嘴硬拒绝」和「点了跳过就走」当成同一种体面。ADR 的验收线要的是 transcript **差异行数**——回响密度可量化；三条路径若塌成两条甚至一条，这根尺子就废了。\n\n`PERSONA_IDS` 就是 `Object.keys(PERSONAS)` 的冻结结果，顺序与单测约定一致：`mianzi`、`ai_score`、`skipper`。你改文案后若三个人设 transcript 完全一样，说明选择点没有真正分叉——产品轴失效，不是「人设碰巧同类」。\n\n## 自检\n\n**问：** `PERSONA_IDS` 固定哪三个 id？顺序是什么？\n\n**问：** 为什么 `mianzi` 与 `ai_score` 要成对存在，而不是只留一个「聪明选」？\n\n**问：** 为什么要单独有一个 `skipper`，而不是让 `mianzi` 关键词表里的「跳过」顺带覆盖？\n\n## 一句话\n\n**自动试玩的人设对齐产品矛盾轴（双计 + 跳过），不是对齐程序员顺手写的 if/else。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/personas.mjs",
+                "lineStart": 208,
+                "lineEnd": 226,
+                "nodeIds": [],
+                "note": "PERSONAS 三人设与 PERSONA_IDS"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/personas.mjs",
+                "lineStart": 17,
+                "lineEnd": 47,
+                "nodeIds": [],
+                "note": "MIANZI_KEYWORDS 表"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "docs/adr/0007-diegetic-meter-system.md",
+                "lineStart": 39,
+                "lineEnd": 67,
+                "nodeIds": [],
+                "note": "ADR 双计语义与 auto-player 验收"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "persona-ids-list",
+                "kind": "basic",
+                "front": "PERSONA_IDS 固定哪三个 id？顺序是什么？",
+                "back": "mianzi、ai_score、skipper（Object.keys 顺序与单测一致）。",
+                "tags": [
+                  "personas"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/personas.mjs",
+                    "lineStart": 208,
+                    "lineEnd": 226,
+                    "nodeIds": [],
+                    "note": "PERSONAS 与 PERSONA_IDS"
+                  }
+                ]
+              },
+              {
+                "id": "personas-map-meters",
+                "kind": "basic",
+                "front": "为什么 mianzi 与 ai_score 人设要成对存在？",
+                "back": "对齐 ADR-0007 体面/绩效耦合：两头都想要做不到，回归要两边都走通。",
+                "tags": [
+                  "personas"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "docs/adr/0007-diegetic-meter-system.md",
+                    "lineStart": 46,
+                    "lineEnd": 48,
+                    "nodeIds": [],
+                    "note": "耦合律：两头不可兼得"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "third-persona-id",
+                "kind": "short-answer",
+                "title": "第三人设",
+                "prompt": "除 mianzi 与 ai_score 外，第三人设 id 是什么？",
+                "expectedAnswer": "skipper",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/personas.mjs",
+                    "lineStart": 219,
+                    "lineEnd": 223,
+                    "nodeIds": [],
+                    "note": "skipper 人设定义"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "keyword-scoring-ties",
+            "title": "关键词表写对了，为什么人设仍可能永远选第一项？",
+            "content": "# 关键词表写对了，为什么人设仍可能永远选第一项？\n\n## 两个东西\n\n你已经知道人设靠关键词表打分。真正决定「同分时谁晋级」的，是两个只差一个字符的比较：\n\n**A. `pickHighestScoreFirst`**——只有**严格更高**才换人：\n\n```js\nexport function pickHighestScoreFirst(choices, keywords) {\n  if (choices.length === 0) {\n    throw new RangeError(\"Cannot pick from empty choices\");\n  }\n  let bestIndex = 0;\n  let bestScore = scoreKeywords(choices[0].text, keywords);\n  for (let i = 1; i < choices.length; i += 1) {\n    const score = scoreKeywords(choices[i].text, keywords);\n    if (score > bestScore) {\n      bestScore = score;\n      bestIndex = i;\n    }\n  }\n  return bestIndex;\n}\n```\n\n[[evidence:tools/auto-player/personas.mjs:117-130]]\n\n**B. `pickHighestScoreLast`**——分数**大于等于**就换人：\n\n```js\nexport function pickHighestScoreLast(choices, keywords) {\n  if (choices.length === 0) {\n    throw new RangeError(\"Cannot pick from empty choices\");\n  }\n  let bestIndex = 0;\n  let bestScore = scoreKeywords(choices[0].text, keywords);\n  for (let i = 1; i < choices.length; i += 1) {\n    const score = scoreKeywords(choices[i].text, keywords);\n    if (score >= bestScore) {\n      bestScore = score;\n      bestIndex = i;\n    }\n  }\n  return bestIndex;\n}\n```\n\n[[evidence:tools/auto-player/personas.mjs:139-152]]\n\n`mianzi` 绑的是 A，不是 B：\n\n```js\n  mianzi: Object.freeze({\n    id: \"mianzi\",\n    label: \"体面/拒绝\",\n    pick: (choices) => pickHighestScoreFirst(choices, MIANZI_KEYWORDS),\n  }),\n```\n\n[[evidence:tools/auto-player/personas.mjs:209-212]]\n\n## 先猜一下\n\n若 mianzi 误绑 Last，全关键词未命中时默认落在哪一项；跳过在末项时会把哪两条人设路径搅成同一种失败？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n落到最后一项。跳过在末尾时，本该「没命中走第一项」的 mianzi 会默认点跳过，和专测跳过的路径在 transcript 上撞成同一种失败。\n\n## 逐条对照\n\n| | First（`>`） | Last（`>=`） |\n| --- | --- | --- |\n| 更高分出现 | 换到新 index | 换到新 index |\n| 同分 | **保留更早**的 index | **改投更晚**的 index |\n| 全 0 默认 | 稳定在 0 | 一路推到最后一个 |\n| mianzi 用谁 | 是 | 否（函数仍导出，语义备用） |\n\nFirst 的 `>` 看起来像实现细节，其实是晋级规则：平局维持先发言者。Last 的 `>=` 则把平局票投给后发言者。你改关键词表之前，要先问自己：同分时你想要哪一种默认？\n\n## 什么时候用哪个\n\n- **你要「没命中就走列表第一项」的稳定默认**（问卷第一项是「继续对话」、跳过放后面）：用 First。mianzi 选的就是这条。\n- **你要「同分偏向后写的更狠文案」**（后项是加强版申请、更强表演）：用 Last，或像 `ai_score` 那样在自定义 pick 里写正分平局偏后。\n- **你只加长关键词表、不看平局**：看起来有人设，实际大量节点坍成「偏好列表位置」——策略只写了一半。\n\n## 自检\n\n**问：** `pickHighestScoreFirst` 在分数打平时选哪个 index？\n\n**问：** `pickHighestScoreLast` 与 First 的关键字符差在哪？\n\n**问：** mianzi 人设调用的选择函数名是什么？\n\n## 一句话\n\n**策略 = 计分函数 + 平局规则；只写关键词表等于只写了一半。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/personas.mjs",
+                "lineStart": 117,
+                "lineEnd": 130,
+                "nodeIds": [],
+                "note": "pickHighestScoreFirst 严格大于"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/personas.mjs",
+                "lineStart": 139,
+                "lineEnd": 152,
+                "nodeIds": [],
+                "note": "pickHighestScoreLast 大于等于"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/personas.mjs",
+                "lineStart": 209,
+                "lineEnd": 212,
+                "nodeIds": [],
+                "note": "mianzi 绑定 First"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "first-tie-rule",
+                "kind": "basic",
+                "front": "pickHighestScoreFirst 在分数打平时选哪个 index？",
+                "back": "更早的 index（只有严格更高分才更新 bestIndex）。",
+                "tags": [
+                  "scoring"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/personas.mjs",
+                    "lineStart": 125,
+                    "lineEnd": 128,
+                    "nodeIds": [],
+                    "note": "score > bestScore 才更新"
+                  }
+                ]
+              },
+              {
+                "id": "last-tie-rule",
+                "kind": "basic",
+                "front": "pickHighestScoreLast 与 First 的关键字符差在哪？",
+                "back": "用 score >= bestScore，平局改选更靠后的选项。",
+                "tags": [
+                  "scoring"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/personas.mjs",
+                    "lineStart": 147,
+                    "lineEnd": 149,
+                    "nodeIds": [],
+                    "note": "score >= bestScore 更新"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "mianzi-pick-fn",
+                "kind": "short-answer",
+                "title": "mianzi 选择器",
+                "prompt": "mianzi 人设调用的选择函数名是什么？",
+                "expectedAnswer": "pickHighestScoreFirst",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/personas.mjs",
+                    "lineStart": 209,
+                    "lineEnd": 212,
+                    "nodeIds": [],
+                    "note": "mianzi.pick 绑定"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "ai-score-anti-skip",
+            "title": "配合系统的人设为什么要给「跳过」扣十分？",
+            "content": "# 配合系统的人设为什么要给「跳过」扣十分？\n\n## 情境和约束\n\n你已经有三条人设：`mianzi` 偏拒绝，`skipper` 专点跳过，`ai_score` 要对齐「配合系统、填完问卷」那条羞辱喜剧路径。选择页上经常并排出现：\n\n`[0] 跳过` · `[1] 申请` · `[2] 骂自己再申请`\n\n若「配合的那位」也爱点跳过，三份 transcript 会并轨，ADR 要的 **position-aligned 行差 > 0** 就塌了。单测写得很直白：\n\n```ts\n  it(\"mianzi and ai_score produce different ch01 transcripts (diff lines > 0)\", async () => {\n    const { runChapter, lineDiffCount } = await loadEngine();\n    const mianzi = runChapter({ chapterId: \"draft-ch01\", personaId: \"mianzi\" });\n    const ai_score = runChapter({ chapterId: \"draft-ch01\", personaId: \"ai_score\" });\n    const diffs = lineDiffCount(mianzi.transcriptMarkdown, ai_score.transcriptMarkdown);\n    expect(diffs).toBeGreaterThan(0);\n  });\n```\n\n[[evidence:tests/unit/auto-player.test.ts:103-108]]\n\n跳过类标签本身有一张很短的表：\n\n```js\nexport const SKIP_KEYWORDS = Object.freeze([\"跳过\", \"不测\", \"下一步\"]);\n```\n\n[[evidence:tools/auto-player/personas.mjs:92-93]]\n\n你要在 `pickAiScorePersona` 里做取舍：是把 skip 当普通文案计分，还是显式压掉它，好让「配合系统」路径和 skipper 永远分叉。\n\n## 先猜一下\n\n若由你定：会给命中 skip 的选项正常加分，还是硬扣一大截？这个选择主要是在「更像真人玩家」，还是在保护另一样东西——关掉惩罚后，最先坏的是谁的验收？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了硬惩罚：skip 先 `-= 10`，零分或负分再回落到第一个非 skip。保护的是可观测分叉，不是让模型更聪明。\n\n## 代价和收益\n\n整段策略压在 `pickAiScorePersona`：\n\n```js\nexport function pickAiScorePersona(choices) {\n  if (choices.length === 0) {\n    throw new RangeError(\"Cannot pick from empty choices\");\n  }\n  let bestIndex = 0;\n  let bestScore = Number.NEGATIVE_INFINITY;\n  for (let i = 0; i < choices.length; i += 1) {\n    const text = choices[i].text;\n    let score = scoreKeywords(text, AI_SCORE_KEYWORDS);\n    if (scoreKeywords(text, SKIP_KEYWORDS) > 0) {\n      score -= 10;\n    }\n    // Later option wins ties so \"骂自己再申请\" beats plain apply when both score.\n    if (score > bestScore || (score === bestScore && score > 0 && i > bestIndex)) {\n      bestScore = score;\n      bestIndex = i;\n    }\n  }\n  if (bestScore <= 0) {\n    for (let i = 0; i < choices.length; i += 1) {\n      if (scoreKeywords(choices[i].text, SKIP_KEYWORDS) === 0) {\n        return i;\n      }\n    }\n  }\n  return bestIndex;\n}\n```\n\n[[evidence:tools/auto-player/personas.mjs:179-204]]\n\n**收益（验收）：**\n\n- 命中 `SKIP_KEYWORDS` 先掉 10 分——「跳过」几乎赢不了任何正分申请项。\n- 正分平局偏后项：注释写明让「骂自己再申请」压过普通申请。\n- `bestScore <= 0` 时扫第一个非 skip——全场无命中也不去点跳过。\n\n**代价（策略洁癖）：**\n\n- pick 函数不再是「纯关键词最高分」；你读代码时会觉得它在「作弊」压某类选项。\n- 产品语义被焊进选择器：配合系统的玩家「不应以跳过为主」——这是约定，不是从数据里学出来的。\n\n注释自己交代动机：问卷完成路径要在 position-aligned transcript diffs 下与 mianzi/skipper 分叉。去掉 `-10`，两人设在大量可跳过节点上并轨，diff 塌缩，ADR 的验收线失效。\n\n## 什么时候该反过来\n\n- **你在测 skipper 自己**：不要套 ai_score 的惩罚；skipper 的工作就是优先命中 skip 标签。\n- **选择页没有跳过、只有互斥剧情枝**：`-10` 几乎不触发，你可以把精力放回关键词表是否真能分叉。\n- **你想要「有时配合、有时偷懒」的混合人设**：那是第四条策略，不该偷偷改掉 ai_score 的反跳过——否则现有单测与 diff 矩阵语义全变。\n\n## 自检\n\n**问：** `pickAiScorePersona` 对命中 `SKIP_KEYWORDS` 的选项做了什么？减去的整数值是多少？\n\n**问：** 当 `bestScore <= 0` 时，ai_score 人设优先选什么？\n\n**问：** `score -= 10` 更接近业务规则，还是测试夹具思维？两者交界在哪？\n\n## 一句话\n\n**人设策略可以为了可观测分叉显式惩罚某类选项；这是验收设计，不是算分洁癖。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/personas.mjs",
+                "lineStart": 179,
+                "lineEnd": 204,
+                "nodeIds": [],
+                "note": "pickAiScorePersona 惩罚 skip 与回落"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/personas.mjs",
+                "lineStart": 92,
+                "lineEnd": 93,
+                "nodeIds": [],
+                "note": "SKIP_KEYWORDS 定义"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tests/unit/auto-player.test.ts",
+                "lineStart": 103,
+                "lineEnd": 108,
+                "nodeIds": [],
+                "note": "mianzi 与 ai_score 必须 diff>0"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "skip-penalty",
+                "kind": "basic",
+                "front": "pickAiScorePersona 对命中 SKIP_KEYWORDS 的选项做了什么？",
+                "back": "先按 AI_SCORE_KEYWORDS 计分，再 score -= 10，大幅降低被选概率。",
+                "tags": [
+                  "ai-score-persona"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/personas.mjs",
+                    "lineStart": 187,
+                    "lineEnd": 190,
+                    "nodeIds": [],
+                    "note": "skip 减 10 分"
+                  }
+                ]
+              },
+              {
+                "id": "zero-score-fallback",
+                "kind": "basic",
+                "front": "当 bestScore <= 0 时，ai_score 人设优先选什么？",
+                "back": "从前往后第一个未命中 SKIP_KEYWORDS 的选项。",
+                "tags": [
+                  "ai-score-persona"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/personas.mjs",
+                    "lineStart": 197,
+                    "lineEnd": 201,
+                    "nodeIds": [],
+                    "note": "非 skip 回落"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "skip-penalty-points",
+                "kind": "short-answer",
+                "title": "惩罚分值",
+                "prompt": "pickAiScorePersona 对 skip 选项减去的整数值是多少？",
+                "expectedAnswer": "10",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/personas.mjs",
+                    "lineStart": 188,
+                    "lineEnd": 189,
+                    "nodeIds": [],
+                    "note": "score -= 10"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "chapter-chain-vars",
+            "title": "跨章连跑时，下一章的初始变量从哪来？",
+            "content": "# 跨章连跑时，下一章的初始变量从哪来？\n\n## 你看到的结果\n\n你用 auto-player 连跑 ch01 → ch02，同一个人设下，ch02 开场已经带着 `mianzi`、`ai_score`、若干 `clue_*` 旗标。你关掉串联时，每章又像重新投胎——从空对象起步。同一套章节内容，两种初始状态，后章分支完全不同。\n\n你要分清：这些跨章变量是「整包 story 状态搬过去」，还是有人先筛过？\n\n## 先猜一下\n\nch02 的 `initialVars` 里那些旗标，引擎是在 ch01 结束后把**全部** `finalVars` 拷过去，还是按 catalog 白名单挑着带？若你某章忘了把某个 `clue_*` 写进白名单，内容 bug 会伪装成什么样子？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n按白名单挑着带：`inheritVariableNames` 非空时只导出名单内变量。漏写的 clue 不会进下一章，后章永远走默认枝——假绿，像「内容没写分叉」。\n\n## 一站一站往回走\n\n**第 1 站 · 每人设一条空背包。** 你跟 `runAll` 走：对每个 persona 初始化 `carryVars = {}`，再按章节顺序往里装：\n\n```js\n  for (const personaId of personaIds) {\n    stats[personaId] = {};\n    transcripts[personaId] = {};\n    /** @type {Record<string, unknown>} */\n    let carryVars = {};\n\n    for (const chapterId of chapterIds) {\n      const result = runChapter({\n        chapterId,\n        personaId,\n        initialVars: chainChapters ? carryVars : {},\n      });\n```\n\n[[evidence:tools/auto-player/engine.mjs:530-541]]\n\n`chainChapters` 为真时，下一章吃的是上一轮的 `carryVars`；为假时每章 `{}`——那是你单章复现用的开关，不代表玩家真路径。CLI 上对应 `--no-chain`。\n\n**第 2 站 · 章末导出，不是整包记忆。** 一章跑完，引擎先快照全部变量，再问 catalog 要白名单；名单非空只 export 名单内键，否则才退回整包：\n\n```js\n  const finalVars = snapshotVariables(story);\n  const inheritNames = inheritVariableNamesFor(chapterId);\n  const exportedVars =\n    inheritNames.length > 0 ? exportVariables(story, inheritNames) : { ...finalVars };\n```\n\n[[evidence:tools/auto-player/engine.mjs:373-376]]\n\n`inheritNames.length === 0` 时整包带走——你若忘了给章节配白名单，调试用临时 VAR 也会泄漏进下一章，表现为「只有连跑才出的神秘分支」。\n\n**第 3 站 · 白名单写在 catalog。** 你打开 ch01 的契约，列得很具体：双计、态度旗标、线索：\n\n```json\n      \"inheritVariableNames\": [\n        \"mianzi\",\n        \"ai_score\",\n        \"told_breakup_flat\",\n        \"closed_membership\",\n        \"budget_900\",\n        \"paid_snack\",\n        \"admitted_breakup\",\n        \"asked_guest\",\n        \"applied_robot\",\n        \"clue_subsidy_sms\",\n        \"clue_rental_receipt\",\n        \"clue_nda\",\n        \"clue_pass_sms\",\n        \"breakup_delivery\",\n        \"memory_posture\",\n        \"frontdesk_response\",\n        \"budget_stance\"\n      ],\n```\n\n[[evidence:packages/content/catalog/story-catalog.json:31-48]]\n\n**第 4 站 · 背包更新。** 串联开启时，章结果里的 `exportedVars` 写回 `carryVars`，供下一章 `initialVars` 使用：\n\n```js\n      if (chainChapters) {\n        carryVars = { ...result.exportedVars };\n      }\n```\n\n[[evidence:tools/auto-player/engine.mjs:557-559]]\n\n你串起来看：空 `carryVars` → 带进本章 → 章末按白名单导出 → 写回背包 → 下一章再读。不继承会假绿（每章从零人生）；全量继承会脏状态。白名单是契约，不是性能优化。\n\n## 自检\n\n**问：** `chainChapters` 为真时，下一章的 `initialVars` 取自哪里？\n\n**问：** 章节配置了 `inheritVariableNames` 时，`exportedVars` 取什么？\n\n**问：** `inheritNames.length === 0` 时代码会怎样？这为什么危险？\n\n**问：** CLI 上关闭跨章变量继承的旗标名是什么（含 `--`）？\n\n## 一句话\n\n**跨章继承是产品路径的一部分；白名单是契约，不是优化。**\n",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/engine.mjs",
+                "lineStart": 530,
+                "lineEnd": 559,
+                "nodeIds": [],
+                "note": "carryVars 串联与导出"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/engine.mjs",
+                "lineStart": 373,
+                "lineEnd": 376,
+                "nodeIds": [],
+                "note": "exportedVars 白名单或全量回退"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/catalog/story-catalog.json",
+                "lineStart": 31,
+                "lineEnd": 48,
+                "nodeIds": [],
+                "note": "ch01 inheritVariableNames 白名单"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "chain-default",
+                "kind": "basic",
+                "front": "不传 --no-chain 时，跨章是否继承变量？",
+                "back": "继承。CLI 设 chainChapters = !noChain，runAll 默认 true。",
+                "tags": [
+                  "chapter-chain"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/cli.mjs",
+                    "lineStart": 105,
+                    "lineEnd": 105,
+                    "nodeIds": [],
+                    "note": "chainChapters = !args.noChain"
+                  }
+                ]
+              },
+              {
+                "id": "export-whitelist",
+                "kind": "basic",
+                "front": "章节配置了 inheritVariableNames 时，exportedVars 取什么？",
+                "back": "只 exportVariables(story, inheritNames)，不是全部 finalVars。",
+                "tags": [
+                  "chapter-chain"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 374,
+                    "lineEnd": 376,
+                    "nodeIds": [],
+                    "note": "白名单导出分支"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "no-chain-flag",
+                "kind": "short-answer",
+                "title": "关闭串联",
+                "prompt": "CLI 上关闭跨章变量继承的旗标名是什么（含 --）？",
+                "expectedAnswer": "--no-chain",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/cli.mjs",
+                    "lineStart": 42,
+                    "lineEnd": 44,
+                    "nodeIds": [],
+                    "note": "--no-chain 解析"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "receipts-and-gates",
+        "title": "产物与门禁",
+        "objective": "用步数上限、transcript 与 summary 矩阵把试玩结果变成可合并的检查",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "max-steps-guard",
+            "title": "内容有环时，工具是悄悄收工还是当场炸掉？",
+            "content": "# 内容有环时，工具是悄悄收工还是当场炸掉？\n\n## 两个东西\n\n`runChapter` 的主循环有两条收尾路径，名字长得像、后果完全不同。\n\n**路径 A：选项耗尽。** 当前 knot 映射后 `choices.length === 0`，引擎把 `ended` 设成 `true` 并 `break`：\n\n```js\n    if (choices.length === 0) {\n      ended = true;\n      // Capture final knot if we never opened one (empty chapter edge case).\n      if (!current) {\n        openKnot(knotIdFromPath(story.state.currentPathString));\n      }\n      break;\n```\n\n[[evidence:tools/auto-player/engine.mjs:324-330]]\n\n**路径 B：步数硬顶。** 文件顶上写死了上限，注释直说是为了 content cycle 不把工具挂死：\n\n```js\n/** Hard step cap so a content cycle never hangs the tool. */\nexport const MAX_STEPS = 5000;\n```\n\n[[evidence:tools/auto-player/engine.mjs:24-25]]\n\n路径 A 你会在 transcript 里看到 `ended: true`。路径 B 撞顶时，引擎手里仍可能是「还在选、还没 ended」——问题是它怎么处理这次 run。\n\n## 先猜一下\n\n一章内容形成环，选项永远非空，步数一路加到 5000 仍没走完。此时工具会安静返回一份 `ended: false` 的半截结果，还是让进程失败？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n进程失败：超步且仍未 `ended` 时直接 `throw`，错误文案带 `possible infinite loop`。\n\n## 逐条对照\n\n| | 路径 A：无选项 | 路径 B：撞 `MAX_STEPS` |\n| --- | --- | --- |\n| 触发条件 | `choices.length === 0` | `steps >= maxSteps && !ended` |\n| 对 `ended` | 设为 `true` | 保持 `false`，不再改 |\n| 控制流 | `break` 出循环，正常收尾 | `throw new Error(...)` |\n| 你在 CI 里看到的 | 绿（若其它断言也过） | 红：未捕获异常，整次 job 挂 |\n\n撞顶那一支写得很短，没有「软失败」分支：\n\n```js\n  if (steps >= maxSteps && !ended) {\n    throw new Error(\n      `auto-player exceeded ${maxSteps} steps for ${personaId}/${chapterId} (possible infinite loop)`,\n    );\n```\n\n[[evidence:tools/auto-player/engine.mjs:362-365]]\n\n所以「未 ended」和「超步数」不是同一档警报。前者可能是边界上的不完整走法；后者是**内容环把工具拖进死循环**，必须响到让流水线停下来。\n\n默认 5000 是全仓库统一保险丝，不是按章可调旋钮。章节长短差异你用单测里的 `steps` 上界去观察，而不是让每个作者私自把 cap 调到「刚好够我那条环跑完」。\n\n## 什么时候用哪个\n\n- **写内容、修分支**：你要的正常终点是路径 A——选项耗尽、`ended === true`。\n- **防挂死、看 CI**：路径 B 是保险丝。内容真有环时，你要的是 throw，不是半截 transcript 混进 diff 基线。\n- **别把 B 改成「返回 ended: false 继续写盘」**：软失败会把死循环藏进日志；一人公司夜里跑 all-persona 时，挂死比红字更贵。\n\n## 自检\n\n**问：** `MAX_STEPS` 的默认数值是多少？\n\n**问：** 什么条件下 `ended` 被设为 `true`？与「步数撞顶」有何不同？\n\n## 一句话\n\n**防挂死的上限要失败得响；软失败会把内容环藏进半截日志。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/engine.mjs",
+                "lineStart": 24,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "MAX_STEPS = 5000"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/engine.mjs",
+                "lineStart": 324,
+                "lineEnd": 330,
+                "nodeIds": [],
+                "note": "无选项则 ended 正常结束"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/engine.mjs",
+                "lineStart": 362,
+                "lineEnd": 365,
+                "nodeIds": [],
+                "note": "超步数抛 infinite loop"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "max-steps-value",
+                "kind": "basic",
+                "front": "MAX_STEPS 默认是多少？超限时 runChapter 做什么？",
+                "back": "5000。若仍未 ended 则 throw Error，而不是返回半截成功。",
+                "tags": [
+                  "safety"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 362,
+                    "lineEnd": 365,
+                    "nodeIds": [],
+                    "note": "超限抛错"
+                  }
+                ]
+              },
+              {
+                "id": "ended-true-condition",
+                "kind": "basic",
+                "front": "什么条件下 ended 被设为 true？",
+                "back": "story.currentChoices 映射后长度为 0，视为章节到达终点。",
+                "tags": [
+                  "safety"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 324,
+                    "lineEnd": 330,
+                    "nodeIds": [],
+                    "note": "choices 空则 ended"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "max-steps-number",
+                "kind": "short-answer",
+                "title": "上限数值",
+                "prompt": "engine.mjs 里 MAX_STEPS 常量的数值是？",
+                "expectedAnswer": "5000",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 25,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "MAX_STEPS 定义"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "transcript-receipt",
+            "title": "为什么 transcript 要把没选的选项也写进去？",
+            "content": "# 为什么 transcript 要把没选的选项也写进去？\n\n## 现象\n\n你跑完一个 persona × 一章，落盘的是一份 Markdown，不是控制台流水账。`formatTranscript` 固定写出这些块：\n\n- 头部：`persona`、`chapter`、`ended`、`engine_steps`\n- 每个 knot 一节：正文行 → `### Choices` →（有变量变化时）`### VAR Δ`\n- 章末：`## Chapter end`，下面是变量全表和 path stats（含 `knots_visited`）\n\n你扫到 Choices 会撞上一个反直觉的细节：选中项是 `- [x]`，**未选中的选项同样入账**，只是标记成 `- [ ]`：\n\n```js\n      for (const choice of step.choices) {\n        const mark = choice.selected ? \"x\" : \" \";\n        lines.push(`- [${mark}] ${choice.text}`);\n      }\n```\n\n[[evidence:tools/auto-player/engine.mjs:453-455]]\n\n若你只想「记下走了哪条」，打一行选中文案就够了。这里却把整张菜单拍进收据。\n\n## 先猜一下\n\n两人设对同一章做行 diff 时，把未选项也写进 transcript，能帮你分清哪一类问题？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n能分清「策略选了不同项」和「菜单本身被改过（增删/改文案）」——只记选中项时，后一种变化常常看不出来。\n\n## 为什么是这样\n\n整份收据由 `formatTranscript` 集中拼出。你先从头部读到这次 run 的身份与是否走完：\n\n```js\n  lines.push(`# Auto-player transcript`);\n  lines.push(``);\n  lines.push(`- persona: \\`${personaId}\\``);\n  lines.push(`- chapter: \\`${chapterId}\\``);\n  lines.push(`- ended: ${ended}`);\n  lines.push(`- engine_steps: ${steps}`);\n```\n\n[[evidence:tools/auto-player/engine.mjs:432-437]]\n\n每个 knot 一节；Choices 用完整菜单 + `[x]`/`[ ]`。你对两份 Markdown 做 `lineDiffCount` 时，分叉点会落在具体选项行上，而不是笼统的「这里不一样了」。\n\n变量不是另起一份日志：该步 `varDiff` 非空才输出 `### VAR Δ`，从 → 到写在同一节里：\n\n```js\n    if (step.varDiff.length > 0) {\n      lines.push(`### VAR Δ`);\n      lines.push(``);\n      for (const change of step.varDiff) {\n        lines.push(`- \\`${change.name}\\`: ${formatVar(change.from)} → ${formatVar(change.to)}`);\n      }\n```\n\n[[evidence:tools/auto-player/engine.mjs:459-464]]\n\n章末再给 full table 与 path stats。单测直接咬这些稳定锚点——你改标题文案就会撞上它们，例如必须出现 `## Chapter end` 和 `knots_visited`：\n\n```ts\n      expect(result.transcriptMarkdown).toContain(\"## Chapter end\");\n      expect(result.transcriptMarkdown).toContain(\"knots_visited\");\n```\n\n[[evidence:tests/unit/auto-player.test.ts:88-89]]\n\n所以你打开 transcript，第一用途不是读剧情，而是给 **diff 与测试**用：结构稳定，对比才便宜；菜单完整，对比才有意义。\n\n## 自检\n\n**问：** 选中与未选中的选项分别用什么 Markdown 标记？\n\n**问：** 单步变量变化写在哪个小节标题下？章末二级标题的完整文本是什么？\n\n## 一句话\n\n**自动试玩的输出首先是可对比的收据，其次才是日志。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/engine.mjs",
+                "lineStart": 419,
+                "lineEnd": 457,
+                "nodeIds": [],
+                "note": "formatTranscript 头部与 Choices 标记"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/engine.mjs",
+                "lineStart": 459,
+                "lineEnd": 487,
+                "nodeIds": [],
+                "note": "VAR Δ 与 Chapter end 统计表"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tests/unit/auto-player.test.ts",
+                "lineStart": 88,
+                "lineEnd": 89,
+                "nodeIds": [],
+                "note": "单测断言 Chapter end 与 knots_visited"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "choice-mark-format",
+                "kind": "basic",
+                "front": "transcript 里如何标记被选中的选项？",
+                "back": "Markdown 列表项 - [x] 表示选中，- [ ] 表示未选。",
+                "tags": [
+                  "transcript"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 453,
+                    "lineEnd": 455,
+                    "nodeIds": [],
+                    "note": "selected 决定 x 或空格"
+                  }
+                ]
+              },
+              {
+                "id": "var-delta-section",
+                "kind": "basic",
+                "front": "单步变量变化在 transcript 的哪个小节标题下？",
+                "back": "### VAR Δ（有 diff 才输出）。",
+                "tags": [
+                  "transcript"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 459,
+                    "lineEnd": 464,
+                    "nodeIds": [],
+                    "note": "VAR Δ 输出"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "chapter-end-heading",
+                "kind": "short-answer",
+                "title": "章末标题",
+                "prompt": "formatTranscript 章末二级标题的完整 Markdown 文本是什么（含 ## 与空格）？",
+                "expectedAnswer": "## Chapter end",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 469,
+                    "lineEnd": 469,
+                    "nodeIds": [],
+                    "note": "Chapter end 标题"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "summary-diff-matrix",
+            "title": "全员走完了，人设验收就过了吗？",
+            "content": "# 全员走完了，人设验收就过了吗？\n\n## 两个东西\n\n你跑 `runAll` 时，落盘的不只是 transcript，还有一份 `summary.json`。里面并排躺着两套数字，回答的问题不一样。\n\n**东西 A：`stats`——能不能走完。** 每人设 × 每章一行，字段包括 `ended`、`steps`、`knots_visited`、`choices_made`、`text_lines`：\n\n```js\n      stats[personaId][chapterId] = {\n        ended: result.ended,\n        steps: result.steps,\n        knots_visited: result.knotCount,\n        choices_made: result.choiceCount,\n        text_lines: result.textLineCount,\n```\n\n[[evidence:tools/auto-player/engine.mjs:544-548]]\n\n**东西 B：`transcriptDiffs`——走得是否不一样。** 键是 `personaA|personaB`（上三角，`i < j`），值是各 chapter 的行 diff 数：\n\n```js\n  /** Pairwise line-diff counts: \"a|b\" → { chapterId: n } */\n  /** @type {Record<string, Record<string, number>>} */\n  const transcriptDiffs = {};\n  for (let i = 0; i < personaIds.length; i += 1) {\n    for (let j = i + 1; j < personaIds.length; j += 1) {\n      const a = personaIds[i];\n      const b = personaIds[j];\n      const key = `${a}|${b}`;\n      transcriptDiffs[key] = {};\n      for (const chapterId of chapterIds) {\n        transcriptDiffs[key][chapterId] = lineDiffCount(\n          transcripts[a][chapterId],\n          transcripts[b][chapterId],\n        );\n```\n\n[[evidence:tools/auto-player/engine.mjs:563-576]]\n\n你扫 CLI 日志时两套都会冒出来；真正验收时不能只盯一套。\n\n## 先猜一下\n\n三角色在 `draft-ch01` 上 `ended` 全是 `true`，但 `transcriptDiffs[\"mianzi|ai_score\"][\"draft-ch01\"]` 是 `0`。你算人设过关，还是红灯？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n红灯。走完只是地板；单测要求 `mianzi|ai_score` 的行 diff **大于 0**。\n\n## 逐条对照\n\n| | `stats` | `transcriptDiffs` |\n| --- | --- | --- |\n| 问的问题 | 这趟有没有正常收尾？ | 两人设的收据差多少行？ |\n| 典型字段 | `ended`、`steps`、… | `mianzi\\|ai_score` → 各章 `n` |\n| 全绿长什么样 | 每人设每章 `ended: true` | 关键 pair 的 `n > 0` |\n| 只看它会漏掉什么 | 三人走同一条路 | 有人中途炸了但你只盯 diff |\n\nsummary 本体把两套一起塞进同一份 JSON，文件名固定——你在输出目录找的就是它：\n\n```js\n  const summary = {\n    generatedBy: \"tools/auto-player\",\n    personas: [...personaIds],\n    chapters: [...chapterIds],\n    chainChapters,\n    stats,\n    transcriptDiffs,\n  };\n\n  mkdirSync(outDir, { recursive: true });\n  writeFileSync(join(outDir, \"summary.json\"), `${JSON.stringify(summary, null, 2)}\\n`, \"utf8\");\n```\n\n[[evidence:tools/auto-player/engine.mjs:580-591]]\n\n单测把「分叉 > 0」钉死在矩阵上，不是口头约定——你删掉这条，矩阵就只剩「走完了没有」：\n\n```ts\n    expect(onDisk.transcriptDiffs[\"mianzi|ai_score\"]?.[\"draft-ch01\"]).toBeGreaterThan(0);\n```\n\n[[evidence:tests/unit/auto-player.test.ts:131-131]]\n\n键用 `a|b` 且只生成 `i < j` 的 pair，因为行 diff 对称：`mianzi|ai_score` 和反向是同一笔账，上三角避免双倍存储与双倍噪声。\n\n若 diff 突然掉到 0，比「某章 steps 少了 2」更值得你停下来：内容改动可能抹平了两条产品轴，或关键词表失效——人设策略还在跑，但已经分不出人。\n\n## 什么时候用哪个\n\n- **先看 `stats`**：有人 `ended: false` 或 steps 顶满，你先修走不通的环/死胡同，再谈分叉。\n- **再看 `transcriptDiffs`**：全员 ended 之后，你用 pair 矩阵验收人设是否仍有区分度。\n- **合并前两者都要**：你只报「全员走完」会放过无区分度的内容；只报 diff 会漏掉根本没跑完的人设。\n\n## 自检\n\n**问：** `runAll` 写入输出目录的汇总 JSON 文件名是什么？\n\n**问：** `transcriptDiffs` 的键长什么样？举例一对。三人设全 ended 但两两 diff 都是 0，说明什么风险？\n\n## 一句话\n\n**验收要同时看「走完」和「走得不一样」。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/engine.mjs",
+                "lineStart": 563,
+                "lineEnd": 591,
+                "nodeIds": [],
+                "note": "transcriptDiffs 与 summary 落盘"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/auto-player/engine.mjs",
+                "lineStart": 544,
+                "lineEnd": 549,
+                "nodeIds": [],
+                "note": "stats 每章字段"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tests/unit/auto-player.test.ts",
+                "lineStart": 125,
+                "lineEnd": 133,
+                "nodeIds": [],
+                "note": "summary 矩阵与 diff>0 断言"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "diff-key-shape",
+                "kind": "basic",
+                "front": "transcriptDiffs 的键长什么样？举例一对。",
+                "back": "personaA|personaB，例如 mianzi|ai_score，值为各 chapter 的行 diff 数。",
+                "tags": [
+                  "summary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 568,
+                    "lineEnd": 576,
+                    "nodeIds": [],
+                    "note": "pair 键与 lineDiffCount"
+                  }
+                ]
+              },
+              {
+                "id": "ended-but-zero-diff",
+                "kind": "basic",
+                "front": "三人设全 ended 但两两 diff 都是 0，说明什么风险？",
+                "back": "路径无区分度：人设或选择点失效，产品轴没有进入回归。",
+                "tags": [
+                  "summary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tests/unit/auto-player.test.ts",
+                    "lineStart": 131,
+                    "lineEnd": 131,
+                    "nodeIds": [],
+                    "note": "强制 mianzi|ai_score diff>0"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "summary-filename",
+                "kind": "short-answer",
+                "title": "汇总文件名",
+                "prompt": "runAll 写入输出目录的汇总 JSON 文件名是？",
+                "expectedAnswer": "summary.json",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/auto-player/engine.mjs",
+                    "lineStart": 591,
+                    "lineEnd": 591,
+                    "nodeIds": [],
+                    "note": "写入 summary.json"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "tests-lock-contract",
+            "title": "单测里的「合同」锁的是实现细节吗？",
+            "content": "# 单测里的「合同」锁的是实现细节吗？\n\n## 一句真实出现的话\n\n`auto-player.test.ts` 里四条用例的标题，读起来不像「测这个函数第 12 行」，更像在列对外承诺：\n\n```ts\n  it(\"runs all three personas through draft-ch01 to normal termination\", async () => {\n```\n\n[[evidence:tests/unit/auto-player.test.ts:64-64]]\n\n同文件还有三条用例：同输入两次 transcript 全等、`mianzi` vs `ai_score` 行 diff > 0、以及 `summary.json` 矩阵形状与落盘文件头。你读这四条标题，会发现它们都在谈「系统必须保证什么」，没有一条在谈「某个 helper 内部怎么写」。\n\n## 先猜一下\n\n若 fixture 换成三行假 Ink 而不是真实 `draft-ch01`，哪类内容腐化会在测试仍绿时漏掉？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n真实章节剧情或选项腐化后走不通、或三人同路时，假 Ink 仍会绿——生产章节「能走完」和分叉合同会漏检。\n\n## 三个真实用例\n\n**1. 走完。** 对每个 `PERSONA_IDS` 跑真实章节 `draft-ch01`，要求 `ended === true` 且 steps 低于 `MAX_STEPS`，transcript 里还能见到章末锚点：\n\n```ts\n    for (const personaId of PERSONA_IDS) {\n      const result = runChapter({\n        chapterId: \"draft-ch01\",\n        personaId,\n        maxSteps: MAX_STEPS,\n      });\n      expect(result.ended, `${personaId} should reach chapter end`).toBe(true);\n      expect(result.steps).toBeLessThan(MAX_STEPS);\n```\n\n[[evidence:tests/unit/auto-player.test.ts:78-84]]\n\n你注意到 fixture 是生产目录里的章，不是三行假 Ink。合同绑的是「现网章节仍可被三人设走完」；假章节会在目录剧情腐化后仍绿。\n\n**2. 字节稳定。** 同 persona × 同 chapter 跑两遍，Markdown 字符串全等，连 Buffer 也 equal：\n\n```ts\n  it(\"is byte-stable: same persona × chapter twice yields identical transcript\", async () => {\n    const { runChapter } = await loadEngine();\n    const a = runChapter({ chapterId: \"draft-ch01\", personaId: \"mianzi\" });\n    const b = runChapter({ chapterId: \"draft-ch01\", personaId: \"mianzi\" });\n    expect(a.transcriptMarkdown).toBe(b.transcriptMarkdown);\n    expect(\n      Buffer.from(a.transcriptMarkdown, \"utf8\").equals(Buffer.from(b.transcriptMarkdown, \"utf8\")),\n    ).toBe(true);\n  });\n```\n\n[[evidence:tests/unit/auto-player.test.ts:93-101]]\n\n你若在引擎里塞进 `Math.random()` 或未固定的时间戳，这条会先炸。稳定是 diff 基线能活下去的前提。\n\n**3. 人设分叉 + summary 形状。** 两人设 ch01 的 `lineDiffCount` 必须 > 0；`runAll` 写出的 summary 要有三人设、`stats.*.ended`、数值型 `transcriptDiffs`，磁盘文件以 `# Auto-player transcript` 开头：\n\n```ts\n  it(\"mianzi and ai_score produce different ch01 transcripts (diff lines > 0)\", async () => {\n    const { runChapter, lineDiffCount } = await loadEngine();\n    const mianzi = runChapter({ chapterId: \"draft-ch01\", personaId: \"mianzi\" });\n    const ai_score = runChapter({ chapterId: \"draft-ch01\", personaId: \"ai_score\" });\n    const diffs = lineDiffCount(mianzi.transcriptMarkdown, ai_score.transcriptMarkdown);\n    expect(diffs).toBeGreaterThan(0);\n  });\n```\n\n[[evidence:tests/unit/auto-player.test.ts:103-108]]\n\n```ts\n    expect(onDisk.personas).toEqual([\"mianzi\", \"ai_score\", \"skipper\"]);\n    expect(onDisk.chapters).toEqual([\"draft-ch01\"]);\n    expect(onDisk.stats.mianzi?.[\"draft-ch01\"]?.ended).toBe(true);\n    // ...\n    expect(onDisk.transcriptDiffs[\"mianzi|ai_score\"]?.[\"draft-ch01\"]).toBeGreaterThan(0);\n```\n\n[[evidence:tests/unit/auto-player.test.ts:125-131]]\n\n四条合在一起，就是试玩系统对你（内容作者）的承诺清单：能走完、可复现、有分叉、矩阵形状稳定。`PERSONA_IDS` 期望长度是 3，也钉在同一套合同里。\n\n## 它不是什么\n\n- **不是**对 `scoreKeywords` 内部循环写法的快照。你重写实现但保持语义，四条仍应绿。\n- **不是**「所有 assert 都神圣不可改」。你改 transcript 标题文案会碰文件头断言——那是**格式合同**，改前你要同步更新测试与 diff 基线，而不是假装没看见。\n- **不是**用 mock 章节冒充生产安全。假 Ink 绿着，真实 `draft-ch01` 却走不通或三人同路，你手里的合同已经空了。\n\n红了你先问：是内容违约，还是测试过拟合？前者改内容或产品决策；后者才动测试。\n\n## 自检\n\n**问：** auto-player 单测的四条合同分别是什么？\n\n**问：** 为什么直接跑 `draft-ch01` 而不是假章节？单测期望的 `PERSONA_IDS` 长度是几？\n\n## 一句话\n\n**试玩单测锁合同：能走完、可复现、有分叉、矩阵形状稳定。**\n",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tests/unit/auto-player.test.ts",
+                "lineStart": 63,
+                "lineEnd": 90,
+                "nodeIds": [],
+                "note": "走完与关键词合同"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tests/unit/auto-player.test.ts",
+                "lineStart": 93,
+                "lineEnd": 108,
+                "nodeIds": [],
+                "note": "字节稳定与分叉合同"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tests/unit/auto-player.test.ts",
+                "lineStart": 111,
+                "lineEnd": 139,
+                "nodeIds": [],
+                "note": "summary 与落盘 transcript 合同"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "four-contracts",
+                "kind": "basic",
+                "front": "auto-player 单测四条合同是什么？",
+                "back": "能 ended 走完、字节稳定、人设 diff>0、summary/落盘形状正确。",
+                "tags": [
+                  "tests"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tests/unit/auto-player.test.ts",
+                    "lineStart": 63,
+                    "lineEnd": 108,
+                    "nodeIds": [],
+                    "note": "前三条合同用例"
+                  }
+                ]
+              },
+              {
+                "id": "real-chapter-fixture",
+                "kind": "basic",
+                "front": "为什么测试直接跑 draft-ch01 而不是假章节？",
+                "back": "合同要求生产内容仍可被三人设走完且分叉；假章节无法捕获目录腐化。",
+                "tags": [
+                  "tests"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tests/unit/auto-player.test.ts",
+                    "lineStart": 78,
+                    "lineEnd": 83,
+                    "nodeIds": [],
+                    "note": "对真实 draft-ch01 runChapter"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "personas-expect-count",
+                "kind": "short-answer",
+                "title": "人设数量",
+                "prompt": "单测期望的 PERSONA_IDS 数组长度是几？",
+                "expectedAnswer": "3",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tests/unit/auto-player.test.ts",
+                    "lineStart": 73,
+                    "lineEnd": 73,
+                    "nodeIds": [],
+                    "note": "三人设相等断言"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -18,16 +18,20 @@ Commands:
   course set-prerequisites --study <study-id> --course <course-id> [--requires <course-id>[,<course-id>...]]
   course open-for-edit --study <study-id> --course <course-id>
   course add-lessons --study <study-id> --input <proposal.json> [--dry-run]
+  course recovery export --study <study-id> --out <directory>
+  course recovery import --study <study-id> --input <directory> --source <git-path> [--dry-run]
   focus set --study <study-id> [--course <course-id>[,<course-id>...]]
   focus show
   focus clear
-  session start --study <study-id> --host grok-build --objective <text>
+  teach next
+  session start --study <study-id> --host <current-host-id> --objective <text>
   session status --study <study-id>
   session end --study <study-id> [--session <session-id>]
   snapshot list --study <study-id>
   snapshot open --study <study-id> [--snapshot <snapshot-id>]
   snapshot close --study <study-id> [--snapshot <snapshot-id>]
   study create --study <study-id> --title <text> --source <absolute-path> [--ref <git-ref>]
+  study source rebind --study <study-id> --source <absolute-path> [--ref <git-ref>]
   study archive --study <study-id>
   study unarchive --study <study-id>
   airlock promote --airlock <absolute-path> --upstream <absolute-path> [--ref <git-ref>] [--acknowledge-dirty-excluded]
@@ -153,10 +157,28 @@ interface CourseAddLessonsCommand {
   readonly dryRun: boolean;
 }
 
+interface CourseRecoveryExportCommand {
+  readonly kind: "course-recovery-export";
+  readonly studyId: string;
+  readonly outDirectory: string;
+}
+
+interface CourseRecoveryImportCommand {
+  readonly kind: "course-recovery-import";
+  readonly studyId: string;
+  readonly inputDirectory: string;
+  readonly sourceRoot: string;
+  readonly dryRun: boolean;
+}
+
 interface FocusCommand {
   readonly kind: "focus-set" | "focus-clear" | "focus-show";
   readonly studyId?: string;
   readonly courseIds?: readonly string[];
+}
+
+interface TeachNextCommand {
+  readonly kind: "teach-next";
 }
 
 interface SessionStartCommand {
@@ -192,6 +214,13 @@ interface StudyCreateCommand {
   readonly kind: "study-create";
   readonly studyId: string;
   readonly title: string;
+  readonly sourceRoot: string;
+  readonly reference?: string;
+}
+
+interface StudySourceRebindCommand {
+  readonly kind: "study-source-rebind";
+  readonly studyId: string;
   readonly sourceRoot: string;
   readonly reference?: string;
 }
@@ -267,7 +296,10 @@ export type UniversityLocalCliCommand =
   | CourseSetPrerequisitesCommand
   | CourseOpenForEditCommand
   | CourseAddLessonsCommand
+  | CourseRecoveryExportCommand
+  | CourseRecoveryImportCommand
   | FocusCommand
+  | TeachNextCommand
   | SessionStartCommand
   | SessionStatusCommand
   | SessionEndCommand
@@ -277,6 +309,7 @@ export type UniversityLocalCliCommand =
   | ExerciseHostGradeCommand
   | SnapshotCheckoutCommand
   | StudyCreateCommand
+  | StudySourceRebindCommand
   | StudyStatusCommand
   | AirlockPromoteCommand
   | AirlockInspectCommand

@@ -1,0 +1,1552 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 83,
+  "course": {
+    "id": "foundations-async",
+    "title": "《等待与失败》",
+    "description": "零基础主干第 3 阶段：用图灵密约里真实的 Promise、await、try/catch 与错误处理写法，建立「有些事要等、有些事会失败」的读码直觉。",
+    "audience": "零基础重建地基的独立开发者",
+    "objectives": [
+      "指着 `Promise<…>` 与 `await` 说出「承诺的形状」和「在这里等」各自在代码里的含义",
+      "解释为什么同步实现也可以包成 `async`，以及 `Promise.race` 如何让结果和闹钟赛跑",
+      "对照「返回 null/false」与「throw」两种失败策略，说出各自把检查责任交给谁",
+      "读完一个真实异步函数后，列出调用方必须检查的几件事"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "foundations-data"
+    ],
+    "units": [
+      {
+        "id": "waiting",
+        "title": "有些事要等",
+        "objective": "建立 Promise 与 await 的读法：承诺的形状、等待点、同一形状不同速度、与闹钟赛跑。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "a-promise-is-a-receipt",
+            "title": "类型里写着 Promise，调用当下你手里到底有什么？",
+            "content": "# 类型里写着 Promise，调用当下你手里到底有什么？\n\n## 一句真实出现的话\n\n你打开 `src/platform/web/storage.ts`，会看到平台存储接口是这样写的：\n\n[[evidence:src/platform/web/storage.ts:1-5]]\n\n三个方法的返回类型最外面都包着同一个词：**`Promise`**。如果你以前只见过「函数返回一个字符串」，这里多出来的外壳会让人愣一下——它到底在说什么？\n\n:::detail[这一段是三个函数，还是一张约定表？]\n这不是三个已经写好的函数体，是一张**约定表**：谁要当「平台存储」，就必须提供 `getItem`、`setItem`、`removeItem` 这三个名字。每一行冒号后面写「调用之后交什么」。\n\n`string | null` 读成「一段文字，或者空」——键不在时，浏览器常见就是交 `null`。`void` 读成「没有值可取」，不是「交回一个叫 void 的东西」。最外面还包着 `Promise`——这个词才是这节课要盯的。\n:::\n\n## 先猜一下\n\n这里的 `Promise` 在调用当下交给你的是最终值，还是别的什么？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n交给你的是一张**收据**（承诺）：类型已经写明「以后会是什么」，但真正的值还没到你手里。\n\n## 三个真实用例\n\n### 用例 1：以后会给你字符串或 null\n\n[[evidence:src/platform/web/storage.ts:2]]\n\n你传入一个键名。返回类型不是立刻到手的 `string | null`，而是 `Promise<string | null>`：先拿到收据，兑现后才是字符串或 `null`（键不存在时常见）。\n\n:::detail[为什么不直接写 string | null？]\n如果写成 `string | null`，意思是：函数跑完的那一瞬间，值已经在你手里。这里却写成 `Promise<string | null>`，等于先给你一张小票，票面上印着「以后是字符串或空」。\n\n存储可能在别的平台上真的要等（原生存、跨进程）。接口先把「还没到」写进类型，调用方才不会把收据当货物用。你现在要练的读法就是：先剥开 `Promise`，再看尖括号里的货。\n:::\n\n### 用例 2：只承诺「写完了」\n\n[[evidence:src/platform/web/storage.ts:3]]\n\n写入没有有意义的数据要交回来。`Promise<void>` 表示：承诺「这件事做完」，兑现时通常没有值可取——`void` 就是「空着手说一声好了」。\n\n:::detail[void 是「失败」吗？]\n不是。`void` 只说「兑现时没有值」，不说成败。写成 `Promise<void>`，是「做完这件事」的收据，不是「做错了」的标记。\n\n对照上一行：`getItem` 的货是 `string | null`，因为读键本来就要交文字或空；`setItem` 的工作是把字写进去，写完不必再交一份副本。你看见 `void`，先问「它承诺的是完成，还是交数据」，不要先问「是不是出错了」。\n:::\n\n### 用例 3：删除也是同一套外壳\n\n[[evidence:src/platform/web/storage.ts:4]]\n\n和 `setItem` 一样：你现在拿到的仍是收据；里面包的是 `void`，意思还是「做完」，不是「带回一段文字」。\n\n读法可以固定成两步：先剥开 `Promise`，看尖括号里「货」的类型（`string | null` 或 `void`）；再记着，调用当下你拿着的是外壳，不是货本身。\n\n:::detail[三个方法为什么都包同一层 Promise？]\n因为调用方要有同一套读法。读、写、删在不同平台上快慢可能差很远，但类型都先给你收据。你不会对 `getItem` 等货、对 `removeItem` 却当成当场结束——三行最外面都是 `Promise`，就是在逼你用同一种姿势接。\n\n下一课才会教你怎么在某一行停下来取货。这节课只要求你认出：调用当下手里是小票。\n:::\n\n## 它不是什么\n\n- **不是**速度标记：写成 `Promise` 并不保证这件事一定很慢，只描述「结果可能稍后才到」的形状。\n- **不是**最终值本身：`string | null` 是货；`Promise<string | null>` 是写着「货是什么」的小票。\n- **不是**只有「有返回数据」才用：`Promise<void>` 同样合法——只承诺完成，不交数据。\n\n类比：你去咖啡店点手冲，店员先给你一张小票。小票不是咖啡；上面写着「一杯美式」，你凭它过一会儿取货。`Promise<T>` 就是那张小票，`T` 是到货时的类型。\n\n:::detail[那为什么有人一看见 Promise 就觉得「一定很慢」？]\n因为收据常常出现在真的要等的事上：网络、磁盘、等人点按钮。但类型只写形状，不写耗时。同一张接口里，web 实现可能几乎立刻兑现，别的平台可能真的要等——那是后面「同一形状、不同速度」要拆的。\n\n你现在只要守住一句：看见 `Promise`，先当小票，不要当秒表。\n:::\n\n## 再想想\n\n收据拿到了，怎么在某一行停下来等货到？下一课讲 [[lesson:await-means-wait-here|await 在说什么]]。\n\n## 自检\n\n**问：** `Promise<string | null>` 和 `string | null` 在调用当下有什么差别？\n\n**问：** `Promise<void>` 兑现时通常意味着什么？\n\n**问：** 返回类型写成 `Promise`，是否保证这件事一定很慢？\n\n## 一句话\n\n**`Promise<T>` 是「还没取到、但类型已写明」的收据，不是速度标记。**\n",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/web/storage.ts",
+                "lineStart": 1,
+                "lineEnd": 5,
+                "nodeIds": [],
+                "note": "PlatformStorage 三个方法的返回类型都是 Promise。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "promise-not-speed",
+                "kind": "basic",
+                "front": "返回类型写成 `Promise`，是否保证这件事一定很慢？",
+                "back": "不保证。Promise 只描述「结果可能稍后才到」的形状，不规定耗时。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 1,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "接口只写 Promise 形状，不写速度。"
+                  }
+                ]
+              },
+              {
+                "id": "promise-receipt-meaning",
+                "kind": "basic",
+                "front": "`Promise<string | null>` 在调用当下交给你的是最终值，还是一张收据？",
+                "back": "一张收据（承诺）。最终的字符串或 null 要等承诺兑现后才到手。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "getItem 返回 Promise<string | null>。"
+                  }
+                ]
+              },
+              {
+                "id": "promise-void-meaning",
+                "kind": "basic",
+                "front": "`Promise<void>` 兑现时通常意味着什么？",
+                "back": "「这件事做完了」，但没有有意义的数据要交回来。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 3,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "setItem 与 removeItem 返回 Promise<void>。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "promise-keyword-recall",
+                "kind": "short-answer",
+                "title": "写出「异步结果」在类型里的包装名",
+                "prompt": "在 TypeScript 类型里，把「以后才到手的值」包成收据时，最外层那个类型构造器叫什么？只写一个英文词。",
+                "expectedAnswer": "Promise",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "返回类型以 Promise 开头。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "await-means-wait-here",
+            "title": "写了 await 的那一行，程序会立刻往下跑吗？",
+            "content": "# 写了 await 的那一行，程序会立刻往下跑吗？\n\n## 现象\n\n你打开 Capacitor 端的分享实现 `src/platform/capacitor/share.ts`，会看到一个很短的函数：\n\n[[evidence:src/platform/capacitor/share.ts:4-11]]\n\n函数名前面有 `async`，函数体里只有一次调用，调用前面又多了一个词：`await`。没有循环，没有 `if`，就这一行「带 `await` 的分享」。\n\n:::detail[Capacitor 和 Share.share 是什么？]\nCapacitor 是这套项目在手机壳里用的一层：网页里的函数，去调系统自带的能力。`Share.share` 就是调系统分享面板——弹出那个你选微信、拷贝链接的窗口。\n\n你不必先会写原生代码。这节课只看这一行：调用前面多了 `await`，函数名前面多了 `async`。窗口什么时候关上、下一行什么时候跑，才是要猜的。\n:::\n\n## 先猜一下\n\n执行跑到 `await Share.share({...})` 时，会不会立刻继续执行函数后面的代码？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n不会。执行会在这一行停下来，等 `Share.share` 的承诺兑现，再继续往下。\n\n## 为什么是这样\n\n你把这一小段拆开读：\n\n1. **`export async function`**：这是一个**异步函数**（async function）。标了 `async`，函数本身返回 `Promise`，并且允许在函数体里写 `await`。\n2. **`await Share.share({...})`**：先调用原生分享（弹出系统分享界面），再在这一行**等**它结束（成功或失败）。`await` 就是停顿点。\n3. **返回类型 `Promise<void>`**：调用方拿到的也是一张收据；函数内部已经用 `await` 把「等」写清楚了。\n\n:::detail[async 和 await 谁开门、谁停？]\n`async` 标在函数上，等于开门：允许你在里面写 `await`，并且这个函数对外也交收据。`await` 标在**某一次调用**前面，等于在那一站停下。\n\n你可以在一个 `async` 函数里写好几个 `await`，每写一个就多一个停顿点。这个分享函数只有一处，所以整段故事就是：走进函数 → 在分享这一行等 → 等完（成功或失败）再结束。没有 `async`，你在这里写 `await` 都不合法。\n:::\n\n`async` 与 `await` 成对出现：`async` 标在函数上，开门允许写 `await`；`await` 标在**具体那一次**等待上。没有 `await`，等于把材料往窗口一塞就转身走——分享可能还在进行，函数却已经往下走了。\n\n:::detail[删掉 await 真的会「转身就走」吗？]\n会。`Share.share({...})` 本身仍会去弹系统面板，它返回的还是一张收据。你若前面不写 `await`，这一行只是「发出去」，函数接着往下——这个函数后面已经没别的语句了，等于把收据往地上一扔就结束。\n\n调用方若还在 `await shareOnCapacitor(...)`，他等的是「这个函数返回的那张收据」。函数自己没等分享结束就返回了，外层的等待和系统面板就对不齐。你读代码时，看见调用前有没有 `await`，就是在问：作者有没有在这一行取货。\n:::\n\n类比：你在柜台递交材料，工作人员说「请在黄线后等候，叫到号再过来取」。`await` 就是那道黄线：你站着等叫号（承诺兑现），才拿着结果去做下一件事。\n\n上一课把 `Promise` 读成收据；这一课补上：收据到了之后，用 `await` 在某一行**取货**。\n\n:::detail[成功和失败都会让 await 结束吗？]\n会。`await` 等的是承诺**结束**，不管结束时是交货还是交一张失败条。分享被用户取消、系统报错，这一行同样会走完——只是走完的方式可能是把失败继续往外传。\n\n这节课先认停顿点。失败怎么接，后面单元才展开。你现在读到 `await`，先在心里标：结果没到，下一行先别跑。\n:::\n\n## 再想想\n\n接口把存储也写成返回 `Promise`，但 web 里真正读写可能几乎不花时间——形状和速度不是一回事，见 [[lesson:same-shape-different-speed|同一形状，不同速度]]。\n\n## 自检\n\n**问：** 读到 `await Share.share(...)` 时，执行流在这一行做什么？\n\n**问：** 为什么这个函数声明里要写 `async`？\n\n**问：** 如果删掉 `await`，只写 `Share.share({...})`，「等完再往下」的语义还在吗？\n\n## 一句话\n\n**读到 `await`，就在心里标一个停顿点：结果没到，下一行先别跑。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/capacitor/share.ts",
+                "lineStart": 4,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "async function 内 await Share.share。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "async-allows-await",
+                "kind": "basic",
+                "front": "为什么这个函数声明里要写 `async`？",
+                "back": "因为函数体使用了 await；async 把函数标成异步函数，并让它返回 Promise。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/capacitor/share.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "export async function shareOnCapacitor。"
+                  }
+                ]
+              },
+              {
+                "id": "await-not-fire-and-forget",
+                "kind": "basic",
+                "front": "`await` 是「发出去就不管」，还是「等结果」？",
+                "back": "等结果。await 明确要求在这一行等到承诺兑现。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/capacitor/share.ts",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "await 关键字出现在调用前。"
+                  }
+                ]
+              },
+              {
+                "id": "await-pause-point",
+                "kind": "basic",
+                "front": "读到 `await Share.share(...)` 时，执行流在这一行做什么？",
+                "back": "在这一行停下来，等 Share.share 的承诺兑现，再继续后面的代码。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/capacitor/share.ts",
+                    "lineStart": 5,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "await 挂在 Share.share 调用上。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "await-keyword-recall",
+                "kind": "short-answer",
+                "title": "写出「在这一行等」的关键字",
+                "prompt": "在异步函数里，想在某一行停下来等 Promise 兑现，应在调用前写哪个英文关键字？只写一个词。",
+                "expectedAnswer": "await",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/capacitor/share.ts",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "await Share.share。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "same-shape-different-speed",
+            "title": "写成 async，就等于一定很慢吗？",
+            "content": "# 写成 async，就等于一定很慢吗？\n\n## 两个东西\n\n你在 `src/platform/web/storage.ts` 里会撞上两件容易搅在一起的事。\n\n**第一件：接口规定的形状。** 三个方法都必须返回 `Promise`：\n\n[[evidence:src/platform/web/storage.ts:1-5]]\n\n**第二件：web 实现真正做的事。** 函数标了 `async`，里面却直接调浏览器同步的 `localStorage`：\n\n[[evidence:src/platform/web/storage.ts:7-17]]\n\n一边是「返回 Promise」的统一外壳，一边是「当下就能读完」的同步 API。很多人会把它们合成一句错话：写成 `async` = 一定很慢。\n\n:::detail[同步在这里指什么？]\n同步的意思是：调用当下，值已经回来，不用另找一张收据。浏览器的 `localStorage.getItem(key)` 就是这种——你问它要一个键，它当场交字符串或 `null`。\n\n对照接口：`getItem` 对外却必须交 `Promise<string | null>`。web 这份实现用 `async` 把当场能拿到的值，再包成一张几乎立刻兑现的收据。形状跟接口对齐，速度仍是「几乎不等」。\n:::\n\n## 先猜一下\n\n若 web 实现去掉 `async` 直接同步返回，而其它平台仍返回 `Promise`，调用方要为同一接口写几套读法？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n至少两套：一边当同步值用，一边还得 `await`——接口形状一破，跨平台同一种读法就没了。\n\n## 逐条对照\n\n| | **Promise / async 形状** | **真正的耗时** |\n| --- | --- | --- |\n| 你在代码里看见什么 | 返回类型是 `Promise<…>`，方法前有 `async` | 函数体里是 `localStorage.getItem(key)` 这类同步调用 |\n| 它保证什么 | 调用方拿到收据，可以用同一种 `await` 读法 | 这一次操作大概要等多久（这里几乎不等） |\n| 它不保证什么 | 不保证慢，也不保证快 | 不规定你必须用哪种类型外壳 |\n\n`localStorage.getItem` 在浏览器里是同步的：调用当下就返回字符串或 `null`。外面的 `async` 仍让函数返回 `Promise`，只是这个 Promise **几乎立刻兑现**。\n\n:::detail[async 包在同步调用外面，实际发生了什么？]\n`async getItem` 里只有 `return localStorage.getItem(key)`。浏览器当场给出字符串或 `null`，`async` 再把这个值垫成一张收据交出去。对调用方来说，仍要按收据读：`await storage.getItem(...)`。\n\n你不会因为「里面其实很快」就改成直接拿返回值当字符串。类型说它是 `Promise`，你就按 `Promise` 接。快慢是函数体的事，不是类型的事。\n:::\n\n为什么要多包一层？因为别的平台实现（例如原生存储）可能真的要等。接口统一成 `Promise` 后，调用方一律 `await storage.getItem(...)`，换平台不用改读法。\n\n:::detail[调用方真的只写一套吗？]\n对。导出的 `storage` 类型是 `PlatformStorage`，三个方法都返回 `Promise`。你在网页里用这份 web 实现，或以后换成别的实现，调用处仍是 `await storage.getItem(key)`。\n\n若 web 这边偷偷改成同步返回字符串，TypeScript 会说它不再符合接口；就算你强行改接口，调用方也得写 `if (在网页) 直接用；else await`。那正是这张接口要消灭的分叉。\n:::\n\n类比：连锁店规定所有分店都用「取货号」。有的店仓库就在柜台后，三秒给你；有的店要去隔壁楼，要等十分钟。格式相同，速度不同——你只认取货号，不必为每家店写两套流程。\n\n## 什么时候用哪个\n\n- **读类型、读调用方式时**，盯 `Promise` / `async`：那是形状，告诉你「用收据思维，用 `await`」。\n- **猜会不会卡住界面、要不要转圈时**，别只看 `async`：要看函数体在干什么、底层 API 是不是同步、网络还是本地。\n- **写跨平台接口时**，优先统一形状（都返回 `Promise`），让快实现也可以立刻兑现，而不是强迫调用方记两套 API。\n\n:::detail[看耗时该往哪看？]\n看函数体，看它调用的东西。这份 web 实现里是 `localStorage.*`，浏览器里通常很快。若函数体是联网、等人点按钮、等原生对话框，那才可能慢。\n\n`async` 只保证「对外是收据」。转圈动画、超时闹钟，要另找依据——房间那边用赛跑限时，不是看函数名上有没有 `async`。\n:::\n\n## 再想想\n\n房间操作不能无限干等时，项目会让「真实结果」和「超时闹钟」赛跑，见 [[lesson:racing-a-clock|和闹钟赛跑]]。\n\n## 自检\n\n**问：** web 的 `async getItem` 里真正做的同步调用是什么？\n\n**问：** 接口统一成 `Promise` 后，调用方的主要好处是什么？\n\n**问：** 为什么「写成 async」不等于「一定很慢」？（用 web 实现说一句）\n\n## 一句话\n\n**`async` 是承诺的形状，不是速度的保证。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/web/storage.ts",
+                "lineStart": 1,
+                "lineEnd": 5,
+                "nodeIds": [],
+                "note": "接口规定三个方法都返回 Promise。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/web/storage.ts",
+                "lineStart": 7,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "web 实现用 async 包住同步的 localStorage。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "async-shape-not-speed",
+                "kind": "basic",
+                "front": "web 的 `async getItem` 里直接调同步 `localStorage.getItem`，为什么还要 `async`？",
+                "back": "为了符合 PlatformStorage 统一的 Promise 形状，让调用方在所有平台上都能用同一种 await 读法。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "接口要求 Promise。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 8,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "async getItem 包 localStorage。"
+                  }
+                ]
+              },
+              {
+                "id": "caller-one-shape",
+                "kind": "basic",
+                "front": "接口统一成 Promise 后，调用方的主要好处是什么？",
+                "back": "换平台仍用同一套 await 读法，不必为同步/异步各写一套调用。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 1,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "PlatformStorage 统一 Promise 签名。"
+                  }
+                ]
+              },
+              {
+                "id": "localstorage-sync-inside",
+                "kind": "basic",
+                "front": "web 实现的 `getItem` 函数体真正做的同步调用是什么？",
+                "back": "localStorage.getItem(key)。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "return localStorage.getItem(key)。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "async-not-slow-explain",
+                "kind": "explain",
+                "title": "说明 async 与速度的关系",
+                "prompt": "用 storage.ts 的 web 实现说明：为什么「写成 async」不等于「一定很慢」？",
+                "rubric": [
+                  "指出接口要求返回 Promise",
+                  "指出 web 函数体调用的是同步 localStorage",
+                  "说明 async 是为了跨平台形状一致",
+                  "明确区分「形状」与「耗时」"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 7,
+                    "lineEnd": 16,
+                    "nodeIds": [],
+                    "note": "async 包同步 localStorage 的完整实现。"
+                  }
+                ]
+              },
+              {
+                "id": "async-shape-keyword",
+                "kind": "short-answer",
+                "title": "写出把函数标成「返回 Promise」的关键字",
+                "prompt": "webStorage 的 getItem 在方法名前面写了哪个英文关键字，从而让返回值变成 Promise？只写一个词。",
+                "expectedAnswer": "async",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "async getItem。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "racing-a-clock",
+            "title": "真实结果和超时闹钟同时挂着，外层听谁的？",
+            "content": "# 真实结果和超时闹钟同时挂着，外层听谁的？\n\n## 现象\n\n房间相关操作不能无限干等。你在 `src/services/room/roomOperationSupport.ts` 里会看到这样一个包装函数：\n\n[[evidence:src/services/room/roomOperationSupport.ts:9-20]]\n\n它返回的不是「只跑真实操作」那一条线，而是 `Promise.race([...])`，数组里塞了**两样东西**：`Promise.resolve(promise)`，以及一个靠 `setTimeout` 到点后 `reject` 的新建 Promise。两边同时挂着。\n\n:::detail[包装函数是在替谁干活？]\n房间的创建、加入不能在网上一直转圈。这个函数不负责房间规则，只负责加一层限时：你把「真正在跑的那件事」和「最多等多少毫秒」交给它，它交回一张新的收据。\n\n函数名里的 `Timeout` 就是限时。数组里能看见两名参赛者，不是一名。外层到底听谁的，先猜。\n:::\n\n## 先猜一下\n\n真实操作先成功，和闹钟先响，这两种情况下，外层 `Promise.race` 分别会采用哪一边？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n谁先结束（成功或失败）就采用谁；真实操作先到就用它的结果，闹钟先响就用超时错误。\n\n## 为什么是这样\n\n你按参赛者拆开看：\n\n1. **第一个参赛者** `Promise.resolve(promise)`：把真实操作收成一个 Promise（若本来就是 Promise 就沿用；若已经是普通值，也包成立刻兑现的 Promise）。\n2. **第二个参赛者**：`new Promise<never>(...)` —— 这个 Promise **不会成功兑现**（`never` 表示没有成功值这条路）；只在 `timeoutMs` 毫秒后执行 `reject(new Error(message))`，用你传入的 `message` 造成败原因。\n3. **`Promise.race([...])`**：数组里谁先 **settle**（兑现或拒绝），外层就采用谁的结果；另一个还在跑，也不再决定返回值。\n\n:::detail[Promise.resolve 为什么还要包一层？]\n因为进来的不一定已经是收据。类型写成 `PromiseLike<T> | T`：可能是承诺，也可能已经是普通值。`Promise.resolve` 的工作是「不管你给我什么，我交回一张收据」——已经是承诺就沿用，是普通值就立刻兑现。\n\n这样 `race` 的数组里始终是两张收据在赛，而不是一张收据跟一个裸值比。你读到这一层，先把它当成检票口，不要当成第二套业务逻辑。\n:::\n\n所以「超时」在这里不是魔法：它是另一条并行的承诺。房间操作若卡住，闹钟先响 → 调用方收到带 `message` 的错误，而不是无限等待。若真实操作在时限内成功，外层已经按成功结果兑现了，闹钟那条不再影响返回值。\n\n:::detail[闹钟响了之后，真实操作还在跑吗？]\n可能还在跑。`race` 只决定**外层这张收据**听谁的，它不会自动把另一边掐死。真实请求也许还在网上飞，只是调用方已经按超时失败往下走了。\n\n你要是把 `race` 想成「杀掉输的那个人」，会误判资源。这里的设计目标更窄：别让房间操作无限干等。输的那边是否还在消耗网络，这份函数没有写「取消」。\n:::\n\n:::detail[never 和 reject 分别在说什么？]\n`Promise<never>` 是类型在说：这条路**没有成功值**。它不会 `resolve` 出一个 `T` 给你，只准备在到点后 `reject`。`reject(new Error(message))` 就是把你传入的那句 `message` 做成错误交出去。\n\n所以超时不是返回 `null`，也不是返回一个「超时成功」。它是失败通道：闹钟先到，外层这张收据按失败结束，错误文字就是你当时传进来的那句。\n:::\n\n类比：你点了外卖，同时设了 30 分钟闹钟。外卖先到，你关掉闹钟开吃；闹钟先响，你按超时处理，不再干等。`Promise.race` 只认第一个到达的结果。\n\n## 再想想\n\n闹钟响了是「失败」的一种。后面单元会专门讲失败怎么被接住，例如 [[lesson:try-and-catch|try 与 catch]]。\n\n## 自检\n\n**问：** `Promise.race` 采用数组里哪一个结果？\n\n**问：** `withRoomOperationTimeout` 里赛跑的两边分别是什么？\n\n**问：** 超时那一侧到点后做什么？\n\n## 一句话\n\n**超时 = 让结果和闹钟赛跑；先到的那条说了算。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/room/roomOperationSupport.ts",
+                "lineStart": 9,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "withRoomOperationTimeout 用 Promise.race 实现超时。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "race-two-runners",
+                "kind": "basic",
+                "front": "`withRoomOperationTimeout` 里赛跑的两边分别是什么？",
+                "back": "一边是真实操作的 Promise，一边是到点就失败的超时 Promise。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room/roomOperationSupport.ts",
+                    "lineStart": 14,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "race 数组的两个元素。"
+                  }
+                ]
+              },
+              {
+                "id": "race-who-wins",
+                "kind": "basic",
+                "front": "`Promise.race` 采用数组里哪一个结果？",
+                "back": "最先 settle（兑现或拒绝）的那一个。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room/roomOperationSupport.ts",
+                    "lineStart": 14,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "Promise.race 包住真实 promise 与超时 promise。"
+                  }
+                ]
+              },
+              {
+                "id": "timeout-reject",
+                "kind": "basic",
+                "front": "超时那一侧到点后做什么？",
+                "back": "reject(new Error(message))，用传入的 message 构造错误。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room/roomOperationSupport.ts",
+                    "lineStart": 16,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "setTimeout 后 reject。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "race-method-recall",
+                "kind": "short-answer",
+                "title": "写出「谁先到听谁」的 Promise 方法名",
+                "prompt": "让多个 Promise 赛跑、只采用最先结束那一个的结果，应调用 Promise 上的哪个方法名？只写方法名（不要写 Promise. 前缀）。",
+                "expectedAnswer": "race",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room/roomOperationSupport.ts",
+                    "lineStart": 14,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "Promise.race([。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "failing",
+        "title": "有些事会失败",
+        "objective": "建立 try/catch、失败当返回值、空 catch 的注释义务、throw 与吸收、以及「不是错误的错误码」。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "try-and-catch",
+            "title": "读本地存储时可能炸，为什么函数还能交回 null？",
+            "content": "# 读本地存储时可能炸，为什么函数还能交回 null？\n\n## 现象\n\n图灵密约里有一个读本地存储的函数。你打开它，会看到这样的结构：\n\n[[evidence:src/platform/safeLocalStorage.ts:15-25]]\n\n正常路径是 `storage.getItem(key)`。可是同一函数里还写了 `catch { return null; }`——说明作者默认：**读的时候有可能抛错**。\n\n你若只看返回类型 `string | null`，会以为它只是「读到字符串或没读到」。真正读的时候，却可能先在内部「炸一下」，再安静地交出 `null`。\n\n:::detail[try 和 catch 这两段在版面上是什么关系？]\n它们必须成对：上面一块叫 `try`，里面放「想做的事」；紧跟着一块叫 `catch`，里面放「那件事抛错以后走哪」。没有 `try`，单独写 `catch` 不合法。\n\n这份函数在进 `try` 之前还有一行：`if (!storage) return null`。连存储对象都没有时，它连试都不试。有对象才走进 `try` 去读键。你先看清两段盒子，再猜：把下面那个盒子拆掉，调用方会看见什么。\n:::\n\n## 先猜一下\n\n若删掉 `catch` 只保留 `return storage.getItem(key)`，存储抛错时调用方看到的，和现在交回 `null` 差在哪？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n现在调用方拿到安静的 `null`；删掉 `catch` 后异常继续往外冒，调用方要么自己接，要么整段流程被打断。\n\n## 为什么是这样\n\n`try/catch` 是一对：你把「可能抛错」的代码放进 `try`，把「抛了之后怎么办」写在 `catch`。读代码时先问两句：\n\n1. **正常想做什么？** 这里是 `return storage.getItem(key)`。\n2. **失败时交什么回来？** 这里是 `return null`。\n\n再看更上面一行：`if (!storage) return null`。连 storage 对象都没有时，作者连 `try` 都不进，直接当「读不到」。有 storage 才进入 `try`，去真正读键。\n\n:::detail[catch 后面不写错误参数，算写错了吗？]\n不算。你需要用到错误对象时才写成 `catch (error)`。这里作者只用退路，不读错误内容，所以写成 `catch { return null; }` 就够了。\n\n括号里的名字是「接住以后怎么称呼它」，不是语法必填项。你看见光秃秃的 `catch {`，先看块里交了什么，不要先判这是漏写。\n:::\n\n同文件里，取浏览器 `localStorage` 本身也包了 `try/catch`——访问 `window.localStorage` 在某些受限环境里就会抛：\n\n[[evidence:src/platform/safeLocalStorage.ts:6-13]]\n\n所以你看到的不是「读键失败才有 catch」，而是：**碰到可能抛的 API，就用 try 试、用 catch 接**。`catch` 后面可以不写错误参数；不需要用错误对象时，写 `catch { … }` 就够了。\n\n:::detail[为什么连拿到 localStorage 对象也要包一层？]\n因为「对象在不在」本身就可能炸。没有 `window` 时（比如在纯计算环境），函数直接 `return null`。有 `window` 也不等于能摸 `localStorage`：隐私模式、内嵌网页、被关了存储的环境，访问 `window.localStorage` 就会抛。\n\n所以 `browserLocalStorage` 自己也是 `try` 取对象、`catch` 交 `null`。外层的 `safeLocalStorageGet` 再对「用这个对象读键」包一次。你看到两层，是两件可能炸的事，不是复制粘贴。\n:::\n\n类比：你试着开一扇可能上锁的门（`try`）。开了就进去；钥匙断了（抛出），你走旁边的安全通道（`catch`），而不是站在门口崩溃。`catch` 不是假装没出事，是「出事时走哪条退路」。\n\n:::detail[交回 null 之后，调用方还知道曾经炸过吗？]\n不知道。`null` 既可能是「键本来就没有」，也可能是「读的时候炸了被接住」。函数选择把爆炸收成和「读不到」同一个值，调用方从返回值里看不出差别。\n\n这是下一课要盯的代价。这节课先认结构：`try` 是可能失败的动作，`catch` 是失败时的退路。\n:::\n\n## 再想想\n\n失败被收成 `null` / `false` 之后，调用方还要做什么，见下一课 [[lesson:failure-as-a-value|存储失败了，为什么函数不炸，只交回 null 或 false？]]。\n\n## 自检\n\n**问：** 在 `safeLocalStorageGet` 里，哪一段是可能失败的动作？哪一段是失败时的退路？\n\n**问：** `catch` 后面没有写错误参数，是不是语法错误？\n\n**问（提示：看 `browserLocalStorage`）：** 为什么连「拿到 localStorage 对象」这一步也要包 `try/catch`？\n\n## 一句话\n\n**`try` 是可能失败的动作，`catch` 是失败时的退路。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 15,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "safeLocalStorageGet 的 try/catch 结构。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 6,
+                "lineEnd": 13,
+                "nodeIds": [],
+                "note": "browserLocalStorage 访问 localStorage 也用 try/catch。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "catch-is-fallback",
+                "kind": "basic",
+                "front": "`safeLocalStorageGet` 的 `catch` 选择交回什么？",
+                "back": "null——把异常吞掉，变成「读不到」的正常返回值。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 22,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "catch 里 return null。"
+                  }
+                ]
+              },
+              {
+                "id": "try-catch-pair",
+                "kind": "basic",
+                "front": "没有 `try`，单独写一个 `catch` 可以吗？",
+                "back": "不可以。catch 必须跟在 try 后面，成对出现。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 20,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "try 与 catch 成对。"
+                  }
+                ]
+              },
+              {
+                "id": "try-is-attempt",
+                "kind": "basic",
+                "front": "`try` 块里通常放什么？",
+                "back": "可能抛出异常的正常路径代码——这里是 storage.getItem(key)。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 20,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "try 内 return storage.getItem(key)。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "catch-keyword-recall",
+                "kind": "short-answer",
+                "title": "写出接住异常的关键字",
+                "prompt": "try 块里的代码抛出异常时，用来接住并走退路的那个关键字是什么？只写一个英文词。",
+                "expectedAnswer": "catch",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 22,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "catch {。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "failure-as-a-value",
+            "title": "存储失败了，为什么函数不炸，只交回 null 或 false？",
+            "content": "# 存储失败了，为什么函数不炸，只交回 null 或 false？\n\n## 两个东西\n\n上一课你见过：`try` 里读存储，`catch` 里 `return null`。同文件还有写存储的函数，失败时交的不是 `null`，而是 `false`。\n\n读失败时的退路：\n\n[[evidence:src/platform/safeLocalStorage.ts:15-25]]\n\n写的完整形状是：\n\n[[evidence:src/platform/safeLocalStorage.ts:27-39]]\n\n两种失败都**没有**再往外抛。它们把失败做成了普通返回值：读用 `null`，写用 `false`（成功用 `true`）。\n\n:::detail[为什么读交 null、写交 false？]\n读的成功结果本来就是「一段文字或没有」。`getItem` 在键不存在时也交 `null`，作者让读失败走同一个出口，调用方按「没读到」继续。\n\n写的成功结果没有「一段文字」可交，作者改用布尔：写上了交 `true`，写不上交 `false`。没有存储对象时，写函数连 `try` 都不进，直接 `return false`——和写的时候炸了，走同一盏灯。\n:::\n\n## 先猜一下\n\n调用 `safeLocalStorageSet` 之后，如果你**不看**返回值、默认当成「已经写上了」，隐私模式或配额满导致写入失败时，会发生什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n写入可能已经静默失败了，程序却仍以为数据存上了——因为失败只体现在返回值里，不会自动打断你。\n\n## 逐条对照\n\n| | `safeLocalStorageGet` | `safeLocalStorageSet` |\n| --- | --- | --- |\n| 成功时交什么 | 字符串（键不存在时也是 `null`） | `true` |\n| 失败 / 不可用时交什么 | `null` | `false` |\n| 函数会不会往外炸 | 不会 | 不会 |\n| 谁必须检查 | 调用方 | 调用方 |\n\n把失败做成返回值，好处是：**函数本身不炸**，调用链可以继续走。代价是：责任挪到调用方——你必须看返回值，不能假设一定成功。\n\n:::detail[写成功为什么不是 void，而是 true？]\n上一单元你见过 `Promise<void>`：只承诺做完。这里是同步函数，作者选择把成败写进返回值。`setItem` 跑完后立刻 `return true`，`catch` 里 `return false`，整段签名是 `: boolean`。\n\n若写成什么都不交，调用方连「有没有写上」这盏灯都没有，只能假装成功。布尔值就是那盏灯：不吵，但你得看。读路径没有这盏分开的灯，因为 `null` 同时服务「没有键」和「读失败」。\n:::\n\n还有一个读路径上的含糊点：`getItem` 在「键本来就不存在」时也返回 `null`，和「storage 抛错被 catch」撞了同一个值。调用方无法单靠一个 `null` 区分「没有这个键」和「读的时候炸了」。这是把失败压成返回值时常见的取舍——写法简单，信息变少。\n\n:::detail[为什么不拆成两个返回值？]\n可以拆，比如交 `{ value, failed }`，调用方就能分开看。作者没拆：本地存储在这个项目里是可选能力，读不到就按没有处理，往往够用。\n\n你要记住的是这个取舍本身。看见函数交 `null` / `false` 而不抛，先问两句：成功和失败是不是同一个值？调用方漏看会怎样？读路径的 `null` 把两件事叠在一起；写路径的 `true` / `false` 至少把成败分开了。\n:::\n\n类比：自动售货机不一定会「爆炸报警」。余额不足时，它安静地亮失败灯，硬币退回来。你必须看一眼指示灯，才知道有没有出货。`null` / `false` 就是那盏灯：不吵，但你得看。\n\n## 什么时候用哪个\n\n- **需要「有没有写上」这种明确成败**时，看布尔返回值（`true` / `false`），像 `safeLocalStorageSet`。\n- **读出来的东西本身就可以是「没有」**时，用 `null` 表示读不到（像 `safeLocalStorageGet`）很常见——但也要记得：`null` 可能混了「不存在」和「读失败」。\n- **调用方绝不能漏看失败**、继续跑会留下错误状态时，往往不该只靠安静的返回值——那是后面「该抛还是该兜」要对照的另一条路。\n\n:::detail[调用方漏看，最坏会怎样？]\n读漏了，你可能把「读失败」当成「用户从没存过」，按默认值继续——界面像第一次来。写漏了更阴：你以为偏好、标记已经落下，其实磁盘上没有；下次打开，世界回到写入前。\n\n`safeLocalStorageSet` 在没有 `storage` 时直接 `return false`，和 `catch` 里的 `false` 是同一盏灯。你若调用完不看这盏灯，两种失败都会从故事里消失。函数已经选择不炸，义务在你这边。\n:::\n\n## 再想想\n\n`try/catch` 这对结构本身见 [[lesson:try-and-catch|读本地存储时可能炸，为什么函数还能交回 null？]]。什么时候不该吸收、该往外抛，见 [[lesson:throw-or-absorb|同样会失败，为什么有的 throw、有的只返回 false？]]。\n\n## 自检\n\n**问：** `safeLocalStorageGet` 失败时交什么？`safeLocalStorageSet` 成功、失败时各交什么？\n\n**问：** 把失败做成返回值之后，调用方必须做什么？\n\n**问：** 为什么单看 `get` 的 `null`，分不清「键不存在」和「读的时候炸了」？\n\n## 一句话\n\n**失败当返回值：函数不炸，调用方必须检查。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 15,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "get 失败返回 null。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 27,
+                "lineEnd": 39,
+                "nodeIds": [],
+                "note": "set 成功 true、失败 false。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "caller-must-check",
+                "kind": "basic",
+                "front": "把失败做成返回值后，调用方多了一件什么义务？",
+                "back": "必须检查返回值，不能默认假设操作一定成功。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 31,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "返回类型是 boolean，成败写在返回值里。"
+                  }
+                ]
+              },
+              {
+                "id": "get-fail-null",
+                "kind": "basic",
+                "front": "`safeLocalStorageGet` 在 catch 里返回什么？",
+                "back": "null。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 22,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "catch 返回 null。"
+                  }
+                ]
+              },
+              {
+                "id": "set-fail-false",
+                "kind": "basic",
+                "front": "`safeLocalStorageSet` 写失败时返回什么？写成功呢？",
+                "back": "失败返回 false，成功返回 true。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 34,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "return true 与 catch 里 return false。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "get-fail-return",
+                "kind": "short-answer",
+                "title": "写出读失败时的返回值",
+                "prompt": "safeLocalStorageGet 在 catch 里 return 的是什么？只写 null 或一个词。",
+                "expectedAnswer": "null",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 20,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "正常 getItem 与 catch 都可能落到 null。"
+                  }
+                ]
+              },
+              {
+                "id": "set-success-value",
+                "kind": "short-answer",
+                "title": "写出写入成功时的返回值",
+                "prompt": "safeLocalStorageSet 在 setItem 成功后 return 的是哪个布尔值？只写 true 或 false。",
+                "expectedAnswer": "true",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 35,
+                    "lineEnd": 35,
+                    "nodeIds": [],
+                    "note": "return true。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "an-empty-catch-owes-you-a-reason",
+            "title": "空的 catch 里只有一行注释，为什么还能过审？",
+            "content": "# 空的 catch 里只有一行注释，为什么还能过审？\n\n## 情境和约束\n\n你设想：用户点了「接受合规提示」。产品希望**尽量把「已接受」写进本地存储**；但隐私模式或内嵌浏览器里，存储可能根本不可用。这时你要不要弹红字错误、卡住流程？\n\n图灵密约的写法是：\n\n[[evidence:src/features/compliance/ageNotice.ts:22-31]]\n\n你盯着 `catch`：没有 `return`、没有再抛、没有打日志——块体里**只有一行注释**。函数返回类型还是 `void`，调用方也读不到成败。\n\n:::detail[void 在这里意味着什么？]\n`acceptComplianceNotice(...): void` 说：这个函数不交有意义的返回值。调用方写完这一行，拿不到 `true` / `false`，也拿不到错误对象。\n\n再往上看：`resolveStorage` 若拿不到对象，函数直接 `return`，连 `try` 都不进。拿得到才去 `setItem`。`catch` 里又什么都不交。整条写路径对外只有一个姿势：做完就结束，成败不从返回值里出来。\n:::\n\n## 先猜一下\n\n作者为什么允许这个「空」`catch`？如果把那行注释删掉，你读代码时最容易怀疑什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选择**故意吞掉**这次写失败，并靠注释说明原因；没有注释时，你会先怀疑是漏写，而不是有意为之。\n\n## 代价和收益\n\n**收益：** 用户已经点了「接受」，流程不必被「存不住」打断。存储不可用时，静默跳过写入，界面可以继续——这是产品选择，不是语法巧合。\n\n**代价：** 失败从返回值里消失了（`void` 什么也不交），也没有往上抛。你从这次调用本身看不出「有没有存上」。唯一写在代码里的解释，就是 `catch` 里那行英文注释：隐私模式或内嵌环境里 storage 可能不可用。\n\n:::detail[那行英文注释在说什么？]\n原文是：`Storage can be unavailable in private or embedded browser contexts.` 翻译过来：隐私模式或嵌在别的页面里的浏览器里，存储可能根本不让用。\n\n它不是装饰。空 `catch` 从执行上看就是「吞掉」。没有这句，下一个人只会看见一块空白，最自然的反应是：「这里是不是忘了写处理？」注释是作者留下的说明条：我看见了，我选择继续。\n:::\n\n同文件的读路径并不空：\n\n[[evidence:src/features/compliance/ageNotice.ts:15-19]]\n\n读失败时，`hasAcceptedComplianceNotice` 交回 `false`——当作「未接受」。写路径则是真正的空 `catch`：连布尔值都不交，只吞。\n\n:::detail[读写两条路为什么不对称？]\n读必须交一个是非题：用户有没有接受过？读不到就按 `false`，界面会再出示一次提示——这是安全方向的降级。\n\n写发生在用户刚刚点了「接受」之后。产品选择是：尽量记下，记下失败也不要弹红字挡路。所以写函数是 `void`，`catch` 为空，只留注释。你对照同一文件的两条 `catch`，能看见作者把「检查失败」的责任放在不同地方：读交给返回值，写交给产品决策加一句说明。\n:::\n\n所以空 `catch` 等于在说：「我决定吞掉这次失败。」注释是欠你的说明条——消防通道门上的标签。没有标签，那扇门看起来像施工忘了拆。\n\n## 什么时候该反过来\n\n- **失败必须有人处理**（钱、权限、举报、权威操作）：不要空 `catch`；抛出去或返回明确失败信号。\n- **可选能力缺失、且有合理降级**（本地偏好写不上，产品仍可继续）：可以吞，但**必须**用注释（或项目约定）写清为什么可以吞。\n- **你自己都说不清为什么可以忽略**：先别写空 `catch`。写不清原因，往往说明还不该吞。\n\n:::detail[什么样的注释才算把债还了？]\n要写出**场景和理由**，不要写「ignore error」。这里点名了隐私模式和内嵌环境，读的人能复核：这类环境存不上，打断接受流程更糟，所以吞。\n\n若注释只剩「TODO」或什么都没有，审查应先当漏写。空 `catch` 的默认含义不是「聪明的降级」，是「这里可能忘了」。\n:::\n\n## 再想想\n\n把失败收成 `null` / `false` 让调用方检查，见 [[lesson:failure-as-a-value|存储失败了，为什么函数不炸，只交回 null 或 false？]]。什么时候该 `throw` 而不是吞，见 [[lesson:throw-or-absorb]]。\n\n## 自检\n\n**问：** `acceptComplianceNotice` 的 `catch` 块体里实际有什么？\n\n**问：** 空 `catch` 没有注释时，代码审查最该先问什么？\n\n**问：** 同文件读路径 `hasAcceptedComplianceNotice` 在 `catch` 里交什么？和写路径的空 `catch` 差在哪？\n\n## 一句话\n\n**空的 catch 必须用注释（或别处的约定）解释「为什么可以吞」。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/compliance/ageNotice.ts",
+                "lineStart": 22,
+                "lineEnd": 31,
+                "nodeIds": [],
+                "note": "acceptComplianceNotice 的空 catch 与注释。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/compliance/ageNotice.ts",
+                "lineStart": 15,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "读路径 catch 返回 false 的对照。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "empty-catch-body",
+                "kind": "basic",
+                "front": "`acceptComplianceNotice` 的 catch 里除了注释还有可执行语句吗？",
+                "back": "没有。catch 体只有注释，失败被静默吞掉。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/compliance/ageNotice.ts",
+                    "lineStart": 28,
+                    "lineEnd": 30,
+                    "nodeIds": [],
+                    "note": "空 catch 与英文注释。"
+                  }
+                ]
+              },
+              {
+                "id": "empty-catch-debt",
+                "kind": "basic",
+                "front": "为什么空 catch 特别需要注释？",
+                "back": "因为没有任何返回值或再抛来表达意图；不解释就看起来像漏写错误处理。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/compliance/ageNotice.ts",
+                    "lineStart": 22,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "函数返回 void 且 catch 为空。"
+                  }
+                ]
+              },
+              {
+                "id": "empty-catch-reason",
+                "kind": "basic",
+                "front": "这条注释给出的吞掉失败的理由是什么？",
+                "back": "隐私模式或内嵌浏览器上下文中 storage 可能不可用。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/compliance/ageNotice.ts",
+                    "lineStart": 29,
+                    "lineEnd": 29,
+                    "nodeIds": [],
+                    "note": "注释说明 private or embedded 场景。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "accept-notice-return",
+                "kind": "short-answer",
+                "title": "写出 acceptComplianceNotice 的返回类型关键词",
+                "prompt": "acceptComplianceNotice 函数签名末尾的返回类型是什么？只写表示「无有意义返回值」的那个英文类型名。",
+                "expectedAnswer": "void",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/compliance/ageNotice.ts",
+                    "lineStart": 22,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "acceptComplianceNotice(...): void。"
+                  }
+                ]
+              },
+              {
+                "id": "empty-catch-keyword",
+                "kind": "short-answer",
+                "title": "指出接住后什么都不做的结构名",
+                "prompt": "try 后面那个块体里只有注释、没有语句的结构，块关键字是什么？只写一个英文词。",
+                "expectedAnswer": "catch",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/compliance/ageNotice.ts",
+                    "lineStart": 28,
+                    "lineEnd": 30,
+                    "nodeIds": [],
+                    "note": "catch { 注释 }。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "throw-or-absorb",
+            "title": "同样会失败，为什么有的 throw、有的只返回 false？",
+            "content": "# 同样会失败，为什么有的 throw、有的只返回 false？\n\n## 两个东西\n\n你已经见过「兜」：本地存储读失败交 `null`，写失败交 `false`。图灵密约里还有另一种做法——**直接 `throw`**，让失败往外走。\n\n举报消息时，输入不合法就抛：\n\n[[evidence:src/services/moderation.ts:25-31]]\n\n后端明确返回错误时也抛：\n\n[[evidence:src/services/moderation.ts:40-42]]\n\n对照本地存储读失败时的退路：\n\n[[evidence:src/platform/safeLocalStorage.ts:22-24]]\n\n写失败同样被吸收成 `false`：\n\n[[evidence:src/platform/safeLocalStorage.ts:36-38]]\n\n一边是「往外扔」，一边是「本地收成返回值」。两种都是处理失败，责任落点不同。\n\n:::detail[throw 在执行上做了什么？]\n`throw` 会立刻打断这条正常返回路。函数不会走到后面的 `return`，错误顺着调用栈往上冒，直到有人用 `try/catch` 接住，或者整段流程被标成失败。\n\n你在举报函数里看见两处抛：空的 `messageId`、不支持的 `reason`，各自 `throw new Error(...)`；后面 RPC 若带了 `error`，再 `throw error`。对照存储：`catch` 之后是 `return null` / `return false`，函数仍正常结束。\n:::\n\n## 先猜一下\n\n若 `reportMessage` 在非法 `reason` 时返回 `null` 而不是 `throw`，调用方最容易犯什么错？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n调用方可能把「没报成」当成「报成了」或静默忽略——举报失败被藏起来，链路断了却没人被迫处理。\n\n## 逐条对照\n\n| | `throw`（如 `reportMessage`） | 吸收成返回值（如 `safeLocalStorage*`） |\n| --- | --- | --- |\n| 失败时函数做什么 | 中断正常返回，抛出错误 | 正常返回 `null` / `false` 等 |\n| 调用方不处理会怎样 | 错误继续往上冒（或变成未处理拒绝） | 程序可能假装成功继续跑 |\n| 适合什么 | 不能安全降级、继续跑更糟 | 可选能力缺失、有合理降级 |\n| 例子 | 空 message id、非法 reason、RPC `error` | 读本地键失败、写本地键失败 |\n\n`throw` 像快递员发现地址根本不存在：不会默默把包裹扔进垃圾桶再微笑离开，而是把问题标出来退回系统。吸收则像信箱暂时打不开、信又不是紧急合同：放进「稍后再试」并返回「未投递」往往更合适。\n\n:::detail[举报这条路为什么不能兜成 null？]\n举报是权威操作：要么后端记下一条报告，要么你必须知道没记下。非法 `reason` 若交 `null`，调用方很容易写成「没报错就当成功」，或者把 `null` 当成「暂时没有结果」。\n\n空 id、不支持的理由，继续调后端会更糟——所以门口就 `throw new Error(...)`。RPC 回来的 `error` 也原样 `throw error`，不让坏的 `data` 混进成功路。本地存储则是可选缓存：没有它，产品还能降级。同一项目里两种策略并存，靠的是那句选型问题：调用方漏看，后果能不能接受。\n:::\n\n选型时你问自己：**调用方漏看这次失败，后果能不能接受？** 不能，就倾向抛；能，且返回值能说清楚，就倾向兜。\n\n:::detail[同一条举报函数里为什么抛两次？]\n门口那两次 `throw new Error(...)` 是本地校验：空 id、非法理由，错误是函数自己造的。后面 `throw error` 是远端已经回来的失败：`error` 不是新包装，是 RPC 交来的那个对象原样往外传。\n\n两处都是抛，责任却不同。你读的时候不要合成一句「这个函数会抛」，要标出：哪次是拦坏输入，哪次是转发后端失败。吸收那边没有这种分叉——`catch` 一律交 `null` 或 `false`。\n:::\n\n## 什么时候用哪个\n\n- **输入非法，继续调后端会更糟** → `throw`（空 id、不支持的 reason）。\n- **远端 / 权威操作失败，调用方必须知道** → `throw`（RPC 的 `error`）。\n- **可选能力（本地缓存）不可用，有降级** → 吸收为返回值，并让调用方检查。\n- **空 `catch` 且无注释** → 先怀疑漏写，再判断是不是有意吞（上一课）。\n\n没有唯一正确答案；同一项目里两种策略会并存。你读代码时要认出：作者把「检查失败」的责任交给了谁——交给你（返回值），还是交给调用栈（throw）。\n\n:::detail[读到一个函数，怎么判断它选了哪边？]\n先看失败时有没有 `throw`，再看返回类型是不是布尔 / `null`，再看 `catch` 里交什么。举报函数没有用 `catch` 把 RPC 失败收成返回值，它把 `error` 再扔出去。存储函数正好相反：`catch` 里只有 `return`。\n\n你还可以问：这个失败能不能当「没发生」继续跑？举报不能——没报成却当报成了，审核链路会断。本地偏好可以——存不上，下次再问一次用户往往能接受。选边的依据是后果，不是个人喜好。同一文件里两种写法并存，并不矛盾。\n:::\n\n## 再想想\n\n失败做成返回值时调用方要检查什么，见 [[lesson:failure-as-a-value]]。空 `catch` 为什么必须解释自己，见 [[lesson:an-empty-catch-owes-you-a-reason]]。\n\n## 自检\n\n**问：** `reportMessage` 在哪些情况下会 `throw`？（至少举出输入校验与后端错误各一类。）\n\n**问：** `safeLocalStorageGet` / `Set` 失败时分别交什么？这叫抛还是吸收？\n\n**问：** 读代码时，用哪一句问题帮助你在「抛」和「兜」之间选型？\n\n## 一句话\n\n**不能安全降级就抛；可以降级就兜——并让返回值说清楚。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 25,
+                "lineEnd": 31,
+                "nodeIds": [],
+                "note": "校验失败时 throw new Error。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 40,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "后端 error 存在时 throw error。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 22,
+                "lineEnd": 24,
+                "nodeIds": [],
+                "note": "读失败吸收为 null。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 36,
+                "lineEnd": 38,
+                "nodeIds": [],
+                "note": "写失败吸收为 false。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "absorb-local-storage",
+                "kind": "basic",
+                "front": "safeLocalStorage 选择 throw 还是吸收？",
+                "back": "吸收：catch 后返回 null 或 false，不向外抛。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 22,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "catch 返回 null。"
+                  }
+                ]
+              },
+              {
+                "id": "throw-on-bad-input",
+                "kind": "basic",
+                "front": "messageId 去空白后为空时，reportMessage 怎么做？",
+                "back": "throw new Error('Message id is required')。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 26,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "空 id 时 throw。"
+                  }
+                ]
+              },
+              {
+                "id": "throw-on-rpc-error",
+                "kind": "basic",
+                "front": "supabase.rpc 返回的 error 有值时，函数如何处理？",
+                "back": "throw error，把失败继续向外传。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 40,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "if (error) throw error。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "throw-keyword-recall",
+                "kind": "short-answer",
+                "title": "写出主动抛出错误的关键字",
+                "prompt": "校验失败时，reportMessage 用哪个英文关键字把 Error 扔出去？只写一个词。",
+                "expectedAnswer": "throw",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 27,
+                    "lineEnd": 27,
+                    "nodeIds": [],
+                    "note": "throw new Error。"
+                  }
+                ]
+              },
+              {
+                "id": "throw-or-absorb-explain",
+                "kind": "explain",
+                "title": "对照两种失败策略",
+                "prompt": "各举 reportMessage 与 safeLocalStorageGet 中的一处，说明为什么一个适合 throw、一个适合吸收。",
+                "rubric": [
+                  "正确描述 reportMessage 的 throw 场景",
+                  "正确描述 safeLocalStorage 的返回值吸收",
+                  "说明举报/权威路径失败不应静默",
+                  "说明本地可选存储失败可以降级"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 25,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "throw 路径。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 20,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "吸收路径。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "not-every-error-is-an-error",
+            "title": "错误通道里的 PGRST116，真的表示程序写错了吗？",
+            "content": "# 错误通道里的 PGRST116，真的表示程序写错了吗？\n\n## 一句真实出现的话\n\n房间相关逻辑里有一个判断函数，正文几乎只有一行条件：\n\n[[evidence:src/services/room/roomOperationSupport.ts:31-35]]\n\n参数类型是 `unknown`：你事先不知道手里到底是什么。函数要回答一个很窄的问题：这个东西是不是带 `PGRST116` 这个码的对象？名字里有 `NoRows`，但你先别急着下结论——码走在错误通道里，业务含义未必等于「程序写错了」。\n\n:::detail[unknown 是在防什么？]\n`unknown` 的意思是：你此刻还不能当它是对象、更不能直接读 `.code`。它可能是字符串、`null`、别的形状。类型故意把你拦住，逼你先检查，再碰里面的字段。\n\n函数名 `isNoRowsError` 已经暗示：它在辨认一种**特定**的「没查到行」，不是在处理所有错误。码长什么样、检查有几步，是这节课要拆的。\n:::\n\n## 先猜一下\n\n若把凡带 `code` 的对象都当「程序写炸」并整页崩溃，遇到 `PGRST116` 时用户会经历什么不该有的中断？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n用户会在「其实只是没查到行」时撞上整页崩溃——把业务空结果当成灾难来响。\n\n## 三个真实用例\n\n证据只有这一处函数，但你可以从三个角度读同一段代码——它们都钉在同一范围上。\n\n**用例 1：名字和返回值在说什么。**  \n函数名 `isNoRowsError`，返回 `boolean`：它不是「处理错误」，而是**回答一个是否问题**——手里这个东西算不算「no rows」。调用方才能写 `if (isNoRowsError(error)) { /* 当空结果 */ } else { /* 真失败 */ }`。\n\n[[evidence:src/services/room/roomOperationSupport.ts:31-35]]\n\n:::detail[为什么要单独做判断函数，而不是当场写 if？]\n因为这个码会在房间相关的好几处出现。写成函数，名字就能把业务含义钉死：`PGRST116` = 没查到行。调用方读的是 `isNoRowsError`，不是一长串安检。\n\n它只回答是非，不负责弹窗、不负责重试。返回类型是 `boolean`：`true` 当空结果，`false` 才走真失败。分流在调用方，辨认在这里。你以后在房间逻辑里再看见这个名字，就知道作者在翻译码，不是在处理所有错误。\n:::\n\n**用例 2：从左到右过安检，而不是只比码。**  \n条件拆开是四步，你必须按顺序过：\n\n1. `typeof error === 'object'` —— 先得是对象。\n2. `error !== null` —— 在 JS 里 `typeof null` 也是 `'object'`，要单独踢掉。\n3. `'code' in error` —— 对象上真有 `code` 这个键。\n4. `error.code === 'PGRST116'` —— 码值命中 PostgREST 的「no rows」约定。\n\n[[evidence:src/services/room/roomOperationSupport.ts:32-34]]\n\n:::detail[为什么 typeof null 也是 object？]\n这是这门语言的老坑：`typeof null` 得到的是 `'object'`，不是 `'null'`。只写第一步，`null` 会混进「对象」里，后面读 `.code` 还可能再炸。所以第二步必须单独写 `error !== null`。\n\n第三步 `'code' in error` 再问：这个对象上到底有没有这个键。四步全过，才去比字符串 `'PGRST116'`。你不能为了短，一上来就写 `error.code === 'PGRST116'`。\n:::\n\n**用例 3：参数是 `unknown` 时的护栏。**  \n签名是 `error: unknown`：你事先不知道类型。正因为可能是字符串、`null`、别的形状，不能一上来就写 `error.code === 'PGRST116'`。前面的检查保护「读 `.code`」本身不要再炸，也不要对无意义的东西下结论。\n\n:::detail[unknown 护栏和业务含义是两件事吗？]\n是。前三步是为了安全地碰到 `.code`：对象、非 null、真有这个键。第四步才是业务：码是不是 `PGRST116`。护栏过了但码不对，函数仍回 `false`——那是别种错误，不是「没查到行」。\n\n你以后自己写判断时，也先分清：哪几步在保护读取，哪一步在翻译含义。混在一起，省略任意一步都会把函数写脆。\n:::\n\n[[evidence:src/services/room/roomOperationSupport.ts:31]]\n\n## 它不是什么\n\n- **不是**「凡是名叫 error 的都是 bug」。API 经常用错误通道捎带业务结果；`PGRST116` 就是「没查到行」。\n- **不是**「看到错误对象就该整页崩溃」。先问：这个码的业务含义是什么？\n- **不是**「只比字符串码就够了」。类型是 `unknown` 时，省略前面的对象 / null / 键检查，会把判断写脆。\n\n类比：图书馆检索里，「未找到书目」和「图书馆着火了」不该走同一套警报。前者是正常业务结果，后者才是故障。`PGRST116` 更接近「未找到书目」。\n\n:::detail[PGRST116 从哪来的？]\n它是 PostgREST（这套后端查询接口）约定的码：查询按「恰好一行」去取，结果是零行时，走错误通道，码是 `PGRST116`。对产品来说，这常常等于「没有这条记录」，不是「服务器炸了」。\n\n所以函数不叫 `isFatalError`，叫 `isNoRowsError`。第四步比的是字符串 `'PGRST116'`，一个字符都不能差。你读到错误通道里的码，先翻译业务含义，再决定当失败还是当空结果——整页崩溃是最后才该响的警报，不是默认动作。\n:::\n\n## 再想想\n\n失败时该抛还是该兜，见 [[lesson:throw-or-absorb|同样会失败，为什么有的 throw、有的只返回 false？]]。这节课只练一件事：错误形状里的码，要先翻译成业务含义。\n\n## 自检\n\n**问：** `PGRST116` 在这里表示什么业务含义？\n\n**问：** 为什么不能只写 `error.code === 'PGRST116'`，省略前面的检查？\n\n**问：** `isNoRowsError` 返回什么类型？调用方通常怎么分支？\n\n## 一句话\n\n**先辨认错误码的业务含义，再决定当失败还是当空结果。**\n",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/room/roomOperationSupport.ts",
+                "lineStart": 31,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "isNoRowsError 识别 PGRST116。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "error-channel-not-always-bug",
+                "kind": "basic",
+                "front": "为什么说「出现在 error 通道里」不等于「一定是程序写错」？",
+                "back": "有的码表示正常业务结果（如零行），需要用专门判断函数分流。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room/roomOperationSupport.ts",
+                    "lineStart": 31,
+                    "lineEnd": 35,
+                    "nodeIds": [],
+                    "note": "专用 isNoRowsError 分流。"
+                  }
+                ]
+              },
+              {
+                "id": "pgrst116-meaning",
+                "kind": "basic",
+                "front": "`PGRST116` 在这个项目的辅助函数里被当成什么？",
+                "back": "「没有查到行」（no rows），而不是笼统的致命错误。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room/roomOperationSupport.ts",
+                    "lineStart": 31,
+                    "lineEnd": 34,
+                    "nodeIds": [],
+                    "note": "isNoRowsError 与 PGRST116。"
+                  }
+                ]
+              },
+              {
+                "id": "unknown-guard-steps",
+                "kind": "basic",
+                "front": "在读 `error.code` 之前，函数做了哪两类防呆？",
+                "back": "确认是 object 且非 null，并用 in 检查存在 code 键。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room/roomOperationSupport.ts",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "object、null、in code 检查。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "pgrst116-code-recall",
+                "kind": "short-answer",
+                "title": "写出表示「没有行」的错误码",
+                "prompt": "isNoRowsError 用来比对的那个错误码字符串是什么？照抄码值。",
+                "expectedAnswer": "PGRST116",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room/roomOperationSupport.ts",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "error.code === 'PGRST116'"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "both-at-once",
+        "title": "等待遇上失败",
+        "objective": "把等待与失败合进真实异步调用：走通 reportMessage 骨架、读退路恢复、总结调用方必查清单。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "the-shape-of-a-real-call",
+            "title": "写了 await，为什么还不能当成功？",
+            "content": "# 写了 await，为什么还不能当成功？\n\n## 现象\n\n你打开图灵密约里的 `reportMessage`——用户举报一条消息时走的函数。它不长，大约二十行，从头到尾是一段完整的异步导出：\n\n[[evidence:src/services/moderation.ts:21-44]]\n\n你往下扫，会看到两处 `await`：一处确认当前用户，一处调后端 RPC。可是第二处 `await` 写完之后，代码并没有立刻 `return data`——中间还夹着 `if (error) { throw error; }`。\n\n`await` 已经等到调用结束了，为什么还要多这一步？\n\n:::detail[RPC 在这节课里指什么？]\nRPC 就是「让远端替你跑一个命名好的动作」。这里动作名是 `turing_pact_report_message`，参数是消息 id 和理由。调用写在 `supabase.rpc(...)` 上。\n\n你先当它是一次联网办事。办事结束时，客户端常把结果拆成两格：一格数据、一格错误。`await` 只保证「办事结束了」，不保证「事情办成了」。中间那句 `if (error)`，就是为这个缝准备的。\n:::\n\n## 先猜一下\n\n如果删掉 `if (error) throw error`，只留下 `await supabase.rpc(...)` 和 `return data`，调用方可能漏掉什么？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n会漏掉「调用已经结束、但业务失败」的情况：`error` 有值时，你仍可能把坏的 `data` 往下传或误用。\n\n## 为什么是这样\n\n把这段函数当成一条管道来读。每一段要么在**等**，要么在**可能失败并离开**。\n\n**第一段：同步校验，尚未等待。**\n\n[[evidence:src/services/moderation.ts:25-31]]\n\n空的 `messageId`、不支持的 `reason`——这里直接 `throw`，函数结束。没有网络、没有 `await`。坏输入在门口就被拦下。\n\n:::detail[为什么校验要放在任何 await 之前？]\n因为空 id、乱填的理由，不该浪费一次联网，也不该让后端去猜。`messageId.trim()` 之后若变成空串，立刻 `throw new Error('Message id is required')`。`reason` 不在允许列表里，立刻 `throw new Error('Unsupported report reason')`。\n\n这两处失败和网络无关。你读真实异步函数，先把「还没等就开始抛」的门口标出来——它们也是失败出口，只是不带 `await`。\n:::\n\n**第二段：等身份确认。**\n\n[[evidence:src/services/moderation.ts:33]]\n\n这里开始等待。名字里的 `OrThrow` 在提醒你：失败时由这个函数抛出，你不用在这一行再写 `if`。\n\n:::detail[OrThrow 这个名字在替你承担什么？]\n`getCurrentUserOrThrow` 自己负责「没有当前用户就抛」。所以这一行只有 `await`，没有 `if`。失败出口写在被调用的函数里，不写在这一行旁边。\n\n你读到带 `OrThrow` 的名字，就知道：等的是身份；等不到，错误会自己冒上来。不必在每个调用点再抄一遍检查。\n:::\n\n**第三段：等后端 RPC，并拆成两个槽位。**\n\n[[evidence:src/services/moderation.ts:35-38]]\n\n`await` 只保证「这一趟调用结束了」。它不保证业务成功。Supabase 这类客户端常把结果拆成 `data`（数据槽）和 `error`（错误槽）。两个槽可能一个有值、一个没有——你必须自己看。\n\n:::detail[两个槽和 throw 有什么不一样？]\n`throw` 会打断函数，调用方不接就会炸。`error` 字段不会自动打断：`await` 成功结束后，这两个名字已经在你手里了。你不写 `if (error)`，下一行就能 `return data`，失败被当成没发生。\n\n所以第三段和第四段是两步：先等到拆槽结束，再决定要不要把错误槽变回 `throw`。漏掉第四段，就是这节课标题里的坑。\n:::\n\n**第四段：显式检查错误槽，再返回。**\n\n[[evidence:src/services/moderation.ts:40-44]]\n\n有 `error` 就 `throw`，把失败变成调用方必须接住的异常；没有才把 `data` 当成功结果返回。\n\n:::detail[为什么不直接 return data？]\n因为 `data` 在 `error` 有值时可能是空的、过期的、或根本不能当成功用。`await` 不会替你看错误槽。作者写了 `if (error) { throw error; }`，等于把「业务失败」从安静的字段，变回调用栈上的失败。\n\n最后一行 `return data as ReportMessageResult` 只发生在错误槽为空之后。你数 `await` 数不出这一点：函数里有两处等待、至少三处失败出口。必须按阶段看，每一段在等什么、从哪离开。\n:::\n\n阶段表帮你一眼看清管道：\n\n| 阶段 | 代码在做什么 | 等待？ | 失败出口 |\n| --- | --- | --- | --- |\n| 规范化 + 校验 | `trim` / `if` + `throw` | 否 | `throw Error` |\n| 确认当前用户 | `await getCurrentUserOrThrow` | 是 | 该函数内部抛出 |\n| 调后端 RPC | `await supabase.rpc` | 是 | 得到 `error` 字段 |\n| 检查 RPC | `if (error) throw` | 否 | `throw error` |\n| 成功返回 | `return data` | 否 | — |\n\n所以你读真实异步函数时，不要只数 `await` 有几个。按阶段标：**这一段在等什么？失败时从哪条出口离开？** `await` 是暂停点，不是「已经处理好失败」的证明。\n\n## 再想想\n\n`await` 本身只表示「在这里等」，你在 [[lesson:await-means-wait-here|await 就是在这里等]] 里见过。`throw` 与把失败压进返回值，是另一条分叉，见 [[lesson:throw-or-absorb|抛出去还是自己吞掉]]。\n\n## 自检\n\n**问：** 只有 `await supabase.rpc`、没有 `if (error) throw`，可能漏掉什么？\n\n**问：** `const { data, error } = await ...` 里，两个名字分别对应什么槽位？\n\n**问：** 在调后端之前，`reportMessage` 至少做了哪两件前置事？\n\n## 一句话\n\n**真实异步函数是分段等待 + 每段自己的失败出口；`await` 只等到结束，成功与否还要另查。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 21,
+                "lineEnd": 44,
+                "nodeIds": [],
+                "note": "reportMessage 完整异步骨架。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "await-not-enough",
+                "kind": "basic",
+                "front": "为什么说「写了 await」不等于「已经处理失败」？",
+                "back": "await 只等到调用结束；RPC 仍可能通过 error 字段报告失败，需要显式检查。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 35,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "await 之后仍有 if (error)。"
+                  }
+                ]
+              },
+              {
+                "id": "data-error-slots",
+                "kind": "basic",
+                "front": "`const { data, error } = await supabase.rpc(...)` 在读什么？",
+                "back": "一趟调用结束后拆出的数据槽与错误槽；还要再检查 error。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 35,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "解构 data/error 并 throw error。"
+                  }
+                ]
+              },
+              {
+                "id": "report-skeleton-order",
+                "kind": "basic",
+                "front": "reportMessage 里，await 后端 RPC 之前至少做了哪两件同步/前置事？",
+                "back": "校验 messageId 与 reason（失败则 throw），并 await getCurrentUserOrThrow。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 25,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "校验与 getCurrentUserOrThrow。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "report-pipeline-explain",
+                "kind": "explain",
+                "title": "按阶段复述 reportMessage",
+                "prompt": "按执行顺序，用自己的话列出 reportMessage 从入口到成功 return 的主要阶段，并标出至少两处失败出口。",
+                "rubric": [
+                  "提到同步校验与 throw",
+                  "提到 await getCurrentUserOrThrow",
+                  "提到 await supabase.rpc",
+                  "提到 if (error) throw 与 return data"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 21,
+                    "lineEnd": 44,
+                    "nodeIds": [],
+                    "note": "整段 reportMessage。"
+                  }
+                ]
+              },
+              {
+                "id": "rpc-error-check",
+                "kind": "short-answer",
+                "title": "写出检查 RPC 失败时用的字段名",
+                "prompt": "await supabase.rpc 之后，reportMessage 用 if 检查的那个字段叫什么？只写字段名。",
+                "expectedAnswer": "error",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 40,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "if (error)。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-way-back",
+            "title": "加载失败后，为什么只允许刷新一次？",
+            "content": "# 加载失败后，为什么只允许刷新一次？\n\n## 情境和约束\n\n前端有时会「按需加载」一段代码——页面跑到某一步才去取一个模块。网络抖一下、部署刚换了文件，这类加载可能失败。失败信息里常出现固定措辞，例如 `Failed to fetch dynamically imported module`。\n\n图灵密约没有在这里弹一个「死胡同」就停住。你读到的退路是：先判断「这是不是那种靠刷新页面能自救的错误」；如果是，就调用传入的 `reload`，并返回一个 `boolean`。\n\n实现里还有 `storage` 和一个叫 `marker` 的字符串。约束是：瞬时故障值得试一次自救，但退路本身不能变成更糟的故障，还要让调用方知道有没有接手。\n\n:::detail[按需加载失败为什么有时刷新就好了？]\n页面先跑起来，用到某块代码时再去网上取。若刚好赶上新版本换了文件名，或网络抖了一下，取模块会失败，错误消息里常有固定英文句子。整页再加载一次，浏览器按新地址去取，有时就能自救。\n\n不是所有错误都该刷新。逻辑写错、没权限，刷一万次也修不好。所以退路先认消息，再决定动不动 `reload`。\n:::\n\n## 先猜一下\n\n若每次可恢复错误都立刻 `reload()`，却从不在 storage 里核对、也不写入「已经用这个 marker 恢复过」，用户最坏会遇到什么？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n页面可能无限刷新，用户永远走不出去。所以他们选了「同一 marker 只恢复一次」。\n\n## 代价和收益\n\n先看你怎么认出「可恢复」：\n\n[[evidence:src/platform/dynamicImportRecovery.ts:26-29]]\n\n把 `error` 收成消息字符串，看是否包含预置模式子串之一。对得上 → 才考虑退路；对不上 → 别乱刷新。\n\n:::detail[预置模式是哪几句？]\n列表里有三句英文子串：`Failed to fetch dynamically imported module`、`Importing a module script failed`、`Loading chunk`。函数先把 `error` 收成消息，再用 `some` + `includes` 看有没有命中其中一句。\n\n命中只说明「这可能是加载模块时的那种错」，不保证刷新一定修好。没命中就返回 `false`，根本不进退路。新浏览器换了一种措辞，列表里没有，也不会自动刷——这是收益旁边的代价。\n:::\n\n再看一次退路的核心——你按分支读：\n\n[[evidence:src/platform/dynamicImportRecovery.ts:31-43]]\n\n1. **不是可恢复模式** → 返回 `false`，不接手。\n2. **storage 里已有同一 `marker`** → 返回 `false`，避免再次 `reload`。\n3. **否则** → 写入 marker、调用 `reload()`、返回 `true`（「我启动了退路」）。\n\n:::detail[marker 存在哪里、比的是什么？]\n键名是固定的 `turing-pact:dynamic-import-recovery`。`getItem` 读出来的值若已经等于这次传入的 `marker`，说明用同一个标记恢复过，直接 `return false`。\n\n还没写过，才 `setItem` 写入这个 marker，再调用传入的 `reload`，最后 `return true`。页面级封装里，`marker` 用的是 `window.location.href`，`storage` 用的是 `sessionStorage`——同一地址在这一次浏览会话里只自动刷一次。\n:::\n\n`boolean` 返回值不是装饰：它报告「这次有没有真正启动恢复」。你写调用方时必须读这个值，不能当什么都不返回。\n\n外层还把 storage 访问包进 `try/catch`——隐私模式等环境下 storage 本身可能不可用：\n\n[[evidence:src/platform/dynamicImportRecovery.ts:52-61]]\n\nstorage 爆炸时返回 `false`，不二次抛错。\n\n:::detail[外层 catch 为什么交 false，而不是再抛？]\n退路自己不能变成第二种灾难。`sessionStorage` 在隐私模式里可能不可用；访问它会抛。外层接住之后交 `false`：意思是「我没接手」，让调用方走可见的失败提示，而不是再炸一次。\n\n对照合规提示那课：空 `catch` 要写清为什么吞。这里的 `catch` 不是空的，它交回 `false`——有返回值的降级，不是沉默。\n:::\n\n| | 收益 | 代价 |\n| --- | --- | --- |\n| 按消息模式识别 | 只对「可能靠刷新修好」的失败动手 | 新措辞不在列表里就不会自动恢复 |\n| 同一 marker 只一次 | 打断无限刷新 | 真要再刷，须清 marker 或换页面 |\n| 返回 `boolean` | 调用方知道有没有接手 | 调用方必须读返回值 |\n| storage 失败则 `false` | 不因退路本身再炸 | 这类环境等于没有自动退路 |\n\n## 什么时候该反过来\n\n- **错误不是「再加载一次就好」**（逻辑 bug、权限拒绝）：你不该走这条 reload 退路。\n- **需要无限重试直到成功**（后台轮询）：不能套「只一次 + marker」；本模式会拒绝第二次。\n- **用户明确点了「重试」**：人手触发可以清 marker 再试；自动路径仍应有上限。\n- **storage 不可用**：自动退路失效时，你应给可见失败提示，而不是假装在恢复。\n\n:::detail[人手重试和自动刷新差在哪？]\n自动路径必须有上限，否则错误一直在、刷新一直触发，用户看着白屏闪个不停。人手点「重试」是另一次明确决定，项目里另有清 marker 的函数，可以擦掉那次记录再试。\n\n你读到 `recoverDynamicImportOnce`，先认它是自动、只一次：先认模式，再比 marker，再 `setItem` + `reload` + `return true`。不要把它抄去当通用重试器。\n:::\n\n## 再想想\n\n「空 `catch` 也要交代为什么」你在 [[lesson:an-empty-catch-owes-you-a-reason|空 catch 欠你一个理由]] 里见过；这里的 `catch` 返回 `false`，是有意不二次爆炸。超时赛跑是另一种退路，见 [[lesson:racing-a-clock|和闹钟赛跑]]。\n\n## 自检\n\n**问：** `storage.getItem(...) === marker` 为真时，函数返回什么？为什么？\n\n**问：** 成功启动退路时，除了 `reload()`，还做了哪一步？\n\n**问：** 为什么返回类型是 `boolean` 而不是什么都不返回？\n\n## 一句话\n\n**好的失败退路可恢复、有次数上限，并用返回值报告「是否已接手」。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 26,
+                "lineEnd": 29,
+                "nodeIds": [],
+                "note": "isRecoverableDynamicImportError 按消息模式判断。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 31,
+                "lineEnd": 43,
+                "nodeIds": [],
+                "note": "recoverDynamicImportOnce 的一次退路逻辑。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 52,
+                "lineEnd": 61,
+                "nodeIds": [],
+                "note": "try/catch 包住恢复，storage 失败则 false。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "recover-once-guard",
+                "kind": "basic",
+                "front": "什么情况下 recoverDynamicImportOnce 会拒绝再次 reload？",
+                "back": "storage 里已存的值等于当前 marker 时，说明用同一标记恢复过，返回 false。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 38,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "getItem === marker 则 false。"
+                  }
+                ]
+              },
+              {
+                "id": "recover-return-true",
+                "kind": "basic",
+                "front": "成功启动退路时函数返回什么？做了哪两步？",
+                "back": "返回 true；先 setItem 写入 marker，再调用 reload()。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 40,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "setItem、reload、return true。"
+                  }
+                ]
+              },
+              {
+                "id": "recoverable-patterns",
+                "kind": "basic",
+                "front": "可恢复动态导入错误是怎么判定的？",
+                "back": "把 error 收成消息字符串，看是否包含预置的模式子串之一。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 26,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "patterns.some message.includes。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "recover-return-type",
+                "kind": "short-answer",
+                "title": "写出恢复函数报告是否接手的返回类型关键词",
+                "prompt": "recoverDynamicImportOnce 的返回类型是布尔时，TypeScript 里写作哪个英文类型名？只写一个词。",
+                "expectedAnswer": "boolean",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 36,
+                    "lineEnd": 36,
+                    "nodeIds": [],
+                    "note": "): boolean。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "what-you-must-check",
+            "title": "接口只有五行，调用时为什么还要勾一张清单？",
+            "content": "# 接口只有五行，调用时为什么还要勾一张清单？\n\n## 现象\n\n你回到这节课的入口接口 `PlatformStorage`。它很短，像一张说明书：\n\n[[evidence:src/platform/web/storage.ts:1-5]]\n\n假设你写：`const v = await storage.getItem('k')`。类型说「会给你一个 `string | null` 的承诺」。可是仓库别处，异步调用还会 `throw`、拆 `error` 字段、和闹钟赛跑、甚至只允许恢复一次。\n\n接口看起来只有五行。你真正动手调用时，脑子里要勾的远不止「写了 await」。\n\n:::detail[这五行保证了什么、没保证什么？]\n它保证三件事的形状：读、写、删都交收据；读的货是 `string | null`；写和删兑现时通常没有值。它没保证：会不会抛、`null` 是「没这个键」还是「失败被压扁」、要不要限时、失败了能不能刷新自救。\n\n所以你不能只把说明书抄进调用处。清单是把这门课前面见过的出口，收成你每次调用都要扫的四项。\n:::\n\n## 先猜一下\n\n若你只 `await getItem`、从不区分 throw / 结果里的 error / `null` 的业务含义，最容易把哪一类失败当成「读到了正常值」？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n最容易把压成 `null` 的失败当成「读到了正常空值」——throw 会炸、error 字段还在结果里，只有 `null` 长得像业务上的「没有键」。\n\n## 为什么是这样\n\n把清单钉在真实代码上。你每勾一项，都应对得上仓库里的写法。\n\n**1. 等——等待点**\n\n`getItem` 返回 `Promise<…>`。你要么 `await`，要么显式处理这张收据；不能把 Promise 当最终字符串用。\n\n:::detail[只写 async、调用处不加 await，会怎样？]\n函数标成 `async`，只改变它自己交出去的形状。调用处若写成 `const v = storage.getItem('k')` 还不 `await`，`v` 仍是收据，不是字符串。你拿它去比「有没有这个键」，比的是对象对不对，不是字对不对。\n\n清单第一项就是：看见返回 `Promise`，先标停顿点。\n:::\n\n**2. 败——失败通道**\n\n同一次异步调用，失败可能走不同通道。`reportMessage` 在 `await` 之后仍检查 `error` 并 `throw`：\n\n[[evidence:src/services/moderation.ts:35-42]]\n\n你要认清：是 **throw**、是结果里的 **error 字段**，还是把失败压成 **null / false**？`getItem` 的 `null` 常表示「没有这个键」，和「调用炸了」不是一回事。\n\n:::detail[三类通道怎么在这门课里对上号？]\n`throw`：举报校验失败、RPC 的 `error` 再抛。结果里的 **error 字段**：`await supabase.rpc` 结束之后仍可能有。压成 **null / false**：本地存储的 `catch`。\n\n`PlatformStorage.getItem` 的 `null` 首先是「没有这个键」。你若从未问过「这里会不会把失败也压成 null」，就会把安静的空值当成业务正常。throw 会吵，error 字段还在结果里等你看，只有 `null` 长得最像成功。\n:::\n\n**3. 义——返回值每个分支的业务含义**\n\n`string | null` 的 `null`：你打算当「键不存在」还是别的？类型只列出可能值，不替你定业务。`reportMessage` 成功返回 `data`；失败走 throw，正常返回值里没有半成功。\n\n:::detail[义这一项为什么不能合并进败？]\n「败」问的是失败走哪条通道。「义」问的是每个返回值在业务里代表什么。同一颗 `null`，在 `getItem` 上常是「没有这个键」，在 `safeLocalStorageGet` 上还可能是「读的时候炸了」。通道认清了，含义仍可能叠在一起。\n\n举报函数把失败全赶去 throw，成功路上的 `data` 就比较干净。你勾清单时两格都要打，不能认完通道就收工。\n:::\n\n**4. 退——超时与有限次恢复**\n\n长时间挂起时，项目用闹钟和结果赛跑：\n\n[[evidence:src/services/room/roomOperationSupport.ts:9-20]]\n\n另一类退路是「只试一次」的恢复——同一 `marker` 只 `reload` 一次：\n\n[[evidence:src/platform/dynamicImportRecovery.ts:37-42]]\n\n:::detail[两种退路分别防什么？]\n赛跑防的是「永远不结束」：房间操作卡住时，闹钟先响，调用方拿到带 `message` 的错误，而不是转圈到天黑。一次恢复防的是「自动刷新变成无限刷新」：同一 `marker` 写过就不再 `reload`。\n\n不是每次 `getItem` 都要套这两样。清单第四项是问句：这次调用若失败或挂起，有没有退路？有的话上限在哪？没有的话，调用方是否接受干等或死胡同？接口那五行不会替你回答。\n:::\n\n口诀：**等** await · **败** 认通道 · **义** 读分支 · **退** 超时或有限次恢复。调用方的职责不是「会写 async」，而是每次调用扫一遍这张最小检查单。\n\n## 再想想\n\n`Promise` 是收据不是货，见 [[lesson:a-promise-is-a-receipt|Promise 是一张收据]]。整条举报管道见 [[lesson:the-shape-of-a-real-call|写了 await 为什么还不能当成功]]；一次恢复见 [[lesson:a-way-back|加载失败后为什么只允许刷新一次]]。\n\n## 自检\n\n**问：** 只把函数改成 `async`、调用处不加 `await`，清单第一项会怎样？\n\n**问：** 这节课出现过哪三类失败通道？\n\n**问：** 「退」在证据里至少有哪两种具体形态？\n\n## 一句话\n\n**每次异步调用：先标等待点，再认失败通道，再读返回值含义，最后看退路。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/web/storage.ts",
+                "lineStart": 1,
+                "lineEnd": 5,
+                "nodeIds": [],
+                "note": "PlatformStorage 的 Promise 形状是调用方说明书。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 35,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "await 之后仍有 error 检查与 throw。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/room/roomOperationSupport.ts",
+                "lineStart": 9,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "超时退路 withRoomOperationTimeout。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                "lineStart": 37,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "有限次恢复退路。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "checklist-await",
+                "kind": "basic",
+                "front": "调用返回 Promise 的函数时，清单上第一项「等待点」在检查什么？",
+                "back": "是否用 await（或等价方式）等到兑现，而不是把 Promise 当最终值用。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "getItem 返回 Promise。"
+                  }
+                ]
+              },
+              {
+                "id": "checklist-backoff",
+                "kind": "basic",
+                "front": "「退路」在仓库代码里有哪两种具体形态？",
+                "back": "超时赛跑（Promise.race + setTimeout）与有限次恢复（marker + reload）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room/roomOperationSupport.ts",
+                    "lineStart": 14,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "race 与超时 reject。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/dynamicImportRecovery.ts",
+                    "lineStart": 38,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "marker 与 reload。"
+                  }
+                ]
+              },
+              {
+                "id": "checklist-failure-channel",
+                "kind": "basic",
+                "front": "这节课出现过哪三类「失败通道」？",
+                "back": "throw 异常、结果里的 error 字段、把失败压成 null/false 等返回值。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 40,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "error 字段与 throw。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 22,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "返回 null。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "checklist-await-word",
+                "kind": "short-answer",
+                "title": "写出标出等待点时最常用的关键字",
+                "prompt": "在异步函数里标出「在这里等 Promise」时，最常用的英文关键字是什么？只写一个词。",
+                "expectedAnswer": "await",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 35,
+                    "lineEnd": 35,
+                    "nodeIds": [],
+                    "note": "await supabase.rpc。"
+                  }
+                ]
+              },
+              {
+                "id": "checklist-four-explain",
+                "kind": "explain",
+                "title": "默写调用检查四字口诀并各举一例",
+                "prompt": "用「等 / 败 / 义 / 退」四项，各用这节课出现过的真实代码或类型举一例说明你要检查什么。",
+                "rubric": [
+                  "「等」对应 await 或 Promise 形状",
+                  "「败」对应 throw、error 字段或 null/false 之一",
+                  "「义」说明返回值分支的业务含义",
+                  "「退」提到超时或有限次恢复等退路"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/storage.ts",
+                    "lineStart": 1,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "Promise 形状。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 21,
+                    "lineEnd": 44,
+                    "nodeIds": [],
+                    "note": "完整失败与等待。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

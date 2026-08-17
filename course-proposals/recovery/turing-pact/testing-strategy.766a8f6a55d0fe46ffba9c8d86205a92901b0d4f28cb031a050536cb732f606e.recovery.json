@@ -1,0 +1,543 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 22,
+  "course": {
+    "id": "testing-strategy",
+    "title": "测试策略：把钱花在刀刃上",
+    "description": "一个人干活没有 QA，测试策略直接决定你敢不敢改代码。讲单元与 e2e 的分工，以及降级矩阵这种既是设计工具又是测试的东西。证据来自图灵密约。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "用「验证手段」而不是「重要程度」决定测试写在哪一层",
+      "说明降级矩阵为什么首先是产品决策工具",
+      "解释完整性断言如何防止静默缺口和敷衍填空"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "foundations-product"
+    ],
+    "units": [
+      {
+        "id": "layer-choice",
+        "title": "测试分层",
+        "objective": "掌握单元测试与 e2e 的分工依据",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "unit-vs-e2e",
+            "title": "同样是承诺，为什么有的开浏览器验、有的不开？",
+            "content": "# 同样是承诺，为什么有的开浏览器验、有的不开？\n\n## 两个东西\n\n图灵密约的测试几乎分成两堆：185 个 `*.test.ts`，20 个 `*.spec.ts`。你打开一份 e2e，文件头写着降级恢复矩阵——格子要跑真实浏览器：\n\n[[evidence:tests/e2e/degraded-matrix.spec.ts:1-10]]\n\n:::detail[为什么文件头出现 Playwright，就说明它要开浏览器？]\n`@playwright/test` 是用来驱动真浏览器的。它给你的是页面、路由、真实点击，不是函数返回值。这份文件后头的矩阵格子写的是「没有 WebGL 也能走完聊天 / 线索 / 投票」，以及「上下文中途丢了，DOM 还能否用」。这些只存在于渲染出来的页面上。你在进程里调一个函数，看不见上下文丢失之后页面还活不活，也看不见玩家下一步按钮在不在。\n:::\n\n同一仓库里，另一份测试不启浏览器。它扫 `src/` 源文件字符串，断言冻结标记还在。这一堆跑在进程里，通常叫单元测试：\n\n[[evidence:tests/public-dom-contracts.test.ts:45-48]]\n\n:::detail[为什么渲染也帮不上「标记还在不在」？]\ntestid、路由、冻结字符串是写在源码里的名字。你关心的是「这个名字有没有从产品源码里消失」，不是它在屏幕上好不好看。打开浏览器只能看见现在这一屏；扫文件才能一次核对整张清单。`assertPresentInSource` 做的就是在已经读进内存的源码文本里找子串。渲染对了，名字照样可能被改掉——e2e 过了，契约却已经漂了。\n:::\n\n更刺眼的是隐私。产品承诺「埋点不泄漏用户数据」——你听着像要开浏览器才严肃。可它只是拦一个假的发送口：禁用字段名一出现，`track` 就抛错，发送口一次都没被调用。\n\n[[evidence:tests/analytics-privacy-contract.test.ts:76-92]]\n\n:::detail[什么叫拦一个假的发送口？]\n真正发出去的那一跳，测试用一个假函数代替。产品代码仍走 `track`，但数据到不了网络。禁用字段名那一测里，`roomCode`、`message`、`userId`、`alias`、`prompt`、`email` 任一出现，`track` 就抛错，假函数一次都不会被叫到——泄漏在门口就被拦住了。你不需要一个真的分析后台，也不需要打开页面点一遍。浏览器在这里看不见任何额外的东西。\n:::\n\n键合法但值像房间码也会被拒：\n\n[[evidence:tests/analytics-privacy-contract.test.ts:98-103]]\n\n允许键上的自由文本（如 `resultCategory: 'player-said-hello-world'`）同样抛：\n\n[[evidence:tests/analytics-privacy-contract.test.ts:122-132]]\n\n一边开真浏览器，一边读文件或拦函数——都在守承诺，分层却不同。\n\n## 先猜一下\n\n有人说：「承诺越重要，越该写 e2e。」对照上面——隐私在单元层、降级矩阵在 e2e——这个说法哪里站不住？你觉得分层真正该看什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n站不住的是把「重要」当成「必须开浏览器」。隐私同样严肃，泄漏点却在数据离开你的代码之前，假发送口就能验。分层看的是**验证手段**，不是承诺有多重要。\n\n## 逐条对照\n\n| | 单元（`*.test.ts`） | e2e（`*.spec.ts`） |\n| --- | --- | --- |\n| 怎么跑 | 进程里直接调 | 真浏览器 |\n| 看得见什么 | 返回值、文件、假发送口 | DOM 时序、视觉、能力缺失 |\n| 失败时你先查哪 | 被测函数附近 | 整条用户路径，更贵 |\n| 这个提交上的数量 | 185 | 20 |\n\n公共 DOM 契约放单元层：读源码做字符串包含——testid 还在不在，渲染也帮不上。隐私同理：泄漏发生在数据离开你的代码之前；字段名清单不够，还要卡值形态和枚举。e2e 那 20 个留给开场、揭面、投票、可访问性、视觉、降级恢复：时序与 DOM，纯函数看不见。\n\n容易混的一点：你不是在问「重不重要」，而是「**用什么手段才能看见它坏了**」。\n\n:::detail[字段名合法，值怎么还会泄漏？]\n`experimentTag` 在允许清单里，值却写成 `ABC234`——长得像房间码。`resultCategory` 也在清单里，值却写成 `player-said-hello-world` 这种玩家原话。检查如果只看键名，这两条都会放行，假发送口也会被叫到。所以这层测试还卡值的形态，以及允许键必须是枚举、不能是自由文本。你以后加一个新字段，先问值会不会变成房间码或聊天内容；会的话，单元层就能拦住，不必开浏览器。\n:::\n\n## 什么时候用哪个\n\n- **纯函数 / 读文件 / 拦发送口就能看见** → 单元层。\n- **必须真实 DOM 时序、视觉或浏览器能力** → e2e。\n- **听上去很严肃** → 不自动升级成 e2e；严肃只说明值得测。\n- **已经能在单元层钉死** → 再写 e2e 只会更慢更脆，失败时你更难定位。\n\n选型时你只留一句：能用更便宜的手段看见，就别上更贵的层。\n\n:::detail[185 比 20，是在说 e2e 不重要吗？]\n不是。20 个 spec 覆盖的是开场、揭面、投票、可访问性、视觉、降级恢复——这些离开真页面就看不见。数量少，是因为每一条都贵：启动慢、失败时你要沿着整条用户路径查。单元层那 185 个把能在进程里钉死的承诺先钉死，e2e 才腾得出手去做只有浏览器看得见的事。你若把比例倒过来，日常改一行都要等一整排浏览器，失败时也更难定位。\n:::\n\n:::detail[为什么「严肃」会把人带去更贵的层？]\n严肃让你害怕漏测，害怕漏测就会想「那我开浏览器把整条路径走一遍吧」。可浏览器看见的是整屏，定位时你分不清是发送口没拦住，还是按钮没点到。隐私这种在门口就能验的承诺，开浏览器反而把信号稀释了。严肃只说明这事值得测；用哪一层，仍然看你怎样才能最清楚地看见它坏了。\n:::\n\n## 再想想\n\n降级矩阵既是产品决策又是 e2e，见 [[lesson:degraded-matrix|为什么 e2e 文件开头是一张八行的表？]]。给了重试按钮之后还欠什么，见 [[lesson:testing-strategy/degraded-design/retry-safety|文件头写「must not duplicate effects」，这里的幂等在约束什么？]]。\n\n## 自检\n\n**问：** 功能很重要，就该写成 e2e 吗？依据该是什么？\n\n**问：** 「埋点不泄漏」为什么可以写在单元层？除了字段名清单，还卡什么？\n\n**问：** 185 比 20 说明 e2e 被留给了哪类问题？\n\n## 一句话\n\n**分层看验证手段能不能看见问题，不看承诺听起来有多重要。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                "lineStart": 1,
+                "lineEnd": 10,
+                "nodeIds": [],
+                "note": "e2e 文件头声明降级恢复矩阵，并从 @playwright/test 导入 Page/Route。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/public-dom-contracts.test.ts",
+                "lineStart": 45,
+                "lineEnd": 48,
+                "nodeIds": [],
+                "note": "assertPresentInSource 扫源码字符串，断言冻结标记仍在。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/analytics-privacy-contract.test.ts",
+                "lineStart": 76,
+                "lineEnd": 92,
+                "nodeIds": [],
+                "note": "禁用字段名在到达 transport 之前抛错，transport 从未被调用。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/analytics-privacy-contract.test.ts",
+                "lineStart": 98,
+                "lineEnd": 103,
+                "nodeIds": [],
+                "note": "experimentTag 写成房间码形态 ABC234 会被拒。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/analytics-privacy-contract.test.ts",
+                "lineStart": 122,
+                "lineEnd": 132,
+                "nodeIds": [],
+                "note": "允许键 resultCategory 上的自由文本会被拒。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "layer-criterion",
+                "kind": "basic",
+                "front": "决定一个测试写单元还是 e2e，依据是什么？",
+                "back": "验证手段，不是重要程度。能不开浏览器验证的就别写 e2e。",
+                "tags": [
+                  "testing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/public-dom-contracts.test.ts",
+                    "lineStart": 18,
+                    "lineEnd": 48,
+                    "nodeIds": [],
+                    "note": "公共 DOM 契约靠读 src/ 文件完成，属于单元层。"
+                  }
+                ]
+              },
+              {
+                "id": "unit-e2e-ratio",
+                "kind": "basic",
+                "front": "这个提交上，图灵密约的单元测试与 e2e 文件数各是多少？说明了什么？",
+                "back": "185 个 `*.test.ts`，20 个 `*.spec.ts`。e2e 只留给 DOM 时序、视觉、可访问性、降级恢复这类纯函数测不了的场景。",
+                "tags": [
+                  "testing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 1,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "20 个 spec 之一：降级恢复必须开 Playwright。"
+                  }
+                ]
+              },
+              {
+                "id": "privacy-is-cheap-to-test",
+                "kind": "basic",
+                "front": "「埋点不能泄漏用户数据」这个承诺，该写在哪一层测试？",
+                "back": "单元层。泄漏发生在数据离开你的代码之前，拦一个假 transport 就能逐条检查，不需要浏览器。听上去严肃不等于验证手段昂贵。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/analytics-privacy-contract.test.ts",
+                    "lineStart": 76,
+                    "lineEnd": 92,
+                    "nodeIds": [],
+                    "note": "拦截 transport 并断言它从未被调用，全程无浏览器。"
+                  }
+                ]
+              },
+              {
+                "id": "allowlist-and-value-shape",
+                "kind": "basic",
+                "front": "埋点隐私检查为什么光有字段名允许清单还不够？",
+                "back": "字段名合法、值仍可能是泄漏的。`experimentTag: 'ABC234'` 的键在清单里，值却长得像房间码，所以还要检查值的形态和枚举范围。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/analytics-privacy-contract.test.ts",
+                    "lineStart": 94,
+                    "lineEnd": 132,
+                    "nodeIds": [],
+                    "note": "既拒绝像房间码的 experimentTag，也拒绝允许键上的自由文本 resultCategory。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "layer-choice-recall",
+                "kind": "short-answer",
+                "title": "分层判据",
+                "prompt": "一个功能很重要，是不是就该写成 e2e？为什么？",
+                "expectedAnswer": "不是。重要程度不决定层级，验证手段才决定；能用单元测试验的写成 e2e 只会更慢更脆。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/public-dom-contracts.test.ts",
+                    "lineStart": 18,
+                    "lineEnd": 48,
+                    "nodeIds": [],
+                    "note": "契约检查靠读文件完成，说明重要承诺也可以停在单元层。"
+                  }
+                ]
+              },
+              {
+                "id": "privacy-layer-explain",
+                "kind": "explain",
+                "title": "解释隐私契约为什么属于单元层",
+                "prompt": "「埋点绝不泄漏用户数据」是产品级承诺，听起来像要端到端验证。请解释图灵密约为什么把它写成不开浏览器的单元测试，以及这个测试除了检查字段名之外还检查什么、为什么必须检查。",
+                "rubric": [
+                  "指出泄漏发生在数据离开代码之前，拦住假 transport 就能在纯函数层完整验证",
+                  "说明除了字段名允许清单，还检查值的形态（像房间码的值会被拒）与允许键上是否为枚举而非自由文本",
+                  "指出分层依据是验证手段而不是承诺的严肃程度"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/analytics-privacy-contract.test.ts",
+                    "lineStart": 76,
+                    "lineEnd": 132,
+                    "nodeIds": [],
+                    "note": "字段名、值形态、枚举范围三重检查，且断言 transport 未被调用。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "degraded-design",
+        "title": "降级即设计",
+        "objective": "把降级状态当作产品决策而非异常处理",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "degraded-matrix",
+            "title": "为什么 e2e 文件开头是一张八行的表？",
+            "content": "# 为什么 e2e 文件开头是一张八行的表？\n\n## 现象\n\n你打开 `tests/e2e/degraded-matrix.spec.ts`，第一大块不是 `test(...)`，而是常量 `DEGRADED_MATRIX`——八格，每格 `id`、坏情况、以及 `expectedNextAction`：\n\n```ts\nexport const DEGRADED_MATRIX = [\n  {\n    id: 'no-webgl',\n    condition: 'no-WebGL',\n    expectedNextAction:\n      'Complete 2D chat / clue / vote / settlement loop without a 3D world shell',\n  },\n  {\n    id: 'expired-room',\n    condition: 'expired room',\n    expectedNextAction:\n      'Bilingual portal invalid surface; Edit room code as next action',\n  },\n  // …共八格\n] as const;\n```\n\n[[evidence:tests/e2e/degraded-matrix.spec.ts:18-48]]\n\n你盯着 `expectedNextAction`：写的是「完成 2D 对局环」「编辑房间码作为下一步」，不是「记日志」或错误码。\n\n套件里第一条测试甚至不打开浏览器：\n\n```ts\ntest('matrix inventory is complete — no silent gaps', () => {\n  const ids = DEGRADED_MATRIX.map((cell) => cell.id);\n  expect(ids).toEqual([/* 八个 id 的固定清单 */]);\n  for (const cell of DEGRADED_MATRIX) {\n    expect(cell.expectedNextAction.length).toBeGreaterThan(12);\n  }\n});\n```\n\n[[evidence:tests/e2e/degraded-matrix.spec.ts:156-172]]\n\n八个 `id` 必须逐字对上清单；每条下一步动作长度必须大于 12。一张表坐在 e2e 文件里，被两条很土的断言钉着。\n\n## 先猜一下\n\n你猜：列成表、再锁住清单和字数——这套东西**首先在逼谁、逼什么**？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n它首先在逼**作者自己**：写恢复路径之前，为每一种失败定下玩家看得见的下一步；测试只是把这个决定钉死。\n\n## 为什么是这样\n\n失败处理若只散落在 `try/catch` 里，你很难对质「没有 WebGL」和「房间过期」时用户该做什么。矩阵把答案抬到表上：契约对象是玩家可见的下一步，不是开发者诊断。房间过期那一格写双语失效界面 + 编辑房间码——你读到的是产品决策。\n\n[[evidence:tests/e2e/degraded-matrix.spec.ts:45-48]]\n\n`no silent gaps` 把八个 id 写死在期望数组里。加一格或删一格都必须改期望，否则测试红。**增删降级条件变成有意识的修改**，不能靠「忘了写」静默留缺口。\n\n`length > 12` 挡不住所有废话，但挡得住「报错」「提示用户」这类没有具体动作的占位。你至少得写出像 `Edit room code as next action` 这样的句子。\n\n矩阵先回答「该看到什么」，之后才为每一格写浏览器场景验证「真的看得到」。\n\n## 再想想\n\n上一单元用验证手段分层：[[lesson:unit-vs-e2e|单元测试和 e2e 各管什么]]。这张表本身可不开浏览器断言；必须上浏览器的是各格的恢复路径。\n\n## 自检\n\n**问：** 降级矩阵首先是测试清单还是产品决策工具？你依据哪类字段判断？\n\n**问：** `no silent gaps` 具体在防什么？\n\n**问：** `expectedNextAction.length > 12` 挡的是哪类文字？\n\n## 一句话\n\n**降级不是异常处理的边角料，是先写清「用户下一步」再锁进机器检查的产品设计。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                "lineStart": 14,
+                "lineEnd": 59,
+                "nodeIds": [],
+                "note": "八种降级条件与各自的玩家可见下一步"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                "lineStart": 156,
+                "lineEnd": 172,
+                "nodeIds": [],
+                "note": "完整性断言与最小长度要求"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "matrix-is-design",
+                "kind": "basic",
+                "front": "降级矩阵首先是测试还是产品决策？",
+                "back": "首先是产品决策。它逼你在写代码前回答「这种情况用户看到什么」，之后才是测试。",
+                "tags": [
+                  "testing",
+                  "product"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 14,
+                    "lineEnd": 24,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "no-silent-gaps",
+                "kind": "basic",
+                "front": "「no silent gaps」这条断言在防什么？",
+                "back": "防降级条件被悄悄漏掉：八个 id 逐字比对，任何增删都必须是有意识的修改。",
+                "tags": [
+                  "testing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 156,
+                    "lineEnd": 172,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "length-assert",
+                "kind": "basic",
+                "front": "expectedNextAction 长度必须大于 12，这条土办法在防什么？",
+                "back": "防敷衍。挡掉「报错」「提示用户」这类没有具体动作的占位文字。",
+                "tags": [
+                  "testing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 169,
+                    "lineEnd": 172,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "degraded-explain",
+                "kind": "explain",
+                "title": "解释降级矩阵的价值",
+                "prompt": "解释为什么把降级状态列成矩阵、并断言其完整性，比在代码里逐处写 try/catch 更有价值。",
+                "rubric": [
+                  "指出矩阵强制在写代码前做出产品决策",
+                  "指出每格必须给出玩家可见的下一步动作",
+                  "指出完整性断言让增删降级条件成为有意识的修改"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 14,
+                    "lineEnd": 59,
+                    "nodeIds": []
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 156,
+                    "lineEnd": 172,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "retry-safety",
+            "title": "文件头写「must not duplicate effects」，这里的幂等在约束什么？",
+            "content": "# 文件头写「must not duplicate effects」，这里的幂等在约束什么？\n\n## 一句真实出现的话\n\n上一课那张降级矩阵给坏情况配了玩家看得见的下一步，里面十有八九是「再点一次」。套件名字就叫 `degraded-matrix idempotency spot-checks`。文件头钉死一句话：vote / rematch / report **must not duplicate effects**。\n\n[[evidence:tests/degraded-idempotency.test.ts:1-4]]\n\n:::detail[为什么坏情况的下一步常常是「再点一次」？]\n网络断了、房间过期、切片加载失败，玩家能做的往往不是换一条全新路径，而是把刚才那一下再做一遍。降级矩阵那张表写的是玩家看得见的下一步，不是你自己看的内部日志。下一步若是「重试」，产品就在对玩家说：再点是安全的。你给这个按钮，等于邀请同一条操作再走一次。走第二次时，票、房间、举报记录必须还是原来那份，不能因为你让他再点而多出一份。\n:::\n\n不还这笔债，降级设计会变成陷阱：网络抖一下，就变成投了两票、开了两个房间、举报了两次。用户点那个按钮，是因为你让他点的。\n\n:::detail[文件头里的 vote、rematch、report 分别是哪三件事？]\n投票、再来一局、举报。这三件都会改服务端认的状态：谁投了谁、有没有新房间、有没有一条举报。客户端自己改个数字不算数。文件头把它们列在一起，是因为降级矩阵给这三件事都留了「再试一次」的入口。\n:::\n\n## 先猜一下\n\n你猜文件头里的「must not duplicate effects」，对「同一操作被调用两次」具体允许什么、禁止什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n它禁止的是**多出来的结果**，不是禁止再跑一遍：两次跑完，票还是那一张、房间还是那一个。过程可以再走，但不能多出第二票、第二个房间、或第二次举报。\n\n## 三个真实用例\n\n### 1. 投票：覆盖同一玩家行\n\n[[evidence:tests/degraded-idempotency.test.ts:87-100]]\n\n投两次，`update` 实打实被调了两次。幂等不是「第二次什么都不做」，而是两次都把同一玩家行的 `current_vote` 写成同一个值。键是玩家身份，物理上插不出第二票。你还看到反向断言：调用链里**绝不能出现 insert**——只断言「更新了一行」抓不住「更新一行又偷偷插一行」的实现。\n\n:::detail[为什么还要写「绝不能出现 insert」？]\n正向断言只看见你想看见的：`update` 调了两次、两次都对着 `player-1`。一个「更新一行、同时再插一行」的实现也能过这些正向检查。反向那句把 insert 从调用链里开除，才挡住「看起来更新了、其实多出一票」的写法。同一段里还有一句：`from` 的每次调用都必须落在 `room_players`——连表都不许换。你测这种约束时，往往「绝不能发生什么」比「发生了什么」更硬。\n:::\n\n### 2. 再来一局：权威方说了算\n\n[[evidence:tests/degraded-idempotency.test.ts:102-121]]\n\n返回里有 `reused: true`：服务端明确告诉你「这不是新建的，是你上次那个」。开房间要花电池、分房号——客户端没资格判断「刚才那次到底成没成」。两次都拿到 `NEXT42`，store 里仍是同一个 `next-room`。你能用「同一 ID 请求两次得同一结果」解决时，就别靠客户端记「我做过没有」——刷新、切后台、换设备会清空那段记忆。\n\n:::detail[客户端为什么没资格自己判断「刚才成没成」？]\n再来一局要扣电池、发新房号。客户端看见一次超时，不知道服务端到底建好了没有。你若在本地记「我开过了」，刷新或换手机这段记忆就没了，下一次又会再开一间。测试因此把信号放在返回值的 `reused` 上：谁真正花了电池、谁真正有房间，只有权威方说了算。两次调用都返回 `NEXT42`，store 里的房间 id 仍是 `next-room`——客户端只把同一条请求再送一遍，并接受同一间房。\n:::\n\n### 3. 举报：不要在客户端扇出\n\n[[evidence:tests/degraded-idempotency.test.ts:123-143]]\n\n两次同一 RPC、同一载荷。主操作做了，你顺手加的埋点、通知、邮件如果没跟着约束，重试一次就多发一封。测试因此只认「同一个调用被忠实重放」，不认客户端再扇出别的事。\n\n:::detail[什么叫客户端扇出？]\n扇出就是主操作之外，你又顺手做了几件「顺便」：发一封邮件、打一条埋点、再通知一次管理员。主操作可能已经按同一把钥匙覆盖了，这些顺便却每次都新做一遍。举报这条测试盯住的是：两次调用只看见两次同样的 `turing_pact_report_message`，载荷也相同，没有第三件客户端自己发起的事。服务端若自己去重，客户端再扇出一次，用户仍然收到两封信。你以后加「顺便」，先问它被点两次会不会变成两份。\n:::\n\n## 它不是什么\n\n- **不是「第二次必须 no-op」。** 投票用例里 `update` 被调了两次；要求的是跑完之后一样，不是过程一样。硬做「第二次直接跳过」反而引入「我做过了吗」这个新状态，而它本身又要被同样地维护。\n- **不是「客户端自己记得做过」当主方案。** 再来一局把信号放在服务端的 `reused`；客户端只如实转达。\n- **不是只断言「发生了什么」就够。** 对这种约束，**「绝不能发生什么」**（无 insert、无扇出）往往才是真正的保证。\n\n:::detail[为什么「我做过了吗」本身又是新债？]\n你若在客户端加一个 `alreadyVoted` 标志，第二次就直接返回，看起来更干净。可这个标志自己也会丢：刷新、杀进程、两台设备，都会让它和真实状态对不上。到头来你还是得问权威方「现在到底怎样」。投票用例选择每次都 `update` 同一行，就是把「做过没有」这件事交给那一行自己回答，而不是再养一份记忆。\n:::\n\n## 再想想\n\n降级矩阵为什么先逼你写清玩家下一步：[[lesson:degraded-matrix|为什么 e2e 文件开头是一张八行的表？]]。给了重试按钮，这一课就是那张表欠下的债。为什么有的承诺不开浏览器也能验：[[lesson:testing-strategy/layer-choice/unit-vs-e2e|同样是承诺，为什么有的开浏览器验、有的不开？]]。\n\n## 自检\n\n**问：** 幂等是不是要求第二次调用直接返回、什么都不做？依据是哪个用例？\n\n**问：** 再来一局的 RPC 返回里，哪个字段告诉客户端「这不是新建的」？\n\n**问：** 举报用例为什么要盯住「没有客户端侧额外动作」？\n\n## 一句话\n\n**降级矩阵给出重试按钮的那一刻，幂等就从「优化」变成了「正确性」。**\n",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/degraded-idempotency.test.ts",
+                "lineStart": 1,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "文件头点名 vote / rematch / report 重试不得产生重复效果。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/degraded-idempotency.test.ts",
+                "lineStart": 87,
+                "lineEnd": 100,
+                "nodeIds": [],
+                "note": "投票用 update 覆盖同一玩家行，并显式断言调用里绝不出现 insert。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/degraded-idempotency.test.ts",
+                "lineStart": 102,
+                "lineEnd": 121,
+                "nodeIds": [],
+                "note": "再来一局由服务端返回 reused:true，两次拿到同一房间 NEXT42。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/degraded-idempotency.test.ts",
+                "lineStart": 123,
+                "lineEnd": 143,
+                "nodeIds": [],
+                "note": "举报两次同一 RPC 同一载荷，无客户端侧扇出。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "retry-implies-idempotent",
+                "kind": "basic",
+                "front": "降级矩阵给用户加了一个「重试」按钮，同时欠下了什么债？",
+                "back": "凡是能被重试的操作，都必须能被安全执行两次。不还这笔债，降级设计就把「网络抖一下」变成了「投两票、开两个房间」。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/degraded-idempotency.test.ts",
+                    "lineStart": 1,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "测试套件名仍是 degraded-matrix idempotency spot-checks。"
+                  }
+                ]
+              },
+              {
+                "id": "idempotent-means-same-end-state",
+                "kind": "basic",
+                "front": "幂等是不是「第二次调用直接返回、什么都不做」？",
+                "back": "不是。投票测试里 update 实实在在被调了两次。幂等要求终态相同，不是过程相同。追求「第二次跳过」反而引入「我做过了吗」这个新状态，而它本身又需要被幂等维护。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/degraded-idempotency.test.ts",
+                    "lineStart": 87,
+                    "lineEnd": 100,
+                    "nodeIds": [],
+                    "note": "两次调用都执行了 update，并禁止 insert。"
+                  }
+                ]
+              },
+              {
+                "id": "assert-what-must-not-happen",
+                "kind": "basic",
+                "front": "`expect(JSON.stringify(from.mock.calls)).not.toMatch(/insert/i)` 这行断言特别在哪？",
+                "back": "它断言的是「什么绝不能发生」。只断言「更新了一行」的话，一个「更新了一行、同时偷偷插了一行」的实现也能通过。对幂等来说，反向断言才是真正的保证。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/degraded-idempotency.test.ts",
+                    "lineStart": 87,
+                    "lineEnd": 100,
+                    "nodeIds": [],
+                    "note": "正向断言之外仍有 not.toMatch(/insert/i)。"
+                  }
+                ]
+              },
+              {
+                "id": "authority-owns-idempotency",
+                "kind": "basic",
+                "front": "开房间这种要花钱的操作，幂等该由谁保证？凭什么信号？",
+                "back": "服务端。它返回 `reused: true` 告诉客户端「这不是新建的，是你上次那个」。客户端的记忆会被刷新、切后台、换设备清空，没资格判断上次到底成没成。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/degraded-idempotency.test.ts",
+                    "lineStart": 102,
+                    "lineEnd": 121,
+                    "nodeIds": [],
+                    "note": "reused:true 仍是服务端给出的幂等信号。"
+                  }
+                ]
+              },
+              {
+                "id": "client-fanout-breaks-idempotency",
+                "kind": "basic",
+                "front": "幂等最常见的破口是什么？",
+                "back": "客户端扇出。主操作做了幂等，但顺手加的那行「顺便发个埋点/通知/邮件」没有，重试一次就多发一封。举报的测试因此断言两次只有同一个 RPC、没有别的动作。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/degraded-idempotency.test.ts",
+                    "lineStart": 123,
+                    "lineEnd": 143,
+                    "nodeIds": [],
+                    "note": "两次举报只产生两次同样的 RPC，无额外客户端动作。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "idempotency-key-recall",
+                "kind": "short-answer",
+                "title": "回忆服务端的幂等信号",
+                "prompt": "再来一局的 RPC 返回里，哪个字段告诉客户端「这不是新建的，是你上次那个」？填字段名。",
+                "expectedAnswer": "reused",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/degraded-idempotency.test.ts",
+                    "lineStart": 102,
+                    "lineEnd": 121,
+                    "nodeIds": [],
+                    "note": "data.reused === true。"
+                  }
+                ]
+              },
+              {
+                "id": "retry-debt-explain",
+                "kind": "explain",
+                "title": "解释降级与幂等的关系",
+                "prompt": "上一课的降级矩阵要求每种坏情况都给玩家一个可见的下一步动作，而那个动作通常是「重试」。请解释这为什么立刻产生了一个幂等要求，并各举一例说明「用覆盖代替新增」和「让权威方返回复用信号」分别适合什么样的操作。",
+                "rubric": [
+                  "指出提供重试就等于承诺该操作可以被安全执行两次，否则降级设计本身制造了重复效果",
+                  "举出覆盖式：投票用玩家身份做键 update 同一行，物理上不可能出现两票",
+                  "举出权威式：开房间要花电池，由服务端返回 reused:true，客户端只如实转达",
+                  "指出幂等要求的是终态相同而非过程相同"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/degraded-idempotency.test.ts",
+                    "lineStart": 87,
+                    "lineEnd": 121,
+                    "nodeIds": [],
+                    "note": "覆盖式投票与权威式再来一局相邻出现。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

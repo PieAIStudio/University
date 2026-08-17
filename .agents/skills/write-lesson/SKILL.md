@@ -1,6 +1,6 @@
 ---
 name: write-lesson
-description: Write or rewrite a UniversityLocal lesson content.md into the house teaching shape so a beginner can finish it. Use when authoring a new lesson, rewriting a wall-of-conclusions lesson, reviewing lesson prose against the five variants, or when the user says 读不进去, 重写这节课, 重写课文, 改写成能读的, 太干, or 语气再循循善诱一些. Covers question-first titles, one prediction, immediate answer, inline [[evidence:]] anchors, and cross-lesson links. Do not use for course/unit planning, card/exercise scheduling alone, UA analysis, refresh-study, knowledge-node saves, teach-from-study tutoring, or ordinary app engineering.
+description: Write or rewrite a UniversityLocal lesson content.md into the house teaching shape so a beginner can finish it. Use when authoring a new lesson, rewriting a wall-of-conclusions lesson, reviewing lesson prose against the five variants, or when the user says 读不进去, 重写这节课, 重写课文, 改写成能读的, 太干, or 语气再循循善诱一些. Covers question-first titles, one prediction, immediate answer, inline [[evidence:]] anchors, and cross-lesson links. It may be invoked by refresh-study for a stale lesson, but it is never the refresh entry point. Do not use for course/unit planning, card/exercise scheduling alone, UA analysis, refresh-study orchestration, knowledge-node saves, teach-from-study tutoring, or ordinary app engineering.
 ---
 
 # Write a lesson
@@ -32,7 +32,31 @@ if you are the one writing.
 
 If the current revision already matches the spine, invariants, and checklist,
 **do not mint a revision** just to rephrase. A new revision resets completion
-and knocks that lesson's cards out of the review queue.
+and knocks that lesson's cards out of the review queue. This no-op rule applies
+only when the freshness audit also says the revision's evidence is still fresh.
+If a refresh handoff says the evidence is stale but the prose, cards, and
+exercises remain accurate, keep their text and append a same-text revision with
+evidence bound to the target snapshot; evidence rebinding is a real revision,
+not a reason to skip the freshness gate.
+
+## When refresh-study invokes this skill
+
+`refresh-study` is the parent workflow. It owns source snapshot preparation, UA,
+freshness audit, stale marking, and course reactivation. This skill is only the
+content step for one stale lesson:
+
+1. Accept the exact target snapshot, analysis, audit reasons, current lesson
+   manifest, and all existing card/exercise IDs from the handoff.
+2. Own the lesson prose, cards, and exercises, including their evidence and
+   checklist; keep IDs and structure stable. Append a revision when the content
+   needs rewriting **or** when stale evidence must be rebound, even if the text
+   is unchanged.
+3. Return the revision proposal and dry-run result to the parent. Do not run
+   `refresh prepare`, `refresh finalize`, `refresh audit`, `refresh audit --apply`,
+   or `course reactivate` from this child step.
+
+When writing a lesson independently, the same content contract applies; only
+the parent orchestration differs.
 
 ## The invariants
 

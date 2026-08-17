@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: human
 created: 2026-07-13
-last_reviewed: 2026-07-16
+last_reviewed: 2026-08-17
 domain: agents-routing
 tags:
   - agents-routing
@@ -30,12 +30,21 @@ This file decides **how to choose a workflow**, not what the project is currentl
 
 ```mermaid
 flowchart TD
-  A["Task arrives"] --> B["Read project router and current work"]
-  B --> C["Classify with local lane profile"]
-  C --> F["Enter local lane"]
-  F --> H["Use AI-in-the-Loop evidence cycle"]
-  H --> I["Record evidence in doc-gov"]
+  A["Task arrives"] --> B["Read project router and local baseline"]
+  B --> C{"Does the task depend on current priorities or in-flight work?"}
+  C -->|"yes"| D["Read current work"]
+  C -->|"no"| E["Skip current work"]
+  D --> F["Classify with local lane profile"]
+  E --> F
+  F --> G["Enter local lane"]
+  G --> H["Use the relevant verification cycle"]
+  H --> I["Record durable evidence only when its document role requires it"]
 ```
+
+`current-work` is a conditional state surface, not universal startup context.
+Likewise, AI-in-the-Loop applies when implementation or runtime verification
+needs it; a documentation-only or read-only routing task does not load that
+policy by default.
 
 ## Keep It Small
 

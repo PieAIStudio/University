@@ -5,6 +5,7 @@ import { CliUsageError, type UniversityLocalCliCommand } from "./commands.js";
 type ParsedValues = {
   readonly study?: string;
   readonly input?: string;
+  readonly out?: string;
   readonly analysis?: string;
   readonly snapshot?: string;
   readonly course?: string;
@@ -60,6 +61,7 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       options: {
         study: { type: "string" },
         input: { type: "string" },
+        out: { type: "string" },
         analysis: { type: "string" },
         snapshot: { type: "string" },
         course: { type: "string" },
@@ -156,6 +158,26 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         snapshotId: required(values.snapshot, "snapshot"),
         ...(values.analysis ? { analysisId: values.analysis } : {}),
         apply: values.apply ?? false,
+      };
+    }
+  }
+  if (positionals.length === 3 && positionals[0] === "course" && positionals[1] === "recovery") {
+    if (positionals[2] === "export") {
+      rejectUnrelatedOptions(values, ["study", "out"]);
+      return {
+        kind: "course-recovery-export",
+        studyId: required(values.study, "study"),
+        outDirectory: required(values.out, "out"),
+      };
+    }
+    if (positionals[2] === "import") {
+      rejectUnrelatedOptions(values, ["study", "input", "source", "dry-run"]);
+      return {
+        kind: "course-recovery-import",
+        studyId: required(values.study, "study"),
+        inputDirectory: required(values.input, "input"),
+        sourceRoot: required(values.source, "source"),
+        dryRun: values["dry-run"] ?? false,
       };
     }
   }
@@ -257,6 +279,10 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       return { kind: "focus-clear" };
     }
   }
+  if (positionals.length === 2 && positionals[0] === "teach" && positionals[1] === "next") {
+    rejectUnrelatedOptions(values, []);
+    return { kind: "teach-next" };
+  }
   if (positionals.length === 2 && positionals[0] === "session") {
     if (positionals[1] === "start") {
       rejectUnrelatedOptions(values, ["study", "host", "objective"]);
@@ -302,6 +328,20 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       kind: `snapshot-${positionals[1]}` as "snapshot-list" | "snapshot-open" | "snapshot-close",
       studyId: required(values.study, "study"),
       ...(values.snapshot ? { snapshotId: values.snapshot } : {}),
+    };
+  }
+  if (
+    positionals.length === 3 &&
+    positionals[0] === "study" &&
+    positionals[1] === "source" &&
+    positionals[2] === "rebind"
+  ) {
+    rejectUnrelatedOptions(values, ["study", "source", "ref"]);
+    return {
+      kind: "study-source-rebind",
+      studyId: required(values.study, "study"),
+      sourceRoot: required(values.source, "source"),
+      ...(values.ref ? { reference: values.ref } : {}),
     };
   }
   if (

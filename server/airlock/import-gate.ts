@@ -25,7 +25,7 @@ interface ImportGateReport {
   readonly blocked: readonly ImportGateFinding[];
 }
 
-interface ImportGateFinding {
+export interface ImportGateFinding {
   readonly path: string;
   readonly reason: string;
 }
@@ -48,7 +48,10 @@ const DENY_RULES: readonly DenyRule[] = [
     reason: "学习数据（课程进度、复习记录）绝不能进入被分析的源",
   },
   {
-    test: /(^|\/)\.env(\.|$)(?!example)/,
+    // `.env.example`, `.env.local.example`, and `.env.json.example` are
+    // documentation templates. Anything whose final segment is not exactly
+    // `example` remains blocked, including `.env.notexample` and backups.
+    test: /(^|\/)\.env(?:\.(?!example$|[^/]*\.example$)[^/]+)?$/,
     reason: "环境变量文件通常含密钥",
   },
   {
@@ -70,24 +73,41 @@ const DENY_RULES: readonly DenyRule[] = [
 ];
 
 /**
+ * Applies only the path-based deny rules.
+ *
+ * Snapshot creation shares this part of the airlock policy, but deliberately
+ * does not share the airlock's blob-size policy: a committed GLB or texture
+ * can be a perfectly valid study source even though it is too large to copy
+ * into an airlock. Keeping this function separate makes that distinction
+ * explicit without duplicating the deny regexes.
+ */
+export function inspectImportPathRisk(
+  entries: readonly Pick<ImportCandidate, "path">[],
+): readonly ImportGateFinding[] {
+  return entries
+    .flatMap((entry) => {
+      const rule = DENY_RULES.find((candidate) => candidate.test.test(entry.path));
+      return rule ? [{ path: entry.path, reason: rule.reason }] : [];
+    })
+    .sort((left, right) => left.path.localeCompare(right.path));
+}
+
+/**
  * Inspects the exact tree a promotion would import.
  *
  * Pure by design: it takes the entries and returns a verdict, so the rules can
  * be tested without a repository and read without following a git invocation.
  */
 export function inspectImportRisk(entries: readonly ImportCandidate[]): ImportGateReport {
-  const blocked: ImportGateFinding[] = [];
+  const blocked: ImportGateFinding[] = [...inspectImportPathRisk(entries)];
+  const deniedPaths = new Set(blocked.map((finding) => finding.path));
   let largestBlobBytes = 0;
 
   for (const entry of entries) {
     const size = entry.sizeBytes ?? 0;
     if (size > largestBlobBytes) largestBlobBytes = size;
 
-    const rule = DENY_RULES.find((candidate) => candidate.test.test(entry.path));
-    if (rule) {
-      blocked.push({ path: entry.path, reason: rule.reason });
-      continue;
-    }
+    if (deniedPaths.has(entry.path)) continue;
     if (size > MAX_IMPORT_BLOB_BYTES) {
       blocked.push({
         path: entry.path,

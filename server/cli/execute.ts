@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 import { loadUniversityLocalConfig } from "../config/load-config.js";
 import { listKnowledgeNotes } from "../knowledge/repository.js";
-import { setDefaultCourse, setStudyStatus } from "../studies/repository.js";
+import { rebindLocalGitSource, setDefaultCourse, setStudyStatus } from "../studies/repository.js";
 import { captureKnowledge } from "../workflows/capture-knowledge.js";
 import { getHostStudyStatus } from "../workflows/host-status.js";
 import { backupLearner, resetLearner, restoreLearner } from "../workflows/learner.js";
@@ -33,11 +33,13 @@ import {
 import { SqliteLearningStore } from "../learning/sqlite-learning-store.js";
 import { getStudyPaths } from "../studies/paths.js";
 import { setCourseCurrency, setCoursePrerequisites } from "../content/repository.js";
+import { exportCourseRecovery, importCourseRecovery } from "../recovery/course-recovery.js";
 import { readCourseClock } from "../airlock/course-clock.js";
 import { inspectAirlock } from "../airlock/inspect.js";
 import { promoteAirlock } from "../airlock/promote.js";
 import { createStudyWithSource } from "../workflows/create-study.js";
 import { reviewExpression } from "../workflows/expression-review.js";
+import { buildLearningOverview } from "../workflows/learning-overview.js";
 import { annotateLanguage } from "../workflows/annotate-language.js";
 import {
   closeSnapshotCheckout,
@@ -153,6 +155,20 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         ...(input.command.analysisId ? { analysisId: input.command.analysisId } : {}),
         apply: input.command.apply,
       });
+    case "course-recovery-export":
+      return exportCourseRecovery({
+        studiesRoot: config.studiesRoot,
+        studyId: input.command.studyId,
+        outDirectory: resolve(input.cwd ?? process.cwd(), input.command.outDirectory),
+      });
+    case "course-recovery-import":
+      return importCourseRecovery({
+        studiesRoot: config.studiesRoot,
+        studyId: input.command.studyId,
+        inputDirectory: resolve(input.cwd ?? process.cwd(), input.command.inputDirectory),
+        sourceRoot: resolve(input.cwd ?? process.cwd(), input.command.sourceRoot),
+        dryRun: input.command.dryRun,
+      });
     case "course-create":
       return createCourse({
         studiesRoot: config.studiesRoot,
@@ -257,6 +273,32 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
       return showLearningFocus(config.projectRoot);
     case "focus-clear":
       return clearLearningFocus(config.projectRoot);
+    case "teach-next": {
+      const stores = new Map<string, SqliteLearningStore>();
+      try {
+        const overview = buildLearningOverview({
+          studiesRoot: config.studiesRoot,
+          ...(config.focus ? { focus: config.focus } : {}),
+          getStore: (studyId) => {
+            const existing = stores.get(studyId);
+            if (existing) return existing;
+            const database = getStudyPaths(config.studiesRoot, studyId).learner.database;
+            if (!existsSync(database)) return null;
+            const store = new SqliteLearningStore(database);
+            stores.set(studyId, store);
+            return store;
+          },
+        });
+        return {
+          schemaVersion: 1 as const,
+          operation: "teach-next" as const,
+          studiesRoot: config.studiesRoot,
+          ...overview,
+        };
+      } finally {
+        for (const store of stores.values()) store.close();
+      }
+    }
     case "session-start":
       return startLearningSession({
         studiesRoot: config.studiesRoot,
@@ -385,6 +427,18 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         sourceRoot: resolve(input.cwd ?? process.cwd(), input.command.sourceRoot),
         ...(input.command.reference ? { reference: input.command.reference } : {}),
       });
+    case "study-source-rebind":
+      return {
+        schemaVersion: 1 as const,
+        operation: "study-source-rebind" as const,
+        studyId: input.command.studyId,
+        ...rebindLocalGitSource(
+          config.studiesRoot,
+          input.command.studyId,
+          resolve(input.cwd ?? process.cwd(), input.command.sourceRoot),
+          input.command.reference,
+        ),
+      };
     case "airlock-promote":
       return promoteAirlock({
         airlockRoot: resolve(input.cwd ?? process.cwd(), input.command.airlockRoot),

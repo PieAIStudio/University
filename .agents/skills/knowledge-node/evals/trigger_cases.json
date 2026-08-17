@@ -12,7 +12,8 @@
     {"text": "我只是随便问问，别保存。", "family": "explicit_no_save"},
     {"text": "点评我的表达是否清楚。", "family": "communication_coach"},
     {"text": "画出这四个服务之间的调用关系。", "family": "diagram"},
-    {"text": "Refresh the study snapshot after the source commit changed.", "family": "refresh"}
+    {"text": "Refresh the study snapshot after the source commit changed.", "family": "refresh"},
+    {"text": "把 stale lesson 的 content.md 按 checklist 改成新 revision，不保存对话知识。", "family": "lesson_writing"}
   ],
   "near_neighbor": [
     {"text": "总结刚才的讨论，但不要写入文件。", "family": "summary_only"},

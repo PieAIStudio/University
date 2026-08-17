@@ -1,0 +1,464 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "ai-cost-and-boundaries",
+    "title": "AI 产品的成本与边界",
+    "description": "一人公司做 AI 产品最贵的两个教训：钱怎么不失控，模型怎么不越权。全部证据来自 SupaLuv 的真实实现。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "说明预扣—提交—退款三段式为什么必须前置于模型调用",
+      "解释 fail-closed 默认值如何把配置事故变成可见故障",
+      "列出约束模型输出的三个层次并说明缺一不可的原因",
+      "区分「约束模型输出」与「不授权模型决策」"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "founder-engineer"
+    ],
+    "units": [
+      {
+        "id": "spend-control",
+        "title": "钱不失控",
+        "objective": "掌握付费 AI 动作的计量顺序与默认拒绝策略",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "reserve-then-spend",
+            "title": "先调模型再扣款，你会在哪一步白付钱？",
+            "content": "# 先调模型再扣款，你会在哪一步白付钱？\n\n## 两个东西\n\n付费 AI 动作有两种常见编排：\n\n**顺序 A：先调模型，成功后再从用户账户扣款。**  \n上游已经按 token 计费；你再去钱包结算。\n\n**顺序 B：先预扣用户额度，拿到 `reservationId` 之后才调模型；成功则结算，失败则退回预扣。**\n\n成功路径上，两种都能收到钱。差别全在失败路径。\n\n## 先猜一下\n\n生产环境如果用顺序 A，哪一类失败会让你已经付给模型厂商、却没从用户收回来？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n模型调用成功、但扣款失败（余额不足、计量不可用、进程崩溃）：上游账单已产生，用户侧却没扣成。\n\n## 逐条对照\n\nSupaLuv 走顺序 B。预扣入口是 `reserveBatteries`：先把「电池」换成整数 power unit，再向钱包预留；余额不够直接 `INSUFFICIENT`，**调用方在这一步就该停，模型根本不该被叫到**。\n\n```ts\nexport async function reserveBatteries(\n  input: {\n    readonly userId: string;\n    readonly batteries: number;\n    readonly reason: string;\n    readonly idempotencyKey?: string;\n  },\n  client?: SupabaseClient,\n): Promise<ReserveResult | ReserveFailure> {\n  const amount = Math.max(0, Math.round(input.batteries * POWER_PER_BATTERY));\n  // ...\n  const reservation = await walletClient(client)!.reserve({\n    userId: input.userId,\n    idempotencyKey: idem,\n    amountPowerUnits: String(amount),\n    metadata: { reason: input.reason, product: \"supaluv\" },\n  });\n  if (reservation.insufficient || !reservation.allowed) {\n    return { ok: false, code: \"INSUFFICIENT\", message: \"INSUFFICIENT_BATTERIES\" };\n  }\n```\n\n[[evidence:services/ai-branch/src/wallet/walletMeter.ts:109-145]]\n\n预扣还带幂等键：调用方没给就生成 `supaluv:<reason>:<userId>:<uuid>`，同一意图重试不会叠出多笔预留。\n\n```ts\n  const idem =\n    input.idempotencyKey?.trim() || `supaluv:${input.reason}:${input.userId}:${randomUUID()}`;\n```\n\n[[evidence:services/ai-branch/src/wallet/walletMeter.ts:134-135]]\n\n模型失败或抛错时，要把冻结额度还回去。`refundReservation` 用 `refund:` 前缀的幂等键，同一笔预扣重复退款不会多退：\n\n```ts\n    await walletClient(client)!.refund({\n      reservationId: input.reservationId,\n      idempotencyKey: `refund:${input.reservationId}`,\n      metadata: { reason: input.reason, product: \"supaluv\" },\n    });\n```\n\n[[evidence:services/ai-branch/src/wallet/walletMeter.ts:229-233]]\n\n运行时把这三段装配成 wallet port：`reserve` / `commit` / `refund`。生成角色资源时，你拿到的是这一组，而不是「调完模型再随手记一笔」。\n\n```ts\nfunction createDefaultGenerationWallet(): CharacterGenerationWallet {\n  return {\n    reserve: (input) =>\n      reserveBatteries({\n        userId: input.ownerId,\n        batteries: input.batteries,\n        reason: input.reason,\n        idempotencyKey: input.idempotencyKey,\n      }),\n    commit: (reservationId, reason) => commitReservation({ reservationId, reason }),\n    refund: (reservationId, reason) => refundReservation({ reservationId, reason }),\n  };\n}\n```\n\n[[evidence:services/ai-branch/src/commercialRouteRuntime.ts:118-130]]\n\n| | 顺序 A（先模型后扣） | 顺序 B（先预扣后模型） |\n| --- | --- | --- |\n| 余额不足 | 模型可能已跑完 | `INSUFFICIENT`，模型未调用 |\n| 模型失败 | 你可能已扣款，要另写退款 | 走 `refund`，预扣退回 |\n| 扣款/计量故障 | 上游已收费，用户未付 | 故障挡在预扣，不进入付费调用 |\n| 重试 | 容易双扣 | 预扣与 `refund:` 幂等键兜住 |\n\n## 什么时候用哪个\n\n- **按次计费、上游不可退或退款贵**（聊天补全、生图、TTS）：用顺序 B。损失函数不对称——白送一次模型远贵过一次「余额不足」报错。\n- **成本为零或你愿意包圆**（内部工具、演示、固定月费已覆盖）：顺序 A 的编排更简单，但你要接受「成功路径记账失败 = 你自己买单」。\n- **预扣成功、结算/退款失败**：钱短暂冻在 reservation 上，需要补偿任务或人工解冻——顺序 B 没消灭运维，只是把「净损失给上游」换成「冻结态可追查」。\n\n## 自检\n\n**问：** 为什么 `INSUFFICIENT` 必须出现在模型调用之前？\n\n**问：** `refund:` 前缀的幂等键在防什么？\n\n**问：** 若改成先调模型再扣款，哪一类失败会让你白付给上游？\n\n## 一句话\n\n**边界要挡在花钱之前：先预扣，再调模型，失败就退预扣。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "services/ai-branch/src/wallet/walletMeter.ts",
+                "lineStart": 105,
+                "lineEnd": 160,
+                "nodeIds": [],
+                "note": "reserveBatteries：预扣与失败码"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "services/ai-branch/src/wallet/walletMeter.ts",
+                "lineStart": 218,
+                "lineEnd": 238,
+                "nodeIds": [],
+                "note": "refundReservation：带幂等键的退款"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "services/ai-branch/src/commercialRouteRuntime.ts",
+                "lineStart": 118,
+                "lineEnd": 130,
+                "nodeIds": [],
+                "note": "运行时把 reserve/commit/refund 装配成 wallet port"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "reserve-order",
+                "kind": "basic",
+                "front": "付费 AI 动作里，扣款和调用模型谁先谁后？为什么？",
+                "back": "先扣款。预扣失败就不调用模型，避免「模型已收费、用户未付费」的净损失。",
+                "tags": [
+                  "cost-control"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/wallet/walletMeter.ts",
+                    "lineStart": 109,
+                    "lineEnd": 132,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "idempotency-key",
+                "kind": "basic",
+                "front": "退款和提交为什么各自带前缀不同的幂等键？",
+                "back": "commit: 与 refund: 前缀让同一笔预扣的提交和退款互不冲突，重试也不会重复计账。",
+                "tags": [
+                  "cost-control"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/wallet/walletMeter.ts",
+                    "lineStart": 162,
+                    "lineEnd": 182,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "reserve-order-recall",
+                "kind": "short-answer",
+                "title": "顺序回忆",
+                "prompt": "如果改成「先调用模型、成功后再扣款」，哪一类失败会让你白付钱？",
+                "expectedAnswer": "模型调用成功但扣款失败的情况——钱已付给上游，却没从用户收回。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/wallet/walletMeter.ts",
+                    "lineStart": 109,
+                    "lineEnd": 160,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "fail-closed",
+            "title": "计量没配好，付费功能该拒绝还是放行？",
+            "content": "# 计量没配好，付费功能该拒绝还是放行？\n\n## 情境和约束\n\n你在新环境拉起 ai-branch，漏配了计量用的 secret key。用户点了付费 AI。`reserveBatteries` 必须给一个结果。\n\n生产默认只剩两种形状：\n\n- 没配好也返回成功（可选地带 `skipped`）\n- 没配好返回失败码，请求停在预扣\n\n本地开发又时常想跳过计量。这个出口如果和「生产默认」糊成同一条隐式路径，你会分不清「有意免费」和「配丢了」。\n\n## 先猜一下\n\n生产默认你会选成功还是失败？选错时，最先坏掉的是用户「功能还能用」，还是你「账本还对得上」？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了失败码 `METER_UNAVAILABLE`：先保账本边界，用「当天不可用」换「当天发现配置事故」。\n\n## 代价和收益\n\n配置是否就绪、是否允许跳过，是两个显式函数，不是散落的 if：\n\n```ts\nexport function walletMeterConfigured(): boolean {\n  return commercialServerCredentialsConfigured();\n}\n\nexport function walletOptionalMode(): boolean {\n  return process.env.SUPALUV_WALLET_OPTIONAL === \"1\";\n}\n```\n\n[[evidence:services/ai-branch/src/wallet/walletMeter.ts:30-36]]\n\n预扣时先问配置。没配好：只有 `walletOptionalMode()` 为真才 `skipped: true` 放行；否则直接失败码——**不是**默认放行后再想办法记账。\n\n```ts\n  if (!walletMeterConfigured()) {\n    if (walletOptionalMode()) {\n      return { ok: true, reservationId: \"\", amountPowerUnits: amount, skipped: true };\n    }\n    return {\n      ok: false,\n      code: \"METER_UNAVAILABLE\",\n      message: \"Wallet metering not configured (need SWIMMER_CORE_SECRET_KEY)\",\n    };\n  }\n```\n\n[[evidence:services/ai-branch/src/wallet/walletMeter.ts:123-132]]\n\n同一姿势出现在鉴权：拿不到 URL 或 key 时，`verifyBearerToken` 返回 401「Authentication is temporarily unavailable」，而不是把请求当匿名用户放过。\n\n```ts\n  if (!url || !key) {\n    return {\n      ok: false,\n      status: 401,\n      error: \"Authentication is temporarily unavailable\",\n    };\n  }\n```\n\n[[evidence:services/ai-branch/src/authGate.ts:46-52]]\n\n**收益：** 配置事故变成可见故障，你当天会修；账单边界不依赖「记得配密钥」。跳过路径叫 `SUPALUV_WALLET_OPTIONAL=1`，可搜索、可审计；返回带 `skipped: true`，你能从结果读出这次没真扣。\n\n**代价：** 漏配时产品「不可用」，支持与发布会被拦住；本地你必须显式打开可选模式，不能靠「没配就当开发环境」。\n\n## 什么时候该反过来\n\n- **本地框架 / 无钱包后端的演示**：设 `SUPALUV_WALLET_OPTIONAL=1`，让跳过成为具名决定。不要改 `walletMeterConfigured` 的默认语义去迁就开发机。\n- **你愿意承担全站免费**（内测包死、费用走别的合同）：fail-open 可以，但要另有硬上限或人工盯账；否则默认放行会把事故推迟到账单日。\n- **鉴权**：几乎不该反过来——凭据缺失时当匿名放行，等于整扇门卸了。\n\n## 自检\n\n**问：** 计量未配置且未开可选模式时，`reserveBatteries` 返回什么 code？\n\n**问：** 为什么跳过计量要用 `SUPALUV_WALLET_OPTIONAL=1`，而不是把默认改成放行？\n\n**问：** 鉴权凭据缺失时，SupaLuv 是放行还是 401？\n\n## 一句话\n\n**默认值是安全决策：成本闸门没配好就拒绝，放行必须是具名例外。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "services/ai-branch/src/wallet/walletMeter.ts",
+                "lineStart": 123,
+                "lineEnd": 132,
+                "nodeIds": [],
+                "note": "计量未配置时返回 METER_UNAVAILABLE"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "services/ai-branch/src/wallet/walletMeter.ts",
+                "lineStart": 30,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "walletMeterConfigured 与 walletOptionalMode"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "services/ai-branch/src/authGate.ts",
+                "lineStart": 46,
+                "lineEnd": 52,
+                "nodeIds": [],
+                "note": "鉴权凭据缺失时返回 401 而不是放行"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "fail-closed-default",
+                "kind": "basic",
+                "front": "计量服务没配好时，SupaLuv 是放行还是拒绝？",
+                "back": "拒绝，返回 METER_UNAVAILABLE。只有显式设置 SUPALUV_WALLET_OPTIONAL=1 才跳过。",
+                "tags": [
+                  "fail-closed"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/wallet/walletMeter.ts",
+                    "lineStart": 123,
+                    "lineEnd": 132,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "explicit-exception",
+                "kind": "basic",
+                "front": "为什么「跳过计量」要用一个具名环境变量，而不是改默认值？",
+                "back": "让跳过成为有名字、可搜索、可审计的决定；改默认值会让生产事故静默变成免费服务。",
+                "tags": [
+                  "fail-closed"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/wallet/walletMeter.ts",
+                    "lineStart": 34,
+                    "lineEnd": 36,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "fail-closed-explain",
+                "kind": "explain",
+                "title": "解释默认值的代价",
+                "prompt": "用 fail-open 和 fail-closed 的区别，解释为什么成本闸门必须默认拒绝。",
+                "rubric": [
+                  "指出 fail-closed 会立刻暴露为可见故障",
+                  "指出 fail-open 的损失在账单日才被发现",
+                  "提到跳过必须是显式且可审计的例外"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/wallet/walletMeter.ts",
+                    "lineStart": 123,
+                    "lineEnd": 132,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "model-constraints",
+        "title": "模型不越权",
+        "objective": "掌握分层约束模型输出的方法，并区分约束与授权",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "layered-constraints",
+            "title": "过了 schema，模型输出为什么还要再砍一刀？",
+            "content": "# 过了 schema，模型输出为什么还要再砍一刀？\n\n## 现象\n\n你顺着 `generateAiBranchWithMastra` 读一遍，会在**同一条返回路径**上连续撞到上限——不是一处，是三处。\n\n第一处在 schema：`beats` 数组写死了条数窗口：\n\n```ts\nconst branchSchema = z.object({\n  choiceLabel: z.string().min(1).max(48),\n  beats: z.array(beatSchema).min(1).max(4),\n  rejoinSceneId: z.string().min(1),\n});\n```\n\n[[evidence:services/ai-branch/src/branch/mastraBranch.ts:15-19]]\n\n第二处在进模型之前：调用方传来的 `maxAiBeats` 自己先被夹进 1–4，缺省 2：\n\n```ts\n  const maxAiBeats = Math.max(1, Math.min(4, body.config.maxAiBeats ?? 2));\n  const artPool = body.config.artPool ?? [];\n  const portraitPool = body.config.portraitPool ?? [];\n  const speakerPool = body.config.speakerPool ?? [\"苏明\", \"旁白\"];\n  const rejoinSceneId = body.config.rejoinSceneId;\n```\n\n[[evidence:services/ai-branch/src/branch/mastraBranch.ts:59-63]]\n\n第三处在 `branchSchema.parse` 之后：条数再 `slice` 一次，每条 `text` 截到 280，选项标签截到 36：\n\n```ts\n  const parsed = branchSchema.parse(parseModelJson(text));\n  const beats = parsed.beats.slice(0, maxAiBeats).map((beat) => ({\n    speaker: pickFromPool(beat.speaker, speakerPool) ?? speakerPool[0] ?? \"旁白\",\n    text: beat.text.slice(0, 280),\n    artKey: pickFromPool(beat.artKey, artPool),\n    portraitKey: pickFromPool(beat.portraitKey, portraitPool),\n    mood: beat.mood,\n  }));\n\n  if (beats.length === 0) {\n    throw new Error(\"Mastra agent returned empty beats\");\n  }\n\n  return {\n    choiceLabel: parsed.choiceLabel.slice(0, 36),\n    beats,\n    rejoinSceneId,\n    provider: `mastra+openrouter:${options.model}`,\n  };\n```\n\n[[evidence:services/ai-branch/src/branch/mastraBranch.ts:147-162]]\n\nschema 已经 `.max(4)` 了；配置又夹了一次；解析完还要再砍。同一条支线生成路径上，上限出现了三次。\n\n## 先猜一下\n\n只留 `beats.max(4)` 时，一次「4 条、每条 2000 字」的合法旁支会先把你的 token 账单、审核 corpus，还是界面上你看到的文案长度一起拖爆？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n三者都会失控：schema 只认形状，不砍单条长度；你一去掉调用方上限与 `slice`/280/36，账单、审核语料和界面文案一起膨胀。\n\n## 为什么是这样\n\n三道检查不是重复劳动，它们各自不信任的对象不同。\n\n**第一层：schema 不信任模型的形状。** `beats` 只能 1–4 条，少了或多了在解析阶段就不合法。它回答「这个 JSON 像不像产品约定的支线形状」。你还要注意：`choiceLabel` 在 schema 里是 `.max(48)`——那是字段级上限，不是最终给玩家看的长度。\n\n**第二层：配置钳制不信任调用方。** `maxAiBeats` 来自 `body.config`，产品不拿它当真理：\n\n```ts\n  const maxAiBeats = Math.max(1, Math.min(4, body.config.maxAiBeats ?? 2));\n```\n\n[[evidence:services/ai-branch/src/branch/mastraBranch.ts:59-63]]\n\n上游写 99，这里先变成 4。后面「最多几条」都用夹过的值。你若只信 schema，调用方仍可能把期望条数开到离谱，再靠 prompt 去「请求」模型多吐——第二层掐的是这条路。\n\n**第三层：解析后截断不信任「合法对象」的规模。** schema 过了只说明形状对：\n\n```ts\n  const beats = parsed.beats.slice(0, maxAiBeats).map((beat) => ({\n    speaker: pickFromPool(beat.speaker, speakerPool) ?? speakerPool[0] ?? \"旁白\",\n    text: beat.text.slice(0, 280),\n    // ...\n  }));\n  // ...\n  return {\n    choiceLabel: parsed.choiceLabel.slice(0, 36),\n    beats,\n    rejoinSceneId,\n```\n\n[[evidence:services/ai-branch/src/branch/mastraBranch.ts:147-162]]\n\n这里才动刀：条数按已钳制的 `maxAiBeats` 再切；`text` 280、标签 36 是**规模**闸。`beatSchema` 对 `text` 只要求非空字符串，没有字数上限——所以「4 条合法 beats、每条小说一章」在第一层是放行的。第三层补的就是你在规模上的那一刀。\n\n叠起来看：\n\n| 层 | 拦什么 | 不信任谁 |\n| --- | --- | --- |\n| schema | 形状 / 条数窗口 | 模型 JSON |\n| 配置钳制 | 调用方声称的上限 | `body.config` |\n| 解析后截断 | 合法对象上的长度与条数 | 已 parse 的结果 |\n\n缺一层，漏的是**另一类边界**，不是同一种错检漏一次。只留 schema：结构对、规模爆。只留截断：畸形 JSON 可能进不了稳定对象。只留配置钳制：模型仍可能吐非法形状。\n\n你记这条不信任链：模型不可信，调用方配置不可信，解析结果也不可信——每一层只确认自己那一截。\n\n## 自检\n\n**问：** 只保留 schema 校验，会漏掉哪一类问题？\n\n**问：** `maxAiBeats` 在进模型前会被夹到什么范围？缺省是几？\n\n**问：** 解析后每条 beat 的 `text`、以及 `choiceLabel`，分别被截到多长？\n\n## 一句话\n\n**可检查的约束要按不信任链分层叠：结构归 schema，规模归截断，调用方上限自己也要被夹。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                "lineStart": 15,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "branchSchema：beats 条数上限"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                "lineStart": 59,
+                "lineEnd": 63,
+                "nodeIds": [],
+                "note": "配置本身被 clamp"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                "lineStart": 147,
+                "lineEnd": 162,
+                "nodeIds": [],
+                "note": "解析后再截断一次"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "three-layers",
+                "kind": "basic",
+                "front": "SupaLuv 约束模型输出的三个层次是什么？",
+                "back": "schema 校验（beats 最多 4）、配置钳制（maxAiBeats 被 clamp 到 1–4）、解析后截断（slice 条数与每条 280 字）。",
+                "tags": [
+                  "constraints"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                    "lineStart": 15,
+                    "lineEnd": 19,
+                    "nodeIds": []
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                    "lineStart": 145,
+                    "lineEnd": 162,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "schema-vs-size",
+                "kind": "basic",
+                "front": "schema 校验管什么？截断管什么？",
+                "back": "schema 管结构合法性，截断管规模。4 个 beats 合法，但每个可以无限长——那要靠截断挡。",
+                "tags": [
+                  "constraints"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                    "lineStart": 147,
+                    "lineEnd": 152,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "layer-gap-recall",
+                "kind": "short-answer",
+                "title": "缺层会漏什么",
+                "prompt": "只保留 schema 校验，会漏掉哪一类问题？",
+                "expectedAnswer": "合法但过量的输出，比如条数合法而每条文本极长。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                    "lineStart": 15,
+                    "lineEnd": 19,
+                    "nodeIds": []
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                    "lineStart": 147,
+                    "lineEnd": 152,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "who-decides-rejoin",
+            "title": "支线播完回到哪一幕，为什么不听模型的？",
+            "content": "# 支线播完回到哪一幕，为什么不听模型的？\n\n## 两个东西\n\n你在同一段 `generateAiBranchWithMastra` 里会碰到两种手法，都像在「管模型」，做的事却不一样。\n\n**A. 约束输出。** 模型可以写字段，产品事后按死规模：`maxAiBeats` 先被夹进 1–4；返回时 `choiceLabel` 再截到 36：\n\n```ts\n  const maxAiBeats = Math.max(1, Math.min(4, body.config.maxAiBeats ?? 2));\n  const artPool = body.config.artPool ?? [];\n  const portraitPool = body.config.portraitPool ?? [];\n  const speakerPool = body.config.speakerPool ?? [\"苏明\", \"旁白\"];\n  const rejoinSceneId = body.config.rejoinSceneId;\n```\n\n[[evidence:services/ai-branch/src/branch/mastraBranch.ts:59-63]]\n\n```ts\n  return {\n    choiceLabel: parsed.choiceLabel.slice(0, 36),\n    beats,\n    rejoinSceneId,\n    provider: `mastra+openrouter:${options.model}`,\n  };\n```\n\n[[evidence:services/ai-branch/src/branch/mastraBranch.ts:159-164]]\n\n**B. 不授权决策。** 同段开头，`rejoinSceneId` 取自 `body.config`；返回里用的就是这个配置变量——你看不到 `parsed.rejoinSceneId`。\n\n台词可以模型写再截断；「回到哪一幕」全程由配置持有。\n\n## 先猜一下\n\n若把 B 改成 A——允许模型写 `rejoinSceneId`，schema 校验「必须是合法场景 id」后采纳——还剩什么风险？坏的是谁的体验？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n还剩语义风险：id 合法也可以跳到毫无关联的一幕。schema 验格式，验不了「讲得通」。坏的是作者的主线拓扑，以及玩家对连贯的预期。\n\n## 逐条对照\n\n| | A 约束输出 | B 不授权决策 |\n| --- | --- | --- |\n| 模型能不能写 | 能（beats、choiceLabel 等） | 产品路径不采纳模型的 rejoin |\n| 产品怎么收口 | clamp / `slice` 管规模 | 返回值固定用配置里的 `rejoinSceneId` |\n| 挡什么 | 过长、过多、形状漂移 | 主线拓扑被改写 |\n| 加校验够不够 | 往往够：上限可检查 | 不够：合法 id ≠ 合理回归点 |\n\nA 是模型当作者、产品当编辑。B 不同——配置侧：\n\n```ts\n  const rejoinSceneId = body.config.rejoinSceneId;\n```\n\n[[evidence:services/ai-branch/src/branch/mastraBranch.ts:63]]\n\n返回侧（第三字段不从 `parsed` 取）：\n\n```ts\n  return {\n    choiceLabel: parsed.choiceLabel.slice(0, 36),\n    beats,\n    rejoinSceneId,\n    provider: `mastra+openrouter:${options.model}`,\n  };\n```\n\n[[evidence:services/ai-branch/src/branch/mastraBranch.ts:159-164]]\n\n`choiceLabel` 走 `parsed.…` 再截——那是 A。`rejoinSceneId` 走外层配置变量——那是 B。你若把模型 JSON 里的同名字段当权威，在这条返回路径上会对不上。\n\n## 什么时候用哪个\n\n- **错了只是难看或偏长**（文案、beat 条数）→ 用 A：让模型写，产品截。\n- **错了会改拓扑或权限**（回到哪一幕、谁付钱、写不写盘）→ 用 B：决定放配置/服务端，不进模型采纳路径。\n- **你想靠「schema 校验合法 id」放心** → 合法只说明场景存在，不说明该从这条支线回到这里。\n- **你分不清 A 还是 B** → 问：丢掉模型输出后产品行为变不变？会变，你在授权；不变，你在约束。\n\n## 再想想\n\n分层截断怎么叠，见 [[lesson:layered-constraints|过了 schema 还要再砍一刀]]。\n\n## 自检\n\n**问：** 支线播完回到哪一幕由谁决定？模型 JSON 里的同名字段算数吗？\n\n**问：** 「约束输出」和「不授权决策」差在哪一步？\n\n**问：** 若允许模型自选回归点、并用 schema 校验合法场景 id，还剩什么风险？\n\n## 一句话\n\n**先问这个决定该不该给模型，再问怎么约束它的输出——顺序反了，你会校验一件本不该发生的事。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                "lineStart": 59,
+                "lineEnd": 76,
+                "nodeIds": [],
+                "note": "rejoinSceneId 取自 body.config"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                "lineStart": 155,
+                "lineEnd": 165,
+                "nodeIds": [],
+                "note": "返回结果使用配置里的 rejoinSceneId"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rejoin-authority",
+                "kind": "basic",
+                "front": "AI 支线播完后回到哪一幕，由谁决定？",
+                "back": "由作者配置的 rejoinSceneId 决定，模型无权参与；模型输出里的同名字段不被采纳。",
+                "tags": [
+                  "authority"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                    "lineStart": 59,
+                    "lineEnd": 76,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "constrain-vs-authorize",
+                "kind": "basic",
+                "front": "「约束模型输出」和「不授权模型决策」有什么区别？",
+                "back": "约束是限制它能产生什么；不授权是这个决定压根不进它的输入输出。后者不能靠加校验实现。",
+                "tags": [
+                  "authority"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                    "lineStart": 59,
+                    "lineEnd": 76,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "authority-explain",
+                "kind": "explain",
+                "title": "解释授权边界",
+                "prompt": "如果允许模型自选回归点、并用 schema 校验它必须是合法场景 id，还剩什么风险？",
+                "rubric": [
+                  "指出 schema 只能验证格式合法，验证不了语义合理",
+                  "举出「存在但荒谬」的场景跳转风险",
+                  "得出该决定不应授权、加校验无法弥补的结论"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+                    "lineStart": 59,
+                    "lineEnd": 76,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

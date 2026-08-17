@@ -25,7 +25,7 @@ related:
 > 不含实现规格与迁移脚本。
 
 **交付状态（2026-08-06）：airlock 路径已交付。** 仓外只读钉钉副本 + `university-local`
-study；手写 SpecialStudies / `ul-meta` 已归档取代。拓扑见
+study；手写 SpecialStudies / `ul-meta` 方案已退役并清理，由前者完整接管。拓扑见
 `docs/reference/what-lives-where.md`。勿重新发明「把 studies 搬出仓」或削弱
 `assertSeparatedRoots` 作为主方案。
 

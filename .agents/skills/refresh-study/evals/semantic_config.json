@@ -1,0 +1,21 @@
+{
+  "optimizer_hints": {
+    "capability": "Orchestrate a safe UniversityLocal refresh from a local source commit through snapshot, UA, freshness audit, stale lifecycle, and lesson-writing handoff.",
+    "inputs": ["studied repository", "local commit", "study id", "UA receipt", "freshness audit"],
+    "trigger_actions": ["refresh study", "prepare snapshot", "run UA", "audit stale evidence", "刷新学习资料", "重新跑 UA", "检查课程过期"],
+    "exclusions": ["continue teaching", "explicit knowledge capture", "single lesson writing", "ordinary engineering", "summary only"]
+  },
+  "fallback_positive_concepts": ["source_refresh_orchestration"],
+  "positive_concepts": {
+    "source_refresh_orchestration": {
+      "weight": 0.7,
+      "phrases": ["new local commit", "refresh study", "prepare snapshot", "run UA", "freshness audit", "刷新", "重新跑 UA", "过期"]
+    }
+  },
+  "negative_concepts": {
+    "teaching": {"weight": 0.35, "exclusive": true, "phrases": ["继续教我", "teach the next", "下一节"]},
+    "knowledge_capture": {"weight": 0.35, "exclusive": true, "phrases": ["保存成一条知识笔记", "加入复习", "save this insight"]},
+    "lesson_writing": {"weight": 0.45, "exclusive": true, "phrases": ["重写这一节", "content.md", "revision proposal", "lesson-writing"]},
+    "engineering": {"weight": 0.35, "exclusive": true, "phrases": ["Implement the API", "run tests", "实现接口"]}
+  }
+}

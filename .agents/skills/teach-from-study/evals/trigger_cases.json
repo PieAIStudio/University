@@ -13,6 +13,7 @@
     {"text": "点评我刚才给同事的表达。", "family": "communication_coach"},
     {"text": "修复这段 Mermaid 语法。", "family": "diagram_repair"},
     {"text": "刷新 SupaLuv 的固定源码快照和 UA 分析。", "family": "study_refresh"},
+    {"text": "按五个 variants 重写这一节课的正文、卡片和练习，不开始教学。", "family": "lesson_writing"},
     {"text": "Implement the API endpoint and run tests.", "family": "engineering_task"}
   ],
   "near_neighbor": [

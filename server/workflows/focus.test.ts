@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { writeCourse } from "../content/repository.js";
-import { createStudy } from "../studies/repository.js";
+import { createStudy, setStudyStatus } from "../studies/repository.js";
 import { clearLearningFocus, setLearningFocus, showLearningFocus } from "./focus.js";
 
 const NOW = "2026-08-06T10:00:00.000Z";
@@ -57,6 +57,15 @@ describe("learning focus", () => {
 
     expect(() => setLearningFocus({ projectRoot, studiesRoot, studyId: "nope" })).toThrow(
       /No study named nope\. Available: sample/,
+    );
+  });
+
+  it("refuses an archived study instead of writing a stale focus", () => {
+    const { projectRoot, studiesRoot } = setup();
+    setStudyStatus(studiesRoot, "sample", "archived");
+
+    expect(() => setLearningFocus({ projectRoot, studiesRoot, studyId: "sample" })).toThrow(
+      /Only an active study can be focused: sample is archived/,
     );
   });
 

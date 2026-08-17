@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { EvidenceReference, KnowledgeNote } from "../src/domain/schemas.js";
+import { executeUniversityLocalCli } from "./cli.js";
 import { createUniversityLocalHttpServer } from "./http-server.js";
 import {
   updateCourseStatus,
@@ -1404,6 +1405,51 @@ describe("UniversityLocal loopback API", () => {
     });
     // Focus reorders; it must not remove anything from the shelf.
     expect(after.studies[0]?.activeCourseCount).toBe(2);
+  });
+
+  it("gives AI hosts the same focused next lesson as the web home page", async () => {
+    const fixture = makeLearningProject(false);
+    addSecondCourse(fixture);
+    setLearningFocus({
+      projectRoot: fixture.projectRoot,
+      studiesRoot: fixture.studiesRoot,
+      studyId: "sample",
+      courseIds: ["cost-boundaries", "founder-engineer"],
+    });
+
+    const cli = (await executeUniversityLocalCli({
+      projectRoot: fixture.projectRoot,
+      command: { kind: "teach-next" },
+    })) as {
+      operation: string;
+      teachingStudyId: string | null;
+      nextLesson: {
+        courseId: string;
+        lessonId: string;
+        evidence: readonly EvidenceReference[];
+        artifact: { manifestPath: string; contentPath: string };
+      } | null;
+    };
+    expect(cli.operation).toBe("teach-next");
+    expect(cli.teachingStudyId).toBe("sample");
+    expect(cli.nextLesson).toMatchObject({
+      courseId: "cost-boundaries",
+      lessonId: "spend-gate",
+      evidence: expect.any(Array),
+      artifact: {
+        manifestPath: expect.stringContaining("/revisions/1/manifest.json"),
+        contentPath: expect.stringContaining("/revisions/1/content.md"),
+      },
+    });
+
+    const { base } = await start(fixture.projectRoot);
+    const bootstrap = (await (await fetch(`${base}/api/bootstrap`)).json()) as {
+      today: { nextLesson: { courseId: string; lessonId: string } | null };
+    };
+    expect(bootstrap.today.nextLesson).toMatchObject({
+      courseId: cli.nextLesson?.courseId,
+      lessonId: cli.nextLesson?.lessonId,
+    });
   });
 
   it("surfaces due cards from a non-default course", async () => {

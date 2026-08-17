@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
 
 import { SnapshotManifestSchema, type SnapshotManifest } from "../../src/domain/schemas.js";
+import { inspectImportPathRisk, type ImportGateFinding } from "../airlock/import-gate.js";
 import { assertSafeGitArgument, gitBuffer, gitText } from "../git/run.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
 import { getSnapshotPaths, getStudyPaths } from "./paths.js";
@@ -24,12 +25,38 @@ interface TreeEntry {
   readonly path: string;
 }
 
+function safePathForError(path: string): string {
+  return [...path]
+    .map((character) => {
+      const code = character.charCodeAt(0);
+      return code < 0x20 || code === 0x7f ? `\\u${code.toString(16).padStart(4, "0")}` : character;
+    })
+    .join("");
+}
+
+function describeSnapshotImportRefusal(findings: readonly ImportGateFinding[]): string {
+  const shown = findings.slice(0, 10);
+  const lines = shown.map(
+    (finding) => `  - ${safePathForError(finding.path)} —— ${finding.reason}`,
+  );
+  if (findings.length > shown.length) {
+    lines.push(`  - …还有 ${findings.length - shown.length} 个`);
+  }
+  return [
+    "这次 clean snapshot 被拒绝：目标提交的 Git tracked tree 包含不应进入学习的路径。",
+    "安全检查只读取 Git 路径名，不会读取或输出这些文件的具体内容。",
+    ...lines,
+    "",
+    "这些路径已经被 Git 跟踪，`.gitignore` 对它们无效。请先把它们从跟踪中移除",
+    "（`git rm --cached <路径>` 并提交），再重新创建 snapshot。",
+  ].join("\n");
+}
+
 function readManifest(path: string): SnapshotManifest {
   return SnapshotManifestSchema.parse(JSON.parse(readFileSync(path, "utf8")) as unknown);
 }
 
-function listTree(repository: string, sourceCommit: string): readonly TreeEntry[] {
-  const output = gitBuffer(["--git-dir", repository, "ls-tree", "-r", "-l", "-z", sourceCommit]);
+function parseTree(output: Buffer): readonly TreeEntry[] {
   return output
     .toString("utf8")
     .split("\0")
@@ -45,6 +72,14 @@ function listTree(repository: string, sourceCommit: string): readonly TreeEntry[
       const [, mode, type, objectId, rawSize] = header;
       return { mode, type, objectId, size: rawSize === "-" ? null : Number(rawSize), path };
     });
+}
+
+function listTree(repository: string, sourceCommit: string): readonly TreeEntry[] {
+  return parseTree(gitBuffer(["--git-dir", repository, "ls-tree", "-r", "-l", "-z", sourceCommit]));
+}
+
+function listSourceTree(sourceRoot: string, sourceCommit: string): readonly TreeEntry[] {
+  return parseTree(gitBuffer(["ls-tree", "-r", "-l", "-z", sourceCommit], sourceRoot));
 }
 
 function readBlob(repository: string, objectId: string): Buffer {
@@ -218,13 +253,43 @@ export function createCleanSnapshot(
 ): SnapshotManifest {
   const registration = readSourceRegistration(studiesRoot, studyId);
   const requestedReference = reference ?? registration.defaultRef;
-  const { repository, sourceCommit, sourceTree } = refreshStudyRepository(
-    studiesRoot,
-    studyId,
-    requestedReference,
+  assertSafeGitArgument(requestedReference, "source reference");
+
+  // Resolve and inspect the exact source commit before refreshStudyRepository
+  // is allowed to fetch it into UniversityLocal's bare mirror. A path-only
+  // check after fetch would already have copied a tracked credential into the
+  // mirror, which is too late even when the snapshot is then refused.
+  const preflightCommit = gitText(
+    ["rev-parse", "--verify", `${requestedReference}^{commit}`],
+    registration.sourceRoot,
   );
+  const preflightTree = gitText(
+    ["rev-parse", "--verify", `${preflightCommit}^{tree}`],
+    registration.sourceRoot,
+  );
+  const preflightPathRisk = inspectImportPathRisk(
+    listSourceTree(registration.sourceRoot, preflightCommit),
+  );
+  if (preflightPathRisk.length > 0) {
+    throw new Error(describeSnapshotImportRefusal(preflightPathRisk));
+  }
+
+  // Pass the resolved commit, rather than the moving branch/tag name, so the
+  // commit we checked is the commit that gets fetched even if the source ref
+  // moves between preflight and refresh.
+  const refreshed = refreshStudyRepository(studiesRoot, studyId, preflightCommit);
+  const { repository, sourceCommit, sourceTree } = refreshed;
+  if (sourceCommit !== preflightCommit || sourceTree !== preflightTree) {
+    throw new Error("Fetched Git object does not match the preflight source commit");
+  }
   const snapshotId = `git-${sourceCommit.slice(0, 12)}`;
   const paths = getSnapshotPaths(studiesRoot, studyId, snapshotId);
+
+  // Reuse the airlock's path deny rules, but not its 5MB blob limit. A clean
+  // snapshot points at an exact Git tree and can legitimately study large
+  // committed media such as GLB files or textures.
+  const pathRisk = inspectImportPathRisk(listTree(repository, sourceCommit));
+  if (pathRisk.length > 0) throw new Error(describeSnapshotImportRefusal(pathRisk));
 
   if (existsSync(paths.manifest)) {
     const existing = readManifest(paths.manifest);

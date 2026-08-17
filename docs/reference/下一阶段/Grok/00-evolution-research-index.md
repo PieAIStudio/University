@@ -32,7 +32,7 @@ P3 外语旁注层核心、以及 B1 宿主答疑桥均已落地；细节与入�
 `docs/reference/execution/current-work.md` 与
 `docs/reference/using-university-local-with-grok.md`。下文保留研究理由；
 **不要**按本文「下一阶段」措辞重新实现已交付能力。仓外 SpecialStudies 手写教材
-路径已被 `university-local` airlock study 取代（见
+路径与 `ul-meta` study 已退役，由 `university-local` airlock study 取代（见
 `docs/reference/what-lives-where.md`）。
 
 ---

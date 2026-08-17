@@ -77,6 +77,9 @@ export function setLearningFocus(input: SetFocusInput): FocusResult {
       `No study named ${input.studyId}. Available: ${available.join(", ") || "(none)"}`,
     );
   }
+  if (study.status !== "active") {
+    throw new Error(`Only an active study can be focused: ${study.id} is ${study.status}`);
+  }
   const courseIds = input.courseIds ?? [];
   // A repeated id is wrong about the list itself, so it is reported before any
   // question about what the shelf holds.

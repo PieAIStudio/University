@@ -306,11 +306,11 @@ pnpm university …   # 待规格冻结
 
 ## 10. 与元学习教材的关系
 
-仓外教材厂：`/Users/yuanfei/PieAI/UniversityLocal-SpecialStudies`
+当前教材唯一入口：study `university-local` 的课程 `four-layer-workbench`。
 
-- Course A 第 1 课含分层图与 B1 预告  
-- 本文件是 **产品方向**；SpecialStudies 是 **可学课文**  
-- 答疑包样例可另存教材厂 `templates/`（实现 B1a 前可用手写样例演练）  
+- 课程以冻结的 UniversityLocal 真代码为证据，覆盖四层模型与 B1 的真实提交、宿主判分链路；
+- 本文件保留 **产品方向**，正式可学课文由 current recovery package 保护；
+- 已删除的 SpecialStudies 手写教材厂和 `ul-meta` 不得重新创建。
 
 ---
 
@@ -371,5 +371,4 @@ pnpm university …   # 待规格冻结
 - 不是「某一家宿主会话 = server 引擎」无写回。  
 - 不是拆掉 local-only 或引入 SwimmerBackend。  
 - 不是 Grok Build 专属功能。  
-
 

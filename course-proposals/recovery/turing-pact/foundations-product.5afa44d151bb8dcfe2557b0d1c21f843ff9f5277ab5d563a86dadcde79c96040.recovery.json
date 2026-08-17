@@ -1,0 +1,1648 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 85,
+  "course": {
+    "id": "foundations-product",
+    "title": "《代码之外》",
+    "description": "零基础主干最后一门：不教语法，只教写在代码里的产品决定——埋点与隐私、规则与合规、实验登记与回访理由。每一节从真实文件倒推：这行代码背后是谁做了什么决定。",
+    "audience": "零基础重建地基的独立开发者",
+    "objectives": [
+      "说出图灵密约在埋点上划的隐私红线，并指出它写在哪个文件里",
+      "解释 bucketPlayerCount 如何用桶化兼顾产品洞察与隐私，并指出默认关闭埋点的开关位置",
+      "指出举报理由清单、必须登录才能举报、年龄提示 -v1 后缀各自服务的产品决定",
+      "从实验注册表与 return-hooks 说明「先登记再上线」和「给人一个回来的理由」"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "foundations-quality"
+    ],
+    "units": [
+      {
+        "id": "measuring-without-spying",
+        "title": "想知道用户在干什么，又不能偷看",
+        "objective": "从事件清单、类型钉名、人数桶化、会抛错的隐私规则与默认关闭开关，读懂埋点背后的产品与隐私决定。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "why-measure-at-all",
+            "title": "「埋点」是在偷看用户，还是只在问固定的几道题？",
+            "content": "# 「埋点」是在偷看用户，还是只在问固定的几道题？\n\n## 一句真实出现的话\n\n图灵密约把「能记什么」写进了类型，不是写进 README。你打开产品分析文件，会先撞上一份事件名清单：\n\n[[evidence:src/services/product-analytics/analytics.ts:6-32]]\n\n:::detail[「类型」在这里是什么意思？]\n你可以把类型想成一份事先印好的菜单：哪些菜名允许点，厨房才接单。这里的菜单不是给人看的说明书，是写给电脑看的名单——名单外的名字，保存文件时就会被标红。\n\n所以「写进类型」不是换了一种更漂亮的注释，是把边界交给检查器去守。你以后改代码时，不必单靠记忆去想「这个名字当初允许吗」。README 里写「请勿乱加事件」只对还记得去读的人生效；类型会在你按保存的那一刻拦住。\n\n你第一次见到「类型」这个词，不必先去背语法书。只要记住：它是一份会拦住你的菜单，不是一份希望你自觉遵守的店规。\n:::\n\n同一文件里，属性接口上方还有一句产品红线。原文先写 Never add，再列出允许的粗维度：\n\n[[evidence:src/services/product-analytics/analytics.ts:34-62]]\n\n:::detail[属性接口是干什么的？]\n事件名回答「发生了哪一类事」。属性回答「这件事带着哪几个粗标签」，比如语言、模式、人数档。\n\n接口就是那张标签纸的格子：格子是有限的，格子里能填的词也是有限的。你能问「中文用户多不多」「每日模式有没有人完成」，不该在这里塞聊天原文、房间码或提示词。Never add 那句注释，就是在告诉后来的你：格子外的东西不是「以后再分析」，是现在就不许写。\n\n第一次读「接口」也不必紧张：这里就是一张格子表。格子叫 locale、mode、playerCountBucket。格子外没有「随便写点什么」那一栏。\n:::\n\n「埋点」这个词，很多人会自动翻译成：尽量把用户干过的事都抓下来。可你在这里看到的，却是一份**事先钉死的名单**，外加一句 Never add。清单从 `landing_view` 起，中间经过开房、重赛、恢复，也含一项 `daily_replay`，最后落到 `world_media_state`。\n\n:::detail[「埋点」到底是在干什么？]\n它不是在你电脑里装摄像头。它是作者事先想好的几道是非题：进过首页吗、开过房间吗、完成过每日吗、有没有再玩一局。\n\n每次你点到对应动作，程序就在名单里勾一项。勾的是「这类事发生过」，不是「这个人是谁、说了什么」。把埋点理解成偷看日记，就会和这份名单对不上——日记要原文，名单只要勾选。\n\n所以你下次听见有人说「我们先埋点看看」，先问他：问的是哪几道事先钉死的题，还是打算把用户做过的事都抓下来？这节课的答案是前者。\n:::\n\n## 先猜一下\n\n按 Never add 注释，自由文本 prompt 能否作为合法埋点属性加上去？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不能。注释写明 Never add free-text… or prompts；合法属性只在粗粒度名单里。\n\n## 三个真实用例\n\n**用例 1：事件名不是任意字符串。**\n`ProductEvent` 把合法名字一项一项写出来。你在别处发事件时，若类型系统接上了这份清单，拼一个清单外的名字就会被标红。埋点在这里先回答的是「我们允许问哪几道题」，不是「字符串管道通了就能记」。\n\n[[evidence:src/services/product-analytics/analytics.ts:6-32]]\n\n:::detail[联合类型是什么？]\n就是用竖线把许多名字焊在一起：这个值只能是其中之一。电脑见到名单外的词，会当作写错。\n\n对你来说，它的产品意义比语法更重要：作者愿意公开回答的问题，被焊成了一份不能随手加长的名单。你想加 `daily_replay` 这种新问题，得回到这份名单里加一项，不能在调用处随手发明一个新词。\n\n竖线在屏幕上其貌不扬，产品上却很硬：名单外的词过不了保存。你可以把联合类型读成「只许点菜单上的菜」。\n:::\n\n**用例 2：属性侧只允许粗维度。**\n`ProductEventProperties` 里是 `locale`、`mode`、`playerCountBucket` 这类有限选项，注释写明只收粗粒度产品维度。你能回答「中文用户多不多」「每日模式有没有人完成」，却不该用这里塞聊天原文或房间码。\n\n[[evidence:src/services/product-analytics/analytics.ts:34-62]]\n\n**用例 3：一人公司也需要一双「眼睛」。**\n没有用研团队挨桌采访时，这份清单就是系统化的观察口：进过首页吗、开过房间吗、完成过每日吗、有没有再玩一局每日。它替你问的是**功能有没有人用**，不是替你建用户日记。一人也写这份清单，是因为以后的你也读不懂「当时随手加的字段」——边界写在类型里，比写在记忆里稳。\n\n[[evidence:src/services/product-analytics/analytics.ts:6-32]]\n\n:::detail[一人公司为什么还要这双眼睛？]\n因为三个月后的你，已经不记得今天为什么加某个字段。清单把「能问什么」留在仓库里，后来的你打开文件就能看见边界。\n\n它不替代和真人说话。它只保证：你回看产品时，问的仍是那几道粗问题，而不是一堆说不清来源的隐私碎片。没有用研团队时，这双眼睛就是你唯一系统化的观察口。\n\n有用研团队的公司，可以用访谈补上「为什么不用」。一人公司没有那场访谈。清单至少保证你问的是功能有没有人用，而不是事后去翻用户隐私。\n:::\n\n## 它不是什么\n\n- **不是**「能抓什么抓什么」。注释的 Never add 把自由文本、标识符、房间码、角色、提示词挡在门外。\n- **不是**日志系统。日志常为排错保留细节；这里为产品趋势保留粗问题。\n- **不是**「反正没数据团队，先全记下来以后再分析」。清单本身就是边界——多记身份与自由文本，会把产品眼睛变成隐私债务。\n\n类比：你开小店，门口只放一张勾选项的纸条（来过吗 / 点了哪类 / 坐了多久档），没有姓名栏，也没有「今天心情」自由填写。埋点就是那张纸条：趋势够用，日记不要。\n\n:::detail[日志和埋点差在哪？]\n日志像修车时的流水账：哪根线断了、哪次请求失败了，细节越多越好修。埋点像店门口的问卷：只问几道能汇总的题。\n\n把日记写进问卷，问卷就脏了。这节课要你分清：排错看日志，看「有没有人用」看这份名单。一人公司尤其容易混：修 bug 时想多记一点，三个月后那些「一点」就变成房间码和原文。Never add 就是在拦这种混法。\n\n分不清这两件事，你就会在修一个崩溃时随手把房间码写进产品事件。第二天报表能看了，隐私红线也破了。\n:::\n\n## 再想想\n\n名单写好了，发送器却仍收任意字符串。下一课拆 [[lesson:a-typo-loses-a-month|发送器吃任意字符串，为什么还要钉一份事件名清单]]。\n\n## 自检\n\n**问：** 在这个项目里，「埋点」主要在记什么？\n\n**问：** 注释禁止往埋点里加哪几类东西？\n\n**问：** 一人公司没有用研团队时，这份事件清单扮演什么角色？\n\n## 一句话\n\n**埋点先是一份你愿意公开回答的问题清单，不是「能抓什么抓什么」。**\n",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/analytics.ts",
+                "lineStart": 6,
+                "lineEnd": 32,
+                "nodeIds": [],
+                "note": "ProductEvent 联合类型：landing_view 起，含 daily_replay，落到 world_media_state。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/analytics.ts",
+                "lineStart": 34,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "Never add 注释与 ProductEventProperties 粗粒度属性。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-measure-what-is",
+                "kind": "basic",
+                "front": "在这个项目里，「埋点」主要在记什么？",
+                "back": "粗粒度产品行为（例如进首页、开房间、完成每日），用预先钉死的事件名与属性字段记录，不是自由文本日志。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 6,
+                    "lineEnd": 32,
+                    "nodeIds": [],
+                    "note": "事件名清单定义了可测量的产品动作。"
+                  }
+                ]
+              },
+              {
+                "id": "why-measure-never-add",
+                "kind": "basic",
+                "front": "ProductEventProperties 上方注释禁止往埋点里加哪几类东西？",
+                "back": "禁止 free-text、identifiers、room codes、roles、prompts（自由文本、标识符、房间码、角色、提示词）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 34,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "注释明确 Never add 的类别。"
+                  }
+                ]
+              },
+              {
+                "id": "why-measure-solo",
+                "kind": "basic",
+                "front": "一人公司没有用研团队时，这份事件清单扮演什么角色？",
+                "back": "它是唯一系统化的「眼睛」：用固定问题看功能有没有人用，而不是事后再扫用户隐私。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 6,
+                    "lineEnd": 32,
+                    "nodeIds": [],
+                    "note": "事件清单把「能问什么」写进类型。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "why-measure-event-name",
+                "kind": "short-answer",
+                "title": "写出清单中的第一个事件名",
+                "prompt": "ProductEvent 联合类型的第一个事件名是什么？只写英文标识符。",
+                "expectedAnswer": "landing_view",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 6,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "landing_view 是清单中的第一个事件名。"
+                  }
+                ]
+              },
+              {
+                "id": "why-measure-forbid-word",
+                "kind": "short-answer",
+                "title": "注释禁止的一类内容",
+                "prompt": "ProductEventProperties 上方注释里 Never add 的第一项英文词是什么？（含连字符）",
+                "expectedAnswer": "free-text",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 34,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "Never add free-text, identifiers…"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-typo-loses-a-month",
+            "title": "发送器吃任意字符串，为什么还要钉一份事件名清单？",
+            "content": "# 发送器吃任意字符串，为什么还要钉一份事件名清单？\n\n## 两个东西\n\n产品分析里，有两层看起来都在说「事件名」的东西。一层是**发送器契约**：\n\n[[evidence:src/services/product-analytics/types.ts:1-9]]\n\n:::detail[发送器契约是什么？]\n你可以把它想成快递公司的接件口：只要你递上一张写了字的纸条，窗口就收下。它不负责检查纸条上的字是不是店里的货名。\n\n`event: string` 的意思就是：名字是一段文字就行。管道负责「能发出去」，不负责「这个名字产品认不认」。\n\n第一次看见「契约」别往法律上想。它只是双方约好的接件口形状：这边交一个字符串名字，那边负责发出去。接件口不审货名，审货名的是另一份目录。\n:::\n\n另一层是**产品事件目录**——联合类型把每一个合法名字写死，从 `landing_view` 列到 `world_media_state`，中间现在也包含 `daily_replay`：\n\n[[evidence:src/services/product-analytics/analytics.ts:6-32]]\n\n:::detail[目录和发送器为什么要分成两个文件？]\n`types.ts` 文件头自己划了界：它只拥有粗粒度 payload 类型；不拥有 PostHog 接线、事件目录、隐私白名单。\n\n发送器要对着外部服务说话，外部服务本来就收字符串。目录要对着产品说话，产品必须守住「允许问哪几道题」。两层并存，不是重复啰嗦，是管道和词汇表各管各的。\n\n你读代码时先问自己：我现在看的是管道，还是词汇表？管道宽，是为了对着外部服务；词汇表窄，是为了守产品。混在一个类型里，外部 SDK 的「随便一个字符串」就会把目录冲掉。\n:::\n\n你若只看 `AnalyticsSender`，会觉得事件名就是随便一个 `string`。可产品层又另起一份 `ProductEvent`。两层并存，不是重复啰嗦——分工不同。\n\n## 先猜一下\n\n若产品代码绕过 `ProductEvent`、直接拿任意字符串去调发送器，并且把 `daily_complete` 拼成了 `daily_compelete`，上线一个月后，分析后台最可能出现什么局面？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n后台多出一条永远对不上的新事件名；正确名字那一栏的计数停住——系统照收错标签，账却对不上。\n\n## 逐条对照\n\n| | `AnalyticsSender` 的 `event: string` | `ProductEvent` 联合类型 |\n| --- | --- | --- |\n| 管什么 | 发送管道：名字是字符串就能往下传 | 产品词汇表：只允许清单上的名字 |\n| 拼错时编译器 | 往往拦不住（仍是合法 string） | 接上类型时会在保存时标红 |\n| 拼错时运行时 | 可能照样发出去 | 理想路径上根本发不出非法名 |\n| 文件职责 | `types.ts` 声明发送器契约，不拥有目录 | `analytics.ts` 把目录钉成类型 |\n\n[[evidence:src/services/product-analytics/types.ts:1-9]]\n\n[[evidence:src/services/product-analytics/analytics.ts:6-32]]\n\n:::detail[为什么拼错一个月都没人发现？]\n因为错名字也是合法字符串，管道会照发。后台于是多出一列叫 `daily_compelete` 的新事件，原来的 `daily_complete` 那天开始不再涨。\n\n你月底对账时，会以为「完成每日的人变少了」。其实人还在点，标签贴错了。这就是「一个字母丢掉一个月」的意思：不是服务器坏了，是词汇表没被接上。\n\n一人公司尤其容易中招：没有人每天对后台的事件名。错标签会安静地活到你做月报那天。联合类型把「发现」提前到保存文件，就是为了不让你用一个月的空数据做决定。\n:::\n\n类比：仓库货架标签必须和进货单一致。你把「矿泉水」写成「矿物泉」，扫码枪还能扫进去，但月底对账时矿泉水是 0、矿物泉多出一堆来历不明的数。事件名拼错就是贴错标签——管道照收，报表却碎了。\n\n## 什么时候用哪个\n\n- **写适配器、对接分析服务商** → 发送器侧用宽的 `string` 契约，因为外部 SDK 本来就收字符串。\n- **写产品埋点调用** → 事件名应落在 `ProductEvent` 上，让编译器守拼写。\n- **只靠上线前手测「点一遍」** → 不够。三个月后新加的一处 `daily_compelete`，手测未必再扫到；联合类型会在你保存文件时就标红。\n\n:::detail[手测为什么不够？]\n手测像你临出门前自己走一遍店里的货架。你今天走得到的，是你记得去点的那几个按钮。\n\n三个月后别人在另一处抄了一个名字，少了一个字母。你不会每天把全部按钮再点一遍。类型检查在你保存文件时就会标红，不依赖你记得去点。\n\n手测适合确认「这个按钮按下去会动」。它不适合确认「三个月后新写的那一行名字没拼错」。机器守拼写，人守手感，别反过来。\n:::\n\n读代码时先分清：你看的是「能发」还是「允许发」。两者撞在同一项目里，是为了让目录变成机器可检查的东西，而不是靠记忆。\n\n## 再想想\n\n人数明明是整数，埋点却记成档。下一课讲 [[lesson:buckets-are-privacy|房间里明明 4 人，埋点为什么记成「4-5」]]。\n\n## 自检\n\n**问：** `AnalyticsSender` 的 event 参数是 `string`，事件目录却另有 `ProductEvent`，分工是什么？\n\n**问：** `ProductEvent` 在产品上保护的是什么？\n\n**问：** `types.ts` 文件头说自己 Does not own 哪三样？\n\n## 一句话\n\n**事件名是产品词汇表：要让编译器替你守住拼写，而不是靠记忆。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "AnalyticsSender 使用 string 事件名；文件头划定 Owns / Does not own。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/analytics.ts",
+                "lineStart": 6,
+                "lineEnd": 32,
+                "nodeIds": [],
+                "note": "ProductEvent 把合法事件名焊成联合类型，现含 daily_replay。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "typo-product-event",
+                "kind": "basic",
+                "front": "ProductEvent 这个类型在产品上保护的是什么？",
+                "back": "合法事件名清单：拼错的名字进不了类型，降低「静默丢数一个月」的风险。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 6,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "联合类型逐项列出事件名，现含 daily_replay。"
+                  }
+                ]
+              },
+              {
+                "id": "typo-sender-vs-catalog",
+                "kind": "basic",
+                "front": "`AnalyticsSender` 的 event 参数是 string，事件目录却另有 ProductEvent，说明分工是什么？",
+                "back": "发送器只保证「能发」；产品目录另用联合类型规定「允许发哪些名字」。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 7,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "AnalyticsSender 使用 string 事件名。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 6,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "ProductEvent 收紧为具体事件名。"
+                  }
+                ]
+              },
+              {
+                "id": "typo-owns",
+                "kind": "basic",
+                "front": "types.ts 文件头说自己 Does not own 哪三样？",
+                "back": "PostHog wiring、event catalogs、privacy allow-lists（接线、事件目录、隐私白名单）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 1,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "Owns / Does not own 边界注释。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "typo-type-name",
+                "kind": "short-answer",
+                "title": "事件名联合类型叫什么",
+                "prompt": "钉住全部产品事件名的那个 type 别名，英文标识符是什么？",
+                "expectedAnswer": "ProductEvent",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 6,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "export type ProductEvent = …"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "buckets-are-privacy",
+            "title": "房间里明明 4 人，埋点为什么记成「4-5」？",
+            "content": "# 房间里明明 4 人，埋点为什么记成「4-5」？\n\n## 现象\n\n产品分析里有一个把人数「收窄」的函数。你把精确整数扔进去，拿回来的却不是原数字：\n\n[[evidence:src/services/product-analytics/context.ts:10-15]]\n\n:::detail[这个函数在干什么？]\n它吃进去一个整数，吐出来四个档里的一个。`4` 走进去，出来的是 `'4-5'`，不是 `4`，也不是 `'4'`。\n\n作者不是算错了。他故意不要精确人数，只要「大概是中局还是大局」。\n\n你第一次看见这种「吃进去一个数、吐出来一档」的函数，容易以为作者算错了。没有。精确人数是房间里的事实，埋点里不允许那个事实原样离开。\n:::\n\n试一下心算：`playerCount` 是 `4` 时，函数返回 `'4-5'`。属性侧同样只认这四个桶字符串：\n\n[[evidence:src/services/product-analytics/analytics.ts:55]]\n\n:::detail[属性字段为什么叫 playerCountBucket？]\n后面的 Bucket 就是「桶」：不装精确数字，只装档。类型只开放这四个字符串，没有「随便一个整数」的格子。\n\n你在埋点里想写 `playerCount: 4`，类型这边根本没有这个字段。红线在类型里，不在口头约定里。\n\n字段名本身就是说明书。你看见 Bucket，就该想到：这里不要精确数字。类型再把四个档写死，连「我想偷偷传 4」都没有格子可写。\n:::\n\n类型名 `ProductPlayerCountBucket` 也从这份属性定义推出来，意思是：人数在埋点里只以桶的形态存在。\n\n[[evidence:src/services/product-analytics/context.ts:3-4]]\n\n## 先猜一下\n\n作者已经知道真实人数是整数，为什么还要故意记成 `'4-5'` 这种档，而不是直接上传 `4`？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n这是桶化：用档位换「够做产品判断」和「更难从单条记录反推具体房间」之间的平衡。\n\n## 为什么是这样\n\n读函数时按三步走：\n\n1. **输入**是精确整数 `playerCount`。\n2. **输出**永远是 `'1'` / `'2-3'` / `'4-5'` / `'6+'` 之一，没有第五种「原样数字」。\n3. **阈值** 2、4、6 是产品参数：小局 / 中局 / 大局的分界，写在代码里，而不是藏在报表工具的筛选条件里。\n\n[[evidence:src/services/product-analytics/context.ts:10-15]]\n\n:::detail[桶化是什么？]\n就是把精确数字收成几档。问卷不问「每月收入精确到元」，而问「5000 以下 / 5000–10000 / 10000 以上」。\n\n趋势还在：你仍能回答「房间更常是小局还是大局」。单份记录却对不上「某一分钟某个恰好 4 人的房间」。这是刻意的模糊，不是统计偷懒。\n\n第一次听「桶化」可以记成收纳：把许多精确值倒进少数几个桶。产品要的是桶与桶之间的高低，不是某一滴水来自哪只杯子。\n:::\n\n你仍能回答「房间更常是小局还是大局」。你更难回答「某一分钟某个恰好 4 人的房间是哪一间」——精确人数一旦和时间、其它字段叠在一起，单条记录更容易拼出具体房间画像。桶化是刻意的模糊，不是统计偷懒。\n\n:::detail[记精确人数会怎样？]\n`4` 看起来只是一个很小的数。可它一旦和开局时间、语言、模式叠在一起，就更容易指回某一间刚好 4 人的房。\n\n作者要的是规模分布，不是房间画像。所以属性类型只开放桶，不开放精确人数。\n\n单独一个 4 看起来无害。叠上开局时间、语言、模式，就更容易指回某一间刚好 4 人的房。作者要规模分布，不要房间画像，所以类型不开放精确人数。\n:::\n\n若改成直接上传 `playerCount: 4`，「恰好 4 人」会更准，但隐私更差。这个项目在属性类型上只开放桶，不开放精确人数——红线在类型里，不在口头约定里。\n\n## 再想想\n\n红线如果只写在类型里，还可能被绕过。下一课看 [[lesson:rules-that-throw|发现禁止字段时，为什么要 throw]]。\n\n## 自检\n\n**问：** `bucketPlayerCount` 会输出哪四个字符串？\n\n**问：** 为什么记桶比记精确人数更有利于隐私？\n\n**问：** 属性字段叫什么名字？它的类型允许精确数字吗？\n\n## 一句话\n\n**桶化不是偷懒统计，是把「够用」和「不可反推」写进同一行返回值。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/context.ts",
+                "lineStart": 10,
+                "lineEnd": 15,
+                "nodeIds": [],
+                "note": "bucketPlayerCount 四个 return 分支。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/analytics.ts",
+                "lineStart": 55,
+                "lineEnd": 55,
+                "nodeIds": [],
+                "note": "playerCountBucket 只开放四个桶字符串。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/context.ts",
+                "lineStart": 3,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "ProductPlayerCountBucket 从属性定义推出。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "bucket-four-values",
+                "kind": "basic",
+                "front": "`bucketPlayerCount` 可能返回哪四个字符串？",
+                "back": "`'1'`、`'2-3'`、`'4-5'`、`'6+'`。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 10,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "四个 return 分支。"
+                  }
+                ]
+              },
+              {
+                "id": "bucket-why-privacy",
+                "kind": "basic",
+                "front": "为什么记「4-5」比记「4」更像隐私设计？",
+                "back": "单条记录不再携带精确人数，更难与其它信息拼成具体房间画像，同时仍能看规模分布。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 10,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "输出是桶而不是原数字。"
+                  }
+                ]
+              },
+              {
+                "id": "bucket-field-name",
+                "kind": "basic",
+                "front": "埋点属性里表示人数规模的字段名是什么？",
+                "back": "playerCountBucket。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 55,
+                    "lineEnd": 55,
+                    "nodeIds": [],
+                    "note": "playerCountBucket 字段定义。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "bucket-six-plus",
+                "kind": "short-answer",
+                "title": "6 人房间落入哪一桶",
+                "prompt": "bucketPlayerCount(6) 返回的字符串是什么？（不要加引号）",
+                "expectedAnswer": "6+",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 11,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "playerCount >= 6 返回 '6+'。"
+                  }
+                ]
+              },
+              {
+                "id": "bucket-four-five",
+                "kind": "short-answer",
+                "title": "4 人房间落入哪一桶",
+                "prompt": "bucketPlayerCount(4) 返回的字符串是什么？（不要加引号）",
+                "expectedAnswer": "4-5",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/context.ts",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "playerCount >= 4 返回 '4-5'。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "rules-that-throw",
+            "title": "发现禁止字段时，为什么要 throw 而不是打日志继续发？",
+            "content": "# 发现禁止字段时，为什么要 throw 而不是打日志继续发？\n\n## 情境和约束\n\n前面你已经见过事件清单和粗粒度属性；这里要把隐私红线做成**可执行**的东西。你打开模块导出，名字本身就摆明态度：\n\n[[evidence:src/services/product-analytics/index.ts:1-14]]\n\n:::detail[看导出名字能看出什么态度？]\nForbidden 是「禁止」，assert 是「断言：不成立就失败」。一份出口清单里同时出现白名单、断言和禁止名单，说明隐私不是写在旁边的提醒，是这扇门自己会关。\n\n你以后打开别的模块，也可以先扫导出名字：有 assert / Forbidden，多半是红线；只有 comment 或 README，多半还只是愿望。\n\n你以后打开陌生模块，也可以先扫这一眼。有 Forbidden 和 assert，说明作者打算让程序自己喊停；只有一段温和的注释，说明红线还只写在愿望里。\n:::\n\n禁止属性名里有 `roomCode`、`userId`、`email`、`prompt` 等——这些是身份与自由文本的常见入口：\n\n[[evidence:src/services/product-analytics/analytics.ts:84-104]]\n\n:::detail[这些禁止名都在防什么？]\n`roomCode`、`userId`、`email` 指向「哪一间房、哪一个人」。`prompt`、`message`、`content` 指向「他说了什么」。\n\n作者把这些常见入口写成一张黑名单。你就算绕过产品属性的白名单，用这些键硬塞，扫描函数也要抓住。\n\n身份类键回答「是谁、是哪一间」。自由文本键回答「他说了什么」。产品埋点两样都不该要。黑名单把最常见的入口名字写死，免得三个月后有人「临时加一个字段看看」。\n:::\n\n你再往下看扫描函数：命中禁止项时，不是打一行警告之后继续，而是直接失败：\n\n[[evidence:src/services/product-analytics/analytics.ts:192-213]]\n\n:::detail[throw 是什么意思？]\n就是当场停住：这件事不再往下做。对比「打一行警告还继续发」——警告像门上贴条，门其实还开着。\n\n`throw new Error(...)` 会打断发送路径。脏事件走不到分析后台，也不会和合法事件混成噪声。\n\n你可以把它想成传送带急停。警告只是喇叭响了还在转；throw 是整条线停住。脏行李走不到分析后台，你才不用第二天去报表里挖隐私事故。\n:::\n\n约束很硬：一人公司没有专职隐私审查员盯每一条日志；红线若只写在 README，三个月后仍可能被新代码绕过。你作为维护者，必须在「软提醒」和「硬失败」之间选一条路。\n\n## 先猜一下\n\n若命中禁止字段只 warn 仍放行，脏事件会不会进分析后台？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会。warn 不打断发送路径，违规 payload 仍可能被送出去——这正是这节课选 throw 要堵住的口。\n\n## 代价和收益\n\n**收益**\n\n- 失败打断发送路径，脏事件进不了报表，也不会和合法事件混成噪声。\n- 测试与代码审查可以依赖「断言会炸」：隐私合同变成可跑的检查，而不只是文档语气。\n- 命名里的 Forbidden / assert 让后来的你一眼知道：这是红线，不是建议。\n\n**代价**\n\n- 开发期若误塞禁止字段，功能路径可能一起炸掉，你要当场修，不能「先发着再改」。\n- 调用方必须在发送前保证 payload 干净；多了一道纪律，也多了一点摩擦。\n\n你可能觉得白名单 `ALLOWED_ANALYTICS_PROPERTIES` 与黑名单 Forbidden 重复——其实不：白名单管「产品维度允许哪些键」；黑名单与值模式管「即使绕过，标识符和自由文本形态也要被抓到」。双层是防御深度。\n\n:::detail[白名单和黑名单为什么要两层？]\n白名单像只许带这几件行李。黑名单像安检仪：即使你换了个袋子，里面像房间码、邮箱、密钥的东西仍会被喊停。\n\n一人公司没有第二个人每天扫日志。两层都写进会失败的路径，你才信得过「不会默默脏掉」。\n\n白名单管「产品允许问哪几个粗标签」。黑名单管「就算你换个袋子，里面像房间码、邮箱、密钥的东西也要被抓住」。一人公司没有第二个人每天扫日志，所以两层都要会失败，不能只会提醒。只提醒不失败，脏事件仍可能走出去。两层都要会失败，你才不必第二天去报表里挖隐私事故。提醒留下记录，失败才挡住发送。\n:::\n\n## 什么时候该反过来\n\n- **探索性本地调试、且数据绝不离开本机** → 有时可以先 warn，降低打断频率；但上线路径仍应 hard fail。\n- **失败会误伤无关主流程，且有更外层的统一拦截** → 可以把 throw 收到分析模块边界，避免整页崩溃；红线仍要失败，只是失败被包在分析层。\n- **绝不能反过来的情况**：生产环境「打日志继续发」等于默认放行隐私事故——对一人公司尤其危险，因为没有第二个人替你扫日志。\n\n类比：机场安检不是贴一张「请勿携带违禁品」海报就结束。行李过机时，违禁物会让传送带停下。`assertPrivacySafePayload` 就是那台会响的机器——红线有牙齿，你才信得过。\n\n## 再想想\n\n能力齐了，克隆仓库后会不会「顺便」开始采？下一课讲 [[lesson:off-by-default|为什么克隆仓库之后，埋点不会顺便开始采]]。\n\n## 自检\n\n**问：** 会扫描 payload 并在违规时抛错的导出函数，英文名是什么？\n\n**问：** 举两个出现在 `FORBIDDEN_ANALYTICS_PROPERTY_NAMES` 里的属性名。\n\n**问：** 有白名单还要黑名单，分别管什么？\n\n## 一句话\n\n**隐私红线要写进会失败的代码路径；只写在 README 里的红线，等于没有红线。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/index.ts",
+                "lineStart": 1,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "导出并列 ALLOWED、assert、FORBIDDEN。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/analytics.ts",
+                "lineStart": 84,
+                "lineEnd": 104,
+                "nodeIds": [],
+                "note": "FORBIDDEN_ANALYTICS_PROPERTY_NAMES 含 roomCode、email、userId、prompt 等。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/analytics.ts",
+                "lineStart": 192,
+                "lineEnd": 213,
+                "nodeIds": [],
+                "note": "assertPrivacySafePayload 命中禁止属性时 throw。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rules-assert-name",
+                "kind": "basic",
+                "front": "`assertPrivacySafePayload` 这个名字里的 assert 暗示什么行为？",
+                "back": "不满足条件就失败（抛错），而不是默默放过。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 192,
+                    "lineEnd": 210,
+                    "nodeIds": [],
+                    "note": "函数在禁止属性时 throw new Error。"
+                  }
+                ]
+              },
+              {
+                "id": "rules-forbidden-example",
+                "kind": "basic",
+                "front": "举两个出现在 FORBIDDEN_ANALYTICS_PROPERTY_NAMES 里的属性名。",
+                "back": "例如 roomCode 与 email（还有 userId、prompt、role 等）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 85,
+                    "lineEnd": 99,
+                    "nodeIds": [],
+                    "note": "禁止名单包含 roomCode、email、userId 等。"
+                  }
+                ]
+              },
+              {
+                "id": "rules-export-attitude",
+                "kind": "basic",
+                "front": "为什么说「光看 index 导出名字就知道态度」？",
+                "back": "导出同时包含 Forbidden 常量与 assert 函数，说明隐私是可执行规则，不是旁注。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/index.ts",
+                    "lineStart": 1,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "导出清单并列 ALLOWED、assert、FORBIDDEN。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rules-throw-fn",
+                "kind": "short-answer",
+                "title": "隐私断言函数名",
+                "prompt": "会扫描 payload 并在违规时抛错的那个导出函数，英文名是什么？",
+                "expectedAnswer": "assertPrivacySafePayload",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 192,
+                    "lineEnd": 194,
+                    "nodeIds": [],
+                    "note": "export function assertPrivacySafePayload。"
+                  }
+                ]
+              },
+              {
+                "id": "rules-throw-why",
+                "kind": "explain",
+                "title": "为什么要 throw 而不是只打日志",
+                "prompt": "用自己的话说明：把隐私违规做成 throw，对一人公司维护者意味着什么？（2–4 句）",
+                "rubric": [
+                  "提到失败会打断发送路径，而不是静默污染数据",
+                  "提到红线可被测试与代码审查依赖",
+                  "对比「只写文档提醒」的不可执行性",
+                  "结合 Forbidden 名单或 assert 命名中至少一处证据"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 207,
+                    "lineEnd": 210,
+                    "nodeIds": [],
+                    "note": "禁止属性时 throw new Error。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "off-by-default",
+            "title": "为什么克隆仓库之后，埋点不会「顺便」开始采？",
+            "content": "# 为什么克隆仓库之后，埋点不会「顺便」开始采？\n\n## 情境和约束\n\n前面几课你已经见过：事件清单、类型钉名、人数桶、会抛错的隐私断言——分析能力在代码里是齐的。可模板环境变量却这样写：\n\n[[evidence:.env.example:10-14]]\n\n:::detail[环境变量模板是什么？]\n它是一份「请你自己填」的样张，通常叫 `.env.example`。你克隆仓库后抄一份成本地配置，不会自动开始往外送数。\n\n`VITE_ENABLE_POSTHOG=false` 是开关默认关。`VITE_POSTHOG_KEY=` 后面是空的。注释还写明：不要把个人密钥写进这份样张。\n\n第一次见到以点开头的文件，可以把它想成「给后来的你看的填空卷」。克隆仓库的人抄一份，填自己的地址和钥匙。样张默认关着、钥匙是空的，就是在说：先别替别人做采集决定。\n:::\n\n代码侧还有第二道门，写在 `isPostHogAnalyticsEnabled` 里。你先自己读这两行，再猜下面那道题：\n\n[[evidence:src/services/product-analytics/analytics.ts:64-66]]\n\n:::detail[这两行在看哪两个东西？]\n一行取出项目 key，并裁掉首尾空格。下一行把开关拿去跟一段字比，再看钥匙裁完还剩不剩东西。\n\n至于「只拨开开关、钥匙仍空」算不算启用，先别急着听我下结论——那正是下面要你猜的。\n\n开关要比的是四个字母 true，不是「看起来像开了」。钥匙要比的是裁完空格后还剩不剩字，不是「我好像填过」。两道门各挡一种「我以为已经开了」。\n:::\n\n你本地拷一份样张，默认看不到「已经开始往外送数」。能力在，许可怎么给，是作者另做的选择。\n\n## 先猜一下\n\n只开 `VITE_ENABLE_POSTHOG=true` 而 key 仍空时，按 `isPostHogAnalyticsEnabled` 会不会开始采？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不会。开关与非空 key 必须同时成立；key 为空时整条门仍关着。\n\n## 代价和收益\n\n**收益**\n\n- 本地与演示环境默认不采集，降低误发真实用户行为或空 key 乱连的风险。\n- 注释写明 privacy-first，并禁止把个人 API key / secret 写进示例文件——立场与默认值一致。\n- 双重条件（`'true'` **且** 非空 key）防止「只开了开关忘了配 key」或「只填了 key 却以为没开」。\n\n**代价**\n\n- 你真要看线上漏斗时，必须记得改环境变量并准备项目 key，多一步配置。\n- 写 `True`、`1`、留空开关都不算打开——严格相等会让「我明明开了」的调试多花几分钟。\n\nHost 指向 `eu.i.posthog.com`，与「隐私优先」注释同一语境：区域与默认关，都是立场的一部分，不是随便填的占位。\n\n:::detail[为什么默认关算产品立场，不是技术偷懒？]\n克隆仓库的人，没有同意过「请记录我怎么点」。默认开等于替别人做采集决定。\n\n开源仓库面向陌生克隆者时，默认关几乎是礼貌，也是合规习惯。要看漏斗，你自己打开那扇门，并准备好项目 key。\n\n技术偷懒会是「没接上所以发不出去」。这里接上了，只是许可默认不给。克隆仓库的人没有点过同意，默认开等于替他做采集决定。开源仓库尤其不该这么做。\n:::\n\n## 什么时候该反过来\n\n- **团队内部预发环境、且全员知情并只走测试账号** → 可以默认开，减少每人重复配置；仍不该把 secret 写进仓库。\n- **合规要求「未同意前不得采集」** → 默认关几乎是硬约束，不该反过来。\n- **开源仓库面向陌生克隆者** → 默认开等于替别人做采集决定；应保持默认关，让开启成为显式决定。\n\n:::detail[个人密钥为什么不能写进样张？]\n样张会进仓库，仓库可能被任何人克隆。个人密钥一旦写进去，就等于把钥匙复印后贴在大门上。\n\n注释写 never put a personal API key or secret here，和默认 `false`、空 key 是同一立场：能力可以就绪，许可必须另开一扇门。\n\n样张会进仓库，仓库可能被任何人克隆。密钥写进去，就等于把钥匙复印后贴在大门上。注释、默认 false、空 key 是同一句话的三种写法：能力可以就绪，许可必须另开一扇门。\n:::\n\n类比：新相机出厂时麦克风是关的。你要录像带声音，必须自己打开。默认关不是说麦克风坏了，而是厂家默认不替你录音。\n\n## 自检\n\n**问：** `.env.example` 里 PostHog 启用开关的默认值是什么？\n\n**问：** 代码里怎样才算 PostHog 分析已启用？\n\n**问：** 环境变量示例注释对 API key 的要求是什么？\n\n## 一句话\n\n**默认关闭是产品立场：能力可以就绪，许可必须另开一扇门。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": ".env.example",
+                "lineStart": 10,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "PostHog 默认关闭，key 为空，禁止写入 personal API key。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/analytics.ts",
+                "lineStart": 64,
+                "lineEnd": 66,
+                "nodeIds": [],
+                "note": "isPostHogAnalyticsEnabled 要求开关为 'true' 且 key 非空。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "off-default-value",
+                "kind": "basic",
+                "front": "`.env.example` 里 PostHog 启用开关的默认值是什么？",
+                "back": "false（VITE_ENABLE_POSTHOG=false）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": ".env.example",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "VITE_ENABLE_POSTHOG=false。"
+                  }
+                ]
+              },
+              {
+                "id": "off-two-conditions",
+                "kind": "basic",
+                "front": "代码里怎样才算 PostHog 分析已启用？",
+                "back": "VITE_ENABLE_POSTHOG 严格等于 'true'，并且 VITE_POSTHOG_KEY 裁剪后非空。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 64,
+                    "lineEnd": 66,
+                    "nodeIds": [],
+                    "note": "双重条件与。"
+                  }
+                ]
+              },
+              {
+                "id": "off-never-secret",
+                "kind": "basic",
+                "front": "环境变量示例注释对 API key 的要求是什么？",
+                "back": "never put a personal API key or secret here（不要把个人密钥或 secret 放进这里）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": ".env.example",
+                    "lineStart": 10,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "注释明确禁止放入 personal API key or secret。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "off-env-var-name",
+                "kind": "short-answer",
+                "title": "开关环境变量名",
+                "prompt": "控制是否启用 PostHog 的环境变量全名是什么？",
+                "expectedAnswer": "VITE_ENABLE_POSTHOG",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": ".env.example",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "VITE_ENABLE_POSTHOG=false。"
+                  }
+                ]
+              },
+              {
+                "id": "off-default-false",
+                "kind": "short-answer",
+                "title": "默认是开还是关",
+                "prompt": "模板里该开关的默认布尔值英文单词是什么？",
+                "expectedAnswer": "false",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": ".env.example",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "赋值为 false。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rules-and-safety",
+        "title": "有人会捣乱，有法律要遵守",
+        "objective": "从举报理由、身份校验、合规存储版本与双语文案，读懂规则与安全相关的产品决定如何落进代码。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "four-reasons-and-an-other",
+            "title": "举报理由为什么不能随便写，却又留了 other？",
+            "content": "# 举报理由为什么不能随便写，却又留了 other？\n\n## 情境和约束\n\n你在做一个会聊天的产品。有人点「举报」时，系统总得知道**他在告哪一类事**——运营才好分单处理。\n\n打开 `src/services/moderation.ts`，靠前写着一份很短的名单：\n\n[[evidence:src/services/moderation.ts:4-5]]\n\n:::detail[这四个词是给人看的菜单，还是给程序看的名单？]\n给程序看的名单。这份文件里没有菜单，只有数组和校验：谁来调用 `reportMessage`，传进来的 `reason` 都得落在这四个英文字里。`as const` 把名单焊死，后面的类型 `ReportReason` 就是「四个词之一」。\n\n你不能靠「我再写一个更准的词」过关。名单外的字，下一扇门会挡下来。\n\n不要把它读成玩家面前的四项菜单。你加一个更准的说法，却忘了改这四个词，调用处和校验处就会各说各的。as const 是在逼你改名单本身，而不是在调用处发明第五个词。\n:::\n\n同一文件里，真正发举报之前会先过一道门：\n\n[[evidence:src/services/moderation.ts:17-31]]\n\n:::detail[这道门失败时会发生什么？]\n`isReportReason` 发现字不在名单里，就抛出 `Unsupported report reason`。举报不会发出去。\n\n这和「让用户打一整段自由文字」是两条路。这里选的是：分类必须受控，写不进名单的字直接失败。\n\n失败不是「记一条警告还是发出去」。Unsupported report reason 会让整次举报停住。运营队列里因此不会出现一个程序不认识的分类，你也不用事后猜这个人到底想告哪一类。\n:::\n\n技术上你可以塞进一百个理由词，也可以改成让用户打一整段自由文字。这里却只留了四个，而且最后一个叫 `other`。\n\n## 先猜一下\n\n若把固定名单去掉，改成「举报原因请自由填写」，运营侧最先会痛在哪里？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n最先痛在分单：同样的事被写成一百种句子，一个人值守的队列会被字淹没。作者因此钉死四个词，并用 `other` 排气，而不是开放自由填写。\n\n## 代价和收益\n\n**收益先看名单本身。** 四个词从名字就能读出覆盖面：\n\n| 值 | 大致覆盖 |\n| --- | --- |\n| abuse | 滥用、攻击性内容 |\n| harassment | 骚扰 |\n| spam | 刷屏、垃圾信息 |\n| other | 清单外的残余 |\n\n分类粗到一个人也能处理——这是运营带宽决定的，不是语法逼出来的。\n\n**`other` 买到的是排气。** 真实世界总会冒出第五种情况。没有 `other`，调用方只能硬塞进错误分类，或这条链路没法标出清单外的情况；有了它，清单盖不全时仍有落点，但落点仍是一个受控标签，不是空白作文纸。\n\n:::detail[other 解决的不是什么？]\n它不让你写「就是那种很微妙的冒犯」。它只是第四个受控标签，避免「前三项都不对、于是没法标」。\n\n细分类要靠运营事后读上下文。你若真要自然语言证据，应另开「补充说明」，不要把分类口做成作文题。\n\n它不是意见箱，也不是「请描述你的感受」。它只是名单里的第四个词，避免前三项都不对时只能乱填或放弃。真要自然语言，应另开补充说明，别把分类口做成作文题。\n:::\n\n**`as const` 与 `ReportReason` 把名单焊死成类型。** 后面校验用同一份数组：`isReportReason` 不通过就抛错。你加一个新理由，要同时改名单和产品流程——改不动「静默接受任意字符串」。\n\n**代价也很直白。** 用户不能精确描述微妙冒犯；细分类要靠运营事后读上下文。你还放弃了「理由栏当意见箱」的幻想——那本来也容易变成新的伤害通道。\n\n像物业报修单上只勾「水电 / 门窗 / 噪音 / 其他」：勾选让班组能分单，「其他」避免真有第五种却无处可写，但单子仍不是小说稿纸。\n\n## 什么时候该反过来\n\n- **类别少、要聚合、要防滥用文案** → 固定枚举加可选的 `other`，像这里。\n- **类别本身就是业务核心、且会快速膨胀** → 可维护的配置表，仍不是纯自由文本。\n- **你要的就是自然语言证据** → 另开「补充说明」字段，与「分类标签」拆开。\n- **完全匿名、零治理的意见箱** → 可以自由写，但那就不是这套举报链路了。\n\n:::detail[为什么自由填写会让运营先痛？]\n因为分单靠的是标签，不是小说。一百个人用一百种写法描述同一件事，一个人值守的队列会先被字淹没，而不是先被问题淹没。\n\n固定四词是带宽设计。`other` 只负责「还有一种我没列」，不负责替你写清楚。\n\n分单靠的是标签。一百个人用一百种写法描述同一件事，一个人值守的队列会先被字淹没。固定四词是带宽设计：先让单子能分出去，细节靠事后读上下文，而不是靠用户当场写小说。一人值守时，分类先活下来，作文以后再读。自由填写会让运营先痛在分单，而不是先痛在「不够精确」。\n:::\n\n## 再想想\n\n同一条 `reportMessage` 里，合法理由通过之后还要确认**是谁在举报**——下一课见 [[lesson:you-must-know-who-reported|点了举报，为什么还要先确认「你是谁」]]。\n\n## 自检\n\n**问：** `REPORT_REASONS` 里四个值分别是什么？\n\n**问：** 提交一个不在列表里的 reason，代码抛出的错误文案是什么？\n\n**问：** 列表里留下 `other`，主要解决什么问题？它解决的**不是**什么问题？\n\n## 一句话\n\n**举报理由清单是运营接口：固定分类好处理，`other` 只排气不开放作文。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 4,
+                "lineEnd": 5,
+                "nodeIds": [],
+                "note": "REPORT_REASONS 四词 as const 与 ReportReason 类型。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 17,
+                "lineEnd": 31,
+                "nodeIds": [],
+                "note": "isReportReason 失败时 throw Unsupported report reason。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "report-four",
+                "kind": "basic",
+                "front": "REPORT_REASONS 包含哪四个字符串？",
+                "back": "abuse、harassment、spam、other。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "四个元素的 as const 数组。"
+                  }
+                ]
+              },
+              {
+                "id": "report-other-role",
+                "kind": "basic",
+                "front": "清单里的 other 主要解决什么产品问题？",
+                "back": "覆盖前三项装不下的情况，同时仍保持枚举可控，而不是开放自由文本。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 4,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "other 与其它三项并列在同一枚举。"
+                  }
+                ]
+              },
+              {
+                "id": "report-unsupported",
+                "kind": "basic",
+                "front": "传入不在列表中的 reason 会怎样？",
+                "back": "抛出 Error：Unsupported report reason，举报不会发出。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 29,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "非法 reason 时 throw。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "report-reasons-const",
+                "kind": "short-answer",
+                "title": "举报理由数组名",
+                "prompt": "导出的举报理由常量数组英文名是什么？",
+                "expectedAnswer": "REPORT_REASONS",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "export const REPORT_REASONS。"
+                  }
+                ]
+              },
+              {
+                "id": "report-other-word",
+                "kind": "short-answer",
+                "title": "排气阀那一项",
+                "prompt": "四个理由里表示「其它」的那一个英文单词是什么？",
+                "expectedAnswer": "other",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "数组末项为 other。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "you-must-know-who-reported",
+            "title": "点了举报，为什么还要先确认「你是谁」？",
+            "content": "# 点了举报，为什么还要先确认「你是谁」？\n\n## 情境和约束\n\n上一课你见过：理由不在名单里，举报直接被拒。同一条函数里，理由过关之后还有一步——在真正写到后端之前，先问清当前用户：\n\n[[evidence:src/services/moderation.ts:21-38]]\n\n:::detail[当前用户是什么意思？]\n就是「现在坐在这台设备前、已经登录的那个人」。函数名叫 `getCurrentUserOrThrow`：拿不到这个人就抛错，不会默默用「匿名」继续。\n\n调用处写了 `operation: 'reporting message'`。这是这次身份检查的内部标签：等身份太久时的提示、以及内部排错记录会带上它，让人看得出卡在「举报」。没拿到登录用户时，抛出的是登录要求，不会把这个标签写进给玩家看的那句失败里。\n\n就是已经登录、此刻正坐在这台设备前的那个人。拿不到这个人还继续，等于接受匿名空投指控。函数名里的 OrThrow 已经把态度写死：没有这个人，就失败，不要默默找一个替身。\n:::\n\n函数名叫 `getCurrentUserOrThrow`：拿不到当前用户就抛错，不会默默用「匿名」继续。\n\n[[evidence:src/services/moderation.ts:33]]\n\n## 先猜一下\n\n若删掉 `getCurrentUserOrThrow` 这一行，未登录的人也能把举报打出去——产品最先丢掉的是哪一种能力？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n他们选了可问责的举报：系统必须知道是谁在报，才能压滥报、追误报；不接受「系统内零身份」的空投指控。\n\n## 代价和收益\n\n你把顺序当产品逻辑读，四步各卡一件事：\n\n1. **先有内容可报**——`messageId` 去空白后不能为空。\n2. **再保证理由合法**——沿用上一课的 `isReportReason`。\n3. **然后锁住「谁在举报」**——`await getCurrentUserOrThrow(...)`。\n4. **最后才写后端**——`supabase.rpc('turing_pact_report_message', …)`。\n\n[[evidence:src/services/moderation.ts:21-38]]\n\n你在调用处看到的 `operation: 'reporting message'`，主要服务等太久时的提示和内部排错，不是给你看的未登录文案。\n\n[[evidence:src/services/room.ts:36-62]]\n\n:::detail[顺序为什么不能对调？]\n若先写后端、再查身份，未登录的请求可能已经落到治理队列里。你事后再补「这是谁」，补不上就是一条无主指控。\n\n代码把身份检查放在 rpc 前面：没有当前用户，根本不会发起那次写入。\n\n先写库再查身份，未登录的请求可能已经落到治理队列。你事后补「这是谁」，补不上就是一条无主指控。代码把身份检查放在写入前面，是为了让「没有当前用户」根本发不出那一次写入。\n:::\n\n**收益：** 每条举报都挂在真实会话用户上。有人刷举报、报复性乱报，你手里有主体可查；治理队列不是匿名意见箱。\n\n**代价：** 没登录就点不了（或点了会失败）。真实受害者若正处于「不想暴露身份」的状态，摩擦会上去——这是刻意权衡，不是疏忽。\n\n:::detail[系统内有身份，等于对外公开举报人吗？]\n不是一回事。门卫登记报事人，是为了防止天天匿名诬告邻居。对外是否保密报事人，是另一层政策。\n\n这里的代码只保证：系统里知道是谁在报。它不决定把这个名字贴到被举报的人眼前。\n\n门卫登记报事人，是为了防止天天匿名诬告。对外是否把名字告诉被举报的人，是另一张政策纸。这几行代码只保证系统里知道是谁在报，不决定把这个名字贴到对方面前。你读的时候别把两件事焊成一件。\n:::\n\n小区门卫收「举报违停」要登记报事人，不是为了刁难，是防止天天匿名诬告邻居。对外是否保密报事人，是另一层政策；**系统内有没有身份**，和**对外泄不泄露身份**，不是一回事。这里的代码只保证前者。\n\n## 什么时候该反过来\n\n- **需要防滥报、要审计、要后续处置** → 像这里，写库前必须有当前用户。\n- **真正的匿名吹哨、法律要求不留操作者** → 另做专用通道与证据保管，不复用这条「可问责举报」链路。\n- **先收材料、稍后补身份** → 可以产品化，但本文件没有这条路径；默认是「没有当前用户就不接受」。\n- **公开投票、无需追责的情绪按钮** → 可以不强制身份，那也不是举报。\n\n:::detail[没登录就失败，会不会把真正的受害者挡在门外？]\n会增加摩擦。有人正处在「不想暴露身份」的状态时，这扇门会让他先去登录。作者仍选了可问责：滥报、报复性乱报一旦发生，手里必须有主体可查。\n\n若法律要求真正的匿名吹哨，应另做通道，不复用这条「必须知道是谁」的举报链路。这节课读的是这条链路，不是所有可能的检举方式。\n:::\n\n## 再想想\n\n理由名单如何收成四个词，见 [[lesson:four-reasons-and-an-other|举报理由为什么不能随便写，却又留了 other]]。\n\n## 自检\n\n**问：** `getCurrentUserOrThrow` 写在写入后端的前面还是后面？若对调顺序，最坏会怎样？\n\n**问：** `operation: 'reporting message'` 主要服务什么场景？\n\n**问：** 「系统内必须有当前用户」和「对外绝不公开举报人」是不是同一件事？\n\n## 一句话\n\n**举报接的是治理流程，不是匿名意见箱；身份是流程的承重柱。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 21,
+                "lineEnd": 38,
+                "nodeIds": [],
+                "note": "reportMessage：校验后先 getCurrentUserOrThrow，再 supabase.rpc。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 33,
+                "lineEnd": 33,
+                "nodeIds": [],
+                "note": "await getCurrentUserOrThrow({ operation: 'reporting message' })。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/room.ts",
+                "lineStart": 36,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "getCurrentUserOrThrow：超时文本带 operation；无 user 时 throw「请先登录」。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "report-who-call",
+                "kind": "basic",
+                "front": "发送举报前用哪一个函数确认身份？",
+                "back": "getCurrentUserOrThrow。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "await getCurrentUserOrThrow(…)。"
+                  }
+                ]
+              },
+              {
+                "id": "report-who-order",
+                "kind": "basic",
+                "front": "身份检查发生在调用 supabase.rpc 之前还是之后？",
+                "back": "之前。没有当前用户就不会发起 rpc。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 33,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "先 getCurrentUserOrThrow，后 rpc。"
+                  }
+                ]
+              },
+              {
+                "id": "report-who-why",
+                "kind": "basic",
+                "front": "代码强制当前用户，主要防的是哪类产品风险？",
+                "back": "无可追溯的匿名滥报 / 无法问责的举报流（系统不知道谁在举报）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "举报路径绑定 getCurrentUserOrThrow。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "report-auth-fn",
+                "kind": "short-answer",
+                "title": "身份函数名",
+                "prompt": "举报前必须调用的身份函数英文名是什么？",
+                "expectedAnswer": "getCurrentUserOrThrow",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "getCurrentUserOrThrow 调用。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-version-suffix-in-a-key",
+            "title": "合规提示的存储键，为什么要拖一条 -v1？",
+            "content": "# 合规提示的存储键，为什么要拖一条 -v1？\n\n## 现象\n\n合规提示（年龄/规则告知一类）点过「我知道了」之后，浏览器要替你记住这件事，免得每次进来再弹一次。记住的地方是一种键值小柜子。\n\n你打开 `src/features/compliance/ageNotice.ts`，键名和「算接受」的判定长这样：\n\n[[evidence:src/features/compliance/ageNotice.ts:1-3]]\n\n:::detail[键值小柜子是什么？]\n就是浏览器留给这个网站的一小格本地记忆：一边是钥匙（键名），一边是放进去的字（值）。关掉页面再打开，格子往往还在。\n\n作者没有写「有这个键就算数」，也没有塞一个真假值。他准备了一把带版本号的钥匙，和五个字母的英文词 `accepted`。\n\n浏览器给这个网站留的一小格本地记忆：一边是钥匙，一边是放进去的字。关掉页面再打开，格子往往还在。作者没有写「有这个键就算数」，因为他要的是「这五个字母的同意」，不是「柜子里随便有点东西」。\n:::\n\n读的时候不是「有这个键就算数」，写的时候也不是塞一个布尔值：\n\n[[evidence:src/features/compliance/ageNotice.ts:11-30]]\n\n:::detail[这两步函数各干什么？]\n`hasAcceptedComplianceNotice` 去柜子里取钥匙，只有取到的字精确等于 `accepted` 才算通过。`acceptComplianceNotice` 用同一把钥匙写下同一个词。\n\n读写盯的是同一对常量。你不会出现「写入用 A 键、读取用 B 键」的阴差阳错。\n\n一个负责问：柜子里是不是精确的 accepted。一个负责写：用同一把钥匙放下同一个词。共用常量，是为了避免「写下用 A 键、读出用 B 键」这种三个月后才发现的阴差阳错。\n:::\n\n键尾拖着 `-v1`，值是英文词 `accepted`。换个产品，你也会见到有人写成「已看过 = 是」就完事。\n\n## 先猜一下\n\n以后法律条款或提示文案大改，必须让**已经点过接受的人再确认一次**——只改屏幕上的字、键名仍用现在的 `…-v1`，已经接受过的用户还会再看到新提示吗？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n不会。他们仍读到旧键里的 `accepted`，系统当已接受；要强制重确认，得换新键（例如 `-v2`），让旧记录对不上。\n\n## 为什么是这样\n\n你把机制拆成两截：\n\n**1. 键名里的版次是开关。**\n`turing-pact-compliance-notice-v1` 把产品、事项、版本写在同一串里。升到 `-v2` 等于换了一格抽屉：旧抽屉里的「已签」管不着新文案。小区公告升级成「2024 版告知书」时，签过 2023 版不等于签过 2024 版——版本印在标题上，物业才能说「新规要重新确认」。\n\n:::detail[-v1 为什么不是装饰？]\n因为它给未来的你留了一格新抽屉。条款或文案大改时，你不用去把所有人的旧记录擦掉，只要换钥匙。旧钥匙对不上，所有人会再看到一次新提示。\n\n只改屏幕上的字、钥匙仍叫 `-v1`，柜子里的 `accepted` 还在，系统继续当已接受。\n\n它给未来的你留了一格新抽屉。条款或文案大改时，你不用去把所有人的旧记录擦掉，只要换钥匙。旧钥匙对不上，所有人会再看到一次新提示。只改屏幕上的字、钥匙仍叫 -v1，柜子里的 accepted 还在，系统继续当已接受。\n:::\n\n**2. 值用显式词，比较用严格相等。**\n`ACCEPTED_VALUE = 'accepted'`，判定是取出来的字必须正好等于这五个字母。`true`、`1`、`yes`、空字符串、乱写的别的词，一律当未接受。存储里打开能读懂，也避免「随便写个真值就过」。\n\n:::detail[为什么不用真假值？]\n真假值在柜子里常常变成看不出含义的记号。五个字母 `accepted` 你打开存储就能读懂：这是「已同意」，不是「随便一个算过的记号」。\n\n严格相等还挡住了 `yes`、`1`、空字。只有精确这一个词算通过。\n\n真假值在柜子里常常变成看不出含义的记号。五个字母 accepted 你打开存储就能读懂：这是已同意。严格相等还挡住 yes、1、空字。只有精确这一个词算通过，排障时也不用猜这个记号当初是什么意思。\n:::\n\n**3. 读写共用同一对常量。**\n接受检查与写下接受盯的是同一把键、同一个词。\n\n所以：`-v1` 不是装饰，是留给未来的你——改规则时能强制全世界重新点一次。\n\n## 自检\n\n**问：** 完整存储键名是什么？接受时写入的值是什么？\n\n**问：** 只改提示文案、不改键名，已经接受过的用户会怎样？\n\n**问：** 为什么用字符串 `accepted`，而不是一个真假值？\n\n## 一句话\n\n**`-v1` 是改规则时强制重确认的开关；`accepted` 让「已同意」可读且严格可检。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/compliance/ageNotice.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "COMPLIANCE_NOTICE_STORAGE_KEY 与 ACCEPTED_VALUE。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/compliance/ageNotice.ts",
+                "lineStart": 11,
+                "lineEnd": 30,
+                "nodeIds": [],
+                "note": "hasAccepted / accept 共用同一对常量，严格相等判定。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "v1-key-name",
+                "kind": "basic",
+                "front": "合规提示的 localStorage 键名是什么？",
+                "back": "turing-pact-compliance-notice-v1。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/compliance/ageNotice.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "COMPLIANCE_NOTICE_STORAGE_KEY 常量。"
+                  }
+                ]
+              },
+              {
+                "id": "v1-accepted-value",
+                "kind": "basic",
+                "front": "用户点接受后写入的字符串值是什么？",
+                "back": "accepted。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/compliance/ageNotice.ts",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "ACCEPTED_VALUE = 'accepted'。"
+                  }
+                ]
+              },
+              {
+                "id": "v1-why-suffix",
+                "kind": "basic",
+                "front": "键名末尾 -v1 主要买到什么？",
+                "back": "以后改条款/文案可换 -v2，让旧接受记录失效并重新提示所有人。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/compliance/ageNotice.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "键名显式带版本后缀 v1。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "v1-accepted-word",
+                "kind": "short-answer",
+                "title": "接受状态写入值",
+                "prompt": "acceptComplianceNotice 写入存储的字符串是什么？",
+                "expectedAnswer": "accepted",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/compliance/ageNotice.ts",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "ACCEPTED_VALUE = 'accepted'。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/compliance/ageNotice.ts",
+                    "lineStart": 27,
+                    "lineEnd": 27,
+                    "nodeIds": [],
+                    "note": "setItem 使用 ACCEPTED_VALUE。"
+                  }
+                ]
+              },
+              {
+                "id": "v1-suffix",
+                "kind": "short-answer",
+                "title": "键名版本后缀",
+                "prompt": "合规提示键名末尾的版本后缀是什么？（含连字符）",
+                "expectedAnswer": "-v1",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/compliance/ageNotice.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "…-notice-v1。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "two-languages-two-costs",
+            "title": "热座文案为什么 en 和 zh-CN 总是成对出现？",
+            "content": "# 热座文案为什么 en 和 zh-CN 总是成对出现？\n\n## 现象\n\n热座实验要给「首席提问人」准备提问脚手架，还要在对方沉默时自动抛出一个默认问题。这些字直接决定玩家看见什么。\n\n你打开 `src/features/experiments/hot-seat/constants.ts`，文件头写明：计时与脚手架文案归导演设计权威。\n\n[[evidence:src/features/experiments/hot-seat/constants.ts:1-4]]\n\n同一文件里，两段用户可见字符串长这样：每个对象都是 `en` 与 `zh-CN` 两个键并肩站着。\n\n[[evidence:src/features/experiments/hot-seat/constants.ts:11-21]]\n\n:::detail[热座是什么？]\n一局进行到一半，有人被点进聚光灯，要当场答一道压力题。脚手架是给提问人的提示句；默认问题是对方一直不说话时，系统替他抛出去的那句。\n\n这些字不是装饰。问什么、用哪国语言问，就是玩法本身。\n\n一局进行到一半，有人被点进聚光灯，要当场答一道压力题。脚手架是给提问人的提示句；默认问题是对方一直不说话时，系统替他抛出去的那句。这些字不是贴在程序外面的皮，问什么、用哪国语言问，就是玩法本身。\n:::\n\n计时常量也写在同一文件——文案和玩法节奏被放在同一张「设计权威」桌上。\n\n## 先猜一下\n\n若只改了英文脚手架的语气，中文键漏了没动，中文界面的用户最可能碰到什么？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n某一侧会缺译文：空白、回退到别的语言，或显示异常——漏一个键就是产品缺陷，不是「翻译以后再补」。\n\n## 为什么是这样\n\n**成对字段把成本钉在源码里。**\n第二语言不是「有空再译」的附件。你每加一句用户可见的话，工作量至少乘上语言数；这里用结构强迫你看见：改 `en` 时，`zh-CN` 就在下一行盯着你。\n\n:::detail[为什么说成本落在代码结构里？]\n因为每个用户看得见的句子，都要你亲手写两个键。结构本身不让你只交英文、把中文留到「以后」。\n\n换存放位置——搬进别的文案文件——成本不会消失：仍要为每种语言提供译文，并防止某一侧缺失。\n\n因为每个用户看得见的句子，都要你亲手写两个键。结构本身不让你只交英文、把中文留到以后。换存放位置——搬进别的文案文件——成本不会消失：仍要为每种语言提供译文，并防止某一侧缺失。\n:::\n\n**文案是功能的一部分。**\n`QUESTION_SCAFFOLD` 引导人问「只有人类答得好的问题」；`DEFAULT_HOT_SEAT_QUESTION` 在沉默时顶上默认题。它们和同一文件里的计时常量放在一起，是因为热座体验等于节奏加问什么，不是「程序写完再贴皮」。\n\n:::detail[这两句文案各管哪一步？]\n脚手架出现在提问人要开口之前：提醒他问一个「只有人类答得好」的问题。默认题出现在他一直沉默之后：系统按文件头的计时，自动抛出「周末你干了什么」。\n\n少一侧译文，对应语言的玩家就会在那一步撞上空白或旧句。那是玩法坏了，不是「翻译同事还没来得及」。\n\n脚手架出现在提问人要开口之前：提醒他问一个只有人类答得好的问题。默认题出现在他一直沉默之后：系统按同一文件里的计时，自动抛出周末你干了什么。少一侧译文，对应语言的玩家就会在那一步撞上空白或旧句。那是玩法坏了，不是翻译同事还没来得及。\n:::\n\n**漏翻的后果不对称。**\n英语用户可能一切正常，中文用户却像进了半装修的店——你开双语菜单的餐馆时，漏印英文的那道菜，英语客人会以为你没这道。\n\n换一套存放方式、把句子挪到别处，**存放位置可以变，成本不会消失**：仍要为每种语言提供译文，并防止某一侧缺失。这个文件只是把成本摊在最靠近玩法的常量里。\n\n## 自检\n\n**问：** `QUESTION_SCAFFOLD` 与 `DEFAULT_HOT_SEAT_QUESTION` 各自有哪两个语言键？\n\n**问：** 为什么说「漏翻是产品缺陷」，而不是「翻译同事的私事」？\n\n**问：** 把双语挪进另一套文案文件之后，每加一句用户可见文案的成本会不会消失？\n\n## 一句话\n\n**双语成本以成对的键写在仓库里；漏一侧就是缺陷，不是以后再译的附件。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                "lineStart": 1,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "文件头：计时与脚手架文案归导演设计权威，软规则呈现。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                "lineStart": 11,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "QUESTION_SCAFFOLD 与 DEFAULT_HOT_SEAT_QUESTION 的 en / zh-CN 成对键。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "i18n-two-keys",
+                "kind": "basic",
+                "front": "这批热座文案常量用哪两个语言键？",
+                "back": "en 与 zh-CN。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 12,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "QUESTION_SCAFFOLD 的两个键。"
+                  }
+                ]
+              },
+              {
+                "id": "i18n-cost",
+                "kind": "basic",
+                "front": "为什么说第二语言的成本「落在代码结构里」？",
+                "back": "每个用户可见字符串都要显式写两个键；结构本身强迫你为每种语言交付译文。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 18,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "DEFAULT_HOT_SEAT_QUESTION 同样成对。"
+                  }
+                ]
+              },
+              {
+                "id": "i18n-miss",
+                "kind": "basic",
+                "front": "若只改了 en 忘了 zh-CN，产品上会发生什么？",
+                "back": "中文用户仍看到旧句或缺失——两侧体验分叉，属于漏翻缺陷。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 12,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "两侧文案必须并列维护。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "i18n-zh-key",
+                "kind": "short-answer",
+                "title": "中文语言键",
+                "prompt": "这些常量对象里表示简体中文的键名是什么？（含连字符）",
+                "expectedAnswer": "zh-CN",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 14,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "'zh-CN' 键。"
+                  }
+                ]
+              },
+              {
+                "id": "i18n-scaffold-name",
+                "kind": "short-answer",
+                "title": "问题脚手架常量名",
+                "prompt": "热座「提问脚手架」那条双语文案常量的英文名是什么？",
+                "expectedAnswer": "QUESTION_SCAFFOLD",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "export const QUESTION_SCAFFOLD。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "experiments-and-coming-back",
+        "title": "怎么知道改动是好是坏，怎么让人回来",
+        "objective": "从实验注册表、统一 exp- 标签、回访钩子与具名时长常量，读懂实验与留存相关的产品决定。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "register-before-you-ship",
+            "title": "想先在页面里偷偷试一个实验，代码为什么不让？",
+            "content": "# 想先在页面里偷偷试一个实验，代码为什么不让？\n\n## 情境和约束\n\n你在做一款社交推理游戏。某天你想试一个新玩法——比如中途把一个人拉进「热座」，逼他答一道压力题。最快的路径听起来是：在某个页面里写死开关，先上线看数据，过两周再整理。\n\n可你打开仓库，会撞上一张叫实验注册表的表。每个实验条目都要长成同一种形状：有 id、title、description、surfaces，还有一个叫 `analyticsTag` 的字段。类型把 `analyticsTag` 写成必须以 `exp-` 开头，检查才放行。\n\n:::detail[注册表是什么？]\n就是一张总名册。谁想当「正式实验」，先在这张表里占一行。表外的玩法，查找函数不认。\n\n它不是一张给人填的网页表单。它是仓库里的一份名单：有哪些实验、各碰哪些面、埋点标签叫什么，都写在同一处。\n\n就是一张总名册。谁想当正式实验，先在这张表里占一行。表外的玩法，查找函数不认。它不是一张给人填的网页表单，是仓库里的一份名单：有哪些实验、各碰哪些面、埋点标签叫什么，都写在同一处。三个月后的你，打开这一处就能回答「线上到底有什么」。\n:::\n\n表里已经挂着三条：hot-seat、persona-pack、topic-ladder，每条都带着自己的 `exp-…` 标签。\n\n一边是「先硬编码试水」的诱惑，一边是「先过注册表」的摩擦。产品必须二选一。\n\n## 先猜一下\n\n在这个仓库里，作者有没有给你留「页面先写死、过两周再补注册表」的旁路？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n没有旁路：新实验必须先写入注册表，`analyticsTag` 还强制统一以 `exp-` 开头。\n\n## 代价和收益\n\n类型把形状钉死了：\n\n[[evidence:src/features/experiments/registry.ts:17-29]]\n\n:::detail[五个字段各管什么？]\n`id` 是目录里的名字。`title` / `description` 给人读。`surfaces` 逼你承认这个实验会碰哪些面：规则形状、AI 人设、话题、房间界面。`analyticsTag` 是埋点侧用来筛流量的标签，而且类型要求必须以 `exp-` 开头。\n\n少写一个字段，这行就不是一条合法实验。你不能「标签以后再说」。\n\nid 是目录里的名字。title 和 description 给人读。surfaces 逼你承认这个实验会碰哪些面：规则形状、人设、话题、房间界面。analyticsTag 是埋点侧用来筛流量的标签，而且类型要求必须以 exp- 开头。少写一个字段，这行就不是一条合法实验。你不能标签以后再说。\n:::\n\n五个字段各管一件事。`id` 是目录里的名字；`title` / `description` 给人读；`surfaces` 逼你承认这个实验会碰哪些面；`analyticsTag` 是埋点侧用来筛流量的标签。\n\n登记表示例：\n\n[[evidence:src/features/experiments/registry.ts:31-54]]\n\n:::detail[表上这三条说明了什么？]\nhot-seat、persona-pack、topic-ladder 都挂在同一张表上。你要查某个实验，走查找函数——它们都以这张表为唯一目录。\n\n界面里再「悄悄」多一个实验，目录和查找函数都不会认。没有备案号，后面的分析也筛不出「谁进了实验组」。\n\nhot-seat、persona-pack、topic-ladder 都挂在同一张表上。你要查某个实验，走查找函数——它们都以这张表为唯一目录。界面里再悄悄多一个实验，目录和查找函数都不会认。没有备案号，后面的分析也筛不出谁进了实验组。\n:::\n\n三条实验都挂在同一张表上。你要查某个实验，走查找函数——它们都以这张表为唯一目录。界面里再「悄悄」多一个实验，目录和查找函数都不会认。\n\n和埋点的接头更短：\n\n[[evidence:src/features/experiments/analytics.ts:7-9]]\n\n有实验就取注册表里的标签；没有就回落成字面量 `none`。数据分析可以按 `exp-` 前缀一把扫出「所有实验流量」，再按具体标签拆开。\n\n:::detail[没有实验时为什么回落成 none？]\n因为分析后台仍需要一个有界的值，不能一会儿空、一会儿乱写。`none` 四个字母表示「这条流量不属于任何已登记实验」。\n\n你以后按 `exp-` 筛，筛到的是实验组；剩下标成 `none` 的，是对照。没有这张表，你筛不出谁进了实验组。\n\n因为分析后台仍需要一个有界的值，不能一会儿空、一会儿乱写。none 四个字母表示这条流量不属于任何已登记实验。你以后按 exp- 筛，筛到的是实验组；剩下标成 none 的，是对照。没有这张表，你筛不出谁进了实验组。\n:::\n\n**代价：** 随手试玩变慢了。你不能「页面先写死、标签以后再说」——类型和查找函数都站在注册表这边。\n\n**收益：** 三个月后你还能回答「线上到底有哪些实验、各碰哪些面、埋点标签是否一致」。一人公司最怕的，恰恰是界面有、目录无、标签各写各的。\n\n可以把它想成医院新药试验：先在伦理委员会备案，试验编号还统一前缀；没有备案号，药房不发药。注册表是备案簿，`exp-` 是统一的编号头。\n\n## 什么时候该反过来\n\n如果你只是改一行纯视觉抛光，完全不进数据对比、也不准备长期开关，硬塞进实验注册表反而污染目录。注册表是为「要对比、要归因、要可关可开」的变更准备的，不是每个像素改动的必经之路。\n\n反过来：只要你事后想问「这个改动有没有让人更爱玩」，就先过注册表——否则你筛不出「谁进了实验组」。\n\n## 再想想\n\n标签写错一个字母会怎样？埋点单元讲过 [[lesson:a-typo-loses-a-month|拼错一个字母，一个月的数据就丢了]]——`exp-` 前缀是同一条纪律在实验侧的延续。\n\n## 自检\n\n**问：** `ExperimentDefinition` 强制哪五个字段？\n\n**问：** `analyticsTag` 的类型为什么写成必须以 `exp-` 开头？\n\n**问：** 没有实验时，`experimentAnalyticsTag` 返回什么字符串？\n\n**问：** 能不能先在页面硬编码一个实验，过两周再补注册表？为什么？\n\n## 一句话\n\n**实验是带编号的产品变更：先写入注册表，标签统一 `exp-`，数据才分析得动。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/registry.ts",
+                "lineStart": 17,
+                "lineEnd": 29,
+                "nodeIds": [],
+                "note": "ExperimentDefinition 五个字段，analyticsTag 为 exp-${string}。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/registry.ts",
+                "lineStart": 31,
+                "lineEnd": 54,
+                "nodeIds": [],
+                "note": "EXPERIMENT_REGISTRY 三条：hot-seat、persona-pack、topic-ladder。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 7,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "experimentAnalyticsTag 回落为 none。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "reg-fields",
+                "kind": "basic",
+                "front": "ExperimentDefinition 有哪五个字段？",
+                "back": "id、title、description、surfaces、analyticsTag。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/registry.ts",
+                    "lineStart": 17,
+                    "lineEnd": 29,
+                    "nodeIds": [],
+                    "note": "接口五个字段。"
+                  }
+                ]
+              },
+              {
+                "id": "reg-prefix",
+                "kind": "basic",
+                "front": "analyticsTag 的类型为什么写成 `exp-${string}`？",
+                "back": "强制所有实验埋点标签以 exp- 开头，便于查询时按前缀筛全部实验流量。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/registry.ts",
+                    "lineStart": 28,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "analyticsTag: `exp-${string}`。"
+                  }
+                ]
+              },
+              {
+                "id": "reg-hot-seat-tag",
+                "kind": "basic",
+                "front": "hot-seat 实验的 analyticsTag 实际字符串是什么？",
+                "back": "exp-hot-seat。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/registry.ts",
+                    "lineStart": 32,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "hot-seat 条目的 analyticsTag。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "reg-tag-prefix",
+                "kind": "short-answer",
+                "title": "实验标签统一前缀",
+                "prompt": "所有实验 analyticsTag 必须以哪四个字符开头？（写成 exp-）",
+                "expectedAnswer": "exp-",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/registry.ts",
+                    "lineStart": 28,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "模板字面量类型 exp-${string}。"
+                  }
+                ]
+              },
+              {
+                "id": "reg-none-fallback",
+                "kind": "short-answer",
+                "title": "无实验时的标签",
+                "prompt": "experimentAnalyticsTag 在没有实验时返回哪个字符串？",
+                "expectedAnswer": "none",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "?? 'none'。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-reason-to-come-back",
+            "title": "留存一定要靠推送通知吗？",
+            "content": "# 留存一定要靠推送通知吗？\n\n## 两个东西\n\n「想让人回来」，很多人第一反应是系统推送。\n\n你打开回访钩子的公共出口：`buildChallengeCopyText`、`LastRoundScrollCard`、`loadLastRoundSummary`……你扫一遍，看不到 push 或 notification。\n\n两个词都和「人会不会再来」有关，机制却可能不是一回事。\n\n:::detail[回访钩子是什么？]\n就是作者放在产品里、专门给人一个「下一步」的挂钩：一句能转发给朋友的话，或你自己再打开时还记得昨晚的一张卡片。\n\n它不是往你手机上弹系统通知。出口文件里没有推送权限、也没有通知通道。\n\n就是作者放在产品里、专门给人一个下一步的挂钩：一句能转发给朋友的话，或你自己再打开时还记得昨晚的一张卡片。它不是往你手机上弹系统通知。出口文件里没有推送权限、也没有通知通道。关掉通知，这两套钩子仍能工作。\n:::\n\n## 先猜一下\n\n关掉推送后，挑战文案复制转发还依赖系统通知权限吗？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不依赖。挑战文案走本机复制与转发，不需要系统通知权限。\n\n## 逐条对照\n\n两套能力并排放在出口上：\n\n[[evidence:src/features/return-hooks/index.ts:1-25]]\n\n| | 社交邀请钩 | 记忆钩 |\n| --- | --- | --- |\n| 符号 | `buildChallengeCopyText` | `LastRoundScrollCard` + 本地摘要 |\n| 带走什么 | 一段朋友语气的话 | 无（数据留在本机） |\n| 何时生效 | 发出去、朋友点开 | 你自己再次打开 |\n| 剧透 | 不剧透 | 只展示你自己的上一局 |\n\n:::detail[为什么出口上看不到推送？]\n因为这条产品路不靠系统通知。挑战文案走剪贴板和分享；上一局摘要写在你自己的浏览器格子里。\n\n推送可以是第三条通道。这里的证据不依赖它。关掉通知权限，这两套钩子仍能工作。\n\n因为这条产品路不靠系统通知。挑战文案走剪贴板和分享；上一局摘要写在你自己的浏览器格子里。推送可以是第三条通道，这里的证据不依赖它。你读出口文件时扫不到 push，不是作者忘了写，是他选了另一条路。\n:::\n\n挑战文案默认中文模板是朋友语气：\n\n[[evidence:src/features/return-hooks/domain/challengeCopy.ts:15-26]]\n\n注释钉死边界——不写房间号、身份、票数，你转发出去时对方不会被剧透：\n\n[[evidence:src/features/return-hooks/domain/challengeCopy.ts:45-48]]\n\n:::detail[不剧透为什么写进注释？]\n因为这句文案是要拿去给还没玩过这局的朋友看的。房间号、谁是什么身份、票数多少，都会先把结局漏出去。\n\n注释写 Spoiler-free。函数名 `buildChallengeCopyText` 做的是「生成可复制的挑战文案」，不是「把本局秘密打包寄出」。\n\n因为这句文案是要拿去给还没玩过这局的朋友看的。房间号、谁是什么身份、票数多少，都会先把结局漏出去。注释写不剧透。函数做的是生成可复制的挑战文案，不是把本局秘密打包寄出。\n:::\n\n记忆钩把摘要存在本地键 `turing-pact-last-round-summary-v1`（注释：回访时「还记得昨晚」）：\n\n[[evidence:src/features/return-hooks/domain/lastRoundSummary.ts:14-21]]\n\n有 summary 才渲染卡片——没有历史就不假装有记忆：\n\n[[evidence:src/features/return-hooks/ui/LastRoundScrollCard.tsx:27-31]]\n\n:::detail[没有上一局为什么不显示卡片？]\n因为一张空卡片比没有更假。注释写：父级不传入摘要时，这张「桌上的卷轴」就不出现。\n\n本地键末尾的 `-v1` 和合规提示那一课是同一类纪律：以后换摘要形状，可以换新键，旧记忆对不上。\n\n因为一张空卡片比没有更假。注释写：父级不传入摘要时，这张桌上的卷轴就不出现。本地键末尾的 -v1 和合规提示那一课是同一类纪律：以后换摘要形状，可以换新键，旧记忆对不上。\n:::\n\n## 什么时候用哪个\n\n- 拉**别人**进下一局 → 社交邀请钩：复制 `buildChallengeCopyText` 发出去。\n- 让**自己**下次接上情节 → 记忆钩：本地摘要 + `LastRoundScrollCard`。\n- 推送可以是第三条通道，这里的证据不依赖它。\n\n## 再想想\n\n本地键末尾的 `-v1` 是什么纪律？见 [[lesson:a-version-suffix-in-a-key|存储键上的 -v1 小尾巴]]。\n\n## 自检\n\n**问：** 回访钩子对外的两个核心手段是什么？\n\n**问：** 挑战文案注释强调不能包含哪几类信息？\n\n**问：** 上一局摘要存在哪个本地存储键？\n\n**问：** 为什么说留存不一定等于做推送通知？\n\n## 一句话\n\n**留存钩子要给人具体的下一步：一句可转发的话，或一幕记得你的界面。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/return-hooks/index.ts",
+                "lineStart": 1,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "导出 buildChallengeCopyText、LastRoundScrollCard 与上一局摘要 API。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/return-hooks/domain/challengeCopy.ts",
+                "lineStart": 15,
+                "lineEnd": 26,
+                "nodeIds": [],
+                "note": "中英挑战文案模板与 PRODUCT_CHALLENGE_URL。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/return-hooks/domain/challengeCopy.ts",
+                "lineStart": 45,
+                "lineEnd": 48,
+                "nodeIds": [],
+                "note": "注释：spoiler-free 挑战消息。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/return-hooks/domain/lastRoundSummary.ts",
+                "lineStart": 14,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "LAST_ROUND_SUMMARY_STORAGE_KEY 与本地记忆意图注释。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/return-hooks/ui/LastRoundScrollCard.tsx",
+                "lineStart": 27,
+                "lineEnd": 31,
+                "nodeIds": [],
+                "note": "有 summary 才显示上一局卷轴卡片。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "return-two-hooks",
+                "kind": "basic",
+                "front": "return-hooks 对外的两个核心手段是什么？",
+                "back": "生成挑战文案（buildChallengeCopyText）与展示上一局卡片（LastRoundScrollCard）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/return-hooks/index.ts",
+                    "lineStart": 8,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "导出挑战文案与 LastRoundScrollCard。"
+                  }
+                ]
+              },
+              {
+                "id": "return-spoiler-free",
+                "kind": "basic",
+                "front": "挑战文案注释强调不能包含什么？",
+                "back": "room code、roles、vote tallies（房间码、角色、票数）等剧透信息。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/return-hooks/domain/challengeCopy.ts",
+                    "lineStart": 45,
+                    "lineEnd": 48,
+                    "nodeIds": [],
+                    "note": "Spoiler-free 注释。"
+                  }
+                ]
+              },
+              {
+                "id": "return-local-key",
+                "kind": "basic",
+                "front": "上一局摘要存在哪个本地存储键？",
+                "back": "turing-pact-last-round-summary-v1。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/return-hooks/domain/lastRoundSummary.ts",
+                    "lineStart": 14,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "LAST_ROUND_SUMMARY_STORAGE_KEY。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "return-build-fn",
+                "kind": "short-answer",
+                "title": "挑战文案函数名",
+                "prompt": "生成可复制挑战文案的函数英文名是什么？",
+                "expectedAnswer": "buildChallengeCopyText",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/return-hooks/domain/challengeCopy.ts",
+                    "lineStart": 49,
+                    "lineEnd": 49,
+                    "nodeIds": [],
+                    "note": "export function buildChallengeCopyText。"
+                  }
+                ]
+              },
+              {
+                "id": "return-not-push",
+                "kind": "explain",
+                "title": "留存不必靠推送",
+                "prompt": "结合 return-hooks 的两个出口，说明这个项目如何在不依赖推送的前提下给人「回来的理由」。",
+                "rubric": [
+                  "提到可转发/可复制的挑战文案",
+                  "提到回来时可见的上一局摘要或 LastRoundScrollCard",
+                  "说明这是产品钩子而非通知通道",
+                  "至少锚定一个真实导出或文件名"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/return-hooks/index.ts",
+                    "lineStart": 8,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "两个出口同时出现在公共 surface。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "magic-numbers-that-are-not-magic",
+            "title": "文件里的 20000，是随便写的还是产品旋钮？",
+            "content": "# 文件里的 20000，是随便写的还是产品旋钮？\n\n## 现象\n\n你打开热座实验的常量文件，一屏几乎全是毫秒常量：提名窗口、热座回答窗、提名人沉默多久后抛默认问题。\n\n[[evidence:src/features/experiments/hot-seat/constants.ts:1-9]]\n\n:::detail[毫秒常量是什么？]\n就是把「多少秒」写成电脑最常用的小单位：1000 毫秒是 1 秒。`20_000` 是 20 秒，中间的下划线只是方便你数零，不改变数值。\n\n名字写得很满——提名、热座、沉默——却没有任何「根据某公式算出 20 秒」的推导。同一文件更下面还有双语问句脚手架。\n\n就是把多少秒写成电脑最常用的小单位：1000 毫秒是 1 秒。20_000 是 20 秒，中间的下划线只是方便你数零，不改变数值。名字写得很满，却没有任何根据某公式算出 20 秒的推导——因为这是旋钮，不是计算结果。\n:::\n\n名字写得很满，却看不到「根据某公式取 20 秒」的推导。同一文件更下面还有双语问句脚手架。\n\n## 先猜一下\n\n把提名窗口从 `20_000` 改成 `5_000`，你主要是在改服务器说了算的时序，还是在拧玩家感受到的游戏节奏？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n拧的是玩家感受到的前端呈现节奏；这些常量不是服务器说了算的时序。\n\n## 为什么是这样\n\n文件头把归属说死了：导演设计权威；只影响软规则呈现，不是服务器时序权威。\n\n[[evidence:src/features/experiments/hot-seat/constants.ts:1-9]]\n\n| 常量 | 毫秒 | 产品意思 |\n| --- | --- | --- |\n| 提名窗口 | 20000 | 约 20 秒 |\n| 热座回答窗 | 45000 | 约 45 秒 |\n| 提名人沉默 | 15000 | 约 15 秒后自动抛出默认问题 |\n\n:::detail[软规则呈现是什么意思？]\n就是：这些数字拧的是你在屏幕上感觉到的快慢，不是后台那台服务器的权威时钟。文件头写明 not server timing authority。\n\n但那不代表你改它们没风险。你是否来得及提名、会不会总落入默认问题、整局显得赶还是拖，全会被拧动。\n\n就是这些数字拧的是你在屏幕上感觉到的快慢，不是后台那台服务器的权威时钟。文件头写明不是服务器时序权威。但那不代表你改它们没风险。你是否来得及提名、会不会总落入默认问题、整局显得赶还是拖，全会被拧动。\n:::\n\n`WINDOW` / `SILENCE` 已经在说产品语义；后面的 `_MS` 只是单位。沉默常量的注释更直白：聚光灯打开后，沉默这么久就自动抛默认问题——这是体验节奏，不是物理定律。\n\n「不是服务器时序权威」的意思是：真正的权威时序不在这层前端常量里。但那不代表你改它们没风险。你是否来得及提名、会不会总落入默认问题、整局显得赶还是拖，全会被拧动。\n\n:::detail[为什么不能当成清理魔法数字？]\n因为 `20_000` 看起来像随手写的数，其实是产品旋钮。你把它改成 `5_000`，玩家会觉得提名突然变赶。\n\n改之前当作一次小的产品变更，最好像上一课那样能对比，不要当成「把难看的数字收进常量」的顺手重构。\n\n因为 20_000 看起来像随手写的数，其实是产品旋钮。你把它改成 5_000，玩家会觉得提名突然变赶。改之前当作一次小的产品变更，最好像上一课那样能对比，不要当成把难看的数字收进常量的顺手重构。\n:::\n\n所以你读到具名毫秒常量时，先当产品旋钮，再当代码。改之前当作一次小的产品变更（最好像 [[lesson:register-before-you-ship|先登记再上线]] 那样能对比），不要当成「清理魔法数字」的顺手重构。\n\n## 自检\n\n**问：** 提名窗口常量的值是多少毫秒？\n\n**问：** 热座回答窗的数字是多少？\n\n**问：** 提名人沉默到期后产品上会发生什么？\n\n**问：** 文件头说只影响呈现、不是服务器时序权威，意味着什么？改前端常量是否完全没风险？\n\n## 一句话\n\n**具名毫秒常量是产品旋钮：改之前当一次小实验，而不是当一次「代码清理」。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "文件头软规则声明与三个毫秒常量。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "magic-20s",
+                "kind": "basic",
+                "front": "NOMINATION_WINDOW_MS 的值是多少毫秒？",
+                "back": "20000（20_000）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 6,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "NOMINATION_WINDOW_MS = 20_000。"
+                  }
+                ]
+              },
+              {
+                "id": "magic-soft-rule",
+                "kind": "basic",
+                "front": "文件头说这些计时是 soft-rule presentation only，意味着什么？",
+                "back": "只影响前端呈现节奏，不是服务器权威时序。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 1,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "Soft-rule presentation only — not server timing authority。"
+                  }
+                ]
+              },
+              {
+                "id": "magic-silence",
+                "kind": "basic",
+                "front": "NOMINATOR_SILENCE_MS 到期后产品上会发生什么？",
+                "back": "自动提供默认热座问题（auto-offers the default question）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 8,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "silence 注释与常量。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "magic-hot-seat-ms",
+                "kind": "short-answer",
+                "title": "热座窗口毫秒数",
+                "prompt": "HOT_SEAT_WINDOW_MS 的数字是多少？（只写数字）",
+                "expectedAnswer": "45000",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "HOT_SEAT_WINDOW_MS = 45_000。"
+                  }
+                ]
+              },
+              {
+                "id": "magic-nomination-ms",
+                "kind": "short-answer",
+                "title": "提名窗口毫秒数",
+                "prompt": "NOMINATION_WINDOW_MS 的数字是多少？（只写数字）",
+                "expectedAnswer": "20000",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 6,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "NOMINATION_WINDOW_MS = 20_000。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

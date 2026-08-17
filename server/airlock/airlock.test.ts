@@ -56,9 +56,24 @@ describe("inspectImportRisk", () => {
     expect(report.blocked).toHaveLength(4);
   });
 
-  it("keeps the example env file, which is documentation", () => {
-    const report = inspectImportRisk([{ path: ".env.example", sizeBytes: 20 }]);
+  it("keeps common example env filename variants, which are documentation", () => {
+    const report = inspectImportRisk([
+      { path: ".env.example", sizeBytes: 20 },
+      { path: ".env.local.example", sizeBytes: 20 },
+      { path: "mobile/.env.json.example", sizeBytes: 20 },
+    ]);
     expect(report.blocked).toEqual([]);
+  });
+
+  it("does not mistake a non-example suffix for an example file", () => {
+    const report = inspectImportRisk([
+      { path: ".env.notexample", sizeBytes: 20 },
+      { path: ".env.example.bak", sizeBytes: 20 },
+    ]);
+    expect(report.blocked.map((finding) => finding.path)).toEqual([
+      ".env.example.bak",
+      ".env.notexample",
+    ]);
   });
 
   it("refuses a blob too large to be source anybody studies", () => {

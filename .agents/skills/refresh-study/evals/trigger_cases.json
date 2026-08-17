@@ -1,0 +1,23 @@
+{
+  "recommended_threshold": 0.3,
+  "should_trigger": [
+    {"text": "被学习项目已经有新的本地 commit，请刷新这个 study 的固定源码快照、UA 图谱和学习资料。", "family": "commit_refresh_zh"},
+    {"text": "The studied repository has a new local commit. Prepare a pinned snapshot, run UA, audit stale evidence, and report what remains stale.", "family": "commit_refresh"},
+    {"text": "项目更新了但还没有 push；只按当前 commit 更新 UniversityLocal 的 study。", "family": "local_commit_no_push"},
+    {"text": "重新跑 UA，检查哪些课程和知识笔记的证据因新 commit 失效。", "family": "ua_freshness_audit"},
+    {"text": "执行 refresh prepare → UA → finalize → audit；先报告变化，再决定是否应用 stale 标记。", "family": "refresh_orchestration"},
+    {"text": "Refresh the study from the latest clean commit and hand stale lessons to the lesson-writing step; do not edit the live source repository.", "family": "stale_handoff"},
+    {"text": "代码仓库有脏工作区，我想知道 refresh 是否会排除未提交改动，并刷新已提交版本。", "family": "dirty_boundary"},
+    {"text": "检查本地提交后的 snapshot、UA、freshness 和 lifecycle 状态，只有全部修复后才重新激活课程。", "family": "lifecycle_gate"}
+  ],
+  "should_not_trigger": [
+    {"text": "继续教我当前 study 的下一节，先问我一个问题。", "family": "teach_from_study"},
+    {"text": "把刚才学到的认证边界保存成一条知识笔记并加入复习。", "family": "knowledge_node"},
+    {"text": "根据 refresh handoff 只重写这一节 stale lesson 的 content.md、卡片和练习，生成 revision proposal。", "family": "write_lesson"},
+    {"text": "只修改这一节正式课程的标题和正文，让它更适合初学者，不刷新 study。", "family": "write_lesson"},
+    {"text": "我只是想了解 HTTP 缓存，不要读取任何 UniversityLocal study。", "family": "general_teaching"},
+    {"text": "Implement the API endpoint and run tests in the studied repository.", "family": "engineering_task"},
+    {"text": "把今天的聊天总结成三条，不写入 UniversityLocal。", "family": "summary_only"},
+    {"text": "判断这段代码的表达是否清楚，并帮我练习复述。", "family": "communication_coach"}
+  ]
+}

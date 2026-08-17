@@ -9,8 +9,11 @@ Teach from fixed evidence and formal artifacts while keeping learner state separ
 
 ## Start
 
-1. Identify the study and intent: `UA tour`, `formal course`, `practice`, or `review`. Infer level from context; ask only if it changes the route.
-2. Follow [session-and-evidence.md](references/session-and-evidence.md) to resolve config, reuse/start a session, and bind exact evidence. Never analyze the live source repository in place.
+1. Identify the intent: `UA tour`, `formal course`, `practice`, or `review`.
+   For “继续学” or an unspecified course, use the `teach next` receipt instead
+   of asking the learner to name a study the configured focus already knows.
+   Infer level from context; ask only if it changes the route.
+2. Follow [session-and-evidence.md](references/session-and-evidence.md) to resolve the focused study, reuse/start a session, and bind exact evidence. Never analyze the live source repository in place.
 
 ## Keep the four layers distinct
 

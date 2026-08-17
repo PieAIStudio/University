@@ -13,6 +13,7 @@ import { join } from "node:path";
 
 import {
   CourseManifestSchema,
+  SnapshotManifestSchema,
   StableId,
   SourceRegistrationSchema,
   StudyManifestSchema,
@@ -20,6 +21,7 @@ import {
   type StudyManifest,
 } from "../../src/domain/schemas.js";
 import { STUDIES_ROOT_MARKER, assertSeparatedRoots } from "../config/load-config.js";
+import { assertSafeGitArgument } from "../git/run.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
 import { getCoursePaths, getStudyPaths } from "./paths.js";
 
@@ -38,6 +40,10 @@ interface CreateStudyInput {
 interface RegisteredSource {
   readonly registration: SourceRegistration;
   readonly resolvedCommit: string;
+}
+
+interface ReboundSource extends RegisteredSource {
+  readonly verifiedSnapshotCount: number;
 }
 
 export function createStudy(studiesRoot: string, input: CreateStudyInput): StudyManifest {
@@ -194,6 +200,7 @@ export function registerLocalGitSource(
 ): RegisteredSource {
   const paths = getStudyPaths(studiesRoot, studyId);
   readStudy(studiesRoot, studyId);
+  assertSafeGitArgument(defaultRef, "default ref");
   if (existsSync(paths.source.registration)) {
     throw new Error(`Source is already registered for study: ${studyId}`);
   }
@@ -212,6 +219,72 @@ export function registerLocalGitSource(
   });
   writeJsonAtomically(paths.source.registration, registration);
   return { registration, resolvedCommit };
+}
+
+/**
+ * Rebinds a study to a moved or freshly cloned checkout of the same Git history.
+ *
+ * A filesystem path is not repository identity: another repository can later
+ * occupy the same directory. Every stored snapshot is therefore used as an
+ * immutable proof. The candidate must contain each exact commit and its exact
+ * tree before the local registration is changed. Existing snapshots, courses,
+ * UA analyses, and learner state are left untouched.
+ */
+export function rebindLocalGitSource(
+  studiesRoot: string,
+  studyId: string,
+  sourceCandidate: string,
+  defaultRef?: string,
+  now = new Date(),
+): ReboundSource {
+  const paths = getStudyPaths(studiesRoot, studyId);
+  readStudy(studiesRoot, studyId);
+  const existing = readSourceRegistration(studiesRoot, studyId);
+  const candidateRoot = realpathSync.native(sourceCandidate);
+  const sourceRoot = realpathSync.native(git(candidateRoot, ["rev-parse", "--show-toplevel"]));
+  assertSeparatedRoots(realpathSync.native(studiesRoot), sourceRoot);
+
+  const snapshotFiles = existsSync(paths.source.snapshots)
+    ? readdirSync(paths.source.snapshots, { withFileTypes: true })
+        .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+        .map((entry) => join(paths.source.snapshots, entry.name))
+        .sort()
+    : [];
+  if (snapshotFiles.length === 0) {
+    throw new Error(
+      `Cannot prove source identity for ${studyId}: the study has no immutable snapshots`,
+    );
+  }
+
+  const snapshots = snapshotFiles.map((path) => SnapshotManifestSchema.parse(readJson(path)));
+  for (const snapshot of snapshots) {
+    let candidateTree: string;
+    try {
+      candidateTree = git(sourceRoot, ["rev-parse", "--verify", `${snapshot.sourceCommit}^{tree}`]);
+    } catch {
+      throw new Error(
+        `Candidate source cannot prove snapshot ${snapshot.id}: commit ${snapshot.sourceCommit} is missing`,
+      );
+    }
+    if (candidateTree !== snapshot.sourceTree) {
+      throw new Error(
+        `Candidate source cannot prove snapshot ${snapshot.id}: the commit tree does not match`,
+      );
+    }
+  }
+
+  const nextDefaultRef = defaultRef ?? existing.defaultRef;
+  assertSafeGitArgument(nextDefaultRef, "default ref");
+  const resolvedCommit = git(sourceRoot, ["rev-parse", `${nextDefaultRef}^{commit}`]);
+  const registration = SourceRegistrationSchema.parse({
+    schemaVersion: 1,
+    kind: "local-git",
+    sourceRoot,
+    defaultRef: nextDefaultRef,
+    registeredAt: now.toISOString(),
+  });
+  writeJsonAtomically(paths.source.registration, registration);
+  return { registration, resolvedCommit, verifiedSnapshotCount: snapshots.length };
 }
 
 export function readSourceRegistration(studiesRoot: string, studyId: string): SourceRegistration {

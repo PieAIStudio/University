@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: project
 created: 2026-07-20
-last_reviewed: 2026-07-20
+last_reviewed: 2026-08-17
 domain: project-policy
 tags:
   - project-policy
@@ -69,13 +69,13 @@ an older commit, but it must say so.
 
 ## Local Lanes
 
-| Lane | Typical work | Required evidence |
-| --- | --- | --- |
-| Research / curriculum | source study, concept extraction, teaching design | cited source paths, commit identity, explicit fact/inference split |
-| Learning data | scheduling, review state, storage, migration | deterministic tests, fixtures, backward-compatibility check |
-| UI / learning experience | review screens, questions, visual explanations | typecheck, component tests, real browser and screenshots |
-| Host / source integration | Grok Build/Codex/Claude routing, source registration, UA adapters | clean external-repo proof, path/config tests, host smoke test |
-| Documentation | policy, Canon, Spec, Plan, Reference | `pnpm docs:check` and `git diff --check` |
+| Lane                      | Typical work                                                      | Required evidence                                                  |
+| ------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Research / curriculum     | source study, concept extraction, teaching design                 | cited source paths, commit identity, explicit fact/inference split |
+| Learning data             | scheduling, review state, storage, migration                      | deterministic tests, fixtures, backward-compatibility check        |
+| UI / learning experience  | review screens, questions, visual explanations                    | typecheck, component tests, real browser and screenshots           |
+| Host / source integration | Grok Build/Codex/Claude routing, source registration, UA adapters | clean external-repo proof, path/config tests, host smoke test      |
+| Documentation             | policy, Canon, Spec, Plan, Reference                              | `pnpm docs:check` and `git diff --check`                           |
 
 ## Verification Ladder
 
@@ -107,19 +107,12 @@ Before a non-trivial new feature or replacement:
 3. Prefer a maintained direct dependency when its contract fits. Otherwise adapt
    the smallest proven pattern and keep UniversityLocal's domain model as the
    source of truth.
-4. Record adopted, deferred, and rejected candidates in a donor map. If no donor
-   is suitable, record the negative evidence before implementing local logic.
+4. Record adopted, deferred, and rejected candidates in the relevant governed
+   plan, reference, or ADR. Do not invent a second portfolio donor catalog or a
+   project-local donor-map format. If no donor is suitable, record the negative
+   evidence before implementing local logic.
 5. Re-evaluate an existing feature when evidence shows a donor is materially
    safer or better, but do not churn working code for novelty alone.
 
 Never copy an application wholesale, import hand-written scheduling or grading
 claims without validation, or treat a popular repository as proof of product fit.
-
-## Current Phase Constraints
-
-- The current phase is foundation and architecture research, not feature-volume
-  delivery.
-- Reuse mature open-source implementations under the donor-first gate above.
-- Keep PBMLS and PBMLS-old read-only as donor candidates. Reuse ideas or
-  selected modules only after comparing their assumptions with the new
-  UniversityLocal architecture.

@@ -1,0 +1,1171 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "communicate-with-ai",
+    "title": "《把话说清楚：跟 AI 协作的表达》",
+    "description": "教的不是客套话，是可执行委托：目标、约束、上下文、输出形状、验收标准。全部证据来自 UniversityLocal 自己的真实产物——练习答疑包、教学技能、项目边界与工作简报。",
+    "audience": "每天跟 AI 宿主协作、想让产出一次可用的人",
+    "objectives": [
+      "说出可执行委托与模糊请求的差别，并指出答疑包任务模板写清了什么",
+      "说明为什么事实核对必须先于表达打磨",
+      "解释约束与非目标如何写成硬规则，并举例本项目的 local-only 边界",
+      "描述「输出形状 + 默认失败」如何把失败往安全方向倒",
+      "用真实案例说明：让产出可用的往往是简报，不是模型本身",
+      "用剪贴板预算解释上下文为何要可粘贴、可裁剪",
+      "说清宿主与本地产品的分工，并在委托里点名执行主体",
+      "写出「显式同意、一问一记、标事实/推论」的保存委托"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "how-this-campus-works-2"
+    ],
+    "units": [
+      {
+        "id": "executable-requests",
+        "title": "可执行委托",
+        "objective": "把跟 AI 宿主的协作从「靠猜」改成「可执行」：目标、约束、上下文预算、输出形状、验收与显式保存一条链写清。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "what-is-executable-request",
+            "title": "只说「帮我看看对不对」，为什么对方只能靠猜？",
+            "content": "# 只说「帮我看看对不对」，为什么对方只能靠猜？\n\n## 两个东西\n\n你跟 AI 宿主协作时，常见两种写法。\n\n**模糊请求**只丢意图：\n\n> 帮我看看这题对不对。\n\n对方要自己填：判分依据是什么、输出长什么样、证据不够时能不能凭印象给通过。\n\n**另一份**来自本项目的练习答疑包。标题是「给 AI 助手的任务（请直接执行）」，下面是编号步骤，再写清边界——不要假设自己是某个品牌的 IDE，也不要假设能打开学习者的代码库。\n\n```ts\n  return [\n    \"# UniversityLocal 练习答疑包（AI 判分 + 写回）\",\n    \"\",\n    \"## 给 AI 助手的任务（请直接执行）\",\n    \"\",\n    \"你是本地学习教练。网页**不会**用字符串比对判对错，判定完全由你负责。\",\n    \"\",\n    \"1. **判定**学习者答案是否达到题目要求（允许合理表述差异，勿因多写解释就判错）。\",\n    \"2. **讲解**：对错原因、易混点，用白话。\",\n    \"3. **引申** 1～3 个相关知识点。\",\n    \"4. **写回** UniversityLocal（见文末命令），否则 Web 不会显示你的评估、课也不会完成。\",\n    \"\",\n    \"不要假设你是某一个品牌的 IDE，也不要假设你能打开学习者的代码库——判分需要的代码已经附在下面。\",\n```\n\n[[evidence:server/workflows/exercise-coaching-packet.ts:159-171]]\n\n## 先猜一下\n\n证据不足以判断对错时，答疑包要求宿主怎么处理？若改成「凭印象也给个通过」，对你这名学习者最坏会怎样？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n包要求在 `evaluation` 里写明缺什么，并把 `passed` 留成 `false`，**不要猜**；若允许凭印象通过，你会拿到一次没有证据支撑的「过」，复习队列会当它是真会了。\n\n## 逐条对照\n\n| | 模糊请求 | 答疑包式委托 |\n| --- | --- | --- |\n| 要对方做什么 | 一句话意图 | 判定 → 讲解 → 引申 → 写回，四步编号 |\n| 边界 | 常不写 | 不假设 IDE、不假设能开本地库；材料已附 |\n| 证据不够 | 默许对方补全 | 明说不确定，`passed` 保持 `false` |\n| 你事后能否验收 | 难 | 有固定写回形状与失败路径 |\n\n证据不足时的失败路径写在参考答案区（第一次尝试不揭晓参考时）：\n\n```ts\n      \"如果证据不足以判断对错，就在 `evaluation` 里明说你无法确定、缺什么信息，并把 `passed` 留成 `false`。**不要猜。**\",\n```\n\n[[evidence:server/workflows/exercise-coaching-packet.ts:84-93]]\n\n「不要猜」不是礼貌，是把**判断权钉在证据上**：猜对了你学不到边界，猜错了你还以为自己会了。\n\n## 什么时候用哪个\n\n- **用完整委托**：要可验收的产出（判分、改文件、写回状态）。你得写清目标、步骤、边界、证据不够时停在哪。\n- **一句话意图可以**：你只是闲聊、要灵感，且不在乎对方填空——但别把那种结果当已验证事实写进复习。\n\n你明天给宿主的任务，可以对照答疑包自检：有没有编号动作？有没有「不要……」？有没有「若做不到就……」？缺一条，对方就还在猜。\n\n## 自检\n\n**问：** 答疑包「给 AI 助手的任务」段写清了哪几类信息（步骤之外还写了什么边界）？\n\n**问：** 证据不足时，`passed` 应保持什么？模板用哪三个字禁止凭空补全？\n\n**问：** 只说「帮我看看这题对不对」缺了哪几块，才让对方只能靠印象填空？\n\n## 一句话\n\n**可执行委托 = 目标、步骤、边界和失败路径写清，让对方不必猜；答疑包的任务段就是活范例。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                "lineStart": 159,
+                "lineEnd": 171,
+                "nodeIds": [],
+                "note": "给 AI 的任务：编号步骤与不要假设 IDE/代码库的边界。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                "lineStart": 84,
+                "lineEnd": 93,
+                "nodeIds": [],
+                "note": "证据不足时说明缺什么，passed 留 false，不要猜。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "five-parts-of-request",
+                "kind": "basic",
+                "front": "一份可执行委托通常要写清哪几类信息？",
+                "back": "目标、步骤/任务、边界（不做什么）、上下文、输出与验收（含失败时怎么办）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                    "lineStart": 162,
+                    "lineEnd": 171,
+                    "nodeIds": [],
+                    "note": "任务四步 + 边界：不要假设 IDE 或能打开代码库。"
+                  }
+                ]
+              },
+              {
+                "id": "vague-vs-executable",
+                "kind": "basic",
+                "front": "模糊请求和可执行委托的核心差别是什么？",
+                "back": "模糊请求把猜测甩给对方；可执行委托写清边界与失败路径，让对方不必猜。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                    "lineStart": 84,
+                    "lineEnd": 93,
+                    "nodeIds": [],
+                    "note": "无法确定时明说并保持 passed false。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-no-guess-rule",
+                "kind": "short-answer",
+                "title": "失败路径四个字",
+                "prompt": "答疑包在证据不足时要求 AI 不要怎样做？四个汉字。",
+                "expectedAnswer": "不要猜",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                    "lineStart": 91,
+                    "lineEnd": 91,
+                    "nodeIds": [],
+                    "note": "并把 passed 留成 false。不要猜。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "facts-before-expression",
+            "title": "为什么不能先润色、后查事实？",
+            "content": "# 为什么不能先润色、后查事实？\n\n## 情境和约束\n\n你已经能读证据、跟课做练习。有时你会对宿主说：「把这段讲得更生动一点」「帮我排练怎么说」。\n\n本项目里两套技能各管一块：`teach-from-study` 管教学与事实；`comm-coach` 管表达排练与措辞反馈。路由写在技能里，不是口头习惯：\n\n```md\n- Teaching owns factual accuracy. On requested rehearsal or expression feedback, verify against evidence first, then invoke `comm-coach`; never run both by default.\n```\n\n[[evidence:.agents/skills/teach-from-study/SKILL.md:32-36]]\n\n约束是：事实正确归教学链路；表达层只在你明确要排练或反馈时上场；**默认不要两者一起跑**。\n\n## 先猜一下\n\n若你默认「边讲课边改措辞」——先把句子写漂亮，再回头对证据——错事实最容易落到什么下场？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n漂亮句子会把错误包得更难拆：你练的是流畅的错答案，复习时还以为自己会了。\n\n## 代价和收益\n\n**先证据、后表达**的代价：你要多一步「对照 snapshot / 证据再开口」，不能一上来只改语气。\n\n收益有三：\n\n1. **对错有锚点** —— 教学技能把 claim 钉在可引用的文件与行上；润色改的是说法，不是真假。\n2. **职责不搅在一起** —— 一边补概念一边磨修辞时，你分不清哪句是事实、哪句是风格。\n3. **默认不同时开跑** —— 避免「讲解还没核实，教练已经在改你的表达」。\n\n你向 AI 提需求时，同一顺序也适用：\n\n- 先给可核对的现状（路径、行号、现象、你已试过的）。\n- 再提表达要求（「写短一点」「像给同事说」）。\n\n顺序反了，宿主可能先交付一篇很会说的稿，里面的机制却对不上仓库。\n\n## 什么时候该反过来\n\n若任务**纯属**措辞、且事实已由上一轮钉死（例如「这段评估已经 host-grade 通过，只改口吻」），可以直接进表达层，不必再整课重讲。\n\n若事实尚未核实、或你自己也说不清依据——**不要**为了生动先开 `comm-coach`。反过来只会加快错误传播。\n\n「讲得生动」本身不是坏事；它排在「讲得对」后面，不是替代品。\n\n## 自检\n\n**问：** 教学链路里，「事实正确」默认归谁管？\n\n**问：** 用户说「把这题讲得更生动一点」时，宿主应先做什么，再做什么？\n\n**问：** 为什么默认不要 `teach-from-study` 和 `comm-coach` 同时开跑？\n\n## 一句话\n\n**先证据后表达：教学管事实，沟通教练只在核实之后上场；默认不同时开跑。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+                "lineStart": 32,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "先核实证据再调 comm-coach；默认不同时运行。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "teaching-owns-facts",
+                "kind": "basic",
+                "front": "teach-from-study 里，谁负责事实正确性？",
+                "back": "Teaching（教学本身）owns factual accuracy；表达反馈是后续可选步骤。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+                    "lineStart": 35,
+                    "lineEnd": 35,
+                    "nodeIds": [],
+                    "note": "Teaching owns factual accuracy。"
+                  }
+                ]
+              },
+              {
+                "id": "never-both-default",
+                "kind": "basic",
+                "front": "为什么默认不要同时跑教学与 comm-coach？",
+                "back": "避免事实核对与措辞打磨搅在一起；应先核实证据，再按需做表达反馈。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+                    "lineStart": 35,
+                    "lineEnd": 35,
+                    "nodeIds": [],
+                    "note": "never run both by default。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "order-fact-then-style",
+                "kind": "short-answer",
+                "title": "谁先谁后",
+                "prompt": "被要求表达反馈时，应先 verify against evidence，再 invoke 哪个技能名？（小写连字符）",
+                "expectedAnswer": "comm-coach",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+                    "lineStart": 35,
+                    "lineEnd": 35,
+                    "nodeIds": [],
+                    "note": "verify against evidence first, then invoke comm-coach。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "constraints-beat-goals",
+            "title": "只写「做更好」，为什么还是会返工？",
+            "content": "# 只写「做更好」，为什么还是会返工？\n\n## 两个东西\n\n你委托 AI 时，目标和非目标常被揉成一句话。\n\n**目标**说你要去哪：做一所本地大学、加强 AI 能力、让体验更顺。\n\n**约束 / 非目标**说禁行线：哪些手段不许用、哪些系统不许接、哪些「好心增强」其实越界。\n\n本仓库的 `AGENTS.md` 不把边界留给默契，而是用 UniversityLocal Rules 写成条目。下面这几条直接卡住协作质量：\n\n```md\n- Treat external repositories as study subjects. Read-only inspection is the\n  default; never write learning artifacts into them unless the user explicitly\n  authorizes that target-repository change.\n- The AI host performs research and teaching. Do not add direct model-provider\n  calls merely to imitate the host; any product runtime AI call must go through\n  SwimmerAIKit and requires a concrete need.\n- UniversityLocal is permanently local-only and must not depend on, integrate with,\n  upload to, or prepare a sync lane for SwimmerBackend or any other application\n  backend.\n```\n\n[[evidence:AGENTS.md:57-76]]\n\n## 先猜一下\n\n你只写目标「加强 AI 能力」、不写非目标时，对方最容易「好心」长出哪类功能？关掉这类功能，伤的是谁的体验、守的是哪条硬边界？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n最容易长出直接塞模型 API、云同步或后台集成；关掉它们，短期少一点「自动智能」感，守住的是 local-only 与「研究教学由宿主做」——返工和数据边界事故比少一个插件贵得多。\n\n## 逐条对照\n\n| | 只写目标 | 目标 + 非目标 |\n| --- | --- | --- |\n| 对方优化方向 | 凡是听起来像增强都可加 | 先排除禁行线，再在允许面里做 |\n| 典型越界 | 直连厂商、预留 sync、写回被学仓 | 规则条目可对票否决 |\n| 你验收时 | 「好像更强了」却说不清是否合规 | 逐条对照 Rules 与委托里的禁止项 |\n| 返工成本 | 架构级拆改 | 多数挡在动手前 |\n\nRules 里还能读到：学习产物默认进 UniversityLocal、不进被检项目；存储路径可配置、不硬编码本机路径；SwimmerGameServerKit 不是默认依赖——本地测验与复习不构成上游戏服的理由。\n\n## 什么时候用哪个\n\n- **委托必须带非目标**：会动代码、数据边界、依赖或对外集成时。模板可以是：目标 / **禁止** / 允许的手段 / 验收。\n- **可以只写目标**：纯讨论、不落地的头脑风暴——但一旦你说「按这个实现」，先补禁行线。\n\n你写「把客厅弄好看」而不写「承重墙不动」，装修队可能抄近路；Rules 就是承重墙清单。目标决定方向，非目标决定还回不回得来。\n\n## 自检\n\n**问：** 为什么「不做什么」往往比「要做什么」更能防止返工？\n\n**问：** 从 UniversityLocal Rules 指出至少两条硬边界（外部仓、模型调用、local-only 任选其二即可）。\n\n**问：** 只写「加强 AI 能力」时，最容易长出哪类多余功能？\n\n## 一句话\n\n**约束与非目标是委托里的禁行线；本项目的 Rules 把 local-only 与不擅自加模型调用写成了硬规则。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 57,
+                "lineEnd": 76,
+                "nodeIds": [],
+                "note": "UniversityLocal Rules：只读外部仓、SwimmerAIKit、local-only。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-non-goals",
+                "kind": "basic",
+                "front": "为什么委托里「不做什么」往往比「要做什么」更值钱？",
+                "back": "目标太空时对方会好心加功能；非目标画出禁行线，减少踩项目宪法的返工。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 70,
+                    "lineEnd": 76,
+                    "nodeIds": [],
+                    "note": "禁止为凑能力直连模型；永久 local-only。"
+                  }
+                ]
+              },
+              {
+                "id": "no-backend-sync",
+                "kind": "basic",
+                "front": "UniversityLocal 能否为将来上云预留 SwimmerBackend 同步车道？",
+                "back": "不能。规则写明不得依赖、集成、上传或准备同步到 SwimmerBackend。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 73,
+                    "lineEnd": 76,
+                    "nodeIds": [],
+                    "note": "must not depend on… or prepare a sync lane for SwimmerBackend。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-local-only",
+                "kind": "short-answer",
+                "title": "永久本地关键词",
+                "prompt": "Rules 写 UniversityLocal is permanently ____（英文连字符短语，表示只在本地）。",
+                "expectedAnswer": "local-only",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 73,
+                    "lineEnd": 76,
+                    "nodeIds": [],
+                    "note": "permanently local-only，不与 SwimmerBackend 同步。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "output-shape-and-acceptance",
+            "title": "助手忘了改「是否通过」，学习者会怎样？",
+            "content": "# 助手忘了改「是否通过」，学习者会怎样？\n\n## 现象\n\n你打开练习答疑包末尾，会看到一份写回 JSON 模板。字段很多：`commandId`、`contentRevision`、`passed`、`evaluation`……其中 `passed` 的初始值不是「待定」，而是 `false`：\n\n```ts\n  const writeBack = {\n    schemaVersion: 1,\n    commandId: input.commandId,\n    contentRevision: exercise.contentRevision,\n    // Fails closed: an assistant that forgets to edit this field cannot hand\n    // the learner a pass it never decided to give.\n    passed: false,\n    evaluation: \"（在此写对学习者的评估：对错原因 + 讲解，中文）\",\n    extensions: [\"（引申知识点 1）\", \"（引申知识点 2）\"],\n    learnerAnswer: input.learnerAnswer,\n    host: \"ai-host\",\n    courseId: locator.courseId,\n    unitId: locator.unitId,\n    lessonId: locator.lessonId,\n    exerciseId: exercise.id,\n  };\n```\n\n[[evidence:server/workflows/exercise-coaching-packet.ts:117-132]]\n\n写回步骤又对你强调：必须自己判断后**改写** `passed`；模板是 `false`，照抄等于判不通过。\n\n```ts\n    \"## 写回步骤（必做，否则 Web 无评估）\",\n    \"\",\n    \"1. 在**任意位置**新建一个文件，例如 `/tmp/ul-host-grade.json`\",\n    \"2. 写入下面的 JSON。**必须自己判断后改写 `passed`**；模板里是 `false`，照抄等于判不通过。\",\n    \"   保留 `commandId` 与 `contentRevision` 不要动。\",\n```\n\n[[evidence:server/workflows/exercise-coaching-packet.ts:196-212]]\n\n## 先猜一下\n\n若默认改成 `passed: true`，助手漏改字段时，坏的是谁的体验？现在默认 `false`，漏操作时事故倒向哪一侧？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n默认 `true` 时，漏改会让从未判定的通过进成绩；默认 `false` 时，漏改只是多一次「不通过」——你要重跑写回，却不会假毕业。\n\n## 为什么是这样\n\n这叫 **fail closed（默认失败）**：未判断不能变成通过。注释写明动机——助手若忘了改这个字段，就不能把从未判定的 pass 交给你。\n\n同包还有第二道与「过关」相关的门：参考答案何时揭晓。\n\n```ts\nexport function disclosesReference(input: {\n  readonly passed: boolean;\n  readonly submissionCount: number;\n}): boolean {\n  return input.passed || input.submissionCount >= 2;\n}\n```\n\n[[evidence:server/workflows/exercise-coaching-packet.ts:57-62]]\n\n`disclosesReference` 仅在 **已通过** 或 **提交次数 ≥ 2** 时为真。第一次尝试不发参考答案，保护的是回忆练习：你还没认真答，系统不把答案塞眼前。\n\n你向 AI 要产物时，可抄这套形状：\n\n- 输出必须是约定字段，而不是散文一段；\n- 「是否完成 / 是否通过」未显式改写时视为否；\n- 验收命令或检查清单写在委托末尾。\n\n验收不是「看起来差不多」，而是**固定形状 + 安全默认**。\n\n## 自检\n\n**问：** 写回模板里 `passed` 的默认值是什么？注释里的 fail closed 想防什么？\n\n**问：** 助手原样贴回模板、一个字段都没改，学习者侧会怎样？\n\n**问：** `disclosesReference` 在哪两种情况下才为真？为什么第一次尝试不揭晓参考？\n\n## 一句话\n\n**输出形状写死 + `passed` 默认 false：未判断不能变通过；失败默认比静默成功更安全。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                "lineStart": 117,
+                "lineEnd": 132,
+                "nodeIds": [],
+                "note": "写回对象 passed 默认 false，注释说明 fail closed。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                "lineStart": 196,
+                "lineEnd": 212,
+                "nodeIds": [],
+                "note": "写回步骤：必须改写 passed；附 JSON 模板。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                "lineStart": 57,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "disclosesReference：通过或提交≥2 才揭晓参考。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "fail-closed-passed",
+                "kind": "basic",
+                "front": "为什么写回模板里 passed 默认是 false？",
+                "back": "Fail closed：助手若忘了改该字段，不能把从未判定的通过交给学习者。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                    "lineStart": 121,
+                    "lineEnd": 123,
+                    "nodeIds": [],
+                    "note": "注释：forgets to edit this field cannot hand a pass。"
+                  }
+                ]
+              },
+              {
+                "id": "when-disclose-reference",
+                "kind": "basic",
+                "front": "disclosesReference 在什么条件下为 true？",
+                "back": "passed 为真，或 learner 提交次数 submissionCount ≥ 2。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                    "lineStart": 57,
+                    "lineEnd": 62,
+                    "nodeIds": [],
+                    "note": "return input.passed || input.submissionCount >= 2。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-passed-value",
+                "kind": "short-answer",
+                "title": "默认 passed",
+                "prompt": "写回 JSON 模板里 passed 字段的默认值是 true 还是 false？只写 true 或 false。",
+                "expectedAnswer": "false",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                    "lineStart": 121,
+                    "lineEnd": 123,
+                    "nodeIds": [],
+                    "note": "Fails closed 注释与 passed: false。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "brief-not-model",
+            "title": "七个 worktree 并行生成，为什么可用靠的不是模型名？",
+            "content": "# 七个 worktree 并行生成，为什么可用靠的不是模型名？\n\n## 情境和约束\n\n你要理解的不是「哪个模型更强」，而是并行生成那一档课为什么能用。体量写在 Zero-Basics Tier Receipt 里——24 units、98 lessons、294 cards、157 exercises、679 条证据引用。人肉通读已经过线。\n\n```md\n## Zero-Basics Tier Receipt (2026-08-06)\n\nThe shelf held seven courses that all assumed the reader could already read\nTypeScript, knew what async meant, and had seen React. The owner could not\nstart. There is now a tier under them: 认识地形 · 读懂一行代码 · 读懂一段逻辑 ·\n等待与失败 · 界面是怎么长出来的 · 数据从哪来 · 怎么知道没写错 · 代码之外 —\n24 units, 98 lessons, 294 cards, 157 exercises, 679 evidence references. The\nwhole shelf across both studies is 15 courses, 120 lessons, 356 cards,\n183 exercises.\n```\n\n[[evidence:docs/reference/execution/current-work.md:369-378]]\n\n生成侧用了 Grok，七个隔离 worktree 并行、一 stage 一个。Receipt 接着写：真正让产出**可用**的，不是模型本身，而是每份 brief。\n\n## 先猜一下\n\n同一模型、换一份只写「生成零基础课」的简报，最可能坏在哪三处？门禁（核对引用与形状的脚本）能单独补上简报缺的那一层吗？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n最容易坏在证据对不上真实文件、课与课重复、练习无法对照源码；门禁能拦住坏引用和坏形状，却补不出「每个文件能教什么」——那一层只能写在简报里。\n\n## 代价和收益\n\nReceipt 原话把分工钉死：\n\n```md\nGeneration was Grok's, seven isolated worktrees in parallel, one per stage.\nWhat made the output usable was not the model but the briefs: each named the\nexact files, their line counts, and what each one could teach. Two mechanical\ngates carried the review, because 294 cards is past what reading can check —\n`check-proposal-evidence.mjs` resolves every citation against the real file at\nits pinned commit, and the new `check-proposal-shape.mjs` checks what the schema\ncannot: duplicate ids, the six-section lesson skeleton, an evidence note on\n```\n\n[[evidence:docs/reference/execution/current-work.md:388-396]]\n\n简报三件套（你写委托时可直接抄）：\n\n1. **点名文件** —— 不要「基础课随便找点代码」。\n2. **行数 / 范围** —— 对方知道读多深。\n3. **每个文件能教什么** —— 目标绑证据，避免空讲概念。\n\n门禁是第二道绳：对照钉死 commit 核引用，查骨架、重复 id、答案长度等。代价是你写 brief 比喊「生成一批课」慢；收益是并行七路仍能拼成一套可验收的课，而不是七盘互不配套的半成品。\n\n模型是发动机；简报是图纸与验收清单。你若不点名文件与「能教什么」，并行再多也只是好看的半成品。\n\n## 什么时候该反过来\n\n探索性聊天、只想看模型临场发挥时，可以不写三件套——你预期的是灵感，不是可合并产物。\n\n一旦产出要进仓库、进课表、进复习队列，你就回到 brief：点名文件、范围、能教什么，并挂上能批跑的门禁。只换「更强模型」却不换简报，解决不了可用性。\n\n你明天给 AI 的任务可以收成：\n\n> 只改 X；读 A.ts L10-40、B.md L1-20；交付形状为 …；自检跑 …；不要做 Y。\n\n## 自检\n\n**问：** Receipt 用哪句话说明「可用」靠的是什么而不是模型？\n\n**问：** 一份能跑并行生成的简报，至少应点名哪三类信息？\n\n**问：** 两道机械门禁各拦什么？它们能否替代简报里的「能教什么」？\n\n## 一句话\n\n**让产出可用的不是模型，是简报：点名文件、行数、能教什么；门禁只是托住评审的第二道绳。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "docs/reference/execution/current-work.md",
+                "lineStart": 388,
+                "lineEnd": 396,
+                "nodeIds": [],
+                "note": "可用靠 briefs：点名文件、行数、能教什么；两道门禁。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "docs/reference/execution/current-work.md",
+                "lineStart": 369,
+                "lineEnd": 378,
+                "nodeIds": [],
+                "note": "Zero-Basics Tier Receipt：规模与全量证据约束。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "usable-was-briefs",
+                "kind": "basic",
+                "front": "Zero-Basics 收据里，什么让生成结果变得可用？",
+                "back": "不是模型本身，而是 briefs：每份点名确切文件、行数、以及能教什么。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "docs/reference/execution/current-work.md",
+                    "lineStart": 388,
+                    "lineEnd": 390,
+                    "nodeIds": [],
+                    "note": "What made the output usable was not the model but the briefs。"
+                  }
+                ]
+              },
+              {
+                "id": "brief-three-fields",
+                "kind": "basic",
+                "front": "一份能支撑并行生成的简报至少应点名哪三类信息？",
+                "back": "确切文件路径、行数（或范围）、每个文件能教什么。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "docs/reference/execution/current-work.md",
+                    "lineStart": 389,
+                    "lineEnd": 390,
+                    "nodeIds": [],
+                    "note": "exact files, their line counts, and what each one could teach。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "write-executable-brief",
+                "kind": "explain",
+                "title": "写一份可执行简报",
+                "prompt": "假设你要请 AI 宿主「根据本课证据，写一段给同事的委托说明：如何让对方第一次就交可用练习评估」。请写一份可执行委托（可中文），必须覆盖：目标、约束/非目标、上下文（点名本课用过的真实路径）、输出形状、验收方式。写完后可让 AI 按评分要点自检。",
+                "rubric": [
+                  "写清目标：对方读完知道要交付什么结果",
+                  "写清至少一条约束或非目标（禁止猜测、禁止越权改仓库等）",
+                  "点名真实上下文（如 exercise-coaching-packet 或 current-work 收据中的做法）",
+                  "给出输出形状与验收（字段/步骤/命令或检查清单）"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "docs/reference/execution/current-work.md",
+                    "lineStart": 388,
+                    "lineEnd": 396,
+                    "nodeIds": [],
+                    "note": "briefs 点名文件与能教什么；门禁托住评审。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                    "lineStart": 159,
+                    "lineEnd": 171,
+                    "nodeIds": [],
+                    "note": "可执行任务模板：步骤、边界、直接执行。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "context-clipboard-budget",
+            "title": "「剪贴板预算」到底在限制什么？",
+            "content": "# 「剪贴板预算」到底在限制什么？\n\n## 一句真实出现的话\n\n答疑包组装证据时，服务端有一个常量，注释不写「正确性上限」，而写 clipboard budget：\n\n```ts\n/**\n * Evidence carried by the packet. The exercise's own references come first\n * because they are what the question is about; the lesson's references follow\n * as context. Five is a clipboard budget, not a correctness limit — a packet\n * nobody can paste teaches nothing.\n */\nconst PACKET_EVIDENCE_LIMIT = 5;\n```\n\n[[evidence:server/http-server.ts:815-822]]\n\n同一条请求链上还有另一道门：没有学习者提交，不能先拷包——会 409。\n\n```ts\n  if (!submission) {\n    throw new HttpError(409, \"Submit an answer before copying the coaching packet\");\n  }\n```\n\n[[evidence:server/http-server.ts:878-880]]\n\n## 先猜一下\n\n没有提交就请求拷贝答疑包时，服务端为何用 409 拦住，而不是给出一份只有题干、没有作答的包？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n包绑定的是你的作答，不是空题干游览；没有提交就缺「学习者写了什么」这一半，给半截包只会误导宿主。\n\n## 三个真实用例\n\n**1. 常量语义**  \n`PACKET_EVIDENCE_LIMIT = 5` 与注释写明：五条是剪贴板预算。练习自己的引用优先，课级上下文在后。超预算的记入 `omitted`，包里会提示另有几条未附上，而不是假装全附了。\n\n**2. 读失败也 omitted**  \n单条引用若指向过大文件或读失败，计入 omitted，不拖垮整包。你委托 AI 时同理：一条读不动的巨型日志，不该让整份任务废掉。\n\n**3. 先提交再拷包**  \n409 文案是 `Submit an answer before copying the coaching packet`。上下文包绑定的是**你的作答**，不是空题干游览。没有提交就拷包，宿主缺少「学习者到底写了什么」这一半。\n\n你自己写委托时的「可粘贴预算」：\n\n- 优先贴与任务直接相关的路径与行号；\n- 长日志放摘要或链接，别整页粘；\n- 假设对方**只能看到你贴出去的字节**，打不开你的整仓。\n\n## 它不是什么\n\n- **不是**「五条就够证明一切」的正确性定理——注释明确区分 budget 与 correctness。\n- **不是**鼓励你少给关键证据：该给的仍给，只是超过带走能力时要裁剪与排序，而不是无限堆。\n- **不是**「宿主总能 `open` 仓库」的借口：答疑包的设计前提是材料必须能被粘走。\n\n上下文不是越多越好，而是对方真能带走、真能读完。\n\n## 自检\n\n**问：** 答疑包一次默认最多附上几条证据？注释如何解释这个上限？\n\n**问：** 为什么说它是剪贴板预算而不是正确性上限？\n\n**问：** 没有提交就请求拷贝答疑包，服务端返回什么？为何要这道门？\n\n## 一句话\n\n**上下文要可粘贴：答疑包默认最多 5 条证据；装不走的材料等于没给。**\n",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 815,
+                "lineEnd": 822,
+                "nodeIds": [],
+                "note": "PACKET_EVIDENCE_LIMIT=5：剪贴板预算注释。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 878,
+                "lineEnd": 880,
+                "nodeIds": [],
+                "note": "无提交则 409，不能先拷答疑包。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-five-evidence",
+                "kind": "basic",
+                "front": "PACKET_EVIDENCE_LIMIT 设为 5 的注释理由是什么？",
+                "back": "这是剪贴板预算：没人粘得上的包什么也教不了。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 815,
+                    "lineEnd": 819,
+                    "nodeIds": [],
+                    "note": "clipboard budget… nobody can paste teaches nothing。"
+                  }
+                ]
+              },
+              {
+                "id": "submit-before-packet",
+                "kind": "basic",
+                "front": "为什么拷答疑包之前必须先提交答案？",
+                "back": "没有提交服务端返回 409；包要带上学习者的答案才能判分。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 878,
+                    "lineEnd": 880,
+                    "nodeIds": [],
+                    "note": "Submit an answer before copying the coaching packet。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "packet-evidence-limit",
+                "kind": "short-answer",
+                "title": "证据条数上限",
+                "prompt": "答疑包一次最多附上几条证据片段？只写数字。",
+                "expectedAnswer": "5",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 821,
+                    "lineEnd": 821,
+                    "nodeIds": [],
+                    "note": "const PACKET_EVIDENCE_LIMIT = 5"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "host-prepares-context",
+            "title": "判分的到底是网页，还是你正在对话的宿主？",
+            "content": "# 判分的到底是网页，还是你正在对话的宿主？\n\n## 两个东西\n\n协作里有两个角色，名字容易糊成「AI 都差不多」。\n\n**AI 宿主**（你正在对话的 Grok / Codex / Claude 等）：政策称它为 teacher and researcher——读证据、讲解、判练习。\n\n**UniversityLocal 产品**（网页、CLI、本地状态）：准备 context、evidence、durable state、exercises、verification，而不是默认再藏一个站内自主智能体。\n\n政策 Runtime Boundaries 里原话只有这几行，却把分工钉死：\n\n```md\n- The AI host is the teacher and researcher. UniversityLocal should prepare context,\n  evidence, durable state, exercises, and verification rather than hiding a\n  second autonomous agent inside the app without a proven need.\n```\n\n[[evidence:docs/policy/best-practice-for-this-project.md:58-60]]\n\n## 先猜一下\n\n若网页在没有 proven need 时再调一个站内模型把练习判了，违反的是上面哪一侧的职责？对你写委托时，任务主语该写成谁？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n把教学从宿主挪进了应用内第二智能体；委托主语应是宿主（「请你根据答疑包判分并 host-grade 写回」），产品只备材料与写回通道。\n\n## 逐条对照\n\n| | AI 宿主 | UniversityLocal |\n| --- | --- | --- |\n| 角色 | 老师与研究者 | 教材柜、成绩本、材料准备 |\n| 典型动作 | 读证据、判对错、讲解 | 组答疑包、存提交、跑校验、持久化进度 |\n| 默认不该做 | 被架空成「只陪聊」 | 无 proven need 时藏第二自主智能体代教 |\n| 你委托时的主语 | 「请你（宿主）……」 | 「材料已在包里 / 写回命令如下」 |\n\n学校类比只为分责：老师讲课批改；教务系统排课、存成绩、发卷子。你不会对教务系统说「你自己再雇一个编外老师藏在服务器里悄悄改分」。\n\n## 什么时候用哪个\n\n- **宿主执行教学动作**：判分、讲解、根据证据作评价——写进委托正文，主语是你对话的那一方。\n- **产品准备与验收**：答疑包、证据片段、host-grade 写回、本地状态——写清已备好什么、命令怎么跑，而不是「请网页再变聪明一点」。\n\n何时才考虑应用内模型调用？政策要求 **proven need**，且项目其它规则还要求走 SwimmerAIKit——那是另一道门，不是本课默认。默认分工是：宿主教，本地系统备上下文与验收。\n\n## 自检\n\n**问：** 政策原文如何称呼 AI host？UniversityLocal 应准备哪些东西？\n\n**问：** 「让网页自己再调一个模型把练习判了」违反了哪条分工？\n\n**问：** 一条可执行委托里，教学动作的主语应写成谁？\n\n## 一句话\n\n**宿主是老师与研究者；本地产品准备上下文与验收，而不是默认再藏一个站内自主智能体。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "docs/policy/best-practice-for-this-project.md",
+                "lineStart": 58,
+                "lineEnd": 60,
+                "nodeIds": [],
+                "note": "AI host 是教师；产品准备上下文而非第二智能体。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "ul-prepares-not-teaches",
+                "kind": "basic",
+                "front": "UniversityLocal 相对 AI 宿主应主要做什么？",
+                "back": "准备上下文、证据、持久状态、练习与校验，而不是默认再藏一个自主教学智能体。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "docs/policy/best-practice-for-this-project.md",
+                    "lineStart": 58,
+                    "lineEnd": 60,
+                    "nodeIds": [],
+                    "note": "prepare context, evidence… rather than hiding a second agent。"
+                  }
+                ]
+              },
+              {
+                "id": "name-the-actor",
+                "kind": "basic",
+                "front": "写委托时为什么要写明「请你（宿主）执行」？",
+                "back": "主体明确：教学动作归宿主；避免对方去发明站内第二机器人或越权改产品。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "docs/policy/best-practice-for-this-project.md",
+                    "lineStart": 58,
+                    "lineEnd": 60,
+                    "nodeIds": [],
+                    "note": "host is teacher；app prepares materials。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "who-is-teacher",
+                "kind": "short-answer",
+                "title": "谁是老师",
+                "prompt": "按政策，担任 teacher and researcher 的是 AI host 还是应用内第二智能体？答 AI host 或 第二智能体。",
+                "expectedAnswer": "AI host",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "docs/policy/best-practice-for-this-project.md",
+                    "lineStart": 58,
+                    "lineEnd": 60,
+                    "nodeIds": [],
+                    "note": "The AI host is the teacher and researcher。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "one-question-explicit-save",
+            "title": "「这段很精彩」——AI 可以不经询问就写成笔记吗？",
+            "content": "# 「这段很精彩」——AI 可以不经询问就写成笔记吗？\n\n## 情境和约束\n\n对话里常冒出值得留下的点。`knowledge-node` 技能管落盘，但边界写在「不可违反」一节，不是可选项：\n\n```md\n## 不可违反的边界\n\n1. 只有用户明确要求保存时才落盘；不得暗中记忆。\n2. 一份笔记只回答一个核心问题；多个概念拆开，不能保存整段聊天。\n3. `content` 是重新组织后的教学 Markdown，禁止粘贴原始对话、系统提示、宿主元数据或无关上下文。\n4. 事实必须有固定源码快照证据；推论要明确标为推论；个人理解不能冒充项目事实。\n5. 只通过 `pnpm university -- capture` 写入。不要直接编辑 `studies/**/notes` 或 `learning.sqlite`。\n6. 同一次保存重试时复用同一个 proposal 文件、note ID 和 `captureId`。不得每次失败都生成新 ID。\n7. UniversityLocal 永久纯本地；不要调用 SwimmerBackend，也不要上传内容。\n```\n\n[[evidence:.agents/skills/knowledge-node/SKILL.md:10-18]]\n\n教学技能同一侧：有用洞察先问是否保存；Invoke `knowledge-node` only after consent。\n\n```md\nPrefer one concept per lesson. For a useful insight, offer: “要把这个知识点保存成笔记和复习卡吗？” Invoke `knowledge-node` only after consent.\n...\n- Teaching owns factual accuracy. On requested rehearsal or expression feedback, verify against evidence first, then invoke `comm-coach`; never run both by default.\n- Persistence is a separate, explicit `knowledge-node` step. Helper skills never save.\n```\n\n[[evidence:.agents/skills/teach-from-study/SKILL.md:30-36]]\n\n## 先猜一下\n\n未经同意、又没有可靠源码证据，就把一段 claim 推进复习队列——队列会把什么当成「你会了」？你下次刷到那张卡时，最大的风险是什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n队列把它当成你已掌握的事实；你可能在复习从未点头保存、甚至是假事实的内容。\n\n## 代价和收益\n\nclaim 类型也有硬规矩——找不到可靠证据时用 draft，不要生成假事实进复习：\n\n```md\n- `source-fact`：必须找到当前 study 最新固定快照里的真实文件与行号，证据 `kind` 必须是 `fact`。\n- `inference`：写清“这是基于哪些事实的推论”，证据 `kind` 使用 `inference`。\n- `personal-understanding`：可无源码证据，但正文必须写明这是个人理解或记忆模型。\n- 找不到可靠证据时使用 `status: \"draft\"`，不要生成进入复习队列的假事实。\n```\n\n[[evidence:.agents/skills/knowledge-node/SKILL.md:50-55]]\n\n可执行的「帮我记一下」应写清：\n\n| 字段 | 你要指定的 |\n| --- | --- |\n| 记哪一问 | 一份笔记一个核心问题 |\n| claim 类型 | fact / inference / personal-understanding |\n| 是否做卡片 | 0–3 张，draft 事实可不进复习 |\n| 通道 | 只经 `pnpm university -- capture`，不手改 sqlite |\n| 重试 | 同一 captureId / note ID，失败不换新 ID |\n\n代价：不能「宿主觉得好就存」；收益：笔记可验证、可复习、可撤销责任边界清晰——档案馆收的是案卷题名 + 一件事由，不是当天全部录音。\n\n## 什么时候该反过来\n\n**不要反过来跳过同意**——暗中记忆在本项目里没有「为你好」的例外。\n\n可以放宽的是**粒度**：你明确说「整理今天学的、批量列出候选」，进入批量模式时，仍是先列表、你点头后逐条 capture，而不是静默写库。\n\n「记一下」若不可执行，会变成整段聊天入库；可执行版是一问一记、标清类型、显式同意。\n\n## 自检\n\n**问：** knowledge-node 何时才允许落盘？可以暗中记忆吗？\n\n**问：** 为什么一份笔记只回答一个核心问题，且禁止粘贴整段聊天？\n\n**问：** 找不到可靠证据时应用什么 status？为什么不能生成假事实进复习？\n\n## 一句话\n\n**保存也是委托：先征得同意、一问一记、标清事实与推论；不整段聊天、不暗中记忆。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": ".agents/skills/knowledge-node/SKILL.md",
+                "lineStart": 10,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "不可违反边界：显式保存、一问一记、本地 capture。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": ".agents/skills/knowledge-node/SKILL.md",
+                "lineStart": 50,
+                "lineEnd": 55,
+                "nodeIds": [],
+                "note": "fact/inference/draft：无证据不进复习假事实。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+                "lineStart": 30,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "先征得同意再 knowledge-node；helper 不擅自保存。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "one-note-one-question",
+                "kind": "basic",
+                "front": "一份 knowledge-node 笔记应覆盖几个核心问题？",
+                "back": "一个。多个概念要拆开，不能把整段聊天存成一条。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": ".agents/skills/knowledge-node/SKILL.md",
+                    "lineStart": 13,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "一份笔记只回答一个核心问题。"
+                  }
+                ]
+              },
+              {
+                "id": "no-fake-facts-in-review",
+                "kind": "basic",
+                "front": "找不到可靠证据时，应如何处理笔记状态？",
+                "back": "使用 status draft，不要生成进入复习队列的假事实。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": ".agents/skills/knowledge-node/SKILL.md",
+                    "lineStart": 55,
+                    "lineEnd": 55,
+                    "nodeIds": [],
+                    "note": "找不到可靠证据时使用 draft。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "when-to-capture",
+                "kind": "short-answer",
+                "title": "何时落盘",
+                "prompt": "knowledge-node 何时才把笔记写入 UniversityLocal？用六字：用户明确要求。",
+                "expectedAnswer": "用户明确要求",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": ".agents/skills/knowledge-node/SKILL.md",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "只有用户明确要求保存时才落盘。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "one-change-at-a-time",
+            "title": "一次改十处，绿了——你为什么仍不知道哪一招有效？",
+            "content": "# 一次改十处，绿了——你为什么仍不知道哪一招有效？\n\n## 现象\n\n你改 prompt、换模型、加上下文、改验收，一并发出。宿主回了更好的结果。你却说不清：该保留的是措辞、模型，还是多塞的那几段材料？\n\n本项目的验证纪律从反面回答同一问题——它不让你「一锅端碰运气」：\n\n```md\n## Verification\n\nRun the smallest relevant checks, then `pnpm verify` before claiming a complete\nimplementation. Browser-visible UI changes also require a real browser pass and\nscreenshot evidence.\n```\n\n[[evidence:AGENTS.md:88-92]]\n\n政策里的 Verification Ladder 把检查排成由小到大的阶梯，而不是一次跑完碰运气：\n\n```bash\npnpm typecheck\npnpm lint\npnpm format:check\npnpm test\npnpm build\npnpm docs:check\npnpm verify\n```\n\n[[evidence:docs/policy/best-practice-for-this-project.md:80-93]]\n\n## 先猜一下\n\n同时改模型与 prompt 措辞，结果变好时，你最大的损失是什么？项目要求先 smallest relevant checks 再 `pnpm verify`，是在强迫你一次只动哪一类东西？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n损失是成功无法归因、下次无法稳定复现；验证阶梯逼你先只验证动过的那一层，使「这一轮只改 X」在工程上可定位。\n\n## 为什么是这样\n\n一次改十个地方，等于同时拧十个旋钮。结果变了，你不知道是哪个旋钮；失败了，也不知道该回哪一档。\n\n**坏委托（多变量）：**\n\n> 把答疑包改短一点，顺便换个模型，上下文再多塞点，语气活泼些，验收也改一下。\n\n**好委托（单变量）：**\n\n> 这一轮我只改 X：把「给 AI 助手的任务」里的步骤说明压缩到每步一行。模型、上下文条数、写回字段、其它文件一律不动。改完先跑最小相关测试，再 `pnpm verify`。\n\n对照项目纪律：\n\n1. **最小相关检查先** —— 只验证你动过的那一层（例如单测某个 workflow）。\n2. **再 `pnpm verify`** —— 全阶梯托底，防止「局部绿、整体红」。\n3. **浏览器可见改动** —— 还要真实浏览器与截图；build 绿不等于交互对。\n\n固定句式你可以抄进下一轮委托：**「这一轮我只改 X，其它保持不变。」**\n\n调音时只拧一根弦，你听得出高低；同时拧六根，嘈杂了也不知该回哪根。改协作条件时也一样。\n\n## 自检\n\n**问：** 为什么一次改十处时，产出变了却难以定位、难以复现？\n\n**问：** `AGENTS.md` 的 Verification 要求的顺序是什么？浏览器可见改动还多哪一步？\n\n**问：** 下一轮委托里，能体现「单变量」的固定句式怎么写？\n\n## 一句话\n\n**一次只改一个变量：委托写清「这一轮只改 X」；项目验证也是先最小检查再 `pnpm verify`，失败才定位得到。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 88,
+                "lineEnd": 92,
+                "nodeIds": [],
+                "note": "Verification：先 smallest relevant checks，再 pnpm verify。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "docs/policy/best-practice-for-this-project.md",
+                "lineStart": 80,
+                "lineEnd": 93,
+                "nodeIds": [],
+                "note": "Verification Ladder：由小到大的检查阶梯，而非一次碰运气。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "one-var-why",
+                "kind": "basic",
+                "front": "为什么改 prompt 时不能同时换模型、措辞和上下文长度？",
+                "back": "三个变量一起动，成功也无法归因，失败也无法定位；下次复现不了。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 88,
+                    "lineEnd": 92,
+                    "nodeIds": [],
+                    "note": "验证纪律要求可定位的最小步骤，再全量 verify。"
+                  }
+                ]
+              },
+              {
+                "id": "one-var-phrase",
+                "kind": "basic",
+                "front": "下一轮委托里，用来锁死单变量的固定句式是什么？",
+                "back": "这一轮我只改 X，其它保持不变。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "docs/policy/best-practice-for-this-project.md",
+                    "lineStart": 80,
+                    "lineEnd": 89,
+                    "nodeIds": [],
+                    "note": "阶梯验证：一次推进可检查的一层，而不是混改后赌全绿。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-verify-order",
+                "kind": "short-answer",
+                "title": "验证谁先谁后",
+                "prompt": "AGENTS.md 要求先跑最小相关检查，再跑哪条命令才宣称完成？只写命令（含 pnpm）。",
+                "expectedAnswer": "pnpm verify",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 90,
+                    "lineEnd": 91,
+                    "nodeIds": [],
+                    "note": "then `pnpm verify` before claiming a complete implementation。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "transfer-to-people",
+        "title": "同一件事，说给人听",
+        "objective": "主练对 AI 之后的迁移注释带：哪些结构可直接搬、哪些会坏事、给人时为何结论先行。不建人际沟通主线。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "structures-that-transfer",
+            "title": "写给 AI 的任务栏，为什么也能当给人的交接清单？",
+            "content": "# 写给 AI 的任务栏，为什么也能当给人的交接清单？\n\n## 现象\n\n练习答疑包是一份给 AI 宿主粘贴的委托。任务段先写四步，再写边界：\n\n```ts\n    \"## 给 AI 助手的任务（请直接执行）\",\n    \"\",\n    \"你是本地学习教练。网页**不会**用字符串比对判对错，判定完全由你负责。\",\n    \"\",\n    \"1. **判定**学习者答案是否达到题目要求（允许合理表述差异，勿因多写解释就判错）。\",\n    \"2. **讲解**：对错原因、易混点，用白话。\",\n    \"3. **引申** 1～3 个相关知识点。\",\n    \"4. **写回** UniversityLocal（见文末命令），否则 Web 不会显示你的评估、课也不会完成。\",\n    \"\",\n    \"不要假设你是某一个品牌的 IDE，也不要假设你能打开学习者的代码库——判分需要的代码已经附在下面。\",\n```\n\n[[evidence:server/workflows/exercise-coaching-packet.ts:162-171]]\n\n同一仓库的 `AGENTS.md` 不写「请尽量本地化」，而是用条目钉死只读外部仓、产物进 `studies/`、local-only、不擅自加模型调用：\n\n```text\n## UniversityLocal Rules\n\n- Treat external repositories as study subjects. Read-only inspection is the\n  default; never write learning artifacts into them unless the user explicitly\n  authorizes that target-repository change.\n- Keep UniversityLocal-owned learning skills under `.agents/skills/`. Generic\n  centrally managed governance or frontend skills may remain PGS-managed\n  links, but project-specific teaching behavior must not be scattered across\n  source projects or user-global folders.\n- Keep generated lessons, exercises, review state, and imported project maps in\n  UniversityLocal-owned storage under root-level `studies/` by default. Storage\n  and source roots must be\n  configurable; do not hard-code this checkout path into portable data.\n- The AI host performs research and teaching. Do not add direct model-provider\n  calls merely to imitate the host; any product runtime AI call must go through\n  SwimmerAIKit and requires a concrete need.\n- UniversityLocal is permanently local-only and must not depend on, integrate with,\n  upload to, or prepare a sync lane for SwimmerBackend or any other application\n  backend. A future commercial `University` is a separate repository and product;\n  it may adopt SwimmerBackend under its own approved contract.\n```\n\n[[evidence:AGENTS.md:57-76]]\n\n你如果把这两段只当成「给模型的 prompt」，会漏掉一件事：它们在填栏目，而不只是在调语气。\n\n## 先猜一下\n\n你把答疑包改成给同事的三行委托。最容易被你删掉、却最容易让对方「好心加戏」的，是哪一类信息？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n是约束与非目标——「别假设你有 IDE / 能开仓库」这一类禁行线；只留目标时，对方会按好意扩范围。\n\n## 为什么是这样\n\n对人对 AI，真正可复用的不是「你必须输出 JSON」那种口吻模板，而是五类结构信息：\n\n1. **目标** —— 对方要交付什么结果（答疑包四步：判定、讲解、引申、写回）。\n2. **约束** —— 时间、权限、工具、格式上限（「不要假设 IDE / 代码库」）。\n3. **上下文** —— 决策必需、对方不知道的事实（紧随任务段的题目上下文与证据）。\n4. **成功标准** —— 怎样算做完（写回成功、课才能完成；`passed` 才落库）。\n5. **非目标** —— 这次明确不做的事（AGENTS 的 local-only、不写回外部仓、不私自加模型调用）。\n\n教学技能里的揭示顺序也是同一骨架：objective → evidence → boundaries/failures，而不是按仓库目录报菜名：\n\n```text\n1. State objective/prerequisite; when prior knowledge exists, ask one retrieval or prediction question first.\n2. Reveal progressively: `why → situation → concept → project evidence → boundaries/failures`, not repository-folder order.\n3. Explain each accurate term in plain language on first use, then retain the real term.\n4. Start with a concrete example. Use an analogy only when helpful and name where it breaks.\n5. Mark facts versus inferences; cite snapshot, commit, path/lines, and UA bindings when used.\n6. Give a small worked example, request application/teach-back, correct uncertainty honestly, and end with recap + next action.\n```\n\n[[evidence:.agents/skills/teach-from-study/SKILL.md:23-28]]\n\n你给人短汇报时，五栏都还在；变的是语气与篇幅。可以说「周五前确认判分是否改宿主写回」，不要念「你是严谨的 reviewer，必须输出严格 JSON」。搬结构，不搬口吻模板。\n\n删掉「非目标」时返工最冤：对方按好意多改文件、多同步、多加功能——不是能力差，是你没画禁行线。AGENTS 把 Rules 写成条目，就是在替未来的执行者预支那条线。\n\n## 再想想\n\n哪些 AI 习惯一搬到人身上会伤信任，见 [[lesson:what-breaks-on-people|同一套 AI 习惯，为什么会伤信任？]]。\n\n## 自检\n\n**问：** 对人对 AI 都成立的五类结构信息是哪五类？\n\n**问：** 只讲目标、不讲非目标，最容易发生什么？\n\n**问：** 迁移带该搬的是结构还是 prompt 口吻模板？\n\n## 一句话\n\n**目标、约束、上下文、成功标准、非目标——五件结构对人对 AI 都成立；搬结构，不搬口吻模板。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                "lineStart": 162,
+                "lineEnd": 171,
+                "nodeIds": [],
+                "note": "任务四步 + 边界：目标/步骤/约束的可执行写法。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 57,
+                "lineEnd": 76,
+                "nodeIds": [],
+                "note": "Rules 把只读、local-only 等写成硬边界（非目标清单）。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+                "lineStart": 23,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "教学顺序含 objective、evidence、boundaries——结构骨架。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "five-structures-list",
+                "kind": "basic",
+                "front": "迁移到对人沟通时，哪五类结构仍然成立？",
+                "back": "目标、约束、上下文、成功标准、非目标。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                    "lineStart": 162,
+                    "lineEnd": 171,
+                    "nodeIds": [],
+                    "note": "答疑包写清任务、边界与上下文。"
+                  }
+                ]
+              },
+              {
+                "id": "transfer-structure-not-template",
+                "kind": "basic",
+                "front": "迁移带搬的是什么？不是什么？",
+                "back": "搬的是信息结构（目标/约束/上下文/验收/非目标）；不是把 prompt 模板原样念给人听。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+                    "lineStart": 23,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "结构顺序可复用；交付形态仍按受众调整。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-five-structures",
+                "kind": "short-answer",
+                "title": "五件结构",
+                "prompt": "对人对 AI 都成立的五类结构，用顿号连接五个词：目标、约束、上下文、成功标准、？",
+                "expectedAnswer": "非目标",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 57,
+                    "lineEnd": 76,
+                    "nodeIds": [],
+                    "note": "Rules 示范：硬边界与非目标比空泛目标更能防返工。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "what-breaks-on-people",
+            "title": "同一套 AI 习惯，为什么一搬到同事身上就伤信任？",
+            "content": "# 同一套 AI 习惯，为什么一搬到同事身上就伤信任？\n\n## 两个东西\n\n上一课说的五栏结构可以搬。你会同时碰到两种「协作对象」，默认权限差得很远：\n\n**A. AI 宿主**——同一请求连发多版对比、用「你必须 / 禁止 / 输出严格 JSON」压格式、默认把对话当可持久化材料，多试几次主要耗 token。\n\n**B. 同事（或任何真人）**——本项目把「能不能记、能不能改」写进技能与规则，不是靠客套：\n\n```text\n## 不可违反的边界\n\n1. 只有用户明确要求保存时才落盘；不得暗中记忆。\n2. 一份笔记只回答一个核心问题；多个概念拆开，不能保存整段聊天。\n3. `content` 是重新组织后的教学 Markdown，禁止粘贴原始对话、系统提示、宿主元数据或无关上下文。\n4. 事实必须有固定源码快照证据；推论要明确标为推论；个人理解不能冒充项目事实。\n5. 只通过 `pnpm university -- capture` 写入。不要直接编辑 `studies/**/notes` 或 `learning.sqlite`。\n6. 同一次保存重试时复用同一个 proposal 文件、note ID 和 `captureId`。不得每次失败都生成新 ID。\n7. UniversityLocal 永久纯本地；不要调用 SwimmerBackend，也不要上传内容。\n```\n\n[[evidence:.agents/skills/knowledge-node/SKILL.md:10-18]]\n\n外部仓同理：默认只读，写回要显式授权——不是靠对方猜你的好意：\n\n```text\n- Treat external repositories as study subjects. Read-only inspection is the\n  default; never write learning artifacts into them unless the user explicitly\n  authorizes that target-repository change.\n```\n\n[[evidence:AGENTS.md:59-61]]\n\n教学侧也把持久化拆成另一步：先核实再表达；consent 之后才 `knowledge-node`；默认不同时开跑一堆 helper：\n\n```text\nPrefer one concept per lesson. For a useful insight, offer: “要把这个知识点保存成笔记和复习卡吗？” Invoke `knowledge-node` only after consent.\n\n## Route helper skills only when needed\n\n- Default to prose/list/table. Invoke `mermaid-diagrams` only on explicit request/repair or when 3+ meaningful entities are materially clearer as a diagram; prose must stand alone.\n- Teaching owns factual accuracy. On requested rehearsal or expression feedback, verify against evidence first, then invoke `comm-coach`; never run both by default.\n- Persistence is a separate, explicit `knowledge-node` step. Helper skills never save.\n```\n\n[[evidence:.agents/skills/teach-from-study/SKILL.md:30-36]]\n\n## 先猜一下\n\n连改五版之后，同事再看到你的硬格式委托时，更可能先怀疑你在调试接口，还是先对齐目标——这会改变他是否愿意给明确 yes/no？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n更可能先怀疑你在调试接口；一旦被当 API，对方就不愿再给明确 yes/no——对齐目标的窗口已经关了。\n\n## 逐条对照\n\n| 习惯（对 A 常见） | 搬到 B 会怎样 |\n| --- | --- |\n| 同一请求连发多版对比 | 像 spam；先对齐一版再改 |\n| 「你必须 / 禁止 / 输出严格 JSON」口吻 | 像训机器人；人要请求、理由与协商 |\n| 默认持久化对话里的一切 | 像偷记小本本；要显式同意（knowledge-node 第 1 条） |\n| 假设能打开对方整个仓库/日历 | 越权；只给本次必需上下文（AGENTS 只读默认） |\n| 证据不足时猜一个好听的答案 | 对人是谎言风险；应标不确定 |\n\nA 可廉价重试、没有真实利益。B 每一次沟通都在花信任账户。所以迁移带坏的，往往不是「目标写得太清楚」，而是把人当 API：暗中记忆、越权改仓库、用 prompt 口吻下命令。\n\n## 什么时候用哪个\n\n- **对象是 AI、可丢弃会话** → A 的重试与硬格式约束仍然划算。\n- **对象是同事、共享长期关系** → 走 B：先问目标与受众，给 1～2 个最高杠杆改法；保存、写回、开沟通教练都要对方点头或点名。\n- **你不确定对方是否同意被记录** → 按 knowledge-node：不落盘，不整段聊天甩进系统。\n- **你想「帮对方把仓库也改了」** → 先拿授权；默认只读不是冷漠，是边界。\n\n## 再想想\n\n五栏结构为什么仍该搬，见 [[lesson:structures-that-transfer|写给 AI 的任务栏，为什么也能当给人的交接清单？]]。给人时信息顺序为何要倒过来，见 [[lesson:lead-with-conclusion-for-people|给人写消息时，为什么要把请求挪到第一句？]]。\n\n## 自检\n\n**问：** AI 与同事在「重试」上最关键的差别是什么？\n\n**问：** 为什么不建议把 prompt 模板原样念给同事？\n\n**问：** knowledge-node 是否允许在用户未要求时暗中把对话记成笔记？\n\n## 一句话\n\n**AI 可廉价重试；人的每次沟通都花信任——不要把人当 API，不要暗中记忆，不要用 prompt 口吻下命令。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": ".agents/skills/knowledge-node/SKILL.md",
+                "lineStart": 10,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "显式同意才保存；一问一记；不整段聊天、不暗中记忆。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 59,
+                "lineEnd": 61,
+                "nodeIds": [],
+                "note": "外部仓默认只读；未经明确授权不写回。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+                "lineStart": 30,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "先核实再表达；consent 后才 knowledge-node；默认不同时开跑。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "retry-cost-diff",
+                "kind": "basic",
+                "front": "AI 与同事在「重试」上最关键的差别是什么？",
+                "back": "AI 重试便宜且无真实利益；同事每次沟通都动用信任，不能当可编程 API 连发调试。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": ".agents/skills/knowledge-node/SKILL.md",
+                    "lineStart": 10,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "对人侧边界：显式同意、原子笔记，禁止整段聊天甩锅。"
+                  }
+                ]
+              },
+              {
+                "id": "no-prompt-voice-to-humans",
+                "kind": "basic",
+                "front": "为什么不建议把 prompt 模板原样念给同事？",
+                "back": "模板口吻像控制可编程接口；对人会显得控制欲强，应改成请求、理由与协商。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 59,
+                    "lineEnd": 61,
+                    "nodeIds": [],
+                    "note": "默认只读与显式授权：权限关系不能靠「模板命令」硬推。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "why-not-api-people",
+                "kind": "short-answer",
+                "title": "信任成本",
+                "prompt": "knowledge-node 是否允许在用户未要求时暗中把对话记成笔记？答「允许」或「不允许」。",
+                "expectedAnswer": "不允许",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": ".agents/skills/knowledge-node/SKILL.md",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "只有用户明确要求保存时才落盘；不得暗中记忆。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "lead-with-conclusion-for-people",
+            "title": "给人写消息时，为什么要把请求挪到第一句？",
+            "content": "# 给人写消息时，为什么要把请求挪到第一句？\n\n## 情境和约束\n\n你已经有可执行委托：目标、约束、上下文、成功标准、非目标都齐。接下来卡在**顺序**。\n\n练习答疑包给 AI 的顺序是：先任务段（判定 / 讲解 / 引申 / 写回 + 边界），再大段题目上下文与证据：\n\n```ts\n  return [\n    \"# UniversityLocal 练习答疑包（AI 判分 + 写回）\",\n    \"\",\n    \"## 给 AI 助手的任务（请直接执行）\",\n    \"\",\n    \"你是本地学习教练。网页**不会**用字符串比对判对错，判定完全由你负责。\",\n    \"\",\n    \"1. **判定**学习者答案是否达到题目要求（允许合理表述差异，勿因多写解释就判错）。\",\n    \"2. **讲解**：对错原因、易混点，用白话。\",\n    \"3. **引申** 1～3 个相关知识点。\",\n    \"4. **写回** UniversityLocal（见文末命令），否则 Web 不会显示你的评估、课也不会完成。\",\n    \"\",\n    \"不要假设你是某一个品牌的 IDE，也不要假设你能打开学习者的代码库——判分需要的代码已经附在下面。\",\n    \"\",\n    \"## 题目上下文\",\n    \"\",\n    `- studyId: \\`${locator.studyId}\\``,\n    `- courseId: \\`${locator.courseId}\\``,\n    `- unitId: \\`${locator.unitId}\\``,\n    `- lessonId: \\`${locator.lessonId}\\`（${input.lessonTitle}）`,\n```\n\n[[evidence:server/workflows/exercise-coaching-packet.ts:159-178]]\n\n教学技能对**课**的揭示顺序又是另一套——你若照它写交接消息，会先铺 why/situation：\n\n```text\n1. State objective/prerequisite; when prior knowledge exists, ask one retrieval or prediction question first.\n2. Reveal progressively: `why → situation → concept → project evidence → boundaries/failures`, not repository-folder order.\n...\nPrefer one concept per lesson. For a useful insight, offer: “要把这个知识点保存成笔记和复习卡吗？” Invoke `knowledge-node` only after consent.\n```\n\n[[evidence:.agents/skills/teach-from-study/SKILL.md:23-30]]\n\n工作简报记录的是另一条线：你看到并行生成能跑，是因为 briefs 里写了 exact files、行数，以及每一份能教什么——\n\n```text\nGeneration was Grok's, seven isolated worktrees in parallel, one per stage.\nWhat made the output usable was not the model but the briefs: each named the\nexact files, their line counts, and what each one could teach. Two mechanical\ngates carried the review, because 294 cards is past what reading can check —\n`check-proposal-evidence.mjs` resolves every citation against the real file at\nits pinned commit, and the new `check-proposal-shape.mjs` checks what the schema\ncannot: duplicate ids, the six-section lesson skeleton, an evidence note on\nevery reference, and answers short enough for a normalized comparison to be\nfair.\n```\n\n[[evidence:docs/reference/execution/current-work.md:388-396]]\n\n三份材料里，信息都齐，但**谁先谁后**并不一样。你现在要把同一份委托发给同事，而不是粘进 AI 宿主。\n\n## 先猜一下\n\n背景能写四段，请求只有一行；同事可能只扫前几行。关掉「先铺完整故事再提要求」这条习惯，坏的是谁的体验——写的人省事，还是读的人接得住？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n坏的是读的人：你把请求埋在文末，对方的注意力预算先被背景耗光，行动项常被跳过。该倒过来——请求/结论第一句，成功标准第二句，背景后置。\n\n## 代价和收益\n\n**你选结论先行的收益：** 注意力砸在「要对方做什么」上。对方即使只扫一眼，也带走可行动的那一行。briefs 先点名文件与能教什么，是同一逻辑：先要什么，再进细节。\n\n**代价：** 对方暂时不知道故事全貌；你第一句太冲、缺最小上下文时，可能被误读成命令。补救不是把请求埋回文末，而是你在第二句写清成功标准，第三句起再补两行事实。\n\n**对 AI 你仍可「任务意图 + 随后大段上下文」：** 答疑包正是如此；模型不会在第 40 行睡着。对人则要更狠：人的注意力预算比上下文窗口紧得多。\n\n口诀（你写人读短汇报时）：\n\n1. **请求** —— 「请你周五前确认：练习判分是否改为宿主写回。」\n2. **成功标准** —— 「回我 yes/no + 一个风险。」\n3. **必要背景** —— 两行现状即可。\n4. **非目标** —— 「这次不讨论换模型厂商。」\n\n## 什么时候该反过来\n\n- **你在写教学课、要制造悬念** → 用 teach-from-study 的渐进揭示，不要第一句剧透结论（本系列课文本身就是反例教材的正面）。\n- **对方明确说「先给我完整背景再决策」** → 你可背景前置，但仍在文首用一行标出「文末有请求」。\n- **你在结对深入排障、双方已共享上下文** → 顺序灵活；缺的是证据，不是标题句。\n- **对象是 AI、上下文窗口还装得下** → 答疑包顺序仍然有效；你不必为人的注意力预算过度裁剪。\n\n## 再想想\n\n哪些结构可搬、哪些口吻会伤人，见 [[lesson:structures-that-transfer|写给 AI 的任务栏，为什么也能当给人的交接清单？]] 与 [[lesson:what-breaks-on-people|同一套 AI 习惯，为什么会伤信任？]]。\n\n## 自检\n\n**问：** 对 AI 与对人，信息顺序上最关键的差别是什么？\n\n**问：** 给人短汇报的改写口诀，第一句和第二句各放什么？\n\n**问：** 给人的短汇报，第一句应优先放「请求/结论」还是「完整背景」？\n\n## 一句话\n\n**对人结论先行：先请求与成功标准，再补背景——模型吞得下长上下文，过路人只停三秒。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+                "lineStart": 23,
+                "lineEnd": 30,
+                "nodeIds": [],
+                "note": "渐进揭示与 one concept per lesson；顺序可教但受众不同要重排。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                "lineStart": 159,
+                "lineEnd": 178,
+                "nodeIds": [],
+                "note": "答疑包先任务段再上下文：对 AI 有效；对人需更前置请求。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "docs/reference/execution/current-work.md",
+                "lineStart": 388,
+                "lineEnd": 396,
+                "nodeIds": [],
+                "note": "briefs 先点名文件与能教什么，读者先看见要什么。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "ai-vs-human-order",
+                "kind": "basic",
+                "front": "对 AI 与对人，信息顺序上最关键的差别是什么？",
+                "back": "对 AI 可先铺上下文再下任务；对人应结论/请求先行，背景后置，因为注意力预算更紧。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                    "lineStart": 162,
+                    "lineEnd": 178,
+                    "nodeIds": [],
+                    "note": "对 AI：任务段可接大段上下文；对人需把请求再提前。"
+                  }
+                ]
+              },
+              {
+                "id": "human-rewrite-motto",
+                "kind": "basic",
+                "front": "给人短汇报的改写口诀是什么？",
+                "back": "第一句请求或结论；第二句成功标准；其余才是背景、约束与非目标。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": ".agents/skills/teach-from-study/SKILL.md",
+                    "lineStart": 23,
+                    "lineEnd": 30,
+                    "nodeIds": [],
+                    "note": "结构完整仍要按受众裁剪；人读优先检索式前几行。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "human-first-line",
+                "kind": "short-answer",
+                "title": "人读第一句",
+                "prompt": "给人的短汇报，第一句应优先放「请求/结论」还是「完整背景」？只答四字：请求结论 或 完整背景。",
+                "expectedAnswer": "请求结论",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "docs/reference/execution/current-work.md",
+                    "lineStart": 388,
+                    "lineEnd": 390,
+                    "nodeIds": [],
+                    "note": "可用产出靠先点名要什么（files/能教什么），不是先堆过程。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

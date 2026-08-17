@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 44,
+  "study": {
+    "id": "supaluv",
+    "title": "SupaLuv",
+    "description": "用创始人和工程维护者视角学习 SupaLuv 的产品与技术系统。",
+    "goals": [
+      "理解产品架构与关键边界",
+      "能够判断改动影响并维护产品",
+      "把源码证据转化为长期可复习的知识"
+    ],
+    "defaultCourseId": "ai-cost-and-boundaries",
+    "status": "active"
+  },
+  "courses": [
+    {
+      "courseId": "founder-engineer",
+      "file": "founder-engineer.d5c5b2369bc2b11ee0d3350c6316612e2d92164738290a57ca668a813cc8d76c.recovery.json",
+      "sha256": "sha256:d5c5b2369bc2b11ee0d3350c6316612e2d92164738290a57ca668a813cc8d76c"
+    },
+    {
+      "courseId": "ai-cost-and-boundaries",
+      "file": "ai-cost-and-boundaries.0f5417c5405960f0e6d0954ecd338930df65fd6c23084db694f370cfef42d27b.recovery.json",
+      "sha256": "sha256:0f5417c5405960f0e6d0954ecd338930df65fd6c23084db694f370cfef42d27b"
+    },
+    {
+      "courseId": "ai-branching-narrative",
+      "file": "ai-branching-narrative.9c13b44373106cf2aeba09175844426e730de008f20a517c6925255ae1d0287e.recovery.json",
+      "sha256": "sha256:9c13b44373106cf2aeba09175844426e730de008f20a517c6925255ae1d0287e"
+    },
+    {
+      "courseId": "generated-assets",
+      "file": "generated-assets.e804a87d260ff1ce94ed57c892bbb12b18a7370fc8d4320f74d489a0de10d191.recovery.json",
+      "sha256": "sha256:e804a87d260ff1ce94ed57c892bbb12b18a7370fc8d4320f74d489a0de10d191"
+    },
+    {
+      "courseId": "media-tooling",
+      "file": "media-tooling.1a120ed1001edcbeb40226aee1e7ca0ebbd37d624e729892cbab2e083c5a6d37.recovery.json",
+      "sha256": "sha256:1a120ed1001edcbeb40226aee1e7ca0ebbd37d624e729892cbab2e083c5a6d37"
+    },
+    {
+      "courseId": "content-as-package",
+      "file": "content-as-package.fea60b46d3f3b032955e7f19997197469c4d036ae6e4a6de58cafbca56d081e2.recovery.json",
+      "sha256": "sha256:fea60b46d3f3b032955e7f19997197469c4d036ae6e4a6de58cafbca56d081e2"
+    },
+    {
+      "courseId": "automated-playtesting",
+      "file": "automated-playtesting.3c8adb2610204411762eb3cb087cc283130ecd2f8844666896a83dd9c154221c.recovery.json",
+      "sha256": "sha256:3c8adb2610204411762eb3cb087cc283130ecd2f8844666896a83dd9c154221c"
+    }
+  ]
+}
