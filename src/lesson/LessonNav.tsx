@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { GameBadge, GameButton } from "@pieai/swimmer-ui-kit";
+import { GameBadge, GameButton, GameSegmentedControl } from "@pieai/swimmer-ui-kit";
 
 import { Tip } from "../Tip.js";
 import type { DetailMode } from "../language/detail-mode.js";
@@ -52,6 +52,11 @@ export function lessonNeighbours(
     total: flat.length,
   };
 }
+
+const DETAIL_OPTIONS = [
+  { id: "standard", label: "标准讲解" },
+  { id: "all", label: "详细讲解" },
+] as const;
 
 /**
  * How far down a scrollable page a position is, as 0–1.
@@ -155,6 +160,17 @@ export function LessonToolbar({
 
   return (
     <div className="lesson-toolbar" ref={barRef}>
+      {/*
+        Two zones, not three.
+
+        The band used to run 返回/位置 · 外语模式/讲解层级/状态 · 上一节/下一节 —
+        three groups with no separation, and the state badge parked between two
+        pressable chips, where it read as a third one. Nothing about
+        「待确认本次更新」 is pressable; it is the answer to "does this lesson
+        count yet", which is the same kind of fact as 「第 2 节 / 共 41 节」.
+        So the left side is now everything that describes where you are, and
+        the right side is everything you can do.
+      */}
       <nav className="lesson-toolbar__nav" aria-label="课程导航">
         <GameButton variant="ghost" onClick={onBackToCourse}>
           ← 返回课程
@@ -162,12 +178,22 @@ export function LessonToolbar({
         <span className="lesson-toolbar__position">
           第 {neighbours.position} 节 / 共 {neighbours.total} 节
         </span>
+        <GameBadge tone={completed ? "success" : "warning"}>
+          {completed ? "已完成" : readConfirmed ? "课文已确认 · 练习待完成" : "待确认本次更新"}
+        </GameBadge>
       </nav>
 
-      <div className="lesson-toolbar__settings">
+      <div className="lesson-toolbar__controls">
         {annotated ? (
           // Only offered where there is something to offer. A toggle that
           // does nothing on most lessons teaches the learner to ignore it.
+          //
+          // Still the local control rather than the kit's `GameToggle`, which
+          // this swap tried and reverted: `.game-ui-toggle-track` is declared
+          // once, with a fixed `--game-ui-secondary` fill, and the kit's
+          // stylesheet carries no `[aria-checked="true"]` rule for it at all.
+          // On and off render identically in every theme. Reported upstream;
+          // fixing it here would be patching a shared package locally.
           <Tip term="english-mode">
             <button
               type="button"
@@ -180,33 +206,29 @@ export function LessonToolbar({
           </Tip>
         ) : null}
 
-        <div className="lesson-detail-switch">
-          <span className="lesson-detail-switch__label" id="lesson-detail-switch-label">
-            讲解层级
-          </span>
-          <button
-            type="button"
-            className="lesson-detail-switch__control"
-            role="switch"
-            aria-checked={detailed}
-            aria-labelledby="lesson-detail-switch-label"
-            onClick={() => onDetailModeChange(detailed ? "standard" : "all")}
-          >
-            <span className="lesson-detail-switch__option" data-active={!detailed || undefined}>
-              标准讲解
-            </span>
-            <span className="lesson-detail-switch__option" data-active={detailed || undefined}>
-              详细讲解
-            </span>
-          </button>
-        </div>
+        {/*
+          The kit's own segmented control, replacing a hand-rolled one whose
+          pressed, hover and focus states were maintained here alone, on a
+          surface where every other control comes from the kit. A reader learns
+          one vocabulary of "this is pressable" per product, and a switch that
+          is nearly but not quite the kit's is the expensive kind of nearly.
 
-        <GameBadge tone={completed ? "success" : "warning"}>
-          {completed ? "已完成" : readConfirmed ? "课文已确认 · 练习待完成" : "待确认本次更新"}
-        </GameBadge>
-      </div>
+          `label` reaches the group's `aria-label` and nothing else, so the
+          visible one is ours: two bare pills reading 标准讲解 / 详细讲解 do not
+          say what they are two settings *of*.
+        */}
+        <span className="lesson-toolbar__label" id="lesson-detail-label">
+          讲解层级
+        </span>
+        <GameSegmentedControl
+          label="讲解层级"
+          activeId={detailed ? "all" : "standard"}
+          options={DETAIL_OPTIONS}
+          onSelect={(id) => onDetailModeChange(id === "all" ? "all" : "standard")}
+        />
 
-      <div className="lesson-toolbar__steps">
+        <span className="lesson-toolbar__split" aria-hidden="true" />
+
         {previous ? (
           <GameButton variant="ghost" onClick={() => onOpenLesson(previous)}>
             上一节

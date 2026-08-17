@@ -628,18 +628,13 @@ summary:focus-visible,
 }
 
 .study-evidence-status {
-  display: grid;
-  grid-template-columns: auto auto minmax(240px, 1fr);
-  gap: 10px;
-  align-items: stretch;
   margin-top: 24px;
 }
 
-.study-evidence-status__metric,
-.study-evidence-status__boundary {
-  border: 1px solid var(--campus-rule);
-  border-radius: 12px;
-  background: rgb(43 31 23 / 52%);
+.study-evidence-status__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .study-evidence-status__metric {
@@ -649,6 +644,9 @@ summary:focus-visible,
   align-items: baseline;
   min-width: 150px;
   padding: 14px 16px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 12px;
+  background: rgb(43 31 23 / 52%);
 }
 
 .study-evidence-status__metric strong {
@@ -658,23 +656,19 @@ summary:focus-visible,
   line-height: 1;
 }
 
-.study-evidence-status__metric span,
-.study-evidence-status__boundary span {
+.study-evidence-status__metric span {
   color: var(--game-ui-text-muted);
   font-size: 0.76rem;
   line-height: 1.45;
 }
 
+/* A note on what the two numbers above mean, so it is drawn as a note. */
 .study-evidence-status__boundary {
-  display: grid;
-  gap: 4px;
-  padding: 13px 16px;
-}
-
-.study-evidence-status__boundary strong {
-  color: var(--game-ui-accent-bright);
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
+  max-width: 46rem;
+  margin: 10px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
 }
 
 .study-detail > [class*="game-progress"],
@@ -684,16 +678,83 @@ summary:focus-visible,
   margin-top: 28px;
 }
 
-.formal-course,
 .knowledge-notes,
 .formal-course-empty {
   margin-top: 42px;
 }
 
-.formal-course,
 .knowledge-notes {
   padding-top: 38px;
   border-top: 1px solid var(--campus-rule);
+}
+
+/*
+  80px of separator on each side of a rule made sense when a study published
+  nine courses and each was a section of the page. TuringPact publishes 31, and
+  at that length they are entries in a list: the same air that gave nine of them
+  room turns thirty-one into two and a half thousand pixels of nothing between
+  the things the reader came to compare.
+*/
+.formal-course {
+  margin-top: 26px;
+  padding-top: 24px;
+  border-top: 1px solid var(--campus-rule);
+}
+
+/*
+  The heading over the pinned run. Set as an eyebrow rather than a section
+  title because it names a group, not a new part of the page — the courses
+  under it are still the same kind of thing they were before there was a
+  grouping.
+*/
+.course-group__eyebrow {
+  margin: 40px 0 0;
+  color: var(--game-ui-accent-bright);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.course-group {
+  margin-top: 34px;
+  padding-top: 26px;
+  border-top: 1px solid var(--campus-rule);
+}
+
+.course-group summary {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  color: var(--game-ui-accent-bright);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  cursor: pointer;
+  list-style: none;
+  text-transform: uppercase;
+}
+
+.course-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.course-group summary::after {
+  color: var(--game-ui-text-muted);
+  content: "展开 ▾";
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.course-group[open] summary::after {
+  content: "收起 ▴";
+}
+
+/* The first course inside the fold already has the group's own rule above it. */
+.course-group[open] > .formal-course:first-of-type {
+  border-top: 0;
+  padding-top: 0;
 }
 
 .formal-course__header h2,
@@ -1057,8 +1118,7 @@ summary:focus-visible,
 }
 
 .lesson-toolbar__nav,
-.lesson-toolbar__settings,
-.lesson-toolbar__steps {
+.lesson-toolbar__controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1066,12 +1126,7 @@ summary:focus-visible,
   min-width: 0;
 }
 
-.lesson-toolbar__settings {
-  flex: 1 1 auto;
-  justify-content: center;
-}
-
-.lesson-toolbar__steps {
+.lesson-toolbar__controls {
   justify-content: flex-end;
 }
 
@@ -1081,54 +1136,22 @@ summary:focus-visible,
   white-space: nowrap;
 }
 
-.lesson-detail-switch {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
+.lesson-toolbar__label {
+  margin-inline-end: -4px;
   color: var(--game-ui-text-muted);
   font-size: 0.76rem;
-}
-
-.lesson-detail-switch__label {
   white-space: nowrap;
 }
 
-.lesson-detail-switch__control {
-  display: inline-grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  min-width: 0;
-  padding: 3px;
-  border: 1px solid var(--campus-rule);
-  border-radius: 999px;
-  background: rgb(12 8 6 / 40%);
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.lesson-detail-switch__control:focus-visible {
-  outline: 3px solid rgb(246 193 119 / 72%);
-  outline-offset: 3px;
-}
-
-.lesson-detail-switch__option {
-  padding: 5px 10px;
-  border-radius: 999px;
-  color: rgb(255 245 232 / 55%);
-  font-size: 0.76rem;
-  line-height: 1.2;
-  white-space: nowrap;
-  transition:
-    background 120ms ease,
-    color 120ms ease;
-}
-
-.lesson-detail-switch__option[data-active] {
-  background: rgb(246 193 119 / 16%);
-  color: #f7d3a0;
+/* Between changing how the lesson reads and moving to another one. Both are
+   things you can do, which is why they share a zone; they are not the same
+   kind of thing, which is why there is a line. */
+.lesson-toolbar__split {
+  align-self: stretch;
+  width: 1px;
+  min-height: 20px;
+  margin-inline: 4px;
+  background: var(--campus-rule);
 }
 
 /*

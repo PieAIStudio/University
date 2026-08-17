@@ -478,7 +478,12 @@ export function App() {
                 </p>
               ) : null}
               {studyView ? (
-                <StudyDetail view={studyView} summary={studySummary} onOpenLesson={openLesson} />
+                <StudyDetail
+                  view={studyView}
+                  summary={studySummary}
+                  focus={data?.today.focus ?? null}
+                  onOpenLesson={openLesson}
+                />
               ) : null}
             </div>
           )

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { shortenHomePath } from "./App.js";
 import { KnowledgeNotesSection } from "./shell/KnowledgeNotesSection.js";
-import { StudyEvidenceStatus } from "./shell/StudyDetail.js";
+import { splitByFocus, StudyEvidenceStatus } from "./shell/StudyDetail.js";
 import { recentStudies, relativeTimeLabel } from "./shell/StudyShelf.js";
 import { EvidenceCode } from "./evidence/EvidenceCode.js";
 import { lessonNeighbours, readProgress } from "./lesson/LessonNav.js";
@@ -22,8 +22,13 @@ describe("StudyEvidenceStatus", () => {
 
     expect(markup).toContain('aria-label="研究证据状态"');
     expect(markup).toContain(">2</strong><span>份源码快照");
-    expect(markup).toContain(">1</strong><span>份 UA READY 分析");
-    expect(markup).toContain("UA 原生地图/导览是课程证据，不是正式课程。");
+    // "READY" is the status this counter filters on, which explains the number
+    // to whoever wrote the counter and to nobody else.
+    expect(markup).toContain(">1</strong><span>份项目地图");
+    expect(markup).not.toContain("READY");
+    // The boundary itself is the point of this component and has to survive
+    // any rewording: a map is evidence a course cites, never a course.
+    expect(markup).toContain("不是课程本身");
   });
 });
 
@@ -407,5 +412,37 @@ describe("readProgress", () => {
     // who has not started that they finished.
     expect(readProgress(0, 700, 900)).toBe(0);
     expect(readProgress(0, 900, 900)).toBe(0);
+  });
+});
+
+describe("splitByFocus", () => {
+  const course = (id: string) => ({ id, title: id, description: "", objectives: [], units: [] });
+  const courses = ["a", "b", "c", "d"].map(course) as never;
+
+  it("puts the pinned run first, in the order it was pinned", () => {
+    // Focus order is the point of pinning a run, so it wins over shelf order.
+    const split = splitByFocus(courses, { studyId: "s", courseIds: ["c", "a"] }, "s");
+    expect(split?.route.map((item) => item.id)).toEqual(["c", "a"]);
+    expect(split?.rest.map((item) => item.id)).toEqual(["b", "d"]);
+  });
+
+  it("declines to group when a heading would carry no information", () => {
+    // No focus, someone else's focus, a focus naming nothing on this shelf, and
+    // a focus naming all of it: in each case one side is empty, and a grouping
+    // with an empty side is a heading pretending to be information.
+    expect(splitByFocus(courses, null, "s")).toBeNull();
+    expect(splitByFocus(courses, { studyId: "other", courseIds: ["a"] }, "s")).toBeNull();
+    expect(splitByFocus(courses, { studyId: "s", courseIds: ["gone"] }, "s")).toBeNull();
+    expect(
+      splitByFocus(courses, { studyId: "s", courseIds: ["a", "b", "c", "d"] }, "s"),
+    ).toBeNull();
+  });
+
+  it("skips a pinned course that is no longer on the shelf", () => {
+    // A focus is stored config and outlives the courses it names; a retired one
+    // must not blank out the row it used to occupy.
+    const split = splitByFocus(courses, { studyId: "s", courseIds: ["a", "retired", "b"] }, "s");
+    expect(split?.route.map((item) => item.id)).toEqual(["a", "b"]);
+    expect(split?.rest.map((item) => item.id)).toEqual(["c", "d"]);
   });
 });

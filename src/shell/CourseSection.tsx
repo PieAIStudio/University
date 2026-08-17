@@ -10,12 +10,15 @@ export function CourseSection({
   course,
   onOpenLesson,
   openWhenNothingInProgress = false,
+  seedOpen = true,
 }: {
   readonly studyId: string;
   readonly course: CourseView;
   readonly onOpenLesson: (locator: LessonLocator) => void;
   /** Set on one course so a shelf with no started course still shows a shape. */
   readonly openWhenNothingInProgress?: boolean;
+  /** False on a shelf where one unrolled course would hide the others. */
+  readonly seedOpen?: boolean;
 }) {
   const lessons = course.units.flatMap((unit) =>
     unit.lessons.map((lesson) => ({ unitId: unit.id, lesson })),
@@ -42,23 +45,25 @@ export function CourseSection({
   const finished = completed === lessons.length && lessons.length > 0;
   const entryPoint = resume ?? lessons[0];
   /*
-    Only the course being worked on opens itself.
+    Nothing opens itself on a large shelf.
 
-    Nine published courses, each listing every unit and lesson, made this page
-    15,000 pixels tall — reaching the fifth course meant scrolling past seven
-    thousand of them, and there was nowhere to stand and see what the study
-    contained. The headers and progress bars stay, because that is the scan;
-    the lesson lists fold, because that is the detail.
+    Folding the lesson lists was a fix for nine courses, and it opened exactly
+    one of them — the course being worked on, or else the first — so that a
+    reader could see what a course looked like without clicking. TuringPact now
+    publishes 31, and the one that opens is a 41-lesson course: 4,717px of a
+    16,892px page, standing between the shelf and every other course on it.
 
-    "Started but not finished" is the one course a returning reader almost
-    always wants, so it is the one already open. State is seeded from that and
-    then owned by the reader — a fold they opened must not close itself on the
-    next render.
+    The reason to open one has also expired. Each course already shows a button
+    that names the lesson it resumes at, and a line reading 「3 个单元 · 41 节课」.
+    Both say what a course is and where you were, without unrolling it. A
+    reader who wants the unit list clicks once, which is cheaper than everyone
+    else scrolling past it.
+
+    So the seed is kept only where it still pays: a shelf small enough that one
+    open course cannot hide the rest.
   */
   const inProgress = completed > 0 && completed < lessons.length;
-  // Exactly one fold starts open. A page where every course is shut asks the
-  // reader to click before they can see what a course even looks like.
-  const [open, setOpen] = useState(inProgress || openWhenNothingInProgress);
+  const [open, setOpen] = useState(seedOpen && (inProgress || openWhenNothingInProgress));
   return (
     <section className="formal-course" aria-labelledby={titleId}>
       <header className="formal-course__header">
@@ -78,17 +83,29 @@ export function CourseSection({
         </div>
         {finished ? <GameBadge tone="success">已学完</GameBadge> : null}
       </header>
-      {/* A bar with no number is decoration. "14%" is technically the same fact
-          as "3 / 21 节", but only one of them tells you how many evenings are
-          left — and lessons are the unit this progress is actually counted in. */}
-      <GameProgress
-        className="course-progress"
-        value={completed}
-        max={Math.max(lessons.length, 1)}
-        label="课程完成度"
-        tone={completed === lessons.length ? "success" : "accent"}
-        valueLabel={`${completed} / ${lessons.length} 节`}
-      />
+      {/*
+        Only once there is progress to show.
+
+        A bar with no number is decoration. "14%" is technically the same fact
+        as "3 / 21 节", but only one of them tells you how many evenings are
+        left — and lessons are the unit this progress is actually counted in.
+
+        And a bar at zero is not information either; it is a promise of
+        information. This study now carries 31 courses, 30 of them unstarted,
+        which put thirty empty 20px troughs down the page saying nothing thirty
+        times. How long the course is, the fold below already says. A bar on
+        screen now means one thing: you have started this one.
+      */}
+      {completed > 0 ? (
+        <GameProgress
+          className="course-progress"
+          value={completed}
+          max={Math.max(lessons.length, 1)}
+          label="课程完成度"
+          tone={finished ? "success" : "accent"}
+          valueLabel={`${completed} / ${lessons.length} 节`}
+        />
+      ) : null}
       {entryPoint ? (
         <div className="course-entry">
           <GameButton
