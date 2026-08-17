@@ -3,7 +3,10 @@
 1. Run `pnpm university -- teach next`. This is the shared read model used by
    the UniversityLocal home page: it resolves the current focus, next lesson,
    due card, exact lesson revision/evidence, and any open session without making
-   the host guess a study from directory order.
+   the host guess a study from directory order. It scans every active study for
+   an existing session before choosing the next lesson. If more than one study
+   is open, the focused study wins; otherwise the newest `startedAt` wins, then
+   `studyId` and `sessionId` break ties.
 2. Use `teachingStudyId` and `nextLesson` from that receipt for continuation.
    If the user explicitly names a different study, run
    `pnpm university -- status --study <study-id>` and

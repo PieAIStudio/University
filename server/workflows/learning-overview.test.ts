@@ -5,7 +5,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { writeCourse } from "../content/repository.js";
-import { getCoursePaths } from "../studies/paths.js";
+import { SqliteLearningStore } from "../learning/sqlite-learning-store.js";
+import { getCoursePaths, getStudyPaths } from "../studies/paths.js";
 import { createStudy, setStudyStatus } from "../studies/repository.js";
 import { buildLearningOverview } from "./learning-overview.js";
 
@@ -13,6 +14,19 @@ function setup() {
   const container = mkdtempSync(join(tmpdir(), "university-local-overview-"));
   const studiesRoot = join(container, "studies");
   return { container, studiesRoot };
+}
+
+function openSessionStore(
+  studiesRoot: string,
+  studyId: string,
+  startedAt: string,
+): SqliteLearningStore {
+  const store = new SqliteLearningStore(getStudyPaths(studiesRoot, studyId).learner.database);
+  store.startSession(new Date(startedAt), {
+    host: "test-host",
+    objective: `Continue ${studyId}`,
+  });
+  return store;
 }
 
 describe("learning overview", () => {
@@ -72,5 +86,54 @@ describe("learning overview", () => {
 
     const noFocus = buildLearningOverview({ studiesRoot, getStore: () => null });
     expect(noFocus.issues.join(" ")).toContain("sample/broken-course: course manifest:");
+  });
+
+  it("resumes the newest open session from any active study when focus is absent", () => {
+    const { studiesRoot } = setup();
+    createStudy(studiesRoot, { id: "alpha-study", title: "Alpha" });
+    createStudy(studiesRoot, { id: "beta-study", title: "Beta" });
+    const stores = new Map([
+      ["alpha-study", openSessionStore(studiesRoot, "alpha-study", "2026-08-17T01:00:00.000Z")],
+      ["beta-study", openSessionStore(studiesRoot, "beta-study", "2026-08-17T02:00:00.000Z")],
+    ]);
+
+    try {
+      const overview = buildLearningOverview({
+        studiesRoot,
+        getStore: (studyId) => stores.get(studyId) ?? null,
+      });
+
+      expect(overview.teachingStudyId).toBe("beta-study");
+      expect(overview.openSession).toMatchObject({
+        studyId: "beta-study",
+        host: "test-host",
+        objective: "Continue beta-study",
+      });
+    } finally {
+      for (const store of stores.values()) store.close();
+    }
+  });
+
+  it("lets an active focus win deterministically when several studies have open sessions", () => {
+    const { studiesRoot } = setup();
+    createStudy(studiesRoot, { id: "alpha-study", title: "Alpha" });
+    createStudy(studiesRoot, { id: "beta-study", title: "Beta" });
+    const stores = new Map([
+      ["alpha-study", openSessionStore(studiesRoot, "alpha-study", "2026-08-17T01:00:00.000Z")],
+      ["beta-study", openSessionStore(studiesRoot, "beta-study", "2026-08-17T02:00:00.000Z")],
+    ]);
+
+    try {
+      const overview = buildLearningOverview({
+        studiesRoot,
+        focus: { studyId: "alpha-study", courseIds: [] },
+        getStore: (studyId) => stores.get(studyId) ?? null,
+      });
+
+      expect(overview.teachingStudyId).toBe("alpha-study");
+      expect(overview.openSession?.studyId).toBe("alpha-study");
+    } finally {
+      for (const store of stores.values()) store.close();
+    }
   });
 });

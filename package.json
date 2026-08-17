@@ -46,8 +46,8 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@pieai/doc-gov": "0.9.0",
-    "@pieai/pro-gov": "0.9.0",
+    "@pieai/doc-gov": "0.9.1",
+    "@pieai/pro-gov": "0.9.1",
     "@types/mdast": "4.0.4",
     "@types/node": "24.13.2",
     "@types/react": "19.2.17",

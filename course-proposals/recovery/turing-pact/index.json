@@ -15,6 +15,9 @@
     "defaultCourseId": "foundations-before-zero",
     "status": "active"
   },
+  "source": {
+    "defaultRef": "HEAD"
+  },
   "courses": [
     {
       "courseId": "foundations-before-zero",

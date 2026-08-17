@@ -98,7 +98,17 @@ interface BuildLearningOverviewInput {
   readonly getStore: (studyId: string) => LearningStore | null;
 }
 
-function activeCourses(studiesRoot: string, study: StudyManifest, issues: string[]) {
+interface OpenSessionCandidate {
+  readonly studyId: string;
+  readonly session: NonNullable<ReturnType<LearningStore["getOpenSession"]>>;
+}
+
+function activeCourses(
+  studiesRoot: string,
+  study: StudyManifest,
+  issues: string[],
+  focusedCourseIds: readonly string[] = [],
+) {
   const courses = [];
   for (const courseId of listCourseIds(studiesRoot, study.id)) {
     try {
@@ -114,7 +124,13 @@ function activeCourses(studiesRoot: string, study: StudyManifest, issues: string
       );
     }
   }
-  return orderCoursesByPrerequisite(courses);
+  const focusPosition = new Map(focusedCourseIds.map((courseId, index) => [courseId, index]));
+  const focusRank = (courseId: string): number =>
+    focusPosition.get(courseId) ?? focusedCourseIds.length;
+  return orderCoursesByPrerequisite(
+    courses,
+    (left, right) => focusRank(left.id) - focusRank(right.id),
+  );
 }
 
 function resolveOverviewFocus(
@@ -215,7 +231,6 @@ export function buildLearningOverview(input: BuildLearningOverviewInput): Learni
   const focusCourseTitles = new Map<string, string>();
   const dueCards: LearningOverviewDueCard[] = [];
   const issues: string[] = [];
-  const stores = new Map<string, LearningStore | null>();
   let nextLesson: LearningOverviewLesson | null = null;
   const focus = resolveOverviewFocus(input.studiesRoot, shelf.studies, input.focus, issues);
 
@@ -223,20 +238,45 @@ export function buildLearningOverview(input: BuildLearningOverviewInput): Learni
     .filter((study) => study.status === "active")
     .sort((left, right) => {
       const rank = (id: string): number => (id === focus?.studyId ? 0 : 1);
-      return rank(left.id) - rank(right.id);
+      return rank(left.id) - rank(right.id) || left.id.localeCompare(right.id);
     });
 
+  // A session is a stronger continuation signal than the first unfinished
+  // lesson on the shelf. Inspect every active study before choosing the work
+  // item so a session in a non-focused study cannot disappear from `teach
+  // next`. There is one open session per learner database, not globally, so a
+  // deterministic tie-break is required when old work left more than one
+  // active study open.
+  const storesByStudy = new Map<string, LearningStore | null>();
+  const openSessionCandidates: OpenSessionCandidate[] = [];
   for (const study of focusedStudies) {
     const store = input.getStore(study.id);
-    stores.set(study.id, store);
+    storesByStudy.set(study.id, store);
+    const session = store?.getOpenSession();
+    if (session) openSessionCandidates.push({ studyId: study.id, session });
+  }
+  openSessionCandidates.sort((left, right) => {
+    const focusRank = (studyId: string): number => (studyId === focus?.studyId ? 0 : 1);
+    return (
+      focusRank(left.studyId) - focusRank(right.studyId) ||
+      right.session.startedAt.getTime() - left.session.startedAt.getTime() ||
+      left.studyId.localeCompare(right.studyId) ||
+      left.session.sessionId.localeCompare(right.session.sessionId)
+    );
+  });
+  const resumedSession = openSessionCandidates[0] ?? null;
+  const studyOrder = resumedSession
+    ? [
+        focusedStudies.find((study) => study.id === resumedSession.studyId)!,
+        ...focusedStudies.filter((study) => study.id !== resumedSession.studyId),
+      ]
+    : focusedStudies;
+
+  for (const study of studyOrder) {
+    const store = storesByStudy.get(study.id) ?? null;
+    storesByStudy.set(study.id, store);
     const focusedCourseIds = study.id === focus?.studyId ? focus.courseIds : [];
-    const courses = [...activeCourses(input.studiesRoot, study, issues)].sort((left, right) => {
-      const rank = (id: string): number => {
-        const position = focusedCourseIds.indexOf(id);
-        return position === -1 ? focusedCourseIds.length : position;
-      };
-      return rank(left.id) - rank(right.id);
-    });
+    const courses = activeCourses(input.studiesRoot, study, issues, focusedCourseIds);
     const coursesById = new Map(courses.map((course) => [course.id, course]));
 
     if (study.id === focus?.studyId) {
@@ -360,17 +400,19 @@ export function buildLearningOverview(input: BuildLearningOverviewInput): Learni
   }
 
   dueCards.sort((left, right) => left.dueAt.localeCompare(right.dueAt));
-  const activeStudyIds = new Set(focusedStudies.map((study) => study.id));
-  // Keep the session locator aligned with the work item. A completed focused
-  // study may roll forward to another study, so focus alone cannot name the
-  // teaching session once `nextLesson` has already selected that successor.
+  const activeStudyIds = new Set(studyOrder.map((study) => study.id));
+  // An existing session is the strongest continuation signal. Otherwise keep
+  // the locator aligned with the first available work item.
   const teachingStudyId =
+    resumedSession?.studyId ??
     nextLesson?.studyId ??
     dueCards[0]?.studyId ??
     (focus && activeStudyIds.has(focus.studyId) ? focus.studyId : null) ??
-    focusedStudies[0]?.id ??
+    studyOrder[0]?.id ??
     null;
-  const session = teachingStudyId ? stores.get(teachingStudyId)?.getOpenSession() : null;
+  const session =
+    resumedSession?.session ??
+    (teachingStudyId ? storesByStudy.get(teachingStudyId)?.getOpenSession() : null);
 
   return {
     dueCount: dueCards.length,

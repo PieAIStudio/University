@@ -11,6 +11,9 @@
     "defaultCourseId": "how-this-campus-works",
     "status": "active"
   },
+  "source": {
+    "defaultRef": "HEAD"
+  },
   "courses": [
     {
       "courseId": "how-this-campus-works",

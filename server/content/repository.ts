@@ -634,10 +634,12 @@ export function setCoursePrerequisites(
 }
 
 /**
- * Courses with no unmet prerequisite come first; ties go to whichever was
- * created earlier, then by id. A prerequisite outside the given set (retired,
- * or simply not part of what is being ordered) never blocks a course — only a
- * prerequisite present in the same set does.
+ * Courses with no unmet prerequisite come first; ready-course ties go to the
+ * optional caller preference, then whichever was created earlier, then by id.
+ * A prerequisite outside the given set (retired, or simply not part of what
+ * is being ordered) never blocks a course — only a prerequisite present in the
+ * same set does. The preference is deliberately consulted only among ready
+ * courses, so a focus order can guide a run without bypassing prerequisites.
  *
  * Prerequisites are validated acyclic when they are set, so the "nothing is
  * ready" branch below is a defensive fallback for a cycle that reached disk
@@ -645,12 +647,17 @@ export function setCoursePrerequisites(
  */
 export function orderCoursesByPrerequisite(
   courses: readonly CourseManifest[],
+  readyTieBreak?: (left: CourseManifest, right: CourseManifest) => number,
 ): readonly CourseManifest[] {
   const byId = new Map(courses.map((course) => [course.id, course]));
   const remaining = new Set(byId.keys());
-  const tieBreak = (left: string, right: string): number =>
+  const stableTieBreak = (left: string, right: string): number =>
     byId.get(left)!.createdAt.localeCompare(byId.get(right)!.createdAt) ||
     left.localeCompare(right);
+  const tieBreak = (left: string, right: string): number => {
+    const preferred = readyTieBreak?.(byId.get(left)!, byId.get(right)!) ?? 0;
+    return preferred || stableTieBreak(left, right);
+  };
 
   const ordered: CourseManifest[] = [];
   while (remaining.size > 0) {

@@ -33,9 +33,16 @@ import {
   writeLessonRevision,
   writeUnit,
 } from "../content/repository.js";
-import { getLessonPaths, getStudyPaths, getUaAnalysisPaths } from "../studies/paths.js";
+import {
+  getCoursePaths,
+  getLessonPaths,
+  getStudyPaths,
+  getUaAnalysisPaths,
+  getUnitPaths,
+} from "../studies/paths.js";
 import {
   createStudy,
+  readSourceRegistration,
   registerLocalGitSource,
   setDefaultCourse,
   setStudyStatus,
@@ -78,7 +85,7 @@ function makeSource(container: string): string {
   return sourceRoot;
 }
 
-function setupActiveCourse() {
+function setupActiveCourse(defaultRef = "HEAD") {
   const container = mkdtempSync(join(tmpdir(), "university-local-course-recovery-"));
   const sourceRoot = makeSource(container);
   const studiesRoot = join(container, "original-studies");
@@ -89,7 +96,7 @@ function setupActiveCourse() {
     goals: ["Recover current courses without learner data"],
     now: new Date(CREATED_AT),
   });
-  registerLocalGitSource(studiesRoot, STUDY_ID, sourceRoot, "HEAD", new Date(CREATED_AT));
+  registerLocalGitSource(studiesRoot, STUDY_ID, sourceRoot, defaultRef, new Date(CREATED_AT));
   const snapshot = createCleanSnapshot(studiesRoot, STUDY_ID, "HEAD", new Date(CREATED_AT));
 
   const graphBytes = `${JSON.stringify({
@@ -275,6 +282,28 @@ function rewriteCourseAndIndex(
 
 function firstIndexEntry(directory: string): Record<string, unknown> {
   return (readJson(join(directory, "index.json"))["courses"] as Array<Record<string, unknown>>)[0]!;
+}
+
+function appendCourseClone(directory: string, courseId: string): void {
+  const indexPath = join(directory, "index.json");
+  const index = readJson(indexPath);
+  const sourceEntry = firstIndexEntry(directory);
+  const sourceCourse = readJson(join(directory, String(sourceEntry["file"])));
+  const clonedCourse = structuredClone(sourceCourse) as Record<string, unknown>;
+  const course = clonedCourse["course"] as Record<string, unknown>;
+  course["id"] = courseId;
+  course["title"] = "Second recovery course";
+  const bytes = `${JSON.stringify(clonedCourse, null, 2)}\n`;
+  const contentHash = sha256(bytes);
+  const file = `${courseId}.${contentHash.slice("sha256:".length)}.recovery.json`;
+  writeFileSync(join(directory, file), bytes);
+  (index["courses"] as Array<Record<string, unknown>>).push({
+    courseId,
+    file,
+    sha256: contentHash,
+  });
+  index["droppedUaBindingCount"] = Number(index["droppedUaBindingCount"]) * 2;
+  writeFileSync(indexPath, `${JSON.stringify(index, null, 2)}\n`);
 }
 
 describe("canonical course recovery", () => {
@@ -521,6 +550,38 @@ describe("canonical course recovery", () => {
     expect(reused.courses).toEqual([{ courseId: COURSE_ID, outcome: "reused" }]);
   });
 
+  it("preserves the source default ref and treats old indexes as HEAD", () => {
+    const fixture = setupActiveCourse("main");
+    const output = exportFixture(fixture.studiesRoot, fixture.container, "default-ref-package");
+    const index = readJson(join(output, "index.json"));
+    expect(index["source"]).toMatchObject({ defaultRef: "main" });
+
+    const targetStudiesRoot = join(fixture.container, "default-ref-target");
+    importCourseRecovery({
+      studiesRoot: targetStudiesRoot,
+      studyId: STUDY_ID,
+      inputDirectory: output,
+      sourceRoot: fixture.sourceRoot,
+    });
+    expect(readSourceRegistration(targetStudiesRoot, STUDY_ID).defaultRef).toBe("main");
+
+    const legacy = join(fixture.container, "legacy-default-ref-package");
+    cpSync(output, legacy, { recursive: true });
+    const legacyIndex = readJson(join(legacy, "index.json"));
+    delete legacyIndex["source"];
+    writeFileSync(join(legacy, "index.json"), `${JSON.stringify(legacyIndex, null, 2)}\n`);
+    expect(loadCourseRecovery(legacy).index.source).toBeUndefined();
+
+    const legacyTargetStudiesRoot = join(fixture.container, "legacy-default-ref-target");
+    importCourseRecovery({
+      studiesRoot: legacyTargetStudiesRoot,
+      studyId: STUDY_ID,
+      inputDirectory: legacy,
+      sourceRoot: fixture.sourceRoot,
+    });
+    expect(readSourceRegistration(legacyTargetStudiesRoot, STUDY_ID).defaultRef).toBe("HEAD");
+  });
+
   it("rejects file-manager capture provenance outside the registered source", () => {
     const fixture = setupActiveCourse();
     const lesson = readLatestLesson(fixture.studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID);
@@ -684,5 +745,130 @@ describe("canonical course recovery", () => {
       }),
     ).toThrow(/Active course conflicts/);
     expect(readCourse(targetStudiesRoot, STUDY_ID, COURSE_ID).title).toBe("System Boundaries");
+  });
+
+  it("preflights later course conflicts before writing earlier courses", () => {
+    const fixture = setupActiveCourse();
+    const output = exportFixture(fixture.studiesRoot, fixture.container, "multi-course-package");
+    appendCourseClone(output, "second-course");
+    const secondCourse = loadCourseRecovery(output).packages.find(
+      (coursePackage) => coursePackage.course.id === "second-course",
+    )!.course;
+
+    const targetStudiesRoot = join(fixture.container, "preflight-target");
+    createStudy(targetStudiesRoot, {
+      id: STUDY_ID,
+      title: "Recovery Study",
+      description: "A canonical recovery fixture",
+      goals: ["Recover current courses without learner data"],
+      now: new Date(CREATED_AT),
+    });
+    registerLocalGitSource(
+      targetStudiesRoot,
+      STUDY_ID,
+      fixture.sourceRoot,
+      "HEAD",
+      new Date(CREATED_AT),
+    );
+    writeCourse(targetStudiesRoot, STUDY_ID, {
+      schemaVersion: 1,
+      id: secondCourse.id,
+      title: secondCourse.title,
+      description: secondCourse.description,
+      audience: secondCourse.audience,
+      objectives: secondCourse.objectives,
+      unitIds: secondCourse.units.map((unit) => unit.id),
+      status: "draft",
+      currency: secondCourse.currency,
+      prerequisiteCourseIds: secondCourse.prerequisiteCourseIds,
+      createdAt: CREATED_AT,
+      updatedAt: CREATED_AT,
+    });
+    const conflictingUnit = secondCourse.units[0]!;
+    writeUnit(targetStudiesRoot, STUDY_ID, secondCourse.id, {
+      schemaVersion: 1,
+      id: conflictingUnit.id,
+      title: "A conflicting unit",
+      objective: conflictingUnit.objective,
+      prerequisiteUnitIds: conflictingUnit.prerequisiteUnitIds,
+      lessonIds: conflictingUnit.lessons.map((lesson) => lesson.id),
+      status: "draft",
+    });
+
+    expect(() =>
+      importCourseRecovery({
+        studiesRoot: targetStudiesRoot,
+        studyId: STUDY_ID,
+        inputDirectory: output,
+        sourceRoot: fixture.sourceRoot,
+      }),
+    ).toThrow(/Existing unit conflicts with recovery package/);
+    expect(existsSync(getCoursePaths(targetStudiesRoot, STUDY_ID, COURSE_ID).manifest)).toBe(false);
+    expect(
+      readdirSync(getStudyPaths(targetStudiesRoot, STUDY_ID).source.snapshots).filter((file) =>
+        file.endsWith(".json"),
+      ),
+    ).toEqual([]);
+  });
+
+  it("rejects a late orphan path before writing earlier recovery objects", () => {
+    const fixture = setupActiveCourse();
+    const output = exportFixture(fixture.studiesRoot, fixture.container, "orphan-late-path");
+    appendCourseClone(output, "second-course");
+    const secondCourse = loadCourseRecovery(output).packages.find(
+      (coursePackage) => coursePackage.course.id === "second-course",
+    )!.course;
+
+    const targetStudiesRoot = join(fixture.container, "orphan-target");
+    createStudy(targetStudiesRoot, {
+      id: STUDY_ID,
+      title: "Recovery Study",
+      description: "A canonical recovery fixture",
+      goals: ["Recover current courses without learner data"],
+      now: new Date(CREATED_AT),
+    });
+    registerLocalGitSource(
+      targetStudiesRoot,
+      STUDY_ID,
+      fixture.sourceRoot,
+      "HEAD",
+      new Date(CREATED_AT),
+    );
+    writeCourse(targetStudiesRoot, STUDY_ID, {
+      schemaVersion: 1,
+      id: secondCourse.id,
+      title: secondCourse.title,
+      description: secondCourse.description,
+      audience: secondCourse.audience,
+      objectives: secondCourse.objectives,
+      unitIds: secondCourse.units.map((unit) => unit.id),
+      status: "draft",
+      currency: secondCourse.currency,
+      prerequisiteCourseIds: secondCourse.prerequisiteCourseIds,
+      createdAt: CREATED_AT,
+      updatedAt: CREATED_AT,
+    });
+    const orphanUnit = getUnitPaths(
+      targetStudiesRoot,
+      STUDY_ID,
+      secondCourse.id,
+      secondCourse.units[0]!.id,
+    );
+    mkdirSync(orphanUnit.root, { recursive: true });
+
+    expect(() =>
+      importCourseRecovery({
+        studiesRoot: targetStudiesRoot,
+        studyId: STUDY_ID,
+        inputDirectory: output,
+        sourceRoot: fixture.sourceRoot,
+      }),
+    ).toThrow(/Existing unit path has no canonical manifest/);
+    expect(existsSync(getCoursePaths(targetStudiesRoot, STUDY_ID, COURSE_ID).manifest)).toBe(false);
+    expect(
+      readdirSync(getStudyPaths(targetStudiesRoot, STUDY_ID).source.snapshots).filter((file) =>
+        file.endsWith(".json"),
+      ),
+    ).toEqual([]);
   });
 });

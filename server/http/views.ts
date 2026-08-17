@@ -225,8 +225,8 @@ function buildLessonView(
       /*
         The one commit this lesson is pinned to, so the reader can be offered a
         checkout of it. Read off the citations rather than stored separately —
-        the manifest already pins every one of them, and across all 561 lessons
-        no lesson cites more than a single commit, which is what makes "this
+        the manifest already pins every one of them, and no current lesson
+        cites more than a single commit, which is what makes "this
         lesson's version" a thing that exists at all. A lesson with no evidence
         has no version to open, and says so by omitting this.
       */

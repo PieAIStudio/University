@@ -11,6 +11,9 @@
     "defaultCourseId": "buzz-orientation",
     "status": "active"
   },
+  "source": {
+    "defaultRef": "HEAD"
+  },
   "courses": [
     {
       "courseId": "buzz-orientation",

@@ -708,6 +708,33 @@ describe("course prerequisite order", () => {
     expect(ordered.map((course) => course.id)).toEqual(["early", "late", "dependent"]);
   });
 
+  it("uses focus order only to break ties among ready courses", () => {
+    const prerequisite = courseManifest({
+      id: "prerequisite",
+      createdAt: "2026-07-02T00:00:00.000Z",
+    });
+    const dependent = courseManifest({
+      id: "dependent",
+      createdAt: "2026-07-01T00:00:00.000Z",
+      prerequisiteCourseIds: ["prerequisite"],
+    });
+    const otherReady = courseManifest({
+      id: "other-ready",
+      createdAt: "2026-07-03T00:00:00.000Z",
+    });
+    const focusOrder = ["dependent", "prerequisite", "other-ready"];
+    const ordered = orderCoursesByPrerequisite(
+      [dependent, prerequisite, otherReady],
+      (left, right) => focusOrder.indexOf(left.id) - focusOrder.indexOf(right.id),
+    );
+
+    expect(ordered.map((course) => course.id)).toEqual([
+      "prerequisite",
+      "dependent",
+      "other-ready",
+    ]);
+  });
+
   it("does not let a prerequisite outside the given set block a course", () => {
     const course = courseManifest({
       id: "solo",

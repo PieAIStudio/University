@@ -35,10 +35,15 @@ pnpm university course recovery import --study <study-id> \
 
 恢复包只保留每门 active 课程的当前成品，并把 UA evidence 降为精确 commit/path/line 的
 source-only 绑定；包会明确报告丢弃了多少 UA binding。它不会伪装成能恢复个人学习进度或 UA。
+`index.json` 也保留 source registration 的 `defaultRef`，让新机器导入后仍沿用原来的默认
+分支/tag；缺少这个字段的旧包按 `HEAD` 兼容。
 截图 provenance 中指向已注册源码仓的 `file-manager:` 绝对路径会写成
 `file-manager:<source-root>`；导入时再绑定本机传入的 `--source`，仓库外路径则拒绝导出。
 课程文件按内容 hash 命名且不会被覆盖；`index.json` 是最后原子写入的 commit point。导出中途
 失败时，旧 index 引用的文件仍然有效，新产生但未被 index 引用的旧文件由 import 忽略。
+导入会在写入前检查所有已存在的 study、snapshot、course、unit、lesson、card 和 exercise
+冲突；通过后仍是跨文件系统的可重跑导入，不承诺整个 studies root 的跨文件系统原子切换。
+中途遇到外部 I/O 错误时可安全重跑，已完成且内容相同的对象会被复用。
 课程内容发生正式修订后，重新运行 export 并提交新 index 与它引用的新对象；旧的未引用对象
 可以在独立确认没有历史 index 需要它们后再清理，不要在课程生产过程中顺手删除。
 

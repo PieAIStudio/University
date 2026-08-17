@@ -37,11 +37,15 @@ items below, create a plan rather than growing this page into another diary.
 
 - One read-only `teach next` view resolves focus, next lesson, due card,
   evidence, artifacts, and any open teaching session from the same learning
-  overview used by the Web Today view.
+  overview used by the Web Today view. It scans every active study first;
+  focused open sessions win, then newest session start time and stable IDs
+  make multiple open sessions deterministic.
 - Canonical course recovery packages export current active course state while
   excluding learner/UA/snapshot history. Content-addressed objects survive a
   failure before the index commit point, and the round-trip proof uses an empty
-  studies root. Current exports live under `course-proposals/recovery/`.
+  studies root. The index preserves source `defaultRef`; imports preflight all
+  known conflicts, are safe to rerun, and are not a cross-filesystem atomic
+  transaction. Current exports live under `course-proposals/recovery/`.
 - Every source snapshot rejects secret-like tracked paths before UA sees
   them. Legitimate large Web3D assets are not secrets and must not be rejected
   solely for size.

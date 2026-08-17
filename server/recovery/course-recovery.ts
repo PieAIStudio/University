@@ -23,6 +23,7 @@ import {
   LessonAssetSchema,
   LessonSectionSchema,
   LessonVariantSchema,
+  SnapshotManifestSchema,
   StableId,
   type CourseManifest,
   type EvidenceReference,
@@ -48,7 +49,13 @@ import {
 } from "../content/repository.js";
 import { gitBuffer, gitText } from "../git/run.js";
 import { writeJsonAtomically, writeTextAtomically } from "../storage/atomic-json.js";
-import { getCoursePaths, getLessonPaths, getStudyPaths } from "../studies/paths.js";
+import {
+  getCoursePaths,
+  getLessonPaths,
+  getSnapshotPaths,
+  getStudyPaths,
+  getUnitPaths,
+} from "../studies/paths.js";
 import {
   createStudy,
   readSourceRegistration,
@@ -192,6 +199,12 @@ export const CourseRecoveryIndexSchema = z
         status: z.enum(["active", "archived"]),
       })
       .strict(),
+    source: z
+      .object({
+        defaultRef: z.string().min(1).max(256),
+      })
+      .strict()
+      .optional(),
     courses: z.array(RecoveryIndexEntrySchema).min(1).max(COURSE_RECOVERY_LIMITS.maxCourses),
   })
   .strict();
@@ -208,6 +221,8 @@ const RecoveryProvenanceSchema = z
 export type CourseRecoveryPackage = z.infer<typeof CourseRecoveryPackageSchema>;
 export type CourseRecoveryIndex = z.infer<typeof CourseRecoveryIndexSchema>;
 type RecoveryLesson = z.infer<typeof RecoveryLessonSchema>;
+type RecoveryCard = RecoveryLesson["cards"][number];
+type RecoveryExercise = RecoveryLesson["exercises"][number];
 type LoadedRecovery = {
   readonly index: CourseRecoveryIndex;
   readonly packages: readonly CourseRecoveryPackage[];
@@ -952,6 +967,7 @@ export function exportCourseRecovery(input: ExportCourseRecoveryInput) {
   ) {
     throw new Error(`Study default course is not active: ${study.defaultCourseId}`);
   }
+  const sourceRegistration = readSourceRegistration(input.studiesRoot, study.id);
 
   const entries: Array<z.infer<typeof RecoveryIndexEntrySchema>> = [];
   const artifacts: CourseRecoveryArtifact[] = [];
@@ -993,6 +1009,7 @@ export function exportCourseRecovery(input: ExportCourseRecoveryInput) {
       defaultCourseId: study.defaultCourseId,
       status: study.status,
     },
+    source: { defaultRef: sourceRegistration.defaultRef },
     courses: entries,
   });
   const indexBytes = jsonBytes(index);
@@ -1054,6 +1071,12 @@ function assertExistingStudy(
     const registration = readSourceRegistration(studiesRoot, existing.id);
     if (realpathSync.native(registration.sourceRoot) !== sourceRoot) {
       throw new Error(`Existing study source conflicts with recovery package: ${existing.id}`);
+    }
+    const expectedDefaultRef = index.source?.defaultRef ?? "HEAD";
+    if (registration.defaultRef !== expectedDefaultRef) {
+      throw new Error(
+        `Existing study source default ref conflicts with recovery package: ${existing.id}`,
+      );
     }
   }
 }
@@ -1214,7 +1237,59 @@ function assertLessonMatchesRecovery(
   }
 }
 
-function writePractices(
+function assertCardMatchesRecovery(
+  existing: ReturnType<typeof readLatestCard>,
+  card: RecoveryCard,
+): void {
+  const actual = {
+    id: existing.id,
+    kind: existing.kind,
+    front: existing.front,
+    back: existing.back,
+    tags: existing.tags,
+    evidence: existing.evidence,
+    contentRevision: existing.contentRevision,
+    status: existing.status,
+  };
+  if (canonicalJson(actual) !== canonicalJson({ ...card, contentRevision: 1, status: "active" })) {
+    throw new Error(`Existing card conflicts with recovery package: ${card.id}`);
+  }
+}
+
+function assertExerciseMatchesRecovery(
+  existing: ReturnType<typeof readLatestExercise>,
+  exercise: RecoveryExercise,
+): void {
+  const actual =
+    existing.kind === "short-answer"
+      ? {
+          id: existing.id,
+          kind: existing.kind,
+          title: existing.title,
+          prompt: existing.prompt,
+          expectedAnswer: existing.expectedAnswer,
+          evidence: existing.evidence,
+          contentRevision: existing.contentRevision,
+          status: existing.status,
+        }
+      : {
+          id: existing.id,
+          kind: existing.kind,
+          title: existing.title,
+          prompt: existing.prompt,
+          rubric: existing.rubric,
+          evidence: existing.evidence,
+          contentRevision: existing.contentRevision,
+          status: existing.status,
+        };
+  if (
+    canonicalJson(actual) !== canonicalJson({ ...exercise, contentRevision: 1, status: "active" })
+  ) {
+    throw new Error(`Existing exercise conflicts with recovery package: ${exercise.id}`);
+  }
+}
+
+function preflightPractices(
   studiesRoot: string,
   studyId: string,
   courseId: string,
@@ -1223,26 +1298,49 @@ function writePractices(
 ): void {
   const lessonPaths = getLessonPaths(studiesRoot, studyId, courseId, unitId, lesson.id);
   for (const card of lesson.cards) {
-    const latest = join(lessonPaths.cards, card.id, "latest.json");
-    if (existsSync(latest)) {
-      const existing = readLatestCard(studiesRoot, studyId, courseId, unitId, lesson.id, card.id);
-      const actual = {
-        id: existing.id,
-        kind: existing.kind,
-        front: existing.front,
-        back: existing.back,
-        tags: existing.tags,
-        evidence: existing.evidence,
-        contentRevision: existing.contentRevision,
-        status: existing.status,
-      };
-      if (
-        canonicalJson(actual) !== canonicalJson({ ...card, contentRevision: 1, status: "active" })
-      ) {
-        throw new Error(`Existing card conflicts with recovery package: ${card.id}`);
+    const cardRoot = join(lessonPaths.cards, card.id);
+    const cardLatest = join(cardRoot, "latest.json");
+    if (!existsSync(cardLatest)) {
+      if (existsSync(cardRoot)) {
+        throw new Error(`Existing card path has no canonical latest revision: ${card.id}`);
       }
       continue;
     }
+    const existing = readLatestCard(studiesRoot, studyId, courseId, unitId, lesson.id, card.id);
+    assertCardMatchesRecovery(existing, card);
+  }
+  for (const exercise of lesson.exercises) {
+    const exerciseRoot = join(lessonPaths.exercises, exercise.id);
+    const exerciseLatest = join(exerciseRoot, "latest.json");
+    if (!existsSync(exerciseLatest)) {
+      if (existsSync(exerciseRoot)) {
+        throw new Error(`Existing exercise path has no canonical latest revision: ${exercise.id}`);
+      }
+      continue;
+    }
+    const existing = readLatestExercise(
+      studiesRoot,
+      studyId,
+      courseId,
+      unitId,
+      lesson.id,
+      exercise.id,
+    );
+    assertExerciseMatchesRecovery(existing, exercise);
+  }
+}
+
+function writePractices(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  unitId: string,
+  lesson: RecoveryLesson,
+): void {
+  const lessonPaths = getLessonPaths(studiesRoot, studyId, courseId, unitId, lesson.id);
+  preflightPractices(studiesRoot, studyId, courseId, unitId, lesson);
+  for (const card of lesson.cards) {
+    if (existsSync(join(lessonPaths.cards, card.id, "latest.json"))) continue;
     writeCardRevision(studiesRoot, studyId, {
       schemaVersion: 1,
       id: card.id,
@@ -1259,46 +1357,7 @@ function writePractices(
     });
   }
   for (const exercise of lesson.exercises) {
-    const latest = join(lessonPaths.exercises, exercise.id, "latest.json");
-    if (existsSync(latest)) {
-      const existing = readLatestExercise(
-        studiesRoot,
-        studyId,
-        courseId,
-        unitId,
-        lesson.id,
-        exercise.id,
-      );
-      const actual =
-        existing.kind === "short-answer"
-          ? {
-              id: existing.id,
-              kind: existing.kind,
-              title: existing.title,
-              prompt: existing.prompt,
-              expectedAnswer: existing.expectedAnswer,
-              evidence: existing.evidence,
-              contentRevision: existing.contentRevision,
-              status: existing.status,
-            }
-          : {
-              id: existing.id,
-              kind: existing.kind,
-              title: existing.title,
-              prompt: existing.prompt,
-              rubric: existing.rubric,
-              evidence: existing.evidence,
-              contentRevision: existing.contentRevision,
-              status: existing.status,
-            };
-      if (
-        canonicalJson(actual) !==
-        canonicalJson({ ...exercise, contentRevision: 1, status: "active" })
-      ) {
-        throw new Error(`Existing exercise conflicts with recovery package: ${exercise.id}`);
-      }
-      continue;
-    }
+    if (existsSync(join(lessonPaths.exercises, exercise.id, "latest.json"))) continue;
     writeExerciseRevision(
       studiesRoot,
       studyId,
@@ -1375,6 +1434,105 @@ function writeLesson(
     writePractices(studiesRoot, studyId, courseId, unitId, lesson);
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
+function preflightCourseRecovery(
+  studiesRoot: string,
+  studyId: string,
+  coursePackage: CourseRecoveryPackage,
+  sourceRoot: string,
+): void {
+  const course = coursePackage.course;
+  const paths = getCoursePaths(studiesRoot, studyId, course.id);
+  if (!existsSync(paths.manifest)) {
+    if (existsSync(paths.root)) {
+      throw new Error(`Existing course path has no canonical manifest: ${course.id}`);
+    }
+    return;
+  }
+
+  const existing = readCourse(studiesRoot, studyId, course.id);
+  if (existing.status === "active") {
+    if (!equivalentPackage(studiesRoot, studyId, coursePackage)) {
+      throw new Error(`Active course conflicts with recovery package: ${course.id}`);
+    }
+    return;
+  }
+  if (existing.status !== "draft" && existing.status !== "stale") {
+    throw new Error(`Course cannot be resumed from status ${existing.status}: ${course.id}`);
+  }
+  assertCourseMatchesRecovery(existing, coursePackage);
+
+  for (const unit of course.units) {
+    const unitPaths = getUnitPaths(studiesRoot, studyId, course.id, unit.id);
+    if (!existsSync(unitPaths.manifest)) {
+      if (existsSync(unitPaths.root)) {
+        throw new Error(`Existing unit path has no canonical manifest: ${unit.id}`);
+      }
+    } else {
+      assertUnitMatchesRecovery(studiesRoot, studyId, course.id, unit);
+    }
+    for (const lesson of unit.lessons) {
+      const lessonPaths = getLessonPaths(studiesRoot, studyId, course.id, unit.id, lesson.id);
+      if (!existsSync(lessonPaths.latest)) {
+        if (existsSync(lessonPaths.root)) {
+          throw new Error(`Existing lesson path has no canonical latest revision: ${lesson.id}`);
+        }
+      } else {
+        assertLessonMatchesRecovery(studiesRoot, studyId, course.id, unit.id, lesson, sourceRoot);
+      }
+      preflightPractices(studiesRoot, studyId, course.id, unit.id, lesson);
+    }
+  }
+}
+
+function preflightSnapshotConflict(
+  studiesRoot: string,
+  studyId: string,
+  sourceRoot: string,
+  sourceCommit: string,
+): void {
+  const snapshotId = `git-${sourceCommit.slice(0, 12)}`;
+  const manifestPath = getSnapshotPaths(studiesRoot, studyId, snapshotId).manifest;
+  if (!existsSync(manifestPath)) return;
+  const existing = SnapshotManifestSchema.parse(
+    JSON.parse(readFileSync(manifestPath, "utf8")) as unknown,
+  );
+  const sourceTree = gitText(["rev-parse", "--verify", `${sourceCommit}^{tree}`], sourceRoot);
+  if (
+    existing.id !== snapshotId ||
+    existing.sourceCommit !== sourceCommit ||
+    existing.sourceTree !== sourceTree
+  ) {
+    throw new Error(`Recovery snapshot conflicts with existing snapshot: ${snapshotId}`);
+  }
+}
+
+function preflightRecoveryImport(
+  studiesRoot: string,
+  studyId: string,
+  loaded: LoadedRecovery,
+  sourceRoot: string,
+  sourceCommits: readonly string[],
+): void {
+  const studyPaths = getStudyPaths(studiesRoot, studyId);
+  const studyExists = existsSync(studyPaths.manifest);
+  if (studyExists) {
+    assertExistingStudy(studiesRoot, loaded.index, sourceRoot);
+  } else if (existsSync(studyPaths.root)) {
+    throw new Error(`Recovery target study path exists without a study manifest: ${studyId}`);
+  }
+  if (!studyExists && existsSync(studyPaths.source.root)) {
+    throw new Error(`Recovery target source path exists without a registration: ${studyId}`);
+  }
+
+  for (const commit of sourceCommits) {
+    preflightSnapshotConflict(studiesRoot, studyId, sourceRoot, commit);
+  }
+  if (!studyExists) return;
+  for (const coursePackage of loaded.packages) {
+    preflightCourseRecovery(studiesRoot, studyId, coursePackage, sourceRoot);
   }
 }
 
@@ -1465,6 +1623,7 @@ export function importCourseRecovery(input: ImportCourseRecoveryInput) {
     );
   }
   const sourceRoot = requireSourceRoot(input.sourceRoot);
+  const sourceDefaultRef = loaded.index.source?.defaultRef ?? "HEAD";
   const potentialStudiesRoot = canonicalizePotentialPath(input.studiesRoot);
   if (
     isPathInside(potentialStudiesRoot, sourceRoot) ||
@@ -1473,6 +1632,7 @@ export function importCourseRecovery(input: ImportCourseRecoveryInput) {
     throw new Error("Recovery studiesRoot and sourceRoot must be separate");
   }
   const commits = validateSourceEvidence(sourceRoot, loaded.packages);
+  preflightRecoveryImport(input.studiesRoot, loaded.index.study.id, loaded, sourceRoot, commits);
   if (input.dryRun) {
     return {
       schemaVersion: 1 as const,
@@ -1490,9 +1650,7 @@ export function importCourseRecovery(input: ImportCourseRecoveryInput) {
 
   const studyPaths = getStudyPaths(input.studiesRoot, loaded.index.study.id);
   const existed = existsSync(studyPaths.manifest);
-  if (existed) {
-    assertExistingStudy(input.studiesRoot, loaded.index, sourceRoot);
-  } else {
+  if (!existed) {
     createStudy(input.studiesRoot, {
       id: loaded.index.study.id,
       title: loaded.index.study.title,
@@ -1502,7 +1660,7 @@ export function importCourseRecovery(input: ImportCourseRecoveryInput) {
     });
   }
   if (!existsSync(studyPaths.source.registration)) {
-    registerLocalGitSource(input.studiesRoot, loaded.index.study.id, sourceRoot, "HEAD");
+    registerLocalGitSource(input.studiesRoot, loaded.index.study.id, sourceRoot, sourceDefaultRef);
   }
   for (const commit of commits) {
     const snapshot = createCleanSnapshot(
