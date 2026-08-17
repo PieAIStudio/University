@@ -229,15 +229,28 @@ summary:focus-visible,
  * thing on the page — into 319px, leaving most of the viewport empty.
  */
 .today-layout {
+  --today-measure: 820px;
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(264px, 0.4fr);
   align-items: start;
   gap: 20px;
 }
 
+/*
+  The right-hand column exists to hold the due-card count beside the card being
+  reviewed. On a day with nothing due there is no count, and the column was
+  still holding 267px of a 1356px row open next to a callout that only had to
+  say 「今天没有到期卡片」 — which also left that callout 250px wider than the
+  headline above it. One column, on the same measure as the hero, so a quiet
+  day reads as one column of page rather than as a layout missing a piece.
+*/
+.today-layout:not(:has(.today-metric)) {
+  grid-template-columns: minmax(0, var(--today-measure));
+}
+
 .today-hero {
   grid-column: 1 / -1;
-  max-width: 820px;
+  max-width: var(--today-measure);
   padding: 10px 0 22px;
 }
 
@@ -557,6 +570,9 @@ summary:focus-visible,
 
 .study-shelf__item span {
   font-weight: 800;
+  /* CJK breaks between any two characters by default, so a narrow shelf split
+     「UniversityLocal 自身」 as 自 / 身. A project name is one word. */
+  word-break: keep-all;
 }
 
 .study-shelf__item small {
@@ -2915,6 +2931,11 @@ summary:focus-visible,
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+}
+
+.exercise-actions__hint {
+  color: var(--game-ui-text-muted);
+  font-size: 0.86rem;
 }
 
 /* Says the box is showing something the server kept, not something typed and

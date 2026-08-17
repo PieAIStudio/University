@@ -250,13 +250,15 @@ export function ExerciseBlock({
           onClick={() => void submit()}
           disabled={!answer.trim() || pending || solved}
         >
+          {/* 「判」 alone is not a verb you can end a Chinese sentence on, and
+              this is the primary action of every lesson in the product. */}
           {pending
             ? "正在提交…"
             : solved
               ? "已完成"
               : reopened
-                ? "重新提交并复制给 AI 判"
-                : "提交并复制给 AI 判"}
+                ? "重新提交并复制给 AI 判分"
+                : "提交并复制给 AI 判分"}
         </GameButton>
         {passed ? (
           <GameButton
@@ -272,6 +274,20 @@ export function ExerciseBlock({
           >
             {reopened ? "放弃重答" : "重新回答"}
           </GameButton>
+        ) : null}
+        {/*
+          Why the button is dead.
+
+          A lesson cannot be completed without answering its exercise, so this
+          is where a learner arrives to finish — and finds the one button on the
+          panel greyed out, at a contrast the kit reserves for disabled
+          controls, with nothing saying what would wake it. The gate itself is
+          right: the whole point of the exercise is that you write the answer
+          before an AI sees it. It just has to be a gate the reader can see the
+          latch on.
+        */}
+        {!answer.trim() && !solved && !pending ? (
+          <span className="exercise-actions__hint">写下你的答案后就能提交</span>
         ) : null}
       </div>
 
