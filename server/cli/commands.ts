@@ -24,6 +24,9 @@ Commands:
   session start --study <study-id> --host grok-build --objective <text>
   session status --study <study-id>
   session end --study <study-id> [--session <session-id>]
+  snapshot list --study <study-id>
+  snapshot open --study <study-id> [--snapshot <snapshot-id>]
+  snapshot close --study <study-id> [--snapshot <snapshot-id>]
   study create --study <study-id> --title <text> --source <absolute-path> [--ref <git-ref>]
   study archive --study <study-id>
   study unarchive --study <study-id>
@@ -174,6 +177,12 @@ interface SessionEndCommand {
   readonly sessionId?: string;
 }
 
+interface SnapshotCheckoutCommand {
+  readonly kind: "snapshot-list" | "snapshot-open" | "snapshot-close";
+  readonly studyId: string;
+  readonly snapshotId?: string;
+}
+
 interface StudyStatusCommand {
   readonly kind: "study-archive" | "study-unarchive";
   readonly studyId: string;
@@ -266,6 +275,7 @@ export type UniversityLocalCliCommand =
   | LearnerResetCommand
   | LearnerRestoreCommand
   | ExerciseHostGradeCommand
+  | SnapshotCheckoutCommand
   | StudyCreateCommand
   | StudyStatusCommand
   | AirlockPromoteCommand

@@ -25,6 +25,7 @@ import { LessonMarkList } from "./LessonMarkList.js";
 import { LessonMargin } from "./LessonMargin.js";
 import { LessonBacklinks } from "./LessonRelated.js";
 import { LessonNextStep } from "./LessonNextStep.js";
+import { LessonSourceVersion } from "./LessonSourceVersion.js";
 import { LessonWordList } from "./LessonWordList.js";
 import { SelectionMenu, type SelectionTarget } from "./SelectionMenu.js";
 import { buildQuestionPrompt, type ReaderMark } from "../domain/reader-marks.js";
@@ -457,6 +458,15 @@ export function LessonReader({
                 {view.lesson.title}
               </h2>
               <LessonUaLayers evidence={view.lesson.evidence} />
+              {view.lesson.pinnedCommit ? (
+                <LessonSourceVersion
+                  studyId={locator.studyId}
+                  sourceCommit={view.lesson.pinnedCommit.commit}
+                  {...(view.lesson.pinnedCommit.date
+                    ? { sourceCommitDate: view.lesson.pinnedCommit.date }
+                    : {})}
+                />
+              ) : null}
             </div>
           </header>
           <div className="markdown-body lesson-prose" ref={bodyRef}>

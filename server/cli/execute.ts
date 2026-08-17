@@ -39,6 +39,11 @@ import { promoteAirlock } from "../airlock/promote.js";
 import { createStudyWithSource } from "../workflows/create-study.js";
 import { reviewExpression } from "../workflows/expression-review.js";
 import { annotateLanguage } from "../workflows/annotate-language.js";
+import {
+  closeSnapshotCheckout,
+  listSnapshotCheckouts,
+  openSnapshotCheckout,
+} from "../workflows/snapshot-checkout.js";
 import { HELP, type UniversityLocalCliCommand } from "./commands.js";
 
 const MAX_CAPTURE_FILE_BYTES = 1024 * 1024;
@@ -332,6 +337,35 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         ...(input.command.limit === undefined ? {} : { limit: input.command.limit }),
         ...(input.command.goal === undefined ? {} : { goal: input.command.goal }),
       });
+    case "snapshot-list":
+      return {
+        schemaVersion: 1 as const,
+        operation: "snapshot-list",
+        studyId: input.command.studyId,
+        snapshots: listSnapshotCheckouts(config.studiesRoot, input.command.studyId),
+      };
+    case "snapshot-open":
+      return {
+        schemaVersion: 1 as const,
+        operation: "snapshot-open",
+        studyId: input.command.studyId,
+        ...openSnapshotCheckout(
+          config.studiesRoot,
+          input.command.studyId,
+          input.command.snapshotId,
+        ),
+      };
+    case "snapshot-close":
+      return {
+        schemaVersion: 1 as const,
+        operation: "snapshot-close",
+        studyId: input.command.studyId,
+        ...closeSnapshotCheckout(
+          config.studiesRoot,
+          input.command.studyId,
+          input.command.snapshotId,
+        ),
+      };
     case "study-archive":
     case "study-unarchive":
       return {

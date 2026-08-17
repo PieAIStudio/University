@@ -294,6 +294,18 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
   }
   if (
     positionals.length === 2 &&
+    positionals[0] === "snapshot" &&
+    (positionals[1] === "list" || positionals[1] === "open" || positionals[1] === "close")
+  ) {
+    rejectUnrelatedOptions(values, ["study", "snapshot"]);
+    return {
+      kind: `snapshot-${positionals[1]}` as "snapshot-list" | "snapshot-open" | "snapshot-close",
+      studyId: required(values.study, "study"),
+      ...(values.snapshot ? { snapshotId: values.snapshot } : {}),
+    };
+  }
+  if (
+    positionals.length === 2 &&
     positionals[0] === "study" &&
     (positionals[1] === "archive" || positionals[1] === "unarchive")
   ) {

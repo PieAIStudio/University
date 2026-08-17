@@ -16,7 +16,7 @@ import { handleLesson } from "./http/handlers/lesson.js";
 import { handleReaderMark } from "./http/handlers/reader-mark.js";
 import { handleStudyMap } from "./http/handlers/study-map.js";
 import { createUaDashboardHandler } from "./http/handlers/ua-dashboard.js";
-import { handleAirlock, handleStudy } from "./http/handlers/study.js";
+import { handleAirlock, handleSnapshotCheckout, handleStudy } from "./http/handlers/study.js";
 import type { Handler } from "./http/handlers/types.js";
 import { handleVocabulary } from "./http/handlers/vocabulary.js";
 import { getStudyPaths } from "./studies/paths.js";
@@ -61,6 +61,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
     handleReaderMark,
     createUaDashboardHandler(uaDashboard),
     handleStudyMap,
+    handleSnapshotCheckout,
   ];
 
   const server = createServer((request, response) => {

@@ -10,6 +10,15 @@ export interface StudyPaths {
     readonly registration: string;
     readonly repository: string;
     readonly snapshots: string;
+    /**
+     * Runnable checkouts of pinned snapshots, one directory per snapshot.
+     *
+     * Beside the mirror and the snapshot manifests rather than anywhere else,
+     * because that is what these are: the same pinned source, materialised so a
+     * person can start it. Derived and disposable — `snapshot close` deletes
+     * one, and nothing but a running dev server ever depends on it.
+     */
+    readonly checkouts: string;
   };
   readonly ua: string;
   readonly courses: string;
@@ -81,6 +90,7 @@ export function getStudyPaths(studiesRoot: string, candidateId: string): StudyPa
       registration: join(sourceRoot, "registration.json"),
       repository: join(sourceRoot, "repository.git"),
       snapshots: join(sourceRoot, "snapshots"),
+      checkouts: join(sourceRoot, "checkouts"),
     },
     ua: join(root, "ua"),
     courses: join(root, "courses"),

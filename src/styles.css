@@ -1261,6 +1261,71 @@ summary:focus-visible,
   margin: 6px 0 0;
 }
 
+/*
+  Which version of the studied project this lesson is about, and a way to run
+  it. Sits under the title with the layer line because that is where the reader
+  has just been told the lesson is pinned to a date — the question "so where is
+  that one" occurs here and nowhere else.
+
+  Set at footnote weight: it answers a question that only some readings raise,
+  and a lesson whose screenshots still match today's app never needs it.
+*/
+.lesson-version {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: baseline;
+  margin-top: 10px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.lesson-version__label {
+  min-width: 0;
+}
+
+.lesson-version__ready {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--campus-rule);
+  border-left: 3px solid #f6c177;
+  background: rgb(246 193 119 / 6%);
+}
+
+.lesson-version__ready p {
+  margin: 0;
+}
+
+.lesson-version__ready code {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  color: #e5c49a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.lesson-version__run {
+  overflow-x: auto;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.lesson-version__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
 .markdown-body {
   color: #eee0ca;
   font-size: 1.04rem;

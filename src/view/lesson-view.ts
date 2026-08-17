@@ -461,6 +461,12 @@ export interface LessonView {
     readonly language?: LanguageLayer;
     readonly links?: readonly LessonLinkRange[];
     readonly backlinks?: readonly LessonLinkTarget[];
+    /**
+     * The single commit this lesson's citations pin to, for offering a runnable
+     * checkout of it. Absent when the lesson cites nothing, or cites more than
+     * one commit and so has no one version to open.
+     */
+    readonly pinnedCommit?: { readonly commit: string; readonly date?: string };
     readonly evidenceAnchors?: readonly EvidenceAnchorRange[];
     readonly progress: LessonProgress | null;
     readonly evidence: readonly EvidenceView[];
