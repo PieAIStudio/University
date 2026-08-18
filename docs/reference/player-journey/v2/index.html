@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>University · 用户旅程 V2</title>
+    <link rel="stylesheet" href="lib/journey.css" />
+    <style>
+      .screens {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 12px;
+        margin: 16px 0;
+      }
+      .screencard {
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--accent);
+        border-radius: 12px;
+        background: var(--card);
+        padding: 14px 16px;
+        text-decoration: none;
+        display: block;
+      }
+      .screencard b {
+        display: block;
+        font-size: 1rem;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+      .screencard span {
+        font-size: 0.84rem;
+        color: var(--ink-dim);
+      }
+      .screencard em {
+        display: block;
+        margin-top: 8px;
+        font-style: normal;
+        font-size: 0.78rem;
+        color: var(--ink-faint);
+        border-top: 1px dashed var(--line);
+        padding-top: 7px;
+      }
+      .screencard.todo {
+        border-left-color: var(--line-strong);
+        opacity: 0.62;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>University · 用户旅程 V2</h1>
+      <p class="sub">
+        2026-08-18 · 在本仓库内撰写 · 28 幕 · 六个阶段 ·
+        <b>V1 是从外面写的投影，V2 是量过 52 门真课之后写的</b>
+      </p>
+
+      <div class="banner">
+        <p class="lede">
+          <strong>V1 和 V2 最大的区别不是结论变了，是 V2 有数据。</strong>
+          V1 起草时没有人打开过导出包。V2 把 52 门课、146 单元、560 节课全部统计了一遍，
+          再回头看 V1 的每一条论断——有几条站不住，而且站不住的恰好是最贵的那几条。
+        </p>
+        <div class="metrics" id="metrics"></div>
+        <p class="sub" style="margin-top: 12px">
+          这些数字由 <code>pnpm journey</code> 从 UniversityLocal 的导出包里现算，本页直接读它。
+          没有一个数字是手写的；哪天内容变了，重新跑一次这一页就跟着变。
+        </p>
+      </div>
+
+      <h2>先看界面</h2>
+      <p class="lede">
+        3D 的部分是<b>能点的灰模</b>，不是静态图。原因很实在：镜头怎么飞、层级怎么下钻、
+        八秒内找不找得到下一节课——这三件事在图上一个都看不出来，
+        而它们正是「做完之后还要不停地调」的来源。
+      </p>
+      <p class="sub">
+        灰模和线框都要 <code>pnpm dev</code> 打开（<code>file://</code> 下浏览器会拦掉数据读取）。
+        阅读器还需要先跑一次带 <code>--sample</code> 的拉取命令。
+      </p>
+      <div class="screens" id="screens"></div>
+
+      <h2>V1 里错的，逐条对账</h2>
+      <p class="lede">只列<b>被数据推翻</b>的，不列见仁见智的。</p>
+
+      <div class="fix">
+        <h4>① 成本模型的地基是错的 —— 这条最贵</h4>
+        <dl>
+          <dt>V1 说</dt>
+          <dd>导出包自带 <code>expectedAnswer</code>，所以确定性判分零成本，且覆盖绝大多数交互。</dd>
+          <dt>实测</dt>
+          <dd>
+            673 道 short-answer 确实全都带 <code>expectedAnswer</code>，但那是<b>中文自然语言答案</b>，
+            中位数 9 字、p90 24 字。真实样例：「因为共享上下文、顺序和控制信号，需要保持 per-channel
+            单个 in-flight batch」。字符串比对对这种答案召回率接近零。
+            更关键的是 UniversityLocal <b>自己就没有确定性判分</b>——判分走
+            <code>host-exercise-grade.ts</code>，由 AI 编程宿主给出 <code>passed</code>。
+            <code>expectedAnswer</code> 是给判分者看的参考答案，不是匹配键。
+          </dd>
+          <dt class="now">所以</dt>
+          <dd class="now">
+            SPEC-0001 验收第 7 条（全确定性的课触发零次大模型调用）用今天的内容<b>一节都过不了</b>。
+            缺口总账把判分标成「移植一半」乐观了一整档。<br /><br />
+            <b>修法不在运行时，在导入时。</b>导入按包哈希发生一次，成本按课程摊销而不是按学习者摊销：
+            在导入流水线里用一次模型把每道题编译成机器可判的东西——可接受答案集合、关键词要点、
+            或用同单元其他答案生成干扰项变成点选题——产物连同包哈希固化，人工评审顺手一起审。
+            这样第一层才真是零边际成本，而且<b>不需要改 UniversityLocal 一个字</b>。
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fix">
+        <h4>② 首次五分钟预算按错的尺度估了</h4>
+        <dl>
+          <dt>V1 说</dt>
+          <dd>「读课文」120 秒，全程 333 秒，超支 33 秒且全部来自注册。</dd>
+          <dt>实测</dt>
+          <dd>
+            课文均值 2363 字符、最长 4903，全库 964 段代码围栏（692 段 TypeScript）。
+            <a href="screens/reader.html">阅读器线框</a>用一节真课渲染出来是 2606 字 + 3 段代码，
+            按中文技术阅读 300 字/分钟算是 <b>≈9 分钟</b>。
+          </dd>
+          <dt class="now">所以</dt>
+          <dd class="now">
+            真实首课是<b>十分钟量级</b>，不是五分钟。这不是措辞问题——V1 那张预算表是拿假数据估的，
+            它把这个产品的核心动作按「Duolingo 一句话一题」的尺度估了。
+            要么承认首课十分钟并据此重排注册位置，要么在导入侧引入「首课特供短课」的概念。
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fix">
+        <h4>③ 「一门课 = 一块大陆」和真实体量不匹配</h4>
+        <dl>
+          <dt>V1 说</dt>
+          <dd>一门课 = 一块大陆，镜头从星图推近。</dd>
+          <dt>实测</dt>
+          <dd>
+            52 门课，体量从 <b>1 节到 41 节</b>，中位 12。四个 study 的拓扑完全不同：
+            buzz 完全平铺（0 条先修关系），supaluv 是一条 7 环的链，
+            university-local 是链加末端三叉，turing-pact 是<b>深 14 层的树</b>——
+            九级主干，然后一次炸出九条支线，再收窄。
+          </dd>
+          <dt class="now">所以</dt>
+          <dd class="now">
+            52 块大陆不是星图，是列表套了 3D 皮。内容里<b>唯一真实存在的拓扑是先修 DAG</b>，
+            其他层级只是文件夹。地图按树排，并且<b>容忍不整齐</b>——岛的大小由课时数决定，
+            41 节就是大岛，1 节就是礁石。要求内容先变整齐再做地图，就永远做不了地图。
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fix">
+        <h4>④ 朗读不是「两边都还没有」</h4>
+        <dl>
+          <dt>V1 说</dt>
+          <dd>朗读两边都没有，所以它是共享包价值的第一个真实检验。</dd>
+          <dt>实测</dt>
+          <dd>
+            UniversityLocal 已有 <code>src/language/speech.ts</code>（Web Speech，选音策略写得很细，
+            明确不走网络）加 <code>WordPopover</code> 与 <code>LessonWordList</code>。
+          </dd>
+          <dt class="now">所以</dt>
+          <dd class="now">
+            论证塌了。共享包的第一个真实检验应换成<b>内容键 + 进度推进规则 + FSRS 调度</b>
+            （<code>exerciseContentKey</code> / <code>lessonContentKey</code> /
+            <code>reviewContentKey</code> / <code>advanceLessonProgress</code>）——
+            纯函数、两边都要、各写一份必然漂移。
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fix">
+        <h4>⑤ 评审闸门的泄露面被低估了一档</h4>
+        <dl>
+          <dt>V1 说</dt>
+          <dd>导入包携带源码路径、精确 commit 与行号，所以要有人工评审闸门。</dd>
+          <dt>实测</dt>
+          <dd>
+            不止指针。<b>逐字源码嵌在课文正文里</b>——964 段围栏，含 SQL 建表语句，
+            1597 条证据锚点。另外一个包 6.8 MB，其中 6.1 MB 是四张内联成 base64 的截图，
+            单张最大 2.86 MB。
+          </dd>
+          <dt class="now">所以</dt>
+          <dd class="now">
+            闸门要做成<b>导入时可执行的检查 + 对包哈希的一次人工签署</b>，不是每次凭感觉。
+            而且它在缺口总账里应该有独立一行，不能并进「导入」里。
+            截图那条另说：写课技能今天才开始建议用截图，第一张就 2.86 MB，
+            560 节课每节两张就是 3 GB——现在管很便宜，以后管很贵。
+          </dd>
+        </dl>
+      </div>
+
+      <div class="fix">
+        <h4>⑥ 「读真实商业产品源码」只覆盖一部分课</h4>
+        <dl>
+          <dt>V1 说</dt>
+          <dd>把「读一个正在赚钱的产品的源码」当卖点，一句话说清差异。</dd>
+          <dt>实测</dt>
+          <dd>
+            turing-pact 的 31 门里有 9 门 <code>foundations-*</code>（139 节，深度 0–8 的整条主干），
+            它们是<b>拿 TuringPact 源码当教具的通识工程课</b>：什么是 App、代码是什么、
+            怎么读一行代码、什么是异步。那不是「读商业产品」，那是「从零学工程」。
+          </dd>
+          <dt class="now">所以</dt>
+          <dd class="now">
+            两类课的人群、定价、评审风险都不同，V1 把它们当一种东西。首发排课应分开：
+            <b>foundations 系列免费获客，产品剖析课订阅</b>。这也顺手回答了 D4。
+          </dd>
+        </dl>
+      </div>
+
+      <h2>V1 漏掉的幕</h2>
+      <p class="lede">下面镜头墙里带 <span class="tag" style="border-color: var(--idea); color: var(--idea)">V2 新增</span> 的六幕，V1 一幕都没有。它们不是锦上添花，缺了会直接出事。</p>
+
+      <h2>镜头墙</h2>
+      <p>默认按学习者真实经历的顺序排。</p>
+      <div class="toolbar" id="toolbar">
+        <button data-f="all" aria-pressed="true">全部</button>
+        <button data-f="v2" aria-pressed="false">只看 V2 新增</button>
+        <button data-f="g1" aria-pressed="false">G1 · 第一节课</button>
+        <button data-f="g2" aria-pressed="false">G2 · 第二天</button>
+        <button data-f="g3" aria-pressed="false">G3 · 习惯</button>
+        <button data-f="new" aria-pressed="false">只看「全新」（最贵）</button>
+        <button data-f="port" aria-pressed="false">只看「可移植」（最便宜）</button>
+      </div>
+      <div id="wall"></div>
+
+      <h2>快乐地图</h2>
+      <p class="lede">
+        柱高是快乐强度，颜色是快乐的<strong>种类</strong>。零高度不是「做得差」，是<strong>纯支出</strong>。
+      </p>
+      <div class="chart"><div class="bars" id="joy"></div></div>
+      <div class="keys" id="joykeys"></div>
+      <p>
+        <strong>V1 的三条结论我保留两条，改一条。</strong>
+        保留：唯一抄不走的快乐是「懂了」，而它发生在 2D 课文里；两段最长的零回报都在「要东西」的时候。
+        改的是第三条——V1 说第二天回来的理由是那张卡。对，但不完整：
+        <b>第二天回来的前提是第一天读完了</b>，而按实测，第一天要读九分钟、看三段真源码。
+        所以真正的第一风险不是「第二天忘了回来」，是<b>第一天没读完就走了</b>。
+        V2 因此把「答错之后」和「判错申诉」补成独立的幕：那是第一天最容易断掉的地方。
+      </p>
+
+      <h2>首次一节课的真实预算</h2>
+      <p>从点开链接到第一次结算。V1 的总预算是 300 秒；下面是按实测重估的。</p>
+      <div class="chart"><div class="budget" id="budget"></div></div>
+      <p>
+        合计约 <strong>11 分钟</strong>。这不是把 V1 的预算调大一点，是换了一个量级。
+        结论也跟着变：<b>五分钟内不可能完成一节课，所以别把注册往五分钟里塞</b>——
+        注册仍然排在第一次结算之后，但理由从「预算超支」变成了「他刚花了十一分钟，
+        现在手里第一次有值得保护的东西」。
+      </p>
+
+      <h2>坏掉的时候，他还知道下一步吗</h2>
+      <p class="lede"><strong>「重试」不是出路，出路必须换一条路。</strong>加粗的两行是 V2 新增。</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>坏在哪</th><th>他看到什么</th><th>出路</th></tr></thead>
+          <tbody>
+            <tr><td>3D 地图加载失败 / 弱 GPU</td><td>地图转不出来或帧率崩</td><td>自动降级到 2D 列表视图，结构完全一致。<a href="screens/world-map.html">灰模里那个开关</a>就是它。</td></tr>
+            <tr><td><b>判分判错了（他认为自己对）</b></td><td>明明答对却被判错</td><td><b>V2 新增。</b>一键「我觉得我对了」→ 升到下一层判分一次，<b>这次不计费</b>。分层判分必然产生这种故障，而且比模型超时高频得多。这条直接决定第一层能不能激进使用。</td></tr>
+            <tr><td>在线模型判分超时</td><td>提交后卡住</td><td>确定性判分本来不需要模型，先出结果；开放题降级为「先记下来，稍后给你讲」，卡片照常入库。</td></tr>
+            <tr><td>免费额度用尽</td><td>辅导按钮变灰</td><td>说清剩下能做什么（读课文、做确定性题、复习全部可用），而不是锁上整个产品。</td></tr>
+            <tr><td>离线 / 通勤断网</td><td>什么都点不动</td><td>已导入课程与到期卡片本地可用，判分排队。复习是最该离线可用的那一部分。</td></tr>
+            <tr><td>课程被作者重新导出</td><td>进度看起来消失了</td><td>按内容键逐节比对，只有变过的小节标「有更新」，进度不清空。见 D3。</td></tr>
+            <tr><td><b>已上架课程因 IP 事故被撤下</b></td><td>正在学的课不见了</td><td><b>V2 新增。</b>已购学习者保留只读访问与全部到期卡片，不再计入新销售；如果必须彻底下架，按未学完比例退款。上架方向 V1 设计了，撤架方向没有——而后者是「上架私有源码」这个决定的对偶风险。</td></tr>
+            <tr><td>课程包校验失败</td><td>课程打不开</td><td>课程不上架，学习者根本看不到。校验发生在投放之前。</td></tr>
+            <tr><td>6.8 MB 的课程包在手机上</td><td>点开课程转圈很久</td><td>导入时把素材抽成独立文件按需加载；课文先到，图后到。自包含是<b>运输</b>格式，不是<b>运行时</b>格式。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>成本：分三层，但第一层要先造出来</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>层</th><th>用在哪</th><th>成本</th><th>V2 的修正</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>0 导入时编译</b></td>
+              <td>把 673 道自然语言答案编译成机器可判的答案键</td>
+              <td>按包哈希一次，可摊销</td>
+              <td><b>V2 新增的一层。</b>没有它，下面第 1 层是空的。它同时是评审闸门的天然工位。</td>
+            </tr>
+            <tr><td><b>1 确定性</b></td><td>比对编译出来的答案键</td><td>零边际成本</td><td>V1 以为它现成，实际要先有第 0 层。</td></tr>
+            <tr><td><b>2 小模型 + 结构化输出</b></td><td>答案键判不了、但语义明显对的作答</td><td>极低</td><td>经 SwimmerAIKit，输出受 schema 约束，不走对话。<b>申诉走这一层，且不计费。</b></td></tr>
+            <tr><td><b>3 开放辅导</b></td><td>「我还是不懂，给我讲讲」</td><td>可观且随使用增长</td><td>付费墙的位置。免费层不得提供不计量的大模型对话。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>缺口总账</h2>
+      <p>按「什么最先杀死第二次打开」排。<b>和 V1 相比动了四个地方</b>，理由写在最后一列。</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>#</th><th>缺口</th><th>来源</th><th>相对 V1</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>课程包导入 + 校验</td><td style="color: var(--new)">全新</td><td>不变。没有它一节课都投放不出去。</td></tr>
+            <tr><td>2</td><td><b>评审闸门（可执行清单 + 对包哈希签署）</b></td><td style="color: var(--new)">全新</td><td><b>独立成行。</b>V1 把它并进第 1 行，但正文里嵌着逐字私有源码，它是硬门不是附属品。</td></tr>
+            <tr><td>3</td><td>2D 课文阅读器（代码块、证据锚点、选中标记）</td><td style="color: var(--port)">可移植</td><td>不变。护城河，且上游已验证。</td></tr>
+            <tr><td>4</td><td><b>2D 导航（课程 / 单元 / 节，先修可见）</b></td><td style="color: var(--new)">全新</td><td><b>提前。</b>V1 把它藏在第 5 行的括号里当「3D 的降级」。实际上垂直切片就需要它，先做它，3D 后面覆盖上去，「结构一致」才是自然成立而不是事后补。</td></tr>
+            <tr><td>5</td><td><b>答案键编译 + 确定性判分 + 卡片入库</b></td><td style="color: var(--new)">全新</td><td><b>从「一半」改成「全新」。</b>见上面对账①。它是免费层经济模型的承重墙。</td></tr>
+            <tr><td>6</td><td>到期复习与召回</td><td style="color: var(--port)">可移植</td><td>不变。第二天回来的唯一实质理由，引擎现成。</td></tr>
+            <tr><td>7</td><td><b>3D 地基（单 renderer / 色彩管线 / DPR clamp / 音频解锁 / 一层 grade）</b></td><td style="color: var(--new)">全新</td><td><b>拆出来单独一行。</b>这五条必须在第一次 <code>&lt;Canvas&gt;</code> 一次付清并撤销 portfolio 例外。混在「做地图」里做，是三件事挤一次改动。<a href="screens/world-map.html">灰模</a>已经按这五条写了，可以直接抄。</td></tr>
+            <tr><td>8</td><td>世界地图与关卡链</td><td style="color: var(--new)">全新</td><td>仍在第 8 位。它决定「愿不愿意开始」，但漂亮地图通往糟糕的课只会让人更快离开。</td></tr>
+            <tr><td>9</td><td>账号与结算（SwimmerBackend）</td><td style="color: var(--kit)">外部件</td><td>不变。第一次结算之后才需要。</td></tr>
+            <tr><td>10</td><td>分层判分第 2、3 层与计量</td><td style="color: var(--new)">全新</td><td>不变。在有人愿意回来之前，付费墙无人可拦。</td></tr>
+            <tr><td>11</td><td>分级、面板与动态调整</td><td style="color: var(--new)">全新</td><td>新增。上游已有一个写死在组件里的雏形，见 D7。</td></tr>
+            <tr><td>12</td><td>连击、角色成长、装扮</td><td style="color: var(--new)">全新</td><td>不变。包装层，没有可放大的东西时等于零。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>3D 从第 5 变成第 7 和第 8，但这不是降级，是拆分。</strong>
+        地基那一行完全可以很早做——场景可以是空的。真正该等的是地图内容。
+      </p>
+
+      <h2>待决项：V1 的六张，加 V2 的三张</h2>
+      <div class="cards" id="decisions"></div>
+
+      <h2>这一版明确不做</h2>
+      <div class="no">
+        <ul>
+          <li><strong>联机与多人。</strong>不装 SwimmerGameServerKit。</li>
+          <li><strong>让学习者上传自己的仓库生成课程。</strong>那是 UniversityLocal 的工作。</li>
+          <li><strong>在 WebGL 里做文本与输入。</strong>违反已登记的 Web3D 基线规则 7，而且中文输入法、可复制的代码、无障碍、手机键盘在画布里全部退化。</li>
+          <li><strong>可操控的 3D 小人。</strong>见 D1。它要 Rapier 物理，donor 目录对本产品的标注就是「先不要装」。</li>
+          <li><strong>写实画风与大世界。</strong>地图存在的目的是让人知道自己在哪、下一步去哪。</li>
+          <li><strong>排行榜。</strong>在「懂了」还没做扎实之前，排行榜只奖励刷题速度。</li>
+          <li><strong>把课程内容在本仓库里改一个字。</strong>内容的修改在 UniversityLocal 里做，重新导出。</li>
+          <li><strong>为了让地图好看而先重构课程划分。</strong>地图容忍不整齐；内容规范化是内容自己的排期。</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>
+          真理来源：<code>docs/specs/active/SPEC-0001-universitylocal-parity-contract.md</code> ·
+          <code>docs/reference/execution/current-work.md</code> ·
+          <code>docs/policy/shared-rules/</code>
+        </p>
+        <p>
+          数据来源：<code>pnpm journey</code> 从 UniversityLocal 导出包现算，落在
+          <code>data/taxonomy.json</code>。这份文件<b>不含课文、不含源码、不含证据路径</b>。
+        </p>
+      </footer>
+    </div>
+
+    <script type="module">
+      const taxonomy = await fetch("data/taxonomy.json").then((response) => response.json());
+      const t = taxonomy.totals;
+
+      const fmt = (value) => value.toLocaleString("en-US");
+      document.getElementById("metrics").innerHTML = [
+        [fmt(t.courses), "门课"],
+        [fmt(t.units), "个单元"],
+        [fmt(t.lessons), "节课"],
+        [fmt(t.cards), "张卡片"],
+        [fmt(t.exercises), "道习题"],
+        [fmt(t.evidence), "条证据锚点"],
+        [fmt(t.codeBlocks), "段代码围栏"],
+        [Math.round(t.chars / t.lessons).toString(), "字符 / 节（均值）"],
+      ]
+        .map(([value, label]) => `<div class="metric"><b>${value}</b><span>${label}</span></div>`)
+        .join("");
+
+      const SCREENS = [
+        {
+          href: "screens/world-map.html",
+          title: "世界地图（3D 灰模）",
+          note: "四个世界、52 座岛、真实先修树。含 2D 降级开关与可运行的 8 秒测试。",
+          accept: "不看教程 8 秒内指出下一节课在哪，并说出它属于哪个产品。",
+        },
+        {
+          href: "screens/course-map.html",
+          title: "课程内地图（3D 灰模）",
+          note: "蛇形路径，四关一段。可切到 1 节 / 12 节 / 41 节看极端体量。",
+          accept: "进来 3 秒内说出还剩几节、下一关是哪一个。",
+        },
+        {
+          href: "screens/reader.html",
+          title: "课堂阅读器（2D 线框）",
+          note: "用一节真课文渲染，桌面与 375px 手机并排。颜色与控件来自 SwimmerUIKit 真 token。",
+          accept: "手机竖屏不横向滚动；任意一段能一键跳到源码位置；不需要放大字体。",
+        },
+        { title: "答题与判错反馈", note: "含答错第二次、判错申诉。", todo: true },
+        { title: "结算与卡片掉落", note: "明天 N 张必须出现在这一屏。", todo: true },
+        { title: "复习关", note: "离线可用是硬要求——通勤是它最大的使用场景。", todo: true },
+        { title: "导师对话与付费墙", note: "第 3 层唯一出口，入口越窄成本越可控。", todo: true },
+        { title: "2D 降级导航", note: "已在世界地图灰模里做出可切换的版本，待独立成页。", todo: true },
+        { title: "分级问卷与面板", note: "作用于整个系列课、永久化、可覆盖。见 D7。", todo: true },
+      ];
+      document.getElementById("screens").innerHTML = SCREENS.map((screen) =>
+        screen.todo
+          ? `<div class="screencard todo"><b>${screen.title}</b><span>${screen.note}</span><em>待建</em></div>`
+          : `<a class="screencard" href="${screen.href}"><b>${screen.title}</b><span>${screen.note}</span><em>验收：${screen.accept}</em></a>`,
+      ).join("");
+
+      const ACTS = [
+        { s: "一 · 到达", n: 1, t: "落地页：一句话说清差异", g: "g1", src: "new", d: "不是「学编程」，是「读一个正在赚钱的产品的源码，作者带着你读」。但注意对账⑥：现有 52 门里有 9 门是通识地基课，落地页要能同时容纳两种承诺。", p: "验收：陌生人读完首屏能复述这句话。真人测 5 个。" },
+        { s: "一 · 到达", n: 2, t: "免注册直接开始", g: "g1", src: "new", d: "没有账号墙、没有邮箱。点一下就进第一节课。", p: "验收：从落地页到看见课文正文 ≤ 3 次点击，0 次输入。" },
+        { s: "一 · 到达", n: 3, t: "分级：三道题定起点", g: "g1", src: "new", v2: true, d: "52 门课、四个世界，学习者第一个真实问题是「我从哪门开始」。三道自评题给一个起点建议，不锁其他课。答案永久保存，之后可在面板里改。", p: "上游已有雏形（<code>CourseRouteQuiz</code>），但题面与入口写死在 React 组件里、只对一门课有效，导出包看不见它。见 D7。" },
+        { s: "一 · 到达", n: 4, t: "世界地图：选一个真实产品", g: "g1", src: "new", d: "一个 study = 一个真实产品 = 一条向上爬的路。默认镜头站在学习者旁边，不是俯瞰全库。", p: "已有灰模。验收：8 秒内找到下一节课。必须有 2D 降级视图，结构完全一致。" },
+        { s: "一 · 到达", n: 5, t: "课程着陆：这门课教什么", g: "g1", src: "half", d: "课程目标、先修课、来自哪个真实产品、有多少节。", p: "来源：course.json 已有 title/description/objectives/prerequisiteCourseIds。交付侧做呈现，不做内容。" },
+        { s: "二 · 第一节课", n: 6, t: "关卡链：unit → lesson", g: "g1", src: "half", d: "蛇形路径，四关一段，单元之间抬一级台阶。已完成的亮着，下一关在呼吸。", p: "已有灰模。93/146 单元恰好 4 节，节奏是内容自带的。" },
+        { s: "二 · 第一节课", n: 7, t: "进关仪式（≤ 3 秒）", g: "g1", src: "new", d: "镜头落地、关卡名浮现、课堂面板推上来。把「点了一下」变成「我进来了」。", p: "验收：可跳过，且跳过后不再强制播放。仪式一旦变成障碍就是负债。" },
+        { s: "二 · 第一节课", n: 8, t: "读课文（2D）", g: "g1", src: "port", d: "带证据锚点的课文：一段解释旁边就是它对应的真实源码位置、精确 commit 与行号。这是唯一抄不走的部分。", p: "已有线框。实测均值 2363 字符 + 964 段代码围栏，<b>一节要读九分钟</b>，不是两分钟。" },
+        { s: "二 · 第一节课", n: 9, t: "选中一段：标记 / 更浅的解释 / 朗读", g: "g2", src: "half", d: "选中任意一段可以标记、可以要一句更浅的解释、可以朗读。", p: "选中与标记、朗读上游都已有（见对账④）。这一幕是移植，不是发明。" },
+        { s: "二 · 第一节课", n: 10, t: "答题：真的输入框", g: "g1", src: "half", d: "这一节的习题与卡片就是怪物血量。战斗 HUD 可以叠在 3D 上，输入框永远是 DOM。", p: "全库只有两种题型：short-answer 673、explain 32。<b>没有选择题、没有 cloze。</b>「答对扣血」的节奏要靠第 0 层编译出选项来。" },
+        { s: "二 · 第一节课", n: 11, t: "判分与「你错在哪」", g: "g1", src: "new", d: "错了不是打叉，是指回课文里那一句和那段源码。", p: "<b>从「移植一半」改成「全新」</b>——上游根本没有确定性判分。见对账①。" },
+        { s: "二 · 第一节课", n: 12, t: "答错之后的第二次", g: "g1", src: "new", v2: true, d: "答错一次到底发生什么？V1 这一层是空的：第 11 幕讲判分，第 20 幕讲卡两次进导师，中间没有设计。这是学习产品最高频的一秒，也最容易做成羞辱。", p: "验收：第二次尝试前必须给出一条<b>指回课文的线索</b>，而不是重复题面。" },
+        { s: "二 · 第一节课", n: 13, t: "判错申诉", g: "g1", src: "new", v2: true, d: "「我觉得我对了」→ 升到第 2 层判一次，不计费。分层判分必然产生误判，而误判没有「重试」这条出路。", p: "验收：申诉一次的成本必须在成本模型里显式计入，且免费层也能用。这条决定第 1 层能不能激进使用。" },
+        { s: "三 · 结算", n: 14, t: "掉落：卡片入库", g: "g2", src: "port", d: "打赢掉落的不是金币，是刚才那节课的记忆卡片。它进入间隔重复队列。", p: "FSRS 调度与卡片模型上游已有，1236 张卡片全部是 basic（front/back）。<b>最被低估的资产。</b>" },
+        { s: "三 · 结算", n: 15, t: "结算屏：连击第 1 天", g: "g2", src: "new", d: "进度、掉落的卡片、明天会有多少张到期。", p: "验收：必须出现「明天 N 张」，否则连击只是一个数字。" },
+        { s: "三 · 结算", n: 16, t: "请求注册（在给完东西之后）", g: "g2", src: "kit", d: "措辞是「保存你刚拿到的东西」，不是「创建账号」。", p: "来源：SwimmerBackend。<b>纯支出幕。</b>他刚花了十一分钟，现在手里第一次有值得保护的东西。" },
+        { s: "四 · 回来", n: 17, t: "第二天的召回", g: "g2", src: "port", d: "说的不是「你的连击要断了」，是「你昨天刚弄懂的那 12 张卡今天到期」。前者制造焦虑，后者制造具体的事。", p: "到期选择逻辑已有。<b>成败决定第二次打开率，而它几乎不需要新发明。</b>" },
+        { s: "四 · 回来", n: 18, t: "复习关：重返旧关", g: "g2", src: "half", d: "复习不是列表页，是回到地图上已通关的区域。", p: "调度已有，表现全新。验收：<b>复习必须离线可用</b>——通勤是它最大的使用场景。" },
+        { s: "四 · 回来", n: 19, t: "连击与失败保护", g: "g3", src: "new", d: "断连击的处理比连击本身更重要。它靠的是身份，不是恐惧。", p: "验收：断一天后回来，产品说的第一句话不能是责备。" },
+        { s: "五 · 卡住与付费", n: 20, t: "真的卡住：AI 导师", g: "g2", src: "new", d: "答错两次、或主动点「我不懂」。这是唯一进入开放对话的入口。", p: "经 SwimmerAIKit。产品代码不得直连任何模型厂商 SDK。入口越窄，成本越可控。" },
+        { s: "五 · 卡住与付费", n: 21, t: "付费时刻", g: "g2", src: "kit", d: "他买的不是「课程」，是「卡住时有人讲给我听」+「全部课程」。付费页出现在他刚被讲通一次之后。", p: "SwimmerBackend 钱包与权益。<b>纯支出幕。</b>验收：付费页不打断当前这次解释。" },
+        { s: "五 · 卡住与付费", n: 22, t: "额度用尽的措辞", g: "g2", src: "new", d: "变灰的只有辅导按钮。读课文、做确定性题、复习全部照常。", p: "验收：额度用尽状态下，学习者仍能完整走完一节课。" },
+        { s: "六 · 长期", n: 23, t: "学完一门课", g: "g3", src: "new", v2: true, d: "12 节走完之后是什么？地图上这座岛点亮、下一门课的推荐、这门课教了你哪些真实文件。V1 有第一节课的结算，有第二天，有长期，唯独没有「一门课结束」。", p: "这是续订的节奏锚点。缺了它，订阅制没有周期感。验收：结课屏必须给出<b>下一门课的具体名字</b>，不是「继续探索」。" },
+        { s: "六 · 长期", n: 24, t: "角色成长与装扮", g: "g3", src: "new", d: "3D 小人随进度变化。包装层：放大已有的快乐，不创造快乐。", p: "没有可放大的东西时它等于零，所以排在最后。" },
+        { s: "六 · 长期", n: 25, t: "课程被作者更新了", g: "g3", src: "new", d: "作者在 UniversityLocal 里改好、重新导出、评审、投放。学习者这一侧看到什么？", p: "按内容键逐节比对，只有变过的小节标「有更新」，进度不清空。见 D3。" },
+        { s: "六 · 长期", n: 26, t: "分级面板与动态调整", g: "g3", src: "new", v2: true, d: "面板显示「你当初说 X，我们看到的是 Y」，按钮的真实含义是<b>手动覆盖</b>，不是重新猜。", p: "两个真相源必须分出主次：真实表现一旦存在就优先于自评。另外 FSRS 已经是卡片级难度调节器，课程级只能动<b>起点、跳过粒度、复习强度</b>，动不了题目难度——题目是导入的固定内容。" },
+        { s: "六 · 长期", n: 27, t: "退订、退款、注销", g: "g3", src: "kit", v2: true, d: "订阅到期后，已学进度和到期卡片还在不在？注销之后学习记录怎么处理？", p: "<b>V1 一幕都没有。</b>它们是信任地基，也决定 SwimmerBackend 那侧要什么。验收：订阅到期后进度与卡片保留只读，这样召回才有东西可召。" },
+        { s: "六 · 长期", n: 28, t: "多端：通勤上的复习", g: "g3", src: "new", d: "手机上不做地图不做关卡，只做复习。桌面端做完整体验。三端共用同一套课程包。", p: "前提是 Web3D 基线规则 8 先满足。注意 6.8 MB 的包在手机上是真问题。" },
+      ];
+
+      const SRC_LABEL = { port: "直接移植", half: "移植一半", new: "全新", kit: "外部件" };
+      const G_LABEL = { g1: "G1 第一节课", g2: "G2 第二天", g3: "G3 习惯" };
+
+      const wall = document.getElementById("wall");
+      let lastStage = null;
+      for (const act of ACTS) {
+        if (act.s !== lastStage) {
+          const heading = document.createElement("div");
+          heading.className = "stage";
+          heading.textContent = act.s;
+          wall.appendChild(heading);
+          const grid = document.createElement("div");
+          grid.className = "grid";
+          wall.appendChild(grid);
+          lastStage = act.s;
+        }
+        const element = document.createElement("article");
+        element.className = act.v2 ? "act is-new" : "act";
+        element.dataset.g = act.g;
+        element.dataset.src = act.src;
+        element.dataset.v2 = act.v2 ? "v2" : "";
+        element.innerHTML =
+          `<div class="top"><span class="num">${String(act.n).padStart(2, "0")}</span><h4>${act.t}</h4></div>` +
+          `<div class="top"><span class="tag" style="border-color:var(--${act.g})">${G_LABEL[act.g]}</span>` +
+          `<span class="tag" style="border-color:var(--${act.src});color:var(--${act.src})">${SRC_LABEL[act.src]}</span>` +
+          (act.v2 ? '<span class="tag" style="border-color:var(--idea);color:var(--idea)">V2 新增</span>' : "") +
+          `</div><p>${act.d}</p><div class="proof">${act.p}</div>`;
+        wall.lastElementChild.appendChild(element);
+      }
+
+      document.getElementById("toolbar").addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        for (const other of document.querySelectorAll("#toolbar button")) {
+          other.setAttribute("aria-pressed", String(other === button));
+        }
+        const filter = button.dataset.f;
+        for (const act of document.querySelectorAll(".act")) {
+          act.hidden = !(
+            filter === "all" ||
+            act.dataset.g === filter ||
+            act.dataset.src === filter ||
+            act.dataset.v2 === filter
+          );
+        }
+        for (const grid of document.querySelectorAll(".grid")) {
+          const any = [...grid.children].some((child) => !child.hidden);
+          grid.previousElementSibling.style.display = any ? "" : "none";
+          grid.style.display = any ? "" : "none";
+        }
+      });
+
+      const JOY_KIND = {
+        understand: { c: "#4bb98a", n: "懂了（抄不走的那个）" },
+        progress: { c: "#6ea8d8", n: "进展" },
+        collect: { c: "#c9a0e8", n: "收藏" },
+        ritual: { c: "#dd8a4a", n: "仪式 / 审美" },
+        identity: { c: "#e8c15e", n: "归属" },
+        none: { c: "#3a4256", n: "纯支出" },
+      };
+      const JOY = [
+        [1, "落地页", 1, "progress"], [2, "免注册", 2, "progress"], [3, "分级", 2, "progress"],
+        [4, "世界地图", 3, "ritual"], [5, "课程着陆", 2, "progress"], [6, "关卡链", 2, "progress"],
+        [7, "进关仪式", 3, "ritual"], [8, "读课文", 5, "understand"], [9, "选中·朗读", 3, "understand"],
+        [10, "答题", 3, "ritual"], [11, "错在哪", 5, "understand"], [12, "第二次尝试", 4, "understand"],
+        [13, "判错申诉", 2, "identity"], [14, "卡片掉落", 4, "collect"], [15, "结算", 4, "progress"],
+        [16, "注册", 0, "none"], [17, "第二天召回", 3, "progress"], [18, "复习关", 4, "understand"],
+        [19, "连击保护", 3, "identity"], [20, "AI 导师", 4, "understand"], [21, "付费", 0, "none"],
+        [22, "额度用尽", 0, "none"], [23, "学完一门课", 5, "identity"], [24, "角色成长", 3, "identity"],
+        [25, "课程更新", 1, "none"], [26, "分级面板", 2, "identity"], [27, "退订注销", 0, "none"],
+        [28, "通勤复习", 4, "collect"],
+      ];
+      const joy = document.getElementById("joy");
+      for (const [n, label, value, kind] of JOY) {
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.title = `${n} ${label} · ${JOY_KIND[kind].n} · 强度 ${value}`;
+        bar.innerHTML =
+          `<div class="fill" style="height:${(value / 5) * 100}%;background:${JOY_KIND[kind].c}"></div>` +
+          `<div class="lbl">${label}</div>`;
+        joy.appendChild(bar);
+      }
+      document.getElementById("joykeys").innerHTML = Object.values(JOY_KIND)
+        .map((kind) => `<span class="key"><span class="dot" style="background:${kind.c}"></span>${kind.n}</span>`)
+        .join("");
+
+      // Re-estimated against the library rather than against a guess.
+      const BUDGET = [
+        ["读懂落地页", 20, false],
+        ["分级三道题", 30, false],
+        ["选世界 + 进课程", 35, false],
+        ["找到第一关", 15, false],
+        ["进关仪式", 8, false],
+        ["读课文（实测 ≈9 分钟）", 540, true],
+        ["答题", 90, false],
+        ["结算与掉落", 20, false],
+        ["注册", 45, false],
+      ];
+      const budget = document.getElementById("budget");
+      const max = Math.max(...BUDGET.map((row) => row[1]));
+      const total = BUDGET.reduce((sum, row) => sum + row[1], 0);
+      budget.innerHTML =
+        BUDGET.map(
+          ([name, seconds, heavy]) =>
+            `<div class="brow"><span>${name}</span>` +
+            `<span class="btrack"><span class="bfill" style="width:${(seconds / max) * 100}%;background:${heavy ? "#dd8a4a" : "#5ec8c0"}"></span></span>` +
+            `<span class="mono" style="color:${heavy ? "#dd8a4a" : "#a8b3c7"}">${seconds}s</span></div>`,
+        ).join("") +
+        `<div class="brow" style="margin-top:8px"><span><b>合计</b></span><span class="btrack"></span>` +
+        `<span class="mono" style="color:var(--ink)">${Math.round(total / 60)} 分</span></div>`;
+
+      const DECISIONS = [
+        {
+          t: "D1 · 地图上要不要一个能走动的小人？",
+          p: "「3D 小人选地图」是这个想法的起点，但可操控角色要装 ecctrl + Rapier，donor 目录对本产品的标注是「先不要装，等试玩证据」。",
+          pick: "选 B：点击关卡节点，镜头飞过去，零物理依赖。",
+          why: "三条理由。donor 表里本产品那一行写的就是「不用」；可操控角色把「找下一节课」从一次点击变成一段操作，直接违反地图自己的 8 秒验收；而第 28 幕说手机端只做复习——小人在手机上没有用武之地。灰模里那个小圆柱是折中版：出现在着陆与结算，不接受操控。",
+        },
+        {
+          t: "D2 · UniversityLocal 的 study 在地图上是什么？",
+          p: "那边的组织方式是「一个源仓库 = 一个 study」。学习者不关心仓库。",
+          pick: "选 A 的变体：星系 = 一个真实产品，但导航主轴用先修 DAG。",
+          why: "42/52 门课带先修关系，那是内容里唯一真实存在的拓扑，其他层级只是文件夹。A 还直接服务卖点——「读《图灵密约》」是一句能卖的话。补一条：foundations 那 9 门不属于任何产品星系，它是入口大陆兼免费层。",
+        },
+        {
+          t: "D3 · 课程更新后，学习者的进度怎么办？",
+          p: "上游规则是内容修订让课程回到未完成。对自学的人对，对付费学习者大概率是敌意的。",
+          pick: "选 B：按小节比对，只有变过的小节回到未完成。",
+          why: "上游已有 contentRevision 和三个 content key，按内容键比对是现成且精确的，不用发明差异算法。附加硬规则：<b>已到期的卡片不因内容修订被清空</b>，只标注「来源已更新」。",
+        },
+        {
+          t: "D4 · 免费额度的单位是什么？",
+          p: "「每天 N 次辅导」学习者算得清但成本不封顶；「每月 N token」对你安全但没人看得懂。",
+          pick: "选 C，并按对账⑥拆分内容：读与确定性判分永久免费，辅导按次；foundations 九门课全免费获客，产品剖析课订阅。",
+          why: "C 最好懂也最可控，而且和产品叙事一致——卖的是「卡住时有人讲」。但 C 缺一半：<b>按次必须配每日硬上限</b>，否则单个重度用户成本无上限。另外申诉那一次不计入额度。",
+        },
+        {
+          t: "D5 · 私有源码的展示边界是什么？",
+          p: "已决定把「读真实商业产品源码」当卖点，那么评审闸门要有可执行的标准。",
+          pick: "不是选项题，是必须写出来的清单，而且要独立成缺口总账第 2 行。",
+          why: "清单至少包含：永不出现的路径前缀（<code>.env*</code>、凭据、迁移、内部运营脚本）；单课嵌入源码总行数上限；单文件被复原的行数占比上限（防一门课把一个文件整篇搬出来）；evidence 指向的 commit 必须已冻结；以及一句人工结论「竞品能从这门课复原什么」。签署对象是<b>包哈希</b>，不是课程名。",
+        },
+        {
+          t: "D6 · 首发语言",
+          p: "现有内容是中文的。i18n 是已登记能力，但双语从第一天做会让每一幕的文案成本翻倍。",
+          pick: "选 A：中文优先，结构上留好 i18n。",
+          why: "560 节全中文，重做英文等于重做整个内容库；turing-pact 里还有一门课就叫 bilingual-by-design，双语是产品能力不是首发要求。立刻要做的一件小事：<b>内容里的英文术语不翻译</b>（实测答案里大量 relay、channel membership、in-flight），那是技术读者的正常习惯。",
+        },
+        {
+          t: "D7 · 分级放在哪一层？（V2 新增）",
+          p: "上游已有一个三道题的分级雏形，但题面与入口课写死在 React 组件里，只对一门课有效，导出包完全看不见它。",
+          pick: "题面与入口点属于<b>课程数据</b>，打分规则属于<b>共享包</b>，学习者的答案属于<b>SwimmerBackend</b>。三样东西没有一样属于 React 组件。",
+          why: "作用范围要到「整个系列课」而不是单门课，答案要永久化、可查、可覆盖。但这几个字段现在不能急着往上游加——先让地图和分级面板真的跑起来，证明需要哪几个字段，再一次性改上游。给一个还不存在的消费者猜接口，会得到两边都不合身的东西。",
+        },
+        {
+          t: "D8 · 答案键什么时候编译？（V2 新增）",
+          p: "673 道题的答案是自然语言，确定性判分需要机器可判的答案键。",
+          pick: "在<b>导入时</b>编译一次，产物随包哈希固化，人工评审时一并审。",
+          why: "运行时编译等于把成本挂在学习者头上，而且每次都可能给出不同结果。导入时编译成本按课程摊销，结果可复现、可审、可修。这份答案键是 University 独有资产，不属于共享包——UniversityLocal 有宿主，它不需要。",
+        },
+        {
+          t: "D9 · 素材怎么投放？（V2 新增）",
+          p: "一个课程包 6.8 MB，其中 6.1 MB 是四张 base64 内联的截图，最大单张 2.86 MB。",
+          pick: "自包含是<b>运输</b>格式，不是<b>运行时</b>格式。导入时把素材抽成独立寻址的文件，按需加载。",
+          why: "学习者读一节课不该先解析 6.8 MB JSON，而且图片藏在 JSON 里就没法「先读文字、图慢慢来」。另外要给上游提一条图片尺寸预算——写课技能今天才开始建议截图，第一张就 2.86 MB，560 节课每节两张是 3 GB。",
+        },
+      ];
+      document.getElementById("decisions").innerHTML = DECISIONS.map(
+        (card) =>
+          `<div class="dec"><h4>${card.t}</h4><p>${card.p}</p>` +
+          `<div class="picked"><b>我的选择：</b>${card.pick}</div>` +
+          `<p style="margin-top:8px">${card.why}</p></div>`,
+      ).join("");
+    </script>
+  </body>
+</html>

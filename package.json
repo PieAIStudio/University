@@ -33,6 +33,7 @@
     "@types/three": "0.185.1",
     "@vitejs/plugin-react": "6.0.3",
     "lefthook": "^2.1.10",
+    "marked": "^18.0.9",
     "oxfmt": "0.58.0",
     "oxlint": "1.73.0",
     "three": "0.185.1",

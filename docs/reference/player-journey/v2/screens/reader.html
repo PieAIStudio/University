@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>课堂阅读器 · 线框 · 旅程 V2</title>
+    <link rel="stylesheet" href="../lib/journey.css" />
+    <style>
+      /*
+       * Colour, surface and radius come from SwimmerUIKit's own tokens, loaded
+       * below. Nothing here invents a palette, because a wireframe that does
+       * becomes a spec somebody implements and then argues about.
+       *
+       * The type scale is the exception, and it is the finding this page
+       * exists to make. The kit's body sizes are 0.82 / 0.95 / 1.18rem — a HUD
+       * scale, correct for a button and wrong for 2,363 characters of Chinese
+       * technical prose. The reading sizes below are marked, measured, and
+       * belong in @pieai/university-kit rather than here or in the game kit.
+       */
+      .reading {
+        --read-body: 1.06rem;
+        --read-line: 1.95;
+        --read-measure: 34em;
+        background: var(--game-ui-bg, #10131b);
+        color: var(--game-ui-text, #e9edf5);
+        font-family: var(--game-ui-font-body, system-ui);
+        min-height: 100%;
+      }
+      .reading .bar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        background: color-mix(in srgb, var(--game-ui-panel, #1a2030) 92%, transparent);
+        border-bottom: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.12));
+        backdrop-filter: blur(8px);
+        font-size: var(--game-ui-font-xs, 0.72rem);
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .reading .bar .left {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .reading .bar .prog {
+        font-family: var(--mono);
+        color: var(--game-ui-accent, #5ec8c0);
+      }
+      .reading .body {
+        padding: 26px 22px 40px;
+        max-width: var(--read-measure);
+        margin: 0 auto;
+        font-size: var(--read-body);
+        line-height: var(--read-line);
+      }
+      .reading .body h1 {
+        font-size: 1.62rem;
+        line-height: 1.4;
+        margin: 0 0 18px;
+        font-family: var(--game-ui-font-display, inherit);
+      }
+      .reading .body h2 {
+        font-size: 1.16rem;
+        margin: 30px 0 8px;
+        border: 0;
+        padding: 0;
+        color: var(--game-ui-text, #e9edf5);
+      }
+      .reading .body p {
+        margin: 14px 0;
+        color: var(--game-ui-text, #e3e8f2);
+        font-size: var(--read-body);
+        line-height: var(--read-line);
+      }
+      .reading .body strong {
+        color: var(--game-ui-accent-bright, #7fe0d8);
+      }
+      /* Wide content scrolls inside itself; the page never scrolls sideways. */
+      .reading pre {
+        margin: 16px 0;
+        padding: 14px 16px;
+        overflow-x: auto;
+        background: var(--game-ui-panel-deep, #0c1018);
+        border: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.1));
+        border-radius: var(--game-ui-radius-card, 12px);
+        font-size: 0.84rem;
+        line-height: 1.62;
+      }
+      .reading code {
+        font-family: var(--mono);
+      }
+      .reading p code {
+        background: var(--game-ui-surface-raised, rgba(255, 255, 255, 0.08));
+        padding: 1px 5px;
+        border-radius: 5px;
+        font-size: 0.9em;
+      }
+      /*
+       * The anchor is the product. Everything else on this screen exists in
+       * every learning app; a line of prose that points at an exact commit and
+       * line range in a shipping private repository does not.
+       */
+      .evidence {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: -6px 0 18px;
+        padding: 7px 11px;
+        border-left: 2px solid var(--game-ui-accent, #5ec8c0);
+        background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 9%, transparent);
+        border-radius: 0 8px 8px 0;
+        font-size: 0.76rem;
+        font-family: var(--mono);
+        color: var(--game-ui-text-muted, #9aa6bb);
+        cursor: pointer;
+      }
+      .evidence b {
+        color: var(--game-ui-accent, #5ec8c0);
+        font-weight: 600;
+      }
+      .evidence .go {
+        margin-left: auto;
+        white-space: nowrap;
+      }
+      .reading .quiz {
+        margin: 30px auto 0;
+        max-width: var(--read-measure);
+        padding: 16px 18px;
+        border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.2));
+        border-radius: var(--game-ui-radius-panel, 14px);
+        background: var(--game-ui-surface, #161b26);
+      }
+      .reading .quiz h3 {
+        margin: 0 0 4px;
+        font-size: 0.98rem;
+      }
+      .reading .quiz p {
+        margin: 0 0 12px;
+        font-size: 0.95rem;
+      }
+      .reading .quiz input {
+        width: 100%;
+        padding: 11px 12px;
+        border-radius: var(--game-ui-radius-control, 10px);
+        border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+        background: var(--game-ui-panel-deep, #0c1018);
+        color: inherit;
+        font: inherit;
+        font-size: 1rem;
+      }
+      .reading .quiz .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
+      }
+      .reading .quiz button {
+        border: 0;
+        border-radius: var(--game-ui-radius-control, 10px);
+        background: var(--game-ui-accent, #5ec8c0);
+        color: var(--game-ui-accent-ink, #07110f);
+        font: inherit;
+        font-weight: 600;
+        padding: 9px 18px;
+        cursor: pointer;
+      }
+      .reading .quiz small {
+        color: var(--game-ui-text-muted, #9aa6bb);
+        font-size: 0.76rem;
+      }
+      .marks {
+        border-top: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.1));
+        margin-top: 26px;
+        padding: 14px 22px 0;
+        font-size: 0.8rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .missing {
+        padding: 34px;
+        color: var(--ink-faint);
+        font-size: 0.9rem;
+        line-height: 1.8;
+      }
+      .missing code {
+        color: var(--accent);
+      }
+      .measure {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 14px 0 0;
+      }
+      .measure span {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--card);
+        padding: 4px 11px;
+        font-size: 0.78rem;
+        color: var(--ink-dim);
+      }
+      .measure b {
+        font-family: var(--mono);
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap wide">
+      <a class="crumb" href="../index.html">← 回到旅程 V2</a>
+      <h1>课堂阅读器 · 线框</h1>
+      <p class="sub">
+        2D · 用一节<b>真课文</b>渲染 · 颜色与控件用 SwimmerUIKit 的真 token ·
+        需要 <code>pnpm dev</code> 打开
+      </p>
+
+      <div class="accept">
+        <div class="eyebrow">验收</div>
+        <p>
+          手机竖屏下不横向滚动；任意一段旁边能一键跳到它引用的源码位置；
+          从进入到读完不需要放大字体。
+        </p>
+      </div>
+
+      <div class="measure" id="measure"></div>
+
+      <div class="frames">
+        <figure class="frame">
+          <figcaption>桌面</figcaption>
+          <div class="surface reading" id="desktop"></div>
+        </figure>
+        <figure class="frame phone">
+          <figcaption>手机 375px — 通勤与复习的主力尺寸</figcaption>
+          <div class="surface reading" id="phone"></div>
+        </figure>
+      </div>
+
+      <div class="scope">
+        <b>这一页负责：</b>信息层级、区块顺序、证据锚点长什么样、代码块在窄屏怎么办、答题框在哪、状态。
+        <b>不负责：</b>最终配色、字体选型、动效。颜色来自 kit，不在这里定。
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <h4>发现：kit 的字号表不是读长文的字号表</h4>
+          <ul>
+            <li>SwimmerUIKit 的正文档位是 <code>0.82 / 0.95 / 1.18rem</code>。那是按钮和 HUD 的尺度。</li>
+            <li>本节课 <b>2606 字</b>，全库均值 2363、最长 4903，还带 <b>968 段代码</b>。0.95rem 读它是折磨。</li>
+            <li>结论：阅读字号与行高属于 <code>@pieai/university-kit</code>，不属于游戏 UI kit，也不该在产品里散着写。这一页把它标出来，作为抽包时的第一条依据。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>为什么答题框是真的输入框</h4>
+          <ul>
+            <li>中文输入法、可选中复制的代码、无障碍、手机键盘，在 WebGL 画布里全部退化。</li>
+            <li>这是已登记的 Web3D 基线规则 7，不是偏好。</li>
+            <li>所以战斗 HUD 可以叠在 3D 上，<b>输入框永远是 DOM</b>。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>状态</h4>
+          <ul>
+            <li><b>加载</b>：先出标题与骨架，课文流式进来。</li>
+            <li><b>证据点不开</b>：源码未随包投放时，锚点显示为灰、说明「这段引用的是私有仓库」。</li>
+            <li><b>离线</b>：已导入课文全部可读，只有辅导入口变灰。</li>
+            <li><b>额度用尽</b>：本页完全不受影响——读与确定性判分永久免费。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import "@pieai/swimmer-ui-kit/styles.css";
+      import { marked } from "marked";
+
+      const measure = document.getElementById("measure");
+
+      let sample;
+      try {
+        const response = await fetch("../data/sample-lesson.json");
+        if (!response.ok) throw new Error(String(response.status));
+        sample = await response.json();
+      } catch {
+        for (const id of ["desktop", "phone"]) {
+          document.getElementById(id).innerHTML =
+            '<div class="missing">这一页要用<b>真课文</b>渲染，而真课文不进版本库——它逐字引用私有仓库的源码。<br><br>先生成它：<br><code>pnpm journey --sample university-local/spaced-repetition/card-state-is-memory</code><br><br>再刷新。</div>';
+        }
+        throw new Error("no sample lesson");
+      }
+
+      const lesson = sample.lesson;
+
+      /*
+       * `[[evidence:path:start-end]]` is UniversityLocal's own inline anchor
+       * form, and it is the one construct in this prose that is not ordinary
+       * Markdown. Lifting it out before Markdown runs keeps it a first-class
+       * element rather than a stray line of text — which is the whole point of
+       * it, and the reason this screen is the product's advantage rather than
+       * a nicer blog.
+       */
+      const ANCHOR = /^\[\[evidence:([^\]]+)\]\]$/gm;
+      const html = marked.parse(
+        lesson.content.replace(
+          ANCHOR,
+          (_, route) => `<div data-evidence="${route}"></div>`,
+        ),
+      );
+
+      function render(host, compact) {
+        host.innerHTML = `
+          <div class="bar">
+            <span class="left">${sample.courseTitle} · ${sample.unitTitle}</span>
+            <span class="prog">3/12</span>
+          </div>
+          <div class="body">${html}</div>
+          <div class="quiz">
+            <h3>${lesson.exercises[0]?.title ?? "自检"}</h3>
+            <p>${lesson.exercises[0]?.prompt ?? ""}</p>
+            <input placeholder="用你自己的话写" />
+            <div class="row">
+              <button>提交</button>
+              <small>先确定性判分 · 判错可申诉 · 不花额度</small>
+            </div>
+          </div>
+          <div class="marks">
+            掉落 ${lesson.cards.length} 张卡片 · 明天到期 · ${lesson.evidence.length} 条证据锚点
+          </div>`;
+
+        // The anchor placeholders become real rows, ordered as they appear.
+        const slots = [...host.querySelectorAll("[data-evidence]")];
+        slots.forEach((slot, index) => {
+          const route = slot.dataset.evidence;
+          const [path, lines] = route.split(/:(?=[^:]*$)/);
+          const commit = lesson.evidence[index]?.sourceCommit?.slice(0, 7) ?? "—";
+          const short = compact ? path.split("/").pop() : path;
+          slot.className = "evidence";
+          slot.innerHTML = `<b>${short}</b><span>:${lines}</span><span class="go">@${commit} ↗</span>`;
+        });
+      }
+
+      render(document.getElementById("desktop"), false);
+      render(document.getElementById("phone"), true);
+
+      const words = lesson.content.length;
+      const code = Math.floor((lesson.content.match(/^```/gm) ?? []).length / 2);
+      // 300 characters a minute is a generous rate for Chinese technical prose
+      // with code in it. V1 budgeted 120 seconds for this screen; the number
+      // below is why that budget was wrong by a factor of three.
+      const minutes = Math.max(1, Math.round(words / 300));
+      measure.innerHTML = [
+        [`${words}`, "字符"],
+        [`${code}`, "段代码"],
+        [`${lesson.evidence.length}`, "条证据"],
+        [`${lesson.cards.length}`, "张卡片"],
+        [`≈${minutes}`, "分钟读完"],
+        ["120s", "V1 给这一屏的预算"],
+      ]
+        .map(([value, label]) => `<span><b>${value}</b> ${label}</span>`)
+        .join("");
+    </script>
+  </body>
+</html>
