@@ -113,6 +113,36 @@ function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
+/**
+ * The donor's CREDITS.md, compiled once into something a script can enforce.
+ *
+ * 2,593 files, 648 rules, every file under exactly one of them. 859 are CC0 and
+ * sellable; the other 1,734 are not, and a third of those are simply not
+ * recorded anywhere in the register — which CREDITS.md is explicit means "we
+ * have not written the terms down", not "help yourself".
+ */
+const licenses = JSON.parse(readFileSync(join(here, "woc-licenses.json"), "utf8"));
+
+/** Segment-wise glob. `*` must not cross a directory boundary; `fnmatch` lets it. */
+function matches(pattern, path) {
+  const glob = pattern.split("/");
+  const parts = path.split("/");
+  const walk = (g, p) => {
+    if (g === glob.length) return p === parts.length;
+    if (glob[g] === "**") {
+      for (let skip = p; skip <= parts.length; skip += 1) if (walk(g + 1, skip)) return true;
+      return false;
+    }
+    if (p === parts.length) return false;
+    const literal = glob[g]
+      .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+      .replace(/\*/g, "[^/]*")
+      .replace(/\?/g, "[^/]");
+    return new RegExp(`^${literal}$`).test(parts[p]) && walk(g + 1, p + 1);
+  };
+  return walk(0, 0);
+}
+
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 
@@ -130,10 +160,23 @@ for (const [role, rel, packKey] of KIT) {
     continue;
   }
   const pack = PACKS[packKey];
-  // A licence that is not CC0 does not reach the copy step. The check is here
-  // rather than in review because review is a person and this is not.
+  // Two independent checks, because one of them is my own bookkeeping.
+  //
+  // The first says the pack this file was filed under is CC0. The second asks
+  // the donor's own register, compiled into `woc-licenses.json`, what it says
+  // about this exact path — which is the check that catches the case where a
+  // file was filed under the wrong pack, or the donor reorganised a directory
+  // and a path now lands in a pack that is not sellable. Review is a person
+  // and this is not.
   if (pack.license !== "CC0 1.0") {
     throw new Error(`refusing ${rel}: ${pack.license} is not sellable in this product`);
+  }
+  const rule = licenses.rules.find((entry) => matches(entry.match, rel));
+  if (!rule) {
+    throw new Error(`refusing ${rel}: the donor's licence register says nothing about it`);
+  }
+  if (rule.commercialUse !== true) {
+    throw new Error(`refusing ${rel}: register says ${rule.license} — not sellable`);
   }
   const file = `${role}.glb`;
   cpSync(from, join(outDir, file));
