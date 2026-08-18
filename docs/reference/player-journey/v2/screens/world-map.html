@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>世界地图 · 灰模 · 旅程 V2</title>
+    <link rel="stylesheet" href="../lib/journey.css" />
+    <style>
+      .stagearea {
+        height: min(70vh, 640px);
+      }
+      .labels {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .label {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        white-space: nowrap;
+        font-size: 0.76rem;
+        color: var(--ink-dim);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+        transition: opacity 0.18s;
+      }
+      .label.study {
+        font-size: 0.92rem;
+        color: var(--ink);
+        letter-spacing: 0.04em;
+      }
+      .label.study small {
+        display: block;
+        font-size: 0.7rem;
+        color: var(--ink-faint);
+        letter-spacing: 0;
+      }
+      .label.hot {
+        color: var(--accent);
+      }
+      .picked {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 268px;
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        background: rgba(11, 14, 22, 0.92);
+        backdrop-filter: blur(6px);
+        padding: 12px 14px;
+        font-size: 0.85rem;
+      }
+      .picked h4 {
+        margin: 0 0 4px;
+        font-size: 0.95rem;
+      }
+      .picked dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 10px;
+        margin: 8px 0 10px;
+        font-size: 0.8rem;
+        color: var(--ink-faint);
+      }
+      .picked dd {
+        margin: 0;
+        color: var(--ink-dim);
+        font-family: var(--mono);
+      }
+      .picked a {
+        display: block;
+        text-align: center;
+        border: 1px solid var(--accent-deep);
+        border-radius: 8px;
+        padding: 6px;
+        text-decoration: none;
+        background: rgba(94, 200, 192, 0.14);
+      }
+      .fallback {
+        position: absolute;
+        inset: 0;
+        overflow: auto;
+        background: var(--bg);
+        padding: 18px 20px;
+      }
+      .fallback[hidden] {
+        display: none;
+      }
+      .fallback h4 {
+        margin: 18px 0 6px;
+        font-size: 0.95rem;
+      }
+      .fallback ol {
+        margin: 0;
+        padding-left: 20px;
+        columns: 2;
+        column-gap: 28px;
+      }
+      .fallback li {
+        font-size: 0.85rem;
+        color: var(--ink-dim);
+        break-inside: avoid;
+        margin: 2px 0;
+      }
+      .fallback .lv {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        color: var(--ink-faint);
+      }
+      .timer {
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        color: var(--warn);
+      }
+      .boot {
+        padding: 40px;
+        color: var(--ink-faint);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap wide">
+      <a class="crumb" href="../index.html">← 回到旅程 V2</a>
+      <h1>世界地图 · 灰模</h1>
+      <p class="sub">
+        L1 · 用 52 门真课渲染 · 全灰 + 一种强调色 · 需要 <code>pnpm dev</code> 打开，不能双击
+      </p>
+
+      <div class="accept">
+        <div class="eyebrow">验收</div>
+        <p>不看教程，8 秒内指出「我下一节课在哪」，并说出它属于哪个产品。</p>
+      </div>
+
+      <div class="stagearea" id="stage">
+        <div class="labels" id="labels"></div>
+        <div class="stagetip">
+          <b>灰模只回答四件事</b>
+          构图、层级、镜头、可达性。材质、灯光、颜色、模型精度不在这一页里定。
+        </div>
+        <div class="picked" id="picked" hidden></div>
+        <div class="fallback" id="fallback" hidden></div>
+        <div class="stagehud">
+          <button class="chip" id="home">回到我在的世界</button>
+          <button class="chip" id="all">看全部四个世界</button>
+          <button class="chip" id="toggle2d" aria-pressed="false">2D 降级视图</button>
+          <button class="chip" id="labelsOn" aria-pressed="false">全部课程名</button>
+          <button class="chip" id="test8">跑 8 秒测试</button>
+          <span class="readout" id="readout"></span>
+          <span class="timer" id="timer"></span>
+        </div>
+      </div>
+
+      <div class="scope">
+        <b>这一页负责：</b>世界怎么分、岛怎么排、路怎么连、镜头怎么飞、找不找得到下一节课。
+        <b>不负责：</b>颜色、材质、天空、地形细节、小人长什么样、动效曲线。
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <h4>为什么是这个形状</h4>
+          <ul>
+            <li>一个 study = 一个真实产品 = 一条<b>向上爬的路</b>，不是一块平铺大陆。</li>
+            <li>深度 → 距离 + 高度。turing-pact 那条链有 14 层，平铺会变成看不到头的走廊；抬高之后，起点就能看见山顶。</li>
+            <li>岛的半径按课时数<b>开平方</b>。41 节和 1 节都真实存在，线性缩放会让最大的岛是最小的 40 倍。</li>
+            <li>buzz 五门课<b>没有先后关系</b>，就画成没有路的一圈。假造顺序比承认平铺更糟。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>坐标从哪来</h4>
+          <ul>
+            <li>种子是 <code>studyId</code> / <code>courseId</code>，<b>不是包哈希</b>。作者改一个错别字，世界不该重排。</li>
+            <li>没有关卡编辑器，没有坐标表。地图是课程结构的函数，所以这里不存在第二份课程结构。</li>
+            <li>文字全部是 DOM 叠加层，投影定位。画布里没有一个字——这正是产品规则第 7 条。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>状态</h4>
+          <ul>
+            <li><b>空</b>：一门课都没导入 → 不进地图，进空态页。</li>
+            <li><b>加载</b>：拓扑先到、几何后到，先画 2D 列表再淡入 3D。</li>
+            <li><b>错误 / 弱 GPU</b>：直接 2D 降级视图，结构完全一致（上面那个开关就是它）。</li>
+            <li><b>离线</b>：已导入的世界照常可见。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import * as THREE from "three";
+      import {
+        GREY,
+        createStage,
+        disc,
+        layoutStudy,
+        learnerMarker,
+        loadTaxonomy,
+        radiusForLessons,
+        road,
+      } from "../lib/greybox.js";
+
+      const host = document.getElementById("stage");
+      const labelLayer = document.getElementById("labels");
+      const pickedPanel = document.getElementById("picked");
+      const readout = document.getElementById("readout");
+
+      let taxonomy;
+      try {
+        taxonomy = await loadTaxonomy();
+      } catch {
+        host.innerHTML =
+          '<div class="boot">读不到 <code>data/taxonomy.json</code>。<br>先跑 <code>pnpm journey</code> 生成，再用 <code>pnpm dev</code> 打开这一页（<code>file://</code> 下 fetch 会被浏览器拦住）。</div>';
+        throw new Error("no taxonomy");
+      }
+
+      /*
+       * Four worlds on a wide ring, each laid out as its own climbing spiral.
+       *
+       * The first attempt put the studies on rays out of a shared centre and
+       * it failed the moment it was opened: 52 islands spread over 170 units
+       * meant the only camera that saw everything saw nothing legible. That is
+       * the whole reason this page is runnable rather than drawn — a picture
+       * would have hidden it until implementation.
+       *
+       * So the default view is not "all four worlds". It is the world you are
+       * standing in, with the others sitting in the fog as places you can go.
+       */
+      const nodes = [];
+      const byId = new Map();
+      const studyCentres = new Map();
+
+      // Lay each world out first, measure how much room it actually took, then
+      // place the worlds so the big one is not sitting on top of its
+      // neighbours. Sizing the ring by guess is what made the first attempt
+      // unreadable, and the numbers are right there to be measured.
+      const laid = taxonomy.studies.map((study) => {
+        const placed = layoutStudy(study.courses);
+        const extent = Math.max(
+          ...[...placed.values()].map((point) => Math.hypot(point.x, point.z)),
+        );
+        return { study, placed, extent: extent + 8 };
+      });
+      const totalExtent = laid.reduce((sum, entry) => sum + entry.extent, 0);
+      const worldRing = Math.max((totalExtent * 1.35) / Math.PI, ...laid.map((e) => e.extent * 1.5));
+
+      let bearingCursor = 0;
+      for (const entry of laid) {
+        const share = entry.extent / totalExtent;
+        const bearing = bearingCursor + share * Math.PI;
+        bearingCursor += share * Math.PI * 2;
+        const centre = new THREE.Vector3(
+          Math.cos(bearing) * worldRing,
+          0,
+          Math.sin(bearing) * worldRing,
+        );
+        studyCentres.set(entry.study.id, centre);
+        for (const course of entry.study.courses) {
+          const local = entry.placed.get(course.id);
+          const lessons = course.units.reduce((sum, unit) => sum + unit.lessons.length, 0);
+          const position = new THREE.Vector3(local.x, local.y, local.z).add(centre);
+          nodes.push({ study: entry.study, course, lessons, position, depth: course.depth });
+        }
+      }
+
+      for (const node of nodes) byId.set(`${node.study.id}/${node.course.id}`, node);
+
+      // The learner stands partway up the longest climb, so "where am I" and
+      // "how far is left" both have a real answer instead of a placeholder.
+      const home = nodes.find((node) => node.course.id === "foundations-logic") ?? nodes[0];
+      const homeCentre = studyCentres.get(home.study.id);
+
+      /*
+       * The default camera stands beside the learner, not above the library.
+       *
+       * A world map is not meant to be read all at once, and trying to make
+       * one that is produces a picture where nothing is legible. The sentence
+       * this page is judged by — find your next lesson in eight seconds — is
+       * answered by the view from where you are standing: a few levels behind,
+       * a few ahead, and the summit visible in the distance. "See everything"
+       * is a different question and gets its own button.
+       */
+      const eye = (node, back = 30, up = 30) => {
+        const away = node.position.clone().sub(homeCentre).setY(0);
+        if (away.lengthSq() < 0.01) away.set(0, 0, 1);
+        away.normalize();
+        // Three-quarters, never down the axis. Standing directly downhill of a
+        // chain of islands stacks them into a column of pancakes and hides the
+        // one property the layout exists to show, which is that it goes
+        // somewhere. Stepping off the line puts the path back in the picture.
+        const side = new THREE.Vector3(-away.z, 0, away.x).multiplyScalar(back * 0.75);
+        return node.position
+          .clone()
+          .addScaledVector(away, back * 0.85)
+          .add(side)
+          .setY(node.position.y + up);
+      };
+      const stage = createStage(host, {
+        cameraFrom: eye(home).toArray(),
+        lookAt: home.position.toArray(),
+      });
+
+      const ground = new THREE.Mesh(
+        new THREE.CircleGeometry(worldRing * 2.4, 96),
+        new THREE.MeshStandardMaterial({ color: GREY.base, roughness: 1 }),
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -0.4;
+      stage.scene.add(ground);
+      // Each world sits on its own low plate, so "you are in this one" is
+      // legible before a single label is read.
+      for (const [studyId, centre] of studyCentres) {
+        const own = nodes.filter((node) => node.study.id === studyId);
+        const reach = Math.max(...own.map((node) => node.position.distanceTo(centre))) + 6;
+        const plate = disc(reach, 0.3, studyId === home.study.id ? 0x2b3242 : 0x1e2430);
+        plate.position.copy(centre).setY(-0.2);
+        stage.scene.add(plate);
+      }
+
+      const pickables = [];
+      for (const node of nodes) {
+        const radius = radiusForLessons(node.lessons);
+        // Done behind you, live where you stand, idle ahead: three greys and
+        // the accent, no fourth colour, no legend needed to read it.
+        const state =
+          node.depth < home.depth ? "done" : node.depth === home.depth ? "live" : "idle";
+        const island = disc(radius, 0.55 + node.depth * 0.05, GREY[state]);
+        island.position.copy(node.position);
+        island.userData.node = node;
+        island.userData.state = state;
+        stage.scene.add(island);
+        pickables.push(island);
+        node.mesh = island;
+        node.radius = radius;
+      }
+
+      for (const node of nodes) {
+        for (const requiredId of node.course.prerequisiteCourseIds) {
+          const from = byId.get(`${node.study.id}/${requiredId}`);
+          if (!from) continue;
+          stage.scene.add(road(from.position, node.position));
+        }
+      }
+
+      const marker = learnerMarker();
+      marker.position.copy(home.position);
+      stage.scene.add(marker);
+      stage.onFrame((delta) => {
+        marker.userData.ring.rotation.z += delta * 0.7;
+      });
+
+      /* ---- labels: DOM over canvas, never text inside WebGL ---- */
+      const labels = [];
+      function addLabel(text, sub, position, className, node = null) {
+        const element = document.createElement("div");
+        element.className = `label ${className}`;
+        element.innerHTML = sub ? `${text}<small>${sub}</small>` : text;
+        labelLayer.appendChild(element);
+        labels.push({ element, position, className, node });
+      }
+      for (const study of taxonomy.studies) {
+        const own = nodes.filter((node) => node.study.id === study.id);
+        const centre = own
+          .reduce((sum, node) => sum.add(node.position), new THREE.Vector3())
+          .divideScalar(own.length);
+        const lessons = own.reduce((sum, node) => sum + node.lessons, 0);
+        addLabel(
+          study.title,
+          `${own.length} 门课 · ${lessons} 节 · 最深 ${Math.max(...own.map((n) => n.depth)) + 1} 层`,
+          centre.clone().setY(centre.y + 7),
+          "study",
+        );
+      }
+      for (const node of nodes) {
+        addLabel(
+          node.course.title,
+          "",
+          node.position.clone().setY(node.position.y + 1.6),
+          "course",
+          node,
+        );
+      }
+
+      /*
+       * Fifty-two labels at once is unreadable, and it was unreadable on the
+       * first run of this page rather than in anyone's imagination. So a
+       * course names itself when you are near it, when you point at it, or
+       * when you ask for all of them; a world always names itself, because
+       * "which product am I in" is half the acceptance sentence.
+       */
+      let allCourseLabels = false;
+      const NEAREST = 9;
+      const projected = new THREE.Vector3();
+      stage.onAfterRender(() => {
+        const rect = host.getBoundingClientRect();
+        /*
+         * Project first, then choose — not the other way round.
+         *
+         * Ranking by distance to the camera and then testing whether the
+         * winners are on screen picks the islands directly under the camera,
+         * which project several screen-heights below the viewport. The first
+         * version of this did exactly that and showed no course names at all
+         * while every number in it looked correct.
+         *
+         * A count rather than a radius, because a radius rule put 52
+         * overlapping names on screen the first time this page ran, and
+         * turing-pact is dense enough that no single radius is right at both
+         * ends of it.
+         */
+        const onScreen = [];
+        for (const label of labels) {
+          projected.copy(label.position).project(stage.camera);
+          label.screen =
+            projected.z < 1 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1
+              ? {
+                  left: ((projected.x + 1) / 2) * rect.width,
+                  top: ((1 - projected.y) / 2) * rect.height,
+                  depth: projected.z,
+                }
+              : null;
+          if (label.screen && label.className === "course") onScreen.push(label);
+        }
+        onScreen.sort((a, b) => a.screen.depth - b.screen.depth);
+        const near = new Set(onScreen.slice(0, NEAREST));
+
+        for (const label of labels) {
+          const isCourse = label.className === "course";
+          const wanted =
+            !isCourse ||
+            allCourseLabels ||
+            near.has(label) ||
+            label.node === hovered ||
+            label.node === selected;
+          if (!wanted || !label.screen) {
+            label.element.style.opacity = "0";
+            continue;
+          }
+          label.element.style.opacity = "1";
+          label.element.classList.toggle("hot", label.node === selected);
+          label.element.style.left = `${label.screen.left}px`;
+          label.element.style.top = `${label.screen.top}px`;
+        }
+      });
+
+      /* ---- selection ---- */
+      let hovered = null;
+      let selected = null;
+      function paint(node, colour) {
+        node.mesh.material.color.setHex(colour);
+      }
+      function restore(node) {
+        paint(node, GREY[node.mesh.userData.state]);
+      }
+
+      host.addEventListener("pointermove", (event) => {
+        const hit = stage.pick(event, pickables);
+        const node = hit?.userData.node ?? null;
+        if (node === hovered) return;
+        if (hovered && hovered !== selected) restore(hovered);
+        hovered = node;
+        if (hovered && hovered !== selected) paint(hovered, GREY.done);
+        host.style.cursor = hovered ? "pointer" : "grab";
+        readout.textContent = hovered
+          ? `${hovered.study.title} → ${hovered.course.title}`
+          : `${taxonomy.totals.courses} 门课 · ${taxonomy.totals.lessons} 节 · 拖动平移，右键旋转，滚轮缩放`;
+      });
+      readout.textContent = `${taxonomy.totals.courses} 门课 · ${taxonomy.totals.lessons} 节 · 拖动平移，右键旋转，滚轮缩放`;
+
+      host.addEventListener("click", (event) => {
+        const hit = stage.pick(event, pickables);
+        const node = hit?.userData.node ?? null;
+        if (selected) restore(selected);
+        selected = node;
+        if (!node) {
+          pickedPanel.hidden = true;
+          return;
+        }
+        paint(node, GREY.live);
+        const units = node.course.units.length;
+        const gated = node.course.prerequisiteCourseIds.length;
+        pickedPanel.hidden = false;
+        pickedPanel.innerHTML = `
+          <h4>${node.course.title}</h4>
+          <p class="sub" style="margin:0">${node.study.title}</p>
+          <dl>
+            <dt>课时</dt><dd>${node.lessons}</dd>
+            <dt>单元</dt><dd>${units}</dd>
+            <dt>层</dt><dd>${node.depth + 1}</dd>
+            <dt>先修</dt><dd>${gated || "无"}</dd>
+          </dl>
+          <a href="course-map.html?study=${node.study.id}&course=${node.course.id}">进入这门课的地图 →</a>`;
+        stage.flyTo(eye(node, 20 + node.radius * 2, 13 + node.radius).toArray(), node.position.toArray());
+      });
+
+      /* ---- 2D fallback: the same structure, no canvas ---- */
+      const fallback = document.getElementById("fallback");
+      fallback.innerHTML = taxonomy.studies
+        .map((study) => {
+          const own = nodes
+            .filter((node) => node.study.id === study.id)
+            .sort((a, b) => a.depth - b.depth || a.course.id.localeCompare(b.course.id));
+          const items = own
+            .map(
+              (node) =>
+                `<li><span class="lv">L${node.depth + 1}</span> ${node.course.title} · ${node.lessons} 节</li>`,
+            )
+            .join("");
+          return `<h4>${study.title}</h4><ol>${items}</ol>`;
+        })
+        .join("");
+
+      const toggle2d = document.getElementById("toggle2d");
+      toggle2d.addEventListener("click", () => {
+        const on = toggle2d.getAttribute("aria-pressed") !== "true";
+        toggle2d.setAttribute("aria-pressed", String(on));
+        fallback.hidden = !on;
+        labelLayer.style.display = on ? "none" : "";
+      });
+
+      const labelsOn = document.getElementById("labelsOn");
+      labelsOn.addEventListener("click", () => {
+        allCourseLabels = !allCourseLabels;
+        labelsOn.setAttribute("aria-pressed", String(allCourseLabels));
+      });
+
+      document.getElementById("home").addEventListener("click", () => {
+        stage.flyTo(eye(home).toArray(), home.position.toArray(), 1.1);
+      });
+      document.getElementById("all").addEventListener("click", () => {
+        stage.flyTo([0, worldRing * 1.9, worldRing * 1.75], [0, 0, 0], 1.3);
+      });
+
+      /*
+       * The acceptance sentence, made runnable.
+       *
+       * A criterion nobody can execute is a wish. This starts a clock, hides
+       * every explanation on the page, and reports the time — so the claim
+       * "8 秒内找得到" either survives contact with a real person or does not.
+       */
+      const test8 = document.getElementById("test8");
+      const timerOut = document.getElementById("timer");
+      test8.addEventListener("click", () => {
+        document.querySelector(".stagetip").style.display = "none";
+        pickedPanel.hidden = true;
+        if (selected) restore(selected);
+        selected = null;
+        const started = performance.now();
+        timerOut.textContent = "计时中…点你认为的「下一节课」";
+        const stop = (event) => {
+          if (!stage.pick(event, pickables)) return;
+          const seconds = (performance.now() - started) / 1000;
+          timerOut.textContent = `${seconds.toFixed(1)}s ${seconds <= 8 ? "✓ 过" : "✗ 超"}`;
+          host.removeEventListener("click", stop, true);
+        };
+        host.addEventListener("click", stop, true);
+      });
+    </script>
+  </body>
+</html>

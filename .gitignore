@@ -38,3 +38,7 @@ university.config.local.json
 
 # Session handoff notes - working material, not project documentation.
 .handoff/
+
+# Pulled from UniversityLocal for a wireframe to render against a real lesson.
+# It quotes private source verbatim, so it stays out of a page anyone can open.
+docs/reference/player-journey/*/data/sample-lesson.json

@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>课程内地图 · 灰模 · 旅程 V2</title>
+    <link rel="stylesheet" href="../lib/journey.css" />
+    <style>
+      .stagearea {
+        height: min(66vh, 600px);
+      }
+      .labels {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .label {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        font-size: 0.74rem;
+        color: var(--ink-dim);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.92);
+        max-width: 190px;
+        text-align: center;
+        line-height: 1.35;
+      }
+      .label.unit {
+        font-size: 0.86rem;
+        color: var(--ink);
+        letter-spacing: 0.05em;
+      }
+      .label.unit small {
+        display: block;
+        font-size: 0.68rem;
+        color: var(--ink-faint);
+      }
+      .label.hot {
+        color: var(--accent);
+      }
+      .head {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        pointer-events: none;
+      }
+      .head .who {
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        background: rgba(11, 14, 22, 0.9);
+        backdrop-filter: blur(6px);
+        padding: 10px 14px;
+        pointer-events: auto;
+      }
+      .head .who b {
+        display: block;
+        font-size: 0.98rem;
+      }
+      .head .who span {
+        font-size: 0.78rem;
+        color: var(--ink-faint);
+      }
+      .head select {
+        pointer-events: auto;
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        background: rgba(11, 14, 22, 0.9);
+        color: var(--ink-dim);
+        font: inherit;
+        font-size: 0.8rem;
+        padding: 6px 8px;
+        max-width: 260px;
+      }
+      .rest {
+        position: absolute;
+        right: 12px;
+        bottom: 52px;
+        border: 1px solid var(--accent-deep);
+        border-radius: 10px;
+        background: rgba(94, 200, 192, 0.12);
+        padding: 10px 14px;
+        font-size: 0.85rem;
+      }
+      .rest b {
+        font-family: var(--mono);
+        font-size: 1.3rem;
+        color: var(--accent);
+        display: block;
+      }
+      .boot {
+        padding: 40px;
+        color: var(--ink-faint);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap wide">
+      <a class="crumb" href="../index.html">← 回到旅程 V2</a>
+      <h1>课程内地图 · 灰模</h1>
+      <p class="sub">
+        L2 · 从世界地图点进来之后 · 换课程看极端体量（1 节 / 12 节 / 41 节）·
+        需要 <code>pnpm dev</code> 打开
+      </p>
+
+      <div class="accept">
+        <div class="eyebrow">验收</div>
+        <p>进来 3 秒内说出「这门课还剩几节」和「下一关是哪一个」，不用滚动、不用点开任何东西。</p>
+      </div>
+
+      <div class="stagearea" id="stage">
+        <div class="labels" id="labels"></div>
+        <div class="head">
+          <div class="who" id="who"></div>
+          <select id="pick" aria-label="换一门课"></select>
+        </div>
+        <div class="rest" id="rest"></div>
+        <div class="stagehud">
+          <button class="chip" id="next">带我去下一关</button>
+          <button class="chip" id="whole">看完整条路</button>
+          <button class="chip" id="names" aria-pressed="false">全部关卡名</button>
+          <span class="readout" id="readout"></span>
+        </div>
+      </div>
+
+      <div class="scope">
+        <b>这一页负责：</b>一门课的路径形状、单元怎么分段、进度怎么一眼看出、极端体量会不会崩。
+        <b>不负责：</b>课文长什么样（那是阅读器那一页）、颜色、材质、过场动画。
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <h4>为什么是蛇形</h4>
+          <ul>
+            <li>单元里 <b>93/146 恰好 4 节</b>，所以一段就是四步，节奏是内容自带的，不是设计出来的。</li>
+            <li>一条直路放 41 节 = 一条看不到头的走廊。折返之后，41 节和 12 节用同一个形状，都能一眼看完。</li>
+            <li>单元之间抬一级台阶。台阶是「这一段结束了」的物理信号，不需要文案说。</li>
+            <li>只有 1 节的课（<code>founder-engineer</code>）也照样成立：一块台阶、一个关卡。它看起来太小——那是<b>内容的问题</b>，地图如实显示，不替它遮掩。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>「还剩几节」为什么是最大的那个数字</h4>
+          <ul>
+            <li>学习者在这一屏只问两个问题：还剩多少、下一步点哪。别的都是次要的。</li>
+            <li>V1 的结算屏验收要求出现「明天 N 张」，同一个道理：<b>进度要给具体的数，不是一条百分比的进度条。</b></li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>状态</h4>
+          <ul>
+            <li><b>未解锁</b>：暗一档，可点开看标题，不能进。</li>
+            <li><b>加载</b>：先出 2D 单元列表，几何后到。</li>
+            <li><b>错误 / 弱 GPU</b>：退回 2D 单元列表，顺序一致。</li>
+            <li><b>课程被更新</b>：变过的小节标记「有更新」，进度不清空（待决 D3 选 B）。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import * as THREE from "three";
+      import { GREY, createStage, disc, learnerMarker, loadTaxonomy, road } from "../lib/greybox.js";
+
+      const host = document.getElementById("stage");
+      const labelLayer = document.getElementById("labels");
+      const readout = document.getElementById("readout");
+
+      let taxonomy;
+      try {
+        taxonomy = await loadTaxonomy();
+      } catch {
+        host.innerHTML =
+          '<div class="boot">读不到 <code>data/taxonomy.json</code>。先 <code>pnpm journey</code>，再 <code>pnpm dev</code>。</div>';
+        throw new Error("no taxonomy");
+      }
+
+      const params = new URLSearchParams(location.search);
+      const flat = taxonomy.studies.flatMap((study) =>
+        study.courses.map((course) => ({ study, course })),
+      );
+      const pick = document.getElementById("pick");
+      pick.innerHTML = flat
+        .map((entry) => {
+          const lessons = entry.course.units.reduce((sum, unit) => sum + unit.lessons.length, 0);
+          return `<option value="${entry.study.id}/${entry.course.id}">${entry.course.title} · ${lessons} 节</option>`;
+        })
+        .join("");
+
+      const stage = createStage(host, {
+        cameraFrom: [0, 26, 34],
+        lookAt: [0, 0, 0],
+        fog: [90, 260],
+        maxDistance: 200,
+      });
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(400, 400),
+        new THREE.MeshStandardMaterial({ color: GREY.base, roughness: 1 }),
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -0.5;
+      stage.scene.add(ground);
+
+      const world = new THREE.Group();
+      stage.scene.add(world);
+      const marker = learnerMarker();
+      stage.scene.add(marker);
+      stage.onFrame((delta) => {
+        marker.userData.ring.rotation.z += delta * 0.7;
+      });
+
+      let labels = [];
+      let pickables = [];
+      let nextNode = null;
+
+      /*
+       * A serpentine path, four steps to a row.
+       *
+       * Straight, a 41-lesson course is a corridor you cannot see the end of,
+       * and that is the first thing a beginner would meet in this library —
+       * `foundations-before-zero` is both the biggest course and the one
+       * everyone starts on. Folded, the same 41 fit the frame, and a 12-lesson
+       * course uses the identical shape rather than a special case.
+       *
+       * The fold is at the unit boundary because the content already folds
+       * there: 93 of 146 units hold exactly four lessons. The rhythm is being
+       * read off the library, not imposed on it.
+       */
+      const STRIDE = 5.2;
+      const ROW = 6.4;
+      const STEP_UP = 1.15;
+
+      function build(entry) {
+        world.clear();
+        for (const label of labels) label.element.remove();
+        labels = [];
+        pickables = [];
+        nextNode = null;
+
+        const lessons = entry.course.units.flatMap((unit) =>
+          unit.lessons.map((lesson) => ({ unit, lesson })),
+        );
+        // Two thirds done, so the map has a real "before" and "after" to show
+        // rather than an empty course or a finished one.
+        const doneCount = Math.max(1, Math.round(lessons.length * 0.55));
+
+        let index = 0;
+        let rowIndex = 0;
+        let unitIndex = -1;
+        const placed = [];
+        for (const unit of entry.course.units) {
+          unitIndex += 1;
+          const rowsBefore = rowIndex;
+          unit.lessons.forEach((lesson, slot) => {
+            const row = rowsBefore + Math.floor(slot / 4);
+            const column = slot % 4;
+            const forward = row % 2 === 0 ? 1 : -1;
+            const x = (column - 1.5) * STRIDE * forward;
+            const z = -row * ROW;
+            const y = unitIndex * STEP_UP;
+            placed.push({ unit, lesson, index, position: new THREE.Vector3(x, y, z) });
+            index += 1;
+          });
+          rowIndex = rowsBefore + Math.ceil(unit.lessons.length / 4);
+        }
+
+        placed.forEach((node, order) => {
+          const state = order < doneCount ? "done" : order === doneCount ? "live" : "idle";
+          // A lesson's pad grows a little with how much there is to read, so a
+          // 4,900-character wall is visible as a bigger step before it is
+          // entered rather than after.
+          const size = 1.3 + Math.min(node.lesson.chars, 5000) / 4200;
+          const pad = disc(size, 0.4, GREY[state === "idle" && order > doneCount + 3 ? "locked" : state]);
+          pad.position.copy(node.position);
+          pad.userData.node = node;
+          pad.userData.state = state;
+          world.add(pad);
+          pickables.push(pad);
+          node.mesh = pad;
+          if (order > 0) world.add(road(placed[order - 1].position, node.position));
+          if (state === "live") {
+            nextNode = node;
+            marker.position.copy(node.position);
+          }
+          addLabel(node.lesson.title, "", node.position.clone().setY(node.position.y + 1.5), "lesson", node);
+        });
+
+        // Unit names sit beside their first row, not above it. Centred over
+        // four pads they land on the pads, and the two label families then
+        // fight for the same pixels — which is what the first render did.
+        for (const unit of entry.course.units) {
+          const own = placed.filter((node) => node.unit === unit);
+          const first = own[0].position;
+          const outward = Math.sign(first.x) || 1;
+          addLabel(
+            unit.title,
+            `${own.length} 关`,
+            first.clone().setX(first.x + outward * (STRIDE * 1.9)).setY(first.y + 1.1),
+            "unit",
+            null,
+          );
+        }
+
+        const remaining = lessons.length - doneCount;
+        document.getElementById("who").innerHTML = `
+          <b>${entry.course.title}</b>
+          <span>${entry.study.title} · ${entry.course.units.length} 单元 · ${lessons.length} 关</span>`;
+        document.getElementById("rest").innerHTML = `<b>${remaining}</b>还剩几关`;
+        readout.textContent = `${entry.course.units.length} 单元 · ${lessons.length} 关 · 每格是一节课`;
+
+        const span = Math.max(...placed.map((node) => -node.position.z));
+        stage.flyTo(
+          [0, 15 + span * 0.44, 15 + span * 0.5],
+          [0, placed.length > 1 ? span * 0.16 : 0, -span / 2],
+          0.7,
+        );
+      }
+
+      function addLabel(text, sub, position, className, node) {
+        const element = document.createElement("div");
+        element.className = `label ${className}`;
+        element.innerHTML = sub ? `${text}<small>${sub}</small>` : text;
+        labelLayer.appendChild(element);
+        labels.push({ element, position, className, node });
+      }
+
+      let allNames = false;
+      let hovered = null;
+      const projected = new THREE.Vector3();
+      stage.onAfterRender(() => {
+        const rect = host.getBoundingClientRect();
+        const onScreen = [];
+        for (const label of labels) {
+          projected.copy(label.position).project(stage.camera);
+          label.screen =
+            projected.z < 1 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1
+              ? {
+                  left: ((projected.x + 1) / 2) * rect.width,
+                  top: ((1 - projected.y) / 2) * rect.height,
+                  depth: projected.z,
+                }
+              : null;
+          if (label.screen && label.className === "lesson") onScreen.push(label);
+        }
+        onScreen.sort((a, b) => a.screen.depth - b.screen.depth);
+        const near = new Set(allNames ? onScreen : onScreen.slice(0, 4));
+        for (const label of labels) {
+          const isLesson = label.className === "lesson";
+          const wanted =
+            !isLesson || near.has(label) || label.node === hovered || label.node === nextNode;
+          if (!wanted || !label.screen) {
+            label.element.style.opacity = "0";
+            continue;
+          }
+          label.element.style.opacity = "1";
+          label.element.classList.toggle("hot", label.node === nextNode);
+          label.element.style.left = `${label.screen.left}px`;
+          label.element.style.top = `${label.screen.top}px`;
+        }
+      });
+
+      host.addEventListener("pointermove", (event) => {
+        const hit = stage.pick(event, pickables);
+        hovered = hit?.userData.node ?? null;
+        host.style.cursor = hovered ? "pointer" : "grab";
+      });
+
+      const initial =
+        flat.find(
+          (entry) =>
+            entry.study.id === params.get("study") && entry.course.id === params.get("course"),
+        ) ?? flat.find((entry) => entry.course.id === "foundations-logic") ?? flat[0];
+      pick.value = `${initial.study.id}/${initial.course.id}`;
+      build(initial);
+
+      pick.addEventListener("change", () => {
+        const [studyId, courseId] = pick.value.split("/");
+        const entry = flat.find((item) => item.study.id === studyId && item.course.id === courseId);
+        if (entry) build(entry);
+      });
+
+      document.getElementById("next").addEventListener("click", () => {
+        if (!nextNode) return;
+        stage.flyTo(
+          nextNode.position.clone().add(new THREE.Vector3(0, 9, 13)).toArray(),
+          nextNode.position.toArray(),
+          0.8,
+        );
+      });
+      document.getElementById("whole").addEventListener("click", () => {
+        const [studyId, courseId] = pick.value.split("/");
+        build(flat.find((item) => item.study.id === studyId && item.course.id === courseId));
+      });
+      const names = document.getElementById("names");
+      names.addEventListener("click", () => {
+        allNames = !allNames;
+        names.setAttribute("aria-pressed", String(allNames));
+      });
+    </script>
+  </body>
+</html>
