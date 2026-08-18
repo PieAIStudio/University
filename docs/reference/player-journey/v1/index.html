@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>University · 用户旅程 v1</title>
+    <style>
+      :root {
+        --ink: #e9edf5;
+        --ink-dim: #a8b3c7;
+        --ink-faint: #74809a;
+        --bg: #0b0e16;
+        --bg-2: #111624;
+        --card: #151b2b;
+        --card-2: #1b2234;
+        --line: rgba(233, 237, 245, 0.13);
+        --accent: #5ec8c0;
+        --accent-dim: #2f7f7a;
+        --g1: #6ea8d8;
+        --g2: #5ec8c0;
+        --g3: #c9a0e8;
+        --port: #7fd1a0;
+        --half: #d7b25e;
+        --new: #dd8a4a;
+        --kit: #8fa2d9;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.6 system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 20px 120px; }
+      h1 { margin: 0 0 6px; font-size: clamp(1.9rem, 4vw, 2.8rem); letter-spacing: -0.01em; }
+      h2 {
+        margin: 64px 0 6px; font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+        border-left: 3px solid var(--accent); padding-left: 12px;
+      }
+      h3 { margin: 30px 0 8px; font-size: 1.02rem; }
+      p { margin: 8px 0; color: var(--ink-dim); }
+      .lede { max-width: 74ch; font-size: 1.02rem; }
+      .sub { color: var(--ink-faint); font-size: 0.9rem; }
+      code, .mono { font-family: var(--mono); font-size: 0.86em; }
+      a { color: var(--accent); }
+      strong { color: var(--ink); }
+
+      .banner {
+        margin: 22px 0 8px; border: 1px solid var(--line); border-left: 3px solid var(--accent);
+        border-radius: 10px; background: linear-gradient(120deg, rgba(94, 200, 192, 0.1), transparent 60%);
+        padding: 18px 20px;
+      }
+      .pipe { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; margin: 16px 0 4px; }
+      .pipe .box { flex: 1 1 240px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: 14px 16px; }
+      .pipe .box h4 { margin: 0 0 4px; font-size: 0.95rem; }
+      .pipe .arrow { display: flex; align-items: center; color: var(--accent); font-size: 1.4rem; }
+
+      .keys { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 4px; }
+      .key {
+        display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line);
+        border-radius: 999px; background: var(--card); padding: 5px 12px; font-size: 0.82rem; color: var(--ink-dim);
+      }
+      .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+
+      .toolbar {
+        position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px;
+        margin: 26px 0 16px; border: 1px solid var(--line); border-radius: 12px;
+        background: rgba(11, 14, 22, 0.94); backdrop-filter: blur(8px); padding: 10px 12px;
+      }
+      .toolbar button {
+        border: 1px solid var(--line); border-radius: 999px; background: var(--card);
+        color: var(--ink-dim); padding: 7px 14px; font: inherit; font-size: 0.85rem; cursor: pointer;
+      }
+      .toolbar button[aria-pressed="true"] { border-color: var(--accent); background: rgba(94, 200, 192, 0.16); color: var(--ink); }
+
+      .stage { margin: 34px 0 6px; color: var(--ink-faint); font-size: 0.82rem; letter-spacing: 0.14em; text-transform: uppercase; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 12px; }
+      .act {
+        border: 1px solid var(--line); border-radius: 12px; background: var(--card);
+        padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 7px;
+      }
+      .act[hidden] { display: none; }
+      .act .top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .num { font-family: var(--mono); font-size: 0.76rem; color: var(--ink-faint); }
+      .act h4 { margin: 0; font-size: 1rem; flex: 1 1 auto; }
+      .tag { font-size: 0.71rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-dim); white-space: nowrap; }
+      .act p { margin: 0; font-size: 0.9rem; }
+      .act .proof { font-size: 0.8rem; color: var(--ink-faint); border-top: 1px dashed var(--line); padding-top: 7px; margin-top: 2px; }
+      .act .proof b { color: var(--ink-dim); font-weight: 600; }
+
+      table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; }
+      th, td { border: 1px solid var(--line); padding: 9px 11px; text-align: left; vertical-align: top; }
+      th { background: var(--card-2); color: var(--ink); font-weight: 600; }
+      td { color: var(--ink-dim); }
+      .scroll { overflow-x: auto; }
+
+      .chart { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 18px; margin: 16px 0; }
+      .bars { display: flex; align-items: flex-end; gap: 5px; height: 190px; margin-top: 10px; }
+      .bar { flex: 1 1 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 5px; min-width: 0; }
+      .bar .fill { width: 100%; border-radius: 4px 4px 0 0; min-height: 2px; }
+      .bar .lbl { font-size: 0.62rem; color: var(--ink-faint); writing-mode: vertical-rl; height: 74px; overflow: hidden; white-space: nowrap; }
+
+      .budget { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+      .brow { display: grid; grid-template-columns: 150px 1fr 60px; gap: 10px; align-items: center; font-size: 0.85rem; }
+      .btrack { background: var(--bg-2); border-radius: 5px; height: 18px; overflow: hidden; }
+      .bfill { height: 100%; border-radius: 5px; }
+
+      .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; margin-top: 14px; }
+      .dec { border: 1px solid var(--line); border-left: 3px solid var(--g3); border-radius: 10px; background: var(--card); padding: 14px 16px; }
+      .dec h4 { margin: 0 0 6px; font-size: 0.96rem; }
+      .dec p { font-size: 0.88rem; }
+      .dec .opt { font-size: 0.85rem; color: var(--ink-dim); margin-top: 6px; padding-left: 14px; border-left: 2px solid var(--line); }
+
+      .no { border: 1px solid var(--line); border-left: 3px solid #d96b6b; border-radius: 10px; background: var(--card); padding: 6px 16px 12px; }
+      footer { margin-top: 70px; border-top: 1px solid var(--line); padding-top: 18px; color: var(--ink-faint); font-size: 0.85rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>University · 用户旅程 v1</h1>
+      <p class="sub">2026-08-18 · 由 PGS 控制平面起草 · 22 幕 · 六个阶段 · <b>这一版是用来被推翻的</b></p>
+
+      <div class="banner">
+        <p class="lede">
+          <strong>这份文件先回答一件事：University 到底是什么，以及它凭什么和 UniversityLocal 一致。</strong>
+          答案不是「两个应用互相同步功能」，而是一条流水线的两半。UniversityLocal 是<strong>作者工作台</strong>，
+          University 是<strong>学生播放器</strong>。只有一个生产者，所以「课程一致」不是同步问题，是供货问题。
+        </p>
+        <div class="pipe">
+          <div class="box">
+            <h4 style="color: var(--port)">UniversityLocal（已存在）</h4>
+            <p style="font-size: 0.87rem">AI 宿主带着一个人读真实仓库，产出课文、卡片、习题、证据。单人、本地、永不联网。</p>
+          </div>
+          <div class="arrow">→</div>
+          <div class="box">
+            <h4 style="color: var(--half)">course-recovery 导出包</h4>
+            <p style="font-size: 0.87rem">已经存在的格式，按内容哈希寻址，自带整棵课程树，不含任何学习者状态。<b>这就是内容契约，不用再发明一个。</b></p>
+          </div>
+          <div class="arrow">→</div>
+          <div class="box">
+            <h4 style="color: var(--new)">University（本仓库）</h4>
+            <p style="font-size: 0.87rem">导入 → 评审 → 投放。3D 地图与关卡负责动机，2D 课堂负责学习，在线模型负责判分与辅导。</p>
+          </div>
+        </div>
+        <p class="sub" style="margin-top: 12px">
+          方向是单向的：University 去拉，UniversityLocal 永远不知道它存在。这不是偏好——UniversityLocal 自己的
+          router 写死了「永久本地、不得为任何后端准备同步通道」，那条约束不归 University 来打破。
+        </p>
+      </div>
+
+      <h2>这一版和图灵密约那份旅程的区别</h2>
+      <p class="lede">
+        图灵密约的 v2 用「已上线 / 只有机器验过 / 不够好 / 没有」标每一幕，因为那个产品已经有代码了。
+        University 今天一行产品代码都没有，全标「没有」等于没有信息。
+      </p>
+      <p class="lede">
+        所以这一版换了一根轴：<strong>每一幕标它的来源</strong>——是 UniversityLocal 已经做好、只需搬过来的，
+        是搬一半的，是 University 全新的，还是外部件（品牌套件 / 后端）给的。
+        这根轴直接回答你最关心的问题：<strong>「一致」的代价具体分布在哪里。</strong>
+        按它排序，你会看到一件反直觉的事——这个产品最贵的部分不是 3D。
+      </p>
+
+      <h2>图例</h2>
+      <div class="keys">
+        <span class="key"><span class="dot" style="background: var(--g1)"></span>G1 · 让第一节课能上完</span>
+        <span class="key"><span class="dot" style="background: var(--g2)"></span>G2 · 让第二天会回来</span>
+        <span class="key"><span class="dot" style="background: var(--g3)"></span>G3 · 让它变成身份</span>
+      </div>
+      <div class="keys">
+        <span class="key"><span class="dot" style="background: var(--port)"></span>直接移植 · UniversityLocal 已有</span>
+        <span class="key"><span class="dot" style="background: var(--half)"></span>移植一半 · 引擎在，交付侧要重做</span>
+        <span class="key"><span class="dot" style="background: var(--new)"></span>全新 · University 独有</span>
+        <span class="key"><span class="dot" style="background: var(--kit)"></span>外部件 · SwimmerUIKit / AIKit / Backend</span>
+      </div>
+      <p class="sub">
+        「直接移植」不等于零成本。它的意思是<b>逻辑已经被验证过</b>，代价在抽包和接线，不在重新想清楚。
+        真正贵的是「全新」，因为它同时要想清楚和做出来。
+      </p>
+
+      <h2>镜头墙</h2>
+      <p>默认按学习者真实经历的顺序排。用下面的按钮换一个看法。</p>
+      <div class="toolbar" id="toolbar">
+        <button data-f="all" aria-pressed="true">全部</button>
+        <button data-f="g1" aria-pressed="false">只看 G1 · 第一节课</button>
+        <button data-f="g2" aria-pressed="false">只看 G2 · 第二天</button>
+        <button data-f="g3" aria-pressed="false">只看 G3 · 习惯</button>
+        <button data-f="new" aria-pressed="false">只看「全新」（最贵）</button>
+        <button data-f="port" aria-pressed="false">只看「可移植」（最便宜）</button>
+      </div>
+      <div id="wall"></div>
+
+      <h2>快乐地图：他在哪一秒真的拿到了东西</h2>
+      <p class="lede">柱子高度是快乐强度，颜色是快乐的<strong>种类</strong>。零高度的不是「做得差」，是<strong>纯支出</strong>——学习者付出了时间，什么都没拿到。</p>
+      <div class="chart">
+        <div class="bars" id="joy"></div>
+      </div>
+      <div class="keys" id="joykeys"></div>
+
+      <h3>这张图说了三件事，都不是"多做点 3D"</h3>
+      <p>
+        <strong>一、唯一抄不走的快乐是「懂了」，而它发生在 2D 课文里。</strong>
+        深绿色（懂了）的两个峰在第 7 幕「读课文」和第 10 幕「判分讲错在哪」。别的学习产品也有进度条、也有连击、也能做 3D 地图；
+        只有这个产品能让人指着一段正在赚钱的商业产品源码说「我看懂它为什么这么写」。
+        3D 的作用是<strong>把人送到那一刻，并在那一刻之后给它一个仪式</strong>。
+        如果 3D 的预算挤压了课文与判分的质量，那是拆了护城河去修外墙。
+      </p>
+      <p>
+        <strong>二、两段最长的零回报都在「要东西」的时候。</strong>
+        第 13 幕注册和第 18 幕付费都是纯支出。它们的位置比它们的措辞重要得多：
+        两者都必须排在学习者<strong>已经拿到东西之后</strong>。V1 把注册放在第一次结算之后，把付费放在第一次真正卡住的时候——
+        不是因为好听，是因为那是他手里第一次有值得保护的东西。
+      </p>
+      <p>
+        <strong>三、第二天回来的理由不是 streak 数字，是那张卡。</strong>
+        连击是包装，间隔重复才是引擎——而引擎 UniversityLocal 已经有了（FSRS + 卡片 + 到期选择）。
+        公开数据里 Duolingo 把连击称作最有效的留存杠杆，但真正让人第二天有事可做的是「今天有 12 张到期」。
+        先接引擎，再做包装；反过来做，会得到一个很好看的空壳。
+      </p>
+
+      <h2>两条曲线：信心该涨，负荷该只在该高的地方高</h2>
+      <p class="lede">
+        <strong>信心</strong>（他觉得自己能行）必须整体向上。<strong>认知负荷</strong>允许在读课文和判分时高——那是学习本身。
+        但在<strong>导航期</strong>（选课、进地图、找关卡）负荷必须低。
+      </p>
+      <div class="chart" id="curve"></div>
+      <p>
+        <strong>这条曲线是 3D 的验收标准，也是它唯一可能变成负债的地方。</strong>
+        研究里反复出现同一个结论：游戏化能提高动机与成绩，但不是所有游戏化元素都免费——某些装饰元素会<strong>抬高</strong>认知负荷。
+        如果 3D 地图让「我下一节课在哪」变成一道需要思考的题，它就是净负债，无论多好看。
+        所以第 3、5 幕的验收不是「好看吗」，是<strong>「不看教程能在 8 秒内找到下一节课吗」</strong>。
+      </p>
+
+      <h2>首次五分钟预算</h2>
+      <p>从点开链接到第一次结算。总预算 300 秒。红色是超支。</p>
+      <div class="chart"><div class="budget" id="budget"></div></div>
+      <p>
+        合计 <strong>333 秒</strong>，超支 33 秒，而且<strong>超支全部来自注册</strong>。
+        这不是让注册更快的问题，是注册不该在这五分钟里。V1 的处理：第一节课完全免注册，
+        结算屏给出成果之后才请求注册，并且把注册说成「保存你刚拿到的东西」而不是「创建账号」。
+      </p>
+
+      <h2>坏掉的时候，他还知道下一步吗</h2>
+      <p class="lede">任何一幕坏掉时，学习者看到的东西必须能让他自己走出去。<strong>「重试」不是出路，出路必须换一条路。</strong></p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>坏在哪</th><th>他看到什么</th><th>出路（不是重试）</th></tr></thead>
+          <tbody>
+            <tr><td>3D 地图加载失败 / 弱 GPU</td><td>地图转不出来或帧率崩</td><td>自动降级到 2D 列表视图，课程结构完全一致。3D 是导航的一种表现，不是唯一表现。</td></tr>
+            <tr><td>在线模型判分超时</td><td>提交后卡住</td><td>确定性判分本来就不需要模型，先出结果；只有开放题降级为「先记下来，稍后给你讲」并把卡片照常入库。</td></tr>
+            <tr><td>免费额度用尽</td><td>辅导按钮变灰</td><td>明确说出剩余能做什么（读课文、做确定性题、复习全部可用），而不是把整个产品锁上。</td></tr>
+            <tr><td>离线 / 通勤断网</td><td>什么都点不动</td><td>已导入课程与到期卡片本地可用，判分排队。复习是最该离线可用的那一部分。</td></tr>
+            <tr><td>课程被作者重新导出</td><td>进度看起来消失了</td><td><b>未决</b>。UniversityLocal 的规则是新修订让课程回到未完成——那对一个自学的人是对的，对付费学习者大概率是敌意的。见待决项 D3。</td></tr>
+            <tr><td>课程包校验失败</td><td>课程打不开</td><td>课程不上架，学习者根本看不到它。校验发生在投放之前，不是学习者面前。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>成本：这决定了它能不能收费</h2>
+      <p class="lede">
+        AI 学习产品最常见的死法不是没人用，是<strong>用得越多亏得越多</strong>。
+        公开的行业口径里，AI 产品的毛利通常被压到 60–70%（传统 SaaS 是 80–90%），因为你实质上在转售算力。
+        所以判分必须分层，而且<strong>最便宜的那层要覆盖绝大多数交互</strong>。
+      </p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>层</th><th>用在哪</th><th>成本</th><th>为什么现在就能做</th></tr></thead>
+          <tbody>
+            <tr><td><b>1 确定性</b></td><td>短答、选择、卡片正反面</td><td>零边际成本</td><td>导出包里的习题<b>自带 <code>expectedAnswer</code></b>，卡片自带 front/back。这是白捡的。</td></tr>
+            <tr><td><b>2 小模型 + 结构化输出</b></td><td>需要语义容错的自由作答</td><td>极低</td><td>经 SwimmerAIKit，输出受 schema 约束，不走对话。</td></tr>
+            <tr><td><b>3 开放辅导</b></td><td>「我还是不懂，给我讲讲」</td><td>可观且随使用增长</td><td><b>这就是付费墙的位置。</b>免费层不得提供不计量的大模型对话。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        验收写死在契约里：<strong>一节所有习题都可确定性判分的课，学习者从头走到尾应触发零次大模型调用。</strong>
+        这一条能不能过，决定了免费层是获客还是失血。
+      </p>
+
+      <h2>缺口总账（按「离第二天有多近」排）</h2>
+      <p>这不是偏好排序，是按「什么最先杀死第二次打开」排的施工单。</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>#</th><th>缺口</th><th>来源</th><th>为什么排这里</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>课程包导入 + 校验 + 评审闸门</td><td style="color: var(--new)">全新</td><td>没有它，一节课都投放不出去。它是所有其他幕的前置，且评审闸门因为「上架真实商业源码」的决定而变成硬需求。</td></tr>
+            <tr><td>2</td><td>2D 课文阅读器（代码块、证据跳转、选中标记）</td><td style="color: var(--port)">可移植</td><td>「懂了」发生在这里。它是护城河，而且 UniversityLocal 已经验证过，是性价比最高的一块。</td></tr>
+            <tr><td>3</td><td>确定性判分 + 卡片入库</td><td style="color: var(--half)">一半</td><td>它同时决定第一节课的手感和第二天的理由，还顺手压住了成本。一块砖砌三面墙。</td></tr>
+            <tr><td>4</td><td>到期复习与召回</td><td style="color: var(--port)">可移植</td><td>第二天回来的<b>唯一</b>实质理由。引擎现成。</td></tr>
+            <tr><td>5</td><td>世界地图与关卡链（含 2D 降级）</td><td style="color: var(--new)">全新</td><td>它决定「愿不愿意开始」，但排在 2–4 之后，因为一个漂亮地图通往一节糟糕的课，只会让人更快离开。</td></tr>
+            <tr><td>6</td><td>账号与结算（SwimmerBackend）</td><td style="color: var(--kit)">外部件</td><td>在第一次结算之后才需要。提前做会把它推到旅程前面去，那正是预算超支的原因。</td></tr>
+            <tr><td>7</td><td>分层判分的第 2、3 层与计量</td><td style="color: var(--new)">全新</td><td>付费墙。但在有人愿意回来之前，付费墙无人可拦。</td></tr>
+            <tr><td>8</td><td>连击、角色成长、装扮</td><td style="color: var(--new)">全新</td><td>包装层。它放大已有的快乐，不创造快乐。放在最后不是因为不重要，是因为它没有可放大的东西时等于零。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>把这张表和你的直觉对一下：3D 排第 5，不是第 1。</strong>
+        我不掩饰这和「先把 3D 弄进来」的起点是有出入的。理由是上面那张快乐地图——
+        3D 的作用是运输和仪式，它放大「懂了」，但不生产「懂了」。垂直切片应该是
+        <strong>一门课，从导入到第二天复习整条打通</strong>，地图那一层可以先是最朴素的 3D，甚至先是 2D 降级视图。
+      </p>
+
+      <h2>公开待决项</h2>
+      <p>这些没有在 V1 里替你决定，因为现在决定就是猜。它们是 V2 该回答的。</p>
+      <div class="cards">
+        <div class="dec">
+          <h4>D1 · 地图上要不要一个能走动的小人？</h4>
+          <p>「3D 小人选地图」是这个想法的起点，但它有具体价格：可操控角色要装 <code>ecctrl</code> + Rapier 物理，donor 目录当前对所有产品的标注是「先不要装，等有试玩证据」。</p>
+          <div class="opt">A 要走动 → 装物理，手感要调，移动端要测<br />B 不走动 → 点击关卡节点，镜头飞过去，零物理依赖<br />C 折中 → 小人只在着陆与结算时出现，不接受操控</div>
+        </div>
+        <div class="dec">
+          <h4>D2 · UniversityLocal 的 study 在地图上是什么？</h4>
+          <p>那边的组织方式是「一个源仓库 = 一个 study，下面若干课程」。学习者不关心仓库。一门课 = 一块大陆，那大陆之上是什么？</p>
+          <div class="opt">A 星系 = 一个真实产品（读《图灵密约》）<br />B 星系 = 一个主题（读界面 / 读 AI 契约），跨仓库<br />C 干脆没有上层，课程平铺</div>
+        </div>
+        <div class="dec">
+          <h4>D3 · 课程更新后，学习者的进度怎么办？</h4>
+          <p>UniversityLocal 的规则：内容修订让课程回到未完成。对一个自学的人这是对的（内容变了就该重看），对付费学习者大概率是敌意的。</p>
+          <div class="opt">A 进度按课程保留，只标注「有更新」<br />B 按小节比对，只有变过的小节回到未完成<br />C 沿用上游规则</div>
+        </div>
+        <div class="dec">
+          <h4>D4 · 免费额度的单位是什么？</h4>
+          <p>「每天 N 次辅导」学习者能算清但对你成本不封顶；「每月 N token」对你安全但没人看得懂。</p>
+          <div class="opt">A 按「解释次数」计，内部换算 token<br />B 按课程数（前 N 节免费，全课程订阅）<br />C 混合：读与确定性判分永久免费，辅导按次</div>
+        </div>
+        <div class="dec">
+          <h4>D5 · 私有源码的展示边界是什么？</h4>
+          <p>已决定把「读真实商业产品源码」当卖点。那么评审闸门要有<b>可执行的标准</b>，而不是每次凭感觉：哪些目录永不出现、密钥形态之外还有哪些红线、竞品能从课程里复原多少。</p>
+          <div class="opt">这一条不是待选项，是<b>必须写出来的清单</b>。没有清单，闸门就是摆设。</div>
+        </div>
+        <div class="dec">
+          <h4>D6 · 首发语言</h4>
+          <p>现有课程内容是中文的。i18n 是已登记能力，但双语从第一天做会让每一幕的文案成本翻倍。</p>
+          <div class="opt">A 中文优先，结构上留好 i18n<br />B 一开始就双语<br />C 英文优先（内容要重做）</div>
+        </div>
+      </div>
+
+      <h2>这一版明确不做</h2>
+      <div class="no">
+        <ul>
+          <li><strong>联机与多人。</strong>不装 SwimmerGameServerKit。测验和本地复习不构成权威多人需求。</li>
+          <li><strong>让学习者上传自己的仓库生成课程。</strong>那是 UniversityLocal 的工作，把它搬进交付侧会同时毁掉成本模型和内容质量。</li>
+          <li><strong>在 WebGL 里做文本与输入。</strong>中文输入法、可选中复制的代码、无障碍、手机键盘在画布里全部退化，而且违反已注册的 Web3D 基线规则 7。</li>
+          <li><strong>写实画风与大世界。</strong>这是学习产品。地图存在的目的是让人知道自己在哪、下一步去哪。</li>
+          <li><strong>排行榜。</strong>在「懂了」还没做扎实之前，排行榜只会奖励刷题速度——那正好是学习的反面。</li>
+          <li><strong>把课程内容在本仓库里改一个字。</strong>内容的修改在 UniversityLocal 里做，重新导出。</li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>
+          真理来源：<code>docs/specs/active/SPEC-0001-universitylocal-parity-contract.md</code> ·
+          <code>docs/policy/shared-rules/brand-kit-first.md</code> ·
+          <code>docs/policy/shared-rules/web3d-capability-alignment.md</code> ·
+          <code>docs/policy/shared-rules/donors.md</code>
+        </p>
+        <p>
+          这份文件是<strong>投影，不是承诺</strong>。它由 PGS 控制平面在本仓库还没有产品代码时起草，
+          所有「来源」标注是对 UniversityLocal 现状的判断，不是已完成的移植。它会过期；过期时请重判，不要相信它。
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      const ACTS = [
+        { s: "一 · 到达", n: 1, t: "落地页：一句话说清差异", g: "g1", src: "new", d: "不是「学编程」，是「读一个正在赚钱的产品的源码，作者带着你读」。这句话如果说不清楚，后面 21 幕都不会发生。", p: "验收：陌生人读完首屏能复述这句话。真人测 5 个，不是读代码。" },
+        { s: "一 · 到达", n: 2, t: "免注册直接开始", g: "g1", src: "new", d: "没有账号墙、没有邮箱、没有「选择你的水平」问卷。点一下就进第一节课。", p: "验收：从落地页到看见课文正文 ≤ 3 次点击，0 次输入。" },
+        { s: "一 · 到达", n: 3, t: "世界选择：3D 星图", g: "g1", src: "new", d: "一门课 = 一块大陆。镜头从星图推近。这是整个产品第一次用到 3D，也是它第一次需要证明自己不是负债。", p: "验收：不看教程，8 秒内指出「我下一节课在哪」。同时必须有 2D 降级视图，结构完全一致。" },
+        { s: "一 · 到达", n: 4, t: "大陆着陆：这门课教什么", g: "g1", src: "half", d: "课程目标、前置课、来自哪个真实产品、有多少节。", p: "来源：course.json 已有 title/description/objectives/prerequisiteCourseIds。交付侧要做的是呈现，不是内容。" },
+        { s: "二 · 第一节课", n: 5, t: "关卡链：unit → lesson 的路径", g: "g1", src: "half", d: "一条看得见终点的路。已完成的关卡亮着，下一关在呼吸，后面的暗着。", p: "来源：units/lessons 树已有。全新的是「路径」这个表现与解锁规则。" },
+        { s: "二 · 第一节课", n: 6, t: "进关仪式（≤ 3 秒）", g: "g1", src: "new", d: "镜头落地、关卡名浮现、课堂面板推上来。它的作用是把「点了一下」变成「我进来了」。", p: "验收：可跳过，且跳过后再也不强制播放。仪式一旦变成障碍就是负债。" },
+        { s: "二 · 第一节课", n: 7, t: "读课文（2D）", g: "g1", src: "port", d: "带证据锚点的课文：一段解释旁边就是它对应的真实源码位置、精确 commit 与行号。这是整个产品的核心，也是唯一抄不走的部分。", p: "来源：LessonReader、markdown 管线、证据锚点在 UniversityLocal 已经跑了几个月。这是最该抽进共享包的第一块。" },
+        { s: "二 · 第一节课", n: 8, t: "选中一段：解释 / 标记 / 朗读", g: "g2", src: "half", d: "选中任意一段可以标记、可以要一句更浅的解释、可以朗读。朗读正是你举的那个例子——它必须两边同时拥有。", p: "来源：选中与标记（reader-marks、find-quote）已有；朗读两边都还没有。<b>它是共享包价值的第一个真实检验：做一次，两边都有。</b>" },
+        { s: "二 · 第一节课", n: 9, t: "小怪战：习题变成血条", g: "g1", src: "half", d: "这一节的习题与卡片就是怪物的血量，答对扣血。战斗界面是叠在 3D 场景上的 2D HUD，输入框是真的输入框。", p: "来源：exercises 与 cards 已有且带答案。全新的是包装与节奏。<b>不要把答题框做进画布。</b>" },
+        { s: "二 · 第一节课", n: 10, t: "判分与「你错在哪」", g: "g1", src: "half", d: "先确定性判分立刻出结果；错了不是打叉，是指回课文里那一句和那段源码。第二个「懂了」的峰在这里。", p: "来源：expectedAnswer 已在包里。全新的是错误归因与回指。验收：一节全确定性的课，零次大模型调用。" },
+        { s: "三 · 结算", n: 11, t: "掉落：卡片入库", g: "g2", src: "port", d: "打赢掉落的不是金币，是刚才那节课的记忆卡片。它进入间隔重复队列——这是明天回来的物理原因。", p: "来源：FSRS 调度（ts-fsrs）与卡片模型已有。<b>这是整个产品最被低估的资产。</b>" },
+        { s: "三 · 结算", n: 12, t: "结算屏：连击第 1 天", g: "g2", src: "new", d: "进度、掉落的卡片、明天会有多少张到期。连击从这里起算，而且第一天就告诉他明天有事可做。", p: "验收：结算屏必须出现「明天 N 张」，否则连击只是一个数字。" },
+        { s: "三 · 结算", n: 13, t: "请求注册（在给完东西之后）", g: "g2", src: "kit", d: "措辞是「保存你刚拿到的东西」，不是「创建账号」。这是整段旅程第一次要求付出，此前一次都没有。", p: "来源：SwimmerBackend。<b>纯支出幕。</b>五分钟预算的 33 秒超支全在这里——所以它必须在结算之后。" },
+        { s: "四 · 回来", n: 14, t: "第二天的召回", g: "g2", src: "port", d: "推送/邮件说的不是「你的连击要断了」，是「你昨天刚弄懂的那 12 张卡今天到期」。前者制造焦虑，后者制造具体的事。", p: "来源：到期选择逻辑已有。<b>这一幕的成败决定第二次打开率，而它几乎不需要新发明。</b>" },
+        { s: "四 · 回来", n: 15, t: "复习关：重返旧关", g: "g2", src: "half", d: "复习不是一个列表页，是回到地图上已通关的区域。视觉上「旧地重游」，机制上是间隔重复。", p: "来源：调度已有，表现全新。验收：复习必须离线可用——通勤是它最大的使用场景。" },
+        { s: "四 · 回来", n: 16, t: "连击与失败保护", g: "g3", src: "new", d: "断连击的处理比连击本身更重要。公开数据里连击是最强的留存杠杆，但它靠的是「身份」，不是「恐惧」——一次断掉就永久流失的设计是在自杀。", p: "验收：断一天后回来，产品说的第一句话不能是责备。" },
+        { s: "五 · 卡住与付费", n: 17, t: "真的卡住：AI 导师", g: "g2", src: "new", d: "答错两次、或者主动点「我不懂」。这是唯一进入开放对话的入口，也是成本第 3 层唯一的出口。", p: "来源：经 SwimmerAIKit。<b>产品代码不得直连任何模型厂商 SDK。</b>入口越窄，成本越可控。" },
+        { s: "五 · 卡住与付费", n: 18, t: "付费时刻", g: "g2", src: "kit", d: "他买的不是「课程」，是「卡住时有人讲给我听」+「全部课程」。付费页出现在他刚被讲通一次之后，不是之前。", p: "来源：SwimmerBackend 钱包与权益。<b>纯支出幕。</b>验收：付费页不打断当前这次解释。" },
+        { s: "五 · 卡住与付费", n: 19, t: "额度用尽的措辞", g: "g2", src: "new", d: "变灰的只有辅导按钮。读课文、做确定性题、复习全部照常。要说清楚还剩什么能做，而不是把产品锁上。", p: "验收：额度用尽状态下，学习者仍能完整走完一节课。" },
+        { s: "六 · 长期", n: 20, t: "角色成长与装扮", g: "g3", src: "new", d: "3D 小人随进度变化。这是包装层：它放大已有的快乐，不创造快乐。", p: "排序理由：没有可放大的东西时它等于零。所以它在缺口总账里排最后。" },
+        { s: "六 · 长期", n: 21, t: "课程被作者更新了", g: "g3", src: "new", d: "作者在 UniversityLocal 里改好、重新导出、评审、投放。学习者这一侧看到什么？", p: "<b>未决（D3）。</b>上游规则会让课程回到未完成，那对付费学习者大概率是敌意的。" },
+        { s: "六 · 长期", n: 22, t: "多端：通勤上的复习", g: "g3", src: "new", d: "手机上不做地图不做关卡，只做复习。桌面端做完整体验。三端共用同一套课程包。", p: "来源：Capacitor / Electron 出壳。前提是 Web3D 基线规则 8 那五条先满足——它现在是登记在案的 scheduled-migration。" },
+      ];
+
+      const SRC_LABEL = { port: "直接移植", half: "移植一半", new: "全新", kit: "外部件" };
+      const G_LABEL = { g1: "G1 第一节课", g2: "G2 第二天", g3: "G3 习惯" };
+
+      const wall = document.getElementById("wall");
+      let lastStage = null;
+      for (const a of ACTS) {
+        if (a.s !== lastStage) {
+          const h = document.createElement("div");
+          h.className = "stage";
+          h.textContent = a.s;
+          wall.appendChild(h);
+          const g = document.createElement("div");
+          g.className = "grid";
+          g.dataset.stage = a.s;
+          wall.appendChild(g);
+          lastStage = a.s;
+        }
+        const grid = wall.lastElementChild;
+        const el = document.createElement("article");
+        el.className = "act";
+        el.dataset.g = a.g;
+        el.dataset.src = a.src;
+        el.innerHTML =
+          '<div class="top"><span class="num">' + String(a.n).padStart(2, "0") + '</span>' +
+          '<h4>' + a.t + '</h4></div>' +
+          '<div class="top"><span class="tag" style="border-color:var(--' + a.g + ')">' + G_LABEL[a.g] + '</span>' +
+          '<span class="tag" style="border-color:var(--' + a.src + ');color:var(--' + a.src + ')">' + SRC_LABEL[a.src] + '</span></div>' +
+          '<p>' + a.d + '</p>' +
+          '<div class="proof">' + a.p + '</div>';
+        grid.appendChild(el);
+      }
+
+      document.getElementById("toolbar").addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        for (const b of document.querySelectorAll("#toolbar button")) {
+          b.setAttribute("aria-pressed", String(b === btn));
+        }
+        const f = btn.dataset.f;
+        for (const act of document.querySelectorAll(".act")) {
+          const show = f === "all" || act.dataset.g === f || act.dataset.src === f;
+          act.hidden = !show;
+        }
+        for (const grid of document.querySelectorAll(".grid")) {
+          const any = [...grid.children].some((c) => !c.hidden);
+          grid.previousElementSibling.style.display = any ? "" : "none";
+          grid.style.display = any ? "" : "none";
+        }
+      });
+
+      // 快乐地图：强度 0-5，种类
+      const JOY_KIND = {
+        understand: { c: "#4bb98a", n: "懂了（抄不走的那个）" },
+        progress: { c: "#6ea8d8", n: "进展" },
+        collect: { c: "#c9a0e8", n: "收藏" },
+        ritual: { c: "#dd8a4a", n: "仪式 / 审美" },
+        identity: { c: "#e8c15e", n: "归属" },
+        none: { c: "#3a4256", n: "纯支出" },
+      };
+      const JOY = [
+        [1, "落地页", 1, "progress"], [2, "免注册开始", 2, "progress"], [3, "3D 星图", 3, "ritual"],
+        [4, "大陆着陆", 2, "progress"], [5, "关卡链", 2, "progress"], [6, "进关仪式", 3, "ritual"],
+        [7, "读课文", 5, "understand"], [8, "选中·朗读", 3, "understand"], [9, "小怪战", 3, "ritual"],
+        [10, "错在哪", 5, "understand"], [11, "卡片掉落", 4, "collect"], [12, "结算·连击 1", 4, "progress"],
+        [13, "注册", 0, "none"], [14, "第二天召回", 3, "progress"], [15, "复习关", 4, "understand"],
+        [16, "连击保护", 3, "identity"], [17, "AI 导师", 4, "understand"], [18, "付费", 0, "none"],
+        [19, "额度用尽", 0, "none"], [20, "角色成长", 3, "identity"], [21, "课程更新", 1, "none"],
+        [22, "通勤复习", 4, "collect"],
+      ];
+      const joy = document.getElementById("joy");
+      for (const [n, label, v, kind] of JOY) {
+        const b = document.createElement("div");
+        b.className = "bar";
+        b.title = n + " " + label + " · " + JOY_KIND[kind].n + " · 强度 " + v;
+        b.innerHTML =
+          '<div class="fill" style="height:' + (v / 5) * 100 + '%;background:' + JOY_KIND[kind].c + '"></div>' +
+          '<div class="lbl">' + label + '</div>';
+        joy.appendChild(b);
+      }
+      const jk = document.getElementById("joykeys");
+      for (const k of Object.values(JOY_KIND)) {
+        const s = document.createElement("span");
+        s.className = "key";
+        s.innerHTML = '<span class="dot" style="background:' + k.c + '"></span>' + k.n;
+        jk.appendChild(s);
+      }
+
+      // 信心 / 认知负荷曲线
+      const CONF = [1, 2, 2.5, 3, 3, 3.5, 4, 4.5, 4, 5, 5.5, 6, 5.5, 6, 6.5, 6.5, 7, 7, 6.5, 7.5, 7, 8];
+      const LOAD = [1, 1.5, 3.5, 2.5, 2.5, 2, 6, 5, 4.5, 6.5, 3, 2, 4, 2, 4, 2, 5, 3.5, 3, 2, 4.5, 2.5];
+      (function drawCurve() {
+        const W = 1080, H = 240, P = 30;
+        const x = (i) => P + (i * (W - 2 * P)) / (CONF.length - 1);
+        const y = (v) => H - P - (v / 8) * (H - 2 * P);
+        const path = (arr) => arr.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
+        document.getElementById("curve").innerHTML =
+          '<svg viewBox="0 0 ' + W + " " + H + '" style="width:100%;height:auto" role="img" aria-label="信心与认知负荷曲线">' +
+          '<line x1="' + P + '" y1="' + (H - P) + '" x2="' + (W - P) + '" y2="' + (H - P) + '" stroke="rgba(233,237,245,.18)"/>' +
+          '<path d="' + path(CONF) + '" fill="none" stroke="#5ec8c0" stroke-width="2.5"/>' +
+          '<path d="' + path(LOAD) + '" fill="none" stroke="#dd8a4a" stroke-width="2.5" stroke-dasharray="5 4"/>' +
+          '<text x="' + (P + 4) + '" y="20" fill="#5ec8c0" font-size="13">信心（必须整体向上）</text>' +
+          '<text x="' + (P + 4) + '" y="38" fill="#dd8a4a" font-size="13">认知负荷（只允许在第 7、10、17 幕高）</text>' +
+          '<text x="' + x(2) + '" y="' + (H - 8) + '" fill="#74809a" font-size="11" text-anchor="middle">3D 星图</text>' +
+          '<text x="' + x(6) + '" y="' + (H - 8) + '" fill="#74809a" font-size="11" text-anchor="middle">读课文</text>' +
+          '<text x="' + x(9) + '" y="' + (H - 8) + '" fill="#74809a" font-size="11" text-anchor="middle">错在哪</text>' +
+          '<text x="' + x(16) + '" y="' + (H - 8) + '" fill="#74809a" font-size="11" text-anchor="middle">AI 导师</text>' +
+          "</svg>";
+      })();
+
+      // 首次五分钟预算
+      const BUDGET = [
+        ["读懂落地页", 20, false], ["选世界（3D 星图）", 25, false], ["看课程目标", 20, false],
+        ["找到第一关", 15, false], ["进关仪式", 8, false], ["读课文", 120, false],
+        ["小怪战答题", 60, false], ["结算与掉落", 20, false], ["注册（超支）", 45, true],
+      ];
+      const bud = document.getElementById("budget");
+      const max = Math.max(...BUDGET.map((b) => b[1]));
+      for (const [name, sec, over] of BUDGET) {
+        const row = document.createElement("div");
+        row.className = "brow";
+        row.innerHTML =
+          "<span>" + name + "</span>" +
+          '<span class="btrack"><span class="bfill" style="width:' + (sec / max) * 100 + "%;background:" + (over ? "#d96b6b" : "#5ec8c0") + '"></span></span>' +
+          '<span class="mono" style="color:' + (over ? "#d96b6b" : "#a8b3c7") + '">' + sec + "s</span>";
+        bud.appendChild(row);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+{
+  "name": "@pieai/university",
+  "version": "0.0.0",
+  "private": true,
+  "description": "University — the commercial, gamified Web3D learning product. UniversityLocal authors the courses; University delivers them.",
+  "type": "module",
+  "scripts": {
+    "prepare": "lefthook install",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "oxlint --deny-warnings src vite.config.ts vitest.config.ts",
+    "format": "oxfmt --write package.json tsconfig.json tsconfig.app.json vite.config.ts vitest.config.ts index.html src",
+    "format:check": "oxfmt --check package.json tsconfig.json tsconfig.app.json vite.config.ts vitest.config.ts index.html src",
+    "test": "vitest run --passWithNoTests",
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build && pnpm docs:check",
+    "pro-gov": "pro-gov",
+    "doc-gov": "doc-gov",
+    "docs:check": "pnpm pro-gov doctor && pnpm doc-gov router-check && pnpm doc-gov check && pnpm doc-gov scan --check && pnpm doc-gov links && pnpm doc-gov audit && pnpm doc-gov doctor"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.6.1",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "three": "0.185.1"
+  },
+  "devDependencies": {
+    "@pieai/doc-gov": "0.9.1",
+    "@pieai/pro-gov": "0.9.1",
+    "@types/node": "24.13.2",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@types/three": "0.185.1",
+    "@vitejs/plugin-react": "6.0.3",
+    "lefthook": "^2.1.10",
+    "oxfmt": "0.58.0",
+    "oxlint": "1.73.0",
+    "typescript": "6.0.3",
+    "vite": "8.1.4",
+    "vitest": "4.1.10"
+  },
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=11.22.0 <12"
+  },
+  "packageManager": "pnpm@11.22.0"
+}

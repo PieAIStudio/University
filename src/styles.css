@@ -1,0 +1,26 @@
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: #0e0f13;
+  color: #e8e6e1;
+  font:
+    15px/1.6 system-ui,
+    -apple-system,
+    "PingFang SC",
+    sans-serif;
+}
+
+.placeholder {
+  max-width: 60ch;
+  padding: max(24px, env(safe-area-inset-top)) 24px 24px;
+  margin: 0 auto;
+}
+
+.placeholder code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  color: #9fd2c0;
+}

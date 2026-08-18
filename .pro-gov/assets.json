@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "host": "codex",
+  "placement": "registry",
+  "bundleIds": [
+    "base-governance",
+    "frontend-app",
+    "threejs-game"
+  ],
+  "assetIds": [
+    "npx-skills/agent-browser",
+    "npx-skills/frontend-design",
+    "npx-skills/impeccable",
+    "npx-skills/threejs-3d-generator",
+    "npx-skills/threejs-aaa-graphics-builder",
+    "npx-skills/threejs-audio-generator",
+    "npx-skills/threejs-debug-profiler",
+    "npx-skills/threejs-game-director",
+    "npx-skills/threejs-game-ui-designer",
+    "npx-skills/threejs-gameplay-systems",
+    "npx-skills/threejs-image-generator",
+    "npx-skills/threejs-qa-release",
+    "npx-skills/ui-ux-pro-max",
+    "pie-rules/ai-in-the-loop",
+    "pie-rules/brand-kit-first",
+    "pie-rules/clean-image-generation-rules",
+    "pie-rules/donors",
+    "pie-rules/web3d-capability-alignment",
+    "pie-skills/experience-capture",
+    "pie-skills/mermaid-diagrams",
+    "pie-skills/screenwalk",
+    "third-party-skills/game-studio"
+  ]
+}

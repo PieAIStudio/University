@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "host": "codex",
+  "placement": "registry",
+  "bundleIds": [
+    "base-governance",
+    "frontend-app",
+    "threejs-game"
+  ],
+  "registryProvenance": {
+    "schema": "agent-assets-registry",
+    "version": 1,
+    "hash": "sha256:15702933ac00c8460bf9a4f9fb46aa850b0b045bf47f84ed0f511c80f398c3ff",
+    "assetCount": 22
+  },
+  "assets": [
+    {
+      "id": "npx-skills/agent-browser",
+      "sourcePath": "skills/npx-skills/.agents/skills/agent-browser",
+      "delivery": "symlink",
+      "contentHash": "sha256:a674b7d81066e3cc471a7512ddb4ae724418cbfefa75cbb050b0dc430e4d57a0",
+      "targetPath": ".agents/skills/agent-browser"
+    },
+    {
+      "id": "npx-skills/frontend-design",
+      "sourcePath": "skills/npx-skills/.agents/skills/frontend-design",
+      "delivery": "symlink",
+      "contentHash": "sha256:665c585455decbcb02116bc928adf5148b9cd0f67b7eb4908c8c0d647c00f68a",
+      "targetPath": ".agents/skills/frontend-design"
+    },
+    {
+      "id": "npx-skills/impeccable",
+      "sourcePath": "skills/npx-skills/.agents/skills/impeccable",
+      "delivery": "symlink",
+      "contentHash": "sha256:16f7f1f484ab99c1149d2decd6c7e830849072dfa1057d6324af8bba84965a9d",
+      "targetPath": ".agents/skills/impeccable"
+    },
+    {
+      "id": "npx-skills/threejs-3d-generator",
+      "sourcePath": "skills/npx-skills/.agents/skills/threejs-3d-generator",
+      "delivery": "symlink",
+      "contentHash": "sha256:ca2321b8310ff1c72b8f74ded002ddea7d443df02641c63c46a84ea71d730ad5",
+      "targetPath": ".agents/skills/threejs-3d-generator"
+    },
+    {
+      "id": "npx-skills/threejs-aaa-graphics-builder",
+      "sourcePath": "skills/npx-skills/.agents/skills/threejs-aaa-graphics-builder",
+      "delivery": "symlink",
+      "contentHash": "sha256:77b9600f931d1eacf46a4f8fb29519738828537004598ab44119002bf6b18839",
+      "targetPath": ".agents/skills/threejs-aaa-graphics-builder"
+    },
+    {
+      "id": "npx-skills/threejs-audio-generator",
+      "sourcePath": "skills/npx-skills/.agents/skills/threejs-audio-generator",
+      "delivery": "symlink",
+      "contentHash": "sha256:3ab4be8c0714be3df83c2d09df134ac985c1208cb53547ff66a201aa41651706",
+      "targetPath": ".agents/skills/threejs-audio-generator"
+    },
+    {
+      "id": "npx-skills/threejs-debug-profiler",
+      "sourcePath": "skills/npx-skills/.agents/skills/threejs-debug-profiler",
+      "delivery": "symlink",
+      "contentHash": "sha256:3c56725f07f5e5f5edcb4a0e5199b10fa9a606b033469f218d2e53f01b5a4be7",
+      "targetPath": ".agents/skills/threejs-debug-profiler"
+    },
+    {
+      "id": "npx-skills/threejs-game-director",
+      "sourcePath": "skills/npx-skills/.agents/skills/threejs-game-director",
+      "delivery": "symlink",
+      "contentHash": "sha256:28f7b1214a429e330829722e596f39a56cbee011c26a67eaa6bb8e50fdcfeb6e",
+      "targetPath": ".agents/skills/threejs-game-director"
+    },
+    {
+      "id": "npx-skills/threejs-game-ui-designer",
+      "sourcePath": "skills/npx-skills/.agents/skills/threejs-game-ui-designer",
+      "delivery": "symlink",
+      "contentHash": "sha256:b7e495bdb8906b228703f41090854943154b293495c846e80064314ce503e952",
+      "targetPath": ".agents/skills/threejs-game-ui-designer"
+    },
+    {
+      "id": "npx-skills/threejs-gameplay-systems",
+      "sourcePath": "skills/npx-skills/.agents/skills/threejs-gameplay-systems",
+      "delivery": "symlink",
+      "contentHash": "sha256:587d05ef292057b93025cc706dad957fdd9f205e5938d0477145a6e81afb18d2",
+      "targetPath": ".agents/skills/threejs-gameplay-systems"
+    },
+    {
+      "id": "npx-skills/threejs-image-generator",
+      "sourcePath": "skills/npx-skills/.agents/skills/threejs-image-generator",
+      "delivery": "symlink",
+      "contentHash": "sha256:521a9f144bb6d73f65f69eabf55479d6195f83cd625d7241620955b7ed055602",
+      "targetPath": ".agents/skills/threejs-image-generator"
+    },
+    {
+      "id": "npx-skills/threejs-qa-release",
+      "sourcePath": "skills/npx-skills/.agents/skills/threejs-qa-release",
+      "delivery": "symlink",
+      "contentHash": "sha256:781eb672190cef2a07eb50d8594e90c545c4c69c4cce3d6adcd173015862c919",
+      "targetPath": ".agents/skills/threejs-qa-release"
+    },
+    {
+      "id": "npx-skills/ui-ux-pro-max",
+      "sourcePath": "skills/npx-skills/.agents/skills/ui-ux-pro-max",
+      "delivery": "symlink",
+      "contentHash": "sha256:6503364c204a3a10e3cf80e3a53323e9ab581b6d06550c3cc893cdcf1206f048",
+      "targetPath": ".agents/skills/ui-ux-pro-max"
+    },
+    {
+      "id": "pie-rules/ai-in-the-loop",
+      "sourcePath": "rules/pie-rules/ai-in-the-loop.md",
+      "delivery": "snapshot",
+      "contentHash": "sha256:344eba8c3b1f3130ed33e4b6a4511a332e2ca477e6a40ad7d4c73006197f5445",
+      "targetPath": "docs/policy/shared-rules/ai-in-the-loop.md"
+    },
+    {
+      "id": "pie-rules/brand-kit-first",
+      "sourcePath": "rules/pie-rules/brand-kit-first.md",
+      "delivery": "snapshot",
+      "contentHash": "sha256:eb74748102972fc97cc62837cefb8098ad4f75731559a079c2ad4d59c71989de",
+      "targetPath": "docs/policy/shared-rules/brand-kit-first.md"
+    },
+    {
+      "id": "pie-rules/clean-image-generation-rules",
+      "sourcePath": "rules/pie-rules/clean-image-generation-rules.md",
+      "delivery": "snapshot",
+      "contentHash": "sha256:cd6a79b9971af50003812b498827837ca5c2c284d5b2c95ad3bbf3778483f74a",
+      "targetPath": "docs/policy/shared-rules/clean-image-generation-rules.md"
+    },
+    {
+      "id": "pie-rules/donors",
+      "sourcePath": "rules/pie-rules/donors.md",
+      "delivery": "snapshot",
+      "contentHash": "sha256:fb4b44a7bf9dc26c6b4384906fdbaa2ed5747697598bee40c60b2dd978684698",
+      "targetPath": "docs/policy/shared-rules/donors.md"
+    },
+    {
+      "id": "pie-rules/web3d-capability-alignment",
+      "sourcePath": "rules/pie-rules/web3d-capability-alignment.md",
+      "delivery": "snapshot",
+      "contentHash": "sha256:9834ff5cadf6b7a6a8479de7ba0c26c4e552224377327fba2b850bdab25d18c1",
+      "targetPath": "docs/policy/shared-rules/web3d-capability-alignment.md"
+    },
+    {
+      "id": "pie-skills/experience-capture",
+      "sourcePath": "skills/pie-skills/experience-capture",
+      "delivery": "symlink",
+      "contentHash": "sha256:7e721266aa5bb311c9e66b887046270cd29cb6125a4fa3c103471d775aa40d65",
+      "targetPath": ".agents/skills/experience-capture"
+    },
+    {
+      "id": "pie-skills/mermaid-diagrams",
+      "sourcePath": "skills/pie-skills/mermaid-diagrams",
+      "delivery": "symlink",
+      "contentHash": "sha256:290c599d15e221ebcd33f4d442188e1ef8077c36eecf4f4a542b2fa520410f14",
+      "targetPath": ".agents/skills/mermaid-diagrams"
+    },
+    {
+      "id": "pie-skills/screenwalk",
+      "sourcePath": "skills/pie-skills/screenwalk",
+      "delivery": "symlink",
+      "contentHash": "sha256:4d2ccbffdba26191cfc1b64d4f070c351f34a729e9ffb28c7dca00759a4837f7",
+      "targetPath": ".agents/skills/screenwalk"
+    },
+    {
+      "id": "third-party-skills/game-studio",
+      "sourcePath": "skills/third-party-without-npx-skills/game-studio/0.1.2",
+      "delivery": "symlink",
+      "contentHash": "sha256:2ab0672154048eac09ef9e7c699e3fe0297c6b58f3919140a0b59c578e7edfe9",
+      "targetPath": ".agents/manual-skills/game-studio"
+    }
+  ]
+}

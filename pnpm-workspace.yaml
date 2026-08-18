@@ -1,0 +1,15 @@
+# pnpm only runs a dependency's install scripts when it is allowed here, so
+# this list is a supply-chain gate: deny by default, allow what is proven
+# necessary.
+allowBuilds:
+  # Denied. esbuild arrives only as a transitive dependency of vite, and its
+  # postinstall is a fallback for installers that cannot resolve the platform
+  # package. pnpm does resolve it, so both the binary and the JS transform API
+  # work with the script skipped.
+  esbuild: false
+  # Allowed. lefthook's postinstall fetches the binary and syncs the Git
+  # hooks; without it the commit gate in lefthook.yml never runs.
+  lefthook: true
+minimumReleaseAgeExclude:
+  - '@pieai/doc-gov@0.9.0 || 0.9.1'
+  - '@pieai/pro-gov@0.9.0 || 0.9.1'

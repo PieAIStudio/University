@@ -1,0 +1,18 @@
+# lefthook.yml — Project Governance System standard doc-gov gate.
+# Copy to target project root as lefthook.yml, then run:
+#   pnpm exec lefthook install
+
+pre-commit:
+  parallel: false
+  commands:
+    01-doc-gov-router-check:
+      glob: "{AGENTS.md,CLAUDE.md,README.md,docs/**/*.{md,yml,yaml}}"
+      run: pnpm doc-gov router-check
+    02-doc-gov-check:
+      glob: "{docs/**/*.md,docs/governance/**/*.{md,yml,yaml},docs/policy/**/*.md,AGENTS.md,CLAUDE.md}"
+      run: pnpm doc-gov check && pnpm doc-gov scan --check && pnpm doc-gov links && pnpm doc-gov audit
+
+commit-msg:
+  commands:
+    doc-gov-commit-msg:
+      run: pnpm doc-gov verify-commit-msg "{1}"
