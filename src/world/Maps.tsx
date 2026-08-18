@@ -6,21 +6,56 @@
  * Chinese IME, selectable code, a screen reader and a phone keyboard all
  * degrade to nothing inside WebGL. The canvas moves the eye; the DOM carries
  * the words.
+ *
+ * What the world *says* is the design decision in this file, and it is one
+ * sentence: **an island shows how far its course got.** Nature is there from
+ * the first visit, because a world nobody has touched still has to be worth
+ * looking at — that is the screen a stranger decides on. The settlement is the
+ * part progress owns. Bare clearings on a half-finished island are not an
+ * oversight; they are the room the learner has left to build, and a finished
+ * course reads as a village because somebody lived there long enough.
+ *
+ * One thing is lit. The beacon burns on exactly one island — the next course —
+ * so the eight-second question the map has to answer ("where do I go now")
+ * is answered by looking, not by reading.
  */
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import type { CourseNode } from "../content/library";
+import { buildIsland, hash, seeded } from "./island";
+import { PropField, type Placement, type Role } from "./kit";
 import { layoutCourse, layoutStudy, radiusForLessons } from "./layout";
 
-/** Three greys and one accent. Completion is lightness, not colour. */
+/**
+ * The world's palette. Two greens for land, one warm accent for the only thing
+ * that is lit, and a sea that is dark enough for a white label to sit on.
+ */
+export const PALETTE = {
+  // The sea is most of the frame, so the sea is what sets the exposure of the
+  // whole product. Measured: with a near-navy sea the scene's median linear
+  // luminance came out at 0.059 and its middle 90% spanned 0.052 to 0.071 —
+  // an image with no midtones, which no grade can rescue, because there is
+  // nothing there to expand. A shallow, lit sea puts the median where a grade
+  // can work and where the land has something to be brighter than.
+  sea: 0x2f89a0,
+  seaDeep: 0x1c5c72,
+  foam: 0xc9f0ea,
+  sky: 0xa9d6e9,
+  horizon: 0xdcefef,
+  causeway: 0xc0a373,
+  accent: 0xffb347,
+  // A locked island multiplies its vertex colours by this, so it has to stay
+  // light: a dark tint reads as a hole in the sea rather than as land that is
+  // not open yet, and the shape of the course tree is information a learner is
+  // entitled to see before they have earned it.
+  locked: 0x94a3ad,
+} as const;
+
+/** Kept for the 2D layer, which still labels by state. */
 export const GREY = {
-  // Measured against the grade, not picked in a swatch: the contrast pivot in
-  // `grade.ts` pulls anything under roughly 0.08 to black, so a floor darker
-  // than this stops being a floor and becomes a hole.
   base: 0x2a3140,
-  /** Reachable, but not the one to start now. */
   open: 0x55617a,
   idle: 0x3d4757,
   done: 0x6d788a,
@@ -37,87 +72,23 @@ export interface Marker {
   readonly kind: "study" | "course" | "lesson" | "unit";
 }
 
-function Disc({
-  position,
-  radius,
-  height,
-  colour,
-  onClick,
-  onOver,
-}: {
-  position: THREE.Vector3;
-  radius: number;
-  height: number;
-  colour: number;
-  onClick?: () => void;
-  onOver?: (over: boolean) => void;
-}) {
-  return (
-    <mesh
-      position={position}
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick?.();
-      }}
-      onPointerOver={(event) => {
-        event.stopPropagation();
-        onOver?.(true);
-      }}
-      onPointerOut={() => onOver?.(false)}
-    >
-      <cylinderGeometry args={[radius, radius * 0.94, height, 28]} />
-      <meshStandardMaterial color={colour} roughness={0.82} metalness={0.05} />
-    </mesh>
-  );
-}
-
-function Road({ from, to }: { from: THREE.Vector3; to: THREE.Vector3 }) {
-  const { position, quaternion, length } = useMemo(() => {
-    const direction = new THREE.Vector3().subVectors(to, from);
-    const mid = from.clone().add(to).multiplyScalar(0.5);
-    const rotation = new THREE.Quaternion().setFromUnitVectors(
-      new THREE.Vector3(0, 0, 1),
-      direction.clone().normalize(),
-    );
-    return { position: mid, quaternion: rotation, length: direction.length() };
-  }, [from, to]);
-  return (
-    <mesh position={position} quaternion={quaternion}>
-      <boxGeometry args={[0.16, 0.06, length]} />
-      <meshStandardMaterial color={GREY.edge} roughness={0.9} />
-    </mesh>
-  );
-}
-
-/** The learner. A small capsule, as asked for, and deliberately kept that way. */
-function Learner({ position }: { position: THREE.Vector3 }) {
-  const ring = useRef<THREE.Mesh>(null);
-  useFrame((_, delta) => {
-    if (ring.current) ring.current.rotation.z += delta * 0.7;
-  });
-  return (
-    <group position={position}>
-      <mesh position={[0, 0.62, 0]}>
-        <capsuleGeometry args={[0.32, 0.5, 4, 12]} />
-        <meshStandardMaterial color={0xf2f6ff} roughness={0.5} />
-      </mesh>
-      <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
-        <ringGeometry args={[0.55, 0.78, 32]} />
-        <meshBasicMaterial color={GREY.live} transparent opacity={0.75} />
-      </mesh>
-    </group>
-  );
-}
+const TREES: Role[] = ["tree-broad-a", "tree-broad-b", "tree-tall-a", "tree-tall-b"];
+const SCRUB: Role[] = ["bush", "bush-flowering", "fern", "mushroom"];
+const STONES: Role[] = ["rock-a", "rock-b", "rock-c"];
+/** A settlement fills in this order, so growth has a shape a learner can feel. */
+const BUILDINGS: Role[] = ["well", "house-small", "house-mid", "house-small", "house-large"];
 
 export interface WorldPlacement {
   readonly node: CourseNode;
   readonly position: THREE.Vector3;
   readonly radius: number;
+  /** 0 to 1 — how much of the course is finished. */
+  readonly progress: number;
   readonly state: "done" | "live" | "open" | "idle";
 }
 
 /** Positions for every course, plus each study's centre, computed once. */
-export function placeWorld(nodes: readonly CourseNode[], completed: (node: CourseNode) => boolean) {
+export function placeWorld(nodes: readonly CourseNode[], progressOf: (node: CourseNode) => number) {
   const byStudy = new Map<string, CourseNode[]>();
   for (const node of nodes) {
     const list = byStudy.get(node.studyId) ?? [];
@@ -158,18 +129,20 @@ export function placeWorld(nodes: readonly CourseNode[], completed: (node: Cours
     for (const node of entry.own) {
       const local = entry.placed.get(node.courseId);
       if (!local) continue;
+      const progress = progressOf(node);
       const unlocked = node.prerequisiteCourseIds.every((id) =>
-        entry.own.some((peer) => peer.courseId === id && completed(peer)),
+        entry.own.some((peer) => peer.courseId === id && progressOf(peer) >= 1),
       );
       placements.push({
         node,
-        position: new THREE.Vector3(local.x, local.y, local.z).add(centre),
+        position: new THREE.Vector3(local.x, 0, local.z).add(centre),
         radius: radiusForLessons(node.lessons),
+        progress,
         // Unlocked is not the same as next. The accent marks exactly one place
         // — where to go now — and a map that accents everything reachable has
         // answered "what could I do" instead of "what do I do", which is the
         // question the eight-second test actually asks.
-        state: completed(node) ? "done" : unlocked ? "open" : "idle",
+        state: progress >= 1 ? "done" : unlocked ? "open" : "idle",
       });
     }
   }
@@ -185,11 +158,230 @@ export function placeWorld(nodes: readonly CourseNode[], completed: (node: Cours
   return { placements: marked, centres, ring };
 }
 
+/**
+ * Decide what stands on one island.
+ *
+ * Slots come back from `buildIsland` scattered; sorting them by distance from
+ * the middle is what turns a scatter into a settlement — buildings take the
+ * centre, nature keeps the shore, and the boundary between them moves outward
+ * as the course is finished.
+ */
+function dress(entry: WorldPlacement) {
+  const random = seeded(`${entry.node.studyId}/${entry.node.courseId}/dress`);
+  const { slots } = shapeOf(entry);
+  const ordered = [...slots].sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
+  const claim = Math.max(1, Math.round(ordered.length * 0.45));
+  const built = Math.round(entry.progress * claim);
+
+  const out = new Map<Role, Placement[]>();
+  const push = (role: Role, at: Placement) => {
+    const list = out.get(role) ?? [];
+    list.push(at);
+    out.set(role, list);
+  };
+  const world = (local: THREE.Vector3) => local.clone().add(entry.position);
+
+  ordered.forEach((slot, index) => {
+    const turn = random() * Math.PI * 2;
+    if (index < claim) {
+      // The settlement band. Empty until the course is worked through.
+      if (index >= built) return;
+      const role =
+        entry.state === "done" && index === 0 ? "hall" : BUILDINGS[index % BUILDINGS.length]!;
+      push(role, {
+        position: world(slot),
+        height: entry.radius * (role === "hall" ? 0.5 : 0.34),
+        turn,
+      });
+      return;
+    }
+    // The wild band. Always there.
+    const roll = random();
+    const role =
+      roll < 0.5
+        ? TREES[Math.floor(random() * TREES.length)]!
+        : roll < 0.78
+          ? SCRUB[Math.floor(random() * SCRUB.length)]!
+          : STONES[Math.floor(random() * STONES.length)]!;
+    const height =
+      entry.radius * (TREES.includes(role) ? 0.42 + random() * 0.22 : 0.14 + random() * 0.1);
+    push(role, { position: world(slot), height, turn });
+  });
+
+  // One lit thing in the whole world. Its height has to match the slot height
+  // the island's own surface sits at, or it is buried inside the hill — void
+  // is not a rendering error anyone gets to see, so this is the kind of thing
+  // that just looks like "the beacon never worked".
+  if (entry.state === "live") {
+    push("beacon", {
+      position: world(new THREE.Vector3(0, entry.radius * 0.24, 0)),
+      height: entry.radius * 0.34,
+      turn: 0,
+    });
+  }
+  return out;
+}
+
+/** Island geometry is expensive enough to be worth keeping between renders. */
+const shapes = new Map<string, ReturnType<typeof buildIsland>>();
+function shapeOf(entry: WorldPlacement) {
+  const key = `${entry.node.studyId}/${entry.node.courseId}/${entry.radius.toFixed(2)}`;
+  const found = shapes.get(key);
+  if (found) return found;
+  // A gentle hue shift per study, so four studies are four places without the
+  // world turning into four unrelated colour schemes.
+  const tint = (hash(entry.node.studyId) - 0.5) * 0.14;
+  const made = buildIsland(`${entry.node.studyId}/${entry.node.courseId}`, entry.radius, tint);
+  shapes.set(key, made);
+  return made;
+}
+
+function Island({
+  entry,
+  onClick,
+  onOver,
+}: {
+  entry: WorldPlacement;
+  onClick: () => void;
+  onOver: (over: boolean) => void;
+}) {
+  const shape = shapeOf(entry);
+  const locked = entry.state === "idle";
+  return (
+    <group position={entry.position}>
+      <mesh
+        geometry={shape.geometry}
+        castShadow
+        receiveShadow
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick();
+        }}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          onOver(true);
+        }}
+        onPointerOut={() => onOver(false)}
+      >
+        <meshStandardMaterial
+          vertexColors
+          flatShading
+          roughness={0.94}
+          metalness={0}
+          // A locked island is the same island seen through colder air. Hiding
+          // it would hide the shape of the course tree, which is information.
+          color={locked ? PALETTE.locked : 0xffffff}
+        />
+      </mesh>
+      {/* Where the land meets the water. One ring, no texture. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+        <ringGeometry args={[entry.radius * 0.94, entry.radius * 1.14, 24]} />
+        <meshBasicMaterial color={PALETTE.foam} transparent opacity={locked ? 0.1 : 0.24} />
+      </mesh>
+    </group>
+  );
+}
+
+/** A prerequisite, drawn as a causeway you could actually walk. */
+function Causeway({ from, to }: { from: THREE.Vector3; to: THREE.Vector3 }) {
+  const { position, quaternion, length } = useMemo(() => {
+    const direction = new THREE.Vector3().subVectors(to, from).setY(0);
+    const mid = from.clone().add(to).multiplyScalar(0.5).setY(0.08);
+    const rotation = new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 0, 1),
+      direction.clone().normalize(),
+    );
+    return { position: mid, quaternion: rotation, length: direction.length() };
+  }, [from, to]);
+  return (
+    <mesh position={position} quaternion={quaternion} rotation-x={0} receiveShadow>
+      <boxGeometry args={[0.7, 0.12, length]} />
+      <meshStandardMaterial color={PALETTE.causeway} roughness={1} />
+    </mesh>
+  );
+}
+
+/** The learner. Small, bobbing, and always on the island the map is telling you about. */
+function Learner({ position, scale = 1 }: { position: THREE.Vector3; scale?: number }) {
+  const body = useRef<THREE.Group>(null);
+  const ring = useRef<THREE.Mesh>(null);
+  useFrame((state, delta) => {
+    if (ring.current) ring.current.rotation.z += delta * 0.6;
+    if (body.current) body.current.position.y = Math.sin(state.clock.elapsedTime * 1.6) * 0.08;
+  });
+  return (
+    <group position={position} scale={scale}>
+      <group ref={body}>
+        <mesh position={[0, 0.62, 0]} castShadow>
+          <capsuleGeometry args={[0.3, 0.5, 4, 12]} />
+          <meshStandardMaterial color={0xf6f2e8} roughness={0.6} />
+        </mesh>
+        <mesh position={[0, 1.12, 0]} castShadow>
+          <sphereGeometry args={[0.24, 12, 10]} />
+          <meshStandardMaterial color={0xe9c9a3} roughness={0.7} />
+        </mesh>
+      </group>
+      <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, 0]}>
+        <ringGeometry args={[0.6, 0.86, 28]} />
+        <meshBasicMaterial color={PALETTE.accent} transparent opacity={0.85} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Sky, sun and sea. Shared by both map levels so they feel like one world. */
+function Weather({ extent }: { extent: number }) {
+  return (
+    <>
+      <color attach="background" args={[PALETTE.sky]} />
+      <fog attach="fog" args={[PALETTE.horizon, extent * 0.9, extent * 3.1]} />
+      <hemisphereLight args={[PALETTE.sky, 0x4a5a3a, 1.15]} />
+      {/*
+        The shadow camera is deliberately far smaller than the world.
+        Stretched across the whole archipelago, one 2048 map gives each texel a
+        quarter of a world unit — and a tree is one and a half units tall, so
+        every prop lands inside six texels and shadows itself into a black
+        silhouette. That is shadow acne, and it looks exactly like "the model
+        failed to load", which is what cost the time here. `normalBias` is the
+        fix that matters: it pushes the shadow lookup along the surface normal,
+        which is what small curved geometry needs. `bias` alone just trades
+        acne for peter-panning.
+      */}
+      <directionalLight
+        position={[extent * 0.5, extent * 0.9, extent * 0.35]}
+        intensity={2.1}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-extent * 0.3}
+        shadow-camera-right={extent * 0.3}
+        shadow-camera-top={extent * 0.3}
+        shadow-camera-bottom={-extent * 0.3}
+        shadow-camera-far={extent * 4}
+        shadow-bias={-0.0002}
+        shadow-normalBias={0.06}
+      />
+      {/*
+        Rough water, not a mirror. A low-roughness sea puts one enormous
+        specular blob under the sun, which on a map is a hole you cannot read
+        anything on top of. Stylised water sells depth through colour and the
+        shoreline, not through gloss.
+      */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+        <circleGeometry args={[extent * 3.2, 64]} />
+        <meshStandardMaterial color={PALETTE.sea} roughness={0.72} metalness={0} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.2, 0]}>
+        <circleGeometry args={[extent * 3.4, 48]} />
+        <meshBasicMaterial color={PALETTE.seaDeep} />
+      </mesh>
+    </>
+  );
+}
+
 export function WorldScene({
   placements,
-  centres,
-  ring,
   learnerAt,
+  ring,
   onPick,
   onHover,
 }: {
@@ -203,41 +395,54 @@ export function WorldScene({
   const byKey = new Map(
     placements.map((entry) => [`${entry.node.studyId}/${entry.node.courseId}`, entry]),
   );
+
+  // Every prop in the world, gathered per model so each becomes one instanced
+  // draw rather than one draw per tree.
+  const fields = useMemo(() => {
+    const merged = new Map<Role, Placement[]>();
+    for (const entry of placements) {
+      if (entry.state === "idle") continue; // a locked island stays bare rock
+      for (const [role, list] of dress(entry)) {
+        merged.set(role, (merged.get(role) ?? []).concat(list));
+      }
+    }
+    return [...merged.entries()];
+  }, [placements]);
+
   return (
     <>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.4, 0]}>
-        <circleGeometry args={[ring * 2.4, 96]} />
-        <meshStandardMaterial color={GREY.base} roughness={1} />
-      </mesh>
-      {[...centres.entries()].map(([studyId, centre]) => {
-        const own = placements.filter((entry) => entry.node.studyId === studyId);
-        const reach = Math.max(...own.map((entry) => entry.position.distanceTo(centre)), 4) + 6;
-        return (
-          <mesh key={studyId} position={[centre.x, -0.2, centre.z]}>
-            <cylinderGeometry args={[reach, reach * 0.99, 0.3, 48]} />
-            <meshStandardMaterial color={0x353d4e} roughness={1} />
-          </mesh>
-        );
-      })}
+      <Weather extent={ring * 1.5} />
       {placements.map((entry) =>
         entry.node.prerequisiteCourseIds.map((id) => {
           const from = byKey.get(`${entry.node.studyId}/${id}`);
           return from ? (
-            <Road key={`${entry.node.courseId}-${id}`} from={from.position} to={entry.position} />
+            <Causeway
+              key={`${entry.node.courseId}-${id}`}
+              from={from.position}
+              to={entry.position}
+            />
           ) : null;
         }),
       )}
       {placements.map((entry) => (
-        <Disc
+        <Island
           key={`${entry.node.studyId}/${entry.node.courseId}`}
-          position={entry.position}
-          radius={entry.radius}
-          height={0.55 + entry.node.depth * 0.05}
-          colour={GREY[entry.state]}
+          entry={entry}
           onClick={() => onPick(entry.node)}
           onOver={(over) => onHover(over ? entry.node : null)}
         />
       ))}
+      {/*
+        Only the kit models suspend, so only they sit behind a boundary. Sky,
+        sea, islands and roads are computed here and owe nothing to the network
+        — gating them on a tree finishing its download is what turns a slow
+        connection into a blank screen instead of a world that fills in.
+      */}
+      <Suspense fallback={null}>
+        {fields.map(([role, at]) => (
+          <PropField key={role} role={role} at={at} />
+        ))}
+      </Suspense>
       {learnerAt ? <Learner position={learnerAt} /> : null}
     </>
   );
@@ -275,7 +480,7 @@ export function placeCourse(
     lessonId: entry.lesson.id,
     lessonTitle: entry.lesson.title,
     chars: entry.lesson.content.length,
-    position: new THREE.Vector3(points[index]!.x, points[index]!.y, points[index]!.z),
+    position: new THREE.Vector3(points[index]!.x, 0, points[index]!.z),
     state: states[index]
       ? "done"
       : index === firstOpen
@@ -286,6 +491,10 @@ export function placeCourse(
   }));
 }
 
+/**
+ * Inside a course, the same world at walking scale: each lesson is a stepping
+ * stone, and the ones already crossed have something growing on them.
+ */
 export function CourseScene({
   lessons,
   onPick,
@@ -296,34 +505,102 @@ export function CourseScene({
   onHover: (lesson: LessonPlacement | null) => void;
 }) {
   const live = lessons.find((lesson) => lesson.state === "live");
+  const extent = useMemo(
+    () =>
+      Math.max(...lessons.map((lesson) => Math.hypot(lesson.position.x, lesson.position.z)), 20),
+    [lessons],
+  );
+
+  const stones = useMemo(
+    () =>
+      lessons.map((lesson) => {
+        // A wall of 4,900 characters should be visible as a bigger step before
+        // it is entered rather than after.
+        const radius = 1.5 + Math.min(lesson.chars, 5000) / 3600;
+        const shape = buildIsland(lesson.lessonId, radius, 0);
+        return { lesson, radius, shape };
+      }),
+    [lessons],
+  );
+
+  const fields = useMemo(() => {
+    const merged = new Map<Role, Placement[]>();
+    for (const { lesson, radius, shape } of stones) {
+      if (lesson.state === "locked") continue;
+      const random = seeded(`${lesson.lessonId}/dress`);
+      const grown = lesson.state === "done";
+      for (const slot of shape.slots.slice(0, grown ? 4 : 2)) {
+        const role = grown
+          ? TREES[Math.floor(random() * TREES.length)]!
+          : STONES[Math.floor(random() * STONES.length)]!;
+        const list = merged.get(role) ?? [];
+        list.push({
+          position: slot.clone().add(lesson.position),
+          height: radius * (grown ? 0.44 : 0.16),
+          turn: random() * Math.PI * 2,
+        });
+        merged.set(role, list);
+      }
+    }
+    return [...merged.entries()];
+  }, [stones]);
+
   return (
     <>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
-        <planeGeometry args={[400, 400]} />
-        <meshStandardMaterial color={GREY.base} roughness={1} />
-      </mesh>
+      <Weather extent={extent * 1.3} />
       {lessons.map((lesson, index) =>
         index > 0 ? (
-          <Road
+          <Causeway
             key={`road-${lesson.lessonId}`}
             from={lessons[index - 1]!.position}
             to={lesson.position}
           />
         ) : null,
       )}
-      {lessons.map((lesson) => (
-        <Disc
-          key={lesson.lessonId}
-          position={lesson.position}
-          // A wall of 4,900 characters should be visible as a bigger step
-          // before it is entered rather than after.
-          radius={1.3 + Math.min(lesson.chars, 5000) / 4200}
-          height={0.4}
-          colour={GREY[lesson.state === "locked" ? "locked" : lesson.state]}
-          onClick={() => onPick(lesson)}
-          onOver={(over) => onHover(over ? lesson : null)}
-        />
+      {stones.map(({ lesson, radius, shape }) => (
+        <group key={lesson.lessonId} position={lesson.position}>
+          <mesh
+            geometry={shape.geometry}
+            castShadow
+            receiveShadow
+            onClick={(event) => {
+              event.stopPropagation();
+              onPick(lesson);
+            }}
+            onPointerOver={(event) => {
+              event.stopPropagation();
+              onHover(lesson);
+            }}
+            onPointerOut={() => onHover(null)}
+          >
+            <meshStandardMaterial
+              vertexColors
+              flatShading
+              roughness={0.94}
+              color={lesson.state === "locked" ? PALETTE.locked : 0xffffff}
+            />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+            <ringGeometry args={[radius * 0.94, radius * 1.12, 20]} />
+            <meshBasicMaterial
+              color={lesson.state === "live" ? PALETTE.accent : PALETTE.foam}
+              transparent
+              opacity={lesson.state === "live" ? 0.85 : 0.2}
+            />
+          </mesh>
+        </group>
       ))}
+      {/*
+        Only the kit models suspend, so only they sit behind a boundary. Sky,
+        sea, islands and roads are computed here and owe nothing to the network
+        — gating them on a tree finishing its download is what turns a slow
+        connection into a blank screen instead of a world that fills in.
+      */}
+      <Suspense fallback={null}>
+        {fields.map(([role, at]) => (
+          <PropField key={role} role={role} at={at} />
+        ))}
+      </Suspense>
       {live ? <Learner position={live.position} /> : null}
     </>
   );

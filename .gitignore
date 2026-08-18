@@ -47,3 +47,8 @@ docs/reference/player-journey/*/data/sample-lesson.json
 # bytes stay out of git; `content/manifest.json` is mirrored into
 # src/content/imported.json, which IS tracked and makes the import reproducible.
 content/
+
+# Imported CC0 art kit. Provenance is tracked in src/world/kit.json; the bytes
+# come back with `pnpm kit` from the donor cache.
+public/kit/
+public/basis/

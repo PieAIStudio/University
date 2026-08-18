@@ -5,12 +5,16 @@
   "bundleIds": [
     "base-governance",
     "frontend-app",
-    "threejs-game"
+    "threejs-game",
+    "threejs-creative"
   ],
   "assetIds": [
+    "npx-skills/3d-web-experience",
     "npx-skills/agent-browser",
     "npx-skills/frontend-design",
+    "npx-skills/img2threejs",
     "npx-skills/impeccable",
+    "npx-skills/threejs",
     "npx-skills/threejs-3d-generator",
     "npx-skills/threejs-aaa-graphics-builder",
     "npx-skills/threejs-audio-generator",
@@ -20,7 +24,9 @@
     "npx-skills/threejs-gameplay-systems",
     "npx-skills/threejs-image-generator",
     "npx-skills/threejs-qa-release",
+    "npx-skills/threejs-skills",
     "npx-skills/ui-ux-pro-max",
+    "npx-skills/webgl-3d-object",
     "pie-rules/ai-in-the-loop",
     "pie-rules/brand-kit-first",
     "pie-rules/clean-image-generation-rules",

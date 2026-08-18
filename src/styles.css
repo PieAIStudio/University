@@ -515,6 +515,15 @@ button.block {
   overflow: hidden;
 }
 
+/*
+ * Names sit on a world, not on a page, and a world does not hold still. The sea
+ * is bright, an island is mid green, a shadow is nearly black, and one label can
+ * cross all three while the camera moves — so no single text colour works and a
+ * drop shadow does not save it. The label carries its own dark ground with it.
+ *
+ * This is also why the type is not tiny: it is the only text on the screen a
+ * learner has to read at a glance while something is moving behind it.
+ */
 .label {
   position: absolute;
   top: 0;
@@ -523,23 +532,32 @@ button.block {
   will-change: transform, opacity;
   transition: opacity 0.15s;
   white-space: nowrap;
-  font-size: 0.78rem;
-  color: var(--game-ui-text-muted, #a8b3c7);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+  font-size: 0.8rem;
+  line-height: 1.25;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  color: #f4f7fb;
+  background: rgba(14, 24, 32, 0.62);
+  backdrop-filter: blur(3px);
+  box-shadow: 0 1px 6px rgba(6, 16, 22, 0.35);
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .label--study {
-  font-size: 0.94rem;
-  color: var(--game-ui-text, #e9edf5);
+  font-size: 1rem;
+  font-weight: 600;
   letter-spacing: 0.04em;
+  padding: 0.3rem 0.75rem;
+  background: rgba(10, 20, 28, 0.72);
+  text-align: center;
 }
 
 .label--study small {
   display: block;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 400;
   letter-spacing: 0;
-  color: var(--game-ui-text-muted, #8c98ad);
+  opacity: 0.78;
 }

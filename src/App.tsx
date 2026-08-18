@@ -195,20 +195,24 @@ export function App() {
     void loadCourse(view.studyId, view.courseId).then(setCourse);
   }, [view]);
 
-  const isCourseDone = useCallback(
+  // A fraction, not a flag. The world map now shows how far a course got, not
+  // only whether it is finished, so a course two lessons in has to be able to
+  // say so — that partly-built island is the whole reason to come back.
+  const courseProgress = useCallback(
     (node: CourseNode) => {
+      if (node.lessons <= 0) return 0;
       const prefix = `${node.studyId}/${node.courseId}/`;
       const done = Object.entries(progress.lessons).filter(
         ([key, state]) => key.startsWith(prefix) && state.progress >= 1,
       ).length;
-      return done >= node.lessons && node.lessons > 0;
+      return Math.min(1, done / node.lessons);
     },
     [progress],
   );
 
   const world = useMemo(
-    () => (nodes ? placeWorld(nodes, isCourseDone) : null),
-    [nodes, isCourseDone],
+    () => (nodes ? placeWorld(nodes, courseProgress) : null),
+    [nodes, courseProgress],
   );
 
   const learnerAt = useMemo(() => {
@@ -294,12 +298,17 @@ export function App() {
       .setY(0);
     if (away.lengthSq() < 0.01) away.set(0, 0, 1);
     away.normalize();
-    const side = new THREE.Vector3(-away.z, 0, away.x).multiplyScalar(24);
+    // Low and off to one side, not high and behind. Height thirty against a
+    // twenty-eight-unit standoff is a map read from a helicopter: islands
+    // become flat shapes, the sea fills the frame, and none of the modelling
+    // work is visible. Pulling back and dropping down puts the horizon in shot,
+    // which is what gives the archipelago a sense of somewhere to go.
+    const side = new THREE.Vector3(-away.z, 0, away.x).multiplyScalar(13);
     const spot = learnerAt
       .clone()
-      .addScaledVector(away, 28)
+      .addScaledVector(away, 38)
       .add(side)
-      .setY(learnerAt.y + 30);
+      .setY(learnerAt.y + 16);
     return [spot.x, spot.y, spot.z];
   }, [world, learnerAt]);
 

@@ -5,15 +5,23 @@
   "bundleIds": [
     "base-governance",
     "frontend-app",
-    "threejs-game"
+    "threejs-game",
+    "threejs-creative"
   ],
   "registryProvenance": {
     "schema": "agent-assets-registry",
     "version": 1,
-    "hash": "sha256:15702933ac00c8460bf9a4f9fb46aa850b0b045bf47f84ed0f511c80f398c3ff",
-    "assetCount": 22
+    "hash": "sha256:723ad74df29d3deb247ef9a1435fb78e24e9129e37b22080b477257ec4d7ed5c",
+    "assetCount": 27
   },
   "assets": [
+    {
+      "id": "npx-skills/3d-web-experience",
+      "sourcePath": "skills/npx-skills/.agents/skills/3d-web-experience",
+      "delivery": "symlink",
+      "contentHash": "sha256:422c492393fcf5c1245df1238ac972c310ef0781da6b536090354eba2789e470",
+      "targetPath": ".agents/manual-skills/3d-web-experience"
+    },
     {
       "id": "npx-skills/agent-browser",
       "sourcePath": "skills/npx-skills/.agents/skills/agent-browser",
@@ -29,11 +37,25 @@
       "targetPath": ".agents/skills/frontend-design"
     },
     {
+      "id": "npx-skills/img2threejs",
+      "sourcePath": "skills/npx-skills/.agents/skills/img2threejs",
+      "delivery": "symlink",
+      "contentHash": "sha256:669d4937fce0a2d8df6f1c5948de8cf1b1d19b7824e6717b6215bcc2640d4ed1",
+      "targetPath": ".agents/manual-skills/img2threejs"
+    },
+    {
       "id": "npx-skills/impeccable",
       "sourcePath": "skills/npx-skills/.agents/skills/impeccable",
       "delivery": "symlink",
       "contentHash": "sha256:16f7f1f484ab99c1149d2decd6c7e830849072dfa1057d6324af8bba84965a9d",
       "targetPath": ".agents/skills/impeccable"
+    },
+    {
+      "id": "npx-skills/threejs",
+      "sourcePath": "skills/npx-skills/.agents/skills/threejs",
+      "delivery": "symlink",
+      "contentHash": "sha256:0c42a00e7607f36e28b747c8aab08d784220c8b378fbf2aea1ada284be1ce12c",
+      "targetPath": ".agents/manual-skills/threejs"
     },
     {
       "id": "npx-skills/threejs-3d-generator",
@@ -99,11 +121,25 @@
       "targetPath": ".agents/skills/threejs-qa-release"
     },
     {
+      "id": "npx-skills/threejs-skills",
+      "sourcePath": "skills/npx-skills/.agents/skills/threejs-skills",
+      "delivery": "symlink",
+      "contentHash": "sha256:0eecb66160b14a40548eb6d6bd33e59c86542825485a3b3010682ccc7e6b97fd",
+      "targetPath": ".agents/manual-skills/threejs-skills"
+    },
+    {
       "id": "npx-skills/ui-ux-pro-max",
       "sourcePath": "skills/npx-skills/.agents/skills/ui-ux-pro-max",
       "delivery": "symlink",
       "contentHash": "sha256:6503364c204a3a10e3cf80e3a53323e9ab581b6d06550c3cc893cdcf1206f048",
       "targetPath": ".agents/skills/ui-ux-pro-max"
+    },
+    {
+      "id": "npx-skills/webgl-3d-object",
+      "sourcePath": "skills/npx-skills/.agents/skills/webgl-3d-object",
+      "delivery": "symlink",
+      "contentHash": "sha256:ad12725a6233252b816a93d35b4631f16e75ba764c8588cac88146fc87156265",
+      "targetPath": ".agents/manual-skills/webgl-3d-object"
     },
     {
       "id": "pie-rules/ai-in-the-loop",
