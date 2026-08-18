@@ -75,7 +75,8 @@
       </p>
       <p class="sub">
         灰模和线框都要 <code>pnpm dev</code> 打开（<code>file://</code> 下浏览器会拦掉数据读取）。
-        阅读器还需要先跑一次带 <code>--sample</code> 的拉取命令。
+        用到真课文、真题、真卡片的那几张，还需要先跑一次带 <code>--sample</code> 的拉取命令。
+        每张界面怎么建、验收是什么，写在<a href="build-brief.html">建造说明书</a>里。
       </p>
       <div class="screens" id="screens"></div>
 
@@ -380,12 +381,42 @@
           note: "用一节真课文渲染，桌面与 375px 手机并排。颜色与控件来自 SwimmerUIKit 真 token。",
           accept: "手机竖屏不横向滚动；任意一段能一键跳到源码位置；不需要放大字体。",
         },
-        { title: "答题与判错反馈", note: "含答错第二次、判错申诉。", todo: true },
-        { title: "结算与卡片掉落", note: "明天 N 张必须出现在这一屏。", todo: true },
-        { title: "复习关", note: "离线可用是硬要求——通勤是它最大的使用场景。", todo: true },
-        { title: "导师对话与付费墙", note: "第 3 层唯一出口，入口越窄成本越可控。", todo: true },
-        { title: "2D 降级导航", note: "已在世界地图灰模里做出可切换的版本，待独立成页。", todo: true },
-        { title: "分级问卷与面板", note: "作用于整个系列课、永久化、可覆盖。见 D7。", todo: true },
+        {
+          href: "screens/answer.html",
+          title: "答题 · 判错 · 申诉（2D 线框）",
+          note: "用一道真题驱动，可以真的答错两次走完整条路。编译出的四选一与自由作答两种形态并排。",
+          accept: "答错一次后必须出现指回课文原句的线索，而不是重复题面；判错到申诉不超过一次点击。",
+        },
+        {
+          href: "screens/settlement.html",
+          title: "结算与卡片掉落（2D 线框）",
+          note: "掉落的是真卡片，可翻面。注册请求只在第一次出现，且可跳过。",
+          accept: "「明天 N 张」必须出现，且比连击数字更显眼。",
+        },
+        {
+          href: "screens/review.html",
+          title: "复习关（2D 线框）",
+          note: "手机是主形态。先回想再看答案，四档 FSRS 评分，到期卡来自全部 study。",
+          accept: "断网状态下这一屏完全可用，且什么都不禁用。",
+        },
+        {
+          href: "screens/tutor.html",
+          title: "导师对话与付费墙（2D 线框）",
+          note: "入口只有两个，额度可见，付费块接在解释下面而不是弹窗。",
+          accept: "额度耗尽时只有辅导按钮变灰，读、判分、复习、申诉全部照常。",
+        },
+        {
+          href: "screens/nav-2d.html",
+          title: "2D 降级导航（2D 线框）",
+          note: "一次承受完整体量：4 study / 52 课 / 146 单元 / 560 节。可折叠、可键盘、可搜索。",
+          accept: "结构与 3D 世界地图完全一致，任何一项对不上都算不通过。",
+        },
+        {
+          href: "screens/placement.html",
+          title: "分级问卷与面板（2D 线框）",
+          note: "三道真题，作用于 foundations 那条 9 门 139 节的主干。面板可查可覆盖。",
+          accept: "面板必须同时出现「你当初说」和「我们看到的是」，按钮写的是手动覆盖。",
+        },
       ];
       document.getElementById("screens").innerHTML = SCREENS.map((screen) =>
         screen.todo

@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>导师对话与付费墙 · 线框 · 旅程 V2</title>
+    <link rel="stylesheet" href="../lib/journey.css" />
+    <style>
+      .surface.play {
+        background: var(--game-ui-bg, #10131b);
+        color: var(--game-ui-text, #e9edf5);
+        font-family: var(--game-ui-font-body, system-ui);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      .tbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 15px;
+        border-bottom: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.12));
+        font-size: var(--game-ui-font-xs, 0.72rem);
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      /*
+       * The meter is not a nag, it is the product explaining its own economics.
+       *
+       * Tier three is the only place this product spends money that scales with
+       * engagement. Hiding that produces a learner who cannot understand why
+       * anything costs — and a free tier with no ceiling. Showing it makes the
+       * paywall legible before it arrives.
+       */
+      .meter {
+        font-family: var(--mono);
+      }
+      .meter b {
+        color: var(--game-ui-accent, #5ec8c0);
+      }
+      .meter.out b {
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .thread {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        padding: 16px 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .msg {
+        max-width: 88%;
+        padding: 11px 14px;
+        border-radius: var(--game-ui-radius-card, 12px);
+        font-size: 0.95rem;
+        line-height: 1.7;
+      }
+      .msg.me {
+        align-self: flex-end;
+        background: var(--game-ui-panel, #1a2030);
+        border: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.14));
+      }
+      .msg.ai {
+        align-self: flex-start;
+        background: var(--game-ui-surface, #161b26);
+        border: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.14));
+      }
+      .msg .cite {
+        display: block;
+        margin-top: 8px;
+        padding-top: 7px;
+        border-top: 1px dashed var(--game-ui-border-subtle, rgba(255, 255, 255, 0.16));
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .msg .cost {
+        display: block;
+        margin-top: 6px;
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .gates {
+        padding: 14px 15px;
+        border-top: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.12));
+      }
+      .gates p {
+        margin: 0 0 10px;
+        font-size: 0.86rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .gates .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .gates button {
+        border: 0;
+        border-radius: var(--game-ui-radius-control, 10px);
+        background: var(--game-ui-accent, #5ec8c0);
+        color: var(--game-ui-accent-ink, #07110f);
+        font: inherit;
+        font-weight: 600;
+        padding: 9px 16px;
+        cursor: pointer;
+      }
+      .gates button.ghost {
+        background: transparent;
+        color: var(--game-ui-text-muted, #9aa6bb);
+        border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+        font-weight: 400;
+      }
+      .gates button[disabled] {
+        opacity: 0.42;
+        cursor: not-allowed;
+      }
+      /*
+       * The offer arrives under the explanation, never over it.
+       *
+       * The one moment this product has earned the right to ask for money is
+       * immediately after it has just made something click. A modal at that
+       * moment destroys the thing it is trying to sell.
+       */
+      .offer {
+        margin: 14px 15px 16px;
+        padding: 14px 16px;
+        border: 1px solid var(--game-ui-accent, #5ec8c0);
+        border-radius: var(--game-ui-radius-panel, 14px);
+        background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 10%, transparent);
+      }
+      .offer h3 {
+        margin: 0 0 5px;
+        font-size: 1rem;
+      }
+      .offer p {
+        margin: 0 0 11px;
+        font-size: 0.87rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .still {
+        margin: 0 15px 16px;
+        padding: 12px 14px;
+        border: 1px dashed var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+        border-radius: var(--game-ui-radius-card, 12px);
+        font-size: 0.86rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .still b {
+        color: var(--game-ui-text, #e9edf5);
+      }
+      .still ul {
+        margin: 7px 0 0;
+        padding-left: 18px;
+      }
+      .still li {
+        margin: 3px 0;
+      }
+      .stateswitch {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 14px 0 4px;
+      }
+      .stateswitch .chip {
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        background: var(--card);
+        color: var(--ink-dim);
+        font: inherit;
+        font-size: 0.82rem;
+        padding: 5px 13px;
+        cursor: pointer;
+      }
+      .stateswitch .chip[aria-pressed="true"] {
+        border-color: var(--accent);
+        color: var(--ink);
+        background: rgba(94, 200, 192, 0.14);
+      }
+      .frame .surface {
+        height: 660px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap wide">
+      <a class="crumb" href="../index.html">← 回到旅程 V2</a>
+      <h1>导师对话与付费墙 · 线框</h1>
+      <p class="sub">
+        2D · 第 20–22 幕 · 成本第 3 层唯一的出口 · 需要 <code>pnpm dev</code> 打开
+      </p>
+
+      <div class="accept">
+        <div class="eyebrow">验收</div>
+        <p>
+          切到「额度耗尽」，屏幕必须证明<b>只有辅导按钮变灰</b>——
+          读课文、确定性判分、复习、申诉全部照常，学习者仍能完整走完一节课。
+        </p>
+      </div>
+
+      <div class="stateswitch" id="states">
+        <button class="chip" data-s="entry" aria-pressed="true">入口（还没进对话）</button>
+        <button class="chip" data-s="talking" aria-pressed="false">正在讲</button>
+        <button class="chip" data-s="offered" aria-pressed="false">讲通之后</button>
+        <button class="chip" data-s="capped" aria-pressed="false">额度耗尽</button>
+      </div>
+
+      <div class="frames">
+        <figure class="frame">
+          <figcaption>桌面</figcaption>
+          <div class="surface play" id="desktop"></div>
+        </figure>
+        <figure class="frame phone">
+          <figcaption>手机 375px</figcaption>
+          <div class="surface play" id="phone"></div>
+        </figure>
+      </div>
+
+      <div class="scope">
+        <b>这一页负责：</b>入口有几个、额度怎么显示、付费页什么时候出现在哪、额度耗尽后还剩什么能用。
+        <b>不负责：</b>提示词、模型选型、对话质量、最终配色。
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <h4>入口只有两个，这是成本设计不是产品洁癖</h4>
+          <ul>
+            <li>答错两次；或者主动点「我不懂」。<b>没有第三个入口。</b></li>
+            <li>一个 AI 学习产品最常见的死法是用得越多亏得越多。入口越窄，第 3 层的调用量越可预测。</li>
+            <li>对照第 1、2 层：确定性判分零边际成本、小模型极低。<b>只有这一屏花钱，所以只有这一屏设闸门。</b></li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>付费页为什么在「讲通之后」</h4>
+          <ul>
+            <li>他买的不是「课程」，是<b>「卡住时有人讲给我听」</b>。所以要先让他体验一次那个价值。</li>
+            <li>形态是<b>接在解释下面的一块</b>，不是弹窗。弹在正在读的解释上面，等于把刚卖出去的东西砸了。</li>
+            <li>验收：付费块出现时，上面那段解释仍然完整可读、可滚动、可复制。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>额度耗尽不是把产品锁上</h4>
+          <ul>
+            <li>变灰的只有「讲给我听」。</li>
+            <li>读课文、做确定性题、复习到期卡、发起申诉——<b>全部照常</b>。</li>
+            <li>申诉尤其重要：误判是分层判分自己的故障，不该由学习者的额度买单。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import "@pieai/swimmer-ui-kit/styles.css";
+
+      const hosts = [document.getElementById("desktop"), document.getElementById("phone")];
+      let sample = null;
+      try {
+        const response = await fetch("../data/sample-lesson.json");
+        if (!response.ok) throw new Error(String(response.status));
+        sample = await response.json();
+      } catch {
+        sample = null;
+      }
+
+      const lessonTitle = sample?.lesson.title ?? "「下次该问你」是怎么进到期队列的？";
+      const anchor = sample?.lesson.evidence?.[0] ?? null;
+      const cite = anchor
+        ? `${anchor.sourcePath}:${anchor.lineStart}-${anchor.lineEnd} @${anchor.sourceCommit.slice(0, 7)}`
+        : "";
+
+      /*
+       * The exchange is about this lesson's real subject, not a generic demo.
+       * A wireframe whose conversation could belong to any product tells you
+       * nothing about whether this product's tutor is worth paying for.
+       */
+      const THREAD = [
+        { who: "me", text: "我还是不懂，为什么不能只存「上次复习时间 + 间隔天数」？" },
+        {
+          who: "ai",
+          text: "因为 FSRS 每一步要的是<b>整张卡的状态</b>，不是一个「N 天后再见」的数字。少了 stability 和 difficulty，你就没法从历史记忆接着往下算，只能把间隔粗暴重置。<br><br>换个说法：间隔天数是<b>结果</b>，stability 是<b>产生这个结果的原因</b>。只存结果，下次换参数就推不回去了。",
+          cost: "第 3 层 · 本次消耗 1 次 · 剩余 2 次",
+        },
+      ];
+
+      let mode = "entry";
+
+      function meter(out) {
+        return `<span class="meter ${out ? "out" : ""}">今日辅导 <b>${out ? "0" : "2"}</b> / 3</span>`;
+      }
+
+      function render(host) {
+        const capped = mode === "capped";
+        const showThread = mode === "talking" || mode === "offered" || capped;
+
+        const messages = showThread
+          ? THREAD.map(
+              (message) => `
+                <div class="msg ${message.who}">
+                  ${message.text}
+                  ${message.who === "ai" && cite ? `<span class="cite">依据 ${cite} ↗</span>` : ""}
+                  ${message.cost ? `<span class="cost">${message.cost}</span>` : ""}
+                </div>`,
+            ).join("")
+          : `<div class="msg ai">这一关的课文和题目你都可以自己读、自己做。
+               只有真的卡住时才需要我——<b>答错两次</b>，或者你主动说不懂。
+               ${cite ? `<span class="cite">这一关的证据：${cite} ↗</span>` : ""}</div>`;
+
+        // The offer, and only after something has already been explained.
+        const offer =
+          mode === "offered"
+            ? `<div class="offer">
+                 <h3>刚才那次讲解，是你付费买的东西</h3>
+                 <p>订阅之后：卡住时随时可以问，加上全部 52 门课。上面那段解释不会消失，你可以继续读完。</p>
+                 <div class="row">
+                   <button>看看订阅</button>
+                   <button class="ghost">先继续学</button>
+                 </div>
+               </div>`
+            : "";
+
+        const still = capped
+          ? `<div class="still">
+               <b>今天的辅导额度用完了。剩下这些照常：</b>
+               <ul>
+                 <li>读课文 —— 永久免费</li>
+                 <li>做确定性判分的题 —— 永久免费</li>
+                 <li>复习到期卡片 —— 永久免费，且离线可用</li>
+                 <li>对判错发起申诉 —— <b>不计额度</b></li>
+               </ul>
+             </div>`
+          : "";
+
+        host.innerHTML = `
+          <div class="tbar">
+            <span>${lessonTitle}</span>
+            ${meter(capped)}
+          </div>
+          <div class="thread">${messages}</div>
+          ${offer}
+          ${still}
+          <div class="gates">
+            <p>${capped ? "辅导入口今天关闭，其它一切不受影响。" : "进入辅导只有两个入口："}</p>
+            <div class="row">
+              <button ${capped ? "disabled" : ""}>我不懂，讲给我听</button>
+              <button class="ghost">我觉得我对了（申诉 · 不计额度）</button>
+            </div>
+          </div>`;
+      }
+
+      function paint() {
+        for (const host of hosts) render(host);
+      }
+      paint();
+
+      document.getElementById("states").addEventListener("click", (event) => {
+        const button = event.target.closest(".chip");
+        if (!button) return;
+        for (const chip of document.querySelectorAll("#states .chip")) {
+          chip.setAttribute("aria-pressed", String(chip === button));
+        }
+        mode = button.dataset.s;
+        paint();
+      });
+    </script>
+  </body>
+</html>

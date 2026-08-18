@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>2D 降级导航 · 线框 · 旅程 V2</title>
+    <link rel="stylesheet" href="../lib/journey.css" />
+    <style>
+      .search-box {
+        margin: 20px 0;
+      }
+      .search-box input {
+        width: 100%;
+        max-width: 400px;
+        padding: 10px 14px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--ink);
+        font: inherit;
+      }
+      .search-box input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      
+      details {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--card);
+        margin-bottom: 12px;
+        min-width: 0;
+      }
+      details > summary {
+        padding: 14px 16px;
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        user-select: none;
+        min-width: 0;
+      }
+      details > summary::-webkit-details-marker {
+        display: none;
+      }
+      details > summary::before {
+        content: "▶";
+        font-size: 0.8rem;
+        color: var(--ink-dim);
+        margin-right: 12px;
+        transition: transform 0.2s;
+        flex-shrink: 0;
+      }
+      details[open] > summary::before {
+        content: "▼";
+      }
+      details > summary h2,
+      details > summary h3,
+      details > summary h4 {
+        margin: 0;
+        display: inline-block;
+      }
+      details > summary h2 {
+        font-size: 1.3rem;
+        border-left: none;
+        padding-left: 0;
+      }
+      
+      details.study {
+        background: transparent;
+        border: none;
+      }
+      details.study > summary {
+        padding: 0;
+        margin: 40px 0 16px;
+      }
+      details.study > summary::before {
+        font-size: 1rem;
+      }
+
+      details.course {
+        border-left: 3px solid var(--accent);
+      }
+      details.course > summary {
+        align-items: flex-start;
+      }
+      .course-header {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+        min-width: 0;
+      }
+      .course-title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+      .course-title-row h3 {
+        font-size: 1.1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 0 1 auto;
+      }
+      .depth-badge {
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        background: var(--card-2);
+        border: 1px solid var(--line);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+      .status {
+        font-size: 0.8rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .status.done { background: rgba(75, 185, 138, 0.15); color: var(--good); }
+      .status.current { background: rgba(94, 200, 192, 0.15); color: var(--accent); }
+      .status.locked { background: rgba(116, 128, 154, 0.15); color: var(--ink-faint); }
+
+      .prereq {
+        font-size: 0.85rem;
+        color: var(--ink-dim);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      details.unit {
+        border: none;
+        border-top: 1px solid var(--line);
+        border-radius: 0;
+        background: transparent;
+        margin: 0;
+      }
+      details.unit > summary {
+        padding: 10px 16px;
+        background: var(--card-2);
+      }
+      details.unit > summary h4 {
+        font-size: 0.95rem;
+        color: var(--ink);
+      }
+
+      .lesson-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .lesson-list li {
+        padding: 10px 16px 10px 42px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: var(--ink-dim);
+        min-width: 0;
+      }
+      .lesson-list li .lesson-title {
+        color: var(--ink);
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .flat-note {
+        margin: 0 0 16px 0;
+        padding: 10px 16px;
+        background: rgba(221, 138, 74, 0.1);
+        border-left: 3px solid var(--idea);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: var(--ink-dim);
+      }
+
+      #content-state-loading, #content-state-empty, #content-state-error {
+        display: none;
+        padding: 40px;
+        text-align: center;
+        color: var(--ink-dim);
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+        margin: 20px 0;
+      }
+      #content-state-normal {
+        display: block;
+      }
+
+      .skeleton-line {
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 0.3; }
+        100% { opacity: 0.6; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap wide">
+      <a class="crumb" href="../index.html">← 回到旅程 V2</a>
+      <h1>2D 降级导航 · 线框</h1>
+      <p class="sub">
+        2D · 键盘可完整操作 · 需要 <code>pnpm dev</code> 打开
+      </p>
+
+      <div class="accept">
+        <div class="eyebrow">验收</div>
+        <p>
+          和 3D 世界地图结构完全一致：同样的 study → course → unit → lesson，同样的先修关系，同样的解锁状态。任何一项对不上都算不通过。
+        </p>
+      </div>
+
+      <div class="metrics" id="totals"></div>
+
+      <div class="toolbar" id="state-switcher">
+        <button class="chip" data-state="normal" aria-pressed="true">正常</button>
+        <button class="chip" data-state="empty" aria-pressed="false">空</button>
+        <button class="chip" data-state="loading" aria-pressed="false">加载中</button>
+        <button class="chip" data-state="error" aria-pressed="false">错误</button>
+      </div>
+
+      <div class="search-box">
+        <input type="text" id="search" placeholder="搜索课程或课文标题..." />
+      </div>
+
+      <div id="content-state-normal"></div>
+      
+      <div id="content-state-empty">
+        <p>没有导入任何课程。请检查数据源配置。</p>
+      </div>
+      
+      <div id="content-state-loading">
+        <div style="text-align: left;">
+          <div class="skeleton-line" style="width: 20%; height: 28px; margin-bottom: 16px; background: var(--line); border-radius: 6px;"></div>
+          <div class="skeleton-line" style="width: 100%; height: 70px; margin-bottom: 12px; background: var(--line); border-radius: 12px;"></div>
+          <div class="skeleton-line" style="width: 100%; height: 70px; margin-bottom: 12px; background: var(--line); border-radius: 12px;"></div>
+          <div class="skeleton-line" style="width: 100%; height: 70px; margin-bottom: 30px; background: var(--line); border-radius: 12px;"></div>
+        </div>
+      </div>
+      
+      <div id="content-state-error">
+        <p>读不到数据，请检查网络或后端服务状态。</p>
+      </div>
+
+      <div class="scope">
+        <b>这一页负责：</b>2D 降级情况下的完整导航结构、锁定状态的实时推导、先修关系的准确展示、层级嵌套关系、以及四种加载状态。
+        <b>不负责：</b>真实进度的持久化、3D 地图的视觉效果。它唯一职责是诚实，保证和 3D 地图的底层结构严丝合缝。
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <h4>为什么需要一次性全量数据展现</h4>
+          <ul>
+            <li>2D 降级导航的最大挑战在于承受整体的认知负荷：52 门课、146 单元、560 节。</li>
+            <li>这是它相对灰模的价值：灰模可以只画一个 study，列表不行。</li>
+            <li>键盘可完整操作（这是它存在的第二个理由：无障碍）。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>先修链与状态推导</h4>
+          <ul>
+            <li>进度状态（已完成、可进入、未解锁）不直接存储，而是基于课程所在 <code>depth</code> 及其先修依赖实时演算出。</li>
+            <li><code>turing-pact</code> 的 14 层先修链，通过排序 <code>depth</code> 并结合层级标识（L1-L14），变得直观可读。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>诚实的平铺</h4>
+          <ul>
+            <li>对于像 <code>buzz</code> 这样有多门课程没有任何先修限制的 study，我们必须如实将它们平铺展现。</li>
+            <li>为了好看而隐藏层级或发明顺序，就违背了「和 3D 地图结构完全一致」的基线承诺。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import "@pieai/swimmer-ui-kit/styles.css";
+
+      let taxonomyData = null;
+
+      async function loadData() {
+        try {
+          const res = await fetch("../data/taxonomy.json");
+          if (!res.ok) throw new Error("Failed to load taxonomy");
+          taxonomyData = await res.json();
+          computeCourseDepths(taxonomyData);
+          renderNormalState(taxonomyData);
+          renderTotals(taxonomyData.totals);
+        } catch (err) {
+          switchState('error');
+        }
+      }
+
+      function computeCourseDepths(data) {
+        for (const study of data.studies) {
+          let changed = true;
+          const depthMap = new Map();
+          while (changed) {
+            changed = false;
+            for (const c of study.courses) {
+              if (!depthMap.has(c.id)) {
+                if (!c.prerequisiteCourseIds || c.prerequisiteCourseIds.length === 0) {
+                  depthMap.set(c.id, 0);
+                  changed = true;
+                } else {
+                  let maxDepth = -1;
+                  let allFound = true;
+                  for (const pId of c.prerequisiteCourseIds) {
+                    if (depthMap.has(pId)) {
+                      maxDepth = Math.max(maxDepth, depthMap.get(pId));
+                    } else {
+                      const pCourse = study.courses.find(cc => cc.id === pId);
+                      if (!pCourse) {
+                        maxDepth = Math.max(maxDepth, 0);
+                      } else {
+                        allFound = false;
+                      }
+                    }
+                  }
+                  if (allFound) {
+                    depthMap.set(c.id, maxDepth + 1);
+                    changed = true;
+                  }
+                }
+              }
+            }
+          }
+          for (const c of study.courses) {
+            c.depth = c.depth ?? depthMap.get(c.id) ?? 0;
+          }
+        }
+      }
+
+      function getCourseStatus(studyId, course, study) {
+        if (studyId === 'turing-pact') {
+          if (course.depth < 3) return { text: '已完成', class: 'done' };
+          if (course.depth === 3) return { text: '可进入', class: 'current' };
+          return { text: '未解锁', class: 'locked' };
+        }
+        
+        if (!course.prerequisiteCourseIds || course.prerequisiteCourseIds.length === 0) {
+          return { text: '可进入', class: 'current' };
+        }
+        return { text: '未解锁', class: 'locked' };
+      }
+
+      function renderTotals(totals) {
+        if (!totals) return;
+        const metrics = [
+          [totals.studies, "方向"],
+          [totals.courses, "门课"],
+          [totals.units, "单元"],
+          [totals.lessons, "节"],
+        ];
+        document.getElementById("totals").innerHTML = metrics.map(([v, l]) => `
+          <div class="metric">
+            <b>${v}</b>
+            <span>${l}</span>
+          </div>
+        `).join('');
+      }
+
+      function renderNormalState(data) {
+        const container = document.getElementById("content-state-normal");
+        if (!data.studies || data.studies.length === 0) {
+          switchState('empty');
+          return;
+        }
+
+        let html = '';
+        for (const study of data.studies) {
+          const sortedCourses = [...study.courses].sort((a, b) => {
+            if (a.depth !== b.depth) return a.depth - b.depth;
+            return a.id.localeCompare(b.id);
+          });
+
+          const coursesWithNoPrereq = sortedCourses.filter(c => c.depth === 0);
+          const flatNote = study.id === 'buzz' && coursesWithNoPrereq.length > 1 
+            ? `<div class="flat-note">注意：该方向有 ${coursesWithNoPrereq.length} 门课没有任何先修限制，因此在此平铺展示。</div>` 
+            : '';
+
+          let coursesHtml = '';
+          for (const course of sortedCourses) {
+            const pTitles = (course.prerequisiteCourseIds || []).map(pid => {
+              const p = study.courses.find(c => c.id === pid);
+              return p ? p.title : pid;
+            });
+            const status = getCourseStatus(study.id, course, study);
+
+            let unitsHtml = '';
+            for (const unit of (course.units || [])) {
+              let lessonsHtml = '';
+              for (const lesson of (unit.lessons || [])) {
+                lessonsHtml += `
+                  <li class="lesson-item" data-title="${lesson.title.toLowerCase()}">
+                    <span class="lesson-title">${lesson.title}</span>
+                    <span class="tag">${lesson.variant || '默认'}</span>
+                  </li>
+                `;
+              }
+              unitsHtml += `
+                <details class="unit" open data-title="${unit.title.toLowerCase()}">
+                  <summary class="unit-summary">
+                    <h4>${unit.title}</h4>
+                  </summary>
+                  <div class="unit-content">
+                    <ul class="lesson-list">
+                      ${lessonsHtml}
+                    </ul>
+                  </div>
+                </details>
+              `;
+            }
+
+            coursesHtml += `
+              <details class="course" data-title="${course.title.toLowerCase()}">
+                <summary class="course-summary">
+                  <div class="course-header">
+                    <div class="course-title-row">
+                      <span class="depth-badge">L${course.depth + 1}</span>
+                      <h3>${course.title}</h3>
+                      <span class="status ${status.class}">${status.text}</span>
+                    </div>
+                    ${pTitles.length ? `<div class="prereq">先修: ${pTitles.join(', ')}</div>` : ''}
+                  </div>
+                </summary>
+                <div class="course-content">
+                  ${unitsHtml}
+                </div>
+              </details>
+            `;
+          }
+
+          html += `
+            <details class="study" open>
+              <summary class="study-summary">
+                <h2>${study.title} <span class="tag">${study.courses.length} 门课</span></h2>
+              </summary>
+              <div class="study-content">
+                ${flatNote}
+                ${coursesHtml}
+              </div>
+            </details>
+          `;
+        }
+        container.innerHTML = html;
+      }
+
+      document.getElementById('search').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const container = document.getElementById("content-state-normal");
+        if (!query) {
+          container.querySelectorAll('details').forEach(el => el.style.display = '');
+          container.querySelectorAll('li').forEach(el => el.style.display = '');
+          return;
+        }
+
+        container.querySelectorAll('.study').forEach(studyEl => {
+          let studyHasMatch = false;
+          studyEl.querySelectorAll('.course').forEach(courseEl => {
+            let courseHasMatch = courseEl.dataset.title.includes(query);
+            
+            courseEl.querySelectorAll('.unit').forEach(unitEl => {
+              let unitHasMatch = courseHasMatch;
+              
+              unitEl.querySelectorAll('.lesson-item').forEach(lessonEl => {
+                let lessonHasMatch = lessonEl.dataset.title.includes(query);
+                if (lessonHasMatch || courseHasMatch) {
+                  lessonEl.style.display = '';
+                  unitHasMatch = true;
+                } else {
+                  lessonEl.style.display = 'none';
+                }
+              });
+
+              if (unitHasMatch) {
+                unitEl.style.display = '';
+                courseHasMatch = true;
+              } else {
+                unitEl.style.display = 'none';
+              }
+            });
+
+            if (courseHasMatch) {
+              courseEl.style.display = '';
+              courseEl.open = true;
+              studyHasMatch = true;
+            } else {
+              courseEl.style.display = 'none';
+            }
+          });
+
+          if (studyHasMatch) {
+            studyEl.style.display = '';
+          } else {
+            studyEl.style.display = 'none';
+          }
+        });
+      });
+
+      function switchState(state) {
+        document.querySelectorAll('#state-switcher .chip').forEach(b => b.setAttribute('aria-pressed', 'false'));
+        const btn = document.querySelector(`#state-switcher .chip[data-state="${state}"]`);
+        if (btn) btn.setAttribute('aria-pressed', 'true');
+        
+        document.getElementById('content-state-normal').style.display = state === 'normal' ? 'block' : 'none';
+        document.getElementById('content-state-empty').style.display = state === 'empty' ? 'block' : 'none';
+        document.getElementById('content-state-loading').style.display = state === 'loading' ? 'block' : 'none';
+        document.getElementById('content-state-error').style.display = state === 'error' ? 'block' : 'none';
+        document.querySelector('.search-box').style.display = state === 'normal' ? 'block' : 'none';
+      }
+
+      document.querySelectorAll('#state-switcher .chip').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          switchState(e.target.dataset.state);
+        });
+      });
+
+      switchState('loading');
+      await loadData();
+      switchState('normal');
+    </script>
+  </body>
+</html>

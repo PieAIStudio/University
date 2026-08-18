@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>结算与卡片掉落 · 线框 · 旅程 V2</title>
+    <link rel="stylesheet" href="../lib/journey.css" />
+    <style>
+      .surface.play {
+        background: var(--game-ui-bg, #10131b);
+        color: var(--game-ui-text, #e9edf5);
+        font-family: var(--game-ui-font-body, system-ui);
+        padding: 22px 18px 28px;
+      }
+      .done {
+        text-align: center;
+        margin-bottom: 18px;
+      }
+      .done .eyebrow {
+        font-size: 0.74rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .done h2 {
+        margin: 4px 0 0;
+        border: 0;
+        padding: 0;
+        font-size: 1.34rem;
+        font-family: var(--game-ui-font-display, inherit);
+      }
+      /*
+       * The largest number on this screen is tomorrow's, not today's.
+       *
+       * A settlement screen that leads with a streak is telling the learner
+       * something about the past. "12 张明天到期" is the only line here that
+       * gives them a reason to open the app again, so it gets the size.
+       */
+      .tomorrow {
+        margin: 18px 0;
+        padding: 18px;
+        text-align: center;
+        border: 1px solid var(--game-ui-accent, #5ec8c0);
+        border-radius: var(--game-ui-radius-panel, 14px);
+        background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 11%, transparent);
+      }
+      .tomorrow b {
+        display: block;
+        font-family: var(--mono);
+        font-size: 3rem;
+        line-height: 1;
+        color: var(--game-ui-accent, #5ec8c0);
+      }
+      .tomorrow span {
+        font-size: 0.92rem;
+        color: var(--game-ui-text, #e9edf5);
+      }
+      .small-stats {
+        display: flex;
+        justify-content: center;
+        gap: 22px;
+        margin-bottom: 4px;
+        font-size: 0.82rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .small-stats b {
+        color: var(--game-ui-text, #e9edf5);
+        font-family: var(--mono);
+      }
+      .drops {
+        display: grid;
+        gap: 10px;
+        margin: 18px 0 0;
+      }
+      .card3d {
+        border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+        border-radius: var(--game-ui-radius-card, 12px);
+        background: var(--game-ui-surface, #161b26);
+        padding: 13px 15px;
+        cursor: pointer;
+      }
+      .card3d .front {
+        font-size: 0.96rem;
+        line-height: 1.6;
+      }
+      .card3d .back {
+        margin-top: 9px;
+        padding-top: 9px;
+        border-top: 1px dashed var(--game-ui-border-subtle, rgba(255, 255, 255, 0.16));
+        font-size: 0.9rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+        line-height: 1.6;
+      }
+      .card3d[data-open="false"] .back {
+        display: none;
+      }
+      .card3d .kind {
+        float: right;
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      /*
+       * The only pure-cost act in the first session, and it arrives last on
+       * purpose. Eleven minutes of work exist before this asks for anything,
+       * so it can say "keep what you already have" instead of "sign up".
+       */
+      .save {
+        margin-top: 20px;
+        padding: 15px 16px;
+        border-radius: var(--game-ui-radius-panel, 14px);
+        border: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.16));
+        background: var(--game-ui-panel, #1a2030);
+      }
+      .save h3 {
+        margin: 0 0 4px;
+        font-size: 1rem;
+      }
+      .save p {
+        margin: 0 0 11px;
+        font-size: 0.87rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .save .row {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .save button {
+        border: 0;
+        border-radius: var(--game-ui-radius-control, 10px);
+        background: var(--game-ui-accent, #5ec8c0);
+        color: var(--game-ui-accent-ink, #07110f);
+        font: inherit;
+        font-weight: 600;
+        padding: 9px 18px;
+        cursor: pointer;
+      }
+      .save button.ghost {
+        background: transparent;
+        color: var(--game-ui-text-muted, #9aa6bb);
+        border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+        font-weight: 400;
+      }
+      .save small {
+        font-size: 0.75rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .stateswitch {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 14px 0 4px;
+      }
+      .stateswitch .chip {
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        background: var(--card);
+        color: var(--ink-dim);
+        font: inherit;
+        font-size: 0.82rem;
+        padding: 5px 13px;
+        cursor: pointer;
+      }
+      .stateswitch .chip[aria-pressed="true"] {
+        border-color: var(--accent);
+        color: var(--ink);
+        background: rgba(94, 200, 192, 0.14);
+      }
+      .skeleton div {
+        height: 13px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, #222836, #2c3444, #222836);
+        margin: 9px 0;
+      }
+      .missing {
+        padding: 30px;
+        color: var(--ink-faint);
+        line-height: 1.8;
+        font-size: 0.9rem;
+      }
+      .missing code {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap wide">
+      <a class="crumb" href="../index.html">← 回到旅程 V2</a>
+      <h1>结算与卡片掉落 · 线框</h1>
+      <p class="sub">2D · 第 14–16 幕 · 卡片是真的 · 需要 <code>pnpm dev</code> 打开</p>
+
+      <div class="accept">
+        <div class="eyebrow">验收</div>
+        <p>
+          屏幕上必须出现<b>「明天 N 张」这个具体数字</b>，而且它要比连击数字更显眼。
+          没有它，连击只是一个数字。
+        </p>
+      </div>
+
+      <div class="stateswitch" id="states">
+        <button class="chip" data-s="normal" aria-pressed="true">正常</button>
+        <button class="chip" data-s="first" aria-pressed="false">第一次（未注册）</button>
+        <button class="chip" data-s="loading" aria-pressed="false">加载中</button>
+        <button class="chip" data-s="error" aria-pressed="false">读不到卡片</button>
+      </div>
+
+      <div class="frames">
+        <figure class="frame">
+          <figcaption>桌面</figcaption>
+          <div class="surface play" id="desktop"></div>
+        </figure>
+        <figure class="frame phone">
+          <figcaption>手机 375px</figcaption>
+          <div class="surface play" id="phone"></div>
+        </figure>
+      </div>
+
+      <div class="scope">
+        <b>这一页负责：</b>什么最显眼、掉落的是什么、注册请求的位置与措辞、跳过之后会怎样。
+        <b>不负责：</b>掉落动画、音效、连击的视觉设计、最终配色。
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <h4>掉落的是卡片，不是金币</h4>
+          <ul>
+            <li>金币是产品发明出来的，谁都能发；<b>卡片是这节课的记忆</b>，只有真的学过才会有。</li>
+            <li>卡片直接进 FSRS 队列——这是「明天会回来」的物理原因，不是心理暗示。</li>
+            <li>全库 <b>1236 张卡片全部是 basic（正/反两面）</b>，没有 cloze，所以这一屏只画一种卡型。画不存在的卡型等于给实现下错误的订单。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>注册为什么排在最后</h4>
+          <ul>
+            <li>按实测，走到这一屏他已经花了约 <b>11 分钟</b>（V1 以为是 5 分钟）。</li>
+            <li>所以措辞是「<b>保存你刚拿到的东西</b>」，不是「创建账号」——他手里第一次有值得保护的东西。</li>
+            <li>可跳过。跳过后成果留在本机，下次仍在。把注册做成闸门，会把整段旅程最贵的一次流失放在最不该放的位置。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>状态</h4>
+          <ul>
+            <li><b>第一次</b>：出现注册请求。之后再结算不再出现。</li>
+            <li><b>加载</b>：先出结算标题与骨架。</li>
+            <li><b>读不到卡片</b>：给生成命令，不伪造卡片。</li>
+            <li><b>离线</b>：卡片本地入库，同步排队，屏幕不提这件事——学习者不需要知道。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import "@pieai/swimmer-ui-kit/styles.css";
+
+      const hosts = [document.getElementById("desktop"), document.getElementById("phone")];
+      let sample = null;
+      try {
+        const response = await fetch("../data/sample-lesson.json");
+        if (!response.ok) throw new Error(String(response.status));
+        sample = await response.json();
+      } catch {
+        sample = null;
+      }
+
+      let mode = "normal";
+
+      /*
+       * Tomorrow's number is derived, not decorative.
+       *
+       * Cards dropped today enter FSRS in the learning state, and the first
+       * interval is short — they come back tomorrow. Adding the ones already
+       * queued from earlier lessons is what makes the number believable rather
+       * than a congratulation.
+       */
+      const droppedToday = sample?.lesson.cards.length ?? 0;
+      const alreadyQueued = 10;
+      const dueTomorrow = droppedToday + alreadyQueued;
+
+      function render(host, compact) {
+        if (mode === "loading") {
+          host.innerHTML = `<div class="skeleton"><div style="width:44%"></div><div style="width:88%"></div><div style="width:70%"></div></div>`;
+          return;
+        }
+        if (mode === "error" || !sample) {
+          host.innerHTML = `<div class="missing">这一页要用<b>真卡片</b>渲染。<br><br><code>pnpm journey --sample university-local/spaced-repetition/card-state-is-memory</code><br><br>再刷新。<b>不会用假卡片代替。</b></div>`;
+          return;
+        }
+
+        const cards = sample.lesson.cards
+          .map(
+            (card, index) => `
+              <div class="card3d" data-open="false" data-i="${index}">
+                <span class="kind">${card.kind}</span>
+                <div class="front">${card.front}</div>
+                <div class="back">${card.back.replace(/`([^`]+)`/g, "<code>$1</code>")}</div>
+              </div>`,
+          )
+          .join("");
+
+        host.innerHTML = `
+          <div class="done">
+            <div class="eyebrow">这一关结束</div>
+            <h2>${sample.lesson.title}</h2>
+          </div>
+          <div class="small-stats">
+            <span>连击 <b>第 1 天</b></span>
+            <span>本课 <b>${droppedToday}</b> 张新卡</span>
+            <span>用时 <b>${compact ? "10" : "11"} 分</b></span>
+          </div>
+          <div class="tomorrow">
+            <b>${dueTomorrow}</b>
+            <span>张卡片明天到期 · 明天回来大约 6 分钟</span>
+          </div>
+          <div class="drops">${cards}</div>
+          ${
+            mode === "first"
+              ? `<div class="save">
+                   <h3>保存你刚拿到的东西</h3>
+                   <p>${dueTomorrow} 张卡片和这一关的进度现在只在这台设备上。留个邮箱就能在手机上接着复习。</p>
+                   <div class="row">
+                     <button>保存</button>
+                     <button class="ghost">以后再说</button>
+                     <small>跳过也不会丢：成果留在本机</small>
+                   </div>
+                 </div>`
+              : ""
+          }`;
+
+        for (const card of host.querySelectorAll(".card3d")) {
+          card.addEventListener("click", () => {
+            card.dataset.open = card.dataset.open === "true" ? "false" : "true";
+          });
+        }
+      }
+
+      function paint() {
+        render(hosts[0], false);
+        render(hosts[1], true);
+      }
+      paint();
+
+      document.getElementById("states").addEventListener("click", (event) => {
+        const button = event.target.closest(".chip");
+        if (!button) return;
+        for (const chip of document.querySelectorAll("#states .chip")) {
+          chip.setAttribute("aria-pressed", String(chip === button));
+        }
+        mode = button.dataset.s;
+        paint();
+      });
+    </script>
+  </body>
+</html>

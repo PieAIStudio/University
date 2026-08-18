@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>复习关 · 线框 · 旅程 V2</title>
+    <link rel="stylesheet" href="../lib/journey.css" />
+    <style>
+      /*
+       * Commute is the largest use of this screen, so the document itself
+       * must not grow a sideways gutter. Long code in a card wraps inside
+       * the surface; it does not shove the page.
+       */
+      html {
+        overflow-x: hidden;
+      }
+      .wrap.wide {
+        overflow-x: hidden;
+      }
+
+      .surface.play {
+        background: var(--game-ui-bg, #10131b);
+        color: var(--game-ui-text, #e9edf5);
+        font-family: var(--game-ui-font-body, system-ui);
+        padding: 22px 18px 28px;
+      }
+      .surface.play {
+        overflow-x: hidden;
+        min-width: 0;
+      }
+
+      /*
+       * Other screens let the desktop frame eat leftover width. Here the
+       * phone is the product; a wide desktop rectangle would steal the eye,
+       * so the second frame stays a reference, not a billboard.
+       */
+      .frames .frame.phone {
+        box-shadow: 0 0 0 1px var(--accent);
+      }
+      .frames .frame:not(.phone) {
+        flex: 0 1 420px;
+        max-width: 480px;
+      }
+
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 10px;
+        font-size: 0.74rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .top b {
+        font-family: var(--mono);
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--game-ui-accent, #5ec8c0);
+      }
+
+      /*
+       * Focus is a lens for "what am I climbing". The due queue is not.
+       * Putting both on the same strip is the only way this rule survives
+       * a screenshot — a note in the margin will be designed away later.
+       */
+      .cross {
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.16));
+        border-radius: var(--game-ui-radius-panel, 14px);
+        background: var(--game-ui-panel, #1a2030);
+        font-size: 0.8rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .cross strong {
+        display: block;
+        color: var(--game-ui-text, #e9edf5);
+        font-size: 0.86rem;
+        margin-bottom: 2px;
+      }
+      .studies {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .studies span {
+        font-size: 0.7rem;
+        border: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.16));
+        border-radius: 999px;
+        padding: 2px 8px;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .studies span[data-due="true"] {
+        border-color: var(--game-ui-accent, #5ec8c0);
+        color: var(--game-ui-text, #e9edf5);
+      }
+      .studies span[data-focus="true"] {
+        background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 14%, transparent);
+      }
+
+      .sync {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 0 12px;
+        padding: 4px 10px;
+        border: 1px dashed var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+        border-radius: 999px;
+        font-size: 0.74rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .sync i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--game-ui-accent, #5ec8c0);
+        flex: 0 0 auto;
+      }
+
+      .origin {
+        margin: 0 0 14px;
+        font-size: 0.8rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+        overflow-wrap: anywhere;
+      }
+      .origin b {
+        display: block;
+        color: var(--game-ui-text, #e9edf5);
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+      .origin a {
+        display: inline-block;
+        margin-top: 4px;
+        color: var(--game-ui-accent, #5ec8c0);
+        text-decoration: none;
+        border-bottom: 1px solid color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 45%, transparent);
+      }
+
+      .prompt {
+        margin: 0 0 16px;
+        font-size: 1.08rem;
+        line-height: 1.7;
+        overflow-wrap: anywhere;
+      }
+      .prompt code,
+      .answer code {
+        font-family: var(--mono);
+        font-size: 0.88em;
+      }
+
+      /*
+       * The back of the card is the whole mechanism.
+       *
+       * A review that shows both sides is a flashcard gallery. The learner
+       * has to retrieve first, or the four grade buttons are a lie — they
+       * would be rating recognition, not memory.
+       */
+      .answer {
+        display: none;
+        margin: 0 0 16px;
+        padding-top: 12px;
+        border-top: 1px dashed var(--game-ui-border-subtle, rgba(255, 255, 255, 0.16));
+        font-size: 0.96rem;
+        line-height: 1.7;
+        color: var(--game-ui-text-muted, #9aa6bb);
+        overflow-wrap: anywhere;
+      }
+      .surface.play[data-open="true"] .answer {
+        display: block;
+        color: var(--game-ui-text, #e9edf5);
+      }
+      .surface.play[data-open="true"] .reveal {
+        display: none;
+      }
+      .surface.play[data-open="false"] .grades,
+      .surface.play:not([data-open]) .grades {
+        display: none;
+      }
+
+      .reveal,
+      .grade {
+        border: 0;
+        border-radius: var(--game-ui-radius-control, 10px);
+        font: inherit;
+        cursor: pointer;
+      }
+      .reveal {
+        width: 100%;
+        background: var(--game-ui-accent, #5ec8c0);
+        color: var(--game-ui-accent-ink, #07110f);
+        font-weight: 600;
+        padding: 12px 18px;
+      }
+      .grades {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .surface.play.wide .grades {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .grade {
+        background: var(--game-ui-surface, #161b26);
+        color: var(--game-ui-text, #e9edf5);
+        border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+        padding: 11px 8px;
+        text-align: center;
+      }
+      .grade small {
+        display: block;
+        margin-top: 3px;
+        font-size: 0.7rem;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+
+      .done {
+        text-align: center;
+        padding: 28px 8px 8px;
+      }
+      .done .eyebrow {
+        font-size: 0.74rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--game-ui-text-muted, #9aa6bb);
+      }
+      .done h2 {
+        margin: 8px 0 0;
+        border: 0;
+        padding: 0;
+        font-size: 1.28rem;
+        font-family: var(--game-ui-font-display, inherit);
+      }
+      .next {
+        margin: 18px 0 0;
+        padding: 16px;
+        border: 1px solid var(--game-ui-accent, #5ec8c0);
+        border-radius: var(--game-ui-radius-panel, 14px);
+        background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 11%, transparent);
+      }
+      .next b {
+        display: block;
+        font-family: var(--mono);
+        font-size: 1.7rem;
+        line-height: 1.15;
+        color: var(--game-ui-accent, #5ec8c0);
+      }
+      .next span {
+        font-size: 0.88rem;
+        color: var(--game-ui-text, #e9edf5);
+      }
+
+      .stateswitch {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 14px 0 4px;
+      }
+      .stateswitch .chip {
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        background: var(--card);
+        color: var(--ink-dim);
+        font: inherit;
+        font-size: 0.82rem;
+        padding: 5px 13px;
+        cursor: pointer;
+      }
+      .stateswitch .chip[aria-pressed="true"] {
+        border-color: var(--accent);
+        color: var(--ink);
+        background: rgba(94, 200, 192, 0.14);
+      }
+      .skeleton div {
+        height: 13px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, #222836, #2c3444, #222836);
+        margin: 9px 0;
+      }
+      .missing {
+        padding: 30px;
+        color: var(--ink-faint);
+        line-height: 1.8;
+        font-size: 0.9rem;
+      }
+      .missing code {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap wide">
+      <a class="crumb" href="../index.html">← 回到旅程 V2</a>
+      <h1>复习关 · 线框</h1>
+      <p class="sub">
+        2D · 第 17–18 幕 · 手机是主形态 · 卡片是真的 · 需要 <code>pnpm dev</code> 打开
+      </p>
+
+      <div class="accept">
+        <div class="eyebrow">验收</div>
+        <p>断网状态下这一屏完全可用：把离线做成能点的状态，不是写在注释里。</p>
+      </div>
+
+      <div class="stateswitch" id="states">
+        <button class="chip" data-s="normal" aria-pressed="true">正常</button>
+        <button class="chip" data-s="offline" aria-pressed="false">离线（可用，判分排队）</button>
+        <button class="chip" data-s="empty" aria-pressed="false">空（今天没有到期卡片）</button>
+        <button class="chip" data-s="loading" aria-pressed="false">加载中</button>
+      </div>
+
+      <div class="frames">
+        <figure class="frame phone">
+          <figcaption>手机 375px · 主形态 · 通勤</figcaption>
+          <div class="surface play" id="phone"></div>
+        </figure>
+        <figure class="frame">
+          <figcaption>桌面 · 次要</figcaption>
+          <div class="surface play wide" id="desktop"></div>
+        </figure>
+      </div>
+
+      <div class="scope">
+        <b>这一页负责：</b>先回想再看答案、四档评分、跨 study 来源、离线仍可点、手机主形态、队列见底后下一张何时到期。
+        <b>不负责：</b>真 FSRS 计算、同步协议、3D 重返动画、最终配色。
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <h4>先回想，再看答案</h4>
+          <ul>
+            <li>答案在点「显示答案」之前<b>不在 DOM 里当正文出现</b>——看见两面的卡片教不会任何人。</li>
+            <li>四档是 FSRS 的 1–4。没有「显示答案」就没有评分，否则评的是再认，不是提取。</li>
+            <li>全库 <b>1236 张全部是 basic</b>，没有 cloze，所以这一屏只画正/反一种卡型。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>到期不过滤主攻</h4>
+          <ul>
+            <li>主攻是「我在爬哪座山」。到期是「哪张该问了」。两件事故意不是同一个过滤器。</li>
+            <li>在 Buzz 里埋头时把 UniversityLocal 的表忘了，<b>正是间隔重复要拦的事</b>。</li>
+            <li>每张卡写明来源课，并且能跳回那一节——复习不是列表页，是回到已经通关的区域。</li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4>离线是能点的状态</h4>
+          <ul>
+            <li>通勤是这一屏最大的使用场景。断网如果变成禁用，产品在它最该被打开的时候是死的。</li>
+            <li>离线只多一枚「判分排队」指示，<b>显示答案和四档都不禁用</b>。</li>
+            <li>空状态说的是「下一张何时到期」，不是一片空白。见底也一样。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import "@pieai/swimmer-ui-kit/styles.css";
+
+      const hosts = [document.getElementById("phone"), document.getElementById("desktop")];
+
+      let sample = null;
+      let taxonomy = null;
+      try {
+        const response = await fetch("../data/sample-lesson.json");
+        if (!response.ok) throw new Error(String(response.status));
+        sample = await response.json();
+      } catch {
+        sample = null;
+      }
+      try {
+        const response = await fetch("../data/taxonomy.json");
+        if (!response.ok) throw new Error(String(response.status));
+        taxonomy = await response.json();
+      } catch {
+        taxonomy = null;
+      }
+
+      /*
+       * Approximate first-review intervals, not a ts-fsrs run.
+       *
+       * A card that entered the learning state yesterday comes back on a
+       * short ladder. The wireframe only needs the four buttons to disagree
+       * with each other. Real scheduling stays in the shared scheduler;
+       * inventing a second one here is how the picture and the product drift.
+       */
+      const GRADES = [
+        { rating: 1, label: "忘了", when: "10 分钟" },
+        { rating: 2, label: "困难", when: "1 天" },
+        { rating: 3, label: "一般", when: "2 天" },
+        { rating: 4, label: "简单", when: "4 天" },
+      ];
+
+      function formatSide(text) {
+        return String(text)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/`([^`]+)`/g, "<code>$1</code>");
+      }
+
+      function findCourse(studyId, courseId) {
+        const study = taxonomy?.studies.find((item) => item.id === studyId) ?? null;
+        const course = study?.courses.find((item) => item.id === courseId) ?? null;
+        return { study, course };
+      }
+
+      function findLesson(course, unitId, lessonId) {
+        const unit = course?.units.find((item) => item.id === unitId) ?? null;
+        const lesson = unit?.lessons.find((item) => item.id === lessonId) ?? null;
+        return { unit, lesson };
+      }
+
+      /*
+       * Due cards are collected by walking every study.
+       *
+       * LearningFocusSchema is a lens for "what am I climbing", not a
+       * filter on forgetting. Something learned in another world going
+       * stale is exactly the failure spaced repetition exists to catch.
+       *
+       * Only sample-lesson.json carries real front/back text. Taxonomy
+       * has counts, not prose — so a study with no sample cards contributes
+       * zero faces, never a fabricated one.
+       */
+      function buildQueue() {
+        const queue = [];
+        const studies = taxonomy?.studies ?? [];
+        const fallback = sample
+          ? [
+              {
+                id: sample.studyId,
+                title: sample.studyId,
+                courses: [
+                  {
+                    id: sample.courseId,
+                    title: sample.courseTitle,
+                    units: [
+                      {
+                        id: sample.unitId,
+                        title: sample.unitTitle,
+                        lessons: [{ id: sample.lesson.id, title: sample.lesson.title }],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ]
+          : [];
+        const walked = studies.length ? studies : fallback;
+
+        for (const study of walked) {
+          for (const course of study.courses) {
+            if (!sample) continue;
+            if (study.id !== sample.studyId || course.id !== sample.courseId) continue;
+            const { unit, lesson } = findLesson(course, sample.unitId, sample.lesson.id);
+            for (const card of sample.lesson.cards) {
+              if (card.kind !== "basic") continue;
+              queue.push({
+                card,
+                studyId: study.id,
+                studyTitle: study.title,
+                courseId: course.id,
+                courseTitle: course.title,
+                unitTitle: unit?.title ?? sample.unitTitle,
+                lessonId: lesson?.id ?? sample.lesson.id,
+                lessonTitle: lesson?.title ?? sample.lesson.title,
+              });
+            }
+          }
+        }
+        return queue;
+      }
+
+      /*
+       * Current focus is deliberately *not* the course these sample cards
+       * belong to. If focus and source were the same, the screenshot would
+       * look like a filtered queue, which is the opposite of the rule.
+       */
+      function focusOf() {
+        const buzz = taxonomy?.studies.find((study) => study.id === "buzz");
+        if (buzz) {
+          const course =
+            buzz.courses.find((item) => item.id === buzz.defaultCourseId) ?? buzz.courses[0];
+          return { studyTitle: buzz.title, courseTitle: course.title };
+        }
+        return { studyTitle: "Buzz", courseTitle: "《你屏幕上这套东西背后是什么？》" };
+      }
+
+      const queue = buildQueue();
+      const focus = focusOf();
+      const studyChips = (taxonomy?.studies ?? []).map((study) => ({
+        title: study.title,
+        due: queue.some((item) => item.studyId === study.id),
+        focus: study.title === focus.studyTitle,
+      }));
+
+      let mode = "normal";
+      let cursor = 0;
+      let revealed = false;
+      let pendingSync = 0;
+      const ratings = [];
+
+      function remaining() {
+        return Math.max(0, queue.length - cursor);
+      }
+
+      function nextDueLabel() {
+        if (!ratings.length) return "明天";
+        const soonest = Math.min(...ratings);
+        return GRADES.find((grade) => grade.rating === soonest)?.when ?? "明天";
+      }
+
+      function missing(host) {
+        host.removeAttribute("data-open");
+        host.innerHTML = `<div class="missing">这一页要用<b>真卡片</b>渲染。<br><br><code>pnpm journey --sample university-local/spaced-repetition/card-state-is-memory</code><br><br>再刷新。<b>不会用假卡片代替。</b></div>`;
+      }
+
+      function skeleton(host) {
+        host.removeAttribute("data-open");
+        host.innerHTML = `<div class="skeleton"><div style="width:36%"></div><div style="width:88%"></div><div style="width:70%"></div><div style="width:54%"></div></div>`;
+      }
+
+      function crossStrip() {
+        const chips = studyChips.length
+          ? `<div class="studies">${studyChips
+              .map(
+                (chip) =>
+                  `<span data-due="${chip.due}" data-focus="${chip.focus}">${chip.title}${
+                    chip.focus ? " · 主攻" : ""
+                  }${chip.due ? " · 有到期" : ""}</span>`,
+              )
+              .join("")}</div>`
+          : "";
+        return `<div class="cross">
+          <strong>当前主攻 ${focus.studyTitle} · ${focus.courseTitle}</strong>
+          到期来自全部 ${taxonomy?.totals.studies ?? 4} 个 study，不按主攻过滤。在别处忘了，正是复习要拦的事。
+          ${chips}
+        </div>`;
+      }
+
+      function syncPill() {
+        if (mode !== "offline") return "";
+        const queued = pendingSync
+          ? `离线 · 已排队 ${pendingSync} 张，连上再同步`
+          : "离线 · 判分先记在本机，连上再同步";
+        return `<div class="sync"><i></i>${queued}</div>`;
+      }
+
+      function emptyView(title, when) {
+        return `
+          ${syncPill()}
+          ${crossStrip()}
+          <div class="done">
+            <div class="eyebrow">${title}</div>
+            <h2>今天没有要问的了</h2>
+            <div class="next">
+              <b>${when}</b>
+              <span>后下一张到期</span>
+            </div>
+          </div>`;
+      }
+
+      function bind(host) {
+        const reveal = host.querySelector("[data-act=reveal]");
+        reveal?.addEventListener("click", () => {
+          revealed = true;
+          paint();
+        });
+        for (const button of host.querySelectorAll("[data-rating]")) {
+          button.addEventListener("click", () => {
+            if (!revealed) return;
+            ratings.push(Number(button.dataset.rating));
+            if (mode === "offline") pendingSync += 1;
+            cursor += 1;
+            revealed = false;
+            paint();
+          });
+        }
+      }
+
+      function render(host) {
+        if (mode === "loading") {
+          skeleton(host);
+          return;
+        }
+        if (mode === "empty") {
+          host.removeAttribute("data-open");
+          host.innerHTML = emptyView("今天没有到期卡片", "明天");
+          return;
+        }
+        if (!sample || !queue.length) {
+          missing(host);
+          return;
+        }
+        if (cursor >= queue.length) {
+          host.removeAttribute("data-open");
+          host.innerHTML = emptyView("今天的到期清完了", nextDueLabel());
+          return;
+        }
+
+        const item = queue[cursor];
+        host.dataset.open = revealed ? "true" : "false";
+        host.innerHTML = `
+          <div class="top">
+            <span>重返 · 已通关区域</span>
+            <b>还剩 ${remaining()} 张</b>
+          </div>
+          ${syncPill()}
+          ${crossStrip()}
+          <div class="origin">
+            <b>${item.courseTitle}</b>
+            ${item.studyTitle} · ${item.unitTitle}
+            <a href="reader.html">回到这一节 · ${item.lessonTitle}</a>
+          </div>
+          <p class="prompt">${formatSide(item.card.front)}</p>
+          <div class="answer">${formatSide(item.card.back)}</div>
+          <button class="reveal" data-act="reveal" type="button">显示答案</button>
+          <div class="grades">
+            ${GRADES.map(
+              (grade) =>
+                `<button class="grade" data-rating="${grade.rating}" type="button">${grade.label}<small>${grade.when}</small></button>`,
+            ).join("")}
+          </div>`;
+        bind(host);
+      }
+
+      function paint() {
+        for (const host of hosts) render(host);
+      }
+      paint();
+
+      document.getElementById("states").addEventListener("click", (event) => {
+        const button = event.target.closest(".chip");
+        if (!button) return;
+        for (const chip of document.querySelectorAll("#states .chip")) {
+          chip.setAttribute("aria-pressed", String(chip === button));
+        }
+        mode = button.dataset.s;
+        if (mode === "empty" || mode === "loading") {
+          paint();
+          return;
+        }
+        paint();
+      });
+    </script>
+  </body>
+</html>
