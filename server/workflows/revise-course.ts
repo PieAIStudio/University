@@ -11,6 +11,7 @@ import {
   IsoDateTime,
   LessonManifestSchema,
   LessonAssetSchema,
+  LessonSectionSchema,
   LessonVariantSchema,
   Sha256,
   SnapshotManifestSchema,
@@ -105,6 +106,7 @@ export const CourseRevisionProposalSchema = z
         expectedRevision: z.number().int().positive(),
         title: z.string().min(1).max(200).optional(),
         variant: LessonVariantSchema.optional(),
+        sections: z.array(LessonSectionSchema).max(100).optional(),
         content: z.string().min(1),
         evidence: z.array(EvidenceReferenceSchema).min(1),
         assets: z.array(LessonAssetSchema).max(100).optional(),
@@ -579,6 +581,14 @@ function buildBundle(
     proposal.lesson.id,
   ).manifest;
   const assets = resolveLessonAssets(currentLesson, proposal.lesson.assets);
+  if (proposal.lesson.sections) {
+    assertUniqueIds(proposal.lesson.sections, `Proposed lesson ${currentLesson.id} sections`);
+    assertCoversExisting(
+      proposal.lesson.sections.map((section) => section.id),
+      currentLesson.sections.map((section) => section.id),
+      `Lesson ${currentLesson.id} sections`,
+    );
+  }
   const assetFiles = resolveLessonAssetFiles(
     studiesRoot,
     studyId,
@@ -672,6 +682,7 @@ function buildBundle(
     ...currentLesson,
     title: proposal.lesson.title ?? currentLesson.title,
     variant: proposal.lesson.variant ?? currentLesson.variant,
+    sections: proposal.lesson.sections ?? currentLesson.sections,
     // The proposal's order is the lesson's order, and it is where a newly added
     // card or exercise becomes part of the lesson rather than an orphan file.
     cardIds: cards.map((card) => card.id),

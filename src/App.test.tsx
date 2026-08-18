@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { shortenHomePath } from "./App.js";
 import { KnowledgeNotesSection } from "./shell/KnowledgeNotesSection.js";
+import { classifyCourseRoute } from "./shell/CourseRouteQuiz.js";
 import { splitByFocus, StudyEvidenceStatus } from "./shell/StudyDetail.js";
 import { recentStudies, relativeTimeLabel } from "./shell/StudyShelf.js";
 import { EvidenceCode } from "./evidence/EvidenceCode.js";
@@ -20,15 +21,23 @@ describe("StudyEvidenceStatus", () => {
       <StudyEvidenceStatus snapshotCount={2} readyUaAnalysisCount={1} />,
     );
 
-    expect(markup).toContain('aria-label="研究证据状态"');
-    expect(markup).toContain(">2</strong><span>份源码快照");
+    expect(markup).toContain('aria-label="课程使用的项目资料"');
+    expect(markup).toContain(">2</strong><span>个源码版本");
     // "READY" is the status this counter filters on, which explains the number
     // to whoever wrote the counter and to nobody else.
-    expect(markup).toContain(">1</strong><span>份项目地图");
+    expect(markup).toContain(">1</strong><span>份项目分析");
     expect(markup).not.toContain("READY");
     // The boundary itself is the point of this component and has to survive
     // any rewording: a map is evidence a course cites, never a course.
-    expect(markup).toContain("不是课程本身");
+    expect(markup).toContain("不代表课程学习进度");
+  });
+});
+
+describe("course route quiz", () => {
+  it("turns answers into an automatic learning starting point", () => {
+    expect(classifyCourseRoute(0)).toBe("beginner");
+    expect(classifyCourseRoute(3)).toBe("familiar");
+    expect(classifyCourseRoute(6)).toBe("builder");
   });
 });
 

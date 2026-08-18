@@ -535,7 +535,7 @@ export function LessonReader({
           {completed && view.lesson.cards.length > 0 ? (
             <section className="lesson-practice">
               <div>
-                <h2>把刚学到的内容，从脑子里拿出来。</h2>
+                <h2>通过答题巩固刚学到的内容</h2>
               </div>
               {view.lesson.cards.map((card) => (
                 <ReviewCard

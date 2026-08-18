@@ -88,14 +88,14 @@ export function StudyMap({ studyId }: { readonly studyId: string }) {
   );
 
   return (
-    <section className="study-map" aria-label="项目地图">
+    <section className="study-map" aria-label="项目文件覆盖分析">
       <div className="study-map__header">
-        <h3>课程走到了项目的哪些地方</h3>
+        <h3>按代码分层查看文件覆盖</h3>
         <Tip term="study-map" className="rail-panel__help">
           <span aria-label="关于项目地图">?</span>
         </Tip>
         <p className="study-map__reach">
-          {totalCited} / {totalFiles} 个文件
+          已讲到 {totalCited} / {totalFiles} 个项目文件
         </p>
       </div>
 
@@ -115,7 +115,7 @@ export function StudyMap({ studyId }: { readonly studyId: string }) {
               >
                 <span className="study-map__layer-name">{layer.name}</span>
                 <span className="study-map__layer-count">
-                  {layer.citedFileCount} / {layer.fileCount}
+                  {layer.citedFileCount} / {layer.fileCount} 个文件
                 </span>
               </button>
               {/*

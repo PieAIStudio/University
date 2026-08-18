@@ -25,9 +25,11 @@ failures a machine can catch before a human or model re-reads.
    - Test: show the title alone to someone who has never programmed. Do they
      want to know? `id="root" 是什么` fails.
      `明明什么都没写，页面为什么是满的` passes.
-4. `[machine]` Section headings match the chosen variant's shape **in order**,
-   with those **exact** names (see `variants.md`). Optional `## 再想想` may
-   appear only after the middle and before `## 自检`.
+4. `[machine]` Section headings match the chosen variant's shape **in order**:
+    the variant-specific slots have the right count and position, while their
+    wording is reader-facing rather than a fixed internal label. The spine
+    headings `## 先猜一下`, `## 答案`, `## 自检`, and `## 一句话` remain exact.
+    Optional `## 再想想` may appear only after the middle and before `## 自检`.
 5. `[machine]` Mandatory extras present: `决策` → `## 什么时候该反过来`;
    `术语` → `## 它不是什么`.
 6. `[machine]` No old-skeleton headings: `## 学习目标`, `## 先给结论`,
@@ -39,7 +41,7 @@ failures a machine can catch before a human or model re-reads.
 8. `[machine]` Prediction is not multiple choice: no `A.`/`B.`/`C.` option
    lists, no `（ ）` fill-in with given choices, no「选一个」.
 9. `[machine]` The prediction block includes the verbatim line
-   `随便猜，猜错不影响任何进度。`
+   `先写下你的判断，再往下看答案。`
 10. `[judgment]` It targets the lesson's **core**, not a side detail.
 11. `[machine]` The next `##` heading after `## 先猜一下` is exactly `## 答案`
     (no suffix in the heading).
@@ -133,6 +135,25 @@ failures a machine can catch before a human or model re-reads.
     exists. Would they ask「你在说什么」? Bare `证据` / `快照` are fine when the
     **studied project** owns those words; they are banned only as this app
     narrating itself.
+
+## Beginner clarity gate
+
+44. `[judgment]` The first explanation of each unfamiliar thing states the literal mechanism
+    before any analogy: what it is, where it lives, who reads it, and what it causes.
+45. `[judgment]` Every analogy is visibly separated and labeled (`打个比方` / `类比`); it never
+    smuggles an unexplained metaphor or new term into the factual explanation.
+46. `[judgment]` Headings, table labels, and transitions remain understandable when read alone;
+    no shorthand such as `现象`, `两个东西`, `你碰什么`, `什么时候用哪个`, or `OK` carries
+    essential meaning by itself.
+47. `[judgment]` The prediction requires a consequence, choice, or reason grounded in the lesson;
+    it is not an obvious yes/no restatement that a reader could answer without reading.
+48. `[judgment]` Every paragraph advances the lesson's one central question; repeated project
+    introductions and repeated conclusions are removed unless they add a new mechanism.
+49. `[judgment]` When code is mapped to a UI, the prose identifies the single visible element,
+    file and line range, and the code-to-screen relationship; a broad screenshot is not used as
+    the only explanation.
+50. `[process]` UI/IA findings (panels, counts, routes, labels, crops) are recorded and handled
+    as separate interface work, not hidden inside lesson prose.
 
 ## Machine vs judgment — linter handoff
 

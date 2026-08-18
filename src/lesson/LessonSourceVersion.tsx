@@ -53,7 +53,7 @@ export function LessonSourceVersion({
       setCheckout(method === "POST" ? body : null);
       setCopied(false);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "打不开这个版本");
+      setError(reason instanceof Error ? reason.message : "打不开正在学习的 App");
     } finally {
       setPending(false);
     }
@@ -74,7 +74,7 @@ export function LessonSourceVersion({
             onClick={() => void call("POST")}
             disabled={pending}
           >
-            {pending ? "正在取出…" : "取出这个版本"}
+            {pending ? "正在打开…" : "打开正在学习的 App"}
           </button>
         </>
       ) : (

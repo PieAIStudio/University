@@ -152,7 +152,7 @@ export function ReviewCard({
       <div className="panel-heading">
         <div>
           <Tip term="retrieval-practice">
-            <h2>先想，再看答案</h2>
+            <h2>通过答题复习</h2>
           </Tip>
           {remaining !== undefined && remaining > 1 ? (
             <p className="review-card__queue">

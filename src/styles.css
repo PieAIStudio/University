@@ -687,6 +687,235 @@ summary:focus-visible,
   line-height: 1.6;
 }
 
+/*
+   Project analysis is a reference shelf, not part of the learner's route.
+   Keeping it behind one native disclosure prevents source counts from
+   competing with the first lesson while preserving a clear explanation for
+   the person who came looking for them.
+*/
+.study-analysis-panel {
+  margin-top: 26px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgb(42 31 24 / 68%), rgb(24 37 35 / 44%));
+}
+
+.study-analysis-panel > summary {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 22px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.study-analysis-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.study-analysis-panel__summary-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.study-analysis-panel__summary-copy strong {
+  color: #fff2dc;
+  font-family: var(--game-ui-font-display);
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  line-height: 1.15;
+}
+
+.study-analysis-panel__summary-copy > span:last-child {
+  max-width: 690px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.study-analysis-panel__summary-action {
+  flex: 0 0 auto;
+  color: #7ad9c9;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.study-analysis-panel__summary-action::after {
+  margin-left: 7px;
+  color: #f0a868;
+  content: "展开 ▾";
+  font-weight: 600;
+}
+
+.study-analysis-panel[open] .study-analysis-panel__summary-action::after {
+  content: "收起 ▴";
+}
+
+.study-analysis-panel__body {
+  padding: 0 22px 22px;
+  border-top: 1px solid var(--campus-rule);
+}
+
+.study-analysis-panel__body .study-evidence-status,
+.study-analysis-panel__body .study-map {
+  margin-top: 20px;
+}
+
+.course-route-quiz {
+  margin-top: 22px;
+  border: 1px solid rgb(47 179 162 / 34%);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 100% 0, rgb(47 179 162 / 14%), transparent 18rem), rgb(24 40 37 / 42%);
+}
+
+.course-route-quiz > summary {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.course-route-quiz > summary::-webkit-details-marker {
+  display: none;
+}
+
+.course-route-quiz > summary > span:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.course-route-quiz > summary strong {
+  color: #fff2dc;
+  font-family: var(--game-ui-font-display);
+  font-size: 1.2rem;
+}
+
+.course-route-quiz__summary-meta {
+  color: #7ad9c9;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.course-route-quiz__body {
+  padding: 0 22px 22px;
+}
+
+.course-route-quiz__question,
+.course-route-quiz__result {
+  padding: 18px 0 0;
+  border-top: 1px solid rgb(122 217 201 / 16%);
+}
+
+.course-route-quiz__progress {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  color: var(--game-ui-text-muted);
+  font-size: 0.74rem;
+}
+
+.course-route-quiz__progress span:first-child {
+  color: #f0a868;
+  font-weight: 800;
+}
+
+.course-route-quiz__question h3,
+.course-route-quiz__result h3 {
+  max-width: 760px;
+  margin: 12px 0 0;
+  color: #fff2dc;
+  font-family: var(--game-ui-font-display);
+  font-size: clamp(1.2rem, 2.2vw, 1.65rem);
+  line-height: 1.25;
+}
+
+.course-route-quiz__options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.course-route-quiz__option {
+  display: flex;
+  min-height: 58px;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 15px;
+  border: 1px solid rgb(122 217 201 / 26%);
+  border-radius: 11px;
+  background: rgb(13 26 24 / 52%);
+  color: #e9f5ed;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.course-route-quiz__option span {
+  color: #7ad9c9;
+  font-size: 1.1rem;
+}
+
+.course-route-quiz__option:hover {
+  border-color: #7ad9c9;
+  background: rgb(47 179 162 / 13%);
+  transform: translateY(-1px);
+}
+
+.course-route-quiz__result-label,
+.course-route-quiz__reason,
+.course-route-quiz__note {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.course-route-quiz__result
+  > p:not(.course-route-quiz__result-label):not(.course-route-quiz__reason):not(
+    .course-route-quiz__note
+  ) {
+  max-width: 760px;
+  margin: 9px 0 0;
+  color: #e9f5ed;
+  line-height: 1.6;
+}
+
+.course-route-quiz__result h3 {
+  color: #7ad9c9;
+}
+
+.course-route-quiz__reason {
+  margin-top: 9px;
+  color: #f0d5ad;
+}
+
+.course-route-quiz__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.course-route-quiz__note {
+  margin-top: 14px;
+  color: rgb(233 245 237 / 58%);
+}
+
 .study-detail > [class*="game-progress"],
 .study-detail > [role="progressbar"],
 .formal-course > [class*="game-progress"],
@@ -2579,6 +2808,32 @@ summary:focus-visible,
 
   .study-evidence-status {
     grid-template-columns: 1fr;
+  }
+
+  .study-analysis-panel > summary,
+  .course-route-quiz > summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .study-analysis-panel__summary-action,
+  .course-route-quiz__summary-meta {
+    white-space: normal;
+  }
+
+  .study-analysis-panel__body,
+  .course-route-quiz__body {
+    padding-inline: 16px;
+  }
+
+  .course-route-quiz__options {
+    grid-template-columns: 1fr;
+  }
+
+  .course-route-quiz__progress {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .study-evidence-status__boundary {

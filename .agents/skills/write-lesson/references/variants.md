@@ -36,10 +36,10 @@ After every real code block, use the product anchor — not a prose location lin
 would expect. The default, and the best one when it fits.
 
 ```
-## 现象
+## <先把读者看到的反常之处说清楚>
 ## 先猜一下
 ## 答案
-## 为什么是这样
+## <回答「为什么会这样」>
 ## 再想想          ← 可选
 ## 自检
 ## 一句话
@@ -62,11 +62,11 @@ from `## 答案` down still leaves the mechanism obvious, you leaked.
 null vs undefined, `==` vs `===`.
 
 ```
-## 两个东西
+## <先把两种情况点名>
 ## 先猜一下          ← 「这两个哪个会……？」
 ## 答案
-## 逐条对照
-## 什么时候用哪个
+## <逐项比较两种情况>
+## <说明分别什么时候用>
 ## 再想想          ← 可选
 ## 自检
 ## 一句话
@@ -86,10 +86,10 @@ recite the difference and still unable to choose.
 reaching a handler, a build input becoming an output.
 
 ```
-## 你看到的结果
+## <先说读者看到的结果>
 ## 先猜一下          ← 「它是从哪来的？」
 ## 答案
-## 一站一站往回走     ← 每站：代码块 + [[evidence:…]]
+## <沿着真实路径逐站回查>     ← 每站：代码块 + [[evidence:…]]
 ## 再想想          ← 可选
 ## 自检
 ## 一句话
@@ -110,11 +110,11 @@ Stops follow the order the value actually travels, not repository tree order.
 the reasoning is the lesson.
 
 ```
-## 情境和约束
+## <说明这次选择面对的情境>
 ## 先猜一下          ← 「你会怎么选？」
 ## 答案              ← 第一句可以说「他们选了…」；标题仍是「答案」
-## 代价和收益
-## 什么时候该反过来
+## <这次选择换来了什么，又付出了什么>
+## <什么时候应该反过来>
 ## 再想想          ← 可选
 ## 自检
 ## 一句话
@@ -137,11 +137,11 @@ would be no lesson. **Also trap:** renaming the answer heading to
 state, render, build, mount.
 
 ```
-## 一句真实出现的话   ← 从被学项目里原样引用
+## <先展示这个词真实出现的一句话>   ← 从被学项目里原样引用
 ## 先猜一下          ← 「这里的 X 是什么意思？」
 ## 答案
-## 三个真实用例       ← 各带 [[evidence:…]]
-## 它不是什么
+## <这个词在项目里怎样使用>       ← 各带 [[evidence:…]]
+## <这个词不等于什么>
 ## 再想想          ← 可选
 ## 自检
 ## 一句话

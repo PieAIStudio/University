@@ -1,6 +1,6 @@
 ---
 name: write-lesson
-description: Write or rewrite a UniversityLocal lesson content.md into the house teaching shape so a beginner can finish it. Use when authoring a new lesson, rewriting a wall-of-conclusions lesson, reviewing lesson prose against the five variants, or when the user says 读不进去, 重写这节课, 重写课文, 改写成能读的, 太干, or 语气再循循善诱一些. Covers question-first titles, one prediction, immediate answer, inline [[evidence:]] anchors, and cross-lesson links. It may be invoked by refresh-study for a stale lesson, but it is never the refresh entry point. Do not use for course/unit planning, card/exercise scheduling alone, UA analysis, refresh-study orchestration, knowledge-node saves, teach-from-study tutoring, or ordinary app engineering.
+description: Write or rewrite a UniversityLocal lesson content.md into the house teaching shape so a beginner can finish it. Use when authoring a new lesson, rewriting a wall-of-conclusions lesson, reviewing lesson prose against the five variants, or when the user says 读不进去, 重写这节课, 重写课文, 改写成能读的, 太干, or 语气再循循善诱一些. Also use when beginner Chinese is vague, shorthand, jargon-heavy, or mixes literal explanation with analogy. Covers question-first titles, one prediction, immediate answer, plain-language beginner scaffolding, literal-first explanations, clearly marked analogies, inline [[evidence:]] anchors, and cross-lesson links. It may be invoked by refresh-study for a stale lesson, but it is never the refresh entry point. Do not use for course/unit planning, card/exercise scheduling alone, UA analysis, refresh-study orchestration, knowledge-node saves, teach-from-study tutoring, or ordinary app engineering.
 ---
 
 # Write a lesson
@@ -66,8 +66,9 @@ Break one → rewrite.
    "X 的作用".
 2. **No answer before `## 先猜一下`** (title, body, or heading).
 3. **Exactly one** open-ended prediction on the lesson core. Never multiple
-   choice (including A/B/C bullets or「选一个」). Include the line
-   **随便猜，猜错不影响任何进度。** on its own line.
+   choice (including A/B/C bullets or「选一个」). Follow it with the line
+   **先写下你的判断，再往下看答案。** on its own line. This keeps the
+   prediction low-stakes without talking down to the reader.
 4. **Next section is exactly `## 答案`** (no heading suffix) and resolves the
    prediction in one or two sentences. Middle sections teach; do not dump the
    lesson into `## 答案`.
@@ -107,15 +108,19 @@ asked; unguided struggle overloads beginners.
 
 ## Variants (pick by content)
 
-| Variant | Use when | Middle |
+| Variant | Use when | Middle role (the heading is written in reader language) |
 | --- | --- | --- |
-| `现象` | Observable surprise | `## 为什么是这样` |
-| `对比` | Two things confused | `## 逐条对照` + `## 什么时候用哪个` |
-| `溯源` | Value/call crosses files | `## 一站一站往回走` |
-| `决策` | A tradeoff was made | `## 代价和收益` + `## 什么时候该反过来` |
-| `术语` | A word is misread | `## 三个真实用例` + `## 它不是什么` |
+| `现象` | Observable surprise | 1 个「为什么会这样」的解释段 |
+| `对比` | Two things confused | 逐项分开比较 + 说明何时选哪一种 |
+| `溯源` | Value/call crosses files | 沿着真实路径逐站回查 |
+| `决策` | A tradeoff was made | 说明取舍带来的收益/代价 + 说明何时反过来 |
+| `术语` | A word is misread | 这个词在项目里的真实用法 + 它不等于什么 |
 
-Full shapes: [references/variants.md](references/variants.md).
+变体决定的是**教学位置和数量**，不是把生硬的内部标签展示给读者。中段标题必须让一个
+没写过代码的人单独读也知道「这一段要解决什么」。例如把 `## 什么时候用哪个` 改成
+`## 这两种写法，分别在什么时候用？`，把 `## 现象` 改成
+`## 我们再看一眼这个反常的地方`。完整的结构约束见
+[references/variants.md](references/variants.md)。
 
 **Rotation:** ≤ two consecutive lessons in a unit may share a variant. If a
 third is honest, say so in the **agent report** — do not force a bad fit.
@@ -295,6 +300,71 @@ names. Never put it in `content.md`.
 
 - `foundations-*` 课程：读者可能从没写过代码，全套扶手。
 - 其余课程：读者已经读完 foundations。少铺垫，别把已知当未知；术语直接用，把篇幅花在这门课真正新的东西上。
+
+## 新手清晰度闸门
+
+这组规则来自对真实课程页面的逐条阅读反馈。它们不是「文风偏好」，而是防止
+聪明但没写过软件的人在句子中途失去上下文的硬闸门。
+
+### 先说事实，再说类比
+
+第一次解释一个东西时，先用完整的事实句回答四件事：它是什么、写在哪里、谁会读它、
+它会造成什么结果。只有事实句站稳之后，才可以另起一段写类比，并明确标成
+`**打个比方：**` 或 `:::detail[打个比方，为什么像……？]`。
+
+禁止把类比偷偷塞进事实句里：
+
+- 坏：程序「照着题库里的台词一条条摆出来」。读者不知道题库和台词是真有其物，还是作者在比喻。
+- 好：程序读取代码里的名单和文字，把它们逐项渲染成页面上的对话和按钮。
+  **打个比方：** 这像把一张名单排成一张可操作的表格。
+
+类比不能代替机制、不能先于术语，也不能把新术语带进另一个新术语的解释里。删掉类比后，
+事实层必须仍然完整。一个类比若有用，就单独出现；不用类比也能懂，就删掉。
+
+### 标题和过渡必须是人话
+
+对零基础读者，`现象`、`两个东西`、`你碰什么`、`你在哪`、`什么时候用哪个` 这类
+脱离语境就不知道在问什么的标题，视为不合格。标题要说出对象和读者要解决的困惑，
+例如「开发项目里的这四类文件，分别有什么用？」或「接下来，我们看一个按钮是怎么被画出来的」。
+
+段落之间也要把路说出来：先明确「前面已经知道了什么」，再说明「这一段接下来要看哪个
+更小的例子，以及为什么看它」。不要用「两件事」「OK」「这就是现象」等空指代让读者自己猜。
+
+### 预测题要有信息量
+
+预测题不能只是把人人都会点头的常识改成问句，例如「会用 App 等于会做 App 吗？」如果
+答案不需要读者调用本课内容就能得到，题目没有教学价值。改问具体后果、选择或判断依据：
+「如果只改了源文件却没有重新构建，用户打开的页面会不会变化？为什么？」预测必须仍然
+紧扣本课核心，而且答案要立刻落地。
+
+### 一节课只推进一个主题
+
+每段都要服务标题里的一个问题。已经介绍过产品名、玩法或项目背景，就不要为了再次展示证据
+把它们重新介绍一遍；除非那段信息直接帮助回答当前问题。比较「会用」和「会开发」之后，
+下一步应推进到「开发为什么要面对文件」，而不是重复「会用不是终点」三遍。删掉重复句后，
+如果机制理解没有变差，就删掉。
+
+### 给第一次看代码的人一个安全落点
+
+`foundations-*` 第一次展示一大段代码时，必须先承认它看起来吓人，再告诉读者为什么仍值得
+看：在 AI 时代，你不需要手写或背下所有代码；你要逐渐读懂文件、知道代码大致在做什么，
+这样才能更准确地和 AI 沟通、判断 AI 的回答、让 AI 帮你改进产品。鼓励要连接到学习目的，
+不能写成脱离课程机制的口号。
+
+### 代码和画面要一一对上
+
+当课程解释「代码怎样变成界面」时，整张产品截图只适合建立整体场景。真正讲一个机制时，
+优先展示一个足够简单的局部元素（例如一个按钮或一块文字）和它对应的真实文件/行号，
+并在图注或紧邻正文里说清楚：左侧行号是什么、哪几行负责什么、页面上哪个元素因此出现、
+点击它时又触发了什么代码。截图必须帮助读者建立「这几行代码 ↔ 这个单一元素」的连接，
+不能只把整张复杂布局再次摆出来。
+
+### 把 UI 问题和课文问题分开
+
+项目地图、统计数字、课程路线、折叠面板、按钮标签、截图裁剪属于 UI/信息架构/呈现层，
+不应靠在课文里再加一段解释来掩盖。写课时记录它们对应的独立 UI 工作项；只有当 UI 已经
+提供了清楚的入口，课文才解释该入口展开后的内容。课程路线若需要用户画像或问答分流，
+把它作为产品流程单独设计，不把「用户应该学几节」硬塞进某一节课的正文。
 
 ## Output contract
 

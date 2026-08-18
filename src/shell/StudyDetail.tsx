@@ -11,6 +11,7 @@ import type {
   StudyView,
 } from "../view/lesson-view.js";
 import { CourseSection } from "./CourseSection.js";
+import { CourseRouteQuiz } from "./CourseRouteQuiz.js";
 import { KnowledgeNotesSection } from "./KnowledgeNotesSection.js";
 import { StudyMap } from "./StudyMap.js";
 import { UaDashboardButton } from "./UaDashboardButton.js";
@@ -37,19 +38,19 @@ export function StudyEvidenceStatus({
     the counter. To a reader it is a word from inside the machine.
   */
   return (
-    <section className="study-evidence-status" aria-label="研究证据状态">
+    <section className="study-evidence-status" aria-label="课程使用的项目资料">
       <div className="study-evidence-status__metrics">
         <div className="study-evidence-status__metric">
           <strong>{snapshotCount}</strong>
-          <span>份源码快照</span>
+          <span>个源码版本</span>
         </div>
         <div className="study-evidence-status__metric">
           <strong>{readyUaAnalysisCount}</strong>
-          <span>份项目地图</span>
+          <span>份项目分析</span>
         </div>
       </div>
       <p className="study-evidence-status__boundary">
-        项目地图和导览是课程引用的证据，不是课程本身。
+        这些资料只说明课程引用了哪些源码，不代表课程学习进度。
       </p>
     </section>
   );
@@ -98,13 +99,13 @@ function AirlockClocks({ studyId }: { readonly studyId: string }) {
       <p className="eyebrow">教材版本</p>
       <dl>
         <div>
-          <dt>教材钉在</dt>
+          <dt>课程使用版本</dt>
           <dd>
             <code>{view.promotedCommit?.slice(0, 8)}</code>
           </dd>
         </div>
         <div>
-          <dt>上游走到</dt>
+          <dt>项目最新版本</dt>
           <dd>
             <code>{view.upstream?.headCommit.slice(0, 8) ?? "读不到"}</code>
           </dd>
@@ -115,7 +116,7 @@ function AirlockClocks({ studyId }: { readonly studyId: string }) {
         </div>
         <div>
           <dt>课程快照</dt>
-          <dd>{view.course?.matchesAirlock === false ? "落后于 airlock" : "与 airlock 一致"}</dd>
+          <dd>{view.course?.matchesAirlock === false ? "资料版本较旧" : "与课程资料一致"}</dd>
         </div>
       </dl>
       {view.verdict === "blocked" ? (
@@ -130,6 +131,39 @@ function AirlockClocks({ studyId }: { readonly studyId: string }) {
         </p>
       )}
     </section>
+  );
+}
+
+function StudyAnalysisPanel({
+  studyId,
+  summary,
+}: {
+  readonly studyId: string;
+  readonly summary: StudySummary | null;
+}) {
+  return (
+    <details className="study-analysis-panel">
+      <summary className="study-analysis-panel__summary">
+        <span className="study-analysis-panel__summary-copy">
+          <span className="eyebrow">项目分析</span>
+          <strong>课程引用了项目的哪些文件？</strong>
+          <span>
+            这里的数字只统计课程引用过的源码，不是“你学了多少”。点开后可以按分层查看，逐层打开文件名。
+          </span>
+        </span>
+        <span className="study-analysis-panel__summary-action">打开分析</span>
+      </summary>
+      <div className="study-analysis-panel__body">
+        {summary ? (
+          <StudyEvidenceStatus
+            snapshotCount={summary.snapshotCount}
+            readyUaAnalysisCount={summary.readyUaAnalysisCount}
+          />
+        ) : null}
+        <AirlockClocks studyId={studyId} />
+        <StudyMap studyId={studyId} />
+      </div>
+    </details>
   );
 }
 
@@ -202,6 +236,7 @@ export function StudyDetail({
     return done > 0 && done < lessons.length;
   });
   const grouped = splitByFocus(view.courses, focus, view.study.id);
+  const routeCourse = view.courses.find((course) => course.id === "foundations-before-zero");
   const renderCourse = (course: CourseView, index: number) => (
     <CourseSection
       key={course.id}
@@ -225,14 +260,10 @@ export function StudyDetail({
           available={(summary?.readyUaAnalysisCount ?? 0) > 0}
         />
       </header>
-      {summary ? (
-        <StudyEvidenceStatus
-          snapshotCount={summary.snapshotCount}
-          readyUaAnalysisCount={summary.readyUaAnalysisCount}
-        />
+      <StudyAnalysisPanel studyId={view.study.id} summary={summary} />
+      {routeCourse ? (
+        <CourseRouteQuiz studyId={view.study.id} course={routeCourse} onOpenLesson={onOpenLesson} />
       ) : null}
-      <AirlockClocks studyId={view.study.id} />
-      <StudyMap studyId={view.study.id} />
       {view.courses.length === 0 ? null : grouped ? (
         <>
           <p className="course-group__eyebrow">主攻路线 · {grouped.route.length} 门</p>

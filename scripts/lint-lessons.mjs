@@ -100,14 +100,20 @@ const DEBT_RULE_ORDER = [
 ];
 
 const VARIANTS = {
-  现象: { open: "现象", middle: ["为什么是这样"] },
-  对比: { open: "两个东西", middle: ["逐条对照", "什么时候用哪个"] },
-  溯源: { open: "你看到的结果", middle: ["一站一站往回走"] },
-  决策: { open: "情境和约束", middle: ["代价和收益", "什么时候该反过来"] },
-  术语: { open: "一句真实出现的话", middle: ["三个真实用例", "它不是什么"] },
+  现象: { openCount: 1, middleCount: 1 },
+  对比: { openCount: 1, middleCount: 2 },
+  溯源: { openCount: 1, middleCount: 1 },
+  决策: { openCount: 1, middleCount: 2 },
+  术语: { openCount: 1, middleCount: 2 },
 };
 
-const GUESS_LINE = "随便猜，猜错不影响任何进度。";
+const GUESS_LINES = [
+  "先写下你的判断，再往下看答案。",
+  // Compatibility for lessons written before the beginner-language rule was
+  // refined. New and rewritten lessons must use the first line; old lessons
+  // should not fail the whole knowledge base until they are actually revised.
+  "随便猜，猜错不影响任何进度。",
+];
 const BANNED = ["显然", "简单来说", "众所周知"];
 
 /**
@@ -634,29 +640,50 @@ function lintLesson({ contentPath, manifestPath, content, manifest, id, previous
   const title = /^#[ \t]+(.+)$/m.exec(content)?.[1]?.trim() ?? "";
   if (!/[？?]\s*$/.test(title)) fail(2, `标题不是问句（不以问号结尾）：${title || "缺 H1"}`);
 
-  // 3, 4 — the variant's sections, in order, with its mandatory ones present.
-  const required = [shape.open, "先猜一下", "答案", ...shape.middle, "自检", "一句话"];
-  let cursor = -1;
-  for (const name of required) {
-    const at = sections.findIndex((heading, i) => i > cursor && matches(heading, name));
-    if (at === -1) {
-      fail(3, `${variant} 变体缺少章节「${name}」（或顺序不对）`);
-      break;
+  // 3, 4 — the variant's role slots, in order, with reader-facing headings.
+  // The four spine headings stay exact because downstream reader controls use
+  // them; variant-specific headings are allowed to say the actual question.
+  const guessPositions = sections.flatMap((heading, index) =>
+    heading === "先猜一下" ? [index] : [],
+  );
+  const guessAt = guessPositions[0] ?? -1;
+  const answerAt = sections.indexOf("答案", guessAt + 1);
+  const selfCheckAt = sections.indexOf("自检", answerAt + 1);
+  const takeawayAt = sections.indexOf("一句话", selfCheckAt + 1);
+  if (guessPositions.length !== 1) {
+    fail(3, `「先猜一下」出现了 ${guessPositions.length} 次，必须恰好 1 次`);
+  }
+  if (guessAt === -1 || answerAt === -1 || selfCheckAt === -1 || takeawayAt === -1) {
+    fail(3, `${variant} 变体缺少固定教学骨架（先猜一下 → 答案 → 自检 → 一句话）`);
+  } else {
+    const openHeadings = sections.slice(0, guessAt);
+    const middleHeadings = sections
+      .slice(answerAt + 1, selfCheckAt)
+      .filter((heading) => heading !== "再想想");
+    if (openHeadings.length < shape.openCount) {
+      fail(
+        3,
+        `${variant} 变体至少需要 ${shape.openCount} 个开场章节，实际为 ${openHeadings.length}`,
+      );
     }
-    cursor = at;
+    if (middleHeadings.length !== shape.middleCount) {
+      fail(
+        3,
+        `${variant} 变体需要 ${shape.middleCount} 个中段章节，实际为 ${middleHeadings.length}`,
+      );
+    }
   }
 
   // 5, 6, 7 — exactly one prediction, open-ended, with the verbatim invitation.
-  const guessCount = sections.filter((name) => name === "先猜一下").length;
-  if (guessCount !== 1) fail(5, `「先猜一下」出现了 ${guessCount} 次，必须恰好 1 次`);
   const guessBody = sectionBody(prose, "先猜一下");
-  if (!guessBody.includes(GUESS_LINE)) fail(7, `「先猜一下」里缺少原句：${GUESS_LINE}`);
+  if (!GUESS_LINES.some((line) => guessBody.includes(line))) {
+    fail(7, `「先猜一下」里缺少低压力作答提示：${GUESS_LINES[0]}`);
+  }
   if (/^[ \t]*[-*][ \t]*[A-Da-d][.、)]/m.test(guessBody) || /^[ \t]*[A-D][.、)]/m.test(guessBody)) {
     fail(6, "预测题看起来是选择题；选项会把答案泄漏出去");
   }
 
   // 9 — the answer is the very next section.
-  const guessAt = sections.indexOf("先猜一下");
   if (guessAt !== -1 && !matches(sections[guessAt + 1] ?? "", "答案")) {
     fail(9, `「先猜一下」后面不是「答案」，而是「${sections[guessAt + 1] ?? "（没有了）"}」`);
   }
@@ -670,7 +697,9 @@ function lintLesson({ contentPath, manifestPath, content, manifest, id, previous
   // 15, 16 — link budget and placement.
   const links = [...prose.matchAll(/\[\[lesson:/g)];
   if (links.length > 3) fail(15, `跨课链接 ${links.length} 个，上限 3 个`);
-  for (const name of [shape.open, "先猜一下"]) {
+  const openHeading = sections[0];
+  for (const name of [openHeading, "先猜一下"]) {
+    if (!name) continue;
     if (/\[\[lesson:/.test(sectionBody(prose, name))) {
       fail(16, `「${name}」里有跨课链接；这一段的任务是制造悬念，不该把人送走`);
     }
