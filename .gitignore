@@ -42,3 +42,8 @@ university.config.local.json
 # Pulled from UniversityLocal for a wireframe to render against a real lesson.
 # It quotes private source verbatim, so it stays out of a page anyone can open.
 docs/reference/player-journey/*/data/sample-lesson.json
+
+# Imported course packages. They quote private repositories verbatim, so the
+# bytes stay out of git; `content/manifest.json` is mirrored into
+# src/content/imported.json, which IS tracked and makes the import reproducible.
+content/

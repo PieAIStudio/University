@@ -22,13 +22,11 @@ It is not a task diary.
 
 ## Current Focus
 
-Design the product before building it. The immediate work is the user journey
-V2, not features.
+The app exists. `pnpm import && pnpm dev` walks a real learner loop end to end:
+world map, course map, lesson, deterministic grading, cards, review queue.
 
-There is still no product implementation and no 3D scene. What changed on
-2026-08-18 is that the supply line this product depends on was repaired and
-given a gate, and this repository's dependencies were made to tell the truth
-about what it currently is.
+The design is no longer the deliverable — it is the reference the app is built
+against, and where the two disagree the app is what a learner meets.
 
 ## Order Of Work
 
@@ -65,8 +63,24 @@ Phases 0 to 2 are done. Phase 3 is the current work.
    - Every screen is rendered with real data from the exported packages. The
      reader wireframe uses one real lesson's full markdown, because that is
      the screen the product's advantage lives on.
-4. **Vertical slice.** One course end to end: import a recovery package →
-   navigation → one lesson → deterministic grading → one review the next day.
+4. **Vertical slice.** Done, and it is the app. `pnpm import` splits recovery
+   packages into per-course lesson JSON plus content-addressed assets — the
+   6.6 MB course now serves 0.34 MB, because its 6.1 MB of inline screenshots
+   became five files that load only when their lesson is open. The first
+   `<Canvas>` landed with it, satisfying baseline rules 1-5, and the portfolio
+   manifest's exceptions for those five were withdrawn in the same change.
+   Rule 8 stays: there is still no mobile or desktop shell.
+
+   What a learner can do today: open the world map, see the study they are in
+   and exactly one accented "next", drill into a course, read a real lesson
+   with its evidence anchors, answer, be graded at tier one for free, get a
+   clue rather than a verdict on a miss, drop cards, and find them due
+   tomorrow. Progress is local; accounts and payment arrive with the paywall.
+
+   Known rough edges, none of them structural: lesson labels overlap at the
+   bottom of a long course map, tier two is not wired so a prose answer says
+   so honestly instead of guessing, and there is no settlement screen — the
+   lesson simply ends.
 5. **Upstream changes.** The first one is done, and it is the one V2 named
    rather than one that was guessed. Building the placement screen exposed a
    course-id prefix match in this repository — a second, unwritten copy of the

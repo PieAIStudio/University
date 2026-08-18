@@ -1,26 +1,545 @@
+/*
+ * Product styling.
+ *
+ * Colour, radius and control shapes come from SwimmerUIKit's tokens, imported
+ * in `main.tsx`. What is written here is layout and the reading scale — the one
+ * thing the kit does not have, because it is a HUD kit and a lesson here
+ * averages 2,363 characters of Chinese with code in it. Reading typography
+ * belongs in the shared learning package; until that exists it lives here,
+ * marked, rather than being smuggled into the game kit.
+ */
 :root {
-  color-scheme: dark;
+  --read-body: 1.06rem;
+  --read-line: 1.9;
+  --read-measure: 34em;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
 }
 
 body {
   margin: 0;
-  background: #0e0f13;
-  color: #e8e6e1;
-  font:
-    15px/1.6 system-ui,
-    -apple-system,
-    "PingFang SC",
-    sans-serif;
+  background: var(--game-ui-bg, #0d1019);
+  color: var(--game-ui-text, #e9edf5);
+  font-family: var(--game-ui-font-body, system-ui, -apple-system, "PingFang SC", sans-serif);
+  -webkit-font-smoothing: antialiased;
+  /* The canvas fills the shell; the page itself never scrolls sideways. */
+  overflow-x: hidden;
 }
 
-.placeholder {
-  max-width: 60ch;
-  padding: max(24px, env(safe-area-inset-top)) 24px 24px;
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.12));
+  background: var(--game-ui-panel, #151b2b);
+  /* Safe-area padding is here from the start: the shells are a product promise
+     and retrofitting insets after layouts settle is how notches eat headers. */
+  padding-top: max(10px, env(safe-area-inset-top));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.brand {
+  border: 0;
+  background: none;
+  color: var(--game-ui-text, #e9edf5);
+  font: inherit;
+  font-weight: 700;
+  font-size: 1.02rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.topbar__stat {
+  font-size: 0.8rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+button.primary,
+button.ghost,
+button.linkish {
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--game-ui-radius-control, 10px);
+}
+
+button.primary {
+  border: 0;
+  background: var(--game-ui-accent, #5ec8c0);
+  color: var(--game-ui-accent-ink, #07110f);
+  font-weight: 600;
+  padding: 8px 16px;
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+  padding: 8px 16px;
+}
+
+button.linkish {
+  border: 0;
+  background: none;
+  color: var(--game-ui-accent, #5ec8c0);
+  padding: 0;
+}
+
+button.block {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.stagewrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.stagewrap[hidden] {
+  display: none;
+}
+
+.picked {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 260px;
+  border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 92%, transparent);
+  backdrop-filter: blur(8px);
+  padding: 14px 16px;
+}
+
+.picked--left {
+  right: auto;
+  left: 14px;
+}
+
+.picked[hidden] {
+  display: none;
+}
+
+.picked h3 {
+  margin: 0 0 3px;
+  font-size: 1rem;
+}
+
+.picked__study {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.picked dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.picked dd {
+  margin: 0;
+  font-family: var(--mono);
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.hint {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  pointer-events: none;
+}
+
+/* ---- reading ---------------------------------------------------------- */
+
+.reader {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.lesson__bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 94%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.12));
+  font-size: 0.78rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.lesson__where {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lesson__pos {
+  font-family: var(--mono);
+  color: var(--game-ui-accent, #5ec8c0);
+}
+
+.lesson__body {
+  max-width: var(--read-measure);
   margin: 0 auto;
+  padding: 26px 20px 10px;
+  font-size: var(--read-body);
+  line-height: var(--read-line);
 }
 
-.placeholder code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.85em;
-  color: #9fd2c0;
+.lesson__body h1 {
+  font-size: 1.6rem;
+  line-height: 1.42;
+  margin: 0 0 18px;
+}
+
+.lesson__body h2 {
+  font-size: 1.15rem;
+  margin: 30px 0 8px;
+}
+
+.lesson__body p {
+  margin: 14px 0;
+}
+
+.lesson__body strong {
+  color: var(--game-ui-accent-bright, #7fe0d8);
+}
+
+/* Wide content scrolls inside itself; the page never scrolls sideways. */
+.lesson__body pre {
+  margin: 16px 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  background: var(--game-ui-panel-deep, #0c1018);
+  border: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.1));
+  border-radius: var(--game-ui-radius-card, 12px);
+  font-size: 0.84rem;
+  line-height: 1.62;
+}
+
+.lesson__body code {
+  font-family: var(--mono);
+}
+
+.lesson__body p code {
+  background: var(--game-ui-surface-raised, rgba(255, 255, 255, 0.08));
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+/* The anchor is the product: a sentence pinned to a real commit and line. */
+.evidence {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -6px 0 18px;
+  padding: 7px 11px;
+  border-left: 2px solid var(--game-ui-accent, #5ec8c0);
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 9%, transparent);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.76rem;
+  font-family: var(--mono);
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.evidence b {
+  color: var(--game-ui-accent, #5ec8c0);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.evidence .go {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.quiz {
+  max-width: var(--read-measure);
+  margin: 24px auto 0;
+  padding: 16px 18px;
+  border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.2));
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: var(--game-ui-surface, #161b26);
+}
+
+.quiz h3 {
+  margin: 0 0 4px;
+  font-size: 0.98rem;
+}
+
+.quiz p {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.quiz__input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: var(--game-ui-radius-control, 10px);
+  border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+  background: var(--game-ui-panel-deep, #0c1018);
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+}
+
+.quiz__row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.quiz__row small {
+  font-size: 0.76rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.verdict {
+  margin-top: 14px;
+  padding: 11px 14px;
+  border-radius: var(--game-ui-radius-card, 12px);
+  border: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.14));
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.verdict--pass {
+  border-color: var(--game-ui-accent, #5ec8c0);
+}
+
+.tier {
+  display: inline-block;
+  margin-left: 8px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+/* A clue, not a verdict: the most frequent second in the product. */
+.clue {
+  margin-top: 14px;
+  border-left: 2px solid var(--game-ui-accent, #5ec8c0);
+  border-radius: 0 10px 10px 0;
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 8%, transparent);
+  padding: 12px 14px;
+}
+
+.clue__eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--game-ui-accent, #5ec8c0);
+}
+
+.clue blockquote {
+  margin: 6px 0 8px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.clue__src {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  overflow-wrap: anywhere;
+}
+
+.paywall {
+  margin-top: 12px;
+  padding: 11px 14px;
+  border: 1px dashed var(--game-ui-border-strong, rgba(255, 255, 255, 0.24));
+  border-radius: var(--game-ui-radius-card, 12px);
+  font-size: 0.88rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.lesson__drops {
+  max-width: var(--read-measure);
+  margin: 22px auto 60px;
+  padding: 12px 18px 0;
+  border-top: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.1));
+  font-size: 0.8rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+/* ---- review ----------------------------------------------------------- */
+
+.review {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 20px 16px 60px;
+}
+
+.review__bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 30em;
+  margin: 0 auto 14px;
+  font-size: 0.82rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.review__card {
+  max-width: 30em;
+  margin: 0 auto;
+  padding: 20px 18px;
+  border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: var(--game-ui-surface, #161b26);
+}
+
+.review__from {
+  margin: 0 0 10px;
+  font-size: 0.76rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.review__front {
+  font-size: 1.06rem;
+  line-height: 1.72;
+}
+
+.review__back {
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px dashed var(--game-ui-border-subtle, rgba(255, 255, 255, 0.18));
+  font-size: 0.97rem;
+  line-height: 1.7;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  overflow-wrap: anywhere;
+}
+
+.review__grades {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin-top: 16px;
+}
+
+.review__grades button {
+  border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel-deep, #0c1018);
+  color: inherit;
+  font: inherit;
+  font-size: 0.86rem;
+  padding: 10px 4px;
+  cursor: pointer;
+}
+
+.review__done {
+  max-width: 30em;
+  margin: 60px auto;
+  text-align: center;
+}
+
+.review__done b {
+  display: block;
+  font-size: 1.16rem;
+  margin-bottom: 6px;
+}
+
+.review__done p {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.9rem;
+}
+
+.empty {
+  max-width: 34em;
+  margin: 80px auto;
+  padding: 0 20px;
+  line-height: 1.8;
+}
+
+.empty code {
+  font-family: var(--mono);
+  color: var(--game-ui-accent, #5ec8c0);
+}
+
+@media (max-width: 720px) {
+  .picked {
+    left: 14px;
+    right: 14px;
+    width: auto;
+  }
+}
+
+/* Projected names. Pointer-transparent: the canvas underneath owns the input. */
+.labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Positioned by transform from a frame callback, never by React state. */
+  will-change: transform, opacity;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  color: var(--game-ui-text-muted, #a8b3c7);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.label--study {
+  font-size: 0.94rem;
+  color: var(--game-ui-text, #e9edf5);
+  letter-spacing: 0.04em;
+}
+
+.label--study small {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0;
+  color: var(--game-ui-text-muted, #8c98ad);
 }

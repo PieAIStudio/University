@@ -1,6 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
+// Brand tokens first, product layout second: the kit defines the custom
+// properties everything below reads.
+import "@pieai/swimmer-ui-kit/styles.css";
 import { App } from "./App";
 import "./styles.css";
 
