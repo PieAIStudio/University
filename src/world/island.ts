@@ -123,10 +123,17 @@ export function buildIsland(seed: string, radius: number, tint = 0): IslandShape
 
   // Dart-throwing rather than a grid: a grid of trees is instantly a grid, and
   // the eye finds it before it finds the island.
-  const top = radius * 0.78;
+  // Slots stay inside the flat crown, not out on the slope — the profile has
+  // already narrowed to about 0.5r by the time it reaches the top, so a tree
+  // placed at 0.78r stands on a hillside with its base in the air.
+  const top = radius * 0.6;
   const slots: THREE.Vector3[] = [];
-  const wanted = Math.max(3, Math.round(radius * radius * 0.5));
-  const spacing = radius * 0.34;
+  // Density is a feel decision, not a performance one: everything here is
+  // instanced, so the cost of a fuller island is a larger matrix array. An
+  // island with four things on it reads as unfinished terrain rather than as a
+  // place, and "unfinished" is the one thing this map must not say by accident.
+  const wanted = Math.max(4, Math.round(radius * radius * 1.1));
+  const spacing = radius * 0.2;
   for (let attempt = 0; attempt < wanted * 24 && slots.length < wanted; attempt += 1) {
     const angle = random() * Math.PI * 2;
     // sqrt keeps the distribution even instead of crowding the middle.

@@ -81,6 +81,30 @@ Phases 0 to 2 are done. Phase 3 is the current work.
    bottom of a long course map, tier two is not wired so a prose answer says
    so honestly instead of guessing, and there is no settlement screen — the
    lesson simply ends.
+5. **Art direction.** Done for the world map. The greybox was right for a
+   design artefact and wrong for a product a stranger judges in eight
+   seconds, so the map is now a low-poly archipelago built from the WOC
+   donor's CC0 packs. `pnpm kit` imports it.
+
+   Three things are settled here and should not be relitigated casually:
+   - **Only CC0 ships.** The donor's media splits three ways and two of them
+     are unusable in a paid product: `@jamiecypher`'s sound effects are
+     CC BY-NC with a commercial grant that runs to that project and does not
+     transfer, and the soundtrack is "with the project only". The register is
+     compiled into `scripts/woc-licenses.json` and the import enforces it.
+     donors.md granted this product WOC's *audio unlock* — a code pattern,
+     already in `src/world/audio.ts` — never its sounds.
+   - **Islands are generated, not modelled.** 1 to 41 lessons cannot be one
+     mesh. Seeded from `courseId`, so an upstream typo fix cannot rearrange
+     a learner's world.
+   - **The kit is repainted on load** from a table in `kit.tsx`, keyed by the
+     material names the artists wrote. Four CC0 packs by four authors have
+     four palettes; the table is how they become one place, and it puts art
+     direction in a file that can be argued with.
+
+   The world says one sentence: an island shows how far its course got.
+   Nature is there from the first visit; the settlement is what progress
+   owns; one beacon burns on the single next course.
 5. **Upstream changes.** The first one is done, and it is the one V2 named
    rather than one that was guessed. Building the placement screen exposed a
    course-id prefix match in this repository — a second, unwritten copy of the
@@ -183,6 +207,17 @@ exists rather than against a sketch.
 - The first `<Canvas>` commit must satisfy Web3D capability baseline rules 1-5
   and withdraw the matching `scheduled-migration` exceptions from the portfolio
   manifest in the same change. A greybox under `docs/` is not that commit.
+
+## Audio Is Blocked, And Not On Effort
+
+There is no usable sound yet and the reason is licensing, not time. WOC's
+audio cannot ship in a paid product; see the register. The generator skills
+under `.agents/skills/` are also unavailable — `threejs-audio-generator`
+needs `ELEVENLABS_API_KEY`, `threejs-3d-generator` needs `TRIPO_API_KEY`,
+`threejs-image-generator` needs `GEMINI_API_KEY`, and the director's own
+probe reports all three MISSING. Either a key arrives, or audio comes from a
+CC0 source (Kenney's audio packs, OpenGameArt and Freesound filtered to CC0).
+Nothing about the art kit depends on this.
 
 ## Open Decisions
 
