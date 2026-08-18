@@ -96,6 +96,13 @@ upstream repository first.
   upload to, or prepare a sync lane for SwimmerBackend or any other application
   backend. A future commercial `University` is a separate repository and product;
   it may adopt SwimmerBackend under its own approved contract.
+- Canonical course recovery packages under `course-proposals/recovery/` are this
+  project's only outward content surface, and they are a **pull** surface. The
+  consuming product reads them; UniversityLocal never gains an uploader, a sync
+  client, a publish command, or any awareness that a consumer exists. A request
+  to "just push the courses over" is a request to break the rule above, and the
+  correct answer is to change the consumer instead. `University` registered
+  that direction as its own constraint on 2026-08-18.
 - Before implementing or replacing a non-trivial capability, inspect mature
   open-source and portfolio donors first. Record license, maintenance, security,
   accessibility, data-boundary, and stack fit; directly reuse a maintained dependency
