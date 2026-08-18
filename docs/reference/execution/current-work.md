@@ -45,7 +45,12 @@ Phases 0 to 2 are done. Phase 3 is the current work.
    Web3D baseline rules that a `<Canvas>` triggers are still registered as
    `scheduled-migration` exceptions. Adding it back takes ten seconds when a
    real scene needs it.
-3. **User journey V2.** Authored here, in `docs/reference/player-journey/v2/`.
+3. **User journey V2.** Written, at `docs/reference/player-journey/v2/index.html`.
+   28 acts, six corrections to V1 that the measurements forced, nine decision
+   cards. Three screens are built and runnable — world map, course map, reader
+   — and the remaining six are listed on the index as unbuilt rather than
+   described as if they existed. Open the index first; it links the rest.
+
    Two artefact kinds, deliberately not mixed:
    - 3D surfaces are **runnable greyboxes**, not static pictures. Camera
      movement, drill-down and "can I find my next lesson in 8 seconds" cannot
@@ -62,10 +67,12 @@ Phases 0 to 2 are done. Phase 3 is the current work.
      the screen the product's advantage lives on.
 4. **Vertical slice.** One course end to end: import a recovery package →
    navigation → one lesson → deterministic grading → one review the next day.
-5. **Upstream changes that V2 proves are needed.** Deliberately not done
-   before V2, because guessing an interface for a consumer that does not exist
-   yet produces something that fits neither side — the same argument SPEC-0001
-   already makes about extracting the shared package. Currently queued:
+5. **Upstream changes that V2 proves are needed.** Still not started, and the
+   reason has not changed: guessing an interface for a consumer that does not
+   exist yet produces something that fits neither side, which is the argument
+   SPEC-0001 already makes about extracting the shared package. V2 exists now
+   but the placement panel and the six unbuilt screens are what would name the
+   fields, and they are not built. Currently queued:
    - `CourseRouteQuiz` becomes course data instead of a hardcoded component
      (see "Route" below).
    - Whatever taxonomy fields the map turns out to need. None are assumed.
