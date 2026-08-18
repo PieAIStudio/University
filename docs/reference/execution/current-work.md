@@ -215,9 +215,32 @@ audio cannot ship in a paid product; see the register. The generator skills
 under `.agents/skills/` are also unavailable — `threejs-audio-generator`
 needs `ELEVENLABS_API_KEY`, `threejs-3d-generator` needs `TRIPO_API_KEY`,
 `threejs-image-generator` needs `GEMINI_API_KEY`, and the director's own
-probe reports all three MISSING. Either a key arrives, or audio comes from a
-CC0 source (Kenney's audio packs, OpenGameArt and Freesound filtered to CC0).
-Nothing about the art kit depends on this.
+probe reports all three MISSING. Nothing about the art kit depends on this.
+
+A CC0 shortlist exists and has been checked against the sources themselves —
+every URL fetched, every licence read off the page, every title matched:
+
+| Need | Source | Licence, verified |
+| --- | --- | --- |
+| Reading-screen ambience | Freesound 609895 `Neutral ambient drone` | CC0 1.0 |
+| Correct-answer chime | Freesound 419491 `Subway Station Chime` | CC0 1.0 |
+| Gentle wrong-answer | Freesound 423166 `Minimalist Sci-Fi UI Error` | CC0 1.0 |
+| Water and wind | Freesound 326097 `LakeWavesOct25th2015` | CC0 1.0 |
+| Built-something reward | OpenGameArt `Win Jingle` (Fupi) | CC0 1.0 |
+| UI click and hover | Kenney `Interface Sounds`, `UI Audio` | CC0 1.0, no attribution |
+
+**Both need a person.** Freesound redirects a file download to a login page,
+and Kenney's download sits behind an interactive form rather than a link. A
+script cannot fetch either.
+
+Two findings that came out of checking rather than accepting:
+
+- The claim that FreePD shut down permanently in 2025/2026 is false. The
+  site answers 200. It was not used, but a build script pointed away from a
+  live source on a bad claim is its own kind of bug.
+- Ambience must not ship as MP3. The format pads the start and end of every
+  file during encoding, so a looped MP3 has an audible gap at the seam that
+  is in the container, not the recording. Ogg Vorbis or Opus on the web.
 
 ## Open Decisions
 
