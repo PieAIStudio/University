@@ -30,11 +30,11 @@ superseded_by: null
 
 不要假装自己有不存在的生图能力。先看你运行在哪个宿主里，再选路线：
 
-| 宿主 | 首选路线 | 备用路线 |
-| --- | --- | --- |
-| Codex App，且当前会话有图像生成工具 | 用干净子代理/新短上下文直接调用图像模型；主线程只做规格、验收和入库 | 用 Codex Chrome Extension 打开网页生图 |
-| Codex App，但没有图像生成工具 | 用 Codex Chrome Extension 打开网页生图 | 先整理最小任务包，等有生图能力的会话执行 |
-| Copilot、Claude Code、其他 IDE/CLI AI | 用 Playwright Chrome Extension 打开网页生图 | 从终端启动一个干净 Codex CLI/App 会话，让 Codex 负责生图，再回收结果 |
+| 宿主                                  | 首选路线                                                            | 备用路线                                                             |
+| ------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Codex App，且当前会话有图像生成工具   | 用干净子代理/新短上下文直接调用图像模型；主线程只做规格、验收和入库 | 用 Codex Chrome Extension 打开网页生图                               |
+| Codex App，但没有图像生成工具         | 用 Codex Chrome Extension 打开网页生图                              | 先整理最小任务包，等有生图能力的会话执行                             |
+| Copilot、Claude Code、其他 IDE/CLI AI | 用 Playwright Chrome Extension 打开网页生图                         | 从终端启动一个干净 Codex CLI/App 会话，让 Codex 负责生图，再回收结果 |
 
 网页生图优先级：
 

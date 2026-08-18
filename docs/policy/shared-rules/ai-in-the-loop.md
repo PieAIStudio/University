@@ -46,12 +46,12 @@ Pick one primary lane before acting. Do not silently mix lanes.
 
 Use the current host's simplest reliable lane:
 
-| Host        | Normal page / visual check                     | Real browser profile or extension state                 | Regression proof |
-| ----------- | ---------------------------------------------- | ------------------------------------------------------- | ---------------- |
-| Codex App   | Codex Browser                                  | Codex Chrome/Edge extension-backed browser              | Project commands |
-| Claude Code | Claude Preview (local dev) or Claude-in-Chrome | Claude-in-Chrome extension (`mcp__Claude_in_Chrome__*`) | Project commands |
+| Host        | Normal page / visual check                     | Real browser profile or extension state                              | Regression proof |
+| ----------- | ---------------------------------------------- | -------------------------------------------------------------------- | ---------------- |
+| Codex App   | Codex Browser                                  | Codex Chrome/Edge extension-backed browser                           | Project commands |
+| Claude Code | Claude Preview (local dev) or Claude-in-Chrome | Claude-in-Chrome extension (`mcp__Claude_in_Chrome__*`)              | Project commands |
 | Grok Build  | `agent-browser`                                | `agent-browser --profile` only when existing login state is required | Project commands |
-| Antigravity | Native browser if available                    | `playwright-extension`                                  | Project commands |
+| Antigravity | Native browser if available                    | `playwright-extension`                                               | Project commands |
 
 `agent-browser` is the Grok Build compatibility lane for frontend repositories.
 Codex App and Claude Code keep their richer native browser integrations instead

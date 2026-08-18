@@ -26,13 +26,13 @@ superseded_by: null
 
 ## 品牌仓库
 
-| 需要 | 仓库 | 包 |
-| --- | --- | --- |
-| 2D UI、按钮、面板、token、HUD 控件 | `SwimmerUIKit`（portfolio id: `swimmer-ui-kit`） | `@pieai/swimmer-ui-kit` |
-| 产品代码调用模型 | `SwimmerAIKit`（portfolio id: `swimmer-ai-kit`） | `@pieai/swimmer-ai-kit` |
-| 账号、钱包、Auth、Realtime、schema、迁移 | `SwimmerBackend`（portfolio id: `swimmer-backend`） | `@pieai/swimmer-backend-client` 等 |
-| 色彩管线、grade、sRGB 只编码一次 | `SwimmerRenderKit`（portfolio id: `swimmer-render-kit`） | `@pieai/swimmer-render-kit` |
-| Colyseus 房间骨架、认证、健康检查 | `SwimmerGameServerKit`（portfolio id: `swimmer-game-server-kit`） | `@pieai/swimmer-game-server-kit` |
+| 需要                                     | 仓库                                                              | 包                                 |
+| ---------------------------------------- | ----------------------------------------------------------------- | ---------------------------------- |
+| 2D UI、按钮、面板、token、HUD 控件       | `SwimmerUIKit`（portfolio id: `swimmer-ui-kit`）                  | `@pieai/swimmer-ui-kit`            |
+| 产品代码调用模型                         | `SwimmerAIKit`（portfolio id: `swimmer-ai-kit`）                  | `@pieai/swimmer-ai-kit`            |
+| 账号、钱包、Auth、Realtime、schema、迁移 | `SwimmerBackend`（portfolio id: `swimmer-backend`）               | `@pieai/swimmer-backend-client` 等 |
+| 色彩管线、grade、sRGB 只编码一次         | `SwimmerRenderKit`（portfolio id: `swimmer-render-kit`）          | `@pieai/swimmer-render-kit`        |
+| Colyseus 房间骨架、认证、健康检查        | `SwimmerGameServerKit`（portfolio id: `swimmer-game-server-kit`） | `@pieai/swimmer-game-server-kit`   |
 
 仓库名和 portfolio id 是身份，某台电脑上的绝对路径不是。组合工作区里由 PGS
 portfolio manifest 解析 checkout；独立 clone 里先用已发布包和本项目携带的规则快照，

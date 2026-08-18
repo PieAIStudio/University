@@ -21,6 +21,7 @@ university-local.config.local.json
 .agents/skills/mermaid-diagrams
 .agents/skills/screenwalk
 .agents/skills/ui-ux-pro-max
+.agents/manual-skills/
 .pro-gov/agent-assets/
 
 # Personal campus data stays visible at ./studies but must never enter source control.

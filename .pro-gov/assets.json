@@ -17,6 +17,7 @@
     "pie-skills/comm-coach",
     "pie-skills/experience-capture",
     "pie-skills/mermaid-diagrams",
-    "pie-skills/screenwalk"
+    "pie-skills/screenwalk",
+    "third-party-skills/kling-cli"
   ]
 }

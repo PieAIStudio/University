@@ -1,7 +1,7 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-17T09:49:34.252Z
-generator_version: doc-gov@0.9.0
+generated_at: 2026-08-17T13:39:12.832Z
+generator_version: doc-gov@0.9.1
 docs_count: 44
 docs:
   - id: ADR-0001
