@@ -672,6 +672,7 @@ function courseManifest(
     status: "active",
     currency: "follow-ref",
     prerequisiteCourseIds: [],
+    trackId: null,
     updatedAt: overrides.createdAt,
     ...overrides,
   };

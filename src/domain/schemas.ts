@@ -354,6 +354,20 @@ export const CourseManifestSchema = z
     status: ContentStatus,
     currency: CourseCurrency.default("follow-ref"),
     prerequisiteCourseIds: z.array(StableId).default([]),
+    /**
+     * The named path this course belongs to, when it belongs to one.
+     *
+     * Prerequisites say what must come before a course. They cannot say that
+     * nine particular courses are *one route* a learner picks a starting point
+     * on — that is an authoring intention, and until it is written down a
+     * consumer can only guess it. The guess that prompted this field was a
+     * course-id prefix match in the delivery product, which works today and
+     * breaks silently the first time a course is renamed or a tenth is added.
+     *
+     * Free-form rather than an enum on purpose. A track is a name this study's
+     * author chose, and the next study will want names this one never needed.
+     */
+    trackId: StableId.nullable().default(null),
     createdAt: IsoDateTime,
     updatedAt: IsoDateTime,
   })

@@ -169,6 +169,10 @@ export const CourseRecoveryPackageSchema = z
         objectives: z.array(z.string().min(1).max(500)).min(1),
         currency: CourseCurrency,
         prerequisiteCourseIds: z.array(StableId).default([]),
+        // Optional with a null default so a package written before tracks
+        // existed still parses; a consumer sees "no path claimed", which is
+        // the truth about it rather than an error.
+        trackId: StableId.nullable().default(null),
         units: z.array(RecoveryUnitSchema).min(1),
       })
       .strict(),
@@ -526,6 +530,7 @@ function serializeCourse(
       objectives: course.objectives,
       currency: course.currency,
       prerequisiteCourseIds: course.prerequisiteCourseIds,
+      trackId: course.trackId,
       units,
     },
   });
@@ -1138,6 +1143,7 @@ function assertCourseMatchesRecovery(
     unitIds: existing.unitIds,
     currency: existing.currency,
     prerequisiteCourseIds: existing.prerequisiteCourseIds,
+    trackId: existing.trackId,
   };
   const expected = {
     id: wanted.id,
@@ -1148,6 +1154,7 @@ function assertCourseMatchesRecovery(
     unitIds: wanted.units.map((unit) => unit.id),
     currency: wanted.currency,
     prerequisiteCourseIds: wanted.prerequisiteCourseIds,
+    trackId: wanted.trackId,
   };
   if (canonicalJson(actual) !== canonicalJson(expected)) {
     throw new Error(`Existing draft course conflicts with recovery package: ${wanted.id}`);
@@ -1573,6 +1580,7 @@ function restoreCourse(
       status: "draft",
       currency: course.currency,
       prerequisiteCourseIds: course.prerequisiteCourseIds,
+      trackId: course.trackId,
       createdAt: timestamp,
       updatedAt: timestamp,
     });

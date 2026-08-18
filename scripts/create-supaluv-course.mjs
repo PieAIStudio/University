@@ -362,6 +362,10 @@ export function buildSupaluvCourseDefinition(analysis) {
       // Same reasoning as `currency` above: stated rather than left to the
       // schema default so the field-for-field comparison against disk agrees.
       prerequisiteCourseIds: [],
+      // And again for `trackId`. This course is not on a named path; saying
+      // so explicitly is what keeps the comparison honest when the schema
+      // grows a field this definition would otherwise never mention.
+      trackId: null,
       createdAt: timestamp,
       updatedAt: timestamp,
     },

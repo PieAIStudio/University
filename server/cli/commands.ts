@@ -16,6 +16,7 @@ Commands:
   course pin --study <study-id> --course <course-id>
   course follow --study <study-id> --course <course-id>
   course set-prerequisites --study <study-id> --course <course-id> [--requires <course-id>[,<course-id>...]]
+  course set-track --study <study-id> --course <course-id> [--track <track-id>]
   course open-for-edit --study <study-id> --course <course-id>
   course add-lessons --study <study-id> --input <proposal.json> [--dry-run]
   course recovery export --study <study-id> --out <directory>
@@ -142,6 +143,13 @@ interface CourseSetPrerequisitesCommand {
   readonly studyId: string;
   readonly courseId: string;
   readonly prerequisiteCourseIds: readonly string[];
+}
+
+interface CourseSetTrackCommand {
+  readonly kind: "course-set-track";
+  readonly studyId: string;
+  readonly courseId: string;
+  readonly trackId: string | null;
 }
 
 interface CourseOpenForEditCommand {
@@ -294,6 +302,7 @@ export type UniversityLocalCliCommand =
   | CourseSetDefaultCommand
   | CourseCurrencyCommand
   | CourseSetPrerequisitesCommand
+  | CourseSetTrackCommand
   | CourseOpenForEditCommand
   | CourseAddLessonsCommand
   | CourseRecoveryExportCommand

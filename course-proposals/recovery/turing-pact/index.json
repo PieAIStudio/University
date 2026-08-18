@@ -21,158 +21,158 @@
   "courses": [
     {
       "courseId": "foundations-before-zero",
-      "file": "foundations-before-zero.9e971f717e1334ee46993655df014c05189835702da74feddbfe440dbb96b469.recovery.json",
-      "sha256": "sha256:9e971f717e1334ee46993655df014c05189835702da74feddbfe440dbb96b469"
+      "file": "foundations-before-zero.826af49ae529aca0f7be077126e9a336d65783da69c1abbe1229630e00252816.recovery.json",
+      "sha256": "sha256:826af49ae529aca0f7be077126e9a336d65783da69c1abbe1229630e00252816"
     },
     {
       "courseId": "foundations-terrain",
-      "file": "foundations-terrain.ae82798961640157c88935aa62ea091983ddc2890042116c9292d21410369e23.recovery.json",
-      "sha256": "sha256:ae82798961640157c88935aa62ea091983ddc2890042116c9292d21410369e23"
+      "file": "foundations-terrain.c04c1481f51130d1cd295805f66ea6caf355683f54fd907d3331f3f5d39cbc7c.recovery.json",
+      "sha256": "sha256:c04c1481f51130d1cd295805f66ea6caf355683f54fd907d3331f3f5d39cbc7c"
     },
     {
       "courseId": "foundations-reading-code",
-      "file": "foundations-reading-code.5b3a76c40fc8d41127e8eb9cae2e0977b84252828e8f72b33ec9e3642d2c44a0.recovery.json",
-      "sha256": "sha256:5b3a76c40fc8d41127e8eb9cae2e0977b84252828e8f72b33ec9e3642d2c44a0"
+      "file": "foundations-reading-code.a4885242325efdfb5b7a1e1aa42a4ea994233d70afac857ac02f7949246339b8.recovery.json",
+      "sha256": "sha256:a4885242325efdfb5b7a1e1aa42a4ea994233d70afac857ac02f7949246339b8"
     },
     {
       "courseId": "foundations-logic",
-      "file": "foundations-logic.558ad48691f1cd81e2a047fd7749da1647f0423d61473f22ebcfe6a8f09a5cb4.recovery.json",
-      "sha256": "sha256:558ad48691f1cd81e2a047fd7749da1647f0423d61473f22ebcfe6a8f09a5cb4"
+      "file": "foundations-logic.250dd664698e1646da50533aad93fcdcc11271443efecfdbf2920c202d5aa1f4.recovery.json",
+      "sha256": "sha256:250dd664698e1646da50533aad93fcdcc11271443efecfdbf2920c202d5aa1f4"
     },
     {
       "courseId": "foundations-data",
-      "file": "foundations-data.cc9b269306c02b9da37b971725d5f2340f135b11a5befdc5b6cce517b23e83a4.recovery.json",
-      "sha256": "sha256:cc9b269306c02b9da37b971725d5f2340f135b11a5befdc5b6cce517b23e83a4"
+      "file": "foundations-data.9008074926784f2d913994b88908cbbab90ff3f9b88fb653ae24bf4f48dba434.recovery.json",
+      "sha256": "sha256:9008074926784f2d913994b88908cbbab90ff3f9b88fb653ae24bf4f48dba434"
     },
     {
       "courseId": "foundations-async",
-      "file": "foundations-async.da048b9b5681c93ab19b3c715578cb06269399ca19f4bf53708a04c730ca9c01.recovery.json",
-      "sha256": "sha256:da048b9b5681c93ab19b3c715578cb06269399ca19f4bf53708a04c730ca9c01"
+      "file": "foundations-async.bba82af92d1ac0b4cc90bcc441f2dd607c43750d94642fe13dcd42cf6caa1959.recovery.json",
+      "sha256": "sha256:bba82af92d1ac0b4cc90bcc441f2dd607c43750d94642fe13dcd42cf6caa1959"
     },
     {
       "courseId": "foundations-ui",
-      "file": "foundations-ui.9ec378b8081f221ffb526924021c1c20839bf3c2c299546da9e5651acf0f1043.recovery.json",
-      "sha256": "sha256:9ec378b8081f221ffb526924021c1c20839bf3c2c299546da9e5651acf0f1043"
+      "file": "foundations-ui.cc1e4d283b07c16df9e1c420ff4ee34ca61903766ca7c4a10008f20a31d9364b.recovery.json",
+      "sha256": "sha256:cc1e4d283b07c16df9e1c420ff4ee34ca61903766ca7c4a10008f20a31d9364b"
     },
     {
       "courseId": "foundations-quality",
-      "file": "foundations-quality.64a462b374b66b9d31079eb5fd31025b877b16cb7b2b9930b4ae4f47c130812b.recovery.json",
-      "sha256": "sha256:64a462b374b66b9d31079eb5fd31025b877b16cb7b2b9930b4ae4f47c130812b"
+      "file": "foundations-quality.98c8222c36beb3de0b2521e896c2605fa30f9fc222c916b317b88881e5686907.recovery.json",
+      "sha256": "sha256:98c8222c36beb3de0b2521e896c2605fa30f9fc222c916b317b88881e5686907"
     },
     {
       "courseId": "foundations-product",
-      "file": "foundations-product.5afa44d151bb8dcfe2557b0d1c21f843ff9f5277ab5d563a86dadcde79c96040.recovery.json",
-      "sha256": "sha256:5afa44d151bb8dcfe2557b0d1c21f843ff9f5277ab5d563a86dadcde79c96040"
+      "file": "foundations-product.8adfef98a0eb1fad4b17dd0e231f9799d72e6b7f01f02f3dd58c7194d1c83fa6.recovery.json",
+      "sha256": "sha256:8adfef98a0eb1fad4b17dd0e231f9799d72e6b7f01f02f3dd58c7194d1c83fa6"
     },
     {
       "courseId": "contracts-and-drift",
-      "file": "contracts-and-drift.3161c33fa4c6c7c8d252ba971f0fa4494f8cb3a983609f1cf04c7181a2ac59fb.recovery.json",
-      "sha256": "sha256:3161c33fa4c6c7c8d252ba971f0fa4494f8cb3a983609f1cf04c7181a2ac59fb"
+      "file": "contracts-and-drift.87926b2cc8e6a02cadb3244538c8c5b6664ae9deffab7303f084dadf18633ebc.recovery.json",
+      "sha256": "sha256:87926b2cc8e6a02cadb3244538c8c5b6664ae9deffab7303f084dadf18633ebc"
     },
     {
       "courseId": "testing-strategy",
-      "file": "testing-strategy.766a8f6a55d0fe46ffba9c8d86205a92901b0d4f28cb031a050536cb732f606e.recovery.json",
-      "sha256": "sha256:766a8f6a55d0fe46ffba9c8d86205a92901b0d4f28cb031a050536cb732f606e"
+      "file": "testing-strategy.21c60328b44bd8a2900029e89df4d36a8b78644d1656883ca9f22326d269eb77.recovery.json",
+      "sha256": "sha256:21c60328b44bd8a2900029e89df4d36a8b78644d1656883ca9f22326d269eb77"
     },
     {
       "courseId": "state-and-process",
-      "file": "state-and-process.51831eaa7b61f33875aa71b259bf486f8c76eae67c8d5bd26fe172ec5ab0de79.recovery.json",
-      "sha256": "sha256:51831eaa7b61f33875aa71b259bf486f8c76eae67c8d5bd26fe172ec5ab0de79"
+      "file": "state-and-process.47935830813488f09a67fb79636f509a780f492b18d148dd656bddcc843e1cf8.recovery.json",
+      "sha256": "sha256:47935830813488f09a67fb79636f509a780f492b18d148dd656bddcc843e1cf8"
     },
     {
       "courseId": "one-codebase-many-hosts",
-      "file": "one-codebase-many-hosts.c3a0e7aeed9babf65ac5adecd7be42f8e4c4b952756ba03b4144749e05a8ebea.recovery.json",
-      "sha256": "sha256:c3a0e7aeed9babf65ac5adecd7be42f8e4c4b952756ba03b4144749e05a8ebea"
+      "file": "one-codebase-many-hosts.bb5c6e337fc63cac45e3ea8429300d8a8d7f716bbe609b8189192c7e98467199.recovery.json",
+      "sha256": "sha256:bb5c6e337fc63cac45e3ea8429300d8a8d7f716bbe609b8189192c7e98467199"
     },
     {
       "courseId": "identity-and-accounts",
-      "file": "identity-and-accounts.c24a78f5ac21b4173e8d77eaa141154f61a33e42a22845e45a3f7c4df1f7651b.recovery.json",
-      "sha256": "sha256:c24a78f5ac21b4173e8d77eaa141154f61a33e42a22845e45a3f7c4df1f7651b"
+      "file": "identity-and-accounts.7f79abf1bea5dfea028f94f50dd2711b86590b980651470e1e68185b4afcd24a.recovery.json",
+      "sha256": "sha256:7f79abf1bea5dfea028f94f50dd2711b86590b980651470e1e68185b4afcd24a"
     },
     {
       "courseId": "bilingual-by-design",
-      "file": "bilingual-by-design.54c5f9a5e39ce89d3b71c0826c162d36e6139477ae16e7080d386cf1a431f9b7.recovery.json",
-      "sha256": "sha256:54c5f9a5e39ce89d3b71c0826c162d36e6139477ae16e7080d386cf1a431f9b7"
+      "file": "bilingual-by-design.b541b48450381c0e0a4768510c1a9499963b98a79079b4daff73b7b3e5731c3d.recovery.json",
+      "sha256": "sha256:b541b48450381c0e0a4768510c1a9499963b98a79079b4daff73b7b3e5731c3d"
     },
     {
       "courseId": "realtime-presence",
-      "file": "realtime-presence.7f5a000e57119f158a4a786129c0d073a43cdc3a6662a02bd9c905d65ee1f062.recovery.json",
-      "sha256": "sha256:7f5a000e57119f158a4a786129c0d073a43cdc3a6662a02bd9c905d65ee1f062"
+      "file": "realtime-presence.d87ae5a0faf8dd7eb1fce7beeabd2144a4eb40f2590324e5b6ae5706c86a4e77.recovery.json",
+      "sha256": "sha256:d87ae5a0faf8dd7eb1fce7beeabd2144a4eb40f2590324e5b6ae5706c86a4e77"
     },
     {
       "courseId": "platform-capabilities",
-      "file": "platform-capabilities.d3bf6f7baa272e279ee5fcdefd22eadb1af5690aaeaf96866a9bd34c4e0afbc3.recovery.json",
-      "sha256": "sha256:d3bf6f7baa272e279ee5fcdefd22eadb1af5690aaeaf96866a9bd34c4e0afbc3"
+      "file": "platform-capabilities.af12ba79335dd87ec141fe334e5dcb8f0b970363fdc902619d3db98fa2d44c07.recovery.json",
+      "sha256": "sha256:af12ba79335dd87ec141fe334e5dcb8f0b970363fdc902619d3db98fa2d44c07"
     },
     {
       "courseId": "ai-contracts-first",
-      "file": "ai-contracts-first.7a55a20ab5b66429f91a402ba2c7e93f9bf685fc5a102f02602ff804b1c1d71e.recovery.json",
-      "sha256": "sha256:7a55a20ab5b66429f91a402ba2c7e93f9bf685fc5a102f02602ff804b1c1d71e"
+      "file": "ai-contracts-first.1e196a4299f5b08e42f17f65e930db898974740653d937f71d1d557d183a71ec.recovery.json",
+      "sha256": "sha256:1e196a4299f5b08e42f17f65e930db898974740653d937f71d1d557d183a71ec"
     },
     {
       "courseId": "ai-budget-and-cost",
-      "file": "ai-budget-and-cost.cfaaba42b736be1e79e710317386bbef3bad04ad3a5ced0c1c9b1ee1a6b7f919.recovery.json",
-      "sha256": "sha256:cfaaba42b736be1e79e710317386bbef3bad04ad3a5ced0c1c9b1ee1a6b7f919"
+      "file": "ai-budget-and-cost.fdbf8423a8f3f566e05e40cd0bc8678f96596802015e192b1f2cf052865cfc3b.recovery.json",
+      "sha256": "sha256:fdbf8423a8f3f566e05e40cd0bc8678f96596802015e192b1f2cf052865cfc3b"
     },
     {
       "courseId": "structured-output-repair",
-      "file": "structured-output-repair.3dab1c30666f120b312410ba689f30be14f2e4da2b969ee1acf419ec0d327377.recovery.json",
-      "sha256": "sha256:3dab1c30666f120b312410ba689f30be14f2e4da2b969ee1acf419ec0d327377"
+      "file": "structured-output-repair.10bd77f6c81666c10556a89e0b258d7af1e33c3a84e48ed522efe99c0b778b50.recovery.json",
+      "sha256": "sha256:10bd77f6c81666c10556a89e0b258d7af1e33c3a84e48ed522efe99c0b778b50"
     },
     {
       "courseId": "ai-evaluation",
-      "file": "ai-evaluation.745673c0b40fd8ce410e2c781b7a2423af74ae99981243c00a8938326efb536d.recovery.json",
-      "sha256": "sha256:745673c0b40fd8ce410e2c781b7a2423af74ae99981243c00a8938326efb536d"
+      "file": "ai-evaluation.70ee7a6434beb9aef7f835c338ff86c408655e968d2cbc443d2338ec63fe4389.recovery.json",
+      "sha256": "sha256:70ee7a6434beb9aef7f835c338ff86c408655e968d2cbc443d2338ec63fe4389"
     },
     {
       "courseId": "agent-identity-continuity",
-      "file": "agent-identity-continuity.fa5ab50f5fbf5f96432032677e53c9d4d934b3e3ae035d6fdd5d1df60f13912f.recovery.json",
-      "sha256": "sha256:fa5ab50f5fbf5f96432032677e53c9d4d934b3e3ae035d6fdd5d1df60f13912f"
+      "file": "agent-identity-continuity.68ee1a459fc3b0e084aaba0a34eff0473b3ae7de020b50219e435d8eb1678553.recovery.json",
+      "sha256": "sha256:68ee1a459fc3b0e084aaba0a34eff0473b3ae7de020b50219e435d8eb1678553"
     },
     {
       "courseId": "failure-recovery",
-      "file": "failure-recovery.73b82caffed3408d54f592d7a02d2b3efd30de50750532cdd6b5678c6e0b47fd.recovery.json",
-      "sha256": "sha256:73b82caffed3408d54f592d7a02d2b3efd30de50750532cdd6b5678c6e0b47fd"
+      "file": "failure-recovery.a1e2538c69df0a83cb259e8d7316d3f179fd6a3dda35a9323e08e2e35f54dd17.recovery.json",
+      "sha256": "sha256:a1e2538c69df0a83cb259e8d7316d3f179fd6a3dda35a9323e08e2e35f54dd17"
     },
     {
       "courseId": "experiments-and-rollout",
-      "file": "experiments-and-rollout.5d33d0abbc522c8b1d34fa2d06acc03b9141e9e5703e8af4a045b41db25a68f5.recovery.json",
-      "sha256": "sha256:5d33d0abbc522c8b1d34fa2d06acc03b9141e9e5703e8af4a045b41db25a68f5"
+      "file": "experiments-and-rollout.66b1eb26c5a807985ca3905bf52c686afe04175d97382d610873167270bb2efa.recovery.json",
+      "sha256": "sha256:66b1eb26c5a807985ca3905bf52c686afe04175d97382d610873167270bb2efa"
     },
     {
       "courseId": "retention-engineering",
-      "file": "retention-engineering.fb9f7dcebadde64bf799f7b1d8aee1b21278b7bcd156eb96933c2ff297ffcb80.recovery.json",
-      "sha256": "sha256:fb9f7dcebadde64bf799f7b1d8aee1b21278b7bcd156eb96933c2ff297ffcb80"
+      "file": "retention-engineering.5f01698648ab50c98605fdec8008ee3ee1973baf92acd532753e2140950dcff8.recovery.json",
+      "sha256": "sha256:5f01698648ab50c98605fdec8008ee3ee1973baf92acd532753e2140950dcff8"
     },
     {
       "courseId": "moment-design",
-      "file": "moment-design.94ff48366c53b43513100c0dc34455a7699964d0a4b44a7b56a73518f97a7b90.recovery.json",
-      "sha256": "sha256:94ff48366c53b43513100c0dc34455a7699964d0a4b44a7b56a73518f97a7b90"
+      "file": "moment-design.fc97347a2df987b608fe7ff0795ed40942418f958606150e480f2fd35fadcf4f.recovery.json",
+      "sha256": "sha256:fc97347a2df987b608fe7ff0795ed40942418f958606150e480f2fd35fadcf4f"
     },
     {
       "courseId": "world-navigation",
-      "file": "world-navigation.a9bd1f8b98ccc338b5a7b3c71d68a552b7f9fceadfea45c4b03108493e13486e.recovery.json",
-      "sha256": "sha256:a9bd1f8b98ccc338b5a7b3c71d68a552b7f9fceadfea45c4b03108493e13486e"
+      "file": "world-navigation.047c84e2a4209bc0f16d697ada65f7075825db98eb5cfa20411a5cc6cac123fc.recovery.json",
+      "sha256": "sha256:047c84e2a4209bc0f16d697ada65f7075825db98eb5cfa20411a5cc6cac123fc"
     },
     {
       "courseId": "e2e-and-qa-scripts",
-      "file": "e2e-and-qa-scripts.3c7c304acc8a9e7ac0568949fa6aabbc102fda1a0bea9d97f850be73bf89300a.recovery.json",
-      "sha256": "sha256:3c7c304acc8a9e7ac0568949fa6aabbc102fda1a0bea9d97f850be73bf89300a"
+      "file": "e2e-and-qa-scripts.71e81fc75f4e3f3a93c47e77160b243563662e720dc0a384dc751b2b0147cc07.recovery.json",
+      "sha256": "sha256:71e81fc75f4e3f3a93c47e77160b243563662e720dc0a384dc751b2b0147cc07"
     },
     {
       "courseId": "asset-pipeline",
-      "file": "asset-pipeline.8ef07bde3b5b6d170b956e1115930baa763746a4a9fc5b3d17bc77c5ac3707f2.recovery.json",
-      "sha256": "sha256:8ef07bde3b5b6d170b956e1115930baa763746a4a9fc5b3d17bc77c5ac3707f2"
+      "file": "asset-pipeline.8e0b8544b2eb6dd2e422683aa3ac7d5c5bad920e011e9ea555180b6e2ba34edd.recovery.json",
+      "sha256": "sha256:8e0b8544b2eb6dd2e422683aa3ac7d5c5bad920e011e9ea555180b6e2ba34edd"
     },
     {
       "courseId": "solo-operations",
-      "file": "solo-operations.72e83b2082ac4d30296e284e54fb167955d9c91683537fc27ef69e3aa4db2333.recovery.json",
-      "sha256": "sha256:72e83b2082ac4d30296e284e54fb167955d9c91683537fc27ef69e3aa4db2333"
+      "file": "solo-operations.630ef62e23089cb742e7f54aac8004f36c9dfc42eea9cd4437f2ed3f243048d4.recovery.json",
+      "sha256": "sha256:630ef62e23089cb742e7f54aac8004f36c9dfc42eea9cd4437f2ed3f243048d4"
     },
     {
       "courseId": "directing-ai-agents",
-      "file": "directing-ai-agents.84d07a37b7a926b91234b2277d40c1de8722a4b64fc4cd100567adbc0b5d8200.recovery.json",
-      "sha256": "sha256:84d07a37b7a926b91234b2277d40c1de8722a4b64fc4cd100567adbc0b5d8200"
+      "file": "directing-ai-agents.f57f4e159a7fd385b3a0d0fa5c8ba02e35aaa78fc04a84299aa69241b6c8a74a.recovery.json",
+      "sha256": "sha256:f57f4e159a7fd385b3a0d0fa5c8ba02e35aaa78fc04a84299aa69241b6c8a74a"
     }
   ]
 }

@@ -634,6 +634,31 @@ export function setCoursePrerequisites(
 }
 
 /**
+ * Put a course on a named path, or take it off one.
+ *
+ * Deliberately not validated against a list of known tracks. A track exists
+ * because courses claim it, the same way a tag does; a registry would mean two
+ * places to keep in step and a failure mode where the name is right and the
+ * registration is missing. Passing `null` clears the claim.
+ */
+export function setCourseTrack(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  trackId: string | null,
+  now = new Date(),
+): CourseManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const updated = CourseManifestSchema.parse({
+    ...course,
+    trackId: trackId === null ? null : StableId.parse(trackId),
+    updatedAt: now.toISOString(),
+  });
+  writeJsonAtomically(getCoursePaths(studiesRoot, studyId, courseId).manifest, updated);
+  return updated;
+}
+
+/**
  * Courses with no unmet prerequisite come first; ready-course ties go to the
  * optional caller preference, then whichever was created earlier, then by id.
  * A prerequisite outside the given set (retired, or simply not part of what

@@ -32,7 +32,11 @@ import {
 } from "../workflows/host-exercise-grade.js";
 import { SqliteLearningStore } from "../learning/sqlite-learning-store.js";
 import { getStudyPaths } from "../studies/paths.js";
-import { setCourseCurrency, setCoursePrerequisites } from "../content/repository.js";
+import {
+  setCourseCurrency,
+  setCoursePrerequisites,
+  setCourseTrack,
+} from "../content/repository.js";
 import { exportCourseRecovery, importCourseRecovery } from "../recovery/course-recovery.js";
 import { readCourseClock } from "../airlock/course-clock.js";
 import { inspectAirlock } from "../airlock/inspect.js";
@@ -226,6 +230,21 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         operation: "course-set-prerequisites" as const,
         courseId: course.id,
         prerequisiteCourseIds: course.prerequisiteCourseIds,
+        updatedAt: course.updatedAt,
+      };
+    }
+    case "course-set-track": {
+      const course = setCourseTrack(
+        config.studiesRoot,
+        input.command.studyId,
+        input.command.courseId,
+        input.command.trackId,
+      );
+      return {
+        schemaVersion: 1 as const,
+        operation: "course-set-track" as const,
+        courseId: course.id,
+        trackId: course.trackId,
         updatedAt: course.updatedAt,
       };
     }

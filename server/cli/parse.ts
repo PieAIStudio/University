@@ -10,6 +10,7 @@ type ParsedValues = {
   readonly snapshot?: string;
   readonly course?: string;
   readonly requires?: string;
+  readonly track?: string;
   readonly ref?: string;
   readonly host?: string;
   readonly objective?: string;
@@ -66,6 +67,7 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         snapshot: { type: "string" },
         course: { type: "string" },
         requires: { type: "string" },
+        track: { type: "string" },
         ref: { type: "string" },
         host: { type: "string" },
         objective: { type: "string" },
@@ -239,6 +241,18 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         studyId: required(values.study, "study"),
         courseId: required(values.course, "course"),
         prerequisiteCourseIds,
+      };
+    }
+    if (positionals[1] === "set-track") {
+      rejectUnrelatedOptions(values, ["study", "course", "track"]);
+      // Omitting --track takes the course off whatever path it was on, the
+      // same way omitting --requires clears prerequisites.
+      const track = (values.track ?? "").trim();
+      return {
+        kind: "course-set-track",
+        studyId: required(values.study, "study"),
+        courseId: required(values.course, "course"),
+        trackId: track.length > 0 ? track : null,
       };
     }
     if (positionals[1] === "open-for-edit") {
