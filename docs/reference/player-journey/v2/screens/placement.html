@@ -255,11 +255,21 @@
       const hosts = [document.getElementById("desktop"), document.getElementById("phone")];
       const taxonomy = await fetch("../data/taxonomy.json").then((response) => response.json());
 
-      // The real spine this placement is for: nine courses, in prerequisite
-      // order, read out of the library rather than typed here.
-      const turing = taxonomy.studies.find((study) => study.id === "turing-pact");
-      const spine = turing.courses
-        .filter((course) => course.id.startsWith("foundations-"))
+      /*
+       * The spine, asked for by name rather than guessed from ids.
+       *
+       * This screen originally found these nine courses with
+       * `id.startsWith("foundations-")`, which is this repository quietly
+       * holding a second copy of the course structure — the exact thing the
+       * parity contract exists to prevent. Building the screen is what exposed
+       * it, and the fix went upstream: a course now declares its `trackId`, so
+       * the question here is "which courses are on this path" instead of
+       * "which ids happen to start the same way".
+       */
+      const TRACK = "foundations";
+      const spine = taxonomy.studies
+        .flatMap((study) => study.courses)
+        .filter((course) => course.trackId === TRACK)
         .sort((a, b) => a.depth - b.depth);
       const spineLessons = spine.reduce(
         (sum, course) => sum + course.units.reduce((n, unit) => n + unit.lessons.length, 0),

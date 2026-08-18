@@ -32,8 +32,9 @@
      ],
      "currency": "follow-ref",
      "prerequisiteCourseIds": [],
-     "sha256": "sha256:6cee0a510e03319cf953e3f52092901655a103feae1bf095acb3a1db3b2c3c4a",
-     "packageBytes": 76074,
+     "trackId": null,
+     "sha256": "sha256:0b076c8e77f36fb0d19cbe0d5df9f26d6016b44774a38a3b125bda3925e75360",
+     "packageBytes": 76095,
      "units": [
       {
        "id": "orientation-workspace",
@@ -203,8 +204,9 @@
      ],
      "currency": "follow-ref",
      "prerequisiteCourseIds": [],
-     "sha256": "sha256:ecce2d063f12ee18e8799b8c5a8c211663e849d4b59fea713235bb4b8106cb6a",
-     "packageBytes": 81577,
+     "trackId": null,
+     "sha256": "sha256:536c110f5dc9345f93834de62d3990194cd6a660fd266ebfe03c42239a2311ef",
+     "packageBytes": 81598,
      "units": [
       {
        "id": "rust-structures",
@@ -374,8 +376,9 @@
      ],
      "currency": "follow-ref",
      "prerequisiteCourseIds": [],
-     "sha256": "sha256:8bd2c88f52aa815e2b67d8a9d6044b43bd1db2cfe0390166935316deed400c6f",
-     "packageBytes": 88481,
+     "trackId": null,
+     "sha256": "sha256:2d46fffac0a3f4658d66acb28428a4bd951eab4f1a59f5dc61deb0297e2de581",
+     "packageBytes": 88502,
      "units": [
       {
        "id": "message-entry",
@@ -545,8 +548,9 @@
      ],
      "currency": "follow-ref",
      "prerequisiteCourseIds": [],
-     "sha256": "sha256:d16614158d27d2c4d7f6fb429efb360827cbec794f4e4a2e2afcae63cd8f734d",
-     "packageBytes": 83622,
+     "trackId": null,
+     "sha256": "sha256:35ca1a51eeadb692022d2beb6bd9a47fd1b31d814d93bdc3b647d5f51636a69a",
+     "packageBytes": 83643,
      "units": [
       {
        "id": "agent-identity",
@@ -716,8 +720,9 @@
      ],
      "currency": "follow-ref",
      "prerequisiteCourseIds": [],
-     "sha256": "sha256:ae483f8bcda877c798e762df02fdc90c26b3d626e9e9c1b9f6c409817a70481f",
-     "packageBytes": 78695,
+     "trackId": null,
+     "sha256": "sha256:aba0793732cc054743192fc7ba877ec6388844aca54b71d105e0199110968b25",
+     "packageBytes": 78716,
      "units": [
       {
        "id": "design-palette",
@@ -899,8 +904,9 @@
      ],
      "currency": "follow-ref",
      "prerequisiteCourseIds": [],
-     "sha256": "sha256:d5c5b2369bc2b11ee0d3350c6316612e2d92164738290a57ca668a813cc8d76c",
-     "packageBytes": 17967,
+     "trackId": null,
+     "sha256": "sha256:e49fee822ad9fa4566f767a73638a335062881f0ddc3b63392a40ccb38020f07",
+     "packageBytes": 17988,
      "units": [
       {
        "id": "narrative-authority",
@@ -938,8 +944,9 @@
      "prerequisiteCourseIds": [
       "founder-engineer"
      ],
-     "sha256": "sha256:0f5417c5405960f0e6d0954ecd338930df65fd6c23084db694f370cfef42d27b",
-     "packageBytes": 36544,
+     "trackId": null,
+     "sha256": "sha256:80a9cd32ab0d630996f74e2bc16385733621706da433c016ed2cda58d43011db",
+     "packageBytes": 36565,
      "units": [
       {
        "id": "spend-control",
@@ -1017,8 +1024,9 @@
      "prerequisiteCourseIds": [
       "ai-cost-and-boundaries"
      ],
-     "sha256": "sha256:9c13b44373106cf2aeba09175844426e730de008f20a517c6925255ae1d0287e",
-     "packageBytes": 111389,
+     "trackId": null,
+     "sha256": "sha256:659e92a2531f3ebaed3f9201145b11bbab0fb9f549828dd7d82107c964b604dc",
+     "packageBytes": 111410,
      "units": [
       {
        "id": "author-owns-the-spine",
@@ -1191,8 +1199,9 @@
      "prerequisiteCourseIds": [
       "ai-branching-narrative"
      ],
-     "sha256": "sha256:e804a87d260ff1ce94ed57c892bbb12b18a7370fc8d4320f74d489a0de10d191",
-     "packageBytes": 35976,
+     "trackId": null,
+     "sha256": "sha256:f065a5635e9661b202fe5c410d72c122ec9812a9f0ad7a3a4b5b560961ca88f9",
+     "packageBytes": 35997,
      "units": [
       {
        "id": "pay-once",
@@ -1259,8 +1268,9 @@
      "prerequisiteCourseIds": [
       "generated-assets"
      ],
-     "sha256": "sha256:1a120ed1001edcbeb40226aee1e7ca0ebbd37d624e729892cbab2e083c5a6d37",
-     "packageBytes": 98285,
+     "trackId": null,
+     "sha256": "sha256:47c905f03f8da7970473966a42361479496d79a66d29e2e2256825b15081e536",
+     "packageBytes": 98306,
      "units": [
       {
        "id": "pipeline-boundary",
@@ -1433,8 +1443,9 @@
      "prerequisiteCourseIds": [
       "media-tooling"
      ],
-     "sha256": "sha256:fea60b46d3f3b032955e7f19997197469c4d036ae6e4a6de58cafbca56d081e2",
-     "packageBytes": 98692,
+     "trackId": null,
+     "sha256": "sha256:06fe72cbc3556d0eae649bbb580eda737410eb8eff5963e8f9408df6b8b44e65",
+     "packageBytes": 98713,
      "units": [
       {
        "id": "why-content-package",
@@ -1596,8 +1607,9 @@
      "prerequisiteCourseIds": [
       "content-as-package"
      ],
-     "sha256": "sha256:3c8adb2610204411762eb3cb087cc283130ecd2f8844666896a83dd9c154221c",
-     "packageBytes": 91481,
+     "trackId": null,
+     "sha256": "sha256:e17aa0af2dded372043d76fded54b4b455b4f9f6daff83c5227f81f2a8ff56ab",
+     "packageBytes": 91502,
      "units": [
       {
        "id": "why-auto-play",
@@ -1772,8 +1784,9 @@
      ],
      "currency": "follow-ref",
      "prerequisiteCourseIds": [],
-     "sha256": "sha256:9e971f717e1334ee46993655df014c05189835702da74feddbfe440dbb96b469",
-     "packageBytes": 6883115,
+     "trackId": "foundations",
+     "sha256": "sha256:826af49ae529aca0f7be077126e9a336d65783da69c1abbe1229630e00252816",
+     "packageBytes": 6883145,
      "units": [
       {
        "id": "what-is-an-app",
@@ -2286,8 +2299,9 @@
      "prerequisiteCourseIds": [
       "foundations-before-zero"
      ],
-     "sha256": "sha256:ae82798961640157c88935aa62ea091983ddc2890042116c9292d21410369e23",
-     "packageBytes": 128795,
+     "trackId": "foundations",
+     "sha256": "sha256:c04c1481f51130d1cd295805f66ea6caf355683f54fd907d3331f3f5d39cbc7c",
+     "packageBytes": 128825,
      "units": [
       {
        "id": "what-a-project-is",
@@ -2460,8 +2474,9 @@
      "prerequisiteCourseIds": [
       "foundations-terrain"
      ],
-     "sha256": "sha256:5b3a76c40fc8d41127e8eb9cae2e0977b84252828e8f72b33ec9e3642d2c44a0",
-     "packageBytes": 133479,
+     "trackId": "foundations",
+     "sha256": "sha256:a4885242325efdfb5b7a1e1aa42a4ea994233d70afac857ac02f7949246339b8",
+     "packageBytes": 133509,
      "units": [
       {
        "id": "a-function",
@@ -2623,8 +2638,9 @@
      "prerequisiteCourseIds": [
       "foundations-reading-code"
      ],
-     "sha256": "sha256:558ad48691f1cd81e2a047fd7749da1647f0423d61473f22ebcfe6a8f09a5cb4",
-     "packageBytes": 148568,
+     "trackId": "foundations",
+     "sha256": "sha256:250dd664698e1646da50533aad93fcdcc11271443efecfdbf2920c202d5aa1f4",
+     "packageBytes": 148598,
      "units": [
       {
        "id": "branching",
@@ -2808,8 +2824,9 @@
      "prerequisiteCourseIds": [
       "foundations-logic"
      ],
-     "sha256": "sha256:cc9b269306c02b9da37b971725d5f2340f135b11a5befdc5b6cce517b23e83a4",
-     "packageBytes": 152342,
+     "trackId": "foundations",
+     "sha256": "sha256:9008074926784f2d913994b88908cbbab90ff3f9b88fb653ae24bf4f48dba434",
+     "packageBytes": 152372,
      "units": [
       {
        "id": "shared-memory",
@@ -2993,8 +3010,9 @@
      "prerequisiteCourseIds": [
       "foundations-data"
      ],
-     "sha256": "sha256:da048b9b5681c93ab19b3c715578cb06269399ca19f4bf53708a04c730ca9c01",
-     "packageBytes": 129040,
+     "trackId": "foundations",
+     "sha256": "sha256:bba82af92d1ac0b4cc90bcc441f2dd607c43750d94642fe13dcd42cf6caa1959",
+     "packageBytes": 129070,
      "units": [
       {
        "id": "waiting",
@@ -3167,8 +3185,9 @@
      "prerequisiteCourseIds": [
       "foundations-async"
      ],
-     "sha256": "sha256:9ec378b8081f221ffb526924021c1c20839bf3c2c299546da9e5651acf0f1043",
-     "packageBytes": 145308,
+     "trackId": "foundations",
+     "sha256": "sha256:cc1e4d283b07c16df9e1c420ff4ee34ca61903766ca7c4a10008f20a31d9364b",
+     "packageBytes": 145338,
      "units": [
       {
        "id": "a-component-is-a-function",
@@ -3341,8 +3360,9 @@
      "prerequisiteCourseIds": [
       "foundations-ui"
      ],
-     "sha256": "sha256:64a462b374b66b9d31079eb5fd31025b877b16cb7b2b9930b4ae4f47c130812b",
-     "packageBytes": 132375,
+     "trackId": "foundations",
+     "sha256": "sha256:98c8222c36beb3de0b2521e896c2605fa30f9fc222c916b317b88881e5686907",
+     "packageBytes": 132405,
      "units": [
       {
        "id": "a-test-is-a-sentence",
@@ -3526,8 +3546,9 @@
      "prerequisiteCourseIds": [
       "foundations-quality"
      ],
-     "sha256": "sha256:5afa44d151bb8dcfe2557b0d1c21f843ff9f5277ab5d563a86dadcde79c96040",
-     "packageBytes": 134975,
+     "trackId": "foundations",
+     "sha256": "sha256:8adfef98a0eb1fad4b17dd0e231f9799d72e6b7f01f02f3dd58c7194d1c83fa6",
+     "packageBytes": 135005,
      "units": [
       {
        "id": "measuring-without-spying",
@@ -3699,8 +3720,9 @@
      "prerequisiteCourseIds": [
       "foundations-product"
      ],
-     "sha256": "sha256:3161c33fa4c6c7c8d252ba971f0fa4494f8cb3a983609f1cf04c7181a2ac59fb",
-     "packageBytes": 29700,
+     "trackId": null,
+     "sha256": "sha256:87926b2cc8e6a02cadb3244538c8c5b6664ae9deffab7303f084dadf18633ebc",
+     "packageBytes": 29721,
      "units": [
       {
        "id": "freeze-surface",
@@ -3766,8 +3788,9 @@
      "prerequisiteCourseIds": [
       "foundations-product"
      ],
-     "sha256": "sha256:766a8f6a55d0fe46ffba9c8d86205a92901b0d4f28cb031a050536cb732f606e",
-     "packageBytes": 42130,
+     "trackId": null,
+     "sha256": "sha256:21c60328b44bd8a2900029e89df4d36a8b78644d1656883ca9f22326d269eb77",
+     "packageBytes": 42151,
      "units": [
       {
        "id": "layer-choice",
@@ -3834,8 +3857,9 @@
      "prerequisiteCourseIds": [
       "foundations-product"
      ],
-     "sha256": "sha256:51831eaa7b61f33875aa71b259bf486f8c76eae67c8d5bd26fe172ec5ab0de79",
-     "packageBytes": 45932,
+     "trackId": null,
+     "sha256": "sha256:47935830813488f09a67fb79636f509a780f492b18d148dd656bddcc843e1cf8",
+     "packageBytes": 45953,
      "units": [
       {
        "id": "fact-vs-process",
@@ -3913,8 +3937,9 @@
      "prerequisiteCourseIds": [
       "foundations-product"
      ],
-     "sha256": "sha256:c3a0e7aeed9babf65ac5adecd7be42f8e4c4b952756ba03b4144749e05a8ebea",
-     "packageBytes": 58194,
+     "trackId": null,
+     "sha256": "sha256:bb5c6e337fc63cac45e3ea8429300d8a8d7f716bbe609b8189192c7e98467199",
+     "packageBytes": 58215,
      "units": [
       {
        "id": "adapter-layer",
@@ -3992,8 +4017,9 @@
      "prerequisiteCourseIds": [
       "foundations-product"
      ],
-     "sha256": "sha256:c24a78f5ac21b4173e8d77eaa141154f61a33e42a22845e45a3f7c4df1f7651b",
-     "packageBytes": 119339,
+     "trackId": null,
+     "sha256": "sha256:7f79abf1bea5dfea028f94f50dd2711b86590b980651470e1e68185b4afcd24a",
+     "packageBytes": 119360,
      "units": [
       {
        "id": "presentation-vs-real-identity",
@@ -4166,8 +4192,9 @@
      "prerequisiteCourseIds": [
       "foundations-product"
      ],
-     "sha256": "sha256:54c5f9a5e39ce89d3b71c0826c162d36e6139477ae16e7080d386cf1a431f9b7",
-     "packageBytes": 121982,
+     "trackId": null,
+     "sha256": "sha256:b541b48450381c0e0a4768510c1a9499963b98a79079b4daff73b7b3e5731c3d",
+     "packageBytes": 122003,
      "units": [
       {
        "id": "namespace-partition",
@@ -4340,8 +4367,9 @@
      "prerequisiteCourseIds": [
       "foundations-product"
      ],
-     "sha256": "sha256:7f5a000e57119f158a4a786129c0d073a43cdc3a6662a02bd9c905d65ee1f062",
-     "packageBytes": 101206,
+     "trackId": null,
+     "sha256": "sha256:d87ae5a0faf8dd7eb1fce7beeabd2144a4eb40f2590324e5b6ae5706c86a4e77",
+     "packageBytes": 101227,
      "units": [
       {
        "id": "presence-contract",
@@ -4503,8 +4531,9 @@
      "prerequisiteCourseIds": [
       "foundations-product"
      ],
-     "sha256": "sha256:d3bf6f7baa272e279ee5fcdefd22eadb1af5690aaeaf96866a9bd34c4e0afbc3",
-     "packageBytes": 102845,
+     "trackId": null,
+     "sha256": "sha256:af12ba79335dd87ec141fe334e5dcb8f0b970363fdc902619d3db98fa2d44c07",
+     "packageBytes": 102866,
      "units": [
       {
        "id": "one-capability-entry",
@@ -4677,8 +4706,9 @@
      "prerequisiteCourseIds": [
       "platform-capabilities"
      ],
-     "sha256": "sha256:7a55a20ab5b66429f91a402ba2c7e93f9bf685fc5a102f02602ff804b1c1d71e",
-     "packageBytes": 98399,
+     "trackId": null,
+     "sha256": "sha256:1e196a4299f5b08e42f17f65e930db898974740653d937f71d1d557d183a71ec",
+     "packageBytes": 98420,
      "units": [
       {
        "id": "contract-boxes",
@@ -4851,8 +4881,9 @@
      "prerequisiteCourseIds": [
       "ai-contracts-first"
      ],
-     "sha256": "sha256:cfaaba42b736be1e79e710317386bbef3bad04ad3a5ced0c1c9b1ee1a6b7f919",
-     "packageBytes": 99865,
+     "trackId": null,
+     "sha256": "sha256:fdbf8423a8f3f566e05e40cd0bc8678f96596802015e192b1f2cf052865cfc3b",
+     "packageBytes": 99886,
      "units": [
       {
        "id": "price-before-call",
@@ -5025,8 +5056,9 @@
      "prerequisiteCourseIds": [
       "ai-contracts-first"
      ],
-     "sha256": "sha256:3dab1c30666f120b312410ba689f30be14f2e4da2b969ee1acf419ec0d327377",
-     "packageBytes": 87595,
+     "trackId": null,
+     "sha256": "sha256:10bd77f6c81666c10556a89e0b258d7af1e33c3a84e48ed522efe99c0b778b50",
+     "packageBytes": 87616,
      "units": [
       {
        "id": "three-failure-modes",
@@ -5188,8 +5220,9 @@
      "prerequisiteCourseIds": [
       "structured-output-repair"
      ],
-     "sha256": "sha256:745673c0b40fd8ce410e2c781b7a2423af74ae99981243c00a8938326efb536d",
-     "packageBytes": 84049,
+     "trackId": null,
+     "sha256": "sha256:70ee7a6434beb9aef7f835c338ff86c408655e968d2cbc443d2338ec63fe4389",
+     "packageBytes": 84070,
      "units": [
       {
        "id": "cases-before-feelings",
@@ -5351,8 +5384,9 @@
      "prerequisiteCourseIds": [
       "ai-evaluation"
      ],
-     "sha256": "sha256:fa5ab50f5fbf5f96432032677e53c9d4d934b3e3ae035d6fdd5d1df60f13912f",
-     "packageBytes": 84286,
+     "trackId": null,
+     "sha256": "sha256:68ee1a459fc3b0e084aaba0a34eff0473b3ae7de020b50219e435d8eb1678553",
+     "packageBytes": 84307,
      "units": [
       {
        "id": "identity-as-checkable-signals",
@@ -5514,8 +5548,9 @@
      "prerequisiteCourseIds": [
       "foundations-product"
      ],
-     "sha256": "sha256:73b82caffed3408d54f592d7a02d2b3efd30de50750532cdd6b5678c6e0b47fd",
-     "packageBytes": 104781,
+     "trackId": null,
+     "sha256": "sha256:a1e2538c69df0a83cb259e8d7316d3f179fd6a3dda35a9323e08e2e35f54dd17",
+     "packageBytes": 104802,
      "units": [
       {
        "id": "chunk-self-heal",
@@ -5688,8 +5723,9 @@
      "prerequisiteCourseIds": [
       "realtime-presence"
      ],
-     "sha256": "sha256:5d33d0abbc522c8b1d34fa2d06acc03b9141e9e5703e8af4a045b41db25a68f5",
-     "packageBytes": 106491,
+     "trackId": null,
+     "sha256": "sha256:66b1eb26c5a807985ca3905bf52c686afe04175d97382d610873167270bb2efa",
+     "packageBytes": 106512,
      "units": [
       {
        "id": "register-before-ship",
@@ -5862,8 +5898,9 @@
      "prerequisiteCourseIds": [
       "realtime-presence"
      ],
-     "sha256": "sha256:fb9f7dcebadde64bf799f7b1d8aee1b21278b7bcd156eb96933c2ff297ffcb80",
-     "packageBytes": 109568,
+     "trackId": null,
+     "sha256": "sha256:5f01698648ab50c98605fdec8008ee3ee1973baf92acd532753e2140950dcff8",
+     "packageBytes": 109589,
      "units": [
       {
        "id": "daily-content-loop",
@@ -6025,8 +6062,9 @@
      "prerequisiteCourseIds": [
       "realtime-presence"
      ],
-     "sha256": "sha256:94ff48366c53b43513100c0dc34455a7699964d0a4b44a7b56a73518f97a7b90",
-     "packageBytes": 112917,
+     "trackId": null,
+     "sha256": "sha256:fc97347a2df987b608fe7ff0795ed40942418f958606150e480f2fd35fadcf4f",
+     "packageBytes": 112938,
      "units": [
       {
        "id": "opening-and-cover",
@@ -6199,8 +6237,9 @@
      "prerequisiteCourseIds": [
       "realtime-presence"
      ],
-     "sha256": "sha256:a9bd1f8b98ccc338b5a7b3c71d68a552b7f9fceadfea45c4b03108493e13486e",
-     "packageBytes": 116206,
+     "trackId": null,
+     "sha256": "sha256:047c84e2a4209bc0f16d697ada65f7075825db98eb5cfa20411a5cc6cac123fc",
+     "packageBytes": 116227,
      "units": [
       {
        "id": "portal-as-gate",
@@ -6373,8 +6412,9 @@
      "prerequisiteCourseIds": [
       "testing-strategy"
      ],
-     "sha256": "sha256:3c7c304acc8a9e7ac0568949fa6aabbc102fda1a0bea9d97f850be73bf89300a",
-     "packageBytes": 108713,
+     "trackId": null,
+     "sha256": "sha256:71e81fc75f4e3f3a93c47e77160b243563662e720dc0a384dc751b2b0147cc07",
+     "packageBytes": 108734,
      "units": [
       {
        "id": "replace-hand-clicks",
@@ -6547,8 +6587,9 @@
      "prerequisiteCourseIds": [
       "world-navigation"
      ],
-     "sha256": "sha256:8ef07bde3b5b6d170b956e1115930baa763746a4a9fc5b3d17bc77c5ac3707f2",
-     "packageBytes": 110008,
+     "trackId": null,
+     "sha256": "sha256:8e0b8544b2eb6dd2e422683aa3ac7d5c5bad920e011e9ea555180b6e2ba34edd",
+     "packageBytes": 110029,
      "units": [
       {
        "id": "organize-before-scale",
@@ -6719,8 +6760,9 @@
      ],
      "currency": "follow-ref",
      "prerequisiteCourseIds": [],
-     "sha256": "sha256:72e83b2082ac4d30296e284e54fb167955d9c91683537fc27ef69e3aa4db2333",
-     "packageBytes": 117267,
+     "trackId": null,
+     "sha256": "sha256:630ef62e23089cb742e7f54aac8004f36c9dfc42eea9cd4437f2ed3f243048d4",
+     "packageBytes": 117288,
      "units": [
       {
        "id": "gates-before-you-push",
@@ -6891,8 +6933,9 @@
      ],
      "currency": "follow-ref",
      "prerequisiteCourseIds": [],
-     "sha256": "sha256:84d07a37b7a926b91234b2277d40c1de8722a4b64fc4cd100567adbc0b5d8200",
-     "packageBytes": 88799,
+     "trackId": null,
+     "sha256": "sha256:f57f4e159a7fd385b3a0d0fa5c8ba02e35aaa78fc04a84299aa69241b6c8a74a",
+     "packageBytes": 88820,
      "units": [
       {
        "id": "what-the-agent-reads-first",
@@ -7050,8 +7093,9 @@
      ],
      "currency": "follow-ref",
      "prerequisiteCourseIds": [],
-     "sha256": "sha256:cb638007bc0405aeed47adc4f6060f9298aa1643910fa71d1d36032b422d50c6",
-     "packageBytes": 8201,
+     "trackId": null,
+     "sha256": "sha256:796b775fb4d0c254c6878800d527f1db5831ffda1343f66364c6ef774b079f9b",
+     "packageBytes": 8222,
      "units": [
       {
        "id": "airlock",
@@ -7089,8 +7133,9 @@
      "prerequisiteCourseIds": [
       "how-this-campus-works"
      ],
-     "sha256": "sha256:afbafbe06278bf61203441db2dde0bdc06b3e3182c4052b0487360b98a3565de",
-     "packageBytes": 37444,
+     "trackId": null,
+     "sha256": "sha256:1097ec494e6880d1ff7aed7bcc9947e3aaaafc8e3a5b141c1735753573a5c349",
+     "packageBytes": 37465,
      "units": [
       {
        "id": "layers-and-bridge",
@@ -7162,8 +7207,9 @@
      "prerequisiteCourseIds": [
       "four-layer-workbench"
      ],
-     "sha256": "sha256:683df1a708741723420d3814d4a91a137aa40c8797d6c5c7aa1b64b42858f8b6",
-     "packageBytes": 75892,
+     "trackId": null,
+     "sha256": "sha256:4269c89c9ec995e19a3d137c60b9edfa07100fb8add8814b1e9aaf91af138b4f",
+     "packageBytes": 75913,
      "units": [
       {
        "id": "airlock-mechanics",
@@ -7318,8 +7364,9 @@
      "prerequisiteCourseIds": [
       "how-this-campus-works-2"
      ],
-     "sha256": "sha256:1b80f5fad690ff8504c532508bdd7ceff6e55b9761d8b15667fd403659ed1099",
-     "packageBytes": 97640,
+     "trackId": null,
+     "sha256": "sha256:7eca50de9a96334c404ce77f5d4b422ad6f0c2a9077bc8751fec2eda72e98dc0",
+     "packageBytes": 97661,
      "units": [
       {
        "id": "executable-requests",
@@ -7485,8 +7532,9 @@
      "prerequisiteCourseIds": [
       "communicate-with-ai"
      ],
-     "sha256": "sha256:1411997c8c37391a08643fafc8b0e32014116df19ab57f7171505fedb0883b0e",
-     "packageBytes": 87897,
+     "trackId": null,
+     "sha256": "sha256:02ec0e5ce88a9988aaaec5100ee3d10b49c8a604da80a3fc53f1e7f508dd9c11",
+     "packageBytes": 87918,
      "units": [
       {
        "id": "pin-to-git-blob",
@@ -7648,8 +7696,9 @@
      "prerequisiteCourseIds": [
       "evidence-and-freshness"
      ],
-     "sha256": "sha256:4a4e54418388658e76eccf30b362b22a00195ebdd03ac87e44eb277b27be355c",
-     "packageBytes": 102253,
+     "trackId": null,
+     "sha256": "sha256:fc0cf11991ad4f8a6fbe2b1154bdbf9966b2e742e4115e3d88e7256cfdeadca4",
+     "packageBytes": 102274,
      "units": [
       {
        "id": "fsrs-as-rows",
@@ -7822,8 +7871,9 @@
      "prerequisiteCourseIds": [
       "evidence-and-freshness"
      ],
-     "sha256": "sha256:3724931823cba07ae9fb1bbc64e1ef89b1be2b768a748199c4abeb88bca706d0",
-     "packageBytes": 92412,
+     "trackId": null,
+     "sha256": "sha256:186e0f1f20204bd44d257af40440f092c6e521d6889045cffb9f21b8b0d26eed",
+     "packageBytes": 92433,
      "units": [
       {
        "id": "loopback-only-service",
@@ -7996,8 +8046,9 @@
      "prerequisiteCourseIds": [
       "local-first-boundaries"
      ],
-     "sha256": "sha256:48d77af69e0a38553cf7c81f32b022752c48139d015793def35107f05e4c686a",
-     "packageBytes": 91117,
+     "trackId": null,
+     "sha256": "sha256:0f270e9ce48f68640c67d9f9f7fd6802d7c71e72bee8ee4010d7a62de7364c14",
+     "packageBytes": 91138,
      "units": [
       {
        "id": "why-isolate-first",
@@ -8159,8 +8210,9 @@
      "prerequisiteCourseIds": [
       "evidence-and-freshness"
      ],
-     "sha256": "sha256:16a699e9753522bcbe3ed798574826093d1c1a5770331b4f08cd39584e51fa34",
-     "packageBytes": 91183,
+     "trackId": null,
+     "sha256": "sha256:6c4e36114949e61129d5a15a17be6f93ede83856776c7f2b294d6dbd75252a80",
+     "packageBytes": 91204,
      "units": [
       {
        "id": "status-machine",

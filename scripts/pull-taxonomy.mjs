@@ -116,6 +116,11 @@ for (const studyId of readdirSync(upstream).sort()) {
       objectives: course.objectives ?? [],
       currency: course.currency ?? "follow-ref",
       prerequisiteCourseIds: course.prerequisiteCourseIds ?? [],
+      // The named path this course is on, when its author put it on one.
+      // Before this field existed, a consumer that needed "the nine
+      // foundations courses" had to match on an id prefix — which is this
+      // repository holding a second, unwritten copy of the course structure.
+      trackId: course.trackId ?? null,
       sha256: entry.sha256,
       packageBytes: statSync(join(studyDir, entry.file)).size,
       units,

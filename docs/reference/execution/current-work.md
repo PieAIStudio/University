@@ -47,9 +47,9 @@ Phases 0 to 2 are done. Phase 3 is the current work.
    real scene needs it.
 3. **User journey V2.** Written, at `docs/reference/player-journey/v2/index.html`.
    28 acts, six corrections to V1 that the measurements forced, nine decision
-   cards. Three screens are built and runnable — world map, course map, reader
-   — and the remaining six are listed on the index as unbuilt rather than
-   described as if they existed. Open the index first; it links the rest.
+   cards, and **all nine screens built and runnable**. Open the index first; it
+   links the rest, and `build-brief.html` holds the per-screen spec that was
+   used to hand two of them to subagents.
 
    Two artefact kinds, deliberately not mixed:
    - 3D surfaces are **runnable greyboxes**, not static pictures. Camera
@@ -67,15 +67,20 @@ Phases 0 to 2 are done. Phase 3 is the current work.
      the screen the product's advantage lives on.
 4. **Vertical slice.** One course end to end: import a recovery package →
    navigation → one lesson → deterministic grading → one review the next day.
-5. **Upstream changes that V2 proves are needed.** Still not started, and the
-   reason has not changed: guessing an interface for a consumer that does not
-   exist yet produces something that fits neither side, which is the argument
-   SPEC-0001 already makes about extracting the shared package. V2 exists now
-   but the placement panel and the six unbuilt screens are what would name the
-   fields, and they are not built. Currently queued:
+5. **Upstream changes.** The first one is done, and it is the one V2 named
+   rather than one that was guessed. Building the placement screen exposed a
+   course-id prefix match in this repository — a second, unwritten copy of the
+   course structure, exactly what SPEC-0001 forbids. The fix went upstream:
+   `CourseManifest.trackId` lets an author say which named path a course is
+   on, `course set-track` sets it, the recovery export carries it, and the
+   nine foundations courses now claim `foundations`. The screen behaves
+   identically and no longer guesses. Still queued:
    - `CourseRouteQuiz` becomes course data instead of a hardcoded component
-     (see "Route" below).
-   - Whatever taxonomy fields the map turns out to need. None are assumed.
+     (see "Route" below). Its questions and entry points are still hardcoded
+     in the wireframe; `trackId` gives them somewhere to live, but where
+     authored questions belong in the content model is a decision the real
+     placement flow should force, not a wireframe.
+   - The map needed no new field: depth is derived and prerequisites exist.
    - The prediction line differs between the 41 revised lessons and the 519
      unrevised ones. Two voices in one library is a launch-blocking content
      task, not an engineering one.
