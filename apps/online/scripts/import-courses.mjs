@@ -37,6 +37,8 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createHash } from "node:crypto";
+
+import { compileAnswerKey } from "@pieai/university-core";
 import { join, resolve } from "node:path";
 
 const projectRoot = resolve(import.meta.dirname, "..");
@@ -83,6 +85,7 @@ const EXTENSIONS = {
 rmSync(contentRoot, { recursive: true, force: true });
 mkdirSync(join(contentRoot, "assets"), { recursive: true });
 
+let keysCompiled = 0;
 const manifest = { importedAt: new Date().toISOString().slice(0, 10), studies: [] };
 let assetCount = 0;
 let assetBytes = 0;
@@ -109,6 +112,21 @@ for (const studyId of readdirSync(upstream).sort()) {
     // can cache it forever.
     for (const unit of course.units) {
       for (const lesson of unit.lessons) {
+        // The answer never leaves the build.
+        //
+        // `expectedAnswer` was being served inside the lesson JSON, so every
+        // answer in the product sat in plain text one network tab away before
+        // the learner had typed anything. The authoring shell discloses a
+        // reference answer only after repeated attempts or a pass; the shell
+        // people pay for was giving it away. What ships now is a fingerprint.
+        for (const exercise of lesson.exercises ?? []) {
+          if (typeof exercise.expectedAnswer === "string") {
+            exercise.answerKey = compileAnswerKey(exercise.expectedAnswer);
+            keysCompiled += 1;
+          }
+          delete exercise.expectedAnswer;
+          delete exercise.rubric;
+        }
         lesson.assets = (lesson.assets ?? []).map((asset) => {
           if (!asset.dataBase64) return asset;
           inlineBytes += asset.dataBase64.length;
@@ -182,7 +200,8 @@ const totalServed = manifest.studies.reduce(
   0,
 );
 console.log(
-  `import-courses: ${manifest.studies.length} studies, ${totalCourses} courses, ` +
+  `import-courses: ${keysCompiled} answer keys compiled (answers stripped), ` +
+    `${manifest.studies.length} studies, ${totalCourses} courses, ` +
     `${(totalServed / 1048576).toFixed(1)} MB of lesson JSON, ` +
     `${assetCount} assets lifted out (${(assetBytes / 1048576).toFixed(1)} MB, ` +
     `was ${(inlineBytes / 1048576).toFixed(1)} MB inline).`,

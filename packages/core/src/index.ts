@@ -9,3 +9,4 @@
 export * from "./domain/schemas.js";
 
 export * from "./scheduling/fsrs.js";
+export * from "./grading/answer-key.js";

@@ -2,15 +2,9 @@ import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
-import {
-  FSRSVersion,
-  Rating,
-  createEmptyCard,
-  fsrs,
-  generatorParameters,
-  type Card,
-  type Grade,
-} from "ts-fsrs";
+import { FSRSVersion, Rating, createEmptyCard, fsrs, type Card, type Grade } from "ts-fsrs";
+
+import { SCHEDULER_PARAMETERS } from "@pieai/university-core";
 
 /**
  * Where a word sits in the learner's head, as far as anything can honestly tell.
@@ -53,7 +47,11 @@ interface VocabularyBudget {
 type VocabularyEventKind = "presented" | "opened" | "graded" | "stage-change";
 
 const SCHEMA_VERSION = 1;
-const PARAMETERS = generatorParameters({ request_retention: 0.9, enable_fuzz: false });
+// The third hand-written copy of these numbers, found by audit. They happened
+// to match, which is exactly why it was invisible: a divergence here would have
+// shown up as vocabulary drifting away from course cards on a schedule nobody
+// was comparing.
+const PARAMETERS = SCHEDULER_PARAMETERS;
 
 /**
  * Vocabulary state lives beside the studies rather than inside one.

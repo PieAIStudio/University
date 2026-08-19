@@ -163,9 +163,22 @@ Phases 0 to 6 are done. Phase 7 is the current work.
      3D code fail to typecheck, because `.pnpm` packages resolve `three` by
      walking up to the root. `publicHoistPattern` is the fix.
 
-   Still queued: `packages/core` should absorb FSRS, so both shells schedule a
-   card with the same algorithm. Today the online shell runs a placeholder and
-   the local one runs real `ts-fsrs` — two answers to "what is due tomorrow".
+8. **One scheduler, one answer key.** Done. `packages/core` owns FSRS with
+   recorded parameters, and both shells call it — the online shell's
+   interval-doubling placeholder is gone, and the third hand-written copy of
+   the parameters in the vocabulary store is gone with it.
+
+   Tier-one grading moved to core in the same change, and that closed a leak
+   worth naming: the online shell was serving `expectedAnswer` inside its
+   lesson JSON, so every answer in a paid product sat in plain text one network
+   tab away before the learner had typed anything. The authoring shell had this
+   right — it discloses a reference answer only after repeated attempts or a
+   pass. Import now compiles 673 answers to fingerprints and strips the
+   originals.
+
+   Found by a Grok audit run against the merged tree, then verified by hand
+   rather than taken on trust — one of its three headline claims pointed at the
+   wrong line while reaching the right conclusion.
 
 ## What Happened On 2026-08-18
 

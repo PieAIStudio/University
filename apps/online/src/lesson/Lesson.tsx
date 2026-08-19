@@ -22,7 +22,7 @@ import { useEffect, useMemo, useState } from "react";
 import { MarkdownContent } from "@pieai/university-ui";
 
 import type { Lesson as LessonData } from "../content/library";
-import { gradeDeterministically, type Verdict } from "./grading";
+import { gradeDeterministically, normalise, type Verdict } from "./grading";
 
 const ANCHOR = /^\[\[evidence:([^\]]+)\]\]$/gm;
 
@@ -68,15 +68,19 @@ export function LessonView({
   }, [lesson.id]);
 
   const submit = () => {
-    const result = gradeDeterministically(answer, exercise?.expectedAnswer);
+    const result = gradeDeterministically(answer, exercise?.answerKey);
     setVerdict(result);
     if (result.outcome === "pass") onPass();
     else if (result.outcome === "fail") setMisses((count) => count + 1);
   };
 
   const clue = useMemo(() => {
-    if (!exercise?.expectedAnswer) return null;
-    const needle = exercise.expectedAnswer.slice(0, 6);
+    // The answer is not available here any more, and should not be — a clue
+    // built from it was a step away from printing it. Anchoring on the
+    // question's own words finds the passage the question came from, which is
+    // what a learner who missed actually needs to re-read.
+    if (!exercise?.prompt) return null;
+    const needle = normalise(exercise.prompt).slice(0, 5);
     const line = lesson.content
       .split(/\n+/)
       .find((row) => row.includes(needle) && !row.startsWith("```") && row.length > 12);
