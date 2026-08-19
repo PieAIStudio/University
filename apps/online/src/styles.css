@@ -561,3 +561,108 @@ button.block {
   letter-spacing: 0;
   opacity: 0.78;
 }
+
+/*
+ * The settlement.
+ *
+ * Deliberately quiet. The temptation on a reward screen is confetti, and
+ * confetti is what a product reaches for when it has nothing real to report.
+ * What this has to report is real — cards, a date, an island that changed — so
+ * the design's whole job is to let those numbers be the loudest thing and then
+ * get out of the way.
+ */
+.settle {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 7vh, 4.5rem) 1.25rem calc(3rem + env(safe-area-inset-bottom));
+}
+
+.settle__eyebrow {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  color: var(--game-ui-text-muted, #8c98ad);
+}
+
+.settle__title {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.5rem, 4.5vw, 2.1rem);
+  line-height: 1.25;
+}
+
+.settle__done {
+  margin: 0.5rem 0 2rem;
+  color: var(--game-ui-text-muted, #8c98ad);
+}
+
+.settle__gains {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.settle__gains li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+/* The number is the message; the words are the caption. */
+.settle__gains b {
+  font-size: 1.9rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--game-ui-accent, #ffb347);
+}
+
+.settle__gains span {
+  color: var(--game-ui-text-muted, #8c98ad);
+}
+
+.settle__world {
+  margin: 0 0 2rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 179, 71, 0.1);
+  border-left: 3px solid var(--game-ui-accent, #ffb347);
+}
+
+.settle__cards h2 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--game-ui-text-muted, #8c98ad);
+  margin: 0 0 0.75rem;
+}
+
+.settle__card {
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--game-ui-line, rgba(255, 255, 255, 0.09));
+  display: grid;
+  gap: 0.3rem;
+}
+
+.settle__card b {
+  font-weight: 600;
+}
+
+.settle__card span {
+  color: var(--game-ui-text-muted, #8c98ad);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.settle__note {
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+  color: var(--game-ui-text-muted, #8c98ad);
+}
+
+.settle__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2.5rem;
+}

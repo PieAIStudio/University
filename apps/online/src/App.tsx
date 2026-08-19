@@ -24,6 +24,9 @@ import {
   type CourseNode,
 } from "./content/library";
 import { LessonView } from "./lesson/Lesson";
+import { Settlement } from "./lesson/Settlement";
+import { fromHash, toHash, WORLD, type View } from "./url-state";
+import { placeLabels, type LabelCandidate } from "./world/labels";
 import {
   advanceLesson,
   dropCards,
@@ -85,18 +88,39 @@ function Flight({
 }) {
   const { camera } = useThree();
   const from = useRef({ position: new THREE.Vector3(), target: new THREE.Vector3(), elapsed: 0 });
+  const first = useRef(true);
 
+  // Keyed on the numbers, not on the arrays.
+  //
+  // `to` and `look` are array literals, so they are a new identity on every
+  // render. With them as dependencies this effect re-fired constantly, resetting
+  // `elapsed` to zero and the start point to wherever the camera had crept to —
+  // a tween that restarts sixty times a second never arrives. It was invisible
+  // while every view change came from a click that also changed something else;
+  // opening a course straight from a URL made it obvious, as a camera still
+  // framed on the world map staring at empty water.
+  const key = `${to.join()}|${look.join()}`;
   useEffect(() => {
     from.current = {
       position: camera.position.clone(),
       target: new THREE.Vector3(...look),
       elapsed: 0,
     };
-  }, [to, look, camera]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, camera]);
 
   useFrame((_, delta) => {
     const flight = from.current;
     if (flight.elapsed >= 1) return;
+    // Arriving from a URL has no previous shot to fly out of, so there is
+    // nothing to animate — snap, and let the flight be for navigation the
+    // learner actually performed.
+    if (first.current) {
+      first.current = false;
+      camera.position.set(...to);
+      flight.elapsed = 1;
+      return;
+    }
     flight.elapsed = Math.min(1, flight.elapsed + delta / 0.85);
     const raw = flight.elapsed;
     const eased = raw < 0.5 ? 4 * raw ** 3 : 1 - (-2 * raw + 2) ** 3 / 2;
@@ -130,57 +154,71 @@ function LabelProbe({
   const scratch = useRef(new THREE.Vector3());
 
   useFrame(() => {
-    const onScreen: { id: string; x: number; y: number; z: number }[] = [];
+    // Project first, then let `placeLabels` decide who survives.
+    //
+    // The old pass ranked by depth and kept the nearest few, which on a
+    // forty-one-lesson course map produced a legible top and an unreadable
+    // stack at the bottom — the names were all "near", they were just on top of
+    // one another. Overlap is a screen-space problem and has to be solved in
+    // screen space, with the boxes the labels actually occupy.
+    const candidates: LabelCandidate[] = [];
     for (const marker of markers) {
       const projected = scratch.current.copy(marker.position).project(camera);
       if (projected.z >= 1 || Math.abs(projected.x) > 1 || Math.abs(projected.y) > 1) continue;
-      onScreen.push({
+      const element = nodes.get(marker.id);
+      if (!element) continue;
+      candidates.push({
         id: marker.id,
         x: ((projected.x + 1) / 2) * size.width,
         y: ((1 - projected.y) / 2) * size.height,
         z: projected.z,
+        // Measured, not guessed: a Chinese lesson title and a study name are
+        // different widths, and a fixed box would either clip or over-reserve.
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        // A study name orients the whole view, so it outranks any one course.
+        weight: marker.kind === "study" ? 2 : marker.kind === "lesson" ? 0 : 1,
       });
     }
-    // Nearest few by depth, not everything within a radius: no single radius is
-    // right at both ends of a study fourteen levels deep, and fifty-two names
-    // at once is unreadable at any zoom.
-    onScreen.sort((a, b) => a.z - b.z);
-    const shown = new Set<string>();
-    let courses = 0;
-    for (const entry of onScreen) {
-      const isStudy = entry.id.startsWith("study:");
-      if (!isStudy && courses >= limit) continue;
-      if (!isStudy) courses += 1;
-      shown.add(entry.id);
-      const element = nodes.get(entry.id);
+
+    for (const placement of placeLabels(
+      candidates,
+      { width: size.width, height: size.height },
+      {
+        maxVisible: limit,
+      },
+    )) {
+      const element = nodes.get(placement.id);
       if (!element) continue;
-      element.style.transform = `translate(${entry.x}px, ${entry.y}px) translate(-50%, -50%)`;
-      element.style.opacity = "1";
+      element.style.transform = `translate(${placement.x}px, ${placement.y}px) translate(-50%, -50%)`;
+      element.style.opacity = placement.visible ? "1" : "0";
     }
+    // Anything that did not project at all this frame is behind the camera or
+    // off the far plane, and must not keep the position it had last frame.
+    const seen = new Set(candidates.map((entry) => entry.id));
     for (const [id, element] of nodes) {
-      if (!shown.has(id)) element.style.opacity = "0";
+      if (!seen.has(id)) element.style.opacity = "0";
     }
   }, 2);
 
   return null;
 }
 
-type View =
-  | { readonly kind: "world" }
-  | { readonly kind: "course"; readonly studyId: string; readonly courseId: string }
-  | {
-      readonly kind: "lesson";
-      readonly studyId: string;
-      readonly courseId: string;
-      readonly unitId: string;
-      readonly lessonId: string;
-    }
-  | { readonly kind: "review" };
-
 export function App() {
   const progress = useSyncExternalStore(subscribe, snapshot);
   const [nodes, setNodes] = useState<readonly CourseNode[] | null>(null);
-  const [view, setView] = useState<View>({ kind: "world" });
+  // The address bar is the source of truth for where the learner is, so a
+  // reload lands where they were and a lesson can be sent to someone.
+  const [view, setViewState] = useState<View>(() => fromHash(location.hash));
+  const setView = useCallback((next: View) => {
+    if (toHash(next) !== location.hash) history.pushState(null, "", toHash(next));
+    setViewState(next);
+  }, []);
+  useEffect(() => {
+    const onPop = () => setViewState(fromHash(location.hash));
+    addEventListener("popstate", onPop);
+    return () => removeEventListener("popstate", onPop);
+  }, []);
   const [course, setCourse] = useState<Course | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [picked, setPicked] = useState<CourseNode | null>(null);
@@ -341,7 +379,10 @@ export function App() {
         </button>
       </nav>
 
-      <div className="stagewrap" hidden={view.kind === "lesson" || view.kind === "review"}>
+      <div
+        className="stagewrap"
+        hidden={view.kind === "lesson" || view.kind === "settled" || view.kind === "review"}
+      >
         <Stage cameraFrom={cameraFrom} lookAt={lookAt}>
           <Controls target={lookAt} />
           <Flight to={cameraFrom} look={lookAt} />
@@ -441,10 +482,38 @@ export function App() {
           unitId={view.unitId}
           lessonId={view.lessonId}
           onBack={() => setView({ kind: "course", studyId: view.studyId, courseId: view.courseId })}
+          onSettled={() =>
+            setView({
+              kind: "settled",
+              studyId: view.studyId,
+              courseId: view.courseId,
+              unitId: view.unitId,
+              lessonId: view.lessonId,
+            })
+          }
         />
       ) : null}
 
-      {view.kind === "review" ? <ReviewHost onDone={() => setView({ kind: "world" })} /> : null}
+      {view.kind === "settled" && course ? (
+        <SettlementHost
+          course={course}
+          studyId={view.studyId}
+          unitId={view.unitId}
+          lessonId={view.lessonId}
+          onMap={() => setView({ kind: "course", studyId: view.studyId, courseId: view.courseId })}
+          onNext={(unitId, lessonId) =>
+            setView({
+              kind: "lesson",
+              studyId: view.studyId,
+              courseId: view.courseId,
+              unitId,
+              lessonId,
+            })
+          }
+        />
+      ) : null}
+
+      {view.kind === "review" ? <ReviewHost onDone={() => setView(WORLD)} /> : null}
     </div>
   );
 }
@@ -455,12 +524,14 @@ function LessonReaderHost({
   unitId,
   lessonId,
   onBack,
+  onSettled,
 }: {
   course: Course;
   studyId: string;
   unitId: string;
   lessonId: string;
   onBack: () => void;
+  onSettled: () => void;
 }) {
   const unit = course.units.find((entry) => entry.id === unitId) ?? course.units[0]!;
   const lesson = unit.lessons.find((entry) => entry.id === lessonId) ?? unit.lessons[0]!;
@@ -486,9 +557,69 @@ function LessonReaderHost({
             lesson.id,
             lesson.cards.map((card) => card.id),
           );
+          // The reward is the point of the loop, so it gets its own screen
+          // rather than a line of green text under a text box.
+          onSettled();
         }}
       />
     </main>
+  );
+}
+
+/**
+ * Reads the reward out of real state rather than being handed it.
+ *
+ * The settlement runs after `advanceLesson` and `dropCards` have already
+ * committed, so everything it reports is what the store actually holds. A
+ * screen that took its numbers as props from the thing that produced them
+ * could congratulate a learner for a card that failed to save.
+ */
+function SettlementHost({
+  course,
+  studyId,
+  unitId,
+  lessonId,
+  onMap,
+  onNext,
+}: {
+  course: Course;
+  studyId: string;
+  unitId: string;
+  lessonId: string;
+  onMap: () => void;
+  onNext: (unitId: string, lessonId: string) => void;
+}) {
+  const progress = useSyncExternalStore(subscribe, snapshot);
+  const unit = course.units.find((entry) => entry.id === unitId) ?? course.units[0]!;
+  const lesson = unit.lessons.find((entry) => entry.id === lessonId) ?? unit.lessons[0]!;
+  const flat = course.units.flatMap((entry) =>
+    entry.lessons.map((item) => ({ unitId: entry.id, lesson: item })),
+  );
+  const index = flat.findIndex((entry) => entry.lesson.id === lesson.id);
+  const next = flat[index + 1] ?? null;
+
+  const prefix = `${studyId}/${course.id}/`;
+  const doneAfter = Object.entries(progress.lessons).filter(
+    ([key, entry]) => key.startsWith(prefix) && entry.progress >= 1,
+  ).length;
+
+  const dropped = lesson.cards
+    .map((card) => ({ card, state: progress.cards[`${prefix}${lesson.id}/${card.id}`] }))
+    .flatMap((entry) => (entry.state ? [{ card: entry.card, dueAt: entry.state.dueAt }] : []));
+
+  return (
+    <Settlement
+      lessonTitle={lesson.title}
+      courseTitle={course.title}
+      dropped={dropped}
+      doneBefore={doneAfter - 1}
+      doneAfter={doneAfter}
+      lessons={flat.length}
+      streakDays={progress.streak.days}
+      nextTitle={next?.lesson.title ?? null}
+      onNext={next ? () => onNext(next.unitId, next.lesson.id) : null}
+      onMap={onMap}
+    />
   );
 }
 
