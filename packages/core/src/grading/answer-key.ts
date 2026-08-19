@@ -31,6 +31,16 @@
  * poking at the page", not "adversary with a GPU".
  */
 
+const PUNCTUATION = /[.,;:!?'"`·。，、；：！？“”‘’（）()[\]{}]/g;
+
+/** Case and spacing never carry meaning. Punctuation sometimes does. */
+function squash(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[\s　]+/g, "");
+}
+
 /**
  * Case, spacing and punctuation carry no meaning in these answers.
  *
@@ -39,11 +49,28 @@
  * teaching keyboard habits rather than the subject.
  */
 export function normalise(text: string): string {
-  return text
-    .trim()
-    .toLowerCase()
-    .replace(/[\s　]+/g, "")
-    .replace(/[.,;:!?'"`·。，、；：！？“”‘’（）()[\]{}]/g, "");
+  return squash(text).replace(PUNCTUATION, "");
+}
+
+/**
+ * The same, except punctuation survives — because in a programming course it is
+ * sometimes the entire answer.
+ *
+ * `normalise` alone was silently destroying a whole class of correct answer.
+ * Six of the 673 exercises here ask what `...`, `??`, `?.`, `?` or `[]` do, and
+ * every one of those normalised to the empty string. An empty key fingerprints
+ * to a value that the substring scan then matches at every position, so those
+ * six exercises passed *any* answer a learner typed — while an empty answer,
+ * being caught earlier, was still refused. Writing nonsense scored better than
+ * writing nothing.
+ *
+ * Keeping both forms rather than choosing one: prose answers need punctuation
+ * gone (`due_at。` is `due_at`), symbol answers need it kept, and which kind an
+ * exercise is cannot be known from the fingerprint that ships in its place. So
+ * both are compiled and either may match.
+ */
+export function normaliseKeepingSymbols(text: string): string {
+  return squash(text);
 }
 
 /** FNV-1a over UTF-16 code units. Stable across Node and every browser. */
@@ -64,12 +91,24 @@ export interface AnswerKey {
   readonly fp: string;
   /** Length of the normalised answer, so a substring window can be sized. */
   readonly len: number;
+  /** The same for the form that keeps punctuation. Absent when identical. */
+  readonly symFp?: string;
+  readonly symLen?: number;
 }
 
 /** Build the key at import time, where the answer is still allowed to exist. */
 export function compileAnswerKey(expected: string): AnswerKey {
   const key = normalise(expected);
-  return { fp: fingerprint(key), len: key.length };
+  const symbols = normaliseKeepingSymbols(expected);
+  // Most answers contain no punctuation at all, and carrying a second identical
+  // fingerprint on every one of them would be bytes that say nothing.
+  if (symbols === key) return { fp: fingerprint(key), len: key.length };
+  return {
+    fp: fingerprint(key),
+    len: key.length,
+    symFp: fingerprint(symbols),
+    symLen: symbols.length,
+  };
 }
 
 export type Verdict =
@@ -81,22 +120,59 @@ export function gradeDeterministically(learnerAnswer: string, key: AnswerKey | u
   if (!key) {
     return { outcome: "undecided", tier: 1, reason: "这道题没有参考答案，只能交给上一层判。" };
   }
-  const answer = normalise(learnerAnswer);
-  if (answer.length === 0) {
+  if (normaliseKeepingSymbols(learnerAnswer).length === 0) {
     return { outcome: "undecided", tier: 1, reason: "先写下你的判断，再提交。" };
   }
-  if (answer.length === key.len && fingerprint(answer) === key.fp) {
-    return { outcome: "pass", tier: 1 };
+
+  // Two readings of the same answer: one with punctuation gone, one with it
+  // kept. An exercise is prose or it is syntax, and the key cannot say which,
+  // so whichever reading matches is the one that was meant.
+  const attempts: readonly {
+    readonly answer: string;
+    readonly fp: string;
+    readonly len: number;
+  }[] = [
+    { answer: normalise(learnerAnswer), fp: key.fp, len: key.len },
+    ...(key.symFp !== undefined && key.symLen !== undefined
+      ? [
+          {
+            answer: normaliseKeepingSymbols(learnerAnswer),
+            fp: key.symFp,
+            len: key.symLen,
+          },
+        ]
+      : []),
+  ];
+
+  // A key of length zero fingerprints to a value the window scan below finds at
+  // every position, which would pass any answer at all. It means the expected
+  // answer normalised away to nothing, so this reading of it decides nothing.
+  const usable = attempts.filter((attempt) => attempt.len > 0);
+  if (usable.length === 0) {
+    return {
+      outcome: "undecided",
+      tier: 1,
+      reason: "这道题的参考答案无法比对，只能交给上一层判。",
+    };
   }
 
-  if (key.len <= FACTUAL_LENGTH) {
+  for (const { answer, fp, len } of usable) {
+    if (answer.length === len && fingerprint(answer) === fp) {
+      return { outcome: "pass", tier: 1 };
+    }
+  }
+
+  const factual = usable.filter((attempt) => attempt.len <= FACTUAL_LENGTH);
+  if (factual.length > 0) {
     // A single fact, wrapped in a sentence, is still that fact. Without the
     // answer in hand this cannot be `includes`, so it slides a window of the
     // key's length and fingerprints each position — the same result, and cheap,
     // because it only runs for keys of twelve characters or fewer.
-    for (let start = 0; start + key.len <= answer.length; start += 1) {
-      if (fingerprint(answer.slice(start, start + key.len)) === key.fp) {
-        return { outcome: "pass", tier: 1 };
+    for (const { answer, fp, len } of factual) {
+      for (let start = 0; start + len <= answer.length; start += 1) {
+        if (fingerprint(answer.slice(start, start + len)) === fp) {
+          return { outcome: "pass", tier: 1 };
+        }
       }
     }
     return { outcome: "fail", tier: 1 };
@@ -112,6 +188,14 @@ export function gradeDeterministically(learnerAnswer: string, key: AnswerKey | u
 /** How much of a library tier one can actually settle, computed, not claimed. */
 export function coverage(keys: readonly (AnswerKey | undefined)[]) {
   const total = keys.length;
-  const decidable = keys.filter((key) => key !== undefined && key.len <= FACTUAL_LENGTH).length;
+  const decidable = keys.filter(
+    (key) =>
+      key !== undefined && decidableLength(key) > 0 && decidableLength(key) <= FACTUAL_LENGTH,
+  ).length;
   return { total, decidable, share: total === 0 ? 0 : decidable / total };
+}
+
+/** The length tier one actually compares against: the longer usable reading. */
+function decidableLength(key: AnswerKey): number {
+  return Math.max(key.len, key.symLen ?? 0);
 }

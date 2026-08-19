@@ -42,6 +42,7 @@ import {
   CourseScene,
   placeCourse,
   placeWorld,
+  settlementSize,
   WorldScene,
   type LessonPlacement,
   type Marker,
@@ -222,6 +223,11 @@ export function App() {
   const [course, setCourse] = useState<Course | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [picked, setPicked] = useState<CourseNode | null>(null);
+  // How many lessons were finished the moment a lesson was passed. Held here
+  // rather than derived later, and deliberately absent when the settlement is
+  // reached by its own URL — arriving at `/done` from a bookmark is not
+  // evidence that anything just grew, so that screen stays quiet about the map.
+  const [grewFrom, setGrewFrom] = useState<{ key: string; doneBefore: number } | null>(null);
 
   useEffect(() => {
     if (!hasContent) return;
@@ -482,21 +488,23 @@ export function App() {
           unitId={view.unitId}
           lessonId={view.lessonId}
           onBack={() => setView({ kind: "course", studyId: view.studyId, courseId: view.courseId })}
-          onSettled={() =>
+          onSettled={(doneBefore) => {
+            setGrewFrom({ key: `${view.studyId}/${view.courseId}/${view.lessonId}`, doneBefore });
             setView({
               kind: "settled",
               studyId: view.studyId,
               courseId: view.courseId,
               unitId: view.unitId,
               lessonId: view.lessonId,
-            })
-          }
+            });
+          }}
         />
       ) : null}
 
       {view.kind === "settled" && course ? (
         <SettlementHost
           course={course}
+          grewFrom={grewFrom}
           studyId={view.studyId}
           unitId={view.unitId}
           lessonId={view.lessonId}
@@ -531,7 +539,7 @@ function LessonReaderHost({
   unitId: string;
   lessonId: string;
   onBack: () => void;
-  onSettled: () => void;
+  onSettled: (doneBefore: number) => void;
 }) {
   const unit = course.units.find((entry) => entry.id === unitId) ?? course.units[0]!;
   const lesson = unit.lessons.find((entry) => entry.id === lessonId) ?? unit.lessons[0]!;
@@ -548,6 +556,14 @@ function LessonReaderHost({
         onBack={onBack}
         onPass={() => {
           const key = lessonKey(studyId, course.id, lesson.id);
+          // Counted before the write, because that is the only moment the
+          // previous number exists. Deriving it afterwards as `done - 1` was
+          // wrong on a lesson finished twice: the count does not move, but the
+          // subtraction invented a step and the settlement announced growth the
+          // map had not made.
+          const doneBefore = Object.entries(snapshot().lessons).filter(
+            ([at, entry]) => at.startsWith(`${studyId}/${course.id}/`) && entry.progress >= 1,
+          ).length;
           advanceLesson(key, 1);
           // The drop is the reason to come back tomorrow, so it happens the
           // moment the lesson is passed rather than on some later screen.
@@ -559,7 +575,7 @@ function LessonReaderHost({
           );
           // The reward is the point of the loop, so it gets its own screen
           // rather than a line of green text under a text box.
-          onSettled();
+          onSettled(doneBefore);
         }}
       />
     </main>
@@ -576,6 +592,7 @@ function LessonReaderHost({
  */
 function SettlementHost({
   course,
+  grewFrom,
   studyId,
   unitId,
   lessonId,
@@ -583,6 +600,7 @@ function SettlementHost({
   onNext,
 }: {
   course: Course;
+  grewFrom: { key: string; doneBefore: number } | null;
   studyId: string;
   unitId: string;
   lessonId: string;
@@ -607,14 +625,24 @@ function SettlementHost({
     .map((card) => ({ card, state: progress.cards[`${prefix}${lesson.id}/${card.id}`] }))
     .flatMap((entry) => (entry.state ? [{ card: entry.card, dueAt: entry.state.dueAt }] : []));
 
+  // Both counts go through the map's own measurement, so the sentence about the
+  // island can only say what the island did. With no observed "before" — a
+  // reload, a shared link — they are equal and the screen says nothing.
+  const doneBefore =
+    grewFrom?.key === `${studyId}/${course.id}/${lesson.id}` ? grewFrom.doneBefore : doneAfter;
+  const lessons = flat.length;
+  const grown = (done: number) =>
+    lessons > 0 ? settlementSize(studyId, course.id, lessons, done / lessons).built : 0;
+
   return (
     <Settlement
       lessonTitle={lesson.title}
       courseTitle={course.title}
       dropped={dropped}
-      doneBefore={doneAfter - 1}
+      builtBefore={grown(doneBefore)}
+      builtAfter={grown(doneAfter)}
       doneAfter={doneAfter}
-      lessons={flat.length}
+      lessons={lessons}
       streakDays={progress.streak.days}
       nextTitle={next?.lesson.title ?? null}
       onNext={next ? () => onNext(next.unitId, next.lesson.id) : null}

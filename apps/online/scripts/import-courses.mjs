@@ -86,6 +86,8 @@ rmSync(contentRoot, { recursive: true, force: true });
 mkdirSync(join(contentRoot, "assets"), { recursive: true });
 
 let keysCompiled = 0;
+/** Keys with nothing left to compare, reported at the end rather than shipped. */
+const unusableKeys = [];
 const manifest = { importedAt: new Date().toISOString().slice(0, 10), studies: [] };
 let assetCount = 0;
 let assetBytes = 0;
@@ -121,8 +123,17 @@ for (const studyId of readdirSync(upstream).sort()) {
         // people pay for was giving it away. What ships now is a fingerprint.
         for (const exercise of lesson.exercises ?? []) {
           if (typeof exercise.expectedAnswer === "string") {
-            exercise.answerKey = compileAnswerKey(exercise.expectedAnswer);
+            const key = compileAnswerKey(exercise.expectedAnswer);
+            exercise.answerKey = key;
             keysCompiled += 1;
+            // A key with nothing left to compare cannot decide anything, and
+            // before this check it decided everything: the empty fingerprint
+            // matched at every position and the exercise passed any answer at
+            // all. Reported here because a build is where it can still be
+            // fixed, and because six exercises shipped like that unnoticed.
+            if (Math.max(key.len, key.symLen ?? 0) === 0) {
+              unusableKeys.push(`${studyId}/${course.id}/${lesson.id}`);
+            }
           }
           delete exercise.expectedAnswer;
           delete exercise.rubric;
@@ -233,3 +244,12 @@ console.log(
     `was ${(inlineBytes / 1048576).toFixed(1)} MB inline), ` +
     `${lexiconSenses} lexicon senses bundled.`,
 );
+
+if (unusableKeys.length > 0) {
+  console.warn(
+    `\nimport-courses: ${unusableKeys.length} answer key(s) have nothing left to compare.\n` +
+      `These exercises cannot be graded at tier one and will ask tier two instead:\n` +
+      unusableKeys.map((where) => `  \u00b7 ${where}`).join("\n") +
+      `\nUsually the expected answer is punctuation the normaliser removes. Fix it upstream.\n`,
+  );
+}

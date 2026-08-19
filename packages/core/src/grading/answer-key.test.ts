@@ -48,4 +48,45 @@ describe("the answer never ships", () => {
     const keys = [compileAnswerKey("图灵密约"), compileAnswerKey("一".repeat(30)), undefined];
     expect(coverage(keys)).toEqual({ total: 3, decidable: 1, share: 1 / 3 });
   });
+
+  /**
+   * These six strings are the real expected answers of six real exercises in
+   * this library, not invented cases. Every one of them is punctuation, because
+   * the lesson is teaching syntax — and stripping punctuation left an empty key
+   * whose fingerprint the substring scan matched at every position, so all six
+   * passed whatever a learner typed.
+   */
+  describe("an answer that is punctuation", () => {
+    const SYNTAX = ["...", "??", "?", "?.", "[]", "=>"] as const;
+
+    it.each(SYNTAX)("accepts %s and refuses something else", (expected) => {
+      const key = compileAnswerKey(expected);
+      expect(gradeDeterministically(expected, key).outcome).toBe("pass");
+      expect(gradeDeterministically("随便写点什么", key).outcome).toBe("fail");
+    });
+
+    it("still accepts the symbol inside a sentence", () => {
+      const key = compileAnswerKey("...");
+      expect(gradeDeterministically("用 ... 把旧对象展开", key).outcome).toBe("pass");
+    });
+
+    it("tolerates a trailing full stop the way prose answers do", () => {
+      const key = compileAnswerKey("??");
+      expect(gradeDeterministically("??。", key).outcome).toBe("pass");
+    });
+
+    it("never passes an answer whose key normalised away entirely", () => {
+      // `　` is a full-width space: whitespace under both readings, so
+      // neither form of the key has anything left to compare.
+      const key = compileAnswerKey("　 ");
+      expect(key.len).toBe(0);
+      expect(gradeDeterministically("随便写点什么", key).outcome).toBe("undecided");
+    });
+
+    it("keeps punctuation out of the way when the answer is prose", () => {
+      const key = compileAnswerKey("图灵密约");
+      expect(key.symFp).toBeUndefined();
+      expect(gradeDeterministically("图灵密约。", key).outcome).toBe("pass");
+    });
+  });
 });

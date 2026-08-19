@@ -32,26 +32,26 @@ function whenDue(dueAt: number, now = Date.now()): string {
 /**
  * What the island gained, in the same words the map uses.
  *
- * The bands match `dress()` in Maps.tsx: nature is always there, the settlement
- * is what progress owns, and the hall only appears when the course is finished.
- * Saying "多了一间房子" when no house appeared would be the reward lying, so the
- * thresholds are the same numbers the world is drawn from.
+ * The counts arrive already measured, from the same function `dress()` draws
+ * with. They used to be recomputed here from the lesson count against `0.45`,
+ * while the map applied `0.45` to the island's *slot* count — a different
+ * number derived from its radius. The two agreed by coincidence and disagreed
+ * whenever a course's lesson count and island size pulled apart, so this screen
+ * could announce a house that never appeared. A reward that lies is worse than
+ * one that stays quiet, which is also why `null` is a normal answer here.
  */
-function whatGrew(before: number, after: number, lessons: number): string | null {
-  if (lessons <= 0) return null;
-  if (after >= 1) return "这座岛建成了 —— 村子中央立起了会堂。";
-  const claim = Math.max(1, Math.round(lessons * 0.45));
-  const built = (fraction: number) => Math.round(fraction * claim);
-  if (built(after) <= built(before)) return null;
-  const first = built(before) === 0;
-  return first ? "岛上开出了第一块地，井挖好了。" : "岛上又立起了一间房子。";
+function whatGrew(builtBefore: number, builtAfter: number, complete: boolean): string | null {
+  if (complete) return "这座岛建成了 —— 村子中央立起了会堂。";
+  if (builtAfter <= builtBefore) return null;
+  return builtBefore === 0 ? "岛上开出了第一块地，井挖好了。" : "岛上又立起了一间房子。";
 }
 
 export function Settlement({
   lessonTitle,
   courseTitle,
   dropped,
-  doneBefore,
+  builtBefore,
+  builtAfter,
   doneAfter,
   lessons,
   streakDays,
@@ -63,7 +63,9 @@ export function Settlement({
   courseTitle: string;
   /** The cards this lesson just dropped, with the schedule FSRS gave them. */
   dropped: readonly { readonly card: Card; readonly dueAt: number }[];
-  doneBefore: number;
+  /** Buildings on this island before and after, measured by the map itself. */
+  builtBefore: number;
+  builtAfter: number;
   doneAfter: number;
   lessons: number;
   streakDays: number;
@@ -75,7 +77,7 @@ export function Settlement({
     (best, entry) => (best === null || entry.dueAt < best ? entry.dueAt : best),
     null as number | null,
   );
-  const grew = whatGrew(doneBefore / lessons, doneAfter / lessons, lessons);
+  const grew = whatGrew(builtBefore, builtAfter, lessons > 0 && doneAfter >= lessons);
 
   return (
     <main className="settle">

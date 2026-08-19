@@ -168,10 +168,12 @@ export function placeWorld(nodes: readonly CourseNode[], progressOf: (node: Cour
  */
 function dress(entry: WorldPlacement) {
   const random = seeded(`${entry.node.studyId}/${entry.node.courseId}/dress`);
-  const { slots } = shapeOf(entry);
-  const ordered = [...slots].sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
-  const claim = Math.max(1, Math.round(ordered.length * 0.45));
-  const built = Math.round(entry.progress * claim);
+  const { ordered, claim, built } = settlementSize(
+    entry.node.studyId,
+    entry.node.courseId,
+    entry.node.lessons,
+    entry.progress,
+  );
 
   const out = new Map<Role, Placement[]>();
   const push = (role: Role, at: Placement) => {
@@ -224,14 +226,42 @@ function dress(entry: WorldPlacement) {
 
 /** Island geometry is expensive enough to be worth keeping between renders. */
 const shapes = new Map<string, ReturnType<typeof buildIsland>>();
-function shapeOf(entry: WorldPlacement) {
-  const key = `${entry.node.studyId}/${entry.node.courseId}/${entry.radius.toFixed(2)}`;
+
+/** Slots nearest the middle first: the order the settlement fills in. */
+function settlementSlots(studyId: string, courseId: string, radius: number) {
+  const { slots } = shapeOf(studyId, courseId, radius);
+  return [...slots].sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
+}
+
+/**
+ * How much of one island is built, at a given progress.
+ *
+ * Exported because the settlement screen tells the learner what just grew, and
+ * it was answering that from its own arithmetic — `lessons * 0.45` against the
+ * lesson count, while the map used `0.45` against the *slot* count, which comes
+ * from the island's radius. The two agreed only by coincidence. A reward screen
+ * that claims a house appeared where none did is worse than one that says
+ * nothing, so both now ask the same function.
+ */
+export function settlementSize(
+  studyId: string,
+  courseId: string,
+  lessons: number,
+  progress: number,
+) {
+  const ordered = settlementSlots(studyId, courseId, radiusForLessons(lessons));
+  const claim = Math.max(1, Math.round(ordered.length * 0.45));
+  return { ordered, claim, built: Math.round(progress * claim) };
+}
+
+function shapeOf(studyId: string, courseId: string, radius: number) {
+  const key = `${studyId}/${courseId}/${radius.toFixed(2)}`;
   const found = shapes.get(key);
   if (found) return found;
   // A gentle hue shift per study, so four studies are four places without the
   // world turning into four unrelated colour schemes.
-  const tint = (hash(entry.node.studyId) - 0.5) * 0.14;
-  const made = buildIsland(`${entry.node.studyId}/${entry.node.courseId}`, entry.radius, tint);
+  const tint = (hash(studyId) - 0.5) * 0.14;
+  const made = buildIsland(`${studyId}/${courseId}`, radius, tint);
   shapes.set(key, made);
   return made;
 }
@@ -245,7 +275,7 @@ function Island({
   onClick: () => void;
   onOver: (over: boolean) => void;
 }) {
-  const shape = shapeOf(entry);
+  const shape = shapeOf(entry.node.studyId, entry.node.courseId, entry.radius);
   const locked = entry.state === "idle";
   return (
     <group position={entry.position}>
