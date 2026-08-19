@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-reading-rust-option",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-reading-rust",
+    "unitId": "rust-structures",
+    "id": "option-channel-id",
+    "expectedRevision": 1,
+    "title": "为什么 channel_id 要用 Option<Uuid> 而不是永远填一个 UUID？",
+    "content": "# 为什么 channel_id 要用 Option<Uuid> 而不是永远填一个 UUID？\n\n## 两个东西\n\n你在 `StoredEvent` 里看到的不是一个强制存在的 `Uuid`，而是 `Option<Uuid>`。`Some(id)` 表示事件有频道范围，`None` 则留下一个明确的“这里没有频道 UUID”的状态。\n\n[[evidence:crates/buzz-core/src/event.rs:14-18]]\n\n## 先猜一下\n\n如果全局事件、DM 和频道事件都共用一个字段，你会用特殊 UUID 代表“没有频道”，还是让类型直接表达有与无？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\nBuzz 选择 `Option<Uuid>`，让“有频道”和“没有频道”成为两个可以被 Rust 区分的分支，而不是把特殊值混进真实 UUID。\n\n## 逐条对照\n\n第一种状态是 `Some(id)`：构造函数接收一个实际频道 ID，并把它保存到 channel_id。第二种状态是 `None`：调用方明确告诉结构体这个事件没有频道范围。你读到 `Option` 时，先问“缺少是合法状态还是错误”，在这里缺少是合法建模。\n\n[[evidence:crates/buzz-core/src/event.rs:21-29]]\n\n这两个状态还会被后续过滤和持久化逻辑区别对待；因此用 Option 比约定某个全零 UUID 更能让调用方处理边界。`with_received_at` 也沿用同一个参数形状，说明时间不同并不改变频道范围的表达。\n\n[[evidence:crates/buzz-core/src/event.rs:37-49]]\n\n## 什么时候用哪个\n\n事件属于具体频道时传 `Some(channel_id)`；全局或 DM 事件没有频道 UUID 时传 `None`。你不要把 `None` 自动翻译成“验证失败”，它只描述 scope 是否存在。\n\n## 自检\n\n- `Some(Uuid)` 与 `None` 分别表达什么？\n- 为什么特殊 UUID 不如 Option 清楚？\n\n## 一句话\n\n**Option<Uuid> 把频道范围的有无写进类型，让全局事件和频道事件不必共享伪造的 UUID。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 14, "lineEnd": 18, "note": "channel_id 被定义为 Option<Uuid>，并说明 None 的含义。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 21, "lineEnd": 29, "note": "new 接收 Option<Uuid> 并把频道范围写入 StoredEvent。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 37, "lineEnd": 49, "note": "两个构造函数都接收 Option<Uuid> 的频道参数。" }
+    ],
+    "cards": [
+      { "id": "rust-channel-some", "expectedRevision": 1, "front": "channel_id 为 Some 时表示什么？", "back": "表示 StoredEvent 有一个具体频道范围，Some 中装着该频道的 UUID。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 14, "lineEnd": 18, "note": "字段类型和注释说明频道 scope。" } ] },
+      { "id": "rust-channel-none", "expectedRevision": 1, "front": "channel_id 为 None 时表示什么？", "back": "表示事件没有频道 UUID，例如全局或 DM 范围；它不是验证失败。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 14, "lineEnd": 18, "note": "注释明确说 None 用于 global/DM events。" } ] }
+    ],
+    "exercises": [
+      { "id": "rust-option-scope", "expectedRevision": 1, "kind": "short-answer", "title": "解释 Option scope", "prompt": "为什么 channel_id 的缺失在这里是合法状态？", "expectedAnswer": "因为全局或 DM 事件本来就没有频道 UUID", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 14, "lineEnd": 18, "note": "字段注释把 None 定义为 global/DM events。" } ] },
+      { "id": "rust-option-construction", "expectedRevision": 1, "kind": "short-answer", "title": "回忆参数形状", "prompt": "new 和 with_received_at 都用什么类型接收频道范围？", "expectedAnswer": "Option<Uuid>", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-core/src/event.rs", "lineStart": 21, "lineEnd": 43, "note": "两个构造函数的 channel_id 参数都是 Option<Uuid>。" } ] }
+    ]
+  }
+}

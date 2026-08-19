@@ -1,0 +1,357 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "rebind-founder-engineer-c9f0ec8d",
+  "targetSnapshotId": "git-c9f0ec8d57a1",
+  "targetAnalysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+  "lesson": {
+    "courseId": "founder-engineer",
+    "unitId": "narrative-authority",
+    "id": "story-direction",
+    "expectedRevision": 1,
+    "title": "谁控制故事方向？",
+    "content": "# 谁控制 SupaLuv 的故事方向？\n\n## 学习目标\n\n完成本课后，你应能解释 SupaLuv 如何把作者主线与受约束 AI 支线组合起来，并指出 React、Ink、Mastra 与 SwimmerAIKit 各自承担的边界。\n\n前置知识：理解前端界面、剧情运行时与生成式模型服务是不同层次即可。\n\n## 先给结论\n\n- **事实：Ink 拥有作者主线。** README 把 Ink / InkJS 定义为“作者主线剧情”；`InkStoryRunner` 保存和推进 Ink 状态，并可在 AI 支线结束后用 `jumpTo` 回到作者路径。\n- **事实：AI 只生成有限支线。** 浏览器契约要求结果同时带有 `beats` 和 `rejoinSceneId`；服务端 schema 把 beats 限制在 1–4 个，返回时仍使用作者配置的回归点。\n- **事实：React 是交互外壳。** README 把 React + Vite + TypeScript 定义为 Web 应用与界面，而不是剧情权威来源。\n- **事实：Mastra + SwimmerAIKit 承担受约束生成。** Mastra Agent 组织生成流程，模型传输由 SwimmerAIKit 模型配置承接，结果再经 schema、长度与素材池约束。\n- **推论：方向权属于作者态，而不属于模型。** 这是由上述代码边界推出的架构结论：AI 可以扩写局部体验，但不能任意改写主线拓扑。\n\n## 一个类比\n\n把故事想成一条有调度中心的铁路：Ink 是铺好的主线轨道，React 是乘客看到的车厢与站台，Mastra + SwimmerAIKit 可以安排一段观光支线；`rejoinSceneId` 是预先批准的并轨站，最多 4 个 beats 是支线里程上限。列车可以绕行，但不能自行改写终点。\n\n## 工作示例\n\n1. 玩家在 React 界面选择一个 AI 选项。\n2. 请求带上作者配置的 `rejoinSceneId` 与 `maxAiBeats`。\n3. Mastra 调用由 SwimmerAIKit 模型配置承接的模型通道。\n4. 服务把输出解析为结构化结果，将 beats 限制为最多 4 个，并保留作者指定的回归点。\n5. 支线播放完毕后，`InkStoryRunner.jumpTo(rejoinSceneId)` 回到作者主线。\n\n## 自检\n\n如果模型返回 7 个 beats 并建议一个新的结局，系统应接受什么？\n\n答案：只接受约束后的最多 4 个 beats；回归点仍来自作者配置，不能让模型自行发明主线方向。\n\n## 证据账本\n\n- 快照：`git-feeb848f1e3b`\n- 源提交：`feeb848f1e3b91ca13f6e222290b70a4ee74e11a`\n- UA 分析：`ua-feeb848f-v294-zh-full`\n- 图哈希：`sha256:45275fe43a6fe2a82c5c88237e74d4a7801263af983ea53fe22abad973c5eca1`\n- `README.md:3-26`\n- `apps/web/src/story/inkStoryRunner.ts:123-219`\n- `apps/web/src/ai/aiBranchTypes.ts:12-40`\n- `services/ai-branch/src/branch/mastraBranch.ts:15-19,42-64,146-164`\n",
+    "evidence": [
+      {
+        "kind": "fact",
+        "snapshotId": "git-c9f0ec8d57a1",
+        "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+        "sourcePath": "README.md",
+        "lineStart": 3,
+        "lineEnd": 26,
+        "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+        "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+        "nodeIds": [
+          "document:README.md"
+        ],
+        "note": "产品边界与 React、Ink、Mastra、SwimmerAIKit 技术基线。"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-c9f0ec8d57a1",
+        "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+        "sourcePath": "apps/web/src/story/inkStoryRunner.ts",
+        "lineStart": 123,
+        "lineEnd": 219,
+        "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+        "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+        "nodeIds": [
+          "file:apps/web/src/story/inkStoryRunner.ts",
+          "class:apps/web/src/story/inkStoryRunner.ts:InkStoryRunner"
+        ],
+        "note": "Ink 运行器保存作者态，并在受约束 AI 支线结束后跳回作者路径。"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-c9f0ec8d57a1",
+        "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+        "sourcePath": "apps/web/src/ai/aiBranchTypes.ts",
+        "lineStart": 12,
+        "lineEnd": 40,
+        "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+        "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+        "nodeIds": [
+          "file:apps/web/src/ai/aiBranchTypes.ts"
+        ],
+        "note": "AI 支线结果契约同时包含 beats 与 rejoinSceneId。"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-c9f0ec8d57a1",
+        "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+        "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+        "lineStart": 15,
+        "lineEnd": 19,
+        "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+        "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+        "nodeIds": [
+          "file:services/ai-branch/src/branch/mastraBranch.ts"
+        ],
+        "note": "结构化输出 schema 把 beats 限制为 1 到 4 个并要求回归点。"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-c9f0ec8d57a1",
+        "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+        "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+        "lineStart": 42,
+        "lineEnd": 64,
+        "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+        "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+        "nodeIds": [
+          "file:services/ai-branch/src/branch/mastraBranch.ts",
+          "function:services/ai-branch/src/branch/mastraBranch.ts:generateAiBranchWithMastra"
+        ],
+        "note": "Mastra 生成函数使用 SwimmerAIKit 模型配置并夹紧支线节拍上限。"
+      },
+      {
+        "kind": "fact",
+        "snapshotId": "git-c9f0ec8d57a1",
+        "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+        "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+        "lineStart": 146,
+        "lineEnd": 164,
+        "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+        "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+        "nodeIds": [
+          "file:services/ai-branch/src/branch/mastraBranch.ts",
+          "function:services/ai-branch/src/branch/mastraBranch.ts:generateAiBranchWithMastra"
+        ],
+        "note": "服务解析、裁剪输出，并返回由作者配置提供的 rejoinSceneId。"
+      }
+    ],
+    "cards": [
+      {
+        "id": "ink-authority",
+        "expectedRevision": 1,
+        "kind": "basic",
+        "front": "SupaLuv 的作者主线由什么技术持有？",
+        "back": "Ink / InkJS。InkStoryRunner 保存并推进作者态，受约束 AI 支线结束后通过 jumpTo 回到作者路径。",
+        "tags": [
+          "narrative",
+          "ink"
+        ],
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "README.md",
+            "lineStart": 3,
+            "lineEnd": 26,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "document:README.md"
+            ],
+            "note": "产品边界与 React、Ink、Mastra、SwimmerAIKit 技术基线。"
+          },
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "apps/web/src/story/inkStoryRunner.ts",
+            "lineStart": 123,
+            "lineEnd": 219,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "file:apps/web/src/story/inkStoryRunner.ts",
+              "class:apps/web/src/story/inkStoryRunner.ts:InkStoryRunner"
+            ],
+            "note": "Ink 运行器保存作者态，并在受约束 AI 支线结束后跳回作者路径。"
+          }
+        ]
+      },
+      {
+        "id": "ai-branch-rejoin",
+        "expectedRevision": 1,
+        "kind": "basic",
+        "front": "AI 支线靠哪两个约束回到作者主线？",
+        "back": "结果必须携带作者配置的 rejoinSceneId，beats 最多 4 个；服务解析并裁剪后仍返回该回归点。",
+        "tags": [
+          "narrative",
+          "ai-branch"
+        ],
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "apps/web/src/ai/aiBranchTypes.ts",
+            "lineStart": 12,
+            "lineEnd": 40,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "file:apps/web/src/ai/aiBranchTypes.ts"
+            ],
+            "note": "AI 支线结果契约同时包含 beats 与 rejoinSceneId。"
+          },
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+            "lineStart": 15,
+            "lineEnd": 19,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "file:services/ai-branch/src/branch/mastraBranch.ts"
+            ],
+            "note": "结构化输出 schema 把 beats 限制为 1 到 4 个并要求回归点。"
+          },
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+            "lineStart": 42,
+            "lineEnd": 64,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "file:services/ai-branch/src/branch/mastraBranch.ts",
+              "function:services/ai-branch/src/branch/mastraBranch.ts:generateAiBranchWithMastra"
+            ],
+            "note": "Mastra 生成函数使用 SwimmerAIKit 模型配置并夹紧支线节拍上限。"
+          },
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+            "lineStart": 146,
+            "lineEnd": 164,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "file:services/ai-branch/src/branch/mastraBranch.ts",
+              "function:services/ai-branch/src/branch/mastraBranch.ts:generateAiBranchWithMastra"
+            ],
+            "note": "服务解析、裁剪输出，并返回由作者配置提供的 rejoinSceneId。"
+          }
+        ]
+      },
+      {
+        "id": "react-interaction-shell",
+        "expectedRevision": 1,
+        "kind": "basic",
+        "front": "React 在 SupaLuv 叙事架构中的职责是什么？",
+        "back": "React + Vite + TypeScript 是 Web 应用与交互界面外壳；作者主线权威属于 Ink，而不是 React。",
+        "tags": [
+          "architecture",
+          "react"
+        ],
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "README.md",
+            "lineStart": 3,
+            "lineEnd": 26,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "document:README.md"
+            ],
+            "note": "产品边界与 React、Ink、Mastra、SwimmerAIKit 技术基线。"
+          }
+        ]
+      },
+      {
+        "id": "constrained-ai-generation",
+        "expectedRevision": 1,
+        "kind": "basic",
+        "front": "Mastra + SwimmerAIKit 在 AI 支线中承担什么职责？",
+        "back": "Mastra 组织受约束生成，SwimmerAIKit 模型配置承接模型传输；输出还要经过 schema、最多 4 beats、素材池和 rejoinSceneId 约束。",
+        "tags": [
+          "architecture",
+          "mastra"
+        ],
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "README.md",
+            "lineStart": 3,
+            "lineEnd": 26,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "document:README.md"
+            ],
+            "note": "产品边界与 React、Ink、Mastra、SwimmerAIKit 技术基线。"
+          },
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+            "lineStart": 15,
+            "lineEnd": 19,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "file:services/ai-branch/src/branch/mastraBranch.ts"
+            ],
+            "note": "结构化输出 schema 把 beats 限制为 1 到 4 个并要求回归点。"
+          },
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+            "lineStart": 42,
+            "lineEnd": 64,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "file:services/ai-branch/src/branch/mastraBranch.ts",
+              "function:services/ai-branch/src/branch/mastraBranch.ts:generateAiBranchWithMastra"
+            ],
+            "note": "Mastra 生成函数使用 SwimmerAIKit 模型配置并夹紧支线节拍上限。"
+          },
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "services/ai-branch/src/branch/mastraBranch.ts",
+            "lineStart": 146,
+            "lineEnd": 164,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "file:services/ai-branch/src/branch/mastraBranch.ts",
+              "function:services/ai-branch/src/branch/mastraBranch.ts:generateAiBranchWithMastra"
+            ],
+            "note": "服务解析、裁剪输出，并返回由作者配置提供的 rejoinSceneId。"
+          }
+        ]
+      }
+    ],
+    "exercises": [
+      {
+        "id": "story-authority-recall",
+        "expectedRevision": 1,
+        "title": "回忆作者主线引擎",
+        "prompt": "填写一个小写英文单词：SupaLuv 中拥有作者主线权威的剧情技术是什么？",
+        "evidence": [
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "README.md",
+            "lineStart": 3,
+            "lineEnd": 26,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "document:README.md"
+            ],
+            "note": "产品边界与 React、Ink、Mastra、SwimmerAIKit 技术基线。"
+          },
+          {
+            "kind": "fact",
+            "snapshotId": "git-c9f0ec8d57a1",
+            "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+            "sourcePath": "apps/web/src/story/inkStoryRunner.ts",
+            "lineStart": 123,
+            "lineEnd": 219,
+            "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+            "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+            "nodeIds": [
+              "file:apps/web/src/story/inkStoryRunner.ts",
+              "class:apps/web/src/story/inkStoryRunner.ts:InkStoryRunner"
+            ],
+            "note": "Ink 运行器保存作者态，并在受约束 AI 支线结束后跳回作者路径。"
+          }
+        ],
+        "kind": "short-answer",
+        "expectedAnswer": "ink"
+      }
+    ]
+  }
+}

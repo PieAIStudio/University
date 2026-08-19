@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-agents-goose",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-agents-as-members",
+    "unitId": "agent-harness",
+    "id": "goose-and-codex-args",
+    "expectedRevision": 1,
+    "title": "为什么 Goose 和 Codex 的启动参数不能一概而论？",
+    "content": "# 为什么 Goose 和 Codex 的启动参数不能一概而论？\n\n## 两个东西\n\n你在 `default_agent_args` 里会看到 Goose 默认追加 `acp`，而 codex、codex-acp、claude 相关命令和 buzz-agent 默认使用空参数。前面的 normalize 函数还会处理路径、大小写和 `.exe`、`.cmd`、`.bat` 后缀。你在配置自己的 runtime 时，先确认它归一化后的 identity。\n\n[[evidence:crates/buzz-acp/src/config.rs:672-701]]\n\n## 先猜一下\n\n如果所有 ACP host 都接受同一套 argv，配置是不是可以只写一个默认数组？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不能直接假设。不同 runtime 的命令入口不同，配置先归一化 command identity，再按 identity 选择默认 args。\n\n## 逐条对照\n\nGoose 的命令行需要 `acp` 子命令，所以默认参数是 `vec![acp]`；Codex、Claude ACP 变体和 buzz-agent 已经把 ACP 作为自身入口，默认参数为空。未知 command 返回 None，让配置或调用方提供明确行为。\n\n[[evidence:crates/buzz-acp/src/config.rs:694-701]]\n\n这是一层启动适配，不等于它们的 prompt 或会话语义完全相同。你还要结合 session_new_full 的 system prompt 分支，看 runtime 对 system role 的支持差异。\n\n[[evidence:crates/buzz-acp/src/pool.rs:894-955]]\n\n## 什么时候用哪个\n\n配置一个已知 runtime 时使用源码对应的 normalized identity 和默认 args；新增 runtime 时先确认它的命令入口、扩展请求和 system prompt 能力，再决定是否加入匹配表。\n\n## 自检\n\n- normalize_agent_command_identity 解决哪些命令形态差异？\n- Goose 与 Codex 默认 args 的核心区别是什么？\n\n## 一句话\n\n**启动参数按 runtime identity 适配，Goose 需要 `acp`，其他已知 ACP 入口默认不追加参数。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/config.rs", "lineStart": 672, "lineEnd": 701, "note": "配置先归一化命令 identity，再按 runtime 选择默认参数。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/pool.rs", "lineStart": 894, "lineEnd": 955, "note": "session 初始化还根据 Goose 与协议版本选择 system prompt transport。" }
+    ],
+    "cards": [
+      { "id": "agent-goose-args", "expectedRevision": 1, "front": "Goose 的默认 agent args 是什么？", "back": "`vec![acp]`，也就是追加 `acp` 子命令。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/config.rs", "lineStart": 694, "lineEnd": 698, "note": "default_agent_args 对 goose 返回 acp。" } ] },
+      { "id": "agent-codex-args", "expectedRevision": 1, "front": "Codex 和 buzz-agent 的默认 args 怎样？", "back": "默认是空 Vec，因为这些命令本身已作为 ACP 入口。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/config.rs", "lineStart": 694, "lineEnd": 700, "note": "codex、claude 变体和 buzz-agent 匹配 Some(Vec::new())。" } ] }
+    ],
+    "exercises": [
+      { "id": "agent-runtime-normalize", "expectedRevision": 1, "kind": "short-answer", "title": "说明命令归一化", "prompt": "normalize_agent_command_identity 会处理哪些常见差异？", "expectedAnswer": "路径分隔符、末尾 slash、大小写，以及 exe/cmd/bat 后缀与空格/下划线", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/config.rs", "lineStart": 672, "lineEnd": 691, "note": "归一化函数逐步处理这些命令形态。" } ] },
+      { "id": "agent-runtime-args", "expectedRevision": 1, "kind": "short-answer", "title": "判断 Goose 参数", "prompt": "command identity 是 goose 时，默认参数列表包含什么？", "expectedAnswer": "acp", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/config.rs", "lineStart": 694, "lineEnd": 698, "note": "Goose 分支返回 acp 参数。" } ] }
+    ]
+  }
+}

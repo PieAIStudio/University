@@ -1,0 +1,1275 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-local-first-boundaries",
+  "targetSnapshotId": "git-90cf76c1177f",
+  "targetAnalysisId": "ua-90cf76c1-v2-9-4-zh-full-e98206c7358f1ff1-8b71aac3ba92",
+  "course": {
+    "id": "local-first-boundaries",
+    "title": "「资料仅在本机」不是一句口号",
+    "description": "本地优先要真成立，必须同时做到：服务只听 loopback、写状态带进程内 request token、渲染课文时不让外部图片自动出网。缺一层，口号就是假的。证据来自 UniversityLocal 自身冻结副本。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "指出 HTTP 入口如何把监听绑在 127.0.0.1，并用 Host 校验挡住非 loopback 请求",
+      "说明 requestToken 的生成、下发与 requireMutationAccess 三关如何保护写状态",
+      "解释 Markdown 渲染层为何拦截外部图片却允许带 noreferrer 的外链",
+      "用三层清单验收「资料仅在本机」：传输、写状态、渲染缺一不可"
+    ],
+    "units": [
+      {
+        "id": "loopback-only-service",
+        "title": "服务只听本机",
+        "objective": "掌握绑定地址、Host 校验、Origin 与安全响应头如何构成传输层边界",
+        "lessons": [
+          {
+            "id": "listen-binds-loopback",
+            "title": "服务只绑 127.0.0.1",
+            "content": "# 服务只绑 127.0.0.1\n\n## 学习目标\n\n完成本课后，你能指出 UniversityLocal HTTP 服务监听的具体地址，并说明「只绑 loopback」与「绑 0.0.0.0 再靠防火墙挡」的差别。\n\n## 先给结论\n\n- **事实：进程入口把监听地址写死为 `127.0.0.1`。** `server.listen(port, \"127.0.0.1\", …)`，不是省略 host、也不是 `0.0.0.0`。\n- **事实：默认端口是 `4317`。** 常量 `DEFAULT_PORT`，可用环境变量 `UNIVERSITY_LOCAL_PORT` 覆盖端口数字，但覆盖的是端口，不是绑定网卡。\n- **推论：局域网邻居即使用端口扫描也碰不到这个 socket。** 绑定在 loopback 上时，包根本进不了本机环回接口以外的路径。\n\n## 一个类比\n\n把门装在自家书房内侧，而不是装在临街大门上再挂「闲人免进」的牌子。牌子可以被撕掉；门装在哪里决定了路人能不能推到门把。\n\n## 工作示例\n\n1. 用户在本机启动 API：入口文件直接调用 `createUniversityLocalHttpServer`。\n2. `server.listen(port, \"127.0.0.1\", …)` 只在环回地址上打开监听。\n3. 同一台机器上的浏览器访问 `http://127.0.0.1:4317/api/health` 成功。\n4. 同一局域网里另一台机器访问你的局域网 IP:4317 —— 操作系统层面就没有监听者应答。\n\n## 自检\n\n如果有人把第二参数改成 `0.0.0.0`，仅保留后面的 Host 校验，还会出现哪类风险？\n\n答案：socket 对全网卡开放，任何能路由到该机的客户端都能把请求打到进程；Host 校验能挡一部分伪造，但攻击面从「本机进程」扩大到「网络可达的进程」，配置与代理错误会直接暴露学习数据接口。\n\n## 重点\n\n**「资料仅在本机」的第一刀是绑定地址，不是口号也不是注释。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 1506,
+                "lineEnd": 1512,
+                "nodeIds": [],
+                "note": "入口 listen 写死 127.0.0.1，并打印本机 URL"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 60,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "DEFAULT_PORT 与 LOOPBACK_HOST 常量定义"
+              }
+            ],
+            "cards": [
+              {
+                "id": "listen-address",
+                "front": "UniversityLocal HTTP 入口把 server.listen 绑在哪个地址？",
+                "back": "绑在 127.0.0.1。不是 0.0.0.0，也不是省略 host。",
+                "tags": [
+                  "loopback",
+                  "bind-address"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 1510,
+                    "lineEnd": 1511,
+                    "nodeIds": [],
+                    "note": "listen 第二参数是 127.0.0.1"
+                  }
+                ]
+              },
+              {
+                "id": "port-vs-bind",
+                "front": "改 UNIVERSITY_LOCAL_PORT 会改绑定网卡吗？",
+                "back": "不会。它只覆盖端口数字，listen 的 host 仍是 127.0.0.1。",
+                "tags": [
+                  "loopback",
+                  "config"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 1508,
+                    "lineEnd": 1511,
+                    "nodeIds": [],
+                    "note": "PORT 来自环境变量，host 字面量固定"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "listen-host-name",
+                "kind": "short-answer",
+                "title": "写出绑定地址",
+                "prompt": "server.listen 的 host 参数字面量是什么？",
+                "expectedAnswer": "127.0.0.1",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 1510,
+                    "lineEnd": 1511,
+                    "nodeIds": [],
+                    "note": "listen host 字面量"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "host-header-gate",
+            "title": "Host 头不是装饰品",
+            "content": "# Host 头不是装饰品\n\n## 学习目标\n\n完成本课后，你能解释为什么「已经绑在 127.0.0.1」还要再查 `Host`，并说出非 loopback Host 时的状态码与错误文案。\n\n## 先给结论\n\n- **事实：每个请求最先经过 `rejectNonLoopbackHost`。** 在路由分发之前，Host 不合格就直接返回并结束处理。\n- **事实：`LOOPBACK_HOST` 只认三种名字。** `127.0.0.1`、`localhost`、`[::1]`，可带端口；其它一律否。\n- **事实：失败响应是 403。** 文案固定为 `UniversityLocal only accepts loopback Host headers`。\n- **推论：绑定地址挡网卡，Host 校验挡「名字被伪造」与代理误配。** 两道门职责不同，不能互相替代。\n\n## 一个类比\n\n听筒只插在内线插孔上（绑定），接线员还要核对分机号是否属于本楼（Host）。插孔对了但分机号写成「外部总机」，照样不接通。你不能说「反正线在楼里」就跳过分机号核对。\n\n## 工作示例\n\n1. 请求进入 `createServer` 回调。\n2. 第一行业务逻辑：`if (rejectNonLoopbackHost(request, response)) return;`\n3. `Host: attacker.example` → `LOOPBACK_HOST.test` 失败 → JSON 403，后续路由代码零执行。\n4. `Host: 127.0.0.1:4317` → 通过，再 `new URL(...)` 解析 path 做路由。\n5. Host 缺失（`!host`）与不匹配走同一拒绝分支——没有「缺省放行」。\n\n## 自检\n\n为什么 Host 缺失也要拒绝，而不是「没有 Host 就当本机」？\n\n答案：缺失 Host 的请求已经不符合正常浏览器对本机 API 的调用形态；放行会在代理、扫描器与畸形客户端上打开缺口。代码对 `!host` 与不匹配同一分支拒绝。\n\n## 重点\n\n**Loopback 绑定解决「谁能连上 socket」；Host 校验解决「这请求自称从哪来」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 62,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "LOOPBACK_HOST 只匹配三种本机名"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 234,
+                "lineEnd": 241,
+                "nodeIds": [],
+                "note": "rejectNonLoopbackHost 对非法 Host 返回 403"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 981,
+                "lineEnd": 984,
+                "nodeIds": [],
+                "note": "每个请求最先调用 rejectNonLoopbackHost"
+              }
+            ],
+            "cards": [
+              {
+                "id": "host-reject-status",
+                "front": "非 loopback 的 Host 会得到什么 HTTP 状态？",
+                "back": "403，错误文案是 UniversityLocal only accepts loopback Host headers。",
+                "tags": [
+                  "loopback",
+                  "host-header"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 234,
+                    "lineEnd": 238,
+                    "nodeIds": [],
+                    "note": "403 与固定错误文案"
+                  }
+                ]
+              },
+              {
+                "id": "host-before-routing",
+                "front": "Host 校验发生在路由匹配之前还是之后？",
+                "back": "之前。createServer 回调里先 rejectNonLoopbackHost，通过后才解析 path。",
+                "tags": [
+                  "loopback",
+                  "request-pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 981,
+                    "lineEnd": 984,
+                    "nodeIds": [],
+                    "note": "先 Host 再 new URL 路由"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "reject-fn-name",
+                "kind": "short-answer",
+                "title": "写出守卫函数名",
+                "prompt": "拦截非 loopback Host 的函数名是什么？",
+                "expectedAnswer": "rejectNonLoopbackHost",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 234,
+                    "lineEnd": 241,
+                    "nodeIds": [],
+                    "note": "函数名与行为"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "origin-gate-for-mutations",
+            "title": "变更还要过 Origin",
+            "content": "# 变更还要过 Origin\n\n## 学习目标\n\n完成本课后，你能区分 Host 校验与 Origin 校验各自管哪一类请求，并指出 `isLoopbackOrigin` 只允许 `http:` 本机源。\n\n## 先给结论\n\n- **事实：Host 对所有请求生效；Origin 只在变更路径上检查。** `requireMutationAccess` 在 POST 写状态前调用。\n- **事实：带了 Origin 且不是 loopback 就 403。** 文案：`State-changing requests require a loopback Origin`。\n- **事实：本机 Origin 必须是 `http:`。** `https://127.0.0.1` 也不算通过——本地开发页是明文 HTTP。\n- **推论：Origin 有值时才做来源判断；真正挡住跨站写的是后面的 request token。** 没有 Origin 的客户端（curl）仍要过 token。\n\n## 一个类比\n\n大门保安查「你是不是从本楼电梯上来的」（Host/Origin 形态），保险柜还要本楼当班钥匙（token）。只查电梯不够，只靠钥匙也不够——两道检查回答的是不同问题。\n\n## 工作示例\n\n1. 外部站对 `http://127.0.0.1:4317` 发 POST：`Host` 可能是 `127.0.0.1:4317`，第一关过。\n2. `Origin: https://attacker.example` → `isLoopbackOrigin` 失败 → 403。\n3. 本机前端 `Origin: http://127.0.0.1:5173` → Origin 关通过。\n4. 接着比 `x-university-local-token` 与 Content-Type；任一项失败仍进不了写库逻辑。\n5. 用 curl 不带 Origin、也不带 token → 在 token 关被挡，而不是「没 Origin 就当可信」。\n\n## 自检\n\n为什么 `isLoopbackOrigin` 要求 `protocol === \"http:\"`，不接受 https 本机？\n\n答案：产品假设本地 UI 与 API 都跑在本机明文 HTTP；收紧协议避免「看起来像本机、实际是另一套 TLS 终结」的误放行。本机开发页用 `http://127.0.0.1` 或 `http://localhost`。\n\n## 重点\n\n**只读与写入的威胁模型不同：读靠 Host，写再加 Origin 与 token。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 243,
+                "lineEnd": 256,
+                "nodeIds": [],
+                "note": "isLoopbackOrigin 只认 http 本机 hostname"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 265,
+                "lineEnd": 269,
+                "nodeIds": [],
+                "note": "非 loopback Origin 抛 403"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 1258,
+                "lineEnd": 1259,
+                "nodeIds": [],
+                "note": "POST exercise attempt 先 requireMutationAccess"
+              }
+            ],
+            "cards": [
+              {
+                "id": "origin-when",
+                "front": "Origin 校验出现在所有请求上，还是只在变更请求上？",
+                "back": "只在变更请求：requireMutationAccess 在 POST 写状态路径调用。",
+                "tags": [
+                  "origin",
+                  "mutation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 265,
+                    "lineEnd": 269,
+                    "nodeIds": [],
+                    "note": "requireMutationAccess 内检查 Origin"
+                  }
+                ]
+              },
+              {
+                "id": "origin-protocol",
+                "front": "isLoopbackOrigin 允许 https://127.0.0.1 吗？",
+                "back": "不允许。代码要求 origin.protocol === \"http:\"。",
+                "tags": [
+                  "origin",
+                  "loopback"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 246,
+                    "lineEnd": 251,
+                    "nodeIds": [],
+                    "note": "仅 http 协议通过"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "origin-error-status",
+                "kind": "short-answer",
+                "title": "写出拒绝状态码",
+                "prompt": "非 loopback Origin 的变更请求抛出的 HTTP 状态码是？",
+                "expectedAnswer": "403",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 267,
+                    "lineEnd": 268,
+                    "nodeIds": [],
+                    "note": "HttpError 403"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "security-headers-no-store",
+            "title": "响应头也是本地边界",
+            "content": "# 响应头也是本地边界\n\n## 学习目标\n\n完成本课后，你能列出 UniversityLocal JSON 响应附带的关键安全头，并解释 `Cache-Control: no-store` 与本地隐私的关系。\n\n## 先给结论\n\n- **事实：`securityHeaders()` 统一注入一组硬头。** 含 `Cache-Control: no-store`、`Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`、`Referrer-Policy: no-referrer`、`X-Content-Type-Options: nosniff`、`X-Frame-Options: DENY`。\n- **事实：`sendJson` 每次写响应都合并这些头。** 健康检查、bootstrap、课程数据同一套，没有「内部接口例外」。\n- **推论：API 响应默认不进共享缓存、不进 iframe、不靠 referrer 外泄。** 这是「本机服务」在 HTTP 语义层的补刀，不是前端主题问题。\n\n## 一个类比\n\n你不仅把保险柜放在家里，还规定单据不许复印、不许被嵌进别人的相框展览。柜子位置是绑定；单据规则是响应头。少了单据规则，别人仍可能拿到复印件。\n\n## 工作示例\n\n1. 客户端 GET `/api/bootstrap` 成功。\n2. 响应里除了 JSON body，还有 `Cache-Control: no-store`。\n3. body 含本进程 `requestToken` 与今日到期卡片摘要——绝不能被中间缓存当静态资源复用。\n4. `X-Frame-Options: DENY` 与 CSP `frame-ancestors 'none'` 双重禁止被嵌套展示，降低点击劫持面。\n5. `Referrer-Policy: no-referrer` 让后续导航尽量不把本地 URL 当来源送出。\n\n## 自检\n\n若拿掉 `no-store`，最直接伤害的是哪类数据？\n\n答案：bootstrap 与学习状态 JSON 可能被缓存；其中包含本进程的 `requestToken` 与今日进度摘要，缓存泄漏等于把写权限凭证留在可被复用的地方。\n\n## 重点\n\n**本地优先不只挡入口，还挡「响应被别人看见或复用」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 216,
+                "lineEnd": 223,
+                "nodeIds": [],
+                "note": "securityHeaders 定义 no-store 与 CSP 等"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 226,
+                "lineEnd": 232,
+                "nodeIds": [],
+                "note": "sendJson 每次合并 securityHeaders"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 1163,
+                "lineEnd": 1166,
+                "nodeIds": [],
+                "note": "bootstrap 响应含 requestToken 故不宜缓存"
+              }
+            ],
+            "cards": [
+              {
+                "id": "no-store-why",
+                "front": "API JSON 为什么统一 Cache-Control: no-store？",
+                "back": "避免 bootstrap 与学习状态（含 requestToken）被中间层或磁盘缓存复用。",
+                "tags": [
+                  "security-headers",
+                  "privacy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 216,
+                    "lineEnd": 219,
+                    "nodeIds": [],
+                    "note": "no-store 定义"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 1163,
+                    "lineEnd": 1166,
+                    "nodeIds": [],
+                    "note": "bootstrap 含 token"
+                  }
+                ]
+              },
+              {
+                "id": "frame-deny",
+                "front": "哪两个头一起禁止页面被嵌进 iframe？",
+                "back": "X-Frame-Options: DENY 与 CSP 的 frame-ancestors 'none'。",
+                "tags": [
+                  "security-headers",
+                  "clickjacking"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 219,
+                    "lineEnd": 222,
+                    "nodeIds": [],
+                    "note": "CSP frame-ancestors 与 X-Frame-Options"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "cache-control-value",
+                "kind": "short-answer",
+                "title": "写出缓存指令",
+                "prompt": "securityHeaders 里 Cache-Control 的值是什么？",
+                "expectedAnswer": "no-store",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 218,
+                    "lineEnd": 218,
+                    "nodeIds": [],
+                    "note": "Cache-Control no-store"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "mutation-request-token",
+        "title": "变更必须持有进程密钥",
+        "objective": "掌握 requestToken 生命周期、变更三关与学习库文件身份校验",
+        "lessons": [
+          {
+            "id": "token-born-in-process-memory",
+            "title": "token 活在进程内存里",
+            "content": "# token 活在进程内存里\n\n## 学习目标\n\n完成本课后，你能说明 `requestToken` 何时生成、存在哪里，以及为什么它不是「用户密码」或「写在配置文件里的固定密钥」。\n\n## 先给结论\n\n- **事实：创建 server 时生成一次。** `const requestToken = randomBytes(32).toString(\"base64url\")`。\n- **事实：长度 32 字节随机，编码为 base64url。** 熵足够作为 CSRF 式请求凭证。\n- **推论：进程重启 token 必变。** 旧标签页里缓存的 token 立刻失效——这是特性，不是事故。\n- **推论：磁盘上没有「万能写密钥」文件可偷。** 攻击者必须能读到本进程本次 bootstrap 的响应，或内存本身。\n\n## 一个类比\n\n酒店房卡在入住时现制，退房（进程结束）即作废。前台不把同一张万能卡永久印在墙上给清洁工和住客共用。\n\n## 工作示例\n\n1. `createUniversityLocalHttpServer` 被调用，闭包内生成 `requestToken`。\n2. 后续所有 POST 守卫通过闭包引用同一值，而不是每次读环境变量。\n3. GET `/api/bootstrap` 把该值放进 JSON 交给前端，字段名 `requestToken`。\n4. 重启服务 → 新随机串 → 旧前端必须重新 bootstrap，否则所有写操作 403。\n5. 对比错误设计：把 token 写进 `.env` 固定字符串——备份外流就变成长期写权限。\n\n## 自检\n\n把 token 改成写在 `.env` 的固定字符串，会失去什么性质？\n\n答案：失去「进程生命周期绑定」与「每次启动轮换」。配置文件泄漏或备份外流会变成长期写权限；多实例共享同一密钥时 CSRF 面更大。\n\n## 重点\n\n**本地写权限凭证应绑定「这一次正在跑的进程」，而不是绑定「这台电脑的配置仓库」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 931,
+                "lineEnd": 934,
+                "nodeIds": [],
+                "note": "createUniversityLocalHttpServer 内 randomBytes 生成 token"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 1,
+                "lineEnd": 1,
+                "nodeIds": [],
+                "note": "randomBytes 与 timingSafeEqual 从 node:crypto 导入"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 1163,
+                "lineEnd": 1166,
+                "nodeIds": [],
+                "note": "bootstrap JSON 下发 requestToken"
+              }
+            ],
+            "cards": [
+              {
+                "id": "token-generation",
+                "front": "requestToken 用什么 API 生成？编码成什么？",
+                "back": "randomBytes(32) 再 toString(\"base64url\")。",
+                "tags": [
+                  "request-token",
+                  "crypto"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 933,
+                    "lineEnd": 933,
+                    "nodeIds": [],
+                    "note": "randomBytes(32).toString base64url"
+                  }
+                ]
+              },
+              {
+                "id": "token-lifetime",
+                "front": "服务重启后旧页面里的 requestToken 还能写状态吗？",
+                "back": "不能。token 在进程启动时生成，重启后闭包里是新值。",
+                "tags": [
+                  "request-token",
+                  "process-lifetime"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 931,
+                    "lineEnd": 933,
+                    "nodeIds": [],
+                    "note": "创建 server 时生成一次"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "token-byte-length",
+                "kind": "short-answer",
+                "title": "随机字节长度",
+                "prompt": "requestToken 的 randomBytes 参数是几？",
+                "expectedAnswer": "32",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 933,
+                    "lineEnd": 933,
+                    "nodeIds": [],
+                    "note": "randomBytes(32)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "bootstrap-hands-out-token",
+            "title": "只有 bootstrap 发钥匙",
+            "content": "# 只有 bootstrap 发钥匙\n\n## 学习目标\n\n完成本课后，你能指出客户端从哪个接口拿到 `requestToken`，以及变更请求必须放在哪个请求头里。\n\n## 先给结论\n\n- **事实：GET `/api/bootstrap` 的 JSON 字段名是 `requestToken`。** 与 `product`、`studies`、`today` 同级。\n- **事实：变更请求读请求头 `x-university-local-token`。** 代码用小写头名索引（Node 会规范化头名）。\n- **事实：头缺失或与闭包值不等 → 403。** 文案：`Missing or invalid UniversityLocal request token`。\n- **推论：读接口不要求 token，写接口强制要求。** 「资料可读」与「进度可写」被刻意拆开。\n\n## 一个类比\n\n图书馆可以让人进阅览室看书（GET），但改借阅记录必须先在服务台领当日章（bootstrap token），盖在单据上（请求头）。没有当日章的单据一律退回。\n\n## 工作示例\n\n1. 前端启动 → GET `/api/bootstrap`，保存响应里的 `requestToken`。\n2. 用户提交练习 → POST `.../exercises/:id/attempt`。\n3. 请求头带 `X-University-Local-Token: <值>`，Content-Type 为 `application/json`。\n4. `requireMutationAccess` 取出头，与闭包 `requestToken` 做 `tokensMatch`。\n5. 缺头、错头、或用旧进程的 token → 统一 403，不会半写进库。\n\n## 自检\n\n为什么不把 token 做成 cookie 自动带上？\n\n答案：自动 cookie 更容易成为跨站请求的燃料；显式头要求前端同源脚本主动附带，配合 Origin 检查，缩小「第三方页一发请求就带凭证」的面。\n\n## 重点\n\n**钥匙的分发通道（bootstrap）与使用通道（mutation header）必须分开设计。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 1163,
+                "lineEnd": 1166,
+                "nodeIds": [],
+                "note": "bootstrap 响应字段 requestToken"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 270,
+                "lineEnd": 274,
+                "nodeIds": [],
+                "note": "从 x-university-local-token 读取并校验"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 1258,
+                "lineEnd": 1259,
+                "nodeIds": [],
+                "note": "exercise attempt POST 调用 requireMutationAccess"
+              }
+            ],
+            "cards": [
+              {
+                "id": "token-header-name",
+                "front": "变更请求应带哪个 HTTP 头传递 token？",
+                "back": "x-university-local-token（客户端常写作 X-University-Local-Token）。",
+                "tags": [
+                  "request-token",
+                  "headers"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 270,
+                    "lineEnd": 271,
+                    "nodeIds": [],
+                    "note": "读取 x-university-local-token"
+                  }
+                ]
+              },
+              {
+                "id": "bootstrap-method",
+                "front": "requestToken 是通过什么方法的哪个路径下发的？",
+                "back": "GET /api/bootstrap 的 JSON 字段 requestToken。",
+                "tags": [
+                  "request-token",
+                  "bootstrap"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 1163,
+                    "lineEnd": 1166,
+                    "nodeIds": [],
+                    "note": "bootstrap 下发 requestToken"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "token-header-id",
+                "kind": "short-answer",
+                "title": "写出请求头名",
+                "prompt": "requireMutationAccess 读取的 token 请求头名是？",
+                "expectedAnswer": "x-university-local-token",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 270,
+                    "lineEnd": 271,
+                    "nodeIds": [],
+                    "note": "header 名"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "require-mutation-access-triple",
+            "title": "变更三关：Origin、token、JSON",
+            "content": "# 变更三关：Origin、token、JSON\n\n## 学习目标\n\n完成本课后，你能按顺序复述 `requireMutationAccess` 的三项检查，并说明缺任何一项会怎样。\n\n## 先给结论\n\n- **事实：第一关 Origin。** 若存在 Origin 且非 loopback → 403。\n- **事实：第二关 token。** `tokensMatch` 失败 → 403。\n- **事实：第三关 Content-Type。** 必须是 `application/json`（忽略参数段）→ 否则 415。\n- **事实：比较用 `timingSafeEqual`，且先比长度。** 长度不同直接 false，避免偏时旁路。\n- **推论：这是 CSRF + 内容类型限制的组合拳。** 不是多用户登录系统，是本机单用户进程写保护。\n\n## 一个类比\n\n进金库要三样：内部通道（Origin）、当日印章（token）、规定表格（JSON）。少一样门不开。门禁不会因为你「看起来像员工」就跳过印章。\n\n## 工作示例\n\n```mermaid\nflowchart TD\n  P[POST 变更请求] --> O{Origin 存在且非 loopback?}\n  O -->|是| E1[403 Origin]\n  O -->|否| T{token 与进程内值 timingSafe 相等?}\n  T -->|否| E2[403 token]\n  T -->|是| C{Content-Type 是 application/json?}\n  C -->|否| E3[415]\n  C -->|是| W[进入写学习库逻辑]\n```\n\n图里最关键的是 **Origin 缺失时不在第一关死、但第二关 token 仍是硬门槛**：curl 乱打 POST 没有 bootstrap 拿到的 token 一样 403。三关是串联，不是「三选一」。\n\n## 自检\n\n为什么 Content-Type 错是 415 不是 403？\n\n答案：415 表示媒体类型不被支持，语义上区别于未授权，方便调用方区分「凭证错了」和「用了 form 编码」两类修复动作。\n\n## 重点\n\n**本机 API 写保护 = 来源形态 + 进程密钥 + 载荷形态，三关同时成立。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 265,
+                "lineEnd": 278,
+                "nodeIds": [],
+                "note": "requireMutationAccess 三项检查完整实现"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 258,
+                "lineEnd": 263,
+                "nodeIds": [],
+                "note": "tokensMatch 使用 timingSafeEqual"
+              }
+            ],
+            "cards": [
+              {
+                "id": "triple-order",
+                "front": "requireMutationAccess 三项检查的顺序是什么？",
+                "back": "先 Origin，再 token，再 Content-Type 是否为 application/json。",
+                "tags": [
+                  "mutation",
+                  "request-token"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 265,
+                    "lineEnd": 277,
+                    "nodeIds": [],
+                    "note": "三关顺序源码"
+                  }
+                ]
+              },
+              {
+                "id": "content-type-status",
+                "front": "Content-Type 不是 application/json 时返回什么状态码？",
+                "back": "415，文案要求 State-changing requests require application/json。",
+                "tags": [
+                  "mutation",
+                  "content-type"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 275,
+                    "lineEnd": 276,
+                    "nodeIds": [],
+                    "note": "415 application/json"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "timing-safe-fn",
+                "kind": "short-answer",
+                "title": "常量时间比较函数",
+                "prompt": "tokensMatch 用来比较字节的函数名是？",
+                "expectedAnswer": "timingSafeEqual",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 258,
+                    "lineEnd": 262,
+                    "nodeIds": [],
+                    "note": "timingSafeEqual 调用"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "database-file-identity",
+            "title": "文件身份不是路径字符串",
+            "content": "# 文件身份不是路径字符串\n\n## 学习目标\n\n完成本课后，你能解释 `databaseIdentity` 用 `dev:ino` 标记打开中的学习库，以及 restore 后若不重开句柄会发生什么。\n\n## 先给结论\n\n- **事实：`fileId` 存的是 `stats.dev:stats.ino`。** 标识 inode，不是路径字符串。\n- **事实：`getStore` 发现路径上的身份与缓存句柄不一致就 close 并重开。** 避免写进已被替换的旧文件。\n- **事实：注释写明 restore/reset 用 rename 覆盖库文件。** POSIX 上旧 inode 对仍打开的 fd 继续可见，但对新路径读者已消失。\n- **推论：本地优先包含「写到正确的那一个文件」。** 否则进度看起来成功，磁盘上却是无人再读的幽灵库。\n\n## 一个类比\n\n你按门牌号找抽屉（路径），但抽屉被整只换掉后，你手里还握着旧抽屉的暗格钥匙（旧 fd）。不核对抽屉编号（inode），你会把新笔记写进已扔进仓库的旧抽屉——房间号没变，抽屉已经不是原来那个。\n\n## 工作示例\n\n1. 服务为 study A 打开 `learner.database`，缓存 `{ store, fileId: \"1:12345\" }`。\n2. CLI `learner restore` 把新库 rename 到同一路径；新文件 inode 变为 99999。\n3. 下一次 `getStore`：`databaseIdentity` 得到 `1:99999` ≠ `1:12345`。\n4. close 旧 store，打开新文件，后续复习写进真正的当前库。\n5. 若跳过这一步，UI 仍显示成功，备份与下次启动却读不到你刚写的进度。\n\n## 自检\n\n`assertQuiescent` 为什么抓不到这种「旧 fd 仍打开」？\n\n答案：它只看有没有活跃事务；空闲但未关闭的连接没有事务，却仍握着旧 inode。所以要在 HTTP 层用 fileId 显式比对。\n\n## 重点\n\n**本机文件完整性不只是 chmod，还包括「句柄是否仍指向用户以为的那份数据」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 936,
+                "lineEnd": 953,
+                "nodeIds": [],
+                "note": "注释说明 restore rename 与 databaseIdentity 的 dev:ino"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 955,
+                "lineEnd": 972,
+                "nodeIds": [],
+                "note": "getStore 比对 fileId 不一致则重开"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 96,
+                "lineEnd": 100,
+                "nodeIds": [],
+                "note": "OpenLearningStore 携带 fileId 字段"
+              }
+            ],
+            "cards": [
+              {
+                "id": "file-id-format",
+                "front": "databaseIdentity 返回的字符串由哪两部分组成？",
+                "back": "stats.dev 与 stats.ino，用冒号拼成 dev:ino。",
+                "tags": [
+                  "file-identity",
+                  "sqlite"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 946,
+                    "lineEnd": 949,
+                    "nodeIds": [],
+                    "note": "dev:ino 格式"
+                  }
+                ]
+              },
+              {
+                "id": "stale-handle-risk",
+                "front": "restore 后若继续用旧 sqlite 句柄，进度写到哪里？",
+                "back": "写到已被替换、路径上已不可见的旧 inode（幽灵库）。",
+                "tags": [
+                  "file-identity",
+                  "restore"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 936,
+                    "lineEnd": 942,
+                    "nodeIds": [],
+                    "note": "注释描述 unlinked 文件风险"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "file-id-field",
+                "kind": "short-answer",
+                "title": "缓存字段名",
+                "prompt": "OpenLearningStore 里标识库文件身份的字段名是？",
+                "expectedAnswer": "fileId",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 96,
+                    "lineEnd": 100,
+                    "nodeIds": [],
+                    "note": "fileId 字段"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 971,
+                    "lineEnd": 971,
+                    "nodeIds": [],
+                    "note": "写入 fileId"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "render-without-phoning-home",
+        "title": "渲染绝不静默出网",
+        "objective": "掌握 isLocalUrl、外图拦截与外链策略，并能用三层清单做验收",
+        "lessons": [
+          {
+            "id": "images-fetch-without-click",
+            "title": "图片会自己出网",
+            "content": "# 图片会自己出网\n\n## 学习目标\n\n完成本课后，你能解释为什么 Markdown 里的外部图片比外部链接更危险，并指出 `img` 组件在拦截时渲染了什么。\n\n## 先给结论\n\n- **事实：文件头注释写明风险。** `![](https://…)` 在打开课文瞬间就会 fetch，无需点击、无需同意。\n- **事实：非本机 `src` 不渲染 `<img>`。** 改渲染为 `span.markdown-blocked-image`，展示「外部图片已拦截」、alt 与原始 URL。\n- **事实：课文仍可读。** 拦截不是静默删掉，而是把意图展示给学习者，避免「图没了但不知道为什么」。\n- **推论：第三方生成的 Markdown 等于不可信内容。** 学习资料来自被研究仓库，链接与图片默认按第三方处理。\n\n## 一个类比\n\n外链像门上的地址牌——你不走出去没人知道你看了；外图像装了自动拨号的对讲——门一开它自己往外打电话。本地优先必须先拔掉自动拨号。\n\n## 工作示例\n\n1. 某课 `content.md` 含 `![diagram](https://evil.example/track.png)`。\n2. UI 用 `MarkdownContent` 渲染整篇 Markdown。\n3. `img` 组件：`isLocalUrl(source)` 为 false。\n4. DOM 中无 `img` 标签；用户看到拦截提示与 URL 文本。\n5. 浏览器网络面板不会出现对该外部主机的图片请求——这是可观测的验收标准。\n\n## 自检\n\n若只拦截 `<script>` 却放行 `<img src=https://…>`，「资料仅在本机」还成立吗？\n\n答案：不成立。打开课文本身就会向外部主机发 HTTP 请求，IP、时间与可能的 referrer 已泄漏。本地优先在渲染层也必须 fail-closed。\n\n## 重点\n\n**渲染层的自动网络行为，和服务器绑定地址一样，是本地优先的硬边界。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/MarkdownContent.tsx",
+                "lineStart": 14,
+                "lineEnd": 23,
+                "nodeIds": [],
+                "note": "注释：外部图片打开即 fetch 变成 page beacon"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/MarkdownContent.tsx",
+                "lineStart": 70,
+                "lineEnd": 82,
+                "nodeIds": [],
+                "note": "img 组件拦截非本机 src 并展示提示"
+              }
+            ],
+            "cards": [
+              {
+                "id": "image-no-click",
+                "front": "为什么外部图片比外部链接更能破坏「仅在本机」？",
+                "back": "图片在打开页面时自动请求，无需点击；链接要用户主动点。",
+                "tags": [
+                  "render-boundary",
+                  "images"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 18,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "no click no consent 注释"
+                  }
+                ]
+              },
+              {
+                "id": "blocked-image-ui",
+                "front": "外部图片被拦后 DOM 里还有 img 标签吗？显示什么？",
+                "back": "没有 img。显示 span.markdown-blocked-image 与「外部图片已拦截」。",
+                "tags": [
+                  "render-boundary",
+                  "images"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 75,
+                    "lineEnd": 80,
+                    "nodeIds": [],
+                    "note": "拦截 UI 结构"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "blocked-image-text",
+                "kind": "short-answer",
+                "title": "拦截提示文案",
+                "prompt": "外部图片拦截时 strong 里的中文提示是什么？",
+                "expectedAnswer": "外部图片已拦截",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 76,
+                    "lineEnd": 77,
+                    "nodeIds": [],
+                    "note": "提示文案"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "is-local-url-protocol-relative",
+            "title": "isLocalUrl 的隐蔽陷阱",
+            "content": "# isLocalUrl 的隐蔽陷阱\n\n## 学习目标\n\n完成本课后，你能说明 `//host/x` 为什么必须先于「以 / 开头」判断被拒绝，并列出哪些 URL 算本机。\n\n## 先给结论\n\n- **事实：空串、`#…`、`/…`、无 scheme 的相对路径算本地。** 相对路径不会离开本机源。\n- **事实：`//` 协议相对 URL 直接 false。** 注释写明它看起来像路径，实际是远程。\n- **事实：带 scheme 时只放行 http(s) 且 hostname 为 127.0.0.1 / localhost / ::1。** 其它 host 或 ftp 等协议否。\n- **推论：`https://localhost.evil.example` 不算本地。** 看的是 hostname 整段相等，不是「包含 localhost 字样」。\n\n## 一个类比\n\n快递单上写「//隔壁城市/某路」——开头像你家楼道编号的斜杠，其实是另一座城市的协议省略写法。门卫必须先认这种写法，不能只看「是不是以斜杠开头」。\n\n## 工作示例\n\n1. `isLocalUrl(\"//evil.example/track.png\")` → 第 28 行 `startsWith(\"//\")` → false。\n2. 若先写 `startsWith(\"/\")` 再处理，`//evil…` 的第一个字符是 `/`，会被误判成本地路径——这是真实历史坑。\n3. `isLocalUrl(\"http://127.0.0.1:4317/x\")` → 解析后 hostname 匹配 → true。\n4. `isLocalUrl(\"http://192.168.1.10/x\")` → hostname 不在白名单 → false。\n5. `isLocalUrl(\"./diagram.png\")` → 无 scheme → true，相对资源可渲染。\n\n## 自检\n\n为什么 `http://192.168.1.10` 要拦？它不也是「你家局域网」吗？\n\n答案：产品承诺是 loopback 本机，不是「任意私网」。局域网其它设备上的服务仍是外部网络主体；放行会让课文图片变成对内网其它主机的请求。\n\n## 重点\n\n**本地 URL 判定必须按「会不会在渲染时离开本机进程边界」来写，不能按字符串长得像路径来写。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/MarkdownContent.tsx",
+                "lineStart": 24,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "isLocalUrl 完整判定含 // 优先拒绝"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/MarkdownContent.tsx",
+                "lineStart": 26,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "协议相对 URL 必须先于 leading-slash 拒绝"
+              }
+            ],
+            "cards": [
+              {
+                "id": "protocol-relative",
+                "front": "为什么 //evil.example/x 必须在 startsWith('/') 之前拒绝？",
+                "back": "它以 / 开头但实际是远程协议相对 URL；先判断 / 会误放行。",
+                "tags": [
+                  "is-local-url",
+                  "url-parsing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 26,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "注释与 // 拒绝"
+                  }
+                ]
+              },
+              {
+                "id": "local-hostnames",
+                "front": "带 http(s) scheme 时，哪些 hostname 算本地？",
+                "back": "仅 127.0.0.1、localhost、::1。",
+                "tags": [
+                  "is-local-url",
+                  "loopback"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 33,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "hostname 白名单"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "protocol-relative-prefix",
+                "kind": "short-answer",
+                "title": "危险前缀",
+                "prompt": "isLocalUrl 优先拒绝的协议相对 URL 前缀是？",
+                "expectedAnswer": "//",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 28,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "startsWith //"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "external-links-with-consent",
+            "title": "外链可点，但不交 referrer",
+            "content": "# 外链可点，但不交 referrer\n\n## 学习目标\n\n完成本课后，你能对比 `a` 与 `img` 对外部 URL 的不同策略，并写出外部链接的 `rel` 值。\n\n## 先给结论\n\n- **事实：外部链接仍渲染为 `<a href>`。** 打开是学习者的显式选择。\n- **事实：外部链接强制 `target=\"_blank\"` 与 `rel=\"noreferrer noopener external\"`。** 目的站拿不到 referrer，也降低 `window.opener` 风险。\n- **事实：UI 附加 ↗ 标记与 `markdown-external-link` 样式。** 学习者能看出这是出网动作。\n- **推论：同意模型不对称——链接要点击，图片会自动加载，所以图片直接拆掉。** 同一 `isLocalUrl`，两种组件两种后果。\n\n## 一个类比\n\n外链是门口的地图：你想去再走；外图是会自动拨号的对讲。地图可以留着，对讲必须拔线。本地优先管的是「自动」，不是「禁止人类出门查资料」。\n\n## 工作示例\n\n1. Markdown：`[docs](https://example.com/docs)`。\n2. `a` 组件：`isLocalUrl` 为 false。\n3. 渲染带 `rel=\"noreferrer noopener external\"` 的链接与 ↗ 标记。\n4. 用户点击后浏览器导航；目的站看不到 UniversityLocal 本地 URL 作为 referrer。\n5. 对照：同一 URL 若出现在 `![](…)`，则根本不会发请求——组件策略不同。\n\n## 自检\n\n若外部链接也像图片一样整段替换成纯文本，会失去什么？\n\n答案：学习者无法从课文一键打开上游文档；产品选择「显式点击 + 切断 referrer」而不是「禁止一切出网导航」。边界在自动请求，不在禁止阅读外部知识。\n\n## 重点\n\n**本地优先要拆的是静默出网，不是禁止人类主动查资料。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/MarkdownContent.tsx",
+                "lineStart": 45,
+                "lineEnd": 69,
+                "nodeIds": [],
+                "note": "a 组件：外链 target blank 与 noreferrer"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/MarkdownContent.tsx",
+                "lineStart": 53,
+                "lineEnd": 54,
+                "nodeIds": [],
+                "note": "注释：打开是学习者选择且不泄漏来源"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/MarkdownContent.tsx",
+                "lineStart": 70,
+                "lineEnd": 72,
+                "nodeIds": [],
+                "note": "img 仅在 isLocalUrl 时渲染真实图片"
+              }
+            ],
+            "cards": [
+              {
+                "id": "link-vs-image",
+                "front": "外部 URL 在 a 与 img 上的处理有何不同？",
+                "back": "a 仍可点但 noreferrer；img 不渲染，改为拦截提示。",
+                "tags": [
+                  "render-boundary",
+                  "links"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 45,
+                    "lineEnd": 81,
+                    "nodeIds": [],
+                    "note": "a 与 img 策略对比"
+                  }
+                ]
+              },
+              {
+                "id": "external-rel",
+                "front": "外部链接的 rel 属性完整值是什么？",
+                "back": "noreferrer noopener external。",
+                "tags": [
+                  "render-boundary",
+                  "referrer"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 59,
+                    "lineEnd": 59,
+                    "nodeIds": [],
+                    "note": "rel 字面量"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "external-rel-value",
+                "kind": "short-answer",
+                "title": "写出 noreferrer",
+                "prompt": "外部 Markdown 链接 rel 里用于切断来源的那个 token 是？",
+                "expectedAnswer": "noreferrer",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 59,
+                    "lineEnd": 59,
+                    "nodeIds": [],
+                    "note": "rel 值"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "three-layers-must-all-hold",
+            "title": "三层同时成立才叫本地优先",
+            "content": "# 三层同时成立才叫本地优先\n\n## 学习目标\n\n完成本课后，你能画出 UniversityLocal 本地优先的三层，并指出任意一层缺失时「资料仅在本机」如何变成假话。\n\n## 先给结论\n\n- **事实：传输层——进程只听 `127.0.0.1`，并用 `rejectNonLoopbackHost` 校验 Host。**\n- **事实：写状态层——`requireMutationAccess` 要 loopback Origin（若有）、`x-university-local-token`、JSON。**\n- **事实：渲染层——`MarkdownContent` 不让外部图片自动请求，外链切断 referrer。**\n- **推论：少一层就是假的。** 只绑 loopback 却放行外图 = 打开课文仍出网；只拦渲染却监听 `0.0.0.0` = 邻居可打 API。\n\n## 一个类比\n\n保险箱（绑定）+ 钥匙（token）+ 监控不外传画面（渲染）。三样齐才是私人金库；宣传语写在门上不算。审计时要三样分别点名验收。\n\n## 工作示例\n\n```mermaid\nflowchart LR\n  subgraph L1[传输层]\n    Bind[\"listen 127.0.0.1\"]\n    Host[\"rejectNonLoopbackHost\"]\n  end\n  subgraph L2[写状态层]\n    Tok[\"requestToken 头\"]\n    Mut[\"requireMutationAccess\"]\n  end\n  subgraph L3[渲染层]\n    Img[\"img 拦截外链图\"]\n    Link[\"a noreferrer\"]\n  end\n  Bind --> Host\n  Host --> Mut\n  Tok --> Mut\n  Mut --> Store[(学习库)]\n  Lesson[课文 Markdown] --> Img\n  Lesson --> Link\n```\n\n图里最关键的是 **三条平行层没有互相包含关系**：传输层过了不等于渲染安全；渲染干净也不等于写接口有 CSRF 防护。验收清单必须三层分别打勾。\n\n## 自检\n\n只做 API 上的 `CSP default-src 'none'` 能不能替代 `img` 拦截？\n\n答案：不能。API 的 CSP 管的是 JSON 响应，课文渲染在前端 React 树，必须在组件层明确不创建会出网的 `img`。多层可以互补，不能假装一层等于三层。\n\n## 重点\n\n**「资料仅在本机」是可检验的三层设计，不是 README 里的一句话。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 1510,
+                "lineEnd": 1511,
+                "nodeIds": [],
+                "note": "传输层：listen 127.0.0.1"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 265,
+                "lineEnd": 278,
+                "nodeIds": [],
+                "note": "写状态层：requireMutationAccess 三关"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/MarkdownContent.tsx",
+                "lineStart": 14,
+                "lineEnd": 23,
+                "nodeIds": [],
+                "note": "渲染层：禁止自动出网的产品声明"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/MarkdownContent.tsx",
+                "lineStart": 70,
+                "lineEnd": 82,
+                "nodeIds": [],
+                "note": "渲染层：外部图片拦截实现"
+              }
+            ],
+            "cards": [
+              {
+                "id": "three-layers",
+                "front": "本地优先要同时成立的三层是什么？",
+                "back": "传输层 loopback、写状态层 request token、渲染层禁止外图自动请求。",
+                "tags": [
+                  "local-first",
+                  "boundaries"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 1510,
+                    "lineEnd": 1511,
+                    "nodeIds": [],
+                    "note": "绑定"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 265,
+                    "lineEnd": 274,
+                    "nodeIds": [],
+                    "note": "token"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 70,
+                    "lineEnd": 82,
+                    "nodeIds": [],
+                    "note": "图片"
+                  }
+                ]
+              },
+              {
+                "id": "one-layer-missing",
+                "front": "若服务只听 127.0.0.1 但课文放行 https 图片，承诺还真吗？",
+                "back": "假的。打开课文仍会向外部主机发请求，本地优先在渲染层已破。",
+                "tags": [
+                  "local-first",
+                  "render-boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 18,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "图片即 beacon"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "mutation-gate-name",
+                "kind": "short-answer",
+                "title": "写保护函数名",
+                "prompt": "变更请求统一调用的访问控制函数名是？",
+                "expectedAnswer": "requireMutationAccess",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 265,
+                    "lineEnd": 278,
+                    "nodeIds": [],
+                    "note": "函数定义"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

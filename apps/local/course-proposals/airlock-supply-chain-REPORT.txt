@@ -1,0 +1,116 @@
+airlock-supply-chain 课程提案交付报告
+================================
+
+规模
+----
+- 单元：3
+  1. why-isolate-first（为什么必须先隔离）— 3 节
+  2. promote-and-seal（唯一写入口与封条）— 4 节
+  3. gate-and-inspect（导入门禁与完整性体检）— 4 节
+- 课时：11
+- 卡片：22（每节 2 张）
+- 练习：11（每节 1 道 short-answer）
+- 证据引用：63 条（全部 kind=fact 或 inference，均含 note；snapshotId/sourceCommit 固定为
+  git-90cf76c1177f / 90cf76c1177fa19cd5d9d0a6c8257d934a586b5e）
+
+输出文件
+--------
+- course-proposals/airlock-supply-chain.json
+- course-proposals/airlock-supply-chain-REPORT.txt
+
+门禁 1：check-proposal-shape.mjs
+--------------------------------
+命令：
+  node scripts/check-proposal-shape.mjs course-proposals/airlock-supply-chain.json
+
+最终输出：
+ok  course-proposals/airlock-supply-chain.json
+
+（脚本成功时打印 ok，无 problem 列表即视为干净通过。）
+
+门禁 2：check-proposal-evidence.mjs
+-----------------------------------
+命令：
+  node scripts/check-proposal-evidence.mjs course-proposals/airlock-supply-chain.json --study university-local
+
+最终输出（末尾汇总行）：
+  all 63 references resolve at their pinned commits
+
+完整输出：
+ok  server/airlock/import-gate.ts:1-14
+ok  server/airlock/import-gate.ts:106-118
+ok  server/airlock/import-gate.ts:11-14
+ok  server/airlock/import-gate.ts:38-38
+ok  server/airlock/import-gate.ts:38-70
+ok  server/airlock/import-gate.ts:4-9
+ok  server/airlock/import-gate.ts:50-53
+ok  server/airlock/import-gate.ts:78-78
+ok  server/airlock/import-gate.ts:91-96
+ok  server/airlock/inspect.ts:17-22
+ok  server/airlock/inspect.ts:24-32
+ok  server/airlock/inspect.ts:46-61
+ok  server/airlock/inspect.ts:63-68
+ok  server/airlock/inspect.ts:65-65
+ok  server/airlock/inspect.ts:8-8
+ok  server/airlock/inspect.ts:86-86
+ok  server/airlock/inspect.ts:89-103
+ok  server/airlock/promote.ts:104-107
+ok  server/airlock/promote.ts:120-128
+ok  server/airlock/promote.ts:131-132
+ok  server/airlock/promote.ts:131-145
+ok  server/airlock/promote.ts:134-142
+ok  server/airlock/promote.ts:147-163
+ok  server/airlock/promote.ts:152-153
+ok  server/airlock/promote.ts:157-161
+ok  server/airlock/promote.ts:22-23
+ok  server/airlock/promote.ts:27-33
+ok  server/airlock/promote.ts:65-73
+ok  server/airlock/promote.ts:65-84
+ok  server/airlock/promote.ts:75-80
+ok  server/airlock/promote.ts:78-79
+ok  server/airlock/promote.ts:85-91
+ok  server/airlock/promote.ts:92-96
+ok  server/airlock/promote.ts:98-102
+ok  server/airlock/seal.ts:100-107
+ok  server/airlock/seal.ts:12-22
+ok  server/airlock/seal.ts:48-55
+ok  server/airlock/seal.ts:48-61
+ok  server/airlock/seal.ts:9-10
+ok  server/airlock/seal.ts:9-23
+ok  server/airlock/seal.ts:95-108
+ok  server/config/load-config.ts:124-132
+ok  server/config/load-config.ts:124-133
+ok  server/config/load-config.ts:125-126
+ok  server/config/load-config.ts:127-130
+ok  server/config/load-config.ts:127-131
+ok  server/config/load-config.ts:145-146
+ok  server/config/load-config.ts:71-74
+
+all 63 references resolve at their pinned commits
+
+读代码时最反直觉的一点
+----------------------
+封条 university-local-airlock.json 故意放在 .git/ 里，而不是工作树。
+
+直觉会说「元数据放仓库根目录最显眼、最好读」。但 seal.ts 注释写得很硬：airlock
+的中心承诺是工作树与 promoted commit 字节一致；若把封条写进 tree，promote 刚
+写完 git status 就会出现 untracked，inspectAirlock 会立刻把「刚创建的合法副本」
+判成被改动过（blocked）。
+
+也就是说：计量装置不能放进被称的货物里——封条是度量空气锁的尺子，不能成为
+空气锁内容的一部分。这点已经写进第 2 单元「封条为什么放在 .git 里」一课。
+
+次级反直觉（也进课了，供对照）
+------------------------------
+- materialize 用 fetch --depth=1 而不是 clone：避免 hardlink / --shared 共用对象，
+  否则路径隔离了、对象库仍拴在上游。
+- import-gate 只拒绝、不跳过：跟踪了密钥时「跳过继续」会制造绿色成功；
+  必须整次 promote 失败，逼 owner 用 git rm --cached 修历史跟踪集。
+- inspect 的 sealed 与 commitsAhead 正交：副本完好但落后上游仍可 sealed；
+  新鲜度不是篡改。
+
+未做事项
+--------
+- 未 git commit
+- 未修改 UniversityLocal 除上述两个输出文件外的任何文件
+- 未触碰 /Users/yuanfei/PieAI/.ul-airlock 冻结副本

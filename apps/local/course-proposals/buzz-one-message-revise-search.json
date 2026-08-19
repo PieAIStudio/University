@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-one-message-search",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-one-message",
+    "unitId": "write-path",
+    "id": "search-is-persisted-row",
+    "expectedRevision": 1,
+    "title": "为什么 Buzz 的搜索可以把 persisted row 当成索引？",
+    "content": "# 为什么 Buzz 的搜索可以把 persisted row 当成索引？\n\n## 情境和约束\n\n系统要支持历史检索，又不想让写入成功后再维护一套容易失同步的外部索引。你在读当前架构时会看到 Postgres FTS 把 searchable row 直接作为 persisted event row，并由生成的 tsvector 填充搜索列。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:502-506]]\n\n## 先猜一下\n\n如果每个事件都要先写数据库，再投递一个独立的 search worker，你会得到更少的写入耦合，还是多一个需要重试和对账的状态？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\nBuzz 选择让持久化事件行同时成为搜索来源，不再把 Typesense worker 或 search_index_tx 当作写入后的必经步骤。\n\n## 代价和收益\n\n收益是事件行与搜索内容在同一个 Postgres 写入边界里，减少外部索引的同步状态；搜索 REQ 仍然走历史查询并在结果后发送 EOSE，不注册成实时 fan-out subscription。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:502-506]]\n\n[[evidence:crates/buzz-relay/src/handlers/req.rs:206-231]]\n\n代价是搜索查询要承担 FTS 规划、访问范围和结果过滤；它不是“写进去就自动出现在所有读者面前”。你还要沿着 req handler 看 auth、channel scope、reader visibility 和 EOSE。\n\n[[evidence:crates/buzz-relay/src/handlers/req.rs:206-231]]\n\n## 什么时候该反过来\n\n当搜索需要独立扩展、跨数据源聚合，或写入数据库与检索索引确实要分开伸缩时，外部索引可能值得引入；但那时必须补上重试、删除、权限和一致性策略。\n\n## 自检\n\n- 当前 searchable row 与什么是同一行？\n- 搜索 REQ 会注册 fan-out subscription 吗？\n\n## 一句话\n\n**Buzz 用 Postgres 的持久化事件行承载 FTS 搜索，并把搜索请求保持为历史读取路径。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 502, "lineEnd": 506, "note": "源码说明 searchable row 就是 persisted event row，旧 Typesense worker 已移除。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 206, "lineEnd": 231, "note": "带 search 的 REQ 进入历史搜索处理，完成后返回而不注册 fan-out subscription。" }
+    ],
+    "cards": [
+      { "id": "message-search-row", "expectedRevision": 1, "front": "当前搜索索引与哪一行合并？", "back": "与 Postgres 中的 persisted event row 合并，生成的 tsvector 填充搜索列。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 502, "lineEnd": 506, "note": "注释直接说明 searchable row 与 persisted event row 的关系。" } ] },
+      { "id": "message-search-no-fanout", "expectedRevision": 1, "front": "搜索 REQ 为什么不注册实时订阅？", "back": "它只查询历史 FTS 命中并发送 EOSE，源码随后 return，不进入 subscription registration。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 206, "lineEnd": 231, "note": "搜索分支调用 handle_search_req 后 return。" } ] }
+    ],
+    "exercises": [
+      { "id": "message-search-design", "expectedRevision": 1, "kind": "short-answer", "title": "说明搜索选择", "prompt": "把 searchable row 直接放在 persisted event row 上，主要减少了哪类状态？", "expectedAnswer": "外部搜索索引与数据库事件行之间的同步状态", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 502, "lineEnd": 506, "note": "旧的独立 Typesense index worker 已不再存在。" } ] },
+      { "id": "message-search-eose", "expectedRevision": 1, "kind": "short-answer", "title": "回忆搜索结束信号", "prompt": "搜索请求完成历史命中后，是否继续保持实时 subscription？", "expectedAnswer": "不保持；搜索分支处理后返回，历史结果以 EOSE 结束", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/req.rs", "lineStart": 206, "lineEnd": 231, "note": "搜索分支被定义为历史搜索并在 handle_search_req 后 return。" } ] }
+    ]
+  }
+}

@@ -1,0 +1,105 @@
+ai-branching-narrative course proposal — delivery report
+========================================================
+
+Course id:   ai-branching-narrative
+Proposal:    course-proposals/ai-branching-narrative.json
+Snapshot:    git-c9f0ec8d57a1
+Commit:      c9f0ec8d57a10484acf547ffc2d3458c955e8068
+Study:       supaluv (services/ai-branch)
+
+Scale
+-----
+Units:     3
+Lessons:   12
+Cards:     24  (2 per lesson)
+Exercises: 12  (1 per lesson)
+Evidence:  85 references (every one has note; all kind fact)
+
+Units
+-----
+1. author-owns-the-spine — 作者主线：绝不交给 AI 的东西
+   lessons: rejoin-is-authored, one-extra-choice, closed-asset-pools, author-brief-is-leash
+2. ai-side-branch-bounds — AI 支线：能走多远
+   lessons: beat-budget, model-output-not-authority, branch-pipeline, prompt-is-not-enforcement
+3. pull-back-when-drifts — 走偏了：怎么收回来
+   lessons: dual-safety-gate, ending-contract-terminal, untrusted-player-action, reject-then-repair
+
+Gate: check-proposal-shape.mjs
+------------------------------
+ok  course-proposals/ai-branching-narrative.json
+
+Gate: check-proposal-evidence.mjs --study supaluv
+------------------------------------------------
+ok  services/ai-branch/src/branch/branchTypes.ts:13-13
+ok  services/ai-branch/src/branch/branchTypes.ts:4-12
+ok  services/ai-branch/src/branch/mastraBranch.ts:146-163
+ok  services/ai-branch/src/branch/mastraBranch.ts:147-147
+ok  services/ai-branch/src/branch/mastraBranch.ts:147-149
+ok  services/ai-branch/src/branch/mastraBranch.ts:147-151
+ok  services/ai-branch/src/branch/mastraBranch.ts:147-163
+ok  services/ai-branch/src/branch/mastraBranch.ts:15-19
+ok  services/ai-branch/src/branch/mastraBranch.ts:159-163
+ok  services/ai-branch/src/branch/mastraBranch.ts:21-26
+ok  services/ai-branch/src/branch/mastraBranch.ts:59-59
+ok  services/ai-branch/src/branch/mastraBranch.ts:60-62
+ok  services/ai-branch/src/branch/mastraBranch.ts:63-63
+ok  services/ai-branch/src/branch/prompts.ts:56-57
+ok  services/ai-branch/src/branch/prompts.ts:56-58
+ok  services/ai-branch/src/branch/prompts.ts:56-64
+ok  services/ai-branch/src/branch/prompts.ts:61-62
+ok  services/ai-branch/src/branch/prompts.ts:81-83
+ok  services/ai-branch/src/branch/prompts.ts:85-99
+ok  services/ai-branch/src/branch/prompts.ts:91-91
+ok  services/ai-branch/src/branch/prompts.ts:91-92
+ok  services/ai-branch/src/branch/prompts.ts:95-96
+ok  services/ai-branch/src/branch/prompts.ts:95-97
+ok  services/ai-branch/src/ending/endingPrompts.ts:15-16
+ok  services/ai-branch/src/ending/endingPrompts.ts:15-22
+ok  services/ai-branch/src/ending/endingPrompts.ts:25-26
+ok  services/ai-branch/src/ending/endingPrompts.ts:25-35
+ok  services/ai-branch/src/ending/endingSchemas.ts:41-45
+ok  services/ai-branch/src/ending/endingSchemas.ts:47-48
+ok  services/ai-branch/src/ending/endingSchemas.ts:47-51
+ok  services/ai-branch/src/ending/endingSchemas.ts:47-54
+ok  services/ai-branch/src/ending/endingSchemas.ts:50-54
+ok  services/ai-branch/src/ending/endingSchemas.ts:55-57
+ok  services/ai-branch/src/ending/endingSessionService.ts:126-129
+ok  services/ai-branch/src/ending/endingSessionService.ts:168-171
+ok  services/ai-branch/src/ending/mastraEnding.ts:108-133
+ok  services/ai-branch/src/ending/mastraEnding.ts:46-55
+ok  services/ai-branch/src/ending/mastraEnding.ts:74-98
+ok  services/ai-branch/src/ending/mastraEnding.ts:75-75
+ok  services/ai-branch/src/ending/mastraEnding.ts:87-91
+ok  services/ai-branch/src/handler.ts:108-112
+ok  services/ai-branch/src/handler.ts:108-113
+ok  services/ai-branch/src/handler.ts:125-134
+ok  services/ai-branch/src/handler.ts:47-47
+ok  services/ai-branch/src/handler.ts:47-51
+ok  services/ai-branch/src/handler.ts:51-51
+ok  services/ai-branch/src/handler.ts:88-113
+ok  services/ai-branch/src/routeTable.ts:262-336
+ok  services/ai-branch/src/routeTable.ts:278-280
+ok  services/ai-branch/src/routeTable.ts:283-286
+ok  services/ai-branch/src/routeTable.ts:283-302
+ok  services/ai-branch/src/routeTable.ts:311-315
+ok  services/ai-branch/src/safetyGate.ts:14-25
+ok  services/ai-branch/src/safetyGate.ts:14-26
+ok  services/ai-branch/src/safetyGate.ts:17-18
+ok  services/ai-branch/src/safetyGate.ts:28-48
+ok  services/ai-branch/src/safetyGate.ts:32-40
+ok  services/ai-branch/src/safetyGate.ts:7-11
+
+all 85 references resolve at their pinned commits
+
+Most counter-intuitive finding (also in the course)
+---------------------------------------------------
+rejoinSceneId is required in the model JSON schema and the system prompt
+orders the model to return it unchanged — but generateAiBranchWithMastra
+captures body.config.rejoinSceneId once, and the response always uses that
+captured value. The parsed model field is discarded. Prompt + schema make
+the model *perform* compliance; the assignment is the real enforcement.
+The same pattern appears for speaker/art/portrait via pickFromPool (invalid
+keys silently fall back to pool[0]) while endings throw on forbidden speakers —
+branch is soft-downgrade, ending is hard-fail, because product stakes differ.
+
+No git commit. SupaLuv left untouched (read-only via git show).

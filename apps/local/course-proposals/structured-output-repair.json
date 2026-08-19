@@ -1,0 +1,1101 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-structured-output-repair",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "structured-output-repair",
+    "title": "从不可靠的模型里拿到可靠结构",
+    "description": "模型返回的结构会缺字段、不是 JSON、或格式对语义错；用 TuringPact 的错误码白名单与修复路径，学会哪些该重试、哪些就地修、哪些重试也没用。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "列出三种结构化输出失败，并指出各自应重试、就地修还是直接失败",
+      "说明 RETRYABLE_STRUCTURED_DECISION_CODES 为何排除 invalid_decision_schema",
+      "对比 tool_submission 与 assistant_text 两条进路，并解释 repaired 标记含义",
+      "在 AgentDecision 契约上指出条件必填与 cooldown 硬窗口如何被代码拒绝"
+    ],
+    "units": [
+      {
+        "id": "three-failure-modes",
+        "title": "三种失败三种治",
+        "objective": "把解析失败拆成可执行的错误码与策略，而不是一个笼统的 parse_error",
+        "lessons": [
+          {
+            "id": "why-structure-breaks",
+            "title": "模型输出为什么不能直接信",
+            "content": "# 模型输出为什么不能直接信\n\n## 学习目标\n\n完成本课后，你能说明「结构化输出」在产品里意味着什么，以及为什么把模型原文直接\n`JSON.parse` 推进业务是在赌概率。\n\n## 先给结论\n\n- **事实：系统要的是 `AgentDecision`，不是一段自然语言。** 契约字段是\n  `shouldSpeak`、`publicMessage`、`privateHint`、`decisionReason`、两个 cooldown。\n  下游调度、冷却、发消息全靠这些字段，不是靠「感觉模型说得对」。\n- **事实：解析层把失败显式分类。** `StructuredDecisionErrorCode` 有四档：\n  没提交、没 JSON 对象、JSON 坏掉、schema/语义不对——不是一个笼统的 `parse_error`。\n- **推论：不可靠的不是「模型会不会写 JSON」，而是「失败形态不单一」。**\n  缺字段、根本不是 JSON、格式对但语义错，需要不同处理；混成一种 retry 会烧钱还修不好。\n\n## 一个类比\n\n快递要的是「收件人、地址、电话」填好的面单，不是一张写满热情的纸条。\n纸条再长，分拣机读不了。模型的热情文本同理：**业务机器只认契约字段**。\n\n## 工作示例\n\n1. 调度器需要决定 AI 要不要公开发言。\n2. 模型可能返回漂亮中文，或半截 JSON，或字段齐全但 `shouldSpeak: true` 却没有\n   `publicMessage`。\n3. 若你只写 `JSON.parse(text)`，第三种会静默通过或在更深处炸掉，排查成本更高。\n4. TuringPact 先落到 `AgentDecision` 类型，再给错误码——失败在边界处可见。\n\n## 自检\n\n如果你的产品把模型原文直接塞进发消息函数，最危险的失败通常是哪一种：完全不是 JSON，\n还是 JSON 合法但语义自相矛盾？\n\n答案：往往是后者。前者立刻炸；后者可能发出空消息、错误冷却，或把脏数据写进状态机。\n\n## 重点\n\n**先定义「可靠结构」长什么样，再谈重试与修复。**\n没有契约，所有补救都是在修一个没有验收标准的洞。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 123,
+                "lineEnd": 130,
+                "nodeIds": [],
+                "note": "AgentDecision：下游真正依赖的字段契约"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 5,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "StructuredDecisionErrorCode：四种互斥失败形态"
+              }
+            ],
+            "cards": [
+              {
+                "id": "structure-not-prose",
+                "front": "为什么业务层要 AgentDecision，而不是模型原文？",
+                "back": "调度、冷却、发言都读契约字段；原文无法被机器稳定消费。",
+                "tags": [
+                  "structured-output"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 123,
+                    "lineEnd": 130,
+                    "nodeIds": [],
+                    "note": "AgentDecision 字段定义"
+                  }
+                ]
+              },
+              {
+                "id": "four-codes-not-one",
+                "front": "把所有解析失败收成一个 parse_error 会怎样？",
+                "back": "无法区分该重试、该本地修还是该直接失败，策略会错配。",
+                "tags": [
+                  "structured-output"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 5,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "四档错误码拆分"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "agent-decision-required-field",
+                "kind": "short-answer",
+                "title": "必填字段",
+                "prompt": "AgentDecision 里哪个字符串字段在类型上始终必填（没有 ?）？",
+                "expectedAnswer": "decisionReason",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 123,
+                    "lineEnd": 130,
+                    "nodeIds": [],
+                    "note": "AgentDecision 类型定义"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "four-error-codes",
+            "title": "四种错误码不是四种日志",
+            "content": "# 四种错误码不是四种日志\n\n## 学习目标\n\n完成本课后，你能按发生阶段解释四个 `StructuredDecisionErrorCode`，并说明每个码\n对应的「坏在哪一层」。\n\n## 先给结论\n\n- **事实：缺提交。** `missing_decision_submission`：既没有 `submittedDecision`，\n  `assistantText` 也空——代理没走 `submit_decision`，也没留下可解析文本。\n- **事实：缺对象。** `missing_json_object`：`extractJsonObject` 在剥掉 markdown fence\n  后仍匹配不到 `{...}`。\n- **事实：JSON 坏掉。** `invalid_decision_json`：`JSON.parse` 抛错，且不是已经分类过的\n  `StructuredDecisionError`。\n- **事实：schema/语义坏。** `invalid_decision_schema`：已经是对象了，但字段类型、\n  取值范围或字段间约束不过（例如 `shouldSpeak` 不是 boolean）。\n- **推论：错误码是处理策略的索引，不是给日志好看的标签。** 后面的重试白名单只认前三码。\n\n## 一个类比\n\n医院分诊：外伤、中毒、慢性病不能都开「观察一晚」。错误码就是分诊标签——\n**标签错了，治疗协议就错了**。\n\n## 工作示例\n\n1. 模型忘了调工具，也没吐文本 → `missing_decision_submission`。\n2. 模型说「好的，我决定不发言」全是中文 → `missing_json_object`。\n3. 模型吐出 `{ \"shouldSpeak\": true,` 半截 → `invalid_decision_json`。\n4. 完整 JSON 但 `shouldSpeak: \"yes\"` → `invalid_decision_schema`。\n\n## 自检\n\n`invalid_decision_json` 和 `invalid_decision_schema` 的分界线是什么？\n\n答案：能不能稳定得到一个对象。parse 过不去是 json 码；对象在了但字段/语义不合法是 schema 码。\n\n## 重点\n\n**先按失败阶段编码，再按码选策略。** 混码等于没有策略。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 5,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "四个 StructuredDecisionErrorCode 字面量"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 70,
+                "lineEnd": 86,
+                "nodeIds": [],
+                "note": "extractJsonObject 抛 missing_json_object"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 166,
+                "lineEnd": 186,
+                "nodeIds": [],
+                "note": "parse 失败映射为 invalid_decision_json"
+              }
+            ],
+            "cards": [
+              {
+                "id": "missing-submission-meaning",
+                "front": "什么情况下会抛 missing_decision_submission？",
+                "back": "没有 tool 提交，且 assistantText 为空或只有空白。",
+                "tags": [
+                  "error-codes"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 200,
+                    "lineEnd": 205,
+                    "nodeIds": [],
+                    "note": "缺提交时抛 missing_decision_submission"
+                  }
+                ]
+              },
+              {
+                "id": "json-vs-schema",
+                "front": "invalid_decision_json 与 invalid_decision_schema 差在哪一层？",
+                "back": "前者 JSON 语法/parse 失败；后者已是对象但字段或语义不合法。",
+                "tags": [
+                  "error-codes"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 166,
+                    "lineEnd": 186,
+                    "nodeIds": [],
+                    "note": "parse 路径与 schema 路径分流"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "code-for-no-braces",
+                "kind": "short-answer",
+                "title": "缺对象码",
+                "prompt": "剥 fence 后仍找不到 JSON 对象时，抛出的错误码是什么？",
+                "expectedAnswer": "missing_json_object",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 77,
+                    "lineEnd": 82,
+                    "nodeIds": [],
+                    "note": "match 失败抛 missing_json_object"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "retry-whitelist",
+            "title": "白名单里没有 schema 错",
+            "content": "# 白名单里没有 schema 错\n\n## 学习目标\n\n完成本课后，你能指出 `RETRYABLE_STRUCTURED_DECISION_CODES` 收了哪三个码、刻意\n排除了哪个，并能解释排除的产品理由。\n\n## 先给结论\n\n- **事实：可重试集合只有三个。** Set 里是 `missing_decision_submission`、\n  `missing_json_object`、`invalid_decision_json`。\n- **事实：`invalid_decision_schema` 不在白名单。** 类型上它仍是\n  `StructuredDecisionErrorCode`，但 `resolveStructuredDecisionWithRepair` 遇到它会直接\n  `throw error`，不会进入 `repairPrompt` 第二次 `runAttempt`。\n- **推论：重试只赌「结构还没成形」。** 没交卷、不是对象、JSON 碎了——再给一次机会\n  可能因为随机性修好。对象已经成形但字段语义错——同一约束下再抽一次，常得到同类错，\n  继续烧 token 不划算。\n- **推论：这是成本与正确性的联合决策。** 不是「校验失败就 retry」的默认框架思维。\n\n## 一个类比\n\n考试：字迹模糊、答题卡没涂——允许补交一次。已经涂完但答案全错——再发一张空白卷\n通常还是错，监考不会无限发卷。**schema 错就是「卷子填完了但内容不合格」。**\n\n## 工作示例\n\n1. 首次 `runAttempt(initialPrompt)` 抛 `invalid_decision_json`。\n2. `RETRYABLE_STRUCTURED_DECISION_CODES.has(error.code)` 为 true。\n3. 系统用 `repairPrompt` 再跑一轮。\n4. 若首次抛的是 `invalid_decision_schema`（例如 cooldown=3），直接失败，没有第二轮。\n\n## 自检\n\n有人把 `invalid_decision_schema` 加进白名单「反正多重试一次」，你会反对的核心理由是什么？\n\n答案：schema 错说明模型已产出可 parse 对象但违反业务约束；同约束下重试命中率低，却稳定加倍成本。\n\n## 重点\n\n**可重试集合是白名单，不是「所有 StructuredDecisionError」。**\n漏掉这个细节，你会在语义错误上无限烧钱。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 22,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "RETRYABLE_STRUCTURED_DECISION_CODES 只含三码"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 214,
+                "lineEnd": 232,
+                "nodeIds": [],
+                "note": "非白名单错误在 repair 入口直接 throw"
+              }
+            ],
+            "cards": [
+              {
+                "id": "three-retryable",
+                "front": "RETRYABLE_STRUCTURED_DECISION_CODES 收了哪三类失败？",
+                "back": "缺提交、缺 JSON 对象、JSON 解析失败——都是结构还没成形。",
+                "tags": [
+                  "retry"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 22,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "可重试三码白名单"
+                  }
+                ]
+              },
+              {
+                "id": "schema-not-retryable",
+                "front": "为什么 invalid_decision_schema 不进重试白名单？",
+                "back": "对象已成形但语义/字段不合法，再抽一次常同类失败，却加倍成本。",
+                "tags": [
+                  "retry"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 226,
+                    "lineEnd": 231,
+                    "nodeIds": [],
+                    "note": "非 retryable 直接抛出"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "excluded-retry-code",
+                "kind": "short-answer",
+                "title": "排除的码",
+                "prompt": "四种 StructuredDecisionErrorCode 里，哪个不在 RETRYABLE 白名单？",
+                "expectedAnswer": "invalid_decision_schema",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 22,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "白名单不含 invalid_decision_schema"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "local-vs-model-repair",
+        "title": "修本地还是再问模型",
+        "objective": "分层使用本地抽取、业务 normalize 与一次模型修复，并正确解读 repaired",
+        "lessons": [
+          {
+            "id": "two-intake-paths",
+            "title": "tool 提交优先，文本兜底",
+            "content": "# tool 提交优先，文本兜底\n\n## 学习目标\n\n完成本课后，你能画出 `resolveStructuredDecision` 的两条进路，并说明为什么\n`tool_submission` 优于 `assistant_text`。\n\n## 先给结论\n\n- **事实：先看 tool 载荷。** 若 `attempt.submittedDecision` 有值，立即\n  `source: \"tool_submission\"`，`repaired: false`，走 `normalizeDecisionCandidate`。\n- **事实：否则才看文本。** 文本为空 → `missing_decision_submission`；有文本 →\n  `source: \"assistant_text\"`，再 `parseAssistantDecisionText`。\n- **事实：运行时用 Zod 约束 tool 入参。** `decisionInputSchema` 要求 boolean/string/number\n  形状；`getInputSchema` 在 `submit_decision` 时挂上这套 schema。\n- **推论：tool 路径把「像不像结构」前移到框架校验。** 文本路径是兼容层——模型偶发\n  把 JSON 写进普通回复时还能抢救，但不应当主路径设计。\n\n## 一个类比\n\n正式渠道是网上填表提交；邮件正文里贴一张表是备用。填表有字段校验，邮件要人工抠。\n**主路径应是填表（tool），不是邮件（assistant_text）。**\n\n## 工作示例\n\n1. Agent 调 `submit_decision`，参数进入 `submittedDecision`。\n2. `resolveStructuredDecision` 不再读 `result.text` 里的闲聊。\n3. 若模型只输出 markdown JSON、没调 tool，才进入 `extractJsonObject` 文本路径。\n4. 两条路径最终都要过 `normalizeDecisionCandidate`——tool 也不能免检语义。\n\n## 自检\n\n为什么 tool 成功提交后仍要 `normalizeDecisionCandidate`，而不是信任 Zod？\n\n答案：Zod 保证单字段类型形状；normalize 还检查字段间约束（如 shouldSpeak 与 publicMessage）。\n\n## 重点\n\n**结构化输出的主路径应是「带 schema 的 tool」，文本 JSON 只是兜底。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 189,
+                "lineEnd": 212,
+                "nodeIds": [],
+                "note": "resolveStructuredDecision：tool 优先再文本"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/mastra-decision-agent.ts",
+                "lineStart": 15,
+                "lineEnd": 27,
+                "nodeIds": [],
+                "note": "submit_decision 的 Zod decisionInputSchema"
+              }
+            ],
+            "cards": [
+              {
+                "id": "tool-first",
+                "front": "resolveStructuredDecision 为什么先看 submittedDecision？",
+                "back": "tool 提交是主路径，已带框架侧 schema，比从散文里抠 JSON 可靠。",
+                "tags": [
+                  "intake"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 192,
+                    "lineEnd": 197,
+                    "nodeIds": [],
+                    "note": "tool_submission 分支"
+                  }
+                ]
+              },
+              {
+                "id": "text-fallback",
+                "front": "assistant_text 路径存在的产品理由是什么？",
+                "back": "模型有时不调 tool 却吐 JSON；兜底可少一次整单失败。",
+                "tags": [
+                  "intake"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 207,
+                    "lineEnd": 211,
+                    "nodeIds": [],
+                    "note": "assistant_text 分支"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "preferred-source",
+                "kind": "short-answer",
+                "title": "优先 source",
+                "prompt": "有 submittedDecision 时，StructuredDecisionResolution.source 是什么字面量？",
+                "expectedAnswer": "tool_submission",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 192,
+                    "lineEnd": 197,
+                    "nodeIds": [],
+                    "note": "source 设为 tool_submission"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "extract-json-locally",
+            "title": "剥 fence 不是调用模型",
+            "content": "# 剥 fence 不是调用模型\n\n## 学习目标\n\n完成本课后，你能区分「本地可修的格式噪声」与「必须再生成」的失败，并指出\n`extractJsonObject` 做了哪几步、不做什么。\n\n## 先给结论\n\n- **事实：本地剥三层噪声。** 去 ` ```json ` / ` ``` ` 围栏，再 regex 取第一个\n  `{...}` 块；取不到才抛 `missing_json_object`。\n- **事实：这发生在同一次 attempt 内。** 不增加 `runAttempt`，不消耗第二次模型调用。\n- **事实：本地修不掉的才上抛。** parse 失败变 `invalid_decision_json`；对象字段不对变\n  `invalid_decision_schema`——后者甚至不在重试白名单。\n- **推论：修复预算要分层。** 确定性字符串处理几乎免费；模型重试昂贵且有副作用。\n  先把便宜的确定性修复做完，再决定是否再买一次生成。\n\n## 一个类比\n\n快递面单外面多包了一层印着「JSON」的透明袋——你撕掉袋子就能扫码，不必打回发件仓库\n重打一张单。**围栏和夹杂文本是袋子，不是地址写错。**\n\n## 工作示例\n\n1. 模型输出围栏包裹的 JSON 对象。\n2. `extractJsonObject` 去掉 fence，抽出对象字符串。\n3. `JSON.parse` 成功，再 normalize。\n4. 若输出是「我认为不应发言」纯中文，本地修无效 → 错误码进入是否重试的决策。\n\n## 自检\n\n`extractJsonObject` 会不会把 `shouldSpeak: \"yes\"` 改成 boolean？\n\n答案：不会。它只负责找到并返回对象字符串；类型与语义在 normalize 阶段失败。\n\n## 重点\n\n**能用确定性规则修的，不要花模型钱去修。**\n本地抽取成功也不等于业务合法——后面还有 schema 门。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 70,
+                "lineEnd": 86,
+                "nodeIds": [],
+                "note": "extractJsonObject：去 fence 与匹配对象"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 166,
+                "lineEnd": 176,
+                "nodeIds": [],
+                "note": "parseAssistantDecisionText 先抽取再 parse"
+              }
+            ],
+            "cards": [
+              {
+                "id": "local-not-model",
+                "front": "剥 markdown fence 算不算 resolveStructuredDecisionWithRepair 的 repaired？",
+                "back": "不算。本地抽取在同一次 attempt 内完成，不触发第二次 runAttempt。",
+                "tags": [
+                  "local-repair"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 70,
+                    "lineEnd": 86,
+                    "nodeIds": [],
+                    "note": "本地 extractJsonObject"
+                  }
+                ]
+              },
+              {
+                "id": "what-extract-cannot",
+                "front": "extractJsonObject 修不了哪类问题？",
+                "back": "字段类型/语义错误，以及根本没有 JSON 对象可抽。",
+                "tags": [
+                  "local-repair"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 77,
+                    "lineEnd": 82,
+                    "nodeIds": [],
+                    "note": "无对象时仍抛错"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "local-repair-fn",
+                "kind": "short-answer",
+                "title": "本地函数名",
+                "prompt": "assistant 文本路径里，负责去 fence 并抽出 JSON 对象字符串的函数名是？",
+                "expectedAnswer": "extractJsonObject",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 70,
+                    "lineEnd": 86,
+                    "nodeIds": [],
+                    "note": "extractJsonObject 定义"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "semantic-schema-gates",
+            "title": "格式对也可能语义错",
+            "content": "# 格式对也可能语义错\n\n## 学习目标\n\n完成本课后，你能举出至少两个「JSON 合法但业务不合法」的例子，并说明代码如何用\n`invalid_decision_schema` 挡下它们。\n\n## 先给结论\n\n- **事实：布尔与非空理由。** `shouldSpeak` 必须严格是 `true`/`false`；\n  `decisionReason` 必须是 trim 后非空字符串。\n- **事实：条件必填。** `shouldSpeak === true` 时必须有 `publicMessage`，否则 schema 错——\n  这是字段间约束，不是单字段 typeof。\n- **事实：cooldown 有硬窗口。** `normalizeCooldown` 要求整数且在\n  `MIN_COOLDOWN_SEC(5)` 与 `MAX_COOLDOWN_SEC(60)` 之间，越界即 `invalid_decision_schema`。\n- **推论：schema 门的价值是语义闭合。** 纯 JSON Schema/typeof 检查不够；产品规则\n  （「要发言就必须有话」）必须写进 normalize。\n\n## 一个类比\n\n护照表格填满了格，但「偕行儿童」勾了是、姓名却空着——海关仍拒。\n**格子填满 ≠ 逻辑自洽。**\n\n## 工作示例\n\n1. `{ \"shouldSpeak\": true, \"decisionReason\": \"ping\", \"publicMessage\": \"  \" }`\n2. `normalizeOptionalText` 把空白收成 `undefined`。\n3. 条件检查触发：`publicMessage is required when shouldSpeak is true`。\n4. 抛 `invalid_decision_schema`；因不在 RETRYABLE 白名单，repair 流程直接失败。\n\n## 自检\n\ncooldown 写成 `5.5` 或 `3` 分别会怎样？\n\n答案：都是 `invalid_decision_schema`。必须是整数且落在 5–60；非整数与越界同一错误码。\n\n## 重点\n\n**第三种失败——语义错——要靠业务 normalize，不能指望「再 gen 一次」当默认药。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 120,
+                "lineEnd": 148,
+                "nodeIds": [],
+                "note": "shouldSpeak/decisionReason/publicMessage 语义门"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 97,
+                "lineEnd": 118,
+                "nodeIds": [],
+                "note": "cooldown 5–60 整数校验"
+              }
+            ],
+            "cards": [
+              {
+                "id": "conditional-public-message",
+                "front": "shouldSpeak 为 true 时，缺 publicMessage 会得到什么错误码？",
+                "back": "invalid_decision_schema——字段间约束失败，不是 JSON 语法问题。",
+                "tags": [
+                  "schema"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 143,
+                    "lineEnd": 148,
+                    "nodeIds": [],
+                    "note": "条件必填 publicMessage"
+                  }
+                ]
+              },
+              {
+                "id": "cooldown-window",
+                "front": "suggestedPublicCooldownSec 合法范围是什么？",
+                "back": "整数秒，闭区间 5 到 60；否则 invalid_decision_schema。",
+                "tags": [
+                  "schema"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 30,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "MIN/MAX_COOLDOWN_SEC"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 105,
+                    "lineEnd": 114,
+                    "nodeIds": [],
+                    "note": "越界抛 schema 错"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "speak-needs-message",
+                "kind": "short-answer",
+                "title": "条件约束",
+                "prompt": "shouldSpeak 为 true 且 publicMessage 为空时，normalize 抛出的错误码？",
+                "expectedAnswer": "invalid_decision_schema",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 143,
+                    "lineEnd": 148,
+                    "nodeIds": [],
+                    "note": "publicMessage 条件必填"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "repaired-means-path",
+            "title": "repaired 记的是路径不是补丁",
+            "content": "# repaired 记的是路径不是补丁\n\n## 学习目标\n\n完成本课后，你能准确解释 `repaired: true` 的含义，并说明它与本地 `extractJsonObject`\n成功不是一回事。\n\n## 先给结论\n\n- **事实：首次成功路径一律 false。** `resolveStructuredDecision` 在 tool 与 text 两条\n  成功分支都写 `repaired: false`。\n- **事实：第二次 attempt 成功后强制 true。** `resolveStructuredDecisionWithRepair` 在\n  repair 轮 `resolveStructuredDecision` 之后 `return { ...repaired, repaired: true }`——\n  覆盖内层的 false。\n- **事实：信封向上传递。** `AgentDecisionEnvelope.generation` 带 `attemptCount` 与\n  `repaired`，供调度侧观测，而不是静默吞掉「多叫了一次模型」。\n- **推论：repaired 是可观测的成本与风险信号。** 它表示「用过修复提示词的第二枪」，\n  不表示「字节级自动修补了 JSON」。本地剥 fence 不会把该位置 true。\n\n## 一个类比\n\n快递重派一次，系统打标「二次派送」——即使第二次地址一次填对，标签仍是二次派送。\n**标签记流程，不记「包裹是否被胶带粘过」。**\n\n## 工作示例\n\n1. 首次缺 tool 提交 → 可重试错误。\n2. `repairPrompt` 再跑，模型这次正确 `submit_decision`。\n3. 内层 resolution 可能是干净的 `tool_submission` + `repaired: false`。\n4. 外层仍展开为 `repaired: true`，因为走了修复路径。\n\n## 自检\n\n监控里 `repaired` 比例突然升高，你应先怀疑什么？\n\n答案：提示词/工具服从率变差，或模型更常吐不可 parse 结构——二次生成成本在爬升。\n\n## 重点\n\n**观测修复路径，而不是假装每次都是一次成功。**\n`repaired` 是产品指标，不是实现细节。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 192,
+                "lineEnd": 211,
+                "nodeIds": [],
+                "note": "首次 resolve 成功时 repaired 恒为 false"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 234,
+                "lineEnd": 239,
+                "nodeIds": [],
+                "note": "repair 成功后强制 repaired: true"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 166,
+                "lineEnd": 169,
+                "nodeIds": [],
+                "note": "Envelope.generation 暴露 attemptCount 与 repaired"
+              }
+            ],
+            "cards": [
+              {
+                "id": "repaired-true-meaning",
+                "front": "repaired: true 准确表示什么？",
+                "back": "走过 repairPrompt 的第二次 runAttempt 并成功，不是本地字符串修补。",
+                "tags": [
+                  "repaired"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 234,
+                    "lineEnd": 239,
+                    "nodeIds": [],
+                    "note": "强制标记 repaired: true"
+                  }
+                ]
+              },
+              {
+                "id": "first-path-false",
+                "front": "首次 tool 提交成功时 repaired 是什么？",
+                "back": "false。只有进入修复轮并成功才会被置 true。",
+                "tags": [
+                  "repaired"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 192,
+                    "lineEnd": 197,
+                    "nodeIds": [],
+                    "note": "tool 成功 repaired: false"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "repaired-flag-value",
+                "kind": "short-answer",
+                "title": "标记语义",
+                "prompt": "resolveStructuredDecisionWithRepair 在第二轮成功后，返回对象的 repaired 字段是？",
+                "expectedAnswer": "true",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 236,
+                    "lineEnd": 239,
+                    "nodeIds": [],
+                    "note": "return 时 repaired: true"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "contract-and-runtime",
+        "title": "契约与调用链",
+        "objective": "把 AgentDecision 契约、Zod 与 repair 状态机接到真实成本观测上",
+        "lessons": [
+          {
+            "id": "agent-decision-contract",
+            "title": "AgentDecision 是下游契约",
+            "content": "# AgentDecision 是下游契约\n\n## 学习目标\n\n完成本课后，你能说明 `AgentDecision` 每个字段如何被调度语义使用，以及为什么\n可选字段不能被模型「随便省略含义」。\n\n## 先给结论\n\n- **事实：决策核。** `shouldSpeak` 决定是否走向公开发言；`publicMessage` /\n  `privateHint` 是两种投递载荷；`decisionReason` 进入运行时状态与可观测原因。\n- **事实：建议冷却是可选的。** `suggestedPublicCooldownSec` /\n  `suggestedPrivateCooldownSec` 可缺省，由调度默认值兜底——但一旦出现就必须合法。\n- **事实：信封大于决策。** `AgentDecisionEnvelope` 还带 `modelId`、`promptSnapshot`、\n  `toolTrace`、`usage`、`generation`、`delivery`，把一次生成的证据链绑在决策旁。\n- **推论：契约稳定，模型可换。** 换模型或换 agent 框架时，保持 `AgentDecision` 不变，\n  下游调度不用跟着抖。\n\n## 一个类比\n\n剧院字幕系统只认「是否上场、台词、侧幕提示、原因码」。换哪个演员（模型）无所谓，\n**提词器协议不能换。**\n\n## 工作示例\n\n1. normalize 产出 `shouldSpeak: false` 且无 publicMessage。\n2. 调度可以跳过公开发言，仍可能送 privateHint。\n3. `decisionReason` 写入 runtime 的 last decision 类字段，供下次触发与排障。\n4. 若模型发明额外字段，契约层忽略；缺关键字段则失败——扩展点在版本化，不在沉默吞并。\n\n## 自检\n\n为什么 `decisionReason` 在类型上是必填，而 `publicMessage` 是可选？\n\n答案：每次决策都需要可审计原因；公开消息仅在决定发言时才有意义。\n\n## 重点\n\n**先冻结下游契约，再接不可靠的模型。** 方向反了就会在业务层到处 if 防御。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 123,
+                "lineEnd": 130,
+                "nodeIds": [],
+                "note": "AgentDecision 字段契约"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 160,
+                "lineEnd": 175,
+                "nodeIds": [],
+                "note": "AgentDecisionEnvelope 携带 generation 与 delivery"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-reason-required",
+                "front": "为什么 decisionReason 不能省？",
+                "back": "调度与排障需要稳定原因码；空原因会让运行时状态不可观测。",
+                "tags": [
+                  "contract"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 123,
+                    "lineEnd": 130,
+                    "nodeIds": [],
+                    "note": "decisionReason 必填"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 130,
+                    "lineEnd": 138,
+                    "nodeIds": [],
+                    "note": "空字符串拒收"
+                  }
+                ]
+              },
+              {
+                "id": "envelope-not-decision",
+                "front": "AgentDecision 与 AgentDecisionEnvelope 差在哪里？",
+                "back": "前者是决策载荷；后者还绑模型、提示快照、用量、修复与投递元数据。",
+                "tags": [
+                  "contract"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 160,
+                    "lineEnd": 175,
+                    "nodeIds": [],
+                    "note": "Envelope 结构"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "optional-cooldown-fields",
+                "kind": "short-answer",
+                "title": "可选字段",
+                "prompt": "AgentDecision 里两个建议冷却字段名都以哪个英文单词开头？",
+                "expectedAnswer": "suggested",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 128,
+                    "lineEnd": 129,
+                    "nodeIds": [],
+                    "note": "两个 suggested*CooldownSec"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "zod-then-normalize",
+            "title": "工具 schema 与 normalize 双重闸",
+            "content": "# 工具 schema 与 normalize 双重闸\n\n## 学习目标\n\n完成本课后，你能对比 `decisionInputSchema`（Zod）与 `normalizeDecisionCandidate`\n的职责边界，并解释为什么需要两道闸而不是一道。\n\n## 先给结论\n\n- **事实：Zod 卡形状。** `shouldSpeak` boolean；消息与理由 string；两个 cooldown\n  `int().min(5).max(60)`——这是 tool 调用入参的框架校验。\n- **事实：normalize 卡业务语义。** 严格 true/false、非空 `decisionReason`、\n  条件 `publicMessage`、再次校验 cooldown 窗口。\n- **事实：装配点明确。** `getInputSchema` 仅当 `tool.id === 'submit_decision'` 时\n  挂 `decisionInputSchema`；读消息类工具用另一套 limit schema。\n- **推论：框架 schema ≠ 产品不变量。** Zod 可通过空字符串 `publicMessage`；\n  产品在 `shouldSpeak === true` 时仍拒绝。只靠一道闸会漏条件约束。\n\n## 一个类比\n\n机场安检（有没有违禁形状）和签证官（行程是否自洽）是两道关。\n**过了 X 光机不等于可以入境。**\n\n## 工作示例\n\n1. 模型 tool 调用带 `publicMessage: \"\"`、`shouldSpeak: true`。\n2. Zod 可能放行（string 类型满足）。\n3. `normalizeOptionalText` 得到 `undefined`，条件检查抛 `invalid_decision_schema`。\n4. 该错误不在 RETRYABLE 白名单——双重闸的失败仍要按码决策。\n\n## 自检\n\n如果删掉 normalize、只留 Zod，会丢掉哪类保护？\n\n答案：字段间业务约束（发言必须有正文、理由非空等），以及与 tool 无关的文本兜底路径校验。\n\n## 重点\n\n**Tool schema 防脏入参；normalize 防脏业务。** 两者重叠是故意的纵深防御。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/mastra-decision-agent.ts",
+                "lineStart": 15,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "decisionInputSchema 的 Zod 形状"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/mastra-decision-agent.ts",
+                "lineStart": 24,
+                "lineEnd": 27,
+                "nodeIds": [],
+                "note": "submit_decision 映射到 decisionInputSchema"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 120,
+                "lineEnd": 163,
+                "nodeIds": [],
+                "note": "normalizeDecisionCandidate 业务语义闸"
+              }
+            ],
+            "cards": [
+              {
+                "id": "two-gates",
+                "front": "Zod 与 normalize 为何要并存？",
+                "back": "Zod 管 tool 入参形状；normalize 管字段间业务不变量与文本路径。",
+                "tags": [
+                  "defense-in-depth"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/mastra-decision-agent.ts",
+                    "lineStart": 15,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "Zod schema"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 143,
+                    "lineEnd": 148,
+                    "nodeIds": [],
+                    "note": "条件业务约束"
+                  }
+                ]
+              },
+              {
+                "id": "empty-string-trap",
+                "front": "为什么空字符串 publicMessage 仍可能危险？",
+                "back": "类型上是 string，但 trim 后无正文；发言决策会变成空广播。",
+                "tags": [
+                  "defense-in-depth"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 140,
+                    "lineEnd": 148,
+                    "nodeIds": [],
+                    "note": "normalizeOptionalText 与条件检查"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "zod-cooldown-max",
+                "kind": "short-answer",
+                "title": "Zod 上限",
+                "prompt": "decisionInputSchema 里 suggestedPublicCooldownSec 的 max 是多少？",
+                "expectedAnswer": "60",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/mastra-decision-agent.ts",
+                    "lineStart": 20,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "cooldown max(60)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "repair-state-machine",
+            "title": "一次修复机会的状态机",
+            "content": "# 一次修复机会的状态机\n\n## 学习目标\n\n完成本课后，你能根据 `resolveStructuredDecisionWithRepair` 画出控制流，并指出\n「最关键的那条边」：非白名单错误如何跳过 repair。\n\n## 先给结论\n\n- **事实：最多两枪。** `initialPrompt` 一次；仅当捕获的是\n  `StructuredDecisionError` 且 code 在 RETRYABLE 集合内，才 `repairPrompt` 第二枪。\n- **事实：第二枪不再套娃。** 函数没有第三轮；第二枪若再抛，直接失败给上层。\n- **事实：成功第二枪必打标。** 返回对象 `repaired: true`，无论第二枪来自 tool 还是 text。\n- **推论：修复预算写死在控制流里。** 不是「指数退避重试五次」，而是产品级的一次机会。\n\n## 一个类比\n\n客服工单：首次处理 → 仅「资料不全」类原因允许退回客户补件一次 → 补件后仍不合格就结案。\n**不是所有差评都配第二次人工。**\n\n## 工作示例\n\n```mermaid\nflowchart TD\n  A[runAttempt initialPrompt] --> B[resolveStructuredDecision]\n  B -->|成功| C[返回 repaired false]\n  B -->|抛 StructuredDecisionError| D{code 在 RETRYABLE?}\n  D -->|否| E[直接 throw]\n  D -->|是| F[runAttempt repairPrompt]\n  F --> G[resolveStructuredDecision]\n  G -->|成功| H[返回 repaired true]\n  G -->|失败| I[向上抛出]\n```\n\n图中**最关键的是 D→E**：`invalid_decision_schema` 走这条边，不烧第二次模型调用。\n很多人画 retry 图时会漏掉「显式不重试」的边，结果实现成「凡错必重试」。\n\n## 自检\n\n若首次抛的是普通 `Error`（不是 StructuredDecisionError），会进入 repair 吗？\n\n答案：不会。条件要求 `error instanceof StructuredDecisionError`，否则直接 throw。\n\n## 重点\n\n**状态机要同时画「重试边」和「拒绝重试边」。** 后者才是省钱与止损的设计。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 214,
+                "lineEnd": 240,
+                "nodeIds": [],
+                "note": "resolveStructuredDecisionWithRepair 完整控制流"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 22,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "RETRYABLE 白名单决定 D 节点分支"
+              }
+            ],
+            "cards": [
+              {
+                "id": "max-two-attempts",
+                "front": "resolveStructuredDecisionWithRepair 最多调用几次 runAttempt？",
+                "back": "两次：initialPrompt 一次，仅可重试错误时再 repairPrompt 一次。",
+                "tags": [
+                  "state-machine"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 221,
+                    "lineEnd": 235,
+                    "nodeIds": [],
+                    "note": "两次 runAttempt"
+                  }
+                ]
+              },
+              {
+                "id": "non-structured-error",
+                "front": "首次抛出非 StructuredDecisionError 时怎么办？",
+                "back": "不进入 repair，直接 throw 给上层。",
+                "tags": [
+                  "state-machine"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 226,
+                    "lineEnd": 231,
+                    "nodeIds": [],
+                    "note": "instanceof 与白名单双条件"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "repair-max-attempts",
+                "kind": "short-answer",
+                "title": "最大次数",
+                "prompt": "resolveStructuredDecisionWithRepair 最多会调用几次 runAttempt？",
+                "expectedAnswer": "2",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 221,
+                    "lineEnd": 235,
+                    "nodeIds": [],
+                    "note": "initial 与 repair 各一次"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "cost-of-retry",
+            "title": "重试会记 attemptCount 并烧钱",
+            "content": "# 重试会记 attemptCount 并烧钱\n\n## 学习目标\n\n完成本课后，你能把「再问一次模型」翻译成可观测成本，并说明运行时 agent 如何提供\n`generate` 用量字段。\n\n## 先给结论\n\n- **事实：每次 generate 都计价。** `createMastraDecisionAgent` 的 `generate` 汇总\n  `inputTokens`/`outputTokens`，并用 `estimateModelCostUsd` 得到 `costUsd`。\n- **事实：修复是第二次 generate。** 控制流上的第二枪不是本地 CPU 修复，而是再次\n  `agent.generate`——token 与 latency 叠加。\n- **事实：信封暴露 generation。** `attemptCount` 与 `repaired` 让调度日志能区分\n  「一次成功」与「修过才成功」，避免平均成本被低估。\n- **推论：白名单收窄直接等于成本护栏。** 把 schema 错也重试，等于在已知低命中率\n  事件上自动 double spend。\n\n## 一个类比\n\n同一道数学题，老师允许「看不清题目」时重发试卷，不允许「算错」时无限重发——\n**纸张（token）有成本，重发规则必须按错误类型写死。**\n\n## 工作示例\n\n1. 首次模型输出缺 JSON → 可重试。\n2. 第二枪成功，`repaired: true`，编排层累计 attempt。\n3. 两次 usage 相加才是真实账单；只看成功响应会漏掉失败枪。\n4. 若是 schema 语义错，设计选择是 fail closed，账单停在一枪。\n\n## 自检\n\n只监控「成功请求的平均 costUsd」、不看 repaired 比例，会低估什么？\n\n答案：低估真实 token 支出与提示词退化；修复枪成本被成功响应摊没了。\n\n## 重点\n\n**结构化重试策略 = 可靠性策略 × 成本策略。** 只优化前者会在账单上还款。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/mastra-decision-agent.ts",
+                "lineStart": 75,
+                "lineEnd": 101,
+                "nodeIds": [],
+                "note": "generate 汇总 token 与 costUsd"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                "lineStart": 166,
+                "lineEnd": 169,
+                "nodeIds": [],
+                "note": "generation.attemptCount 与 repaired"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                "lineStart": 214,
+                "lineEnd": 235,
+                "nodeIds": [],
+                "note": "第二枪 runAttempt 才会 repair"
+              }
+            ],
+            "cards": [
+              {
+                "id": "retry-is-generate",
+                "front": "repair 轮本质上多做了什么昂贵的事？",
+                "back": "再一次模型 generate（runAttempt），不是本地字符串修补。",
+                "tags": [
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/agent-decision.ts",
+                    "lineStart": 234,
+                    "lineEnd": 235,
+                    "nodeIds": [],
+                    "note": "repairPrompt 的第二次 runAttempt"
+                  }
+                ]
+              },
+              {
+                "id": "observe-repaired",
+                "front": "为什么要把 repaired 放进 AgentDecisionEnvelope.generation？",
+                "back": "让成本与失败模式可观测，避免二次生成被平均掉。",
+                "tags": [
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-scheduler-core.ts",
+                    "lineStart": 166,
+                    "lineEnd": 169,
+                    "nodeIds": [],
+                    "note": "generation 元数据"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "cost-field-name",
+                "kind": "short-answer",
+                "title": "费用字段",
+                "prompt": "mastra decision agent 的 usage 里表示美元成本的字段名是？",
+                "expectedAnswer": "costUsd",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/mastra-decision-agent.ts",
+                    "lineStart": 93,
+                    "lineEnd": 99,
+                    "nodeIds": [],
+                    "note": "usage.costUsd"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

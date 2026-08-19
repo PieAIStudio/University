@@ -1,0 +1,27 @@
+interface:
+  display_name: "Refresh Study"
+  short_description: "Orchestrate local-commit study refresh and evidence audit"
+  default_prompt: "Use $refresh-study to refresh the current study from its latest local commit and audit stale evidence before reactivation."
+
+compatibility:
+  canonical_format: "agent-skills"
+  adapter_targets:
+    - "openai"
+    - "claude"
+    - "generic"
+    - "agent-skills"
+  activation:
+    mode: "auto"
+    paths: []
+  execution:
+    context: "inline"
+    shell: "bash"
+  trust:
+    source_tier: "local"
+    remote_inline_execution: "forbid"
+    remote_metadata_policy: "allow-metadata-only"
+  degradation:
+    openai: "metadata-adapter"
+    claude: "neutral-source-plus-adapter"
+    generic: "neutral-source"
+    agent-skills: "canonical-source"

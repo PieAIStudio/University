@@ -1,0 +1,1034 @@
+import { createHash, randomUUID } from "node:crypto";
+import {
+  closeSync,
+  copyFileSync,
+  existsSync,
+  fsyncSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  statSync,
+} from "node:fs";
+import { basename, dirname, join, relative, resolve } from "node:path";
+
+import { z } from "zod";
+
+import {
+  CardContentSchema,
+  ContentStatus,
+  CourseCurrency,
+  CourseManifestSchema,
+  ExerciseSchema,
+  LessonManifestSchema,
+  StableId,
+  UnitManifestSchema,
+  type CardContent,
+  type CourseManifest,
+  type CourseManifestInput,
+  type Exercise,
+  type LessonManifest,
+  type UnitManifest,
+} from "../../src/domain/schemas.js";
+import { writeJsonAtomically, writeTextAtomically } from "../storage/atomic-json.js";
+import { getCoursePaths, getLessonPaths, getStudyPaths, getUnitPaths } from "../studies/paths.js";
+import { readStudy } from "../studies/repository.js";
+import { validateEvidence } from "./evidence.js";
+
+const EMPTY_SHA256 = `sha256:${"0".repeat(64)}`;
+
+const LatestRevisionPointerSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    id: StableId,
+    contentRevision: z.number().int().positive(),
+  })
+  .strict();
+
+type LatestRevisionPointer = z.infer<typeof LatestRevisionPointerSchema>;
+
+type ExerciseWithoutHash = Exercise extends infer Item
+  ? Item extends { contentHash: string }
+    ? Omit<Item, "contentHash">
+    : never
+  : never;
+
+interface WriteLessonRevisionInput {
+  readonly manifest: Omit<z.input<typeof LessonManifestSchema>, "contentHash">;
+  readonly content: string;
+  /** External capture paths are copied into the atomic revision staging tree. */
+  readonly assetFiles?: readonly { readonly path: string; readonly sourcePath: string }[];
+}
+
+function sha256(value: string): string {
+  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
+}
+
+function sha256Bytes(value: Buffer): string {
+  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
+}
+
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map((child) => (child === undefined ? "null" : canonicalJson(child))).join(",")}]`;
+  }
+  if (value !== null && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .filter(([, child]) => child !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, child]) => `${JSON.stringify(key)}:${canonicalJson(child)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function readJson(path: string): unknown {
+  return JSON.parse(readFileSync(path, "utf8")) as unknown;
+}
+
+function assertUniqueIds(ids: readonly string[], label: string): void {
+  if (new Set(ids).size !== ids.length) throw new Error(`${label} must not contain duplicate IDs`);
+}
+
+function assertCourseStructure(course: CourseManifest): void {
+  assertUniqueIds(course.unitIds, `Course ${course.id} unitIds`);
+}
+
+function assertUnitStructure(course: CourseManifest, unit: UnitManifest): void {
+  if (!course.unitIds.includes(unit.id))
+    throw new Error(`Course does not declare unit: ${unit.id}`);
+  assertUniqueIds(unit.lessonIds, `Unit ${unit.id} lessonIds`);
+  assertUniqueIds(unit.prerequisiteUnitIds, `Unit ${unit.id} prerequisiteUnitIds`);
+  if (unit.prerequisiteUnitIds.includes(unit.id)) {
+    throw new Error(`Unit must not list itself as a prerequisite: ${unit.id}`);
+  }
+  for (const prerequisiteId of unit.prerequisiteUnitIds) {
+    if (!course.unitIds.includes(prerequisiteId)) {
+      throw new Error(`Course does not declare prerequisite unit: ${prerequisiteId}`);
+    }
+  }
+}
+
+function assertLessonStructure(unit: UnitManifest, lesson: LessonManifest, content?: string): void {
+  if (!unit.lessonIds.includes(lesson.id))
+    throw new Error(`Unit does not declare lesson: ${lesson.id}`);
+  assertUniqueIds(lesson.exerciseIds, `Lesson ${lesson.id} exerciseIds`);
+  assertUniqueIds(lesson.cardIds, `Lesson ${lesson.id} cardIds`);
+  assertUniqueIds(
+    lesson.sections.map((section) => section.id),
+    `Lesson ${lesson.id} section IDs`,
+  );
+  if (content !== undefined && lesson.sections.length > 0) {
+    const headings = new Set(
+      [...content.matchAll(/^#{1,3}\s+(.+?)\s*$/gm)].map((match) =>
+        match[1]!.replace(/\s+\{#[a-z0-9-]+\}\s*$/, "").trim(),
+      ),
+    );
+    for (const section of lesson.sections) {
+      if (!headings.has(section.title)) {
+        throw new Error(`Lesson section title is not an H1-H3 heading: ${section.id}`);
+      }
+    }
+  }
+}
+
+function syncDirectory(directory: string): void {
+  const descriptor = openSync(directory, "r");
+  try {
+    fsyncSync(descriptor);
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
+function createManifestRoot(
+  root: string,
+  childDirectory: string,
+  manifestPath: string,
+  manifest: unknown,
+): void {
+  const assertIdentity = (): void => {
+    try {
+      if (!statSync(childDirectory).isDirectory()) {
+        throw new Error("required child path is not a directory");
+      }
+      if (canonicalJson(readJson(manifestPath)) !== canonicalJson(manifest)) {
+        throw new Error("stored manifest does not match");
+      }
+    } catch (error) {
+      const detail = error instanceof Error ? `: ${error.message}` : "";
+      throw new Error(`Content already exists and conflicts with requested content${detail}`);
+    }
+  };
+
+  const parent = dirname(root);
+  mkdirSync(parent, { recursive: true, mode: 0o700 });
+  if (existsSync(root)) {
+    assertIdentity();
+    return;
+  }
+
+  const staging = join(parent, `.creating-${basename(root)}-${randomUUID()}`);
+  try {
+    mkdirSync(staging, { mode: 0o700 });
+    mkdirSync(join(staging, relative(root, childDirectory)), { recursive: true, mode: 0o700 });
+    writeJsonAtomically(join(staging, relative(root, manifestPath)), manifest);
+    try {
+      renameSync(staging, root);
+    } catch (error) {
+      if (!existsSync(root)) throw error;
+      assertIdentity();
+      return;
+    }
+  } finally {
+    rmSync(staging, { recursive: true, force: true });
+  }
+  syncDirectory(parent);
+}
+
+function readLatestPointer(path: string, expectedId: string): LatestRevisionPointer {
+  const pointer = LatestRevisionPointerSchema.parse(readJson(path));
+  if (pointer.id !== expectedId) {
+    throw new Error(`Latest pointer ID mismatch: expected ${expectedId}, received ${pointer.id}`);
+  }
+  return pointer;
+}
+
+function assertPointerMatchesManifest(
+  pointer: LatestRevisionPointer,
+  manifest: { readonly id: string; readonly contentRevision: number },
+  label: string,
+): void {
+  if (manifest.id !== pointer.id || manifest.contentRevision !== pointer.contentRevision) {
+    throw new Error(`${label} latest pointer does not match its revision manifest`);
+  }
+}
+
+function assertExistingRevisionMatches(
+  revisionRoot: string,
+  revision: number,
+  label: string,
+  assertIdentity: (revisionRoot: string) => void,
+): void {
+  try {
+    assertIdentity(revisionRoot);
+  } catch (error) {
+    const detail = error instanceof Error ? `: ${error.message}` : "";
+    throw new Error(
+      `${label} revision ${revision} already exists and conflicts with requested content${detail}`,
+    );
+  }
+}
+
+function writeRevisionDirectory(
+  root: string,
+  revision: number,
+  label: string,
+  writeStaging: (stagingRoot: string) => void,
+  assertIdentity: (revisionRoot: string) => void,
+): void {
+  const revisionsRoot = join(root, "revisions");
+  mkdirSync(revisionsRoot, { recursive: true, mode: 0o700 });
+  const revisionRoot = join(revisionsRoot, String(revision));
+  if (existsSync(revisionRoot)) {
+    assertExistingRevisionMatches(revisionRoot, revision, label, assertIdentity);
+    return;
+  }
+
+  const staging = join(revisionsRoot, `.creating-${revision}-${randomUUID()}`);
+  try {
+    mkdirSync(staging, { mode: 0o700 });
+    writeStaging(staging);
+    try {
+      renameSync(staging, revisionRoot);
+    } catch (error) {
+      if (!existsSync(revisionRoot)) throw error;
+      assertExistingRevisionMatches(revisionRoot, revision, label, assertIdentity);
+      return;
+    }
+    syncDirectory(revisionsRoot);
+  } finally {
+    rmSync(staging, { recursive: true, force: true });
+  }
+}
+
+function assertRequestedRevision(actual: number, expected: number, label: string): void {
+  if (actual !== expected) {
+    throw new Error(`${label} revision must be ${expected}, received ${actual}`);
+  }
+}
+
+function finalizeLatestRevision(
+  latestPath: string,
+  id: string,
+  revision: number,
+  previousRevision: number,
+  label: string,
+): void {
+  if (existsSync(latestPath)) {
+    const current = readLatestPointer(latestPath, id);
+    if (current.contentRevision === revision) return;
+    if (current.contentRevision !== previousRevision) {
+      throw new Error(`${label} latest revision changed while the revision was being written`);
+    }
+  } else if (previousRevision !== 0) {
+    throw new Error(`${label} latest pointer disappeared while the revision was being written`);
+  }
+
+  writeJsonAtomically(latestPath, {
+    schemaVersion: 1,
+    id,
+    contentRevision: revision,
+  } satisfies LatestRevisionPointer);
+}
+
+function assertContentIdentity(
+  content: { readonly courseId: string; readonly unitId: string; readonly lessonId?: string },
+  courseId: string,
+  unitId: string,
+  lessonId?: string,
+): void {
+  if (content.courseId !== courseId || content.unitId !== unitId) {
+    throw new Error("Content hierarchy IDs do not match its storage location");
+  }
+  if (lessonId !== undefined && content.lessonId !== lessonId) {
+    throw new Error("Content lessonId does not match its storage location");
+  }
+}
+
+export function writeCourse(
+  studiesRoot: string,
+  studyId: string,
+  candidate: CourseManifestInput,
+): CourseManifest {
+  readStudy(studiesRoot, studyId);
+  const course = CourseManifestSchema.parse(candidate);
+  if (course.status !== "draft") {
+    throw new Error("A course must be created as draft and activated only after validation");
+  }
+  assertCourseStructure(course);
+  const paths = getCoursePaths(studiesRoot, studyId, course.id);
+  createManifestRoot(paths.root, paths.units, paths.manifest, course);
+  return course;
+}
+
+/**
+ * Every course directory in a study, in a stable order. A study is a shelf of
+ * courses, not a container for one: `defaultCourseId` says which course opens
+ * first, and this says which ones exist at all. Directories without a manifest
+ * are skipped rather than reported, so a half-written course cannot break the
+ * shelf for the courses beside it.
+ */
+export function listCourseIds(studiesRoot: string, studyId: string): readonly string[] {
+  const root = getStudyPaths(studiesRoot, studyId).courses;
+  if (!existsSync(root)) return [];
+  return readdirSync(root, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(join(root, entry.name, "course.json")))
+    .map((entry) => entry.name)
+    .sort();
+}
+
+export function readCourse(studiesRoot: string, studyId: string, courseId: string): CourseManifest {
+  const paths = getCoursePaths(studiesRoot, studyId, courseId);
+  const course = CourseManifestSchema.parse(readJson(paths.manifest));
+  if (course.id !== courseId) throw new Error("Course manifest ID does not match its directory");
+  assertCourseStructure(course);
+  return course;
+}
+
+export function writeUnit(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  candidate: UnitManifest,
+): UnitManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const unit = UnitManifestSchema.parse(candidate);
+  if (unit.status !== "draft") {
+    throw new Error("A unit must be created as draft and activated only after validation");
+  }
+  assertUnitStructure(course, unit);
+  const paths = getUnitPaths(studiesRoot, studyId, courseId, unit.id);
+  createManifestRoot(paths.root, paths.lessons, paths.manifest, unit);
+  return unit;
+}
+
+export function readUnit(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  unitId: string,
+): UnitManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const paths = getUnitPaths(studiesRoot, studyId, courseId, unitId);
+  const unit = UnitManifestSchema.parse(readJson(paths.manifest));
+  if (unit.id !== unitId) throw new Error("Unit manifest ID does not match its directory");
+  assertUnitStructure(course, unit);
+  return unit;
+}
+
+function assertStatusTransition(
+  current: CourseManifest["status"],
+  candidate: CourseManifest["status"],
+): void {
+  const allowed: Readonly<Record<CourseManifest["status"], readonly CourseManifest["status"][]>> = {
+    draft: ["active"],
+    active: ["stale", "retired"],
+    stale: ["active", "retired"],
+    retired: [],
+  };
+  if (!allowed[current].includes(candidate)) {
+    throw new Error(`Invalid content status transition: ${current} -> ${candidate}`);
+  }
+}
+
+function assertEvidenceIsStillValid(
+  studiesRoot: string,
+  studyId: string,
+  evidence: readonly LessonManifest["evidence"][number][],
+): void {
+  for (const reference of evidence) validateEvidence(studiesRoot, studyId, reference);
+}
+
+function assertUnitReadyForActivation(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  unit: UnitManifest,
+): void {
+  if (unit.lessonIds.length === 0) {
+    throw new Error(`Unit cannot be activated without lessons: ${unit.id}`);
+  }
+
+  for (const lessonId of unit.lessonIds) {
+    const lesson = readLatestLesson(studiesRoot, studyId, courseId, unit.id, lessonId).manifest;
+    if (lesson.status !== "active") {
+      throw new Error(`Unit cannot be activated while lesson is ${lesson.status}: ${lesson.id}`);
+    }
+    assertEvidenceIsStillValid(studiesRoot, studyId, lesson.evidence);
+
+    for (const cardId of lesson.cardIds) {
+      const card = readLatestCard(studiesRoot, studyId, courseId, unit.id, lesson.id, cardId);
+      if (card.status !== "active") {
+        throw new Error(`Unit cannot be activated while card is ${card.status}: ${card.id}`);
+      }
+      assertEvidenceIsStillValid(studiesRoot, studyId, card.evidence);
+    }
+
+    for (const exerciseId of lesson.exerciseIds) {
+      const exercise = readLatestExercise(
+        studiesRoot,
+        studyId,
+        courseId,
+        unit.id,
+        lesson.id,
+        exerciseId,
+      );
+      if (exercise.status !== "active") {
+        throw new Error(
+          `Unit cannot be activated while exercise is ${exercise.status}: ${exercise.id}`,
+        );
+      }
+      assertEvidenceIsStillValid(studiesRoot, studyId, exercise.evidence);
+    }
+  }
+}
+
+function assertCourseReadyForActivation(
+  studiesRoot: string,
+  studyId: string,
+  course: CourseManifest,
+): void {
+  if (course.unitIds.length === 0) {
+    throw new Error(`Course cannot be activated without units: ${course.id}`);
+  }
+  for (const unitId of course.unitIds) {
+    const unit = readUnit(studiesRoot, studyId, course.id, unitId);
+    if (unit.status !== "active") {
+      throw new Error(`Course cannot be activated while unit is ${unit.status}: ${unit.id}`);
+    }
+    assertUnitReadyForActivation(studiesRoot, studyId, course.id, unit);
+  }
+}
+
+function assertCourseIsEditable(course: CourseManifest): void {
+  if (course.status === "active" || course.status === "retired") {
+    throw new Error(`Course must be draft or stale before content can change: ${course.id}`);
+  }
+}
+
+function assertContentContainerIsEditable(course: CourseManifest, unit: UnitManifest): void {
+  assertCourseIsEditable(course);
+  if (unit.status === "active" || unit.status === "retired") {
+    throw new Error(`Unit must be draft or stale before content can change: ${unit.id}`);
+  }
+}
+
+/**
+ * Adds to what a course declares — a new unit, a changed title — while it sits
+ * in the editable window that `course open-for-edit` opens. `writeCourse` is
+ * create-once by design, which is right for creation but meant a published
+ * course could never gain a unit. Correctness is not bought by immutability
+ * here; it is bought by the freshness audit that reactivation runs on the way
+ * out.
+ *
+ * `status` and `createdAt` are absent from the input on purpose: status belongs
+ * to `updateCourseStatus`, which owns the transition table, and a creation date
+ * that could be edited is not a creation date.
+ */
+export function updateCourseManifest(
+  studiesRoot: string,
+  studyId: string,
+  candidate: Omit<CourseManifest, "status" | "createdAt">,
+  now = new Date(),
+): CourseManifest {
+  const current = readCourse(studiesRoot, studyId, candidate.id);
+  assertCourseIsEditable(current);
+  const updated = CourseManifestSchema.parse({
+    ...candidate,
+    status: current.status,
+    createdAt: current.createdAt,
+    updatedAt: now.toISOString(),
+  });
+  assertCourseStructure(updated);
+  writeJsonAtomically(getCoursePaths(studiesRoot, studyId, updated.id).manifest, updated);
+  return updated;
+}
+
+/**
+ * The unit-level counterpart: lets a unit declare a lesson it did not have
+ * before. A lesson cannot be written until its unit names it, so this is the
+ * step that makes a lesson addable at all.
+ */
+export function updateUnitManifest(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  candidate: Omit<UnitManifest, "status">,
+): UnitManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const current = readUnit(studiesRoot, studyId, courseId, candidate.id);
+  assertContentContainerIsEditable(course, current);
+  const updated = UnitManifestSchema.parse({ ...candidate, status: current.status });
+  assertUnitStructure(course, updated);
+  writeJsonAtomically(getUnitPaths(studiesRoot, studyId, courseId, updated.id).manifest, updated);
+  return updated;
+}
+
+export function updateCourseStatus(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  candidateStatus: CourseManifest["status"],
+  now = new Date(),
+): CourseManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const status = ContentStatus.parse(candidateStatus);
+  // Asking for the status a course already has is a no-op, not an error.
+  // Reactivation walks units and then the course; if it failed partway, the
+  // retry used to die on "Invalid content status transition: active -> active"
+  // for the units it had already done, leaving the shelf stuck half-activated
+  // with no command able to finish the job.
+  if (course.status === status) return course;
+  assertStatusTransition(course.status, status);
+  if (status === "active") {
+    assertCourseReadyForActivation(studiesRoot, studyId, course);
+  }
+  const updated = CourseManifestSchema.parse({
+    ...course,
+    status,
+    updatedAt: now.toISOString(),
+  });
+  writeJsonAtomically(getCoursePaths(studiesRoot, studyId, courseId).manifest, updated);
+  return updated;
+}
+
+/**
+ * Declares whether a course is meant to track the repository or to stay put.
+ *
+ * Pinning is not a way to silence a course that has genuinely rotted: a course
+ * that is already `stale` is one the audit judged out of date, and freezing it
+ * there would leave a broken course wearing a label that says it is fine on
+ * purpose. Retire or revise it instead, then pin.
+ */
+export function setCourseCurrency(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  candidate: CourseManifest["currency"],
+  now = new Date(),
+): CourseManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const currency = CourseCurrency.parse(candidate);
+  if (course.currency === currency) return course;
+  if (currency === "pinned-history" && course.status === "stale") {
+    throw new Error(
+      `Course ${courseId} is stale; revise or retire it before pinning it as history`,
+    );
+  }
+  const updated = CourseManifestSchema.parse({
+    ...course,
+    currency,
+    updatedAt: now.toISOString(),
+  });
+  writeJsonAtomically(getCoursePaths(studiesRoot, studyId, courseId).manifest, updated);
+  return updated;
+}
+
+/**
+ * Declares which courses a learner should already have finished. This is the
+ * one place course order comes from — see `orderCoursesByPrerequisite` — so a
+ * newly added course only needs its author to answer "what does this assume",
+ * the same question `objectives` already asks; it never needs anyone to go
+ * back and renumber the rest of the shelf.
+ */
+export function setCoursePrerequisites(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  prerequisiteCourseIds: readonly string[],
+  now = new Date(),
+): CourseManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const requested = [...new Set(prerequisiteCourseIds.map((id) => StableId.parse(id)))];
+  if (requested.includes(courseId)) {
+    throw new Error(`Course ${courseId} cannot depend on itself`);
+  }
+  const others = new Map(
+    listCourseIds(studiesRoot, studyId)
+      .filter((id) => id !== courseId)
+      .map((id) => [id, readCourse(studiesRoot, studyId, id)]),
+  );
+  for (const id of requested) {
+    if (!others.has(id)) throw new Error(`No course named ${id} in study ${studyId}`);
+  }
+  const graph = new Map<string, readonly string[]>(
+    [...others.entries()].map(([id, manifest]) => [id, manifest.prerequisiteCourseIds]),
+  );
+  graph.set(courseId, requested);
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const hasCycleFrom = (id: string): boolean => {
+    if (visited.has(id)) return false;
+    if (visiting.has(id)) return true;
+    visiting.add(id);
+    for (const prerequisite of graph.get(id) ?? []) {
+      if (hasCycleFrom(prerequisite)) return true;
+    }
+    visiting.delete(id);
+    visited.add(id);
+    return false;
+  };
+  if (hasCycleFrom(courseId)) {
+    throw new Error(`Setting ${courseId}'s prerequisites would create a cycle`);
+  }
+  const updated = CourseManifestSchema.parse({
+    ...course,
+    prerequisiteCourseIds: requested,
+    updatedAt: now.toISOString(),
+  });
+  writeJsonAtomically(getCoursePaths(studiesRoot, studyId, courseId).manifest, updated);
+  return updated;
+}
+
+/**
+ * Put a course on a named path, or take it off one.
+ *
+ * Deliberately not validated against a list of known tracks. A track exists
+ * because courses claim it, the same way a tag does; a registry would mean two
+ * places to keep in step and a failure mode where the name is right and the
+ * registration is missing. Passing `null` clears the claim.
+ */
+export function setCourseTrack(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  trackId: string | null,
+  now = new Date(),
+): CourseManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const updated = CourseManifestSchema.parse({
+    ...course,
+    trackId: trackId === null ? null : StableId.parse(trackId),
+    updatedAt: now.toISOString(),
+  });
+  writeJsonAtomically(getCoursePaths(studiesRoot, studyId, courseId).manifest, updated);
+  return updated;
+}
+
+/**
+ * Courses with no unmet prerequisite come first; ready-course ties go to the
+ * optional caller preference, then whichever was created earlier, then by id.
+ * A prerequisite outside the given set (retired, or simply not part of what
+ * is being ordered) never blocks a course — only a prerequisite present in the
+ * same set does. The preference is deliberately consulted only among ready
+ * courses, so a focus order can guide a run without bypassing prerequisites.
+ *
+ * Prerequisites are validated acyclic when they are set, so the "nothing is
+ * ready" branch below is a defensive fallback for a cycle that reached disk
+ * some other way — it breaks the tie deterministically instead of looping.
+ */
+export function orderCoursesByPrerequisite(
+  courses: readonly CourseManifest[],
+  readyTieBreak?: (left: CourseManifest, right: CourseManifest) => number,
+): readonly CourseManifest[] {
+  const byId = new Map(courses.map((course) => [course.id, course]));
+  const remaining = new Set(byId.keys());
+  const stableTieBreak = (left: string, right: string): number =>
+    byId.get(left)!.createdAt.localeCompare(byId.get(right)!.createdAt) ||
+    left.localeCompare(right);
+  const tieBreak = (left: string, right: string): number => {
+    const preferred = readyTieBreak?.(byId.get(left)!, byId.get(right)!) ?? 0;
+    return preferred || stableTieBreak(left, right);
+  };
+
+  const ordered: CourseManifest[] = [];
+  while (remaining.size > 0) {
+    const ready = [...remaining]
+      .filter((id) => byId.get(id)!.prerequisiteCourseIds.every((p) => !remaining.has(p)))
+      .sort(tieBreak);
+    const next = ready.length > 0 ? ready[0]! : [...remaining].sort(tieBreak)[0]!;
+    ordered.push(byId.get(next)!);
+    remaining.delete(next);
+  }
+  return ordered;
+}
+
+export function updateUnitStatus(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  unitId: string,
+  candidateStatus: UnitManifest["status"],
+): UnitManifest {
+  const course = readCourse(studiesRoot, studyId, courseId);
+  const unit = readUnit(studiesRoot, studyId, courseId, unitId);
+  const status = ContentStatus.parse(candidateStatus);
+  // Same idempotency as `updateCourseStatus`: re-requesting the current status
+  // is what a retry after a partial reactivation looks like.
+  if (unit.status === status) return unit;
+  assertStatusTransition(unit.status, status);
+  if (course.status === "active" && status !== "active") {
+    throw new Error(`Course must be marked stale before changing an active unit: ${course.id}`);
+  }
+  if (status === "active") {
+    assertUnitReadyForActivation(studiesRoot, studyId, courseId, unit);
+  }
+  const updated = UnitManifestSchema.parse({ ...unit, status });
+  writeJsonAtomically(getUnitPaths(studiesRoot, studyId, courseId, unitId).manifest, updated);
+  return updated;
+}
+
+export function writeLessonRevision(
+  studiesRoot: string,
+  studyId: string,
+  input: WriteLessonRevisionInput,
+): LessonManifest {
+  if (input.content.trim() === "") throw new Error("Lesson content must not be empty");
+  const lesson = LessonManifestSchema.parse({
+    ...input.manifest,
+    contentHash: sha256(input.content),
+  });
+  const course = readCourse(studiesRoot, studyId, lesson.courseId);
+  const unit = readUnit(studiesRoot, studyId, lesson.courseId, lesson.unitId);
+  assertContentContainerIsEditable(course, unit);
+  assertLessonStructure(unit, lesson, input.content);
+  for (const evidence of lesson.evidence) validateEvidence(studiesRoot, studyId, evidence);
+  const assetFiles = new Map((input.assetFiles ?? []).map((file) => [file.path, file.sourcePath]));
+  const declaredAssetPaths = new Set(lesson.assets.map((asset) => asset.path));
+  for (const file of assetFiles.keys()) {
+    if (!declaredAssetPaths.has(file)) throw new Error(`Asset file is not declared: ${file}`);
+  }
+
+  const paths = getLessonPaths(studiesRoot, studyId, lesson.courseId, lesson.unitId, lesson.id);
+  let previousRevision = 0;
+  if (existsSync(paths.latest)) {
+    const current = readLatestLesson(
+      studiesRoot,
+      studyId,
+      lesson.courseId,
+      lesson.unitId,
+      lesson.id,
+    );
+    previousRevision = current.manifest.contentRevision;
+  }
+  assertRequestedRevision(lesson.contentRevision, previousRevision + 1, "Lesson");
+
+  writeRevisionDirectory(
+    paths.root,
+    lesson.contentRevision,
+    "Lesson",
+    (stagingRoot) => {
+      writeTextAtomically(join(stagingRoot, "content.md"), input.content);
+      writeJsonAtomically(join(stagingRoot, "manifest.json"), lesson);
+      for (const asset of lesson.assets) {
+        const sourcePath = assetFiles.get(asset.path);
+        if (!sourcePath) throw new Error(`Missing source file for lesson asset: ${asset.id}`);
+        const bytes = readFileSync(sourcePath);
+        if (bytes.byteLength !== asset.bytes || sha256Bytes(bytes) !== asset.sha256) {
+          throw new Error(`Lesson asset hash/size mismatch: ${asset.id}`);
+        }
+        const destination = resolve(stagingRoot, asset.path);
+        const stagingRelative = relative(stagingRoot, destination);
+        if (stagingRelative.startsWith("..") || stagingRelative.includes("..")) {
+          throw new Error(`Lesson asset path escapes revision: ${asset.path}`);
+        }
+        mkdirSync(dirname(destination), { recursive: true, mode: 0o700 });
+        copyFileSync(sourcePath, destination);
+      }
+    },
+    (revisionRoot) => {
+      const storedContent = readFileSync(join(revisionRoot, "content.md"), "utf8");
+      const storedManifest = LessonManifestSchema.parse(
+        readJson(join(revisionRoot, "manifest.json")),
+      );
+      if (
+        storedContent !== input.content ||
+        storedManifest.contentHash !== sha256(storedContent) ||
+        canonicalJson(storedManifest) !== canonicalJson(lesson)
+      ) {
+        throw new Error("stored lesson identity does not match");
+      }
+    },
+  );
+  finalizeLatestRevision(
+    paths.latest,
+    lesson.id,
+    lesson.contentRevision,
+    previousRevision,
+    "Lesson",
+  );
+  return lesson;
+}
+
+export function readLatestLesson(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  unitId: string,
+  lessonId: string,
+): { readonly manifest: LessonManifest; readonly content: string } {
+  const unit = readUnit(studiesRoot, studyId, courseId, unitId);
+  const paths = getLessonPaths(studiesRoot, studyId, courseId, unitId, lessonId);
+  const pointer = readLatestPointer(paths.latest, lessonId);
+  const revisionRoot = join(paths.revisions, String(pointer.contentRevision));
+  const manifest = LessonManifestSchema.parse(readJson(join(revisionRoot, "manifest.json")));
+  assertPointerMatchesManifest(pointer, manifest, "Lesson");
+  assertContentIdentity(manifest, courseId, unitId);
+  assertLessonStructure(unit, manifest);
+  const content = readFileSync(join(revisionRoot, "content.md"), "utf8");
+  assertLessonStructure(unit, manifest, content);
+  if (manifest.contentHash !== sha256(content)) throw new Error("Lesson content hash mismatch");
+  return { manifest, content };
+}
+
+function normalizeCard(candidate: Omit<CardContent, "contentHash">): CardContent {
+  const parsed = CardContentSchema.parse({ ...candidate, contentHash: EMPTY_SHA256 });
+  const { contentHash: _ignored, ...content } = parsed;
+  return CardContentSchema.parse({ ...content, contentHash: sha256(canonicalJson(content)) });
+}
+
+function normalizeExercise(candidate: ExerciseWithoutHash): Exercise {
+  const parsed = ExerciseSchema.parse({ ...candidate, contentHash: EMPTY_SHA256 });
+  const { contentHash: _ignored, ...content } = parsed;
+  return ExerciseSchema.parse({ ...content, contentHash: sha256(canonicalJson(content)) });
+}
+
+function cardRoot(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  unitId: string,
+  lessonId: string,
+  candidateId: string,
+): string {
+  const id = StableId.parse(candidateId);
+  return join(getLessonPaths(studiesRoot, studyId, courseId, unitId, lessonId).cards, id);
+}
+
+function exerciseRoot(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  unitId: string,
+  lessonId: string,
+  candidateId: string,
+): string {
+  const id = StableId.parse(candidateId);
+  return join(getLessonPaths(studiesRoot, studyId, courseId, unitId, lessonId).exercises, id);
+}
+
+export function writeCardRevision(
+  studiesRoot: string,
+  studyId: string,
+  candidate: Omit<CardContent, "contentHash">,
+): CardContent {
+  const card = normalizeCard(candidate);
+  const course = readCourse(studiesRoot, studyId, card.courseId);
+  const unit = readUnit(studiesRoot, studyId, card.courseId, card.unitId);
+  assertContentContainerIsEditable(course, unit);
+  const lesson = readLatestLesson(
+    studiesRoot,
+    studyId,
+    card.courseId,
+    card.unitId,
+    card.lessonId,
+  ).manifest;
+  if (!lesson.cardIds.includes(card.id))
+    throw new Error(`Lesson does not declare card: ${card.id}`);
+  for (const evidence of card.evidence) validateEvidence(studiesRoot, studyId, evidence);
+
+  const root = cardRoot(studiesRoot, studyId, card.courseId, card.unitId, card.lessonId, card.id);
+  const latest = join(root, "latest.json");
+  let previousRevision = 0;
+  if (existsSync(latest)) {
+    previousRevision = readLatestCard(
+      studiesRoot,
+      studyId,
+      card.courseId,
+      card.unitId,
+      card.lessonId,
+      card.id,
+    ).contentRevision;
+  }
+  assertRequestedRevision(card.contentRevision, previousRevision + 1, "Card");
+
+  writeRevisionDirectory(
+    root,
+    card.contentRevision,
+    "Card",
+    (stagingRoot) => writeJsonAtomically(join(stagingRoot, "card.json"), card),
+    (revisionRoot) => {
+      const stored = CardContentSchema.parse(readJson(join(revisionRoot, "card.json")));
+      const { contentHash, ...content } = stored;
+      if (
+        contentHash !== sha256(canonicalJson(content)) ||
+        canonicalJson(stored) !== canonicalJson(card)
+      ) {
+        throw new Error("stored card identity does not match");
+      }
+    },
+  );
+  finalizeLatestRevision(latest, card.id, card.contentRevision, previousRevision, "Card");
+  return card;
+}
+
+export function readLatestCard(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  unitId: string,
+  lessonId: string,
+  cardId: string,
+): CardContent {
+  const lesson = readLatestLesson(studiesRoot, studyId, courseId, unitId, lessonId).manifest;
+  const root = cardRoot(studiesRoot, studyId, courseId, unitId, lessonId, cardId);
+  const pointer = readLatestPointer(join(root, "latest.json"), cardId);
+  const card = CardContentSchema.parse(
+    readJson(join(root, "revisions", String(pointer.contentRevision), "card.json")),
+  );
+  assertPointerMatchesManifest(pointer, card, "Card");
+  assertContentIdentity(card, courseId, unitId, lessonId);
+  if (!lesson.cardIds.includes(card.id))
+    throw new Error(`Lesson does not declare card: ${card.id}`);
+  const { contentHash, ...content } = card;
+  if (contentHash !== sha256(canonicalJson(content))) throw new Error("Card content hash mismatch");
+  return card;
+}
+
+export function writeExerciseRevision(
+  studiesRoot: string,
+  studyId: string,
+  candidate: ExerciseWithoutHash,
+): Exercise {
+  const exercise = normalizeExercise(candidate);
+  const course = readCourse(studiesRoot, studyId, exercise.courseId);
+  const unit = readUnit(studiesRoot, studyId, exercise.courseId, exercise.unitId);
+  assertContentContainerIsEditable(course, unit);
+  const lesson = readLatestLesson(
+    studiesRoot,
+    studyId,
+    exercise.courseId,
+    exercise.unitId,
+    exercise.lessonId,
+  ).manifest;
+  if (!lesson.exerciseIds.includes(exercise.id)) {
+    throw new Error(`Lesson does not declare exercise: ${exercise.id}`);
+  }
+  for (const evidence of exercise.evidence) validateEvidence(studiesRoot, studyId, evidence);
+
+  const root = exerciseRoot(
+    studiesRoot,
+    studyId,
+    exercise.courseId,
+    exercise.unitId,
+    exercise.lessonId,
+    exercise.id,
+  );
+  const latest = join(root, "latest.json");
+  let previousRevision = 0;
+  if (existsSync(latest)) {
+    previousRevision = readLatestExercise(
+      studiesRoot,
+      studyId,
+      exercise.courseId,
+      exercise.unitId,
+      exercise.lessonId,
+      exercise.id,
+    ).contentRevision;
+  }
+  assertRequestedRevision(exercise.contentRevision, previousRevision + 1, "Exercise");
+
+  writeRevisionDirectory(
+    root,
+    exercise.contentRevision,
+    "Exercise",
+    (stagingRoot) => writeJsonAtomically(join(stagingRoot, "exercise.json"), exercise),
+    (revisionRoot) => {
+      const stored = ExerciseSchema.parse(readJson(join(revisionRoot, "exercise.json")));
+      const { contentHash, ...content } = stored;
+      if (
+        contentHash !== sha256(canonicalJson(content)) ||
+        canonicalJson(stored) !== canonicalJson(exercise)
+      ) {
+        throw new Error("stored exercise identity does not match");
+      }
+    },
+  );
+  finalizeLatestRevision(
+    latest,
+    exercise.id,
+    exercise.contentRevision,
+    previousRevision,
+    "Exercise",
+  );
+  return exercise;
+}
+
+export function readLatestExercise(
+  studiesRoot: string,
+  studyId: string,
+  courseId: string,
+  unitId: string,
+  lessonId: string,
+  exerciseId: string,
+): Exercise {
+  const lesson = readLatestLesson(studiesRoot, studyId, courseId, unitId, lessonId).manifest;
+  const root = exerciseRoot(studiesRoot, studyId, courseId, unitId, lessonId, exerciseId);
+  const pointer = readLatestPointer(join(root, "latest.json"), exerciseId);
+  const exercise = ExerciseSchema.parse(
+    readJson(join(root, "revisions", String(pointer.contentRevision), "exercise.json")),
+  );
+  assertPointerMatchesManifest(pointer, exercise, "Exercise");
+  assertContentIdentity(exercise, courseId, unitId, lessonId);
+  if (!lesson.exerciseIds.includes(exercise.id)) {
+    throw new Error(`Lesson does not declare exercise: ${exercise.id}`);
+  }
+  const { contentHash, ...content } = exercise;
+  if (contentHash !== sha256(canonicalJson(content))) {
+    throw new Error("Exercise content hash mismatch");
+  }
+  return exercise;
+}

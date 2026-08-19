@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-ul-self-airlock",
+  "targetSnapshotId": "git-90cf76c1177f",
+  "course": {
+    "id": "how-this-campus-works",
+    "title": "《这所大学自己是怎么盖的》",
+    "description": "把 UniversityLocal 自己当成被学项目。第一单元讲 airlock：为什么「学自己」会被一行守卫拦住，以及怎么在不拆守卫的前提下把自己变成可学的对象。所有证据指向本项目的真实代码。",
+    "audience": "正在用这套系统学习、也想看懂它怎么运转的人",
+    "objectives": [
+      "说清「学习数据目录」和「被学项目目录」为什么不能互相包含，并指出是哪个函数在拦",
+      "用自己的话解释 airlock 是什么、它解决的是路径问题而不是递归问题",
+      "说明 airlock 为什么用 fetch 一个 commit 而不是 clone，以及封条为什么放在 .git 里",
+      "指出导入门禁拦的是什么，以及为什么 .gitignore 在这里帮不上忙"
+    ],
+    "units": [
+      {
+        "id": "airlock",
+        "title": "airlock：把自己变成可学的对象",
+        "objective": "理解自我学习的真正障碍是路径边界，以及 airlock 如何在不放松任何安全规则的前提下绕开它。",
+        "lessons": [
+          {
+            "id": "the-guard-that-blocks-self-study",
+            "title": "拦住「学自己」的那一行守卫",
+            "content": "# 拦住「学自己」的那一行守卫\n\n## 学习目标\n\n完成本课后，你能说出：为什么把 UniversityLocal 自己加进学习列表会失败，失败发生在哪个函数里，以及这个失败**不是** bug。\n\n## 先给结论\n\n- **事实：`server/config/load-config.ts` 第 124–133 行有一个函数 `assertSeparatedRoots`，它在「学习数据目录」和「被学项目目录」互相包含时抛出错误。**\n- **推论：默认的学习数据目录 `./studies` 就在项目里面，所以把本项目登记为被学对象时，这个函数必然抛错。这是设计，不是故障。**\n\n## 一个类比\n\n医院有条规矩：**病历柜不能放在病房里**。\n\n听起来像是多此一举——都在同一家医院里，放哪不一样吗？不一样。查房的时候医生会把病房里的东西整个扫一遍、拍照存档。如果病历柜就在病房里，那病人最私密的记录就会跟着被扫进去、被拍进照片里。\n\n这套系统里，「病房」是被学的项目，「病历」是你的学习记录——你做过哪些题、答错了什么、哪张卡片明天要复习。分析一个项目的时候，系统会把它整个检出一份来读。如果学习数据就在项目里面，它就会跟着被读进去。\n\n所以这条规矩守的不是洁癖，是你的隐私。\n\n## 工作示例\n\n把守卫的代码逐行读一遍：\n\n```ts\nexport function assertSeparatedRoots(studiesRoot: string, sourceRoot: string): void {\n  const canonicalStudiesRoot = realpathSync.native(studiesRoot);\n  const canonicalSourceRoot = realpathSync.native(sourceRoot);\n  if (\n    isPathInside(canonicalStudiesRoot, canonicalSourceRoot) ||\n    isPathInside(canonicalSourceRoot, canonicalStudiesRoot)\n  ) {\n    throw new Error(\"studiesRoot and sourceRoot must be separate and must not contain each other\");\n  }\n}\n```\n\n1. `realpathSync.native(...)` —— 先把路径「拉直」。如果有人用一个软链接（快捷方式）指过去，这一步会还原成真实位置，绕不过去。\n2. `isPathInside(A, B)` —— 问「B 在不在 A 里面」。\n3. 两个方向**都**问了：学习数据在项目里不行，项目在学习数据里也不行。\n4. 只要中一个，就 `throw`——直接停下来，什么都不做。\n\n最后这一点有个名字叫 **fail closed**（失败时关门）。意思是：拿不准的时候，宁可什么都不做，也不要冒险做下去。锁坏了的时候，门应该是锁着的，不是开着的。\n\n## 自检\n\n**问：** 既然是我自己的电脑、自己的项目，把这个检查去掉不就能学自己了吗？\n\n**答：** 能，但代价很大。这个函数不只在「学自己」的时候跑，它对**每一个**被学项目都跑。为了一个特例把它放松，等于给所有项目都拆掉了这道门。真正的解法是换个地方放被学的副本——那就是下一课的 airlock。\n\n## 重点\n\n**「学自己」失败在 `assertSeparatedRoots`，它挡的是路径互相包含，守的是你的学习记录。要解决它，应该搬副本，而不是拆守卫。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/config/load-config.ts",
+                "lineStart": 124,
+                "lineEnd": 133,
+                "nodeIds": [],
+                "note": "assertSeparatedRoots：两个方向都检查互相包含，命中就抛错。"
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-the-guard",
+                "kind": "short-answer",
+                "title": "守卫叫什么",
+                "prompt": "哪个函数在「学习数据目录」和「被学项目目录」互相包含时抛错？只写函数名。",
+                "expectedAnswer": "assertSeparatedRoots",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/config/load-config.ts",
+                    "lineStart": 124,
+                    "lineEnd": 133,
+                    "nodeIds": [],
+                    "note": "函数定义与它抛出的错误信息。"
+                  }
+                ]
+              }
+            ],
+            "cards": [
+              {
+                "id": "guard-checks-both-directions",
+                "front": "`assertSeparatedRoots` 只检查「学习数据在项目里」这一个方向吗？",
+                "back": "不是。两个方向都检查：学习数据在项目里不行，项目在学习数据里也不行。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/config/load-config.ts",
+                    "lineStart": 127,
+                    "lineEnd": 130,
+                    "nodeIds": [],
+                    "note": "两次 isPathInside，参数顺序相反。"
+                  }
+                ]
+              },
+              {
+                "id": "realpath-defeats-symlinks",
+                "front": "为什么守卫要先调用 `realpathSync.native`？",
+                "back": "把路径拉直成真实位置，这样用软链接（快捷方式）绕过检查就不管用了。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/config/load-config.ts",
+                    "lineStart": 125,
+                    "lineEnd": 126,
+                    "nodeIds": [],
+                    "note": "两个路径都先经过 realpath 再比较。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "lessons": [
+    {
+      "courseId": "state-and-process",
+      "unitId": "fact-vs-process",
+      "lessonId": "two-stores-not-one",
+      "anchors": [
+        {
+          "quote": "事实",
+          "occurrence": 1,
+          "senseId": "fact.durable"
+        },
+        {
+          "quote": "过程",
+          "occurrence": 1,
+          "senseId": "process.transient"
+        },
+        {
+          "quote": "重置",
+          "occurrence": 1,
+          "senseId": "reset.state"
+        },
+        {
+          "quote": "状态",
+          "occurrence": 2,
+          "senseId": "state.memory"
+        },
+        {
+          "quote": "失败",
+          "occurrence": 3,
+          "senseId": "fail.status"
+        }
+      ]
+    },
+    {
+      "courseId": "state-and-process",
+      "unitId": "fact-vs-process",
+      "lessonId": "one-definition-of-empty",
+      "anchors": [
+        {
+          "quote": "空",
+          "occurrence": 1,
+          "senseId": "empty.state"
+        },
+        {
+          "quote": "重置",
+          "occurrence": 1,
+          "senseId": "reset.state"
+        },
+        {
+          "quote": "约束",
+          "occurrence": 1,
+          "senseId": "constraint.design"
+        },
+        {
+          "quote": "替换",
+          "occurrence": 2,
+          "senseId": "replace.state"
+        },
+        {
+          "quote": "默认",
+          "occurrence": 1,
+          "senseId": "default.value"
+        }
+      ]
+    },
+    {
+      "courseId": "state-and-process",
+      "unitId": "name-the-waiting",
+      "lessonId": "phases-not-loading",
+      "anchors": [
+        {
+          "quote": "阶段",
+          "occurrence": 1,
+          "senseId": "phase.process"
+        },
+        {
+          "quote": "等待",
+          "occurrence": 2,
+          "senseId": "wait.action"
+        },
+        {
+          "quote": "类型",
+          "occurrence": 1,
+          "senseId": "type.kind"
+        },
+        {
+          "quote": "匿名",
+          "occurrence": 1,
+          "senseId": "anonymous.user"
+        },
+        {
+          "quote": "矩阵",
+          "occurrence": 1,
+          "senseId": "matrix.table"
+        }
+      ]
+    },
+    {
+      "courseId": "state-and-process",
+      "unitId": "name-the-waiting",
+      "lessonId": "keys-not-sentences",
+      "anchors": [
+        {
+          "quote": "标识符",
+          "occurrence": 1,
+          "senseId": "identifier.key"
+        },
+        {
+          "quote": "状态",
+          "occurrence": 1,
+          "senseId": "state.memory"
+        },
+        {
+          "quote": "渲染",
+          "occurrence": 1,
+          "senseId": "render.ui"
+        },
+        {
+          "quote": "显式的",
+          "occurrence": 1,
+          "senseId": "explicit.stated"
+        },
+        {
+          "quote": "检查",
+          "occurrence": 1,
+          "senseId": "check.action"
+        }
+      ]
+    }
+  ]
+}

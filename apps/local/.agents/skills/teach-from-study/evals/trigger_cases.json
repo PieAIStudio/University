@@ -1,0 +1,24 @@
+{
+  "recommended_threshold": 0.3,
+  "should_trigger": [
+    {"text": "打开 SupaLuv 这个 study，像教初学者一样带我理解认证边界。", "family": "formal_teaching_zh"},
+    {"text": "Continue my UniversityLocal course and quiz me before the explanation.", "family": "course_continue"},
+    {"text": "带我走一遍 UA tour，但请说明它和正式课程有什么区别。", "family": "ua_tour_zh"},
+    {"text": "复习今天到期的卡片，先别告诉我答案。", "family": "review_zh"},
+    {"text": "Use the fixed snapshot evidence to explain why this lesson became stale.", "family": "source_change"},
+    {"text": "在 SupaLuv study 里考我十道认证题，只检查知识对错。", "family": "factual_quiz_zh"}
+  ],
+  "should_not_trigger": [
+    {"text": "把刚才这个知识点保存下来。", "family": "knowledge_capture"},
+    {"text": "点评我刚才给同事的表达。", "family": "communication_coach"},
+    {"text": "修复这段 Mermaid 语法。", "family": "diagram_repair"},
+    {"text": "刷新 SupaLuv 的固定源码快照和 UA 分析。", "family": "study_refresh"},
+    {"text": "按五个 variants 重写这一节课的正文、卡片和练习，不开始教学。", "family": "lesson_writing"},
+    {"text": "Implement the API endpoint and run tests.", "family": "engineering_task"}
+  ],
+  "near_neighbor": [
+    {"text": "解释 HTTP 缓存，不需要使用任何 UniversityLocal study。", "family": "general_teaching"},
+    {"text": "根据这段录屏判断交互卡顿。", "family": "dynamic_ux_review"},
+    {"text": "给我画一个登录时序图。", "family": "explicit_diagram"}
+  ]
+}

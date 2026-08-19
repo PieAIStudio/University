@@ -1,0 +1,340 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "lessons": [
+    {
+      "courseId": "foundations-async",
+      "unitId": "waiting",
+      "lessonId": "a-promise-is-a-receipt",
+      "anchors": [
+        {
+          "quote": "收据",
+          "occurrence": 1,
+          "senseId": "receipt.record"
+        },
+        {
+          "quote": "承诺",
+          "occurrence": 1,
+          "senseId": "promise.async"
+        },
+        {
+          "quote": "契约",
+          "occurrence": 1,
+          "senseId": "contract.api"
+        },
+        {
+          "quote": "兑现",
+          "occurrence": 1,
+          "senseId": "resolve.promise"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-async",
+      "unitId": "waiting",
+      "lessonId": "await-means-wait-here",
+      "anchors": [
+        {
+          "quote": "await",
+          "occurrence": 1,
+          "senseId": "await.pause"
+        },
+        {
+          "quote": "异步函数",
+          "occurrence": 1,
+          "senseId": "async.function"
+        },
+        {
+          "quote": "等待",
+          "occurrence": 1,
+          "senseId": "wait.action"
+        },
+        {
+          "quote": "结果",
+          "occurrence": 1,
+          "senseId": "result.outcome"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-async",
+      "unitId": "waiting",
+      "lessonId": "racing-a-clock",
+      "anchors": [
+        {
+          "quote": "赛跑",
+          "occurrence": 1,
+          "senseId": "race.promise"
+        },
+        {
+          "quote": "超时",
+          "occurrence": 1,
+          "senseId": "timeout.network"
+        },
+        {
+          "quote": "settle",
+          "occurrence": 1,
+          "senseId": "settle.promise"
+        },
+        {
+          "quote": "错误",
+          "occurrence": 1,
+          "senseId": "error.status"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-async",
+      "unitId": "waiting",
+      "lessonId": "same-shape-different-speed",
+      "anchors": [
+        {
+          "quote": "同步",
+          "occurrence": 1,
+          "senseId": "sync.blocking"
+        },
+        {
+          "quote": "契约",
+          "occurrence": 1,
+          "senseId": "contract.api"
+        },
+        {
+          "quote": "平台",
+          "occurrence": 2,
+          "senseId": "platform.target"
+        },
+        {
+          "quote": "收据",
+          "occurrence": 1,
+          "senseId": "receipt.record"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-async",
+      "unitId": "failing",
+      "lessonId": "try-and-catch",
+      "anchors": [
+        {
+          "quote": "try",
+          "occurrence": 1,
+          "senseId": "try.block"
+        },
+        {
+          "quote": "catch",
+          "occurrence": 1,
+          "senseId": "catch.handler"
+        },
+        {
+          "quote": "退路",
+          "occurrence": 1,
+          "senseId": "fallback.plan"
+        },
+        {
+          "quote": "抛出",
+          "occurrence": 1,
+          "senseId": "throw.error"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-async",
+      "unitId": "failing",
+      "lessonId": "throw-or-absorb",
+      "anchors": [
+        {
+          "quote": "抛",
+          "occurrence": 1,
+          "senseId": "throw.error"
+        },
+        {
+          "quote": "吸收",
+          "occurrence": 1,
+          "senseId": "absorb.failure"
+        },
+        {
+          "quote": "合理降级",
+          "occurrence": 1,
+          "senseId": "degrade.fallback"
+        },
+        {
+          "quote": "返回值",
+          "occurrence": 1,
+          "senseId": "return.value"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-async",
+      "unitId": "failing",
+      "lessonId": "an-empty-catch-owes-you-a-reason",
+      "anchors": [
+        {
+          "quote": "空的",
+          "occurrence": 1,
+          "senseId": "empty.state"
+        },
+        {
+          "quote": "catch",
+          "occurrence": 1,
+          "senseId": "catch.handler"
+        },
+        {
+          "quote": "原因",
+          "occurrence": 1,
+          "senseId": "reason.explain"
+        },
+        {
+          "quote": "静默忽略",
+          "occurrence": 1,
+          "senseId": "silent.gap"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-async",
+      "unitId": "failing",
+      "lessonId": "failure-as-a-value",
+      "anchors": [
+        {
+          "quote": "返回值",
+          "occurrence": 1,
+          "senseId": "return.value"
+        },
+        {
+          "quote": "失败",
+          "occurrence": 1,
+          "senseId": "fail.status"
+        },
+        {
+          "quote": "检查",
+          "occurrence": 1,
+          "senseId": "check.action"
+        },
+        {
+          "quote": "成功",
+          "occurrence": 1,
+          "senseId": "success.status"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-async",
+      "unitId": "failing",
+      "lessonId": "not-every-error-is-an-error",
+      "anchors": [
+        {
+          "quote": "错误通道",
+          "occurrence": 1,
+          "senseId": "error.status"
+        },
+        {
+          "quote": "检查",
+          "occurrence": 1,
+          "senseId": "check.action"
+        },
+        {
+          "quote": "类型",
+          "occurrence": 1,
+          "senseId": "type.kind"
+        },
+        {
+          "quote": "空结果",
+          "occurrence": 2,
+          "senseId": "empty.state"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-async",
+      "unitId": "both-at-once",
+      "lessonId": "the-shape-of-a-real-call",
+      "anchors": [
+        {
+          "quote": "throw",
+          "occurrence": 1,
+          "senseId": "throw.error"
+        },
+        {
+          "quote": "await",
+          "occurrence": 1,
+          "senseId": "await.pause"
+        },
+        {
+          "quote": "类型守卫",
+          "occurrence": 1,
+          "senseId": "type-guard.check"
+        },
+        {
+          "quote": "解构",
+          "occurrence": 1,
+          "senseId": "destructure.unpack"
+        },
+        {
+          "quote": "错误",
+          "occurrence": 1,
+          "senseId": "error.status"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-async",
+      "unitId": "both-at-once",
+      "lessonId": "a-way-back",
+      "anchors": [
+        {
+          "quote": "退路",
+          "occurrence": 1,
+          "senseId": "fallback.plan"
+        },
+        {
+          "quote": "恢复",
+          "occurrence": 3,
+          "senseId": "recover.failure"
+        },
+        {
+          "quote": "reload",
+          "occurrence": 1,
+          "senseId": "reload.page"
+        },
+        {
+          "quote": "上限",
+          "occurrence": 1,
+          "senseId": "limit.bound"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-async",
+      "unitId": "both-at-once",
+      "lessonId": "what-you-must-check",
+      "anchors": [
+        {
+          "quote": "异步函数",
+          "occurrence": 1,
+          "senseId": "async.function"
+        },
+        {
+          "quote": "失败通道",
+          "occurrence": 1,
+          "senseId": "fail.status"
+        },
+        {
+          "quote": "返回值",
+          "occurrence": 1,
+          "senseId": "return.value"
+        },
+        {
+          "quote": "超时",
+          "occurrence": 1,
+          "senseId": "timeout.network"
+        },
+        {
+          "quote": "重试",
+          "occurrence": 1,
+          "senseId": "retry.network"
+        }
+      ]
+    }
+  ]
+}

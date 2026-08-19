@@ -1,0 +1,1900 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-foundations-data",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "foundations-data",
+    "title": "《数据从哪来》",
+    "description": "零基础主干第 5 阶段：分清本机共享状态（zustand store）、服务端数据（Supabase）与实时推送（Realtime）三种来源，用图灵密约里的短 store 与服务文件建立直觉。",
+    "audience": "零基础重建地基的独立开发者",
+    "objectives": [
+      "指着一个 zustand store 说出「当前值 + 改值方法」的形状，并说明它为何放在组件外面",
+      "解释列表为何用新建数组更新，以及 React / zustand 为何关心「是不是同一个引用」",
+      "读出服务端数据层：表行命名、多表拼装、缺值保护、环境变量密钥与 { data, error }",
+      "说明推送与轮询的差别，并沿「线上事件名 → 回调 → store → 界面」走通一条路径"
+    ],
+    "units": [
+      {
+        "id": "shared-memory",
+        "title": "放在组件外面的记忆",
+        "objective": "用最短的 store 文件建立共享状态、不可变更新、reset 与初始值复用的读法。",
+        "lessons": [
+          {
+            "id": "why-not-usestate",
+            "title": "为什么不继续用 useState",
+            "content": "# 为什么不继续用 useState\n\n## 学习目标\n完成本课后，你能说明：两个互不相邻的组件要看同一个值时，为什么把状态放在组件树外面（zustand store），而不是继续往上提 `useState`。\n\n## 先给结论\n- **事实：`src/stores/aiStore.ts` 用 `create` 在模块顶层生成 `useAIStore`；`isAITyping`、`aiPlayerId` 等值不写在任何 React 组件的函数体里。**\n- **推论：组件自己的记忆（`useState`）跟着那棵组件树走；需要「谁都能读、谁都能改、不必是父子关系」时，记忆要放到组件外面。**\n\n## 一个类比\n`useState` 像贴在某一间办公室门上的白板：只有这间房和专门跑来这间房的人看得见。两个不相邻的部门都要盯同一个库存数字时，你不会在两间办公室各写一块白板再派人同步——你会在大厅挂一块共享板。store 就是大厅那块板：挂在大楼里，不挂在某一间办公室门上。\n\n## 工作示例\n```ts\nexport const useAIStore = create<AIState>((set) => ({\n  isAITyping: false,\n  lastAIMessageTime: null,\n  aiPlayerId: null,\n  setIsAITyping: (isAITyping) => set({ isAITyping }),\n  setLastAIMessageTime: (lastAIMessageTime) => set({ lastAIMessageTime }),\n  setAIPlayerId: (aiPlayerId) => set({ aiPlayerId }),\n  reset: () => set({ isAITyping: false, lastAIMessageTime: null, aiPlayerId: null }),\n}));\n```\n\n注意两件事：\n\n1. 这整段写在 `aiStore.ts` 文件顶层，不在某个 `function ChatPanel()` 里面。\n2. 任意组件都可以 `useAIStore()` 读 `isAITyping`；改值时调 `setIsAITyping`，不必把状态一层层当 props 传下去。\n\n上一门课《界面是怎么长出来的》教的 `useState` 仍然正确——它管「这个组件自己的临时记忆」。本课管的是另一种：跨界面、跨组件树的共享记忆。\n\n## 自检\n**问：** 聊天输入框里正在打的那一行字，该放 store 还是 `useState`？AI 是否正在输入（`isAITyping`）呢？\n**答：** 输入框草稿通常只属于那一个输入组件 → `useState` 更合适。`isAITyping` 可能被消息列表、头像、提示条等多处同时读 → 放在 store 更合适。\n\n## 重点\n**组件内状态跟组件走；多处共享、不必是父子关系的值，放到组件外的 store。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/aiStore.ts",
+                "lineStart": 13,
+                "lineEnd": 21,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/aiStore.ts"
+                ],
+                "note": "useAIStore 在模块顶层 create，值不在任何组件函数体内。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/aiStore.ts",
+                "lineStart": 3,
+                "lineEnd": 11,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/aiStore.ts"
+                ],
+                "note": "AIState 描述共享值与改值方法，与单个组件的 useState 形状不同。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "store-outside-component",
+                "front": "aiStore 里的 isAITyping 写在 React 组件函数里面，还是写在文件顶层？",
+                "back": "写在文件顶层：create(...) 生成的 store 挂在模块上，不属于某一个组件。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/aiStore.ts",
+                    "lineStart": 13,
+                    "lineEnd": 16,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/aiStore.ts"
+                    ],
+                    "note": "create 调用与初始值 isAITyping 都在模块作用域。"
+                  }
+                ]
+              },
+              {
+                "id": "when-usestate-still-ok",
+                "front": "什么时候仍该用 useState，而不是一上来就建 store？",
+                "back": "值只被一个组件（或其紧密子树）使用时，用 useState；多处不相邻组件要共享时，才考虑 store。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/aiStore.ts",
+                    "lineStart": 13,
+                    "lineEnd": 21,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/aiStore.ts"
+                    ],
+                    "note": "aiStore 服务的是跨界面共享字段，对照「局部草稿」应留在组件内。"
+                  }
+                ]
+              },
+              {
+                "id": "hall-whiteboard",
+                "front": "用一句话：store 相对 useState，像大楼里的什么？",
+                "back": "像大厅的共享板，而不是某一间办公室门上的白板。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/aiStore.ts",
+                    "lineStart": 13,
+                    "lineEnd": 13,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/aiStore.ts"
+                    ],
+                    "note": "export const useAIStore = create... 是项目级共享入口。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "store-module-level",
+                "title": "共享状态放在哪一层",
+                "kind": "short-answer",
+                "prompt": "zustand 的 create(...) 通常写在组件函数里面，还是写在模块（文件）顶层？只答「组件内」或「模块顶层」。",
+                "expectedAnswer": "模块顶层",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/aiStore.ts",
+                    "lineStart": 13,
+                    "lineEnd": 13,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/aiStore.ts"
+                    ],
+                    "note": "export const useAIStore = create 出现在文件顶层。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-store-is-values-plus-setters",
+            "title": "Store：值加上改值的方法",
+            "content": "# Store：值加上改值的方法\n\n## 学习目标\n完成本课后，你能指着一个 zustand store 的 `interface` 与 `create` 体，指出哪些字段是「当前值」，哪些字段是「改值的方法」。\n\n## 先给结论\n- **事实：`AIState` 里同时声明了 `isAITyping`、`lastAIMessageTime`、`aiPlayerId`（值）和 `setIsAITyping`、`setLastAIMessageTime`、`setAIPlayerId`、`reset`（方法）；`create<AIState>((set) => ({...}))` 一次性提供初始值与这些方法。**\n- **推论：读 store 时先分两栏——「现在是什么」和「谁有权改」——比把所有字段当成一锅粥更清楚。**\n\n## 一个类比\n酒店前台的入住本：左页写「302 已入住 / 303 空房」（当前值），右页写「办理入住」「办理退房」「清空今日记录」（操作）。客人问状态看左页，前台改状态走右页。store 的 interface 就是这本册子的目录。\n\n## 工作示例\n先看形状合同：\n\n```ts\ninterface AIState {\n  isAITyping: boolean;\n  lastAIMessageTime: number | null;\n  aiPlayerId: string | null;\n  setIsAITyping: (typing: boolean) => void;\n  setLastAIMessageTime: (time: number | null) => void;\n  setAIPlayerId: (id: string | null) => void;\n  reset: () => void;\n}\n```\n\n再看实现：\n\n```ts\nexport const useAIStore = create<AIState>((set) => ({\n  isAITyping: false,\n  lastAIMessageTime: null,\n  aiPlayerId: null,\n  setIsAITyping: (isAITyping) => set({ isAITyping }),\n  setLastAIMessageTime: (lastAIMessageTime) => set({ lastAIMessageTime }),\n  setAIPlayerId: (aiPlayerId) => set({ aiPlayerId }),\n  reset: () => set({ isAITyping: false, lastAIMessageTime: null, aiPlayerId: null }),\n}));\n```\n\n三个 setter 是同一模式：收到新值 → 调用 `set({ 字段名: 新值 })`。`set` 由 zustand 注入，用来合并进当前 store。参数名与字段名相同（`(isAITyping) => set({ isAITyping })`）是简写：右边的对象键叫 `isAITyping`，值就是参数。\n\n## 自检\n**问：** `setIsAITyping` 本身是「当前值」还是「改值的方法」？\n**答：** 改值的方法。它是函数；真正的当前值是 `isAITyping` 那个 boolean。\n\n## 重点\n**一个 store = 一袋当前值 + 一组改这些值的方法；`create` 把两者捆在一起。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/aiStore.ts",
+                "lineStart": 3,
+                "lineEnd": 11,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/aiStore.ts"
+                ],
+                "note": "AIState：三个值字段 + 三个 setter + reset。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/aiStore.ts",
+                "lineStart": 13,
+                "lineEnd": 20,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/aiStore.ts"
+                ],
+                "note": "create 体：初始值与 setter 同一对象里实现。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "values-vs-setters",
+                "front": "AIState 里 isAITyping 和 setIsAITyping 各属于哪一类？",
+                "back": "isAITyping 是当前值；setIsAITyping 是改这个值的方法。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/aiStore.ts",
+                    "lineStart": 4,
+                    "lineEnd": 7,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/aiStore.ts"
+                    ],
+                    "note": "boolean 字段与 (typing: boolean) => void 方法相邻声明。"
+                  }
+                ]
+              },
+              {
+                "id": "set-merges-fields",
+                "front": "setIsAITyping 里的 set({ isAITyping }) 在做什么？",
+                "back": "让 zustand 用新的 isAITyping 更新 store；通常只改点名的字段，其余字段保持。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/aiStore.ts",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/aiStore.ts"
+                    ],
+                    "note": "setIsAITyping: (isAITyping) => set({ isAITyping })。"
+                  }
+                ]
+              },
+              {
+                "id": "create-generic",
+                "front": "create<AIState>(...) 尖括号里的 AIState 表示什么？",
+                "back": "这个 store 的状态形状合同：create 返回的对象必须符合 AIState。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/aiStore.ts",
+                    "lineStart": 13,
+                    "lineEnd": 13,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/aiStore.ts"
+                    ],
+                    "note": "create<AIState>((set) => ({...}))。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "setter-pattern-keyword",
+                "title": "改 store 字段时调用的函数名",
+                "kind": "short-answer",
+                "prompt": "在 aiStore 的 setter 里，更新字段时调用的是哪个由 zustand 注入的单参数函数名？只写函数名。",
+                "expectedAnswer": "set",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/aiStore.ts",
+                    "lineStart": 17,
+                    "lineEnd": 19,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/aiStore.ts"
+                    ],
+                    "note": "三个 setter 都调用 set({ ... })。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "replace-do-not-mutate",
+            "title": "换一张名牌，不要改原牌",
+            "content": "# 换一张名牌，不要改原牌\n\n## 学习目标\n完成本课后，你能解释 `addMessage` 为什么写成 `[...state.messages, msg]` 而不是 `state.messages.push(msg)`，并说出 React / zustand 依赖「是不是同一个引用」来决定要不要重画。\n\n## 先给结论\n- **事实：`chatStore` 的 `addMessage` 是 `set((state) => ({ messages: [...state.messages, msg] }))`——用展开（spread）拼出一个新数组。**\n- **推论：若原地 `push`，数组还是同一个对象；许多界面层靠「引用变没变」判断要不要更新。换新数组 = 换一张名牌，监听者才知道「列表已经不同了」。**\n\n## 一个类比\n教室门口挂着一张「今日值日生」名牌。来了新人时，正确做法是**换一张写好新名单的牌子挂上去**，路过的人一看牌子换了就知道有更新。错误做法是拿笔在旧牌子背面偷偷改名字却不换牌——有人只瞄「还是那块旧牌子」就会以为没变化。`[...旧列表, 新消息]` 是换牌；`push` 是在旧牌上改字。\n\n## 工作示例\n```ts\naddMessage: (msg) => set((state) => ({ messages: [...state.messages, msg] })),\naddPrivateMessage: (msg) =>\n  set((state) => ({ privateMessages: [...state.privateMessages, msg] })),\n```\n\n逐步读 `addMessage`：\n\n1. `set((state) => (...))` —— 需要读旧状态时，zustand 把当前 state 递进回调。\n2. `...state.messages` —— 把旧数组里的每一项拷进新数组（浅拷贝）。\n3. `, msg` —— 新消息接在末尾。\n4. 整个 `{ messages: 新数组 }` 交给 `set`，store 里的 `messages` 字段指向**新**数组。\n\n对比：`state.messages.push(msg); set({ messages: state.messages })` 往往仍指向同一个数组对象——名牌没换，依赖引用比较的订阅者可能不重画。\n\n## 自检\n**问：** 「不可变更新（immutable update）」是说数组里的字符串永远不能改内容吗？\n**答：** 不是。它说的是：更新列表时不要在原数组对象上改；交给 store 一个新的数组/对象引用。元素本身是否再深拷贝，是另一层问题。\n\n## 重点\n**往列表加一项时新建数组（`[...old, item]`）；React / zustand 靠「还是不是原来那个对象」决定要不要重画。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/chatStore.ts",
+                "lineStart": 17,
+                "lineEnd": 19,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/chatStore.ts"
+                ],
+                "note": "addMessage / addPrivateMessage 用展开新建数组，而不是 push。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/chatStore.ts",
+                "lineStart": 4,
+                "lineEnd": 12,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/chatStore.ts"
+                ],
+                "note": "ChatState 中 messages 是 Message[]，由 addMessage 追加。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "spread-new-array",
+                "front": "addMessage 里的 [...state.messages, msg] 产生的是同一个数组还是新数组？",
+                "back": "新数组：展开拷贝旧项后再接上 msg，messages 字段会指向新引用。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/chatStore.ts",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/chatStore.ts"
+                    ],
+                    "note": "messages: [...state.messages, msg]。"
+                  }
+                ]
+              },
+              {
+                "id": "why-not-push",
+                "front": "为什么不在 addMessage 里对 state.messages 直接 push？",
+                "back": "push 改的是原数组对象；引用不变时，靠引用判断更新的界面可能不重画。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/chatStore.ts",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/chatStore.ts"
+                    ],
+                    "note": "代码选择新建数组而非 push。"
+                  }
+                ]
+              },
+              {
+                "id": "set-with-state-callback",
+                "front": "set((state) => ({...})) 这种写法何时需要？",
+                "back": "新值依赖旧 state 时（例如在旧 messages 末尾追加）需要读 state 的回调形式。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/chatStore.ts",
+                    "lineStart": 17,
+                    "lineEnd": 19,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/chatStore.ts"
+                    ],
+                    "note": "addMessage 与 addPrivateMessage 都使用 state 回调。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "immutable-spread-token",
+                "title": "新建数组时用的语法记号",
+                "kind": "short-answer",
+                "prompt": "chatStore 的 addMessage 用哪个由三个点组成的语法，把旧 messages 拷进新数组？只写符号本身。",
+                "expectedAnswer": "...",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/chatStore.ts",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/chatStore.ts"
+                    ],
+                    "note": "[...state.messages, msg] 中的展开运算符。"
+                  }
+                ]
+              },
+              {
+                "id": "why-replace-array",
+                "title": "为什么要换数组引用",
+                "kind": "explain",
+                "prompt": "用 chatStore 的 addMessage 说明：为什么追加消息时要新建数组，而不是 push 进原数组？请提到「引用」或「是不是同一个对象」与界面更新的关系。",
+                "rubric": [
+                  "指出 addMessage 使用 [...state.messages, msg] 产生新数组",
+                  "说明 push 会保留同一数组引用",
+                  "说明 React/zustand 常靠引用变化决定是否通知/重画",
+                  "结论：换引用是为了让订阅者发现列表已变"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/chatStore.ts",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/chatStore.ts"
+                    ],
+                    "note": "不可变追加的真实写法。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "reset-is-a-feature",
+            "title": "reset 不是多余的",
+            "content": "# reset 不是多余的\n\n## 学习目标\n完成本课后，你能说明每个 store 为什么常备一个 `reset`，以及它把哪些字段一次归位。\n\n## 先给结论\n- **事实：`aiStore`、`chatStore`、`gameStore` 都提供 `reset: () => set({ ...回到初始值 })`；`gameStore` 的 reset 同时清掉 `gamePhase`、`voteCounts`、`winner`。**\n- **推论：离开房间、开新局、登出时，需要「一键回到开局」；若只靠零散 setter，漏清一个字段就会留下脏状态。**\n\n## 一个类比\n桌游收摊：不是把棋子一个个问「这个归位了吗」，而是有一套固定收纳——棋盘折好、卡牌归盒、计分归零。`reset` 就是那套收纳清单：一次执行，全场归位。\n\n## 工作示例\n`gameStore` 的形状里，阶段是联合类型（union type）：\n\n```ts\ntype GamePhase = 'idle' | 'waiting' | 'playing' | 'finished';\n```\n\n初始与重置：\n\n```ts\nexport const useGameStore = create<GameState>((set) => ({\n  gamePhase: 'idle',\n  voteCounts: [],\n  winner: null,\n  setGamePhase: (gamePhase) => set({ gamePhase }),\n  setVoteCounts: (voteCounts) => set({ voteCounts }),\n  setWinner: (winner) => set({ winner }),\n  reset: () => set({ gamePhase: 'idle', voteCounts: [], winner: null }),\n}));\n```\n\n`reset` 里的三个字段与文件开头的初始值一致：`idle`、空数组、`null`。读 reset 时对照初始值——两边必须是同一套「空」的定义（正式课《状态与过程》会把「空只能有一个定义」讲得更深）。\n\n再看 `chatStore`：\n\n```ts\nreset: () => set({ messages: [], privateMessages: [] }),\n```\n\n消息列表的「空」就是两个空数组，一次清干净。\n\n## 自检\n**问：** 有了 `setGamePhase('idle')`，还要 `reset` 干吗？\n**答：** `setGamePhase` 只动阶段；`voteCounts` 和 `winner` 可能还留着上一局的数据。`reset` 一次清全部。\n\n## 重点\n**reset 是「开局快照」的一键回放；防止只改了一个字段、漏了脏数据。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/gameStore.ts",
+                "lineStart": 4,
+                "lineEnd": 4,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/gameStore.ts"
+                ],
+                "note": "GamePhase 联合类型：idle | waiting | playing | finished。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/gameStore.ts",
+                "lineStart": 16,
+                "lineEnd": 23,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/gameStore.ts"
+                ],
+                "note": "初始值与 reset 把 phase、票数、胜者一次归位。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/chatStore.ts",
+                "lineStart": 22,
+                "lineEnd": 22,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/chatStore.ts"
+                ],
+                "note": "chatStore.reset 清空两条消息列表。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/aiStore.ts",
+                "lineStart": 20,
+                "lineEnd": 20,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/aiStore.ts"
+                ],
+                "note": "aiStore.reset 三个字段回到初始。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "reset-clears-all",
+                "front": "gameStore 的 reset 会动几个字段？只改 gamePhase 够不够？",
+                "back": "三个：gamePhase、voteCounts、winner。只改 phase 不够，票数和胜者可能仍是上局的。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/gameStore.ts",
+                    "lineStart": 23,
+                    "lineEnd": 23,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/gameStore.ts"
+                    ],
+                    "note": "reset 一次 set 三个字段。"
+                  }
+                ]
+              },
+              {
+                "id": "reset-matches-initial",
+                "front": "读 reset 时应该和什么对照？",
+                "back": "和 create 时的初始值对照：两边应是同一套「空」的定义。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/gameStore.ts",
+                    "lineStart": 17,
+                    "lineEnd": 23,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/gameStore.ts"
+                    ],
+                    "note": "初始 idle/[]/null 与 reset 目标一致。"
+                  }
+                ]
+              },
+              {
+                "id": "game-phase-union",
+                "front": "GamePhase 允许哪些字符串？",
+                "back": "'idle' | 'waiting' | 'playing' | 'finished' 四个之一。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/gameStore.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/gameStore.ts"
+                    ],
+                    "note": "type GamePhase 联合类型定义。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "game-reset-idle",
+                "title": "reset 后的游戏阶段",
+                "kind": "short-answer",
+                "prompt": "gameStore 调用 reset 之后，gamePhase 应是哪个字符串？只写该词（不要引号）。",
+                "expectedAnswer": "idle",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/gameStore.ts",
+                    "lineStart": 23,
+                    "lineEnd": 23,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/gameStore.ts"
+                    ],
+                    "note": "reset 设 gamePhase: 'idle'。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "sharing-the-initial-values",
+            "title": "初始值只写一次",
+            "content": "# 初始值只写一次\n\n## 学习目标\n完成本课后，你能说明 `roomEntryStore` 为什么把初始状态抽成 `createRoomEntryState`，以及 `set(..., true)` 的第二个参数在说什么。\n\n## 先给结论\n- **事实：`createRoomEntryState(set)` 返回含初始字段与 `reset` 的完整状态；`reset` 写 `set(createRoomEntryState(set), true)`；`useRoomEntryStore` 的 create 回调也是 `createRoomEntryState(set)`。**\n- **推论：初始值与 reset 目标共用同一函数，避免「开局写一遍、reset 再手抄一遍」抄漏；`true` 表示用这份对象整体替换当前 state，而不是默认的浅合并。**\n\n## 一个类比\n打印机的「恢复出厂」不该是维修员凭记忆拧每一个旋钮，而应该是再跑一遍出厂设置程序。`createRoomEntryState` 就是那份出厂程序：第一次开机跑它，复位时再跑一遍。\n\n## 工作示例\n```ts\nfunction createRoomEntryState(set: StoreApi<RoomEntryState>['setState']): RoomEntryState {\n  return {\n    phase: 'idle',\n    statusKey: null,\n    error: null,\n    code: null,\n    setState: (partial) => set(partial),\n    reset: () => set(createRoomEntryState(set), true),\n  };\n}\n\nexport const useRoomEntryStore = create<RoomEntryState>((set) => createRoomEntryState(set));\n```\n\n读法：\n\n1. **工厂函数** `createRoomEntryState` 既生成「第一次的状态」，也被 `reset` 调用。\n2. `reset` 里再次调用自己，保证字段与开局一致。\n3. `set(完整对象, true)` —— zustand 的第二个参数为 `true` 时是 **replace**（替换）：新对象成为全部 state。默认 `set(partial)` 是 merge（合并），只覆盖点名的键。\n\n为什么这里用替换？因为 reset 递进去的是「完整的新状态对象」（含方法）。用替换更贴切「整桌收掉再摆一桌」，而不是「只改几个字段」。\n\n## 自检\n**问：** 若有人在 create 初始值里加了字段 `retryCount: 0`，却忘了改 reset 手写对象，会怎样？\n**答：** 若仍用手抄 reset，`retryCount` 可能残留。抽成 `createRoomEntryState` 后，加字段只改一处，reset 自动带上。\n\n## 重点\n**初始值与 reset 共用同一工厂函数；`set(state, true)` 表示整体替换。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/roomEntryStore.ts",
+                "lineStart": 16,
+                "lineEnd": 25,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/roomEntryStore.ts"
+                ],
+                "note": "createRoomEntryState 工厂：初始字段 + reset 复用。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/roomEntryStore.ts",
+                "lineStart": 23,
+                "lineEnd": 23,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/roomEntryStore.ts"
+                ],
+                "note": "reset 调用 set(createRoomEntryState(set), true) 整体替换。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/roomEntryStore.ts",
+                "lineStart": 27,
+                "lineEnd": 27,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/roomEntryStore.ts"
+                ],
+                "note": "useRoomEntryStore 的 create 也走同一工厂。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "factory-shared",
+                "front": "roomEntryStore 的初始状态和 reset 目标如何避免抄两遍？",
+                "back": "都调用 createRoomEntryState(set)，初始值只定义一次。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/roomEntryStore.ts",
+                    "lineStart": 16,
+                    "lineEnd": 27,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/roomEntryStore.ts"
+                    ],
+                    "note": "工厂函数被 create 与 reset 共用。"
+                  }
+                ]
+              },
+              {
+                "id": "set-second-true",
+                "front": "set(createRoomEntryState(set), true) 里的 true 表示什么？",
+                "back": "整体替换当前 state（replace），而不是默认的浅合并（merge）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/roomEntryStore.ts",
+                    "lineStart": 23,
+                    "lineEnd": 23,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/roomEntryStore.ts"
+                    ],
+                    "note": "第二个参数 true。"
+                  }
+                ]
+              },
+              {
+                "id": "set-state-partial",
+                "front": "setState(partial) 和 reset 的替换有何不同？",
+                "back": "setState 把 partial 合并进现有状态；reset 用完整新对象并 replace。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/roomEntryStore.ts",
+                    "lineStart": 22,
+                    "lineEnd": 23,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/roomEntryStore.ts"
+                    ],
+                    "note": "setState: set(partial) 对比 reset 的 set(..., true)。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "replace-flag-true",
+                "title": "整体替换的第二个参数",
+                "kind": "short-answer",
+                "prompt": "roomEntryStore 的 reset 调用 set 时，表示「整体替换」的第二个参数是什么？只写该字面量。",
+                "expectedAnswer": "true",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/roomEntryStore.ts",
+                    "lineStart": 23,
+                    "lineEnd": 23,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/roomEntryStore.ts"
+                    ],
+                    "note": "set(..., true)。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "data-from-a-server",
+        "title": "数据在别人机器上",
+        "objective": "不写 SQL 也能读懂：行与对象、拼装、缺行、公开密钥、data/error 返回风格。",
+        "lessons": [
+          {
+            "id": "a-row-is-not-an-object",
+            "title": "数据库的行 ≠ 前端的对象",
+            "content": "# 数据库的行 ≠ 前端的对象\n\n## 学习目标\n完成本课后，你能指出 `profile.ts` 里数据库行接口与前端字段在命名上的差别，并说明为什么中间要有一层转换。\n\n## 先给结论\n- **事实：`CoreProfileRow` 使用 `user_id`、`display_name`、`created_at`（下划线 snake_case）；拼装结果 `Profile` 使用 `id`、`nickname` 等前端更常用的名字。**\n- **推论：服务端表结构与界面心智模型不必同名；转换层的工作就是「把行变成对象」，而不是假装两边已经是同一种语言。**\n\n## 一个类比\n海关申报单用官方栏位名（货物编号、原产国代码）；你在购物 App 里看到的是「商品名」「产地」。仓管按申报单入库，App 按商品卡展示——中间有人把单上的栏位抄到卡上。`XxxRow` 是申报单栏位；`Profile` 是商品卡。\n\n## 工作示例\n```ts\ninterface CoreProfileRow {\n  user_id: string;\n  display_name: string | null;\n  created_at: string;\n}\n\ninterface CoreWalletRow {\n  balance_power_units: number;\n}\n\ninterface PlayerStatsRow {\n  user_id: string;\n  ai_caught: number;\n  mistaken_as_ai: number;\n  sympathizer_wins: number;\n}\n```\n\n观察：\n\n1. 三个接口都以 `Row` 结尾——提示「这是表的一行」，不是 UI 模型。\n2. 字段名带下划线：`user_id`、`display_name`、`balance_power_units`，贴近数据库常见命名。\n3. 前端别处用的 `userId` 驼峰（camelCase）不会直接出现在这些 Row 上；后面 `composeGameProfile` 才会把 `user_id` 写进 `id` 等字段。\n\n你还不需要会写 SQL。只要建立直觉：**线缆那边传来的名字，往往不是你在 React 里想用的名字。**\n\n## 自检\n**问：** 看到 `display_name`，应假设界面文案里也必须叫 `display_name` 吗？\n**答：** 不必须。这里稍后映射成 `nickname`。Row 名跟 UI 名可以不同。\n\n## 重点\n**Row 接口描述表行（常 snake_case）；前端对象可以有另一套名字——中间靠转换。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/profile.ts",
+                "lineStart": 3,
+                "lineEnd": 18,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/profile.ts"
+                ],
+                "note": "三个 XxxRow 接口：user_id、display_name 等下划线字段。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/profile.ts",
+                "lineStart": 28,
+                "lineEnd": 36,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/profile.ts"
+                ],
+                "note": "Profile 使用 id、nickname、batteries 等拼装结果字段。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "snake-vs-camel",
+                "front": "CoreProfileRow 里用户 id 字段叫什么？和前端常见的 userId 一样吗？",
+                "back": "叫 user_id（下划线）。与前端常见的 userId 驼峰不是同一写法。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 3,
+                    "lineEnd": 7,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "user_id: string 出现在 CoreProfileRow。"
+                  }
+                ]
+              },
+              {
+                "id": "row-suffix-means",
+                "front": "接口名以 Row 结尾通常暗示什么？",
+                "back": "这是数据库表的一行的形状，不是最终给界面用的领域对象。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 3,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "CoreProfileRow / CoreWalletRow / PlayerStatsRow。"
+                  }
+                ]
+              },
+              {
+                "id": "display-name-to-nickname",
+                "front": "行里的 display_name 在拼装后的 Profile 上对应哪个字段？",
+                "back": "nickname（见 composeGameProfile 的映射）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 30,
+                    "lineEnd": 30,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "nickname: input.coreProfile?.display_name ?? null。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "row-user-id-field",
+                "title": "表行上的用户 id 字段名",
+                "kind": "short-answer",
+                "prompt": "CoreProfileRow 里表示用户 id 的字段名是什么？照抄代码中的字段名。",
+                "expectedAnswer": "user_id",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "user_id: string。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "three-tables-one-screen",
+            "title": "三张表，一块屏幕",
+            "content": "# 三张表，一块屏幕\n\n## 学习目标\n完成本课后，你能说明 `composeGameProfile` 如何把三份可能来自不同表的数据拼成一个界面用的 `Profile`。\n\n## 先给结论\n- **事实：`composeGameProfile` 的输入同时包含 `coreProfile`、`wallet`、`stats`（均可为 null）以及可选的 `userId`；输出是单一的 `Profile` 对象。**\n- **推论：界面要的形状 ≠ 数据库存的形状——屏幕想要「一张名片」，库里可能是「身份表 + 钱包表 + 战绩表」。**\n\n## 一个类比\n你办会员卡：前台系统里，姓名在顾客表、积分在积分表、停车折扣在权益表。印卡时却只印一张卡面。`composeGameProfile` 就是印卡那一步——从三本账各抄需要的栏，印成一张 `Profile`。\n\n## 工作示例\n```ts\nexport function composeGameProfile(input: {\n  userId?: string;\n  coreProfile: CoreProfileRow | null;\n  wallet: CoreWalletRow | null;\n  stats: PlayerStatsRow | null;\n}): Profile {\n  const userId = input.coreProfile?.user_id ?? input.stats?.user_id ?? input.userId ?? '';\n\n  return {\n    id: userId,\n    nickname: input.coreProfile?.display_name ?? null,\n    batteries: Math.floor((input.wallet?.balance_power_units ?? 0) / 100),\n    last_daily_claim: null,\n    ai_caught: input.stats?.ai_caught ?? 0,\n    mistaken_as_ai: input.stats?.mistaken_as_ai ?? 0,\n    sympathizer_wins: input.stats?.sympathizer_wins ?? 0,\n    created_at: input.coreProfile?.created_at ?? '',\n  };\n}\n```\n\n对照表：\n\n| 界面字段 | 从哪来 |\n| --- | --- |\n| `id` | 档案行或战绩行的 `user_id`，再不行用传入的 `userId` |\n| `nickname` | 档案行的 `display_name` |\n| `batteries` | 钱包余额除以 100 再取整 |\n| `ai_caught` 等 | 战绩行 |\n\n`batteries` 这一行特别能说明「转换」：库里存的是 `balance_power_units`（最小单位），界面显示「电池」个数——单位换算也发生在这一层。\n\n## 自检\n**问：** 为什么不让 React 组件直接读三张表的查询结果？\n**答：** 组件会淹没在表结构细节和缺行处理里。拼装函数把「库的形状」收成「屏的形状」，组件只消费 `Profile`。\n\n## 重点\n**一块屏幕一个模型；多表数据在边界上 compose 成界面要的形状。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/profile.ts",
+                "lineStart": 20,
+                "lineEnd": 37,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/profile.ts"
+                ],
+                "note": "composeGameProfile：三路输入拼成一个 Profile。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/profile.ts",
+                "lineStart": 31,
+                "lineEnd": 31,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/profile.ts"
+                ],
+                "note": "batteries 由 balance_power_units / 100 换算。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "compose-three-inputs",
+                "front": "composeGameProfile 至少拼哪三类行数据？",
+                "back": "coreProfile（档案）、wallet（钱包）、stats（战绩）；外加可选 userId。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 20,
+                    "lineEnd": 25,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "函数参数列出三路 Row 与 userId。"
+                  }
+                ]
+              },
+              {
+                "id": "batteries-conversion",
+                "front": "batteries 字段如何从钱包行算出来？",
+                "back": "取 balance_power_units，缺省当 0，除以 100 再 Math.floor。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 31,
+                    "lineEnd": 31,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "Math.floor((input.wallet?.balance_power_units ?? 0) / 100)。"
+                  }
+                ]
+              },
+              {
+                "id": "screen-vs-tables",
+                "front": "「界面要的形状 ≠ 数据库存的形状」在这个函数里怎么体现？",
+                "back": "库是三份 Row；函数返回单一 Profile，字段名与单位都按界面需要重写。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 20,
+                    "lineEnd": 37,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "输入多 Row，输出一个 Profile。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "compose-function-name",
+                "title": "拼装个人资料的函数名",
+                "kind": "short-answer",
+                "prompt": "把档案、钱包、战绩拼成 Profile 的导出函数叫什么？照抄函数名。",
+                "expectedAnswer": "composeGameProfile",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 20,
+                    "lineEnd": 20,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "export function composeGameProfile。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "everything-might-be-missing",
+            "title": "任何一张表都可能缺行",
+            "content": "# 任何一张表都可能缺行\n\n## 学习目标\n完成本课后，你能解释 `profile.ts` 里 `?.` 与 `??` 为何密集出现，并读出一条「缺了就用后备」的链式写法。\n\n## 先给结论\n- **事实：`coreProfile`、`wallet`、`stats` 的类型都是 `... | null`；读取时用 `input.coreProfile?.display_name ?? null`、`input.wallet?.balance_power_units ?? 0` 等。**\n- **推论：服务端数据与本地 `useState` 不同——远程行可能根本不存在；代码必须假定「任何一张表都可能查不到」。**\n\n## 一个类比\n你同时向三个部门调档案：人事、财务、战绩室。任何一个部门都可能回「查无此人」。你不能假设三份文件齐了才做会员卡——缺人事就昵称留空，缺财务就余额当 0。`?.` 是「先确认这沓文件在不在」，`??` 是「不在或为空就用后备值」。\n\n## 工作示例\n```ts\nconst userId = input.coreProfile?.user_id ?? input.stats?.user_id ?? input.userId ?? '';\n\nreturn {\n  id: userId,\n  nickname: input.coreProfile?.display_name ?? null,\n  batteries: Math.floor((input.wallet?.balance_power_units ?? 0) / 100),\n  // ...\n  ai_caught: input.stats?.ai_caught ?? 0,\n  created_at: input.coreProfile?.created_at ?? '',\n};\n```\n\n逐段：\n\n1. `coreProfile?.user_id` —— 档案为 null 时整段是 `undefined`，不会去撞 `.user_id` 报错。\n2. `?? input.stats?.user_id` —— 左边是 null/undefined 时再试战绩行。\n3. `?? input.userId ?? ''` —— 再退到调用方传入，最后退到空字符串。\n4. 数字类字段常用 `?? 0`：没有战绩行就当零次，而不是让界面拿到 `undefined` 崩掉。\n\n这和第 1 门见过的 `?.` / `??` 是同一工具，场景换成了**远程数据可能整行缺失**。\n\n## 自检\n**问：** 把 `?? 0` 写成 `|| 0` 有时会有什么差别？\n**答：** `||` 会把 `0`、`''` 等假值也当成缺省触发后备；`??` 只在 `null` 或 `undefined` 时触发。余额真的是 0 时，`??` 更安全。\n\n## 重点\n**远程行可能是 null；用 `?.` 安全下钻，用 `??` 给出缺省，别假设三张表都在。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/profile.ts",
+                "lineStart": 20,
+                "lineEnd": 25,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/profile.ts"
+                ],
+                "note": "三路输入类型均为 Row | null。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/profile.ts",
+                "lineStart": 26,
+                "lineEnd": 36,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/profile.ts"
+                ],
+                "note": "密集的 ?. 与 ??：缺行时有后备。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "row-nullable",
+                "front": "composeGameProfile 的 coreProfile 参数类型为什么是 CoreProfileRow | null？",
+                "back": "档案查询可能没有行；函数必须接受「查不到」的情况。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 22,
+                    "lineEnd": 22,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "coreProfile: CoreProfileRow | null。"
+                  }
+                ]
+              },
+              {
+                "id": "optional-chain-read",
+                "front": "input.wallet?.balance_power_units 在 wallet 为 null 时结果是什么？",
+                "back": "undefined（不会对 null 强行读属性而抛错）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 31,
+                    "lineEnd": 31,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "wallet?.balance_power_units 与 ?? 0 连用。"
+                  }
+                ]
+              },
+              {
+                "id": "nullish-default-zero",
+                "front": "战绩字段 ai_caught 缺失时用什么缺省？",
+                "back": "0（input.stats?.ai_caught ?? 0）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "ai_caught: input.stats?.ai_caught ?? 0。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "nullish-coalescing-op",
+                "title": "缺省合并运算符",
+                "kind": "short-answer",
+                "prompt": "profile.ts 在「左边为 null 或 undefined 时用右边」用的是哪个由两个问号组成的运算符？只写符号。",
+                "expectedAnswer": "??",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/profile.ts",
+                    "lineStart": 26,
+                    "lineEnd": 26,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/profile.ts"
+                    ],
+                    "note": "多处 ?? 链式后备。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "where-the-keys-come-from",
+            "title": "钥匙从环境变量来",
+            "content": "# 钥匙从环境变量来\n\n## 学习目标\n完成本课后，你能说明 Supabase 客户端的 URL 与 anon key 从哪里读入，以及「公开的匿名密钥」和「绝不能写进前端的私密密钥」差在哪里。\n\n## 先给结论\n- **事实：`supabase.ts` 用 `import.meta.env.VITE_SUPABASE_URL` 与 `import.meta.env.VITE_SUPABASE_ANON_KEY` 配置客户端；测试模式与本地开发各自有写死的假值常量。**\n- **推论：前端打包进去的只能是设计为可公开的 anon key；真正的 service role / 数据库密码绝不能出现在这种文件里。**\n\n## 一个类比\n酒店大堂放着「访客 Wi‑Fi 密码」牌子——这是公开密钥：进门就能用，但权限有限。保险库钥匙在经理保险柜里——那是私密密钥：不能印在大堂手册上。`VITE_SUPABASE_ANON_KEY` 是大堂 Wi‑Fi；service role 是保险柜钥匙。\n\n## 工作示例\n（只读本文件前 35 行的配置段；后面的锁实现与本课无关。）\n\n```ts\nconst isVitestRuntime = import.meta.env.MODE === 'test';\nconst isLocalDevServerRuntime = import.meta.env.DEV && !isVitestRuntime;\nconst VITEST_PUBLIC_SUPABASE_URL = 'https://vitest-public.supabase.co';\nconst VITEST_PUBLIC_SUPABASE_ANON_KEY = 'vitest-public-anon-key';\nconst LOCAL_DEVELOPMENT_PUBLIC_SUPABASE_ANON_KEY = 'local-development-public-anon-key';\nconst configuredSupabaseUrl =\n  import.meta.env.VITE_SUPABASE_URL ??\n  (isVitestRuntime ? VITEST_PUBLIC_SUPABASE_URL : SWIMMER_CORE_SUPABASE_URL);\n// ...\nexport const supabaseAnonKey =\n  import.meta.env.VITE_SUPABASE_ANON_KEY ??\n  (isVitestRuntime\n    ? VITEST_PUBLIC_SUPABASE_ANON_KEY\n    : isLocalDevServerRuntime\n      ? LOCAL_DEVELOPMENT_PUBLIC_SUPABASE_ANON_KEY\n      : '');\n```\n\n读法：\n\n1. `import.meta.env.VITE_*` —— Vite 注入的环境变量；名字在 `.env` 里配置（第 0 门地形课见过 `.env.example`）。\n2. 测试跑 Vitest 时用假 URL/假 key，避免测试去打真服务器。\n3. 本地 dev 若没配 key，落到 `local-development-public-anon-key` 这类占位，而不是偷偷塞一个生产密钥。\n4. 常量名带 `PUBLIC` / `ANON`——提醒你：这是匿名公开侧，不是管理员密钥。\n\n## 自检\n**问：** 既然 anon key 会出现在前端，是不是就等于谁都可以删库？\n**答：** 不是。anon key 只证明「这是这个项目的公开客户端」；真正能做什么仍受服务端规则约束。把 service role 写进前端才是事故。\n\n## 重点\n**URL 与 anon key 来自环境变量；anon 可进前端，私密密钥不行。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/supabase.ts",
+                "lineStart": 7,
+                "lineEnd": 14,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/supabase.ts"
+                ],
+                "note": "从 import.meta.env 读取 URL，测试环境有假 URL。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/supabase.ts",
+                "lineStart": 23,
+                "lineEnd": 33,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/supabase.ts"
+                ],
+                "note": "anon key：环境变量优先，否则测试/本地假值。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/supabase.ts",
+                "lineStart": 18,
+                "lineEnd": 22,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/supabase.ts"
+                ],
+                "note": "导出 supabaseUrl 等运行时配置。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "env-url-var",
+                "front": "配置 Supabase URL 时优先读哪个环境变量名？",
+                "back": "VITE_SUPABASE_URL（import.meta.env.VITE_SUPABASE_URL）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/supabase.ts",
+                    "lineStart": 12,
+                    "lineEnd": 14,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/supabase.ts"
+                    ],
+                    "note": "configuredSupabaseUrl 读取 VITE_SUPABASE_URL。"
+                  }
+                ]
+              },
+              {
+                "id": "anon-not-service",
+                "front": "supabaseAnonKey 这个名字在提醒你什么？",
+                "back": "这是匿名公开客户端密钥（anon），不是 service role 等私密密钥。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/supabase.ts",
+                    "lineStart": 27,
+                    "lineEnd": 33,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/supabase.ts"
+                    ],
+                    "note": "export const supabaseAnonKey = ...。"
+                  }
+                ]
+              },
+              {
+                "id": "vitest-fake-key",
+                "front": "Vitest 测试运行时若没有真 key，用什么？",
+                "back": "常量 VITEST_PUBLIC_SUPABASE_ANON_KEY（假的测试用 key）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/supabase.ts",
+                    "lineStart": 10,
+                    "lineEnd": 10,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/supabase.ts"
+                    ],
+                    "note": "VITEST_PUBLIC_SUPABASE_ANON_KEY = 'vitest-public-anon-key'。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "anon-env-name",
+                "title": "匿名密钥的环境变量名",
+                "kind": "short-answer",
+                "prompt": "supabase.ts 读取匿名公钥时用的环境变量名是什么？照抄 VITE_ 开头的完整名字。",
+                "expectedAnswer": "VITE_SUPABASE_ANON_KEY",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/supabase.ts",
+                    "lineStart": 28,
+                    "lineEnd": 28,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/supabase.ts"
+                    ],
+                    "note": "import.meta.env.VITE_SUPABASE_ANON_KEY。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "data-and-error-together",
+            "title": "data 和 error 一起回来",
+            "content": "# data 和 error 一起回来\n\n## 学习目标\n完成本课后，你能读懂 `const { data, error } = await supabase.rpc(...)` 这种返回风格，并说明为什么必须先看 `error`（对照第 3 门「失败会 throw」的路径）。\n\n## 先给结论\n- **事实：`reportMessage` 在通过本地校验后调用 `supabase.rpc('turing_pact_report_message', {...})`，解构出 `data` 与 `error`；若 `error` 存在则 `throw error`，否则把 `data` 当作结果返回。**\n- **推论：许多 Supabase 客户端 API 不靠抛异常表示业务失败，而是把错误放在同一返回值的 `error` 字段——你不看 `error`，就会把失败当成成功的空数据。**\n\n## 一个类比\n快递柜取件：屏幕同时显示「包裹格口」和「错误码」。成功时格口有号、错误码空；失败时格口无、错误码有。你不会只盯格口——错误码亮着还去拉空格口就错了。`{ data, error }` 就是「格口 + 错误码」同一屏。\n\n## 工作示例\n```ts\nconst { data, error } = await supabase.rpc('turing_pact_report_message', {\n  p_message_id: normalizedMessageId,\n  p_reason: reason,\n});\n\nif (error) {\n  throw error;\n}\n\nreturn data as ReportMessageResult;\n```\n\n读顺序：\n\n1. `await supabase.rpc(...)` —— 一次远程调用（要等，可能失败；第 3 门的异步直觉在这里落地）。\n2. 返回值拆成 `data` 与 `error` 两个字段。\n3. **先** `if (error) throw error` —— 把「错误字段风格」接回你熟悉的 throw 路径，让上层 try/catch 或错误边界处理。\n4. 确认无 error 后才使用 `data`。\n\n对照：有的 API 失败直接 throw；Supabase 客户端这里选择「结果对象里带 error」。两种都要会读，不能混用假设。\n\n## 自检\n**问：** 只写 `const { data } = await supabase.rpc(...); return data` 漏掉 error，会怎样？\n**答：** 失败时可能拿到 `null`/`undefined` 的 data 还当成功用，错误被静默吞掉。\n\n## 重点\n**Supabase 常返回 `{ data, error }`；先看 error，再碰 data。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 35,
+                "lineEnd": 44,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/moderation.ts"
+                ],
+                "note": "rpc 返回 data/error；先 throw error 再 return data。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/moderation.ts",
+                "lineStart": 21,
+                "lineEnd": 24,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/moderation.ts"
+                ],
+                "note": "reportMessage 是一次真实的服务端调用入口。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "destructure-data-error",
+                "front": "supabase.rpc 的结果通常拆成哪两个名字？",
+                "back": "data 与 error。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 35,
+                    "lineEnd": 38,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "const { data, error } = await supabase.rpc(...)。"
+                  }
+                ]
+              },
+              {
+                "id": "check-error-first",
+                "front": "reportMessage 在 return data 之前做了什么？",
+                "back": "if (error) throw error——先把失败变成抛出。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 40,
+                    "lineEnd": 42,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "if (error) { throw error; }。"
+                  }
+                ]
+              },
+              {
+                "id": "rpc-name",
+                "front": "这段代码调用的远程过程名字符串是什么？",
+                "back": "turing_pact_report_message",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 35,
+                    "lineEnd": 35,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "supabase.rpc('turing_pact_report_message', ...)。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "error-field-name",
+                "title": "失败信息在哪个字段",
+                "kind": "short-answer",
+                "prompt": "supabase.rpc 返回对象里，表示失败的字段名是什么？只写字段名。",
+                "expectedAnswer": "error",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 35,
+                    "lineEnd": 41,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "解构 error 并在 if (error) 中处理。"
+                  }
+                ]
+              },
+              {
+                "id": "data-error-vs-throw",
+                "title": "两种失败风格",
+                "kind": "explain",
+                "prompt": "比较：supabase.rpc 返回 { data, error }，与「失败直接 throw」有何不同？调用方漏看 error 会怎样？结合 reportMessage 的写法说明它如何把两种风格接起来。",
+                "rubric": [
+                  "说明 rpc 把错误放在返回值的 error 字段而非一定抛异常",
+                  "说明漏检 error 可能把失败当成功",
+                  "指出 reportMessage 在 error 存在时 throw error",
+                  "指出无 error 时才 return data"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 35,
+                    "lineEnd": 44,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "data/error 解构与 throw 衔接。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "data-that-arrives-by-itself",
+        "title": "你没问，它自己来",
+        "objective": "建立推送直觉：订阅频道、线上事件名契约、从线缆到 store 再到屏幕的站点。",
+        "lessons": [
+          {
+            "id": "push-instead-of-pull",
+            "title": "推送，而不是轮询",
+            "content": "# 推送，而不是轮询\n\n## 学习目标\n完成本课后，你能用具体差别说明「轮询（pull）」与「订阅推送（push）」，并指出 `realtime.ts` 里订阅房间频道的代码落点。\n\n## 先给结论\n- **事实：`subscribeToRoom` 使用 `supabase.channel(`room:${roomId}`)` 并 `channel.on(...)` 注册多种事件，最后 `channel.subscribe(...)`；收到消息时回调 `onNewMessage`，并可能更新 `useAIStore`。**\n- **推论：客户端不是每隔几秒问「有新消息吗」，而是挂上监听——服务器有事就推过来。**\n\n## 一个类比\n**轮询：** 你每分钟自己走到小区信箱看一眼——大部分时候空跑。**推送：** 邮差按门铃，有信才打扰你。Realtime 订阅就是装门铃：频道连上之后，新邮件（消息、玩家变动、广播）来了会响。\n\n## 工作示例\n订阅入口：\n\n```ts\nsubscribeToRoom(roomId: string, callbacks: RoomCallbacks): () => void {\n  const channel = supabase.channel(`room:${roomId}`);\n  callbacks.onConnectionChange?.('connecting');\n  // ... channel.on(...) 多次注册 ...\n  channel.subscribe((status) => {\n    if (status === 'SUBSCRIBED') {\n      callbacks.onConnectionChange?.('connected');\n      return;\n    }\n    // ...\n  });\n  this.channels.set(roomId, channel);\n\n  return () => {\n    channel.unsubscribe();\n    this.channels.delete(roomId);\n  };\n}\n```\n\n新消息到达时：\n\n```ts\nchannel.on(\n  'postgres_changes',\n  {\n    event: 'INSERT',\n    schema: turingPactDatabaseSchema,\n    table: 'messages',\n    filter: `room_id=eq.${roomId}`,\n  },\n  (payload) => {\n    const message = payload.new as Message;\n    if (message.message_type === 'chat') {\n      useAIStore.getState().setIsAITyping(false);\n    }\n    callbacks.onNewMessage(message);\n  },\n);\n```\n\n要点：\n\n1. `channel` —— 按房间 id 订的那条线。\n2. `on('postgres_changes', ...)` —— 数据库表有变化时推过来（这里是 messages 插入）。\n3. 回调里写 store、叫 `onNewMessage`——推送最终要落到本机记忆与界面。\n4. 返回的函数负责 `unsubscribe`——离开房间要拆门铃，避免漏听或重复听。\n\n## 自检\n**问：** 推送是不是就永远不需要主动请求服务器了？\n**答：** 不是。进房时仍要拉一次当前玩家列表、历史消息等；推送负责「之后的变化」。初次快照 + 之后增量，常常两套都有。\n\n## 重点\n**轮询是你反复去问；订阅是挂上门铃——有变化它来找你。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/realtime.ts",
+                "lineStart": 48,
+                "lineEnd": 50,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/realtime.ts"
+                ],
+                "note": "subscribeToRoom：按 roomId 建立 channel。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/realtime.ts",
+                "lineStart": 87,
+                "lineEnd": 101,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/realtime.ts"
+                ],
+                "note": "messages INSERT 推送：写 AI store 并 onNewMessage。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/realtime.ts",
+                "lineStart": 120,
+                "lineEnd": 136,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/realtime.ts"
+                ],
+                "note": "subscribe 状态回调与 unsubscribe 清理。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "channel-per-room",
+                "front": "订阅房间时 channel 名如何拼？",
+                "back": "room: 前缀加上 roomId，如 room:${roomId}。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtime.ts",
+                    "lineStart": 49,
+                    "lineEnd": 49,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtime.ts"
+                    ],
+                    "note": "supabase.channel(`room:${roomId}`)。"
+                  }
+                ]
+              },
+              {
+                "id": "push-vs-poll",
+                "front": "轮询与 Realtime 订阅的核心差别是什么？",
+                "back": "轮询是客户端定时拉；订阅是挂监听，有事件由服务端/通道推来。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtime.ts",
+                    "lineStart": 87,
+                    "lineEnd": 101,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtime.ts"
+                    ],
+                    "note": "channel.on 注册推送回调，而非循环请求。"
+                  }
+                ]
+              },
+              {
+                "id": "unsubscribe-cleanup",
+                "front": "subscribeToRoom 返回的函数做什么？",
+                "back": "unsubscribe 并删掉本地 channel 记录，离开时拆掉订阅。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtime.ts",
+                    "lineStart": 133,
+                    "lineEnd": 136,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtime.ts"
+                    ],
+                    "note": "return () => { channel.unsubscribe(); ... }。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "mailbox-vs-doorbell",
+                "title": "信箱与门铃",
+                "kind": "explain",
+                "prompt": "用「每分钟看信箱」和「邮差按门铃」类比，说明轮询与 Realtime 订阅的差别；并指出 subscribeToRoom 里哪一步相当于「装门铃」。",
+                "rubric": [
+                  "轮询对应反复主动查看",
+                  "推送对应有事件才通知",
+                  "提到 channel / subscribe / on 之一作为装门铃",
+                  "可补充离开时 unsubscribe 拆门铃"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtime.ts",
+                    "lineStart": 48,
+                    "lineEnd": 50,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtime.ts"
+                    ],
+                    "note": "建立 channel 是订阅起点。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-name-on-the-wire-is-a-promise",
+            "title": "线上的名字是契约",
+            "content": "# 线上的名字是契约\n\n## 学习目标\n完成本课后，你能说明 `REALTIME_BROADCAST_EVENT` 里的字符串为何不能随便改名，以及注释里的「多人游戏线上契约」是什么意思。\n\n## 先给结论\n- **事实：`realtimeEvents.ts` 导出 `REALTIME_BROADCAST_EVENT`，值为 `typing: 'typing'`、`coldOpenNudge: 'cold-open-nudge'`；文件头注释写明 values 是 on-the-wire 字符串，改名需要有意的多人契约迁移与 e2e 更新。**\n- **推论：事件名不只是本机变量名——它是房间里所有客户端约定好的「接头暗号」；单端改名会导致另一端永远听不到。**\n\n## 一个类比\n对讲机频道口令：一方喊「猎鹰」，另一方也必须听「猎鹰」。你单方面改成「老鹰」却不通知队友，队友会以为频道死了。`cold-open-nudge` 就是口令本身；TypeScript 里的 `coldOpenNudge` 只是本地好记的钥匙。\n\n## 工作示例\n```ts\n/**\n * Stable Realtime broadcast event wire names for the room channel.\n * ...\n * Values are the on-the-wire strings; do not rename without intentional\n * multiplayer contract migration + e2e updates.\n */\n\nexport const REALTIME_BROADCAST_EVENT = {\n  /** AI typing indicator broadcast (`isTyping` payload). */\n  typing: 'typing',\n  /** Host cold-open silence nudge fan-out (G-07). */\n  coldOpenNudge: 'cold-open-nudge',\n} as const;\n```\n\n第 2 门用这份文件讲过 `as const`（值固定为字面量）。本课只强调**为什么要集中存放**：\n\n1. 发送方与接收方都应引用同一常量，避免一头写 `typo` 字符串。\n2. 注释把「可改本地标识符」和「不可随便改线上字符串」分开。\n3. `realtime.ts` 里 `channel.on('broadcast', { event: REALTIME_BROADCAST_EVENT.typing }, ...)` 与 `channel.send({ event: REALTIME_BROADCAST_EVENT.coldOpenNudge, ...})` 都吃这套名字。\n\n## 自检\n**问：** 只改 TypeScript 的键名 `coldOpenNudge` → `nudge`，但不改右边的 `'cold-open-nudge'`，线上兼容吗？\n**答：** 线上字符串没变，只要所有引用都改用新键，线缆上仍兼容。危险的是改**右边的字符串值**却不一起迁移所有端。\n\n## 重点\n**广播事件的字符串是多人契约；改线上名字 = 改协议，不是改本地昵称。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/realtimeEvents.ts",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/realtimeEvents.ts"
+                ],
+                "note": "文件头：on-the-wire 字符串，改名需契约迁移。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/realtimeEvents.ts",
+                "lineStart": 11,
+                "lineEnd": 16,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/realtimeEvents.ts"
+                ],
+                "note": "REALTIME_BROADCAST_EVENT 的两个线上事件名。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/realtime.ts",
+                "lineStart": 104,
+                "lineEnd": 111,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/realtime.ts"
+                ],
+                "note": "订阅方使用 REALTIME_BROADCAST_EVENT.typing。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/realtime.ts",
+                "lineStart": 146,
+                "lineEnd": 149,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/realtime.ts"
+                ],
+                "note": "发送方 send 使用 REALTIME_BROADCAST_EVENT.coldOpenNudge。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "wire-string-value",
+                "front": "coldOpenNudge 在线缆上实际发送的字符串是什么？",
+                "back": "cold-open-nudge",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtimeEvents.ts",
+                    "lineStart": 15,
+                    "lineEnd": 15,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtimeEvents.ts"
+                    ],
+                    "note": "coldOpenNudge: 'cold-open-nudge'。"
+                  }
+                ]
+              },
+              {
+                "id": "why-central-constants",
+                "front": "为什么事件名要集中在 REALTIME_BROADCAST_EVENT，而不是各写各的字符串？",
+                "back": "保证收发双方同一暗号；避免拼写分叉导致一端永远收不到。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtimeEvents.ts",
+                    "lineStart": 11,
+                    "lineEnd": 16,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtimeEvents.ts"
+                    ],
+                    "note": "集中导出的事件名常量。"
+                  }
+                ]
+              },
+              {
+                "id": "rename-warning",
+                "front": "注释说改名需要什么？",
+                "back": "有意的 multiplayer 契约迁移，并更新 e2e 测试。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtimeEvents.ts",
+                    "lineStart": 7,
+                    "lineEnd": 8,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtimeEvents.ts"
+                    ],
+                    "note": "do not rename without intentional multiplayer contract migration + e2e updates。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "typing-wire-name",
+                "title": "typing 事件的线上字符串",
+                "kind": "short-answer",
+                "prompt": "REALTIME_BROADCAST_EVENT.typing 的值（线上事件名）是什么？只写该字符串内容，不要引号。",
+                "expectedAnswer": "typing",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtimeEvents.ts",
+                    "lineStart": 13,
+                    "lineEnd": 13,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtimeEvents.ts"
+                    ],
+                    "note": "typing: 'typing'。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "from-the-wire-to-the-screen",
+            "title": "从线缆到屏幕要经过哪几站",
+            "content": "# 从线缆到屏幕要经过哪几站\n\n## 学习目标\n完成本课后，你能按顺序说出一条实时消息从通道到界面的站点：线上事件 → 回调 → store（本机共享记忆）→ 界面重画，并指出代码中的对应片段。\n\n## 先给结论\n- **事实：新聊天行经 `postgres_changes` 的 INSERT 回调到达；回调里可 `useAIStore.getState().setIsAITyping(false)`，再 `callbacks.onNewMessage(message)`。typing 广播则直接 `setIsAITyping(isTyping)`。**\n- **推论：Realtime 不直接画 DOM——它改的是本机记忆与「请更新」的回调；界面仍通过 React 订阅 store 或 props 才重画。本课三种数据源在此交汇：推送、store、（间接触达）UI。**\n\n## 一个类比\n消防警报链路：传感器响（线上事件）→ 值班室接警（channel 回调）→ 在共享白板上写「3 楼火警」（store）→ 各楼层显示屏刷新（React 界面）。你不会指望传感器自己跑到每间办公室改指示灯。\n\n## 工作示例\n**站 1 — 线缆上的变化**\n\n```ts\nchannel.on(\n  'postgres_changes',\n  { event: 'INSERT', /* schema, table: messages, filter */ },\n  (payload) => { /* ... */ },\n);\n```\n\n**站 2 — 回调里写本机 store**\n\n```ts\nconst message = payload.new as Message;\nif (message.message_type === 'chat') {\n  useAIStore.getState().setIsAITyping(false);\n}\ncallbacks.onNewMessage(message);\n```\n\n**站 3 — 广播事件同样落 store**\n\n```ts\nchannel.on('broadcast', { event: REALTIME_BROADCAST_EVENT.typing }, (payload) => {\n  const isTyping = /* 从 payload 解析 */;\n  useAIStore.getState().setIsAITyping(isTyping);\n});\n```\n\n**站 4 — 界面**\n\n组件通过 `useAIStore()` 读 `isAITyping`，或通过 `onNewMessage` 最终 `addMessage` 进 `chatStore`。本课开头的「大厅白板」与这里的推送接通：数据可以来自用户点击（本地 setter），也可以来自门铃（Realtime）。\n\n回顾三种来源：\n\n| 来源 | 本课代表 | 刷新页面后 |\n| --- | --- | --- |\n| 本机共享记忆 | zustand store | 通常没了 |\n| 服务端数据 | Supabase 查询 / rpc | 还在服务器上 |\n| 实时推送 | Realtime channel | 只推「当下变化」，历史仍靠拉取 |\n\n## 自检\n**问：** `useAIStore.getState().setIsAITyping(false)` 为什么不用 React hook 写法？\n**答：** 这段在普通回调/类方法里，不在组件函数顶层；`getState()` 可在非组件代码里读写 store。Hook 只能在组件（或自定义 hook）里调用。\n\n## 重点\n**推送 → 回调 → store / 回调链 → 界面；Realtime 改记忆，React 才画屏幕。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/realtime.ts",
+                "lineStart": 87,
+                "lineEnd": 101,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/realtime.ts"
+                ],
+                "note": "INSERT 消息：清 AI 输入态并 onNewMessage。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/realtime.ts",
+                "lineStart": 104,
+                "lineEnd": 111,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/realtime.ts"
+                ],
+                "note": "typing 广播：解析后 setIsAITyping。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/aiStore.ts",
+                "lineStart": 17,
+                "lineEnd": 17,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/aiStore.ts"
+                ],
+                "note": "setIsAITyping 是 store 上的 setter，供回调调用。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/chatStore.ts",
+                "lineStart": 17,
+                "lineEnd": 17,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/chatStore.ts"
+                ],
+                "note": "onNewMessage 上游最终常会 addMessage 进 chatStore。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "stations-order",
+                "front": "一条实时聊天消息到屏幕，合理的站点顺序是？",
+                "back": "通道事件 → 回调 → 更新 store/触发回调 → React 读状态重画。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtime.ts",
+                    "lineStart": 95,
+                    "lineEnd": 100,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtime.ts"
+                    ],
+                    "note": "回调内先碰 store 再 onNewMessage。"
+                  }
+                ]
+              },
+              {
+                "id": "getstate-outside-react",
+                "front": "在 channel 回调里为什么用 useAIStore.getState() 而不是 useAIStore()？",
+                "back": "回调不在组件函数内，不能调 hook；getState() 可在任意代码读 store。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtime.ts",
+                    "lineStart": 98,
+                    "lineEnd": 98,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtime.ts"
+                    ],
+                    "note": "useAIStore.getState().setIsAITyping(false)。"
+                  }
+                ]
+              },
+              {
+                "id": "three-sources-review",
+                "front": "本课三种数据来源各举一个代表？",
+                "back": "本机 store（如 aiStore）；服务端（如 profile / rpc）；实时推送（realtime channel）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/aiStore.ts",
+                    "lineStart": 13,
+                    "lineEnd": 13,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/stores/aiStore.ts"
+                    ],
+                    "note": "本机共享记忆入口 useAIStore。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/moderation.ts",
+                    "lineStart": 35,
+                    "lineEnd": 35,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/moderation.ts"
+                    ],
+                    "note": "服务端 rpc 调用。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtime.ts",
+                    "lineStart": 49,
+                    "lineEnd": 49,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtime.ts"
+                    ],
+                    "note": "Realtime channel 订阅。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "end-to-end-stations",
+                "title": "走完一条推送链",
+                "kind": "explain",
+                "prompt": "以「AI 正在输入」指示为例，按顺序说明：线上事件名从哪来、谁订阅、谁写入 store、界面如何间接受益。请点名 REALTIME_BROADCAST_EVENT.typing 与 setIsAITyping。",
+                "rubric": [
+                  "事件名来自 REALTIME_BROADCAST_EVENT.typing（线上字符串 typing）",
+                  "realtime 中 channel.on broadcast 订阅",
+                  "回调里 useAIStore.getState().setIsAITyping(...)",
+                  "组件订阅 useAIStore 的 isAITyping 后重画"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtimeEvents.ts",
+                    "lineStart": 13,
+                    "lineEnd": 13,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtimeEvents.ts"
+                    ],
+                    "note": "typing: 'typing' 线上契约。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/realtime.ts",
+                    "lineStart": 104,
+                    "lineEnd": 110,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/realtime.ts"
+                    ],
+                    "note": "broadcast typing → setIsAITyping。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

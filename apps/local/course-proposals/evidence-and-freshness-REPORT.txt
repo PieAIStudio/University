@@ -1,0 +1,53 @@
+evidence-and-freshness course proposal — delivery report
+========================================================
+
+Course id:     evidence-and-freshness
+Proposal id:   create-evidence-and-freshness
+Snapshot:      git-90cf76c1177f
+Commit:        90cf76c1177fa19cd5d9d0a6c8257d934a586b5e
+Analysis:      ua-90cf76c1-v2-9-4-zh-full-e98206c7358f1ff1-8b71aac3ba92
+Evidence files (airlock @ pinned commit):
+  - server/content/evidence.ts
+  - server/workflows/refresh-study.ts
+
+Scale
+-----
+- Units:     3
+- Lessons:   11
+- Cards:     22 (2 per lesson)
+- Exercises: 11 (1 per lesson)
+- Evidence references (lesson + card + exercise, all with note): 63
+
+Units
+-----
+1. pin-to-git-blob — 把句子钉在 Git blob 上 (4 lessons)
+   open-git-not-path, require-regular-blob, validate-same-as-display, never-live-checkout
+2. judge-freshness — 判断什么时候教材过期 (4 lessons)
+   freshness-by-object-id, inference-needs-review, ua-integrity-vs-authority, any-reason-means-stale
+3. audit-and-latch — 审计报告与单向过期闩 (3 lessons)
+   local-commit-not-dirty, audit-dry-vs-apply, cascade-active-to-stale (includes mermaid)
+
+Gate: check-proposal-shape.mjs
+------------------------------
+ok  course-proposals/evidence-and-freshness.json
+
+Gate: check-proposal-evidence.mjs --study university-local
+---------------------------------------------------------
+(unique path:line ranges all ok; summary line below)
+
+all 63 references resolve at their pinned commits
+
+Full gate stdout (evidence) ends with the line above; every listed range printed as "ok  <path>:<start>-<end>" with no MISS / out-of-range failures.
+
+Most counter-intuitive finding (taught in-course)
+-------------------------------------------------
+Inference evidence can go stale even when the cited file's blob objectId is unchanged.
+
+In evaluateEvidenceFreshness, if kind === "inference" and the target snapshot's sourceCommit has moved forward, the code still pushes
+"Inference requires review after the repository commit changes" while sameRegularBlob is true.
+
+That is the opposite of the naive rule "if the lines didn't change, the lesson is still fine."
+A fact can stay fresh on an identical blob across commits; a judgment cannot — surrounding call graph and defaults may have shifted
+while those exact lines stayed put. Marking uncertain claims as inference is what makes the curriculum re-open them.
+
+Also sharp (lesson cascade-active-to-stale): apply only transitions active → stale; a later "fresh" report never auto-revives a course.

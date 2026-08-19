@@ -1,0 +1,60 @@
+failure-recovery 课程提案交付报告
+========================================
+
+规模
+----
+- 单元：3
+  1. chunk-self-heal（代码分块失败时先自救）— 4 节
+  2. storage-may-die（存储不可用时继续跑）— 4 节
+  3. platform-storage-matrix（多端存储与空实现）— 4 节
+- 课时：12
+- 卡片：24（每节 2）
+- 练习：12（每节 1，short-answer）
+- 证据引用：70 条（含 note；kind 以 fact 为主，行号均对照 pinned commit）
+
+输出文件
+--------
+- course-proposals/failure-recovery.json
+- course-proposals/failure-recovery-REPORT.txt
+
+门禁结果（最终）
+----------------
+1) node scripts/check-proposal-shape.mjs course-proposals/failure-recovery.json
+
+   ok  course-proposals/failure-recovery.json
+
+2) node scripts/check-proposal-evidence.mjs course-proposals/failure-recovery.json --study turing-pact
+
+   （50 条去重后的路径区间均为 ok）
+   all 70 references resolve at their pinned commits
+
+证据来源（pinned commit）
+-------------------------
+snapshotId:  git-3b402e069a5d
+sourceCommit: 3b402e069a5db5fe9eb82dbc03aa05152b3d298b
+targetAnalysisId: ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a
+files:
+  - src/platform/dynamicImportRecovery.ts
+  - src/platform/safeLocalStorage.ts
+  - src/platform/storage.ts
+  - src/App.tsx（接线：Boundary / MarkerClearer / Failure UI / lazy）
+  - src/features/chat-signals/aiFeedIntro.ts（safe API 的业务降级示例）
+
+读代码时最反直觉的一点（已写进课）
+----------------------------------
+自动恢复不是「失败就 reload」，而是 **同一 URL 只许自动救一次**。
+
+直觉上 chunk 挂了多刷几次更稳；TuringPact 相反：
+- `recoverDynamicImportOnce` 把 `RECOVERY_STORAGE_KEY` 写成当前 marker（页 URL）；
+- 标记已在则直接 `return false`，把控制权交给 `DynamicImportRecoveryFailure`（说明 + 手动按钮）；
+- 成功挂载后 `clearCurrentPageDynamicImportRecovery` 才清标记，留给「下一次真发版故障」。
+
+无限 reload 比白屏更糟——用户连「重试」都点不到。
+这一条落在课时：
+- recover-once-only
+- recovery-state-machine（mermaid：最关键边是 CheckMark → FailUI）
+- boundary-then-fallback-ui
+
+配套反直觉：
+- 恢复标记用 **sessionStorage** 不是 localStorage（跨一次 reload 即可，不永久钉死）；
+- `createPlatformStorage` 在 `isNativePlatform && !isElectron` 才走 Preferences——Electron 故意走 Web 存储。

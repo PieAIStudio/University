@@ -1,0 +1,1624 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 85,
+  "course": {
+    "id": "foundations-ui",
+    "title": "《界面是怎么长出来的》",
+    "description": "零基础主干第 4 阶段：用图灵密约里最短的真实组件与 hook，建立「组件是返回界面的函数」、props、组合、条件渲染，以及组件自己的记忆与清理直觉。",
+    "audience": "零基础重建地基的独立开发者",
+    "objectives": [
+      "指着一个 .tsx 组件说出：它是函数、返回的是界面描述、JSX 尖括号与 HTML 不是同一套规则",
+      "读 props、children、默认值、{...} 插值与 return 前计算时，能指出各自在函数里的位置",
+      "解释 ...props 透传、variant 样式变体、条件渲染与 aria/data 属性分别服务谁",
+      "用 useState、useRef、useEffect 清理函数说明：界面何时因「自己的记忆」变化，以及卸载时为什么要取消订阅"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "foundations-async"
+    ],
+    "trackId": "foundations",
+    "units": [
+      {
+        "id": "a-component-is-a-function",
+        "title": "组件就是个函数",
+        "objective": "建立组件 = 返回界面的函数：JSX、props、children、花括号插值，以及 return 前先计算。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "jsx-is-not-html",
+            "title": "函数里的尖括号，和网页上的 HTML 是一回事吗？",
+            "content": "# 函数里的尖括号，和网页上的 HTML 是一回事吗？\n\n## 两个东西\n\n你打开图灵密约里的输入框组件 `src/ui/TextInput.tsx`。文件名以 `.tsx` 结尾。函数体里有一行长这样：\n\n[[evidence:src/ui/TextInput.tsx:5-8]]\n\n:::detail[文件名后面的 .tsx 是什么意思？]\n电脑认文件，先看后缀。`.ts` 是 TypeScript 文本，里面的 `<` 默认当「小于号」。`.tsx` 多一个 `x`，是在告诉工具：这个文件里的尖括号可以当标签起点，不要按比较符号去读。\n\n你可以把后缀想成信封上的备注。备注写错了，里面的字还在，但拆信的人会按错规则读。这节课你只要记住：看见 `.tsx`，先准备好读标签，不是只读加减乘除。\n:::\n\n你至少认出了两样熟悉的东西：尖括号、标签名 `input`。于是脑子里很容易蹦出第三个词——**HTML**。HTML 是浏览器读的网页标记：一整页已经摆好的结构。\n\n:::detail[HTML 到底是什么？]\n就是网页上那些尖括号标签。你在浏览器里「查看页面源代码」，看到的多半是它：一整页已经摆好谁在谁里面。\n\n它通常住在 `.html` 文件里，或作为一整段文字交给浏览器去解析。你现在要对比的，不是「尖括号漂不漂亮」，是「这段尖括号住在哪种文件、由谁来读」。\n:::\n\n可是这段尖括号并不住在 `.html` 文件里。它住在一个 **TypeScript 函数**的 `return` 后面，和参数、花括号待在一起。文件第一行还从 `react` 借了 `forwardRef`：\n\n[[evidence:src/ui/TextInput.tsx:1]]\n\n一边是「网页上的 HTML」，一边是「函数里的尖括号」。它们长得像，是不是同一种东西？\n\n## 先猜一下\n\n如果有人说「`return <input … />` 就是函数返回了一段 HTML 字符串」，你觉得对吗？差在哪？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n不对。源码里这是 **JSX**——写在 JS/TS 里的界面描述，不是用引号包起来的 HTML 字符串。\n\n## 逐条对照\n\n**写在哪里**\n\n- HTML：常在 `.html` 文件里，或作为字符串交给浏览器解析。\n- JSX：写在组件函数体里。你看到的 `return <input … />`，返回值不是 `'…'` 那种字符串，而是一段 JSX 表达式。\n\n[[evidence:src/ui/TextInput.tsx:5-8]]\n\n:::detail[JSX 这个词先怎么记？]\n先别背缩写。你就把它读成「写在函数里的组装图」：这里要一颗输入框、类名怎么拼、类型是 text。\n\n它长得像 HTML，是为了让你眼睛好认，不是为了让浏览器直接当网页源码去读。真正长到屏幕上，还要 React 按这张图去搭。你现在只要分清：返回值不是带引号的那串字。\n\n若它真是字符串，你得自己处理引号、换行和转义，改一个属性也容易拼错。JSX 让你按标签来改：要加 `type`，就在标签上写，而不是往字符串中间塞字。工具随后把它变成界面节点。你的工作是写清楚「要什么」，不是亲手拼网页文本。\n:::\n\n**文件后缀为什么是 `.tsx`**\n\n- 纯 `.ts` 文件里，解析器会把 `<` 优先当成「小于号」，不会当成标签起点。\n- **`.tsx`** = TypeScript + 允许 JSX。本文件用 `.tsx`，就是在告诉工具链：这里的尖括号是界面描述，别按小于号去读。\n\n**属性名：`class` 还是 `className`**\n\n- HTML 里常见 `class=\"…\"`。\n- JSX 里写成 **`className`**，因为在 JS/TS 里 `class` 是保留字，不能直接当属性名用。证据行写的是 `className={…}`，不是 `class=`。\n\n[[evidence:src/ui/TextInput.tsx:7]]\n\n:::detail[保留字是什么意思？]\n就是语言先占住的词，不能再拿去当普通名字用。`class` 在 JS/TS 里已经有别的工作，你再写 `class=`，解析器会愣住。\n\n所以 JSX 换了一个不会撞车的名字：`className`。你读的时候不要翻译回「这就是 HTML 的 class」——外形像，规则已经换了。\n:::\n\n**身份：已经摆好的页，还是组装说明**\n\n- HTML 页像已经印好的一页纸。\n- JSX 像说明书上的组装图：你在函数里写下「这里要一颗输入框、类名怎么拼、类型是 text」，React 再按说明在屏幕上长出真正的控件。\n- 所以：**组件 = 返回界面描述的函数**。参数进去，界面描述出来——前几门课里的「函数」没换骨架，换的是返回值长什么样。\n\n**你会先绕的一点**\n\n- 外层的 `forwardRef<…>( function TextInput(...) { … } )` 是在给这个函数套一层「能接 ref」的包装；这节课你只要抓住最里面：`function TextInput` 仍然是函数，`return` 出去的是 JSX。包装细节以后再拆。\n\n:::detail[forwardRef 现在要不要啃完？]\n不要。你先把它看成快递箱外的一层胶带：里面仍是那个叫 `TextInput` 的函数。\n\n胶带是为了以后能把「口袋」递进去，那是后面的课。这节课若在胶带上停太久，你会忘了真正要看的：`return` 后面那一对尖括号。\n\n你以后在别的文件里还会看见这种包装。读法保持不变：先找到最里面那个 `function`，再看它 `return` 了什么。包装层是附加能力，不是第二种组件。\n:::\n\n## 什么时候用哪个\n\n- 你在浏览器「查看页面源代码」、或打开项目里的静态 `.html` 时 → 按 **HTML** 读。\n- 你在 `.tsx` / `.jsx` 里、组件函数的 `return` 后面看到尖括号 → 按 **JSX** 读：界面描述，不是字符串拼接。\n- 属性写成 `className` 而不是 `class`：先当 JSX 读，不要硬套 HTML 属性表。\n- 有人问「组件是什么」：指着 `TextInput` 说——**一个返回界面的函数**。\n\n:::detail[为什么有人会说「返回了一段 HTML 字符串」？]\n因为眼睛先看到了尖括号。网页课里，尖括号几乎总是 HTML；字符串课里，返回值又常常带着引号。两件事叠在一起，就猜成「函数交出一段网页字」。\n\n可你在源码里看不到把标签包进 `'…'` 或 `` `…` ``。`return` 后面直接是表达式。字符串要拼、要转义、要自己管换行；JSX 让你按标签来写，再交给工具去变成真正的界面节点。差就差在：交出去的不是一段待解析的网页文本。\n:::\n\n## 再想想\n\n标签上的 `className={…}`、`type={type}` 从哪来、算不算给函数传参，见 [[lesson:props-are-parameters|props 就是函数参数]]。花括号为什么能塞表达式，见 [[lesson:curly-braces-are-an-escape-hatch|花括号：逃回 JavaScript]]。\n\n## 自检\n\n**问：** 本文件后缀是 `.tsx` 而不是 `.ts`，主要是为了允许什么？\n\n**问：** JSX 里给输入框加 CSS 类名，属性通常写成 `class` 还是 `className`？\n\n**问：** 把 `return <input … />` 理解成「返回了一段 HTML 字符串」对不对？一句话说出差在哪里。\n\n## 一句话\n\n**组件就是返回界面描述的函数；JSX 长得像 HTML，却是写在函数里的组装说明，不是 HTML 字符串。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/TextInput.tsx",
+                "lineStart": 5,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "TextInput 函数 return 了一行 <input … /> JSX。"
+              },
+              {
+                "kind": "inference",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/TextInput.tsx",
+                "lineStart": 1,
+                "lineEnd": 1,
+                "nodeIds": [],
+                "note": "从 react 导入 forwardRef，文件是 .tsx。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "jsx-tsx-suffix",
+                "kind": "basic",
+                "front": "为什么这个文件叫 `.tsx` 而不是 `.ts`？",
+                "back": "`.tsx` 表示 TypeScript 文件里允许写 JSX 尖括号；纯 `.ts` 会把 `<` 当成比较运算符。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 5,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "文件是 .tsx，函数体里有 JSX 尖括号。"
+                  }
+                ]
+              },
+              {
+                "id": "jsx-component-is-function",
+                "kind": "basic",
+                "front": "用一句话说：React 组件在代码里本质上是什么？",
+                "back": "一个返回界面描述（通常是 JSX）的函数。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 6,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "function TextInput … return <input … />。"
+                  }
+                ]
+              },
+              {
+                "id": "jsx-classname-not-class",
+                "kind": "basic",
+                "front": "JSX 里给元素加 CSS 类名时，属性名通常写 `class` 还是 `className`？",
+                "back": "写 `className`。`class` 在 JavaScript 里是保留字。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "属性写的是 className，不是 class。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "jsx-suffix-word",
+                "kind": "short-answer",
+                "title": "允许 JSX 的文件后缀",
+                "prompt": "图灵密约里既能写 TypeScript 又能写尖括号标签的源文件，后缀通常是哪三个字母（含点，例如 .ts）？",
+                "expectedAnswer": ".tsx",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 5,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "TextInput 写在 .tsx 文件里。"
+                  }
+                ]
+              },
+              {
+                "id": "jsx-classname-attr",
+                "kind": "short-answer",
+                "title": "类名属性怎么写",
+                "prompt": "在 JSX 的 `<input …>` 上绑定 CSS 类时，属性名写哪个英文单词？",
+                "expectedAnswer": "className",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "输入框上写的是 className。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "props-are-parameters",
+            "title": "标签上的 seed、alias，到底是在干什么？",
+            "content": "# 标签上的 seed、alias，到底是在干什么？\n\n## 一句真实出现的话\n\n你打开玩家头像组件 `src/ui/PlayerAvatar.tsx`。它以前住在 `src/components/game/` 里，现在搬到了 `src/ui/`，里面那包输入没换。文件最上面不是先画圆，而是先写了一段「这一包输入长什么样」：\n\n[[evidence:src/ui/PlayerAvatar.tsx:1-5]]\n\n:::detail[开头这段 interface 是在画头像吗？]\n不是。它是一张栏目表：这一包输入里有哪些名字、每个名字允不允许缺席。\n\n`interface` 你可以先读成「约定表」。电脑按这张表检查调用方填没填齐。真正画圆、填字，是后面那个函数的事。你先别急着在表上找颜色。\n\n这张表也解释了为什么文件一打开不是 `<div>`。作者先把「外面能传什么」钉死，再写怎么用这些值。你读组件，习惯先看表，再看函数，就不会把类型和画面糊成一团。\n:::\n\n紧接着，函数参数写成了：\n\n[[evidence:src/ui/PlayerAvatar.tsx:7]]\n\n社区把这包输入叫 **props**（properties 的缩写，中文常说「属性」）。你第一次见这个词，很容易猜成「HTML 标签上的装饰」，或者猜成「和函数参数完全两套机制」。这里真正要钉死的是：你在标签上填的那些字段，进函数之后站在哪。\n\n## 先猜一下\n\n这里的 props，和普通函数的参数，是什么关系？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n**props 就是传给组件函数的那包参数**；你在标签上写的 `seed=\"…\"`、`alias=\"…\"`，语义上就是在给这个函数传参。\n\n## 三个真实用例\n\n### 用例 1：先用类型把「这一包」说清楚\n\n[[evidence:src/ui/PlayerAvatar.tsx:1-5]]\n\n- `interface PlayerAvatarProps`：给「这一包参数」起的类型名，方便你在签名上复用。\n- `seed`、`alias`：必填。你作为调用方不给，类型检查会拦下来。\n- 你在 JSX 里写 `<PlayerAvatar seed=\"abc\" alias=\"阿飞\" />` 时，填的就是这张表上的栏目。\n\n:::detail[必填是谁在拦？]\n不是运行到一半才发现少了字。类型检查在你保存文件时就会标红：表上没写问号的栏目，调用方就得填。\n\n所以「必填」不是礼貌提醒，是检查器按这张表执法。你漏了 `seed`，头像函数还没跑，编辑器已经在喊。\n:::\n\n### 用例 2：可选字段——`size?`\n\n同一段类型里，`size?: number` 的 **`?`** 表示：这一项你可以不传。\n\n[[evidence:src/ui/PlayerAvatar.tsx:4]]\n\n- 有的调用只要种子和别名，你不想每次都写尺寸。\n- 类型层先允许「缺席」；缺席时怎么办，看下一用例。\n\n:::detail[问号是「这个数可能是空」吗？]\n不完全是。`size?: number` 说的是「你可以不传这个栏目」，不是「传了也可以是空字」。\n\n不传和「传了一个空」是两回事。这张表只在类型上放开缺席。缺席之后函数里用哪个数，要看参数上的 `size = 40`。\n\n若只有问号、没有默认值，函数里的 `size` 会是 `undefined`。后面若拿它去算 `${size}px`，你会得到一串很难看的字。这个文件两件事都写了：类型允许不传，运行时保证有 40。\n:::\n\n### 用例 3：解构参数 + 默认值\n\n[[evidence:src/ui/PlayerAvatar.tsx:7]]\n\n- `{ seed, alias, size = 40 }`：从那一包对象里取出字段（解构），你在函数体里直接用这三个名字。\n- `size = 40`：运行时若你没传到 `size`，就用 `40`。\n- 整包类型仍是 `: PlayerAvatarProps`。\n\n逻辑上相当于调用：\n\n```text\nPlayerAvatar({ seed: 'abc', alias: '阿飞' })  // size 走默认 40\n```\n\nJSX 习惯写成标签属性的样子；**外形像 HTML 属性，语义仍是函数参数。**你读的时候，把标签属性翻译回「传给函数的字段」就不会飘。\n\n:::detail[解构是在复制一份对象吗？]\n更像拆快递：箱子是那包 props，你按名字把 `seed`、`alias`、`size` 拿出来放桌上。\n\n桌上有了这三个名字，函数体就不用每次写 `那一包.seed`。`size = 40` 是拆箱时的备用：箱子里没有这件，桌上就放 40。\n\n你也可以不拆，改写成 `function PlayerAvatar(props)`，再写 `props.seed`。机制还是同一包参数。这个文件选择拆开，只是让后面的计算少敲几个字。\n:::\n\n## 它不是什么\n\n- **不是**和「函数参数」并列的第二套神秘通道。props 就是参数对象上的字段；你换个叫法，机制还是传参。\n- **不是**「`size?` 和 `size = 40` 是同一件事」：`size?` 在**类型**上说你可以不传；`size = 40` 在**运行时**说没传到时用 40。两者常一起出现，职责不同。\n- **不是**只有写在标签上才叫 props：你写成函数调用时传入的那包对象，同样是 props。\n\n:::detail[标签上的 seed 和函数参数里的 seed 是两个东西吗？]\n不是。JSX 把标签属性收成一个对象，再交给这个函数。你在标签上写 `seed=\"abc\"`，进函数后就是参数里的 `seed`。\n\n所以「属性」这个词在这里容易骗人。HTML 里的属性是贴在标签上的装饰；这里的属性是函数参数的字段。外形像贴标签，读的时候按传参来想，就不会飘到另一套机制上去。\n\n你也可以反过来读：看见函数参数上的字段，就去调用处找对应的标签属性。两边对得上，这节课就算读通了。\n:::\n\n## 再想想\n\n夹在开始标签和结束标签**中间**的那一块内容，也是 props 的一员，名字固定叫 `children`——见 [[lesson:children-is-a-prop-too|children 也是一种 prop]]。你拿到 props 之后先算再画，见 [[lesson:compute-then-return|先算完，再 return]]。\n\n## 自检\n\n**问：** props 和「传给组件函数的参数」是什么关系？\n\n**问：** `size?: number` 和 `size = 40` 各管哪一层？\n\n**问：** 调用方只写了 `seed` 和 `alias`、没写 `size` 时，函数里 `size` 会是多少？\n\n## 一句话\n\n**props = 传给组件函数的那包参数；标签上的属性就是在填这包参数。**\n",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/PlayerAvatar.tsx",
+                "lineStart": 1,
+                "lineEnd": 5,
+                "nodeIds": [],
+                "note": "PlayerAvatarProps：seed、alias、可选 size。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/PlayerAvatar.tsx",
+                "lineStart": 7,
+                "lineEnd": 7,
+                "nodeIds": [],
+                "note": "解构参数与 size = 40 默认值。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "props-are-args",
+                "kind": "basic",
+                "front": "React 里常说的 props，对应函数的哪一部分？",
+                "back": "传给组件函数的那包参数（通常是一个对象，再被解构）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "函数参数就是那包 props。"
+                  }
+                ]
+              },
+              {
+                "id": "props-optional-size",
+                "kind": "basic",
+                "front": "`size?: number` 里的问号表示什么？",
+                "back": "可选属性：调用方可以不传 size。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "size?: number 表示可选。"
+                  }
+                ]
+              },
+              {
+                "id": "props-default-40",
+                "kind": "basic",
+                "front": "调用方不传 `size` 时，`PlayerAvatar` 用什么值？",
+                "back": "40。参数写成 `size = 40`。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "size = 40 是运行时默认值。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "props-default-size-value",
+                "kind": "short-answer",
+                "title": "默认头像尺寸",
+                "prompt": "PlayerAvatar 在调用方没传 size 时，默认像素值是多少？只写数字。",
+                "expectedAnswer": "40",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "默认 size 是 40。"
+                  }
+                ]
+              },
+              {
+                "id": "props-required-fields",
+                "kind": "short-answer",
+                "title": "带问号的那个 prop 名",
+                "prompt": "PlayerAvatarProps 里，哪一个字段名后面带问号（表示可以不传）？只写字段名。",
+                "expectedAnswer": "size",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 1,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "带问号的字段是 size。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "children-is-a-prop-too",
+            "title": "这个组件几乎不画界面，屏幕上的东西从哪来？",
+            "content": "# 这个组件几乎不画界面，屏幕上的东西从哪来？\n\n## 现象\n\n你打开认证相关的壳组件 `src/components/auth/AuthenticatedRuntime.tsx`。整个函数体只有这几行：\n\n[[evidence:src/components/auth/AuthenticatedRuntime.tsx:5-8]]\n\n文件开头从 `react` 借了类型名 `ReactNode`：\n\n[[evidence:src/components/auth/AuthenticatedRuntime.tsx:1]]\n\n:::detail[ReactNode 是一种按钮吗？]\n不是零件名，是「能放进界面树里的东西」的统称：一段文字、一个标签、一串节点，都可以算。\n\n你现在只要知道：`children` 的类型写成它，意思是「这里准备接一块已经能挂到树上的内容」，不是「这里必须是某个固定组件」。\n\n父级可以塞一颗大应用，也可以塞一小段文字。壳不关心孩子长什么样，只负责先做认证准备，再把孩子交回去。类型写成 `ReactNode`，就是在说「我接得够宽」。\n:::\n\n你在这里看不到按钮文案、看不到布局骨架、看不到「自己的」大段界面。它调了一次 `useAuth()`，然后 `return` 出去的是 `<>{children}</>`。可是父级如果用它包住真正的应用，你在屏幕上仍然会看到完整界面。\n\n那些看得见的东西，是这个函数自己画的吗？\n\n## 先猜一下\n\n若把 `return` 改成「什么都不交回去」（源码里常写成 `return null`），`useAuth()` 还会不会跑？包在里面的界面还会不会出现？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n`useAuth()` 仍会跑（它在 return 之前）。但界面不会出现——孩子没被交回树上。\n\n## 为什么是这样\n\n三件事叠在同一小段函数里，你按这个顺序读就不绕：\n\n**1. `children` 也是 prop**\n\n- 签名是 `({ children }: { children: ReactNode })`：参数对象上有一个字段，名字就叫 `children`。\n- 类型 `ReactNode`：可以是元素、文本、一组节点等「能放进 React 树」的东西。\n- 父级若写成（示意）：\n\n```text\n<AuthenticatedRuntime>\n  <App />\n</AuthenticatedRuntime>\n```\n\n中间的 `<App />` 就会成为这里的 `children`。你没有在属性列表里写 `children={…}`，标签包住的内容会自动进这个字段。\n\n[[evidence:src/components/auth/AuthenticatedRuntime.tsx:5]]\n\n:::detail[children 这个名字是谁规定的？]\nReact 的约定：写在开始标签和结束标签中间的那一块，会自动填进参数对象的 `children` 字段。\n\n你也可以显式写 `children={…}`，效果同类。这个项目里的壳选择了「包住孩子」的写法，所以签名里只点了这一个字段。名字不是作者随口起的，换一个名字，中间那块内容就对不上了。\n\n你若把参数改成 `({ slot })`，夹在标签中间的那块不会自动进 `slot`。React 只认 `children` 这个约定名。想用别的名字，就得自己在属性上写 `slot={…}`，中间夹心那条自动通道就断了。\n:::\n\n**2. 组件可以「干活」却不产出可见零件**\n\n- `useAuth()` 被调用了，做认证相关的运行时准备。\n- 它的返回值**没有**被画进 `return`。你要改掉一个习惯：组件不必等于「往屏幕贴一块 UI」；也可以只准备环境，再把孩子交回去。\n\n[[evidence:src/components/auth/AuthenticatedRuntime.tsx:6-8]]\n\n:::detail[useAuth 不画界面，还算组件的一部分吗？]\n算。组件函数从上往下跑，`useAuth()` 在 `return` 之前，所以每次这个函数被叫到，认证准备都会先做。\n\n它不往屏幕贴字，不代表它没干活。你把它想成进门时刷卡：刷完卡，屋里摆设还是孩子带进来的那些。漏写 `return <>{children}</>`，卡刷了，屋里却是空的。\n\n`return null` 也是合法的「屋里空着」：函数跑完，树上什么都不挂。`useAuth()` 仍会先跑，因为调用写在 return 之前。孩子丢不丢，只取决于你交不交回 `children`。\n:::\n\n**3. `<>…</>` 是 Fragment（片段）**\n\n- 函数需要 `return` 一个根；这里根是空标签 `<>…</>`。\n- 它把 `children` 包起来交出去，又尽量不在真实 DOM 里多加一层有名字的外壳。\n- 所以你在开发者工具里，往往看不到一个叫 `AuthenticatedRuntime` 的多余节点挡在中间——壳的工作在运行时侧，不在多画一层盒子。\n\n类比只需记一句：快递中转时贴了「已安检」贴纸（`useAuth`），你打开箱子递出去的仍是原来的包裹（`children`），不是中转箱的外壳。\n\n:::detail[换成 div 包一层会怎样？]\n页面多半还能看。差别在树上：会多一个名叫 `div` 的盒子夹在中间。\n\n有的样式、有的查询按「父节点是谁」来算。多一个盒子，布局可能被撑开，测试也可能找错人。空标签的用处就是：满足「必须 return 一个根」，又不真的盖一座房子。\n\n你以后看见别人用 `<div>{children}</div>`，也不必立刻判错。有时就需要那层盒子来做布局。这个壳的选择是：认证准备发生在函数里，树上尽量不留自己的痕迹。\n:::\n\n## 再想想\n\n`children` 是 props 大家族里的一员；你在标签属性那一侧怎么对应参数，见上一课 [[lesson:props-are-parameters|props 就是函数参数]]。`{children}` 里的花括号为什么表示「插入这个值」，见 [[lesson:curly-braces-are-an-escape-hatch|花括号：逃回 JavaScript]]。\n\n## 自检\n\n**问：** 写在组件开始标签和结束标签之间的内容，对应参数对象上的哪个字段名？\n\n**问：** `AuthenticatedRuntime` 里调用 `useAuth()` 的目的，是不是为了把它的返回值画到屏幕上？\n\n**问：** `<>…</>`（Fragment）在这里主要解决什么问题？\n\n## 一句话\n\n**夹在标签中间的内容 = `children` prop；组件可以只准备环境，再把孩子交回去。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/components/auth/AuthenticatedRuntime.tsx",
+                "lineStart": 5,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "children 参数、useAuth()、return <>{children}</>。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/components/auth/AuthenticatedRuntime.tsx",
+                "lineStart": 1,
+                "lineEnd": 1,
+                "nodeIds": [],
+                "note": "ReactNode 类型从 react 导入。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "children-what",
+                "kind": "basic",
+                "front": "`children` 通常指什么？",
+                "back": "写在组件开始标签与结束标签之间的内容，作为 props 的一个字段传给函数。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/components/auth/AuthenticatedRuntime.tsx",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "签名里的 children 字段。"
+                  }
+                ]
+              },
+              {
+                "id": "fragment-empty-tag",
+                "kind": "basic",
+                "front": "`return <>{children}</>` 里的 `<>…</>` 是什么？",
+                "back": "Fragment（片段）：包一层以便 return，又不额外制造有名字的 DOM 节点。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/components/auth/AuthenticatedRuntime.tsx",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "空标签包住 children。"
+                  }
+                ]
+              },
+              {
+                "id": "hook-no-ui",
+                "kind": "basic",
+                "front": "`AuthenticatedRuntime` 调用了 `useAuth()` 却几乎不渲染自己的 UI，这说明什么？",
+                "back": "组件可以执行 hook/逻辑而不产出自己的可见元素，只把 children 交回去。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/components/auth/AuthenticatedRuntime.tsx",
+                    "lineStart": 6,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "useAuth 之后只交回 children。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "children-prop-name",
+                "kind": "short-answer",
+                "title": "夹心内容的 prop 名",
+                "prompt": "写在组件开始标签和结束标签之间的内容，在函数参数里通常叫什么字段名？",
+                "expectedAnswer": "children",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/components/auth/AuthenticatedRuntime.tsx",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "字段名是 children。"
+                  }
+                ]
+              },
+              {
+                "id": "children-fragment-role",
+                "kind": "explain",
+                "title": "为什么用空标签",
+                "prompt": "用一两句话说明：AuthenticatedRuntime 为什么 return `<>{children}</>`，而不是 return 一个 `<div>{children}</div>`？（不必背术语，说清多一层真实节点的差别即可。）",
+                "rubric": [
+                  "提到 children 被原样交出",
+                  "提到 <> 是 Fragment / 空标签",
+                  "提到避免多余的 div（或真实 DOM 节点）"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/components/auth/AuthenticatedRuntime.tsx",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "空标签包住 children。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "curly-braces-are-an-escape-hatch",
+            "title": "JSX 里的花括号，到底在逃回哪里？",
+            "content": "# JSX 里的花括号，到底在逃回哪里？\n\n## 一句真实出现的话\n\n你在输入框组件里已经见过尖括号。再盯紧属性值这一段：\n\n[[evidence:src/ui/TextInput.tsx:7]]\n\n`className=` 后面不是 `\"tp-input\"` 这种纯字面量字符串，而是 **`{cx('tp-input', className)}`**——一对花括号包住了一次函数调用。头像组件已经搬到 `src/ui/PlayerAvatar.tsx`，里面还有更扎眼的写法：`style={{ … }}`，以及子节点位置的 `{initial}`。\n\n[[evidence:src/ui/PlayerAvatar.tsx:25-33]]\n\n:::detail[尖括号和花括号各管哪一层？]\n尖括号还在 JSX 里：这是一颗 `div`、一颗 `input`。花括号是从标签世界逃回 JavaScript 的门。\n\n门里面放的是能算出一个值的东西：变量、函数调用、一个对象。门外面仍按标签读。你第一次看见满屏括号，先问「这扇门开在属性上，还是开在标签中间」。\n\n属性上的门，填的是这个属性要的值：类名、类型、样式表。标签中间的门，填的是盒子里面要显示的东西。同一对花括号，位置不同，插进去的角色就不同。\n:::\n\n你第一次看见 `style={{`，很容易猜成「样式专用的双括号语法」。\n\n## 先猜一下\n\n这里的 `{…}` 在说什么？`style={{ … }}` 是不是 JSX 发明的一种特殊双括号？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n`{…}` 表示：在 JSX 里插入一段 **JavaScript 表达式**；`style={{ … }}` 只是「外层插值 + 内层对象字面量」叠在一起，不是第四种括号魔法。\n\n## 三个真实用例\n\n### 用例 1：属性值用表达式\n\n[[evidence:src/ui/TextInput.tsx:7]]\n\n- `className={cx(…)}`：你要的类名不是写死的一串字，而是函数 `cx` 算出来的返回值。\n\n:::detail[cx('tp-input', className) 算出的那串字会落到哪？]\n花括号先让 JSX 停下来，去跑这次调用。`cx` 拿到两个参数：永远先是 `'tp-input'`，再是调用方传来的 `className`——没传就是空着。\n\n它交回一串拼好的类名。这串字才是 `<input>` 的 `className` 真正拿到的值。花括号不负责拼类名，只负责把门里算出的值填进属性。\n\n你读的时候拆两拍：先问门里这次调用交回什么，再问这个值贴到哪个属性上。贴上去的是返回值，不是 `cx` 这几个字母本身。\n:::\n- `type={type}`：右边的 `type` 是参数里的变量；花括号告诉 JSX——这里取变量的值，不要把四个字母 t-y-p-e 当字面文本。\n- `{...props}`：把剩余 props 展开到元素上（后文 rest 课会专讲）；你现在先认出：又是花括号里的 JS。\n\n:::detail[type={type} 为什么两边都叫 type？]\n左边是属性名，写给那颗 `<input>`：输入框的种类。右边是函数参数里那个变量，默认值是 `'text'`。\n\n花括号的工作就是：把右边变量里的值，填进左边这个属性。若你写成 `type=\"type\"`，屏幕上会得到种类叫 type 的输入框——那是四个字母本身，不是变量里的值。\n:::\n\n### 用例 2：子节点位置插入变量\n\n[[evidence:src/ui/PlayerAvatar.tsx:32-33]]\n\n- `initial` 是前面算好的字符；你写成 `{initial}`，它才会作为子节点显示。\n- 若写成不带花括号的 `initial`，屏幕上会显示 i-n-i-t-i-a-l 这串字母本身，而不是变量里的值。\n- 规则同一条：**标签之间的默认是文本；要插入 JS 值，就用 `{…}`。**\n\n:::detail[子节点是什么意思？]\n就是夹在开始标签和结束标签中间、最后会出现在盒子里面的那一块。\n\n头像这个 `div` 中间要显示一个字。那个字来自变量 `initial`，所以必须开门：`{initial}`。你若忘了开门，JSX 会把 `initial` 当普通汉字/字母印上去。\n:::\n\n### 用例 3：内联样式——看起来像两层花括号\n\n[[evidence:src/ui/PlayerAvatar.tsx:25-31]]\n\n- **外层** `{` `}`：JSX 的「这里插入 JS」。\n- **内层** `{ width: …, … }`：一个普通的 JavaScript **对象字面量**。\n- 所以你看见 `style={{…}}`，拆开就是：插值括号 + 对象括号。\n- 若你先写 `const s = { color: 'red' }`，也可以 `style={s}`，那时只剩一层花括号——机制没变。\n\n:::detail[style 表里的 width 当时怎么变成带单位的字？]\n外层花括号打开门，门里是一张表。表上每一行自己算出自己的值：`width` 和 `height` 用模板字符串，取出 `size` 这个数字，后面接上 `px`，变成 `'40px'` 这种浏览器认得的长度字。\n\n`fontSize` 还多一步：先算 `size * 0.4`，再接 `px`。`backgroundColor` 直接用前面算好的 `bgColor`。`color` 是写死的 `'#FFFFFF'`，不用再算。\n\n你数层数时，不要把模板里的 `${size}` 再当成第三层 JSX 花括号——那是字符串自己挖的坑，用来填数字。外层仍是插值门，内层仍是那张表。\n:::\n\n:::detail[对象字面量又是什么？]\n就是当场写出来的一份键值表：`{ width: '40px', color: '#FFFFFF' }`。左面是名字，右面是值。\n\n`style` 这个属性要的正是这样一张表，不是一段普通文字。所以你先开门（外层 `{}`），门里再放一张表（内层 `{}`）。看起来像双括号，数清楚只有两层。\n\n有人会把内层再拆成一行一个键，只是为了好读。层数不变：外面仍是插值门，里面仍是那张表。你数括号时从外往里数，不要被换行骗成「很多层语法」。\n:::\n\n## 它不是什么\n\n- **不是**「凡是花括号都和 CSS 有关」。属性值、子节点、展开 props，都可以用 `{…}`。\n- **不是** `style={{…}}` 的四层括号魔法：你数清楚，只有「插值」和「对象」两层。\n- **不是**在 JSX 里随便执行任意多行语句的地方：花括号里放的是**表达式**（能算出一个值的东西），不是一整段带 `if` 声明一堆变量的脚本块。需要先算复杂结果时，通常在 `return` 前算好再插入——下一课就会看到。\n\n:::detail[花括号里能写 if 吗？]\n不能像普通脚本那样先 `if` 再声明一堆变量。这里要的是一个值。\n\n你可以用三元 `条件 ? 这个 : 那个`，或下一课那种「先在 return 前算好，再插入」。头像文件把 `initial`、`bgColor` 都算在前面，花括号里只放名字，就是这个原因：门里太挤，先在门外算完。\n\n你看见门里只有一个名字，就可以往上翻：这个值是在 return 前算好的。花括号负责插入，不负责把整段算法塞进标签里。\n:::\n\n## 再想想\n\n`initial`、`bgColor` 这些值往往在 `return` 之前就算好了，见 [[lesson:compute-then-return|先算完，再 return]]。它们从 props 来时的身份，见 [[lesson:props-are-parameters|props 就是函数参数]]。\n\n## 自检\n\n**问：** JSX 里一对 `{…}` 的基本作用是什么？\n\n**问：** `style={{ color: 'red' }}` 是特殊的「双括号语法」吗？外层和内层各是什么？\n\n**问：** 子节点位置写 `initial` 不带花括号，和写 `{initial}`，屏幕上会有什么差别？\n\n## 一句话\n\n**`{…}` = 在 JSX 里插入 JavaScript；`style={{…}}` 只是「插值 + 对象」叠在一起。**\n",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/TextInput.tsx",
+                "lineStart": 7,
+                "lineEnd": 7,
+                "nodeIds": [],
+                "note": "className={cx(…)}、type={type} 等属性插值。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/PlayerAvatar.tsx",
+                "lineStart": 25,
+                "lineEnd": 33,
+                "nodeIds": [],
+                "note": "style={{…}} 对象与子节点 {initial}。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "curly-escape",
+                "kind": "basic",
+                "front": "JSX 里一对 `{…}` 表示什么？",
+                "back": "在这里插入一个 JavaScript 表达式的值（变量、函数调用、对象等）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "属性值写在花括号里。"
+                  }
+                ]
+              },
+              {
+                "id": "curly-double-style",
+                "kind": "basic",
+                "front": "为什么常见写法是 `style={{ … }}` 两层花括号？",
+                "back": "外层是 JSX 插值，内层是 JS 对象字面量。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 25,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "style={{ … }} 两层括号。"
+                  }
+                ]
+              },
+              {
+                "id": "curly-child-text",
+                "kind": "basic",
+                "front": "若写成 `<div>initial</div>` 而不是 `<div>{initial}</div>`，会显示什么？",
+                "back": "字面文本 initial 四个/七个字母，而不是变量 initial 的值。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "子节点位置写 {initial}。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "curly-style-outer",
+                "kind": "short-answer",
+                "title": "内联样式属性名",
+                "prompt": "PlayerAvatar 里给 div 设内联样式时，属性名写的是哪个英文单词？",
+                "expectedAnswer": "style",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 25,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "属性名是 style。"
+                  }
+                ]
+              },
+              {
+                "id": "curly-initial-var",
+                "kind": "short-answer",
+                "title": "头像里显示的字符变量名",
+                "prompt": "PlayerAvatar 在 div 子节点位置用花括号插入的那个变量叫什么？",
+                "expectedAnswer": "initial",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "子节点插入 initial。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "compute-then-return",
+            "title": "头像上的颜色和字，是在 return 里才现算的吗？",
+            "content": "# 头像上的颜色和字，是在 return 里才现算的吗？\n\n## 现象\n\n你打开 `src/ui/PlayerAvatar.tsx`。屏幕上你最终看到的是：一个带背景色的圆（或方）块，中间一个字。可是你顺着函数往下读，真正的 `return (` 出现得很晚。在那之前，文件里先有一段这样的代码：\n\n[[evidence:src/ui/PlayerAvatar.tsx:8-20]]\n\n然后才是 `return` 出去的 JSX，把 `bgColor` 和 `initial` 填进去：\n\n[[evidence:src/ui/PlayerAvatar.tsx:22-35]]\n\n:::detail[return 前面那些 const 是在画界面吗？]\n不是。它们在算数、切字、取颜色。`const` 只是给算出来的结果起个名字，方便后面引用。\n\n组件函数并不是「只能写 return」。你先看到的计算，和后看到的界面描述，是同一次函数调用里的前后两段。客人看见的是装好的盘，不是切配过程。\n\n若把 `reduce` 整段塞进 `style={{ backgroundColor: … }}` 里面，也能跑，但标签会变成一堵墙。这个文件选择先起名，再引用：你读的时候能单独盯「颜色怎么来」，不必在 JSX 里数括号。\n:::\n\n组件函数并不是「只能写 return」。你先看到的计算，和后看到的界面描述，是同一次函数调用里的前后两段。\n\n## 先猜一下\n\n父组件导致 `PlayerAvatar` 再执行时，`bgColor` 会沿用上次结果，还是 `return` 前的 `const` 整段重算？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n整段重算。函数再调用一次时，return 前的 `const` 会跟着再跑，不是沿用上次缓存。\n\n## 为什么是这样\n\n把函数体当成普通函数读，你就不会把组件想成魔法：\n\n**1. 先取 props**\n\n- `seed`、`alias`、`size` 从参数进来（`size` 默认 40，你上一课见过）。\n- 后面的计算都吃这些输入。\n\n**2. 准备调色板，再映射到下标**\n\n[[evidence:src/ui/PlayerAvatar.tsx:8-19]]\n\n- `colors`：固定候选色。\n- `split` + `reduce`：把 `seed` 字符串收成一个数，再 `% colors.length` 落进合法下标。`reduce` 你在逻辑课里见过：一串输入收成一个值。\n- `bgColor`：按下标取出的颜色字符串。\n\n:::detail[% 在选颜色这里干什么？]\n取模：除完以后要余数。余数一定落在 `0` 到 `长度减一` 之间，正好能当数组下标。\n\n种子字符串被收成一个很大的数也没关系，最后 `% colors.length` 会把它收回调色板的格子里。没有这一步，下标可能超出数组，颜色就取不到了。\n\n同一份种子每次再算，余数相同，所以颜色看起来稳定。稳定来自算法，不是来自「上次的 `const` 还活着」。\n:::\n\n**3. 取出要显示的字**\n\n- `initial = alias.slice(-1)`：取别名**最后一个**字符。\n- 你之后在子节点写 `{initial}`，插入的就是这个字符，不是整段别名。\n\n[[evidence:src/ui/PlayerAvatar.tsx:20]]\n\n:::detail[slice(-1) 为什么是最后一个字？]\n`slice` 按位置切一段。负数从尾巴数：`-1` 就是倒数第一个。\n\n注意别和芯片组件搞混：那边头像格子用的是 `alias.slice(0, 1)`，取的是**开头**一个字。这个头像文件明确写了 `-1`，所以教的是末字。你看书上的数字，不要凭印象改。\n\n中文别名最后一个字，常常是名字里最认得出的那个。作者选末字，是产品选择，不是 `slice` 只能这么用。\n:::\n\n**4. 最后 return JSX**\n\n- `style` 里用 `bgColor`、`size`；子节点用 `initial`。\n- JSX 负责**摆放**已经算好的结果，不负责把 `reduce` 嵌进标签里难读的长表达式。\n\n[[evidence:src/ui/PlayerAvatar.tsx:22-35]]\n\n**5. 每次函数再跑一遍，这些 `const` 会再算一遍**\n\n- 父组件若导致 `PlayerAvatar` 再次执行，不是「屏幕自己长了记忆」，而是**组件函数又调用了一次**。\n- 你在 `return` 前写的计算，会跟着再跑；这就是后文「重新渲染」在函数层面的含义。\n\n:::detail[那颜色会不会闪成别的？]\n同一份 `seed` 再算，还是同一个下标，颜色看起来没变。变的是「又算了一次」，不是「沿用上次缓存的变量」。\n\n`const` 活在这一次函数调用里。函数结束，这些名字就散了。下一次进来，是全新的一局计算。真正跨多次调用还记得住的东西，是后面 state 课才教的。\n\n你现在就能做一个判断：看见 `const` 写在组件函数里、又在 `return` 前面，先当「这一次调用现场算的」。不要把它想成文件打开时算一次、以后永远沿用。函数再跑，切配再来一遍。\n:::\n\n类比只需一句：后厨先切配装盘（计算），再把盘子端上桌（return JSX）。客人看见的是装好的盘，不是切配过程。\n\n## 再想想\n\n`{initial}` 和 `style={{…}}` 里的花括号，见 [[lesson:curly-braces-are-an-escape-hatch|花括号：逃回 JavaScript]]。`seed` / `alias` 作为 props 怎么进函数，见 [[lesson:props-are-parameters|props 就是函数参数]]。\n\n## 自检\n\n**问：** `bgColor` 和 `initial` 是在 `return` 之前定义的，还是在 JSX 标签内部才出现的？\n\n**问：** `alias.slice(-1)` 取的是别名的哪一部分？\n\n**问：** 父组件再次渲染导致 `PlayerAvatar` 函数再执行时，这些 `const` 会怎样？\n\n## 一句话\n\n**组件可以在 return 前算好数据；JSX 只负责把结果摆进界面描述。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/PlayerAvatar.tsx",
+                "lineStart": 8,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "return 前的 colors、reduce、bgColor、initial。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/PlayerAvatar.tsx",
+                "lineStart": 22,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "return 的 JSX 使用 bgColor 与 initial。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "compute-before-return",
+                "kind": "basic",
+                "front": "PlayerAvatar 的颜色是在 return 里现算，还是 return 之前算好？",
+                "back": "在 return 之前算好 colorIndex / bgColor，再带进 style。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 18,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "bgColor 在 return 前算出。"
+                  }
+                ]
+              },
+              {
+                "id": "compute-reduce-seed",
+                "kind": "basic",
+                "front": "`colorIndex` 用 seed 做了什么？",
+                "back": "把 seed 每个字符的 charCode 累加，再对颜色数组长度取模，得到下标。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "reduce 后对 colors.length 取模。"
+                  }
+                ]
+              },
+              {
+                "id": "compute-initial-slice",
+                "kind": "basic",
+                "front": "`initial` 取的是 alias 的哪一部分？",
+                "back": "最后一个字符：`alias.slice(-1)`。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 20,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "alias.slice(-1) 取末字。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "compute-slice-arg",
+                "kind": "short-answer",
+                "title": "slice 的参数",
+                "prompt": "得到 initial 时，`alias.slice(???)` 括号里写的是什么？（写成源码中的数字，含负号。）",
+                "expectedAnswer": "-1",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 20,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "slice 参数是 -1。"
+                  }
+                ]
+              },
+              {
+                "id": "compute-mod-purpose",
+                "kind": "short-answer",
+                "title": "取模运算符在选色里的作用",
+                "prompt": "colorIndex 表达式末尾用来把累加结果收进合法下标的运算符是什么？（只写符号）",
+                "expectedAnswer": "%",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerAvatar.tsx",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "用 % colors.length 收进下标。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "composition",
+        "title": "小零件拼成大界面",
+        "objective": "学会透传 props、用 variant 切换外观、条件渲染可选块，以及 aria/data 属性的读者分工。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "rest-props",
+            "title": "你没在参数列表里写 onClick，点了为什么还有反应？",
+            "content": "# 你没在参数列表里写 onClick，点了为什么还有反应？\n\n## 现象\n\n你打开 `src/ui/Button.tsx`。类型上，`ButtonProps` 继承了原生按钮那一大包属性：\n\n[[evidence:src/ui/Button.tsx:7-10]]\n\n函数参数里，你却只看见这几个被点名取出的字段：\n\n[[evidence:src/ui/Button.tsx:12-17]]\n\n没有 `onClick`，没有 `disabled`，没有 `aria-label`。可是调用方照样写 `<Button onClick={handler}>`，一点就有反应。类型也允许你这么传。\n\n那些没被点名的属性，进了函数之后去哪了？\n\n## 先猜一下\n\n你在 `<Button onClick={handler}>` 上写的 `onClick`，最后是靠什么挂到真正的 DOM `<button>` 上的？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n没被具名取出的属性，会收进参数里的 **`...props`**；函数再在 `<button {...props}>` 上把它们展开回去。收集和展开要成对，缺一边就断了。\n\n## 为什么是这样\n\n整段签名和返回值是这样写的：\n\n[[evidence:src/ui/Button.tsx:12-24]]\n\n你按三步读：\n\n**1. `extends`：类型上先「能收」**\n\n`ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>` 的意思是：原生 `<button>` 有的属性（`onClick`、`disabled`、`aria-*`…），在 `Button` 上写也合法。类型检查不会因为你多传一个 `onClick` 就报错。\n\n[[evidence:src/ui/Button.tsx:7-10]]\n\n:::detail[extends 是在复制一份按钮吗？]\n不是再画一颗按钮，是把「原生按钮说明书」上的栏目并进自己的表。\n\n`Button` 额外加了 `icon`、`variant`，同时又承认原生按钮那些老栏目。类型只解决「允许你写」；真正挂到页面上，还要看后面的收集和展开。\n\n你可以把 `extends` 想成「我这张菜单包含餐厅原菜单」。点 `onClick` 不会被服务员赶出去。但菜上不上桌，还得看后厨有没有把这道菜端出去——那就是 `{...props}`。\n:::\n\n**2. 参数里的 `...props`：运行时「收剩下的」**\n\n`children`、`className`、`icon`、`type`、`variant` 是 `Button` 自己要加工的：拼 class、设默认 `type`、决定外观。其余字段——包括你的 `onClick`——不会丢，而是打成一个对象，名字就叫 `props`。社区常说 **rest props**（剩余属性）：剩下的那一包。\n\n:::detail[三个点写在参数里是什么意思？]\n读成「其余的都装进这个袋子」。前面点过名的字段被拿走了，没点名的——`onClick`、`disabled`、`aria-label`——掉进名为 `props` 的对象。\n\n袋子的名字是作者起的，常见就叫 `props`。你要认的是那三个点的方向：在参数列表里，它们是在**收**。\n\n具名取出的那几个字段，不会进袋子。`variant` 若也掉进去再摊到原生 `<button>` 上，浏览器并不认识这个属性，还可能污染 DOM。自己要加工的，先拿走；剩下的才打包转发。\n:::\n\n:::detail[调用方写 onClick 和 disabled 时，袋子里当时装着什么？]\n假定调用是 `<Button onClick={handler} disabled>`，没写 `variant` 和 `type`。\n\n具名取出的那几个先落位：`children`、`className`、`icon` 都空着；`type` 落到默认 `'button'`；`variant` 落到默认 `'secondary'`。这五个都不进袋子。\n\n剩下的打进名为 `props` 的对象：`onClick` 是那个 handler，`disabled` 为真。袋子里没有 `variant`，也没有已经拿走的 `type`。下一步 `{...props}` 只能摊出袋子里有的键——你点下去能反应，靠的就是这包里的 `onClick`。\n:::\n\n**3. JSX 里的 `{...props}`：再「摊」到原生按钮上**\n\n`<button … {...props}>` 把对象上的键值写成真正的 DOM 属性。于是点击事件挂在浏览器认识的那个 `<button>` 上，而不是停在你的包装函数里。\n\n两处 `...` 方向相反、必须成对：\n\n| 位置 | 写法 | 作用 |\n| --- | --- | --- |\n| 参数列表 | `...props` | **收集**：没被具名解构的属性打成一个对象 |\n| JSX | `{...props}` | **展开**：把对象上的键值写成 `<button>` 的属性 |\n\n只写收集、漏写展开：`onClick` 进了 `props` 对象，却到不了 DOM——类型仍可能让你传，点了却没反应。只写展开、前面没收：你根本没有那一包可摊。\n\n:::detail[漏写展开，类型还会让你传 onClick 吗？]\n会。`extends` 只管「这份表允许这个栏目」，不管你有没有把它摊到原生按钮上。\n\n所以你会看见一种很气人的 bug：编辑器不报错，点了没反应。收集和展开缺一边，类型检查帮不上忙。你得自己盯成对。\n\n读的时候养成手势：先在参数列表找 `...`，再在 JSX 里找 `{...}`。两处都在，通道才通。\n:::\n\n:::detail[button 上摊开之后，点一下会走到哪？]\n`<button className={cx(…)} type={type} {...props}>` 这一行先写下自己加工过的两栏：`className` 是 `cx` 拼好的那串，`type` 是默认或传入的值。然后 `{...props}` 把袋子里每个键写成这颗原生按钮的属性。\n\n于是 `onClick` 挂在浏览器认识的那个 `<button>` 上。你点屏幕，事件打在 DOM 按钮上，再调用袋子里那个 handler。`disabled` 若在袋子里，按钮按原生规则变灰、点不动。\n\n`variant` 不在袋子里，所以摊开不会在 DOM 上多出一个浏览器不认识的属性。你要认的顺序是：具名拿走 → 剩下进袋 → 袋里的键摊到原生标签。缺最后一步，点击就停在包装函数里，到不了按钮。\n:::\n\n`className` 和 `type` 被单独拿出来，是因为这里要和 `cx`、默认值一起处理，不能原样透传完事。你在第 1 门见过的 `cx`，继续负责把基础类、变体类和调用方临时类并成最终字符串。\n\n:::detail[为什么 className 不能扔进剩余那一包？]\n因为它不是原样转发。这里要先和 `tp-button`、变体类拼在一起，再交给 `cx`。\n\n若把它留在 `...props` 里再摊出去，原生按钮上可能出现两份 class，或者丢掉你刚拼好的那串。自己要加工的字段，就具名取出；剩下的才进袋子。\n\n`type` 也是同一理由：默认要写成 `'button'`，避免这颗按钮待在表单里时被当成提交键。默认值必须在具名参数上写，不能指望剩余那一包替你补。\n:::\n\n## 再想想\n\n标签上的字段进函数之后叫 props，见 [[lesson:props-are-parameters|props 就是函数参数]]。`variant` 为什么要单独解构、而不是塞进 rest，见下一课 [[lesson:variants|variant：几种外观怎么切换]]。\n\n## 自检\n\n**问：** 参数里的 `...props` 和 JSX 里的 `{...props}`，哪一步是「收」，哪一步是「摊」？\n\n**问：** 若只解构了 `...props`、却漏写 `<button>` 上的 `{...props}`，调用方传的 `onClick` 会怎样？\n\n**问：** `extends ButtonHTMLAttributes<HTMLButtonElement>` 解决的是类型问题，还是运行时把属性挂到 DOM 上的问题？\n\n## 一句话\n\n**自己要用的字段具名取出，剩下的用 `...props` 收起再展开到原生元素上。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/Button.tsx",
+                "lineStart": 7,
+                "lineEnd": 10,
+                "nodeIds": [],
+                "note": "ButtonProps extends ButtonHTMLAttributes。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/Button.tsx",
+                "lineStart": 12,
+                "lineEnd": 24,
+                "nodeIds": [],
+                "note": "解构、...props 与 <button {...props}>。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rest-collect",
+                "kind": "basic",
+                "front": "参数列表里的 `...props` 做什么？",
+                "back": "收集未被具名解构的剩余属性，打成一个对象。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/Button.tsx",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "参数里的 ...props 收集剩余字段。"
+                  }
+                ]
+              },
+              {
+                "id": "rest-spread",
+                "kind": "basic",
+                "front": "JSX 里的 `{...props}` 做什么？",
+                "back": "把 props 对象上的键值展开成元素的属性。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/Button.tsx",
+                    "lineStart": 21,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "<button {...props}> 展开剩余属性。"
+                  }
+                ]
+              },
+              {
+                "id": "rest-extends",
+                "kind": "basic",
+                "front": "`extends ButtonHTMLAttributes<HTMLButtonElement>` 带来什么？",
+                "back": "继承原生 button 所能接受的那一大批属性类型，便于透传 onClick 等。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/Button.tsx",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "ButtonProps 继承原生按钮属性类型。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rest-spread-token",
+                "kind": "short-answer",
+                "title": "展开到 button 上的写法",
+                "prompt": "把剩余 props 展开到 `<button>` 上时，源码里写的是哪六个字符的模式？（写成 `{...props}`）",
+                "expectedAnswer": "{...props}",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/Button.tsx",
+                    "lineStart": 21,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "JSX 上写 {...props}。"
+                  }
+                ]
+              },
+              {
+                "id": "rest-default-type",
+                "kind": "short-answer",
+                "title": "Button 默认 type",
+                "prompt": "Button 在没传 type 时，默认字符串是什么？",
+                "expectedAnswer": "button",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/Button.tsx",
+                    "lineStart": 16,
+                    "lineEnd": 16,
+                    "nodeIds": [],
+                    "note": "type = 'button'。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "variants",
+            "title": "同一个 Button，凭什么能长出五种样子？",
+            "content": "# 同一个 Button，凭什么能长出五种样子？\n\n## 一句真实出现的话\n\n你继续读 `src/ui/Button.tsx`，文件靠上有这样一行类型：\n\n[[evidence:src/ui/Button.tsx:5]]\n\n五个英文单词用 `|` 串在一起。社区把这一包可选外观叫 **variant**（变体）。你第一次见，很容易把它想成「五个不同的组件」，或者想成「随便写个字符串就能换肤」。这里真正要钉死的是：这一个词在类型、默认值和 class 名里各扮演什么角色。\n\n## 先猜一下\n\n这里的 variant，在运行时最终变成了什么，才让同一次 `Button` 调用能换出不同外观？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n它变成 class 名字符串的一段：模板 `` `tp-button-${variant}` `` 把选中的名字接到统一前缀后面，再交给 CSS。\n\n## 三个真实用例\n\n### 用例 1：联合类型把名单钉死\n\n[[evidence:src/ui/Button.tsx:5]]\n\n这叫 **联合类型**（union type）：值只能是名单里的某一个字符串。你传 `'primary'` 合法；传 `'huge'` 会在类型检查时报错。名单写在类型里，不是写在注释里——编辑器能拦你，人眼也一眼数得清「一共几种」。\n\n:::detail[竖线串起来的五个词是五种按钮吗？]\n不是五个组件。还是同一个 `Button` 函数，只是这个字段只许填五个词里的一个。\n\n竖线读成「或者」：要么 primary，要么 secondary，依此类推。你想加第六种，得回到这一行加一个词，再去补对应的 CSS，不能在调用处发明一个新词碰运气。\n\n五个词也方便你数：primary、secondary、ghost、danger、success。数得清，测试也好写。若这里是 `string`，任何一串字都能过检查，拼错一个字母要到页面上才发现。\n:::\n\n### 用例 2：懒得选时的默认值\n\n参数解构里写了：\n\n[[evidence:src/ui/Button.tsx:17]]\n\n调用方不写 `variant` 时，运行时用 `'secondary'`。类型上 `variant` 往往是可选的；默认值保证「没人选，也有一个稳妥外观」，页面不会因为缺字段而没有变体 class。\n\n:::detail[默认 secondary 是因为它最好看吗？]\n源码没这么说。它只保证：没人挑的时候，仍然有一个合法名字能拼进 class。\n\n`secondary` 在这份名单里，也是那五个词之一。默认值的工作是「别让这个字段空着」，不是「宣布哪种外观最正确」。你换默认，要同时想清楚页面上没写 variant 的按钮会一起变。\n\n类型上这个字段带问号，和头像的 `size?` 是同一层意思：可以不传。不传之后长什么样，由 `= 'secondary'` 决定，不由联合类型自己变出来。\n:::\n\n:::detail[没人传 variant 时，模板坑里填的是哪个词？]\n参数那一行 `variant = 'secondary'` 先生效，这个名字里已经是 `'secondary'`。\n\n走到 `cx` 时，反引号那一段把坑填成 `'tp-button-secondary'`。三个参数于是是：基础 `'tp-button'`、变体 `'tp-button-secondary'`、调用方的 `className`（没传就空着）。\n\n你在 DOM 上看到的是拼好的两类名，不会看到类型名 `ButtonVariant`。默认值的工作就是让这一步永远有一个合法词可填，而不是留下一个空坑。\n:::\n\n### 用例 3：模板字符串把名字编进 class\n\n[[evidence:src/ui/Button.tsx:21]]\n\n`cx` 合并三层：\n\n1. **`tp-button`** —— 所有按钮共享的基础样式。\n2. **`` `tp-button-${variant}` ``** —— **模板字符串**（template string）：把 `variant` 的值嵌进字符串。`variant` 为 `'danger'` 时得到 `'tp-button-danger'`。\n3. **`className`** —— 调用方临时追加的类。\n\n:::detail[调用方写 variant=\"danger\" 时，cx 三个参数各是什么？]\n这时 `variant` 是 `'danger'`，默认 `'secondary'` 不会上场。\n\n`cx` 拿到：`'tp-button'`、模板算出的 `'tp-button-danger'`、以及调用方若还传了 `className` 的那一串。它把这三层并成最终类名，写到 `<button>` 上。\n\n类型名单只保证 `'danger'` 这个词合法。真正换外观的是 DOM 上出现了 `tp-button-danger`，并且样式表认这个选择器。你调试时按这个顺序对：参数里的词 → 模板拼出的类 → 页面上的 class → 样式表。\n:::\n\n你读 DOM 时，看到的是拼好的 class 列表，不是类型名 `ButtonVariant`。类型只在写代码时约束；真正换肤的是 CSS 认不认 `.tp-button-danger` 这类选择器。\n\n:::detail[反引号字符串里的 ${variant} 在拼什么？]\n反引号包住的是模板：固定的字，加上 `${…}` 挖的坑。坑里填上变量当下的值。\n\n`variant` 是 `'ghost'` 时，整段变成 `'tp-button-ghost'`。`cx` 再把它和基础类、调用方的类并成一串。你在页面上看到的是拼好的名字，不是类型里的那条竖线。\n\n前缀 `tp-button-` 是这个项目自己的约定。换项目可能换前缀，但「名单里的词编进 class」这一步还是同一套读法。你先认拼法，再去对样式表。\n:::\n\n## 它不是什么\n\n- **不是**五个互不相干的组件。模具还是同一个 `Button`；变的是传入的字符串和由此拼出的 class。\n- **不是**「改了 variant，样式就一定变」。类名会被写到 DOM 上，但 CSS 里若没有对应规则，你看不到新外观。变体是约定好的类名开关，样式表要有人写好。\n- **不是**可以随便发明的自由文本。联合类型把可选项钉在五个词上；想加第六种，要先改类型、再补 CSS，而不是在调用处写一个新词碰运气。\n\n:::detail[类名拼出来了，样式就一定变吗？]\n不一定。这行代码只负责把名字写到 `className` 上。颜色、边框、悬停态，都住在样式表里。\n\n样式表若没有 `.tp-button-ghost`，你改成 `'ghost'` 也只是多了一个没人认的类名。类型保证名字合法，不保证设计师已经画过这一种。\n\n所以你调试「变体没生效」时，先看 DOM 上有没有 `tp-button-ghost`，再去样式表搜这个选择器。缺哪一层，补哪一层。不要只在调用处把词换来换去。\n:::\n\n## 再想想\n\n`variant` 会在参数里被具名取出，不会进 `...props` 原样透传——透传那一套见 [[lesson:rest-props|剩下的 props 怎么递出去]]。`className` 里的花括号为何能插入表达式，见 [[lesson:curly-braces-are-an-escape-hatch|花括号：逃回 JavaScript]]。\n\n## 自检\n\n**问：** `ButtonVariant` 里的 `|` 限制的是什么？\n\n**问：** 调用方不传 `variant` 时，默认会落到哪个字符串？\n\n**问：** 若 CSS 里没有 `.tp-button-ghost`，把 `variant` 改成 `'ghost'` 会发生什么？\n\n## 一句话\n\n**联合类型列名单，模板字符串拼类名，cx 合并成最终 class。**\n",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/Button.tsx",
+                "lineStart": 5,
+                "lineEnd": 5,
+                "nodeIds": [],
+                "note": "ButtonVariant 五个字符串的联合类型。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/Button.tsx",
+                "lineStart": 17,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "默认 secondary 与 tp-button-${variant}。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "variant-union",
+                "kind": "basic",
+                "front": "`ButtonVariant` 用什么类型写法限制取值？",
+                "back": "字符串字面量的联合类型（'primary' | 'secondary' | …）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/Button.tsx",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "五个字符串用 | 串成联合类型。"
+                  }
+                ]
+              },
+              {
+                "id": "variant-template",
+                "kind": "basic",
+                "front": "`` `tp-button-${variant}` `` 在 variant 为 primary 时得到什么字符串？",
+                "back": "`tp-button-primary`。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/Button.tsx",
+                    "lineStart": 21,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "模板字符串拼出变体 class。"
+                  }
+                ]
+              },
+              {
+                "id": "variant-default",
+                "kind": "basic",
+                "front": "没传 variant 时默认是哪一个？",
+                "back": "secondary。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/Button.tsx",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "variant = 'secondary'。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "variant-default-word",
+                "kind": "short-answer",
+                "title": "默认变体名",
+                "prompt": "Button 的 variant 默认值是哪个英文单词？",
+                "expectedAnswer": "secondary",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/Button.tsx",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "默认是 secondary。"
+                  }
+                ]
+              },
+              {
+                "id": "variant-count",
+                "kind": "short-answer",
+                "title": "有几种 variant",
+                "prompt": "ButtonVariant 联合里一共写了几种取值？只写数字。",
+                "expectedAnswer": "5",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/Button.tsx",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "联合里有五个字符串。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "render-nothing-sometimes",
+            "title": "没有职务的一行，代码是「留白」还是「印个空」？",
+            "content": "# 没有职务的一行，代码是「留白」还是「印个空」？\n\n## 两个东西\n\n你打开玩家芯片 `src/ui/PlayerChip.tsx`。同一块界面上，有两处「可能没有值」，写法却不一样。\n\n头像格子里，总要显示一个字符——没有专用标签时，用别名首字顶上：\n\n[[evidence:src/ui/PlayerChip.tsx:29]]\n\n下面元信息那一行，却是另一套符号：\n\n[[evidence:src/ui/PlayerChip.tsx:33]]\n\n一边是 `??`，一边是 `&&` 后面直接跟一个 `<span>`。两边都在处理「可能没有」，符号却完全不同。你若只扫一眼，很容易以为它们干的是同一件事。调用方没传某个字段时，函数里常见到的就是 `undefined`——意思是「这个位子空着，没有值」。\n\n:::detail[元信息在这颗芯片里指什么？]\n就是别名下面那一行小字，源码里的字段叫 `meta`。有职务、有补充说明时才值得占一行。\n\n没有 `meta` 时，作者选择整行不排，而不是印一个空白格子。头像那边相反：格子还在，只是字可能要换。\n\n同一颗芯片里放两种「没有」，是因为两种空的代价不同。头像空着会像缺了一块；职务空着，整行消失更干净。选符号之前，先看空了会不会留下一个尴尬的坑。\n:::\n\n## 先猜一下\n\n`meta` 是 `undefined`、`avatarLabel` 也是 `undefined` 时：元信息那一行的 `<span>` 还会不会在？头像格子里会出现什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n`meta` 为假时，`&&` 右侧整块不渲染，那一行 span 不出现；`avatarLabel` 为 `null`/`undefined` 时，`??` 走右边，头像显示 `alias` 的首字。\n\n## 逐条对照\n\n| | `avatarLabel ?? alias.slice(0, 1)` | `meta && <span>…</span>` |\n| --- | --- | --- |\n| 意图 | 总要有一个字符可贴 | 整块元信息可有可无 |\n| 运算符 | 空值合并 `??` | 逻辑与 `&&`（条件渲染） |\n| 左边「没有」时 | 用右边的兜底值 | 右边元素不出现 |\n| 你在屏上看到 | 仍有字（首字） | 可能整行留白 |\n\n**`??` 你只在左边是 `null` 或 `undefined` 时才换右边。** 空字符串 `''` 对 `??` 仍算「有值」，不会触发兜底。头像场景要的是「缺专用标签就用首字」，不是「任意假值都换」。\n\n**`&&` 条件渲染靠 JS 的真假值。** `meta` 为 `undefined`、`null`、`''` 时为假，右侧 `<span>` 不挂上。有内容时为真，才画出那一行。名片上的「职务」：有就印，没有就整行不排，不印字面量 `undefined`。\n\n:::detail[空字符串对这两个符号分别算「有」还是「没有」？]\n对 `??`：空字符串仍算有值，不会走右边。对 `&&`：空字符串是假，右侧整块不出现。\n\n所以你不能把两个符号当同义词互换。头像若写成 `&&`，空标签时格子会空着；元信息若写成 `??`，没有职务时可能硬印出一个空 span。选符号之前，先问：这个位置必须占着，还是整块可撤？\n\n`??` 对假值里的 `0` 和 `''` 都手下留情，只盯 `null` / `undefined`。`&&` 则把这些假值一视同仁。两种「没有」的尺子本来就不一样长。\n:::\n\n:::detail[avatarLabel 空着时，slice(0, 1) 切出来的是哪一个字？]\n`??` 看见左边是 `null` 或 `undefined`，才去算右边。`alias` 是必填的别名；`slice(0, 1)` 从开头切一个字符。\n\n这个字符成为头像那个 `span` 的子节点。格子还在，里面是别名的首字。若 `avatarLabel` 已经是 `'A'` 这种字，左边算「有值」，右边根本不会跑。\n\n你看见 `0, 1`，读成「从位置 0 切到位置 1 之前」——切的是开头一个，不是末尾。花括号再把这个字符插进头像格子里。\n:::\n\n两处都写在花括号里，所以是 JavaScript 表达式的结果被插进 JSX——你上一单元见过的插值通道。\n\n## 什么时候用哪个\n\n- **位置必须占着、只是文案可能缺** → 用 `??`（或三元）给兜底值。头像首字就是这种：格子还在，字不能空着。\n- **整块 UI 可有可无** → 用 `条件 && <元素>`，或 `条件 ? <元素> : null`。元信息行就是这种：没有 `meta`，连那一行节点都不要。\n\n**数字要小心。** 若你写成 `count && <span>{count}</span>` 且 `count === 0`，`0` 是假值，表达式结果是 `0`，React 会在屏上画出文字「0」，而不是「什么都不显示」。`meta` 在这里是 `string | undefined`，用 `&&` 相对安全；换数字计数，优先 `count > 0 && …` 或显式三元。\n\n:::detail[为什么 0 会印到屏幕上？]\n`&&` 的规矩是：左边为假，整个表达式的值就是左边那个假值本身。`0` 是假值，所以结果是数字 0。\n\nReact 遇到数字 0，会把它当文本画出来。`false`、`null`、`undefined` 才是「什么都不画」。`meta` 的类型是字符串或空着，踩不到 0 这个坑；你以后在计数上抄这个写法，就要自己改成「大于 0 才画」。\n\n这个坑只在你把数字直接丢给 `&&` 时出现。字符串职务行抄过来是安全的，计数器不能照搬。\n:::\n\n:::detail[meta 里有字时，&& 这一整段的值是什么？]\n假定 `meta` 是 `'法官'`。非空字符串为真，于是 `&&` 交出右边那颗 `<span>`。span 里面的 `{meta}` 再插入同一句「法官」。\n\n你在芯片上看到别名下面多了一行小字，字就是 `meta` 的内容。若 `meta` 是 `undefined`，左边为假，整段表达式的值就是这个假值本身，React 不挂那颗 span。\n\n所以这一行不是「先画一个空 span 再决定写不写字」。假的时候节点根本不出现；真的时候节点和字一起出现。\n:::\n\n:::detail[花括号在这里只是通道吗？]\n是。`??` 和 `&&` 都是 JavaScript 自己的运算，算出一个值，再由花括号插进 JSX。\n\n没有花括号，这两个符号进不了标签中间。通道还是上一单元那扇门；这节课新的是门里放了两种不同的「没有」。\n\n你读别人的组件，看见花括号里有 `??` 或 `&&`，先别急着抄。问一句：这个位置必须留着，还是整块可撤？答案会告诉你该用哪一个，而不是哪个符号看起来更短。\n:::\n\n## 再想想\n\n花括号里为什么能跑表达式，见 [[lesson:curly-braces-are-an-escape-hatch|花括号：逃回 JavaScript]]。头像 span 上还有 `aria-hidden`，那是写给另一类读者的——见 [[lesson:accessibility-in-two-attributes|aria 与 data 各写给谁]]。\n\n## 自检\n\n**问：** `meta` 是空字符串 `''` 时，元信息那一行会不会出现？\n\n**问：** `avatarLabel` 是 `undefined` 时，头像格子依赖哪一边的表达式补字？\n\n**问：** 为什么 `0 && <span>{0}</span>` 可能在屏幕上看到一个「0」？\n\n## 一句话\n\n**`??` 补一个值，`&&` 决定整块画不画；碰到数字 0 别裸用 `&&`。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/PlayerChip.tsx",
+                "lineStart": 29,
+                "lineEnd": 29,
+                "nodeIds": [],
+                "note": "avatarLabel ?? alias.slice(0, 1) 兜底。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/PlayerChip.tsx",
+                "lineStart": 33,
+                "lineEnd": 33,
+                "nodeIds": [],
+                "note": "meta && <span> 条件渲染。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "cond-and-render",
+                "kind": "basic",
+                "front": "`{meta && <span>…</span>}` 在 meta 有内容时做什么？",
+                "back": "渲染后面的 span，把 meta 显示出来。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerChip.tsx",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "meta 为真时才画 span。"
+                  }
+                ]
+              },
+              {
+                "id": "cond-nullish-avatar",
+                "kind": "basic",
+                "front": "`avatarLabel ?? alias.slice(0, 1)` 何时用右边？",
+                "back": "avatarLabel 是 null 或 undefined 时，用别名的第一个字符。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerChip.tsx",
+                    "lineStart": 29,
+                    "lineEnd": 29,
+                    "nodeIds": [],
+                    "note": "?? 只在左边空值时走右边。"
+                  }
+                ]
+              },
+              {
+                "id": "cond-zero-pitfall",
+                "kind": "basic",
+                "front": "为什么说 `0 && <span/>` 可能在屏幕上看到 0？",
+                "back": "0 是假值，整个表达式结果是 0，React 会把 0 当文本渲染出来。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "inference",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerChip.tsx",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "这里 meta 是 string | undefined，&& 相对安全。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "cond-and-operator",
+                "kind": "short-answer",
+                "title": "条件渲染用的运算符",
+                "prompt": "PlayerChip 里决定是否渲染 meta 行时，meta 与 JSX 之间写的是哪个逻辑运算符（两个字符）？",
+                "expectedAnswer": "&&",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerChip.tsx",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "用 && 决定画不画 span。"
+                  }
+                ]
+              },
+              {
+                "id": "cond-nullish-op",
+                "kind": "short-answer",
+                "title": "头像文字的兜底运算符",
+                "prompt": "`avatarLabel` 与 `alias.slice(0, 1)` 之间用的是哪个两位运算符？",
+                "expectedAnswer": "??",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerChip.tsx",
+                    "lineStart": 29,
+                    "lineEnd": 29,
+                    "nodeIds": [],
+                    "note": "用 ?? 兜底首字。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "accessibility-in-two-attributes",
+            "title": "同是 HTML 属性，为什么一个给读屏、一个给 CSS？",
+            "content": "# 同是 HTML 属性，为什么一个给读屏、一个给 CSS？\n\n## 两个东西\n\n你继续看 `PlayerChip`。根上的按钮带着一个 `data-*`：\n\n[[evidence:src/ui/PlayerChip.tsx:22-26]]\n\n里头像那一格，却是另一个前缀：\n\n[[evidence:src/ui/PlayerChip.tsx:28-30]]\n\n`data-active` 和 `aria-hidden` 并排出现在同一颗芯片里。你若只看名字，会觉得它们都是「给元素贴标签」；它们服务的对象却不是同一拨读者。\n\n:::detail[读屏是什么？]\n就是把屏幕上的结构读出声来的辅助技术，供眼睛不方便、或暂时不能盯着屏幕的人用。\n\n它读的是文档树和 `aria-*` 这类约定，不是你眼睛看见的颜色块。头像上那个首字，旁边已经有别名；再读一遍首字，对听的人是噪音。\n\n视觉上那个圆点还在，只是辅助技术跳过它。`aria-hidden` 不负责把圆点从眼睛里抹掉。两种读者各看各的层，这正是两个前缀要拆开的原因。\n:::\n\n## 先猜一下\n\n你把 `aria-hidden=\"true\"` 从头像 span 挪到整个 `<button>` 上，用读屏的人会碰到什么问题？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n整颗可点的芯片可能被辅助技术跳过，旁边的 `alias` 也读不到——装饰藏起来可以，交互控件整颗藏通常不行。\n\n## 逐条对照\n\n| | `aria-hidden=\"true\"` | `data-active=\"true\"/\"false\"` |\n| --- | --- | --- |\n| 写在哪 | 头像 `<span>` | 根 `<button>` |\n| 前缀约定 | `aria-*`：无障碍（accessibility） | `data-*`：自定义数据属性 |\n| 主要读者 | 辅助技术（如屏幕阅读器） | CSS（如 `[data-active='true']`）或测试/脚本 |\n| 意图 | 装饰性首字不要再读一遍；旁边已有 alias | 标记选中态，不必只靠 class 名表达状态 |\n\n`active ? 'true' : 'false'` 把布尔值收成字符串。你在 DOM 上写 `data-*` 时常见这种：属性值是文本，不是 JS 布尔类型本身。\n\n:::detail[aria 是给谁看的？]\n给辅助技术看的约定前缀。`hidden` 在这里的意思是「别把这个节点读出来」。\n\n它不是 CSS 钩子，也不改变你眼睛看见的圆点。写错地方，受伤的是听的人：整颗按钮若也被藏起来，别名和点击提示会一起消失。\n:::\n\n:::detail[data- 开头的属性浏览器认吗？]\n认它是「自定义数据」，不认它有固定含义。`data-active` 不会自动让按钮变成选中样式。\n\n真正认这个钩子的，是你们自己写的 CSS 或测试。作者选这个名字，是为了把「是否选中」从一串含糊的 class 里抽出来，写成稳定的状态标记。\n\n你在样式表里搜 `data-active`，就能找到谁在读这个钩子。搜 `aria-hidden`，找到的应是辅助技术相关的约定，而不是颜色。\n:::\n\n你读属性时先问一句：**这是写给谁的？** 人眼看见的文案、读屏听见的结构、CSS 挂钩用的状态，可以叠在同一棵树上，但职责要分开。\n\n## 什么时候用哪个\n\n- **辅助技术需要知道「这个节点别读 / 叫什么 / 是否展开」** → 你查 `aria-*` 约定，按角色选属性。这里头像是重复信息（首字装饰），所以 `aria-hidden=\"true\"`。\n- **样式或脚本需要一个稳定的状态钩子** → 你用 `data-*`（或约定好的 class）。这里的选中态用 `data-active`，让 CSS 可以写 `[data-active='true']`，而不把「是否选中」只藏在含糊的 class 字符串里。\n\n你不要用 `aria-*` 当 CSS 钩子凑合用，也不要把本该给读屏的信息只写在 `data-*` 里——读者不对，属性就白写。\n\n:::detail[为什么要写成 'true' 这种字，而不是 true？]\n写到 DOM 属性上的值，会变成文本。`true` 这个 JS 布尔，落到属性里常被收成字符串；作者索性自己写成 `'true'` / `'false'`，两边都是字。\n\nCSS 选择器 `[data-active='true']` 比的也是这段文字。你若丢一个裸布尔进去，不同工具转出来的字可能不一致。这里用三元，是为了钉死这两个词。\n\n你以后自己写 `data-*`，也优先自己映射成稳定的字。不要指望「丢进去的布尔，到 CSS 里一定还叫 true」。这颗芯片已经替你示范了稳妥写法。\n:::\n\n## 再想想\n\n`{...props}` 仍可能透传更多 `aria-*` / 事件到这颗按钮，见 [[lesson:rest-props|剩下的 props 怎么递出去]]。头像字从哪来，见 [[lesson:render-nothing-sometimes|可选块何时不渲染]]。\n\n## 自检\n\n**问：** `aria-hidden` 和 `data-active` 在 `PlayerChip` 里各标在哪个元素上？\n\n**问：** 主要读者分别是谁？\n\n**问：** 为什么 `data-active` 要写成 `'true'` / `'false'` 字符串，而不是直接丢一个 JS 布尔进去？\n\n## 一句话\n\n**`aria-*` 多写给辅助技术，`data-*` 多写给样式与脚本——先问属性的读者是谁。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/PlayerChip.tsx",
+                "lineStart": 22,
+                "lineEnd": 26,
+                "nodeIds": [],
+                "note": "按钮上的 data-active。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/PlayerChip.tsx",
+                "lineStart": 28,
+                "lineEnd": 30,
+                "nodeIds": [],
+                "note": "头像 span 的 aria-hidden。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "a11y-aria-hidden",
+                "kind": "basic",
+                "front": "`aria-hidden=\"true\"` 在 PlayerChip 头像上大致表示什么？",
+                "back": "让辅助技术忽略这颗装饰性头像节点（旁侧已有文字）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerChip.tsx",
+                    "lineStart": 28,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "头像 span 写了 aria-hidden。"
+                  }
+                ]
+              },
+              {
+                "id": "a11y-data-active",
+                "kind": "basic",
+                "front": "`data-active` 主要方便谁使用？",
+                "back": "CSS 选择器或脚本/测试，用数据属性表示是否选中。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerChip.tsx",
+                    "lineStart": 24,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "根按钮上的 data-active。"
+                  }
+                ]
+              },
+              {
+                "id": "a11y-true-false-string",
+                "kind": "basic",
+                "front": "为什么 active 要写成 'true' / 'false' 字符串？",
+                "back": "data-* 属性值以字符串形式出现在 DOM；用三元把布尔映射成这两个字符串。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerChip.tsx",
+                    "lineStart": 24,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "三元写成 'true' / 'false' 字符串。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "a11y-aria-attr",
+                "kind": "short-answer",
+                "title": "隐藏装饰节点的属性名",
+                "prompt": "头像 span 上用来向辅助技术隐藏自身的属性名是什么（含连字符）？",
+                "expectedAnswer": "aria-hidden",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerChip.tsx",
+                    "lineStart": 28,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "属性名是 aria-hidden。"
+                  }
+                ]
+              },
+              {
+                "id": "a11y-data-attr",
+                "kind": "short-answer",
+                "title": "选中态数据属性名",
+                "prompt": "PlayerChip 根按钮上标记是否 active 的 data 属性全名是什么？",
+                "expectedAnswer": "data-active",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/PlayerChip.tsx",
+                    "lineStart": 24,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "属性全名是 data-active。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "state-and-effects",
+        "title": "界面怎么会变",
+        "objective": "用 useState / useRef / useEffect 清理理解组件本地记忆、不触发重渲的口袋，以及卸载时的收尾。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "state-is-memory",
+            "title": "组件函数跑完就结束了，那句提示字为什么还记得住？",
+            "content": "# 组件函数跑完就结束了，那句提示字为什么还记得住？\n\n## 现象\n\n你打开 `src/hooks/useTimedStatus.ts`。这是一个自定义 hook——名字以 `use` 开头，里面组合 React 自带的能力，对外交出「闪一句状态文案再消失」这套行为。\n\n:::detail[hook 是什么？为什么名字以 use 开头？]\n你可以先把它想成「可复用的一小包组件能力」。它不是组件：不 return JSX，而是把记忆、口袋、清理这些零件拼好，交给真正的界面去用。\n\nReact 约定这类函数以 `use` 开头，好让它在每次函数再跑时按固定顺序对接记忆。你这节课只要抓住：`useTimedStatus` 自己也在用 `useState`，而 `useState` 才是那张便利贴。\n\n自定义 hook 看起来像普通函数，却必须遵守同样的顺序规则：每次再跑，这些 `use…` 都要按同样的次序出现。所以你不会在 `if` 里面临时才调用 `useState`。这节课先把「记忆本身」钉住，规则以后用得多了会更熟。\n:::\n\n文件靠前有一行：\n\n[[evidence:src/hooks/useTimedStatus.ts:14]]\n\n再往下，`flashStatus` 被调用时会做两件事：先把文案写进去，再在定时结束后清掉：\n\n[[evidence:src/hooks/useTimedStatus.ts:25-34]]\n\n（中间碰到的 `timeoutRef` 是「记一个定时器编号」用的，下一课专门讲；你这课先盯住 `setStatus` 和 `status`。）\n\n你已经知道：组件就是函数，父级一更新，这个函数可能被**再调用一遍**。可这里的 `status` 要在「刚闪出文案」到「几秒后清掉」之间一直能被读到——中间函数可能已经跑过不止一次。\n\n## 先猜一下\n\n若你不用 `useState`，只在这个函数里写 `let status = null`，再执行 `status = message`，调用方读到的 `status` 能不能像现在这样，跨过下一次函数调用仍是那句文案？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n不能稳定代替。普通局部变量在**每一次**函数调用结束就丢了；`useState` 把值放在 React 替你管的记忆里，跨多次调用还在，并且 `setStatus` 会安排函数再跑一遍。\n\n## 为什么是这样\n\n### 1. 拆开 `useState` 那一行\n\n[[evidence:src/hooks/useTimedStatus.ts:14]]\n\n| 部分 | 你怎么读 |\n| --- | --- |\n| `useState<string \\| null>(null)` | 记忆的类型是「字符串或 null」，**初始值**是 `null`（还没有状态文案） |\n| `status` | 当前记忆的值；给界面或调用方**读** |\n| `setStatus` | 更新记忆的函数；调用它会安排一次**重新渲染**（re-render） |\n\n**重新渲染**在这里不是「浏览器随便重画一下」，而是：React **再次调用**这个组件（或 hook 所在的）函数，好让返回值里的 `status` 与记忆一致。\n\n:::detail[方括号里两个名字分别干什么？]\n这叫解构：`useState` 交回一个两项的数组，你给它们起名。第一项是当前值，第二项是改它的函数。\n\n名字是你起的。写成 `[status, setStatus]` 只是习惯：读的叫 status，改的叫 setStatus。换两个别的名字，机制还是「值 + 更新函数」。\n\n尖括号 `<string | null>` 是类型：记忆里要么是一句字，要么是空。括号里的 `(null)` 才是第一次的值。类型管「以后能放什么」，括号管「一开始放什么」。两层别糊成一层。\n:::\n\n:::detail[第一次跑到 useState(null) 时，status 读出来是什么？]\n第一次，`useState` 收下初始值 `null`，把它写进记忆。解构出来的 `status` 就是 `null`：还没有要闪的字。\n\n`setStatus` 已经在手里，但还没人叫它。调用方若现在去读 `status`，拿到的是空，界面上不会出现提示。\n\n函数稍后被再叫时，这一行看起来又执行了一遍，但 React 不会再用 `null` 把记忆覆盖掉。你读到的 `status` 是便利贴上的当前字，不是括号里那个初始值。\n:::\n\n### 2. `flashStatus` 里两次改记忆\n\n[[evidence:src/hooks/useTimedStatus.ts:25-34]]\n\n- 第一次 `setStatus(message)`：记忆变成这句提示；React 安排再跑一遍，调用方拿到的 `status` 才是新文案。\n- 定时到了再 `setStatus(null)`：记忆清空，再跑一遍，提示从界面上撤掉。\n\n你看到的「闪一下再消失」，背后是**两次改记忆 + 两次（或多次）让函数再跑**，不是在同一次函数调用的局部变量上改来改去。\n\n:::detail[setStatus 之后界面为什么会变？]\n因为 React 收到「记忆改了」的通知，会把这个函数再叫一遍。再叫的时候，`status` 已经是新值，return 出去的界面描述才会换字。\n\n你若只改一个普通 `let`，没有人负责再叫一次函数，调用方下次读到的仍可能是旧的或干脆丢了的值。便利贴换了字，店长还得把「怎么交出当前结果」的流程再走一遍。\n\n所以「闪一下再消失」不是同一次函数里改了两次局部变量。是两次改便利贴，两次把流程再走一遍。\n:::\n\n:::detail[flashStatus 被叫一次，两次 setStatus 各在哪一拍改记忆？]\n第一拍就发生：`setStatus(message)` 把便利贴换成这句提示，React 安排函数再跑，调用方读到新文案。\n\n同一轮里它还会清掉旧的定时器，再登记一个新的。定时到了才发生第二拍：回调里的 `setStatus(null)` 把便利贴擦空，函数再跑一遍，提示从界面上撤掉。\n\n两拍不是同一次函数调用里改了两个局部变量。第一拍在 `flashStatus` 这次调用里；第二拍在以后某个时刻的回调里。中间函数可能已经跑过别的事情。\n:::\n\n### 3. 为什么不是整站数据库\n\n这节课只讲**组件（或这个 hook）自己的记忆**。全局商店、服务器拉数是后面的范围；这里不要把 `useState` 想成「整个 App 的数据库」。它管的是：这一块逻辑在多次被调用之间，还记得住什么。\n\n### 4. 和便利贴的对应（只钉机制）\n\n想象显示器边框上贴着一张便利贴，写着当前文案。函数每次被叫来干活，可以**读**便利贴；你用 `setStatus` 换内容后，店长会把「怎么交出当前结果」的流程再走一遍。便利贴不在某次函数调用的局部变量里——局部变量下班就扔，便利贴还在。\n\n:::detail[普通 let 变量下班后去哪了？]\n函数这次调用结束，局部变量占用的那张桌子就被收走。下一次再进来，是一张新桌子，`let status = null` 又从 null 开始。\n\n所以它记不住「几秒前闪过的那句」。`useState` 把字写在函数外面的便利贴上，桌子收走了，字还在。\n\n你可以用一件事自测：函数再跑时，这行 `useState(…)` 看起来又执行了，但 React 不会用初始值把便利贴覆盖掉。初始值只在第一次生效。若每次都从 `null` 开始，闪过的字永远留不住。\n:::\n\n## 再想想\n\n下一课你会看到：同一个文件里还有一只「改了也不逼界面重跑」的口袋，和 `status` 用途完全不同——[[lesson:ref-is-a-pocket|改了也不触发重渲的口袋]]。\n\n## 自检\n\n**问：** `useState` 返回的两个名字，通常分别用来做什么？\n\n**问：** 调用 `setStatus(message)` 之后，React 还会做什么？（用「重新渲染」自己的话解释）\n\n**问：** 在组件函数里写 `let status = null` 再赋值，为什么不能稳定代替 `useState`？（提示：想一想函数被再调用时，局部变量从哪开始）\n\n## 一句话\n\n**useState = 跨多次函数调用仍保留的记忆；setStatus 会触发重新渲染——函数再跑一遍。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/hooks/useTimedStatus.ts",
+                "lineStart": 14,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "useState<string | null>(null) 得到 status 与 setStatus。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/hooks/useTimedStatus.ts",
+                "lineStart": 25,
+                "lineEnd": 34,
+                "nodeIds": [],
+                "note": "flashStatus 里 setStatus(message) 与超时后 setStatus(null)。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "state-pair",
+                "kind": "basic",
+                "front": "`useState` 返回的数组两个元素通常是什么？",
+                "back": "当前状态值，以及更新它的 setter（如 status 与 setStatus）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 14,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "解构出 status 与 setStatus。"
+                  }
+                ]
+              },
+              {
+                "id": "state-rerender",
+                "kind": "basic",
+                "front": "重新渲染（re-render）在本课的定义是什么？",
+                "back": "组件函数被重新调用了一遍，以便按新的 state 再返回界面描述；不是泛指浏览器重画。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "inference",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 14,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "setStatus 会安排函数再跑一遍。"
+                  }
+                ]
+              },
+              {
+                "id": "state-initial-null",
+                "kind": "basic",
+                "front": "status 的初始值是什么？",
+                "back": "null，表示当前没有要显示的状态字符串。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 14,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "useState 初始值是 null。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "state-hook-name",
+                "kind": "short-answer",
+                "title": "组件记忆的 hook 名",
+                "prompt": "useTimedStatus 里用来保存 status 字符串的 React hook 名称是什么？",
+                "expectedAnswer": "useState",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 14,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "hook 名是 useState。"
+                  }
+                ]
+              },
+              {
+                "id": "state-initial-value",
+                "kind": "short-answer",
+                "title": "status 初始值",
+                "prompt": "useState 传入的初始值是哪个字面量？",
+                "expectedAnswer": "null",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 14,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "初始值是 null。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "ref-is-a-pocket",
+            "title": "定时器编号也要记住，为什么不放进 useState？",
+            "content": "# 定时器编号也要记住，为什么不放进 useState？\n\n## 两个东西\n\n你还在 `useTimedStatus` 里。上一课的 `status` 要上屏；同一文件紧挨着又多了一行：\n\n[[evidence:src/hooks/useTimedStatus.ts:14-15]]\n\n你往下读，`clearStatus` / `flashStatus` 会读、会写 `timeoutRef.current`，也会 `setStatus`：\n\n[[evidence:src/hooks/useTimedStatus.ts:17-35]]\n\n你看到两边都是「跨渲染还记得住的东西」，写法却完全不同：一个走 `setStatus`，一个改 `.current`。\n\n:::detail[这两行并排放，为什么一个后面跟着 set，一个后面跟着 Ref？]\n因为要记住的东西性质不同。`status` 是给界面看的文案，改了必须让函数再跑。定时器编号只是内部车票，观众席不必为换号重演整场。\n\nReact 用两套挂钩：`useState` 改完会通知重跑；`useRef` 给你一个盒子，盒子还在，改盒子里的东西默认不敲锣。\n\n并排放是故意的：同一份「闪一句状态」的逻辑，同时需要两种记忆。你读文件时不要因为它们挨着，就当成同一套 API 的两种拼写。\n:::\n\n## 先猜一下\n\n若你把定时器句柄也改成 `useState` 来存、每次 `setTimeout` 返回后都 `setTimerId(…)`，和现在用 `timeoutRef.current = …` 比，界面行为上多出来的主要代价是什么？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n多出来的是**多余的重新渲染**：你只是记下一个实现细节（定时器编号），也会逼函数再跑一遍；而 ref 改 `.current` **不会**因此触发重渲。\n\n## 逐条对照\n\n| | `status`（state） | `timeoutRef`（ref） |\n| --- | --- | --- |\n| 要不要上屏 / 给调用方当数据读 | 要（当前文案） | 不要（内部句柄） |\n| 你怎么改 | `setStatus(…)` | `timeoutRef.current = …` |\n| 改完之后 | 触发重新渲染 | **不**因此触发重新渲染 |\n| 值在哪 | React 管的 state 记忆 | 盒子的 `.current` 夹层 |\n\n读的时候你盯住这一点：真正的句柄在 **`timeoutRef.current`** 上。`timeoutRef` 是盒子，`.current` 是盒子里的东西。\n\n对照你在代码里能看到的分工：\n\n- `setStatus(message)` / `setStatus(null)`：文案变了，界面（或依赖 `status` 的调用方）必须跟上 → 走 state。\n- `timeoutRef.current = window.setTimeout(…)`：只是留下「待会好 `clearTimeout`」的编号；观众席不必为换了一个编号重演整场 → 走 ref。\n\n[[evidence:src/hooks/useTimedStatus.ts:17-35]]\n\n`clearStatus` 里也是同一套配对：你先 `setStatus(null)` 清文案，再若 `.current !== null` 就 `clearTimeout` 并把 `.current` 置回 `null`。\n\n:::detail[定时器编号为什么不该上屏？]\n它是浏览器发给你的一张内部号码牌，好让你稍后能喊「把这个闹钟取消」。用户没有理由看见这串数字。\n\n把它放进 `useState`，每次换号都会让函数再跑，界面描述跟着重做一遍——而字并没有变。口袋的意义就是：记得住，但不惊动观众。\n\n编号每次 `setTimeout` 都会换。若走 state，每次换号都重跑一遍，屏幕上的字却没变。这就是「多余」的准确定义：跑了，却没有任何该变的字。\n:::\n\n## 什么时候用哪个\n\n- **会画到界面上、或调用方当数据依赖的** → 你用 `useState`（上一课的记忆）。\n- **只要跨渲染记住、改它不该带动界面重跑的** → 你用 `useRef` 的 `.current`。定时器 ID、DOM 节点句柄、某次渲染无关的可变标记，都是常见例子。\n\n若你误用 `useState` 存 timer id：每次只是记录句柄也会重渲，多余，还容易把「实现细节」和「界面数据」搅在同一套更新节奏里。\n\n（`useCallback` 把 `flashStatus` / `clearStatus` 的函数引用稳住，避免每次渲染都新建函数；你这课只需知道：这两个函数里会同时碰到 ref 与 state 两种记忆。）\n\n:::detail[新定时器开始前为什么要清旧的？]\n`flashStatus` 可能被连点。若不先 `clearTimeout` 旧的，就会有两只闹钟在走：先到的那只仍会 `setStatus(null)`，把刚换上的新文案清掉。\n\n所以源码先看 `.current` 里有没有旧号，有就取消，再挂新的写回去。口袋里同时只该躺着一只闹钟。\n\n`clearStatus` 走同一条路：先把文案清掉（state），再若口袋里有号就取消闹钟，并把 `.current` 置回 `null`。文案和车票要一起收，只收一边，另一边还会响。\n:::\n\n:::detail[改 .current 会不会让函数再跑？]\n不会因为这一次赋值就跑。这正是它和 `setStatus` 的分界。\n\n函数以后还会因别的原因再跑——比如文案变了。再跑时，同一个盒子还在，`.current` 里仍是你上次写下的号。盒子跨渲染活着，敲锣的是 state，不是它。\n\n你可以用这句自测：改完这个值，屏幕上有没有必须跟着变的字？有，走 state；没有，先考虑 ref。定时器编号答「没有」。\n:::\n\n## 再想想\n\n组件卸下时，若定时器还没响，编号存在 `.current` 里也不够——你还得在离开时清掉。那是下一课 [[lesson:cleanup-is-not-optional|清理函数]] 的事。\n\n## 自检\n\n**问：** 读定时器句柄时，你应该读 `timeoutRef` 还是 `timeoutRef.current`？\n\n**问：** 改 `.current` 会不会像 `setStatus` 那样触发重新渲染？\n\n**问：** 为什么本文件用 ref 存 timeout id，而用 state 存 status 文案？\n\n## 一句话\n\n**要记住但不驱动界面更新的值，放 useRef 的 .current；定时器句柄是典型例子。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/hooks/useTimedStatus.ts",
+                "lineStart": 14,
+                "lineEnd": 15,
+                "nodeIds": [],
+                "note": "state 与 useRef 并列声明。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/hooks/useTimedStatus.ts",
+                "lineStart": 17,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "clear/flash 里读写 timeoutRef.current 与 setTimeout。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "ref-current",
+                "kind": "basic",
+                "front": "定时器句柄实际存在 ref 的哪个属性上？",
+                "back": "`current`（timeoutRef.current）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 19,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "读写的是 timeoutRef.current。"
+                  }
+                ]
+              },
+              {
+                "id": "ref-vs-state",
+                "kind": "basic",
+                "front": "为什么定时器 ID 适合 useRef 而不是 useState？",
+                "back": "需要跨渲染记住，但修改它不应触发重新渲染；它不是给界面显示的数据。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "inference",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 15,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "timeout 句柄放在 useRef 里。"
+                  }
+                ]
+              },
+              {
+                "id": "ref-clear-timeout",
+                "kind": "basic",
+                "front": "flashStatus 在设新定时器前若发现已有句柄会怎样？",
+                "back": "先 clearTimeout 旧的，再 setTimeout 新的并写回 current。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 28,
+                    "lineEnd": 34,
+                    "nodeIds": [],
+                    "note": "先清旧句柄再设新定时器。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ref-hook-name",
+                "kind": "short-answer",
+                "title": "口袋 hook 的名字",
+                "prompt": "useTimedStatus 里保存 timeout 句柄用的 hook 名称是什么？",
+                "expectedAnswer": "useRef",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 15,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "hook 名是 useRef。"
+                  }
+                ]
+              },
+              {
+                "id": "ref-property",
+                "kind": "short-answer",
+                "title": "取值属性名",
+                "prompt": "从 ref 对象读出/写入句柄时，属性名是什么？",
+                "expectedAnswer": "current",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 19,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "属性名是 current。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "cleanup-is-not-optional",
+            "title": "组件都卸了，定时器和键盘监听为什么还会敲门？",
+            "content": "# 组件都卸了，定时器和键盘监听为什么还会敲门？\n\n## 现象\n\n你已经会用 state 记文案、用 ref 记定时器编号。`useTimedStatus` 末尾还有一段：\n\n[[evidence:src/hooks/useTimedStatus.ts:39-45]]\n\n你注意到：effect 函数体几乎是空的，真正干活的是 **`return` 出去的那个函数**。\n\n另一处更长：`useKeyboard` 在原生平台上挂键盘监听，离开时再摘掉：\n\n[[evidence:src/hooks/useKeyboard.ts:15-43]]\n\n:::detail[卸载是什么意思？]\n就是这颗组件从树上拿下来，函数不再为这块界面服务。人离开房间，客房电话却可能还在响。\n\n定时器和键盘监听活在组件外面的世界。你挂上它们的时候，必须登记「离开时怎么摘」。源码把这份登记写成 `useEffect` 返回的那个函数。\n\n卸载不是浏览器关页那么大的事。父级换屏、条件不再成立，这块界面都可能被拿下来。你以为人还在房里，其实门禁已经失效，外面的闹钟却不知道。\n:::\n\n你看到的模式是一对：挂上（`setTimeout` / `addListener`）和摘掉（`clearTimeout` / `remove`）。若只写前半截……\n\n## 先猜一下\n\n若 `useEffect` 里只 `addListener` / `setTimeout`，**不** `return` 那个清理函数，组件卸载（或 effect 重跑）之后，最典型会出什么问题？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n旧定时器或旧监听可能仍在：回调会打到已卸载的逻辑上，造成重复响应、无效更新或警告。\n\n## 为什么是这样\n\n### 1. 清理函数何时跑\n\n`useEffect` 的返回值是**清理函数**（cleanup）。React 在两种时机调用它：\n\n- 组件**卸载**前；\n- 同一 effect **即将重跑**前（先清旧的，再挂新的）。\n\n`useTimedStatus` 的依赖是 `[]`：挂载时注册这段 effect，卸载时跑清理——只在进出时办手续。\n\n[[evidence:src/hooks/useTimedStatus.ts:39-45]]\n\n:::detail[依赖写成空数组是什么意思？]\n方括号是依赖列表：里面的值变了，这段 effect 才重跑。写成空的 `[]`，意思是「进出时办一次手续就够」。\n\n所以清理函数主要等卸载。若以后有人往列表里加东西，重跑之前仍会先跑清理——先退房，再按新条件入住。\n\n这两个文件都写成 `[]`，所以你看到的主要是「进门挂上、出门摘掉」。不要把空数组读成「这段永远不跑」——挂载时仍会跑一次。空的意思是「不要因为别的值变了就重办手续」。\n:::\n\n### 2. 定时器：人走了，闹钟还在响\n\n`flashStatus` 把编号写在 `timeoutRef.current`。若组件已经卸下，超时仍触发 `setStatus`，就是在对「已经不在的界面」改 state。清理里 `clearTimeout(timeoutRef.current)` 是在说：走之前把闹钟掐了。\n\n:::detail[人走了闹钟还响会怎样？]\n回调仍会跑。它会调用 `setStatus`，而这时已经没有对应的界面要更新。轻则看到警告，重则改到不该改的记忆。\n\n编号躺在口袋里不够。口袋只负责记得住号；真正取消闹钟的，是清理里那句 `clearTimeout`。\n\n`flashStatus` 只能在人还在时清旧闹钟。人已经离开，那条路不会再被走。所以 effect 末尾必须再备一刀：不管文案闪没闪完，退房时把口袋里的号拿去取消。\n:::\n\n### 3. 订阅：成对出现\n\n`useKeyboard` 在 effect 里 `Keyboard.addListener`，在 `return` 的清理里 `remove()`。原生键盘事件活在组件外的世界；你挂上监听，就得在清理里摘掉。\n\n[[evidence:src/hooks/useKeyboard.ts:15-43]]\n\n依赖仍是 `[]`：挂载订一次，卸载清一次。清理路径是 async 的（要先 await 到 listener 句柄），所以包在 `void (async () => { … })()` 里——Promise 你在异步课见过；这里只是「先拿到句柄再 remove」。\n\n:::detail[remove 和 addListener 为什么必须成对？]\n`addListener` 是在组件外的键盘系统上登记：「有消息就打这个电话」。组件离开后，登记还在，电话仍会打进来。\n\n`remove` 就是注销。反复进入离开却只登记不注销，你会留下一串旧电话，新的界面叠着旧的回调。成对不是礼貌，是避免空房继续响铃。\n\n`useKeyboard` 还多绕了一步：`addListener` 立刻交给你的是 Promise，句柄要等一会儿才到。所以清理里先 `await` 两个 Promise，再对真正的 listener 调 `remove`。异步课里的收据，在这里变成「先拿到号牌再注销」。\n:::\n\n### 4. 和退房的对应\n\n入住时登记「有消息打客房电话」（`addListener` / `setTimeout`）。退房时前台必须注销（cleanup）。你若忘了注销，人已经离开，酒店还往空房打电话——轻则吵到下一位，重则打到已回收的分机。\n\n:::detail[effect 函数体几乎是空的，为什么还要写这一段？]\n因为挂上闹钟的动作发生在 `flashStatus` 里，不一定发生在 effect 里。effect 在这里专职办退房：不管你闪过几次，离开时口袋里若还有号，就取消。\n\n函数体空，不代表这段没工作。工作写在 `return` 出去的那个函数里。你读 `useEffect`，看见立即 return 一个函数，先把它当成「出门时要做的事」，不要当成写错了的空壳。\n\n对照 `useKeyboard`：那边函数体不空，因为挂上监听就发生在 effect 里。两种写法都合法。看挂上发生在哪，清理就在对应的 `return` 里配对完成。只写一半，另一半会在人走后继续敲门。\n:::\n\n## 再想想\n\n清理要清的编号，常常就躺在上一课的 [[lesson:ref-is-a-pocket|ref 口袋]] 里；文案本身仍由 [[lesson:state-is-memory|useState 记忆]] 保管。\n\n## 自检\n\n**问：** `useEffect` 返回的函数通常在什么时候执行？\n\n**问：** `useTimedStatus` 的清理里调用了哪个 API 来取消未触发的定时器？\n\n**问：** `useKeyboard` 里与 `addListener` 配对的清理动作是什么？\n\n**问：** 只订阅、不返回清理函数，长期会有什么风险？\n\n## 一句话\n\n**useEffect 返回的函数负责收尾；定时器要 clear，监听要 remove。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/hooks/useTimedStatus.ts",
+                "lineStart": 39,
+                "lineEnd": 45,
+                "nodeIds": [],
+                "note": "useEffect 返回清理：clearTimeout。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/hooks/useKeyboard.ts",
+                "lineStart": 15,
+                "lineEnd": 43,
+                "nodeIds": [],
+                "note": "addListener 与 return 里 remove 成对。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "cleanup-when",
+                "kind": "basic",
+                "front": "useEffect 返回的清理函数大致何时运行？",
+                "back": "组件卸载时，或该 effect 因依赖变化即将重跑之前。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "inference",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 39,
+                    "lineEnd": 45,
+                    "nodeIds": [],
+                    "note": "返回的函数是清理函数。"
+                  }
+                ]
+              },
+              {
+                "id": "cleanup-timeout",
+                "kind": "basic",
+                "front": "useTimedStatus 的清理函数做什么？",
+                "back": "若 timeoutRef.current 非 null，则 clearTimeout，避免卸载后仍触发。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 40,
+                    "lineEnd": 43,
+                    "nodeIds": [],
+                    "note": "清理里调用 clearTimeout。"
+                  }
+                ]
+              },
+              {
+                "id": "cleanup-keyboard",
+                "kind": "basic",
+                "front": "useKeyboard 的清理函数关键一步是什么？",
+                "back": "对 show/hide 两个 listener 调用 remove()，取消订阅。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useKeyboard.ts",
+                    "lineStart": 34,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "清理里对两个 listener 调用 remove。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "cleanup-clear-api",
+                "kind": "short-answer",
+                "title": "清定时器的 API 名",
+                "prompt": "清理函数里取消 window 定时器用的方法名是什么？",
+                "expectedAnswer": "clearTimeout",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useTimedStatus.ts",
+                    "lineStart": 42,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "调用 window.clearTimeout。"
+                  }
+                ]
+              },
+              {
+                "id": "cleanup-remove-method",
+                "kind": "short-answer",
+                "title": "取消键盘监听的方法名",
+                "prompt": "useKeyboard 清理时对 listener 调用的方法名是什么？",
+                "expectedAnswer": "remove",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useKeyboard.ts",
+                    "lineStart": 40,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "调用 showListener.remove()。"
+                  }
+                ]
+              },
+              {
+                "id": "cleanup-why-pair",
+                "kind": "explain",
+                "title": "为什么订阅必须配对清理",
+                "prompt": "用 useKeyboard 的场景，用自己的话说明：只 addListener 不 remove，在组件反复进入离开后可能出什么问题？（2–4 句）",
+                "rubric": [
+                  "提到监听/订阅会残留",
+                  "提到组件卸载后回调仍可能触发，或重复监听",
+                  "提到 cleanup 里 remove 是配对操作"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/hooks/useKeyboard.ts",
+                    "lineStart": 18,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "addListener 与 remove 成对。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

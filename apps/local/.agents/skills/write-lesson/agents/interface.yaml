@@ -1,0 +1,27 @@
+interface:
+  display_name: "Write Lesson"
+  short_description: "Revise one evidence-bound lesson, cards, and exercises"
+  default_prompt: "Use $write-lesson to revise one lesson from its fixed evidence while preserving its existing card and exercise IDs."
+
+compatibility:
+  canonical_format: "agent-skills"
+  adapter_targets:
+    - "openai"
+    - "claude"
+    - "generic"
+    - "agent-skills"
+  activation:
+    mode: "auto"
+    paths: []
+  execution:
+    context: "inline"
+    shell: "bash"
+  trust:
+    source_tier: "local"
+    remote_inline_execution: "forbid"
+    remote_metadata_policy: "allow-metadata-only"
+  degradation:
+    openai: "metadata-adapter"
+    claude: "neutral-source-plus-adapter"
+    generic: "neutral-source"
+    agent-skills: "canonical-source"

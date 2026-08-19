@@ -1,0 +1,308 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "lessons": [
+    {
+      "courseId": "foundations-reading-code",
+      "unitId": "a-function",
+      "lessonId": "default-param-and-noop",
+      "anchors": [
+        {
+          "quote": "默认参数",
+          "occurrence": 2,
+          "senseId": "default.value"
+        },
+        {
+          "quote": "参数",
+          "occurrence": 3,
+          "senseId": "parameter.input"
+        },
+        {
+          "quote": "平台",
+          "occurrence": 1,
+          "senseId": "platform.target"
+        },
+        {
+          "quote": "契约",
+          "occurrence": 1,
+          "senseId": "contract.api"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-reading-code",
+      "unitId": "a-function",
+      "lessonId": "export-makes-public",
+      "anchors": [
+        {
+          "quote": "导出",
+          "occurrence": 1,
+          "senseId": "export.share"
+        },
+        {
+          "quote": "文件",
+          "occurrence": 3,
+          "senseId": "file.storage"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-reading-code",
+      "unitId": "a-function",
+      "lessonId": "filter-and-join",
+      "anchors": [
+        {
+          "quote": "过滤",
+          "occurrence": 2,
+          "senseId": "filter.select"
+        },
+        {
+          "quote": "顺序",
+          "occurrence": 1,
+          "senseId": "order.sequence"
+        },
+        {
+          "quote": "返回",
+          "occurrence": 1,
+          "senseId": "return.value"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-reading-code",
+      "unitId": "a-function",
+      "lessonId": "params-and-return",
+      "anchors": [
+        {
+          "quote": "参数",
+          "occurrence": 2,
+          "senseId": "parameter.input"
+        },
+        {
+          "quote": "返回值",
+          "occurrence": 2,
+          "senseId": "return.value"
+        },
+        {
+          "quote": "类型",
+          "occurrence": 2,
+          "senseId": "type.kind"
+        },
+        {
+          "quote": "约定",
+          "occurrence": 1,
+          "senseId": "convention.agreed"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-reading-code",
+      "unitId": "a-function",
+      "lessonId": "rest-params-and-union",
+      "anchors": [
+        {
+          "quote": "剩余参数",
+          "occurrence": 2,
+          "senseId": "rest.params"
+        },
+        {
+          "quote": "联合类型",
+          "occurrence": 2,
+          "senseId": "union.type"
+        },
+        {
+          "quote": "参数",
+          "occurrence": 2,
+          "senseId": "parameter.input"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-reading-code",
+      "unitId": "files-talking",
+      "lessonId": "barrel-and-why-split",
+      "anchors": [
+        {
+          "quote": "依赖",
+          "occurrence": 1,
+          "senseId": "dependency.module"
+        },
+        {
+          "quote": "木桶",
+          "occurrence": 1,
+          "senseId": "barrel.reexport"
+        },
+        {
+          "quote": "再导出",
+          "occurrence": 1,
+          "senseId": "export.share"
+        },
+        {
+          "quote": "路径",
+          "occurrence": 1,
+          "senseId": "path.location"
+        },
+        {
+          "quote": "导入",
+          "occurrence": 1,
+          "senseId": "import.borrow"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-reading-code",
+      "unitId": "files-talking",
+      "lessonId": "import-export-handshake",
+      "anchors": [
+        {
+          "quote": "导出",
+          "occurrence": 1,
+          "senseId": "export.share"
+        },
+        {
+          "quote": "具名导入",
+          "occurrence": 1,
+          "senseId": "import.borrow"
+        },
+        {
+          "quote": "路径",
+          "occurrence": 1,
+          "senseId": "path.location"
+        },
+        {
+          "quote": "组件",
+          "occurrence": 1,
+          "senseId": "component.ui"
+        },
+        {
+          "quote": "依赖",
+          "occurrence": 1,
+          "senseId": "dependency.module"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-reading-code",
+      "unitId": "naming-things",
+      "lessonId": "function-type-and-record",
+      "anchors": [
+        {
+          "quote": "可选参数",
+          "occurrence": 2,
+          "senseId": "optional.choice"
+        },
+        {
+          "quote": "参数",
+          "occurrence": 2,
+          "senseId": "parameter.input"
+        },
+        {
+          "quote": "返回值",
+          "occurrence": 1,
+          "senseId": "return.value"
+        },
+        {
+          "quote": "合同",
+          "occurrence": 1,
+          "senseId": "contract.api"
+        },
+        {
+          "quote": "类型",
+          "occurrence": 2,
+          "senseId": "type.kind"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-reading-code",
+      "unitId": "naming-things",
+      "lessonId": "import-type-and-coalesce",
+      "anchors": [
+        {
+          "quote": "可选链",
+          "occurrence": 2,
+          "senseId": "optional-chaining.access"
+        },
+        {
+          "quote": "空值合并",
+          "occurrence": 2,
+          "senseId": "nullish.coalesce"
+        },
+        {
+          "quote": "运行时",
+          "occurrence": 1,
+          "senseId": "runtime.environment"
+        },
+        {
+          "quote": "导入",
+          "occurrence": 1,
+          "senseId": "import.borrow"
+        },
+        {
+          "quote": "默认值",
+          "occurrence": 1,
+          "senseId": "default.value"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-reading-code",
+      "unitId": "naming-things",
+      "lessonId": "owns-does-not-own",
+      "anchors": [
+        {
+          "quote": "边界",
+          "occurrence": 1,
+          "senseId": "boundary.scope"
+        },
+        {
+          "quote": "载荷",
+          "occurrence": 1,
+          "senseId": "payload.api"
+        },
+        {
+          "quote": "合同",
+          "occurrence": 1,
+          "senseId": "contract.api"
+        },
+        {
+          "quote": "隐私",
+          "occurrence": 1,
+          "senseId": "privacy.protection"
+        },
+        {
+          "quote": "允许列表",
+          "occurrence": 1,
+          "senseId": "allowlist.fields"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-reading-code",
+      "unitId": "naming-things",
+      "lessonId": "type-alias-and-union",
+      "anchors": [
+        {
+          "quote": "类型别名",
+          "occurrence": 1,
+          "senseId": "type.kind"
+        },
+        {
+          "quote": "联合类型",
+          "occurrence": 1,
+          "senseId": "union.type"
+        },
+        {
+          "quote": "运行时",
+          "occurrence": 1,
+          "senseId": "runtime.environment"
+        },
+        {
+          "quote": "导出",
+          "occurrence": 1,
+          "senseId": "export.share"
+        }
+      ]
+    }
+  ]
+}

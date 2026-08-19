@@ -1,0 +1,117 @@
+foundations-async 英文标注 overlay 自查报告
+================================================
+日期：2026-08-07
+输出：course-proposals/annot-foundations-async.json
+词表：data/vocabulary/en.json（240 条，只读）
+
+## 覆盖范围
+- 课时数：12（与 content.md 课时一一对应，无遗漏）
+- 锚点总数：50
+- 每课锚点数：2–5（实际均为 4 或 5）
+
+## 课时清单
+- waiting/a-promise-is-a-receipt  (4)  receipt.record, promise.async, contract.api, resolve.promise
+- waiting/await-means-wait-here  (4)  await.pause, async.function, wait.action, result.outcome
+- waiting/racing-a-clock  (4)  race.promise, timeout.network, settle.promise, error.status
+- waiting/same-shape-different-speed  (4)  sync.blocking, contract.api, platform.target, receipt.record
+- failing/try-and-catch  (4)  try.block, catch.handler, fallback.plan, throw.error
+- failing/throw-or-absorb  (4)  throw.error, absorb.failure, degrade.fallback, return.value
+- failing/an-empty-catch-owes-you-a-reason  (4)  empty.state, catch.handler, reason.explain, silent.gap
+- failing/failure-as-a-value  (4)  return.value, fail.status, check.action, success.status
+- failing/not-every-error-is-an-error  (4)  error.status, check.action, type.kind, empty.state
+- both-at-once/the-shape-of-a-real-call  (5)  throw.error, await.pause, type-guard.check, destructure.unpack, error.status
+- both-at-once/a-way-back  (4)  fallback.plan, recover.failure, reload.page, limit.bound
+- both-at-once/what-you-must-check  (5)  async.function, fail.status, return.value, timeout.network, retry.network
+
+## senseId 校验
+- 使用 senseId 数：50（去重 34）
+- 词表缺失：无
+
+## occurrence / 落点抽查（8 个）
+规则：对 content.md 全文做纯字符串 indexOf 计数（含代码块与行内代码），
+再确认第 N 次落在非保护区（非 fence / 非 inline code / 非表格行）。
+
+1. both-at-once/the-shape-of-a-real-call
+   quote='错误' occurrence=1/1 senseId=error.status
+   status=OK  context=…端结果常拆成「数据」和「错误」两个槽位；`await` 只等…
+   结果：通过
+2. waiting/await-means-wait-here
+   quote='结果' occurrence=1/4 senseId=result.outcome
+   status=OK  context=…把心智模型设成「在这里等结果；等完才执行下一行」——而不是「…
+   结果：通过
+3. waiting/a-promise-is-a-receipt
+   quote='承诺' occurrence=1/6 senseId=promise.async
+   status=OK  context=…个字符串或 null 的承诺」，并指出接口上哪些方法返回的是…
+   结果：通过
+4. failing/try-and-catch
+   quote='catch' occurrence=1/12 senseId=catch.handler
+   status=OK  context=…# try 与 catch：先试，炸了再接↵↵## 学习目…
+   结果：通过
+5. waiting/same-shape-different-speed
+   quote='收据' occurrence=1/1 senseId=receipt.record
+   status=OK  context=…实现也可以立刻兑现同一张收据。**↵↵## 一个类比↵连锁店…
+   结果：通过
+6. waiting/same-shape-different-speed
+   quote='平台' occurrence=2/2 senseId=platform.target
+   status=OK  context=…Item(...)`，换平台不用改读法。↵↵## 自检↵**…
+   结果：通过
+7. waiting/racing-a-clock
+   quote='赛跑' occurrence=1/3 senseId=race.promise
+   status=OK  context=…# 和闹钟赛跑：Promise.race↵↵#…
+   结果：通过
+8. waiting/await-means-wait-here
+   quote='等待' occurrence=1/1 senseId=wait.action
+   status=OK  context=…ait` 标在具体那一次等待上。↵↵## 自检↵**问：**…
+   结果：通过
+
+## 因子串碰撞调整过的 quote
+
+1. 「异步」→「异步函数」
+   - 课：await-means-wait-here、what-you-must-check
+   - 原因：正文仅有「异步函数 / 异步调用」，短 quote「异步」会成为前缀，
+     英文模式会显示成 async函数 这类半截词。
+
+2. 「平台」occurrence 1 → 2
+   - 课：same-shape-different-speed
+   - 原因：第 1 次「平台」落在「全平台」内部；改标第 2 次「换平台」。
+
+3. 「降级」→「合理降级」
+   - 课：throw-or-absorb
+   - 原因：正文里「降级」总是嵌在「合理降级 / 安全降级 / 可以降级」中；
+     用更长 quote 对齐 degrade 义项，避免只盖住后两字。
+
+4. 「静默」→「静默忽略」
+   - 课：an-empty-catch-owes-you-a-reason
+   - 原因：「静默」是「静默忽略」的前缀；整段映射 silent.gap。
+
+5. 「空结果」occurrence 1 → 2
+   - 课：not-every-error-is-an-error
+   - 原因：第 1 次在行内代码注释 `/* 当空结果处理 */` 内（系统会 inside-code 拒绝）；
+     改标重点句里的第 2 次。
+
+6. 「恢复」occurrence 1 → 3
+   - 课：a-way-back
+   - 原因：第 1、2、4、7 次落在「可恢复」内部（「恢复」是子串）；
+     第 3 次是独立的「则不再恢复」。
+
+7. 「校验」不单独使用（本会出现在「同步校验」里）
+   - 课：the-shape-of-a-real-call
+   - 改为标散文中的 throw / await / 类型守卫 / 解构 / 错误。
+
+8. 失败相关：用「失败通道」而非「失败」
+   - 课：what-you-must-check
+   - 原因：「失败」是「失败通道」前缀；本节清单词就是失败通道。
+
+9. 错误相关：用「错误通道」而非「错误」
+   - 课：not-every-error-is-an-error
+   - 原因：短 quote「错误」会先撞上「错误通道 / 错误形状 / 错误码」。
+
+## 保护区规则（实现侧）
+resolveAnchors 会拒绝落在以下区域的锚点：fence 代码块、行内代码、
+链接目标、HTML 标签、表格行。occurrence 仍按全文（含这些区域）计数。
+本批锚点均已核对为 prose 落点。
+
+## 结论
+- 12 课全覆盖，50 锚点，senseId 全部在词表中。
+- 抽查 8/8 通过；子串碰撞已按上表调整。
+- 未修改 en.json 与 studies/ 下任何文件。

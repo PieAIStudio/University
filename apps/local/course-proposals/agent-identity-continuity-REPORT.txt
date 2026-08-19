@@ -1,0 +1,62 @@
+agent-identity-continuity 课程提案交付报告
+========================================
+
+规模
+----
+- 单元数：3
+  1. identity-as-checkable-signals（4 节）
+  2. style-and-delivery-rhythm（3 节）
+  3. quality-gate-and-agent-wireup（4 节）
+- 课时总数：11
+- 每节：2 张卡片、1 道 short-answer 练习
+- 证据引用总数：63（lesson + card + exercise 合计）
+- 含 mermaid 流程图：1 节（one-repair-chance）
+
+输出文件
+--------
+- course-proposals/agent-identity-continuity.json
+- course-proposals/agent-identity-continuity-REPORT.txt
+
+证据来源（commit 3b402e069a5db5fe9eb82dbc03aa05152b3d298b）
+----------------------------------------------------------
+主要：
+- services/mastra/src/orchestration/identity-continuity.ts
+- services/mastra/src/orchestration/message-style-signals.ts
+- services/mastra/src/orchestration/decision-quality.ts
+- services/mastra/src/orchestration/turing-pact-agent.ts
+辅助（组装/重试集合）：
+- services/mastra/src/contracts/agent-decision.ts
+- services/mastra/src/orchestration/scheduler-social-signals.ts
+
+门禁结果（最终）
+----------------
+$ node scripts/check-proposal-shape.mjs course-proposals/agent-identity-continuity.json
+ok  course-proposals/agent-identity-continuity.json
+
+$ node scripts/check-proposal-evidence.mjs course-proposals/agent-identity-continuity.json --study turing-pact
+（全部唯一 sourcePath:lineStart-lineEnd 行均为 ok）
+all 63 references resolve at their pinned commits
+
+读代码时最反直觉的一点（已写进课）
+------------------------------------
+selectPersonaArchetype 故意忽略 aiPlayerId，只按 roomCode（或退回 roomId）做确定性选型。
+
+直觉上「每个 AI 玩家该有自己的人设」，但产品目标是同房间 rematch 仍是同一嗓音。
+身份锚在房间，不锚在可变的 AI 槽位——注释原文：
+「Intentionally ignores aiPlayerId so rematches in the same room keep the voice。」
+
+写进：unit 1 / lesson room-seed-not-player-id。
+
+次级反直觉（同课体系）
+----------------------
+1. sampleLine 写进档案却 never recite——纹理参考，不是台词库。
+2. RETRYABLE_STRUCTURED_DECISION_CODES 不含 invalid_decision_schema：
+   JSON 已解析但字段语义错时不重试，避免双倍烧钱。
+3. 风格信号带 deliveryDelayMs + nextPublicCooldownSec，且 prompt 写明
+   风格不能覆盖语境/人格/保密/长度——软提示与硬门禁分工。
+
+未做
+----
+- 未 git commit
+- 未修改 TuringPact 仓库
+- 除上述两个输出文件外未改 UniversityLocal 其他文件

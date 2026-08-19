@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "comm-one-change",
+  "targetSnapshotId": "git-90cf76c1177f",
+  "courseId": "communicate-with-ai",
+  "unit": {
+    "id": "executable-requests"
+  },
+  "lessons": [
+    {
+      "id": "one-change-at-a-time",
+      "title": "迭代：一次只改一个变量",
+      "content": "# 迭代：一次只改一个变量\n\n## 学习目标\n\n完成本课后，你能：\n\n1. 说明为什么一次改十处时，产出变了却无法定位、无法复现。\n2. 指出本项目验证纪律如何体现「一次只推进一个变量」。\n3. 写出下一轮委托里的固定句式：「这一轮我只改 X，其它保持不变」。\n\n## 先给结论\n\n- **事实：`AGENTS.md` 的 Verification 写明：先跑 smallest relevant checks，再跑 `pnpm verify`，才宣称实现完成。** 浏览器可见改动还要真实浏览器与截图证据。\n- **事实：政策里的 Verification Ladder 把 typecheck、lint、test、build、docs:check、`pnpm verify` 排成阶梯。** 不是「一锅端碰运气」，而是由小到大。\n- **推论：一次改十个地方，等于同时拧十个旋钮。** 结果变了，你不知道是哪个旋钮起的作用；下次也复现不了。这不是玄学——本项目的验证纪律就是在工程上强制「一次只推进可定位的一步」。\n\n## 一个类比\n\n调音时只拧一根弦，你听得出高低。若同时拧六根，嘈杂了也不知该回哪根。\n改 prompt 时同时换模型、换措辞、换上下文长度，等于同时拧三根弦——好听了也不知该保留哪一招。\n\n## 工作示例\n\n**坏委托（多变量）：**\n\n> 把答疑包改短一点，顺便换个模型，上下文再多塞点，语气活泼些，验收也改一下。\n\n产出变了：可能是模型、可能是篇幅、可能是上下文——你学不到可复用的一招。\n\n**好委托（单变量）：**\n\n> 这一轮我只改 X：把「给 AI 助手的任务」里的步骤说明压缩到每步一行。模型、上下文条数、写回字段、其它文件一律不动。改完先跑最小相关测试，再 `pnpm verify`。\n\n对照项目纪律：\n\n1. **最小相关检查先** —— 只验证你动过的那一层（例如单测某个 workflow）。\n2. **再 `pnpm verify`** —— 全阶梯托底，防止「局部绿、整体红」。\n3. **失败时可定位** —— 因为只动了一个变量，回滚与对比才有意义。\n\n## 自检\n\n**问：** 同时改模型与 prompt 措辞，成功时最大的损失是什么？\n\n**答：** 不知道成功归因于哪一次改动，下次无法稳定复现，也学不到可迁移的一招。\n\n## 重点\n\n**一次只改一个变量：委托写清「这一轮只改 X」；项目验证也是先最小检查再 `pnpm verify`，失败才定位得到。**\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "snapshotId": "git-90cf76c1177f",
+          "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+          "sourcePath": "AGENTS.md",
+          "lineStart": 88,
+          "lineEnd": 92,
+          "nodeIds": [],
+          "note": "Verification：先 smallest relevant checks，再 pnpm verify。"
+        },
+        {
+          "kind": "fact",
+          "snapshotId": "git-90cf76c1177f",
+          "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+          "sourcePath": "docs/policy/best-practice-for-this-project.md",
+          "lineStart": 80,
+          "lineEnd": 93,
+          "nodeIds": [],
+          "note": "Verification Ladder：由小到大的检查阶梯，而非一次碰运气。"
+        }
+      ],
+      "exercises": [
+        {
+          "id": "name-verify-order",
+          "kind": "short-answer",
+          "title": "验证谁先谁后",
+          "prompt": "AGENTS.md 要求先跑最小相关检查，再跑哪条命令才宣称完成？只写命令（含 pnpm）。",
+          "expectedAnswer": "pnpm verify",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": "AGENTS.md",
+              "lineStart": 90,
+              "lineEnd": 91,
+              "nodeIds": [],
+              "note": "then `pnpm verify` before claiming a complete implementation。"
+            }
+          ]
+        }
+      ],
+      "cards": [
+        {
+          "id": "one-var-why",
+          "front": "为什么改 prompt 时不能同时换模型、措辞和上下文长度？",
+          "back": "三个变量一起动，成功也无法归因，失败也无法定位；下次复现不了。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": "AGENTS.md",
+              "lineStart": 88,
+              "lineEnd": 92,
+              "nodeIds": [],
+              "note": "验证纪律要求可定位的最小步骤，再全量 verify。"
+            }
+          ]
+        },
+        {
+          "id": "one-var-phrase",
+          "front": "下一轮委托里，用来锁死单变量的固定句式是什么？",
+          "back": "这一轮我只改 X，其它保持不变。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "snapshotId": "git-90cf76c1177f",
+              "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+              "sourcePath": "docs/policy/best-practice-for-this-project.md",
+              "lineStart": 80,
+              "lineEnd": 89,
+              "nodeIds": [],
+              "note": "阶梯验证：一次推进可检查的一层，而不是混改后赌全绿。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

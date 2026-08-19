@@ -1,0 +1,55 @@
+spaced-repetition 课程提案交付报告
+========================================
+
+规模
+----
+- 单元数：3
+  1. fsrs-as-rows（4 节）— 遗忘曲线落成表行
+  2. idempotent-reviews（4 节）— 复审幂等是生死问题
+  3. migration-and-files（4 节）— 迁移与本地文件
+- 课时总数：12
+- 每节：2 张卡片、1 道 short-answer 练习
+- 证据引用总数：72（lesson + card + exercise 合计）
+- 含 mermaid 流程图：1 节（command-id-first）
+
+输出文件
+--------
+- course-proposals/spaced-repetition.json
+- course-proposals/spaced-repetition-REPORT.txt
+
+证据来源（commit 90cf76c1177fa19cd5d9d0a6c8257d934a586b5e）
+----------------------------------------------------------
+唯一源文件（airlock 冻结副本）：
+- server/learning/sqlite-learning-store.ts
+  覆盖：card_state / FSRS 默认参数与 profile 哈希、ensureCard 保留间隔、
+  reviewCard command_id 幂等与 duplicate/conflict、rebuild 投影、
+  schema v1–v4 阶梯与 fail-closed 前置条件、legacy scoped keys、
+  0o600 权限与原子 backup。
+
+门禁结果（最终）
+----------------
+$ node scripts/check-proposal-shape.mjs course-proposals/spaced-repetition.json
+ok  course-proposals/spaced-repetition.json
+
+$ node scripts/check-proposal-evidence.mjs course-proposals/spaced-repetition.json --study university-local
+（全部唯一 sourcePath:lineStart-lineEnd 行均为 ok，共 61 条 ok 行）
+ok  server/learning/sqlite-learning-store.ts:947-954
+ok  server/learning/sqlite-learning-store.ts:980-988
+ok  server/learning/sqlite-learning-store.ts:980-996
+
+all 72 references resolve at their pinned commits
+
+读代码时最反直觉的一点（已写进课）
+------------------------------------
+ensureCard 在 contentRevision 上调时，故意不重置 due/stability：只改
+content_revision 与 updated_at。注释写明 card_state 是 append-only
+review_event 的投影——若在投影上「内容变了就重学」，下一次
+rebuildCardStateFromReviewEvents 会按事件重放把重置盖掉。
+
+产品直觉是「改了卡片就当新卡」；工程真相是：改进度只能追加事件，
+不能偷改投影。该点写在 revision-bump-keeps-schedule 一课。
+
+未做事项
+--------
+- 未 git commit
+- 未修改 airlock 或 UniversityLocal 除上述两份交付文件外的任何文件

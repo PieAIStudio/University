@@ -1,0 +1,21 @@
+{
+  "optimizer_hints": {
+    "capability": "Author or revise one UniversityLocal lesson from fixed evidence, preserving lesson structure and existing card/exercise identities.",
+    "inputs": ["one lesson", "content.md", "manifest.json", "fixed evidence", "card and exercise IDs", "refresh handoff"],
+    "trigger_actions": ["rewrite lesson", "append revision", "write cards and exercises", "重写课文", "改写这节课", "生成 revision proposal"],
+    "exclusions": ["study refresh orchestration", "continue teaching", "explicit knowledge capture", "course planning", "ordinary engineering"]
+  },
+  "fallback_positive_concepts": ["single_lesson_revision"],
+  "positive_concepts": {
+    "single_lesson_revision": {
+      "weight": 0.7,
+      "phrases": ["one lesson", "content.md", "new revision", "revision proposal", "重写这一节", "改写课文", "追加同文 revision"]
+    }
+  },
+  "negative_concepts": {
+    "teaching": {"weight": 0.35, "exclusive": true, "phrases": ["继续教我", "下一节", "teaching session"]},
+    "knowledge_capture": {"weight": 0.35, "exclusive": true, "phrases": ["保存到当前 study", "加入复习", "save this insight"]},
+    "refresh": {"weight": 0.45, "exclusive": true, "phrases": ["new local commit", "refresh prepare", "UA finalize", "刷新 snapshot", "freshness audit"]},
+    "course_planning": {"weight": 0.35, "exclusive": true, "phrases": ["规划一门新课程", "拆分单元", "course planning"]}
+  }
+}

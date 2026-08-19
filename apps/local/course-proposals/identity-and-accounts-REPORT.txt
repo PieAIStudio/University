@@ -1,0 +1,81 @@
+identity-and-accounts 课程提案交付报告
+================================
+
+规模
+----
+- 单元：3
+- 课时：12
+- 卡片：24（每课 2 张）
+- 练习：12（每课 1 道 short-answer）
+- 证据引用：75 条（全部 kind=fact 或带 note；本课证据以 fact 为主，推论写在课文里）
+
+单元与课时
+----------
+1. presentation-vs-real-identity（展示身份 ≠ 真实身份）— 4 课
+   - three-fields-of-truth
+   - display-name-cascade
+   - settled-flag-beats-stale
+   - table-alias-is-costume
+
+2. login-as-settlement（登录是结算，不是一次 await）— 4 课
+   - soft-timeout-then-reconcile
+   - expected-session-guard
+   - anonymous-upgrade-path（含 mermaid 流程图）
+   - bootstrap-token-fork
+
+3. sync-and-logout-cleanup（多端同步与退出时清什么）— 4 课
+   - two-stores-two-jobs
+   - logout-clear-and-rebootstrap（含 mermaid 状态图）
+   - ignore-transient-null
+   - init-once-across-mounts
+
+门禁结果
+--------
+check-proposal-shape.mjs:
+ok  course-proposals/identity-and-accounts.json
+
+check-proposal-evidence.mjs --study turing-pact:
+（节选：首行 ok 路径摘要 + 末行汇总；中间全部为 ok）
+
+首尾：
+ok  src/components/auth/AuthenticatedRuntime.tsx:1-9
+ok  src/components/auth/LoginModal.tsx:20-25
+ok  src/components/auth/LoginModal.tsx:26-34
+...
+ok  src/stores/authRuntimeStore.ts:15-16
+ok  src/stores/authRuntimeStore.ts:5-20
+ok  src/stores/authStore.ts:4-22
+
+all 75 references resolve at their pinned commits
+
+全部 75 条 references 均为 ok，无 MISS / 行号越界。
+
+证据来源（pinned）
+------------------
+- snapshotId: git-3b402e069a5d
+- sourceCommit: 3b402e069a5db5fe9eb82dbc03aa05152b3d298b
+- targetAnalysisId: ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a
+- 主读文件：authController / presentation / types / emailAuth / player-identity
+- 支撑文件：room.ts、useAuth.ts、authStore、authRuntimeStore、LoginModal、HomePage、supabase.ts、AuthenticatedRuntime
+
+最反直觉的一点（已写入课程）
+----------------------------
+登录/升级过程中 Supabase 推来的 session=null **不能**当成登出。
+
+authController 里 isTransientMissingSessionPhase 把 bootstrapping / submitting / reconciling
+标成「允许暂时没有 session」；handleAuthStateChange 在这些相位收到 null 直接 return，
+既不 clearAuthStoreState，也不 bootstrap。
+
+若把每一次 null 都当退出，登录中间态会清掉 store 并拉起新匿名会话，随后到达的目标邮箱会话
+会对不上 expectedEmail / expectedAnonymous，用户表现为「登录失败或串号」。
+
+与之配套的另一面（logout-clear-and-rebootstrap）：稳态下的真登出也不是停在真空——
+clear + runtime reset 之后会再 bootstrap 出匿名会话。产品目标态是「可玩的干净游客」，
+不是 user 永久为 null。
+
+输出文件
+--------
+- course-proposals/identity-and-accounts.json
+- course-proposals/identity-and-accounts-REPORT.txt
+
+未做 git commit；未修改 TuringPact 仓库。

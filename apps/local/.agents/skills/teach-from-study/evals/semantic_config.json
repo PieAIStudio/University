@@ -1,0 +1,24 @@
+{
+  "optimizer_hints": {
+    "capability": "Teach or review from a registered UniversityLocal study using fixed snapshot evidence and separated learner state.",
+    "inputs": ["registered study", "formal course", "UA tour", "practice request", "due review cards"],
+    "trigger_actions": ["teach from study", "continue course", "UA tour", "review due cards", "explain snapshot evidence", "factual quiz", "quiz me on the study", "带我学习", "继续课程", "复习卡片", "知识测验", "考考我"],
+    "exclusions": ["knowledge capture", "communication coaching", "diagram repair", "study refresh", "ordinary engineering"]
+  },
+  "fallback_positive_concepts": ["study_learning"],
+  "positive_concepts": {
+    "study_learning": {
+      "weight": 0.68,
+      "phrases": ["UniversityLocal", "study", "course", "UA tour", "fixed snapshot", "snapshot evidence", "quiz me on", "factual quiz", "带我理解", "带我学习", "正式课程", "知识测验", "考考我", "复习", "到期的卡片", "lesson became stale"]
+    }
+  },
+  "negative_concepts": {
+    "capture": {"weight": 0.35, "exclusive": true, "phrases": ["保存下来", "保存这个知识点", "knowledge capture"]},
+    "communication": {"weight": 0.35, "exclusive": true, "phrases": ["点评我的表达", "沟通教练", "communication coach"]},
+    "diagram": {"weight": 0.35, "exclusive": true, "phrases": ["修复 Mermaid", "登录时序图", "explicit diagram"]},
+    "refresh": {"weight": 0.35, "exclusive": true, "phrases": ["刷新", "refresh the study"]},
+    "engineering": {"weight": 0.35, "exclusive": true, "phrases": ["implement the API", "run tests"]},
+    "no_study": {"weight": 0.75, "exclusive": true, "phrases": ["不需要使用任何 UniversityLocal study"]},
+    "dynamic_review": {"weight": 0.35, "exclusive": true, "phrases": ["录屏", "dynamic ux"]}
+  }
+}

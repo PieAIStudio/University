@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "host": "codex",
+  "placement": "registry",
+  "bundleIds": [
+    "base-governance",
+    "frontend-app"
+  ],
+  "registryProvenance": {
+    "schema": "agent-assets-registry",
+    "version": 1,
+    "hash": "sha256:48e96f157c233a5d340632988563e552279a1b5b2f5ea11eff87f6f7ce76e137",
+    "assetCount": 12
+  },
+  "assets": [
+    {
+      "id": "npx-skills/agent-browser",
+      "sourcePath": "skills/npx-skills/.agents/skills/agent-browser",
+      "delivery": "symlink",
+      "contentHash": "sha256:a674b7d81066e3cc471a7512ddb4ae724418cbfefa75cbb050b0dc430e4d57a0",
+      "targetPath": ".agents/skills/agent-browser"
+    },
+    {
+      "id": "npx-skills/frontend-design",
+      "sourcePath": "skills/npx-skills/.agents/skills/frontend-design",
+      "delivery": "symlink",
+      "contentHash": "sha256:665c585455decbcb02116bc928adf5148b9cd0f67b7eb4908c8c0d647c00f68a",
+      "targetPath": ".agents/skills/frontend-design"
+    },
+    {
+      "id": "npx-skills/impeccable",
+      "sourcePath": "skills/npx-skills/.agents/skills/impeccable",
+      "delivery": "symlink",
+      "contentHash": "sha256:16f7f1f484ab99c1149d2decd6c7e830849072dfa1057d6324af8bba84965a9d",
+      "targetPath": ".agents/skills/impeccable"
+    },
+    {
+      "id": "npx-skills/ui-ux-pro-max",
+      "sourcePath": "skills/npx-skills/.agents/skills/ui-ux-pro-max",
+      "delivery": "symlink",
+      "contentHash": "sha256:6503364c204a3a10e3cf80e3a53323e9ab581b6d06550c3cc893cdcf1206f048",
+      "targetPath": ".agents/skills/ui-ux-pro-max"
+    },
+    {
+      "id": "pie-rules/ai-in-the-loop",
+      "sourcePath": "rules/pie-rules/ai-in-the-loop.md",
+      "delivery": "snapshot",
+      "contentHash": "sha256:344eba8c3b1f3130ed33e4b6a4511a332e2ca477e6a40ad7d4c73006197f5445",
+      "targetPath": "docs/policy/shared-rules/ai-in-the-loop.md"
+    },
+    {
+      "id": "pie-rules/brand-kit-first",
+      "sourcePath": "rules/pie-rules/brand-kit-first.md",
+      "delivery": "snapshot",
+      "contentHash": "sha256:eb74748102972fc97cc62837cefb8098ad4f75731559a079c2ad4d59c71989de",
+      "targetPath": "docs/policy/shared-rules/brand-kit-first.md"
+    },
+    {
+      "id": "pie-rules/clean-image-generation-rules",
+      "sourcePath": "rules/pie-rules/clean-image-generation-rules.md",
+      "delivery": "snapshot",
+      "contentHash": "sha256:cd6a79b9971af50003812b498827837ca5c2c284d5b2c95ad3bbf3778483f74a",
+      "targetPath": "docs/policy/shared-rules/clean-image-generation-rules.md"
+    },
+    {
+      "id": "pie-skills/comm-coach",
+      "sourcePath": "skills/pie-skills/comm-coach",
+      "delivery": "symlink",
+      "contentHash": "sha256:e52af1057c0afffa3cd0b14edc840659eb7d76ccfee9c69c46180d411d437179",
+      "targetPath": ".agents/skills/comm-coach"
+    },
+    {
+      "id": "pie-skills/experience-capture",
+      "sourcePath": "skills/pie-skills/experience-capture",
+      "delivery": "symlink",
+      "contentHash": "sha256:7e721266aa5bb311c9e66b887046270cd29cb6125a4fa3c103471d775aa40d65",
+      "targetPath": ".agents/skills/experience-capture"
+    },
+    {
+      "id": "pie-skills/mermaid-diagrams",
+      "sourcePath": "skills/pie-skills/mermaid-diagrams",
+      "delivery": "symlink",
+      "contentHash": "sha256:290c599d15e221ebcd33f4d442188e1ef8077c36eecf4f4a542b2fa520410f14",
+      "targetPath": ".agents/skills/mermaid-diagrams"
+    },
+    {
+      "id": "pie-skills/screenwalk",
+      "sourcePath": "skills/pie-skills/screenwalk",
+      "delivery": "symlink",
+      "contentHash": "sha256:4d2ccbffdba26191cfc1b64d4f070c351f34a729e9ffb28c7dca00759a4837f7",
+      "targetPath": ".agents/skills/screenwalk"
+    },
+    {
+      "id": "third-party-skills/kling-cli",
+      "sourcePath": "skills/third-party-without-npx-skills/kling-cli/0.1.3",
+      "delivery": "symlink",
+      "contentHash": "sha256:c1de47af3859957f111133a95239ccb0c08b911a58343070260223d0fdeec69e",
+      "targetPath": ".agents/manual-skills/kling-cli"
+    }
+  ]
+}

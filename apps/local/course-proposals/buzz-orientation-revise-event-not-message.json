@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-orientation-event",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-orientation",
+    "unitId": "orientation-protocol",
+    "id": "event-not-message",
+    "expectedRevision": 1,
+    "content": "# 一条普通消息为什么长得不像消息？\n\n## 一句真实出现的话\n\n你在 Buzz 的文档里会看到这句话：每个动作都是一个 cryptographically signed event。\n\n[[evidence:VISION.md:60-75]]\n\n## 先猜一下\n\n这里的 `event` 是不是只指聊天消息？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不是；event 是 Buzz 用来承载消息、reaction、workflow step、profile update 等动作的共同事件形状。\n\n## 三个真实用例\n\n第一，README 把消息、reaction、workflow step、review approval 和 git event 放进同一条 log。\n\n[[evidence:README.md:35-50]]\n\n第二，VISION 把 message、reaction、workflow step 和 profile update 都列为签名事件。\n\n[[evidence:VISION.md:60-73]]\n\n第三，架构把每个 action 定义成带六个字段的 JSON event，并让 kind 决定 relay 如何路由。\n\n[[evidence:ARCHITECTURE.md:101-116]]\n\n## 它不是什么\n\n它不是“所有东西内容都一样”，也不是“event 只等于一条聊天气泡”。你可以把 event 理解成共同的外壳和身份验证方式；不同动作仍然靠 kind、tags 和 content 表达差异。\n\n## 自检\n\n- event 这个词在 Buzz 里覆盖了哪些动作？\n- 为什么共同外壳不等于共同的 UI？\n\n## 一句话\n\n**event 是 Buzz 里跨消息、自动化和协作动作的共同事件外壳。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "VISION.md", "lineStart": 60, "lineEnd": 75, "note": "VISION 说明 Nostr 事件承载所有动作，并列出字段与 kind。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "README.md", "lineStart": 35, "lineEnd": 50, "note": "README 将消息、reaction、workflow、approval 和 git event 放进同一日志。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 101, "lineEnd": 116, "note": "架构定义六字段 JSON event 与 kind 分发。" }
+    ],
+    "cards": [
+      { "id": "orientation-event-term", "expectedRevision": 1, "front": "Buzz 里的 event 只指聊天消息吗？", "back": "不是。event 也承载 reaction、workflow step、profile update、approval 和 git event 等动作。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "README.md", "lineStart": 35, "lineEnd": 50, "note": "README 列出多种都进入同一事件日志的动作。" } ] },
+      { "id": "orientation-event-shape", "expectedRevision": 1, "front": "event 的共同性主要体现在哪里？", "back": "共同性在事件外壳、签名和分发方式；具体动作仍由 kind、tags 和 content 区分。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 103, "lineEnd": 116, "note": "六字段 event 与 kind 分发共同构成协议外壳。" } ] }
+    ],
+    "exercises": [
+      { "id": "orientation-event-answer", "expectedRevision": 1, "kind": "short-answer", "title": "辨认 event 的范围", "prompt": "Buzz 用哪个英文词称呼承载多种动作的共同对象？", "expectedAnswer": "event", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "VISION.md", "lineStart": 60, "lineEnd": 73, "note": "VISION 将每个动作称为签名 event。" } ] },
+      { "id": "orientation-kind-answer", "expectedRevision": 1, "kind": "short-answer", "title": "辨认事件分发开关", "prompt": "哪个字段决定 relay 如何路由和存储事件？", "expectedAnswer": "kind", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 116, "lineEnd": 116, "note": "架构明确称 kind integer 是唯一 dispatch switch。" } ] }
+    ]
+  }
+}

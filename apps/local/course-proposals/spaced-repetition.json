@@ -1,0 +1,1241 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-spaced-repetition",
+  "targetSnapshotId": "git-90cf76c1177f",
+  "targetAnalysisId": "ua-90cf76c1-v2-9-4-zh-full-e98206c7358f1ff1-8b71aac3ba92",
+  "course": {
+    "id": "spaced-repetition",
+    "title": "遗忘曲线怎么变成一张表",
+    "description": "「记住」是快忘时被问一次：FSRS 状态如何落成 sqlite 行，以及幂等复审与 schema 迁移为何是生死问题。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "把 FSRS 状态向量映射到 card_state 列并用 due_at 查询到期队列",
+      "用 command_id 实现复审幂等：重复返回收据、冲突硬失败、禁止重算",
+      "说明 card_state 作为 review_event 投影时 revision 上调为何不重置间隔",
+      "设计 fail-closed 的 schema 阶梯迁移与本地库 0o600/原子备份"
+    ],
+    "units": [
+      {
+        "id": "fsrs-as-rows",
+        "title": "遗忘曲线落成表行",
+        "objective": "能把调度状态说成列、查询与参数契约，而不是「调用一下 FSRS 库」",
+        "lessons": [
+          {
+            "id": "card-state-is-memory",
+            "title": "记忆状态就是 card_state 这一行",
+            "content": "# 记忆状态就是 card_state 这一行\n\n## 学习目标\n\n完成本课后，你能指出 FSRS 的关键量如何落成 `card_state` 列，并说明为什么「下次该什么时候问」是一张表上的查询，而不是业务逻辑里的 if-else。\n\n## 先给结论\n\n- **事实：调度状态整行落库。** `card_state` 用 STRICT 表存 `due_at`、`stability`、`difficulty`、`elapsed_days`、`scheduled_days`、`learning_steps`、`reps`、`lapses`、`state`（0–3），以及 `scheduler_version` / `scheduler_config_hash`。\n- **事实：到期靠索引查。** `CREATE INDEX card_state_due_idx ON card_state(due_at)`，`listDueCards` 就是 `WHERE due_at <= ? ORDER BY due_at`。\n- **事实：行到领域对象要过校验。** `rowToState` 用 `reviewContentKey` 规范化 `card_id`，把毫秒时间戳还原成 `Date`。\n- **推论：遗忘曲线不是文档里的图，是可查询的列。** 你改算法前先问：新状态能不能无损写进现有列；写不进去，课表就丢了。\n\n## 一个类比\n\n健身房私教的「下次约什么时候」如果只写在微信聊天里，换手机就丢。写在预约系统的「下一次到场时间」列里，任何人都能按日期筛出今天该练的人。`due_at` 就是那一列。\n\n## 工作示例\n\n1. 学习者对一张卡点了 Good。\n2. `reviewCard` 调 `this.#scheduler.next(...)`，得到新的 `Card`。\n3. `#saveCard` 把 `card.due.getTime()` 写入 `due_at`，`stability` / `difficulty` 等同字段一并 UPSERT。\n4. 第二天打开产品，`listDueCards(now)` 只返回 `due_at <= now` 的行——这就是「该复习的队列」。\n\n## 自检\n\n如果产品只存「上次复习时间」和「间隔天数」，却不存 `stability` / `difficulty`，换 FSRS 参数或重算会怎样？\n\n答案：你只能粗暴重置间隔，无法从历史状态继续调度；FSRS 需要完整状态向量，不是一个简单的「N 天后再见」。\n\n## 重点\n\n**「记住」在工程上等于：一行可调度状态 + 一条到期查询。** 别把调度藏在内存或前端 localStorage 里。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 590,
+                "lineEnd": 607,
+                "nodeIds": [],
+                "note": "card_state 表：due/stability/difficulty 等 FSRS 字段与 due 索引"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1187,
+                "lineEnd": 1196,
+                "nodeIds": [],
+                "note": "listDueCards：按 due_at 取到期卡"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 198,
+                "lineEnd": 216,
+                "nodeIds": [],
+                "note": "rowToState：表行还原为 StoredCardState"
+              }
+            ],
+            "cards": [
+              {
+                "id": "due-at-query",
+                "front": "到期复习队列在存储层靠哪一列、哪条查询决定？",
+                "back": "`due_at` 列；`listDueCards` 执行 `WHERE due_at <= ? ORDER BY due_at`。",
+                "tags": [
+                  "fsrs-state"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1187,
+                    "lineEnd": 1196,
+                    "nodeIds": [],
+                    "note": "listDueCards 的 due 查询"
+                  }
+                ]
+              },
+              {
+                "id": "state-vector",
+                "front": "为什么只存「上次复习 + 间隔天数」不够支撑 FSRS？",
+                "back": "FSRS 需要 stability、difficulty、reps、lapses、state 等完整状态；缺了就无法继续调度，只能重置。",
+                "tags": [
+                  "fsrs-state"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 590,
+                    "lineEnd": 606,
+                    "nodeIds": [],
+                    "note": "card_state 完整状态列"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "due-column-name",
+                "kind": "short-answer",
+                "title": "到期列名",
+                "prompt": "card_state 里表示「下次该什么时候问」的列名是什么？",
+                "expectedAnswer": "due_at",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 593,
+                    "lineEnd": 593,
+                    "nodeIds": [],
+                    "note": "due_at 列定义"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "parameters-pinned-by-hash",
+            "title": "调度参数要钉死，不能 silently 漂移",
+            "content": "# 调度参数要钉死，不能 silently 漂移\n\n## 学习目标\n\n完成本课后，你能解释 `scheduler_config_hash` 为什么存在，以及打开一个「参数悄悄改过」的库会发生什么。\n\n## 先给结论\n\n- **事实：默认参数写死在代码里。** `DEFAULT_PARAMETERS` 设 `request_retention: 0.9`、`enable_fuzz: false`，再交给 `generatorParameters`。\n- **事实：参数有稳定序列化与哈希。** `stableJson` 固定字段顺序序列化；`hashParameters` 产出 `sha256:...` 字符串。\n- **事实：库内有单例 profile。** `scheduler_profile` 用 `singleton_id = 1` 约束只有一行，构造时 `#insertSchedulerProfile` / `#validateSchedulerProfile`。\n- **事实：不匹配直接拒绝打开。** version、hash、或 `stableJson` 不一致时抛 `Scheduler profile mismatch`。\n- **推论：fuzz 关掉是为了可重放。** 随机抖动会让同一串 review_event 重放得不到同一 `due_at`，事件日志就失去「可审计」的意义。\n\n## 一个类比\n\n药厂批次记录写「按配方 A 生产」。你不能某天把配方改成 A' 却继续用同一批号——检验机构会要求：配方变了必须换批号，旧数据不能假装仍有效。调度参数就是配方，hash 就是批号。\n\n## 工作示例\n\n1. 构造 `SqliteLearningStore`，写入 `scheduler_profile`。\n2. 有人改了 `request_retention` 再打开同一路径。\n3. `#validateSchedulerProfile` 比较 `scheduler_version`、`scheduler_config_hash` 与 `stableJson`。\n4. 不一致 → 抛错，库打不开；而不是用新参数继续算、把历史 `due_at` 变得不可解释。\n\n## 自检\n\n为什么默认 `enable_fuzz: false`，而不是「更自然」的随机间隔？\n\n答案：复盘与 `rebuildCardStateFromReviewEvents` 要求同一事件序列重放得到同一结果；fuzz 会破坏这条链。\n\n## 重点\n\n**调度器配置是持久化契约的一部分，不是启动时的小偏好。** 改参数必须显式迁移策略，不能靠「下次打开用新默认」。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 57,
+                "lineEnd": 60,
+                "nodeIds": [],
+                "note": "DEFAULT_PARAMETERS：retention 0.9 且 enable_fuzz false"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 182,
+                "lineEnd": 196,
+                "nodeIds": [],
+                "note": "stableJson 与 hashParameters 固定参数身份"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 928,
+                "lineEnd": 955,
+                "nodeIds": [],
+                "note": "validateSchedulerProfile：不匹配则拒绝打开库"
+              }
+            ],
+            "cards": [
+              {
+                "id": "fuzz-off-why",
+                "front": "为什么 DEFAULT_PARAMETERS 把 enable_fuzz 设为 false？",
+                "back": "关闭随机抖动，保证同一 review 事件序列可确定性重放，due 可审计。",
+                "tags": [
+                  "scheduler-profile"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 57,
+                    "lineEnd": 60,
+                    "nodeIds": [],
+                    "note": "enable_fuzz: false"
+                  }
+                ]
+              },
+              {
+                "id": "profile-mismatch",
+                "front": "库里的 scheduler_config_hash 与当前进程不一致时会发生什么？",
+                "back": "构造阶段 `#validateSchedulerProfile` 抛 Scheduler profile mismatch，拒绝打开。",
+                "tags": [
+                  "scheduler-profile"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 947,
+                    "lineEnd": 954,
+                    "nodeIds": [],
+                    "note": "profile mismatch 抛错"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "hash-prefix",
+                "kind": "short-answer",
+                "title": "参数哈希前缀",
+                "prompt": "hashParameters 返回的字符串以什么前缀开头？",
+                "expectedAnswer": "sha256:",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 194,
+                    "lineEnd": 196,
+                    "nodeIds": [],
+                    "note": "hashParameters 返回 sha256: 前缀"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "first-review-creates-empty-card",
+            "title": "第一次复审：没有行就先造空卡",
+            "content": "# 第一次复审：没有行就先造空卡\n\n## 学习目标\n\n完成本课后，你能描述「卡尚未入队」时 `reviewCard` 如何创建初始 FSRS 状态，以及 rating 合法集合是什么。\n\n## 先给结论\n\n- **事实：评分只有四档。** `Rating.Again / Hard / Good / Easy` 之外直接抛错。\n- **事实：无状态时用 createEmptyCard。** `reviewCard` 若 `#getCard` 为空，先 `createEmptyCard(reviewedAt)` 再 `#saveCard`，得到 previous。\n- **事实：调度一步完成。** `this.#scheduler.next(toFsrsCard(previous), reviewedAt, rating)` 产出新卡，再写入 `review_event` 与 `card_state`。\n- **推论：产品层不必「先注册再复习」。** 存储层允许第一次评分隐式开卡；但 revision 必须与后续一致，否则要走 `ensureCard`。\n\n## 一个类比\n\n图书馆办证：有的馆允许你借第一本书时顺带办证；有的要求先填表。这里选前者——第一次评分就是办证动作——但办证后的「书号版本」不能偷偷换。\n\n## 工作示例\n\n1. 新卡 `cardKey` 在 `card_state` 不存在。\n2. 客户端带 `commandId`、`rating: Good`、`contentRevision: 1` 调用 `reviewCard`。\n3. 事务内创建 empty card → `scheduler.next` → INSERT `review_event` → UPSERT `card_state`。\n4. 返回 `{ eventId, state }`，其中 `state.due` 已是下一次到期时间。\n\n## 自检\n\n若客户端传来 rating=5（五级量表），会发生什么？\n\n答案：`[Rating.Again, Hard, Good, Easy].includes` 失败，抛 `A review rating must be Again, Hard, Good, or Easy`。FSRS 四档不是 UI 喜好，是算法契约。\n\n## 重点\n\n**空状态是合法前置条件，非法 rating 不是。** 开卡可以懒，评分边界必须硬。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1202,
+                "lineEnd": 1204,
+                "nodeIds": [],
+                "note": "rating 必须是 Again/Hard/Good/Easy"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1220,
+                "lineEnd": 1231,
+                "nodeIds": [],
+                "note": "无 previous 时 createEmptyCard 并 save"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1241,
+                "lineEnd": 1275,
+                "nodeIds": [],
+                "note": "scheduler.next 后写 event 与 card_state"
+              }
+            ],
+            "cards": [
+              {
+                "id": "empty-card-path",
+                "front": "card_state 尚无此卡时，reviewCard 如何得到 previous 状态？",
+                "back": "调用 createEmptyCard(reviewedAt)，#saveCard 写入后再作为 previous 进入 scheduler.next。",
+                "tags": [
+                  "fsrs-state"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1220,
+                    "lineEnd": 1231,
+                    "nodeIds": [],
+                    "note": "空卡创建路径"
+                  }
+                ]
+              },
+              {
+                "id": "four-ratings",
+                "front": "合法的 review rating 有哪四个符号？",
+                "back": "Again、Hard、Good、Easy（ts-fsrs 的 Rating 枚举）。",
+                "tags": [
+                  "fsrs-state"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1202,
+                    "lineEnd": 1204,
+                    "nodeIds": [],
+                    "note": "四档 rating 校验"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "empty-card-fn",
+                "kind": "short-answer",
+                "title": "空卡工厂",
+                "prompt": "第一次复审创建初始 FSRS 卡时调用的工厂函数名是什么？",
+                "expectedAnswer": "createEmptyCard",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1222,
+                    "lineEnd": 1223,
+                    "nodeIds": [],
+                    "note": "createEmptyCard 调用点"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "revision-bump-keeps-schedule",
+            "title": "改了课文，间隔为什么故意不重置",
+            "content": "# 改了课文，间隔为什么故意不重置\n\n## 学习目标\n\n完成本课后，你能解释 `ensureCard` 在 content revision 上调时为何只改 revision 与 `updated_at`，并说明这与 `card_state` 作为投影的关系。\n\n## 先给结论\n\n- **事实：revision 不能回退。** `contentRevision < existing` 直接抛 `Content revision cannot move backward`。\n- **事实：同 revision 直接返回。** 幂等读取，不写库。\n- **事实：上调 revision 保留 FSRS 状态。** 注释写明 deliberate：只 `UPDATE ... SET content_revision = ?, updated_at = ?`，不重置 due/stability。\n- **事实：原因绑在事件日志上。** `card_state` 是 append-only `review_event` 的投影；`rebuildCardStateFromReviewEvents` 对「投影 revision 超前于事件」会保留重放日程。\n- **推论：改文案 ≠ 学习者忘了。** 若你希望「内容变了当新卡」，必须记一条显式 reset 事件，而不是改投影。\n\n## 一个类比\n\n你把菜谱从「少盐版」改成「标准版」，不等于食客的消化记忆清零。食客仍记得上次吃过；你若要当作新菜考核，得重新开考卷，而不是偷偷改档案上的「上次用餐记录」。\n\n## 工作示例\n\n1. 卡在 revision 1，已有 30 天间隔。\n2. 编辑器改了卡片背面，课程发布 revision 2。\n3. 同步路径调用 `ensureCard(key, 2)`。\n4. 库内 due 仍是 30 天后；只是 `content_revision` 变成 2。学习者不会因为你修了错别字而被连夜轰炸。\n\n## 自检\n\n若在 `ensureCard` 里对 revision 上调执行 `createEmptyCard` 重置，随后跑一次 `rebuildCardStateFromReviewEvents` 会怎样？\n\n答案：重建会按历史 `review_event` 重放，把你的重置盖掉——投影与日志打架，重置策略等于没写。\n\n## 重点\n\n**投影上的「偷改」会被日志重放否决。** 改变学习进度的唯一诚实方式是追加事件。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1158,
+                "lineEnd": 1178,
+                "nodeIds": [],
+                "note": "ensureCard：revision 上调只改 revision/updated_at，保留 FSRS"
+              },
+              {
+                "kind": "inference",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1167,
+                "lineEnd": 1174,
+                "nodeIds": [],
+                "note": "注释说明 card_state 是 review_event 投影，重置会被 rebuild 撤销"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1409,
+                "lineEnd": 1417,
+                "nodeIds": [],
+                "note": "rebuild 时若当前 revision 超前则保留日程只抬 revision"
+              }
+            ],
+            "cards": [
+              {
+                "id": "ensure-no-reset",
+                "front": "ensureCard 发现 contentRevision 比库里大时，会重置 due/stability 吗？",
+                "back": "不会。只更新 content_revision 与 updated_at，FSRS 调度状态原样前移。",
+                "tags": [
+                  "content-revision"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1167,
+                    "lineEnd": 1178,
+                    "nodeIds": [],
+                    "note": "deliberate 保留 FSRS 状态"
+                  }
+                ]
+              },
+              {
+                "id": "projection-rule",
+                "front": "为什么不能靠改 card_state 来「内容更新后重学」？",
+                "back": "card_state 是 review_event 的投影；rebuild 会按事件重放，投影上的重置会被盖掉。",
+                "tags": [
+                  "content-revision"
+                ],
+                "evidence": [
+                  {
+                    "kind": "inference",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1167,
+                    "lineEnd": 1174,
+                    "nodeIds": [],
+                    "note": "投影与 rebuild 关系"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "keep-fsrs-fn",
+                "kind": "short-answer",
+                "title": "抬 revision 的 API",
+                "prompt": "内容 revision 上调且刻意保留 FSRS 状态的方法名是什么？",
+                "expectedAnswer": "ensureCard",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1136,
+                    "lineEnd": 1179,
+                    "nodeIds": [],
+                    "note": "ensureCard 方法"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "idempotent-reviews",
+        "title": "复审幂等是生死问题",
+        "objective": "能设计命令级幂等：先查键、返回收据、冲突拒绝，并用事件重放修投影",
+        "lessons": [
+          {
+            "id": "command-id-first",
+            "title": "复审入口先查 command_id",
+            "content": "# 复审入口先查 command_id\n\n## 学习目标\n\n完成本课后，你能画出 `reviewCard` 在真正跑 FSRS 之前如何用 `command_id` 做幂等闸门，并说明为什么闸门必须在事务内。\n\n## 先给结论\n\n- **事实：command_id 全局唯一。** schema 里 `review_event.command_id TEXT NOT NULL UNIQUE`。\n- **事实：先查后算。** 事务开头 `SELECT ... FROM review_event WHERE command_id = ?`，有行就走 `#duplicateReviewReceipt`，不调用 `scheduler.next`。\n- **事实：练习与检索同一模式。** `recordExerciseAttempt` / `recordRetrievalAttempt` 同样先按 `command_id` 查重。\n- **推论：网络重试的默认语义是「同一 pen 再戳一次」。** 客户端必须稳定生成 commandId；随机新 id 等于「再评一次」，间隔会被再次缩短或拉长。\n\n## 一个类比\n\n餐厅扫码点餐：同一订单号重复提交不应再出一份菜。收银系统先查订单号，已存在就返回原小票，而不是再走一遍厨房。\n\n## 工作示例\n\n```mermaid\nflowchart TD\n  A[reviewCard 入口] --> B{事务内查 command_id}\n  B -->|已有行| C[duplicateReviewReceipt]\n  C --> D{载荷与本次 input 一致?}\n  D -->|是| E[返回旧 eventId 与 resultingState]\n  D -->|否| F[抛 Command ID conflict]\n  B -->|无行| G[取/建 previous card_state]\n  G --> H[scheduler.next]\n  H --> I[INSERT review_event + save card_state]\n  I --> J[返回新 receipt]\n```\n\n图里最关键的线是 **「已有行 → 不跑 scheduler.next」**：幂等的本质不是「再算一遍碰巧一样」，而是「根本不算第二遍」。FSRS 带时间，再算一次 due 往往会变。\n\n## 自检\n\n客户端超时重试时若每次 `commandId = randomUUID()`，学习者会看到什么？\n\n答案：同一张卡被连续记多次复习，稳定性与 due 被多次推进——队列被「假勤奋」污染。\n\n## 重点\n\n**幂等键是产品契约，不是存储细节。** 存储层只能保证：同一键不双写；键本身要由客户端认真持有。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 609,
+                "lineEnd": 612,
+                "nodeIds": [],
+                "note": "review_event.command_id UNIQUE"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1209,
+                "lineEnd": 1216,
+                "nodeIds": [],
+                "note": "reviewCard 事务内先按 command_id 查重"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1704,
+                "lineEnd": 1725,
+                "nodeIds": [],
+                "note": "exercise_attempt 同样 command_id 幂等"
+              }
+            ],
+            "cards": [
+              {
+                "id": "idempotent-gate",
+                "front": "reviewCard 在调用 scheduler.next 之前必须先查什么？",
+                "back": "用 command_id 查 review_event；命中则走 duplicate 路径，不再调度。",
+                "tags": [
+                  "idempotency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1209,
+                    "lineEnd": 1216,
+                    "nodeIds": [],
+                    "note": "command_id 查重"
+                  }
+                ]
+              },
+              {
+                "id": "retry-new-id",
+                "front": "超时重试时每次换新 commandId 会怎样？",
+                "back": "每次都被当成新复习，FSRS 状态多次推进，队列被假重复习污染。",
+                "tags": [
+                  "idempotency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "inference",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1209,
+                    "lineEnd": 1241,
+                    "nodeIds": [],
+                    "note": "未命中查重就会 next 并写新事件"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "unique-col",
+                "kind": "short-answer",
+                "title": "幂等列名",
+                "prompt": "review_event 上用于幂等去重的唯一列名是什么？",
+                "expectedAnswer": "command_id",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 611,
+                    "lineEnd": 611,
+                    "nodeIds": [],
+                    "note": "command_id UNIQUE"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "duplicate-returns-receipt",
+            "title": "重复提交：返回收据，不重算",
+            "content": "# 重复提交：返回收据，不重算\n\n## 学习目标\n\n完成本课后，你能说明 `#duplicateReviewReceipt` 如何从 `payload_json` 还原结果，以及为何要把 `resultingState` 写进事件载荷。\n\n## 先给结论\n\n- **事实：事件载荷含完整结果。** INSERT 时 `payload_json = JSON.stringify({ log, resultingState: serializeCardState(...) })`。\n- **事实：重复路径反序列化状态。** `#duplicateReviewReceipt` 在字段一致时 `deserializeCardState(payload.resultingState)` 返回旧 `eventId`。\n- **事实：缺收据则硬失败。** `resultingState` 缺失抛 `Stored review receipt is missing`。\n- **推论：收据是幂等的返回值缓存。** 仅有「发生过」不够，调用方需要同一 shape 的 `ReviewReceipt`；缓存写在事件里，不另开一张表。\n\n## 一个类比\n\n快递驿站：你再出示同一取件码，工作人员扫码给你看同一条出库记录，而不是重新从仓库拣货。`payload_json.resultingState` 就是那条出库快照。\n\n## 工作示例\n\n1. 第一次 `reviewCard` 成功，网络在响应返回前断开。\n2. 客户端用同一 `commandId` 重试。\n3. SELECT 命中 → 校验 card/rating/revision 一致 → 从 payload 取出状态。\n4. `card_state` 不会被第二次 `#saveCard`；`due_at` 保持第一次计算的值。\n\n## 自检\n\n为什么不在重复路径里再跑一遍 `scheduler.next`「反正参数一样」？\n\n答案：`reviewedAt` 默认是 `new Date()`，第二次时间不同，FSRS 输出的 due 可能变化；重算破坏幂等。必须返回第一次固化的结果。\n\n## 重点\n\n**幂等 = 返回第一次的真相，不是「再算一次碰运气」。** 把结果快照进事件，是给重试准备的。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1271,
+                "lineEnd": 1271,
+                "nodeIds": [],
+                "note": "payload_json 写入 log 与 resultingState"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1279,
+                "lineEnd": 1300,
+                "nodeIds": [],
+                "note": "duplicateReviewReceipt：一致则反序列化返回"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 252,
+                "lineEnd": 269,
+                "nodeIds": [],
+                "note": "serializeCardState：状态可 JSON 固化"
+              }
+            ],
+            "cards": [
+              {
+                "id": "payload-receipt",
+                "front": "重复 command_id 的成功路径从哪里取返回状态？",
+                "back": "从已存 review_event 的 payload_json.resultingState 反序列化，不重跑 FSRS。",
+                "tags": [
+                  "idempotency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1294,
+                    "lineEnd": 1300,
+                    "nodeIds": [],
+                    "note": "从 payload 还原 resultingState"
+                  }
+                ]
+              },
+              {
+                "id": "no-rerun-fsrs",
+                "front": "为何重复提交不能再调一次 scheduler.next？",
+                "back": "再次调度会带上新的 reviewedAt，due 可能变化，破坏「同一命令同一结果」。",
+                "tags": [
+                  "idempotency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "inference",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1218,
+                    "lineEnd": 1241,
+                    "nodeIds": [],
+                    "note": "reviewedAt 默认 now，重算非幂等"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "receipt-field",
+                "kind": "short-answer",
+                "title": "收据字段",
+                "prompt": "幂等返回时从 payload_json 里读取的状态字段名是什么？",
+                "expectedAnswer": "resultingState",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1294,
+                    "lineEnd": 1300,
+                    "nodeIds": [],
+                    "note": "resultingState 字段"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "conflict-is-hard-fail",
+            "title": "同键不同载荷：必须冲突，不能覆盖",
+            "content": "# 同键不同载荷：必须冲突，不能覆盖\n\n## 学习目标\n\n完成本课后，你能列出 `#duplicateReviewReceipt` 判定冲突的字段，并解释为什么冲突要抛错而不是「以第二次为准」。\n\n## 先给结论\n\n- **事实：比对四类身份。** `card_id`、`content_revision`、`rating`，以及若调用方给了 `reviewedAt` 则比对 `reviewed_at`。\n- **事实：不一致抛固定话术。** `Command ID conflict: ${commandId} was already used for another review`。\n- **事实：练习路径同样严格。** exercise 还比对 `score` / `max_score` / 规范化后的 `response_json`。\n- **推论：静默覆盖等于篡改历史。** 若第二次 Good 覆盖第一次 Again，事件日志与学习者真实表现脱节，重建投影会撒谎。\n\n## 一个类比\n\n银行转账流水号：同一流水号第二次却改成不同收款人，系统必须拒绝，绝不能「以最后一次为准」改账——否则审计失效。\n\n## 工作示例\n\n1. commandId `cmd-1` 已记录：卡 A、Again、revision 1。\n2. bug 客户端用 `cmd-1` 再发：卡 A、Good、revision 1。\n3. 查重命中，rating 不一致 → 抛 `Command ID conflict`。\n4. `card_state` 保持 Again 那次的结果；没有「悄悄变 Good」。\n\n## 自检\n\n产品经理想：「用户手滑点错，允许同一 command 改评分」——存储层该不该支持？\n\n答案：不该在同一 commandId 上改。正确做法是新的 commandId 记一次新 review（若产品允许连续评分），或显式设计「撤销」事件；复用 id 改载荷会毁掉幂等与审计。\n\n## 重点\n\n**冲突是特性，不是用户体验失败。** 它保护的是「命令」这个词的含义：一次意图，一次结果。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1284,
+                "lineEnd": 1292,
+                "nodeIds": [],
+                "note": "duplicate 比对不一致则 Command ID conflict"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1712,
+                "lineEnd": 1723,
+                "nodeIds": [],
+                "note": "exercise 路径对 score/response 同样冲突检测"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1770,
+                "lineEnd": 1784,
+                "nodeIds": [],
+                "note": "retrieval_attempt 全字段冲突检测"
+              }
+            ],
+            "cards": [
+              {
+                "id": "conflict-fields",
+                "front": "review 幂等冲突时至少会比对哪些字段？",
+                "back": "card_id、content_revision、rating；若请求带 reviewedAt 还要比对时间。",
+                "tags": [
+                  "idempotency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1284,
+                    "lineEnd": 1288,
+                    "nodeIds": [],
+                    "note": "冲突比对字段"
+                  }
+                ]
+              },
+              {
+                "id": "no-last-write",
+                "front": "同 commandId 第二次改 rating，为何不能 last-write-wins？",
+                "back": "会篡改已提交的学习事件，破坏审计与投影重建的可信度。",
+                "tags": [
+                  "idempotency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "inference",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1284,
+                    "lineEnd": 1292,
+                    "nodeIds": [],
+                    "note": "冲突抛错而非覆盖"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "conflict-phrase",
+                "kind": "short-answer",
+                "title": "冲突错误关键词",
+                "prompt": "command_id 复用但载荷不同时，错误信息里的固定英文短语是什么？（三词）",
+                "expectedAnswer": "Command ID conflict",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1290,
+                    "lineEnd": 1291,
+                    "nodeIds": [],
+                    "note": "Command ID conflict 文案"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "event-log-rebuild",
+            "title": "card_state 坏了：靠事件重放修复",
+            "content": "# card_state 坏了：靠事件重放修复\n\n## 学习目标\n\n完成本课后，你能说明 `rebuildCardStateFromReviewEvents` 验证哪些不变量，以及为何「日志正确、投影可丢」是可恢复设计。\n\n## 先给结论\n\n- **事实：按卡时间序重放。** `ORDER BY card_id, reviewed_at, rowid` 取出全部 `review_event`。\n- **事实：校验调度元数据。** 事件的 `scheduler_version` / `scheduler_config_hash` 必须匹配当前 store。\n- **事实：校验 due 链。** `event.previous_due_at` 必须等于重放中 previous 的 due；`resulting_due_at` 必须等于 `scheduler.next` 输出。\n- **事实：校验收据。** 重算的 `resultingState` 必须与 `payload_json` 中快照 `sameSerializedCardState`。\n- **推论：可恢复的前提是 append-only 与确定性调度。** 没有唯一 command、没有关掉 fuzz、没有 profile 钉死，重放只能得到「差不多」，修库就变成猜。\n\n## 一个类比\n\n会计：总账科目余额（投影）可以盘错，但只要凭证（事件）完整且记账规则稳定，就能从零重做账。余额表被误改不怕；凭证被撕了才是灾难。\n\n## 工作示例\n\n1. 运维误操作改了某行 `card_state.due_at`。\n2. 调用 `rebuildCardStateFromReviewEvents()`。\n3. 对每张卡从 empty + 事件链重放，比对 due 链与 payload。\n4. 不一致的投影被 `#saveCard` 写回；返回 `rebuiltCardCount` 等统计。\n\n## 自检\n\n若有人直接 DELETE 某条 `review_event` 却保留后面的事件，重建时最可能在哪类检查失败？\n\n答案：`previous_due_at` 链断裂（`Review event due chain is broken`），或后续 `resulting_due_at` 与重算不符。\n\n## 重点\n\n**把不可重建的东西当日志，把可重建的东西当缓存。** 复习产品里，事件是资产，当前状态是缓存。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1303,
+                "lineEnd": 1312,
+                "nodeIds": [],
+                "note": "rebuild：按 card_id/reviewed_at 读全部事件"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1367,
+                "lineEnd": 1380,
+                "nodeIds": [],
+                "note": "校验 previous_due 链与 resulting_due 匹配 scheduler"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1396,
+                "lineEnd": 1400,
+                "nodeIds": [],
+                "note": "payload resultingState 必须与重放一致"
+              }
+            ],
+            "cards": [
+              {
+                "id": "due-chain",
+                "front": "rebuild 时如何发现事件被删改过？",
+                "back": "检查 previous_due_at 是否接上一条状态的 due，以及 resulting_due 是否等于重算输出。",
+                "tags": [
+                  "event-sourcing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1367,
+                    "lineEnd": 1379,
+                    "nodeIds": [],
+                    "note": "due 链与结果校验"
+                  }
+                ]
+              },
+              {
+                "id": "log-vs-projection",
+                "front": "review_event 与 card_state 谁是权威、谁可重建？",
+                "back": "review_event 是 append-only 权威日志；card_state 是可被 rebuild 覆盖的投影。",
+                "tags": [
+                  "event-sourcing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "inference",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1303,
+                    "lineEnd": 1430,
+                    "nodeIds": [],
+                    "note": "rebuild 用事件覆盖投影"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rebuild-authority",
+                "kind": "short-answer",
+                "title": "权威日志表",
+                "prompt": "重建 card_state 时作为权威来源读取的表名是什么？",
+                "expectedAnswer": "review_event",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 1305,
+                    "lineEnd": 1312,
+                    "nodeIds": [],
+                    "note": "FROM review_event 重放"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "migration-and-files",
+        "title": "迁移与本地文件",
+        "objective": "能写带前置条件的 schema 阶梯迁移，并守住权限与可恢复备份",
+        "lessons": [
+          {
+            "id": "schema-version-ladder",
+            "title": "SCHEMA_VERSION 是梯子，不是开关",
+            "content": "# SCHEMA_VERSION 是梯子，不是开关\n\n## 学习目标\n\n完成本课后，你能描述从空库到 v4 的迁移阶梯，并说明「版本更新」与「一步到位建表」两条路径如何分开。\n\n## 先给结论\n\n- **事实：当前版本为 4。** `LEARNING_SCHEMA_VERSION = 4`，内部 `SCHEMA_VERSION` 与之相同。\n- **事实：用 schema_migrations 记账。** `version INTEGER PRIMARY KEY` + `applied_at`。\n- **事实：空库一步建当前 schema。** `version === 0` 时 `#createCurrentSchema()` 后直接插入 `SCHEMA_VERSION`。\n- **事实：旧库逐级爬升。** `1→#migrateVersionOne→2`，`2→#migrateVersionTwo→3`，`3→#migrateVersionThree`（写入 4）。\n- **事实：未来版本拒绝打开。** `version > SCHEMA_VERSION` 抛 `schema … is newer than supported`。\n- **推论：迁移函数是单向历史。** 你不能只维护「最新 CREATE TABLE」；线上已有 v1/v2 用户时，梯子上每一级都是承诺。\n\n## 一个类比\n\n游戏存档：新玩家直接进最新地图；老玩家必须按补丁 1.1→1.2→1.3 升级。删掉中间补丁，老存档全部卡住。\n\n## 工作示例\n\n1. 打开一个仍在 schema 1 的库。\n2. `#migrate` 读到 MAX(version)=1。\n3. 跑 v1 迁移（加 command_id、scoped keys、scheduler_profile…）→ 记 version 2。\n4. 跑 v2（建 `retrieval_attempt`）→ 记 3。\n5. 跑 v3（session 列、进度事件、单 open session 索引）→ 记 4。\n\n## 自检\n\n为什么 version=0 不调用 `#migrateVersionOne` 再一级级升，而是直接 `#createCurrentSchema`？\n\n答案：空库没有历史数据要变换；逐步迁移只对「已有行」有意义。直接建最终形态避免无意义的中间状态。\n\n## 重点\n\n**Schema 版本是产品履约记录。** 每一级迁移函数都是对老用户磁盘上真实字节的法律责任。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 54,
+                "lineEnd": 55,
+                "nodeIds": [],
+                "note": "LEARNING_SCHEMA_VERSION = 4"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 706,
+                "lineEnd": 737,
+                "nodeIds": [],
+                "note": "migrate：0 建全量；1/2/3 逐级；过高拒绝"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 581,
+                "lineEnd": 588,
+                "nodeIds": [],
+                "note": "createCurrentSchema 含 scheduler_profile 等当前表"
+              }
+            ],
+            "cards": [
+              {
+                "id": "ladder-not-switch",
+                "front": "从 schema 1 升到 4 会怎样执行迁移？",
+                "back": "依次 migrateVersionOne、Two、Three，每级写入 schema_migrations，不能跳级。",
+                "tags": [
+                  "schema-migration"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 728,
+                    "lineEnd": 737,
+                    "nodeIds": [],
+                    "note": "逐级 currentVersion 爬升"
+                  }
+                ]
+              },
+              {
+                "id": "newer-schema",
+                "front": "磁盘 schema 版本比代码新时 store 如何处理？",
+                "back": "抛错拒绝打开：Learning database schema N is newer than supported。",
+                "tags": [
+                  "schema-migration"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 716,
+                    "lineEnd": 717,
+                    "nodeIds": [],
+                    "note": "未来版本拒绝"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "schema-const",
+                "kind": "short-answer",
+                "title": "当前 schema 常量",
+                "prompt": "表示学习库当前 schema 版本的导出常量名是什么？",
+                "expectedAnswer": "LEARNING_SCHEMA_VERSION",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 54,
+                    "lineEnd": 54,
+                    "nodeIds": [],
+                    "note": "LEARNING_SCHEMA_VERSION 导出"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "migrate-refuses-unsafe",
+            "title": "迁不过就停机：比硬迁更安全",
+            "content": "# 迁不过就停机：比硬迁更安全\n\n## 学习目标\n\n完成本课后，你能举出迁移路径上至少两处「数据不满足前置条件就抛错」的例子，并说明为何 fail-closed 优于「尽量迁」。\n\n## 先给结论\n\n- **事实：v1→v2 拒绝未清空 outbox。** `sync_outbox` 仍有行则 `Cannot migrate … unprocessed row(s)`。\n- **事实：v1→v2 拒绝调度元数据不一致。** 旧 `card_state`/`review_event` 的 version/hash 必须匹配当前进程。\n- **事实：v3→v4 拒绝多个 open session。** `ended_at IS NULL` 超过 1 条则无法建「仅一个 open」的唯一索引语义。\n- **推论：迁移是写放大 + 语义收紧。** 收紧前必须保证旧数据已可被新约束表达；否则停机人工处理，好过迁完出现重复 open session 或丢掉未同步 outbox。\n\n## 一个类比\n\n搬家公司发现旧房子保险柜还锁着：正确做法是停工等钥匙，而不是把柜子砸了装车——里面可能是未同步的契约。\n\n## 工作示例\n\n1. 某开发分支曾写 `sync_outbox`，生产库还留 3 行未处理。\n2. 新版本启动触发 `#migrateVersionOne`。\n3. `COUNT(*)` > 0 → 抛错，进程拒绝服务。\n4. 运维先排空 outbox 或明确丢弃策略，再升级——而不是迁移函数「DROP TABLE」默默蒸发。\n\n## 自检\n\n若迁移在 multi-open-session 时强行 DELETE 多余 open session，风险是什么？\n\n答案：可能丢掉仍在进行的学习会话归属，review/exercise 的 session_id 历史语义被破坏，且用户无感知。\n\n## 重点\n\n**迁移失败可见，数据静默损坏不可见。** 一人公司没有 DBA 值班，停机报错是你最便宜的报警器。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 742,
+                "lineEnd": 748,
+                "nodeIds": [],
+                "note": "migrate v1：sync_outbox 非空则拒绝"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 761,
+                "lineEnd": 769,
+                "nodeIds": [],
+                "note": "migrate v1：scheduler 元数据不匹配则拒绝"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 872,
+                "lineEnd": 878,
+                "nodeIds": [],
+                "note": "migrate v3：多个 open session 则拒绝"
+              }
+            ],
+            "cards": [
+              {
+                "id": "outbox-block",
+                "front": "v1→v2 时 sync_outbox 仍有未处理行会怎样？",
+                "back": "迁移抛错中止，不会 DROP outbox 或继续改表。",
+                "tags": [
+                  "schema-migration"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 742,
+                    "lineEnd": 748,
+                    "nodeIds": [],
+                    "note": "outbox 非空拒绝迁移"
+                  }
+                ]
+              },
+              {
+                "id": "one-open-session",
+                "front": "为何升到 v4 前要保证最多一个 open learning_session？",
+                "back": "新 schema 用唯一部分索引强制仅一个 ended_at IS NULL；多开无法安全建立该不变量。",
+                "tags": [
+                  "schema-migration"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 872,
+                    "lineEnd": 886,
+                    "nodeIds": [],
+                    "note": "open session 检查与唯一索引"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "outbox-table",
+                "kind": "short-answer",
+                "title": "阻挡 v1 迁移的表",
+                "prompt": "migrateVersionOne 在 DROP 之前要求行数为 0 的表名是什么？",
+                "expectedAnswer": "sync_outbox",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 742,
+                    "lineEnd": 748,
+                    "nodeIds": [],
+                    "note": "sync_outbox 检查"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "legacy-keys-and-scope",
+            "title": "裸 id 迁成带路径的 content key",
+            "content": "# 裸 id 迁成带路径的 content key\n\n## 学习目标\n\n完成本课后，你能说明 v1→v2 如何把旧的裸 `card_id` 变成 scoped key，以及启动时 `#validateScopedContentKeys` 防的是什么。\n\n## 先给结论\n\n- **事实：遗留占位 id 写死。** `LEGACY_COURSE_ID/UNIT/LESSON = legacy-course/unit/lesson`。\n- **事实：迁移前校验能 parse。** 对旧 id 调 `cardContentKey` / `lessonContentKey` / `exerciseContentKey` 构造，确保可进入新模型。\n- **事实：用前缀改写主键。** `UPDATE card_state SET card_id = ? || card_id` 等，把行变成 `legacy-course/legacy-unit/legacy-lesson/...`。\n- **事实：每次打开再校验。** `#validateScopedContentKeys` 对现存 key 跑 `reviewContentKey` / `parseLessonContentKey` 等，坏数据拒绝启动。\n- **推论：id 设计是迁移税。** 第一天用全局裸字符串省事，第二天多课程就得付前缀迁移与永久 legacy 命名空间。\n\n## 一个类比\n\n公司通讯录早期只写「小王」。分公司多了必须改成「华东/销售/小王」。你可以批量加前缀，但「小王」这两个字的历史含义要永远保留在兼容层。\n\n## 工作示例\n\n1. v1 库 card_id = `spacing-intro`。\n2. 迁移校验后执行前缀更新。\n3. 新值 = `legacy-course/legacy-unit/legacy-lesson/spacing-intro`。\n4. 之后所有 API 只认 scoped key；启动时 parse 失败即视为库损坏。\n\n## 自检\n\n为什么不把旧卡全部删掉让用户重学，而要 legacy 前缀？\n\n答案：间隔状态是用户时间的沉淀；抹掉等于惩罚升级。前缀迁移保留 FSRS 数字，只改名字空间。\n\n## 重点\n\n**主键里的业务范围要尽早编码。** 省一次设计，迁一次全表加前缀，还留下永久 legacy 洞穴。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 61,
+                "lineEnd": 63,
+                "nodeIds": [],
+                "note": "LEGACY_COURSE/UNIT/LESSON 常量"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 825,
+                "lineEnd": 834,
+                "nodeIds": [],
+                "note": "迁移用前缀改写 card/lesson/exercise id"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 980,
+                "lineEnd": 988,
+                "nodeIds": [],
+                "note": "validateScopedContentKeys 校验 card key"
+              }
+            ],
+            "cards": [
+              {
+                "id": "legacy-prefix",
+                "front": "v1 裸 card_id 迁移后会变成什么形态？",
+                "back": "加上 legacy-course/legacy-unit/legacy-lesson/ 前缀的 scoped content key。",
+                "tags": [
+                  "schema-migration"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 825,
+                    "lineEnd": 828,
+                    "nodeIds": [],
+                    "note": "cardPrefix 更新 card_id"
+                  }
+                ]
+              },
+              {
+                "id": "validate-on-open",
+                "front": "打开库时 #validateScopedContentKeys 失败意味着什么？",
+                "back": "磁盘上存在无法 parse 的 content key 或非法进度，store 拒绝带病运行。",
+                "tags": [
+                  "schema-migration"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 980,
+                    "lineEnd": 996,
+                    "nodeIds": [],
+                    "note": "启动校验 scoped keys 与进度"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "legacy-course-id",
+                "kind": "short-answer",
+                "title": "遗留课程 id",
+                "prompt": "迁移裸 id 时使用的遗留 courseId 字符串常量值是什么？",
+                "expectedAnswer": "legacy-course",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 61,
+                    "lineEnd": 61,
+                    "nodeIds": [],
+                    "note": "LEGACY_COURSE_ID"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "private-files-and-backup",
+            "title": "本地库的权限与可恢复备份",
+            "content": "# 本地库的权限与可恢复备份\n\n## 学习目标\n\n完成本课后，你能说明学习 sqlite 文件如何以 0o600 落地，以及 `backup` 为何在 rename 之后还要 `syncDirectory`。\n\n## 先给结论\n\n- **事实：目录 700，文件 600。** `mkdirSync(..., mode: 0o700)`；`createPrivateFile` 用 `openSync(..., 0o600)` 再 `chmodSync(path, 0o600)`。\n- **事实：WAL 旁路文件同样保护。** `protectSqliteFiles` 对 `path`、`path-wal`、`path-shm` 存在则 chmod 600。\n- **事实：打开参数偏硬。** `enableForeignKeyConstraints: true`、`allowExtension: false`、`defensive: true`、`PRAGMA journal_mode = WAL` 且 `synchronous = FULL`。\n- **事实：备份是原子落盘。** 写临时文件 → `backup()` → protect → `renameSync` → `syncDirectory` 父目录。\n- **推论：本地-only 产品仍有多用户 OS 威胁模型。** 同机其他账户读你的复习库，等于读你的知识弱点与学习轨迹。\n\n## 一个类比\n\n日记本不锁抽屉，家人都能翻。chmod 600 是抽屉锁；fsync 目录项是「搬家后确认门牌已钉死」，而不是只把箱子放在门口说搬完了。\n\n## 工作示例\n\n1. 构造 store 指向 `~/Library/.../learning.sqlite`。\n2. 若文件不存在，先以 600 创建空文件再让 sqlite 打开。\n3. 用户触发备份到 `learning.backup.sqlite`。\n4. 数据进 `.xxx.tmp`，rename 成最终名后，父目录 fsync——掉电后文件名仍然在。\n\n## 自检\n\n只 `renameSync` 成功、不 sync 目录，在掉电场景下可能出现什么？\n\n答案：文件内容可能已在磁盘，但目录项未持久化，重启后「备份文件名」消失或指向旧 inode——你以为有备份，实际没有可恢复入口。\n\n## 重点\n\n**状态机正确却权限错误，照样是产品事故。** 间隔算法保护记忆；文件模式保护隐私与可恢复性。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 518,
+                "lineEnd": 527,
+                "nodeIds": [],
+                "note": "createPrivateFile 0o600 与 protectSqliteFiles"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 550,
+                "lineEnd": 574,
+                "nodeIds": [],
+                "note": "构造：目录 700、私有文件、WAL、migrate、再 protect"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/learning/sqlite-learning-store.ts",
+                "lineStart": 1991,
+                "lineEnd": 2008,
+                "nodeIds": [],
+                "note": "backup：临时文件、rename、syncDirectory"
+              }
+            ],
+            "cards": [
+              {
+                "id": "mode-600",
+                "front": "学习 sqlite 主文件及 wal/shm 被设成什么权限？",
+                "back": "0o600（仅所有者读写），由 createPrivateFile / protectSqliteFiles 保证。",
+                "tags": [
+                  "local-safety"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 518,
+                    "lineEnd": 527,
+                    "nodeIds": [],
+                    "note": "0o600 保护"
+                  }
+                ]
+              },
+              {
+                "id": "sync-dir-why",
+                "front": "backup rename 成功后为什么还要 syncDirectory？",
+                "back": "让父目录项持久化，避免掉电后「有内容却没有可靠文件名」的假备份。",
+                "tags": [
+                  "local-safety"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 2003,
+                    "lineEnd": 2007,
+                    "nodeIds": [],
+                    "note": "syncDirectory 注释与调用"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "file-mode",
+                "kind": "short-answer",
+                "title": "文件权限八进制",
+                "prompt": "createPrivateFile 使用的文件权限八进制字面量是什么？",
+                "expectedAnswer": "0o600",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/learning/sqlite-learning-store.ts",
+                    "lineStart": 518,
+                    "lineEnd": 521,
+                    "nodeIds": [],
+                    "note": "0o600 open/chmod"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

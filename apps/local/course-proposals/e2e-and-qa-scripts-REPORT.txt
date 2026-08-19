@@ -1,0 +1,72 @@
+e2e-and-qa-scripts 课程提案交付报告
+========================================
+
+规模
+----
+- 单元数：3
+  1. replace-hand-clicks（4 节）— 手点 → 脚本的信任模型
+  2. e2e-that-earn-cost（4 节）— 贵但真的 e2e 合同
+  3. smoke-and-ladder（4 节）— 抽查脚本与发布阶梯
+- 课时总数：12
+- 每节：2 张卡片、1 道 short-answer 练习
+- 证据引用总数：71（lesson + card + exercise 合计）
+- 含 mermaid 流程图：1 节（smoke-ladder / 发布阶梯）
+
+输出文件
+--------
+- course-proposals/e2e-and-qa-scripts.json
+- course-proposals/e2e-and-qa-scripts-REPORT.txt
+
+证据来源（commit 3b402e069a5db5fe9eb82dbc03aa05152b3d298b）
+----------------------------------------------------------
+e2e（tests/e2e/）主要：
+- public-product.spec.ts
+- degraded-matrix.spec.ts
+- opening-ritual.spec.ts / cold-open-silence.spec.ts / vote-moments.spec.ts
+- role-reveal-ritual.spec.ts / accessibility-core.spec.ts
+- typing-rhythm.spec.ts / experiment-isolation.spec.ts
+- start-screen-visual.spec.ts / venue-preview-matrix.spec.ts
+
+QA 脚本（scripts/qa/）主要：
+- production-health-check.mjs / founder-session-triage.md
+- world-primary-flow-browser-smoke.mjs
+- world-performance-smoke-utils.mjs（噪声分类与性能分轨阈值）
+- world-release-browser-smoke.mjs
+- world-no-webgl-browser-smoke.mjs
+- world-seat-browser-smoke.mjs / world-round-complete-browser-smoke.mjs
+- world-asset-credits-check.mjs
+- visual-regression-matrix.mjs / visual-regression-config.json
+- ai-playtest-cycle.mjs
+
+门禁结果（最终）
+----------------
+$ node scripts/check-proposal-shape.mjs course-proposals/e2e-and-qa-scripts.json
+ok  course-proposals/e2e-and-qa-scripts.json
+
+$ node scripts/check-proposal-evidence.mjs course-proposals/e2e-and-qa-scripts.json --study turing-pact
+（全部 71 条唯一 sourcePath:lineStart-lineEnd 均为 ok）
+all 71 references resolve at their pinned commits
+
+读代码时最反直觉的一个点（已写进课）
+------------------------------------
+classifyConsoleMessage / classifyFailedRequest 故意把「看起来像错误」的信号
+标成非失败：匿名 signup 限流、路由切换中的 net::ERR_ABORTED、
+headless 的 GPU stall due to ReadPixels、以及精确匹配的 THREE.Clock 弃用警告。
+
+直觉上「红字就该红灯」，但不过滤噪声时，一人公司会被 flaky 训练成忽略所有红灯。
+图灵密约把信任建立在分类器上：未知才是 failure。
+
+写进：unit 1 / lesson noise-is-not-failure。
+
+次级反直觉（同课体系）
+----------------------
+1. production-health-check 绿勾明确不证明 fun 或多人对局；H1 只能 owner 解释。
+2. visual ledger 把 owner-taste 与 machine blockers 分列——品味不当机器失败。
+3. 同一 no-WebGL 故障：e2e 劫持 getContext 钉合同，smoke 用 --disable-webgl 钉现场。
+4. release smoke 强制 loopback，并按 3g + 低内存手机画像抽查，而不是开发者本机。
+
+未做
+----
+- 未 git commit
+- 未修改 TuringPact 仓库
+- 除上述两个输出文件外未改 UniversityLocal 其他文件

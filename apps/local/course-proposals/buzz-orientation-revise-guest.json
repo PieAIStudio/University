@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-orientation-guest",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-orientation",
+    "unitId": "orientation-boundaries",
+    "id": "guest-scoped-token",
+    "expectedRevision": 1,
+    "content": "# 访客为什么不是一套新的权限系统？\n\n## 一句真实出现的话\n\n你在 VISION 里会看到这句话：Guests get a scoped token with membership in specific channels。\n\n[[evidence:VISION.md:35-46]]\n\n## 先猜一下\n\n这里的 `scoped` 是不是意味着访客走一套与成员完全不同的访问模型？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不是；访客只是把 membership 限定在特定频道，仍然使用同一个 relay 访问模型。\n\n## 三个真实用例\n\n第一，开放频道允许成员自助加入，私密频道由 owner/admin 邀请，DM 只给 participants。\n\n[[evidence:VISION.md:39-44]]\n\n第二，访客拿到的是 specific channels 的 scoped token，而不是一个能看全局的特殊身份。\n\n[[evidence:VISION.md:44-46]]\n\n第三，VISION 紧接着说明访客与其他人使用 same access model as everyone else。你可以把“范围更窄”记成这个词的核心。\n\n[[evidence:VISION.md:46-46]]\n\n## 它不是什么\n\n`scoped` 不是“访客拥有一套隐藏的超级权限”，也不是“给 token 加一个标签就自动安全”。你真正要记住的是范围被缩小；relay 仍需按频道成员资格执行访问。\n\n## 自检\n\n- scoped token 把访客的 membership 限定在哪里？\n- 访客与普通成员的访问模型是否分叉？\n\n## 一句话\n\n**访客的特殊之处是范围更窄，而不是另造一套访问规则。**",
+    "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "VISION.md", "lineStart": 35, "lineEnd": 46, "note": "VISION 定义四种访问类型，并说明 guests 使用限定频道 token 和同一访问模型。" } ],
+    "cards": [
+      { "id": "orientation-guest-scope", "expectedRevision": 1, "front": "访客的 scoped token 限定什么？", "back": "它把访客的 membership 限定在特定频道，而不是授予整个 community。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "VISION.md", "lineStart": 44, "lineEnd": 46, "note": "Guests 的 token 被限定到 specific channels。" } ] },
+      { "id": "orientation-guest-model", "expectedRevision": 1, "front": "访客是否使用另一套访问模型？", "back": "不使用；访客与其他人使用同一个访问模型，只是 membership 范围更窄。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "VISION.md", "lineStart": 46, "lineEnd": 46, "note": "VISION 明确说 same access model as everyone else。" } ] }
+    ],
+    "exercises": [
+      { "id": "orientation-guest-token-answer", "expectedRevision": 1, "kind": "short-answer", "title": "说出访客 token 范围", "prompt": "访客 token 主要限定到什么范围？", "expectedAnswer": "特定频道", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "VISION.md", "lineStart": 44, "lineEnd": 46, "note": "访客 membership 被限制在 specific channels。" } ] },
+      { "id": "orientation-guest-model-answer", "expectedRevision": 1, "kind": "short-answer", "title": "说出访客模型", "prompt": "访客与其他人使用什么访问模型？", "expectedAnswer": "同一模型", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "VISION.md", "lineStart": 46, "lineEnd": 46, "note": "访客使用 same access model as everyone else。" } ] }
+    ]
+  }
+}

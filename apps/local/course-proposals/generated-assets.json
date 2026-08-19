@@ -1,0 +1,515 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-generated-assets",
+  "targetSnapshotId": "git-c9f0ec8d57a1",
+  "targetAnalysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+  "course": {
+    "id": "generated-assets",
+    "title": "一个人如何量产内容",
+    "description": "AI 时代一个人也能产出海量素材，但生成是要花钱的，而且花过的钱不能重来。这门课讲生成式资产的缓存键、上线事务，以及用预算挡住代码膨胀。",
+    "audience": "一人公司 / 独立开发者，产品里含有 AI 生成或批量制作的素材",
+    "objectives": [
+      "为付费生成设计一个不会重复付款的内容寻址缓存键",
+      "说明为什么批量替换素材必须有一个明确的提交点",
+      "解释新增在前、删除在后的顺序为什么不能颠倒",
+      "用预算把「拆分而不是继续堆」变成机器能执行的规则"
+    ],
+    "units": [
+      {
+        "id": "pay-once",
+        "title": "只付一次钱",
+        "objective": "用内容寻址的缓存键，让相同的内容永远不会被生成两次。",
+        "lessons": [
+          {
+            "id": "content-addressed-key",
+            "title": "缓存键决定你付几次钱",
+            "content": "# 缓存键决定你付几次钱\n\nSupaLuv 要给剧情台词预生成语音。语音合成按字符收费，同一句话合成两次就是白付一次。所以它先算一个键：\n\n```ts\nexport function voiceTraversalChunkKey(input: {\n  sceneId: string | null;\n  text: string;\n  choices: ReadonlyArray<{ id: string | null; text: string }>;\n}): string {\n  return voicePlanDigest({\n    sceneId: input.sceneId,\n    text: input.text,\n    choices: input.choices.map((choice) => ({ id: choice.id, text: choice.text })),\n  });\n}\n```\n\n`voicePlanDigest` 是这么算的：\n\n```ts\nexport function voicePlanDigest(contract: unknown): string {\n  return sha256Text(JSON.stringify(canonicalize(contract)));\n}\n```\n\n关键在 `canonicalize`：\n\n```ts\nfunction canonicalize(value: unknown): unknown {\n  if (Array.isArray(value)) return value.map(canonicalize);\n  if (value && typeof value === 'object') {\n    return Object.fromEntries(\n      Object.entries(value as Record<string, unknown>)\n        .sort(([left], [right]) => left.localeCompare(right))\n        .map(([key, nested]) => [key, canonicalize(nested)]),\n    );\n  }\n  return value;\n}\n```\n\n**递归地按键名排序，然后才序列化。**\n\n## 不排序会怎样\n\n`JSON.stringify` 按属性的插入顺序输出。这两个对象在语义上完全相同：\n\n```js\n{ sceneId: 'a', text: 'hi' }   // -> '{\"sceneId\":\"a\",\"text\":\"hi\"}'\n{ text: 'hi', sceneId: 'a' }   // -> '{\"text\":\"hi\",\"sceneId\":\"a\"}'\n```\n\n哈希不同。于是**同一句台词被合成两次，你付两次钱**。\n\n更糟的是它什么时候会发生：你重构了构造这个对象的代码，字段顺序变了。逻辑上什么都没改，但整个语音库的键全变了，下一次预生成会把**所有台词重新合成一遍**。一次重构，一张账单。\n\n## 这个键还决定了「什么算改了」\n\n看 `voiceTraversalChunkKey` 放了什么进去：`sceneId`、`text`、每个选项的 `id` 和 `text`。\n\n没放进去的东西，改了也不会触发重新生成。放进去的东西，改一个字就要重新付费。**所以这个函数的参数列表，就是「什么变化值得再花一次钱」的定义。**\n\n这是一个产品决策，不是技术细节。选项文案改了要不要重配音？这个函数说：要。因为选项文本会被读出来。\n\n如果哪天加了一个 `voiceStyle` 字段却忘了放进键里，那么切换语音风格将不会重新生成——你会拿到一堆旧风格的音频，而且完全不知道为什么。\n\n## 一般形式\n\n> **凡是要花钱、花时间的生成，先定义「输入的规范形式」，用它的哈希做键。**\n\n适用范围远不止语音：AI 生成的图片、翻译、摘要、embedding、编译产物、缩略图。\n\n三条必须做到：\n\n1. **规范化**——排序键、统一空白、统一大小写规则，让语义相同的输入产生相同的字节。\n2. **只放该放的**——键里的每个字段都是一条「改这个要重新付钱」的声明。\n3. **别把时间戳放进去**——这是最常见的失误，一放进去缓存就永久失效了。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/safetyContract.ts",
+                "lineStart": 3,
+                "lineEnd": 15,
+                "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                "nodeIds": [
+                  "file:tools/voice-pregen/safetyContract.ts",
+                  "function:tools/voice-pregen/safetyContract.ts:canonicalize"
+                ],
+                "note": "递归按键名排序，让语义相同的输入序列化成相同字节。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/safetyContract.ts",
+                "lineStart": 21,
+                "lineEnd": 35,
+                "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                "nodeIds": [
+                  "function:tools/voice-pregen/safetyContract.ts:voicePlanDigest",
+                  "function:tools/voice-pregen/safetyContract.ts:voiceTraversalChunkKey"
+                ],
+                "note": "键的字段列表就是「什么变化值得重新付费」的定义：sceneId、text、每个选项的 id 与 text。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "canonicalize-why",
+                "front": "算生成缓存键前为什么要递归按键名排序？",
+                "back": "JSON.stringify 按插入顺序输出，字段顺序一变哈希就变。一次不改逻辑的重构会让整个素材库的键全变，导致全部重新生成、重新付费。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/safetyContract.ts",
+                    "lineStart": 3,
+                    "lineEnd": 15,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": ["function:tools/voice-pregen/safetyContract.ts:canonicalize"],
+                    "note": "排序发生在序列化之前。"
+                  }
+                ]
+              },
+              {
+                "id": "key-fields-are-policy",
+                "front": "缓存键的字段列表在产品意义上代表什么？",
+                "back": "代表「什么变化值得再花一次钱」。放进去的改一个字就重新生成，没放进去的改了也不会触发——漏放一个字段会导致改了却不生效，且很难察觉。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/safetyContract.ts",
+                    "lineStart": 25,
+                    "lineEnd": 35,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": [
+                      "function:tools/voice-pregen/safetyContract.ts:voiceTraversalChunkKey"
+                    ],
+                    "note": "键只包含 sceneId、text 与选项的 id/text。"
+                  }
+                ]
+              },
+              {
+                "id": "no-timestamp-in-key",
+                "front": "生成缓存键里最常见的一个致命失误是什么？",
+                "back": "把时间戳放进去。这样每次算出的键都不同，缓存永久失效，等于没有缓存却以为有。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/safetyContract.ts",
+                    "lineStart": 21,
+                    "lineEnd": 35,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": [
+                      "function:tools/voice-pregen/safetyContract.ts:voicePlanDigest"
+                    ],
+                    "note": "键的输入只有内容本身，不含任何时间或环境信息。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "canonicalize-recall",
+                "title": "回忆规范化动作",
+                "prompt": "canonicalize 在序列化之前对对象做了什么？填一个动作。",
+                "expectedAnswer": "按键名排序",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/safetyContract.ts",
+                    "lineStart": 3,
+                    "lineEnd": 15,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": ["function:tools/voice-pregen/safetyContract.ts:canonicalize"],
+                    "note": "Object.entries(...).sort(...) 后再重建对象。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "safe-publish",
+        "title": "安全上线",
+        "objective": "让批量替换素材有明确的提交点、正确的顺序，并且失败能整体回滚。",
+        "lessons": [
+          {
+            "id": "commit-point",
+            "title": "提交点：哪一刻算数",
+            "content": "# 提交点：哪一刻算数\n\n预生成完一批语音，要把它们装进产品里。这不是「复制几个文件」——它是**一次事务**。SupaLuv 的注释把话说得很直白：\n\n```ts\n/**\n * Install a governed voice bank with catalog activation as the commit point.\n * Ordinary filesystem/validation failures roll every target back. New files,\n * ledger, provenance and debt baseline land before catalog activation; files\n * made orphan by the new catalog are removed only afterwards.\n */\n```\n\n三件事被明确规定了：**提交点是目录激活**、**失败全部回滚**、**新增在前删除在后**。\n\n## 一、提交点\n\n执行顺序是：\n\n```ts\nfor (const replacement of input.preActivationReplacements) install(replacement);\ninput.onStep?.('pre-activation-installed');\n\ninstall(input.catalogReplacement);          // <- 提交点\ninput.onStep?.('catalog-activated');\n\nfor (const replacement of input.postActivationReplacements ?? []) install(replacement);\nfor (const targetPath of input.postActivationDeletions) remove(targetPath);\ninput.onStep?.('post-activation-cleaned');\n\nawait input.validate();\n```\n\n新音频文件先落盘，但此时**没有任何东西引用它们**——目录（catalog）还是旧的，产品照常播放旧语音。只有 `install(catalogReplacement)` 那一行执行完，新音频才真正生效。\n\n一个原子的动作（重命名一个目录文件）把一批非原子的动作（写几百个音频文件）变成了整体生效。**这是所有「批量上线」问题的通解：找一个指针，让所有内容先就位，最后只翻这一个指针。**\n\n## 二、顺序不能颠倒\n\n新文件在激活前装，孤儿文件在激活后删。反过来会怎样？\n\n先删除，然后激活失败 —— 你删掉的是**旧目录仍在引用的文件**。回滚之后，目录是旧的，但它指向的文件已经没了。**产品坏了，而且坏在你以为已经回滚干净的状态里。**\n\n所以顺序是：**先让新的可用，再让旧的消失。** 任何时刻，当前生效的目录所引用的文件都必须存在。\n\n这条规矩在别处一模一样：数据库先加新列再停写旧列，API 先上新版本再下线旧版本，配置先发新值再删旧键。\n\n## 三、下手之前先检查\n\n真正碰硬盘之前，有两个检查：\n\n```ts\nfor (const targets of phaseTargets) {\n  const uniqueTargets = new Set<string>();\n  for (const targetPath of targets) {\n    if (uniqueTargets.has(targetPath)) {\n      throw new Error(`voice bank transaction repeats a target within one phase: ${targetPath}`);\n    }\n    uniqueTargets.add(targetPath);\n  }\n}\nconst replacementTargets = new Set(phaseTargets.slice(0, 3).flatMap((targets) => targets));\nfor (const targetPath of input.postActivationDeletions) {\n  if (replacementTargets.has(targetPath)) {\n    throw new Error(`voice bank transaction cannot replace and delete one target: ${targetPath}`);\n  }\n}\n```\n\n同一阶段内不能重复操作同一个目标；同一个目标不能既被替换又被删除。这两种输入的结果**取决于执行顺序**，也就是说结果不可预测。与其让它跑出一个随机结果，不如在动手前拒绝。\n\n**校验放在第一次写盘之前，回滚就永远不需要处理「半个非法输入」。**\n\n## 四、回滚靠备份，不靠删除\n\n```ts\nfunction backupTarget(targetPath: string): string | null {\n  if (!existsSync(targetPath)) return null;\n  const backupPath = join(backupDirectory, `${String(mutations.length).padStart(4, '0')}.bak`);\n  renameSync(targetPath, backupPath);\n  return backupPath;\n}\n```\n\n每个被动过的目标都先改名进备份目录，并记进 `mutations`。出错时倒着走一遍：\n\n```ts\nfor (const mutation of [...mutations].reverse()) {\n  rmSync(mutation.targetPath, { recursive: true, force: true });\n  if (mutation.backupPath) {\n    mkdirSync(dirname(mutation.targetPath), { recursive: true });\n    renameSync(mutation.backupPath, mutation.targetPath);\n  }\n}\n```\n\n注意 `backupPath` 可以是 `null`——原本不存在的文件，回滚就是删掉它。**「原本没有」也是一种需要恢复的状态。**\n\n## 五、`onStep` 是给失败注入用的\n\n```ts\n/** Test seam for deterministic failure injection; production callers omit it. */\nreadonly onStep?: (step: VoiceBankTransactionStep) => void;\n```\n\n四个步骤名是 `'pre-activation-installed' | 'catalog-activated' | 'post-activation-cleaned' | 'validated'`。测试可以在任意一步抛异常，然后断言磁盘回到了原样。\n\n**一个不能被要求失败的回滚逻辑，等于没有回滚逻辑**——它只在你从没验证过的路径上运行。这个可选参数的存在，是「这条回滚路径被真的测过」的证据。\n\n## 和钱包是同一件事\n\n《AI 产品的成本与边界》里，钱包是「预扣 → 调用 → 结算/退款」。这里是「暂存 → 激活 → 清理/回滚」。\n\n形状完全一样，因为要解决的问题一样：**中间那一步可能失败，而失败时你已经花掉了钱。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                "lineStart": 31,
+                "lineEnd": 37,
+                "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                "nodeIds": [
+                  "file:tools/voice-pregen/bankTransaction.ts",
+                  "function:tools/voice-pregen/bankTransaction.ts:commitVoiceBankTransaction"
+                ],
+                "note": "文档注释明确规定提交点为目录激活，并规定新增在前、删除在后。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                "lineStart": 89,
+                "lineEnd": 107,
+                "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                "nodeIds": [
+                  "function:tools/voice-pregen/bankTransaction.ts:commitVoiceBankTransaction"
+                ],
+                "note": "执行顺序：预装 → 激活目录 → 后置替换与删除 → 校验。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                "lineStart": 43,
+                "lineEnd": 63,
+                "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                "nodeIds": [
+                  "function:tools/voice-pregen/bankTransaction.ts:commitVoiceBankTransaction"
+                ],
+                "note": "写盘前的两个不变量检查：同阶段不重复目标；同一目标不得既替换又删除。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                "lineStart": 65,
+                "lineEnd": 87,
+                "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                "nodeIds": [
+                  "function:tools/voice-pregen/bankTransaction.ts:commitVoiceBankTransaction"
+                ],
+                "note": "备份改名并登记 mutations；原本不存在的目标记 backupPath 为 null。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                "lineStart": 108,
+                "lineEnd": 117,
+                "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                "nodeIds": [
+                  "function:tools/voice-pregen/bankTransaction.ts:commitVoiceBankTransaction"
+                ],
+                "note": "回滚倒序遍历 mutations，backupPath 为 null 时以删除还原。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                "lineStart": 9,
+                "lineEnd": 24,
+                "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                "nodeIds": ["file:tools/voice-pregen/bankTransaction.ts"],
+                "note": "四个步骤名与 onStep 测试缝，注释写明生产调用方不传。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "the-commit-point",
+                "front": "批量上线一批素材，「提交点」应该是什么样的动作？",
+                "back": "一个原子动作——翻一个指针。SupaLuv 让几百个音频先落盘但无人引用，最后只替换 catalog 这一个文件，新素材才整体生效。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                    "lineStart": 89,
+                    "lineEnd": 107,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": [
+                      "function:tools/voice-pregen/bankTransaction.ts:commitVoiceBankTransaction"
+                    ],
+                    "note": "install(catalogReplacement) 是分界线。"
+                  }
+                ]
+              },
+              {
+                "id": "add-before-delete",
+                "front": "为什么必须「新增在激活前、删除在激活后」，颠倒会怎样？",
+                "back": "先删就删掉了旧目录仍在引用的文件；此后激活失败，回滚回旧目录，但它指向的文件已经没了——坏在你以为已经回滚干净的状态里。任何时刻生效目录引用的文件都必须存在。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                    "lineStart": 31,
+                    "lineEnd": 37,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": [
+                      "function:tools/voice-pregen/bankTransaction.ts:commitVoiceBankTransaction"
+                    ],
+                    "note": "注释把这条顺序写成了规定。"
+                  }
+                ]
+              },
+              {
+                "id": "validate-before-write",
+                "front": "两个不变量检查为什么放在第一次写盘之前？",
+                "back": "重复目标和「既替换又删除」的结果取决于执行顺序，即不可预测。先拒绝，回滚就永远不必处理半个非法输入。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                    "lineStart": 43,
+                    "lineEnd": 63,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": [
+                      "function:tools/voice-pregen/bankTransaction.ts:commitVoiceBankTransaction"
+                    ],
+                    "note": "两个检查都在 install/remove 之前执行。"
+                  }
+                ]
+              },
+              {
+                "id": "null-backup-path",
+                "front": "回滚记录里 `backupPath` 为 `null` 表示什么？",
+                "back": "该目标原本不存在，回滚就是把它删掉。「原本没有」也是一种需要恢复的状态。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                    "lineStart": 65,
+                    "lineEnd": 87,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": [
+                      "function:tools/voice-pregen/bankTransaction.ts:commitVoiceBankTransaction"
+                    ],
+                    "note": "backupTarget 在目标不存在时返回 null。"
+                  }
+                ]
+              },
+              {
+                "id": "onstep-seam",
+                "front": "`onStep` 这个可选参数存在的意义是什么？",
+                "back": "让测试在四个步骤的任意一步注入失败，再断言磁盘回到原样。不能被要求失败的回滚逻辑等于没有回滚逻辑。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                    "lineStart": 9,
+                    "lineEnd": 24,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": ["file:tools/voice-pregen/bankTransaction.ts"],
+                    "note": "注释写明是确定性失败注入的测试缝。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "commit-point-recall",
+                "title": "回忆提交点",
+                "prompt": "在这个语音库上线事务里，哪一次替换是提交点？填被替换的东西的名字。",
+                "expectedAnswer": "catalog",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                    "lineStart": 89,
+                    "lineEnd": 107,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": [
+                      "function:tools/voice-pregen/bankTransaction.ts:commitVoiceBankTransaction"
+                    ],
+                    "note": "install(input.catalogReplacement) 之后即 catalog-activated。"
+                  }
+                ]
+              },
+              {
+                "id": "transaction-shape-explain",
+                "title": "解释与钱包的同构",
+                "kind": "explain",
+                "prompt": "这门课说语音库上线的「暂存 → 激活 → 清理/回滚」和钱包的「预扣 → 调用 → 结算/退款」是同一个形状。请解释它们在解决什么共同问题，并说明各自的提交点是哪一步。",
+                "rubric": [
+                  "指出共同问题：中间那一步可能失败，而失败时资源已经消耗（钱已花 / 文件已写）",
+                  "说出语音库的提交点是 catalog 激活，在此之前新文件无人引用",
+                  "说出钱包在调用前先预扣，调用结果决定结算还是退款",
+                  "指出两者都要求失败时能回到一个完整、自洽的状态，而不是停在中间"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/voice-pregen/bankTransaction.ts",
+                    "lineStart": 89,
+                    "lineEnd": 117,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": [
+                      "function:tools/voice-pregen/bankTransaction.ts:commitVoiceBankTransaction"
+                    ],
+                    "note": "提交点、清理与回滚三段连在一起。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "budgets-as-gates",
+            "title": "用预算挡住膨胀",
+            "content": "# 用预算挡住膨胀\n\n一个人写代码，没有人会在 PR 里说「这个文件太长了」。SupaLuv 用了一个 56 行的脚本代替那个人：\n\n```js\n/**\n * Anti-bloat gate for known God-file hotspots.\n * Fail if a file grows past its budget — split modules instead of stacking.\n */\nconst BUDGETS = [\n  { path: 'apps/web/src/views/VisualNovelPrototype.tsx', maxLines: 400 },\n  { path: 'apps/web/src/App.tsx', maxLines: 650 },\n  { path: 'apps/web/src/audio/gameAudio.ts', maxLines: 300 },\n];\n```\n\n超了就退出码 1：\n\n```js\nfailures.push(\n  `${budget.path}: ${lines} lines > budget ${budget.maxLines} — 拆分而不是继续堆 (split modules instead of stacking)`,\n);\n```\n\n## 三个文件，不是全部文件\n\n这是这个脚本最值得学的地方。它没有说「所有文件不得超过 300 行」——那种规则会在几百个无辜的文件上制造噪音，然后被人加一堆例外，最后关掉。\n\n它只盯**三个已知的热点**。这三个是真的会长胖的：主视图、App 壳、音频管理器。它们长胖有明确的原因——新功能天然想往这里加。\n\n**「抓大放小」被写成了一个只有三行数据的数组。**\n\n这也是这套课程反复出现的那条规矩的又一次现身：约束要放在机器能检查的地方。「注意别让 App.tsx 太长」是愿望；`maxLines: 650` 加一个退出码是约束。\n\n## 上限不是审美，是决策成本\n\n为什么 `App.tsx` 是 650 而 `gameAudio.ts` 是 300？因为它们的当前长度不同，预算是**在当时的实际长度上加了一点余量**定出来的。\n\n这意味着预算的含义不是「一个文件应该多长」，而是：\n\n> **这个文件到此为止。下一个功能，请找别的地方放。**\n\n对独立开发者，这个机制解决的是一个非常具体的心理问题：**你在赶功能的时候，是不会主动重构的。** 你会想「先加上，回头再拆」，然后永远没有回头。预算把「回头再拆」变成了「现在就得拆」，而且是在这个文件还只有 660 行、拆起来还很容易的时候。\n\n等到它 2000 行，拆的成本已经高到你不会去做了。**预算的价值不在于挡住第 651 行，而在于挡住第 1500 行。**\n\n## 怎么给自己的项目定\n\n1. 列出你**已经不太想打开**的那几个文件——通常就 2 到 4 个。\n2. 量一下现在多少行，加 5% 到 10% 作为预算。\n3. 加进 CI 或 pre-commit。\n4. 每次它挡住你，就拆一次；拆完把预算调低到新的长度。\n\n第 4 条是关键：**预算只能降，不能升。** 一旦允许「这次先调高一点」，这个闸门就失效了——和给自己发例外的 lint 规则一个下场。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/check-file-budgets.mjs",
+                "lineStart": 1,
+                "lineEnd": 17,
+                "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                "nodeIds": ["file:tools/check-file-budgets.mjs"],
+                "note": "只给三个已知 God-file 热点设行数预算，而不是给全部文件设统一上限。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "tools/check-file-budgets.mjs",
+                "lineStart": 38,
+                "lineEnd": 56,
+                "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                "nodeIds": ["file:tools/check-file-budgets.mjs"],
+                "note": "超预算时打印「拆分而不是继续堆」并以退出码 1 结束。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "budget-only-hotspots",
+                "front": "文件预算为什么只盯三个热点，而不是给所有文件设统一上限？",
+                "back": "统一上限会在几百个无辜文件上制造噪音，然后被加一堆例外、最后关掉。只盯真的会长胖的少数文件，「抓大放小」就变成了三行数据。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/check-file-budgets.mjs",
+                    "lineStart": 12,
+                    "lineEnd": 17,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": ["file:tools/check-file-budgets.mjs"],
+                    "note": "BUDGETS 数组只有三项，且行数上限各不相同。"
+                  }
+                ]
+              },
+              {
+                "id": "budget-blocks-line-1500",
+                "front": "文件预算真正挡住的是第几行？",
+                "back": "不是第 651 行，是第 1500 行。它逼你在文件还只有 660 行、拆起来还容易的时候就拆；等到 2000 行，拆的成本已高到你不会去做。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/check-file-budgets.mjs",
+                    "lineStart": 38,
+                    "lineEnd": 45,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": ["file:tools/check-file-budgets.mjs"],
+                    "note": "超限即失败，提示语直接写「拆分而不是继续堆」。"
+                  }
+                ]
+              },
+              {
+                "id": "budgets-only-go-down",
+                "front": "维护文件预算时唯一不能破的一条规矩是什么？",
+                "back": "预算只能降，不能升。一旦允许「这次先调高一点」，闸门就失效了，和给自己发例外的 lint 规则一个下场。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/check-file-budgets.mjs",
+                    "lineStart": 12,
+                    "lineEnd": 17,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": ["file:tools/check-file-budgets.mjs"],
+                    "note": "预算是按当时实际长度加余量定出来的，含义是「到此为止」。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "budget-count-recall",
+                "title": "回忆预算范围",
+                "prompt": "check-file-budgets 给多少个文件设了预算？只填数字。",
+                "expectedAnswer": "3",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "tools/check-file-budgets.mjs",
+                    "lineStart": 12,
+                    "lineEnd": 17,
+                    "analysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+                    "graphHash": "sha256:f06b695dd1b9fb2d5ac7a767618433261958a9d3c6ea6778772e2ea8d31acb10",
+                    "nodeIds": ["file:tools/check-file-budgets.mjs"],
+                    "note": "VisualNovelPrototype.tsx、App.tsx、gameAudio.ts。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+interface:
+  display_name: "Teach From Study"
+  short_description: "Teach from fixed UniversityLocal study evidence"
+  default_prompt: "Use $teach-from-study to teach the next concept from the current study with beginner-friendly sequencing and fixed-snapshot evidence."
+
+compatibility:
+  canonical_format: "agent-skills"
+  adapter_targets: ["openai", "claude", "generic", "agent-skills"]
+  activation:
+    mode: "auto"
+    paths: []
+  execution:
+    context: "inline"
+    shell: "bash"
+  trust:
+    source_tier: "local"
+    remote_inline_execution: "forbid"
+    remote_metadata_policy: "allow-metadata-only"
+  degradation:
+    openai: "metadata-adapter"
+    claude: "neutral-source-plus-adapter"
+    generic: "neutral-source"
+    agent-skills: "canonical-source"

@@ -1,0 +1,342 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "lessons": [
+    {
+      "courseId": "foundations-logic",
+      "unitId": "branching",
+      "lessonId": "a-fork-in-the-road",
+      "anchors": [
+        {
+          "quote": "三元表达式",
+          "occurrence": 2,
+          "senseId": "ternary.operator"
+        },
+        {
+          "quote": "返回",
+          "occurrence": 3,
+          "senseId": "return.value"
+        },
+        {
+          "quote": "结果",
+          "occurrence": 1,
+          "senseId": "result.outcome"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "branching",
+      "lessonId": "and-or-not",
+      "anchors": [
+        {
+          "quote": "短路",
+          "occurrence": 1,
+          "senseId": "short-circuit.logic"
+        },
+        {
+          "quote": "跳过",
+          "occurrence": 1,
+          "senseId": "skip.action"
+        },
+        {
+          "quote": "防护",
+          "occurrence": 1,
+          "senseId": "guard.code"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "branching",
+      "lessonId": "guarding-bad-input",
+      "anchors": [
+        {
+          "quote": "防护",
+          "occurrence": 1,
+          "senseId": "guard.code"
+        },
+        {
+          "quote": "早返回",
+          "occurrence": 1,
+          "senseId": "early-return.control"
+        },
+        {
+          "quote": "返回",
+          "occurrence": 1,
+          "senseId": "return.value"
+        },
+        {
+          "quote": "结果",
+          "occurrence": 1,
+          "senseId": "result.outcome"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "branching",
+      "lessonId": "order-is-the-rule",
+      "anchors": [
+        {
+          "quote": "顺序",
+          "occurrence": 2,
+          "senseId": "order.sequence"
+        },
+        {
+          "quote": "阈值",
+          "occurrence": 1,
+          "senseId": "threshold.limit"
+        },
+        {
+          "quote": "兜底",
+          "occurrence": 1,
+          "senseId": "fallback.plan"
+        },
+        {
+          "quote": "匹配",
+          "occurrence": 1,
+          "senseId": "match.compare"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "branching",
+      "lessonId": "return-early",
+      "anchors": [
+        {
+          "quote": "早返回",
+          "occurrence": 2,
+          "senseId": "early-return.control"
+        },
+        {
+          "quote": "默认",
+          "occurrence": 2,
+          "senseId": "default.value"
+        },
+        {
+          "quote": "兜底",
+          "occurrence": 1,
+          "senseId": "fallback.plan"
+        },
+        {
+          "quote": "返回",
+          "occurrence": 3,
+          "senseId": "return.value"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "collections",
+      "lessonId": "a-list-and-a-loop",
+      "anchors": [
+        {
+          "quote": "副作用",
+          "occurrence": 1,
+          "senseId": "side-effect.code"
+        },
+        {
+          "quote": "顺序",
+          "occurrence": 1,
+          "senseId": "order.sequence"
+        },
+        {
+          "quote": "返回值",
+          "occurrence": 1,
+          "senseId": "return.value"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "collections",
+      "lessonId": "a-map-is-an-index",
+      "anchors": [
+        {
+          "quote": "钥匙",
+          "occurrence": 2,
+          "senseId": "key.data"
+        },
+        {
+          "quote": "查找",
+          "occurrence": 1,
+          "senseId": "find.action"
+        },
+        {
+          "quote": "覆盖",
+          "occurrence": 1,
+          "senseId": "overwrite.update"
+        },
+        {
+          "quote": "值",
+          "occurrence": 2,
+          "senseId": "value.data"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "collections",
+      "lessonId": "folding-a-list",
+      "anchors": [
+        {
+          "quote": "折叠",
+          "occurrence": 1,
+          "senseId": "reduce.fold"
+        },
+        {
+          "quote": "纯",
+          "occurrence": 1,
+          "senseId": "pure.function"
+        },
+        {
+          "quote": "结果",
+          "occurrence": 2,
+          "senseId": "result.outcome"
+        },
+        {
+          "quote": "参数",
+          "occurrence": 1,
+          "senseId": "parameter.input"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "collections",
+      "lessonId": "sorting",
+      "anchors": [
+        {
+          "quote": "返回",
+          "occurrence": 1,
+          "senseId": "return.value"
+        },
+        {
+          "quote": "过滤",
+          "occurrence": 1,
+          "senseId": "filter.select"
+        },
+        {
+          "quote": "约定",
+          "occurrence": 1,
+          "senseId": "convention.agreed"
+        },
+        {
+          "quote": "结果",
+          "occurrence": 1,
+          "senseId": "result.outcome"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "collections",
+      "lessonId": "two-passes",
+      "anchors": [
+        {
+          "quote": "跳过",
+          "occurrence": 1,
+          "senseId": "skip.action"
+        },
+        {
+          "quote": "边界",
+          "occurrence": 1,
+          "senseId": "boundary.scope"
+        },
+        {
+          "quote": "结果",
+          "occurrence": 1,
+          "senseId": "result.outcome"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "naming-the-cases",
+      "lessonId": "a-closed-set",
+      "anchors": [
+        {
+          "quote": "字面量",
+          "occurrence": 2,
+          "senseId": "literal.type"
+        },
+        {
+          "quote": "联合",
+          "occurrence": 2,
+          "senseId": "union.type"
+        },
+        {
+          "quote": "阶段",
+          "occurrence": 1,
+          "senseId": "phase.process"
+        },
+        {
+          "quote": "状态",
+          "occurrence": 1,
+          "senseId": "state.memory"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "naming-the-cases",
+      "lessonId": "derive-do-not-repeat",
+      "anchors": [
+        {
+          "quote": "推导",
+          "occurrence": 2,
+          "senseId": "derive.compute"
+        },
+        {
+          "quote": "真相",
+          "occurrence": 1,
+          "senseId": "source-of-truth.data"
+        },
+        {
+          "quote": "约束",
+          "occurrence": 1,
+          "senseId": "constraint.design"
+        },
+        {
+          "quote": "字面量",
+          "occurrence": 2,
+          "senseId": "literal.type"
+        },
+        {
+          "quote": "运行时",
+          "occurrence": 1,
+          "senseId": "runtime.environment"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-logic",
+      "unitId": "naming-the-cases",
+      "lessonId": "narrowing",
+      "anchors": [
+        {
+          "quote": "类型守卫",
+          "occurrence": 2,
+          "senseId": "type-guard.check"
+        },
+        {
+          "quote": "收窄",
+          "occurrence": 2,
+          "senseId": "narrow.type"
+        },
+        {
+          "quote": "运行时",
+          "occurrence": 2,
+          "senseId": "runtime.environment"
+        },
+        {
+          "quote": "允许列表",
+          "occurrence": 1,
+          "senseId": "allowlist.fields"
+        }
+      ]
+    }
+  ]
+}

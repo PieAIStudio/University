@@ -1,0 +1,14 @@
+{
+  "name": "refresh-study",
+  "version": "1.0.0",
+  "owner": "UniversityLocal",
+  "updated_at": "2026-08-17",
+  "status": "active",
+  "maturity_tier": "production",
+  "lifecycle_stage": "production",
+  "context_budget_tier": "production",
+  "review_cadence": "quarterly",
+  "target_platforms": ["openai", "claude", "generic", "agent-skills-compatible"],
+  "factory_components": ["evals"],
+  "notes": "Top-level local refresh orchestration: snapshot, UA, freshness audit, stale lifecycle, and handoff to write-lesson. It never edits the studied repository or writes lesson prose itself."
+}

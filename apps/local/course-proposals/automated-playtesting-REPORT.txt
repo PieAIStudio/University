@@ -1,0 +1,30 @@
+=== automated-playtesting course proposal REPORT ===
+date: 2026-08-07
+
+## Scale
+unit why-auto-play lessons [33m3[39m
+unit persona-strategies lessons [33m4[39m
+unit receipts-and-gates lessons [33m4[39m
+units: [33m3[39m
+lessons: [33m11[39m
+cards: [33m22[39m
+exercises: [33m11[39m
+evidence refs: [33m66[39m
+
+## Gate 1: check-proposal-shape.mjs
+ok  course-proposals/automated-playtesting.json
+
+## Gate 2: check-proposal-evidence.mjs --study supaluv
+ok  tools/auto-player/personas.mjs:209-212
+ok  tools/auto-player/personas.mjs:219-223
+ok  tools/auto-player/personas.mjs:92-93
+
+all 66 references resolve at their pinned commits
+
+## Most counterintuitive finding (taught in lesson ai-score-anti-skip)
+pickAiScorePersona does not merely prefer AI_SCORE_KEYWORDS. It subtracts 10
+whenever SKIP_KEYWORDS hit, and when bestScore <= 0 it forces the first non-skip
+option. That is acceptance engineering: force the cooperation persona off the
+skipper track so mianzi|ai_score transcriptDiffs stay > 0 (ADR-0007 + unit tests).
+Without the -10 penalty, two personas collapse on skip-heavy questionnaire nodes
+and the product axes stop being regression-visible.

@@ -1,0 +1,220 @@
+foundations-terrain English overlay 自查报告
+==================================================
+课程: foundations-terrain (TuringPact)
+词表: data/vocabulary/en.json (240 senses)
+输出: course-proposals/annot-foundations-terrain.json
+
+## 覆盖
+- 处理课时: 12（磁盘上 content.md 共 12 节，无遗漏）
+- 锚点总数: 54
+- 每课锚点数: 4, 4, 5, 4, 5, 5, 4, 4, 5, 5, 4, 5
+- 全部 senseId 存在于词表: YES
+- resolveAnchors 模拟（含 code/table/inline-code/HTML/link 保护区）: 全部 placed, 0 rejected
+
+## 子串碰撞与 occurrence 调整记录
+- scripts-are-the-doors: 键 occurrence=2（跳过 #1「一键验收」中的子串「键」）
+- gitignore-is-a-boundary: 忽略 occurrence=2（#1 落在表格保护区）
+- gitignore-is-a-boundary: 产物 occurrence=2（#1 在表格「构建产物」内）
+- dependencies-vs-dev: quote 用「类型检查」完整词，不用「类型」
+- dependencies-vs-dev: quote 用「运行时」完整词，不用「运行」
+- same-dist-in-a-native-shell: quote 用「环境变量」完整词，不用「环境」
+- same-dist: 未标会切到「构建产物」的「构建」#2；改标独立「产物」#1
+- two-tsconfigs: quote 用「源文件」，避免「文件」撞「配置文件」
+- package-json-is-an-id-card: 依赖 #1（#2「不依赖这一行」是日常「依靠」义）
+- the-first-page: 挂载 #2（落在「挂载点（mount point）」教学句）
+- env-example-not-env: 默认 #2（事实句「默认关闭」）；占位 #2（示例讲解句）
+- dev-server-vs-build: 构建 #1「构建模式」（#2 在表格内）
+- what-done-means: 类型 #1 是列表「类型、风格…」独立词（正文无「类型检查」）
+
+## 抽查（8 个锚点，逐 occurrence 重数）
+
+[what-a-project-is/package-json-is-an-id-card] quote='依赖' occurrence=1 senseId=dependency.module (dependency)
+  match_ok=True total_hits=2
+    #1 ...ripts、依赖都挂在同一张... <== CHOSEN
+    #2 ...本地跑起来不依赖这一行；发错...
+
+[what-a-project-is/scripts-are-the-doors] quote='键' occurrence=2 senseId=key.data (key)
+  match_ok=True total_hits=3
+    #1 ...包敲哪条、一键验收敲哪条。...
+    #2 ...ify` 等键；每个键对应... <== CHOSEN
+    #3 ... 等键；每个键对应一条可在...
+
+[what-a-project-is/dependencies-vs-dev] quote='类型检查' occurrence=1 senseId=typecheck.static (typecheck)
+  match_ok=True total_hits=1
+    #1 ...ipt 负责类型检查，Vites... <== CHOSEN
+
+[what-a-project-is/gitignore-is-a-boundary] quote='忽略' occurrence=2 senseId=ignore.action (ignore)
+  match_ok=True total_hits=4
+    #1 ... | 为什么忽略 |↵| -...
+    #2 ...交——「默认忽略一类，再放行... <== CHOSEN
+    #3 ...st/` 被忽略，是不是意味...
+    #4 ...** 不是。忽略的是「不要把...
+
+[how-it-runs/dev-server-vs-build] quote='构建' occurrence=1 senseId=build.action (build)
+  match_ok=True total_hits=4
+    #1 ...立刻看见」；构建模式偏向「产... <== CHOSEN
+    #2 ...译 |↵| 构建 | `pn...
+    #3 ...d——开发与构建都会走这套管...
+    #4 ...，把类型项目构建/检查也算进...
+
+[how-it-runs/same-dist-in-a-native-shell] quote='环境变量' occurrence=1 senseId=environment.variable (environment)
+  match_ok=True total_hits=1
+    #1 ...st'`；若环境变量 `CAP_... <== CHOSEN
+
+[configuration-and-commits/a-commit-is-a-stamp] quote='快照' occurrence=1 senseId=snapshot.git (snapshot)
+  match_ok=True total_hits=1
+    #1 ...让进入历史的快照更干净。结合... <== CHOSEN
+
+[configuration-and-commits/what-done-means] quote='验收' occurrence=1 senseId=verify.suite (verify)
+  match_ok=True total_hits=1
+    #1 ...rify 的验收河，过河才叫... <== CHOSEN
+
+## 逐课明细
+
+## what-a-project-is/package-json-is-an-id-card
+anchors: 4, resolved: 4
+  - '文件' #2 -> file.storage (file)
+    context: ...↵- **推论：这份文件是项目的「身份证」—...
+  - '边界' #1 -> boundary.scope (boundary)
+    context: ...证」——先登记身份与边界，后面的 scrip...
+  - '依赖' #1 -> dependency.module (dependency)
+    context: ...的 scripts、依赖都挂在同一张身份证上...
+  - '键' #1 -> key.data (key)
+    context: ...{ }` 包住一堆「键: 值」；键和字符串...
+
+## what-a-project-is/scripts-are-the-doors
+anchors: 4, resolved: 4
+  - '开发服务器' #1 -> dev-server.local (dev server)
+    context: ...「访客」——门开了，开发服务器起来。↵↵## 工作...
+  - '键' #2 -> key.data (key)
+    context: ...`verify` 等键；每个键对应一条可在...
+  - '验收' #1 -> verify.suite (verify)
+    context: ...条、打包敲哪条、一键验收敲哪条。↵↵## 先...
+  - '约定' #1 -> convention.agreed (convention)
+    context: ...才是真正执行的命令。约定俗成用 `dev` ...
+
+## what-a-project-is/dependencies-vs-dev
+anchors: 5, resolved: 5
+  - '依赖' #1 -> dependency.module (dependency)
+    context: ...# 两类依赖：跑起来要的 vs ...
+  - '类型检查' #1 -> typecheck.static (typecheck)
+    context: ...eScript 负责类型检查，Vitest 负责...
+  - '运行时' #2 -> runtime.environment (runtime)
+    context: ...ncies` 是产品运行时的队友；`devDe...
+  - '渲染' #1 -> render.ui (render)
+    context: ...界面由 React 渲染，数据客户端用到 S...
+  - '边界' #1 -> boundary.scope (boundary)
+    context: ...半仍能开发与构建，但边界乱了：依赖树变胖、语...
+
+## what-a-project-is/two-tsconfigs
+anchors: 4, resolved: 4
+  - '配置' #3 -> config.settings (config)
+    context: ...↵- **推论：一份配置可以只做「目录索引」...
+  - '构建' #1 -> build.action (build)
+    context: ... ["src"]`，构建相关入口在 node...
+  - '检查' #1 -> check.action (check)
+    context: ...后，工具能按场景分别检查，而不是用一份「大锅...
+  - '源文件' #1 -> file.storage (file)
+    context: ...根配置自己不直接收录源文件。↵- `refer...
+
+## what-a-project-is/gitignore-is-a-boundary
+anchors: 5, resolved: 5
+  - '忽略' #2 -> ignore.action (ignore)
+    context: ...被允许提交——「默认忽略一类，再放行少数必须...
+  - '提交' #1 -> commit.git (commit)
+    context: ...e` 至少三类「不该提交」的东西，并各举图灵...
+  - '边界' #1 -> boundary.scope (boundary)
+    context: ...库的」。↵↵本课建立边界意识即可：打开项目时...
+  - '产物' #2 -> artifact.build (artifact)
+    context: ...`dist/`，再把产物交给托管平台。↵↵#...
+  - '密钥' #1 -> secret.security (secret)
+    context: ...复现的源」；生成物、密钥、本机垃圾进库只会让...
+
+## how-it-runs/dev-server-vs-build
+anchors: 5, resolved: 5
+  - '开发服务器' #1 -> dev-server.local (dev server)
+    context: ...# 开发服务器 vs 打包产物↵↵...
+  - '构建' #1 -> build.action (build)
+    context: ...向「改了立刻看见」；构建模式偏向「产出可部署...
+  - '部署' #1 -> deploy.release (deploy)
+    context: ...构建模式偏向「产出可部署的静态目录」。两者都...
+  - '产物' #1 -> artifact.build (artifact)
+    context: ...发服务器 vs 打包产物↵↵## 学习目标↵...
+  - '脚本' #1 -> script.command (script)
+    context: ...*事实：`dev` 脚本是 `vite`；`...
+
+## how-it-runs/the-first-page
+anchors: 4, resolved: 4
+  - '挂载' #2 -> mount.lifecycle (mount)
+    context: .../div>` —— 挂载点（mount po...
+  - '渲染' #1 -> render.ui (render)
+    context: ...React 会把应用渲染进这个节点。↵2. ...
+  - '组件' #1 -> component.ui (component)
+    context: ...。演员（React 组件）还没上场，但台位和...
+  - '脚本' #1 -> script.command (script)
+    context: ... 的挂载点在哪、应用脚本从哪一行引入，并说明...
+
+## how-it-runs/one-rewrite-rule
+anchors: 4, resolved: 4
+  - '路径' #1 -> path.location (path)
+    context: ... SPA 需要把未知路径 rewrite 回...
+  - '文件' #1 -> file.storage (file)
+    context: ...按「每个路径都有真实文件」去找，刷新深链接会...
+  - '加载' #1 -> load.action (load)
+    context: ...回 `/`，浏览器仍加载 SPA 壳，再由前...
+  - '渲染' #1 -> render.ui (render)
+    context: ...端路由继续根据地址栏渲染对应页面。↵↵## ...
+
+## how-it-runs/same-dist-in-a-native-shell
+anchors: 5, resolved: 5
+  - '原生' #1 -> native.device (native)
+    context: ...一份 dist，塞进原生壳↵↵## 学习目标...
+  - '外壳' #1 -> shell.container (shell)
+    context: ...`）；剧场建筑或货车外壳是 Capacito...
+  - '产物' #1 -> artifact.build (artifact)
+    context: ...；多端共享同一份前端产物。**↵↵## 一个...
+  - '开发服务器' #1 -> dev-server.local (dev server)
+    context: ...bView 打开这个开发服务器地址，方便真机/模拟...
+  - '环境变量' #1 -> environment.variable (environment)
+    context: ... 'dist'`；若环境变量 `CAP_SERV...
+
+## configuration-and-commits/env-example-not-env
+anchors: 5, resolved: 5
+  - '占位' #2 -> placeholder.value (placeholder)
+    context: ...here` 或空值是占位——提醒你填自己的值...
+  - '忽略' #1 -> ignore.action (ignore)
+    context: ...example` 却忽略 `.env`，并指...
+  - '提交' #1 -> commit.git (commit)
+    context: ...释为什么 Git 里提交 `.env.exa...
+  - '密钥' #1 -> secret.security (secret)
+    context: ...的值，不是让你提交真密钥。↵3. `VITE...
+  - '默认' #2 -> default.value (default)
+    context: ...OG=false` 默认关闭；`.gitig...
+
+## configuration-and-commits/a-commit-is-a-stamp
+anchors: 4, resolved: 4
+  - '提交' #1 -> commit.git (commit)
+    context: ...# 一次提交是一枚可引用的戳↵↵...
+  - '证据' #1 -> evidence.study (evidence)
+    context: ...点；并知道本课程所有证据为什么都钉在同一个 ...
+  - '快照' #1 -> snapshot.git (snapshot)
+    context: ...查**，让进入历史的快照更干净。结合 `.g...
+  - '漂移' #1 -> drift.divergence (drift)
+    context: ...，地形才不会在讨论中漂移。**↵...
+
+## configuration-and-commits/what-done-means
+anchors: 5, resolved: 5
+  - '验收' #1 -> verify.suite (verify)
+    context: ...叫 verify 的验收河，过河才叫到岸。*...
+  - '构建' #1 -> build.action (build)
+    context: ...、风格、格式、测试、构建，按固定顺序勾完。↵...
+  - '成功' #1 -> success.status (success)
+    context: ...&&` 表示：前一步成功才继续下一步。任一步...
+  - '失败' #1 -> fail.status (fail)
+    context: ...才继续下一步。任一步失败，整条链停住。↵↵|...
+  - '类型' #1 -> type.kind (type)
+    context: ...` 就是起飞检查单：类型、风格、格式、测试、...
+
+## 结论
+全部 12 课、全部锚点通过 senseId 存在性检查与 occurrence/保护区解析。
+未修改 data/vocabulary/en.json，未修改 studies/ 下任何文件。未做 git commit。

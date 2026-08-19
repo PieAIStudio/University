@@ -1,0 +1,104 @@
+ai-budget-and-cost course proposal — delivery report
+====================================================
+
+Outputs
+- course-proposals/ai-budget-and-cost.json
+- course-proposals/ai-budget-and-cost-REPORT.txt
+
+Scale
+- units: 3
+  1) price-before-call — 计价：调用前必须算得清 (4 lessons)
+  2) budget-gate — 闸门：预扣提交退款 (4 lessons)
+  3) settle-and-wire — 结算与接线：失败怎么收钱 (4 lessons)
+- lessons: 12
+- cards: 24 (2 per lesson)
+- exercises: 12 (1 short-answer per lesson)
+- evidence references: 81
+- mermaid: lesson gate-before-provider
+
+Snapshot / analysis
+- targetSnapshotId: git-3b402e069a5d
+- sourceCommit: 3b402e069a5db5fe9eb82dbc03aa05152b3d298b
+- targetAnalysisId: ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a
+
+Gate 1 — node scripts/check-proposal-shape.mjs course-proposals/ai-budget-and-cost.json
+ok  course-proposals/ai-budget-and-cost.json
+
+Gate 2 — node scripts/check-proposal-evidence.mjs course-proposals/ai-budget-and-cost.json --study turing-pact
+ok  services/mastra/src/contracts/ai-chat-handler.ts:111-118
+ok  services/mastra/src/contracts/ai-chat-handler.ts:140-146
+ok  services/mastra/src/contracts/ai-chat-handler.ts:159-167
+ok  services/mastra/src/contracts/ai-chat-handler.ts:163-165
+ok  services/mastra/src/contracts/ai-chat-handler.ts:169-188
+ok  services/mastra/src/contracts/ai-chat-handler.ts:169-189
+ok  services/mastra/src/contracts/ai-chat-handler.ts:182-185
+ok  services/mastra/src/contracts/ai-chat-handler.ts:187-188
+ok  services/mastra/src/contracts/ai-chat-handler.ts:206-208
+ok  services/mastra/src/contracts/ai-chat-handler.ts:267-324
+ok  services/mastra/src/contracts/ai-chat-handler.ts:287-290
+ok  services/mastra/src/contracts/ai-chat-handler.ts:288-290
+ok  services/mastra/src/contracts/ai-chat-handler.ts:292-318
+ok  services/mastra/src/contracts/ai-chat-handler.ts:294-297
+ok  services/mastra/src/contracts/ai-chat-handler.ts:315-318
+ok  services/mastra/src/contracts/ai-chat-handler.ts:315-324
+ok  services/mastra/src/contracts/ai-chat-handler.ts:326-328
+ok  services/mastra/src/contracts/ai-chat-handler.ts:348-356
+ok  services/mastra/src/contracts/ai-chat-handler.ts:357-359
+ok  services/mastra/src/contracts/ai-chat-handler.ts:368-383
+ok  services/mastra/src/contracts/ai-chat-handler.ts:374-377
+ok  services/mastra/src/contracts/ai-chat-handler.ts:392-397
+ok  services/mastra/src/contracts/ai-chat-handler.ts:477-480
+ok  services/mastra/src/contracts/ai-chat-handler.ts:73-77
+ok  services/mastra/src/contracts/ai-chat-handler.ts:73-78
+ok  services/mastra/src/contracts/ai-chat-handler.ts:95-101
+ok  services/mastra/src/contracts/ai-chat-handler.ts:99-99
+ok  services/mastra/src/runtime/ai-budget.ts:129-152
+ok  services/mastra/src/runtime/ai-budget.ts:136-136
+ok  services/mastra/src/runtime/ai-budget.ts:165-170
+ok  services/mastra/src/runtime/ai-budget.ts:177-195
+ok  services/mastra/src/runtime/ai-budget.ts:181-185
+ok  services/mastra/src/runtime/ai-budget.ts:181-194
+ok  services/mastra/src/runtime/ai-budget.ts:182-182
+ok  services/mastra/src/runtime/ai-budget.ts:198-210
+ok  services/mastra/src/runtime/ai-budget.ts:198-213
+ok  services/mastra/src/runtime/ai-budget.ts:26-35
+ok  services/mastra/src/runtime/ai-budget.ts:3-3
+ok  services/mastra/src/runtime/ai-budget.ts:63-72
+ok  services/mastra/src/runtime/ai-budget.ts:75-92
+ok  services/mastra/src/runtime/ai-budget.ts:87-88
+ok  services/mastra/src/runtime/ai-budget.ts:89-90
+ok  services/mastra/src/runtime/ai-chat-auth.ts:10-10
+ok  services/mastra/src/runtime/ai-chat-auth.ts:93-120
+ok  services/mastra/src/runtime/env.ts:10-15
+ok  services/mastra/src/runtime/env.ts:10-16
+ok  services/mastra/src/runtime/env.ts:29-35
+ok  services/mastra/src/runtime/env.ts:67-76
+ok  services/mastra/src/runtime/mastra-chat.ts:49-52
+ok  services/mastra/src/runtime/mastra-chat.ts:49-58
+ok  services/mastra/src/runtime/mastra-chat.ts:51-51
+ok  services/mastra/src/runtime/mastra-chat.ts:67-89
+ok  services/mastra/src/runtime/model-cost.ts:16-21
+ok  services/mastra/src/runtime/model-cost.ts:23-27
+ok  services/mastra/src/runtime/model-cost.ts:29-34
+ok  services/mastra/src/runtime/model-cost.ts:29-35
+ok  services/mastra/src/runtime/model-cost.ts:37-41
+ok  services/mastra/src/runtime/model-cost.ts:44-56
+ok  services/mastra/src/runtime/model-cost.ts:48-49
+ok  services/mastra/src/runtime/model-cost.ts:58-70
+ok  services/mastra/src/runtime/model-cost.ts:66-69
+ok  services/mastra/src/runtime/model-cost.ts:72-83
+ok  services/mastra/src/runtime/model-cost.ts:76-78
+ok  services/mastra/src/runtime/model-cost.ts:76-81
+
+all 81 references resolve at their pinned commits
+
+Most counter-intuitive finding (already in the course)
+------------------------------------------------------
+Same MODEL_PRICES, two failure modes: estimateModelCostUsd returns 0 for
+unknown models (soft telemetry), while estimateMeteredModelCostMicroUsd
+throws via requireMeteredPrice (hard gate). Worst-case reserve treats
+inputBytes as inputTokens on purpose. On most upstream failures the handler
+commits the full reservation (only NonBillableProviderError refunds); missing
+usage also settles at reservedMicroUsd — not zero.
+
+No git commit. TuringPact untouched.

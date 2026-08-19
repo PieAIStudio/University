@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "study": {
+    "id": "university-local",
+    "title": "UniversityLocal 自身",
+    "description": "",
+    "goals": [],
+    "defaultCourseId": "how-this-campus-works",
+    "status": "active"
+  },
+  "source": {
+    "defaultRef": "HEAD"
+  },
+  "courses": [
+    {
+      "courseId": "how-this-campus-works",
+      "file": "how-this-campus-works.796b775fb4d0c254c6878800d527f1db5831ffda1343f66364c6ef774b079f9b.recovery.json",
+      "sha256": "sha256:796b775fb4d0c254c6878800d527f1db5831ffda1343f66364c6ef774b079f9b"
+    },
+    {
+      "courseId": "four-layer-workbench",
+      "file": "four-layer-workbench.1097ec494e6880d1ff7aed7bcc9947e3aaaafc8e3a5b141c1735753573a5c349.recovery.json",
+      "sha256": "sha256:1097ec494e6880d1ff7aed7bcc9947e3aaaafc8e3a5b141c1735753573a5c349"
+    },
+    {
+      "courseId": "how-this-campus-works-2",
+      "file": "how-this-campus-works-2.4269c89c9ec995e19a3d137c60b9edfa07100fb8add8814b1e9aaf91af138b4f.recovery.json",
+      "sha256": "sha256:4269c89c9ec995e19a3d137c60b9edfa07100fb8add8814b1e9aaf91af138b4f"
+    },
+    {
+      "courseId": "communicate-with-ai",
+      "file": "communicate-with-ai.7eca50de9a96334c404ce77f5d4b422ad6f0c2a9077bc8751fec2eda72e98dc0.recovery.json",
+      "sha256": "sha256:7eca50de9a96334c404ce77f5d4b422ad6f0c2a9077bc8751fec2eda72e98dc0"
+    },
+    {
+      "courseId": "evidence-and-freshness",
+      "file": "evidence-and-freshness.02ec0e5ce88a9988aaaec5100ee3d10b49c8a604da80a3fc53f1e7f508dd9c11.recovery.json",
+      "sha256": "sha256:02ec0e5ce88a9988aaaec5100ee3d10b49c8a604da80a3fc53f1e7f508dd9c11"
+    },
+    {
+      "courseId": "spaced-repetition",
+      "file": "spaced-repetition.fc0cf11991ad4f8a6fbe2b1154bdbf9966b2e742e4115e3d88e7256cfdeadca4.recovery.json",
+      "sha256": "sha256:fc0cf11991ad4f8a6fbe2b1154bdbf9966b2e742e4115e3d88e7256cfdeadca4"
+    },
+    {
+      "courseId": "local-first-boundaries",
+      "file": "local-first-boundaries.186e0f1f20204bd44d257af40440f092c6e521d6889045cffb9f21b8b0d26eed.recovery.json",
+      "sha256": "sha256:186e0f1f20204bd44d257af40440f092c6e521d6889045cffb9f21b8b0d26eed"
+    },
+    {
+      "courseId": "airlock-supply-chain",
+      "file": "airlock-supply-chain.0f270e9ce48f68640c67d9f9f7fd6802d7c71e72bee8ee4010d7a62de7364c14.recovery.json",
+      "sha256": "sha256:0f270e9ce48f68640c67d9f9f7fd6802d7c71e72bee8ee4010d7a62de7364c14"
+    },
+    {
+      "courseId": "content-governance",
+      "file": "content-governance.6c4e36114949e61129d5a15a17be6f93ede83856776c7f2b294d6dbd75252a80.recovery.json",
+      "sha256": "sha256:6c4e36114949e61129d5a15a17be6f93ede83856776c7f2b294d6dbd75252a80"
+    }
+  ]
+}
