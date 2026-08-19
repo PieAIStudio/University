@@ -1,6 +1,6 @@
 import { join } from "node:path";
 
-import { StableId } from "../../src/domain/schemas.js";
+import { StableId } from "@pieai/university-core/domain/schemas.js";
 
 export interface StudyPaths {
   readonly root: string;

@@ -5,7 +5,7 @@ import {
   LearningFocusSchema,
   UniversityLocalConfigSchema,
   type UniversityLocalConfig,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
 
 const BASE_CONFIG = "university-local.config.json";

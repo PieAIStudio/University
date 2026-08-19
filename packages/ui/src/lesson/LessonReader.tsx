@@ -28,7 +28,10 @@ import { LessonNextStep } from "./LessonNextStep.js";
 import { LessonSourceVersion } from "./LessonSourceVersion.js";
 import { LessonWordList } from "./LessonWordList.js";
 import { SelectionMenu, type SelectionTarget } from "./SelectionMenu.js";
-import { buildQuestionPrompt, type ReaderMark } from "../domain/reader-marks.js";
+import {
+  buildQuestionPrompt,
+  type ReaderMark,
+} from "@pieai/university-core/domain/reader-marks.js";
 
 /**
  * How many nested detours to remember.

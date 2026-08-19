@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-import { StableId } from "../../src/domain/schemas.js";
+import { StableId } from "@pieai/university-core/domain/schemas.js";
 import { assertSafeGitArgument, gitText } from "../git/run.js";
 import { getStudyPaths } from "../studies/paths.js";
 import { listSnapshots, openStudyRepository } from "../studies/snapshots.js";

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { IsoDateTime, StableId } from "../../src/domain/schemas.js";
+import { IsoDateTime, StableId } from "@pieai/university-core/domain/schemas.js";
 
 const CommandId = z.string().uuid();
 const Answer = z.string().trim().min(1).max(20_000);

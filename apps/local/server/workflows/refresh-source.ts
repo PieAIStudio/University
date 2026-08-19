@@ -5,7 +5,7 @@ import {
   type SnapshotManifest,
   type UaAnalysisManifest,
   type UaEngineProvenance,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { getUaAnalysisPaths } from "../studies/paths.js";
 import { createCleanSnapshot } from "../studies/snapshots.js";
 import {

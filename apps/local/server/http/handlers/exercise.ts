@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { StableId } from "../../../src/domain/schemas.js";
+import { StableId } from "@pieai/university-core/domain/schemas.js";
 import {
   requireActiveExercise,
   requireActiveLesson,

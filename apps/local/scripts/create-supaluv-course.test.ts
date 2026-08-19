@@ -44,7 +44,10 @@ import {
 } from "../server/studies/repository.js";
 import { createCleanSnapshot } from "../server/studies/snapshots.js";
 import { finalizeUaAnalysis, prepareUaAnalysis } from "../server/ua/adapter.js";
-import { SnapshotManifestSchema, UaAnalysisManifestSchema } from "../src/domain/schemas.js";
+import {
+  SnapshotManifestSchema,
+  UaAnalysisManifestSchema,
+} from "@pieai/university-core/domain/schemas.js";
 import {
   COURSE_IDS,
   SUPALUV_ANALYSIS_ID,

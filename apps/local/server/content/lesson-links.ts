@@ -1,12 +1,12 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import type { LessonLinkTarget } from "../../src/domain/lesson-marks.js";
-import type { LessonSection } from "../../src/domain/schemas.js";
+import type { LessonLinkTarget } from "@pieai/university-core/domain/lesson-marks.js";
+import type { LessonSection } from "@pieai/university-core/domain/schemas.js";
 import { findProtectedRegions } from "../language/resolve-anchors.js";
 import { getStudyPaths } from "../studies/paths.js";
 
-export type { LessonLinkTarget } from "../../src/domain/lesson-marks.js";
+export type { LessonLinkTarget } from "@pieai/university-core/domain/lesson-marks.js";
 
 /**
  * Wiki links between lessons, so a course can be linear and associative at once.

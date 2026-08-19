@@ -1,4 +1,4 @@
-import type { LanguageAnchor } from "../../src/domain/schemas.js";
+import type { LanguageAnchor } from "@pieai/university-core/domain/schemas.js";
 import {
   adaptiveTargetCount,
   detectAnchors,

@@ -19,7 +19,7 @@ import {
   StudyManifestSchema,
   type SourceRegistration,
   type StudyManifest,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { STUDIES_ROOT_MARKER, assertSeparatedRoots } from "../config/load-config.js";
 import { assertSafeGitArgument } from "../git/run.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";

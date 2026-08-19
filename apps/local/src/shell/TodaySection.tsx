@@ -1,10 +1,10 @@
 import { GameBadge, GameButton, GameCallout } from "@pieai/swimmer-ui-kit";
 
-import { Tip } from "../Tip.js";
-import { ReviewCard } from "../review/ReviewCard.js";
-import { VocabularyReview } from "../review/VocabularyReview.js";
-import type { BootstrapData, LessonLocator } from "../view/lesson-view.js";
-import { focusParts, progressLabel } from "../view/lesson-view.js";
+import { Tip } from "@pieai/university-ui/Tip.js";
+import { ReviewCard } from "@pieai/university-ui/review/ReviewCard.js";
+import { VocabularyReview } from "@pieai/university-ui/review/VocabularyReview.js";
+import type { BootstrapData, LessonLocator } from "@pieai/university-ui/view/lesson-view.js";
+import { focusParts, progressLabel } from "@pieai/university-ui/view/lesson-view.js";
 
 /**
  * The page someone opens every day, so the largest thing on it should be the

@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { z } from "zod";
 
-import { LexiconEntrySchema, type LexiconEntry } from "../../src/domain/schemas.js";
+import { LexiconEntrySchema, type LexiconEntry } from "@pieai/university-core/domain/schemas.js";
 
 const LexiconFileSchema = z
   .object({

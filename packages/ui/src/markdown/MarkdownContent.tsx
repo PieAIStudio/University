@@ -3,7 +3,7 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
 
-import type { LanguageLayer } from "../domain/lesson-marks.js";
+import type { LanguageLayer } from "@pieai/university-core/domain/lesson-marks.js";
 import { EvidenceInlineSource } from "../evidence/EvidenceInlineSource.js";
 import { lessonSectionRole } from "./lesson-sections.js";
 import { MermaidDiagram } from "./MermaidDiagram.js";

@@ -1,6 +1,10 @@
 import { existsSync } from "node:fs";
 
-import { StableId, type SnapshotManifest, type StudyManifest } from "../../src/domain/schemas.js";
+import {
+  StableId,
+  type SnapshotManifest,
+  type StudyManifest,
+} from "@pieai/university-core/domain/schemas.js";
 import { SqliteLearningStore } from "../learning/sqlite-learning-store.js";
 import { getStudyPaths } from "../studies/paths.js";
 import { createStudy, readStudy, registerLocalGitSource } from "../studies/repository.js";

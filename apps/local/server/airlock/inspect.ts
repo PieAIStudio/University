@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-import type { AirlockSeal } from "../../src/domain/schemas.js";
+import type { AirlockSeal } from "@pieai/university-core/domain/schemas.js";
 import { gitText } from "../git/run.js";
 import { inspectUpstreamIdentity, readSeal } from "./seal.js";
 

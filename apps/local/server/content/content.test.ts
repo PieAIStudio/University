@@ -5,12 +5,12 @@ import { dirname, join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import type { EvidenceReference } from "../../src/domain/schemas.js";
+import type { EvidenceReference } from "@pieai/university-core/domain/schemas.js";
 import { getCoursePaths, getLessonPaths, getUnitPaths } from "../studies/paths.js";
 import { createStudy, registerLocalGitSource } from "../studies/repository.js";
 import { createCleanSnapshot } from "../studies/snapshots.js";
 import { evaluateEvidenceFreshness, validateEvidence } from "./evidence.js";
-import type { CourseManifest } from "../../src/domain/schemas.js";
+import type { CourseManifest } from "@pieai/university-core/domain/schemas.js";
 import {
   orderCoursesByPrerequisite,
   readCourse,

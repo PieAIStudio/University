@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { GamePanel } from "@pieai/swimmer-ui-kit";
 
-import { readJson } from "../api/client.js";
-import { isCurrentLessonCompleted } from "../view/lesson-view.js";
+import { readJson } from "@pieai/university-ui/api/client.js";
+import { isCurrentLessonCompleted } from "@pieai/university-ui/view/lesson-view.js";
 import type {
   CourseView,
   LearningFocus,
   LessonLocator,
   StudySummary,
   StudyView,
-} from "../view/lesson-view.js";
+} from "@pieai/university-ui/view/lesson-view.js";
 import { CourseSection } from "./CourseSection.js";
 import { CourseRouteQuiz } from "./CourseRouteQuiz.js";
 import { KnowledgeNotesSection } from "./KnowledgeNotesSection.js";

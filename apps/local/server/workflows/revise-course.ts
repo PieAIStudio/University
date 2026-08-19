@@ -21,7 +21,7 @@ import {
   type EvidenceReference,
   type Exercise,
   type LessonManifest,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import {
   readCourse,
   readLatestCard,

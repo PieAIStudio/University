@@ -6,7 +6,7 @@ import {
   UaAnalysisManifestSchema,
   type SnapshotManifest,
   type UaAnalysisManifest,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { listKnowledgeNotes } from "../knowledge/repository.js";
 import { getStudyPaths } from "../studies/paths.js";
 import { readStudy } from "../studies/repository.js";

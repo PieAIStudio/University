@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { UaAnalysisManifestSchema } from "../../src/domain/schemas.js";
+import { UaAnalysisManifestSchema } from "@pieai/university-core/domain/schemas.js";
 import { getStudyPaths, getUaAnalysisPaths } from "../studies/paths.js";
 
 /**

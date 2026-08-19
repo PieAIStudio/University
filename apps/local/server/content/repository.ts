@@ -31,7 +31,7 @@ import {
   type Exercise,
   type LessonManifest,
   type UnitManifest,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { writeJsonAtomically, writeTextAtomically } from "../storage/atomic-json.js";
 import { getCoursePaths, getLessonPaths, getStudyPaths, getUnitPaths } from "../studies/paths.js";
 import { readStudy } from "../studies/repository.js";

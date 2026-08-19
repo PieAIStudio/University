@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { z } from "zod";
 
-import { KnowledgeNoteSchema, type KnowledgeNote } from "../../src/domain/schemas.js";
+import { KnowledgeNoteSchema, type KnowledgeNote } from "@pieai/university-core/domain/schemas.js";
 import { validateEvidence } from "../content/evidence.js";
 import { writeKnowledgeNoteRevision } from "../knowledge/repository.js";
 import { SqliteLearningStore } from "../learning/sqlite-learning-store.js";

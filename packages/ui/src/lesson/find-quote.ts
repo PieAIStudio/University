@@ -1,4 +1,4 @@
-import { locateQuote, type TextQuote } from "../domain/reader-marks.js";
+import { locateQuote, type TextQuote } from "@pieai/university-core/domain/reader-marks.js";
 
 /**
  * Turns a stored quote back into a live range in the rendered lesson.

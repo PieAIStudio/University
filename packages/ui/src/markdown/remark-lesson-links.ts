@@ -1,14 +1,17 @@
 import type { PhrasingContent, Root, RootContent, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
-import type { EvidenceAnchorRange, LessonLinkRange } from "../domain/lesson-marks.js";
-import { mergeAdjacentTextNodes } from "../domain/merge-text-runs.js";
+import type {
+  EvidenceAnchorRange,
+  LessonLinkRange,
+} from "@pieai/university-core/domain/lesson-marks.js";
+import { mergeAdjacentTextNodes } from "@pieai/university-core/domain/merge-text-runs.js";
 
 export type {
   EvidenceAnchorRange,
   LessonLinkRange,
   LessonLinkTarget,
-} from "../domain/lesson-marks.js";
+} from "@pieai/university-core/domain/lesson-marks.js";
 
 /**
  * Same trick as the word anchor: react-markdown dispatches on the HTML element

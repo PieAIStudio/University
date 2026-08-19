@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 
 import { z } from "zod";
 
-import { StableId, type UnitManifest } from "../../src/domain/schemas.js";
+import { StableId, type UnitManifest } from "@pieai/university-core/domain/schemas.js";
 import {
   readCourse,
   readUnit,

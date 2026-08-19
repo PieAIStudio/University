@@ -4,9 +4,12 @@ import { lstatSync, readFileSync, readlinkSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 
-import { UaEngineProvenanceSchema, type UaEngineProvenance } from "../../src/domain/schemas.js";
+import {
+  UaEngineProvenanceSchema,
+  type UaEngineProvenance,
+} from "@pieai/university-core/domain/schemas.js";
 
-export type { UaEngineProvenance } from "../../src/domain/schemas.js";
+export type { UaEngineProvenance } from "@pieai/university-core/domain/schemas.js";
 
 interface InspectUaEngineProvenanceInput {
   readonly skillPath?: string;

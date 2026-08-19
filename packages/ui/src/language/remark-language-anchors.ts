@@ -1,10 +1,10 @@
 import type { Root, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
-import type { LanguageRange } from "../domain/lesson-marks.js";
-import { mergeAdjacentTextNodes } from "../domain/merge-text-runs.js";
+import type { LanguageRange } from "@pieai/university-core/domain/lesson-marks.js";
+import { mergeAdjacentTextNodes } from "@pieai/university-core/domain/merge-text-runs.js";
 
-export type { LanguageRange } from "../domain/lesson-marks.js";
+export type { LanguageRange } from "@pieai/university-core/domain/lesson-marks.js";
 
 /**
  * A word the reader can tap, standing exactly where the author put it.

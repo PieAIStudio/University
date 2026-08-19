@@ -15,7 +15,7 @@ import {
   type LessonManifest,
   type StudyManifest,
   type UnitManifest,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import {
   listCourseIds,
   orderCoursesByPrerequisite,

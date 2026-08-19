@@ -2,19 +2,19 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 
-import type { LanguageRange } from "../../src/domain/lesson-marks.js";
+import type { LanguageRange } from "@pieai/university-core/domain/lesson-marks.js";
 import {
   LanguageOverlaySchema,
   StableId,
   type LanguageAnchor,
   type LanguageOverlay,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { readLatestLesson } from "../content/repository.js";
 import { getStudyPaths } from "../studies/paths.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
 import { resolveAnchors } from "./resolve-anchors.js";
 
-export type { LanguageRange } from "../../src/domain/lesson-marks.js";
+export type { LanguageRange } from "@pieai/university-core/domain/lesson-marks.js";
 
 export type LanguageCode = "en";
 

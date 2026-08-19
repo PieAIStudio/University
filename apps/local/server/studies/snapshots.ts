@@ -1,7 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
 
-import { SnapshotManifestSchema, type SnapshotManifest } from "../../src/domain/schemas.js";
+import {
+  SnapshotManifestSchema,
+  type SnapshotManifest,
+} from "@pieai/university-core/domain/schemas.js";
 import { inspectImportPathRisk, type ImportGateFinding } from "../airlock/import-gate.js";
 import { assertSafeGitArgument, gitBuffer, gitText } from "../git/run.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";

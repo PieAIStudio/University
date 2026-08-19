@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GameBadge, GameCallout, GameTabs } from "@pieai/swimmer-ui-kit";
 
-import { Tip } from "./Tip.js";
-import { lessonPath, readJson } from "./api/client.js";
-import type { LessonLinkTarget } from "./markdown/remark-lesson-links.js";
+import { Tip } from "@pieai/university-ui/Tip.js";
+import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
+import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
 import { formatAddress, parseAddress, type AppAddress } from "./url-state.js";
-import { LINK_RETURN_DEPTH, LessonReader } from "./lesson/LessonReader.js";
-import { lessonNeighbours } from "./lesson/LessonNav.js";
+import { LINK_RETURN_DEPTH, LessonReader } from "@pieai/university-ui/lesson/LessonReader.js";
+import { lessonNeighbours } from "@pieai/university-ui/lesson/LessonNav.js";
 import { EmptyCampus } from "./shell/EmptyCampus.js";
 import { recentStudies, StudyShelf } from "./shell/StudyShelf.js";
 import { StudyDetail } from "./shell/StudyDetail.js";
@@ -14,7 +14,12 @@ import { TodaySection } from "./shell/TodaySection.js";
 
 type SectionId = "today" | "studies";
 
-import type { LessonLocator, BootstrapData, StudyView, LessonView } from "./view/lesson-view.js";
+import type {
+  LessonLocator,
+  BootstrapData,
+  StudyView,
+  LessonView,
+} from "@pieai/university-ui/view/lesson-view.js";
 
 interface DisplayedStudy {
   readonly locator: string;

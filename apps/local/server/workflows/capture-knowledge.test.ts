@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import type { EvidenceReference } from "../../src/domain/schemas.js";
+import type { EvidenceReference } from "@pieai/university-core/domain/schemas.js";
 import { writeKnowledgeNoteRevision } from "../knowledge/repository.js";
 import { SqliteLearningStore } from "../learning/sqlite-learning-store.js";
 import { knowledgeCardContentKey } from "../learning/types.js";

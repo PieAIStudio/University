@@ -21,7 +21,7 @@ import {
   StableId,
   type KnowledgeCard,
   type KnowledgeNote,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { validateEvidence } from "../content/evidence.js";
 import { writeJsonAtomically, writeTextAtomically } from "../storage/atomic-json.js";
 import { getKnowledgeNotePaths, getStudyPaths } from "../studies/paths.js";

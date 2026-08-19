@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
 
-import type { EvidenceReference, KnowledgeNote, StudyManifest } from "../../src/domain/schemas.js";
+import type {
+  EvidenceReference,
+  KnowledgeNote,
+  StudyManifest,
+} from "@pieai/university-core/domain/schemas.js";
 import { resolveEvidenceAnchors } from "../content/evidence-anchors.js";
 import { readCommitDate } from "../content/commit-date.js";
 import { readEvidenceSnippet } from "../content/evidence.js";

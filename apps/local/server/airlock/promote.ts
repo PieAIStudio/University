@@ -1,7 +1,7 @@
 import { mkdirSync, readdirSync } from "node:fs";
 import { dirname } from "node:path";
 
-import { AirlockSealSchema, type AirlockSeal } from "../../src/domain/schemas.js";
+import { AirlockSealSchema, type AirlockSeal } from "@pieai/university-core/domain/schemas.js";
 import { canonicalizePotentialPath } from "../config/load-config.js";
 import { assertSafeGitArgument, gitBuffer, gitText } from "../git/run.js";
 import { describeImportRefusal, inspectImportRisk, type ImportCandidate } from "./import-gate.js";

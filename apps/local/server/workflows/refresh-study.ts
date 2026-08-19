@@ -12,7 +12,7 @@ import {
   type EvidenceReference,
   type Exercise,
   type KnowledgeNote,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { evaluateEvidenceFreshness } from "../content/evidence.js";
 import {
   readCourse,

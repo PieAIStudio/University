@@ -15,7 +15,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import type { EvidenceReference, LessonAsset } from "../../src/domain/schemas.js";
+import type { EvidenceReference, LessonAsset } from "@pieai/university-core/domain/schemas.js";
 import { executeUniversityLocalCli } from "../cli/execute.js";
 import { HELP } from "../cli/commands.js";
 import { parseUniversityLocalCli } from "../cli/parse.js";

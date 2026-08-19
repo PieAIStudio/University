@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import type { BootstrapData, StudySummary } from "../view/lesson-view.js";
+import type { BootstrapData, StudySummary } from "@pieai/university-ui/view/lesson-view.js";
 
 /**
  * How many projects the shortcut row carries. Three is the point where a

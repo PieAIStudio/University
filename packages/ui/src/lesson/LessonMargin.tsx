@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import type { ReaderMark } from "../domain/reader-marks.js";
+import type { ReaderMark } from "@pieai/university-core/domain/reader-marks.js";
 import { findQuote } from "./find-quote.js";
 
 /** Vertical breathing room between two notes that would otherwise overlap. */

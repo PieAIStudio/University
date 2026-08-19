@@ -28,7 +28,7 @@ import {
   type CourseManifest,
   type EvidenceReference,
   type LessonAsset,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { inspectImportPathRisk } from "../airlock/import-gate.js";
 import { canonicalizePotentialPath, isPathInside } from "../config/load-config.js";
 import {

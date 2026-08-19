@@ -4,7 +4,7 @@ import {
   EvidenceReferenceSchema,
   LessonVariantSchema,
   StableId,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import {
   writeCardRevision,
   writeExerciseRevision,

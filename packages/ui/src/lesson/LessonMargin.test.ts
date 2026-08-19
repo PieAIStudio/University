@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { layoutNotes } from "./LessonMargin.js";
-import type { ReaderMark } from "../domain/reader-marks.js";
+import type { ReaderMark } from "@pieai/university-core/domain/reader-marks.js";
 
 function mark(id: string): ReaderMark {
   return {

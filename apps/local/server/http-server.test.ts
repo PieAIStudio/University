@@ -9,7 +9,7 @@ import { join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { EvidenceReference, KnowledgeNote } from "../src/domain/schemas.js";
+import type { EvidenceReference, KnowledgeNote } from "@pieai/university-core/domain/schemas.js";
 import { executeUniversityLocalCli } from "./cli.js";
 import { createUniversityLocalHttpServer } from "./http-server.js";
 import {

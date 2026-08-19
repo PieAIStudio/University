@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
-import { openBlankDashboardTab, requestUaDashboardUrl } from "../api/ua-dashboard.js";
+import {
+  openBlankDashboardTab,
+  requestUaDashboardUrl,
+} from "@pieai/university-ui/api/ua-dashboard.js";
 
 /**
  * Open the official UA graph in a browser tab after the local bridge has

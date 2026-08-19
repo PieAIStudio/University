@@ -5,7 +5,7 @@ import {
   buildQuestionPrompt,
   type LessonTitleLookup,
   type ReaderMark,
-} from "../domain/reader-marks.js";
+} from "@pieai/university-core/domain/reader-marks.js";
 
 /**
  * The batch of open questions, and one button that turns them into something an

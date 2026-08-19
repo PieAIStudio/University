@@ -9,7 +9,7 @@ import type {
   EvidenceReference,
   KnowledgeNote,
   SnapshotManifest,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import {
   readCourse,
   readUnit,

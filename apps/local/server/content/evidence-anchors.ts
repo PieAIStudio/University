@@ -1,7 +1,7 @@
-import type { EvidenceAnchorRange } from "../../src/domain/lesson-marks.js";
+import type { EvidenceAnchorRange } from "@pieai/university-core/domain/lesson-marks.js";
 import { parseLessonLinks, tokenKind, type ParsedLessonLink } from "./lesson-links.js";
 
-export type { EvidenceAnchorRange } from "../../src/domain/lesson-marks.js";
+export type { EvidenceAnchorRange } from "@pieai/university-core/domain/lesson-marks.js";
 
 /**
  * Inline "where does this come from" markers, standing next to the claim.

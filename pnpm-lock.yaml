@@ -20,39 +20,24 @@ importers:
 
   apps/local:
     dependencies:
-      '@floating-ui/react':
-        specifier: ^0.27.20
-        version: 0.27.20(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/swimmer-ui-kit':
         specifier: 1.3.2
         version: 1.3.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      mermaid:
-        specifier: 11.16.0
-        version: 11.16.0
+      '@pieai/university-core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@pieai/university-ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       react:
         specifier: 19.2.7
         version: 19.2.7
       react-dom:
         specifier: 19.2.7
         version: 19.2.7(react@19.2.7)
-      react-markdown:
-        specifier: 10.1.0
-        version: 10.1.0(@types/react@19.2.17)(react@19.2.7)
-      remark-directive:
-        specifier: 4.0.0
-        version: 4.0.0
-      remark-gfm:
-        specifier: 4.0.1
-        version: 4.0.1
-      shiki:
-        specifier: 4.3.1
-        version: 4.3.1
       ts-fsrs:
         specifier: 5.4.1
         version: 5.4.1
-      unist-util-visit:
-        specifier: 5.1.0
-        version: 5.1.0
       zod:
         specifier: 4.4.3
         version: 4.4.3
@@ -63,9 +48,6 @@ importers:
       '@pieai/pro-gov':
         specifier: 0.9.1
         version: 0.9.1
-      '@types/mdast':
-        specifier: 4.0.4
-        version: 4.0.4
       '@types/node':
         specifier: 24.13.2
         version: 24.13.2
@@ -154,6 +136,83 @@ importers:
       vite:
         specifier: 8.1.4
         version: 8.1.4(@types/node@24.13.2)
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.1.4(@types/node@24.13.2))
+
+  packages/core:
+    dependencies:
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+    devDependencies:
+      oxfmt:
+        specifier: 0.58.0
+        version: 0.58.0
+      oxlint:
+        specifier: 1.73.0
+        version: 1.73.0
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.1.4(@types/node@24.13.2))
+
+  packages/ui:
+    dependencies:
+      '@floating-ui/react':
+        specifier: ^0.27.20
+        version: 0.27.20(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@pieai/swimmer-ui-kit':
+        specifier: 1.3.2
+        version: 1.3.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@pieai/university-core':
+        specifier: workspace:*
+        version: link:../core
+      mermaid:
+        specifier: 11.16.0
+        version: 11.16.0
+      react:
+        specifier: 19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: 19.2.7
+        version: 19.2.7(react@19.2.7)
+      react-markdown:
+        specifier: 10.1.0
+        version: 10.1.0(@types/react@19.2.17)(react@19.2.7)
+      remark-directive:
+        specifier: 4.0.0
+        version: 4.0.0
+      remark-gfm:
+        specifier: 4.0.1
+        version: 4.0.1
+      shiki:
+        specifier: 4.3.1
+        version: 4.3.1
+      unist-util-visit:
+        specifier: 5.1.0
+        version: 5.1.0
+    devDependencies:
+      '@types/mdast':
+        specifier: 4.0.4
+        version: 4.0.4
+      '@types/react':
+        specifier: 19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      oxfmt:
+        specifier: 0.58.0
+        version: 0.58.0
+      oxlint:
+        specifier: 1.73.0
+        version: 1.73.0
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
       vitest:
         specifier: 4.1.10
         version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.1.4(@types/node@24.13.2))

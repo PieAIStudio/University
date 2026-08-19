@@ -1,7 +1,7 @@
 import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from "@floating-ui/react";
 import { useCallback, useEffect, useState } from "react";
 
-import type { TextQuote } from "../domain/reader-marks.js";
+import type { TextQuote } from "@pieai/university-core/domain/reader-marks.js";
 
 /**
  * How much text on either side of the selection is kept.

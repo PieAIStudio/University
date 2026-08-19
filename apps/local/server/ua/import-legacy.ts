@@ -6,7 +6,7 @@ import {
   SnapshotManifestSchema,
   UaAnalysisManifestSchema,
   type UaAnalysisManifest,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { writeJsonAtomically, writeTextAtomically } from "../storage/atomic-json.js";
 import { getSnapshotPaths, getUaAnalysisPaths } from "../studies/paths.js";
 

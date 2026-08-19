@@ -5,7 +5,7 @@ import {
   LearningFocusSchema,
   UniversityLocalConfigSchema,
   type LearningFocus,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { readCourse } from "../content/repository.js";
 import { readStudy } from "../studies/repository.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";

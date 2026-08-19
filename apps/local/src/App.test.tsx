@@ -6,14 +6,14 @@ import { KnowledgeNotesSection } from "./shell/KnowledgeNotesSection.js";
 import { classifyCourseRoute } from "./shell/CourseRouteQuiz.js";
 import { splitByFocus, StudyEvidenceStatus } from "./shell/StudyDetail.js";
 import { recentStudies, relativeTimeLabel } from "./shell/StudyShelf.js";
-import { EvidenceCode } from "./evidence/EvidenceCode.js";
-import { lessonNeighbours, readProgress } from "./lesson/LessonNav.js";
-import { cardActionPath } from "./api/client.js";
+import { EvidenceCode } from "@pieai/university-ui/evidence/EvidenceCode.js";
+import { lessonNeighbours, readProgress } from "@pieai/university-ui/lesson/LessonNav.js";
+import { cardActionPath } from "@pieai/university-ui/api/client.js";
 import {
   buildCardCoachingPacket,
   buildCardRevealPayload,
   highlightEvidenceCode,
-} from "./view/lesson-view.js";
+} from "@pieai/university-ui/view/lesson-view.js";
 
 describe("StudyEvidenceStatus", () => {
   it("shows source and ready-UA counts without presenting UA as a course", () => {

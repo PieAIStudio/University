@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import type { EvidenceReference, SnapshotManifest } from "../../src/domain/schemas.js";
+import type { EvidenceReference, SnapshotManifest } from "@pieai/university-core/domain/schemas.js";
 import {
   readCourse,
   readLatestCard,

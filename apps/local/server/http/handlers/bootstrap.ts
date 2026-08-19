@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 
-import type { LearningFocus } from "../../../src/domain/schemas.js";
+import type { LearningFocus } from "@pieai/university-core/domain/schemas.js";
 import {
   countCourseManifests,
   countSnapshotManifests,

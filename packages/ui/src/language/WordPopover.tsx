@@ -24,7 +24,7 @@ import { readVoicePreference, selectVoice, speakWord, useEnglishVoices } from ".
  * which is exactly why it was dangerous: TypeScript accepted both, so the two
  * could have drifted a field apart without a single error.
  */
-import type { LexiconEntry } from "../domain/schemas.js";
+import type { LexiconEntry } from "@pieai/university-core/domain/schemas.js";
 import type { ForeignSettings } from "./foreign-settings.js";
 
 export type { LexiconEntry };

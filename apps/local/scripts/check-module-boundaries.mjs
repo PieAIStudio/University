@@ -22,7 +22,7 @@
  * So this scans import/export/dynamic-import specifiers under `src/**` and
  * `server/**` (tests excluded) and fails on any of the four rules below. It
  * resolves relative paths first: a naive string match on `"../src/"` misses
- * nested modules and misjudges `"./domain/..."` from inside `src/`.
+ * nested modules and misjudges `"@pieai/university-core/domain/..."` from inside `src/`.
  *
  * Usage:
  *   node scripts/check-module-boundaries.mjs

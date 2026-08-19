@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 import { z } from "zod";
 
-import { LanguageAnchorSchema, StableId } from "../../src/domain/schemas.js";
+import { LanguageAnchorSchema, StableId } from "@pieai/university-core/domain/schemas.js";
 import { loadLexicon } from "../language/lexicon.js";
 import { writeLanguageOverlay } from "../language/overlay.js";
 

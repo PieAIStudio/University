@@ -7,7 +7,7 @@ import {
   SnapshotManifestSchema,
   UaAnalysisManifestSchema,
   type EvidenceReference,
-} from "../../src/domain/schemas.js";
+} from "@pieai/university-core/domain/schemas.js";
 import { getSnapshotPaths, getUaAnalysisPaths } from "../studies/paths.js";
 import { openStudyRepository } from "../studies/snapshots.js";
 

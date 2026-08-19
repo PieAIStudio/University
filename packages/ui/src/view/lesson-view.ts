@@ -3,7 +3,7 @@ import type {
   LanguageLayer,
   LessonLinkRange,
   LessonLinkTarget,
-} from "../domain/lesson-marks.js";
+} from "@pieai/university-core/domain/lesson-marks.js";
 
 /**
  * The shapes the API returns, and the pure functions that turn them into what

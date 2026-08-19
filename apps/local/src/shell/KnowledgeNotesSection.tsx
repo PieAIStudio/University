@@ -1,8 +1,8 @@
 import { GameBadge, GameCallout } from "@pieai/swimmer-ui-kit";
 
-import { MarkdownContent } from "../markdown/MarkdownContent.js";
-import { EvidenceRail } from "../evidence/EvidenceRail.js";
-import type { KnowledgeNoteView } from "../view/lesson-view.js";
+import { MarkdownContent } from "@pieai/university-ui/markdown/MarkdownContent.js";
+import { EvidenceRail } from "@pieai/university-ui/evidence/EvidenceRail.js";
+import type { KnowledgeNoteView } from "@pieai/university-ui/view/lesson-view.js";
 
 const claimTypeLabels: Readonly<Record<KnowledgeNoteView["claimType"], string>> = {
   "source-fact": "源码事实",

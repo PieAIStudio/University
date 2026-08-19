@@ -1,4 +1,4 @@
-import { StableId } from "../../../src/domain/schemas.js";
+import { StableId } from "@pieai/university-core/domain/schemas.js";
 import { HttpError } from "../errors.js";
 import { buildStudyView } from "../views.js";
 import { sendJson } from "../wire.js";

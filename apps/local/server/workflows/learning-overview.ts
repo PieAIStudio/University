@@ -1,6 +1,6 @@
 import { join } from "node:path";
 
-import type { LearningFocus, StudyManifest } from "../../src/domain/schemas.js";
+import type { LearningFocus, StudyManifest } from "@pieai/university-core/domain/schemas.js";
 import {
   listCourseIds,
   orderCoursesByPrerequisite,

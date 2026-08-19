@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 
-import { AirlockSealSchema, type AirlockSeal } from "../../src/domain/schemas.js";
+import { AirlockSealSchema, type AirlockSeal } from "@pieai/university-core/domain/schemas.js";
 import { isPathInside } from "../config/load-config.js";
 import { gitText } from "../git/run.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";

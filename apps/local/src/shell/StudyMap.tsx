@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { readJson } from "../api/client.js";
-import { Tip } from "../Tip.js";
+import { readJson } from "@pieai/university-ui/api/client.js";
+import { Tip } from "@pieai/university-ui/Tip.js";
 
 export interface StudyMapLayer {
   readonly id: string;
