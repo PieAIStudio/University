@@ -548,15 +548,25 @@ function ReviewHost({ onDone }: { onDone: () => void }) {
         {revealed ? <div className="review__back">{card?.back}</div> : null}
         {revealed ? (
           <div className="review__grades">
-            {([1, 2, 3, 4] as const).map((grade) => (
+            {(
+              [
+                // "没想起来" rather than "忘了": FSRS reads this rating as the
+                // card not arriving in time, not as a failure, and the word on
+                // the button is the only place a learner meets that difference.
+                ["again", "没想起来"],
+                ["hard", "有点吃力"],
+                ["good", "想起来了"],
+                ["easy", "很轻松"],
+              ] as const
+            ).map(([rating, label]) => (
               <button
-                key={grade}
+                key={rating}
                 onClick={() => {
-                  gradeCard(current.cardKey, grade);
+                  gradeCard(current.cardKey, rating);
                   setRevealed(false);
                 }}
               >
-                {["忘了", "困难", "一般", "简单"][grade - 1]}
+                {label}
               </button>
             ))}
           </div>

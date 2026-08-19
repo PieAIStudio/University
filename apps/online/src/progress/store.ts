@@ -8,13 +8,30 @@
  * and the settlement screen's "save what you just earned" has something real to
  * offer when it lands.
  *
- * The card schedule here is a placeholder for FSRS, and is marked as one. The
- * real scheduler is the authoring side's `ts-fsrs` and belongs in the shared
- * package both halves import — reimplementing it here would be the drift the
- * parity contract exists to prevent. What this does is keep the shape of the
- * state FSRS needs, so swapping the algorithm in does not migrate storage.
+ * Card scheduling is not decided here. It comes from
+ * `@pieai/university-core`, which is real FSRS with recorded parameters, and
+ * is the same function the authoring shell calls. Until it did, this store ran
+ * a placeholder that doubled an interval — so the same learner, the same card
+ * and the same answer produced two different review dates depending on which
+ * shell they happened to be in, and neither looked wrong from the outside.
+ *
+ * What stays local is where the state is kept, not how it is computed.
  */
-const KEY = "university.progress.v1";
+import {
+  loadCard,
+  newCard,
+  RATING,
+  review,
+  storeCard,
+  type RatingName,
+  type StoredCard,
+} from "@pieai/university-core";
+
+// v2: cards hold the scheduler's own state instead of a bare interval. A v1
+// card cannot be migrated into one — its interval says nothing about stability
+// or difficulty — so the key changes and old progress is left where it is
+// rather than guessed at.
+const KEY = "university.progress.v2";
 const DAY = 86_400_000;
 
 export interface CardState {
@@ -24,10 +41,8 @@ export interface CardState {
   readonly lessonId: string;
   /** Milliseconds since epoch. The due queue is `dueAt <= now`, nothing more. */
   dueAt: number;
-  /** Days. FSRS calls this stability; the placeholder only ever doubles it. */
-  interval: number;
-  reps: number;
-  lapses: number;
+  /** The scheduler's own state, stored verbatim so nothing here interprets it. */
+  fsrs: StoredCard;
 }
 
 export interface LessonState {
@@ -65,6 +80,17 @@ let state = read();
 const listeners = new Set<() => void>();
 
 function commit() {
+  // A new identity on every write, at every level React might compare.
+  //
+  // `useSyncExternalStore` decides whether to re-render by comparing the
+  // snapshot it holds with the one it just read — by reference. The mutators
+  // here assign into `state.cards` and `state.lessons` in place, so without
+  // this line the top-level object never changes and React concludes nothing
+  // happened. The symptom was quiet and specific: finishing a lesson dropped
+  // its cards and wrote them to storage, but the header went on saying
+  // "复习 · 明天 0 张" until the page was reloaded, at which point two cards
+  // were suddenly due. Nothing threw. The data was always right.
+  state = { ...state, lessons: { ...state.lessons }, cards: { ...state.cards } };
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch {
@@ -128,15 +154,14 @@ export function dropCards(
   for (const id of cardIds) {
     const cardKey = `${studyId}/${courseId}/${lessonId}/${id}`;
     if (state.cards[cardKey]) continue;
+    const fresh = newCard();
     state.cards[cardKey] = {
       cardKey,
       studyId,
       courseId,
       lessonId,
-      dueAt: Date.now() + DAY,
-      interval: 1,
-      reps: 0,
-      lapses: 0,
+      dueAt: fresh.due.getTime(),
+      fsrs: storeCard(fresh),
     };
   }
   commit();
@@ -154,32 +179,17 @@ export function dueTomorrow(): number {
 }
 
 /**
- * Grade a card. 1 forgot, 2 hard, 3 good, 4 easy.
+ * Answer a card. The four ratings are FSRS's own, in its own order.
  *
- * Placeholder intervals, and named as such: FSRS derives these from a state
- * vector this store keeps room for but does not yet use. The one property worth
- * preserving even in a placeholder is that forgetting is not free — it resets
- * the interval and counts a lapse, because a scheduler that lets you keep a
- * long interval after failing is lying to you about what you know.
+ * `again` is not "wrong". FSRS reads it as "this did not come back in time",
+ * which is both a different claim and a kinder one, and it is the claim the
+ * review screen should be making to someone who just missed one.
  */
-export function gradeCard(cardKey: string, grade: 1 | 2 | 3 | 4) {
+export function gradeCard(cardKey: string, rating: RatingName) {
   const card = state.cards[cardKey];
   if (!card) return;
-  const interval =
-    grade === 1
-      ? 0.007
-      : grade === 2
-        ? Math.max(1, card.interval)
-        : grade === 3
-          ? card.interval * 2
-          : card.interval * 3;
-  state.cards[cardKey] = {
-    ...card,
-    interval,
-    dueAt: Date.now() + interval * DAY,
-    reps: card.reps + 1,
-    lapses: grade === 1 ? card.lapses + 1 : card.lapses,
-  };
+  const next = review(loadCard(card.fsrs), RATING[rating]);
+  state.cards[cardKey] = { ...card, dueAt: next.due.getTime(), fsrs: storeCard(next) };
   touchStreak();
   commit();
 }

@@ -23,6 +23,8 @@ import {
   type Grade,
 } from "ts-fsrs";
 
+import { SCHEDULER_PARAMETERS } from "@pieai/university-core";
+
 import { LEARNING_SCHEMA_VERSION, migrate } from "./schema.js";
 import {
   cardToStoredState,
@@ -84,10 +86,16 @@ import {
 import { LESSON_STATUS_ORDER, validateLessonProgress } from "./lesson-progress.js";
 
 export { LEARNING_SCHEMA_VERSION };
-const DEFAULT_PARAMETERS = generatorParameters({
-  request_retention: 0.9,
-  enable_fuzz: false,
-});
+/**
+ * The parameters are not this store's to choose any more.
+ *
+ * They moved to `@pieai/university-core` so the online shell schedules a card
+ * with the same algorithm this one does — two answers to "what is due
+ * tomorrow" was the drift worth closing first. What stays here is everything
+ * this store actually owns: the event log, the replay check, and the hash that
+ * proves a stored row was scheduled under the parameters it claims.
+ */
+const DEFAULT_PARAMETERS = SCHEDULER_PARAMETERS;
 
 interface SchedulerProfileRow {
   scheduler_version: string;

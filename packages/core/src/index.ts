@@ -7,3 +7,5 @@
  * written down once.
  */
 export * from "./domain/schemas.js";
+
+export * from "./scheduling/fsrs.js";
