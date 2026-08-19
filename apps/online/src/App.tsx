@@ -236,7 +236,18 @@ export function App() {
 
   useEffect(() => {
     if (view.kind !== "course" && view.kind !== "lesson") return;
-    void loadCourse(view.studyId, view.courseId).then(setCourse);
+    // Whichever course was asked for last is the one that gets rendered, even
+    // if an earlier request answers after it. Courses are fetched once and
+    // cached, so this only bites on a first visit over a slow connection — and
+    // there it bites as "I tapped this island and got the other one's
+    // lessons", which reads as corrupted data rather than as a late reply.
+    let current = true;
+    void loadCourse(view.studyId, view.courseId).then((loaded) => {
+      if (current) setCourse(loaded);
+    });
+    return () => {
+      current = false;
+    };
   }, [view]);
 
   // A fraction, not a flag. The world map now shows how far a course got, not
