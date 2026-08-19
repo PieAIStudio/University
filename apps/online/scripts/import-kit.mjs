@@ -36,7 +36,11 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, "..");
-const donor = resolve(repo, "../_donors/world-of-claudecraft/public");
+// Three levels up, not one. `repo` is this app, which used to be the repository
+// root; after the monorepo move a single `..` pointed at `apps/_donors`, a
+// directory that has never existed, so the import found nothing and said the
+// donor was missing rather than that the path was wrong.
+const donor = resolve(repo, "../../../_donors/world-of-claudecraft/public");
 const outDir = join(repo, "public/kit");
 const manifestPath = join(repo, "src/world/kit.json");
 

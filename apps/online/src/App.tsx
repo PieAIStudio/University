@@ -314,7 +314,7 @@ export function App() {
       <main className="empty">
         <h1>还没有导入任何课程</h1>
         <p>
-          先跑 <code>pnpm import</code>，它会从 UniversityLocal 的导出包里取课程。 没有
+          先跑 <code>pnpm content</code>，它会从 UniversityLocal 的导出包里取课程。 没有
           UniversityLocal 的检出时它会干净退出——这个产品不生产内容，只投放内容。
         </p>
       </main>

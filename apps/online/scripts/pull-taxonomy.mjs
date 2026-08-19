@@ -30,11 +30,21 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { dirname, join, resolve } from "node:path";
 
 const projectRoot = resolve(import.meta.dirname, "..");
-const outRoot = join(projectRoot, "docs", "reference", "player-journey", "v2", "data");
+// Governed docs live at the repository root, not inside this app. Left as
+// `projectRoot` after the monorepo move, this wrote a fresh `apps/online/docs/`
+// nobody reads while the real taxonomy quietly went stale.
+const outRoot = resolve(
+  projectRoot,
+  "../../docs",
+  "reference",
+  "player-journey",
+  "v2",
+  "data",
+);
 
 const upstream = resolve(
   projectRoot,
-  process.env["UNIVERSITY_UPSTREAM_RECOVERY"] ?? "../UniversityLocal/course-proposals/recovery",
+  process.env["UNIVERSITY_UPSTREAM_RECOVERY"] ?? "../local/course-proposals/recovery",
 );
 
 if (!existsSync(upstream)) {

@@ -170,11 +170,28 @@ export function advanceLesson(key: string, progress: number) {
   commit();
 }
 
+/**
+ * The learner's own calendar day, not UTC's.
+ *
+ * `toISOString()` names a UTC day, and a streak is a promise about *your*
+ * days. Eight hours east of UTC that boundary falls at eight in the morning:
+ * a session before breakfast and one after it were two days and inflated the
+ * count, while a session either side of local midnight was one day and broke
+ * it. Both directions were wrong, and neither looked wrong from the outside.
+ */
+function calendarDay(at: number): string {
+  const date = new Date(at);
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 function touchStreak() {
-  const today = new Date().toISOString().slice(0, 10);
+  const now = Date.now();
+  const today = calendarDay(now);
   const { lastDay, days } = state.streak;
   if (lastDay === today) return;
-  const yesterday = new Date(Date.now() - DAY).toISOString().slice(0, 10);
+  const yesterday = calendarDay(now - DAY);
   state.streak = { days: lastDay === yesterday ? days + 1 : 1, lastDay: today };
 }
 
