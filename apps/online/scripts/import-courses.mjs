@@ -41,9 +41,14 @@ import { join, resolve } from "node:path";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const contentRoot = join(projectRoot, "content");
+// The authoring shell is a sibling package now, not a repository somewhere
+// else on the machine. That is worth more than a shorter path: the exports
+// this reads and the courses they came from move together in one commit, so
+// "the export was stale and nothing reported it" stops being possible by
+// construction rather than by a checker noticing afterwards.
 const upstream = resolve(
   projectRoot,
-  process.env["UNIVERSITY_UPSTREAM_RECOVERY"] ?? "../UniversityLocal/course-proposals/recovery",
+  process.env["UNIVERSITY_UPSTREAM_RECOVERY"] ?? "../local/course-proposals/recovery",
 );
 
 if (!existsSync(upstream)) {
@@ -108,15 +113,35 @@ for (const studyId of readdirSync(upstream).sort()) {
           if (!asset.dataBase64) return asset;
           inlineBytes += asset.dataBase64.length;
           const { bytes, type } = decodeAsset(asset.dataBase64);
+          // The package stores bare base64 with no `data:` prefix, so the mime
+          // the exporter recorded is the authoritative one; sniffing the blob
+          // only ever returns application/octet-stream and every screenshot
+          // lands on disk as a `.bin` nothing will preview.
+          const mime = asset.metadata?.mime ?? type;
           const digest = sha(bytes);
-          const name = `${digest}.${EXTENSIONS[type] ?? "bin"}`;
+          const name = `${digest}.${EXTENSIONS[mime] ?? "bin"}`;
           const target = join(contentRoot, "assets", name);
           if (!existsSync(target)) {
             writeFileSync(target, bytes);
             assetCount += 1;
             assetBytes += bytes.length;
           }
-          return { metadata: asset.metadata, src: `/content/assets/${name}`, bytes: bytes.length };
+          // Flatten into the shape the shared reader already speaks.
+          //
+          // The recovery package nests everything real under `metadata` and
+          // puts the pixels beside it as base64. `LessonAssetView` wants those
+          // fields at the top level with a `url` instead. Doing that conversion
+          // here — once, at the boundary — is what lets the reader be the same
+          // component on both sides; doing it in the component would be a
+          // second shape with a second set of bugs.
+          const meta = asset.metadata ?? {};
+          return {
+            ...meta,
+            url: `/content/assets/${name}`,
+            mime,
+            alt: meta.alt ?? "",
+            bytes: bytes.length,
+          };
         });
       }
     }

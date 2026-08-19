@@ -8,33 +8,23 @@
  * Reading sizes are set here rather than taken from SwimmerUIKit, and that is
  * deliberate and temporary. The kit's body scale tops out at 1.18rem because it
  * is a HUD kit; lessons here average 2,363 characters of Chinese with code in
- * them. Reading typography belongs in the shared learning package both halves
- * will import, and this is the note that says so until it exists.
+ * them. Reading typography belongs in the shared learning package, and this is
+ * the note that says so until it moves there.
+ *
+ * The prose itself is no longer rendered here. It goes through the same
+ * `MarkdownContent` the authoring shell uses, which is the whole point of
+ * `packages/ui`: a second Markdown pipeline is not a convenience, it is drift
+ * with a schedule. Swapping it in is also what gives this side Mermaid
+ * diagrams, Shiki-highlighted code and the authoring directives for free —
+ * none of which the previous `marked` call could do.
  */
 import { useEffect, useMemo, useState } from "react";
-import { marked } from "marked";
+import { MarkdownContent } from "@pieai/university-ui";
 
 import type { Lesson as LessonData } from "../content/library";
 import { gradeDeterministically, type Verdict } from "./grading";
 
 const ANCHOR = /^\[\[evidence:([^\]]+)\]\]$/gm;
-
-/**
- * Lift the inline anchors out before Markdown runs.
- *
- * `[[evidence:path:start-end]]` is the authoring side's own form and the one
- * construct in this prose that is not ordinary Markdown. Left alone it renders
- * as a stray line of text; lifted out it stays a first-class element, which is
- * the entire point of it.
- */
-function renderLesson(markdown: string) {
-  return marked.parse(
-    markdown.replace(ANCHOR, (_, route: string) => `<div data-evidence="${route}"></div>`),
-    {
-      async: false,
-    },
-  ) as string;
-}
 
 export function LessonView({
   lesson,
@@ -51,7 +41,19 @@ export function LessonView({
   onPass: () => void;
   onBack: () => void;
 }) {
-  const html = useMemo(() => renderLesson(lesson.content), [lesson.content]);
+  // `[[evidence:path:lines]]` is the authoring side's own construct, not
+  // Markdown. Lifting it out before rendering keeps the citations as real rows
+  // instead of a stray line of text in the middle of a paragraph.
+  const { prose, anchors } = useMemo(() => {
+    const found: { path: string; lines: string }[] = [];
+    const text = lesson.content.replace(ANCHOR, (_match, route: string) => {
+      const [path, lines] = route.split(/:(?=[^:]*$)/);
+      found.push({ path: path ?? route, lines: lines ?? "" });
+      return "";
+    });
+    return { prose: text, anchors: found };
+  }, [lesson.content]);
+
   const exercise = lesson.exercises[0];
   const [answer, setAnswer] = useState("");
   const [verdict, setVerdict] = useState<Verdict | null>(null);
@@ -64,23 +66,6 @@ export function LessonView({
     setMisses(0);
     setAppealed(false);
   }, [lesson.id]);
-
-  // Anchors become real rows in document order, matched to the lesson's own
-  // evidence list so the commit and line range come from the package.
-  useEffect(() => {
-    const slots = document.querySelectorAll<HTMLElement>("[data-evidence]");
-    slots.forEach((slot, index) => {
-      if (slot.dataset.filled === "yes") return;
-      const route = slot.dataset.evidence ?? "";
-      const [path, lines] = route.split(/:(?=[^:]*$)/);
-      const anchor = lesson.evidence[index];
-      slot.className = "evidence";
-      slot.dataset.filled = "yes";
-      slot.innerHTML = `<b>${path ?? ""}</b><span>:${lines ?? ""}</span><span class="go">@${
-        anchor?.sourceCommit.slice(0, 7) ?? "—"
-      } ↗</span>`;
-    });
-  }, [html, lesson.evidence]);
 
   const submit = () => {
     const result = gradeDeterministically(answer, exercise?.expectedAnswer);
@@ -110,7 +95,23 @@ export function LessonView({
         <span className="lesson__pos">{position}</span>
       </header>
 
-      <div className="lesson__body" dangerouslySetInnerHTML={{ __html: html }} />
+      <div className="lesson__body">
+        <MarkdownContent assets={lesson.assets ?? []}>{prose}</MarkdownContent>
+      </div>
+
+      {anchors.length > 0 ? (
+        <section className="evidence-list">
+          {anchors.map((anchor, index) => (
+            <div className="evidence" key={`${anchor.path}:${anchor.lines}:${index}`}>
+              <b>{anchor.path}</b>
+              <span>:{anchor.lines}</span>
+              <span className="go">
+                @{lesson.evidence[index]?.sourceCommit.slice(0, 7) ?? "—"} ↗
+              </span>
+            </div>
+          ))}
+        </section>
+      ) : null}
 
       {exercise ? (
         <section className="quiz">

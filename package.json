@@ -7,7 +7,6 @@
   "scripts": {
     "prepare": "lefthook install",
     "dev": "pnpm --filter @pieai/university-online dev",
-    "import": "pnpm --filter @pieai/university-online import",
     "kit": "pnpm --filter @pieai/university-online kit",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
@@ -18,7 +17,8 @@
     "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build && pnpm docs:check",
     "pro-gov": "pro-gov",
     "doc-gov": "doc-gov",
-    "docs:check": "pnpm pro-gov doctor && pnpm doc-gov router-check && pnpm doc-gov check && pnpm doc-gov scan --check && pnpm doc-gov links && pnpm doc-gov audit && pnpm doc-gov doctor"
+    "docs:check": "pnpm pro-gov doctor && pnpm doc-gov router-check && pnpm doc-gov check && pnpm doc-gov scan --check && pnpm doc-gov links && pnpm doc-gov audit && pnpm doc-gov doctor",
+    "content": "pnpm --filter @pieai/university-online content"
   },
   "devDependencies": {
     "@pieai/doc-gov": "0.9.1",
