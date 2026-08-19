@@ -1,0 +1,516 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-state-and-process",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "state-and-process",
+    "title": "状态与过程：半年后还改得动",
+    "description": "一个人维护的前端，最先烂掉的地方是状态。这门课讲两件事：把「事实」和「过程」分开存，以及把「加载中」拆成有名字的阶段。",
+    "audience": "一人公司 / 独立开发者，需要长期独自维护一个有真实用户的前端",
+    "objectives": [
+      "解释为什么身份和登录过程必须放在两个 store 里",
+      "写出一个只有一处定义的重置逻辑",
+      "把一个异步流程拆成可以逐个命名的阶段，而不是一个 loading 布尔值",
+      "说明状态里为什么存 key 而不是存给人看的话"
+    ],
+    "units": [
+      {
+        "id": "fact-vs-process",
+        "title": "事实与过程",
+        "objective": "分清「现在是真的」和「正在发生什么」，并让重置只有一个定义。",
+        "lessons": [
+          {
+            "id": "two-stores-not-one",
+            "title": "两个 store，不是一个",
+            "content": "# 两个 store，不是一个\n\n登录这件事，包含两种完全不同的信息：\n\n- **事实**：你是谁。`user`、`profile`、`isAnonymous`。\n- **过程**：登录进行得怎么样。`phase`、`statusKey`、`error`。\n\n绝大多数人把它们塞进同一个 store，因为「都跟登录有关」。TuringPact 没有——它拆成了两个文件。\n\n`src/stores/authStore.ts` 只存事实：\n\n```ts\ninterface AuthState {\n  user: { id: string; email?: string; is_anonymous?: boolean } | null;\n  profile: Profile | null;\n  isAnonymous: boolean;\n  // setters + reset\n}\n```\n\n`src/stores/authRuntimeStore.ts` 只存过程：\n\n```ts\ninterface AuthRuntimeState {\n  phase: AuthRuntimePhase;\n  statusKey: AuthRuntimeStatusKey;\n  error: string | null;\n  // setState + reset\n}\n```\n\n同一个仓库里，房间也是这么拆的：`roomStore.ts` 存 `room` / `players` / `myPlayerId` / `myRole`，`roomEntryStore.ts` 存 `phase` / `statusKey` / `error` / `code`。**两次独立出现的同一个划分，就不是巧合，是这个代码库的一条规矩。**\n\n## 为什么这条线必须画\n\n两类信息的**生命周期不一样**。\n\n事实要活得久。用户刷新页面、切到后台再回来、网络断了又通，`user` 应该还在。\n\n过程必须能随时清零。一次失败的登录留下的 `error`，在下一次尝试开始时就该消失；一个卡在 `submitting` 的 phase，重进页面时必须回到 `bootstrapping`。\n\n合成一个 store，你就只有两个坏选择：\n\n1. **重置整个 store** —— 清掉失败状态的同时把用户也登出了。用户明明还是登录着的，界面却把他踢回了首页。\n2. **手工挑着重置** —— 于是你写下 `set({ error: null, phase: 'idle' })`。三个月后你加了第四个过程字段，忘了加进这行，一个陈旧的状态就永远留在了那儿。\n\n拆开之后，这两个选择都不需要做：`useAuthRuntimeStore.getState().reset()` 语义完整——把过程清零，事实不动。\n\n## 一个人写代码时，这条规矩更重要\n\n有团队时，这类问题会被 code review 拦下来。一个人时没人拦，只有「三个月后的你」在处理「三个月前的你」留下的东西。\n\n判断标准很简单，写字段的时候问一句：\n\n> **这个值，在操作失败后应该消失，还是应该留着？**\n\n答案是「消失」的，属于过程 store。答案是「留着」的，属于事实 store。答不上来的，说明这个字段本身还没想清楚。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/authStore.ts",
+                "lineStart": 1,
+                "lineEnd": 26,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:src/stores/authStore.ts"],
+                "note": "身份事实：user / profile / isAnonymous，不含任何过程字段。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/authRuntimeStore.ts",
+                "lineStart": 1,
+                "lineEnd": 23,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:src/stores/authRuntimeStore.ts"],
+                "note": "登录过程：phase / statusKey / error，与身份事实分开存放。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/roomStore.ts",
+                "lineStart": 1,
+                "lineEnd": 30,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:src/stores/roomStore.ts"],
+                "note": "房间事实：room / players / myPlayerId / myRole。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/roomEntryStore.ts",
+                "lineStart": 1,
+                "lineEnd": 27,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:src/stores/roomEntryStore.ts"],
+                "note": "进房过程：同样的 phase / statusKey / error 三件套，证明这是一条通行规矩而非个例。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "fact-process-test",
+                "front": "要判断一个字段该放事实 store 还是过程 store，问哪一个问题？",
+                "back": "「操作失败后，这个值应该消失还是留着？」——消失的属于过程，留着的属于事实。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/authRuntimeStore.ts",
+                    "lineStart": 7,
+                    "lineEnd": 13,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/stores/authRuntimeStore.ts"],
+                    "note": "过程 store 的三个字段都是失败后应当清零的。"
+                  }
+                ]
+              },
+              {
+                "id": "merged-store-cost",
+                "front": "把身份和登录过程合成一个 store，会被迫在哪两个坏选择之间挑？",
+                "back": "要么整体重置——清错误的同时把用户登出了；要么手工挑字段重置——以后新增过程字段一定会漏掉一个。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/authStore.ts",
+                    "lineStart": 4,
+                    "lineEnd": 12,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/stores/authStore.ts"],
+                    "note": "事实 store 里没有 error 与 phase，所以重置它不会影响登录过程，反之亦然。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "split-recall",
+                "title": "回忆划分标准",
+                "prompt": "TuringPact 用哪一个问题来决定字段放进事实 store 还是过程 store？用一句话写出来。",
+                "expectedAnswer": "操作失败后这个值应该消失还是留着",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/authRuntimeStore.ts",
+                    "lineStart": 7,
+                    "lineEnd": 13,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/stores/authRuntimeStore.ts"],
+                    "note": "phase / statusKey / error 都属于失败后应当清零的一类。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "one-definition-of-empty",
+            "title": "「空」只能有一个定义",
+            "content": "# 「空」只能有一个定义\n\n四个 store 的重置，写法完全一样：\n\n```ts\nfunction createAuthState(set: StoreApi<AuthState>['setState']): AuthState {\n  return {\n    user: null,\n    profile: null,\n    isAnonymous: true,\n    setUser: (user) => set({ user }),\n    setProfile: (profile) => set({ profile }),\n    setIsAnonymous: (isAnonymous) => set({ isAnonymous }),\n    reset: () => set(createAuthState(set), true),\n  };\n}\n\nexport const useAuthStore = create<AuthState>((set) => createAuthState(set));\n```\n\n这段代码里有两个刻意的选择，都容易被当成随手写的。\n\n## 一、初始状态和重置调用同一个函数\n\n`create()` 用 `createAuthState(set)` 建初始状态，`reset()` 也调 `createAuthState(set)`。**「空」在整个文件里只有一处定义。**\n\n常见的写法是另外写一份：\n\n```ts\n// 不要这样\nconst initialState = { user: null, profile: null, isAnonymous: true };\n// ...\nreset: () => set({ user: null, profile: null, isAnonymous: true }),\n```\n\n这就有了两份定义。加第四个字段时，你会改其中一份，忘掉另一份，而且**不会报错**——`reset()` 依然能跑，只是从此不再重置那个字段。这个 bug 不会在开发时出现，只会在用户连续做两次操作时出现，而且难以复现。\n\n这就是这门课程体系反复讲的那件事的另一个形态：**约束要放在机器能替你检查的地方。**「记得两处一起改」不是约束，是愿望。让两处变成一处，才是约束。\n\n## 二、`set(..., true)` 里的 `true`\n\nZustand 的 `set` 默认是**合并**。`set(createAuthState(set))` 只会把返回对象里的键覆盖上去；如果 store 里有别处塞进来的键，它会原封不动留着。\n\n第二个参数 `true` 是 `replace`，表示整个替换。**只有加了它，`reset()` 才真的等于「回到刚创建的样子」**，否则它只是「把我列出来的这些字段改回去」。\n\n四个 store 全都写了这个 `true`。这不是风格，是语义。\n\n## 迁移到你自己的代码\n\n这个模式和框架无关。Redux、Signals、`useReducer`、甚至一个普通的 class，只要有「初始状态」和「重置」两个概念，就适用同一条：\n\n> 让初始状态和重置指向同一个表达式，并确认你的重置是替换而不是合并。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/authStore.ts",
+                "lineStart": 14,
+                "lineEnd": 26,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:src/stores/authStore.ts"],
+                "note": "createAuthState 同时被 create() 和 reset() 调用；reset 传了 replace=true。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/roomStore.ts",
+                "lineStart": 16,
+                "lineEnd": 30,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/roomStore.ts",
+                  "function:src/stores/roomStore.ts:createRoomState"
+                ],
+                "note": "同一个工厂 + replace 模式在 roomStore 里逐字重复。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/stores/roomEntryStore.ts",
+                "lineStart": 15,
+                "lineEnd": 27,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/stores/roomEntryStore.ts",
+                  "function:src/stores/roomEntryStore.ts:createRoomEntryState"
+                ],
+                "note": "第四次出现，确认这是全仓库统一的写法。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "single-empty-definition",
+                "front": "为什么初始状态和 reset 要调用同一个工厂函数？",
+                "back": "让「空」只有一处定义。分成两份时，新增字段只改了一处也不会报错，reset 会静默地不再重置那个字段。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/authStore.ts",
+                    "lineStart": 14,
+                    "lineEnd": 26,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/stores/authStore.ts"],
+                    "note": "create() 与 reset() 都调用 createAuthState。"
+                  }
+                ]
+              },
+              {
+                "id": "replace-flag",
+                "front": "`set(createAuthState(set), true)` 里的 `true` 是什么？去掉会怎样？",
+                "back": "是 Zustand 的 replace 标志。去掉后 set 变成合并，reset 只会覆盖列出的字段，别处塞进 store 的键会留下来，reset 就不再等于「回到初始」。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/authStore.ts",
+                    "lineStart": 21,
+                    "lineEnd": 21,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/stores/authStore.ts"],
+                    "note": "reset 显式传入第二个参数 true。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "two-definitions-explain",
+                "title": "解释两份定义的代价",
+                "kind": "explain",
+                "prompt": "假设有人把 reset 改写成手写一份字面量对象（`reset: () => set({ user: null, profile: null, isAnonymous: true })`），并且忘了传 replace。请解释这个改动引入了哪些问题，以及它们各自会在什么时候暴露出来。",
+                "rubric": [
+                  "指出「空」出现了两份定义，新增字段时只改一处不会报错",
+                  "说明少了 replace 后 set 变成合并，reset 不再等于回到初始状态",
+                  "指出这类 bug 不在开发期暴露，而是在用户连续操作时才出现，且难以复现"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/stores/authStore.ts",
+                    "lineStart": 14,
+                    "lineEnd": 26,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/stores/authStore.ts"],
+                    "note": "对照原始写法：工厂复用 + replace=true。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "name-the-waiting",
+        "title": "给等待命名",
+        "objective": "把一个 loading 布尔值拆成有名字的阶段，并让状态只存标识符。",
+        "lessons": [
+          {
+            "id": "phases-not-loading",
+            "title": "「加载中」不是一个状态，是七个",
+            "content": "# 「加载中」不是一个状态，是七个\n\n进一个房间，TuringPact 的类型是这么写的：\n\n```ts\nexport type RoomEntryPhase =\n  | 'idle'\n  | 'waiting_for_auth'\n  | 'resolving_room'\n  | 'ensuring_membership'\n  | 'hydrating_room'\n  | 'ready'\n  | 'failed';\n```\n\n七个名字。不是 `isLoading: boolean`，不是 `status: 'loading' | 'done' | 'error'`。\n\n登录那边是同一个做法：\n\n```ts\nexport type AuthRuntimePhase =\n  | 'bootstrapping'\n  | AuthReadyPhase          // 'anonymous_ready' | 'authenticated_ready'\n  | 'submitting'\n  | 'reconciling'\n  | 'failed';\n```\n\n注意 `AuthReadyPhase` 被单独抽了出来——「就绪」有两种，匿名就绪和已认证就绪，而且两者都是**合法的终态**。这是产品决策写进了类型：匿名用户可以直接玩，不是「还没登录完」。\n\n## 为什么值得拆这么细\n\n**第一，用户在等待时唯一想知道的就是「卡在哪一步」。**\n\n一个转圈的图标，转三秒和转三十秒是同一个画面。用户没法判断该继续等还是该退出重来，于是他们退出重来——常常是在还差一步就成功的时候。\n\n七个阶段意味着界面可以说「正在确认房间」而不是「加载中」。这不是文案优化，这是把「还要多久」这个信息真的交出去。\n\n**第二，你自己排查问题时，它就是日志。**\n\n用户说「进不去房间」。如果只有 `isLoading`，你什么都不知道。如果 phase 停在 `ensuring_membership`，你直接知道认证过了、房间找到了、卡在加入成员这一步——排查范围从整条链路缩到一个函数。\n\n一个人做产品时，这一条尤其值钱：**你没有客服，用户不会给你复现步骤，阶段名就是你唯一的现场。**\n\n**第三，写下这个 union 会逼你把流程想清楚。**\n\n`waiting_for_auth` 排在 `resolving_room` 前面，说明进房依赖登录先完成。这个依赖关系原本藏在函数调用顺序里，写成类型之后就摆在明面上了。\n\n## 和「降级矩阵」是同一件事\n\n如果你学过这套课程里的《测试策略》，会认出这个形状：那门课里 `degraded-matrix.spec.ts` 要求**每一种降级状况都要对应一个玩家能看见的下一步动作**。\n\n这里是同一条规矩，出现在状态设计里：**每一种等待都要有名字。**\n\n没名字的等待和没有下一步动作的错误，是同一个毛病——**系统知道发生了什么，但没打算告诉任何人。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/room-entry/types.ts",
+                "lineStart": 3,
+                "lineEnd": 10,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:src/services/room-entry/types.ts"],
+                "note": "RoomEntryPhase 七个阶段，把进房流程写成了类型。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/types.ts",
+                "lineStart": 11,
+                "lineEnd": 18,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:src/services/auth/types.ts"],
+                "note": "AuthRuntimePhase 把 AuthReadyPhase 抽出来，匿名就绪与已认证就绪都是合法终态。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "phase-union-value",
+                "front": "把 `isLoading: boolean` 换成七个具名阶段，对一个没有客服的独立开发者最大的好处是什么？",
+                "back": "用户报「进不去」时，停住的阶段名就是现场。排查范围从整条链路缩到一个函数——你不需要用户复现。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 3,
+                    "lineEnd": 10,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/services/room-entry/types.ts"],
+                    "note": "阶段名本身构成了可定位的现场信息。"
+                  }
+                ]
+              },
+              {
+                "id": "two-ready-phases",
+                "front": "`AuthReadyPhase = 'anonymous_ready' | 'authenticated_ready'` 这个抽取表达了什么产品决策？",
+                "back": "匿名就绪也是合法终态——匿名用户可以直接玩，不是「还没登录完」。产品决策被写进了类型。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/types.ts",
+                    "lineStart": 11,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/services/auth/types.ts"],
+                    "note": "AuthReadyPhase 单独定义并嵌入 AuthRuntimePhase。"
+                  }
+                ]
+              },
+              {
+                "id": "phase-order-dependency",
+                "front": "`waiting_for_auth` 排在 `resolving_room` 之前，暴露了什么原本藏起来的信息？",
+                "back": "进房依赖登录先完成。这个依赖原本只存在于函数调用顺序里，写成 union 之后摆在了明面上。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 3,
+                    "lineEnd": 10,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/services/room-entry/types.ts"],
+                    "note": "阶段顺序编码了依赖关系。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "phase-count-recall",
+                "title": "回忆阶段数",
+                "prompt": "RoomEntryPhase 一共定义了几个阶段？只填数字。",
+                "expectedAnswer": "7",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 3,
+                    "lineEnd": 10,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/services/room-entry/types.ts"],
+                    "note": "idle / waiting_for_auth / resolving_room / ensuring_membership / hydrating_room / ready / failed。"
+                  }
+                ]
+              },
+              {
+                "id": "naming-waiting-explain",
+                "title": "解释「给等待命名」",
+                "kind": "explain",
+                "prompt": "这门课说「没名字的等待，和没有下一步动作的错误，是同一个毛病」。请解释这两者为什么是同一件事，并各举出它在 TuringPact 里的一处落点。",
+                "rubric": [
+                  "指出共同点：系统内部知道发生了什么，但没有把它交给用户",
+                  "举出等待侧的落点：RoomEntryPhase 的七个具名阶段",
+                  "举出错误侧的落点：降级矩阵要求每种降级都对应一个玩家可见的下一步动作"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 3,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/services/room-entry/types.ts"],
+                    "note": "阶段与状态键一起构成了可以交给界面的信息。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "keys-not-sentences",
+            "title": "状态存 key，不存话",
+            "content": "# 状态存 key，不存话\n\n两个过程 store 里都有一个 `statusKey`：\n\n```ts\nexport type RoomEntryStatusKey =\n  | 'syncingSession'\n  | 'checkingRoom'\n  | 'joiningRoom'\n  | 'loadingRoom'\n  | null;\n```\n\n```ts\nexport type AuthRuntimeStatusKey =\n  | 'signingIn'\n  | 'syncingSession'\n  | 'checkingSession'\n  | 'recoveringSession'\n  | 'creatingAnonymousSession'\n  | null;\n```\n\n它们是**标识符**，不是给人看的句子。store 里没有一个字段叫 `statusMessage: '正在加入房间…'`。\n\n## 三件事因此变得可能\n\n**一、翻译。** TuringPact 是双语的。如果 store 里存的是中文字符串，那么切换语言就得把状态清掉重跑一遍，或者在渲染时反查字符串——两条路都很难看。存 key，翻译就是纯粹的渲染层问题。\n\n对独立开发者，这一条的分量比看上去重：**i18n 是极少数无法事后补的架构决定之一。** 补的时候，你要把散落在几十个文件里的每一句话找出来，而它们已经和逻辑绞在一起了。开始时存 key 的代价是零；两年后再改的代价是重写。\n\n**二、比较。** `statusKey === 'syncingSession'` 是可靠的判断。`statusMessage === '正在同步会话…'` 会被一个句号、一个空格、一次文案微调打断。**能比较的状态才能被测试。**\n\n注意 `syncingSession` 在两个 union 里都出现了——登录和进房共用同一个提示。用 key，这种复用是显式的；用句子，你只会得到两句碰巧长得差不多的话，然后有一天它们悄悄分叉了。\n\n**三、改文案不动逻辑。** 你想把「正在加入房间」改成「正在为你安排座位」，改的是翻译文件，代码一行不动，测试不受影响。\n\n## `| null` 也是设计\n\n两个 union 都以 `| null` 结尾。null 表示「此刻没有要显示的状态提示」——`idle` 和 `ready` 都不需要提示。\n\n显式写出 null，界面就必须处理这种情况；如果用空字符串 `''` 来表示，它会悄悄通过所有的真值判断，然后在某处渲染出一个空白的提示条。\n\n## 一句话\n\n> **状态里存机器用的东西，界面上才出现人看的东西。**\n\n这条和《契约与防漂移》里的那条是一家人：把承诺放在机器能检查的地方。`statusKey` 是能被 `===` 检查的；一句中文不是。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/room-entry/types.ts",
+                "lineStart": 12,
+                "lineEnd": 17,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:src/services/room-entry/types.ts"],
+                "note": "RoomEntryStatusKey 是标识符 union，并显式允许 null。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/auth/types.ts",
+                "lineStart": 20,
+                "lineEnd": 26,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": ["file:src/services/auth/types.ts"],
+                "note": "AuthRuntimeStatusKey 与 RoomEntryStatusKey 共享 syncingSession 这个键。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-status-key",
+                "front": "为什么过程 store 存 `statusKey` 而不是一句现成的提示语？",
+                "back": "翻译只剩渲染层的事；key 可以用 === 可靠比较因而可测；改文案不动代码。三者都因为存的是标识符而不是句子。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 12,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/services/room-entry/types.ts"],
+                    "note": "状态键是标识符 union。"
+                  }
+                ]
+              },
+              {
+                "id": "i18n-not-retrofittable",
+                "front": "为什么说 i18n 是极少数无法事后补的架构决定？",
+                "back": "补的时候要把散在几十个文件里的每一句话找出来，而它们已经和逻辑绞在一起。开始时存 key 代价为零，两年后再改等于重写。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/types.ts",
+                    "lineStart": 20,
+                    "lineEnd": 26,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/services/auth/types.ts"],
+                    "note": "双语产品从一开始就在状态里存键。"
+                  }
+                ]
+              },
+              {
+                "id": "explicit-null-status",
+                "front": "状态键 union 末尾的 `| null` 解决了什么，用空字符串会怎样？",
+                "back": "null 表示此刻没有提示（idle、ready），显式写出来界面就必须处理它。空字符串会悄悄通过真值判断，最后渲染出一条空白提示条。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 12,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/services/room-entry/types.ts"],
+                    "note": "union 显式以 null 结尾。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "status-key-recall",
+                "title": "回忆共用的状态键",
+                "prompt": "AuthRuntimeStatusKey 和 RoomEntryStatusKey 共同拥有的那个状态键叫什么？",
+                "expectedAnswer": "syncingSession",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/auth/types.ts",
+                    "lineStart": 20,
+                    "lineEnd": 26,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": ["file:src/services/auth/types.ts"],
+                    "note": "syncingSession 同时出现在两个状态键 union 中。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

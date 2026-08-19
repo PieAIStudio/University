@@ -1,0 +1,110 @@
+annot-one-codebase-many-hosts 自查报告
+================================================
+
+课程：one-codebase-many-hosts（一套代码，多端交付）
+处理课时数：4（与 studies 下 content.md 数量一致，无遗漏）
+锚点总数：20（每节 5 个，落在 2–5 要求内）
+词表：data/vocabulary/en.json（只使用已有 senseId，未改词表）
+
+课时清单
+------------------------------------------------
+- adapter-layer/detect-once-degrade-always: 5 anchors
+    quote='适配层' occ=1 senseId=adapter.platform
+    quote='降级' occ=1 senseId=degrade.fallback
+    quote='纯函数' occ=1 senseId=pure.function
+    quote='宿主' occ=1 senseId=host.runtime
+    quote='平台' occ=1 senseId=platform.target
+- adapter-layer/hardest-platform-wins: 5 anchors
+    quote='接口' occ=1 senseId=interface.shape
+    quote='平台' occ=1 senseId=platform.target
+    quote='同步的' occ=1 senseId=sync.blocking
+    quote='异步的' occ=1 senseId=async.function
+    quote='约束' occ=1 senseId=constraint.design
+- the-shell/decisions-out-of-the-shell: 5 anchors
+    quote='外壳' occ=1 senseId=shell.container
+    quote='纯函数' occ=1 senseId=pure.function
+    quote='环境变量' occ=1 senseId=environment.variable
+    quote='边界用例' occ=1 senseId=edge.boundary
+    quote='路径' occ=1 senseId=path.location
+- the-shell/electron-three-switches: 5 anchors
+    quote='运行时' occ=1 senseId=runtime.environment
+    quote='依赖' occ=1 senseId=dependency.module
+    quote='默认值' occ=1 senseId=default.value
+    quote='覆盖' occ=1 senseId=overwrite.update
+    quote='兜底' occ=1 senseId=fallback.plan
+
+senseId 全量对照：全部 20 个均在 en.json 中存在。
+
+抽查（8 个锚点，手工按正文 indexOf 逐次计数）
+------------------------------------------------
+[detect-once-degrade-always] quote='适配层' occ=1 / total=1
+  落点上下文：…、有单一出处、能被断言。↵↵**适配层的产出不该只是「我在哪个平台」，…
+  判定：正确（第 1 次即目标词）
+
+[detect-once-degrade-always] quote='宿主' occ=1 / total=1
+  落点上下文：…测结果推出的一个决定**。非网页宿主是从 `file://` 加载页…
+  判定：正确（第 1 次即目标词）
+
+[hardest-platform-wins] quote='同步的' occ=1 / total=1
+  落点上下文：…calStorage`，**它是同步的**。这里加 `async` 纯…
+  判定：正确（第 1 次即目标词）
+
+[hardest-platform-wins] quote='接口' occ=1 / total=10
+  落点上下文：…# 接口按最难的平台设计↵↵Turing…
+  判定：正确（第 1 次即目标词）
+
+[decisions-out-of-the-shell] quote='环境变量' occ=1 / total=4
+  落点上下文：…``↵↵六行。它做的事很小：如果环境变量里给了一个非空的路径，就用它，否…
+  判定：正确（第 1 次即目标词）
+
+[decisions-out-of-the-shell] quote='路径' occ=1 / total=3
+  落点上下文：…小：如果环境变量里给了一个非空的路径，就用它，否则返回 null 表…
+  判定：正确（第 1 次即目标词）
+
+[electron-three-switches] quote='默认值' occ=1 / total=2
+  落点上下文：…是 Electron 现代版本的默认值，但**默认值会被抄来的旧代码覆…
+  判定：正确（第 1 次即目标词）
+
+[electron-three-switches] quote='覆盖' occ=1 / total=1
+  落点上下文：…值，但**默认值会被抄来的旧代码覆盖**——网上大量教程还是 201…
+  判定：正确（第 1 次即目标词）
+
+子串碰撞处理（本次因陷阱调整过的 quote）
+------------------------------------------------
+1. 同步 / 异步 → 改用「同步的」「异步的」
+   原因：正文首次「同步」「异步」都包在「同步的」「异步的」里，
+   若标短词会显示成「sync的 / async的」。
+2. 环境 → 改用「环境变量」
+   原因：正文里「环境」四次全部是「环境变量」的前缀。
+3. 边界 → 改用「边界用例」
+   原因：decisions 课里「边界」只作为「边界用例」出现；
+   且 detect 课里「边界」仅出现在书名《…成本与边界》，不是本节概念。
+4. 默认 → 改用「默认值」
+   原因：electron 课里前两次「默认」都在「默认值」内部；
+   hardest-platform 课同理。
+5. 原生 → 未采用短词「原生」
+   原因：首次出现包在「原生端」里；本节未单独标原生（已用接口/异步等主概念）。
+6. 产物 → 未采用
+   原因：仅出现在「产物路径」内，会显示成「artifact路径」。
+7. 权限 → 未采用短词
+   原因：electron 课仅「权限设置」；hardest 课「有权限/无权限」可标但非本节核心。
+8. 适配 → 用完整「适配层」
+   原因：词表 sense 即 adapter/适配层，长词更精确。
+
+其他注意
+------------------------------------------------
+- 「宿主」落在「非网页宿主」末两字：替换后为「非网页 host」，语义完整，
+  不是「文件(夹)」类破碎；未改 quote。
+- occurrence 计数包含代码块与行内代码（与 resolveAnchors 一致）；
+  本次全部锚点落点均在 prose，无 inside-code。
+- 同一节同一 quote 只标一次。
+- 优先 technical 轨术语（适配层/降级/宿主/接口/运行时等）。
+
+选词与课意对齐（简述）
+------------------------------------------------
+- detect-once-degrade-always：适配层、降级、纯函数、宿主、平台
+- hardest-platform-wins：接口、平台、同步的、异步的、约束
+- decisions-out-of-the-shell：外壳、纯函数、环境变量、边界用例、路径
+- electron-three-switches：运行时、依赖、默认值、覆盖、兜底
+
+结论：4 节课齐全，20 锚点 senseId 合法，抽查 8/8 落点正确，子串碰撞已规避。

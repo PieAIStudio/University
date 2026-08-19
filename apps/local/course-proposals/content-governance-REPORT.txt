@@ -1,0 +1,94 @@
+content-governance course proposal — delivery report
+=====================================================
+
+Scale
+-----
+- Units: 3
+  1. status-machine (状态机：草稿到退休) — 4 lessons
+  2. crash-safe-writes (崩溃安全的写入) — 4 lessons
+  3. activate-and-retire (激活门禁与稳定标识) — 3 lessons
+- Lessons: 11
+- Cards: 22 (2 per lesson)
+- Exercises: 11 (1 per lesson)
+- Evidence references (lesson + card + exercise): 59
+
+Target
+------
+- proposalId: create-content-governance
+- course.id: content-governance
+- targetSnapshotId: git-90cf76c1177f
+- sourceCommit: 90cf76c1177fa19cd5d9d0a6c8257d934a586b5e
+- targetAnalysisId: ua-90cf76c1-v2-9-4-zh-full-e98206c7358f1ff1-8b71aac3ba92
+- Primary evidence: server/content/repository.ts, server/workflows/revise-course.ts
+  (also evidence.ts, atomic-json.ts, src/domain/schemas.ts)
+
+Gate: check-proposal-shape.mjs
+------------------------------
+ok  course-proposals/content-governance.json
+
+Gate: check-proposal-evidence.mjs --study university-local
+---------------------------------------------------------
+ok  server/content/evidence.ts:114-125
+ok  server/content/evidence.ts:114-126
+ok  server/content/evidence.ts:294-308
+ok  server/content/repository.ts:200-229
+ok  server/content/repository.ts:215-215
+ok  server/content/repository.ts:215-220
+ok  server/content/repository.ts:232-236
+ok  server/content/repository.ts:238-259
+ok  server/content/repository.ts:276-289
+ok  server/content/repository.ts:283-285
+ok  server/content/repository.ts:347-359
+ok  server/content/repository.ts:351-355
+ok  server/content/repository.ts:351-359
+ok  server/content/repository.ts:370-411
+ok  server/content/repository.ts:380-409
+ok  server/content/repository.ts:39-45
+ok  server/content/repository.ts:431-434
+ok  server/content/repository.ts:431-441
+ok  server/content/repository.ts:504-509
+ok  server/content/repository.ts:509-509
+ok  server/content/repository.ts:511-512
+ok  server/content/repository.ts:537-539
+ok  server/content/repository.ts:548-576
+ok  server/content/repository.ts:554-556
+ok  server/content/repository.ts:578-606
+ok  server/content/repository.ts:610-627
+ok  server/content/repository.ts:625-626
+ok  server/storage/atomic-json.ts:13-32
+ok  server/storage/atomic-json.ts:20-25
+ok  server/workflows/revise-course.ts:219-225
+ok  server/workflows/revise-course.ts:219-255
+ok  server/workflows/revise-course.ts:240-246
+ok  server/workflows/revise-course.ts:243-246
+ok  server/workflows/revise-course.ts:258-266
+ok  server/workflows/revise-course.ts:258-269
+ok  server/workflows/revise-course.ts:299-302
+ok  server/workflows/revise-course.ts:299-322
+ok  server/workflows/revise-course.ts:306-322
+ok  server/workflows/revise-course.ts:316-321
+ok  server/workflows/revise-course.ts:487-496
+ok  server/workflows/revise-course.ts:804-838
+ok  server/workflows/revise-course.ts:815-816
+ok  server/workflows/revise-course.ts:829-833
+ok  server/workflows/revise-course.ts:895-912
+ok  server/workflows/revise-course.ts:960-1026
+ok  server/workflows/revise-course.ts:969-972
+ok  src/domain/schemas.ts:202-202
+
+all 59 references resolve at their pinned commits
+
+Most counter-intuitive finding (already in the course)
+-----------------------------------------------------
+The status value "stale" is NOT only "source evidence went bad".
+openCourseForEdit deliberately moves a still-fresh active course to stale so
+human revision shares the same reactivation door as freshness failure
+(reactivateCourse + full audit).
+
+A close second: status updates are idempotent no-ops when the requested status
+equals the current one. That was not a convenience — partial reactivation used
+to die on illegal transition active -> active and leave the shelf half-activated
+with no command able to finish (see comments on updateCourseStatus). Process
+re-entrancy matters as much as the pretty state diagram.
+
+No git commit was made. Airlock frozen copy was not modified.

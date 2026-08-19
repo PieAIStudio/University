@@ -1,0 +1,1426 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "buzz-reading-rust",
+    "title": "《如何读懂 Buzz 里的 Rust 结构？》",
+    "description": "从 Buzz 的真实 Rust 源码出发，读懂结构体、Option、Result、借用和 async 边界如何共同表达事件处理规则。",
+    "audience": "已经完成 Buzz 入门课程、能阅读少量 Rust，但还不熟悉 Rust 类型和错误传播的学习者。",
+    "objectives": [
+      "用真实源码解释 StoredEvent 的字段可见性、构造方式和 Option 频道范围",
+      "沿着 verify_event 和 ingest_event 读懂 Result、错误变体、问号传播与阻塞任务",
+      "读懂 NIP-01 filter 的借用签名，以及多个 filter 与单个 filter 字段的逻辑关系"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [],
+    "trackId": null,
+    "units": [
+      {
+        "id": "rust-structures",
+        "title": "从 StoredEvent 读 Rust 结构",
+        "objective": "先用一个真实结构体建立字段、构造函数、Option 与状态标记的阅读方法。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "tampered-id-and-signature",
+            "title": "为什么 event.rs 的测试要把 ID 和签名分开检查？",
+            "content": "# 为什么 event.rs 的测试要把 ID 和签名分开检查？\n\n## 现象\n\n你在 `buzz-core` 的测试里会看到一个很有信息量的动作：先生成签名事件，只把 `sig` 改成 128 个零，接着断言 `verify_id()` 仍然成功，而 `verify_signature()` 失败。\n\n[[evidence:crates/buzz-core/src/event.rs:65-72]]\n\n## 先猜一下\n\n如果事件的签名被改坏了，但 pubkey、时间、kind、tags、content 都没有变，你觉得事件 ID 会不会也跟着变？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不会。这个测试把 ID 完整性和签名真实性拆成两个检查，所以只改签名时 ID 还能通过，签名检查会失败。\n\n## 为什么是这样\n\n事件 ID 是由事件字段计算出的哈希；签名则是对事件 ID 做的 Schnorr 证明。你只改 `sig`，没有改参与 ID 计算的那些字段，`verify_id()` 就仍然能复算出原来的 ID。\n\n[[evidence:crates/buzz-core/src/verification.rs:11-29]]\n\n验证函数也把顺序写出来了：先检查 ID，ID 正确后才检查签名。这样你能区分“内容和 ID 对不上”与“ID 对，但签名不可信”这两类失败。你读测试时，两个断言正好对应这两个层次。\n\n[[evidence:crates/buzz-core/src/event.rs:65-72]]\n\n## 自检\n\n- 只改 `sig` 时，为什么 `verify_id()` 还能成功？\n- `verify_id()` 和 `verify_signature()` 分别在回答什么问题？\n\n## 一句话\n\n**事件 ID 检查字段完整性，签名检查签名者是否真的证明了这个 ID。**",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/event.rs",
+                "lineStart": 65,
+                "lineEnd": 72,
+                "nodeIds": [],
+                "note": "测试只篡改 sig，并分别断言 ID 验证成功、签名验证失败。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/verification.rs",
+                "lineStart": 11,
+                "lineEnd": 29,
+                "nodeIds": [],
+                "note": "verify_event 先检查 ID，再检查 Schnorr 签名。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-id-check",
+                "kind": "basic",
+                "front": "只改 sig 时，哪项检查仍然可能成功？",
+                "back": "verify_id 仍然可能成功，因为参与 ID 哈希的事件字段没有变化。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 65,
+                    "lineEnd": 72,
+                    "nodeIds": [],
+                    "note": "测试直接断言 tampered 事件的 verify_id 成功。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-signature-check",
+                "kind": "basic",
+                "front": "签名检查失败说明什么？",
+                "back": "说明当前 sig 没有为这个事件 ID 提供有效的 Schnorr 证明。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/verification.rs",
+                    "lineStart": 27,
+                    "lineEnd": 29,
+                    "nodeIds": [],
+                    "note": "verify_event 对无效签名返回 InvalidSignature。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-id-signature-order",
+                "kind": "short-answer",
+                "title": "回忆验证顺序",
+                "prompt": "verify_event 先检查 ID 还是先检查签名？",
+                "expectedAnswer": "先检查 ID",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/verification.rs",
+                    "lineStart": 11,
+                    "lineEnd": 29,
+                    "nodeIds": [],
+                    "note": "源码中的两个 if 顺序先后对应 ID 与签名。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-tampered-sig-result",
+                "kind": "short-answer",
+                "title": "判断篡改结果",
+                "prompt": "测试只把 sig 改成零时，两个验证结果分别是什么？",
+                "expectedAnswer": "verify_id 成功，verify_signature 失败",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 65,
+                    "lineEnd": 72,
+                    "nodeIds": [],
+                    "note": "测试断言给出两个结果。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "pub-and-private-fields",
+            "title": "`pub` 和私有字段在 StoredEvent 里各自保护什么？",
+            "content": "# `pub` 和私有字段在 StoredEvent 里各自保护什么？\n\n## 一句真实出现的话\n\n你在 `StoredEvent` 的定义里会看到三项公开字段：`pub event`、`pub received_at`、`pub channel_id`；紧接着的 `verified: bool` 没有 `pub`。这不是排版差异，而是 Rust 访问边界。\n\n[[evidence:crates/buzz-core/src/event.rs:9-19]]\n\n## 先猜一下\n\n如果 relay 的其他模块拿到了一个 StoredEvent，它能不能直接把 `verified` 改成 true？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不能直接访问这个私有字段；它只能通过公开方法读取验证状态，或者使用模块提供的构造路径建立状态。\n\n## 三个真实用例\n\n第一个用例是读取原始事件：`pub event` 让外层处理器能继续访问 Nostr event。第二个用例是读取 relay 接收时间和频道范围：两个字段同样公开，便于存储、过滤和扇出。\n\n[[evidence:crates/buzz-core/src/event.rs:9-18]]\n\n第三个用例是验证状态：字段本身保持私有，但 `is_verified()` 公开返回它的值。你因此能看到“允许读取状态”与“允许随意改状态”是两种不同的权限。\n\n[[evidence:crates/buzz-core/src/event.rs:32-35]]\n\n## 它不是什么\n\n`pub` 不是“这个字段可以绕过所有业务规则”的意思；它只表达 Rust 的字段可见性。你仍然要看构造函数和调用方，才能知道一个公开字段怎样进入系统、一个私有状态怎样被改变。\n\n## 自检\n\n- StoredEvent 中哪个字段没有 `pub`？\n- 为什么 `is_verified()` 比公开 `verified` 更能保留状态边界？\n\n## 一句话\n\n**`pub` 负责让数据可读，私有字段和方法负责把状态改变留在设计好的边界里。**",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/event.rs",
+                "lineStart": 9,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "StoredEvent 展示了三个公开字段和一个私有 verified 字段。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/event.rs",
+                "lineStart": 32,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "is_verified 通过公开方法读取私有 verified 状态。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-pub-fields",
+                "kind": "basic",
+                "front": "StoredEvent 哪三个字段是公开的？",
+                "back": "event、received_at 和 channel_id。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 11,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "三个字段前都有 pub。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-private-verified",
+                "kind": "basic",
+                "front": "verified 为什么不直接公开？",
+                "back": "它表示受保护的验证状态；模块通过 is_verified 暴露读取，而不是允许调用方任意改写。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 18,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "verified 没有 pub。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-visible-fields",
+                "kind": "short-answer",
+                "title": "识别公开字段",
+                "prompt": "从 StoredEvent 定义中说出两个公开字段。",
+                "expectedAnswer": "event、received_at 或 channel_id 中任意两个",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 11,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "字段定义标有 pub。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-state-method",
+                "kind": "short-answer",
+                "title": "找出状态入口",
+                "prompt": "调用方通过哪个方法读取 verified 状态？",
+                "expectedAnswer": "is_verified",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 32,
+                    "lineEnd": 35,
+                    "nodeIds": [],
+                    "note": "公开方法返回私有字段。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "new-and-verified",
+            "title": "为什么 StoredEvent::new 要把 verified 设成 false？",
+            "content": "# 为什么 StoredEvent::new 要把 verified 设成 false？\n\n## 情境和约束\n\n一个事件刚被 relay 收到时，系统需要同时保存原始 event、接收时间和频道范围；但“收到”不等于“签名已经验证”。你在读这个构造函数时，先把“收到”和“可信”分成两件事。`StoredEvent::new` 因而创建一个 `verified = false` 的初始状态。\n\n[[evidence:crates/buzz-core/src/event.rs:21-30]]\n\n## 先猜一下\n\n如果构造函数一创建对象就把 verified 设成 true，后面的验签失败会不会让系统先把未验证事件当成可信事件？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会有这个风险，所以默认值选择保守的 false：接收流程必须显式完成验证，状态才有可信含义。\n\n## 代价和收益\n\n代价是调用方不能只看“对象已经存在”就把它当作已验证；它要继续走验证路径。收益是状态默认拒绝信任，漏掉验证步骤时更容易暴露问题。你可以把这个布尔值看成一个需要被证明的事实，而不是构造时赠送的标签。\n\n[[evidence:crates/buzz-core/src/event.rs:32-35]]\n\n同一个实现还提供 `with_received_at`，让测试、重放或需要明确时间与状态的路径传入完整值。这个入口把“我确实知道状态是什么”与“普通新事件还没有验证”分开；后半句是从两个构造函数的参数设计得到的阅读结论。\n\n[[evidence:crates/buzz-core/src/event.rs:37-49]]\n\n## 什么时候该反过来\n\n如果某条内部路径只接受已经完成验签的事件，并且它能在类型或调用约束上证明这一点，才值得考虑使用显式 verified 状态的构造入口；不要为了省一步就改变 `new` 的默认值。\n\n## 自检\n\n- `StoredEvent::new` 的 verified 初始值是什么？\n- `with_received_at` 为什么需要把 verified 作为参数？\n\n## 一句话\n\n**普通构造先把事件放在未验证状态，可信状态必须由后续验证路径明确建立。**",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/event.rs",
+                "lineStart": 21,
+                "lineEnd": 30,
+                "nodeIds": [],
+                "note": "new 将 received_at 设为当前时间并把 verified 设为 false。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/event.rs",
+                "lineStart": 32,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "is_verified 通过公开方法读取 new 建立的验证状态。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/event.rs",
+                "lineStart": 37,
+                "lineEnd": 49,
+                "nodeIds": [],
+                "note": "with_received_at 允许调用方显式传入时间、频道和验证状态。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-new-default",
+                "kind": "basic",
+                "front": "StoredEvent::new 的 verified 默认值是什么？",
+                "back": "false。新收到的事件必须先经过验证，不能因对象已创建就获得可信状态。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 21,
+                    "lineEnd": 30,
+                    "nodeIds": [],
+                    "note": "构造函数明确写入 verified: false。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-explicit-status",
+                "kind": "basic",
+                "front": "哪个构造函数允许显式传入 verified？",
+                "back": "with_received_at。它同时接收 received_at、channel_id 和 verified。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 37,
+                    "lineEnd": 49,
+                    "nodeIds": [],
+                    "note": "显式构造入口列出 verified 参数并写入字段。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-conservative-default",
+                "kind": "short-answer",
+                "title": "解释保守默认值",
+                "prompt": "为什么 new 不把 verified 直接设为 true？",
+                "expectedAnswer": "因为收到事件不等于已经验签，必须先保持未验证状态",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 21,
+                    "lineEnd": 30,
+                    "nodeIds": [],
+                    "note": "new 的默认状态是 false。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-with-received-at",
+                "kind": "short-answer",
+                "title": "选择显式构造入口",
+                "prompt": "需要同时指定接收时间和验证状态时，应看哪个构造函数？",
+                "expectedAnswer": "with_received_at",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 37,
+                    "lineEnd": 49,
+                    "nodeIds": [],
+                    "note": "该函数接受显式 received_at 与 verified。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "option-channel-id",
+            "title": "为什么 channel_id 要用 Option<Uuid> 而不是永远填一个 UUID？",
+            "content": "# 为什么 channel_id 要用 Option<Uuid> 而不是永远填一个 UUID？\n\n## 两个东西\n\n你在 `StoredEvent` 里看到的不是一个强制存在的 `Uuid`，而是 `Option<Uuid>`。`Some(id)` 表示事件有频道范围，`None` 则留下一个明确的“这里没有频道 UUID”的状态。\n\n[[evidence:crates/buzz-core/src/event.rs:14-18]]\n\n## 先猜一下\n\n如果全局事件、DM 和频道事件都共用一个字段，你会用特殊 UUID 代表“没有频道”，还是让类型直接表达有与无？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\nBuzz 选择 `Option<Uuid>`，让“有频道”和“没有频道”成为两个可以被 Rust 区分的分支，而不是把特殊值混进真实 UUID。\n\n## 逐条对照\n\n第一种状态是 `Some(id)`：构造函数接收一个实际频道 ID，并把它保存到 channel_id。第二种状态是 `None`：调用方明确告诉结构体这个事件没有频道范围。你读到 `Option` 时，先问“缺少是合法状态还是错误”，在这里缺少是合法建模。\n\n[[evidence:crates/buzz-core/src/event.rs:21-29]]\n\n这两个状态还会被后续过滤和持久化逻辑区别对待；因此用 Option 比约定某个全零 UUID 更能让调用方处理边界。`with_received_at` 也沿用同一个参数形状，说明时间不同并不改变频道范围的表达。\n\n[[evidence:crates/buzz-core/src/event.rs:37-49]]\n\n## 什么时候用哪个\n\n事件属于具体频道时传 `Some(channel_id)`；全局或 DM 事件没有频道 UUID 时传 `None`。你不要把 `None` 自动翻译成“验证失败”，它只描述 scope 是否存在。\n\n## 自检\n\n- `Some(Uuid)` 与 `None` 分别表达什么？\n- 为什么特殊 UUID 不如 Option 清楚？\n\n## 一句话\n\n**Option<Uuid> 把频道范围的有无写进类型，让全局事件和频道事件不必共享伪造的 UUID。**",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/event.rs",
+                "lineStart": 14,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "channel_id 被定义为 Option<Uuid>，并说明 None 的含义。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/event.rs",
+                "lineStart": 21,
+                "lineEnd": 29,
+                "nodeIds": [],
+                "note": "new 接收 Option<Uuid> 并把频道范围写入 StoredEvent。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/event.rs",
+                "lineStart": 37,
+                "lineEnd": 49,
+                "nodeIds": [],
+                "note": "两个构造函数都接收 Option<Uuid> 的频道参数。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-channel-some",
+                "kind": "basic",
+                "front": "channel_id 为 Some 时表示什么？",
+                "back": "表示 StoredEvent 有一个具体频道范围，Some 中装着该频道的 UUID。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 14,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "字段类型和注释说明频道 scope。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-channel-none",
+                "kind": "basic",
+                "front": "channel_id 为 None 时表示什么？",
+                "back": "表示事件没有频道 UUID，例如全局或 DM 范围；它不是验证失败。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 14,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "注释明确说 None 用于 global/DM events。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-option-scope",
+                "kind": "short-answer",
+                "title": "解释 Option scope",
+                "prompt": "为什么 channel_id 的缺失在这里是合法状态？",
+                "expectedAnswer": "因为全局或 DM 事件本来就没有频道 UUID",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 14,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "字段注释把 None 定义为 global/DM events。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-option-construction",
+                "kind": "short-answer",
+                "title": "回忆参数形状",
+                "prompt": "new 和 with_received_at 都用什么类型接收频道范围？",
+                "expectedAnswer": "Option<Uuid>",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/event.rs",
+                    "lineStart": 21,
+                    "lineEnd": 43,
+                    "nodeIds": [],
+                    "note": "两个构造函数的 channel_id 参数都是 Option<Uuid>。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rust-failures",
+        "title": "沿着验证失败往回读",
+        "objective": "读懂 Result 的成功与失败、验证顺序、问号传播以及 CPU 密集任务的 async 边界。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "result-is-outcome",
+            "title": "为什么 verify_event 返回 Result<(), VerificationError>？",
+            "content": "# 为什么 verify_event 返回 Result<(), VerificationError>？\n\n## 一句真实出现的话\n\n你在函数签名里会看到 `pub fn verify_event(event: &Event) -> Result<(), VerificationError>`：成功时没有要返回的数据，失败时却要携带具体验证错误。\n\n[[evidence:crates/buzz-core/src/verification.rs:8-11]]\n\n## 先猜一下\n\n如果函数只返回一个 bool，调用方还能不能知道是 ID 不对，还是 Schnorr 签名不对？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不能。`Result<(), VerificationError>` 把成功的空值和带原因的失败放在同一个返回类型里，调用方可以继续区分错误。\n\n## 三个真实用例\n\n第一个用例是成功：验证通过时返回 `Ok(())`，因为调用方只需要知道“可以继续”，不需要一份额外结果。第二个用例是 ID 失败：返回 `InvalidId`，其中保存 computed 和 got。\n\n[[evidence:crates/buzz-core/src/verification.rs:21-31]]\n\n第三个用例是签名失败：返回 `InvalidSignature`。错误枚举把这两个原因分开，还保留底层 secp256k1 error 作为另一个变体。你因此能把“没有数据的成功”和“有上下文的失败”同时读出来。\n\n[[evidence:crates/buzz-core/src/error.rs:1-19]]\n\n## 它不是什么\n\nResult 不是把错误变成日志文字，也不是一个只能回答真假的开关。你要继续看错误变体和调用方如何匹配，才能知道失败是否应该拒绝事件、重试或记录。\n\n## 自检\n\n- 成功路径为什么是 `Ok(())`？\n- InvalidId 比 InvalidSignature 多携带了什么信息？\n\n## 一句话\n\n**Result 用空成功值和有原因的错误，把验证结果的分支保留给调用方。**",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/verification.rs",
+                "lineStart": 8,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "verify_event 的返回类型是 Result<(), VerificationError>。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/verification.rs",
+                "lineStart": 21,
+                "lineEnd": 31,
+                "nodeIds": [],
+                "note": "验证函数返回 InvalidId、InvalidSignature 或 Ok(())。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/error.rs",
+                "lineStart": 1,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "VerificationError 定义了 ID、签名和 secp256k1 错误变体。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-result-success",
+                "kind": "basic",
+                "front": "verify_event 成功时返回什么？",
+                "back": "Ok(())，因为成功只需要表达可以继续，不需要额外数据。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/verification.rs",
+                    "lineStart": 27,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "函数末尾返回 Ok(())。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-result-errors",
+                "kind": "basic",
+                "front": "VerificationError 至少区分哪两类事件验证失败？",
+                "back": "InvalidId 和 InvalidSignature。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/error.rs",
+                    "lineStart": 3,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "错误枚举分别定义 ID 与 Schnorr 签名失败。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-result-shape",
+                "kind": "short-answer",
+                "title": "读出返回类型",
+                "prompt": "verify_event 的完整返回类型是什么？",
+                "expectedAnswer": "Result<(), VerificationError>",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/verification.rs",
+                    "lineStart": 8,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "函数签名直接给出返回类型。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-invalid-id-payload",
+                "kind": "short-answer",
+                "title": "回忆 InvalidId 细节",
+                "prompt": "InvalidId 里保存哪两个 ID 相关值？",
+                "expectedAnswer": "computed 和 got",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/error.rs",
+                    "lineStart": 4,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "InvalidId 定义 computed 与 got 字段。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "verify-event-order",
+            "title": "为什么验证要先检查 ID，再检查签名？",
+            "content": "# 为什么验证要先检查 ID，再检查签名？\n\n## 你看到的结果\n\n你在 `verify_event` 的返回分支里看到两种拒绝：`InvalidId` 和 `InvalidSignature`。想知道它们为什么按这个顺序出现，就沿着函数体从第一个 if 往下读。\n\n[[evidence:crates/buzz-core/src/verification.rs:11-31]]\n\n## 先猜一下\n\n验证一条事件时，应该先重新计算由字段组成的 ID，还是先用签名去证明当前 ID？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n先验证 ID，再验证签名。只有事件字段确实对应当前 ID，签名验证才是在验证正确的消息。\n\n## 一站一站往回走\n\n第一站是 `verify_id()`：如果失败，函数先用 pubkey、created_at、kind、tags、content 重新构造 computed ID，再把它和事件里的 got ID 放进 InvalidId。\n\n[[evidence:crates/buzz-core/src/verification.rs:12-24]]\n\n第二站是 `verify_signature()`：它只有在第一站没有返回错误时才会执行，失败则返回 InvalidSignature。错误定义也说明 Schnorr signature 是覆盖 event ID 的证明。\n\n[[evidence:crates/buzz-core/src/verification.rs:25-31]]\n\n[[evidence:crates/buzz-core/src/error.rs:13-15]]\n\n第三站是 Ok：两道检查都通过，函数才结束。你因此可以把顺序读成一条证据链，而不是两个随意排列的 if。\n\n## 自检\n\n- InvalidId 失败时，为什么不会继续到签名检查？\n- 签名证明覆盖的对象是什么？\n\n## 一句话\n\n**先确认事件字段对应哪个 ID，再确认签名是否证明了这个 ID。**",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/verification.rs",
+                "lineStart": 11,
+                "lineEnd": 31,
+                "nodeIds": [],
+                "note": "verify_event 的控制流按 ID、签名、成功依次展开。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/verification.rs",
+                "lineStart": 12,
+                "lineEnd": 24,
+                "nodeIds": [],
+                "note": "InvalidId 分支计算 computed ID 并和 got ID 一起返回。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/error.rs",
+                "lineStart": 13,
+                "lineEnd": 15,
+                "nodeIds": [],
+                "note": "错误说明 Schnorr signature 覆盖 event ID。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-verify-first",
+                "kind": "basic",
+                "front": "verify_event 的第一道检查是什么？",
+                "back": "先调用 event.verify_id()，确认字段与事件 ID 的哈希一致。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/verification.rs",
+                    "lineStart": 11,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "第一个 if 检查 verify_id。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-verify-second",
+                "kind": "basic",
+                "front": "签名检查在什么条件下执行？",
+                "back": "只有 ID 检查没有提前返回错误时，才调用 verify_signature。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/verification.rs",
+                    "lineStart": 25,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "签名 if 位于 ID 分支之后。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-trace-invalid-id",
+                "kind": "short-answer",
+                "title": "追踪 ID 失败",
+                "prompt": "verify_id 失败时函数返回哪个错误变体？",
+                "expectedAnswer": "InvalidId",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/verification.rs",
+                    "lineStart": 21,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "ID 分支构造并返回 InvalidId。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-signature-target",
+                "kind": "short-answer",
+                "title": "找出签名对象",
+                "prompt": "VerificationError 的说明说 Schnorr signature 覆盖什么？",
+                "expectedAnswer": "event ID",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/error.rs",
+                    "lineStart": 13,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "InvalidSignature 的注释说明签名覆盖 event ID。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "question-mark-propagates",
+            "title": "为什么 ingest 里一个 `?` 就能结束当前分支？",
+            "content": "# 为什么 ingest 里一个 `?` 就能结束当前分支？\n\n## 现象\n\n你在 `ingest_event_inner` 的持久化分支里会看到数据库调用接上 `.await` 和 `.map_err(...) ?`。如果 replace 或 insert 失败，函数没有在这一行展开一大段匹配，而是把错误交回当前的 Result。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:2878-2900]]\n\n## 先猜一下\n\n`.map_err(...)` 已经把错误变成 IngestError 了，后面的 `?` 还需要做什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n`?` 会在 Result 为 Err 时提前从当前函数返回；为 Ok 时取出成功值，让 if 分支继续得到 stored_event 和 was_inserted。\n\n## 为什么是这样\n\n这个函数的返回类型是 `Result<IngestResult, IngestError>`，而内部函数也返回同一类 Result。`map_err` 负责把数据库错误转成 ingest 能理解的错误，`?` 负责把失败沿着当前调用边界向上传递。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:1923-1929]]\n\n你可以把这两步分开读：`.map_err` 改变错误的类型，`?` 决定遇到 Err 时不再执行当前函数后面的语句。成功时它不会制造额外分支，只把 Ok 里面的值交给下一步。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:2878-2900]]\n\n因此 replaceable、parameterized replaceable 和普通 insert 可以保持相同的错误传播形状，而不会把每个数据库调用都改写成手工 match。你读到 `?` 时，要同时看函数的 Result 返回类型和它前面的错误转换。\n\n## 自检\n\n- `.map_err` 和 `?` 在这段代码里分别负责什么？\n- 数据库调用返回 Err 时，当前分支还会继续执行吗？\n\n## 一句话\n\n**map_err 统一错误类型，问号把失败提前交回当前 Result 边界。**",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs",
+                "lineStart": 2878,
+                "lineEnd": 2900,
+                "nodeIds": [],
+                "note": "数据库 replace 调用经过 await、map_err 和问号传播。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs",
+                "lineStart": 1923,
+                "lineEnd": 1929,
+                "nodeIds": [],
+                "note": "ingest_event_inner 的返回类型是 Result<IngestResult, IngestError>。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-map-err",
+                "kind": "basic",
+                "front": ".map_err 在 ingest 分支中改变什么？",
+                "back": "它把数据库错误转换成 IngestError，统一当前 ingest 函数能返回的错误类型。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs",
+                    "lineStart": 2881,
+                    "lineEnd": 2900,
+                    "nodeIds": [],
+                    "note": "数据库调用后使用 map_err 将错误包装为 IngestError。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-question-mark",
+                "kind": "basic",
+                "front": "数据库调用返回 Err 时，? 做什么？",
+                "back": "它让当前函数提前返回这个 Err；返回 Ok 时则取出成功值继续执行。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs",
+                    "lineStart": 2881,
+                    "lineEnd": 2900,
+                    "nodeIds": [],
+                    "note": "问号位于数据库调用链末端。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-question-return",
+                "kind": "short-answer",
+                "title": "判断问号行为",
+                "prompt": "map_err 后的数据库 Err 是否还会执行当前函数后面的语句？",
+                "expectedAnswer": "不会，? 会让当前函数提前返回 Err",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs",
+                    "lineStart": 2878,
+                    "lineEnd": 2900,
+                    "nodeIds": [],
+                    "note": "问号直接结束该 Result 分支。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-result-boundary",
+                "kind": "short-answer",
+                "title": "找出当前边界",
+                "prompt": "ingest_event_inner 返回哪种 Result？",
+                "expectedAnswer": "Result<IngestResult, IngestError>",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs",
+                    "lineStart": 1923,
+                    "lineEnd": 1929,
+                    "nodeIds": [],
+                    "note": "函数签名定义问号可以传播到的错误边界。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "spawn-blocking-verification",
+            "title": "为什么 async ingest 要把 verify_event 放进 spawn_blocking？",
+            "content": "# 为什么 async ingest 要把 verify_event 放进 spawn_blocking？\n\n## 情境和约束\n\n`verify_event` 做 Schnorr 验签，源码把它标为 CPU-bound，并要求 async context 通过 `tokio::task::spawn_blocking` 调用。ingest 还要把事件交给验证任务，之后继续处理数据库流程。\n\n[[evidence:crates/buzz-core/src/verification.rs:1-11]]\n\n## 先猜一下\n\n如果你在 async 任务里直接做大量验签，其他连接的异步工作会不会被同一个执行线程拖住？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n有这个风险，所以 Buzz 把 CPU 密集的 verify_event 放到 blocking 线程池，并通过 Arc 共享事件，避免为了验证再做一次深拷贝。\n\n## 代价和收益\n\n收益是异步执行器可以把 CPU 工作移出自己的调度路径，网络和数据库相关任务更容易继续推进；Arc 让验证任务拿到静态共享引用，原流程保留事件所有权。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:1955-1965]]\n\n代价是你要处理 JoinHandle 的等待结果，也要理解 `Arc` 的生命周期和错误层级。源码先 clone Arc，再 `spawn_blocking(move || verify_event(...))`，随后匹配任务完成与验证结果。你不能只看到“用了线程池”，还要继续读它怎样把 Ok、验证 Err 和任务失败接回 ingest。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:1955-1965]]\n\n## 什么时候该反过来\n\n如果代码已经处在同步工作线程，或者操作不再是 CPU 密集任务，就不必机械套用 spawn_blocking；但在 async relay 里直接调用这段验签函数，违背了它在文件顶部写出的并发约束。\n\n## 自检\n\n- verify_event 为什么被视为 CPU-bound？\n- ingest 用 Arc 解决了什么问题？\n\n## 一句话\n\n**CPU 密集的验签离开 async 执行器，Arc 则把同一事件安全交给验证任务。**",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/verification.rs",
+                "lineStart": 1,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "verification 模块说明 verify_event 是 CPU-bound，async 中应使用 spawn_blocking。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs",
+                "lineStart": 1955,
+                "lineEnd": 1965,
+                "nodeIds": [],
+                "note": "ingest 用 Arc 和 spawn_blocking 调用 verify_event，并匹配结果。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-blocking-reason",
+                "kind": "basic",
+                "front": "verify_event 为什么不能直接占用 async 任务？",
+                "back": "因为 Schnorr 验签是 CPU-bound，直接执行可能阻塞异步执行器中的其他工作。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/verification.rs",
+                    "lineStart": 1,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "模块文档明确标注 CPU-bound 和 spawn_blocking 约束。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-arc-verify",
+                "kind": "basic",
+                "front": "ingest 为什么先 clone 一个 Arc？",
+                "back": "让 blocking 验证任务共享事件而不深拷贝完整内容，同时保留原流程需要的所有权。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs",
+                    "lineStart": 1955,
+                    "lineEnd": 1961,
+                    "nodeIds": [],
+                    "note": "注释说明 Arc 用于避免深拷贝，随后进入 spawn_blocking。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-async-boundary",
+                "kind": "short-answer",
+                "title": "选择执行边界",
+                "prompt": "在 async context 中调用 CPU-bound 的 verify_event 应使用什么 API？",
+                "expectedAnswer": "tokio::task::spawn_blocking",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/verification.rs",
+                    "lineStart": 1,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "模块文档给出 async 调用约束。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-verify-arc",
+                "kind": "short-answer",
+                "title": "回忆共享方式",
+                "prompt": "ingest 用什么共享机制把 event 交给验证任务？",
+                "expectedAnswer": "Arc",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs",
+                    "lineStart": 1955,
+                    "lineEnd": 1961,
+                    "nodeIds": [],
+                    "note": "源码构造 Arc 并 clone 给验证任务。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rust-signatures",
+        "title": "读过滤器的类型与逻辑",
+        "objective": "用 filter.rs 的真实函数签名理解 Option 条件、OR/AND 组合以及借用的生命周期边界。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "if-let-option",
+            "title": "为什么 filter_match_one 到处用 if let Some？",
+            "content": "# 为什么 filter_match_one 到处用 if let Some？\n\n## 一句真实出现的话\n\n你在 `filter_match_one` 里会连续看到 `if let Some(kinds)`、`if let Some(authors)`、`if let Some(since)` 和 `if let Some(until)`。这些 Option 不是装饰，它们表示一个过滤条件是否被请求方提供。\n\n[[evidence:crates/buzz-core/src/filter.rs:35-58]]\n\n## 先猜一下\n\n当一个 filter 没有给 `since`，函数应该把所有事件都判成失败，还是跳过时间下限这一项？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n跳过这一项。Some 表示启用约束，None 表示这个字段没有约束；函数继续检查同一个 filter 的其他条件。\n\n## 三个真实用例\n\n第一个用例是 kinds：只有请求包含 kinds 时，事件 kind 才需要在集合里。第二个用例是 authors：Some(authors) 才会比较事件 pubkey。第三个用例是 since/until：只有请求给出时间边界，函数才比较 created_at。\n\n[[evidence:crates/buzz-core/src/filter.rs:35-58]]\n\n这套写法让一个 Filter 可以只描述它真正关心的字段。你读代码时，可以把每个 `if let Some` 翻成“如果调用方提出了这条约束，就执行一次拒绝检查”；没有提出的约束不会凭空增加条件。\n\n[[evidence:crates/buzz-core/src/filter.rs:35-58]]\n\n## 它不是什么\n\nNone 不是“事件无效”，也不是“匹配失败”。它只说明该 Filter 没有指定这一维；真正的失败要看某个 Some 条件是否不满足，或者后面的 tag 匹配是否返回 false。\n\n## 自检\n\n- Some 与 None 在 filter_match_one 中分别表示什么？\n- 哪些字段使用 Option 条件？\n\n## 一句话\n\n**if let Some 把可选过滤条件变成只在请求提供时才生效的检查。**",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/filter.rs",
+                "lineStart": 35,
+                "lineEnd": 58,
+                "nodeIds": [],
+                "note": "filter_match_one 用 Some 条件检查 kinds、authors、since 和 until。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-filter-some",
+                "kind": "basic",
+                "front": "filter_match_one 里的 Some 表示什么？",
+                "back": "表示调用方提供了这一维过滤条件，需要执行对应检查。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 35,
+                    "lineEnd": 58,
+                    "nodeIds": [],
+                    "note": "多个 if let Some 分支按字段启用检查。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-filter-none",
+                "kind": "basic",
+                "front": "filter_match_one 里的 None 表示什么？",
+                "back": "表示该维度没有约束，函数跳过这一项而继续看其他条件。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 35,
+                    "lineEnd": 58,
+                    "nodeIds": [],
+                    "note": "条件只在 Some 时进入拒绝检查。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-filter-fields",
+                "kind": "short-answer",
+                "title": "列出 Option 条件",
+                "prompt": "filter_match_one 在前半段对哪些字段使用 if let Some？",
+                "expectedAnswer": "kinds、authors、since、until",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 35,
+                    "lineEnd": 58,
+                    "nodeIds": [],
+                    "note": "四个条件分支依次出现。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-filter-skip",
+                "kind": "short-answer",
+                "title": "判断 None 行为",
+                "prompt": "请求没有 since 时，函数会怎样处理时间下限？",
+                "expectedAnswer": "跳过 since 检查",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 48,
+                    "lineEnd": 52,
+                    "nodeIds": [],
+                    "note": "since 检查被包在 if let Some 中。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "filter-or-and",
+            "title": "为什么多个 filter 是 OR，而一个 filter 的字段是 AND？",
+            "content": "# 为什么多个 filter 是 OR，而一个 filter 的字段是 AND？\n\n## 两个东西\n\n你要区分两层组合：`filters_match` 对 filter 列表使用 `.any(...)`，而 `filter_match_one` 在一个 filter 里逐项检查 kinds、authors、时间和 tags，任一不满足就返回 false。\n\n[[evidence:crates/buzz-core/src/filter.rs:1-12]]\n\n## 先猜一下\n\n如果一个请求包含两个 filter，是不是必须两个 filter 都匹配，事件才会被送出？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不需要。多个 filter 之间是 OR：任意一个 filter 匹配即可；单个 filter 的字段之间是 AND：它描述的每一项都要通过。\n\n## 逐条对照\n\n列表层看 `filters.iter().any(...)`：第一个返回 true 就足够，后面的 filter 不必继续判断。单项层则先检查 kind、author、since、until，再检查 generic tags；某项不符合就立即返回 false。\n\n[[evidence:crates/buzz-core/src/filter.rs:35-103]]\n\n因此两个 filter 可以表达两种可接受的查询形状，而一个 filter 可以表达一个更窄的交集。你要先定位自己正在读哪一层，否则很容易把 any 误读成所有条件都必须通过。\n\n[[evidence:crates/buzz-core/src/filter.rs:1-12]]\n\n## 什么时候用哪个\n\n当多个查询方案任意满足即可时，放在 filter 列表里；当一个方案需要同时限定作者、kind 和时间时，把它们放在同一个 filter。你可以先问“这是替代方案，还是同一方案的收窄条件”。\n\n## 自检\n\n- 列表层使用什么逻辑？\n- 单个 filter 内的字段为什么不是 OR？\n\n## 一句话\n\n**filter 列表用 OR 表达替代方案，单个 filter 用 AND 收窄一个方案。**",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/filter.rs",
+                "lineStart": 1,
+                "lineEnd": 12,
+                "nodeIds": [],
+                "note": "模块文档和 filters_match 明确多个 filters OR-ed。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/filter.rs",
+                "lineStart": 35,
+                "lineEnd": 103,
+                "nodeIds": [],
+                "note": "单个 filter 的每个条件失败就返回 false，形成 AND 语义。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-filters-any",
+                "kind": "basic",
+                "front": "filters_match 如何组合多个 filter？",
+                "back": "使用 any，只要列表中有一个 filter_match_one 返回 true，整体就匹配。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 9,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "实现直接调用 filters.iter().any。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-filter-fields-all",
+                "kind": "basic",
+                "front": "单个 filter 的字段怎样组合？",
+                "back": "每个已提供字段都要通过；任一条件不满足就返回 false。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 35,
+                    "lineEnd": 103,
+                    "nodeIds": [],
+                    "note": "各字段条件按顺序拒绝不匹配事件。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-filter-or",
+                "kind": "short-answer",
+                "title": "回忆列表逻辑",
+                "prompt": "两个 filter 放在同一个列表中时，事件需要满足几个？",
+                "expectedAnswer": "任意一个",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 9,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "any 表示任意一个匹配即可。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-filter-and",
+                "kind": "short-answer",
+                "title": "回忆字段逻辑",
+                "prompt": "同一个 filter 同时指定 kind 和 author 时，事件需要怎样？",
+                "expectedAnswer": "同时满足两个条件",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 35,
+                    "lineEnd": 46,
+                    "nodeIds": [],
+                    "note": "kind 或 author 不匹配都会提前返回 false。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "borrowed-event",
+            "title": "为什么过滤函数借用 &StoredEvent 而不接管 event？",
+            "content": "# 为什么过滤函数借用 &StoredEvent 而不接管 event？\n\n## 一句真实出现的话\n\n你在过滤器入口会看到 `filters_match(filters: &[Filter], event: &StoredEvent) -> bool`，内部函数也接收 `f: &Filter` 和 `ev: &StoredEvent`。这里的 `&` 是 Rust 的借用标记。\n\n[[evidence:crates/buzz-core/src/filter.rs:5-11]]\n\n## 先猜一下\n\n如果 filter_match_one 只是读取 event 的 kind、pubkey、时间和 tags，它有没有必要取得 StoredEvent 的所有权？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n没有必要。借用允许函数暂时读取已有对象，并把一个 bool 返回给调用方，不需要移动或复制整个 StoredEvent。\n\n## 三个真实用例\n\n第一个用例是列表入口借用 filter 切片和事件，调用 `.any` 逐个判断。第二个用例是单项函数继续借用 `&Filter` 与 `&StoredEvent`，所以每个条件都可以读同一个事件。\n\n[[evidence:crates/buzz-core/src/filter.rs:9-11]]\n\n第三个用例是字段读取：`ev.event.kind`、`ev.event.pubkey`、`ev.event.created_at` 和 `ev.channel_id` 都是在借用期间观察，不会改变事件。你可以把 `&StoredEvent` 理解成“给我临时查看权”，而不是“把对象交给我管理”。\n\n[[evidence:crates/buzz-core/src/filter.rs:35-103]]\n\n## 它不是什么\n\n借用不是一份深拷贝，也不是把事件变成不可访问的全局对象。你还可以把它理解成受生命周期约束的只读引用；调用方仍然拥有 StoredEvent，过滤函数只负责判断匹配结果。\n\n## 自检\n\n- `&StoredEvent` 与直接传 StoredEvent 的主要差别是什么？\n- filters_match 返回的是事件本身还是判断结果？\n\n## 一句话\n\n**过滤器借用事件来读字段，把所有权留给调用方，只返回是否匹配。**",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/filter.rs",
+                "lineStart": 5,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "filters_match 的参数是借用的 Filter 切片和 StoredEvent。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/filter.rs",
+                "lineStart": 35,
+                "lineEnd": 103,
+                "nodeIds": [],
+                "note": "filter_match_one 在借用期间读取事件字段并返回 bool。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-borrowed-signature",
+                "kind": "basic",
+                "front": "filters_match 的 event 参数是什么形式？",
+                "back": "是 &StoredEvent 的借用，函数不会取得事件所有权。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 9,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "函数签名显示 event: &StoredEvent。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-borrowed-result",
+                "kind": "basic",
+                "front": "过滤函数借用事件后返回什么？",
+                "back": "返回 bool，表示事件是否匹配至少一个过滤条件。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 9,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "函数签名返回 bool，并对列表使用 any。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-reference-mark",
+                "kind": "short-answer",
+                "title": "识别借用标记",
+                "prompt": "Rust 参数类型中的哪个符号表示借用？",
+                "expectedAnswer": "&",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 9,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "签名中的 &Filter 与 &StoredEvent 是借用。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-filter-return",
+                "kind": "short-answer",
+                "title": "回忆过滤结果",
+                "prompt": "filters_match 返回事件对象还是 bool？",
+                "expectedAnswer": "bool",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/filter.rs",
+                    "lineStart": 9,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "返回类型和实现都表明结果是 bool。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "async-handler-signature",
+            "title": "从 WebSocket EVENT 到验证函数，Rust 类型如何把责任接起来？",
+            "content": "# 从 WebSocket EVENT 到验证函数，Rust 类型如何把责任接起来？\n\n## 你看到的结果\n\n你从 WebSocket 收到一个 EVENT，入口函数是 async；再往里走，ingest_event 仍然是 async 并返回 Result；真正的 verify_event 是同步函数，也返回 Result。三个签名把不同责任接在一起。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:603-608]]\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:1863-1868]]\n\n## 先猜一下\n\n如果入口负责网络协作，而验签是 CPU 工作，你会让两个函数都只返回 bool，还是保留 async 与 Result 的边界？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n保留边界：EVENT handler 负责异步接入，ingest 负责异步验证与持久化流程，verify_event 负责同步地给出具体验证结果。\n\n## 一站一站往回走\n\n第一站是 `handle_event(event: Event, ...)`：它拥有收到的事件，并在 async relay 上处理连接上下文。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:603-608]]\n\n第二站是 `ingest_event(..., event: Event, auth: IngestAuth) -> Result<IngestResult, IngestError>`：它把 transport-specific auth 汇总到共享 ingest pipeline。\n\n[[evidence:crates/buzz-relay/src/handlers/ingest.rs:1849-1868]]\n\n第三站是 `verify_event(event: &Event) -> Result<(), VerificationError>`：它只借用事件做 CPU 验证，具体失败原因由 VerificationError 表达。你沿着这些签名读，就能知道事件在哪一层拥有、在哪一层借用、在哪一层变成业务错误。\n\n[[evidence:crates/buzz-core/src/verification.rs:8-11]]\n\n## 自检\n\n- 哪个函数首先接收 WebSocket EVENT？\n- verify_event 为什么借用 Event 而不是返回 IngestResult？\n\n## 一句话\n\n**异步入口接住事件，ingest 组织流程，同步验证函数只负责给出可区分的验证结果。**",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-relay/src/handlers/event.rs",
+                "lineStart": 603,
+                "lineEnd": 608,
+                "nodeIds": [],
+                "note": "WebSocket EVENT 入口是 async handle_event。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs",
+                "lineStart": 1849,
+                "lineEnd": 1868,
+                "nodeIds": [],
+                "note": "共享 ingest pipeline 由 async ingest_event 接收 Event 并返回 Result。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-02f640bc4559",
+                "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                "sourcePath": "crates/buzz-core/src/verification.rs",
+                "lineStart": 8,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "verify_event 同步借用 Event 并返回 VerificationError。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rust-event-entry",
+                "kind": "basic",
+                "front": "WebSocket EVENT 的 Rust 入口函数是什么？",
+                "back": "async handle_event(event: Event, conn: Arc<ConnectionState>, state: Arc<AppState>)。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-relay/src/handlers/event.rs",
+                    "lineStart": 603,
+                    "lineEnd": 608,
+                    "nodeIds": [],
+                    "note": "入口函数签名在注释后直接定义。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-verify-boundary",
+                "kind": "basic",
+                "front": "verify_event 的输入和输出各是什么？",
+                "back": "借用的 &Event，输出 Result<(), VerificationError>。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/verification.rs",
+                    "lineStart": 8,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "签名同时给出借用输入和错误结果。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rust-handler-async",
+                "kind": "short-answer",
+                "title": "识别异步层",
+                "prompt": "handle_event 和 ingest_event 为什么都标记 async？",
+                "expectedAnswer": "它们处在 WebSocket 接入和异步 relay pipeline 中，需要等待连接、验证任务或数据库工作",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-relay/src/handlers/event.rs",
+                    "lineStart": 603,
+                    "lineEnd": 608,
+                    "nodeIds": [],
+                    "note": "EVENT handler 是 async；共享 ingest 说明位于 ingest_event 签名之前。"
+                  }
+                ]
+              },
+              {
+                "id": "rust-signature-chain",
+                "kind": "short-answer",
+                "title": "复述责任链",
+                "prompt": "从 EVENT 到验签，依次经过哪三个函数？",
+                "expectedAnswer": "handle_event、ingest_event、verify_event",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-relay/src/handlers/event.rs",
+                    "lineStart": 603,
+                    "lineEnd": 608,
+                    "nodeIds": [],
+                    "note": "第一站是 WebSocket EVENT handler。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-relay/src/handlers/ingest.rs",
+                    "lineStart": 1863,
+                    "lineEnd": 1868,
+                    "nodeIds": [],
+                    "note": "第二站是共享 ingest_event。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-02f640bc4559",
+                    "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+                    "sourcePath": "crates/buzz-core/src/verification.rs",
+                    "lineStart": 8,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "第三站是 verify_event。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

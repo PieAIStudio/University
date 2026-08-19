@@ -1,0 +1,1235 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-moment-design",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "moment-design",
+    "title": "产品的「时刻」是怎么搭出来的",
+    "description": "好产品的开场、高潮与复盘不是美术贴图，而是代码里的揭示节奏与状态门闩。本课从 TuringPact 的 opening-ritual、start-presentation、unmask-climax、roast-report 抽出可复用的取舍。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "能设计「第一次用户手势」门闩，并把 mute 与 unlock 拆成正交状态，避免开场音频被浏览器策略或静音开关卡死",
+      "能用纯函数规定高潮揭示顺序与毫秒节奏，并用组合组件挡住结算信息直到高潮结束",
+      "能把结束复盘做成可识别的消息契约，并设计无下一局剧透的分享文案变体",
+      "能为分享出口写出 PNG→SVG 的降级阶梯与竖图/CJK 字宽预算，保证结束时刻「点了就能带走」"
+    ],
+    "units": [
+      {
+        "id": "opening-and-cover",
+        "title": "开场：仪式感怎么进门",
+        "objective": "读完能把开场拆成音频状态机、灯光降级与封面呈现边界，而不是「加个 BGM」",
+        "lessons": [
+          {
+            "id": "first-gesture-unlock",
+            "title": "第一次手势：开场仪式的门闩",
+            "content": "# 第一次手势：开场仪式的门闩\n\n## 学习目标\n\n完成本课后，你能说明为什么开场音效不能在页面加载时自动播放，并指出 TuringPact 用哪一次用户动作打开音频门闩。\n\n## 先给结论\n\n- **事实：音频相位是三态状态机。** `OpeningAudioPhase` 只有 `locked | unlocked | playing`，不是布尔「有没有声音」。\n- **事实：门闩绑在第一次真手势上。** `bindOpeningRitualFirstGesture` 监听一次 `pointerdown` / `keydown`（捕获阶段），触发 `handleFirstGesture` 后立刻解绑。\n- **事实：解锁与开播是两步。** `unlockOpeningAudio` 只把相位从 `locked` 推到 `unlocked`；有声时再 `beginOpeningAmbience` 进 `playing`。\n- **推论：开场「仪式」首先是浏览器策略合规，其次才是氛围。** 先自动播会静默失败，用户以为产品坏了。\n\n## 一个类比\n\n这像进剧场：灯可以暗着（画面先画），但乐队不能在你入座前偷偷开演——剧场规定「观众就位」后才允许响。浏览器的 autoplay 政策就是那条剧场规定。\n\n## 工作示例\n\n1. 页面挂载，`useOpeningRitual` 调用 `bindOpeningRitualFirstGesture(window)`。\n2. 此时 `audioPhase === 'locked'`，环境音不会响。\n3. 用户第一次点按或按键 → `handleFirstGesture`：若仍 locked 则 `unlockOpeningAudio`。\n4. 若 `soundEnabled`，`ensureAmbienceStarted` 后 `beginOpeningAmbience` 进入 `playing`。\n5. 若静音，注释写得很清楚：Stay unlocked + muted；灯光仍可 warm。\n\n## 自检\n\n如果把 `beginOpeningAmbience` 放进 `useEffect([])` 页面一挂载就调，会发生什么？\n\n答案：浏览器会拦 `AudioContext` / `play()`，状态机可能卡住或静默失败，开场「没声音」被当成 bug，而不是策略。\n\n## 重点\n\n**仪式的第一步是合规的门闩，不是美术音轨。** 把「第一次用户意图」写进状态机，比堆叠音效库重要得多。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                "lineStart": 11,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "OpeningAudioPhase 三态：locked / unlocked / playing"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/opening-ritual/services/openingRitualSession.ts",
+                "lineStart": 213,
+                "lineEnd": 265,
+                "nodeIds": [],
+                "note": "handleFirstGesture 与 bindOpeningRitualFirstGesture：一次手势解锁"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/opening-ritual/ui/useOpeningRitual.ts",
+                "lineStart": 91,
+                "lineEnd": 95,
+                "nodeIds": [],
+                "note": "useOpeningRitual 挂载时绑定 first-gesture"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-not-autoplay",
+                "front": "为什么开场环境音不能在页面加载时直接 play？",
+                "back": "浏览器 autoplay 政策会拦截无手势音频；产品会静默失败，用户当成坏了。",
+                "tags": [
+                  "opening-ritual",
+                  "audio-policy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                    "lineStart": 47,
+                    "lineEnd": 54,
+                    "nodeIds": [],
+                    "note": "unlockOpeningAudio：仅第一次手势后离开 locked"
+                  }
+                ]
+              },
+              {
+                "id": "two-step-unlock",
+                "front": "TuringPact 把开场音频拆成哪两步相位迁移？",
+                "back": "先 locked→unlocked（unlockOpeningAudio），有声再 unlocked→playing（beginOpeningAmbience）。",
+                "tags": [
+                  "opening-ritual",
+                  "state-machine"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                    "lineStart": 47,
+                    "lineEnd": 74,
+                    "nodeIds": [],
+                    "note": "unlock 与 beginOpeningAmbience 两步迁移"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "audio-initial-phase",
+                "kind": "short-answer",
+                "title": "初始相位",
+                "prompt": "页面刚加载、用户尚未操作时 OpeningAudioPhase 应是哪个字面量？",
+                "expectedAnswer": "locked",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                    "lineStart": 11,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "OpeningAudioPhase 含 locked"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                    "lineStart": 38,
+                    "lineEnd": 44,
+                    "nodeIds": [],
+                    "note": "createInitialOpeningRitualSnapshot 默认 audioPhase locked"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "mute-orthogonal-to-unlock",
+            "title": "静音与解锁正交：别把门又锁上",
+            "content": "# 静音与解锁正交：别把门又锁上\n\n## 学习目标\n\n完成本课后，你能解释为什么「关声音」不能把音频相位退回 `locked`，并指出 `applyOpeningSoundEnabled` 静音时如何改写 `audioPhase`。\n\n## 先给结论\n\n- **事实：静音时相位从 playing 退到 unlocked，不是 locked。** `applyOpeningSoundEnabled(false)` 在 playing 时写 `audioPhase: 'unlocked'`，并 `ambienceActive: false`。\n- **事实：注释写明意图。** Keep phase so re-enabling can resume without a new gesture after unlock。\n- **事实：重新开声若已非 locked，直接 playing。** 再 `soundEnabled: true` 且相位不是 locked 时，代码把 `audioPhase` 设为 `playing` 并 `ambienceActive: true`。\n- **推论：解锁门闩是稀缺资源。** 用户已经点过一次；静音只是音量策略，不能逼他再点一次才能恢复氛围。\n\n## 一个类比\n\n剧院里你捂住耳朵（静音），并没有把入场券退掉。音乐停了，但你仍坐在「已入场」的座位上；松开手就可以继续听，不用重新检票。\n\n## 工作示例\n\n1. 用户手势解锁并进入 `playing`。\n2. 设置里关掉 `soundEnabled` → `applyOpeningSoundEnabled`：相位变成 `unlocked`，`ambienceActive` 为 false。\n3. `setOpeningRitualSoundEnabled` 把 gain 打到 0。\n4. 用户再打开声音：相位不是 locked，直接回到 `playing` 并重新拉起 ambience。\n5. 若从未手势就开声音：仍停在 locked，`ambienceActive` 仍 false——门闩还在。\n\n## 自检\n\n若静音时错误地把相位设回 `locked`，用户体验上最糟的一点是什么？\n\n答案：再次开声需要第二次手势，但用户以为「开关」就该立刻生效，会觉得静音按钮坏了。\n\n## 重点\n\n**门闩（gesture unlock）与音量（mute）必须正交。** 混成一个布尔，开场仪式会在设置面板上反复卡死。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                "lineStart": 76,
+                "lineEnd": 100,
+                "nodeIds": [],
+                "note": "applyOpeningSoundEnabled：静音退到 unlocked 而非 locked"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                "lineStart": 56,
+                "lineEnd": 68,
+                "nodeIds": [],
+                "note": "beginOpeningAmbience：静音时停在 unlocked"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/opening-ritual/services/openingRitualSession.ts",
+                "lineStart": 69,
+                "lineEnd": 82,
+                "nodeIds": [],
+                "note": "setOpeningRitualSoundEnabled 把 mute 接到 session"
+              }
+            ],
+            "cards": [
+              {
+                "id": "mute-phase",
+                "front": "用户已 playing 后点静音，audioPhase 变成什么？为什么不是 locked？",
+                "back": "变成 unlocked。保留手势解锁，再开声不必第二次手势。",
+                "tags": [
+                  "opening-ritual",
+                  "mute"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                    "lineStart": 81,
+                    "lineEnd": 88,
+                    "nodeIds": [],
+                    "note": "静音时 playing→unlocked"
+                  }
+                ]
+              },
+              {
+                "id": "unmute-path",
+                "front": "已解锁后重新打开 soundEnabled，状态机目标相位是什么？",
+                "back": "playing，并 ambienceActive: true（仍 locked 则只改 soundEnabled）。",
+                "tags": [
+                  "opening-ritual",
+                  "mute"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                    "lineStart": 90,
+                    "lineEnd": 99,
+                    "nodeIds": [],
+                    "note": "重开声：非 locked 直接 playing"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "mute-target-phase",
+                "kind": "short-answer",
+                "title": "静音目标相位",
+                "prompt": "已 playing 时执行 applyOpeningSoundEnabled(false)，audioPhase 变成哪个字面量？",
+                "expectedAnswer": "unlocked",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                    "lineStart": 81,
+                    "lineEnd": 88,
+                    "nodeIds": [],
+                    "note": "playing 静音 → unlocked"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "silent-placeholder-playing",
+            "title": "没有音轨也能 playing：占位仪式",
+            "content": "# 没有音轨也能 playing：占位仪式\n\n## 学习目标\n\n完成本课后，你能说明 `AMBIENCE_LOOP_URL === null` 时系统如何仍进入「playing」，以及为什么产品要把仪式状态与媒体资产解耦。\n\n## 先给结论\n\n- **事实：资产刻意为空。** `AMBIENCE_LOOP_URL` 类型是 `string | null`，当前为 `null`，注释写 ASSET GAP 与 ~300KB loop 预算。\n- **事实：空资产走静音占位图。** `startOpeningAmbience` 在 URL 为空时建 `silentGain`（gain 0）+ 40Hz `OscillatorNode`，注释：so the graph is \"playing\"。\n- **事实：快照会标记占位。** `ambiencePlaceholder: AMBIENCE_LOOP_URL === null`，UI/e2e 能区分「真在播」与「状态机到位」。\n- **推论：仪式进度不能被素材 pipeline 绑架。** 缺 loop 文件时若整条开场卡死，用户只看到「点了没反应」。\n\n## 一个类比\n\n电影开机前先播「静音测试条」：银幕流程走到「放映中」，但喇叭可以还没接好。流程到了，素材以后再补。\n\n## 工作示例\n\n1. 手势解锁，`soundEnabled` 为 true。\n2. `startOpeningAmbience` 创建 AudioContext 并 resume。\n3. 因 `AMBIENCE_LOOP_URL` 为 null，不创建 `HTMLAudioElement`，改走 silent oscillator。\n4. master gain 仍按 `AMBIENCE_TARGET_GAIN`（0.08）与 `AMBIENCE_FADE_MS`（500）做淡入调度——占位路径也走同一套 gain 管道。\n5. 会话侧 `beginOpeningAmbience` 把相位标为 `playing`。\n\n## 自检\n\n若没有占位路径、URL 为 null 就直接 return null，状态机会停在哪？\n\n答案：可能长期停在 `unlocked` 却 `ambienceActive` 永远起不来，e2e 的 `data-*` 钩子也等不到 playing，开场「完成」无法观测。\n\n## 重点\n\n**把「时刻完成」绑在状态机上，不要绑在资产是否就绪上。** 素材缺口用占位，别让用户卡在半扇门里。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                "lineStart": 19,
+                "lineEnd": 24,
+                "nodeIds": [],
+                "note": "AMBIENCE_LOOP_URL 现为 null 的资产缺口注释"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/opening-ritual/services/ambienceAudio.ts",
+                "lineStart": 80,
+                "lineEnd": 102,
+                "nodeIds": [],
+                "note": "null URL 时 silent oscillator 占位 playing"
+              },
+              {
+                "kind": "inference",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                "lineStart": 38,
+                "lineEnd": 44,
+                "nodeIds": [],
+                "note": "快照 ambiencePlaceholder 与 URL null 绑定，仪式可测"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-null-url",
+                "front": "AMBIENCE_LOOP_URL 为 null 时，开场为何仍可能进入 playing？",
+                "back": "ambienceAudio 用零增益 oscillator 占位，让音频图与状态机仍走 playing 路径。",
+                "tags": [
+                  "opening-ritual",
+                  "placeholder"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/opening-ritual/services/ambienceAudio.ts",
+                    "lineStart": 93,
+                    "lineEnd": 102,
+                    "nodeIds": [],
+                    "note": "Silent placeholder oscillator"
+                  }
+                ]
+              },
+              {
+                "id": "asset-budget",
+                "front": "注释里把环境音 loop 预算卡在大约多少 KB？",
+                "back": "约 300KB；超预算就先保持 null，不硬塞大文件。",
+                "tags": [
+                  "opening-ritual",
+                  "budget"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                    "lineStart": 19,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "ASSET GAP 与 ~300KB loop 预算"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ambience-url-null",
+                "kind": "short-answer",
+                "title": "当前 loop URL",
+                "prompt": "提交快照里 AMBIENCE_LOOP_URL 的运行时值是什么字面量？",
+                "expectedAnswer": "null",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/opening-ritual/domain/openingRitualState.ts",
+                    "lineStart": 24,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "AMBIENCE_LOOP_URL = null"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "cover-diorama-before-engine",
+            "title": "封面沙盘：先让壳可点，再启动 3D",
+            "content": "# 封面沙盘：先让壳可点，再启动 3D\n\n## 学习目标\n\n完成本课后，你能说出 `StartTableDiorama` 如何把「开场画面」与「可玩世界」切开，并列出它拒绝挂载 3D 的两个系统条件。\n\n## 先给结论\n\n- **事实：封面是装饰，不是出生点。** 组件注释写 Decorative only… never a player spawn；假座位用 `start-mika` 等 id，房号常量 `EMBER1`。\n- **事实：能力门控。** `canPresentDiorama`：无 window/navigator → false；`prefers-reduced-motion: reduce` → false；`connection.saveData` → false。\n- **事实：推迟启动 Three。** 先让 clay shell paint，用 `requestIdleCallback(..., { timeout: 900 })`，否则 `setTimeout(120)` 再 `setActive(true)`。\n- **推论：开场呈现的 KPI 是「首屏可交互」，不是「一进来就 WebGL 满帧」。** 3D 晚几百毫秒可以接受，输入被堵不可接受。\n\n## 一个类比\n\n橱窗模特不是店员：你可以隔着玻璃看「圆桌在吃饭」，但推门进去才是真实服务。把橱窗做成可走动的店面，只会让人卡在门口装货。\n\n## 工作示例\n\n1. 起屏渲染 `StartTableDiorama`，初始 `active=false`，`data-start-diorama=\"fallback\"`，只有 CSS 底。\n2. effect 跑 `canPresentDiorama()`；省流或减动效则永不 active。\n3. 通过门控后 idle/timeout 置 active，挂 `WorldLobbyCanvas`，`mode=\"epilogue\"`，塞入 `DIORAMA_SEATS`。\n4. 用户第一次点击仍可由 opening-ritual 接管音频门闩——封面不抢「可玩房间」语义。\n\n## 自检\n\n为什么 diorama 的 `roomCode` 用写死的 `EMBER1` 而不是真实房号？\n\n答案：它不是可加入的房间会话，只是封面构图；写真实房号会暗示可进房、可同步，语义错误。\n\n## 重点\n\n**呈现时刻可以借用 3D 引擎，但产品边界必须写死：装饰 ≠ 会话。** 再加 idle 推迟，保护首击。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/start-presentation/StartTableDiorama.tsx",
+                "lineStart": 6,
+                "lineEnd": 6,
+                "nodeIds": [],
+                "note": "START_DIORAMA_ROOM_CODE 写死 EMBER1"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/start-presentation/StartTableDiorama.tsx",
+                "lineStart": 56,
+                "lineEnd": 89,
+                "nodeIds": [],
+                "note": "canPresentDiorama 与 idle 推迟启动"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/start-presentation/StartTableDiorama.tsx",
+                "lineStart": 62,
+                "lineEnd": 105,
+                "nodeIds": [],
+                "note": "装饰-only 与 WorldLobbyCanvas epilogue 挂载"
+              }
+            ],
+            "cards": [
+              {
+                "id": "diorama-gates",
+                "front": "StartTableDiorama 在哪两个浏览器条件下直接不挂 3D？",
+                "back": "prefers-reduced-motion: reduce，以及 navigator.connection.saveData 为真。",
+                "tags": [
+                  "start-presentation",
+                  "perf"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/start-presentation/StartTableDiorama.tsx",
+                    "lineStart": 56,
+                    "lineEnd": 60,
+                    "nodeIds": [],
+                    "note": "canPresentDiorama 双门控"
+                  }
+                ]
+              },
+              {
+                "id": "diorama-not-spawn",
+                "front": "为什么说封面沙盘 never a player spawn？",
+                "back": "它是 epilogue 装饰场景与假座位，不是可同步的玩家出生世界。",
+                "tags": [
+                  "start-presentation",
+                  "boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/start-presentation/StartTableDiorama.tsx",
+                    "lineStart": 62,
+                    "lineEnd": 63,
+                    "nodeIds": [],
+                    "note": "Decorative only 注释"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "diorama-room-code",
+                "kind": "short-answer",
+                "title": "封面房号常量",
+                "prompt": "START_DIORAMA_ROOM_CODE 的字符串值是什么？",
+                "expectedAnswer": "EMBER1",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/start-presentation/StartTableDiorama.tsx",
+                    "lineStart": 6,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "START_DIORAMA_ROOM_CODE = EMBER1"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "unmask-climax",
+        "title": "高潮：按什么顺序揭开",
+        "objective": "读完能用确定性顺序、时间常量与门闩组件搭出可跳过的揭晓高潮",
+        "lessons": [
+          {
+            "id": "reveal-order-is-drama",
+            "title": "揭晓顺序就是剧本：AI 必须最后",
+            "content": "# 揭晓顺序就是剧本：AI 必须最后\n\n## 学习目标\n\n完成本课后，你能复述 `buildUnmaskRevealOrder` 的三条不变量，并解释为什么高潮顺序必须是纯函数而不是「谁票高谁先翻」。\n\n## 先给结论\n\n- **事实：顺序写死在纯函数里。** resistance 人类先（座位稳定序）→ sympathizer 次末块 → AI 最后；同块内 `compareSeatStable`。\n- **事实：无随机、无客户端私货。** 注释：Same payload always yields the same order (no randomness, no client-local state)。\n- **事实：未揭示角色直接过滤。** `hasRevealedRole` 只收 resistance / sympathizer / ai。\n- **推论：戏剧结构是数据变换，不是 CSS 动画彩蛋。** 把 AI 提前翻开会毁掉「最后一刀」的产品时刻。\n\n## 一个类比\n\n魔术揭秘有固定卡司出场顺序：先普通观众，再同伙，最后主术。顺序乱了，掌声落在错误的人身上。\n\n## 工作示例\n\n1. 结算 payload 含 4 名 resistance、1 名 sympathizer、1 名 ai。\n2. `buildUnmaskRevealOrder` 产出 stepIndex 0..n，最后一步一定是 ai。\n3. `UnmaskSequence` 用 `useMemo(() => buildUnmaskRevealOrder(players), [players])` 驱动翻牌。\n4. 同一 payload 在任何客户端得到同一序列——直播回放与「谁先看到」不会分叉。\n\n## 自检\n\n若按「本机玩家自己优先揭晓」排序，会破坏什么？\n\n答案：破坏跨客户端一致性与公共高潮；每人看到不同剧本，观众时刻不再共享。\n\n## 重点\n\n**高潮顺序是结算域的不变量，不是 UI 偏好。** 先写纯函数排序，再谈动画。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/unmask-climax/domain/unmaskOrder.ts",
+                "lineStart": 45,
+                "lineEnd": 73,
+                "nodeIds": [],
+                "note": "buildUnmaskRevealOrder：R→S→AI 与确定性注释"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/unmask-climax/domain/unmaskOrder.ts",
+                "lineStart": 19,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "hasRevealedRole 过滤未揭示角色"
+              }
+            ],
+            "cards": [
+              {
+                "id": "unmask-order",
+                "front": "buildUnmaskRevealOrder 规定的三块出场顺序是什么？",
+                "back": "resistance → sympathizer → ai（AI 永远最后）。",
+                "tags": [
+                  "unmask-climax",
+                  "drama"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/domain/unmaskOrder.ts",
+                    "lineStart": 48,
+                    "lineEnd": 52,
+                    "nodeIds": [],
+                    "note": "三条 order invariants"
+                  }
+                ]
+              },
+              {
+                "id": "why-pure-order",
+                "front": "为什么揭晓顺序禁止随机和客户端本地状态？",
+                "back": "同一结算 payload 必须各端同序，共享高潮不能分叉。",
+                "tags": [
+                  "unmask-climax",
+                  "determinism"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/domain/unmaskOrder.ts",
+                    "lineStart": 53,
+                    "lineEnd": 54,
+                    "nodeIds": [],
+                    "note": "no randomness, no client-local state"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "unmask-last-faction",
+                "kind": "short-answer",
+                "title": "最后揭晓阵营",
+                "prompt": "按 buildUnmaskRevealOrder 不变量，序列最后一块是哪个 role？",
+                "expectedAnswer": "ai",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/domain/unmaskOrder.ts",
+                    "lineStart": 48,
+                    "lineEnd": 52,
+                    "nodeIds": [],
+                    "note": "AI last"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "timing-constants-are-product",
+            "title": "毫秒常量就是产品节奏",
+            "content": "# 毫秒常量就是产品节奏\n\n## 学习目标\n\n完成本课后，你能列出 unmask 四段时间常量，并能用 `estimateUnmaskDurationMs` 的公式估算一场 6 人揭晓的墙钟时间。\n\n## 先给结论\n\n- **事实：节奏是命名常量，不是魔法数散落在 JSX。** `UNMASK_INTRO_MS = 450`，`UNMASK_BEAT_MS = 800`，`UNMASK_AI_CLIMAX_HOLD_MS = 1_100`，`UNMASK_POST_SEQUENCE_MS = 280`。\n- **事实：BEAT 有产品目标区间。** 注释 Journey target: ~700–900ms。\n- **事实：总时长可预算。** `estimateUnmaskDurationMs(n) = intro + (n-1)*beat + AI hold + post`（n≤0 则 intro+post）。\n- **推论：改节奏等于改产品感觉。** 把 beat 改成 200ms，高潮变幻灯片；改成 2000ms，人会狂点 skip。\n\n## 一个类比\n\n这不是「动画调参」，而是相声的「抖包袱间隔」。包袱之间太密像念稿，太疏像忘词——间隔本身就是作品。\n\n## 工作示例\n\n1. `UnmaskSequence` 先等 `UNMASK_INTRO_MS`，相位 `intro` → `revealing`，翻第 0 张。\n2. 之后每张累加 `UNMASK_BEAT_MS` 设 timeout。\n3. 最后一张（AI）再加 `UNMASK_AI_CLIMAX_HOLD_MS + UNMASK_POST_SEQUENCE_MS` 才 `finish()`。\n4. e2e 可用 `estimateUnmaskDurationMs(stepCount)` 估超时，而不是拍脑袋 sleep。\n\n## 自检\n\n6 步揭晓时，flipBeats 一项贡献多少毫秒？\n\n答案：`(6-1)*800 = 4000` 毫秒。\n\n## 重点\n\n**把「感觉对」沉淀成可审查的常量与估算函数。** 一人公司没有动画导演时，代码里的毫秒就是导演。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/unmask-climax/domain/unmaskTiming.ts",
+                "lineStart": 1,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "四段 unmask 时间常量与 estimateUnmaskDurationMs"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/unmask-climax/ui/UnmaskSequence.tsx",
+                "lineStart": 100,
+                "lineEnd": 132,
+                "nodeIds": [],
+                "note": "timeout 驱动 intro/beat/AI hold"
+              }
+            ],
+            "cards": [
+              {
+                "id": "unmask-beat",
+                "front": "两张面具之间的标准间隔常量叫什么、多少毫秒？",
+                "back": "UNMASK_BEAT_MS，800ms（目标约 700–900）。",
+                "tags": [
+                  "unmask-climax",
+                  "timing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/domain/unmaskTiming.ts",
+                    "lineStart": 4,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "UNMASK_BEAT_MS = 800"
+                  }
+                ]
+              },
+              {
+                "id": "ai-hold",
+                "front": "为什么最后一张（AI）要用 UNMASK_AI_CLIMAX_HOLD_MS 额外停住？",
+                "back": "高潮牌需要更长凝视，再交给 settlement，避免立刻被面板盖住。",
+                "tags": [
+                  "unmask-climax",
+                  "timing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/domain/unmaskTiming.ts",
+                    "lineStart": 10,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "AI climax hold 与 post sequence"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "unmask-beat-ms",
+                "kind": "short-answer",
+                "title": "BEAT 毫秒",
+                "prompt": "UNMASK_BEAT_MS 的数值是多少？",
+                "expectedAnswer": "800",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/domain/unmaskTiming.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "UNMASK_BEAT_MS = 800"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "settlement-behind-climax",
+            "title": "结算面板必须站在高潮后面",
+            "content": "# 结算面板必须站在高潮后面\n\n## 学习目标\n\n完成本课后，你能描述 `SettlementWithUnmask` 如何用一个布尔门闩挡住 `RoundSettlementPanel`，并说明 `sequenceKey` 变化时会发生什么。\n\n## 先给结论\n\n- **事实：组合组件先演后结。** `showSettlement` 为 false 时只渲染 `UnmaskSequence`；`onComplete` 才切到 `RoundSettlementPanel`。\n- **事实：减动效可直接进结算。** 初始 state 用 `shouldAutoSkipUnmask(prefersReducedMotionNow())`，为 true 则一开始就 showSettlement。\n- **事实：sequenceKey 重启门闩。** `useEffect` 依赖 `sequenceKey`，新结算身份会重置是否跳过。\n- **推论：若先渲染完整结算再叠动画，揭晓没有信息差。** 用户已经在面板里读完身份，翻牌变成噪音。\n\n## 一个类比\n\n信封没拆开前不能把信纸内容印在桌面上。结算面板是信纸；unmask 是拆信封的动作。顺序反了，仪式是假的。\n\n## 工作示例\n\n1. 房间进入结算，父级挂 `SettlementWithUnmask` 并传入 `sequenceKey`（通常 room id）。\n2. 正常路径：`showSettlement=false` → 只见 `UnmaskSequence`。\n3. 序列 `finish()` → `setShowSettlement(true)` → 出现 `RoundSettlementPanel`。\n4. 新一局 key 变：effect 按 reduced-motion 规则重算门闩。\n\n## 自检\n\n把 `RoundSettlementPanel` 与 `UnmaskSequence` 并排同时挂载，最大产品损失是什么？\n\n答案：身份信息在高潮完成前泄漏，揭晓失去「未知→已知」的落差。\n\n## 重点\n\n**高潮组件的职责包含「挡住」下游信息，而不只是播放动画。** 门闩是产品结构。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/unmask-climax/ui/SettlementWithUnmask.tsx",
+                "lineStart": 25,
+                "lineEnd": 52,
+                "nodeIds": [],
+                "note": "SettlementWithUnmask 门闩：先 Unmask 后 Settlement"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/unmask-climax/index.ts",
+                "lineStart": 1,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "对外导出 SettlementWithUnmask 与 order helpers"
+              }
+            ],
+            "cards": [
+              {
+                "id": "gate-pattern",
+                "front": "SettlementWithUnmask 在 showSettlement 为 false 时渲染什么？",
+                "back": "只渲染 UnmaskSequence，不挂 RoundSettlementPanel。",
+                "tags": [
+                  "unmask-climax",
+                  "composition"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/ui/SettlementWithUnmask.tsx",
+                    "lineStart": 41,
+                    "lineEnd": 48,
+                    "nodeIds": [],
+                    "note": "未完成时仅 UnmaskSequence"
+                  }
+                ]
+              },
+              {
+                "id": "sequence-key",
+                "front": "sequenceKey 的产品作用是什么？",
+                "back": "标识这一次结算；变化时重启 unmask 门闩与序列。",
+                "tags": [
+                  "unmask-climax",
+                  "identity"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/ui/SettlementWithUnmask.tsx",
+                    "lineStart": 10,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "sequenceKey 注释：stable identity"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "settlement-first-child",
+                "kind": "short-answer",
+                "title": "门闩未开时组件",
+                "prompt": "showSettlement 为 false 时渲染的子组件名是？",
+                "expectedAnswer": "UnmaskSequence",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/ui/SettlementWithUnmask.tsx",
+                    "lineStart": 41,
+                    "lineEnd": 48,
+                    "nodeIds": [],
+                    "note": "渲染 UnmaskSequence"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "skip-and-reduced-motion",
+            "title": "可跳过的高潮才是尊重用户",
+            "content": "# 可跳过的高潮才是尊重用户\n\n## 学习目标\n\n完成本课后，你能画出 unmask 相位流，并说明 skip 与 `prefers-reduced-motion` 如何殊途同归到 `complete`。\n\n## 先给结论\n\n- **事实：相位三态。** `UnmaskSequencePhase = 'intro' | 'revealing' | 'complete'`。\n- **事实：减动效自动跳满。** `shouldAutoSkipUnmask(prefersReducedMotion)` 为 true 时初始即 `complete`，`revealedThrough = steps.length - 1`，并立刻 `onComplete`。\n- **事实：Skip 按钮走同一 finish。** `skip` → `finish`：置 complete、翻完全部、调用 `onCompleteRef`；`finishedRef` 防双触发。\n- **推论：强制看完动画是敌意设计。** 一人公司更要默认尊重系统减动效与「我赶时间」。\n\n## 一个类比\n\n过场动画该像电梯门：默认有节奏开合，但必须有「关门/跳过」按钮；无障碍模式则门一直开着——你不是在惩罚赶时间的乘客。\n\n## 工作示例\n\n```mermaid\nstateDiagram-v2\n  [*] --> intro: 正常进入\n  [*] --> complete: prefers-reduced-motion\n  intro --> revealing: UNMASK_INTRO_MS 后\n  revealing --> revealing: 下一张 UNMASK_BEAT_MS\n  revealing --> complete: AI hold + post / 用户 skip\n  complete --> [*]\n```\n\n图里最关键的边是 **`[*] --> complete: prefers-reduced-motion`**：它不是「播快一点」，而是**整段高潮不存在**，直接把信息权交给 settlement。skip 边汇入同一 `complete`，避免两套结束语义。\n\n## 自检\n\n`finish` 为什么用 `finishedRef` 而不是只靠 React state？\n\n答案：多个 timeout 与 skip 可能并发；ref 同步闸门防止 `onComplete` 调两次导致父级状态抖动。\n\n## 重点\n\n**高潮必须可跳过、可无障碍降级，且降级路径与正常结束共用一个完成语义。** 否则你会养出「卡死在动画」的幽灵 bug。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/unmask-climax/domain/unmaskOrder.ts",
+                "lineStart": 75,
+                "lineEnd": 78,
+                "nodeIds": [],
+                "note": "shouldAutoSkipUnmask 仅取决于 prefersReducedMotion"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/unmask-climax/ui/UnmaskSequence.tsx",
+                "lineStart": 51,
+                "lineEnd": 73,
+                "nodeIds": [],
+                "note": "初始 auto-skip 与 skip→finish"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/unmask-climax/ui/UnmaskSequence.tsx",
+                "lineStart": 76,
+                "lineEnd": 89,
+                "nodeIds": [],
+                "note": "sequenceKey 变化时 autoSkip 立即 onComplete"
+              }
+            ],
+            "cards": [
+              {
+                "id": "auto-skip-rule",
+                "front": "shouldAutoSkipUnmask 在什么条件下返回 true？",
+                "back": "prefersReducedMotion 为 true 时；函数体就是 return prefersReducedMotion。",
+                "tags": [
+                  "unmask-climax",
+                  "a11y"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/domain/unmaskOrder.ts",
+                    "lineStart": 75,
+                    "lineEnd": 78,
+                    "nodeIds": [],
+                    "note": "auto-skip = reduced motion"
+                  }
+                ]
+              },
+              {
+                "id": "skip-same-finish",
+                "front": "点 Skip 与正常播完，结束语义差在哪里？",
+                "back": "不差：都走 finish()，complete + 全揭示 + onComplete。",
+                "tags": [
+                  "unmask-climax",
+                  "skip"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/ui/UnmaskSequence.tsx",
+                    "lineStart": 62,
+                    "lineEnd": 73,
+                    "nodeIds": [],
+                    "note": "skip 直接 finish"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "unmask-auto-skip",
+                "kind": "short-answer",
+                "title": "自动跳过条件",
+                "prompt": "shouldAutoSkipUnmask 的唯一输入参数语义是什么（英文标识风格）？",
+                "expectedAnswer": "prefersReducedMotion",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/unmask-climax/domain/unmaskOrder.ts",
+                    "lineStart": 76,
+                    "lineEnd": 78,
+                    "nodeIds": [],
+                    "note": "参数 prefersReducedMotion"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "roast-and-share",
+        "title": "复盘：离开后还记得什么",
+        "objective": "读完能把结束报告做成契约化内容，并安全、可降级地传播出去",
+        "lessons": [
+          {
+            "id": "report-message-contract",
+            "title": "吐槽报告是消息契约，不是长文",
+            "content": "# 吐槽报告是消息契约，不是长文\n\n## 学习目标\n\n完成本课后，你能用前缀与双语标题拆开一条 roast 消息，并说明为什么复盘内容要可机器识别。\n\n## 先给结论\n\n- **事实：专用前缀。** `REPORT_PREFIX = '【吐槽报告】\\n'`；`isRoastReportMessage` 只认 `startsWith`。\n- **事实：双语段落标题写死。** 中文 `【人类观察报告】`，英文 `【HUMANITY AUDIT】`；`splitRoastReportSections` 按英文标题切 zh/en 数组。\n- **事实：提取会剥前缀。** `extractRoastReport` 去掉 prefix 再 trim。\n- **推论：结束时刻的「报告」必须能从聊天流里捞出来。** 没有契约，分享图与 UI 面板都只能靠脆弱字符串猜。\n\n## 一个类比\n\n这像快递面单：不是把感想随便写在箱子上，而是固定栏位——前缀是「这是面单」，中英标题是「收件区/英文区」。扫描枪（解析器）只认栏位。\n\n## 工作示例\n\n1. AI 或系统产出带 `【吐槽报告】` 的消息。\n2. UI 用 `isRoastReportMessage` 决定是否走 roast 面板而不是普通气泡。\n3. `extractRoastReport` 得到正文；`splitRoastReportSections` 分成 zh/en 行数组。\n4. 分享图 `shareImage` 再消费这些行——同一契约贯通复盘与传播。\n\n## 自检\n\n如果前缀改成可翻译文案且随 locale 变化，会坏掉什么？\n\n答案：`startsWith` 契约在多语言下分叉，旧消息与新客户端互相不认，历史复盘全部失效。\n\n## 重点\n\n**结束时刻先定消息契约，再谈文案俏皮。** 可识别比「写得像人」更优先。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/roast-report/roastReport.ts",
+                "lineStart": 8,
+                "lineEnd": 23,
+                "nodeIds": [],
+                "note": "REPORT_PREFIX 与 is/extract 识别"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/roast-report/roastReport.ts",
+                "lineStart": 25,
+                "lineEnd": 44,
+                "nodeIds": [],
+                "note": "splitRoastReportSections 双语切分"
+              }
+            ],
+            "cards": [
+              {
+                "id": "report-prefix",
+                "front": "如何判断一条聊天内容是吐槽报告？",
+                "back": "content.startsWith('【吐槽报告】\\n')，即 REPORT_PREFIX。",
+                "tags": [
+                  "roast-report",
+                  "contract"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/roastReport.ts",
+                    "lineStart": 17,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "isRoastReportMessage"
+                  }
+                ]
+              },
+              {
+                "id": "en-heading",
+                "front": "英文段落标题常量 EN_HEADING 的字面量是什么？",
+                "back": "【HUMANITY AUDIT】",
+                "tags": [
+                  "roast-report",
+                  "i18n"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/roastReport.ts",
+                    "lineStart": 10,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "EN_HEADING"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "report-prefix-token",
+                "kind": "short-answer",
+                "title": "报告前缀首段",
+                "prompt": "REPORT_PREFIX 去掉换行后的中文括号标题是什么？",
+                "expectedAnswer": "【吐槽报告】",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/roastReport.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "REPORT_PREFIX"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "share-without-next-room-spoilers",
+            "title": "分享要爽，但不能剧透下一局",
+            "content": "# 分享要爽，但不能剧透下一局\n\n## 学习目标\n\n完成本课后，你能说明 `resolveRoastShareVariant` 如何把「我是谁 + 谁赢了」映射到分享文案，以及 AI 视角为什么落入 `generic`。\n\n## 先给结论\n\n- **事实：变体由角色与胜者决定。** resistance/sympathizer 各有 win/loss；缺 role、role 为 `ai`、或缺 winner → `generic`。\n- **事实：允许庆祝本局，禁止带走下一局钥匙。** `buildRoastReportShareText` 注释：Spoiler-free for the *next* room (no active room code)。\n- **事实：fallback 文案写死「不含房号」。** 例如 zh-CN generic：不包含下一局可用的房号、玩家邮箱或账号。\n- **推论：传播时刻的转化漏斗，不能以泄漏房间入口为代价。** 病毒式文案若带房号，等于把下一桌的信息安全打开。\n\n## 一个类比\n\n你可以在朋友圈晒「我今天进球了」，但不要把自家门锁密码印在配图上。爽感来自结果，安全来自不传入口密钥。\n\n## 工作示例\n\n1. 人类 resistance 且 resistance 胜 → `resistanceWin` 文案（「我们抓到那台机器了」）。\n2. 你是 sympathizer 且败 → `sympathizerLoss`。\n3. 你旁观或身份是 ai → `generic`，避免用「我」冒充人类立场。\n4. `lines` 若由 i18n 传入则覆盖 fallback，但仍应遵守「无进行中房号」产品规则。\n\n## 自检\n\n为什么 `role === 'ai'` 要强制 `generic`？\n\n答案：AI 不是可晒的「玩家自我叙事」主体；用人类 win/loss 语气会错位，也更易泄漏策略口吻。\n\n## 重点\n\n**结束分享：放大情绪，锁死下一局入口信息。** variant 矩阵是安全阀，不是文案表。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/roast-report/shareCopy.ts",
+                "lineStart": 13,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "resolveRoastShareVariant 矩阵与 ai→generic"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/roast-report/shareCopy.ts",
+                "lineStart": 96,
+                "lineEnd": 108,
+                "nodeIds": [],
+                "note": "buildRoastReportShareText 与 no active room code 注释"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/roast-report/shareCopy.ts",
+                "lineStart": 80,
+                "lineEnd": 84,
+                "nodeIds": [],
+                "note": "zh-CN generic fallback 声明不含房号邮箱"
+              }
+            ],
+            "cards": [
+              {
+                "id": "ai-share-variant",
+                "front": "玩家 role 为 ai 时分享变体是什么？",
+                "back": "generic——与缺 role/缺 winner 相同兜底。",
+                "tags": [
+                  "roast-report",
+                  "share"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/shareCopy.ts",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "ai 或无 winner → generic"
+                  }
+                ]
+              },
+              {
+                "id": "no-room-code",
+                "front": "分享文案对「下一局」的硬约束是什么？",
+                "back": "不带进行中的房号等入口信息，可庆祝已结束本局结果。",
+                "tags": [
+                  "roast-report",
+                  "privacy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/shareCopy.ts",
+                    "lineStart": 96,
+                    "lineEnd": 99,
+                    "nodeIds": [],
+                    "note": "Spoiler-free for next room"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ai-share-fallback",
+                "kind": "short-answer",
+                "title": "AI 分享变体",
+                "prompt": "resolveRoastShareVariant 在 role 为 ai 时返回哪个 variant？",
+                "expectedAnswer": "generic",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/shareCopy.ts",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "ai → generic"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "share-image-fallback-ladder",
+            "title": "分享图：PNG 优先，失败仍要离场",
+            "content": "# 分享图：PNG 优先，失败仍要离场\n\n## 学习目标\n\n完成本课后，你能按优先级复述 `createRoastReportImage` 的三档导出，以及 `shareRoastReportImageFile` 在非 PNG 时为何直接 download。\n\n## 先给结论\n\n- **事实：导出阶梯。** DOM `html-to-image` PNG → SVG 栅格化 PNG → 原始 SVG blob；任一失败走下一档。\n- **事实：非 PNG 不走 Web Share 文件。** `image.format !== 'png'` 时 `triggerBlobDownload` 并返回 `'downloaded'`。\n- **事实：PNG 路径再分 share / clipboard / download。** `navigator.canShare({ files })` → share；否则 `copyImageBlobToClipboard`；再否则 download；catch → `'failed'`。\n- **推论：结束时刻的「能带走」比「最美那一档」重要。** 全有或全无能把复盘出口堵死。\n\n## 一个类比\n\n登机牌可以是电子二维码、打印条、手写确认号——优先级从漂亮到保底，但你必须能登机。分享图同理。\n\n## 工作示例\n\n1. `createRoastReportImage` 先 `rasterizeDomCardToPng`（超时 `DOM_EXPORT_TIMEOUT_MS = 8000`）。\n2. 失败则 `buildRoastReportImageSvg` + `rasterizeSvgToPng`（`RASTERIZE_TIMEOUT_MS = 1200`）。\n3. 仍失败返回 SVG 结果。\n4. 用户点分享：若是 SVG，直接下载而不是假装 share 成功。\n\n## 自检\n\n为什么 SVG 不尝试 `navigator.share`？\n\n答案：文件分享链路与社交 App 对 PNG 支持最稳；SVG 常不被 canShare，强行 share 只会高失败率。\n\n## 重点\n\n**出口阶梯要写进代码：最佳呈现 → 可接受呈现 → 保底文件。** 结束时刻最怕的是按钮点了没下文。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/roast-report/shareImage.ts",
+                "lineStart": 470,
+                "lineEnd": 507,
+                "nodeIds": [],
+                "note": "createRoastReportImage：DOM PNG → SVG PNG → SVG"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/roast-report/shareImage.ts",
+                "lineStart": 536,
+                "lineEnd": 574,
+                "nodeIds": [],
+                "note": "shareRoastReportImageFile：非 PNG 下载与 share 阶梯"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/roast-report/shareImage.ts",
+                "lineStart": 51,
+                "lineEnd": 53,
+                "nodeIds": [],
+                "note": "DOM_EXPORT 与 RASTERIZE 超时预算"
+              }
+            ],
+            "cards": [
+              {
+                "id": "export-ladder",
+                "front": "createRoastReportImage 三档导出顺序是什么？",
+                "back": "DOM PNG，然后 SVG 栅格 PNG，最后 SVG blob。",
+                "tags": [
+                  "roast-report",
+                  "export"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/shareImage.ts",
+                    "lineStart": 483,
+                    "lineEnd": 506,
+                    "nodeIds": [],
+                    "note": "三档 fallback"
+                  }
+                ]
+              },
+              {
+                "id": "svg-share-result",
+                "front": "导出结果是 svg 时 shareRoastReportImageFile 返回什么？",
+                "back": "downloaded——触发本地下载，不走 files share。",
+                "tags": [
+                  "roast-report",
+                  "share"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/shareImage.ts",
+                    "lineStart": 541,
+                    "lineEnd": 546,
+                    "nodeIds": [],
+                    "note": "format !== png → downloaded"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "non-png-share-result",
+                "kind": "short-answer",
+                "title": "非 PNG 分享结果",
+                "prompt": "shareRoastReportImageFile 在 image.format 不是 png 时返回哪个字符串？",
+                "expectedAnswer": "downloaded",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/shareImage.ts",
+                    "lineStart": 541,
+                    "lineEnd": 546,
+                    "nodeIds": [],
+                    "note": "return downloaded"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "portrait-card-and-cjk-width",
+            "title": "竖图卡片：字宽预算是设计决策",
+            "content": "# 竖图卡片：字宽预算是设计决策\n\n## 学习目标\n\n完成本课后，你能说出分享图逻辑像素与最终 PNG 尺寸，并解释为什么 CJK 字符在换行算法里按 2 个宽度单位计。\n\n## 先给结论\n\n- **事实：竖屏 story 规格。** `SHARE_IMAGE_CSS_WIDTH/HEIGHT = 540×960`，`PIXEL_RATIO = 2` → 导出 `1080×1920`。\n- **事实：正文行数封顶。** `MAX_BODY_LINES = 12`，导出 DOM 卡片 `slice(0, MAX_BODY_LINES)`。\n- **事实：CJK 双倍字宽。** `charUnits` 对 `FULL_WIDTH_PATTERN` 匹配字符返回 2，拉丁为 1；无空格语言靠 hard break。\n- **推论：传播素材的版式是算法，不是设计师事后拉框。** 中文报告若按英文空格换行，卡片会裁字，时刻「难看」会杀死分享欲。\n\n## 一个类比\n\n地铁灯箱广告有固定画幅：文案必须按画幅拆行。你不能把小说贴上去指望乘客自己缩放。分享卡就是灯箱。\n\n## 工作示例\n\n1. 构建离屏 DOM 卡：fixed 定位到 `-12000px`，宽高用 CSS 540×960。\n2. 中文吐槽长句进入 `hardBreak`，按单位宽度切块，避免撑破边。\n3. `toBlob` 时 `pixelRatio: 2` 得到 1080×1920 PNG，适合 Stories。\n4. 超过 12 行的复盘被截断——完整报告在产品内，卡片只负责钩子。\n\n## 自检\n\n若 CJK 也按 1 unit 计宽，最常见的视觉事故是什么？\n\n答案：行在视觉上过长，出框或与边线重叠，中文分享图比英文更容易「糊边」。\n\n## 重点\n\n**结束时刻的像素规格与换行规则是产品决策。** 它们决定「愿不愿意转发」，不是边角 CSS。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/roast-report/shareImage.ts",
+                "lineStart": 41,
+                "lineEnd": 53,
+                "nodeIds": [],
+                "note": "540×960 CSS、2x 导出与 MAX_BODY_LINES"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/roast-report/shareImage.ts",
+                "lineStart": 98,
+                "lineEnd": 111,
+                "nodeIds": [],
+                "note": "FULL_WIDTH_PATTERN 与 charUnits 双倍 CJK"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/roast-report/shareImage.ts",
+                "lineStart": 342,
+                "lineEnd": 348,
+                "nodeIds": [],
+                "note": "导出卡片正文 slice 到 MAX_BODY_LINES"
+              }
+            ],
+            "cards": [
+              {
+                "id": "share-png-size",
+                "front": "分享 PNG 最终宽高是多少？",
+                "back": "1080×1920（540×960 CSS × pixelRatio 2）。",
+                "tags": [
+                  "roast-report",
+                  "export"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/shareImage.ts",
+                    "lineStart": 42,
+                    "lineEnd": 47,
+                    "nodeIds": [],
+                    "note": "CSS 尺寸与 PIXEL_RATIO"
+                  }
+                ]
+              },
+              {
+                "id": "cjk-units",
+                "front": "charUnits 对匹配 FULL_WIDTH_PATTERN 的字符返回几？",
+                "back": "2——按全角视觉宽度做换行预算。",
+                "tags": [
+                  "roast-report",
+                  "i18n"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/shareImage.ts",
+                    "lineStart": 103,
+                    "lineEnd": 105,
+                    "nodeIds": [],
+                    "note": "charUnits 返回 2 或 1"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "share-pixel-ratio",
+                "kind": "short-answer",
+                "title": "导出像素比",
+                "prompt": "SHARE_IMAGE_PIXEL_RATIO 的数值是多少？",
+                "expectedAnswer": "2",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/roast-report/shareImage.ts",
+                    "lineStart": 45,
+                    "lineEnd": 45,
+                    "nodeIds": [],
+                    "note": "PIXEL_RATIO = 2"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

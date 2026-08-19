@@ -1,0 +1,42 @@
+ai-contracts-first 课程提案自检报告
+================================
+日期：2026-08-07
+输出：course-proposals/ai-contracts-first.json
+
+规模
+----
+单元：3
+  1. contract-boxes（契约盒子：先隔离再接线）— 4 节
+  2. handler-contract（处理器契约：边界、预算、身份）— 4 节
+  3. scheduler-contract（调度契约：注入、闸门、交还租约）— 4 节
+课时：12
+证据引用：80 条（每节 lesson + cards + exercises 合计）
+卡片：24（每节 2 张）
+练习：12（每节 1 道 short-answer）
+
+证据源（commit 3b402e069a5db5fe9eb82dbc03aa05152b3d298b）
+----
+- services/mastra/src/contracts/ai-chat-gateway.ts
+- services/mastra/src/contracts/ai-chat-handler.ts
+- services/mastra/src/contracts/ai-scheduler-core.ts
+- services/mastra/src/runtime/scheduler-deps.ts
+- services/mastra/src/runtime/ai-chat-auth.ts
+
+门禁 1：check-proposal-shape
+----
+ok  course-proposals/ai-contracts-first.json
+
+门禁 2：check-proposal-evidence --study turing-pact
+----
+ok  services/mastra/src/runtime/scheduler-deps.ts:273-278
+ok  services/mastra/src/runtime/scheduler-deps.ts:70-87
+ok  services/mastra/src/runtime/scheduler-deps.ts:83-87
+
+all 80 references resolve at their pinned commits
+
+最反直觉的一点（已写入课时 budget-lifecycle-in-handler）
+----
+complete 失败时，默认并不是 refund，而是 commit 整笔 reservedMicroUsd。
+只有抛出 NonBillableProviderError 才会 refundBudget。
+契约把「无法证明厂商未计费」编码成默认入账；退款是显式例外。
+独立开发者直觉常是「失败就全退」——那会在 rate limit / 502 等路径上系统性亏钱。

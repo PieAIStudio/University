@@ -1,0 +1,1141 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-content-as-package",
+  "targetSnapshotId": "git-c9f0ec8d57a1",
+  "targetAnalysisId": "ua-c9f0ec8d-v2-9-4-zh-full-e98206c7358f1ff1-d0c838f811a5",
+  "course": {
+    "id": "content-as-package",
+    "title": "把内容当依赖包管理",
+    "description": "内容膨胀后散放在业务代码里会失控：用独立包管版本、校验、构建时机与导出边界，做错会泄漏编译器、剧透图或静默漂移映射。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "划分内容包与 UI/运行时的责任边界，并能指出 exports 地图挡的是哪类误 import",
+      "说明 source→Ink→compiled→manifest→catalog 各层单一真相源，以及混层如何产生双真相",
+      "解释 digest/assert/fidelity 三类校验如何 fail-closed，并区分「源码存在」与「运行时播过」",
+      "设计玩家与工具的导出分轨：预编译、opaque 图、退休 id 与存档兼容"
+    ],
+    "units": [
+      {
+        "id": "why-content-package",
+        "title": "为什么内容必须独立成包",
+        "objective": "能说明包边界、流水线分层、catalog SSOT 与按章加载的收益与代价",
+        "lessons": [
+          {
+            "id": "package-boundary",
+            "title": "内容包负责什么、不负责什么",
+            "content": "# 内容包负责什么、不负责什么\n\n## 学习目标\n\n完成本课后，你能用 `@supaluv/content` 的 `package.json` 与入口设计，说明「内容独立成包」时边界画在哪里，以及越界会拖垮什么。\n\n## 先给结论\n\n- **事实：内容是独立 workspace 包。** 包名 `@supaluv/content`，`private: true`，只依赖 `@supaluv/shared`，不依赖 React 或 web 运行时。\n- **事实：导出地图是显式契约。** `exports` 列出主入口 `\".\"`、`./narrative-graph-player`、`./narrative-graph-creator.node` 以及若干 scenes 子路径——不是「整个目录随便 import」。\n- **事实：构建是内容流水线，不是业务编译。** `build` 串联 `check-story-catalog-types`、`compile-ink`、`generate-coverage`、`generate-narrative-graph`，再 `tsc --noEmit`。\n- **推论：包边界同时挡两件事。** 一是业务代码别把小说草稿、编译器、资产台账拖进 UI 包；二是内容作者别在内容包里写播放器状态机。\n\n## 一个类比\n\n把内容包想成**食材中央厨房**：它负责备菜、贴标签、出成品质检报告。餐厅（`apps/web`）只点菜、上桌、收钱。若厨房直接管点单收银，菜单一改，前台代码就跟着炸。\n\n## 工作示例\n\n1. 你要改一章剧情：落在 `packages/content`，跑 `pnpm --filter @supaluv/content compile-ink` 等脚本。\n2. 你要改播放 UI：落在 `apps/web`，只通过 `@supaluv/content` 的导出 API 取元数据与章节载荷。\n3. 你若从 web 直接 import 内容包里未导出的 `scripts/compile-ink.mjs` 或 `inkjs/full`，等于把 Node 编译器拖进玩家浏览器。\n4. `package.json` 的 `exports` 正是在说：**合法入口只有这些门。**\n\n## 自检\n\n为什么 `dependencies` 只有 `@supaluv/shared`，而没有 `react`？\n\n答案：内容包交付的是数据、类型与加载函数，不是 UI。依赖 React 会把渲染层耦合进内容真相中心，版本升级与 tree-shaking 都会变成互相拖累。\n\n## 重点\n\n**独立成包的第一收益不是「目录整齐」，而是导出边界：谁可以 import 什么，写进 `exports` 才算契约。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/package.json",
+                "lineStart": 1,
+                "lineEnd": 30,
+                "nodeIds": [],
+                "note": "包名、exports 地图与 build 流水线脚本"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/index.ts",
+                "lineStart": 93,
+                "lineEnd": 120,
+                "nodeIds": [],
+                "note": "StoryCatalogMeta 轻量元数据与 LoadedStoryChapter 分离"
+              }
+            ],
+            "cards": [
+              {
+                "id": "exports-as-contract",
+                "front": "为什么内容包要显式写 exports，而不是让消费方随意相对路径 import？",
+                "back": "exports 是对外契约：限制合法入口，避免把脚本、源稿或 Node-only 模块拖进玩家包。",
+                "tags": [
+                  "content-package"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/package.json",
+                    "lineStart": 6,
+                    "lineEnd": 16,
+                    "nodeIds": [],
+                    "note": "exports 列出主入口与子路径"
+                  }
+                ]
+              },
+              {
+                "id": "build-is-pipeline",
+                "front": "内容包的 build 为什么先跑 compile-ink / generate-coverage，而不是只 tsc？",
+                "back": "内容真相依赖生成物与校验；只 typecheck 过不了「编译产物过期、覆盖映射漂移」。",
+                "tags": [
+                  "content-package"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/package.json",
+                    "lineStart": 17,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "build 串联类型检查、编译、覆盖与图生成"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "package-name-recall",
+                "kind": "short-answer",
+                "title": "包名回忆",
+                "prompt": "SupaLuv 内容包在 package.json 里的 name 字段是什么？",
+                "expectedAnswer": "@supaluv/content",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/package.json",
+                    "lineStart": 1,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "name 为 @supaluv/content"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "pipeline-layers",
+            "title": "内容流水线：每一层只许碰一件事",
+            "content": "# 内容流水线：每一层只许碰一件事\n\n## 学习目标\n\n完成本课后，你能画出从原稿快照到运行时加载的分层，并指出「拓扑」与「表现」分别落在哪一层——以及混层会出什么故障。\n\n## 先给结论\n\n- **事实：原稿有 hash 钉死。** `sources/draft-2026-07/SOURCE-MANIFEST.json` 为每份 `draft0N.md` 记 `sha256`、`chapterId`、`inkFile`。\n- **事实：Ink 持有拓扑。** `# scene:dch01_s001` 与 `# choice:dch01_s001_continue` 写在 `ink/draft-ch01.ink` 的 knot 上；选择与 divert 也在这里。\n- **事实：manifest 只做表现。** `manifests/draft-ch01-scenes.ts` 注释写明 presentation-only；字段是 `artKey`、`speaker`、`mood`、`bgmKey`，不写 choices。\n- **事实：章节模块绑定编译产物。** `src/chapters/draft-ch01.ts` 只 export `scenes` / `compiled` / `compiledEn`。\n- **推论：混层等于双真相。** 若在 manifest 再写一遍 choices，Ink 改了拓扑、UI 还信 manifest，玩家会走进幽灵分支。\n\n## 一个类比\n\n电影工业：**剧本**（sources）→ **分镜与场次**（Ink 拓扑）→ **美术与配乐单**（manifest）→ **成片母带**（compiled JSON）→ **片库条目**（catalog）。场记单不能改剧本结局，灯光表不能决定下一场接哪场。\n\n## 工作示例\n\n```mermaid\nflowchart LR\n  S[sources + SOURCE-MANIFEST] --> C[coverage ledger]\n  I[ink topology] --> P[compile-ink]\n  P --> J[compiled JSON]\n  M[manifests presentation] --> Ch[src/chapters]\n  J --> Ch\n  Cat[story-catalog.json] --> Load[loadStoryChapter]\n  Ch --> Load\n```\n\n图里最关键的线是 **I → P → J**：拓扑只在 Ink 里改，运行时读的是编译后的 JSON；**manifest 没有回到 Ink 的箭头**——表现层不得回流改拓扑。\n\n1. 改对白：改 `ink/*.ink`，再 `compile-ink`。\n2. 改立绘/背景：改对应 `manifests/*-scenes.ts`。\n3. 改章节顺序/标题：改 `catalog/story-catalog.json`，再生成类型。\n\n## 自检\n\n你在 manifest 里加了一个 `choices` 数组，Ink 里没有对应 choice——玩家会看到什么？\n\n答案：若 UI 误读 manifest 的 choices，会出现点了没路或与 Ink 状态机不一致；SupaLuv 的契约是拓扑只信 Ink，manifest 根本不该持有 choices。\n\n## 重点\n\n**分层的价值是强制单一真相源：拓扑 Ink、表现 manifest、注册 catalog、载荷 chapters。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/sources/draft-2026-07/SOURCE-MANIFEST.json",
+                "lineStart": 1,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "源快照 id/sha256/chapterId 注册"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/ink/draft-ch01.ink",
+                "lineStart": 37,
+                "lineEnd": 43,
+                "nodeIds": [],
+                "note": "scene 与 choice 稳定 ID 写在 Ink"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/manifests/draft-ch01-scenes.ts",
+                "lineStart": 1,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "presentation-only 场景卡字段"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/chapters/draft-ch01.ts",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "章节模块绑定 scenes 与 compiled JSON"
+              }
+            ],
+            "cards": [
+              {
+                "id": "topology-in-ink",
+                "front": "场景跳转与选项列表的真相源在哪一层？为什么不能放在 scenes manifest？",
+                "back": "在 Ink。manifest 只承载立绘/背景/配乐等表现；再写 choices 会与编译后的状态机双真相。",
+                "tags": [
+                  "pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/ink/draft-ch01.ink",
+                    "lineStart": 37,
+                    "lineEnd": 43,
+                    "nodeIds": [],
+                    "note": "choice divert 属于 Ink 拓扑"
+                  }
+                ]
+              },
+              {
+                "id": "manifest-presentation",
+                "front": "draft-ch01-scenes.ts 注释里的 presentation-only 禁止你在里面写什么？",
+                "back": "禁止写 choices/autoNext 一类拓扑边；只写 speaker、artKey、mood、bgmKey 等表现字段。",
+                "tags": [
+                  "pipeline"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/manifests/draft-ch01-scenes.ts",
+                    "lineStart": 3,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "场景卡仅表现字段"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "scene-tag-owner",
+                "kind": "short-answer",
+                "title": "标签归属",
+                "prompt": "稳定场景 ID 标签 # scene: 写在哪种源文件里？（答扩展名即可，如 .ink）",
+                "expectedAnswer": ".ink",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/ink/draft-ch01.ink",
+                    "lineStart": 37,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "# scene: 写在 Ink knot"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "catalog-as-ssot",
+            "title": "章节目录只能有一份真相",
+            "content": "# 章节目录只能有一份真相\n\n## 学习目标\n\n完成本课后，你能说明 `catalog/story-catalog.json` 作为章节链 SSOT 的职责，并解释为什么 graph 生成与运行时入口都读它、而不是各自 hard-code 一章列表。\n\n## 先给结论\n\n- **事实：包与章链写在 catalog。** `defaultPackageId` 为 `draft-2026-07`；`packages[0].chapterIds` 是 `draft-ch01`→`draft-ch02`→`draft-ch03`。\n- **事实：生产章带 checkpoint。** 第 1、2 章 `kind: \"next_chapter\"`，第 3 章 `kind: \"draft_end\"`。\n- **事实：生成图也只信 catalog。** `generate-narrative-graph.mjs` 注释写明 CHAPTERS 只从 `story-catalog.json` 派生，禁止 hard-code 包 id/顺序/文件名。\n- **事实：运行时 `storyCatalogDocument` 就是这份 JSON。** `src/index.ts` import 后映射为 `productionStoryCatalog` 元数据。\n- **推论：第二份章节列表 = 静默分叉。** 今天两份碰巧一致，明天只改了一处，生产链与 Studio 图就会指到不同章节。\n\n## 一个类比\n\n公司通讯录只维护在 HR 系统：门禁、邮箱、报销都从那里同步。若每个部门自己 Excel 一份，半年后你就会「工卡进不去、邮件却还在」。\n\n## 工作示例\n\n1. 新增试玩章：先写进 `story-catalog.json` 的 `devChapters` 或 `productionChapters`。\n2. 跑 `generate-story-catalog-types`，得到生成类型常量。\n3. `compile-ink` 用 catalog 的 `inkFile` 找源文件；缺文件直接 throw。\n4. `generate-narrative-graph` 用同一 catalog 建图。\n5. 任何一步 hard-code 章节数组都会在下次加章时漏网。\n\n## 自检\n\n为什么 checkpoint 写在 catalog，而不是写在 Ink 文件末尾注释里？\n\n答案：跨章衔接是产品/发行决策（下一章是谁、是否 draft_end），需要被运行时与工具共同读取；Ink 只管章内拓扑。catalog 把「章与章的合同」集中成数据。\n\n## 重点\n\n**SSOT 不是口号：所有生成器与运行时必须 import 同一份 catalog，禁止第二份章节数组。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/catalog/story-catalog.json",
+                "lineStart": 1,
+                "lineEnd": 30,
+                "nodeIds": [],
+                "note": "defaultPackageId 与生产章 checkpoint"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/scripts/generate-narrative-graph.mjs",
+                "lineStart": 33,
+                "lineEnd": 41,
+                "nodeIds": [],
+                "note": "图生成只从 catalog SSOT 派生章节"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/index.ts",
+                "lineStart": 215,
+                "lineEnd": 228,
+                "nodeIds": [],
+                "note": "productionStoryCatalog 映射自 JSON"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-one-catalog",
+                "front": "compile-ink 与 generate-narrative-graph 都去读 story-catalog.json，图的是什么风险？",
+                "back": "避免各自 hard-code 章节列表后产生分叉：发行链与工具链必须指向同一组章。",
+                "tags": [
+                  "catalog-ssot"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/generate-narrative-graph.mjs",
+                    "lineStart": 33,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "禁止 hard-code 章节列表"
+                  }
+                ]
+              },
+              {
+                "id": "draft-end-meaning",
+                "front": "draft-ch03 的 checkpoint.kind 是 draft_end 而不是 next_chapter，对产品意味着什么？",
+                "back": "生产草稿链在此结束，没有下一章 id；运行时不应再自动衔接下一部主线章。",
+                "tags": [
+                  "catalog-ssot"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/catalog/story-catalog.json",
+                    "lineStart": 1,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "包内三章链与默认包 id"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-package-id",
+                "kind": "short-answer",
+                "title": "默认包 id",
+                "prompt": "story-catalog.json 里的 defaultPackageId 字符串是什么？",
+                "expectedAnswer": "draft-2026-07",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/catalog/story-catalog.json",
+                    "lineStart": 1,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "defaultPackageId 为 draft-2026-07"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "load-one-chapter",
+            "title": "一次只加载一章：体积与缓存策略",
+            "content": "# 一次只加载一章：体积与缓存策略\n\n## 学习目标\n\n完成本课后，你能解释 `loadStoryChapter` 为何用动态 import 按章加载，以及缓存键为何是 `storyId::contentLocale`。\n\n## 先给结论\n\n- **事实：目录元数据不含章节载荷。** `StoryCatalogMeta` 注释写明 no compiled JSON / raw Ink / scene arrays；完整载荷是 `LoadedStoryChapter`。\n- **事实：按 id 动态 import。** `loadChapterModule` 用 catalog id 拼 `./chapters/${id}.ts`，章模块名与 catalog id 对齐，避免第二份 loader map。\n- **事实：中英缓存并存。** `chapterCacheKey` 为 id 与 contentLocale 的组合；英缺省时回退中文 `compiled`。\n- **事实：同步读取有门禁。** `getLoadedStoryChapter` 在未 load 时 throw，强迫调用方先异步加载。\n- **推论：全量静态 import 三章 compiled JSON 会把首包体积与解析成本绑死。** 内容越长，越必须把「目录」与「正文」拆开。\n\n## 一个类比\n\n流媒体首页只拉封面与标题；点进某一集才拉该集视频。不会在打开 App 时把整季 4K 全下完。\n\n## 工作示例\n\n1. 标题屏读 `productionStoryCatalog`（轻量）渲染列表。\n2. 玩家点「第01章」→ `loadStoryChapter(\"draft-ch01\")`。\n3. 动态 import `./chapters/draft-ch01.ts`，拿到 `compiled` + `scenes`。\n4. 再点同一章同一语言：走 `chapterCache`，不再重复 import。\n5. 切到 `en`：新的 cache key；若无 `compiledEn` 则回退中文编译产物。\n\n## 自检\n\n为什么章节文件必须命名为 `draft-ch01.ts` 而不是 `chapter1.ts`？\n\n答案：`loadChapterModule` 用 catalog id 拼路径。名字不一致就要再维护一份 id→路径映射——这正是他们刻意删掉的第二真相源。\n\n## 重点\n\n**内容当依赖包管理时，「版本」之外同等重要的是加载粒度：元数据同步、载荷异步、缓存按 locale 分桶。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/index.ts",
+                "lineStart": 93,
+                "lineEnd": 120,
+                "nodeIds": [],
+                "note": "元数据与载荷类型拆分"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/index.ts",
+                "lineStart": 278,
+                "lineEnd": 341,
+                "nodeIds": [],
+                "note": "动态 import 与 loadStoryChapter 缓存"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/chapters/draft-ch01.ts",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "单章 payload 模块"
+              }
+            ],
+            "cards": [
+              {
+                "id": "cache-key-locale",
+                "front": "章节缓存键为什么要带 contentLocale，而不是只按 storyId？",
+                "back": "zh/en 编译产物不同，必须共存；只按 id 缓存会在切语言时串包或漏更新。",
+                "tags": [
+                  "async-load"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/src/index.ts",
+                    "lineStart": 287,
+                    "lineEnd": 291,
+                    "nodeIds": [],
+                    "note": "cache key 含 locale"
+                  }
+                ]
+              },
+              {
+                "id": "sync-after-async",
+                "front": "为什么提供 getLoadedStoryChapter 却在未加载时直接 throw？",
+                "back": "同步 API 只服务已缓存数据，防止调用方假装载荷已就绪而读到空或过期状态。",
+                "tags": [
+                  "async-load"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/src/index.ts",
+                    "lineStart": 320,
+                    "lineEnd": 341,
+                    "nodeIds": [],
+                    "note": "loadStoryChapter 异步加载路径"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "loader-fn-name",
+                "kind": "short-answer",
+                "title": "加载函数名",
+                "prompt": "异步加载单章 compiled Ink + scenes 的导出函数名是什么？",
+                "expectedAnswer": "loadStoryChapter",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/src/index.ts",
+                    "lineStart": 320,
+                    "lineEnd": 323,
+                    "nodeIds": [],
+                    "note": "export async function loadStoryChapter"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "build-and-validate",
+        "title": "构建时机与校验账本",
+        "objective": "能设计生成物同步、预编译提交与 fail-closed 覆盖/保真门禁",
+        "lessons": [
+          {
+            "id": "dual-source-sync",
+            "title": "JSON 与生成类型必须互相掐架",
+            "content": "# JSON 与生成类型必须互相掐架\n\n## 学习目标\n\n完成本课后，你能解释「数据 SSOT + 生成类型 + 启动时 assert」三联为什么比单独靠 TypeScript 或单独靠 JSON 更抗漂移。\n\n## 先给结论\n\n- **事实：类型文件声明勿手改。** `story-catalog.generated.ts` 首行写明由 `generate-story-catalog-types.mjs` 生成。\n- **事实：生成脚本读 JSON 写 const 数组。** 产出生产章 id 列表、默认包 id 等可被类型系统消费的常量。\n- **事实：运行入口 import 两边并 assert。** `assertStringArrayEquals` 比较 JSON 的 production/dev 章 id 与生成数组；`defaultPackageId` 不一致直接 throw。\n- **事实：typecheck 先跑 `--check`。** `check-story-catalog-types` 是 `generate-story-catalog-types.mjs --check`。\n- **推论：只生成不校验，CI 可能带着过期 generated 绿过；只手写类型，JSON 一改类型还在撒谎。**\n\n## 一个类比\n\n护照芯片与纸质页必须一致：海关既扫芯片又看纸页。只信纸页可伪造，只信芯片坏了就卡住。两边交叉验证，造假成本最高。\n\n## 工作示例\n\n1. 你在 `story-catalog.json` 加了 `draft-ch04`，忘了 regenerate。\n2. `typecheck` 的 `--check` 模式发现 generated 与 JSON 不一致 → 失败。\n3. 若有人强行提交旧 generated，模块加载时 `assertStringArrayEquals` 仍会在运行时报 `regenerate catalog types`。\n4. 正确路径：改 JSON → 跑生成脚本 → commit 两边。\n\n## 自检\n\n为什么 assert 放在 `src/index.ts` 模块顶层，而不是某个 test 文件？\n\n答案：测试可以跳过；任何 import `@supaluv/content` 的进程都会执行顶层 assert，漂移无法静默进入运行时。\n\n## 重点\n\n**内容包的「版本一致性」常靠生成物 + 双向校验，而不是靠人记住要同步两个文件。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/story-catalog.generated.ts",
+                "lineStart": 1,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "生成的章 id 常量与默认包"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/index.ts",
+                "lineStart": 47,
+                "lineEnd": 76,
+                "nodeIds": [],
+                "note": "JSON 与 generated 启动时交叉 assert"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/package.json",
+                "lineStart": 19,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "check-story-catalog-types 接入 typecheck/build"
+              }
+            ],
+            "cards": [
+              {
+                "id": "assert-on-import",
+                "front": "story-catalog.json 与 story-catalog.generated.ts 不一致时，最晚在哪一步必然爆炸？",
+                "back": "import 内容包入口时顶层 assertStringArrayEquals 会 throw，提示 regenerate catalog types。",
+                "tags": [
+                  "validation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/src/index.ts",
+                    "lineStart": 62,
+                    "lineEnd": 75,
+                    "nodeIds": [],
+                    "note": "production/dev id 与 defaultPackageId assert"
+                  }
+                ]
+              },
+              {
+                "id": "check-mode",
+                "front": "generate-story-catalog-types.mjs 的 --check 模式解决什么问题？",
+                "back": "CI/typecheck 只验证 generated 是否仍匹配 JSON，避免带着过期类型文件合并。",
+                "tags": [
+                  "validation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/package.json",
+                    "lineStart": 19,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "check-story-catalog-types 脚本"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "assert-fn-name",
+                "kind": "short-answer",
+                "title": "断言函数",
+                "prompt": "入口里比较 JSON 与 generated 章 id 数组的函数名是什么？",
+                "expectedAnswer": "assertStringArrayEquals",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/src/index.ts",
+                    "lineStart": 47,
+                    "lineEnd": 60,
+                    "nodeIds": [],
+                    "note": "assertStringArrayEquals 定义"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "compile-not-ship-compiler",
+            "title": "预编译进仓库：玩家不拿编译器",
+            "content": "# 预编译进仓库：玩家不拿编译器\n\n## 学习目标\n\n完成本课后，你能说明为何 Ink 在 Node 侧用 `inkjs/full` 预编译，产物提交为 `compiled/*.json`，以及 fidelity 如何抓「编译产物过期」。\n\n## 先给结论\n\n- **事实：compile-ink 明确 Node-only。** 文件头写 players never receive inkjs/full；脚本 require `inkjs/full` 的 `Compiler`。\n- **事实：编译目标来自 catalog。** 默认不扫全部 ink 目录，而是 `catalogInkTargets()` 读 production+dev 章的 `inkFile`（及可选 `.en.ink`）。\n- **事实：fidelity 对比重编译结果。** `verifyRuntimeArtifact` 把当前 Ink 再 Compile，与 committed JSON 字符串化比较；不一致报 `compiled JSON is stale`。\n- **推论：构建时机前移到「作者改内容时」。** 玩家运行时只跑 Story 解释器 + JSON，包体更小，也少一个「浏览器里编译失败」的支持面。\n\n## 一个类比\n\n出版社印书：作者交稿后在印刷厂出片；读者买的是书，不是整套印刷机。你不会让读者到店里自己排版。\n\n## 工作示例\n\n1. 改 `draft-ch02.ink` 一行对白。\n2. 跑 `pnpm --filter @supaluv/content compile-ink` 写 `compiled/draft-ch02.json`。\n3. 若只改 ink 不编译就提交，`fidelity` 在 CI 失败：`compiled JSON is stale`。\n4. 玩家端加载的是 JSON 字符串 `compiledStoryJson`，不是 `.ink` 源。\n\n## 自检\n\n为什么默认编译目标不直接扫 `ink/` 下全部 `.ink`？\n\n答案：`legacy/` 等归档与未注册文件不应进入生产编译集；catalog 才是「要交付哪些章」的清单。`--all` 是显式例外。\n\n## 重点\n\n**把内容当包时，「构建」常发生在内容变更时并提交产物；运行时禁止再带上重型编译器。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/scripts/compile-ink.mjs",
+                "lineStart": 1,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "Node 预编译与 catalog 目标选择"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/scripts/verify-fidelity.mjs",
+                "lineStart": 95,
+                "lineEnd": 102,
+                "nodeIds": [],
+                "note": "compiled 与现源重编译比对"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/index.ts",
+                "lineStart": 315,
+                "lineEnd": 338,
+                "nodeIds": [],
+                "note": "运行时使用 compiledStoryJson"
+              }
+            ],
+            "cards": [
+              {
+                "id": "no-inkjs-full-client",
+                "front": "compile-ink.mjs 为什么强调 players never receive inkjs/full？",
+                "back": "编译器只给作者/CI；玩家只需 Story 运行时与预编译 JSON，减小包体与攻击面。",
+                "tags": [
+                  "build-timing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/compile-ink.mjs",
+                    "lineStart": 2,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "players never receive inkjs/full"
+                  }
+                ]
+              },
+              {
+                "id": "stale-compiled",
+                "front": "fidelity 报 compiled JSON is stale 时，你应先跑哪条包内脚本名？",
+                "back": "compile-ink：按 catalog 重编译并写回 committed JSON。",
+                "tags": [
+                  "build-timing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/verify-fidelity.mjs",
+                    "lineStart": 99,
+                    "lineEnd": 101,
+                    "nodeIds": [],
+                    "note": "stale 错误提示 compile-ink"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "compiler-package-name",
+                "kind": "short-answer",
+                "title": "编译器包",
+                "prompt": "预编译 Ink 时 require 的编译器模块路径字符串是什么？",
+                "expectedAnswer": "inkjs/full",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/compile-ink.mjs",
+                    "lineStart": 18,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "require inkjs/full Compiler"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "coverage-fail-closed",
+            "title": "覆盖映射默认锁死：漂移必须显式接受",
+            "content": "# 覆盖映射默认锁死：漂移必须显式接受\n\n## 学习目标\n\n完成本课后，你能解释 `coverageMappingDigest` 与 `--accept-mapping` 如何把「映射被改了」变成可见决策，而不是安静的 regenerate。\n\n## 先给结论\n\n- **事实：manifest 钉死 digest。** `SOURCE-MANIFEST.json` 含 `coverageMappingDigest.algorithm/value` 与 `entryCount: 434`。\n- **事实：generate-coverage 默认 fail-closed。** 注释写明 mapping change 必须匹配 pinned digest。\n- **事实：不匹配就 fail 并提示 flag。** 生成 digest 与 pinned value 不同且未带 `--accept-mapping` 时 fail，文案要求 review 后再带 flag 重跑。\n- **事实：源文件 sha256 也校验。** 快照文件 hash 对不上 manifest 会直接判无效。\n- **推论：覆盖表是审计对象。** 自动重写 mapping 而不 bump digest，等于允许「原文↔场景」关系在无人审查时滑动。\n\n## 一个类比\n\n仓库的锁版：BOM 变更要走工程变更单。不能因为脚本能重算物料清单，就允许每次构建悄悄换供应商。\n\n## 工作示例\n\n1. 你调整了某段原文映射到的 `sceneId`。\n2. 跑 `generate-coverage`：新 digest 与 manifest 不一致 → 失败。\n3. 你 review diff，确认是有意改编映射。\n4. 再跑 `generate-coverage --accept-mapping`：同时更新 ledger 与 digest 锚点。\n5. 代码审阅能看见 digest 变化，而不是埋在巨大 JSON 里的静默漂移。\n\n## 自检\n\n为什么 overrides 还要求 `sourceHash` 钉住段落？\n\n答案：改编回执必须绑定「当时那一版原文」。原文改了 hash 变了，旧 overrides 失效，防止把过期改编理由贴到新段落上。\n\n## 重点\n\n**内容包的版本感不只来自 semver，更来自 hash 与 digest：默认拒绝漂移，接受必须带显式开关。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/sources/draft-2026-07/SOURCE-MANIFEST.json",
+                "lineStart": 1,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "coverageMappingDigest 钉死在 manifest"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/scripts/generate-coverage.mjs",
+                "lineStart": 1,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "默认 fail-closed 注释"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/scripts/generate-coverage.mjs",
+                "lineStart": 378,
+                "lineEnd": 382,
+                "nodeIds": [],
+                "note": "digest 不匹配需 --accept-mapping"
+              }
+            ],
+            "cards": [
+              {
+                "id": "accept-mapping-flag",
+                "front": "generate-coverage 在 mapping digest 变化时默认失败，正确的接受方式是什么？",
+                "back": "审阅 diff 后显式加 --accept-mapping 重跑，同时更新 digest 锚点与 ledger。",
+                "tags": [
+                  "coverage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/generate-coverage.mjs",
+                    "lineStart": 378,
+                    "lineEnd": 382,
+                    "nodeIds": [],
+                    "note": "mismatch 提示 --accept-mapping"
+                  }
+                ]
+              },
+              {
+                "id": "digest-not-semver",
+                "front": "为什么内容覆盖要用 sha256 digest，而不是只靠 package.json 的 0.1.0？",
+                "back": "semver 不描述「哪段原文映射到哪一 scene」；digest 能捕获映射集合的任意静默改动。",
+                "tags": [
+                  "coverage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/sources/draft-2026-07/SOURCE-MANIFEST.json",
+                    "lineStart": 6,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "digest 字段结构"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "accept-mapping-flag-name",
+                "kind": "short-answer",
+                "title": "接受映射开关",
+                "prompt": "覆盖映射 digest 有意变更时，generate-coverage 要加的 CLI 开关是什么？",
+                "expectedAnswer": "--accept-mapping",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/generate-coverage.mjs",
+                    "lineStart": 379,
+                    "lineEnd": 381,
+                    "nodeIds": [],
+                    "note": "rerun with --accept-mapping"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "fidelity-runtime-witness",
+            "title": "保真门禁：存在过不等于播过",
+            "content": "# 保真门禁：存在过不等于播过\n\n## 学习目标\n\n完成本课后，你能区分「源文件里有这段字」与「运行时代表性遍历真的显示过这段字」，并指出 fidelity 用哪类证据判失败。\n\n## 先给结论\n\n- **事实：不可达 scene 直接报错。** 声明了 `# scene:` 但代表性探索未触及 → `declared scene is unreachable at runtime`。\n- **事实：精确段落要 runtime witness。** 非 `approved-adaptation` 条目必须 `hasRuntimeTextWitness`；否则 `no representative runtime display witness`。\n- **事实：探索策略是代表性菜单展开。** `runtime-fidelity.mjs` 注释承认全状态组合爆炸，因此对每个 distinct visible menu 展开一次，记录真实 emitted text。\n- **推论：死代码式 Ink 段落会挂 CI。** 「写进源文件」不够；玩家路径走不到或显示不出，就不算交付。\n\n## 一个类比\n\n消防演习：手册里写了逃生通道，不等于有人走过并确认门没锁。fidelity 要的是**走过的脚印**，不是平面图上的虚线。\n\n## 工作示例\n\n1. 你把一段原文原样贴进某个 stitch，但 divert 永远进不去。\n2. coverage 可能仍把 paragraph 映射到该 `sceneId`。\n3. 代表性遍历到不了该 scene，或到了却未吐出该句。\n4. `verify-fidelity` 失败，逼你修拓扑或改映射/改编回执。\n5. 这比上线后玩家反馈「小说有这句游戏没有」便宜得多。\n\n## 自检\n\n为什么不枚举 Ink 的全部变量状态？\n\n答案：计数器与历史变量使状态空间组合爆炸。代表性可见菜单展开在成本与证据强度之间折中：证明「显示过」，不证明「一切隐藏状态都覆盖」。\n\n## 重点\n\n**内容包的最高校验往往是运行时见证：提交的是可玩路径，不是静态字符串仓库。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/scripts/verify-fidelity.mjs",
+                "lineStart": 120,
+                "lineEnd": 127,
+                "nodeIds": [],
+                "note": "不可达 scene 报错"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/scripts/verify-fidelity.mjs",
+                "lineStart": 336,
+                "lineEnd": 346,
+                "nodeIds": [],
+                "note": "缺 runtime display witness 报错"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/scripts/runtime-fidelity.mjs",
+                "lineStart": 61,
+                "lineEnd": 68,
+                "nodeIds": [],
+                "note": "代表性菜单展开策略说明"
+              }
+            ],
+            "cards": [
+              {
+                "id": "unreachable-scene",
+                "front": "Ink 里写了 # scene:foo 但没有任何 divert 能到达时，fidelity 会怎样？",
+                "back": "报 declared scene is unreachable at runtime，把死场景当交付缺陷。",
+                "tags": [
+                  "fidelity"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/verify-fidelity.mjs",
+                    "lineStart": 124,
+                    "lineEnd": 127,
+                    "nodeIds": [],
+                    "note": "unreachable scene 错误"
+                  }
+                ]
+              },
+              {
+                "id": "witness-not-presence",
+                "front": "为什么「段落出现在 .ink 文件里」仍可能过不了 fidelity？",
+                "back": "精确段落还要求代表性运行遍历中真实显示过该文本；仅存在于源码不够。",
+                "tags": [
+                  "fidelity"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/verify-fidelity.mjs",
+                    "lineStart": 338,
+                    "lineEnd": 346,
+                    "nodeIds": [],
+                    "note": "no representative runtime display witness"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "witness-fn-name",
+                "kind": "short-answer",
+                "title": "见证函数",
+                "prompt": "检查某 scene 是否显示过源段落的函数名是什么？",
+                "expectedAnswer": "hasRuntimeTextWitness",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/verify-fidelity.mjs",
+                    "lineStart": 340,
+                    "lineEnd": 341,
+                    "nodeIds": [],
+                    "note": "调用 hasRuntimeTextWitness"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "export-and-compat",
+        "title": "导出边界与版本兼容",
+        "objective": "能把剧透级产物和退休 id 从玩家路径隔开，同时保住旧存档可识别",
+        "lessons": [
+          {
+            "id": "export-map-split",
+            "title": "导出地图：玩家入口禁止 creator",
+            "content": "# 导出地图：玩家入口禁止 creator\n\n## 学习目标\n\n完成本课后，你能对照 `package.json` exports 与 `src/index.ts` 再导出策略，说明为何 creator graph 必须走 `.node` 子路径且不能从主入口泄漏。\n\n## 先给结论\n\n- **事实：主入口只再导出 player skeleton。** `index.ts` 注释：full creator graph is Node/dev-only and is not re-exported here。\n- **事实：creator 模块文件名带 `.node`。** `narrative-graph-creator.node.ts` 警告勿从 production web / Vite client import；并用 `readFileSync` 读 JSON（Node API）。\n- **事实：exports 把两者拆成不同 subpath。** `./narrative-graph-player` 与 `./narrative-graph-creator.node` 分开。\n- **推论：边界靠「路径 + API 形状 + 测试」三道。** 仅靠注释挡不住误 import；Node-only API 会在浏览器打包期爆炸，这是故意的。\n\n## 一个类比\n\n电影院：观众入口只能进放映厅；剪辑室大门写着 Staff Only，门禁卡也不同。把剪辑室钥匙挂在观众服务台，剧透与事故只是时间问题。\n\n## 工作示例\n\n1. 玩家路径：从 `@supaluv/content` 取 `getNarrativeGraphPlayerSkeleton`。\n2. Studio/工具：从 `@supaluv/content/narrative-graph-creator.node` 取 `loadNarrativeGraphCreator`。\n3. 若有人把 creator 挂到主入口，生产 bundle 可能打进带语义 id 的完整图与 Node 依赖。\n4. 单元测试断言生产 content graph 不 import 该模块——文件名 `.node` 是给人与工具看的信号。\n\n## 自检\n\n为什么 creator loader 用 `readFileSync` 而不是 `import json`？\n\n答案：强化 Node-only 边界——浏览器打包器一碰到 `node:fs` 就应失败，比「约定不要 import」更硬。\n\n## 重点\n\n**内容包的 exports 是安全边界：剧透级产物与编译期工具不得与玩家入口同门。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/package.json",
+                "lineStart": 6,
+                "lineEnd": 15,
+                "nodeIds": [],
+                "note": "player 与 creator.node 分 path 导出"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/index.ts",
+                "lineStart": 405,
+                "lineEnd": 412,
+                "nodeIds": [],
+                "note": "主入口只 re-export player skeleton"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/narrative-graph-creator.node.ts",
+                "lineStart": 1,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "Node-only creator loader 警告与 fs 读取"
+              }
+            ],
+            "cards": [
+              {
+                "id": "no-creator-on-main",
+                "front": "为什么 narrative-graph-creator 不从 @supaluv/content 主入口 re-export？",
+                "back": "避免玩家包误打进完整语义图与 Node 专用加载路径；主入口只提供 production-safe player skeleton。",
+                "tags": [
+                  "export-boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/src/index.ts",
+                    "lineStart": 405,
+                    "lineEnd": 412,
+                    "nodeIds": [],
+                    "note": "明确不 re-export creator"
+                  }
+                ]
+              },
+              {
+                "id": "node-suffix-signal",
+                "front": "文件名 narrative-graph-creator.node.ts 里的 .node 在工程上信号是什么？",
+                "back": "标记 Node/dev-only 边界，提醒勿进 web 图；测试可断言生产图不引用它。",
+                "tags": [
+                  "export-boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/src/narrative-graph-creator.node.ts",
+                    "lineStart": 4,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": ".node 后缀文档化边界"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "creator-export-suffix",
+                "kind": "short-answer",
+                "title": "creator 模块后缀",
+                "prompt": "creator 加载模块文件名里用来标记 Node-only 的后缀词是什么？（不含点）",
+                "expectedAnswer": "node",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/src/narrative-graph-creator.node.ts",
+                    "lineStart": 7,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "filename suffix .node documents boundary"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "player-opaque-graph",
+            "title": "玩家图只给不透明句柄",
+            "content": "# 玩家图只给不透明句柄\n\n## 学习目标\n\n完成本课后，你能说明 player NarrativeGraph 为何把节点/边改成 `n_`/`e_` 前缀，并禁止 `stableChoiceId` 出现在玩家边上。\n\n## 先给结论\n\n- **事实：先建 creator 再投影 player。** `toPlayerSkeleton(creator)` 生成玩家骨架。\n- **事实：不透明 id 强制前缀。** player node 必须以 `n_` 开头，edge 以 `e_` 开头，否则 throw。\n- **事实：禁止 stableChoiceId。** 玩家边若带 `stableChoiceId` 直接报错。\n- **事实：碰撞检测。** opaque handle 集合 size 必须等于数组长度。\n- **推论：玩家包可以有「结构感」但不能有「剧透索引」。** 语义 scene/choice id 留在 creator/工具链，运行时观察再经共享 opaque helpers 映射。\n\n## 一个类比\n\n考试发答题卡编号，不发标准答案章节号。结构（有多少题、题间关系）可见，内容坐标不可见。\n\n## 工作示例\n\n1. `generate-narrative-graph` 从生产 Ink 探索出带语义 id 的 creator 图。\n2. 投影为 player：剥掉可读 scene/choice 标识。\n3. 断言失败示例：有人手改 player JSON 写回 `dch01_s001` → `Player node id not opaque`。\n4. 玩家端只 import `narrative-graph-player` 产物。\n\n## 自检\n\nopaque 化会不会让调试变难？\n\n答案：会，所以 creator 图仍保留语义 id 给 Studio/Node 工具。分轨的代价是换取玩家包不剧透与更小攻击面；调试在 dev 轨完成。\n\n## 重点\n\n**导出边界不只挡文件，还挡信息：同构的图，玩家轨必须降语义。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/scripts/generate-narrative-graph.mjs",
+                "lineStart": 629,
+                "lineEnd": 654,
+                "nodeIds": [],
+                "note": "player 不透明句柄与禁 stableChoiceId"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/narrative-graph-player.ts",
+                "lineStart": 1,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "只 import player skeleton JSON"
+              }
+            ],
+            "cards": [
+              {
+                "id": "n-prefix",
+                "front": "玩家 NarrativeGraph 节点 id 必须以什么前缀开头？为什么？",
+                "back": "n_。强制不透明句柄，防止语义 scene id 泄漏进玩家包。",
+                "tags": [
+                  "opaque-graph"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/generate-narrative-graph.mjs",
+                    "lineStart": 642,
+                    "lineEnd": 645,
+                    "nodeIds": [],
+                    "note": "node id 必须 n_ 前缀"
+                  }
+                ]
+              },
+              {
+                "id": "no-stable-choice",
+                "front": "为什么玩家边绝对不能带 stableChoiceId 字段？",
+                "back": "stableChoiceId 是可剧透/可反推剧情拓扑的语义标识；玩家骨架只保留结构句柄。",
+                "tags": [
+                  "opaque-graph"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/generate-narrative-graph.mjs",
+                    "lineStart": 651,
+                    "lineEnd": 653,
+                    "nodeIds": [],
+                    "note": "禁止 stableChoiceId"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "player-node-prefix",
+                "kind": "short-answer",
+                "title": "节点前缀",
+                "prompt": "player 图节点 id 强制前缀两个字符是什么？（如 n_）",
+                "expectedAnswer": "n_",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/scripts/generate-narrative-graph.mjs",
+                    "lineStart": 642,
+                    "lineEnd": 644,
+                    "nodeIds": [],
+                    "note": "startsWith n_"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "retire-keep-id",
+            "title": "退休章节：删功能，不删身份证",
+            "content": "# 退休章节：删功能，不删身份证\n\n## 学习目标\n\n完成本课后，你能解释 `RETIRED_STORY_IDS` 为何保留已下架 demo id，以及「从 catalog 移除」与「从类型宇宙抹掉」的差别。\n\n## 先给结论\n\n- **事实：ch01 已退休。** `RetiredStoryId = \"ch01\"`；`RETIRED_STORY_IDS = [\"ch01\"]`，注释写 kept for save incompatibility detection only。\n- **事实：可选 catalog 不含 retired。** `storyCatalog` 只拼 production + dev，注释 never includes retired ch01。\n- **事实：legacy 归档仍存在。** `legacyCh01Archive` 与 `ink/legacy/` 保留给测试/档案；生产不可选。\n- **事实：有 `isRetiredStoryId` 判别。** 存档里读到旧 id 时可以识别，而不是当成 unknown 乱兜底。\n- **推论：内容版本升级最痛的是旧存档。** 静默删除 id 会让老用户读档进入错误分支或被当成新故事。\n\n## 一个类比\n\n手机号注销后，运营商仍会把该号冷冻一段时间。立刻回收给新人，你会接到前任的短信。章节 id 同理。\n\n## 工作示例\n\n1. 早期 demo 章 id 为 `ch01`，玩家本地有存档。\n2. 生产切换到 `draft-ch01` 链，catalog 不再可选 `ch01`。\n3. 读档时 `isRetiredStoryId(\"ch01\") === true` → 走不兼容提示/迁移，而不是当 unknown 清空或错配。\n4. 若直接从类型里抹掉 `ch01`，所有判别代码都要猜字符串。\n\n## 自检\n\n退休 id 是否还应出现在生产可选章 id 列表里？\n\n答案：不应当。生产可选列表与退休名单是两个集合；退休 id 只用于识别旧存档，不应再进入新游戏选择器。\n\n## 重点\n\n**把内容当包做版本管理时，下架是产品决策，标识符退役是兼容决策——两者必须分开建模。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/index.ts",
+                "lineStart": 40,
+                "lineEnd": 45,
+                "nodeIds": [],
+                "note": "RETIRED_STORY_IDS 与 RetiredStoryId"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/index.ts",
+                "lineStart": 224,
+                "lineEnd": 228,
+                "nodeIds": [],
+                "note": "storyCatalog 不含 retired ch01"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/index.ts",
+                "lineStart": 298,
+                "lineEnd": 300,
+                "nodeIds": [],
+                "note": "isRetiredStoryId 判别"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-c9f0ec8d57a1",
+                "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                "sourcePath": "packages/content/src/index.ts",
+                "lineStart": 380,
+                "lineEnd": 388,
+                "nodeIds": [],
+                "note": "legacyCh01Archive 仅档案/测试"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-keep-retired",
+                "front": "生产已不可选 ch01，为什么还要保留 RETIRED_STORY_IDS？",
+                "back": "用于识别旧存档里的退休 id，做不兼容检测/迁移，而不是当未知字符串误处理。",
+                "tags": [
+                  "compat"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/src/index.ts",
+                    "lineStart": 40,
+                    "lineEnd": 45,
+                    "nodeIds": [],
+                    "note": "save incompatibility detection"
+                  }
+                ]
+              },
+              {
+                "id": "two-sets",
+                "front": "storyCatalog 与 RETIRED_STORY_IDS 为什么必须是两个集合？",
+                "back": "可选章服务新游戏与目录；退休 id 服务旧档识别。混成一个列表会把下架章重新暴露给玩家。",
+                "tags": [
+                  "compat"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/src/index.ts",
+                    "lineStart": 224,
+                    "lineEnd": 228,
+                    "nodeIds": [],
+                    "note": "catalog 不含 retired"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "retired-id-value",
+                "kind": "short-answer",
+                "title": "退休 id",
+                "prompt": "RETIRED_STORY_IDS 数组里当前保留的那个章节 id 字符串是什么？",
+                "expectedAnswer": "ch01",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-c9f0ec8d57a1",
+                    "sourceCommit": "c9f0ec8d57a10484acf547ffc2d3458c955e8068",
+                    "sourcePath": "packages/content/src/index.ts",
+                    "lineStart": 45,
+                    "lineEnd": 45,
+                    "nodeIds": [],
+                    "note": "RETIRED_STORY_IDS 含 ch01"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

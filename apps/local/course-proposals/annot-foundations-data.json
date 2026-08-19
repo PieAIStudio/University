@@ -1,0 +1,357 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "lessons": [
+    {
+      "courseId": "foundations-data",
+      "unitId": "data-from-a-server",
+      "lessonId": "a-row-is-not-an-object",
+      "anchors": [
+        {
+          "quote": "表行",
+          "occurrence": 1,
+          "senseId": "row.database"
+        },
+        {
+          "quote": "拼装",
+          "occurrence": 1,
+          "senseId": "compose.assemble"
+        },
+        {
+          "quote": "接口",
+          "occurrence": 1,
+          "senseId": "interface.shape"
+        },
+        {
+          "quote": "线缆",
+          "occurrence": 1,
+          "senseId": "wire.protocol"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "data-from-a-server",
+      "lessonId": "data-and-error-together",
+      "anchors": [
+        {
+          "quote": "解构",
+          "occurrence": 1,
+          "senseId": "destructure.unpack"
+        },
+        {
+          "quote": "远程调用",
+          "occurrence": 1,
+          "senseId": "rpc.remote"
+        },
+        {
+          "quote": "错误",
+          "occurrence": 1,
+          "senseId": "error.status"
+        },
+        {
+          "quote": "校验",
+          "occurrence": 1,
+          "senseId": "validate.check"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "data-from-a-server",
+      "lessonId": "everything-might-be-missing",
+      "anchors": [
+        {
+          "quote": "安全下钻",
+          "occurrence": 1,
+          "senseId": "optional-chaining.access"
+        },
+        {
+          "quote": "后备",
+          "occurrence": 1,
+          "senseId": "fallback.plan"
+        },
+        {
+          "quote": "缺失",
+          "occurrence": 1,
+          "senseId": "missing.state"
+        },
+        {
+          "quote": "null",
+          "occurrence": 4,
+          "senseId": "nullish.coalesce"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "data-from-a-server",
+      "lessonId": "three-tables-one-screen",
+      "anchors": [
+        {
+          "quote": "拼装",
+          "occurrence": 1,
+          "senseId": "compose.assemble"
+        },
+        {
+          "quote": "边界",
+          "occurrence": 1,
+          "senseId": "boundary.scope"
+        },
+        {
+          "quote": "组件",
+          "occurrence": 1,
+          "senseId": "component.ui"
+        },
+        {
+          "quote": "可选的",
+          "occurrence": 1,
+          "senseId": "optional.choice"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "data-from-a-server",
+      "lessonId": "where-the-keys-come-from",
+      "anchors": [
+        {
+          "quote": "环境变量",
+          "occurrence": 1,
+          "senseId": "environment.variable"
+        },
+        {
+          "quote": "私密密钥",
+          "occurrence": 1,
+          "senseId": "secret.security"
+        },
+        {
+          "quote": "匿名",
+          "occurrence": 2,
+          "senseId": "anonymous.user"
+        },
+        {
+          "quote": "占位",
+          "occurrence": 1,
+          "senseId": "placeholder.value"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "data-that-arrives-by-itself",
+      "lessonId": "a-name-on-the-wire-is-a-promise",
+      "anchors": [
+        {
+          "quote": "契约",
+          "occurrence": 1,
+          "senseId": "contract.api"
+        },
+        {
+          "quote": "线上",
+          "occurrence": 1,
+          "senseId": "wire.protocol"
+        },
+        {
+          "quote": "字面量",
+          "occurrence": 1,
+          "senseId": "literal.type"
+        },
+        {
+          "quote": "约定",
+          "occurrence": 1,
+          "senseId": "convention.agreed"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "data-that-arrives-by-itself",
+      "lessonId": "from-the-wire-to-the-screen",
+      "anchors": [
+        {
+          "quote": "回调",
+          "occurrence": 1,
+          "senseId": "callback.async"
+        },
+        {
+          "quote": "共享记忆",
+          "occurrence": 1,
+          "senseId": "store.state"
+        },
+        {
+          "quote": "推送",
+          "occurrence": 1,
+          "senseId": "push.delivery"
+        },
+        {
+          "quote": "通道",
+          "occurrence": 1,
+          "senseId": "channel.realtime"
+        },
+        {
+          "quote": "订阅",
+          "occurrence": 1,
+          "senseId": "subscribe.events"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "data-that-arrives-by-itself",
+      "lessonId": "push-instead-of-pull",
+      "anchors": [
+        {
+          "quote": "推送",
+          "occurrence": 1,
+          "senseId": "push.delivery"
+        },
+        {
+          "quote": "轮询",
+          "occurrence": 1,
+          "senseId": "poll.repeat"
+        },
+        {
+          "quote": "订阅",
+          "occurrence": 3,
+          "senseId": "subscribe.events"
+        },
+        {
+          "quote": "广播",
+          "occurrence": 1,
+          "senseId": "broadcast.event"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "shared-memory",
+      "lessonId": "a-store-is-values-plus-setters",
+      "anchors": [
+        {
+          "quote": "改值的方法",
+          "occurrence": 1,
+          "senseId": "setter.update"
+        },
+        {
+          "quote": "形状合同",
+          "occurrence": 1,
+          "senseId": "interface.shape"
+        },
+        {
+          "quote": "状态",
+          "occurrence": 1,
+          "senseId": "state.memory"
+        },
+        {
+          "quote": "参数",
+          "occurrence": 1,
+          "senseId": "parameter.input"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "shared-memory",
+      "lessonId": "replace-do-not-mutate",
+      "anchors": [
+        {
+          "quote": "展开",
+          "occurrence": 1,
+          "senseId": "spread.copy"
+        },
+        {
+          "quote": "原地",
+          "occurrence": 1,
+          "senseId": "mutate.inplace"
+        },
+        {
+          "quote": "不可变",
+          "occurrence": 1,
+          "senseId": "immutable.data"
+        },
+        {
+          "quote": "重画",
+          "occurrence": 1,
+          "senseId": "render.ui"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "shared-memory",
+      "lessonId": "reset-is-a-feature",
+      "anchors": [
+        {
+          "quote": "重置",
+          "occurrence": 1,
+          "senseId": "reset.state"
+        },
+        {
+          "quote": "联合类型",
+          "occurrence": 1,
+          "senseId": "union.type"
+        },
+        {
+          "quote": "阶段",
+          "occurrence": 1,
+          "senseId": "phase.process"
+        },
+        {
+          "quote": "快照",
+          "occurrence": 1,
+          "senseId": "snapshot.git"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "shared-memory",
+      "lessonId": "sharing-the-initial-values",
+      "anchors": [
+        {
+          "quote": "整体替换",
+          "occurrence": 1,
+          "senseId": "replace.state"
+        },
+        {
+          "quote": "覆盖",
+          "occurrence": 1,
+          "senseId": "overwrite.update"
+        },
+        {
+          "quote": "参数",
+          "occurrence": 1,
+          "senseId": "parameter.input"
+        },
+        {
+          "quote": "默认",
+          "occurrence": 2,
+          "senseId": "default.value"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-data",
+      "unitId": "shared-memory",
+      "lessonId": "why-not-usestate",
+      "anchors": [
+        {
+          "quote": "共享记忆",
+          "occurrence": 1,
+          "senseId": "store.state"
+        },
+        {
+          "quote": "组件",
+          "occurrence": 1,
+          "senseId": "component.ui"
+        },
+        {
+          "quote": "状态",
+          "occurrence": 1,
+          "senseId": "state.memory"
+        }
+      ]
+    }
+  ]
+}

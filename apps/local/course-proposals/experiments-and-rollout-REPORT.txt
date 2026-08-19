@@ -1,0 +1,79 @@
+experiments-and-rollout course proposal — delivery report
+========================================================
+
+Course id:     experiments-and-rollout
+Title:         先登记，再上线
+Proposal file: course-proposals/experiments-and-rollout.json
+Snapshot:      git-3b402e069a5d
+Commit:        3b402e069a5db5fe9eb82dbc03aa05152b3d298b
+Analysis id:   ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a
+
+Scale
+-----
+Units:    3
+Lessons:  12
+Cards:    24  (2 per lesson)
+Exercises:12  (1 short-answer per lesson)
+Evidence: 72 references (all kind fact/inference with note; nodeIds [])
+
+Unit map
+--------
+1. register-before-ship — 先登记，才能变体 (4 lessons)
+   - registry-is-the-gate
+   - surfaces-are-the-contract
+   - default-is-off
+   - bind-at-create
+
+2. isolate-and-kill — 隔离默认，并能立刻关掉 (4 lessons)
+   - hosted-ignores-stray-url  (includes mermaid flowchart)
+   - coarse-analytics-tag
+   - badge-states-the-limit
+   - clear-is-the-kill-switch
+
+3. hypothesis-and-promotion — 把上线写成可证伪的假设 (4 lessons)
+   - no-new-timing-authority
+   - shadow-not-real-votes
+   - ladder-null-means-default
+   - promote-or-kill
+
+Gate 1: check-proposal-shape
+----------------------------
+Command:
+  node scripts/check-proposal-shape.mjs course-proposals/experiments-and-rollout.json
+
+Final output:
+  ok  course-proposals/experiments-and-rollout.json
+
+(no problems)
+
+Gate 2: check-proposal-evidence
+-------------------------------
+Command:
+  node scripts/check-proposal-evidence.mjs course-proposals/experiments-and-rollout.json --study turing-pact
+
+Final summary line:
+  all 72 references resolve at their pinned commits
+
+Every listed path:line range printed as `ok` (no MISS / no out-of-range).
+
+Most counterintuitive finding (written into the course)
+-------------------------------------------------------
+Hosted 正式房在「没有 room-local 绑定」时会直接 source=none，**故意忽略**
+浏览器 URL 上的 `?exp=` 和 localStorage allowlist。
+
+直觉上「链接里带了实验参数就该开实验」；TuringPact 反过来：
+preview 才认 URL/allowlist，hosted 只认建房时 `bindRoomExperiment` 写下的绑定。
+这样分享链接尾巴、书签残留、devtools allowlist 都无法污染已验证的默认房间。
+
+该点写在单元 2 课时 `hosted-ignores-stray-url`（含 mermaid 决策图），
+并与 `bind-at-create` / `clear-is-the-kill-switch` 形成「先登记绑定 → 正式房隔离 → 可立刻 clear」闭环。
+
+Secondary sharp edges also taught
+---------------------------------
+- clearRoomExperiment 写空串哨兵而非 removeItem（SyncStorageAccess 无 delete）
+- Hot Seat 用 shadow nominations 复用计票，不碰真实 current_vote
+- experimentAnalyticsTag 无实验时强制 'none'，对照组可切片
+- Topic Ladder 双重门控后返回 null，默认题库保持主权
+- annotation / soft-rule 禁止「检测确定性」话术；前三分钟搞混则 kill
+
+No git commit. TuringPact repo untouched. Only this report + the proposal JSON written.

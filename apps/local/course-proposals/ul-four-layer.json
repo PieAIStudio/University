@@ -1,0 +1,422 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-ul-four-layer",
+  "targetSnapshotId": "git-90cf76c1177f",
+  "course": {
+    "id": "four-layer-workbench",
+    "title": "AI 时代的四层工作台",
+    "description": "把 UniversityLocal 放回宿主、胶水、产品、凭证四层里看：谁教学、谁自保护、本地边界怎么守、答疑桥 B1 如何从提交走到 AI 写回。所有证据指向本项目真实代码，并按 host-grade 现状讲解练习判分。",
+    "audience": "使用 UniversityLocal + 多 AI 宿主的独立开发者",
+    "objectives": [
+      "用四层图说明宿主、胶水、产品、凭证各管什么，并把 Grok / UniversityLocal / SwimmerAIKit 放对层",
+      "指出产品层如何用 loopback 与请求 token 自保护，以及页面如何拦外部图片",
+      "按真实代码说明 short-answer 现状：网页只记答案，判定由 AI 宿主写回（host-grade）",
+      "解释为何 lesson / card / exercise 的 evidence 必须至少一条"
+    ],
+    "units": [
+      {
+        "id": "layers-and-bridge",
+        "title": "四层与答疑桥",
+        "objective": "建立四层心智模型，看清本地边界与 host-grade 写回链路，并理解证据是硬约束。",
+        "lessons": [
+          {
+            "id": "four-layers-map",
+            "title": "四层是什么：宿主、胶水、产品、凭证",
+            "content": "# 四层是什么：宿主、胶水、产品、凭证\n\n## 学习目标\n\n完成本课后，你能：\n\n1. 画出（或复述）**四层工作台**：**AI 宿主**（host：你已登录、能对话、常能动仓库/终端的工作环境）、**胶水**（嵌进应用代码的 agent/模型编排）、**产品**（有自己界面与数据模型的软件）、**凭证**（证明「谁付费 / 你是谁」的 key 或 token）。\n2. 把 Grok Build、UniversityLocal、SwimmerAIKit 放进正确的层。\n3. 指出产品层如何用 `requireMutationAccess` 自保护，而不是把「谁能改状态」交给浏览器自觉。\n\n## 先给结论\n\n- **事实：政策写明「AI 宿主负责研究和教学」；产品若真要在运行时调模型，必须走 SwimmerAIKit，且要有具体需要——不能为了模仿宿主而散落直连模型厂商。**\n- **事实：改状态的 HTTP 请求要过 `requireMutationAccess`：Origin 须是 loopback（本机回环地址）、Header 里要有正确的请求 token、Content-Type 必须是 `application/json`。**\n- **推论：四层不是名词游戏——宿主管「脑子与会话」，产品管「题册与落盘」，胶水是嵌进进程的库，凭证证明付费身份；Web 默认拿不到你在 Grok 里那条会话。**\n\n## 一个类比\n\n把学习想成「私人大学」：\n\n- **宿主** = 坐在你对面的教授（Grok Build、Claude Code、Codex、pi）——会话、板书、改代码都在他那间办公室。\n- **产品** = 教务系统与题册（UniversityLocal）——选课、交卷、复习桌、档案柜。\n- **胶水** = 教务系统内部的工作流引擎（若采用 Mastra 一类框架，或政策层的 SwimmerAIKit）——是代码库，不是另一位教授。\n- **凭证** = 校园卡 / 订阅 token / API key——证明谁在付费、谁被授权调用模型。\n\n教授的办公室（宿主会话）和教务系统（Web）默认不是同一扇门；你不能假设「我在 Grok 里聊过」就等于「网页按钮能调用同一条聊天」。\n\n## 工作示例\n\n### 1. 政策边界：谁教学\n\n`AGENTS.md` 里 UniversityLocal Rules 有一句硬边界：\n\n```md\n- The AI host performs research and teaching. Do not add direct model-provider\n  calls merely to imitate the host; any product runtime AI call must go through\n  SwimmerAIKit and requires a concrete need.\n```\n\n逐行：\n\n1. **AI host**（AI 宿主）——研究和教学的默认执行者是宿主，不是 Web 里再藏一套「假宿主」。\n2. 禁止「为了看起来像宿主」而直接调模型厂商 SDK。\n3. 若产品运行时**真的**要调模型，统一走 **SwimmerAIKit**（Pie 组合里 App 调模型的统一入口），且要有具体需要。\n\n### 2. 产品层自保护：谁能改状态\n\n本机 server 对「会改学习状态」的请求不靠自觉：\n\n```ts\nfunction requireMutationAccess(request: IncomingMessage, requestToken: string): void {\n  const origin = request.headers.origin;\n  if (origin && !isLoopbackOrigin(origin)) {\n    throw new HttpError(403, \"State-changing requests require a loopback Origin\");\n  }\n  const tokenHeader = request.headers[\"x-university-local-token\"];\n  const token = Array.isArray(tokenHeader) ? tokenHeader[0] : tokenHeader;\n  if (!tokensMatch(token, requestToken)) {\n    throw new HttpError(403, \"Missing or invalid UniversityLocal request token\");\n  }\n  if (request.headers[\"content-type\"]?.split(\";\", 1)[0]?.trim() !== \"application/json\") {\n    throw new HttpError(415, \"State-changing requests require application/json\");\n  }\n}\n```\n\n1. **Origin** 检查——若带了 Origin，必须是本机 HTTP 源（`isLoopbackOrigin`）。\n2. **`x-university-local-token`**——浏览器页拿到的本机会话 token，用恒定时间比较（`tokensMatch`）防时序旁路。\n3. **Content-Type**——只收 JSON，避免表单杂糅与意外解析。\n\n这就是**产品层**：题册可以漂亮，但「交卷 / 写进度」的门在 server 上自己守。\n\n```mermaid\nflowchart TB\n  accTitle[四层关系简图]\n  subgraph hosts[\"AI 宿主 · 给人用\"]\n    GB[\"Grok Build / Claude Code / pi\"]\n  end\n  subgraph product[\"产品\"]\n    UL[\"UniversityLocal Web + server\"]\n  end\n  subgraph glue[\"胶水 · 给代码用\"]\n    KIT[\"SwimmerAIKit / 可选 agent 框架\"]\n  end\n  subgraph cred[\"凭证\"]\n    KEY[\"API key / OAuth token / 订阅会话\"]\n  end\n  GB -->|\"教学会话在宿主内\"| UL\n  KIT -.->|\"仅当产品真要 runtime 调模型\"| UL\n  KEY --> GB\n  KEY -.-> KIT\n```\n\n**文字等价：** 上排是宿主；中间是 UniversityLocal 产品；胶水嵌进产品进程；凭证支撑宿主或（若采用）kit 调模型。宿主教学箭头指向产品，但不等于 Web 自动共用同一条会话。\n\n## 自检\n\n**问：** Mastra 或 SwimmerAIKit 算不算「另一个 AI 宿主」？\n\n**答：** 不算。宿主是给人用的完整工作环境；Mastra / kit 是给**应用代码**用的库或统一入口。UniversityLocal 第一阶段设计是宿主当老师、Web 当题册。\n\n## 重点\n\n**四层：宿主教学、胶水编排、产品守门、凭证付费。政策把研究和教学交给 AI 宿主；产品用 `requireMutationAccess` 自保护，不默认内嵌第二套 runtime 模型。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "AGENTS.md",
+                "lineStart": 70,
+                "lineEnd": 72,
+                "nodeIds": [],
+                "note": "AI 宿主负责研究与教学；产品 runtime 调模型须走 SwimmerAIKit。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 265,
+                "lineEnd": 278,
+                "nodeIds": [],
+                "note": "requireMutationAccess：loopback Origin、请求 token、JSON Content-Type。"
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-who-teaches",
+                "kind": "short-answer",
+                "title": "谁负责研究和教学",
+                "prompt": "按 AGENTS.md，研究和教学默认由哪一层做？只写两个字（宿主 / 胶水 / 产品 / 凭证 之一）。",
+                "expectedAnswer": "宿主",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 70,
+                    "lineEnd": 72,
+                    "nodeIds": [],
+                    "note": "The AI host performs research and teaching。"
+                  }
+                ]
+              }
+            ],
+            "cards": [
+              {
+                "id": "host-teaches-not-web",
+                "front": "按 AGENTS.md，研究和教学默认由谁做？产品若真要调模型应走什么？",
+                "back": "由 AI 宿主做。产品 runtime 调模型须走 SwimmerAIKit，且要有具体需要，不能为了模仿宿主而直连厂商。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "AGENTS.md",
+                    "lineStart": 70,
+                    "lineEnd": 72,
+                    "nodeIds": [],
+                    "note": "宿主教学与 SwimmerAIKit 边界句。"
+                  }
+                ]
+              },
+              {
+                "id": "mutation-three-checks",
+                "front": "requireMutationAccess 拦的三件事是什么？",
+                "back": "非 loopback 的 Origin；缺失或错误的 x-university-local-token；非 application/json 的 Content-Type。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 265,
+                    "lineEnd": 278,
+                    "nodeIds": [],
+                    "note": "Origin、token、Content-Type 三道检查。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "local-boundary-and-credentials",
+            "title": "凭证与本地边界：loopback 与外部图片",
+            "content": "# 凭证与本地边界：loopback 与外部图片\n\n## 学习目标\n\n完成本课后，你能：\n\n1. 指出 server 只接受哪些 **Host**（`LOOPBACK_HOST` 正则）。\n2. 说明 JSON 响应上的 **securityHeaders**（安全响应头）在防什么。\n3. 解释课文 Markdown 里外链图片为何被拦截——这和「资料仅在本机」是同一条本地边界。\n\n## 先给结论\n\n- **事实：`LOOPBACK_HOST` 只匹配 `127.0.0.1`、`localhost`、`[::1]`（可带端口）；非 loopback 的 Host 直接 403。**\n- **事实：`securityHeaders` 给响应贴上 CSP `default-src 'none'`、禁止嵌入、`no-referrer`、`nosniff`、`DENY` 等默认收紧的头。**\n- **事实：`MarkdownContent` 不渲染外部 `http(s)` 图片，改为展示「外部图片已拦截」——因为图片会在打开课文时自动请求，无需点击。**\n- **推论：凭证可以是 API key 或 OAuth token，但 UniversityLocal 产品侧的默认承诺是「状态与渲染尽量不离开本机」；边界写在 Host 检查与 Markdown 组件里，不是写在 README 口号里。**\n\n## 一个类比\n\n你家书房有两道规矩：\n\n1. **门铃**——只有本楼对讲机能按响（loopback Host）；小区门外的陌生人按门铃，门禁直接拒绝。\n2. **墙上的海报**——允许贴本地打印的图；若海报纸上印了「自动去外网拉一张图」，那张图一挂上就会打电话给外网——等于书房位置被当成信标。所以产品选择：**外链图不渲染，只显示「这里本来有张外链图」。**\n\n凭证则是另一回事：订阅登录、API key 证明「谁在给模型付费」；它们落在宿主配置或本机 env，**不应**塞进浏览器长期密钥里。\n\n## 工作示例\n\n### 1. 只认本机 Host\n\n```ts\nconst LOOPBACK_HOST = /^(?:127\\.0\\.0\\.1|localhost|\\[::1\\])(?::\\d+)?$/;\n```\n\n`rejectNonLoopbackHost` 用它测 `request.headers.host`；不匹配就返回 403：`UniversityLocal only accepts loopback Host headers`。\n\n### 2. 响应默认收紧\n\n```ts\nfunction securityHeaders(): Record<string, string> {\n  return {\n    \"Cache-Control\": \"no-store\",\n    \"Content-Security-Policy\": \"default-src 'none'; frame-ancestors 'none'\",\n    \"Referrer-Policy\": \"no-referrer\",\n    \"X-Content-Type-Options\": \"nosniff\",\n    \"X-Frame-Options\": \"DENY\",\n  };\n}\n```\n\n1. **no-store**——别把学习状态缓到奇怪的共享缓存。\n2. **CSP default-src 'none'**——JSON API 响应本身不应被当成可执行文档去拉脚本。\n3. **frame-ancestors / X-Frame-Options**——别被嵌进别人的页面点按钮。\n4. **no-referrer / nosniff**——少泄露来源，少被 MIME 嗅探。\n\n### 3. 课文里的外链图\n\n```ts\n/**\n * UniversityLocal is a local-only product: nothing it renders should reach the\n * network on its own. ...\n * An `![](https://…)` image fetches the moment a lesson opens — no click, no\n * consent — which quietly turns \"资料仅在本机\" into a page beacon.\n */\n```\n\n`img` 组件里：`isLocalUrl(source)` 才真正渲染 `<img>`；否则：\n\n```tsx\n<span className=\"markdown-blocked-image\">\n  <strong>外部图片已拦截</strong>\n  ...\n</span>\n```\n\n**beacon**（信标）：页面一打开就对外发起的请求，可暴露「谁在读这份材料」。本地-only 产品不能把课文打开变成静默外联。\n\n## 自检\n\n**问：** 外链用 `<a href>` 打开，和 `![](https://…)` 自动加载，边界差别在哪？\n\n**答：** 链接需要学习者**主动点击**，且代码给了 `rel=\"noreferrer noopener\"`；图片会在渲染时**自动**请求，没有二次确认，所以直接拦截渲染。\n\n## 重点\n\n**本地边界写在两处：server 只认 loopback Host 并贴紧 securityHeaders；Markdown 不让外部图片自动外联。凭证形态可变，但产品默认不把「本机」变成对外信标。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 62,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "LOOPBACK_HOST 只匹配 127.0.0.1、localhost 与 [::1]。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 216,
+                "lineEnd": 224,
+                "nodeIds": [],
+                "note": "securityHeaders：CSP、no-referrer、禁嵌入等默认收紧。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/MarkdownContent.tsx",
+                "lineStart": 14,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "注释：外部图片会在打开课文时自动请求，变成页面信标。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/MarkdownContent.tsx",
+                "lineStart": 70,
+                "lineEnd": 81,
+                "nodeIds": [],
+                "note": "img 组件：非本地 URL 不渲染，显示「外部图片已拦截」。"
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-loopback-const",
+                "kind": "short-answer",
+                "title": "Host 白名单常量名",
+                "prompt": "http-server.ts 里限制 Host 只能是本机地址的正则常量叫什么？只写常量名。",
+                "expectedAnswer": "LOOPBACK_HOST",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 62,
+                    "lineEnd": 62,
+                    "nodeIds": [],
+                    "note": "const LOOPBACK_HOST = ..."
+                  }
+                ]
+              }
+            ],
+            "cards": [
+              {
+                "id": "loopback-hosts-only",
+                "front": "LOOPBACK_HOST 允许哪些主机名？",
+                "back": "127.0.0.1、localhost、[::1]，均可选带端口。其它 Host 会被拒绝。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 62,
+                    "lineEnd": 62,
+                    "nodeIds": [],
+                    "note": "loopback Host 正则。"
+                  }
+                ]
+              },
+              {
+                "id": "why-block-remote-images",
+                "front": "课文里的外部 Markdown 图片为什么直接拦截而不是照常显示？",
+                "back": "图片会在打开课文时自动请求、无需点击，等于把「资料仅在本机」变成对外页面信标。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/MarkdownContent.tsx",
+                    "lineStart": 14,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "自动 fetch 与 page beacon 注释。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "host-grade-bridge-b1",
+            "title": "答疑桥 B1：提交只记答案，AI 写回判定",
+            "content": "# 答疑桥 B1：提交只记答案，AI 写回判定\n\n## 学习目标\n\n完成本课后，你能：\n\n1. 按真实代码说出 **short-answer** 的现状：网页提交**只记录答案**，**不再**用「规范化后与参考答案精确比较」直接判对错。\n2. 说明 **host-grade**（宿主判分写回）链路：复制答疑包 → AI 判定 → CLI / HTTP 写回 → Web 展示。\n3. 指出答疑包模板里 `passed: false` 的 fail-closed 含义，以及 `disclosesReference` 何时才揭晓参考答案。\n\n## 先给结论\n\n- **事实：练习 attempt 接口把 learner 提交记成 `phase: \"learner-submit\"`、`score: 0`；注释写明语义上的 pass/fail 来自 AI 宿主写回（host-grade）。**\n- **事实：答疑包正文写明「网页不会用字符串比对判对错，判定完全由你（AI）负责」；写回 JSON 模板默认 `passed: false`，防止助手忘了改字段却给出通过。**\n- **事实：`applyHostExerciseGrade` 把宿主判定记成 `phase: \"host-grade\"` 的 attempt，并推进课时进度与卡片入学；注释写明 short-answer 提交不再靠字符串匹配给分。**\n- **事实：`disclosesReference` 仅在 `passed` 或学习者提交次数 `>= 2` 时允许附上参考答案——避免第一次尝试就剧透。**\n- **推论：B1 的「真相源」是写回后的本地数据；聊天窗口是草稿台，Web 展示以落盘为准。**\n\n## 一个类比\n\n旧做法像自动阅卷机：你填的空和标准答案字符串一比对，绿灯/红灯当场亮。\n\n现在的 B1 像开卷答辩：\n\n1. 你在教务系统（Web）交上答卷——系统**只收件、盖「已交」戳**，不当场批分数。\n2. 你把「答疑包」（题干、你的答案、允许展示的源码证据）复制给任意一位教授（AI 宿主）。\n3. 教授批完，按模板填 `passed` / `evaluation`，用 CLI 写回教务系统。\n4. 你刷新网页，看到评估与是否通过。\n\n模板默认 `passed: false`，就像教授表格上预先印着「未通过」——他必须亲手改成通过，不能空白就当及格。\n\n## 工作示例\n\n### 1. 提交：只记答案\n\n```ts\n// All exercise kinds: record learner answer only (score 0). Semantic\n// pass/fail comes from AI host write-back (host-grade). Self-rubric is\n// no longer used for completion.\n...\nconst score = 0;\n...\nresponse: { phase: \"learner-submit\", answer: body.answer },\n```\n\n旧课若仍写「short-answer = 规范化后精确比较」，已经**过时**。参考答案字段 `expectedAnswer` 仍可存在于内容模型里（给答疑包在披露后展示），但**完成判定不靠网页字符串相等**。\n\n### 2. 答疑包：任务与 fail-closed 模板\n\n```ts\nconst writeBack = {\n  schemaVersion: 1,\n  commandId: input.commandId,\n  contentRevision: exercise.contentRevision,\n  // Fails closed: an assistant that forgets to edit this field cannot hand\n  // the learner a pass it never decided to give.\n  passed: false,\n  evaluation: \"（在此写对学习者的评估：对错原因 + 讲解，中文）\",\n  ...\n};\n```\n\n包内任务写清：判定、讲解、引申，并执行 `pnpm university exercise host-grade ...` 写回。\n\n### 3. 何时揭晓参考答案\n\n```ts\nexport function disclosesReference(input: {\n  readonly passed: boolean;\n  readonly submissionCount: number;\n}): boolean {\n  return input.passed || input.submissionCount >= 2;\n}\n```\n\n`submissionCount` 只计**学习者提交**，不计宿主写回行——否则 AI 写一次失败就会提前剧透。\n\n### 4. 写回：记分并推进\n\n```ts\n/**\n * Records an AI-host grade as a scored exercise attempt (phase host-grade) and\n * advances lesson completion / card enrollment. Short-answer learner submits\n * no longer set score=1 by string match.\n */\nexport function applyHostExerciseGrade(...) { ... }\n```\n\n`score = proposal.passed ? 1 : 0`，`phase: \"host-grade\"`。课时完成与卡片 enroll 都走这条写回路径。\n\n```mermaid\nsequenceDiagram\n  accTitle[B1 host-grade 链路]\n  participant U as 学习者\n  participant Web as UL Web\n  participant S as UL server\n  participant H as AI 宿主\n\n  U->>Web: 提交答案\n  Web->>S: POST attempt（只记答案）\n  S-->>Web: 已记录，等待 host-grade\n  U->>H: 粘贴答疑包\n  H->>H: 判定 + 讲解\n  H->>S: CLI/HTTP host-grade 写回\n  S-->>Web: 评估与进度\n  Web-->>U: 同页展示宿主评估\n```\n\n**文字等价：** 交卷只落「已交」；复制包给宿主；宿主判分写回；Web 读落盘结果展示。\n\n## 自检\n\n**问：** 答疑包模板里 `passed` 默认是 `false`，若 AI 忘了改就写回，结果是什么？\n\n**答：** 记成未通过（fail-closed）。注释写明：助手若忘了编辑该字段，不能把从未决定的通过交给学习者。\n\n## 重点\n\n**B1 现状：提交 ≠ 判分。网页只记录答案；判定由 AI 宿主经 host-grade 写回。模板默认 `passed: false`；参考答案按 `disclosesReference` 延迟披露。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/http-server.ts",
+                "lineStart": 1266,
+                "lineEnd": 1301,
+                "nodeIds": [],
+                "note": "提交只记 learner-submit 与 score 0；pass/fail 来自 host-grade。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                "lineStart": 57,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "disclosesReference：通过或提交满 2 次才披露参考答案。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                "lineStart": 117,
+                "lineEnd": 132,
+                "nodeIds": [],
+                "note": "写回模板默认 passed:false，fail-closed 防止误给通过。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/host-exercise-grade.ts",
+                "lineStart": 72,
+                "lineEnd": 76,
+                "nodeIds": [],
+                "note": "applyHostExerciseGrade：宿主判定记分；short-answer 不再字符串匹配给 1 分。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/host-exercise-grade.ts",
+                "lineStart": 130,
+                "lineEnd": 152,
+                "nodeIds": [],
+                "note": "phase host-grade 写入 attempt 并 advanceLessonProgress。"
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-host-grade-phase",
+                "kind": "short-answer",
+                "title": "宿主判定的 phase 名",
+                "prompt": "宿主写回的 attempt 在 response 里用的 phase 字符串是什么？只写该标识符（含连字符）。",
+                "expectedAnswer": "host-grade",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/host-exercise-grade.ts",
+                    "lineStart": 130,
+                    "lineEnd": 139,
+                    "nodeIds": [],
+                    "note": "phase: \"host-grade\" 写入 scored attempt。"
+                  }
+                ]
+              }
+            ],
+            "cards": [
+              {
+                "id": "submit-not-grade",
+                "front": "学习者在网页提交 short-answer 时，server 会不会当场按字符串判对错？",
+                "back": "不会。提交只记 learner-submit 且 score 为 0；语义对错来自 AI 宿主的 host-grade 写回。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/http-server.ts",
+                    "lineStart": 1266,
+                    "lineEnd": 1301,
+                    "nodeIds": [],
+                    "note": "score 0 与 host-grade 注释。"
+                  }
+                ]
+              },
+              {
+                "id": "passed-fails-closed",
+                "front": "答疑包写回模板为什么默认 passed: false？",
+                "back": "fail-closed：助手若忘了改这个字段，不能把从未决定的「通过」交给学习者。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/exercise-coaching-packet.ts",
+                    "lineStart": 117,
+                    "lineEnd": 124,
+                    "nodeIds": [],
+                    "note": "Fails closed 注释与 passed: false。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "evidence-hard-constraint",
+            "title": "证据为什么是硬约束",
+            "content": "# 证据为什么是硬约束\n\n## 学习目标\n\n完成本课后，你能：\n\n1. 指出 lesson、exercise、card 的 schema 都要求 `evidence` 数组 **min(1)**。\n2. 用自己的话说明：没有钉死源码位置的课，在 UniversityLocal 里不算「可验收的正式内容」。\n3. 把「证据」和前面四层、host-grade 连起来——答疑包附的源码片段，正是这些 evidence 解析出来的。\n\n## 先给结论\n\n- **事实：`LessonManifestSchema` 的 `evidence` 是 `z.array(EvidenceReferenceSchema).min(1)`——一课至少一条证据引用。**\n- **事实：练习基座 `PracticeBaseSchema`（short-answer 与 explain 共用）同样 `evidence.min(1)`。**\n- **事实：卡片 `CardContentSchema` 也是 `evidence.min(1)`。**\n- **推论：空口「架构课」进不了正式课表；行号、commit、路径必须能对上被学快照，host-grade 才能按真实代码判分。**\n\n## 一个类比\n\n法庭不接受「我觉得他有罪」——要物证编号、来源、保管链。UniversityLocal 把同一标准用在教材上：每课、每题、每张复习卡至少挂一条**可打开的源码位置**。\n\n没有证据的句子可以出现在聊天里，但不能单独成为正式 lesson 清单的一员。\n\n## 工作示例\n\n课时清单：\n\n```ts\nexport const LessonManifestSchema = z\n  .object({\n    ...\n    evidence: z.array(EvidenceReferenceSchema).min(1),\n    ...\n  })\n  .strict();\n```\n\n练习（short-answer / explain 的共同底座）：\n\n```ts\nconst PracticeBaseSchema = z.object({\n  ...\n  evidence: z.array(EvidenceReferenceSchema).min(1),\n});\n```\n\n卡片：\n\n```ts\nexport const CardContentSchema = z\n  .object({\n    ...\n    evidence: z.array(EvidenceReferenceSchema).min(1),\n  })\n  .strict();\n```\n\n三处同一形状：**至少一条**。`min(1)` 把「以后再补证据」挡在入库之前。\n\n这和本课前面讲的 host-grade 连在一起：答疑包里的「判分依据：本课引用的真实源码」不是装饰，而是这些 evidence 在 server 侧解析出的片段。证据空了，宿主只能凭印象——而这正是产品要避免的。\n\n## 自检\n\n**问：** 若某张复习卡写得很精彩，但 `evidence` 是空数组，按 schema 能否成为 active 卡片？\n\n**答：** 不能。`CardContentSchema` 要求 `evidence.min(1)`，空数组过不了校验。\n\n## 重点\n\n**lesson / exercise / card 的 evidence 都是 min(1)：证据是入库硬约束，也是 host-grade 能「按代码而不是按印象」判分的前提。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/domain/schemas.ts",
+                "lineStart": 279,
+                "lineEnd": 294,
+                "nodeIds": [],
+                "note": "LessonManifestSchema：evidence 数组 min(1)。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/domain/schemas.ts",
+                "lineStart": 296,
+                "lineEnd": 319,
+                "nodeIds": [],
+                "note": "练习基座与 ExerciseSchema：evidence min(1)。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/domain/schemas.ts",
+                "lineStart": 321,
+                "lineEnd": 337,
+                "nodeIds": [],
+                "note": "CardContentSchema：卡片 evidence 也是 min(1)。"
+              }
+            ],
+            "exercises": [
+              {
+                "id": "evidence-min-recall",
+                "kind": "short-answer",
+                "title": "证据最少几条",
+                "prompt": "lesson、exercise、card 的 evidence 数组最少需要几条？只写数字。",
+                "expectedAnswer": "1",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/domain/schemas.ts",
+                    "lineStart": 290,
+                    "lineEnd": 290,
+                    "nodeIds": [],
+                    "note": "evidence: z.array(...).min(1)"
+                  }
+                ]
+              }
+            ],
+            "cards": [
+              {
+                "id": "three-min-one",
+                "front": "哪些内容类型在 schema 里要求 evidence 至少一条？",
+                "back": "lesson（LessonManifestSchema）、exercise（PracticeBaseSchema）、card（CardContentSchema）三处都是 min(1)。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/domain/schemas.ts",
+                    "lineStart": 290,
+                    "lineEnd": 335,
+                    "nodeIds": [],
+                    "note": "三处 evidence.min(1) 并列。"
+                  }
+                ]
+              },
+              {
+                "id": "why-evidence-gates-host-grade",
+                "front": "证据硬约束和 host-grade 判分有什么关系？",
+                "back": "答疑包附带的源码片段来自这些 evidence；没有钉死的证据，宿主只能凭印象判，产品要避免这种情况。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/domain/schemas.ts",
+                    "lineStart": 307,
+                    "lineEnd": 307,
+                    "nodeIds": [],
+                    "note": "练习 evidence 必填，支撑可引用源码的判分。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

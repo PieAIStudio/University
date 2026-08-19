@@ -1,0 +1,1086 @@
+{
+  "schemaVersion": 1,
+  "note": "为 TuringPact 12 门课扩充的词表",
+  "entries": [
+    {
+      "senseId": "async.function",
+      "headword": "async",
+      "phonetic": "/əˈsɪŋk/",
+      "partOfSpeech": "adjective",
+      "gloss": "异步的：函数可以在中途等待，不把整条调用链卡死",
+      "usage": "读到 async function 时，先想「它返回的是 Promise」，再找函数体里的 await。",
+      "track": "technical"
+    },
+    {
+      "senseId": "await.pause",
+      "headword": "await",
+      "phonetic": "/əˈweɪt/",
+      "partOfSpeech": "verb",
+      "gloss": "等待兑现：在这一行停住，直到 Promise 有结果再往下跑",
+      "usage": "看到 await，在心里画停顿点；没有 await 往往表示「发出去就不管了」。",
+      "track": "technical"
+    },
+    {
+      "senseId": "throw.error",
+      "headword": "throw",
+      "phonetic": "/θrəʊ/",
+      "partOfSpeech": "verb",
+      "gloss": "抛出：把失败变成异常，逼调用方必须处理或继续往上抛",
+      "usage": "读到 throw 时问：谁会 catch？没人接就会一路炸到顶层。",
+      "track": "technical"
+    },
+    {
+      "senseId": "catch.handler",
+      "headword": "catch",
+      "phonetic": "/kætʃ/",
+      "partOfSpeech": "verb",
+      "gloss": "接住：try 里炸了之后走的退路分支",
+      "usage": "看到 catch 先问两句：接住之后返回什么？还是空的、靠注释解释？",
+      "track": "technical"
+    },
+    {
+      "senseId": "try.block",
+      "headword": "try",
+      "phonetic": "/traɪ/",
+      "partOfSpeech": "verb",
+      "gloss": "尝试执行：包住可能失败的动作，失败时交给 catch",
+      "usage": "try 标的是「正常路径」；真正的产品决策往往写在 catch 里。",
+      "track": "technical"
+    },
+    {
+      "senseId": "reject.promise",
+      "headword": "reject",
+      "phonetic": "/rɪˈdʒekt/",
+      "partOfSpeech": "verb",
+      "gloss": "拒绝兑现：让 Promise 以失败结束，而不是给出正常值",
+      "usage": "超时闹钟常用 reject；读到它时想的是「这条赛道以错误收场」。",
+      "track": "technical"
+    },
+    {
+      "senseId": "resolve.promise",
+      "headword": "resolve",
+      "phonetic": "/rɪˈzɒlv/",
+      "partOfSpeech": "verb",
+      "gloss": "兑现成功：让 Promise 带着正常结果结束",
+      "usage": "Promise.resolve(x) 常用来把同步值收成同一形状的 Promise。",
+      "track": "technical"
+    },
+    {
+      "senseId": "race.promise",
+      "headword": "race",
+      "phonetic": "/reɪs/",
+      "partOfSpeech": "verb",
+      "gloss": "赛跑取先：多个 Promise 里谁先结束就采用谁的结果",
+      "usage": "Promise.race 读作「只认第一名」；常见用法是真实操作对闹钟。",
+      "track": "technical"
+    },
+    {
+      "senseId": "settle.promise",
+      "headword": "settle",
+      "phonetic": "/ˈsetl/",
+      "partOfSpeech": "verb",
+      "gloss": "尘埃落定：Promise 无论成功还是失败，只要已经结束",
+      "usage": "文档说 settled 时，问的是「有没有结果了」，不是「成功了没有」。",
+      "track": "technical"
+    },
+    {
+      "senseId": "recover.failure",
+      "headword": "recover",
+      "phonetic": "/rɪˈkʌvə/",
+      "partOfSpeech": "verb",
+      "gloss": "恢复：失败后按预定路径自救，而不是只报错离开",
+      "usage": "读到 recover 时看次数上限——无上限的恢复往往会变成死循环刷新。",
+      "track": "technical"
+    },
+    {
+      "senseId": "reload.page",
+      "headword": "reload",
+      "phonetic": "/ˌriːˈləʊd/",
+      "partOfSpeech": "verb",
+      "gloss": "重新加载：整页或资源再取一次，常作最后一招自救",
+      "usage": "代码里的 reload 往往是「退路」，不是日常导航；要配「只做一次」的标记。",
+      "track": "technical"
+    },
+    {
+      "senseId": "absorb.failure",
+      "headword": "absorb",
+      "phonetic": "/əbˈzɔːb/",
+      "partOfSpeech": "verb",
+      "gloss": "吸收失败：不往外抛，在本地变成返回值或静默跳过",
+      "usage": "读到「吸收」策略时问：调用方还能从返回值看出失败吗？",
+      "track": "technical"
+    },
+    {
+      "senseId": "sync.blocking",
+      "headword": "sync",
+      "phonetic": "/sɪŋk/",
+      "partOfSpeech": "adjective",
+      "gloss": "同步的：调用当下就给出结果，中间不挂起等待",
+      "usage": "localStorage 是 sync API；接口仍可能包成 async，那是为了对齐形状。",
+      "track": "technical"
+    },
+    {
+      "senseId": "normalize.input",
+      "headword": "normalize",
+      "phonetic": "/ˈnɔːməlaɪz/",
+      "partOfSpeech": "verb",
+      "gloss": "规范化：把输入收成统一干净的形式再往下用",
+      "usage": "trim、小写化、去空都是 normalize；先规范再校验，少踩空白字符的坑。",
+      "track": "technical"
+    },
+    {
+      "senseId": "contract.api",
+      "headword": "contract",
+      "phonetic": "/ˈkɒntrækt/",
+      "partOfSpeech": "noun",
+      "gloss": "契约：多方必须遵守的稳定约定，改了就要一起改",
+      "usage": "读到 contract 时问：谁承诺、谁检查、改名要不要迁移。",
+      "track": "technical"
+    },
+    {
+      "senseId": "drift.divergence",
+      "headword": "drift",
+      "phonetic": "/drɪft/",
+      "partOfSpeech": "noun",
+      "gloss": "漂移：实现悄悄偏离了曾经写下的承诺",
+      "usage": "防 drift 的测试不问功能对不对，只问「承诺过的标记还在不在」。",
+      "track": "technical"
+    },
+    {
+      "senseId": "layer.architecture",
+      "headword": "layer",
+      "phonetic": "/ˈleɪə/",
+      "partOfSpeech": "noun",
+      "gloss": "层：靠依赖方向分开的一组模块，不是靠文件夹名字",
+      "usage": "判断分层真假：试着换掉下层，上层要改多少。",
+      "track": "technical"
+    },
+    {
+      "senseId": "dependency.module",
+      "headword": "dependency",
+      "phonetic": "/dɪˈpendənsi/",
+      "partOfSpeech": "noun",
+      "gloss": "依赖：这份代码要能跑，必须先有的另一份代码或包",
+      "usage": "读 dependency 时分清：是架构上的层依赖，还是 package.json 里的包。",
+      "track": "technical"
+    },
+    {
+      "senseId": "surface.public",
+      "headword": "surface",
+      "phonetic": "/ˈsɜːfɪs/",
+      "partOfSpeech": "noun",
+      "gloss": "对外表面：别人（或测试、其他端）真正会碰到的那组名字与标记",
+      "usage": "public surface 改名等于改协议；本地变量名可以丑，线上字符串要稳。",
+      "track": "technical"
+    },
+    {
+      "senseId": "store.state",
+      "headword": "store",
+      "phonetic": "/stɔː/",
+      "partOfSpeech": "noun",
+      "gloss": "状态仓库：一袋当前值加上改这些值的方法，多处界面共享",
+      "usage": "读 store 先分两栏：现在是什么，谁有权改。",
+      "track": "technical"
+    },
+    {
+      "senseId": "setter.update",
+      "headword": "setter",
+      "phonetic": "/ˈsetə/",
+      "partOfSpeech": "noun",
+      "gloss": "设值函数：专门负责把某个状态字段改成新值的方法",
+      "usage": "看到 setXxx 时，它本身不是「当前值」，当前值是不带 set 的那个字段。",
+      "track": "technical"
+    },
+    {
+      "senseId": "mutate.inplace",
+      "headword": "mutate",
+      "phonetic": "/mjuːˈteɪt/",
+      "partOfSpeech": "verb",
+      "gloss": "原地改动：不换新对象，直接改旧对象内部的内容",
+      "usage": "React/zustand 场景里 mutate 常是反模式；更常见的是换新数组/新对象。",
+      "track": "technical"
+    },
+    {
+      "senseId": "spread.copy",
+      "headword": "spread",
+      "phonetic": "/spred/",
+      "partOfSpeech": "verb",
+      "gloss": "展开：用 ... 把对象或数组的内容摊进另一个结构",
+      "usage": "[...old, item] 是换新数组；{...props} 是把剩余属性贴到元素上。",
+      "track": "technical"
+    },
+    {
+      "senseId": "reset.state",
+      "headword": "reset",
+      "phonetic": "/ˌriːˈset/",
+      "partOfSpeech": "verb",
+      "gloss": "重置：把状态清回初始定义，而不是只改一两个字段",
+      "usage": "好的 reset 与初始状态共用同一份定义，避免两处各写一遍。",
+      "track": "technical"
+    },
+    {
+      "senseId": "subscribe.events",
+      "headword": "subscribe",
+      "phonetic": "/səbˈskraɪb/",
+      "partOfSpeech": "verb",
+      "gloss": "订阅：挂上监听，之后有变化由对方推过来",
+      "usage": "subscribe 成对出现的是 unsubscribe；离开时不拆会漏听或重复听。",
+      "track": "technical"
+    },
+    {
+      "senseId": "unsubscribe.events",
+      "headword": "unsubscribe",
+      "phonetic": "/ˌʌnsəbˈskraɪb/",
+      "partOfSpeech": "verb",
+      "gloss": "取消订阅：拆掉监听，不再接收后续推送",
+      "usage": "组件卸载或离开房间时找 unsubscribe，否则就是资源泄漏的温床。",
+      "track": "technical"
+    },
+    {
+      "senseId": "push.delivery",
+      "headword": "push",
+      "phonetic": "/pʊʃ/",
+      "partOfSpeech": "noun",
+      "gloss": "推送：服务器有变化就主动送来，而不是客户端反复去问",
+      "usage": "push 解决「之后的变化」；进房时的历史列表往往仍要先拉一次。",
+      "track": "technical"
+    },
+    {
+      "senseId": "poll.repeat",
+      "headword": "poll",
+      "phonetic": "/pəʊl/",
+      "partOfSpeech": "verb",
+      "gloss": "轮询：按固定间隔主动询问「有没有新消息」",
+      "usage": "读到 poll 时想成本：空跑次数、延迟上限，以及能否改成订阅。",
+      "track": "technical"
+    },
+    {
+      "senseId": "broadcast.event",
+      "headword": "broadcast",
+      "phonetic": "/ˈbrɔːdkɑːst/",
+      "partOfSpeech": "noun",
+      "gloss": "广播：同一房间或频道里多方都会收到的事件",
+      "usage": "broadcast 事件名是多人契约；单端改字符串等于改对讲机口令。",
+      "track": "technical"
+    },
+    {
+      "senseId": "channel.realtime",
+      "headword": "channel",
+      "phonetic": "/ˈtʃænl/",
+      "partOfSpeech": "noun",
+      "gloss": "通道：实时连接里按房间或主题划分的一条订阅线路",
+      "usage": "channel 名常带 room id；订阅与退订都针对这条线。",
+      "track": "technical"
+    },
+    {
+      "senseId": "wire.protocol",
+      "headword": "wire",
+      "phonetic": "/waɪə/",
+      "partOfSpeech": "noun",
+      "gloss": "线上传输：真正在网络上跑的名字与字节，不是本地变量名",
+      "usage": "on-the-wire 字符串改了，另一端就听不到——本地键名反而可以重构。",
+      "track": "technical"
+    },
+    {
+      "senseId": "compose.assemble",
+      "headword": "compose",
+      "phonetic": "/kəmˈpəʊz/",
+      "partOfSpeech": "verb",
+      "gloss": "拼装：把多份来源的数据合成界面要的单一形状",
+      "usage": "compose 发生在边界：库是多表，屏是一张名片。",
+      "track": "technical"
+    },
+    {
+      "senseId": "row.database",
+      "headword": "row",
+      "phonetic": "/rəʊ/",
+      "partOfSpeech": "noun",
+      "gloss": "表行：数据库一张表里的一条记录，字段名常跟库约定",
+      "usage": "XxxRow 提示「这是表结构」；不要假设它等于前端对象字段名。",
+      "track": "technical"
+    },
+    {
+      "senseId": "rpc.remote",
+      "headword": "rpc",
+      "phonetic": "/ˌɑː piː ˈsiː/",
+      "partOfSpeech": "noun",
+      "gloss": "远程过程调用：像调本地函数一样调后端的一个命名过程",
+      "usage": "Supabase 的 rpc 常返回 { data, error }——先看 error 再碰 data。",
+      "track": "technical"
+    },
+    {
+      "senseId": "nullish.coalesce",
+      "headword": "nullish",
+      "phonetic": "/ˈnʌlɪʃ/",
+      "partOfSpeech": "adjective",
+      "gloss": "空值性的：特指 null 或 undefined，不包括 0 和空字符串",
+      "usage": "?? 只在 nullish 时触发；|| 会把 0 也当成缺省，余额场景要小心。",
+      "track": "technical"
+    },
+    {
+      "senseId": "optional-chaining.access",
+      "headword": "optional chaining",
+      "phonetic": "/ˈɒpʃənl ˈtʃeɪnɪŋ/",
+      "partOfSpeech": "noun",
+      "gloss": "可选链：?. 先确认左边有值再往下取，否则整段是 undefined",
+      "usage": "远程行可能为 null 时，?. 比直接 . 安全；常与 ?? 后备值成对。",
+      "track": "technical"
+    },
+    {
+      "senseId": "environment.variable",
+      "headword": "environment",
+      "phonetic": "/ɪnˈvaɪrənmənt/",
+      "partOfSpeech": "noun",
+      "gloss": "环境：进程或构建时注入的外部配置，不写死在源码里",
+      "usage": "环境变量管密钥与开关；example 只给形状，真值留在本地 .env。",
+      "track": "technical"
+    },
+    {
+      "senseId": "anonymous.user",
+      "headword": "anonymous",
+      "phonetic": "/əˈnɒnɪməs/",
+      "partOfSpeech": "adjective",
+      "gloss": "匿名的：没有绑定可识别身份，或密钥仅代表公开客户端",
+      "usage": "anon key 可进前端，不等于谁都能删库；service role 绝不能进前端。",
+      "track": "technical"
+    },
+    {
+      "senseId": "component.ui",
+      "headword": "component",
+      "phonetic": "/kəmˈpəʊnənt/",
+      "partOfSpeech": "noun",
+      "gloss": "组件：返回一段界面描述的函数，可被别处组合复用",
+      "usage": "组件就是函数：props 进去，JSX 出来；先算完再 return。",
+      "track": "technical"
+    },
+    {
+      "senseId": "props.parameters",
+      "headword": "props",
+      "phonetic": "/prɒps/",
+      "partOfSpeech": "noun",
+      "gloss": "属性包：传给组件的那包参数，外形像 HTML 属性",
+      "usage": "标签上的 seed=\"…\" 就是在给函数传参，不是另一套神秘机制。",
+      "track": "technical"
+    },
+    {
+      "senseId": "render.ui",
+      "headword": "render",
+      "phonetic": "/ˈrendə/",
+      "partOfSpeech": "verb",
+      "gloss": "渲染：根据当前数据把界面描述变成屏幕上可见的结果",
+      "usage": "重新 render 往往等于组件函数又执行了一遍，不是魔法重画。",
+      "track": "technical"
+    },
+    {
+      "senseId": "state.memory",
+      "headword": "state",
+      "phonetic": "/steɪt/",
+      "partOfSpeech": "noun",
+      "gloss": "状态：组件或应用自己记住的、会随交互变化的数据",
+      "usage": "state 变了通常触发重渲；改了却不该重渲的口袋用 ref。",
+      "track": "technical"
+    },
+    {
+      "senseId": "hook.react",
+      "headword": "hook",
+      "phonetic": "/hʊk/",
+      "partOfSpeech": "noun",
+      "gloss": "钩子：React 里以 use 开头、在组件顶层调用的可复用能力",
+      "usage": "Hook 只能在组件或自定义 hook 顶层调；回调里请用 getState()。",
+      "track": "technical"
+    },
+    {
+      "senseId": "children.nodes",
+      "headword": "children",
+      "phonetic": "/ˈtʃɪldrən/",
+      "partOfSpeech": "noun",
+      "gloss": "子节点：写在开始标签与结束标签之间的内容，也是一种 prop",
+      "usage": "组件可以只做准备工作再 {children} 原样交回，自己不画壳。",
+      "track": "technical"
+    },
+    {
+      "senseId": "ref.pocket",
+      "headword": "ref",
+      "phonetic": "/ref/",
+      "partOfSpeech": "noun",
+      "gloss": "引用口袋：可读写但不触发重渲的可变格子，常挂 DOM 或定时器 id",
+      "usage": "读到 ref 时问：为什么不能放进 state？答案通常是「改了不该重渲」。",
+      "track": "technical"
+    },
+    {
+      "senseId": "cleanup.effect",
+      "headword": "cleanup",
+      "phonetic": "/ˈkliːnʌp/",
+      "partOfSpeech": "noun",
+      "gloss": "清理：副作用结束或组件离开时必须做的收尾，如拆订阅、清定时器",
+      "usage": "useEffect 返回的函数就是 cleanup；漏了它等于泄漏。",
+      "track": "technical"
+    },
+    {
+      "senseId": "mount.lifecycle",
+      "headword": "mount",
+      "phonetic": "/maʊnt/",
+      "partOfSpeech": "verb",
+      "gloss": "挂载：组件第一次被放进界面树并开始工作",
+      "usage": "mount 时常注册监听；配对的 unmount 必须拆掉。",
+      "track": "technical"
+    },
+    {
+      "senseId": "unmount.lifecycle",
+      "headword": "unmount",
+      "phonetic": "/ʌnˈmaʊnt/",
+      "partOfSpeech": "verb",
+      "gloss": "卸载：组件从界面树移除，应释放它占用的监听与定时器",
+      "usage": "bug 报告里 unmount 后仍 setState，多半是 cleanup 没写全。",
+      "track": "technical"
+    },
+    {
+      "senseId": "variant.appearance",
+      "headword": "variant",
+      "phonetic": "/ˈveəriənt/",
+      "partOfSpeech": "noun",
+      "gloss": "变体：同一组件有限种外观或语义选项，如 primary / danger",
+      "usage": "variant 应用封闭字符串集合；模板字符串常把它编进 class 名。",
+      "track": "technical"
+    },
+    {
+      "senseId": "fragment.jsx",
+      "headword": "fragment",
+      "phonetic": "/ˈfræɡmənt/",
+      "partOfSpeech": "noun",
+      "gloss": "片段：包一层好返回单个根，却不在 DOM 里多长真实节点",
+      "usage": "<>…</> 就是 Fragment：需要分组，但不想多一个 div 壳。",
+      "track": "technical"
+    },
+    {
+      "senseId": "jsx.syntax",
+      "headword": "jsx",
+      "phonetic": "/ˌdʒeɪ es ˈeks/",
+      "partOfSpeech": "noun",
+      "gloss": "JSX：在 JS/TS 里用尖括号写界面描述的语法扩展",
+      "usage": "JSX 不是 HTML 字符串；{…} 才是逃回 JavaScript 表达式的口子。",
+      "track": "technical"
+    },
+    {
+      "senseId": "ternary.operator",
+      "headword": "ternary",
+      "phonetic": "/ˈtɜːnəri/",
+      "partOfSpeech": "noun",
+      "gloss": "三元运算：条件 ? 真值 : 假值，整段本身就是一个值",
+      "usage": "适合二选一返回值；多步动作或超过两个出口更适合 if。",
+      "track": "technical"
+    },
+    {
+      "senseId": "short-circuit.logic",
+      "headword": "short-circuit",
+      "phonetic": "/ˌʃɔːt ˈsɜːkɪt/",
+      "partOfSpeech": "noun",
+      "gloss": "短路：左边已能决定结果时，右边表达式不再计算",
+      "usage": "A || B 在 A 为真时可能不算 B；有副作用的右边要格外小心。",
+      "track": "technical"
+    },
+    {
+      "senseId": "early-return.control",
+      "headword": "early return",
+      "phonetic": "/ˈɜːli rɪˈtɜːn/",
+      "partOfSpeech": "noun",
+      "gloss": "早返回：特殊情况在门口处理完就离开函数，避免层层 else",
+      "usage": "一串 if … return 的优先级等于行序；调换顺序等于改规则。",
+      "track": "general"
+    },
+    {
+      "senseId": "literal.type",
+      "headword": "literal",
+      "phonetic": "/ˈlɪtərəl/",
+      "partOfSpeech": "noun",
+      "gloss": "字面量：源代码里直接写出的固定值，如 'en' 或 20_000",
+      "usage": "as const 与字面量联合把「随便字符串」收成封闭集合。",
+      "track": "technical"
+    },
+    {
+      "senseId": "union.type",
+      "headword": "union",
+      "phonetic": "/ˈjuːniən/",
+      "partOfSpeech": "noun",
+      "gloss": "联合类型：值只能是列出的几种形状之一，用 | 连接",
+      "usage": "读到 A | B 时先列成员，再找类型守卫如何收窄到其中之一。",
+      "track": "technical"
+    },
+    {
+      "senseId": "narrow.type",
+      "headword": "narrow",
+      "phonetic": "/ˈnærəʊ/",
+      "partOfSpeech": "verb",
+      "gloss": "收窄：用运行时检查让类型从宽联合变成更具体的一种",
+      "usage": "if (typeof x === 'string') 之后，分支里的 x 已被 narrow。",
+      "track": "technical"
+    },
+    {
+      "senseId": "type-guard.check",
+      "headword": "type guard",
+      "phonetic": "/taɪp ɡɑːd/",
+      "partOfSpeech": "noun",
+      "gloss": "类型守卫：返回布尔值并在为真时收窄参数类型的检查函数",
+      "usage": "isXxx(error) 既是运行时判断，也是给 TypeScript 的通行证。",
+      "track": "technical"
+    },
+    {
+      "senseId": "derive.compute",
+      "headword": "derive",
+      "phonetic": "/dɪˈraɪv/",
+      "partOfSpeech": "verb",
+      "gloss": "推导：从一个真相源算出另一个值，而不是抄两份维护",
+      "usage": "能 derive 就不要同步维护两份列表；抄两遍一定会漂。",
+      "track": "technical"
+    },
+    {
+      "senseId": "reduce.fold",
+      "headword": "reduce",
+      "phonetic": "/rɪˈdjuːs/",
+      "partOfSpeech": "verb",
+      "gloss": "归约：把列表从左到右折成一个累积值",
+      "usage": "读 reduce 时盯住：初始值是什么、每一步 acc 怎么变。",
+      "track": "technical"
+    },
+    {
+      "senseId": "filter.select",
+      "headword": "filter",
+      "phonetic": "/ˈfɪltə/",
+      "partOfSpeech": "verb",
+      "gloss": "过滤：留下符合条件的元素，丢掉其余，得到新列表",
+      "usage": "filter 不改原数组；之后常接 map 或 join 做第二趟处理。",
+      "track": "technical"
+    },
+    {
+      "senseId": "map.structure",
+      "headword": "map",
+      "phonetic": "/mæp/",
+      "partOfSpeech": "noun",
+      "gloss": "映射表：用钥匙直接找到格子的字典结构，不是数组下标扫描",
+      "usage": "Map 适合「已知 key 取 value」；先 build 再 get，避免两层循环。",
+      "track": "technical"
+    },
+    {
+      "senseId": "bucket.group",
+      "headword": "bucket",
+      "phonetic": "/ˈbʌkɪt/",
+      "partOfSpeech": "noun",
+      "gloss": "桶：把连续或敏感的精确值收成粗粒度分组标签",
+      "usage": "bucket 4–5 人而不是记 4，是为了隐私与可聚合分析。",
+      "track": "technical"
+    },
+    {
+      "senseId": "export.share",
+      "headword": "export",
+      "phonetic": "/ɪkˈspɔːt/",
+      "partOfSpeech": "verb",
+      "gloss": "导出：把本文件的名字交给其他文件 import 使用",
+      "usage": "没 export 的名字是文件私有；读公共 API 先看 export 列表。",
+      "track": "technical"
+    },
+    {
+      "senseId": "import.borrow",
+      "headword": "import",
+      "phonetic": "/ɪmˈpɔːt/",
+      "partOfSpeech": "verb",
+      "gloss": "导入：从别的模块把已导出的名字借进来用",
+      "usage": "import type 只借类型、运行时擦除；值与类型的导入路径不同。",
+      "track": "technical"
+    },
+    {
+      "senseId": "parameter.input",
+      "headword": "parameter",
+      "phonetic": "/pəˈræmɪtə/",
+      "partOfSpeech": "noun",
+      "gloss": "参数：函数声明里预留的输入槽位，调用时填入实参",
+      "usage": "参数列表的默认值管运行时；类型上的 ? 管可不可以不传。",
+      "track": "technical"
+    },
+    {
+      "senseId": "rest.params",
+      "headword": "rest",
+      "phonetic": "/rest/",
+      "partOfSpeech": "noun",
+      "gloss": "剩余参数：…name 收集「还没被具名拿走」的那一包",
+      "usage": "参数里 ...props 是收集，JSX 里 {...props} 是展开，要成对。",
+      "track": "technical"
+    },
+    {
+      "senseId": "destructure.unpack",
+      "headword": "destructure",
+      "phonetic": "/diːˈstrʌktʃə/",
+      "partOfSpeech": "verb",
+      "gloss": "解构：按结构一次性取出对象或数组里的字段",
+      "usage": "({ data, error }) = … 是在强迫你看见错误槽位，别只拿 data。",
+      "track": "technical"
+    },
+    {
+      "senseId": "interface.shape",
+      "headword": "interface",
+      "phonetic": "/ˈɪntəfeɪs/",
+      "partOfSpeech": "noun",
+      "gloss": "接口：描述对象必须具备哪些字段与方法的形状合同",
+      "usage": "读 interface 先当说明书：调用方要给什么，实现方必须兑现什么。",
+      "track": "technical"
+    },
+    {
+      "senseId": "barrel.reexport",
+      "headword": "barrel",
+      "phonetic": "/ˈbærəl/",
+      "partOfSpeech": "noun",
+      "gloss": "桶文件：一个 index 里重新导出多个模块，给外部统一入口",
+      "usage": "from './domain' 常落到 barrel；拆文件是为边界，barrel 是为入口。",
+      "track": "technical"
+    },
+    {
+      "senseId": "describe.suite",
+      "headword": "describe",
+      "phonetic": "/dɪˈskraɪb/",
+      "partOfSpeech": "verb",
+      "gloss": "描述分组：给一组相关测试用例起一个可读的主题标题",
+      "usage": "describe 是文件夹，it 是句子，expect 才是真正的钉。",
+      "track": "technical"
+    },
+    {
+      "senseId": "inject.dependency",
+      "headword": "inject",
+      "phonetic": "/ɪnˈdʒekt/",
+      "partOfSpeech": "verb",
+      "gloss": "注入：把依赖从外部传进函数，而不是在函数内部写死",
+      "usage": "可注入的 storage/clock 是为了测试能递假货，不是多余参数。",
+      "track": "technical"
+    },
+    {
+      "senseId": "fake.test",
+      "headword": "fake",
+      "phonetic": "/feɪk/",
+      "partOfSpeech": "adjective",
+      "gloss": "假的：测试里可控的替身实现，如假时钟、假存储",
+      "usage": "fake 的目标是可重复演练事故，不是复制生产的全部真实感。",
+      "track": "technical"
+    },
+    {
+      "senseId": "edge.boundary",
+      "headword": "edge",
+      "phonetic": "/edʒ/",
+      "partOfSpeech": "noun",
+      "gloss": "边界情况：刚好临界、异常形态或最小/最大输入",
+      "usage": "测试优先钉 edge：该认的认、不该认的坚决不认。",
+      "track": "general"
+    },
+    {
+      "senseId": "gate.ci",
+      "headword": "gate",
+      "phonetic": "/ɡeɪt/",
+      "partOfSpeech": "noun",
+      "gloss": "门禁：提交或合并前必须通过的自动检查关卡",
+      "usage": "gate 问的是「能不能进历史/进主干」，不是「你觉得没问题」。",
+      "track": "technical"
+    },
+    {
+      "senseId": "typecheck.static",
+      "headword": "typecheck",
+      "phonetic": "/ˈtaɪptʃek/",
+      "partOfSpeech": "verb",
+      "gloss": "类型检查：在不运行程序时用类型系统抓一批错误",
+      "usage": "typecheck 是你不用手写的测试；它拦不住「常量值钉错」这类问题。",
+      "track": "technical"
+    },
+    {
+      "senseId": "verify.suite",
+      "headword": "verify",
+      "phonetic": "/ˈverɪfaɪ/",
+      "partOfSpeech": "verb",
+      "gloss": "验证：跑完整套约定检查，确认「做完了」可宣称",
+      "usage": "项目里的 verify 脚本通常串起 test、lint、typecheck 等门禁。",
+      "track": "technical"
+    },
+    {
+      "senseId": "e2e.test",
+      "headword": "e2e",
+      "phonetic": "/ˌiː tə ˈiː/",
+      "partOfSpeech": "noun",
+      "gloss": "端到端测试：真开浏览器（或真链路）把主路径点通的测试",
+      "usage": "e2e 贵且脆；只留给「必须开浏览器才看得见」的事。",
+      "track": "technical"
+    },
+    {
+      "senseId": "unit.test",
+      "headword": "unit",
+      "phonetic": "/ˈjuːnɪt/",
+      "partOfSpeech": "noun",
+      "gloss": "单元：可被单独验证的一小块逻辑，通常是函数或模块",
+      "usage": "unit test 便宜；分层看验证手段，不看事情有多重要。",
+      "track": "technical"
+    },
+    {
+      "senseId": "ci.automation",
+      "headword": "ci",
+      "phonetic": "/ˌsiː ˈaɪ/",
+      "partOfSpeech": "noun",
+      "gloss": "持续集成：在别人的电脑上自动跑构建与测试的流水线",
+      "usage": "CI 红了先当「共享门禁没过」，别只在自己机器上口头说绿。",
+      "track": "technical"
+    },
+    {
+      "senseId": "analytics.tracking",
+      "headword": "analytics",
+      "phonetic": "/ˌænəˈlɪtɪks/",
+      "partOfSpeech": "noun",
+      "gloss": "分析埋点：按约定上报产品事件，用来看使用而不是监视个人",
+      "usage": "读 analytics 先找允许字段清单；自由文本与房间码通常是红线。",
+      "track": "technical"
+    },
+    {
+      "senseId": "experiment.ab",
+      "headword": "experiment",
+      "phonetic": "/ɪkˈsperɪmənt/",
+      "partOfSpeech": "noun",
+      "gloss": "实验：带登记、标签与范围的产品试错，而不是私下改 UI",
+      "usage": "先登记再上线；analyticsTag 统一前缀才能筛出实验流量。",
+      "track": "technical"
+    },
+    {
+      "senseId": "registry.catalog",
+      "headword": "registry",
+      "phonetic": "/ˈredʒɪstri/",
+      "partOfSpeech": "noun",
+      "gloss": "注册表：集中列出合法条目的清单，没有登记就不算存在",
+      "usage": "registry 强制字段与形状；旁路「先在 UI 里试一下」会被挡住。",
+      "track": "technical"
+    },
+    {
+      "senseId": "retention.return",
+      "headword": "retention",
+      "phonetic": "/rɪˈtenʃn/",
+      "partOfSpeech": "noun",
+      "gloss": "留存：用户过一段时间还会回来继续用的比例或能力",
+      "usage": "留存不一定靠推送；可转发文案与「记得你」的界面也是钩子。",
+      "track": "technical"
+    },
+    {
+      "senseId": "privacy.protection",
+      "headword": "privacy",
+      "phonetic": "/ˈprɪvəsi/",
+      "partOfSpeech": "noun",
+      "gloss": "隐私：限制识别个人与敏感内容离开设备或进入分析的边界",
+      "usage": "隐私承诺常在单元层最便宜：拦 transport 比开浏览器验更直接。",
+      "track": "technical"
+    },
+    {
+      "senseId": "placeholder.value",
+      "headword": "placeholder",
+      "phonetic": "/ˈpleɪshəʊldə/",
+      "partOfSpeech": "noun",
+      "gloss": "占位：先占着位置的假值或空值，提醒你稍后填真的",
+      "usage": "example 里的 your-…-here 是 placeholder；千万别把真密钥填回去提交。",
+      "track": "general"
+    },
+    {
+      "senseId": "enum.closed",
+      "headword": "enum",
+      "phonetic": "/ˈiːnʌm/",
+      "partOfSpeech": "noun",
+      "gloss": "枚举：预先列死的有限取值集合，不允许自由发挥的字符串",
+      "usage": "举报理由用 enum 加 other；分析侧才能聚合，也不会出现无限脏值。",
+      "track": "technical"
+    },
+    {
+      "senseId": "explicit.stated",
+      "headword": "explicit",
+      "phonetic": "/ɪkˈsplɪsɪt/",
+      "partOfSpeech": "adjective",
+      "gloss": "显式的：写在代码或配置里、不靠默认猜测就能看见的",
+      "usage": "reuseExistingServer 必须显式打开——静默复用别人服务是事故。",
+      "track": "general"
+    },
+    {
+      "senseId": "arbitrary.value",
+      "headword": "arbitrary",
+      "phonetic": "/ˈɑːbɪtrəri/",
+      "partOfSpeech": "adjective",
+      "gloss": "任意的：没有业务约束、可以是什么就来什么",
+      "usage": "分析字段若允许 arbitrary 文本，一个月后你将面对不可聚合的垃圾。",
+      "track": "general"
+    },
+    {
+      "senseId": "granular.detail",
+      "headword": "granular",
+      "phonetic": "/ˈɡrænjələ/",
+      "partOfSpeech": "adjective",
+      "gloss": "粒度：切分有多细；越细往往越容易暴露隐私",
+      "usage": "越 granular 越容易伤隐私；桶化是故意变粗。",
+      "track": "general"
+    },
+    {
+      "senseId": "trigger.event",
+      "headword": "trigger",
+      "phonetic": "/ˈtrɪɡə/",
+      "partOfSpeech": "verb",
+      "gloss": "触发：某个条件满足时启动另一段逻辑或副作用",
+      "usage": "读到 trigger 时找触发条件与失败时是否允许降级（如震动失败）。",
+      "track": "general"
+    },
+    {
+      "senseId": "canonical.standard",
+      "headword": "canonical",
+      "phonetic": "/kəˈnɒnɪkl/",
+      "partOfSpeech": "adjective",
+      "gloss": "权威规范的：全项目统一认准的那一个名字或形式",
+      "usage": "canonical schema 名被测试钉死，防止运行时悄悄连错库。",
+      "track": "technical"
+    },
+    {
+      "senseId": "script.command",
+      "headword": "script",
+      "phonetic": "/skrɪpt/",
+      "partOfSpeech": "noun",
+      "gloss": "脚本：package.json 里登记的、可用包管理器一键调用的命令",
+      "usage": "scripts 是项目的门牌：dev、build、test、verify 各自开哪扇门。",
+      "track": "technical"
+    },
+    {
+      "senseId": "dist.output",
+      "headword": "dist",
+      "phonetic": "/dɪst/",
+      "partOfSpeech": "noun",
+      "gloss": "产物目录：构建输出的可部署文件所在文件夹",
+      "usage": "同一份 dist 可塞进网页宿主或原生壳；改的是壳，不是再打一份业务包。",
+      "track": "technical"
+    },
+    {
+      "senseId": "dev-server.local",
+      "headword": "dev server",
+      "phonetic": "/dev ˈsɜːvə/",
+      "partOfSpeech": "noun",
+      "gloss": "开发服务器：本地边改边看的运行环境，不是生产打包结果",
+      "usage": "dev server 与 build 产物是两条路；e2e 常拉起前者做真点击。",
+      "track": "technical"
+    },
+    {
+      "senseId": "dev-dependency.tool",
+      "headword": "dev dependency",
+      "phonetic": "/dev dɪˈpendənsi/",
+      "partOfSpeech": "noun",
+      "gloss": "开发依赖：只在开发与测试需要、生产运行不装的包",
+      "usage": "测试框架、类型与打包器多半是 devDependency，不是线上业务依赖。",
+      "track": "technical"
+    },
+    {
+      "senseId": "config.settings",
+      "headword": "config",
+      "phonetic": "/kənˈfɪɡ/",
+      "partOfSpeech": "noun",
+      "gloss": "配置：决定工具与运行行为的设置文件或对象",
+      "usage": "config 也会写错且会漂；关键片段可以像契约一样被测试钉住。",
+      "track": "technical"
+    },
+    {
+      "senseId": "adapter.platform",
+      "headword": "adapter",
+      "phonetic": "/əˈdæptə/",
+      "partOfSpeech": "noun",
+      "gloss": "适配层：把各平台差异收成统一接口与决策，避免 if 平台散落",
+      "usage": "适配层的产出应是「因此怎么做」，不只是「我在哪个平台」。",
+      "track": "technical"
+    },
+    {
+      "senseId": "host.runtime",
+      "headword": "host",
+      "phonetic": "/həʊst/",
+      "partOfSpeech": "noun",
+      "gloss": "宿主：真正装载并运行你这坨前端的环境，如浏览器、Electron、原生壳",
+      "usage": "同一份 dist 可进多种 host；路由与超时等决策应随 host 变。",
+      "track": "technical"
+    },
+    {
+      "senseId": "shell.container",
+      "headword": "shell",
+      "phonetic": "/ʃel/",
+      "partOfSpeech": "noun",
+      "gloss": "外壳：包住同一份 Web 产物的原生或桌面容器",
+      "usage": "壳负责窗口与权限开关；产品决策尽量挪出壳，避免双份逻辑。",
+      "track": "technical"
+    },
+    {
+      "senseId": "platform.target",
+      "headword": "platform",
+      "phonetic": "/ˈplætfɔːm/",
+      "partOfSpeech": "noun",
+      "gloss": "平台：web / ios / android / electron 等可运行目标",
+      "usage": "接口按最难的 platform 设计；容易的一端可以多包一层 Promise。",
+      "track": "technical"
+    },
+    {
+      "senseId": "native.device",
+      "headword": "native",
+      "phonetic": "/ˈneɪtɪv/",
+      "partOfSpeech": "adjective",
+      "gloss": "原生的：跑在操作系统应用容器里，而不是普通浏览器标签页",
+      "usage": "native 存储与分享常常真异步；超时阈值也常比浏览器更长。",
+      "track": "technical"
+    },
+    {
+      "senseId": "degrade.fallback",
+      "headword": "degrade",
+      "phonetic": "/dɪˈɡreɪd/",
+      "partOfSpeech": "verb",
+      "gloss": "降级：能力不可用时换较弱但可用的路径，而不是直接崩溃",
+      "usage": "降级前先问：失败后用户还能完成本来的事吗？能才 degrade。",
+      "track": "technical"
+    },
+    {
+      "senseId": "runtime.environment",
+      "headword": "runtime",
+      "phonetic": "/ˈrʌntaɪm/",
+      "partOfSpeech": "noun",
+      "gloss": "运行时：程序真正执行时所处的环境与当时可用能力",
+      "usage": "runtime 描述符应可纯函数测试：决策与读全局要分开。",
+      "track": "technical"
+    },
+    {
+      "senseId": "phase.process",
+      "headword": "phase",
+      "phonetic": "/feɪz/",
+      "partOfSpeech": "noun",
+      "gloss": "阶段：过程进行到哪一步的命名状态，不是一句给人看的文案",
+      "usage": "phase 应是可比较的 key；「加载中」一个词往往掩盖了七个阶段。",
+      "track": "technical"
+    },
+    {
+      "senseId": "process.transient",
+      "headword": "process",
+      "phonetic": "/ˈprəʊses/",
+      "partOfSpeech": "noun",
+      "gloss": "过程态：描述进行中、失败、可清零的临时信息，与长期事实分开",
+      "usage": "失败后的 error 属于 process；user 身份属于 fact——别塞进同一个 store。",
+      "track": "technical"
+    },
+    {
+      "senseId": "fact.durable",
+      "headword": "fact",
+      "phonetic": "/fækt/",
+      "partOfSpeech": "noun",
+      "gloss": "事实态：操作失败后仍应保留的身份与业务数据",
+      "usage": "判断字段归哪边：失败后该消失还是该留着？留着的是 fact。",
+      "track": "general"
+    },
+    {
+      "senseId": "identifier.key",
+      "headword": "identifier",
+      "phonetic": "/aɪˈdentɪfaɪə/",
+      "partOfSpeech": "noun",
+      "gloss": "标识符：用来指称某物的稳定名字，不是给用户读的完整句子",
+      "usage": "statusKey 存 identifier，文案留给渲染层——才好翻译和测试。",
+      "track": "general"
+    },
+    {
+      "senseId": "i18n.localization",
+      "headword": "i18n",
+      "phonetic": "/ˌaɪ eɪˈtiːn en/",
+      "partOfSpeech": "noun",
+      "gloss": "国际化：让同一套逻辑能换语言展示，而不把文案写进状态",
+      "usage": "i18n 很难事后补；状态里存句子会把逻辑和语言绞死。",
+      "track": "technical"
+    },
+    {
+      "senseId": "replace.state",
+      "headword": "replace",
+      "phonetic": "/rɪˈpleɪs/",
+      "partOfSpeech": "verb",
+      "gloss": "整体替换：用新状态盖住旧状态，而不是只合并列出的字段",
+      "usage": "zustand 的 set(state, true) 才是 replace；默认合并会留下陈旧键。",
+      "track": "technical"
+    },
+    {
+      "senseId": "matrix.table",
+      "headword": "matrix",
+      "phonetic": "/ˈmeɪtrɪks/",
+      "partOfSpeech": "noun",
+      "gloss": "矩阵：把条件与应对动作排成可逐格检查的表",
+      "usage": "降级矩阵先是产品设计：每格都要有玩家看得见的下一步。",
+      "track": "technical"
+    },
+    {
+      "senseId": "silent.gap",
+      "headword": "silent",
+      "phonetic": "/ˈsaɪlənt/",
+      "partOfSpeech": "adjective",
+      "gloss": "静默的：没有提示、没有动作、也没有失败信号的缺口",
+      "usage": "no silent gaps 断言在防：坏了却既不说明也不给下一步。",
+      "track": "general"
+    },
+    {
+      "senseId": "fan-out.side",
+      "headword": "fan-out",
+      "phonetic": "/ˈfæn aʊt/",
+      "partOfSpeech": "noun",
+      "gloss": "扇出：一次主操作顺带触发多个额外动作或调用",
+      "usage": "主操作幂等了，fan-out 的埋点/邮件没幂等，重试仍会双份。",
+      "track": "technical"
+    },
+    {
+      "senseId": "authoritative.source",
+      "headword": "authoritative",
+      "phonetic": "/ɔːˈθɒrətətɪv/",
+      "partOfSpeech": "adjective",
+      "gloss": "权威的：以谁的结果为准，客户端不得自作聪明覆盖",
+      "usage": "开房间是否 reused 由 authoritative 服务端说了算。",
+      "track": "technical"
+    },
+    {
+      "senseId": "pure.function",
+      "headword": "pure",
+      "phonetic": "/pjʊə/",
+      "partOfSpeech": "adjective",
+      "gloss": "纯的：同样输入必得同样输出，且不偷偷改外部世界",
+      "usage": "纯函数最好测也最好放单元层；e2e 留给纯函数看不见的事。",
+      "track": "technical"
+    },
+    {
+      "senseId": "transport.analytics",
+      "headword": "transport",
+      "phonetic": "/ˈtrænspɔːt/",
+      "partOfSpeech": "noun",
+      "gloss": "传输层：数据真正送出前所经过的发送通道",
+      "usage": "隐私测试常拦截 analytics transport，在离开前检查载荷。",
+      "track": "technical"
+    },
+    {
+      "senseId": "allowlist.fields",
+      "headword": "allowlist",
+      "phonetic": "/əˈlaʊlɪst/",
+      "partOfSpeech": "noun",
+      "gloss": "允许清单：只有列在上面的名字或值才放行，其余一律拒绝",
+      "usage": "埋点字段走 allowlist，比事后后悔删数据便宜。",
+      "track": "technical"
+    },
+    {
+      "senseId": "overwrite.update",
+      "headword": "overwrite",
+      "phonetic": "/ˌəʊvəˈraɪt/",
+      "partOfSpeech": "verb",
+      "gloss": "覆盖：用新值取代旧值，而不是再插入一条记录",
+      "usage": "投票幂等靠 overwrite 同一玩家行，而不是 insert 第二票。",
+      "track": "technical"
+    },
+    {
+      "senseId": "validate.check",
+      "headword": "validate",
+      "phonetic": "/ˈvælɪdeɪt/",
+      "partOfSpeech": "verb",
+      "gloss": "校验：在继续昂贵操作前确认输入是否合法",
+      "usage": "同步 validate 失败应 throw；别把脏 id 送进后端再失败。",
+      "track": "technical"
+    },
+    {
+      "senseId": "convention.agreed",
+      "headword": "convention",
+      "phonetic": "/kənˈvenʃn/",
+      "partOfSpeech": "noun",
+      "gloss": "约定：团队或工具链共同遵守、但不一定写进类型系统的规矩",
+      "usage": "只靠 convention 的分层会在赶工期失效；能机器检查的才硬。",
+      "track": "general"
+    }
+  ]
+}

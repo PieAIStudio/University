@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 44,
+  "study": {
+    "id": "supaluv",
+    "title": "SupaLuv",
+    "description": "用创始人和工程维护者视角学习 SupaLuv 的产品与技术系统。",
+    "goals": [
+      "理解产品架构与关键边界",
+      "能够判断改动影响并维护产品",
+      "把源码证据转化为长期可复习的知识"
+    ],
+    "defaultCourseId": "ai-cost-and-boundaries",
+    "status": "active"
+  },
+  "source": {
+    "defaultRef": "HEAD"
+  },
+  "courses": [
+    {
+      "courseId": "founder-engineer",
+      "file": "founder-engineer.e49fee822ad9fa4566f767a73638a335062881f0ddc3b63392a40ccb38020f07.recovery.json",
+      "sha256": "sha256:e49fee822ad9fa4566f767a73638a335062881f0ddc3b63392a40ccb38020f07"
+    },
+    {
+      "courseId": "ai-cost-and-boundaries",
+      "file": "ai-cost-and-boundaries.80a9cd32ab0d630996f74e2bc16385733621706da433c016ed2cda58d43011db.recovery.json",
+      "sha256": "sha256:80a9cd32ab0d630996f74e2bc16385733621706da433c016ed2cda58d43011db"
+    },
+    {
+      "courseId": "ai-branching-narrative",
+      "file": "ai-branching-narrative.659e92a2531f3ebaed3f9201145b11bbab0fb9f549828dd7d82107c964b604dc.recovery.json",
+      "sha256": "sha256:659e92a2531f3ebaed3f9201145b11bbab0fb9f549828dd7d82107c964b604dc"
+    },
+    {
+      "courseId": "generated-assets",
+      "file": "generated-assets.f065a5635e9661b202fe5c410d72c122ec9812a9f0ad7a3a4b5b560961ca88f9.recovery.json",
+      "sha256": "sha256:f065a5635e9661b202fe5c410d72c122ec9812a9f0ad7a3a4b5b560961ca88f9"
+    },
+    {
+      "courseId": "media-tooling",
+      "file": "media-tooling.47c905f03f8da7970473966a42361479496d79a66d29e2e2256825b15081e536.recovery.json",
+      "sha256": "sha256:47c905f03f8da7970473966a42361479496d79a66d29e2e2256825b15081e536"
+    },
+    {
+      "courseId": "content-as-package",
+      "file": "content-as-package.06fe72cbc3556d0eae649bbb580eda737410eb8eff5963e8f9408df6b8b44e65.recovery.json",
+      "sha256": "sha256:06fe72cbc3556d0eae649bbb580eda737410eb8eff5963e8f9408df6b8b44e65"
+    },
+    {
+      "courseId": "automated-playtesting",
+      "file": "automated-playtesting.e17aa0af2dded372043d76fded54b4b455b4f9f6daff83c5227f81f2a8ff56ab.recovery.json",
+      "sha256": "sha256:e17aa0af2dded372043d76fded54b4b455b4f9f6daff83c5227f81f2a8ff56ab"
+    }
+  ]
+}

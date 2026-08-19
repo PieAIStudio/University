@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-orientation-community",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-orientation",
+    "unitId": "orientation-boundaries",
+    "id": "community-isolation-boundary",
+    "expectedRevision": 1,
+    "content": "# 社区 URL 为什么不能只是一个筛选条件？\n\n## 你看到的结果\n\n两个 community 可能共用一套部署、Postgres 和 Redis，但用户不能看到彼此的 event、profile、DM、搜索结果、audit chain 或错误字符串。你可以把这看成共享机器上的两块不可互穿空间。\n\n[[evidence:VISION.md:50-56]]\n\n## 先猜一下\n\n从浏览器请求到“这个社区的数据不可见”，中间至少要先确定哪一个输入？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n要先确定连接的 host，并由它解析出 community。\n\n## 一站一站往回走\n\n第一站是请求 host：架构把 community 描述为 request host 选择出的 tenant-visible workspace。\n\n[[evidence:ARCHITECTURE.md:9-15]]\n\n第二站是解析顺序：`req.community = resolve_host(connection.host)` 在 AUTH、EVENT、REQ、REST、search 和 pub/sub 之前建立。\n\n[[evidence:ARCHITECTURE.md:9-15]]\n\n第三站是隔离结果：共享基础设施只是实现细节，社区之间的事件、profile、DM、搜索、audit chain 和错误字符串不能互相看见。\n\n[[evidence:VISION.md:52-56]]\n\n因此 community 不是一条查询结果上的 where 条件，而是请求进入系统前就确定的边界。这样做才能防止某个后续服务忘记加筛选时越过租户。最后一句是从“边界先于处理”的顺序得出的设计推断。\n\n## 自检\n\n- community 在哪些处理之前被确定？\n- 为什么共享 Postgres 不等于共享用户可见空间？\n\n## 一句话\n\n**社区隔离从 host 解析开始，而不是在最后一条查询上补一个筛选。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 9, "lineEnd": 15, "note": "架构定义 host 到 community 的解析顺序，并列出受其约束的处理。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "VISION.md", "lineStart": 50, "lineEnd": 56, "note": "VISION 定义 community 的工作区边界、URL 权威性和共享部署下的隔离。" },
+      { "kind": "inference", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 9, "lineEnd": 15, "note": "将解析顺序理解为防止后续服务越界的边界设计，是基于源码顺序的推断。" }
+    ],
+    "cards": [
+      { "id": "orientation-community-input", "expectedRevision": 1, "front": "community 由请求中的什么输入解析？", "back": "由连接的 host 解析；host-derived community 在认证和事件处理前就建立。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 9, "lineEnd": 15, "note": "req.community 从 connection.host 解析并先于各类请求处理。" } ] },
+      { "id": "orientation-community-data", "expectedRevision": 1, "front": "跨 community 哪些数据不能互相看见？", "back": "事件、profile、DM、搜索结果、audit chain 和错误字符串都不能跨社区可见。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "VISION.md", "lineStart": 52, "lineEnd": 56, "note": "VISION 列出社区隔离的 tenant-observable 数据。" } ] }
+    ],
+    "exercises": [
+      { "id": "orientation-community-host-answer", "expectedRevision": 1, "kind": "short-answer", "title": "回忆 community 输入", "prompt": "架构从连接的什么信息解析 community？", "expectedAnswer": "host", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 9, "lineEnd": 15, "note": "community 由 connection.host 解析。" } ] },
+      { "id": "orientation-community-isolation-answer", "expectedRevision": 1, "kind": "short-answer", "title": "回忆隔离对象", "prompt": "社区隔离不仅保护事件，还保护哪类检索结果？", "expectedAnswer": "搜索结果", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "VISION.md", "lineStart": 52, "lineEnd": 56, "note": "VISION 将 search results 列为社区隔离对象。" } ] }
+    ]
+  }
+}

@@ -1,0 +1,1134 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "content-governance",
+    "title": "草稿、发布、过期、退休",
+    "description": "教材是活的：用状态机与崩溃安全写入，保证你永远分得清哪份最新、哪份还能信。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "画出 ContentStatus 四态转移表，并说明 draft 不能直接 retired 的原因",
+      "解释 staging+rename 与 latest.json 后写如何避免读者看到半成品",
+      "说明 activate 前为何重跑 validateEvidence，以及证据必须是 regular blob",
+      "描述 revise 回执续跑与 assertCoversExisting：可加不可漏、状态更新必须幂等"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "evidence-and-freshness"
+    ],
+    "trackId": null,
+    "units": [
+      {
+        "id": "status-machine",
+        "title": "状态机：草稿到退休",
+        "objective": "掌握四态语义、合法转移与可编辑窗口，能设计「在架不可改」的产品规则。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "four-statuses",
+            "title": "为什么新建课程时写 `active` 会被直接拒绝？",
+            "content": "# 为什么新建课程时写 `active` 会被直接拒绝？\n\n## 现象\n\n你调用 `writeCourse`，manifest 里写着 `status: \"active\"`。课程目录还不存在，激活校验也还没跑——落盘前就被挡下了：\n\n```ts\nif (course.status !== \"draft\") {\n  throw new Error(\"A course must be created as draft and activated only after validation\");\n}\n```\n\n[[evidence:server/content/repository.ts:283-285]]\n\n错误信息说得很死：必须先建草稿，再经过校验后的激活。没有「创建即上架」的捷径。\n\n## 先猜一下\n\n如果去掉这道检查，让你直接创建 `active` 课程，架上会出现什么问题？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n激活门禁（证据校验、子单元全 active）会被绕过，半成品会以「可学」身份出现在架上。\n\n## 为什么是这样\n\n状态不是贴在文件上的标签，而是权限开关。整个产品只认四个值，没有第五态，也没有「临时可见」：\n\n```ts\nexport const ContentStatus = z.enum([\"draft\", \"active\", \"stale\", \"retired\"]);\n```\n\n[[evidence:src/domain/schemas.ts:202]]\n\n四个词各管一段生命周期：\n\n| 状态 | 你该怎么理解它 |\n| --- | --- |\n| `draft` | 编目中，还没证明可学 |\n| `active` | 在架；学习者读到的就是这份冻结语义 |\n| `stale` | 已离开在架——源过期或人工打开编辑 |\n| `retired` | 永久剔除，没有合法出口 |\n\n所以 `writeCourse` 不是随便挑个默认值。创建入口在解析 manifest 之后、建目录之前强制 `status === \"draft\"`——你传别的状态到不了落盘：\n\n```ts\nexport function writeCourse(\n  studiesRoot: string,\n  studyId: string,\n  candidate: CourseManifest,\n): CourseManifest {\n  readStudy(studiesRoot, studyId);\n  const course = CourseManifestSchema.parse(candidate);\n  if (course.status !== \"draft\") {\n    throw new Error(\"A course must be created as draft and activated only after validation\");\n  }\n  assertCourseStructure(course);\n  const paths = getCoursePaths(studiesRoot, studyId, course.id);\n  createManifestRoot(paths.root, paths.units, paths.manifest, course);\n  return course;\n}\n```\n\n[[evidence:server/content/repository.ts:276-289]]\n\n你后面会看到：`active` / `retired` 禁止改内容；只有 `draft` / `stale` 允许写入。发布在代码里不叫 `publish`，就是 `active`。\n\n你先记住封闭状态集，再谈转移——四个状态是后面所有「能不能改、能不能学」的坐标。\n\n## 自检\n\n**问：** 四个状态之外，系统会接受「半发布」之类的第五态吗？\n\n**问：** 如果允许 `writeCourse` 直接创建 `active`，哪一类门禁会被绕过？\n\n## 一句话\n\n**四个状态是封闭坐标：创建只能进 draft，上架只能走激活，没有第五态捷径。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "src/domain/schemas.ts",
+                "lineStart": 202,
+                "lineEnd": 202,
+                "nodeIds": [],
+                "note": "ContentStatus 四态枚举定义"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 276,
+                "lineEnd": 289,
+                "nodeIds": [],
+                "note": "writeCourse 强制 status 必须是 draft"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "status-enum-four",
+                "kind": "basic",
+                "front": "ContentStatus 允许哪些取值？漏掉哪一个会拆掉生命周期模型？",
+                "back": "draft、active、stale、retired 四个。少任何一个，就无法表达「可学 / 可改 / 终态」的区分。",
+                "tags": [
+                  "content-status"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/domain/schemas.ts",
+                    "lineStart": 202,
+                    "lineEnd": 202,
+                    "nodeIds": [],
+                    "note": "四态枚举"
+                  }
+                ]
+              },
+              {
+                "id": "create-must-draft",
+                "kind": "basic",
+                "front": "为什么 writeCourse 拒绝非 draft 的创建？",
+                "back": "创建只负责落盘草稿；上架必须走 updateCourseStatus 的激活校验，防止半成品直接可学。",
+                "tags": [
+                  "content-status"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 283,
+                    "lineEnd": 285,
+                    "nodeIds": [],
+                    "note": "创建必须 draft 的错误信息"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "content-status-count",
+                "kind": "short-answer",
+                "title": "状态个数",
+                "prompt": "ContentStatus 枚举一共有几个取值？只写数字。",
+                "expectedAnswer": "4",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "src/domain/schemas.ts",
+                    "lineStart": 202,
+                    "lineEnd": 202,
+                    "nodeIds": [],
+                    "note": "ContentStatus 定义行"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "transition-table",
+            "title": "为什么草稿不能直接标成退休？",
+            "content": "# 为什么草稿不能直接标成退休？\n\n## 情境和约束\n\n你手里有一门刚创建、从没上过架的课。内容写废了，想直接标 `retired` 清掉。状态更新一跑，系统抛：\n\n`Invalid content status transition: draft -> retired`\n\n转移规则不在配置文件里，而是写死在 `assertStatusTransition` 的一张表。`updateCourseStatus` / `updateUnitStatus` 都先过这张表，再谈激活时的额外校验。你没有「临时绕一下」的 API——改边等于改产品语义。\n\n## 先猜一下\n\n他们故意不给 `draft → retired` 这条边——你觉得这是为了挡住哪种审计灾难？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n否则磁盘上会堆满从未校验过的「幽灵课程」，状态却显示已退休；审计时无法区分「从未发布」和「曾上架后下线」。\n\n## 代价和收益\n\n允许边就这些：\n\n```ts\nconst allowed: Readonly<Record<CourseManifest[\"status\"], readonly CourseManifest[\"status\"][]>> = {\n  draft: [\"active\"],\n  active: [\"stale\", \"retired\"],\n  stale: [\"active\", \"retired\"],\n  retired: [],\n};\nif (!allowed[current].includes(candidate)) {\n  throw new Error(`Invalid content status transition: ${current} -> ${candidate}`);\n}\n```\n\n[[evidence:server/content/repository.ts:351-358]]\n\n用状态图看同一张表：\n\n```mermaid\nstateDiagram-v2\n  [*] --> draft\n  draft --> active\n  active --> stale\n  active --> retired\n  stale --> active\n  stale --> retired\n  retired --> [*]\n```\n\n**收益**\n\n- `draft` 唯一出口是 `active`：创建出来的东西必须先证明「能上架」，才有资格谈下架\n- `active → stale` 是改内容的正规入口；`active → retired` 是直接永久下线\n- `retired → []`：死胡同，不能再悄悄塞回货架\n- 非法转移报错格式固定：`Invalid content status transition: ${current} -> ${candidate}`，调用方能定位\n\n**代价**\n\n- 你不能静默废弃草稿：要么让它停在 `draft`，要么至少走过一次可激活路径\n- 没有 `active → draft`：在架内容不能假装还没发布过；要改内容只能先 `stale`\n\n图里最关键的那条线，是 `draft → active` 且**没有** `draft → retired`。\n\n## 什么时候该反过来\n\n如果你的产品把 draft 当本地废稿箱、不需要审计「从未上架」，放行 `draft → retired` 会更省事。UniversityLocal 选的是另一头：状态机即产品语义，捷径等于改语义。\n\n反过来也不该从 `active` 回到 `draft`——表里没有这条边。在架过的内容要改，走 `stale`；要永久下线，走 `retired`。\n\n## 自检\n\n**问：** 从 `active` 能否直接回到 `draft`？\n\n**问：** `retired` 有没有合法的下一状态？\n\n## 一句话\n\n**状态转移表是产品规则的源码形式——想临时绕边，等于改产品语义。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 347,
+                "lineEnd": 359,
+                "nodeIds": [],
+                "note": "assertStatusTransition 允许边与报错"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "draft-not-to-retired",
+                "kind": "basic",
+                "front": "draft 为什么不能直接 retired？",
+                "back": "转移表只允许 draft→active。必须先经过激活校验，避免未发布内容用退休状态伪装成「曾存在的正式教材」。",
+                "tags": [
+                  "content-status"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 351,
+                    "lineEnd": 355,
+                    "nodeIds": [],
+                    "note": "draft 只允许到 active"
+                  }
+                ]
+              },
+              {
+                "id": "retired-is-terminal",
+                "kind": "basic",
+                "front": "retired 之后还能回到 active 吗？",
+                "back": "不能。retired 的允许列表是空数组，终态没有合法出口。",
+                "tags": [
+                  "content-status"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 351,
+                    "lineEnd": 359,
+                    "nodeIds": [],
+                    "note": "retired 空转移表"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "draft-next-status",
+                "kind": "short-answer",
+                "title": "草稿下一跳",
+                "prompt": "assertStatusTransition 里 draft 唯一允许的下一状态是什么？只写一个英文词。",
+                "expectedAnswer": "active",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 351,
+                    "lineEnd": 355,
+                    "nodeIds": [],
+                    "note": "draft: [\"active\"]"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "edit-window",
+            "title": "课程还在架上时，为什么连一个 unit 都改不了？",
+            "content": "# 课程还在架上时，为什么连一个 unit 都改不了？\n\n## 两个东西\n\n你想改一节已发布课的正文，会撞上两层不同的「不许动」：\n\n**可编辑窗口**——`assertCourseIsEditable` / `assertContentContainerIsEditable`：课程或单元若是 `active` 或 `retired`，写入路径直接抛错；只有 `draft` 与 `stale` 能改。\n\n**课程对单元的锁**——`updateUnitStatus`：即便你不写正文、只改 unit 状态，course 仍是 `active` 时，也不准把 unit 改成非 `active`。\n\n两层都在 `repository.ts`，但卡的不是同一步。\n\n## 先猜一下\n\n若允许 course 仍 `active` 时单独把 unit 标 `stale`，学习者从 active 课入口走进去会撞上什么不一致？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n课仍显示在架、入口仍是 active，但该 unit 已可改甚至正文已变——架上状态与可读内容分叉。\n\n## 逐条对照\n\n**可编辑窗口**查的是「这份容器现在能不能写」：\n\n```ts\nfunction assertCourseIsEditable(course: CourseManifest): void {\n  if (course.status === \"active\" || course.status === \"retired\") {\n    throw new Error(`Course must be draft or stale before content can change: ${course.id}`);\n  }\n}\n\nfunction assertContentContainerIsEditable(course: CourseManifest, unit: UnitManifest): void {\n  assertCourseIsEditable(course);\n  if (unit.status === \"active\" || unit.status === \"retired\") {\n    throw new Error(`Unit must be draft or stale before content can change: ${unit.id}`);\n  }\n}\n```\n\n[[evidence:server/content/repository.ts:431-441]]\n\n课程先过闸，单元再过闸。`writeLessonRevision` 之类写内容的路径会走到这里——所以你在 active 课上直接改正文，失败点是「必须是 draft 或 stale」，不是权限位。\n\n**课程对单元的锁**查的是「能不能单独把 unit 拉离在架」：\n\n```ts\nif (course.status === \"active\" && status !== \"active\") {\n  throw new Error(`Course must be marked stale before changing an active unit: ${course.id}`);\n}\n```\n\n[[evidence:server/content/repository.ts:537-539]]\n\n| | 可编辑窗口 | 课程对单元的锁 |\n| --- | --- | --- |\n| 触发场景 | 写 lesson / 改 course·unit 声明 | `updateUnitStatus` |\n| 拦什么 | `active`/`retired` 容器上的内容写入 | course 仍 `active` 时 unit 离开 `active` |\n| 通过条件 | course 与 unit 都是 `draft` 或 `stale` | 先把 course 标成非 `active`（通常是 `stale`） |\n\n可编辑是显式状态，不是「有写权限的人就能改」。在架内容对读者必须是冻结语义。\n\n## 什么时候用哪个\n\n你只问一件事：**学习者现在还能不能按 active 入口走进这份内容？**\n\n- **还能**（课在架上）→ 两层都不许你动；要改，先打开整门课的编辑窗口（下一课 `openCourseForEdit`）\n- **已经离开在架**（course 与 unit 都是 `draft`/`stale`）→ 可编辑窗口放行，锁也不再挡 unit 下沉\n- **永久下线**（`retired`）→ 两层都拒；退休不是修订入口\n\n典型事故是只想「动一个 unit」：你觉得改动面小，但 active 课入口仍对外，架上状态与可读内容会分叉。\n\n## 再想想\n\n打开编辑时为什么必须先动整门课、后动单元：见 [[lesson:open-for-edit-order|打开编辑的顺序]]。\n\n## 自检\n\n**问：** 哪些状态下可以改课程/单元内容？\n\n**问：** 为什么不允许「课程仍 active、只把一个 unit 设为 stale」？\n\n## 一句话\n\n**可编辑窗口是显式状态：在架内容对读者冻结，active 课不许单独拆 unit。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 431,
+                "lineEnd": 441,
+                "nodeIds": [],
+                "note": "assertCourseIsEditable 与 unit 可编辑断言"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 537,
+                "lineEnd": 539,
+                "nodeIds": [],
+                "note": "active 课程禁止 unit 先下沉"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "when-editable",
+                "kind": "basic",
+                "front": "课程在哪些 status 下允许改内容？",
+                "back": "只有 draft 与 stale。active 与 retired 都会被 assertCourseIsEditable 拒绝。",
+                "tags": [
+                  "edit-window"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 431,
+                    "lineEnd": 434,
+                    "nodeIds": [],
+                    "note": "active/retired 不可编辑"
+                  }
+                ]
+              },
+              {
+                "id": "course-before-unit-stale",
+                "kind": "basic",
+                "front": "active 课程下，为何不能直接把 unit 标成 stale？",
+                "back": "updateUnitStatus 要求先把 course 标 stale，避免架上课程与单元状态分叉。",
+                "tags": [
+                  "edit-window"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 537,
+                    "lineEnd": 539,
+                    "nodeIds": [],
+                    "note": "course 必须先 stale"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "editable-statuses",
+                "kind": "short-answer",
+                "title": "可编辑状态",
+                "prompt": "课程允许改内容的两个 status，按字典序空格分隔。",
+                "expectedAnswer": "draft stale",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 431,
+                    "lineEnd": 434,
+                    "nodeIds": [],
+                    "note": "可编辑判定"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "open-for-edit-order",
+            "title": "打开编辑时，为什么必须先动整门课？",
+            "content": "# 打开编辑时，为什么必须先动整门课？\n\n## 你看到的结果\n\n你对一门 evidence 仍完全 fresh 的 active 课调用 `openCourseForEdit`。返回里 `courseStatus` 是 `\"stale\"`，`staleUnitIds` 列满每个 unit，`disposition` 是 `opened`（或你已打开过时的 `reused`）。\n\n源码并没过期。`stale` 在这里不是 freshness audit 的发现，而是你人工打开编辑时故意走的同一转移——注释写得很直：过去只有源变旧才会 stale，证据仍新鲜的课你根本改不了。\n\n```ts\n/**\n * Moves an active course and its units to `stale` so their content can be\n * edited. `course revise` refuses to touch active containers, and until now the\n * only thing that produced `stale` was a freshness audit finding the source had\n * moved — so a course whose evidence was still perfectly current could not be\n * improved at all. This is the deliberate half of the same transition, and\n * `course reactivate` remains the only way back, with its full audit intact.\n */\n```\n\n[[evidence:server/workflows/revise-course.ts:219-226]]\n\n## 先猜一下\n\n如果实现反过来——先把每个 unit 标 `stale`，最后再动 course——你的调用会卡在哪一步？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n第一步就会被 `updateUnitStatus` 拒绝：course 仍 `active` 时 unit 不能离开 `active`。\n\n## 一站一站往回走\n\n**第 1 站：`openCourseForEdit` 的固定顺序**\n\n函数体先校验 course 是 `active` 或已是 `stale`，再算整课是否已打开（幂等 → `reused`），然后**先课、后单元**——你不能改这段顺序：\n\n```ts\n  // The course goes first: `updateUnitStatus` refuses to move a unit out of\n  // `active` while its course is still active. Reactivation runs the mirror\n  // image, units first and the course last.\n  const updated = updateCourseStatus(input.studiesRoot, input.studyId, course.id, \"stale\", now);\n  for (const unitId of course.unitIds) {\n    updateUnitStatus(input.studiesRoot, input.studyId, course.id, unitId, \"stale\");\n  }\n```\n\n[[evidence:server/workflows/revise-course.ts:240-246]]\n\n注释点名了镜像：重激活是 **units 先、course 后**。你打开编辑必须反过来，否则 unit 层硬规则会挡你。\n\n**第 2 站：unit 层为什么拒绝**\n\n```ts\n  if (course.status === \"active\" && status !== \"active\") {\n    throw new Error(`Course must be marked stale before changing an active unit: ${course.id}`);\n  }\n```\n\n[[evidence:server/content/repository.ts:537-539]]\n\n所以顺序不是风格偏好：course 先变成 `stale`，你的 unit 循环才过得了闸。整条链：\n\n```mermaid\nsequenceDiagram\n  participant Op as openCourseForEdit\n  participant C as Course\n  participant U as Units\n  Op->>C: status → stale（先）\n  loop 每个 unitId\n    Op->>U: status → stale（后）\n  end\n  Note over C,U: 重激活顺序相反：units → course\n```\n\n`stale` 因此有两条来源：freshness audit（源过期）与 `openCourseForEdit`（你故意打开）。回来都走同一条 `reactivate` 审计门——证据仍新鲜你也要先 stale 才能改，不能绕开审计。\n\n若课程与全部 unit 已是 stale，你再调一次是 `disposition: \"reused\"`，可安全重复调用。\n\n## 再想想\n\n两层「不许动」分别卡在哪：见 [[lesson:edit-window|可编辑窗口]]。\n\n## 自检\n\n**问：** evidence 完全 fresh 的 active 课，你不 open-for-edit 能否 revise？\n\n**问：** 打开编辑与重激活的顺序分别是什么？为什么互为镜像？\n\n## 一句话\n\n**`stale` 是离开在架的统一中间态——先课后单元打开编辑，重激活则 units 先、course 后。**\n",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/revise-course.ts",
+                "lineStart": 219,
+                "lineEnd": 255,
+                "nodeIds": [],
+                "note": "openCourseForEdit：注释、顺序与返回值"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 537,
+                "lineEnd": 539,
+                "nodeIds": [],
+                "note": "unit 下沉依赖 course 已非 active"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "stale-two-meanings",
+                "kind": "basic",
+                "front": "stale 是否只表示「源码证据过期」？",
+                "back": "不是。openCourseForEdit 故意把仍新鲜的课也标 stale，以便与 freshness 共用同一套重激活审计。",
+                "tags": [
+                  "edit-window"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/revise-course.ts",
+                    "lineStart": 219,
+                    "lineEnd": 225,
+                    "nodeIds": [],
+                    "note": "stale 的故意一半"
+                  }
+                ]
+              },
+              {
+                "id": "open-order",
+                "kind": "basic",
+                "front": "openCourseForEdit 先改 course 还是先改 units？为什么？",
+                "back": "先 course。unit 在 course 仍 active 时不能离开 active；顺序反了第一步就失败。",
+                "tags": [
+                  "edit-window"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/revise-course.ts",
+                    "lineStart": 240,
+                    "lineEnd": 246,
+                    "nodeIds": [],
+                    "note": "course 先、units 后"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "open-edit-first-target",
+                "kind": "short-answer",
+                "title": "先动谁",
+                "prompt": "openCourseForEdit 第一个调用 updateCourseStatus 还是 updateUnitStatus？写函数名。",
+                "expectedAnswer": "updateCourseStatus",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/revise-course.ts",
+                    "lineStart": 243,
+                    "lineEnd": 246,
+                    "nodeIds": [],
+                    "note": "先更新 course 再循环 units"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "crash-safe-writes",
+        "title": "崩溃安全的写入",
+        "objective": "掌握 revision 目录原子发布、latest 指针、修订链与回执续跑。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "staging-rename",
+            "title": "写到一半进程死了，读者为什么看不到半截 revision？",
+            "content": "# 写到一半进程死了，读者为什么看不到半截 revision？\n\n## 现象\n\n你触发一次 `writeLessonRevision`，目标是让 `revisions/5` 出现。进程在往目录里写 `content.md` 的中途被杀。\n\n磁盘上你可能短暂瞥见一个名字怪得很的目录：`revisions/.creating-5-<uuid>`。正式路径 `revisions/5` **没有**以「只有 content、没有 manifest」或「content 写到一半」的姿态出现。读者继续读 `latest` 指向的旧 revision，拿到的仍是完整旧正文。\n\n半成品没有变成读者可见的对象。\n\n## 先猜一下\n\n你读 lesson 时打开的永远是 `revisions/<n>` 这类正式路径。写到一半崩溃时，系统靠什么保证「半截目录」进不了你走的这条路径？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n先在隐藏的 staging 目录写完，再 `renameSync` 成正式名——rename 之前，正式路径上什么都没有。\n\n## 为什么是这样\n\n你顺着 `writeRevisionDirectory` 看会发现：它不直接创建 `revisions/<n>`。目标若不存在，它先建一个带点号前缀的 staging：\n\n```ts\nconst staging = join(revisionsRoot, `.creating-${revision}-${randomUUID()}`);\ntry {\n  mkdirSync(staging, { mode: 0o700 });\n  writeStaging(staging);\n  try {\n    renameSync(staging, revisionRoot);\n  } catch (error) {\n    if (!existsSync(revisionRoot)) throw error;\n    assertExistingRevisionMatches(revisionRoot, revision, label, assertIdentity);\n    return;\n  }\n  syncDirectory(revisionsRoot);\n} finally {\n  rmSync(staging, { recursive: true, force: true });\n}\n```\n\n[[evidence:server/content/repository.ts:215-229]]\n\n对你这意味着三件事：\n\n1. **可见性后置。** `writeStaging` 在 staging 里写 `content.md` 和 `manifest.json`；读者从不读 `.creating-*`。\n2. **发布是一步。** `renameSync(staging, revisionRoot)` 成功后，`revisions/n` 才突然以完整目录出现。POSIX rename 替换同卷目录名是原子的——要么旧名，要么新名，没有「改到一半的名字」。\n3. **崩溃可清。** `finally` 里 `rmSync(staging, …)` 清掉残留 staging。正式路径若从未 rename 成功，就不会留下半目录给下次误读。\n\n若目标 `revisions/n` **已经存在**（并发或重试），代码不覆盖，只做 identity 校验：内容对得上就当作已写入，对不上就抛冲突——你不会在「重试」里悄悄丢掉别人刚写好的字节。\n\n单文件同样走原子路径。你打开 `writeTextAtomically` 会看到：先写临时文件、`fsync`、再 rename 到最终路径，并尽量 fsync 父目录：\n\n```ts\nfileDescriptor = openSync(temporaryPath, \"wx\", 0o600);\nwriteFileSync(fileDescriptor, value, \"utf8\");\nfsyncSync(fileDescriptor);\ncloseSync(fileDescriptor);\nfileDescriptor = undefined;\nrenameSync(temporaryPath, path);\n\nconst directoryDescriptor = openSync(directory, \"r\");\ntry {\n  fsyncSync(directoryDescriptor);\n} finally {\n  closeSync(directoryDescriptor);\n}\n```\n\n[[evidence:server/storage/atomic-json.ts:20-31]]\n\n目录级 staging 解决「半 revision」；文件级 tmp+fsync+rename 解决「半文件」。两者叠在一起，才是 revision 发布时你看到的完整姿势：staging 内原子写两个文件，再 rename 整个目录。\n\n对比一下：若你直接往 `revisions/3/content.md` 流式写，杀进程可能留下半截正文，或只有 content 没有 manifest。staging+rename 的设计目标不是写得更快，而是**不完整状态不可见**。\n\n## 再想想\n\n目录已经完整出现之后，谁告诉你「现在该读几号」？指针必须后写——见 [[lesson:latest-pointer|latest 指针为什么后写？]]。\n\n## 自检\n\n**问：** 若你跳过 staging，直接创建 `revisions/3/` 再往里写文件，进程在写完 content、写 manifest 之前被杀，读路径的人可能读到什么坏状态？\n\n**问：** rename 失败但目标目录已经存在时，代码为什么调用 identity 校验而不是删掉重写？你若覆盖，会破坏谁的假设？\n\n## 一句话\n\n**崩溃安全的核心不是写得快，是不完整状态对读者不可见——先 staging，再 rename 发布。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 200,
+                "lineEnd": 229,
+                "nodeIds": [],
+                "note": "writeRevisionDirectory 的 staging+rename"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/storage/atomic-json.ts",
+                "lineStart": 13,
+                "lineEnd": 32,
+                "nodeIds": [],
+                "note": "writeTextAtomically：tmp+fsync+rename"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-staging-dir",
+                "kind": "basic",
+                "front": "为什么 revision 要先写到 .creating-* 再 rename？",
+                "back": "保证 revisions/<n> 要么不存在，要么内容完整；崩溃时半成品不会出现在稳定路径。",
+                "tags": [
+                  "atomic-write"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 215,
+                    "lineEnd": 220,
+                    "nodeIds": [],
+                    "note": "staging 路径与 rename"
+                  }
+                ]
+              },
+              {
+                "id": "atomic-json-fsync",
+                "kind": "basic",
+                "front": "writeTextAtomically 在 rename 前为什么 fsync 临时文件？",
+                "back": "确保数据落盘后再切换名字，避免 rename 成功但内容仍在页缓存、掉电丢失。",
+                "tags": [
+                  "atomic-write"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/storage/atomic-json.ts",
+                    "lineStart": 20,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "fsync 后 rename"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "staging-prefix",
+                "kind": "short-answer",
+                "title": "staging 前缀",
+                "prompt": "writeRevisionDirectory 创建的临时目录名以什么前缀开头？（含点号 creating 与连字符）",
+                "expectedAnswer": ".creating-",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 215,
+                    "lineEnd": 215,
+                    "nodeIds": [],
+                    "note": "staging 目录命名"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "latest-pointer",
+            "title": "latest 指针为什么必须后写？",
+            "content": "# latest 指针为什么必须后写？\n\n## 情境和约束\n\n你已经有一套 revision 目录：`revisions/1`、`revisions/2`… 每个目录自己完整。还差一件事——告诉读路径的人「当前该打开哪一号」。\n\n约束叠在一起：\n\n- 指针文件要**极小**，才能用单次原子替换更新，不能把整篇正文塞进去。\n- 写目录的过程可能崩溃（上一课：staging 里的半成品对你不可见）。\n- 并发或重试时，指针可能被别人先推进一步；你不能静默覆盖成错误版本。\n\n系统用 `latest.json` 做这层 indirection。它的 schema 窄到只剩三样：\n\n```ts\nconst LatestRevisionPointerSchema = z\n  .object({\n    schemaVersion: z.literal(1),\n    id: StableId,\n    contentRevision: z.number().int().positive(),\n  })\n  .strict();\n```\n\n[[evidence:server/content/repository.ts:39-45]]\n\n注意：这里**没有**正文，也没有 hash。正文住在 `revisions/<n>/content.md`。\n\n## 先猜一下\n\n你写完 `revisions/5` 的完整目录之后，才去改 `latest.json`。若你把顺序反过来——先把指针改成 5，再写目录——进程在目录还没 rename 成功时崩溃，读路径的人会撞上什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会指向一个还不存在（或未完整发布）的 revision——指针变成黑洞，可用性比「继续读旧版」更差。\n\n## 代价和收益\n\n真实顺序写在 `writeLessonRevision` 里：先 `writeRevisionDirectory`，成功后才 `finalizeLatestRevision`。finalize 自己也守并发：\n\n```ts\nif (existsSync(latestPath)) {\n  const current = readLatestPointer(latestPath, id);\n  if (current.contentRevision === revision) return;\n  if (current.contentRevision !== previousRevision) {\n    throw new Error(`${label} latest revision changed while the revision was being written`);\n  }\n} else if (previousRevision !== 0) {\n  throw new Error(`${label} latest pointer disappeared while the revision was being written`);\n}\n\nwriteJsonAtomically(latestPath, {\n  schemaVersion: 1,\n  id,\n  contentRevision: revision,\n} satisfies LatestRevisionPointer);\n```\n\n[[evidence:server/content/repository.ts:245-259]]\n\n你读这段时抓住三条收益：\n\n1. **先有货再改告示牌。** 目录写挂了，指针仍停在旧号，旧内容完整可读。\n2. **指针可原子替换。** `writeJsonAtomically` 走 tmp+fsync+rename；文件小，替换成本低。\n3. **并发可检测。** 若别人已把指针推离你的 `previousRevision`，你拿不到「静默覆盖」，只会报 `latest revision changed while the revision was being written`。指针已是目标 revision 则直接 return——重试幂等。\n\n读取侧把 indirection 再收紧一次。`readLatestLesson` 不是「信指针就返回文件」：\n\n```ts\nconst pointer = readLatestPointer(paths.latest, lessonId);\nconst revisionRoot = join(paths.revisions, String(pointer.contentRevision));\nconst manifest = LessonManifestSchema.parse(readJson(join(revisionRoot, \"manifest.json\")));\nassertPointerMatchesManifest(pointer, manifest, \"Lesson\");\n// ...\nconst content = readFileSync(join(revisionRoot, \"content.md\"), \"utf8\");\nif (manifest.contentHash !== sha256(content)) throw new Error(\"Lesson content hash mismatch\");\n```\n\n[[evidence:server/content/repository.ts:619-626]]\n\n指针说「5」→ 打开 `revisions/5` → manifest 的 `contentRevision` 必须也是 5 → 再校验 `contentHash`。任何一环对不上，你拿不到一份「看起来像最新、其实对不上号」的脏读。\n\n代价也清楚：多一次间接、多一次交叉校验、写路径多一步 finalize。你用复杂换的是——崩溃时宁可停在旧完整版，也不指向空架。\n\n## 什么时候该反过来\n\n- **单文件、无历史、可接受丢半截的草稿缓存：** 直接原地写最终路径往往更简单；不必上指针+目录。\n- **需要可审计历史、多读者、写可能中断：** 保持「目录先于指针」。反过来（先指针后目录）几乎总是错的——除非你另有「指针无效则回退」的协议，而本仓库没有那条回退，它选择了顺序保证。\n- **想把正文塞进 `latest.json`：** 别。指针必须保持可原子替换的小文件；正文进 revision 目录，才能独立做 staging+rename。\n\n## 再想想\n\n指针只说「第几号」。谁保证号只能 +1、字节没被偷换？见 [[lesson:revision-chain|修订号 +1 和 contentHash 各拦什么？]]。\n\n## 自检\n\n**问：** `latest.json` 里为什么不能直接存正文？你若把正文摊在固定文件名上原地改，会丢掉上一课哪条性质？\n\n**问：** finalize 时发现指针已经不是 `previousRevision`，代码抛错而不是强行写成目标号——这样挡的是哪类故障？\n\n## 一句话\n\n**「最新」是一个可原子替换的 indirection：先完整发布目录，再移动指针，崩溃时宁可读旧版也不指向黑洞。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 39,
+                "lineEnd": 45,
+                "nodeIds": [],
+                "note": "LatestRevisionPointerSchema 字段"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 238,
+                "lineEnd": 259,
+                "nodeIds": [],
+                "note": "finalizeLatestRevision 条件与写入"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 610,
+                "lineEnd": 627,
+                "nodeIds": [],
+                "note": "readLatestLesson：指针+hash 校验"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "pointer-fields",
+                "kind": "basic",
+                "front": "latest.json 指针里有正文吗？有哪些字段？",
+                "back": "没有正文。只有 schemaVersion、id、contentRevision。",
+                "tags": [
+                  "latest-pointer"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 39,
+                    "lineEnd": 45,
+                    "nodeIds": [],
+                    "note": "指针 schema"
+                  }
+                ]
+              },
+              {
+                "id": "pointer-after-dir",
+                "kind": "basic",
+                "front": "为什么 finalizeLatestRevision 必须在 revision 目录写完之后？",
+                "back": "若先改指针，读者会指向尚未存在或不完整的 revisions/n；后写指针保证目标已完整。",
+                "tags": [
+                  "latest-pointer"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 578,
+                    "lineEnd": 606,
+                    "nodeIds": [],
+                    "note": "先 writeRevisionDirectory 再 finalize"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "pointer-revision-field",
+                "kind": "short-answer",
+                "title": "指针字段名",
+                "prompt": "LatestRevisionPointer 里表示当前修订号的字段名是什么？",
+                "expectedAnswer": "contentRevision",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 39,
+                    "lineEnd": 45,
+                    "nodeIds": [],
+                    "note": "contentRevision 字段"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "revision-chain",
+            "title": "修订号 +1 和 contentHash，各拦的是哪类事故？",
+            "content": "# 修订号 +1 和 contentHash，各拦的是哪类事故？\n\n## 两个东西\n\n写一次 lesson revision，你会同时碰到两道闸：\n\n**A. 修订号闸**——新 manifest 的 `contentRevision` 必须等于「当前 latest + 1」。跳号、同号重报，写入侧直接拒绝。\n\n**B. 内容哈希闸**——manifest 里有一个 `contentHash` 字段，和 `content.md` 成对出现。\n\n两者都挂在同一条写/读链路上，但它们各自在盯什么，并不相同。你若把它们当成「差不多都是版本控制」，调试时会对着错误信息发呆。\n\n## 先猜一下\n\n磁盘上 `revisions/3/content.md` 被人用编辑器改了一个错别字，revision 号没动，`latest.json` 仍指向 3。下次 `readLatestLesson` 会先撞上哪一闸？修订号，还是 contentHash？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n撞 contentHash——读路径重算 `sha256(content)`，与 manifest 里存的不一致即失败。修订号只约束「链怎么长」，不管已落盘字节有没有被偷换。\n\n## 逐条对照\n\n写入时，hash 先被算进 manifest，再要求号必须是 previous+1：\n\n```ts\nconst lesson = LessonManifestSchema.parse({\n  ...input.manifest,\n  contentHash: sha256(input.content),\n});\n// ...\nlet previousRevision = 0;\nif (existsSync(paths.latest)) {\n  const current = readLatestLesson(\n    studiesRoot,\n    studyId,\n    lesson.courseId,\n    lesson.unitId,\n    lesson.id,\n  );\n  previousRevision = current.manifest.contentRevision;\n}\nassertRequestedRevision(lesson.contentRevision, previousRevision + 1, \"Lesson\");\n```\n\n[[evidence:server/content/repository.ts:554-576]]\n\n`assertRequestedRevision` 本身只做相等判断：\n\n```ts\nfunction assertRequestedRevision(actual: number, expected: number, label: string): void {\n  if (actual !== expected) {\n    throw new Error(`${label} revision must be ${expected}, received ${actual}`);\n  }\n}\n```\n\n[[evidence:server/content/repository.ts:232-236]]\n\n读取时，号对上之后还有最后一道字节校验：\n\n```ts\nconst content = readFileSync(join(revisionRoot, \"content.md\"), \"utf8\");\nif (manifest.contentHash !== sha256(content)) throw new Error(\"Lesson content hash mismatch\");\n```\n\n[[evidence:server/content/repository.ts:625-626]]\n\n| | A 修订号 | B contentHash |\n| --- | --- | --- |\n| 比较什么 | 整数是否等于 previous+1 | 正文字节的 sha256 是否等于 manifest 字段 |\n| 典型故障 | 并发双写同号、跳号、想「修一下 3」却仍报 3 | 手改 content.md、坏盘、拷贝错文件 |\n| 写入侧 | `assertRequestedRevision` | 写入时计算并写入 hash；已存在目录则 identity 比对 |\n| 读取侧 | 指针与 manifest 的 revision 交叉验证（上一课） | 每次读都重算，不一致即抛 |\n| 历史形态 | 强制 `revisions/1..n` 连续伸长 | 每个目录自证「字节仍是发布时那份」 |\n\n还有一层你容易漏掉：`revisions/n` 已在时**不覆盖**，只做 identity 校验——内容不同就冲突。「已发布 revision 不可变」是写路径硬挡，不是文档约定。\n\n## 什么时候用哪个\n\n- **设计下一次发布：** 用 A。新稿必须 previous+1；别人抢先推进一步，你的 assert 失败，而不是静默盖掉。\n- **怀疑磁盘上的 3 是否仍是发布时的 3：** 看 B。号对、hash 错，就是字节被改过或拷坏。\n- **错别字：** 不要打开 `revisions/3` 原地改。你应写 revision 4，再移 latest——复习队列、回执、缓存可能仍引用「当时的 3」。\n\n两道闸缺一不可：只有号，偷换字节查不出来；只有 hash，无法表达「历史只追加」。\n\n## 再想想\n\n一次 revise 要写 lesson + 多张卡 + 练习。中途崩溃后如何续跑而不重写已装 revision，见 [[lesson:revise-receipt|崩溃后为何能续跑而不是整单重来？]]。\n\n## 自检\n\n**问：** latest 指向 4 时，提案若仍把新 lesson 的 `contentRevision` 写成 4，会在哪一步失败？失败信息大致长什么样？\n\n**问：** 为什么不允许「原地覆盖 revision 3」修错别字？你若覆盖，破坏的是哪条对外承诺？\n\n## 一句话\n\n**修订号管链的形状，contentHash 管字节的诚实——两者一起，历史才可证明而不是靠文件名默契。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 232,
+                "lineEnd": 236,
+                "nodeIds": [],
+                "note": "assertRequestedRevision 必须相等"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 548,
+                "lineEnd": 576,
+                "nodeIds": [],
+                "note": "writeLessonRevision：hash 与 previous+1"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 625,
+                "lineEnd": 626,
+                "nodeIds": [],
+                "note": "读取时 contentHash 校验"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "revision-plus-one",
+                "kind": "basic",
+                "front": "当前 latest 是 7 时，新写入的 contentRevision 必须是几？",
+                "back": "必须是 8。assertRequestedRevision 要求 actual === previous + 1。",
+                "tags": [
+                  "revision-chain"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 232,
+                    "lineEnd": 236,
+                    "nodeIds": [],
+                    "note": "revision 必须匹配 expected"
+                  }
+                ]
+              },
+              {
+                "id": "hash-mismatch",
+                "kind": "basic",
+                "front": "读课时 contentHash 对不上说明什么？",
+                "back": "revision 目录里的 content.md 相对 manifest 被篡改或损坏，系统拒绝把脏数据当教材。",
+                "tags": [
+                  "revision-chain"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 625,
+                    "lineEnd": 626,
+                    "nodeIds": [],
+                    "note": "Lesson content hash mismatch"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "hash-field-name",
+                "kind": "short-answer",
+                "title": "哈希字段",
+                "prompt": "LessonManifest 里与正文绑定的哈希字段名是什么？",
+                "expectedAnswer": "contentHash",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 554,
+                    "lineEnd": 556,
+                    "nodeIds": [],
+                    "note": "写入时计算 contentHash"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "revise-receipt",
+            "title": "崩溃后为何能续跑，而不是整单重来？",
+            "content": "# 崩溃后为何能续跑，而不是整单重来？\n\n## 现象\n\n你对一门课跑 `revise`：要写 lesson、两张卡、一道练习。进程在「lesson 已落盘、第一张卡写完、第二张卡写到一半」时被杀。\n\n磁盘上：lesson 的新 revision 已经完整（staging+rename 过了）；部分卡可能已装；操作没有走到 `complete` 终态。你用**同一份 proposal**（同一个 `proposalId`、同一内容）再跑一次——已装的组件没有被整段重写一遍，剩余组件从断点继续；全部成功后，再调用一次会直接 `disposition: \"reused\"`。\n\n长事务中途死掉，恢复路径不是「再执行完整脚本碰运气」。\n\n## 先猜一下\n\n若你崩溃后换了一个**新的** `proposalId` 再提交「看起来一样」的改稿，系统还会从断点续写吗？还是会把这次当成另一单意图？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n当成另一单——续跑句柄绑在原来的 `proposalId` 与 `proposalHash` 上；换 ID 就丢了 pending 回执那条恢复链。\n\n## 为什么是这样\n\n回执路径由 proposal 固定：`operations/revise-<proposalId>.json`，原子写入。入口先算 `proposalHash`，再和已有回执比对：\n\n```ts\nconst proposalHash = sha256(canonicalJson(proposal));\n// ...\nconst existing = readExistingReceipt(path);\nif (existing && existing.proposalHash !== proposalHash) {\n  throw new Error(`Proposal ID ${proposal.proposalId} was already used for different content`);\n}\n// ...\nif (existing?.status === \"complete\") {\n  assertStoredBundle(input.studiesRoot, input.studyId, bundle);\n  return result(\n    \"apply\",\n    \"reused\",\n    input.studyId,\n    proposal,\n    proposalHash,\n    bundle,\n    existing.completedComponents,\n  );\n}\n```\n\n[[evidence:server/workflows/revise-course.ts:806-838]]\n\n对你这意味着：\n\n1. **同 ID、不同内容 → 拒绝。** 回执不是可复用的空壳文件名；`proposalHash` 把 ID 和那份意图字节绑死。\n2. **已 complete → 复用。** 再跑一遍不重写，返回 `reused`，并校验磁盘与 bundle 仍一致。\n3. **pending → 接着写。** 每个组件写完就 `complete(\"lesson:…\")` / `complete(\"card:…\")` 推进 `completedComponents`。\n\n组件循环里，**目标 revision 已安装则跳过写入**：\n\n```ts\n// Each write is skipped when the target revision is already installed, so a\n// retry resumes rather than repeats. A newly added item has nothing stored\n// yet, and its target revision is 1, so absence is exactly the state that\n// means \"still to write\".\nfor (const card of bundle.cards) {\n  const latest = readLatestCardIfPresent(\n    input.studiesRoot,\n    input.studyId,\n    card.courseId,\n    card.unitId,\n    card.lessonId,\n    card.id,\n  );\n  if ((latest?.contentRevision ?? 0) === card.contentRevision - 1) {\n    const { contentHash: _contentHash, ...candidate } = card;\n    writeCardRevision(input.studiesRoot, input.studyId, candidate);\n  }\n  complete(`card:${card.id}`);\n}\n```\n\n[[evidence:server/workflows/revise-course.ts:895-912]]\n\n你读条件时注意方向：`latest === target - 1` 才写下一号；若 latest 已经是目标号，条件不成立，跳过 `writeCardRevision`，仍会 `complete` 标记。新 item 磁盘上还没有 latest，`0 === 1 - 1`，正好表示「还该写」。\n\n中途失败不会默默吞掉。抛出的是带着回执的 partial error，明确叫你**重试同一 proposal**：\n\n```ts\nexport class CourseRevisionPartialError extends Error {\n  readonly receipt: OperationReceipt;\n\n  constructor(receipt: OperationReceipt, cause: unknown) {\n    const detail = cause instanceof Error ? cause.message : String(cause);\n    super(\n      `Course revision stopped after a partial write (${receipt.completedComponents.join(\", \") || \"none\"}). ` +\n        `A pending receipt was preserved; retry the exact proposal ${receipt.proposalId}. Cause: ${detail}`,\n    );\n    this.name = \"CourseRevisionPartialError\";\n    this.receipt = receipt;\n  }\n}\n```\n\n[[evidence:server/workflows/revise-course.ts:258-269]]\n\n消息里写了 `retry the exact proposal`——不是「随便再提交一次」。回执丢了却已有 revision 落盘时，你换新 proposalId 可能因 `expectedRevision` 与磁盘不一致失败，或撞上已安装目标冲突。`proposalId` 是恢复句柄，不能当一次性随机数乱换。\n\n## 再想想\n\n单次 revision 目录如何保证「半成品不可见」，见 [[lesson:staging-rename|写到一半进程死了，读者为什么看不到半截 revision？]]；号与 hash 如何守历史，见 [[lesson:revision-chain|修订号 +1 和 contentHash，各拦的是哪类事故？]]。\n\n## 自检\n\n**问：** 回执 `status === \"complete\"` 时再 apply 同一 proposal，disposition 是什么？会不会再次 `writeLessonRevision`？\n\n**问：** 同 `proposalId`、改过正文后再提交，你会看到哪类错误？系统在保护什么假设？\n\n## 一句话\n\n**长事务的崩溃恢复靠「可续跑的意图记录」：proposalId + proposalHash 绑死回执，已装组件跳过，而不是整单重跑碰运气。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/revise-course.ts",
+                "lineStart": 258,
+                "lineEnd": 269,
+                "nodeIds": [],
+                "note": "CourseRevisionPartialError 与保留回执"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/revise-course.ts",
+                "lineStart": 804,
+                "lineEnd": 838,
+                "nodeIds": [],
+                "note": "回执哈希校验与 complete 复用"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/revise-course.ts",
+                "lineStart": 895,
+                "lineEnd": 912,
+                "nodeIds": [],
+                "note": "已安装 revision 则跳过写入"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "proposal-hash-bind",
+                "kind": "basic",
+                "front": "同一 proposalId 换了一份不同正文再提交，系统怎样？",
+                "back": "若已有回执且 proposalHash 不同，直接拒绝，防止恢复句柄被绑到另一套内容上。",
+                "tags": [
+                  "revise-receipt"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/revise-course.ts",
+                    "lineStart": 815,
+                    "lineEnd": 816,
+                    "nodeIds": [],
+                    "note": "proposalHash 冲突报错"
+                  }
+                ]
+              },
+              {
+                "id": "partial-error",
+                "kind": "basic",
+                "front": "修订中途失败时抛什么？回执还在吗？",
+                "back": "CourseRevisionPartialError；pending 回执保留，要求用同一 proposalId 重试。",
+                "tags": [
+                  "revise-receipt"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/revise-course.ts",
+                    "lineStart": 258,
+                    "lineEnd": 266,
+                    "nodeIds": [],
+                    "note": "partial error 文案"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "complete-disposition",
+                "kind": "short-answer",
+                "title": "完成后的 disposition",
+                "prompt": "回执 status 已是 complete 时再提交同一提案，返回的 disposition 是什么？",
+                "expectedAnswer": "reused",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/revise-course.ts",
+                    "lineStart": 829,
+                    "lineEnd": 833,
+                    "nodeIds": [],
+                    "note": "complete 回执返回 reused"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "activate-and-retire",
+        "title": "激活门禁与稳定标识",
+        "objective": "掌握上架前证据巡检、修订不可漏 ID、重激活新鲜度与状态幂等。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "activate-evidence-gate",
+            "title": "把课程标成 active，为什么证据还能拦下来？",
+            "content": "# 把课程标成 active，为什么证据还能拦下来？\n\n## 现象\n\n你调用 `updateCourseStatus`，目标状态是 `active`。转表检查过了之后，写回之前先撞上这两行：\n\n```ts\n  if (status === \"active\") {\n    assertCourseReadyForActivation(studiesRoot, studyId, course);\n```\n\n[[evidence:server/content/repository.ts:511-512]]\n\ncourse 就绪检查会要求每个 unit 都已经是 active，再对每个 unit 做就绪巡检。你若以为 unit 侧只读 `unit.json` 的 status，就漏了：它会把 unit 下每一节课、每张卡、每道练习都读出来。\n\n现在你手上有一门课，各层 manifest 的 status 看起来都是 `active`。其中一张卡片的 evidence 路径，在钉死的 `sourceCommit` 里是一个 symlink，不是普通文件。\n\n## 先猜一下\n\n你激活这张卡所在的 unit 时，系统会怎么处理「status 是 active、证据却是 symlink」？unit 的 status 还能被标成 active 吗？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不能。`requireRegularBlob` 会拒绝 symlink（以及 tree、gitlink、路径不存在），整次 unit 激活抛错，status 不会改成 active。\n\n## 为什么是这样\n\n`assertUnitReadyForActivation` 对每节课做两件并列的事：status 必须是 `active`，证据必须仍可解析；然后对每张卡、每道练习重复同一套：\n\n```ts\n    if (lesson.status !== \"active\") {\n      throw new Error(`Unit cannot be activated while lesson is ${lesson.status}: ${lesson.id}`);\n    }\n    assertEvidenceIsStillValid(studiesRoot, studyId, lesson.evidence);\n\n    for (const cardId of lesson.cardIds) {\n      const card = readLatestCard(studiesRoot, studyId, courseId, unit.id, lesson.id, cardId);\n      if (card.status !== \"active\") {\n        throw new Error(`Unit cannot be activated while card is ${card.status}: ${card.id}`);\n      }\n      assertEvidenceIsStillValid(studiesRoot, studyId, card.evidence);\n    }\n```\n\n[[evidence:server/content/repository.ts:382-392]]\n\n你别指望「lesson 过了就算」。树上下来每一片叶子都要过；任意一张卡证据失效，整个 unit 激活失败。\n\n`assertEvidenceIsStillValid` 对每条证据调用 `validateEvidence`。入口是离线的——只读 study 内的 git 对象，不 mutate、不 fetch 上游：\n\n```ts\nexport function validateEvidence(\n  studiesRoot: string,\n  studyId: string,\n  candidate: EvidenceReference,\n): EvidenceReference {\n  const evidence = EvidenceReferenceSchema.parse(candidate);\n  const snapshotPaths = getSnapshotPaths(studiesRoot, studyId, evidence.snapshotId);\n  const snapshot = SnapshotManifestSchema.parse(readJson(snapshotPaths.manifest));\n  if (snapshot.sourceCommit !== evidence.sourceCommit) {\n    throw new Error(\"Evidence snapshot does not match sourceCommit\");\n  }\n\n  // Validation is intentionally offline: reading evidence must never mutate or fetch the source.\n  const repository = openStudyRepository(studiesRoot, studyId);\n  const entry = requireRegularBlob(repository, evidence.sourceCommit, evidence.sourcePath);\n```\n\n[[evidence:server/content/evidence.ts:294-308]]\n\n真正卡 symlink 的是 `requireRegularBlob`：路径不存在，或不是普通 blob，都抛错：\n\n```ts\nfunction requireRegularBlob(\n  repository: string,\n  sourceCommit: string,\n  sourcePath: string,\n): GitTreeEntry {\n  const entry = readTreeEntry(repository, sourceCommit, sourcePath);\n  if (entry === null) throw new Error(`Evidence source file does not exist: ${sourcePath}`);\n  if (!isRegularBlob(entry)) {\n    throw new Error(\n      `Evidence source must be a regular Git blob (not a symlink, tree, or gitlink): ${sourcePath}`,\n    );\n  }\n  return entry;\n}\n```\n\n[[evidence:server/content/evidence.ts:114-126]]\n\n你第一次写入 revision 时证据可能过了。快照会换、提案会改、路径可能变成 symlink 或目录——激活是再次对读者负责的边界。你把 status 改成 active 之前，系统还要确认：结构齐全，且证据在钉死的 commit 上仍可解析。上架不是改一个字段。\n\n## 自检\n\n**问：** 你激活 unit 时只检查 unit.json 的 status 够吗？还要检查哪些对象？\n\n**问：** 证据路径若是 symlink，`requireRegularBlob` 会怎样？\n\n**问：** `validateEvidence` 注释里写的离线约束是什么（mutate / fetch）？\n\n## 一句话\n\n**发布门 = 状态转移 + 结构齐全 + 证据在钉死的 commit 上仍是可解析的普通 blob。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 370,
+                "lineEnd": 411,
+                "nodeIds": [],
+                "note": "assertUnitReadyForActivation 全树校验"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 511,
+                "lineEnd": 512,
+                "nodeIds": [],
+                "note": "转 active 时触发 course 就绪检查"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 114,
+                "lineEnd": 126,
+                "nodeIds": [],
+                "note": "requireRegularBlob 拒绝非普通文件"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 294,
+                "lineEnd": 308,
+                "nodeIds": [],
+                "note": "validateEvidence 离线校验入口"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "activation-walks-tree",
+                "kind": "basic",
+                "front": "激活 unit 时只检查 unit.json 的 status 够吗？",
+                "back": "不够。要每个 lesson/card/exercise 都 active，并 validateEvidence 全部证据。",
+                "tags": [
+                  "activation-gate"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 380,
+                    "lineEnd": 409,
+                    "nodeIds": [],
+                    "note": "巡检 lesson/card/exercise"
+                  }
+                ]
+              },
+              {
+                "id": "blob-not-symlink",
+                "kind": "basic",
+                "front": "证据路径若是 symlink，validateEvidence 会怎样？",
+                "back": "requireRegularBlob 拒绝：必须是普通 Git blob（100644/100755），不能是 symlink/tree/gitlink。",
+                "tags": [
+                  "activation-gate"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 114,
+                    "lineEnd": 125,
+                    "nodeIds": [],
+                    "note": "非 regular blob 报错"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "require-blob-fn",
+                "kind": "short-answer",
+                "title": "证据文件函数",
+                "prompt": "验证证据源路径必须是普通 Git 文件的函数名是什么？",
+                "expectedAnswer": "requireRegularBlob",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 114,
+                    "lineEnd": 126,
+                    "nodeIds": [],
+                    "note": "requireRegularBlob 定义"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "never-drop-ids",
+            "title": "修订时想拿掉一张卡，为什么不能从 ID 列表里删掉它？",
+            "content": "# 修订时想拿掉一张卡，为什么不能从 ID 列表里删掉它？\n\n## 两个东西\n\n你改一节课的 revise 提案。课上现在有 cards：`a`、`b`、`c`。你想「不要 c 了」。\n\n两条路看起来都能「拿掉」：\n\n**A. 省略 ID**——提案的 card 列表只写 `a`、`b`，数组里不再出现 `c`。\n\n**B. 退休路径**——不靠「从数组抹掉」表达删除，而是改该对象的生命周期状态。\n\n## 先猜一下\n\n学员的复习队列里还挂着 `c` 的进度。你选 A，并且假设系统放行这次修订——lesson 对 `c` 的声明会怎样？选 B 呢？哪一种会让队列悬空？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n选 A 会让 lesson 不再声明 `c`，队列悬空；选 B 保留声明与历史，语义是下线。系统实际上在 buildBundle 阶段用 `assertCoversExisting` 直接拒绝 A。\n\n## 逐条对照\n\n注释把规则写死了：修订可以加，不能丢。丢一张卡会让它的复习状态仍指向 lesson 已不再声明的内容，所以删除必须走退休，不能靠提案里省略：\n\n```ts\n/**\n * A revision may add items but never lose them. Dropping a card would leave its\n * scheduled review state pointing at content the lesson no longer declares, so\n * removal has to go through retirement rather than through an omission in a\n * proposal. Duplicates are rejected for the same reason `create-course` rejects\n * them: two entries would write into one directory.\n */\nfunction assertCoversExisting(\n  proposed: readonly string[],\n  existing: readonly string[],\n  label: string,\n): void {\n  const seen = new Set<string>();\n  for (const id of proposed) {\n    if (seen.has(id)) throw new Error(`${label} must not contain duplicate IDs: ${id}`);\n    seen.add(id);\n  }\n  const missing = existing.filter((id) => !seen.has(id));\n  if (missing.length > 0) {\n    throw new Error(\n      `${label} must still contain every existing ID; missing: ${missing.join(\", \")}. ` +\n        `Retire an item instead of dropping it from a revision.`,\n    );\n  }\n```\n\n[[evidence:server/workflows/revise-course.ts:299-322]]\n\n你漏掉 `c` 时，`missing` 非空，错误文案点名 missing ID，并写明 `Retire an item instead of dropping it`。整次 revise 在 buildBundle 阶段失败，**一行都不会写**。\n\n同一套检查对 cards 和 exercises 各跑一次：\n\n```ts\n  assertCoversExisting(\n    proposal.lesson.cards.map((card) => card.id),\n    currentLesson.cardIds,\n    `Lesson ${currentLesson.id} cards`,\n  );\n  assertCoversExisting(\n    proposal.lesson.exercises.map((exercise) => exercise.id),\n    currentLesson.exerciseIds,\n    `Lesson ${currentLesson.id} exercises`,\n  );\n```\n\n[[evidence:server/workflows/revise-course.ts:487-496]]\n\n对照表你可以直接记：\n\n| | A 省略 ID | B 退休 |\n| --- | --- | --- |\n| lesson 是否仍声明该 ID | 否（若放行） | 是 |\n| 复习队列 | 悬空 | 仍指向已声明对象 |\n| 系统实际行为 | `assertCoversExisting` 拒绝 | 合法下线路径 |\n| 新增 | — | —（新增靠新 ID，与覆盖检查正交） |\n\n新增是允许的：新 ID 不在 existing 集合里，覆盖检查不拦「多出来的」；它只拦「少了的」。\n\n## 什么时候用哪个\n\n- **你只是改文案、改证据、加一张新卡**：提案里保留全部旧 ID，需要时追加新 ID。走 A 去「顺便删一张」会整包失败。\n- **你确定这张卡不该再进入新学路径**：保留 ID，走退休/状态路径，让语义变成「已下线」而不是「从未存在」。\n- **你想靠 diff 语义表示删除**（从数组消失 = 删除）：在这个产品里行不通。稳定 ID 是跨版本契约；内容可变，标识不能靠省略表示删除。\n\n## 自检\n\n**问：** 你在 revise 提案里省略一张已有卡片 ID，会发生什么？\n\n**问：** 修订时「新增卡片」和「删除卡片」哪一个被允许？删除应走什么语义？\n\n**问：** 禁止漏掉已有 card/exercise ID 的函数名是什么？\n\n## 一句话\n\n**稳定 ID 是跨版本契约：可以加，不能靠省略表示删除。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/revise-course.ts",
+                "lineStart": 299,
+                "lineEnd": 322,
+                "nodeIds": [],
+                "note": "assertCoversExisting 注释与 missing 报错"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/revise-course.ts",
+                "lineStart": 487,
+                "lineEnd": 496,
+                "nodeIds": [],
+                "note": "对 cards/exercises 调用覆盖检查"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "no-omit-card",
+                "kind": "basic",
+                "front": "revise 提案里省略一张已有卡片 ID，会发生什么？",
+                "back": "buildBundle 阶段 assertCoversExisting 失败，提示应 retire 而不是 drop，不会部分写入。",
+                "tags": [
+                  "revision-set"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/revise-course.ts",
+                    "lineStart": 316,
+                    "lineEnd": 321,
+                    "nodeIds": [],
+                    "note": "missing ID 错误文案"
+                  }
+                ]
+              },
+              {
+                "id": "add-ok-drop-not",
+                "kind": "basic",
+                "front": "修订时「新增卡片」和「删除卡片」哪一个被允许？",
+                "back": "允许新增；删除必须走退休语义，不能靠提案省略 ID。",
+                "tags": [
+                  "revision-set"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/revise-course.ts",
+                    "lineStart": 299,
+                    "lineEnd": 302,
+                    "nodeIds": [],
+                    "note": "可加不可丢的注释"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "covers-existing-fn",
+                "kind": "short-answer",
+                "title": "集合守卫函数",
+                "prompt": "禁止修订提案漏掉已有 card/exercise ID 的函数名是什么？",
+                "expectedAnswer": "assertCoversExisting",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/revise-course.ts",
+                    "lineStart": 306,
+                    "lineEnd": 322,
+                    "nodeIds": [],
+                    "note": "assertCoversExisting 定义"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "reactivate-and-idempotent",
+            "title": "半程重激活失败后重试，为什么 active→active 不能报错？",
+            "content": "# 半程重激活失败后重试，为什么 active→active 不能报错？\n\n## 情境和约束\n\n你要重上架一门 stale 课程。`reactivateCourseUnchecked` 的入口先 audit 新鲜度：这门课的 report 必须是 `fresh`，且每个 item 的 `contentStatus` 为 `active`——不过就直接抛错，course 继续 stale：\n\n```ts\n  if (report.status !== \"fresh\") {\n    throw new Error(\n      `Course remains stale for target ${input.targetSnapshotId}; revise every stale item before reactivation`,\n    );\n  }\n  if (report.items.some((item) => item.contentStatus !== \"active\")) {\n    throw new Error(\"Every lesson, card, and exercise must be active before course reactivation\");\n  }\n```\n\n[[evidence:server/workflows/revise-course.ts:969-976]]\n\nfresh 过了之后，course 必须是 `stale` 才能往下走（已是 active 且 units 全 active 则 `disposition: \"reused\"`）。真正改状态的顺序是：先逐个 unit 调 `updateUnitStatus(..., \"active\")`（`stale` 或 `draft` 的 unit 都会走），**最后**才 `updateCourseStatus(..., \"active\")`。catch 里抛的是「course 仍保持 stale，修好后再试」：\n\n```ts\n  const activatedUnitIds: string[] = [];\n  try {\n    for (const unitId of course.unitIds) {\n      const unit = readUnit(input.studiesRoot, input.studyId, course.id, unitId);\n      if (unit.status === \"stale\" || unit.status === \"draft\") {\n        updateUnitStatus(input.studiesRoot, input.studyId, course.id, unit.id, \"active\");\n        activatedUnitIds.push(unit.id);\n      }\n    }\n    course = updateCourseStatus(input.studiesRoot, input.studyId, course.id, \"active\");\n```\n\n[[evidence:server/workflows/revise-course.ts:1017-1026]]\n\n你做到 unit 3 失败：unit 1、2 已经 active，course 仍是 stale。你修好原因后再次调用 reactivate。\n\n## 先猜一下\n\n重试时系统会再请求把 unit 1 标成 active——它已经是 active。你若把「请求状态等于当前状态」设计成非法转移错误，这门课的架子会怎样？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了 no-op：已是目标状态就直接 return。否则半程重试会死在 active→active，架子卡死且没有命令能推完。\n\n## 代价和收益\n\n`updateCourseStatus` 把同状态请求写成 no-op，注释写明了历史事故：\n\n```ts\n  // Asking for the status a course already has is a no-op, not an error.\n  // Reactivation walks units and then the course; if it failed partway, the\n  // retry used to die on \"Invalid content status transition: active -> active\"\n  // for the units it had already done, leaving the shelf stuck half-activated\n  // with no command able to finish the job.\n  if (course.status === status) return course;\n```\n\n[[evidence:server/content/repository.ts:504-509]]\n\n你得到的收益：重试是合法恢复手段。unit 1、2 已 active 时，幂等跳过；未完成的 unit 和 course 可以继续推。course 最后一步才 active——失败时你看到的仍是 stale，不会误报「已上架」。\n\n你付出的代价：调用方不能靠「再请求一次 active」来探测「刚才到底成功没有」——同状态静默返回，状态探测要读当前 manifest，不能靠抛错。另一面，freshness 门仍然很硬：report 不是 fresh，你根本进不了 unit 循环；幂等解决的是半程状态，不是陈旧证据。\n\n`draft` unit 也会被激活：`add-lessons` 新增、从未发布的 unit 合法是 draft。门禁不是「draft 一律拒绝」，而是上面的 audit 加上 unit 激活时的证据巡检——半成品 unit 会在巡检里失败。\n\n## 什么时候该反过来\n\n- **你在写需要严格审计的金融记账 API**：「重复提交同一状态」可能必须显式拒绝或返回 409，好让调用方区分「首次成功」和「重复请求」。教材架上的 status 字段不是那种账本。\n- **你能保证激活是单步事务、失败必全回滚**：同状态当错误的成本变低——但 UniversityLocal 的路径是多 unit 顺序写盘，半程是真实情况。\n- **你有单独的「修复半激活」命令**：可以把 update 收紧，把恢复留给专用工具。本仓库选择的是让主路径本身可重入，一人公司没有人值夜班清半激活事故。\n\n终态正确不够，过程必须可重入。幂等就是那笔运维预算。\n\n## 再想想\n\nunit 激活时仍会巡检证据是否可解析，见 [[lesson:activate-evidence-gate|把课程标成 active，为什么证据还能拦下来？]]。\n\n## 自检\n\n**问：** reactivate 时 freshness report 不是 fresh 会怎样？\n\n**问：** `updateCourseStatus` 发现当前 status 已等于目标时，会 throw 还是 return？\n\n**问：** 为什么「active → active 报错」比 no-op 更危险？\n\n## 一句话\n\n**终态正确不够：半程可重试的幂等，才是一人运维预算。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/revise-course.ts",
+                "lineStart": 960,
+                "lineEnd": 1026,
+                "nodeIds": [],
+                "note": "reactivate：audit、draft unit、units 先 course 后"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/repository.ts",
+                "lineStart": 504,
+                "lineEnd": 509,
+                "nodeIds": [],
+                "note": "同状态 no-op 与半激活重试注释"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "reactivate-needs-fresh",
+                "kind": "basic",
+                "front": "reactivate 时 freshness report 不是 fresh 会怎样？",
+                "back": "直接抛错要求先 revise 每个 stale item；不会把课程标回 active。",
+                "tags": [
+                  "reactivate"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/revise-course.ts",
+                    "lineStart": 969,
+                    "lineEnd": 972,
+                    "nodeIds": [],
+                    "note": "remains stale 报错"
+                  }
+                ]
+              },
+              {
+                "id": "status-idempotent",
+                "kind": "basic",
+                "front": "updateCourseStatus 请求的状态若与当前相同，为什么不报「非法转移」？",
+                "back": "当作 no-op 返回。这样半程重激活重试不会卡在 active→active。",
+                "tags": [
+                  "reactivate"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 504,
+                    "lineEnd": 509,
+                    "nodeIds": [],
+                    "note": "同状态直接 return"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "idempotent-status-return",
+                "kind": "short-answer",
+                "title": "幂等行为",
+                "prompt": "updateCourseStatus 发现当前 status 已等于目标时，会 throw 还是 return？只写英文单词。",
+                "expectedAnswer": "return",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/repository.ts",
+                    "lineStart": 509,
+                    "lineEnd": 509,
+                    "nodeIds": [],
+                    "note": "if equal return course"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

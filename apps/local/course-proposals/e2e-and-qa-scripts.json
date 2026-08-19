@@ -1,0 +1,1231 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-e2e-and-qa-scripts",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "e2e-and-qa-scripts",
+    "title": "一个人怎么替代一个 QA 团队",
+    "description": "没有测试团队时，把「每次都要手点」写成 e2e 与 QA 脚本；本课用图灵密约的真实分层，教你哪些流程值得端到端钉死、哪些抽查就够、噪声如何分类才不骗自己。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "按「契约回归 vs 现场抽查 vs 真人局」三层为检查分流并说明混层的代价",
+      "设计 /ui-preview 类 harness，把时序与仪式感 e2e 从真后端成本里拆出来",
+      "为 smoke 编写噪声分类，使 flaky 信号不再淹没真实失败",
+      "对致命降级路径实施 e2e 合同 + smoke 现场的双层覆盖，并控制真后端脚本的使用频率"
+    ],
+    "units": [
+      {
+        "id": "replace-hand-clicks",
+        "title": "把「手点一遍」变成可信任的脚本",
+        "objective": "建立健康检查、e2e/smoke 分工、harness 与噪声分类的心智模型",
+        "lessons": [
+          {
+            "id": "health-is-not-fun",
+            "title": "绿勾不等于好玩",
+            "content": "# 绿勾不等于好玩\n\n## 学习目标\n\n完成本课后，你能说明 production health probe 证明了什么、没证明什么，\n并解释为什么「好玩」必须留给 founder 真人局。\n\n## 先给结论\n\n- **事实：health 只探三个 URL。** `production-health-check.mjs` 对 web、\n  mastra `/health`、`/venue-preview` 各发一次 `fetch`，12 秒超时，\n  `pass` 是三者 `ok` 的布尔与。\n- **事实：脚本自己写明边界。** `notes` 数组写着：\n  `Health probe only — does not prove fun or full multiplayer AI rounds`，\n  以及 founder gate 仍要按 `founder-playtest-brief.md` 做人局。\n- **事实：fun 归人类。** `founder-session-triage.md` 的硬规则第一条是\n  **No fun claims**：机器只能记笑声/再来一局/分享意图等信号，\n  H1 过不过只有 owner 解释。\n- **推论：一人公司最容易的自欺是「探针绿了 = 产品可以卖」。**\n  探针挡的是宕机；脚本挡的是回归；好玩挡的是你自己。\n\n## 一个类比\n\n机场安检通过只说明你没带违禁品，**不说明这趟航班会准时、座位舒服、\n目的地值得去。** 健康检查是安检，真人局是登机后的体验。\n\n## 工作示例\n\n1. 发布前跑 `production-health-check.mjs`，web/mastra/venue 都 200。\n2. 你以为可以发推文说「上线了、体验丝滑」。\n3. 脚本 notes 与 triage 规则拦住你：fun 信号行必须标\n   `H1 evidence — owner interprets`。\n4. 你约一场 founder session，把截图和笔记丢进 `tmp/founder-sessions/`，\n   才进入「好不好玩」的讨论。\n\n## 自检\n\n探针绿了，能不能写进对外文案说「多人 AI 对局已验证」？\n\n答案：不能。脚本明确说它不证明 full multiplayer AI rounds，\n更不证明 fun。\n\n## 重点\n\n**自动化证明机械正确；人证明产品价值。** 混为一谈，你会在错误的层上放心。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/production-health-check.mjs",
+                "lineStart": 39,
+                "lineEnd": 52,
+                "nodeIds": [],
+                "note": "health 三探头 + notes 声明不证 fun"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/founder-session-triage.md",
+                "lineStart": 13,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "No fun claims：H1 只能 owner 解释"
+              }
+            ],
+            "cards": [
+              {
+                "id": "health-scope",
+                "front": "production-health-check 的 pass 证明了什么、没证明什么？",
+                "back": "只证明 web、mastra health、venue-preview 可访问；不证明好玩或完整多人对局。",
+                "tags": [
+                  "qa-boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/production-health-check.mjs",
+                    "lineStart": 48,
+                    "lineEnd": 52,
+                    "nodeIds": [],
+                    "note": "pass 与 notes 的边界声明"
+                  }
+                ]
+              },
+              {
+                "id": "h1-owner",
+                "front": "为什么 fun 信号行必须写 H1 evidence — owner interprets？",
+                "back": "机器可记笑声/再来一局等信号，但 H1 过不过只能由产品 owner 解释。",
+                "tags": [
+                  "qa-boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/founder-session-triage.md",
+                    "lineStart": 15,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "fun 信号必须 owner 解释"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "health-not-fun-term",
+                "kind": "short-answer",
+                "title": "探针边界词",
+                "prompt": "production-health-check 的 notes 说它不证明 fun 或哪类对局？用英文短语 multiplayer AI rounds 的完整表述回答（三词）。",
+                "expectedAnswer": "multiplayer AI rounds",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/production-health-check.mjs",
+                    "lineStart": 49,
+                    "lineEnd": 51,
+                    "nodeIds": [],
+                    "note": "notes 原文不证 fun/多人对局"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "e2e-vs-smoke",
+            "title": "e2e 套件和 QA 脚本各防什么",
+            "content": "# e2e 套件和 QA 脚本各防什么\n\n## 学习目标\n\n完成本课后，你能按「回归契约」与「发布抽查」给测试分流，\n并指出图灵密约把哪类检查放进 `tests/e2e/`、哪类放进 `scripts/qa/`。\n\n## 先给结论\n\n- **事实：e2e 是 Playwright 规格。** 例如 `public-product.spec.ts` 钉死\n  Daily/Host/Join 入口、禁止挂载遗留 `.tp-app-shell`、Portal 文案与取消回流。\n- **事实：QA 脚本是可选手动/CI 烟囱。** `world-primary-flow-browser-smoke.mjs`\n  自己 `chromium.launch`，跨 viewport 走完 Start→Join→Host Gate→Daily→邀请恢复，\n  输出 JSON `passed`，适合发布前抽查。\n- **事实：两者会重叠表面。** no-WebGL 既有 e2e 矩阵格，也有\n  `world-no-webgl-browser-smoke.mjs`——e2e 验规格完整性，smoke 验当前 dev server 活着。\n- **推论：e2e 防「契约漂移」；smoke 防「这台机器/这版构建此刻坏了」。**\n  一人公司没有 QA 班次，必须用两层替班。\n\n## 一个类比\n\ne2e 像交规题库（每次改代码都要考过的固定题），\nsmoke 像发车前绕车一圈（油表、灯、胎压——快，但不替代路考）。\n\n## 工作示例\n\n1. 你改了 Start 按钮文案：`public-product.spec.ts` 在 PR 上拦住回归。\n2. 你要在本地确认「今天这版」路径还能点通：跑 `smoke:world-primary-flow`。\n3. 你要上生产前确认服务没挂：跑 `production-health-check`，\n   必要时再跑四人对局 smoke。\n\n## 自检\n\n为什么 primary-flow smoke 还要断言 `appShellCount === 0`，\n而不是只看按钮可见？\n\n答案：防止遗留壳层悄悄回来——可见按钮可能叠在半死不活的旧壳上。\n\n## 重点\n\n**固定契约进 e2e；此刻活着进 smoke。** 两层都写脚本，你才真替代了 QA 班次。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/public-product.spec.ts",
+                "lineStart": 12,
+                "lineEnd": 26,
+                "nodeIds": [],
+                "note": "e2e：Start 三入口且无遗留 app shell"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-primary-flow-browser-smoke.mjs",
+                "lineStart": 100,
+                "lineEnd": 119,
+                "nodeIds": [],
+                "note": "smoke：Start 就绪后走主路径"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-primary-flow-browser-smoke.mjs",
+                "lineStart": 290,
+                "lineEnd": 312,
+                "nodeIds": [],
+                "note": "smoke pass 含 appShellCount===0"
+              }
+            ],
+            "cards": [
+              {
+                "id": "layer-job",
+                "front": "e2e 与 QA smoke 各自主要防什么？",
+                "back": "e2e 防契约漂移（PR 回归）；smoke 防当前构建/环境此刻不可用。",
+                "tags": [
+                  "test-layers"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/public-product.spec.ts",
+                    "lineStart": 12,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "e2e 钉入口契约"
+                  }
+                ]
+              },
+              {
+                "id": "no-legacy-shell",
+                "front": "primary-flow 为什么要求 appShellCount === 0？",
+                "back": "确保新 Start 屏没有挂载遗留 .tp-app-shell，避免新旧壳叠层。",
+                "tags": [
+                  "test-layers"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-primary-flow-browser-smoke.mjs",
+                    "lineStart": 290,
+                    "lineEnd": 296,
+                    "nodeIds": [],
+                    "note": "pass 条件含 appShellCount"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "appshell-zero",
+                "kind": "short-answer",
+                "title": "shell 断言",
+                "prompt": "primary-flow smoke 要求遗留壳数量等于几？",
+                "expectedAnswer": "0",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-primary-flow-browser-smoke.mjs",
+                    "lineStart": 296,
+                    "lineEnd": 296,
+                    "nodeIds": [],
+                    "note": "appShellCount === 0"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "ui-preview-lab",
+            "title": "为什么要造 /ui-preview 实验室",
+            "content": "# 为什么要造 /ui-preview 实验室\n\n## 学习目标\n\n完成本课后，你能解释为什么仪式感、时序、实验旗标的 e2e 走 `/ui-preview`\n而不是真实开房，并说出 harness 参数如何压低 flaky。\n\n## 先给结论\n\n- **事实：预览页可钉舞台。** `typing-rhythm.spec.ts` 用\n  `/ui-preview?liveRoom=1&stage=playing&typingDemo=1` 播 AI 打字节奏，\n  注释写明 **Harness: /ui-preview live room (no backend)**。\n- **事实：时序可加速。** `cold-open-silence.spec.ts` 用 `coldOpenMs=300`\n  把静默窗压到毫秒级，仍断言 `cold-open-nudge` 只出现一次。\n- **事实：实验不泄漏。** `experiment-isolation.spec.ts` 验证默认\n  `data-experiment-id=none`，带 `exp=hot-seat` 才出现 badge，\n  再回默认 URL 必须清零——**无 shared-state leaks**。\n- **推论：没有 harness，你就得为每条时序测试起真人房 + 真 AI，\n  成本和 flaky 会把一人公司的 e2e 拖死。**\n\n## 一个类比\n\n飞行模拟器不是偷懒：飞行员要练的是仪表程序，不是每次都烧真航油。\n`/ui-preview` 是产品的模拟器舱。\n\n## 工作示例\n\n1. 要验 AI 先出 typing 指示再出气泡：打开 `typingDemo=1`，\n   断言 `[data-typing=true]` 再断言含 `late nights` 的气泡。\n2. 要验实验隔离：先无 flag，再 `exp=persona-pack`，再默认——\n   surfaces 不得从上一局泄漏。\n3. 要验真实后端座位冲突：那才上 `world-seat-browser-smoke.mjs`，\n   用 Supabase admin 建房——贵，所以不放进日常 e2e 矩阵。\n\n## 自检\n\n把 cold-open 测试改成真实开房 + 默认静默时长，会发生什么？\n\n答案：套件变慢、依赖网络与 AI 时序，失败时分不清是产品 bug 还是环境抖动。\n\n## 重点\n\n**能确定性复现的体验债，用 harness 钉死；必须真后端的，才付 smoke 全价。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/typing-rhythm.spec.ts",
+                "lineStart": 4,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "ui-preview + typingDemo 无后端 harness"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/cold-open-silence.spec.ts",
+                "lineStart": 44,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "coldOpenMs 压缩静默窗并断言 nudge 一次"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/experiment-isolation.spec.ts",
+                "lineStart": 17,
+                "lineEnd": 53,
+                "nodeIds": [],
+                "note": "实验旗标加载与回默认无泄漏"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-harness",
+                "front": "仪式/时序类 e2e 为什么优先 /ui-preview 而不是真开房？",
+                "back": "可钉 stage、加速时钟、无后端，把 flaky 和费用挡在日常回归外。",
+                "tags": [
+                  "harness"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/typing-rhythm.spec.ts",
+                    "lineStart": 4,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "注释声明 no backend harness"
+                  }
+                ]
+              },
+              {
+                "id": "exp-reset",
+                "front": "experiment-isolation 如何证明旗标不泄漏？",
+                "back": "带 exp 出现 badge 后，再打开无 exp URL，data-experiment-id 必须回到 none。",
+                "tags": [
+                  "harness"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/experiment-isolation.spec.ts",
+                    "lineStart": 49,
+                    "lineEnd": 53,
+                    "nodeIds": [],
+                    "note": "回默认 URL 后无 badge"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "harness-path",
+                "kind": "short-answer",
+                "title": "实验室路径",
+                "prompt": "typing/cold-open 类测试主要挂在哪条路由上？（含前导斜杠）",
+                "expectedAnswer": "/ui-preview",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/typing-rhythm.spec.ts",
+                    "lineStart": 17,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "goto ui-preview liveRoom"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "noise-is-not-failure",
+            "title": "把噪声分类，否则脚本会撒谎",
+            "content": "# 把噪声分类，否则脚本会撒谎\n\n## 学习目标\n\n完成本课后，你能解释 `classifyConsoleMessage` / `classifyFailedRequest`\n为什么故意放过若干「看起来像错误」的信号，以及不分类会怎样。\n\n## 先给结论\n\n- **事实：失败请求分四类。** `classifyFailedRequest` 把匿名 signup 断连归为\n  `background-auth-rate-limit`，路由切换中的 `ERR_ABORTED` 归为\n  `navigation-abort`，player_stats 瞬时断连归为 `background-stats-transient`，\n  其余才是真 `failure`。\n- **事实：控制台也分档。** `classifyConsoleMessage` 放过精确匹配的\n  `THREE.Clock` 弃用警告、Auth rate limit 文案、以及 headless 常见的\n  `GPU stall due to ReadPixels` / WebGL driver 噪声。\n- **事实：smoke 用分类结果算 pass。** primary-flow 只把未知 console 当失败，\n  背景 auth/依赖弃用/WebGL 噪声不计入 `consoleMessages` 失败集。\n- **推论：一人公司最反直觉的 QA 能力不是「多断言」，而是\n  「知道哪些红字不配叫 bug」。** 不过滤，你会被 flaky 训练成忽略所有红字。\n\n## 一个类比\n\n医院监护仪会过滤肌肉抖动伪差，否则护士会被假心率警报逼疯，\n最后对真警报也麻木。**噪声分类是防警报疲劳。**\n\n## 工作示例\n\n1. headless Chromium 打出 ReadPixels stall → 分类为\n   `background-webgl-driver-noise` → smoke 继续绿。\n2. 路由从 `/` 跳 `/daily` 时旧请求 ABORTED → `navigation-abort` → 不记 failure。\n3. 若业务接口 500 且不在白名单 → `failure` → `passed=false`。\n\n## 自检\n\n把所有 console warning 都当失败，长期会发生什么？\n\n答案：headless GPU 与匿名 auth 限流会让套件长期红灯，团队开始习惯跳过检查。\n\n## 重点\n\n**先定义「什么叫噪声」，再谈红灯可信。** 这是脚本替代 QA 的信任根基。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-performance-smoke-utils.mjs",
+                "lineStart": 9,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "classifyFailedRequest 四类结果"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-performance-smoke-utils.mjs",
+                "lineStart": 38,
+                "lineEnd": 80,
+                "nodeIds": [],
+                "note": "classifyConsoleMessage 放过 Clock/auth/WebGL 噪声"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-primary-flow-browser-smoke.mjs",
+                "lineStart": 204,
+                "lineEnd": 216,
+                "nodeIds": [],
+                "note": "smoke 过滤已知噪声后才算未知 console"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-filter-noise",
+                "front": "为什么 headless 的 ReadPixels stall 不能当产品失败？",
+                "back": "它是 SwiftShader/驱动噪声，不是玩家路径缺陷；当失败会训练你忽略真红灯。",
+                "tags": [
+                  "noise-filter"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-performance-smoke-utils.mjs",
+                    "lineStart": 71,
+                    "lineEnd": 78,
+                    "nodeIds": [],
+                    "note": "WebGL driver noise 非 failure"
+                  }
+                ]
+              },
+              {
+                "id": "nav-abort",
+                "front": "路由切换时的 net::ERR_ABORTED 在分类器里叫什么？",
+                "back": "navigation-abort，在 routeTransitioning 为真时不计为 failure。",
+                "tags": [
+                  "noise-filter"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-performance-smoke-utils.mjs",
+                    "lineStart": 22,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "ERR_ABORTED → navigation-abort"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "noise-class-name",
+                "kind": "short-answer",
+                "title": "噪声类别名",
+                "prompt": "classifyFailedRequest 把路由切换中的 ERR_ABORTED 标成哪一类字符串？",
+                "expectedAnswer": "navigation-abort",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-performance-smoke-utils.mjs",
+                    "lineStart": 22,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "navigation-abort 返回值"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e2e-that-earn-cost",
+        "title": "贵但真的 e2e：只钉浏览器才能看见的合同",
+        "objective": "能判断降级、仪式、无障碍、视觉哪些必须进 e2e 以及如何断言",
+        "lessons": [
+          {
+            "id": "matrix-no-silent-gaps",
+            "title": "降级矩阵：每格都要有下一步",
+            "content": "# 降级矩阵：每格都要有下一步\n\n## 学习目标\n\n完成本课后，你能说明 `DEGRADED_MATRIX` 为什么既是产品合同又是 e2e 清单，\n并解释「no silent gaps」测试在防什么。\n\n## 先给结论\n\n- **事实：八格故障各有 expectedNextAction。** 从 `no-webgl` 到\n  `host-departure`，每一格写的是玩家可见的下一步，不是工程师日志。\n- **事实：完整性自检。** 测试 `matrix inventory is complete — no silent gaps`\n  断言 id 列表全等，且每格 `expectedNextAction.length > 12`——\n  禁止占位空话。\n- **事实：格子有自动化场景。** `no-WebGL` 用 `disableWebGLInitScript`\n  把 getContext 打成 null，再断言 `.world-room-shell` 为 0、投票按钮仍在、\n  结算面可达。\n- **推论：没有矩阵，你只会测「开心路径」；有矩阵，你是在测\n  「坏掉时人还知不知道该按哪」。** 一人公司的 QA 时间应优先花在这里。\n\n## 一个类比\n\n消防演练图必须标「从这里走哪个楼梯」。\n格子有名字却没有 next action，等于只有火灾警报没有逃生图。\n\n## 工作示例\n\n1. 产品讨论加「支付失败」降级：先在 `DEGRADED_MATRIX` 加 id 与 next action。\n2. 完整性测试变红，直到你写完对应 e2e 场景。\n3. 玩家真遇到故障时，UI 给出与矩阵一致的双语下一步。\n\n## 自检\n\n为什么 next action 要限制长度大于 12，而不是只检查 id 存在？\n\n答案：防止有人塞 `todo`/`n/a` 之类敷衍字符串冒充合同。\n\n## 重点\n\n**降级清单完整，比再多一条开心路径 e2e 更能替代 QA。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                "lineStart": 18,
+                "lineEnd": 59,
+                "nodeIds": [],
+                "note": "DEGRADED_MATRIX 八格与 expectedNextAction"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                "lineStart": 157,
+                "lineEnd": 172,
+                "nodeIds": [],
+                "note": "完整性断言 no silent gaps"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                "lineStart": 174,
+                "lineEnd": 190,
+                "nodeIds": [],
+                "note": "no-WebGL 场景：无 3D 壳仍可玩可结算"
+              }
+            ],
+            "cards": [
+              {
+                "id": "matrix-role",
+                "front": "DEGRADED_MATRIX 的 expectedNextAction 写给谁看？",
+                "back": "写给玩家可见合同：故障后的下一步动作，不是内部日志。",
+                "tags": [
+                  "degraded"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 14,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "expectedNextAction 注释与 no-webgl 格"
+                  }
+                ]
+              },
+              {
+                "id": "silent-gaps",
+                "front": "no silent gaps 测试具体挡什么？",
+                "back": "矩阵 id 被删/漏写，或 next action 过短敷衍，都会让测试失败。",
+                "tags": [
+                  "degraded"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 157,
+                    "lineEnd": 171,
+                    "nodeIds": [],
+                    "note": "id 全等与 length>12"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "matrix-cell-count",
+                "kind": "short-answer",
+                "title": "矩阵格数",
+                "prompt": "DEGRADED_MATRIX 完整性测试期望的 id 个数是多少？",
+                "expectedAnswer": "8",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 159,
+                    "lineEnd": 168,
+                    "nodeIds": [],
+                    "note": "八个 id 全等列表"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "ritual-timing-e2e",
+            "title": "仪式感只能开浏览器验",
+            "content": "# 仪式感只能开浏览器验\n\n## 学习目标\n\n完成本课后，你能举出三类「逻辑对了、体验仍可能坏」的场景，\n并说明为何它们必须进 e2e 而不是单元测试。\n\n## 先给结论\n\n- **事实：开场要真用户手势。** `opening-ritual.spec.ts` 点 `(40,40)`\n  解锁 `data-opening-audio`，灯光从 `dormant` 走到 `lit`——\n  浏览器音频策略决定了单元测模拟不了。\n- **事实：静默窗有副作用边界。** cold-open：静默结束应出现一次\n  `cold-open-nudge`；有人先发言则永不触发。\n- **事实：投票时刻是瞬时 DOM。** 首投出 `data-vote-moment=first-vote`，\n  改投出 `switch` 与 `data-vote-moved-from`——横幅约 1.4s，只能在 e2e 窗口内抓。\n- **推论：AI 社交产品的「感觉」很多是时序状态机；\n  只测 reducer 会漏掉整段玩家记忆。**\n\n## 一个类比\n\n你可以单元测试乐谱音符对不对，但「停顿够不够让观众紧张」\n必须彩排。e2e 就是彩排录像。\n\n## 工作示例\n\n1. 改开场动画：跑 opening-ritual，确认 reduced-motion 仍能到 `lit`。\n2. 改冷场提示：两条 cold-open 用例，防「刷屏提示」与「有人说话还提示」。\n3. 改投票动效：vote-moments 两条，防横幅丢失与 switch 属性错绑。\n\n## 自检\n\n角色揭示卡按 Escape 应该怎样？为什么 e2e 要测这个？\n\n答案：对话框必须仍可见——防误触关掉私密身份，这是产品安全/体验，不是算法。\n\n## 重点\n\n**时序与手势是 e2e 的主粮；别把它们塞进单元测试假装覆盖了。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/opening-ritual.spec.ts",
+                "lineStart": 18,
+                "lineEnd": 45,
+                "nodeIds": [],
+                "note": "首次手势解锁 audio 与 light 状态机"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/cold-open-silence.spec.ts",
+                "lineStart": 44,
+                "lineEnd": 70,
+                "nodeIds": [],
+                "note": "静默后 nudge 只出现一次"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/vote-moments.spec.ts",
+                "lineStart": 36,
+                "lineEnd": 55,
+                "nodeIds": [],
+                "note": "首投 moment banner 与 data-first-vote-land"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/role-reveal-ritual.spec.ts",
+                "lineStart": 33,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "Escape 不得关闭角色揭示"
+              }
+            ],
+            "cards": [
+              {
+                "id": "gesture-audio",
+                "front": "开场音频为什么必须用真实 click 而不是直接调函数？",
+                "back": "浏览器音频策略要求用户手势；e2e 在验证策略下的状态机，不是纯函数。",
+                "tags": [
+                  "ritual"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/opening-ritual.spec.ts",
+                    "lineStart": 28,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "Genuine user gesture 解锁 audio"
+                  }
+                ]
+              },
+              {
+                "id": "escape-role",
+                "front": "角色揭示时按 Escape 的期望行为是什么？",
+                "back": "dialog 仍可见；只能通过确认按钮进入会话。",
+                "tags": [
+                  "ritual"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/role-reveal-ritual.spec.ts",
+                    "lineStart": 33,
+                    "lineEnd": 36,
+                    "nodeIds": [],
+                    "note": "Escape 后 dialog 仍 visible"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "opening-light-end",
+                "kind": "short-answer",
+                "title": "开场灯光终态",
+                "prompt": "opening-ritual 首次手势后 data-opening-light 最终应等于什么？",
+                "expectedAnswer": "lit",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/opening-ritual.spec.ts",
+                    "lineStart": 39,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "light 最终 toBe lit"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a11y-serious-only",
+            "title": "无障碍：只把严重问题当红灯",
+            "content": "# 无障碍：只把严重问题当红灯\n\n## 学习目标\n\n完成本课后，你能说明 `expectAxeClean` 为何只 fail critical/serious，\n以及 reduced-motion 路径为什么也是 e2e 合同。\n\n## 先给结论\n\n- **事实：axe 标签固定。** `runAxe` 使用 wcag2a/aa 与 2.1 a/aa。\n- **事实：严重度过滤。** `expectAxeClean` 只收集 `critical|serious`，\n  注释写明装饰性 3D nameplate 的 color-contrast 可能 incomplete，\n  **只对确认的严重违规失败**；另强制 `meta-viewport` 违规必须为空（允许缩放）。\n- **事实：reduced-motion 是产品路径。** role-reveal 在\n  `reducedMotion: 'reduce'` 下直接 `data-reveal-beat=3`，\n  卡片 animation-name 为 `none`；unmask 同理可直接到结算。\n- **推论：无障碍 e2e 的取舍是「可执行的门禁」vs「审美级对比度争论」。**\n  一人公司必须先锁住会挡住用户的严重项。\n\n## 一个类比\n\n交警先拦闯红灯和逆行，不会在早高峰为「车漆不够好看」开罚单。\nserious 是闯红灯；装饰面对比度争议是车漆。\n\n## 工作示例\n\n1. Start/Portal/Live/Settlement 跑 axe → 只报 serious/critical。\n2. 模拟 reduced-motion → 角色揭示一步到位，无翻牌动画。\n3. 交互控件扫 `collectUnnamedInteractive`，无障碍名缺失直接失败。\n\n## 自检\n\n为什么还要单独禁止 meta-viewport 违规？\n\n答案：禁止缩放会伤害大字号用户；这是硬可访问性，不是装饰问题。\n\n## 重点\n\n**门禁要严在「用不成」，松在「不够好看」。** 否则 a11y 套件会在噪声里死掉。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/accessibility-core.spec.ts",
+                "lineStart": 30,
+                "lineEnd": 56,
+                "nodeIds": [],
+                "note": "axe 标签 + 仅 serious/critical + meta-viewport"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/role-reveal-ritual.spec.ts",
+                "lineStart": 52,
+                "lineEnd": 66,
+                "nodeIds": [],
+                "note": "reduced-motion 一步揭示且 animation none"
+              }
+            ],
+            "cards": [
+              {
+                "id": "axe-filter",
+                "front": "expectAxeClean 为什么不只 assert violations 为空？",
+                "back": "装饰 3D 可能产生 incomplete/非严重项；只 fail critical/serious 才可执行。",
+                "tags": [
+                  "a11y"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/accessibility-core.spec.ts",
+                    "lineStart": 45,
+                    "lineEnd": 51,
+                    "nodeIds": [],
+                    "note": "serious 过滤后 expect []"
+                  }
+                ]
+              },
+              {
+                "id": "rm-role",
+                "front": "reduced-motion 下角色揭示 beat 直接是几？",
+                "back": "3，完整揭示一步到位，无翻牌动画。",
+                "tags": [
+                  "a11y"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/role-reveal-ritual.spec.ts",
+                    "lineStart": 59,
+                    "lineEnd": 66,
+                    "nodeIds": [],
+                    "note": "beat 3 且 animation-name none"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "axe-impacts",
+                "kind": "short-answer",
+                "title": "axe 失败档",
+                "prompt": "expectAxeClean 过滤时保留哪两档 impact？（用英文竖线连接，小写）",
+                "expectedAnswer": "critical|serious",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/accessibility-core.spec.ts",
+                    "lineStart": 45,
+                    "lineEnd": 46,
+                    "nodeIds": [],
+                    "note": "critical 或 serious"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "visual-is-math",
+            "title": "视觉回归用尺子，不是用眼睛",
+            "content": "# 视觉回归用尺子，不是用眼睛\n\n## 学习目标\n\n完成本课后，你能区分机器可判的视觉 blocker 与 owner-taste 问题，\n并举出图灵密约用几何/像素度量视觉的例子。\n\n## 先给结论\n\n- **事实：Start 屏用几何断言层级。** `assertDailyHierarchy` 要求\n  Daily 卡高度大于 Host/Join，且不与 utilities 重叠——\n  把「主 CTA 必须最大」写成可执行规则。\n- **事实：场馆预览防黑屏。** `venue-preview-matrix.spec.ts` 对画布截图像素采样，\n  9 点网格统计 non-black，并量桌面区域亮度（WO-17）。\n- **事实：Batch C 账本分两栏。** `visual-regression-matrix.mjs` 生成 ledger，\n  明确 **machine blockers** 与 **owner-taste questions** 分离，\n  口味问题不记为机器失败。\n- **推论：一人公司没有设计走查会，就必须把「看得见的回归」\n  拆成可判布尔与留给自己的品味清单。**\n\n## 一个类比\n\n质检员用卡尺量公差，不等老板每天来「觉得顺不顺眼」。\n卡尺是 machine blocker；老板审美是 owner taste。\n\n## 工作示例\n\n1. 改 Start 布局 → e2e 多 viewport 查重叠与 Daily 高度。\n2. 改场馆光照 → venue 矩阵防黑画布。\n3. 发版前跑 visual-regression-matrix → 机器 blocker 必须清零；\n   taste 行留给你晚上扫一眼截图。\n\n## 自检\n\n为什么 owner-taste 不能默认 `fail-on-blocker`？\n\n答案：口味无客观阈值，当机器失败会逼你调阈值或关掉整套视觉门禁。\n\n## 重点\n\n**能用尺子量的进 CI；只能用品味判的进账本。** 这是视觉 QA 的分层。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/start-screen-visual.spec.ts",
+                "lineStart": 113,
+                "lineEnd": 155,
+                "nodeIds": [],
+                "note": "Daily 高度层级与不重叠 utilities"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/venue-preview-matrix.spec.ts",
+                "lineStart": 55,
+                "lineEnd": 80,
+                "nodeIds": [],
+                "note": "截图像素 non-black 采样防黑屏"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/visual-regression-matrix.mjs",
+                "lineStart": 90,
+                "lineEnd": 99,
+                "nodeIds": [],
+                "note": "ledger 分离 machine blockers 与 owner taste"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/visual-regression-config.json",
+                "lineStart": 2,
+                "lineEnd": 10,
+                "nodeIds": [],
+                "note": "对比度/覆盖率等机器阈值"
+              }
+            ],
+            "cards": [
+              {
+                "id": "daily-height",
+                "front": "assertDailyHierarchy 对 Daily 卡的核心几何要求是什么？",
+                "back": "Daily 高度必须大于 Host 与 Join，且不与 secondary utilities 重叠。",
+                "tags": [
+                  "visual"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/start-screen-visual.spec.ts",
+                    "lineStart": 149,
+                    "lineEnd": 155,
+                    "nodeIds": [],
+                    "note": "高度比较与 overlap false"
+                  }
+                ]
+              },
+              {
+                "id": "taste-split",
+                "front": "visual ledger 为什么把 owner-taste 单独成列？",
+                "back": "口味留给人审，不当作机器失败，避免假红灯毁掉视觉门禁。",
+                "tags": [
+                  "visual"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/visual-regression-matrix.mjs",
+                    "lineStart": 94,
+                    "lineEnd": 95,
+                    "nodeIds": [],
+                    "note": "owner taste 不记机器失败"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ledger-machine-col",
+                "kind": "short-answer",
+                "title": "账本机器列",
+                "prompt": "visual-comparison ledger 里机器可失败的一列叫什么？（英文，复数）",
+                "expectedAnswer": "machine blockers",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/visual-regression-matrix.mjs",
+                    "lineStart": 95,
+                    "lineEnd": 99,
+                    "nodeIds": [],
+                    "note": "Machine blockers 列表头"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "smoke-and-ladder",
+        "title": "抽查脚本与发布阶梯",
+        "objective": "会搭可选阶梯、最差设备抽查、真后端限频与双层覆盖",
+        "lessons": [
+          {
+            "id": "smoke-ladder",
+            "title": "发布阶梯：从单元到真人局",
+            "content": "# 发布阶梯：从单元到真人局\n\n## 学习目标\n\n完成本课后，你能画出图灵密约 AI playtest cycle 的可选阶梯，\n并说明每一级多证明什么、多花什么。\n\n## 先给结论\n\n- **事实：默认两级。** `ai-playtest-cycle.mjs` 固定跑 `pnpm test` 与\n  mastra `eval:m2` 离线对话评估。\n- **事实：浏览器可选。** `--with-browser` 追加 no-webgl、primary-flow、\n  performance 三条 smoke。\n- **事实：生产可选。** `--with-production` 再加 `smoke:production-game`。\n- **事实：阶梯之上还有人。** health notes 与 founder triage 把 H1 留在脚本外。\n- **推论：一人公司不该每次全量；应把「最贵的证明」留给最高风险变更。**\n\n```mermaid\nflowchart TD\n  U[unit tests] --> E[m2 dialogue eval]\n  E --> B[browser smokes]\n  B --> P[production game smoke]\n  P --> H[production health probe]\n  H --> F[founder human session]\n  E -. 日常默认 .-> E\n  B -. --with-browser .-> B\n  P -. --with-production .-> P\n  F -. 仅 H1 趣味主张 .-> F\n```\n\n图里最关键的线是 **F 不挂在自动化默认路径上**：\n脚本可以把你送到 P/H，但「好玩」没有自动绿勾，必须你自己走进 founder session。\n\n## 一个类比\n\n体检套餐分基础血常规、CT、专家面诊。\n感冒别一上来全套 CT；改结算动画却只跑单元测试，则是该拍片时偷懒。\n\n## 工作示例\n\n1. 改纯函数与文案：默认 ai-cycle 足够。\n2. 改 Start 导航：加 `--with-browser`。\n3. 动房间/AI 后端：考虑 production game smoke + health。\n4. 宣称「更好玩」：安排 founder session，走 triage playbook。\n\n## 自检\n\n为什么 m2 eval 和 browser smoke 都可选开关而不是永远全开？\n\n答案：时间与 flaky 成本；默认路径要短到你会天天跑。\n\n## 重点\n\n**用开关做阶梯，而不是用勇气做取舍。** 写进脚本的分层才会被执行。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/ai-playtest-cycle.mjs",
+                "lineStart": 59,
+                "lineEnd": 95,
+                "nodeIds": [],
+                "note": "默认 unit+eval，可选 browser/production 阶梯"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/production-health-check.mjs",
+                "lineStart": 49,
+                "lineEnd": 51,
+                "nodeIds": [],
+                "note": "探针之上仍需 founder 人局"
+              }
+            ],
+            "cards": [
+              {
+                "id": "default-steps",
+                "front": "ai-playtest-cycle 不加 flag 时跑哪两步？",
+                "back": "unit-tests（pnpm test）与 m2-dialogue-eval-offline。",
+                "tags": [
+                  "ladder"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/ai-playtest-cycle.mjs",
+                    "lineStart": 59,
+                    "lineEnd": 70,
+                    "nodeIds": [],
+                    "note": "默认 steps 两段"
+                  }
+                ]
+              },
+              {
+                "id": "browser-flag",
+                "front": "--with-browser 追加哪类检查？",
+                "back": "no-webgl、primary-flow、performance 三条世界相关 browser smoke。",
+                "tags": [
+                  "ladder"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/ai-playtest-cycle.mjs",
+                    "lineStart": 73,
+                    "lineEnd": 87,
+                    "nodeIds": [],
+                    "note": "withBrowser 追加三条 smoke"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "with-browser-flag",
+                "kind": "short-answer",
+                "title": "浏览器开关",
+                "prompt": "ai-playtest-cycle 打开浏览器 smoke 的 CLI flag 是什么？",
+                "expectedAnswer": "--with-browser",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/ai-playtest-cycle.mjs",
+                    "lineStart": 22,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "withBrowser 读 --with-browser"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "worst-device-release",
+            "title": "发版按最差设备抽查",
+            "content": "# 发版按最差设备抽查\n\n## 学习目标\n\n完成本课后，你能说明 release smoke 为何固定在慢网手机上下文，\n以及 performance 预算为何区分软件渲染器。\n\n## 先给结论\n\n- **事实：release smoke 锁 loopback。** `assertLoopbackUrl` 拒绝非本地 host，\n  防止误对生产录视频加压。\n- **事实：刻意最差画像。** mobile 390×844、touch、`reducedMotion: 'reduce'`、\n  伪造 3g/saveData、deviceMemory=2，再用 CDP\n  `Network.emulateNetworkConditions` cellular3g。\n- **事实：性能阈值分轨。** `DEFAULT_WORLD_PERFORMANCE_THRESHOLDS` 与\n  `SOFTWARE_RENDERER_WORLD_PERFORMANCE_THRESHOLDS` 分离；\n  SwiftShader 下 firstPlayable 放到 45s 级，避免假失败。\n- **推论：抽查不是「再跑一遍开心路径」，而是\n  「在用户最惨的设备画像上还能否开始玩」。**\n\n## 一个类比\n\n餐厅试菜如果只请饱着的美食家，不如请刚下班又饿又急的人。\nrelease smoke 请的是后者。\n\n## 工作示例\n\n1. 本地 dev server 起来 → release smoke 只打 127.0.0.1。\n2. 3g + 低内存上下文打开 Start，录视频与 result.json。\n3. performance smoke 若侦测到 SwiftShader，自动换宽阈值。\n\n## 自检\n\n为什么 release smoke 要禁止指向生产域名？\n\n答案：它会模拟差网并录证据，误打生产既不礼貌也可能触发限流/误伤真实用户路径。\n\n## 重点\n\n**抽查要抽「最差合理用户」，不是抽「开发者的 MBP」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-release-browser-smoke.mjs",
+                "lineStart": 18,
+                "lineEnd": 48,
+                "nodeIds": [],
+                "note": "loopback 限制 + 慢网手机上下文"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-release-browser-smoke.mjs",
+                "lineStart": 88,
+                "lineEnd": 96,
+                "nodeIds": [],
+                "note": "CDP 模拟 cellular3g"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-performance-smoke-utils.mjs",
+                "lineStart": 109,
+                "lineEnd": 135,
+                "nodeIds": [],
+                "note": "默认与软件渲染器性能阈值分轨"
+              }
+            ],
+            "cards": [
+              {
+                "id": "loopback-release",
+                "front": "release smoke 为什么 assertLoopbackUrl？",
+                "back": "强制只打本地服务器，避免对生产做差网加压与误操作。",
+                "tags": [
+                  "release-smoke"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-release-browser-smoke.mjs",
+                    "lineStart": 18,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "非 loopback 直接 throw"
+                  }
+                ]
+              },
+              {
+                "id": "soft-thresholds",
+                "front": "为什么 headless 性能阈值比真机阈值宽？",
+                "back": "SwiftShader/ANGLE 软件路径远慢于真设备，严阈值只会制造假红灯。",
+                "tags": [
+                  "release-smoke"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-performance-smoke-utils.mjs",
+                    "lineStart": 123,
+                    "lineEnd": 134,
+                    "nodeIds": [],
+                    "note": "SOFTWARE_RENDERER 宽阈值"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "release-net",
+                "kind": "short-answer",
+                "title": "差网模拟",
+                "prompt": "release smoke 用 CDP 模拟的 connectionType 字符串是什么？",
+                "expectedAnswer": "cellular3g",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-release-browser-smoke.mjs",
+                    "lineStart": 90,
+                    "lineEnd": 92,
+                    "nodeIds": [],
+                    "note": "connectionType cellular3g"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "real-backend-sparingly",
+            "title": "真后端 smoke 要贵得有理由",
+            "content": "# 真后端 smoke 要贵得有理由\n\n## 学习目标\n\n完成本课后，你能判断哪些检查值得付「真 Supabase + 真浏览器」的成本，\n并说出 loopback/配置门禁在防什么。\n\n## 先给结论\n\n- **事实：座位冲突要真库。** `world-seat-browser-smoke.mjs` 用 secret key\n  建 `room_players`，双页抢座，失败时写 diagnostics JSON/截图。\n- **事实：完整三人对局更贵。** `world-round-complete-browser-smoke.mjs`\n  要求 QA_* 环境齐全，loopback base URL，并收集多阶段截图证据。\n- **事实：生产四人对局走站点。** `production-four-player-smoke.mjs`\n  直接打 `TURING_PACT_SITE_URL`，带重试 fetch——这是商业门禁级，不是日常。\n- **事实：便宜脚本挡供应链。** `world-asset-credits-check.mjs` 只读文件，\n  核对 catalogue 资产 id 与 CREDITS 捐赠声明，不需要浏览器。\n- **推论：真后端是「少数关键路径的显微镜」，不是默认放大镜。**\n\n## 一个类比\n\n不是每个感冒都做 MRI。座位竞态、完整 AI 回合、生产四人桌——\n这些是 MRI；资产 credits 是指尖血氧。\n\n## 工作示例\n\n1. 改座位分配算法：优先单元测试 + 必要时 seat smoke。\n2. 改 AI 回合编排：round-complete smoke + 证据目录。\n3. 只改松树模型：asset-credits-check 即可。\n\n## 自检\n\nseat smoke 为什么要求 baseUrl 必须是 loopback？\n\n答案：它持有 secret key 并写房间数据；打到错误环境会造成脏数据或安全事故。\n\n## 重点\n\n**密钥 + 写库的脚本必须默认打本地，且次数要少。** 贵，是因为真。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-seat-browser-smoke.mjs",
+                "lineStart": 15,
+                "lineEnd": 34,
+                "nodeIds": [],
+                "note": "缺配置即失败 + loopback/Supabase URL 门禁"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-round-complete-browser-smoke.mjs",
+                "lineStart": 19,
+                "lineEnd": 60,
+                "nodeIds": [],
+                "note": "完整回合预检与 loopback 要求"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-asset-credits-check.mjs",
+                "lineStart": 11,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "无浏览器：资产 id 与 CREDITS 捐赠检查"
+              }
+            ],
+            "cards": [
+              {
+                "id": "when-real-db",
+                "front": "什么问题值得上 world-seat-browser-smoke？",
+                "back": "多客户端抢座/座位状态与数据库一致性——DOM 预览模拟不了写库竞态。",
+                "tags": [
+                  "backend-smoke"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-seat-browser-smoke.mjs",
+                    "lineStart": 61,
+                    "lineEnd": 68,
+                    "nodeIds": [],
+                    "note": "查询 room_players 座位状态"
+                  }
+                ]
+              },
+              {
+                "id": "cheap-credits",
+                "front": "asset-credits-check 不需要浏览器却仍有价值，因为它防什么？",
+                "back": "catalogue 引用了清单里不存在的资产，或 CREDITS 丢失捐赠声明。",
+                "tags": [
+                  "backend-smoke"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-asset-credits-check.mjs",
+                    "lineStart": 22,
+                    "lineEnd": 36,
+                    "nodeIds": [],
+                    "note": "missingInManifest 与 donorsOk"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "loopback-label",
+                "kind": "short-answer",
+                "title": "本地主机约束",
+                "prompt": "seat/round smoke 对 QA_BASE_URL 主机名的要求关键词是什么？",
+                "expectedAnswer": "loopback",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-seat-browser-smoke.mjs",
+                    "lineStart": 19,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "assertLoopback 与调用"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "no-webgl-dual-layer",
+            "title": "同一故障：e2e 钉合同，smoke 钉现场",
+            "content": "# 同一故障：e2e 钉合同，smoke 钉现场\n\n## 学习目标\n\n完成本课后，你能用 no-WebGL 例子说明「双层覆盖」如何分工，\n并设计自己产品里「最贵故障」的双层策略。\n\n## 先给结论\n\n- **事实：e2e 层模拟 API。** degraded-matrix 用 initScript 劫持\n  `getContext`，断言无 `.world-room-shell`、投票仍在、结算可达。\n- **事实：smoke 层关浏览器能力。** `world-no-webgl-browser-smoke.mjs`\n  以 `--disable-webgl` 启动 Chromium，检查 `canvasCount===0`、\n  aria 树仍有对话名与 Share、投票按钮 ≥2。\n- **事实：注释互相指认。** e2e 写明对齐 smoke 表面——不是重复劳动，\n  是合同与现场的双保险。\n- **推论：最可怕的故障值得付两次钱：一次保证规格还在，\n  一次保证今天的构建仍服从规格。**\n\n## 一个类比\n\n消防条例写「逃生门不得上锁」（合同/e2e），\n每晚保安拧一把门把手（现场/smoke）。只写条例或只拧把手都不够。\n\n## 工作示例\n\n1. 重构世界运行时：e2e no-webgl 格保护玩法回路合同。\n2. 发版前：`pnpm smoke:world-no-webgl` 在真禁用 WebGL 的浏览器里再验一次。\n3. 若 smoke 红、e2e 绿：多半是构建/启动参数问题；反过来则是规格回归。\n\n## 自检\n\n为什么 smoke 用浏览器 flag 而 e2e 用 JS 劫持 getContext？\n\n答案：e2e 要在常规项目配置里可重复；smoke 要更接近「用户机器真的没有 WebGL」。\n\n## 重点\n\n**对业务致命的降级路径，合同与现场都要有脚本。** 这就是一个人替代 QA 团队的密度打法。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                "lineStart": 79,
+                "lineEnd": 95,
+                "nodeIds": [],
+                "note": "e2e disableWebGLInitScript 劫持 getContext"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                "lineStart": 174,
+                "lineEnd": 180,
+                "nodeIds": [],
+                "note": "e2e 对齐 smoke 表面注释与 playing 场景"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "scripts/qa/world-no-webgl-browser-smoke.mjs",
+                "lineStart": 7,
+                "lineEnd": 71,
+                "nodeIds": [],
+                "note": "真禁用 WebGL 的现场 smoke 与 pass 条件"
+              }
+            ],
+            "cards": [
+              {
+                "id": "dual-why",
+                "front": "no-WebGL 为何同时有 e2e 与 smoke？",
+                "back": "e2e 钉回归合同；smoke 在禁用 WebGL 的真实浏览器配置上钉当前构建。",
+                "tags": [
+                  "dual-layer"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 178,
+                    "lineEnd": 180,
+                    "nodeIds": [],
+                    "note": "注释 Aligns with smoke"
+                  }
+                ]
+              },
+              {
+                "id": "smoke-pass-canvas",
+                "front": "no-webgl smoke 对 canvasCount 的要求是什么？",
+                "back": "必须为 0——没有 WebGL 时不应残留可玩 3D 画布依赖。",
+                "tags": [
+                  "dual-layer"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-no-webgl-browser-smoke.mjs",
+                    "lineStart": 62,
+                    "lineEnd": 71,
+                    "nodeIds": [],
+                    "note": "canvasCount === 0 等 pass 条件"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "disable-flag",
+                "kind": "short-answer",
+                "title": "禁用 WebGL 参数",
+                "prompt": "no-webgl smoke 启动 Chromium 时与 webgl 相关的 args 之一是什么？",
+                "expectedAnswer": "--disable-webgl",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "scripts/qa/world-no-webgl-browser-smoke.mjs",
+                    "lineStart": 7,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "args 含 disable-webgl"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

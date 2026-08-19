@@ -1,0 +1,350 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "lessons": [
+    {
+      "courseId": "foundations-product",
+      "unitId": "experiments-and-coming-back",
+      "lessonId": "a-reason-to-come-back",
+      "anchors": [
+        {
+          "quote": "留存",
+          "occurrence": 1,
+          "senseId": "retention.return"
+        },
+        {
+          "quote": "推送",
+          "occurrence": 1,
+          "senseId": "push.delivery"
+        },
+        {
+          "quote": "渲染",
+          "occurrence": 1,
+          "senseId": "render.ui"
+        },
+        {
+          "quote": "组件",
+          "occurrence": 1,
+          "senseId": "component.ui"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-product",
+      "unitId": "experiments-and-coming-back",
+      "lessonId": "magic-numbers-that-are-not-magic",
+      "anchors": [
+        {
+          "quote": "参数",
+          "occurrence": 1,
+          "senseId": "parameter.input"
+        },
+        {
+          "quote": "枚举",
+          "occurrence": 1,
+          "senseId": "enum.closed"
+        },
+        {
+          "quote": "实验",
+          "occurrence": 1,
+          "senseId": "experiment.ab"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-product",
+      "unitId": "experiments-and-coming-back",
+      "lessonId": "register-before-you-ship",
+      "anchors": [
+        {
+          "quote": "实验",
+          "occurrence": 1,
+          "senseId": "experiment.ab"
+        },
+        {
+          "quote": "注册表",
+          "occurrence": 1,
+          "senseId": "registry.catalog"
+        },
+        {
+          "quote": "埋点",
+          "occurrence": 1,
+          "senseId": "analytics.tracking"
+        },
+        {
+          "quote": "字面量",
+          "occurrence": 1,
+          "senseId": "literal.type"
+        },
+        {
+          "quote": "类型",
+          "occurrence": 1,
+          "senseId": "type.kind"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-product",
+      "unitId": "measuring-without-spying",
+      "lessonId": "a-typo-loses-a-month",
+      "anchors": [
+        {
+          "quote": "类型",
+          "occurrence": 1,
+          "senseId": "type.kind"
+        },
+        {
+          "quote": "联合类型",
+          "occurrence": 1,
+          "senseId": "union.type"
+        },
+        {
+          "quote": "契约",
+          "occurrence": 1,
+          "senseId": "contract.api"
+        },
+        {
+          "quote": "边界",
+          "occurrence": 1,
+          "senseId": "boundary.scope"
+        },
+        {
+          "quote": "隐私",
+          "occurrence": 1,
+          "senseId": "privacy.protection"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-product",
+      "unitId": "measuring-without-spying",
+      "lessonId": "buckets-are-privacy",
+      "anchors": [
+        {
+          "quote": "桶",
+          "occurrence": 4,
+          "senseId": "bucket.group"
+        },
+        {
+          "quote": "隐私",
+          "occurrence": 1,
+          "senseId": "privacy.protection"
+        },
+        {
+          "quote": "阈值",
+          "occurrence": 1,
+          "senseId": "threshold.limit"
+        },
+        {
+          "quote": "字面量",
+          "occurrence": 1,
+          "senseId": "literal.type"
+        },
+        {
+          "quote": "参数",
+          "occurrence": 1,
+          "senseId": "parameter.input"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-product",
+      "unitId": "measuring-without-spying",
+      "lessonId": "off-by-default",
+      "anchors": [
+        {
+          "quote": "埋点",
+          "occurrence": 1,
+          "senseId": "analytics.tracking"
+        },
+        {
+          "quote": "默认值",
+          "occurrence": 1,
+          "senseId": "default.value"
+        },
+        {
+          "quote": "环境",
+          "occurrence": 1,
+          "senseId": "environment.variable"
+        },
+        {
+          "quote": "启用",
+          "occurrence": 1,
+          "senseId": "enable.action"
+        },
+        {
+          "quote": "隐私",
+          "occurrence": 1,
+          "senseId": "privacy.protection"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-product",
+      "unitId": "measuring-without-spying",
+      "lessonId": "rules-that-throw",
+      "anchors": [
+        {
+          "quote": "断言",
+          "occurrence": 1,
+          "senseId": "assert.test"
+        },
+        {
+          "quote": "隐私",
+          "occurrence": 1,
+          "senseId": "privacy.protection"
+        },
+        {
+          "quote": "运行时",
+          "occurrence": 1,
+          "senseId": "runtime.environment"
+        },
+        {
+          "quote": "标识符",
+          "occurrence": 1,
+          "senseId": "identifier.key"
+        },
+        {
+          "quote": "白名单",
+          "occurrence": 1,
+          "senseId": "allowlist.fields"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-product",
+      "unitId": "measuring-without-spying",
+      "lessonId": "why-measure-at-all",
+      "anchors": [
+        {
+          "quote": "埋点",
+          "occurrence": 1,
+          "senseId": "analytics.tracking"
+        },
+        {
+          "quote": "联合类型",
+          "occurrence": 1,
+          "senseId": "union.type"
+        },
+        {
+          "quote": "粒度",
+          "occurrence": 1,
+          "senseId": "granular.detail"
+        },
+        {
+          "quote": "边界",
+          "occurrence": 1,
+          "senseId": "boundary.scope"
+        },
+        {
+          "quote": "隐私",
+          "occurrence": 1,
+          "senseId": "privacy.protection"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-product",
+      "unitId": "rules-and-safety",
+      "lessonId": "a-version-suffix-in-a-key",
+      "anchors": [
+        {
+          "quote": "键",
+          "occurrence": 1,
+          "senseId": "key.data"
+        },
+        {
+          "quote": "值",
+          "occurrence": 2,
+          "senseId": "value.data"
+        },
+        {
+          "quote": "显式",
+          "occurrence": 1,
+          "senseId": "explicit.stated"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-product",
+      "unitId": "rules-and-safety",
+      "lessonId": "four-reasons-and-an-other",
+      "anchors": [
+        {
+          "quote": "枚举",
+          "occurrence": 1,
+          "senseId": "enum.closed"
+        },
+        {
+          "quote": "推导",
+          "occurrence": 1,
+          "senseId": "derive.compute"
+        },
+        {
+          "quote": "校验",
+          "occurrence": 1,
+          "senseId": "validate.check"
+        },
+        {
+          "quote": "类型",
+          "occurrence": 1,
+          "senseId": "type.kind"
+        },
+        {
+          "quote": "错误",
+          "occurrence": 1,
+          "senseId": "error.status"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-product",
+      "unitId": "rules-and-safety",
+      "lessonId": "two-languages-two-costs",
+      "anchors": [
+        {
+          "quote": "实验",
+          "occurrence": 1,
+          "senseId": "experiment.ab"
+        },
+        {
+          "quote": "显式",
+          "occurrence": 1,
+          "senseId": "explicit.stated"
+        },
+        {
+          "quote": "键",
+          "occurrence": 1,
+          "senseId": "key.data"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-product",
+      "unitId": "rules-and-safety",
+      "lessonId": "you-must-know-who-reported",
+      "anchors": [
+        {
+          "quote": "匿名的",
+          "occurrence": 1,
+          "senseId": "anonymous.user"
+        },
+        {
+          "quote": "校验",
+          "occurrence": 1,
+          "senseId": "validate.check"
+        },
+        {
+          "quote": "顺序",
+          "occurrence": 1,
+          "senseId": "order.sequence"
+        },
+        {
+          "quote": "错误",
+          "occurrence": 1,
+          "senseId": "error.status"
+        }
+      ]
+    }
+  ]
+}

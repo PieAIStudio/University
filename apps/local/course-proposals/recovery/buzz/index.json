@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "study": {
+    "id": "buzz",
+    "title": "Buzz",
+    "description": "",
+    "goals": [],
+    "defaultCourseId": "buzz-orientation",
+    "status": "active"
+  },
+  "source": {
+    "defaultRef": "HEAD"
+  },
+  "courses": [
+    {
+      "courseId": "buzz-orientation",
+      "file": "buzz-orientation.0b076c8e77f36fb0d19cbe0d5df9f26d6016b44774a38a3b125bda3925e75360.recovery.json",
+      "sha256": "sha256:0b076c8e77f36fb0d19cbe0d5df9f26d6016b44774a38a3b125bda3925e75360"
+    },
+    {
+      "courseId": "buzz-reading-rust",
+      "file": "buzz-reading-rust.536c110f5dc9345f93834de62d3990194cd6a660fd266ebfe03c42239a2311ef.recovery.json",
+      "sha256": "sha256:536c110f5dc9345f93834de62d3990194cd6a660fd266ebfe03c42239a2311ef"
+    },
+    {
+      "courseId": "buzz-one-message",
+      "file": "buzz-one-message.2d46fffac0a3f4658d66acb28428a4bd951eab4f1a59f5dc61deb0297e2de581.recovery.json",
+      "sha256": "sha256:2d46fffac0a3f4658d66acb28428a4bd951eab4f1a59f5dc61deb0297e2de581"
+    },
+    {
+      "courseId": "buzz-agents-as-members",
+      "file": "buzz-agents-as-members.35ca1a51eeadb692022d2beb6bd9a47fd1b31d814d93bdc3b647d5f51636a69a.recovery.json",
+      "sha256": "sha256:35ca1a51eeadb692022d2beb6bd9a47fd1b31d814d93bdc3b647d5f51636a69a"
+    },
+    {
+      "courseId": "buzz-design-tokens",
+      "file": "buzz-design-tokens.aba0793732cc054743192fc7ba877ec6388844aca54b71d105e0199110968b25.recovery.json",
+      "sha256": "sha256:aba0793732cc054743192fc7ba877ec6388844aca54b71d105e0199110968b25"
+    }
+  ]
+}

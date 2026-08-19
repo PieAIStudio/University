@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.server.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".university-local-build",
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false
+  },
+  "exclude": ["**/*.test.ts"]
+}

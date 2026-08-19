@@ -1,0 +1,199 @@
+/**
+ * The screen the product's advantage lives on.
+ *
+ * Everything else here exists in every learning app. A paragraph of explanation
+ * sitting next to the exact commit and line range in a shipping private
+ * repository does not, and that is what the evidence anchors below are.
+ *
+ * Reading sizes are set here rather than taken from SwimmerUIKit, and that is
+ * deliberate and temporary. The kit's body scale tops out at 1.18rem because it
+ * is a HUD kit; lessons here average 2,363 characters of Chinese with code in
+ * them. Reading typography belongs in the shared learning package, and this is
+ * the note that says so until it moves there.
+ *
+ * The prose itself is no longer rendered here. It goes through the same
+ * `MarkdownContent` the authoring shell uses, which is the whole point of
+ * `packages/ui`: a second Markdown pipeline is not a convenience, it is drift
+ * with a schedule. Swapping it in is also what gives this side Mermaid
+ * diagrams, Shiki-highlighted code and the authoring directives for free —
+ * none of which the previous `marked` call could do.
+ */
+import { useEffect, useMemo, useState } from "react";
+import { MarkdownContent } from "@pieai/university-ui";
+
+import type { Lesson as LessonData } from "../content/library";
+import { gradeDeterministically, type Verdict } from "./grading";
+
+const ANCHOR = /^\[\[evidence:([^\]]+)\]\]$/gm;
+
+export function LessonView({
+  lesson,
+  courseTitle,
+  unitTitle,
+  position,
+  onPass,
+  onBack,
+}: {
+  lesson: LessonData;
+  courseTitle: string;
+  unitTitle: string;
+  position: string;
+  onPass: () => void;
+  onBack: () => void;
+}) {
+  // `[[evidence:path:lines]]` is the authoring side's own construct, not
+  // Markdown. Lifting it out before rendering keeps the citations as real rows
+  // instead of a stray line of text in the middle of a paragraph.
+  const { prose, anchors } = useMemo(() => {
+    const found: { path: string; lines: string }[] = [];
+    const text = lesson.content.replace(ANCHOR, (_match, route: string) => {
+      const [path, lines] = route.split(/:(?=[^:]*$)/);
+      found.push({ path: path ?? route, lines: lines ?? "" });
+      return "";
+    });
+    return { prose: text, anchors: found };
+  }, [lesson.content]);
+
+  const exercise = lesson.exercises[0];
+  const [answer, setAnswer] = useState("");
+  const [verdict, setVerdict] = useState<Verdict | null>(null);
+  const [misses, setMisses] = useState(0);
+  const [appealed, setAppealed] = useState(false);
+
+  useEffect(() => {
+    setAnswer("");
+    setVerdict(null);
+    setMisses(0);
+    setAppealed(false);
+  }, [lesson.id]);
+
+  const submit = () => {
+    const result = gradeDeterministically(answer, exercise?.expectedAnswer);
+    setVerdict(result);
+    if (result.outcome === "pass") onPass();
+    else if (result.outcome === "fail") setMisses((count) => count + 1);
+  };
+
+  const clue = useMemo(() => {
+    if (!exercise?.expectedAnswer) return null;
+    const needle = exercise.expectedAnswer.slice(0, 6);
+    const line = lesson.content
+      .split(/\n+/)
+      .find((row) => row.includes(needle) && !row.startsWith("```") && row.length > 12);
+    return line ? line.replace(/[*`]/g, "").trim() : null;
+  }, [exercise, lesson.content]);
+
+  return (
+    <article className="lesson">
+      <header className="lesson__bar">
+        <button className="linkish" onClick={onBack}>
+          ← 关卡地图
+        </button>
+        <span className="lesson__where">
+          {courseTitle} · {unitTitle}
+        </span>
+        <span className="lesson__pos">{position}</span>
+      </header>
+
+      <div className="lesson__body">
+        <MarkdownContent assets={lesson.assets ?? []}>{prose}</MarkdownContent>
+      </div>
+
+      {anchors.length > 0 ? (
+        <section className="evidence-list">
+          {anchors.map((anchor, index) => (
+            <div className="evidence" key={`${anchor.path}:${anchor.lines}:${index}`}>
+              <b>{anchor.path}</b>
+              <span>:{anchor.lines}</span>
+              <span className="go">
+                @{lesson.evidence[index]?.sourceCommit.slice(0, 7) ?? "—"} ↗
+              </span>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {exercise ? (
+        <section className="quiz">
+          <h3>{exercise.title ?? "自检"}</h3>
+          <p>{exercise.prompt}</p>
+          <input
+            className="quiz__input"
+            value={answer}
+            placeholder="用你自己的话写"
+            onChange={(event) => setAnswer(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") submit();
+            }}
+          />
+          <div className="quiz__row">
+            <button className="primary" onClick={submit}>
+              提交
+            </button>
+            {misses > 0 || verdict?.outcome === "undecided" ? (
+              <button
+                className="ghost"
+                onClick={() => {
+                  setAppealed(true);
+                  onPass();
+                }}
+              >
+                我觉得我对了
+              </button>
+            ) : null}
+            <small>确定性判分 · 不花额度</small>
+          </div>
+
+          {verdict?.outcome === "pass" ? (
+            <div className="verdict verdict--pass">
+              答对了。这一层没有花任何钱，也没有等待。<span className="tier">第 1 层 · 确定性</span>
+            </div>
+          ) : null}
+
+          {verdict?.outcome === "undecided" ? (
+            <div className="verdict">
+              {verdict.reason}
+              <span className="tier">第 2 层未接入 · 本地判不了就如实说</span>
+            </div>
+          ) : null}
+
+          {verdict?.outcome === "fail" ? (
+            <>
+              {clue ? (
+                <div className="clue">
+                  <div className="clue__eyebrow">再看一眼你刚才读过的这句</div>
+                  <blockquote>{clue}</blockquote>
+                  {lesson.evidence[0] ? (
+                    <div className="clue__src">
+                      {lesson.evidence[0].sourcePath}:{lesson.evidence[0].lineStart}-
+                      {lesson.evidence[0].lineEnd} @{lesson.evidence[0].sourceCommit.slice(0, 7)}
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="verdict">再想一下，答案就在上面这段里。</div>
+              )}
+              {misses >= 2 ? (
+                <div className="paywall">
+                  还是不通？现在才出现导师入口。
+                  <span className="tier">第 3 层 · 计入额度</span>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+
+          {appealed ? (
+            <div className="verdict">
+              已按你的申诉放行。真实产品里这会升到第 2 层重判一次，<b>不计额度</b>——
+              误判是分层判分自己的故障。
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      <footer className="lesson__drops">
+        掉落 {lesson.cards.length} 张卡片 · {lesson.evidence.length} 条证据锚点
+      </footer>
+    </article>
+  );
+}

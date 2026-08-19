@@ -1,0 +1,23 @@
+{
+  "recommended_threshold": 0.3,
+  "should_trigger": [
+    {"text": "把这节 lesson 的 content.md 按五种变体和 checklist 重写，让初学者读得进去。", "family": "lesson_rewrite_zh"},
+    {"text": "Rewrite one existing UniversityLocal lesson from its pinned evidence and append a new revision without changing card or exercise IDs.", "family": "lesson_rewrite"},
+    {"text": "这节课读不进去，请改成问题标题、先猜、答案和逐步讲解的 house teaching shape。", "family": "house_shape"},
+    {"text": "refresh-study 已给出 stale lesson handoff，请根据目标 snapshot 的 evidence 重写正文、卡片和练习。", "family": "refresh_handoff"},
+    {"text": "为这一课生成 course revise proposal；保留现有课程结构，只追加一个内容 revision。", "family": "revision_proposal"},
+    {"text": "检查这节课是否违反 evidence token、变体轮换和自检清单，必要时写出新 revision。", "family": "lesson_checklist"},
+    {"text": "把这一节旧骨架课文改成有一个预测题、紧接答案、detail blocks 和一句话总结的版本。", "family": "lesson_structure"},
+    {"text": "现有 lesson 的正文可以不变，但 evidence 已 stale；请按 handoff 追加同文 revision 重新绑定证据。", "family": "evidence_rebind"}
+  ],
+  "should_not_trigger": [
+    {"text": "继续教我当前 study 的下一节，并先考我一个问题。", "family": "teach_from_study"},
+    {"text": "把刚才学到的知识点保存到当前 study 并加入复习。", "family": "knowledge_node"},
+    {"text": "被学习项目有新的本地 commit，请刷新 snapshot、UA 和 freshness audit。", "family": "refresh_study"},
+    {"text": "只运行 refresh prepare、UA finalize 和 audit，先标记 stale，不要改任何 lesson 正文。", "family": "refresh_study"},
+    {"text": "规划一门新课程、拆分单元，并决定每节课要教哪些主题。", "family": "course_planning"},
+    {"text": "为当前 study 开始一段学习会话并带我完成下一课。", "family": "teaching_session"},
+    {"text": "Implement the lesson API endpoint and run tests in the application.", "family": "engineering_task"},
+    {"text": "点评我对这节课的复述是否清楚，不要修改课文文件。", "family": "communication_coach"}
+  ]
+}

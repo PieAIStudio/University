@@ -1,0 +1,142 @@
+testing-strategy English overlay self-check report
+==================================================
+
+Course: testing-strategy (TuringPact)
+Vocabulary source: data/vocabulary/en.json (240 senses, read-only)
+Output: course-proposals/annot-testing-strategy.json
+
+## Coverage
+
+- Lessons processed: 3 / 3 (no omission)
+- Anchors total: 15
+- Per lesson: 5 anchors each (within 2–5 budget)
+
+Lesson list (course order, latest contentRevision only):
+1. layer-choice / unit-vs-e2e           (contentRevision 2)
+2. degraded-design / degraded-matrix    (contentRevision 1)
+3. degraded-design / retry-safety       (contentRevision 1)
+
+## senseId check
+
+All 15 senseIds verified present in en.json (no unknown sense → annotateLanguage hard-fail):
+
+  unit-vs-e2e:
+    - unit.test
+    - e2e.test
+    - privacy.protection
+    - allowlist.fields
+    - pure.function
+
+  degraded-matrix:
+    - degrade.fallback
+    - matrix.table
+    - assert.test
+    - silent.gap
+    - placeholder.value
+
+  retry-safety:
+    - idempotent.retry
+    - retry.network
+    - assert.test
+    - fan-out.side
+    - authoritative.source
+
+## Occurrence + placement
+
+Used the same rules as server/language/resolve-anchors.ts:
+- indexOf count over the full Markdown (code included in numbering)
+- refuse landings inside fenced/inline code, link targets, HTML tags, tables
+- refuse overlapping ranges
+
+Result: 15/15 resolved to prose. 0 not-found / occurrence-missing / inside-code / overlaps.
+
+Landings:
+
+### unit-vs-e2e
+  - 「单元」occ=1 → title「# 单元测试和 e2e…」
+  - 「e2e」occ=1 → same title
+  - 「隐私」occ=1 → 「连隐私承诺也在单元层」
+  - 「允许清单」occ=1 → 「字段名必须在允许清单里」(only hit)
+  - 「纯函数」occ=1 → 「纯函数测不了」
+
+### degraded-matrix
+  - 「降级」occ=1 → title「# 降级矩阵…」
+  - 「矩阵」occ=1 → same title, second half of「降级矩阵」(adjacent to 降级, non-overlapping)
+  - 「断言」occ=1 → 「不留静默缺口」这条断言
+  - 「静默」occ=1 → 「不留静默缺口」(only hit)
+  - 「占位」occ=1 → 「没有具体动作的占位文字」(only hit)
+
+### retry-safety
+  - 「幂等」occ=1 → title「一笔幂等的债」
+  - 「重试」occ=1 → title「给了重试按钮」
+  - 「断言」occ=1 → 「知道一条断言「什么不该发生」」
+  - 「扇出」occ=1 → 「不要在客户端扇出」
+  - 「权威」occ=1 → 「让权威方说了算」
+
+## Spot-check (8 anchors, hand-counted in content.md)
+
+1. unit-vs-e2e / 单元 / occ=1
+   Full content has 11 hits of「单元」; #1 is title. PASS
+
+2. unit-vs-e2e / e2e / occ=1
+   10 hits; #1 is title. PASS
+
+3. unit-vs-e2e / 允许清单 / occ=1
+   Exactly 1 hit in prose. PASS
+
+4. unit-vs-e2e / 纯函数 / occ=1
+   3 hits; #1 is「纯函数测不了」(not code). PASS
+
+5. degraded-matrix / 降级 / occ=1
+   4 hits; #1 is title. PASS
+
+6. degraded-matrix / 静默 / occ=1
+   Exactly 1 hit. PASS
+
+7. retry-safety / 幂等 / occ=1
+   14 hits; #1 is title「幂等的债」. PASS
+
+8. retry-safety / 扇出 / occ=1
+   2 hits; #1 is heading「不要在客户端扇出」. PASS
+
+## Substring collision adjustments
+
+Checked traps: 文件↔文件夹, 状态↔状态机, 测试↔测试用例, 类型↔类型守卫,
+构建↔构建产物, 依赖↔依赖注入, 函数↔纯函数, 降级↔降级矩阵, 单元↔单元测试.
+
+Adjustments made before finalizing:
+
+1. unit-vs-e2e: dropped candidate quote「函数」
+   Reason: all 3 hits of「函数」are the last two characters of「纯函数」.
+   Would render as 纯函(数) style break. Replaced with quote「纯函数」→ pure.function.
+
+2. retry-safety: dropped candidate quote「载荷」/payload.api
+   Reason: occurrence 1 sits inside a fenced code block
+   (`{ ...同样的载荷 }`); resolveAnchors would reject as inside-code.
+   Prose hit would need occ=2. Chose clearer lesson term「权威」instead.
+
+3. retry-safety: dropped candidate quote「mock」
+   Reason: all 4 hits are inside fenced code only; no prose landing.
+
+4. degraded-matrix: kept both「降级」and「矩阵」on the title compound「降级矩阵」
+   Not a 文件(夹)-style error: ranges are adjacent non-overlapping
+   (降级 then 矩阵), so the UI shows two whole words, not a split character mid-word.
+
+5. unit-vs-e2e: kept short「单元」rather than「单元测试」
+   senseId unit.test glosses as「单元」; landing on the stem of「单元测试」
+   is intentional (same style as other stem annotations).
+
+No remaining broken partial-word landings of the 文件(夹) kind.
+
+## Selection rationale
+
+- unit-vs-e2e: layer pair (unit/e2e) + this lesson’s privacy cheap-test story
+  (privacy / allowlist / pure function)
+- degraded-matrix: degrade matrix as product design, machine assert, silent gap,
+  placeholder fluff the length assert blocks
+- retry-safety: idempotent + retry debt, assert-must-not-happen, client fan-out,
+  authoritative server for rematch
+
+## Validation status
+
+PASS — 3 lessons, 15 anchors, all senseIds known, all occurrences land on intended prose.

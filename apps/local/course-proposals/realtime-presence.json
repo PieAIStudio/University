@@ -1,0 +1,1111 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-realtime-presence",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "realtime-presence",
+    "title": "谁在线，谁在打字",
+    "description": "实时功能的难点不是把消息发出去，而是让每个人看到的在场、断线与信号一致：缺席如何两阶段处理、首帧为何必须静默、打字节奏为何不能泄身份。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "指出 presence payload 的字段边界，并说明为何权威状态不能走呈现通道",
+      "解释 missingSinceMs 与 prune 的两阶段离开，以及 idle 静默为何不等于失踪",
+      "对照 leave 复核与 seat arrival reseed，说明重连/blip 如何避免假进出",
+      "区分 typing 呈现时钟与权威消息时间，并说明人机同模如何堵住身份侧信道"
+    ],
+    "units": [
+      {
+        "id": "presence-contract",
+        "title": "在场包是合同",
+        "objective": "掌握 presence 的字段边界、解析失败策略、发布节流与多会话合并",
+        "lessons": [
+          {
+            "id": "surface-only-payload",
+            "title": "在场包只装表象",
+            "content": "# 在场包只装表象\n\n## 学习目标\n\n完成本课后，你能指出 `WorldPresencePayloadV1` 里有什么、刻意没有什么，并说明把身份/投票塞进 presence 通道会带来什么风险。\n\n## 先给结论\n\n- **事实：V1 字段是呈现层坐标。** `alias`、`avatarSeed`、`emote`、`locomotion`、`playerId`、`position`、`rotationY`、`updatedAtMs`、`version: 1`——全是「别人怎么画你」。\n- **事实：`RemotePresenceState` 另加本地时间语义。** 例如 `missingSinceMs`、`lastReceivedAtMs`、`intervalMs`，它们不从网络原样广播，是接收端用来插值与过期的。\n- **推论：presence 不是真相源。** 角色身份、投票、结算不能走这条通道；测试也断言序列化字符串里不出现 `role` / `vote` / `entitlement` / `settlement`。\n- **推论：通道泄漏等于产品泄漏。** 谁能订阅房间 presence，谁就能读到你塞进去的一切。\n\n## 一个类比\n\npresence 像会场门口的名牌与站位：别人需要知道你站哪、挥不挥手；**不需要知道你口袋里的选票和合同**。把选票写在名牌上，门卫和路人都能抄走。\n\n## 工作示例\n\n1. 本地玩家移动时，调用方组装 `WorldPresencePayloadV1`，`version` 固定为 `1`。\n2. 经 transport `track` 发出去。\n3. 远端 `parseWorldPresencePayload` 只接受这套字段；多出来的私货要么被忽略（根本没解析），要么你自己在别处又开了一个口子。\n4. 远端用 `RemotePresenceState` 记住上一次位姿，再插值——权威游戏状态仍在别的 store / RPC。\n\n## 自检\n\n如果把 `current_vote` 写进 presence payload，中途加入的观察者会立刻看到谁在投谁吗？那为什么仍不该这么做？\n\n答案：会。但观察者权限、防作弊、重连权威都以服务端/权威快照为准；presence 的可见面更宽、更易被旁路订阅，且无法表达「已结算 / 已撤销」等权威生命周期。\n\n## 重点\n\n**实时通道先决定「能看见什么」，再决定「发多快」。字段表本身就是安全边界。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 17,
+                "lineEnd": 39,
+                "nodeIds": [],
+                "note": "WorldPresencePayloadV1 与 RemotePresenceState 字段边界"
+              },
+              {
+                "kind": "inference",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 17,
+                "lineEnd": 27,
+                "nodeIds": [],
+                "note": "V1 无 role/vote/entitlement：呈现面不等于权威状态"
+              }
+            ],
+            "cards": [
+              {
+                "id": "payload-fields",
+                "front": "WorldPresencePayloadV1 为什么不放 current_vote？",
+                "back": "它是呈现坐标通道，不是权威状态源；投票应走权威快照与独立 UI 派生。",
+                "tags": [
+                  "presence-boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 17,
+                    "lineEnd": 27,
+                    "nodeIds": [],
+                    "note": "V1 字段仅含呈现坐标与 emote"
+                  }
+                ]
+              },
+              {
+                "id": "remote-state-local",
+                "front": "missingSinceMs 属于 payload 还是 RemotePresenceState？含义？",
+                "back": "属于接收端 RemotePresenceState：标记「从何时起不再出现在同步快照里」，不随广播原样发出。",
+                "tags": [
+                  "presence-boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 29,
+                    "lineEnd": 39,
+                    "nodeIds": [],
+                    "note": "RemotePresenceState.missingSinceMs 为本地时间语义"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "payload-not-vote",
+                "kind": "short-answer",
+                "title": "通道边界",
+                "prompt": "把投票写进 presence 最直接的产品风险是什么关键词？（权限面过宽）",
+                "expectedAnswer": "旁路可见",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 17,
+                    "lineEnd": 27,
+                    "nodeIds": [],
+                    "note": "payload 仅呈现字段"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "parse-or-drop",
+            "title": "坏包直接丢，不半信半疑",
+            "content": "# 坏包直接丢，不半信半疑\n\n## 学习目标\n\n完成本课后，你能解释 `parseWorldPresencePayload` 在哪些条件返回 `null`，以及为什么「解析失败」必须发生在进入 runtime 之前。\n\n## 先给结论\n\n- **事实：版本硬匹配。** `value.version !== 1` 直接 `null`——未来版本不会被旧客户端瞎读一半字段。\n- **事实：字段全量校验。** 空 `alias`/`playerId`、非有限 `rotationY`/`updatedAtMs`、非 `idle|walk|sit` 的 locomotion、坏 emote 结构一律拒绝。\n- **事实：emote 可选但一旦出现就必须合法。** `value.emote !== undefined && !emote` 时整包丢弃，而不是「人还在、手势坏了」。\n- **推论：半解析是最危险的成功。** 位置对、版本错，或 locomotion 乱码却仍渲染，会把故障伪装成正常在场。\n\n## 一个类比\n\n安检不是「包里大部分合法就放行」。有一件违禁品，整包退回。实时状态同理：**残缺在场比缺席更伤信任**（幽灵坐标、抽搐旋转）。\n\n## 工作示例\n\n1. Supabase `presenceState()` 给你一堆 unknown。\n2. `flattenWorldPresenceState` 对每条调用 `parseWorldPresencePayload`。\n3. `version: 2` 或 `position.x = NaN` → `null` → 该条不进入地图。\n4. 只有通过的 payload 才参与 newest-by-player 合并。\n\n## 自检\n\n为什么 emote 坏了要整包丢，而不是保留 position、丢掉 emote？\n\n答案：发送端把 emote 与姿态当作同一条状态提交；局部接受会让接收端状态机与发送端序列号/时序假设分叉，后续 `emoteKey` 比较也会建立在错误前提上。全有或全无更简单、可测。\n\n## 重点\n\n**未知形状进不了状态机。** 解析器是 presence 的第一道 fail-closed。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 181,
+                "lineEnd": 204,
+                "nodeIds": [],
+                "note": "parseWorldPresencePayload：版本与字段全量校验"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 124,
+                "lineEnd": 136,
+                "nodeIds": [],
+                "note": "parseEmote：id/sequence/untilMs 任一非法则 null"
+              }
+            ],
+            "cards": [
+              {
+                "id": "version-gate",
+                "front": "收到 version:2 的 presence 包时解析结果是什么？为什么？",
+                "back": "返回 null。旧客户端不能半读未来 schema，避免幽灵字段驱动渲染。",
+                "tags": [
+                  "parse-fail-closed"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 181,
+                    "lineEnd": 183,
+                    "nodeIds": [],
+                    "note": "version 必须严格等于 1"
+                  }
+                ]
+              },
+              {
+                "id": "bad-emote-whole",
+                "front": "payload 带了非法 emote 时，人会不会仍被画出来？",
+                "back": "不会。emote 非法时整包 parse 失败，不会「只丢手势留坐标」。",
+                "tags": [
+                  "parse-fail-closed"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 191,
+                    "lineEnd": 192,
+                    "nodeIds": [],
+                    "note": "emote 出现但 parse 失败则整包 null"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "version-reject",
+                "kind": "short-answer",
+                "title": "版本门",
+                "prompt": "parseWorldPresencePayload 对非 1 的 version 返回什么？",
+                "expectedAnswer": "null",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 181,
+                    "lineEnd": 183,
+                    "nodeIds": [],
+                    "note": "version !== 1 → null"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "throttle-the-publish",
+            "title": "不是每帧都该上网",
+            "content": "# 不是每帧都该上网\n\n## 学习目标\n\n完成本课后，你能用 `shouldPublishPresence` 的阈值解释：哪些变化立刻发、哪些被距离/角度/时间门槛挡住，以及 emote 为什么开特例。\n\n## 先给结论\n\n- **事实：默认门槛写死。** `DEFAULT_MIN_INTERVAL_MS = 160`，`DEFAULT_MIN_MOVE_DISTANCE = 0.08`，`DEFAULT_MIN_ROTATION_RADIANS = 0.08`。\n- **事实：首次、换人、emote 序列变化必发。** `!previous`、`playerId` 变、`emoteKey` 变 → `true`。\n- **事实：小抖不动网。** 位移与转角都小于门槛时，只有攒够 160ms 心跳才发。\n- **推论：带宽与「活着」信号要同时满足。** 纯事件驱动会在站桩时沉默，对端可能误判掉线；纯高频心跳又烧流量。\n\n## 一个类比\n\n对讲机不必每吸一口气就按键。走一大步、转身、挥手——立刻说；站着轻微晃——偶尔报一声「还在」。\n\n## 工作示例\n\n1. 玩家从 (0,0) 挪到 (0.01,0.01)，40ms 后：`shouldPublishPresence` → false。\n2. 挪到 0.3 或转够角：true。\n3. 原地贴 `emote: { id, sequence, untilMs }`：即便间隔 <160ms 也 true，因为 `emoteKey` 变了。\n4. 本地 emote 还有 `LOCAL_EMOTE_COOLDOWN_MS = 5000`，避免连点刷序列。\n\n## 自检\n\n如果去掉 160ms 心跳、只在移动时 publish，站桩的人在对端会怎样？\n\n答案：对端可能长时间收不到更新；若你的过期策略错误地按「最后收包时间」杀实体，站桩会被误删。TuringPact 用 `missingSinceMs`（确认缺失）而不是「沉默即死亡」——但仍需要合理的发布策略配合。\n\n## 重点\n\n**节流表是产品体验：社交手势优先于毫米级位移。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 95,
+                "lineEnd": 100,
+                "nodeIds": [],
+                "note": "发布与插值相关默认常量"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 224,
+                "lineEnd": 238,
+                "nodeIds": [],
+                "note": "shouldPublishPresence 门槛与 emote 必发"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/emoteCooldown.ts",
+                "lineStart": 8,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "LOCAL_EMOTE_DURATION/COOLDOWN 防连点叠信号"
+              }
+            ],
+            "cards": [
+              {
+                "id": "emote-always",
+                "front": "emote sequence 变化时，即便不足 160ms 会不会 publish？",
+                "back": "会。emoteKey 变化直接 true，社交信号不被位移节流吞掉。",
+                "tags": [
+                  "publish-throttle"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 232,
+                    "lineEnd": 234,
+                    "nodeIds": [],
+                    "note": "emoteKey 不同则立即 publish"
+                  }
+                ]
+              },
+              {
+                "id": "min-move",
+                "front": "DEFAULT_MIN_MOVE_DISTANCE 是多少？作用是什么？",
+                "back": "0.08。小于该平面位移的微抖不触发发布，降低噪声流量。",
+                "tags": [
+                  "publish-throttle"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 95,
+                    "lineEnd": 97,
+                    "nodeIds": [],
+                    "note": "默认位移门槛 0.08"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-interval",
+                "kind": "short-answer",
+                "title": "心跳间隔",
+                "prompt": "shouldPublishPresence 默认最小间隔毫秒数是多少？",
+                "expectedAnswer": "160",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 95,
+                    "lineEnd": 95,
+                    "nodeIds": [],
+                    "note": "DEFAULT_MIN_INTERVAL_MS = 160"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "newest-wins-per-player",
+            "title": "一人多会话，只留最新",
+            "content": "# 一人多会话，只留最新\n\n## 学习目标\n\n完成本课后，你能说明 `flattenWorldPresenceState` 如何处理：自己的包、畸形包、同一 `playerId` 多条会话。\n\n## 先给结论\n\n- **事实：先 parse，再过滤自己。** `payload.playerId === localPlayerId` 直接跳过——本地权威位姿不吃网络回声。\n- **事实：按 playerId 折叠，保留 `updatedAtMs` 最大者。** 多 tab / 重连残留会话不会画两个自己的分身给别人（对远端观察者而言）。\n- **事实：畸形包在 flatten 阶段消失。** `parse` 失败就不进 `newestByPlayer`。\n- **推论：presence key 与业务 playerId 可能一对多。** 传输层会话键不等于身份；合并规则必须显式。\n\n## 一个类比\n\n机场航班屏：同一航班号可能短暂出现多条系统记录，旅客只该看到最新一条。你不会把「历史错误登机口」和「当前登机口」并排显示。\n\n## 工作示例\n\n1. `presenceState()` 返回 `{ clientA: [remote], clientB: [self], clientC: [{version:2}] }`。\n2. flatten 后只剩 remote；self 被滤，version2 被滤。\n3. 同 player 有 updatedAtMs 1000 与 1200 两条 → 只要 1200。\n\n## 自检\n\n为什么过滤 self 发生在接收 flatten，而不是发送端不 track？\n\n答案：发送端必须 track 才能让别人看见你；接收端若再把自己的网络回声画进远程列表，本地预测与远程插值会打架（双影、抖动）。\n\n## 重点\n\n**多会话是常态，不是边界情况。** newest-by-player 是默认合并律。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 206,
+                "lineEnd": 222,
+                "nodeIds": [],
+                "note": "flattenWorldPresenceState：parse、滤 self、newest 折叠"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/transport/worldPresenceTransport.ts",
+                "lineStart": 40,
+                "lineEnd": 44,
+                "nodeIds": [],
+                "note": "transport 回调统一走 flattenWorldPresenceState"
+              }
+            ],
+            "cards": [
+              {
+                "id": "filter-self",
+                "front": "flatten 时为什么丢掉 localPlayerId 的 payload？",
+                "back": "避免网络回声覆盖本地权威位姿，防止双影与插值打架。",
+                "tags": [
+                  "presence-merge"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 213,
+                    "lineEnd": 214,
+                    "nodeIds": [],
+                    "note": "playerId === localPlayerId 则 continue"
+                  }
+                ]
+              },
+              {
+                "id": "newest-clock",
+                "front": "同一 playerId 多条 presence 用什么字段决胜？",
+                "back": "updatedAtMs 更大者胜出。",
+                "tags": [
+                  "presence-merge"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 215,
+                    "lineEnd": 218,
+                    "nodeIds": [],
+                    "note": "按 updatedAtMs 保留最新"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "collapse-key",
+                "kind": "short-answer",
+                "title": "折叠键",
+                "prompt": "flatten 按哪个字段折叠多会话？",
+                "expectedAnswer": "playerId",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 210,
+                    "lineEnd": 218,
+                    "nodeIds": [],
+                    "note": "newestByPlayer 以 playerId 为键"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "disconnect-and-roster",
+        "title": "断线与名册",
+        "objective": "掌握失踪打戳、插值/瞬移、leave 复核与到达 diff 的静默规则",
+        "lessons": [
+          {
+            "id": "missing-then-prune",
+            "title": "失踪不是删除",
+            "content": "# 失踪不是删除\n\n## 学习目标\n\n完成本课后，你能画出「确认缺失 → 等待 → 修剪」的状态路径，并说明为什么 idle 无移动包不会被 `pruneStaleRemotePresence` 清掉。\n\n## 先给结论\n\n- **事实：缺失是打戳，不是立刻删。** `mergeRemotePresencePayloads` 在全量快照里找不到某人且其 `missingSinceMs` 仍为 null 时，写入 `missingSinceMs: nowMs`。\n- **事实：`markRemotePresenceMissing` 只在确认缺席时启动计时。** 已 missing 的不会被刷新成更新的时间戳逻辑外的二次语义——仅在 null 时写入。\n- **事实：修剪看 missing 时长。** `pruneStaleRemotePresence`：`missingSinceMs === null` **永远保留**；只有 missing 超过 `staleAfterMs` 才丢。\n- **推论：沉默 ≠ 失踪。** 站桩不发移动包时 `missingSinceMs` 仍为 null，60 秒后 prune 仍 size=1（测试写明）。\n\n## 一个类比\n\n同事摄像头黑了：你先标「可能断线」，等几十秒；确认会议室名单已无此人，才从在线墙撕名牌。你不会因为对方没说话就把人当成离开。\n\n## 工作示例\n\n```mermaid\nstateDiagram-v2\n  [*] --> Present: applyRemotePresenceUpdate\n  Present --> Present: 新 payload\\nmissingSinceMs=null\n  Present --> Missing: 快照缺席或 leave 确认\\n写入 missingSinceMs\n  Missing --> Present: 再次收到 payload\n  Missing --> Gone: now - missingSinceMs > staleAfterMs\\nprune 删除\n```\n\n图里最关键的线是 **Present → Missing 只打戳、不删**，以及 **prune 不处理 missingSinceMs===null 的 Present**。很多人误把「最后收包时间超时」当成离开，会把安静站桩的玩家杀光。\n\n## 自检\n\n全量 sync 暂时为空数组时，系统应立刻清空远程列表吗？\n\n答案：不应。应标记 missing 并等待 stale 窗口；瞬时空快照（blip）后对方若回来，可直接回到 Present，而无需「离场动画 + 入场动画」双刷。\n\n## 重点\n\n**离开是两阶段：确认失踪，再到期删除。** 混成一步就会在弱网下鬼畜闪烁。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 307,
+                "lineEnd": 333,
+                "nodeIds": [],
+                "note": "mergeRemotePresencePayloads：缺席则写 missingSinceMs"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 354,
+                "lineEnd": 370,
+                "nodeIds": [],
+                "note": "markRemotePresenceMissing：仅 null→now 启动失踪钟"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 401,
+                "lineEnd": 413,
+                "nodeIds": [],
+                "note": "pruneStaleRemotePresence：null missing 永不因静默删除"
+              }
+            ],
+            "cards": [
+              {
+                "id": "idle-not-stale",
+                "front": "远端 idle 很久没移动包，prune 会删他吗？",
+                "back": "不会。missingSinceMs 仍为 null 时 prune 一律保留。",
+                "tags": [
+                  "missing-prune"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 407,
+                    "lineEnd": 410,
+                    "nodeIds": [],
+                    "note": "missingSinceMs===null 保留"
+                  }
+                ]
+              },
+              {
+                "id": "two-phase-leave",
+                "front": "确认离开时第一步写什么字段？",
+                "back": "missingSinceMs（时间戳）；真正删除交给后续 prune。",
+                "tags": [
+                  "missing-prune"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 354,
+                    "lineEnd": 366,
+                    "nodeIds": [],
+                    "note": "markRemotePresenceMissing 写入 missingSinceMs"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "prune-null",
+                "kind": "short-answer",
+                "title": "静默保留",
+                "prompt": "prune 时 missingSinceMs 为 null 会怎样？",
+                "expectedAnswer": "保留",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 407,
+                    "lineEnd": 410,
+                    "nodeIds": [],
+                    "note": "null missing 保留条目"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "lerp-or-teleport-snap",
+            "title": "滑动还是瞬移",
+            "content": "# 滑动还是瞬移\n\n## 学习目标\n\n完成本课后，你能解释 `applyRemotePresenceUpdate` 与 `interpolateRemotePresence` 如何用 `intervalMs` 与 `TELEPORT_SNAP_DISTANCE` 在平滑与正确之间切换。\n\n## 先给结论\n\n- **事实：远程状态存「上一段」与「当前」。** `previousPosition` / `previousRotationY` 对 `current` 做 lerp。\n- **事实：超过 5 单位平面距离就 snap。** `TELEPORT_SNAP_DISTANCE = 5`，大跳不再缓动（避免滑翔穿越桌子）。\n- **事实：interval 自适应。** 包间隔在 5–450ms 时，`intervalMs` 做 0.7/0.3 平滑，插值时钟跟上真实发包节奏。\n- **事实：迟到 emote 仍有本地最短展示。** 新 emote 用 `max(untilMs, nowMs + REMOTE_EMOTE_MIN_DISPLAY_MS)`，发送端时钟已过期也能看见挥手。\n\n## 一个类比\n\n地图导航：隔壁路口的移动用动画跟过去；突然从城东跳到城西，你不会画一条穿山的平滑曲线，而是直接钉到新坐标。\n\n## 工作示例\n\n1. 收到 x=0，再收到 x=1：插值在中间某处（测试期望 0.3–0.5）。\n2. 收到 x=9（距离 >5）：`interpolate` 直接 x=9。\n3. emote 的 `untilMs` 已过、但本地 now 刚收到：仍显示至少约 5s。\n\n## 自检\n\n为什么插值用 `lastReceivedAtMs` 与 `intervalMs`，而不是墙钟固定 16ms？\n\n答案：发包节奏随网络与 `shouldPublishPresence` 变化；固定帧假设会在慢网下抽搐、在快网下过于粘滞。用实测间隔估下一跳更稳。\n\n## 重点\n\n**平滑是默认，瞬移是正确性逃生口。** 阈值写进常量，而不是靠感觉调。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 277,
+                "lineEnd": 304,
+                "nodeIds": [],
+                "note": "applyRemotePresenceUpdate：自适应 interval 与 TELEPORT snap"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 372,
+                "lineEnd": 399,
+                "nodeIds": [],
+                "note": "interpolateRemotePresence：按 interval 投影位姿与 emote"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                "lineStart": 99,
+                "lineEnd": 100,
+                "nodeIds": [],
+                "note": "TELEPORT_SNAP_DISTANCE=5 与 REMOTE_EMOTE_MIN_DISPLAY_MS"
+              }
+            ],
+            "cards": [
+              {
+                "id": "snap-distance",
+                "front": "多大位移会放弃 lerp 改为 snap？",
+                "back": "平面距离超过 TELEPORT_SNAP_DISTANCE（5）。",
+                "tags": [
+                  "interpolation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 281,
+                    "lineEnd": 283,
+                    "nodeIds": [],
+                    "note": "distance > TELEPORT_SNAP_DISTANCE 则 snap"
+                  }
+                ]
+              },
+              {
+                "id": "late-emote",
+                "front": "对端 emote.untilMs 已过期才到达时，本地会怎样？",
+                "back": "仍用 nowMs+REMOTE_EMOTE_MIN_DISPLAY_MS 保底展示窗口。",
+                "tags": [
+                  "interpolation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 256,
+                    "lineEnd": 259,
+                    "nodeIds": [],
+                    "note": "新 emote 取 max(untilMs, now+5000)"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "snap-const",
+                "kind": "short-answer",
+                "title": "瞬移阈值",
+                "prompt": "TELEPORT_SNAP_DISTANCE 的数值是？",
+                "expectedAnswer": "5",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/presencePayload.ts",
+                    "lineStart": 99,
+                    "lineEnd": 99,
+                    "nodeIds": [],
+                    "note": "TELEPORT_SNAP_DISTANCE = 5"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "confirm-leave-before-drop",
+            "title": "leave 事件也不可全信",
+            "content": "# leave 事件也不可全信\n\n## 学习目标\n\n完成本课后，你能说明 transport 层为何对 leave 做 `queueMicrotask` 复核，以及 `pendingPresenceCleanupByTopic` 如何避免 remount 竞态。\n\n## 先给结论\n\n- **事实：topic 按房间。** `world-presence:${roomId}`，presence key 为 `localPlayerId`。\n- **事实：leave 后异步再读 presenceState。** 仅当 player 不在剩余集合才 `onPresenceLeave`；若 leave 事件时人已回来，回调参数是空列表（测试断言）。\n- **事实：unsubscribe 先 untrack 再 removeChannel。** 清理 Promise 登记在 `pendingPresenceCleanupByTopic`。\n- **事实：同 topic 重订阅读等清理结束。** remount 时 `pendingCleanup.finally(start)`，避免双 channel 回调交错。\n\n## 一个类比\n\n前台说「客人离开了」，你还要抬头看大厅——他可能只是去了洗手间又刷了次门禁。名册以你复核的现场为准，不以单次广播为准。\n\n## 工作示例\n\n1. leave 携带 remote payload，但 `presenceState` 仍有 remote → `onPresenceLeave([])`。\n2. 真正清空 state 后再 leave → `onPresenceLeave(['remote'])`。\n3. 组件快速卸载再挂载：第二次 `subscribe` 的 handler 注册被推迟到 untrack 完成。\n\n## 自检\n\n为什么 join/leave 不直接 `sync` 全量替代一切？\n\n答案：代码对 sync / join / leave 分流：sync 全量 `onPresenceChange`，join 走 `onPresenceUpdate`，leave 走确认后的 leave。全量刷新成本与闪烁更高；增量要配复核，否则会话迁移会误杀。\n\n## 重点\n\n**传输事件是线索，成员集合是判决。** 实时系统里「事件」常比「状态」更吵。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/transport/worldPresenceTransport.ts",
+                "lineStart": 34,
+                "lineEnd": 79,
+                "nodeIds": [],
+                "note": "subscribe：sync/join/leave 分流与 leave 复核"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/transport/worldPresenceTransport.ts",
+                "lineStart": 81,
+                "lineEnd": 111,
+                "nodeIds": [],
+                "note": "pendingPresenceCleanupByTopic 与 untrack 串行重订阅"
+              }
+            ],
+            "cards": [
+              {
+                "id": "leave-recheck",
+                "front": "leave 回调里为什么还要读 presenceState？",
+                "back": "过滤会话迁移假离开：人仍在集合则不触发 onPresenceLeave。",
+                "tags": [
+                  "transport-leave"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/transport/worldPresenceTransport.ts",
+                    "lineStart": 62,
+                    "lineEnd": 73,
+                    "nodeIds": [],
+                    "note": "queueMicrotask 后对照 remainingPlayerIds"
+                  }
+                ]
+              },
+              {
+                "id": "cleanup-serial",
+                "front": "同 room topic 快速 remount 时如何避免双 channel？",
+                "back": "unsubscribe 的 cleanup Promise 入 Map，新订阅 finally 后再 start。",
+                "tags": [
+                  "transport-leave"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/transport/worldPresenceTransport.ts",
+                    "lineStart": 81,
+                    "lineEnd": 86,
+                    "nodeIds": [],
+                    "note": "pendingCleanup.finally(start)"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "leave-tool",
+                "kind": "short-answer",
+                "title": "假离开",
+                "prompt": "leave 复核用的异步调度是？",
+                "expectedAnswer": "queueMicrotask",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/transport/worldPresenceTransport.ts",
+                    "lineStart": 64,
+                    "lineEnd": 64,
+                    "nodeIds": [],
+                    "note": "queueMicrotask 包裹 leave 确认"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "silent-first-snapshot",
+            "title": "重连不要重新报幕",
+            "content": "# 重连不要重新报幕\n\n## 学习目标\n\n完成本课后，你能用 `diffSeatArrivals` 的三条守卫解释：为何首屏、reseed、瞬时空快照都不应刷一排「XXX 加入了」。\n\n## 先给结论\n\n- **事实：`uninitialized` 或 `reseed: true` 只铺 knownIds，arrivals 为空。** 注释写明：重连后全量成员不得再广播一遍。\n- **事实：每人在 known 期间最多宣布一次。** 已在 `knownIds` 的 id 跳过。\n- **事实：瞬时空快照不清除 knownIds。** 合并时 `knownIds` 只增不减（无显式 reseed），防止 blip 后全员再宣布。\n- **事实：入座成员过滤 AI。** `seatedMembersFromPlayers` 只要 `!is_ai && seat_state === 'occupied'`。\n\n## 一个类比\n\n会议室门禁重连：系统不应因为交换机闪断，就给所有人再播一遍「欢迎张三李四王五」。欢迎词只给**真正新出现**的 id。\n\n## 工作示例\n\n1. 首次 snapshot 五人 → 无 toast，state=ready，known=五人。\n2. 第六人入座 → 一条 arrival。\n3. 网络 blip 得到空 members → known 仍五人，无「离开再欢迎」。\n4. channel reconnect 调 `reseed: true` → 再次静默铺种子。\n\n## 自检\n\n为什么 knownIds 在普通 diff 里不删除离开的人？\n\n答案：离开公告与到达公告是不同产品问题；到达 diff 的职责是「新来了谁」。用空快照删除 known 会把瞬时故障变成假到达风暴。离开应走 presence leave / 权威座位状态。\n\n## 重点\n\n**引导文案的正确性取决于 diff 的静默规则，不取决于文案本身。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/seatArrivalDiff.ts",
+                "lineStart": 1,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "三条守卫：首屏静默、只宣布一次、reseed 清知识"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/seatArrivalDiff.ts",
+                "lineStart": 37,
+                "lineEnd": 71,
+                "nodeIds": [],
+                "note": "diffSeatArrivals：reseed/uninitialized 与 blip 保 knownIds"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-presence/domain/seatArrivalDiff.ts",
+                "lineStart": 73,
+                "lineEnd": 85,
+                "nodeIds": [],
+                "note": "seatedMembersFromPlayers 过滤 AI 与非 occupied"
+              }
+            ],
+            "cards": [
+              {
+                "id": "reseed-silent",
+                "front": "presence 频道重连后为何传 reseed:true？",
+                "back": "静默重铺 knownIds，避免对仍在房间的人再次宣布到达。",
+                "tags": [
+                  "arrival-diff"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/seatArrivalDiff.ts",
+                    "lineStart": 49,
+                    "lineEnd": 54,
+                    "nodeIds": [],
+                    "note": "reseed 或 uninitialized 时 arrivals 为空"
+                  }
+                ]
+              },
+              {
+                "id": "blip-known",
+                "front": "瞬时空 members 会清空 knownIds 吗？",
+                "back": "不会。普通 diff 只把 nextIds 并入 known，不删除旧 id。",
+                "tags": [
+                  "arrival-diff"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/seatArrivalDiff.ts",
+                    "lineStart": 62,
+                    "lineEnd": 69,
+                    "nodeIds": [],
+                    "note": "preserve previously known ids across blip"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "first-silent",
+                "kind": "short-answer",
+                "title": "首屏",
+                "prompt": "tracker 为 uninitialized 时 arrivals 是？",
+                "expectedAnswer": "[]",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-presence/domain/seatArrivalDiff.ts",
+                    "lineStart": 49,
+                    "lineEnd": 53,
+                    "nodeIds": [],
+                    "note": "首屏 arrivals 为空数组"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "signals-not-truth",
+        "title": "信号不是真相",
+        "objective": "掌握 typing/gap 呈现分层、人机同模节奏，以及 moment/冷场的 bootstrap 与权威点火",
+        "lessons": [
+          {
+            "id": "typing-is-presentation",
+            "title": "「正在输入」不是真相",
+            "content": "# 「正在输入」不是真相\n\n## 学习目标\n\n完成本课后，你能区分权威消息时间与 live typing 呈现，并指出 `typingRhythm` 模块边界写明的「不得进入」的表面。\n\n## 先给结论\n\n- **事实：typing 是纯呈现层。** 文件头写明 owns 时长/阶段/FIFO；**does not own** Realtime、历史/forensics、服务端投递延迟。\n- **事实：Guard：仅 live callout。** History、Daily forensics、votes、store 必须保留权威 `created_at`。\n- **事实：阶段由 (text, arrival, now) 决定。** `resolveTypingPresentation` → `typing` | `revealed`。\n- **事实：对话间隙是另一类信号。** `getConversationGap` 仅当间隔 ≥ `MIN_VISIBLE_GAP_MS`（90s）才显示分钟级 gap 标记。\n\n## 一个类比\n\n舞台剧里演员「假装写信」：信其实已经写好在提词器上。观众需要的是节奏，不是邮政系统延迟。历史档案室则只存真实投递时间。\n\n## 工作示例\n\n1. 消息已达客户端 store（权威时间已定）。\n2. live 气泡调用 `typingDurationMs` 算出 duration，先显示 typing 再 reveal。\n3. 打开历史记录：**禁止**再跑 typing 动画，直接按权威时间排布。\n4. 两条消息间隔 2 分钟 → `getConversationGap` 给出 `minutes: 2` 分隔。\n\n## 自检\n\n把 typing 延迟写进服务端「真正晚发消息」会有什么问题？\n\n答案：权威时间被污染，复盘/投票/审计全错；弱网用户看到的「思考」其实是传输；也无法在不改历史的情况下调整体验。\n\n## 重点\n\n**体验节奏可以假，时间线真相不能假。** 分层是实时产品的基本功。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                "lineStart": 1,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "typingRhythm：呈现层边界与禁止表面"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                "lineStart": 71,
+                "lineEnd": 84,
+                "nodeIds": [],
+                "note": "resolveTypingPresentation 由 arrival+duration 定 phase"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                "lineStart": 6,
+                "lineEnd": 24,
+                "nodeIds": [],
+                "note": "conversationGap：MIN_VISIBLE_GAP_MS=90s 才显示"
+              }
+            ],
+            "cards": [
+              {
+                "id": "typing-not-history",
+                "front": "历史消息列表能否调用 scheduleTypingReveals？",
+                "back": "不能。模块 Guard 要求 history/forensics 保留权威时间，仅 live callout 使用。",
+                "tags": [
+                  "typing-boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                    "lineStart": 9,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "History/forensics 不得用 typing 节奏"
+                  }
+                ]
+              },
+              {
+                "id": "gap-threshold",
+                "front": "两条聊天间隔多久才会出现 conversationGap？",
+                "back": "至少 90 秒（MIN_VISIBLE_GAP_MS）；再 floor 成分钟。",
+                "tags": [
+                  "typing-boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                    "lineStart": 6,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "gapMs < 90_000 返回 null"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "gap-ms",
+                "kind": "short-answer",
+                "title": "间隙阈值",
+                "prompt": "MIN_VISIBLE_GAP_MS 是多少毫秒？",
+                "expectedAnswer": "90000",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/chat-signals/conversationGap.ts",
+                    "lineStart": 6,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "MIN_VISIBLE_GAP_MS = 90_000"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "shared-cadence-hides-ai",
+            "title": "同一套打字节奏，不泄身份",
+            "content": "# 同一套打字节奏，不泄身份\n\n## 学习目标\n\n完成本课后，你能说明为何人类与 AI 共用 `typingDurationMs`，以及 `scheduleTypingReveals` 的 per-sender FIFO 防止什么穿帮。\n\n## 先给结论\n\n- **事实：注释写明同一模型。** 「cadence never leaks who is AI」——人和 AI 走同一 live bubble 路径。\n- **事实：时长确定性。** 由字符数 + `unitMix` 伪随机，同文案跨客户端一致；有 floor 380ms、cap 4000ms。\n- **事实：同发送者 FIFO。** 后一条的 start = max(arrival, 上一条 revealAt)；短句不能插队盖过长句。\n- **推论：AI 若秒回全文、人慢打，节奏本身就是身份侧信道。** 产品要藏 AI，必须先统一呈现时钟。\n\n## 一个类比\n\n谍战戏里所有人用同款对讲机延迟；若只有内应消息「零延迟灌屏」，观众不用看剧本也能指认。\n\n## 工作示例\n\n1. AI 与人类同一句 `typingDurationMs(text)` 结果相等。\n2. AI 连续两条：长句仍在 typing 时，短句 `ok` 的 revealAt ≥ 长句 revealAt。\n3. 历史积压的自然 reveal 已过的行不再堵 live 通道（readyAt 推进但不过度 backlog stall）。\n\n## 自检\n\n只给 AI 加 typing、人类真实按键广播，是否「更真实」？\n\n答案：在身份隐藏玩法里更糟——分布差异即分类器。若产品明确展示 Bot，可以分轨；TuringPact 桌局设定要求不泄露。\n\n## 重点\n\n**侧信道往往不在内容，而在时间形状。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                "lineStart": 48,
+                "lineEnd": 65,
+                "nodeIds": [],
+                "note": "typingDurationMs：人机同模、floor/cap、确定性"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                "lineStart": 98,
+                "lineEnd": 135,
+                "nodeIds": [],
+                "note": "scheduleTypingReveals：per-sender FIFO"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                "lineStart": 29,
+                "lineEnd": 33,
+                "nodeIds": [],
+                "note": "TYPING_DURATION_CAP_MS 与 FLOOR"
+              }
+            ],
+            "cards": [
+              {
+                "id": "same-path",
+                "front": "为什么 AI 与人类共用 typingDurationMs？",
+                "back": "避免打字节奏成为身份侧信道；同文案同 cadence。",
+                "tags": [
+                  "typing-ai"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                    "lineStart": 48,
+                    "lineEnd": 51,
+                    "nodeIds": [],
+                    "note": "same model so cadence never leaks AI"
+                  }
+                ]
+              },
+              {
+                "id": "fifo-reason",
+                "front": "同 sender 短句后发，为何不能立刻 reveal？",
+                "back": "FIFO：startMs=max(arrival,上一reveal)，防止短句插队破坏语序观感。",
+                "tags": [
+                  "typing-ai"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                    "lineStart": 118,
+                    "lineEnd": 124,
+                    "nodeIds": [],
+                    "note": "readyAtMs 串起同发送者队列"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "typing-cap",
+                "kind": "short-answer",
+                "title": "时长上限",
+                "prompt": "TYPING_DURATION_CAP_MS 是多少？",
+                "expectedAnswer": "4000",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                    "lineStart": 30,
+                    "lineEnd": 30,
+                    "nodeIds": [],
+                    "note": "TYPING_DURATION_CAP_MS = 4_000"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "bootstrap-blocks-false-moments",
+            "title": "首帧静默，权威才开火",
+            "content": "# 首帧静默，权威才开火\n\n## 学习目标\n\n完成本课后，你能对比 `advanceVoteMoments` 的 bootstrap 与 cold-open 的 `isAuthority`，说明「呈现节拍」如何避免在中途入房/多端同时触发时炸场。\n\n## 先给结论\n\n- **事实：投票 moment 首快照永不发射。** `!tracker.seeded` 时只存 map，`events` 为空；若已有票则 `firstVoteAnnounced=true`，防止中途加入误播「第一票」。\n- **事实：计票与 moment 分离。** `buildVoteCountsFromPlayers` 只做权威 tally 映射；banner 是另一条呈现管线。\n- **事实：冷场提示仅权威点火。** `decideColdOpenSilence` 在 `!isAuthority` 时 `cancelled: not-authority`；10s 静默窗、确定性提名与文案变体。\n- **推论：实时 UI 的「第一次」必须相对本地观察者定义清楚。** 全局第一次 vs 我入房后第一次——搞混就刷屏。\n\n## 一个类比\n\n球赛回放：你半场打开转播，不会把当前 2:1 当成「首粒进球」再放礼炮。礼炮只在从 0 变 1 的那次边沿触发；解说权也只给主播席，不给每位观众各放一次。\n\n## 工作示例\n\n1. 中途入房，票已存在 → seed 且 firstVoteAnnounced，无 first-vote banner。\n2. 本局随后第一张从空到非空的票 → 可发射 firstVote。\n3. 仅 host/`isAuthority` 在冷场 10s 后 fire nudge；其他人 decision 直接 cancel。\n4. 与 unit2 的 seat arrival 首屏静默同一家族：**bootstrap edge，不 replay edge**。\n\n## 自检\n\n若每个客户端各自 fire cold-open，房间会出现什么？\n\n答案：多条系统提示、不同 nominee（若种子不一致）或同文案重复；权威单写者 + 确定性 seed 把「谁说话」收成一条。\n\n## 重点\n\n**边沿触发的呈现必须：静默种子 + 单一点火权威。** 这是实时一致性的产品版本，不只是算法细节。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/live-room/domain/voteMoments.ts",
+                "lineStart": 111,
+                "lineEnd": 142,
+                "nodeIds": [],
+                "note": "advanceVoteMoments bootstrap：首帧不发射、中途入房压 firstVote"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/live-room/domain/coldOpenSilence.ts",
+                "lineStart": 127,
+                "lineEnd": 143,
+                "nodeIds": [],
+                "note": "decideColdOpenSilence：非 authority 直接 not-authority"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/live-room/domain/buildVoteCounts.ts",
+                "lineStart": 3,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "buildVoteCounts 只做 tally 不拥有 React/网络"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/live-room/domain/coldOpenSilence.ts",
+                "lineStart": 9,
+                "lineEnd": 10,
+                "nodeIds": [],
+                "note": "COLD_OPEN_SILENCE_MS=10000"
+              }
+            ],
+            "cards": [
+              {
+                "id": "vote-bootstrap",
+                "front": "中途入房时 vote tracker 如何避免误播第一票？",
+                "back": "首快照只 seed；若已有票则 firstVoteAnnounced=true，不发 firstVote 事件。",
+                "tags": [
+                  "bootstrap-authority"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/voteMoments.ts",
+                    "lineStart": 131,
+                    "lineEnd": 141,
+                    "nodeIds": [],
+                    "note": "seeded 首帧 emptyEvents 且可标记 firstVoteAnnounced"
+                  }
+                ]
+              },
+              {
+                "id": "cold-authority",
+                "front": "decideColdOpenSilence 在 isAuthority=false 时返回什么 reason？",
+                "back": "cancelled 且 reason 为 not-authority。",
+                "tags": [
+                  "bootstrap-authority"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/coldOpenSilence.ts",
+                    "lineStart": 141,
+                    "lineEnd": 142,
+                    "nodeIds": [],
+                    "note": "非权威 cancelled not-authority"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "cold-reason",
+                "kind": "short-answer",
+                "title": "权威门",
+                "prompt": "非权威 cold-open 的 cancel reason 是？",
+                "expectedAnswer": "not-authority",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/live-room/domain/coldOpenSilence.ts",
+                    "lineStart": 141,
+                    "lineEnd": 142,
+                    "nodeIds": [],
+                    "note": "reason: not-authority"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

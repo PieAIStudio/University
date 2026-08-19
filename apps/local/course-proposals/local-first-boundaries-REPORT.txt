@@ -1,0 +1,71 @@
+local-first-boundaries 课程提案交付报告
+========================================
+
+课程 id: local-first-boundaries
+标题: 「资料仅在本机」不是一句口号
+提案文件: course-proposals/local-first-boundaries.json
+targetSnapshotId: git-90cf76c1177f
+targetAnalysisId: ua-90cf76c1-v2-9-4-zh-full-e98206c7358f1ff1-8b71aac3ba92
+sourceCommit: 90cf76c1177fa19cd5d9d0a6c8257d934a586b5e
+
+规模
+----
+单元数: 3
+  1. loopback-only-service — 服务只听本机（4 节）
+  2. mutation-request-token — 变更必须持有进程密钥（4 节）
+  3. render-without-phoning-home — 渲染绝不静默出网（4 节）
+课时总数: 12
+卡片总数: 24（每节 2 张）
+练习总数: 12（每节 1 道 short-answer）
+证据引用总数: 73（含 lesson / card / exercise；门禁全部 ok）
+
+证据来源（冻结 commit 上真实读过）
+----------------------------------
+- server/http-server.ts：listen 127.0.0.1、LOOPBACK_HOST / rejectNonLoopbackHost、
+  isLoopbackOrigin、requestToken（randomBytes）、requireMutationAccess 三关、
+  tokensMatch/timingSafeEqual、securityHeaders、bootstrap 下发 token、
+  databaseIdentity/fileId（restore 后 inode 重开）
+- src/MarkdownContent.tsx：isLocalUrl（含 // 协议相对优先拒绝）、
+  img 外图拦截、a 外链 noreferrer
+
+含 mermaid 的课时
+----------------
+- require-mutation-access-triple（变更三关流程图）
+- three-layers-must-all-hold（传输 / 写状态 / 渲染三层总图）
+
+门禁 1：check-proposal-shape.mjs
+--------------------------------
+命令:
+  node scripts/check-proposal-shape.mjs course-proposals/local-first-boundaries.json
+输出:
+ok  course-proposals/local-first-boundaries.json
+
+门禁 2：check-proposal-evidence.mjs
+-----------------------------------
+命令:
+  node scripts/check-proposal-evidence.mjs course-proposals/local-first-boundaries.json --study university-local
+结果摘要:
+  ok 行数: 51
+  all 73 references resolve at their pinned commits
+  （完整输出中每条证据均为 ok，无 MISS / 行号越界）
+
+读代码时最反直觉的一点（已写入课中）
+------------------------------------
+外链与外图共用同一个 isLocalUrl，但策略故意不对称：
+  - 外部链接仍然可点（显式同意），只加 target=_blank 与
+    rel="noreferrer noopener external"，切断 referrer / opener；
+  - 外部图片绝不渲染 <img>，因为 ![](https://…) 在打开课文瞬间就会
+    自己 fetch——无需点击、无需同意——源码注释原话是 quietly turns
+    「资料仅在本机」into a page beacon。
+
+同一判定函数、两种组件、两种后果：本地优先要拆的是「静默出网」，
+不是「禁止人类主动查上游文档」。对应课时：
+images-fetch-without-click、external-links-with-consent、
+以及 is-local-url-protocol-relative 里对 // 协议相对 URL 的优先拒绝
+（看起来像路径，实际是远程——必须写在 startsWith('/') 之前）。
+
+未做事项
+--------
+- 未 git commit
+- 未修改 UniversityLocal 业务代码或 airlock 冻结副本
+- 仅新增本报告与 course-proposals/local-first-boundaries.json

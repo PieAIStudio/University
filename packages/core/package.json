@@ -1,0 +1,36 @@
+{
+  "name": "@pieai/university-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The domain model both shells agree on. Types and schemas only — no React, no filesystem, no network.",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": "./dist/*"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "oxlint --deny-warnings src",
+    "format": "oxfmt --write package.json tsconfig.json src",
+    "format:check": "oxfmt --check package.json tsconfig.json src",
+    "test": "vitest run --passWithNoTests",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "oxfmt": "0.58.0",
+    "oxlint": "1.73.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}

@@ -22,15 +22,28 @@ It is not a task diary.
 
 ## Current Focus
 
-The app exists. `pnpm import && pnpm dev` walks a real learner loop end to end:
-world map, course map, lesson, deterministic grading, cards, review queue.
+One repository, two shells, one shared learning surface.
 
-The design is no longer the deliverable — it is the reference the app is built
-against, and where the two disagree the app is what a learner meets.
+```
+apps/local      authoring — filesystem, CLI, single machine   (9999)
+apps/online     delivery  — 3D archipelago, progress, review  (9998)
+packages/core   the domain model. No React, no fs, no network.
+packages/ui     the reader, evidence, review, markdown,语言层
+```
+
+`pnpm content && pnpm dev` runs the online shell; `pnpm --filter
+@pieai/university-local dev` runs the authoring one. Both read the same
+lessons and now render them with the same component.
+
+The old rule list is retired. Two remain, and the rest of AGENTS.md derives
+from them: **share the code**, and **keep the architecture efficient, clear,
+modular, robust and legible to both a person and an AI.** The online shell is
+no longer forbidden from authoring courses — when it authors, it will run the
+same workflows the local shell runs.
 
 ## Order Of Work
 
-Phases 0 to 2 are done. Phase 3 is the current work.
+Phases 0 to 6 are done. Phase 7 is the current work.
 
 0. **Clear the supply line.** Done. See "What happened on 2026-08-18".
 1. **SwimmerUIKit paperwork.** Done — the PGS 0.9.1 delivery is committed and
@@ -63,7 +76,7 @@ Phases 0 to 2 are done. Phase 3 is the current work.
    - Every screen is rendered with real data from the exported packages. The
      reader wireframe uses one real lesson's full markdown, because that is
      the screen the product's advantage lives on.
-4. **Vertical slice.** Done, and it is the app. `pnpm import` splits recovery
+4. **Vertical slice.** Done, and it is the app. `pnpm content` splits recovery
    packages into per-course lesson JSON plus content-addressed assets — the
    6.6 MB course now serves 0.34 MB, because its 6.1 MB of inline screenshots
    became five files that load only when their lesson is open. The first
@@ -91,13 +104,13 @@ Phases 0 to 2 are done. Phase 3 is the current work.
      are unusable in a paid product: `@jamiecypher`'s sound effects are
      CC BY-NC with a commercial grant that runs to that project and does not
      transfer, and the soundtrack is "with the project only". The register is
-     compiled into `scripts/woc-licenses.json` and the import enforces it.
+     compiled into `apps/online/scripts/woc-licenses.json` and the import enforces it.
      donors.md granted this product WOC's *audio unlock* — a code pattern,
-     already in `src/world/audio.ts` — never its sounds.
+     already in `apps/online/src/world/audio.ts` — never its sounds.
    - **Islands are generated, not modelled.** 1 to 41 lessons cannot be one
      mesh. Seeded from `courseId`, so an upstream typo fix cannot rearrange
      a learner's world.
-   - **The kit is repainted on load** from a table in `kit.tsx`, keyed by the
+   - **The kit is repainted on load** from a table in `apps/online/src/world/kit.tsx`, keyed by the
      material names the artists wrote. Four CC0 packs by four authors have
      four palettes; the table is how they become one place, and it puts art
      direction in a file that can be argued with.
@@ -105,7 +118,7 @@ Phases 0 to 2 are done. Phase 3 is the current work.
    The world says one sentence: an island shows how far its course got.
    Nature is there from the first visit; the settlement is what progress
    owns; one beacon burns on the single next course.
-5. **Upstream changes.** The first one is done, and it is the one V2 named
+6. **Upstream changes.** The first one is done, and it is the one V2 named
    rather than one that was guessed. Building the placement screen exposed a
    course-id prefix match in this repository — a second, unwritten copy of the
    course structure, exactly what SPEC-0001 forbids. The fix went upstream:
@@ -123,6 +136,36 @@ Phases 0 to 2 are done. Phase 3 is the current work.
      unrevised ones. Two voices in one library is a launch-blocking content
      task, not an engineering one.
    - An image size budget for lesson screenshots.
+
+7. **One repository.** Done. `git subtree` brought UniversityLocal in as
+   `apps/local` with its history intact — 133 commits across both lineages —
+   and 6,400 lines of its UI moved into `packages/core` and `packages/ui`.
+   534 tests before, 534 after, redistributed with the code they test.
+
+   The split fell out of the code rather than being imposed: `domain/` went to
+   core because the local *server* imports it too, and a thing both a React
+   tree and a Node process need is not a UI concern. `api/client.ts` went to
+   ui because it builds URLs and unwraps responses and does no fetching — a
+   contract, not an implementation.
+
+   The online shell now reads lessons through the shared `MarkdownContent`,
+   which is where its Mermaid, Shiki, authoring directives and lesson images
+   came from. None of it was written twice.
+
+   Two traps recorded so the next session does not re-find them:
+   - `packages/core` must emit real JavaScript, because `apps/local`'s server
+     is a Node process and Node cannot import a `.ts` from a workspace package
+     the way Vite can. Its `exports` is `"./*": "./dist/*"` with no extension
+     appended; a `"./dist/*.d.ts"` pattern turns `schemas.js` into a lookup for
+     `schemas.js.d.ts` and reports as "cannot find module".
+   - Type packages are workspace infrastructure, not an app's private
+     dependency. `@types/three` living inside an app made every `<mesh>` in the
+     3D code fail to typecheck, because `.pnpm` packages resolve `three` by
+     walking up to the root. `publicHoistPattern` is the fix.
+
+   Still queued: `packages/core` should absorb FSRS, so both shells schedule a
+   card with the same algorithm. Today the online shell runs a placeholder and
+   the local one runs real `ts-fsrs` — two answers to "what is due tomorrow".
 
 ## What Happened On 2026-08-18
 

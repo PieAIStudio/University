@@ -1,0 +1,48 @@
+content-as-package course proposal REPORT
+========================================
+date: 2026-08-07
+targetSnapshotId: git-c9f0ec8d57a1
+sourceCommit: c9f0ec8d57a10484acf547ffc2d3458c955e8068
+
+规模
+----
+units: 3
+  - why-content-package: 为什么内容必须独立成包 (4 lessons)
+      · package-boundary: 内容包负责什么、不负责什么
+      · pipeline-layers: 内容流水线：每一层只许碰一件事
+      · catalog-as-ssot: 章节目录只能有一份真相
+      · load-one-chapter: 一次只加载一章：体积与缓存策略
+  - build-and-validate: 构建时机与校验账本 (4 lessons)
+      · dual-source-sync: JSON 与生成类型必须互相掐架
+      · compile-not-ship-compiler: 预编译进仓库：玩家不拿编译器
+      · coverage-fail-closed: 覆盖映射默认锁死：漂移必须显式接受
+      · fidelity-runtime-witness: 保真门禁：存在过不等于播过
+  - export-and-compat: 导出边界与版本兼容 (3 lessons)
+      · export-map-split: 导出地图：玩家入口禁止 creator
+      · player-opaque-graph: 玩家图只给不透明句柄
+      · retire-keep-id: 退休章节：删功能，不删身份证
+lessons: 11
+evidence references: 66
+cards: 22
+exercises: 11
+
+门禁：check-proposal-shape
+--------------------------
+ok  course-proposals/content-as-package.json
+
+门禁：check-proposal-evidence --study supaluv
+---------------------------------------------
+ok  packages/content/src/narrative-graph-creator.node.ts:7-8
+ok  packages/content/src/narrative-graph-player.ts:1-14
+ok  packages/content/src/story-catalog.generated.ts:1-28
+
+all 66 references resolve at their pinned commits
+
+最反直觉的一点（已写入 fidelity-runtime-witness 课）
+----------------------------------------------------
+fidelity 不接受「字在 .ink 里就算交付」。verify-fidelity 会用
+exploreRepresentativeChapter 做代表性运行遍历，并要求精确段落存在
+hasRuntimeTextWitness；声明了 # scene: 但走不到会报
+declared scene is unreachable at runtime。死代码式段落会挂 CI——
+存在过 ≠ 播过。这和「内容包 = 静态资源文件夹」的直觉相反：
+提交的是可玩路径与运行时见证，不是字符串仓库。

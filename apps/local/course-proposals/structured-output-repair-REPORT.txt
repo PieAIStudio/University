@@ -1,0 +1,56 @@
+structured-output-repair 课程提案交付报告
+========================================
+
+规模
+----
+- 单元：3
+  1. three-failure-modes（三种失败三种治）— 3 节
+  2. local-vs-model-repair（修本地还是再问模型）— 4 节
+  3. contract-and-runtime（契约与调用链）— 4 节
+- 课时：11
+- 卡片：22（每节 2）
+- 练习：11（每节 1，short-answer）
+- 证据引用：62 条（全部 kind=fact，均含 note）
+
+输出文件
+--------
+- course-proposals/structured-output-repair.json
+- course-proposals/structured-output-repair-REPORT.txt
+
+门禁结果（最终）
+----------------
+1) node scripts/check-proposal-shape.mjs course-proposals/structured-output-repair.json
+
+   ok  course-proposals/structured-output-repair.json
+
+2) node scripts/check-proposal-evidence.mjs course-proposals/structured-output-repair.json --study turing-pact
+
+   （37 条去重后的路径区间均为 ok）
+   all 62 references resolve at their pinned commits
+
+证据来源（pinned commit）
+-------------------------
+snapshotId:  git-3b402e069a5d
+sourceCommit: 3b402e069a5db5fe9eb82dbc03aa05152b3d298b
+files:
+  - services/mastra/src/contracts/agent-decision.ts
+  - services/mastra/src/contracts/ai-scheduler-core.ts
+  - services/mastra/src/runtime/mastra-decision-agent.ts
+
+读代码时最反直觉的一点（已写进课）
+----------------------------------
+`invalid_decision_schema` 是合法的 StructuredDecisionErrorCode，却故意不在
+`RETRYABLE_STRUCTURED_DECISION_CODES` 白名单里。
+
+直觉上「校验失败 → 再让模型试一次」很自然；TuringPact 的取舍相反：
+- 缺提交 / 缺 JSON 对象 / JSON 碎了 → 结构还没成形，随机性值得再花一次模型调用；
+- 对象已经成形但字段/语义不合法（如 shouldSpeak=true 却无 publicMessage、cooldown 越界）
+  → 同约束下重试命中率低，却稳定 double spend，所以直接 fail closed。
+
+配套的第二层反直觉：`repaired: true` 记的是「走过 repairPrompt 第二枪」，
+不是本地 `extractJsonObject` 剥 fence 成功。本地修免费且不打标；模型修昂贵且必须可观测。
+
+这两点分别落在课时：
+- retry-whitelist（白名单里没有 schema 错）
+- repaired-means-path（repaired 记的是路径不是补丁）
+- repair-state-machine（mermaid：最关键的边是 D→E 拒绝重试）

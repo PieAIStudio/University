@@ -1,0 +1,1132 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-evidence-and-freshness",
+  "targetSnapshotId": "git-90cf76c1177f",
+  "targetAnalysisId": "ua-90cf76c1-v2-9-4-zh-full-e98206c7358f1ff1-8b71aac3ba92",
+  "course": {
+    "id": "evidence-and-freshness",
+    "title": "怎么让教材没法撒谎",
+    "description": "AI 教材最大的风险是写得像真的。UniversityLocal 的解法：每句钉在某个提交的某几行，代码一变课就标过期——证据来自 evidence 校验与 refresh 新鲜度审计的真实实现。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "能说明证据为何必须对 study 仓库 ls-tree 并要求 regular blob，而不是读 live checkout",
+      "能区分 fact 与 inference 在 objectId 未变但 commit 前进时的不同过期规则",
+      "能解释 UA 绑定上 integrity（仍可读）与 authority（superseded 即 stale）的分工",
+      "能描述 audit 先落报告、apply 才 active→stale，且转移不可反向自动复活"
+    ],
+    "units": [
+      {
+        "id": "pin-to-git-blob",
+        "title": "把句子钉在 Git blob 上",
+        "objective": "读完本单元，你能设计「打开对象库校验」的证据门，而不是信路径字符串或工作区文件。",
+        "lessons": [
+          {
+            "id": "open-git-not-path",
+            "title": "证据要打开 Git 仓，不能信路径字符串",
+            "content": "# 证据要打开 Git 仓，不能信路径字符串\n\n## 学习目标\n\n完成本课后，你能说明为什么证据校验必须对 study 仓库执行 `ls-tree`，以及「路径看起来合法」为何不等于「这行代码在这个提交里真的存在」。\n\n## 先给结论\n\n- **事实：读树条目走 Git。** `readTreeEntry` 用 `git ls-tree -z <sourceCommit> -- <sourcePath>` 在 study 仓库里查文件，而不是 `fs.readFile` 工作区路径。\n- **事实：提交不可用会硬失败。** `ls-tree` 抛错时抛出 `Evidence commit is unavailable in the study repository`——证据钉死的提交必须在本地对象库里。\n- **事实：路径必须精确匹配。** 解析出的 `path` 必须与请求的 `sourcePath` 完全一致，否则当作不存在返回 `null`。\n- **推论：证据系统的信任根是不可变对象库，不是「磁盘上现在有这个文件」。** 磁盘可以改、可以删、可以软链接；blob 对象 id 不能静默变样。\n\n## 一个类比\n\n这像法庭要的是**封存证物袋上的编号**，不是你今天从桌上随便拿来的同款杯子。杯子可以长得一样，编号对不上就不能当同一件证物。\n\n## 工作示例\n\n1. 课里写着 `sourceCommit=90cf76c…`、`sourcePath=server/content/evidence.ts`。\n2. `validateEvidence` 打开 study 的 bare/git-dir 仓库。\n3. `readTreeEntry` 对该 commit 做 `ls-tree`。\n4. 没有条目 → `requireRegularBlob` 抛 `Evidence source file does not exist`。\n5. 有条目 → 继续检查是否为 regular blob，再读行号。\n\n## 自检\n\n如果校验改成「只要 `studies/.../checkout/server/content/evidence.ts` 现在存在就算过」，会出现什么事故？答案：工作区未提交修改、被删改、或 symlink 指向别处时，教材仍显示「证据有效」，但读者看到的已经不是那次提交的代码。\n\n## 重点\n\n**钉证据 = 钉 Git 对象，不是钉文件系统上的路径字符串。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 86,
+                "lineEnd": 106,
+                "nodeIds": [],
+                "note": "readTreeEntry：ls-tree 按 commit+path 查树条目"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 114,
+                "lineEnd": 127,
+                "nodeIds": [],
+                "note": "requireRegularBlob：不存在则抛 Evidence source file does not exist"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-ls-tree",
+                "front": "证据校验为什么用 git ls-tree，而不是直接读工作区文件？",
+                "back": "ls-tree 钉住某个 commit 的树条目；工作区文件可能已改、未提交或被替换。",
+                "tags": [
+                  "evidence",
+                  "git"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 86,
+                    "lineEnd": 93,
+                    "nodeIds": [],
+                    "note": "readTreeEntry 调用 ls-tree 而不是 fs.readFile"
+                  }
+                ]
+              },
+              {
+                "id": "commit-unavailable",
+                "front": "sourceCommit 在 study 仓库里不存在时，系统抛什么错误语义？",
+                "back": "Evidence commit is unavailable in the study repository——证据提交必须本地可得。",
+                "tags": [
+                  "evidence",
+                  "fail-closed"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 92,
+                    "lineEnd": 95,
+                    "nodeIds": [],
+                    "note": "ls-tree 失败时抛 commit unavailable"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ls-tree-command",
+                "kind": "short-answer",
+                "title": "查树命令",
+                "prompt": "readTreeEntry 对 Git 调用的子命令名是什么（一个词，如 show/log/…）？",
+                "expectedAnswer": "ls-tree",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 92,
+                    "lineEnd": 93,
+                    "nodeIds": [],
+                    "note": "gitBuffer 传入 ls-tree 参数"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "require-regular-blob",
+            "title": "只能钉普通文件 blob，不能钉链接或目录",
+            "content": "# 只能钉普通文件 blob，不能钉链接或目录\n\n## 学习目标\n\n完成本课后，你能解释 `isRegularBlob` / `requireRegularBlob` 拒绝 symlink、tree、gitlink 的产品原因，并指出合法的两个 mode。\n\n## 先给结论\n\n- **事实：合法类型极窄。** `isRegularBlob` 要求 `type === \"blob\"` 且 `mode` 为 `100644` 或 `100755`。\n- **事实：其它一律拒绝。** `requireRegularBlob` 在非 regular 时抛 `Evidence source must be a regular Git blob (not a symlink, tree, or gitlink)`。\n- **事实：不存在与类型错误分开。** `entry === null` 走「文件不存在」；存在但非 regular 走「必须是 regular blob」。\n- **推论：证据要的是「可稳定展示的文本字节」，不是「路径解析后碰巧能读到的东西」。** symlink 可指向仓外；tree 不是文本；gitlink 是子模块指针。\n\n## 一个类比\n\n图书馆索书号必须指向一本**具体的书**。指向「书架」「另一馆的指路牌」或「外包仓库的提单」都不能当引文页码用——读者当场翻不开同一页。\n\n## 工作示例\n\n1. 有人把证据 path 指到一个目录 → `type` 为 tree → 拒绝。\n2. 指到 `100644` 的 `.ts` 源文件 → 通过，返回带 `objectId` 的条目。\n3. 后续 `readBlob` / `readBlobSize` 都用这个 `objectId`，不再二次解析路径。\n\n## 自检\n\n为什么可执行脚本 `100755` 允许、符号链接不允许？答案：`100755` 仍是普通 blob 字节；symlink 的 blob 内容是目标路径字符串，展示与行号语义都会漂。\n\n## 重点\n\n**证据路径的终点必须是 regular blob——这是展示与行号可比的前提。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 108,
+                "lineEnd": 112,
+                "nodeIds": [],
+                "note": "isRegularBlob：仅 blob + 100644/100755"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 114,
+                "lineEnd": 127,
+                "nodeIds": [],
+                "note": "requireRegularBlob：非 regular 时的错误文案"
+              }
+            ],
+            "cards": [
+              {
+                "id": "allowed-modes",
+                "front": "isRegularBlob 接受哪两个 Git mode？",
+                "back": "100644 与 100755。其它 mode（含 symlink）一律不算 regular blob。",
+                "tags": [
+                  "evidence",
+                  "git"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 108,
+                    "lineEnd": 112,
+                    "nodeIds": [],
+                    "note": "mode 必须是 100644 或 100755"
+                  }
+                ]
+              },
+              {
+                "id": "reject-symlink",
+                "front": "证据路径若是 symlink，系统会怎样？为什么不能放行？",
+                "back": "requireRegularBlob 抛错。symlink 指向可漂，行号与内容不再钉死在提交内的固定字节。",
+                "tags": [
+                  "evidence",
+                  "security"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 120,
+                    "lineEnd": 124,
+                    "nodeIds": [],
+                    "note": "错误信息点名 symlink/tree/gitlink"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "regular-modes",
+                "kind": "short-answer",
+                "title": "合法 mode",
+                "prompt": "isRegularBlob 允许的两个 mode 用空格分隔写出来。",
+                "expectedAnswer": "100644 100755",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 108,
+                    "lineEnd": 112,
+                    "nodeIds": [],
+                    "note": "两个合法 mode"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "validate-same-as-display",
+            "title": "能校验的证据必须也能展示",
+            "content": "# 能校验的证据必须也能展示\n\n## 学习目标\n\n完成本课后，你能指出 `validateEvidence` 与 `readEvidenceSnippet` 为何共用 `decodeTextBlob` + `sourceLines`，以及「校验宽松、展示严格」会制造什么幽灵错误。\n\n## 先给结论\n\n- **事实：行号校验走同一解码。** `validateEvidence` 在检查 `lineStart`/`lineEnd` 时，用 `decodeTextBlob` 再 `sourceLines`，注释写明旧实现曾用宽松 `toString(\"utf8\")` 与 `/\r?\n/`。\n- **事实：非法 UTF-8 与二进制直接拒绝。** `decodeTextBlob` 遇 NUL 抛 binary；`TextDecoder(..., { fatal: true })` 失败则抛 must be valid UTF-8。\n- **事实：展示前再 validate 一次。** `readEvidenceSnippet` 开头调用 `validateEvidence`，再 `requireRegularBlob` 读同一 object。\n- **推论：门禁通过的证据，读者必须能在 UI 里看到同一段字节。** 否则 AI 生成的课会「引用成功、打开失败」，比写错更像真的。\n\n## 一个类比\n\n安检机说行李过关，托运柜台却说超重——两套尺子。证据系统强制安检与柜台用同一把秤：过关就能托运。\n\n## 工作示例\n\n1. 证据声明 `lineEnd=500`，文件只有 408 行。\n2. `validateEvidence` 算出 `lineCount`，发现越界 → `Evidence line range exceeds …`。\n3. 永远不会进入「先写入课程、点开证据才 422」的路径。\n\n## 自检\n\n若校验用 `\n` 分行、展示用同时识别 `\r` 的分行，哪种文件会「校验过、展示行号错位」？答案：经典 Mac 式单独 `\r` 换行的文本——行数在两套算法下不一致。\n\n## 重点\n\n**Validation that cannot be displayed is a lie waiting to happen.** 校验与展示必须同一解码。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 310,
+                "lineEnd": 321,
+                "nodeIds": [],
+                "note": "validateEvidence：与 snippet 相同的 decode+sourceLines 计行"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 142,
+                "lineEnd": 151,
+                "nodeIds": [],
+                "note": "decodeTextBlob：拒绝 binary 与非法 UTF-8"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 204,
+                "lineEnd": 210,
+                "nodeIds": [],
+                "note": "readEvidenceSnippet 先 validateEvidence 再读 blob"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-same-decode",
+                "front": "validateEvidence 检查行号时为什么不能用 Buffer.toString('utf8') 随便拆行？",
+                "back": "宽松解码会让非法 UTF-8 或 \\r 换行通过校验，展示时却 422 或行号错位。",
+                "tags": [
+                  "evidence",
+                  "consistency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 310,
+                    "lineEnd": 315,
+                    "nodeIds": [],
+                    "note": "注释：校验曾宽松导致与 reader 行数不一致"
+                  }
+                ]
+              },
+              {
+                "id": "binary-evidence",
+                "front": "证据 blob 含 0 字节时会怎样？",
+                "back": "decodeTextBlob 抛 Evidence snippet cannot display a binary blob。",
+                "tags": [
+                  "evidence",
+                  "fail-closed"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 142,
+                    "lineEnd": 145,
+                    "nodeIds": [],
+                    "note": "includes(0) 判定 binary"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "fatal-utf8",
+                "kind": "short-answer",
+                "title": "UTF-8 策略",
+                "prompt": "decodeTextBlob 使用的 TextDecoder 选项 fatal 取值是 true 还是 false？",
+                "expectedAnswer": "true",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 146,
+                    "lineEnd": 148,
+                    "nodeIds": [],
+                    "note": "TextDecoder utf-8 fatal true"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "never-live-checkout",
+            "title": "展示证据时故意不看 live checkout",
+            "content": "# 展示证据时故意不看 live checkout\n\n## 学习目标\n\n完成本课后，你能复述 `readEvidenceSnippet` 的信任边界：只读证据钉住的 immutable Git 对象，并说明 `EVIDENCE_SNIPPET_LIMITS` 在防什么。\n\n## 先给结论\n\n- **事实：注释写死边界。** `readEvidenceSnippet` 文档写：Reads from the immutable Git object；**The registered live source checkout is deliberately never consulted.**\n- **事实：先 validate 再 cat-file。** 通过 `requireRegularBlob` 拿到 `objectId` 后 `cat-file blob`，按行切片返回 `code` 与高亮范围。\n- **事实：展示有硬顶。** `EVIDENCE_SNIPPET_LIMITS`：源文件最大 2MiB、返回 64KiB、高亮最多 120 行、返回最多 160 行、上下文默认 5 最多 20。\n- **推论：教材 UI 不是「打开你电脑上的项目」，而是「出示封存快照里的那几行」。** 源项目正在改也没关系——读者看到的仍是课被批准时的字节。\n\n## 一个类比\n\n博物馆展柜里的青铜器说明牌，引用的是入库编号与照片底片，不是仓库工人今天正在修复的那件半成品。\n\n## 工作示例\n\n1. 学习者点开证据轨。\n2. 服务端 `validateEvidence` → `openStudyRepository` → `requireRegularBlob`。\n3. 检查 blob 大小 ≤ `maxSourceBytes`。\n4. 按 `lineStart`/`lineEnd` 加 `contextLines` 切片；超 `maxReturnedLines` 则要求收窄引用。\n5. 返回的 `sourceCommit`/`startLine`/`endLine`/`highlight*` 全是快照坐标。\n\n## 自检\n\n为什么要限制 `maxHighlightedLines=120`？答案：防止一节课用「整文件当证据」冒充精确引用，也避免一次响应拖垮阅读体验。\n\n## 重点\n\n**Live checkout 是学习对象的工地；证据轨只出示封存物件。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 200,
+                "lineEnd": 203,
+                "nodeIds": [],
+                "note": "readEvidenceSnippet：永不查阅 live source checkout"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 30,
+                "lineEnd": 37,
+                "nodeIds": [],
+                "note": "EVIDENCE_SNIPPET_LIMITS：展示与上下文硬顶"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 221,
+                "lineEnd": 227,
+                "nodeIds": [],
+                "note": "requireRegularBlob 后按 maxSourceBytes 拒绝过大源文件"
+              }
+            ],
+            "cards": [
+              {
+                "id": "no-live-checkout",
+                "front": "readEvidenceSnippet 为什么故意不读 registered live source checkout？",
+                "back": "证据必须钉 immutable Git 对象；live checkout 可能已改且含未提交脏文件。",
+                "tags": [
+                  "evidence",
+                  "boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 200,
+                    "lineEnd": 203,
+                    "nodeIds": [],
+                    "note": "文档：deliberately never consulted"
+                  }
+                ]
+              },
+              {
+                "id": "max-highlight",
+                "front": "单条证据高亮行数上限是多少？超了会怎样？",
+                "back": "maxHighlightedLines 为 120；超过则抛错，要求收窄 line range。",
+                "tags": [
+                  "evidence",
+                  "limits"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 242,
+                    "lineEnd": 249,
+                    "nodeIds": [],
+                    "note": "高亮行数超过 120 抛错"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-context",
+                "kind": "short-answer",
+                "title": "默认上下文",
+                "prompt": "EVIDENCE_SNIPPET_LIMITS.defaultContextLines 的数值是多少？",
+                "expectedAnswer": "5",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 30,
+                    "lineEnd": 35,
+                    "nodeIds": [],
+                    "note": "defaultContextLines: 5"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "judge-freshness",
+        "title": "判断什么时候教材过期",
+        "objective": "读完本单元，你能用 objectId、inference 规则与 UA 绑定解释一条证据为何 fresh 或 stale。",
+        "lessons": [
+          {
+            "id": "freshness-by-object-id",
+            "title": "过期判定比的是 blob objectId",
+            "content": "# 过期判定比的是 blob objectId\n\n## 学习目标\n\n完成本课后，你能说明 `evaluateEvidenceFreshness` 如何用两侧 `objectId` 判定「引用源是否变了」，以及 `status: fresh | stale` 与 `reasons` 的关系。\n\n## 先给结论\n\n- **事实：先完整 validate。** 新鲜度评估入口仍调用 `validateEvidence`——无效证据根本不进入 fresh/stale 语义。\n- **事实：比的是 Git object id。** 在证据 `sourceCommit` 与目标 snapshot 的 `sourceCommit` 上各 `readTreeEntry`，`sameRegularBlob` 要求两侧都是 regular blob 且 `previousEntry.objectId === targetEntry.objectId`。\n- **事实：不同则写原因。** 不等时 `reasons.push(\"Referenced source changed: …\")`；`reasons.length === 0` 才是 `fresh`。\n- **推论：文件「还在、路径还对」不够。** 内容字节变了 objectId 就变，课自动过期；没改字节则 fact 类证据可保持 fresh。\n\n## 一个类比\n\n不是比书架上那本书还在不在，而是比**ISBN+印次的条码**。书名相同但再版页码全变，引用必须重审。\n\n## 工作示例\n\n1. 目标 snapshot 指向新 commit。\n2. 证据仍钉旧 commit 的 `server/content/evidence.ts`。\n3. 若该路径在新 commit 的 blob id 不同 → stale，原因 `Referenced source changed`。\n4. 若路径删除或变成 symlink → `sameRegularBlob` 为 false → 同样 stale。\n\n## 自检\n\n只改了注释空格、内容哈希变了，fact 证据会怎样？答案：objectId 变 → stale。新鲜度不靠「语义上差不多」，只靠字节身份。\n\n## 重点\n\n**Stale 的第一信号：钉住的 blob 不再是目标快照里的同一个 object。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 347,
+                "lineEnd": 367,
+                "nodeIds": [],
+                "note": "evaluateEvidenceFreshness：objectId 比较与 Referenced source changed"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 407,
+                "lineEnd": 407,
+                "nodeIds": [],
+                "note": "reasons 为空则 fresh 否则 stale"
+              }
+            ],
+            "cards": [
+              {
+                "id": "same-regular-blob",
+                "front": "sameRegularBlob 为 true 需要同时满足哪三件事？",
+                "back": "旧条目是 regular blob、新条目是 regular blob、两侧 objectId 相等。",
+                "tags": [
+                  "freshness",
+                  "git"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 363,
+                    "lineEnd": 366,
+                    "nodeIds": [],
+                    "note": "sameRegularBlob 三条件"
+                  }
+                ]
+              },
+              {
+                "id": "changed-reason",
+                "front": "源文件字节变了时，reasons 里会出现哪句固定前缀？",
+                "back": "Referenced source changed: 后接 sourcePath。",
+                "tags": [
+                  "freshness"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 367,
+                    "lineEnd": 367,
+                    "nodeIds": [],
+                    "note": "Referenced source changed 原因字符串"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "fresh-status-values",
+                "kind": "short-answer",
+                "title": "状态枚举",
+                "prompt": "EvidenceFreshness.status 的两个字面量用空格分隔。",
+                "expectedAnswer": "fresh stale",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 39,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "status: fresh | stale"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "inference-needs-review",
+            "title": "推论比事实更脆：commit 一变就要复审",
+            "content": "# 推论比事实更脆：commit 一变就要复审\n\n## 学习目标\n\n完成本课后，你能区分 `kind: \"fact\"` 与 `kind: \"inference\"` 在新鲜度上的不对称，并解释「文件字节没变、仓库 commit 变了」时 inference 为何仍 stale。\n\n## 先给结论\n\n- **事实：inference 有额外规则。** 当 `evidence.kind === \"inference\"`，且 `targetSnapshot.sourceCommit !== evidence.sourceCommit`，且 `sameRegularBlob` 仍为 true 时，仍 push `Inference requires review after the repository commit changes`。\n- **事实：fact 在同 blob 时可保持 fresh。** 同一规则块里，fact 不会仅因 commit 前进而过期。\n- **推论：AI 写的「因此 / 意味着」比「源码第 N 行写着 X」更容易在仓库演进中说错。** 周围调用图、默认值、调用频率可能变了，被引用的那几行却原封不动。\n- **推论：拿不准就标 inference。** 把推论标成 fact，会在 blob 未变时漏掉复审——教材继续「像真的」。\n\n## 一个类比\n\n照片里的路牌（fact）还在，但你根据照片推断的「这条路永远单向」可能被新政改了。路牌像素没变，**判断**仍要重做。\n\n## 工作示例\n\n1. 课写道：根据 `requireRegularBlob` 的存在，推断「所有学习内容都不可能引用 submodule」。\n2. 这是 inference：依赖全仓约定，不单是那几行字面意思。\n3. 仓库其它地方引入 gitlink 证据路径的新策略后，该文件 blob 可能未改。\n4. 目标 commit 前进 → inference 变 stale，强制人/AI 复审表述。\n\n## 自检\n\n什么时候应该用 fact？答案：主张可以直接由被引用行字面推出、不依赖未引用上下文时。一旦需要「结合模块职责猜测意图」，用 inference。\n\n## 重点\n\n**Fact 钉字节；inference 钉判断——仓库一前进，判断默认过期。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 368,
+                "lineEnd": 374,
+                "nodeIds": [],
+                "note": "inference：commit 变且 blob 相同时仍要求 review"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 359,
+                "lineEnd": 367,
+                "nodeIds": [],
+                "note": "fact 仅在 sameRegularBlob 失败时因源变更 stale"
+              }
+            ],
+            "cards": [
+              {
+                "id": "inference-extra-rule",
+                "front": "文件 blob 没变，但目标 commit 变了：inference 证据会怎样？",
+                "back": "仍标 stale，原因是 Inference requires review after the repository commit changes。",
+                "tags": [
+                  "freshness",
+                  "inference"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 368,
+                    "lineEnd": 373,
+                    "nodeIds": [],
+                    "note": "inference 额外 stale 条件与原因句"
+                  }
+                ]
+              },
+              {
+                "id": "when-use-inference",
+                "front": "写证据时拿不准 fact 还是 inference，默认选哪个？为什么？",
+                "back": "选 inference。标成 fact 会在 blob 未变时跳过复审，让过期判断继续装真。",
+                "tags": [
+                  "evidence",
+                  "inference"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 368,
+                    "lineEnd": 373,
+                    "nodeIds": [],
+                    "note": "inference 在 commit 前进时强制复审"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "inference-reason-keyword",
+                "kind": "short-answer",
+                "title": "复审原因关键词",
+                "prompt": "inference 额外 stale 原因句里要求 review 的那个英文单词是？",
+                "expectedAnswer": "review",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 373,
+                    "lineEnd": 373,
+                    "nodeIds": [],
+                    "note": "Inference requires review …"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "ua-integrity-vs-authority",
+            "title": "UA 图：还能读 ≠ 仍然权威",
+            "content": "# UA 图：还能读 ≠ 仍然权威\n\n## 学习目标\n\n完成本课后，你能解释 UA 绑定证据在 `validateEvidence` 与 `evaluateEvidenceFreshness` 中的分工：superseded 分析仍可校验读取，但新鲜度会标 stale。\n\n## 先给结论\n\n- **事实：校验允许 ready 与 superseded。** 绑定 `analysisId`+`graphHash` 时，分析状态可以是 `ready` 或 `superseded`，且 commit/graphHash 必须与证据一致；节点必须在图中存在。\n- **事实：注释拆开两个概念。** Integrity（绑定仍匹配）independent of authority（是否仍 current）；superseded 仍可读，freshness 标 stale。\n- **事实：新鲜度看 superseded。** `oldManifest.status === \"superseded\"` → reason `Evidence UA analysis is superseded: …`；节点内容用 `canonicalJson` 比对，变了或消失也 stale。\n- **推论：历史课还能打开旧图上的节点，但系统不会假装它仍是当前权威地图。** 这是「可审计的过期」，不是静默坏链。\n\n## 一个类比\n\n旧版地图留在档案馆可以查阅（integrity），但不能再当今日导航的权威图（authority）。馆员会盖「已替换」章，而不是把抽屉锁死假装没有这张图。\n\n## 工作示例\n\n1. 证据带 `analysisId` 与 `nodeIds`。\n2. 新 UA 跑完后旧分析变 `superseded`。\n3. `validateEvidence` 仍可通过（绑定未毁）。\n4. `evaluateEvidenceFreshness` 加入 superseded 原因 → 课 stale。\n5. 另：缺 `targetAnalysisId` 时 reason 为 `UA-backed evidence has no target analysis for comparison`（与 refresh 工作流常量一致）。\n\n## 自检\n\n为什么 superseded 不直接让 validate 失败？答案：失败会让历史证据无法展示，读者失去对照；过期应体现在 freshness，而不是毁掉可读性。\n\n## 重点\n\n**Integrity 保证「绑的是那张图」；authority 保证「那张图还算数」——两道闸各管各的。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 324,
+                "lineEnd": 335,
+                "nodeIds": [],
+                "note": "validate：ready|superseded 可读；注释 integrity vs authority"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 386,
+                "lineEnd": 388,
+                "nodeIds": [],
+                "note": "freshness：superseded 写入 reasons"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/refresh-study.ts",
+                "lineStart": 170,
+                "lineEnd": 170,
+                "nodeIds": [],
+                "note": "MISSING_TARGET_UA_REASON 与 evidence 侧文案对齐"
+              }
+            ],
+            "cards": [
+              {
+                "id": "superseded-still-readable",
+                "front": "UA 分析状态为 superseded 时，validateEvidence 还会放行吗？",
+                "back": "会，只要绑定的 commit 与 graphHash 仍匹配。过期由 freshness 标记。",
+                "tags": [
+                  "ua",
+                  "freshness"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 327,
+                    "lineEnd": 335,
+                    "nodeIds": [],
+                    "note": "ready 与 superseded 均可过 validate"
+                  }
+                ]
+              },
+              {
+                "id": "node-canonical-compare",
+                "front": "比较新旧 UA 节点是否变化时用什么序列化？",
+                "back": "canonicalJson：键排序后的确定性 JSON，避免键序造成假差异。",
+                "tags": [
+                  "ua",
+                  "freshness"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 400,
+                    "lineEnd": 403,
+                    "nodeIds": [],
+                    "note": "canonicalJson 比较 node"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ua-statuses-validate",
+                "kind": "short-answer",
+                "title": "可校验状态",
+                "prompt": "validateEvidence 接受的两种 UA analysis.status 用空格分隔。",
+                "expectedAnswer": "ready superseded",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/content/evidence.ts",
+                    "lineStart": 330,
+                    "lineEnd": 330,
+                    "nodeIds": [],
+                    "note": "status ready 或 superseded"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "any-reason-means-stale",
+            "title": "一条 reasons 就够让整段引用过期",
+            "content": "# 一条 reasons 就够让整段引用过期\n\n## 学习目标\n\n完成本课后，你能说明课程级审计如何把多条证据的 freshness 聚合成 item/unit/course 状态，以及 `waitingForUa` 为何单独成旗标。\n\n## 先给结论\n\n- **事实：单引用：reasons 非空即 stale。** `evaluateEvidenceFreshness` 返回 `reasons.length === 0 ? fresh : stale`。\n- **事实：多引用：合并 reasons。** `evaluateReferences` 对每条证据评估后 `uniqueSorted` 展平 reasons；任一非空则 item stale。\n- **事实：waitingForUa 是子集信号。** 当合并后的 reasons 包含 `MISSING_TARGET_UA_REASON` 时 `waitingForUa: true`——不是第二种状态机，而是「缺比较靶」的可操作提示。\n- **事实：单元/课程向上汇总。** 单元有任一 stale item → unit stale；任一 stale unit → course report stale。\n- **推论：新鲜度是「全票通过」而不是「多数没坏」。** AI 教材里一句漂了，整课信誉就要亮黄灯。\n\n## 一个类比\n\n航天发射前检查单：不是「二十项里十九项 OK 就飞」，而是**任何一项红灯整架次 hold**。\n\n## 工作示例\n\n1. 一节课 3 条证据，2 条 blob 未变，1 条 inference 因 commit 前进 stale。\n2. `evaluateReferences` reasons 含 inference 句 → 该 lesson item stale。\n3. `buildCourseReport` 把该 item key 记入 unit 的 `staleItemKeys`。\n4. course payload `status: \"stale\"`，`reasons` 含 `Stale unit: …`。\n\n## 自检\n\n为什么 `waitingForUa` 不直接等于 stale 的反义词？答案：缺 target analysis 时 reasons 已含那句固定文案，item 已是 stale；旗标只是让 UI/工作流知道卡在「还没跑 UA」而不是「源码已变」。\n\n## 重点\n\n**聚合规则是 OR：任一证据过期，内容项过期；任一内容项过期，课过期。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/content/evidence.ts",
+                "lineStart": 407,
+                "lineEnd": 407,
+                "nodeIds": [],
+                "note": "单条证据：reasons 空才 fresh"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/refresh-study.ts",
+                "lineStart": 300,
+                "lineEnd": 319,
+                "nodeIds": [],
+                "note": "evaluateReferences：合并 reasons 与 waitingForUa"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/refresh-study.ts",
+                "lineStart": 453,
+                "lineEnd": 465,
+                "nodeIds": [],
+                "note": "buildCourseReport：unit/course 按 stale 向上汇总"
+              }
+            ],
+            "cards": [
+              {
+                "id": "or-aggregation",
+                "front": "三节课所在 unit 里只有一张卡片 stale，课程 freshness report 会是什么 status？",
+                "back": "stale。任一 unit stale 则 course report status 为 stale。",
+                "tags": [
+                  "freshness",
+                  "aggregation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 453,
+                    "lineEnd": 462,
+                    "nodeIds": [],
+                    "note": "staleUnits 非空则 course stale"
+                  }
+                ]
+              },
+              {
+                "id": "waiting-for-ua",
+                "front": "waitingForUa 为 true 时，item 的 status 还可能是 fresh 吗？",
+                "back": "不能。该旗标来自 reasons 含缺 target analysis 的句子，reasons 非空即 stale。",
+                "tags": [
+                  "freshness",
+                  "ua"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 313,
+                    "lineEnd": 316,
+                    "nodeIds": [],
+                    "note": "waitingForUa 来自 reasons.includes(MISSING…)"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "missing-ua-constant",
+                "kind": "short-answer",
+                "title": "缺 UA 常量",
+                "prompt": "refresh-study 里 MISSING_TARGET_UA_REASON 变量名（全大写）写出来。",
+                "expectedAnswer": "MISSING_TARGET_UA_REASON",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 170,
+                    "lineEnd": 170,
+                    "nodeIds": [],
+                    "note": "常量定义"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "audit-and-latch",
+        "title": "审计报告与单向过期闩",
+        "objective": "读完本单元，你能运行并解释 freshness 审计：脏工作区不进快照、先报告后 apply、只落不升。",
+        "lessons": [
+          {
+            "id": "local-commit-not-dirty",
+            "title": "快照只认本地 commit，脏工作区不算数",
+            "content": "# 快照只认本地 commit，脏工作区不算数\n\n## 学习目标\n\n完成本课后，你能说明 `inspectSourceStatus` 如何描述被学仓库状态，以及为何 `dirtyChangesIncluded: false` 与 `localCommitSufficient: true` 是产品边界而不是实现细节。\n\n## 先给结论\n\n- **事实：HEAD 提交是真相。** `inspectSourceStatus` 用 `git rev-parse HEAD^{commit}` 得到 `headCommit`。\n- **事实：脏文件被列出但不纳入快照。** `git status --porcelain=v1 -z` 得到 `dirtyEntries`；返回里写死 `snapshotBasis: \"local-commit\"`、`localCommitSufficient: true`、`dirtyChangesIncluded: false`。\n- **事实：审计前后状态要冻结。** `auditStudyFreshness` 结束时再 `inspectSourceStatus`，若与开始时 `canonicalJson` 不同则抛 `Studied repository status changed while freshness was being audited`。\n- **推论：一人公司最容易犯的错是「我改完还没 commit，教材已经按新逻辑讲了」。** 本系统拒绝这种幻觉：没进 commit 的字节对证据世界不存在。\n\n## 一个类比\n\n报纸只报道**已归档的官方公报**。编辑桌上未签字的草稿再真，也不能当今日见报事实——否则读者引用的永远是「记者印象」。\n\n## 工作示例\n\n1. 你在源项目改了 `evidence.ts` 但未 commit。\n2. `dirty: true`，entries 非空。\n3. 刷新学习资料时 snapshot 仍基于旧 HEAD；新改动不进证据。\n4. 你 commit 后，新 snapshot 才可能让旧课 stale。\n\n## 自检\n\n为什么审计中途源状态变化要直接 throw 而不是重试？答案：报告的 `targetIdentity` 与 `sourceStatus` 必须对应同一次观察；中途 HEAD/脏位变了，报告会变成自我矛盾的文件。\n\n## 重点\n\n**Local commit is enough; dirty work never becomes curriculum truth.**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/refresh-study.ts",
+                "lineStart": 224,
+                "lineEnd": 260,
+                "nodeIds": [],
+                "note": "inspectSourceStatus：HEAD、dirty、local-commit 边界"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/refresh-study.ts",
+                "lineStart": 598,
+                "lineEnd": 601,
+                "nodeIds": [],
+                "note": "审计结束校验源状态未在中途变化"
+              }
+            ],
+            "cards": [
+              {
+                "id": "dirty-excluded",
+                "front": "SourceStatus 里 dirtyChangesIncluded 的值是什么？含义？",
+                "back": "false。未提交改动永不进入 snapshot / 证据世界。",
+                "tags": [
+                  "snapshot",
+                  "boundary"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 257,
+                    "lineEnd": 259,
+                    "nodeIds": [],
+                    "note": "dirtyChangesIncluded: false"
+                  }
+                ]
+              },
+              {
+                "id": "audit-race",
+                "front": "审计 freshness 过程中被学仓库 HEAD 变了，会怎样？",
+                "back": "结束时 inspect 对比失败，抛 Studied repository status changed while freshness was being audited。",
+                "tags": [
+                  "freshness",
+                  "concurrency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 598,
+                    "lineEnd": 601,
+                    "nodeIds": [],
+                    "note": "前后 sourceStatus 不一致则 throw"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "snapshot-basis",
+                "kind": "short-answer",
+                "title": "快照基准",
+                "prompt": "SourceStatus.snapshotBasis 的字面量字符串是什么？",
+                "expectedAnswer": "local-commit",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 257,
+                    "lineEnd": 257,
+                    "nodeIds": [],
+                    "note": "snapshotBasis: local-commit"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "audit-dry-vs-apply",
+            "title": "先写报告，apply 才转移状态",
+            "content": "# 先写报告，apply 才转移状态\n\n## 学习目标\n\n完成本课后，你能画出 `auditStudyFreshness` 的两阶段：始终落盘 freshness 报告，仅当 `apply: true` 时执行 active→stale 转移。\n\n## 先给结论\n\n- **事实：报告总会写。** 对每个 course / knowledge note 构建 report 后 `writeJsonAtomically` 到 `freshness/<snapshotId>--<analysisId|none>.json`。\n- **事实：转移受 apply 开关控制。** `transitions = input.apply ? [...applyReport, ...applyKnowledgeReport] : []`。\n- **事实：applyReport 只处理 stale 报告。** `report.status === \"fresh\"` 直接返回空转移。\n- **事实：报告带 reportHash。** payload 经 `canonicalJson` 后 `sha256:` 哈希，知识笔记 stale 时还把 `reportHash` 写入转移记录。\n- **推论：审计默认是「诊断」，不是「立刻改课程状态」。** 一人公司可以先看报告再决定是否 apply——但系统不会在没报告的情况下静默改状态。\n\n## 一个类比\n\n医生先出化验单，再问你是否开始疗程。化验单每次都有；打针需要你点头（apply）。\n\n## 工作示例\n\n1. 调用 `auditStudyFreshness({ apply: false, targetSnapshotId, … })`。\n2. 磁盘出现 course/note 的 freshness JSON，`transitions` 为空数组。\n3. 你确认后以 `apply: true` 再跑。\n4. 仅 stale 且当前 `active` 的 course/unit/note 写入转移。\n\n## 自检\n\n为什么报告路径要把 `targetAnalysisId` 编进文件名（没有则 `none`）？答案：同一 snapshot 在「有 UA / 无 UA」两种靶下结论不同，必须分文件，避免互相覆盖。\n\n## 重点\n\n**Audit produces evidence about evidence; apply is the only door into stale status.**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/refresh-study.ts",
+                "lineStart": 576,
+                "lineEnd": 596,
+                "nodeIds": [],
+                "note": "auditStudyFreshness：写报告与 apply 门控 transitions"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/refresh-study.ts",
+                "lineStart": 520,
+                "lineEnd": 525,
+                "nodeIds": [],
+                "note": "applyReport：fresh 报告不产生转移"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/refresh-study.ts",
+                "lineStart": 498,
+                "lineEnd": 504,
+                "nodeIds": [],
+                "note": "报告路径含 snapshotId 与 analysis 或 none"
+              }
+            ],
+            "cards": [
+              {
+                "id": "apply-default",
+                "front": "auditStudyFreshness 在 apply 未开时会不会写 freshness 报告文件？",
+                "back": "会写。apply 只控制是否执行 active→stale 转移，不控制报告落盘。",
+                "tags": [
+                  "freshness",
+                  "workflow"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 579,
+                    "lineEnd": 582,
+                    "nodeIds": [],
+                    "note": "build 后无条件 writeJsonAtomically"
+                  }
+                ]
+              },
+              {
+                "id": "report-hash",
+                "front": "CourseFreshnessReport 的 reportHash 怎么来？",
+                "back": "对 payload 做 canonicalJson，再 sha256，前缀 sha256:。",
+                "tags": [
+                  "freshness",
+                  "integrity"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 200,
+                    "lineEnd": 202,
+                    "nodeIds": [],
+                    "note": "sha256 辅助函数"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 466,
+                    "lineEnd": 466,
+                    "nodeIds": [],
+                    "note": "reportHash: sha256(canonicalJson(payload))"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "apply-field",
+                "kind": "short-answer",
+                "title": "转移开关",
+                "prompt": "AuditStudyFreshnessInput 里控制是否执行状态转移的可选字段名是？",
+                "expectedAnswer": "apply",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 147,
+                    "lineEnd": 154,
+                    "nodeIds": [],
+                    "note": "apply?: boolean"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 591,
+                    "lineEnd": 595,
+                    "nodeIds": [],
+                    "note": "input.apply 门控 transitions"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "cascade-active-to-stale",
+            "title": "过期只会单向落下：active → stale",
+            "content": "# 过期只会单向落下：active → stale\n\n## 学习目标\n\n完成本课后，你能描述课程与单元在 apply 时的状态转移方向，解释为什么 fresh 报告不会把 stale 自动改回 active，并读懂整条「证据→新鲜度→审计→转移」流水线。\n\n## 先给结论\n\n- **事实：转移类型写死方向。** `FreshnessTransition` 的 course/unit/note 变体都是 `from: \"active\", to: \"stale\"`——类型系统不表达反向。\n- **事实：applyReport 条件。** 仅当 course 当前为 `active` 才 `updateCourseStatus(..., \"stale\")`；随后仅当 course 已是 `stale` 时，才把报告里 stale 的 unit 从 `active` 标 stale。\n- **事实：fresh 不回写 active。** `report.status === \"fresh\"` 时 `applyReport` 直接 `return []`，不会复活旧课。\n- **推论：过期是刹车，不是自动维修。** 源码修好后需要新内容修订与重新发布，而不是审计任务静默「洗白」旧教材。\n\n## 一个类比\n\n食品的「已过期」标签可以贴上，但过期标签不会因为你把冰箱调冷就自己撕掉。重新上架要重新质检、换批次——对应新 revision / 新证据。\n\n## 工作示例\n\n完整流水线：\n\n```mermaid\nflowchart TD\n  A[EvidenceReference 钉 commit+path+行号] --> B[validateEvidence + requireRegularBlob]\n  B --> C[evaluateEvidenceFreshness 比 objectId / inference / UA]\n  C --> D{reasons 为空?}\n  D -->|是| E[item fresh]\n  D -->|否| F[item stale]\n  E --> G[buildCourseReport 汇总 unit/course]\n  F --> G\n  G --> H[writeJsonAtomically freshness 报告]\n  H --> I{apply?}\n  I -->|否| J[只返回报告 transitions 空]\n  I -->|是| K[active 课程/单元/笔记 → stale]\n```\n\n图中**最关键的那条线**是 `I → K`：只有显式 `apply` 才改内容状态；且 K 只有 active→stale，没有 stale→active。少了这道门，后台审计一次失败重跑就可能把课「刷回新鲜」，撒谎会从内容层漏到状态层。\n\n1. 旧课 active，源码前进导致 report stale。\n2. `apply: true` → course 变 stale，相关 active unit 变 stale。\n3. 再次审计若暂时误判 fresh（例如指错 target），`applyReport` 也不会把已 stale 的课改回 active。\n\n## 自检\n\n知识笔记过期走哪条函数？答案：`applyKnowledgeReport` → 仅 `latest.status === \"active\"` 时 `markKnowledgeNoteStale`，转移带 `reportHash`。\n\n## 重点\n\n**Stale is a one-way safety latch; repair is a new revision, not a reverse transition.**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/refresh-study.ts",
+                "lineStart": 125,
+                "lineEnd": 145,
+                "nodeIds": [],
+                "note": "FreshnessTransition：仅 active→stale"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/refresh-study.ts",
+                "lineStart": 520,
+                "lineEnd": 547,
+                "nodeIds": [],
+                "note": "applyReport：active 课程/单元落入 stale"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/workflows/refresh-study.ts",
+                "lineStart": 550,
+                "lineEnd": 573,
+                "nodeIds": [],
+                "note": "applyKnowledgeReport：active 笔记 markKnowledgeNoteStale"
+              }
+            ],
+            "cards": [
+              {
+                "id": "one-way-transition",
+                "front": "FreshnessTransition 类型允许 unit 从 stale 回到 active 吗？",
+                "back": "不允许。类型写死 from active、to stale。复活靠新内容流程，不靠审计反转。",
+                "tags": [
+                  "freshness",
+                  "state"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 125,
+                    "lineEnd": 138,
+                    "nodeIds": [],
+                    "note": "course/unit transition 仅 active→stale"
+                  }
+                ]
+              },
+              {
+                "id": "course-before-unit",
+                "front": "applyReport 为什么先把 course 标 stale，再处理 unit？",
+                "back": "先确保课程离开 active；仅当 course 已是 stale 时才继续把 stale unit 从 active 落下，避免课程仍 active 而单元已 stale 的中间态被当成正常教学。",
+                "tags": [
+                  "freshness",
+                  "workflow"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 527,
+                    "lineEnd": 546,
+                    "nodeIds": [],
+                    "note": "先 updateCourseStatus 再条件更新 unit"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "transition-to",
+                "kind": "short-answer",
+                "title": "转移终点",
+                "prompt": "FreshnessTransition 里 to 字段的唯一字面量是什么？",
+                "expectedAnswer": "stale",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/workflows/refresh-study.ts",
+                    "lineStart": 130,
+                    "lineEnd": 144,
+                    "nodeIds": [],
+                    "note": "to: stale 于三种 kind"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

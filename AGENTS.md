@@ -79,25 +79,37 @@ relevant hits.
 
 ## University Rules
 
-- **University does not author courses. UniversityLocal does.** This repository
-  consumes `university-local-course-recovery` packages. It never generates
-  lesson prose, cards, or exercises from a source repository, and it never
-  edits an imported package in place.
-- **The pull direction is one-way and this side owns it.** University reads
-  UniversityLocal's exports. UniversityLocal must never gain an upload lane, a
-  sync client, or any awareness that this product exists — that is a standing
-  constraint on that repository, and breaking it is not a University decision
-  to make.
-- **Do not copy code out of UniversityLocal.** Shared learning logic belongs in
-  a shared package under the parity contract. A copy-paste that "works for now"
-  is exactly the drift SPEC-0001 exists to prevent.
-- **2D is where learning happens; 3D is where motivation happens.** Lesson
-  prose, code blocks, answer input, review cards, settings, account and payment
-  are React DOM. The canvas owns the world map, level entry, and feedback.
-  Never rebuild readable text or text input as objects inside WebGL.
-- **Grading is tiered by cost.** Deterministic checks first, structured small-
-  model checks second, open-ended tutoring last and metered. A free tier must
-  not expose an unmetered large-model conversation.
+Two rules, and everything below them is a consequence rather than a separate
+restriction. The earlier list of prohibitions was retired when this became one
+repository; what survived, survived because it follows from these.
+
+1. **Share the code.** One implementation of anything, ever. If a shell needs a
+   behaviour the other shell already has, it imports it — it does not write a
+   second one, and it does not copy the first.
+2. **Keep the architecture efficient, clear, modular, robust, and legible to
+   both a person and an AI.** When those pull against each other, legibility
+   wins, because the thing nobody can read is the thing nobody can fix.
+
+What follows from them:
+
+- **`apps/local` authors, `apps/online` sells, `packages/*` is everything
+  both of them do.** Neither app may own something the other also needs. The
+  online shell is not forbidden from authoring courses; when it authors, it
+  runs the same workflows the local shell runs.
+- **The shells never import each other.** `apps/local` importing `apps/online`
+  is the modularity rule broken, and `check-module-boundaries.mjs` is where
+  that gets enforced rather than remembered. UniversityLocal still has no
+  awareness that a commercial product exists — sharing a package is not
+  awareness, and it must not grow an uploader or a sync client.
+- **Readable text is DOM, never geometry.** A Chinese IME, a screen reader,
+  text selection and a phone keyboard all die inside a canvas, so text in
+  WebGL is the legibility rule broken for a human. The canvas owns the world
+  map, level entry and feedback. This is also Web3D baseline rule 7, which is
+  a portfolio-wide shared rule: changing it means proposing it in PGS, not
+  deciding it here.
+- **Grading stays tiered by cost.** Deterministic first, structured small-model
+  second, open tutoring last and metered. An unmetered large model behind a
+  free tier is the robustness rule broken, in the direction of the bank.
 - **Design before build.** A user-facing behaviour gets designed in
   `docs/reference/player-journey/` before it gets implemented.
 

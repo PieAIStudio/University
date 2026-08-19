@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-agents-system-prompt",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-agents-as-members",
+    "unitId": "agent-harness",
+    "id": "system-prompt-transport",
+    "expectedRevision": 1,
+    "title": "为什么 system prompt 要按 agent 能力选择 transport？",
+    "content": "# 为什么 system prompt 要按 agent 能力选择 transport？\n\n## 情境和约束\n\n一个 ACP session 需要把 base prompt、system prompt、team instructions、agent core 和 canvas metadata 合并起来，但不同 agent 对 system role 和扩展请求的支持不同。你在读 session 创建代码时，可以先把“内容相同”和“传输位置不同”分开。Buzz 在 session 创建处先构造 combined_system_prompt，再按 Goose、协议版本和能力发送。\n\n[[evidence:crates/buzz-acp/src/pool.rs:894-936]]\n\n## 先猜一下\n\n如果所有 agent 都把 system prompt 当成同一种消息发送，旧协议、Goose 和现代 protocol-v2 agent 能否都保持一致的上下文语义？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不能保证，所以 Buzz 优先用 session/new 的 system prompt 能力；Goose 走它的扩展请求，若扩展不支持则退回 user-message framing，legacy agent 也走兼容路径。\n\n## 代价和收益\n\n收益是同一份上下文内容可以适配不同 harness，而不会因为某个 agent 不认识 system-prompt extension 就整轮失败。源码把 core、team、canvas 先合并，再传进 `session_new_system_prompt`。你可以把这一层理解成 harness 的协议适配，而不是业务 prompt 的改写。\n\n[[evidence:crates/buzz-acp/src/pool.rs:894-936]]\n\nGoose 的扩展失败为 method-not-found 时会标记不支持并警告，后续使用 user-message framing。你因此获得兼容性，但也必须维护能力探测和两种传输语义，不能只改 prompt 字符串。\n\n[[evidence:crates/buzz-acp/src/pool.rs:938-955]]\n\n## 什么时候该反过来\n\n如果一个新 runtime 明确支持 protocol-v2 system role，并且能力声明稳定，可以只走标准 session/new；如果能力未知，保留 fallback 比假设支持更安全。\n\n## 自检\n\n- combined_system_prompt 在什么时候构造？\n- Goose 不支持 system-prompt extension 时怎么退回？\n\n## 一句话\n\n**harness 统一上下文内容，再按 runtime 能力选择标准 system role、Goose 扩展或兼容的 user-message framing。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/pool.rs", "lineStart": 894, "lineEnd": 936, "note": "源码构造合并 system prompt，并通过 session_new_full/session_new_system_prompt 发送。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/pool.rs", "lineStart": 938, "lineEnd": 955, "note": "Goose system-prompt 扩展不支持时标记能力并退回 user-message framing。" }
+    ],
+    "cards": [
+      { "id": "agent-prompt-combine", "expectedRevision": 1, "front": "哪些内容会合并到 combined_system_prompt？", "back": "base/system prompt、team instructions、agent core 和 canvas metadata。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/pool.rs", "lineStart": 894, "lineEnd": 910, "note": "with_canvas、with_core、with_team 共同构造合并 prompt。" } ] },
+      { "id": "agent-prompt-goose-fallback", "expectedRevision": 1, "front": "Goose 不支持 system-prompt extension 时怎样？", "back": "记录能力为 false，并使用 user-message framing 兼容路径。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/pool.rs", "lineStart": 938, "lineEnd": 955, "note": "method-not-found 分支标记不支持并警告 fallback。" } ] }
+    ],
+    "exercises": [
+      { "id": "agent-prompt-transport", "expectedRevision": 1, "kind": "short-answer", "title": "选择标准入口", "prompt": "标准 protocol-v2 agent 的合并 system prompt 优先通过哪里发送？", "expectedAnswer": "session/new 的 system prompt 参数", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/pool.rs", "lineStart": 894, "lineEnd": 936, "note": "session_new_full 调用 session_new_system_prompt。" } ] },
+      { "id": "agent-prompt-fallback", "expectedRevision": 1, "kind": "short-answer", "title": "回忆兼容策略", "prompt": "Goose 的 system-prompt 扩展返回 method-not-found 时，harness 用什么替代？", "expectedAnswer": "user-message framing", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/pool.rs", "lineStart": 938, "lineEnd": 955, "note": "源码说明扩展不支持时退回 user-message sections。" } ] }
+    ]
+  }
+}

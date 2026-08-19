@@ -1,0 +1,23 @@
+interface:
+  display_name: "Knowledge Node"
+  short_description: "Save one verified learning insight locally"
+  default_prompt: "Use $knowledge-node to preview, deduplicate, dry-run, and save one selected insight to the current UniversityLocal study."
+
+compatibility:
+  canonical_format: "agent-skills"
+  adapter_targets: ["openai", "claude", "generic", "agent-skills"]
+  activation:
+    mode: "auto"
+    paths: []
+  execution:
+    context: "inline"
+    shell: "bash"
+  trust:
+    source_tier: "local"
+    remote_inline_execution: "forbid"
+    remote_metadata_policy: "allow-metadata-only"
+  degradation:
+    openai: "metadata-adapter"
+    claude: "neutral-source-plus-adapter"
+    generic: "neutral-source"
+    agent-skills: "canonical-source"

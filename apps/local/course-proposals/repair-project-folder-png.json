@@ -1,0 +1,126 @@
+{
+ "schemaVersion": 1,
+ "proposalId": "repair-project-folder-png",
+ "targetSnapshotId": "git-3b402e069a5d",
+ "lesson": {
+  "courseId": "foundations-before-zero",
+  "unitId": "what-is-an-app",
+  "id": "you-already-know-apps",
+  "expectedRevision": 5,
+  "title": "会玩一个 App，等于会做它吗？",
+  "variant": "对比",
+  "content": "# 会玩一个 App，等于会做它吗？\n\n## 两个东西\n\n你每天都在做第一件事：点开手机或电脑上的图标，滑动、发消息、用地图。人们把这类能点开的软件叫做 **App**——**Application**（应用程序）的缩写。\n\n第二件事看起来也和「App」有关：有人打开项目文件夹，改里面的文字文件，再让工具把文件变成能运行的程序。\n\n:::figure[真实的项目文件夹]{#turing-pact-project-folder}\nFinder 中打开 TuringPact 文件夹；README.md、package.json、src、index.html 与其他普通文件和文件夹并列出现。\n:::\n\n:::detail[截图里这四个名字为什么重要？]\n你可以把画面先当成一张普通文件夹的目录表：README.md 和 package.json 是文件，src 是文件夹，index.html 也是文件。它们没有排成一张“App”图标，也没有藏在神秘容器里；做的人就是在这样的文件夹里找到并修改它们。截图不负责说明每个文件的内容，只负责让你看到它们作为同一层的普通项目成员并列出现。\n:::\n\n:::detail[什么叫「项目文件夹」？]\n你手机上那个图标，是别人做完、打包好、送到你手上的成品。在做它的人的电脑上，它不长这样——它只是一个普通文件夹，跟你放照片的那个文件夹没有区别，只是里面装的不是照片，是一堆写满文字的文件。做的人就在这个文件夹里改字、加文件，所以叫它项目文件夹。\n:::\n\n:::detail[「变成能运行的程序」是什么意思？]\n你点开微信，手机里跑的是一份已经整理好的成品。做的人手里往往是一堆还没整理完的文字文件——别人的手机看不懂这些文件。中间要有一步：用电脑上的程序，把这堆文字文件整理成手机或浏览器能打开的成品。那一步完成之后，才谈得上「能运行」。\n:::\n\n图灵密约这个项目的最外层，就有一份说明文件 `README.md`，开头是：\n\n[[evidence:README.md:1-4]]\n\n:::detail[`README.md` 是什么？]\n很多项目会在最外层放一个叫 `README.md` 的文件——名字就是「先读我」。它不是图标，也不是按钮，只是一份用文字写的说明：这东西叫什么、是干什么的、从哪下手。你不会在手机主屏幕上点到它；它是做的人给后来的人留的路标。\n:::\n\n第 1 行是中英文产品名；第 3–4 行用英文写了一句玩法：聊天室里有人是人类、有人是 AI，你要判断。这里没有图标，也没有可点的按钮。\n\n两件事都跟「图灵密约」有关，却不像是同一种动作。\n\n## 先猜一下\n\n一个人会玩「图灵密约」，等于他会做「图灵密约」吗？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n不等于。会玩只说明你会当乘客；会做要求你能读懂并改动文件，能解释这个产品是怎么被写出来的。\n\n## 逐条对照\n\n| | 会用 App | 会造 App |\n| --- | --- | --- |\n| 你碰什么 | 图标、按钮、屏幕 | 文件、文件夹、说明文字、代码 |\n| 你在哪 | 装好之后的界面里 | 项目仓库里 |\n| 成功长什么样 | 功能用顺了 | 改得对、跑得起来、说得清「为什么是这样」 |\n| 图灵密约例子 | 进聊天室、判断谁是 AI | 打开 `README.md`，看见产品名和玩法一句 |\n\n:::detail[什么叫「项目仓库」？]\n你可以把它想成一间还没装修完的房子的施工资料柜：图纸、清单、施工记录都在同一柜子里，不是你住进去之后看到的客厅。做 App 的人把和这个产品有关的文件都放进同一个大文件夹，并跟着时间留下改过什么的痕迹——这个整体就叫仓库。你在里面改文件；用户永远看不到这个柜子，只看到装好的客厅。\n:::\n\n:::detail[「跑得起来」是什么意思？]\n改完文件不等于事情做完。还得让电脑上的程序把改过的文件整理成能打开的样子，并且真的打开看一眼：按钮还在不在、字对不对。这一步通过了，才叫跑得起来。只改字、从不打开看，不算会造。\n:::\n\n会用的人可以一辈子不打开 `README.md`。会造的人却往往从这里起步：先确认「我们在做什么」，再改具体代码。\n\n:::detail[为什么会用的人可以一辈子不打开它？]\n因为说明文件是给做的人看的。用户拿到的是装好的 App：点图标、看界面就够了。产品叫什么、玩法是什么，界面自己会告诉你——不必翻那份写给后来接手的人看的说明。\n:::\n\n产品中文名 **图灵密约**、英文名 Turing Pact，以及「双语社交推理」这句定位，都写在这份文件的前四行里。\n\n## 什么时候用哪个\n\n- **只谈玩法、体验、好不好用** 时，用「会用」的视角就够了。\n- **谈功能写在哪、改哪一行、为什么坏了** 时，必须切到「会造」：打开文件，对着文字工作。\n- 这门课从现在起默认走第二条路。你已经站在终点（会用）；后面每一课都在带你回到起点（文件）。\n\n## 再想想\n\n下一课会打开真正的入口文件，看「能玩的产品」在磁盘上长什么样。现在只需记住：说明文字和代码文件，才是造的人每天面对的东西。\n\n## 自检\n\n**问：** 「会用微信」等于「会做微信」吗？用这节课的两个词回答。\n\n## 一句话\n\n**你会用 App，已经站在终点；这门课带你走到起点——文件。**\n",
+  "evidence": [
+   {
+    "kind": "fact",
+    "snapshotId": "git-3b402e069a5d",
+    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+    "sourcePath": "README.md",
+    "lineStart": 1,
+    "lineEnd": 4,
+    "nodeIds": [],
+    "note": "README 标题与产品一句话说明。"
+   }
+  ],
+  "assets": [
+   {
+    "id": "turing-pact-project-folder",
+    "kind": "real-screenshot",
+    "path": "assets/turing-pact-project-folder.png",
+    "sha256": "sha256:d57f5176de91d52b751feb75670239aac2a0a109b5195763b7fca44d91e68be7",
+    "mime": "image/png",
+    "bytes": 333333,
+    "width": 1288,
+    "height": 594,
+    "alt": "Finder 中打开 TuringPact 项目文件夹的内容视图；README.md、package.json、src 文件夹和 index.html 与其他文件和文件夹并列显示。",
+    "caption": "真实项目文件夹：README.md、package.json、src 和 index.html 都只是同一个普通文件夹里的项目文件。",
+    "source": {
+     "license": "Owner-captured local screenshot; no remote asset",
+     "attribution": "Captured locally from the owner's TuringPact checkout"
+    },
+    "capture": {
+     "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+     "route": "file-manager:/Users/yuanfei/PieAI/TuringPact",
+     "state": "Finder icon view of the TuringPact project folder; README.md, package.json, src, and index.html are visible.",
+     "viewport": {
+      "width": 1521,
+      "height": 652
+     },
+     "locale": "en-US",
+     "captureRecipe": "Open the local TuringPact folder in Finder icon view, capture the window, then crop away the sidebar with sips; no pixels were synthesized.",
+     "capturedAt": "2026-08-10T07:33:36.000Z"
+    }
+   }
+  ],
+  "assetFiles": [
+   {
+    "path": "assets/turing-pact-project-folder.png",
+    "sourcePath": "/private/tmp/claude-501/-Users-yuanfei-PieAI-UniversityLocal/058fe3d3-ebdc-46a7-a319-9d4b5c6a0650/scratchpad/turing-pact-project-folder.png"
+   }
+  ],
+  "cards": [
+   {
+    "id": "app-means-application",
+    "expectedRevision": 4,
+    "kind": "basic",
+    "front": "App 这个词通常是什么英文词的缩写？",
+    "back": "Application（应用程序）。",
+    "tags": [],
+    "evidence": [
+     {
+      "kind": "fact",
+      "snapshotId": "git-3b402e069a5d",
+      "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+      "sourcePath": "README.md",
+      "lineStart": 1,
+      "lineEnd": 1,
+      "nodeIds": [],
+      "note": "README 标题处的产品名。"
+     }
+    ]
+   },
+   {
+    "id": "readme-product-one-liner",
+    "expectedRevision": 4,
+    "kind": "basic",
+    "front": "README 说图灵密约本质上是一种什么游戏？",
+    "back": "双语社交推理游戏：判断聊天室里谁是人、谁是 AI。",
+    "tags": [],
+    "evidence": [
+     {
+      "kind": "fact",
+      "snapshotId": "git-3b402e069a5d",
+      "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+      "sourcePath": "README.md",
+      "lineStart": 3,
+      "lineEnd": 4,
+      "nodeIds": [],
+      "note": "产品一句话。"
+     }
+    ]
+   }
+  ],
+  "exercises": [
+   {
+    "id": "product-name-from-readme",
+    "expectedRevision": 4,
+    "kind": "short-answer",
+    "title": "产品中文名",
+    "prompt": "README 第 1 行里，产品的中文名是哪四个字？",
+    "evidence": [
+     {
+      "kind": "fact",
+      "snapshotId": "git-3b402e069a5d",
+      "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+      "sourcePath": "README.md",
+      "lineStart": 1,
+      "lineEnd": 1,
+      "nodeIds": [],
+      "note": "标题含图灵密约。"
+     }
+    ],
+    "expectedAnswer": "图灵密约"
+   }
+  ]
+ }
+}

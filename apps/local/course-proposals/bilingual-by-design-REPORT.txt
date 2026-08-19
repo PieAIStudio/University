@@ -1,0 +1,67 @@
+bilingual-by-design — course proposal delivery report
+=====================================================
+
+Course id:     bilingual-by-design
+Title:         双语不是翻译表
+Proposal id:   create-bilingual-by-design
+Snapshot:      git-3b402e069a5d
+Commit:        3b402e069a5db5fe9eb82dbc03aa05152b3d298b
+Analysis:      ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a
+
+Scale
+-----
+Units:    3
+Lessons:  12
+Evidence: 74 references (all resolve)
+
+Units
+-----
+- namespace-partition: 命名空间怎么切 (4 lessons)
+    · four-namespaces-not-one — 四个命名空间，不是一张大表
+    · default-ns-is-common — 默认命名空间为什么是 common
+    · resources-mirror-disk — resources 树必须镜像磁盘
+    · nested-keys-within-ns — 命名空间之内还要再分层
+- what-stays-out: 什么绝不能进翻译文件 (4 lessons)
+    · interpolate-dynamic-data — 动态数据走插值，不进表
+    · machine-keys-human-values — 机器码做键，人话做值
+    · never-leak-in-locale — locale 里也不能塞机密
+    · spoiler-free-share-copy — 分享文案是产品决策，不是附赠翻译
+- fallback-and-detection: 缺翻译时退到什么 (4 lessons)
+    · fallback-is-zh-cn — 缺翻译时退回中文，不是英文
+    · detect-local-storage-first — 语言检测：先记忆，后浏览器
+    · escape-value-false — 为什么 escapeValue 要关掉
+    · key-parity-both-locales — 中英键集合必须对齐
+
+Gate: check-proposal-shape.mjs
+------------------------------
+ok  course-proposals/bilingual-by-design.json
+
+Gate: check-proposal-evidence.mjs --study turing-pact
+------------------------------------------------------
+(summary) all 74 references resolve at their pinned commits
+
+Full unique path:line ranges are listed by the tool as ok lines; exit code 0.
+
+Most counter-intuitive finding (already in the course)
+------------------------------------------------------
+fallbackLng is 'zh-CN', not 'en'.
+
+Western i18n scaffolds almost always anchor missing keys on English. TuringPact
+does the opposite: en is a first-class resource tree, but the configured fallback
+language is Chinese. That matches a product whose source copy and primary market
+are Chinese — so an incomplete English key surfaces as Chinese text (or forces
+you to notice mixed UI) rather than sprinkling English into a Chinese session by
+default. Lesson: fallback-is-zh-cn (unit fallback-and-detection). The mermaid
+diagram in that lesson highlights the B→D edge: miss current locale → look up
+zh-CN, not “whatever else is loaded”.
+
+Evidence sources used
+---------------------
+- src/i18n/config.ts
+- src/i18n/locales/en/{auth,common,game,puzzle}.json
+- src/i18n/locales/zh-CN/{auth,common,game,puzzle}.json
+
+All line numbers taken via:
+  git -C /Users/yuanfei/PieAI/TuringPact show 3b402e069a5d...:<path>
+
+No git commit made. TuringPact not modified.

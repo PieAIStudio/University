@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-one-message-workflow",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-one-message",
+    "unitId": "write-path",
+    "id": "workflow-loop-prevention",
+    "expectedRevision": 1,
+    "title": "为什么 post-commit dispatch 要跳过几类 workflow 事件？",
+    "content": "# 为什么 post-commit dispatch 要跳过几类 workflow 事件？\n\n## 一句真实出现的话\n\n你在 dispatch 内部会看到 `is_relay_workflow_msg`，以及一个同时检查 `is_workflow_execution_kind`、`is_command_kind`、relay workflow tag 和 gift wrap 的条件。这个条件是 workflow trigger guard。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:520-555]]\n\n## 先猜一下\n\n如果 workflow 产生的执行消息再次触发 workflow，系统会不会把一次自动化越滚越大？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会有回环风险，所以已经属于 workflow execution、command、relay-signed workflow message 或 gift wrap 的事件不再启动普通 workflow trigger。\n\n## 三个真实用例\n\n第一个用例是 kind gate：workflow execution kind 和 command kind 直接排除。第二个用例是身份与 tag gate：事件由 relay key 签名并带 `buzz:workflow` tag 时，`is_relay_workflow_msg` 为真。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:520-532]]\n\n第三个用例是 gift wrap：即使它不是普通 workflow kind，条件也把它排除。通过所有 gate 后，才 clone StoredEvent 并 spawn workflow_engine.on_event。你可以把这个术语记成“触发器的反回环门”。\n\n[[evidence:crates/buzz-relay/src/handlers/event.rs:528-555]]\n\n## 它不是什么\n\n这个 guard 不是拒绝存储事件，也不是禁止 workflow 读取事件。你看到的是“是否启动新的 workflow trigger”的门；事件可以已经写入并被其他 fan-out、audit 或搜索路径处理。\n\n## 自检\n\n- 哪几类事件会被 workflow trigger guard 排除？\n- 通过 guard 后调用哪个 workflow engine 方法？\n\n## 一句话\n\n**workflow trigger guard 让自动化产生的控制事件不再无条件启动下一轮自动化。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 520, "lineEnd": 532, "note": "源码定义 relay workflow message，并组合多个排除条件。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 520, "lineEnd": 555, "note": "通过 guard 后才 spawn workflow_engine.on_event。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 528, "lineEnd": 555, "note": "所有排除条件通过后才启动 workflow engine。" }
+    ],
+    "cards": [
+      { "id": "message-workflow-guard", "expectedRevision": 1, "front": "workflow trigger guard 主要防什么？", "back": "防止 workflow execution、command 或 relay 产生的 workflow 消息再次无条件触发下一轮自动化。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 520, "lineEnd": 532, "note": "多个排除条件共同组成触发门。" } ] },
+      { "id": "message-workflow-call", "expectedRevision": 1, "front": "通过 guard 后会调用什么？", "back": "异步调用 workflow_engine.on_event，并记录 workflow run 指标。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 533, "lineEnd": 555, "note": "spawn 内调用 workflow_engine.on_event。" } ] }
+    ],
+    "exercises": [
+      { "id": "message-workflow-skips", "expectedRevision": 1, "kind": "short-answer", "title": "列出排除项", "prompt": "源码中至少说出两类不会启动普通 workflow trigger 的事件。", "expectedAnswer": "workflow execution kind、command kind、relay-signed workflow message、gift wrap 中任意两类", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 528, "lineEnd": 532, "note": "排除条件集中列出四类情况。" } ] },
+      { "id": "message-workflow-purpose", "expectedRevision": 1, "kind": "short-answer", "title": "解释 guard 边界", "prompt": "workflow trigger guard 拒绝的是事件存储，还是新的 workflow trigger？", "expectedAnswer": "新的 workflow trigger", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-relay/src/handlers/event.rs", "lineStart": 520, "lineEnd": 533, "note": "guard 包围的是 workflow_engine.on_event 调用。" } ] }
+    ]
+  }
+}

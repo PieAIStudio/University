@@ -1,0 +1,43 @@
+node_modules/
+dist/
+.university-local-build/
+coverage/
+*.log
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
+.scratch/
+university-local.config.local.json
+
+# PGS workstation materializations. UniversityLocal-owned teaching skills stay
+# tracked; these generic links are recreated from the control-plane asset plan.
+.agents/skills/agent-browser
+.agents/skills/comm-coach
+.agents/skills/experience-capture
+.agents/skills/frontend-design
+.agents/skills/impeccable
+.agents/skills/mermaid-diagrams
+.agents/skills/screenwalk
+.agents/skills/ui-ux-pro-max
+.agents/manual-skills/
+.pro-gov/agent-assets/
+
+# Personal campus data stays visible at ./studies but must never enter source control.
+# The leading slash is load-bearing: an unanchored `studies/` matches a directory
+# of that name at any depth, and this repository has a source module at
+# server/studies/. Without the anchor Git silently swallowed it, and a fresh
+# clone could not build. Keep only the root ignore contract and explanation so
+# fresh clones satisfy router/link checks without tracking learner contents.
+/studies/*
+!/studies/.gitignore
+!/studies/README.md
+
+# Session handoff notes — working material, not project documentation.
+.handoff/
+
+# Quality-loop working material: screenshots, evidence dumps, and handoff notes
+# produced while investigating a session's findings. The path says `tmp` because
+# it is — the durable outcome is a learning under docs/reference/learnings/.
+/artifacts/**/tmp/

@@ -1,0 +1,1611 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-foundations-reading-code",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "foundations-reading-code",
+    "title": "《读懂一行代码》",
+    "description": "零基础主干第 1 阶段：用图灵密约里最短的真实文件，逐字建立 export、函数、类型、import 与拆文件的读码直觉。",
+    "audience": "零基础重建地基的独立开发者",
+    "objectives": [
+      "指着 `export function` 与 `import { }` 说明名字如何跨文件交接",
+      "读完一个短函数签名后说出参数、返回类型、剩余参数与默认参数各自在哪",
+      "解释联合类型、`type` 别名、`Record` 与可选参数在真实签名里的含义",
+      "读出 `?.`、`??` 与文件头 Owns/Does not own 在代码中的作用"
+    ],
+    "units": [
+      {
+        "id": "a-function",
+        "title": "一个函数长什么样",
+        "objective": "用三行真实文件建立 export、参数、返回值、剩余参数、过滤拼接与空实现的读法。",
+        "lessons": [
+          {
+            "id": "export-makes-public",
+            "title": "export：把名字交给别人用",
+            "content": "# export：把名字交给别人用\n\n## 学习目标\n完成本课后，你能指着一行 `export function` 说出：谁在这个文件里定义了这个名字、谁可以在文件外使用它。\n\n## 先给结论\n- **事实：`src/ui/utils.ts` 的第一行以 `export function cx` 开头；`src/platform/web/haptics.ts` 的第一行以 `export function triggerHaptic` 开头。**\n- **推论：没有 `export` 的名字默认只属于本文件；`export` 是把「本文件的名字」登记成「项目里别人可以引用的名字」。**\n\n## 一个类比\n你在厨房做了一壶汤。汤在锅里时，只有你这间厨房的人喝得到。你把它装进带标签的保温壶，放到客厅——标签上写着「番茄汤」，别人按名字就能拿走。`export` 就是往保温壶上贴标签那一步：名字公开，别人才能按名取用。\n\n## 工作示例\n先看最短的导出：\n\n```ts\nexport function cx(...parts: Array<string | false | null | undefined>): string {\n  return parts.filter(Boolean).join(' ');\n}\n```\n\n逐词读第一行的前半段：\n\n1. `export` —— 这个函数要给其他文件用。\n2. `function` —— 声明的是一个函数（function）。\n3. `cx` —— 函数的名字。别人 import 时写的就是这个名字。\n\n再看另一份三行文件，同样的骨架：\n\n```ts\nexport function triggerHaptic(_style: 'light' | 'medium' | 'heavy' = 'light') {\n  // Web 环境无触觉反馈，静默忽略\n}\n```\n\n两个文件做的事完全不同，但「怎么把名字交出去」的写法是同一句：`export function 名字(...)`。\n\n## 自检\n**问：** 如果把 `export` 删掉，写成 `function cx(...)`，本文件里还能不能调用 `cx`？其他文件还能不能 `import { cx }`？\n**答：** 本文件里仍然可以调用（名字还在）。其他文件不能再 import——名字没再登记到「对外公开」那一层。\n\n## 重点\n**`export` 不改变函数怎么跑，只改变「谁有权叫这个名字」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/ui/utils.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/ui/utils.ts"
+                ],
+                "note": "export function cx：整个文件只有一个被导出的函数。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/web/haptics.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/platform/web/haptics.ts"
+                ],
+                "note": "export function triggerHaptic：同样的 export 写法，另一份三行文件。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "export-what-it-does",
+                "front": "`export` 改变函数的哪一层语义：怎么执行，还是谁能引用？",
+                "back": "只改变谁能引用。函数体怎么跑不受 `export` 影响；它把名字登记成其他文件可以 import 的名字。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "第一行以 export function cx 开头。"
+                  }
+                ]
+              },
+              {
+                "id": "export-without",
+                "front": "删掉 `export` 之后，本文件和其他文件分别会怎样？",
+                "back": "本文件仍可调用该函数；其他文件无法再 import 这个名字。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/platform/web/haptics.ts"
+                    ],
+                    "note": "export function triggerHaptic 去掉 export 后仅本文件可见。"
+                  }
+                ]
+              },
+              {
+                "id": "export-name-is-the-handle",
+                "front": "别人 `import { cx }` 时，花括号里的 `cx` 从哪来？",
+                "back": "来自被导出文件里 `export function` 后面的那个名字。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "函数名 cx 就是对外的把手。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "export-keyword-recall",
+                "title": "写出公开一个函数时，声明开头的那个关键字",
+                "kind": "short-answer",
+                "prompt": "要把一个函数登记成其他文件可以引用的名字，声明开头写哪个英文关键字？只写一个词。",
+                "expectedAnswer": "export",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "export function cx。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "params-and-return",
+            "title": "参数进去，返回值出来",
+            "content": "# 参数进去，返回值出来\n\n## 学习目标\n完成本课后，你能在函数签名里指出：参数（parameter）在哪、返回类型标注（return type annotation）在哪、调用时传进去的是实参（argument）。\n\n## 先给结论\n- **事实：`cx` 的签名末尾写着 `: string`，表示这个函数返回值的类型是字符串；括号里的 `...parts` 是它接收的输入。**\n- **推论：读函数时先问两句——「我要递什么进去？」「它保证给我什么回来？」——比先读函数体更能建立地图。**\n\n## 一个类比\n自动售货机：你塞进硬币和按键选择（输入），机器吐出一罐饮料（输出）。售货机侧面的说明写「出货：罐装饮料」，对应类型标注；投币口和按钮对应参数列表。你不会先拆开机器内部线路，才决定能不能买——你会先看输入输出说明。\n\n## 工作示例\n```ts\nexport function cx(...parts: Array<string | false | null | undefined>): string {\n  return parts.filter(Boolean).join(' ');\n}\n```\n\n把签名拆开：\n\n| 片段 | 角色 |\n| --- | --- |\n| `...parts` | 参数名：调用时递进来的值会装进 `parts` |\n| `: Array<...>` | 参数的类型：允许什么形状的值进来 |\n| `): string` | 返回类型标注：出去的值必须是 `string` |\n| `return ...` | 真正把值交回去的那一行 |\n\n再看触觉函数：\n\n```ts\nexport function triggerHaptic(_style: 'light' | 'medium' | 'heavy' = 'light') {\n  // Web 环境无触觉反馈，静默忽略\n}\n```\n\n这里有参数 `_style`，但**没有**写 `: 某种类型` 在括号后面——没有显式返回类型标注。函数体也没有 `return` 表达式。对 TypeScript 来说，这种函数返回 `void`（没有有意义的返回值）。名字前的下划线 `_` 是约定：这个参数被接收了，但函数体故意不用它。\n\n## 自检\n**问：** `cx('a', 'b')` 里的 `'a'` 和 `'b'` 叫参数还是实参？\n**答：** 叫实参（argument）——调用时真正递进去的值。参数（parameter）是定义里的 `parts` 那个名字。\n\n## 重点\n**先认清「进什么、出什么」，再读函数体怎么把进变成出。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/ui/utils.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/ui/utils.ts"
+                ],
+                "note": "cx 的参数列表与返回类型 : string，以及 return 语句。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/web/haptics.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/platform/web/haptics.ts"
+                ],
+                "note": "有参数、无显式返回类型、无 return 表达式的对照。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "return-type-string",
+                "front": "`cx` 签名末尾的 `: string` 在说什么？",
+                "back": "返回类型标注：这个函数交回来的值类型是字符串（string）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "): string 出现在参数列表之后。"
+                  }
+                ]
+              },
+              {
+                "id": "param-vs-argument",
+                "front": "定义里的 `parts` 和调用里的 `'a'`，哪个叫参数，哪个叫实参？",
+                "back": "`parts` 是参数（parameter）；`'a'` 是实参（argument）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 2,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "parts 在定义侧；filter/join 使用装进来的值。"
+                  }
+                ]
+              },
+              {
+                "id": "underscore-param",
+                "front": "`triggerHaptic` 的参数写成 `_style`，下划线通常表示什么？",
+                "back": "这个参数被接收了，但函数体故意不使用它（常见约定，避免「未使用变量」噪音）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/platform/web/haptics.ts"
+                    ],
+                    "note": "参数名为 _style。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "cx-return-type",
+                "title": "写出 cx 的返回类型",
+                "kind": "short-answer",
+                "prompt": "`export function cx(...): ???` 里，问号处写的是哪个类型名？只写类型名本身。",
+                "expectedAnswer": "string",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "返回类型标注为 string。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "rest-params-and-union",
+            "title": "剩余参数与联合类型",
+            "content": "# 剩余参数与联合类型\n\n## 学习目标\n完成本课后，你能解释 `...parts` 为什么能接收「任意多个」实参，以及 `string | false | null | undefined` 里竖线 `|` 的含义。\n\n## 先给结论\n- **事实：`cx` 的参数写成 `...parts: Array<string | false | null | undefined>`。**\n- **推论：类名（class name）拼接时，调用方经常夹带「有时有、有时没有」的片段；类型故意允许 `false` / `null` / `undefined`，好在下一步统一滤掉。**\n\n## 一个类比\n你搬家装箱：箱子侧面写着「可装：衣服、或空袋子、或还没决定要不要的东西」。竖线 `|` 就是「或」。`...parts` 像开口很大的收纳袋——你可以一次塞一件，也可以一次塞十几件，它们都会进同一个袋子，编号从 0 往上排。\n\n## 工作示例\n```ts\nexport function cx(...parts: Array<string | false | null | undefined>): string {\n```\n\n三块拼在一起：\n\n1. **剩余参数（rest parameters）`...parts`**\n   调用 `cx('btn', isActive && 'btn--on', null)` 时，三个实参都会进入数组 `parts`。`...` 不是「省略号装饰」，它表示「把剩余的实参收集成数组」。\n\n2. **数组类型 `Array<...>`**\n   `parts` 的类型是数组；数组里每一个元素都要符合括号里的元素类型。\n\n3. **联合类型（union type）`string | false | null | undefined`**\n   竖线读作「或」。合法元素可以是字符串，也可以是布尔值 `false`，也可以是 `null`，也可以是 `undefined`——四选一即可，不要求同时满足。\n\n为什么要允许非字符串？因为 UI 里常见这种写法：\n\n```ts\ncx('card', isSelected && 'card--selected', className)\n```\n\n`isSelected && 'card--selected'` 在 `isSelected` 为假时会得到 `false`，不是字符串。类型若只写 `string`，这行调用就会被 TypeScript 拦住。\n\n## 自检\n**问：** `string | false` 是不是表示「既是 string 又是 false」？\n**答：** 不是。`|` 是「或」：每次只取其中一种。要表示「同时具备」才会用交叉类型（intersection）`&`，那是后话。\n\n## 重点\n**`...parts` 负责「装多少个」；`A | B | C` 负责「每个可以是哪几种」。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/ui/utils.ts",
+                "lineStart": 1,
+                "lineEnd": 1,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/ui/utils.ts"
+                ],
+                "note": "剩余参数 ...parts 与联合类型元素类型在同一处声明。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "rest-collects-array",
+                "front": "`...parts` 在函数参数列表里做什么？",
+                "back": "剩余参数：把调用时传入的多个实参收集成一个数组，装进 `parts`。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "...parts 出现在参数列表。"
+                  }
+                ]
+              },
+              {
+                "id": "union-means-or",
+                "front": "类型里的竖线 `|` 读作什么？`string | false` 表示什么？",
+                "back": "读作「或」。表示这个位置的值可以是 string，也可以是 false，每次只是其中一种。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "string | false | null | undefined。"
+                  }
+                ]
+              },
+              {
+                "id": "why-allow-false",
+                "front": "为什么 `cx` 的元素类型要包含 `false`，而不是只写 `string`？",
+                "back": "调用方常用 `条件 && '类名'`；条件为假时得到 false。允许 false 才能通过类型检查，再在函数体内滤掉。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 2,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "下一行 filter(Boolean) 会清掉假值。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "union-or-word",
+                "title": "联合类型竖线的读法",
+                "kind": "short-answer",
+                "prompt": "TypeScript 里 `string | null` 的竖线 `|`，中文通常读作哪个字？（一个字）",
+                "expectedAnswer": "或",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "联合类型用 | 连接。"
+                  }
+                ]
+              },
+              {
+                "id": "rest-dots-name",
+                "title": "三个点参数的英文名",
+                "kind": "short-answer",
+                "prompt": "`...parts` 这种写法，英文术语叫什么？两个词，小写亦可。",
+                "expectedAnswer": "rest parameters",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "剩余参数 rest parameters。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "filter-and-join",
+            "title": "先过滤，再拼接",
+            "content": "# 先过滤，再拼接\n\n## 学习目标\n完成本课后，你能逐步说出 `parts.filter(Boolean).join(' ')` 每一段做了什么，以及为什么过滤要发生在拼接之前。\n\n## 先给结论\n- **事实：`cx` 的函数体只有一行：`return parts.filter(Boolean).join(' ');`**\n- **推论：这行代码的工作顺序是固定的——先丢掉「不该出现在类名里」的值，再把剩下的字符串用空格粘成一个字符串。**\n\n## 一个类比\n`cx` 像出门前整理行李标签：桌上堆着「外套」「（空）」「雨伞」「不要的广告纸」。你先把空的和不要的挑掉（`filter`），再把剩下的名字用空格写成一行清单（`join`），好贴在箱子上。顺序反了——先粘成一行再挑——字已经粘在一起，很难只撕掉中间某一段。\n\n## 工作示例\n```ts\nreturn parts.filter(Boolean).join(' ');\n```\n\n从左读到右：\n\n1. **`parts`** —— 上一课收集好的数组，里面可能混着字符串和假值。\n2. **`.filter(Boolean)`** —— 留下在布尔语境里为真的元素。`false`、`null`、`undefined`、空字符串 `''` 会被去掉；正常的类名字符串会留下。\n3. **`.join(' ')`** —— 把留下的字符串用**一个空格**接成一个字符串。例如 `['btn', 'btn--primary']` 变成 `'btn btn--primary'`。\n4. **`return`** —— 把拼好的字符串交还给调用方。\n\n用具体输入走一遍：\n\n| 调用 | `parts` 近似内容 | 过滤后 | join 结果 |\n| --- | --- | --- | --- |\n| `cx('a', 'b')` | `['a','b']` | `['a','b']` | `'a b'` |\n| `cx('a', false, 'b')` | `['a', false, 'b']` | `['a','b']` | `'a b'` |\n| `cx('a', null, undefined)` | `['a', null, undefined]` | `['a']` | `'a'` |\n\n## 自检\n**问：** 若写成 `parts.join(' ').filter(Boolean)` 行不行？\n**答：** 不行。`join` 返回的是字符串，字符串没有按元素过滤的 `filter` 数组方法；而且假值已经变成文字夹在中间，语义也错了。必须先 `filter` 再 `join`。\n\n## 重点\n**过滤定名单，拼接写一行——顺序不能反。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/ui/utils.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/ui/utils.ts"
+                ],
+                "note": "函数体整行：filter(Boolean) 后 join 空格。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "filter-boolean-role",
+                "front": "`parts.filter(Boolean)` 在 `cx` 里负责去掉什么？",
+                "back": "去掉在布尔语境里为假的值，例如 false、null、undefined，以及空字符串。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "filter(Boolean) 是返回表达式的前半段。"
+                  }
+                ]
+              },
+              {
+                "id": "join-space",
+                "front": "`join(' ')` 的参数是一个空格，结果长什么样？",
+                "back": "把数组里剩下的字符串用单个空格连成一个字符串，例如类名列表 `'btn btn--on'`。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "join(' ') 使用空格分隔符。"
+                  }
+                ]
+              },
+              {
+                "id": "order-filter-then-join",
+                "front": "为什么必须先 `filter` 再 `join`，不能反过来？",
+                "back": "join 之后得到的是字符串，不能再按「数组元素」过滤；假值也会变成夹在中间的文字。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "源码顺序就是 filter 后接 join。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "join-separator",
+                "title": "join 用的分隔符",
+                "kind": "short-answer",
+                "prompt": "`parts.filter(Boolean).join(???)` 里，括号中的分隔符是什么？写出引号里的那个字符（空格就写「空格」）。",
+                "expectedAnswer": "空格",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "join(' ') 的分隔符是空格。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "default-param-and-noop",
+            "title": "默认参数与空实现",
+            "content": "# 默认参数与空实现\n\n## 学习目标\n完成本课后，你能指出默认参数（default parameter）写在哪里，并能说明为什么一个函数体可以几乎什么都不做却仍然正当。\n\n## 先给结论\n- **事实：`triggerHaptic` 的参数写成 `_style: 'light' | 'medium' | 'heavy' = 'light'`，函数体只有一行注释，没有其他语句。**\n- **推论：Web 平台没有手机那套震动 API 时，「公开同一个函数名、内部安静地什么也不做」是一种有意的实现，不是写到一半忘了填。**\n\n## 一个类比\n酒店房间里的「请勿打扰」灯按钮：有的房型真的连着灯，有的旧房型按钮在墙上但线路未接。按钮还在——客人按的动作不变——只是这个房型里按了等于没按。空实现（no-op，no operation）就是那只未接线的按钮：接口保留，效果为零。\n\n## 工作示例\n```ts\nexport function triggerHaptic(_style: 'light' | 'medium' | 'heavy' = 'light') {\n  // Web 环境无触觉反馈，静默忽略\n}\n```\n\n两处细节：\n\n1. **默认参数 `= 'light'`**\n   调用方写 `triggerHaptic()` 时，`_style` 自动是 `'light'`。写 `triggerHaptic('heavy')` 时用传入值。默认值贴在参数类型后面，不是贴在函数体里。\n\n2. **函数体是空的（只有注释）**\n   没有 `return`，没有调用浏览器 API。注释写明原因：Web 环境无触觉反馈，静默忽略。调用方仍然可以统一写 `triggerHaptic('medium')`，不必在每个按钮上判断「是不是手机」。\n\n对照 `cx`：同样是 `export function`，但 `cx` 必须算出一个字符串交回去；`triggerHaptic` 的契约是「尽量给反馈，给不了就当作成功的无操作」。两种实现密度不同，都是完整实现。\n\n之后学《一套代码，多端交付》时，你会看到同一能力在 Web / Electron / Capacitor 上换成不同文件——Web 这一份经常就是 no-op 或最薄包装。\n\n## 自检\n**问：** 空函数体是不是等于「这个功能还没做完」？\n**答：** 不一定。当平台本身没有对应能力时，空实现是刻意的：保持调用方代码一致，避免满项目 `if (isNative)`。是否「没做完」要看注释和同名的其他平台文件，不能只看行数。\n\n## 重点\n**默认参数写在签名里；空实现可以是正当的平台适配，不是自动等于半成品。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/web/haptics.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/platform/web/haptics.ts"
+                ],
+                "note": "默认参数 = 'light' 与仅含注释的空函数体。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/ui/utils.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/ui/utils.ts"
+                ],
+                "note": "对照：同样是 export function，但 cx 有 return 计算。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "default-param-location",
+                "front": "默认参数 `= 'light'` 写在什么位置？",
+                "back": "写在参数列表里、该参数的类型标注后面，不在函数体里。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/platform/web/haptics.ts"
+                    ],
+                    "note": "_style: ... = 'light'。"
+                  }
+                ]
+              },
+              {
+                "id": "noop-meaning",
+                "front": "什么是空实现（no-op）？Web 版 `triggerHaptic` 为什么可以是 no-op？",
+                "back": "no-op 表示执行时故意不产生效果。Web 没有对应触觉 API 时，保留同名函数、内部静默忽略，让调用方不必分支。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 3,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/platform/web/haptics.ts"
+                    ],
+                    "note": "注释写明 Web 环境静默忽略。"
+                  }
+                ]
+              },
+              {
+                "id": "call-without-args",
+                "front": "调用 `triggerHaptic()` 不传参时，`_style` 的值是什么？",
+                "back": "`'light'`，由默认参数提供。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/platform/web/haptics.ts"
+                    ],
+                    "note": "默认值 = 'light'。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-haptic-style",
+                "title": "默认触觉强度",
+                "kind": "short-answer",
+                "prompt": "`triggerHaptic` 不传参时，默认的 style 字符串是什么？只写引号里的词。",
+                "expectedAnswer": "light",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/platform/web/haptics.ts"
+                    ],
+                    "note": "默认参数为 light。"
+                  }
+                ]
+              },
+              {
+                "id": "noop-when-valid",
+                "title": "说明空实现何时正当",
+                "kind": "explain",
+                "prompt": "有人看到 `triggerHaptic` 函数体几乎为空，就认为这是没写完的代码。请说明在什么条件下空实现是正当设计，并点出这份 Web 文件里哪一处文字支持你的判断。",
+                "rubric": [
+                  "说明 no-op 是「有意不产生效果」而不是漏写",
+                  "点出平台缺少能力（Web 无触觉）时保留统一调用入口的价值",
+                  "引用文件中「Web 环境无触觉反馈，静默忽略」这类注释作为证据",
+                  "区分「未完成」与「该平台就应为空」需要看注释或其它平台对照，不能只看行数"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 3,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/platform/web/haptics.ts"
+                    ],
+                    "note": "注释与空函数体共同构成 no-op 证据。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "naming-things",
+        "title": "给东西起名字",
+        "objective": "用类型合同与一行 analytics 函数建立 type、Record、import type、?.、?? 与边界注释的读法。",
+        "lessons": [
+          {
+            "id": "type-alias-and-union",
+            "title": "type：给类型起别名",
+            "content": "# type：给类型起别名\n\n## 学习目标\n完成本课后，你能读懂 `export type 名字 = ...`，并说明类型别名（type alias）本身不产生运行时的值。\n\n## 先给结论\n- **事实：`src/services/product-analytics/types.ts` 里有 `export type AnalyticsValue = string | number | boolean | null`。**\n- **推论：把一长串联合类型收成一个短名字，是为了在函数签名和别处反复引用时只改一处。**\n\n## 一个类比\n咖啡店菜单不写「以咖啡豆为原料、经热水萃取、可加奶的热饮」，而写「拿铁」。`type AnalyticsValue = ...` 就是在类型世界里起菜单名：右边是完整配方，左边是短名。菜单名印在纸上方便点单；端出来的仍是那杯液体——别名不额外变出一种新饮料。\n\n## 工作示例\n```ts\nexport type AnalyticsValue = string | number | boolean | null;\n```\n\n逐段：\n\n1. `export type` —— 导出一个**类型**名字（不是函数、不是变量）。\n2. `AnalyticsValue` —— 别名。\n3. `=` 右边 —— 真正的类型：字符串、数字、布尔或 `null` 四者之一。\n\n和 `export function` 的关键区别：\n\n| | `export function cx` | `export type AnalyticsValue` |\n| --- | --- | --- |\n| 运行时存在吗？ | 存在，是可调用的函数 | 不存在，编译后会擦掉 |\n| 能 `import type` 吗？ | 一般用值 import | 专门用类型 import |\n| 改它影响什么？ | 改行为 | 改「哪些值被允许」的检查 |\n\n文件头注释还写了这层类型文件 **Owns / Does not own** 的边界——下一单元会专讲注释；这里先记住：这个文件只拥有「粗糙的事件载荷类型」，不拥有 PostHog 接线。\n\n## 自检\n**问：** 程序跑起来时，内存里有没有一个叫 `AnalyticsValue` 的对象？\n**答：** 没有。它只在 TypeScript 检查阶段存在，编译成 JavaScript 后类型别名会被抹掉。\n\n## 重点\n**`type` 别名是给类型配方起的短名，不创造运行时的值。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/product-analytics/types.ts"
+                ],
+                "note": "文件头注释与 AnalyticsValue、AnalyticsSender 两个 type 导出。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 7,
+                "lineEnd": 7,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/product-analytics/types.ts"
+                ],
+                "note": "AnalyticsValue 联合类型别名单行定义。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "type-alias-not-runtime",
+                "front": "`export type AnalyticsValue = ...` 在程序跑起来之后还在吗？",
+                "back": "不在。类型别名只参与编译期检查，编译成 JavaScript 后会被擦掉，内存里没有对应对象。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "type AnalyticsValue 定义。"
+                  }
+                ]
+              },
+              {
+                "id": "analytics-value-members",
+                "front": "`AnalyticsValue` 允许哪四种可能？",
+                "back": "string、number、boolean、null。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "string | number | boolean | null。"
+                  }
+                ]
+              },
+              {
+                "id": "why-name-the-union",
+                "front": "为什么要把联合类型收成 `AnalyticsValue` 这个名字，而不是每次重写一长串？",
+                "back": "多处签名可复用；改允许的值时只改一处别名定义。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 7,
+                    "lineEnd": 9,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "别名被 AnalyticsSender 的 Record 值类型引用。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "analytics-value-null",
+                "title": "AnalyticsValue 是否包含 null",
+                "kind": "short-answer",
+                "prompt": "`AnalyticsValue` 的联合里，有没有 `null`？回答「有」或「无」。",
+                "expectedAnswer": "有",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "联合以 null 结尾。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "function-type-and-record",
+            "title": "函数类型与 Record",
+            "content": "# 函数类型与 Record\n\n## 学习目标\n完成本课后，你能读出 `AnalyticsSender` 是「函数的类型」而不是「一个已实现的函数」，并能解释 `Record<K, V>` 和可选参数 `?` 在签名里的位置。\n\n## 先给结论\n- **事实：`export type AnalyticsSender = (event: string, properties?: Record<string, AnalyticsValue>) => void`。**\n- **推论：这里定义的是「发送器必须长什么样」的合同；具体谁去发、发到 PostHog 还是别处，不属于这个文件。**\n\n## 一个类比\n插座标准只规定「两个孔、多大电压」，不规定你插台灯还是插手机充。`AnalyticsSender` 是插座图纸：左边插孔叫 `event`（字符串），右边可选插孔叫 `properties`（一串键值）。`=> void` 表示插上之后不保证从插座再拿回什么东西——发送通常是「交代完就结束」。\n\n## 工作示例\n```ts\nexport type AnalyticsSender = (\n  event: string,\n  properties?: Record<string, AnalyticsValue>,\n) => void;\n```\n\n拆开读：\n\n1. **`( ... ) => void`** —— 函数类型（function type）。左边是参数列表形状，箭头右边是返回类型。`void` 表示调用方不应依赖返回值。\n\n2. **`event: string`** —— 第一个参数必填，名字在类型层是 `event`，类型是字符串。\n\n3. **`properties?`** —— 参数名后面的 `?` 表示**可选参数（optional parameter）**。调用时可以只传事件名，不传第二项。\n\n4. **`Record<string, AnalyticsValue>`** —— TypeScript 内置工具类型：键是 `string`，值是 `AnalyticsValue` 的对象。像一张表：列名任意字符串，格子里只能放上一课的那四种值。\n\n和 `export function cx(...)` 对比：`function` 关键字带来**一份实现**；`type ... = (...) => ...` 只描述**形状**，文件里没有函数体。\n\n## 自检\n**问：** `properties?` 的问号能不能挪到类型前面写成 `?Record<...>`？\n**答：** 不能。可选参数的 `?` 贴在参数名后。类型本身若要表达「值或 undefined」，会写成 `T | undefined` 或 `properties: T | undefined`，那是另一种写法。\n\n## 重点\n**函数类型写合同；`Record` 描述键值表；`?` 贴在参数名后表示可省略。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 7,
+                "lineEnd": 9,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/product-analytics/types.ts"
+                ],
+                "note": "AnalyticsValue 与 AnalyticsSender 相邻定义，Sender 引用 Value。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 9,
+                "lineEnd": 9,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/product-analytics/types.ts"
+                ],
+                "note": "AnalyticsSender：可选 properties 与 Record、返回 void。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "function-type-not-impl",
+                "front": "`export type AnalyticsSender = (event: string, ...) => void` 是实现还是合同？",
+                "back": "合同（函数类型）。它描述参数与返回值形状，这个文件里没有函数体实现。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "type 别名指向箭头函数类型。"
+                  }
+                ]
+              },
+              {
+                "id": "record-kv",
+                "front": "`Record<string, AnalyticsValue>` 表示什么样的对象？",
+                "back": "键为 string、值必须是 AnalyticsValue 的对象（字符串键到分析值的映射表）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "Record 出现在 properties 的类型位置。"
+                  }
+                ]
+              },
+              {
+                "id": "optional-param-q",
+                "front": "`properties?` 里的问号表示什么？",
+                "back": "可选参数：调用时可以不传第二项。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "properties? 写法。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "sender-return-void",
+                "title": "AnalyticsSender 的返回类型",
+                "kind": "short-answer",
+                "prompt": "`AnalyticsSender` 箭头右侧的返回类型写的是什么？只写类型名。",
+                "expectedAnswer": "void",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "=> void。"
+                  }
+                ]
+              },
+              {
+                "id": "optional-mark",
+                "title": "可选参数的标记字符",
+                "kind": "short-answer",
+                "prompt": "把参数标成可选时，紧跟在参数名后面的那个字符是什么？",
+                "expectedAnswer": "?",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "properties?。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "import-type-and-coalesce",
+            "title": "import type、可选链与空值合并",
+            "content": "# import type、可选链与空值合并\n\n## 学习目标\n完成本课后，你能区分 `import type` 与普通 import，并能逐步读出 `resolution.experiment?.analyticsTag ?? 'none'`。\n\n## 先给结论\n- **事实：`src/features/experiments/analytics.ts` 第一行是 `import type { ExperimentResolution } from './resolve'`；返回值是 `resolution.experiment?.analyticsTag ?? 'none'`。**\n- **推论：只需要类型时用 `import type`，避免把类型误当成运行时依赖；`?.` 与 `??` 联手把「可能没有实验」收成一个有界的字符串标签。**\n\n## 一个类比\n你打电话问前台：「302 房的客人姓名？」——若房间是空的，前台不会硬闯空房翻抽屉（那会报错），而是说「没有住客」；你再规定「没有住客就在表格上写 none」。`?.` 是「房间空着就别往里走」；`??` 是「左边没有有效结果时，用右边的默认」。\n\n## 工作示例\n```ts\nimport type { ExperimentResolution } from './resolve';\n\nexport function experimentAnalyticsTag(resolution: ExperimentResolution): string {\n  return resolution.experiment?.analyticsTag ?? 'none';\n}\n```\n\n三步：\n\n1. **`import type { ExperimentResolution }`**\n   只导入类型。`ExperimentResolution` 不会出现在编译后的 JavaScript 里。若写成普通 `import`，在某些配置下可能暗示「我依赖 resolve 模块的运行时导出」，即便你只用了类型。\n\n2. **可选链（optional chaining）`experiment?.analyticsTag`**\n   若 `resolution.experiment` 是 `null` 或 `undefined`，整段表达式直接得到 `undefined`，**不会**再去读 `.analyticsTag`（避免运行时错误）。若 experiment 存在，才读取它的 `analyticsTag`。\n\n3. **空值合并（nullish coalescing）`?? 'none'`**\n   仅当左边是 `null` 或 `undefined` 时，才用右边的 `'none'`。若左边是合法字符串（包括空字符串），保留左边。\n\n文件注释写明：永远返回有界 slug——注册表里的 tag，或者字面量 `none`。这个 `?? 'none'` 的写法，之后学《一套代码，多端交付》和埋点相关课时会反复见到：用一个稳定默认值堵住「空」。\n\n## 自检\n**问：** `??` 和 `||` 有什么不同？若 `analyticsTag` 是空字符串 `''`，两者结果一样吗？\n**答：** 不一样。`||` 会把空字符串也当成假而换默认值；`??` 只在 `null`/`undefined` 时换默认值，空字符串会保留。\n\n## 重点\n**`import type` 只搬类型；`?.` 遇空则停；`??` 只在 nullish 时填默认。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/experiments/analytics.ts"
+                ],
+                "note": "import type、函数签名与 ?. ?? 返回表达式。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 7,
+                "lineEnd": 9,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/experiments/analytics.ts"
+                ],
+                "note": "experimentAnalyticsTag 函数体一行。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "import-type-only",
+                "front": "`import type { ExperimentResolution }` 和普通 `import` 差在哪？",
+                "back": "import type 只引入类型，编译后擦掉，不把该名字当成运行时值依赖。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/experiments/analytics.ts"
+                    ],
+                    "note": "文件第一行 import type。"
+                  }
+                ]
+              },
+              {
+                "id": "optional-chaining-stop",
+                "front": "`resolution.experiment?.analyticsTag` 在 experiment 为 null 时会发生什么？",
+                "back": "不会继续访问 analyticsTag，整个可选链表达式得到 undefined。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/experiments/analytics.ts"
+                    ],
+                    "note": "?. 出现在返回表达式。"
+                  }
+                ]
+              },
+              {
+                "id": "nullish-none",
+                "front": "`?? 'none'` 在什么情况下会得到 `'none'`？",
+                "back": "当左边是 null 或 undefined 时（例如没有 experiment，或 tag 为空值）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/experiments/analytics.ts"
+                    ],
+                    "note": "?? 'none' 收尾。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "coalesce-default-none",
+                "title": "空值合并的默认字面量",
+                "kind": "short-answer",
+                "prompt": "`experimentAnalyticsTag` 在拿不到 tag 时返回的默认字符串是什么？只写内容，不要引号。",
+                "expectedAnswer": "none",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/experiments/analytics.ts"
+                    ],
+                    "note": "?? 'none'。"
+                  }
+                ]
+              },
+              {
+                "id": "optional-chain-operator",
+                "title": "可选链的两个字符",
+                "kind": "short-answer",
+                "prompt": "可选链运算符由哪两个字符组成？（按源码里的写法）",
+                "expectedAnswer": "?.",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/experiments/analytics.ts"
+                    ],
+                    "note": "experiment?.analyticsTag。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "owns-does-not-own",
+            "title": "文件头声明：Owns / Does not own",
+            "content": "# 文件头声明：Owns / Does not own\n\n## 学习目标\n完成本课后，你能在文件头注释里找出「本文件拥有什么」和「故意不拥有什么」，并说明为什么这种自我声明对一人维护有用。\n\n## 先给结论\n- **事实：`types.ts` 注释写着 Owns: coarse event payload typing only；Does not own: PostHog wiring, event catalogs, or privacy allow-lists。`analytics.ts`（experiments）注释写着始终返回有界 slug。**\n- **推论：边界写在文件顶上，是给未来的自己和代码审查用的合同，不是装饰性说明。**\n\n## 一个类比\n合租冰箱门上的便签：「我的格子只放调料；牛奶、外卖盒不归我管。」室友不会把你的格子塞满剩菜，你也不会被当成整台冰箱的管理员。`Owns / Does not own` 就是贴在模块门上的那张便签。\n\n## 工作示例\n```ts\n/**\n * Shared sender contract for product analytics adapters.\n *\n * Owns: coarse event payload typing only.\n * Does not own: PostHog wiring, event catalogs, or privacy allow-lists.\n */\nexport type AnalyticsValue = string | number | boolean | null;\n```\n\n读注释的方式：\n\n1. **第一句** —— 这文件是什么（共享的 sender 合同）。\n2. **Owns** —— 你改这个文件时，有权改、也应该改的范围：只做粗糙的事件载荷类型。\n3. **Does not own** —— 明确排除：PostHog 怎么接、事件目录、隐私允许列表。那些问题去别的文件找。\n\nexperiments 侧的兄弟写法：\n\n```ts\n/**\n * Coarse analytics value for the existing `experimentTag` allowlist key.\n * Always returns a bounded slug: registry tag or `none`.\n */\n```\n\n它用「Always returns...」声明输出合同：永远是有界 slug。这和 Owns 句式不同，但作用同类——**缩小读者对这个文件的期望**。\n\n一人公司时没有专职架构师盯边界。文件头顶的 Owns 句，是你能留给「三个月后的自己」的最便宜架构文档。之后在正式课里读更大的模块，也会反复看到同一种注释习惯。\n\n## 自检\n**问：** 注释里写 Does not own PostHog wiring，是不是表示项目不做 PostHog？\n**答：** 不是。表示**这个文件**不负责接线；接线在别的模块。边界是文件级的，不是产品级的「我们不做」。\n\n## 重点\n**Owns 写清责任田，Does not own 防止文件长成杂物间。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 1,
+                "lineEnd": 6,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/product-analytics/types.ts"
+                ],
+                "note": "Owns / Does not own 文件头注释块。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 3,
+                "lineEnd": 6,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/experiments/analytics.ts"
+                ],
+                "note": "experiments analytics 的输出合同注释。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "owns-payload-typing",
+                "front": "product-analytics 的 `types.ts` 声明自己拥有什么？",
+                "back": "只拥有粗糙的事件载荷类型（coarse event payload typing only）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "Owns 行。"
+                  }
+                ]
+              },
+              {
+                "id": "does-not-own-posthog",
+                "front": "同一文件明确不拥有哪三类东西？",
+                "back": "PostHog 接线、事件目录（event catalogs）、隐私允许列表（privacy allow-lists）。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "Does not own 行。"
+                  }
+                ]
+              },
+              {
+                "id": "boundary-not-product-no",
+                "front": "Does not own 某能力，是否等于产品不做该能力？",
+                "back": "不等于。只表示当前文件不负责；实现可能在其他模块。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 1,
+                    "lineEnd": 6,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "Shared sender contract 定位为类型合同文件。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "owns-keyword",
+                "title": "责任田注释的英文小标题",
+                "kind": "short-answer",
+                "prompt": "这套代码文件头里，表示「本文件拥有什么」的英文单词是什么？",
+                "expectedAnswer": "Owns",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "Owns: ..."
+                  }
+                ]
+              },
+              {
+                "id": "why-write-does-not-own",
+                "title": "为什么要写 Does not own",
+                "kind": "explain",
+                "prompt": "如果只写 Owns、不写 Does not own，一人维护几个月后容易发生什么问题？请结合 types.ts 的职责边界说明。",
+                "rubric": [
+                  "指出文件会逐渐被塞进本不该放的职责（接线、目录、隐私列表等）",
+                  "说明 Does not own 给未来的自己一个明确的拒绝标准",
+                  "联系一人无专职审查时，注释边界是廉价的架构文档",
+                  "不把 Does not own 误解成产品不做该功能"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 1,
+                    "lineEnd": 6,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/product-analytics/types.ts"
+                    ],
+                    "note": "Owns 与 Does not own 成对出现。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "files-talking",
+        "title": "文件之间怎么说话",
+        "objective": "看清 export/import 握手、再导出出口与门面收窄，理解为何拆成多文件。",
+        "lessons": [
+          {
+            "id": "import-export-handshake",
+            "title": "一个给出，一个拿来",
+            "content": "# 一个给出，一个拿来\n\n## 学习目标\n完成本课后，你能指着一对文件说出：谁用 `export` 给出名字，谁用 `import` 拿来用，以及相对路径 `./utils` 指向哪里。\n\n## 先给结论\n- **事实：`src/ui/utils.ts` 导出 `cx`；`src/ui/TextInput.tsx` 写 `import { cx } from './utils'`，并在 JSX 里调用 `cx('tp-input', className)`。**\n- **推论：组件不必自己实现类名拼接——它依赖同目录工具文件给出的名字；「会用」建立在「先 export、再 import」的握手上。**\n\n## 一个类比\n图书馆总台把书编目上架（export：书名进入可借目录）。读者在检索机输入书名、写下架层号（import：按名取用）。书还是那一本，只是经过「登记 → 检索」才从书库来到读者手里。`./utils` 是层号：同目录下的 `utils` 文件。\n\n## 工作示例\n给出的一侧（你已见过）：\n\n```ts\n// src/ui/utils.ts\nexport function cx(...parts: Array<string | false | null | undefined>): string {\n  return parts.filter(Boolean).join(' ');\n}\n```\n\n拿来的一侧：\n\n```ts\n// src/ui/TextInput.tsx\nimport { cx } from './utils';\n\nexport const TextInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(\n  function TextInput({ className, type = 'text', ...props }, ref) {\n    return <input className={cx('tp-input', className)} ref={ref} type={type} {...props} />;\n  },\n);\n```\n\n握手三步：\n\n1. **export** —— `utils.ts` 公开 `cx`。\n2. **import { cx } from './utils'** —— `TextInput.tsx` 按名取用；`./` 表示「当前文件所在目录」，`utils` 对应 `utils.ts`（扩展名常省略）。\n3. **使用** —— `cx('tp-input', className)` 把基础类名和外部传入的 `className` 拼起来。\n\n花括号 `{ cx }` 是**具名导入（named import）**：导出时叫什么，导入时一般就写什么（除非用 `as` 改名）。\n\n## 自检\n**问：** 若 `utils.ts` 忘了写 `export`，`TextInput.tsx` 的 import 会怎样？\n**答：** 类型检查 / 打包阶段会报找不到导出。本文件里的 `function cx` 若存在，也只是私有名字，过不了文件边界。\n\n## 重点\n**export 登记书名，import 按名借书；相对路径写出书在哪一层架子。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/ui/utils.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/ui/utils.ts"
+                ],
+                "note": "cx 的 export 定义。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/ui/TextInput.tsx",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/ui/TextInput.tsx"
+                ],
+                "note": "import { cx } from './utils' 并在 className 中调用。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/ui/TextInput.tsx",
+                "lineStart": 3,
+                "lineEnd": 3,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/ui/TextInput.tsx"
+                ],
+                "note": "具名导入 cx 的那一行。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "named-import-cx",
+                "front": "`import { cx } from './utils'` 里的花括号表示什么？",
+                "back": "具名导入：按导出时的名字 cx 取用。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/TextInput.tsx"
+                    ],
+                    "note": "import { cx } from './utils'。"
+                  }
+                ]
+              },
+              {
+                "id": "relative-dot-slash",
+                "front": "`./utils` 中的 `./` 表示什么？",
+                "back": "当前文件所在目录；去同目录下找 utils 模块。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/TextInput.tsx"
+                    ],
+                    "note": "from './utils'。"
+                  }
+                ]
+              },
+              {
+                "id": "who-exports-who-imports",
+                "front": "在 utils 与 TextInput 这一对里，谁 export、谁 import？",
+                "back": "utils.ts export cx；TextInput.tsx import cx。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/utils.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/utils.ts"
+                    ],
+                    "note": "export function cx"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/TextInput.tsx"
+                    ],
+                    "note": "import { cx }"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "textinput-import-path",
+                "title": "TextInput 从哪导入 cx",
+                "kind": "short-answer",
+                "prompt": "`TextInput.tsx` 里 import cx 的模块路径字符串是什么？（包含 ./）",
+                "expectedAnswer": "./utils",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/ui/TextInput.tsx"
+                    ],
+                    "note": "from './utils'。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "barrel-and-why-split",
+            "title": "为什么要拆成多个文件",
+            "content": "# 为什么要拆成多个文件\n\n## 学习目标\n完成本课后，你能用仓库里的「对外出口文件」说明：拆文件是为了分开责任和收窄依赖，而不是为了让目录看起来更满。\n\n## 先给结论\n- **事实：`src/features/experiments/index.ts` 从 `./analytics`、`./resolve`、`./storage`、`./ui/ExperimentBadge` 再导出（re-export）一组名字；`src/services/emailAuth.ts` 导入 `authController` 后只暴露更窄的 `submitEmailAuth`。**\n- **推论：产品页面依赖「稳定的门口」，不必知道内部房间怎么隔；内部文件可以各自变，只要门口的 export 列表还在。**\n\n## 一个类比\n商场有很多专柜，顾客通常只走正门和导视牌，不从卸货通道穿厨房。`index.ts` 这类对外出口（常被叫作 barrel，木桶——把东西从桶口递出）就是正门导视：列出你能从这层「官方购买」的名字。专柜内部装修（resolve、storage）可以换，正门目录保持稳定，顾客代码就少改。\n\n## 工作示例\n对外出口：\n\n```ts\n// src/features/experiments/index.ts\nexport { experimentAnalyticsTag } from './analytics';\n\nexport {\n  resolveExperimentIntent,\n  resolveRoomExperiment,\n  type ExperimentResolution,\n} from './resolve';\n// ... 还有 storage、ExperimentBadge\n```\n\n注意：`experimentAnalyticsTag` 的**实现**仍在 `analytics.ts`；`index.ts` 只是再次 export，方便外面写 `from '@/features/experiments'` 这类路径，而不用深挖 `.../analytics`。\n\n另一窄门：\n\n```ts\n// src/services/emailAuth.ts\nimport { authController, AUTH_SOFT_TIMEOUT_MS } from './auth/authController';\n\nexport async function submitEmailAuth(options: SubmitEmailAuthOptions) {\n  return authController.submitEmailAuth({ ... });\n}\n```\n\n这里不是 barrel 罗列，而是**门面（facade）**：调用方只看见邮箱登录这一动作，不直接抱着整个 `authController` 的大表面。\n\n拆文件的三个常见理由（都在这些例子里）：\n\n1. **责任分开** —— 类型合同、解析逻辑、UI 徽章各管一段（你在 Owns 注释里已见过这种意识）。\n2. **依赖收窄** —— 页面只 import 出口或门面，不绑死内部路径。\n3. **替换实现** —— 同名能力在不同平台文件里换成 no-op 或原生调用（`triggerHaptic` 那课），调用方 import 的是「平台选好的那一份」。\n\n若全写进一个三千行文件：能跑，但你改一行类名工具，也要在同一卷轴里翻过登录、实验、邮件。拆分是给「明天的你」缩小阅读半径。\n\n## 自检\n**问：** `export { experimentAnalyticsTag } from './analytics'` 会不会复制一份函数实现？\n**答：** 不会。它只是把已有导出再次公开到当前模块的出口，实现仍只有一份。\n\n## 重点\n**拆文件为了分责任、稳门口、缩依赖——不是为了多建几个空文件夹。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/index.ts",
+                "lineStart": 1,
+                "lineEnd": 18,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/experiments/index.ts"
+                ],
+                "note": "experiments 公共出口：再导出 analytics/resolve/storage/ui。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/index.ts",
+                "lineStart": 8,
+                "lineEnd": 8,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/experiments/index.ts"
+                ],
+                "note": "从 ./analytics 再导出 experimentAnalyticsTag。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/services/emailAuth.ts",
+                "lineStart": 1,
+                "lineEnd": 17,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/services/emailAuth.ts"
+                ],
+                "note": "emailAuth 门面：导入 authController，导出 submitEmailAuth。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 7,
+                "lineEnd": 9,
+                "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                "nodeIds": [
+                  "file:src/features/experiments/analytics.ts"
+                ],
+                "note": "真正的 experimentAnalyticsTag 实现仍在 analytics.ts。"
+              }
+            ],
+            "cards": [
+              {
+                "id": "reexport-not-copy",
+                "front": "`export { experimentAnalyticsTag } from './analytics'` 会复制函数实现吗？",
+                "back": "不会。再导出只是把已有名字公开到当前模块出口，实现仍在 analytics.ts 一份。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/index.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/experiments/index.ts"
+                    ],
+                    "note": "re-export 行。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 7,
+                    "lineEnd": 9,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/experiments/analytics.ts"
+                    ],
+                    "note": "实现所在处。"
+                  }
+                ]
+              },
+              {
+                "id": "barrel-door",
+                "front": "feature 的 `index.ts` 主要扮演什么角色？",
+                "back": "对外出口（barrel）：列出产品代码应依赖的稳定名字，内部模块可换。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/index.ts",
+                    "lineStart": 1,
+                    "lineEnd": 6,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/experiments/index.ts"
+                    ],
+                    "note": "Public surface 注释说明稳定给产品页用。"
+                  }
+                ]
+              },
+              {
+                "id": "facade-email",
+                "front": "`emailAuth.ts` 相对 `authController` 做了哪一层收窄？",
+                "back": "门面：对外只暴露 submitEmailAuth（以及超时常量），调用方不必直接依赖整个 controller 表面。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/services/emailAuth.ts",
+                    "lineStart": 1,
+                    "lineEnd": 17,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/services/emailAuth.ts"
+                    ],
+                    "note": "import controller，export submitEmailAuth。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "reexport-from-analytics",
+                "title": "index 从哪再导出 experimentAnalyticsTag",
+                "kind": "short-answer",
+                "prompt": "`experiments/index.ts` 里，`experimentAnalyticsTag` 的 from 路径是什么？",
+                "expectedAnswer": "./analytics",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/index.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/experiments/index.ts"
+                    ],
+                    "note": "from './analytics'。"
+                  }
+                ]
+              },
+              {
+                "id": "why-not-one-file",
+                "title": "为什么不要全塞一个文件",
+                "kind": "explain",
+                "prompt": "如果把 experiments 的解析、存储、徽章 UI 和 analytics 标签全写进一个文件，一人维护时会多出哪些成本？请至少谈到阅读半径与依赖两面。",
+                "rubric": [
+                  "指出改一处也要在大文件中承担无关阅读成本",
+                  "说明调用方会绑死内部细节，难以只依赖稳定门口",
+                  "联系责任边界（Owns）难以靠文件头注释守住",
+                  "提到替换/测试局部实现会变难"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/index.ts",
+                    "lineStart": 1,
+                    "lineEnd": 18,
+                    "analysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+                    "graphHash": "sha256:840b72c1afff32b9bb2b6bcfd5b7ce9313097bd58a145d388bb3a0e04c5f17b7",
+                    "nodeIds": [
+                      "file:src/features/experiments/index.ts"
+                    ],
+                    "note": "多模块再导出的公共表面。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

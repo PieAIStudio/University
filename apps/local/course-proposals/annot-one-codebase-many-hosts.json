@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "lessons": [
+    {
+      "courseId": "one-codebase-many-hosts",
+      "unitId": "adapter-layer",
+      "lessonId": "detect-once-degrade-always",
+      "anchors": [
+        {
+          "quote": "适配层",
+          "occurrence": 1,
+          "senseId": "adapter.platform"
+        },
+        {
+          "quote": "降级",
+          "occurrence": 1,
+          "senseId": "degrade.fallback"
+        },
+        {
+          "quote": "纯函数",
+          "occurrence": 1,
+          "senseId": "pure.function"
+        },
+        {
+          "quote": "宿主",
+          "occurrence": 1,
+          "senseId": "host.runtime"
+        },
+        {
+          "quote": "平台",
+          "occurrence": 1,
+          "senseId": "platform.target"
+        }
+      ]
+    },
+    {
+      "courseId": "one-codebase-many-hosts",
+      "unitId": "adapter-layer",
+      "lessonId": "hardest-platform-wins",
+      "anchors": [
+        {
+          "quote": "接口",
+          "occurrence": 1,
+          "senseId": "interface.shape"
+        },
+        {
+          "quote": "平台",
+          "occurrence": 1,
+          "senseId": "platform.target"
+        },
+        {
+          "quote": "同步的",
+          "occurrence": 1,
+          "senseId": "sync.blocking"
+        },
+        {
+          "quote": "异步的",
+          "occurrence": 1,
+          "senseId": "async.function"
+        },
+        {
+          "quote": "约束",
+          "occurrence": 1,
+          "senseId": "constraint.design"
+        }
+      ]
+    },
+    {
+      "courseId": "one-codebase-many-hosts",
+      "unitId": "the-shell",
+      "lessonId": "decisions-out-of-the-shell",
+      "anchors": [
+        {
+          "quote": "外壳",
+          "occurrence": 1,
+          "senseId": "shell.container"
+        },
+        {
+          "quote": "纯函数",
+          "occurrence": 1,
+          "senseId": "pure.function"
+        },
+        {
+          "quote": "环境变量",
+          "occurrence": 1,
+          "senseId": "environment.variable"
+        },
+        {
+          "quote": "边界用例",
+          "occurrence": 1,
+          "senseId": "edge.boundary"
+        },
+        {
+          "quote": "路径",
+          "occurrence": 1,
+          "senseId": "path.location"
+        }
+      ]
+    },
+    {
+      "courseId": "one-codebase-many-hosts",
+      "unitId": "the-shell",
+      "lessonId": "electron-three-switches",
+      "anchors": [
+        {
+          "quote": "运行时",
+          "occurrence": 1,
+          "senseId": "runtime.environment"
+        },
+        {
+          "quote": "依赖",
+          "occurrence": 1,
+          "senseId": "dependency.module"
+        },
+        {
+          "quote": "默认值",
+          "occurrence": 1,
+          "senseId": "default.value"
+        },
+        {
+          "quote": "覆盖",
+          "occurrence": 1,
+          "senseId": "overwrite.update"
+        },
+        {
+          "quote": "兜底",
+          "occurrence": 1,
+          "senseId": "fallback.plan"
+        }
+      ]
+    }
+  ]
+}

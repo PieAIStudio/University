@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-testing-strategy",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "testing-strategy",
+    "title": "测试策略：把钱花在刀刃上",
+    "description": "一个人干活没有 QA，测试策略直接决定你敢不敢改代码。讲单元与 e2e 的分工，以及降级矩阵这种既是设计工具又是测试的东西。证据来自图灵密约。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "用「验证手段」而不是「重要程度」决定测试写在哪一层",
+      "说明降级矩阵为什么首先是产品决策工具",
+      "解释完整性断言如何防止静默缺口和敷衍填空"
+    ],
+    "units": [
+      {
+        "id": "layer-choice",
+        "title": "测试分层",
+        "objective": "掌握单元测试与 e2e 的分工依据",
+        "lessons": [
+          {
+            "id": "unit-vs-e2e",
+            "title": "单元测试和 e2e 各管什么",
+            "content": "# 单元测试和 e2e 各管什么\n\n## 学习目标\n\n完成本课后，你能说出图灵密约的单元测试与 e2e 数量比例，\n并能用「这件事能不能不开浏览器验证」判断一个测试该写在哪一层。\n\n## 先给结论\n\n- **事实：比例是 171 比 20。** 图灵密约有 171 个 `.test.ts` 单元/集成测试，\n  只有 20 个 `.spec.ts` e2e。测试层在知识图谱里占 194 个节点，是最大的一层。\n- **事实：e2e 只覆盖必须开浏览器才能验的东西。** 20 个 e2e 全部集中在\n  开场仪式、揭面序列、投票时刻、可访问性、视觉回归、降级恢复——\n  这些是 DOM 行为、时序和视觉，纯函数测不了。\n- **事实：契约检查放在单元层。** `public-dom-contracts.test.ts` 靠读文件字符串完成，\n  不需要浏览器，所以它是单元测试而不是 e2e。\n- **推论：分层依据是「验证手段」，不是「重要程度」。** 很重要的东西也可能用单元测试验，\n  不重要的东西也可能必须开浏览器。\n\n## 一个类比\n\n体检里抽血和拍片是两种手段：抽血能查的指标就别拍片，\n因为拍片贵、慢、还有辐射。**但骨折是抽血查不出来的。**\n不是按重要程度分，是按「这个手段能不能看见这个问题」分。\n\n## 工作示例\n\n1. 你要验「投票横幅在正确时机出现」——涉及时序和 DOM，写 e2e。\n2. 你要验「某个 data-testid 还在产品代码里」——读文件就够，写单元测试。\n3. 你要验「座位分配算法跳过已占座位」——纯函数，写单元测试。\n4. 你要验「没有 WebGL 时仍能完成 2D 对局」——必须真实浏览器，写 e2e。\n\n## 自检\n\n一个测试很重要，是不是就应该写成 e2e？\n\n答案：不是。重要程度不决定层级，**验证手段**才决定。\n把能用单元测试验的东西写成 e2e，只会让套件更慢更脆，\n而且失败时更难定位。\n\n## 重点\n\n**按「能不能用更便宜的手段看见」分层。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                "lineStart": 1,
+                "lineEnd": 10,
+                "nodeIds": [],
+                "note": "e2e 覆盖降级恢复这类必须开浏览器的场景"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/public-dom-contracts.test.ts",
+                "lineStart": 18,
+                "lineEnd": 48,
+                "nodeIds": [],
+                "note": "契约检查靠读文件完成，属于单元层"
+              }
+            ],
+            "cards": [
+              {
+                "id": "layer-criterion",
+                "front": "决定一个测试写单元还是 e2e，依据是什么？",
+                "back": "验证手段，不是重要程度。能不开浏览器验证的就别写 e2e。",
+                "tags": [
+                  "testing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/public-dom-contracts.test.ts",
+                    "lineStart": 18,
+                    "lineEnd": 48,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "unit-e2e-ratio",
+                "front": "图灵密约的单元测试与 e2e 数量比例大致是多少？说明了什么？",
+                "back": "171 比 20。e2e 只留给 DOM 时序、视觉、可访问性、降级恢复这类纯函数测不了的场景。",
+                "tags": [
+                  "testing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 1,
+                    "lineEnd": 10,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "layer-choice-recall",
+                "title": "分层判据",
+                "prompt": "一个功能很重要，是不是就该写成 e2e？为什么？",
+                "expectedAnswer": "不是。重要程度不决定层级，验证手段才决定；能用单元测试验的写成 e2e 只会更慢更脆。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/public-dom-contracts.test.ts",
+                    "lineStart": 18,
+                    "lineEnd": 48,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "degraded-design",
+        "title": "降级即设计",
+        "objective": "把降级状态当作产品决策而非异常处理",
+        "lessons": [
+          {
+            "id": "degraded-matrix",
+            "title": "降级矩阵：先决定用户看到什么",
+            "content": "# 降级矩阵：先决定用户看到什么\n\n## 学习目标\n\n完成本课后，你能说明降级矩阵是什么、它为什么先是设计工具再是测试，\n并能解释「不留静默缺口」这条断言在防什么。\n\n## 先给结论\n\n- **事实：八种降级条件被逐条列出。** `DEGRADED_MATRIX` 声明了\n  没有 WebGL、WebGL 上下文丢失、懒加载 chunk 过期、Realtime 中断、\n  AI 供应商失败、房间过期、房间已开局、房主离开。\n- **事实：每一格都写明「玩家可见的下一步」。** 不是「记录错误日志」，\n  而是像「双语门户失效界面 + 编辑房间码作为下一步动作」这样具体到用户动作。\n- **事实：矩阵完整性本身被断言。** `matrix inventory is complete — no silent gaps`\n  这条测试把八个 id 逐字比对，并要求每条 `expectedNextAction` 长度大于 12。\n- **推论：这份矩阵首先是产品决策，其次才是测试。** 它逼你在写代码前回答\n  「这种情况下用户该看到什么」，而不是等线上出问题再补。\n\n## 一个类比\n\n餐厅的应急预案不是「停电了怎么办」这么一句，\n而是「停电 → 点应急灯 → 告知客人预计恢复时间 → 已下单的菜免费」。\n**每一格都要有具体的下一步动作，否则遇到那天还是现场慌乱。**\n\n## 工作示例\n\n1. 你决定支持没有 WebGL 的设备。\n2. 在矩阵里加一格：条件 `no-WebGL`，下一步「不依赖 3D 世界外壳完成 2D 对局」。\n3. 完整性断言强制这一格必须出现在 id 清单里。\n4. 长度断言（`> 12`）挡掉「显示错误」这种敷衍的填空。\n5. 然后才是为这一格写真实的 e2e 场景。\n\n## 自检\n\n`expectedNextAction.length > 12` 这条断言看起来很土，它在防什么？\n\n答案：防敷衍。它挡不住所有废话，但能挡住「报错」「提示用户」这类\n长度不足、没有具体动作的占位文字。**这是用最低成本给「必须写清楚」加一道机器检查。**\n\n## 重点\n\n**降级不是异常处理的细节，是产品设计的一部分。**\n与前两门课同一条线：把决定前置，并且让机器能检查它是否真的做了决定。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                "lineStart": 14,
+                "lineEnd": 59,
+                "nodeIds": [],
+                "note": "八种降级条件与各自的玩家可见下一步"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                "lineStart": 156,
+                "lineEnd": 172,
+                "nodeIds": [],
+                "note": "完整性断言与最小长度要求"
+              }
+            ],
+            "cards": [
+              {
+                "id": "matrix-is-design",
+                "front": "降级矩阵首先是测试还是产品决策？",
+                "back": "首先是产品决策。它逼你在写代码前回答「这种情况用户看到什么」，之后才是测试。",
+                "tags": [
+                  "testing",
+                  "product"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 14,
+                    "lineEnd": 24,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "no-silent-gaps",
+                "front": "「no silent gaps」这条断言在防什么？",
+                "back": "防降级条件被悄悄漏掉：八个 id 逐字比对，任何增删都必须是有意识的修改。",
+                "tags": [
+                  "testing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 156,
+                    "lineEnd": 172,
+                    "nodeIds": []
+                  }
+                ]
+              },
+              {
+                "id": "length-assert",
+                "front": "expectedNextAction 长度必须大于 12，这条土办法在防什么？",
+                "back": "防敷衍。挡掉「报错」「提示用户」这类没有具体动作的占位文字。",
+                "tags": [
+                  "testing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 169,
+                    "lineEnd": 172,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "degraded-explain",
+                "title": "解释降级矩阵的价值",
+                "kind": "explain",
+                "prompt": "解释为什么把降级状态列成矩阵、并断言其完整性，比在代码里逐处写 try/catch 更有价值。",
+                "rubric": [
+                  "指出矩阵强制在写代码前做出产品决策",
+                  "指出每格必须给出玩家可见的下一步动作",
+                  "指出完整性断言让增删降级条件成为有意识的修改"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 14,
+                    "lineEnd": 59,
+                    "nodeIds": []
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "tests/e2e/degraded-matrix.spec.ts",
+                    "lineStart": 156,
+                    "lineEnd": 172,
+                    "nodeIds": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

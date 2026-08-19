@@ -1,0 +1,1211 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "create-platform-capabilities",
+  "targetSnapshotId": "git-3b402e069a5d",
+  "targetAnalysisId": "ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a",
+  "course": {
+    "id": "platform-capabilities",
+    "title": "同一个能力，三种实现",
+    "description": "震动、分享、存储在 web / Electron / Capacitor 上是三套 API；把决策收敛到适配层，平台只提供能力，避免业务写三份逻辑走样。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "说明业务为何只能调用 shareContent/triggerHaptic/storage，而不能在组件内分支平台 API",
+      "列出 RuntimeDescriptor 关键字段并解释 Electron 在存储与分享上为何单独成态",
+      "对照三条分享路径解释 ShareResult 只有 shared|copied 以及原生失败为何降级 Web",
+      "描述 safeLocalStorage 与 PlatformStorage 的降级契约：抛错变返回值、非法偏好回退默认"
+    ],
+    "units": [
+      {
+        "id": "one-capability-entry",
+        "title": "一个能力，一个入口",
+        "objective": "能把分享与震动的分发顺序和失败策略讲清楚，并坚持业务只依赖入口函数。",
+        "lessons": [
+          {
+            "id": "why-one-entry",
+            "title": "为什么能力必须一个入口",
+            "content": "# 为什么能力必须一个入口\n\n## 学习目标\n\n完成本课后，你能说明业务层为什么只能调用 `shareContent` / `triggerHaptic`，而不能在按钮点击里直接 `import` 各平台实现。\n\n## 先给结论\n\n- **事实：入口集中在 `src/platform/index.ts`。** `shareContent` 与 `triggerHaptic` 是业务侧应看到的能力面；`shareRoomLink` 只是 `shareContent` 的别名。\n- **事实：分发顺序写死。** 分享先看 `runtime.isElectron`，再看 `runtime.isNativePlatform`，最后走 `shareOnWeb`。\n- **事实：原生分享失败会降级。** Capacitor 路径包在 `try/catch` 里，失败后仍调用 `shareOnWeb`。\n- **推论：平台差异是实现细节，不是产品分支。** 若每个页面自己 `if (Capacitor) ... else if (electron)`，三条逻辑会以不同速度腐烂。\n\n## 一个类比\n\n把「震动 / 分享」比作插座标准。墙上可以是欧标、美标、英标，电器只认插头形状。`index.ts` 就是转接头盒子：电器永远插同一形状，盒子内部再接真插座。\n\n## 工作示例\n\n1. 房间邀请按钮只调 `shareContent({ url, title, text })`，不 import `./capacitor/share`。\n2. 你要加「微信小程序壳」：新增 `shareOnWechat`，只改 `shareContent` 分发，不动业务组件。\n3. 你要测「分享失败降级」：让 `shareOnCapacitor` 抛错，断言仍走到 `shareOnWeb`。\n\n## 自检\n\n若「复制房间链接」写在 A 组件用 `navigator.share`，「分享战报」写在 B 组件用 Capacitor `Share`，半年后某次 iOS 权限变更，你会改几处？入口收敛后应改几处？\n\n答案：散落时至少两处且行为可能不一致；收敛后只改 `shareContent` 一处。\n\n## 重点\n\n**业务只认能力名，不认平台名。** 平台分支出现在组件里，就是债务开始计息的信号。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/index.ts",
+                "lineStart": 11,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "shareContent：按 runtime 分发到 electron/capacitor/web"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/index.ts",
+                "lineStart": 32,
+                "lineEnd": 49,
+                "nodeIds": [],
+                "note": "triggerHaptic：Electron 直接 return，失败吞掉"
+              }
+            ],
+            "cards": [
+              {
+                "id": "one-entry-not-three",
+                "front": "业务层直接 import capacitor/share 与 electron/share 各写一份，半年后最可能坏在哪里？",
+                "back": "两处降级与错误处理会分叉：一处能剪贴板兜底，另一处直接抛错，用户只感觉「有时能分享有时不能」。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/index.ts",
+                    "lineStart": 11,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "shareContent：按 runtime 分发到 electron/capacitor/web"
+                  }
+                ]
+              },
+              {
+                "id": "share-fallback-order",
+                "front": "shareContent 在原生壳里 Capacitor 分享抛错后，下一步做什么？",
+                "back": "catch 后调用 shareOnWeb，继续尝试 Web Share 或剪贴板。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/index.ts",
+                    "lineStart": 11,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "shareContent：按 runtime 分发到 electron/capacitor/web"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "share-entry-name",
+                "kind": "short-answer",
+                "title": "分享统一入口",
+                "prompt": "业务应调用的分享入口函数名是什么？",
+                "expectedAnswer": "shareContent",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/index.ts",
+                    "lineStart": 11,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "shareContent：按 runtime 分发到 electron/capacitor/web"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "runtime-descriptor",
+            "title": "运行时探测是决策输入，不是装饰字段",
+            "content": "# 运行时探测是决策输入，不是装饰字段\n\n## 学习目标\n\n完成本课后，你能列出 `RuntimeDescriptor` 的关键字段，并解释为什么分享、震动、路由与超时都要读同一份描述，而不是各处再猜环境。\n\n## 先给结论\n\n- **事实：描述由纯函数 `resolveRuntimeDescriptor` 算出。** 输入是 `hasElectronBridge`、`isNativePlatform`、`capacitorPlatform`、`locationOrigin` 四元组。\n- **事实：`platform` 只有四值。** `'web' | 'electron' | 'ios' | 'android'`；若有 Electron 桥，platform 直接定为 electron，排在 Capacitor 标签之前。\n- **事实：派生字段绑定语义。** `isNativePlatform` 仅当最终 platform 为 ios/android；`isElectron` 仅 electron；`usesHashRouter` 在非 web 为 true。\n- **事实：在线装配在 `getCurrentRuntimeDescriptor`。** 组合 `hasElectronBridge()`、`Capacitor.isNativePlatform()`、`Capacitor.getPlatform()` 与 `location.origin`。\n- **推论：探测必须单点。** 若分享看 Capacitor、路由看 userAgent、超时看「是不是 App」，会出现互相矛盾的幽灵分支。\n\n## 一个类比\n\n这像机场安检后发的登机牌：舱位、登机口、是否过境写在同一张牌上。安检、登机口、行李转盘都认这张牌，而不是每个柜台再听你讲一遍护照故事。\n\n## 工作示例\n\n1. 单测注入 `hasElectronBridge: true`，断言 `platform === 'electron'` 且 `usesHashRouter === true`、`isNativePlatform === false`。\n2. 注入 `isNativePlatform: true, capacitorPlatform: 'ios'`，断言最终 `platform === 'ios'`。\n3. 房间操作：`resolveRoomOperationTimeoutMs(runtime)`——原生默认 15000ms，浏览器 5000ms。\n4. 新能力（例如本地文件导出）应新增读描述符的分支，而不是再写一套 `navigator.userAgent` 正则。\n\n## 自检\n\n为什么 `isNativePlatform` 要按最终 `platform` 重算，而不是原样返回输入里的 `options.isNativePlatform`？\n\n答案：避免 Electron 或错误输入被标成 native，从而把存储、超时、分享送进错误分支。\n\n## 重点\n\n**运行时描述是平台决策的 SSOT。** 字段可以少，但不能让每个特性各自猜环境。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/runtimeInfo.ts",
+                "lineStart": 32,
+                "lineEnd": 54,
+                "nodeIds": [],
+                "note": "resolveRuntimeDescriptor：platform/isNative/isElectron/usesHashRouter"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/runtimeInfo.ts",
+                "lineStart": 57,
+                "lineEnd": 64,
+                "nodeIds": [],
+                "note": "getCurrentRuntimeDescriptor 组装 Capacitor 与 electronAPI 探测"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/runtimeInfo.ts",
+                "lineStart": 66,
+                "lineEnd": 74,
+                "nodeIds": [],
+                "note": "原生房间操作默认 15s，浏览器 5s"
+              }
+            ],
+            "cards": [
+              {
+                "id": "is-native-recomputed",
+                "front": "resolveRuntimeDescriptor 为什么重算 isNativePlatform，而不是原样返回输入？",
+                "back": "只把最终 platform 为 ios/android 算作 native，防止 Electron 或错误输入被当成原生壳。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/runtimeInfo.ts",
+                    "lineStart": 32,
+                    "lineEnd": 54,
+                    "nodeIds": [],
+                    "note": "resolveRuntimeDescriptor：platform/isNative/isElectron/usesHashRouter"
+                  }
+                ]
+              },
+              {
+                "id": "hash-router-when",
+                "front": "usesHashRouter 在哪些 platform 为 true？",
+                "back": "platform 不是 web 时为 true，即 electron、ios、android。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/runtimeInfo.ts",
+                    "lineStart": 32,
+                    "lineEnd": 54,
+                    "nodeIds": [],
+                    "note": "resolveRuntimeDescriptor：platform/isNative/isElectron/usesHashRouter"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "runtime-platform-union",
+                "kind": "short-answer",
+                "title": "平台枚举",
+                "prompt": "RuntimePlatform 的四个字面量用竖线写出",
+                "expectedAnswer": "web|electron|ios|android",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/runtimeInfo.ts",
+                    "lineStart": 32,
+                    "lineEnd": 54,
+                    "nodeIds": [],
+                    "note": "resolveRuntimeDescriptor：platform/isNative/isElectron/usesHashRouter"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "share-three-paths",
+            "title": "分享：三条实现，两种结果码",
+            "content": "# 分享：三条实现，两种结果码\n\n## 学习目标\n\n完成本课后，你能对照三条分享路径，说明 UI 为什么只应处理 `'shared' | 'copied'`，以及 Electron 为何从不返回 `'shared'`。\n\n## 先给结论\n\n- **事实：结果类型极窄。** `ShareResult = 'shared' | 'copied'`，没有 `'cancelled'`、没有 `'failed'`。\n- **事实：Web 优先 `navigator.share`。** 成功返回 `'shared'`；否则拼 `text`+`url` 写剪贴板返回 `'copied'`；再不行抛 `Share is not supported`。\n- **事实：Electron 只做剪贴板。** `shareOnElectron` 不调系统分享 sheet，成功恒为 `'copied'`。\n- **事实：Capacitor 成功被入口映射成 `'shared'`。** `shareOnCapacitor` 自身返回 `void`，`shareContent` 在 await 成功后 `return 'shared'`。\n- **推论：UI 文案应对齐结果码。** 看见 `'copied'` 应提示「已复制」，不要假装弹出了系统分享面板。\n\n## 一个类比\n\n三种外卖柜：小区自提柜（Web Share）、前台代收只贴纸条（Electron 剪贴板）、物业柜（Capacitor）。快递单状态只有「已放入柜」和「已贴纸条」两种——柜型不同，状态机必须统一。\n\n## 工作示例\n\n1. 按钮根据返回值切换 toast：`shared` →「已打开分享」；`copied` →「链接已复制」。\n2. 桌面 Electron 永远走后一种文案，不要写「请在分享面板选择微信」。\n3. Web 无 clipboard 权限时捕获抛错，给用户手动复制 UI。\n\n## 自检\n\nCapacitor 分享失败时，`shareContent` 是否向调用方抛出 Capacitor 错误？\n\n答案：否，catch 后改走 `shareOnWeb`；只有 Web 也失败才抛。\n\n## 重点\n\n**统一的是「用户意图结果」，不是「系统 API 名字」。** 三条实现可以完全不同，但结果码集合必须只有业务能消费的那几个。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/web/share.ts",
+                "lineStart": 11,
+                "lineEnd": 37,
+                "nodeIds": [],
+                "note": "shareOnWeb：navigator.share 否则 clipboard，否则抛错"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/electron/share.ts",
+                "lineStart": 3,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "Electron 分享只写剪贴板并返回 copied"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/capacitor/share.ts",
+                "lineStart": 4,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "shareOnCapacitor 调用 @capacitor/share"
+              }
+            ],
+            "cards": [
+              {
+                "id": "electron-share-result",
+                "front": "Electron 上 shareContent 成功时，ShareResult 是什么？",
+                "back": "copied——只写了剪贴板，没有系统分享面板。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/electron/share.ts",
+                    "lineStart": 3,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "Electron 分享只写剪贴板并返回 copied"
+                  }
+                ]
+              },
+              {
+                "id": "share-result-union",
+                "front": "ShareResult 允许哪些取值？缺少 cancelled 意味着什么？",
+                "back": "只有 shared 与 copied；用户取消或失败需靠异常/降级处理，不进结果枚举。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/web/share.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "ShareResult 只有 shared 与 copied"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "share-result-type",
+                "kind": "short-answer",
+                "title": "分享结果类型",
+                "prompt": "ShareResult 的两个字面量用竖线写出",
+                "expectedAnswer": "shared|copied",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/web/share.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "ShareResult 只有 shared 与 copied"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "haptic-degrade",
+            "title": "震动：不能震就安静失败",
+            "content": "# 震动：不能震就安静失败\n\n## 学习目标\n\n完成本课后，你能解释 `triggerHaptic` 为什么在 Electron 上直接 return、在失败时吞掉异常，以及业务为何不应依赖「震了才算点到」。\n\n## 先给结论\n\n- **事实：入口包了总 try/catch。** `triggerHaptic` 任何异常走到 `void 0`，调用方拿不到失败。\n- **事实：Electron 显式空操作。** `if (runtime.isElectron) return;`，连 web 那层空函数都不调。\n- **事实：原生才真正震。** `triggerNativeHaptic` 把 `light|medium|heavy` 映射到 `ImpactStyle`，再 `Haptics.impact`。\n- **事实：Web/Electron 实现文件是空函数。** 注释写明 Web 无触觉、Electron 直接 return。\n- **推论：触觉是增强，不是确认信号。** 用震动当「操作成功」的唯一反馈，在桌面与无障碍场景会静默失败。\n\n## 一个类比\n\n震动像餐厅的香氛：有就加分，没有不该让上菜失败。你不会因为扩香机坏了就拒绝结账——同样，haptic 失败也不该弹错误 toast。\n\n## 工作示例\n\n1. 抽卡成功：同时改 UI 状态 + `triggerHaptic('medium')`，UI 不 await 成功。\n2. 单元测试：mock 原生 haptic 抛错，断言 `triggerHaptic` 仍 resolve 且不抛。\n3. 新平台若支持震动：只实现原生适配器，保持入口吞错策略。\n\n## 自检\n\n为什么 Electron 在入口直接 return，而不是复用 `web/haptics` 的空实现？\n\n答案：行为等价；入口短路避免误以为桌面还要走「类 Web」路径，语义是「此壳无触觉能力」。\n\n## 重点\n\n**可降级能力默认 fail-soft。** 分享可以失败给用户出路；震动失败应像没发生过。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/index.ts",
+                "lineStart": 32,
+                "lineEnd": 49,
+                "nodeIds": [],
+                "note": "triggerHaptic：Electron 直接 return，失败吞掉"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/capacitor/haptics.ts",
+                "lineStart": 3,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "triggerNativeHaptic 映射 ImpactStyle"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/web/haptics.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "Web 触觉空实现"
+              }
+            ],
+            "cards": [
+              {
+                "id": "haptic-swallow",
+                "front": "triggerHaptic 在原生 Haptics.impact 抛错时，调用方会收到异常吗？",
+                "back": "不会；外层 catch 吞掉，函数正常结束。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/index.ts",
+                    "lineStart": 32,
+                    "lineEnd": 49,
+                    "nodeIds": [],
+                    "note": "triggerHaptic：Electron 直接 return，失败吞掉"
+                  }
+                ]
+              },
+              {
+                "id": "haptic-electron",
+                "front": "Electron 运行时 triggerHaptic 走哪条分支？",
+                "back": "isElectron 为 true 时直接 return，不调用原生也不调用 web 空实现逻辑路径上的副作用。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/index.ts",
+                    "lineStart": 32,
+                    "lineEnd": 49,
+                    "nodeIds": [],
+                    "note": "triggerHaptic：Electron 直接 return，失败吞掉"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "haptic-styles",
+                "kind": "short-answer",
+                "title": "震动强度参数",
+                "prompt": "triggerHaptic 的 style 三个字面量用竖线写出",
+                "expectedAnswer": "light|medium|heavy",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/index.ts",
+                    "lineStart": 32,
+                    "lineEnd": 49,
+                    "nodeIds": [],
+                    "note": "triggerHaptic：Electron 直接 return，失败吞掉"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "runtime-and-hosts",
+        "title": "运行时壳与启动宿主",
+        "objective": "能区分 runtime 四态与 Telegram/Discord 宿主轴，并说明状态栏/键盘/超时/路由如何读描述符。",
+        "lessons": [
+          {
+            "id": "electron-not-native",
+            "title": "Electron 不是原生，也不是「就是个浏览器」",
+            "content": "# Electron 不是原生，也不是「就是个浏览器」\n\n## 学习目标\n\n完成本课后，你能指出 TuringPact 如何用 `electronAPI` 识别桌面壳，以及为什么存储与分享对 Electron 的处理不同于 iOS/Android。\n\n## 先给结论\n\n- **事实：Electron 靠桥探测。** `hasElectronBridge` 检查 `window` 上是否有 `electronAPI` 属性。\n- **事实：有桥则 platform 固定 electron。** 即使 Capacitor 误报 native，resolve 时 electron 分支在前。\n- **事实：存储把 Electron 当 Web。** `createPlatformStorage` 条件是 `isNativePlatform && !isElectron` 才用 Preferences，否则 `createWebStorage`。\n- **事实：分享把 Electron 当「仅剪贴板」。** 不走 `navigator.share` 优先路径，桌面分享 sheet 不可靠。\n- **推论：三分类不够用时要显式第三态。** 「原生 / Web」二元会把 Electron 错塞进 Preferences 或错误分享体验。\n\n## 一个类比\n\nElectron 像「装了浏览器内核的本地 App」：有本地菜单栏（像 App），但持久化仍常是网页那套（localStorage）。你不能按手机 App 规范去要触觉马达，也不能按纯网页假设没有壳层桥。\n\n## 工作示例\n\n1. 测存储：`createPlatformStorage({ isNativePlatform: true, isElectron: true })` 必须得到 web/localStorage 路径，不是 Preferences。\n2. 预加载脚本注入 `window.electronAPI = {}` 后，UI 应用 hash 路由。\n3. 分享按钮在 Electron 上固定展示「复制链接」语义。\n\n## 自检\n\n若去掉 `&& !isElectron`，仅用 `isNativePlatform` 决定 Preferences，在「错误地把 Electron 标成 native」时会发生什么？\n\n答案：桌面读写走 Capacitor Preferences，行为与预期 localStorage 分裂，数据像「丢了」。\n\n## 重点\n\n**桌面壳是独立运行时态。** 探测、存储、分享、触觉四条线都要对它单独表态。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/runtimeInfo.ts",
+                "lineStart": 13,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "hasElectronBridge：检测 window.electronAPI"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 79,
+                "lineEnd": 97,
+                "nodeIds": [],
+                "note": "createPlatformStorage：原生且非 Electron 才用 Preferences"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/electron/share.ts",
+                "lineStart": 3,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "Electron 分享只写剪贴板并返回 copied"
+              }
+            ],
+            "cards": [
+              {
+                "id": "electron-storage-path",
+                "front": "createPlatformStorage 在 isNativePlatform 与 isElectron 都为 true 时用哪套后端？",
+                "back": "createWebStorage（localStorage 路径），因为条件要求原生且非 Electron。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 79,
+                    "lineEnd": 97,
+                    "nodeIds": [],
+                    "note": "createPlatformStorage：原生且非 Electron 才用 Preferences"
+                  }
+                ]
+              },
+              {
+                "id": "electron-detect",
+                "front": "如何判断当前是 Electron 壳？",
+                "back": "hasElectronBridge：window 对象上存在 electronAPI。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/runtimeInfo.ts",
+                    "lineStart": 13,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "hasElectronBridge：检测 window.electronAPI"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "electron-bridge-prop",
+                "kind": "short-answer",
+                "title": "Electron 桥属性名",
+                "prompt": "hasElectronBridge 检查 window 上的哪个属性名？",
+                "expectedAnswer": "electronAPI",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/runtimeInfo.ts",
+                    "lineStart": 13,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "hasElectronBridge：检测 window.electronAPI"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "hash-router-timeout",
+            "title": "非 Web：hash 路由与更长超时",
+            "content": "# 非 Web：hash 路由与更长超时\n\n## 学习目标\n\n完成本课后，你能说明 `usesHashRouter` 为何在 electron / ios / android 为 true，以及房间操作超时为何原生默认更长、Electron 却仍走浏览器默认。\n\n## 先给结论\n\n- **事实：`usesHashRouter` 等于 `platform !== 'web'`。** file 协议、自定义 scheme、App WebView 对 History API 的 path 路由不友好时，hash 更不容易 404。\n- **事实：超时函数只读 `isNativePlatform`。** `resolveRoomOperationTimeoutMs`：原生用 `nativeMs ?? 15000`，否则 `browserMs ?? 5000`。\n- **事实：Electron 的 `isNativePlatform` 为 false。** 桌面默认 5 秒，不是 15 秒——除非调用方显式传入 options 覆盖。\n- **推论：同一描述符上的字段服务不同决策。** 路由跟「像不像网站」走；超时跟「是不是手机 WebView 网络」走。写成一个笼统 `if (isApp)` 会两边同时错。\n\n## 一个类比\n\n出国出差：导航在境外改用离线包路径（hash 的自包含地址），给公司打电话则把振铃等待调长（超时）。两套策略服务不同物理限制，不能共用一个「是否出国」开关打天下。\n\n## 工作示例\n\n1. 路由根组件：`usesHashRouter ? <HashRouter> : <BrowserRouter>`。\n2. 进房 / 轮询：`resolveRoomOperationTimeoutMs(runtime)`；弱网活动可传 `{ nativeMs: 20000 }`。\n3. 单测矩阵：web → hash false、超时 5000；ios → hash true、超时 15000；electron → hash true、超时 5000。\n4. 线上排障：用户说「桌面进房总超时」时，先查是不是误用了 native 超时假设，或反过来把 5 秒设太短。\n\n## 自检\n\nElectron 默认房间超时是 5 秒还是 15 秒？依据哪个字段？\n\n答案：5 秒；因为描述符里 `isNativePlatform` 为 false，走 `browserMs` 默认值。\n\n## 重点\n\n**派生字段要按决策拆开用。** 所有「壳」并不共享同一种网络与路由物理限制。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/runtimeInfo.ts",
+                "lineStart": 32,
+                "lineEnd": 54,
+                "nodeIds": [],
+                "note": "resolveRuntimeDescriptor：platform/isNative/isElectron/usesHashRouter"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/runtimeInfo.ts",
+                "lineStart": 66,
+                "lineEnd": 74,
+                "nodeIds": [],
+                "note": "原生房间操作默认 15s，浏览器 5s"
+              }
+            ],
+            "cards": [
+              {
+                "id": "timeout-defaults",
+                "front": "resolveRoomOperationTimeoutMs 的两个默认毫秒数是多少？",
+                "back": "原生 15000，浏览器 5000。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/runtimeInfo.ts",
+                    "lineStart": 66,
+                    "lineEnd": 74,
+                    "nodeIds": [],
+                    "note": "原生房间操作默认 15s，浏览器 5s"
+                  }
+                ]
+              },
+              {
+                "id": "electron-timeout",
+                "front": "Electron 默认走 nativeMs 还是 browserMs？",
+                "back": "browserMs，因为描述符里 isNativePlatform 为 false。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/runtimeInfo.ts",
+                    "lineStart": 66,
+                    "lineEnd": 74,
+                    "nodeIds": [],
+                    "note": "原生房间操作默认 15s，浏览器 5s"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "native-timeout-default",
+                "kind": "short-answer",
+                "title": "原生默认超时",
+                "prompt": "原生房间操作默认超时毫秒数是多少？",
+                "expectedAnswer": "15000",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/runtimeInfo.ts",
+                    "lineStart": 66,
+                    "lineEnd": 74,
+                    "nodeIds": [],
+                    "note": "原生房间操作默认 15s，浏览器 5s"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "status-bar-keyboard",
+            "title": "状态栏与键盘：只在有意义的平台配置",
+            "content": "# 状态栏与键盘：只在有意义的平台配置\n\n## 学习目标\n\n完成本课后，你能解释 iOS/Android 状态栏策略为何分叉，以及键盘 `setScroll` 为何只在 iOS 调用。\n\n## 先给结论\n\n- **事实：非原生直接 return。** `configureStatusBar` / `configureKeyboard` 都以 `Capacitor.isNativePlatform()` 守门。\n- **事实：iOS 开 overlay。** `StatusBar.setOverlaysWebView({ overlay: true })`，为了让 `env(safe-area-inset-top)` 有真实值。\n- **事实：Android 设背景色。** `setBackgroundColor({ color: '#ededed' })`，注释写明不靠 overlay + CSS 环境变量。\n- **事实：样式命名反直觉。** `Style.Light` 表示浅色状态栏 → 深色图标；注释专门警告不要按「图标颜色」理解枚举名。\n- **事实：键盘滚动仅 iOS。** `Keyboard.setScroll({ isDisabled: true })`，Android 会 not implemented，故平台判断 + try/catch。\n\n## 一个类比\n\n装修两套样板间：iOS 样板间要把吊顶灯带嵌进墙面（WebView 延伸到状态栏后），Android 样板间则刷一条固定腰线颜色。同一套「客厅设计图」（CSS safe-area）不能假定两边墙体结构相同。\n\n## 工作示例\n\n1. 启动时调一次 `configureStatusBar`，不要在每个页面 setStyle。\n2. 主题改深色时，同步把 `Style.Light` 换成 `Style.Dark`（并读注释确认图标颜色方向）。\n3. 键盘避让用页面 `paddingBottom`，不依赖 iOS 自动滚 WebView。\n\n## 自检\n\n若 iOS 不设 overlay，主要坏的是哪类 UI？\n\n答案：依赖 `env(safe-area-inset-top)` 的顶部安全区，刘海/状态栏可能遮挡内容。\n\n## 重点\n\n**平台特有能力可以不进统一 `shareContent` 门面，但必须仍有「只调一次」的配置入口，并写清为何分叉。**\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/capacitor/statusBar.ts",
+                "lineStart": 9,
+                "lineEnd": 27,
+                "nodeIds": [],
+                "note": "iOS overlay、Android 背景色、Style.Light"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/capacitor/keyboard.ts",
+                "lineStart": 8,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "仅 iOS Keyboard.setScroll 禁用自动滚"
+              }
+            ],
+            "cards": [
+              {
+                "id": "ios-overlay-why",
+                "front": "iOS 为什么 StatusBar.setOverlaysWebView({ overlay: true })？",
+                "back": "让 env(safe-area-inset-top) 返回真实值，CSS 安全区才能生效。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/capacitor/statusBar.ts",
+                    "lineStart": 9,
+                    "lineEnd": 27,
+                    "nodeIds": [],
+                    "note": "iOS overlay、Android 背景色、Style.Light"
+                  }
+                ]
+              },
+              {
+                "id": "style-light-meaning",
+                "front": "Capacitor StatusBar 的 Style.Light 实际让图标偏深还是偏浅？",
+                "back": "深色图标（浅色状态栏/浅色背景用）；命名指状态栏样式而非图标色。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/capacitor/statusBar.ts",
+                    "lineStart": 9,
+                    "lineEnd": 27,
+                    "nodeIds": [],
+                    "note": "iOS overlay、Android 背景色、Style.Light"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "status-android-color",
+                "kind": "short-answer",
+                "title": "Android 状态栏色",
+                "prompt": "configureStatusBar 给 Android 设置的背景色十六进制是？",
+                "expectedAnswer": "#ededed",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/capacitor/statusBar.ts",
+                    "lineStart": 9,
+                    "lineEnd": 27,
+                    "nodeIds": [],
+                    "note": "iOS overlay、Android 背景色、Style.Light"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "host-adapters",
+            "title": "宿主嵌套：Telegram/Discord 不是第四个壳",
+            "content": "# 宿主嵌套：Telegram / Discord 不是第四个壳\n\n## 学习目标\n\n完成本课后，你能区分「运行时壳」（web / electron / ios / android）与「启动宿主」（telegram / discord / web），并说明 `startParam` 如何变成房间路径。\n\n## 先给结论\n\n- **事实：`LaunchHostContext` 是另一套判别轴。** `platform` 为 telegram | discord | web；`source` 记录证据从哪来（如 `telegram-webapp`、`discord-activity-query`）。\n- **事实：Telegram 优先。** 只要 `window.Telegram.WebApp` 存在，直接返回 telegram，不再看 query。\n- **事实：Discord 靠 query 标记。** `frame_id`、`instance_id` 或 `platform=discord` 任一命中即可。\n- **事实：初始化带宿主副作用。** `initializeLaunchHost` 对 Telegram 调用 `ready()` 与 `expand()`，异常吞掉以免卡启动。\n- **事实：深链只解析 Telegram 房间码。** `resolveHostStartPath` 匹配 6 位码或 `room-XXXXXX` 形式，输出 `/room/CODE`（大写）。\n- **推论：宿主解决「从哪打开」，runtime 解决「在什么引擎跑」。** 两轴正交；揉成一个超级 enum 组合会爆炸。\n\n## 一个类比\n\nruntime 问的是「你开的是轿车还是货车」；host 问的是「车从自家车库、共享车位还是商场地库开出来」。油耗策略跟车型走，入场券跟地库走——不要用「是不是特殊车」一个问题同时回答两件事。\n\n## 工作示例\n\n1. 应用启动：`const host = initializeLaunchHost()`，再用 `resolveHostStartPath(host)` 决定是否直接进房。\n2. 单测 Discord：无 Telegram 桥，`location.search` 含 `frame_id=1` → `platform: 'discord'`。\n3. 冲突输入：同时挂 Telegram 桥与 discord query → 仍判 telegram（桥优先）。\n4. 分享/震动仍只读 runtime：在 Telegram WebApp 里该震震、该降级降级，不因 host 换一套 API。\n\n## 自检\n\n代码为什么用 query 识别 Discord，而不是对称地找 `window.Discord` 桥？\n\n答案：实现认的是 Activity 打开时的 query 标记（`discord-activity-query`），与 Telegram 的 WebApp 桥不是同构模型。\n\n## 重点\n\n**壳内嵌套宿主是第二轴。** 能力分发继续走 runtime；拉起参数与 `ready`/`expand` 走 `hostAdapters`。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/hostAdapters.ts",
+                "lineStart": 68,
+                "lineEnd": 100,
+                "nodeIds": [],
+                "note": "detectLaunchHost：Telegram 优先于 Discord query"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/hostAdapters.ts",
+                "lineStart": 102,
+                "lineEnd": 116,
+                "nodeIds": [],
+                "note": "initializeLaunchHost 对 Telegram 调 ready/expand"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/hostAdapters.ts",
+                "lineStart": 118,
+                "lineEnd": 126,
+                "nodeIds": [],
+                "note": "resolveHostStartPath 解析 room 启动路径"
+              }
+            ],
+            "cards": [
+              {
+                "id": "host-priority",
+                "front": "同时有 Telegram.WebApp 与 Discord query 时，detectLaunchHost 判谁？",
+                "back": "telegram——桥存在则优先返回，不看 frame_id。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/hostAdapters.ts",
+                    "lineStart": 68,
+                    "lineEnd": 100,
+                    "nodeIds": [],
+                    "note": "detectLaunchHost：Telegram 优先于 Discord query"
+                  }
+                ]
+              },
+              {
+                "id": "start-path-shape",
+                "front": "resolveHostStartPath 成功时返回的路径形状是什么？",
+                "back": "/room/{6位大写房间码}，例如 /room/ABC123。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/hostAdapters.ts",
+                    "lineStart": 118,
+                    "lineEnd": 126,
+                    "nodeIds": [],
+                    "note": "resolveHostStartPath 解析 room 启动路径"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "host-telegram-source",
+                "kind": "short-answer",
+                "title": "Telegram source 字段",
+                "prompt": "Telegram 场景下 LaunchHostContext.source 的值是？",
+                "expectedAnswer": "telegram-webapp",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/hostAdapters.ts",
+                    "lineStart": 68,
+                    "lineEnd": 100,
+                    "nodeIds": [],
+                    "note": "detectLaunchHost：Telegram 优先于 Discord query"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "storage-degrade",
+        "title": "存储降级与决策图",
+        "objective": "能设计「读不到就默认、写失败不崩」的存储策略，并用决策图标出分享降级边。",
+        "lessons": [
+          {
+            "id": "safe-local-storage",
+            "title": "localStorage 会抛：先包一层再谈业务",
+            "content": "# localStorage 会抛：先包一层再谈业务\n\n## 学习目标\n\n完成本课后，你能说明为何读取偏好不能直接写 `localStorage.getItem`，以及 `safeLocalStorageGet` / `safeLocalStorageSet` 的失败契约分别是什么。\n\n## 先给结论\n\n- **事实：拿到 storage 对象本身就可能抛。** `browserLocalStorage` 在访问 `window.localStorage` 时包了 try/catch；隐私模式、跨域 iframe、某些 WebView 会直接丢安全异常。\n- **事实：get 失败统一变成 null。** `safeLocalStorageGet` 在 storage 为 null 或 `getItem` 抛错时都返回 null，调用方按「没有值」处理。\n- **事实：set 失败统一变成 false。** `safeLocalStorageSet` 返回 boolean；配额满、只读存储、被禁用时不把异常砸穿 UI。\n- **事实：storage 可注入。** 第三个参数（默认浏览器）让单测不必 mock 全局 `window`。\n- **推论：同步偏好 API 必须与「永久化可能失败」共存。** 一人公司产品里，崩在「读个主题色」比功能缺失更丢人。\n\n## 一个类比\n\n从冰箱取酱料：门可能上锁（访问 localStorage 即抛）、格子可能空（null）、塞回去可能满（set 返回 false）。菜谱步骤应写成「没有就用水」，而不是假设冰箱永远听使唤。\n\n## 工作示例\n\n1. 读主题：`const raw = safeLocalStorageGet('theme')`，null 则跟系统 `prefers-color-scheme`。\n2. 写主题：`if (!safeLocalStorageSet('theme', next)) { /* 内存已变，可选 toast：无法记住选择 */ }`。\n3. 单测：注入 `{ getItem(){ throw new Error('denied') }, setItem(){ throw new Error('quota') } }`，断言 get→null、set→false。\n4. 对比：业务里层层 try/catch 复制粘贴，最终某页漏写 catch，只在用户开无痕窗口时爆。\n\n## 自检\n\n`safeLocalStorageSet` 在 storage 参数为 null 时返回什么？会不会抛？\n\n答案：返回 false，不抛。\n\n## 重点\n\n**浏览器存储不是可靠磁盘。** 先把异常收敛成返回值，业务才能稳定写「读不到就默认」。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 6,
+                "lineEnd": 13,
+                "nodeIds": [],
+                "note": "访问 localStorage 本身包 try/catch"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 15,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "safeLocalStorageGet：无 storage 或抛错返回 null"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 27,
+                "lineEnd": 38,
+                "nodeIds": [],
+                "note": "safeLocalStorageSet：失败返回 false 不抛"
+              }
+            ],
+            "cards": [
+              {
+                "id": "safe-get-contract",
+                "front": "safeLocalStorageGet 在 localStorage 禁用时返回什么？",
+                "back": "null（拿不到 storage 或 getItem 抛错都是 null）。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 15,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "safeLocalStorageGet：无 storage 或抛错返回 null"
+                  }
+                ]
+              },
+              {
+                "id": "safe-set-contract",
+                "front": "safeLocalStorageSet 失败时如何通知调用方？",
+                "back": "返回 false，而不是抛异常。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 27,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "safeLocalStorageSet：失败返回 false 不抛"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "safe-set-return-type",
+                "kind": "short-answer",
+                "title": "set 返回类型语义",
+                "prompt": "safeLocalStorageSet 成功与失败分别返回什么？用斜杠写",
+                "expectedAnswer": "true/false",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 27,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "safeLocalStorageSet：失败返回 false 不抛"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "platform-storage-split",
+            "title": "同一 PlatformStorage，两套后端",
+            "content": "# 同一 PlatformStorage，两套后端\n\n## 学习目标\n\n完成本课后，你能描述 `PlatformStorage` 异步接口如何同时覆盖 localStorage 与 Capacitor Preferences，以及工厂函数如何按运行时选型。\n\n## 先给结论\n\n- **事实：接口三方法皆 Promise。** `getItem` / `setItem` / `removeItem` 全部返回 Promise；即使 web 底层是同步 `localStorage`，也在 `createWebStorage` 里包成 async。\n- **事实：Web 适配器是薄封装。** 有 `SyncStorageLike` 就转发；没有（SSR、无 window、被禁）就退回 `noopStorage`。\n- **事实：原生走 Preferences。** `createNativeStorage` 调用 `preferences.get/set/remove`，键值形状与 Capacitor 插件一致。\n- **事实：默认 `storage` 在模块加载时选定后端。** `createPlatformStorage` 读当前 `isNativePlatform` 与 `isElectron`，业务侧只 `import { storage }`。\n- **推论：调用风格统一比「底层是否同步」更重要。** 业务若有的地方 sync、有的地方 await，跨端必裂。\n\n## 一个类比\n\n`PlatformStorage` 是统一的「保险箱接口」：合租公寓用壁橱（localStorage），银行网点用保管箱（Preferences）。租客只填存取单，不各自保管两串钥匙。钥匙散落在组件里，就等于每个人私藏一把平台 API。\n\n## 工作示例\n\n1. 业务代码只写 `await storage.setItem('session-hint', value)`，从不 `import { Preferences }`。\n2. 单测注入：`createPlatformStorage({ isNativePlatform: false, isElectron: false, webStorage: memoryMap })`，断言读写命中内存。\n3. 无 `window` 的环境：`getBrowserLocalStorage` 返回 null → noop；读永远是 null，写不抛错，启动流程仍可继续。\n4. 对比错误写法：在 React 组件里 `if (Capacitor.isNativePlatform()) Preferences.set(...) else localStorage.setItem(...)`——下一次加 Electron 就要改所有调用点。\n\n## 自检\n\n为什么 web 也要做成 async 接口，而不是导出同步 `getItem`？\n\n答案：与 Preferences 的 Promise API 对齐，业务不必为平台写两套调用风格与错误处理。\n\n## 重点\n\n**统一异步契约，分叉实现。** 这与 `shareContent` 同一模式：能力名稳定，后端可换，测试可注入。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 79,
+                "lineEnd": 97,
+                "nodeIds": [],
+                "note": "createPlatformStorage：原生且非 Electron 才用 Preferences"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 34,
+                "lineEnd": 50,
+                "nodeIds": [],
+                "note": "createWebStorage 包装同步 localStorage"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 52,
+                "lineEnd": 65,
+                "nodeIds": [],
+                "note": "createNativeStorage 走 Preferences API"
+              }
+            ],
+            "cards": [
+              {
+                "id": "when-preferences",
+                "front": "什么条件下 createPlatformStorage 选择 createNativeStorage？",
+                "back": "isNativePlatform 为 true 且 isElectron 为 false。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 79,
+                    "lineEnd": 97,
+                    "nodeIds": [],
+                    "note": "createPlatformStorage：原生且非 Electron 才用 Preferences"
+                  }
+                ]
+              },
+              {
+                "id": "platform-storage-methods",
+                "front": "PlatformStorage 必须实现哪三个方法？",
+                "back": "getItem、setItem、removeItem（均为异步）。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 4,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "PlatformStorage 接口三方法"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "native-storage-api",
+                "kind": "short-answer",
+                "title": "原生存储后端",
+                "prompt": "原生非 Electron 时 createNativeStorage 依赖的 Capacitor 插件名？",
+                "expectedAnswer": "Preferences",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 52,
+                    "lineEnd": 65,
+                    "nodeIds": [],
+                    "note": "createNativeStorage 走 Preferences API"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "noop-and-defaults",
+            "title": "存不了就 noop，读不懂就默认值",
+            "content": "# 存不了就 noop，读不懂就默认值\n\n## 学习目标\n\n完成本课后，你能把 `noopStorage` 与偏好白名单默认值说成同一降级策略的两面，并能用 `WorldGraphicsPreference` 举例。\n\n## 先给结论\n\n- **事实：noop 三方法空转。** `getItem` 恒返回 null；`setItem` / `removeItem` 立即结束且不抛——调用方的 await 链不断。\n- **事实：偏好有白名单。** `isWorldGraphicsPreference` 只接受 `auto` / `low` / `medium` / `high` 四个字符串。\n- **事实：非法或缺失回退 `auto`。** `loadWorldGraphicsPreference` 先 `safeLocalStorageGet`，再校验；任何脏数据都落到安全档。\n- **事实：写入仍走 safe set。** `persistWorldGraphicsPreference` 返回 boolean，失败时内存态可以已更新。\n- **推论：降级目标是「可运行」，不是「严格到崩溃」。** 受限 WebView、被篡改的本地键、首次安装，都应能进主界面。\n\n## 一个类比\n\n自动贩卖机读卡失败时不应炸电路：它显示未扣款，并仍允许投币（默认档 / 内存态）。noop 就像断电后的空货道——你按键没有货，但灯还亮着，整机还能服务下一个意图。\n\n## 工作示例\n\n1. 首次启动无 key → 画质策略 `auto`，渲染路径有确定分支。\n2. 用户或脚本把存储写成 `ultra` / `\"\"` / JSON 垃圾 → 读回 `auto`，不会在 switch 里落到 undefined。\n3. 完全无存储：工厂给出 noop；set 仍 resolve，功能降级为「本会话默认」，而不是白屏。\n4. 产品文案：不要在 noop 环境弹「存储严重错误」；最多轻提示「无法保存设置」。\n\n## 自检\n\n`loadWorldGraphicsPreference` 读到字符串 `\"ultra\"` 时返回什么？\n\n答案：`auto`（未通过白名单校验）。\n\n## 重点\n\n**持久化失败与数据污染都要落到安全默认。** 对一人公司，崩溃是最贵的「严格模式」。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 22,
+                "lineEnd": 32,
+                "nodeIds": [],
+                "note": "noopStorage：get 恒 null，set/remove 空操作"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/worldGraphicsPreference.ts",
+                "lineStart": 15,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "非法偏好值回退 auto"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/worldGraphicsPreference.ts",
+                "lineStart": 9,
+                "lineEnd": 12,
+                "nodeIds": [],
+                "note": "偏好 key 与 isWorldGraphicsPreference 白名单"
+              }
+            ],
+            "cards": [
+              {
+                "id": "noop-get",
+                "front": "noopStorage.getItem 的返回值是什么？",
+                "back": "始终是 null。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 22,
+                    "lineEnd": 32,
+                    "nodeIds": [],
+                    "note": "noopStorage：get 恒 null，set/remove 空操作"
+                  }
+                ]
+              },
+              {
+                "id": "gfx-default",
+                "front": "画质偏好存储损坏时，loadWorldGraphicsPreference 回退到什么？",
+                "back": "auto。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/worldGraphicsPreference.ts",
+                    "lineStart": 15,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "非法偏好值回退 auto"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "gfx-default-value",
+                "kind": "short-answer",
+                "title": "画质默认",
+                "prompt": "非法 WorldGraphicsPreference 时的默认值？",
+                "expectedAnswer": "auto",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/worldGraphicsPreference.ts",
+                    "lineStart": 15,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "非法偏好值回退 auto"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "capability-decision-map",
+            "title": "决策图：从一次点击到平台实现",
+            "content": "# 决策图：从一次点击到平台实现\n\n## 学习目标\n\n完成本课后，你能按一张决策图画完「分享」与「存储选型」的分支，并指出最关键的那条「降级边」。\n\n## 先给结论\n\n- **事实：分享入口顺序是 Electron → Native(Capacitor) → Web。** 原生失败仍可到 Web。\n- **事实：存储选型是「原生且非 Electron → Preferences，否则 Web/noop」。**\n- **事实：触觉在 Electron 短路，错误一律吞。**\n- **推论：适配层的价值是把「会走样的 if」收成可测纯函数 + 薄副作用。**\n\n## 一个类比\n\n这是机场登机分流图：国际/国内/中转各有闸口，但行李丢了都去同一失物台（Web 降级 / noop）。乘客只认「登机」按钮。\n\n## 工作示例\n\n```mermaid\nflowchart TD\n  A[业务调用 shareContent] --> B{getCurrentRuntimeDescriptor}\n  B -->|isElectron| C[shareOnElectron 剪贴板]\n  C --> R1[copied]\n  B -->|isNativePlatform| D[shareOnCapacitor]\n  D -->|成功| R2[shared]\n  D -->|抛错| E[shareOnWeb]\n  B -->|否则| E\n  E -->|navigator.share| R2\n  E -->|clipboard| R1\n  E -->|都不可用| X[抛 Error]\n```\n\n图中**最关键的线是 `D -->|抛错| E`**：原生分享不是「失败即对用户报错」，而是强制再试 Web 能力。一人公司最容易漏掉这条边，结果 iOS 某次插件异常变成整页红屏。\n\n同步记住存储边：`isNative && !isElectron` 才进 Preferences；Electron 与浏览器共享 web 存储语义。\n\n## 自检\n\n画出或默写分享三条路径后，问自己：取消分享（用户关掉 sheet）在类型里有没有专门结果？当前设计如何影响 toast？\n\n答案：没有 cancelled；若 Web Share 以异常表示取消，可能掉进 catch 或上层错误处理，需产品层再定。\n\n## 重点\n\n**适配层要显式画出「失败后还去哪」。** 没有降级边的平台 if，只是把崩溃从 A 平台搬到 B 平台。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/index.ts",
+                "lineStart": 11,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "shareContent：按 runtime 分发到 electron/capacitor/web"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/storage.ts",
+                "lineStart": 79,
+                "lineEnd": 97,
+                "nodeIds": [],
+                "note": "createPlatformStorage：原生且非 Electron 才用 Preferences"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/platform/index.ts",
+                "lineStart": 32,
+                "lineEnd": 49,
+                "nodeIds": [],
+                "note": "triggerHaptic：Electron 直接 return，失败吞掉"
+              }
+            ],
+            "cards": [
+              {
+                "id": "critical-fallback-edge",
+                "front": "分享决策图里，原生 Capacitor 失败后的下一条边指向谁？",
+                "back": "shareOnWeb——继续 Web Share 或剪贴板，而不是立刻抛给业务。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/index.ts",
+                    "lineStart": 11,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "shareContent：按 runtime 分发到 electron/capacitor/web"
+                  }
+                ]
+              },
+              {
+                "id": "storage-decision",
+                "front": "存储工厂在什么布尔条件下走 Preferences？",
+                "back": "isNativePlatform 为真且 isElectron 为假。",
+                "tags": [
+                  "platform-capabilities"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/storage.ts",
+                    "lineStart": 79,
+                    "lineEnd": 97,
+                    "nodeIds": [],
+                    "note": "createPlatformStorage：原生且非 Electron 才用 Preferences"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "share-dispatch-order",
+                "kind": "short-answer",
+                "title": "分享分发顺序",
+                "prompt": "shareContent 判断顺序：先谁后谁？用大于号连接三词",
+                "expectedAnswer": "electron>native>web",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/platform/index.ts",
+                    "lineStart": 11,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "shareContent：按 runtime 分发到 electron/capacitor/web"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

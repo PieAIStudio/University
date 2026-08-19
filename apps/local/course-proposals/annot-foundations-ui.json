@@ -1,0 +1,345 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "lessons": [
+    {
+      "courseId": "foundations-ui",
+      "unitId": "a-component-is-a-function",
+      "lessonId": "children-is-a-prop-too",
+      "anchors": [
+        {
+          "quote": "组件",
+          "occurrence": 1,
+          "senseId": "component.ui"
+        },
+        {
+          "quote": "片段",
+          "occurrence": 1,
+          "senseId": "fragment.jsx"
+        },
+        {
+          "quote": "渲染",
+          "occurrence": 1,
+          "senseId": "render.ui"
+        },
+        {
+          "quote": "参数",
+          "occurrence": 1,
+          "senseId": "parameter.input"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-ui",
+      "unitId": "a-component-is-a-function",
+      "lessonId": "compute-then-return",
+      "anchors": [
+        {
+          "quote": "返回",
+          "occurrence": 1,
+          "senseId": "return.value"
+        },
+        {
+          "quote": "子节点",
+          "occurrence": 1,
+          "senseId": "children.nodes"
+        },
+        {
+          "quote": "组件",
+          "occurrence": 1,
+          "senseId": "component.ui"
+        },
+        {
+          "quote": "重新渲染",
+          "occurrence": 1,
+          "senseId": "render.ui"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-ui",
+      "unitId": "a-component-is-a-function",
+      "lessonId": "curly-braces-are-an-escape-hatch",
+      "anchors": [
+        {
+          "quote": "子节点",
+          "occurrence": 1,
+          "senseId": "children.nodes"
+        },
+        {
+          "quote": "展开",
+          "occurrence": 1,
+          "senseId": "spread.copy"
+        },
+        {
+          "quote": "参数",
+          "occurrence": 1,
+          "senseId": "parameter.input"
+        },
+        {
+          "quote": "默认",
+          "occurrence": 1,
+          "senseId": "default.value"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-ui",
+      "unitId": "a-component-is-a-function",
+      "lessonId": "jsx-is-not-html",
+      "anchors": [
+        {
+          "quote": "组件",
+          "occurrence": 1,
+          "senseId": "component.ui"
+        },
+        {
+          "quote": "返回",
+          "occurrence": 2,
+          "senseId": "return.value"
+        },
+        {
+          "quote": "参数",
+          "occurrence": 1,
+          "senseId": "parameter.input"
+        },
+        {
+          "quote": "构建",
+          "occurrence": 1,
+          "senseId": "build.action"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-ui",
+      "unitId": "a-component-is-a-function",
+      "lessonId": "props-are-parameters",
+      "anchors": [
+        {
+          "quote": "属性",
+          "occurrence": 1,
+          "senseId": "props.parameters"
+        },
+        {
+          "quote": "参数",
+          "occurrence": 1,
+          "senseId": "parameter.input"
+        },
+        {
+          "quote": "默认值",
+          "occurrence": 1,
+          "senseId": "default.value"
+        },
+        {
+          "quote": "可选",
+          "occurrence": 1,
+          "senseId": "optional.choice"
+        },
+        {
+          "quote": "接口",
+          "occurrence": 1,
+          "senseId": "interface.shape"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-ui",
+      "unitId": "composition",
+      "lessonId": "accessibility-in-two-attributes",
+      "anchors": [
+        {
+          "quote": "状态",
+          "occurrence": 1,
+          "senseId": "state.memory"
+        },
+        {
+          "quote": "子节点",
+          "occurrence": 1,
+          "senseId": "children.nodes"
+        },
+        {
+          "quote": "属性",
+          "occurrence": 1,
+          "senseId": "props.parameters"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-ui",
+      "unitId": "composition",
+      "lessonId": "render-nothing-sometimes",
+      "anchors": [
+        {
+          "quote": "渲染",
+          "occurrence": 1,
+          "senseId": "render.ui"
+        },
+        {
+          "quote": "空值合并",
+          "occurrence": 1,
+          "senseId": "nullish.coalesce"
+        },
+        {
+          "quote": "兜底",
+          "occurrence": 1,
+          "senseId": "fallback.plan"
+        },
+        {
+          "quote": "三元",
+          "occurrence": 1,
+          "senseId": "ternary.operator"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-ui",
+      "unitId": "composition",
+      "lessonId": "rest-props",
+      "anchors": [
+        {
+          "quote": "剩余参数",
+          "occurrence": 1,
+          "senseId": "rest.params"
+        },
+        {
+          "quote": "展开",
+          "occurrence": 1,
+          "senseId": "spread.copy"
+        },
+        {
+          "quote": "解构",
+          "occurrence": 1,
+          "senseId": "destructure.unpack"
+        },
+        {
+          "quote": "属性",
+          "occurrence": 1,
+          "senseId": "props.parameters"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-ui",
+      "unitId": "composition",
+      "lessonId": "variants",
+      "anchors": [
+        {
+          "quote": "变体",
+          "occurrence": 1,
+          "senseId": "variant.appearance"
+        },
+        {
+          "quote": "联合类型",
+          "occurrence": 1,
+          "senseId": "union.type"
+        },
+        {
+          "quote": "默认",
+          "occurrence": 1,
+          "senseId": "default.value"
+        },
+        {
+          "quote": "类型检查",
+          "occurrence": 1,
+          "senseId": "typecheck.static"
+        },
+        {
+          "quote": "组件",
+          "occurrence": 1,
+          "senseId": "component.ui"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-ui",
+      "unitId": "state-and-effects",
+      "lessonId": "cleanup-is-not-optional",
+      "anchors": [
+        {
+          "quote": "清理函数",
+          "occurrence": 1,
+          "senseId": "cleanup.effect"
+        },
+        {
+          "quote": "卸载",
+          "occurrence": 1,
+          "senseId": "unmount.lifecycle"
+        },
+        {
+          "quote": "挂载",
+          "occurrence": 1,
+          "senseId": "mount.lifecycle"
+        },
+        {
+          "quote": "订阅",
+          "occurrence": 2,
+          "senseId": "subscribe.events"
+        },
+        {
+          "quote": "组件",
+          "occurrence": 1,
+          "senseId": "component.ui"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-ui",
+      "unitId": "state-and-effects",
+      "lessonId": "ref-is-a-pocket",
+      "anchors": [
+        {
+          "quote": "口袋",
+          "occurrence": 1,
+          "senseId": "ref.pocket"
+        },
+        {
+          "quote": "重新渲染",
+          "occurrence": 1,
+          "senseId": "render.ui"
+        },
+        {
+          "quote": "更新",
+          "occurrence": 1,
+          "senseId": "update.action"
+        },
+        {
+          "quote": "返回",
+          "occurrence": 1,
+          "senseId": "return.value"
+        }
+      ]
+    },
+    {
+      "courseId": "foundations-ui",
+      "unitId": "state-and-effects",
+      "lessonId": "state-is-memory",
+      "anchors": [
+        {
+          "quote": "状态",
+          "occurrence": 1,
+          "senseId": "state.memory"
+        },
+        {
+          "quote": "重新渲染",
+          "occurrence": 1,
+          "senseId": "render.ui"
+        },
+        {
+          "quote": "组件",
+          "occurrence": 1,
+          "senseId": "component.ui"
+        },
+        {
+          "quote": "更新",
+          "occurrence": 1,
+          "senseId": "update.action"
+        },
+        {
+          "quote": "类型",
+          "occurrence": 1,
+          "senseId": "type.kind"
+        }
+      ]
+    }
+  ]
+}

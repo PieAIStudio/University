@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-orientation-relay",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-orientation",
+    "unitId": "orientation-boundaries",
+    "id": "relay-single-source",
+    "expectedRevision": 1,
+    "title": "为什么一个 relay 能同时承载聊天、搜索和自动化？",
+    "content": "# 为什么一个 relay 能同时承载聊天、搜索和自动化？\n\n## 现象\n\n你在同一份架构说明里会看到 relay 负责 auth、EVENT pipeline、REQ handler、HTTP bridge、订阅注册，还连接 Postgres 和 Redis；同一条事件又能进入 fan-out、搜索、audit 和 workflow。\n\n[[evidence:ARCHITECTURE.md:21-64]]\n\n## 先猜一下\n\n如果这些功能都围绕事件发生，你觉得系统应该让每个服务直接互相调用，还是让一个地方负责协调？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\nBuzz 让 relay 作为 single source of truth 和协调中心，其他 focused crates 由它组合。\n\n## 为什么是这样\n\n架构把 relay 放在客户端和 Postgres、Redis 之间，所有读写先经过它；crate hierarchy 则把 `buzz-core`、db、auth、pubsub、search、audit、workflow 和 relay 分层。\n\n[[evidence:ARCHITECTURE.md:75-97]]\n\n这样聊天、搜索、审计和自动化可以共享同一事件身份与访问入口，同时保持服务 crate 之间不互相缠绕。你可以把 relay 看成跨 crate 的协调面：架构特别强调 workflow 不直接调用 pubsub，search 不直接调用 db，跨子系统协调只由 relay 完成。\n\n[[evidence:ARCHITECTURE.md:97-97]]\n\n## 自检\n\n- relay 在这套架构中是普通业务服务还是 single source of truth？\n- 为什么 focused crates 之间不直接互调？\n\n## 一句话\n\n**relay 让多种能力共享事件边界，同时把跨 crate 的协调集中在一个入口。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 21, "lineEnd": 64, "note": "系统图展示 relay、客户端、Postgres、Redis 与 fan-out 的关系。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 75, "lineEnd": 97, "note": "crate hierarchy 和关键架构原则定义 relay 的协调职责。" }
+    ],
+    "cards": [
+      { "id": "orientation-relay-source", "expectedRevision": 1, "front": "Buzz 的 single source of truth 是什么？", "back": "是 relay；所有读写经过它，它负责认证、验签、持久化、扇出、索引和自动化触发。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 3, "lineEnd": 7, "note": "架构摘要直接称 relay 是 single source of truth。" } ] },
+      { "id": "orientation-relay-coordination", "expectedRevision": 1, "front": "跨子系统协调由谁负责？", "back": "由 buzz-relay 负责；focused service crates 不直接互相调用。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 97, "lineEnd": 97, "note": "关键架构原则规定跨子系统协调只经过 relay。" } ] }
+    ],
+    "exercises": [
+      { "id": "orientation-relay-answer", "expectedRevision": 1, "kind": "short-answer", "title": "回忆事实来源", "prompt": "Buzz 的 single source of truth 是哪个组件？", "expectedAnswer": "relay", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 3, "lineEnd": 7, "note": "relay 是所有读写的共同入口。" } ] },
+      { "id": "orientation-coordination-answer", "expectedRevision": 1, "kind": "short-answer", "title": "回忆协调者", "prompt": "服务 crate 之间的跨子系统协调经过哪个 crate？", "expectedAnswer": "buzz-relay", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "ARCHITECTURE.md", "lineStart": 87, "lineEnd": 97, "note": "relay ties everything together，并持有跨子系统协调。" } ] }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "revise-buzz-agents-one-prompt",
+  "targetSnapshotId": "git-02f640bc4559",
+  "lesson": {
+    "courseId": "buzz-agents-as-members",
+    "unitId": "agent-queue",
+    "id": "one-prompt-per-channel",
+    "expectedRevision": 1,
+    "title": "为什么队列要按 channel 限制 in-flight prompt？",
+    "content": "# 为什么队列要按 channel 限制 in-flight prompt？\n\n## 情境和约束\n\nACP queue 的设计说明把每个 channel 的事件放进独立队列，并保持 per-channel in-flight tracking；同一 channel 的多个事件可以合并成一批，而不同 channel 可以同时进行。你在读这段状态机时，可以先把 channel 当成上下文与控制信号的最小一致性边界。\n\n[[evidence:crates/buzz-acp/src/queue.rs:1-14]]\n\n## 先猜一下\n\n如果同一个 channel 同时启动两轮 agent prompt，回复顺序、上下文和 cancel 信号会不会互相踩到？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会有冲突风险，所以 EventQueue 每个 channel 同时最多有一个 in-flight batch；同一 channel 的新事件进入队列或按 dedup mode 处理，不直接开第二轮。\n\n## 代价和收益\n\n收益是一个 channel 的上下文与回复顺序保持连贯，取消、重试和 mark_complete 都能按 channel 找到唯一的进行中任务。`flush_next` 也会排除 in-flight channel，只把不在进行中的队列拿出来。你可以把这看成“一个频道一次只由一个 turn 代表”。\n\n[[evidence:crates/buzz-acp/src/queue.rs:254-300]]\n\n代价是同一 channel 的后续事件可能等待当前 turn，批次还有 MAX_BATCH_EVENTS 上限；但不同 channel 仍可以各自 claim agent。你得到的是 per-channel serial、cross-channel concurrent 的折中。\n\n[[evidence:crates/buzz-acp/src/queue.rs:335-380]]\n\n## 什么时候该反过来\n\n如果一个 channel 的事件彼此完全独立、没有共享会话和顺序要求，才可能允许更高并发；Buzz 的 channel prompt 和 control signal 共享状态时，不应为了吞吐取消这条边界。\n\n## 自检\n\n- in-flight 限制的粒度是什么？\n- 为什么不同 channel 仍可以同时工作？\n\n## 一句话\n\n**队列让同一 channel 保持单轮进行中，同时把并发机会留给其他 channel。**",
+    "evidence": [
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/queue.rs", "lineStart": 1, "lineEnd": 14, "note": "模块文档说明 per-channel queue、in-flight tracking、合并与跨频道独立。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/queue.rs", "lineStart": 254, "lineEnd": 300, "note": "flush_next 排除 in-flight channel，并按最老 pending event 选候选。" },
+      { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/queue.rs", "lineStart": 335, "lineEnd": 380, "note": "flush_next 将单频道事件批量 drain、登记 in-flight 并返回 FlushBatch。" }
+    ],
+    "cards": [
+      { "id": "agent-one-flight", "expectedRevision": 1, "front": "in-flight 限制按什么粒度生效？", "back": "按 channel；同一 channel 同时只保持一个进行中的 batch。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/queue.rs", "lineStart": 1, "lineEnd": 14, "note": "文档明确是 per-channel in-flight tracking。" } ] },
+      { "id": "agent-channel-batch", "expectedRevision": 1, "front": "flush_next 对同一 channel 的多个事件做什么？", "back": "最多 drain MAX_BATCH_EVENTS，合并为一个 FlushBatch。", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/queue.rs", "lineStart": 335, "lineEnd": 380, "note": "同一 channel 的队列被批量 drain 并登记 in-flight。" } ] }
+    ],
+    "exercises": [
+      { "id": "agent-channel-serial", "expectedRevision": 1, "kind": "short-answer", "title": "解释单频道串行", "prompt": "同一 channel 的新事件为什么不能直接启动第二个 prompt？", "expectedAnswer": "因为共享上下文、顺序和控制信号，需要保持 per-channel 单个 in-flight batch", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/queue.rs", "lineStart": 1, "lineEnd": 14, "note": "模块说明按频道维护 in-flight。" } ] },
+      { "id": "agent-channel-concurrent", "expectedRevision": 1, "kind": "short-answer", "title": "找出并发单位", "prompt": "哪种并发仍然被队列保留？", "expectedAnswer": "不同 channel 之间可以同时 in-flight", "evidence": [ { "kind": "fact", "snapshotId": "git-02f640bc4559", "sourceCommit": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db", "sourcePath": "crates/buzz-acp/src/queue.rs", "lineStart": 1, "lineEnd": 7, "note": "不同 channels 可以同时 in-flight，彼此独立。" } ] }
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+retention-engineering 课程提案交付报告
+========================================
+
+产出文件
+--------
+- course-proposals/retention-engineering.json
+- course-proposals/retention-engineering-REPORT.txt
+
+规模
+----
+- 单元：3
+  1. daily-content-loop（每日内容循环）— 4 课
+  2. return-hooks（回访钩子）— 4 课
+  3. share-and-rechallenge（分享与再约）— 3 课
+- 课时：共 11 节（每节 2 卡 + 1 短答练习）
+- 证据引用：共 63 条（lesson / card / exercise 合计；均含 note）
+- 含 mermaid 流程图的课时：write-on-finish-read-on-home
+
+快照绑定
+--------
+- targetSnapshotId: git-3b402e069a5d
+- sourceCommit: 3b402e069a5db5fe9eb82dbc03aa05152b3d298b
+- targetAnalysisId: ua-3b402e06-v2-9-4-zh-full-e98206c7358f1ff1-179ee6bc7b4a
+- 被学项目：TuringPact（study id: turing-pact）
+- 主证据目录：src/features/return-hooks/**、src/features/daily-puzzle/**
+  以及接线页 src/pages/{HomePage,DailyPuzzlePage,RoomPage}.tsx、
+  src/components/game/RoundSettlementPanel.tsx
+
+门禁结果（最终）
+----------------
+$ node scripts/check-proposal-shape.mjs course-proposals/retention-engineering.json
+ok  course-proposals/retention-engineering.json
+
+$ node scripts/check-proposal-evidence.mjs course-proposals/retention-engineering.json --study turing-pact
+（全部 unique path:line 范围均 ok；末行）
+all 63 references resolve at their pinned commits
+
+读码时最反直觉的一点（已写入第 2 课 two-clocks-number-vs-slot）
+--------------------------------------------------------------
+`getPuzzleNumber` 与 `getDailyPuzzle` 不是同一只钟。
+
+- 题号：`PUZZLE_EPOCH_UTC = Date.UTC(2026, 5, 12)` 起算的单调期号，给分享文案
+  `Turing Pact Daily #N` 用。
+- 选题：`dayIndex = Date.UTC(y,m,d) / DAY_MS`（Unix 日序）再对库存长度取模，
+  **并不减去** 产品纪元。
+
+因此玩家看到的「第 42 期」不是库存下标 42；库存会循环，题号不会。
+一人公司最容易写错的留存细节之一：对外身份与对内调度若共用一个取模，
+社交题号叙事会在 inventory 长度处回绕撞车。
