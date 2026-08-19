@@ -7,6 +7,18 @@ settings:
 importers:
 
   .:
+    devDependencies:
+      '@pieai/doc-gov':
+        specifier: 0.9.1
+        version: 0.9.1
+      '@pieai/pro-gov':
+        specifier: 0.9.1
+        version: 0.9.1
+      lefthook:
+        specifier: ^2.1.10
+        version: 2.1.10
+
+  apps/online:
     dependencies:
       '@pieai/swimmer-ui-kit':
         specifier: 1.3.2
@@ -33,12 +45,6 @@ importers:
         specifier: ^2.36.1
         version: 2.36.1(three@0.185.1)
     devDependencies:
-      '@pieai/doc-gov':
-        specifier: 0.9.1
-        version: 0.9.1
-      '@pieai/pro-gov':
-        specifier: 0.9.1
-        version: 0.9.1
       '@types/node':
         specifier: 24.13.2
         version: 24.13.2
@@ -54,9 +60,6 @@ importers:
       '@vitejs/plugin-react':
         specifier: 6.0.3
         version: 6.0.3(vite@8.1.4(@types/node@24.13.2))
-      lefthook:
-        specifier: ^2.1.10
-        version: 2.1.10
       oxfmt:
         specifier: 0.58.0
         version: 0.58.0

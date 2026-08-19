@@ -6,7 +6,8 @@
     "base-governance",
     "frontend-app",
     "threejs-game",
-    "threejs-creative"
+    "threejs-creative",
+    "taste-design"
   ],
   "assetIds": [
     "npx-skills/3d-web-experience",
@@ -35,6 +36,19 @@
     "pie-skills/experience-capture",
     "pie-skills/mermaid-diagrams",
     "pie-skills/screenwalk",
-    "third-party-skills/game-studio"
+    "third-party-skills/brandkit",
+    "third-party-skills/design-taste-frontend",
+    "third-party-skills/design-taste-frontend-v1",
+    "third-party-skills/full-output-enforcement",
+    "third-party-skills/game-studio",
+    "third-party-skills/gpt-taste",
+    "third-party-skills/high-end-visual-design",
+    "third-party-skills/image-to-code",
+    "third-party-skills/imagegen-frontend-mobile",
+    "third-party-skills/imagegen-frontend-web",
+    "third-party-skills/industrial-brutalist-ui",
+    "third-party-skills/minimalist-ui",
+    "third-party-skills/redesign-existing-projects",
+    "third-party-skills/stitch-design-taste"
   ]
 }
