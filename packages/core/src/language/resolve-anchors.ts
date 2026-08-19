@@ -1,4 +1,4 @@
-import type { LanguageAnchor } from "@pieai/university-core/domain/schemas.js";
+import type { LanguageAnchor } from "../domain/schemas.js";
 
 /**
  * Turns anchors into character ranges in one lesson's Markdown.

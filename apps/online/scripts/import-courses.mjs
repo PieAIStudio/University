@@ -194,6 +194,32 @@ writeFileSync(
   `${JSON.stringify(manifest, null, 1)}\n`,
 );
 
+// The lexicon is bundled rather than fetched, unlike lesson prose.
+//
+// Every lesson needs it and it is 90 KB for the whole language, so a per-course
+// fetch would pay the request cost repeatedly to deliver bytes the reader
+// already had. It is copied rather than imported across the workspace because
+// it is authored content that travels with the courses it annotates: a word
+// added upstream reaches this shell on the next `pnpm content`, in the same
+// commit as the lessons that use it.
+const lexiconSource = resolve(
+  projectRoot,
+  process.env["UNIVERSITY_UPSTREAM_LEXICON"] ?? "../local/data/vocabulary/en.json",
+);
+let lexiconSenses = 0;
+if (existsSync(lexiconSource)) {
+  const lexicon = JSON.parse(readFileSync(lexiconSource, "utf8"));
+  lexiconSenses = lexicon.entries.length;
+  writeFileSync(
+    join(projectRoot, "src", "content", "lexicon.json"),
+    `${JSON.stringify(lexicon, null, 1)}\n`,
+  );
+} else {
+  // Not fatal: the reader treats an absent lexicon as "no words to annotate",
+  // which is the same path a lesson with no matches already takes.
+  console.warn(`import-courses: no lexicon at ${lexiconSource}, foreign-language mode will be empty.`);
+}
+
 const totalCourses = manifest.studies.reduce((sum, study) => sum + study.courses.length, 0);
 const totalServed = manifest.studies.reduce(
   (sum, study) => sum + study.courses.reduce((n, course) => n + course.servedBytes, 0),
@@ -204,5 +230,6 @@ console.log(
     `${manifest.studies.length} studies, ${totalCourses} courses, ` +
     `${(totalServed / 1048576).toFixed(1)} MB of lesson JSON, ` +
     `${assetCount} assets lifted out (${(assetBytes / 1048576).toFixed(1)} MB, ` +
-    `was ${(inlineBytes / 1048576).toFixed(1)} MB inline).`,
+    `was ${(inlineBytes / 1048576).toFixed(1)} MB inline), ` +
+    `${lexiconSenses} lexicon senses bundled.`,
 );

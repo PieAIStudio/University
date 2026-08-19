@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import type { LessonLinkTarget } from "@pieai/university-core/domain/lesson-marks.js";
 import type { LessonSection } from "@pieai/university-core/domain/schemas.js";
-import { findProtectedRegions } from "../language/resolve-anchors.js";
+import { findProtectedRegions } from "@pieai/university-core/language/resolve-anchors.js";
 import { getStudyPaths } from "../studies/paths.js";
 
 export type { LessonLinkTarget } from "@pieai/university-core/domain/lesson-marks.js";

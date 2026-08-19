@@ -1,4 +1,4 @@
-import type { LanguageAnchor, LexiconEntry } from "@pieai/university-core/domain/schemas.js";
+import type { LanguageAnchor, LexiconEntry } from "../domain/schemas.js";
 import { findProtectedRegions, type Region } from "./resolve-anchors.js";
 
 /**

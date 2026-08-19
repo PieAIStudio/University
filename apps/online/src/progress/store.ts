@@ -25,6 +25,7 @@ import {
   storeCard,
   type RatingName,
   type StoredCard,
+  type VocabularyState,
 } from "@pieai/university-core";
 
 // v2: cards hold the scheduler's own state instead of a bare interval. A v1
@@ -52,13 +53,38 @@ export interface LessonState {
   attempts: number;
 }
 
+/**
+ * What the learner has said about one English word.
+ *
+ * A word the learner is learning carries a real scheduler card, not a bare
+ * flag, because the layer composer treats an overdue learning word as a reason
+ * to stop introducing new ones. That brake is deliberate — it is what keeps a
+ * beginner from collecting fifty half-known words — but it only releases if the
+ * word has a due date that can arrive. Storing `dueAt: null` here would jam it
+ * permanently after the first word the learner tapped, and nothing would say so.
+ */
+export interface WordState {
+  readonly senseId: string;
+  stage: "learning" | "familiar" | "paused";
+  /** Milliseconds. Only meaningful while `stage` is `learning`. */
+  dueAt: number | null;
+  lapses: number;
+  fsrs: StoredCard | null;
+}
+
 interface Progress {
   lessons: Record<string, LessonState>;
   cards: Record<string, CardState>;
+  words: Record<string, WordState>;
   streak: { days: number; lastDay: string | null };
 }
 
-const empty: Progress = { lessons: {}, cards: {}, streak: { days: 0, lastDay: null } };
+const empty: Progress = {
+  lessons: {},
+  cards: {},
+  words: {},
+  streak: { days: 0, lastDay: null },
+};
 
 function read(): Progress {
   try {
@@ -68,6 +94,9 @@ function read(): Progress {
     return {
       lessons: parsed.lessons ?? {},
       cards: parsed.cards ?? {},
+      // Added after v2 shipped. Absent is the normal case for anyone who read a
+      // lesson before the language layer existed, not a corrupt store.
+      words: parsed.words ?? {},
       streak: parsed.streak ?? { days: 0, lastDay: null },
     };
   } catch {
@@ -90,7 +119,12 @@ function commit() {
   // its cards and wrote them to storage, but the header went on saying
   // "复习 · 明天 0 张" until the page was reloaded, at which point two cards
   // were suddenly due. Nothing threw. The data was always right.
-  state = { ...state, lessons: { ...state.lessons }, cards: { ...state.cards } };
+  state = {
+    ...state,
+    lessons: { ...state.lessons },
+    cards: { ...state.cards },
+    words: { ...state.words },
+  };
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch {
@@ -192,6 +226,51 @@ export function gradeCard(cardKey: string, rating: RatingName) {
   state.cards[cardKey] = { ...card, dueAt: next.due.getTime(), fsrs: storeCard(next) };
   touchStreak();
   commit();
+}
+
+/**
+ * Record what the learner just said about a word.
+ *
+ * `learning` opens a scheduler card so the word has a due date; the other two
+ * are judgements that need no review — `familiar` retires it to a dimmed
+ * mention, `paused` takes it off the page entirely.
+ */
+export function stageWord(senseId: string, stage: WordState["stage"]) {
+  const current = state.words[senseId];
+  if (stage === "learning") {
+    const card = current?.fsrs ? loadCard(current.fsrs) : newCard();
+    state.words[senseId] = {
+      senseId,
+      stage,
+      dueAt: card.due.getTime(),
+      lapses: current?.lapses ?? 0,
+      fsrs: storeCard(card),
+    };
+  } else {
+    state.words[senseId] = {
+      senseId,
+      stage,
+      dueAt: null,
+      lapses: current?.lapses ?? 0,
+      fsrs: current?.fsrs ?? null,
+    };
+  }
+  commit();
+}
+
+/** The learner's word states, in the shape the shared layer composer reads. */
+export function vocabularyStates(): readonly VocabularyState[] {
+  return Object.values(state.words).map((word) => ({
+    senseId: word.senseId,
+    stage: word.stage,
+    dueAt: word.dueAt === null ? null : new Date(word.dueAt).toISOString(),
+    lapses: word.lapses,
+  }));
+}
+
+/** senseId → stage, for the reader's popover to show which button is pressed. */
+export function wordStages(): ReadonlyMap<string, string> {
+  return new Map(Object.values(state.words).map((word) => [word.senseId, word.stage]));
 }
 
 export function resetAll() {

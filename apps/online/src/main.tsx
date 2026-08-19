@@ -5,6 +5,9 @@ import { createRoot } from "react-dom/client";
 // properties everything below reads.
 import "@pieai/swimmer-ui-kit/styles.css";
 import { App } from "./App";
+// The word layer's rules travel with the component that emits its class names,
+// so both shells render it the same way.
+import "@pieai/university-ui/language/word-layer.css";
 import "./styles.css";
 
 const container = document.getElementById("root");

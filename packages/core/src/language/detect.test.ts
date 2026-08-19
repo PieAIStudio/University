@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { LexiconEntry } from "@pieai/university-core/domain/schemas.js";
+import type { LexiconEntry } from "../domain/schemas.js";
 import { adaptiveTargetCount, detectAnchors, type VocabularyStage } from "./detect.js";
 import { resolveAnchors } from "./resolve-anchors.js";
 

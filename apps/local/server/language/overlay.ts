@@ -12,7 +12,7 @@ import {
 import { readLatestLesson } from "../content/repository.js";
 import { getStudyPaths } from "../studies/paths.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
-import { resolveAnchors } from "./resolve-anchors.js";
+import { resolveAnchors } from "@pieai/university-core/language/resolve-anchors.js";
 
 export type { LanguageRange } from "@pieai/university-core/domain/lesson-marks.js";
 

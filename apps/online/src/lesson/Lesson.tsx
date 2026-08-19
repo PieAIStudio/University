@@ -18,11 +18,23 @@
  * diagrams, Shiki-highlighted code and the authoring directives for free —
  * none of which the previous `marked` call could do.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { MarkdownContent } from "@pieai/university-ui";
+import { ForeignSettingsPanel } from "@pieai/university-ui/language/ForeignSettingsPanel.js";
+import {
+  readForeignSettings,
+  writeForeignSettings,
+  type ForeignSettings,
+} from "@pieai/university-ui/language/foreign-settings.js";
+import {
+  readForeignLanguageMode,
+  writeForeignLanguageMode,
+} from "@pieai/university-ui/language/reading-mode.js";
 
 import type { Lesson as LessonData } from "../content/library";
+import { stageWord, subscribe, snapshot, wordStages } from "../progress/store";
 import { gradeDeterministically, normalise, type Verdict } from "./grading";
+import { languageLayerFor } from "./language";
 
 const ANCHOR = /^\[\[evidence:([^\]]+)\]\]$/gm;
 
@@ -53,6 +65,24 @@ export function LessonView({
     });
     return { prose: text, anchors: found };
   }, [lesson.content]);
+
+  const [english, setEnglish] = useState(readForeignLanguageMode);
+  // The preset is the difference between a reading aid and a study tool: only
+  // `remember` shows the buttons that put a word into review, so without this
+  // panel the word states below would be unreachable from the page.
+  const [foreignSettings, setForeignSettings] = useState<ForeignSettings>(readForeignSettings);
+
+  // The layer depends on what the learner has said about words, so it is
+  // recomputed when they say something. Subscribing to the whole progress store
+  // is coarser than it needs to be, but a lesson's worth of prose costs well
+  // under a millisecond to scan and a second store would be a second thing to
+  // keep in sync.
+  const words = useSyncExternalStore(subscribe, snapshot);
+  const language = useMemo(
+    () => (english ? languageLayerFor(prose) : undefined),
+    [english, prose, words],
+  );
+  const stages = useMemo(() => wordStages(), [words]);
 
   const exercise = lesson.exercises[0];
   const [answer, setAnswer] = useState("");
@@ -96,11 +126,43 @@ export function LessonView({
         <span className="lesson__where">
           {courseTitle} · {unitTitle}
         </span>
+        <span className="lesson__lang">
+          <button
+            className={`lesson__en${english ? " lesson__en--on" : ""}`}
+            aria-pressed={english}
+            title={english ? "关掉英文词" : "在课文里认几个英文词"}
+            onClick={() => {
+              const next = !english;
+              setEnglish(next);
+              writeForeignLanguageMode(next);
+            }}
+          >
+            EN
+          </button>
+          {english ? (
+            <ForeignSettingsPanel
+              settings={foreignSettings}
+              onChange={(next) => {
+                setForeignSettings(next);
+                writeForeignSettings(next);
+              }}
+            />
+          ) : null}
+        </span>
         <span className="lesson__pos">{position}</span>
       </header>
 
       <div className="lesson__body">
-        <MarkdownContent assets={lesson.assets ?? []}>{prose}</MarkdownContent>
+        <MarkdownContent
+          assets={lesson.assets ?? []}
+          language={language}
+          englishEnabled={english}
+          foreignSettings={foreignSettings}
+          vocabularyStages={stages}
+          onStageWord={stageWord}
+        >
+          {prose}
+        </MarkdownContent>
       </div>
 
       {anchors.length > 0 ? (

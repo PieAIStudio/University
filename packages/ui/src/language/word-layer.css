@@ -1,0 +1,335 @@
+/*
+  The word layer's own styles, next to the component that emits the class names.
+
+  They started in the authoring shell's stylesheet, because that shell is where
+  the reader was built. The delivery shell then imported the same component and
+  got a popover with no background: the markup was shared, the rules that made
+  it legible were not, and the card rendered as bare text on top of the lesson.
+
+  A shared component whose appearance depends on which app happens to import it
+  is one implementation in name only, so the rules live here now and both
+  shells import this file.
+*/
+
+/* ---- English mode: an additive layer over the lesson, never a rewrite ---- */
+
+.word-anchor {
+  position: relative;
+  display: inline;
+}
+
+.word-anchor__trigger {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #f7d3a0;
+  font: inherit;
+  cursor: pointer;
+}
+
+/*
+   A dotted underline is nearly invisible in Chinese prose. Chinese has no
+   spaces between words, so a line under a run of characters reads as one more
+   continuous rule among the strokes rather than as a mark on a particular word.
+   The marker style changes a *block* instead of a line, which is what survives
+   dense CJK setting — and is why it is the default for the 记忆 preset, where
+   finding the word again is the whole job.
+*/
+.word-anchor__trigger[data-mark="underline"] {
+  border-bottom: 1px dotted currentcolor;
+}
+
+.word-anchor__trigger[data-mark="marker"] {
+  /* Stopping the wash short of the cap height leaves the glyphs sitting on the
+     colour rather than drowning in it, the way a real marker behaves. */
+  padding: 0 2px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to top,
+    rgb(246 193 119 / 26%) 0%,
+    rgb(246 193 119 / 26%) 82%,
+    transparent 82%
+  );
+  color: #fbe6c4;
+}
+
+.word-anchor__trigger[data-mark="marker"]:hover,
+.word-anchor__trigger[data-mark="marker"]:focus-visible {
+  background: linear-gradient(
+    to top,
+    rgb(246 193 119 / 42%) 0%,
+    rgb(246 193 119 / 42%) 88%,
+    transparent 88%
+  );
+}
+
+/* No mark at all: the word is still a button, still hoverable, still keyboard
+   reachable — it simply stops advertising itself. */
+.word-anchor__trigger[data-mark="plain"] {
+  color: inherit;
+}
+
+/* The Chinese stays visible beside the English on first encounter: a reader who
+   does not know the word must never be stuck, only invited. */
+.word-anchor__original {
+  color: rgba(255, 245, 232, 0.55);
+  font-size: 0.85em;
+}
+
+/* Placement is Floating UI's job now — it renders in a portal and writes
+   position/transform inline so a word near the viewport edge flips and shifts
+   instead of opening off-screen. Declaring top/left here would fight it. */
+.word-popover {
+  z-index: 20;
+  width: min(320px, 78vw);
+  padding: 12px 14px;
+  border: 1px solid rgba(247, 211, 160, 0.34);
+  border-radius: 12px;
+  background: #1a1512;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
+  text-align: left;
+}
+
+/* Second way out, for the two readers the first one fails: a touch user with no
+   pointer to move away, and anyone who pinned the card on purpose. Escape and
+   an outside click also close it. */
+.word-popover__close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: rgba(255, 245, 232, 0.5);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.word-popover__close:hover {
+  background: rgba(247, 211, 160, 0.14);
+  color: #f7ead6;
+}
+
+/* A pinned card outlives the pointer, so the word it belongs to has to keep
+   saying which one it is after the cursor has gone somewhere else. */
+.word-anchor__trigger[data-pinned] {
+  border-bottom-style: solid;
+  color: #f6c177;
+}
+
+.word-popover__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0 0 8px;
+}
+
+.word-popover__word {
+  color: #f7d3a0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.word-popover__phonetic,
+.word-popover__pos {
+  color: rgba(255, 245, 232, 0.6);
+  font-size: 0.82rem;
+}
+
+.word-popover__gloss {
+  margin: 0 0 6px;
+  color: rgba(255, 245, 232, 0.92);
+  font-size: 0.9rem;
+}
+
+.word-popover__usage,
+.word-popover__note {
+  margin: 0 0 10px;
+  color: rgba(255, 245, 232, 0.62);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.word-popover__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.word-popover__actions button {
+  padding: 5px 12px;
+  border: 1px solid rgba(247, 211, 160, 0.3);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 245, 232, 0.85);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.word-popover__actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.word-popover__stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(247, 211, 160, 0.16);
+}
+
+.word-popover__stage {
+  padding: 4px 10px;
+  border: 1px solid rgba(247, 211, 160, 0.24);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 245, 232, 0.75);
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.word-popover__stage[aria-pressed="true"] {
+  border-color: rgba(247, 211, 160, 0.7);
+  background: rgba(247, 211, 160, 0.16);
+  color: rgba(255, 245, 232, 0.98);
+}
+/* A word the learner has claimed stays in the text — meeting it again in
+   context is most of what makes it stick — but it stops competing with the
+   words they have not met. Underline goes, colour softens, popover unchanged. */
+.word-anchor__trigger[data-reason="familiar"] {
+  border-bottom-color: transparent;
+  color: inherit;
+  opacity: 1;
+}
+
+.word-anchor__trigger[data-reason="familiar"] .word-anchor__original {
+  display: none;
+}
+
+.word-anchor__trigger[data-reason="familiar"]:hover,
+.word-anchor__trigger[data-reason="familiar"]:focus-visible {
+  opacity: 1;
+}
+
+/* ---- The settings panel that chooses how the layer behaves ------------- */
+.rail-panel__gear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: rgb(255 245 232 / 45%);
+  cursor: pointer;
+}
+
+.rail-panel__gear:hover,
+.rail-panel__gear[aria-expanded="true"] {
+  background: rgb(247 211 160 / 14%);
+  color: #f7d3a0;
+}
+
+.foreign-settings {
+  z-index: 30;
+  display: grid;
+  gap: 6px;
+  width: min(300px, 84vw);
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding: 14px;
+  border: 1px solid rgb(247 211 160 / 32%);
+  border-radius: 12px;
+  background: #1a1512;
+  box-shadow: 0 14px 36px rgb(0 0 0 / 50%);
+}
+
+.foreign-settings__group-label {
+  margin: 4px 0 2px;
+  color: rgb(255 245 232 / 45%);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+}
+
+.foreign-settings__group-label:not(:first-child) {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--campus-rule);
+}
+
+.foreign-settings__presets {
+  display: grid;
+  gap: 5px;
+}
+
+.foreign-settings__preset {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: rgb(255 245 232 / 4%);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.foreign-settings__preset:hover {
+  background: rgb(247 211 160 / 12%);
+}
+
+/* The chosen one is outlined rather than merely tinted: this panel is read at a
+   glance to answer "which of these am I in", and a fill alone loses that
+   against the hover state next to it. */
+.foreign-settings__preset[aria-pressed="true"] {
+  border-color: rgb(246 193 119 / 60%);
+  background: rgb(247 211 160 / 14%);
+}
+
+.foreign-settings__preset strong {
+  color: #f7d3a0;
+  font-size: 0.85rem;
+}
+
+.foreign-settings__preset small {
+  color: rgb(255 245 232 / 52%);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.foreign-settings__row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.foreign-settings__row select {
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+/* Says what the switch above it costs. These settings trade against each other,
+   and a panel that only lists them invites the reader to turn everything on and
+   wonder later why nothing stuck. */
+.foreign-settings__note {
+  margin: 0 0 2px;
+  color: rgb(255 245 232 / 42%);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}

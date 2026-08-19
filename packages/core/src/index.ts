@@ -10,3 +10,14 @@ export * from "./domain/schemas.js";
 
 export * from "./scheduling/fsrs.js";
 export * from "./grading/answer-key.js";
+
+// The foreign-language layer: which words a learner sees annotated, and why.
+// Pure, so the delivery shell can compute it in the browser from the same rule
+// the authoring shell runs on the server.
+export * from "./language/layer.js";
+export { detectAnchors, adaptiveTargetCount } from "./language/detect.js";
+export {
+  resolveAnchors,
+  findProtectedRegions,
+  segmentContent,
+} from "./language/resolve-anchors.js";

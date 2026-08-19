@@ -214,6 +214,46 @@ button.block {
   color: var(--game-ui-accent, #5ec8c0);
 }
 
+/*
+  The English toggle sits off by itself rather than reading as a third piece of
+  lesson metadata: it is the one control in this bar that changes the page.
+  Off, it stays quiet enough that a reader who does not want English never has
+  to decide about it.
+*/
+.lesson__lang {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  align-items: center;
+}
+
+.lesson__en {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  font: 600 0.68rem / 1 var(--mono);
+  letter-spacing: 0.06em;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  background: transparent;
+  border: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.12));
+  border-radius: 5px;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.lesson__en:hover {
+  color: var(--game-ui-text, #e6ecf5);
+  border-color: var(--game-ui-border, rgba(255, 255, 255, 0.24));
+}
+
+.lesson__en--on {
+  color: var(--game-ui-bg, #0b0f1a);
+  background: var(--game-ui-accent, #5ec8c0);
+  border-color: var(--game-ui-accent, #5ec8c0);
+}
+
 .lesson__body {
   max-width: var(--read-measure);
   margin: 0 auto;
