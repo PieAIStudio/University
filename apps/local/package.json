@@ -29,7 +29,8 @@
     "check:lesson-anchors": "node scripts/check-lesson-anchors.mjs",
     "check:export-freshness": "node scripts/check-export-freshness.mjs",
     "check:lesson-drift": "node scripts/check-lesson-drift.mjs",
-    "lesson:signals": "node scripts/lesson-signals.mjs"
+    "lesson:signals": "node scripts/lesson-signals.mjs",
+    "lint:hedges": "node scripts/check-lesson-hedges.mjs"
   },
   "dependencies": {
     "@pieai/swimmer-ui-kit": "1.3.2",

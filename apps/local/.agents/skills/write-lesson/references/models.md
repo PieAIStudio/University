@@ -41,6 +41,14 @@ something from another family.
 | **Writer / fixer** | Grok | `grok` |
 | **Detector** | Gemini Flash | `agy` (Antigravity) |
 | **Detector fallback** | Claude Sonnet | `agy` |
+| **Polisher** | Gemini Flash | `agy` |
+
+The polisher and the detector are the same family for the same reason — it
+writes and hears Chinese the way a person speaks it — but they are different
+jobs under different rules. The detector may not propose wording at all. The
+polisher may only change wording, and is bounded by two rules it will otherwise
+break every time. Both arguments are in `pipeline.md`; do not run a polish pass
+without reading them.
 
 Shapes of the calls — substitute the current ids:
 
@@ -68,6 +76,12 @@ agy -p "$(cat <file>)" --model <newest-claude-sonnet> --dangerously-skip-permiss
 Gemini ids have historically carried their level as a suffix (`-high`,
 `-medium`, `-low`). Where that is still true, choosing the `-high` id *is*
 choosing the effort, and passing `--effort` as well is redundant but harmless.
+
+**The polisher will absolutise unless told not to.** Measured, not suspected:
+across three lessons an unbounded polish removed ten of the author's hedges and
+invented ten absolutes that were not in the source, while leaving every anchor
+and code span perfectly intact — so nothing structural caught it. The two rules
+that stop it, and the checker that verifies them, are in `pipeline.md`.
 
 **The detector may not write.** This is not a model property and no version
 changes it — it is the reason the pipeline wins. Give it the lesson, ask only

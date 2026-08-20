@@ -7,7 +7,9 @@ write; this says who writes, who checks, and what to run.
 
 ```
 grok writes  →  a second model reports where a beginner stops  →  grok fixes
-             →  scripts/lint-lessons.mjs  →  a human reads one lesson per course
+             →  gemini flash polishes for spoken register (bounded, see below)
+             →  scripts/lint-lessons.mjs + scripts/check-lesson-hedges.mjs
+             →  a human reads one lesson per course
 ```
 
 Chosen by a controlled experiment on 2026-08-10, not by preference. Three
@@ -29,6 +31,75 @@ clean"; it actually runs `git rev-parse --is-inside-work-tree`). Every citation
 in every arm resolved to a real path and a real line range, so **no linter can
 catch this class of defect** — only a second model actually reading the source.
 That alone rules out letting the cheap model draft.
+
+## The polish pass, and the one thing it will do to you
+
+Added 2026-08-20, after a second controlled experiment. Grok and Claude reason
+well and write like documentation; Gemini Flash reasons less well and writes
+like a person talking. The question was whether the second thing can be bought
+without losing the first.
+
+It can, but only with two rules the model does not follow unasked.
+
+**What an unbounded polish does.** Three lessons — short, median and long, from
+`turing-pact/foundations-before-zero` — polished by `gemini-3.7-flash-high`
+with instructions to change wording only. It kept every evidence anchor, every
+code span, every heading and every fence. It also, across those three lessons:
+
+- removed 10 of the author's 23 hedges, and
+- manufactured 10 absolutes where the originals had **zero**, and
+- grew every lesson by 7–9% while being told not to grow, and
+- wrote 「只要平台不是 `web`，哈希路由**才**会打开」 — 「只要」 pairs with
+  「就」, 「只有」 pairs with 「才」 — in the sentence that states a boolean.
+
+「通常能照着清单重新装」 became 「随时都能重新装」. For a beginner those are
+different claims, and the second one teaches them that the day the network is
+down, the failure is theirs. Both blind judges found this class of defect and
+found it **only** in the polished version.
+
+**With the two rules added** — no absolutising, no growth — the same model on
+the same three lessons restored every hedge (23 → 25), produced **zero**
+absolutes, and came out 1.6% shorter.
+
+**Scored blind, both orderings, two judges** (`claude-sonnet-4-6` and
+`gemini-3.1-pro-high`, neither of which wrote either version):
+
+| | verdict |
+| --- | --- |
+| current output vs **unbounded** polish | judges split: Gemini Pro preferred the current output 3/3, Sonnet preferred the polish 3/3 |
+| current output vs **bounded** polish | **bounded polish wins 11 of 12** |
+
+The first row is why the rules are not optional; the second is why the pass is
+worth running. Position was swapped and re-judged because the first
+randomisation happened to put one version first every time.
+
+**The rules, in the polish prompt:**
+
+1. Every hedge in the source is deliberate. `通常 / 常常 / 往往 / 一般 / 多数 /
+   可能 / 倾向于` must survive. Never introduce `绝不 / 绝对 / 必然 / 从不 /
+   全都是 / 根本不 / 压根 / 随时都能 / 完全可以`. 「只要」 takes 「就」;
+   「只有」 takes 「才」.
+2. The output may not be longer than the input. Spoken language is *shorter*
+   sentences, not more words.
+
+Both are checked mechanically afterwards, which is what makes the pass safe to
+run at volume:
+
+```bash
+node scripts/check-lesson-hedges.mjs --before <original.md> --after <polished.md>
+```
+
+It fails on a lost hedge, a new absolute, or a new 「只要…才」.
+
+**Polish once, not twice.** The first instinct is to add a second Flash pass at
+the end to apply the fixes Grok finds. Do not: every pass is another chance to
+absolutise, and running two doubles a risk that has been measured rather than
+guessed. Grok finds the errors and Grok fixes them.
+
+**The honesty note.** This experiment is a quarter the size of the 2026-08-10
+one — 3 lessons, 2 model judges, one course, against 3 pipelines × 6 lessons
+scored by two human readers. It supports "run this on the next batch and look",
+not "this is settled". Re-evaluate after about 10 lessons.
 
 ## The detector is not allowed to write
 
