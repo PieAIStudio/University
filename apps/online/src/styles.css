@@ -566,6 +566,10 @@ button.block {
 }
 
 /* Projected names. Pointer-transparent: the canvas underneath owns the input. */
+/*
+  The layer itself stays transparent to the pointer so the map can be dragged
+  from anywhere. Only the labels that lead somewhere take events back.
+*/
 .labels {
   position: absolute;
   inset: 0;
@@ -601,6 +605,36 @@ button.block {
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/*
+  A label you can enter is a real button, so it has to shed the browser's button
+  styling and take back the pointer the layer above gave up.
+
+  It also has to be visibly focusable. A keyboard user landing on a course name
+  floating over a moving 3D scene has no other way to tell where they are, and
+  this is the only navigation the world map has.
+*/
+button.label {
+  pointer-events: auto;
+  border: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: inherit;
+}
+
+button.label:hover {
+  background: rgba(14, 24, 32, 0.85);
+}
+
+button.label:focus-visible {
+  outline: 2px solid #ffd479;
+  outline-offset: 2px;
+  /* Focus has to win over the fade-out the frame callback applies to labels
+     that are crowded off screen, or tabbing would move focus somewhere
+     invisible. */
+  opacity: 1 !important;
 }
 
 .label--study {

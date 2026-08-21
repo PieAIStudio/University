@@ -73,6 +73,16 @@ export interface Marker {
   readonly text: string;
   readonly sub?: string;
   readonly kind: "study" | "course" | "lesson" | "unit";
+  /**
+   * What clicking this label does, when it does anything.
+   *
+   * A label without one is a place name — the world it sits on is not somewhere
+   * you can enter. A label with one is the same target the island underneath it
+   * is, and the reason it has to exist is that picking in the canvas is a mouse
+   * -only affordance: before this, the entire product had no keyboard path into
+   * a single course, and a screen reader was handed an `aria-hidden` layer.
+   */
+  readonly activate?: () => void;
 }
 
 const TREES: Role[] = ["tree-broad-a", "tree-broad-b", "tree-tall-a", "tree-tall-b"];

@@ -190,6 +190,9 @@ function Controls({
  * snake away from the camera, and every degree of extra tilt compresses the
  * far rows further into each other.
  */
+/** What the map actually responds to. Kept next to the controls it describes. */
+const MAP_CONTROLS_HINT = "拖动平移 · 滚轮缩放 · 点岛进入";
+
 const WORLD_POLAR = THREE.MathUtils.degToRad(54);
 const COURSE_POLAR = THREE.MathUtils.degToRad(50);
 
@@ -409,6 +412,17 @@ export function App() {
 
   const labelNodes = useRef(new Map<string, HTMLElement>());
 
+  /**
+   * Whether the pointer travelled far enough since it went down to count as a
+   * drag rather than a click.
+   *
+   * A ref rather than state on purpose: this is read inside a click handler and
+   * must never cause a render. Six pixels is the usual slop for a hand resting
+   * on a trackpad — below it, people believe they clicked.
+   */
+  const draggedRef = useRef(false);
+  const pointerOrigin = useRef<{ x: number; y: number } | null>(null);
+
   const markers: readonly Marker[] = useMemo(() => {
     if (view.kind === "course" || view.kind === "lesson") {
       return lessons.map((lesson) => ({
@@ -416,6 +430,17 @@ export function App() {
         position: lesson.position.clone().setY(lesson.position.y + 1.6),
         text: lesson.lessonTitle,
         kind: "lesson" as const,
+        activate:
+          view.kind === "lesson"
+            ? undefined
+            : () =>
+                setView({
+                  kind: "lesson",
+                  studyId: view.studyId,
+                  courseId: view.courseId,
+                  unitId: lesson.unitId,
+                  lessonId: lesson.lessonId,
+                }),
       }));
     }
     if (!world) return [];
@@ -436,6 +461,9 @@ export function App() {
         position: entry.position.clone().setY(entry.position.y + entry.radius * 0.4 + 1.4),
         text: entry.node.title,
         kind: "course" as const,
+        // Same target as the island, so a label and the shape under it cannot
+        // disagree about what selecting a course means.
+        activate: () => setPicked(entry.node),
       })),
     ];
   }, [world, lessons, view]);
@@ -545,6 +573,17 @@ export function App() {
 
       <div
         className="stagewrap"
+        onPointerDownCapture={(event) => {
+          pointerOrigin.current = { x: event.clientX, y: event.clientY };
+          draggedRef.current = false;
+        }}
+        onPointerMoveCapture={(event) => {
+          const origin = pointerOrigin.current;
+          if (!origin || draggedRef.current) return;
+          if (Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 6) {
+            draggedRef.current = true;
+          }
+        }}
         hidden={
           view.kind === "lesson" ||
           view.kind === "settled" ||
@@ -631,24 +670,65 @@ export function App() {
           </aside>
         ) : null}
 
-        <div className="labels" aria-hidden="true">
-          {markers.map((marker) => (
-            <div
-              key={marker.id}
-              ref={(element) => {
-                if (element) labelNodes.current.set(marker.id, element);
-                else labelNodes.current.delete(marker.id);
-              }}
-              className={`label label--${marker.kind}`}
-              style={{ opacity: 0 }}
-            >
-              {marker.text}
-              {marker.sub ? <small>{marker.sub}</small> : null}
-            </div>
-          ))}
-        </div>
+        {/*
+          The map's names, and — where the thing under them can be entered —
+          the way you enter it.
 
-        <p className="hint">{hovered ? hovered : "拖动平移 · 右键旋转 · 滚轮缩放 · 点岛进入"}</p>
+          This layer used to be `aria-hidden` divs with `pointer-events: none`,
+          which meant the only way into any course in the product was clicking a
+          shape inside the canvas. That is a mouse-only affordance, so keyboard
+          and screen-reader users had no path into a single lesson. Rule 7 of
+          the Web3D baseline says readable text is DOM; it is worth just as
+          little if the *reachable* control stays in the canvas.
+
+          A label that can be entered is a real `<button>`. A label that names a
+          world is not, because a world is not somewhere you go.
+        */}
+        <nav className="labels" aria-label="世界地图上的去处">
+          {markers.map((marker) => {
+            const content = (
+              <>
+                {marker.text}
+                {marker.sub ? <small>{marker.sub}</small> : null}
+              </>
+            );
+            const attach = (element: HTMLElement | null) => {
+              if (element) labelNodes.current.set(marker.id, element);
+              else labelNodes.current.delete(marker.id);
+            };
+            const className = `label label--${marker.kind}`;
+            return marker.activate ? (
+              <button
+                key={marker.id}
+                ref={attach}
+                type="button"
+                className={className}
+                style={{ opacity: 0 }}
+                onClick={() => {
+                  // A drag that happens to end on a label is a pan, not a
+                  // choice. Without this, moving the map by grabbing near a
+                  // course name would open that course.
+                  if (draggedRef.current) return;
+                  marker.activate?.();
+                }}
+              >
+                {content}
+              </button>
+            ) : (
+              <div key={marker.id} ref={attach} className={className} style={{ opacity: 0 }}>
+                {content}
+              </div>
+            );
+          })}
+        </nav>
+
+        {/*
+          The hint has to describe the controls that exist. It said 「右键旋转」
+          for as long as rotation had been disabled — the camera is locked to a
+          fixed pitch on purpose, the way a map app locks it, and telling a
+          learner to right-drag taught them the app was broken.
+        */}
+        <p className="hint">{hovered ? hovered : MAP_CONTROLS_HINT}</p>
       </div>
 
       {view.kind === "lesson" && course ? (
