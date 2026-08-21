@@ -28,7 +28,9 @@ if you are the one writing.
 2. **Read the cited evidence in the study snapshot.** No invented paths or lines.
 3. Pick a variant → [references/variants.md](references/variants.md).
 4. Write. Run [references/checklist.md](references/checklist.md).
-5. Land only as a **new revision**. Never rewrite existing revision bytes.
+5. **Polish.** See "The polish pass" below. Skip it and the lesson still ships;
+   it just reads like documentation.
+6. Land only as a **new revision**. Never rewrite existing revision bytes.
 
 If the current revision already matches the spine, invariants, and checklist,
 **do not mint a revision** just to rephrase. A new revision resets completion
@@ -38,6 +40,57 @@ If a refresh handoff says the evidence is stale but the prose, cards, and
 exercises remain accurate, keep their text and append a same-text revision with
 evidence bound to the target snapshot; evidence rebinding is a real revision,
 not a reason to skip the freshness gate.
+
+## The polish pass
+
+You and Grok reason well and write like documentation. Gemini Flash reasons
+less well and writes like a person talking. This step buys the second without
+losing the first, and it was measured rather than assumed —
+[references/pipeline.md](references/pipeline.md) has the numbers and the blind
+scoring.
+
+Run it on the finished draft, never on a draft you are still fixing:
+
+```bash
+cp content.md /tmp/before.md
+agy -p "$(cat .agents/skills/write-lesson/references/polish-prompt.md)
+
+---
+
+$(cat content.md)" --model gemini-3.7-flash-high --effort high --dangerously-skip-permissions > /tmp/after.md
+```
+
+Then the gate, which is not optional:
+
+```bash
+pnpm lint:hedges --before /tmp/before.md --after /tmp/after.md
+```
+
+**Exit 0 → keep the polished version. Non-zero → throw it away and ship your
+own draft.** Do not hand-repair the polish. The failures this catches are the
+model disagreeing with the author about how certain the world is, and a model
+that got that wrong once in a file will have got it wrong somewhere the linter
+cannot see.
+
+### Why there is a linter and not just a prompt
+
+[references/polish-prompt.md](references/polish-prompt.md) states both rules,
+and the prompt alone was not enough. Told only in prose to change wording only,
+the model removed 10 of the author's 23 hedges, manufactured 10 absolutes where
+the originals had zero, and grew every lesson by 7–9%. 「通常能照着清单重新装」
+came back as 「随时都能重新装」.
+
+For a beginner those are different claims. The second one teaches them that on
+the day the network is down, the failure is theirs.
+
+So the two red lines are enforced twice: written in the prompt, and checked by
+`scripts/check-lesson-hedges.mjs`, which fails on a lost hedge, a new absolute,
+a 「只要…才」 mispairing, or prose growing more than 3%. It ignores fenced code
+and evidence anchors, so a lesson that legitimately gained a code block does not
+read as growth. It also fails closed: a crash exits non-zero.
+
+Both rules are machine-checked because a rule only a reader enforces is a rule
+that holds until the day someone is in a hurry.
 
 ## When refresh-study invokes this skill
 

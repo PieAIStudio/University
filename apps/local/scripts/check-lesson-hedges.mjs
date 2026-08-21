@@ -37,13 +37,42 @@ const ABSOLUTE =
 /** 「只要…就」 and 「只有…才」 are the correct pairings. 「只要…才」 is not. */
 const MISPAIRED = /只要[^。！？\n]{0,20}才(?![^。！？\n]{0,6}(行|对))/g;
 
+/**
+ * How much prose a lesson is, ignoring the parts a polish pass must not touch.
+ *
+ * Fenced code, evidence anchors and headings are excluded because they are
+ * fixed by the source rather than chosen by the writer, and counting them
+ * would let a lesson with one long code block hide real growth in the prose
+ * around it.
+ */
+function proseLength(text) {
+  return text
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/\[\[[^\]]*\]\]/g, "")
+    .replace(/^#{1,6} .*$/gm, "")
+    .replace(/\s+/g, "").length;
+}
+
 function scan(text) {
   return {
     hedges: text.match(HEDGE) ?? [],
     absolutes: text.match(ABSOLUTE) ?? [],
     mispaired: text.match(MISPAIRED) ?? [],
+    prose: proseLength(text),
   };
 }
+
+/**
+ * How much longer a polished lesson may be than its source.
+ *
+ * Zero would be the honest number and it is unusable: 「因此」 becoming
+ * 「所以你会看到」 is exactly the change this pass is for, and it costs
+ * characters. Three percent is the slack that buys those rewrites without
+ * buying a new paragraph. Measured: told not to grow at all, the model grew
+ * three lessons by 7 to 9 percent; told the same thing with the two rules
+ * attached, it came out 1.6 percent shorter.
+ */
+const GROWTH_ALLOWANCE = 0.03;
 
 const args = process.argv.slice(2);
 let failed = false;
@@ -67,7 +96,16 @@ if (args[0] === "--before" && args[2] === "--after") {
     console.error(`✗ 新增关联词误配（「只要…才」）：${after.mispaired.join(" | ")}`);
     failed = true;
   }
-  if (!failed) console.log("✓ 让步强度未被削弱");
+  const growth = before.prose > 0 ? (after.prose - before.prose) / before.prose : 0;
+  console.log(`正文字数 ${before.prose} → ${after.prose}（${(growth * 100).toFixed(1)}%）`);
+  if (growth > GROWTH_ALLOWANCE) {
+    console.error(
+      `✗ 正文长了 ${(growth * 100).toFixed(1)}%，超过 ${GROWTH_ALLOWANCE * 100}%。` +
+        `润色是换说法，不是加内容——多出来的通常是模型自己想讲的。`,
+    );
+    failed = true;
+  }
+  if (!failed) console.log("✓ 让步强度未被削弱，正文没有变长");
 } else {
   for (const path of args) {
     const found = scan(readFileSync(path, "utf8"));
