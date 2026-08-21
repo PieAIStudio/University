@@ -8,6 +8,7 @@ import { App } from "./App";
 // so both shells render it the same way.
 import "@pieai/university-ui/language/word-layer.css";
 import "@pieai/university-ui/reference/reference-panel.css";
+import "@pieai/university-ui/sound/sound-toggle.css";
 import "./styles.css";
 
 const root = document.getElementById("root");

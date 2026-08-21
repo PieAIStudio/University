@@ -39,6 +39,7 @@ import {
   readForeignLanguageMode,
   writeForeignLanguageMode,
 } from "@pieai/university-ui/language/reading-mode.js";
+import { playSound, SoundToggle } from "@pieai/university-ui/sound/index.js";
 
 import type { Course, Lesson as LessonData } from "../content/library";
 import { stageWord, subscribe, snapshot, wordStages } from "../progress/store";
@@ -138,8 +139,17 @@ export function LessonView({
   const submit = () => {
     const result = gradeDeterministically(answer, exercise?.answerKey);
     setVerdict(result);
-    if (result.outcome === "pass") onPass();
-    else if (result.outcome === "fail") setMisses((count) => count + 1);
+    // The three outcomes sound different because they *are* different, and a
+    // learner should be able to tell which one happened without reading.
+    if (result.outcome === "pass") {
+      playSound("answer.correct");
+      onPass();
+    } else if (result.outcome === "fail") {
+      playSound("answer.wrong");
+      setMisses((count) => count + 1);
+    } else {
+      playSound("answer.undecided");
+    }
   };
 
   const clue = useMemo(() => {
@@ -158,7 +168,13 @@ export function LessonView({
   return (
     <article className="lesson">
       <header className="lesson__bar">
-        <button className="linkish" onClick={onBack}>
+        <button
+          className="linkish"
+          onClick={() => {
+            playSound("nav.back");
+            onBack();
+          }}
+        >
           ← 关卡地图
         </button>
         <span className="lesson__where">
@@ -186,6 +202,7 @@ export function LessonView({
               }}
             />
           ) : null}
+          <SoundToggle />
         </span>
         <span className="lesson__pos">{position}</span>
       </header>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { GameBadge, GameCallout, GameTabs } from "@pieai/swimmer-ui-kit";
 
 import { Tip } from "@pieai/university-ui/Tip.js";
+import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
 import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
 import { formatAddress, parseAddress, type AppAddress } from "./url-state.js";
@@ -82,6 +83,12 @@ const tabs = [
 ] as const;
 
 export function App() {
+  // Same latch as the delivery shell, for the same reason: the browser will not
+  // start an AudioContext until a gesture, and this is where the gesture is
+  // noticed. Authoring and delivery share one implementation of this, which is
+  // the point of `packages/ui`.
+  useEffect(() => armSoundUnlock(), []);
+
   // Seeded from the address bar, so a refresh or a pasted link lands where it
   // says it will rather than dropping the reader back on Today.
   const initialAddress = useMemo(() => parseAddress(window.location.pathname), []);

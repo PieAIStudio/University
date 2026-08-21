@@ -20,6 +20,7 @@
  * is answered by looking, not by reading.
  */
 import { useFrame } from "@react-three/fiber";
+import { playSound } from "@pieai/university-ui/sound/index.js";
 import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 
@@ -285,10 +286,12 @@ function Island({
         receiveShadow
         onClick={(event) => {
           event.stopPropagation();
+          playSound("map.select");
           onClick();
         }}
         onPointerOver={(event) => {
           event.stopPropagation();
+          playSound("map.hover");
           onOver(true);
         }}
         onPointerOut={() => onOver(false)}
@@ -595,10 +598,12 @@ export function CourseScene({
             receiveShadow
             onClick={(event) => {
               event.stopPropagation();
+              playSound("map.select");
               onPick(lesson);
             }}
             onPointerOver={(event) => {
               event.stopPropagation();
+              playSound("map.hover");
               onHover(lesson);
             }}
             onPointerOut={() => onHover(null)}

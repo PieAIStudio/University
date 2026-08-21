@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { playSound } from "../sound/index.js";
 import { GameBadge, GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
@@ -129,6 +130,9 @@ export function ReviewCard({
       });
       const result = await readJson<{ readonly state: { readonly dueAt: string } }>(response);
       setNextDue(result.state.dueAt);
+      // After the grade is committed, never before: a sound that fires on the
+      // click and then the save fails has told the learner something untrue.
+      playSound("review.graded");
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : "暂时无法保存复习结果";
       setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);

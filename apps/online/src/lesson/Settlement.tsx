@@ -17,7 +17,9 @@
  * whole claim — the reading happens in the DOM and the reason to care happens
  * on the map, and this is the sentence that connects them.
  */
+import { useEffect } from "react";
 import type { Card } from "../content/library";
+import { playSound } from "@pieai/university-ui/sound/index.js";
 
 /** How the settlement talks about a due date a learner has to plan around. */
 function whenDue(dueAt: number, now = Date.now()): string {
@@ -78,6 +80,20 @@ export function Settlement({
     null as number | null,
   );
   const grew = whatGrew(builtBefore, builtAfter, lessons > 0 && doneAfter >= lessons);
+  const finished = lessons > 0 && doneAfter >= lessons;
+
+  // One sound, not three. This screen can be simultaneously "cards dropped",
+  // "the island grew" and "the course is done", and playing all three turns a
+  // reward into a slot machine. The loudest true thing wins, which also means
+  // the rarest cue is only ever heard when the rarest thing happened.
+  useEffect(() => {
+    if (finished) playSound("reward.course");
+    else if (builtAfter > builtBefore) playSound("reward.built");
+    else if (dropped.length > 0) playSound("reward.card");
+    // Deliberately mount-only: this screen exists to announce one event, and a
+    // re-render is not a second event.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <main className="settle">

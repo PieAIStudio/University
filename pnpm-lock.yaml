@@ -197,6 +197,9 @@ importers:
       shiki:
         specifier: 4.3.1
         version: 4.3.1
+      uisfx:
+        specifier: 0.4.0
+        version: 0.4.0
       unist-util-visit:
         specifier: 5.1.0
         version: 5.1.0
@@ -210,6 +213,9 @@ importers:
       '@types/react-dom':
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      jsdom:
+        specifier: 29.1.1
+        version: 29.1.1
       oxfmt:
         specifier: 0.58.0
         version: 0.58.0
@@ -2065,6 +2071,9 @@ packages:
     resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
+
+  uisfx@0.4.0:
+    resolution: {integrity: sha512-W891N75C09cvpaNeChP+7BiP0Yp5VSbrIcRgZvzpFUT3o/2DxZqROmUcX50oxeyMnY4Hqxu4jEfjndVUpmheEQ==}
 
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
@@ -4274,6 +4283,8 @@ snapshots:
       - react
 
   typescript@6.0.3: {}
+
+  uisfx@0.4.0: {}
 
   undici-types@7.18.2: {}
 

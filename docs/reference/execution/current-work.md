@@ -106,7 +106,8 @@ Phases 0 to 6 are done. Phase 7 is the current work.
      transfer, and the soundtrack is "with the project only". The register is
      compiled into `apps/online/scripts/woc-licenses.json` and the import enforces it.
      donors.md granted this product WOC's *audio unlock* — a code pattern,
-     already in `apps/online/src/world/audio.ts` — never its sounds.
+     now shared by both shells at `packages/ui/src/sound/sound.ts` — never its
+     sounds. See "Audio Ships" below for what the product actually plays.
    - **Islands are generated, not modelled.** 1 to 41 lessons cannot be one
      mesh. Seeded from `courseId`, so an upstream typo fix cannot rearrange
      a learner's world.
@@ -264,17 +265,51 @@ exists rather than against a sketch.
   and withdraw the matching `scheduled-migration` exceptions from the portfolio
   manifest in the same change. A greybox under `docs/` is not that commit.
 
-## Audio Is Blocked, And Not On Effort
+## Audio Ships, And The Blocker Was The Wrong Shape
 
-There is no usable sound yet and the reason is licensing, not time. WOC's
-audio cannot ship in a paid product; see the register. The generator skills
-under `.agents/skills/` are also unavailable — `threejs-audio-generator`
-needs `ELEVENLABS_API_KEY`, `threejs-3d-generator` needs `TRIPO_API_KEY`,
-`threejs-image-generator` needs `GEMINI_API_KEY`, and the director's own
-probe reports all three MISSING. Nothing about the art kit depends on this.
+This section used to say audio was blocked on licensing. That was true of the
+approach it assumed — hunt CC0 recordings, host them, keep an attribution
+ledger — and every problem it listed was real: WOC's sound effects are
+CC BY-NC with a commercial grant that runs to that project and does not
+transfer, Freesound redirects a download to a login page, and Kenney's files
+sit behind an interactive form. A script cannot fetch either.
 
-A CC0 shortlist exists and has been checked against the sources themselves —
-every URL fetched, every licence read off the page, every title matched:
+The blocker dissolved when the assumption did. `uisfx` (npm, MIT code, CC0
+audio, `LICENSE-AUDIO` carries the SPDX identifier) **synthesises every cue
+from a deterministic recipe at runtime**. There is no file to download, host,
+or credit, and no attribution ledger to keep in sync. The runtime is 12.35 kB
+gzipped with no dependencies; the package's 12 MB of pre-rendered MP3/Ogg is
+for native and game engines and is not imported here, so the shipped cost of
+sound in this product is the runtime and nothing else.
+
+It also disposes of the MP3 seam problem recorded below: a synthesised loop has
+no container, so it has no encoder padding.
+
+| Decision | What was chosen, and why |
+| --- | --- |
+| Engine | `uisfx`, not WOC's. WOC's `sfx.ts` is 1,852 lines of MMO spatial audio — footsteps by ground material, mount engines, rift ambience, a 24-voice pool. University needs fifteen UI cues. |
+| Pack | `zen`, one of twelve. Its own brief is "mindfulness, reading, writing, calm productivity". This is a reading surface someone sits with for twenty minutes. |
+| Unlock | Still WOC's, and it is the one thing taken from that donor. donors.md grants University WOC's *audio unlock* — a code pattern — and never its sounds. |
+
+**One context, not two.** The latch used to construct its own `AudioContext`
+and `uisfx` constructs one lazily as well. Two contexts is a wasted hardware
+voice on mobile and a browser limit waiting to be hit, so the latch was rewritten
+to own the *timing* rather than the context: `packages/ui/src/sound/sound.ts`.
+
+Verified in a browser rather than argued: **zero** `AudioContext` instances
+exist before the first gesture, one exists and reports `running` immediately
+after it, and with sound muted a graded answer produces zero audio sources
+while still grading. Baseline rule 5 holds by measurement.
+
+Sound design lives in one table, `packages/ui/src/sound/cues.ts`, for the same
+reason the kit's material repaint does: a design decision spread across twenty
+call sites is a design decision nobody can argue with.
+
+### The old CC0 shortlist
+
+Kept because the licences were verified against the sources themselves and
+that work should not have to be redone if the engine choice is ever revisited.
+Nothing here is used today.
 
 | Need | Source | Licence, verified |
 | --- | --- | --- |
@@ -285,18 +320,15 @@ every URL fetched, every licence read off the page, every title matched:
 | Built-something reward | OpenGameArt `Win Jingle` (Fupi) | CC0 1.0 |
 | UI click and hover | Kenney `Interface Sounds`, `UI Audio` | CC0 1.0, no attribution |
 
-**Both need a person.** Freesound redirects a file download to a login page,
-and Kenney's download sits behind an interactive form rather than a link. A
-script cannot fetch either.
+Two findings from that round that are still worth keeping:
 
-Two findings that came out of checking rather than accepting:
-
-- The claim that FreePD shut down permanently in 2025/2026 is false. The
-  site answers 200. It was not used, but a build script pointed away from a
-  live source on a bad claim is its own kind of bug.
+- The claim that FreePD shut down permanently in 2025/2026 is false. The site
+  answers 200. It was not used, but a build script pointed away from a live
+  source on a bad claim is its own kind of bug.
 - Ambience must not ship as MP3. The format pads the start and end of every
-  file during encoding, so a looped MP3 has an audible gap at the seam that
-  is in the container, not the recording. Ogg Vorbis or Opus on the web.
+  file during encoding, so a looped MP3 has an audible gap at the seam that is
+  in the container, not the recording. Ogg Vorbis or Opus on the web — or, as
+  it turned out, no container at all.
 
 ## Open Decisions
 

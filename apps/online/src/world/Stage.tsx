@@ -26,7 +26,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 
-import { armAudioUnlock } from "./audio";
+import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
 import { createGradePass } from "./grade";
 
 /**
@@ -125,7 +125,7 @@ export interface StageProps {
 export function Stage({ children, cameraFrom, lookAt = [0, 0, 0] }: StageProps) {
   const tier = renderTier();
 
-  useEffect(() => armAudioUnlock(), []);
+  useEffect(() => armSoundUnlock(), []);
 
   return (
     <Canvas

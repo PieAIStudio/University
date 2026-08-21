@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { playSound } from "../sound/index.js";
 import { GameBadge } from "@pieai/swimmer-ui-kit";
 
 import { Tip } from "../Tip.js";
@@ -159,7 +160,10 @@ export function LessonWordList({
                     <button
                       type="button"
                       className="word-list__undo"
-                      onClick={() => onStageWord(entry.senseId, "learning")}
+                      onClick={() => {
+                        playSound("word.staged");
+                        onStageWord(entry.senseId, "learning");
+                      }}
                     >
                       重新加入复习
                     </button>
