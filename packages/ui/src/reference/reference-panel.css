@@ -1,0 +1,208 @@
+/*
+  The reference panel's own styles, next to the component that emits the class
+  names. Same reason the word layer's rules live beside WordPopover: a shared
+  component whose appearance depends on which app happens to import it is one
+  implementation in name only.
+*/
+
+/* ---- In-prose triggers ------------------------------------------------ */
+
+/* Inline in prose, so it has to read as part of the sentence rather than as a
+   control bolted into it. */
+.lesson-link,
+.term-link {
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid rgb(240 168 104 / 45%);
+  background: none;
+  color: #f0a868;
+  cursor: pointer;
+  font: inherit;
+}
+
+.lesson-link:hover,
+.lesson-link:focus-visible,
+.term-link:hover,
+.term-link:focus-visible {
+  border-bottom-color: #f0a868;
+}
+
+.lesson-link:focus-visible,
+.term-link:focus-visible,
+.evidence-anchor:focus-visible,
+.reference-panel__close:focus-visible,
+.reference-panel__full:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+/* A link whose target does not exist. Loud on purpose: the only person who can
+   fix it is the one reading a page that would otherwise look fine. */
+.lesson-link--broken,
+.term-link--broken {
+  border-bottom: 1px dashed #ffb4a4;
+  color: #ffb4a4;
+  cursor: not-allowed;
+}
+
+/* Sits beside the claim it supports. The sidebar answers "what is this lesson
+   based on"; this answers "which line is *this sentence* about". */
+.evidence-anchor {
+  padding: 1px 7px;
+  border: 1px solid var(--campus-rule, rgb(247 211 160 / 28%));
+  border-radius: 6px;
+  background: rgb(0 0 0 / 22%);
+  color: var(--game-ui-text-muted, #cbb49c);
+  cursor: pointer;
+  font-family: var(--game-ui-font-mono, ui-monospace, monospace);
+  font-size: 0.78em;
+  white-space: nowrap;
+}
+
+.evidence-anchor:hover,
+.evidence-anchor:focus-visible {
+  border-color: #f0a868;
+  color: #f0a868;
+}
+
+/* An anchor naming lines the lesson never cited. Loud, because the evidence
+   rail is the whole reason to trust a generated lesson. */
+.evidence-anchor--broken {
+  border-color: #ffb4a4;
+  color: #ffb4a4;
+  cursor: not-allowed;
+}
+
+/* ---- Slide-over panel ------------------------------------------------- */
+
+.reference-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: min(24rem, 92vw);
+  height: 100%;
+  padding: 16px 16px 20px;
+  border-left: 1px solid rgb(247 211 160 / 28%);
+  background: #1a1512;
+  box-shadow: -16px 0 40px rgb(0 0 0 / 45%);
+  color: #f7ead6;
+  transform: translateX(100%);
+  transition: transform 180ms ease;
+}
+
+.reference-panel[data-open="true"] {
+  transform: translateX(0);
+}
+
+.reference-panel__header {
+  position: relative;
+  padding-right: 36px;
+  margin-bottom: 14px;
+}
+
+.reference-panel__kind {
+  margin: 0 0 4px;
+  color: rgb(255 245 232 / 52%);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.reference-panel__title {
+  margin: 0;
+  color: #f7d3a0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.reference-panel__close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: rgb(255 245 232 / 55%);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.reference-panel__close:hover {
+  background: rgb(247 211 160 / 14%);
+  color: #f7ead6;
+}
+
+.reference-panel__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.reference-panel__footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(247 211 160 / 16%);
+}
+
+.reference-panel__full {
+  padding: 8px 12px;
+  border: 1px solid rgb(247 211 160 / 34%);
+  border-radius: 8px;
+  background: transparent;
+  color: #f7d3a0;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.reference-panel__full:hover,
+.reference-panel__full:focus-visible {
+  background: rgb(247 211 160 / 14%);
+}
+
+.reference-panel__note,
+.reference-panel__meta,
+.reference-panel__gloss,
+.reference-panel__usage {
+  margin: 0 0 10px;
+  line-height: 1.55;
+}
+
+.reference-panel__meta {
+  color: rgb(255 245 232 / 58%);
+  font-size: 0.82rem;
+}
+
+.reference-panel__gloss {
+  color: rgb(255 245 232 / 92%);
+  font-size: 0.95rem;
+}
+
+.reference-panel__usage,
+.reference-panel__note {
+  color: rgb(255 245 232 / 62%);
+  font-size: 0.86rem;
+}
+
+.reference-panel__phonetic,
+.reference-panel__pos {
+  margin-left: 8px;
+  color: rgb(255 245 232 / 58%);
+  font-size: 0.82rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reference-panel {
+    transition: none;
+  }
+}

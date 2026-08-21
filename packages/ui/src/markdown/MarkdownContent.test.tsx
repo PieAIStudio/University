@@ -342,7 +342,7 @@ describe("local-only link and image policy", () => {
     expect(container.querySelector("details")?.open).toBe(true);
   });
 
-  it("renders fetched pinned source inline via the approved evidence index", async () => {
+  it("opens fetched pinned source in the shared panel, without leaving the lesson", async () => {
     const markdown = "证据：[[evidence:src/app.ts:4-5]]";
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
@@ -377,52 +377,37 @@ describe("local-only link and image policy", () => {
         },
       ],
     });
+
+    expect(container.querySelector(".evidence-inline-source")).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+    const mark = container.querySelector<HTMLButtonElement>(".evidence-anchor");
+    expect(mark?.textContent).toContain("src/app.ts:4-5");
+    expect(container.textContent).not.toContain("[[evidence:");
+
+    await act(async () => {
+      mark!.click();
+    });
     await waitFor(() =>
-      expect(
-        container.querySelector(".evidence-inline-source .evidence-code")?.textContent,
-      ).toContain("const first"),
+      expect(document.querySelector(".reference-panel .evidence-code")?.textContent).toContain(
+        "const first",
+      ),
     );
 
     expect(fetchMock).toHaveBeenCalledWith("/api/lesson/evidence/0");
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(container.querySelector(".evidence-inline-source__path")?.textContent).toBe(
-      "src/app.ts",
-    );
-    expect(container.textContent).toContain("L4–5");
-    expect(container.querySelector(".evidence-code__line--highlighted")).not.toBeNull();
+    const panel = document.querySelector(".reference-panel");
+    expect(panel?.getAttribute("role")).toBe("dialog");
+    expect(panel?.getAttribute("aria-modal")).toBe("false");
+    expect(document.querySelector(".reference-panel__full")?.textContent).toContain("查看完整页");
 
-    const openButton = container.querySelector<HTMLButtonElement>(
-      'button[data-evidence-trigger="inline"]',
-    );
-    expect(openButton?.textContent).toContain("看完整文件");
-    expect(openButton?.getAttribute("data-evidence-index")).toBe("0");
-    expect(openButton?.getAttribute("data-evidence-trigger-id")).toBeTruthy();
+    await act(async () => {
+      document.querySelector<HTMLButtonElement>(".reference-panel__full")!.click();
+    });
+    expect(onOpenEvidence).toHaveBeenCalledWith(0, mark);
   });
 
-  it("keeps the source panel out of the paragraph, so the browser does not regroup the prose", async () => {
-    // `<p><div>…<pre>…</pre></div></p>` is invalid, and a browser repairs it by
-    // closing the paragraph early — silently changing how the surrounding text
-    // is grouped. The anchor has to become a sibling of the prose, not a child.
+  it("keeps the source snippet out of the paragraph, so the browser does not regroup the prose", async () => {
     const markdown = "前面一句。\n\n[[evidence:src/app.ts:4-5]]\n\n后面一句。";
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            sourcePath: "src/app.ts",
-            sourceCommit: "a".repeat(40),
-            startLine: 4,
-            endLine: 5,
-            highlightStartLine: 4,
-            highlightEndLine: 5,
-            language: "typescript",
-            code: "const first = true;\n",
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
-      ),
-    );
-
     const start = markdown.indexOf("[[");
     await renderMarkdown(markdown, {
       evidenceBasePath: "/api/lesson",
@@ -438,31 +423,17 @@ describe("local-only link and image policy", () => {
         },
       ],
     });
-    await waitFor(() => expect(container.querySelector(".evidence-inline-source")).not.toBeNull());
 
     expect(container.querySelector("p .evidence-inline-source")).toBeNull();
     expect(container.querySelector("p pre")).toBeNull();
-    // The prose either side survives as its own paragraph rather than being
-    // absorbed into whatever the parser salvaged.
     const paragraphs = [...container.querySelectorAll("p")].map((node) => node.textContent);
-    expect(paragraphs).toEqual(["前面一句。", "后面一句。"]);
+    expect(paragraphs).toEqual(["前面一句。", "src/app.ts:4-5", "后面一句。"]);
   });
 
-  it("splits a paragraph that holds an anchor mid-sentence, leaving no empty paragraph", async () => {
+  it("leaves a mid-sentence evidence mark in the paragraph", async () => {
     const markdown = "前面。[[evidence:src/app.ts:1-1]] 后面。";
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ error: "not needed" }), {
-          status: 404,
-          headers: { "Content-Type": "application/json" },
-        }),
-      ),
-    );
-
     const start = markdown.indexOf("[[");
     await renderMarkdown(markdown, {
-      evidenceBasePath: "/api/lesson",
       evidenceAnchors: [
         {
           start,
@@ -476,12 +447,9 @@ describe("local-only link and image policy", () => {
       ],
     });
 
-    // Prose paragraphs only — the panel renders its own `<p>` for the failure
-    // message, and that one is not part of the lesson text.
-    const paragraphs = [...container.querySelectorAll("p")]
-      .filter((node) => !node.closest(".evidence-inline-source"))
-      .map((node) => node.textContent);
-    expect(paragraphs).toEqual(["前面。", " 后面。"]);
+    const paragraphs = [...container.querySelectorAll("p")].map((node) => node.textContent);
+    expect(paragraphs).toEqual(["前面。src/app.ts:1 后面。"]);
+    expect(container.textContent).not.toContain("[[evidence:");
   });
 
   it("degrades quietly when the pinned source cannot be read", async () => {
@@ -510,23 +478,24 @@ describe("local-only link and image policy", () => {
         },
       ],
     });
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(".evidence-anchor")!.click();
+    });
     await waitFor(() =>
-      expect(container.querySelector(".evidence-inline-source__error")).not.toBeNull(),
+      expect(document.querySelector(".evidence-inline-source__error")).not.toBeNull(),
     );
 
-    const error = container.querySelector(".evidence-inline-source__error");
+    const error = document.querySelector(".evidence-inline-source__error");
     expect(error?.textContent).toContain("无法读取固定源码");
     expect(error?.textContent).toContain("src/missing.ts");
     expect(error?.textContent).toContain("L10–12");
-    expect(container.querySelector(".evidence-code")).toBeNull();
-    // Header + open control still present so the rest of the lesson can read
-    // and the reader can try the full-file sheet if offered.
-    expect(container.querySelector(".evidence-inline-source__path")?.textContent).toBe(
+    expect(document.querySelector(".evidence-code")).toBeNull();
+    expect(document.querySelector(".evidence-inline-source__path")?.textContent).toBe(
       "src/missing.ts",
     );
   });
 
-  it("loads the same evidence index only once when cited twice", async () => {
+  it("loads the same evidence index only once when opened twice", async () => {
     const first = "[[evidence:src/app.ts:1-2]]";
     const second = "[[evidence:src/app.ts:1-2]]";
     const markdown = `先看 ${first} 再看 ${second}`;
@@ -572,11 +541,89 @@ describe("local-only link and image policy", () => {
         },
       ],
     });
-    await waitFor(() =>
-      expect(container.querySelectorAll(".evidence-inline-source .evidence-code")).toHaveLength(2),
-    );
+    const marks = container.querySelectorAll<HTMLButtonElement>(".evidence-anchor");
+    expect(marks).toHaveLength(2);
+    await act(async () => {
+      marks[0]!.click();
+    });
+    await waitFor(() => expect(document.querySelector(".evidence-code")).not.toBeNull());
+    await act(async () => {
+      marks[1]!.click();
+    });
+    await waitFor(() => expect(document.querySelector(".evidence-code")).not.toBeNull());
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith("/api/lesson/evidence/0");
+  });
+
+  it("opens a lesson link in the panel instead of navigating, then follows from 查看完整页", async () => {
+    const markdown = "去看 [[lesson:c1/u1/other|另一课]]。";
+    const onFollowLink = vi.fn();
+    const start = markdown.indexOf("[[");
+    await renderMarkdown(markdown, {
+      onFollowLink,
+      lessonLinks: [
+        {
+          start,
+          end: start + "[[lesson:c1/u1/other|另一课]]".length,
+          label: "另一课",
+          target: { courseId: "c1", unitId: "u1", lessonId: "other", title: "另一课" },
+        },
+      ],
+    });
+
+    expect(container.textContent).not.toContain("[[lesson:");
+    expect(container.querySelector(".lesson-link")?.textContent).toBe("另一课");
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(".lesson-link")!.click();
+    });
+    expect(onFollowLink).not.toHaveBeenCalled();
+    const panel = document.querySelector(".reference-panel");
+    expect(panel?.getAttribute("data-kind")).toBe("lesson");
+    expect(panel?.textContent).toContain("c1/u1/other");
+
+    await act(async () => {
+      document.querySelector<HTMLButtonElement>(".reference-panel__full")!.click();
+    });
+    expect(onFollowLink).toHaveBeenCalledWith({
+      courseId: "c1",
+      unitId: "u1",
+      lessonId: "other",
+      title: "另一课",
+    });
+  });
+
+  it("renders a term without showing the token, and opens its sense in the panel", async () => {
+    const markdown = "这是 [[term:app.program|应用]]。";
+    const start = markdown.indexOf("[[");
+    await renderMarkdown(markdown, {
+      termAnchors: [
+        {
+          start,
+          end: start + "[[term:app.program|应用]]".length,
+          senseId: "app.program",
+          label: "应用",
+          entry: {
+            senseId: "app.program",
+            headword: "app",
+            phonetic: "/æp/",
+            partOfSpeech: "noun",
+            gloss: "应用：用户点开图标就能用的那个成品",
+            usage: "App 是 application 的口语缩写。",
+            track: "technical",
+          },
+        },
+      ],
+    });
+
+    expect(container.textContent).not.toContain("[[term:");
+    expect(container.querySelector(".term-link")?.textContent).toBe("应用");
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(".term-link")!.click();
+    });
+    const panel = document.querySelector(".reference-panel");
+    expect(panel?.getAttribute("data-kind")).toBe("term");
+    expect(panel?.textContent).toContain("应用：用户点开图标就能用的那个成品");
+    expect(panel?.querySelector(".reference-panel__full")).toBeNull();
   });
 });

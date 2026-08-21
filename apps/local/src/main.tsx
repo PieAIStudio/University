@@ -7,6 +7,7 @@ import { App } from "./App";
 // The word layer's rules travel with the component that emits its class names,
 // so both shells render it the same way.
 import "@pieai/university-ui/language/word-layer.css";
+import "@pieai/university-ui/reference/reference-panel.css";
 import "./styles.css";
 
 const root = document.getElementById("root");

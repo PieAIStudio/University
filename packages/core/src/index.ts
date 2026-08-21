@@ -21,3 +21,20 @@ export {
   findProtectedRegions,
   segmentContent,
 } from "./language/resolve-anchors.js";
+
+// Wiki tokens (`[[kind:target]]`). Parsing and resolution are pure; the
+// authoring shell is the one that builds an index by reading lessons off disk.
+export {
+  parseLessonLinks,
+  tokenKind,
+  resolveLessonLinks,
+  backlinksOf,
+  assembleLessonIndex,
+  type ParsedLessonLink,
+  type LinkResolution,
+  type LessonIndex,
+  type LessonIndexEntry,
+  type LessonIndexSource,
+} from "./marks/references.js";
+export { resolveEvidenceAnchors, type EvidenceCitation } from "./marks/evidence.js";
+export { resolveTermLinks, termRangeOf, type TermResolution } from "./marks/terms.js";

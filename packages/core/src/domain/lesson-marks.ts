@@ -45,6 +45,15 @@ export interface LanguageRange {
   readonly senseId: string;
 }
 
+export interface TermRange {
+  readonly start: number;
+  readonly end: number;
+  readonly senseId: string;
+  readonly label: string | null;
+  /** `null` when the sense is not in the lexicon. */
+  readonly entry: LexiconEntry | null;
+}
+
 /**
  * Foreign-language overlay on a lesson payload: ranges, lexicon entries those
  * ranges use, and optional per-sense reasons. The browser decides whether to

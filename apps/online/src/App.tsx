@@ -498,6 +498,15 @@ export function App() {
           studyId={view.studyId}
           unitId={view.unitId}
           lessonId={view.lessonId}
+          onFollowLink={(target) =>
+            setView({
+              kind: "lesson",
+              studyId: view.studyId,
+              courseId: target.courseId,
+              unitId: target.unitId,
+              lessonId: target.lessonId,
+            })
+          }
           onBack={() => setView({ kind: "course", studyId: view.studyId, courseId: view.courseId })}
           onSettled={(doneBefore) => {
             setGrewFrom({ key: `${view.studyId}/${view.courseId}/${view.lessonId}`, doneBefore });
@@ -544,6 +553,7 @@ function LessonReaderHost({
   lessonId,
   onBack,
   onSettled,
+  onFollowLink,
 }: {
   course: Course;
   studyId: string;
@@ -551,6 +561,11 @@ function LessonReaderHost({
   lessonId: string;
   onBack: () => void;
   onSettled: (doneBefore: number) => void;
+  onFollowLink: (target: {
+    readonly courseId: string;
+    readonly unitId: string;
+    readonly lessonId: string;
+  }) => void;
 }) {
   const unit = course.units.find((entry) => entry.id === unitId) ?? course.units[0]!;
   const lesson = unit.lessons.find((entry) => entry.id === lessonId) ?? unit.lessons[0]!;
@@ -561,9 +576,12 @@ function LessonReaderHost({
     <main className="reader">
       <LessonView
         lesson={lesson}
+        course={course}
+        unitId={unit.id}
         courseTitle={course.title}
         unitTitle={unit.title}
         position={`${index + 1}/${flat.length}`}
+        onFollowLink={onFollowLink}
         onBack={onBack}
         onPass={() => {
           const key = lessonKey(studyId, course.id, lesson.id);

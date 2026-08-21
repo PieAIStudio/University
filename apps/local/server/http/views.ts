@@ -5,7 +5,9 @@ import type {
   KnowledgeNote,
   StudyManifest,
 } from "@pieai/university-core/domain/schemas.js";
+import { resolveTermLinks, termRangeOf } from "@pieai/university-core/marks/terms.js";
 import { resolveEvidenceAnchors } from "../content/evidence-anchors.js";
+import { loadLexicon } from "../language/lexicon.js";
 import { readCommitDate } from "../content/commit-date.js";
 import { readEvidenceSnippet } from "../content/evidence.js";
 import { resolveEvidenceUa } from "../ua/study-map.js";
@@ -207,7 +209,8 @@ function buildLessonView(
   // the browser because a broken link has to be visible to whoever wrote it,
   // and the browser has no way to know a target does not exist.
   const linkIndex = getLessonIndex(studiesRoot, route.studyId);
-  const linkResolutions = resolveLessonLinks(parseLessonLinks(content), linkIndex, route);
+  const parsedLinks = parseLessonLinks(content);
+  const linkResolutions = resolveLessonLinks(parsedLinks, linkIndex, route);
   return {
     lesson: {
       id: lesson.id,
@@ -238,6 +241,7 @@ function buildLessonView(
       // Resolved against this lesson's own citations, so prose can only point
       // at lines the manifest already pinned to the snapshot.
       evidenceAnchors: resolveEvidenceAnchors(content, lesson.evidence),
+      termAnchors: resolveTermLinks(parsedLinks, loadLexicon()).map(termRangeOf),
       language: {
         status: language.status,
         ranges: language.ranges,

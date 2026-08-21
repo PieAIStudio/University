@@ -491,6 +491,7 @@ export function LessonReader({
               {...(view.lesson.evidenceAnchors
                 ? { evidenceAnchors: view.lesson.evidenceAnchors }
                 : {})}
+              {...(view.lesson.termAnchors ? { termAnchors: view.lesson.termAnchors } : {})}
               evidence={view.lesson.evidence}
               evidenceBasePath={lessonPath(locator)}
               onOpenEvidence={(index, trigger) => openSourceSheet(index, trigger)}

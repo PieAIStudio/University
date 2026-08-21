@@ -3,8 +3,10 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
 
-import type { LanguageLayer } from "@pieai/university-core/domain/lesson-marks.js";
+import type { LanguageLayer, TermRange } from "@pieai/university-core/domain/lesson-marks.js";
+import type { LexiconEntry } from "@pieai/university-core/domain/schemas.js";
 import { EvidenceInlineSource } from "../evidence/EvidenceInlineSource.js";
+import { ReferencePanel, type ReferenceKind } from "../reference/ReferencePanel.js";
 import { lessonSectionRole } from "./lesson-sections.js";
 import { MermaidDiagram } from "./MermaidDiagram.js";
 import {
@@ -19,6 +21,7 @@ import { remarkLanguageAnchors } from "../language/remark-language-anchors.js";
 import {
   remarkEvidenceAnchors,
   remarkLessonLinks,
+  remarkTermLinks,
   type EvidenceAnchorRange,
   type LessonLinkRange,
   type LessonLinkTarget,
@@ -175,6 +178,30 @@ function codeText(children: ReactNode): string {
     .replace(/\n$/, "");
 }
 
+type OpenReference =
+  | {
+      readonly kind: "lesson";
+      readonly title: string;
+      readonly trigger: HTMLElement;
+      readonly target: LessonLinkTarget | null;
+    }
+  | {
+      readonly kind: "term";
+      readonly title: string;
+      readonly trigger: HTMLElement;
+      readonly entry: LexiconEntry | null;
+      readonly senseId: string;
+    }
+  | {
+      readonly kind: "evidence";
+      readonly title: string;
+      readonly trigger: HTMLElement;
+      readonly sourcePath: string;
+      readonly lines: string;
+      readonly evidenceIndex: number | null;
+      readonly resolved: boolean;
+    };
+
 function markdownText(children: ReactNode): string {
   return Children.toArray(children)
     .map((child) => {
@@ -294,6 +321,7 @@ export function MarkdownContent({
   evidence,
   evidenceBasePath,
   onOpenEvidence,
+  termAnchors,
   assets = [],
   sections = [],
   detailMode = "standard",
@@ -311,6 +339,7 @@ export function MarkdownContent({
   readonly evidence?: readonly EvidenceView[];
   readonly evidenceBasePath?: string;
   readonly onOpenEvidence?: (index: number, trigger: HTMLElement) => void;
+  readonly termAnchors?: readonly TermRange[];
   readonly assets?: readonly LessonAssetView[];
   readonly sections?: readonly LessonSectionView[];
   readonly detailMode?: "standard" | "all";
@@ -324,6 +353,29 @@ export function MarkdownContent({
   readonly inline?: boolean;
 }) {
   const active = englishEnabled && language?.status === "annotated" ? language : null;
+  const [openReference, setOpenReference] = useState<OpenReference | null>(null);
+
+  const termEntries = useMemo(() => {
+    const map = new Map<string, LexiconEntry>();
+    for (const range of termAnchors ?? []) {
+      if (range.entry) map.set(range.senseId, range.entry);
+    }
+    return map;
+  }, [termAnchors]);
+
+  function toggleReference(next: OpenReference) {
+    setOpenReference((current) => {
+      if (
+        current &&
+        current.kind === next.kind &&
+        current.trigger === next.trigger &&
+        current.title === next.title
+      ) {
+        return null;
+      }
+      return next;
+    });
+  }
 
   const lexicon = useMemo(
     () => new Map((active?.lexicon ?? []).map((entry) => [entry.senseId, entry])),
@@ -404,27 +456,22 @@ export function MarkdownContent({
         }
         const evidenceIndex =
           typeof properties?.evidenceIndex === "number" ? properties.evidenceIndex : null;
-        if (evidenceIndex !== null && evidenceBasePath) {
-          return (
-            <EvidenceInlineSource
-              index={evidenceIndex}
-              basePath={evidenceBasePath}
-              sourcePath={sourcePath}
-              lines={lines}
-              ua={placeTellsThemApart ? (evidence?.[evidenceIndex]?.ua ?? null) : null}
-              onOpenEvidence={onOpenEvidence}
-            />
-          );
-        }
-        // An older API response without an approved index remains copyable, but
-        // cannot open an arbitrary path. The server is the only source of truth
-        // for source-sheet locations.
         return (
           <button
             type="button"
             className="evidence-anchor"
-            title="复制位置，到编辑器里打开"
-            onClick={() => void navigator.clipboard?.writeText(location)}
+            title={location}
+            onClick={(event) =>
+              toggleReference({
+                kind: "evidence",
+                title: location,
+                trigger: event.currentTarget,
+                sourcePath,
+                lines,
+                evidenceIndex,
+                resolved: true,
+              })
+            }
           >
             {children}
           </button>
@@ -446,6 +493,7 @@ export function MarkdownContent({
         readonly children?: ReactNode;
       }) {
         const properties = node?.properties;
+        const label = typeof children === "string" ? children : markdownText(children);
         if (properties?.broken !== undefined || typeof properties?.lessonId !== "string") {
           // Visibly wrong, and not clickable. Silently swallowing it would let
           // a bad link ship, since the only person who could notice is reading
@@ -460,7 +508,7 @@ export function MarkdownContent({
           courseId: String(properties.courseId),
           unitId: String(properties.unitId),
           lessonId: properties.lessonId,
-          title: typeof children === "string" ? children : "",
+          title: label,
           ...(typeof properties.targetSectionId === "string"
             ? { targetSectionId: properties.targetSectionId }
             : {}),
@@ -469,11 +517,56 @@ export function MarkdownContent({
           <button
             type="button"
             className="lesson-link"
-            onClick={() => onFollowLink?.(target)}
-            disabled={!onFollowLink}
+            onClick={(event) =>
+              toggleReference({
+                kind: "lesson",
+                title: target.title || label,
+                trigger: event.currentTarget,
+                target,
+              })
+            }
           >
             {children}
-            <span aria-hidden="true"> ↗</span>
+          </button>
+        );
+      },
+      "term-link"({
+        node,
+        children,
+      }: {
+        readonly node?: {
+          readonly properties?: {
+            readonly senseId?: unknown;
+            readonly broken?: unknown;
+          };
+        };
+        readonly children?: ReactNode;
+      }) {
+        const senseId =
+          typeof node?.properties?.senseId === "string" ? node.properties.senseId : "";
+        const entry = termEntries.get(senseId) ?? null;
+        if (node?.properties?.broken !== undefined || !entry) {
+          return (
+            <span className="term-link term-link--broken" title="词库里没有这个词义">
+              {children}
+            </span>
+          );
+        }
+        return (
+          <button
+            type="button"
+            className="term-link"
+            onClick={(event) =>
+              toggleReference({
+                kind: "term",
+                title: entry.headword,
+                trigger: event.currentTarget,
+                entry,
+                senseId,
+              })
+            }
+          >
+            {children}
           </button>
         );
       },
@@ -573,6 +666,7 @@ export function MarkdownContent({
       sectionsByTitle,
       detailMode,
       foreignSettings,
+      termEntries,
     ],
   );
 
@@ -585,12 +679,120 @@ export function MarkdownContent({
     if (evidenceAnchors && evidenceAnchors.length > 0) {
       list.push([remarkEvidenceAnchors, { ranges: evidenceAnchors }]);
     }
+    if (termAnchors && termAnchors.length > 0) {
+      list.push([remarkTermLinks, { ranges: termAnchors }]);
+    }
     return list;
-  }, [active, lessonLinks, evidenceAnchors]);
+  }, [active, lessonLinks, evidenceAnchors, termAnchors]);
+
+  let fullPage: (() => void) | undefined;
+  if (openReference?.kind === "lesson" && openReference.target && onFollowLink) {
+    const target = openReference.target;
+    fullPage = () => {
+      setOpenReference(null);
+      onFollowLink(target);
+    };
+  } else if (
+    openReference?.kind === "evidence" &&
+    openReference.evidenceIndex !== null &&
+    onOpenEvidence
+  ) {
+    const index = openReference.evidenceIndex;
+    const trigger = openReference.trigger;
+    fullPage = () => {
+      setOpenReference(null);
+      onOpenEvidence(index, trigger);
+    };
+  }
 
   return (
-    <ReactMarkdown components={components} remarkPlugins={plugins as never}>
-      {children}
-    </ReactMarkdown>
+    <>
+      <ReactMarkdown components={components} remarkPlugins={plugins as never}>
+        {children}
+      </ReactMarkdown>
+      <ReferencePanel
+        open={openReference !== null}
+        title={openReference?.title ?? "引用"}
+        kind={(openReference?.kind ?? "lesson") as ReferenceKind}
+        trigger={openReference?.trigger ?? null}
+        onClose={() => setOpenReference(null)}
+        {...(fullPage ? { onOpenFull: fullPage } : {})}
+      >
+        {openReference ? (
+          <ReferenceBody
+            reference={openReference}
+            evidence={evidence}
+            evidenceBasePath={evidenceBasePath}
+            placeTellsThemApart={placeTellsThemApart}
+          />
+        ) : null}
+      </ReferencePanel>
+    </>
+  );
+}
+
+function ReferenceBody({
+  reference,
+  evidence,
+  evidenceBasePath,
+  placeTellsThemApart,
+}: {
+  readonly reference: OpenReference;
+  readonly evidence: readonly EvidenceView[] | undefined;
+  readonly evidenceBasePath: string | undefined;
+  readonly placeTellsThemApart: boolean;
+}) {
+  if (reference.kind === "lesson") {
+    if (!reference.target) {
+      return <p className="reference-panel__note">这一课还不存在。</p>;
+    }
+    return (
+      <>
+        <p className="reference-panel__meta">
+          {reference.target.courseId}/{reference.target.unitId}/{reference.target.lessonId}
+          {reference.target.targetSectionId ? `#${reference.target.targetSectionId}` : ""}
+        </p>
+        <p className="reference-panel__note">在侧栏打开，课文的阅读位置留在这里。</p>
+      </>
+    );
+  }
+  if (reference.kind === "term") {
+    const entry = reference.entry;
+    if (!entry) {
+      return <p className="reference-panel__note">词库里没有这个词义。</p>;
+    }
+    return (
+      <>
+        <p className="reference-panel__meta">
+          <span lang="en">{entry.headword}</span>
+          <span className="reference-panel__phonetic">{entry.phonetic}</span>
+          <span className="reference-panel__pos">{entry.partOfSpeech}</span>
+        </p>
+        <p className="reference-panel__gloss">{entry.gloss}</p>
+        <p className="reference-panel__usage">{entry.usage}</p>
+      </>
+    );
+  }
+  const cited =
+    reference.evidenceIndex !== null ? (evidence?.[reference.evidenceIndex] ?? null) : null;
+  if (reference.evidenceIndex !== null && evidenceBasePath) {
+    return (
+      <EvidenceInlineSource
+        index={reference.evidenceIndex}
+        basePath={evidenceBasePath}
+        sourcePath={reference.sourcePath}
+        lines={reference.lines}
+        ua={placeTellsThemApart ? (cited?.ua ?? null) : null}
+      />
+    );
+  }
+  return (
+    <>
+      <p className="reference-panel__meta">
+        {reference.sourcePath}:{reference.lines}
+        {cited?.sourceCommit ? ` @${cited.sourceCommit.slice(0, 7)}` : ""}
+      </p>
+      {cited?.note ? <p className="reference-panel__note">{cited.note}</p> : null}
+    </>
   );
 }

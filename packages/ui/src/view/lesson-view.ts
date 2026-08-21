@@ -3,6 +3,7 @@ import type {
   LanguageLayer,
   LessonLinkRange,
   LessonLinkTarget,
+  TermRange,
 } from "@pieai/university-core/domain/lesson-marks.js";
 
 /**
@@ -468,6 +469,7 @@ export interface LessonView {
      */
     readonly pinnedCommit?: { readonly commit: string; readonly date?: string };
     readonly evidenceAnchors?: readonly EvidenceAnchorRange[];
+    readonly termAnchors?: readonly TermRange[];
     readonly progress: LessonProgress | null;
     readonly evidence: readonly EvidenceView[];
     readonly assets?: readonly LessonAssetView[];

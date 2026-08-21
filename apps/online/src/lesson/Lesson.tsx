@@ -19,7 +19,16 @@
  * none of which the previous `marked` call could do.
  */
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  assembleLessonIndex,
+  parseLessonLinks,
+  resolveEvidenceAnchors,
+  resolveLessonLinks,
+  resolveTermLinks,
+  termRangeOf,
+} from "@pieai/university-core";
 import { MarkdownContent } from "@pieai/university-ui";
+import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
 import { ForeignSettingsPanel } from "@pieai/university-ui/language/ForeignSettingsPanel.js";
 import {
   readForeignSettings,
@@ -31,40 +40,69 @@ import {
   writeForeignLanguageMode,
 } from "@pieai/university-ui/language/reading-mode.js";
 
-import type { Lesson as LessonData } from "../content/library";
+import type { Course, Lesson as LessonData } from "../content/library";
 import { stageWord, subscribe, snapshot, wordStages } from "../progress/store";
 import { gradeDeterministically, normalise, type Verdict } from "./grading";
-import { languageLayerFor } from "./language";
+import { languageLayerFor, LEXICON } from "./language";
 
-const ANCHOR = /^\[\[evidence:([^\]]+)\]\]$/gm;
+const LEXICON_BY_ID = new Map(LEXICON.map((entry) => [entry.senseId, entry]));
 
 export function LessonView({
   lesson,
+  course,
+  unitId,
   courseTitle,
   unitTitle,
   position,
   onPass,
   onBack,
+  onFollowLink,
 }: {
   lesson: LessonData;
+  course: Course;
+  unitId: string;
   courseTitle: string;
   unitTitle: string;
   position: string;
   onPass: () => void;
   onBack: () => void;
+  onFollowLink?: (target: LessonLinkTarget) => void;
 }) {
-  // `[[evidence:path:lines]]` is the authoring side's own construct, not
-  // Markdown. Lifting it out before rendering keeps the citations as real rows
-  // instead of a stray line of text in the middle of a paragraph.
-  const { prose, anchors } = useMemo(() => {
-    const found: { path: string; lines: string }[] = [];
-    const text = lesson.content.replace(ANCHOR, (_match, route: string) => {
-      const [path, lines] = route.split(/:(?=[^:]*$)/);
-      found.push({ path: path ?? route, lines: lines ?? "" });
-      return "";
-    });
-    return { prose: text, anchors: found };
-  }, [lesson.content]);
+  const { lessonLinks, evidenceAnchors, termAnchors } = useMemo(() => {
+    const parsed = parseLessonLinks(lesson.content);
+    const index = assembleLessonIndex(
+      course.units.flatMap((unit) =>
+        unit.lessons.map((item) => ({
+          courseId: course.id,
+          unitId: unit.id,
+          lessonId: item.id,
+          title: item.title,
+          content: item.content,
+          sections: [],
+        })),
+      ),
+    );
+    const from = { courseId: course.id, unitId, lessonId: lesson.id };
+    return {
+      lessonLinks: resolveLessonLinks(parsed, index, from).map((item) =>
+        item.kind === "resolved"
+          ? {
+              start: item.link.start,
+              end: item.link.end,
+              label: item.link.label,
+              target: item.target,
+            }
+          : {
+              start: item.link.start,
+              end: item.link.end,
+              label: item.link.label,
+              target: null,
+            },
+      ),
+      evidenceAnchors: resolveEvidenceAnchors(lesson.content, lesson.evidence),
+      termAnchors: resolveTermLinks(parsed, LEXICON_BY_ID).map(termRangeOf),
+    };
+  }, [course, lesson, unitId]);
 
   const [english, setEnglish] = useState(readForeignLanguageMode);
   // The preset is the difference between a reading aid and a study tool: only
@@ -79,8 +117,8 @@ export function LessonView({
   // keep in sync.
   const words = useSyncExternalStore(subscribe, snapshot);
   const language = useMemo(
-    () => (english ? languageLayerFor(prose) : undefined),
-    [english, prose, words],
+    () => (english ? languageLayerFor(lesson.content) : undefined),
+    [english, lesson.content, words],
   );
   const stages = useMemo(() => wordStages(), [words]);
 
@@ -160,24 +198,23 @@ export function LessonView({
           foreignSettings={foreignSettings}
           vocabularyStages={stages}
           onStageWord={stageWord}
+          lessonLinks={lessonLinks}
+          evidenceAnchors={evidenceAnchors}
+          termAnchors={termAnchors}
+          evidence={lesson.evidence.map((item) => ({
+            kind: item.kind,
+            sourcePath: item.sourcePath,
+            lineStart: item.lineStart,
+            lineEnd: item.lineEnd,
+            sourceCommit: item.sourceCommit,
+            nodeIds: [],
+            note: item.note ?? null,
+          }))}
+          {...(onFollowLink ? { onFollowLink } : {})}
         >
-          {prose}
+          {lesson.content}
         </MarkdownContent>
       </div>
-
-      {anchors.length > 0 ? (
-        <section className="evidence-list">
-          {anchors.map((anchor, index) => (
-            <div className="evidence" key={`${anchor.path}:${anchor.lines}:${index}`}>
-              <b>{anchor.path}</b>
-              <span>:{anchor.lines}</span>
-              <span className="go">
-                @{lesson.evidence[index]?.sourceCommit.slice(0, 7) ?? "—"} ↗
-              </span>
-            </div>
-          ))}
-        </section>
-      ) : null}
 
       {exercise ? (
         <section className="quiz">

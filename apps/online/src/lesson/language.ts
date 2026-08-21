@@ -22,7 +22,7 @@ import type { LanguageLayer } from "@pieai/university-core/domain/lesson-marks.j
 import lexiconFile from "../content/lexicon.json";
 import { vocabularyStates } from "../progress/store";
 
-const LEXICON = lexiconFile.entries as readonly LexiconEntry[];
+export const LEXICON = lexiconFile.entries as readonly LexiconEntry[];
 
 /**
  * Builds the layer for one lesson's prose.

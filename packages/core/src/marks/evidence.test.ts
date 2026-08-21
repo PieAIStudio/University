@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveEvidenceAnchors, type EvidenceCitation } from "./evidence-anchors.js";
+import { resolveEvidenceAnchors, type EvidenceCitation } from "./evidence.js";
 
 const CITED: readonly EvidenceCitation[] = [
   { sourcePath: "index.html", lineStart: 29, lineEnd: 31 },

@@ -3477,32 +3477,8 @@ summary:focus-visible,
   opacity: 0.6;
 }
 
-/* --- Cross-lesson links ----------------------------------------------- */
-
-/* Inline in prose, so it has to read as part of the sentence rather than as a
-   control bolted into it. */
-.lesson-link {
-  padding: 0;
-  border: 0;
-  border-bottom: 1px solid rgb(240 168 104 / 45%);
-  background: none;
-  color: #f0a868;
-  cursor: pointer;
-  font: inherit;
-}
-
-.lesson-link:hover,
-.lesson-link:focus-visible {
-  border-bottom-color: #f0a868;
-}
-
-/* A link whose target does not exist. Loud on purpose: the only person who can
-   fix it is the one reading a page that would otherwise look fine. */
-.lesson-link--broken {
-  border-bottom: 1px dashed #ffb4a4;
-  color: #ffb4a4;
-  cursor: not-allowed;
-}
+/* Cross-lesson and evidence trigger styles moved to
+   @pieai/university-ui/reference/reference-panel.css, imported from main.tsx. */
 
 .lesson-return {
   display: block;
@@ -3564,36 +3540,6 @@ summary:focus-visible,
    the Markdown readable on its own. */
 .markdown-body > h1:first-child {
   display: none;
-}
-
-/* --- Inline evidence anchors ------------------------------------------ */
-
-/* Sits beside the claim it supports. The sidebar answers "what is this lesson
-   based on"; this answers "which line is *this sentence* about". */
-.evidence-anchor {
-  padding: 1px 7px;
-  border: 1px solid var(--campus-rule);
-  border-radius: 6px;
-  background: rgb(0 0 0 / 22%);
-  color: var(--game-ui-text-muted, #cbb49c);
-  cursor: pointer;
-  font-family: var(--game-ui-font-mono, ui-monospace, monospace);
-  font-size: 0.78em;
-  white-space: nowrap;
-}
-
-.evidence-anchor:hover,
-.evidence-anchor:focus-visible {
-  border-color: #f0a868;
-  color: #f0a868;
-}
-
-/* An anchor naming lines the lesson never cited. Loud, because the evidence
-   rail is the whole reason to trust a generated lesson. */
-.evidence-anchor--broken {
-  border-color: #ffb4a4;
-  color: #ffb4a4;
-  cursor: not-allowed;
 }
 
 @media (prefers-reduced-motion: reduce) {
