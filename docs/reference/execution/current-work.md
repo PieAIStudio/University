@@ -330,6 +330,55 @@ Two findings from that round that are still worth keeping:
   in the container, not the recording. Ogg Vorbis or Opus on the web — or, as
   it turned out, no container at all.
 
+## Evidence In The Delivery Shell Is A Disclosure Decision, Not A Gap
+
+Worth writing down because it looked like unfinished wiring for a long time
+and is not. The shared reader already supports both modes: when it is given an
+`evidenceBasePath` it fetches the cited lines and renders them highlighted, and
+when it is not it falls back to path, range, commit and the author's note. The
+authoring shell passes that base path and the delivery shell does not.
+
+That is not an oversight. The authoring shell has a clone of the cited
+repository on disk; a static build served to customers does not. Giving it one
+means shipping the source.
+
+Measured, so the decision can be made on numbers rather than instinct:
+
+| Study | Anchors | Distinct files | Lines cited |
+| --- | --- | --- | --- |
+| turing-pact | 1,072 | 225 | ~11,581 |
+| university-local | 208 | 22 | ~2,490 |
+| supaluv | 174 | 49 | ~2,477 |
+| buzz | 143 | 18 | ~3,019 |
+| **Total** | **1,597** | **314** | **~19,567** |
+
+Median citation is 9 lines; the longest is 104. By file type the bulk is real
+source rather than documentation: 952 `.ts`, 136 `.mjs`, 115 `.tsx`, 87 `.rs`,
+against 118 `.md`.
+
+So "turn on snippets" means publishing roughly 19,600 lines across 314 files of
+four private repositories to anyone who buys a course. That is a decision for
+the person who owns those repositories, and it must not be made by whoever
+happens to be editing the exporter.
+
+Three options, none of them taken yet:
+
+1. **Nothing.** Coordinates only, which is what ships today.
+2. **All of it**, behind an export flag. Simple, and the full disclosure above.
+3. **An author-chosen subset.** Bake snippets only for the anchors where seeing
+   the code *is* the lesson, default closed, opt-in per anchor. Keeps the
+   product's actual claim — verifiable evidence — without publishing a third of
+   a codebase to make it.
+
+Option 3 is the recommendation. It is also the only one of the three that
+cannot leak by accident, because the default is silence.
+
+What did ship: the fallback branch now carries the copy-locator button that the
+authoring rail already had. A reader with repository access can paste
+`README.md:1` into their editor and land on the line; a reader without it still
+sees exactly what was cited. That is the difference between a citation and a
+footnote, and it costs nothing.
+
 ## Open Decisions
 
 Tracked as decision cards in the user journey, not resolved here.

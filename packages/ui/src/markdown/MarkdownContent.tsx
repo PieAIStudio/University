@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import type { LanguageLayer, TermRange } from "@pieai/university-core/domain/lesson-marks.js";
 import type { LexiconEntry } from "@pieai/university-core/domain/schemas.js";
 import { EvidenceInlineSource } from "../evidence/EvidenceInlineSource.js";
+import { CopyLocatorButton } from "../evidence/CopyLocatorButton.js";
 import { ReferencePanel, type ReferenceKind } from "../reference/ReferencePanel.js";
 import { lessonSectionRole } from "./lesson-sections.js";
 import { MermaidDiagram } from "./MermaidDiagram.js";
@@ -786,6 +787,17 @@ function ReferenceBody({
       />
     );
   }
+  // No snippet source. That is the delivery shell, and it is not an oversight:
+  // the authoring shell has a clone of the cited repository on disk and can
+  // serve the lines, and a static build served to customers does not — showing
+  // them would mean shipping the source itself, which is a disclosure decision
+  // and not a rendering one.
+  //
+  // What a reader can still be given is the locator. Someone with access to the
+  // repository can paste it straight into their editor's Quick Open and land on
+  // the line; someone without access at least sees precisely what was cited
+  // rather than a claim that something was. That is the difference between a
+  // citation and a footnote, and it costs nothing to keep.
   return (
     <>
       <p className="reference-panel__meta">
@@ -793,6 +805,7 @@ function ReferenceBody({
         {cited?.sourceCommit ? ` @${cited.sourceCommit.slice(0, 7)}` : ""}
       </p>
       {cited?.note ? <p className="reference-panel__note">{cited.note}</p> : null}
+      {cited ? <CopyLocatorButton reference={cited} /> : null}
     </>
   );
 }
