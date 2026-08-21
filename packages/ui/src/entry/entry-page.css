@@ -638,3 +638,10 @@ span.entry-section__sense {
 .region-quiz__region:disabled {
   cursor: default;
 }
+
+.demo__divider {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--game-ui-border, #253048);
+  margin: 4px 0;
+}

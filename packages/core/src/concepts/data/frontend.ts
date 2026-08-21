@@ -1567,6 +1567,61 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "三个按钮并排：深色的「提交报名」最显眼，描边的「放弃修改」次之，红色的「删除账号」是危险动作；切到第二个状态时，提交按钮变灰、按下去没有任何反馈。",
+        caption: "同一排里只让一个按钮最显眼。三个一样重，等于没有轻重。",
+        states: [
+          {
+            id: "normal",
+            label: "能点的时候",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "提交报名",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "放弃修改",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "删除账号",
+                    variant: "danger",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "off",
+            label: "不能点的时候",
+            note: "灰掉的按钮按下去没有反馈——这就是它在说「现在轮不到你点」。但它没说为什么，所以旁边那句话不能省。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "button",
+                    label: "提交报名",
+                    variant: "primary",
+                    disabled: true,
+                  },
+                  {
+                    kind: "text",
+                    text: "手机号还没填完，填完就能提交。",
+                    muted: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -1790,6 +1845,23 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "一个框外写着「姓名」的单行输入框，框里浅色提示「和身份证一致的姓名」，点进去可以打一行字。",
+        caption: "一次只打一行。姓名、手机号用这种；要写一段话，就换成能换行的大框。",
+        states: [
+          {
+            id: "idle",
+            label: "平常",
+            nodes: [
+              {
+                kind: "input",
+                label: "姓名",
+                placeholder: "和身份证一致的姓名",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -2006,6 +2078,92 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "c",
       },
+      demo: {
+        alt: "人数这一格带「减少」和「增加」：最少 1 人时减少点不了，最多 6 人时增加点不了，中间是 2 人，旁边写着单位。",
+        caption: "这是在填个数。手机号、身份证号看起来也是数字，但不能拿来加减。",
+        states: [
+          {
+            id: "idle",
+            label: "两人",
+            note: "加减每次变 1。单位写在数字旁边，避免猜这是人还是件。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "减少",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "text",
+                    text: "2 人",
+                  },
+                  {
+                    kind: "button",
+                    label: "增加",
+                    variant: "secondary",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "min",
+            label: "最少",
+            note: "到 1 再减，数字不该再变小。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "减少",
+                    variant: "secondary",
+                    disabled: true,
+                  },
+                  {
+                    kind: "text",
+                    text: "1 人",
+                  },
+                  {
+                    kind: "button",
+                    label: "增加",
+                    variant: "secondary",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "max",
+            label: "满额",
+            note: "体验课每单最多 6 人。到头了就停，不要让人填出 99。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "减少",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "text",
+                    text: "6 人",
+                  },
+                  {
+                    kind: "button",
+                    label: "增加",
+                    variant: "secondary",
+                    disabled: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -2120,6 +2278,90 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "两个摊开的场次选项。还没选时两个都不亮；点了下午场，上午场就灭掉，一次只能亮一个。",
+        caption: "选项很少、又必须看清每一项时，摊开比藏进下拉更清楚。",
+        states: [
+          {
+            id: "none",
+            label: "还没选",
+            note: "必须选一个才能交时，默认可以都不选，不要偷偷预选一场。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "text",
+                    text: "场次",
+                  },
+                  {
+                    kind: "button",
+                    label: "○ 上午场 9:00-12:00",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "○ 下午场 14:00-17:00",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "am",
+            label: "上午场",
+            note: "点了这个，另一个就取消。一组里只能留一个。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "text",
+                    text: "场次",
+                  },
+                  {
+                    kind: "button",
+                    label: "● 上午场 9:00-12:00",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "○ 下午场 14:00-17:00",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "pm",
+            label: "下午场",
+            note: "现在亮的是下午场。上午场灭了，不是两个一起亮。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "text",
+                    text: "场次",
+                  },
+                  {
+                    kind: "button",
+                    label: "○ 上午场 9:00-12:00",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "● 下午场 14:00-17:00",
+                    variant: "primary",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -2229,6 +2471,90 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "两个可以同时勾上的加项：租围裙和加购泥料。可以一个都不亮，可以只亮一个，也可以两个一起亮。",
+        caption: "能同时成立的多项用这种。上午场和下午场那种只能留一个的，不要做成这样。",
+        states: [
+          {
+            id: "none",
+            label: "都不勾",
+            note: "可以一个都不勾。加项不是必填。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "text",
+                    text: "可以另加（多选）",
+                  },
+                  {
+                    kind: "button",
+                    label: "☐ 租围裙",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "☐ 加购泥料",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "one",
+            label: "勾一项",
+            note: "只勾围裙，泥料还是没勾。两项互不影响。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "text",
+                    text: "可以另加（多选）",
+                  },
+                  {
+                    kind: "button",
+                    label: "☑ 租围裙",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "☐ 加购泥料",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "both",
+            label: "都勾了",
+            note: "两个都能同时勾上。这就是和单选不一样的地方。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "text",
+                    text: "可以另加（多选）",
+                  },
+                  {
+                    kind: "button",
+                    label: "☑ 租围裙",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "☑ 加购泥料",
+                    variant: "primary",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -2337,6 +2663,23 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "c",
       },
+      demo: {
+        alt: "一个写着「活动开始前发短信」的开关，拨一下就能开或关，不用再点保存。",
+        caption: "拨完就该已经改了。报名须知的「我同意」不要做成开关，那一项要跟提交绑在一起。",
+        states: [
+          {
+            id: "idle",
+            label: "平常",
+            nodes: [
+              {
+                kind: "toggle",
+                label: "活动开始前发短信",
+                checked: true,
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -2444,6 +2787,25 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "一条音量滑块，范围从 0 到 100，当前在 40，可以用手指拖，旁边能看见数字。",
+        caption: "适合大概调、马上听效果的量。人数、身份证号不要用滑块。",
+        states: [
+          {
+            id: "idle",
+            label: "平常",
+            nodes: [
+              {
+                kind: "slider",
+                label: "音量",
+                value: 40,
+                min: 0,
+                max: 100,
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -2554,6 +2916,150 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "五颗星给一节课打分。选 1 分只亮第一颗，选 3 分前三颗一起亮，选 5 分全亮。两端写着没听懂和完全清楚。",
+        caption: "这是好坏的程度，不是收藏。收藏只要一颗星亮或灭。",
+        states: [
+          {
+            id: "one",
+            label: "1分",
+            note: "点第一颗只亮第一颗。1 分的意思是没听懂。",
+            nodes: [
+              {
+                kind: "text",
+                text: "这节课讲清楚了吗",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "★",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "☆",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "☆",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "☆",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "☆",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "1 没听懂 · 5 完全清楚",
+                muted: true,
+              },
+            ],
+          },
+          {
+            id: "three",
+            label: "3分",
+            note: "点第三颗，前三颗一起亮，不是只亮中间那颗。",
+            nodes: [
+              {
+                kind: "text",
+                text: "这节课讲清楚了吗",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "★",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "★",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "★",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "☆",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "☆",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "1 没听懂 · 5 完全清楚",
+                muted: true,
+              },
+            ],
+          },
+          {
+            id: "five",
+            label: "5分",
+            note: "5 分的意思是完全清楚。交之前应允许改。",
+            nodes: [
+              {
+                kind: "text",
+                text: "这节课讲清楚了吗",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "★",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "★",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "★",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "★",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "★",
+                    variant: "primary",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "1 没听懂 · 5 完全清楚",
+                muted: true,
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -2668,6 +3174,75 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "c",
       },
+      demo: {
+        alt: "省份选择器的三种样子：收着时写「请选择省份」，点开后列出浙江、山东、广东，选完框里变成浙江，框外的「省份」还在。",
+        caption: "选项很多才收进下拉。只有两三项、又要互相比较的，摊开更清楚。",
+        states: [
+          {
+            id: "closed",
+            label: "收着",
+            note: "没选时这一行要写清请选什么，不要空白得像坏了。",
+            nodes: [
+              {
+                kind: "text",
+                text: "省份",
+              },
+              {
+                kind: "button",
+                label: "请选择省份",
+                variant: "secondary",
+              },
+            ],
+          },
+          {
+            id: "open",
+            label: "点开",
+            note: "点开才看见名单。人必须从里面挑，不能自己发明一个省。",
+            nodes: [
+              {
+                kind: "text",
+                text: "省份",
+              },
+              {
+                kind: "button",
+                label: "请选择省份",
+                variant: "secondary",
+              },
+              {
+                kind: "button",
+                label: "浙江",
+                variant: "ghost",
+              },
+              {
+                kind: "button",
+                label: "山东",
+                variant: "ghost",
+              },
+              {
+                kind: "button",
+                label: "广东",
+                variant: "ghost",
+              },
+            ],
+          },
+          {
+            id: "picked",
+            label: "选好了",
+            note: "选完框里变成省名。框外的「省份」还在，回头才认得出这一格是什么。",
+            nodes: [
+              {
+                kind: "text",
+                text: "省份",
+              },
+              {
+                kind: "button",
+                label: "浙江",
+                variant: "secondary",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -2776,6 +3351,58 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "毕业院校格子。空着时可以打字；打了「清华」后下面弹出清华大学、清华附中；点选后框里变成正式全称。",
+        caption: "交出去的是名单里的正式名称，不要留下人随口打的简称。",
+        states: [
+          {
+            id: "empty",
+            label: "空着",
+            note: "人先打几个字。没有这一步，就只是普通下拉。",
+            nodes: [
+              {
+                kind: "input",
+                label: "毕业院校",
+                placeholder: "打两个字开始找",
+              },
+            ],
+          },
+          {
+            id: "suggest",
+            label: "出名单",
+            note: "打「清华」后名单缩成几条全称。没有匹配时要说名单里没有，不要默默收下简称。",
+            nodes: [
+              {
+                kind: "input",
+                label: "毕业院校",
+                value: "清华",
+              },
+              {
+                kind: "button",
+                label: "清华大学",
+                variant: "ghost",
+              },
+              {
+                kind: "button",
+                label: "清华附中",
+                variant: "ghost",
+              },
+            ],
+          },
+          {
+            id: "picked",
+            label: "选中了",
+            note: "框里是正式全称。表里存这个，后面才统计得动。",
+            nodes: [
+              {
+                kind: "input",
+                label: "毕业院校",
+                value: "清华大学",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -2882,6 +3509,80 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "一层层选地区：先出现请选择省份；选了浙江，市只出现杭州和宁波；再选杭州，才出现西湖区和上城区。",
+        caption: "下一层跟着上一层变。三个互不相干的下拉会选出浙江加青岛。",
+        states: [
+          {
+            id: "prov",
+            label: "先选省",
+            note: "没选省之前，市那一层不要给出全国所有市。",
+            nodes: [
+              {
+                kind: "text",
+                text: "收货地区",
+              },
+              {
+                kind: "button",
+                label: "请选择省份",
+                variant: "secondary",
+              },
+            ],
+          },
+          {
+            id: "city",
+            label: "再选市",
+            note: "选了浙江，市名单里不会出现青岛。换省则市和区要清空重选。",
+            nodes: [
+              {
+                kind: "text",
+                text: "浙江",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "杭州",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "宁波",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "dist",
+            label: "再到区",
+            note: "交出去的是整条路径：浙江 / 杭州 / 西湖区。不要只交「西湖区」。",
+            nodes: [
+              {
+                kind: "text",
+                text: "浙江 / 杭州",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "西湖区",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "上城区",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -3100,6 +3801,130 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "2026年8月的一排日期。18 到 20 号灰掉点不了；点了 22 号入住之后，再点 24 号当离店。",
+        caption: "从日历上点，不要自己敲 2026/08/21。离店不能早于入住。",
+        states: [
+          {
+            id: "checkin",
+            label: "选入住",
+            note: "今天之前的日子点不了。当前选中 8 月 22 日入住。",
+            nodes: [
+              {
+                kind: "text",
+                text: "2026年8月",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "18",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "19",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "20",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "21",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "22",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "23",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "24",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "入住 8月22日",
+                muted: true,
+              },
+            ],
+          },
+          {
+            id: "checkout",
+            label: "选离店",
+            note: "离店必须晚于入住。22 号是入住，24 号是离店。",
+            nodes: [
+              {
+                kind: "text",
+                text: "2026年8月",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "18",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "19",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "20",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "21",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "22",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "23",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "24",
+                    variant: "primary",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "入住 22日 · 离店 24日",
+                muted: true,
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -3209,6 +4034,93 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "到店时间从半点列表里挑：14:00、14:30、15:00、15:30，当前选中 14:30。打烊后的 18:00 起全部灰掉点不了。",
+        caption: "不要让人自己打「下午两点半」。也不要精确到秒。",
+        states: [
+          {
+            id: "open",
+            label: "营业中",
+            note: "只给出整点和半点。人不会选出 14:07，也不用猜上午下午。",
+            nodes: [
+              {
+                kind: "text",
+                text: "到店时间",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "14:00",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "14:30",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "15:00",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "15:30",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "closed",
+            label: "已打烊",
+            note: "教室 18 点关门。范围外的时刻直接点不了，并写清营业时间。",
+            nodes: [
+              {
+                kind: "text",
+                text: "到店时间",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "18:00",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "18:30",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "19:00",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "19:30",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "营业到 18:00",
+                muted: true,
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -3316,6 +4228,74 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "c",
+      },
+      demo: {
+        alt: "证件照上传的三种样子：一颗写着格式限制的选文件按钮、一条传到 45% 的进度、传完后的预览和「更换」。",
+        caption: "点了要让人看见还在传。成功后要能认出传上去的是哪一张。",
+        states: [
+          {
+            id: "idle",
+            label: "未选择",
+            note: "入口写清要什么。只写「上传」两字，人会把视频也塞进来。",
+            nodes: [
+              {
+                kind: "button",
+                label: "上传证件照",
+                variant: "primary",
+              },
+              {
+                kind: "text",
+                text: "jpg 或 png，不超过 2MB",
+                muted: true,
+              },
+            ],
+          },
+          {
+            id: "busy",
+            label: "上传中",
+            note: "上传中按钮暂时不能点，避免连点传两份。",
+            nodes: [
+              {
+                kind: "progress",
+                label: "上传中",
+                value: 45,
+                max: 100,
+              },
+              {
+                kind: "button",
+                label: "正在上传",
+                variant: "primary",
+                disabled: true,
+              },
+            ],
+          },
+          {
+            id: "done",
+            label: "已完成",
+            note: "图片给一小张预览，再给文件名。没有预览，人不知道传上去的是不是那一张。",
+            nodes: [
+              {
+                kind: "block",
+                label: "证件照预览",
+                height: "short",
+              },
+              {
+                kind: "badge",
+                label: "已上传",
+                tone: "success",
+              },
+              {
+                kind: "text",
+                text: "一寸照.jpg",
+              },
+              {
+                kind: "button",
+                label: "更换",
+                variant: "secondary",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -3425,6 +4405,100 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "一份报名表：姓名、手机号两格，加上「提交报名」。填错时手机号那格变成出错样子并写出原因；提交中按钮灰掉点不了。",
+        caption: "表单是一组格子加一次交卷。没有提交，填了也不算数。",
+        states: [
+          {
+            id: "idle",
+            label: "待填写",
+            note: "每格框外有名字。交卷用按钮，不要指望人在最后一格按回车。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "input",
+                    label: "姓名",
+                    placeholder: "和身份证一致",
+                  },
+                  {
+                    kind: "input",
+                    label: "手机号",
+                    placeholder: "11 位手机号",
+                  },
+                  {
+                    kind: "button",
+                    label: "提交报名",
+                    variant: "primary",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "invalid",
+            label: "填错了",
+            note: "错了写在出问题的那一格旁边，不要弹一个挡住整页的窗。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "input",
+                    label: "姓名",
+                    value: "小林",
+                  },
+                  {
+                    kind: "input",
+                    label: "手机号",
+                    value: "123",
+                    invalid: true,
+                  },
+                  {
+                    kind: "text",
+                    text: "手机号少一位",
+                    muted: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "提交报名",
+                    variant: "primary",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "busy",
+            label: "提交中",
+            note: "提交中按钮暂时不能点，避免连点出两单。成功失败等结果回来再报。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "input",
+                    label: "姓名",
+                    value: "小林",
+                  },
+                  {
+                    kind: "input",
+                    label: "手机号",
+                    value: "13800138000",
+                  },
+                  {
+                    kind: "button",
+                    label: "提交中",
+                    variant: "primary",
+                    disabled: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -3642,6 +4716,35 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "同一格已经填了「小林」：一次框外还写着「姓名」，一次框外什么都没有，只剩格子里的字。",
+        caption: "名字要写在框外，一直留着。框里的浅字只是例子，打完就会消失。",
+        states: [
+          {
+            id: "labeled",
+            label: "有标签",
+            note: "框外的「姓名」打完字还在。点这三个字，光标会进框。",
+            nodes: [
+              {
+                kind: "input",
+                label: "姓名",
+                value: "小林",
+              },
+            ],
+          },
+          {
+            id: "bare",
+            label: "没标签",
+            note: "只靠框里浅字当名字。字一打，这一格叫什么就看不见了。",
+            nodes: [
+              {
+                kind: "input",
+                value: "小林",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -3750,6 +4853,36 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "手机号输入框空着时，框里有一行浅色「11 位手机号」；一开始打字，这行浅字就消失，框外的「手机号」还在。",
+        caption: "浅色提示只在空着时出现，给人格式或例子。不要拿它当这一格的名字。",
+        states: [
+          {
+            id: "empty",
+            label: "空着",
+            note: "框里的浅字在给格式。框外的「手机号」才是这一格的名字。",
+            nodes: [
+              {
+                kind: "input",
+                label: "手机号",
+                placeholder: "11 位手机号",
+              },
+            ],
+          },
+          {
+            id: "typed",
+            label: "打了字",
+            note: "一开始打字，浅色提示就没了。如果名字只写在框里，现在就什么标记都没有。",
+            nodes: [
+              {
+                kind: "input",
+                label: "手机号",
+                value: "13800138000",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -8773,6 +9906,44 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      regions: {
+        question: "点一下打开这一页、不用往下滚就能看见的那块大介绍。",
+        regions: [
+          {
+            id: "header",
+            label: "页头",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "hero",
+            label: "首屏",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "flow",
+            label: "上课流程",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "works",
+            label: "作品照片",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "footer",
+            label: "页脚",
+            span: "full",
+            height: "short",
+          },
+        ],
+        correctRegionId: "hero",
+        reveal:
+          "紧挨着顶上细条下面、最高的那块就是首屏。顶上细条是页头，下面两块半栏要往下滚才看见。",
+      },
     },
   },
   {
@@ -8984,6 +10155,44 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      regions: {
+        question: "点一下把学员自己说过的话原样放出来的那一块，不是上面那排标志。",
+        regions: [
+          {
+            id: "header",
+            label: "页头",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "hero",
+            label: "首屏",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "proof",
+            label: "客户标志",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "voice",
+            label: "用户原声",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "footer",
+            label: "页脚",
+            span: "full",
+            height: "short",
+          },
+        ],
+        correctRegionId: "voice",
+        reveal:
+          "大块里放的是原话。上面那条瘦的是标志墙，也算社会证明，但不是用户原声。原话不要改数字，也别补假头像。",
+      },
     },
   },
   {
@@ -9086,6 +10295,43 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      regions: {
+        question: "点一下每一页最顶端那一整条（标志和栏目都在里面）。",
+        regions: [
+          {
+            id: "header",
+            label: "页头",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "hero",
+            label: "首屏介绍",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "bread",
+            label: "面包课",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "cake",
+            label: "蛋糕课",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "footer",
+            label: "页脚",
+            span: "full",
+            height: "short",
+          },
+        ],
+        correctRegionId: "header",
+        reveal: "最上面那条细的就是页头，每页都在。它下面那块大的才是首屏，只在介绍页出现。",
       },
     },
   },
@@ -9190,6 +10436,37 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      regions: {
+        question: "点一下左上角用来认出这是谁的网站的那一块。",
+        regions: [
+          {
+            id: "logo",
+            label: "标志",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "nav",
+            label: "栏目",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "hero",
+            label: "首屏",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "footer",
+            label: "页脚",
+            span: "full",
+            height: "short",
+          },
+        ],
+        correctRegionId: "logo",
+        reveal: "左上角那一块就是标志，点了应回到首页。右边那排才是栏目。两块合在一起才叫页头。",
       },
     },
   },
@@ -9296,6 +10573,38 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      regions: {
+        question: "点一下顶上那排出门的栏目，不是左上角的标志。",
+        regions: [
+          {
+            id: "logo",
+            label: "标志",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "navbar",
+            label: "顶部导航栏",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "hero",
+            label: "办事介绍",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "footer",
+            label: "页脚",
+            span: "full",
+            height: "short",
+          },
+        ],
+        correctRegionId: "navbar",
+        reveal:
+          "右边那排「办事指南 / 通知 / 关于」才是顶部导航栏。左上角是标志；整条合起来叫页头。",
+      },
     },
   },
   {
@@ -9401,6 +10710,43 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      regions: {
+        question: "点一下滚到最底下、放版权和联系电话的那一块。",
+        regions: [
+          {
+            id: "header",
+            label: "页头",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "hero",
+            label: "首屏",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "trial",
+            label: "体验课价格",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "month",
+            label: "包月价格",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "footer",
+            label: "页脚",
+            span: "full",
+            height: "short",
+          },
+        ],
+        correctRegionId: "footer",
+        reveal: "最底下那条就是页脚。版权、退费规则、电话放这里；唯一的报名按钮不要只藏在这里。",
+      },
     },
   },
   {
@@ -9505,6 +10851,50 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      regions: {
+        question: "点一下回答「课能退吗」「手机能不能看回放」的那一块。",
+        regions: [
+          {
+            id: "header",
+            label: "页头",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "hero",
+            label: "报名介绍",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "group",
+            label: "小班价格",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "one",
+            label: "一对一价格",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "faq",
+            label: "常见问题",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "footer",
+            label: "页脚",
+            span: "full",
+            height: "short",
+          },
+        ],
+        correctRegionId: "faq",
+        reveal:
+          "价格卡片下面那块就是常见问题。答案第一句先说能还是不能；「你们为什么专业」那种自夸句不要写进来。",
       },
     },
   },
@@ -9615,6 +11005,50 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      regions: {
+        question: "点一下把多少钱、包含什么摊开、让人比较完再开通的那一块。",
+        regions: [
+          {
+            id: "header",
+            label: "页头",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "hero",
+            label: "产品介绍",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "proof",
+            label: "使用人数",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "pricing",
+            label: "定价区",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "faq",
+            label: "常见问题",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "footer",
+            label: "页脚",
+            span: "full",
+            height: "short",
+          },
+        ],
+        correctRegionId: "pricing",
+        reveal:
+          "介绍下面、问答上面那块大的就是定价区。第二块高的不是又一个首屏，是让人看完包含什么再付钱的地方。",
+      },
     },
   },
   {
@@ -9717,6 +11151,50 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "c",
+      },
+      regions: {
+        question: "点一下首屏下面那条客户标志或使用人数，用来证明不只有你自己在说好。",
+        regions: [
+          {
+            id: "header",
+            label: "页头",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "hero",
+            label: "首屏",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "proof",
+            label: "社会证明",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "dishes",
+            label: "本周菜式",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "window",
+            label: "预约窗口",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "footer",
+            label: "页脚",
+            span: "full",
+            height: "short",
+          },
+        ],
+        correctRegionId: "proof",
+        reveal:
+          "首屏正下面那条瘦的就是社会证明，常放一排允许公开的标志，或一个能核对的数字。假标志和凑出来的「十万用户」比空着更伤。",
       },
     },
   },
@@ -9822,6 +11300,32 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      regions: {
+        question: "这种排法的栏目都在上面一条里。点一下那条导航。",
+        regions: [
+          {
+            id: "topnav",
+            label: "顶部导航",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "content",
+            label: "正文",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "footer",
+            label: "页脚",
+            span: "full",
+            height: "short",
+          },
+        ],
+        correctRegionId: "topnav",
+        reveal:
+          "上面一条、下面一大块内容，就是顶部导航布局。入口只有几个、内容是主角时用它，不必常驻一列侧栏。",
       },
     },
   },
@@ -10038,6 +11542,62 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      regions: {
+        question: "介绍、价钱、问答、报名都接在这一页。点一下价钱那一块。",
+        regions: [
+          {
+            id: "nav",
+            label: "顶上栏目",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "hero",
+            label: "首屏介绍",
+            span: "full",
+            height: "tall",
+          },
+          {
+            id: "flow",
+            label: "上课流程",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "works",
+            label: "学员作品",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "pricing",
+            label: "价格",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "faq",
+            label: "常见问题",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "signup",
+            label: "报名",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "footer",
+            label: "页脚",
+            span: "full",
+            height: "short",
+          },
+        ],
+        correctRegionId: "pricing",
+        reveal:
+          "价钱没有另开一页，就接在介绍下面。这就是单页滚动：往下滚能看完；顶上点「价格」也是滚到这一块，不换地址。",
+      },
     },
   },
   {
@@ -10246,6 +11806,44 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      regions: {
+        question: "这些公开课是结构相同的卡片、按格子铺开的。点一下左上角那一张。",
+        regions: [
+          {
+            id: "nav",
+            label: "页头",
+            span: "full",
+            height: "short",
+          },
+          {
+            id: "card-1",
+            label: "周六陶艺课",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "card-2",
+            label: "夜间瑜伽课",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "card-3",
+            label: "周末烘焙课",
+            span: "half",
+            height: "short",
+          },
+          {
+            id: "card-4",
+            label: "亲子绘画课",
+            span: "half",
+            height: "short",
+          },
+        ],
+        correctRegionId: "card-1",
+        reveal:
+          "每张结构相同、高度对齐，这就是卡片网格。横着比时长、竖着找课名都方便。照片高低不齐的那种叫瀑布流，不要拿来排课程。",
       },
     },
   },
@@ -10556,6 +12154,26 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      regions: {
+        question: "点一下左右对半这一屏里、放字和按钮的左半边。",
+        regions: [
+          {
+            id: "copy",
+            label: "文字和按钮",
+            span: "half",
+            height: "tall",
+          },
+          {
+            id: "photo",
+            label: "柜台实拍",
+            span: "half",
+            height: "tall",
+          },
+        ],
+        correctRegionId: "copy",
+        reveal:
+          "左右各一半、两边都是内容，就是分屏。左边说话，右边给图。若左边只是窄菜单，那叫左侧栏，不是分屏。",
       },
     },
   },
@@ -12272,6 +13890,75 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "两组账单文字中间没有线和加上一根淡线。加上之后能看出是两段，线本身不比数字抢。",
+        caption: "分组先靠标题和空。线只在空仍不够时才加，而且要淡。不要每个字段下面都画一根。",
+        states: [
+          {
+            id: "together",
+            label: "糊在一起",
+            note: "两段贴着，分不清哪段是哪段。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "text",
+                    text: "本月应缴",
+                  },
+                  {
+                    kind: "text",
+                    text: "128 元 · 本月物业费",
+                    muted: true,
+                  },
+                  {
+                    kind: "text",
+                    text: "往年欠费",
+                  },
+                  {
+                    kind: "text",
+                    text: "360 元 · 尚未结清",
+                    muted: true,
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "split",
+            label: "加了淡线",
+            note: "中间一根淡线，上下是两件不同的事。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "text",
+                    text: "本月应缴",
+                  },
+                  {
+                    kind: "text",
+                    text: "128 元 · 本月物业费",
+                    muted: true,
+                  },
+                  {
+                    kind: "divider",
+                  },
+                  {
+                    kind: "text",
+                    text: "往年欠费",
+                  },
+                  {
+                    kind: "text",
+                    text: "360 元 · 尚未结清",
+                    muted: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -13224,6 +14911,43 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "同一条停水通知，标题清楚，但「明日 9 点停水」写成浅色时要费眼，写成够深的颜色时一眼能读。",
+        caption: "说明浅到一定程度，不是柔，是没了。时间这种关键句不能当装饰。",
+        states: [
+          {
+            id: "low",
+            label: "太浅",
+            note: "标题还在，时间却像没写。许多人不会凑近看。",
+            nodes: [
+              {
+                kind: "text",
+                text: "停水通知",
+              },
+              {
+                kind: "text",
+                text: "明日 9 点到 15 点停水。",
+                muted: true,
+              },
+            ],
+          },
+          {
+            id: "ok",
+            label: "够深",
+            note: "时间和标题都和底差得开。标题仍可以更重，但关键句必须能读。",
+            nodes: [
+              {
+                kind: "text",
+                text: "停水通知",
+              },
+              {
+                kind: "text",
+                text: "明日 9 点到 15 点停水。",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -13328,6 +15052,83 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "同一组陶艺课报名：一种是课名清楚、只有一个实心按钮；一种是字一样重、四个实心按钮排成一行一起抢。",
+        caption: "层级是拉开差距。四个一样大的按钮，等于没有主次。",
+        states: [
+          {
+            id: "clear",
+            label: "主次清楚",
+            note: "三秒内能抓住是什么课、该点哪。",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "text",
+                    text: "本周六陶艺课",
+                  },
+                  {
+                    kind: "text",
+                    text: "社区活动室 · 14:00",
+                    muted: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "提交报名",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "查看须知",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "flat",
+            label: "一样抢",
+            note: "每个都在喊「看我」，人会先点最左边那个。",
+            nodes: [
+              {
+                kind: "text",
+                text: "本周六陶艺课",
+              },
+              {
+                kind: "text",
+                text: "社区活动室 · 14:00",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "提交报名",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "保存草稿",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "查看须知",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "分享到群",
+                    variant: "primary",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -14415,6 +16216,55 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "同一个「提交报名」按钮，从能点变成灰掉，灰掉后按下去没有反馈；没填完时旁边写着还没填手机号，提交中则写成提交中。",
+        caption: "只变灰、不写原因，人会以为坏了。看起来能点、点了没反应，比灰掉更糟。",
+        states: [
+          {
+            id: "ready",
+            label: "能点",
+            note: "填完了。按下去会有反应。",
+            nodes: [
+              {
+                kind: "button",
+                label: "提交报名",
+                variant: "primary",
+              },
+            ],
+          },
+          {
+            id: "empty",
+            label: "没填完",
+            note: "按钮淡了一号，真的点不了。原因写在旁边，不是只在鼠标放上去时才出现。",
+            nodes: [
+              {
+                kind: "button",
+                label: "提交报名",
+                variant: "primary",
+                disabled: true,
+              },
+              {
+                kind: "text",
+                text: "还没填手机号",
+                muted: true,
+              },
+            ],
+          },
+          {
+            id: "busy",
+            label: "提交中",
+            note: "事情正在做。暂时点不了，避免连点出两份。",
+            nodes: [
+              {
+                kind: "button",
+                label: "提交中…",
+                variant: "primary",
+                disabled: true,
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -14540,6 +16390,40 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "把鼠标划过能点的按钮、能打字的输入框、点不了的灰按钮，以及一块只能看的内容，箭头会变成小手、竖道、禁止圈，或保持普通箭头。",
+        caption: "手机上看不到这些变化。能不能点，不能只写在指针形状上。",
+        states: [
+          {
+            id: "kinds",
+            label: "四种形状",
+            note: "把鼠标依次划过下面四块，看箭头怎么变。",
+            nodes: [
+              {
+                kind: "button",
+                label: "预约今天下午",
+                variant: "primary",
+              },
+              {
+                kind: "input",
+                label: "搜索课名",
+                placeholder: "点进去打字",
+              },
+              {
+                kind: "button",
+                label: "还没选日期",
+                variant: "primary",
+                disabled: true,
+              },
+              {
+                kind: "block",
+                label: "只能看的图",
+                height: "short",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -14651,6 +16535,23 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "一段可以划选的停水说明。按住鼠标划过之后，那截字会换底色，好看出选了哪一句、好复制。",
+        caption: "底色和字要分得开。不要整页禁止选字——有人只想抄半句。",
+        states: [
+          {
+            id: "copy",
+            label: "划选",
+            note: "按住鼠标从这句上面划过去。",
+            nodes: [
+              {
+                kind: "text",
+                text: "明日 9 点到 15 点停水，请提前备水。",
+              },
+            ],
+          },
+        ],
       },
     },
   },

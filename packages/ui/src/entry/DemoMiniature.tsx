@@ -72,6 +72,8 @@ function Leaf({ node }: { readonly node: DemoLeaf }) {
       return <GameBadge tone={node.tone ?? "neutral"}>{node.label}</GameBadge>;
     case "progress":
       return <GameProgress label={node.label} value={node.value} max={node.max ?? 100} showValue />;
+    case "divider":
+      return <hr className="demo__divider" />;
     case "block":
       return (
         <div

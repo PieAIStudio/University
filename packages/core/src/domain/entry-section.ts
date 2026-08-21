@@ -422,6 +422,13 @@ const DemoLeafSchema = z.discriminatedUnion("kind", [
       max: z.number().optional(),
     })
     .strict(),
+  /**
+   * A real rule. Added because the first authored demo for 「分割线」 drew one
+   * out of box-drawing characters — a workaround that renders as literal text,
+   * does not follow the theme, and reads as a string of dashes to a screen
+   * reader. When authors start faking a primitive, the primitive is missing.
+   */
+  z.object({ kind: z.literal("divider") }).strict(),
   /** A grey placeholder standing in for content, so a layout demo is about layout. */
   z
     .object({

@@ -88,6 +88,29 @@ export type ConceptEntry = StructuredEntry<ConceptHead>;
  */
 export interface ConceptBody {
   readonly colloquial: string;
+  /** C9 and C11. One state is a static miniature; two or more is a state switch. */
+  readonly demo?: {
+    readonly alt: string;
+    readonly caption?: string;
+    readonly states: readonly {
+      readonly id: string;
+      readonly label: string;
+      readonly note?: string;
+      readonly nodes: readonly unknown[];
+    }[];
+  };
+  /** C12. Click the part of the mockup being named. */
+  readonly regions?: {
+    readonly question: string;
+    readonly regions: readonly {
+      readonly id: string;
+      readonly label: string;
+      readonly span?: "full" | "half";
+      readonly height?: "short" | "tall";
+    }[];
+    readonly correctRegionId: string;
+    readonly reveal: string;
+  };
   readonly definition: { readonly statement: string; readonly not?: string };
   readonly aliases?: readonly string[];
   readonly prerequisites?: readonly string[];
@@ -150,15 +173,21 @@ export interface RawConcept {
 function conceptBodySections(body: ConceptBody): unknown[] {
   const sections: unknown[] = [
     { id: "colloquial", type: "colloquial", payload: { text: body.colloquial } },
-    {
-      id: "definition",
-      type: "definition",
-      payload: {
-        statement: body.definition.statement,
-        ...(body.definition.not === undefined ? {} : { not: body.definition.not }),
-      },
-    },
   ];
+  // The miniature goes above the definition, not below it, and that ordering is
+  // the one thing their hero gets unarguably right: for anything you could
+  // point at, seeing it settles the question that the paragraph then explains.
+  if (body.demo) {
+    sections.push({ id: "demo", type: "demo", payload: { ...body.demo } });
+  }
+  sections.push({
+    id: "definition",
+    type: "definition",
+    payload: {
+      statement: body.definition.statement,
+      ...(body.definition.not === undefined ? {} : { not: body.definition.not }),
+    },
+  });
   if (body.aliases?.length) {
     sections.push({ id: "aliases", type: "aliases", payload: { names: [...body.aliases] } });
   }
@@ -214,6 +243,9 @@ function conceptBodySections(body: ConceptBody): unknown[] {
   sections.push({ id: "plain", type: "plain", payload: { paragraphs: [...body.plain] } });
   if (body.whenNot?.length) {
     sections.push({ id: "when-not", type: "when-not", payload: { cases: [...body.whenNot] } });
+  }
+  if (body.regions) {
+    sections.push({ id: "regions", type: "regions", payload: { ...body.regions } });
   }
   if (body.quiz) {
     sections.push({

@@ -44,6 +44,10 @@ body {
 .topbar {
   display: flex;
   align-items: center;
+  /* Wraps because the bar grows. It held five controls without wrapping and
+     overflowed the viewport by 98px on a 375px screen the moment a sixth was
+     added — a horizontal scrollbar on the whole app, caused by one button. */
+  flex-wrap: wrap;
   gap: 12px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.12));
@@ -73,6 +77,20 @@ body {
 
 .spacer {
   flex: 1 1 auto;
+}
+
+/*
+  Below this the bar is stacked rather than a single row, so the counts stop
+  competing with the controls for the same line.
+*/
+@media (max-width: 640px) {
+  .topbar__stat {
+    order: 1;
+  }
+
+  .spacer {
+    flex-basis: 100%;
+  }
 }
 
 button.primary,
