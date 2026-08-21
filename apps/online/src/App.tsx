@@ -56,6 +56,7 @@ import {
 import { LEXICON } from "./lesson/language";
 import { LessonScreen } from "./lesson/Lesson";
 import { Settlement } from "./lesson/Settlement";
+import { CourseCatalog } from "./catalog/CourseCatalog";
 import { fromHash, toHash, WORLD, LIBRARY_TABS, type LibraryTab, type View } from "./url-state";
 import { placeLabels, type LabelCandidate } from "./world/labels";
 import { courseShapeOf, progressSource } from "./progress/source";
@@ -580,6 +581,13 @@ export function App() {
           person it is for, so making them find the right course first would
           defeat it.
         */}
+        <button
+          className="ghost"
+          aria-current={view.kind === "catalog" ? "page" : undefined}
+          onClick={() => setView({ kind: "catalog" })}
+        >
+          目录
+        </button>
         <button className="ghost" onClick={() => setView({ kind: "library", tab: "concepts" })}>
           图鉴
         </button>
@@ -837,6 +845,8 @@ export function App() {
       {view.kind === "concept" ? <ConceptEntryHost id={view.id} onOpen={setView} /> : null}
 
       {view.kind === "practice" ? <PracticeHost onOpen={setView} /> : null}
+
+      {view.kind === "catalog" ? <CourseCatalog onOpen={setView} /> : null}
 
       {view.kind === "anti-pattern-entry" ? (
         <AntiPatternEntryHost id={view.id} onOpen={setView} />

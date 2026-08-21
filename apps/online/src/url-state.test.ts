@@ -20,6 +20,7 @@ const views: View[] = [
     unitId: "what-is-an-app",
     lessonId: "you-already-know-apps",
   },
+  { kind: "catalog" },
 ];
 
 describe("the address bar", () => {
@@ -60,5 +61,10 @@ describe("the address bar", () => {
     });
     expect(toHash({ kind: "library", tab: "flavour" })).toBe("#/library/flavour");
     expect(fromHash("#/library/flavour")).toEqual({ kind: "library", tab: "flavour" });
+  });
+
+  it("keeps the 2D directory on its own hash instead of falling back to the world", () => {
+    expect(toHash({ kind: "catalog" })).toBe("#/catalog");
+    expect(fromHash("#/catalog")).toEqual({ kind: "catalog" });
   });
 });

@@ -149,12 +149,45 @@ export interface CourseNode extends LibraryCourse {
 }
 
 /**
- * The map's nodes, with depth computed rather than stored.
+ * Distance from a root along prerequisites, computed over one study.
  *
  * Depth is a property of the set, not of a course: adding one prerequisite
- * upstream moves everything behind it. Storing it here would be this repository
- * keeping a second copy of the course structure, which is the drift the parity
- * contract exists to prevent — so it is derived on every load instead.
+ * upstream moves everything behind it. Storing it on the package would be this
+ * repository keeping a second copy of the course structure, which is the drift
+ * the parity contract exists to prevent — so both the world map and the 2D
+ * directory derive it with this function.
+ *
+ * A prerequisite the schema cannot express across studies reads as a root
+ * rather than as an error.
+ */
+export function depthsFromPrerequisites(
+  courses: readonly {
+    readonly id: string;
+    readonly prerequisiteCourseIds: readonly string[];
+  }[],
+): Map<string, number> {
+  const byId = new Map(courses.map((course) => [course.id, course]));
+  const depths = new Map<string, number>();
+  const visiting = new Set<string>();
+  const walk = (id: string): number => {
+    const known = depths.get(id);
+    if (known !== undefined) return known;
+    const course = byId.get(id);
+    if (!course || visiting.has(id)) return 0;
+    visiting.add(id);
+    const depth = course.prerequisiteCourseIds.length
+      ? Math.max(...course.prerequisiteCourseIds.map(walk)) + 1
+      : 0;
+    visiting.delete(id);
+    depths.set(id, depth);
+    return depth;
+  };
+  for (const course of courses) walk(course.id);
+  return depths;
+}
+
+/**
+ * The map's nodes, with depth computed rather than stored.
  *
  * Prerequisites are not in the tracked manifest, so this needs the courses
  * themselves. It is the one place that pays for loading them all, and it is
@@ -167,30 +200,14 @@ export async function loadGraph(): Promise<readonly CourseNode[]> {
       study.courses.map((summary) => loadCourse(study.studyId, summary.courseId)),
     );
     const byId = new Map(courses.map((course) => [course.id, course]));
-    const depths = new Map<string, number>();
-    const visiting = new Set<string>();
-    const walk = (id: string): number => {
-      const known = depths.get(id);
-      if (known !== undefined) return known;
-      const course = byId.get(id);
-      // A prerequisite the schema cannot express across studies reads as a
-      // root here rather than as an error.
-      if (!course || visiting.has(id)) return 0;
-      visiting.add(id);
-      const depth = course.prerequisiteCourseIds.length
-        ? Math.max(...course.prerequisiteCourseIds.map(walk)) + 1
-        : 0;
-      visiting.delete(id);
-      depths.set(id, depth);
-      return depth;
-    };
+    const depths = depthsFromPrerequisites(courses);
     for (const summary of study.courses) {
       const course = byId.get(summary.courseId);
       nodes.push({
         ...summary,
         studyId: study.studyId,
         studyTitle: study.title,
-        depth: walk(summary.courseId),
+        depth: depths.get(summary.courseId) ?? 0,
         prerequisiteCourseIds: course?.prerequisiteCourseIds ?? [],
         trackId: course?.trackId ?? null,
       });

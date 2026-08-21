@@ -379,6 +379,67 @@ authoring rail already had. A reader with repository access can paste
 sees exactly what was cited. That is the difference between a citation and a
 footnote, and it costs nothing.
 
+## The Refactor Rounds, 2026-08-21
+
+Run against `ai-human-friendly-refactor-methodology.md`, in the order it
+prescribes: audit read-only first, narrow the public API before moving any
+implementation, one seam at a time, targeted checks between.
+
+Two models audited independently from the same brief and converged. What is
+worth keeping from that is not the agreement but the two places they were each
+half right: one said the delivery shell had written a second lesson reader, the
+other said the authoring shell's HTTP client was living in `packages/ui`. Those
+are one problem seen from opposite ends — the "shared" `LessonReader` makes 13
+calls to the authoring server, so the delivery shell could not have used it.
+That seam is **not yet cut** and is the largest remaining one.
+
+**W1 · Public API.** Both packages declared `"./*"`, making every file a public
+entry. Removed, replaced with sub-paths derived from grepping actual
+deep-imports. Unused exports 21 → 2, unused exported types 51 → 0. The two
+survivors are the world grade constants, kept because a grade table is the
+contract with the render kit and knip cannot see a same-file blit.
+
+**W4 · Naming.** `LessonView` was a read model in one package and a React
+component in another; the component became `LessonScreen`. `flavour` and
+`anti-pattern` were one collection under two names, now one — while `#/flavour`
+still resolves, pinned by a test, because a bookmarked hash is a public
+contract. `LessonLocator` / `LessonAddress` / `LessonRef` were three names for
+the same four fields.
+
+**Practice.** The stream was built, tested and mounted by nobody, with nothing
+to serve. Generalised off `TermEntry` and mounted against the 281 questions the
+concept entries carry.
+
+### What the rounds found that no test could
+
+- **The map had no keyboard.** Course names were `aria-hidden` divs with
+  `pointer-events: none`; the only way into any course was clicking a polygon.
+  The design document had already said the 2D catalogue exists *before* the 3D
+  map and that accessibility is its second reason for existing. It was never
+  built, and the defect it was meant to prevent shipped.
+- **A growing `hidden={}` list.** The 3D stage was hidden by enumerating every
+  view that had to hide it, so a new route was correct only if someone
+  remembered to edit that list. Two surfaces had been rendering over a live
+  canvas. Now stated as which views *use* the map.
+- **The lesson told learners about the billing tiers.** 「第 2 层未接入」 reads
+  as an unfinished product; 「真实产品里这会…」 tells a paying learner this is
+  not the real product.
+
+### Declined
+
+- **Showing code slices at evidence anchors.** A product audit recommended it as
+  the fix for the anchors reading as unusable hashes. The anchors point into
+  private repository clones under `apps/local/studies/`, and the delivery bundle
+  carries coordinates only. That is a disclosure decision, recorded above, not
+  an oversight. The coordinate now explains itself in words instead.
+- **Re-arting the 3D scene.** It already has fog, hemisphere and directional
+  lighting and a kit-governed `diorama` grade. The flat look is a direction, and
+  direction is governed by the portfolio's Web3D and donor rules rather than by
+  a refactor.
+- **Splitting the concept data files.** Both audits independently defended the
+  19,240-line `frontend.ts` as a data table with one responsibility. Splitting
+  it by line count is the methodology's first-named anti-pattern.
+
 ## Open Decisions
 
 Tracked as decision cards in the user journey, not resolved here.

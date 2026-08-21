@@ -66,7 +66,11 @@ export type View =
   // An endless sitting of the questions the concept entries already carry. One
   // segment, like review and favourites, because it belongs to the learner
   // rather than to any course.
-  | { readonly kind: "practice" };
+  | { readonly kind: "practice" }
+  // The 2D course directory. It is not a downgrade of the world map: the
+  // product's own journey puts it first, and a keyboard has to be able to
+  // reach every lesson without touching the canvas.
+  | { readonly kind: "catalog" };
 
 export const WORLD: View = { kind: "world" };
 
@@ -94,6 +98,8 @@ export function toHash(view: View): string {
       return `#/concepts/${enc(view.id)}`;
     case "practice":
       return "#/practice";
+    case "catalog":
+      return "#/catalog";
     case "course":
       return `#/${enc(view.studyId)}/${enc(view.courseId)}`;
     case "lesson":
@@ -126,6 +132,7 @@ export function fromHash(hash: string): View {
     return { kind: "anti-pattern-entry", id: parts[1] };
   }
   if (parts.length === 1 && parts[0] === "practice") return { kind: "practice" };
+  if (parts.length === 1 && parts[0] === "catalog") return { kind: "catalog" };
   if (parts.length === 1 && parts[0] === "concepts") return { kind: "concepts" };
   if (parts.length === 2 && parts[0] === "concepts" && parts[1]) {
     return { kind: "concept", id: parts[1] };
