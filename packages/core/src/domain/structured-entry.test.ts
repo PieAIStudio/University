@@ -47,7 +47,7 @@ describe("assembleStructuredEntry", () => {
   });
 
   it("includes a lexicon colloquial line on the head when the field is present", () => {
-    const withSpoken: LexiconEntry = { ...APP, colloquial: "点开图标就能用。" };
+    const withSpoken: LexiconEntry = { ...APP, colloquial: ["点开图标就能用。"] };
     expect(termHeadToMarkdown(withSpoken)).toContain("> **你可能会说**");
     expect(termHeadToMarkdown(withSpoken)).toContain("点开图标就能用。");
   });

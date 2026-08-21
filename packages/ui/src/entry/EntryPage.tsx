@@ -139,10 +139,15 @@ export function TermEntryHead({ entry }: { readonly entry: LexiconEntry }) {
         <span className="entry-head__phonetic">{entry.phonetic}</span>
         <span className="entry-head__pos">{entry.partOfSpeech}</span>
       </p>
-      {entry.colloquial ? (
+      {/*
+        Only the first phrasing is shown. The rest exist so the search can be
+        found by more than one person's words; printing all of them here would
+        be showing the reader the index instead of the entry.
+      */}
+      {entry.colloquial && entry.colloquial.length > 0 ? (
         <p className="entry-head__colloquial">
           <span className="entry-head__colloquial-label">你可能会说</span>
-          {entry.colloquial}
+          {entry.colloquial[0]}
         </p>
       ) : null}
       <p className="entry-head__gloss">{entry.gloss}</p>

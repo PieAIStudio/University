@@ -45,8 +45,8 @@ export interface LexiconSearchResult {
  * schema migration.
  */
 function indexedFields(entry: LexiconEntry): readonly string[] {
-  if (typeof entry.colloquial === "string") {
-    return [entry.headword, entry.gloss, entry.usage, entry.colloquial];
+  if (Array.isArray(entry.colloquial) && entry.colloquial.length > 0) {
+    return [entry.headword, entry.gloss, entry.usage, ...entry.colloquial];
   }
   return [entry.headword, entry.gloss, entry.usage];
 }

@@ -199,7 +199,16 @@ export const LexiconEntrySchema = z
      * Optional because no curated entry has it yet. Search reads it when it is
      * present; the detail page that *shows* it is a separate module.
      */
-    colloquial: z.string().min(1).max(300).optional(),
+    /**
+     * How a beginner would describe this, in their own words.
+     *
+     * An array because two independent phrasings of the same situation cover
+     * more of what someone actually types than one polished sentence does.
+     * A learner who says 「刚开机第一次点开特别慢」 and one who says 「很久没跑，
+     * 第一次会慢很多」 are asking about the same term, and a search field only
+     * helps the one whose words it happens to hold.
+     */
+    colloquial: z.array(z.string().min(1).max(300)).max(6).optional(),
   })
   .strict();
 

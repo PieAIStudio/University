@@ -9,7 +9,8 @@
       "partOfSpeech": "verb",
       "gloss": "吸收失败：不往外抛，在本地变成返回值或静默跳过",
       "usage": "读到「吸收」策略时问：调用方还能从返回值看出失败吗？",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["出错了但程序没停，也没人告诉你"]
     },
     {
       "senseId": "adapter.platform",
@@ -18,7 +19,8 @@
       "partOfSpeech": "noun",
       "gloss": "适配层：把各平台差异收成统一接口与决策，避免 if 平台散落",
       "usage": "适配层的产出应是「因此怎么做」，不只是「我在哪个平台」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["电脑和手机规则不一样，我想只写一套", "不同系统写法不一样，垫一层把差异抹平"]
     },
     {
       "senseId": "allow.permit",
@@ -27,7 +29,8 @@
       "partOfSpeech": "verb",
       "gloss": "允许：放开某种行为或访问",
       "usage": "allow access / not allowed 在权限与配置说明里极常见。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["这个按钮现在点不了，我想让它能点", "本来被拦在门外的操作，开个口子让它通过"]
     },
     {
       "senseId": "allowlist.fields",
@@ -36,7 +39,8 @@
       "partOfSpeech": "noun",
       "gloss": "允许清单：只有列在上面的名字或值才放行，其余一律拒绝",
       "usage": "埋点字段走 allowlist，比事后后悔删数据便宜。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["没写进名单的字段一律不许往外送", "只认纸上写着的几个名字，别的全给拦在外面"]
     },
     {
       "senseId": "analytics.tracking",
@@ -45,7 +49,11 @@
       "partOfSpeech": "noun",
       "gloss": "分析埋点：按约定上报产品事件，用来看使用而不是监视个人",
       "usage": "读 analytics 先找允许字段清单；自由文本与房间码通常是红线。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "想看大家点了哪些按钮、待了多久",
+        "想看大家平时爱点哪个地方，悄悄记一笔发回后台"
+      ]
     },
     {
       "senseId": "anonymous.user",
@@ -54,7 +62,8 @@
       "partOfSpeech": "adjective",
       "gloss": "匿名的：没有绑定可识别身份，或密钥仅代表公开客户端",
       "usage": "anon key 可进前端，不等于谁都能删库；service role 绝不能进前端。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["没登录也能用，系统不知道你是谁", "没登录账号就直接点进来逛的路人"]
     },
     {
       "senseId": "api.interface",
@@ -63,7 +72,8 @@
       "partOfSpeech": "noun",
       "gloss": "接口：一个程序对外开放的、别人可以调用的功能清单",
       "usage": "调用 API 就是「按对方规定的格式提要求，拿回对方规定格式的答复」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["别人写好的功能，你按规矩调一下就能用"]
     },
     {
       "senseId": "app.program",
@@ -72,7 +82,8 @@
       "partOfSpeech": "noun",
       "gloss": "应用：用户点开图标就能用的那个成品",
       "usage": "App 是 application 的口语缩写。拆开看，它其实是一堆文件加一个运行环境。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["点开图标就能用的那个", "桌面上点开图标就能直接用的成品东西"]
     },
     {
       "senseId": "arbitrary.value",
@@ -81,7 +92,8 @@
       "partOfSpeech": "adjective",
       "gloss": "任意的：没有业务约束、可以是什么就来什么",
       "usage": "分析字段若允许 arbitrary 文本，一个月后你将面对不可聚合的垃圾。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["这个格子什么字都能填，没有限制", "这里填什么内容都行，随便输几个字都不报错"]
     },
     {
       "senseId": "artifact.build",
@@ -90,7 +102,8 @@
       "partOfSpeech": "noun",
       "gloss": "产物：构建步骤产出的、可安装或可部署的文件",
       "usage": "upload build artifacts 把包留给后续部署步骤用。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["打包完拿去安装或上线的那个包", "一堆散文件加工完后，吐出来的那个最终安装包"]
     },
     {
       "senseId": "assert.test",
@@ -99,7 +112,11 @@
       "partOfSpeech": "verb",
       "gloss": "断言：测试里声明「这里必须是这样」，否则算失败",
       "usage": "assert equal 失败时，看 expected 和 actual 差在哪。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "测试里写死了这里必须是这个样子",
+        "提前放话这里必须等于几，对不上就立刻报错停下"
+      ]
     },
     {
       "senseId": "async.function",
@@ -108,7 +125,8 @@
       "partOfSpeech": "adjective",
       "gloss": "异步的：函数可以在中途等待，不把整条调用链卡死",
       "usage": "读到 async function 时，先想「它返回的是 Promise」，再找函数体里的 await。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["等网络回来时，别把整页先卡住", "点了之后不用傻等，界面还能继续点别的地方"]
     },
     {
       "senseId": "attempt.action",
@@ -117,7 +135,8 @@
       "partOfSpeech": "verb",
       "gloss": "尝试：去做一次，不保证成功",
       "usage": "attempt to reconnect 表示会试，但可能仍失败。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["先做一次看看，成不成先不保证", "先去碰一下运气看能不能通，成不成还不一定"]
     },
     {
       "senseId": "authoritative.source",
@@ -126,7 +145,8 @@
       "partOfSpeech": "adjective",
       "gloss": "权威的：以谁的结果为准，客户端不得自作聪明覆盖",
       "usage": "开房间是否 reused 由 authoritative 服务端说了算。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["两边说法不一，听服务器那头的", "两边说的数字对不上时，一律以它给的为准"]
     },
     {
       "senseId": "await.pause",
@@ -135,7 +155,11 @@
       "partOfSpeech": "verb",
       "gloss": "等待兑现：在这一行停住，直到 Promise 有结果再往下跑",
       "usage": "看到 await，在心里画停顿点；没有 await 往往表示「发出去就不管了」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "写到这行先停着，那边做完再往下跑",
+        "代码停在这一步不往下走，等那边给信了才继续"
+      ]
     },
     {
       "senseId": "barrel.reexport",
@@ -144,7 +168,8 @@
       "partOfSpeech": "noun",
       "gloss": "桶文件：一个 index 里重新导出多个模块，给外部统一入口",
       "usage": "from './domain' 常落到 barrel；拆文件是为边界，barrel 是为入口。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["外面只从一个文件把东西借进来", "在最外层文件里把各处的小零件打包成一个总入口"]
     },
     {
       "senseId": "bottleneck.perf",
@@ -153,7 +178,8 @@
       "partOfSpeech": "noun",
       "gloss": "瓶颈：整条链路里最慢、卡住整体的那一环",
       "usage": "优化前先找 bottleneck，别平均用力。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["别的都很快，就这一步把整体拖慢", "整个流程里就数它最慢，把大家都给卡住了"]
     },
     {
       "senseId": "boundary.scope",
@@ -162,7 +188,8 @@
       "partOfSpeech": "noun",
       "gloss": "边界：这一侧归我管，那一侧不归",
       "usage": "谈架构时 boundary 几乎总是在说「谁不该知道谁的事」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["这边归我管，那边的事别来碰", "划清哪一部分归我管、哪一部分我不插手"]
     },
     {
       "senseId": "branch.git",
@@ -171,7 +198,8 @@
       "partOfSpeech": "noun",
       "gloss": "分支：从主线分出去的一条独立改动线",
       "usage": "create a branch / switch branch —— 改功能前先分出去，别直接在主线上改。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["先从主线分出去改，别直接动主干", "不影响正在跑的主线，单拉出来一条线随便折腾"]
     },
     {
       "senseId": "breaking.change",
@@ -180,7 +208,8 @@
       "partOfSpeech": "adjective",
       "gloss": "破坏性的：升级后旧用法会直接坏掉",
       "usage": "breaking change 出现在 changelog 里时，意味着你要改调用方。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["升完级，以前的写法直接不能用了", "一更新版本，以前写好的老代码全都跑不通了"]
     },
     {
       "senseId": "broadcast.event",
@@ -189,7 +218,8 @@
       "partOfSpeech": "noun",
       "gloss": "广播：同一房间或频道里多方都会收到的事件",
       "usage": "broadcast 事件名是多人契约；单端改字符串等于改对讲机口令。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["房间里所有人同时收到同一条通知", "在群里大喊一嗓子，屋里所有人都能同时收到"]
     },
     {
       "senseId": "bucket.group",
@@ -198,7 +228,11 @@
       "partOfSpeech": "noun",
       "gloss": "桶：把连续或敏感的精确值收成粗粒度分组标签",
       "usage": "bucket 4–5 人而不是记 4，是为了隐私与可聚合分析。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "人数不记到个位，只记大概几人档",
+        "不记具体的精确数字，而是粗略归进几个预设档位"
+      ]
     },
     {
       "senseId": "bug.defect",
@@ -207,7 +241,8 @@
       "partOfSpeech": "noun",
       "gloss": "缺陷：程序的实际行为和预期不一致的地方",
       "usage": "「有个 bug」的意思是「它没按我以为的方式运行」，不一定是崩溃。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["点了按钮，出来的不是我要的结果", "点完加号明明该加一，结果界面直接白屏崩溃了"]
     },
     {
       "senseId": "build.action",
@@ -216,7 +251,8 @@
       "partOfSpeech": "verb",
       "gloss": "构建：把源码或素材加工成可运行、可发布的结果",
       "usage": "build the project 出现在安装与发布章节的开头。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["改完文字还得再加工才能给人用", "把平时写的一堆散文件搓成可以给人直接点的成品"]
     },
     {
       "senseId": "callback.async",
@@ -225,7 +261,8 @@
       "partOfSpeech": "noun",
       "gloss": "回调：事情做完之后被调用的那个函数",
       "usage": "onSuccess callback 就是「成功了再跑这段」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["事情做完了再回头跑我写的这段", "把要做的事先交代好，等那边忙完了再回头执行"]
     },
     {
       "senseId": "canonical.standard",
@@ -234,7 +271,11 @@
       "partOfSpeech": "adjective",
       "gloss": "权威规范的：全项目统一认准的那一个名字或形式",
       "usage": "canonical schema 名被测试钉死，防止运行时悄悄连错库。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "库名必须用这一个，测过了不许偷偷换成别的",
+        "叫法五花八门，最后项目唯一认准的正版写法"
+      ]
     },
     {
       "senseId": "catch.handler",
@@ -243,7 +284,8 @@
       "partOfSpeech": "verb",
       "gloss": "接住：try 里炸了之后走的退路分支",
       "usage": "看到 catch 先问两句：接住之后返回什么？还是空的、靠注释解释？",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["前面那段炸了，走这条退路接着干", "前面执行炸了的时候，跳到这里来收拾残局"]
     },
     {
       "senseId": "cause.origin",
@@ -252,7 +294,8 @@
       "partOfSpeech": "noun",
       "gloss": "起因：直接导致问题发生的那件事",
       "usage": "root cause 在事故复盘里指「真正源头」，不是表面现象。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["表面是崩了，最先出事的是哪一步", "排查了半天，发现最开始到底是哪一步搞砸的"]
     },
     {
       "senseId": "change.action",
@@ -261,7 +304,8 @@
       "partOfSpeech": "verb",
       "gloss": "更改：把当前状态改成另一个状态",
       "usage": "change the setting / if anything changes —— 教程里到处都是。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["把现在这样改成另一个样子", "把原来显示的内容换成一个不一样的新模样"]
     },
     {
       "senseId": "channel.realtime",
@@ -270,7 +314,8 @@
       "partOfSpeech": "noun",
       "gloss": "通道：实时连接里按房间或主题划分的一条订阅线路",
       "usage": "channel 名常带 room id；订阅与退订都针对这条线。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["同一房间的人走这一条消息线", "多个人连在同一个房间里实时收发消息的专线"]
     },
     {
       "senseId": "check.action",
@@ -279,7 +324,8 @@
       "partOfSpeech": "verb",
       "gloss": "检查：先看一眼是否符合条件，再决定怎么做",
       "usage": "check if it exists / check the result 是步骤说明里的口头禅。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["先看一眼合不合格，再决定怎么做", "动手之前先瞄一眼合不合规矩，不对劲就不做"]
     },
     {
       "senseId": "children.nodes",
@@ -288,7 +334,11 @@
       "partOfSpeech": "noun",
       "gloss": "子节点：写在开始标签与结束标签之间的内容，也是一种 prop",
       "usage": "组件可以只做准备工作再 {children} 原样交回，自己不画壳。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "写在开头和结尾中间的那些，原样留下",
+        "夹在开头和结尾那一对尖括号中间的所有东西"
+      ]
     },
     {
       "senseId": "choose.select",
@@ -297,7 +347,8 @@
       "partOfSpeech": "verb",
       "gloss": "选择：在几个选项里定一个",
       "usage": "choose a name / choose one of the following 是步骤引导用语。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["几个选项里定一个用哪个", "摆在面前好几个现成选项，从中敲定一个"]
     },
     {
       "senseId": "ci.automation",
@@ -306,7 +357,11 @@
       "partOfSpeech": "noun",
       "gloss": "持续集成：在别人的电脑上自动跑构建与测试的流水线",
       "usage": "CI 红了先当「共享门禁没过」，别只在自己机器上口头说绿。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "我一交上去，网上那台机器就自动帮我验",
+        "一提交改动，云端机器就自动帮你跑一遍全面体检"
+      ]
     },
     {
       "senseId": "cleanup.effect",
@@ -315,7 +370,11 @@
       "partOfSpeech": "noun",
       "gloss": "清理：副作用结束或组件离开时必须做的收尾，如拆订阅、清定时器",
       "usage": "useEffect 返回的函数就是 cleanup；漏了它等于泄漏。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "离开页面了还在计时、还在听，得拆掉",
+        "离开页面时，把后台挂着的监听和计时器顺手关掉"
+      ]
     },
     {
       "senseId": "close.action",
@@ -324,7 +383,8 @@
       "partOfSpeech": "verb",
       "gloss": "关闭：用完后释放文件、连接或窗口",
       "usage": "用完要 close，否则资源可能一直占着。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["用完了把连接或窗口收掉", "用完了赶紧把占着的文件或连着的线路掐掉"]
     },
     {
       "senseId": "code.text",
@@ -333,7 +393,11 @@
       "partOfSpeech": "noun",
       "gloss": "代码：人写给机器执行的、有严格语法的文本",
       "usage": "代码不是天书，它就是文本文件。特别之处只在于必须严格守语法。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "给电脑看的那堆文字，多一个标点它就不认",
+        "按严格语法一行行敲出来、让机器去跑的纯文字"
+      ]
     },
     {
       "senseId": "cold-start.perf",
@@ -342,7 +406,8 @@
       "partOfSpeech": "noun",
       "gloss": "冷启动：从完全没预热的状态开始，第一次会更慢",
       "usage": "serverless 的 cold start 常被单独拿出来测延迟。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["很久没跑，第一次请求会慢很多", "刚开机第一次点开特别慢，后面再点就快多了"]
     },
     {
       "senseId": "commit.db",
@@ -351,7 +416,11 @@
       "partOfSpeech": "verb",
       "gloss": "提交事务：把数据库里这批改动真正落盘，失败则整批不算",
       "usage": "commit a transaction 和 Git 的 commit 不是一回事，别混着学。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "这批改动一起写入，失败就全不算",
+        "刚才改的那几笔账真正存死，有一步错了就全作废"
+      ]
     },
     {
       "senseId": "commit.git",
@@ -360,7 +429,8 @@
       "partOfSpeech": "noun",
       "gloss": "提交：一次存档，带着「谁、什么时候、改了什么」",
       "usage": "Git 里一个 commit 就是历史上的一个点，可以随时回到它。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["把这次改动存成历史上的一个点", "改完一段后存个带说明的档，随时能翻回来看"]
     },
     {
       "senseId": "component.ui",
@@ -369,7 +439,8 @@
       "partOfSpeech": "noun",
       "gloss": "组件：返回一段界面描述的函数，可被别处组合复用",
       "usage": "组件就是函数：props 进去，JSX 出来；先算完再 return。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["页面上这一块可以拆出来反复用", "做好的一个按钮或卡片零件，在各个页面到处拼装"]
     },
     {
       "senseId": "compose.assemble",
@@ -378,7 +449,11 @@
       "partOfSpeech": "verb",
       "gloss": "拼装：把多份来源的数据合成界面要的单一形状",
       "usage": "compose 发生在边界：库是多表，屏是一张名片。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "好几处数据，屏幕上只要拼成这一块",
+        "把好几处抓来的零散数据，捏成页面要的一整块"
+      ]
     },
     {
       "senseId": "config.settings",
@@ -387,7 +462,8 @@
       "partOfSpeech": "noun",
       "gloss": "配置：决定工具与运行行为的设置文件或对象",
       "usage": "config 也会写错且会漂；关键片段可以像契约一样被测试钉住。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["改几个开关，程序行为跟着变", "不改主体逻辑，只通过改几个开关来调整程序行为"]
     },
     {
       "senseId": "conflict.git",
@@ -396,7 +472,8 @@
       "partOfSpeech": "noun",
       "gloss": "冲突：两边改了同一处，程序没法自动决定留谁",
       "usage": "merge conflict 出现时，要人手挑出最终该长什么样。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["两边改了同一行，没法自动留谁", "两个人同时改了同一行，系统不知道到底该听谁的"]
     },
     {
       "senseId": "constraint.design",
@@ -405,7 +482,8 @@
       "partOfSpeech": "noun",
       "gloss": "约束：不能违反的条件",
       "usage": "跟 AI 提需求时写清 constraint，比写清目标更能决定产出可不可用。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["跟它说需求时，先写清不能碰的底线", "定死了绝对不能碰的红线，一旦越界直接报错"]
     },
     {
       "senseId": "contract.api",
@@ -414,7 +492,11 @@
       "partOfSpeech": "noun",
       "gloss": "契约：多方必须遵守的稳定约定，改了就要一起改",
       "usage": "读到 contract 时问：谁承诺、谁检查、改名要不要迁移。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "双方说好的规矩，改了就得一起改",
+        "两边提前说好的数据长相，谁悄悄改了对方就会炸"
+      ]
     },
     {
       "senseId": "convention.agreed",
@@ -423,7 +505,8 @@
       "partOfSpeech": "noun",
       "gloss": "约定：团队或工具链共同遵守、但不一定写进类型系统的规矩",
       "usage": "只靠 convention 的分层会在赶工期失效；能机器检查的才硬。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["团队都这么写，但没有机器帮你盯", "大家默认都遵守、不用特意写进代码里的规矩"]
     },
     {
       "senseId": "count.number",
@@ -432,7 +515,8 @@
       "partOfSpeech": "noun",
       "gloss": "数量：一共有多少个",
       "usage": "item count / retry count 在接口字段和日志里常直接出现。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["列表里一共有多少条，报一个数", "数一下列表里一共装了多少条东西"]
     },
     {
       "senseId": "coverage.test",
@@ -441,7 +525,11 @@
       "partOfSpeech": "noun",
       "gloss": "覆盖率：有多少代码真的被测试跑到过",
       "usage": "coverage 高不等于测得好，只说明跑到了，没说明验对了。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "测试跑过哪些行，还有哪些没摸到",
+        "写了那么多行，实际跑起来到底有百分之几被验过了"
+      ]
     },
     {
       "senseId": "create.action",
@@ -450,7 +538,8 @@
       "partOfSpeech": "verb",
       "gloss": "创建：从无到有做出一个新对象或资源",
       "usage": "create a file / create a user 是 REST 与文件系统教程的开场白。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["从没有到有，新做一个出来", "从零开始造出一个原本没有的新东西"]
     },
     {
       "senseId": "deadlock.concurrency",
@@ -459,7 +548,11 @@
       "partOfSpeech": "noun",
       "gloss": "死锁：互相等对方放手，谁也动不了",
       "usage": "数据库报 deadlock detected 时，通常要改锁的顺序或范围。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "你等我放手，我等你放手，谁也动不了",
+        "两边互相等对方先撒手，结果全都卡在原地动不了"
+      ]
     },
     {
       "senseId": "debounce.event",
@@ -468,7 +561,8 @@
       "partOfSpeech": "verb",
       "gloss": "防抖：连续触发时只认停下来之后的那一次",
       "usage": "搜索框输入常 debounce，避免每个字母都打一次接口。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["搜索框连着打字，停下来才搜一次", "输入框里狂按时不搜，手指停下来了才真正去查"]
     },
     {
       "senseId": "default.value",
@@ -477,7 +571,8 @@
       "partOfSpeech": "noun",
       "gloss": "默认值：你不指定时系统自动采用的那个",
       "usage": "by default / default value 解释「什么都没配时会怎样」。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["我没填的时候它自己用的那个", "你要是不特意选一个，系统就自动给你填好的那个"]
     },
     {
       "senseId": "degrade.fallback",
@@ -486,7 +581,8 @@
       "partOfSpeech": "verb",
       "gloss": "降级：能力不可用时换较弱但可用的路径，而不是直接崩溃",
       "usage": "降级前先问：失败后用户还能完成本来的事吗？能才 degrade。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["震动坏了就改弹字，别整页崩掉", "高级功能坏了时，换成简易版顶上而不直接崩溃"]
     },
     {
       "senseId": "demo.sample",
@@ -495,7 +591,11 @@
       "partOfSpeech": "noun",
       "gloss": "演示：为展示效果而做的简化版本，不保证完整或耐用",
       "usage": "demo 能跑不等于能上线——它常常绕过了错误处理和边界情况。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "能跑给别人看，但缺了出错怎么处理",
+        "临时做出来给人看一眼效果的简陋架子，不能真用"
+      ]
     },
     {
       "senseId": "dependency.module",
@@ -504,7 +604,11 @@
       "partOfSpeech": "noun",
       "gloss": "依赖：这份代码要能跑，必须先有的另一份代码或包",
       "usage": "读 dependency 时分清：是架构上的层依赖，还是 package.json 里的包。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "缺了别人写的那个包，我这边跑不起来",
+        "想跑起来必须先装上的别人写好的现成工具包"
+      ]
     },
     {
       "senseId": "deploy.release",
@@ -513,7 +617,11 @@
       "partOfSpeech": "verb",
       "gloss": "部署：把构建好的东西放到用户能用到的环境",
       "usage": "deploy to production 之前，文档常要求先过预发环境。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "做好的程序放到网上，别人就能用",
+        "把做好的网站放到公网服务器上，让所有人都能打开"
+      ]
     },
     {
       "senseId": "deprecate.api",
@@ -522,7 +630,11 @@
       "partOfSpeech": "verb",
       "gloss": "废弃预告：还能用，但已宣布将来会删，别再新用",
       "usage": "deprecated API 文档会标替代方案，迁移窗口通常有时限。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "还能用，但说了以后会删，别再新用",
+        "现在还能跑，但官方说下次更新就删，劝你别再用了"
+      ]
     },
     {
       "senseId": "derive.compute",
@@ -531,7 +643,11 @@
       "partOfSpeech": "verb",
       "gloss": "推导：从一个真相源算出另一个值，而不是抄两份维护",
       "usage": "能 derive 就不要同步维护两份列表；抄两遍一定会漂。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "这份能从那份算出来，就别再手抄一份",
+        "不单独存一份新数据，而是根据手头的数字现算出来"
+      ]
     },
     {
       "senseId": "describe.suite",
@@ -540,7 +656,8 @@
       "partOfSpeech": "verb",
       "gloss": "描述分组：给一组相关测试用例起一个可读的主题标题",
       "usage": "describe 是文件夹，it 是句子，expect 才是真正的钉。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["把相关的测试归到同一个标题下", "把测同一个功能的好几个检查项归在一个标题下"]
     },
     {
       "senseId": "destructure.unpack",
@@ -549,7 +666,11 @@
       "partOfSpeech": "verb",
       "gloss": "解构：按结构一次性取出对象或数组里的字段",
       "usage": "({ data, error }) = … 是在强迫你看见错误槽位，别只拿 data。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "别整个拿着，把要用的几个名字拆开",
+        "一行语句直接把包裹里的好几样东西分别掏出来用"
+      ]
     },
     {
       "senseId": "deterministic.build",
@@ -558,7 +679,11 @@
       "partOfSpeech": "adjective",
       "gloss": "确定性的：同样的输入永远给同样的输出",
       "usage": "deterministic build 意味着别人在别的机器上能造出一模一样的东西。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "别人机器上打出来的包，得跟我的一样",
+        "只要输入一样，不管跑多少次吐出来的结果都相同"
+      ]
     },
     {
       "senseId": "dev-dependency.tool",
@@ -567,7 +692,11 @@
       "partOfSpeech": "noun",
       "gloss": "开发依赖：只在开发与测试需要、生产运行不装的包",
       "usage": "测试框架、类型与打包器多半是 devDependency，不是线上业务依赖。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "测试和打包用的包，线上运行不装",
+        "只在自己写代码时才用、打包给用户时不带上的工具"
+      ]
     },
     {
       "senseId": "dev-server.local",
@@ -576,7 +705,11 @@
       "partOfSpeech": "noun",
       "gloss": "开发服务器：本地边改边看的运行环境，不是生产打包结果",
       "usage": "dev server 与 build 产物是两条路；e2e 常拉起前者做真点击。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "本机开一个预览页，连着你正在改的文件",
+        "本地开着的小环境，代码一保存浏览器马上自动刷新"
+      ]
     },
     {
       "senseId": "dev.development",
@@ -585,7 +718,11 @@
       "partOfSpeech": "noun",
       "gloss": "开发（模式）：给写代码的人用的运行方式，改一行就立刻看到效果",
       "usage": "dev 模式方便但慢且不安全；给用户的是 build 出来的产物。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "改一行马上变，但这份又慢又不安全",
+        "专供自己干活时的运行状态，改完一行能立刻看变化"
+      ]
     },
     {
       "senseId": "diff.patch",
@@ -594,7 +731,11 @@
       "partOfSpeech": "noun",
       "gloss": "差异：两份内容之间具体改了哪些行",
       "usage": "看 PR 时先读 diff，比通读全文快。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "看这次动了哪些行，别通读全文",
+        "红绿颜色标出来的、新旧版本到底删了哪行加了哪行"
+      ]
     },
     {
       "senseId": "disable.action",
@@ -603,7 +744,11 @@
       "partOfSpeech": "verb",
       "gloss": "禁用：关掉某个功能或选项，让它不再生效",
       "usage": "disable caching / temporarily disable 表示先关掉再排查。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "这个选项先关上，排查时别让它掺和",
+        "把开关扳下去，让那个原本能点的地方变灰按不动"
+      ]
     },
     {
       "senseId": "dist.output",
@@ -612,7 +757,11 @@
       "partOfSpeech": "noun",
       "gloss": "产物目录：构建输出的可部署文件所在文件夹",
       "usage": "同一份 dist 可塞进网页宿主或原生壳；改的是壳，不是再打一份业务包。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "加工完的成品都堆在这个文件夹里",
+        "加工完后自动生成的文件夹，装满准备上线的成品"
+      ]
     },
     {
       "senseId": "dom.tree",
@@ -621,7 +770,11 @@
       "partOfSpeech": "noun",
       "gloss": "文档对象模型：浏览器把 HTML 读成的那棵可被程序修改的树",
       "usage": "HTML 是纸上的文本，DOM 是浏览器读完后在内存里搭出来的结构。改 DOM 才会改变你看到的页面。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "改页面上的字和按钮，改的是这份结构",
+        "浏览器把网页解析后，在内存里立起来的层级结构"
+      ]
     },
     {
       "senseId": "drift.divergence",
@@ -630,7 +783,11 @@
       "partOfSpeech": "noun",
       "gloss": "漂移：实现悄悄偏离了曾经写下的承诺",
       "usage": "防 drift 的测试不问功能对不对，只问「承诺过的标记还在不在」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "当初说好要有的标记，现在找不到了",
+        "说明文档写的是一套，实际代码悄悄改歪对不上了"
+      ]
     },
     {
       "senseId": "e2e.test",
@@ -639,7 +796,8 @@
       "partOfSpeech": "noun",
       "gloss": "端到端测试：真开浏览器（或真链路）把主路径点通的测试",
       "usage": "e2e 贵且脆；只留给「必须开浏览器才看得见」的事。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["真打开浏览器把主路径从头点一遍", "真打开浏览器，从头到尾把核心业务流程点一遍"]
     },
     {
       "senseId": "early-return.control",
@@ -648,7 +806,11 @@
       "partOfSpeech": "noun",
       "gloss": "早返回：特殊情况在门口处理完就离开函数，避免层层 else",
       "usage": "一串 if … return 的优先级等于行序；调换顺序等于改规则。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "不合格的先拦下走人，剩下才往下走",
+        "发现不对劲在开头就直接退出去，不往后套条件了"
+      ]
     },
     {
       "senseId": "edge.boundary",
@@ -657,7 +819,11 @@
       "partOfSpeech": "noun",
       "gloss": "边界情况：刚好临界、异常形态或最小/最大输入",
       "usage": "测试优先钉 edge：该认的认、不该认的坚决不认。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "最短的、最长的、刚好卡线的，这些要单独测",
+        "输入正好是零、或者特别大特别怪的那些刁钻情况"
+      ]
     },
     {
       "senseId": "empty.state",
@@ -666,7 +832,8 @@
       "partOfSpeech": "adjective",
       "gloss": "空的：里面没有任何元素或内容",
       "usage": "empty list / empty string 是边界条件说明里的常客。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["打开一看，里面什么都没有", "列表里一件东西都没装，干干净净什么也没有"]
     },
     {
       "senseId": "enable.action",
@@ -675,7 +842,11 @@
       "partOfSpeech": "verb",
       "gloss": "启用：打开某个功能或选项，让它开始生效",
       "usage": "enable the feature / enable debug mode 是配置章节的开关用语。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "把关掉的功能打开，让它开始起作用",
+        "把开关拨上去，让原本灰掉按不动的地方恢复可用"
+      ]
     },
     {
       "senseId": "endpoint.api",
@@ -684,7 +855,11 @@
       "partOfSpeech": "noun",
       "gloss": "端点：接口上可调用的一个具体地址",
       "usage": "POST /users 就是一个 endpoint，不是整套 API。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "按这个地址发请求，对应一件具体的事",
+        "服务器上专门用来接收某项请求的具体网址尾巴"
+      ]
     },
     {
       "senseId": "enum.closed",
@@ -693,7 +868,11 @@
       "partOfSpeech": "noun",
       "gloss": "枚举：预先列死的有限取值集合，不允许自由发挥的字符串",
       "usage": "举报理由用 enum 加 other；分析侧才能聚合，也不会出现无限脏值。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "举报理由只能从这几个里选，不能随便打字",
+        "把允许填的选项死死定在几个固定词里，不许多填"
+      ]
     },
     {
       "senseId": "environment.variable",
@@ -702,7 +881,11 @@
       "partOfSpeech": "noun",
       "gloss": "环境：进程或构建时注入的外部配置，不写死在源码里",
       "usage": "环境变量管密钥与开关；example 只给形状，真值留在本地 .env。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "密钥和开关不写进代码，从外面塞进来",
+        "像密码这种敏感配置，不写在文件里而是启动时传进去"
+      ]
     },
     {
       "senseId": "error.status",
@@ -711,7 +894,8 @@
       "partOfSpeech": "noun",
       "gloss": "错误：出了问题，需要处理或报告",
       "usage": "throw an error / error message 是排错章节的核心词。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["程序出问题了，弹出一句话说明", "程序在半路上突然炸掉，屏幕上跳出一大片红字"]
     },
     {
       "senseId": "evidence.study",
@@ -720,7 +904,11 @@
       "partOfSpeech": "noun",
       "gloss": "证据：一句话凭什么算数，指向真实存在的文件和行",
       "usage": "报错和文档里常说 no evidence，意思是「你说的这件事没有依据」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "这句话凭什么算数，指出文件和行号",
+        "说代码里有这规矩，必须指出在哪个文件的第几行"
+      ]
     },
     {
       "senseId": "expect.action",
@@ -729,7 +917,8 @@
       "partOfSpeech": "verb",
       "gloss": "预期：事先认定应该出现的结果",
       "usage": "expect an error / we expect this value —— 测试和文档都爱用。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["测试里写好了，跑完应该得到这个", "还没跑之前心里先认定待会儿应该吐出来什么值"]
     },
     {
       "senseId": "experiment.ab",
@@ -738,7 +927,11 @@
       "partOfSpeech": "noun",
       "gloss": "实验：带登记、标签与范围的产品试错，而不是私下改 UI",
       "usage": "先登记再上线；analyticsTag 统一前缀才能筛出实验流量。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "先登记范围再试新界面，别私下改",
+        "给一半人看蓝色给另一半人看红色，看哪边买得更多"
+      ]
     },
     {
       "senseId": "explicit.stated",
@@ -747,7 +940,11 @@
       "partOfSpeech": "adjective",
       "gloss": "显式的：写在代码或配置里、不靠默认猜测就能看见的",
       "usage": "reuseExistingServer 必须显式打开——静默复用别人服务是事故。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "这个开关必须写出来打开，不能靠猜",
+        "不让机器瞎猜，一清二楚白纸黑字写在明面上的东西"
+      ]
     },
     {
       "senseId": "export.share",
@@ -756,7 +953,8 @@
       "partOfSpeech": "verb",
       "gloss": "导出：把本文件的名字交给其他文件 import 使用",
       "usage": "没 export 的名字是文件私有；读公共 API 先看 export 列表。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["把这个名字交给别的文件去用", "把当前文件写好的东西挂出来，让别的文件能借去用"]
     },
     {
       "senseId": "fact.durable",
@@ -765,7 +963,11 @@
       "partOfSpeech": "noun",
       "gloss": "事实态：操作失败后仍应保留的身份与业务数据",
       "usage": "判断字段归哪边：失败后该消失还是该留着？留着的是 fact。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "出错了，登录身份也不该跟着清掉",
+        "不管刚才操作成没成功，都不能丢的真实老底子数据"
+      ]
     },
     {
       "senseId": "fail.status",
@@ -774,7 +976,8 @@
       "partOfSpeech": "verb",
       "gloss": "失败：没有按预期完成",
       "usage": "if the request fails —— 失败分支几乎每章都有。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["请求没做成，走到了出错的那条路", "事情没办成，半路上直接黄了或者被拒之门外"]
     },
     {
       "senseId": "failure-mode.risk",
@@ -783,7 +986,11 @@
       "partOfSpeech": "noun",
       "gloss": "失效方式：坏的时候是怎么个坏法",
       "usage": "问「它的 failure mode 是什么」比问「它会不会坏」有用得多。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "它坏了会崩、会卡住，还是悄悄错下去",
+        "一旦出事，到底是屏幕卡死、乱跳提示还是丢数据"
+      ]
     },
     {
       "senseId": "fake.test",
@@ -792,7 +999,11 @@
       "partOfSpeech": "adjective",
       "gloss": "假的：测试里可控的替身实现，如假时钟、假存储",
       "usage": "fake 的目标是可重复演练事故，不是复制生产的全部真实感。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "测试里自己造一个时钟，时间由我拨",
+        "为了做检查自己捏的一个仿真道具，不连真实数据库"
+      ]
     },
     {
       "senseId": "fallback.plan",
@@ -801,7 +1012,11 @@
       "partOfSpeech": "noun",
       "gloss": "兜底方案：首选不行时退而求其次的那条路",
       "usage": "silent fallback 是危险的 —— 悄悄降级，你还以为一切正常。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "这条走不通，改走旁边那条凑合的",
+        "大招要是翻车了，马上退回去走的第二手备用路线"
+      ]
     },
     {
       "senseId": "false.boolean",
@@ -810,7 +1025,8 @@
       "partOfSpeech": "adjective",
       "gloss": "假：与 true 相对，表示「不成立」",
       "usage": "注意 false 和「没有值」是两回事——前者是明确的否定。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["这个条件不成立，走另一边", "二选一判断里，代表不对、没通过的那个记号"]
     },
     {
       "senseId": "fan-out.side",
@@ -819,7 +1035,11 @@
       "partOfSpeech": "noun",
       "gloss": "扇出：一次主操作顺带触发多个额外动作或调用",
       "usage": "主操作幂等了，fan-out 的埋点/邮件没幂等，重试仍会双份。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "存一次，顺带发邮件、记日志、通知别人",
+        "点一下确认，顺带呼啦啦触发了好几个地方同时干活"
+      ]
     },
     {
       "senseId": "feature-flag.config",
@@ -828,7 +1048,11 @@
       "partOfSpeech": "noun",
       "gloss": "功能开关：用配置决定某功能开不开，不必为此专门发版",
       "usage": "behind a feature flag 表示代码已合入，但默认可能仍关闭。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "新功能代码已经进去了，但开关还关着",
+        "新写好的东西先藏着，在后台把旋钮拧开才对人展示"
+      ]
     },
     {
       "senseId": "file.storage",
@@ -837,7 +1061,11 @@
       "partOfSpeech": "noun",
       "gloss": "文件：磁盘上有名字、可读写的一块数据",
       "usage": "中文教程里 open a file / save the file 是最常见落点。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "电脑里那份有名字的，打开能改字",
+        "硬盘上占着一个名字、点开能看能改的那一份份东西"
+      ]
     },
     {
       "senseId": "filter.select",
@@ -846,7 +1074,11 @@
       "partOfSpeech": "verb",
       "gloss": "过滤：留下符合条件的元素，丢掉其余，得到新列表",
       "usage": "filter 不改原数组；之后常接 map 或 join 做第二趟处理。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "名单里只留符合条件的，其他丢掉",
+        "在一大堆东西里只把符合要求的挑出来，其余全丢掉"
+      ]
     },
     {
       "senseId": "find.action",
@@ -855,7 +1087,8 @@
       "partOfSpeech": "verb",
       "gloss": "查找：在集合里定位符合条件的那一项",
       "usage": "find by id / if not found 是查询接口的标准说法。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["按这个编号把那一条找出来", "在一长串清单里挨个翻，把符合要求的第一个抓出来"]
     },
     {
       "senseId": "fix.action",
@@ -864,7 +1097,8 @@
       "partOfSpeech": "verb",
       "gloss": "修复：把坏掉或不对的地方改正确",
       "usage": "fix the bug / this fixes… 是 issue 与 changelog 的日常用语。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["它跑错了，把错的地方改对", "把之前算错或者崩溃的地方改好，让它能正常跑"]
     },
     {
       "senseId": "fixture.test",
@@ -873,7 +1107,11 @@
       "partOfSpeech": "noun",
       "gloss": "测试夹具：测试里反复用的那套准备好的数据或环境",
       "usage": "load fixture 常出现在测试 setup 里。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "测试里反复用的那套准备好的数据",
+        "每次做检查前，提前摆好的那一整套固定假数据道具"
+      ]
     },
     {
       "senseId": "flaky.test",
@@ -882,7 +1120,11 @@
       "partOfSpeech": "adjective",
       "gloss": "偶发失败的：有时过有时不过，并不跟这次改动对应",
       "usage": "flaky test 最烦人 —— 绿了也不能证明修好了。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "同样的测试，这次过下次不过，说不清",
+        "代码明明没改，但跑十次总有一两次莫名其妙挂掉"
+      ]
     },
     {
       "senseId": "fragment.jsx",
@@ -891,7 +1133,11 @@
       "partOfSpeech": "noun",
       "gloss": "片段：包一层好返回单个根，却不在 DOM 里多长真实节点",
       "usage": "<>…</> 就是 Fragment：需要分组，但不想多一个 div 壳。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "几个并列的块要包一下，但不想多一层壳",
+        "用空标签把几个块兜在一起，但页面上不会多出一层"
+      ]
     },
     {
       "senseId": "gate.ci",
@@ -900,7 +1146,11 @@
       "partOfSpeech": "noun",
       "gloss": "门禁：提交或合并前必须通过的自动检查关卡",
       "usage": "gate 问的是「能不能进历史/进主干」，不是「你觉得没问题」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "过不了这关，改动就不许合进主干",
+        "合入代码前必须全绿通过的自动卡口，不过就不给进"
+      ]
     },
     {
       "senseId": "git.vcs",
@@ -909,7 +1159,11 @@
       "partOfSpeech": "noun",
       "gloss": "一个记录文件每次改动的工具，可以随时回到任何一次存档",
       "usage": "Git 记住的不是文件现在什么样，而是它一路怎么变成现在这样。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "改乱了能回到以前某一版的那个工具",
+        "记录每次改动、随时能按记录坐时光机回去的工具"
+      ]
     },
     {
       "senseId": "granular.detail",
@@ -918,7 +1172,11 @@
       "partOfSpeech": "adjective",
       "gloss": "粒度：切分有多细；越细往往越容易暴露隐私",
       "usage": "越 granular 越容易伤隐私；桶化是故意变粗。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "记得太细会暴露是谁，故意记粗一点",
+        "把一大块东西切成大段还是切成碎渣的精细程度"
+      ]
     },
     {
       "senseId": "guard.code",
@@ -927,7 +1185,11 @@
       "partOfSpeech": "noun",
       "gloss": "守卫：挡在入口的检查，不合格就不让往下走",
       "usage": "guard clause 是常见写法：先把不合法的情况挡掉，剩下的才是正常路径。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "不合格的在入口挡掉，不让往下走",
+        "站在门口查证件，只要有一项不符合就直接把人赶走"
+      ]
     },
     {
       "senseId": "handle.action",
@@ -936,7 +1198,8 @@
       "partOfSpeech": "verb",
       "gloss": "处理：接手某类事件或错误并做出响应",
       "usage": "handle the error / event handler 表示「谁来管这件事」。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["出错了谁来管、点了按钮谁来接", "既然事情已经发生了，接过来具体把它应对过去"]
     },
     {
       "senseId": "hang.process",
@@ -945,7 +1208,8 @@
       "partOfSpeech": "verb",
       "gloss": "挂起卡死：进程还在，但不再往前走",
       "usage": "the process hangs 时，先抓堆栈，别急着杀了重来。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["转圈一直不停，页面再也没反应", "程序还在后台占着，但彻底停住没有任何动静了"]
     },
     {
       "senseId": "hook.react",
@@ -954,7 +1218,11 @@
       "partOfSpeech": "noun",
       "gloss": "钩子：React 里以 use 开头、在组件顶层调用的可复用能力",
       "usage": "Hook 只能在组件或自定义 hook 顶层调；回调里请用 getState()。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "好几块都要同一套记住数据和听变化的办法",
+        "名字带特定前缀的现成写法，让页面能记住数据"
+      ]
     },
     {
       "senseId": "host.runtime",
@@ -963,7 +1231,11 @@
       "partOfSpeech": "noun",
       "gloss": "宿主：真正装载并运行你这坨前端的环境，如浏览器、Electron、原生壳",
       "usage": "同一份 dist 可进多种 host；路由与超时等决策应随 host 变。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "这页到底跑在浏览器、桌面还是手机里",
+        "页面真正跑在哪个壳子里，比如浏览器还是手机容器"
+      ]
     },
     {
       "senseId": "html.markup",
@@ -972,7 +1244,11 @@
       "partOfSpeech": "noun",
       "gloss": "一种用尖括号标签描述网页结构的文本格式",
       "usage": "HTML 负责「有什么、什么层级」，不负责好不好看——那是 CSS 的事。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "用尖括号写出网页有什么、谁套着谁",
+        "用一堆尖括号把文字、图片和区域排出来的网页骨架"
+      ]
     },
     {
       "senseId": "i18n.localization",
@@ -981,7 +1257,11 @@
       "partOfSpeech": "noun",
       "gloss": "国际化：让同一套逻辑能换语言展示，而不把文案写进状态",
       "usage": "i18n 很难事后补；状态里存句子会把逻辑和语言绞死。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "中英文切换时，别把整句写死在数据里",
+        "点一下切换按钮，界面上的所有文字一键全变成英文"
+      ]
     },
     {
       "senseId": "idempotent.retry",
@@ -990,7 +1270,11 @@
       "partOfSpeech": "adjective",
       "gloss": "幂等的：做一次和做十次结果一样",
       "usage": "重试安全的接口都是 idempotent 的 —— 网络抖一下重发也不会出乱子。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "网络抖了又发一次，不该多出一份",
+        "不管网络卡了连续重发多少次，都不会导致重复扣款"
+      ]
     },
     {
       "senseId": "identifier.key",
@@ -999,7 +1283,11 @@
       "partOfSpeech": "noun",
       "gloss": "标识符：用来指称某物的稳定名字，不是给用户读的完整句子",
       "usage": "statusKey 存 identifier，文案留给渲染层——才好翻译和测试。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "存一个短名字，给人看的句子另外画出来",
+        "在代码里给东西起的简短名字，用来唯一定位它"
+      ]
     },
     {
       "senseId": "ignore.action",
@@ -1008,7 +1296,8 @@
       "partOfSpeech": "verb",
       "gloss": "忽略：看到了也不处理、不纳入",
       "usage": "ignore the warning / add to ignore list 在配置说明里常见。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["这条提示看到了也不管、不纳入", "明明发现了有这处变化，但装作没看见直接跳过去"]
     },
     {
       "senseId": "immutable.data",
@@ -1017,7 +1306,11 @@
       "partOfSpeech": "adjective",
       "gloss": "不可变的：创建后不能改，要改就造一份新的",
       "usage": "immutable data 让「谁改过这份值」更容易追。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "改的时候造一份新的，不改原来那份",
+        "造出来就定死了不能动，想改就必须复制一份新的去改"
+      ]
     },
     {
       "senseId": "import.borrow",
@@ -1026,7 +1319,11 @@
       "partOfSpeech": "verb",
       "gloss": "导入：从别的模块把已导出的名字借进来用",
       "usage": "import type 只借类型、运行时擦除；值与类型的导入路径不同。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "从别的文件把公开的名字借进来用",
+        "在文件开头写一行，把别人写好的现成工具借过来用"
+      ]
     },
     {
       "senseId": "inject.dependency",
@@ -1035,7 +1332,11 @@
       "partOfSpeech": "verb",
       "gloss": "注入：把依赖从外部传进函数，而不是在函数内部写死",
       "usage": "可注入的 storage/clock 是为了测试能递假货，不是多余参数。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "测试要换掉时钟，就别在里面写死",
+        "不在自己肚子里把工具写死，而是由外面调用时塞进来"
+      ]
     },
     {
       "senseId": "interface.shape",
@@ -1044,7 +1345,11 @@
       "partOfSpeech": "noun",
       "gloss": "接口：描述对象必须具备哪些字段与方法的形状合同",
       "usage": "读 interface 先当说明书：调用方要给什么，实现方必须兑现什么。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "两边先说好必须有哪些字段，少了就不认",
+        "提前定一张清单，规定这个对象身上必须有哪些字段"
+      ]
     },
     {
       "senseId": "invalid.state",
@@ -1053,7 +1358,11 @@
       "partOfSpeech": "adjective",
       "gloss": "无效的：不符合规则，不能继续用",
       "usage": "invalid token / invalid argument 是报错信息里的固定搭配。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "填的内容不符合规则，不能继续用",
+        "填进来的格式根本不对头，过不了检查不能拿去用"
+      ]
     },
     {
       "senseId": "invalidate.cache",
@@ -1062,7 +1371,8 @@
       "partOfSpeech": "verb",
       "gloss": "使失效：标记缓存不能再用，下次必须重新取",
       "usage": "invalidate cache 之后，下一次读会穿透到真实数据源。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["改完数据，把记下的旧份作废", "告诉系统存的老结果过时了，下次必须重新去要"]
     },
     {
       "senseId": "io.inputoutput",
@@ -1071,7 +1381,11 @@
       "partOfSpeech": "noun",
       "gloss": "输入输出：程序和外界（磁盘、网络、键盘）交换数据的那一类操作",
       "usage": "IO 通常比计算慢几个数量级，所以它几乎总是异步的。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "读文件、发网络，比光算数慢很多",
+        "把东西存进硬盘或从网线上收发数据的那类慢操作"
+      ]
     },
     {
       "senseId": "json.format",
@@ -1080,7 +1394,11 @@
       "partOfSpeech": "noun",
       "gloss": "一种给机器读的文本格式，用大括号和引号把「名字: 值」成对写下来",
       "usage": "配置文件、接口返回的数据，多半都是 JSON。看到大括号就是它。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "配置和回信里那种大括号配引号的文字",
+        "用大括号和冒号把一组成对数据写出来的通用文本格式"
+      ]
     },
     {
       "senseId": "jsx.syntax",
@@ -1089,7 +1407,11 @@
       "partOfSpeech": "noun",
       "gloss": "JSX：在 JS/TS 里用尖括号写界面描述的语法扩展",
       "usage": "JSX 不是 HTML 字符串；{…} 才是逃回 JavaScript 表达式的口子。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "尖括号写按钮和文字，夹在普通程序文字里",
+        "在脚本代码里直接把网页尖括号标签混着写进去的写法"
+      ]
     },
     {
       "senseId": "key.data",
@@ -1098,7 +1420,11 @@
       "partOfSpeech": "noun",
       "gloss": "键：用来查找对应值的名字或标识",
       "usage": "object key / API key 在对象与鉴权教程里含义不同，但都当「钥匙名」用。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "拿这个名字去取对应的那一项",
+        "在字典结构里用来查东西的那个小标签，对准它拿内容"
+      ]
     },
     {
       "senseId": "latency.perf",
@@ -1107,7 +1433,11 @@
       "partOfSpeech": "noun",
       "gloss": "延迟：从发出请求到收到回应要等多久",
       "usage": "high latency 不一定是挂了，可能只是慢得难受。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "点了之后要等挺久才有反应，但没挂",
+        "从点下按钮到屏幕终于有反应，中间白白等了多长时间"
+      ]
     },
     {
       "senseId": "layer.architecture",
@@ -1116,7 +1446,11 @@
       "partOfSpeech": "noun",
       "gloss": "层：靠依赖方向分开的一组模块，不是靠文件夹名字",
       "usage": "判断分层真假：试着换掉下层，上层要改多少。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "谁可以调用谁，不是看文件夹叫什么",
+        "把界面、核心逻辑和底层存储各自分开归类的分工划分"
+      ]
     },
     {
       "senseId": "leak.memory",
@@ -1125,7 +1459,11 @@
       "partOfSpeech": "noun",
       "gloss": "泄漏：该释放的资源没释放，越跑越少",
       "usage": "memory leak 的典型症状是内存曲线只上不下。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "用久了越来越卡，关掉才恢复",
+        "用完的东西一直不扔占着地方，程序越跑越慢最后崩掉"
+      ]
     },
     {
       "senseId": "limit.bound",
@@ -1134,7 +1472,11 @@
       "partOfSpeech": "noun",
       "gloss": "上限：不能超过的那条线",
       "usage": "rate limit / size limit 解释为什么请求被拒。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "次数或大小不能超过这条线，超了就拒",
+        "最多只能装这么多，再多塞一个就会当场被顶回来"
+      ]
     },
     {
       "senseId": "lint.code",
@@ -1143,7 +1485,11 @@
       "partOfSpeech": "verb",
       "gloss": "静态检查：用规则自动挑出风格问题和明显错误",
       "usage": "CI 里 lint failed 通常还没跑到真正的测试。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "还没跑起来，规则先挑出写法问题",
+        "不用真跑起来，光看字面就能自动挑出格式和拼写毛病"
+      ]
     },
     {
       "senseId": "literal.type",
@@ -1152,7 +1498,8 @@
       "partOfSpeech": "noun",
       "gloss": "字面量：源代码里直接写出的固定值，如 'en' 或 20_000",
       "usage": "as const 与字面量联合把「随便字符串」收成封闭集合。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["二十写在程序里，不是算出来的", "在代码里直接写死的某串固定文字或某个具体数字"]
     },
     {
       "senseId": "live.realtime",
@@ -1161,7 +1508,11 @@
       "partOfSpeech": "adjective",
       "gloss": "实时的：正在运行、且随真实数据变化的",
       "usage": "live 数据和测试数据的区别是，前者错了会被真实用户看到。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "给真实用户看的数据，错了他们立刻看见",
+        "只要那边有变化屏幕立刻跟着变，不用手动刷新页面"
+      ]
     },
     {
       "senseId": "load.action",
@@ -1170,7 +1521,8 @@
       "partOfSpeech": "verb",
       "gloss": "加载：把外部数据或资源读进来备用",
       "usage": "load config / load the page 表示从别处取到内存里。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["打开页面时把要用的内容读进来", "从远处或硬盘里把需要的数据拉到内存里准备就绪"]
     },
     {
       "senseId": "lockfile.deps",
@@ -1179,7 +1531,11 @@
       "partOfSpeech": "noun",
       "gloss": "锁文件：记下每次安装实际用到的精确依赖版本",
       "usage": "commit the lockfile，别人装出来才跟你一样。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "装包时真正用了哪一版，记下来大家照装",
+        "把安装时实际用到的每个工具精确版本号定死的大清单"
+      ]
     },
     {
       "senseId": "map.structure",
@@ -1188,7 +1544,11 @@
       "partOfSpeech": "noun",
       "gloss": "映射表：用钥匙直接找到格子的字典结构，不是数组下标扫描",
       "usage": "Map 适合「已知 key 取 value」；先 build 再 get，避免两层循环。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "已知名字直接取，别从头一个个找",
+        "不用从头翻，按名字就能一瞬间抓到内容的数据袋"
+      ]
     },
     {
       "senseId": "match.compare",
@@ -1197,7 +1557,11 @@
       "partOfSpeech": "verb",
       "gloss": "匹配：两边对得上、符合某个模式",
       "usage": "if the pattern matches —— 正则、路由、筛选条件都会用。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "这串字是不是符合我要的那个样子",
+        "拿手里的东西去对模版，看是不是严丝合缝对得上号"
+      ]
     },
     {
       "senseId": "matrix.table",
@@ -1206,7 +1570,11 @@
       "partOfSpeech": "noun",
       "gloss": "矩阵：把条件与应对动作排成可逐格检查的表",
       "usage": "降级矩阵先是产品设计：每格都要有玩家看得见的下一步。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "每种坏法对应玩家下一步，格子里写清",
+        "把各种情况横竖排成一张大网格表，逐个对号入座"
+      ]
     },
     {
       "senseId": "merge.git",
@@ -1215,7 +1583,11 @@
       "partOfSpeech": "verb",
       "gloss": "合并：把两条分支上的改动合到一起",
       "usage": "merge into main 就是把你的分支收进主干。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "我改的和别人改的收到同一条线上",
+        "把别人在旁边改好的支线内容，收纳合流回大主线里"
+      ]
     },
     {
       "senseId": "message.info",
@@ -1224,7 +1596,11 @@
       "partOfSpeech": "noun",
       "gloss": "消息：系统或程序说给你听的一句话",
       "usage": "error message / log message 告诉你发生了什么。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "出错时弹出来的那一行说明文字",
+        "系统给屏幕弹出来的一行字，告诉你刚才具体发生了啥"
+      ]
     },
     {
       "senseId": "middleware.http",
@@ -1233,7 +1609,11 @@
       "partOfSpeech": "noun",
       "gloss": "中间件：请求到达业务逻辑前或后经过的那一层处理",
       "usage": "auth middleware 会在进接口前先查你有没有登录。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "进正事之前先查你登没登录的那一步",
+        "请求进门前或出门后，必须经过的那道拦截处理关卡"
+      ]
     },
     {
       "senseId": "migrate.db",
@@ -1242,7 +1622,11 @@
       "partOfSpeech": "verb",
       "gloss": "迁移：按步骤改数据库结构或历史数据",
       "usage": "run migrations 失败时，先看卡在第几步，别手动乱改表。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "数据库要加一列，按步骤改，别手改表",
+        "给老表加个新列，并把以前存的历史数据全部对齐更新"
+      ]
     },
     {
       "senseId": "missing.state",
@@ -1251,7 +1635,11 @@
       "partOfSpeech": "adjective",
       "gloss": "缺失的：该有却找不到",
       "usage": "missing file / missing dependency 是安装失败日志的高频词。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "少了必需的那个文件，装不下去",
+        "明明按规矩该有这个字段，结果翻开一看竟然空空如也"
+      ]
     },
     {
       "senseId": "mock.test",
@@ -1260,7 +1648,11 @@
       "partOfSpeech": "noun",
       "gloss": "替身：测试里假装的外部依赖，用来隔离真实服务",
       "usage": "mock the API 意思是测试不真发网络请求。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "测试不连真服务，自己扮一个回来",
+        "检查时不想真调收费服务，自己捏个替补假装成功"
+      ]
     },
     {
       "senseId": "module.unit",
@@ -1269,7 +1661,11 @@
       "partOfSpeech": "noun",
       "gloss": "模块：一个可以被单独引用的代码文件或单元",
       "usage": "拆模块的目的不是文件变多，是让每块只负责一件事，改的时候不牵连别处。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "拆成小文件，每块只负责一件事",
+        "独立封装好的一小份文件，能被其他地方单独借去用"
+      ]
     },
     {
       "senseId": "monorepo.repo",
@@ -1278,7 +1674,11 @@
       "partOfSpeech": "noun",
       "gloss": "单仓多包：多个相关项目放在同一个 Git 仓库里",
       "usage": "in a monorepo 里改共享库，要同时考虑所有调用方。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "好几个相关项目放在同一个仓库里",
+        "把前端、后端和公共工具全塞在同一个代码大仓库里管"
+      ]
     },
     {
       "senseId": "mount.lifecycle",
@@ -1287,7 +1687,11 @@
       "partOfSpeech": "verb",
       "gloss": "挂载：组件第一次被放进界面树并开始工作",
       "usage": "mount 时常注册监听；配对的 unmount 必须拆掉。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "页面第一次画出这块时，开始听点击",
+        "界面零件第一次被塞进页面并正式开始工作的那一刻"
+      ]
     },
     {
       "senseId": "mutate.inplace",
@@ -1296,7 +1700,11 @@
       "partOfSpeech": "verb",
       "gloss": "原地改动：不换新对象，直接改旧对象内部的内容",
       "usage": "React/zustand 场景里 mutate 常是反模式；更常见的是换新数组/新对象。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "不换新的，直接改原来那份里面的内容",
+        "不重新开一个新容器，直接在旧物件肚子里动手改内容"
+      ]
     },
     {
       "senseId": "narrow.type",
@@ -1305,7 +1713,11 @@
       "partOfSpeech": "verb",
       "gloss": "收窄：用运行时检查让类型从宽联合变成更具体的一种",
       "usage": "if (typeof x === 'string') 之后，分支里的 x 已被 narrow。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "确认它是文字之后，后面才能当文字用",
+        "通过一步判断，把原本宽泛的范围缩小到确切的一种"
+      ]
     },
     {
       "senseId": "native.device",
@@ -1314,7 +1726,11 @@
       "partOfSpeech": "adjective",
       "gloss": "原生的：跑在操作系统应用容器里，而不是普通浏览器标签页",
       "usage": "native 存储与分享常常真异步；超时阈值也常比浏览器更长。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "装在手机上的那个，不是浏览器里打开的",
+        "直接调动手机硬件能力跑，而不是套在网页浏览器里"
+      ]
     },
     {
       "senseId": "node.runtime",
@@ -1323,7 +1739,11 @@
       "partOfSpeech": "noun",
       "gloss": "一个让 JavaScript 脱离浏览器、在电脑上直接运行的程序",
       "usage": "浏览器和 Node 都能跑 JavaScript，但能用的能力不同：Node 能读文件，浏览器不能。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "不靠浏览器，在电脑里直接跑脚本",
+        "让网页脚本脱离浏览器、直接在电脑后台跑起来的底座"
+      ]
     },
     {
       "senseId": "normalize.input",
@@ -1332,7 +1752,11 @@
       "partOfSpeech": "verb",
       "gloss": "规范化：把输入收成统一干净的形式再往下用",
       "usage": "trim、小写化、去空都是 normalize；先规范再校验，少踩空白字符的坑。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "用户乱打的空格和大小写，先收成一样",
+        "把用户填得乱七八糟的格式整理成干干净净的统一模样"
+      ]
     },
     {
       "senseId": "null.absent",
@@ -1341,7 +1765,11 @@
       "partOfSpeech": "noun",
       "gloss": "空值：明确表示「这里没有值」，而不是值恰好是 0 或空字符串",
       "usage": "很多 bug 来自把 null 当成正常值继续用。读到 null 要先问「谁该给它赋值」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "这里故意什么都没有，别当成零继续用",
+        "放一个特定记号，明确说明这里就是什么东西都没有"
+      ]
     },
     {
       "senseId": "nullish.coalesce",
@@ -1350,7 +1778,11 @@
       "partOfSpeech": "adjective",
       "gloss": "空值性的：特指 null 或 undefined，不包括 0 和空字符串",
       "usage": "?? 只在 nullish 时触发；|| 会把 0 也当成缺省，余额场景要小心。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "零也是有效的数，别当成没填去换掉",
+        "专指压根没定义或明确留白的情况，不包含数字零"
+      ]
     },
     {
       "senseId": "open.action",
@@ -1359,7 +1791,8 @@
       "partOfSpeech": "verb",
       "gloss": "打开：开始使用某个文件、连接或界面",
       "usage": "open the file / open a connection —— 用之前先 open。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["用之前先把文件或连接准备好", "双击展开或者连通一条通道，准备开始使用"]
     },
     {
       "senseId": "optional-chaining.access",
@@ -1368,7 +1801,11 @@
       "partOfSpeech": "noun",
       "gloss": "可选链：?. 先确认左边有值再往下取，否则整段是 undefined",
       "usage": "远程行可能为 null 时，?. 比直接 . 安全；常与 ?? 后备值成对。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "中间可能没有，取下去前先问一声",
+        "加个问号点一下，前面要是没了就安全停住不报错"
+      ]
     },
     {
       "senseId": "optional.choice",
@@ -1377,7 +1814,8 @@
       "partOfSpeech": "adjective",
       "gloss": "可选的：有更好，没有也能继续",
       "usage": "optional parameter / this step is optional 标出可以跳过的部分。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["这个可以不传，不传也能跑", "这一项填不填都行，直接留空也不会卡住流程"]
     },
     {
       "senseId": "order.sequence",
@@ -1386,7 +1824,8 @@
       "partOfSpeech": "noun",
       "gloss": "顺序：谁先谁后",
       "usage": "in this order / out of order —— 步骤必须按序时会强调。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["这几步必须按这个先后，颠倒会坏", "排队的时候谁走在前面、谁跟在后面的先后规矩"]
     },
     {
       "senseId": "overwrite.update",
@@ -1395,7 +1834,11 @@
       "partOfSpeech": "verb",
       "gloss": "覆盖：用新值取代旧值，而不是再插入一条记录",
       "usage": "投票幂等靠 overwrite 同一玩家行，而不是 insert 第二票。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "同一人再投一次，改原来那条，不新加",
+        "不新建一条记录，而是把旧内容硬生生抹掉涂上新的"
+      ]
     },
     {
       "senseId": "parameter.input",
@@ -1404,7 +1847,11 @@
       "partOfSpeech": "noun",
       "gloss": "参数：函数声明里预留的输入槽位，调用时填入实参",
       "usage": "参数列表的默认值管运行时；类型上的 ? 管可不可以不传。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "调这段时，缺了这些就跑不了",
+        "在写功能时预先留好的输入坑位，等调用时往里塞东西"
+      ]
     },
     {
       "senseId": "path.location",
@@ -1413,7 +1860,8 @@
       "partOfSpeech": "noun",
       "gloss": "路径：到达某个文件或资源的位置写法",
       "usage": "file path / absolute path 出现在几乎所有「告诉程序去哪找」的句子里。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["用一串目录名写出文件在哪", "用一串斜杠连起来的、顺着它就能找到文件的具体位置"]
     },
     {
       "senseId": "payload.api",
@@ -1422,7 +1870,11 @@
       "partOfSpeech": "noun",
       "gloss": "载荷：请求或响应里真正带着的数据本体",
       "usage": "看报错时除了状态码，还要看 response payload 里写了什么。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "回信正文里到底写了什么，别只看过没过",
+        "包裹外皮剥开后，里面真正装着要送过去的核心业务数据"
+      ]
     },
     {
       "senseId": "phase.process",
@@ -1431,7 +1883,11 @@
       "partOfSpeech": "noun",
       "gloss": "阶段：过程进行到哪一步的命名状态，不是一句给人看的文案",
       "usage": "phase 应是可比较的 key；「加载中」一个词往往掩盖了七个阶段。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "加载中一个词不够，要知道走到第几步",
+        "流程走到哪一步了的内部代号，比如加载中还是就绪"
+      ]
     },
     {
       "senseId": "pin.version",
@@ -1440,7 +1896,11 @@
       "partOfSpeech": "verb",
       "gloss": "钉死版本：固定用某一个确切版本，避免被悄悄升级",
       "usage": "pin the dependency 后，升级必须你主动改。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "别让它悄悄升版本，写死就用这一号",
+        "把版本号死死定在某一个具体数字上，禁止被自动更新"
+      ]
     },
     {
       "senseId": "pipeline.ci",
@@ -1449,7 +1909,11 @@
       "partOfSpeech": "noun",
       "gloss": "流水线：构建、测试、发布串成自动跑的一串步骤",
       "usage": "CI pipeline failed 时，先看卡在哪一 stage。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "交上去之后自动打包、测试、再上线",
+        "把体检、打包、上线串成一排，前面通了自动跑下一棒"
+      ]
     },
     {
       "senseId": "placeholder.value",
@@ -1458,7 +1922,11 @@
       "partOfSpeech": "noun",
       "gloss": "占位：先占着位置的假值或空值，提醒你稍后填真的",
       "usage": "example 里的 your-…-here 是 placeholder；千万别把真密钥填回去提交。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "例子里写着以后填，千万别把真的交上去",
+        "输入框里浅浅的一行提示文字，点进去打字就自动消失"
+      ]
     },
     {
       "senseId": "platform.target",
@@ -1467,7 +1935,11 @@
       "partOfSpeech": "noun",
       "gloss": "平台：web / ios / android / electron 等可运行目标",
       "usage": "接口按最难的 platform 设计；容易的一端可以多包一层 Promise。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "同一套功能，网页和手机做法不一样",
+        "这套代码最终是给苹果、安卓还是网页浏览器跑的"
+      ]
     },
     {
       "senseId": "poll.repeat",
@@ -1476,7 +1948,11 @@
       "partOfSpeech": "verb",
       "gloss": "轮询：按固定间隔主动询问「有没有新消息」",
       "usage": "读到 poll 时想成本：空跑次数、延迟上限，以及能否改成订阅。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "隔一会儿就主动问一次有没有新的",
+        "隔两秒就跑去问一次后台好了没，一直问到给结果为止"
+      ]
     },
     {
       "senseId": "prepare.action",
@@ -1485,7 +1961,8 @@
       "partOfSpeech": "verb",
       "gloss": "准备：正式动手前先把材料和环境就位",
       "usage": "prepare the environment 常出现在教程第一步。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["正式动手前先把材料和工具就位", "正式动手前，先把需要的工具和原料在边上摆整齐"]
     },
     {
       "senseId": "privacy.protection",
@@ -1494,7 +1971,11 @@
       "partOfSpeech": "noun",
       "gloss": "隐私：限制识别个人与敏感内容离开设备或进入分析的边界",
       "usage": "隐私承诺常在单元层最便宜：拦 transport 比开浏览器验更直接。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "房间号和自由文本，不要送到统计里",
+        "守住底线，不能把用户的私人敏感信息悄悄传给外人"
+      ]
     },
     {
       "senseId": "privilege.security",
@@ -1503,7 +1984,8 @@
       "partOfSpeech": "noun",
       "gloss": "权限：系统允许你做哪些操作",
       "usage": "insufficient privilege 就是「你的账号没被允许做这件事」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["这个账号没被允许做这件事", "账号等级够不够高，决定了能看哪些页面和点哪些开关"]
     },
     {
       "senseId": "process.transient",
@@ -1512,7 +1994,11 @@
       "partOfSpeech": "noun",
       "gloss": "过程态：描述进行中、失败、可清零的临时信息，与长期事实分开",
       "usage": "失败后的 error 属于 process；user 身份属于 fact——别塞进同一个 store。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "转圈和报错是临时的，失败后可以清掉",
+        "转圈或报错的临时状况，刷新一下就没了的瞬时信息"
+      ]
     },
     {
       "senseId": "promise.async",
@@ -1521,7 +2007,11 @@
       "partOfSpeech": "noun",
       "gloss": "承诺对象：表示「稍后会有结果」的异步句柄",
       "usage": "return a promise 时，调用方用 then 或 await 等结果。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "调用当时拿不到，过一会儿才有结果",
+        "先拿手里的一张凭条，保证稍后一定把结果送过来"
+      ]
     },
     {
       "senseId": "prompt.instruction",
@@ -1530,7 +2020,8 @@
       "partOfSpeech": "noun",
       "gloss": "提示词：你交给 AI 的那段话，规定它做什么、按什么格式回答",
       "usage": "prompt 写得含糊，答案就含糊。它更像需求文档，不像聊天。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["你写给它的要求，含糊它就含糊答", "发给大模型的那段要求，指挥它按什么规矩干活"]
     },
     {
       "senseId": "props.parameters",
@@ -1539,7 +2030,11 @@
       "partOfSpeech": "noun",
       "gloss": "属性包：传给组件的那包参数，外形像 HTML 属性",
       "usage": "标签上的 seed=\"…\" 就是在给函数传参，不是另一套神秘机制。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "这块界面要的数据，写在尖括号上往里传",
+        "从外层页面塞进这个零件肚子里的一包现成数据"
+      ]
     },
     {
       "senseId": "pull-request.github",
@@ -1548,7 +2043,11 @@
       "partOfSpeech": "noun",
       "gloss": "拉取请求：请求把你的改动合进目标分支",
       "usage": "open a pull request 之后才会进入代码评审。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "改完了，请别人把我的改动收进主线",
+        "提个申请让管理员把你自己改好的部分代码收录进去"
+      ]
     },
     {
       "senseId": "pure.function",
@@ -1557,7 +2056,11 @@
       "partOfSpeech": "adjective",
       "gloss": "纯的：同样输入必得同样输出，且不偷偷改外部世界",
       "usage": "纯函数最好测也最好放单元层；e2e 留给纯函数看不见的事。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "测它不用打开页面，给输入就能断定输出",
+        "给同样的原料永远吐同样结果，且绝不碰外面的东西"
+      ]
     },
     {
       "senseId": "push.delivery",
@@ -1566,7 +2069,11 @@
       "partOfSpeech": "noun",
       "gloss": "推送：服务器有变化就主动送来，而不是客户端反复去问",
       "usage": "push 解决「之后的变化」；进房时的历史列表往往仍要先拉一次。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "服务器有新的自己送过来，我不用老问",
+        "不用自己反复刷新，那边一有新动静就主动甩到屏幕上"
+      ]
     },
     {
       "senseId": "race.concurrency",
@@ -1575,7 +2082,11 @@
       "partOfSpeech": "noun",
       "gloss": "竞态：结果取决于谁先跑完，顺序一变就错",
       "usage": "race condition 在日志里常表现为「偶发、难复现」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "两个请求抢着改同一处，后到的盖住先到的",
+        "两件事同时在跑看谁快，顺序一颠倒整个结果全乱套"
+      ]
     },
     {
       "senseId": "race.promise",
@@ -1584,7 +2095,11 @@
       "partOfSpeech": "verb",
       "gloss": "赛跑取先：多个 Promise 里谁先结束就采用谁的结果",
       "usage": "Promise.race 读作「只认第一名」；常见用法是真实操作对闹钟。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "好几件同时等，谁先做完就用谁的结果",
+        "同时派出去好几个任务，哪个最先有动静就只认哪一个"
+      ]
     },
     {
       "senseId": "readme.doc",
@@ -1593,7 +2108,11 @@
       "partOfSpeech": "noun",
       "gloss": "项目根目录下那份「先读我」的说明文件",
       "usage": "打开一个陌生项目，README 是唯一保证该先看的文件。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "项目文件夹里那份告诉你怎么开始的说明",
+        "打开别人仓库最显眼的那份介绍，教你这个项目该怎么跑"
+      ]
     },
     {
       "senseId": "reason.explain",
@@ -1602,7 +2121,8 @@
       "partOfSpeech": "noun",
       "gloss": "原因：为什么会这样的解释",
       "usage": "the reason is… / for this reason —— 排错段落的连接词。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["它为什么会这样，把解释写出来", "说清楚到底是由于什么，才导致眼下发生这个局面"]
     },
     {
       "senseId": "rebase.git",
@@ -1611,7 +2131,11 @@
       "partOfSpeech": "verb",
       "gloss": "变基：把你的提交挪到另一条历史之上重新放一遍",
       "usage": "rebase onto main 常用来让历史更直，但已推送的共享分支要谨慎。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "把我的改动挪到别人最新历史上面再放一遍",
+        "把你改动的起点拔起来，重新嫁接到别人最新的记录后面"
+      ]
     },
     {
       "senseId": "receipt.record",
@@ -1620,7 +2144,11 @@
       "partOfSpeech": "noun",
       "gloss": "回执：一次操作留下的可查记录",
       "usage": "日常英语里是购物小票；工程里是「这事做过、这是凭证」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "做过这件事，留下一张能查的记录",
+        "办完一笔业务后系统给的证明字据，之后拿来对账查验"
+      ]
     },
     {
       "senseId": "recover.failure",
@@ -1629,7 +2157,11 @@
       "partOfSpeech": "verb",
       "gloss": "恢复：失败后按预定路径自救，而不是只报错离开",
       "usage": "读到 recover 时看次数上限——无上限的恢复往往会变成死循环刷新。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "断了之后自己再连，但要有次数上限",
+        "半路摔跤了不直接罢工，按备用方案自己重新爬起来"
+      ]
     },
     {
       "senseId": "reduce.fold",
@@ -1638,7 +2170,11 @@
       "partOfSpeech": "verb",
       "gloss": "归约：把列表从左到右折成一个累积值",
       "usage": "读 reduce 时盯住：初始值是什么、每一步 acc 怎么变。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "一堆数从头累加，最后得到一个总数",
+        "把一整串数字从头到尾挨个滚雪球，最后揉成一个总数"
+      ]
     },
     {
       "senseId": "ref.pocket",
@@ -1647,7 +2183,11 @@
       "partOfSpeech": "noun",
       "gloss": "引用口袋：可读写但不触发重渲的可变格子，常挂 DOM 或定时器 id",
       "usage": "读到 ref 时问：为什么不能放进 state？答案通常是「改了不该重渲」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "记下定时器编号，改它不该让页面重画",
+        "偷偷存个数值在兜里，改了它不会让页面重新刷一遍"
+      ]
     },
     {
       "senseId": "refactor.code",
@@ -1656,7 +2196,11 @@
       "partOfSpeech": "verb",
       "gloss": "重构：不改对外行为，只改内部结构让代码更好改",
       "usage": "跟 AI 说 refactor 时，要写明「行为必须不变」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "功能一个别动，把内部整理得更好改",
+        "功能效果一点没变，只是把乱七八糟的写法理顺改好"
+      ]
     },
     {
       "senseId": "registry.catalog",
@@ -1665,7 +2209,11 @@
       "partOfSpeech": "noun",
       "gloss": "注册表：集中列出合法条目的清单，没有登记就不算存在",
       "usage": "registry 强制字段与形状；旁路「先在 UI 里试一下」会被挡住。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "先在总名单里登记，没有登记就不让用",
+        "统一管理所有公开包的大名册，没登在上面的搜不到"
+      ]
     },
     {
       "senseId": "reject.promise",
@@ -1674,7 +2222,11 @@
       "partOfSpeech": "verb",
       "gloss": "拒绝兑现：让 Promise 以失败结束，而不是给出正常值",
       "usage": "超时闹钟常用 reject；读到它时想的是「这条赛道以错误收场」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "等太久了，按没做成收场，不给正常结果",
+        "未完工的任务在半路搞砸了，主动甩出异常宣告完蛋"
+      ]
     },
     {
       "senseId": "reload.page",
@@ -1683,7 +2235,8 @@
       "partOfSpeech": "verb",
       "gloss": "重新加载：整页或资源再取一次，常作最后一招自救",
       "usage": "代码里的 reload 往往是「退路」，不是日常导航；要配「只做一次」的标记。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["出错后把整页再打开一遍试试", "页面彻底乱套了，把整张网页从头重新拉取展示一遍"]
     },
     {
       "senseId": "remove.action",
@@ -1692,7 +2245,8 @@
       "partOfSpeech": "verb",
       "gloss": "移除：从集合、列表或系统里拿掉",
       "usage": "remove the item / remove unused code —— 比 delete 更常出现在教程正文。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["从列表或系统里把这一项拿掉", "把列表里的某一项直接抽走扔掉，不再留在里面"]
     },
     {
       "senseId": "render.ui",
@@ -1701,7 +2255,11 @@
       "partOfSpeech": "verb",
       "gloss": "渲染：根据当前数据把界面描述变成屏幕上可见的结果",
       "usage": "重新 render 往往等于组件函数又执行了一遍，不是魔法重画。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "数据变了，屏幕上的字和按钮跟着变",
+        "根据最新数据，在屏幕上把元素和文字真正画出来"
+      ]
     },
     {
       "senseId": "replace.action",
@@ -1710,7 +2268,8 @@
       "partOfSpeech": "verb",
       "gloss": "替换：用新的盖住或换掉旧的",
       "usage": "replace the old value / find and replace 是编辑与配置里的动作。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["找到旧的，换成新的那一份", "把原位置的旧东西拿掉，放上一个全新东西顶替它"]
     },
     {
       "senseId": "replace.state",
@@ -1719,7 +2278,11 @@
       "partOfSpeech": "verb",
       "gloss": "整体替换：用新状态盖住旧状态，而不是只合并列出的字段",
       "usage": "zustand 的 set(state, true) 才是 replace；默认合并会留下陈旧键。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "整袋数据换成新的，没列出的旧字段别留",
+        "不挑拣改几个字段，直接拿整份新数据全盘端走旧的"
+      ]
     },
     {
       "senseId": "require.need",
@@ -1728,7 +2291,8 @@
       "partOfSpeech": "verb",
       "gloss": "需要：做这件事必须具备的条件",
       "usage": "this requires Node 20 / required field 表示「没有就不行」。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["少了这一项就不能继续", "想办成这件事，手头打底得先具备的硬性前提条件"]
     },
     {
       "senseId": "reset.state",
@@ -1737,7 +2301,8 @@
       "partOfSpeech": "verb",
       "gloss": "重置：把状态清回初始定义，而不是只改一两个字段",
       "usage": "好的 reset 与初始状态共用同一份定义，避免两处各写一遍。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["一键回到刚打开时的样子", "不管刚才改了多少东西，一键全部复原成出厂模样"]
     },
     {
       "senseId": "resolve.promise",
@@ -1746,7 +2311,11 @@
       "partOfSpeech": "verb",
       "gloss": "兑现成功：让 Promise 带着正常结果结束",
       "usage": "Promise.resolve(x) 常用来把同步值收成同一形状的 Promise。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "那边做完了，把正常结果交回来",
+        "等了半天的活终于顺利做完了，把算好的好结果递交出来"
+      ]
     },
     {
       "senseId": "rest.params",
@@ -1755,7 +2324,11 @@
       "partOfSpeech": "noun",
       "gloss": "剩余参数：…name 收集「还没被具名拿走」的那一包",
       "usage": "参数里 ...props 是收集，JSX 里 {...props} 是展开，要成对。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "没被点名拿走的那些，收成一包接着传",
+        "用三个小点把前面没挑走的零碎输入一口气全打包收走"
+      ]
     },
     {
       "senseId": "result.outcome",
@@ -1764,7 +2337,8 @@
       "partOfSpeech": "noun",
       "gloss": "结果：做完之后得到的东西或状态",
       "usage": "return the result / as a result 是函数与说明文字里的高频词。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["做完之后拿到手的是什么", "整套操作全部跑完之后，最终落到手里的那个现成收获"]
     },
     {
       "senseId": "retention.return",
@@ -1773,7 +2347,11 @@
       "partOfSpeech": "noun",
       "gloss": "留存：用户过一段时间还会回来继续用的比例或能力",
       "usage": "留存不一定靠推送；可转发文案与「记得你」的界面也是钩子。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "用过一次的人，过几天还会不会再来",
+        "今天新来的人里，下星期还会主动打开继续用的占几成"
+      ]
     },
     {
       "senseId": "retire.lifecycle",
@@ -1782,7 +2360,11 @@
       "partOfSpeech": "verb",
       "gloss": "退役：标记为不再使用，但不删除",
       "usage": "retire 而不是 delete，是为了让历史还能查得到。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "标记不再使用，但先不删，历史还能查",
+        "给老功能打上封存标签不再用，但为了兼容留着不删"
+      ]
     },
     {
       "senseId": "retry.network",
@@ -1791,7 +2373,11 @@
       "partOfSpeech": "verb",
       "gloss": "重试：失败后再试一次或若干次",
       "usage": "with retry 常出现在网络调用说明里；要确认接口是否幂等。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "网络没做成，隔一会儿再发一遍",
+        "刚发出去的请求要是断网翻车了，自动立马重新再发一遍"
+      ]
     },
     {
       "senseId": "return.value",
@@ -1800,7 +2386,11 @@
       "partOfSpeech": "verb",
       "gloss": "返回：把结果交回给调用方，并结束当前函数",
       "usage": "return true / early return 是函数教程的核心动作。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "算完了把答案交回去，这段到此结束",
+        "算完之后把算好的答案交出去，顺便结束当前这趟执行"
+      ]
     },
     {
       "senseId": "review.code",
@@ -1809,7 +2399,11 @@
       "partOfSpeech": "noun",
       "gloss": "评审：别人检查你的改动是否可接受",
       "usage": "code review 里 request changes 表示「先改再合」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "合进主线前，请别人先看过这批改动",
+        "改好的代码提上去，让同行逐行挑毛病看能不能准许入库"
+      ]
     },
     {
       "senseId": "revision.content",
@@ -1818,7 +2412,11 @@
       "partOfSpeech": "noun",
       "gloss": "修订版：同一份东西的第几版",
       "usage": "跟 version 的区别：revision 常指同一条内容被改过几次。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "这篇课文改过几次，现在是第几版",
+        "同一篇稿子改了好几回，标记这是改动后的第几个存档"
+      ]
     },
     {
       "senseId": "rollback.release",
@@ -1827,7 +2425,11 @@
       "partOfSpeech": "verb",
       "gloss": "回滚：把线上版本退回到上一个还能用的版本",
       "usage": "发布出问题就 rollback，先恢复服务再查原因。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "刚发出去的坏了，先退回上一版",
+        "刚发上去的新版大面积崩溃，紧急倒退回昨天稳定旧版"
+      ]
     },
     {
       "senseId": "row.database",
@@ -1836,7 +2438,11 @@
       "partOfSpeech": "noun",
       "gloss": "表行：数据库一张表里的一条记录，字段名常跟库约定",
       "usage": "XxxRow 提示「这是表结构」；不要假设它等于前端对象字段名。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "库里这一条，名字别当成页面上的名字",
+        "数据表格里横向的一整条，装满某对象的全部登记信息"
+      ]
     },
     {
       "senseId": "rpc.remote",
@@ -1845,7 +2451,11 @@
       "partOfSpeech": "noun",
       "gloss": "远程过程调用：像调本地函数一样调后端的一个命名过程",
       "usage": "Supabase 的 rpc 常返回 { data, error }——先看 error 再碰 data。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "对面有个按名字叫的功能，我这边按名去调",
+        "明明是找远方服务器干活，写起来却跟调用自家方法一样"
+      ]
     },
     {
       "senseId": "run.action",
@@ -1854,7 +2464,11 @@
       "partOfSpeech": "verb",
       "gloss": "运行：启动一段程序或命令让它执行",
       "usage": "run the command / run the tests 是操作步骤的谓语。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "在黑窗口里把这条命令执行起来",
+        "敲个回车把写好的指令开动起来，让它真正开始干活"
+      ]
     },
     {
       "senseId": "runtime.environment",
@@ -1863,7 +2477,11 @@
       "partOfSpeech": "noun",
       "gloss": "运行时：程序真正执行时所处的环境与当时可用能力",
       "usage": "runtime 描述符应可纯函数测试：决策与读全局要分开。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "真正跑起来时，这台机器能做什么",
+        "代码真在机器里跑起来时，实际所处的上下文环境"
+      ]
     },
     {
       "senseId": "sanitize.input",
@@ -1872,7 +2490,11 @@
       "partOfSpeech": "verb",
       "gloss": "清洗：把不可信输入处理成安全可用的形式",
       "usage": "sanitize user input 常出现在防注入、防 XSS 的说明里。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "用户填的字可能有危险，先处理再显示",
+        "把用户填进来的危险恶意符号过滤掉，防止系统被黑搞崩"
+      ]
     },
     {
       "senseId": "save.action",
@@ -1881,7 +2503,11 @@
       "partOfSpeech": "verb",
       "gloss": "保存：把当前内容写到持久位置，避免丢失",
       "usage": "save the file / save changes 是编辑器与表单教程的收尾动作。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "改完了写到磁盘，免得一关就没",
+        "把写好的内容正式写入硬盘，免得关掉软件后全白忙活"
+      ]
     },
     {
       "senseId": "schema.data",
@@ -1890,7 +2516,11 @@
       "partOfSpeech": "noun",
       "gloss": "结构定义：规定一份数据必须长什么样",
       "usage": "schema validation 失败，意思是数据的形状不对，不是内容不对。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "字段缺了或格式不对，整份都不收",
+        "立个硬规矩，定死这份数据必须包含哪些字段与格式"
+      ]
     },
     {
       "senseId": "script.command",
@@ -1899,7 +2529,11 @@
       "partOfSpeech": "noun",
       "gloss": "脚本：package.json 里登记的、可用包管理器一键调用的命令",
       "usage": "scripts 是项目的门牌：dev、build、test、verify 各自开哪扇门。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "项目里一键启动、打包、跑测试的那些命令",
+        "把一长串繁琐操作起个简短别号，敲一下就能一键跑起来"
+      ]
     },
     {
       "senseId": "secret.security",
@@ -1908,7 +2542,11 @@
       "partOfSpeech": "noun",
       "gloss": "机密：不能写进代码仓库的口令、令牌一类",
       "usage": "do not commit secrets —— 密钥进 Git 是事故，不是小疏忽。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "口令和密钥不能写进仓库，一拉就看见",
+        "绝对不能发到公开网上的私人密码或者敏感通行口令"
+      ]
     },
     {
       "senseId": "serialize.data",
@@ -1917,7 +2555,11 @@
       "partOfSpeech": "verb",
       "gloss": "序列化：把内存里的结构变成可存储或可传输的文本/字节",
       "usage": "serialize to JSON 是最常见的落盘和跨服务传数据方式。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "内存里的结构变成一段可发送的文字",
+        "把复杂的结构压成扁平的一长串文本，方便走网线发走"
+      ]
     },
     {
       "senseId": "setter.update",
@@ -1926,7 +2568,11 @@
       "partOfSpeech": "noun",
       "gloss": "设值函数：专门负责把某个状态字段改成新值的方法",
       "usage": "看到 setXxx 时，它本身不是「当前值」，当前值是不带 set 的那个字段。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "这个不存当前是几，它只负责把那个改掉",
+        "专门用来把某个值改成新数据、并触发界面更新的把手"
+      ]
     },
     {
       "senseId": "settle.promise",
@@ -1935,7 +2581,8 @@
       "partOfSpeech": "verb",
       "gloss": "尘埃落定：Promise 无论成功还是失败，只要已经结束",
       "usage": "文档说 settled 时，问的是「有没有结果了」，不是「成功了没有」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["已经有结果了，不管成还是不成", "不管成了还是搞砸了，反正这个后台活彻底结清了"]
     },
     {
       "senseId": "shell.container",
@@ -1944,7 +2591,11 @@
       "partOfSpeech": "noun",
       "gloss": "外壳：包住同一份 Web 产物的原生或桌面容器",
       "usage": "壳负责窗口与权限开关；产品决策尽量挪出壳，避免双份逻辑。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "同一份网页成品，外面套个桌面或手机窗口",
+        "把写好的网页套在本地窗口盒子里，当成独立软件去用"
+      ]
     },
     {
       "senseId": "short-circuit.logic",
@@ -1953,7 +2604,11 @@
       "partOfSpeech": "noun",
       "gloss": "短路：左边已能决定结果时，右边表达式不再计算",
       "usage": "A || B 在 A 为真时可能不算 B；有副作用的右边要格外小心。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "前面已经成立，后面带动作的就可能没跑",
+        "前面既然已经不成立了，后面的长串判断直接略过不看"
+      ]
     },
     {
       "senseId": "side-effect.code",
@@ -1962,7 +2617,11 @@
       "partOfSpeech": "noun",
       "gloss": "副作用：函数除了返回值以外，还改了外面的世界",
       "usage": "pure function 没有 side effect；写日志、改数据库都是副作用。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "算完不止交答案，还写了文件或改了库",
+        "算自己账的同时，还顺手改了外面的共享变量或弹了提示"
+      ]
     },
     {
       "senseId": "silent.gap",
@@ -1971,7 +2630,11 @@
       "partOfSpeech": "adjective",
       "gloss": "静默的：没有提示、没有动作、也没有失败信号的缺口",
       "usage": "no silent gaps 断言在防：坏了却既不说明也不给下一步。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "出错了页面毫无反应，也没有任何提示",
+        "点完之后什么动静也没有，既没报错也没反应像石沉大海"
+      ]
     },
     {
       "senseId": "skip.action",
@@ -1980,7 +2643,8 @@
       "partOfSpeech": "verb",
       "gloss": "跳过：这一步不做，直接进入下一步",
       "usage": "skip this step / skip the test 表示有意不执行。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["这一步不做，直接进入下一步", "这一关不用做了，直接越过去接着干后头的那一项"]
     },
     {
       "senseId": "snapshot.git",
@@ -1989,7 +2653,11 @@
       "partOfSpeech": "noun",
       "gloss": "快照：某一刻的完整副本，之后不再改变",
       "usage": "读到 snapshot 时，问的通常是「哪一刻的副本」，而不是「现在什么样」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "记下这一刻长什么样，以后对照用",
+        "给当前时刻的文件拍张定格记录永久冻结，再也不许动"
+      ]
     },
     {
       "senseId": "source-of-truth.data",
@@ -1998,7 +2666,11 @@
       "partOfSpeech": "noun",
       "gloss": "真相源：说法不一致时以谁为准",
       "usage": "同一件事有两个 source of truth，等于没有。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "两处都记着同一件事，到底听哪一处",
+        "各个页面显示打架时，全系统唯一以它为准的那个老根底"
+      ]
     },
     {
       "senseId": "source.origin",
@@ -2007,7 +2679,11 @@
       "partOfSpeech": "noun",
       "gloss": "源码 / 来源：人写的那份原始文本，或数据来自哪里",
       "usage": "src 文件夹是 source 的缩写：里面放的是人写的原件，不是构建出来的产物。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "人写的原件在这，打包结果在另一处",
+        "人亲手敲出来的原装文本内容，而不是后面打包的产物"
+      ]
     },
     {
       "senseId": "spread.copy",
@@ -2016,7 +2692,11 @@
       "partOfSpeech": "verb",
       "gloss": "展开：用 ... 把对象或数组的内容摊进另一个结构",
       "usage": "[...old, item] 是换新数组；{...props} 是把剩余属性贴到元素上。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "旧列表拷一份再加一项，不改原来那份",
+        "用三个点把盒子里东西倒出来，顺手摊进新盒子里"
+      ]
     },
     {
       "senseId": "stack-trace.error",
@@ -2025,7 +2705,11 @@
       "partOfSpeech": "noun",
       "gloss": "堆栈跟踪：出错时函数一层层怎么调进来的记录",
       "usage": "读 stack trace 从最上面的业务帧往下看，别只盯着最底下一行。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "报错下面那一串调用名单，从上往下看",
+        "报错时打出来的一长串清单，看是一层层从哪钻进来的"
+      ]
     },
     {
       "senseId": "stale.cache",
@@ -2034,7 +2718,11 @@
       "partOfSpeech": "adjective",
       "gloss": "过期的：内容还在，但已经跟不上真相了",
       "usage": "stale cache、stale data、stale branch —— 都是「旧了，别信」。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "记下的还是旧的，页面已经改过了",
+        "手头数据虽然还在，但源头早就改了，不能再盲信它"
+      ]
     },
     {
       "senseId": "state.memory",
@@ -2043,7 +2731,11 @@
       "partOfSpeech": "noun",
       "gloss": "状态：组件或应用自己记住的、会随交互变化的数据",
       "usage": "state 变了通常触发重渲；改了却不该重渲的口袋用 ref。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "点一下数字加一，页面自己得记住现在是几",
+        "页面心里记住的变量，一旦改了它整个画面就跟着重画"
+      ]
     },
     {
       "senseId": "storage.persistence",
@@ -2052,7 +2744,11 @@
       "partOfSpeech": "noun",
       "gloss": "存储：把数据留在关掉程序之后还在的地方",
       "usage": "内存里的东西一关就没，storage 是「下次打开还在」的那一层。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "关了再开还在，不是内存里一关就没",
+        "把数据长久放在关机也丢不掉的地方，下次打开依然还在"
+      ]
     },
     {
       "senseId": "store.state",
@@ -2061,7 +2757,11 @@
       "partOfSpeech": "noun",
       "gloss": "状态仓库：一袋当前值加上改这些值的方法，多处界面共享",
       "usage": "读 store 先分两栏：现在是什么，谁有权改。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "好几个页面都要读同一份当前数据",
+        "多页面公用的公共大账本，谁都能看、也能按规矩改它"
+      ]
     },
     {
       "senseId": "subscribe.events",
@@ -2070,7 +2770,11 @@
       "partOfSpeech": "verb",
       "gloss": "订阅：挂上监听，之后有变化由对方推过来",
       "usage": "subscribe 成对出现的是 unsubscribe；离开时不拆会漏听或重复听。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "先报名听这个房间，有新的就送过来",
+        "把耳朵挂在某个信道上，之后那边有动静就立刻通知你"
+      ]
     },
     {
       "senseId": "success.status",
@@ -2079,7 +2783,11 @@
       "partOfSpeech": "noun",
       "gloss": "成功：操作按预期完成",
       "usage": "on success / success response 标出成功路径怎么走。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "操作按预想做完了，走这条正常路",
+        "刚才点的动作办妥了，如愿拿到了预想中的好结果"
+      ]
     },
     {
       "senseId": "surface.public",
@@ -2088,7 +2796,11 @@
       "partOfSpeech": "noun",
       "gloss": "对外表面：别人（或测试、其他端）真正会碰到的那组名字与标记",
       "usage": "public surface 改名等于改协议；本地变量名可以丑，线上字符串要稳。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "测试和外面认的是这些公开名字",
+        "暴露在最外层、别人能直接看到和调用的那一批公开名字"
+      ]
     },
     {
       "senseId": "sync.blocking",
@@ -2097,7 +2809,11 @@
       "partOfSpeech": "adjective",
       "gloss": "同步的：调用当下就给出结果，中间不挂起等待",
       "usage": "localStorage 是 sync API；接口仍可能包成 async，那是为了对齐形状。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "问完立刻有答案，不用等网络回来",
+        "调完立刻就能拿到现成答案，不用挂在原地傻等后台"
+      ]
     },
     {
       "senseId": "tag.markup",
@@ -2106,7 +2822,11 @@
       "partOfSpeech": "noun",
       "gloss": "标签：HTML 里用尖括号包起来的记号，说明这一段是什么",
       "usage": "<title> 告诉浏览器「这里是标题」。标签通常成对出现，有开就有关。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "尖括号里的名字，说明这段是标题还是按钮",
+        "尖括号包起来的成对记号，告诉浏览器这里放什么"
+      ]
     },
     {
       "senseId": "ternary.operator",
@@ -2115,7 +2835,11 @@
       "partOfSpeech": "noun",
       "gloss": "三元运算：条件 ? 真值 : 假值，整段本身就是一个值",
       "usage": "适合二选一返回值；多步动作或超过两个出口更适合 if。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "条件成立用这个，不成立用那个",
+        "用问号和冒号写在一行里的二选一判断，直接得出结果"
+      ]
     },
     {
       "senseId": "threshold.limit",
@@ -2124,7 +2848,11 @@
       "partOfSpeech": "noun",
       "gloss": "阈值：越过这条线，行为就变了",
       "usage": "超过 threshold 常常触发告警、限流或拒绝。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "超过这条线就开始限速或拒绝",
+        "设好的一道警戒线，只要数值一旦超过它就立刻触发警报"
+      ]
     },
     {
       "senseId": "throttle.rate",
@@ -2133,7 +2861,11 @@
       "partOfSpeech": "verb",
       "gloss": "限流：故意放慢调用频率，防止把下游打爆",
       "usage": "throttle requests 和 debounce 不同：限流是匀速放行，不是只认最后一次。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "滚动时不要每次都算，隔一小段才处理一次",
+        "拼命狂按时，强制限制成每隔一秒钟最多只放行一次操作"
+      ]
     },
     {
       "senseId": "throw.error",
@@ -2142,7 +2874,11 @@
       "partOfSpeech": "verb",
       "gloss": "抛出：把失败变成异常，逼调用方必须处理或继续往上抛",
       "usage": "读到 throw 时问：谁会 catch？没人接就会一路炸到顶层。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "这里过不下去了，把问题往上丢",
+        "发现不对劲立刻甩出一颗雷，逼上一层接住或当场炸掉"
+      ]
     },
     {
       "senseId": "timeout.network",
@@ -2151,7 +2887,11 @@
       "partOfSpeech": "noun",
       "gloss": "超时：等太久还没回应就放弃",
       "usage": "connection timeout 和 read timeout 坏在不同阶段，别当成同一种错。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "等了很久对面没回，这次算没做成",
+        "等对面回信等了太长时间，不等了直接放弃并判定失效"
+      ]
     },
     {
       "senseId": "title.heading",
@@ -2160,7 +2900,11 @@
       "partOfSpeech": "noun",
       "gloss": "标题：一份文档或一个页面的名字",
       "usage": "网页的 title 就是浏览器标签页上显示的那几个字。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "浏览器标签页上显示的那几个字",
+        "显示在浏览器最上面标签页栏里的那一串网页大名字"
+      ]
     },
     {
       "senseId": "token.credential",
@@ -2169,7 +2913,11 @@
       "partOfSpeech": "noun",
       "gloss": "令牌：一串代表「我有权限」的字符，相当于临时通行证",
       "usage": "token 泄漏等于钥匙被复制。所以它不进代码仓库，只放在环境变量里。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "登录后拿到的那串字符，不能写进仓库",
+        "登录后发给你的一串字符，每次发请求带上它证明身份"
+      ]
     },
     {
       "senseId": "trade-off.decision",
@@ -2178,7 +2926,11 @@
       "partOfSpeech": "noun",
       "gloss": "取舍：要了这个就得放弃那个",
       "usage": "没有 trade-off 的方案通常是还没想清楚，不是真的免费。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "要快就得牺牲一点正确，两头不能全占",
+        "想要速度快就得多占内存，两边不能兼得只能有所放弃"
+      ]
     },
     {
       "senseId": "transaction.db",
@@ -2187,7 +2939,11 @@
       "partOfSpeech": "noun",
       "gloss": "事务：一组操作要么全成功，要么全撤销",
       "usage": "begin transaction / commit / rollback 是数据库文档里的固定三连。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "转账两步必须一起成，一步失败两边都回",
+        "几步改动绑一起，要么全办妥，坏一步就全部撤销作废"
+      ]
     },
     {
       "senseId": "transport.analytics",
@@ -2196,7 +2952,11 @@
       "partOfSpeech": "noun",
       "gloss": "传输层：数据真正送出前所经过的发送通道",
       "usage": "隐私测试常拦截 analytics transport，在离开前检查载荷。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "想在数据送出门之前拦下来检查写了什么",
+        "数据在离开设备之前，最后经过的那条专门发货专线"
+      ]
     },
     {
       "senseId": "trigger.event",
@@ -2205,7 +2965,11 @@
       "partOfSpeech": "verb",
       "gloss": "触发：某个条件满足时启动另一段逻辑或副作用",
       "usage": "读到 trigger 时找触发条件与失败时是否允许降级（如震动失败）。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "点下去之后，后面那串动作开始跑",
+        "某个条件一旦达成了，立马自动启动另一段代码跑起来"
+      ]
     },
     {
       "senseId": "true.boolean",
@@ -2214,7 +2978,8 @@
       "partOfSpeech": "adjective",
       "gloss": "真：只有两种取值的那类数据里表示「成立」的那个",
       "usage": "true / false 是程序里最小的判断单位，几乎所有分支最后都归结成它。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": ["这个条件成立，走这一边", "在是非判断题里，代表条件完全吻合、确认无误的记号"]
     },
     {
       "senseId": "try.block",
@@ -2223,7 +2988,11 @@
       "partOfSpeech": "verb",
       "gloss": "尝试执行：包住可能失败的动作，失败时交给 catch",
       "usage": "try 标的是「正常路径」；真正的产品决策往往写在 catch 里。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "把可能炸的那段包起来，炸了走旁边",
+        "把可能翻车的几行包起来试着跑，做好随时接锅的准备"
+      ]
     },
     {
       "senseId": "type-guard.check",
@@ -2232,7 +3001,11 @@
       "partOfSpeech": "noun",
       "gloss": "类型守卫：返回布尔值并在为真时收窄参数类型的检查函数",
       "usage": "isXxx(error) 既是运行时判断，也是给 TypeScript 的通行证。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "先问它是不是这种错，是的话才能当这种用",
+        "写个判断方法，一旦符合就让系统认定它属于哪种形状"
+      ]
     },
     {
       "senseId": "type.kind",
@@ -2241,7 +3014,11 @@
       "partOfSpeech": "noun",
       "gloss": "类型：这个数据属于哪一类、能做什么运算",
       "usage": "type error / specify the type 是类型系统入门的第一词。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "这是数字还是文字，能做的运算不一样",
+        "规定这个变量到底是个数字、一段文本还是一个真假开关"
+      ]
     },
     {
       "senseId": "typecheck.static",
@@ -2250,7 +3027,11 @@
       "partOfSpeech": "verb",
       "gloss": "类型检查：在不运行程序时用类型系统抓一批错误",
       "usage": "typecheck 是你不用手写的测试；它拦不住「常量值钉错」这类问题。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "还没点运行，标的是数字却写成了文字",
+        "不用真跑起来，扫一遍看是否把数字错当成文字传了"
+      ]
     },
     {
       "senseId": "typescript.language",
@@ -2259,7 +3040,11 @@
       "partOfSpeech": "noun",
       "gloss": "给 JavaScript 加上类型标注的一种语言，写完会被翻译回 JavaScript",
       "usage": "类型的作用是让错误在写的时候就被发现，而不是等用户点到那一步。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "在脚本上注明是数字还是文字，写完再译回去",
+        "给网页脚本加上数据规格标注，写错时立刻划红波浪线"
+      ]
     },
     {
       "senseId": "union.type",
@@ -2268,7 +3053,11 @@
       "partOfSpeech": "noun",
       "gloss": "联合类型：值只能是列出的几种形状之一，用 | 连接",
       "usage": "读到 A | B 时先列成员，再找类型守卫如何收窄到其中之一。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "回来的要么是数据要么是出错，得先分清是哪一种",
+        "用竖线把几种可能连起来，说明这个值只能是其中一种"
+      ]
     },
     {
       "senseId": "unit.test",
@@ -2277,7 +3066,11 @@
       "partOfSpeech": "noun",
       "gloss": "单元：可被单独验证的一小块逻辑，通常是函数或模块",
       "usage": "unit test 便宜；分层看验证手段，不看事情有多重要。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "只测这一小块逻辑，不打开浏览器",
+        "单独把某个计算小零件抽出来，专门写代码验它准不准"
+      ]
     },
     {
       "senseId": "unmount.lifecycle",
@@ -2286,7 +3079,11 @@
       "partOfSpeech": "verb",
       "gloss": "卸载：组件从界面树移除，应释放它占用的监听与定时器",
       "usage": "bug 报告里 unmount 后仍 setState，多半是 cleanup 没写全。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "离开这页时这块没了，别再往上改数字",
+        "某个弹窗或者卡片从屏幕上彻底被拆除消失的那一刻"
+      ]
     },
     {
       "senseId": "unsubscribe.events",
@@ -2295,7 +3092,11 @@
       "partOfSpeech": "verb",
       "gloss": "取消订阅：拆掉监听，不再接收后续推送",
       "usage": "组件卸载或离开房间时找 unsubscribe，否则就是资源泄漏的温床。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "离开房间时把一直在听的拆掉，免得还在收",
+        "不想再收消息了，把之前挂上的监听给摘下来彻底断开"
+      ]
     },
     {
       "senseId": "update.action",
@@ -2304,7 +3105,11 @@
       "partOfSpeech": "verb",
       "gloss": "更新：在已有东西上改成更新的内容",
       "usage": "update the record / update dependencies 几乎每本教程都会写。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "已有的记录改成新内容，不是新做一条",
+        "在现有的老数据底子上做修改，把它换成最新的内容"
+      ]
     },
     {
       "senseId": "upstream.repo",
@@ -2313,7 +3118,11 @@
       "partOfSpeech": "noun",
       "gloss": "上游：你这份东西是从哪儿来的",
       "usage": "「去 upstream 提」意思是去源头那个仓库提，而不是在自己的副本里改。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "别只在自己副本里改，去源头那个仓库提",
+        "自己复制了一份来改，最早生出这份代码的源头大仓库"
+      ]
     },
     {
       "senseId": "url.address",
@@ -2322,7 +3131,11 @@
       "partOfSpeech": "noun",
       "gloss": "网址：一个资源在网络上的完整地址",
       "usage": "浏览器地址栏里那一串就是 URL。它同时说明了用什么协议、找哪台机器、要哪个文件。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "地址栏那一串，说明去哪台机器找哪个文件",
+        "在浏览器顶上敲的那一长串以 http 开头的地址"
+      ]
     },
     {
       "senseId": "valid.state",
@@ -2331,7 +3144,11 @@
       "partOfSpeech": "adjective",
       "gloss": "有效的：格式和规则都过关，可以继续用",
       "usage": "valid input / is valid 出现在校验通过的分支。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "格式和规则都过关，可以继续用",
+        "输入的东西检查合规，拿到了继续往后走的通行准许"
+      ]
     },
     {
       "senseId": "validate.check",
@@ -2340,7 +3157,11 @@
       "partOfSpeech": "verb",
       "gloss": "校验：在继续昂贵操作前确认输入是否合法",
       "usage": "同步 validate 失败应 throw；别把脏 id 送进后端再失败。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "先看输入合不合法，别把脏的送过去",
+        "在发给后台之前，先查一遍填的手机号是不是十一位数字"
+      ]
     },
     {
       "senseId": "value.data",
@@ -2349,7 +3170,8 @@
       "partOfSpeech": "noun",
       "gloss": "值：某个字段或变量当前具体是什么",
       "usage": "set the value / return value 是变量与函数章节的基础词。",
-      "track": "general"
+      "track": "general",
+      "colloquial": ["这一项现在到底是什么", "这个变量或输入框肚子里，此刻装的具体数字或文字内容"]
     },
     {
       "senseId": "variant.appearance",
@@ -2358,7 +3180,11 @@
       "partOfSpeech": "noun",
       "gloss": "变体：同一组件有限种外观或语义选项，如 primary / danger",
       "usage": "variant 应用封闭字符串集合；模板字符串常把它编进 class 名。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "同一个按钮，主用的和危险的长得不一样",
+        "同一个按钮换个皮肤外观，比如红色危险款或蓝色主要款"
+      ]
     },
     {
       "senseId": "verify.suite",
@@ -2367,7 +3193,11 @@
       "partOfSpeech": "verb",
       "gloss": "验证：跑完整套约定检查，确认「做完了」可宣称",
       "usage": "项目里的 verify 脚本通常串起 test、lint、typecheck 等门禁。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "约定的那套检查全跑过，才能说做完了",
+        "一口气把检查工具全跑一遍，确认代码真的挑不出毛病"
+      ]
     },
     {
       "senseId": "wait.action",
@@ -2376,7 +3206,11 @@
       "partOfSpeech": "verb",
       "gloss": "等待：先停住，直到某个条件满足再继续",
       "usage": "wait for the response / wait until ready 是异步教程的高频句。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "页面转圈，等回信来了再往下",
+        "手头先停下来什么也不干，等那边信号亮了才继续动身"
+      ]
     },
     {
       "senseId": "warning.status",
@@ -2385,7 +3219,11 @@
       "partOfSpeech": "noun",
       "gloss": "警告：还能继续，但有风险或不合最佳做法",
       "usage": "ignore warnings at your own risk —— 警告不是错误，但别当没看见。",
-      "track": "general"
+      "track": "general",
+      "colloquial": [
+        "黄字提示有问题，程序还能跑",
+        "终端跳出一排黄字，虽然没崩但提醒你写法可能有隐患"
+      ]
     },
     {
       "senseId": "web.platform",
@@ -2394,7 +3232,11 @@
       "partOfSpeech": "noun",
       "gloss": "网页平台：用浏览器打开、不用安装的那一类程序",
       "usage": "同一份代码可以跑在 web 上，也可以打包成手机 App——web 只是其中一种外壳。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "不用安装，在浏览器里打开就能用",
+        "不用下载安装包，在浏览器里输地址就能直接用的东西"
+      ]
     },
     {
       "senseId": "wire.protocol",
@@ -2403,7 +3245,11 @@
       "partOfSpeech": "noun",
       "gloss": "线上传输：真正在网络上跑的名字与字节，不是本地变量名",
       "usage": "on-the-wire 字符串改了，另一端就听不到——本地键名反而可以重构。",
-      "track": "technical"
+      "track": "technical",
+      "colloquial": [
+        "发给对面的那串名字改了，对面就听不到",
+        "通过网卡发出去的原始字串，不是本地写给自己的名字"
+      ]
     }
   ]
 }

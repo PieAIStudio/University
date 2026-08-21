@@ -43,7 +43,7 @@ const HOVER = entry({
   headword: "hover",
   gloss: "悬停：指针停在上面时的状态",
   usage: "Use hover for non-destructive hints.",
-  colloquial: "鼠标放上去变色",
+  colloquial: ["鼠标放上去变色"],
 });
 
 const LEXICON = [ABSORB, APP, ALLOW, HOVER];
@@ -74,11 +74,26 @@ describe("lexicon search index", () => {
     expect(result.groups[0]?.entries[0]?.senseId).toBe("absorb.failure");
   });
 
-  it("matches a query that lives only in the colloquial sentence", () => {
+  it("matches a query that lives only in a colloquial phrasing", () => {
     const result = searchLexicon(LEXICON, "鼠标放上去变色");
 
     expect(result.total).toBe(1);
     expect(result.groups[0]?.entries[0]?.headword).toBe("hover");
+  });
+
+  it("matches on any phrasing, which is why the field is a list", () => {
+    // Two people describing the same thing do not choose the same words, and
+    // a search field only helps the one whose words it happens to hold.
+    const many = [
+      entry({
+        senseId: "cold.start",
+        headword: "cold start",
+        gloss: "冷启动：第一次会更慢",
+        colloquial: ["很久没跑，第一次会慢很多", "刚开机第一次点开特别慢"],
+      }),
+    ];
+    expect(searchLexicon(many, "刚开机").total).toBe(1);
+    expect(searchLexicon(many, "很久没跑").total).toBe(1);
   });
 
   it("does not invent a hit when nothing indexed contains the query", () => {
@@ -119,8 +134,8 @@ describe("lexicon search index", () => {
     expect(
       LexiconEntrySchema.parse({
         ...parsed,
-        colloquial: "点开图标就能用的那个成品",
+        colloquial: ["点开图标就能用的那个成品"],
       }).colloquial,
-    ).toBe("点开图标就能用的那个成品");
+    ).toEqual(["点开图标就能用的那个成品"]);
   });
 });

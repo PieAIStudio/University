@@ -92,8 +92,9 @@ export function assembleTermEntry(
  */
 export function termHeadToMarkdown(head: LexiconEntry): string {
   const parts: string[] = [`# ${head.headword}`, `${head.phonetic} · ${head.partOfSpeech}`];
-  if (head.colloquial) {
-    parts.push(`> **你可能会说**\n> ${head.colloquial}`);
+  if (head.colloquial && head.colloquial.length > 0) {
+    // First phrasing only, matching the page. The others are search surface.
+    parts.push(`> **你可能会说**\n> ${head.colloquial[0]}`);
   }
   parts.push(head.gloss, head.usage);
   return parts.join("\n\n");
