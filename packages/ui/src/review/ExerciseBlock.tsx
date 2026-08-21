@@ -7,7 +7,7 @@ import type {
   CoachingPacketResponse,
   ExerciseAttemptResult,
   HostExerciseGradeView,
-  LessonLocator,
+  LessonRef,
   LessonView,
 } from "../view/lesson-view.js";
 
@@ -25,7 +25,7 @@ export function ExerciseBlock({
   requestToken,
   onRefresh,
 }: {
-  readonly locator: LessonLocator;
+  readonly locator: LessonRef;
   readonly exercise: LessonView["lesson"]["exercises"][number];
   readonly requestToken: string;
   /**

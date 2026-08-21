@@ -16,19 +16,14 @@
  * parse/format rules.
  */
 
-export type SectionId = "today" | "studies";
+import type { LessonRef } from "@pieai/university-core";
 
-export interface LessonAddress {
-  readonly studyId: string;
-  readonly courseId: string;
-  readonly unitId: string;
-  readonly lessonId: string;
-}
+export type SectionId = "today" | "studies";
 
 export interface AppAddress {
   readonly section: SectionId;
   readonly studyId: string | null;
-  readonly lesson: LessonAddress | null;
+  readonly lesson: LessonRef | null;
 }
 
 const HOME: AppAddress = { section: "today", studyId: null, lesson: null };

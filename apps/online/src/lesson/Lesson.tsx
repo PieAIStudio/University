@@ -48,7 +48,7 @@ import { languageLayerFor, LEXICON } from "./language";
 
 const LEXICON_BY_ID = new Map(LEXICON.map((entry) => [entry.senseId, entry]));
 
-export function LessonView({
+export function LessonScreen({
   lesson,
   course,
   unitId,

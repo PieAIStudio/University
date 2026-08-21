@@ -56,7 +56,7 @@ function indexedFields(entry: ConceptEntry): readonly WeightedField[] {
   ].map((field) => ({ text: foldSearchText(field.text), weight: field.weight }));
 }
 
-export interface ConceptIndex {
+export interface ConceptSearchIndex {
   readonly records: readonly IndexedConceptRecord[];
 }
 
@@ -98,7 +98,7 @@ export interface ConceptSearchResult {
   readonly groups: readonly ConceptSearchGroup[];
 }
 
-export function createConceptIndex(entries: readonly ConceptEntry[]): ConceptIndex {
+export function createConceptIndex(entries: readonly ConceptEntry[]): ConceptSearchIndex {
   return {
     records: entries.map((entry) => ({ entry, fields: indexedFields(entry) })),
   };
@@ -140,7 +140,7 @@ function groupBySubCategory(entries: readonly ConceptEntry[]): readonly ConceptS
  * someone who does not yet know the vocabulary well enough to guess.
  */
 export function searchConceptIndex(
-  index: ConceptIndex,
+  index: ConceptSearchIndex,
   query: string,
   category?: ConceptCategory,
 ): ConceptSearchResult {

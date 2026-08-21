@@ -33,7 +33,7 @@ function indexedFields(entry: AntiPatternEntry): readonly WeightedField[] {
   ].map((field) => ({ text: foldSearchText(field.text), weight: field.weight }));
 }
 
-export interface AntiPatternIndex {
+export interface AntiPatternSearchIndex {
   readonly records: readonly IndexedAntiPatternRecord[];
 }
 
@@ -55,7 +55,9 @@ export interface AntiPatternSearchResult {
   readonly groups: readonly AntiPatternSearchGroup[];
 }
 
-export function createAntiPatternIndex(entries: readonly AntiPatternEntry[]): AntiPatternIndex {
+export function createAntiPatternIndex(
+  entries: readonly AntiPatternEntry[],
+): AntiPatternSearchIndex {
   return {
     records: entries.map((entry) => ({
       entry,
@@ -86,7 +88,7 @@ function groupByCategory(entries: readonly AntiPatternEntry[]): readonly AntiPat
  * A non-empty query keeps an entry when any indexed field contains it.
  */
 export function searchAntiPatternIndex(
-  index: AntiPatternIndex,
+  index: AntiPatternSearchIndex,
   query: string,
 ): AntiPatternSearchResult {
   const trimmed = query.trim();

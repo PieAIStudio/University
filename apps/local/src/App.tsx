@@ -1,26 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GameBadge, GameCallout, GameTabs } from "@pieai/swimmer-ui-kit";
 
+import { lessonRefKey } from "@pieai/university-core";
 import { Tip } from "@pieai/university-ui/Tip.js";
 import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
 import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
-import { formatAddress, parseAddress, type AppAddress } from "./url-state.js";
 import { LINK_RETURN_DEPTH, LessonReader } from "@pieai/university-ui/lesson/LessonReader.js";
 import { lessonNeighbours } from "@pieai/university-ui/lesson/LessonNav.js";
+import type {
+  BootstrapData,
+  LessonRef,
+  LessonView,
+  StudyView,
+} from "@pieai/university-ui/view/lesson-view.js";
+import { formatAddress, parseAddress, type AppAddress } from "./url-state.js";
 import { EmptyCampus } from "./shell/EmptyCampus.js";
 import { recentStudies, StudyShelf } from "./shell/StudyShelf.js";
 import { StudyDetail } from "./shell/StudyDetail.js";
 import { TodaySection } from "./shell/TodaySection.js";
 
 type SectionId = "today" | "studies";
-
-import type {
-  LessonLocator,
-  BootstrapData,
-  StudyView,
-  LessonView,
-} from "@pieai/university-ui/view/lesson-view.js";
 
 interface DisplayedStudy {
   readonly locator: string;
@@ -29,12 +29,8 @@ interface DisplayedStudy {
 
 interface DisplayedLesson {
   readonly locatorKey: string;
-  readonly locator: LessonLocator;
+  readonly locator: LessonRef;
   readonly view: LessonView;
-}
-
-function lessonLocatorKey(locator: LessonLocator): string {
-  return [locator.studyId, locator.courseId, locator.unitId, locator.lessonId].join("/");
 }
 
 /**
@@ -97,9 +93,9 @@ export function App() {
   const [selectedStudyId, setSelectedStudyId] = useState<string | null>(initialAddress.studyId);
   const [displayedStudy, setDisplayedStudy] = useState<DisplayedStudy | null>(null);
   const [pendingStudyId, setPendingStudyId] = useState<string | null>(null);
-  const [lessonLocator, setLessonLocator] = useState<LessonLocator | null>(initialAddress.lesson);
+  const [lessonLocator, setLessonRef] = useState<LessonRef | null>(initialAddress.lesson);
   /** Lessons a cross-lesson link led away from, innermost last. */
-  const [returnStack, setReturnStack] = useState<readonly LessonLocator[]>([]);
+  const [returnStack, setReturnStack] = useState<readonly LessonRef[]>([]);
   const [displayedLesson, setDisplayedLesson] = useState<DisplayedLesson | null>(null);
   const [pendingLessonKey, setPendingLessonKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -140,12 +136,12 @@ export function App() {
     setPendingStudyId(null);
   }
 
-  async function loadLesson(locator: LessonLocator, signal?: AbortSignal) {
+  async function loadLesson(locator: LessonRef, signal?: AbortSignal) {
     const requestId = (lessonRequestId.current += 1);
     const next = await readJson<LessonView>(await fetch(lessonPath(locator), { signal }));
     if (lessonRequestId.current !== requestId) return;
     commitView(() =>
-      setDisplayedLesson({ locatorKey: lessonLocatorKey(locator), locator, view: next }),
+      setDisplayedLesson({ locatorKey: lessonRefKey(locator), locator, view: next }),
     );
     setPendingLessonKey(null);
   }
@@ -187,7 +183,7 @@ export function App() {
       return;
     }
     const controller = new AbortController();
-    const requestedKey = lessonLocatorKey(lessonLocator);
+    const requestedKey = lessonRefKey(lessonLocator);
     if (skipLessonLoadRef.current === requestedKey) {
       skipLessonLoadRef.current = null;
       setPendingLessonKey(null);
@@ -213,7 +209,7 @@ export function App() {
           window.history.replaceState(null, "", fallbackAddress);
           setSelectedStudyId(fallback.locator.studyId);
           skipLessonLoadRef.current = fallback.locatorKey;
-          setLessonLocator(fallback.locator);
+          setLessonRef(fallback.locator);
         }
       });
     return () => controller.abort();
@@ -254,15 +250,13 @@ export function App() {
   );
   const lessonView = displayedLesson?.view ?? null;
   const displayedLessonIsCurrent = Boolean(
-    displayedLesson &&
-    lessonLocator &&
-    displayedLesson.locatorKey === lessonLocatorKey(lessonLocator),
+    displayedLesson && lessonLocator && displayedLesson.locatorKey === lessonRefKey(lessonLocator),
   );
 
-  function openLesson(locator: LessonLocator, sectionId?: string) {
+  function openLesson(locator: LessonRef, sectionId?: string) {
     pendingSectionIdRef.current = sectionId ?? null;
     setSelectedStudyId(locator.studyId);
-    setLessonLocator(locator);
+    setLessonRef(locator);
     setActiveSection("studies");
   }
 
@@ -318,7 +312,7 @@ export function App() {
     const requested = lessonLocator;
     const expectedRequestId = lessonRequestId.current + 1;
     setLessonError(null);
-    setPendingLessonKey(lessonLocatorKey(requested));
+    setPendingLessonKey(lessonRefKey(requested));
     void loadLesson(requested)
       .then(() => setLessonError(null))
       .catch((reason: unknown) => {
@@ -349,7 +343,7 @@ export function App() {
       const restored = parseAddress(window.location.pathname);
       setActiveSection(restored.section);
       setSelectedStudyId(restored.studyId);
-      setLessonLocator(restored.lesson);
+      setLessonRef(restored.lesson);
       // The detour stack belongs to a reading session, not to a URL. Going Back
       // past the lesson that offered a link makes "回到刚才那一课" meaningless.
       setReturnStack([]);
@@ -396,7 +390,7 @@ export function App() {
             activeId={activeSection}
             onSelect={(id) => {
               setActiveSection(id as SectionId);
-              if (id === "today") setLessonLocator(null);
+              if (id === "today") setLessonRef(null);
             }}
           />
         </nav>
@@ -465,7 +459,7 @@ export function App() {
                   }}
                   onBackToCourse={() => {
                     setReturnStack([]);
-                    setLessonLocator(null);
+                    setLessonRef(null);
                   }}
                   onFollowLink={followLessonLink}
                   onReturn={returnStack.length > 0 ? goBackFromLink : undefined}
@@ -481,7 +475,7 @@ export function App() {
                 selectedStudyId={selectedStudyId}
                 onSelect={(studyId) => {
                   setSelectedStudyId(studyId);
-                  setLessonLocator(null);
+                  setLessonRef(null);
                 }}
               />
               {pendingStudyId && displayedStudy && pendingStudyId !== displayedStudy.locator ? (

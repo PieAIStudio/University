@@ -154,7 +154,7 @@ export {
   createAntiPatternIndex,
   searchAntiPatternIndex,
   searchAntiPatterns,
-  type AntiPatternIndex,
+  type AntiPatternSearchIndex,
   type AntiPatternSearchGroup,
   type AntiPatternSearchResult,
 } from "./anti-patterns/search.js";
@@ -192,7 +192,7 @@ export {
   createConceptIndex,
   searchConceptIndex,
   searchConcepts,
-  type ConceptIndex,
+  type ConceptSearchIndex,
   type ConceptSearchGroup,
   type ConceptSearchResult,
 } from "./concepts/search.js";

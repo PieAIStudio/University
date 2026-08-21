@@ -82,7 +82,7 @@ export interface Course {
   readonly units: readonly Unit[];
 }
 
-interface CourseSummary {
+interface LibraryCourse {
   readonly courseId: string;
   readonly title: string;
   readonly sha256: string;
@@ -91,16 +91,16 @@ interface CourseSummary {
   readonly lessons: number;
 }
 
-interface StudySummary {
+interface LibraryStudy {
   readonly studyId: string;
   readonly title: string;
   readonly defaultCourseId: string | null;
-  readonly courses: readonly CourseSummary[];
+  readonly courses: readonly LibraryCourse[];
 }
 
 export const library = imported as {
   readonly importedAt: string;
-  readonly studies: readonly StudySummary[];
+  readonly studies: readonly LibraryStudy[];
 };
 
 export const hasContent = library.studies.length > 0;
@@ -139,7 +139,7 @@ export function peekCourse(studyId: string, courseId: string): Course | undefine
   return resolved.get(`${studyId}/${courseId}`);
 }
 
-export interface CourseNode extends CourseSummary {
+export interface CourseNode extends LibraryCourse {
   readonly studyId: string;
   readonly studyTitle: string;
   /** Distance from a root along prerequisites, computed over this study. */

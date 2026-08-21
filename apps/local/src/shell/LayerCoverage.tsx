@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { readJson } from "@pieai/university-ui/api/client.js";
 import { Tip } from "@pieai/university-ui/Tip.js";
 
-interface StudyMapLayer {
+interface CoverageLayer {
   readonly id: string;
   readonly name: string;
   readonly description: string;
@@ -12,11 +12,11 @@ interface StudyMapLayer {
   readonly citedFiles: readonly string[];
 }
 
-interface StudyMapView {
+interface LayerCoverage {
   readonly analysisId: string;
   readonly sourceCommit: string;
   readonly nodeCount: number;
-  readonly layers: readonly StudyMapLayer[];
+  readonly layers: readonly CoverageLayer[];
   readonly uncharted: readonly string[];
 }
 
@@ -31,7 +31,7 @@ interface StudyMapView {
  */
 const THIN_COVERAGE = 0.15;
 
-function percent(layer: StudyMapLayer): number {
+function percent(layer: CoverageLayer): number {
   if (layer.fileCount === 0) return 0;
   return Math.round((layer.citedFileCount / layer.fileCount) * 100);
 }
@@ -49,8 +49,8 @@ function percent(layer: StudyMapLayer): number {
  * than anything worth rebuilding here; what it cannot show is this, because it
  * has never heard of a lesson.
  */
-export function StudyMap({ studyId }: { readonly studyId: string }) {
-  const [map, setMap] = useState<StudyMapView | null>(null);
+export function LayerCoverage({ studyId }: { readonly studyId: string }) {
+  const [map, setMap] = useState<LayerCoverage | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "absent">("loading");
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -61,7 +61,7 @@ export function StudyMap({ studyId }: { readonly studyId: string }) {
     setExpanded(null);
     void (async () => {
       try {
-        const body = await readJson<{ readonly map: StudyMapView | null }>(
+        const body = await readJson<{ readonly map: LayerCoverage | null }>(
           await fetch(`/api/studies/${encodeURIComponent(studyId)}/map`),
         );
         if (cancelled) return;

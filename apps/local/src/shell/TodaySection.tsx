@@ -3,7 +3,7 @@ import { GameBadge, GameButton, GameCallout } from "@pieai/swimmer-ui-kit";
 import { Tip } from "@pieai/university-ui/Tip.js";
 import { ReviewCard } from "@pieai/university-ui/review/ReviewCard.js";
 import { VocabularyReview } from "@pieai/university-ui/review/VocabularyReview.js";
-import type { BootstrapData, LessonLocator } from "@pieai/university-ui/view/lesson-view.js";
+import type { BootstrapData, LessonRef } from "@pieai/university-ui/view/lesson-view.js";
 import { focusParts, progressLabel } from "@pieai/university-ui/view/lesson-view.js";
 
 /**
@@ -26,7 +26,7 @@ export function TodaySection({
   onReviewed,
 }: {
   readonly data: BootstrapData;
-  readonly onOpenLesson: (locator: LessonLocator) => void;
+  readonly onOpenLesson: (locator: LessonRef) => void;
   readonly onReviewed: () => Promise<void>;
 }) {
   const card = data.today.card;

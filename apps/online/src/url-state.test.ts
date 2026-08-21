@@ -47,4 +47,18 @@ describe("the address bar", () => {
     expect(toHash(lesson)).not.toBe(toHash(settled));
     expect(fromHash(toHash(settled)).kind).toBe("settled");
   });
+
+  it("keeps the public flavour hashes as the anti-pattern collection", () => {
+    expect(toHash({ kind: "anti-pattern" })).toBe("#/flavour");
+    expect(fromHash("#/flavour")).toEqual({ kind: "anti-pattern" });
+    expect(toHash({ kind: "anti-pattern-entry", id: "steady-catch" })).toBe(
+      "#/flavour/steady-catch",
+    );
+    expect(fromHash("#/flavour/steady-catch")).toEqual({
+      kind: "anti-pattern-entry",
+      id: "steady-catch",
+    });
+    expect(toHash({ kind: "library", tab: "flavour" })).toBe("#/library/flavour");
+    expect(fromHash("#/library/flavour")).toEqual({ kind: "library", tab: "flavour" });
+  });
 });

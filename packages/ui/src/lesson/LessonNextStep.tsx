@@ -1,6 +1,6 @@
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
-import type { LessonLocator } from "../view/lesson-view.js";
+import type { LessonRef } from "../view/lesson-view.js";
 import type { LessonNeighbours } from "./LessonNav.js";
 
 /**
@@ -30,7 +30,7 @@ export function LessonNextStep({
 }: {
   readonly neighbours: LessonNeighbours;
   readonly completed: boolean;
-  readonly onOpenLesson: (locator: LessonLocator) => void;
+  readonly onOpenLesson: (locator: LessonRef) => void;
   readonly onBackToCourse: () => void;
 }) {
   const { next, position, total } = neighbours;

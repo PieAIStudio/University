@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { GameBadge, GameButton, GameProgress } from "@pieai/swimmer-ui-kit";
 
-import type { CourseView, LessonLocator } from "@pieai/university-ui/view/lesson-view.js";
+import type { CourseView, LessonRef } from "@pieai/university-ui/view/lesson-view.js";
 import { isCurrentLessonCompleted, progressLabel } from "@pieai/university-ui/view/lesson-view.js";
 
 export function CourseSection({
@@ -14,7 +14,7 @@ export function CourseSection({
 }: {
   readonly studyId: string;
   readonly course: CourseView;
-  readonly onOpenLesson: (locator: LessonLocator) => void;
+  readonly onOpenLesson: (locator: LessonRef) => void;
   /** Set on one course so a shelf with no started course still shows a shape. */
   readonly openWhenNothingInProgress?: boolean;
   /** False on a shelf where one unrolled course would hide the others. */

@@ -3,9 +3,9 @@ import { GameBadge, GameButton, GameSegmentedControl, GameToggle } from "@pieai/
 
 import { Tip } from "../Tip.js";
 import type { DetailMode } from "../language/detail-mode.js";
-import type { CourseView, LessonLocator } from "../view/lesson-view.js";
+import type { CourseView, LessonRef } from "../view/lesson-view.js";
 
-export interface LessonNeighbour extends LessonLocator {
+export interface LessonNeighbour extends LessonRef {
   readonly title: string;
 }
 
@@ -30,7 +30,7 @@ export interface LessonNeighbours {
  */
 export function lessonNeighbours(
   courses: readonly CourseView[],
-  locator: LessonLocator,
+  locator: LessonRef,
 ): LessonNeighbours | null {
   const course = courses.find((item) => item.id === locator.courseId);
   if (!course) return null;
@@ -144,7 +144,7 @@ export function LessonToolbar({
   readConfirmed,
 }: {
   readonly neighbours: LessonNeighbours;
-  readonly onOpenLesson: (locator: LessonLocator) => void;
+  readonly onOpenLesson: (locator: LessonRef) => void;
   readonly onBackToCourse: () => void;
   readonly annotated: boolean;
   readonly englishMode: boolean;

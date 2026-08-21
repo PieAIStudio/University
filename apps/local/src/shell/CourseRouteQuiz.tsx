@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
-import type { CourseView, LessonLocator } from "@pieai/university-ui/view/lesson-view.js";
+import type { CourseView, LessonRef } from "@pieai/university-ui/view/lesson-view.js";
 
 type CourseRouteLevel = "beginner" | "familiar" | "builder";
 
@@ -117,7 +117,7 @@ export function CourseRouteQuiz({
 }: {
   readonly studyId: string;
   readonly course: CourseView;
-  readonly onOpenLesson: (locator: LessonLocator) => void;
+  readonly onOpenLesson: (locator: LessonRef) => void;
 }) {
   const storageKey = `universitylocal-route-${studyId}-${course.id}`;
   const [answers, setAnswers] = useState<readonly number[]>([]);

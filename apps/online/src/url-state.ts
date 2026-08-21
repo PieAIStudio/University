@@ -11,6 +11,9 @@
  * real path would 404 on refresh without a server rewrite rule. The hash is the
  * one part of a URL a static host cannot get wrong.
  */
+// `flavour` is the public hash segment (`#/flavour`, `#/library/flavour`).
+// The collection itself is anti-pattern; view kinds use that name. Do not
+// rename this string — bookmarked and shared URLs still have to parse.
 export const LIBRARY_TABS = ["concepts", "terms", "flavour", "favourites"] as const;
 
 export type LibraryTab = (typeof LIBRARY_TABS)[number];
@@ -50,10 +53,10 @@ export type View =
   // The learner's own shortlist. Single segment like review and terms, because
   // it belongs to the person rather than to any course.
   | { readonly kind: "favourites" }
-  // 防止 AI 味儿. A second collection on the same entry system, so it gets a
-  // route of the same shape rather than a second kind of page.
-  | { readonly kind: "flavour" }
-  | { readonly kind: "flavour-entry"; readonly id: string }
+  // Anti-pattern catalogue. Public hashes stay `#/flavour` and
+  // `#/flavour/<id>` — those strings are the URL contract, these kinds are not.
+  | { readonly kind: "anti-pattern" }
+  | { readonly kind: "anti-pattern-entry"; readonly id: string }
   // 概念图解. The third collection, and the routes are the same two shapes for
   // the third time — index and entry. When a fourth collection arrives and this
   // block is copied a fourth time, that is the moment to make it generic; three
@@ -81,9 +84,9 @@ export function toHash(view: View): string {
       return `#/terms/${enc(view.senseId)}`;
     case "favourites":
       return "#/favourites";
-    case "flavour":
+    case "anti-pattern":
       return "#/flavour";
-    case "flavour-entry":
+    case "anti-pattern-entry":
       return `#/flavour/${enc(view.id)}`;
     case "concepts":
       return "#/concepts";
@@ -118,9 +121,9 @@ export function fromHash(hash: string): View {
   }
   if (parts.length === 1 && parts[0] === "terms") return { kind: "terms" };
   if (parts.length === 1 && parts[0] === "favourites") return { kind: "favourites" };
-  if (parts.length === 1 && parts[0] === "flavour") return { kind: "flavour" };
+  if (parts.length === 1 && parts[0] === "flavour") return { kind: "anti-pattern" };
   if (parts.length === 2 && parts[0] === "flavour" && parts[1]) {
-    return { kind: "flavour-entry", id: parts[1] };
+    return { kind: "anti-pattern-entry", id: parts[1] };
   }
   if (parts.length === 1 && parts[0] === "practice") return { kind: "practice" };
   if (parts.length === 1 && parts[0] === "concepts") return { kind: "concepts" };

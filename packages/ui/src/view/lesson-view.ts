@@ -1,3 +1,4 @@
+import type { LessonRef } from "@pieai/university-core";
 import type {
   EvidenceAnchorRange,
   LanguageLayer,
@@ -5,6 +6,9 @@ import type {
   LessonLinkTarget,
   TermRange,
 } from "@pieai/university-core/domain/lesson-marks.js";
+
+/** Re-export: one lesson address, the same type the progress contract uses. */
+export type { LessonRef };
 
 /**
  * The shapes the API returns, and the pure functions that turn them into what
@@ -56,14 +60,7 @@ export interface StudySummary extends StudyIdentity {
   readonly lastActivityAt: string | null;
 }
 
-export interface LessonLocator {
-  readonly studyId: string;
-  readonly courseId: string;
-  readonly unitId: string;
-  readonly lessonId: string;
-}
-
-export interface CourseReviewCardLocator extends LessonLocator {
+export interface CourseReviewCardLocator extends LessonRef {
   readonly kind: "course-card";
   readonly cardId: string;
   readonly front: string;
@@ -85,7 +82,7 @@ export type TodayCard = ReviewCardLocator & {
   readonly dueAt: string;
 };
 
-export interface NextLesson extends LessonLocator {
+export interface NextLesson extends LessonRef {
   readonly studyTitle: string;
   readonly courseTitle: string;
   readonly lessonTitle: string;
@@ -452,6 +449,12 @@ export interface CoachingPacketResponse {
   readonly submissionCount: number;
 }
 
+/**
+ * The `/api/studies/:id/courses/:id/units/:id/lessons/:id` payload.
+ *
+ * A read model, like `CourseView` and `StudyView`. The delivery shell's React
+ * screen is `LessonScreen` — same subject, different thing, different name.
+ */
 export interface LessonView {
   readonly lesson: {
     readonly id: string;

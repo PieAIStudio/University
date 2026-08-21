@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { getStudyPaths } from "../../studies/paths.js";
-import { buildStudyMap, lookupStudyMapFiles } from "../../ua/study-map.js";
+import { buildLayerCoverage, lookupLayerCoverageFiles } from "../../ua/study-map.js";
 import { sendJson } from "../wire.js";
 import type { Handler } from "./types.js";
 
@@ -62,12 +62,12 @@ function citedSourcePaths(studiesRoot: string, studyId: string): Set<string> {
  * no map is an ordinary state for a project nobody has analysed yet, and the
  * page should say so instead of showing an error.
  */
-export const handleStudyMap: Handler = (ctx, request, response, url) => {
+export const handleLayerCoverage: Handler = (ctx, request, response, url) => {
   const mapRoute = MAP_ROUTE.exec(url.pathname);
   if (request.method === "GET" && mapRoute) {
     const studyId = decodeURIComponent(mapRoute[1]!);
     const cited = citedSourcePaths(ctx.studiesRoot, studyId);
-    const map = buildStudyMap(ctx.studiesRoot, studyId, cited);
+    const map = buildLayerCoverage(ctx.studiesRoot, studyId, cited);
     sendJson(response, 200, { map, citedFileCount: cited.size });
     return true;
   }
@@ -82,7 +82,7 @@ export const handleStudyMap: Handler = (ctx, request, response, url) => {
       .map((value) => value.trim())
       .filter(Boolean)
       .slice(0, 50);
-    sendJson(response, 200, { files: lookupStudyMapFiles(ctx.studiesRoot, studyId, paths) });
+    sendJson(response, 200, { files: lookupLayerCoverageFiles(ctx.studiesRoot, studyId, paths) });
     return true;
   }
 

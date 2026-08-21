@@ -29,7 +29,7 @@ import { getStudyPaths, getUaAnalysisPaths } from "../studies/paths.js";
  */
 
 /** One architectural layer, and how much of it the courses have reached. */
-interface StudyMapLayer {
+interface CoverageLayer {
   readonly id: string;
   readonly name: string;
   readonly description: string;
@@ -41,18 +41,18 @@ interface StudyMapLayer {
   readonly citedFiles: readonly string[];
 }
 
-interface StudyMap {
+interface LayerCoverage {
   readonly analysisId: string;
   readonly sourceCommit: string;
   readonly outputLanguage: string;
   readonly nodeCount: number;
-  readonly layers: readonly StudyMapLayer[];
+  readonly layers: readonly CoverageLayer[];
   /** Files the courses cite that UA has no node for — a coverage question, not an error. */
   readonly uncharted: readonly string[];
 }
 
 /** What UA knows about one file, for the panel beside a piece of evidence. */
-interface StudyMapFile {
+interface CoverageFile {
   readonly nodeId: string;
   readonly filePath: string;
   readonly name: string;
@@ -174,11 +174,11 @@ function readGraph(studiesRoot: string, studyId: string, analysisId: string) {
  * cites, which the caller collects — this module deliberately knows nothing
  * about courses beyond the set of paths it is handed.
  */
-export function buildStudyMap(
+export function buildLayerCoverage(
   studiesRoot: string,
   studyId: string,
   citedPaths: ReadonlySet<string>,
-): StudyMap | null {
+): LayerCoverage | null {
   const analysis = newestReadyAnalysis(studiesRoot, studyId);
   if (!analysis) return null;
   const graph = readGraph(studiesRoot, studyId, analysis.id);
@@ -195,7 +195,7 @@ export function buildStudyMap(
     charted.add(filePath);
   }
 
-  const layers: StudyMapLayer[] = [];
+  const layers: CoverageLayer[] = [];
   for (const layer of Array.isArray(graph.layers) ? graph.layers : []) {
     const files = new Set<string>();
     for (const nodeId of strings(layer.nodeIds)) {
@@ -227,11 +227,11 @@ export function buildStudyMap(
 }
 
 /** What UA knows about specific files, keyed by path. Missing files are simply absent. */
-export function lookupStudyMapFiles(
+export function lookupLayerCoverageFiles(
   studiesRoot: string,
   studyId: string,
   filePaths: readonly string[],
-): readonly StudyMapFile[] {
+): readonly CoverageFile[] {
   if (filePaths.length === 0) return [];
   const analysis = newestReadyAnalysis(studiesRoot, studyId);
   if (!analysis) return [];
@@ -247,7 +247,7 @@ export function lookupStudyMapFiles(
     for (const nodeId of strings(layer.nodeIds)) layerByNodeId.set(nodeId, name);
   }
 
-  const found: StudyMapFile[] = [];
+  const found: CoverageFile[] = [];
   for (const node of nodes) {
     const filePath = text(node.filePath);
     const nodeId = text(node.id);

@@ -54,7 +54,7 @@ import {
   type CourseNode,
 } from "./content/library";
 import { LEXICON } from "./lesson/language";
-import { LessonView } from "./lesson/Lesson";
+import { LessonScreen } from "./lesson/Lesson";
 import { Settlement } from "./lesson/Settlement";
 import { fromHash, toHash, WORLD, LIBRARY_TABS, type LibraryTab, type View } from "./url-state";
 import { placeLabels, type LabelCandidate } from "./world/labels";
@@ -838,7 +838,9 @@ export function App() {
 
       {view.kind === "practice" ? <PracticeHost onOpen={setView} /> : null}
 
-      {view.kind === "flavour-entry" ? <FlavourEntryHost id={view.id} onOpen={setView} /> : null}
+      {view.kind === "anti-pattern-entry" ? (
+        <AntiPatternEntryHost id={view.id} onOpen={setView} />
+      ) : null}
     </div>
   );
 }
@@ -848,7 +850,7 @@ const LIBRARY_VIEW_TAB: Partial<Record<View["kind"], LibraryTab>> = {
   library: "concepts",
   concepts: "concepts",
   terms: "terms",
-  flavour: "flavour",
+  "anti-pattern": "flavour",
   favourites: "favourites",
 };
 
@@ -910,7 +912,7 @@ function LibraryHost({ tab, onOpen }: { tab: LibraryTab; onOpen: (view: View) =>
       {tab === "flavour" ? (
         <AntiPatternIndex
           entries={ANTI_PATTERN_ENTRIES}
-          onOpen={(entry) => onOpen({ kind: "flavour-entry", id: entry.head.id })}
+          onOpen={(entry) => onOpen({ kind: "anti-pattern-entry", id: entry.head.id })}
         />
       ) : null}
       {tab === "favourites" ? <FavouritesHost onOpen={onOpen} /> : null}
@@ -946,7 +948,7 @@ function LessonReaderHost({
 
   return (
     <main className="reader">
-      <LessonView
+      <LessonScreen
         lesson={lesson}
         course={course}
         unitId={unit.id}
@@ -1429,12 +1431,12 @@ function CONCEPT_POINTERS(onOpen: (view: View) => void) {
  * page for this collection is the design failing, because the two pages would
  * drift on the day someone adds a section type to one of them.
  */
-function FlavourEntryHost({ id, onOpen }: { id: string; onOpen: (view: View) => void }) {
+function AntiPatternEntryHost({ id, onOpen }: { id: string; onOpen: (view: View) => void }) {
   const entry = getAntiPatternEntry(id);
   if (!entry) {
     return (
       <main className="terms">
-        <button className="linkish" onClick={() => onOpen({ kind: "flavour" })}>
+        <button className="linkish" onClick={() => onOpen({ kind: "anti-pattern" })}>
           ← 防 AI 味儿
         </button>
         <p className="reference-panel__note">没有这一条。</p>

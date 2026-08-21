@@ -53,13 +53,6 @@ export interface SourceStatus {
 type FreshnessStatus = "fresh" | "stale";
 type FreshnessItemKind = "lesson" | "card" | "exercise";
 
-interface EvidenceIdentity {
-  readonly snapshotId: string;
-  readonly sourceCommit: string;
-  readonly analysisId: string | null;
-  readonly graphHash: string | null;
-}
-
 interface TargetIdentity {
   readonly snapshotId: string;
   readonly sourceCommit: string;
@@ -79,7 +72,7 @@ interface FreshnessItem {
   readonly status: FreshnessStatus;
   readonly waitingForUa: boolean;
   readonly reasons: readonly string[];
-  readonly previousIdentities: readonly EvidenceIdentity[];
+  readonly previousIdentities: readonly TargetIdentity[];
 }
 
 interface UnitFreshness {
@@ -93,7 +86,7 @@ interface CourseFreshnessPayload {
   readonly schemaVersion: 1;
   readonly studyId: string;
   readonly courseId: string;
-  readonly previousIdentities: readonly EvidenceIdentity[];
+  readonly previousIdentities: readonly TargetIdentity[];
   readonly targetIdentity: TargetIdentity;
   readonly status: FreshnessStatus;
   readonly waitingForUa: boolean;
@@ -111,7 +104,7 @@ interface KnowledgeFreshnessPayload {
   readonly studyId: string;
   readonly noteId: string;
   readonly claimType: KnowledgeNote["claimType"];
-  readonly previousIdentities: readonly EvidenceIdentity[];
+  readonly previousIdentities: readonly TargetIdentity[];
   readonly targetIdentity: TargetIdentity;
   readonly status: FreshnessStatus;
   readonly waitingForUa: boolean;
@@ -164,7 +157,7 @@ interface EvaluatedReferences {
   readonly status: FreshnessStatus;
   readonly waitingForUa: boolean;
   readonly reasons: readonly string[];
-  readonly previousIdentities: readonly EvidenceIdentity[];
+  readonly previousIdentities: readonly TargetIdentity[];
 }
 
 const MISSING_TARGET_UA_REASON = "UA-backed evidence has no target analysis for comparison";
@@ -205,14 +198,14 @@ function uniqueSorted(values: readonly string[]): readonly string[] {
   return [...new Set(values)].sort((left, right) => left.localeCompare(right));
 }
 
-function uniqueIdentities(values: readonly EvidenceIdentity[]): readonly EvidenceIdentity[] {
+function uniqueIdentities(values: readonly TargetIdentity[]): readonly TargetIdentity[] {
   const identities = new Map(values.map((value) => [canonicalJson(value), value]));
   return [...identities.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([, identity]) => identity);
 }
 
-function evidenceIdentity(evidence: EvidenceReference): EvidenceIdentity {
+function evidenceIdentity(evidence: EvidenceReference): TargetIdentity {
   return {
     snapshotId: evidence.snapshotId,
     sourceCommit: evidence.sourceCommit,

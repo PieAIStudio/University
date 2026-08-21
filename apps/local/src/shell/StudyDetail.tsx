@@ -6,14 +6,14 @@ import { isCurrentLessonCompleted } from "@pieai/university-ui/view/lesson-view.
 import type {
   CourseView,
   LearningFocus,
-  LessonLocator,
+  LessonRef,
   StudySummary,
   StudyView,
 } from "@pieai/university-ui/view/lesson-view.js";
 import { CourseSection } from "./CourseSection.js";
 import { CourseRouteQuiz } from "./CourseRouteQuiz.js";
 import { KnowledgeNotesSection } from "./KnowledgeNotesSection.js";
-import { StudyMap } from "./StudyMap.js";
+import { LayerCoverage } from "./LayerCoverage.js";
 import { UaDashboardButton } from "./UaDashboardButton.js";
 
 export function StudyEvidenceStatus({
@@ -161,7 +161,7 @@ function StudyAnalysisPanel({
           />
         ) : null}
         <AirlockClocks studyId={studyId} />
-        <StudyMap studyId={studyId} />
+        <LayerCoverage studyId={studyId} />
       </div>
     </details>
   );
@@ -213,7 +213,7 @@ export function StudyDetail({
   readonly summary: StudySummary | null;
   /** The learner's pinned run, from `/api/bootstrap`; null when none is set. */
   readonly focus?: LearningFocus | null;
-  readonly onOpenLesson: (locator: LessonLocator) => void;
+  readonly onOpenLesson: (locator: LessonRef) => void;
 }) {
   /*
     Above this many courses, no course unrolls itself. The number is not a

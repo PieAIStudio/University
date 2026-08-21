@@ -14,7 +14,7 @@ import { handleCard } from "./http/handlers/card.js";
 import { handleExercise } from "./http/handlers/exercise.js";
 import { handleLesson } from "./http/handlers/lesson.js";
 import { handleReaderMark } from "./http/handlers/reader-mark.js";
-import { handleStudyMap } from "./http/handlers/study-map.js";
+import { handleLayerCoverage } from "./http/handlers/study-map.js";
 import { createUaDashboardHandler } from "./http/handlers/ua-dashboard.js";
 import { handleAirlock, handleSnapshotCheckout, handleStudy } from "./http/handlers/study.js";
 import type { Handler } from "./http/handlers/types.js";
@@ -60,7 +60,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
     // handler claims, so placing them here cannot change any existing route.
     handleReaderMark,
     createUaDashboardHandler(uaDashboard),
-    handleStudyMap,
+    handleLayerCoverage,
     handleSnapshotCheckout,
   ];
 

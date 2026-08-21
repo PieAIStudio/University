@@ -15,11 +15,7 @@ import { readForeignLanguageMode, writeForeignLanguageMode } from "../language/r
 import type { LessonLinkTarget } from "../markdown/remark-lesson-links.js";
 import { ExerciseBlock } from "../review/ExerciseBlock.js";
 import { ReviewCard } from "../review/ReviewCard.js";
-import {
-  isCurrentLessonCompleted,
-  type LessonLocator,
-  type LessonView,
-} from "../view/lesson-view.js";
+import { isCurrentLessonCompleted, type LessonRef, type LessonView } from "../view/lesson-view.js";
 import { LessonToolbar, type LessonNeighbours } from "./LessonNav.js";
 import { LessonMarkList } from "./LessonMarkList.js";
 import { LessonMargin } from "./LessonMargin.js";
@@ -62,13 +58,13 @@ export function LessonReader({
   onFollowLink,
   onReturn,
 }: {
-  readonly locator: LessonLocator;
+  readonly locator: LessonRef;
   readonly view: LessonView;
   readonly requestToken: string;
   readonly onLearningChanged: () => Promise<void>;
   /** Absent until the study tree has loaded; the lesson reads fine without it. */
   readonly neighbours?: LessonNeighbours | null;
-  readonly onOpenLesson?: (locator: LessonLocator) => void;
+  readonly onOpenLesson?: (locator: LessonRef) => void;
   readonly onBackToCourse?: () => void;
   readonly onFollowLink?: ((target: LessonLinkTarget) => void) | undefined;
   /** Present only when a cross-lesson link brought the reader here. */

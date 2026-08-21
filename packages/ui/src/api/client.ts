@@ -1,4 +1,4 @@
-import type { LessonLocator, ReviewCardLocator } from "../view/lesson-view.js";
+import type { LessonRef, ReviewCardLocator } from "../view/lesson-view.js";
 
 /**
  * How the page talks to the local API, and what it does when the answer is no.
@@ -15,7 +15,7 @@ export async function readJson<T>(response: Response): Promise<T> {
   return body;
 }
 
-export function lessonPath(locator: LessonLocator): string {
+export function lessonPath(locator: LessonRef): string {
   return `/api/studies/${locator.studyId}/courses/${locator.courseId}/units/${locator.unitId}/lessons/${locator.lessonId}`;
 }
 
