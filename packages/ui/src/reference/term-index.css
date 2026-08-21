@@ -1,5 +1,9 @@
 /*
-  Term index styles, next to the component that emits the class names.
+  Collection index styles, next to the component that emits the class names.
+
+  Terms and anti-patterns share this surface. Class names stay `term-index__*`
+  because both shells already load this file; a second stylesheet for the
+  same chips would be a second look for one implementation.
 
   Shells import this file the same way they import reference-panel.css. A
   shared surface whose appearance depends on which app remembered the CSS is
@@ -12,6 +16,15 @@
 }
 
 .term-index__search {
+  min-width: 0;
+}
+
+/*
+  F2 sits above search on purpose. A reader who can browse 25 tells without
+  seeing the notice will use the page as a lie detector, which is the
+  failure the sentence exists to prevent.
+*/
+.term-index__notice {
   min-width: 0;
 }
 

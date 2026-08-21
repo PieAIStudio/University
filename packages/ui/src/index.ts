@@ -26,10 +26,14 @@ export {
   type ReferenceKind,
 } from "./reference/ReferencePanel.js";
 export { TermIndex, LEXICON_SEARCH_PLACEHOLDER } from "./reference/TermIndex.js";
+export { AntiPatternIndex, ANTI_PATTERN_SEARCH_PLACEHOLDER } from "./reference/AntiPatternIndex.js";
+export { CollectionIndex } from "./reference/CollectionIndex.js";
 export {
   EntryPage,
   TermEntryHead,
   TermEntryPage,
+  AntiPatternEntryHead,
+  AntiPatternEntryPage,
   COLLECTION_LABEL,
   type EntryBreadcrumbItem,
   type EntryPageProps,

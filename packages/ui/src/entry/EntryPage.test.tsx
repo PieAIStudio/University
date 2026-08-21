@@ -6,12 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   SECTION_TYPES,
   assembleTermEntry,
+  getAntiPatternEntry,
   type EntrySection,
   type EntrySectionType,
   type LexiconEntry,
 } from "@pieai/university-core";
 
-import { EntryPage, TermEntryPage } from "./EntryPage.js";
+import { AntiPatternEntryPage, TermEntryPage } from "./EntryPage.js";
 
 const APP: LexiconEntry = {
   senseId: "app.program",
@@ -160,26 +161,32 @@ describe("EntryPage", () => {
   });
 
   it("is collection-generic: an anti-pattern uses the same shell", async () => {
+    const entry = getAntiPatternEntry("steady-catch");
+    expect(entry).toBeTruthy();
     await act(async () => {
-      root.render(
-        <EntryPage
-          breadcrumb={[{ label: "防止 AI 味儿" }, { label: "稳稳接住" }]}
-          head={<h1>稳稳接住</h1>}
-          headMarkdown="# 稳稳接住"
-          sections={[
-            {
-              id: "exception",
-              type: "when-not",
-              payload: { cases: ["小说、广告或角色台词本来就需要这种非日常表达。"] },
-            },
-          ]}
-        />,
-      );
+      root.render(<AntiPatternEntryPage entry={entry!} collectionHref="#/anti-patterns" />);
     });
     expect(container.querySelector('[aria-label="面包屑"]')?.textContent).toContain("防止 AI 味儿");
+    expect(container.querySelector('[aria-label="面包屑"]')?.textContent).toContain("稳稳接住");
+    expect(container.querySelector("h1")?.textContent).toContain("稳稳接住");
+    expect(container.textContent).toContain("你正常说就行");
     expect(container.querySelector('[data-section-type="when-not"]')?.textContent).toContain(
       "什么时候不用",
     );
+    expect(container.querySelector('[data-section-type="plain"]')).not.toBeNull();
+    expect(container.querySelector('[data-section-type="before-after"]')).not.toBeNull();
+    expect(container.querySelector('[data-section-type="agent-prompt"]')).not.toBeNull();
+
+    const copy = [...container.querySelectorAll("button")].find((button) =>
+      button.textContent?.includes("复制为 Markdown"),
+    );
+    await act(async () => {
+      copy?.click();
+    });
+    const pasted = writeText.mock.calls[0]?.[0] as string;
+    expect(pasted).toContain("# 稳稳接住");
+    expect(pasted).toContain("## 通俗解释");
+    expect(pasted).toContain("## 改前 / 改后");
   });
 
   it("renders every registered section type", async () => {

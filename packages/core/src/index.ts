@@ -49,6 +49,37 @@ export {
   type StructuredEntry,
   type TermEntry,
 } from "./domain/structured-entry.js";
+export {
+  ANTI_PATTERN_CATEGORY_IDS,
+  ANTI_PATTERN_CATEGORY_LABEL,
+  ANTI_PATTERN_NOTICE,
+  ANTI_PATTERN_NOTICE_HEADING,
+  AntiPatternCategorySchema,
+  AntiPatternHeadSchema,
+  antiPatternEntryToMarkdown,
+  antiPatternHeadToMarkdown,
+  assembleAntiPatternEntry,
+  loadAntiPattern,
+  type AntiPatternBody,
+  type AntiPatternCategory,
+  type AntiPatternEntry,
+  type AntiPatternHead,
+} from "./domain/anti-pattern.js";
+export {
+  ANTI_PATTERN_CHIP_ORDER,
+  ANTI_PATTERN_COUNTS,
+  ANTI_PATTERN_ENTRIES,
+  antiPatternsInCategory,
+  getAntiPatternEntry,
+} from "./anti-patterns/catalog.js";
+export {
+  createAntiPatternIndex,
+  searchAntiPatternIndex,
+  searchAntiPatterns,
+  type AntiPatternIndex,
+  type AntiPatternSearchGroup,
+  type AntiPatternSearchResult,
+} from "./anti-patterns/search.js";
 
 export * from "./scheduling/fsrs.js";
 export * from "./grading/answer-key.js";

@@ -1,6 +1,17 @@
 import type { ReactNode } from "react";
-import type { CollectionId, EntrySection, LexiconEntry, TermEntry } from "@pieai/university-core";
-import { termHeadToMarkdown } from "@pieai/university-core";
+import type {
+  AntiPatternEntry,
+  AntiPatternHead,
+  CollectionId,
+  EntrySection,
+  LexiconEntry,
+  TermEntry,
+} from "@pieai/university-core";
+import {
+  ANTI_PATTERN_CATEGORY_LABEL,
+  antiPatternHeadToMarkdown,
+  termHeadToMarkdown,
+} from "@pieai/university-core";
 
 import { CopyTextButton } from "./CopyTextButton.js";
 import "./default-renderers.js";
@@ -146,6 +157,54 @@ export function TermEntryPage({
       head={<TermEntryHead entry={entry.head} />}
       sections={entry.sections}
       headMarkdown={termHeadToMarkdown(entry.head)}
+      lexicon={lexicon}
+      onOpenSense={onOpenSense}
+    />
+  );
+}
+
+/**
+ * The anti-pattern record as a page head. A second page component would be
+ * SPEC-0004 failing; this is the head adapter the collection-generic shell
+ * already expected.
+ */
+export function AntiPatternEntryHead({ head }: { readonly head: AntiPatternHead }) {
+  return (
+    <header className="entry-head">
+      <h1>
+        <span className="entry-head__headword">{head.name}</span>
+      </h1>
+      <p className="entry-head__meta">
+        <span className="entry-head__pos">{ANTI_PATTERN_CATEGORY_LABEL[head.category]}</span>
+      </p>
+      <p className="entry-head__colloquial">
+        <span className="entry-head__colloquial-label">你正常说就行</span>
+        {head.complaint}
+      </p>
+    </header>
+  );
+}
+
+export function AntiPatternEntryPage({
+  entry,
+  collectionHref,
+  lexicon,
+  onOpenSense,
+}: {
+  readonly entry: AntiPatternEntry;
+  readonly collectionHref?: string;
+  readonly lexicon?: ReadonlyMap<string, LexiconEntry>;
+  readonly onOpenSense?: (senseId: string) => void;
+}) {
+  return (
+    <EntryPage
+      breadcrumb={[
+        { label: COLLECTION_LABEL["anti-patterns"], href: collectionHref },
+        { label: entry.head.name },
+      ]}
+      head={<AntiPatternEntryHead head={entry.head} />}
+      sections={entry.sections}
+      headMarkdown={antiPatternHeadToMarkdown(entry.head)}
       lexicon={lexicon}
       onOpenSense={onOpenSense}
     />

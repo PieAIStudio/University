@@ -15,9 +15,25 @@ import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { MapControls } from "three/addons/controls/MapControls.js";
 
-import { assembleTermEntry, termHeadToMarkdown } from "@pieai/university-core";
+import {
+  ANTI_PATTERN_ENTRIES,
+  antiPatternHeadToMarkdown,
+  getAntiPatternEntry,
+  assembleTermEntry,
+  hasFavourite,
+  listGroupedByTrack,
+  termHeadToMarkdown,
+  toggleFavourite,
+} from "@pieai/university-core";
 import { readCourseProgress } from "@pieai/university-core";
-import { EntryPage, TermIndex } from "@pieai/university-ui";
+import {
+  EntryPage,
+  FavouriteStar,
+  FavouritesEmpty,
+  TermIndex,
+  AntiPatternIndex,
+  createLocalFavouritesStore,
+} from "@pieai/university-ui";
 
 import {
   hasContent,
@@ -504,6 +520,12 @@ export function App() {
         <button className="ghost" onClick={() => setView({ kind: "terms" })}>
           查词
         </button>
+        <button className="ghost" onClick={() => setView({ kind: "favourites" })}>
+          收藏
+        </button>
+        <button className="ghost" onClick={() => setView({ kind: "flavour" })}>
+          AI 味儿
+        </button>
         <button
           className={due.length > 0 ? "primary" : "ghost"}
           onClick={() => setView({ kind: "review" })}
@@ -519,7 +541,10 @@ export function App() {
           view.kind === "settled" ||
           view.kind === "review" ||
           view.kind === "terms" ||
-          view.kind === "term"
+          view.kind === "term" ||
+          view.kind === "favourites" ||
+          view.kind === "flavour" ||
+          view.kind === "flavour-entry"
         }
       >
         <Stage cameraFrom={cameraFrom} lookAt={lookAt}>
@@ -669,6 +694,22 @@ export function App() {
       {view.kind === "review" ? <ReviewHost onDone={() => setView(WORLD)} /> : null}
 
       {view.kind === "term" ? <TermEntryHost senseId={view.senseId} onOpen={setView} /> : null}
+
+      {view.kind === "favourites" ? <FavouritesHost onOpen={setView} /> : null}
+
+      {view.kind === "flavour" ? (
+        <main className="terms">
+          <button className="linkish" onClick={() => setView(WORLD)}>
+            ← 关卡地图
+          </button>
+          <AntiPatternIndex
+            entries={ANTI_PATTERN_ENTRIES}
+            onOpen={(entry) => setView({ kind: "flavour-entry", id: entry.head.id })}
+          />
+        </main>
+      ) : null}
+
+      {view.kind === "flavour-entry" ? <FlavourEntryHost id={view.id} onOpen={setView} /> : null}
 
       {view.kind === "terms" ? (
         <main className="terms">
@@ -922,6 +963,7 @@ function ReviewHost({ onDone }: { onDone: () => void }) {
  * file.
  */
 function TermEntryHost({ senseId, onOpen }: { senseId: string; onOpen: (view: View) => void }) {
+  const { state: favouriteState, toggle: toggleFavouriteFor } = useFavourites();
   const entry = LEXICON.find((item) => item.senseId === senseId);
   if (!entry) {
     return (
@@ -940,7 +982,15 @@ function TermEntryHost({ senseId, onOpen }: { senseId: string; onOpen: (view: Vi
         breadcrumb={[{ label: "词义索引", href: "#/terms" }, { label: entry.headword }]}
         head={
           <>
-            <h1 lang="en">{entry.headword}</h1>
+            <h1 lang="en">
+              {entry.headword}
+              <FavouriteStar
+                senseId={entry.senseId}
+                headword={entry.headword}
+                pressed={hasFavourite(favouriteState, entry.senseId)}
+                onToggle={toggleFavouriteFor}
+              />
+            </h1>
             <p className="reference-panel__meta">
               <span className="reference-panel__phonetic">{entry.phonetic}</span>
               <span className="reference-panel__pos">{entry.partOfSpeech}</span>
@@ -959,3 +1009,112 @@ function TermEntryHost({ senseId, onOpen }: { senseId: string; onOpen: (view: Vi
 }
 
 const LEXICON_BY_SENSE = new Map(LEXICON.map((entry) => [entry.senseId, entry]));
+const LEXICON_SENSE_IDS = new Set(LEXICON.map((entry) => entry.senseId));
+
+/**
+ * One store for the whole session.
+ *
+ * Favourites are a shortlist a learner builds by hand, so they must survive a
+ * reload; they live in localStorage today and behind an interface, which is
+ * what makes the account-backed version a different adapter rather than a
+ * rewrite of everything that reads them.
+ */
+const favourites = createLocalFavouritesStore();
+
+function useFavourites() {
+  const [state, setState] = useState(() => favourites.read());
+  const toggle = useCallback((senseId: string) => {
+    setState((current) => {
+      // `now` is a parameter rather than something the model reads off the
+      // clock, which is what makes the model pure and its tests reproducible.
+      const next = toggleFavourite(current, senseId, LEXICON_SENSE_IDS, new Date().toISOString());
+      favourites.write(next);
+      return next;
+    });
+  }, []);
+  return { state, toggle };
+}
+
+/** The learner's shortlist, grouped the same way the index groups. */
+function FavouritesHost({ onOpen }: { onOpen: (view: View) => void }) {
+  const { state, toggle } = useFavourites();
+  const groups = listGroupedByTrack(state, LEXICON);
+  const total = groups.reduce((sum, group) => sum + group.entries.length, 0);
+
+  return (
+    <main className="terms">
+      <button className="linkish" onClick={() => onOpen(WORLD)}>
+        ← 关卡地图
+      </button>
+      <h1>收藏</h1>
+      {total === 0 ? (
+        <FavouritesEmpty onBrowse={() => onOpen({ kind: "terms" })} />
+      ) : (
+        groups.map((group) => (
+          <section key={group.track}>
+            <h2>
+              {group.track} <span className="term-index__count">{group.entries.length}</span>
+            </h2>
+            <ul className="term-index__list">
+              {group.entries.map((entry) => (
+                <li key={entry.senseId}>
+                  <button
+                    className="term-index__hit"
+                    onClick={() => onOpen({ kind: "term", senseId: entry.senseId })}
+                  >
+                    <span lang="en">{entry.headword}</span>
+                    <span>{entry.gloss}</span>
+                  </button>
+                  <FavouriteStar
+                    senseId={entry.senseId}
+                    headword={entry.headword}
+                    pressed
+                    onToggle={toggle}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      )}
+    </main>
+  );
+}
+
+/**
+ * One anti-pattern, rendered by the same EntryPage a term uses.
+ *
+ * That reuse is the point rather than a saving. SPEC-0004 says a second detail
+ * page for this collection is the design failing, because the two pages would
+ * drift on the day someone adds a section type to one of them.
+ */
+function FlavourEntryHost({ id, onOpen }: { id: string; onOpen: (view: View) => void }) {
+  const entry = getAntiPatternEntry(id);
+  if (!entry) {
+    return (
+      <main className="terms">
+        <button className="linkish" onClick={() => onOpen({ kind: "flavour" })}>
+          ← 防 AI 味儿
+        </button>
+        <p className="reference-panel__note">没有这一条。</p>
+      </main>
+    );
+  }
+  return (
+    <main className="terms">
+      <EntryPage
+        breadcrumb={[{ label: "防 AI 味儿", href: "#/flavour" }, { label: entry.head.name }]}
+        head={
+          <>
+            <h1>{entry.head.name}</h1>
+            <p className="reference-panel__gloss">{entry.head.complaint}</p>
+          </>
+        }
+        sections={entry.sections}
+        headMarkdown={antiPatternHeadToMarkdown(entry.head)}
+        lexicon={LEXICON_BY_SENSE}
+        onOpenSense={(senseId) => onOpen({ kind: "term", senseId })}
+      />
+    </main>
+  );
+}

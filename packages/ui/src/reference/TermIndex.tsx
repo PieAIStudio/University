@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { GameBadge, GameEmptyState, GameField, GameInput, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
   createLexiconIndex,
   searchLexiconIndex,
@@ -8,6 +7,7 @@ import {
 } from "@pieai/university-core";
 
 import { playSound } from "../sound/index.js";
+import { CollectionIndex } from "./CollectionIndex.js";
 import { ReferencePanel, TermReferenceBody } from "./ReferencePanel.js";
 
 /**
@@ -32,19 +32,13 @@ function chipLabel(id: TrackFilter): string {
   return id === "all" ? "全部" : TRACK_LABELS[id];
 }
 
-function chipCount(id: TrackFilter, counts: Readonly<Record<TrackFilter, number>>): number {
-  return counts[id];
-}
-
 /**
  * The term index: search, browse by track, open the existing reference panel.
  *
- * This is the surface a beginner needs before they have the word. The search
- * box, the category chips, the grouped hits and the empty-state manual are
- * one module because they answer one question: "how do I find a sense I
- * cannot name?" A second panel for the hit itself is forbidden — the lesson
- * reader already opens `ReferencePanel` for `[[term:]]`, and two drawers for
- * the same sense would be two implementations.
+ * The chips, the search box and the grouped hits live on `CollectionIndex`
+ * because the anti-pattern catalogue is the same surface pointed at a
+ * different collection. This file keeps the lexicon search and the panel —
+ * the things that are actually about 词义.
  */
 export function TermIndex({
   entries,
@@ -77,7 +71,6 @@ export function TermIndex({
 
   const groups =
     track === "all" ? result.groups : result.groups.filter((group) => group.track === track);
-  const visibleTotal = track === "all" ? result.total : (counts[track] ?? 0);
   const searched = result.query !== "";
 
   function setQuery(next: string) {
@@ -95,83 +88,44 @@ export function TermIndex({
     });
   }
 
-  let body;
-  if (visibleTotal === 0 && searched) {
-    body = (
-      <GameEmptyState
-        title={`没有找到「${result.query}」相关的词义`}
-        description="可以搜英文词、中文释义，或直接描述你想说的那句话。例如「应用」「接口」「点开图标就能用」。词库会按你的说法去找对应的术语，不必先知道它叫什么。"
-      />
-    );
-  } else if (visibleTotal === 0) {
-    body = <GameEmptyState title="还没有词义" description="词库载入后会出现在这里。" />;
-  } else {
-    body = (
-      <div className="term-index__results">
-        {groups.map((group) => (
-          <section
-            key={group.track}
-            className="term-index__group"
-            aria-label={TRACK_LABELS[group.track]}
-          >
-            <h3 className="term-index__group-title">
-              {TRACK_LABELS[group.track]}
-              <GameBadge>{group.count}</GameBadge>
-            </h3>
-            <ul className="term-index__list">
-              {group.entries.map((item) => (
-                <li key={item.senseId}>
-                  <button
-                    type="button"
-                    className="term-index__hit"
-                    onClick={(event) => openEntry(item, event.currentTarget)}
-                  >
-                    <span lang="en" className="term-index__headword">
-                      {item.headword}
-                    </span>
-                    <span className="term-index__gloss">{item.gloss}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-    );
-  }
+  const byId = useMemo(
+    () => new Map(entries.map((entry) => [entry.senseId, entry] as const)),
+    [entries],
+  );
 
   return (
-    <GamePanel className="term-index" title="词义索引">
-      <div className="term-index__search" role="search">
-        <GameField label="搜索词义">
-          <GameInput
-            type="search"
-            value={value}
-            placeholder={LEXICON_SEARCH_PLACEHOLDER}
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck={false}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </GameField>
-      </div>
-      <div className="term-index__chips" role="radiogroup" aria-label="按类别筛选">
-        {CHIP_ORDER.map((id) => (
-          <button
-            key={id}
-            type="button"
-            className="term-index__chip"
-            role="radio"
-            aria-checked={track === id}
-            onClick={() => setTrack(id)}
-          >
-            <span>{chipLabel(id)}</span>
-            <GameBadge>{chipCount(id, counts)}</GameBadge>
-          </button>
-        ))}
-      </div>
-      {body}
+    <CollectionIndex
+      title="词义索引"
+      searchLabel="搜索词义"
+      placeholder={LEXICON_SEARCH_PLACEHOLDER}
+      query={value}
+      onQueryChange={setQuery}
+      chips={CHIP_ORDER.map((id) => ({ id, label: chipLabel(id), count: counts[id] }))}
+      selectedChipId={track}
+      onSelectChip={(id) => setTrack(id as TrackFilter)}
+      groups={groups.map((group) => ({
+        id: group.track,
+        label: TRACK_LABELS[group.track],
+        count: group.count,
+        items: group.entries.map((item) => ({
+          id: item.senseId,
+          title: item.headword,
+          subtitle: item.gloss,
+          titleLang: "en",
+        })),
+      }))}
+      searched={searched}
+      emptyMiss={{
+        title: `没有找到「${result.query}」相关的词义`,
+        description:
+          "可以搜英文词、中文释义，或直接描述你想说的那句话。例如「应用」「接口」「点开图标就能用」。词库会按你的说法去找对应的术语，不必先知道它叫什么。",
+      }}
+      emptyIdle={{ title: "还没有词义", description: "词库载入后会出现在这里。" }}
+      onOpenHit={(id, trigger) => {
+        const entry = byId.get(id);
+        if (entry) openEntry(entry, trigger);
+      }}
+    >
       <ReferencePanel
         open={open !== null}
         title={open?.entry.headword ?? "词义"}
@@ -190,6 +144,6 @@ export function TermIndex({
       >
         <TermReferenceBody entry={open?.entry ?? null} />
       </ReferencePanel>
-    </GamePanel>
+    </CollectionIndex>
   );
 }
