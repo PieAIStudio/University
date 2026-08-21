@@ -258,6 +258,111 @@ every term card and term page (C9–C12, B3) — is at **zero**, and no amount o
 section plumbing changes that. A term page here is still an English headword
 with a Chinese gloss; theirs is a working miniature of the thing being named.
 
+## The Catalogue Landed, 2026-08-21
+
+The audit above said the persuasive half was at zero and that a term page here
+was an English headword with a Chinese gloss. Both were true. What changed is
+that the 281 entries now exist as a third collection, `concepts`, at
+`#/concepts`, with the seven categories and forty-two sub-categories intact.
+
+### What was taken, and what was not
+
+Their names and their organisation. Not one sentence of their prose. Their
+examples are invented; this product has a real repository, real courses and
+real evidence anchors, and the authoring brief carried a list of facts about
+this codebase that an entry was allowed to cite, with inventing anything else
+forbidden outright.
+
+That instruction is visible in the shipped text. The 「回滚」 entry says, of
+this product's own deployment: 「产品对外那包怎么退，公开事实没写，这里不编。」
+An entry declining to invent a fact about us is worth more than the fact would
+have been.
+
+### How the inventory was checked
+
+Three independent reads: a browser pass over the seven category pages here, and
+Grok and Gemini scraping from the same brief with no contact. All three agree on
+281 slugs, with no disagreement on any category or sub-category placement. A
+first pass here found 280 — `/env-var` sits in a card whose link the first
+extractor missed — and the disagreement is what surfaced it.
+
+The counts are pinned in `packages/core/src/concepts/catalogue.test.ts`, so a
+future batch that quietly drops four entries fails in CI rather than appearing
+as a chip that says 133.
+
+### What the ledger can now claim, and what it still cannot
+
+Genuinely closed, with content rather than mechanism:
+
+| Module | Now |
+| --- | --- |
+| B1, B5, B6 | Seven category chips plus 「全部」, counts live against the query |
+| C1, C3 | Breadcrumb and copy-as-Markdown on all 281 |
+| C5 | 281 colloquial leads — the field the audit found empty on the lexicon |
+| C6 | 281 definitions, **every one carrying 「它不是」**, enforced by test |
+| C7, C8, C21 | Prerequisites, aliases and related on the entries that have them |
+| C13, C14, C16, C17, C18 | Anatomy, variants, use/don't, distinctions, plain |
+| C19, D2, D3, D4 | 281 three-option questions with per-option wrong feedback |
+| C20 | Agent prompt with the copy button theirs does not have |
+| C23 | Prev/next, mounted for the first time — it shipped unmounted, and an unmounted component is one nobody has checked |
+
+Mechanism built, content still thin:
+
+- **C9, C11 (`demo`) and C12 (`regions`)** — the section types, the ten-leaf
+  node vocabulary and the renderers exist. Every leaf renders through
+  SwimmerUIKit, so the demo of 「按钮」 is the button this product ships and a
+  theme change repaints all of them. Coverage is a first tranche, not 281.
+- **C10** — the readable chain shipped earlier. Its animated half is not a
+  missing type: a `demo` with one state per step *is* the stepper, so what is
+  missing is authored steps, not a schema.
+
+Still open, and not to be counted:
+
+- **B2** sub-category sidebar. The grouping exists; the sticky rail does not.
+- **B3** live demo on the *index card*. Cards carry a tagline.
+- **C2** favourite star on a concept page. Term pages have it. The favourites
+  store is keyed by one id across collections, and concept ids and lexicon sense
+  ids do not collide *today* only because one set is dotted and the other is
+  kebab — so this wants a namespace before it wants a button.
+- **C4** pronunciation on concept pages. Concepts carry `en`; the button is
+  wired for terms only.
+- **C15** 典型使用场景 has no section type of its own; `variants` covers part of it.
+- **C22** stays a category error, as the audit said. Ours is stronger and it is
+  not the same module.
+- **A10** mobile form. Web3D baseline rule 8 is still open.
+- **G1–G5**, the Skill group, entirely.
+- **0 of 560 delivered lessons contain a `[[term:]]`.** The catalogue does not
+  change this. It is still the gap between a mechanism and a learner.
+
+### Two defects only a browser found
+
+Both had every test passing.
+
+- Concept pointers were resolved against the lexicon, so 「相关」 and 「先知道」
+  rendered as bare ids on all 281 pages. The ids were valid concept ids, which
+  is exactly what the test checked.
+- `main.terms` has never had a rule behind it in either shell, so every entry
+  page in all three collections ran edge to edge. That one shipped with the
+  term and anti-pattern pages and was missed in their browser pass.
+
+The reading measure now lives on `.entry-page`, where a shell cannot forget it.
+
+### Search stopped requiring the exact words
+
+Not on this ledger, and the reason it belongs here anyway: a catalogue whose
+entry point is 「描述你看见的现象」 is only as good as the search behind it.
+
+Matching used to ask whether the whole query appeared verbatim in some field.
+Measured against real phrasings, 「怎么退回上一版」 returned 「搜索」 and
+「第一次打开特别慢」 returned nothing. `Intl.Segmenter` — ICU, already in every
+engine, no dependency — segments the query, and an entry scores by which tokens
+landed and in which field. Field weights are the load-bearing part: unweighted,
+an entry's body is thousands of characters and one sentence matched 248 of 281.
+
+The lexicon and the anti-pattern catalogue moved onto the same module. Three
+collections with three search implementations would have been the share-the-code
+rule broken three ways.
+
 ## What "Better Than Theirs" Has To Mean
 
 The instruction is that University ends up with more modules, not fewer. That

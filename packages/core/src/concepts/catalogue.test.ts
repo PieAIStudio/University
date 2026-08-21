@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { validateChoiceExercise } from "../domain/choice-exercise.js";
+import { sectionsToMarkdown } from "../domain/entry-section.js";
 import { CONCEPT_CATEGORY_IDS, type ConceptCategory } from "../domain/concept.js";
 import {
   CONCEPT_COUNTS,
@@ -209,6 +210,24 @@ describe("concept catalogue", () => {
         .map((entry) => entry.head.id);
       expect({ query, hits }).toEqual({ query, hits: expect.arrayContaining([expected]) });
     }
+  });
+
+  it("keeps insider jargon out of copy written for beginners", () => {
+    // The failure this exists to prevent actually shipped once: a catalogue
+    // about spotting AI-written Chinese used 「芯片」 for a filter tag fourteen
+    // times, which to someone who has never built a website means the silicon
+    // in their laptop. Every word below has no defensible use in this
+    // collection — unlike 「赋能」 or 「令牌」, which appear here on purpose,
+    // one inside agent prompts as a thing to forbid and the other as a name the
+    // entry warns the reader about.
+    const banned = ["英雄区", "宾语", "谓语", "语素", "实例化", "挂载", "颗粒度", "对齐颗粒度"];
+    const found = CONCEPT_ENTRIES.flatMap((entry) => {
+      const text = `${entry.head.zh} ${entry.head.tagline} ${sectionsToMarkdown(entry.sections)}`;
+      return banned
+        .filter((word) => text.includes(word))
+        .map((word) => `${entry.head.id}: ${word}`);
+    });
+    expect(found).toEqual([]);
   });
 
   it("does not return most of the catalogue for one sentence", () => {
