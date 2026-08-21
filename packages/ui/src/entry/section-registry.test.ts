@@ -49,6 +49,17 @@ const SAMPLES = {
     type: "anatomy",
     payload: { parts: [{ name: "图标", note: "用户点的入口。" }] },
   },
+  flow: {
+    id: "save-path",
+    type: "flow",
+    payload: {
+      title: "一次保存经过哪些部分？",
+      steps: [
+        { label: "填写并点击保存", description: "前端读取输入。", current: true },
+        { label: "写入记录", description: "数据库长期保存这次修改。", current: false },
+      ],
+    },
+  },
   variants: {
     id: "kinds",
     type: "variants",

@@ -57,6 +57,17 @@ const ALL_SECTIONS = {
     type: "anatomy",
     payload: { parts: [{ name: "图标", note: "用户点的入口。" }] },
   },
+  flow: {
+    id: "save-path",
+    type: "flow",
+    payload: {
+      title: "一次保存经过哪些部分？",
+      steps: [
+        { label: "填写并点击保存", description: "前端读取输入，显示保存中。", current: true },
+        { label: "写入记录", description: "数据库长期保存这次修改。", current: false },
+      ],
+    },
+  },
   variants: {
     id: "kinds",
     type: "variants",
@@ -214,5 +225,156 @@ describe("EntryPage", () => {
       (pointer as HTMLButtonElement | null)?.click();
     });
     expect(onOpenSense).toHaveBeenCalledWith("api.interface");
+  });
+
+  it("renders a flow as an ordered list and highlights the current step", async () => {
+    const { entry } = assembleTermEntry(APP, [ALL_SECTIONS.flow]);
+    await act(async () => {
+      root.render(<TermEntryPage entry={entry} />);
+    });
+
+    const section = container.querySelector('[data-section-type="flow"]');
+    expect(section?.querySelector("h2")?.textContent).toBe("在这条链路里");
+    expect(section?.textContent).toContain("一次保存经过哪些部分？");
+    const list = section?.querySelector("ol");
+    expect(list).toBeTruthy();
+    expect(list?.tagName).toBe("OL");
+    const steps = [...(list?.querySelectorAll("li") ?? [])];
+    expect(steps).toHaveLength(2);
+    expect(steps[0]?.getAttribute("data-current")).toBe("true");
+    expect(steps[0]?.textContent).toContain("本页重点");
+    expect(steps[0]?.textContent).toContain("填写并点击保存");
+    expect(steps[1]?.getAttribute("data-current")).toBeNull();
+    expect(steps[1]?.textContent).not.toContain("本页重点");
+
+    const copy = [...container.querySelectorAll("button")].find((button) =>
+      button.textContent?.includes("复制为 Markdown"),
+    );
+    await act(async () => {
+      copy?.click();
+    });
+    const pasted = writeText.mock.calls[0]?.[0] as string;
+    expect(pasted).toContain("1. **填写并点击保存** — 前端读取输入，显示保存中。（本页重点）");
+    expect(pasted).toContain("2. **写入记录** — 数据库长期保存这次修改。");
+    expect(pasted).not.toContain("2. **写入记录** — 数据库长期保存这次修改。（本页重点）");
+  });
+
+  it("hides the pronunciation button when speechSynthesis is missing", async () => {
+    const { entry } = assembleTermEntry(APP, []);
+    await act(async () => {
+      root.render(<TermEntryPage entry={entry} />);
+    });
+    expect(container.querySelector('[aria-label="听 app 的英文发音"]')).toBeNull();
+    expect(container.textContent).not.toContain("听发音");
+  });
+
+  it("reads the English headword, not the Chinese gloss", async () => {
+    const speak = vi.fn();
+    vi.stubGlobal(
+      "SpeechSynthesisUtterance",
+      class {
+        text: string;
+        voice: unknown = null;
+        lang = "";
+        rate = 1;
+        constructor(text: string) {
+          this.text = text;
+        }
+      },
+    );
+    vi.stubGlobal("speechSynthesis", {
+      getVoices: () => [
+        {
+          name: "Samantha",
+          lang: "en-US",
+          localService: true,
+          default: true,
+          voiceURI: "Samantha",
+        },
+      ],
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      cancel: vi.fn(),
+      speak,
+    });
+
+    const { entry } = assembleTermEntry(APP, []);
+    await act(async () => {
+      root.render(<TermEntryPage entry={entry} />);
+    });
+
+    const button = container.querySelector('[aria-label="听 app 的英文发音"]');
+    expect(button).toBeTruthy();
+    expect(button?.textContent).toContain("听发音");
+    await act(async () => {
+      (button as HTMLButtonElement | null)?.click();
+    });
+    expect(speak).toHaveBeenCalledTimes(1);
+    const utterance = speak.mock.calls[0]?.[0] as { text: string };
+    expect(utterance.text).toBe("app");
+    expect(utterance.text).not.toContain("应用");
+  });
+
+  it("does not put a pronunciation button on an anti-pattern head", async () => {
+    const entry = getAntiPatternEntry("steady-catch");
+    await act(async () => {
+      root.render(<AntiPatternEntryPage entry={entry!} />);
+    });
+    expect(container.querySelector('[aria-label^="听 "]')).toBeNull();
+  });
+
+  it("takes neighbours as props and reveals their names, for either collection", async () => {
+    const onPrevious = vi.fn();
+    const onNext = vi.fn();
+    const { entry } = assembleTermEntry(APP, []);
+    await act(async () => {
+      root.render(
+        <TermEntryPage
+          entry={entry}
+          neighbours={{
+            previous: { label: "api", onOpen: onPrevious },
+            next: { label: "backend", href: "#/terms/backend", onOpen: onNext },
+          }}
+        />,
+      );
+    });
+
+    const nav = container.querySelector('[aria-label="相邻条目"]');
+    expect(nav).toBeTruthy();
+    const previous = container.querySelector('[data-neighbour="previous"]');
+    const next = container.querySelector('[data-neighbour="next"]');
+    expect(previous?.getAttribute("aria-label")).toBe("上一个：api");
+    expect(previous?.getAttribute("title")).toBe("api");
+    expect(previous?.textContent).toContain("api");
+    expect(next?.getAttribute("aria-label")).toBe("下一个：backend");
+    expect(next?.getAttribute("title")).toBe("backend");
+    expect(next?.getAttribute("href")).toBe("#/terms/backend");
+    expect(next?.textContent).toContain("backend");
+
+    await act(async () => {
+      (previous as HTMLButtonElement | null)?.click();
+    });
+    expect(onPrevious).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      (next as HTMLAnchorElement | null)?.click();
+    });
+    expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides a missing neighbour rather than rendering a dead control", async () => {
+    const entry = getAntiPatternEntry("steady-catch");
+    await act(async () => {
+      root.render(
+        <AntiPatternEntryPage
+          entry={entry!}
+          neighbours={{ next: { label: "热情洋溢", onOpen: () => undefined } }}
+        />,
+      );
+    });
+    expect(container.querySelector('[data-neighbour="previous"]')).toBeNull();
+    expect(container.querySelector('[data-neighbour="next"]')?.getAttribute("aria-label")).toBe(
+      "下一个：热情洋溢",
+    );
   });
 });

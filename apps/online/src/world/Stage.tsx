@@ -11,9 +11,12 @@
  *      and `useFrame` at priority 1 takes rendering away from R3F's automatic
  *      pass, so the draw happens exactly once per frame, here.
  *   2. One tone map, one sRGB encode. The scene renders linear into a target;
- *      `grade.ts` does ACES and gamma once, in a shader, and forces the
- *      renderer to leave the result alone. See that file's header.
- *   3. A grade exists and its donor is recorded — again, `grade.ts`.
+ *      `grade.ts` runs the kit's standalone blit (ACES, then grade, then one
+ *      sRGB encode) and forces `toneMapping` to `NoToneMapping` while that
+ *      blit runs, so the renderer does not add a second pair. The kit guard
+ *      asserts the count in development, below.
+ *   3. A grade exists — `grade.ts` starts from the kit's `diorama` preset and
+ *      records the scene-specific overrides.
  *   4. DPR is clamped, with a lower ceiling and no multisampling on small
  *      screens. Below.
  *   5. Audio is latched behind a gesture — `audio.ts`, armed on mount.
@@ -27,7 +30,7 @@ import { Suspense, useEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 
 import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
-import { createGradePass } from "./grade";
+import { assertWorldGradePipeline, createGradePass } from "./grade";
 
 /**
  * A phone is not a small desktop.
@@ -53,6 +56,15 @@ function Pipeline() {
   useEffect(() => {
     pass.resize(size.width * viewport.dpr, size.height * viewport.dpr);
   }, [pass, size.width, size.height, viewport.dpr]);
+
+  // The kit guard is the reason the package exists: double tone-map / double
+  // sRGB encode fails silently. Gate on DEV because the kit does not sniff
+  // NODE_ENV; a shipped build must not throw. The renderer is the live R3F
+  // canvas, which is the configuration a wrong `outputOwner` would mis-count.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    assertWorldGradePipeline(gl);
+  }, [gl]);
 
   // Priority above zero: R3F stops rendering for us, and this is the loop.
   const measuring = useRef<((report: unknown) => void) | null>(null);

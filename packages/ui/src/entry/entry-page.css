@@ -57,8 +57,16 @@
   outline-offset: 2px;
 }
 
-.entry-head h1 {
+.entry-head__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
   margin: 0 0 8px;
+}
+
+.entry-head h1 {
+  margin: 0;
   font-size: 2rem;
   line-height: 1.2;
 }
@@ -129,6 +137,7 @@
 
 .entry-section__senses,
 .entry-section__parts,
+.entry-section__flow,
 .entry-section__variants,
 .entry-section__pairs {
   display: grid;
@@ -174,7 +183,9 @@ span.entry-section__sense {
 }
 
 .entry-section__parts li,
+.entry-section__flow-step,
 .entry-section__variants li {
+  position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 6px 12px;
@@ -185,17 +196,20 @@ span.entry-section__sense {
 }
 
 .entry-section__parts li strong,
+.entry-section__flow-head,
 .entry-section__variants li strong {
   grid-column: 2;
 }
 
 .entry-section__parts li span:last-child,
+.entry-section__flow-step span:last-child,
 .entry-section__variants li p {
   grid-column: 2;
   margin: 0;
 }
 
 .entry-section__part-index {
+  z-index: 1;
   grid-row: 1 / span 2;
   width: 1.6em;
   height: 1.6em;
@@ -278,4 +292,143 @@ span.entry-section__sense {
 
 .entry-section__pairs li p:last-child {
   margin: 0;
+}
+
+.entry-section__flow-title {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.entry-section__flow-caption {
+  margin: 0 0 14px;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.92rem;
+}
+
+.entry-section__flow-step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: calc(12px + 1.6em);
+  bottom: -12px;
+  left: calc(14px + 0.8em);
+  width: 2px;
+  background: var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+}
+
+.entry-section__flow-step.is-current {
+  border-color: var(--game-ui-accent, #5ec8c0);
+  background: color-mix(
+    in srgb,
+    var(--game-ui-accent, #5ec8c0) 10%,
+    var(--game-ui-panel-deep, #0c1018)
+  );
+}
+
+.entry-section__flow-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.entry-section__flow-mark {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 22%, transparent);
+  color: var(--game-ui-accent, #5ec8c0);
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.entry-section__flow-step.is-current .entry-section__part-index {
+  background: var(--game-ui-accent, #5ec8c0);
+  color: var(--game-ui-panel-deep, #0c1018);
+}
+
+.entry-page__float-navs {
+  pointer-events: none;
+}
+
+.entry-page__float-nav {
+  pointer-events: auto;
+  position: fixed;
+  top: 50%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: 999px;
+  background: var(--game-ui-panel-deep, #0c1018);
+  color: var(--game-ui-text, #e9edf5);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.entry-page__float-nav:hover,
+.entry-page__float-nav:focus-visible {
+  border-color: var(--game-ui-accent, #5ec8c0);
+  color: var(--game-ui-accent, #5ec8c0);
+}
+
+.entry-page__float-nav:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+.entry-page__float-nav--prev {
+  left: 12px;
+}
+
+.entry-page__float-nav--next {
+  right: 12px;
+}
+
+.entry-page__float-nav-arrow {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.entry-page__float-nav-name {
+  position: absolute;
+  top: 50%;
+  max-width: 12rem;
+  padding: 4px 10px;
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel-deep, #0c1018);
+  color: var(--game-ui-text, #e9edf5);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.entry-page__float-nav--prev .entry-page__float-nav-name {
+  left: calc(100% + 8px);
+}
+
+.entry-page__float-nav--next .entry-page__float-nav-name {
+  right: calc(100% + 8px);
+}
+
+.entry-page__float-nav:hover .entry-page__float-nav-name,
+.entry-page__float-nav:focus-visible .entry-page__float-nav-name {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .entry-page__float-nav-name {
+    opacity: 1;
+  }
 }

@@ -36,8 +36,12 @@ export {
   AntiPatternEntryPage,
   COLLECTION_LABEL,
   type EntryBreadcrumbItem,
+  type EntryNeighbour,
+  type EntryNeighbourPair,
   type EntryPageProps,
 } from "./entry/EntryPage.js";
+export { PronunciationButton } from "./entry/PronunciationButton.js";
+export { EntryFloatNav } from "./entry/EntryFloatNav.js";
 export {
   foldEntryMarkdown,
   registerSectionRenderer,
@@ -63,5 +67,19 @@ export {
   writeLocalFavourites,
   type FavouritesStore,
 } from "./favourites/index.js";
+export {
+  PRACTICE_EMPTY_ACTION,
+  PRACTICE_EMPTY_DESCRIPTION,
+  PRACTICE_EMPTY_TITLE,
+  PRACTICE_RECENT_STORAGE_KEY,
+  PRACTICE_UNLOCK_HINT,
+  PracticeStream,
+  PracticeTermPanel,
+  createLocalPracticeRecentStore,
+  practiceOrdinalLabel,
+  readLocalPracticeRecent,
+  writeLocalPracticeRecent,
+  type PracticeRecentStore,
+} from "./practice/index.js";
 export * from "./view/lesson-view.js";
 export * from "./api/client.js";

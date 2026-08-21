@@ -5,16 +5,18 @@ import { SenseId, StableId } from "./schemas.js";
 /**
  * The typed blocks an entry body is made of.
  *
- * This is not thirteen independent features. SPEC-0002 listed them as modules
- * because VibeHub named them that way; SPEC-0004 is the count of *shapes*.
- * `agent-prompt` is C20 and F10 — a pasteable paragraph for an AI agent, on a
- * term page or an anti-pattern page. `related` is C21 and F12 — pointers at
- * other senses, whether the heading says 「接下来学」 or 「相关术语」. `when-not`
- * is F8 and the negative half of C24. Built as separate components, this
- * product would ship two implementations of one thing on day one.
+ * This is not one independent feature per ledger row. SPEC-0002 listed them as
+ * modules because VibeHub named them that way; SPEC-0004 is the count of
+ * *shapes*. `agent-prompt` is C20 and F10 — a pasteable paragraph for an AI
+ * agent, on a term page or an anti-pattern page. `related` is C21 and F12 —
+ * pointers at other senses, whether the heading says 「接下来学」 or 「相关术语」.
+ * `when-not` is F8 and the negative half of C24. Built as separate components,
+ * this product would ship two implementations of one thing on day one.
  *
- * Interactive demos (C9–C12) are deliberately absent. They are a later type,
- * and an unknown type already degrades instead of taking the page down.
+ * C10 (`flow`) is the readable chain: where this entry sits in a path.
+ * Interactive demos that *animate* a path (C9 header demo, C11 state-switch,
+ * C12 click-the-region, and VibeHub's live zone mockups) stay later types, and
+ * an unknown type already degrades instead of taking the page down.
  */
 export const SECTION_TYPES = [
   "colloquial",
@@ -22,6 +24,7 @@ export const SECTION_TYPES = [
   "aliases",
   "prerequisites",
   "anatomy",
+  "flow",
   "variants",
   "use-dont",
   "distinction",
@@ -53,6 +56,7 @@ export const SECTION_HEADING: { readonly [T in EntrySectionType]: string } = {
   aliases: "也常被叫作",
   prerequisites: "先知道",
   anatomy: "组成结构",
+  flow: "在这条链路里",
   variants: "常见变体",
   "use-dont": "该用 / 不该用",
   distinction: "容易混淆",
@@ -114,6 +118,13 @@ export const PrerequisitesPayloadSchema = z
   .strict();
 
 /**
+ * C10. Caption under the heading, so the clipboard and the page explain the
+ * same highlight. The mark on a current step is 「本页重点」; this sentence is
+ * why that mark is there.
+ */
+export const FLOW_CAPTION = "突出显示的步骤，就是你刚学的这个东西在整条链路里站的位置。";
+
+/**
  * C13. Numbered parts of the thing being named.
  *
  * The number is the index. Storing it would be a second copy of order, and the
@@ -134,6 +145,46 @@ export const AnatomyPayloadSchema = z
       .max(30),
   })
   .strict();
+
+/**
+ * C10. An ordered path, with this entry's own step marked.
+ *
+ * The highlight is the whole module. A beginner gets lost not because they
+ * cannot read a definition, but because they cannot see where the thing they
+ * just learned sits in the work. Steps live on the entry, not in a shared flow
+ * catalogue: sharing a path across terms is content reuse, not a second schema
+ * — copy the steps and flip the flags. Interactive zone mockups are a later
+ * demo type; this is the readable chain those demos would sit on.
+ *
+ * At least one step must be current. A path with no highlight is a different
+ * section, and a weaker one.
+ */
+export const FlowPayloadSchema = z
+  .object({
+    title: ShortName,
+    steps: z
+      .array(
+        z
+          .object({
+            label: ShortName,
+            description: Sentence,
+            current: z.boolean().default(false),
+          })
+          .strict(),
+      )
+      .min(2)
+      .max(20),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (!value.steps.some((step) => step.current)) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "A flow needs at least one current step; the highlight is the point of the section.",
+      });
+    }
+  });
 
 /** C14. A variant and the situation that picks it. Live miniatures come later. */
 export const VariantsPayloadSchema = z
@@ -245,6 +296,7 @@ export const SECTION_PAYLOAD_SCHEMAS = {
   aliases: AliasesPayloadSchema,
   prerequisites: PrerequisitesPayloadSchema,
   anatomy: AnatomyPayloadSchema,
+  flow: FlowPayloadSchema,
   variants: VariantsPayloadSchema,
   "use-dont": UseDontPayloadSchema,
   distinction: DistinctionPayloadSchema,
@@ -445,6 +497,15 @@ function sectionBody(section: EntrySection): string {
       return section.payload.parts
         .map((part, index) => `${index + 1}. **${part.name}** — ${part.note}`)
         .join("\n");
+    case "flow": {
+      const steps = section.payload.steps
+        .map((step, index) => {
+          const mark = step.current ? "（本页重点）" : "";
+          return `${index + 1}. **${step.label}** — ${step.description}${mark}`;
+        })
+        .join("\n");
+      return `**${section.payload.title}**\n\n${FLOW_CAPTION}\n\n${steps}`;
+    }
     case "variants":
       return section.payload.items
         .map((item) => `### ${item.name}\n\n什么时候用它：${item.when}`)

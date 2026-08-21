@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { GameCallout } from "@pieai/swimmer-ui-kit";
 import {
+  FLOW_CAPTION,
   SECTION_HEADING,
   SECTION_TYPES,
   sectionToMarkdown,
@@ -140,6 +141,42 @@ const DEFAULT_BY_TYPE = {
               </span>
               <strong>{part.name}</strong>
               <span>{part.note}</span>
+            </li>
+          ))}
+        </ol>
+      </SectionFrame>
+    ),
+  },
+  flow: {
+    type: "flow",
+    toMarkdown: sectionToMarkdown,
+    render: (section) => (
+      <SectionFrame section={section}>
+        <p className="entry-section__flow-title">{section.payload.title}</p>
+        <p className="entry-section__flow-caption">{FLOW_CAPTION}</p>
+        {/*
+          A real ordered list, not a drawing of one. The visual rail is CSS on
+          top of `<ol>`; without CSS the learner still gets numbered steps,
+          selectable text, and a screen reader that can walk the path. Mermaid
+          and WebGL would throw all three away, which is why they are not used.
+        */}
+        <ol className="entry-section__flow">
+          {section.payload.steps.map((step, index) => (
+            <li
+              key={`${step.label}-${index}`}
+              className={
+                step.current ? "entry-section__flow-step is-current" : "entry-section__flow-step"
+              }
+              data-current={step.current ? "true" : undefined}
+            >
+              <span className="entry-section__part-index" aria-hidden="true">
+                {index + 1}
+              </span>
+              <span className="entry-section__flow-head">
+                <strong>{step.label}</strong>
+                {step.current ? <em className="entry-section__flow-mark">本页重点</em> : null}
+              </span>
+              <span>{step.description}</span>
             </li>
           ))}
         </ol>

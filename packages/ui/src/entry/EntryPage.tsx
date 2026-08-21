@@ -15,11 +15,15 @@ import {
 
 import { CopyTextButton } from "./CopyTextButton.js";
 import "./default-renderers.js";
+import { EntryFloatNav, type EntryNeighbourPair } from "./EntryFloatNav.js";
+import { PronunciationButton } from "./PronunciationButton.js";
 import {
   foldEntryMarkdown,
   getSectionRenderer,
   type EntryRenderContext,
 } from "./section-registry.js";
+
+export type { EntryNeighbour, EntryNeighbourPair } from "./EntryFloatNav.js";
 
 /**
  * Breadcrumb root labels. One shell, two collections; a second page component
@@ -43,6 +47,11 @@ export interface EntryPageProps {
   readonly headMarkdown: string;
   readonly lexicon?: ReadonlyMap<string, LexiconEntry>;
   readonly onOpenSense?: (senseId: string) => void;
+  /**
+   * C23. Neighbours of *this* entry in its collection. Terms and anti-patterns
+   * pass the same shape; the chrome does not know which collection it is on.
+   */
+  readonly neighbours?: EntryNeighbourPair;
 }
 
 function SectionView({
@@ -61,8 +70,8 @@ function SectionView({
  * The entry page chrome: breadcrumb, head, sections in order, copy-as-Markdown.
  *
  * Collection-generic on purpose. Terms pass a lexicon head; anti-patterns pass
- * a different head into the same shell. Favourite, pronunciation and prev/next
- * are later chrome, not a reason to fork this.
+ * a different head into the same shell. Favourite is later chrome, not a
+ * reason to fork this.
  */
 export function EntryPage({
   breadcrumb,
@@ -71,12 +80,14 @@ export function EntryPage({
   headMarkdown,
   lexicon,
   onOpenSense,
+  neighbours,
 }: EntryPageProps) {
   const markdown = foldEntryMarkdown(headMarkdown, sections);
   const context: EntryRenderContext = { lexicon, onOpenSense };
 
   return (
     <article className="entry-page">
+      {neighbours ? <EntryFloatNav neighbours={neighbours} /> : null}
       <header className="entry-page__topbar">
         <nav className="entry-page__breadcrumb" aria-label="面包屑">
           <ol>
@@ -116,11 +127,14 @@ export function EntryPage({
 export function TermEntryHead({ entry }: { readonly entry: LexiconEntry }) {
   return (
     <header className="entry-head">
-      <h1>
-        <span className="entry-head__headword" lang="en">
-          {entry.headword}
-        </span>
-      </h1>
+      <div className="entry-head__title">
+        <h1>
+          <span className="entry-head__headword" lang="en">
+            {entry.headword}
+          </span>
+        </h1>
+        <PronunciationButton word={entry.headword} />
+      </div>
       <p className="entry-head__meta">
         <span className="entry-head__phonetic">{entry.phonetic}</span>
         <span className="entry-head__pos">{entry.partOfSpeech}</span>
@@ -142,11 +156,13 @@ export function TermEntryPage({
   collectionHref,
   lexicon,
   onOpenSense,
+  neighbours,
 }: {
   readonly entry: TermEntry;
   readonly collectionHref?: string;
   readonly lexicon?: ReadonlyMap<string, LexiconEntry>;
   readonly onOpenSense?: (senseId: string) => void;
+  readonly neighbours?: EntryNeighbourPair;
 }) {
   return (
     <EntryPage
@@ -159,6 +175,7 @@ export function TermEntryPage({
       headMarkdown={termHeadToMarkdown(entry.head)}
       lexicon={lexicon}
       onOpenSense={onOpenSense}
+      neighbours={neighbours}
     />
   );
 }
@@ -190,11 +207,13 @@ export function AntiPatternEntryPage({
   collectionHref,
   lexicon,
   onOpenSense,
+  neighbours,
 }: {
   readonly entry: AntiPatternEntry;
   readonly collectionHref?: string;
   readonly lexicon?: ReadonlyMap<string, LexiconEntry>;
   readonly onOpenSense?: (senseId: string) => void;
+  readonly neighbours?: EntryNeighbourPair;
 }) {
   return (
     <EntryPage
@@ -207,6 +226,7 @@ export function AntiPatternEntryPage({
       headMarkdown={antiPatternHeadToMarkdown(entry.head)}
       lexicon={lexicon}
       onOpenSense={onOpenSense}
+      neighbours={neighbours}
     />
   );
 }

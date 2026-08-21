@@ -23,6 +23,7 @@ export {
   SECTION_TYPES,
   SECTION_HEADING,
   SECTION_PAYLOAD_SCHEMAS,
+  FLOW_CAPTION,
   SectionTypeSchema,
   isEntrySectionType,
   parseEntrySection,
@@ -132,3 +133,29 @@ export * from "./progress/contract.js";
 // adapter, so the account-backed store is a different reader/writer rather
 // than a second model.
 export * from "./favourites/model.js";
+
+// Practice is a term's own three-option quiz, served as an endless sitting.
+// Identity is `${track}-${senseId}`; storage of the recent-id ring is an
+// adapter, same split as favourites.
+export {
+  EMPTY_PRACTICE_RECENT,
+  PRACTICE_RECENT_DOCUMENT_VERSION,
+  PRACTICE_RECENT_LIMIT,
+  advancePracticeSession,
+  assembleTermPracticeQuestion,
+  idOfPracticeQuestion,
+  indexPracticeQuestions,
+  parsePracticeRecent,
+  pickPracticeQuestionId,
+  practiceQuestionIdFromHead,
+  rememberPracticeQuestion,
+  startPracticeSession,
+  unlockPracticeSession,
+  type PracticeRecentState,
+  type PracticeSession,
+  type TermPracticeAssembly,
+  type TermPracticeExercise,
+  type TermPracticeIssue,
+  type TermPracticeIssueCode,
+  type TermPracticeQuestion,
+} from "./practice/index.js";

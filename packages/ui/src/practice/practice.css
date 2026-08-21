@@ -1,0 +1,70 @@
+/*
+  Practice stream styles, next to the component that emits the class names.
+
+  Shells that mount PracticeStream also need choice-block.css and
+  entry-page.css, because this surface reuses ChoiceBlock and TermEntryPage
+  rather than restyling them. A shared surface whose appearance depends on
+  which app remembered the CSS is one implementation in name only.
+*/
+
+.practice-stream {
+  display: grid;
+  gap: 16px;
+}
+
+.practice-stream__ordinal {
+  margin: 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.9rem;
+}
+
+.practice-stream__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.practice-term-panel {
+  min-width: 0;
+  min-height: 16rem;
+  max-height: min(70vh, 40rem);
+  overflow: auto;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: var(--game-ui-panel, #1a2030);
+}
+
+.practice-term-panel.is-locked {
+  display: grid;
+}
+
+.practice-term-panel__mask {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 12px;
+  min-height: 16rem;
+  padding: 24px;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  text-align: center;
+}
+
+.practice-term-panel__mask p {
+  margin: 0;
+}
+
+.practice-term-panel__icon {
+  display: block;
+}
+
+.practice-term-panel__entry {
+  min-width: 0;
+  padding: 20px;
+}
+
+@media (max-width: 47.99rem) {
+  .practice-stream__columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

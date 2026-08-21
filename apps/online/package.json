@@ -17,6 +17,7 @@
     "content": "node scripts/import-courses.mjs"
   },
   "dependencies": {
+    "@pieai/swimmer-render-kit": "0.3.0",
     "@pieai/swimmer-ui-kit": "1.3.2",
     "@pieai/university-core": "workspace:*",
     "@pieai/university-ui": "workspace:*",

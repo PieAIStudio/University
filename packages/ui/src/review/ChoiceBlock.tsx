@@ -41,10 +41,17 @@ export interface ChoiceBlockExercise {
 export function ChoiceBlock({
   exercise,
   onNext,
+  onSolved,
 }: {
   readonly exercise: ChoiceBlockExercise;
   /** Fires only from the control that appears after a correct pick. */
   readonly onNext?: () => void;
+  /**
+   * Fires once when the correct option is first picked. The practice term
+   * panel unlocks on this moment, not on `onNext`: waiting for the next-question
+   * button would hide the page until the learner was already leaving it.
+   */
+  readonly onSolved?: () => void;
 }) {
   const [state, setState] = useState(INITIAL_CHOICE_BLOCK_STATE);
 
@@ -65,6 +72,7 @@ export function ChoiceBlock({
     const next = applyChoicePick(state, optionId, exercise.correctOptionId);
     setState(next);
     playSound(optionId === exercise.correctOptionId ? "answer.correct" : "answer.wrong");
+    if (next.solved && !state.solved) onSolved?.();
   }
 
   return (

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  FLOW_CAPTION,
   parseEntrySection,
   parseEntrySections,
   SECTION_HEADING,
@@ -43,6 +44,35 @@ const SAMPLES = {
       parts: [
         { name: "按钮本体", note: "可点的那一块，后果必须写在文案里。" },
         { name: "图标", note: "可省略；有的话要和文案说同一件事。" },
+      ],
+    },
+  },
+  flow: {
+    id: "save-path",
+    type: "flow",
+    payload: {
+      title: "一次保存经过哪些部分？",
+      steps: [
+        {
+          label: "填写并点击保存",
+          description: "前端读取输入，显示保存中。",
+          current: true,
+        },
+        {
+          label: "发出保存请求",
+          description: "前端按 API 约定发送地址、方法和数据。",
+          current: true,
+        },
+        {
+          label: "接收、检查并处理",
+          description: "后端接收请求，检查输入、身份和权限。",
+          current: false,
+        },
+        {
+          label: "写入记录",
+          description: "数据库长期保存这次修改。",
+          current: false,
+        },
       ],
     },
   },
@@ -152,6 +182,58 @@ describe("section payloads", () => {
     const markdown = sectionToMarkdown(sample("anatomy"));
     expect(markdown).toContain("1. **按钮本体**");
     expect(markdown).toContain("2. **图标**");
+  });
+
+  it("serialises a flow as an ordered list and marks the current steps", () => {
+    const markdown = sectionToMarkdown(sample("flow"));
+    expect(markdown).toContain("## 在这条链路里");
+    expect(markdown).toContain("一次保存经过哪些部分？");
+    expect(markdown).toContain("1. **填写并点击保存** — 前端读取输入，显示保存中。（本页重点）");
+    expect(markdown).toContain(
+      "2. **发出保存请求** — 前端按 API 约定发送地址、方法和数据。（本页重点）",
+    );
+    expect(markdown).toContain("3. **接收、检查并处理** — 后端接收请求，检查输入、身份和权限。");
+    expect(markdown).not.toContain(
+      "3. **接收、检查并处理** — 后端接收请求，检查输入、身份和权限。（本页重点）",
+    );
+    expect(markdown).toContain(FLOW_CAPTION);
+  });
+
+  it("drops a flow with no current step, because the highlight is the point", () => {
+    const parsed = parseEntrySection(
+      {
+        id: "no-focus",
+        type: "flow",
+        payload: {
+          title: "一次保存经过哪些部分？",
+          steps: [
+            { label: "前端", description: "点保存。" },
+            { label: "后端", description: "写入。" },
+          ],
+        },
+      },
+      0,
+    );
+    expect(parsed.ok).toBe(false);
+    if (parsed.ok) return;
+    expect(parsed.problem.code).toBe("invalid-payload");
+  });
+
+  it("drops a single-step flow: a chain of one does not show a place in a path", () => {
+    const parsed = parseEntrySection(
+      {
+        id: "one-step",
+        type: "flow",
+        payload: {
+          title: "只有一步？",
+          steps: [{ label: "保存", description: "点一下。", current: true }],
+        },
+      },
+      0,
+    );
+    expect(parsed.ok).toBe(false);
+    if (parsed.ok) return;
+    expect(parsed.problem.code).toBe("invalid-payload");
   });
 });
 
