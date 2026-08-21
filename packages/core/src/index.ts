@@ -38,3 +38,8 @@ export {
 } from "./marks/references.js";
 export { resolveEvidenceAnchors, type EvidenceCitation } from "./marks/evidence.js";
 export { resolveTermLinks, termRangeOf, type TermResolution } from "./marks/terms.js";
+
+// The one thing both shells must agree on before either can render the other's
+// world: what a lesson is called, and what finished means. A read model, not a
+// storage migration — neither store is told where to put its bytes.
+export * from "./progress/contract.js";
