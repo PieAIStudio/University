@@ -15,8 +15,9 @@ import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { MapControls } from "three/addons/controls/MapControls.js";
 
+import { assembleTermEntry, termHeadToMarkdown } from "@pieai/university-core";
 import { readCourseProgress } from "@pieai/university-core";
-import { TermIndex } from "@pieai/university-ui";
+import { EntryPage, TermIndex } from "@pieai/university-ui";
 
 import {
   hasContent,
@@ -54,8 +55,38 @@ import {
 } from "./world/Maps";
 import { Stage } from "./world/Stage";
 
-/** Camera rig. Reused rather than written: MapControls is the map idiom. */
-function Controls({ target }: { target: readonly [number, number, number] }) {
+/**
+ * Camera rig. Still MapControls, but with the map idiom's two habits removed.
+ *
+ * This used to be free-orbit with the tilt allowed down to 83°, and the eye
+ * deliberately placed low so the horizon was in shot. That was a considered
+ * choice for a landscape, and it is the wrong one for a screen whose job is
+ * "where do I go now". Level-select maps that answer that in eight seconds —
+ * Duolingo, Mario's world map, Candy Crush — all refuse to let you turn the
+ * map, because the answer has to be in the same place every time you look.
+ *
+ * Three specific things went wrong when the map could be turned:
+ *
+ *  - The lit beacon marking the next course has an orientation. Turn far
+ *    enough and it is behind its own island.
+ *  - Every change of azimuth re-lays out all 41 DOM labels, which is part of
+ *    why they were seen stacking.
+ *  - On a trackpad the rotation was not even requested. MapControls binds
+ *    right-drag to rotate, a two-finger tap *is* a right-click, and a pinch is
+ *    `TOUCH.DOLLY_ROTATE`, so any twist during a zoom turns the world.
+ *
+ * Mapbox ships an official "disable rotation" example and Apple Maps hides
+ * rotation behind the compass rather than putting it on the trackpad. This
+ * follows them.
+ */
+function Controls({
+  target,
+  polar,
+}: {
+  target: readonly [number, number, number];
+  /** The one tilt this view is allowed, in radians from straight down. */
+  polar: number;
+}) {
   const { camera, gl } = useThree();
   const controls = useRef<MapControls | null>(null);
 
@@ -63,11 +94,62 @@ function Controls({ target }: { target: readonly [number, number, number] }) {
     const instance = new MapControls(camera, gl.domElement);
     instance.enableDamping = true;
     instance.dampingFactor = 0.08;
-    instance.maxPolarAngle = Math.PI * 0.46;
+    instance.enableRotate = false;
     instance.minDistance = 6;
     instance.maxDistance = 460;
+    // Two fingers zoom. They do not also rotate, which is what DOLLY_ROTATE
+    // would do with any accidental twist.
+    instance.touches.TWO = THREE.TOUCH.DOLLY_PAN;
     controls.current = instance;
     return () => instance.dispose();
+  }, [camera, gl]);
+
+  // Pinning both ends is what makes the tilt a property of the view rather
+  // than of whatever the last drag happened to leave behind.
+  useEffect(() => {
+    const instance = controls.current;
+    if (!instance) return;
+    instance.minPolarAngle = polar;
+    instance.maxPolarAngle = polar;
+  }, [polar]);
+
+  /**
+   * A two-finger trackpad swipe pans.
+   *
+   * The browser reports that swipe as a `wheel` event, and MapControls reads
+   * every `wheel` as zoom — so on a laptop, the gesture every Mac user makes
+   * to move a map was zooming it instead. A pinch is distinguishable: the
+   * browser sets `ctrlKey` on it, which is how Apple Maps and Mapbox tell the
+   * two apart, so a pinch still falls through to the zoom MapControls does.
+   *
+   * The listener sits on the canvas's parent in the capture phase because
+   * MapControls binds its own to the canvas. Registering on the same element
+   * would leave the order to chance.
+   */
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const host = canvas.parentElement;
+    if (!host) return;
+    const onWheel = (event: WheelEvent) => {
+      if (event.ctrlKey) return; // a pinch — let it zoom
+      const instance = controls.current;
+      if (!instance) return;
+      event.preventDefault();
+      event.stopPropagation();
+      // Pan in the ground plane, scaled by how far away the camera is, so the
+      // gesture moves the same amount of *map* at every zoom level.
+      const reach = camera.position.distanceTo(instance.target) * 0.0016;
+      const forward = new THREE.Vector3();
+      camera.getWorldDirection(forward).setY(0).normalize();
+      const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+      const shift = right
+        .multiplyScalar(event.deltaX * reach)
+        .addScaledVector(forward, -event.deltaY * reach);
+      camera.position.add(shift);
+      instance.target.add(shift);
+    };
+    host.addEventListener("wheel", onWheel, { capture: true, passive: false });
+    return () => host.removeEventListener("wheel", onWheel, { capture: true });
   }, [camera, gl]);
 
   useEffect(() => {
@@ -77,6 +159,17 @@ function Controls({ target }: { target: readonly [number, number, number] }) {
   useFrame(() => controls.current?.update());
   return null;
 }
+
+/**
+ * The tilt each view is locked to, in radians from straight down.
+ *
+ * 54° is between true isometric (54.7°) and the angle Mapbox's own 3D examples
+ * use (60°). The course map sits slightly more overhead because its 41 lessons
+ * snake away from the camera, and every degree of extra tilt compresses the
+ * far rows further into each other.
+ */
+const WORLD_POLAR = THREE.MathUtils.degToRad(54);
+const COURSE_POLAR = THREE.MathUtils.degToRad(50);
 
 /**
  * A camera move, eased, with no tween library.
@@ -360,22 +453,29 @@ export function App() {
       .setY(0);
     if (away.lengthSq() < 0.01) away.set(0, 0, 1);
     away.normalize();
-    // Low and off to one side, not high and behind. Height thirty against a
-    // twenty-eight-unit standoff is a map read from a helicopter: islands
-    // become flat shapes, the sea fills the frame, and none of the modelling
-    // work is visible. Pulling back and dropping down puts the horizon in shot,
-    // which is what gives the archipelago a sense of somewhere to go.
-    const side = new THREE.Vector3(-away.z, 0, away.x).multiplyScalar(13);
+    // This used to sit low and off to one side, with the horizon deliberately
+    // in shot, and the note here argued for it: a high camera makes islands
+    // flat shapes and hides the modelling. That reasoning is sound about a
+    // landscape and wrong about a map. At 16 units of height against a 40-unit
+    // standoff the eye was 68° from vertical — a holiday photograph of an
+    // archipelago, on the screen that has to answer "where do I go now".
+    //
+    // 54° is between true isometric and Mapbox's 3D examples, and the standoff
+    // grows with it because the field of view narrowed from 45° to 34°; a
+    // narrower lens sees less, so the same islands need more distance.
+    const side = new THREE.Vector3(-away.z, 0, away.x).multiplyScalar(15);
     const spot = learnerAt
       .clone()
-      .addScaledVector(away, 38)
+      .addScaledVector(away, 45)
       .add(side)
-      .setY(learnerAt.y + 16);
+      .setY(learnerAt.y + 34);
     return [spot.x, spot.y, spot.z];
   }, [world, learnerAt]);
 
+  // Was [0, 40, 46] onto [0, 4, -18]: 60.6° from vertical. Held at the same
+  // look-at, 50° with the narrower lens puts the eye here instead.
   const cameraFrom: readonly [number, number, number] =
-    view.kind === "course" || view.kind === "lesson" ? [0, 40, 46] : eye;
+    view.kind === "course" || view.kind === "lesson" ? [0, 68, 58] : eye;
   const lookAt: readonly [number, number, number] =
     view.kind === "course" || view.kind === "lesson"
       ? [0, 4, -18]
@@ -418,11 +518,15 @@ export function App() {
           view.kind === "lesson" ||
           view.kind === "settled" ||
           view.kind === "review" ||
-          view.kind === "terms"
+          view.kind === "terms" ||
+          view.kind === "term"
         }
       >
         <Stage cameraFrom={cameraFrom} lookAt={lookAt}>
-          <Controls target={lookAt} />
+          <Controls
+            target={lookAt}
+            polar={view.kind === "course" || view.kind === "lesson" ? COURSE_POLAR : WORLD_POLAR}
+          />
           <Flight to={cameraFrom} look={lookAt} />
           <LabelProbe markers={markers} limit={9} nodes={labelNodes.current} />
           {view.kind === "world" && world ? (
@@ -564,12 +668,17 @@ export function App() {
 
       {view.kind === "review" ? <ReviewHost onDone={() => setView(WORLD)} /> : null}
 
+      {view.kind === "term" ? <TermEntryHost senseId={view.senseId} onOpen={setView} /> : null}
+
       {view.kind === "terms" ? (
         <main className="terms">
           <button className="linkish" onClick={() => setView(WORLD)}>
             ← 关卡地图
           </button>
-          <TermIndex entries={LEXICON} />
+          <TermIndex
+            entries={LEXICON}
+            onOpenFull={(entry) => setView({ kind: "term", senseId: entry.senseId })}
+          />
         </main>
       ) : null}
     </div>
@@ -802,3 +911,51 @@ function ReviewHost({ onDone }: { onDone: () => void }) {
     </main>
   );
 }
+
+/**
+ * One term's full entry.
+ *
+ * No term carries sections yet, so today this renders the head and nothing
+ * else — which is the case SPEC-0004 insisted stay valid, because it is what
+ * lets all 267 existing entries keep working on the day the registry lands.
+ * A term that gains sections starts showing them here with no change to this
+ * file.
+ */
+function TermEntryHost({ senseId, onOpen }: { senseId: string; onOpen: (view: View) => void }) {
+  const entry = LEXICON.find((item) => item.senseId === senseId);
+  if (!entry) {
+    return (
+      <main className="terms">
+        <button className="linkish" onClick={() => onOpen({ kind: "terms" })}>
+          ← 词义索引
+        </button>
+        <p className="reference-panel__note">词库里没有这个词义。</p>
+      </main>
+    );
+  }
+  const assembled = assembleTermEntry(entry, []);
+  return (
+    <main className="terms">
+      <EntryPage
+        breadcrumb={[{ label: "词义索引", href: "#/terms" }, { label: entry.headword }]}
+        head={
+          <>
+            <h1 lang="en">{entry.headword}</h1>
+            <p className="reference-panel__meta">
+              <span className="reference-panel__phonetic">{entry.phonetic}</span>
+              <span className="reference-panel__pos">{entry.partOfSpeech}</span>
+            </p>
+            <p className="reference-panel__gloss">{entry.gloss}</p>
+            <p className="reference-panel__usage">{entry.usage}</p>
+          </>
+        }
+        sections={assembled.entry.sections}
+        headMarkdown={termHeadToMarkdown(entry)}
+        lexicon={LEXICON_BY_SENSE}
+        onOpenSense={(id) => onOpen({ kind: "term", senseId: id })}
+      />
+    </main>
+  );
+}
+
+const LEXICON_BY_SENSE = new Map(LEXICON.map((entry) => [entry.senseId, entry]));

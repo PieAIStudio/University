@@ -32,7 +32,11 @@ export type View =
   // The term index. A single-segment route like review, because it belongs to
   // the learner rather than to any one course — the whole point is looking a
   // word up when you cannot remember which lesson it came from.
-  | { readonly kind: "terms" };
+  | { readonly kind: "terms" }
+  // One term's full entry. The side panel is the preview and this is the page:
+  // same record, more of it. Two segments, so a term is linkable — the whole
+  // point of a dictionary is sending someone a word.
+  | { readonly kind: "term"; readonly senseId: string };
 
 export const WORLD: View = { kind: "world" };
 
@@ -44,6 +48,8 @@ export function toHash(view: View): string {
       return "#/review";
     case "terms":
       return "#/terms";
+    case "term":
+      return `#/terms/${enc(view.senseId)}`;
     case "course":
       return `#/${enc(view.studyId)}/${enc(view.courseId)}`;
     case "lesson":
@@ -66,6 +72,9 @@ export function fromHash(hash: string): View {
   if (parts.length === 0) return WORLD;
   if (parts.length === 1 && parts[0] === "review") return { kind: "review" };
   if (parts.length === 1 && parts[0] === "terms") return { kind: "terms" };
+  if (parts.length === 2 && parts[0] === "terms" && parts[1]) {
+    return { kind: "term", senseId: parts[1] };
+  }
   const [studyId, courseId, unitId, lessonId, tail] = parts;
   if (!studyId || !courseId) return WORLD;
   if (!unitId || !lessonId) return { kind: "course", studyId, courseId };

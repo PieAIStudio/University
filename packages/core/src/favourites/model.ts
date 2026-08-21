@@ -132,7 +132,11 @@ export function parseFavourites(input: unknown): FavouritesState {
   if (!isRecord(input)) return EMPTY_FAVOURITES;
   const { version } = input;
   if (version !== FAVOURITES_DOCUMENT_VERSION) {
-    if (typeof version === "number" && Number.isInteger(version) && version > FAVOURITES_DOCUMENT_VERSION) {
+    if (
+      typeof version === "number" &&
+      Number.isInteger(version) &&
+      version > FAVOURITES_DOCUMENT_VERSION
+    ) {
       return { version, items: [] };
     }
     return EMPTY_FAVOURITES;
@@ -162,6 +166,7 @@ export function addFavourite(
   now: string,
 ): FavouritesState {
   if (!isCurrentDocument(state)) return state;
+  if (senseId.length === 0) return state;
   if (!knownSenseIds.has(senseId)) return state;
   const existing = state.items.find((item) => item.senseId === senseId);
   if (existing) {

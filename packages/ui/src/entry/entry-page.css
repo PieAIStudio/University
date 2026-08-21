@@ -1,0 +1,281 @@
+/*
+  Entry page styles, next to the component that emits the class names.
+
+  Shells import this file the same way they import term-index.css. A shared
+  surface whose appearance depends on which app remembered the CSS is one
+  implementation in name only.
+*/
+
+.entry-page {
+  display: grid;
+  gap: 28px;
+}
+
+.entry-page__topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.entry-page__breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.9rem;
+}
+
+.entry-page__breadcrumb li + li::before {
+  content: "›";
+  margin-right: 0.35em;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.entry-page__breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.entry-page__breadcrumb a:hover,
+.entry-page__breadcrumb a:focus-visible {
+  color: var(--game-ui-accent, #5ec8c0);
+}
+
+.entry-page__breadcrumb [aria-current="page"] {
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.entry-page__breadcrumb a:focus-visible,
+.entry-section__sense:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+.entry-head h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.entry-head__headword {
+  letter-spacing: 0.01em;
+}
+
+.entry-head__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 16px;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.entry-head__phonetic {
+  font-family: var(--game-ui-font-mono, ui-monospace, monospace);
+}
+
+.entry-head__colloquial,
+.entry-head__gloss,
+.entry-head__usage {
+  margin: 0 0 12px;
+  line-height: 1.6;
+}
+
+.entry-head__colloquial-label,
+.entry-section__when-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.82rem;
+}
+
+.entry-page__sections {
+  display: grid;
+  gap: 28px;
+}
+
+.entry-section h2 {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+}
+
+.entry-section p,
+.entry-section li {
+  line-height: 1.6;
+}
+
+.entry-section__aliases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry-section__aliases em {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel-deep, #0c1018);
+  font-style: normal;
+}
+
+.entry-section__senses,
+.entry-section__parts,
+.entry-section__variants,
+.entry-section__pairs {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry-section__sense {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid rgb(240 168 104 / 45%);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.entry-section__sense:hover,
+.entry-section__sense:focus-visible {
+  border-bottom-color: #f0a868;
+  color: #f0a868;
+}
+
+button.entry-section__sense {
+  cursor: pointer;
+}
+
+span.entry-section__sense {
+  cursor: default;
+  border-bottom: 0;
+}
+
+.entry-section__sense-gloss {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.92em;
+}
+
+.entry-section__parts li,
+.entry-section__variants li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel-deep, #0c1018);
+}
+
+.entry-section__parts li strong,
+.entry-section__variants li strong {
+  grid-column: 2;
+}
+
+.entry-section__parts li span:last-child,
+.entry-section__variants li p {
+  grid-column: 2;
+  margin: 0;
+}
+
+.entry-section__part-index {
+  grid-row: 1 / span 2;
+  width: 1.6em;
+  height: 1.6em;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 18%, transparent);
+  color: var(--game-ui-accent, #5ec8c0);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.6em;
+  text-align: center;
+}
+
+.entry-section__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .entry-section__split {
+    grid-template-columns: 1fr;
+  }
+
+  .entry-head h1 {
+    font-size: 1.6rem;
+  }
+}
+
+.entry-section__split ul {
+  margin: 0;
+  padding-left: 1.1em;
+}
+
+.entry-section__rewrite {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel-deep, #0c1018);
+}
+
+.entry-section__rewrite figcaption {
+  margin-bottom: 8px;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.82rem;
+}
+
+.entry-section__rewrite--after {
+  border-color: var(--game-ui-accent, #5ec8c0);
+}
+
+.entry-section__rewrite p {
+  margin: 0;
+}
+
+.entry-section__prompt {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+
+.entry-section__prompt blockquote {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--game-ui-accent, #5ec8c0);
+  background: var(--game-ui-panel-deep, #0c1018);
+  white-space: pre-wrap;
+}
+
+.entry-section__neq {
+  margin: 0 0 6px;
+}
+
+.entry-section__pairs li {
+  padding: 12px 14px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel-deep, #0c1018);
+}
+
+.entry-section__pairs li p:last-child {
+  margin: 0;
+}

@@ -16,6 +16,40 @@ export {
   type ChoiceExerciseValidation,
 } from "./domain/choice-exercise.js";
 
+// Structured entries: one collection system, head + typed sections. A section
+// type that cannot serialise itself is a missing `sectionToMarkdown` branch,
+// not a silent clipboard omission later.
+export {
+  SECTION_TYPES,
+  SECTION_HEADING,
+  SECTION_PAYLOAD_SCHEMAS,
+  SectionTypeSchema,
+  isEntrySectionType,
+  parseEntrySection,
+  parseEntrySections,
+  sectionToMarkdown,
+  sectionsToMarkdown,
+  type EntrySection,
+  type EntrySectionType,
+  type PayloadOf,
+  type ParsedEntrySections,
+  type SectionProblem,
+  type SectionProblemCode,
+} from "./domain/entry-section.js";
+export {
+  COLLECTION_IDS,
+  CollectionIdSchema,
+  assembleStructuredEntry,
+  assembleTermEntry,
+  entryToMarkdown,
+  termEntryToMarkdown,
+  termHeadToMarkdown,
+  type AssembledEntry,
+  type CollectionId,
+  type StructuredEntry,
+  type TermEntry,
+} from "./domain/structured-entry.js";
+
 export * from "./scheduling/fsrs.js";
 export * from "./grading/answer-key.js";
 
@@ -62,3 +96,8 @@ export {
 // world: what a lesson is called, and what finished means. A read model, not a
 // storage migration — neither store is told where to put its bytes.
 export * from "./progress/contract.js";
+
+// Favourites are a versioned document of sense ids. Pure: storage is an
+// adapter, so the account-backed store is a different reader/writer rather
+// than a second model.
+export * from "./favourites/model.js";

@@ -116,6 +116,20 @@ export const AirlockSealSchema = z
 export type AirlockSeal = z.infer<typeof AirlockSealSchema>;
 
 /**
+ * One meaning, not one spelling. Dots separate the word from the sense
+ * (`app.program`); hyphens stay inside a token (`e2e-test`).
+ *
+ * Shared because the language overlay, the lexicon, and structured-entry
+ * pointers all name the same thing. Three copies of this regex would be three
+ * places a newly minted sense id could pass one check and fail another.
+ */
+export const SenseId = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9]+(?:[-.][a-z0-9]+)*$/, "sense id must be lowercase dotted-kebab");
+
+/**
  * One English word placed at one exact spot in one exact lesson revision.
  *
  * `quote` is the Chinese text being annotated and `occurrence` says which
@@ -129,11 +143,7 @@ export const LanguageAnchorSchema = z
   .object({
     quote: z.string().min(1).max(200),
     occurrence: z.number().int().positive(),
-    senseId: z
-      .string()
-      .min(1)
-      .max(64)
-      .regex(/^[a-z0-9]+(?:[-.][a-z0-9]+)*$/, "sense id must be lowercase dotted-kebab"),
+    senseId: SenseId,
   })
   .strict();
 
@@ -173,11 +183,7 @@ export type LanguageOverlay = z.infer<typeof LanguageOverlaySchema>;
  */
 export const LexiconEntrySchema = z
   .object({
-    senseId: z
-      .string()
-      .min(1)
-      .max(64)
-      .regex(/^[a-z0-9]+(?:[-.][a-z0-9]+)*$/),
+    senseId: SenseId,
     headword: z.string().min(1).max(80),
     /** IPA. Shown even when no local voice is available to speak it. */
     phonetic: z.string().min(1).max(80),

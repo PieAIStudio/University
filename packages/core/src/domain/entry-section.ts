@@ -1,0 +1,490 @@
+import { z } from "zod";
+
+import { SenseId, StableId } from "./schemas.js";
+
+/**
+ * The typed blocks an entry body is made of.
+ *
+ * This is not thirteen independent features. SPEC-0002 listed them as modules
+ * because VibeHub named them that way; SPEC-0004 is the count of *shapes*.
+ * `agent-prompt` is C20 and F10 — a pasteable paragraph for an AI agent, on a
+ * term page or an anti-pattern page. `related` is C21 and F12 — pointers at
+ * other senses, whether the heading says 「接下来学」 or 「相关术语」. `when-not`
+ * is F8 and the negative half of C24. Built as separate components, this
+ * product would ship two implementations of one thing on day one.
+ *
+ * Interactive demos (C9–C12) are deliberately absent. They are a later type,
+ * and an unknown type already degrades instead of taking the page down.
+ */
+export const SECTION_TYPES = [
+  "colloquial",
+  "definition",
+  "aliases",
+  "prerequisites",
+  "anatomy",
+  "variants",
+  "use-dont",
+  "distinction",
+  "plain",
+  "agent-prompt",
+  "related",
+  "before-after",
+  "when-not",
+] as const;
+
+export type EntrySectionType = (typeof SECTION_TYPES)[number];
+
+export const SectionTypeSchema = z.enum(SECTION_TYPES);
+
+export function isEntrySectionType(value: string): value is EntrySectionType {
+  return (SECTION_TYPES as readonly string[]).includes(value);
+}
+
+/**
+ * The heading each type uses in Markdown *and* on the page.
+ *
+ * One string per type so the clipboard and the renderer cannot drift. The
+ * merged types keep one heading on purpose: a second label would be the split
+ * this registry exists to prevent.
+ */
+export const SECTION_HEADING: { readonly [T in EntrySectionType]: string } = {
+  colloquial: "你可能会说",
+  definition: "定义",
+  aliases: "也常被叫作",
+  prerequisites: "先知道",
+  anatomy: "组成结构",
+  variants: "常见变体",
+  "use-dont": "该用 / 不该用",
+  distinction: "容易混淆",
+  plain: "通俗解释",
+  "agent-prompt": "你可以这样告诉 AI Agent",
+  related: "相关",
+  "before-after": "改前 / 改后",
+  "when-not": "什么时候不用",
+};
+
+const ShortName = z.string().trim().min(1).max(80);
+const Sentence = z.string().trim().min(1).max(500);
+const Paragraph = z.string().trim().min(1).max(2_000);
+const Prompt = z.string().trim().min(1).max(4_000);
+const SenseIdList = z.array(SenseId).min(1).max(20);
+
+/** C5. One sentence a beginner would actually say, not a gloss restated. */
+export const ColloquialPayloadSchema = z
+  .object({
+    text: z.string().trim().min(1).max(300),
+  })
+  .strict();
+
+/**
+ * C6. The page-body definition, including the optional 「它不是」 that the
+ * lexicon gloss does not carry.
+ *
+ * Both fields are optional so a term whose head already has `gloss` can add
+ * only the boundary, and an anti-pattern (no lexicon gloss) can still state
+ * what the thing is. At least one must be present or the section is empty.
+ */
+export const DefinitionPayloadSchema = z
+  .object({
+    statement: z.string().trim().min(1).max(500).optional(),
+    not: z.string().trim().min(1).max(300).optional(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.statement === undefined && value.not === undefined) {
+      context.addIssue({
+        code: "custom",
+        message: "A definition needs a statement, what it is not, or both.",
+      });
+    }
+  });
+
+/** C8. Other names for the same sense, so search and the page agree. */
+export const AliasesPayloadSchema = z
+  .object({
+    names: z.array(ShortName).min(1).max(20),
+  })
+  .strict();
+
+/** C7. Typed backward edges. A `[[lesson:]]` link is not a prerequisite. */
+export const PrerequisitesPayloadSchema = z
+  .object({
+    senseIds: SenseIdList,
+  })
+  .strict();
+
+/**
+ * C13. Numbered parts of the thing being named.
+ *
+ * The number is the index. Storing it would be a second copy of order, and the
+ * first edit that reshuffled the list would desync the two.
+ */
+export const AnatomyPayloadSchema = z
+  .object({
+    parts: z
+      .array(
+        z
+          .object({
+            name: ShortName,
+            note: Sentence,
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(30),
+  })
+  .strict();
+
+/** C14. A variant and the situation that picks it. Live miniatures come later. */
+export const VariantsPayloadSchema = z
+  .object({
+    items: z
+      .array(
+        z
+          .object({
+            name: ShortName,
+            when: Sentence,
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(20),
+  })
+  .strict();
+
+/**
+ * C16. Two columns of guidance, not a single "best practice" paragraph.
+ *
+ * Both sides are required because a list of only "do" or only "don't" is a
+ * different section (`when-not` covers the negative-applicability case).
+ */
+export const UseDontPayloadSchema = z
+  .object({
+    use: z.array(Sentence).min(1).max(20),
+    dont: z.array(Sentence).min(1).max(20),
+  })
+  .strict();
+
+/**
+ * C17. X ≠ Y and the one-sentence tell.
+ *
+ * Names are strings, not sense ids, because a distinction often names something
+ * that is not in this lexicon yet. Linking is a renderer concern when a lookup
+ * is supplied.
+ */
+export const DistinctionPayloadSchema = z
+  .object({
+    pairs: z
+      .array(
+        z
+          .object({
+            left: ShortName,
+            right: ShortName,
+            how: Sentence,
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(20),
+  })
+  .strict();
+
+/** C18. Several short paragraphs. Cause/fix prose can live here until it earns a type. */
+export const PlainPayloadSchema = z
+  .object({
+    paragraphs: z.array(Paragraph).min(1).max(20),
+  })
+  .strict();
+
+/**
+ * C20 and F10. One type: a paragraph the learner can paste to an agent.
+ *
+ * The page renderer owes this a copy button. VibeHub's version did not have
+ * one; that is a free win, not a second section type.
+ */
+export const AgentPromptPayloadSchema = z
+  .object({
+    text: Prompt,
+  })
+  .strict();
+
+/**
+ * C21 and F12. One type: an ordered list of other senses.
+ *
+ * "What to learn next" and "related terms" are the same edge with different
+ * labels. The heading is 「相关」 for both collections so we do not grow a
+ * `kind: "next" | "related"` that splits them again.
+ */
+export const RelatedPayloadSchema = z
+  .object({
+    senseIds: SenseIdList,
+  })
+  .strict();
+
+/** F5. One rewrite pair. Visual demos of the same contrast are a later type. */
+export const BeforeAfterPayloadSchema = z
+  .object({
+    before: Paragraph,
+    after: Paragraph,
+  })
+  .strict();
+
+/**
+ * F8 and C24's "when not to use it". Negative applicability: when the
+ * anti-pattern does not count, or when the style is the wrong tool.
+ */
+export const WhenNotPayloadSchema = z
+  .object({
+    cases: z.array(Sentence).min(1).max(20),
+  })
+  .strict();
+
+export const SECTION_PAYLOAD_SCHEMAS = {
+  colloquial: ColloquialPayloadSchema,
+  definition: DefinitionPayloadSchema,
+  aliases: AliasesPayloadSchema,
+  prerequisites: PrerequisitesPayloadSchema,
+  anatomy: AnatomyPayloadSchema,
+  variants: VariantsPayloadSchema,
+  "use-dont": UseDontPayloadSchema,
+  distinction: DistinctionPayloadSchema,
+  plain: PlainPayloadSchema,
+  "agent-prompt": AgentPromptPayloadSchema,
+  related: RelatedPayloadSchema,
+  "before-after": BeforeAfterPayloadSchema,
+  "when-not": WhenNotPayloadSchema,
+} as const;
+
+export type PayloadOf<T extends EntrySectionType> = z.infer<(typeof SECTION_PAYLOAD_SCHEMAS)[T]>;
+
+export type EntrySection = {
+  [T in EntrySectionType]: {
+    readonly id: string;
+    readonly type: T;
+    readonly payload: PayloadOf<T>;
+  };
+}[EntrySectionType];
+
+export type SectionProblemCode =
+  | "not-a-list"
+  | "not-an-object"
+  | "unknown-type"
+  | "invalid-id"
+  | "invalid-payload";
+
+/**
+ * Why one section was dropped. Data, never an exception — the same contract as
+ * a `[[term:]]` that does not resolve. The page stays up; the caller decides
+ * how loud to be.
+ */
+export interface SectionProblem {
+  readonly code: SectionProblemCode;
+  readonly index: number;
+  readonly id?: string;
+  readonly type?: string;
+  readonly message: string;
+}
+
+export interface ParsedEntrySections {
+  readonly sections: readonly EntrySection[];
+  readonly problems: readonly SectionProblem[];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function formatZodError(error: z.ZodError): string {
+  return error.issues
+    .map((issue) => {
+      const path = issue.path.length > 0 ? `${issue.path.join(".")}: ` : "";
+      return `${path}${issue.message}`;
+    })
+    .join("; ");
+}
+
+function problem(
+  index: number,
+  code: SectionProblemCode,
+  message: string,
+  extra: { readonly id?: string; readonly type?: string } = {},
+): SectionProblem {
+  return { code, index, message, ...extra };
+}
+
+/**
+ * Validates one raw section. Never throws.
+ *
+ * An unknown `type` is a dropped section, not a hard failure, so a future demo
+ * type can land in stored entries before every reader has learned it.
+ */
+export function parseEntrySection(
+  raw: unknown,
+  index: number,
+): { ok: true; section: EntrySection } | { ok: false; problem: SectionProblem } {
+  if (!isRecord(raw)) {
+    return {
+      ok: false,
+      problem: problem(
+        index,
+        "not-an-object",
+        "A section must be an object with id, type and payload.",
+      ),
+    };
+  }
+
+  const typeValue = raw.type;
+  if (typeof typeValue !== "string" || !isEntrySectionType(typeValue)) {
+    return {
+      ok: false,
+      problem: problem(
+        index,
+        "unknown-type",
+        typeof typeValue === "string"
+          ? `Unknown section type "${typeValue}" was dropped.`
+          : "A section must name a registered type.",
+        {
+          type: typeof typeValue === "string" ? typeValue : undefined,
+          id: typeof raw.id === "string" ? raw.id : undefined,
+        },
+      ),
+    };
+  }
+
+  const idResult = StableId.safeParse(raw.id);
+  if (!idResult.success) {
+    return {
+      ok: false,
+      problem: problem(
+        index,
+        "invalid-id",
+        `Section id is not a stable kebab id: ${formatZodError(idResult.error)}`,
+        { type: typeValue, id: typeof raw.id === "string" ? raw.id : undefined },
+      ),
+    };
+  }
+
+  const payloadResult = SECTION_PAYLOAD_SCHEMAS[typeValue].safeParse(raw.payload);
+  if (!payloadResult.success) {
+    return {
+      ok: false,
+      problem: problem(
+        index,
+        "invalid-payload",
+        `Section "${idResult.data}" (${typeValue}) payload was dropped: ${formatZodError(payloadResult.error)}`,
+        { type: typeValue, id: idResult.data },
+      ),
+    };
+  }
+
+  return {
+    ok: true,
+    section: {
+      id: idResult.data,
+      type: typeValue,
+      payload: payloadResult.data,
+    } as EntrySection,
+  };
+}
+
+/**
+ * Validates an ordered list of sections, dropping any that fail and keeping the
+ * rest, in order. `undefined` is the zero-section case — valid, no problems.
+ * Anything else that is not an array is reported and treated as empty.
+ */
+export function parseEntrySections(raw: unknown): ParsedEntrySections {
+  if (raw === undefined) {
+    return { sections: [], problems: [] };
+  }
+  if (!Array.isArray(raw)) {
+    return {
+      sections: [],
+      problems: [
+        problem(
+          -1,
+          "not-a-list",
+          "Entry sections must be an array; the body was dropped and the head kept.",
+        ),
+      ],
+    };
+  }
+
+  const sections: EntrySection[] = [];
+  const problems: SectionProblem[] = [];
+  for (const [index, item] of raw.entries()) {
+    const parsed = parseEntrySection(item, index);
+    if (parsed.ok) sections.push(parsed.section);
+    else problems.push(parsed.problem);
+  }
+  return { sections, problems };
+}
+
+function headingBlock(type: EntrySectionType, body: string): string {
+  return `## ${SECTION_HEADING[type]}\n\n${body}`;
+}
+
+function bullets(items: readonly string[]): string {
+  return items.map((item) => `- ${item}`).join("\n");
+}
+
+function sectionBody(section: EntrySection): string {
+  switch (section.type) {
+    case "colloquial":
+      return section.payload.text;
+    case "definition": {
+      const parts: string[] = [];
+      if (section.payload.statement) parts.push(`**${section.payload.statement}**`);
+      if (section.payload.not) parts.push(`它不是：${section.payload.not}`);
+      return parts.join("\n\n");
+    }
+    case "aliases":
+      return bullets(section.payload.names);
+    case "prerequisites":
+      return bullets(section.payload.senseIds.map((id) => `\`${id}\``));
+    case "anatomy":
+      return section.payload.parts
+        .map((part, index) => `${index + 1}. **${part.name}** — ${part.note}`)
+        .join("\n");
+    case "variants":
+      return section.payload.items
+        .map((item) => `### ${item.name}\n\n什么时候用它：${item.when}`)
+        .join("\n\n");
+    case "use-dont":
+      return `### 该用\n\n${bullets(section.payload.use)}\n\n### 不该用\n\n${bullets(section.payload.dont)}`;
+    case "distinction":
+      return section.payload.pairs
+        .map((pair) => `**${pair.left}** ≠ **${pair.right}**\n\n${pair.how}`)
+        .join("\n\n");
+    case "plain":
+      return section.payload.paragraphs.join("\n\n");
+    case "agent-prompt":
+      return `> ${section.payload.text}`;
+    case "related":
+      return bullets(section.payload.senseIds.map((id) => `\`${id}\``));
+    case "before-after":
+      return `### 改前\n\n${section.payload.before}\n\n### 改后\n\n${section.payload.after}`;
+    case "when-not":
+      return bullets(section.payload.cases);
+    default: {
+      const _never: never = section;
+      return _never;
+    }
+  }
+}
+
+/**
+ * One section as Markdown. The clipboard fold calls this per type so adding a
+ * type without a serialiser is a compile error here, not a silent omission in
+ * a learner's paste.
+ */
+export function sectionToMarkdown(section: EntrySection): string {
+  return headingBlock(section.type, sectionBody(section));
+}
+
+/** Fold over an entry's body. An empty list is the empty string, not a heading. */
+export function sectionsToMarkdown(sections: readonly EntrySection[]): string {
+  return sections
+    .map((section) => sectionToMarkdown(section).trim())
+    .filter((text) => text.length > 0)
+    .join("\n\n");
+}

@@ -134,7 +134,7 @@ export function Stage({ children, cameraFrom, lookAt = [0, 0, 0] }: StageProps) 
       // Antialiasing on the default framebuffer would be a second, redundant
       // resolve: the scene lands in a multisampled target instead.
       gl={{ antialias: false, powerPreference: "high-performance", alpha: false }}
-      camera={{ position: [...cameraFrom], fov: 45, near: 0.5, far: 1200 }}
+      camera={{ position: [...cameraFrom], fov: 34, near: 0.5, far: 1200 }}
       onCreated={(state) => {
         state.gl.setClearColor(new THREE.Color(0x0d1019), 1);
         state.camera.lookAt(new THREE.Vector3(...lookAt));

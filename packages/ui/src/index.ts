@@ -26,5 +26,38 @@ export {
   type ReferenceKind,
 } from "./reference/ReferencePanel.js";
 export { TermIndex, LEXICON_SEARCH_PLACEHOLDER } from "./reference/TermIndex.js";
+export {
+  EntryPage,
+  TermEntryHead,
+  TermEntryPage,
+  COLLECTION_LABEL,
+  type EntryBreadcrumbItem,
+  type EntryPageProps,
+} from "./entry/EntryPage.js";
+export {
+  foldEntryMarkdown,
+  registerSectionRenderer,
+  getSectionRenderer,
+  type SectionRenderer,
+  type EntryRenderContext,
+} from "./entry/section-registry.js";
+export {
+  DEFAULT_SECTION_RENDERERS,
+  registerDefaultSectionRenderers,
+} from "./entry/default-renderers.js";
+export {
+  FavouriteStar,
+  FavouritesEmpty,
+  FAVOURITES_EMPTY_ACTION,
+  FAVOURITES_EMPTY_DESCRIPTION,
+  FAVOURITES_EMPTY_TITLE,
+  FAVOURITES_STORAGE_KEY,
+  createLocalFavouritesStore,
+  favouriteStarLabel,
+  readLocalFavourites,
+  shouldPlayFavouriteSound,
+  writeLocalFavourites,
+  type FavouritesStore,
+} from "./favourites/index.js";
 export * from "./view/lesson-view.js";
 export * from "./api/client.js";

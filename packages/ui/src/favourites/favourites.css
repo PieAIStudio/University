@@ -1,0 +1,45 @@
+/*
+  Favourites controls, next to the components that emit the class names.
+
+  Shells import this file the same way they import term-index.css. A shared
+  star whose appearance depends on which app remembered the CSS is one
+  implementation in name only.
+*/
+
+.favourite-star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel-deep, #0c1018);
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.favourite-star:hover,
+.favourite-star:focus-visible {
+  border-color: var(--game-ui-accent, #5ec8c0);
+}
+
+.favourite-star:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+/*
+  Pressed is outlined and tinted, the same treatment as a selected track
+  chip. A fill alone disappears against the hover state next to it, and
+  the question this control answers is "is this sense on my list".
+*/
+.favourite-star[aria-pressed="true"] {
+  border-color: var(--game-ui-accent, #5ec8c0);
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 14%, transparent);
+  color: var(--game-ui-accent, #5ec8c0);
+}
