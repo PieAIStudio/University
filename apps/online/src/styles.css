@@ -151,6 +151,47 @@ button.block {
   padding: 14px 16px;
 }
 
+/*
+  The one thing to do next.
+
+  Deliberately the same panel language as `.picked` rather than a louder
+  treatment: it is a suggestion the map is making, not an advertisement. It
+  takes the left side so it never covers the selection panel, and it disappears
+  the moment a learner picks an island themselves — at that point they are
+  choosing, and a second opinion would be nagging.
+*/
+.nextup {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 280px;
+  border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 92%, transparent);
+  backdrop-filter: blur(8px);
+  padding: 14px 16px;
+}
+
+.nextup__eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  color: var(--game-ui-accent, #ffd479);
+}
+
+.nextup__title {
+  margin: 0 0 4px;
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+.nextup__meta {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
 .picked--left {
   right: auto;
   left: 14px;
@@ -757,4 +798,44 @@ button.label:focus-visible {
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 2.5rem;
+}
+
+/*
+  The library's own tabs.
+
+  Not the collection chips — those live inside each index and filter it. These
+  choose which collection you are looking at, so they sit above the search box
+  and read as a row of places rather than a row of filters.
+*/
+.library-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 12px 0 18px;
+  border-bottom: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.12));
+}
+
+.library-tabs__tab {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font: inherit;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.library-tabs__tab:hover {
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.library-tabs__tab.is-current {
+  color: var(--game-ui-text, #e9edf5);
+  border-bottom-color: var(--game-ui-accent, #ffd479);
+}
+
+.library-tabs__tab:focus-visible {
+  outline: 2px solid var(--game-ui-accent, #ffd479);
+  outline-offset: -2px;
 }

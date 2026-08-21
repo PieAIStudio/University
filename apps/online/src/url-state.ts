@@ -11,6 +11,10 @@
  * real path would 404 on refresh without a server rewrite rule. The hash is the
  * one part of a URL a static host cannot get wrong.
  */
+export const LIBRARY_TABS = ["concepts", "terms", "flavour", "favourites"] as const;
+
+export type LibraryTab = (typeof LIBRARY_TABS)[number];
+
 export type View =
   | { readonly kind: "world" }
   | { readonly kind: "course"; readonly studyId: string; readonly courseId: string }
@@ -29,9 +33,15 @@ export type View =
       readonly lessonId: string;
     }
   | { readonly kind: "review" }
-  // The term index. A single-segment route like review, because it belongs to
-  // the learner rather than to any one course — the whole point is looking a
-  // word up when you cannot remember which lesson it came from.
+  // The library: three collections and the learner's shortlist, behind one
+  // door. They were four top-bar buttons, which told a visitor that looking a
+  // word up, browsing concepts, checking a tic and re-reading a favourite were
+  // four different kinds of activity. They are one, and the index component has
+  // been shared between them since SPEC-0004.
+  //
+  // The old single-segment routes still resolve, because a hash someone
+  // bookmarked or pasted into a chat is a public contract.
+  | { readonly kind: "library"; readonly tab: LibraryTab }
   | { readonly kind: "terms" }
   // One term's full entry. The side panel is the preview and this is the page:
   // same record, more of it. Two segments, so a term is linkable — the whole
@@ -63,6 +73,8 @@ export function toHash(view: View): string {
       return "#/";
     case "review":
       return "#/review";
+    case "library":
+      return `#/library/${view.tab}`;
     case "terms":
       return "#/terms";
     case "term":
@@ -100,6 +112,10 @@ export function fromHash(hash: string): View {
   const parts = hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(dec);
   if (parts.length === 0) return WORLD;
   if (parts.length === 1 && parts[0] === "review") return { kind: "review" };
+  if (parts[0] === "library") {
+    const tab = LIBRARY_TABS.find((candidate) => candidate === parts[1]);
+    return { kind: "library", tab: tab ?? "concepts" };
+  }
   if (parts.length === 1 && parts[0] === "terms") return { kind: "terms" };
   if (parts.length === 1 && parts[0] === "favourites") return { kind: "favourites" };
   if (parts.length === 1 && parts[0] === "flavour") return { kind: "flavour" };

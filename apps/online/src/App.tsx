@@ -56,7 +56,7 @@ import {
 import { LEXICON } from "./lesson/language";
 import { LessonView } from "./lesson/Lesson";
 import { Settlement } from "./lesson/Settlement";
-import { fromHash, toHash, WORLD, type View } from "./url-state";
+import { fromHash, toHash, WORLD, LIBRARY_TABS, type LibraryTab, type View } from "./url-state";
 import { placeLabels, type LabelCandidate } from "./world/labels";
 import { courseShapeOf, progressSource } from "./progress/source";
 import {
@@ -412,11 +412,22 @@ export function App() {
     [nodes, courseProgress],
   );
 
-  const learnerAt = useMemo(() => {
+  /**
+   * The course the learner is actually on, as a node rather than a coordinate.
+   *
+   * This was already computed and used only to aim the camera at it. Pointing a
+   * camera at something is not the same as telling anyone about it: the first
+   * frame of the product was four unexplained archipelagos and five equally
+   * weighted buttons, and the one thing the app already knew — which course to
+   * open — was the one thing it did not say.
+   */
+  const nextUp = useMemo(() => {
     if (!world) return null;
     const live = world.placements.find((entry) => entry.state === "live");
-    return live ? live.position : (world.placements[0]?.position ?? null);
+    return live ?? world.placements[0] ?? null;
   }, [world]);
+
+  const learnerAt = nextUp?.position ?? null;
 
   const lessons: readonly LessonPlacement[] = useMemo(() => {
     if (!course || (view.kind !== "course" && view.kind !== "lesson")) return [];
@@ -569,20 +580,11 @@ export function App() {
           person it is for, so making them find the right course first would
           defeat it.
         */}
-        <button className="ghost" onClick={() => setView({ kind: "terms" })}>
-          查词
-        </button>
-        <button className="ghost" onClick={() => setView({ kind: "favourites" })}>
-          收藏
-        </button>
-        <button className="ghost" onClick={() => setView({ kind: "concepts" })}>
-          图解
+        <button className="ghost" onClick={() => setView({ kind: "library", tab: "concepts" })}>
+          图鉴
         </button>
         <button className="ghost" onClick={() => setView({ kind: "practice" })}>
           练习
-        </button>
-        <button className="ghost" onClick={() => setView({ kind: "flavour" })}>
-          AI 味儿
         </button>
         <button
           className={due.length > 0 ? "primary" : "ghost"}
@@ -641,6 +643,38 @@ export function App() {
             />
           ) : null}
         </Stage>
+
+        {/*
+          The first thing to do, said out loud.
+
+          It sits opposite the selection panel rather than in a dismissible
+          first-run modal: someone returning on day nine needs "where was I"
+          just as much as a stranger needs "what is this", and a modal answers
+          only the second and only once.
+        */}
+        {view.kind === "world" && nextUp && !picked ? (
+          <aside className="nextup">
+            <p className="nextup__eyebrow">
+              {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
+            </p>
+            <h2 className="nextup__title">{nextUp.node.title}</h2>
+            <p className="nextup__meta">
+              {nextUp.node.studyTitle} · {nextUp.node.lessons} 节
+            </p>
+            <button
+              className="primary block"
+              onClick={() =>
+                setView({
+                  kind: "course",
+                  studyId: nextUp.node.studyId,
+                  courseId: nextUp.node.courseId,
+                })
+              }
+            >
+              {progress.streak.days > 0 ? "继续" : "开始第一节"} →
+            </button>
+          </aside>
+        ) : null}
 
         {view.kind === "world" ? (
           <aside className="picked" hidden={!picked}>
@@ -796,50 +830,91 @@ export function App() {
 
       {view.kind === "term" ? <TermEntryHost senseId={view.senseId} onOpen={setView} /> : null}
 
-      {view.kind === "favourites" ? <FavouritesHost onOpen={setView} /> : null}
-
-      {view.kind === "concepts" ? (
-        <main className="terms">
-          <button className="linkish" onClick={() => setView(WORLD)}>
-            ← 关卡地图
-          </button>
-          <ConceptIndex
-            entries={CONCEPT_ENTRIES}
-            onOpen={(entry) => setView({ kind: "concept", id: entry.head.id })}
-          />
-        </main>
+      {LIBRARY_VIEW_TAB[view.kind] ? (
+        <LibraryHost tab={libraryTabOf(view)} onOpen={setView} />
       ) : null}
 
       {view.kind === "concept" ? <ConceptEntryHost id={view.id} onOpen={setView} /> : null}
 
       {view.kind === "practice" ? <PracticeHost onOpen={setView} /> : null}
 
-      {view.kind === "flavour" ? (
-        <main className="terms">
-          <button className="linkish" onClick={() => setView(WORLD)}>
-            ← 关卡地图
-          </button>
-          <AntiPatternIndex
-            entries={ANTI_PATTERN_ENTRIES}
-            onOpen={(entry) => setView({ kind: "flavour-entry", id: entry.head.id })}
-          />
-        </main>
-      ) : null}
-
       {view.kind === "flavour-entry" ? <FlavourEntryHost id={view.id} onOpen={setView} /> : null}
-
-      {view.kind === "terms" ? (
-        <main className="terms">
-          <button className="linkish" onClick={() => setView(WORLD)}>
-            ← 关卡地图
-          </button>
-          <TermIndex
-            entries={LEXICON}
-            onOpenFull={(entry) => setView({ kind: "term", senseId: entry.senseId })}
-          />
-        </main>
-      ) : null}
     </div>
+  );
+}
+
+/** Which library tab a legacy single-segment route lands on. */
+const LIBRARY_VIEW_TAB: Partial<Record<View["kind"], LibraryTab>> = {
+  library: "concepts",
+  concepts: "concepts",
+  terms: "terms",
+  flavour: "flavour",
+  favourites: "favourites",
+};
+
+function libraryTabOf(view: View): LibraryTab {
+  return view.kind === "library" ? view.tab : (LIBRARY_VIEW_TAB[view.kind] ?? "concepts");
+}
+
+const LIBRARY_TAB_LABEL: Record<LibraryTab, string> = {
+  concepts: "概念图解",
+  terms: "词义索引",
+  flavour: "防 AI 味儿",
+  favourites: "收藏",
+};
+
+/**
+ * One door for everything that is looked up rather than worked through.
+ *
+ * These were four top-bar buttons of equal weight, which is the arrangement the
+ * product's own 「按钮」 entry warns about: several controls of the same weight
+ * mean none of them is the answer. Worse, it made a claim that was not true —
+ * that looking up a word, browsing a concept, checking a verbal tic and
+ * re-reading a saved entry are four different kinds of activity. They are one,
+ * and the three collections have shared one index component since SPEC-0004.
+ *
+ * Each tab renders the collection's existing adapter. There is no new index
+ * here, and there must not be one.
+ */
+function LibraryHost({ tab, onOpen }: { tab: LibraryTab; onOpen: (view: View) => void }) {
+  return (
+    <main className="terms">
+      <button className="linkish" onClick={() => onOpen(WORLD)}>
+        ← 关卡地图
+      </button>
+      <nav className="library-tabs" aria-label="图鉴">
+        {LIBRARY_TABS.map((candidate) => (
+          <button
+            key={candidate}
+            type="button"
+            className={candidate === tab ? "library-tabs__tab is-current" : "library-tabs__tab"}
+            aria-current={candidate === tab ? "page" : undefined}
+            onClick={() => onOpen({ kind: "library", tab: candidate })}
+          >
+            {LIBRARY_TAB_LABEL[candidate]}
+          </button>
+        ))}
+      </nav>
+      {tab === "concepts" ? (
+        <ConceptIndex
+          entries={CONCEPT_ENTRIES}
+          onOpen={(entry) => onOpen({ kind: "concept", id: entry.head.id })}
+        />
+      ) : null}
+      {tab === "terms" ? (
+        <TermIndex
+          entries={LEXICON}
+          onOpenFull={(entry) => onOpen({ kind: "term", senseId: entry.senseId })}
+        />
+      ) : null}
+      {tab === "flavour" ? (
+        <AntiPatternIndex
+          entries={ANTI_PATTERN_ENTRIES}
+          onOpen={(entry) => onOpen({ kind: "flavour-entry", id: entry.head.id })}
+        />
+      ) : null}
+      {tab === "favourites" ? <FavouritesHost onOpen={onOpen} /> : null}
+    </main>
   );
 }
 
@@ -1159,13 +1234,10 @@ function FavouritesHost({ onOpen }: { onOpen: (view: View) => void }) {
   const total = groups.reduce((sum, group) => sum + group.entries.length, 0);
 
   return (
-    <main className="terms">
-      <button className="linkish" onClick={() => onOpen(WORLD)}>
-        ← 关卡地图
-      </button>
+    <>
       <h1>收藏</h1>
       {total === 0 ? (
-        <FavouritesEmpty onBrowse={() => onOpen({ kind: "terms" })} />
+        <FavouritesEmpty onBrowse={() => onOpen({ kind: "library", tab: "terms" })} />
       ) : (
         groups.map((group) => (
           <section key={group.track}>
@@ -1194,7 +1266,7 @@ function FavouritesHost({ onOpen }: { onOpen: (view: View) => void }) {
           </section>
         ))
       )}
-    </main>
+    </>
   );
 }
 
