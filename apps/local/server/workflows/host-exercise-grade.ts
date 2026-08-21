@@ -23,7 +23,7 @@ import {
  */
 const ATTEMPTED_LESSON_PROGRESS = 0.05;
 
-export const HostExerciseGradeProposalSchema = z
+const HostExerciseGradeProposalSchema = z
   .object({
     schemaVersion: z.literal(1).default(1),
     commandId: z.string().uuid(),
@@ -40,8 +40,6 @@ export const HostExerciseGradeProposalSchema = z
     exerciseId: z.string().min(2).max(64).optional(),
   })
   .strict();
-
-export type HostExerciseGradeProposal = z.infer<typeof HostExerciseGradeProposalSchema>;
 
 /** CLI input: proposal fields plus required route IDs. */
 export const HostExerciseGradeCliProposalSchema = z

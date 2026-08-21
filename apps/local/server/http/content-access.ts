@@ -47,30 +47,6 @@ interface ReviewableCard {
   readonly back: string;
 }
 
-interface DueCourseCard {
-  readonly kind: "course-card";
-  readonly studyId: string;
-  readonly courseId: string;
-  readonly unitId: string;
-  readonly lessonId: string;
-  readonly cardId: string;
-  readonly front: string;
-  readonly contentRevision: number;
-  readonly dueAt: string;
-}
-
-interface DueKnowledgeCard {
-  readonly kind: "knowledge-card";
-  readonly studyId: string;
-  readonly noteId: string;
-  readonly cardId: string;
-  readonly front: string;
-  readonly contentRevision: number;
-  readonly dueAt: string;
-}
-
-type DueCard = DueCourseCard | DueKnowledgeCard;
-
 function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, "utf8")) as unknown;
 }
@@ -424,4 +400,3 @@ export {
   reviewReviewableCard,
   runWithCommandConflictMapped,
 };
-export type { DueCard };

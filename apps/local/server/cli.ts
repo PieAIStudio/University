@@ -9,12 +9,12 @@ import { parseUniversityLocalCli } from "./cli/parse.js";
 export { parseUniversityLocalCli } from "./cli/parse.js";
 export { executeUniversityLocalCli } from "./cli/execute.js";
 
-export interface CliIo {
+interface CliIo {
   readonly stdout: { write(value: string): unknown };
   readonly stderr: { write(value: string): unknown };
 }
 
-export interface MainOptions {
+interface MainOptions {
   readonly projectRoot?: string;
   readonly cwd?: string;
   readonly env?: Readonly<Record<string, string | undefined>>;

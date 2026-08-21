@@ -83,7 +83,7 @@ const Prompt = z.string().trim().min(1).max(4_000);
 const SenseIdList = z.array(SenseId).min(1).max(20);
 
 /** C5. One sentence a beginner would actually say, not a gloss restated. */
-export const ColloquialPayloadSchema = z
+const ColloquialPayloadSchema = z
   .object({
     text: z.string().trim().min(1).max(300),
   })
@@ -97,7 +97,7 @@ export const ColloquialPayloadSchema = z
  * only the boundary, and an anti-pattern (no lexicon gloss) can still state
  * what the thing is. At least one must be present or the section is empty.
  */
-export const DefinitionPayloadSchema = z
+const DefinitionPayloadSchema = z
   .object({
     statement: z.string().trim().min(1).max(500).optional(),
     not: z.string().trim().min(1).max(300).optional(),
@@ -113,14 +113,14 @@ export const DefinitionPayloadSchema = z
   });
 
 /** C8. Other names for the same sense, so search and the page agree. */
-export const AliasesPayloadSchema = z
+const AliasesPayloadSchema = z
   .object({
     names: z.array(ShortName).min(1).max(20),
   })
   .strict();
 
 /** C7. Typed backward edges. A `[[lesson:]]` link is not a prerequisite. */
-export const PrerequisitesPayloadSchema = z
+const PrerequisitesPayloadSchema = z
   .object({
     senseIds: SenseIdList,
   })
@@ -139,7 +139,7 @@ export const FLOW_CAPTION = "突出显示的步骤，就是你刚学的这个东
  * The number is the index. Storing it would be a second copy of order, and the
  * first edit that reshuffled the list would desync the two.
  */
-export const AnatomyPayloadSchema = z
+const AnatomyPayloadSchema = z
   .object({
     parts: z
       .array(
@@ -168,7 +168,7 @@ export const AnatomyPayloadSchema = z
  * At least one step must be current. A path with no highlight is a different
  * section, and a weaker one.
  */
-export const FlowPayloadSchema = z
+const FlowPayloadSchema = z
   .object({
     title: ShortName,
     steps: z
@@ -196,7 +196,7 @@ export const FlowPayloadSchema = z
   });
 
 /** C14. A variant and the situation that picks it. Live miniatures come later. */
-export const VariantsPayloadSchema = z
+const VariantsPayloadSchema = z
   .object({
     items: z
       .array(
@@ -218,7 +218,7 @@ export const VariantsPayloadSchema = z
  * Both sides are required because a list of only "do" or only "don't" is a
  * different section (`when-not` covers the negative-applicability case).
  */
-export const UseDontPayloadSchema = z
+const UseDontPayloadSchema = z
   .object({
     use: z.array(Sentence).min(1).max(20),
     dont: z.array(Sentence).min(1).max(20),
@@ -232,7 +232,7 @@ export const UseDontPayloadSchema = z
  * that is not in this lexicon yet. Linking is a renderer concern when a lookup
  * is supplied.
  */
-export const DistinctionPayloadSchema = z
+const DistinctionPayloadSchema = z
   .object({
     pairs: z
       .array(
@@ -250,7 +250,7 @@ export const DistinctionPayloadSchema = z
   .strict();
 
 /** C18. Several short paragraphs. Cause/fix prose can live here until it earns a type. */
-export const PlainPayloadSchema = z
+const PlainPayloadSchema = z
   .object({
     paragraphs: z.array(Paragraph).min(1).max(20),
   })
@@ -262,7 +262,7 @@ export const PlainPayloadSchema = z
  * The page renderer owes this a copy button. VibeHub's version did not have
  * one; that is a free win, not a second section type.
  */
-export const AgentPromptPayloadSchema = z
+const AgentPromptPayloadSchema = z
   .object({
     text: Prompt,
   })
@@ -275,14 +275,14 @@ export const AgentPromptPayloadSchema = z
  * labels. The heading is 「相关」 for both collections so we do not grow a
  * `kind: "next" | "related"` that splits them again.
  */
-export const RelatedPayloadSchema = z
+const RelatedPayloadSchema = z
   .object({
     senseIds: SenseIdList,
   })
   .strict();
 
 /** F5. One rewrite pair. Visual demos of the same contrast are a later type. */
-export const BeforeAfterPayloadSchema = z
+const BeforeAfterPayloadSchema = z
   .object({
     before: Paragraph,
     after: Paragraph,
@@ -293,7 +293,7 @@ export const BeforeAfterPayloadSchema = z
  * F8 and C24's "when not to use it". Negative applicability: when the
  * anti-pattern does not count, or when the style is the wrong tool.
  */
-export const WhenNotPayloadSchema = z
+const WhenNotPayloadSchema = z
   .object({
     cases: z.array(Sentence).min(1).max(20),
   })
@@ -329,7 +329,7 @@ const OptionId = z
  * the stream is the same record as the one on the page, and there is no second
  * corpus to keep in sync.
  */
-export const QuizPayloadSchema = z
+const QuizPayloadSchema = z
   .object({
     question: Paragraph,
     options: z
@@ -462,7 +462,7 @@ const DemoNodeSchema = z.discriminatedUnion("kind", [
  * sentences, so a reader who cannot see the arrangement gets a sentence that
  * says what it shows.
  */
-export const DemoPayloadSchema = z
+const DemoPayloadSchema = z
   .object({
     alt: Sentence,
     caption: Sentence.optional(),
@@ -498,7 +498,7 @@ export const DemoPayloadSchema = z
  *
  * A keyboard user gets the same exercise because the regions are buttons.
  */
-export const RegionsPayloadSchema = z
+const RegionsPayloadSchema = z
   .object({
     question: Sentence,
     regions: z

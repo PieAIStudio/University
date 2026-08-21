@@ -27,7 +27,7 @@ import { listSnapshots, openStudyRepository } from "../studies/snapshots.js";
  * are for a person, so they persist until closed.
  */
 
-export interface SnapshotCheckout {
+interface SnapshotCheckout {
   readonly snapshotId: string;
   readonly sourceCommit: string;
   readonly path: string;
@@ -37,7 +37,7 @@ export interface SnapshotCheckout {
   readonly run: readonly string[];
 }
 
-export interface SnapshotCheckoutSummary {
+interface SnapshotCheckoutSummary {
   readonly snapshotId: string;
   readonly sourceCommit: string;
   readonly createdAt: string;

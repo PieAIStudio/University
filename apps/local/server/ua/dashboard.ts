@@ -38,7 +38,7 @@ export class UaDashboardError extends Error {
   }
 }
 
-export interface UaDashboardView {
+interface UaDashboardView {
   readonly url: string;
   readonly analysisId: string;
   readonly sourceCommit: string;

@@ -11,10 +11,4 @@
  * This re-export exists so call sites keep reading `./grading`, which is where
  * a person looks for it.
  */
-export {
-  coverage,
-  gradeDeterministically,
-  normalise,
-  type AnswerKey,
-  type Verdict,
-} from "@pieai/university-core";
+export { gradeDeterministically, normalise, type Verdict } from "@pieai/university-core";

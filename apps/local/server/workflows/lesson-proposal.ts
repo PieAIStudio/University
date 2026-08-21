@@ -84,7 +84,7 @@ export const LessonCreationProposalSchema = z
     path: ["exercises"],
   });
 
-export type LessonCreationProposal = z.infer<typeof LessonCreationProposalSchema>;
+type LessonCreationProposal = z.infer<typeof LessonCreationProposalSchema>;
 
 /** Every ID a lesson brings with it, for uniqueness checks and result reporting. */
 interface LessonProposalIds {

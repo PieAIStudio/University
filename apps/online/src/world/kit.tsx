@@ -32,7 +32,7 @@ import manifest from "./kit.json";
 
 export type Role = keyof typeof manifest.assets;
 
-export const kit = manifest.assets as Record<Role, { src: string; license: string }>;
+const kit = manifest.assets as Record<Role, { src: string; license: string }>;
 
 /**
  * Raise the donor's baked ambient occlusion into a range this scene can light.

@@ -14,7 +14,7 @@ interface EvidenceRoute {
   readonly index: number;
 }
 
-export interface LessonAssetRoute {
+interface LessonAssetRoute {
   readonly lesson: LearningRoute;
   readonly revision: number;
   readonly assetId: string;

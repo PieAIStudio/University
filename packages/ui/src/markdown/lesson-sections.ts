@@ -18,7 +18,7 @@
  * Headings outside this vocabulary — variant-specific ones like `逐条对照`, and
  * the couple of dozen one-offs — get no role and keep the plain treatment.
  */
-export type LessonSectionRole =
+type LessonSectionRole =
   /** The reader is asked to produce something before reading on. A full stop. */
   | "ask"
   /** The resolution of the `ask` directly above it. Reads as its other half. */

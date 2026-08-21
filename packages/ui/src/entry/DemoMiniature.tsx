@@ -136,7 +136,7 @@ function Nodes({ nodes }: { readonly nodes: readonly DemoNode[] }) {
   );
 }
 
-export interface DemoState {
+interface DemoState {
   readonly id: string;
   readonly label: string;
   readonly note?: string;

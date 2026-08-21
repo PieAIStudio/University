@@ -67,7 +67,7 @@ const PROFILE: readonly (readonly [number, number])[] = [
   [0.0, 0.62],
 ];
 
-export interface IslandShape {
+interface IslandShape {
   readonly geometry: THREE.BufferGeometry;
   /** Where props may stand, in island-local space, already on the surface. */
   readonly slots: readonly THREE.Vector3[];

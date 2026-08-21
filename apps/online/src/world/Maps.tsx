@@ -35,7 +35,7 @@ import { layoutCourse, layoutStudy, radiusForLessons } from "./layout";
  * The world's palette. Two greens for land, one warm accent for the only thing
  * that is lit, and a sea that is dark enough for a white label to sit on.
  */
-export const PALETTE = {
+const PALETTE = {
   // The sea is most of the frame, so the sea is what sets the exposure of the
   // whole product. Measured: with a near-navy sea the scene's median linear
   // luminance came out at 0.059 and its middle 90% spanned 0.052 to 0.071 —
@@ -54,17 +54,6 @@ export const PALETTE = {
   // not open yet, and the shape of the course tree is information a learner is
   // entitled to see before they have earned it.
   locked: 0x94a3ad,
-} as const;
-
-/** Kept for the 2D layer, which still labels by state. */
-export const GREY = {
-  base: 0x2a3140,
-  open: 0x55617a,
-  idle: 0x3d4757,
-  done: 0x6d788a,
-  live: 0x5ec8c0,
-  locked: 0x232a36,
-  edge: 0x5a6675,
 } as const;
 
 export interface Marker {
@@ -91,7 +80,7 @@ const STONES: Role[] = ["rock-a", "rock-b", "rock-c"];
 /** A settlement fills in this order, so growth has a shape a learner can feel. */
 const BUILDINGS: Role[] = ["well", "house-small", "house-mid", "house-small", "house-large"];
 
-export interface WorldPlacement {
+interface WorldPlacement {
   readonly node: CourseNode;
   readonly position: THREE.Vector3;
   readonly radius: number;

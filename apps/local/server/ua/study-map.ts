@@ -29,7 +29,7 @@ import { getStudyPaths, getUaAnalysisPaths } from "../studies/paths.js";
  */
 
 /** One architectural layer, and how much of it the courses have reached. */
-export interface StudyMapLayer {
+interface StudyMapLayer {
   readonly id: string;
   readonly name: string;
   readonly description: string;
@@ -41,7 +41,7 @@ export interface StudyMapLayer {
   readonly citedFiles: readonly string[];
 }
 
-export interface StudyMap {
+interface StudyMap {
   readonly analysisId: string;
   readonly sourceCommit: string;
   readonly outputLanguage: string;
@@ -52,7 +52,7 @@ export interface StudyMap {
 }
 
 /** What UA knows about one file, for the panel beside a piece of evidence. */
-export interface StudyMapFile {
+interface StudyMapFile {
   readonly nodeId: string;
   readonly filePath: string;
   readonly name: string;
@@ -67,7 +67,7 @@ export interface StudyMapFile {
  * snapshot. A lesson reader asks "where does this file sit?", not "show me
  * the newest analysis of the whole repo".
  */
-export interface EvidenceUaContext {
+interface EvidenceUaContext {
   readonly analysisId: string;
   readonly nodeId: string;
   readonly filePath: string;
@@ -100,7 +100,7 @@ interface RawLayer {
   readonly nodeIds?: unknown;
 }
 
-export interface ReadyUaAnalysis {
+interface ReadyUaAnalysis {
   readonly id: string;
   readonly completedAt: string;
   readonly sourceCommit: string;

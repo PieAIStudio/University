@@ -9,8 +9,6 @@ import {
   type UaEngineProvenance,
 } from "@pieai/university-core/domain/schemas.js";
 
-export type { UaEngineProvenance } from "@pieai/university-core/domain/schemas.js";
-
 interface InspectUaEngineProvenanceInput {
   readonly skillPath?: string;
   readonly source?: UaEngineProvenance["source"];

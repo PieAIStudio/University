@@ -8,7 +8,7 @@
  * explanation as the principle — can be tested without mounting a button.
  */
 
-export interface ChoiceBlockState {
+interface ChoiceBlockState {
   readonly wrongOptionIds: readonly string[];
   readonly lastPickId: string | null;
   readonly solved: boolean;
@@ -20,7 +20,7 @@ export const INITIAL_CHOICE_BLOCK_STATE: ChoiceBlockState = {
   solved: false,
 };
 
-export type ChoiceBlockFeedback =
+type ChoiceBlockFeedback =
   | { readonly kind: "correct"; readonly explanation: string }
   | { readonly kind: "wrong"; readonly explanation: string };
 

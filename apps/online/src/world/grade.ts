@@ -62,6 +62,10 @@ import * as THREE from "three";
  *
  * `edgeGain` 0.76 is the old `uVignette = 0.24` expressed as the kit's mix
  * (`mix(edgeGain, centerGain, vg)` equals `mix(1.0 - 0.24, 1.0, vg)`).
+ *
+ * Exported on purpose: this table is the colour-pipeline contract, not a
+ * private helper. knip flags it because no other file names it; the blit
+ * in this file is the consumer.
  */
 export const WORLD_GRADE = defineGrade("diorama", {
   tiltShift: false,
@@ -89,7 +93,10 @@ export const WORLD_GRADE = defineGrade("diorama", {
   },
 });
 
-/** Standalone fragment: this blit owns ACES and the one sRGB encode. */
+/**
+ * Standalone fragment: this blit owns ACES and the one sRGB encode.
+ * Exported with `WORLD_GRADE` — same contract, same knip false-positive.
+ */
 export const WORLD_GRADE_FRAGMENT = buildGradeFragment(WORLD_GRADE, {
   target: "standalone",
 });
@@ -138,7 +145,7 @@ export function assertWorldGradePipeline(renderer: THREE.WebGLRenderer): void {
   });
 }
 
-export interface GradePass {
+interface GradePass {
   readonly target: THREE.WebGLRenderTarget;
   resize(width: number, height: number): void;
   /** Draw the target to the canvas. The caller has already filled the target. */

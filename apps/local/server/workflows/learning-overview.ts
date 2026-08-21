@@ -19,7 +19,7 @@ import {
 import { getLessonPaths } from "../studies/paths.js";
 import { inspectStudyShelf } from "../studies/repository.js";
 
-export interface LearningOverviewProgress {
+interface LearningOverviewProgress {
   readonly contentRevision: number;
   readonly status: StoredLessonProgress["status"];
   readonly progress: number;
@@ -27,7 +27,7 @@ export interface LearningOverviewProgress {
   readonly readConfirmed: boolean;
 }
 
-export interface LearningOverviewLesson {
+interface LearningOverviewLesson {
   readonly studyId: string;
   readonly studyTitle: string;
   readonly courseId: string;
@@ -68,13 +68,13 @@ interface KnowledgeDueCard {
   readonly dueAt: string;
 }
 
-export type LearningOverviewDueCard = CourseDueCard | KnowledgeDueCard;
+type LearningOverviewDueCard = CourseDueCard | KnowledgeDueCard;
 
-export interface ResolvedLearningFocus extends LearningFocus {
+interface ResolvedLearningFocus extends LearningFocus {
   readonly courses: readonly { readonly id: string; readonly title: string }[];
 }
 
-export interface LearningOverview {
+interface LearningOverview {
   readonly dueCount: number;
   readonly card: LearningOverviewDueCard | null;
   readonly nextLesson: LearningOverviewLesson | null;

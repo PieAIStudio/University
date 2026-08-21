@@ -74,7 +74,7 @@ const GIT_LFS_POINTER_HEADER = /^version https:\/\/git-lfs\.github\.com\/spec\/v
 const FILE_MANAGER_ROUTE_PREFIX = "file-manager:";
 const PORTABLE_SOURCE_ROOT_ROUTE = `${FILE_MANAGER_ROUTE_PREFIX}<source-root>`;
 
-export const COURSE_RECOVERY_LIMITS = Object.freeze({
+const COURSE_RECOVERY_LIMITS = Object.freeze({
   maxIndexBytes: 1024 * 1024,
   maxCourseFileBytes: 128 * 1024 * 1024,
   maxPackageBytes: 512 * 1024 * 1024,
@@ -154,7 +154,7 @@ const RecoveryUnitSchema = z
   })
   .strict();
 
-export const CourseRecoveryPackageSchema = z
+const CourseRecoveryPackageSchema = z
   .object({
     schemaVersion: z.literal(1),
     packageKind: z.literal(PACKAGE_KIND),
@@ -187,7 +187,7 @@ const RecoveryIndexEntrySchema = z
   })
   .strict();
 
-export const CourseRecoveryIndexSchema = z
+const CourseRecoveryIndexSchema = z
   .object({
     schemaVersion: z.literal(1),
     packageKind: z.literal(PACKAGE_KIND),
@@ -222,8 +222,8 @@ const RecoveryProvenanceSchema = z
   })
   .strict();
 
-export type CourseRecoveryPackage = z.infer<typeof CourseRecoveryPackageSchema>;
-export type CourseRecoveryIndex = z.infer<typeof CourseRecoveryIndexSchema>;
+type CourseRecoveryPackage = z.infer<typeof CourseRecoveryPackageSchema>;
+type CourseRecoveryIndex = z.infer<typeof CourseRecoveryIndexSchema>;
 type RecoveryLesson = z.infer<typeof RecoveryLessonSchema>;
 type RecoveryCard = RecoveryLesson["cards"][number];
 type RecoveryExercise = RecoveryLesson["exercises"][number];

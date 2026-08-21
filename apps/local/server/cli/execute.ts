@@ -67,7 +67,7 @@ function readProposal(path: string, label: string): unknown {
   }
 }
 
-export interface ExecuteCliInput {
+interface ExecuteCliInput {
   readonly command: UniversityLocalCliCommand;
   readonly projectRoot: string;
   readonly cwd?: string;

@@ -6,7 +6,7 @@ import { LanguageAnchorSchema, StableId } from "@pieai/university-core/domain/sc
 import { loadLexicon } from "../language/lexicon.js";
 import { writeLanguageOverlay } from "../language/overlay.js";
 
-export const LanguageOverlayProposalSchema = z
+const LanguageOverlayProposalSchema = z
   .object({
     schemaVersion: z.literal(1),
     language: z.literal("en").default("en"),

@@ -92,7 +92,7 @@ const LessonAssetFileProposalSchema = z
   })
   .strict();
 
-export const CourseRevisionProposalSchema = z
+const CourseRevisionProposalSchema = z
   .object({
     schemaVersion: z.literal(1),
     proposalId: StableId,

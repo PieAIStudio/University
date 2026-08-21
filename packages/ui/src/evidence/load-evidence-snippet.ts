@@ -2,7 +2,7 @@ import { readJson } from "../api/client.js";
 import type { EvidenceSnippetView, EvidenceToken } from "../view/lesson-view.js";
 import { highlightEvidenceCode } from "../view/lesson-view.js";
 
-export type LoadedEvidenceSnippet =
+type LoadedEvidenceSnippet =
   | {
       readonly ok: true;
       readonly snippet: EvidenceSnippetView;
@@ -15,7 +15,7 @@ export type LoadedEvidenceSnippet =
 
 const cache = new Map<string, Promise<LoadedEvidenceSnippet>>();
 
-export function evidenceSnippetCacheKey(basePath: string, index: number): string {
+function evidenceSnippetCacheKey(basePath: string, index: number): string {
   return `${basePath}\0${index}`;
 }
 

@@ -82,7 +82,7 @@ export interface Course {
   readonly units: readonly Unit[];
 }
 
-export interface CourseSummary {
+interface CourseSummary {
   readonly courseId: string;
   readonly title: string;
   readonly sha256: string;
@@ -91,7 +91,7 @@ export interface CourseSummary {
   readonly lessons: number;
 }
 
-export interface StudySummary {
+interface StudySummary {
   readonly studyId: string;
   readonly title: string;
   readonly defaultCourseId: string | null;

@@ -13,7 +13,7 @@
  */
 
 /** FNV-1a. Small, stable across machines, adequate for scattering nodes. */
-export function hash(text: string): number {
+function hash(text: string): number {
   let value = 0x811c9dc5;
   for (let index = 0; index < text.length; index += 1) {
     value ^= text.charCodeAt(index);
@@ -22,7 +22,7 @@ export function hash(text: string): number {
   return (value >>> 0) / 0xffffffff;
 }
 
-export const jitter = (id: string, salt: string) => hash(`${id}:${salt}`) * 2 - 1;
+const jitter = (id: string, salt: string) => hash(`${id}:${salt}`) * 2 - 1;
 
 /**
  * A lesson count turned into a radius.
@@ -34,14 +34,14 @@ export const jitter = (id: string, salt: string) => hash(`${id}:${salt}`) * 2 - 
  */
 export const radiusForLessons = (lessons: number) => 0.55 + Math.sqrt(lessons) * 0.42;
 
-export interface Placed {
+interface Placed {
   readonly x: number;
   readonly y: number;
   readonly z: number;
   readonly depth: number;
 }
 
-export interface LayoutInput {
+interface LayoutInput {
   readonly id: string;
   readonly depth: number;
   readonly prerequisiteCourseIds: readonly string[];

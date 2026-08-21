@@ -33,7 +33,7 @@ const UnitCreationProposalSchema = z
   })
   .strict();
 
-export const CourseCreationProposalSchema = z
+const CourseCreationProposalSchema = z
   .object({
     schemaVersion: z.literal(1),
     proposalId: StableId,
@@ -52,7 +52,7 @@ export const CourseCreationProposalSchema = z
   })
   .strict();
 
-export type CourseCreationProposal = z.infer<typeof CourseCreationProposalSchema>;
+type CourseCreationProposal = z.infer<typeof CourseCreationProposalSchema>;
 
 interface CreateCourseInput {
   readonly studiesRoot: string;

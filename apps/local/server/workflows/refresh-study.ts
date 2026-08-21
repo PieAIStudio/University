@@ -60,7 +60,7 @@ interface EvidenceIdentity {
   readonly graphHash: string | null;
 }
 
-export interface TargetIdentity {
+interface TargetIdentity {
   readonly snapshotId: string;
   readonly sourceCommit: string;
   readonly analysisId: string | null;

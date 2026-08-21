@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { readJson } from "@pieai/university-ui/api/client.js";
 import { Tip } from "@pieai/university-ui/Tip.js";
 
-export interface StudyMapLayer {
+interface StudyMapLayer {
   readonly id: string;
   readonly name: string;
   readonly description: string;
@@ -12,7 +12,7 @@ export interface StudyMapLayer {
   readonly citedFiles: readonly string[];
 }
 
-export interface StudyMapView {
+interface StudyMapView {
   readonly analysisId: string;
   readonly sourceCommit: string;
   readonly nodeCount: number;

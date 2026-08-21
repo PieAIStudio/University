@@ -5,18 +5,10 @@ import type { LessonSection } from "@pieai/university-core/domain/schemas.js";
 import { assembleLessonIndex } from "@pieai/university-core/marks/references.js";
 import { getStudyPaths } from "../studies/paths.js";
 
-export type { LessonLinkTarget } from "@pieai/university-core/domain/lesson-marks.js";
 export {
   parseLessonLinks,
-  tokenKind,
   resolveLessonLinks,
   backlinksOf,
-  assembleLessonIndex,
-  type ParsedLessonLink,
-  type LinkResolution,
-  type LessonIndex,
-  type LessonIndexEntry,
-  type LessonIndexSource,
 } from "@pieai/university-core/marks/references.js";
 
 interface RawLesson {

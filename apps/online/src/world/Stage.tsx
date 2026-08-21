@@ -40,7 +40,7 @@ import { assertWorldGradePipeline, createGradePass } from "./grade";
  * of flat discs, which buys nothing and costs the frame budget the rest of the
  * lesson needs.
  */
-export function renderTier() {
+function renderTier() {
   const coarse = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
   const small =
     typeof window !== "undefined" && Math.min(window.innerWidth, window.innerHeight) < 720;
@@ -128,7 +128,7 @@ function sample(gl: THREE.WebGLRenderer, target: THREE.WebGLRenderTarget) {
   };
 }
 
-export interface StageProps {
+interface StageProps {
   readonly children: ReactNode;
   readonly cameraFrom: readonly [number, number, number];
   readonly lookAt?: readonly [number, number, number];

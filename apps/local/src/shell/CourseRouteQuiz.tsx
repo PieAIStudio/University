@@ -3,14 +3,14 @@ import { GameButton } from "@pieai/swimmer-ui-kit";
 
 import type { CourseView, LessonLocator } from "@pieai/university-ui/view/lesson-view.js";
 
-export type CourseRouteLevel = "beginner" | "familiar" | "builder";
+type CourseRouteLevel = "beginner" | "familiar" | "builder";
 
 interface RouteQuestion {
   readonly prompt: string;
   readonly options: readonly { readonly label: string; readonly score: number }[];
 }
 
-export const COURSE_ROUTE_QUESTIONS: readonly RouteQuestion[] = [
+const COURSE_ROUTE_QUESTIONS: readonly RouteQuestion[] = [
   {
     prompt: "如果 App 里的按钮文字不对，你第一反应更接近哪一种？",
     options: [
@@ -73,7 +73,7 @@ export function classifyCourseRoute(score: number): CourseRouteLevel {
   return "builder";
 }
 
-export function getCourseRoutePlan(course: CourseView, level: CourseRouteLevel) {
+function getCourseRoutePlan(course: CourseView, level: CourseRouteLevel) {
   const lessons = course.units.flatMap((unit) =>
     unit.lessons.map((lesson) => ({ unitId: unit.id, lesson })),
   );

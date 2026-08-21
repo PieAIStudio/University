@@ -35,7 +35,7 @@ import {
 const KEY = "university.progress.v2";
 const DAY = 86_400_000;
 
-export interface CardState {
+interface CardState {
   readonly cardKey: string;
   readonly studyId: string;
   readonly courseId: string;
@@ -46,7 +46,7 @@ export interface CardState {
   fsrs: StoredCard;
 }
 
-export interface LessonState {
+interface LessonState {
   /** 0 to 1. Never moves backwards — a failed attempt cannot undo progress. */
   progress: number;
   completedAt: number | null;
@@ -63,7 +63,7 @@ export interface LessonState {
  * word has a due date that can arrive. Storing `dueAt: null` here would jam it
  * permanently after the first word the learner tapped, and nothing would say so.
  */
-export interface WordState {
+interface WordState {
   readonly senseId: string;
   stage: "learning" | "familiar" | "paused";
   /** Milliseconds. Only meaningful while `stage` is `learning`. */

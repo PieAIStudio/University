@@ -41,7 +41,7 @@ const UnitTargetSchema = z
   })
   .strict();
 
-export const AddLessonsProposalSchema = z
+const AddLessonsProposalSchema = z
   .object({
     schemaVersion: z.literal(1),
     proposalId: StableId,
@@ -53,7 +53,7 @@ export const AddLessonsProposalSchema = z
   })
   .strict();
 
-export type AddLessonsProposal = z.infer<typeof AddLessonsProposalSchema>;
+type AddLessonsProposal = z.infer<typeof AddLessonsProposalSchema>;
 
 interface AddLessonsInput {
   readonly studiesRoot: string;

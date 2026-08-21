@@ -5,7 +5,25 @@
  * reader, the evidence rail, the review cards, the foreign-language layer and
  * the markdown pipeline that ties them together. A shell adds a way in and a
  * way out — a campus, or a world map — and owns nothing that is in here.
+ *
+ * How to read this file:
+ *
+ * - Exports below are the **shared surface**. Both shells render these
+ *   components; the delivery shell mostly comes through this barrel, the
+ *   authoring shell mostly comes through deep paths of the same files.
+ *   Changing a prop or a class name is a product change.
+ * - `view/lesson-view` is the HTTP read-model the authoring campus talks in.
+ *   The delivery shell currently takes one type from it (`LessonAssetView`).
+ * - `api/client` is URL-building for the authoring shell's local API. The
+ *   delivery shell does not use it.
+ * - Deep paths exist because the authoring campus imports piece by piece.
+ *   `package.json` `exports` lists the ones that are actually imported.
+ *   CSS files travel the same way (`language/word-layer.css` and friends).
+ *   Anything not listed there is internal assembly — do not import it
+ *   from a shell.
  */
+
+// Shared surface — the lesson itself. Both shells.
 export { LessonReader } from "./lesson/LessonReader.js";
 export { LessonToolbar, lessonNeighbours, readProgress } from "./lesson/LessonNav.js";
 export { MarkdownContent, isLocalUrl } from "./markdown/MarkdownContent.js";
@@ -20,6 +38,10 @@ export { VocabularyReview } from "./review/VocabularyReview.js";
 export { EvidenceRail } from "./evidence/EvidenceRail.js";
 export { EvidenceCode } from "./evidence/EvidenceCode.js";
 export { Tip } from "./Tip.js";
+
+// Shared surface — reference collections and structured entries. The delivery
+// shell imports these from this barrel; the authoring shell can, and must
+// not grow a second copy.
 export {
   ReferencePanel,
   TermReferenceBody,
@@ -83,5 +105,14 @@ export {
   writeLocalPracticeRecent,
   type PracticeRecentStore,
 } from "./practice/index.js";
+
+// Authoring-shell read model: the shapes `/api/*` returns, and the pure
+// functions that turn them into what the campus shows. Exporting the module
+// whole is the point — this is one HTTP contract, not a grab bag. The
+// delivery shell currently names `LessonAssetView` from here.
 export * from "./view/lesson-view.js";
+
+// Authoring-shell API contract: URL building and response unwrapping, no
+// fetching. The whole module is that contract; the delivery shell does not
+// talk to this API.
 export * from "./api/client.js";

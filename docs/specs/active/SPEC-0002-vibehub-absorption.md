@@ -240,7 +240,7 @@ acting on:
   is the rarer error and still an error.
 
 Measured against the delivered content at audit time: 52 courses, 560 lessons,
-1,815 `[[evidence:]]`, 420 `[[lesson:]]`, **0** `[[term:]]`, **0** choice
+1,597 evidence anchors, 420 `[[lesson:]]`, **0** `[[term:]]`, **0** choice
 exercises; lexicon 267 entries with **0** `colloquial`.
 
 ### What changed immediately after the audit
@@ -250,6 +250,18 @@ exercises; lexicon 267 entries with **0** `colloquial`.
   part of the term.
 - The F group is mounted at `#/flavour` with 25 entries.
 - Favourites and the term entry page are mounted rather than merely built.
+
+### One number in this document was wrong
+
+The line above read **1,815** evidence anchors until 2026-08-21, and a product
+audit disputed it. Counting the delivered course packages directly —
+`apps/online/content/**/*.json`, `course.units[].lessons[].evidence` — gives
+**1,597** across 560 lessons, alongside 1,236 cards, 673 short-answer exercises
+and 32 explain exercises.
+
+The number is recorded here rather than quietly corrected because it had been
+repeated in reports as evidence of scale. A count nobody re-derives is a claim,
+not a measurement, and this one was off by 218.
 
 ### What the audit says is still worth knowing
 

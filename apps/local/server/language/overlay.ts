@@ -14,8 +14,6 @@ import { getStudyPaths } from "../studies/paths.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
 import { resolveAnchors } from "@pieai/university-core/language/resolve-anchors.js";
 
-export type { LanguageRange } from "@pieai/university-core/domain/lesson-marks.js";
-
 export type LanguageCode = "en";
 
 function getOverlayPath(
@@ -99,7 +97,7 @@ export function writeLanguageOverlay(input: WriteOverlayInput): WriteOverlayRece
   };
 }
 
-export type OverlayStatus = "annotated" | "not-annotated" | "stale";
+type OverlayStatus = "annotated" | "not-annotated" | "stale";
 
 interface LessonLanguageLayer {
   readonly status: OverlayStatus;

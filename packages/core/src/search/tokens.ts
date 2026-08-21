@@ -74,7 +74,7 @@ function weightOf(token: string): number {
  * way. Segmenting both sides would be stricter, slower, and would fail on the
  * boundary disagreements that segmenters routinely have with themselves.
  */
-export function scoreTokens(tokens: readonly string[], text: string): number {
+function scoreTokens(tokens: readonly string[], text: string): number {
   if (tokens.length === 0) return 0;
   let total = 0;
   let matched = 0;

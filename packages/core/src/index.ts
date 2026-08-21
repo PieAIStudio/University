@@ -5,8 +5,83 @@
  * writing JSON to disk and an online server writing rows to a database must
  * still be describing the same lesson, and this is where that sameness is
  * written down once.
+ *
+ * How to read this file:
+ *
+ * - Everything exported here is the **shared contract**. Both shells, the
+ *   importer, and `packages/ui` may depend on it. Changing a name or a
+ *   meaning is a product change, not a local tidy.
+ * - **Authoring-shell only** lives on the schemas module and is *not*
+ *   re-exported here: `UniversityLocalConfigSchema`, `AirlockSealSchema`,
+ *   `UaAnalysisManifestSchema`, and their inferred types. Import those from
+ *   `@pieai/university-core/domain/schemas.js`.
+ * - A few modules are imported by deep path because the authoring server or
+ *   the markdown pipeline wants one function, not this whole barrel. The
+ *   only deep paths `package.json` still exposes are:
+ *   `domain/schemas.js`, `domain/lesson-marks.js`, `domain/reader-marks.js`,
+ *   `domain/merge-text-runs.js`, `marks/references.js`, `marks/terms.js`,
+ *   `marks/evidence.js`, `language/layer.js`, `language/resolve-anchors.js`.
+ *   Anything else under `src/` is internal assembly.
  */
-export * from "./domain/schemas.js";
+
+// Shared contract: on-disk content and learning records. Both shells parse
+// the same JSON; the authoring shell is the writer, the delivery shell is
+// the reader, and the importer compiles answers from these shapes.
+export {
+  StableId,
+  Sha256,
+  GitCommit,
+  IsoDateTime,
+  LearningFocusSchema,
+  StudyManifestSchema,
+  SourceRegistrationSchema,
+  SenseId,
+  LanguageAnchorSchema,
+  LanguageOverlaySchema,
+  LexiconEntrySchema,
+  UaEngineProvenanceSchema,
+  SnapshotManifestSchema,
+  ContentStatus,
+  EvidenceReferenceSchema,
+  CourseCurrency,
+  CourseManifestSchema,
+  UnitManifestSchema,
+  LessonVariantSchema,
+  LessonSectionSchema,
+  LessonAssetKindSchema,
+  LessonAssetSchema,
+  LessonManifestSchema,
+  ChoiceOptionSchema,
+  ChoiceExerciseSchema,
+  ExerciseSchema,
+  CardContentSchema,
+  KnowledgeCardSchema,
+  KnowledgeNoteSchema,
+  type LearningFocus,
+  type StudyManifest,
+  type SourceRegistration,
+  type LanguageAnchor,
+  type LanguageOverlay,
+  type LexiconEntry,
+  type LexiconTrack,
+  type SnapshotManifest,
+  type UaEngineProvenance,
+  type EvidenceReference,
+  type CourseManifest,
+  type CourseManifestInput,
+  type UnitManifest,
+  type LessonManifest,
+  type LessonSection,
+  type LessonAsset,
+  type ChoiceOption,
+  type ChoiceExercise,
+  type Exercise,
+  type CardContent,
+  type KnowledgeClaim,
+  type KnowledgeOrigin,
+  type KnowledgeCard,
+  type KnowledgeNote,
+} from "./domain/schemas.js";
 export {
   CHOICE_OPTION_COUNT,
   validateChoiceExercise,
@@ -18,7 +93,8 @@ export {
 
 // Structured entries: one collection system, head + typed sections. A section
 // type that cannot serialise itself is a missing `sectionToMarkdown` branch,
-// not a silent clipboard omission later.
+// not a silent clipboard omission later. Consumers: both shells' reference
+// pages and `packages/ui` entry rendering.
 export {
   SECTION_TYPES,
   SECTION_HEADING,
@@ -121,12 +197,19 @@ export {
   type ConceptSearchResult,
 } from "./concepts/search.js";
 
+// One scheduler, so both shells answer "what is due tomorrow" the same way.
+// The whole module is the contract: parameters, review, and the JSON card
+// shape a store that cannot hold a Date has to persist.
 export * from "./scheduling/fsrs.js";
+
+// Tier-one grading: fingerprint the answer at import time, compare without
+// shipping it. The whole module is that contract.
 export * from "./grading/answer-key.js";
 
 // The foreign-language layer: which words a learner sees annotated, and why.
 // Pure, so the delivery shell can compute it in the browser from the same rule
-// the authoring shell runs on the server.
+// the authoring shell runs on the server. The whole composer is the contract;
+// detect/resolve are the pieces a caller may want without composing.
 export * from "./language/layer.js";
 export { detectAnchors, adaptiveTargetCount } from "./language/detect.js";
 export {
@@ -165,12 +248,13 @@ export {
 
 // The one thing both shells must agree on before either can render the other's
 // world: what a lesson is called, and what finished means. A read model, not a
-// storage migration — neither store is told where to put its bytes.
+// storage migration — neither store is told where to put its bytes. The whole
+// module is that question.
 export * from "./progress/contract.js";
 
 // Favourites are a versioned document of sense ids. Pure: storage is an
 // adapter, so the account-backed store is a different reader/writer rather
-// than a second model.
+// than a second model. The whole document algebra is the contract.
 export * from "./favourites/model.js";
 
 // Practice is an entry's own three-option quiz, served as an endless sitting.

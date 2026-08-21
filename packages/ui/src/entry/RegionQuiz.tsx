@@ -17,7 +17,7 @@ import { playSound } from "../sound/index.js";
  * a labelled mockup answers its own question.
  */
 
-export interface QuizRegion {
+interface QuizRegion {
   readonly id: string;
   readonly label: string;
   readonly span?: "full" | "half";

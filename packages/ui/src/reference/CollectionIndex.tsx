@@ -6,21 +6,21 @@ import { GameBadge, GameEmptyState, GameField, GameInput, GamePanel } from "@pie
  * and the gloss in `subtitle`; anti-patterns put the Chinese name and the
  * spoken complaint. The chrome does not know which collection it is showing.
  */
-export interface CollectionIndexHit {
+interface CollectionIndexHit {
   readonly id: string;
   readonly title: string;
   readonly subtitle: string;
   readonly titleLang?: string;
 }
 
-export interface CollectionIndexGroup {
+interface CollectionIndexGroup {
   readonly id: string;
   readonly label: string;
   readonly count: number;
   readonly items: readonly CollectionIndexHit[];
 }
 
-export interface CollectionIndexChip {
+interface CollectionIndexChip {
   readonly id: string;
   readonly label: string;
   readonly count: number;
