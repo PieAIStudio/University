@@ -57,9 +57,22 @@ const diagramAsset: LessonAssetView = {
 
 const section: LessonSectionView = { id: "foundation", title: "Foundation" };
 
+/**
+ * `vi.waitFor` with a budget that is about the assertion rather than about the
+ * machine.
+ *
+ * The default is one second, and the evidence-panel test — which fetches, parses
+ * and renders a highlighted code block — spent 1219ms on a laptop running other
+ * work and failed. It passed on the two runs either side of it, which is the
+ * signature of a flaky test rather than a broken one: the assertion was fine and
+ * the clock was not.
+ *
+ * Five seconds still fails fast when the panel genuinely never appears, and it
+ * stops the suite reporting a red build because something else was compiling.
+ */
 async function waitFor(assertion: () => void) {
   await act(async () => {
-    await vi.waitFor(assertion);
+    await vi.waitFor(assertion, { timeout: 5_000, interval: 25 });
   });
 }
 
