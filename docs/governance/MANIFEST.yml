@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-21T08:17:29.683Z
+generated_at: 2026-08-21T08:35:36.228Z
 generator_version: doc-gov@0.9.1
-docs_count: 18
+docs_count: 19
 docs:
   - id: GOV-AGENTS-ROUTING-ENGINEERING-RUNTIME-V1-1
     path: docs/governance/agents-routing/engineering-runtime-v1.1.md
@@ -125,6 +125,13 @@ docs:
     pinned: false
   - id: SPEC-0003
     path: docs/specs/active/SPEC-0003-one-world-two-shells.md
+    type: spec
+    status: active
+    canonical: true
+    last_reviewed: 2026-08-21
+    pinned: false
+  - id: SPEC-0004
+    path: docs/specs/active/SPEC-0004-structured-entries.md
     type: spec
     status: active
     canonical: true
