@@ -19,6 +19,7 @@ import {
   ANTI_PATTERN_ENTRIES,
   CONCEPT_ENTRIES,
   antiPatternHeadToMarkdown,
+  assemblePracticeQuestion,
   conceptHeadToMarkdown,
   conceptNeighbours,
   getConceptEntry as lookupConcept,
@@ -38,6 +39,8 @@ import {
   TermIndex,
   AntiPatternIndex,
   ConceptIndex,
+  PracticeStream,
+  createLocalPracticeRecentStore,
   createLocalFavouritesStore,
 } from "@pieai/university-ui";
 
@@ -191,6 +194,21 @@ function Controls({
  * far rows further into each other.
  */
 /** What the map actually responds to. Kept next to the controls it describes. */
+/**
+ * The only two views the 3D map is part of.
+ *
+ * This used to be the opposite list — every view that had to *hide* the stage,
+ * enumerated one `||` at a time. That shape is wrong in a way that is invisible
+ * when you write it and expensive later: a new route is correct only if
+ * whoever adds it remembers to come back here, and `concepts` and `concept`
+ * were both added without that, so two full-page surfaces spent their life
+ * rendering on top of a live WebGL canvas nobody could see.
+ *
+ * Stated as "who uses the map", a forgotten route hides the canvas, which is
+ * the safe direction to be wrong in.
+ */
+const SHOWS_THE_MAP = new Set<View["kind"]>(["world", "course"]);
+
 const MAP_CONTROLS_HINT = "拖动平移 · 滚轮缩放 · 点岛进入";
 
 const WORLD_POLAR = THREE.MathUtils.degToRad(54);
@@ -560,6 +578,9 @@ export function App() {
         <button className="ghost" onClick={() => setView({ kind: "concepts" })}>
           图解
         </button>
+        <button className="ghost" onClick={() => setView({ kind: "practice" })}>
+          练习
+        </button>
         <button className="ghost" onClick={() => setView({ kind: "flavour" })}>
           AI 味儿
         </button>
@@ -584,16 +605,7 @@ export function App() {
             draggedRef.current = true;
           }
         }}
-        hidden={
-          view.kind === "lesson" ||
-          view.kind === "settled" ||
-          view.kind === "review" ||
-          view.kind === "terms" ||
-          view.kind === "term" ||
-          view.kind === "favourites" ||
-          view.kind === "flavour" ||
-          view.kind === "flavour-entry"
-        }
+        hidden={!SHOWS_THE_MAP.has(view.kind)}
       >
         <Stage cameraFrom={cameraFrom} lookAt={lookAt}>
           <Controls
@@ -799,6 +811,8 @@ export function App() {
       ) : null}
 
       {view.kind === "concept" ? <ConceptEntryHost id={view.id} onOpen={setView} /> : null}
+
+      {view.kind === "practice" ? <PracticeHost onOpen={setView} /> : null}
 
       {view.kind === "flavour" ? (
         <main className="terms">
@@ -1247,6 +1261,74 @@ function ConceptEntryHost({ id, onOpen }: { id: string; onOpen: (view: View) => 
     </main>
   );
 }
+
+/**
+ * The endless sitting, drawing on the questions the concept entries already
+ * carry.
+ *
+ * There is no second question bank and there is not going to be one. Every
+ * question here is the same record the entry's own 「小测」 renders, which is
+ * the architecture worth copying from the site this catalogue came from: their
+ * question ids prove the practice bank *is* the per-entry quiz. A separate
+ * corpus would drift from the entries within one authoring pass.
+ *
+ * The reward is the concept page itself, passed as a render prop, because
+ * SPEC-0004 forbids a second detail page for a collection that already has one.
+ */
+function PracticeHost({ onOpen }: { onOpen: (view: View) => void }) {
+  const questions = useMemo(() => {
+    const built = [];
+    for (const entry of CONCEPT_ENTRIES) {
+      const quiz = entry.sections.find((section) => section.type === "quiz");
+      if (quiz?.type !== "quiz") continue;
+      const assembled = assemblePracticeQuestion(
+        entry,
+        {
+          prompt: quiz.payload.question,
+          options: quiz.payload.options,
+          correctOptionId: quiz.payload.correctOptionId,
+        },
+        { category: entry.head.category, id: entry.head.id },
+      );
+      if (assembled.ok) built.push(assembled.question);
+    }
+    return built;
+  }, []);
+
+  return (
+    <main className="terms">
+      <button className="linkish" onClick={() => onOpen(WORLD)}>
+        ← 关卡地图
+      </button>
+      <PracticeStream
+        questions={questions}
+        store={PRACTICE_STORE}
+        onBrowse={() => onOpen({ kind: "concepts" })}
+        renderReward={(question) => (
+          <EntryPage
+            breadcrumb={[
+              { label: "概念图解", href: "#/concepts" },
+              { label: question.entry.head.zh },
+            ]}
+            head={
+              <>
+                <h1>{question.entry.head.zh}</h1>
+                <p className="reference-panel__gloss">{question.entry.head.tagline}</p>
+              </>
+            }
+            sections={question.entry.sections}
+            headMarkdown={conceptHeadToMarkdown(question.entry.head)}
+            lexicon={LEXICON_BY_SENSE}
+            {...CONCEPT_POINTERS(onOpen)}
+          />
+        )}
+      />
+    </main>
+  );
+}
+
+/** One store for the whole session, same shape as the favourites store. */
+const PRACTICE_STORE = createLocalPracticeRecentStore();
 
 /**
  * How a concept page resolves its own 「先知道」 and 「相关」 pointers.

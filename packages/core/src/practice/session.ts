@@ -31,7 +31,7 @@ export function startPracticeSession(
 }
 
 /**
- * Reveal the term page. A session with no current question has nothing to
+ * Reveal the reward. A session with no current question has nothing to
  * unlock; a second call is a no-op so a double-fire from the choice block
  * cannot change the sitting.
  */

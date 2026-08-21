@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 
 import {
+  assemblePracticeQuestion,
   assembleTermEntry,
-  assembleTermPracticeQuestion,
   type LexiconEntry,
+  type PracticeQuestion,
   type PracticeRecentState,
-  type TermPracticeQuestion,
 } from "@pieai/university-core";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -17,6 +17,7 @@ vi.mock("../sound/index.js", () => ({
   playSound,
 }));
 
+import { TermEntryPage } from "../entry/EntryPage.js";
 import {
   PRACTICE_EMPTY_ACTION,
   PRACTICE_EMPTY_DESCRIPTION,
@@ -24,7 +25,7 @@ import {
   PracticeStream,
   practiceOrdinalLabel,
 } from "./PracticeStream.js";
-import { PRACTICE_UNLOCK_HINT } from "./PracticeTermPanel.js";
+import { PRACTICE_UNLOCK_HINT } from "./PracticeRewardPanel.js";
 import type { PracticeRecentStore } from "./storage.js";
 
 const APP: LexiconEntry = {
@@ -58,20 +59,24 @@ function questionFor(
   prompt: string,
   correctText: string,
   extraWrong: string,
-): TermPracticeQuestion {
-  const assembled = assembleTermPracticeQuestion(assembleTermEntry(entry).entry, {
-    prompt,
-    options: [
-      { id: "keep", text: correctText, explanation: "这是对的判据。" },
-      { id: "wrong-a", text: extraWrong, explanation: "省事并不等于成立。" },
-      {
-        id: "wrong-b",
-        text: "用一个确认处理所有后果，点了再猜。",
-        explanation: "这不是这道题在问的事。",
-      },
-    ],
-    correctOptionId: "keep",
-  });
+): PracticeQuestion<LexiconEntry> {
+  const assembled = assemblePracticeQuestion(
+    assembleTermEntry(entry).entry,
+    {
+      prompt,
+      options: [
+        { id: "keep", text: correctText, explanation: "这是对的判据。" },
+        { id: "wrong-a", text: extraWrong, explanation: "省事并不等于成立。" },
+        {
+          id: "wrong-b",
+          text: "用一个确认处理所有后果，点了再猜。",
+          explanation: "这不是这道题在问的事。",
+        },
+      ],
+      correctOptionId: "keep",
+    },
+    { category: entry.track, id: entry.senseId },
+  );
   if (!assembled.ok) throw new Error(assembled.errors.map((issue) => issue.code).join(","));
   return assembled.question;
 }
@@ -109,14 +114,20 @@ afterEach(async () => {
   vi.restoreAllMocks();
 });
 
+function termReward(question: PracticeQuestion<LexiconEntry>) {
+  return <TermEntryPage entry={question.entry} />;
+}
+
 async function renderStream(
-  props: Partial<Parameters<typeof PracticeStream>[0]> & {
+  props: Partial<Parameters<typeof PracticeStream<LexiconEntry>>[0]> & {
     readonly store?: PracticeRecentStore;
   } = {},
 ) {
   const store = props.store ?? memoryStore();
   await act(async () => {
-    root.render(<PracticeStream questions={QUESTIONS} store={store} {...props} />);
+    root.render(
+      <PracticeStream questions={QUESTIONS} store={store} renderReward={termReward} {...props} />,
+    );
   });
   return store;
 }
@@ -155,7 +166,7 @@ describe("PracticeStream", () => {
     expect(container.querySelector(".practice-stream__ordinal")?.textContent).toBe("第 1 题");
     expect(container.textContent).toContain(APP_PROMPT);
     expect(container.textContent).toContain(PRACTICE_UNLOCK_HINT);
-    expect(container.querySelector(".practice-term-panel")?.className).toContain("is-locked");
+    expect(container.querySelector(".practice-reward-panel")?.className).toContain("is-locked");
     expect(container.textContent).not.toContain(APP.gloss);
     expect(container.querySelector("[role='progressbar']")).toBeNull();
     expect(container.textContent).not.toMatch(/共\s*\d+\s*题/);
@@ -188,7 +199,7 @@ describe("PracticeStream", () => {
     expect(container.textContent).toContain("答对了");
     expect(container.textContent).toContain("这是对的判据。");
     expect(container.textContent).not.toContain(PRACTICE_UNLOCK_HINT);
-    expect(container.querySelector(".practice-term-panel")?.className).not.toContain("is-locked");
+    expect(container.querySelector(".practice-reward-panel")?.className).not.toContain("is-locked");
     expect(container.querySelector(".entry-page")).not.toBeNull();
     expect(container.querySelector("h1")?.textContent).toContain("app");
     expect(container.textContent).toContain(APP.gloss);

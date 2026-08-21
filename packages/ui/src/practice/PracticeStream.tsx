@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { GameButton, GameEmptyState } from "@pieai/swimmer-ui-kit";
 import {
   advancePracticeSession,
@@ -6,26 +6,25 @@ import {
   indexPracticeQuestions,
   startPracticeSession,
   unlockPracticeSession,
-  type LexiconEntry,
+  type PracticeQuestion,
   type PracticeSession,
-  type TermPracticeQuestion,
 } from "@pieai/university-core";
 
 import { ChoiceBlock, type ChoiceBlockExercise } from "../review/ChoiceBlock.js";
-import { PracticeTermPanel } from "./PracticeTermPanel.js";
+import { PracticeRewardPanel } from "./PracticeRewardPanel.js";
 import type { PracticeRecentStore } from "./storage.js";
 
-export const PRACTICE_EMPTY_TITLE = "还没有可练习的术语";
+export const PRACTICE_EMPTY_TITLE = "还没有可以练的题";
 
-export const PRACTICE_EMPTY_DESCRIPTION = "每个术语自己带着一道判断题。有题的术语会在这里出现。";
+export const PRACTICE_EMPTY_DESCRIPTION = "每一条词条自己带着一道判断题。带题的那些会出现在这里。";
 
-export const PRACTICE_EMPTY_ACTION = "浏览术语";
+export const PRACTICE_EMPTY_ACTION = "去翻翻词条";
 
 export function practiceOrdinalLabel(ordinal: number): string {
   return `第 ${ordinal} 题`;
 }
 
-function toChoiceBlockExercise(question: TermPracticeQuestion): ChoiceBlockExercise {
+function toChoiceBlockExercise(question: PracticeQuestion): ChoiceBlockExercise {
   return {
     id: idOfPracticeQuestion(question),
     prompt: question.exercise.prompt,
@@ -35,28 +34,28 @@ function toChoiceBlockExercise(question: TermPracticeQuestion): ChoiceBlockExerc
 }
 
 /**
- * The endless single-question stream: one judgement, then the term as a reward.
+ * The endless single-question stream: one judgement, then the entry as a reward.
  *
  * The counter below is the only number on this surface, and it is session-local.
  * There is no total, no score, no progress bar, and no category filter. That
  * absence is the design, not an omission — a remaining-work bar here would turn
  * "随便刷两题" into a test, which is the settlement screen's job, not this
  * sitting's. Do not add one.
+ *
+ * The reward page is a render prop because each collection already has a
+ * detail page, and SPEC-0004 forbids a second one. The stream unlocks; the
+ * caller says what is behind the lock.
  */
-export function PracticeStream({
+export function PracticeStream<Head = unknown>({
   questions,
   store,
-  lexicon,
-  onOpenSense,
-  collectionHref,
   onBrowse,
+  renderReward,
 }: {
-  readonly questions: readonly TermPracticeQuestion[];
+  readonly questions: readonly PracticeQuestion<Head>[];
   readonly store: PracticeRecentStore;
-  readonly lexicon?: ReadonlyMap<string, LexiconEntry>;
-  readonly onOpenSense?: (senseId: string) => void;
-  readonly collectionHref?: string;
   readonly onBrowse?: () => void;
+  readonly renderReward: (question: PracticeQuestion<Head>) => ReactNode;
 }) {
   const indexed = indexPracticeQuestions(questions);
   const bankKey = indexed.ids.join("\0");
@@ -114,13 +113,9 @@ export function PracticeStream({
             onNext={handleNext}
           />
         </div>
-        <PracticeTermPanel
-          question={current}
-          unlocked={sitting.unlocked}
-          lexicon={lexicon}
-          onOpenSense={onOpenSense}
-          collectionHref={collectionHref}
-        />
+        <PracticeRewardPanel unlocked={sitting.unlocked}>
+          {sitting.unlocked ? renderReward(current) : null}
+        </PracticeRewardPanel>
       </div>
     </section>
   );

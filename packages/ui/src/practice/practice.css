@@ -1,10 +1,9 @@
 /*
   Practice stream styles, next to the component that emits the class names.
 
-  Shells that mount PracticeStream also need choice-block.css and
-  entry-page.css, because this surface reuses ChoiceBlock and TermEntryPage
-  rather than restyling them. A shared surface whose appearance depends on
-  which app remembered the CSS is one implementation in name only.
+  Shells that mount PracticeStream also need choice-block.css, because this
+  surface reuses ChoiceBlock rather than restyling it. The reward page's CSS
+  belongs with whatever the caller renders behind the lock.
 */
 
 .practice-stream {
@@ -25,7 +24,7 @@
   align-items: start;
 }
 
-.practice-term-panel {
+.practice-reward-panel {
   min-width: 0;
   min-height: 16rem;
   max-height: min(70vh, 40rem);
@@ -35,11 +34,11 @@
   background: var(--game-ui-panel, #1a2030);
 }
 
-.practice-term-panel.is-locked {
+.practice-reward-panel.is-locked {
   display: grid;
 }
 
-.practice-term-panel__mask {
+.practice-reward-panel__mask {
   display: grid;
   justify-items: center;
   align-content: center;
@@ -50,15 +49,15 @@
   text-align: center;
 }
 
-.practice-term-panel__mask p {
+.practice-reward-panel__mask p {
   margin: 0;
 }
 
-.practice-term-panel__icon {
+.practice-reward-panel__icon {
   display: block;
 }
 
-.practice-term-panel__entry {
+.practice-reward-panel__entry {
   min-width: 0;
   padding: 20px;
 }

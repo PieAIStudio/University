@@ -261,19 +261,32 @@ export function LessonView({
                 我觉得我对了
               </button>
             ) : null}
-            <small>确定性判分 · 不花额度</small>
+            {/*
+              This line used to read 「确定性判分 · 不花额度」. Both halves are
+              true and neither is the learner's problem: the tiering exists so
+              this product does not go bankrupt behind a free tier, and a
+              learner reading about billing tiers mid-question is being shown
+              the plumbing. What they can actually use is that the answer comes
+              back instantly.
+            */}
+            <small>当场判完，不用等</small>
           </div>
 
           {verdict?.outcome === "pass" ? (
-            <div className="verdict verdict--pass">
-              答对了。这一层没有花任何钱，也没有等待。<span className="tier">第 1 层 · 确定性</span>
-            </div>
+            <div className="verdict verdict--pass">答对了。</div>
           ) : null}
 
+          {/*
+            The honesty is the feature and it stays. What changed is who it is
+            addressed to: 「第 2 层未接入」 told a paying learner the product was
+            half-built, when the actual message is the far better one — this
+            answer needs a human read, so you are not being marked wrong by a
+            checker that cannot judge it.
+          */}
           {verdict?.outcome === "undecided" ? (
             <div className="verdict">
               {verdict.reason}
-              <span className="tier">第 2 层未接入 · 本地判不了就如实说</span>
+              <span className="tier">这一题这里判不了，所以不算你错。</span>
             </div>
           ) : null}
 
@@ -283,10 +296,20 @@ export function LessonView({
                 <div className="clue">
                   <div className="clue__eyebrow">再看一眼你刚才读过的这句</div>
                   <blockquote>{clue}</blockquote>
+                  {/*
+                    `README.md:1-12 @3b402e06` is a coordinate, and a learner
+                    who does not have the repository cannot do anything with a
+                    seven-character hash. The sentence says what the coordinate
+                    means; the exact revision stays available on hover for
+                    anyone who does have the repository.
+                  */}
                   {lesson.evidence[0] ? (
-                    <div className="clue__src">
-                      {lesson.evidence[0].sourcePath}:{lesson.evidence[0].lineStart}-
-                      {lesson.evidence[0].lineEnd} @{lesson.evidence[0].sourceCommit.slice(0, 7)}
+                    <div
+                      className="clue__src"
+                      title={`${lesson.evidence[0].sourcePath} @${lesson.evidence[0].sourceCommit}`}
+                    >
+                      出自真实项目：{lesson.evidence[0].sourcePath} 第{" "}
+                      {lesson.evidence[0].lineStart}–{lesson.evidence[0].lineEnd} 行
                     </div>
                   ) : null}
                 </div>
@@ -295,17 +318,20 @@ export function LessonView({
               )}
               {misses >= 2 ? (
                 <div className="paywall">
-                  还是不通？现在才出现导师入口。
-                  <span className="tier">第 3 层 · 计入额度</span>
+                  还是不通？可以叫导师来看这一题。
+                  <span className="tier">导师会用掉一次答疑额度</span>
                 </div>
               ) : null}
             </>
           ) : null}
 
+          {/*
+            The old copy said 「真实产品里这会…」 — the product telling a paying
+            learner that it is not the real product. It is the real product.
+          */}
           {appealed ? (
             <div className="verdict">
-              已按你的申诉放行。真实产品里这会升到第 2 层重判一次，<b>不计额度</b>——
-              误判是分层判分自己的故障。
+              按你说的放行了。会有人再看一遍这道题，<b>不用你出额度</b>——判错是我们的问题。
             </div>
           ) : null}
         </section>

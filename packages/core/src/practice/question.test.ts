@@ -3,10 +3,11 @@ import { describe, expect, it } from "vitest";
 import type { LexiconEntry } from "../domain/schemas.js";
 import { assembleTermEntry } from "../domain/structured-entry.js";
 import {
-  assembleTermPracticeQuestion,
+  assemblePracticeQuestion,
   idOfPracticeQuestion,
   indexPracticeQuestions,
-  practiceQuestionIdFromHead,
+  practiceQuestionIdFromSubject,
+  type PracticeSubject,
 } from "./question.js";
 
 const APP: LexiconEntry = {
@@ -51,6 +52,10 @@ function termOf(entry: LexiconEntry) {
   return assembleTermEntry(entry).entry;
 }
 
+function subjectOf(entry: LexiconEntry): PracticeSubject {
+  return { category: entry.track, id: entry.senseId };
+}
+
 function exercise(
   overrides: {
     readonly prompt?: unknown;
@@ -66,19 +71,19 @@ function exercise(
   };
 }
 
-describe("practiceQuestionIdFromHead", () => {
+describe("practiceQuestionIdFromSubject", () => {
   it("is category plus term slug, so the bank cannot drift off the term", () => {
-    expect(practiceQuestionIdFromHead(APP)).toBe("technical-app.program");
-    expect(practiceQuestionIdFromHead(ALLOW)).toBe("general-allow.permit");
+    expect(practiceQuestionIdFromSubject(subjectOf(APP))).toBe("technical-app.program");
+    expect(practiceQuestionIdFromSubject(subjectOf(ALLOW))).toBe("general-allow.permit");
   });
 });
 
-describe("assembleTermPracticeQuestion", () => {
+describe("assemblePracticeQuestion", () => {
   it("attaches the exercise to the term and derives identity from that term", () => {
-    const result = assembleTermPracticeQuestion(termOf(APP), exercise());
+    const result = assemblePracticeQuestion(termOf(APP), exercise(), subjectOf(APP));
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.question.term.head).toEqual(APP);
+    expect(result.question.entry.head).toEqual(APP);
     expect(result.question.exercise.prompt).toContain("账号设置页");
     expect(result.question.exercise.correctOptionId).toBe("separate-buttons");
     expect(result.question.exercise.options).toHaveLength(3);
@@ -87,7 +92,11 @@ describe("assembleTermPracticeQuestion", () => {
   });
 
   it("rejects a stemless prompt rather than serving a blank judgement", () => {
-    const result = assembleTermPracticeQuestion(termOf(APP), exercise({ prompt: "   " }));
+    const result = assemblePracticeQuestion(
+      termOf(APP),
+      exercise({ prompt: "   " }),
+      subjectOf(APP),
+    );
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.errors).toEqual(
@@ -98,9 +107,10 @@ describe("assembleTermPracticeQuestion", () => {
   });
 
   it("reuses the choice-exercise checks for option count and per-option explanations", () => {
-    const result = assembleTermPracticeQuestion(
+    const result = assemblePracticeQuestion(
       termOf(APP),
       exercise({ options: OPTIONS.slice(0, 2) }),
+      subjectOf(APP),
     );
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -108,11 +118,12 @@ describe("assembleTermPracticeQuestion", () => {
   });
 
   it("rejects an option that is a noun definition with no situation text", () => {
-    const result = assembleTermPracticeQuestion(
+    const result = assemblePracticeQuestion(
       termOf(APP),
       exercise({
         options: [OPTIONS[0], OPTIONS[1], { ...OPTIONS[2], text: "   " }],
       }),
+      subjectOf(APP),
     );
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -122,16 +133,33 @@ describe("assembleTermPracticeQuestion", () => {
       ]),
     );
   });
+
+  it("assembles from a non-lexicon entry whose subject uses that collection's own fields", () => {
+    const entry = {
+      collection: "concepts" as const,
+      head: { id: "flex", zh: "弹性布局", category: "frontend" },
+      sections: [],
+    };
+    const result = assemblePracticeQuestion(entry, exercise(), {
+      category: entry.head.category,
+      id: entry.head.id,
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(idOfPracticeQuestion(result.question)).toBe("frontend-flex");
+    expect(result.question.entry).toBe(entry);
+  });
 });
 
 describe("indexPracticeQuestions", () => {
   it("keys the bank by the derived id and collapses a second quiz for the same term", () => {
-    const first = assembleTermPracticeQuestion(termOf(APP), exercise());
-    const second = assembleTermPracticeQuestion(
+    const first = assemblePracticeQuestion(termOf(APP), exercise(), subjectOf(APP));
+    const second = assemblePracticeQuestion(
       termOf(APP),
       exercise({ prompt: "另一道不该独立存在的题。" }),
+      subjectOf(APP),
     );
-    const other = assembleTermPracticeQuestion(termOf(ALLOW), exercise());
+    const other = assemblePracticeQuestion(termOf(ALLOW), exercise(), subjectOf(ALLOW));
     expect(first.ok && second.ok && other.ok).toBe(true);
     if (!first.ok || !second.ok || !other.ok) return;
     const indexed = indexPracticeQuestions([first.question, other.question, second.question]);

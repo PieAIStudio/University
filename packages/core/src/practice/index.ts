@@ -1,13 +1,14 @@
 export {
-  assembleTermPracticeQuestion,
+  assemblePracticeQuestion,
   idOfPracticeQuestion,
   indexPracticeQuestions,
-  practiceQuestionIdFromHead,
-  type TermPracticeAssembly,
-  type TermPracticeExercise,
-  type TermPracticeIssue,
-  type TermPracticeIssueCode,
-  type TermPracticeQuestion,
+  practiceQuestionIdFromSubject,
+  type PracticeAssembly,
+  type PracticeExercise,
+  type PracticeIssue,
+  type PracticeIssueCode,
+  type PracticeQuestion,
+  type PracticeSubject,
 } from "./question.js";
 export {
   EMPTY_PRACTICE_RECENT,

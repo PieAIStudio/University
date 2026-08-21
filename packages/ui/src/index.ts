@@ -76,7 +76,7 @@ export {
   PRACTICE_RECENT_STORAGE_KEY,
   PRACTICE_UNLOCK_HINT,
   PracticeStream,
-  PracticeTermPanel,
+  PracticeRewardPanel,
   createLocalPracticeRecentStore,
   practiceOrdinalLabel,
   readLocalPracticeRecent,

@@ -49,7 +49,11 @@ export type View =
   // block is copied a fourth time, that is the moment to make it generic; three
   // is not yet enough evidence to know what the general case looks like.
   | { readonly kind: "concepts" }
-  | { readonly kind: "concept"; readonly id: string };
+  | { readonly kind: "concept"; readonly id: string }
+  // An endless sitting of the questions the concept entries already carry. One
+  // segment, like review and favourites, because it belongs to the learner
+  // rather than to any course.
+  | { readonly kind: "practice" };
 
 export const WORLD: View = { kind: "world" };
 
@@ -73,6 +77,8 @@ export function toHash(view: View): string {
       return "#/concepts";
     case "concept":
       return `#/concepts/${enc(view.id)}`;
+    case "practice":
+      return "#/practice";
     case "course":
       return `#/${enc(view.studyId)}/${enc(view.courseId)}`;
     case "lesson":
@@ -100,6 +106,7 @@ export function fromHash(hash: string): View {
   if (parts.length === 2 && parts[0] === "flavour" && parts[1]) {
     return { kind: "flavour-entry", id: parts[1] };
   }
+  if (parts.length === 1 && parts[0] === "practice") return { kind: "practice" };
   if (parts.length === 1 && parts[0] === "concepts") return { kind: "concepts" };
   if (parts.length === 2 && parts[0] === "concepts" && parts[1]) {
     return { kind: "concept", id: parts[1] };

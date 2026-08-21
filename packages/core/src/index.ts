@@ -173,28 +173,29 @@ export * from "./progress/contract.js";
 // than a second model.
 export * from "./favourites/model.js";
 
-// Practice is a term's own three-option quiz, served as an endless sitting.
-// Identity is `${track}-${senseId}`; storage of the recent-id ring is an
+// Practice is an entry's own three-option quiz, served as an endless sitting.
+// Identity is `${category}-${id}`; storage of the recent-id ring is an
 // adapter, same split as favourites.
 export {
   EMPTY_PRACTICE_RECENT,
   PRACTICE_RECENT_DOCUMENT_VERSION,
   PRACTICE_RECENT_LIMIT,
   advancePracticeSession,
-  assembleTermPracticeQuestion,
+  assemblePracticeQuestion,
   idOfPracticeQuestion,
   indexPracticeQuestions,
   parsePracticeRecent,
   pickPracticeQuestionId,
-  practiceQuestionIdFromHead,
+  practiceQuestionIdFromSubject,
   rememberPracticeQuestion,
   startPracticeSession,
   unlockPracticeSession,
+  type PracticeAssembly,
+  type PracticeExercise,
+  type PracticeIssue,
+  type PracticeIssueCode,
+  type PracticeQuestion,
   type PracticeRecentState,
   type PracticeSession,
-  type TermPracticeAssembly,
-  type TermPracticeExercise,
-  type TermPracticeIssue,
-  type TermPracticeIssueCode,
-  type TermPracticeQuestion,
+  type PracticeSubject,
 } from "./practice/index.js";

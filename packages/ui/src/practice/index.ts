@@ -5,7 +5,7 @@ export {
   PracticeStream,
   practiceOrdinalLabel,
 } from "./PracticeStream.js";
-export { PRACTICE_UNLOCK_HINT, PracticeTermPanel } from "./PracticeTermPanel.js";
+export { PRACTICE_UNLOCK_HINT, PracticeRewardPanel } from "./PracticeRewardPanel.js";
 export {
   PRACTICE_RECENT_STORAGE_KEY,
   createLocalPracticeRecentStore,
