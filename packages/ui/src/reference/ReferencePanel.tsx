@@ -8,6 +8,8 @@ import {
 } from "@floating-ui/react";
 import { useEffect, useState, type ReactNode } from "react";
 
+import type { LexiconEntry } from "@pieai/university-core/domain/schemas.js";
+
 export type ReferenceKind = "lesson" | "term" | "evidence";
 
 /**
@@ -129,4 +131,29 @@ function kindLabel(kind: ReferenceKind): string {
   if (kind === "lesson") return "课文";
   if (kind === "term") return "词义";
   return "证据";
+}
+
+/**
+ * The body of a term panel: headword, phonetic, gloss, usage.
+ *
+ * Extracted so the lesson reader and the term index open the same drawer with
+ * the same copy. A second panel that happened to look similar would be the
+ * share-the-code rule broken, and the two would drift the first time a field
+ * was added to one of them.
+ */
+export function TermReferenceBody({ entry }: { readonly entry: LexiconEntry | null }) {
+  if (!entry) {
+    return <p className="reference-panel__note">词库里没有这个词义。</p>;
+  }
+  return (
+    <>
+      <p className="reference-panel__meta">
+        <span lang="en">{entry.headword}</span>
+        <span className="reference-panel__phonetic">{entry.phonetic}</span>
+        <span className="reference-panel__pos">{entry.partOfSpeech}</span>
+      </p>
+      <p className="reference-panel__gloss">{entry.gloss}</p>
+      <p className="reference-panel__usage">{entry.usage}</p>
+    </>
+  );
 }

@@ -187,10 +187,18 @@ export const LexiconEntrySchema = z
     /** Where this sense comes up in real work, so the word has somewhere to live. */
     usage: z.string().min(1).max(300),
     track: z.enum(["technical", "general"]),
+    /**
+     * A plain-spoken sentence a beginner would actually say for this sense.
+     *
+     * Optional because no curated entry has it yet. Search reads it when it is
+     * present; the detail page that *shows* it is a separate module.
+     */
+    colloquial: z.string().min(1).max(300).optional(),
   })
   .strict();
 
 export type LexiconEntry = z.infer<typeof LexiconEntrySchema>;
+export type LexiconTrack = LexiconEntry["track"];
 
 const RepositoryRelativePath = z
   .string()

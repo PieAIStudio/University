@@ -7,7 +7,11 @@ import type { LanguageLayer, TermRange } from "@pieai/university-core/domain/les
 import type { LexiconEntry } from "@pieai/university-core/domain/schemas.js";
 import { EvidenceInlineSource } from "../evidence/EvidenceInlineSource.js";
 import { CopyLocatorButton } from "../evidence/CopyLocatorButton.js";
-import { ReferencePanel, type ReferenceKind } from "../reference/ReferencePanel.js";
+import {
+  ReferencePanel,
+  TermReferenceBody,
+  type ReferenceKind,
+} from "../reference/ReferencePanel.js";
 import { lessonSectionRole } from "./lesson-sections.js";
 import { MermaidDiagram } from "./MermaidDiagram.js";
 import {
@@ -758,21 +762,7 @@ function ReferenceBody({
     );
   }
   if (reference.kind === "term") {
-    const entry = reference.entry;
-    if (!entry) {
-      return <p className="reference-panel__note">词库里没有这个词义。</p>;
-    }
-    return (
-      <>
-        <p className="reference-panel__meta">
-          <span lang="en">{entry.headword}</span>
-          <span className="reference-panel__phonetic">{entry.phonetic}</span>
-          <span className="reference-panel__pos">{entry.partOfSpeech}</span>
-        </p>
-        <p className="reference-panel__gloss">{entry.gloss}</p>
-        <p className="reference-panel__usage">{entry.usage}</p>
-      </>
-    );
+    return <TermReferenceBody entry={reference.entry} />;
   }
   const cited =
     reference.evidenceIndex !== null ? (evidence?.[reference.evidenceIndex] ?? null) : null;

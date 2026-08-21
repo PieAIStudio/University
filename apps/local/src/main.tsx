@@ -9,6 +9,7 @@ import { App } from "./App";
 import "@pieai/university-ui/language/word-layer.css";
 import "@pieai/university-ui/reference/reference-panel.css";
 import "@pieai/university-ui/sound/sound-toggle.css";
+import "@pieai/university-ui/reference/term-index.css";
 import "./styles.css";
 
 const root = document.getElementById("root");

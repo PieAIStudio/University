@@ -1,0 +1,110 @@
+/*
+  Term index styles, next to the component that emits the class names.
+
+  Shells import this file the same way they import reference-panel.css. A
+  shared surface whose appearance depends on which app remembered the CSS is
+  one implementation in name only.
+*/
+
+.term-index {
+  display: grid;
+  gap: 16px;
+}
+
+.term-index__search {
+  min-width: 0;
+}
+
+.term-index__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.term-index__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel-deep, #0c1018);
+  color: inherit;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.term-index__chip:hover,
+.term-index__chip:focus-visible {
+  border-color: var(--game-ui-accent, #5ec8c0);
+}
+
+.term-index__chip:focus-visible,
+.term-index__hit:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+/*
+  The selected chip is outlined rather than merely tinted. A fill alone
+  disappears against the hover state next to it, and the question this
+  control answers is "which of these am I in".
+*/
+.term-index__chip[aria-checked="true"] {
+  border-color: var(--game-ui-accent, #5ec8c0);
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 14%, transparent);
+}
+
+.term-index__results {
+  display: grid;
+  gap: 20px;
+}
+
+.term-index__group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: var(--game-ui-text, #e9edf5);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.term-index__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.term-index__hit {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel-deep, #0c1018);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.term-index__hit:hover,
+.term-index__hit:focus-visible {
+  border-color: var(--game-ui-accent, #5ec8c0);
+}
+
+.term-index__headword {
+  color: var(--game-ui-accent, #5ec8c0);
+  font-weight: 600;
+}
+
+.term-index__gloss {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}

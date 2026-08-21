@@ -16,6 +16,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { MapControls } from "three/addons/controls/MapControls.js";
 
 import { readCourseProgress } from "@pieai/university-core";
+import { TermIndex } from "@pieai/university-ui";
 
 import {
   hasContent,
@@ -26,6 +27,7 @@ import {
   type Course,
   type CourseNode,
 } from "./content/library";
+import { LEXICON } from "./lesson/language";
 import { LessonView } from "./lesson/Lesson";
 import { Settlement } from "./lesson/Settlement";
 import { fromHash, toHash, WORLD, type View } from "./url-state";
@@ -393,6 +395,15 @@ export function App() {
         </span>
         <span className="spacer" />
         <span className="topbar__stat">连击 {progress.streak.days} 天</span>
+        {/*
+          The term index is reachable from everywhere on purpose. A learner
+          who cannot remember which lesson a word came from is exactly the
+          person it is for, so making them find the right course first would
+          defeat it.
+        */}
+        <button className="ghost" onClick={() => setView({ kind: "terms" })}>
+          查词
+        </button>
         <button
           className={due.length > 0 ? "primary" : "ghost"}
           onClick={() => setView({ kind: "review" })}
@@ -403,7 +414,12 @@ export function App() {
 
       <div
         className="stagewrap"
-        hidden={view.kind === "lesson" || view.kind === "settled" || view.kind === "review"}
+        hidden={
+          view.kind === "lesson" ||
+          view.kind === "settled" ||
+          view.kind === "review" ||
+          view.kind === "terms"
+        }
       >
         <Stage cameraFrom={cameraFrom} lookAt={lookAt}>
           <Controls target={lookAt} />
@@ -547,6 +563,15 @@ export function App() {
       ) : null}
 
       {view.kind === "review" ? <ReviewHost onDone={() => setView(WORLD)} /> : null}
+
+      {view.kind === "terms" ? (
+        <main className="terms">
+          <button className="linkish" onClick={() => setView(WORLD)}>
+            ← 关卡地图
+          </button>
+          <TermIndex entries={LEXICON} />
+        </main>
+      ) : null}
     </div>
   );
 }

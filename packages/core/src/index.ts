@@ -47,6 +47,17 @@ export {
 export { resolveEvidenceAnchors, type EvidenceCitation } from "./marks/evidence.js";
 export { resolveTermLinks, termRangeOf, type TermResolution } from "./marks/terms.js";
 
+// Term index. The searchable projection of a lexicon: headword, gloss, usage,
+// and the optional colloquial sentence a beginner would actually say.
+export {
+  createLexiconIndex,
+  searchLexicon,
+  searchLexiconIndex,
+  type LexiconIndex,
+  type LexiconSearchGroup,
+  type LexiconSearchResult,
+} from "./lexicon/search.js";
+
 // The one thing both shells must agree on before either can render the other's
 // world: what a lesson is called, and what finished means. A read model, not a
 // storage migration — neither store is told where to put its bytes.

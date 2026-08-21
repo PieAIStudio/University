@@ -1,0 +1,138 @@
+---
+id: SPEC-0003
+title: One World, Two Shells
+type: spec
+status: active
+canonical: true
+owner: human
+created: 2026-08-21
+last_reviewed: 2026-08-21
+domain: learning-surface
+tags:
+  - shared-package
+  - world-map
+  - shells
+  - progress
+pinned: false
+related:
+  - SPEC-0001
+  - SPEC-0002
+---
+
+# SPEC-0003: One World, Two Shells
+
+## Problem
+
+The authoring shell picks a course from a 2D shelf. The delivery shell picks
+one from a 3D archipelago. They are two implementations of the same act, which
+breaks the first rule this repository has, and it means every improvement to
+"find your next lesson" has to be made twice or it drifts.
+
+The instruction is to put both on the 3D world. The hard part is not the
+canvas. It is that the authoring shell's 2D surfaces carry a great deal of
+information the archipelago has nowhere to put — today's next lesson, cards due,
+the focus track, the airlock's three clocks, when each study was last touched —
+and that information is the reason an author opens the app at all. Losing it to
+gain a nicer landing screen would be a bad trade made for aesthetic reasons.
+
+So the question this document answers is not "can both shells render a world".
+It is **where each piece of the authoring shell's information goes**, given
+that it must all still be there.
+
+## The Principle
+
+**The canvas answers "where do I go". The DOM answers "what is true right
+now".** They are not competing for the same job and the information does not
+have to fit in the world.
+
+This is not a compromise reached to save effort. It is forced by a portfolio
+law this project is registered under: readable text is DOM, never geometry.
+A Chinese IME, a screen reader, text selection and a phone keyboard all die
+inside a canvas. Every number in the authoring shell's shelf is readable text,
+so every number stays in the DOM whatever the landing screen looks like.
+
+What follows is that the two shells share **one world** and differ by **one
+overlay**, and the overlay is small.
+
+## What Is Shared, And Where It Has To Live
+
+The scene is currently `apps/online/src/world/Maps.tsx`, which imports
+`../content/library` — a static JSON reader that the authoring shell does not
+have and must not grow. Sharing it means moving it into `packages/ui` and
+having it take its data as arguments instead of importing a shell's storage.
+
+The progress half of that is already done. `packages/core/src/progress/`
+defines what a lesson is called and what finished means, and both shells now
+have an adapter. The scene should take:
+
+- a list of course nodes (id, title, lesson count, prerequisites)
+- a `ProgressSource`
+- a click handler
+
+and know nothing else. No fetch, no localStorage, no SQLite, no `import.meta`.
+
+## Where Every Authoring-Shell Number Goes
+
+The inventory below is the authoring shell's 2D information, one row each, with
+its destination. Nothing is dropped; that is the acceptance criterion.
+
+| Today | Destination | Why there |
+| --- | --- | --- |
+| Next lesson | **Both.** The world already accents exactly one next course, and the DOM panel names the lesson. | The accent answers it in a glance and the text answers it exactly. Neither alone is enough: a glowing island does not tell you the lesson's title, and a title does not tell you where it is. |
+| Cards due today | DOM, top bar | Already there in the delivery shell. One implementation. |
+| Focus track | DOM panel, and **the world dims everything else** | This is the one number that earns a change to the scene, because "what am I ignoring right now" is genuinely spatial. |
+| Last activity per study | DOM panel, on the study's own card | A date is text. Putting it on a signpost in the water would be unreadable at map zoom and unselectable at any zoom. |
+| Airlock three clocks | DOM panel, authoring only | Depends on local git and a seal file. It cannot exist in the delivery shell at all, which is exactly why it belongs in the overlay and not the scene. |
+| UA analysis overlay | DOM button, authoring only | Spawns a local process. Same reason. |
+| Study shelf ordering | The world's own layout | The archipelago already places studies; a second ordering would be a second answer to the same question. |
+| Empty campus | DOM, full screen | An empty world is an empty blue plane, which reads as a bug rather than as an invitation. The empty state must say what to do. |
+| Three-question placement quiz | DOM, on entering a course | Not a landing-screen concern. |
+
+Two rows above are the whole design. The focus track is the only authoring
+concept that changes the scene, and everything else is an overlay that the
+delivery shell simply does not render.
+
+## What Each Shell Keeps To Itself
+
+Neither list is a gap to be closed later. They are the shells being different
+products, which they are allowed to be.
+
+**Authoring only**, because each needs Node, git, SQLite, a clipboard or an AI
+host: airlock clocks, UA dashboard, knowledge notes, host grading, selection
+marks, the real source drawer, pinned-version checkout, the author CLI, reading
+confirmation, session objectives.
+
+**Delivery only**: streak, settlement, paywall, prerequisite locking, the
+browser-side tier-one grader, account and payment.
+
+## The One Behaviour That Must Change In The Delivery Shell
+
+The authoring shell requires a learner to *confirm they read the lesson*
+before it counts, separately from answering its exercises. The delivery shell
+has no such signal and currently writes both facts at once from one event.
+
+`packages/core/src/progress/contract.ts` already models these as two
+independent flags, and `apps/online/src/progress/source.ts` says in comments
+that it sets them equal and that this is a gap rather than a decision. Closing
+it is a user-facing behaviour change, so it gets designed in
+`docs/reference/player-journey/` before it is built, not decided here.
+
+## Order Of Work
+
+1. Move the scene to `packages/ui` and cut its import of the delivery shell's
+   library. Nothing user-visible changes; the delivery shell must look
+   identical afterwards, and that is the test.
+2. Give the authoring shell the same scene plus its overlay.
+3. Retire the 2D shelf **only after** every row in the table above is visible
+   in the new landing. Deleting it earlier trades information for a screenshot.
+
+Step 3 is where this can go wrong, and the ordering is the whole safeguard.
+
+## Non-Negotiables
+
+- One scene, two overlays. A second copy of the archipelago is this document
+  failing.
+- No text in WebGL. Labels are DOM elements positioned over the canvas, which
+  is how the delivery shell already does it.
+- The authoring shell stays offline. Sharing a package is not networking, and
+  nothing in this change may give it an outbound call.

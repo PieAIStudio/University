@@ -20,5 +20,11 @@ export { VocabularyReview } from "./review/VocabularyReview.js";
 export { EvidenceRail } from "./evidence/EvidenceRail.js";
 export { EvidenceCode } from "./evidence/EvidenceCode.js";
 export { Tip } from "./Tip.js";
+export {
+  ReferencePanel,
+  TermReferenceBody,
+  type ReferenceKind,
+} from "./reference/ReferencePanel.js";
+export { TermIndex, LEXICON_SEARCH_PLACEHOLDER } from "./reference/TermIndex.js";
 export * from "./view/lesson-view.js";
 export * from "./api/client.js";

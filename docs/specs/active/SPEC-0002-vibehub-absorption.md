@@ -80,7 +80,7 @@ a full checklist.
 | # | Module | Status | Note |
 | --- | --- | --- | --- |
 | A1 | Top navigation | adapt | The world map is our navigation. What is missing is that VibeHub's six items *teach* — they announce that look-up, drill, systematic study and pitfall-avoidance are all valid uses. Our map announces one. |
-| A2 | Global search | build | Highest-value single module in this table. Their placeholder is the teaching: "试试「按钮」「登录弹窗」「返回顶部」". A beginner cannot search for a word they do not have. |
+| A2 | Global search | have | `TermIndex` in `packages/ui` plus `searchLexiconIndex` in `packages/core`. The placeholder teaches from this lexicon: 「应用」「接口」「点开图标就能用」. Shells mount the surface; they do not reimplement it. |
 | A3 | Language switch | decline | Their zh/en split is for SEO reach. This product's foreign-language layer is a *reading aid inside one lesson*, which is a different feature that already exists. |
 | A4 | Theme accent colour | adapt | Ours is `packages/ui` tokens from SwimmerUIKit. Their trick worth stealing: switching it re-colours every live demo, which teaches "design token" by demonstration. |
 | A5 | Cursor effects | decline | Taste signal, no learning value, and a cursor effect over a WebGL canvas fights the camera controls. |
@@ -94,12 +94,12 @@ a full checklist.
 
 | # | Module | Status | Note |
 | --- | --- | --- | --- |
-| B1 | Category chips | build | We have no browse-by-domain surface at all. |
+| B1 | Category chips | have | Track chips on `TermIndex` (`技术用语` / `通用英语` / `全部`), each with a live count. |
 | B2 | Sub-category sidebar | build | Their rule is worth taking exactly: the sidebar only appears when a category has more than one group. |
 | B3 | Term card with live demo | build | The hard one, and the reason their site is convincing. A card shows a *miniature working UI*, not an illustration. |
 | B4 | Favourites | build | Pure `localStorage` there; ours should be account-backed, so this is one of the modules where we are structurally better. |
-| B5 | Search results | build | Their index includes the colloquial "你可能会说" sentence, which is why searching "鼠标放上去变色" finds `悬停 Hover`. Indexing only names would lose the entire point. |
-| B6 | Search empty state | build | Their empty state is the search syntax manual. Cheap, and it teaches. |
+| B5 | Search results | have | Hits group by `track` with a count per group. The index reads headword, gloss, usage, and optional `colloquial` — the field is on the schema, empty in the current 267 entries. |
+| B6 | Search empty state | have | A miss is the syntax manual: search the English word, the Chinese gloss, or describe what you mean. |
 | B7 | Per-category SEO titles | build | Ours has no public term pages to title yet. |
 
 ### C. Term detail page (24)
@@ -182,13 +182,13 @@ An entire section this product does not have, and the one the user singled out.
 
 | Status | Count |
 | --- | --- |
-| have | 8 |
+| have | 12 |
 | adapt | 10 |
-| build | 57 |
+| build | 53 |
 | decline | 3 |
 | **Total** | **78** |
 
-The eight we already have: A8, C22, E1, E2, E4, E9, E13, E14.
+The twelve we already have: A2, A8, B1, B5, B6, C22, E1, E2, E4, E9, E13, E14.
 The ten to adapt: A1, A4, C4, C6, C21, E3, E6, E7, F11, F12.
 The three declined: A3 (language switch), A5 (cursor effects), A6 (source
 survey). Every other id is a build.
@@ -228,6 +228,16 @@ is satisfied by the ledger only if the additions are real, so they are named:
 - **E9** — shipped 2026-08-21 as `[[term:]]` plus `ReferencePanel`, and it
   removed 217 lines while adding the feature, because it replaced a second
   parser for the same syntax rather than adding a third.
+- **A2 / B1 / B5 / B6** — term index and search, in `packages/core`
+  (`searchLexiconIndex`) and `packages/ui` (`TermIndex`). Closed 2026-08-21 and
+  mounted in the delivery shell at `#/terms`, reachable from the top bar on
+  every screen. Clicking a hit opens the existing `ReferencePanel` rather than
+  a second drawer.
+
+  Verified in a browser against the real 267 entries: searching 「点开图标」 —
+  a description, not a name — returns `app`, which is the entire point of
+  indexing the gloss and not only the headword. A miss renders the syntax
+  manual. The authoring shell has the CSS but does not yet mount the surface.
 
 ## Non-Negotiables Carried From The Portfolio
 
