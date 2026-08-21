@@ -202,6 +202,62 @@ this tally wrong.
 A `decline` is not a gap. If one is ever overturned, overturn it here rather
 than in a commit message.
 
+## Audited, 2026-08-21, By Two Models Independently
+
+The tally below this line counts rows. It does not count whether a learner can
+read anything, and a ledger that cannot tell those apart will flatter itself
+until someone opens the product. So the same adversarial brief went to two
+models with no contact between them.
+
+| | Grok | Gemini |
+| --- | --- | --- |
+| Mechanism built | 41 / 78 (53%) | 39 / 78 (50%) |
+| Content authored | 26 / 78 (33%) | 21 / 78 (27%) |
+| Reachable in a running app | 26 / 78 (33%) | 35 / 78 (45%) |
+
+They converge on mechanism and content and diverge on *reachable*, for a stated
+reason: Grok required a row to be both mounted and populated, Gemini required
+only mounting. Both readings are defensible and the gap between them is exactly
+the mechanism-versus-content distinction this section exists to protect.
+
+**Both independently found the same overstatements**, which is the part worth
+acting on:
+
+- **A2 was not a global search.** It is a button to a separate page, and it
+  indexes 267 English senses rather than a visual-term corpus.
+- **A8 `have` was false.** There is no author card.
+- **C22 `have` was a category error.** Our evidence rail cites a commit and a
+  line range in prose; their C22 is a "further reading" block on a term page.
+  Ours is stronger and it is not the same module.
+- **E9 was named but empty.** The mechanism shipped and the delivered courses
+  contain **560 lessons and zero `[[term:]]` tokens**, so for a learner it did
+  not exist.
+- **C19 / D2–D4 were "in flight" and not in the product.** `ChoiceBlock`
+  existed; `ExerciseSchema` still had only `short-answer | explain`, and the
+  course packages held **0** choice exercises against 673 short-answer and 32
+  explain.
+- **The F group was marked `build` and was already done** — understated, which
+  is the rarer error and still an error.
+
+Measured against the delivered content at audit time: 52 courses, 560 lessons,
+1,815 `[[evidence:]]`, 420 `[[lesson:]]`, **0** `[[term:]]`, **0** choice
+exercises; lexicon 267 entries with **0** `colloquial`.
+
+### What changed immediately after the audit
+
+- `colloquial` went from 0 to 267 entries carrying 532 phrasings, which opens
+  the search path the field was built for. Verified with queries containing no
+  part of the term.
+- The F group is mounted at `#/flavour` with 25 entries.
+- Favourites and the term entry page are mounted rather than merely built.
+
+### What the audit says is still worth knowing
+
+The half of VibeHub that makes it persuasive — the live miniature demos on
+every term card and term page (C9–C12, B3) — is at **zero**, and no amount of
+section plumbing changes that. A term page here is still an English headword
+with a Chinese gloss; theirs is a working miniature of the thing being named.
+
 ## What "Better Than Theirs" Has To Mean
 
 The instruction is that University ends up with more modules, not fewer. That
