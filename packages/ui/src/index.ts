@@ -11,6 +11,11 @@ export { LessonToolbar, lessonNeighbours, readProgress } from "./lesson/LessonNa
 export { MarkdownContent, isLocalUrl } from "./markdown/MarkdownContent.js";
 export { ReviewCard } from "./review/ReviewCard.js";
 export { ExerciseBlock } from "./review/ExerciseBlock.js";
+export {
+  ChoiceBlock,
+  type ChoiceBlockExercise,
+  type ChoiceBlockOption,
+} from "./review/ChoiceBlock.js";
 export { VocabularyReview } from "./review/VocabularyReview.js";
 export { EvidenceRail } from "./evidence/EvidenceRail.js";
 export { EvidenceCode } from "./evidence/EvidenceCode.js";

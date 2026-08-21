@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   CardContentSchema,
+  ChoiceExerciseSchema,
   CourseManifestSchema,
   EvidenceReferenceSchema,
   ExerciseSchema,
@@ -146,6 +147,40 @@ describe("study domain schemas", () => {
         evidence: [evidence],
       }).kind,
     ).toBe("short-answer");
+    expect(
+      ChoiceExerciseSchema.parse({
+        schemaVersion: 1,
+        id: "setting-buttons",
+        kind: "choice",
+        title: "设置页的按钮",
+        courseId: "founder-engineer",
+        unitId: "system-map",
+        lessonId: "auth-owner",
+        prompt: "账号设置页有保存资料、放弃本次修改、删除账号。怎样安排更合适？",
+        contentRevision: 1,
+        contentHash: hash,
+        status: "draft",
+        evidence: [evidence],
+        correctOptionId: "separate-buttons",
+        options: [
+          {
+            id: "separate-buttons",
+            text: "保存、放弃和删除各用一个按钮，删除前再确认。",
+            explanation: "三个动作后果不同，各自用明确的按钮。",
+          },
+          {
+            id: "one-confirm",
+            text: "用一个确认按钮处理全部操作，点了再猜用户想做什么。",
+            explanation: "一个按钮承担三种后果，设置页会变得不可预测。",
+          },
+          {
+            id: "all-links",
+            text: "三项都做成链接，点了再跳到别的页去完成。",
+            explanation: "链接带走当前页；保存和放弃是留在本页的动作。",
+          },
+        ],
+      }).kind,
+    ).toBe("choice");
   });
 
   it("requires cards to keep content revision separate from learner state", () => {

@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-21T05:08:15.040Z
+generated_at: 2026-08-21T05:23:38.869Z
 generator_version: doc-gov@0.9.1
-docs_count: 16
+docs_count: 17
 docs:
   - id: GOV-AGENTS-ROUTING-ENGINEERING-RUNTIME-V1-1
     path: docs/governance/agents-routing/engineering-runtime-v1.1.md
@@ -97,6 +97,13 @@ docs:
     pinned: true
   - id: REF-LEARNING-WORKFLOW-ISSUES-EVIDENCE-WIKI-TOKENS-CANNOT-RENDER-AS-BLOCK-SOURCE-INSIDE-A-PARAGRAPH
     path: docs/reference/learnings/workflow-issues/evidence-wiki-tokens-cannot-render-as-block-source-inside-a-paragraph.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-21
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-WIDENING-EXERCISESCHEMA-KIND-BREAKS-LOCAL-RECOVERY-AND-COACHING-PACKETS
+    path: docs/reference/learnings/workflow-issues/widening-exerciseschema-kind-breaks-local-recovery-and-coaching-packets.md
     type: reference
     status: stable
     canonical: true

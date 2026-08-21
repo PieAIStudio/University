@@ -521,6 +521,50 @@ const PracticeBaseSchema = z.object({
   evidence: z.array(EvidenceReferenceSchema).min(1),
 });
 
+/**
+ * One of the three answers on a choice exercise.
+ *
+ * `text` must be a full description of a working situation, not a dictionary
+ * definition of a noun. That is the design rule that makes this exercise type
+ * work: the learner is choosing between practices, and a noun definition cannot
+ * be right or wrong in the way a situation can. "保存、放弃、删除分别做成按钮"
+ * is a situation; "按钮是可点击的控件" is a glossary entry, and a glossary
+ * entry teaches the word rather than the judgement.
+ *
+ * `explanation` is written for this option specifically. A miss has to answer
+ * "why would someone pick this, and why that does not hold" — a generic
+ * "wrong, try again" is not a substitute.
+ */
+export const ChoiceOptionSchema = z
+  .object({
+    id: StableId,
+    text: z.string().min(1).max(2_000),
+    explanation: z.string().min(1).max(2_000),
+  })
+  .strict();
+
+/**
+ * Three options, one right, and the explanation lives on the option the
+ * learner actually picked.
+ *
+ * Until they pick the correct option there is no next question — retrying is
+ * the mechanism, not a courtesy. The count, the correct id, uniqueness and
+ * the presence of per-option explanations are enforced by
+ * `validateChoiceExercise`, which returns structured errors instead of
+ * throwing, so an authoring surface can show every problem at once.
+ *
+ * This is a sibling of `ExerciseSchema` rather than a third discriminant on
+ * it. The authoring and recovery pipelines still switch on two kinds, and
+ * widening that union is a type error in `apps/local` that this change is not
+ * allowed to edit. The shape is otherwise the same `PracticeBaseSchema`, and
+ * it joins the union when those pipelines learn the third branch.
+ */
+export const ChoiceExerciseSchema = PracticeBaseSchema.extend({
+  kind: z.literal("choice"),
+  options: z.array(ChoiceOptionSchema),
+  correctOptionId: StableId,
+}).strict();
+
 export const ExerciseSchema = z.discriminatedUnion("kind", [
   PracticeBaseSchema.extend({
     kind: z.literal("short-answer"),
@@ -670,6 +714,8 @@ export type UnitManifest = z.infer<typeof UnitManifestSchema>;
 export type LessonManifest = z.infer<typeof LessonManifestSchema>;
 export type LessonSection = z.infer<typeof LessonSectionSchema>;
 export type LessonAsset = z.infer<typeof LessonAssetSchema>;
+export type ChoiceOption = z.infer<typeof ChoiceOptionSchema>;
+export type ChoiceExercise = z.infer<typeof ChoiceExerciseSchema>;
 export type Exercise = z.infer<typeof ExerciseSchema>;
 export type CardContent = z.infer<typeof CardContentSchema>;
 export type KnowledgeClaim = z.infer<typeof KnowledgeClaimType>;

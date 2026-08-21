@@ -106,6 +106,7 @@ export const library = imported as {
 export const hasContent = library.studies.length > 0;
 
 const cache = new Map<string, Promise<Course>>();
+const resolved = new Map<string, Course>();
 
 /** One course, fetched once, kept for the session. */
 export function loadCourse(studyId: string, courseId: string): Promise<Course> {
@@ -117,9 +118,25 @@ export function loadCourse(studyId: string, courseId: string): Promise<Course> {
       if (!response.ok) throw new Error(`${key}: ${response.status}`);
       return response.json();
     })
-    .then((pkg: { course: Course }) => pkg.course);
+    .then((pkg: { course: Course }) => {
+      resolved.set(key, pkg.course);
+      return pkg.course;
+    });
   cache.set(key, pending);
   return pending;
+}
+
+/**
+ * A course this session has already fetched, or undefined if it has not
+ * resolved yet.
+ *
+ * The world map asks the progress contract how far each island got, and that
+ * question needs the course's units and lesson ids on the same tick as the
+ * render. `loadGraph` has already paid for those fetches; this is the
+ * synchronous answer for a callback that cannot wait.
+ */
+export function peekCourse(studyId: string, courseId: string): Course | undefined {
+  return resolved.get(`${studyId}/${courseId}`);
 }
 
 export interface CourseNode extends CourseSummary {

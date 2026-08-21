@@ -15,11 +15,14 @@ import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { MapControls } from "three/addons/controls/MapControls.js";
 
+import { readCourseProgress } from "@pieai/university-core";
+
 import {
   hasContent,
   library,
   loadCourse,
   loadGraph,
+  peekCourse,
   type Course,
   type CourseNode,
 } from "./content/library";
@@ -27,6 +30,7 @@ import { LessonView } from "./lesson/Lesson";
 import { Settlement } from "./lesson/Settlement";
 import { fromHash, toHash, WORLD, type View } from "./url-state";
 import { placeLabels, type LabelCandidate } from "./world/labels";
+import { courseShapeOf, progressSource } from "./progress/source";
 import {
   advanceLesson,
   dropCards,
@@ -34,7 +38,6 @@ import {
   dueTomorrow,
   gradeCard,
   lessonKey,
-  lessonState,
   snapshot,
   subscribe,
 } from "./progress/store";
@@ -255,12 +258,13 @@ export function App() {
   // say so — that partly-built island is the whole reason to come back.
   const courseProgress = useCallback(
     (node: CourseNode) => {
-      if (node.lessons <= 0) return 0;
-      const prefix = `${node.studyId}/${node.courseId}/`;
-      const done = Object.entries(progress.lessons).filter(
-        ([key, state]) => key.startsWith(prefix) && state.progress >= 1,
-      ).length;
-      return Math.min(1, done / node.lessons);
+      const loaded = peekCourse(node.studyId, node.courseId);
+      if (!loaded) return 0;
+      const { done, total } = readCourseProgress(
+        courseShapeOf(loaded, node.studyId),
+        progressSource(),
+      );
+      return total > 0 ? Math.min(1, done / total) : 0;
     },
     [progress],
   );
@@ -278,12 +282,13 @@ export function App() {
 
   const lessons: readonly LessonPlacement[] = useMemo(() => {
     if (!course || (view.kind !== "course" && view.kind !== "lesson")) return [];
-    return placeCourse(
-      course.units,
-      (unitId, lessonId) =>
-        lessonState(lessonKey(view.studyId, course.id, lessonId)).progress >= 1 && unitId !== "",
-    );
-  }, [course, view]);
+    return placeCourse(view.studyId, course, progressSource());
+  }, [course, view, progress]);
+
+  const viewedProgress = useMemo(() => {
+    if (!course || (view.kind !== "course" && view.kind !== "lesson")) return null;
+    return readCourseProgress(courseShapeOf(course, view.studyId), progressSource());
+  }, [course, view, progress]);
 
   const labelNodes = useRef(new Map<string, HTMLElement>());
 
@@ -463,8 +468,8 @@ export function App() {
           <aside className="picked picked--left">
             <h3>{course.title}</h3>
             <p className="picked__study">
-              {course.units.length} 单元 · {lessons.length} 关 · 还剩{" "}
-              {lessons.filter((lesson) => lesson.state !== "done").length} 关
+              {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
+              {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
             </p>
             <button className="ghost block" onClick={() => setView({ kind: "world" })}>
               ← 回到世界地图
@@ -590,9 +595,10 @@ function LessonReaderHost({
           // wrong on a lesson finished twice: the count does not move, but the
           // subtraction invented a step and the settlement announced growth the
           // map had not made.
-          const doneBefore = Object.entries(snapshot().lessons).filter(
-            ([at, entry]) => at.startsWith(`${studyId}/${course.id}/`) && entry.progress >= 1,
-          ).length;
+          const doneBefore = readCourseProgress(
+            courseShapeOf(course, studyId),
+            progressSource(),
+          ).done;
           advanceLesson(key, 1);
           // The drop is the reason to come back tomorrow, so it happens the
           // moment the lesson is passed rather than on some later screen.
@@ -643,12 +649,17 @@ function SettlementHost({
     entry.lessons.map((item) => ({ unitId: entry.id, lesson: item })),
   );
   const index = flat.findIndex((entry) => entry.lesson.id === lesson.id);
+  // The button is "the lesson after this one", not the world's accent.
+  // `readCourseProgress().next` is the first unfinished lesson in reading
+  // order; using it here would send a learner who skipped ahead back to the
+  // gap they left, which is the map's job and not this screen's.
   const next = flat[index + 1] ?? null;
 
   const prefix = `${studyId}/${course.id}/`;
-  const doneAfter = Object.entries(progress.lessons).filter(
-    ([key, entry]) => key.startsWith(prefix) && entry.progress >= 1,
-  ).length;
+  const { done: doneAfter, total: lessons } = readCourseProgress(
+    courseShapeOf(course, studyId),
+    progressSource(),
+  );
 
   const dropped = lesson.cards
     .map((card) => ({ card, state: progress.cards[`${prefix}${lesson.id}/${card.id}`] }))
@@ -659,7 +670,6 @@ function SettlementHost({
   // reload, a shared link — they are equal and the screen says nothing.
   const doneBefore =
     grewFrom?.key === `${studyId}/${course.id}/${lesson.id}` ? grewFrom.doneBefore : doneAfter;
-  const lessons = flat.length;
   const grown = (done: number) =>
     lessons > 0 ? settlementSize(studyId, course.id, lessons, done / lessons).built : 0;
 

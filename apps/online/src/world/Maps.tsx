@@ -19,12 +19,14 @@
  * so the eight-second question the map has to answer ("where do I go now")
  * is answered by looking, not by reading.
  */
-import { useFrame } from "@react-three/fiber";
+import { isLessonComplete, readCourseProgress, type ProgressSource } from "@pieai/university-core";
 import { playSound } from "@pieai/university-ui/sound/index.js";
+import { useFrame } from "@react-three/fiber";
 import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import type { CourseNode } from "../content/library";
+import type { Course, CourseNode } from "../content/library";
+import { courseShapeOf } from "../progress/source";
 import { buildIsland, hash, seeded } from "./island";
 import { PropField, type Placement, type Role } from "./kit";
 import { layoutCourse, layoutStudy, radiusForLessons } from "./layout";
@@ -243,6 +245,11 @@ function settlementSlots(studyId: string, courseId: string, radius: number) {
  * from the island's radius. The two agreed only by coincidence. A reward screen
  * that claims a house appeared where none did is worse than one that says
  * nothing, so both now ask the same function.
+ *
+ * `progress` is `done / total` from `readCourseProgress`. This function does
+ * not count lessons itself — it only turns that fraction into buildings — so
+ * the map and the reward screen stay on one number even as the shells agree
+ * on what "done" means.
  */
 export function settlementSize(
   studyId: string,
@@ -492,36 +499,41 @@ export interface LessonPlacement {
 }
 
 export function placeCourse(
-  units: readonly {
-    id: string;
-    title: string;
-    lessons: readonly { id: string; title: string; content: string }[];
-  }[],
-  isDone: (unitId: string, lessonId: string) => boolean,
+  studyId: string,
+  course: Course,
+  source: ProgressSource,
 ): LessonPlacement[] {
-  const flat = units.flatMap((unit) => unit.lessons.map((lesson) => ({ unit, lesson })));
-  const points = layoutCourse(units.map((unit) => unit.lessons.length));
-  let firstOpen = -1;
-  const states = flat.map((entry, index) => {
-    const done = isDone(entry.unit.id, entry.lesson.id);
-    if (!done && firstOpen === -1) firstOpen = index;
-    return done;
+  const { next } = readCourseProgress(courseShapeOf(course, studyId), source);
+  const flat = course.units.flatMap((unit) => unit.lessons.map((lesson) => ({ unit, lesson })));
+  const points = layoutCourse(course.units.map((unit) => unit.lessons.length));
+  const firstOpen = next
+    ? flat.findIndex((entry) => entry.unit.id === next.unitId && entry.lesson.id === next.lessonId)
+    : -1;
+  return flat.map((entry, index) => {
+    const done = isLessonComplete(
+      source.completionOf({
+        studyId,
+        courseId: course.id,
+        unitId: entry.unit.id,
+        lessonId: entry.lesson.id,
+      }),
+    );
+    return {
+      unitId: entry.unit.id,
+      unitTitle: entry.unit.title,
+      lessonId: entry.lesson.id,
+      lessonTitle: entry.lesson.title,
+      chars: entry.lesson.content.length,
+      position: new THREE.Vector3(points[index]!.x, 0, points[index]!.z),
+      state: done
+        ? "done"
+        : index === firstOpen
+          ? "live"
+          : index > firstOpen + 3
+            ? "locked"
+            : "idle",
+    };
   });
-  return flat.map((entry, index) => ({
-    unitId: entry.unit.id,
-    unitTitle: entry.unit.title,
-    lessonId: entry.lesson.id,
-    lessonTitle: entry.lesson.title,
-    chars: entry.lesson.content.length,
-    position: new THREE.Vector3(points[index]!.x, 0, points[index]!.z),
-    state: states[index]
-      ? "done"
-      : index === firstOpen
-        ? "live"
-        : index > firstOpen + 3
-          ? "locked"
-          : "idle",
-  }));
 }
 
 /**

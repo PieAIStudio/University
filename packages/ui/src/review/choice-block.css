@@ -1,0 +1,67 @@
+/*
+  Styles for the three-option choice block, next to the component that emits
+  the class names. Same reason the word layer's rules live beside WordPopover:
+  a shared component whose appearance depends on which app happens to import
+  it is one implementation in name only.
+*/
+
+.choice-block__options {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 14px;
+}
+
+.choice-block__option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  align-items: start;
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel-deep, #0c1018);
+  color: inherit;
+  font: inherit;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choice-block__option:hover,
+.choice-block__option:focus-visible {
+  border-color: var(--game-ui-accent, #5ec8c0);
+}
+
+.choice-block__option:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+.choice-block__option[aria-disabled="true"] {
+  cursor: default;
+}
+
+.choice-block__option--wrong {
+  border-color: var(--game-ui-danger, #e07a7a);
+  background: color-mix(in srgb, var(--game-ui-danger, #e07a7a) 12%, transparent);
+}
+
+.choice-block__option--correct {
+  border-color: var(--game-ui-accent, #5ec8c0);
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 14%, transparent);
+}
+
+.choice-block__letter {
+  font-weight: 700;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.choice-block__mark {
+  font-weight: 700;
+}
+
+.choice-block__next {
+  margin-top: 14px;
+}

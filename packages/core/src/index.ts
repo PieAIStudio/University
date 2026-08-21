@@ -7,6 +7,14 @@
  * written down once.
  */
 export * from "./domain/schemas.js";
+export {
+  CHOICE_OPTION_COUNT,
+  validateChoiceExercise,
+  type ChoiceExerciseDraft,
+  type ChoiceExerciseIssue,
+  type ChoiceExerciseIssueCode,
+  type ChoiceExerciseValidation,
+} from "./domain/choice-exercise.js";
 
 export * from "./scheduling/fsrs.js";
 export * from "./grading/answer-key.js";
