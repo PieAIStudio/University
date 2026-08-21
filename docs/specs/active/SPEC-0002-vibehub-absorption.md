@@ -306,15 +306,39 @@ Genuinely closed, with content rather than mechanism:
 | C20 | Agent prompt with the copy button theirs does not have |
 | C23 | Prev/next, mounted for the first time — it shipped unmounted, and an unmounted component is one nobody has checked |
 
-Mechanism built, content still thin:
+Mechanism built, coverage partial and unevenly so:
 
-- **C9, C11 (`demo`) and C12 (`regions`)** — the section types, the ten-leaf
-  node vocabulary and the renderers exist. Every leaf renders through
-  SwimmerUIKit, so the demo of 「按钮」 is the button this product ships and a
-  theme change repaints all of them. Coverage is a first tranche, not 281.
+- **C9, C11 (`demo`)** — **64 of 281**. Every leaf renders through SwimmerUIKit,
+  so the demo of 「按钮」 is the button this product ships, and a theme change
+  repaints all of them.
+- **C12 (`regions`)** — **13 of the 19 page-layout and 官网区块 entries**, the
+  group the exercise was designed for.
 - **C10** — the readable chain shipped earlier. Its animated half is not a
   missing type: a `demo` with one state per step *is* the stepper, so what is
   missing is authored steps, not a schema.
+
+The shape of the 64 is more useful than the number. 17 of 21 form controls, 20
+of 21 in 弹窗与提示/导航, 21 of 25 in 内容展示 — and **6 of 23 in 外观/动画/鼠标**,
+which is the group most obviously about *looking* at something.
+
+That gap is the vocabulary's, not the writer's. The ten leaves can say "a
+disabled button" and cannot say "rounder", "a softer shadow", "half opacity",
+"blurred behind", or "this is what hover looks like". The writer skipped rather
+than faked, which was the instruction. Closing it means a bounded enum of visual
+treatments drawn from brand-kit tokens — not free-form styling, which is the
+door the node vocabulary exists to keep shut.
+
+Two smaller honest notes:
+
+- **`divider` became a primitive because content faked it.** The first demo for
+  「分割线」 drew its rule out of box-drawing characters, which renders as literal
+  dashes and reads aloud as a row of hyphens. An author reaching for a
+  workaround is how a missing primitive announces itself.
+- **The form demos approximate.** 「单选框」 is highlighted buttons, not a real
+  radio, because the radio was never exposed as a leaf. It teaches the behaviour
+  correctly — pick one and the other goes out — and the `alt` text describes
+  what is on screen rather than claiming to be a radio. Recognition is weaker
+  than behaviour here, and that is a real cost.
 
 Still open, and not to be counted:
 
@@ -333,6 +357,13 @@ Still open, and not to be counted:
 - **G1–G5**, the Skill group, entirely.
 - **0 of 560 delivered lessons contain a `[[term:]]`.** The catalogue does not
   change this. It is still the gap between a mechanism and a learner.
+- **The practice stream (D1–D6) is built, tested, and mounted by nobody.**
+  `PracticeStream` is exported from `packages/ui` and imported by neither shell,
+  and until now it had nothing to draw on: there were 0 choice exercises in
+  delivered content. There are now 281. Wiring it is the single highest-value
+  thing left, and it is a refactor rather than a mount — the question model is
+  typed to `TermEntry` and would have to become collection-generic first. Doing
+  that badly would be worse than the current honest zero.
 
 ### Two defects only a browser found
 

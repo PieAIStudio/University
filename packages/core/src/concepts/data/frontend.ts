@@ -5002,6 +5002,94 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "三笔订单排成三行，单号、金额、状态各占一列。两笔待配送上下对齐，眼睛顺着状态那一列就能对出来。",
+        caption:
+          "同一套栏目、很多条、要对着比，才用表。只有一条，或每条都是大图加一段话，就别排成表。",
+        states: [
+          {
+            id: "rows",
+            label: "三笔订单",
+            note: "一行一笔。金额、状态上下对齐，才能顺着一列往下扫。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "text",
+                    text: "单号",
+                    muted: true,
+                  },
+                  {
+                    kind: "text",
+                    text: "金额",
+                    muted: true,
+                  },
+                  {
+                    kind: "text",
+                    text: "状态",
+                    muted: true,
+                  },
+                ],
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "text",
+                    text: "A12",
+                  },
+                  {
+                    kind: "text",
+                    text: "38 元",
+                  },
+                  {
+                    kind: "badge",
+                    label: "待配送",
+                    tone: "warning",
+                  },
+                ],
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "text",
+                    text: "A13",
+                  },
+                  {
+                    kind: "text",
+                    text: "80 元",
+                  },
+                  {
+                    kind: "badge",
+                    label: "已送达",
+                    tone: "success",
+                  },
+                ],
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "text",
+                    text: "A15",
+                  },
+                  {
+                    kind: "text",
+                    text: "12 元",
+                  },
+                  {
+                    kind: "badge",
+                    label: "待配送",
+                    tone: "warning",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -5114,6 +5202,30 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "三条物业通知从上往下排，每条一行：标题加时间。没有对齐的金额列，也没有封面大图。",
+        caption: "结构相同的一条条，读过去就行。要比数字用表；图是主角用卡片。",
+        states: [
+          {
+            id: "notices",
+            label: "通知清单",
+            nodes: [
+              {
+                kind: "text",
+                text: "停水通知 · 10:12",
+              },
+              {
+                kind: "text",
+                text: "快递已送达 · 09:40",
+              },
+              {
+                kind: "text",
+                text: "物业费已出 · 昨天",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -5228,6 +5340,43 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "一张课的卡片：上面是工作室照片的占位，下面是课名「周六拉坯体验」、时长和价格，角落有一颗收藏。",
+        caption:
+          "一张卡对应一个对象。整张进详情时，卡上的收藏必须自己挡住这次点击，免得人想收藏却跳走了。",
+        states: [
+          {
+            id: "course",
+            label: "一门课",
+            nodes: [
+              {
+                kind: "stack",
+                children: [
+                  {
+                    kind: "block",
+                    label: "工作室照片",
+                    height: "tall",
+                  },
+                  {
+                    kind: "text",
+                    text: "周六拉坯体验",
+                  },
+                  {
+                    kind: "text",
+                    text: "2 小时 · 168 元",
+                    muted: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "收藏",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -5338,6 +5487,60 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "两种短标记：订单旁边一枚不可点的「已付款」；筛选区两枚带叉的「本周」「待配送」，点叉只取消限制。",
+        caption: "字必须自己能看懂，颜色只帮忙。订单状态不要带叉，人会以为能改这笔订单。",
+        states: [
+          {
+            id: "status",
+            label: "状态",
+            note: "贴在这一笔旁边，说明它是什么。点它不该去改付款。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "text",
+                    text: "订单 A12",
+                  },
+                  {
+                    kind: "badge",
+                    label: "已付款",
+                    tone: "success",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "picked",
+            label: "已选条件",
+            note: "这是你加在列表上的限制。点叉只取消这个条件，订单本身没被改。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "本周 ×",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "待配送 ×",
+                    variant: "secondary",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "现在只看本周且待配送的单。",
+                muted: true,
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -5438,6 +5641,69 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "消息入口旁边的未读数字：有 3 条就显示 3，没有未读时数字消失，超过 99 写成 99+。",
+        caption:
+          "徽标贴在已经有的入口上，报条数或「有新的」。0 不要挂着。本周报名 48 人那种大数字不是这个。",
+        states: [
+          {
+            id: "unread",
+            label: "有未读",
+            note: "3 条就写 3。真正的会贴在角上，这里用旁边的数字代替。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "消息",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "badge",
+                    label: "3",
+                    tone: "danger",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "none",
+            label: "没有未读",
+            note: "0 条就不显示数字。别留一个红 0 天天挂着。",
+            nodes: [
+              {
+                kind: "button",
+                label: "消息",
+                variant: "ghost",
+              },
+            ],
+          },
+          {
+            id: "capped",
+            label: "很多",
+            note: "超过 99 写成 99+。人要知道很多，不必看见精确到一位的 347。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "消息",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "badge",
+                    label: "99+",
+                    tone: "danger",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -5646,6 +5912,55 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "一笔订单的详情：收货人、实付、状态、备注一项一项列出。备注空着时写「未填写」，不是空白。",
+        caption:
+          "一条记录、许多栏目、只看不改。不要放进灰色输入框假装能改。要改地址，另外给修改入口。",
+        states: [
+          {
+            id: "detail",
+            label: "只能看",
+            nodes: [
+              {
+                kind: "text",
+                text: "收货人",
+                muted: true,
+              },
+              {
+                kind: "text",
+                text: "小林",
+              },
+              {
+                kind: "text",
+                text: "实付金额",
+                muted: true,
+              },
+              {
+                kind: "text",
+                text: "38 元",
+              },
+              {
+                kind: "text",
+                text: "状态",
+                muted: true,
+              },
+              {
+                kind: "text",
+                text: "待配送",
+              },
+              {
+                kind: "text",
+                text: "备注",
+                muted: true,
+              },
+              {
+                kind: "text",
+                text: "未填写",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -5753,6 +6068,43 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "同一项本周报名：完整时写清「48 人」和「比上周多 12%」；残缺时只剩一个朝上的箭头和 12%，人数和跟谁比都没有。",
+        caption: "数字、单位、比较对象都要在。只放箭头，这个数什么也没说。",
+        states: [
+          {
+            id: "full",
+            label: "完整",
+            note: "这是什么、多少人、跟谁比，三件都在。",
+            nodes: [
+              {
+                kind: "text",
+                text: "本周体验课报名",
+                muted: true,
+              },
+              {
+                kind: "text",
+                text: "48 人",
+              },
+              {
+                kind: "text",
+                text: "比上周多 12%",
+              },
+            ],
+          },
+          {
+            id: "arrow",
+            label: "只有涨幅",
+            note: "没有 48、没有「跟上周比」，12% 可以是任何东西。",
+            nodes: [
+              {
+                kind: "text",
+                text: "↑12%",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -5863,6 +6215,111 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "一笔报名里三个页签：概览、缴费、请假。点哪个，下面就换成那一组，当前页签一直亮着，人还留在这一笔里。",
+        caption: "几组平起平坐、没有先后。有先后的用步骤条；会换地址的是顶栏栏目，不是页签。",
+        states: [
+          {
+            id: "overview",
+            label: "概览",
+            note: "当前是概览。另外两组还在，只是先不露。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "概览",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "缴费",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "请假",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "小林 · 周六下午场",
+              },
+              {
+                kind: "badge",
+                label: "已交费",
+                tone: "success",
+              },
+            ],
+          },
+          {
+            id: "pay",
+            label: "缴费",
+            note: "还是这一笔报名，下面换成缴费记录。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "概览",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "缴费",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "请假",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "8月18日已付 168 元",
+              },
+            ],
+          },
+          {
+            id: "leave",
+            label: "请假",
+            note: "切到请假再切回来，填过的内容不该丢。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "概览",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "缴费",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "请假",
+                    variant: "primary",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "还没有请假记录",
+                muted: true,
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -5970,6 +6427,104 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "日、周、月三段连在一起。点哪一段，同一批报名就按那天、那周或那月来看，当前那一段一直亮着。",
+        caption: "还是那些数，只换看法。点了立刻变，不要再做一个确定。整组不同内容用页签。",
+        states: [
+          {
+            id: "day",
+            label: "按日",
+            note: "当前是按日看。关着的不是「关」，是另外两种平等的看法。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "日",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "周",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "月",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "8月21日 报名 12 人",
+              },
+            ],
+          },
+          {
+            id: "week",
+            label: "按周",
+            note: "还是报名人数，只是改按这一周合计。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "日",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "周",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "月",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "本周 报名 48 人",
+              },
+            ],
+          },
+          {
+            id: "month",
+            label: "按月",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "日",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "周",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "月",
+                    variant: "primary",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "本月 报名 186 人",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -6071,6 +6626,76 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "两个常见问题先只露问句。点开「如何退款」后答案出现，另一条仍收着；也可以两条一起打开。",
+        caption:
+          "折叠是展开已有内容，可以同时打开好几块。买之前必须看见的退课期限，不要默认藏在里面。",
+        states: [
+          {
+            id: "closed",
+            label: "都收着",
+            note: "先只露问句。整行都能点。",
+            nodes: [
+              {
+                kind: "button",
+                label: "▸ 如何退款",
+                variant: "ghost",
+              },
+              {
+                kind: "button",
+                label: "▸ 怎么找教室",
+                variant: "ghost",
+              },
+            ],
+          },
+          {
+            id: "one",
+            label: "打开一条",
+            note: "点开才看见答案。另一条仍收着。",
+            nodes: [
+              {
+                kind: "button",
+                label: "▾ 如何退款",
+                variant: "ghost",
+              },
+              {
+                kind: "text",
+                text: "开课前 24 小时可全额退。",
+              },
+              {
+                kind: "button",
+                label: "▸ 怎么找教室",
+                variant: "ghost",
+              },
+            ],
+          },
+          {
+            id: "both",
+            label: "都打开",
+            note: "和页签不同：折叠可以同时摊开好几块。",
+            nodes: [
+              {
+                kind: "button",
+                label: "▾ 如何退款",
+                variant: "ghost",
+              },
+              {
+                kind: "text",
+                text: "开课前 24 小时可全额退。",
+              },
+              {
+                kind: "button",
+                label: "▾ 怎么找教室",
+                variant: "ghost",
+              },
+              {
+                kind: "text",
+                text: "地铁 A 口出，直行 200 米。",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -6174,6 +6799,49 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "外卖进度从上到下：还没送到，然后 19:15 骑手已取餐，19:02 商家出餐，18:40 已下单。每一步都写了时间和发生了什么。",
+        caption:
+          "已经发生的事按时间排。不要做成等人去点亮的步骤条。成败也要用字写出来，不能只靠圆点。",
+        states: [
+          {
+            id: "logistics",
+            label: "配送中",
+            nodes: [
+              {
+                kind: "text",
+                text: "还没送到",
+              },
+              {
+                kind: "text",
+                text: "进行中",
+                muted: true,
+              },
+              {
+                kind: "divider",
+              },
+              {
+                kind: "text",
+                text: "19:15  骑手已取餐 · 南山",
+              },
+              {
+                kind: "divider",
+              },
+              {
+                kind: "text",
+                text: "19:02  商家已出餐",
+              },
+              {
+                kind: "divider",
+              },
+              {
+                kind: "text",
+                text: "18:40  已下单",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -6281,6 +6949,58 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "班级资料一层套一层。收着时只看见「作业」和「通知」两个文件夹；展开作业后，下面多出两份文件，缩进表示它们属于作业。",
+        caption: "有下级才有小三角。默认不要全部摊开。没有上下级的一堆文件，用列表。",
+        states: [
+          {
+            id: "folded",
+            label: "作业收着",
+            note: "有下级才有小三角。点它展开，不要默认全摊开。",
+            nodes: [
+              {
+                kind: "text",
+                text: "▾ 2026 春季",
+              },
+              {
+                kind: "text",
+                text: "├ ▸ 作业",
+              },
+              {
+                kind: "text",
+                text: "└ ▸ 通知",
+              },
+            ],
+          },
+          {
+            id: "opened",
+            label: "作业展开",
+            note: "缩进表示属于谁。文件没有小三角，不能再展开。",
+            nodes: [
+              {
+                kind: "text",
+                text: "▾ 2026 春季",
+              },
+              {
+                kind: "text",
+                text: "├ ▾ 作业",
+              },
+              {
+                kind: "text",
+                text: "│　├ 第三次泥板.jpg",
+              },
+              {
+                kind: "text",
+                text: "│　└ 课堂笔记.pdf",
+              },
+              {
+                kind: "text",
+                text: "└ ▸ 通知",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -6378,6 +7098,106 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "同一块主图区域里三张作品照轮着看：正面、底部、侧面。下面写着第几张，到头的那一侧箭头点不了。",
+        caption: "一块地方、好几张、人自己翻。第一张放最能代表的。默认不要自动切。",
+        states: [
+          {
+            id: "first",
+            label: "第1张",
+            note: "第一张要承担最能代表的那面。没翻到的人看不见后面。",
+            nodes: [
+              {
+                kind: "block",
+                label: "拉坯成品 · 正面",
+                height: "tall",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "上一张",
+                    variant: "secondary",
+                    disabled: true,
+                  },
+                  {
+                    kind: "text",
+                    text: "1 / 3",
+                  },
+                  {
+                    kind: "button",
+                    label: "下一张",
+                    variant: "secondary",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "second",
+            label: "第2张",
+            nodes: [
+              {
+                kind: "block",
+                label: "拉坯成品 · 底部",
+                height: "tall",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "上一张",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "text",
+                    text: "2 / 3",
+                  },
+                  {
+                    kind: "button",
+                    label: "下一张",
+                    variant: "secondary",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "third",
+            label: "第3张",
+            note: "到最后一张，「下一张」点不了。只有一张时，箭头和张数都该藏起来。",
+            nodes: [
+              {
+                kind: "block",
+                label: "拉坯成品 · 侧面",
+                height: "tall",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "上一张",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "text",
+                    text: "3 / 3",
+                  },
+                  {
+                    kind: "button",
+                    label: "下一张",
+                    variant: "secondary",
+                    disabled: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -6477,6 +7297,44 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "两种空：还没人报名时写明原因并给出复制链接；筛太严一条都看不见时，说明是条件造成的，并提供清除。",
+        caption: "真的一条都没有，才是空。还在转圈不是空，加载失败也不是空。别都写成「暂无数据」。",
+        states: [
+          {
+            id: "nobody",
+            label: "还没人",
+            note: "请求已经成功，只是还没人报。下一步要写出来。",
+            nodes: [
+              {
+                kind: "text",
+                text: "还没有人报名",
+              },
+              {
+                kind: "button",
+                label: "复制报名链接",
+                variant: "primary",
+              },
+            ],
+          },
+          {
+            id: "filtered",
+            label: "筛空了",
+            note: "数据还在，是条件太严。别让人以为被删了。",
+            nodes: [
+              {
+                kind: "text",
+                text: "没有同时满足这两个条件的任务",
+              },
+              {
+                kind: "button",
+                label: "清除条件",
+                variant: "secondary",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -6579,6 +7437,41 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "一块先留好的照片位置。图在的时候这块是「周六拉坯台实拍」；没出来时位置还在，说明文字顶上，页不会突然变矮。",
+        caption: "位置先定，图按比例裁进去，宁可切边不要拉扁脸。图有信息时，说明要能单独成立。",
+        states: [
+          {
+            id: "ready",
+            label: "图在",
+            note: "高宽先留好。图还没到，这块也占着，整页才不会突然往下跳。",
+            nodes: [
+              {
+                kind: "block",
+                label: "周六拉坯台实拍",
+                height: "tall",
+              },
+            ],
+          },
+          {
+            id: "broken",
+            label: "没出来",
+            note: "失败时位置还在，说明文字顶上。不要裂成一块破碎图。",
+            nodes: [
+              {
+                kind: "block",
+                label: "图没出来",
+                height: "tall",
+              },
+              {
+                kind: "text",
+                text: "周六拉坯台实拍",
+                muted: true,
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -6683,6 +7576,101 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "同一份学生证照片的三种样子：传到 66% 能取消，没传上能重试或删除，成功后仍能看见文件名和大小。",
+        caption: "一份文件一项。不要收成一句「已选择 3 个文件」——失败那份会被藏住。",
+        states: [
+          {
+            id: "busy",
+            label: "上传中",
+            note: "正在传要能取消。传到一半把入口收起来，失败那份会看不见。",
+            nodes: [
+              {
+                kind: "text",
+                text: "学生证.jpg",
+              },
+              {
+                kind: "text",
+                text: "1.2 MB",
+                muted: true,
+              },
+              {
+                kind: "progress",
+                label: "上传中",
+                value: 66,
+                max: 100,
+              },
+              {
+                kind: "button",
+                label: "取消",
+                variant: "secondary",
+              },
+            ],
+          },
+          {
+            id: "failed",
+            label: "没传上",
+            note: "失败要留下这一项，并能重试或删除。不要显示成已上传。",
+            nodes: [
+              {
+                kind: "text",
+                text: "学生证.jpg",
+              },
+              {
+                kind: "text",
+                text: "1.2 MB",
+                muted: true,
+              },
+              {
+                kind: "badge",
+                label: "没传上",
+                tone: "danger",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "重试",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "删除",
+                    variant: "danger",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "done",
+            label: "已完成",
+            note: "成功后文件名还在。即使是图片，也不要只留预览、藏掉名字。",
+            nodes: [
+              {
+                kind: "text",
+                text: "学生证.jpg",
+              },
+              {
+                kind: "text",
+                text: "1.2 MB",
+                muted: true,
+              },
+              {
+                kind: "badge",
+                label: "已上传",
+                tone: "success",
+              },
+              {
+                kind: "button",
+                label: "删除",
+                variant: "ghost",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -6885,6 +7873,27 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "一句学员原话单独成块，下面写着王敏、哪一期课、本人同意公开。没有头像，也没有改写成广告词。",
+        caption: "引用的力量来自能核对。没有来源、没有授权，先别放。原话不漂亮也别改。",
+        states: [
+          {
+            id: "line",
+            label: "原话",
+            nodes: [
+              {
+                kind: "text",
+                text: "周六那节课我第一次跟上完整的序列。",
+              },
+              {
+                kind: "text",
+                text: "王敏 · 2026 年 3 月体验课 · 本人同意公开",
+                muted: true,
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -6986,6 +7995,67 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "一段两分钟演示：封面写内容和时长，点播放才开始，默认不出声；播放中出现进度、暂停和静音。",
+        caption: "打开页面不要自动出声。关键步骤还要写在旁边：视频卡住，人仍能按字做完。",
+        states: [
+          {
+            id: "cover",
+            label: "未播放",
+            note: "先让人判断值不值得看。写时长。点了才出声。",
+            nodes: [
+              {
+                kind: "block",
+                label: "从地铁 A 口走到前台",
+                height: "tall",
+              },
+              {
+                kind: "text",
+                text: "2:18",
+                muted: true,
+              },
+              {
+                kind: "button",
+                label: "播放",
+                variant: "primary",
+              },
+            ],
+          },
+          {
+            id: "playing",
+            label: "播放中",
+            note: "暂停、进度、声音开关都要在。默认静音。",
+            nodes: [
+              {
+                kind: "block",
+                label: "从地铁 A 口走到前台",
+                height: "tall",
+              },
+              {
+                kind: "progress",
+                label: "播放进度",
+                value: 40,
+                max: 100,
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "暂停",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "静音",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -7089,6 +8159,101 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "同一句「放门口」：发出去显示发送中；网络断开时这条还在并标着没发出去，能重试；成功后对面才出现回复。",
+        caption: "失败不要删掉原文，也不要先假装对方已经回了「好的」。界面顺，不证明话送到了。",
+        states: [
+          {
+            id: "sending",
+            label: "发送中",
+            note: "点了发送，这条先进入列表。还没到对面。",
+            nodes: [
+              {
+                kind: "text",
+                text: "放门口",
+              },
+              {
+                kind: "text",
+                text: "发送中…",
+                muted: true,
+              },
+              {
+                kind: "input",
+                placeholder: "输入消息",
+              },
+              {
+                kind: "button",
+                label: "发送",
+                variant: "primary",
+              },
+            ],
+          },
+          {
+            id: "failed",
+            label: "没发出去",
+            note: "原文还在，标明没发出去，能重试。人不必从头再打一遍。",
+            nodes: [
+              {
+                kind: "text",
+                text: "放门口",
+              },
+              {
+                kind: "badge",
+                label: "没发出去",
+                tone: "danger",
+              },
+              {
+                kind: "button",
+                label: "重试",
+                variant: "secondary",
+              },
+              {
+                kind: "input",
+                placeholder: "输入消息",
+              },
+              {
+                kind: "button",
+                label: "发送",
+                variant: "primary",
+              },
+            ],
+          },
+          {
+            id: "sent",
+            label: "已送达",
+            note: "成功后才出现对面的回复。不要在失败时先插一条假的「好的」。",
+            nodes: [
+              {
+                kind: "text",
+                text: "放门口",
+              },
+              {
+                kind: "text",
+                text: "我 · 已送达",
+                muted: true,
+              },
+              {
+                kind: "text",
+                text: "好的，已放门口",
+              },
+              {
+                kind: "text",
+                text: "骑手 · 19:21",
+                muted: true,
+              },
+              {
+                kind: "input",
+                placeholder: "输入消息",
+              },
+              {
+                kind: "button",
+                label: "发送",
+                variant: "primary",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -7190,6 +8355,95 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "四笔订单点「待配送」后只剩两笔，另外两笔被藏起；再点「全部」，四笔都回来。条数变了，不是换了先后。",
+        caption: "筛选会藏行，列表变短。去掉条件，那些行还在。只换先后、一条都不少，那是排序。",
+        states: [
+          {
+            id: "all",
+            label: "全部",
+            note: "四笔都在。还没有加限制。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "全部",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "待配送",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "已送达",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "A12 · 38 元 · 待配送",
+              },
+              {
+                kind: "text",
+                text: "A13 · 80 元 · 已送达",
+              },
+              {
+                kind: "text",
+                text: "A15 · 12 元 · 待配送",
+              },
+              {
+                kind: "text",
+                text: "A16 · 45 元 · 已送达",
+              },
+            ],
+          },
+          {
+            id: "pending",
+            label: "待配送",
+            note: "只剩两笔。另外两笔被藏了，去掉条件还会回来。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "全部",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "待配送",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "已送达",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "A12 · 38 元 · 待配送",
+              },
+              {
+                kind: "text",
+                text: "A15 · 12 元 · 待配送",
+              },
+              {
+                kind: "text",
+                text: "另外 2 笔被藏了，还在。",
+                muted: true,
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -7502,6 +8756,80 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "同样三笔报价：按时间时今天那笔在最上；改按金额后 80 元那笔到最上，12 元那笔到底，三笔还在。",
+        caption: "排序一条都不少，只换先后。想看不见小单，那是筛选，别假装是在排序。",
+        states: [
+          {
+            id: "by-time",
+            label: "按时间",
+            note: "最新在上。3 笔都在。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "时间 ↓",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "金额",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "A16 · 12 元 · 今天",
+              },
+              {
+                kind: "text",
+                text: "A13 · 80 元 · 昨天",
+              },
+              {
+                kind: "text",
+                text: "A12 · 38 元 · 周一",
+              },
+            ],
+          },
+          {
+            id: "by-amount",
+            label: "按金额",
+            note: "大的在上。还是 3 笔，12 元那笔在最下，没被藏掉。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "时间",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "金额 ↓",
+                    variant: "primary",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "A13 · 80 元 · 昨天",
+              },
+              {
+                kind: "text",
+                text: "A12 · 38 元 · 周一",
+              },
+              {
+                kind: "text",
+                text: "A16 · 12 元 · 今天",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -7614,6 +8942,61 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "报名表上方钉着一条「手机号还没填」，人不用关任何盒子就能改那一格；号码填上之后，这条才消失。",
+        caption: "该一直看着的问题钉在现场。做完了报一声，用会自己消失的短消息，别用这种。",
+        states: [
+          {
+            id: "missing",
+            label: "还没填",
+            note: "提示留着，表还能改。不要做成必须先点确定才能回去。",
+            nodes: [
+              {
+                kind: "badge",
+                label: "还没填",
+                tone: "danger",
+              },
+              {
+                kind: "text",
+                text: "手机号还没填",
+              },
+              {
+                kind: "text",
+                text: "需要 11 位才能联系到你。",
+                muted: true,
+              },
+              {
+                kind: "input",
+                label: "手机号",
+                placeholder: "11 位手机号",
+                invalid: true,
+              },
+              {
+                kind: "button",
+                label: "提交报名",
+                variant: "primary",
+              },
+            ],
+          },
+          {
+            id: "filled",
+            label: "填上了",
+            note: "问题过去了，这条才消失。不是过两秒自己飞走。",
+            nodes: [
+              {
+                kind: "input",
+                label: "手机号",
+                value: "13800138000",
+              },
+              {
+                kind: "button",
+                label: "提交报名",
+                variant: "primary",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -7725,6 +9108,40 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "点了加入购物车之后出现一句「已加入购物车」，过一两秒自己消失；加菜的按钮一直都能点，不用再点确定。",
+        caption: "看一眼就够、还要接着点，才用这种。缺手机号这种没了会做错的话，不要做成会飞走的。",
+        states: [
+          {
+            id: "shown",
+            label: "闪出来",
+            note: "人不需要再点一次。真正的会浮在角落，这里用按钮旁边的一句代替。",
+            nodes: [
+              {
+                kind: "button",
+                label: "加入购物车",
+                variant: "primary",
+              },
+              {
+                kind: "text",
+                text: "已加入购物车",
+              },
+            ],
+          },
+          {
+            id: "gone",
+            label: "自己没了",
+            note: "过一两秒自己走。人还在点菜这一页。回头翻找不到这句话，所以取件码不能放这里。",
+            nodes: [
+              {
+                kind: "button",
+                label: "加入购物车",
+                variant: "primary",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -7832,6 +9249,62 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "消息列表里两条还在：快递入柜带着取件码，停水通知写着明天九点。没看过旁边有数字；看过了数字消失，内容和码都还留着。",
+        caption: "当时你可能不在，所以必须留下。会自己消失的那句「已加入购物车」不是这个。",
+        states: [
+          {
+            id: "unread",
+            label: "没看过",
+            note: "数字说有几条新的。点开要能落到那件事，不要只写「您有一条新消息」。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "消息",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "badge",
+                    label: "2",
+                    tone: "danger",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "快递已入柜 · 取件码 3184",
+              },
+              {
+                kind: "text",
+                text: "明日 9 点停水 · 今天 18:02",
+              },
+            ],
+          },
+          {
+            id: "read",
+            label: "看过了",
+            note: "标记消掉。取件码还在，晚上还能翻出来。这就是和轻提示不一样的地方。",
+            nodes: [
+              {
+                kind: "button",
+                label: "消息",
+                variant: "ghost",
+              },
+              {
+                kind: "text",
+                text: "快递已入柜 · 取件码 3184",
+              },
+              {
+                kind: "text",
+                text: "明日 9 点停水 · 今天 18:02",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -7944,6 +9417,74 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "课文还在这一页。点开证据后出现一块「源码证据」盒子，背后课名变淡，盒子里有关闭和上一条下一条；关掉以后人还在这节课。",
+        caption: "短任务、上下文还在、不关就点不了后面。已复制这种小事不要锁死整页。",
+        states: [
+          {
+            id: "closed",
+            label: "关上",
+            note: "人还在这节课。证据是一个按钮，还没打开。",
+            nodes: [
+              {
+                kind: "text",
+                text: "这一课：按钮是什么",
+              },
+              {
+                kind: "block",
+                label: "课文",
+                height: "tall",
+              },
+              {
+                kind: "button",
+                label: "源码证据",
+                variant: "secondary",
+              },
+            ],
+          },
+          {
+            id: "open",
+            label: "打开",
+            note: "背后变暗，课文点不了。关掉还在原地，地址栏通常也不变。",
+            nodes: [
+              {
+                kind: "text",
+                text: "这一课：按钮是什么",
+                muted: true,
+              },
+              {
+                kind: "text",
+                text: "源码证据",
+              },
+              {
+                kind: "block",
+                label: "那几行代码",
+                height: "tall",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "上一条",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "关闭",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "下一条",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -8059,6 +9600,78 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "词义索引搜出两条命中。点「按钮」后旁边出现释义，底下的搜索词和另一条命中还在；关掉面板，人还在这一串结果上。",
+        caption: "先瞄一眼、随时能关、列表还在。必须先回答完才能继续的，用挡住整页的弹窗。",
+        states: [
+          {
+            id: "list",
+            label: "只列表",
+            note: "人想先确认是不是要找的词，还不想离开这串结果。",
+            nodes: [
+              {
+                kind: "input",
+                label: "搜索词义",
+                value: "按钮",
+              },
+              {
+                kind: "button",
+                label: "Button 按钮",
+                variant: "ghost",
+              },
+              {
+                kind: "button",
+                label: "Badge 徽标",
+                variant: "ghost",
+              },
+            ],
+          },
+          {
+            id: "open",
+            label: "滑出来",
+            note: "同一块面板看释义。再点另一条会换内容，不要叠出第二块。",
+            nodes: [
+              {
+                kind: "input",
+                label: "搜索词义",
+                value: "按钮",
+              },
+              {
+                kind: "button",
+                label: "Button 按钮",
+                variant: "primary",
+              },
+              {
+                kind: "button",
+                label: "Badge 徽标",
+                variant: "ghost",
+              },
+              {
+                kind: "divider",
+              },
+              {
+                kind: "text",
+                text: "点一下就做事的那块区域。",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "查看完整页",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "关闭",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -8168,6 +9781,64 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "评论旁边的删除。点了先在这个按钮旁问「确定删除这条评论？」，给「删除评论」和「取消」；问的时候人还看得见要删的是哪一句。",
+        caption:
+          "先问再动手。点亮星标这种改得回来的，不要问。清空整个名单这种后果很大的，用挡住整页的弹窗。",
+        states: [
+          {
+            id: "idle",
+            label: "平常",
+            note: "还没问。这一条还在。",
+            nodes: [
+              {
+                kind: "text",
+                text: "周六那节我第一次跟上。",
+              },
+              {
+                kind: "button",
+                label: "删除",
+                variant: "danger",
+              },
+            ],
+          },
+          {
+            id: "ask",
+            label: "再问一句",
+            note: "贴在刚才那个按钮旁。两个按钮不要都叫确定：一个叫删除评论，一个叫取消。",
+            nodes: [
+              {
+                kind: "text",
+                text: "周六那节我第一次跟上。",
+              },
+              {
+                kind: "button",
+                label: "删除",
+                variant: "danger",
+              },
+              {
+                kind: "text",
+                text: "确定删除这条评论？删了撤不回。",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "删除评论",
+                    variant: "danger",
+                  },
+                  {
+                    kind: "button",
+                    label: "取消",
+                    variant: "secondary",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -8281,6 +9952,58 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "课文里的英文词 Button。旁边出现小卡片，有中文意思，还有「朗读」和「还不熟」；点一下钉住以后，鼠标移开卡片还在，才能去点这些按钮。",
+        caption: "里面有能点的按钮，就必须允许钉住。只有一句、没有按钮的，用文字提示。",
+        states: [
+          {
+            id: "hidden",
+            label: "没出卡",
+            note: "划过去不要一张张闪。要停稳才出。",
+            nodes: [
+              {
+                kind: "text",
+                text: "点一下就做事的控件叫 Button。",
+              },
+            ],
+          },
+          {
+            id: "pinned",
+            label: "钉住了",
+            note: "鼠标移开卡片还在，才能去点朗读。没有按钮的那一句说明，不是这种。",
+            nodes: [
+              {
+                kind: "text",
+                text: "点一下就做事的控件叫 Button。",
+              },
+              {
+                kind: "text",
+                text: "按钮",
+              },
+              {
+                kind: "text",
+                text: "点一下就做事的那块区域。",
+                muted: true,
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "朗读",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "还不熟",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -8390,6 +10113,58 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "「预计 12:40 送达」旁边一个问号。平常只看见问号；停上去才出现一句「按骑手当前速度估算，不是承诺」，里面没有按钮，移开就没。",
+        caption: "补一句「这是什么」。按钮的名字要一直写在按钮上，别只藏在停上去才出的说明里。",
+        states: [
+          {
+            id: "idle",
+            label: "平常",
+            note: "问号一直在。送达时间本身也看得见。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "text",
+                    text: "预计 12:40 送达",
+                  },
+                  {
+                    kind: "button",
+                    label: "？",
+                    variant: "ghost",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "shown",
+            label: "停上去",
+            note: "只有一句，没有按钮。移开就消失。朗读这种能点的东西放不进来。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "text",
+                    text: "预计 12:40 送达",
+                  },
+                  {
+                    kind: "button",
+                    label: "？",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "按骑手当前速度估算，不是承诺。",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -8493,6 +10268,78 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "作品照片上传：一条杠走到 37%，旁边写着正在上传；传完走到 100%；失败时杠停在 37% 并写出原因，可以重试。",
+        caption: "能说出做到哪了才用杠。说不清还要多久，写一句正在做什么，别画假的 99%。",
+        states: [
+          {
+            id: "busy",
+            label: "上传中",
+            note: "杠在动，数字也在。人能判断还要不要等。",
+            nodes: [
+              {
+                kind: "text",
+                text: "作品照片.jpg",
+              },
+              {
+                kind: "progress",
+                label: "正在上传作品照片",
+                value: 37,
+                max: 100,
+              },
+            ],
+          },
+          {
+            id: "done",
+            label: "传完了",
+            note: "走到 100。成功后还要能认出传上去的是哪一张。",
+            nodes: [
+              {
+                kind: "text",
+                text: "作品照片.jpg",
+              },
+              {
+                kind: "progress",
+                label: "已上传",
+                value: 100,
+                max: 100,
+              },
+              {
+                kind: "badge",
+                label: "已上传",
+                tone: "success",
+              },
+            ],
+          },
+          {
+            id: "failed",
+            label: "没传上",
+            note: "停住并说原因。不要卡在 99% 装还在传。",
+            nodes: [
+              {
+                kind: "text",
+                text: "作品照片.jpg",
+              },
+              {
+                kind: "progress",
+                label: "上传中断",
+                value: 37,
+                max: 100,
+              },
+              {
+                kind: "badge",
+                label: "网断了",
+                tone: "danger",
+              },
+              {
+                kind: "button",
+                label: "重试",
+                variant: "primary",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -8601,6 +10448,60 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "订单表还在取的时候，先用三行灰条把表的形状撑住；数据到了，灰条换成真订单，行的位置差不多还在原处。",
+        caption: "还在取才用灰块。取完一条都没有，要说空；失败了要说失败。别都写成暂无数据。",
+        states: [
+          {
+            id: "loading",
+            label: "还在取",
+            note: "灰块的形状要像即将出现的行。先撑三五行就够。",
+            nodes: [
+              {
+                kind: "text",
+                text: "单号 · 状态",
+                muted: true,
+              },
+              {
+                kind: "block",
+                height: "short",
+              },
+              {
+                kind: "block",
+                height: "short",
+              },
+              {
+                kind: "block",
+                height: "short",
+              },
+            ],
+          },
+          {
+            id: "ready",
+            label: "到了",
+            note: "换成真行。高度不要猛跳，人正在点的位置才不会跑掉。",
+            nodes: [
+              {
+                kind: "text",
+                text: "单号 · 状态",
+                muted: true,
+              },
+              {
+                kind: "text",
+                text: "A12 · 待配送",
+              },
+              {
+                kind: "text",
+                text: "A13 · 已送达",
+              },
+              {
+                kind: "text",
+                text: "A15 · 待配送",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -8713,6 +10614,64 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "报名交完后离开原表：成功页写清周日下午场和自带围裙，主按钮去查看报名；没成页写余额不足，给换一种方式支付。两页都不再出现提交报名。",
+        caption: "一整步走完就换页。成功了还停在原表上，刷新可能再交一次。",
+        states: [
+          {
+            id: "ok",
+            label: "成功",
+            note: "关键事实留下能截图。不要只画一个对勾不写字。",
+            nodes: [
+              {
+                kind: "badge",
+                label: "报名成功",
+                tone: "success",
+              },
+              {
+                kind: "text",
+                text: "周日下午场 · 自带围裙",
+              },
+              {
+                kind: "text",
+                text: "教室在地铁 A 口直行 200 米。",
+                muted: true,
+              },
+              {
+                kind: "button",
+                label: "查看我的报名",
+                variant: "primary",
+              },
+              {
+                kind: "button",
+                label: "再报一位",
+                variant: "secondary",
+              },
+            ],
+          },
+          {
+            id: "fail",
+            label: "没成",
+            note: "说原因，给能做的下一步。不要只写失败。",
+            nodes: [
+              {
+                kind: "badge",
+                label: "支付未完成",
+                tone: "danger",
+              },
+              {
+                kind: "text",
+                text: "余额不足",
+              },
+              {
+                kind: "button",
+                label: "换一种方式支付",
+                variant: "primary",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -8935,6 +10894,80 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "顶上一排去处：查词、收藏、复习。当前在查词时那一项亮着，下面是搜索；切到复习，亮的换成复习，下面变成到期的卡片。",
+        caption: "菜单管去处。复制、提交这种当下就做的事不要塞进来冒充栏目。",
+        states: [
+          {
+            id: "terms",
+            label: "查词",
+            note: "当前项要能看出来。查词必须从任何地方够得着。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "查词",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "收藏",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "复习",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "input",
+                label: "搜索词义",
+                placeholder: "试试「点一下就做事」",
+              },
+            ],
+          },
+          {
+            id: "review",
+            label: "复习",
+            note: "去了另一个地方。不是同一笔报名里换一组内容——那是页签。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "查词",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "收藏",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "复习",
+                    variant: "primary",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "3 张到期",
+              },
+              {
+                kind: "button",
+                label: "开始复习",
+                variant: "secondary",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -9038,6 +11071,65 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "词条页顶上「词义索引 / Button」：前面「词义索引」能点回去，当前的 Button 不是链接；点回去后是那一串搜索结果，不是浏览器返回的来时路。",
+        caption: "面包屑给结构上的上一级。从复习跳进来再按返回，可能回到复习，回不到索引。",
+        states: [
+          {
+            id: "entry",
+            label: "词条页",
+            note: "最后一段是当前词，点了只会刷新这一页，所以不要做成链接。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "词义索引",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "text",
+                    text: "/",
+                  },
+                  {
+                    kind: "text",
+                    text: "Button",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "按钮是点一下就做事的控件。",
+              },
+            ],
+          },
+          {
+            id: "index",
+            label: "回到索引",
+            note: "上一级是索引这一层，不管你刚才从哪来。",
+            nodes: [
+              {
+                kind: "text",
+                text: "词义索引",
+              },
+              {
+                kind: "input",
+                label: "搜索词义",
+                value: "按钮",
+              },
+              {
+                kind: "text",
+                text: "Button 按钮",
+              },
+              {
+                kind: "text",
+                text: "Badge 徽标",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -9150,6 +11242,111 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "200 笔订单拆成页。第 1 页是 A12、A13、A14，「上一页」点不了；第 2 页换成 A32、A33、A34，底下仍写共 200 笔，一条都没被藏掉。",
+        caption: "分页一次看一截，总数不变。想看不见某些单，那是筛选。",
+        states: [
+          {
+            id: "one",
+            label: "第1页",
+            note: "第一页时上一页不能点。要能看见共几笔。",
+            nodes: [
+              {
+                kind: "text",
+                text: "A12 · 待配送",
+              },
+              {
+                kind: "text",
+                text: "A13 · 已送达",
+              },
+              {
+                kind: "text",
+                text: "A14 · 待配送",
+              },
+              {
+                kind: "text",
+                text: "共 200 笔 / 第 1 页",
+                muted: true,
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "上一页",
+                    variant: "secondary",
+                    disabled: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "1",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "2",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "下一页",
+                    variant: "secondary",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "two",
+            label: "第2页",
+            note: "换了一截，200 笔还在。不是把已送达藏起来了。",
+            nodes: [
+              {
+                kind: "text",
+                text: "A32 · 已送达",
+              },
+              {
+                kind: "text",
+                text: "A33 · 待配送",
+              },
+              {
+                kind: "text",
+                text: "A34 · 待配送",
+              },
+              {
+                kind: "text",
+                text: "共 200 笔 / 第 2 页",
+                muted: true,
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "上一页",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "1",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "2",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "下一页",
+                    variant: "secondary",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -9261,6 +11458,155 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "b",
       },
+      demo: {
+        alt: "陶艺课报名三步：选场次、填信息、去支付。当前步亮着，还没到的步点不了；最后一步才出现提交并支付，回到上一步时姓名还在。",
+        caption: "必须按顺序做完才用步骤条。谁先填都无所谓的三个格子，不要拆成三步。",
+        states: [
+          {
+            id: "pick",
+            label: "选场次",
+            note: "每步只问这一步的问题。还没到的步不要假装能点。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "选场次",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "填信息",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                  {
+                    kind: "button",
+                    label: "去支付",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                ],
+              },
+              {
+                kind: "button",
+                label: "周日下午场",
+                variant: "primary",
+              },
+              {
+                kind: "button",
+                label: "下一步",
+                variant: "secondary",
+              },
+            ],
+          },
+          {
+            id: "fill",
+            label: "填信息",
+            note: "上一步可以点回去。已填的不要清掉。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "选场次",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "填信息",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "去支付",
+                    variant: "ghost",
+                    disabled: true,
+                  },
+                ],
+              },
+              {
+                kind: "input",
+                label: "姓名",
+                value: "小林",
+              },
+              {
+                kind: "input",
+                label: "手机号",
+                value: "13800138000",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "上一步",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "下一步",
+                    variant: "primary",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "pay",
+            label: "去支付",
+            note: "最后一步才出现提交并支付。中间几步不要过早提交。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "选场次",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "填信息",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "去支付",
+                    variant: "primary",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "周日下午场 · 小林",
+              },
+              {
+                kind: "text",
+                text: "168 元",
+                muted: true,
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "上一步",
+                    variant: "secondary",
+                  },
+                  {
+                    kind: "button",
+                    label: "提交并支付",
+                    variant: "primary",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -9367,6 +11713,80 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "订单行上「发货」一直看得见。点「更多」才垂出复制单号、联系骑手、取消订单；取消在最下并且是危险样子。点完清单关掉。",
+        caption:
+          "次要动作才收进更多。一屏里最想让人点的那个不要藏。表单里选省份不是这个，那是选择器。",
+        states: [
+          {
+            id: "closed",
+            label: "收着",
+            note: "主动作留在行上。",
+            nodes: [
+              {
+                kind: "text",
+                text: "订单 A12 · 38 元",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "发货",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "更多",
+                    variant: "secondary",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "open",
+            label: "点开",
+            note: "一列动作，点完即关。里面不要放输入框。",
+            nodes: [
+              {
+                kind: "text",
+                text: "订单 A12 · 38 元",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "发货",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "更多",
+                    variant: "secondary",
+                  },
+                ],
+              },
+              {
+                kind: "button",
+                label: "复制单号",
+                variant: "ghost",
+              },
+              {
+                kind: "button",
+                label: "联系骑手",
+                variant: "ghost",
+              },
+              {
+                kind: "button",
+                label: "取消订单",
+                variant: "danger",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -9476,6 +11896,83 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         ],
         correctOptionId: "a",
       },
+      demo: {
+        alt: "报名须知目录点「退费规则」后，画面落到退费那一段，地址从「报名须知」变成「报名须知#退费」；上课须知仍在同一页里，只是先不在眼前。",
+        caption:
+          "还在这一页，只是滚到某一段。地址能复制给别人。普通字绑点击却不改地址，发出去会落在顶部。",
+        states: [
+          {
+            id: "toc",
+            label: "在顶部",
+            note: "目录必须是真链接。现在还在须知开头。",
+            nodes: [
+              {
+                kind: "text",
+                text: "地址 · 报名须知",
+                muted: true,
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "上课须知",
+                    variant: "primary",
+                  },
+                  {
+                    kind: "button",
+                    label: "退费规则",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "上课须知",
+              },
+              {
+                kind: "text",
+                text: "请提前 10 分钟到。",
+              },
+            ],
+          },
+          {
+            id: "refund",
+            label: "退费段",
+            note: "地址后面带上记号。发给别人，打开就落在这一段。",
+            nodes: [
+              {
+                kind: "text",
+                text: "地址 · 报名须知#退费",
+                muted: true,
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "上课须知",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "退费规则",
+                    variant: "primary",
+                  },
+                ],
+              },
+              {
+                kind: "text",
+                text: "退费规则",
+              },
+              {
+                kind: "text",
+                text: "开课前 24 小时可全额退。",
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -9578,6 +12075,56 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "物业通知第一屏没有回到顶部；刷过两屏后才出现「回到顶部」，点了回到最上面，按钮再次隐藏。",
+        caption: "滚长了才需要。短页从第一屏就钉一个，是噪音，还可能挡住提交。",
+        states: [
+          {
+            id: "top",
+            label: "还没滚",
+            note: "还在最上面，这个按钮不该出现。",
+            nodes: [
+              {
+                kind: "text",
+                text: "停水通知 · 10:12",
+              },
+              {
+                kind: "text",
+                text: "电梯检修 · 昨天",
+              },
+              {
+                kind: "text",
+                text: "快递已入柜 · 前天",
+              },
+            ],
+          },
+          {
+            id: "down",
+            label: "滚下去",
+            note: "已经过了大约两屏。按钮上要有字，不要只画谁都不认得的箭头。",
+            nodes: [
+              {
+                kind: "text",
+                text: "包裹超时 · 上月",
+              },
+              {
+                kind: "text",
+                text: "绿化修剪 · 上月",
+              },
+              {
+                kind: "text",
+                text: "已经刷过两屏。",
+                muted: true,
+              },
+              {
+                kind: "button",
+                label: "回到顶部",
+                variant: "secondary",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -9683,6 +12230,81 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "a",
+      },
+      demo: {
+        alt: "报名页顶上有一排栏目。用鼠标时看不见「跳到报名表」；键盘往下走的第一下它出现在最上面，点了落到姓名那一格，中间不必把栏目走完。",
+        caption: "给键盘开的近道。不是回到顶部，也不是把栏目拆掉。",
+        states: [
+          {
+            id: "mouse",
+            label: "看不见",
+            note: "鼠标用户不必看它。栏目还在。",
+            nodes: [
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "课程",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "价格",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "关于",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "input",
+                label: "姓名",
+                placeholder: "和身份证一致",
+              },
+            ],
+          },
+          {
+            id: "first",
+            label: "第一下",
+            note: "键盘往下走的第一下，这条必须出现在最上面，能看见、能点。",
+            nodes: [
+              {
+                kind: "button",
+                label: "跳到报名表",
+                variant: "secondary",
+              },
+              {
+                kind: "row",
+                children: [
+                  {
+                    kind: "button",
+                    label: "课程",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "价格",
+                    variant: "ghost",
+                  },
+                  {
+                    kind: "button",
+                    label: "关于",
+                    variant: "ghost",
+                  },
+                ],
+              },
+              {
+                kind: "input",
+                label: "姓名",
+                placeholder: "和身份证一致",
+              },
+            ],
+          },
+        ],
       },
     },
   },
@@ -9795,6 +12417,66 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
           },
         ],
         correctOptionId: "b",
+      },
+      demo: {
+        alt: "词义索引的搜索框。空着时浅色提示教人怎么搜；打「点一下就做事」命中 Button；打对不上的字则承认没有找到，并留下刚才搜的词。",
+        caption: "打字去找，不必先猜分类。点「待配送」那种现成条件是筛选，不是搜索。",
+        states: [
+          {
+            id: "empty",
+            label: "空着",
+            note: "框外有名字。框里的例子比「请输入关键字」有用。",
+            nodes: [
+              {
+                kind: "input",
+                label: "搜索词义",
+                placeholder: "试试「点一下就做事」",
+              },
+            ],
+          },
+          {
+            id: "hit",
+            label: "打中文",
+            note: "不会拼 button 也能中。命中的是释义和初学者的说法，不只是英文词。",
+            nodes: [
+              {
+                kind: "input",
+                label: "搜索词义",
+                value: "点一下就做事",
+              },
+              {
+                kind: "text",
+                text: "Button 按钮",
+              },
+              {
+                kind: "text",
+                text: "点一下就做事的那块区域。",
+                muted: true,
+              },
+            ],
+          },
+          {
+            id: "miss",
+            label: "没有",
+            note: "零结果要承认。不要一片白，也不要转个没完。",
+            nodes: [
+              {
+                kind: "input",
+                label: "搜索词义",
+                value: "水电费发票",
+              },
+              {
+                kind: "text",
+                text: "没有找到「水电费发票」相关的词义",
+              },
+              {
+                kind: "text",
+                text: "可以换中文，或直接描述想说的那句话。",
+                muted: true,
+              },
+            ],
+          },
+        ],
       },
     },
   },
