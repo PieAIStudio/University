@@ -43,7 +43,13 @@ export type View =
   // 防止 AI 味儿. A second collection on the same entry system, so it gets a
   // route of the same shape rather than a second kind of page.
   | { readonly kind: "flavour" }
-  | { readonly kind: "flavour-entry"; readonly id: string };
+  | { readonly kind: "flavour-entry"; readonly id: string }
+  // 概念图解. The third collection, and the routes are the same two shapes for
+  // the third time — index and entry. When a fourth collection arrives and this
+  // block is copied a fourth time, that is the moment to make it generic; three
+  // is not yet enough evidence to know what the general case looks like.
+  | { readonly kind: "concepts" }
+  | { readonly kind: "concept"; readonly id: string };
 
 export const WORLD: View = { kind: "world" };
 
@@ -63,6 +69,10 @@ export function toHash(view: View): string {
       return "#/flavour";
     case "flavour-entry":
       return `#/flavour/${enc(view.id)}`;
+    case "concepts":
+      return "#/concepts";
+    case "concept":
+      return `#/concepts/${enc(view.id)}`;
     case "course":
       return `#/${enc(view.studyId)}/${enc(view.courseId)}`;
     case "lesson":
@@ -89,6 +99,10 @@ export function fromHash(hash: string): View {
   if (parts.length === 1 && parts[0] === "flavour") return { kind: "flavour" };
   if (parts.length === 2 && parts[0] === "flavour" && parts[1]) {
     return { kind: "flavour-entry", id: parts[1] };
+  }
+  if (parts.length === 1 && parts[0] === "concepts") return { kind: "concepts" };
+  if (parts.length === 2 && parts[0] === "concepts" && parts[1]) {
+    return { kind: "concept", id: parts[1] };
   }
   if (parts.length === 2 && parts[0] === "terms" && parts[1]) {
     return { kind: "term", senseId: parts[1] };

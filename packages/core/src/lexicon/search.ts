@@ -1,3 +1,10 @@
+import {
+  MATCH_THRESHOLD,
+  foldSearchText,
+  scoreFields,
+  tokenize,
+  type WeightedField,
+} from "../search/tokens.js";
 import type { LexiconEntry, LexiconTrack } from "../domain/schemas.js";
 
 /**
@@ -19,7 +26,7 @@ export interface LexiconIndex {
 
 interface IndexedLexiconRecord {
   readonly entry: LexiconEntry;
-  readonly fields: readonly string[];
+  readonly fields: readonly WeightedField[];
 }
 
 export interface LexiconSearchGroup {
@@ -36,38 +43,34 @@ export interface LexiconSearchResult {
 }
 
 /**
- * Fields a query may hit, in the order they are checked.
+ * Fields a query may hit, and what a hit in each is worth.
  *
  * VibeHub indexes the colloquial sentence, which is why searching
- * 「鼠标放上去变色」 finds 「hover」. Indexing only names would lose the
- * entire point of the feature. `colloquial` is optional because no entry
- * has it yet; when an author adds one, it starts matching without a
- * schema migration.
+ * 「鼠标放上去变色」 finds 「hover」. Indexing only names would lose the entire
+ * point. Every one of the 267 entries now carries two independent phrasings,
+ * because two people describing the same situation do not pick the same words
+ * and a search field only helps the one whose words it happens to hold.
+ *
+ * `usage` is weighted below the rest: it says where the sense comes up at work,
+ * which is useful context and a weaker signal of what someone is asking for
+ * than the word, the gloss, or a sentence written to be the thing they'd say.
  */
-function indexedFields(entry: LexiconEntry): readonly string[] {
-  if (Array.isArray(entry.colloquial) && entry.colloquial.length > 0) {
-    return [entry.headword, entry.gloss, entry.usage, ...entry.colloquial];
+function indexedFields(entry: LexiconEntry): readonly WeightedField[] {
+  const fields: WeightedField[] = [
+    { text: entry.headword, weight: 1 },
+    { text: entry.gloss, weight: 1 },
+    { text: entry.usage, weight: 0.8 },
+  ];
+  if (Array.isArray(entry.colloquial)) {
+    for (const phrasing of entry.colloquial) fields.push({ text: phrasing, weight: 1 });
   }
-  return [entry.headword, entry.gloss, entry.usage];
-}
-
-/**
- * One fold for both scripts. Chinese has no case, so this is a no-op on CJK
- * and still lets 「API」 find 「api」. Substring matching is the whole
- * algorithm: a beginner types a fragment of a gloss, not a tokenised query,
- * and a fuzzy library would hide that fact behind a score nobody can explain.
- */
-function foldSearchText(value: string): string {
-  return value.toLowerCase();
+  return fields.map((field) => ({ text: foldSearchText(field.text), weight: field.weight }));
 }
 
 /** Builds the searchable projection. Call once; search many times. */
 export function createLexiconIndex(entries: readonly LexiconEntry[]): LexiconIndex {
   return {
-    records: entries.map((entry) => ({
-      entry,
-      fields: indexedFields(entry).map(foldSearchText),
-    })),
+    records: entries.map((entry) => ({ entry, fields: indexedFields(entry) })),
   };
 }
 
@@ -89,19 +92,33 @@ function groupByTrack(entries: readonly LexiconEntry[]): readonly LexiconSearchG
 /**
  * Searches a previously built index.
  *
- * An empty query (after trim) is a browse: every entry, grouped by track,
- * with a count on each group. A non-empty query keeps an entry when any
- * indexed field contains it as a substring.
+ * An empty query (after trim) is a browse: every entry, grouped by track, with
+ * a count on each group. A non-empty query scores each entry against the shared
+ * tokeniser and keeps the ones that clear the threshold.
+ *
+ * This used to be whole-query substring matching, and the comment defending
+ * that said a fuzzy library would hide the behaviour behind a score nobody can
+ * explain. That was right about libraries and wrong about the problem: the
+ * matching was not too clever, it was too literal, and 「不写进代码里」 missed
+ * 「不写进代码，从外面塞进来」 over one character. What replaced it is the
+ * platform's own Chinese segmenter and a weighted count of which query tokens
+ * landed — explainable in a sentence, and shared with the other two collections
+ * rather than reimplemented per collection.
  */
 export function searchLexiconIndex(index: LexiconIndex, query: string): LexiconSearchResult {
   const trimmed = query.trim();
-  const needle = foldSearchText(trimmed);
-  const hits: LexiconEntry[] = [];
+  const tokens = tokenize(trimmed);
+  const scored: { entry: LexiconEntry; score: number }[] = [];
   for (const record of index.records) {
-    if (needle === "" || record.fields.some((field) => field.includes(needle))) {
-      hits.push(record.entry);
+    if (tokens.length === 0) {
+      scored.push({ entry: record.entry, score: 0 });
+      continue;
     }
+    const score = scoreFields(tokens, record.fields);
+    if (score >= MATCH_THRESHOLD) scored.push({ entry: record.entry, score });
   }
+  if (tokens.length > 0) scored.sort((left, right) => right.score - left.score);
+  const hits = scored.map((item) => item.entry);
   const groups = groupByTrack(hits);
   return {
     query: trimmed,

@@ -27,6 +27,7 @@ export {
 } from "./reference/ReferencePanel.js";
 export { TermIndex, LEXICON_SEARCH_PLACEHOLDER } from "./reference/TermIndex.js";
 export { AntiPatternIndex, ANTI_PATTERN_SEARCH_PLACEHOLDER } from "./reference/AntiPatternIndex.js";
+export { ConceptIndex, CONCEPT_SEARCH_PLACEHOLDER } from "./reference/ConceptIndex.js";
 export { CollectionIndex } from "./reference/CollectionIndex.js";
 export {
   EntryPage,
@@ -48,6 +49,7 @@ export {
   getSectionRenderer,
   type SectionRenderer,
   type EntryRenderContext,
+  type SenseTarget,
 } from "./entry/section-registry.js";
 export {
   DEFAULT_SECTION_RENDERERS,

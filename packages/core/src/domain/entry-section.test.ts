@@ -135,6 +135,51 @@ const SAMPLES = {
     type: "when-not",
     payload: { cases: ["小说、广告或角色台词本来就需要这种非日常表达。"] },
   },
+  quiz: {
+    id: "check",
+    type: "quiz",
+    payload: {
+      question: "同事说「把这个做成应用」，你手上是一个网页。该先问什么？",
+      options: [
+        { id: "a", text: "先问要不要上架商店。", explanation: "上架是后面的事。" },
+        { id: "b", text: "先问他说的是不是点开图标那种。", explanation: "对。先对齐再动手。" },
+        {
+          id: "c",
+          text: "先按手机应用做，做错再改。",
+          explanation: "重做整套壳，代价比问一句大。",
+        },
+      ],
+      correctOptionId: "b",
+    },
+  },
+  demo: {
+    id: "look",
+    type: "demo",
+    payload: {
+      alt: "一个「打开应用」按钮，灰掉之后不再有按下去的反馈。",
+      states: [
+        { id: "idle", label: "平常", nodes: [{ kind: "button", label: "打开应用" }] },
+        {
+          id: "off",
+          label: "不能点",
+          nodes: [{ kind: "button", label: "打开应用", disabled: true }],
+        },
+      ],
+    },
+  },
+  regions: {
+    id: "where",
+    type: "regions",
+    payload: {
+      question: "点一下这一页装着「应用」这个词的那一块。",
+      regions: [
+        { id: "nav", label: "顶部导航栏" },
+        { id: "hero", label: "首屏大标题区", height: "tall" },
+      ],
+      correctRegionId: "hero",
+      reveal: "首屏那句话决定别人怎么理解你做的东西。",
+    },
+  },
 } satisfies { [T in EntrySectionType]: EntrySection & { type: T } };
 
 function sample<T extends EntrySectionType>(type: T): EntrySection & { type: T } {

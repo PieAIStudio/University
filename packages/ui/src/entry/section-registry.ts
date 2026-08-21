@@ -2,14 +2,33 @@ import type { ReactNode } from "react";
 import type { EntrySection, EntrySectionType, LexiconEntry } from "@pieai/university-core";
 
 /**
+ * What a related/prerequisite pointer resolves to, whichever collection it
+ * points into. A term supplies headword and gloss; a concept supplies its
+ * Chinese name and tagline; the renderer does not need to know which.
+ */
+export interface SenseTarget {
+  readonly title: string;
+  readonly subtitle: string;
+  /** Set when the title is not Chinese, so a screen reader says it correctly. */
+  readonly lang?: string;
+}
+
+/**
  * Per-type lookup used by related/prerequisite pointers.
  *
- * Optional because the page is still readable when the caller has not passed a
- * lexicon: the sense id is shown as code, the same way a broken `[[term:]]`
- * stays on the page as text.
+ * Everything is optional because the page stays readable when the caller has
+ * not passed a lookup: the id is shown as code, the same way a broken
+ * `[[term:]]` stays on the page as text.
+ *
+ * `resolveSense` exists because `lexicon` was the wrong shape the moment a
+ * third collection arrived. A concept page's 「相关」 points at concepts, and
+ * handing it the 267-entry lexicon resolved none of them — every pointer
+ * rendered as a bare id, on every one of 281 pages, while all the tests passed
+ * because the ids were perfectly valid. It took opening the page to see it.
  */
 export interface EntryRenderContext {
   readonly lexicon?: ReadonlyMap<string, LexiconEntry>;
+  readonly resolveSense?: (senseId: string) => SenseTarget | undefined;
   readonly onOpenSense?: (senseId: string) => void;
 }
 

@@ -9,7 +9,10 @@ import {
   type EntrySectionType,
 } from "@pieai/university-core";
 
+import { ChoiceBlock } from "../review/ChoiceBlock.js";
 import { CopyTextButton } from "./CopyTextButton.js";
+import { DemoMiniature } from "./DemoMiniature.js";
+import { RegionQuiz } from "./RegionQuiz.js";
 import {
   registerSectionRenderer,
   type EntryRenderContext,
@@ -47,11 +50,16 @@ function SenseList({
   return (
     <ol className="entry-section__senses">
       {senseIds.map((senseId, index) => {
-        const entry = context.lexicon?.get(senseId);
-        const content = entry ? (
+        const fromLexicon = context.lexicon?.get(senseId);
+        const target =
+          context.resolveSense?.(senseId) ??
+          (fromLexicon
+            ? { title: fromLexicon.headword, subtitle: fromLexicon.gloss, lang: "en" }
+            : undefined);
+        const content = target ? (
           <>
-            <span lang="en">{entry.headword}</span>
-            <span className="entry-section__sense-gloss">{entry.gloss}</span>
+            <span lang={target.lang}>{target.title}</span>
+            <span className="entry-section__sense-gloss">{target.subtitle}</span>
           </>
         ) : (
           <code>{senseId}</code>
@@ -313,6 +321,53 @@ const DEFAULT_BY_TYPE = {
             ))}
           </ul>
         </GameCallout>
+      </SectionFrame>
+    ),
+  },
+  quiz: {
+    type: "quiz",
+    toMarkdown: sectionToMarkdown,
+    // `ChoiceBlock` unchanged. The stored `ChoiceExercise` a lesson carries and
+    // this payload are assignable to the same `ChoiceBlockExercise` slice, so
+    // the question on a concept page and the question in the practice stream
+    // are one component and one behaviour, not two that drift.
+    render: (section) => (
+      <SectionFrame section={section}>
+        <ChoiceBlock
+          exercise={{
+            id: section.id,
+            prompt: section.payload.question,
+            options: section.payload.options,
+            correctOptionId: section.payload.correctOptionId,
+          }}
+        />
+      </SectionFrame>
+    ),
+  },
+  demo: {
+    type: "demo",
+    toMarkdown: sectionToMarkdown,
+    render: (section) => (
+      <SectionFrame section={section}>
+        <DemoMiniature
+          alt={section.payload.alt}
+          caption={section.payload.caption}
+          states={section.payload.states}
+        />
+      </SectionFrame>
+    ),
+  },
+  regions: {
+    type: "regions",
+    toMarkdown: sectionToMarkdown,
+    render: (section) => (
+      <SectionFrame section={section}>
+        <RegionQuiz
+          question={section.payload.question}
+          regions={section.payload.regions}
+          correctRegionId={section.payload.correctRegionId}
+          reveal={section.payload.reveal}
+        />
       </SectionFrame>
     ),
   },

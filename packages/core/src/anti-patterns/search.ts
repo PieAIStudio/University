@@ -1,5 +1,12 @@
 import { sectionsToMarkdown } from "../domain/entry-section.js";
 import {
+  MATCH_THRESHOLD,
+  foldSearchText,
+  scoreFields,
+  tokenize,
+  type WeightedField,
+} from "../search/tokens.js";
+import {
   ANTI_PATTERN_CATEGORY_IDS,
   ANTI_PATTERN_CATEGORY_LABEL,
   type AntiPatternCategory,
@@ -7,28 +14,23 @@ import {
 } from "../domain/anti-pattern.js";
 
 /**
- * One fold for both scripts. Chinese has no case; Latin still lets 「API」
- * find 「api」. Substring matching is the whole algorithm, same as the lexicon:
- * a beginner types a fragment of a complaint, not a tokenised query.
- */
-function foldSearchText(value: string): string {
-  return value.toLowerCase();
-}
-
-/**
  * Fields a query may hit. The body is folded through `sectionsToMarkdown` so
  * a new section type starts matching without a second indexer — the same
  * reason copy-as-Markdown is a fold over the registry.
  */
-function indexedFields(entry: AntiPatternEntry): readonly string[] {
+function indexedFields(entry: AntiPatternEntry): readonly WeightedField[] {
   return [
-    entry.head.id,
-    entry.head.name,
-    entry.head.complaint,
-    entry.head.category,
-    ANTI_PATTERN_CATEGORY_LABEL[entry.head.category],
-    sectionsToMarkdown(entry.sections),
-  ].map(foldSearchText);
+    { text: entry.head.id, weight: 1 },
+    { text: entry.head.name, weight: 1 },
+    // The spoken complaint is the way in. Someone who could name the
+    // anti-pattern mostly does not need to look it up.
+    { text: entry.head.complaint, weight: 1 },
+    {
+      text: `${entry.head.category} ${ANTI_PATTERN_CATEGORY_LABEL[entry.head.category]}`,
+      weight: 0.75,
+    },
+    { text: sectionsToMarkdown(entry.sections), weight: 0.7 },
+  ].map((field) => ({ text: foldSearchText(field.text), weight: field.weight }));
 }
 
 export interface AntiPatternIndex {
@@ -37,7 +39,7 @@ export interface AntiPatternIndex {
 
 interface IndexedAntiPatternRecord {
   readonly entry: AntiPatternEntry;
-  readonly fields: readonly string[];
+  readonly fields: readonly WeightedField[];
 }
 
 export interface AntiPatternSearchGroup {
@@ -88,13 +90,18 @@ export function searchAntiPatternIndex(
   query: string,
 ): AntiPatternSearchResult {
   const trimmed = query.trim();
-  const needle = foldSearchText(trimmed);
-  const hits: AntiPatternEntry[] = [];
+  const tokens = tokenize(trimmed);
+  const scored: { entry: AntiPatternEntry; score: number }[] = [];
   for (const record of index.records) {
-    if (needle === "" || record.fields.some((field) => field.includes(needle))) {
-      hits.push(record.entry);
+    if (tokens.length === 0) {
+      scored.push({ entry: record.entry, score: 0 });
+      continue;
     }
+    const score = scoreFields(tokens, record.fields);
+    if (score >= MATCH_THRESHOLD) scored.push({ entry: record.entry, score });
   }
+  if (tokens.length > 0) scored.sort((left, right) => right.score - left.score);
+  const hits = scored.map((item) => item.entry);
   return {
     query: trimmed,
     total: hits.length,

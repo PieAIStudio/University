@@ -6,9 +6,27 @@
   implementation in name only.
 */
 
+/*
+  The page owns its own reading measure.
+ 
+  It used to rely on whatever container a shell dropped it into, and the shells
+  dropped it into `main.terms` — a class with no rule behind it in either
+  stylesheet. The result was every entry page in all three collections running
+  edge to edge with no margin, in both shells, which the tests could not see and
+  a browser pass shows in one screenshot.
+ 
+  Putting the measure here rather than on the container is also what keeps the
+  three collections looking like one product: a shell that forgets the wrapper
+  now gets a readable page anyway.
+*/
 .entry-page {
   display: grid;
   gap: 28px;
+  /* Long-form Chinese prose, so a little wider than a Latin reading measure. */
+  max-width: 62rem;
+  margin: 0 auto;
+  /* The right inset clears the fixed next-entry control at narrow widths. */
+  padding: 24px clamp(16px, 4vw, 40px) 96px;
 }
 
 .entry-page__topbar {
@@ -383,12 +401,33 @@ span.entry-section__sense {
   outline-offset: 2px;
 }
 
+/*
+  The arrows sit outside the reading measure, never on top of it.
+ 
+  Pinned to the viewport edge they landed on the title at any width narrower
+  than about 1100px — which is most laptops. `max()` keeps them just outside the
+  62rem column when the window is wide enough to have a margin there, and the
+  media query below removes them entirely when it is not, because a control
+  overlapping the heading it is meant to help you leave is worse than no
+  control.
+*/
 .entry-page__float-nav--prev {
-  left: 12px;
+  left: max(12px, calc(50% - 31rem - 56px));
 }
 
 .entry-page__float-nav--next {
-  right: 12px;
+  right: max(12px, calc(50% - 31rem - 56px));
+}
+
+/*
+  62rem of column plus 56px of control and a gap on each side. Below this the
+  arrows have nowhere to stand; the breadcrumb and the index are still there,
+  and on a phone swiping the list is the navigation anyway.
+*/
+@media (max-width: 1140px) {
+  .entry-page__float-nav {
+    display: none;
+  }
 }
 
 .entry-page__float-nav-arrow {
@@ -431,4 +470,171 @@ span.entry-section__sense {
   .entry-page__float-nav-name {
     opacity: 1;
   }
+}
+
+/*
+ * The miniature demo (C9, C11) and the click-the-region exercise (C12).
+ *
+ * Every control inside a demo comes from the brand kit and is styled by the
+ * kit, so what is left here is the frame around them: a stage that reads as a
+ * sample rather than as live product chrome, and placeholder blocks that are
+ * obviously stand-ins for content.
+ */
+.demo {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.demo__viewport {
+  border: 1px solid var(--game-ui-border, #253048);
+  border-radius: 12px;
+  background: var(--game-ui-panel, #121826);
+  padding: 20px;
+  overflow-x: auto;
+}
+
+.demo__stage {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  /* Keeps a wide arrangement from collapsing into a column on a narrow screen,
+     which for a layout demo would destroy the thing being demonstrated. */
+  min-width: min(420px, 100%);
+}
+
+.demo__group {
+  display: flex;
+  gap: 12px;
+}
+
+.demo__group--row {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.demo__group--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.demo__text {
+  margin: 0;
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.demo__text--muted {
+  color: var(--game-ui-text-muted, #93a0b8);
+}
+
+.demo__field {
+  display: grid;
+  gap: 4px;
+  min-width: 220px;
+}
+
+.demo__field-label {
+  font-size: 0.85rem;
+  color: var(--game-ui-text-muted, #93a0b8);
+}
+
+.demo__block {
+  width: 100%;
+  min-width: 160px;
+  border-radius: 8px;
+  /* Striped rather than flat, so nobody reads a grey rectangle as a real
+     empty panel the product would ship. */
+  background: repeating-linear-gradient(
+    135deg,
+    var(--game-ui-panel-deep, #0c1018),
+    var(--game-ui-panel-deep, #0c1018) 6px,
+    var(--game-ui-border, #253048) 6px,
+    var(--game-ui-border, #253048) 7px
+  );
+  display: grid;
+  place-items: center;
+  color: var(--game-ui-text-muted, #93a0b8);
+  font-size: 0.85rem;
+}
+
+.demo__block--short {
+  height: 40px;
+}
+
+.demo__block--tall {
+  height: 96px;
+}
+
+.demo__note,
+.demo__caption {
+  margin: 0;
+  color: var(--game-ui-text-muted, #93a0b8);
+  font-size: 0.9rem;
+}
+
+.region-quiz {
+  display: grid;
+  gap: 12px;
+}
+
+.region-quiz__question {
+  margin: 0;
+  font-weight: 600;
+}
+
+.region-quiz__mock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--game-ui-border, #253048);
+  border-radius: 12px;
+  background: var(--game-ui-panel, #121826);
+}
+
+.region-quiz__region {
+  flex: 1 1 100%;
+  border: 1px dashed var(--game-ui-border, #253048);
+  border-radius: 8px;
+  background: var(--game-ui-panel-deep, #0c1018);
+  color: var(--game-ui-text-muted, #93a0b8);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.region-quiz__region--half {
+  flex: 1 1 calc(50% - 8px);
+}
+
+.region-quiz__region--short {
+  min-height: 44px;
+}
+
+.region-quiz__region--tall {
+  min-height: 96px;
+}
+
+.region-quiz__region:hover:not(:disabled),
+.region-quiz__region:focus-visible {
+  border-color: var(--game-ui-accent, #6ea8ff);
+}
+
+.region-quiz__region.is-missed {
+  border-style: solid;
+  border-color: var(--game-ui-danger, #d9534f);
+  /* The wrong region keeps its revealed label rather than resetting, so a
+     second guess is made with more information than the first. */
+  opacity: 0.7;
+}
+
+.region-quiz__region.is-answer {
+  border-style: solid;
+  border-color: var(--game-ui-success, #4caf7d);
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.region-quiz__region:disabled {
+  cursor: default;
 }

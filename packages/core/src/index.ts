@@ -30,6 +30,7 @@ export {
   parseEntrySections,
   sectionToMarkdown,
   sectionsToMarkdown,
+  type DemoNode,
   type EntrySection,
   type EntrySectionType,
   type PayloadOf,
@@ -81,6 +82,44 @@ export {
   type AntiPatternSearchGroup,
   type AntiPatternSearchResult,
 } from "./anti-patterns/search.js";
+
+// The third collection on the same entry system: 281 illustrated concepts in
+// seven categories. A third page component would be SPEC-0004 failing, so what
+// is new here is a head adapter and a catalogue, nothing else.
+export {
+  CONCEPT_CATEGORY_IDS,
+  CONCEPT_CATEGORY_LABEL,
+  ConceptCategorySchema,
+  ConceptHeadSchema,
+  assembleConceptEntry,
+  conceptEntryToMarkdown,
+  conceptHeadToMarkdown,
+  loadConcept,
+  type ConceptBody,
+  type ConceptCategory,
+  type ConceptEntry,
+  type ConceptHead,
+  type ConceptLoadProblem,
+  type RawConcept,
+} from "./domain/concept.js";
+export {
+  CONCEPT_CHIP_ORDER,
+  CONCEPT_COUNTS,
+  CONCEPT_ENTRIES,
+  CONCEPT_PROBLEMS,
+  conceptGroupsIn,
+  conceptNeighbours,
+  conceptsInCategory,
+  getConceptEntry,
+} from "./concepts/catalogue.js";
+export {
+  createConceptIndex,
+  searchConceptIndex,
+  searchConcepts,
+  type ConceptIndex,
+  type ConceptSearchGroup,
+  type ConceptSearchResult,
+} from "./concepts/search.js";
 
 export * from "./scheduling/fsrs.js";
 export * from "./grading/answer-key.js";

@@ -21,6 +21,7 @@ import {
   foldEntryMarkdown,
   getSectionRenderer,
   type EntryRenderContext,
+  type SenseTarget,
 } from "./section-registry.js";
 
 export type { EntryNeighbour, EntryNeighbourPair } from "./EntryFloatNav.js";
@@ -32,6 +33,7 @@ export type { EntryNeighbour, EntryNeighbourPair } from "./EntryFloatNav.js";
 export const COLLECTION_LABEL: { readonly [C in CollectionId]: string } = {
   terms: "术语图鉴",
   "anti-patterns": "防止 AI 味儿",
+  concepts: "概念图解",
 };
 
 export interface EntryBreadcrumbItem {
@@ -46,6 +48,7 @@ export interface EntryPageProps {
   /** Already-serialised head. The copy button folds this with each renderer's toMarkdown. */
   readonly headMarkdown: string;
   readonly lexicon?: ReadonlyMap<string, LexiconEntry>;
+  readonly resolveSense?: (senseId: string) => SenseTarget | undefined;
   readonly onOpenSense?: (senseId: string) => void;
   /**
    * C23. Neighbours of *this* entry in its collection. Terms and anti-patterns
@@ -79,11 +82,12 @@ export function EntryPage({
   sections,
   headMarkdown,
   lexicon,
+  resolveSense,
   onOpenSense,
   neighbours,
 }: EntryPageProps) {
   const markdown = foldEntryMarkdown(headMarkdown, sections);
-  const context: EntryRenderContext = { lexicon, onOpenSense };
+  const context: EntryRenderContext = { lexicon, resolveSense, onOpenSense };
 
   return (
     <article className="entry-page">
@@ -160,12 +164,14 @@ export function TermEntryPage({
   entry,
   collectionHref,
   lexicon,
+  resolveSense,
   onOpenSense,
   neighbours,
 }: {
   readonly entry: TermEntry;
   readonly collectionHref?: string;
   readonly lexicon?: ReadonlyMap<string, LexiconEntry>;
+  readonly resolveSense?: (senseId: string) => SenseTarget | undefined;
   readonly onOpenSense?: (senseId: string) => void;
   readonly neighbours?: EntryNeighbourPair;
 }) {
@@ -179,6 +185,7 @@ export function TermEntryPage({
       sections={entry.sections}
       headMarkdown={termHeadToMarkdown(entry.head)}
       lexicon={lexicon}
+      resolveSense={resolveSense}
       onOpenSense={onOpenSense}
       neighbours={neighbours}
     />
@@ -211,12 +218,14 @@ export function AntiPatternEntryPage({
   entry,
   collectionHref,
   lexicon,
+  resolveSense,
   onOpenSense,
   neighbours,
 }: {
   readonly entry: AntiPatternEntry;
   readonly collectionHref?: string;
   readonly lexicon?: ReadonlyMap<string, LexiconEntry>;
+  readonly resolveSense?: (senseId: string) => SenseTarget | undefined;
   readonly onOpenSense?: (senseId: string) => void;
   readonly neighbours?: EntryNeighbourPair;
 }) {
@@ -230,6 +239,7 @@ export function AntiPatternEntryPage({
       sections={entry.sections}
       headMarkdown={antiPatternHeadToMarkdown(entry.head)}
       lexicon={lexicon}
+      resolveSense={resolveSense}
       onOpenSense={onOpenSense}
       neighbours={neighbours}
     />

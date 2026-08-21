@@ -14,9 +14,12 @@ import { SenseId, StableId } from "./schemas.js";
  * this product would ship two implementations of one thing on day one.
  *
  * C10 (`flow`) is the readable chain: where this entry sits in a path.
- * Interactive demos that *animate* a path (C9 header demo, C11 state-switch,
- * C12 click-the-region, and VibeHub's live zone mockups) stay later types, and
- * an unknown type already degrades instead of taking the page down.
+ * `demo` is C9 and C11 — one miniature with one state or several — and
+ * `regions` is C12. They arrived later than the text types and that order was
+ * right: a demo is only worth building once there is a page for it to sit on.
+ *
+ * An unknown type degrades instead of taking the page down, which is what lets
+ * a type be added here before every shell knows how to draw it.
  */
 export const SECTION_TYPES = [
   "colloquial",
@@ -33,6 +36,9 @@ export const SECTION_TYPES = [
   "related",
   "before-after",
   "when-not",
+  "quiz",
+  "demo",
+  "regions",
 ] as const;
 
 export type EntrySectionType = (typeof SECTION_TYPES)[number];
@@ -65,6 +71,9 @@ export const SECTION_HEADING: { readonly [T in EntrySectionType]: string } = {
   related: "相关",
   "before-after": "改前 / 改后",
   "when-not": "什么时候不用",
+  quiz: "小测",
+  demo: "动手看看",
+  regions: "点一下试试",
 };
 
 const ShortName = z.string().trim().min(1).max(80);
@@ -290,6 +299,235 @@ export const WhenNotPayloadSchema = z
   })
   .strict();
 
+/**
+ * An option's id, which is allowed to be one character.
+ *
+ * `StableId` requires two, and it is right to: it names entities that appear in
+ * URLs, filenames and cross-references, where a one-letter id is a collision
+ * waiting to happen. An option id is scoped to the three options of a single
+ * question, never leaves the payload, and its natural values are `a`, `b`, `c`
+ * — the same letters the block puts on screen. Borrowing the entity rule here
+ * bought nothing and silently dropped 281 quizzes the first time it was tried.
+ */
+const OptionId = z
+  .string()
+  .trim()
+  .min(1)
+  .max(32)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "option id must be lowercase kebab");
+
+/**
+ * C19. The three-option judgement, embedded in the entry it belongs to.
+ *
+ * The same shape `ChoiceBlock` already renders and `validateChoiceExercise`
+ * already checks, minus everything that ties a stored `ChoiceExercise` to a
+ * lesson — course, unit, revision, content hash, evidence. A concept page has
+ * none of those and inventing them would be a fake anchor.
+ *
+ * That overlap is the architecture worth copying rather than a coincidence:
+ * the practice bank *is* the per-entry quiz, so a question the learner meets in
+ * the stream is the same record as the one on the page, and there is no second
+ * corpus to keep in sync.
+ */
+export const QuizPayloadSchema = z
+  .object({
+    question: Paragraph,
+    options: z
+      .array(
+        z
+          .object({
+            id: OptionId,
+            text: Paragraph,
+            explanation: Paragraph,
+          })
+          .strict(),
+      )
+      .length(3),
+    correctOptionId: OptionId,
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const ids = value.options.map((option) => option.id);
+    if (new Set(ids).size !== ids.length) {
+      context.addIssue({ code: "custom", message: "Option ids must be unique." });
+    }
+    if (!ids.includes(value.correctOptionId)) {
+      context.addIssue({
+        code: "custom",
+        message: `correctOptionId "${value.correctOptionId}" is not one of the options.`,
+      });
+    }
+  });
+
+/**
+ * The vocabulary a miniature demo is built from. Ten leaves and two containers.
+ *
+ * Deliberately not arbitrary markup. A demo authored as HTML would be a second
+ * component library nobody reviews, it would drift from the product's own
+ * controls the first time a token changed, and it would put author-supplied
+ * markup on a page — three separate problems for one convenience.
+ *
+ * Every leaf maps onto a control the brand kit already ships, which is the
+ * whole reason this is affordable: the demo of 「按钮」 *is* the product's
+ * button, so switching the theme re-paints all 281 demos and the reader learns
+ * what a design variable does by watching it happen. The kit is also where
+ * focus rings, disabled semantics and reduced-motion already live, so a demo
+ * cannot be less accessible than the real control.
+ *
+ * Containers hold leaves and never other containers. Two levels of grouping —
+ * a stack of rows — draws every mockup this catalogue needs, and a recursive
+ * tree would buy arbitrary depth at the price of an unbounded render.
+ */
+const DemoLeafSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("text"), text: Sentence, muted: z.boolean().optional() }).strict(),
+  z
+    .object({
+      kind: z.literal("button"),
+      label: ShortName,
+      variant: z.enum(["primary", "secondary", "ghost", "danger", "success"]).optional(),
+      disabled: z.boolean().optional(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("input"),
+      label: ShortName.optional(),
+      value: z.string().max(120).optional(),
+      placeholder: z.string().max(120).optional(),
+      invalid: z.boolean().optional(),
+    })
+    .strict(),
+  z.object({ kind: z.literal("toggle"), label: ShortName, checked: z.boolean() }).strict(),
+  z
+    .object({
+      kind: z.literal("slider"),
+      label: ShortName,
+      value: z.number(),
+      min: z.number().optional(),
+      max: z.number().optional(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("badge"),
+      label: ShortName,
+      tone: z.enum(["neutral", "success", "warning", "danger", "ai"]).optional(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("progress"),
+      label: ShortName,
+      value: z.number(),
+      max: z.number().optional(),
+    })
+    .strict(),
+  /** A grey placeholder standing in for content, so a layout demo is about layout. */
+  z
+    .object({
+      kind: z.literal("block"),
+      label: ShortName.optional(),
+      height: z.enum(["short", "tall"]).optional(),
+    })
+    .strict(),
+]);
+
+// `row` and `stack` are two literal members rather than one member with a
+// two-value `kind`. Only literals make this a discriminated union, and only a
+// discriminated union lets a renderer narrow "not a container" by elimination
+// instead of re-listing all ten leaves every time a new one is added.
+const DemoContainerChildren = z.array(DemoLeafSchema).min(1).max(12);
+
+const DemoNodeSchema = z.discriminatedUnion("kind", [
+  ...DemoLeafSchema.options,
+  z.object({ kind: z.literal("row"), children: DemoContainerChildren }).strict(),
+  z.object({ kind: z.literal("stack"), children: DemoContainerChildren }).strict(),
+]);
+
+/**
+ * C9 and C11. One type, because they are one thing with a different number of
+ * states: a single state is the static miniature in the hero, and two or more
+ * is the state switch. Splitting them would ship two renderers that draw the
+ * same nodes.
+ *
+ * `alt` is required and is not decoration. This section is the one place in the
+ * catalogue where the meaning is carried by arrangement rather than by
+ * sentences, so a reader who cannot see the arrangement gets a sentence that
+ * says what it shows.
+ */
+export const DemoPayloadSchema = z
+  .object({
+    alt: Sentence,
+    caption: Sentence.optional(),
+    states: z
+      .array(
+        z
+          .object({
+            id: StableId,
+            label: ShortName,
+            note: Sentence.optional(),
+            nodes: z.array(DemoNodeSchema).min(1).max(12),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(8),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const ids = value.states.map((state) => state.id);
+    if (new Set(ids).size !== ids.length) {
+      context.addIssue({ code: "custom", message: "State ids must be unique." });
+    }
+  });
+
+/**
+ * C12. Click the part of the mockup being named.
+ *
+ * Their most distinctive exercise, and the reason is worth stating: a learner
+ * can pass a multiple-choice question about 「首屏」 by recognising the word,
+ * and can only pass this by finding the thing. Labels stay hidden until the
+ * right region is clicked, or the question answers itself.
+ *
+ * A keyboard user gets the same exercise because the regions are buttons.
+ */
+export const RegionsPayloadSchema = z
+  .object({
+    question: Sentence,
+    regions: z
+      .array(
+        z
+          .object({
+            id: StableId,
+            label: ShortName,
+            /** Rendered width, so the mockup looks like the page it is imitating. */
+            span: z.enum(["full", "half"]).optional(),
+            height: z.enum(["short", "tall"]).optional(),
+          })
+          .strict(),
+      )
+      .min(2)
+      .max(10),
+    correctRegionId: StableId,
+    /** One sentence, shown once the right region is found. */
+    reveal: Sentence,
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const ids = value.regions.map((region) => region.id);
+    if (new Set(ids).size !== ids.length) {
+      context.addIssue({ code: "custom", message: "Region ids must be unique." });
+    }
+    if (!ids.includes(value.correctRegionId)) {
+      context.addIssue({
+        code: "custom",
+        message: `correctRegionId "${value.correctRegionId}" is not one of the regions.`,
+      });
+    }
+  });
+
+export type DemoNode = z.infer<typeof DemoNodeSchema>;
+
 export const SECTION_PAYLOAD_SCHEMAS = {
   colloquial: ColloquialPayloadSchema,
   definition: DefinitionPayloadSchema,
@@ -305,6 +543,9 @@ export const SECTION_PAYLOAD_SCHEMAS = {
   related: RelatedPayloadSchema,
   "before-after": BeforeAfterPayloadSchema,
   "when-not": WhenNotPayloadSchema,
+  quiz: QuizPayloadSchema,
+  demo: DemoPayloadSchema,
+  regions: RegionsPayloadSchema,
 } as const;
 
 export type PayloadOf<T extends EntrySectionType> = z.infer<(typeof SECTION_PAYLOAD_SCHEMAS)[T]>;
@@ -526,6 +767,32 @@ function sectionBody(section: EntrySection): string {
       return `### 改前\n\n${section.payload.before}\n\n### 改后\n\n${section.payload.after}`;
     case "when-not":
       return bullets(section.payload.cases);
+    case "quiz": {
+      // The answer is deliberately absent. This clipboard exists so a learner
+      // can paste an entry into an AI chat as context, and an agent handed the
+      // answer key will recite it instead of reasoning about the situation.
+      const options = section.payload.options
+        .map((option, index) => `${["A", "B", "C"][index] ?? index + 1}. ${option.text}`)
+        .join("\n");
+      return `${section.payload.question}\n\n${options}`;
+    }
+    case "demo": {
+      // The clipboard gets the sentence, not the arrangement. A paste target is
+      // either an AI chat or a text note, and neither can do anything with a
+      // list of node kinds — while `alt` is already the one-sentence account of
+      // what the demo shows, written for exactly this situation.
+      const states =
+        section.payload.states.length > 1
+          ? `\n\n可切换的状态：${section.payload.states.map((state) => state.label).join(" / ")}`
+          : "";
+      const caption = section.payload.caption ? `\n\n${section.payload.caption}` : "";
+      return `${section.payload.alt}${states}${caption}`;
+    }
+    case "regions":
+      // The answer is left out for the same reason the quiz answer is.
+      return `${section.payload.question}\n\n${bullets(
+        section.payload.regions.map((region) => region.label),
+      )}`;
     default: {
       const _never: never = section;
       return _never;

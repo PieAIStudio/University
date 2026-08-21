@@ -15,7 +15,7 @@ import type { LexiconEntry } from "./schemas.js";
  * page shell is collection-generic; only the head changes. Adding a collection
  * is a new head adapter, not a new page.
  */
-export const COLLECTION_IDS = ["terms", "anti-patterns"] as const;
+export const COLLECTION_IDS = ["terms", "anti-patterns", "concepts"] as const;
 
 export type CollectionId = (typeof COLLECTION_IDS)[number];
 

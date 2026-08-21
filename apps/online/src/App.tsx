@@ -17,8 +17,13 @@ import { MapControls } from "three/addons/controls/MapControls.js";
 
 import {
   ANTI_PATTERN_ENTRIES,
+  CONCEPT_ENTRIES,
   antiPatternHeadToMarkdown,
+  conceptHeadToMarkdown,
+  conceptNeighbours,
+  getConceptEntry as lookupConcept,
   getAntiPatternEntry,
+  getConceptEntry,
   assembleTermEntry,
   hasFavourite,
   listGroupedByTrack,
@@ -32,6 +37,7 @@ import {
   FavouritesEmpty,
   TermIndex,
   AntiPatternIndex,
+  ConceptIndex,
   createLocalFavouritesStore,
 } from "@pieai/university-ui";
 
@@ -523,6 +529,9 @@ export function App() {
         <button className="ghost" onClick={() => setView({ kind: "favourites" })}>
           收藏
         </button>
+        <button className="ghost" onClick={() => setView({ kind: "concepts" })}>
+          图解
+        </button>
         <button className="ghost" onClick={() => setView({ kind: "flavour" })}>
           AI 味儿
         </button>
@@ -696,6 +705,20 @@ export function App() {
       {view.kind === "term" ? <TermEntryHost senseId={view.senseId} onOpen={setView} /> : null}
 
       {view.kind === "favourites" ? <FavouritesHost onOpen={setView} /> : null}
+
+      {view.kind === "concepts" ? (
+        <main className="terms">
+          <button className="linkish" onClick={() => setView(WORLD)}>
+            ← 关卡地图
+          </button>
+          <ConceptIndex
+            entries={CONCEPT_ENTRIES}
+            onOpen={(entry) => setView({ kind: "concept", id: entry.head.id })}
+          />
+        </main>
+      ) : null}
+
+      {view.kind === "concept" ? <ConceptEntryHost id={view.id} onOpen={setView} /> : null}
 
       {view.kind === "flavour" ? (
         <main className="terms">
@@ -1079,6 +1102,90 @@ function FavouritesHost({ onOpen }: { onOpen: (view: View) => void }) {
       )}
     </main>
   );
+}
+
+/**
+ * One concept, on the same EntryPage a term and an anti-pattern use.
+ *
+ * Third collection, third head adapter, still one page component — which is
+ * the claim SPEC-0004 made and this is the first time it has been tested by a
+ * collection large enough to tempt someone into a special case.
+ *
+ * It is also the first page to pass `neighbours`. C23 shipped unmounted, and an
+ * unmounted component is a component nobody has checked.
+ */
+function ConceptEntryHost({ id, onOpen }: { id: string; onOpen: (view: View) => void }) {
+  const entry = getConceptEntry(id);
+  if (!entry) {
+    return (
+      <main className="terms">
+        <button className="linkish" onClick={() => onOpen({ kind: "concepts" })}>
+          ← 概念图解
+        </button>
+        <p className="reference-panel__note">没有这一条。</p>
+      </main>
+    );
+  }
+  const { previous, next } = conceptNeighbours(id);
+  return (
+    <main className="terms">
+      <EntryPage
+        breadcrumb={[
+          { label: "概念图解", href: "#/concepts" },
+          { label: entry.head.group },
+          { label: entry.head.zh },
+        ]}
+        head={
+          <>
+            <h1>
+              {entry.head.zh}
+              {entry.head.en ? (
+                <span className="reference-panel__pos" lang="en">
+                  {entry.head.en}
+                </span>
+              ) : null}
+            </h1>
+            <p className="reference-panel__gloss">{entry.head.tagline}</p>
+          </>
+        }
+        sections={entry.sections}
+        headMarkdown={conceptHeadToMarkdown(entry.head)}
+        lexicon={LEXICON_BY_SENSE}
+        {...CONCEPT_POINTERS(onOpen)}
+        neighbours={{
+          previous: previous
+            ? {
+                label: previous.head.zh,
+                onOpen: () => onOpen({ kind: "concept", id: previous.head.id }),
+              }
+            : null,
+          next: next
+            ? { label: next.head.zh, onOpen: () => onOpen({ kind: "concept", id: next.head.id }) }
+            : null,
+        }}
+      />
+    </main>
+  );
+}
+
+/**
+ * How a concept page resolves its own 「先知道」 and 「相关」 pointers.
+ *
+ * Concepts point at concepts. Handing the page only the lexicon — which is what
+ * it got at first — resolved none of them, so every pointer on all 281 pages
+ * rendered as a bare id while every test passed, because the ids were valid
+ * concept ids and the tests checked exactly that. The lexicon stays as the
+ * fallback, since an entry is allowed to point at an English sense.
+ */
+function CONCEPT_POINTERS(onOpen: (view: View) => void) {
+  return {
+    resolveSense: (id: string) => {
+      const target = lookupConcept(id);
+      return target ? { title: target.head.zh, subtitle: target.head.tagline } : undefined;
+    },
+    onOpenSense: (id: string) =>
+      onOpen(lookupConcept(id) ? { kind: "concept", id } : { kind: "term", senseId: id }),
+  };
 }
 
 /**
