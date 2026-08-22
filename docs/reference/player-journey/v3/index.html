@@ -161,35 +161,19 @@ tbody tr:hover{background:#12171e}
 <p class="lede">这三条决定了下面每一屏。如果你不同意其中任何一条，先停在这里说，
 因为改这三条 = 整份文档重写；改下面任何一屏 = 只改那一屏。</p>
 
-<div class="dec hm">
-  <h4>决定一 · 3D 不当落地屏，改当「世界选择器 + 常驻舞台 + 奖励面」<span style="font-size:13px;color:var(--gold)"> ⟵ 待你拍板</span></h4>
-  <p><b>这一条和 <code>SPEC-0003</code> 有冲突，我不替你决定。</b></p>
-  <p><code>SPEC-0003: One World, Two Shells</code>（2026-08-21，active / canonical / owner: human）
-  第 3 步写着「<b>退役 2D 书架</b>」，Non-Negotiables 写着「一个场景，两个覆盖层」。
-  它要求两个 shell 的落地屏都是 3D 群岛。</p>
-  <p>而多邻国官方博客给出的改版理由只有一句：学习者
-  <b>「不确定自己有没有在用『对的』或者『最好的』方式用多邻国」</b>（blog.duolingo.com, 2022）。
-  他们的解法是<b>取消选择</b>——把网状技能树压成一条线。
-  <b>我们的 3D 群岛正是网状技能树的 3D 版</b>：52 座岛按先修关系铺开，一打开就是「你自己看着办」。
-  这正是多邻国花大力气删掉的东西，我们做了个立体的。</p>
-  <p><b>我的方案（三选一里的第三个）：按视口分岗，两份文档同时成立。</b></p>
-  <table>
-    <tr><th>视口</th><th>落地屏</th><th>3D 在哪</th><th>SPEC-0003 还成立吗</th></tr>
-    <tr><td><b>Web ≥1180px</b></td><td>三栏</td>
-        <td><b>右栏常驻</b>，一直在你眼前</td>
-        <td><b>成立。</b>一个共享场景，两个覆盖层，2D 书架照样退役</td></tr>
-    <tr><td><b>Web 768–1180</b></td><td>双栏</td><td>不加载</td><td>降级，同 SPEC-0003 未覆盖的情况</td></tr>
-    <tr><td><b>移动端</b></td><td>2D 路径</td>
-        <td>按需 <code>import()</code>：「看看我的世界」+ 结算庆祝</td>
-        <td><b>场景仍是同一个</b>，只是不默认挂载</td></tr>
-  </table>
-  <p>这样 3D 的三个岗位是：① <b>世界选择器</b>——4 个 study 是 4 片群岛，
-  「选学哪个真实项目」是有意义的选择，保留；
-  ② <b>常驻舞台</b>——桌面右栏，你随时看得见自己站在哪；
-  ③ <b>奖励面</b>——学完一节岛上真的多一间房，这是多邻国用一句「+40 经验」代替掉的东西，我们有实体。
-  <b>它唯一不再承担的岗位是「从这里找出下一节课」。</b></p>
-  <p class="cite"><b>本项目自己早就写过同一句话</b>：<code>v2/build-brief.html</code> 第 ⑤ 屏原话——
-  「它是先于 3D 存在的，不是 3D 的降级」。那一屏至今没被建出来（<code>#/catalog</code> 是它的一半）。</p>
+<div class="dec">
+  <h4>决定一 · 3D 不退位，换镜头 ✔ 已定</h4>
+  <p><code>SPEC-0003</code> 要求两个 shell 都落地到 3D 世界；多邻国的证据说落地屏该是一条一次只给一步的路。
+  <b>两者都对，冲突的是「镜头站在哪」而不是「用不用 3D」。</b></p>
+  <p>路径本身<b>早就写好了</b>——<code>layout.ts</code> 的 <code>layoutCourse()</code>
+  一直在做奇偶行反向、左右摆、往前推、每单元升高，那就是一条盘山蛇形路。
+  它只是被摊平成 4 个一排、然后从 50° 高空俯视，所以读起来像网格不像路。</p>
+  <p><b>已经改完并跑通</b>：折叠 4→1、正弦摆动（周期 7，与单元大小互质）、
+  保留爬升、俯角 50°→74°、雾改按视线长度算、当前关挂「开始」气泡。
+  三个镜头（路上 / 飞行 / 俯瞰）是同一个场景的三个相机档位。</p>
+  <p class="cite">过程中撞出两个真 bug：真正的杠杆是 <code>COURSE_POLAR</code> 而不是相机位置
+  （<code>Controls</code> 把俯角两头钉死，<code>MapControls.update()</code> 每帧覆盖高度）；
+  以及雾在按「世界多大」算而不是「看多远」，于是雾的起点比画面上任何东西都远。</p>
 </div>
 
 <div class="dec">
@@ -229,65 +213,219 @@ tbody tr:hover{background:#12171e}
   这一版只解决三件事：<b>好看、好用、认知负担低</b>。</p>
 </div>
 
-<h2 class="alt"><span class="n">骨架</span>导航壳：一份代码，两个布局</h2>
-<p class="lede">下面所有屏都长在这个壳里。壳本身是<b>一个组件</b>，
-两套布局靠 CSS 断点切换，不是两个组件——否则第一条项目规则就破了。</p>
+<h2 class="alt"><span class="n">骨架</span>导航：逐格照搬多邻国，格子里换成我们的东西</h2>
+<p class="lede">多邻国的导航是经受过考验的，没必要重新发明。
+<b>做法：槽位数量、位置、层级一比一照搬；每个槽位里放什么，换成我们的。</b>
+我们没有的功能<b>先占位</b>——占位不是偷懒，它是把"这块地方留给什么"提前定死，
+免得以后硬塞进别处。</p>
 
 <div class="frames">
   <div class="fr fr-m">
-    <div class="lab">MOBILE · 375×812</div>
+    <div class="lab">MOBILE · 顶部四计数 + 底部六 tab（与多邻国同构）</div>
     <div class="wf wf-m">
-      <div class="box solid" style="height:30px">顶栏 · 世界▾ 🔥连击 ⚡额度</div>
-      <div class="box grow">内容区（每一屏的主体）</div>
-      <div class="row" style="height:42px">
-        <div class="box go grow">学习</div><div class="box grow dim">图鉴</div>
-        <div class="box grow dim">练习</div><div class="box grow dim">复习</div>
-        <div class="box grow dim">我</div>
+      <div class="row" style="height:26px">
+        <div class="box solid grow" style="font-size:9px">🌍 世界▾</div>
+        <div class="box grow" style="font-size:9px">🔥 3</div>
+        <div class="box grow" style="font-size:9px">💎 120</div>
+        <div class="box grow" style="font-size:9px">⚡ 额度</div>
+      </div>
+      <div class="box sky solid" style="height:32px">第 2 课 · 让 AI 读懂你的仓库 → 📋</div>
+      <div class="box plum grow">3D 漂浮岛路径<br>（云上）</div>
+      <div class="box gold" style="height:20px">↓ 回到当前</div>
+      <div class="row" style="height:40px">
+        <div class="box go grow" style="font-size:8px">学习</div>
+        <div class="box grow dim" style="font-size:8px">任务</div>
+        <div class="box grow dim" style="font-size:8px">排行榜</div>
+        <div class="box grow dim" style="font-size:8px">图鉴</div>
+        <div class="box grow dim" style="font-size:8px">会员</div>
+        <div class="box grow dim" style="font-size:8px">我</div>
       </div>
     </div>
   </div>
   <div class="fr fr-w">
-    <div class="lab">WEB · 1440×810（16:9）</div>
+    <div class="lab">WEB · 三栏 257 / 618 / 366（尺寸从多邻国录屏量出）</div>
     <div class="wf wf-w">
       <div class="row grow">
-        <div class="col" style="width:120px">
-          <div class="box solid" style="height:26px">品牌</div>
-          <div class="box go" style="height:24px">学习</div>
-          <div class="box dim" style="height:24px">图鉴</div>
-          <div class="box dim" style="height:24px">练习</div>
-          <div class="box dim" style="height:24px">复习</div>
-          <div class="box dim" style="height:24px">目录</div>
-          <div class="box dim grow">我 / 设置</div>
+        <div class="col" style="width:108px">
+          <div class="box solid" style="height:20px;font-size:9px">University</div>
+          <div class="box go" style="height:17px;font-size:9px">学习</div>
+          <div class="box dim" style="height:17px;font-size:9px">图鉴</div>
+          <div class="box dim" style="height:17px;font-size:9px">练习</div>
+          <div class="box dim" style="height:17px;font-size:9px">排行榜</div>
+          <div class="box dim" style="height:17px;font-size:9px">任务</div>
+          <div class="box dim" style="height:17px;font-size:9px">会员</div>
+          <div class="box dim" style="height:17px;font-size:9px">个人档案</div>
+          <div class="box dim grow" style="font-size:9px">更多</div>
         </div>
-        <div class="box grow">中栏 · 内容区 max-width 620px</div>
-        <div class="col" style="width:150px">
-          <div class="box solid" style="height:26px">🔥连击 ⚡额度</div>
-          <div class="box plum grow">3D 岛 · 常驻舞台<br>（你正站在哪）</div>
-          <div class="box gold" style="height:46px">今日目标 / 复习到期</div>
+        <div class="col grow">
+          <div class="box sky solid" style="height:22px;font-size:9px">第 2 课 · 让 AI 读懂你的仓库 → 📋</div>
+          <div class="box grow" style="font-size:9px">中栏 · 当前页主体</div>
+        </div>
+        <div class="col" style="width:118px">
+          <div class="box solid" style="height:20px;font-size:8px">🌍 🔥3 💎120 ⚡</div>
+          <div class="box plum grow" style="font-size:9px">3D 漂浮岛<br>常驻<br>当前岛发亮</div>
+          <div class="box gold" style="height:34px;font-size:9px">今日 · 复习 4 张<br>约 12 分钟</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<h3>槽位对照：多邻国有什么，我们放什么</h3>
+<p class="lede"><b>状态列的读法</b>：✅ 已有 · 🟡 有一半 · 🔲 <b>占位</b>（这一版只建空壳和入口，功能后补）· ❌ 决定不做</p>
+
+<h4>Web 左栏 · 8 项（多邻国是 8 项，我们也是 8 项）</h4>
+<table>
+  <tr><th>#</th><th>多邻国</th><th>我们放什么</th><th>状态</th><th>为什么</th></tr>
+  <tr><td>1</td><td>学习</td><td><b>学习</b> — 3D 漂浮岛路径</td><td>🟡</td>
+      <td>路已经是路了，还缺弹窗、分段色、岔口</td></tr>
+  <tr><td>2</td><td>发音（音标掌握网格）</td><td><b>图鉴</b> — 概念 / 术语 / 防 AI 味儿 / 收藏</td><td>🟡</td>
+      <td>结构同构：都是「一格一个知识点 + 掌握度条」。我们有 281 概念 + 267 术语，缺掌握度</td></tr>
+  <tr><td>3</td><td>练习基地</td><td><b>练习</b> — 无尽题流 + 错题本</td><td>🟡</td><td>题流有了，错题本没有</td></tr>
+  <tr><td>4</td><td>排行榜</td><td><b>排行榜</b></td><td>🔲</td>
+      <td>没有账号就没有排行。<b>先建空页 + 空状态文案</b>（照 G3：睡着的角色 + 「学一节就能上榜」）</td></tr>
+  <tr><td>5</td><td>特别任务</td><td><b>任务</b> — 日 / 周 / 月三层</td><td>🔲</td>
+      <td>三层倒计时是留存机器的核心。先建页 + 三条假进度条占位</td></tr>
+  <tr><td>6</td><td>宝石小店</td><td><b>会员</b> — 订阅 + AI 额度</td><td>🔲</td>
+      <td><b>不做双层货币</b>（见「不做的五件事」）。一层人民币定价</td></tr>
+  <tr><td>7</td><td>个人档案</td><td><b>个人档案</b> — <b>3D 头像</b> + 统计 + 徽章</td><td>🟡</td>
+      <td>头像生成器已经能跑（<code>#/avatar-lab</code>），缺档案页本身</td></tr>
+  <tr><td>8</td><td>更多（浮层）</td><td><b>更多</b> — 设置 / 目录 / 复习 / 帮助 / 退出</td><td>🟡</td>
+      <td>目录和复习已有，只是没归位</td></tr>
+</table>
+
+<h4>移动端底部 · 6 tab（多邻国是 6 个，我们也是 6 个）</h4>
+<table>
+  <tr><th>#</th><th>多邻国</th><th>我们</th><th>说明</th></tr>
+  <tr><td>1</td><td>🏠 学习</td><td><b>学习</b></td><td>同</td></tr>
+  <tr><td>2</td><td>🎯 特别任务</td><td><b>任务</b> 🔲</td><td>同槽位</td></tr>
+  <tr><td>3</td><td>🏆 排行榜</td><td><b>排行榜</b> 🔲</td><td>同槽位</td></tr>
+  <tr><td>4</td><td>💗 消息中心（社交流）</td><td><b>图鉴</b> ✅</td>
+      <td><b>唯一换掉的一格。</b>我们没有社交流，而图鉴是差异化主产品——
+        多邻国把练习埋到第 6 tab 因为它是副产品，对我们反过来</td></tr>
+  <tr><td>5</td><td>💠 Super</td><td><b>会员</b> 🔲</td><td>同槽位</td></tr>
+  <tr><td>6</td><td>⋯ 个人</td><td><b>我</b> — 3D 头像 + 练习 + 复习 + 设置</td><td>同槽位</td></tr>
+</table>
+<p class="cite"><b>练习去哪了</b>：Web 上它是左栏第 3 项（宽屏有位置），
+移动端收进「我」——和多邻国把「练习基地」收进个人页完全一致。</p>
+
+<h4>顶部四计数（两端都有，多邻国也是四个）</h4>
+<table>
+  <tr><th>多邻国</th><th>我们</th><th>点开是什么</th><th>状态</th></tr>
+  <tr><td>🇺🇸 语言旗 + 分数</td><td><b>🌍 世界▾</b> + 进度</td><td>Study 切换下拉（4 个世界）</td><td>🔲</td></tr>
+  <tr><td>🔥 连胜</td><td><b>🔥 连击</b></td><td>连击页 · 月历 · 温和版（见「不做」）</td><td>🟡</td></tr>
+  <tr><td>💎 宝石</td><td><b>💎 学分</b></td><td>做完课得到，可换 AI 辅导额度。<b>不能用真钱买</b></td><td>🔲</td></tr>
+  <tr><td>⚡ 能量</td><td><b>⚡ AI 判题额度</b></td><td>额度页。<b>这是真实成本，不是人造稀缺</b></td><td>🔲</td></tr>
+</table>
+
+<h3>断点：一份代码，三个壳</h3>
 <dl class="spec">
   <dt>断点</dt><dd>
     <ul>
-      <li><code>&lt; 768px</code> — 单栏 + 底部 tab bar。</li>
-      <li><code>768–1180px</code> — 双栏：左导航坍成图标条，右栏隐藏，状态条上移进中栏顶部。</li>
-      <li><code>≥ 1180px</code> — 三栏。</li>
+      <li><code>&lt; 768px</code> — 单栏 + 底部 6 tab（= 多邻国移动端）</li>
+      <li><code>768–1160px</code> — 双栏：左栏坍成图标条，右栏收起，四计数上移进中栏顶部</li>
+      <li><code>≥ 1160px</code> — 三栏（= 多邻国 web 端）</li>
     </ul></dd>
-  <dt>为什么<br>断在这</dt><dd>1180 = 120（左）+ 620（中）+ 150（右）+ 间距，是三栏能站住的最小宽度。
-    低于它右栏会挤到 3D 画布小于 200px，那时候 3D 传达不了任何信息，只剩耗电。</dd>
-  <dt>共享</dt><dd>壳、路径、节点弹窗、阅读器、答题、结算 → 全部在 <code>packages/ui</code>。
-    <b>本地端和在线端用同一个壳。</b>见文末「和任务一的关系」。</dd>
+  <dt>三个壳</dt><dd>
+    <ul>
+      <li><b>浏览器</b> — Vite 产物直接部署，<b>不需要任何壳</b></li>
+      <li><b>桌面</b> — Electron 包同一份产物。<b>顺带收益</b>：Electron 主进程就是 Node，
+        <code>apps/local</code> 那个单独的 HTTP 服务器进程可以直接被它取代</li>
+      <li><b>移动</b> — Capacitor 包同一份产物</li>
+    </ul></dd>
+  <dt>唯一<br>允许的<br>分歧</dt><dd>设备能力，且必须走 Port：
+    <code>StoragePort</code>（文件/IndexedDB/沙盒）·
+    <code>PaymentPort</code>（网页收银台 / <b>App 内购，苹果谷歌抽 30%</b>）·
+    <code>NotificationPort</code>（Web Push / 系统通知 / APNs）·
+    <code>GradingPort</code>（剪贴板 / API key）。
+    <b>Port 之上的每一行代码，三端一模一样。</b></dd>
 </dl>
 
-<p class="cite"><b>三栏尺寸的来源</b>：Grok 与 Gemini 独立调研 duolingo.com 后收敛到
-左 ~256px / 中 ~600–630px / 右 ~368px，断点 ~768（去底栏）与 ~1160（放出右栏）。
-两家都明确说「<b>不要做横向 timeline</b>，2022 改版就是为了消灭分支树」。
-<b>我没能亲自量</b>——<code>/learn</code> 需要登录，我不会登录你的账号。这条按「两家一致但未亲验」采信。</p>
 
+<h2 class="alt2"><span class="n">3D</span>美术方向：云上的岛，和 OwnMySpace 同一个世界观</h2>
+<p class="lede">这一节是这一版最大的视觉转向，而且它<b>不是新发明的</b>——
+它是把 University 的选课场景接到你已经在另一个项目里建立的视觉语言上。</p>
+
+<div class="dec">
+  <h4>从「海上的岛」改成「云上的岛」</h4>
+  <p><code>/Users/yuanfei/PieAI/OwnMySpace</code> 的定位原文是：
+  「every player owns a <b>floating platform in the sky above an ocean planet</b>」——
+  海洋星球上空的漂浮平台。它的 <code>ART-DIRECTION-V2.md</code> 里画了这张图：</p>
+  <p style="font:13px/2 var(--mono);background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:16px 20px;color:var(--dim);white-space:pre">🏝️(别人的小庄园)                    ⛴️🏘️(云港镇，有暖色灯点)
+           ☁️☁️☁️  ← 云海
+   ═══════════════════════════════   ← 海洋星球弧面 + 大气 rim</p>
+  <p><b>University 用同一套。</b>52 门课不是海面上的岛，是<b>云层之上的浮岛</b>；
+  往下看是一望无际、被大气雾化的森林与湖泊；选课 = 从一座岛<b>飞到</b>另一座岛。</p>
+  <p><b>为什么这值得做</b>：这不是换个贴图。两个产品共用一套世界观之后，
+  它们互相为对方作证——一个人在 OwnMySpace 拥有自己的浮岛，在 University 沿着浮岛学习，
+  <b>他会认为这是同一个世界，而那正是一个品牌能给的最贵的东西。</b>
+  而且它顺手解决了一个我一直没解决的问题：现在的海面是一整片死平的青绿色，
+  <b>没有任何东西能让画面有纵深</b>，因为水面本来就是平的。云层不是。</p>
+</div>
+
+<h3>直接继承 OwnMySpace 已经踩过的坑</h3>
+<p class="lede">它的 <code>ART-DIRECTION-V2.md</code> 是一份用真实截图逐帧诊断出来的文档。
+下面这些是它的结论，<b>我们不用再犯一次</b>。</p>
+<table>
+  <tr><th>它的诊断</th><th>我们现在的状态</th><th>要做什么</th></tr>
+  <tr><td><b>「天空是死白的 —— 这是『廉价 3D demo』最强的单一信号。
+      没有任何商业游戏的天空是纯灰白。」</b></td>
+      <td>我们是青绿渐变，比死白好，但<b>天顶没有饱和的蓝，地平线不暖</b></td>
+      <td>天顶饱和蓝 → 地平线偏暖，至少 3 级明度梯度</td></tr>
+  <tr><td><b>「云不是云。两套风格并存 —— 风格不统一比丑更伤。」</b></td>
+      <td>我们<b>一朵云都没有</b></td>
+      <td>先用 drei 的 <code>&lt;Clouds/&gt;&lt;Cloud/&gt;</code> 评估，<b>一套风格</b>，宁少勿杂</td></tr>
+  <tr><td><b>「远景是飞碟 —— 它无法被解释，所以大脑判定为 bug。」</b></td>
+      <td>远处的岛在雾里，勉强可解释</td>
+      <td>远景必须是<b>可解释的</b>：更远的浮岛群 + 云海 + 底下的森林湖泊</td></tr>
+  <tr><td><b>「大气透视是纵深的真正来源，不是加更多几何体。
+      远的东西必须更淡、更偏天空色、对比度更低。」</b></td>
+      <td>✅ 我们已经按「视线长度」调好了雾（不是按世界大小）</td>
+      <td>再进一步：<code>FogExp2</code> + 按高度衰减</td></tr>
+  <tr><td><b>「AO 单项性价比第一名。Townscaper 的高级感有一大半来自它。
+      现在所有物体像贴纸，就是因为没有它。」</b></td>
+      <td>需要核实 <code>Stage.tsx</code> 的后处理链里有没有</td>
+      <td>没有就加：N8AO → 色彩分级 → 克制的 Bloom → SMAA → 极轻 Vignette</td></tr>
+  <tr><td><b>「★ 前景框架：让近处的一棵树挡住画面一角（占 5–15%）。
+      这是摄影里最基本的深度技巧，成本为零。」</b></td>
+      <td>❌ 完全没有前景</td>
+      <td>路上视角天然适合：近处一丛草 / 一块岩石压住画面下角</td></tr>
+  <tr><td><b>「同一物体不许原样重复超过 3 次 —— 那十几棵一模一样的松树。」</b></td>
+      <td>我们的 <code>PropField</code> 有实例化，<b>需要核实有没有做随机变化</b></td>
+      <td>尺寸 / 旋转 / 色调三项随机</td></tr>
+</table>
+
+<h3>色彩脚本：先定 7 个锚点，所有资产必须落在里面</h3>
+<p class="lede">OwnMySpace §14.1 的硬规则值得原样继承：
+<b>「任何一个资产，如果它的主色不在这个色板里，要么改色，要么删掉。」</b>
+这是防止画面读起来"像几个人拼的"的唯一有效手段。University 的版本：</p>
+<table>
+  <tr><th>角色</th><th>用途</th><th>面积</th></tr>
+  <tr><td><b>主色</b></td><td>岛面草绿（要暖，不要橄榄灰）</td><td>30–40%</td></tr>
+  <tr><td><b>天空色</b></td><td>天顶饱和蓝 → 地平线暖，分层</td><td>30–40%</td></tr>
+  <tr><td><b>云色</b></td><td>受光面暖白，背光面偏蓝紫（<b>不是纯白</b>）</td><td>10–15%</td></tr>
+  <tr><td><b>岛底色</b></td><td>浮岛底部的岩石/土层——<b>这是「浮」的关键</b>，必须能看见底</td><td>8–12%</td></tr>
+  <tr><td><b>★ 强调 A</b></td><td>当前关的高饱和暖色（金环、「开始」气泡、灯火）</td><td>≤3%</td></tr>
+  <tr><td><b>★ 强调 B</b></td><td>已解锁路径的青蓝（栈桥、飞行轨迹）</td><td>≤2%</td></tr>
+  <tr><td><b>暗色锚</b></td><td>最深的暗部（岛底阴影、云隙）</td><td>≤5%</td></tr>
+</table>
+
+<h3>三个镜头，一个场景</h3>
+<table>
+  <tr><th>镜头</th><th>看到什么</th><th>什么时候</th></tr>
+  <tr><td><b>路上</b>（默认，polar 74°）</td>
+      <td>脚下这条路 + 前后几关 + 两侧云隙 + 底下模糊的森林</td>
+      <td>进入一门课。<b>90% 的时间在这里</b></td></tr>
+  <tr><td><b>飞行</b>（过渡，2–3 秒）</td>
+      <td>相机拔高、穿过云层、落到另一座岛</td>
+      <td>换课 / 换世界。<b>这是「选课」这个动作的全部动画</b></td></tr>
+  <tr><td><b>俯瞰</b>（缩出，polar 50°）</td>
+      <td>整片浮岛群 + 云海 + 你盖了多少房子</td>
+      <td>选世界 / 看成就。<b>就是现在的世界地图，降级成缩出层</b></td></tr>
+</table>
+<p class="cite"><b>三个镜头是同一个场景的三个相机档位</b>，不是三个页面。
+这一条是硬约束——第二份场景副本就是 <code>SPEC-0003</code> 失败了。</p>
 
 <h2 class="alt2"><span class="n">网</span>主路径与岔口：网状学习，但一次只露三个</h2>
 <p class="lede">网状学习确实更符合大脑——关联记忆比孤立记忆牢。
@@ -464,11 +602,73 @@ const visible = nodes
   和 <code>check-lesson-anchors.mjs</code> 是同一类工具。</p>
 </div>
 
-<h2 class="alt2"><span class="n">屏</span>十二屏，一屏一节</h2>
-<p class="lede">每屏四件事：<b>线框</b>（移动 + Web 并排）、<b>规格</b>、<b>我们现在有什么</b>（诚实标注）、
-<b>验收</b>（可测的句子，不是形容词）。<code>C5</code> 这类编号引用多邻国拆解文档。</p>
+<h2 class="alt2"><span class="n">屏</span>全量页面清单：23 个面，一个都不漏</h2>
+<p class="lede">这一节是<b>施工清单</b>。多邻国有的槽位我们都留，
+我们还没有的功能<b>建空壳 + 入口 + 空状态文案</b>——
+空状态是产品的一部分，不是"没做完"。多邻国自己的排行榜空页就是一只睡着的猫头鹰加一句
+「别打盹！学个单元开始这周的挑战吧！」，那一页什么数据都没有，但它是完成的。</p>
 
-<!-- ============ 01 ============ -->
+<table>
+  <tr><th>#</th><th>页面</th><th>路由</th><th>多邻国对应</th><th>状态</th><th>这一版要做到</th></tr>
+  <tr><td colspan="6" style="background:#12171e;font-weight:600;color:var(--go)">导航槽 1 · 学习</td></tr>
+  <tr><td>01</td><td><b>学习路径</b></td><td><code>#/</code></td><td>C1–C4</td><td>🟡</td>
+      <td>3D 漂浮岛 + 分段色 + 单元条 + 「开始」气泡 + ↓回到当前</td></tr>
+  <tr><td>02</td><td><b>节点弹窗</b></td><td>就地</td><td><b>C5 · 最关键</b></td><td>🔲</td>
+      <td>标题 + 「读 6 分钟 · 3 题」 + 按钮上印奖励（「学完解锁『幂等』」）</td></tr>
+  <tr><td>03</td><td><b>单元卡</b></td><td>就地 sheet</td><td>C6 + E1</td><td>🔲</td>
+      <td><b>第一人称能力句</b> +「会带你读的真实代码」坐标 + 解锁词条预告</td></tr>
+  <tr><td>04</td><td><b>阶段总览 / 跳级</b></td><td>就地</td><td>E1 + W2</td><td>🔲</td>
+      <td>课程列表 + 能力区间 + 「跳级到这儿?」（挂到路径上，不只在菜单里）</td></tr>
+  <tr><td>05</td><td><b>世界切换器</b></td><td>顶栏下拉</td><td>D1</td><td>🔲</td>
+      <td>4 个 study 方块 + 进度条 + 「新课程」区</td></tr>
+  <tr><td>06</td><td><b>世界（3D 缩出）</b></td><td><code>#/world</code></td><td>无</td><td>🟡</td>
+      <td><b>我们独有</b>：缩出看全部漂浮岛群，选世界 / 看盖了多少</td></tr>
+  <tr><td>07</td><td><b>连击页</b></td><td><code>#/streak</code></td><td>D2</td><td>🔲</td>
+      <td>月历 + 打卡天数。<b>温和版</b>，不做「0 天」的巨大空洞</td></tr>
+  <tr><td>08</td><td><b>AI 额度页</b></td><td><code>#/credits</code></td><td>D4（能量）</td><td>🔲</td>
+      <td>额度条 + 「订阅得无限」+ 「学分兑换」。<b>额度是真实成本，不是人造稀缺</b></td></tr>
+
+  <tr><td colspan="6" style="background:#12171e;font-weight:600;color:var(--sky)">学习会话（进入后全部导航消失）</td></tr>
+  <tr><td>09</td><td><b>加载页</b></td><td>全局</td><td>F1</td><td>🔲</td>
+      <td>随机一条概念词条当冷知识。<b>281 条素材已经写完了，成本最低的一屏</b></td></tr>
+  <tr><td>10</td><td><b>课文阅读</b></td><td><code>#/&lt;s&gt;/&lt;c&gt;/&lt;u&gt;/&lt;l&gt;</code></td><td>F2 顶栏</td><td>🟡</td>
+      <td>✕ + 进度条，<b>DOM 里不存在 tab bar / 侧栏</b>；Web 端证据锚点进右栏</td></tr>
+  <tr><td>11</td><td><b>答题</b></td><td>课文内联</td><td>F2</td><td>🟡</td>
+      <td>题型小标签 · 选项无 ABC 编号 · 提交键<b>禁用不隐藏</b> · 对错三重编码</td></tr>
+  <tr><td>12</td><td><b>结算</b></td><td><code>…/done</code></td><td>无（他们只给经验）</td><td>🟡</td>
+      <td>岛上真的多一间房 + <b>直接给下一个节点弹窗</b> + 解锁词条卡</td></tr>
+
+  <tr><td colspan="6" style="background:#12171e;font-weight:600;color:var(--plum)">导航槽 2–4 · 图鉴 / 练习 / 排行榜</td></tr>
+  <tr><td>13</td><td><b>图鉴首页</b></td><td><code>#/library/&lt;tab&gt;</code></td><td>发音网格 G7</td><td>🟡</td>
+      <td>4 tab（概念 281 / 术语 267 / 防 AI 味儿 25 / 收藏）</td></tr>
+  <tr><td>14</td><td><b>概念掌握网格</b></td><td><code>#/library/concepts</code></td><td><b>G7</b></td><td>🔲</td>
+      <td>一格一个概念 + <b>FSRS 记忆强度条</b>。调度器已有，只是没投影成网格</td></tr>
+  <tr><td>15</td><td><b>词条页</b></td><td><code>#/library/&lt;tab&gt;/&lt;id&gt;</code></td><td>无</td><td>✅</td>
+      <td>已有。加「一键复制成 AI 上下文」的显眼入口</td></tr>
+  <tr><td>16</td><td><b>练习中心</b></td><td><code>#/practice</code></td><td>G9</td><td>🟡</td>
+      <td>推荐大卡（照 G9：一句话 +「开始」）+ 题流 + <b>错题本（带红标计数）</b>🔲</td></tr>
+  <tr><td>17</td><td><b>复习 FSRS</b></td><td><code>#/review</code></td><td>无</td><td>✅</td>
+      <td><b>我们独有</b>。多邻国把间隔重复藏在算法里，我们把它做成一个面</td></tr>
+  <tr><td>18</td><td><b>排行榜</b></td><td><code>#/league</code></td><td>G3</td><td>🔲</td>
+      <td><b>只建空状态</b>：照 G3 的手法——空的时候讲下一步，不讲现状</td></tr>
+
+  <tr><td colspan="6" style="background:#12171e;font-weight:600;color:var(--gold)">导航槽 5–8 · 任务 / 会员 / 档案 / 更多</td></tr>
+  <tr><td>19</td><td><b>任务</b></td><td><code>#/quests</code></td><td>G2</td><td>🔲</td>
+      <td>三层倒计时（日 12h / 周 / 月）+ 宝箱奖励。<b>全部 0/N 占位</b></td></tr>
+  <tr><td>20</td><td><b>会员</b></td><td><code>#/plans</code></td><td>G5</td><td>🔲</td>
+      <td>照 G5 的<b>浅色主题</b>（全站唯一亮页）+ 价格锚定排序。<b>一层人民币定价</b></td></tr>
+  <tr><td>21</td><td><b>个人档案</b></td><td><code>#/me</code></td><td>G6</td><td>🔲</td>
+      <td><b>3D 头像</b>（可换物种/色盘）+ 「读过 N 段真实代码」+ 徽章墙占位</td></tr>
+  <tr><td>22</td><td><b>目录</b></td><td><code>#/catalog</code></td><td>无</td><td>✅</td>
+      <td>已有。<b>补第一人称能力句</b>（52 门课 + 146 单元各一句）</td></tr>
+  <tr><td>23</td><td><b>设置</b></td><td><code>#/settings</code></td><td>W6</td><td>🔲</td>
+      <td>照 W6：中栏表单 + <b>右栏变成设置子导航</b>（右栏是「当前页的上下文栏」）</td></tr>
+</table>
+
+<p class="cite"><b>数一下</b>：✅ 4 个已有 · 🟡 8 个有一半 · 🔲 <b>11 个要新建</b>。
+11 个里有 7 个是空壳 + 入口 + 空状态，工作量比听起来小得多。</p>
+
+<h3 style="margin-top:44px">四个最关键的屏，展开讲</h3>
 <div class="scr">
   <div class="scr-head"><span class="id">01</span><h3>学习路径</h3>
     <span class="route">#/ （落地屏）</span><span class="have part">部分：有 3D 地图，无路径</span></div>
@@ -538,7 +738,6 @@ const visible = nodes
   </ol></div>
 </div>
 
-<!-- ============ 02 ============ -->
 <div class="scr">
   <div class="scr-head"><span class="id">02</span><h3>节点弹窗</h3>
     <span class="route">路径上就地展开，不换路由</span><span class="have no">完全没有</span></div>
@@ -588,7 +787,6 @@ const visible = nodes
   </ol></div>
 </div>
 
-<!-- ============ 03 ============ -->
 <div class="scr">
   <div class="scr-head"><span class="id">03</span><h3>单元卡 · 学完你能做什么</h3>
     <span class="route">单元条右侧 📋 / 弹窗内展开</span><span class="have no">没有</span></div>
@@ -636,49 +834,6 @@ const visible = nodes
   </ol></div>
 </div>
 
-<!-- ============ 04 ============ -->
-<div class="scr">
-  <div class="scr-head"><span class="id">04</span><h3>世界 · 3D 群岛（改岗后）</h3>
-    <span class="route">#/world · Web 右栏常驻 / 移动端按需</span><span class="have part">有，但岗位错了</span></div>
-  <p>对应决定一。<b>它不再是「找一节课」的地方</b>，它是三件事：选世界、看自己在哪、看自己盖了什么。</p>
-  <div class="frames">
-    <div class="fr fr-m"><div class="lab">MOBILE · 全屏，从「我」或结算进入</div>
-      <div class="wf wf-m" style="height:340px">
-        <div class="box solid" style="height:24px">✕　我的世界</div>
-        <div class="box plum grow">4 片群岛<br>当前岛脉冲<br>其余压暗<br><br>（按需 import()）</div>
-        <div class="box solid col" style="flex:0 0 auto;padding:6px;gap:4px">
-          <div class="box" style="border:none;color:var(--ink);font-size:11px">Buzz · 你在这里</div>
-          <div class="box" style="border:none;font-size:10px">12/41 节 · 岛上已有 12 间房</div>
-          <div class="box go solid" style="height:24px">回到路径</div></div>
-        <div class="box dim" style="height:20px">拖动平移 · 滚轮缩放 · 点岛切换世界</div>
-      </div></div>
-    <div class="fr fr-w"><div class="lab">WEB · 右栏常驻（不是全屏）</div>
-      <div class="wf wf-w" style="height:200px">
-        <div class="row grow">
-          <div class="box dim" style="width:100px">导航</div>
-          <div class="box dim grow">路径（主体不变）</div>
-          <div class="col" style="width:150px">
-            <div class="box solid" style="height:20px">🔥3 · ⚡额度</div>
-            <div class="box plum grow">3D · 当前岛高亮<br>其余压暗<br>点岛=切世界<br>⤢ 放大</div>
-            <div class="box" style="height:26px">Buzz · 12/41<br>岛上 12 间房</div></div>
-        </div></div></div>
-  </div>
-  <dl class="spec">
-    <dt>点岛 =</dt><dd><b>切换 study</b>，不是进课。切完中栏路径整条换成那个世界的课。
-      这跟 D1 课程切换器是同一个动作的两种形态——<b>一个动作，两个入口，不是两套逻辑。</b></dd>
-    <dt>压暗</dt><dd>SPEC-0003 表格里「focus track → 世界压暗其余」那一行，原样保留。</dd>
-    <dt>缩放档</dt><dd>路上视角 ⇄ 地图视角是<b>同一个场景的两个相机档位</b>，不是两个页面。
-      缩出 = 看全局与选世界，缩进 = 回到路上。</dd>
-    <dt>共享</dt><dd>场景本体搬到 <b><code>packages/world</code></b>（独立包，不是 <code>packages/ui</code>）。
-      理由见文末「和任务一的关系」。</dd>
-  </dl>
-  <div class="ac"><b>验收</b><ol>
-    <li>两个 shell 渲染的是<b>同一个组件</b>，<code>check-module-boundaries.mjs</code> 能证明没有第二份。</li>
-    <li>3D 挂了（WebGL 不可用 / 加载失败）时，路径与全部功能<b>照常工作</b>，右栏换成文字摘要。</li>
-  </ol></div>
-</div>
-
-<!-- ============ 05 ============ -->
 <div class="scr">
   <div class="scr-head"><span class="id">05</span><h3>课文阅读</h3>
     <span class="route">#/&lt;study&gt;/&lt;course&gt;/&lt;unit&gt;/&lt;lesson&gt;</span>
@@ -720,93 +875,6 @@ const visible = nodes
     <li>两个 shell 用<b>同一个阅读器组件</b>，<code>apps/online/src/lesson/Lesson.tsx</code> 的重复实现被删除。</li>
     <li><code>已读</code> 与 <code>已答题</code> 在 <code>progress/contract.ts</code> 里是两个独立标志，两端都不再置相等。</li>
   </ol></div>
-</div>
-
-<!-- ============ 06–07 ============ -->
-<div class="scr">
-  <div class="scr-head"><span class="id">06</span><h3>答题</h3>
-    <span class="route">课文内联</span><span class="have part">两端各一份</span></div>
-  <dl class="spec">
-    <dt>照搬 F2</dt><dd>① 题型小标签（「新概念」/「回忆」/「应用」）② 选项<b>无 A/B/C 编号</b>
-      ③ 提交按钮<b>禁用而非隐藏</b>，位置从进来就固定 ④ 判定后从底部升起结果条，
-      对/错用<b>颜色 + 图标 + 文字</b>三重编码（不能只靠颜色，色盲）。</dd>
-    <dt>判分</dt><dd>沿用现有三层：确定性 → 小模型 → 开放辅导。
-      <b>学习者看到的文案里不出现「第 N 层」「额度」这类内部词</b>（这条已经修过，别退回去）。</dd>
-    <dt>两端差异</dt><dd><b>唯一差异在这里，而且这正是老板说的那条</b>：
-      在线端 → SwimmerAIKit 实时判；本地端 → 复制提示词到剪贴板，宿主判完粘回来。
-      <b>同一个组件，一个 <code>GradingPort</code> 两种实现。</b></dd>
-  </dl>
-</div>
-
-<div class="scr">
-  <div class="scr-head"><span class="id">07</span><h3>结算</h3>
-    <span class="route">…/done</span><span class="have yes">有</span></div>
-  <dl class="spec">
-    <dt>保留</dt><dd>「岛上又立起了一间房子」——这是 3D 唯一无可替代的时刻，也是我们对多邻国
-      「+40 经验」的实体回答。<b>移动端在这里、也只在这里，值得按需加载 3D。</b></dd>
-    <dt>加上</dt><dd>结算页底部<b>直接给下一个节点弹窗</b>（屏 02），不要求用户先回路径再找。
-      多邻国在这里放「继续」直连下一节，这是连续学习率最高的一个按钮。</dd>
-    <dt>加上</dt><dd>本节解锁的词条，做成可点的卡片（我们的「宝箱」）。</dd>
-  </dl>
-</div>
-
-<!-- ============ 08–12 ============ -->
-<div class="scr">
-  <div class="scr-head"><span class="id">08</span><h3>目录</h3>
-    <span class="route">#/catalog</span><span class="have yes">有（缺能力句）</span></div>
-  <dl class="spec">
-    <dt>不动</dt><dd>560 节全部真 <code>&lt;a href&gt;</code>、键盘可达、<code>&lt;details&gt;</code> 折叠——这些已经对了。</dd>
-    <dt>加</dt><dd>每门课、每个单元<b>那一句第一人称能力描述</b>（屏 03）。
-      目录现在列出了 52 门课，但<b>没有一句话说学完能干什么</b>——这是「这课值不值得买」的直接答案。</dd>
-    <dt>Web</dt><dd>三栏里的中栏，右栏 3D 跟着高亮鼠标悬停的课。</dd>
-  </dl>
-</div>
-
-<div class="scr">
-  <div class="scr-head"><span class="id">09</span><h3>图鉴 · 概念掌握网格</h3>
-    <span class="route">#/library/&lt;tab&gt;</span><span class="have part">有列表，缺掌握度</span></div>
-  <p>对应 G7（发音网格）。多邻国把 40 个音标做成带掌握度条的卡片网格——
-  <b>路径回答「往哪走」，网格回答「哪块弱」，同一套数据两种投影。</b></p>
-  <dl class="spec">
-    <dt>加</dt><dd>281 个概念每个一张卡，卡上一条<b>掌握度条</b>。数据源：FSRS 的记忆强度，
-      <b>我们已经有调度器了</b>（<code>packages/core/src/scheduling/fsrs.ts</code>），只是没投影成网格。</dd>
-    <dt>反着做</dt><dd>多邻国把自由练习埋到第 6 个 tab 底下第 4 项，因为练习是副产品、会跟路径抢注意力。
-      <b>对我们它是差异化主产品</b>——281 概念 + 267 术语 + 25 反模式 + 一键复制成 AI 上下文。
-      <b>图鉴留在一级 tab。这是看懂之后要反着做的地方。</b></dd>
-  </dl>
-</div>
-
-<div class="scr">
-  <div class="scr-head"><span class="id">10</span><h3>练习流</h3>
-    <span class="route">#/practice</span><span class="have yes">有</span></div>
-  <dl class="spec">
-    <dt>加</dt><dd>入口卡照 G9 的写法：一句话说清这是什么 +「开始」。现在它只是一个 tab 名。</dd>
-    <dt>加</dt><dd><b>错题本</b>（G9 里那个带红标 3 的）。答错的题进队列，红点告诉你欠着几道。
-      我们有 FSRS，这本质是「到期的错题」，不是新系统。</dd>
-  </dl>
-</div>
-
-<div class="scr">
-  <div class="scr-head"><span class="id">11</span><h3>加载页</h3>
-    <span class="route">全局</span><span class="have no">没有</span></div>
-  <dl class="spec">
-    <dt>照搬 F1</dt><dd>加载时<b>随机显示一条概念词条</b>：「你知道吗：<i>幂等</i> 的意思是……」
-      不放进度条——进度条让你盯着等，一句话让你读完了才发现已经好了。</dd>
-    <dt>为什么<br>几乎白捡</dt><dd><b>281 条素材已经写完了。</b>这是全文档里工作量最小的一屏。</dd>
-  </dl>
-</div>
-
-<div class="scr">
-  <div class="scr-head"><span class="id">12</span><h3>我</h3>
-    <span class="route">#/me</span><span class="have no">没有</span></div>
-  <dl class="spec">
-    <dt>放</dt><dd>学习总览（学了多少天 / 完成 N 节 / 解锁 N 个概念）· 收藏 · 设置 · 账号与订阅（仅在线端）。</dd>
-    <dt>G6 的<br>那一手</dt><dd>多邻国把「67,539 经验」放在个人主页最显眼处，因为<b>那个数字是转换成本</b>——
-      个人主页的真正作用不是给别人看，是给你自己看你走不了。<br>
-      <b>我们的等价物是「你读过 N 段真实代码」</b>，而且它比经验值诚实，因为它指向真东西。</dd>
-    <dt>两端</dt><dd>本地端这一屏放 airlock 三个时钟、UA 面板、知识笔记——
-      SPEC-0003 表格里「authoring only 覆盖层」的那些行，全部落在这里。</dd>
-  </dl>
 </div>
 
 <h2 class="gold"><span class="n">任务一</span>和「两端合流」的关系：你说对了一大半</h2>
@@ -884,28 +952,35 @@ const visible = nodes
   这条要么你拍板改 SPEC-0003 的第 1 步，要么在 PGS 上游提。</p>
 </div>
 
-<h2><span class="n">顺序</span>施工顺序：先切口，再换屏</h2>
-<p class="lede">顺序不是偏好。<b>先切口</b>是因为口没切开之前，任何一屏都会被做成两遍——
-这正是我们要消灭的东西。每一波做完都能跑、能验证、能停。</p>
+<h2><span class="n">顺序</span>施工顺序</h2>
+<p class="lede">顺序不是偏好。<b>先切口</b>，因为口没切开之前任何一屏都会被做两遍；
+<b>占位早于功能</b>，因为空壳定死了"这块地方留给什么"，晚了就会被硬塞进别处。</p>
 <table>
   <tr><th>波</th><th>做什么</th><th>做完能验证什么</th><th>风险</th></tr>
-  <tr><td><b>0</b></td><td>你回答文末三个问题</td><td>方向锁定</td><td>—</td></tr>
-  <tr><td><b>1</b></td><td>切 <code>ContentPort</code> / <code>EvidencePort</code>，
-      删掉 <code>apps/online/src/lesson/Lesson.tsx</code> 那份重复阅读器</td>
-    <td><b>两端课文页看起来完全没变</b>——这就是测试</td><td>高（最大的一条缝）</td></tr>
-  <tr><td><b>2</b></td><td>屏 05/06 的导航隐藏 + 已读/已答分离</td><td>进课后 DOM 里没有 tab bar</td><td>低</td></tr>
-  <tr><td><b>3</b></td><td>屏 01 路径 + 屏 02 节点弹窗（<b>2D，无 3D 依赖</b>）</td>
-    <td>560 节可 Tab 到达；移动端首屏无 three</td><td>中</td></tr>
-  <tr><td><b>4</b></td><td>屏 03 能力句 + 屏 08 目录补句（<b>纯文案</b>）</td>
-    <td>52 门课各有一句「学完你能——」，缺则 CI 红</td><td>无代码风险</td></tr>
-  <tr><td><b>5</b></td><td>抽 <code>packages/world</code>，local 接上（= 建 SPEC-0003）</td>
-    <td>两端同一个场景；<code>check-module-boundaries</code> 证明没有第二份</td><td>中</td></tr>
-  <tr><td><b>6</b></td><td>Web 三栏 + 右栏常驻 3D（屏 04）</td><td>1160/768 两处断点无横向滚动</td><td>低</td></tr>
-  <tr><td><b>7</b></td><td>屏 09 掌握度网格 · 屏 11 加载页 · 屏 10 错题本</td><td>—</td><td>低</td></tr>
-  <tr><td><b>8</b></td><td>online 建 SwimmerBackend（账号 / 支付 / 计费 AI）</td><td>能收到第一笔钱</td><td>高，独立立项</td></tr>
+  <tr><td><b>0</b></td><td>✔ 路上视角（已完成并推送）· ✔ 3D 头像包（已完成）</td>
+      <td>路能跑、头像能换物种</td><td>—</td></tr>
+  <tr><td><b>1</b></td><td><b>导航骨架</b>：Web 三栏 257/618/366 + 移动端 6 tab + 顶部四计数。
+      <b>八个槽位全部建出来，没功能的建空壳</b></td>
+      <td>1160/768 两处断点无横向滚动；每个 tab 都能进、都有内容或空状态</td><td>中</td></tr>
+  <tr><td><b>2</b></td><td><b>节点弹窗</b>（屏 02）+ <b>单元卡</b>（屏 03）</td>
+      <td>点石头不改 URL、Esc 可关、焦点不逃逸</td><td>低</td></tr>
+  <tr><td><b>3</b></td><td><b>课程 spineOrder</b> + turing-pact 排序 + <b>岔口三格窗</b></td>
+      <td>主路径永远只有一个下一步；屏上岔口 ≤9（常数上界）</td><td>中</td></tr>
+  <tr><td><b>4</b></td><td><b>能力句</b>：52 门课 + 146 单元各一句第一人称。<b>纯文案，零代码风险</b></td>
+      <td>缺一句 CI 红</td><td>无</td></tr>
+  <tr><td><b>5</b></td><td><b>云上的岛</b>：天空分层、云、浮岛底、前景框架、AO/色彩分级</td>
+      <td>和 OwnMySpace 并排看是同一个世界</td><td>中</td></tr>
+  <tr><td><b>6</b></td><td><b>四个 Port</b> + 删掉 online 那份重复阅读器 + 导航隐藏 + 已读/已答分离</td>
+      <td>两端课文页看起来完全没变——这就是测试</td><td><b>高</b>（最大一条缝）</td></tr>
+  <tr><td><b>7</b></td><td><b>本地档案</b>（localStorage 版 profile）→ 个人档案页 + 3D 头像落位</td>
+      <td>不需要后端就能有"我"</td><td>低</td></tr>
+  <tr><td><b>8</b></td><td>Electron 壳（顺带吃掉 <code>apps/local</code> 的独立 server 进程）+ Capacitor 壳</td>
+      <td>同一份产物三个壳都能跑</td><td>中</td></tr>
+  <tr><td><b>9</b></td><td>SwimmerBackend：账号 / 支付 / 计费 AI。<b>排行榜、徽章、跨端同步在这之后才有意义</b></td>
+      <td>能收到第一笔钱</td><td>高，独立立项</td></tr>
 </table>
-<p class="cite"><b>波 4 建议插队到最前面。</b>它零代码风险、成本最低，
-而且它直接回答「这课值不值得买」——那是「能卖钱」这个目标最短的一条路。</p>
+<p class="cite"><b>波 4 建议插队到最前面</b>：零代码风险、成本最低，
+而且它直接回答「这课值不值得买」——那是「能卖钱」最短的一条路。</p>
 
 <h2 class="warn"><span class="n">不做</span>看懂了之后<i>不</i>抄的五件事</h2>
 <table>
@@ -923,18 +998,28 @@ const visible = nodes
     <td><b>对我们图鉴和练习是差异化主产品。这一条要反着做。</b></td></tr>
 </table>
 
-<h2 class="warn"><span class="n">?</span>三个问题，回答完我就开工</h2>
+<h2 class="gold"><span class="n">定</span>已经拍板的，和还开着的</h2>
 <table>
-  <tr><th>#</th><th>问题</th><th>我的建议</th></tr>
-  <tr><td>1</td><td><b>落地屏之争</b>：SPEC-0003 要求两端落地屏都是 3D 群岛并退役 2D 书架；
-      多邻国的证据说落地屏该是 2D 路径。</td>
-    <td><b>按视口分岗</b>（决定一的表）：Web ≥1160 三栏、3D 常驻右栏（SPEC-0003 仍成立）；
-      移动端落地屏是 2D 路径、3D 按需。<b>需要你同意「移动端落地屏不是 3D」。</b></td></tr>
-  <tr><td>2</td><td><b>SwimmerBackend</b>：三份文档说 local 必须离线。</td>
-    <td><b>local 保持离线，用四个 Port 共享口以上的全部代码</b>；
-      SwimmerBackend 只建在 online 侧。这样你的闭环 100% 成立。</td></tr>
-  <tr><td>3</td><td><b>SPEC-0001 与 SPEC-0003 打架</b>（3D 能不能进共享包）。</td>
-    <td>新建 <code>packages/world</code>，两份都成立。需要你拍板改 SPEC-0003 第 1 步的措辞。</td></tr>
+  <tr><th>事</th><th>结论</th></tr>
+  <tr><td>落地屏</td><td>✔ <b>3D 不退位，换镜头。</b>路上视角为默认，俯瞰降级为缩出层</td></tr>
+  <tr><td>本地端后端</td><td>✔ <b>local 保持离线 + 四个 Port。</b>SwimmerBackend 只建在 online 侧</td></tr>
+  <tr><td>网状学习</td><td>✔ <b>主路径 + 岔口 + 行内引用三层，三格窗收敛，网只在身后显现</b></td></tr>
+  <tr><td>三端</td><td>✔ <b>一份代码，三个壳。</b>浏览器不需要壳，桌面 Electron，移动 Capacitor</td></tr>
+  <tr><td>导航</td><td>✔ <b>槽位一比一照搬多邻国，格子里换成我们的东西，缺的先占位</b></td></tr>
+  <tr><td>3D 美术</td><td>✔ <b>云上的岛，与 OwnMySpace 同一世界观</b></td></tr>
+  <tr><td>3D 头像</td><td>✔ 已跑通。<b>升级成品牌共享包是 PGS 的决定</b>，不在这里定</td></tr>
+  <tr><td colspan="2" style="background:#12171e;font-weight:600;color:var(--gold)">还开着的</td></tr>
+  <tr><td><b>SPEC-0001 vs SPEC-0003</b></td>
+      <td>3D 能不能进共享包，两份 canonical spec 打架。建议新建 <code>packages/world</code>，
+        需要改 SPEC-0003 第 1 步的措辞——<b>这是记账，不是方向</b></td></tr>
+  <tr><td><b>buzz 5 门课的顺序</b></td>
+      <td>零先修，除了 <code>buzz-orientation</code> 该在最前，其余我给不了有依据的建议。<b>要作者定</b></td></tr>
+  <tr><td><b>移动端 30% 抽成</b></td>
+      <td>走 App Store / Google Play 卖课，苹果谷歌强制抽 30%，网页和桌面没有。
+        <b>影响定价，是商业决策</b></td></tr>
+  <tr><td><b>32 条悬空链接</b></td>
+      <td><code>[[lesson:]]</code> 指向不存在的课时 id。要一个校验脚本，和
+        <code>check-lesson-anchors.mjs</code> 同类</td></tr>
 </table>
 
 </div>
