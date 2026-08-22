@@ -25,8 +25,7 @@ import { useFrame } from "@react-three/fiber";
 import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import type { Course, CourseNode } from "../content/library";
-import { courseShapeOf } from "../progress/source";
+import { courseShapeOf, type Course, type CourseNode } from "./course";
 import { buildIsland, hash, lockIslandGeometry, seeded } from "./island";
 import { PropField, type Placement, type Role } from "./kit";
 import { layoutCourse, layoutStudy, radiusForLessons } from "./layout";

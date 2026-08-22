@@ -35,6 +35,17 @@ import {
   SettingsScreen,
   SettingsSubnav,
 } from "@pieai/university-ui/navigation/empty.js";
+import { courseShapeOf } from "@pieai/university-world/course.js";
+import {
+  CourseScene,
+  placeCourse,
+  placeWorld,
+  WorldScene,
+  type LessonPlacement,
+  type Marker,
+} from "@pieai/university-world/Maps.js";
+import { courseSprites } from "@pieai/university-world/path-overlay.js";
+import { Stage } from "@pieai/university-world/Stage.js";
 
 import { CourseCatalog } from "../catalog/CourseCatalog";
 import {
@@ -46,7 +57,7 @@ import {
   type Course,
   type CourseNode,
 } from "../content/library";
-import { courseShapeOf, progressSource } from "../progress/source";
+import { progressSource } from "../progress/source";
 import { dueCards, dueTomorrow, snapshot, subscribe } from "../progress/store";
 import { AntiPatternEntryHost } from "../screens/AntiPatternEntryHost";
 import { AvatarLab } from "../screens/AvatarLab";
@@ -58,16 +69,6 @@ import { ReviewHost } from "../screens/ReviewHost";
 import { SettlementHost } from "../screens/SettlementHost";
 import { TermEntryHost } from "../screens/TermEntryHost";
 import { fromHash, toHash, WORLD, type View } from "../url-state";
-import {
-  CourseScene,
-  placeCourse,
-  placeWorld,
-  WorldScene,
-  type LessonPlacement,
-  type Marker,
-} from "../world/Maps";
-import { courseSprites } from "../world/path-overlay";
-import { Stage } from "../world/Stage";
 import { ProfileAvatar } from "./ProfileAvatar";
 import { TodayCard } from "./TodayCard";
 import {

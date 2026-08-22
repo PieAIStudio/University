@@ -12,8 +12,6 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { UnitCard, type PathUnit } from "@pieai/university-ui";
 
-import "../styles.css";
-
 const UNIT: PathUnit = {
   title: "从零开始之前",
   objective: "读完能说出这一单元在讲什么。",

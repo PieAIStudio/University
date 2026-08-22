@@ -16,9 +16,9 @@ import {
   type LessonRef,
   type ProgressSource,
 } from "@pieai/university-core";
+import { courseShapeOf } from "@pieai/university-world/course.js";
 
 import { depthsFromPrerequisites, library, type Course } from "../content/library";
-import { courseShapeOf } from "../progress/source";
 
 export interface CatalogLesson {
   readonly id: string;

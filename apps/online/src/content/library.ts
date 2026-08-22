@@ -25,6 +25,7 @@ import imported from "./imported.json";
  */
 import type { AnswerKey } from "@pieai/university-core";
 import type { LessonAssetView, LessonSectionView } from "@pieai/university-ui";
+import type { CourseNode } from "@pieai/university-world/course.js";
 
 export type LessonAsset = LessonAssetView;
 
@@ -142,14 +143,8 @@ export function peekCourse(studyId: string, courseId: string): Course | undefine
   return resolved.get(`${studyId}/${courseId}`);
 }
 
-export interface CourseNode extends LibraryCourse {
-  readonly studyId: string;
-  readonly studyTitle: string;
-  /** Distance from a root along prerequisites, computed over this study. */
-  depth: number;
-  prerequisiteCourseIds: readonly string[];
-  trackId: string | null;
-}
+/** Defined in `@pieai/university-world`. The map's input contract. */
+export type { CourseNode };
 
 /**
  * Distance from a root along prerequisites, computed over one study.

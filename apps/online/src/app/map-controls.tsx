@@ -1,9 +1,8 @@
+import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { useFrame, useThree } from "@react-three/fiber";
 import { MapControls } from "three/addons/controls/MapControls.js";
 
-import type { View } from "../url-state";
 import {
   boxesOverlap,
   labelBox,
@@ -11,8 +10,10 @@ import {
   type LabelAnchor,
   type LabelBox,
   type LabelCandidate,
-} from "../world/labels";
-import type { Marker } from "../world/Maps";
+} from "@pieai/university-world/labels.js";
+import type { Marker } from "@pieai/university-world/Maps.js";
+
+import type { View } from "../url-state";
 
 /**
  * Camera rig. Still MapControls, but with the map idiom's two habits removed.

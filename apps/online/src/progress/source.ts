@@ -22,13 +22,11 @@
  */
 import {
   NOT_STARTED,
-  type CourseShape,
   type LessonCompletion,
   type LessonRef,
   type ProgressSource,
 } from "@pieai/university-core";
 
-import type { Course } from "../content/library";
 import { lessonKey, lessonState } from "./store";
 
 export function progressSource(): ProgressSource {
@@ -38,17 +36,5 @@ export function progressSource(): ProgressSource {
       if (state.progress < 1) return NOT_STARTED;
       return { exercisesPassed: true, readConfirmed: true };
     },
-  };
-}
-
-/** The contract's view of a course, taken from the imported package. */
-export function courseShapeOf(course: Course, studyId: string): CourseShape {
-  return {
-    studyId,
-    courseId: course.id,
-    units: course.units.map((unit) => ({
-      unitId: unit.id,
-      lessonIds: unit.lessons.map((lesson) => lesson.id),
-    })),
   };
 }
