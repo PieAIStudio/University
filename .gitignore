@@ -76,3 +76,11 @@ docs/reference/借鉴的App/*.mov
 # Subagent working notes and their screenshots. The findings that matter get
 # written into docs or a commit message; the scratch pad does not.
 SCRATCH/
+
+# Trailing-slash patterns match directories only, so a *symlink* with the same
+# name slips past them. A git worktree that symlinks these back to the main
+# checkout — a normal way to run isolated agents — then commits the symlink,
+# and merging it replaces the real directory with a link pointing at itself.
+# That cost a content rebuild once. These extensionless twins catch the link.
+apps/online/content
+node_modules

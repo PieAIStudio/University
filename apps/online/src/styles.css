@@ -143,10 +143,23 @@ button.block {
   margin-top: 10px;
 }
 
+.learn-stage {
+  position: relative;
+  height: 100%;
+  min-height: min(70dvh, 720px);
+  min-width: 0;
+}
+
 .stagewrap {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
+  /* Cap the stage. On a phone the shell's main column is height:auto, so
+     `height: 100%` on the canvas resolves against content. A feedback loop
+     with the drawing buffer used to stretch the canvas to tens of thousands
+     of pixels and the sea rendered black. */
+  overflow: hidden;
+  max-height: 100dvh;
 }
 
 .stagewrap[hidden] {
@@ -307,6 +320,7 @@ button.block {
 
 .hint {
   position: absolute;
+  z-index: 2;
   left: 14px;
   bottom: 12px;
   margin: 0;
@@ -684,16 +698,63 @@ button.block {
   }
 }
 
-/* Projected names. Pointer-transparent: the canvas underneath owns the input. */
 /*
-  The layer itself stays transparent to the pointer so the map can be dragged
-  from anywhere. Only the labels that lead somewhere take events back.
+  One overlay over the canvas. Pointer-transparent so the map can be dragged
+  from anywhere. Only the labels that lead somewhere — and are actually
+  visible — take events back. Invisible quiet titles used to sit on top of
+  the unit strip as real buttons, so a human click opened nothing while
+  `element.click()` still worked.
 */
 .labels {
   position: absolute;
   inset: 0;
+  z-index: 1;
   pointer-events: none;
   overflow: hidden;
+}
+
+/*
+  HUD chrome has to sit above the overlay. The shell forces `.picked` in
+  main to `position: static`; these more specific rules put it back over
+  the canvas so a real pointer can reach the unit-strip button.
+*/
+.app-shell__main .stagewrap > .picked,
+.app-shell__main .stagewrap > .nextup {
+  position: absolute;
+  z-index: 3;
+  pointer-events: auto;
+}
+
+.app-shell__main .learn-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.app-shell__main .learn-hud .picked,
+.app-shell__main .learn-hud .nextup {
+  position: absolute;
+  z-index: 3;
+  top: 14px;
+  width: 260px;
+  max-width: calc(100% - 28px);
+  margin: 0;
+  pointer-events: auto;
+}
+
+.app-shell__main .learn-hud .nextup {
+  left: 14px;
+  width: 280px;
+}
+
+.app-shell__main .learn-hud .picked {
+  right: 14px;
+}
+
+.app-shell__main .learn-hud .picked--left {
+  right: auto;
+  left: 14px;
 }
 
 /*
@@ -756,7 +817,7 @@ button.block {
   this is the only navigation the world map has.
 */
 button.label {
-  pointer-events: auto;
+  pointer-events: none;
   border: 0;
   font: inherit;
   font-size: 0.8rem;
@@ -764,17 +825,57 @@ button.label {
   text-align: inherit;
 }
 
+button.label.is-visible {
+  pointer-events: auto;
+}
+
 button.label:hover {
   background: rgba(14, 24, 32, 0.85);
 }
 
 button.label:focus-visible {
+  pointer-events: auto;
   outline: 2px solid #ffd479;
   outline-offset: 2px;
   /* Focus has to win over the fade-out the frame callback applies to labels
      that are crowded off screen, or tabbing would move focus somewhere
      invisible. */
   opacity: 1 !important;
+}
+
+.label--icon {
+  padding: 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  border-radius: 0;
+  max-width: none;
+  overflow: visible;
+  font-size: clamp(1.35rem, 3.4vw, 2.25rem);
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgb(8 16 22 / 55%));
+  user-select: none;
+}
+
+.label--icon.is-locked {
+  filter: grayscale(1) brightness(0.82) drop-shadow(0 1px 1px rgb(8 16 22 / 40%));
+}
+
+.label--unit {
+  padding: 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  border-radius: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: rgb(244 247 251 / 78%);
+  text-shadow: 0 1px 4px rgb(8 16 22 / 75%);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  user-select: none;
 }
 
 .label--study {

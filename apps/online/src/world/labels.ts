@@ -13,6 +13,15 @@
  * jitter or a live layout measurement; we do not.
  */
 
+export type LabelAnchor = "center" | "start";
+
+export interface LabelBox {
+  readonly left: number;
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+}
+
 export interface LabelCandidate {
   readonly id: string;
   /** Screen-pixel anchor the 3D projection already computed. */
@@ -25,6 +34,11 @@ export interface LabelCandidate {
   readonly height: number;
   /** Larger wins. The lesson the learner is standing on. */
   readonly weight?: number;
+  /**
+   * Where (x, y) sits on the box. `center` is a caption over a point;
+   * `start` is a left-aligned name growing toward the path.
+   */
+  readonly anchor?: LabelAnchor;
 }
 
 export interface LabelPlacement {
@@ -42,13 +56,6 @@ export interface LabelPlacement {
 
 const DEFAULT_MAX_VISIBLE = 12;
 const DEFAULT_GAP = 4;
-
-interface Rect {
-  readonly left: number;
-  readonly top: number;
-  readonly right: number;
-  readonly bottom: number;
-}
 
 interface Slot {
   readonly x: number;
@@ -70,9 +77,17 @@ interface Slot {
  */
 function slotsFor(candidate: LabelCandidate, gap: number): readonly Slot[] {
   const { x, y, width, height } = candidate;
-  const aboveY = y - height / 2;
   const stepX = width + gap;
   const stepY = height + gap;
+  if (candidate.anchor === "start") {
+    return [
+      { x, y },
+      { x, y: y + stepY },
+      { x: x + stepX, y },
+      { x: x - stepX, y },
+    ];
+  }
+  const aboveY = y - height / 2;
   return [
     { x, y: aboveY },
     { x, y: aboveY + stepY },
@@ -81,7 +96,20 @@ function slotsFor(candidate: LabelCandidate, gap: number): readonly Slot[] {
   ];
 }
 
-function rectAt(slot: Slot, width: number, height: number): Rect {
+export function labelBox(
+  slot: Slot,
+  width: number,
+  height: number,
+  anchor: LabelAnchor = "center",
+): LabelBox {
+  if (anchor === "start") {
+    return {
+      left: slot.x,
+      top: slot.y - height / 2,
+      right: slot.x + width,
+      bottom: slot.y + height / 2,
+    };
+  }
   return {
     left: slot.x - width / 2,
     top: slot.y - height / 2,
@@ -91,7 +119,7 @@ function rectAt(slot: Slot, width: number, height: number): Rect {
 }
 
 /** Exact-gap contact is allowed; that *is* the minimum spacing. */
-function overlaps(a: Rect, b: Rect, gap: number): boolean {
+export function boxesOverlap(a: LabelBox, b: LabelBox, gap: number): boolean {
   return (
     a.left < b.right + gap &&
     a.right + gap > b.left &&
@@ -101,7 +129,7 @@ function overlaps(a: Rect, b: Rect, gap: number): boolean {
 }
 
 function intersectsViewport(
-  rect: Rect,
+  rect: LabelBox,
   viewport: { readonly width: number; readonly height: number },
 ): boolean {
   return (
@@ -124,7 +152,12 @@ function anchorOnScreen(
 export function placeLabels(
   candidates: readonly LabelCandidate[],
   viewport: { readonly width: number; readonly height: number },
-  options?: { readonly maxVisible?: number; readonly gap?: number },
+  options?: {
+    readonly maxVisible?: number;
+    readonly gap?: number;
+    /** Already-claimed boxes (pinned icons). Names must go around them. */
+    readonly reserved?: readonly LabelBox[];
+  },
 ): readonly LabelPlacement[] {
   const maxVisible = options?.maxVisible ?? DEFAULT_MAX_VISIBLE;
   const gap = options?.gap ?? DEFAULT_GAP;
@@ -134,7 +167,7 @@ export function placeLabels(
     return { id: candidate.id, x: home.x, y: home.y, visible: false };
   });
 
-  const occupied: Rect[] = [];
+  const occupied: LabelBox[] = options?.reserved ? [...options.reserved] : [];
   let visibleCount = 0;
 
   const order = candidates.map((candidate, index) => ({ candidate, index }));
@@ -153,12 +186,13 @@ export function placeLabels(
     if (visibleCount >= maxVisible) continue;
 
     const { width, height } = candidate;
+    const anchor = candidate.anchor ?? "center";
     for (const slot of slotsFor(candidate, gap)) {
-      const rect = rectAt(slot, width, height);
+      const rect = labelBox(slot, width, height, anchor);
       // An offset that leaves the frame is not a placement: it would spend a
       // maxVisible slot on a name nobody can read.
       if (!intersectsViewport(rect, viewport)) continue;
-      if (occupied.some((other) => overlaps(rect, other, gap))) continue;
+      if (occupied.some((other) => boxesOverlap(rect, other, gap))) continue;
       occupied.push(rect);
       placed[index] = { id: candidate.id, x: slot.x, y: slot.y, visible: true };
       visibleCount += 1;

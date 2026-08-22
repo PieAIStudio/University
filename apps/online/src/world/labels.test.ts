@@ -109,6 +109,40 @@ describe("placeLabels", () => {
     expect(placeLabels(candidates, VIEW, options)).toEqual(placeLabels(candidates, VIEW, options));
   });
 
+  it("keeps a name off a reserved icon box", () => {
+    const icon = { left: 160, top: 190, right: 240, bottom: 230 };
+    const placed = placeLabels([candidate({ id: "name", x: 200, y: 210, z: 0.2 })], VIEW, {
+      reserved: [icon],
+    });
+    const name = byId(placed, "name");
+    expect(name.visible).toBe(true);
+    const size = { width: 80, height: 20 };
+    const box = {
+      left: name.x - size.width / 2,
+      top: name.y - size.height / 2,
+      right: name.x + size.width / 2,
+      bottom: name.y + size.height / 2,
+    };
+    const gap = 4;
+    const clash =
+      box.left < icon.right + gap &&
+      box.right + gap > icon.left &&
+      box.top < icon.bottom + gap &&
+      box.bottom + gap > icon.top;
+    expect(clash).toBe(false);
+  });
+
+  it("places a start-anchored name at its projected point, not above it", () => {
+    const placed = placeLabels(
+      [candidate({ id: "unit", x: 120, y: 180, width: 100, height: 16, anchor: "start" })],
+      VIEW,
+    );
+    const unit = byId(placed, "unit");
+    expect(unit.visible).toBe(true);
+    expect(unit.x).toBe(120);
+    expect(unit.y).toBe(180);
+  });
+
   it("keeps a 41-lesson pile readable: visible labels never intersect", () => {
     const candidates: LabelCandidate[] = Array.from({ length: 41 }, (_, index) => ({
       id: `lesson-${index}`,
