@@ -52,7 +52,7 @@ concepts · 267 terms · 25 anti-patterns.
 420 lesson-to-lesson links, 383 inside their own course and **five** crossing
 one: the mesh does not exist yet. `[[term:]]` links: zero.
 
-Tests: core 227 · ui 134 · online 24 · local 441.
+Tests: core 227 · ui 143 · online 45 · local 444.
 
 **Re-run the script before quoting any of these.** Every number on this page
 has been wrong at least once.
@@ -102,19 +102,41 @@ each slot is ours.
 
 ## Order Of Work
 
-1. **Navigation skeleton.** Web three columns, mobile six tabs, four counters,
-   all eight slots built, empty ones with real empty states. *In progress.*
-2. Node popup and unit card. *Done, less the anchored arrow from frame C5.*
-3. `spineOrder` and the three-cell spur window. *spineOrder done.*
-4. **Capability sentences** — one first-person "after this you can —" per
-   course and per unit. Pure copy, no code risk. Best inserted first.
-5. Islands in the sky: sky layers, cloud, island underside, foreground frame,
-   AO and colour grading. Needs `packages/world` extracted first.
-6. The four ports; delete online's duplicate reader; hide navigation in a
-   lesson; separate read from answered.
-7. Evidence code in the delivery shell (ADR-0003).
-8. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
-9. SwimmerBackend: accounts, payment, metered AI.
+Done, and verified in a browser rather than by a passing suite:
+
+- **Navigation skeleton.** Both shells wear one chrome from
+  `packages/ui/src/shell` and `packages/ui/src/navigation`: web three columns,
+  mobile six tabs, four counters, eight slots, real empty states. The context
+  column collapses when a page has nothing for it.
+- **Node popup and unit card**, including the anchored tail from frame C5.
+- **`spineOrder`** for all four studies.
+- **Capability sentences** — 146 unit objectives in the first person.
+- **Path legibility** — nodes from 6% of viewport width to 14.8%, three states,
+  one hue per course, unit boundaries, kind icons.
+- **Evidence code in the delivery shell** (ADR-0003). 1,597 anchors baked.
+
+Next:
+
+1. **One overlay layer.** Lesson titles project from `app/`, kind icons and
+   unit names from `world/`, and they share no avoidance pass — so a long
+   title still crosses a unit name. Merging them also fixes the unit-strip
+   button, which the canvas currently covers: `element.click()` opens the
+   card and a human click does not.
+2. **The reading screen.** Navigation is already gone. Still to do: a ✕ in
+   place of the breadcrumb, and a progress bar showing sections within the
+   lesson rather than the lesson's index in the course.
+3. **A loading state.** The canvas paints black before its first frame, which
+   reads as a broken page. v3 screen 09 spends one of the 281 concepts on it.
+4. **`packages/world`.** SPEC-0003 step 1, and it blocks the sky work.
+5. **Islands in the sky** — sky layers, cloud, island underside, foreground
+   frame, AO and colour grading.
+6. The four ports; delete online's duplicate reader; separate read from
+   answered.
+7. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
+8. SwimmerBackend: accounts, payment, metered AI.
+
+Open, needing a person: `migrate/swimmer-avatar-kit` is built and verified but
+unmerged — it decides whether `packages/avatar` stays.
 
 ## Traps, Found The Hard Way
 
@@ -143,6 +165,21 @@ each slot is ours.
   `pnpm doc-gov scan`, not the filtered form.
 - **Videos never enter git.** `.gitignore` excludes
   `docs/reference/借鉴的App/*.mp4|MP4|mov`.
+- **Two overlay layers project over one canvas.** Lesson titles come from
+  `apps/online/src/app/`, kind icons and unit names from
+  `apps/online/src/world/`, and neither knows about the other. Anything that
+  positions DOM over the scene has to reckon with both until they are merged.
+- **A control over the canvas can be in the accessibility tree and still be
+  unclickable.** The canvas stacks above the overlay, so `element.click()`
+  succeeds where a human click does not — and a test written with `.click()`
+  passes throughout. This repo has shipped this twice now; the first time,
+  course names were `aria-hidden` with `pointer-events: none` and the only way
+  into a course was clicking a polygon.
+- **A blank canvas is two different faults that look identical.** Read
+  `globalThis.three` before touching the camera: no handle means the renderer
+  never started, a handle plus an empty `scene` means the scene failed, and a
+  handle plus a populated scene means you are early in the load. Only one of
+  the three is fixed by moving the camera.
 - **This file is pinned.** A commit touching it needs
   `Pinned-Override: REF-CURRENT-WORK` in the message. SPEC-0001 needs its own.
 
