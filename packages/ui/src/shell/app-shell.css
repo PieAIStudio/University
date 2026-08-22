@@ -440,6 +440,33 @@
   .counter-row {
     padding: 12px 4px 0;
   }
+
+  /*
+    A page with nothing to say in the context column should not reserve a
+    quarter of the screen to say it.
+
+    The rail is per-page context, not a fixed widget shelf — settings turns it
+    into settings sub-navigation, learn puts the scene and today's card there,
+    and five pages have nothing for it yet. Those were rendering 366px of
+    background beside a card floating at the top of an empty column, which
+    reads as broken rather than as empty.
+
+    `:empty` is the honest test: a caller passing a fragment that renders
+    nothing still produces an `<aside>` element, so `aside != null` in the
+    component cannot see it, but the DOM can. When it matches, the layout
+    falls back to the same two-column arrangement the 768–1159 range already
+    uses — counters above main — rather than inventing a third one.
+  */
+  .app-shell:not(:has(.app-shell__aside:not(:empty))) {
+    grid-template-columns: 257px minmax(0, 618px);
+    grid-template-areas:
+      "rail counters"
+      "rail main";
+  }
+
+  .app-shell__aside:empty {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
