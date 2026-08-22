@@ -69,7 +69,7 @@ import {
 import { courseSprites } from "../world/path-overlay";
 import { Stage } from "../world/Stage";
 import { ProfileAvatar } from "./ProfileAvatar";
-import { TodayCard } from "./TodayCard";
+import { TodayCard, todayMeta } from "./TodayCard";
 import {
   Controls,
   COURSE_POLAR,
@@ -186,6 +186,19 @@ export function App() {
     const live = world.placements.find((entry) => entry.state === "live");
     return live ?? world.placements[0] ?? null;
   }, [world]);
+
+  /**
+   * Same `{ done, total }` the course path header prints as 「还剩 N 关」.
+   * Null only while the course JSON has not resolved this session — then
+   * the card names the project and withholds the count rather than inventing
+   * a second source.
+   */
+  const nextUpProgress = useMemo(() => {
+    if (!nextUp) return null;
+    const loaded = peekCourse(nextUp.node.studyId, nextUp.node.courseId);
+    if (!loaded) return null;
+    return readCourseProgress(courseShapeOf(loaded, nextUp.node.studyId), progressSource());
+  }, [nextUp, progress]);
 
   const learnerAt = nextUp?.position ?? null;
 
@@ -454,7 +467,7 @@ export function App() {
   const todayCard = (
     <TodayCard
       nextTitle={nextUp?.node.title ?? null}
-      nextMeta={nextUp ? `${nextUp.node.studyTitle} · ${nextUp.node.lessons} 节` : null}
+      nextMeta={nextUp ? todayMeta(nextUp.node.studyTitle, nextUpProgress) : null}
       continueLabel={progress.streak.days > 0 ? "继续" : "开始第一节"}
       onContinue={() => {
         if (!nextUp) return;
