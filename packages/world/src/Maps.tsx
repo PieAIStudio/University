@@ -31,6 +31,7 @@ import { PropField, type Placement, type Role } from "./kit";
 import { layoutCourse, layoutStudy, radiusForLessons } from "./layout";
 import { stoneRadius } from "./path-overlay";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./path-language";
+import { renderTier } from "./tier";
 
 /**
  * The world's palette. Two greens for land, one warm accent for the only thing
@@ -519,6 +520,56 @@ function SkyDome() {
   );
 }
 
+/**
+ * Clouds that speak the same language as the islands.
+ *
+ * v3 asked to evaluate drei `<Clouds/><Cloud/>` first. A local puff texture,
+ * one colour, Lambert, camera-glued so they could not hide at the origin:
+ * they never appeared in the blit. Icosahedron clusters next to the thing
+ * the camera is actually looking at do appear, and they match the board.
+ * Soft billboards against this land would have been the "two styles" trap
+ * OwnMySpace already named.
+ */
+function CloudField({ around }: { around: THREE.Vector3 }) {
+  const puffs = useMemo(() => {
+    const random = seeded(`clouds/${around.x.toFixed(1)}/${around.z.toFixed(1)}`);
+    const centres: readonly (readonly [number, number, number])[] = [
+      [14, 8, -11],
+      [-16, 7, 8],
+      [6, 9, 16],
+    ];
+    const out: { position: readonly [number, number, number]; scale: number }[] = [];
+    for (const centre of centres) {
+      for (let i = 0; i < 3; i += 1) {
+        out.push({
+          position: [
+            centre[0] + (random() - 0.5) * 5,
+            centre[1] + (random() - 0.5) * 1.4,
+            centre[2] + (random() - 0.5) * 5,
+          ],
+          scale: 2.2 + random() * 1.8,
+        });
+      }
+    }
+    return out;
+  }, [around.x, around.z]);
+  if (renderTier() === "mobile") return null;
+  return (
+    <group position={around}>
+      {puffs.map((puff, index) => (
+        <mesh
+          key={index}
+          position={puff.position}
+          scale={[puff.scale, puff.scale * 0.38, puff.scale]}
+        >
+          <sphereGeometry args={[1, 7, 5]} />
+          <meshBasicMaterial color={0xf4ece0} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 const SKY_VERTEX = /* glsl */ `
 varying vec3 vDir;
 void main() {
@@ -648,6 +699,7 @@ export function WorldScene({
   return (
     <>
       <Weather extent={ring * 1.5} />
+      {learnerAt ? <CloudField around={learnerAt} /> : null}
       {placements.map((entry) =>
         entry.node.prerequisiteCourseIds.map((id) => {
           const from = byKey.get(`${entry.node.studyId}/${id}`);
@@ -764,6 +816,8 @@ export function CourseScene({
   onHover: (lesson: LessonPlacement | null) => void;
 }) {
   const live = lessons.find((lesson) => lesson.state === "live");
+  const liveIndex = lessons.findIndex((lesson) => lesson.state === "live");
+  const haze = lessons[Math.min(Math.max(liveIndex, 0) + 5, lessons.length - 1)];
   const extent = useMemo(
     () =>
       Math.max(...lessons.map((lesson) => Math.hypot(lesson.position.x, lesson.position.z)), 20),
@@ -813,6 +867,7 @@ export function CourseScene({
         you have already stopped reading.
       */}
       <Weather extent={extent * 1.3} fog={[88, 210]} />
+      {haze ? <CloudField around={haze.position} /> : null}
       {lessons.map((lesson, index) =>
         index > 0 ? (
           lesson.unitIndex % 2 === 1 ? (
