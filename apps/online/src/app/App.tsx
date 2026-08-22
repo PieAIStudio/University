@@ -66,6 +66,7 @@ import {
   type LessonPlacement,
   type Marker,
 } from "../world/Maps";
+import { courseSprites } from "../world/path-overlay";
 import { Stage } from "../world/Stage";
 import { ProfileAvatar } from "./ProfileAvatar";
 import { TodayCard } from "./TodayCard";
@@ -243,35 +244,54 @@ export function App() {
     return { lessonsCompleted, passagesRead };
   }, [progress]);
 
+  const pathSprites = useMemo(() => {
+    if (view.kind !== "course" && view.kind !== "lesson") return [];
+    return courseSprites(lessons);
+  }, [view.kind, lessons]);
+
   const markers: readonly Marker[] = useMemo(() => {
+    const fromPath: Marker[] = pathSprites.map((sprite) => ({
+      id: sprite.id,
+      position: sprite.position,
+      text: sprite.text,
+      kind: sprite.role === "icon" ? ("icon" as const) : ("unit" as const),
+      pinned: sprite.role === "icon",
+      origin: sprite.role === "unit" ? ("start" as const) : ("center" as const),
+      locked: sprite.locked,
+      label: sprite.label,
+      weight: sprite.role === "unit" ? 2 : undefined,
+    }));
     if (view.kind === "course" || view.kind === "lesson") {
-      return lessons.map((lesson) => ({
-        id: lesson.lessonId,
-        // A low lift, because the tilt is shallow. At seventy-four degrees a
-        // world-space unit of height travels a long way up the screen, and the
-        // bubble that was lifted clear of its own stone arrived next to the
-        // following one — pointing at the wrong lesson is worse than sitting a
-        // little close to the right one.
-        position: lesson.position.clone().setY(lesson.position.y + 1.7),
-        // Not the lesson title. Forty-one Chinese titles down a road all
-        // truncate, and the reference this is built from does not put them
-        // there either: the stone you are on says "start", and what it is
-        // called belongs to the card that opens when you choose it.
-        text: lesson.state === "live" ? "开始" : lesson.lessonTitle,
-        kind: "lesson" as const,
-        quiet: lesson.state !== "live",
-        weight: lesson.state === "live" ? 3 : 0,
-        activate:
-          view.kind === "lesson"
-            ? undefined
-            : () =>
-                setPathOverlay({
-                  kind: "node",
-                  unitId: lesson.unitId,
-                  lessonId: lesson.lessonId,
-                  returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
-                }),
-      }));
+      return [
+        ...fromPath,
+        ...lessons.map((lesson) => ({
+          id: lesson.lessonId,
+          // A low lift, because the tilt is shallow. At seventy-four degrees a
+          // world-space unit of height travels a long way up the screen, and the
+          // bubble that was lifted clear of its own stone arrived next to the
+          // following one — pointing at the wrong lesson is worse than sitting a
+          // little close to the right one.
+          position: lesson.position.clone().setY(lesson.position.y + 1.7),
+          // Not the lesson title. Forty-one Chinese titles down a road all
+          // truncate, and the reference this is built from does not put them
+          // there either: the stone you are on says "start", and what it is
+          // called belongs to the card that opens when you choose it.
+          text: lesson.state === "live" ? "开始" : lesson.lessonTitle,
+          kind: "lesson" as const,
+          quiet: lesson.state !== "live",
+          weight: lesson.state === "live" ? 3 : 0,
+          activate:
+            view.kind === "lesson"
+              ? undefined
+              : () =>
+                  setPathOverlay({
+                    kind: "node",
+                    unitId: lesson.unitId,
+                    lessonId: lesson.lessonId,
+                    returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
+                  }),
+        })),
+      ];
     }
     if (!world) return [];
     const studyMarkers: Marker[] = [...world.centres.entries()].map(([studyId, centre]) => {
@@ -296,7 +316,7 @@ export function App() {
         activate: () => setPicked(entry.node),
       })),
     ];
-  }, [world, lessons, view]);
+  }, [world, lessons, view, pathSprites]);
 
   const due = dueCards();
   const dueTomorrowCount = dueTomorrow();
@@ -624,7 +644,28 @@ export function App() {
               if (element) labelNodes.current.set(marker.id, element);
               else labelNodes.current.delete(marker.id);
             };
-            const className = `label label--${marker.kind}${marker.quiet ? " label--quiet" : ""}`;
+            const className = [
+              "label",
+              `label--${marker.kind}`,
+              marker.quiet ? "label--quiet" : "",
+              marker.locked ? "is-locked" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            if (marker.kind === "icon") {
+              return (
+                <span
+                  key={marker.id}
+                  ref={attach}
+                  className={className}
+                  style={{ "--placed": 0 } as CSSProperties}
+                  role="img"
+                  aria-label={marker.label ?? marker.text}
+                >
+                  {marker.text}
+                </span>
+              );
+            }
             return marker.activate ? (
               <button
                 key={marker.id}
@@ -690,101 +731,103 @@ export function App() {
 
   const main = (
     <>
-      {stage}
-      {wide && showMap ? (
-        <div className="learn-hud">
-          {view.kind === "world" && nextUp && !picked ? (
-            <aside className="nextup">
-              <p className="nextup__eyebrow">
-                {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
-              </p>
-              <h2 className="nextup__title">{nextUp.node.title}</h2>
-              <p className="nextup__meta">
-                {nextUp.node.studyTitle} · {nextUp.node.lessons} 节
-              </p>
-              <button
-                className="primary block"
-                onClick={() =>
-                  setView({
-                    kind: "course",
-                    studyId: nextUp.node.studyId,
-                    courseId: nextUp.node.courseId,
-                  })
-                }
-              >
-                {progress.streak.days > 0 ? "继续" : "开始第一节"} →
-              </button>
-            </aside>
-          ) : null}
-          {view.kind === "world" && picked ? (
-            <aside className="picked">
-              <h3>{picked.title}</h3>
-              <p className="picked__study">{picked.studyTitle}</p>
-              <dl>
-                <dt>课时</dt>
-                <dd>{picked.lessons}</dd>
-                <dt>层</dt>
-                <dd>{picked.depth + 1}</dd>
-                <dt>先修</dt>
-                <dd>{picked.prerequisiteCourseIds.length || "无"}</dd>
-              </dl>
-              <button
-                className="primary block"
-                onClick={() =>
-                  setView({
-                    kind: "course",
-                    studyId: picked.studyId,
-                    courseId: picked.courseId,
-                  })
-                }
-              >
-                进入这门课 →
-              </button>
-            </aside>
-          ) : null}
-          {view.kind === "course" && course ? (
-            <aside className="picked picked--left">
-              <h3>{course.title}</h3>
-              <p className="picked__study">
-                {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
-                {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
-              </p>
-              {pathUnit ? (
-                <div className="unit-strip">
-                  <p className="unit-strip__name">{pathUnit.title}</p>
-                  <button
-                    type="button"
-                    className="unit-strip__list"
-                    aria-label="先看这一单元讲什么"
-                    aria-haspopup="dialog"
-                    aria-expanded={pathOverlay?.kind === "unit" ? true : undefined}
-                    onClick={(event) =>
-                      setPathOverlay({
-                        kind: "unit",
-                        unitId: pathUnit.id,
-                        returnFocusTo: event.currentTarget,
-                      })
-                    }
-                  >
-                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                      <path
-                        d="M3 4.5h10M3 8h10M3 11.5h7"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeWidth="1.5"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ) : null}
-              <button className="ghost block" onClick={() => setView({ kind: "world" })}>
-                ← 回到世界地图
-              </button>
-            </aside>
-          ) : null}
-        </div>
-      ) : null}
+      <div className="learn-stage">
+        {stage}
+        {wide && showMap ? (
+          <div className="learn-hud">
+            {view.kind === "world" && nextUp && !picked ? (
+              <aside className="nextup">
+                <p className="nextup__eyebrow">
+                  {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
+                </p>
+                <h2 className="nextup__title">{nextUp.node.title}</h2>
+                <p className="nextup__meta">
+                  {nextUp.node.studyTitle} · {nextUp.node.lessons} 节
+                </p>
+                <button
+                  className="primary block"
+                  onClick={() =>
+                    setView({
+                      kind: "course",
+                      studyId: nextUp.node.studyId,
+                      courseId: nextUp.node.courseId,
+                    })
+                  }
+                >
+                  {progress.streak.days > 0 ? "继续" : "开始第一节"} →
+                </button>
+              </aside>
+            ) : null}
+            {view.kind === "world" && picked ? (
+              <aside className="picked">
+                <h3>{picked.title}</h3>
+                <p className="picked__study">{picked.studyTitle}</p>
+                <dl>
+                  <dt>课时</dt>
+                  <dd>{picked.lessons}</dd>
+                  <dt>层</dt>
+                  <dd>{picked.depth + 1}</dd>
+                  <dt>先修</dt>
+                  <dd>{picked.prerequisiteCourseIds.length || "无"}</dd>
+                </dl>
+                <button
+                  className="primary block"
+                  onClick={() =>
+                    setView({
+                      kind: "course",
+                      studyId: picked.studyId,
+                      courseId: picked.courseId,
+                    })
+                  }
+                >
+                  进入这门课 →
+                </button>
+              </aside>
+            ) : null}
+            {view.kind === "course" && course ? (
+              <aside className="picked picked--left">
+                <h3>{course.title}</h3>
+                <p className="picked__study">
+                  {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
+                  {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
+                </p>
+                {pathUnit ? (
+                  <div className="unit-strip">
+                    <p className="unit-strip__name">{pathUnit.title}</p>
+                    <button
+                      type="button"
+                      className="unit-strip__list"
+                      aria-label="先看这一单元讲什么"
+                      aria-haspopup="dialog"
+                      aria-expanded={pathOverlay?.kind === "unit" ? true : undefined}
+                      onClick={(event) =>
+                        setPathOverlay({
+                          kind: "unit",
+                          unitId: pathUnit.id,
+                          returnFocusTo: event.currentTarget,
+                        })
+                      }
+                    >
+                      <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                        <path
+                          d="M3 4.5h10M3 8h10M3 11.5h7"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeWidth="1.5"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                ) : null}
+                <button className="ghost block" onClick={() => setView({ kind: "world" })}>
+                  ← 回到世界地图
+                </button>
+              </aside>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
       {view.kind === "avatar-lab" ? (
         <Suspense fallback={null}>
           <AvatarLab onOpen={setView} />

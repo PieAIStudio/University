@@ -4,7 +4,14 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { MapControls } from "three/addons/controls/MapControls.js";
 
 import type { View } from "../url-state";
-import { placeLabels, type LabelCandidate } from "../world/labels";
+import {
+  boxesOverlap,
+  labelBox,
+  placeLabels,
+  type LabelAnchor,
+  type LabelBox,
+  type LabelCandidate,
+} from "../world/labels";
 import type { Marker } from "../world/Maps";
 
 /**
@@ -271,7 +278,9 @@ export function Flight({
 }
 
 /**
- * Names, projected out of the scene and written straight to the DOM.
+ * The one overlay projector. Course names, lesson titles, kind icons and
+ * unit names all go through this pass: one place decides "this thing is on
+ * screen at this position with this opacity".
  *
  * Not through React state, and that is the whole point of the file. Positions
  * change every frame; routing them through `setState` re-renders the tree sixty
@@ -282,6 +291,31 @@ export function Flight({
  * nothing there. Baseline rule 7 in one place: geometry moves the eye, the DOM
  * carries the words.
  */
+function originOf(marker: Marker): string {
+  return marker.origin === "start" ? "translate(0, -50%)" : "translate(-50%, -50%)";
+}
+
+function defaultWeight(marker: Marker): number {
+  if (marker.kind === "study" || marker.kind === "unit") return 2;
+  if (marker.kind === "lesson") return 0;
+  return 1;
+}
+
+function writePlacement(
+  element: HTMLElement,
+  marker: Marker,
+  x: number,
+  y: number,
+  visible: boolean,
+) {
+  element.style.transform = `translate(${x}px, ${y}px) ${originOf(marker)}`;
+  // A custom property rather than `opacity`, so a stylesheet can still have
+  // an opinion. An inline opacity wins against every rule that is not
+  // `!important`, which would make `.label--quiet` unenforceable.
+  element.style.setProperty("--placed", visible ? "1" : "0");
+  element.classList.toggle("is-visible", visible);
+}
+
 export function LabelProbe({
   markers,
   limit,
@@ -309,12 +343,27 @@ export function LabelProbe({
     // budget on names nobody is reading, and on a forty-one stone road they
     // took every slot and left the one loud name unplaced. Invisible things do
     // not get to win arguments about space.
+    //
+    // Pinned markers (kind icons) stay on their stone. They occupy a box so
+    // names go around them, and they do not spend the name budget.
     const candidates: LabelCandidate[] = [];
+    const reserved: LabelBox[] = [];
+    const pinned: {
+      marker: Marker;
+      element: HTMLElement;
+      x: number;
+      y: number;
+      z: number;
+      width: number;
+      height: number;
+      anchor: LabelAnchor;
+    }[] = [];
     // Every marker that projected this frame, quiet or not. The reset below
     // keys off this rather than off `candidates`, which no longer holds the
     // quiet ones — without it the reset immediately undoes the transform the
     // quiet branch just wrote, and nothing on the road can ever be focused.
     const projectedIds = new Set<string>();
+    const viewport = { width: size.width, height: size.height };
     for (const marker of markers) {
       const projected = scratch.current.copy(marker.position).project(camera);
       if (projected.z >= 1 || Math.abs(projected.x) > 1 || Math.abs(projected.y) > 1) continue;
@@ -324,8 +373,16 @@ export function LabelProbe({
       const y = ((1 - projected.y) / 2) * size.height;
       projectedIds.add(marker.id);
       if (marker.quiet) {
-        element.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+        writePlacement(element, marker, x, y, false);
+        // Quiet still needs `--placed: 1` so focus-visible can fade it in.
         element.style.setProperty("--placed", "1");
+        continue;
+      }
+      const width = element.offsetWidth;
+      const height = element.offsetHeight;
+      const anchor: LabelAnchor = marker.origin === "start" ? "start" : "center";
+      if (marker.pinned) {
+        pinned.push({ marker, element, x, y, z: projected.z, width, height, anchor });
         continue;
       }
       candidates.push({
@@ -335,32 +392,40 @@ export function LabelProbe({
         z: projected.z,
         // Measured, not guessed: a Chinese lesson title and a study name are
         // different widths, and a fixed box would either clip or over-reserve.
-        width: element.offsetWidth,
-        height: element.offsetHeight,
+        width,
+        height,
         // A study name orients the whole view, so it outranks any one course.
-        weight: marker.weight ?? (marker.kind === "study" ? 2 : marker.kind === "lesson" ? 0 : 1),
+        weight: marker.weight ?? defaultWeight(marker),
+        anchor,
       });
     }
 
-    for (const placement of placeLabels(
-      candidates,
-      { width: size.width, height: size.height },
-      {
-        maxVisible: limit,
-      },
-    )) {
+    pinned.sort((left, right) => left.z - right.z);
+    for (const item of pinned) {
+      const onScreen =
+        item.x >= 0 && item.y >= 0 && item.x <= viewport.width && item.y <= viewport.height;
+      const box = labelBox({ x: item.x, y: item.y }, item.width, item.height, item.anchor);
+      const free = onScreen && !reserved.some((other) => boxesOverlap(box, other, 4));
+      writePlacement(item.element, item.marker, item.x, item.y, free);
+      if (free) reserved.push(box);
+    }
+
+    for (const placement of placeLabels(candidates, viewport, {
+      maxVisible: limit,
+      reserved,
+    })) {
       const element = nodes.get(placement.id);
       if (!element) continue;
-      element.style.transform = `translate(${placement.x}px, ${placement.y}px) translate(-50%, -50%)`;
-      // A custom property rather than `opacity`, so a stylesheet can still have
-      // an opinion. An inline opacity wins against every rule that is not
-      // `!important`, which would make `.label--quiet` unenforceable.
-      element.style.setProperty("--placed", placement.visible ? "1" : "0");
+      const marker = markers.find((entry) => entry.id === placement.id);
+      if (!marker) continue;
+      writePlacement(element, marker, placement.x, placement.y, placement.visible);
     }
     // Anything that did not project at all this frame is behind the camera or
     // off the far plane, and must not keep the position it had last frame.
     for (const [id, element] of nodes) {
-      if (!projectedIds.has(id)) element.style.setProperty("--placed", "0");
+      if (projectedIds.has(id)) continue;
+      element.style.setProperty("--placed", "0");
+      element.classList.remove("is-visible");
     }
   }, 2);
 

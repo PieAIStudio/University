@@ -30,14 +30,8 @@ import { courseShapeOf } from "../progress/source";
 import { buildIsland, hash, lockIslandGeometry, seeded } from "./island";
 import { PropField, type Placement, type Role } from "./kit";
 import { layoutCourse, layoutStudy, radiusForLessons } from "./layout";
-import { PathHud, type PathSprite } from "./path-hud";
-import {
-  hueShiftForCourse,
-  PATH_KIND_ICON,
-  PATH_KIND_LABEL,
-  pathNodeKind,
-  type PathNodeKind,
-} from "./path-language";
+import { stoneRadius } from "./path-overlay";
+import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./path-language";
 
 /**
  * The world's palette. Two greens for land, one warm accent for the only thing
@@ -70,7 +64,7 @@ export interface Marker {
   readonly position: THREE.Vector3;
   readonly text: string;
   readonly sub?: string;
-  readonly kind: "study" | "course" | "lesson" | "unit";
+  readonly kind: "study" | "course" | "lesson" | "unit" | "icon";
   /**
    * What clicking this label does, when it does anything.
    *
@@ -93,6 +87,16 @@ export interface Marker {
   readonly quiet?: boolean;
   /** Overrides the per-kind default. Larger wins a collision. */
   readonly weight?: number;
+  /**
+   * Occupies space and never moves. Kind icons sit on the stone; a name
+   * that covered them would look like it belonged to the wrong step.
+   */
+  readonly pinned?: boolean;
+  /** Where the projected point sits on the box. Unit names grow right. */
+  readonly origin?: "center" | "start";
+  /** Accessible name for a decorative icon. */
+  readonly label?: string;
+  readonly locked?: boolean;
 }
 
 const TREES: Role[] = ["tree-broad-a", "tree-broad-b", "tree-tall-a", "tree-tall-b"];
@@ -688,9 +692,7 @@ export function CourseScene({
   const stones = useMemo(
     () =>
       lessons.map((lesson) => {
-        // A wall of 4,900 characters should be visible as a bigger step before
-        // it is entered rather than after.
-        const radius = 1.5 + Math.min(lesson.chars, 5000) / 3600;
+        const radius = stoneRadius(lesson.chars);
         const shape = buildIsland(lesson.lessonId, radius, lesson.hueShift);
         const lockedGeometry =
           lesson.state === "locked" ? lockIslandGeometry(shape.geometry) : shape.geometry;
@@ -698,57 +700,6 @@ export function CourseScene({
       }),
     [lessons],
   );
-
-  /*
-    Icons and unit names are bounded to a window around where the learner is,
-    for the same reason spurs are (v3, 「收敛规则：三格窗」): what is on screen
-    has to stop growing before the content does. Unbounded, a 41-lesson course
-    projected 47 sprites and they collided 215 times in the far field, because
-    the ones behind the fog still ask for a box. This is a constant upper
-    bound — a 200-lesson course looks the same.
-
-    The window is wider than the five nodes the size work aimed for, so the
-    icons do not pop in at the edge of what you can already read.
-  */
-  const SPRITE_WINDOW = 8;
-  const currentIndex = Math.max(
-    0,
-    lessons.findIndex((lesson) => lesson.state === "live"),
-  );
-  const inWindow = (index: number) => Math.abs(index - currentIndex) <= SPRITE_WINDOW;
-
-  const sprites = useMemo(() => {
-    const icons: PathSprite[] = stones
-      .filter((_, index) => inWindow(index))
-      .map(({ lesson, radius }) => ({
-        id: `kind:${lesson.lessonId}`,
-        role: "icon" as const,
-        text: PATH_KIND_ICON[lesson.kind],
-        label: PATH_KIND_LABEL[lesson.kind],
-        locked: lesson.state === "locked",
-        position: lesson.position.clone().setY(lesson.position.y + Math.max(1.05, radius * 0.5)),
-      }));
-    const byUnit = new Map<string, (typeof lessons)[number][]>();
-    lessons.forEach((lesson, index) => {
-      if (!inWindow(index)) return;
-      const group = byUnit.get(lesson.unitId) ?? [];
-      group.push(lesson);
-      byUnit.set(lesson.unitId, group);
-    });
-    const units: PathSprite[] = [];
-    for (const group of byUnit.values()) {
-      const first = group[0]!;
-      const last = group[group.length - 1]!;
-      const mid = first.position.clone().lerp(last.position, 0.45);
-      units.push({
-        id: `unit:${first.unitId}`,
-        role: "unit",
-        text: `— ${first.unitTitle} —`,
-        position: new THREE.Vector3(Math.min(mid.x, 0) - 3.2, mid.y + 1.05, mid.z),
-      });
-    }
-    return [...units, ...icons];
-  }, [lessons, stones, currentIndex]);
 
   const fields = useMemo(() => {
     const merged = new Map<Role, Placement[]>();
@@ -832,7 +783,6 @@ export function CourseScene({
           )}
         </group>
       ))}
-      <PathHud sprites={sprites} />
       {/*
         Only the kit models suspend, so only they sit behind a boundary. Sky,
         sea, islands and roads are computed here and owe nothing to the network
