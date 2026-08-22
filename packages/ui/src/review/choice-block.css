@@ -5,6 +5,10 @@
   it is one implementation in name only.
 */
 
+.choice-block__kind {
+  margin: 0 0 8px;
+}
+
 .choice-block__options {
   display: grid;
   gap: 8px;
@@ -13,7 +17,7 @@
 
 .choice-block__option {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px 12px;
   align-items: start;
   width: 100%;
@@ -31,7 +35,7 @@
 
 .choice-block__option:hover,
 .choice-block__option:focus-visible {
-  border-color: var(--game-ui-accent, #5ec8c0);
+  border-color: var(--game-ui-accent, #e8743b);
 }
 
 .choice-block__option:focus-visible {
@@ -39,29 +43,50 @@
   outline-offset: 2px;
 }
 
-.choice-block__option[aria-disabled="true"] {
+.choice-block__option:disabled {
   cursor: default;
 }
 
+.choice-block__option--selected:not(.choice-block__option--wrong):not(
+  .choice-block__option--correct
+) {
+  border-color: var(--game-ui-accent, #e8743b);
+  background: color-mix(in srgb, var(--game-ui-accent, #e8743b) 14%, transparent);
+  box-shadow: inset 3px 0 0 var(--game-ui-accent, #e8743b);
+}
+
 .choice-block__option--wrong {
-  border-color: var(--game-ui-danger, #e07a7a);
-  background: color-mix(in srgb, var(--game-ui-danger, #e07a7a) 12%, transparent);
+  border-color: var(--game-ui-danger, #d85a45);
+  background: color-mix(in srgb, var(--game-ui-danger, #d85a45) 12%, transparent);
 }
 
 .choice-block__option--correct {
-  border-color: var(--game-ui-accent, #5ec8c0);
-  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 14%, transparent);
+  border-color: var(--game-ui-success, #4f9d6b);
+  background: color-mix(in srgb, var(--game-ui-success, #4f9d6b) 14%, transparent);
 }
 
-.choice-block__letter {
+.choice-block__verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--game-ui-font-sm, 0.82rem);
   font-weight: 700;
-  color: var(--game-ui-text-muted, #9aa6bb);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.choice-block__option--wrong .choice-block__verdict {
+  color: var(--game-ui-danger, #d85a45);
+}
+
+.choice-block__option--correct .choice-block__verdict {
+  color: var(--game-ui-success, #4f9d6b);
 }
 
 .choice-block__mark {
   font-weight: 700;
 }
 
-.choice-block__next {
+.choice-block__submit {
   margin-top: 14px;
 }
