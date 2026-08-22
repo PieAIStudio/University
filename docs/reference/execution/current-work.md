@@ -41,6 +41,65 @@ modular, robust and legible to both a person and an AI.** The online shell is
 no longer forbidden from authoring courses — when it authors, it will run the
 same workflows the local shell runs.
 
+## Where V3 Left Off, 2026-08-22
+
+**Read `docs/reference/player-journey/v3/index.html` before touching any
+learner-facing surface.** It supersedes v1 and v2. It is one document with a
+mobile/web switcher rather than two, because two documents describing one
+product drift, which is what SPEC-0001 exists to prevent.
+
+The instruction behind v3 is worth stating plainly, because it changes what
+"good" means here: **take Duolingo's structure wholesale and put our content
+in it.** Not because imitation is safe, but because that structure has been
+tested on hundreds of millions of learners and we have neither the traffic nor
+the time to rediscover it. Slot count, slot position, and flow are copied. What
+sits in each slot is ours.
+
+Both recordings the design is built on live in
+`docs/reference/借鉴的App/` — phone and desktop — and are taken apart screen by
+screen in `duolingo-teardown/index.html`, with 33 frames and stable ids. v3
+cites those ids (`C5`, `E1`, `W2`), so the two documents can be read together.
+The source videos are gitignored; the frames and the analysis are not.
+
+### What Is Settled
+
+- **3D keeps the stage and changes lens.** The archipelago read from 50° above
+  is a skill tree in three dimensions, and Duolingo's stated reason for
+  demolishing its own was that learners could not tell whether they were using
+  it correctly. The road view — one next step, the rest receding — is now the
+  default inside a course. The overview survives as the zoomed-out level.
+- **The islands move from sea to sky.** OwnMySpace already established the
+  visual language: a floating platform above an ocean planet, cloud layer,
+  blurred ground far below. Two products sharing one world is worth more than
+  either art direction alone, and water is flat, so the sea gave the frame
+  nothing to make depth out of.
+- **The authoring shell stays offline.** Four ports — content, progress,
+  grading, evidence — and everything above them is one implementation.
+  SwimmerBackend is built on the delivery side only.
+- **Mesh learning, bounded.** Spine, spur, inline reference. Spurs render only
+  within one node of the current position, three per node, so what is on screen
+  is bounded by a constant however much content exists.
+
+### What Is Open
+
+- `SPEC-0001:141` forbids the shared package from owning 3D; `SPEC-0003:122`
+  says move the scene into `packages/ui`, which is the shared package. Two
+  canonical specs, one contradiction. A separate `packages/world` satisfies
+  both and needs SPEC-0003's first step reworded.
+- `buzz`'s five courses have no prerequisites and no defensible order beyond
+  `buzz-orientation` going first. That is an authoring decision.
+- Shipping through the app stores costs thirty per cent of digital sales. Web
+  and desktop do not. That is a pricing decision, not a technical one.
+- 32 `[[lesson:]]` links point at lesson ids that do not exist.
+
+### Corrections To Numbers Previously Reported Here
+
+558 lessons, not 560. `[[evidence:]]` markers number 1,815 and resolve to 1,597
+anchors — both figures are right, they count different things. Of 420
+lesson-to-lesson links, 383 stay inside their own course and **five** cross one,
+so the mesh that a reader of earlier notes might expect does not exist yet.
+
+
 ## Order Of Work
 
 Phases 0 to 6 are done. Phase 7 is the current work.
