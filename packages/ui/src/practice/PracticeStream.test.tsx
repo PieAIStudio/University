@@ -18,12 +18,17 @@ vi.mock("../sound/index.js", () => ({
 }));
 
 import { TermEntryPage } from "../entry/EntryPage.js";
+import { CHOICE_NEXT_LABEL, CHOICE_SUBMIT_LABEL } from "../review/ChoiceBlock.js";
 import {
   PRACTICE_EMPTY_ACTION,
   PRACTICE_EMPTY_DESCRIPTION,
   PRACTICE_EMPTY_TITLE,
+  PRACTICE_INTRO_ACTION,
+  PRACTICE_INTRO_DESCRIPTION,
+  PRACTICE_INTRO_TITLE,
   PracticeStream,
-  practiceOrdinalLabel,
+  practiceSolvedLabel,
+  sittingSolvedCount,
 } from "./PracticeStream.js";
 import { PRACTICE_UNLOCK_HINT } from "./PracticeRewardPanel.js";
 import type { PracticeRecentStore } from "./storage.js";
@@ -138,11 +143,39 @@ function buttonWith(text: string): HTMLButtonElement | undefined {
   );
 }
 
-describe("practiceOrdinalLabel", () => {
-  it("is a sitting counter, not a remaining-work fraction", () => {
-    expect(practiceOrdinalLabel(1)).toBe("第 1 题");
-    expect(practiceOrdinalLabel(12)).toBe("第 12 题");
-    expect(practiceOrdinalLabel(12)).not.toContain("/");
+function submitControl(): HTMLButtonElement | undefined {
+  return [...container.querySelectorAll("button")].find(
+    (button) => button.textContent === CHOICE_SUBMIT_LABEL,
+  );
+}
+
+async function startSitting() {
+  await act(async () => {
+    buttonWith(PRACTICE_INTRO_ACTION)?.click();
+  });
+}
+
+async function submitOption(text: string) {
+  await act(async () => {
+    buttonWith(text)?.click();
+  });
+  await act(async () => {
+    submitControl()?.click();
+  });
+}
+
+describe("practiceSolvedLabel", () => {
+  it("names how many this sitting got right, and does not invent a total", () => {
+    expect(practiceSolvedLabel(0)).toBe("本次已答对 0");
+    expect(practiceSolvedLabel(12)).toBe("本次已答对 12");
+    expect(practiceSolvedLabel(12)).not.toContain("/");
+    expect(practiceSolvedLabel(1)).not.toContain("第");
+  });
+
+  it("counts an unlocked question as solved, and a locked one as not yet", () => {
+    expect(sittingSolvedCount({ ordinal: 1, currentId: "a", unlocked: false })).toBe(0);
+    expect(sittingSolvedCount({ ordinal: 1, currentId: "a", unlocked: true })).toBe(1);
+    expect(sittingSolvedCount({ ordinal: 2, currentId: "b", unlocked: false })).toBe(1);
   });
 });
 
@@ -161,9 +194,19 @@ describe("PracticeStream", () => {
     expect(container.querySelector("[role='progressbar']")).toBeNull();
   });
 
-  it("starts on 第 1 题 with the term panel locked and no scoreboard", async () => {
+  it("opens on a recommendation card rather than the first question", async () => {
     await renderStream();
-    expect(container.querySelector(".practice-stream__ordinal")?.textContent).toBe("第 1 题");
+    expect(container.textContent).toContain(PRACTICE_INTRO_TITLE);
+    expect(container.textContent).toContain(PRACTICE_INTRO_DESCRIPTION);
+    expect(buttonWith(PRACTICE_INTRO_ACTION)).toBeTruthy();
+    expect(container.textContent).not.toContain(APP_PROMPT);
+    expect(container.querySelector(".practice-stream__ordinal")).toBeNull();
+  });
+
+  it("starts at 本次已答对 0 with the term panel locked and no scoreboard", async () => {
+    await renderStream();
+    await startSitting();
+    expect(container.querySelector(".practice-stream__ordinal")?.textContent).toBe("本次已答对 0");
     expect(container.textContent).toContain(APP_PROMPT);
     expect(container.textContent).toContain(PRACTICE_UNLOCK_HINT);
     expect(container.querySelector(".practice-reward-panel")?.className).toContain("is-locked");
@@ -171,31 +214,28 @@ describe("PracticeStream", () => {
     expect(container.querySelector("[role='progressbar']")).toBeNull();
     expect(container.textContent).not.toMatch(/共\s*\d+\s*题/);
     expect(container.textContent).not.toContain("正确率");
+    expect(container.textContent).not.toContain("第 1 题");
     expect(container.querySelector(".term-index__chips")).toBeNull();
   });
 
-  it("keeps the term page masked after a wrong pick and plays answer.wrong", async () => {
+  it("keeps the term page masked after a wrong submit and plays answer.wrong", async () => {
     await renderStream();
-    const miss = buttonWith(APP_WRONG);
-    expect(miss).toBeTruthy();
-    await act(async () => {
-      miss?.click();
-    });
+    await startSitting();
+    expect(buttonWith(APP_WRONG)).toBeTruthy();
+    await submitOption(APP_WRONG);
     expect(container.textContent).toContain("还不对");
     expect(container.textContent).toContain("省事并不等于成立。");
     expect(container.textContent).toContain(PRACTICE_UNLOCK_HINT);
     expect(container.textContent).not.toContain(APP.gloss);
-    expect(buttonWith("继续下一题")).toBeUndefined();
+    expect(buttonWith(CHOICE_NEXT_LABEL)).toBeUndefined();
     expect(playSound).toHaveBeenCalledWith("answer.wrong");
   });
 
-  it("unlocks the existing term page in place after a correct pick", async () => {
+  it("unlocks the existing term page in place after a correct submit", async () => {
     await renderStream();
-    const hit = buttonWith(APP_CORRECT);
-    expect(hit).toBeTruthy();
-    await act(async () => {
-      hit?.click();
-    });
+    await startSitting();
+    expect(buttonWith(APP_CORRECT)).toBeTruthy();
+    await submitOption(APP_CORRECT);
     expect(container.textContent).toContain("答对了");
     expect(container.textContent).toContain("这是对的判据。");
     expect(container.textContent).not.toContain(PRACTICE_UNLOCK_HINT);
@@ -205,19 +245,19 @@ describe("PracticeStream", () => {
     expect(container.textContent).toContain(APP.gloss);
     expect(container.textContent).toContain("术语图鉴");
     expect(playSound).toHaveBeenCalledWith("answer.correct");
-    expect(buttonWith("继续下一题")).toBeTruthy();
+    expect(buttonWith(CHOICE_NEXT_LABEL)).toBeTruthy();
+    expect(container.querySelector(".practice-stream__ordinal")?.textContent).toBe("本次已答对 1");
   });
 
   it("advances the sitting, remembers the derived id, and locks the next term", async () => {
     const store = memoryStore();
     await renderStream({ store });
+    await startSitting();
+    await submitOption(APP_CORRECT);
     await act(async () => {
-      buttonWith(APP_CORRECT)?.click();
+      buttonWith(CHOICE_NEXT_LABEL)?.click();
     });
-    await act(async () => {
-      buttonWith("继续下一题")?.click();
-    });
-    expect(container.querySelector(".practice-stream__ordinal")?.textContent).toBe("第 2 题");
+    expect(container.querySelector(".practice-stream__ordinal")?.textContent).toBe("本次已答对 1");
     expect(container.textContent).toContain(API_PROMPT);
     expect(container.textContent).toContain(PRACTICE_UNLOCK_HINT);
     expect(container.textContent).not.toContain(APP.gloss);

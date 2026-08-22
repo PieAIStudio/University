@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from "react";
-import { GameButton, GameEmptyState } from "@pieai/swimmer-ui-kit";
+import { GameButton, GameEmptyState, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
   advancePracticeSession,
   idOfPracticeQuestion,
@@ -20,8 +20,27 @@ export const PRACTICE_EMPTY_DESCRIPTION = "每一条词条自己带着一道判�
 
 export const PRACTICE_EMPTY_ACTION = "去翻翻词条";
 
-export function practiceOrdinalLabel(ordinal: number): string {
-  return `第 ${ordinal} 题`;
+export const PRACTICE_INTRO_TITLE = "今天练一道判断";
+
+export const PRACTICE_INTRO_DESCRIPTION =
+  "概念自己带着判断题。答对一道，展开这一条。题流没有尽头，停下来就行。";
+
+export const PRACTICE_INTRO_ACTION = "开始";
+
+/**
+ * How many questions this sitting has already got right.
+ *
+ * The stream is endless, so "第 N 题" without a total is a road with no
+ * length. Inventing a denominator would be worse. The sitting already knows
+ * how many it has unlocked; that number is honest.
+ */
+export function practiceSolvedLabel(solved: number): string {
+  return `本次已答对 ${solved}`;
+}
+
+export function sittingSolvedCount(session: PracticeSession): number {
+  if (session.currentId === null) return 0;
+  return session.unlocked ? session.ordinal : Math.max(0, session.ordinal - 1);
 }
 
 function toChoiceBlockExercise(question: PracticeQuestion): ChoiceBlockExercise {
@@ -36,11 +55,11 @@ function toChoiceBlockExercise(question: PracticeQuestion): ChoiceBlockExercise 
 /**
  * The endless single-question stream: one judgement, then the entry as a reward.
  *
- * The counter below is the only number on this surface, and it is session-local.
- * There is no total, no score, no progress bar, and no category filter. That
- * absence is the design, not an omission — a remaining-work bar here would turn
+ * There is no total, no remaining-work bar, and no category filter. That
+ * absence is the design, not an omission — a fraction here would turn
  * "随便刷两题" into a test, which is the settlement screen's job, not this
- * sitting's. Do not add one.
+ * sitting's. The number on screen is how many this sitting has already got
+ * right, which is a fact the session already holds.
  *
  * The reward page is a render prop because each collection already has a
  * detail page, and SPEC-0004 forbids a second one. The stream unlocks; the
@@ -62,12 +81,16 @@ export function PracticeStream<Head = unknown>({
   const [session, setSession] = useState<PracticeSession>(() =>
     startPracticeSession(indexed.ids, store.read()),
   );
+  const [started, setStarted] = useState(false);
   const seenBank = useRef(bankKey);
   let sitting = session;
+  let intro = started;
   if (seenBank.current !== bankKey) {
     seenBank.current = bankKey;
     sitting = startPracticeSession(indexed.ids, store.read());
+    intro = false;
     setSession(sitting);
+    setStarted(false);
   }
 
   const current = sitting.currentId ? (indexed.byId.get(sitting.currentId) ?? null) : null;
@@ -99,10 +122,23 @@ export function PracticeStream<Head = unknown>({
     );
   }
 
+  if (!intro) {
+    return (
+      <section className="practice-stream" aria-label="练习">
+        <GamePanel className="practice-stream__intro" title={PRACTICE_INTRO_TITLE}>
+          <p className="practice-stream__intro-copy">{PRACTICE_INTRO_DESCRIPTION}</p>
+          <GameButton variant="primary" type="button" onClick={() => setStarted(true)}>
+            {PRACTICE_INTRO_ACTION}
+          </GameButton>
+        </GamePanel>
+      </section>
+    );
+  }
+
   return (
     <section className="practice-stream" aria-label="练习">
       <p className="practice-stream__ordinal" aria-live="polite">
-        {practiceOrdinalLabel(sitting.ordinal)}
+        {practiceSolvedLabel(sittingSolvedCount(sitting))}
       </p>
       <div className="practice-stream__columns">
         <div className="practice-stream__question">
