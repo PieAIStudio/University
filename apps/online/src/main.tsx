@@ -13,6 +13,7 @@ import "@pieai/university-ui/sound/sound-toggle.css";
 import "@pieai/university-ui/reference/term-index.css";
 import "@pieai/university-ui/favourites/favourites.css";
 import "@pieai/university-ui/entry/entry-page.css";
+import "@pieai/university-ui/path/path-cards.css";
 import "./styles.css";
 
 const container = document.getElementById("root");

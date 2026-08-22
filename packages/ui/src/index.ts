@@ -106,6 +106,10 @@ export {
   type PracticeRecentStore,
 } from "./practice/index.js";
 
+// Shared surface — the path cards. DOM over the 3D path, never geometry.
+export { NodeCard, type PathLesson } from "./path/NodeCard.js";
+export { UnitCard, type PathUnit } from "./path/UnitCard.js";
+
 // Authoring-shell read model: the shapes `/api/*` returns, and the pure
 // functions that turn them into what the campus shows. Exporting the module
 // whole is the point — this is one HTTP contract, not a grab bag. The

@@ -1,0 +1,193 @@
+/*
+  Path node and unit cards. Shells that mount NodeCard or UnitCard load this
+  file the same way they load reference-panel.css: a shared surface whose
+  appearance depends on which app remembered the CSS is one implementation
+  in name only.
+*/
+
+.path-card-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgb(6 10 18 / 52%);
+}
+
+.path-card {
+  box-sizing: border-box;
+  display: grid;
+  gap: 12px;
+  width: min(22.5rem, 100%);
+  max-height: min(36rem, calc(100vh - 32px));
+  overflow: auto;
+  padding: 16px 16px 18px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 94%, transparent);
+  color: var(--game-ui-text, #e9edf5);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 35%);
+  backdrop-filter: blur(10px);
+}
+
+.path-card:focus {
+  outline: none;
+}
+
+.path-card:focus-visible {
+  outline: 2px solid var(--game-ui-accent, #5ec8c0);
+  outline-offset: 2px;
+}
+
+.path-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.path-card__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.path-card__close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  margin: -4px -6px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: transparent;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font: inherit;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.path-card__close:hover,
+.path-card__close:focus-visible {
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.path-card__close:focus-visible,
+.node-card__preview:focus-visible,
+.path-card__start:focus-visible {
+  outline: 2px solid var(--game-ui-accent, #5ec8c0);
+  outline-offset: 2px;
+}
+
+.path-card__body {
+  display: grid;
+  gap: 12px;
+}
+
+.path-card__start {
+  width: 100%;
+}
+
+.node-card__cost {
+  margin: 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.node-card__preview {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font: inherit;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.node-card__preview:hover {
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.unit-card {
+  display: grid;
+  gap: 12px;
+}
+
+.unit-card__ability {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--game-ui-radius-card, 12px);
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 16%, transparent);
+}
+
+.unit-card__ability-label,
+.unit-card__evidence-label,
+.unit-card__meta {
+  margin: 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.78rem;
+}
+
+.unit-card__ability-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.unit-card__evidence {
+  display: grid;
+  gap: 6px;
+}
+
+.unit-card__locators {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.unit-card__locator {
+  display: block;
+  padding: 8px 10px;
+  border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel-deep, #0c1018);
+  color: var(--game-ui-accent-bright, #7fe0d8);
+  font-family: var(--game-ui-font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace);
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+.unit-card__meta {
+  margin: 0;
+}
+
+@media (max-width: 40rem) {
+  .path-card-layer {
+    align-items: flex-end;
+  }
+
+  .path-card {
+    width: 100%;
+    max-height: min(42rem, calc(100vh - 12px));
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .path-card-layer,
+  .path-card {
+    transition: none;
+  }
+}

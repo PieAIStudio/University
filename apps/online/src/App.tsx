@@ -48,10 +48,12 @@ import {
   EntryPage,
   FavouriteStar,
   FavouritesEmpty,
+  NodeCard,
   TermIndex,
   AntiPatternIndex,
   ConceptIndex,
   PracticeStream,
+  UnitCard,
   createLocalPracticeRecentStore,
   createLocalFavouritesStore,
 } from "@pieai/university-ui";
@@ -225,6 +227,19 @@ function Controls({
  * the safe direction to be wrong in.
  */
 const SHOWS_THE_MAP = new Set<View["kind"]>(["world", "course"]);
+
+type PathOverlay =
+  | {
+      readonly kind: "node";
+      readonly unitId: string;
+      readonly lessonId: string;
+      readonly returnFocusTo: HTMLElement | null;
+    }
+  | {
+      readonly kind: "unit";
+      readonly unitId: string;
+      readonly returnFocusTo: HTMLElement | null;
+    };
 
 const MAP_CONTROLS_HINT = "拖动平移 · 滚轮缩放 · 点岛进入";
 
@@ -415,6 +430,9 @@ export function App() {
   const [course, setCourse] = useState<Course | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [picked, setPicked] = useState<CourseNode | null>(null);
+  // Screen 02/03: a path card sits on the course map. It is not a route —
+  // confirming is what changes the URL, not pointing at a stone.
+  const [pathOverlay, setPathOverlay] = useState<PathOverlay | null>(null);
   // How many lessons were finished the moment a lesson was passed. Held here
   // rather than derived later, and deliberately absent when the settlement is
   // reached by its own URL — arriving at `/done` from a bookmark is not
@@ -425,6 +443,10 @@ export function App() {
     if (!hasContent) return;
     void loadGraph().then(setNodes);
   }, []);
+
+  useEffect(() => {
+    if (view.kind !== "course") setPathOverlay(null);
+  }, [view.kind]);
 
   useEffect(() => {
     if (view.kind !== "course" && view.kind !== "lesson") return;
@@ -525,12 +547,11 @@ export function App() {
           view.kind === "lesson"
             ? undefined
             : () =>
-                setView({
-                  kind: "lesson",
-                  studyId: view.studyId,
-                  courseId: view.courseId,
+                setPathOverlay({
+                  kind: "node",
                   unitId: lesson.unitId,
                   lessonId: lesson.lessonId,
+                  returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
                 }),
       }));
     }
@@ -669,6 +690,16 @@ export function App() {
       ? [learnerAt.x, learnerAt.y, learnerAt.z]
       : [0, 0, 0];
 
+  const pathUnitId =
+    pathOverlay?.unitId ??
+    lessons.find((lesson) => lesson.state === "live")?.unitId ??
+    course?.units[0]?.id;
+  const pathUnit = course?.units.find((unit) => unit.id === pathUnitId);
+  const pathLesson =
+    pathOverlay?.kind === "node"
+      ? pathUnit?.lessons.find((lesson) => lesson.id === pathOverlay.lessonId)
+      : undefined;
+
   return (
     <div className="app">
       <nav className="topbar">
@@ -751,16 +782,15 @@ export function App() {
             {(view.kind === "course" || view.kind === "lesson") && lessons.length > 0 ? (
               <CourseScene
                 lessons={lessons}
-                onPick={(lesson) =>
-                  view.kind !== "lesson" &&
-                  setView({
-                    kind: "lesson",
-                    studyId: view.studyId,
-                    courseId: view.courseId,
+                onPick={(lesson) => {
+                  if (view.kind === "lesson") return;
+                  setPathOverlay({
+                    kind: "node",
                     unitId: lesson.unitId,
                     lessonId: lesson.lessonId,
-                  })
-                }
+                    returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
+                  });
+                }}
                 onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
               />
             ) : null}
@@ -836,6 +866,35 @@ export function App() {
                 {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
                 {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
               </p>
+              {pathUnit ? (
+                <div className="unit-strip">
+                  <p className="unit-strip__name">{pathUnit.title}</p>
+                  <button
+                    type="button"
+                    className="unit-strip__list"
+                    aria-label="先看这一单元讲什么"
+                    aria-haspopup="dialog"
+                    aria-expanded={pathOverlay?.kind === "unit" ? true : undefined}
+                    onClick={(event) =>
+                      setPathOverlay({
+                        kind: "unit",
+                        unitId: pathUnit.id,
+                        returnFocusTo: event.currentTarget,
+                      })
+                    }
+                  >
+                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                      <path
+                        d="M3 4.5h10M3 8h10M3 11.5h7"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeWidth="1.5"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ) : null}
               <button className="ghost block" onClick={() => setView({ kind: "world" })}>
                 ← 回到世界地图
               </button>
@@ -876,6 +935,14 @@ export function App() {
                   type="button"
                   className={className}
                   style={{ "--placed": 0 } as CSSProperties}
+                  aria-haspopup={marker.kind === "lesson" ? "dialog" : undefined}
+                  aria-expanded={
+                    marker.kind === "lesson" &&
+                    pathOverlay?.kind === "node" &&
+                    pathOverlay.lessonId === marker.id
+                      ? true
+                      : undefined
+                  }
                   onClick={() => {
                     // A drag that happens to end on a label is a pan, not a
                     // choice. Without this, moving the map by grabbing near a
@@ -912,6 +979,63 @@ export function App() {
           <AvatarLab onOpen={setView} />
         </Suspense>
       )}
+
+      {view.kind === "course" &&
+      course &&
+      pathOverlay?.kind === "node" &&
+      pathUnit &&
+      pathLesson ? (
+        <NodeCard
+          open
+          lesson={pathLesson}
+          unit={pathUnit}
+          onClose={() => setPathOverlay(null)}
+          onStart={() => {
+            setPathOverlay(null);
+            setView({
+              kind: "lesson",
+              studyId: view.studyId,
+              courseId: view.courseId,
+              unitId: pathUnit.id,
+              lessonId: pathLesson.id,
+            });
+          }}
+          onStartUnit={() => {
+            const first = pathUnit.lessons[0];
+            if (!first) return;
+            setPathOverlay(null);
+            setView({
+              kind: "lesson",
+              studyId: view.studyId,
+              courseId: view.courseId,
+              unitId: pathUnit.id,
+              lessonId: first.id,
+            });
+          }}
+          returnFocusTo={pathOverlay.returnFocusTo}
+        />
+      ) : null}
+
+      {view.kind === "course" && course && pathOverlay?.kind === "unit" && pathUnit ? (
+        <UnitCard
+          open
+          unit={pathUnit}
+          onClose={() => setPathOverlay(null)}
+          onStart={() => {
+            const first = pathUnit.lessons[0];
+            if (!first) return;
+            setPathOverlay(null);
+            setView({
+              kind: "lesson",
+              studyId: view.studyId,
+              courseId: view.courseId,
+              unitId: pathUnit.id,
+              lessonId: first.id,
+            });
+          }}
+          returnFocusTo={pathOverlay.returnFocusTo}
+        />
+      ) : null}
 
       {view.kind === "lesson" && course ? (
         <LessonReaderHost
