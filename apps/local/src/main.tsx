@@ -11,6 +11,7 @@ import "@pieai/university-ui/language/word-layer.css";
 import "@pieai/university-ui/reference/reference-panel.css";
 import "@pieai/university-ui/sound/sound-toggle.css";
 import "@pieai/university-ui/lesson/lesson-toolbar.css";
+import "@pieai/university-ui/markdown/markdown-content.css";
 import "@pieai/university-ui/reference/term-index.css";
 import "@pieai/university-ui/shell/app-shell.css";
 import "@pieai/university-ui/navigation/university-shell.css";

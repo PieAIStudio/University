@@ -22,6 +22,7 @@
     "./lesson/LessonReader.js": "./src/lesson/LessonReader.tsx",
     "./lesson/lesson-toolbar.css": "./src/lesson/lesson-toolbar.css",
     "./markdown/MarkdownContent.js": "./src/markdown/MarkdownContent.tsx",
+    "./markdown/markdown-content.css": "./src/markdown/markdown-content.css",
     "./markdown/remark-lesson-links.js": "./src/markdown/remark-lesson-links.ts",
     "./navigation/UniversityShell.js": "./src/navigation/UniversityShell.tsx",
     "./navigation/counters.js": "./src/navigation/counters.tsx",
