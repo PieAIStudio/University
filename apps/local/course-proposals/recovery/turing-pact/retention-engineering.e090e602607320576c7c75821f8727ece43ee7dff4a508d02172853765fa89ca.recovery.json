@@ -1,0 +1,1234 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 53,
+  "course": {
+    "id": "retention-engineering",
+    "title": "给人一个回来的理由",
+    "description": "留存不是发推送：把「为什么值得再来一次」落成每日选题、本地回访钩子与无剧透分享——全部证据来自 TuringPact 的 return-hooks 与 daily-puzzle。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "用 UTC 日与双时钟（题号纪元 vs 取模槽位）设计可对齐的每日内容循环",
+      "实现「结束写入、回家条件渲染」的本地回访钩子，并在无历史时保持沉默",
+      "构造无剧透的分享色块与好友语气挑战文案（规范 URL、无房间码）",
+      "把结算教学（clues/forensic flaws）放在揭晓之后，而不是开局剧透"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "realtime-presence"
+    ],
+    "trackId": null,
+    "units": [
+      {
+        "id": "daily-content-loop",
+        "title": "每日内容循环",
+        "objective": "我能按 UTC 日切今日题、让练习滤掉今日槽，并把连胜做成按日期幂等，而不是按点击计数。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "utc-day-same-puzzle",
+            "title": "为什么早晨和深夜必须是同一道题？",
+            "content": "# 为什么早晨和深夜必须是同一道题？\n\n## 现象\n\n你把三个时间戳丢进每日选题，库存不变：\n\n- `2026-06-12T00:01:00.000Z` → 某一道题\n- `2026-06-12T23:59:00.000Z` → **同一道**\n- `2026-06-13T00:01:00.000Z` → **换题**\n\n时分秒差了将近一整天，题却没变；跨过世界时午夜，题才换。页面没有「今日已刷新」按钮——你换到的题只跟日历日有关。\n\n:::detail[末尾那个 Z 是什么意思？]\nZ 表示世界时：不跟任何一个国家的夏令时走的那套钟。你在北京看到的早上八点，在这套钟上已经是同一天的零点。每日选题用这套钟切日，是为了让不同时区的人在「同一天」对上同一道题，而不是各看各的本地午夜。\n\n你如果按自己手机上的日期切日，纽约的「还是昨天」和北京的「已经明天」会对不上。分享标题上的期数、朋友圈里的「今日题」也会各说各的。世界时把这根尺钉死。\n:::\n\n## 先猜一下\n\n选题函数到底读了日期上的哪些部分？时分秒有没有参与计算？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n它只读世界时的年、月、日；时分秒从不参与。同一天的早晨和深夜会落到库存里的同一道。\n\n## 为什么是这样\n\n入口自己不再手算「今天是第几天」。它把日期和整份库存交给轮换函数：\n\n[[evidence:src/features/daily-puzzle/dailyPuzzle.ts:39-42]]\n\n:::detail[为什么入口看起来只剩三行？]\n以前「算今天是第几天」和「从库存里取出那一道」写在同一个函数里。现在算日的工作抽到了通用轮换函数——封面局那条支线也要按天换案子，同一套切日规则就能共用。你读入口时别被三行唬住：真正决定「哪一天算同一天」的，是它调用的那一层。\n\n空库存检查仍在入口先做一遍；轮换函数自己遇到空列表也会抛同一句错。两道门叠在一起，不是重复劳动，是抽公共函数之后两边都不敢假设「调用我的人已经检查过了」。\n:::\n\n轮换函数只剥年、月、日，除掉一天的毫秒数，得到从 1970 年 1 月 1 日算起的整数日序，再对库存长度取余：\n\n[[evidence:src/features/daily-puzzle/dailyPuzzle.ts:29-37]]\n\n:::detail[取余是在干什么？]\n库存就那么十几道，日序却会一直涨。取余的意思是：涨过库存长度就从头再来。第 1 天和第 15 天可能拿到同一道题，但那是循环，不是「这一天里换了题」。时分秒在剥年月日时已经被丢掉，所以 00:01 和 23:59 算出的整数一样。\n\n日序是从 1970 年 1 月 1 日数过来的整天数。构造当天零点再除掉一天的毫秒，得到的就是这个整数。你传入的时分秒在「先取年、月、日」那一步已经被剥掉，进不了除法。\n:::\n\n这里第一次看会绕：你传入的时间明明带着时分秒，函数却只剥年月日。丢掉精度，换来的是「同一世界时日、全世界同一索引」。你一旦改用本地日期或带小时的时间戳去取余，跨时区好友就会在「同一自然日」里看到不同的题。\n\n库存不能为空。没有题就直接抛错，不让后面的界面自己猜：\n\n[[evidence:src/features/daily-puzzle/dailyPuzzle.ts:13-17]]\n\n:::detail[空库存为什么要当场炸掉？]\n返回空值会把爆炸推迟到渲染：页面得自己决定「没题」长什么样，还可能默默显示空白。抛错是先关上大门——选题承诺无法兑现时，宁可让程序停在这里，也不假装今天有一题。\n\n每日页假定「今天一定有一道题」才能算出题号、练习池和分享串。空库存如果悄悄变成空，后面每一层都得再猜一次。在选题入口炸掉，比让首页、练习、分享各写一套空态更便宜。\n:::\n\n产品承诺是「全世界同一世界时日同一题」。若按本地时区切日，跨时区好友对不上分享编号；若按打开时刻随机，就没有可讨论的「今天」。随机感留给练习池，不留给主线。\n\n## 再想想\n\n对外展示的题号和这里的轮换槽位不是同一只钟，见 [[lesson:two-clocks-number-vs-slot|题号和轮换为什么要两套时间？]]。\n\n## 自检\n\n**问：** `00:01Z` 与 `23:59Z` 同一天为什么落到同一索引？\n\n**问：** 若改成每次打开随机抽题，哪两种产品能力会立刻失效？\n\n## 一句话\n\n**每日循环的第一约束：把时间切成可对齐的世界时日，再映射到有限库存。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                "lineStart": 39,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "getDailyPuzzle 把日期交给 getRotatingItem。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                "lineStart": 29,
+                "lineEnd": 37,
+                "nodeIds": [],
+                "note": "getRotatingItem：UTC 年月日算 dayIndex 再取模。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                "lineStart": 13,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "requirePuzzles：空库存直接抛错。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "same-day-index",
+                "kind": "basic",
+                "front": "同一 UTC 日的早晨与深夜，getDailyPuzzle 会不会换题？为什么？",
+                "back": "不会。轮换函数只用 UTC 年月日算出 dayIndex，再对库存取模，时分秒不参与。",
+                "tags": [
+                  "daily-loop"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 29,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "UTC dayIndex 忽略时分秒"
+                  }
+                ]
+              },
+              {
+                "id": "empty-inventory",
+                "kind": "basic",
+                "front": "CURATED_PUZZLES 为空时 getDailyPuzzle 走什么路径？",
+                "back": "requirePuzzles 抛 Error，而不是返回 undefined 让页面空转。",
+                "tags": [
+                  "daily-loop"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 13,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "空库存 fail-closed"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "same-day-key",
+                "kind": "short-answer",
+                "title": "选题时钟",
+                "prompt": "对库存取模时使用的日序变量名是什么？",
+                "expectedAnswer": "dayIndex",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 33,
+                    "lineEnd": 36,
+                    "nodeIds": [],
+                    "note": "dayIndex 变量现在写在 getRotatingItem 里"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "two-clocks-number-vs-slot",
+            "title": "分享文案上的 #42，是库存下标吗？",
+            "content": "# 分享文案上的 #42，是库存下标吗？\n\n## 两个东西\n\n你在每日谜题里会碰到两个都从日期算出来的数：\n\n- **题号**：分享标题写成 `Turing Pact Daily #42` / `图灵密约每日谜题 #42`\n- **槽位**：从有限库存里挑出「今天那一道」时用的下标\n\n两者都只看世界时的年、月、日，但产品用途完全不同。库存可能只有十几道、会循环；分享编号却被当成「第几期」对外传播。你要是把它们当成同一个数，社交上对不上「昨天那期」。\n\n:::detail[库存下标是什么？]\n就是数组里的第几格：第 0 道、第 1 道……数到头就回去。它回答「今天派哪一份题面」。题号回答另一件事：从产品第一天起，这是对外的第几期。两件事都从日期算，但尺子不一样。\n\n取余就是除完以后只留余数。库存有尽头，日序没有；数到头就从头再来。它回答「今天派哪一格」，不回答「这是对外第几期」。两把尺子都从同一天的年、月、日算起，但零点和是否回绕不是一回事。你先分清「派哪一格」和「对外第几期」，再去读后面的对照表。\n:::\n\n## 先猜一下\n\n若强行让「对外编号」也走「对库存长度取余」，库存循环一圈之后，两个不同的世界时日会怎样？玩家拿着两条都写着 `#1` 的分享，还能分辨是哪一天吗？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会撞号：取余下标在库存长度处回绕，不同日期可以共用同一个编号；「第 N 期」叙事和跨日社交对比一起崩。\n\n## 逐条对照\n\n**题号**锚定产品纪元 `PUZZLE_EPOCH_UTC`（2026-06-12），再保证至少是 1：\n\n[[evidence:src/features/daily-puzzle/dailyPuzzle.ts:4-4]]\n\n[[evidence:src/features/daily-puzzle/dailyPuzzle.ts:19-27]]\n\n:::detail[纪元为什么不是 1970？]\n1970 是计算机常用的时间零点，用来算「过了多少个整天」。题号零点是产品自己的生日：2026 年 6 月 12 日。你对外说 Daily #1，说的是「开服第一天」，不是「距 1970 年已经第两万多天」。两套零点叠在同一份日期上，就是两只钟。\n\n函数最后还用「至少为 1」兜底：纪元当天是第 1 期，不会出现 Daily #0。你在分享标题里看见的井号，永远从 1 往上数。纪元写在常量里，改开服日只改这一处，不会和槽位那只从 1970 起算的钟缠在一起。\n:::\n\n**槽位**不减产品纪元：轮换函数用从 1970 起的日序，直接对库存长度取余。选题入口只是把它调一次：\n\n[[evidence:src/features/daily-puzzle/dailyPuzzle.ts:29-42]]\n\n分享文案只吃题号，不吃下标：\n\n[[evidence:src/features/daily-puzzle/dailyPuzzle.ts:101-103]]\n\n| | 题号 `getPuzzleNumber` | 槽位 `getRotatingItem` |\n| --- | --- | --- |\n| 基准 | 减去 `PUZZLE_EPOCH_UTC` | 1970 日起的日序，不减纪元 |\n| 范围 | ≥ 1，随日历单调涨 | `0 … length-1`，循环 |\n| 谁消费 | 分享标题、history 记录 | 当天派发哪道题 |\n\n假设库存长度 14：第 15 个世界时日，槽位会再次落到与第 1 天相同的题，但题号继续变成 15——你复制出去的是 Daily #15，不是 #1。\n\n:::detail[封面局为什么也调用同一只槽位钟？]\n「扮演洗白者」那条支线有自己的案子库存，也要按天换一份。它直接调用轮换函数，而不是再写一遍剥年月日。你在每日入口里看见的那只槽位钟，已经被抽成公用零件；题号钟仍然只服务「第几期」叙事，不会拿去当封面案子的下标。\n\n这就是入口变短的产品原因：同一天只换一份「今日货」的规则，现在有两份货要遵守。规则写一次，两份货共用；对外编号仍然只有每日主线那一份需要。你在封面支线里找不到第二份 PUZZLE_EPOCH_UTC，那是故意的：案子轮换不需要对外期数，也不该对外数期数，免得两套货抢同一个井号。\n:::\n\n## 什么时候用哪个\n\n- **你要对玩家说话、要记「第几期」、要写 history / 分享** → 用题号。\n- **你要从 curated 列表里取出今天的题面** → 用槽位取余。\n- **永远不要**把取余下标写进分享文案，也**不要**用题号当数组下标（题号会涨过库存长度）。\n\n:::detail[history 记录为什么也必须吃题号？]\n完成记录要能回答「第几期过了没有」。若写入库存下标，循环一圈后第 15 天会覆盖第 1 天的完成态，或者两天共享同一条历史。题号单调往上，才不会在循环处撞车。分享标题和完成记录用同一只钟，你对朋友说的 #15 和自己账本上的 #15 才是同一天。\n:::\n\n你若在别处只看到一个「日序」，先问：它有没有减产品纪元？减了就是对外身份，没减再取余就是对内调度。\n\n## 再想想\n\n槽位那只钟怎么把「一天」钉死，见 [[lesson:utc-day-same-puzzle|为什么早晨和深夜必须是同一道题？]]。\n\n## 自检\n\n**问：** `PUZZLE_EPOCH_UTC` 的日期是哪一天？题号会不会返回 0？\n\n**问：** 若把题号也改成「日序对库存长度取余」，分享文案会出现什么问题？\n\n## 一句话\n\n**对外身份（题号）与对内调度（取余槽位）必须分开计时。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                "lineStart": 4,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "PUZZLE_EPOCH_UTC：题号零点 2026-06-12。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                "lineStart": 19,
+                "lineEnd": 27,
+                "nodeIds": [],
+                "note": "getPuzzleNumber 减纪元后保证 ≥ 1。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                "lineStart": 29,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "getRotatingItem 用 Unix 日序取模；getDailyPuzzle 只做转交。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                "lineStart": 101,
+                "lineEnd": 103,
+                "nodeIds": [],
+                "note": "分享标题使用 puzzleNumber，不是库存下标。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "epoch-vs-unix",
+                "kind": "basic",
+                "front": "getPuzzleNumber 的零点是什么？getDailyPuzzle 的 dayIndex 呢？",
+                "back": "题号零点是 PUZZLE_EPOCH_UTC（2026-06-12）；选题 dayIndex 在 getRotatingItem 里，是自 Unix 纪元起的 UTC 日序。",
+                "tags": [
+                  "daily-loop"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "题号纪元"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 19,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "getPuzzleNumber 与 getRotatingItem 的 dayIndex"
+                  }
+                ]
+              },
+              {
+                "id": "share-uses-number",
+                "kind": "basic",
+                "front": "玩家分享卡片上的 #N 来自哪条 API？",
+                "back": "来自 getPuzzleNumber，经 buildPuzzleShareText 拼进标题行。",
+                "tags": [
+                  "daily-loop"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 101,
+                    "lineEnd": 103,
+                    "nodeIds": [],
+                    "note": "Daily #puzzleNumber 标签"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "epoch-const",
+                "kind": "short-answer",
+                "title": "题号纪元",
+                "prompt": "getPuzzleNumber 使用的纪元常量叫什么？",
+                "expectedAnswer": "PUZZLE_EPOCH_UTC",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "纪元常量名"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "practice-does-not-steal-daily",
+            "title": "「再练一局」为什么绝不能先吐出今日题？",
+            "content": "# 「再练一局」为什么绝不能先吐出今日题？\n\n## 情境和约束\n\n你猜完今日题，页面提供「练习」入口：还想多玩几把。库存是有限精选列表，今日题已经消耗过一次注意力。\n\n要拍板两件事：\n\n1. 练习池里**要不要包含**今天那道题；\n2. 练习路径上的一次猜对，**要不要**记进每日完成、覆盖「昨晚」那张回访卡。\n\n一边是「多给用户一局、实现简单」；一边是「今日题必须保持稀缺，主线记账不能被刷题污染」。\n\n:::detail[练习池是什么？]\n就是还想多玩时，从同一份精选库存里再抽题给你的那一圈。它不是另一套服务器题库，也不是无限随机。你连续点练习，走的是这一圈。\n\n「再练一局」卖的是手感，不是第二份今日稀缺。圈里有没有今天刚猜过的那道，会直接决定你明天还想不想回来。\n:::\n\n## 先猜一下\n\n如果练习池不过滤今日题，用户刚通关就立刻在练习里再刷同一道——你觉得坏的是「新鲜感」还是「连胜数据」？还是两者都会被伤到？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们两边都挡：练习池先滤掉今日题；每日进度和回访卡只在主线局（还没点练习）时写入。稀缺和记账是两条独立闸门。\n\n## 代价和收益\n\n选题侧，真正干活的是通用练习函数：先按 id 滤掉当前题，再在剩余池上按练习序号取余。每日练习只是给它传今日题 id：\n\n[[evidence:src/features/daily-puzzle/dailyPuzzle.ts:44-65]]\n\n:::detail[过滤之后，练习序号怎么落到某一题？]\n函数先建一个去掉当前 id 的短名单。短名单不空，就只在短名单上转圈；短名单空了，才退回整份库存再取余。取余写成「先模再加回长度再模」，负数序号也不会掉到数组外面。\n\n你第一次点「再练」，页面把空着的练习序号写成 0，函数就取短名单第一题——正常库存下这题不是今天那道。再点一次，序号加 1，再取余。封面局的案子列表也把当前案子 id 交给同一套函数，所以你改每日练习纪律时，那条支线会一起改。\n:::\n\n:::detail[库存只剩今日一题时会怎样？]\n过滤后如果池子空了，函数会退回整份库存再取余——单题库存时你练到的还是今天那道。这是写明的降级，不是默认路径。精选列表正常有十几道，走不到这里。\n\n整份库存一个都没有，函数会直接抛错，不会假装抽到题。空池回退管的是「滤完没剩」，不是「货架上空空」。旧写法在空池时直接返回库存第一题；现在改成「空了就用全量再取余」，单题时结果一样，多题时仍然先跳过当前。你读代码时不要再去找「返回第一题」那一行，那一行已经没了。\n:::\n\n你连续点练习时，练习序号在过滤后的池里转圈；今日题被留在主线，当作「明天再来」的钩子。\n\n:::detail[练习序号空着和有数字，差在哪？]\n页面上这个序号一开始是空的，表示你还在今日主线。点「再练」才把它写成 0，之后每点一次加 1。选题时：空着就用今天那道；有数字才去通用练习函数里按序号取。\n\n猜完时这道闸门再判一次。序号仍空着，才写每日完成和回访卡，并记一笔「每日通关」。序号已经是数字，就不再动这两本主线账——练习局可以另记卷宗，但不能冒充今天的主线。\n:::\n\n页面侧，猜完后是否写入每日进度和回访卡，取决于你是不是还在主线：\n\n[[evidence:src/pages/DailyPuzzlePage.tsx:146-163]]\n\n:::detail[练习是不是什么都不写？]\n不是。猜完先写卷宗，再决定要不要写每日账本。卷宗这条路练习也会走，只是标成练习而不是每日主线：对错、看了几行、连抓几题，都还能进卷宗；同一天的官方日不会因为你刷练习再记一次。\n\n每日账本——今日完成、连胜、首页那张「昨晚」卷轴——只在序号还空着时写。注释写明要先交卷宗、再写今日完成：卷宗回填时会去读每日账本；如果先把今天记成已完成，回填会以为主线已经落过档，今天这份卷宗该记的第一笔会丢。\n\n连胜按日幂等，同一天猜对两次本来也不会把连胜加成 2。可回访卡没有这层保护：练习若也保存「昨晚」，首页会记住一局不算数的副刊。所以这里选择连回访卡一起不写，而不是指望连胜函数去挡。\n:::\n\n:::detail[为什么过滤和记账要分成两道闸？]\n只过滤、练习仍写每日完成：今日题没被再刷，连胜和回访卡却会被副刊污染。只挡记账、练习池仍含今日题：账是干净的，稀缺没了。两件事伤的不是同一根筋，所以他们做了两道门，而不是赌其中一道能兼管另一道。封面局复用同一套过滤，你改每日练习纪律时也会改到那条支线——这是抽公共函数的连带责任。两道闸门都在，今日题才既稀缺又干净。少一道都会漏掉一边。\n:::\n\n**收益：** 今日题仍是「明天再来」的钩子；练习是可消耗副刊。你刷练习不会把回访卡盖成练习局，也不会把练习误记成主线完成。\n\n**代价：** 多一个过滤分支和「是不是主线」门闩；练习池比全量少一题；极端单题库存时练习会退回今日题。\n\n## 什么时候该反过来\n\n- **库存极大、今日题几乎不构成稀缺**（千题随机池）：过滤今日题收益变小，你更该关心的是难度与去重。\n- **练习本身就是产品主路径**（训练模式、无每日主线）：那就不该借用每日进度的语义，而应单独的练习统计——不是「把过滤去掉」，是「换一套账本」。\n- **故意要复盘今日题**（解析模式、错题本）：应走显式「再看今日」入口，而不是混进「再练一局」的无剧透池。\n\n## 再想想\n\n主线完成如何按日记账、同一天猜对两次会不会连胜加倍，见 [[lesson:streak-idempotent-by-date|同一天猜对两次，连胜会变成 2 吗？]]。\n\n## 自检\n\n**问：** 练习函数用什么条件把今日题剔出练习池？\n\n**问：** 练习模式若也调用每日完成记账，会混淆什么语义？\n\n## 一句话\n\n**主线稀缺、练习可耗：滤掉今日题，且只在还没点练习时写入每日账本。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                "lineStart": 44,
+                "lineEnd": 65,
+                "nodeIds": [],
+                "note": "getPracticeItem 过滤当前 id；getPracticePuzzle 转交今日题 id。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/DailyPuzzlePage.tsx",
+                "lineStart": 146,
+                "lineEnd": 163,
+                "nodeIds": [],
+                "note": "仅主线（practiceIndex === null）写入 progress 与 last-round。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "practice-filter",
+                "kind": "basic",
+                "front": "getPracticePuzzle 如何保证第一道练习不是今日题？",
+                "back": "交给 getPracticeItem：先 filter 掉当前 id，再在剩余池上按 practiceIndex 取模。",
+                "tags": [
+                  "daily-loop"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 52,
+                    "lineEnd": 55,
+                    "nodeIds": [],
+                    "note": "practicePool 排除今日"
+                  }
+                ]
+              },
+              {
+                "id": "practice-no-persist",
+                "kind": "basic",
+                "front": "为什么 handleGuess 用 practiceIndex === null 包住每日进度和回访卡写入？",
+                "back": "练习不计入每日完成、不覆盖 last-round；卷宗对错仍可能先记一笔。两本账分开，才保住主线稀缺与回访钩子。",
+                "tags": [
+                  "daily-loop"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/pages/DailyPuzzlePage.tsx",
+                    "lineStart": 146,
+                    "lineEnd": 163,
+                    "nodeIds": [],
+                    "note": "练习分支跳过每日账本"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "practice-filter-name",
+                "kind": "short-answer",
+                "title": "练习池",
+                "prompt": "排除今日题后的数组变量名是？",
+                "expectedAnswer": "practicePool",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 52,
+                    "lineEnd": 52,
+                    "nodeIds": [],
+                    "note": "practicePool 变量现在写在 getPracticeItem 里"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "streak-idempotent-by-date",
+            "title": "同一天猜对两次，连胜会变成 2 吗？",
+            "content": "# 同一天猜对两次，连胜会变成 2 吗？\n\n## 现象\n\n你在 6 月 12 日首次完成今日题：界面上的连胜变成 1。\n\n同日你刷新页面、再次走完猜题流程——连胜数字还是 1，没有「再点一次 +1」。\n\n6 月 13 日再完成：连胜变成 2。6 月 15 日才回来：当前连胜掉回 1，但历史最佳仍可能留着更高的峰值。\n\n看起来像前端禁了第二次提交；也可能是领域函数自己吞掉了同日重入。\n\n## 先猜一下\n\n假如有人绕过 UI，直接把同一个 `dateKey` 第二次丢进 `recordDailyCompletion`，函数会返回新对象并累加，还是连引用都懒得换？幂等守在哪一层？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n领域层第一行就早退：`lastCompletedDate === dateKey` 时直接 `return progress`（原对象）。幂等写在纯函数里，不靠按钮禁用。\n\n## 为什么是这样\n\n历史窗口和存储键先定死边界：\n\n```ts\nconst STORAGE_KEY = 'turing-pact-daily-progress-v1';\nconst HISTORY_LIMIT = 14;\nconst DAY_MS = 86_400_000;\n```\n\n[[evidence:src/features/daily-puzzle/dailyProgress.ts:1-3]]\n\n记账函数把「同日」和「相邻日」拆成两道门：\n\n```ts\nexport function recordDailyCompletion(\n  progress: DailyProgress,\n  completion: DailyHistoryEntry,\n): DailyProgress {\n  if (progress.lastCompletedDate === completion.dateKey) return progress;\n\n  const currentStreak = isConsecutiveDate(progress.lastCompletedDate, completion.dateKey)\n    ? progress.currentStreak + 1\n    : 1;\n\n  return {\n    ...progress,\n    currentStreak,\n    bestStreak: Math.max(progress.bestStreak, currentStreak),\n    totalCompleted: progress.totalCompleted + 1,\n    totalCorrect: progress.totalCorrect + (completion.correct ? 1 : 0),\n    lastCompletedDate: completion.dateKey,\n    history: [completion, ...progress.history].slice(0, HISTORY_LIMIT),\n  };\n}\n```\n\n[[evidence:src/features/daily-puzzle/dailyProgress.ts:39-70]]\n\n你同一天无论调用几次，第一行就挡掉：`totalCompleted`、`history`、streak 全不动。若只靠页面 `if (result) return`，用户清掉组件状态再提交，仍可能双计——所以闸门必须落在 `recordDailyCompletion`。\n\n第二道门是 `isConsecutiveDate`：两个 `dateKey` 的 UTC 毫秒差必须**恰好**等于 `DAY_MS`。差两天或更久，你拿不到「续上」——`currentStreak` 直接变成 1；`bestStreak` 才用 `Math.max` 保留峰值。`history` 只留 14 条——你看到的「最近两周」是硬切，不是无限流水。\n\n留存指标认的是「这一天有没有回来过」，不是「这一天点了几次」。把幂等写进领域函数之后，UI 怎么写都难刷爆 streak。\n\n## 再想想\n\n主线之外的练习不会走进这个函数，见 [[lesson:practice-does-not-steal-daily|「再练一局」为什么不写 progress？]]。\n\n## 自检\n\n**问：** 同日重入时 `recordDailyCompletion` 返回什么？\n\n**问：** 若去掉同日早退，只靠前端 `if (result) return` 防重复，用户清状态重放会怎样？\n\n**问：** `HISTORY_LIMIT` 是多少？\n\n## 一句话\n\n**连胜是「日历相邻的完成事件」规约，不是点击计数器。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/daily-puzzle/dailyProgress.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "STORAGE_KEY 与 HISTORY_LIMIT=14"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/daily-puzzle/dailyProgress.ts",
+                "lineStart": 39,
+                "lineEnd": 70,
+                "nodeIds": [],
+                "note": "同日早退、相邻判定与 streak 更新"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "same-day-noop",
+                "kind": "basic",
+                "front": "同一 dateKey 第二次调用 recordDailyCompletion 会怎样？",
+                "back": "直接返回原 progress，不增加 totalCompleted，也不改 streak。",
+                "tags": [
+                  "streak"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/daily-puzzle/dailyProgress.ts",
+                    "lineStart": 56,
+                    "lineEnd": 56,
+                    "nodeIds": [],
+                    "note": "同日幂等早退"
+                  }
+                ]
+              },
+              {
+                "id": "streak-reset",
+                "kind": "basic",
+                "front": "间隔两天再完成时 currentStreak 变成多少？",
+                "back": "变成 1：isConsecutiveDate 失败则重置，而不是清零 bestStreak。",
+                "tags": [
+                  "streak"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/daily-puzzle/dailyProgress.ts",
+                    "lineStart": 58,
+                    "lineEnd": 60,
+                    "nodeIds": [],
+                    "note": "非连续则 streak=1"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "history-limit",
+                "kind": "short-answer",
+                "title": "历史长度",
+                "prompt": "DailyProgress.history 最多保留几条？",
+                "expectedAnswer": "14",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/daily-puzzle/dailyProgress.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "HISTORY_LIMIT"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "return-hooks",
+        "title": "回访钩子",
+        "objective": "我能把昨晚那一局落成版本化单槽快照，结束时写入、回家时读取，没有历史就不渲染卡片。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "last-round-versioned-snapshot",
+            "title": "「记住昨晚」在本地该落成什么样？",
+            "content": "# 「记住昨晚」在本地该落成什么样？\n\n## 情境和约束\n\n庄园首页要在你回来时勾住你：桌上有东西提醒「你昨晚经历过一局」。工程上你必须在本机留下可渲染的摘要。\n\n你面对三条互相拉扯的约束：\n\n- 要不要存完整对局时间线，还是只留「最近一次」？\n- 字段要肥到能重放整晚聊天，还是瘦到只够 hook 文案？\n- 磁盘上的 JSON 坏了、格式升了版本，是半残渲染，还是当没有？\n\n这不是「加不加 history 表」的审美题——是留存钩子该多大、坏了会不会砸脸。\n\n## 先猜一下\n\n在「时间线列表」和「单槽后写覆盖」之间，你会选哪个？校验失败时，你会半残渲染还是直接当没有？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了**单槽 + `version: 1` 硬校验**：一个 key，后写覆盖；schema 不过就当没有——回访钩子不是战报档案馆。\n\n## 代价和收益\n\n键名本身带着版本，注释把产品意图写死成「记住昨晚」：\n\n```ts\nexport const LAST_ROUND_SUMMARY_STORAGE_KEY = 'turing-pact-last-round-summary-v1';\n\nexport type LastRoundSource = 'live' | 'daily';\n\n/**\n * Compact, versioned snapshot of the most recent finished Live or Daily round.\n * Stored locally so the manor can \"remember last night\" on return visits.\n */\nexport interface LastRoundSummary {\n  version: 1;\n  source: LastRoundSource;\n  finishedAt: string;\n  winner?: RoundWinner | null;\n  myRole?: PlayerRole | null;\n  hostAlias?: string | null;\n  roastReport?: string | null;\n  roastLeadZh?: string | null;\n  roastLeadEn?: string | null;\n  dailyCorrect?: boolean | null;\n  dailyPuzzleNumber?: number | null;\n}\n```\n\n[[evidence:src/features/return-hooks/domain/lastRoundSummary.ts:14-38]]\n\n**收益：** 首页只问「有没有能勾人的东西」；live 带 winner / roast lead，daily 带对错与题号——够渲染，不背档案包袱。\n\n**代价：** 你打完 daily 再打 live，昨天的 daily 钩子被盖掉；没有「上周三那局」可翻。\n\n校验不是宽松 coerce，是硬门槛：\n\n```ts\nexport function isLastRoundSummary(value: unknown): value is LastRoundSummary {\n  if (!value || typeof value !== 'object') return false;\n  const candidate = value as Partial<LastRoundSummary>;\n  if (candidate.version !== 1) return false;\n  if (candidate.source !== 'live' && candidate.source !== 'daily') return false;\n  if (typeof candidate.finishedAt !== 'string' || candidate.finishedAt.length === 0) return false;\n  if (\n    candidate.winner !== undefined &&\n    candidate.winner !== null &&\n    !isRoundWinner(candidate.winner)\n  ) {\n    return false;\n  }\n  if (\n    candidate.myRole !== undefined &&\n    candidate.myRole !== null &&\n    !isPlayerRole(candidate.myRole)\n  ) {\n    return false;\n  }\n  return true;\n}\n```\n\n[[evidence:src/features/return-hooks/domain/lastRoundSummary.ts:66-86]]\n\n`version !== 1` 或非法 `source` 直接 false；后面的 `load` 会把 false 折成 `null`。你拿到的不是「带警告的半对象」，是「这帧不存在」。\n\n建造路径也按 source 切开，不让 daily 误塞 live 字段语义：\n\n```ts\nexport function buildLiveLastRoundSummary(input: {\n  finishedAt?: string;\n  winner: RoundWinner;\n  myRole?: PlayerRole | null;\n  hostAlias?: string | null;\n  roastReport?: string | null;\n}): LastRoundSummary {\n  const roastReport = normalizeRoastReportBody(input.roastReport);\n  const leads = extractRoastLeadLines(roastReport);\n  return createEmptyLastRoundSummary({\n    source: 'live',\n    finishedAt: input.finishedAt ?? new Date().toISOString(),\n    winner: input.winner,\n    myRole: input.myRole ?? null,\n    hostAlias: input.hostAlias?.trim() || null,\n    roastReport,\n    roastLeadZh: leads.zh,\n    roastLeadEn: leads.en,\n  });\n}\n\nexport function buildDailyLastRoundSummary(input: {\n  finishedAt?: string;\n  correct: boolean;\n  puzzleNumber: number;\n}): LastRoundSummary {\n  return createEmptyLastRoundSummary({\n    source: 'daily',\n    finishedAt: input.finishedAt ?? new Date().toISOString(),\n    dailyCorrect: input.correct,\n    dailyPuzzleNumber: input.puzzleNumber,\n  });\n}\n```\n\n[[evidence:src/features/return-hooks/domain/lastRoundSummary.ts:112-143]]\n\ndaily 建造函数**根本不收** transcript——这是边界，不是遗漏。摘要越肥，损坏面和隐私面一起变宽。\n\n## 什么时候该反过来\n\n- **产品要「我的战报历史」**：单槽会删记忆，你需要列表存储、分页和过期策略，那是另一个功能。\n- **schema 演进要兼容读旧帧**：`version === 1` 硬失败会丢掉旧钩子；那时要 migration 或并读 v1/v2，而不是 silently drop。\n- **合规要求保留完整对话**：compact snapshot 不够，应进服务端审计通道，别把聊天塞进回访 key。\n\n## 再想想\n\n这帧何时写入、何时被首页读出，见 [[lesson:write-on-finish-read-on-home|结束时写入，回家时读出]]；load 得 `null` 时 UI 如何沉默，见 [[lesson:no-history-no-card|没有历史就不要装有]]。\n\n## 自检\n\n**问：** `isLastRoundSummary` 要求的 `version` 字面量是什么？\n\n**问：** 为什么 daily 摘要不塞完整聊天 transcript？\n\n## 一句话\n\n**回访状态 = 单一版本化槽位 + 严格 schema：做大了变存档，做糊了变坏数据弹窗。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/return-hooks/domain/lastRoundSummary.ts",
+                "lineStart": 14,
+                "lineEnd": 38,
+                "nodeIds": [],
+                "note": "存储键与 LastRoundSummary 字段"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/return-hooks/domain/lastRoundSummary.ts",
+                "lineStart": 66,
+                "lineEnd": 86,
+                "nodeIds": [],
+                "note": "isLastRoundSummary：version/source 校验"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/return-hooks/domain/lastRoundSummary.ts",
+                "lineStart": 112,
+                "lineEnd": 143,
+                "nodeIds": [],
+                "note": "buildLive / buildDaily 两种建造路径"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "single-slot",
+                "kind": "basic",
+                "front": "LastRoundSummary 是时间线还是单槽？依据是什么？",
+                "back": "单槽：一个 STORAGE_KEY，后写覆盖；接口也只有 load/save/clear 当前摘要。",
+                "tags": [
+                  "return-hooks"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/return-hooks/domain/lastRoundSummary.ts",
+                    "lineStart": 14,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "单 key 记忆昨晚"
+                  }
+                ]
+              },
+              {
+                "id": "bad-version",
+                "kind": "basic",
+                "front": "本地 JSON 的 version 不是 1 时 load 返回什么？",
+                "back": "null。isLastRoundSummary 失败则当作无历史。",
+                "tags": [
+                  "return-hooks"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/return-hooks/domain/lastRoundSummary.ts",
+                    "lineStart": 66,
+                    "lineEnd": 70,
+                    "nodeIds": [],
+                    "note": "version 必须为 1"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "summary-version",
+                "kind": "short-answer",
+                "title": "schema 版本",
+                "prompt": "isLastRoundSummary 要求的 version 字面量是？",
+                "expectedAnswer": "1",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/return-hooks/domain/lastRoundSummary.ts",
+                    "lineStart": 69,
+                    "lineEnd": 69,
+                    "nodeIds": [],
+                    "note": "version === 1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "write-on-finish-read-on-home",
+            "title": "首页那张卷轴，是什么时候写进本机的？",
+            "content": "# 首页那张卷轴，是什么时候写进本机的？\n\n## 你看到的结果\n\n你打完一局直播或每日题，回到庄园首页，桌上多了一张「昨晚」卷轴。中间没有推送、没有「最近房间」接口往回填。\n\n关掉站点数据再进首页，卷轴消失。钩子活在这台浏览器的本地格子里。落盘的意思是：结束那一刻就把这帧摘要写进这台机器，而不是等你下次打开首页再去网上拼。\n\n:::detail[卷轴里装的是整局回放吗？]\n不是。它是一帧摘要：谁赢了、你当时什么身份、房主叫什么、有没有一句结算吐槽。首页只需要够你「还记得昨晚」，不需要把整晚聊天再播一遍。所以结算当下就能写完，不必等首页再去拼。\n\n本地格子就是浏览器留给这个网站的一小块记事本。关标签不会丢，清站点数据会丢。推送和「最近房间」接口都不在这条链上：你看到卷轴，是因为离开时写下了；你看不到，是因为本机没有这帧。\n:::\n\n## 先猜一下\n\n这帧摘要是在**打开首页时**现拼的，还是在**对局结束当下**就写好的？若只靠首页拉网、结算时不落盘，弱网时你会看到什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n结算时写进本机：直播在对局结束且已有赢家时写，每日在猜完主线时写；首页只读一次，有值才挂卡——弱网现拼会得到空白首页。\n\n## 一站一站往回走\n\n**第 1 站 — 直播房在结束时落盘**\n\n房间页有一段只在「阶段是结束、并且已经有赢家」时才跑的效果：条件不齐就返回；齐了才组一帧直播摘要并保存。\n\n[[evidence:src/pages/RoomPage.tsx:500-515]]\n\n:::detail[为什么还要检查赢家？]\n「结束」只说明房间不再接受发言，「赢家」才说明这局有可讲的结局。没有赢家就写卡，首页会挂一张说不清谁赢的卷轴。两个条件绑在一起，才是「有故事可记」而不是「房间关了」。\n\n这段写入挂在页面的效果里：阶段或赢家一变就会再跑。中途重连、晚到的结算吐槽，也能在条件齐了之后补写同一槽。你不用在点「回大厅」时再记一笔——离开之前，口袋里已经有货。\n:::\n\n你离开直播桌的那一刻，钩子已经进口袋——不是回家后再问服务器「我昨晚赢了吗」。\n\n**第 2 站 — 每日在猜完主线时落盘**\n\n每日路径写在提交猜测里：练习局不记每日进度，也不写回访；正式完成才组一帧每日摘要并保存。\n\n[[evidence:src/pages/DailyPuzzlePage.tsx:146-163]]\n\n:::detail[直播和每日会不会各存一张卡？]\n不会。两条写入汇入同一个本地槽位，后写的覆盖先写的。你今晚先打完直播、再猜每日，首页只记得每日那帧；反过来也一样。回访钩子要的是「还记得昨晚」，不是一份完整战绩列表。\n\n每日路径还多一道门：练习局不写这张卡。主线猜完才落盘，避免首页挂出一局「再练」的副刊。直播没有练习这回事，所以只看结束和赢家。\n:::\n\n**第 3 站 — 首页进门时只读一次**\n\n你进首页时，状态的初始值直接调用读取函数——读失败或没有，得到空：\n\n[[evidence:src/pages/HomePage.tsx:90-90]]\n\n没有在首页再起一个效果去拉「最近对局接口」。你看到的状态，就是进页那一瞬间本地有没有货。\n\n**第 4 站 — 有摘要才挂卡**\n\n条件钉死在页面上：有摘要才挂卷轴卡片，否则你什么都看不到。\n\n[[evidence:src/pages/HomePage.tsx:553-553]]\n\n:::detail[为什么不在首页现算摘要？]\n现算就要再问服务器要昨晚的房间、角色、吐槽。弱网、清过站点数据、或者那间房已经拆掉时，首页会空。结束当下写入，回家只负责读和决定挂不挂——链路短，失败形态也干净：没有就是没有。\n\n读取发生在首页状态的初始值里，只跑一次。你在首页停留时，别的标签页若写下新摘要，这页不会自己刷新卷轴。要看到新的「昨晚」，你得重新进门。这是「进门读一次」的代价，也避免首页不停去问服务器。没有摘要时连卡片组件都不挂，空桌比一张空白卷轴更诚实。条件写在页面结构里，不是靠卡片自己去猜「父级是不是忘了传」。\n:::\n\n整条链是 **保存 → 本地格子 → 读取 → 条件渲染**。回访理由必须在离开当下写进本机，回家才能「记得昨晚」。\n\n## 再想想\n\n槽位长什么样、坏数据怎么办，见 [[lesson:last-round-versioned-snapshot|「记住昨晚」在本地该落成什么样？]]；父级不传时卡片如何缺席，见 [[lesson:no-history-no-card|从没玩过的人打开首页，桌上为什么什么都没有？]]。\n\n## 自检\n\n**问：** 直播写入触发的两个必要条件是什么（阶段与赢家）？\n\n**问：** 若只在首页靠「最近房间接口」拼钩子、结算时不写本地，弱网时用户会看到什么？\n\n## 一句话\n\n**给人一个回来的理由，在工程上常是：离开时落盘，回来时条件渲染。**\n",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/RoomPage.tsx",
+                "lineStart": 500,
+                "lineEnd": 515,
+                "nodeIds": [],
+                "note": "finished 且有 winner 时写入 live last-round。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/DailyPuzzlePage.tsx",
+                "lineStart": 146,
+                "lineEnd": 163,
+                "nodeIds": [],
+                "note": "每日猜完主线才写入 daily last-round。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/HomePage.tsx",
+                "lineStart": 90,
+                "lineEnd": 90,
+                "nodeIds": [],
+                "note": "首页 mount 时 loadLastRoundSummary。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/HomePage.tsx",
+                "lineStart": 553,
+                "lineEnd": 553,
+                "nodeIds": [],
+                "note": "有摘要才渲染 LastRoundScrollCard。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "live-write-trigger",
+                "kind": "basic",
+                "front": "直播局何时 saveLastRoundSummary？",
+                "back": "gamePhase 为 finished 且 room.winner 存在时的 useEffect。",
+                "tags": [
+                  "return-hooks"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/pages/RoomPage.tsx",
+                    "lineStart": 500,
+                    "lineEnd": 515,
+                    "nodeIds": [],
+                    "note": "finished 触发写入"
+                  }
+                ]
+              },
+              {
+                "id": "home-conditional",
+                "kind": "basic",
+                "front": "HomePage 没有摘要时如何渲染回访卡？",
+                "back": "三元表达式为 null：不挂 LastRoundScrollCard。",
+                "tags": [
+                  "return-hooks"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/pages/HomePage.tsx",
+                    "lineStart": 553,
+                    "lineEnd": 553,
+                    "nodeIds": [],
+                    "note": "条件渲染"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "home-load-fn",
+                "kind": "short-answer",
+                "title": "首页读取",
+                "prompt": "HomePage 用来读取回访快照的函数名？",
+                "expectedAnswer": "loadLastRoundSummary",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/pages/HomePage.tsx",
+                    "lineStart": 90,
+                    "lineEnd": 90,
+                    "nodeIds": [],
+                    "note": "load 调用"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "no-history-no-card",
+            "title": "从没玩过的人打开首页，桌上为什么什么都没有？",
+            "content": "# 从没玩过的人打开首页，桌上为什么什么都没有？\n\n## 现象\n\n你清掉站点数据，或用全新浏览器进庄园首页。页面上有每日入口、建房入口，但**没有** `data-return-hook=\"last-round\"` 那张卷轴。\n\n不是「暂无回忆」灰卡，不是「快去玩一局」催促条——对应节点在 DOM 里根本不存在。\n\n:::detail[「节点不存在」和灰卡差在哪？]\n灰卡是「我在桌上，只是没字」：你仍能看见一块空牌子。节点不存在是桌上根本没有那张纸。你若打开开发者工具搜 `last-round`，会搜不到这个标记。这不是文案写得低调，是东西没被放上去。\n\n催促条更吵：它承认你没玩过，还推你去玩。这节课要盯的现象更安静——干净的缺席。第一次进门的你，看到的是庄园本身，不是一块在解释自己为什么空着的牌子。\n:::\n\n你打完一局再回来，节点才出现。有人手改 localStorage 把 `version` 改成 `2`，节点再次消失。\n\n## 先猜一下\n\n空态是 `LastRoundScrollCard` 自己 `return null`，还是父组件从不挂载它？若把 `summary` 改成可选并在组件内画「快去玩一局」，你会伤到哪类人？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n父组件 `load` 得 `null` 就不挂载；卡片 props 要求 `summary` 必填——空状态的正确形状是沉默，不是催促。\n\n## 为什么是这样\n\n组件契约假定摘要已经存在：`summary` 不是 optional。\n\n[[evidence:src/features/return-hooks/ui/LastRoundScrollCard.tsx:8-10]]\n\n:::detail[为什么不让卡片自己去读存储？]\n若卡片内部自己读，首页就不必决定「今晚有没有钩子」。同一张卡被别处误挂时，它可能自己变出一张卷轴，页面级的「有没有」就散了。必填 props 把决定钉在父级：有货才传入，没货连组件都不出现。\n\n卡片只负责把一帧摘要画成卷轴。它不过问这台浏览器的记事本，也不猜「父级是不是忘了传」。你以后若在别的页复用这张卡，它仍然只会画你递给它的那一帧——不会偷偷去翻口袋。\n:::\n\n注释把产品边界写进签名旁：absent when parent does not pass——没有历史就没有卡。\n\n[[evidence:src/features/return-hooks/ui/LastRoundScrollCard.tsx:27-31]]\n\n所以组件内部**不需要**「无 summary 画空态」分支；那条路在类型上就不存在。你在卡片里找 `if (!summary)` 是找不到的——责任在父级。\n\n读端把所有失败折成同一种空：\n\n[[evidence:src/features/return-hooks/domain/lastRoundSummary.ts:146-154]]\n\n缺 key、JSON 抛错、`isLastRoundSummary` 失败——三条路都是 `null`。你不会在首页看到「数据损坏请联系客服」；钩子与坏数据一样安静退场。这和 fail-closed 同一哲学，用在留存而不是安全上：有证据才出场。\n\n:::detail[三种失败为什么不能各画一种提示？]\n对回访钩子来说，三种失败的产品结论相同：这台机器上没有一帧能勾人的「昨晚」。缺 key 是真没玩过；JSON 坏了或版本不对是不能信。若拆成「去玩一局」「数据损坏」「请升级」，从没玩过的人会被催，数据坏了的人会看到一句他修不了的报错。\n\n统一折成空，首页只做一件事：有值才挂卡。失败形态干净——没有就是没有。你不必先当维修员，才能判断桌上该不该有卷轴。回访钩子不是控制台：它要么勾住回来的你，要么安静让路。\n:::\n\n首页把决定写在页面结构里：有摘要才挂卷轴卡片，否则那一侧什么都不渲染。\n\n[[evidence:src/pages/HomePage.tsx:553-553]]\n\n:::detail[为什么判断写在首页，而不是写在卡片里？]\n因为这是页面级决定，不是卡片自己的心情。你在首页结构里一眼能看到：有摘要才出现组件，没有就走到空的那一侧。卡片函数甚至不会被叫到。\n\n若把判断藏进卡片内部，读首页的人要再钻进子组件才知道空桌怎么来的。决定留在父级，空态的形状才稳定：缺席，而不是一张没传全的卡硬撑着画。\n:::\n\n:::detail[若改成「快去玩一局」会伤到谁？]\n从没玩过的人。首页已经有每日入口和建房入口，他不需要一张卷轴来提醒「你还没故事」。催促条把「缺席」变成指责，第一次到访就在推销回访。\n\n沉默把位置留给以后真的有「昨晚」的时候。你要勾的是回来的人，不是刚进门的人。空桌比一张空白卷轴更诚实，也比一句「快去玩」更尊重第一次推门进来的你。\n:::\n\n## 再想想\n\n谁在结算时写入、谁在首页读取，见 [[lesson:write-on-finish-read-on-home|首页那张卷轴，是什么时候写进本机的？]]；为什么坏 `version` 也走同一条 `null`，见 [[lesson:last-round-versioned-snapshot|「记住昨晚」在本地该落成什么样？]]。\n\n## 自检\n\n**问：** `LastRoundScrollCardProps.summary` 是可选还是必填？\n\n**问：** 若把 `summary` 改成可选并在组件内画「快去玩一局」，会伤害哪类体验？\n\n## 一句话\n\n**回访 UI 的默认是缺席：有证据才出场。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/return-hooks/ui/LastRoundScrollCard.tsx",
+                "lineStart": 8,
+                "lineEnd": 10,
+                "nodeIds": [],
+                "note": "summary 必填 props。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/return-hooks/ui/LastRoundScrollCard.tsx",
+                "lineStart": 27,
+                "lineEnd": 31,
+                "nodeIds": [],
+                "note": "无历史则父级不传、卡片不出现。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/return-hooks/domain/lastRoundSummary.ts",
+                "lineStart": 146,
+                "lineEnd": 154,
+                "nodeIds": [],
+                "note": "load 失败路径统一返回 null。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/HomePage.tsx",
+                "lineStart": 553,
+                "lineEnd": 553,
+                "nodeIds": [],
+                "note": "无摘要时不挂 LastRoundScrollCard。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "props-required",
+                "kind": "basic",
+                "front": "LastRoundScrollCard 为什么要求 summary 必填而不是内部 load？",
+                "back": "让「有没有钩子」成为页面级决策；组件只负责展示，不隐式读存储。",
+                "tags": [
+                  "return-hooks"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/return-hooks/ui/LastRoundScrollCard.tsx",
+                    "lineStart": 8,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "必填 summary"
+                  }
+                ]
+              },
+              {
+                "id": "load-null",
+                "kind": "basic",
+                "front": "三种会导致 loadLastRoundSummary 返回 null 的情况？",
+                "back": "无 key、JSON 解析失败、isLastRoundSummary 不通过。",
+                "tags": [
+                  "return-hooks"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/return-hooks/domain/lastRoundSummary.ts",
+                    "lineStart": 146,
+                    "lineEnd": 154,
+                    "nodeIds": [],
+                    "note": "null 三路径"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "empty-render",
+                "kind": "short-answer",
+                "title": "空历史 UI",
+                "prompt": "无 last-round 时 HomePage 对卷轴卡的渲染结果是什么字面量？",
+                "expectedAnswer": "null",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/pages/HomePage.tsx",
+                    "lineStart": 553,
+                    "lineEnd": 553,
+                    "nodeIds": [],
+                    "note": "三元 else 为 null"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "source-shapes-the-hook",
+            "title": "同一张卷轴，为什么 daily 与 live 拆开后不一样？",
+            "content": "# 同一张卷轴，为什么 daily 与 live 拆开后不一样？\n\n## 两个东西\n\n首页只挂一种卡片：`LastRoundScrollCard`。你塞进去的摘要却有两种来源字段：`source: 'daily'` 与 `source: 'live'`。\n\n你昨天 daily 猜错，卡上是一回事；你刚打完 live 且带 roast，卡上是另一回事。外壳同一个，你拆开后读到的第一句和弹层内容不是同一条叙事。\n\n## 先猜一下\n\n用户点开弹层时，**哪一种** `source` 会展开完整中英 roast，哪一种只回落 `leadLine`？若有人给 daily 摘要也塞一个空的 `roastReport` 字段，弹层会不会突然变成 roast 报告？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n只有 `source === 'live' && roastSections` 才展开完整 roast；daily 始终走 `leadLine`——空 `roastReport` 字段也不会让 daily 误入 roast 分支。\n\n## 逐条对照\n\n**标题行（headline）** 按 source 分叉：daily 读 `dailyCorrect` 选对/错文案；live 读 `winner` 选阵营文案——你看 headline 就能分辨刚结束的是哪一种玩法。\n\n**导语（leadLine）** 信息密度也不同：daily 优先 puzzle number；live 优先你当前语言的 `roastLeadZh` / `roastLeadEn`。\n\n```ts\n  const headline = useMemo(() => {\n    if (summary.source === 'daily') {\n      return summary.dailyCorrect ? t('returnHook.dailyCorrect') : t('returnHook.dailyWrong');\n    }\n    if (summary.winner === 'sympathizer') return t('returnHook.liveWinnerSympathizer');\n    if (summary.winner === 'resistance') return t('returnHook.liveWinnerResistance');\n    return t('returnHook.liveGeneric');\n  }, [summary.dailyCorrect, summary.source, summary.winner, t]);\n\n  const leadLine = useMemo(() => {\n    if (summary.source === 'daily') {\n      return summary.dailyPuzzleNumber != null\n        ? t('returnHook.dailyPuzzleLine', { number: summary.dailyPuzzleNumber })\n        : t('returnHook.dailyGenericLine');\n    }\n    if (locale === 'zh-CN') {\n      return summary.roastLeadZh ?? summary.roastLeadEn ?? t('returnHook.liveGenericLine');\n    }\n    return summary.roastLeadEn ?? summary.roastLeadZh ?? t('returnHook.liveGenericLine');\n  }, [\n    locale,\n    summary.dailyPuzzleNumber,\n    summary.roastLeadEn,\n    summary.roastLeadZh,\n    summary.source,\n    t,\n  ]);\n```\n\n[[evidence:src/features/return-hooks/ui/LastRoundScrollCard.tsx:38-64]]\n\n你读这段时盯住 `summary.source`：它不是装饰字段，是**整卡叙事的开关**。不是「有没有 roast 字段」去猜你刚玩了什么。\n\n**弹层正文** 才是最容易踩坑的分叉：\n\n```tsx\n            <div className=\"tp-return-hook-dialog-body\">\n              <p className=\"tp-return-hook-dialog-headline\">{headline}</p>\n              {summary.source === 'live' && roastSections ? (\n                <div className=\"tp-return-hook-report\" data-return-hook-report=\"true\">\n                  {roastSections.zh.map((line) => (\n                    <p key={`zh-${line}`}>{line}</p>\n                  ))}\n                  {roastSections.en.length > 0 && (\n                    <div className=\"tp-return-hook-report-en\">\n                      {roastSections.en.map((line) => (\n                        <p key={`en-${line}`}>{line}</p>\n                      ))}\n                    </div>\n                  )}\n                </div>\n              ) : (\n                <p>{leadLine}</p>\n              )}\n              {summary.source === 'live' && !roastSections && (\n                <p className=\"tp-return-hook-empty\">{t('returnHook.noDetail')}</p>\n              )}\n```\n\n[[evidence:src/features/return-hooks/ui/LastRoundScrollCard.tsx:120-140]]\n\n条件是 **source 与 roastSections 的合取**。daily 再怎么带 `roastReport`，只要 `source !== 'live'`，你仍只看到 `leadLine`。字段空置无害，但会诱使后人误用——建造函数不写该字段更干净。\n\n## 什么时候用哪个\n\n- **写 daily 摘要**：走 `buildDailyLastRoundSummary`，只填 correct / puzzleNumber；你别为「统一形状」硬塞 roast 空壳。\n- **写 live 摘要**：走 `buildLiveLastRoundSummary`，把 roast 与 lead 行带上；你点开弹层才能重读完整吐槽。\n- **读 / 渲染**：先看 `source`，再决定标题、导语、弹层分支——同一组件两套结束语义，分叉集中在 `useMemo` 与条件 JSX，而不是两套卡片分叉维护。\n\n你要加第三种来源时，也该先扩 `LastRoundSource` 与显式分支，而不是「有某可选字段就当某种玩法」。\n\n## 再想想\n\n摘要字段从哪来，见 [[lesson:last-round-versioned-snapshot|「记住昨晚」在本地该落成什么样？]]；何时写入本机，见 [[lesson:write-on-finish-read-on-home|首页那张卷轴，是什么时候写进本机的？]]。\n\n## 自检\n\n**问：** 弹层展开完整 roast 的条件是哪两个合取？\n\n**问：** 若 daily 也强行塞空的 `roastReport` 字段，UI 会怎样？\n\n## 一句话\n\n**一个组件、两种结束语义：用 source 显式分叉，而不是用「有没有某字段」去猜用户刚玩了什么。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/return-hooks/ui/LastRoundScrollCard.tsx",
+                "lineStart": 38,
+                "lineEnd": 64,
+                "nodeIds": [],
+                "note": "headline 与 leadLine 按 source 分叉"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/return-hooks/ui/LastRoundScrollCard.tsx",
+                "lineStart": 120,
+                "lineEnd": 140,
+                "nodeIds": [],
+                "note": "仅 live 展开 roast 报告弹层"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "daily-lead",
+                "kind": "basic",
+                "front": "daily 来源的 leadLine 优先展示什么？",
+                "back": "有 dailyPuzzleNumber 时用题号文案，否则 generic daily 行。",
+                "tags": [
+                  "return-hooks"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/return-hooks/ui/LastRoundScrollCard.tsx",
+                    "lineStart": 47,
+                    "lineEnd": 51,
+                    "nodeIds": [],
+                    "note": "daily lead 分支"
+                  }
+                ]
+              },
+              {
+                "id": "live-roast-ui",
+                "kind": "basic",
+                "front": "什么条件下弹层渲染 data-return-hook-report？",
+                "back": "source 为 live 且 roastSections 解析成功。",
+                "tags": [
+                  "return-hooks"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/return-hooks/ui/LastRoundScrollCard.tsx",
+                    "lineStart": 122,
+                    "lineEnd": 123,
+                    "nodeIds": [],
+                    "note": "live && roastSections"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "source-field",
+                "kind": "short-answer",
+                "title": "分叉字段",
+                "prompt": "LastRoundSummary 里区分 live/daily 的字段名？",
+                "expectedAnswer": "source",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/return-hooks/domain/lastRoundSummary.ts",
+                    "lineStart": 24,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "source 字段"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "share-and-rechallenge",
+        "title": "分享与再约",
+        "objective": "我能写出不含别名的分享格和挑战文案，先揭晓再教学，让增长不拆掉下一题的留存。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "share-grid-no-aliases",
+            "title": "分享串已经画出对错，为什么还不能写玩家名？",
+            "content": "# 分享串已经画出对错，为什么还不能写玩家名？\n\n## 现象\n\n你猜完今日谜题，点分享。剪贴板里是一串像成绩单的文字：题号、1/1 或 0/1、一句钩子、一行色块、游玩地址和话题标签。\n\n错选时色块可能长成 `⬜🟥⬜🟨`——红的是你点的那格，黄的是另一格。好友扫一眼就知道「你没中、真答案在别的位置」。\n\n可是整段文案里，没有任何一个玩家的显示名，也没有答案编号字符串。\n\n:::detail[色块为什么已经算剧透了？]\n四个格子对应四个玩家的座位顺序。红是你点错的那位，黄是你没点到的真答案。好友还没玩，却已经知道「你没中，真答案在另一个座位」。猜词游戏也分享绿黄格：一眼能看出哪一格对、哪一格错、真答案落在哪一格。\n\n你自己玩的时候看见的是带名字的头像；分享出去只剩格子。同一局信息，离开 App 之后被削掉一层。成绩单可以秀「我今天过了」，格子只把座位上的对错画出来。\n:::\n\n## 先猜一下\n\n色块已经把「点错 / 真答案在哪一格」编码进去了。那为什么分享构造函数仍然坚决不把玩家名或答案编号写进字符串？加进去会立刻毁掉谁的体验？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n毁掉的是好友：名字一写，当日答案就剧透了，他们打开每日题只剩验证，没有自己的猜测。色块只传结构结果，不传内容身份。\n\n## 为什么是这样\n\n色块语义全部压在组格函数里：选中且对 → 绿；选中且错 → 红；猜错时未选中的真答案 → 黄；其余 → 白。比较用的是内部玩家编号，输出只有色块——映射结果从不带显示名。\n\n[[evidence:src/features/daily-puzzle/dailyPuzzle.ts:80-90]]\n\n:::detail[四种色块分别在什么时候出现？]\n函数按玩家列表从左到右走一圈，每人只涂一格。你点中的那一位：猜对涂绿，猜错涂红。只有你猜错时，才再给真正的答案涂一格黄——黄标的是你没点到的那一格，不是你点错的那一格。剩下没被点到、也不是漏网答案的人，一律白。\n\n所以猜对时不会出现黄：答案就是你点中的那格，已经是绿，没有「漏网」可标。你不会在猜对的成绩单里看到一颗黄，那颗黄只为「没点到的真答案」存在。\n:::\n\n:::detail[四个格子的顺序会不会每次都不一样？]\n不会。组格按玩家列表从左到右映射，没有按名字排序，也没有按对错重排。列表怎么写，格子就怎么排。同一道题里，好友对着那串色块数到的第二格，就是你这局里的第二个座位。\n\n顺序一旦乱跳，色块就不再是「结构成绩单」，而成了只有你自己看得懂的暗号。分享要能隔着屏幕对上座位，靠的就是这份名单顺序稳住。\n:::\n\n:::detail[内部编号为什么可以比、却不能写进分享？]\n函数要知道「你点的是不是真答案」，只能用内部编号做相等比较。比较发生在你的设备里，结果变成一颗色块再离开。一旦把编号或显示名写进字符串，比较用的身份就变成了读分享的人也能看见的谜底。\n\n黄色只在你猜错时出现，标的是你没点到的那一格。猜对时四个格子里只有一颗绿，没有黄——因为没有「漏网」可标。规则写在组格函数里，分享正文只负责把这串色块夹进成绩单。\n:::\n\n分享正文把可公开字段拼成多行：题号加比分、钩子句、色块、空行、游玩地址、话题标签。双语文案分支只换措辞和标签，不换信息上限。\n\n[[evidence:src/features/daily-puzzle/dailyPuzzle.ts:92-118]]\n\n:::detail[返回的那几行都允许带什么？]\n题号和比分说明「第几期、你中了没有」；钩子句说明玩法，不说明本局答案；色块是结构成绩单；地址是进门；话题标签是检索。玩家显示名、答案编号、房间码都不在这个清单里。增长链接可以剧透机制，不能剧透本局内容。\n\n中英两套句子只换用词和标签，不换行数、不加字段。你不会在英文分享里突然看见显示名，也不会在中文分享里突然看见答案编号。信息上限是函数的返回数组，不是某一种语言的礼貌。多一个字段就会把成绩单变成剧透单。\n:::\n\n:::detail[函数手里明明有玩家对象，为什么不去读显示名？]\n组格时只用内部编号比「你点的是谁、答案是谁」；拼分享正文时只用题号、对错比分、钩子句、色块、地址和标签。玩家对象上的显示名就在旁边，函数一行都没读。\n\n双语分支只换四句固定措辞：标题、钩子、来玩、话题。比分仍是 1/1 或 0/1，色块仍是同一串，地址仍是传入的那条。检查分享串时，中英文显示名都不该出现——不是译者客气，是构造函数根本没把名字接进返回值。\n:::\n\n注意拼出来的每一项：玩家列表上的显示名一次都没读。钩子句讲的是玩法（「混进了真 AI」），不是本局答案。若你在分享文本里塞上答案编号「方便复盘讨论」，当日公平钩子和社交邀请会一起塌成剧透垃圾：能传播，但传播的是答案，不是「今日理由」。\n\n## 再想想\n\n题号从哪条时钟来、和「今日槽位」不是同一把尺子，见 [[lesson:two-clocks-number-vs-slot|分享文案上的 #42，是库存下标吗？]]。结算后再约朋友时，文案同样卡信息上限，见 [[lesson:challenge-spoiler-free|再约文案为什么不带房间码？]]。\n\n## 自检\n\n**问：** 猜错时黄色色块标记的是选中的人，还是未选中的真答案？\n\n**问：** 分享正文的返回行里，有没有读取玩家显示名的位置？\n\n## 一句话\n\n**可分享的是结构结果（比分 + 色块 + 地址），不是内容答案。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                "lineStart": 80,
+                "lineEnd": 90,
+                "nodeIds": [],
+                "note": "buildEmojiGrid：绿红黄白语义，比较用 player.id。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                "lineStart": 92,
+                "lineEnd": 118,
+                "nodeIds": [],
+                "note": "buildPuzzleShareText：题号/钩子/色块/URL/hashtag，不读 alias。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "yellow-meaning",
+                "kind": "basic",
+                "front": "猜错时 🟨 标记的是谁？",
+                "back": "未选中的真正 AI（answerId），用于在不露名的前提下标出漏网之鱼。",
+                "tags": [
+                  "share"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 86,
+                    "lineEnd": 86,
+                    "nodeIds": [],
+                    "note": "错时标出真 AI"
+                  }
+                ]
+              },
+              {
+                "id": "no-alias-share",
+                "kind": "basic",
+                "front": "为什么分享串不能包含 player.alias？",
+                "back": "防止剧透身份，保住好友的游玩与讨论空间。",
+                "tags": [
+                  "share"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 92,
+                    "lineEnd": 118,
+                    "nodeIds": [],
+                    "note": "分享构造不含 alias 字段"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "wrong-ai-emoji",
+                "kind": "short-answer",
+                "title": "漏网色块",
+                "prompt": "猜错时标记真 AI 的 emoji 是？",
+                "expectedAnswer": "🟨",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 86,
+                    "lineEnd": 86,
+                    "nodeIds": [],
+                    "note": "🟨 真 AI"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "challenge-spoiler-free",
+            "title": "再约文案为什么不带房间码？",
+            "content": "# 再约文案为什么不带房间码？\n\n## 情境和约束\n\n一局结算完，你想把朋友约回来。结算页会组装一段剪贴板文案：语气像约饭，不是营销短信；里面有房主名、一扇产品大门，以及「明晚同一时间」这类时间钩子。\n\n你手里其实有更「省事」的选项：把本局房间码塞进文案，让对方一点就进同一间房；或者深链到未结算状态。那样短期摩擦更低——但你也得承担剧透、失效码、错房间的代价。\n\n系统要在两条路上选：\n\n- **关系钩子**：只告诉对方谁约你、何时再战、从哪扇门进产品；\n- **状态复开**：把未结束的局直接递过去。\n\n:::detail[房间码为什么诱人？]\n它看起来能省一步：朋友点开就落座。可结算之后那间房往往已经拆掉，码会失效；就算没拆，文案里带着局内身份或票数，等于把结局寄给还没玩过的人。省事换来的是过期链接和剧透。\n\n场外再约要的是「明晚再来一桌」，不是「现在挤进刚才那间已经散场的房」。房间码服务的是还在进行的局；结算文案服务的是已经走出房间的人。两件事共用一段剪贴板，就会互相踩。\n:::\n\n## 先猜一下\n\n若你来定剪贴板上限：会塞本局房间码换一键进房，还是只给规范产品地址？这个选择主要牺牲谁的短期省事、保护什么长期体验？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了规范产品地址、不带房间码：牺牲一键回残局，保护场外再约的信任——卖的是关系，不是未结算状态。\n\n## 代价和收益\n\n规范门牌写死在常量里，注释直接禁止发明其它域名或路径：\n\n[[evidence:src/features/return-hooks/domain/challengeCopy.ts:3-4]]\n\n:::detail[为什么门牌要写成常量，而不是读当前网址？]\n当前网址可能带着房间路径、语言前缀、调试端口。把此刻地址原样贴进邀请，朋友会走进一间已经散场的房，或走进你本机才有的开发地址。常量把「产品大门」钉死成对外那一扇；缺省时装配函数也回退到它，而不是当前页面地址。\n\n规范的意思是：对外只承认这一扇门。营销页、语言子路径、带追踪参数的落地可以另说，但默认邀请不能发明第二扇。注释写 Do not invent others，就是把这扇门钉死。结算页组装时也把同一条常量传进去——不是读你此刻停在哪一页，而是每次都把朋友送到产品根门。\n:::\n\n备用模板是好友语气。占位符只有房主和地址——没有房间码、角色、票数：\n\n[[evidence:src/features/return-hooks/domain/challengeCopy.ts:11-26]]\n\n:::detail[占位符为什么只有两个？]\n文案要能转发到还没进过这局的人手里。房主回答「谁约你」，地址回答「从哪进门」。房间码、谁是卧底、票数多少，都会把未开始的人变成旁观者。两个占位符是信息上限，不是省事少写。\n\n装配时只替换这两个空位：先换房主，再换地址。没有第三个空位给你塞房间码。房主空白或只剩空格时，落到「房主 / the host」这类通称，不会改去填角色或票数。英文和中文备用稿都把产品地址写死在第三行，时间钩子写在第一行（tomorrow / 明晚）。你换成自己的模板时，也只能替换房主和地址。\n\n备用稿注释写的是好友语气，不是营销短信。约饭可以说「那桌还热着」；不能说「限时房间码今晚有效」。语气和信息上限是同一件事：你在约人回来坐一桌，不是在推未结算状态。\n:::\n\n装配函数自己也写明：无剧透，不要房间码、角色、票数。房主空白时落到「房主」这类通称，地址缺省时回退到那条常量：\n\n[[evidence:src/features/return-hooks/domain/challengeCopy.ts:45-57]]\n\n:::detail[为什么注释要点名房间码、角色、票数？]\n函数注释把上限写成三禁：房间码、角色、票数。模板里没有这些空位，装配时也不会从房间状态里把它们读进来。结算页上其实看得到再战用的房间码、谁赢了、你这一票有没有打中——那些字留在站内结算，不进这段剪贴板。\n\n地址空了就回退到规范门牌；翻译模板若缺失或只剩键名，就改用那份好友语气备用稿。两条退路都还是「房主 + 门牌」，不会在失败时改去拼房间码。你要找有没有漏网字段，看装配输入里有没有房间码、角色、票数这三项——没有，就不是「忘了写」，是故意不接。\n:::\n\n结算页把翻译模板（若有）和常量地址交给同一函数——界面没有第二条「偷偷加房间码」的装配路径。这块面板已经从通用组件目录搬进直播房间功能里，装配纪律没变：\n\n[[evidence:src/features/live-room/ui/RoundSettlementPanel.tsx:80-90]]\n\n:::detail[结算面板搬家，上限会不会一起松掉？]\n不会。搬家改的是文件落在哪一层，不是剪贴板允许带什么。新面板从回访钩子那一层把规范地址、装配函数和复制函数一起引进来。组装时先取翻译模板，再把房主名和同一条规范地址交给装配函数；翻译键若原样弹回来，就当成模板缺失，改走备用稿。复制只写装配结果，不另拼一串。\n\n旧路径在通用游戏组件目录里。新路径进了直播房间功能，和房间页、再战按钮住在一起。再战按钮可以在站内用房间码拉人进下一桌——那是页内协作，不是剪贴板邀请。调用方变了，装配纪律没变：你按旧路径去搜结算面板会找不到文件，但剪贴板上限还在这个函数里。搬家不是放松上限，是让结算和房间住在一起，邀请纪律跟着房间走，不跟着已经搬走的旧组件目录走。\n:::\n\n\n**收益：** 朋友粘贴打开的是产品根门，自行进门；失效码、剧透票数、误进已结束房间不会跟着文案传播。明日再战保持「约关系」，不被降成「立刻围观残局」。\n\n**代价：** 对方多一步自己开房或进厅；你不能靠剪贴板一键回到「刚才那桌」的未结算状态——那条通路若存在，应是另一条再战机制，不是这段外传文案。\n\n## 什么时候该反过来\n\n- **局内邀请还在进行的房间**：需要房间码或短链，让人立刻落座——那是局内协作，不是场外再约。\n- **运营要追踪活动落地页**：你可能换带追踪参数的落地地址，但仍不该塞答案或角色；门可以换，信息上限不能破。\n- **私密小队只在固定房续战**：深链进房码可能划算——前提是受众小、码仍有效、且你接受失效时的支持成本。\n\n## 再想想\n\n每日分享同样卡在「结构结果、不剧透答案」，见 [[lesson:share-grid-no-aliases|分享串已经画出对错，为什么还不能写玩家名？]]。猜完才教学、而不是开局剧透，见 [[lesson:reveal-then-teach|猜完才给线索，教学为什么放在结算？]]。\n\n## 自检\n\n**问：** 挑战文案使用的规范地址常量名是什么？\n\n**问：** 装配函数的注释写明不允许出现哪三类信息？\n\n## 一句话\n\n**场外邀请的信息上限是：谁（房主）+ 何时（明晚）+ 何门（规范地址）。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/return-hooks/domain/challengeCopy.ts",
+                "lineStart": 3,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "PRODUCT_CHALLENGE_URL：禁止发明其它门牌。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/return-hooks/domain/challengeCopy.ts",
+                "lineStart": 11,
+                "lineEnd": 26,
+                "nodeIds": [],
+                "note": "好友语气模板，占位符只有 host 与 url。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/return-hooks/domain/challengeCopy.ts",
+                "lineStart": 45,
+                "lineEnd": 57,
+                "nodeIds": [],
+                "note": "buildChallengeCopyText：spoiler-free 装配。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/live-room/ui/RoundSettlementPanel.tsx",
+                "lineStart": 80,
+                "lineEnd": 90,
+                "nodeIds": [],
+                "note": "结算页把 i18n 模板与规范 URL 交给同一函数。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "no-room-in-challenge",
+                "kind": "basic",
+                "front": "挑战剪贴板文案为什么不带 room code？",
+                "back": "面向场外再约，避免剧透与失效码；入口是规范产品 URL。",
+                "tags": [
+                  "challenge"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/return-hooks/domain/challengeCopy.ts",
+                    "lineStart": 45,
+                    "lineEnd": 48,
+                    "nodeIds": [],
+                    "note": "Spoiler-free 注释约束"
+                  }
+                ]
+              },
+              {
+                "id": "canonical-url",
+                "kind": "basic",
+                "front": "PRODUCT_CHALLENGE_URL 被注释要求怎样使用？",
+                "back": "作为唯一规范邀请 URL，不要发明其它域名或路径变体。",
+                "tags": [
+                  "challenge"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/return-hooks/domain/challengeCopy.ts",
+                    "lineStart": 3,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "Do not invent others"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "challenge-url-const",
+                "kind": "short-answer",
+                "title": "规范 URL",
+                "prompt": "挑战文案使用的 URL 常量名？",
+                "expectedAnswer": "PRODUCT_CHALLENGE_URL",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/return-hooks/domain/challengeCopy.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "常量定义"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "reveal-then-teach",
+            "title": "猜完才给线索，教学为什么放在结算？",
+            "content": "# 猜完才给线索，教学为什么放在结算？\n\n## 你看到的结果\n\n你玩每日题时，对话就是普通气泡——没有人在台词下划破绽。你提交猜测之后，结算区突然变厚：对错、完整答案、线索列表；若这题带有鉴证目录，同一段对话还会按原句高亮并附注解。\n\n同一份题面，猜前猜后两副面孔。\n\n:::detail[鉴证目录是什么？]\n就是题外另附的一份「这句话为什么像机器 / 像洗白」的批注清单。题可以先上线，批注后补；没有清单时，结算仍能靠线索列表教学，只是对话不会出现高亮破绽。\n\n线索是题面自带的短句列表，对错都会在结算时原样返回。破绽是标在某条消息上的注解，要另开显示开关才画得出来。两者都早写在数据里，不是你点提交那一刻才编出来。\n:::\n\n## 先猜一下\n\n结算时甩出来的线索和破绽注解，是「你点提交的那一刻才算出来的」，还是「早就挂在题数据上、只是显示开关没开」？若把显示开关在开局就打开，坏的是哪一段体验？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n早就挂着：线索在题上，破绽从目录可选合并；显示开关只控制要不要渲染注解。开局就打开开关，坏的是「猜」本身——今日题会变成阅读标答。\n\n## 一站一站往回走\n\n**第 1 站 · 页面把开关绑在「有没有结果」上。** 你先看见的差异，来自页面把「是否揭晓」设成「已经有猜测结果」。没提交时是关的；一提交就打开。\n\n[[evidence:src/pages/DailyPuzzlePage.tsx:266-269]]\n\n:::detail[为什么用「有没有结果」而不是另做一颗按钮？]\n猜测结果只在你点了某个人之后才存在。用它当开关，揭晓和提交是同一瞬间：你先付出判断，再看到批注。如果单独做「查看解析」，有人会开局先点开，今日题就不再是猜。\n\n页面把「是否揭晓」写成「已经有猜测结果」。没点人时开关是关的，对话按纯文本切行；一点人，同一段对话立刻带上高亮。你不需要记另一套「解析模式」状态。鉴证函数自己默认是揭晓的，真正在游玩态把它关掉的，是页面传入的这一下。默认揭晓是为了结算侧少传一个参数；游玩侧必须显式关掉，否则开局就是标答。\n:::\n\n**第 2 站 · 鉴证函数按开关决定要不要画破绽。** 默认按揭晓处理；显式关掉时，每条消息只剩纯文本，注解进不了游玩态。\n\n[[evidence:src/features/daily-puzzle/domain/forensicSpans.ts:140-153]]\n\n**第 3 站 · 提交之后线索必到。** 线索不是界面临时编的。评判函数无论对错都返回所选之人、真正的答案编号，以及完整线索——结算教学有固定数据形状可接。\n\n[[evidence:src/features/daily-puzzle/dailyPuzzle.ts:67-78]]\n\n:::detail[猜错为什么还要给线索？]\n因为留存不只靠「明天还有题」，还靠「今天错了但看懂了」。对错都给同一份线索，结算页才稳定：不用为失败另做一套残缺教学。你付出的是一次判断，换回的是这题为什么是这样。\n\n评判函数还会核对「你点的人是不是这题里的玩家」。点到题外 id 会直接抛错，而不是返回一份空线索。结算教学依赖的是完整结果形状：所选、答案、对错、线索四件套，缺一件页面就没法讲。\n:::\n\n**第 4 站 · 破绽是可选项，目录与正文分离。** 题型上破绽字段可缺；注释写明：缺或空 → 纯对话加线索。发货清单按题 id 查目录：有则合并，无则原样——目录条目缺失不会挡住题本身。\n\n[[evidence:src/features/daily-puzzle/domain/puzzleTypes.ts:45-48]]\n\n[[evidence:src/features/daily-puzzle/puzzles.ts:967-971]]\n\n:::detail[类型和清单为什么拆开写？]\n类型回答「可不可以没有破绽」；清单回答「这一题有没有补上」。拆开之后，内容可以先发货，注解后补，页面不用为缺目录写特殊分支。你在类型注释里看到的那句降级，和清单合并时「没有就原样返回」，是同一条纪律的两端。\n\n破绽字段曾经写在题库文件自己的类型里。现在类型搬到了独立的题型文件，题库文件只负责发货清单和合并。你如果还去题库文件开头找那句「缺则纯对话」，会撞上压缩题输入的结构——那不是破绽可选的定义。\n:::\n\n串起来：注解数据可以早就挂在题上，但游玩态把开关关掉；你提交后，线索随评判结果必达，鉴证视图再开闸。教学发生在承诺完成之后。\n\n## 再想想\n\n分享成绩单同样把剧透挡在结构结果之外，见 [[lesson:share-grid-no-aliases|分享串已经画出对错，为什么还不能写玩家名？]]。\n\n## 自检\n\n**问：** 评判函数在猜错时还返回线索吗？\n\n**问：** 鉴证函数里控制是否展示破绽的选项字段名是什么？\n\n## 一句话\n\n**结算即教学：答案、线索、破绽高亮都发生在承诺完成之后。**\n",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/DailyPuzzlePage.tsx",
+                "lineStart": 266,
+                "lineEnd": 269,
+                "nodeIds": [],
+                "note": "页面把 revealed 绑在是否已有猜测结果。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/domain/forensicSpans.ts",
+                "lineStart": 140,
+                "lineEnd": 153,
+                "nodeIds": [],
+                "note": "buildForensicTranscript 的 revealed 开关。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                "lineStart": 67,
+                "lineEnd": 78,
+                "nodeIds": [],
+                "note": "evaluatePuzzleGuess：对错都返回 clues。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/domain/puzzleTypes.ts",
+                "lineStart": 45,
+                "lineEnd": 48,
+                "nodeIds": [],
+                "note": "DailyPuzzle.flaws 可选，缺则纯对话+线索。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/daily-puzzle/puzzles.ts",
+                "lineStart": 967,
+                "lineEnd": 971,
+                "nodeIds": [],
+                "note": "CURATED_PUZZLES 按 id 合并 flaw catalog。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "guess-reveals-clues",
+                "kind": "basic",
+                "front": "evaluatePuzzleGuess 在猜错时还返回 clues 吗？",
+                "back": "返回。对错都带 answerId 与 clues，结算才能教学。",
+                "tags": [
+                  "reveal"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/dailyPuzzle.ts",
+                    "lineStart": 72,
+                    "lineEnd": 77,
+                    "nodeIds": [],
+                    "note": "结果始终含 clues"
+                  }
+                ]
+              },
+              {
+                "id": "flaws-optional",
+                "kind": "basic",
+                "front": "某题没有 catalog 条目时 CURATED_PUZZLES 会怎样？",
+                "back": "map 时保持原 puzzle，不挂 flaws，UI 降级为纯 transcript + clues。",
+                "tags": [
+                  "reveal"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/puzzles.ts",
+                    "lineStart": 967,
+                    "lineEnd": 971,
+                    "nodeIds": [],
+                    "note": "有则合并无则原样"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "revealed-flag",
+                "kind": "short-answer",
+                "title": "鉴证开关",
+                "prompt": "buildForensicTranscript 用来控制是否展示破绽的 options 字段名？",
+                "expectedAnswer": "revealed",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/daily-puzzle/domain/forensicSpans.ts",
+                    "lineStart": 143,
+                    "lineEnd": 145,
+                    "nodeIds": [],
+                    "note": "revealed 选项"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

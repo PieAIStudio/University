@@ -2,10 +2,14 @@
 
 import { act, type ComponentProps } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { clearEvidenceSnippetCache } from "../evidence/load-evidence-snippet.js";
-import type { LessonAssetView, LessonSectionView } from "../view/lesson-view.js";
+import {
+  highlightEvidenceCode,
+  type LessonAssetView,
+  type LessonSectionView,
+} from "../view/lesson-view.js";
 import { isLocalUrl, MarkdownContent } from "./MarkdownContent.js";
 
 const mermaidMock = vi.hoisted(() => ({
@@ -17,6 +21,22 @@ vi.mock("mermaid", () => ({ default: mermaidMock }));
 
 let container: HTMLDivElement;
 let root: Root;
+
+/*
+  Pay the syntax highlighter's one-time cost before the clock starts on any
+  assertion.
+
+  `highlightEvidenceCode` lazily imports shiki's core, its JavaScript engine,
+  five language grammars and a theme on first use. Whichever evidence test ran
+  first was charged all of it, and on a machine compiling the other three
+  packages at once that regularly passed the wait budget — so `pnpm -r test`
+  went red while running this package alone never did. Raising the timeout was
+  the previous answer twice; this removes the variance instead of widening the
+  net around it.
+*/
+beforeAll(async () => {
+  await highlightEvidenceCode("const warm = 1;", "typescript");
+}, 60_000);
 
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -567,6 +587,53 @@ describe("local-only link and image policy", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith("/api/lesson/evidence/0");
+  });
+
+  it("loads pinned source through a resolver instead of fetching a URL prefix", async () => {
+    const markdown = "证据：[[evidence:src/app.ts:4-5]]";
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const resolver = vi.fn().mockResolvedValue({
+      sourcePath: "src/app.ts",
+      sourceCommit: "a".repeat(40),
+      startLine: 4,
+      endLine: 5,
+      highlightStartLine: 4,
+      highlightEndLine: 5,
+      language: "typescript",
+      code: "const first = true;\nconst second = false;\n",
+      attribution: "Source: https://github.com/block/buzz (Apache License 2.0)",
+    });
+
+    await renderMarkdown(markdown, {
+      evidenceBasePath: resolver,
+      evidenceAnchors: [
+        {
+          start: markdown.indexOf("[["),
+          end: markdown.length,
+          sourcePath: "src/app.ts",
+          lineStart: 4,
+          lineEnd: 5,
+          resolved: true,
+          evidenceIndex: 0,
+        },
+      ],
+    });
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(".evidence-anchor")!.click();
+    });
+    await waitFor(() =>
+      expect(document.querySelector(".reference-panel .evidence-code")?.textContent).toContain(
+        "const first",
+      ),
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(resolver).toHaveBeenCalledWith(0);
+    expect(document.querySelector(".evidence-inline-source__attribution")?.textContent).toContain(
+      "Apache License 2.0",
+    );
   });
 
   it("opens a lesson link in the panel instead of navigating, then follows from 查看完整页", async () => {

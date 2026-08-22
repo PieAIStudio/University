@@ -202,3 +202,45 @@
     transition: none;
   }
 }
+
+/*
+  Anchored mode — frame C5. The card grows a tail off the node it belongs to
+  and the path stays visible around it, which is the whole difference between
+  "this stone" and "a dialog".
+
+  The layer stops centring its child, because floating-ui positions the card
+  absolutely and flex centring would fight it every frame.
+*/
+.path-card-layer--anchored {
+  display: block;
+  padding: 0;
+}
+
+.path-card-layer--anchored .path-card__scrim {
+  /*
+    Still catches the click that dismisses, but does not dim: covering the path
+    would undo the reason for anchoring to it.
+  */
+  background: transparent;
+}
+
+.path-card-layer--anchored .path-card {
+  width: min(22.5rem, calc(100vw - 32px));
+  max-height: min(30rem, calc(100vh - 32px));
+}
+
+.path-card__arrow {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 94%, transparent);
+  rotate: 45deg;
+  /*
+    The card is rounded and blurred; a square rotated under it would show its
+    own corners through the backdrop filter. Clipping to the outer half leaves
+    only the point that reads as a tail.
+  */
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  pointer-events: none;
+}

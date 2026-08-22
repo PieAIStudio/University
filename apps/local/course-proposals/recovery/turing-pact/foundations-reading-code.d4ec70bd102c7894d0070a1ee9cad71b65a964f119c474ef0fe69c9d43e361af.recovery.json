@@ -1,0 +1,1478 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 81,
+  "course": {
+    "id": "foundations-reading-code",
+    "title": "《读懂一行代码》",
+    "description": "零基础主干第 1 阶段：用图灵密约里最短的真实文件，逐字建立 export、函数、类型、import 与拆文件的读码直觉。",
+    "audience": "零基础重建地基的独立开发者",
+    "objectives": [
+      "指着 `export function` 与 `import { }` 说明名字如何跨文件交接",
+      "读完一个短函数签名后说出参数、返回类型、剩余参数与默认参数各自在哪",
+      "解释联合类型、`type` 别名、`Record` 与可选参数在真实签名里的含义",
+      "读出 `?.`、`??` 与文件头 Owns/Does not own 在代码中的作用"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "foundations-terrain"
+    ],
+    "trackId": "foundations",
+    "units": [
+      {
+        "id": "a-function",
+        "title": "一个函数长什么样",
+        "objective": "我能从函数签名读出进什么、出什么、剩余参数和默认值，并判断空实现是不是正当的平台适配。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "export-makes-public",
+            "title": "没有 export，别的文件还能借这个函数吗？",
+            "content": "# 没有 export，别的文件还能借这个函数吗？\n\n## 两个东西\n\n你打开图灵密约里最短的一份工具文件 `src/ui/classNames.ts`，第一行是这样开头的：\n\n[[evidence:src/ui/classNames.ts:1-3]]\n\n:::detail[这个文件专门在干什么？]\n它只做一件事：把好几段可能出现、也可能不出现的 class 名，收成一行字符串。函数名叫 `cx`，文件名也改成了 `classNames.ts`，和这件事对得上。你这节课还不拆函数体，只盯第一行那个 `export`。\n\n文件名换了，不等于函数换了。你认的是导出的那个名字 `cx`，以及它还在不在公开清单上。后面读到 `import { cx }` 时，要找的也是这个名字，不是旧文件名。\n:::\n\n另一份同样只有三行的文件 `src/platform/web/haptics.ts`，开头骨架一模一样：\n\n[[evidence:src/platform/web/haptics.ts:1-3]]\n\n:::detail[两份文件做的事完全不同，为什么骨架还一样？]\n一个拼 class 名，一个在网页上假装震动。共同点不是业务，是「别的文件要用这个名字」。所以两行都以 `export function` 开头：先把名字公开，至于函数体做什么，是下一层的事。\n\n你可以把骨架读成两截：`export` 管权限，`function 名字(...)` 管它是一个函数。权限相同，不代表行为相同。对照着看，是为了让你把「公开」从「做什么」里抽出来。\n:::\n\n两份文件做的事完全不同——一个拼 class 名，一个假装震动——但第一行都带着同一个词：`export`。你脑子里可以放一个对照物：同一行如果写成普通的 `function cx(...)`，少了 `export` 那一个词。\n\n## 先猜一下\n\n如果 `classNames.ts` 里只有 `function cx`、没有 `export`，别的文件还能写 `import { cx }` 并用它吗？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n通常**不能**。没有 `export` 的名字默认只属于本文件；别的文件按模块规则借不到它。\n\n## 逐条对照\n\n**有 `export` 的名字**\n\n- 写法：`export function cx(...)`、`export function triggerHaptic(...)`。\n- 含义：把这个名字登记进「可以分享出去」的清单。\n- 结果：别的文件可以用 `import { 名字 }` 来借用。\n\n**没有 `export` 的名字**\n\n- 写法：普通的 `function ...`（你在这节课里看到的公开面都带了 `export`，要自己想象去掉它的样子）。\n- 含义：名字留在本文件内部，是私有细节。\n- 结果：本文件里你仍然可以调用它；其它文件不能再具名导入。\n\n:::detail[本文件里还能调用，是什么意思？]\n同一个文件里，名字本来就能互相看见。`export` 不是「让函数开始存在」，是「让别的文件也看得到」。你删掉 `export`，`cx` 还在，那一行 `return` 也还在；只是门口关上了，邻居进不来。\n\n若 `classNames.ts` 自己在下面又写了一行 `cx('a', 'b')`，没有 `export` 也合法。跨文件的 `import { cx }` 才会失败。权限切的是边界，不是函数本身。\n:::\n\n**`export` 改的是什么、不改什么**\n\n- 改的是**谁有权叫这个名字**。\n- 不改函数体怎么跑：`cx` 仍然那一行 `return`，`triggerHaptic` 仍然几乎什么都不做。\n\n:::detail[那为什么不把每个函数都 export？]\n有的名字只是本文件的临时帮手。一公开，别人就会依赖它，你以后改起来就得小心。这两份文件都选择「整文件只公开一个函数」：你打开文件第一眼，看见的就是公开面。\n\n公开面越小，你改内部时越安全。帮手改名、合并、删掉，都不必通知邻居。你看见一份短文件只 export 一个名字，先把它当成「这扇门只开一条缝」，不要当成「这个项目不会有私有函数」。\n:::\n\n类比：汤在锅里时只有这间厨房喝得到；装进贴了标签的保温壶放到客厅，别人才能按标签取用。`export` 就是贴标签那一步。\n\n## 什么时候用哪个\n\n- 你希望别的文件复用这个函数 → 需要 `export`。\n- 只是本文件里的临时帮手、不想被外面直接摸到 → 可以不 `export`。\n- 你在别处看到 `import { cx }` 时，心里应能找到某个文件里对应的 `export function cx`（或等价导出）。\n\n两份文件都选择了「整文件只公开一个函数」：打开文件第一眼，你就看见公开面。\n\n:::detail[看见 import 时该往哪找？]\n花括号里的名字，一般就是对方 `export function` 后面那个词。路径告诉你去哪个邻居找。这节课只练「有没有 `export`」；跨文件怎么握手，后面会单独走一趟。\n\n你现在只要练成一个反射：看见 `import { cx }`，心里问「哪个文件把 `cx` 写进了公开清单」。找不到对应的 `export`，不是函数丢了，是门口没开。\n:::\n\n## 再想想\n\n`export` 只解决「名字能不能被借」；括号里进什么、后面标不标返回类型，是下一课 [[lesson:params-and-return|参数和返回值]] 要拆的。\n\n## 自检\n\n**问：** 把名字开放给其它文件的关键字是哪个？\n\n**问：** 如果删掉 `export`，本文件里还能不能调用 `cx`？其它文件还能不能 `import { cx }`？\n\n**问：** `export` 会不会改变 `cx` 函数体里那一行 `return` 怎么算？\n\n## 一句话\n\n**`export` 不改变函数怎么跑，只改变谁有权叫这个名字。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/classNames.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "export function cx：整个文件只有一个被导出的函数。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/web/haptics.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "export function triggerHaptic：同样的 export 写法，另一份三行文件。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "export-what-it-does",
+                "kind": "basic",
+                "front": "`export` 改变函数的哪一层语义：怎么执行，还是谁能引用？",
+                "back": "只改变谁能引用。函数体怎么跑不受 `export` 影响；它把名字登记成其他文件可以 import 的名字。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "第一行以 export function cx 开头。"
+                  }
+                ]
+              },
+              {
+                "id": "export-without",
+                "kind": "basic",
+                "front": "删掉 `export` 之后，本文件和其他文件分别会怎样？",
+                "back": "本文件仍可调用该函数；其他文件无法再 import 这个名字。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "export function triggerHaptic 去掉 export 后仅本文件可见。"
+                  }
+                ]
+              },
+              {
+                "id": "export-name-is-the-handle",
+                "kind": "basic",
+                "front": "别人 `import { cx }` 时，花括号里的 `cx` 从哪来？",
+                "back": "来自被导出文件里 `export function` 后面的那个名字。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "函数名 cx 就是对外的把手。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "export-keyword-recall",
+                "kind": "short-answer",
+                "title": "写出公开一个函数时，声明开头的那个关键字",
+                "prompt": "要把一个函数登记成其他文件可以引用的名字，声明开头写哪个英文关键字？只写一个词。",
+                "expectedAnswer": "export",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "export function cx。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "params-and-return",
+            "title": "括号里的名字，和调用时塞进去的值，是一回事吗？",
+            "content": "# 括号里的名字，和调用时塞进去的值，是一回事吗？\n\n## 两个东西\n\n你已经会认 `export function` 了。现在把目光挪到括号和括号后面。`cx` 的完整签名是：\n\n[[evidence:src/ui/classNames.ts:1-3]]\n\n:::detail[先看哪一段，才不会被函数体带走？]\n先看括号里的名字，再看括号后面的 `: string`，最后才看 `{ }` 里面。签名是地图：进什么、出什么。函数体是路线。你还没认清进出口，就钻进 `filter` 和 `join`，很容易把「定义里的名字」和「这一次塞进去的值」搅在一起。\n\n读签名可以当成填一张小表：左边写「谁进来」，右边写「什么出去」。表没填完之前，先别评价函数体聪不聪明。这三行短，正好拿来练这张表。\n:::\n\n同一项目里还有另一个三行函数，括号里也有名字，但括号**后面**没有写类型：\n\n[[evidence:src/platform/web/haptics.ts:1-3]]\n\n一边是**定义里的名字**（参数，parameter）——`parts`、`_style` 写在函数声明的括号里，像插座上印的插孔名。另一边是**调用时真正塞进去的值**（实参，argument）——例如你写 `cx('a', 'b')` 时的 `'a'` 和 `'b'`。很多人把这两样都叫「参数」，读签名时就会对不上号。\n\n:::detail[为什么很多人把这两样都叫参数？]\n日常说话里，「参数」什么都往里装。读代码时要拆开：定义侧是插孔的名字，调用侧是这一次插进去的东西。同一插孔，不同次调用可以塞不同的值。你把两者当成一回事，就说不清「`parts` 是谁、`'a'` 又是谁」。\n\n一个办法是读出声：定义里说「这里有个叫 parts 的槽」；调用里说「这一次我塞进 a 和 b」。槽还在，货换了。你练几次，两个词就会各就各位。\n:::\n\n## 先猜一下\n\n`triggerHaptic` 既没写返回类型也没有 `return` 时，调用方还能像 `cx` 那样指望拿到拼好的字符串吗？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不能。没有返回类型标注和 `return` 时，它交回的是 `void`——没有可依赖的返回值。\n\n## 逐条对照\n\n**参数（parameter）**\n\n- 出现位置：函数**定义**的括号里。\n- 例子：`...parts`、`_style`。\n- 角色：给「进来的值」在函数体里起一个可引用的名字。\n\n**实参（argument）**\n\n- 出现位置：函数**调用**的括号里。\n- 例子：`cx('a', 'b')` 的 `'a'`、`'b'`；`triggerHaptic('heavy')` 的 `'heavy'`。\n- 角色：这一次调用实际递进去的值，会装进对应的参数名。\n\n**再看「出去」那一端**\n\n| 片段 | 你在问的问题 |\n| --- | --- |\n| `...parts` / `_style` | 我要递什么进去？ |\n| `: Array<...>` / `'light' \\| ...` | 允许什么形状的值进来？ |\n| `): string`（仅 `cx`） | 它保证给我什么回来？ |\n| `return ...`（仅 `cx`） | 真正把值交回去的那一行 |\n\n`cx` 在括号后写了 `: string`，函数体里也有 `return`——它承诺交出一个字符串。`triggerHaptic` **没有**在括号后写返回类型，函数体也没有 `return` 表达式；对 TypeScript 来说，这种函数返回 `void`（没有有意义的返回值）。名字前的下划线 `_` 是约定：这个参数被接收了，但函数体故意不用它。\n\n:::detail[`void` 是「失败了」吗？]\n不是。`void` 只说「没有可取的返回值」。`triggerHaptic` 的工作是「尽量震一下」；网页上震不了，函数体就空着，调用方也不该去接一个字符串。`cx` 则必须交回拼好的类名，所以它既写 `: string`，也写 `return`。\n\n你判断「出去」那一端时，看两处：括号后面有没有写返回类型，函数体有没有 `return` 表达式。两处都空，就按 `void` 读——不是崩溃，是没东西可接。\n:::\n\n:::detail[`_style` 前面的下划线是打错了吗？]\n不是。下划线是给读代码的人（和检查器）看的约定：这个槽位我收了，函数体里故意不用。网页版用不到震动强度，但签名还是留着，好跟别的平台对上同一套调用。\n\n若写成 `style` 却从来不用，检查器会抱怨「未使用的参数」。加上下划线，等于提前声明：我知道它在，我故意不理。你看见这种前缀，先当约定，不要当笔误。\n:::\n\n类比：自动售货机。你塞进的硬币和按键是**这一次的实参**；机身上印的「投币口 / 选择键」是**参数位**；侧面写「出货：罐装饮料」像返回类型标注。你不会先拆开机器内部，才决定能不能买——你会先看进和出。\n\n## 什么时候用哪个\n\n- 你在读**定义**、想搞清「这个函数接受什么」→ 看参数名和参数类型。\n- 你在读**调用**、想搞清「这一次递了什么」→ 看实参。\n- 你要先建立地图再读函数体 → 先问「进什么、出什么」，再读中间怎么把进变成出。\n- 看见 `_style` 这种下划线前缀 → 心里记一句：故意接收、故意不用，不是打错字。\n\n:::detail[为什么要先看进出口？]\n函数体可以以后再拆。进出口错了，你对函数体的猜测会整段跑偏：以为 `triggerHaptic` 会交回点什么，或者以为 `parts` 就是某一次调用里的 `'a'`。先钉住进和出，再读中间，负担会小很多。\n\n这和读说明书一样：先看插什么电、出什么货，再决定要不要拆机。你对短函数也用同一顺序，长函数才不会把你淹没。\n:::\n\n## 再想想\n\n`...parts` 为什么能一次收好几个实参、类型里为什么出现 `false`，见 [[lesson:rest-params-and-union|剩余参数与联合类型]]。\n\n## 自检\n\n**问：** 参数和实参，哪个写在函数定义的括号里？\n\n**问：** `cx` 的返回类型标注写的是什么？\n\n**问：** `triggerHaptic` 有没有在括号后面写显式返回类型？\n\n## 一句话\n\n**先认清「进什么、出什么」，再读函数体怎么把进变成出。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/classNames.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "cx 的参数列表与返回类型 : string，以及 return 语句。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/web/haptics.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "有参数、无显式返回类型、无 return 表达式的对照。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "return-type-string",
+                "kind": "basic",
+                "front": "`cx` 签名末尾的 `: string` 在说什么？",
+                "back": "返回类型标注：这个函数交回来的值类型是字符串（string）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "): string 出现在参数列表之后。"
+                  }
+                ]
+              },
+              {
+                "id": "param-vs-argument",
+                "kind": "basic",
+                "front": "定义里的 `parts` 和调用里的 `'a'`，哪个叫参数，哪个叫实参？",
+                "back": "`parts` 是参数（parameter）；`'a'` 是实参（argument）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "parts 在定义侧；filter/join 使用装进来的值。"
+                  }
+                ]
+              },
+              {
+                "id": "underscore-param",
+                "kind": "basic",
+                "front": "`triggerHaptic` 的参数写成 `_style`，下划线通常表示什么？",
+                "back": "这个参数被接收了，但函数体故意不使用它（常见约定，避免「未使用变量」噪音）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "参数名为 _style。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "cx-return-type",
+                "kind": "short-answer",
+                "title": "写出 cx 的返回类型",
+                "prompt": "`export function cx(...): ???` 里，问号处写的是哪个类型名？只写类型名本身。",
+                "expectedAnswer": "string",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "返回类型标注为 string。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "rest-params-and-union",
+            "title": "拼 class 名的函数，类型里为什么写了 false？",
+            "content": "# 拼 class 名的函数，类型里为什么写了 false？\n\n## 现象\n\n你打开 `src/ui/classNames.ts`，只看第一行签名——还没读函数体：\n\n[[evidence:src/ui/classNames.ts:1]]\n\n:::detail[为什么先只看签名、不看函数体？]\n签名先告诉你：能塞进来什么、保证交回什么。`false` 出现在参数类型里，不在 `return` 后面。你若先跳进函数体，会把「允许进来」和「最后还在不在」混成一件事。这节课只练入口；假值怎么消失，是下一课的流水线。\n\n入口写「可以是假」，不等于出口还留着假。两件事叠在同一文件里，但分属签名和函数体。你先把入口读熟，下一课再看清洗。\n:::\n\n函数名叫 `cx`，返回类型是 `string`，听起来像在处理文字。可参数类型里却白纸黑字写着：数组元素可以是 `string`，也可以是 `false`，也可以是 `null`，也可以是 `undefined`。拼 class 名的入口，居然正式允许「假」和「空」。\n\n## 先猜一下\n\n类型为什么要故意允许 `false` / `null` / `undefined`，而不是只写 `string`？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n因为调用方经常夹带「有时有、有时没有」的片段；类型先放行这些假值，好在下一步统一滤掉。\n\n## 为什么是这样\n\n签名上其实叠了三块，你从左往右拆：\n\n**1. 剩余参数 `...parts`**\n\n`...` 不是装饰用的省略号。它表示：调用时多出来的实参，全部收集进一个数组，名字叫 `parts`。所以你可以写：\n\n```text\ncx('btn', isActive && 'btn--on', null)\n```\n\n三个实参都会进 `parts`，编号从 0 往上排。你不必预先规定「只能传两个」。\n\n:::detail[`...` 和数组类型是一回事吗？]\n不是。`...` 管的是「调用时能塞多少个」：一个也行，十个也行，全装进 `parts`。`Array<...>` 管的是「装进去的每一个可以是什么」。你先问个数，再问元素种类，就不会把两套记号揉成一团。\n\n没有 `...`，你就得预先写死「第一参、第二参、第三参」。UI 里 class 名个数常常变，剩余参数就是为这种「个数不固定」准备的口袋。\n:::\n\n**2. 数组类型 `Array<...>`**\n\n`parts` 的类型是数组；数组里**每一个**元素都要符合括号里的元素类型。\n\n**3. 联合类型 `string | false | null | undefined`**\n\n竖线 `|` 读作「或」。合法元素可以是字符串，也可以是 `false`，也可以是 `null`，也可以是 `undefined`——四选一即可，不要求同时满足。\n\n:::detail[「或」为什么不是「同时都是」？]\n一个值在某一时刻只能是其中一种。`'btn'` 是字符串，不是 `false`；`false` 也不是字符串。竖线列的是候选名单，不是要你把四种叠在同一个值上。你读到 `A | B`，先说「可以是 A，也可以是 B」。\n\n若真要「同时又是」，类型系统会用交叉（`&`），不是这根竖线。这节课你只要守住：`|` 是菜单，点一份就够。\n:::\n\n为什么 UI 代码特别需要这几项？因为常见这种写法：\n\n```text\ncx('card', isSelected && 'card--selected', className)\n```\n\n`isSelected && 'card--selected'` 在 `isSelected` 为假时会得到 `false`，不是字符串。若类型只写 `string`，TypeScript 会在调用处拦你。把 `false`（以及 `null` / `undefined`）写进联合，等于告诉检查器：这些「暂时没有类名」的值是预期输入，不是写错。\n\n:::detail[为什么不强迫调用方先自己滤干净？]\n可以，但每个按钮都要先写一遍「有就传、没有就别传」。把假值写进类型，调用处就能直接把条件表达式塞进来，过滤集中在 `cx` 里做一次。入口变宽，是为了让你在使用处少写重复判断。\n\n`isSelected && 'card--selected'` 这种写法，条件为假时天然得到 `false`。类型若只收 `string`，这一行在调用处就会被拦下。放行 `false`，不是鼓励你传垃圾，是承认 UI 里「有时没有类名」是常态。\n:::\n\n类比：搬家装箱，侧面写「可装：衣服、或空袋子、或还没决定要不要的东西」。`|` 就是「或」；`...parts` 像开口很大的收纳袋——一件或十几件都能塞进去。\n\n这节课对着的是签名这一行；滤掉假值、用空格拼成字符串，是下一课的函数体工作。\n\n## 再想想\n\n假值进了 `parts` 之后怎么消失、顺序能不能反，见 [[lesson:filter-and-join|先过滤再拼接]]。\n\n## 自检\n\n**问：** `string | false` 是表示「既是 string 又是 false」，还是「或」？\n\n**问：** `...parts` 里的 `...` 表示什么？\n\n**问：** 为什么类型要允许 `false`，而不是只写 `string`？\n\n## 一句话\n\n**`...parts` 负责「装多少个」；`A | B | C` 负责「每个可以是哪几种」。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/classNames.ts",
+                "lineStart": 1,
+                "lineEnd": 1,
+                "nodeIds": [],
+                "note": "剩余参数 ...parts 与联合类型元素类型在同一处声明。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "rest-collects-array",
+                "kind": "basic",
+                "front": "`...parts` 在函数参数列表里做什么？",
+                "back": "剩余参数：把调用时传入的多个实参收集成一个数组，装进 `parts`。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "...parts 出现在参数列表。"
+                  }
+                ]
+              },
+              {
+                "id": "union-means-or",
+                "kind": "basic",
+                "front": "类型里的竖线 `|` 读作什么？`string | false` 表示什么？",
+                "back": "读作「或」。表示这个位置的值可以是 string，也可以是 false，每次只是其中一种。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "string | false | null | undefined。"
+                  }
+                ]
+              },
+              {
+                "id": "why-allow-false",
+                "kind": "basic",
+                "front": "为什么 `cx` 的元素类型要包含 `false`，而不是只写 `string`？",
+                "back": "调用方常用 `条件 && '类名'`；条件为假时得到 false。允许 false 才能通过类型检查，再在函数体内滤掉。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "下一行 filter(Boolean) 会清掉假值。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "union-or-word",
+                "kind": "short-answer",
+                "title": "联合类型竖线的读法",
+                "prompt": "TypeScript 里 `string | null` 的竖线 `|`，中文通常读作哪个字？（一个字）",
+                "expectedAnswer": "或",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "联合类型用 | 连接。"
+                  }
+                ]
+              },
+              {
+                "id": "rest-dots-name",
+                "kind": "short-answer",
+                "title": "三个点参数的英文名",
+                "prompt": "`...parts` 这种写法，英文术语叫什么？两个词，小写亦可。",
+                "expectedAnswer": "rest parameters",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "剩余参数 rest parameters。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "filter-and-join",
+            "title": "假值进了 `parts`，最后字符串里还在吗？",
+            "content": "# 假值进了 `parts`，最后字符串里还在吗？\n\n## 现象\n\n上一课你知道 `cx` 的类型故意放行 `false`、`null`、`undefined`。函数体却只有一行：\n\n[[evidence:src/ui/classNames.ts:1-3]]\n\n:::detail[入口放行假值，出口为什么是干净字符串？]\n签名允许假值进来，返回类型却是 `string`。中间一定发生了一次「清洗」。你这节课要盯的就是这一行函数体：谁负责丢掉假值，谁负责把剩下的字粘起来。\n\n入口宽、出口窄，不是自相矛盾。宽是为了调用方便，窄是为了 `className` 只要一行文字。中间那一刀，就是 `filter` 再 `join`。\n:::\n\n你若调用 `cx('a', false, 'b')`，进门时装进 `parts` 的大约是 `['a', false, 'b']`。出门时调用方拿到的却是字符串 `'a b'`——中间的 `false` 不见了，两个真片段之间只剩一个空格。\n\n## 先猜一下\n\n`false` 是在哪一步从结果里消失的：`filter`，还是 `join`？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n在 **`filter(Boolean)`**：假值在这一步被丢掉；`join` 只负责把剩下的真片段用空格粘成一行。\n\n## 为什么是这样\n\n从左读到右，这一行是一条固定流水线：\n\n1. **`parts`** —— 上一课收集好的数组，里面可能混着字符串和假值。\n2. **`.filter(Boolean)`** —— 留下在布尔语境里为真的元素。`false`、`null`、`undefined`、空字符串 `''` 会被去掉；正常的类名字符串会留下。\n3. **`.join(' ')`** —— 把留下的字符串用**一个空格**接成一个字符串。例如 `['btn', 'btn--primary']` 变成 `'btn btn--primary'`。\n4. **`return`** —— 把拼好的字符串交还给调用方。\n\n:::detail[`Boolean` 在这里是什么角色？]\n它被当成一把尺子：对每个元素问「在真假语境里算真吗」。`false`、`null`、`undefined`、`''` 算假，被丢掉；普通类名算真，留下。你不必自己写一长串 `if`，这一步就按同一把尺子筛完。\n\n`filter` 需要一个「留下还是丢掉」的判断。传入 `Boolean`，等于复用语言自己的真假规则，而不是再手写一个比较函数。你记住尺子量的是真假，不是「是不是字符串」这一种检查。\n:::\n\n用具体输入走一遍（你可以对着签名想象调用，不必真的跑）：\n\n| 调用 | 过滤后大致剩下 | join 结果 |\n| --- | --- | --- |\n| `cx('a', 'b')` | `['a','b']` | `'a b'` |\n| `cx('a', false, 'b')` | `['a','b']` | `'a b'` |\n| `cx('a', null, undefined)` | `['a']` | `'a'` |\n\n:::detail[为什么假值消失后不会留下两个空格？]\n因为空格是 `join` 加在**留下的片段之间**的。`false` 在 `filter` 里已经被拿掉，名单里只剩 `'a'` 和 `'b'`，中间只会出现一个空格。若先粘成字再想抠掉中间的 `false`，空格和文字会糊在一起，很难只撕掉一段。\n\n`join` 不负责判断真假，它甚至看不见已经被丢掉的元素。名单是 `filter` 交出来的；`join` 只在这份名单的缝里插入分隔符。\n:::\n\n顺序不能反。若你脑子里写成「先 `join` 再 `filter`」：`join` 返回的是字符串，字符串没有按元素过滤的 `filter` 数组方法；而且假值一旦被粘进文字中间，语义也错了。必须先定名单（filter），再写一行（join）。\n\n:::detail[空字符串也会被丢掉吗？]\n会。`''` 在布尔语境里算假，`filter(Boolean)` 同样拿掉它。对 class 名来说这通常是好事：空片段不该在最终字符串里占一个位置。你以后若真要保留空字符串，就不能再用这把尺子。\n\n这把尺子还有边界：数字 `0` 也会被当成假。`cx` 的元素类型里没有 `number`，所以你在这里碰不到；换一个收数字的函数，同一把尺子可能切错东西。\n:::\n\n类比：出门前整理行李标签——桌上堆着「外套」「（空）」「雨伞」。你先把空的挑掉，再把剩下的名字用空格写成一行。先粘成一行再挑，字已经粘在一起，很难只撕掉中间某一段。\n\n## 再想想\n\n类型为什么要先放行这些假值，见 [[lesson:rest-params-and-union|剩余参数与联合类型]]。函数前面的 `export` 只决定名字能不能被借，见 [[lesson:export-makes-public|export 公开名字]]。\n\n## 自检\n\n**问：** `filter` 和 `join`，哪一步先发生？\n\n**问：** `join` 用的分隔符是什么字符？\n\n**问：** 若顺序改成先 `join` 再 `filter`，主要会出什么问题？\n\n## 一句话\n\n**过滤定名单，拼接写一行——顺序不能反。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/classNames.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "函数体整行：filter(Boolean) 后 join 空格。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "filter-boolean-role",
+                "kind": "basic",
+                "front": "`parts.filter(Boolean)` 在 `cx` 里负责去掉什么？",
+                "back": "去掉在布尔语境里为假的值，例如 false、null、undefined，以及空字符串。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "filter(Boolean) 是返回表达式的前半段。"
+                  }
+                ]
+              },
+              {
+                "id": "join-space",
+                "kind": "basic",
+                "front": "`join(' ')` 的参数是一个空格，结果长什么样？",
+                "back": "把数组里剩下的字符串用单个空格连成一个字符串，例如类名列表 `'btn btn--on'`。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "join(' ') 使用空格分隔符。"
+                  }
+                ]
+              },
+              {
+                "id": "order-filter-then-join",
+                "kind": "basic",
+                "front": "为什么必须先 `filter` 再 `join`，不能反过来？",
+                "back": "join 之后得到的是字符串，不能再按「数组元素」过滤；假值也会变成夹在中间的文字。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "源码顺序就是 filter 后接 join。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "join-separator",
+                "kind": "short-answer",
+                "title": "join 用的分隔符",
+                "prompt": "`parts.filter(Boolean).join(???)` 里，括号中的分隔符是什么？写出引号里的那个字符（空格就写「空格」）。",
+                "expectedAnswer": "空格",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 2,
+                    "lineEnd": 2,
+                    "nodeIds": [],
+                    "note": "join(' ') 的分隔符是空格。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "default-param-and-noop",
+            "title": "函数体只有一行注释，为什么还算做完了？",
+            "content": "# 函数体只有一行注释，为什么还算做完了？\n\n## 情境和约束\n\n图灵密约要在多种宿主上跑：浏览器网页、桌面壳、手机壳。按钮按下时，产品希望「尽量给一点触觉反馈」；可浏览器网页往往**没有**手机那套震动接口。\n\nWeb 这一侧的实现落在三行文件里：\n\n[[evidence:src/platform/web/haptics.ts:1-3]]\n\n:::detail[为什么网页也要留一个同名函数？]\n调用方想统一写 `triggerHaptic('medium')`，不想每个按钮先问「现在是不是手机」。网页留一个同名入口，平台差异就收在这一个文件里。你看见空函数体，先问「它是不是在替这个平台把接口撑住」，不要先判「没写完」。\n\n统一入口的代价是：有的平台上这个入口什么都不做。收益是：按钮代码不用长出一串平台判断。这是适配，不是偷懒——前提是注释把意图写清。\n:::\n\n对照同一项目里真正会算东西交回去的函数：\n\n[[evidence:src/ui/classNames.ts:1-3]]\n\n两边都是 `export function`。一边必须拼出字符串；一边函数体只有注释。约束是：调用方想统一写 `triggerHaptic('medium')`，不想在每个按钮上先判断「是不是手机」。\n\n## 先猜一下\n\nWeb 上直接 `triggerHaptic('heavy')`、且调用前不判平台，会抛错，还是静默返回？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n静默返回，不抛错：函数体只有注释，没有会炸掉的调用；参数照样收，只是什么也不做。\n\n## 代价和收益\n\n**默认参数 `= 'light'`**\n\n- 写法贴在参数类型后面：`_style: 'light' | 'medium' | 'heavy' = 'light'`。\n- 你写 `triggerHaptic()` 时，`_style` 自动是 `'light'`；写 `triggerHaptic('heavy')` 时用你传入的值。\n- 默认值在签名里，不在函数体里——读文件的人第一眼就能看见「不传时用什么」。\n\n:::detail[默认值为什么不写进函数体？]\n写在签名里，你不用往下翻就能看见「不传时用 light」。若写进函数体，还要先判断「有没有传」，签名本身反而不完整。这三档强度是给别的平台用的；网页收了参数却不用，所以名字仍叫 `_style`。\n\n默认参数贴在类型后面：先写允许哪几档，再写不传时用哪一档。你读的顺序也该这样——先看菜单，再看默认菜。\n:::\n\n**空函数体**\n\n- 没有 `return`，没有调用浏览器 API，只有注释说明原因。\n- 收益：调用方代码到处一样，平台差异收在这一个文件里。\n- 代价：你若只看行数，会误以为「功能还没做完」。判断要靠注释，以及（之后你会见到的）同名能力在其他平台上的不同文件。\n\n:::detail[注释在这里算不算「做完了」的一部分？]\n算。空函数体自己不会说话；「Web 环境无触觉反馈，静默忽略」把意图钉死：不是漏写，是这个平台就该什么都不做。你以后读到空函数，先找有没有这样一行说明。没有说明、平台其实有能力，那才更像半成品。\n\n行数不能当完成标准。三行里两行是签名和括号，真正的「做完」写在那句注释里。你要用意图判断，不要用篇幅判断。\n:::\n\n类比：酒店「请勿打扰」灯按钮——有的房型真的连着灯，有的旧房型按钮在墙上但线路未接。按钮还在，客人按的动作不变；这个房型里按了等于没按。空实现就是那只未接线的按钮：接口保留，效果为零。\n\n## 什么时候该反过来\n\n- 平台**有**对应能力，却仍留空函数体 → 那更像半成品或 bug，不该当「适配」吹。\n- 只有一两个调用点、且平台差异巨大 → 在调用点分支有时更直白，不必硬造统一函数名。\n- 空实现会让错误被静默吞掉、调试极难 → 至少在开发环境打日志，或换成显式的「不支持」返回值。\n- `cx` 这类必须交出计算结果的函数 → 不能用空实现凑数；没有 `return` 就破坏了契约。\n\n:::detail[什么样的函数绝对不能空着？]\n调用方指望拿到结果的那种。`cx` 必须交回字符串，空着会让界面少掉 class 名。`triggerHaptic` 的合同是「尽量震一下」：网页震不了，静默是符合合同的。你先问「调用方在不在等一个值」，再判断空函数体正当不正当。\n\n同一项目里两份三行文件，正好拿来对照：有 `return` 的不能空，没有可依赖返回值的才可以空。合同不同，完成的样子就不同。\n:::\n\n:::detail[默认参数和空实现是绑死的吗？]\n不是。你可以有默认参数、函数体仍做真事；也可以空实现、参数必须每次都传。这里两件事叠在一起：签名对所有平台统一（含默认 `'light'`），网页实现选择什么都不做。你要分开读，不要当成一条语法。\n\n默认参数回答「不传时用什么」；空实现回答「这个平台做什么」。两个问题可以独立作答。你把它们捆成一句「空函数所以才有默认值」，下次遇到只有其中一样的文件就会读歪。\n:::\n\n## 再想想\n\n`_style` 前的下划线、以及「有参数但无有意义返回值」，可回看 [[lesson:params-and-return|参数和返回值]]。\n\n## 自检\n\n**问：** 默认参数 `= 'light'` 写在函数体里，还是写在签名的参数旁边？\n\n**问：** 空函数体是否一定等于「这个功能还没做完」？\n\n**问：** 调用 `triggerHaptic()` 且不传实参时，`_style` 会是什么？\n\n## 一句话\n\n**默认参数写在签名里；空实现可以是正当的平台适配，不是自动等于半成品。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/web/haptics.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "默认参数 = 'light' 与仅含注释的空函数体。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/classNames.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "对照：同样是 export function，但 cx 有 return 计算。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "default-param-location",
+                "kind": "basic",
+                "front": "默认参数 `= 'light'` 写在什么位置？",
+                "back": "写在参数列表里、该参数的类型标注后面，不在函数体里。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "_style: ... = 'light'。"
+                  }
+                ]
+              },
+              {
+                "id": "noop-meaning",
+                "kind": "basic",
+                "front": "什么是空实现（no-op）？Web 版 `triggerHaptic` 为什么可以是 no-op？",
+                "back": "no-op 表示执行时故意不产生效果。Web 没有对应触觉 API 时，保留同名函数、内部静默忽略，让调用方不必分支。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "注释写明 Web 环境静默忽略。"
+                  }
+                ]
+              },
+              {
+                "id": "call-without-args",
+                "kind": "basic",
+                "front": "调用 `triggerHaptic()` 不传参时，`_style` 的值是什么？",
+                "back": "`'light'`，由默认参数提供。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "默认值 = 'light'。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-haptic-style",
+                "kind": "short-answer",
+                "title": "默认触觉强度",
+                "prompt": "`triggerHaptic` 不传参时，默认的 style 字符串是什么？只写引号里的词。",
+                "expectedAnswer": "light",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "默认参数为 light。"
+                  }
+                ]
+              },
+              {
+                "id": "noop-when-valid",
+                "kind": "explain",
+                "title": "说明空实现何时正当",
+                "prompt": "有人看到 `triggerHaptic` 函数体几乎为空，就认为这是没写完的代码。请说明在什么条件下空实现是正当设计，并点出这份 Web 文件里哪一处文字支持你的判断。",
+                "rubric": [
+                  "说明 no-op 是「有意不产生效果」而不是漏写",
+                  "点出平台缺少能力（Web 无触觉）时保留统一调用入口的价值",
+                  "引用文件中「Web 环境无触觉反馈，静默忽略」这类注释作为证据",
+                  "区分「未完成」与「该平台就应为空」需要看注释或其它平台对照，不能只看行数"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/web/haptics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "注释与空函数体共同构成 no-op 证据。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "naming-things",
+        "title": "给东西起名字",
+        "objective": "我能用 type、Record、import type、?. 和 ?? 读一行分析函数，并说出哪段边界注释在挡什么。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "type-alias-and-union",
+            "title": "`export type` 起的名字，程序跑起来还在吗？",
+            "content": "# `export type` 起的名字，程序跑起来还在吗？\n\n## 一句真实出现的话\n\n你在图灵密约里打开 `src/services/product-analytics/types.ts`，会读到这一行：\n\n[[evidence:src/services/product-analytics/types.ts:7]]\n\n:::detail[这一行为什么长得像「交出去一个东西」？]\n它有 `export`，有名字 `AnalyticsValue`，还有等号。你很容易按函数或变量的读法，以为运行时会多出一个对象。等号右边却是类型配方，不是可以调用的步骤。你这节课要分开的，就是「起名」和「在内存里造一个值」。\n\n`export` 这个词两边都能用：导出函数，也导出类型。你不能只靠 `export` 判断运行时还在不在，要看后面跟的是 `function` 还是 `type`。\n:::\n\n它长得像「把一个东西交出去」：有 `export`，有名字 `AnalyticsValue`。你可能下意识以为：程序跑起来后，内存里会有一个叫这个名字的对象。\n\n## 先猜一下\n\n`AnalyticsValue` 这个名字，在程序真正跑起来时还在吗？它主要是干什么用的？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n不在。它是**类型别名**（type alias）：给一长串类型配方起的短名，只在写代码、做类型检查时存在，编译成 JavaScript 后会被抹掉。\n\n## 三个真实用例\n\n### 用例 1：把「允许哪几种值」收成一个短名\n\n[[evidence:src/services/product-analytics/types.ts:7]]\n\n你从左往右读：\n\n1. **`export type`** —— 导出一个**类型**名字（不是函数，也不是变量）。\n2. **`AnalyticsValue`** —— 你给这套配方起的别名。\n3. **`=` 右边** —— 真正的配方：字符串、数字、布尔，或者 `null`。竖线 `|` 读作「或者」，这叫**联合类型**（union）：只能是其中之一。\n\n:::detail[`null` 为什么也要写进联合？]\n分析事件的某个字段可能「现在没有值」。不写 `null`，检查器会把空值当成写错。写上之后，`string`、`number`、`boolean`、`null` 都是合法格子，缺的是对象、数组这类更复杂的结构——那是故意收窄。\n\n四种可能是故意收窄后的名单，不是「什么值都行」。对象、数组、`undefined` 都不在这张菜单里。你读联合，既要看见放行了什么，也要看见没写进去的是什么。\n:::\n\n### 用例 2：别名被另一行类型接着用\n\n同一文件紧接着还有：\n\n[[evidence:src/services/product-analytics/types.ts:9]]\n\n你看 `Record<string, AnalyticsValue>` 里的 `AnalyticsValue`：如果没有短名，这里就得把 `string | number | boolean | null` 整串再抄一遍。起别名的好处是——**只改一处**，所有引用它的地方一起跟着检查。\n\n:::detail[抄两遍会出什么错？]\n你在一处加上 `null`、另一处忘了，两套配方就开始撒谎。别名把配方收成一个开关：改 `AnalyticsValue`，`AnalyticsSender` 里的 `Record` 值类型跟着变。你为的是少维护两份名单。\n\n别名还有一个读法上的好处：`Record<string, AnalyticsValue>` 比把四种类型再写一遍更短，眼睛不容易滑。短名是给读的人减负，不只是给以后的修改留开关。\n:::\n\n### 用例 3：整份文件都在谈「类型合同」，不是运行逻辑\n\n文件头写着这是 product analytics 适配器共享的 sender 合同，并且只拥有粗糙的事件载荷类型：\n\n[[evidence:src/services/product-analytics/types.ts:1-7]]\n\n你在这几行里找不到函数体、找不到「去 PostHog 发一条事件」的步骤。文件用 `type` 把**允许什么样的数据**钉死；真正怎么发，不在这里。\n\n:::detail[为什么合同文件里不能顺便写发送步骤？]\n步骤一写进来，这份文件就不再只是「允许什么样的数据」。接线、目录、隐私名单会跟着往里挤。你现在只要认出：`export type` 在钉配方，不在跑流程。\n\n发送步骤一进来，这份文件就会开始依赖网络、隐私规则、事件目录。头顶写的 Owns 立刻变假。合同短，是为了让它真的只做合同。\n:::\n\n## 它不是什么\n\n- **不是**程序跑起来之后内存里的一个对象。你搜编译后的 JavaScript，通常找不到 `AnalyticsValue` 这个标识符。\n- **不是**函数或变量。`export function` 会留下可调用的实现；`export type` 只留下检查期的名字。\n- **不是**「随便起的注释名」。它有严格语法；你往 `AnalyticsValue` 该出现的地方塞了联合之外的值，类型检查会标红。\n\n:::detail[那 export type 的 export 还算数吗？]\n算。它导出的是类型名字，别的文件可以用 `import type` 来借这个配方。借到的仍不是运行时对象。`export` 管「谁能看见这个名字」，不把别名变成一个值。\n\n你后面会看到 `import type { ExperimentResolution }`：借的也是类型名字。两条线对上——导出类型、导入类型——运行时仍然没有这个对象。权限和寿命是两件事。\n:::\n\n类比：咖啡店菜单写「拿铁」，不写「以咖啡豆为原料、经热水萃取、可加奶的热饮」。菜单名方便点单；端出来的仍是那杯液体——**别名不额外变出一种新饮料**。\n\n## 再想想\n\n「类型是开发期护栏」这层意思，你在 [[lesson:types-are-notes-for-machines|冒号后面的类型名是给谁看的]] 里已经见过。下一课会接着读同一文件里的 `AnalyticsSender`：[[lesson:function-type-and-record|函数类型长什么样]]。\n\n## 自检\n\n**问：** 程序跑起来时，内存里有没有一个叫 `AnalyticsValue` 的对象？（提示：想想 `type` 会不会进编译结果。）\n\n**问：** `AnalyticsValue` 的联合里，允许哪四种可能？有没有 `null`？\n\n**问：** 为什么要把联合收成 `AnalyticsValue` 这个名字，而不是每次把一长串重写一遍？\n\n## 一句话\n\n**`type` 别名是给类型配方起的短名，不创造运行时的值。**\n",
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "文件头注释与 AnalyticsValue、AnalyticsSender 两个 type 导出。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 7,
+                "lineEnd": 7,
+                "nodeIds": [],
+                "note": "AnalyticsValue 联合类型别名单行定义。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 9,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "AnalyticsSender 引用 AnalyticsValue。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "type-alias-not-runtime",
+                "kind": "basic",
+                "front": "`export type AnalyticsValue = ...` 在程序跑起来之后还在吗？",
+                "back": "不在。类型别名只参与编译期检查，编译成 JavaScript 后会被擦掉，内存里没有对应对象。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "type AnalyticsValue 定义。"
+                  }
+                ]
+              },
+              {
+                "id": "analytics-value-members",
+                "kind": "basic",
+                "front": "`AnalyticsValue` 允许哪四种可能？",
+                "back": "string、number、boolean、null。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "string | number | boolean | null。"
+                  }
+                ]
+              },
+              {
+                "id": "why-name-the-union",
+                "kind": "basic",
+                "front": "为什么要把联合类型收成 `AnalyticsValue` 这个名字，而不是每次重写一长串？",
+                "back": "多处签名可复用；改允许的值时只改一处别名定义。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 7,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "别名被 AnalyticsSender 的 Record 值类型引用。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "analytics-value-null",
+                "kind": "short-answer",
+                "title": "AnalyticsValue 是否包含 null",
+                "prompt": "`AnalyticsValue` 的联合里，有没有 `null`？回答「有」或「无」。",
+                "expectedAnswer": "有",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "联合以 null 结尾。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "function-type-and-record",
+            "title": "没有函数体的那一行，是在写函数吗？",
+            "content": "# 没有函数体的那一行，是在写函数吗？\n\n## 两个东西\n\n你在同一份 `types.ts` 里已经见过值的配方 `AnalyticsValue`。紧接着还有一行，形状完全不同：\n\n[[evidence:src/services/product-analytics/types.ts:9]]\n\n:::detail[为什么这行看起来像函数，却没有花括号？]\n它有参数名、有箭头、有返回类型，所以像函数。缺的是 `{ ... }` 函数体——没有「接到事件之后真正做什么」。你这节课要分开的，就是「描述形状」和「写出步骤」。\n\n箭头函数形状在这里是「形状说明书」。真正的函数还要有人按这张说明书去实现。你在这份文件里找不到实现，不是漏了，是合同不负责发光。\n:::\n\n你很容易把它和「一个已经写好、可以调用的函数」搞混——两边都有参数名、都有箭头、都像在说「接收什么、返回什么」。但它们不是同一种东西。\n\n这节课要分开的两样是：\n\n1. **函数类型**（function type）——只描述「发送器必须长什么样」的合同。\n2. **已实现的函数**——带 `function` 关键字和函数体，真的会在运行时被调用。\n\n中间还夹着两个读签名时绕人的记号：`Record<...>`，以及参数名后的 `?`。\n\n## 先猜一下\n\n若适配器交来的发送器参数和 `AnalyticsSender` 对不上，错误会卡在写代码时，还是真去发事件时？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n卡在写代码时：类型检查会拦下形状不对的赋值。这份 types 文件只有合同，没有可执行的发送步骤。\n\n## 逐条对照\n\n| | 函数类型 `AnalyticsSender` | 已实现的函数（如 `export function ...`） |\n| --- | --- | --- |\n| 关键字 | `type` + 箭头函数形状 | `function`（或带函数体的赋值） |\n| 有没有函数体 `{ ... }` | 没有 | 有，里面是真正执行的步骤 |\n| 运行时存在吗 | 类型会被擦掉 | 存在，可被调用 |\n| 这行在管什么 | 「谁来当发送器，必须符合这个形状」 | 「调用时具体做什么」 |\n\n你把 `AnalyticsSender` 拆开读：\n\n[[evidence:src/services/product-analytics/types.ts:9]]\n\n1. **`( ... ) => void`** —— 函数类型。左边是参数列表的形状，箭头右边是返回类型。`void` 表示：调用方**不应依赖**返回值（发送通常是「交代完就结束」）。\n2. **`event: string`** —— 第一个参数必填，类型是字符串。\n3. **`properties?`** —— 参数名后面的 `?` 表示**可选参数**：调用时可以只传事件名，不传第二项。问号贴在**名字后面**，不能写成 `?Record<...>` 那种前缀。\n4. **`Record<string, AnalyticsValue>`** —— TypeScript 内置的「键值表」写法：键是 `string`，值必须是上一课的 `AnalyticsValue`。像一张表——列名任意字符串，格子里只能放那四种值。\n\n:::detail[`void` 在这里是「失败」吗？]\n不是。发送器交代完就结束，调用方不该去接一个返回值。`void` 写的是「没有可依赖的结果」，不是「出错了」。真要表达失败，会用别的类型，不会只靠这个词。\n\n发送器也可以失败，但失败不会靠 `void` 这两个字表达。`void` 只约束「调用方别接返回值」。你把失败和空返回捆在一起，以后看见 `Promise<void>` 也会误判。\n:::\n\n:::detail[问号为什么必须贴在名字后面？]\n`properties?` 的意思是「这个参数可以不传」。问号若跑到类型前面，就不再是可选参数这套语法。可选的是**要不要递第二项**，不是「Record 这个类型本身可有可无」。值可能是 `undefined`，会写成 `T | undefined`——那是另一张牌。\n\n调用 `sender('clicked')` 可以不传第二项，正是因为 `properties?`。若写成必填，每个只报事件名的地方都得硬塞一个空对象。问号省的是调用处的噪音。\n:::\n\n类比：插座标准只规定「两个孔、多大电压」，不规定你插台灯还是手机充。`AnalyticsSender` 是插座图纸；真正插上去发光的，是别处的实现。\n\n## 什么时候用哪个\n\n- **你要规定「别人交来的函数必须长什么样」**，自己却不在这里写步骤 → 用函数类型（`type ... = (...) => ...`）。`AnalyticsSender` 就是这样：适配器可以换，形状不能乱。\n- **你要写真正会跑的步骤** → 用带函数体的 `function`（或等价实现）。合同文件里找不到实现，是故意的。\n\n你若把合同写成实现：类型文件会开始长业务逻辑，边界糊掉。你若该写实现时只留一个 type：运行时什么都不会发生，事件也发不出去。\n\n读到 `properties?` 时记住：可选的是**这个参数可以不传**；不是「Record 类型本身可有可无」的另一种写法。若要表达「值可能是 undefined」，会写成 `T | undefined` 之类——那是另一张牌。\n\n:::detail[函数类型里的参数名还重要吗？]\n`event`、`properties` 在类型里不会被调用，却能告诉你这两项各自是什么角色。你读合同时，参数名是路标，类型是约束。两者一起看，比只盯着 `string` 和 `Record` 更不容易走丢。\n:::\n\n:::detail[`Record` 为什么出现在第二项？]\n发送器除了事件名，还可以带一张附加表：键是任意字符串，值必须是 `AnalyticsValue`。`Record<string, AnalyticsValue>` 就是这张表的形状。没有它，第二项会失去「格子里只能放那四种值」的约束。\n\n键是任意字符串，值却不是任意值——必须落在 `AnalyticsValue` 里。一张「键随便、值受限」的表，正好是事件附加属性的常见形状。你读 `Record`，两头都要看。\n:::\n\n:::detail[合同写在 types.ts，实现写在哪？]\n不在这份文件里。适配器在别处交一个真正的函数，形状必须对上 `AnalyticsSender`。对不上，类型检查在你写代码时就拦下，不会等到真去发事件。合同和实现分文件，正是为了换适配器时只换实现。\n\n你现在不必追到具体适配器文件。这节课要留下的是判断力：看见没有函数体的箭头类型，先当合同，不要当漏写的实现。实现在别处，形状在这里。\n:::\n\n## 再想想\n\n`AnalyticsValue` 为什么能被塞进 `Record` 的值位置，见 [[lesson:type-alias-and-union|type 别名还在不在]]。真正「只借类型、不借运行时」的 import 写法，下一课会碰到：[[lesson:import-type-and-coalesce|import type 与 ?. ??]]。\n\n## 自检\n\n**问：** `AnalyticsSender` 是实现还是合同？你根据什么判断？\n\n**问：** `properties?` 里的问号表示什么？它贴在参数名后，还是贴在类型前？\n\n**问：** `Record<string, AnalyticsValue>` 描述的是什么样的对象？箭头右侧的返回类型写的是什么？\n\n## 一句话\n\n**函数类型写合同；`Record` 描述键值表；`?` 贴在参数名后表示可省略。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 7,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "AnalyticsValue 与 AnalyticsSender 相邻定义，Sender 引用 Value。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 9,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "AnalyticsSender：可选 properties 与 Record、返回 void。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "function-type-not-impl",
+                "kind": "basic",
+                "front": "`export type AnalyticsSender = (event: string, ...) => void` 是实现还是合同？",
+                "back": "合同（函数类型）。它描述参数与返回值形状，这个文件里没有函数体实现。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "type 别名指向箭头函数类型。"
+                  }
+                ]
+              },
+              {
+                "id": "record-kv",
+                "kind": "basic",
+                "front": "`Record<string, AnalyticsValue>` 表示什么样的对象？",
+                "back": "键为 string、值必须是 AnalyticsValue 的对象（字符串键到分析值的映射表）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "Record 出现在 properties 的类型位置。"
+                  }
+                ]
+              },
+              {
+                "id": "optional-param-q",
+                "kind": "basic",
+                "front": "`properties?` 里的问号表示什么？",
+                "back": "可选参数：调用时可以不传第二项。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "properties? 写法。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "sender-return-void",
+                "kind": "short-answer",
+                "title": "AnalyticsSender 的返回类型",
+                "prompt": "`AnalyticsSender` 箭头右侧的返回类型写的是什么？只写类型名。",
+                "expectedAnswer": "void",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "=> void。"
+                  }
+                ]
+              },
+              {
+                "id": "optional-mark",
+                "kind": "short-answer",
+                "title": "可选参数的标记字符",
+                "prompt": "把参数标成可选时，紧跟在参数名后面的那个字符是什么？",
+                "expectedAnswer": "?",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "properties?。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "import-type-and-coalesce",
+            "title": "实验可能不存在，这一行为什么不崩？",
+            "content": "# 实验可能不存在，这一行为什么不崩？\n\n## 现象\n\n你打开 `src/features/experiments/analytics.ts`，整个函数几乎只有一行返回值：\n\n[[evidence:src/features/experiments/analytics.ts:1-9]]\n\n:::detail[为什么整份文件几乎只有一行返回？]\n因为它只回答一个问题：这次解析结果该写成哪一个分析标签。没有实验时也要交出一个稳定字符串，后面的埋点键才不会因为「偶发没有实验」而炸掉。你先看见返回类型是 `string`，再去问：实验为空时，这一行怎么仍然交得出字符串。\n\n短不是偷工。注释已经把出口合同写死：有界 slug 或 `none`。函数体只负责兑现这句合同。你读短函数，先对注释，再对那一行符号。\n:::\n\n文件头注释还写着：永远返回一个**有界的 slug**——注册表里的 tag，或者字面量 `none`。\n\n[[evidence:src/features/experiments/analytics.ts:3-6]]\n\n奇怪的地方在于：`resolution.experiment` **可以没有**（没有命中任何实验时，它往往是空的）。按日常直觉，对空值再点 `.analyticsTag`，很多语言会直接报错。可这里的返回类型仍是稳稳的 `string`，注释也保证你总能拿到一个有界结果。\n\n## 先猜一下\n\n如果 `resolution.experiment` 是 `null` 或 `undefined`，`resolution.experiment?.analyticsTag ?? 'none'` 会得到什么？会不会在读 `.analyticsTag` 时崩溃？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n不会崩溃，你会得到字符串 `'none'`。`?.` 在空值处停下，`??` 再把「没有有效结果」收成默认的 `none`。\n\n## 为什么是这样\n\n你把这一行拆成三截读。\n\n### 1. `import type`：只借类型，不借运行时\n\n[[evidence:src/features/experiments/analytics.ts:1]]\n\n`import type` 表示：你只需要 `ExperimentResolution` 这个**类型名字**来标注参数，不需要 `resolve` 模块在运行时导出的值。编译之后，这行类型 import 通常会消失。若写成普通 `import`，在某些配置下会暗示「我依赖对方的运行时导出」——即便你只用了类型。\n\n:::detail[为什么要特地写 import type？]\n你要的只是参数长什么样，不是去调用 `resolve` 里的函数。`import type` 把这件事说死：编译后这行通常消失，不会把类型名字当成运行时依赖。普通 `import` 有时会让工具以为你还要用对方的值。\n\n`ExperimentResolution` 只出现在参数类型位置。文件里没有调用 `resolve` 里的函数。只借类型，依赖更窄：对方改运行时导出，不一定波及你这一行。\n:::\n\n### 2. `?.`：可选链，遇空则停\n\n[[evidence:src/features/experiments/analytics.ts:8]]\n\n**可选链（optional chaining）** 写作 `?.`。若 `resolution.experiment` 是 `null` 或 `undefined`，整段表达式直接得到 `undefined`，**不会**再去读 `.analyticsTag`，于是你避开了「对空值取属性」的运行时错误。若 experiment 在，才继续读它的 `analyticsTag`。\n\n:::detail[写成普通的点号会怎样？]\n`resolution.experiment.analyticsTag` 会在 experiment 为空时直接报错：空值上没有这个属性。`?.` 的约定是「空着就别往里走」，整段变成 `undefined`，后面的 `??` 才接得住。\n\n可选链不是装饰。没有实验是常态，不是异常。用 `?.` 让「没有」变成 `undefined`，后面才能用 `??` 收成稳定字符串。硬闯空值，合同里的 `string` 也救不了运行时。\n:::\n\n### 3. `??`：只在 nullish 时填默认\n\n[[evidence:src/features/experiments/analytics.ts:8]]\n\n**空值合并（nullish coalescing）** 写作 `??`。仅当左边是 `null` 或 `undefined` 时，才用右边的 `'none'`。若左边已经是合法字符串（哪怕是空字符串 `''`），就保留左边。\n\n这和 `||` 不一样：`||` 会把空字符串、`0`、`false` 也当成「假」而换掉；`??` 更窄，只盯着「真的没有值」。\n\n:::detail[空字符串时 ?? 和 || 差在哪？]\n若 `analyticsTag` 是 `''`，`??` 会保留空字符串，因为左边不是 `null` / `undefined`。`||` 会把空字符串当成假，换成 `'none'`。这行选 `??`，是只在「真的没有值」时填默认，不把空字符串也吞掉。\n\n这行选更窄的那把刀，是因为标签有可能是合法的空串，作者不想把它一并吃掉。你以后看见 `|| 'none'`，要问一句：空字符串该不该也变成默认值？答案不一定相同。\n:::\n\n合在一起的故事是：\n\n1. 可能没有实验 → `?.` 安全地停住，得到 `undefined`；\n2. 没有 tag 可用 → `?? 'none'` 补上稳定默认；\n3. 调用方永远拿到 `string`，后面的埋点键不会因为「偶发没有实验」而炸掉。\n\n:::detail[为什么默认值是 none 而不是空字符串？]\n注释写明：永远返回有界 slug——注册表里的 tag，或者字面量 `none`。`none` 是一个明确的标签，后面的允许名单认得出它。空字符串比较难当稳定键用。你读 `??` 右边，问的是「没有结果时，合同交什么」。\n\n`none` 四个字母是写进合同的字面量，不是随便填的占位。后面的允许名单按这个词认「没有实验」。你读 `??` 右边，把它当成合同的一部分，不要当成装饰。\n:::\n\n类比：你打电话问前台「302 有没有住客的姓名」。房间空着时，前台不会硬闯空房翻抽屉（那会出错），而是说「没有住客」；你再规定表格上写 `none`。`?.` 是「空着就别往里走」，`??` 是「左边没有有效结果就用默认」。\n\n## 再想想\n\n`ExperimentResolution` 这种类型名为什么能单独 import，和 [[lesson:type-alias-and-union|type 别名不进运行时]] 是同一条线。文件头如何声明「我保证输出什么」，见 [[lesson:owns-does-not-own|Owns / Does not own]]。\n\n## 自检\n\n**问：** `import type { ExperimentResolution }` 和普通 `import` 差在哪？\n\n**问：** `resolution.experiment?.analyticsTag` 在 experiment 为 null 时会发生什么？可选链是哪两个字符？\n\n**问：** `?? 'none'` 在什么情况下会得到 `'none'`？若 `analyticsTag` 是空字符串 `''`，`??` 和 `||` 结果一样吗？\n\n## 一句话\n\n**`import type` 只搬类型；`?.` 遇空则停；`??` 只在 nullish 时填默认。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "import type、函数签名与 ?. ?? 返回表达式。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 7,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "experimentAnalyticsTag 函数体一行。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 1,
+                "lineEnd": 1,
+                "nodeIds": [],
+                "note": "import type ExperimentResolution。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 3,
+                "lineEnd": 6,
+                "nodeIds": [],
+                "note": "输出合同：bounded slug 或 none。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 8,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "?. 与 ?? 'none' 同一行。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "import-type-only",
+                "kind": "basic",
+                "front": "`import type { ExperimentResolution }` 和普通 `import` 差在哪？",
+                "back": "import type 只引入类型，编译后擦掉，不把该名字当成运行时值依赖。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "文件第一行 import type。"
+                  }
+                ]
+              },
+              {
+                "id": "optional-chaining-stop",
+                "kind": "basic",
+                "front": "`resolution.experiment?.analyticsTag` 在 experiment 为 null 时会发生什么？",
+                "back": "不会继续访问 analyticsTag，整个可选链表达式得到 undefined。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "?. 出现在返回表达式。"
+                  }
+                ]
+              },
+              {
+                "id": "nullish-none",
+                "kind": "basic",
+                "front": "`?? 'none'` 在什么情况下会得到 `'none'`？",
+                "back": "当左边是 null 或 undefined 时（例如没有 experiment，或 tag 为空值）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "?? 'none' 收尾。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "coalesce-default-none",
+                "kind": "short-answer",
+                "title": "空值合并的默认字面量",
+                "prompt": "`experimentAnalyticsTag` 在拿不到 tag 时返回的默认字符串是什么？只写内容，不要引号。",
+                "expectedAnswer": "none",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "?? 'none'。"
+                  }
+                ]
+              },
+              {
+                "id": "optional-chain-operator",
+                "kind": "short-answer",
+                "title": "可选链的两个字符",
+                "prompt": "可选链运算符由哪两个字符组成？（按源码里的写法）",
+                "expectedAnswer": "?.",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "experiment?.analyticsTag。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "owns-does-not-own",
+            "title": "为什么文件头顶要写「拥有什么」和「不拥有什么」？",
+            "content": "# 为什么文件头顶要写「拥有什么」和「不拥有什么」？\n\n## 情境和约束\n\n你在一人维护、没有专职架构师盯边界的项目里打开 `types.ts`。文件很短，真正的代码几乎只有类型导出，但头顶却先有一段英文注释：\n\n[[evidence:src/services/product-analytics/types.ts:1-6]]\n\n:::detail[这段注释在代码之前，是不是多余？]\n不是装饰。文件会越改越长；三个月后的你容易把「碰巧相关」的逻辑继续塞进来。先用几行字钉住责任田，比事后从杂物间往外搬便宜。你先读头顶，再读下面的 `export type`，才知道这些类型该管到哪为止。\n\n一人维护时，文件夹结构和包名帮不上太多忙：没有第二个人在审查里拦住你。文件头这几行，是写给三个月后的自己的廉价栏杆。\n:::\n\n它先说这文件是什么，再写 **Owns**（拥有）：只做粗糙的事件载荷类型；再写 **Does not own**（不拥有）：PostHog 怎么接线、事件目录、隐私允许列表。\n\n同一门课里，experiments 侧的兄弟文件换了一种句式，但目的同类——缩小你对这个文件的期望：\n\n[[evidence:src/features/experiments/analytics.ts:3-6]]\n\n:::detail[AnalyticsValue 和 AnalyticsSender 跟隔壁实验分析怎么分责任？]\nOwns 对准的就是注释下面这两行。\n\n[[evidence:src/services/product-analytics/types.ts:7-9]]\n\n`AnalyticsValue` 管载荷里一个格子能放哪几种粗糙值，`AnalyticsSender` 管发送器必须长什么样。两行都是类型导出，没有发送步骤。Does not own 已经划掉接线、目录和隐私名单，所以你不会在这份文件里看见 PostHog 调用。\n\n隔壁实验分析管的是另一件事：给已有的 `experimentTag` 键交回一个有界 slug。交回的是字符串，字符串也是 `AnalyticsValue` 里的一种——这不表示算出这个 slug 的步骤该住进 `types.ts`。类型合同允许某种值，不等于拥有怎么算出这个值。`types.ts` 不拥有实验标签怎么选；隔壁那份也不拥有载荷类型合同。你把选标签的逻辑塞进 `types.ts`，头顶的 Owns 就假了。\n:::\n\n约束很现实：文件会越改越长；三个月后的你（或审查代码的人）容易把「碰巧相关」的逻辑继续塞进来。注释很便宜，边界一旦糊掉，改动成本很贵。\n\n:::detail[碰巧相关为什么特别危险？]\n事件载荷、接线、目录、隐私名单都围着「分析」转，放在一起好像也说得通。正是这种「好像有关」，最容易把合同文件撑成杂物间。Does not own 专门对付这种好像。\n\n相关不是归属。你问「这件事改的时候，该不该动这份 types」，答案经常是不该。把不该动的写进 Does not own，比事后从一锅粥里往外捞便宜。\n:::\n\n## 先猜一下\n\n如果只写 Owns、不写 Does not own，一个人维护几个月后，这个文件容易发生什么问题？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n他们选择在文件头**同时**写 Owns 与 Does not own：责任田写清，并明确排除「别往这里塞」的事，防止类型合同文件长成杂物间。\n\n## 代价和收益\n\n**你付的代价**\n\n- 多写几行注释，还要在改职责时记得同步更新。\n- 注释不是编译器强制的：写了也可能过期——你得当它是合同，而不是装饰。\n\n**你拿到的收益**\n\n- **Owns** 告诉你：改这个文件时，有权改、也应该改的范围是什么（这里是粗糙的事件载荷类型）。\n- **Does not own** 告诉你：PostHog 接线、事件目录、隐私名单——那些问题去别的模块找，别在 `types.ts` 里「顺手」实现。\n- 审查 diff 时有一把尺子：新增代码若越出 Owns，或踏进 Does not own，你可以当场问「这是不是放错文件了」。\n\n:::detail[Owns 单独写为什么不够？]\n「拥有载荷类型」听起来很宽，接线、目录、名单都可能被说成「和载荷有关」。Does not own 把最容易误塞的三样点名划掉，拒绝才有依据。你以后想往里加 PostHog 调用，头顶已经先说了不。\n\n相关的东西太多了。PostHog、目录、隐私名单都和「事件载荷」沾边。不点名划掉，相关就会变成「那就放这里吧」。Does not own 是拒绝的话术，不是情绪。\n:::\n\n读法可以固定成三步：\n\n1. **第一句** —— 这文件是什么（共享的 sender 合同）。\n2. **Owns** —— 责任田。\n3. **Does not own** —— 故意划掉的范围。\n\nexperiments 那份用「Always returns...」声明**输出合同**：永远是有界 slug。句式不同，作用一样——**缩小读者对这个文件的期望**。\n\n:::detail[两种句式要不要强行统一？]\n不必。`types.ts` 管的是「这块田到哪为止」；`analytics.ts` 管的是「出口永远是什么」。你认的是作用——缩小期望——不是认某一个英文小标题。换项目时，先找「它保证什么、它拒绝什么」。\n\n统一句式容易变成填空表演。有的文件该写责任田，有的文件该写出口保证。你认作用，不认模板。看见缩小期望的句子，就按边界来读。\n:::\n\n类比：合租冰箱门上的便签写「我的格子只放调料；牛奶、外卖盒不归我管」。室友不会把你的格子塞满剩菜，你也不会被当成整台冰箱的管理员。\n\n## 什么时候该反过来\n\n- **小练习文件、一次性脚本、明显没有增长压力的草稿** —— 可以不写这套头注；硬写反而像表演。\n- **边界已经由文件夹结构、包名、代码审查清单钉死，且团队有共享约定** —— 文件头可以更短，不必每篇作文都重复全书架构。\n- **你发现 Owns / Does not own 长期与真实代码不一致** —— 与其留着假合同，不如删掉或改到与现实一致；过期的边界注释比没有更害人。\n\n反过来也成立：一旦文件开始被多个功能「顺手」借用、或你预计三个月后会想不起来边界——**就值得**在头顶钉住 Owns / Does not own。\n\n特别提醒：Does not own PostHog wiring **不等于**「产品不做 PostHog」。边界是**文件级**的，不是产品级的「我们不做」。接线在别的模块。\n\n:::detail[审查 diff 时这把尺子怎么用？]\n新增几行若开始连 PostHog、开始列事件名、开始写允许名单，就踏进了 Does not own。你不必等专职架构师：头顶已经给了否决词。一人维护时，这就是最便宜的审查清单。\n\n反过来也对：只改 `AnalyticsValue` 的联合成员，落在 Owns 里，这把尺子会放行。尺子的价值是两边都能用，不是只会说不。\n:::\n\n:::detail[怎么看出注释已经过期？]\n头顶写「只做类型」，文件里却出现了发送网络请求的函数，两边就打架了。这时你要改注释或把代码搬走，不能假装没看见。过期的 Owns 比没有更害人：后来的你会按假合同继续往里塞。\n\n最简单的核对：头顶划掉的事，文件里有没有开始做。一旦出现，优先搬家或改注释，不要让两套说法并存。假合同会训练你继续往错的地方加代码。\n:::\n\n:::detail[为什么这和产品做不做 PostHog 不是一回事？]\n产品可以做接线，只是不放在这份 `types.ts` 里。Does not own 说的是「别在这个文件里实现」，不是「全项目禁止」。你读到划掉的名单，先问「该去哪个模块找」，不要问「产品是不是砍了这个功能」。\n\n文件级边界让产品仍能做完整能力：接线在适配器，目录在别的模块，类型合同只守载荷形状。你把「文件不做」读成「产品不做」，会误删不该删的能力。\n:::\n\n## 再想想\n\n这份 `types.ts` 里 Owns 的那亩田，正是你前面读过的类型别名与发送器合同：[[lesson:type-alias-and-union|type 别名]]、[[lesson:function-type-and-record|函数类型]]。输出侧如何用 `?? 'none'` 守住有界结果，见 [[lesson:import-type-and-coalesce|?. 与 ??]]。\n\n## 自检\n\n**问：** 文件头里表示「本文件拥有什么」的英文单词是什么？`types.ts` 声明自己拥有什么？\n\n**问：** 同一文件明确不拥有哪三类东西？\n\n**问：** 注释写 Does not own PostHog wiring，是否表示产品不做 PostHog？若只写 Owns、不写 Does not own，一人维护几个月后容易发生什么？\n\n## 一句话\n\n**Owns 写清责任田，Does not own 防止文件长成杂物间。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 1,
+                "lineEnd": 6,
+                "nodeIds": [],
+                "note": "Owns / Does not own 文件头注释块。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 3,
+                "lineEnd": 6,
+                "nodeIds": [],
+                "note": "experiments analytics 的输出合同注释。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/types.ts",
+                "lineStart": 7,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "Owns 对应的两行类型导出：AnalyticsValue 与 AnalyticsSender。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "owns-payload-typing",
+                "kind": "basic",
+                "front": "product-analytics 的 `types.ts` 声明自己拥有什么？",
+                "back": "只拥有粗糙的事件载荷类型（coarse event payload typing only）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "Owns 行。"
+                  }
+                ]
+              },
+              {
+                "id": "does-not-own-posthog",
+                "kind": "basic",
+                "front": "同一文件明确不拥有哪三类东西？",
+                "back": "PostHog 接线、事件目录（event catalogs）、隐私允许列表（privacy allow-lists）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "Does not own 行。"
+                  }
+                ]
+              },
+              {
+                "id": "boundary-not-product-no",
+                "kind": "basic",
+                "front": "Does not own 某能力，是否等于产品不做该能力？",
+                "back": "不等于。只表示当前文件不负责；实现可能在其他模块。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 1,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "Shared sender contract 定位为类型合同文件。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "owns-keyword",
+                "kind": "short-answer",
+                "title": "责任田注释的英文小标题",
+                "prompt": "这套代码文件头里，表示「本文件拥有什么」的英文单词是什么？",
+                "expectedAnswer": "Owns",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "Owns: ..."
+                  }
+                ]
+              },
+              {
+                "id": "why-write-does-not-own",
+                "kind": "explain",
+                "title": "为什么要写 Does not own",
+                "prompt": "如果只写 Owns、不写 Does not own，一人维护几个月后容易发生什么问题？请结合 types.ts 的职责边界说明。",
+                "rubric": [
+                  "指出文件会逐渐被塞进本不该放的职责（接线、目录、隐私列表等）",
+                  "说明 Does not own 给未来的自己一个明确的拒绝标准",
+                  "联系一人无专职审查时，注释边界是廉价的架构文档",
+                  "不把 Does not own 误解成产品不做该功能"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/types.ts",
+                    "lineStart": 1,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "Owns 与 Does not own 成对出现。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "files-talking",
+        "title": "文件之间怎么说话",
+        "objective": "我能指出两个文件如何用 export/import 握手，以及桶文件再导出时收窄了什么。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "import-export-handshake",
+            "title": "这个组件从没定义过 `cx`，为什么还能调用它？",
+            "content": "# 这个组件从没定义过 `cx`，为什么还能调用它？\n\n## 你看到的结果\n\n打开图灵密约的文本输入组件 `src/ui/TextInput.tsx`。你往下翻到画输入框的那一行，会看见它在调用一个叫 `cx` 的名字：\n\n[[evidence:src/ui/TextInput.tsx:7]]\n\n:::detail[这一行在干什么？]\n它在给输入框拼 class 名：固定的 `'tp-input'`，再加上外面可能传入的 `className`。`cx` 负责把这两段收成一行。你现在只要看见「这里用了 `cx`」——至于 `cx` 写在哪，这一行本身不说。\n\n你先把这一行当成结果画面：输入框已经在用一个外来的名字。下一步才去问名字从哪来。结果先坐实，来源后追查，才是溯源该有的顺序。\n:::\n\n再往同一文件的上面扫一遍：这里没有 `function cx`，也没有 `const cx = ...`。名字被用了，却不在本文件里出生。\n\n同目录还有另一个文件 `src/ui/classNames.ts`。你现在只需要知道：它和 `TextInput.tsx` 是邻居——至于邻居怎么把名字递过来，先别急着下结论。\n\n## 先猜一下\n\n`TextInput` 里用到的 `cx`，是从哪里来的？它是怎么跨进这个文件的？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n`classNames.ts` 用 `export` 把 `cx` 公开出去；`TextInput.tsx` 用 `import { cx } from './classNames'` 按名拿来用。\n\n## 一站一站往回走\n\n### 第 1 站：你看见的调用\n\n[[evidence:src/ui/TextInput.tsx:7]]\n\n这一站只告诉你一件事：界面代码**依赖**一个叫 `cx` 的名字。它把固定样式名 `'tp-input'` 和外面可能传入的 `className` 一起交给 `cx`。至于 `cx` 本体写在哪，这一行本身不说。\n\n:::detail[为什么不从函数定义开始读？]\n因为你读陌生文件时，往往先撞上「谁在用」。先钉住使用处，再往上找借条，再跳到给出的那一侧，路径才跟名字真正走的方向一致。从仓库树从上往下数文件，反而容易走丢。\n\n仓库里文件很多，从定义出发你得先猜它在哪。从使用处出发，借条就在同一文件上头，路径是写死的。你顺着借条走，比在目录树里碰运气快。\n:::\n\n### 第 2 站：文件开头的「借条」\n\n同一文件更靠上的地方，有这样一句：\n\n[[evidence:src/ui/TextInput.tsx:3]]\n\n拆开读：\n\n- **`import ... from ...`**：从「哪里」取「什么」。这是**拿来**的一侧。\n- **`{ cx }`**：花括号表示**具名导入（named import）**——导出时叫什么，导入时一般就写什么（除非你用 `as` 改名）。\n- **`'./classNames'`**：**相对路径**。`./` 表示「当前文件所在目录」；`classNames` 对应同目录下的 `classNames.ts`（扩展名常省略）。\n\n所以这一站的意思是：`TextInput.tsx` 明确说「我要去邻居 `classNames` 那里，按名字借 `cx`」。\n\n:::detail[`./` 能不能写成别的样子？]\n`./` 是「就在我旁边这一层」。若目标在上一层，会看见 `../`；若再往上或往旁边拐，路径会变长。这节课这一对是同目录邻居，所以是 `./classNames`。你看见路径，先问「从当前文件出发，要走几步」。\n\n扩展名通常省略：`./classNames` 对上的是 `classNames.ts`。你不必在 import 里写 `.ts`。认的是「从哪一层出发、去哪个邻居」，不是抄完整磁盘路径。\n:::\n\n### 第 3 站：给出的一侧\n\n邻居文件里，名字是这样公开的：\n\n[[evidence:src/ui/classNames.ts:1-3]]\n\n- **`export`**：把这个名字登记成「别的文件可以来借」。这是**给出**的一侧。\n- 若这里只有 `function cx`、没有 `export`，本文件内部还能用，但跨不过文件边界——`TextInput` 那行 `import` 会找不到可导出的名字。\n\n:::detail[花括号里的名字必须一模一样吗？]\n具名导入默认按导出时的名字取。这边 `export function cx`，那边就写 `{ cx }`。你可以用 `as` 改名，但那是额外一步；这节课里两边都叫 `cx`，对得上才借得到。\n\n对不上就会借失败。改名是例外，要额外写 `as`。这节课两边都叫 `cx`，就是为了让你先看见最常见、也最不容易错的那种握手。\n:::\n\n三站串起来，就是一次完整的**握手**：\n\n1. **export** —— `classNames.ts` 公开 `cx`。\n2. **import { cx } from './classNames'** —— `TextInput.tsx` 按名、按路径取用。\n3. **使用** —— `cx('tp-input', className)` 真正调用。\n\n缺任何一步，名字都过不了文件边界。你读陌生代码时，看见 `import { 某名 } from '某路径'`，就可以反向去找：给出的文件里，有没有对应的 `export`。\n\n:::detail[为什么路径写的是 classNames 不是 utils？]\n邻居文件现在就叫 `classNames.ts`，借条必须写成 `./classNames`。函数还是 `cx`，签名也没变，变的是「去哪个邻居取」。你读握手时，名字和路径要分开看：名字对上导出，路径对上文件。\n:::\n\n:::detail[少了哪一步会怎样？]\n没有 `export`，借条指向一个不公开的名字，导入会失败。没有 `import`，本文件里突然冒出 `cx`，检查器会问「这是谁」。有借条却写错路径，会去错邻居。三站齐了，名字才能跨过文件边界。\n\n三站是一条链，不是三件可以单挑的装饰。你排查「名字从哪来」时，按使用 → 借条 → 导出这个顺序走，缺哪一环就补哪一环，不要在无关文件里打转。\n:::\n\n## 再想想\n\n`export` 单独拎出来是什么意思，见 [[lesson:foundations-before-zero/what-is-code/export-means-share|函数前面的 export]]；`import` 作为「借条」的读法，见 [[lesson:foundations-before-zero/what-is-code/import-means-borrow|文件开头的 import]]。`cx` 自己怎样过滤再拼接，见 [[lesson:foundations-before-zero/what-is-code/a-three-line-function|输入框的 class 名从哪拼出来]]。\n\n## 自检\n\n**问：** 在 `classNames.ts` 与 `TextInput.tsx` 这一对里，谁负责 `export`，谁负责 `import`？\n\n**问：** `import { cx } from './classNames'` 里，`./` 表示什么？\n\n**问：** 花括号 `{ cx }` 表示哪一种导入方式？若 `classNames.ts` 忘了写 `export`，这行 import 会怎样？\n\n## 一句话\n\n**export 给出名字，import 按名借走；相对路径写出邻居在哪一层架子。**\n",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/classNames.ts",
+                "lineStart": 1,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "cx 的 export 定义。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/TextInput.tsx",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "import { cx } from './classNames' 并在 className 中调用。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/TextInput.tsx",
+                "lineStart": 3,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "具名导入 cx 的那一行。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/ui/TextInput.tsx",
+                "lineStart": 7,
+                "lineEnd": 7,
+                "nodeIds": [],
+                "note": "调用 cx('tp-input', className) 的那一行。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "named-import-cx",
+                "kind": "basic",
+                "front": "`import { cx } from './classNames'` 里的花括号表示什么？",
+                "back": "具名导入：按导出时的名字 cx 取用。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "import { cx } from './classNames'。"
+                  }
+                ]
+              },
+              {
+                "id": "relative-dot-slash",
+                "kind": "basic",
+                "front": "`./classNames` 中的 `./` 表示什么？",
+                "back": "当前文件所在目录；去同目录下找 classNames 模块。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "from './classNames'。"
+                  }
+                ]
+              },
+              {
+                "id": "who-exports-who-imports",
+                "kind": "basic",
+                "front": "在 classNames 与 TextInput 这一对里，谁 export、谁 import？",
+                "back": "classNames.ts export cx；TextInput.tsx import cx。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/classNames.ts",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "export function cx"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "import { cx }"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "textinput-import-path",
+                "kind": "short-answer",
+                "title": "TextInput 从哪导入 cx",
+                "prompt": "`TextInput.tsx` 里 import cx 的模块路径字符串是什么？（包含 ./）",
+                "expectedAnswer": "./classNames",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/ui/TextInput.tsx",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "from './classNames'。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "barrel-and-why-split",
+            "title": "为什么不把实验相关逻辑全塞进一个文件？",
+            "content": "# 为什么不把实验相关逻辑全塞进一个文件？\n\n## 情境和约束\n\n图灵密约里，「实验（experiments）」这一块要同时管好几件事：分析标签、意图解析、房间存储、界面上的徽章。产品页只想**稳定地拿到一组合法名字**，不想每次改内部房间布局都跟着改 import 路径。\n\n同仓库还有另一类压力：邮箱登录。调用方往往只需要「提交邮箱密码」这一动作，不需要抱着整个认证控制器的大表面。\n\n:::detail[产品页到底怕什么？]\n怕绑死内部路径。今天标签写在 `analytics.ts`，明天若挪到别的房间，所有深 import 都得改。门口若只露出稳定名字，里面怎么挪家具，外面那一行 `from '.../experiments'` 还可以不动。\n\n内部房间可以拆、可以并、可以改名。怕的是产品页把房间号写进自己的 import。门口名单稳着，房间号怎么变都是内部的事。你维护时先保护门口，再整理房间。\n:::\n\n你可以想象两种摆法：\n\n1. **一个三千行文件** —— 解析、存储、徽章、标签全写在一起。\n2. **拆成多文件**，再决定**对外露出哪几扇门**。\n\n两种摆法都能让程序跑起来。差别在于：你改一行时要读多大一片，以及别人依赖你时会绑死到多深。\n\n## 先猜一下\n\n如果是你来维护，你会不会把 experiments 的解析、存储、徽章 UI 和分析标签全写进同一个文件？你觉得拆开会多出什么成本、又省下什么成本？\n\n随便猜，猜错不影响任何进度。\n\n先在脑子里答一句，再往下看。\n\n## 答案\n\n他们拆开了：用 `index.ts` 再导出一组稳定名字当公共出口，再用 `emailAuth.ts` 这类门面只暴露更窄的动作。\n\n## 代价和收益\n\n### 公共出口：再导出，不复制\n\n`src/features/experiments/index.ts` 开头写明：这是给产品页和房间外壳用的**公共表面**；测试或兄弟包若要摸内部，应走更深的路径。\n\n[[evidence:src/features/experiments/index.ts:1-18]]\n\n注意这一行：\n\n[[evidence:src/features/experiments/index.ts:8]]\n\n它**不会**再抄一份函数实现。实现仍在 `analytics.ts`：\n\n[[evidence:src/features/experiments/analytics.ts:7-9]]\n\n`index.ts` 只是把已有名字**再次公开**到当前模块的出口。外面可以写「从 experiments 门口进来」，而不必深挖 `.../analytics`。这种「门口文件」有人叫它 **barrel**（木桶——东西从桶口递出）：你记住的是正门导视，不是每个专柜的卸货通道。\n\n:::detail[公共表面注释在管谁？]\n开头那段话把人分成两拨：产品页和房间外壳走门口；测试或兄弟包若真要摸内部，才走更深的路径。不是禁止深 import，是默认别走。你读注释，是在读「谁被邀请走正门」。\n\n正门一旦约定清楚，里面改房间号就不再是公共事件。你维护产品页时，先看门口名单还在不在，再决定要不要跟进内部改动。\n:::\n\n:::detail[再导出和复制差在哪？]\n复制会留下第二份函数体，改一处忘另一处就会撒谎。再导出只登记「这个名字从那边来」，实现仍只有一份。你在 `index.ts` 里找不到 `function experimentAnalyticsTag` 的步骤，那是故意的。\n\n你在门口文件里找不到计算步骤，是正常的。步骤在 `analytics.ts`。门口只回答「外面可以叫哪个名字」。把这两份文件叠在一起看，才不会以为 `index.ts` 自己会算标签。\n:::\n\n### 窄门：门面只递一个动作\n\n另一扇门不是罗列表，而是收窄：\n\n[[evidence:src/services/emailAuth.ts:1-17]]\n\n这里先**导入**较大的 `authController`，再**只导出** `submitEmailAuth`（以及一个超时常量）。调用方看见的是邮箱登录这一动作，不必直接绑死整个 controller 表面。这叫**门面（facade）**：门口变窄，里面仍可复杂。\n\n:::detail[超时常量为什么也从这扇门出去？]\n调用「提交邮箱密码」的人，常常还要知道等多久算超时。门面把动作和这个相关数字一起递出，调用方仍不必抱住整个 controller。窄，不是只准留一个名字，是只留这一件事需要的那一小撮。\n\n常量本身也是从 controller 那边再导出的，不是门面重新发明一个数字。门口仍是转发，不是复制第二份超时逻辑。你看见门面里的数字，先问它从哪转发过来，再决定能不能就在这里改这个数字。转发不是重写。\n:::\n\n:::detail[门面和 barrel 怎么区分？]\nbarrel 是导视牌：把已经公开的几个名字再摆到正门口。门面是收窄：里面也许很大，外面只递一个动作。你问「门口是在罗列，还是在藏起大部分」，就能把两者分开。\n\n同一仓库两种门口，是因为压力不同。experiments 要露出一组稳定名字；邮箱登录只要一个动作。你不要看见 `index.ts` 就以为全世界都该罗列，也不要看见门面就以为再导出是多余的。\n:::\n\n### 拆文件在买什么、付什么\n\n**收益（你明天会感谢自己的部分）：**\n\n- **责任分开** —— 标签、解析、存储、徽章各管一段；你改徽章不必在同一卷轴里翻过解析。\n- **依赖收窄** —— 产品页依赖出口或门面，不绑死内部路径；内部文件可以挪、可以换，只要门口的 export 列表还在。\n- **替换与测试更局部** —— 同名能力可以在别的文件里换成空操作或另一实现，调用方仍对着稳定名字。\n\n**代价（你现在就会感到的部分）：**\n\n- 文件变多，第一次找「真正实现」要多点一次跳转（从 `index` 再进 `analytics`）。\n- 门口列表要维护：漏了 re-export，外面就借不到；多 re-export 了不该公开的名字，依赖边界会变糊。\n\n:::detail[第一次找实现为什么会慢一拍？]\n你在门口看见 `export { experimentAnalyticsTag } from './analytics'`，还要再跳进 `analytics.ts` 才看见函数体。这是拆文件的税：多一次跳转，换来明天改徽章时不必翻解析。值不值，看这个名字会不会被很多人依赖。\n\n税只交在第一次。交完之后，改徽章、改解析、改存储，阅读半径都变小。你若每周都在改门口名单，说明拆早了；若门口稳、里面常改，税就值。\n:::\n\n类比：商场可以只有一个没有隔断的巨型厅，顾客和货架混在一起——能开张，但你改货架布局时，所有人都在你脚边。拆成专柜 + 正门导视，是给「明天的你」缩小阅读半径。\n\n## 什么时候该反过来\n\n拆文件不是信仰。下列情况，**合**往往比**拆**更合适：\n\n- **真的只有几行、只有一个调用方** —— 再拆出口文件，是给自己加空跳转。\n- **两段逻辑永远同生共死、改一处必改另一处** —— 硬拆会让你每次改动跨两个文件，收益为负。\n- **你还在探索 API 长什么样** —— 过早的 barrel 会把不稳定的名字「正式化」，改起来更疼。等表面稳了，再收成门口。\n\n门面也一样：若调用方**本来就需要** controller 上大半能力，硬收成一个函数只会逼人再去深 import，门口形同虚设。\n\n:::detail[怎么判断「拆早了」？]\n门口名单每周都在改，说明表面还没稳。这时 barrel 会把草稿变成正式入口，调用方一绑上，你就不敢改。先让几个调用方用深路径，等名字稳定，再收到 `index.ts`。\n\n还有一个信号：两个文件每次 diff 都成对出现。永远同生共死，拆开只是让你多开一个标签页。等它们开始以不同频率变化，再拆也不迟。\n:::\n\n你读仓库时的判断可以记成：先问「谁是稳定门口、谁是内部房间」；再问「这个门口是在**罗列**（barrel）还是在**收窄**（facade）」。\n\n## 再想想\n\n跨文件「给出 / 拿来」的握手，见本单元上一课 [[lesson:import-export-handshake|这个组件从没定义过 cx，为什么还能调用它]]。\n\n## 自检\n\n**问：** `export { experimentAnalyticsTag } from './analytics'` 会不会复制一份函数实现？实现还在哪个文件？\n\n**问：** `emailAuth.ts` 相对 `authController` 做了哪一层收窄？调用方主要看见什么名字？\n\n**问：** 若把 experiments 的解析、存储、徽章和分析标签全写进一个文件，一人维护时，阅读半径和依赖面会怎样变差？\n\n## 一句话\n\n**拆文件是为了分责任、稳门口、缩依赖——不是为了多建几个空文件夹。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/index.ts",
+                "lineStart": 1,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "experiments 公共出口：再导出 analytics/resolve/storage/ui。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/index.ts",
+                "lineStart": 8,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "从 ./analytics 再导出 experimentAnalyticsTag。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/emailAuth.ts",
+                "lineStart": 1,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "emailAuth 门面：导入 authController，导出 submitEmailAuth。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 7,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "真正的 experimentAnalyticsTag 实现仍在 analytics.ts。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "reexport-not-copy",
+                "kind": "basic",
+                "front": "`export { experimentAnalyticsTag } from './analytics'` 会复制函数实现吗？",
+                "back": "不会。再导出只是把已有名字公开到当前模块出口，实现仍在 analytics.ts 一份。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/index.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "re-export 行。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 7,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "实现所在处。"
+                  }
+                ]
+              },
+              {
+                "id": "barrel-door",
+                "kind": "basic",
+                "front": "feature 的 `index.ts` 主要扮演什么角色？",
+                "back": "对外出口（barrel）：列出产品代码应依赖的稳定名字，内部模块可换。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/index.ts",
+                    "lineStart": 1,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "Public surface 注释说明稳定给产品页用。"
+                  }
+                ]
+              },
+              {
+                "id": "facade-email",
+                "kind": "basic",
+                "front": "`emailAuth.ts` 相对 `authController` 做了哪一层收窄？",
+                "back": "门面：对外只暴露 submitEmailAuth（以及超时常量），调用方不必直接依赖整个 controller 表面。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/emailAuth.ts",
+                    "lineStart": 1,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "import controller，export submitEmailAuth。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "reexport-from-analytics",
+                "kind": "short-answer",
+                "title": "index 从哪再导出 experimentAnalyticsTag",
+                "prompt": "`experiments/index.ts` 里，`experimentAnalyticsTag` 的 from 路径是什么？",
+                "expectedAnswer": "./analytics",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/index.ts",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "from './analytics'。"
+                  }
+                ]
+              },
+              {
+                "id": "why-not-one-file",
+                "kind": "explain",
+                "title": "为什么不要全塞一个文件",
+                "prompt": "如果把 experiments 的解析、存储、徽章 UI 和 analytics 标签全写进一个文件，一人维护时会多出哪些成本？请至少谈到阅读半径与依赖两面。",
+                "rubric": [
+                  "指出改一处也要在大文件中承担无关阅读成本",
+                  "说明调用方会绑死内部细节，难以只依赖稳定门口",
+                  "联系责任边界（Owns）难以靠文件头注释守住",
+                  "提到替换/测试局部实现会变难"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/index.ts",
+                    "lineStart": 1,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "多模块再导出的公共表面。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

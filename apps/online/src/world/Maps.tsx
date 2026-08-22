@@ -27,9 +27,17 @@ import * as THREE from "three";
 
 import type { Course, CourseNode } from "../content/library";
 import { courseShapeOf } from "../progress/source";
-import { buildIsland, hash, seeded } from "./island";
+import { buildIsland, hash, lockIslandGeometry, seeded } from "./island";
 import { PropField, type Placement, type Role } from "./kit";
 import { layoutCourse, layoutStudy, radiusForLessons } from "./layout";
+import { PathHud, type PathSprite } from "./path-hud";
+import {
+  hueShiftForCourse,
+  PATH_KIND_ICON,
+  PATH_KIND_LABEL,
+  pathNodeKind,
+  type PathNodeKind,
+} from "./path-language";
 
 /**
  * The world's palette. Two greens for land, one warm accent for the only thing
@@ -48,6 +56,7 @@ const PALETTE = {
   sky: 0xa9d6e9,
   horizon: 0xdcefef,
   causeway: 0xc0a373,
+  steps: 0x9aa0a8,
   accent: 0xffb347,
   // A locked island multiplies its vertex colours by this, so it has to stay
   // light: a dark tint reads as a hole in the sea rather than as land that is
@@ -334,7 +343,15 @@ function Island({
 }
 
 /** A prerequisite, drawn as a causeway you could actually walk. */
-function Causeway({ from, to }: { from: THREE.Vector3; to: THREE.Vector3 }) {
+function Causeway({
+  from,
+  to,
+  color = PALETTE.causeway,
+}: {
+  from: THREE.Vector3;
+  to: THREE.Vector3;
+  color?: number;
+}) {
   const { position, quaternion, length } = useMemo(() => {
     const direction = new THREE.Vector3().subVectors(to, from).setY(0);
     const mid = from.clone().add(to).multiplyScalar(0.5).setY(0.08);
@@ -347,7 +364,73 @@ function Causeway({ from, to }: { from: THREE.Vector3; to: THREE.Vector3 }) {
   return (
     <mesh position={position} quaternion={quaternion} rotation-x={0} receiveShadow>
       <boxGeometry args={[0.7, 0.12, length]} />
-      <meshStandardMaterial color={PALETTE.causeway} roughness={1} />
+      <meshStandardMaterial color={color} roughness={1} />
+    </mesh>
+  );
+}
+
+/**
+ * The other path surface. A unit that isn't a causeway is a flight of slabs,
+ * so the change of pavement is the unit boundary you feel with your eye
+ * before you read the name.
+ */
+function StoneSteps({ from, to }: { from: THREE.Vector3; to: THREE.Vector3 }) {
+  const pieces = useMemo(() => {
+    const direction = new THREE.Vector3().subVectors(to, from);
+    const length = direction.length();
+    if (length < 0.05) return [];
+    const rotation = new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 0, 1),
+      direction.clone().setY(0).normalize(),
+    );
+    const count = Math.max(3, Math.round(length / 0.72));
+    const depth = (length / count) * 0.68;
+    return Array.from({ length: count }, (_, index) => {
+      const t = (index + 0.5) / count;
+      return {
+        position: from
+          .clone()
+          .lerp(to, t)
+          .setY(THREE.MathUtils.lerp(from.y, to.y, t) + 0.1 + (index % 2) * 0.08),
+        quaternion: rotation,
+        depth,
+      };
+    });
+  }, [from, to]);
+  return (
+    <>
+      {pieces.map((piece, index) => (
+        <mesh
+          key={index}
+          position={piece.position}
+          quaternion={piece.quaternion}
+          receiveShadow
+          castShadow
+        >
+          <boxGeometry args={[1.2, 0.18, piece.depth]} />
+          <meshStandardMaterial color={PALETTE.steps} roughness={1} />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
+/** Gold ring on the live stone. Opacity and scale breathe; the learner stands in it. */
+function LiveRing({ radius }: { radius: number }) {
+  const mesh = useRef<THREE.Mesh>(null);
+  useFrame(({ clock }) => {
+    const ring = mesh.current;
+    if (!ring) return;
+    const t = (Math.sin(clock.elapsedTime * 2.2) + 1) / 2;
+    const material = ring.material;
+    if (material instanceof THREE.MeshBasicMaterial) material.opacity = 0.52 + t * 0.4;
+    const scale = 1 + t * 0.07;
+    ring.scale.set(scale, scale, scale);
+  });
+  return (
+    <mesh ref={mesh} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, 0]}>
+      <ringGeometry args={[radius * 1.02, radius * 1.2, 28]} />
+      <meshBasicMaterial color={PALETTE.accent} transparent opacity={0.85} />
     </mesh>
   );
 }
@@ -519,11 +602,15 @@ export function WorldScene({
 export interface LessonPlacement {
   readonly unitId: string;
   readonly unitTitle: string;
+  readonly unitIndex: number;
   readonly lessonId: string;
   readonly lessonTitle: string;
   readonly chars: number;
   readonly position: THREE.Vector3;
   readonly state: "done" | "live" | "idle" | "locked";
+  readonly kind: PathNodeKind;
+  /** Grass hue offset for this course, from `hueShiftForCourse`. */
+  readonly hueShift: number;
 }
 
 export function placeCourse(
@@ -532,8 +619,11 @@ export function placeCourse(
   source: ProgressSource,
 ): LessonPlacement[] {
   const { next } = readCourseProgress(courseShapeOf(course, studyId), source);
-  const flat = course.units.flatMap((unit) => unit.lessons.map((lesson) => ({ unit, lesson })));
+  const flat = course.units.flatMap((unit, unitIndex) =>
+    unit.lessons.map((lesson, slot) => ({ unit, unitIndex, lesson, slot })),
+  );
   const points = layoutCourse(course.units.map((unit) => unit.lessons.length));
+  const hueShift = hueShiftForCourse(studyId, course.id);
   const firstOpen = next
     ? flat.findIndex((entry) => entry.unit.id === next.unitId && entry.lesson.id === next.lessonId)
     : -1;
@@ -549,6 +639,7 @@ export function placeCourse(
     return {
       unitId: entry.unit.id,
       unitTitle: entry.unit.title,
+      unitIndex: entry.unitIndex,
       lessonId: entry.lesson.id,
       lessonTitle: entry.lesson.title,
       chars: entry.lesson.content.length,
@@ -562,6 +653,14 @@ export function placeCourse(
           : index > firstOpen + 3
             ? "locked"
             : "idle",
+      kind: pathNodeKind({
+        variant: entry.lesson.variant,
+        exercises: entry.lesson.exercises.length,
+        cards: entry.lesson.cards.length,
+        slot: entry.slot,
+        unitLength: entry.unit.lessons.length,
+      }),
+      hueShift,
     };
   });
 }
@@ -592,11 +691,64 @@ export function CourseScene({
         // A wall of 4,900 characters should be visible as a bigger step before
         // it is entered rather than after.
         const radius = 1.5 + Math.min(lesson.chars, 5000) / 3600;
-        const shape = buildIsland(lesson.lessonId, radius, 0);
-        return { lesson, radius, shape };
+        const shape = buildIsland(lesson.lessonId, radius, lesson.hueShift);
+        const lockedGeometry =
+          lesson.state === "locked" ? lockIslandGeometry(shape.geometry) : shape.geometry;
+        return { lesson, radius, shape, lockedGeometry };
       }),
     [lessons],
   );
+
+  /*
+    Icons and unit names are bounded to a window around where the learner is,
+    for the same reason spurs are (v3, 「收敛规则：三格窗」): what is on screen
+    has to stop growing before the content does. Unbounded, a 41-lesson course
+    projected 47 sprites and they collided 215 times in the far field, because
+    the ones behind the fog still ask for a box. This is a constant upper
+    bound — a 200-lesson course looks the same.
+
+    The window is wider than the five nodes the size work aimed for, so the
+    icons do not pop in at the edge of what you can already read.
+  */
+  const SPRITE_WINDOW = 8;
+  const currentIndex = Math.max(
+    0,
+    lessons.findIndex((lesson) => lesson.state === "live"),
+  );
+  const inWindow = (index: number) => Math.abs(index - currentIndex) <= SPRITE_WINDOW;
+
+  const sprites = useMemo(() => {
+    const icons: PathSprite[] = stones
+      .filter((_, index) => inWindow(index))
+      .map(({ lesson, radius }) => ({
+        id: `kind:${lesson.lessonId}`,
+        role: "icon" as const,
+        text: PATH_KIND_ICON[lesson.kind],
+        label: PATH_KIND_LABEL[lesson.kind],
+        locked: lesson.state === "locked",
+        position: lesson.position.clone().setY(lesson.position.y + Math.max(1.05, radius * 0.5)),
+      }));
+    const byUnit = new Map<string, (typeof lessons)[number][]>();
+    lessons.forEach((lesson, index) => {
+      if (!inWindow(index)) return;
+      const group = byUnit.get(lesson.unitId) ?? [];
+      group.push(lesson);
+      byUnit.set(lesson.unitId, group);
+    });
+    const units: PathSprite[] = [];
+    for (const group of byUnit.values()) {
+      const first = group[0]!;
+      const last = group[group.length - 1]!;
+      const mid = first.position.clone().lerp(last.position, 0.45);
+      units.push({
+        id: `unit:${first.unitId}`,
+        role: "unit",
+        text: `— ${first.unitTitle} —`,
+        position: new THREE.Vector3(Math.min(mid.x, 0) - 3.2, mid.y + 1.05, mid.z),
+      });
+    }
+    return [...units, ...icons];
+  }, [lessons, stones, currentIndex]);
 
   const fields = useMemo(() => {
     const merged = new Map<Role, Placement[]>();
@@ -623,24 +775,33 @@ export function CourseScene({
   return (
     <>
       {/*
-        The sight line, not the length of the road. Stones eight or so ahead
-        start to go, which is the same thing the locked colour says and the
-        reason both are here: one of them you read, the other you just see.
+        Sight line past the five readable stones, not the length of the road.
+        Fog used to start at 52, which ate locked nodes into the same grey as
+        "far away". Locked is a colour treatment now; fog only takes the ones
+        you have already stopped reading.
       */}
-      <Weather extent={extent * 1.3} fog={[52, 148]} />
+      <Weather extent={extent * 1.3} fog={[88, 210]} />
       {lessons.map((lesson, index) =>
         index > 0 ? (
-          <Causeway
-            key={`road-${lesson.lessonId}`}
-            from={lessons[index - 1]!.position}
-            to={lesson.position}
-          />
+          lesson.unitIndex % 2 === 1 ? (
+            <StoneSteps
+              key={`road-${lesson.lessonId}`}
+              from={lessons[index - 1]!.position}
+              to={lesson.position}
+            />
+          ) : (
+            <Causeway
+              key={`road-${lesson.lessonId}`}
+              from={lessons[index - 1]!.position}
+              to={lesson.position}
+            />
+          )
         ) : null,
       )}
-      {stones.map(({ lesson, radius, shape }) => (
+      {stones.map(({ lesson, radius, lockedGeometry }) => (
         <group key={lesson.lessonId} position={lesson.position}>
           <mesh
-            geometry={shape.geometry}
+            geometry={lockedGeometry}
             castShadow
             receiveShadow
             onClick={(event) => {
@@ -655,23 +816,23 @@ export function CourseScene({
             }}
             onPointerOut={() => onHover(null)}
           >
-            <meshStandardMaterial
-              vertexColors
-              flatShading
-              roughness={0.94}
-              color={lesson.state === "locked" ? PALETTE.locked : 0xffffff}
-            />
+            <meshStandardMaterial vertexColors flatShading roughness={0.94} color={0xffffff} />
           </mesh>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
-            <ringGeometry args={[radius * 0.94, radius * 1.12, 20]} />
-            <meshBasicMaterial
-              color={lesson.state === "live" ? PALETTE.accent : PALETTE.foam}
-              transparent
-              opacity={lesson.state === "live" ? 0.85 : 0.2}
-            />
-          </mesh>
+          {lesson.state === "live" ? (
+            <LiveRing radius={radius} />
+          ) : (
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+              <ringGeometry args={[radius * 0.94, radius * 1.12, 20]} />
+              <meshBasicMaterial
+                color={PALETTE.foam}
+                transparent
+                opacity={lesson.state === "locked" ? 0.12 : 0.2}
+              />
+            </mesh>
+          )}
         </group>
       ))}
+      <PathHud sprites={sprites} />
       {/*
         Only the kit models suspend, so only they sit behind a boundary. Sky,
         sea, islands and roads are computed here and owe nothing to the network

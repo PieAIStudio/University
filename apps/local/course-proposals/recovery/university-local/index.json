@@ -17,48 +17,48 @@
   "courses": [
     {
       "courseId": "how-this-campus-works",
-      "file": "how-this-campus-works.796b775fb4d0c254c6878800d527f1db5831ffda1343f66364c6ef774b079f9b.recovery.json",
-      "sha256": "sha256:796b775fb4d0c254c6878800d527f1db5831ffda1343f66364c6ef774b079f9b"
+      "file": "how-this-campus-works.7620f16a5545c563a33beecccf49c3f8d4a22bb4f0ca1da1bb71ebd86b6779cb.recovery.json",
+      "sha256": "sha256:7620f16a5545c563a33beecccf49c3f8d4a22bb4f0ca1da1bb71ebd86b6779cb"
     },
     {
       "courseId": "four-layer-workbench",
-      "file": "four-layer-workbench.1097ec494e6880d1ff7aed7bcc9947e3aaaafc8e3a5b141c1735753573a5c349.recovery.json",
-      "sha256": "sha256:1097ec494e6880d1ff7aed7bcc9947e3aaaafc8e3a5b141c1735753573a5c349"
+      "file": "four-layer-workbench.fba8ac6c7e8ea7ef961d060a24c68c1996c434b085bbe182eb2861129682850e.recovery.json",
+      "sha256": "sha256:fba8ac6c7e8ea7ef961d060a24c68c1996c434b085bbe182eb2861129682850e"
     },
     {
       "courseId": "how-this-campus-works-2",
-      "file": "how-this-campus-works-2.4269c89c9ec995e19a3d137c60b9edfa07100fb8add8814b1e9aaf91af138b4f.recovery.json",
-      "sha256": "sha256:4269c89c9ec995e19a3d137c60b9edfa07100fb8add8814b1e9aaf91af138b4f"
+      "file": "how-this-campus-works-2.e34e279913b20612b74c9c553aff1be8eb49c25cea4954233d5b4ddf8a09c553.recovery.json",
+      "sha256": "sha256:e34e279913b20612b74c9c553aff1be8eb49c25cea4954233d5b4ddf8a09c553"
     },
     {
       "courseId": "communicate-with-ai",
-      "file": "communicate-with-ai.7eca50de9a96334c404ce77f5d4b422ad6f0c2a9077bc8751fec2eda72e98dc0.recovery.json",
-      "sha256": "sha256:7eca50de9a96334c404ce77f5d4b422ad6f0c2a9077bc8751fec2eda72e98dc0"
+      "file": "communicate-with-ai.5b5e121e15bf1d9800b641fe252eca8787581b68909ce5df48a52e139419517a.recovery.json",
+      "sha256": "sha256:5b5e121e15bf1d9800b641fe252eca8787581b68909ce5df48a52e139419517a"
     },
     {
       "courseId": "evidence-and-freshness",
-      "file": "evidence-and-freshness.02ec0e5ce88a9988aaaec5100ee3d10b49c8a604da80a3fc53f1e7f508dd9c11.recovery.json",
-      "sha256": "sha256:02ec0e5ce88a9988aaaec5100ee3d10b49c8a604da80a3fc53f1e7f508dd9c11"
+      "file": "evidence-and-freshness.6d650eca5f16c0129619bd8e0acebd14c5c482bdb8e2409913cef22445bbb664.recovery.json",
+      "sha256": "sha256:6d650eca5f16c0129619bd8e0acebd14c5c482bdb8e2409913cef22445bbb664"
     },
     {
       "courseId": "spaced-repetition",
-      "file": "spaced-repetition.fc0cf11991ad4f8a6fbe2b1154bdbf9966b2e742e4115e3d88e7256cfdeadca4.recovery.json",
-      "sha256": "sha256:fc0cf11991ad4f8a6fbe2b1154bdbf9966b2e742e4115e3d88e7256cfdeadca4"
+      "file": "spaced-repetition.bd79b498427c35cff80d2c822dc8abd14fbe107a628e410bb820d012a1b77ae4.recovery.json",
+      "sha256": "sha256:bd79b498427c35cff80d2c822dc8abd14fbe107a628e410bb820d012a1b77ae4"
     },
     {
       "courseId": "local-first-boundaries",
-      "file": "local-first-boundaries.186e0f1f20204bd44d257af40440f092c6e521d6889045cffb9f21b8b0d26eed.recovery.json",
-      "sha256": "sha256:186e0f1f20204bd44d257af40440f092c6e521d6889045cffb9f21b8b0d26eed"
+      "file": "local-first-boundaries.4647d4bf97a8fb0e36dff985e0b6f684226b3d88284eb8139846c6bc521e74f7.recovery.json",
+      "sha256": "sha256:4647d4bf97a8fb0e36dff985e0b6f684226b3d88284eb8139846c6bc521e74f7"
     },
     {
       "courseId": "airlock-supply-chain",
-      "file": "airlock-supply-chain.0f270e9ce48f68640c67d9f9f7fd6802d7c71e72bee8ee4010d7a62de7364c14.recovery.json",
-      "sha256": "sha256:0f270e9ce48f68640c67d9f9f7fd6802d7c71e72bee8ee4010d7a62de7364c14"
+      "file": "airlock-supply-chain.a94595d8b0a1fd45cfdc6e63970a1dca9796ff75d0aaa148d891f89de268217a.recovery.json",
+      "sha256": "sha256:a94595d8b0a1fd45cfdc6e63970a1dca9796ff75d0aaa148d891f89de268217a"
     },
     {
       "courseId": "content-governance",
-      "file": "content-governance.6c4e36114949e61129d5a15a17be6f93ede83856776c7f2b294d6dbd75252a80.recovery.json",
-      "sha256": "sha256:6c4e36114949e61129d5a15a17be6f93ede83856776c7f2b294d6dbd75252a80"
+      "file": "content-governance.1d762563bd3b64abb1ef339e01fad11b0085e612a9a32fc7048f406f11ab6162.recovery.json",
+      "sha256": "sha256:1d762563bd3b64abb1ef339e01fad11b0085e612a9a32fc7048f406f11ab6162"
     }
   ]
 }

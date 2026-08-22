@@ -11,8 +11,11 @@
  *
  * So import splits it: lesson text and structure into a small per-course file,
  * every asset out into its own content-addressed file that loads only when the
- * lesson that needs it is open. Same bytes, different shape, chosen by whoever
- * has to serve them.
+ * lesson that needs it is open. Cited source ranges get the same treatment:
+ * read from `studies/<id>/source/repository.git` and written beside the course
+ * as content-addressed JSON. A machine with no checkout bakes none of them
+ * and still exits 0 — being unable to see a sibling repository is a normal
+ * state, not a broken build.
  *
  * What lands in `content/` is ignored by git — it quotes private repositories
  * verbatim. What is tracked is `content/manifest.json`: study and course ids,
@@ -40,6 +43,8 @@ import { createHash } from "node:crypto";
 
 import { compileAnswerKey } from "@pieai/university-core";
 import { join, resolve } from "node:path";
+
+import { bakeLessonEvidence, hasAnyStudyRepository } from "./bake-evidence.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const contentRoot = join(projectRoot, "content");
@@ -92,6 +97,15 @@ const manifest = { importedAt: new Date().toISOString().slice(0, 10), studies: [
 let assetCount = 0;
 let assetBytes = 0;
 let inlineBytes = 0;
+const studiesRoot = resolve(
+  projectRoot,
+  process.env["UNIVERSITY_STUDIES_ROOT"] ?? "../local/studies",
+);
+let snippetBaked = 0;
+let snippetSkipped = 0;
+let snippetBytes = 0;
+let snippetFiles = 0;
+let snippetEvidence = 0;
 
 for (const studyId of readdirSync(upstream).sort()) {
   if (onlyStudy && studyId !== onlyStudy) continue;
@@ -138,6 +152,20 @@ for (const studyId of readdirSync(upstream).sort()) {
           delete exercise.expectedAnswer;
           delete exercise.rubric;
         }
+        snippetEvidence += (lesson.evidence ?? []).length;
+        const baked = bakeLessonEvidence({
+          studiesRoot,
+          studyId,
+          courseId: course.id,
+          evidence: lesson.evidence ?? [],
+          contentRoot,
+          sha,
+        });
+        snippetBaked += baked.baked;
+        snippetSkipped += baked.skipped;
+        snippetBytes += baked.bytes;
+        snippetFiles += baked.files;
+
         lesson.assets = (lesson.assets ?? []).map((asset) => {
           if (!asset.dataBase64) return asset;
           inlineBytes += asset.dataBase64.length;
@@ -244,6 +272,21 @@ console.log(
     `was ${(inlineBytes / 1048576).toFixed(1)} MB inline), ` +
     `${lexiconSenses} lexicon senses bundled.`,
 );
+
+if (snippetBaked === 0) {
+  console.log(
+    hasAnyStudyRepository(studiesRoot)
+      ? `import-courses: baked 0 evidence snippets (${snippetSkipped} cited ranges unreadable).`
+      : `import-courses: baked 0 evidence snippets (no checkout at ${studiesRoot}).`,
+  );
+} else {
+  console.log(
+    `import-courses: baked ${snippetBaked}/${snippetEvidence} evidence snippets ` +
+      `into ${snippetFiles} files (${(snippetBytes / 1048576).toFixed(2)} MB` +
+      (snippetSkipped > 0 ? `; ${snippetSkipped} skipped` : "") +
+      `).`,
+  );
+}
 
 if (unusableKeys.length > 0) {
   console.warn(

@@ -1,3 +1,4 @@
+import { arrow, autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -27,19 +28,56 @@ export function PathDialog({
   title,
   onClose,
   returnFocusTo,
+  anchorTo,
   children,
 }: {
   readonly open: boolean;
   readonly title: string;
   readonly onClose: () => void;
   readonly returnFocusTo?: HTMLElement | null;
+  /**
+   * The thing this card is about, so it can grow a tail pointing at it.
+   *
+   * Frame C5 is the difference between "this stone" and "a dialog": the bubble
+   * hangs off the node it belongs to, and the path stays visible around it.
+   * A card floating in the middle of the screen has lost which node you tapped
+   * by the time it finishes animating in.
+   *
+   * Kept separate from `returnFocusTo` even though every caller passes the same
+   * element today. They answer different questions — where focus goes on close,
+   * and what this is about — and a card opened from a menu would have the first
+   * without the second.
+   */
+  readonly anchorTo?: HTMLElement | null;
   readonly children: ReactNode;
 }) {
   const headingId = useId();
   const layerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const arrowRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+
+  const anchor = anchorTo ?? returnFocusTo ?? null;
+  const anchored = anchor !== null;
+  const { refs, floatingStyles, middlewareData, placement } = useFloating({
+    open: open && anchored,
+    placement: "bottom",
+    whileElementsMounted: autoUpdate,
+    middleware: [
+      offset(14),
+      // The node can sit anywhere on a winding path, including hard against an
+      // edge, so the card flips above it and slides along rather than hanging
+      // off screen.
+      flip({ padding: 16 }),
+      shift({ padding: 16 }),
+      arrow({ element: arrowRef, padding: 12 }),
+    ],
+  });
+
+  useEffect(() => {
+    refs.setReference(anchor);
+  }, [anchor, refs]);
 
   useEffect(() => {
     if (!open) return;
@@ -96,17 +134,40 @@ export function PathDialog({
 
   if (!open || typeof document === "undefined") return null;
 
+  const arrowData = middlewareData.arrow;
+  const arrowSide = ({ top: "bottom", bottom: "top", left: "right", right: "left" } as const)[
+    placement.split("-")[0] as "top" | "bottom" | "left" | "right"
+  ];
+
   return createPortal(
-    <div ref={layerRef} className="path-card-layer">
+    <div
+      ref={layerRef}
+      className={anchored ? "path-card-layer path-card-layer--anchored" : "path-card-layer"}
+    >
       <div className="path-card__scrim" onClick={onClose} />
       <div
-        ref={cardRef}
+        ref={(node) => {
+          cardRef.current = node;
+          if (anchored) refs.setFloating(node);
+        }}
         className="path-card"
+        style={anchored ? floatingStyles : undefined}
         role="dialog"
         aria-modal="true"
         aria-labelledby={headingId}
         tabIndex={-1}
       >
+        {anchored ? (
+          <div
+            ref={arrowRef}
+            className="path-card__arrow"
+            style={{
+              left: arrowData?.x === undefined ? undefined : `${arrowData.x}px`,
+              top: arrowData?.y === undefined ? undefined : `${arrowData.y}px`,
+              [arrowSide]: "-7px",
+            }}
+          />
+        ) : null}
         <header className="path-card__header">
           <h2 id={headingId} className="path-card__title">
             {title}

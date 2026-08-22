@@ -35,6 +35,8 @@ export interface EvidenceAnchor {
   readonly lineStart: number;
   readonly lineEnd: number;
   readonly note?: string;
+  /** Content-addressed snippet written at import; absent when no checkout baked it. */
+  readonly snippetUrl?: string;
 }
 
 export interface Card {

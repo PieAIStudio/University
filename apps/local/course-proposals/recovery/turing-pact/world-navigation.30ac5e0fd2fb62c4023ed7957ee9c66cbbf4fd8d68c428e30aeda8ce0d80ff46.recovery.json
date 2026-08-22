@@ -1,0 +1,1443 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 37,
+  "course": {
+    "id": "world-navigation",
+    "title": "导航是产品结构的外化",
+    "description": "用户从打开应用到正在玩的每条岔口都是产品决策：传送门状态机、大厅座位与能力闸、房内话题与气泡如何暴露你认为什么最重要。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "用 PortalState 状态机说明进房主路径，并区分 invalid 与 error 的产品后果",
+      "解释 resolvePortalHostIntent 与 guest 免费路径如何外化定价结构",
+      "对照 phase→WorldLobbyMode 与 WebGL 闸门，说明世界通道何时才启动",
+      "说明 callout 上限、人机同模 typing 与 history/live 双时钟如何导航注意力"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "realtime-presence"
+    ],
+    "trackId": null,
+    "units": [
+      {
+        "id": "portal-as-gate",
+        "title": "传送门是产品闸门",
+        "objective": "我能用传送门状态机把 invite 和 resume 的歧义收成状态，并分清做客和开桌不是同一条路径。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "url-entry-is-contract",
+            "title": "链接上同时挂了 invite 和 resume，你会进哪张桌？",
+            "content": "# 链接上同时挂了 invite 和 resume，你会进哪张桌？\n\n## 现象\n\n传送门深链用查询串表达意图：`invite` 表示受邀入座，`resume` 表示回到已有房间。两条各自合法。调用方只把整段查询串交给解析函数，没有第二层人工仲裁。\n\n你现在面对一条真实会出现的串：`?invite=ABC123&resume=abc123`——两个键同时在。无关参数（比如推广标记）解析时会被忽略，不会自己变成一种入口。\n\n:::detail[查询串是什么？]\n就是地址问号后面那截：`invite=…`、`resume=…`。浏览器把它当成键值表。解析函数只认这两个键；别的键在不在，都不构成进房意图。\n\n两个键各自合法：只带邀请，你是客人；只带恢复，你是回头客。冲突发生在「两个都在」——不是码好不好看，是意图没法同时成立。\n:::\n\n## 先猜一下\n\n双参数冲突时，解析层会默默挑一个继续进房，还是整段入口作废？这个选择主要防的是哪类事故？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n整段作废：无效入口，原因是歧义，不合并、不择优。防的是参数被污染时你静默走错桌。\n\n## 为什么是这样\n\n入口结果是闭集，没有「尽量进门」的第五态：空闲、邀请、恢复，或带原因的无效。\n\n[[evidence:src/features/world-portal/domain/portalEntry.ts:9-12]]\n\n:::detail[为什么没有「优先邀请」这种第五态？]\n第五态一旦存在，调用方就会在冲突时继续往下走。测试也只能断言「进了某一张桌」，没法断言「这是错桌」。闭集成四类，冲突必须停在无效。\n\n无效还带原因：码形不对，或两个键同时在。原因不同，界面可以共用一张作废壳，分析却能分开数。\n:::\n\n解析先读两个键；**只要两个都出现，立刻返回歧义**，后面的码规范化根本不会跑。码脏不脏、够不够六位，都轮不到：\n\n[[evidence:src/features/world-portal/domain/portalEntry.ts:16-34]]\n\n:::detail[两个键都在、而且码都是歪的，会报畸形吗？]\n不会。歧义判断写在最前面。两个键都不是空，直接返回无效、码是空串、原因是歧义。清洗和「必须恰好六位」只走单参数那条。\n\n优先级是：**两个键都在 → 歧义；只有一个键但码不干净 → 畸形；一个都没有 → 空闲。** 产品经理若要求「优先 invite」，就是把第一刀砍掉，让污染链接静默走邀请桌。\n:::\n\n单参数路径上你才谈码形：只留字母数字、大写、截到 6 位；清洗后长度也必须恰好 6，否则是畸形，不是「凑合用前缀」：\n\n[[evidence:src/features/world-portal/domain/portalStateMachine.ts:40-45]]\n\n:::detail[为什么清洗后还要再量一次原始串？]\n规范化会截到六位。若只看截完的结果，一串七位垃圾也能变成看起来合法的六位码。解析还要求：原始串里字母数字不多不少正好六个。多了、少了、夹了符号洗完变短，都是畸形。\n\n这把尺和状态机提交手输码用的是同一个清洗函数。链接入口和手打入口，对「什么算一张桌的名字」口径一致。\n:::\n\n解析结果压进初始状态时，无效原样落成作废画面，不会被改写成空闲或某条进房态：\n\n[[evidence:src/features/world-portal/domain/portalEntry.ts:36-42]]\n\n:::detail[作废画面会不会被当成空闲传送门？]\n不会。空闲才让你手打码或走开桌。无效带着原因直接进作废壳，主按钮是改码，不是「先挑一张桌试试」。\n\n你要是改成「双参数时优先邀请」，分享链接被书签叠参、短链回写污染时，你会以为在恢复旧桌，实际却进了邀请桌——而且自动化很难断言「错桌」。显式歧义把冲突变成可测的错误态。\n:::\n\n## 自检\n\n**问：** 地址同时含 `invite` 与 `resume` 时，解析结果里原因字段的字面量是什么？\n\n**问：** 房间码清洗后不足 6 位，入口会进邀请或恢复吗？落到什么原因？\n\n**问：** 产品经理要求「两个参数都在时优先 invite」。你用这节课的机制怎么反驳？\n\n## 一句话\n\n**导航入口的歧义必须变成状态，不能变成默认偏好。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalEntry.ts",
+                "lineStart": 9,
+                "lineEnd": 12,
+                "nodeIds": [],
+                "note": "ParsedPortalEntry：idle / invitation / resume / invalid。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalEntry.ts",
+                "lineStart": 16,
+                "lineEnd": 34,
+                "nodeIds": [],
+                "note": "双键先 ambiguous；单键才 normalize，长度不对 malformed。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalStateMachine.ts",
+                "lineStart": 40,
+                "lineEnd": 45,
+                "nodeIds": [],
+                "note": "normalizeRoomCode 只留字母数字、大写、截到 6 位。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalEntry.ts",
+                "lineStart": 36,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "portalStateFromEntry 把 invalid 原样落成 status: invalid。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "ambiguous-both-params",
+                "kind": "basic",
+                "front": "URL 同时有 invite 与 resume 时，parsePortalEntry 返回什么 reason？为什么不优先其中一个？",
+                "back": "reason 是 ambiguous。优先规则会在参数污染时静默走错桌，显式失败更可测。",
+                "tags": [
+                  "portal",
+                  "entry-contract"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/domain/portalEntry.ts",
+                    "lineStart": 20,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "双参数返回 ambiguous"
+                  }
+                ]
+              },
+              {
+                "id": "malformed-six",
+                "kind": "basic",
+                "front": "房间码清洗后不足 6 位时，入口状态是什么？",
+                "back": "invalid + reason malformed；不进入 invitation/resume。",
+                "tags": [
+                  "portal",
+                  "entry-contract"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/domain/portalEntry.ts",
+                    "lineStart": 28,
+                    "lineEnd": 31,
+                    "nodeIds": [],
+                    "note": "长度校验失败返回 malformed"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "entry-ambiguous-recall",
+                "kind": "short-answer",
+                "title": "双参数结果",
+                "prompt": "URL 同时含 invite 与 resume 时，ParsedPortalEntry.reason 的字符串是什么？",
+                "expectedAnswer": "ambiguous",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/domain/portalEntry.ts",
+                    "lineStart": 20,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "ambiguous 字面量"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "portal-state-machine",
+            "title": "点「再试一次」之后，进房从哪条路径接着走？",
+            "content": "# 点「再试一次」之后，进房从哪条路径接着走？\n\n## 你看到的结果\n\n你在传送门里手输六位码并提交。请求失败后，界面出现「再试一次」；成功时又是另一套提示。邀请进房、恢复旧桌、手输码，三条入口最后都要经过同一次 join。这三条会在状态里记成不同的来源名。\n\n同一套遮罩按当前画面换壳。你点的每个按钮只派发一个事件，不在点击里写「失败了该不该重试」。\n\n:::detail[来源名是干什么的？]\n邀请、恢复、手输码最后都调用同一次做客 join，但产品要知道你是从分享链接来的、从旧桌回来的，还是在首页手打的。来源名就三档：`invitation`、`resume`、`code`。\n\n它跟房间里坐了几个人无关。状态机不数人数，也不写「满六人就停」。六这个数字在这里管的是房间码长度：不够六位，进不了「正在加入」，刚建好的桌也进不了「桌已开好」。人满是另一次 join 失败，走可恢复那条。\n:::\n\n## 先猜一下\n\n可恢复失败上点「再试一次」、回到「正在加入」时，来源名还会在吗？若还在，它是在哪一站被写进状态、又靠什么一直带着走的？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n还在：重试用当前失败态上的码与来源原样重建「正在加入」。来源在第一次进入「正在加入」时写入，之后由状态机沿状态传递。\n\n## 一站一站往回走\n\n**第 1 站：状态与事件是闭集。** 你能看见的画面只能是这些状态之一；你的动作与异步结果都是事件。做客路径会带上来源；开桌另有开桌卡和「桌已开好」，不走 join。\n\n[[evidence:src/features/world-portal/domain/portalStateMachine.ts:6-34]]\n\n:::detail[桌已开好为什么也在这张闭集里？]\n上一版只有做客成功。现在建房成功会切到 `hosted`：邀请卡、分享、再进自己的桌。事件里对应 `table-hosted`。\n\n它不是做客 join 的终点。你不会从「正在加入」走到「桌已开好」；那是开桌岔口的终点。重试和来源只活在做客那条线上。把 `hosted` 写进闭集，是为了不让开桌成功去复用做客成功的壳。\n:::\n\n**第 2 站：进入「正在加入」时写入来源。** 手输只在空闲且码长为 6 时生效，并把来源定为 `code`；否则状态机原样返回，你进不了「正在加入」：\n\n[[evidence:src/features/world-portal/domain/portalStateMachine.ts:66-73]]\n\n:::detail[六位不够为什么连请求都不发？]\n码不够六位，join 也只会得到畸形输入。状态机在进「正在加入」之前先卡死，首页的 effect 也就不会去打网络。邀请和恢复同样：来源写进去之前，内部还会再看一眼码长，不够就退回空闲。\n\n这是码长上限，不是人数上限。桌上能坐几个，不在这台状态机里数。\n:::\n\n**第 3 站：异步结果在状态机分叉，不在界面。** 成功时你仍带着同一来源；永久失败（过期 / 找不到）丢掉来源、进作废；其余进可恢复并**保留**来源。你点的重试只从可恢复回到「正在加入」，字段原样复用：\n\n[[evidence:src/features/world-portal/domain/portalStateMachine.ts:82-100]]\n\n:::detail[重试为什么必须抄原来的来源？]\n若重试时改写成手输码，分析漏斗会把一次分享进入记成首页手打，房主也看不到「这人是从邀请进来又重试的」。状态机不重新猜测你从哪来，只把写下的那一档原样搬回去。\n\n建房成功是另一条事件：码清洗后必须恰好六位才进入「桌已开好」，否则停在原地。六位规则在做客提交和开桌落成上是同一把尺。人满不会在这里被数出来——`full` 是 join 失败分类给的字，重试时连同来源一起回到「正在加入」。\n:::\n\n**第 4 站：遮罩只读状态选壳。** 你在可恢复上看到的主按钮是重试，在永久错上只有改码；这里不重写「哪种失败可重试」：\n\n[[evidence:src/features/world-portal/WorldPortalOverlay.tsx:180-204]]\n\n:::detail[开桌成功的壳在哪？]\n做客失败那两块上方，遮罩还认 `hosted`：换成邀请卡，不再显示重试。关遮罩时若停在这一态，首页会带你进房。\n\n做客主路径仍是：提交或接受 → 正在加入 → 成功 / 永久错 / 可恢复；可恢复再回正在加入。开桌是旁路，不借用重试键。\n:::\n\n你可以把主路径记成：\n\n```mermaid\nstateDiagram-v2\n  [*] --> idle\n  idle --> joining: submit-code\n  invitation --> joining: accept-invitation\n  resume --> joining: resume\n  joining --> success: join-succeeded\n  joining --> invalid: expired_or_notFound\n  joining --> error: full_network_unknown\n  error --> joining: retry-join\n  invalid --> idle: dismiss-error\n  error --> idle: dismiss-error\n  idle --> hostGate: open-own-table\n  hostGate --> idle: cancel-host\n  [*] --> hosted: table-hosted\n```\n\n## 再想想\n\n你若想顺着查询串看初始状态怎么来，见 [[lesson:url-entry-is-contract|链接上同时挂了 invite 和 resume，你会进哪张桌？]]；永久错与可恢复各自吃哪些失败码，见 [[lesson:failure-taxonomy|同样 join 失败，为什么有的只能改码、有的能重试？]]。\n\n## 自检\n\n**问：** 空闲下码长不足 6 时派发提交，状态会怎样？\n\n**问：** 可恢复失败上点重试，会丢掉来源名吗？\n\n**问：** 做客 join 成功之后，状态字面量是什么？\n\n## 一句话\n\n**导航岔口先固化成状态机，再谈文案与动效。**\n",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalStateMachine.ts",
+                "lineStart": 6,
+                "lineEnd": 34,
+                "nodeIds": [],
+                "note": "PortalState 含 hosted；PortalEvent 含 table-hosted。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalStateMachine.ts",
+                "lineStart": 66,
+                "lineEnd": 73,
+                "nodeIds": [],
+                "note": "submit-code 要求 idle 且码长 6，写入 source: code。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalStateMachine.ts",
+                "lineStart": 82,
+                "lineEnd": 100,
+                "nodeIds": [],
+                "note": "join-failed / join-succeeded / retry-join 沿用 source；六位才 hosted。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/WorldPortalOverlay.tsx",
+                "lineStart": 180,
+                "lineEnd": 204,
+                "nodeIds": [],
+                "note": "invalid 只改码，error 主按钮 retry-join。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "joining-only-six",
+                "kind": "basic",
+                "front": "idle 下码长不足 6 时 submit-code 会怎样？",
+                "back": "reducer 返回原 state，不进入 joining。",
+                "tags": [
+                  "portal",
+                  "state-machine"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/domain/portalStateMachine.ts",
+                    "lineStart": 66,
+                    "lineEnd": 70,
+                    "nodeIds": [],
+                    "note": "submit-code 要求 idle 且长度 6"
+                  }
+                ]
+              },
+              {
+                "id": "retry-keeps-source",
+                "kind": "basic",
+                "front": "error 上 retry-join 会丢掉 PortalGuestSource 吗？",
+                "back": "不会。重新 joining 时复用 state.source。",
+                "tags": [
+                  "portal",
+                  "state-machine"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/domain/portalStateMachine.ts",
+                    "lineStart": 97,
+                    "lineEnd": 100,
+                    "nodeIds": [],
+                    "note": "retry-join 保留 code 与 source"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "portal-success-status",
+                "kind": "short-answer",
+                "title": "成功状态名",
+                "prompt": "join-succeeded 后 PortalState.status 的字面量是什么？",
+                "expectedAnswer": "success",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/domain/portalStateMachine.ts",
+                    "lineStart": 93,
+                    "lineEnd": 96,
+                    "nodeIds": [],
+                    "note": "join-succeeded → success"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "failure-taxonomy",
+            "title": "同样 join 失败，为什么有的只能改码、有的能重试？",
+            "content": "# 同样 join 失败，为什么有的只能改码、有的能重试？\n\n## 两个东西\n\njoin 请求抛错之后，产品表面上像同一种「进不去」。实现里却拆成两条路：\n\n- **永久错**：你只能关掉提示、回手输码。码本身废了，再试同一串没有意义。\n- **可恢复**：你有主按钮「再试一次」，也可以改码离开。码还在，环境可能变好。\n\n分类函数把原始异常收成一份闭集，状态机再决定走哪条路。这跟「三维世界画不出来」不是同一张失败表——那是设备能力闸，进房分类不管 GPU。\n\n:::detail[闭集是什么意思？]\n失败原因只允许几个事先写好的字。没有「随便一段英文错误信息」这种开放槽。界面按这几个字选文案和按钮，测试也能断言「满员一定能重试」。\n\n你若把后端原文直接抛到按钮上，网络抖动、房间不存在、桌已开局会挤成同一句「失败了」。分类是先把脏异常收成产品认识的几种，再决定人能做什么。进房这张表不管 GPU：三维世界要不要挂，是房间壳另一道能力闸，失败字完全不同。\n:::\n\n## 先猜一下\n\n房间已满时，你会落在永久错还是可恢复？若把满员也打成只能改码的那条，坏的是谁的体验？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n满员进可恢复（能重试）。若打进永久错，你只能改码离开，没法在原码上「等有空位再进」——可恢复问题被做成死胡同。\n\n## 逐条对照\n\n失败原因本身是闭集：进房失败是 `expired`、`not-found`、`full`、`network`、`unknown`；入口作废另有 `malformed`、`ambiguous`，和过期、找不到一起算永久错。\n\n[[evidence:src/features/world-portal/domain/portalStateMachine.ts:3-4]]\n\n:::detail[为什么进房失败和入口作废要两套字？]\n进房失败来自一次真正的 join 请求：房间过期、查无此桌、已满或已开局、网络抖动。入口作废发生在请求之前：码形不对，或链接上两个意图撞车。\n\n两套字避免「还没出门就当成进房失败」。你在链接上同时带了邀请和恢复，不应该先去打一次 join，再假装是房间不存在。\n:::\n\n分类看 message / code / details。Postgres `pgrst116`、\"0 rows\" 会变成找不到；含 expired/过期 → 过期；full/已满/已开始 → 满员；network/timeout → 网络：\n\n[[evidence:src/features/world-portal/domain/portalJoin.ts:22-48]]\n\n:::detail[「已开始」为什么也算满员？]\n做客真正调用的 join 在房间不是「等人」时会抛「游戏已开始」。分类把 already started、已开始、full、已满收进同一个 `full`。产品文案也写成「满员或已经开局」。\n\n对你来说，这两种都是「这张桌此刻进不去，但码未必废」。过几秒有人离开，或房主重开一桌，原码或新码都可能再试。所以它不走永久错。状态机也不在这里数「已经坐了几个人」——没有「满六人」常量，只有这句错误被收成 `full`。\n\n分类按字段顺序扫：先看 code 是不是 `pgrst116`，再看「要对象却 0 行」，再看过期，再看找不到，最后才是满员和网络。后端若回 `PGRST116`，会先被收成小写再匹配。对不上这些短语的，落到 `unknown`，仍然可重试——未知抖动不当成死码。\n:::\n\n状态机把闭集劈成两岔——**只有**过期 / 找不到进永久错，其余进可恢复，并带上你当初是邀请、恢复还是手输码：\n\n[[evidence:src/features/world-portal/domain/portalStateMachine.ts:82-92]]\n\n:::detail[为什么只有这两种进永久错？]\n过期和找不到：再点同一码只会制造噪音。满员、网络、未知：再试同一码可能成功。分叉写在状态机里，不写在按钮的 onClick 里。状态必须先是「正在加入」，否则这条失败事件会被丢掉——迟到的报错不会把你从空闲踢进作废。\n\n可恢复那条会把来源一起留下。你稍后点「再试一次」，还走原来那条做客入口，不会变成另一次手输码。永久错丢掉来源，因为下一步只允许改码，不再沿用邀请或恢复。\n:::\n\n文案函数也按岔口分开：永久错用过期/不存在正文；可恢复用满员/网络/未知正文——你读到的句子和按钮能力是对齐的：\n\n[[evidence:src/features/world-portal/WorldPortalOverlay.tsx:72-88]]\n\n:::detail[文案和按钮为什么必须同一张表？]\n若满员走可恢复状态、文案却写成「房间不存在」，你会点「再试一次」却以为码废了。句子选自同一份 reason，主按钮才跟分类一致。\n\n永久错那块没有重试键，只有改码。可恢复那块主按钮是重试，旁边才是改码。畸形和歧义也会落到永久错壳，用入口作废正文，而不是满员那句。你不用在界面上再猜「这次算哪一种失败」。句子和按钮必须同一张表。\n:::\n\n| | 永久错 `invalid` | 可恢复 `error` |\n| --- | --- | --- |\n| 典型 reason | expired, not-found（外加入口 malformed/ambiguous） | full, network, unknown |\n| 你能点的主路径 | 改码 | 重试，也可改码 |\n| 再点同一码 | 无意义（房已死/不存在） | 可能成功（空位、网络恢复） |\n\n## 什么时候用哪个\n\n- **码本身错了或房间已结束** → 永久错。你再试同一码只会制造噪音；产品应逼你改输入。\n- **环境暂时不对**（满员或已开局、断网、未知抖动）→ 可恢复。你保留码与来源，一键再试。\n- **不要**把所有失败都做成「失败 + 重试」：房间不存在时的重试按钮是在教用户做无用功。\n- **不要**把满员收进永久错：满员是时间问题，不是码问题。\n- **不要**把 WebGL 画不出来塞进这张表：那是进房之后、世界挂不挂得上的设备闸。\n\n## 再想想\n\n`retry-join` 如何带着来源回到进房中，见 [[lesson:portal-state-machine|点「再试一次」之后，进房从哪条路径接着走？]]。三维世界画不出来为什么整闸关掉，见 [[lesson:webgl-gate|为什么 WebGL 一失败就不挂 3D 世界？]]。\n\n## 自检\n\n**问：** 错误 code 为 `pgrst116` 时，分类函数返回什么？\n\n**问：** join 因过期失败时，用户主路径是重试还是改码？\n\n**问：** 房间已满时失败字面量是什么？若误打进永久错会怎样？\n\n## 一句话\n\n**失败分类是导航产品决策，不是日志字段。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalStateMachine.ts",
+                "lineStart": 3,
+                "lineEnd": 4,
+                "nodeIds": [],
+                "note": "PortalJoinFailure 与 PortalInvalidReason 闭集。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalJoin.ts",
+                "lineStart": 22,
+                "lineEnd": 48,
+                "nodeIds": [],
+                "note": "classifyPortalJoinFailure：pgrst116/0 rows→not-found，已开始/已满→full。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalStateMachine.ts",
+                "lineStart": 82,
+                "lineEnd": 92,
+                "nodeIds": [],
+                "note": "join-failed：expired/not-found 进 invalid，其余进 error 并保留 source。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/WorldPortalOverlay.tsx",
+                "lineStart": 72,
+                "lineEnd": 88,
+                "nodeIds": [],
+                "note": "invalid 与 retryable 文案按 reason 分岔。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "expired-no-retry",
+                "kind": "basic",
+                "front": "join 因 expired 失败时，用户主路径是 retry 还是改码？",
+                "back": "改码：状态进 invalid，按钮是 dismiss-error / editCode。",
+                "tags": [
+                  "portal",
+                  "failure-taxonomy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/domain/portalStateMachine.ts",
+                    "lineStart": 85,
+                    "lineEnd": 88,
+                    "nodeIds": [],
+                    "note": "expired 进入 invalid"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/WorldPortalOverlay.tsx",
+                    "lineStart": 180,
+                    "lineEnd": 189,
+                    "nodeIds": [],
+                    "note": "invalid UI 无 retry 按钮"
+                  }
+                ]
+              },
+              {
+                "id": "pgrst-not-found",
+                "kind": "basic",
+                "front": "错误 code 为 pgrst116 时，classifyPortalJoinFailure 返回什么？",
+                "back": "not-found。",
+                "tags": [
+                  "portal",
+                  "failure-taxonomy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/domain/portalJoin.ts",
+                    "lineStart": 28,
+                    "lineEnd": 30,
+                    "nodeIds": [],
+                    "note": "pgrst116 映射 not-found"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "full-maps-to",
+                "kind": "short-answer",
+                "title": "满员失败码",
+                "prompt": "房间已满时 PortalJoinFailure 字面量是什么？",
+                "expectedAnswer": "full",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/domain/portalJoin.ts",
+                    "lineStart": 34,
+                    "lineEnd": 39,
+                    "nodeIds": [],
+                    "note": "already started/full/已开始/已满 → full"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "host-is-not-guest",
+            "title": "为什么「进世界」不能做成同一个按钮？",
+            "content": "# 为什么「进世界」不能做成同一个按钮？\n\n## 情境和约束\n\n传送门表面上像「进房」：有人来做客，有人要开自己的桌。两边都要过导航，但经济模型相反——做客零摩擦，开桌要账号和电量。\n\n你若只放一个「进入」按钮，收银（扣电量）和安保（登录）会抢同一条文案：匿名用户、零电量用户、已付费可开桌的用户挤在同一套确认流里，失败原因也对不齐。\n\n约束写在两处：决策函数只吃「是不是匿名」和「手里有几格电」，输出三种决定之一——`account-gate`、`entitlement-denied`、`create`；首页在派发「开自己的桌」之前先问这个函数，再决定是弹出开桌卡、只闪一句电量不够，还是直接建桌。先碰哪一个条件，是下一问。\n\n:::detail[做客和开桌为什么经济模型相反？]\n做客是被邀请或手输码进别人的桌：产品要你摩擦尽量低，所以不先查电量。开桌是你当房主：要有可扣费的账号，还要至少一格电。\n\n同一按钮会把「请先登录」和「电量不足」挤成一句「进不去」。匿名的人会被领去充值，零电量的人会去填登录表。分岔就是为了让失败原因跟真正挡住你的那件事一致。\n:::\n\n## 先猜一下\n\n这两个条件里，函数会先判哪一个？若把顺序反过来，匿名且电量为 0 的用户会先撞上哪种决定——那为什么是假原因？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n先判匿名 → `account-gate`，再判电量不足 → `entitlement-denied`，否则 `create`。顺序反过来会先给 `entitlement-denied`：匿名没有可扣电量的主体，电量不足是假原因。\n\n## 代价和收益\n\n开桌意图是三级闸门，没有旁路：\n\n[[evidence:src/features/world-portal/domain/portalHost.ts:1-15]]\n\n:::detail[三种决定分别把你送去哪？]\n`account-gate`：你还没登录，先去认人。`entitlement-denied`：你登录了但电不够，不该再走开桌卡。`create`：两个条件都过了，可以真去建房间。\n\n函数本身不弹窗、不改传送门状态。它只回答「现在该挡哪一层」。谁来问、问完做什么，在首页。匿名且电量为 0 时，先挡登录是真原因：没有账号，电量数字没有可扣的主体。\n:::\n\n首页截住「开自己的桌」：先问决策函数。匿名才把传送门推进开桌卡；电量不够只闪提示，不进开桌卡；能创建则直接建房，再把状态打成「桌已开好」。\n\n[[evidence:src/pages/HomePage.tsx:290-320]]\n\n:::detail[状态机里不是写着点开桌就进开桌卡吗？]\n状态机那一行仍然是：只有空闲时点开桌，才进入开桌卡。但首页在把这个动作交给状态机之前先分流了——匿名才派发那一下；电不够根本不派发；能创建则改派「桌已开好」。\n\n所以你不能只读状态机就说「开桌一定先看到三步卡」。产品真路径是：决策函数选岔口，状态机只承接被派进来的那一种。做客的邀请 / 恢复 / 手输码从不走进开桌卡。开桌卡上点继续，还会再走一遍建房函数：若此时仍是匿名，会改弹出登录，而不是假装已经能扣电。\n:::\n\n状态机仍保留开桌卡和取消回空闲；建房成功另有「桌已开好」，码必须够六位才收下：\n\n[[evidence:src/features/world-portal/domain/portalStateMachine.ts:74-81]]\n\n:::detail[桌已开好和做客成功有何不同？]\n做客成功表示你已经作为客人 join 进去，下一步进房间页。桌已开好表示你刚把桌子建出来，界面换成邀请卡：分享码、再进自己的桌。\n\n关传送门时若正停在「桌已开好」，首页会直接带你进房，而不是把一张新桌悄悄丢掉。六位不够的码，状态机拒绝切到「桌已开好」，避免一张残码桌出现在邀请卡上。建房成功派发的是 `table-hosted`，不是做客那条 `join-succeeded`。\n:::\n\n你在开桌卡看到的是单独卡片：账号 / 电池 / 邀请三步，外加做客免费提示——结构上外化「谁付钱」：\n\n[[evidence:src/features/world-portal/WorldPortalOverlay.tsx:141-163]]\n\n:::detail[空闲传送门怎么强调做客免费？]\n空闲主界面用成功色徽章挂「做客免费」，和开桌那条皇冠磁贴并排。做客路径保持低文案、低步骤；开桌路径才展开三步和警告色徽章。\n\n分析也按来源分桶：邀请算分享，恢复算房间，手输码算首页，模式固定直播。回溯漏斗时，不会把邀请做客和手输码糊成同一条。开桌意图另记 `host_intent`，账号闸再记一笔，不会混进做客 join 的次数里。漏斗因此能分开看「谁想来开桌」和「谁已经坐到别人桌上」。\n:::\n\n分析按来源分桶，模式固定 live：\n\n[[evidence:src/features/world-portal/domain/portalEntry.ts:43-47]]\n\n**收益：** 导航即定价。做客路径保持低摩擦；你开桌失败时原因与真实阻塞一致；漏斗可分。\n\n**代价：** 多一个开桌卡状态、一个「桌已开好」状态，外加首页分流；「进世界」不能再假装是单一按钮，你设计和实现都要维护岔口。\n\n## 什么时候该反过来\n\n- **开桌也免费、无账号门槛**：三级闸门是噪音，你应让空闲直接创建，不必开桌卡。\n- **必须先展示配额再逼登录**（例如先让匿名用户看到「开桌要 1 电量」再注册）：你仍可在文案层提示电量，但**决策函数仍应先挡匿名**——否则匿名会走进充值/购电死路。\n- **做客也要登录或付费**：与当前模型相反；那时做客路径也要闸门，不能只靠免费徽章。\n\n## 再想想\n\n你若要顺着进房主路径看状态机怎么承接重试和来源，见 [[lesson:portal-state-machine|点「再试一次」之后，进房从哪条路径接着走？]]。\n\n## 自检\n\n**问：** 匿名为真时，开桌决策函数返回什么字面量？\n\n**问：** 为什么先判匿名再判电量？\n\n**问：** 首页在什么情况下才会把传送门推进开桌卡？\n\n## 一句话\n\n**谁付钱、谁免费，必须在导航岔口可见，不能靠一个「进入」按钮硬扛。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalHost.ts",
+                "lineStart": 1,
+                "lineEnd": 15,
+                "nodeIds": [],
+                "note": "resolvePortalHostIntent：先匿名 account-gate，再电量 entitlement-denied，否则 create。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/HomePage.tsx",
+                "lineStart": 290,
+                "lineEnd": 320,
+                "nodeIds": [],
+                "note": "首页先问决策函数：匿名才进 host-gate，电量不足只闪提示，否则直接建桌。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalStateMachine.ts",
+                "lineStart": 74,
+                "lineEnd": 81,
+                "nodeIds": [],
+                "note": "open-own-table / cancel-host / table-hosted（六位码才进 hosted）。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/WorldPortalOverlay.tsx",
+                "lineStart": 141,
+                "lineEnd": 163,
+                "nodeIds": [],
+                "note": "host-gate 三步卡与做客免费提示。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-portal/domain/portalEntry.ts",
+                "lineStart": 43,
+                "lineEnd": 47,
+                "nodeIds": [],
+                "note": "portalAnalyticsProperties 按来源分桶，mode 固定 live。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "guest-free-badge",
+                "kind": "basic",
+                "front": "idle 传送门主界面用什么视觉信号强调做客免费？",
+                "back": "GameBadge 展示 labels.guestFree（成功 tone）。",
+                "tags": [
+                  "portal",
+                  "host-gate"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/WorldPortalOverlay.tsx",
+                    "lineStart": 208,
+                    "lineEnd": 210,
+                    "nodeIds": [],
+                    "note": "guestFree 徽章在 portal hero"
+                  }
+                ]
+              },
+              {
+                "id": "host-order",
+                "kind": "basic",
+                "front": "resolvePortalHostIntent 为什么先看 isAnonymous 再看 batteries？",
+                "back": "匿名没有扣费主体；先报电量不足会掩盖真正阻塞是登录。",
+                "tags": [
+                  "portal",
+                  "host-gate"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/domain/portalHost.ts",
+                    "lineStart": 12,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "先 account-gate 再 entitlement-denied"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "host-anon-decision",
+                "kind": "short-answer",
+                "title": "匿名开桌决策",
+                "prompt": "isAnonymous 为 true 时 resolvePortalHostIntent 返回什么字面量？",
+                "expectedAnswer": "account-gate",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-portal/domain/portalHost.ts",
+                    "lineStart": 12,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "匿名返回 account-gate"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "lobby-as-structure",
+        "title": "大厅是空间结构",
+        "objective": "我能把对局 phase 映成世界模式，把神秘座位放进大厅叙事，并按 WebGL 能力决定懒加载世界和频道。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "phase-to-mode",
+            "title": "对局 phase 一变，世界为什么换了交互？",
+            "content": "# 对局 phase 一变，世界为什么换了交互？\n\n## 你看到的结果\n\n你进了同一间房间，URL 没换。服务端阶段从「等人」跳到「开打」时，你刚才还能在酒馆位之间走动的世界，焦点压到了桌面；到了「散场」，又像出口区。换的不是另一条路由页面——还是这个房间壳在换「世界允许你干什么」。\n\n服务端有一套阶段名，世界壳有一套模式名，画布引擎还有一套。你看见交互变了，是名字在换。\n\n:::detail[「阶段名」和「模式名」差在哪？]\n阶段名是对局生命周期：还没开、等人、开打、散场。它跟「这局进行到哪」有关，房间里所有人共享同一份。\n\n模式名是世界壳准备怎么接待你：还在装、让你闲逛、把焦点压到桌面、散场出口。同一间房可以换模式，不必换路由。引擎再吃第三套更短的名字，决定走动和入座默认开不开。\n\n你若把三套名字当成同一张表，后面就会把「开打」直接写进引擎——那正是这节课要拆开的地方。\n:::\n\n## 先猜一下\n\n从服务端阶段名到画布引擎真正吃的模式，代码会不会直接一对一贴过去？还是先换成另一套产品名，再压成引擎名？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不直接贴：先换成产品侧世界模式，再在画布里压成引擎模式。\n\n## 一站一站往回走\n\n### 第 1 站：房间页把阶段喂进去\n\n直播房读的是本机对局阶段，当场换成世界壳模式，再往下传：\n\n[[evidence:src/pages/RoomPage.tsx:136-137]]\n\n:::detail[这一站为什么不直接把阶段丢给画布？]\n房间页认的是对局阶段：空闲、等人、开打、散场。画布认的是世界壳模式。两边词汇不同，房间页必须先翻译，不能把服务端字符串原样塞进三维世界。\n\n功能开关在这里写死为开。真要不要挂三维世界，还要另过设备能力闸——那是后一节的事。这节课只看：阶段一变，模式名先变。\n:::\n\n### 第 2 站：阶段 → 产品世界模式\n\n四段映射写死在座位模块里：`waiting→lobby`，`playing→overlay`，`finished→epilogue`，其余（含 `idle`）→`loading`。\n\n[[evidence:src/features/world-lobby/avatarPlacement.ts:21-26]]\n\n:::detail[未知阶段为什么落到 loading？]\n`idle` 是本机还没对齐房间的空档。若此时按大厅打开走动和入座，你会在半初始化的世界上点来点去。落到 `loading`，等于先关上交互，等阶段变成一个认识的值。\n\n默认分支也接住以后新加、但世界壳还不认识的阶段名。宁可停在装载，也不假装认识。\n:::\n\n### 第 3 站：两套类型故意分开\n\n对局生命周期是 `idle | waiting | playing | finished`；世界壳是 `loading | lobby | overlay | epilogue`。\n\n[[evidence:src/features/world-lobby/worldLobbyTypes.ts:4-7]]\n\n:::detail[playing 和 overlay 为什么不能当同义词？]\n一个是服务端阶段，一个是产品给世界用的模式名。类型分开，编译器就不会让你把「开打」直接传给只吃世界模式的函数。\n\n你若图省事合成一套字符串，下一回改对局阶段就会误伤世界交互。中间多一层名字，就是把「对局中的世界」从「大厅」语义里拆出去。\n:::\n\n### 第 4 站：产品模式 → 引擎模式\n\n第二层：`overlay→table`，`epilogue→epilogue`，其余（`loading` / `lobby`）→`tavern`。所以阶段一到 `playing`，引擎侧看到的是 `table`，不是继续叫 lobby。\n\n[[evidence:src/features/world-lobby/WorldLobbyCanvas.tsx:80-84]]\n\n:::detail[loading 和 lobby 为什么都进酒馆？]\n引擎只认三种世界：酒馆闲逛、桌面焦点、散场。装载和等人在引擎眼里都还是酒馆布景，差别在产品层：`loading` 不该开交互，`lobby` 才让你走动入座。\n\n`playing` 不沿用 lobby 这个词，是因为名称绑着「等人闲逛」。走动、入座的默认开关若仍挂在大厅语义上，对局中会误开。中间多一层 `overlay`，再压成 `table`，桌面焦点才跟大厅脱钩。\n:::\n\n## 自检\n\n**问：** `phase` 为 `waiting` 时，产品侧世界模式是什么？\n\n**问：** `overlay` 经 `runtimeMode` 对应哪个引擎模式？\n\n**问：** `phase` 为 `finished` 时，`resolveWorldLobbyMode` 返回什么？\n\n## 一句话\n\n**阶段名经两层映射决定世界允许什么，而不只是同一房间换皮。**\n",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/RoomPage.tsx",
+                "lineStart": 136,
+                "lineEnd": 137,
+                "nodeIds": [],
+                "note": "房间页用 gamePhase 调用 resolveWorldLobbyMode。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-lobby/avatarPlacement.ts",
+                "lineStart": 21,
+                "lineEnd": 26,
+                "nodeIds": [],
+                "note": "waiting→lobby、playing→overlay、finished→epilogue，其余 loading。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-lobby/worldLobbyTypes.ts",
+                "lineStart": 4,
+                "lineEnd": 7,
+                "nodeIds": [],
+                "note": "RoomGamePhase 与 WorldLobbyMode 两套类型分开。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/world-lobby/WorldLobbyCanvas.tsx",
+                "lineStart": 80,
+                "lineEnd": 84,
+                "nodeIds": [],
+                "note": "runtimeMode：overlay→table，epilogue→epilogue，其余 tavern。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "playing-to-table",
+                "kind": "basic",
+                "front": "overlay 模式在 runtimeMode 里对应什么 WorldMode？",
+                "back": "table。",
+                "tags": [
+                  "lobby",
+                  "mode-map"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-lobby/WorldLobbyCanvas.tsx",
+                    "lineStart": 81,
+                    "lineEnd": 81,
+                    "nodeIds": [],
+                    "note": "overlay → table"
+                  }
+                ]
+              },
+              {
+                "id": "waiting-is-lobby",
+                "kind": "basic",
+                "front": "phase 为 waiting 时 WorldLobbyMode 是什么？",
+                "back": "lobby。",
+                "tags": [
+                  "lobby",
+                  "mode-map"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-lobby/avatarPlacement.ts",
+                    "lineStart": 22,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "waiting → lobby"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "finished-mode",
+                "kind": "short-answer",
+                "title": "终局模式",
+                "prompt": "phase 为 finished 时 resolveWorldLobbyMode 返回什么？",
+                "expectedAnswer": "epilogue",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/world-lobby/avatarPlacement.ts",
+                    "lineStart": 24,
+                    "lineEnd": 24,
+                    "nodeIds": [],
+                    "note": "finished → epilogue"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "mystery-seat-in-lobby",
+            "title": "桌上还没 AI，你为什么已经看见 ???？",
+            "content": "# 桌上还没 AI，你为什么已经看见 ???？\n\n## 现象\n\n你在 `waiting` 大厅里。真人只有三个，座位排布却多出一个别名是 `???` 的座。它的 `playerId` 不是某个真人 id，而是固定字符串 `mystery-ai-seat`；`avatarSeed` 是 `null`。此时服务端 `players` 里，可能还没有任何 `is_ai` 成员。\n\n## 先猜一下\n\n你猜：这个 `???` 会在哪些条件下被写进座位表？对局一旦开打（世界不再是 lobby 模式），它还会继续占着一个位置吗？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n只在 `mode === 'lobby'` 且 `players` 里还没有任何 `is_ai` 时，客户端 `assignWorldLobbySeats` 额外 push 一个 mystery 座；进入 playing / overlay 后函数不再插入它。\n\n## 为什么是这样\n\n你先分清两条路径。真正的 AI 玩家走 `toSeat` 投影：`is_ai` 时 `kind` 记成 `mystery`，否则是 `human`。\n\n```ts\nfunction toSeat(player: RoomPlayer, seatIndex: number, myPlayerId: string | null): WorldLobbySeat {\n  const transform = seatTransform(seatIndex);\n  return {\n    seatIndex,\n    playerId: player.id,\n    alias: player.alias,\n    avatarSeed: player.avatar_seed,\n    kind: player.is_ai ? 'mystery' : 'human',\n    isSelf: player.id === myPlayerId,\n    position: transform.position,\n    rotationY: transform.rotationY,\n  };\n}\n```\n\n[[evidence:src/features/world-lobby/avatarPlacement.ts:52-64]]\n\n还没有 AI 时，产品仍要你在开打前看见「桌上有隐藏的一方」。于是另有一个纯客户端占位构造器：固定 id、别名 `???`、种子为空。\n\n```ts\nconst MYSTERY_AI_SEAT_ID = 'mystery-ai-seat';\n```\n\n[[evidence:src/features/world-lobby/avatarPlacement.ts:10]]\n\n```ts\nfunction mysteryAiSeat(seatIndex: number): WorldLobbySeat {\n  const transform = seatTransform(seatIndex);\n  return {\n    seatIndex,\n    playerId: MYSTERY_AI_SEAT_ID,\n    alias: '???',\n    avatarSeed: null,\n    kind: 'mystery',\n    isSelf: false,\n    position: transform.position,\n    rotationY: transform.rotationY,\n  };\n}\n```\n\n[[evidence:src/features/world-lobby/avatarPlacement.ts:66-78]]\n\n你要找的插入条件写在分配函数末尾——双条件同时成立才 push：\n\n```ts\nexport function assignWorldLobbySeats({\n  players,\n  myPlayerId,\n  mode,\n}: AssignWorldLobbySeatsInput): WorldLobbySeat[] {\n  const seats = sortPlayers(players).map((player, index) => toSeat(player, index, myPlayerId));\n\n  if (mode === 'lobby' && !players.some((player) => player.is_ai)) {\n    seats.push(mysteryAiSeat(seats.length));\n  }\n\n  return seats;\n}\n```\n\n[[evidence:src/features/world-lobby/avatarPlacement.ts:80-92]]\n\n所以你看到的时间线是：\n\n1. 三个真人 waiting → 三个人类座 + 一个 `???`（`seatIndex` 接在后面）。\n2. 服务端稍后加入真正 AI → `players.some(is_ai)` 为真，不再插占位。\n3. 进入 playing / overlay → `mode !== 'lobby'`，整条 mystery 分支不跑，只投影真实 players。\n\n你若把 mystery 座也塞进 playing：对局中会多一个无权威状态的假玩家，投票、在场、结算都可能被脏数据污染。占位只属于「等待叙事」，不属于你能拿来当真的对局权威名单。\n\n## 自检\n\n**问：** mystery 占位座位的 `playerId` 字符串是什么？\n\n**问：** `assignWorldLobbySeats` 在什么条件下会 `push` `mysteryAiSeat`？\n\n**问：** 服务端已经有一个 `is_ai` 玩家时，还会再插 `???` 吗？\n\n## 一句话\n\n**大厅布局在讲规则：谁在、谁将在、谁必须神秘——`???` 是等待叙事，不是对局名单。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/avatarPlacement.ts",
+                "lineStart": 10,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "MYSTERY_AI_SEAT_ID 与 BASE_SEATS"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/avatarPlacement.ts",
+                "lineStart": 52,
+                "lineEnd": 78,
+                "nodeIds": [],
+                "note": "toSeat 与 mysteryAiSeat 字段"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/avatarPlacement.ts",
+                "lineStart": 80,
+                "lineEnd": 92,
+                "nodeIds": [],
+                "note": "lobby 且无 AI 时插入 mystery 座"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "when-mystery-insert",
+                "kind": "basic",
+                "front": "什么条件下 assignWorldLobbySeats 会 push mysteryAiSeat？",
+                "back": "mode 为 lobby 且 players 中尚无 is_ai。",
+                "tags": [
+                  "lobby",
+                  "seating"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/avatarPlacement.ts",
+                    "lineStart": 87,
+                    "lineEnd": 89,
+                    "nodeIds": [],
+                    "note": "lobby 且无 AI 时插入"
+                  }
+                ]
+              },
+              {
+                "id": "mystery-alias",
+                "kind": "basic",
+                "front": "占位 AI 座的 alias 与 playerId 各是什么？",
+                "back": "alias 为 ???，playerId 为 mystery-ai-seat。",
+                "tags": [
+                  "lobby",
+                  "seating"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/avatarPlacement.ts",
+                    "lineStart": 66,
+                    "lineEnd": 76,
+                    "nodeIds": [],
+                    "note": "mysteryAiSeat 常量字段"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "mystery-player-id",
+                "kind": "short-answer",
+                "title": "占位 ID",
+                "prompt": "mystery 占位座位的 playerId 字符串是什么？",
+                "expectedAnswer": "mystery-ai-seat",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/avatarPlacement.ts",
+                    "lineStart": 10,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "MYSTERY_AI_SEAT_ID 常量"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "webgl-gate",
+            "title": "为什么 WebGL 一失败就不挂 3D 世界？",
+            "content": "# 为什么 WebGL 一失败就不挂 3D 世界？\n\n## 情境和约束\n\n你想在房间壳里塞 3D 世界大厅。两道约束会同时砸来：功能 flag 可能关着；浏览器可能要不到 WebGL context。Shell 必须在「尝试世界」和「传统 2D 房间」之间岔开——岔晚了，Three 在坏 context 上硬跑；只看 flag、不真探测，又会在无 GPU 路径上白白进 loading。\n\n## 先猜一下\n\n功能 flag 已经是 `true` 时，代码还会不会再查一次「这台机能不能画 WebGL」？只过 flag、在坏 GPU 上仍 mount Canvas，坏的会是谁的体验？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n还会查：`canRenderWorld` 要 `enabled && webglAvailable` 双真；`detectWebGLAvailable` 真取 context，失败则整闸 false，降级壳接手，不碰运气 mount。\n\n## 代价和收益\n\n闸门本身极短：\n\n```ts\nexport function shouldAttemptWorldLobby({\n  enabled,\n  webglAvailable,\n}: ShouldAttemptWorldLobbyInput): boolean {\n  return enabled && webglAvailable;\n}\n```\n\n[[evidence:src/features/world-lobby/worldRuntimeGate.ts:6-11]]\n\n你在这里读到的是逻辑与，不是「尽量试试」。`enabled=false` 时，无论 GPU 多好都不尝试世界；flag 开但 `webglAvailable=false` 时同样不挂 Canvas。\n\n探测也不猜，是真取 context，按 `webgl2` → `webgl` → `experimental-webgl` 顺序要；无 `document` 直接 false：\n\n```ts\nexport function detectWebGLAvailable(): boolean {\n  if (typeof document === 'undefined') return false;\n  const canvas = document.createElement('canvas');\n  const webgl =\n    canvas.getContext('webgl2') ??\n    canvas.getContext('webgl') ??\n    canvas.getContext('experimental-webgl');\n  return webgl !== null;\n}\n```\n\n[[evidence:src/features/world-lobby/worldRuntimeGate.ts:13-21]]\n\n壳层只 memo 一次探测，再算 `canRenderWorld`——你不会在每次 render 上重复 createElement：\n\n```ts\n  const webglAvailable = useMemo(() => detectWebGLAvailable(), []);\n```\n\n[[evidence:src/features/world-lobby/WorldRoomShell.tsx:150]]\n\n```ts\n  const canRenderWorld = shouldAttemptWorldLobby({ enabled, webglAvailable });\n  const presenceActive = canRenderWorld && (mode === 'lobby' || mode === 'overlay');\n  const conversationActive =\n    canRenderWorld && (mode === 'lobby' || mode === 'overlay' || mode === 'epilogue');\n```\n\n[[evidence:src/features/world-lobby/WorldRoomShell.tsx:167-170]]\n\n收益：故障变成可预期降级（没 WebGL 就传统房间）；`presenceActive` / `conversationActive` 都先过 `canRenderWorld`，闸门 false 时你不会启动走动广播和对话时钟；flag 与能力解耦，关实验不必改探测。\n\n代价：多一次挂载期 context 探测；极老或被策略锁死的 WebGL 环境永远看不到 3D 大厅——有意牺牲沉浸，换稳定。\n\n## 什么时候该反过来\n\n- **你在做强制 demo / 预览**：可绕过产品 flag，但仍应保留 WebGL 探测。\n- **你已有可靠的软件光栅回退**：才值得在 `webglAvailable=false` 时仍 mount「世界」。\n- **其余情况**：降级壳仍是正解；一次 memo 探测通常不必做成跨会话缓存。\n\n## 自检\n\n**问：** `enabled` 为 true 但 `webglAvailable` 为 false 时，应否挂世界 Canvas？\n\n**问：** `detectWebGLAvailable` 尝试 context 的大致顺序是什么？\n\n**问：** `enabled` 与 `webglAvailable` 有一个为 false 时，`shouldAttemptWorldLobby` 返回什么？\n\n## 一句话\n\n**世界导航的 zeroth 岔口：这台机器能不能成为世界——双条件与，失败就降级，不碰运气。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/worldRuntimeGate.ts",
+                "lineStart": 6,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "shouldAttemptWorldLobby 与 detectWebGLAvailable"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                "lineStart": 149,
+                "lineEnd": 170,
+                "nodeIds": [],
+                "note": "webgl memo 与 canRenderWorld/presenceActive"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "gate-and",
+                "kind": "basic",
+                "front": "enabled 为 true 但 webglAvailable 为 false 时，应否挂世界 Canvas？",
+                "back": "不应。shouldAttemptWorldLobby 要求两者皆真。",
+                "tags": [
+                  "lobby",
+                  "capability"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/worldRuntimeGate.ts",
+                    "lineStart": 6,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "双条件与"
+                  }
+                ]
+              },
+              {
+                "id": "webgl-order",
+                "kind": "basic",
+                "front": "detectWebGLAvailable 尝试 context 的顺序是什么？",
+                "back": "webgl2，再 webgl，再 experimental-webgl。",
+                "tags": [
+                  "lobby",
+                  "capability"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/worldRuntimeGate.ts",
+                    "lineStart": 16,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "context 探测顺序"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "gate-false-when",
+                "kind": "short-answer",
+                "title": "闸门结果",
+                "prompt": "enabled 与 webglAvailable 有一个为 false 时函数返回什么？",
+                "expectedAnswer": "false",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/worldRuntimeGate.ts",
+                    "lineStart": 10,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "return enabled && webglAvailable"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "lazy-world-and-channels",
+            "title": "presence 和 conversation，终局时谁还开着？",
+            "content": "# presence 和 conversation，终局时谁还开着？\n\n## 两个东西\n\n同一份 `WorldRoomShell` 里，你看到两个布尔量：`presenceActive` 与 `conversationActive`。两者都先要求 `canRenderWorld`，但允许的 `WorldLobbyMode` 集合并不相同。Canvas 本身还是 `lazy` 动态 import——能渲染世界，不等于所有实时子系统一起全开。\n\n## 先猜一下\n\n`mode` 已经是 `epilogue`（终局）时，走动在场（presence）和对话气泡（conversation）哪一个还会保持激活？你若把该关的那个继续开着，坏的是谁的体验？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\nconversation 仍可开（mode 含 `epilogue`）；presence 只在 `lobby` / `overlay`——终局关掉走动广播，避免散场后角色还在漂移。\n\n## 逐条对照\n\n**Canvas 加载。** 壳层用 `lazy` 动态 import `WorldLobbyCanvas`，避免首屏为不可用设备拉 Three 包：\n\n```ts\nconst WorldLobbyCanvas = lazy(() =>\n  import('./WorldLobbyCanvas').then((module) => ({\n    default: module.WorldLobbyCanvas,\n  })),\n);\n```\n\n[[evidence:src/features/world-lobby/WorldRoomShell.tsx:71-75]]\n\n你在不可渲染路径上甚至不该付出这份解析成本——这和通道开关是同一条总闸思路的前半段。\n\n**两个通道的 mode 窗。**\n\n```ts\n  const canRenderWorld = shouldAttemptWorldLobby({ enabled, webglAvailable });\n  const presenceActive = canRenderWorld && (mode === 'lobby' || mode === 'overlay');\n  const conversationActive =\n    canRenderWorld && (mode === 'lobby' || mode === 'overlay' || mode === 'epilogue');\n```\n\n[[evidence:src/features/world-lobby/WorldRoomShell.tsx:167-170]]\n\n| | presence | conversation |\n| --- | --- | --- |\n| 先过 `canRenderWorld` | 是 | 是 |\n| `lobby` | 开 | 开 |\n| `overlay` | 开 | 开 |\n| `epilogue` | **关** | **开** |\n| 目的 | 走动 / 远程化身 | 气泡与历史时钟 |\n\n本地 presence 发布槽还有一道身份过滤：匹配到的本机玩家若是 AI，`localPresencePlayer` 为 null——采样只服务真人控制的化身。\n\n```ts\n  const localPresencePlayer = useMemo(() => {\n    if (!myPlayerId || !matchedPlayerId || matchedPlayerIsAi) return null;\n    return {\n      alias: matchedAlias ?? '',\n      avatarSeed: matchedAvatarSeed ?? null,\n      playerId: matchedPlayerId,\n    };\n  }, [matchedAlias, matchedAvatarSeed, matchedPlayerId, matchedPlayerIsAi, myPlayerId]);\n```\n\n[[evidence:src/features/world-lobby/WorldRoomShell.tsx:176-183]]\n\n**关闸时清空。** presence 条件失败时，effect 直接清订阅与 remote entities，而不是留半截状态：\n\n```ts\n  useEffect(() => {\n    if (!presenceActive || !roomId || !localPresencePlayer) {\n      presenceSubscriptionRef.current = null;\n      remotePresenceStatesRef.current = new Map();\n      lastPublishedPresenceRef.current = null;\n      setRemoteEntities([]);\n      return undefined;\n    }\n```\n\n[[evidence:src/features/world-lobby/WorldRoomShell.tsx:388-395]]\n\n对照时间线你可以对着走：\n\n1. waiting 且 WebGL OK → Suspense 加载 Canvas，presence 与 conversation 都开。\n2. playing（overlay）→ 两者仍开。\n3. finished（epilogue）→ presence 关并清空，conversation 仍 tick。\n4. WebGL 失败 → `canRenderWorld` false，两边都不启动，传统 UI 的 children 接管。\n\n## 什么时候用哪个\n\n- **你要同步「谁在空间里走动」** → 看 `presenceActive`；终局叙事不需要角色漂移时就该关。\n- **你要气泡寿命 / 历史可读** → 看 `conversationActive`；散场后仍让人回看对话，所以窗口更宽。\n- **你只是进了房间路由** → 不等于两通道全开；先 `canRenderWorld`，再按 mode 裁剪。\n\n## 自检\n\n**问：** `epilogue` 模式会激活 `presenceActive` 吗？\n\n**问：** `presenceActive` 允许的两个 `WorldLobbyMode` 是哪些？\n\n**问：** 为什么 AI 本地玩家不能作为 `localPresencePlayer`？\n\n## 一句话\n\n**能进房间 ≠ 所有实时子系统全开；按 mode 裁剪 presence 与 conversation，才是结构。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                "lineStart": 71,
+                "lineEnd": 75,
+                "nodeIds": [],
+                "note": "WorldLobbyCanvas lazy import"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                "lineStart": 167,
+                "lineEnd": 183,
+                "nodeIds": [],
+                "note": "canRenderWorld/presence/conversation 与 AI 排除"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                "lineStart": 388,
+                "lineEnd": 395,
+                "nodeIds": [],
+                "note": "presence 条件失败时清空订阅"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "epilogue-presence",
+                "kind": "basic",
+                "front": "epilogue 模式会激活 presenceActive 吗？",
+                "back": "不会。presence 只在 lobby 与 overlay。",
+                "tags": [
+                  "lobby",
+                  "channels"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                    "lineStart": 168,
+                    "lineEnd": 168,
+                    "nodeIds": [],
+                    "note": "presenceActive 不含 epilogue"
+                  }
+                ]
+              },
+              {
+                "id": "lazy-why",
+                "kind": "basic",
+                "front": "WorldLobbyCanvas 使用 React.lazy 的产品理由是什么？",
+                "back": "把 Three/世界包推迟到确认要渲染世界之后，保护非 WebGL 首屏。",
+                "tags": [
+                  "lobby",
+                  "channels"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                    "lineStart": 71,
+                    "lineEnd": 75,
+                    "nodeIds": [],
+                    "note": "lazy 动态 import Canvas"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "presence-modes",
+                "kind": "short-answer",
+                "title": "在场模式",
+                "prompt": "presenceActive 允许的两个 WorldLobbyMode 是哪些（用/分隔）？",
+                "expectedAnswer": "lobby/overlay",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                    "lineStart": 168,
+                    "lineEnd": 168,
+                    "nodeIds": [],
+                    "note": "lobby 或 overlay"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "attention-in-room",
+        "title": "房内注意力导航",
+        "objective": "我能把开场话题收成当前 locale 的一行、把 live 气泡当标点，并让人机共用打字节奏、历史和表演分两只钟。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "opening-topic-bilingual",
+            "title": "开场话题存成两行，手机 dock 为什么只亮一行？",
+            "content": "# 开场话题存成两行，手机 dock 为什么只亮一行？\n\n## 两个东西\n\n你进房后，HUD 会冒出一句「往哪聊」。同一份内容在源码里有**两种形态**。\n\n**形态 A：存进房间的串**——`formatRoomTopic` 用换行叠英中：\n\n```ts\nexport function formatRoomTopic(topic: RoomOpeningTopic): string {\n  return `${topic.en}\\n${topic['zh-CN']}`;\n}\n```\n\n[[evidence:src/features/room-topics/topics.ts:50-52]]\n\n清单项带 `id`、`en`、`zh-CN`，偏感官日常，不是术语考题：\n\n```ts\n  {\n    id: 'memory-smell',\n    en: 'Which smell instantly takes you back somewhere?',\n    'zh-CN': '哪一种气味会立刻把你带回某个地方？',\n  },\n```\n\n[[evidence:src/features/room-topics/topics.ts:8-12]]\n\n**形态 B：你在 dock 上读到的一行**——`displayRoomTopic` 按 UI locale 只留一行：\n\n```ts\nexport function displayRoomTopic(topic: string, locale: string): string {\n  const lines = topic\n    .split('\\n')\n    .map((line) => line.trim())\n    .filter((line) => line.length > 0);\n  if (lines.length <= 1) return topic.trim();\n\n  const prefersChinese = locale.toLowerCase().startsWith('zh');\n  const chinese = lines.find((line) => /[\\u4e00-\\u9fff]/.test(line));\n  const latin = lines.find((line) => !/[\\u4e00-\\u9fff]/.test(line));\n  if (prefersChinese) return chinese ?? lines[lines.length - 1]!;\n  return latin ?? lines[0]!;\n}\n```\n\n[[evidence:src/features/room-topics/topics.ts:59-71]]\n\nA 是双语合同；B 是给当前玩家看的裁剪。你很容易只留一种串。\n\n## 先猜一下\n\n若你把 `formatRoomTopic` 的结果**原样**塞进手机 dock（不经 `displayRoomTopic`），坏的是谁的体验？桌里的 AI 读上下文会不会一起坏掉？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n坏的是**看 HUD 的你**：多行把 dock 撑成双倍高度，挤世界与操作区；AI 与混合桌仍要完整双语串，存储侧不能跟着砍成单语。\n\n## 逐条对照\n\n| | 存储串（`formatRoomTopic`） | 展示串（`displayRoomTopic`） |\n| --- | --- | --- |\n| 形状 | `` `${en}\\n${zh-CN}` `` | 按 locale **一行** |\n| 消费者 | AI、混桌、共享下游 | 你的 HUD / dock |\n| 为何 | 跨语言桌同一串，不丢半边 | 避免 mobile dock 双倍高度 |\n| 你改错 | 上下文不完整 | 可读性崩、世界被挤 |\n\n注释钉死分工：\n\n```ts\n/**\n * HUD/display helper: bilingual topics are stored as \"en\\\\nzh-CN\" for AI and\n * mixed tables, but the live chrome should follow the player's UI locale so the\n * dock does not double-height every prompt on mobile.\n */\n```\n\n[[evidence:src/features/room-topics/topics.ts:54-58]]\n\n抽题：`getRandomTopic` 用 `floor(random()*len)` 再 clamp，RNG 贴边不越界：\n\n```ts\nexport function getRandomTopic(random: () => number = Math.random): string {\n  const index = Math.min(\n    ROOM_OPENING_TOPICS.length - 1,\n    Math.max(0, Math.floor(random() * ROOM_OPENING_TOPICS.length)),\n  );\n  return formatRoomTopic(ROOM_OPENING_TOPICS[index]!);\n}\n```\n\n[[evidence:src/features/room-topics/topics.ts:73-79]]\n\n它返回 **format 后的存储串**。你交给 HUD 前仍要走 `displayRoomTopic`。\n\n## 什么时候用哪个\n\n只问一句：\n\n> **这份串给机器/全桌共享，还是给你（当前玩家）看？**\n\n- **共享 / 存盘 / 喂 AI** → `formatRoomTopic`\n- **HUD、dock** → `displayRoomTopic(stored, locale)`\n- **你想只存当前语言** → 混桌或换 UI 语言时另一半没了\n\n中文 UI 只亮中文行，英文 UI 只亮拉丁行；存储仍是两行。\n\n## 自检\n\n**问：** `formatRoomTopic` 用什么字符连接 `en` 与 `zh-CN`？\n\n**问：** 为什么你的 HUD 不能直接渲染存储串？\n\n**问：** `getRandomTopic` 返回存储形态还是展示形态？\n\n## 一句话\n\n**同一开场话题：存储合同可以是双语，呈现合同必须按 locale 收成单行。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/room-topics/topics.ts",
+                "lineStart": 7,
+                "lineEnd": 52,
+                "nodeIds": [],
+                "note": "ROOM_OPENING_TOPICS 与 formatRoomTopic"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/room-topics/topics.ts",
+                "lineStart": 54,
+                "lineEnd": 71,
+                "nodeIds": [],
+                "note": "displayRoomTopic 按 locale 单行裁剪"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/room-topics/topics.ts",
+                "lineStart": 73,
+                "lineEnd": 79,
+                "nodeIds": [],
+                "note": "getRandomTopic 有界随机"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-split-display",
+                "kind": "basic",
+                "front": "为什么 formatRoomTopic 存双语，displayRoomTopic 却只回一行？",
+                "back": "AI/混桌需要完整串；手机 HUD 双行会撑高 dock。",
+                "tags": [
+                  "topics",
+                  "i18n"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/room-topics/topics.ts",
+                    "lineStart": 54,
+                    "lineEnd": 70,
+                    "nodeIds": [],
+                    "note": "注释与 locale 裁剪逻辑"
+                  }
+                ]
+              },
+              {
+                "id": "topic-shape",
+                "kind": "basic",
+                "front": "RoomOpeningTopic 除 id 外还有哪些语言字段？",
+                "back": "en 与 zh-CN。",
+                "tags": [
+                  "topics",
+                  "i18n"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/room-topics/topics.ts",
+                    "lineStart": 1,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "接口字段定义"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "topic-separator",
+                "kind": "short-answer",
+                "title": "存储分隔",
+                "prompt": "formatRoomTopic 把 en 与 zh-CN 用什么字符连接？",
+                "expectedAnswer": "\\n",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/room-topics/topics.ts",
+                    "lineStart": 50,
+                    "lineEnd": 52,
+                    "nodeIds": [],
+                    "note": "模板字符串换行连接"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "callouts-are-punctuation",
+            "title": "桌上六人狂聊，为什么屏幕上最多只留两三条气泡？",
+            "content": "# 桌上六人狂聊，为什么屏幕上最多只留两三条气泡？\n\n## 情境和约束\n\n你在 3D 酒馆桌上：脸、名牌、中央证据区都要可读。聊天消息可以很多，但 live 气泡不能变成第二聊天窗。\n\n调度默认封顶 3，且每人只留**最新一条**——你看不到每人的全文堆叠：\n\n```ts\nexport function scheduleWorldCallouts({\n  maxCallouts = 3,\n  messages,\n  seats,\n}: {\n  maxCallouts?: number;\n  messages: readonly CalloutMessageView[];\n  seats: readonly CalloutSeatView[];\n}): ScheduledWorldCallout[] {\n  const seatsByPlayer = new Map(seats.map((seat) => [seat.playerId, seat]));\n  const latestByPlayer = new Map<string, CalloutMessageView>();\n\n  [...messages]\n    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))\n    .forEach((message) => {\n      if (!seatsByPlayer.has(message.senderId)) return;\n      latestByPlayer.set(message.senderId, message);\n    });\n\n  return [...latestByPlayer.values()]\n    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))\n    .slice(0, maxCallouts)\n```\n\n[[evidence:src/features/world-callouts/domain/calloutSchedule.ts:20-41]]\n\n酒馆接入同样默认 3：\n\n```ts\nconst DEFAULT_CALLOUT_LIMIT = 3;\n```\n\n[[evidence:src/features/world-lobby/tavernInteraction.ts:33-33]]\n\n房间壳还要把 `maxCallouts` 绑在 `historyOpen` 上——比默认 3 更紧，具体数字和开关逻辑在答案之后拆。\n\n## 先猜一下\n\n你打开历史面板去对证据时，还飘在桌上的气泡该怎么办？若产品必须二选一：保留当对照，或清掉让路——哪边更贴「气泡是标点」？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了清掉：`maxCallouts: historyOpen ? 0 : 2`——历史打开时气泡归零，注意力交给抄本；平时也只留一对，不当第二 transcript。\n\n## 代价和收益\n\n房间壳写死了意图与数字：\n\n```ts\n    return buildWorldConversation({\n      blockedPlayerIds: new Set(),\n      locale: i18n.language,\n      // Bubbles are punctuation, not a second transcript. A bounded pair keeps\n      // faces and the central evidence area readable on every viewport.\n      maxCallouts: historyOpen ? 0 : 2,\n      maxHistory: 120,\n```\n\n[[evidence:src/features/world-lobby/WorldRoomShell.tsx:283-289]]\n\n- **收益：** 气泡是标点——提示「谁刚说了句什么」，不镜像完整记录；历史打开时视线不再被头顶字抢。\n- **代价：** 你在桌面上**看不到**更早的 live 句；完整对话必须进历史。六人狂聊时，调度先 per-sender 压成每人一条，再截到 2–3。\n- **再裁一刀：** 布局层 `maxVisible` 窄屏 1、宽屏 4，并与名牌 obstacles 避让——有座位也不等于一定画得上：\n\n```ts\n    const placements = resolveWorldCalloutLayout({\n      boxes: layoutBoxes,\n      gap: 8,\n      maxVisible: viewport.width < 700 ? 1 : 4,\n      obstacles: nameplateObstacles,\n      safeArea: {\n        bottom: viewport.width < 760 ? 78 : 24,\n        left: 12,\n        right: 12,\n        top: viewport.height < 480 ? 214 : 144,\n      },\n      viewport,\n    });\n```\n\n[[evidence:src/features/world-callouts/runtime/WorldCalloutLayer.ts:219-230]]\n\n注意力导航靠减法：3D 桌上若镜像完整聊天，你当场不知道该看脸还是看字。\n\n## 什么时候该反过来\n\n- **不要**把 `maxCallouts` 调到 20「更像聊天软件」——你的气泡从标点退化成遮挡 3D 的第二窗，中心证据区先死。\n- **可以**在纯 2D / 无世界层的表面用完整列表；那不是 callout 合同。\n- **不要**在 `historyOpen` 时仍留气泡当对照——产品已经选了「历史 = 抄本，气泡让路」。\n- 若你要做旁观回放、同时看多句，应另开回放表面，而不是把 live 上限拧爆。\n\n## 再想想\n\n历史与 live 的授时也不一样：历史立即落卷，气泡还有打字钟——见 [[lesson:history-vs-live-clock|历史立即，现场有钟]]。\n\n## 自检\n\n**问：** `DEFAULT_CALLOUT_LIMIT` 是多少？\n\n**问：** `historyOpen === true` 时 `maxCallouts` 是多少？为什么？\n\n**问：** `scheduleWorldCallouts` 对同一发送者多条消息保留几条？\n\n## 一句话\n\n**空间里的对话导航默认显示更少：气泡是标点，完整记录走历史。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/calloutSchedule.ts",
+                "lineStart": 20,
+                "lineEnd": 47,
+                "nodeIds": [],
+                "note": "scheduleWorldCallouts 每人最新且截断"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/tavernInteraction.ts",
+                "lineStart": 33,
+                "lineEnd": 53,
+                "nodeIds": [],
+                "note": "DEFAULT_CALLOUT_LIMIT=3 与酒馆接入"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                "lineStart": 281,
+                "lineEnd": 302,
+                "nodeIds": [],
+                "note": "historyOpen 时 maxCallouts 为 0 否则 2"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/runtime/WorldCalloutLayer.ts",
+                "lineStart": 218,
+                "lineEnd": 230,
+                "nodeIds": [],
+                "note": "窄屏 maxVisible=1 与 safeArea"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "history-kills-bubbles",
+                "kind": "basic",
+                "front": "historyOpen 为 true 时 buildWorldConversation 的 maxCallouts 是多少？为什么？",
+                "back": "0。气泡是标点；历史打开时把注意力交给抄本。",
+                "tags": [
+                  "callouts",
+                  "attention"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                    "lineStart": 286,
+                    "lineEnd": 289,
+                    "nodeIds": [],
+                    "note": "historyOpen ? 0 : 2 与注释"
+                  }
+                ]
+              },
+              {
+                "id": "per-sender-latest",
+                "kind": "basic",
+                "front": "scheduleWorldCallouts 对同一发送者多条消息保留几条？",
+                "back": "一条：Map 覆盖为该发送者最新。",
+                "tags": [
+                  "callouts",
+                  "attention"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-callouts/domain/calloutSchedule.ts",
+                    "lineStart": 30,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "latestByPlayer 再排序截断"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-callout-limit",
+                "kind": "short-answer",
+                "title": "默认上限",
+                "prompt": "tavernInteraction 里 DEFAULT_CALLOUT_LIMIT 的数字是？",
+                "expectedAnswer": "3",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/tavernInteraction.ts",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "DEFAULT_CALLOUT_LIMIT = 3"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "typing-same-for-all",
+            "title": "AI 已经写好了整句，为什么气泡还要先打三个点？",
+            "content": "# AI 已经写好了整句，为什么气泡还要先打三个点？\n\n## 情境和约束\n\n你在图灵社交局里猜谁是 AI。服务端可以瞬间吐出整段文本，但你看见的 live 气泡仍会先进入 typing 态。呈现层时钟写在 `typingRhythm.ts`：只服务 live callout，不碰历史取证。\n\n文件头把边界划死——你读注释就知道谁能调用：\n\n```ts\n/**\n * Pure presentation-layer typing rhythm for live conversation bubbles (G-10).\n *\n * Owns: deterministic typing duration and phase from (text, arrival, now);\n *       per-sender FIFO scheduling so queued lines do not overlap incorrectly.\n * Does not own: React clocks, Realtime, history/forensics surfaces, or server\n *       delivery delays (those stay independent).\n *\n * Guard: only the live callout surface should call this. History, Daily\n * forensics, votes, and store data must keep authoritative message times.\n */\n```\n\n[[evidence:src/features/world-callouts/domain/typingRhythm.ts:1-11]]\n\n时长参数也硬编码在同一文件，你调参只能动常量：每字 30–80ms、思考 180–520ms、总长夹在 380–4000ms。\n\n## 先猜一下\n\n若你给 AI 单独开 `durationMs = 0`、一到就全文揭示，坏的是「少看一会儿动画」这种体验，还是玩法规则本身？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n坏的是**规则**：打字节奏会变成识别 AI 的侧信道；所以人机共用同一 `typingDurationMs`，节奏不得泄身份。\n\n## 代价和收益\n\n同模写在注释与实现里：\n\n```ts\n/**\n * Typing duration for a message body. Same model for every speaker so cadence\n * never leaks who is AI (humans and AI share this path for live bubbles).\n */\nexport function typingDurationMs(text: string): number {\n  const characters = typingCharacterCount(text);\n  if (characters <= 0) return TYPING_DURATION_FLOOR_MS;\n\n  const perChar =\n    TYPING_MS_PER_CHAR_MIN +\n    unitMix(characters * 17 + 3) * (TYPING_MS_PER_CHAR_MAX - TYPING_MS_PER_CHAR_MIN);\n  const think =\n    TYPING_THINK_MS_MIN +\n    unitMix(characters * 31 + 11) * (TYPING_THINK_MS_MAX - TYPING_THINK_MS_MIN);\n\n  const raw = think + characters * perChar;\n  return Math.round(Math.min(TYPING_DURATION_CAP_MS, Math.max(TYPING_DURATION_FLOOR_MS, raw)));\n}\n```\n\n[[evidence:src/features/world-callouts/domain/typingRhythm.ts:48-65]]\n\n- **收益：** 你无法靠「回得有多快」点名 AI；公平落在呈现层，不是装饰。\n- **代价：** 真 AI 也要假打字；长句封顶 4s，避免拖死你这桌；短句有 380ms 地板，避免「ok」闪一下。\n- **确定性：** `unitMix` 由字数派生，你换客户端同文仍同节奏；字数用 `Array.from` 数码点。\n- **FIFO：** 同一发送者下一条等上一条 reveal，避免你看见叠字；历史已过自然 reveal 的不堵新消息：\n\n```ts\nexport function scheduleTypingReveals(\n  messages: readonly TypingScheduleMessage[],\n  nowMs: number,\n): readonly TypingScheduleEntry[] {\n  const bySender = new Map<string, TypingScheduleMessage[]>();\n  for (const message of messages) {\n    if (!message.senderId) continue;\n    const list = bySender.get(message.senderId);\n    if (list) list.push(message);\n    else bySender.set(message.senderId, [message]);\n  }\n```\n\n[[evidence:src/features/world-callouts/domain/typingRhythm.ts:103-114]]\n\nDOM 层 typing 态只放三点 HTML，正文走 `textContent`——你不该在 bubble 里看到注入正文：\n\n```ts\n      if (callout?.presentation === 'typing') {\n        // Shared human typing language: three dots in the same bubble chrome.\n        // Static markup only — never inject message text as HTML.\n        record.bubble.textContent = '';\n        record.bubble.innerHTML =\n          '<span class=\"world-chat-typing\" aria-hidden=\"true\"><i></i><i></i><i></i></span>';\n```\n\n[[evidence:src/features/world-callouts/runtime/WorldCalloutLayer.ts:112-117]]\n\n## 什么时候该反过来\n\n- **不要**给 AI 单独 `durationMs = 0`「更跟手」——侧信道直接架空社交推理。\n- **不要**把这套钟套进历史 / Daily 取证 / 投票——文件头 Guard 已禁；证据时间必须权威。\n- **可以**在非对抗、不藏身份的演示表面关掉假打字；那不是本产品的 live 桌。\n- 你调参（地板、封顶、每字区间）可以，**路径分叉**（人一条、机一条）不行。\n\n## 再想想\n\n历史为何绝不套这套钟，以及 shell 如何按 pending typing 切换 tick：[[lesson:history-vs-live-clock|历史立即，现场有钟]]。\n\n## 自检\n\n**问：** 为何 AI 与人类共用 `typingDurationMs`，而不是 AI 秒显？\n\n**问：** `TYPING_DURATION_FLOOR_MS` 是多少？封顶呢？\n\n**问：** typing 态时 bubble 里放的是正文还是三点标记？\n\n## 一句话\n\n**呈现层时钟可以假，但必须对所有说话者一视同仁，否则节奏会泄身份。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                "lineStart": 1,
+                "lineEnd": 34,
+                "nodeIds": [],
+                "note": "typingRhythm 职责边界与时长常量"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                "lineStart": 48,
+                "lineEnd": 65,
+                "nodeIds": [],
+                "note": "typingDurationMs 人机同模"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                "lineStart": 103,
+                "lineEnd": 135,
+                "nodeIds": [],
+                "note": "scheduleTypingReveals 每发送者 FIFO"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/runtime/WorldCalloutLayer.ts",
+                "lineStart": 112,
+                "lineEnd": 128,
+                "nodeIds": [],
+                "note": "typing 三点标记且正文 textContent"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-shared-cadence",
+                "kind": "basic",
+                "front": "为何 AI 与人类共用 typingDurationMs，而不是 AI 秒显？",
+                "back": "避免打字节奏成为识别 AI 的侧信道。",
+                "tags": [
+                  "callouts",
+                  "typing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                    "lineStart": 48,
+                    "lineEnd": 51,
+                    "nodeIds": [],
+                    "note": "同模注释：不泄 AI 身份"
+                  }
+                ]
+              },
+              {
+                "id": "typing-cap",
+                "kind": "basic",
+                "front": "单条 typing 动画最长多少毫秒？为什么要封顶？",
+                "back": "4000ms。长 AI 句不能拖死整桌节奏。",
+                "tags": [
+                  "callouts",
+                  "typing"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                    "lineStart": 29,
+                    "lineEnd": 30,
+                    "nodeIds": [],
+                    "note": "TYPING_DURATION_CAP_MS = 4000"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "typing-floor-ms",
+                "kind": "short-answer",
+                "title": "最短打字",
+                "prompt": "TYPING_DURATION_FLOOR_MS 的数值是？",
+                "expectedAnswer": "380",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-callouts/domain/typingRhythm.ts",
+                    "lineStart": 33,
+                    "lineEnd": 33,
+                    "nodeIds": [],
+                    "note": "FLOOR 常量 380"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "history-vs-live-clock",
+            "title": "同一条消息，为什么历史立刻全文、气泡却还在打字？",
+            "content": "# 同一条消息，为什么历史立刻全文、气泡却还在打字？\n\n## 两个东西\n\n你在房间里同时面对两套「时间语义」：\n\n**A. 历史投影**——`buildWorldConversation` 把消息落成 history 时**不做 typing 延迟**，给取证用。\n\n**B. Live 现场**——气泡仍走呈现层打字节奏；shell 还按是否有 pending typing 切换 tick；媒体另有加载闸。\n\n注释把 A 钉死：\n\n```ts\n/**\n * Live callout projection with presentation-layer typing rhythm.\n * History is always immediate (no typing delay) for forensics / evidence.\n * Rhythm uses the same model for every speaker so cadence cannot mark AI.\n */\nexport function buildWorldConversation({\n  blockedPlayerIds,\n  locale,\n  maxCallouts,\n  maxHistory,\n  messages,\n  nowMs,\n}: {\n  blockedPlayerIds: ReadonlySet<string>;\n  locale: string;\n  maxCallouts: number;\n  maxHistory: number;\n  messages: readonly WorldConversationMessage[];\n  nowMs: number;\n}): WorldConversationProjection {\n  const projectedHistory = messages\n    .map((message) => historyEntryForMessage(message, blockedPlayerIds))\n    .filter((entry): entry is WorldHistoryEntry => entry !== null)\n    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));\n  const history = maxHistory <= 0 ? [] : projectedHistory.slice(-maxHistory);\n```\n\n[[evidence:src/features/world-callouts/domain/worldConversation.ts:86-110]]\n\n同条消息在你眼前可以分裂：history 里已是全文，callout 仍在 `typing`。\n\n## 先猜一下\n\n若你让历史也套上 live typing 延迟，复盘投票「谁何时说了什么」时，坏掉的是体验动画，还是证据本身？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n坏的是**证据**：呈现延迟会污染权威消息时间，玩家/客服无法对齐「谁何时说了什么」。\n\n## 逐条对照\n\n| | 历史（A） | Live 现场（B） |\n| --- | --- | --- |\n| 文本何时可见 | 立即 | 等 `revealAtMs`（假打字） |\n| 时钟职责 | 权威 `createdAt` | 呈现层节奏 + shell tick |\n| 失败模式 | 若也延迟 → 取证脏 | 若无节奏 → 身份侧信道（上节） |\n| 你该信哪边 | 复盘、投票依据 | 桌上「正在说」的表演 |\n\n气泡寿命也跟 locale 走：中文每字 240ms、拉丁 55ms，夹在 4s–14s，从 reveal 起算——你切语言，气泡待多久也变：\n\n```ts\nexport function calloutLifetimeMs(text: string, locale: string): number {\n  const characters = Array.from(text.trim()).length;\n  const isCjk = locale.toLowerCase().startsWith('zh');\n  return clamp(3_200 + characters * (isCjk ? 240 : 55), 4_000, 14_000);\n}\n```\n\n[[evidence:src/features/world-callouts/domain/worldConversation.ts:55-59]]\n\nShell 用双时钟省电又跟手：空闲 1000ms；你桌上还有 pending typing 时拧到 200ms：\n\n```ts\n/** Coarse clock while only bubble lifetimes matter. */\nconst CONVERSATION_TICK_IDLE_MS = 1_000;\n/** Finer clock while a live bubble is still in the typing phase (G-10). */\nconst CONVERSATION_TICK_TYPING_MS = 200;\n```\n\n[[evidence:src/features/world-lobby/WorldRoomShell.tsx:79-82]]\n\n```ts\n  useEffect(() => {\n    if (!conversationActive || messages.length === 0) return undefined;\n    const tickMs = conversation.hasPendingTyping\n      ? CONVERSATION_TICK_TYPING_MS\n      : CONVERSATION_TICK_IDLE_MS;\n    const intervalId = window.setInterval(() => setConversationNowMs(Date.now()), tickMs);\n    return () => window.clearInterval(intervalId);\n  }, [conversation.hasPendingTyping, conversationActive, messages]);\n```\n\n[[evidence:src/features/world-lobby/WorldRoomShell.tsx:352-359]]\n\n媒体还有闸：你把页切后台、`saveData`、2g/slow-2g 时不加载——省带宽，同属房内资源导航：\n\n```ts\nexport function shouldLoadWorldMedia({\n  effectiveType,\n  saveData,\n  visibilityState,\n}: {\n  effectiveType: string | undefined;\n  saveData: boolean;\n  visibilityState: DocumentVisibilityState;\n}): boolean {\n  return (\n    visibilityState === 'visible' &&\n    !saveData &&\n    effectiveType !== 'slow-2g' &&\n    effectiveType !== '2g'\n  );\n}\n```\n\n[[evidence:src/features/world-callouts/domain/worldMedia.ts:48-63]]\n\n## 什么时候用哪个\n\n- **你在对证据、复盘、投票** → 信 history 的立即投影与权威时间；别等气泡 reveal。\n- **你在看桌上谁正在说** → live 打字与 `calloutLifetimeMs`；shell 会在有 pending 时把 tick 拧到 200ms。\n- **你想「一个 setInterval 糊弄」** → 取证脏、打字卡或空转耗电；分层授时就是为拆开这些。\n\n消息到达 → history 立即追加；同条 live 仍可能 typing → 200ms tick；reveal 后气泡再活一段时间，历史仍在。\n\n## 再想想\n\n假打字为何人机同模：[[lesson:typing-same-for-all|打字节奏不得泄身份]]。气泡数量为何默认极少：[[lesson:callouts-are-punctuation|气泡是标点]]。\n\n## 自检\n\n**问：** 有 pending typing 时 conversation 刷新间隔多少毫秒？空闲呢？\n\n**问：** 为什么 history 不能复用 live typing 时钟？\n\n**问：** `calloutLifetimeMs` 对中文与拉丁每字速率有何不同？\n\n## 一句话\n\n**房内注意力要分层授时：证据立即，表演有钟，带宽另闸——不能共用一个 setInterval。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/worldConversation.ts",
+                "lineStart": 55,
+                "lineEnd": 59,
+                "nodeIds": [],
+                "note": "calloutLifetimeMs 中英不同速率"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/worldConversation.ts",
+                "lineStart": 86,
+                "lineEnd": 110,
+                "nodeIds": [],
+                "note": "历史立即投影且 private 剔除"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                "lineStart": 79,
+                "lineEnd": 82,
+                "nodeIds": [],
+                "note": "IDLE 1000ms 与 TYPING 200ms 常量"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                "lineStart": 352,
+                "lineEnd": 359,
+                "nodeIds": [],
+                "note": "按 hasPendingTyping 切换 tick"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/world-callouts/domain/worldMedia.ts",
+                "lineStart": 48,
+                "lineEnd": 63,
+                "nodeIds": [],
+                "note": "shouldLoadWorldMedia 可见性与网络闸"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "two-ticks",
+                "kind": "basic",
+                "front": "有 pending typing 时 conversation 刷新间隔是多少毫秒？无则呢？",
+                "back": "200ms；空闲 1000ms。",
+                "tags": [
+                  "callouts",
+                  "clocks"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                    "lineStart": 79,
+                    "lineEnd": 82,
+                    "nodeIds": [],
+                    "note": "双 tick 常量"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                    "lineStart": 354,
+                    "lineEnd": 356,
+                    "nodeIds": [],
+                    "note": "按 hasPendingTyping 选择"
+                  }
+                ]
+              },
+              {
+                "id": "history-no-typing",
+                "kind": "basic",
+                "front": "为什么 history 不能复用 live typing 时钟？",
+                "back": "取证与复盘需要权威消息时间，呈现延迟会污染证据。",
+                "tags": [
+                  "callouts",
+                  "clocks"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-callouts/domain/worldConversation.ts",
+                    "lineStart": 86,
+                    "lineEnd": 90,
+                    "nodeIds": [],
+                    "note": "History immediate for forensics 注释"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "typing-tick-ms",
+                "kind": "short-answer",
+                "title": "打字 tick",
+                "prompt": "CONVERSATION_TICK_TYPING_MS 的数值是？",
+                "expectedAnswer": "200",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/world-lobby/WorldRoomShell.tsx",
+                    "lineStart": 82,
+                    "lineEnd": 82,
+                    "nodeIds": [],
+                    "note": "TYPING tick 200"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

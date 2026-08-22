@@ -1,0 +1,199 @@
+/*
+  Highlighted evidence in the reference panel. The authoring campus already
+  carries these rules in its own stylesheet; the delivery shell does not, and
+  the shared component's class names are inert without them. Importing this
+  file from the delivery entry is what makes the two panels look the same.
+*/
+
+.evidence-code {
+  max-height: min(460px, 58vh);
+  margin: 0;
+  overflow: auto;
+  border: 1px solid rgb(246 231 211 / 12%);
+  border-radius: 10px;
+  padding: 10px 0;
+  color: #e6edf3;
+  background: #0d1117;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  overscroll-behavior: contain;
+}
+
+.evidence-code > code {
+  display: block;
+  min-width: max-content;
+}
+
+.evidence-code__line {
+  display: grid;
+  grid-template-columns: 4.5ch minmax(0, 1fr);
+  min-height: 1.55em;
+  padding-right: 12px;
+  white-space: pre;
+}
+
+.evidence-code__line--highlighted {
+  background: rgb(246 193 119 / 8%);
+  box-shadow: inset 4px 0 #f6c177;
+}
+
+.evidence-code__line-number {
+  padding-right: 1.2ch;
+  color: rgb(230 237 243 / 64%);
+  text-align: right;
+  user-select: none;
+}
+
+.evidence-code__line-content {
+  min-width: 1px;
+}
+
+.evidence-code__line--found {
+  outline: 1px solid rgb(80 200 185 / 66%);
+  outline-offset: -1px;
+}
+
+.evidence-inline-source {
+  display: block;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgb(246 231 211 / 14%);
+  border-radius: 12px;
+  background: #161b22;
+  color: #e6edf3;
+}
+
+.evidence-inline-source__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgb(246 231 211 / 10%);
+  background: rgb(0 0 0 / 22%);
+  color: rgb(225 228 232 / 78%);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.evidence-inline-source__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35em;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.evidence-inline-source__path {
+  overflow-wrap: anywhere;
+  color: #f0d2a8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+}
+
+.evidence-inline-source__lines {
+  color: rgb(225 228 232 / 62%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.evidence-inline-source__open {
+  flex: none;
+  margin-left: auto;
+  border: 0;
+  padding: 2px 0;
+  background: none;
+  color: #f7d3a0;
+  font: inherit;
+  font-size: 0.92em;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgb(247 211 160 / 40%);
+  text-underline-offset: 0.18em;
+}
+
+.evidence-inline-source__open:hover,
+.evidence-inline-source__open:focus-visible {
+  color: #ffe3b5;
+  text-decoration-color: #ffe3b5;
+}
+
+.evidence-inline-source__open:focus-visible {
+  outline: 2px solid #f0a868;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.evidence-inline-source > .evidence-code {
+  max-height: min(360px, 50vh);
+  border: 0;
+  border-radius: 0;
+  background: #0d1117;
+}
+
+.evidence-inline-source__loading {
+  display: grid;
+  gap: 0.55em;
+  align-content: start;
+  padding: 12px 14px 14px;
+  background: #0d1117;
+}
+
+.evidence-inline-source__loading-bar {
+  display: block;
+  height: 0.72em;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgb(225 228 232 / 8%) 0%,
+    rgb(225 228 232 / 16%) 50%,
+    rgb(225 228 232 / 8%) 100%
+  );
+  background-size: 200% 100%;
+  animation: evidence-inline-shimmer 1.2s ease-in-out infinite;
+}
+
+.evidence-inline-source__loading-bar--short {
+  width: 62%;
+}
+
+.evidence-inline-source__error {
+  margin: 0;
+  padding: 12px 14px;
+  color: rgb(225 228 232 / 78%);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.evidence-inline-source__error code {
+  color: #f0d2a8;
+  font-size: 0.95em;
+}
+
+.evidence-inline-source__error-detail {
+  display: inline;
+  margin-left: 0.25em;
+  color: rgb(225 228 232 / 52%);
+  font-size: 0.92em;
+}
+
+.evidence-inline-source__attribution {
+  margin: 0;
+  padding: 8px 12px 10px;
+  border-top: 1px solid rgb(246 231 211 / 10%);
+  color: rgb(225 228 232 / 52%);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+@keyframes evidence-inline-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}

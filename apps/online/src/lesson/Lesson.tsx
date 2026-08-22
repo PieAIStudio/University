@@ -27,7 +27,7 @@ import {
   resolveTermLinks,
   termRangeOf,
 } from "@pieai/university-core";
-import { MarkdownContent } from "@pieai/university-ui";
+import { MarkdownContent, type EvidenceSnippetView } from "@pieai/university-ui";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
 import { ForeignSettingsPanel } from "@pieai/university-ui/language/ForeignSettingsPanel.js";
 import {
@@ -55,6 +55,7 @@ export function LessonScreen({
   courseTitle,
   unitTitle,
   position,
+  evidenceBasePath,
   onPass,
   onBack,
   onFollowLink,
@@ -65,6 +66,7 @@ export function LessonScreen({
   courseTitle: string;
   unitTitle: string;
   position: string;
+  evidenceBasePath?: string | ((index: number) => Promise<EvidenceSnippetView>);
   onPass: () => void;
   onBack: () => void;
   onFollowLink?: (target: LessonLinkTarget) => void;
@@ -227,6 +229,7 @@ export function LessonScreen({
             nodeIds: [],
             note: item.note ?? null,
           }))}
+          {...(evidenceBasePath ? { evidenceBasePath } : {})}
           {...(onFollowLink ? { onFollowLink } : {})}
         >
           {lesson.content}

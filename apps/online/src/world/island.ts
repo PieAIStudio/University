@@ -148,3 +148,27 @@ export function buildIsland(seed: string, radius: number, tint = 0): IslandShape
 
   return { geometry, slots, top };
 }
+
+/**
+ * The locked look, baked into a clone of the island's vertex colours.
+ *
+ * Grey is not blur: saturation drops to ~15% of what it was and lightness
+ * drops ~40%, but the facets stay hard. A material tint cannot do this —
+ * multiplying vertex colours by a grey only darkens, it does not desaturate.
+ */
+export function lockIslandGeometry(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
+  const locked = geometry.clone();
+  const colour = locked.getAttribute("color");
+  if (!colour) return locked;
+  const baked = colour.clone();
+  const pixel = new THREE.Color();
+  const hsl = { h: 0, s: 0, l: 0 };
+  for (let index = 0; index < baked.count; index += 1) {
+    pixel.setRGB(baked.getX(index), baked.getY(index), baked.getZ(index));
+    pixel.getHSL(hsl);
+    pixel.setHSL(hsl.h, hsl.s * 0.15, hsl.l * 0.6);
+    baked.setXYZ(index, pixel.r, pixel.g, pixel.b);
+  }
+  locked.setAttribute("color", baked);
+  return locked;
+}

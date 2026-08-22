@@ -13,29 +13,50 @@ type LoadedEvidenceSnippet =
       readonly message: string;
     };
 
-const cache = new Map<string, Promise<LoadedEvidenceSnippet>>();
+/**
+ * Two suppliers, one reader. The authoring shell passes a URL prefix and the
+ * local API serves `${basePath}/evidence/${index}`. The delivery shell has no
+ * such API: import bakes content-addressed JSON, so it passes a resolver that
+ * loads the file for that index. The component does not care which.
+ */
+export type EvidenceSnippetResolver = (index: number) => Promise<EvidenceSnippetView>;
+export type EvidenceSource = string | EvidenceSnippetResolver;
 
-function evidenceSnippetCacheKey(basePath: string, index: number): string {
-  return `${basePath}\0${index}`;
+const cache = new Map<string, Promise<LoadedEvidenceSnippet>>();
+const resolverIds = new WeakMap<EvidenceSnippetResolver, string>();
+let nextResolverId = 0;
+
+function evidenceSnippetCacheKey(source: EvidenceSource, index: number): string {
+  if (typeof source === "string") return `${source}\0${index}`;
+  let id = resolverIds.get(source);
+  if (id === undefined) {
+    id = `resolver:${nextResolverId}`;
+    nextResolverId += 1;
+    resolverIds.set(source, id);
+  }
+  return `${id}\0${index}`;
+}
+
+async function readSnippet(source: EvidenceSource, index: number): Promise<EvidenceSnippetView> {
+  if (typeof source === "function") return source(index);
+  return readJson<EvidenceSnippetView>(await fetch(`${source}/evidence/${index}`));
 }
 
 /**
- * Fetches a windowed evidence snippet and highlights it. Results are cached by
- * base path + evidence index so a lesson that cites the same anchor twice does
+ * Loads a windowed evidence snippet and highlights it. Results are cached by
+ * supplier + evidence index so a lesson that cites the same anchor twice does
  * not hit the network twice.
  */
 export function loadEvidenceSnippet(
-  basePath: string,
+  source: EvidenceSource,
   index: number,
 ): Promise<LoadedEvidenceSnippet> {
-  const key = evidenceSnippetCacheKey(basePath, index);
+  const key = evidenceSnippetCacheKey(source, index);
   let pending = cache.get(key);
   if (!pending) {
     pending = (async (): Promise<LoadedEvidenceSnippet> => {
       try {
-        const snippet = await readJson<EvidenceSnippetView>(
-          await fetch(`${basePath}/evidence/${index}`),
-        );
+        const snippet = await readSnippet(source, index);
         const tokens = await highlightEvidenceCode(snippet.code, snippet.language);
         return { ok: true, snippet, tokens };
       } catch (reason) {

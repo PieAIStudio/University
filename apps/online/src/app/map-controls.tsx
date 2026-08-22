@@ -31,6 +31,57 @@ import type { Marker } from "../world/Maps";
  * rotation behind the compass rather than putting it on the trackpad. This
  * follows them.
  */
+/**
+ * The only two views the 3D map is part of.
+ *
+ * This used to be the opposite list — every view that had to *hide* the stage,
+ * enumerated one `||` at a time. That shape is wrong in a way that is invisible
+ * when you write it and expensive later: a new route is correct only if
+ * whoever adds it remembers to come back here, and `concepts` and `concept`
+ * were both added without that, so two full-page surfaces spent their life
+ * rendering on top of a live WebGL canvas nobody could see.
+ *
+ * Stated as "who uses the map", a forgotten route hides the canvas, which is
+ * the safe direction to be wrong in.
+ */
+export const SHOWS_THE_MAP = new Set<View["kind"]>(["world", "course"]);
+
+export const MAP_CONTROLS_HINT = "拖动平移 · 滚轮缩放 · 点岛进入";
+
+export const WORLD_POLAR = THREE.MathUtils.degToRad(54);
+/**
+ * Inside a course the eye is on the road, not above it.
+ *
+ * This tilt is pinned at both ends by `Controls`, which makes it — not the
+ * camera position — the thing that decides how high the shot sits: `Flight`
+ * sets the distance to the target and `MapControls.update()` then forces the
+ * angle, so every offset tuned into the eye position was being overwritten on
+ * the next frame. Fifty degrees off vertical is a level-select map looking
+ * down at its own layout. Seventy-four is a road going away from you, which is
+ * the only angle at which the stones ahead overlap into a line, the fog does
+ * anything, and the climb reads as a climb.
+ */
+export const COURSE_POLAR = THREE.MathUtils.degToRad(74);
+
+/**
+ * How far the eye sits from the look target inside a course.
+ *
+ * App.tsx still aims four stones ahead; this is the radius MapControls is
+ * allowed to keep. 76 (the old `from`) made each stone ~6% of the viewport.
+ * 38 is the distance at which a stone reads as a button (~12%) while five
+ * still fit, given COURSE_STEP. Height is not a lever — polar is pinned.
+ */
+export const COURSE_DISTANCE = 38;
+export const COURSE_DISTANCE_MIN = 22;
+export const COURSE_DISTANCE_MAX = 48;
+/**
+ * App.tsx aims four stones ahead. Dolly-in toward that far look drops the
+ * live stone under the chrome. Pulling the target back along the ground
+ * toward the eye (about two stones) keeps the live stone in the lower
+ * third with road still visible behind it.
+ */
+export const COURSE_LOOK_PULL = 12;
+
 export function Controls({
   target,
   polar,
@@ -41,6 +92,9 @@ export function Controls({
 }) {
   const { camera, gl } = useThree();
   const controls = useRef<MapControls | null>(null);
+
+  const polarRef = useRef(polar);
+  polarRef.current = polar;
 
   useEffect(() => {
     const instance = new MapControls(camera, gl.domElement);
@@ -53,7 +107,16 @@ export function Controls({
     // would do with any accidental twist.
     instance.touches.TWO = THREE.TOUCH.DOLLY_PAN;
     controls.current = instance;
-    return () => instance.dispose();
+    if (import.meta.env.DEV) {
+      (globalThis as unknown as { mapControls?: MapControls }).mapControls = instance;
+    }
+    return () => {
+      instance.dispose();
+      if (import.meta.env.DEV) {
+        const bag = globalThis as unknown as { mapControls?: MapControls };
+        if (bag.mapControls === instance) delete bag.mapControls;
+      }
+    };
   }, [camera, gl]);
 
   // Pinning both ends is what makes the tilt a property of the view rather
@@ -63,6 +126,13 @@ export function Controls({
     if (!instance) return;
     instance.minPolarAngle = polar;
     instance.maxPolarAngle = polar;
+    if (Math.abs(polar - COURSE_POLAR) < 1e-6) {
+      instance.minDistance = COURSE_DISTANCE_MIN;
+      instance.maxDistance = COURSE_DISTANCE_MAX;
+    } else {
+      instance.minDistance = 6;
+      instance.maxDistance = 460;
+    }
   }, [polar]);
 
   /**
@@ -105,53 +175,43 @@ export function Controls({
   }, [camera, gl]);
 
   useEffect(() => {
-    controls.current?.target.set(...target);
+    const instance = controls.current;
+    if (!instance) return;
+    instance.target.set(...target);
+    // The course road is laid out in −Z. Pulling the look back along +Z
+    // (toward the live stone) does not depend on where the eye currently is,
+    // so a world→course flight cannot aim the target at the old archipelago.
+    if (Math.abs(polarRef.current - COURSE_POLAR) < 1e-6) {
+      instance.target.z += COURSE_LOOK_PULL;
+    }
   }, [target]);
 
-  useFrame(() => controls.current?.update());
+  useFrame((_, delta) => {
+    const instance = controls.current;
+    if (!instance) return;
+    // Flight runs at priority 0 and snaps the eye to App.tsx's `from`, which
+    // is ~65–76 units from the look target. MapControls then rebuilds position
+    // from (target, distance, polar) — so the lever is distance, not height.
+    if (Math.abs(polarRef.current - COURSE_POLAR) < 1e-6) {
+      const dist = camera.position.distanceTo(instance.target);
+      if (dist > COURSE_DISTANCE_MAX + 0.05) {
+        const dir = camera.position.clone().sub(instance.target);
+        if (dir.lengthSq() > 1e-8) {
+          dir.normalize();
+          // Coming from the world map the eye is hundreds of units out; damp
+          // so the drill-down is a dolly, not a teleport. App's course `from`
+          // is just outside max — snap that, or the first URL frame is the
+          // old landscape shot.
+          const next =
+            dist > 90 ? THREE.MathUtils.damp(dist, COURSE_DISTANCE, 2.6, delta) : COURSE_DISTANCE;
+          camera.position.copy(instance.target).addScaledVector(dir, next);
+        }
+      }
+    }
+    instance.update();
+  }, 0.5);
   return null;
 }
-
-/**
- * The tilt each view is locked to, in radians from straight down.
- *
- * 54° is between true isometric (54.7°) and the angle Mapbox's own 3D examples
- * use (60°). The course map sits slightly more overhead because its 41 lessons
- * snake away from the camera, and every degree of extra tilt compresses the
- * far rows further into each other.
- */
-/** What the map actually responds to. Kept next to the controls it describes. */
-/**
- * The only two views the 3D map is part of.
- *
- * This used to be the opposite list — every view that had to *hide* the stage,
- * enumerated one `||` at a time. That shape is wrong in a way that is invisible
- * when you write it and expensive later: a new route is correct only if
- * whoever adds it remembers to come back here, and `concepts` and `concept`
- * were both added without that, so two full-page surfaces spent their life
- * rendering on top of a live WebGL canvas nobody could see.
- *
- * Stated as "who uses the map", a forgotten route hides the canvas, which is
- * the safe direction to be wrong in.
- */
-export const SHOWS_THE_MAP = new Set<View["kind"]>(["world", "course"]);
-
-export const MAP_CONTROLS_HINT = "拖动平移 · 滚轮缩放 · 点岛进入";
-
-export const WORLD_POLAR = THREE.MathUtils.degToRad(54);
-/**
- * Inside a course the eye is on the road, not above it.
- *
- * This tilt is pinned at both ends by `Controls`, which makes it — not the
- * camera position — the thing that decides how high the shot sits: `Flight`
- * sets the distance to the target and `MapControls.update()` then forces the
- * angle, so every offset tuned into the eye position was being overwritten on
- * the next frame. Fifty degrees off vertical is a level-select map looking
- * down at its own layout. Seventy-four is a road going away from you, which is
- * the only angle at which the stones ahead overlap into a line, the fog does
- * anything, and the climb reads as a climb.
- */
-export const COURSE_POLAR = THREE.MathUtils.degToRad(74);
 
 /**
  * A camera move, eased, with no tween library.

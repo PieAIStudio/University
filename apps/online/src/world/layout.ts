@@ -149,9 +149,17 @@ export function layoutStudy(
  * distance rather than as a percentage, and looking ahead shows the next shelf
  * before you can read what is on it.
  */
+/**
+ * Forward spacing between lessons on the course road.
+ *
+ * Stones run to r≈2.9. 7.2 packed them like landscape; 4.2 is close enough
+ * that five stay in frame when the camera dolly (see COURSE_DISTANCE) makes
+ * each one a button. Amplitude scales with it or the curve flattens.
+ */
+export const COURSE_STEP = 4.2;
+export const COURSE_AMPLITUDE = 2.7;
+
 export function layoutCourse(unitSizes: readonly number[]): Placed[] {
-  const STEP = 7.2; // forward, per lesson — stones run to r≈2.9, so this is the gap
-  const AMPLITUDE = 4.6; // lateral swing, peak — scaled with STEP or the curve flattens
   const PERIOD = 7; // lessons per swing, coprime with the common unit size
   const CLIMB = 0.34; // rise per lesson
   const SHELF = 1.1; // extra rise at each unit boundary
@@ -160,9 +168,9 @@ export function layoutCourse(unitSizes: readonly number[]): Placed[] {
   unitSizes.forEach((count, unitIndex) => {
     for (let slot = 0; slot < count; slot += 1) {
       out.push({
-        x: AMPLITUDE * Math.sin((index / PERIOD) * Math.PI * 2),
+        x: COURSE_AMPLITUDE * Math.sin((index / PERIOD) * Math.PI * 2),
         y: index * CLIMB + unitIndex * SHELF,
-        z: -index * STEP,
+        z: -index * COURSE_STEP,
         depth: unitIndex,
       });
       index += 1;

@@ -312,6 +312,8 @@ export interface EvidenceSnippetView {
   readonly code: string;
   readonly truncatedBefore?: boolean;
   readonly truncatedAfter?: boolean;
+  /** Present on baked third-party ranges; absent when the authoring API serves live Git. */
+  readonly attribution?: string;
 }
 
 export interface LessonAssetView {

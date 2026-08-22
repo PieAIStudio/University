@@ -1,0 +1,1423 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "ai-budget-and-cost",
+    "title": "一次对话到底花多少钱",
+    "description": "AI 功能的成本必须在调用前按模型算清并预扣拦住；本课用 TuringPact 的价表、预算 RPC 与 handler 顺序，教你做对会活命的计费设计。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "区分软计价 estimateModelCostUsd 与硬闸门 estimateMeteredModelCostMicroUsd 的失败语义",
+      "用 worst-case 预扣与 MODEL_PRICES 白名单在调用模型前挡住未知费用",
+      "按 reserve→complete→commit/refund 顺序实现预算生命周期并映射 PT* 错误码",
+      "对缺失 usage 与上游失败给出不漏记、不超扣的结算策略"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "ai-contracts-first"
+    ],
+    "trackId": null,
+    "units": [
+      {
+        "id": "price-before-call",
+        "title": "计价：调用前必须算得清",
+        "objective": "我能按模型白名单和最坏 token 估出预扣额，并分清观测可以宽容、扣款必须严厉。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "two-cost-lanes",
+            "title": "未知模型时，哪条计价路会把日预算打穿？",
+            "content": "# 未知模型时，哪条计价路会把日预算打穿？\n\n## 两个东西\n\n你打开 `model-cost.ts`，会看到并排两个估费函数。它们读同一份 `MODEL_PRICES`，对「价表里没有的模型」却给出相反结果。\n\n软路径：找不到价就返回 `0`：\n\n```ts\nexport function estimateModelCostUsd(\n  modelId: string,\n  usage: ModelUsage,\n): number {\n  const price = MODEL_PRICES[normalizeModelId(modelId)];\n  if (!price) return 0;\n  // ...\n}\n```\n\n[[evidence:services/mastra/src/runtime/model-cost.ts:44-49]]\n\n硬路径：同样查不到价，却不返回 0，而是先走 `requireMeteredPrice`：\n\n```ts\nexport function estimateMeteredModelCostMicroUsd(\n  modelId: string,\n  usage: ModelUsage,\n): number {\n  const price = requireMeteredPrice(modelId);\n  // ...\n}\n```\n\n[[evidence:services/mastra/src/runtime/model-cost.ts:58-62]]\n\n两套出口类型也不同：软路径是可读的浮点 USD；硬路径是整数 micro-USD（后面 `Math.ceil`）。\n\n## 先猜一下\n\n如果有人把硬路径也改成「未知模型返回 0」，让预扣永远成功，你这边并发的用户聊天会怎样？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n预扣额变成 0，等于没预扣；上游仍按真实 token 收费，你的日限额却当这笔是免费的——一次配置事故就能打穿预算。\n\n## 逐条对照\n\n| | 软路径 `estimateModelCostUsd` | 硬路径 `estimateMeteredModelCostMicroUsd` |\n| --- | --- | --- |\n| 用途 | 看板、trace、决策 agent 旁路记账 | 付费聊天的预扣与结算 |\n| 单位 | 浮点 USD（`toFixed(9)`） | 整数 micro-USD |\n| 未知模型 | `return 0`，流程继续 | `requireMeteredPrice` 抛错 |\n| 失败语义 | fail-open：报表难看，钱没真扣 | fail-closed：请求在调用模型前结束 |\n\n软路径的计算本身很直白——百万 token 单价 × token 数：\n\n```ts\n  const cost =\n    (usage.inputTokens / 1_000_000) * price.inputUsdPerMillion +\n    (usage.outputTokens / 1_000_000) * price.outputUsdPerMillion;\n\n  return Number(cost.toFixed(9));\n```\n\n[[evidence:services/mastra/src/runtime/model-cost.ts:51-55]]\n\n硬路径多两步纪律：先强制取价，再把 token 校验成非负整数，最后 `Math.ceil` 成整数 micro-USD。`tokens * usd_per_million` 在算术上恰好等于 `USD × 1e6`，所以你不必再乘一百万。\n\n你在 handler 里只会把硬路径接到 `budget.reserve` 之前；软路径从不参与抬杆。混用的典型事故是：你看见软路径「未知返回 0」很省事，就把同一语义抄进预扣。\n\n## 什么时候用哪个\n\n你只问一件事：**这个数字会不会挡住一次真钱调用？**\n\n- **不会**（只写日志、只展示估算）→ 软路径，未知当 0 可以接受\n- **会**（预扣、限额、commit）→ 硬路径，未知必须抛错，绝不能当免费\n\n同一未知模型：决策 agent 的 trace 可以记 `costUsd: 0` 继续跑；用户聊天在预扣前接到抛错，返回 400，**模型 API 一行都没打出去**。你把「能看见 0」和「真的免费」当成一回事，日限额就会骗你。\n\n## 自检\n\n**问：** 硬闸门若也改成「未知按 0 预扣」，对上游账单和你的日限额分别意味着什么？\n\n**问：** 软路径返回 0 时，你应把 0 理解成「真免费」还是「未计价」？\n\n## 一句话\n\n**观测可以宽容，扣款必须严厉——同一份价表，两种失败语义，别混用。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                "lineStart": 44,
+                "lineEnd": 56,
+                "nodeIds": [],
+                "note": "estimateModelCostUsd：未知模型返回 0"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                "lineStart": 58,
+                "lineEnd": 70,
+                "nodeIds": [],
+                "note": "estimateMeteredModelCostMicroUsd：ceil 整数 micro-USD"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "soft-vs-hard-zero",
+                "kind": "basic",
+                "front": "未知模型时，estimateModelCostUsd 与 estimateMeteredModelCostMicroUsd 分别怎样？",
+                "back": "软函数返回 0；硬函数抛错（requireMeteredPrice），不允许按免费处理。",
+                "tags": [
+                  "cost",
+                  "fail-closed"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                    "lineStart": 48,
+                    "lineEnd": 49,
+                    "nodeIds": [],
+                    "note": "软路径：无价格则 return 0"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                    "lineStart": 29,
+                    "lineEnd": 34,
+                    "nodeIds": [],
+                    "note": "硬路径：requireMeteredPrice 抛错"
+                  }
+                ]
+              },
+              {
+                "id": "micro-usd-formula",
+                "kind": "basic",
+                "front": "为何 tokens * usdPerMillion 再 ceil 就是 micro-USD？",
+                "back": "USD = tokens/1e6 * price，乘 1e6 后等于 tokens * price；ceil 保证不低估。",
+                "tags": [
+                  "cost",
+                  "units"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                    "lineStart": 66,
+                    "lineEnd": 69,
+                    "nodeIds": [],
+                    "note": "Math.ceil(tokens * price) 得 micro-USD"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "hard-unknown-behavior",
+                "kind": "short-answer",
+                "title": "未知模型硬路径",
+                "prompt": "计量预扣遇到未定价模型时，代码的硬行为是什么？用一个英文词。",
+                "expectedAnswer": "throw",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                    "lineStart": 29,
+                    "lineEnd": 34,
+                    "nodeIds": [],
+                    "note": "requireMeteredPrice 对未知模型 throw"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "price-allowlist",
+            "title": "路由认识的模型，为什么计价这边能直接拒掉？",
+            "content": "# 路由认识的模型，为什么计价这边能直接拒掉？\n\n## 现象\n\n你打开 `MODEL_PRICES`，整张表在本快照里只有一条：\n\n```ts\nconst MODEL_PRICES: Record<string, ModelPrice> = {\n  'google/gemini-2.5-flash': {\n    inputUsdPerMillion: 0.3,\n    outputUsdPerMillion: 2.5,\n  },\n};\n```\n\n[[evidence:services/mastra/src/runtime/model-cost.ts:16-21]]\n\n网关侧的模型注册表可以更长——能路由的 ID 不必出现在这张表里。可是你走付费聊天时，计量入口不查注册表，只查这里。\n\n更绕的一点：你在请求里常见的 ID 带 `openrouter/` 前缀，价表键却不带。中间还有一次剥前缀：\n\n```ts\nfunction normalizeModelId(modelId: string): string {\n  return modelId.startsWith('openrouter/')\n    ? modelId.slice('openrouter/'.length)\n    : modelId;\n}\n```\n\n[[evidence:services/mastra/src/runtime/model-cost.ts:23-27]]\n\n## 先猜一下\n\n路由表里有 `openai/gpt-4o`，但 `MODEL_PRICES` 没有它。用户发起一次付费聊天时，请求会在哪一步停住？模型 API 会不会被打到？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n停在计量取价：`requireMeteredPrice` 查不到就抛错，handler 收成 400；模型 API 一行都不会发出去。\n\n## 为什么是这样\n\n硬路径不接受「先调用、月底再估」。取价函数把「未登记」直接变成异常：\n\n```ts\nfunction requireMeteredPrice(modelId: string): ModelPrice {\n  const price = MODEL_PRICES[normalizeModelId(modelId)];\n  if (!price) {\n    throw new Error(`Model ${modelId} is not enabled for metered AI chat`);\n  }\n  return price;\n}\n```\n\n[[evidence:services/mastra/src/runtime/model-cost.ts:29-35]]\n\n所以对你而言，价表是**白名单**，不是建议价目录：没进表 = 未启用计量 = 不能走付费聊天。\n\n`normalizeModelId` 只做一件对齐的事：网关常写 `openrouter/google/gemini-2.5-flash`，价表键是 `google/gemini-2.5-flash`。剥掉前缀后命中；你若不剥，同一种模型会被误判成「未启用」。它**不**把任意模型翻译成已定价模型——只统一同一种模型的两种写法。\n\n你可以把路由表想成「厨房认不认得这道菜」，价表是「今晚备没备原料、标没标价」。认得出但没备料，正确动作是拒单，不是估个价先做再对账。\n\n因此你开放模型的顺序是固定的：先有真实单价进 `MODEL_PRICES`，再在路由侧放行。只扩注册表、不扩价表 → 计量路径全 400；给未知模型塞假价格 → 账单系统性偏。\n\n## 自检\n\n**问：** 请求 `openrouter/google/gemini-2.5-flash` 时，查表用的键是什么？谁改的？\n\n**问：** 产品经理说「先放开所有 OpenRouter 模型，价钱后面补」——你若只改路由表，付费聊天会怎样？\n\n## 一句话\n\n**计量价表是产品决策的代码化：没定价就不卖。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                "lineStart": 16,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "MODEL_PRICES 仅登记 gemini-2.5-flash"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                "lineStart": 23,
+                "lineEnd": 27,
+                "nodeIds": [],
+                "note": "normalizeModelId 去掉 openrouter/ 前缀"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                "lineStart": 29,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "requireMeteredPrice 未登记则 throw"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "only-priced-models",
+                "kind": "basic",
+                "front": "MODEL_PRICES 在本快照里登记了几个模型？缺登记的计量请求会怎样？",
+                "back": "只登记了 google/gemini-2.5-flash；未登记模型在硬路径抛错，无法预扣。",
+                "tags": [
+                  "cost",
+                  "allowlist"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                    "lineStart": 16,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "价表只有一条 Gemini Flash"
+                  }
+                ]
+              },
+              {
+                "id": "strip-openrouter",
+                "kind": "basic",
+                "front": "为什么 model id 可能带 openrouter/ 前缀还要查同一张价表？",
+                "back": "normalizeModelId 会剥掉 openrouter/，让供应商前缀与价表 canonical id 对齐。",
+                "tags": [
+                  "cost",
+                  "normalize"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                    "lineStart": 23,
+                    "lineEnd": 27,
+                    "nodeIds": [],
+                    "note": "normalizeModelId 的 slice 逻辑"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "priced-model-id",
+                "kind": "short-answer",
+                "title": "价表 canonical id",
+                "prompt": "MODEL_PRICES 里唯一模型键是什么（完整字符串）？",
+                "expectedAnswer": "google/gemini-2.5-flash",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                    "lineStart": 16,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "价表键 google/gemini-2.5-flash"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "worst-case-before-call",
+            "title": "还没打模型，预扣数字是按什么估出来的？",
+            "content": "# 还没打模型，预扣数字是按什么估出来的？\n\n## 你看到的结果\n\n付费聊天在碰模型 API 之前，handler 已经算出一笔 `reservedMicroUsd`，交给预算闸门冻结：\n\n```ts\n    let reservedMicroUsd: number;\n    try {\n      reservedMicroUsd = estimateWorstCaseModelCostMicroUsd(route.model, {\n        inputBytes: requestInputBytes(messages, systemPrompt),\n        maxOutputTokens: maxTokens,\n      });\n    } catch (error) {\n      return errorResponse(\n        error instanceof Error ? error.message : \"AI model is not metered\",\n        400,\n      );\n    }\n    // ...\n      reservation = await deps.budget.reserve({\n        requestId,\n        reservedMicroUsd,\n      });\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:292-318]]\n\n调用前你手里没有真实 `usage.inputTokens` / `outputTokens`。可预扣不能等发票到了再抬杆。\n\n## 先猜一下\n\n你手里还没有真实 token 数，代码却仍要出一个整数预扣。相对事后按 usage 结的账，这笔预扣通常偏高还是偏低？偏的那一侧在保护谁的日限额？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n故意偏高：把输入字节数当成 input token 数去硬计价，再配上你允许的最大输出；多冻的可以在 commit 时压回去，少冻会让并发请求击穿你的日限额。\n\n## 一站一站往回走\n\n**第 1 站：请求体变成字节数。** `requestInputBytes` 用 `TextEncoder` 累加 system 与每条 message 的 UTF-8 字节，O(n)，不跑 tokenizer：\n\n```ts\nfunction requestInputBytes(\n  messages: AiChatMessage[],\n  systemPrompt?: string,\n): number {\n  return (\n    byteLength(systemPrompt ?? \"\") +\n    messages.reduce((total, message) => total + byteLength(message.content), 0)\n  );\n}\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:111-118]]\n\n**第 2 站：最坏情况估 micro-USD。** 估费函数不发明第二套公式，直接复用硬路径，但把字段硬映射过去：\n\n```ts\nexport function estimateWorstCaseModelCostMicroUsd(\n  modelId: string,\n  usage: WorstCaseUsage,\n): number {\n  return estimateMeteredModelCostMicroUsd(modelId, {\n    inputTokens: asNonNegativeInteger(usage.inputBytes, 'inputBytes'),\n    outputTokens: asNonNegativeInteger(\n      usage.maxOutputTokens,\n      'maxOutputTokens',\n    ),\n  });\n}\n```\n\n[[evidence:services/mastra/src/runtime/model-cost.ts:72-83]]\n\n你在真实 UTF-8 文本里，一字节往往远小于一 token。这里把 `inputBytes` 塞进 `inputTokens`，是**上界假设**：宁可多算输入成本，也不在预扣阶段低估。输出侧用你请求允许的 `maxTokens` 天花板，同样按「可能吐满」计。\n\n**第 3 站：数字进 reserve。** 你回到 handler：估出来的整数交给 `deps.budget.reserve`；估费抛错（例如模型未计量）则 400 返回，根本不会去 reserve，更不会打模型。\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:292-318]]\n\n整条链对你要记住的含义只有一句：预扣是天花板，不是发票。发票在 commit 用真实 usage；天花板必须在 reserve 前就算死。\n\n## 自检\n\n**问：** 为什么调用前你不用 tokenizer 精确数 token，而用字节长度？\n\n**问：** 预扣按最坏情况多冻了，commit 时靠什么保证你不会一直按天花板付钱？\n\n## 一句话\n\n**预扣算的是天花板，不是发票——发票在 commit，天花板必须在 reserve。**\n",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                "lineStart": 72,
+                "lineEnd": 83,
+                "nodeIds": [],
+                "note": "worst-case：inputBytes 当作 inputTokens"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 292,
+                "lineEnd": 318,
+                "nodeIds": [],
+                "note": "handler：先 worst-case 再 budget.reserve"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 111,
+                "lineEnd": 118,
+                "nodeIds": [],
+                "note": "requestInputBytes 累加 system 与 messages 字节"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "bytes-as-tokens",
+                "kind": "basic",
+                "front": "estimateWorstCaseModelCostMicroUsd 如何处理 inputBytes？为什么？",
+                "back": "把 inputBytes 当作 inputTokens 送进硬计价，故意高估输入成本，保证预扣够用。",
+                "tags": [
+                  "cost",
+                  "reserve"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                    "lineStart": 76,
+                    "lineEnd": 81,
+                    "nodeIds": [],
+                    "note": "inputBytes 映射到 inputTokens"
+                  }
+                ]
+              },
+              {
+                "id": "reserve-uses-worst-case",
+                "kind": "basic",
+                "front": "handleAiChatRequest 在调用模型前用什么函数算 reservedMicroUsd？",
+                "back": "estimateWorstCaseModelCostMicroUsd，入参是请求字节与 maxTokens。",
+                "tags": [
+                  "cost",
+                  "handler"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 294,
+                    "lineEnd": 297,
+                    "nodeIds": [],
+                    "note": "worst-case 预扣计算调用点"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "worst-case-input-field",
+                "kind": "short-answer",
+                "title": "最坏估计输入字段",
+                "prompt": "worst-case 函数把哪个字段当成 inputTokens？",
+                "expectedAnswer": "inputBytes",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                    "lineStart": 76,
+                    "lineEnd": 78,
+                    "nodeIds": [],
+                    "note": "inputBytes 传入 inputTokens"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "ceil-never-undercount",
+            "title": "极小 usage 会不会被记成 0 成本？",
+            "content": "# 极小 usage 会不会被记成 0 成本？\n\n## 情境和约束\n\n硬路径最后要把成本落成**整数** micro-USD，才能和你的预算账本对齐。Flash 价上，3 个 input token 加 1 个 output 的原始乘积是：\n\n`3 × 0.3 + 1 × 2.5 = 3.4`\n\n你还要同时守两条边：\n\n1. 上游按真实 token 收费——你这边若系统性少记，日限额会被粉尘请求磨穿。\n2. 用户侧已经按最坏情况预扣过——结算绝不能比预扣还狠。\n\n金额路径上你还要拦非法 usage：token 必须是非负整数。\n\n```ts\nfunction asNonNegativeInteger(value: number, label: string): number {\n  if (!Number.isInteger(value) || value < 0) {\n    throw new Error(`${label} must be a non-negative integer`);\n  }\n  return value;\n}\n```\n\n[[evidence:services/mastra/src/runtime/model-cost.ts:37-41]]\n\n## 先猜一下\n\n硬路径要把像 3.4 这样的原始乘积落成整数 micro-USD。若用向下取整（`floor`），一千次 raw 约 0.4 的请求在你账本上会怎样？上游账单呢？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了 `Math.ceil`：3.4 记成 4，而不是截成 3 或抹成 0；平台宁多记一丁点碎银，也不在粉尘请求上漏记。\n\n## 代价和收益\n\n结算端的取整方向写死在硬计价出口：\n\n```ts\n  return Math.ceil(\n    inputTokens * price.inputUsdPerMillion +\n      outputTokens * price.outputUsdPerMillion,\n  );\n```\n\n[[evidence:services/mastra/src/runtime/model-cost.ts:66-69]]\n\n- **收益：** 任意大于 0 的正成本至少进 1 个 micro 量级的整数格；`floor` 会让 0.4 变 0，一千次免费，上游账单却还在。\n- **代价：** 单笔可能多记不到 1 micro-USD 的碎银——相对一次模型调用的真钱，可忽略；相对「漏记粉尘」，更可接受。\n\n用户侧还有第二道：`usageCostMicroUsd` 在 commit 前用 `Math.min(预扣, 实测)` 盖帽；usage 缺失或非法则直接按预扣天花板结：\n\n```ts\nfunction usageCostMicroUsd(\n  modelId: string,\n  message: GatewayAssistantMessage,\n  reservedMicroUsd: number,\n): number {\n  const usage = message.usage;\n  if (\n    usage &&\n    Number.isSafeInteger(usage.inputTokens) &&\n    usage.inputTokens >= 0 &&\n    Number.isSafeInteger(usage.outputTokens) &&\n    usage.outputTokens >= 0\n  ) {\n    return Math.min(\n      reservedMicroUsd,\n      estimateMeteredModelCostMicroUsd(modelId, usage),\n    );\n  }\n\n  return reservedMicroUsd;\n}\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:169-188]]\n\n两套规则各管一边：ceil 防你少收自己；min 防 usage 异常或估偏时超扣用户。你预扣 13538、真实算出 120 → commit 120；usage 丢了 → commit 仍按 13538。\n\n## 什么时候该反过来\n\n- **不要**在计量硬路径上改用 `floor` / 四舍五入「看起来更公平」——公平对粉尘攻击无效，漏记会系统性偏向调用方。\n- **可以**在纯展示的软路径保留浮点（上一课的 USD 估算），因为那不挡真钱。\n- **不要**为了「usage 丢了就免单」而去掉 `return reservedMicroUsd` 回退——那会鼓励坏 usage 形状；你要的是可审计的结算，不是善意免单。\n- 若某条线路明确免费（零价模型），应进价表标 0 并产品化，而不是靠 floor 把正价抹掉。\n\n## 自检\n\n**问：** `3` input + `1` output 在 Flash 价上，硬路径记多少 micro-USD？你为什么不应期望是 3？\n\n**问：** 预扣与实测不一致时，你 commit 的金额取哪一边？usage 非法时呢？\n\n## 一句话\n\n**金额路径上，舍入方向是产品策略：对自己用 ceil，对用户预扣用 min 封顶。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                "lineStart": 37,
+                "lineEnd": 41,
+                "nodeIds": [],
+                "note": "asNonNegativeInteger 拒绝非法 token 数"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                "lineStart": 66,
+                "lineEnd": 69,
+                "nodeIds": [],
+                "note": "Math.ceil 向上取整 micro-USD"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 169,
+                "lineEnd": 188,
+                "nodeIds": [],
+                "note": "usageCostMicroUsd：min(预扣, 实测) 或回退预扣"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-ceil",
+                "kind": "basic",
+                "front": "计量 micro-USD 为什么用 Math.ceil 而不是四舍五入？",
+                "back": "避免小于 1 的成本被抹成 0；平台宁多记一丁点，也不在粉尘请求上漏记。",
+                "tags": [
+                  "cost",
+                  "rounding"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                    "lineStart": 66,
+                    "lineEnd": 69,
+                    "nodeIds": [],
+                    "note": "ceil 包裹计价结果"
+                  }
+                ]
+              },
+              {
+                "id": "min-with-reserve",
+                "kind": "basic",
+                "front": "真实 usage 算出的费用若高于预扣，commit 金额取多少？",
+                "back": "取 Math.min(reservedMicroUsd, 实测)，不超过预扣天花板。",
+                "tags": [
+                  "cost",
+                  "commit"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 182,
+                    "lineEnd": 185,
+                    "nodeIds": [],
+                    "note": "Math.min 限制 commit 金额"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ceil-result-3-1",
+                "kind": "short-answer",
+                "title": "小数向上",
+                "prompt": "Flash 价下 inputTokens=3 outputTokens=1 的 micro-USD 是几？",
+                "expectedAnswer": "4",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                    "lineStart": 66,
+                    "lineEnd": 69,
+                    "nodeIds": [],
+                    "note": "ceil 后的整数结算单位"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "budget-gate",
+        "title": "闸门：预扣提交退款",
+        "objective": "我能按 reserve→调用→commit/refund 扣预算，用 requestId 保证重试不二次扣，并把 SQLSTATE 映到 HTTP。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "reserve-commit-refund",
+            "title": "预算够不够，为什么不能在 Node 内存里减？",
+            "content": "# 预算够不够，为什么不能在 Node 内存里减？\n\n## 情境和约束\n\n你要给 AI 聊天扣预算：用户一天有限额，一次请求先估一个上限，模型成功后按实测入账，确定不计费失败则退回。并发下两个请求可能同时读到「余额还够」。\n\nTypeScript 侧有 `createAiBudgetLifecycle`，对外是三个方法：`reserve` / `commit` / `refund`。看起来像本地账本，其实每一步都在打 Postgres RPC。状态字面量只有三个：\n\n```ts\nexport type AiBudgetStatus = 'reserved' | 'committed' | 'refunded';\n```\n\n[[evidence:services/mastra/src/runtime/ai-budget.ts:3]]\n\n没有 `pending`、`partial` 之类的第四态。\n\n## 先猜一下\n\n两个并发请求若都在 Node 里先读 `available` 再各自本地减一笔，最终入账总和相对日限额最坏会怎样？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n两边都可能读到「还够」并各自扣一笔，入账总和最坏会超过日限额——这就是双花。\n\n## 代价和收益\n\n你在客户端看到的状态机故意短。一笔预算行只在三态之间走：\n\n1. **reserve** → 行进 `reserved`，可用额度下降。  \n2. **commit** → 进 `committed`，把预扣改成实扣，要带 `actualMicroUsd`（可以小于预扣）。  \n3. **refund** → 进 `refunded`，整笔撤销；参数里只有 `requestId`，不再传金额。\n\n三个方法一一对应三个 RPC 名与参数：\n\n```ts\nexport function createAiBudgetLifecycle(\n  gateway: AiBudgetRpcGateway,\n): AiBudgetLifecycle {\n  return {\n    reserve: (input) =>\n      callBudgetRpc(gateway, 'reserve_ai_budget', {\n        p_request_id: input.requestId,\n        p_reserved_micro_usd: input.reservedMicroUsd,\n      }),\n    commit: (input) =>\n      callBudgetRpc(gateway, 'commit_ai_budget', {\n        p_request_id: input.requestId,\n        p_actual_micro_usd: input.actualMicroUsd,\n      }),\n    refund: (input) =>\n      callBudgetRpc(gateway, 'refund_ai_budget', {\n        p_request_id: input.requestId,\n      }),\n  };\n}\n```\n\n[[evidence:services/mastra/src/runtime/ai-budget.ts:177-195]]\n\n你从返回的 `AiBudgetSnapshot` 里能看到限额全貌，但那是**读出来的快照**，不是 Node 自己维护的真源：\n\n```ts\nexport interface AiBudgetSnapshot {\n  requestId: string;\n  status: AiBudgetStatus;\n  idempotent: boolean;\n  limitMicroUsd: number;\n  reservedMicroUsd: number;\n  committedMicroUsd: number;\n  availableMicroUsd: number;\n  staleAfter?: string;\n}\n```\n\n[[evidence:services/mastra/src/runtime/ai-budget.ts:26-35]]\n\n收益：推理闭环小——任意时刻你只问「现在是 reserved / committed / refunded 哪一态」；扣款是否合法由服务端原子保证。代价：你不能在 Node 里「先改个变量再补写库」；断线、重试、结算失败都要按状态机补 `commit` 或 `refund`，不能靠进程内存假装已经扣过。\n\n`commit` 要 `actualMicroUsd`、`refund` 不要金额：提交要把预扣改成真实消费（常小于预估）；退款是整笔撤销，金额已写在 reserve 行上，再传金额只会制造不一致窗口。\n\n## 什么时候该反过来\n\n如果你在写**单机演示**、没有并发、预算只是 UI 装饰，可以在内存里减一个计数器——省掉 RPC 往返。一旦同一用户会并行多请求、或金额要跨实例一致，客户端账本就会在竞态里双花；那时应回到「短状态机 + 服务端权威」。\n\n另一边也不要堆十几个业务灰态进 `AiBudgetStatus`：灰态越多，重试与对账分支越容易漏。产品语义（日限额、过期）应落在 RPC 与行字段上，而不是再发明第四、第五个状态字符串。\n\n## 自检\n\n**问：** `AiBudgetStatus` 允许哪三个字符串？\n\n**问：** `reserve` / `commit` / `refund` 分别调用哪个 Postgres RPC 名？\n\n**问：** 为什么 `commit` 需要 `actualMicroUsd`，而 `refund` 不需要金额参数？\n\n## 一句话\n\n**钱的状态机要短、可枚举、服务端权威；客户端多出来的状态只是缓存。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                "lineStart": 3,
+                "lineEnd": 3,
+                "nodeIds": [],
+                "note": "AiBudgetStatus 三态定义"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                "lineStart": 26,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "AiBudgetSnapshot 字段含限额与 idempotent"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                "lineStart": 177,
+                "lineEnd": 195,
+                "nodeIds": [],
+                "note": "createAiBudgetLifecycle 映射三个 RPC"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "three-statuses",
+                "kind": "basic",
+                "front": "AiBudgetStatus 允许哪三个字符串？",
+                "back": "reserved、committed、refunded。没有第四态。",
+                "tags": [
+                  "budget",
+                  "lifecycle"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                    "lineStart": 3,
+                    "lineEnd": 3,
+                    "nodeIds": [],
+                    "note": "状态字面量联合类型"
+                  }
+                ]
+              },
+              {
+                "id": "rpc-names",
+                "kind": "basic",
+                "front": "reserve / commit / refund 分别调用哪个 Postgres RPC 名？",
+                "back": "reserve_ai_budget、commit_ai_budget、refund_ai_budget。",
+                "tags": [
+                  "budget",
+                  "rpc"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                    "lineStart": 181,
+                    "lineEnd": 194,
+                    "nodeIds": [],
+                    "note": "三个 RPC 函数名"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "reserve-rpc-name",
+                "kind": "short-answer",
+                "title": "预扣 RPC 名",
+                "prompt": "预扣调用的 RPC 函数名是？",
+                "expectedAnswer": "reserve_ai_budget",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                    "lineStart": 182,
+                    "lineEnd": 182,
+                    "nodeIds": [],
+                    "note": "reserve 映射 reserve_ai_budget"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "gate-before-provider",
+            "title": "日预算用尽时，模型提供商还会收到这次请求吗？",
+            "content": "# 日预算用尽时，模型提供商还会收到这次请求吗？\n\n## 你看到的结果\n\n打开 `handleAiChatRequest`。非流式**成功**路径上，你先看到模型 `complete`，再看到用实测（或回退到预扣额）去 `commit`：\n\n```ts\n        const response = await deps.complete(model, context, options);\n        try {\n          await commitBudget(\n            deps,\n            requestId,\n            usageCostMicroUsd(route.model, response, reservation.reservedMicroUsd),\n          );\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:348-356]]\n\n而在这段之前，同一函数里已经出现过 `deps.budget.reserve`。结算公式不是这节课的重点；**付费 I/O 出现在控制流的哪一侧**才是。\n\n## 先猜一下\n\n若 `budget.reserve` 抛出 `AiBudgetRpcError`（例如日预算耗尽），`complete` / `stream` 会不会已经执行？模型提供商还会不会收到这次请求？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不会。预扣的 `catch` 里直接 `return budgetErrorResponse`，模型分支未进入。\n\n## 一站一站往回走\n\n**第 1 站：校验与路由。** 消息形态、温度、maxTokens、模型 id 先过关；不过关直接 400，你还没碰到预算。\n\n```ts\n    const boundsError = validateRequestBounds(\n      messages,\n      systemPrompt,\n      temperature,\n      maxTokens,\n    );\n    if (boundsError) {\n      return errorResponse(boundsError, 400);\n    }\n\n    const route = resolveModelRoute(modelId);\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:267-277]]\n\n**第 2 站：最坏情况估价。** 你用输入字节与 `maxTokens` 估一个上限 `reservedMicroUsd`。估不出来（未计量模型等）也是 400，仍未预扣。\n\n```ts\n      reservedMicroUsd = estimateWorstCaseModelCostMicroUsd(route.model, {\n        inputBytes: requestInputBytes(messages, systemPrompt),\n        maxOutputTokens: maxTokens,\n      });\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:294-297]]\n\n**第 3 站：预扣。** 你在这里才调用生命周期的 `reserve`，把 `requestId` 与预估微美元写进 RPC：\n\n```ts\n      reservation = await deps.budget.reserve({\n        requestId,\n        reservedMicroUsd,\n      });\n    } catch (error) {\n      if (error instanceof AiBudgetRpcError) {\n        return budgetErrorResponse(error);\n      }\n      throw error;\n    }\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:315-324]]\n\n`reserve` 本身只是薄封装，真名在 schema 侧：\n\n```ts\n    reserve: (input) =>\n      callBudgetRpc(gateway, 'reserve_ai_budget', {\n        p_request_id: input.requestId,\n        p_reserved_micro_usd: input.reservedMicroUsd,\n      }),\n```\n\n[[evidence:services/mastra/src/runtime/ai-budget.ts:181-185]]\n\n上面的 `return` 结束请求。你不会进入后面的 `buildGatewayModel` / `complete`。\n\n**第 4 站：模型与结算。** 只有预扣成功且行状态可用时，你才走到 `complete`；成功后再 `commitBudget`（见开场代码）。顺序写死在 handler 里：校验 → 估价 → reserve → 模型 → commit/refund。\n\n这是利润防火墙。AI 厂商只认 API 调用，不认你内部账单。任何「先调模型再记账」的重构，都会在结算失败时把上游费用变成公司净亏损。\n\n同一 `requestId` 再次预扣时，handler 还会把「已预扣或已终结」收成 409，避免幂等命中后仍再跑一轮模型——键与闸门是同一条链上的两环，细节见 [[lesson:request-id-idempotency|requestId 与幂等]]。\n\n## 自检\n\n**问：** 付费 AI 聊天里，`budget.reserve` 与 `deps.complete` 谁先执行？预扣失败会不会打到模型？\n\n**问：** 预扣返回 429（日预算耗尽）时，OpenRouter 会不会收到这次请求？\n\n**问：** 调用模型前必须成功的预算动作，名字是什么？\n\n## 一句话\n\n**预算闸门的位置比闸门算法更重要：必须在付费 I/O 之前。**\n",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 267,
+                "lineEnd": 324,
+                "nodeIds": [],
+                "note": "校验→估价→reserve→才进入模型"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 348,
+                "lineEnd": 356,
+                "nodeIds": [],
+                "note": "非流式成功路径：complete 后 commit"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                "lineStart": 181,
+                "lineEnd": 185,
+                "nodeIds": [],
+                "note": "reserve RPC 参数 p_request_id 与金额"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "order-reserve-model",
+                "kind": "basic",
+                "front": "付费 AI 聊天里，budget.reserve 与 deps.complete 谁先执行？失败预扣会否打到模型？",
+                "back": "reserve 在前。预扣抛 AiBudgetRpcError 时直接返回，complete 不会跑。",
+                "tags": [
+                  "budget",
+                  "order"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 315,
+                    "lineEnd": 324,
+                    "nodeIds": [],
+                    "note": "reserve 失败返回；模型在其后"
+                  }
+                ]
+              },
+              {
+                "id": "idempotent-409",
+                "kind": "basic",
+                "front": "reservation.idempotent 为 true 时 handler 返回什么？",
+                "back": "409，提示请求已预扣或已终结，避免同一 requestId 再跑一轮模型。",
+                "tags": [
+                  "budget",
+                  "idempotency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 326,
+                    "lineEnd": 328,
+                    "nodeIds": [],
+                    "note": "idempotent 或非 reserved 返回 409"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "before-model-step",
+                "kind": "short-answer",
+                "title": "调用前一步",
+                "prompt": "调用模型前必须成功的预算动作是？",
+                "expectedAnswer": "reserve",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 315,
+                    "lineEnd": 318,
+                    "nodeIds": [],
+                    "note": "budget.reserve 在 complete 之前"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "sqlstate-to-http",
+            "title": "预算 RPC 报错时，HTTP 状态码是谁定的？",
+            "content": "# 预算 RPC 报错时，HTTP 状态码是谁定的？\n\n## 两个东西\n\n预算失败从 Postgres 上来时，带的是 **SQLSTATE 风格的 `code`** 和一段 `message`。TypeScript 侧要把它们变成浏览器 / 客户端能认的 **HTTP 状态码**。\n\n你在 `statusFromSqlState` 里会看到两套逻辑并排放着：\n\n1. **一张显式 `PT*` 表**——认识的产品码，逐个 `return` 固定数字。  \n2. **一个 `default` 分支**——表里没有的码，走统一兜底。\n\n错误对象本身同时扛两个字段：HTTP `status`，以及可选的原始 `code`：\n\n```ts\nexport class AiBudgetRpcError extends Error {\n  readonly status: number;\n  readonly code?: string;\n\n  constructor(message: string, status: number, code?: string) {\n    super(message);\n    this.name = 'AiBudgetRpcError';\n    this.status = status;\n    this.code = code;\n  }\n}\n```\n\n[[evidence:services/mastra/src/runtime/ai-budget.ts:63-72]]\n\n## 先猜一下\n\n日预算用尽时，产品约定用 `PT429`。若某次 RPC 漏登记，返回了表里没有的码，用户看到的 HTTP 更接近「明确业务拒绝」，还是「依赖暂时不可用」？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n更接近依赖暂时不可用：`default` 返回 **503**，不是 500，也不是某张 4xx。\n\n## 逐条对照\n\n表内码是产品契约，不是 Postgres 标准 SQLSTATE。你能直接读到映射：\n\n```ts\nfunction statusFromSqlState(code?: string): number {\n  switch (code) {\n    case 'PT400':\n      return 400;\n    case 'PT401':\n      return 401;\n    case 'PT403':\n      return 403;\n    case 'PT404':\n      return 404;\n    case 'PT409':\n      return 409;\n    case 'PT429':\n      return 429;\n    default:\n      return 503;\n  }\n}\n```\n\n[[evidence:services/mastra/src/runtime/ai-budget.ts:75-92]]\n\n| | 表内 `PT*`（如 `PT429`） | `default` |\n| --- | --- | --- |\n| HTTP | 与后缀对齐的 4xx / 429 | **503** |\n| 含义 | 明确业务拒绝（日预算耗尽、冲突等） | 未知依赖故障 / 暂时不可用 |\n| 调用方动作 | 停重试或换策略，别当服务器 bug | 可退避重试，并告警「契约漏登记」 |\n\nRPC 出错时，客户端用 `error.message` 与 `statusFromSqlState(error.code)` 抛出：\n\n```ts\n  if (error) {\n    throw new AiBudgetRpcError(\n      error.message,\n      statusFromSqlState(error.code),\n      error.code,\n    );\n  }\n```\n\n[[evidence:services/mastra/src/runtime/ai-budget.ts:165-170]]\n\nhandler 不再二次发明状态码，只透传：\n\n```ts\nfunction budgetErrorResponse(error: AiBudgetRpcError): Response {\n  return errorResponse(error.message, error.status);\n}\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:206-208]]\n\n所以「日预算用尽」的策略源在数据库 RPC（`PT429` + 文案）；BFF 只做翻译。你改日限额数字，不必发一版 Edge。\n\n## 什么时候用哪个\n\n- **表内码**：产品已经定义、客户端要分支处理的结果——限额、鉴权、冲突。新增一种业务拒绝时，你要同时改 RPC 抛码与这张 `switch`，漏一边就会掉进 503。  \n- **503 兜底**：未知码、半残依赖、契约漂移。它故意不说「你的业务逻辑算错了」，而说「这条链路现在不可用」。\n\n不要在 Edge 里再写一份 `if (available < need) return 402` 去「提前拦」：两处规则会漂移，绕过 Edge 直打 RPC 时行为还不一致。权威校验只在 RPC；Edge 只翻译。\n\n## 自检\n\n**问：** `statusFromSqlState('PT429')` 返回几？代表什么产品含义？\n\n**问：** 未识别的 SQLSTATE 为何默认 503 而不是 500？\n\n**问：** 若把「余额不足」同时写在 TS 与 DB 两处，会怎样？\n\n## 一句话\n\n**错误码是跨层 API：SQLSTATE、HTTP、客户端文案必须共用一张表。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                "lineStart": 75,
+                "lineEnd": 92,
+                "nodeIds": [],
+                "note": "statusFromSqlState：PT* 到 HTTP 映射"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                "lineStart": 63,
+                "lineEnd": 72,
+                "nodeIds": [],
+                "note": "AiBudgetRpcError 携带 status 与 code"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                "lineStart": 165,
+                "lineEnd": 170,
+                "nodeIds": [],
+                "note": "RPC error 转为 AiBudgetRpcError"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 206,
+                "lineEnd": 208,
+                "nodeIds": [],
+                "note": "budgetErrorResponse 透传 status"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "pt429-means",
+                "kind": "basic",
+                "front": "预算 RPC 返回 code PT429 时，HTTP 状态码是多少？代表什么产品含义？",
+                "back": "429。测试与消息表明日预算耗尽，应停止继续调用而不是当服务器 bug。",
+                "tags": [
+                  "budget",
+                  "errors"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                    "lineStart": 87,
+                    "lineEnd": 88,
+                    "nodeIds": [],
+                    "note": "PT429 映射为 429"
+                  }
+                ]
+              },
+              {
+                "id": "default-503",
+                "kind": "basic",
+                "front": "未识别的 SQLSTATE 为何默认 503 而不是 500？",
+                "back": "偏向「暂时不可用/依赖故障」，便于与明确的 4xx 业务拒绝区分。",
+                "tags": [
+                  "budget",
+                  "errors"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                    "lineStart": 89,
+                    "lineEnd": 90,
+                    "nodeIds": [],
+                    "note": "default 返回 503"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "pt429-http",
+                "kind": "short-answer",
+                "title": "PT429 的 HTTP",
+                "prompt": "statusFromSqlState('PT429') 返回几？",
+                "expectedAnswer": "429",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                    "lineStart": 87,
+                    "lineEnd": 88,
+                    "nodeIds": [],
+                    "note": "PT429 → 429"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "request-id-idempotency",
+            "title": "超时后用同一个 requestId 重试，会再扣一笔吗？",
+            "content": "# 超时后用同一个 requestId 重试，会再扣一笔吗？\n\n## 现象\n\n你发了一条 AI 聊天。客户端带上（或由服务端生成）一个 `requestId`，请求在预扣之后、模型返回之前超时。你用**同一个** `requestId` 再 POST 一次。\n\n预算行的键就是这个 id。重放会撞上已有行；快照字段 `idempotent` 标记「命中已有行，不是新开预扣」。你若乱填非 UUID，连预扣都进不去——直接 400。\n\n## 先猜一下\n\n同一 `requestId` 再次打到预扣时，handler 更应该再跑一轮模型并再扣一次，还是停下来当冲突处理？为什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n应当当冲突停住。同一业务键上的预算行已经存在；再当成功往下跑会让你付第二次模型费。\n\n## 为什么是这样\n\n`requestId` 的解析很硬：未传 → 生成 UUID；传了但不符合 UUID 正则 → `undefined`：\n\n```ts\nfunction resolveRequestId(requestId?: string): string | undefined {\n  if (requestId === undefined) {\n    return crypto.randomUUID();\n  }\n  if (!UUID_PATTERN.test(requestId)) {\n    return undefined;\n  }\n  return requestId;\n}\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:159-167]]\n\n进预算前就拒绝坏键：\n\n```ts\n    const requestId = resolveRequestId(payload.requestId);\n    if (!requestId) {\n      return errorResponse(\"AI chat requestId must be a UUID\", 400);\n    }\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:287-290]]\n\n预扣时，这个 id 原样进入 `p_request_id`——它是预算行主键，不是日志装饰：\n\n```ts\n    reserve: (input) =>\n      callBudgetRpc(gateway, 'reserve_ai_budget', {\n        p_request_id: input.requestId,\n        p_reserved_micro_usd: input.reservedMicroUsd,\n      }),\n```\n\n[[evidence:services/mastra/src/runtime/ai-budget.ts:181-185]]\n\n行映射里，`idempotent` **必须是 boolean**。缺字段或类型不对走 502，而不是默默当 `false`：\n\n```ts\n    idempotent: asBoolean(record.idempotent, 'idempotent'),\n```\n\n[[evidence:services/mastra/src/runtime/ai-budget.ts:136]]\n\n你不能把「未知」当成「非幂等」继续扣款。handler 见 `idempotent` 或状态已非 `reserved` 时以冲突结束，避免再跑一轮模型（见 [[lesson:gate-before-provider|预扣必须在模型前]]）。\n\n只对 HTTP 层做幂等不够：预算行与模型调用必须共享同一业务键。超时重试时，你应复用 id，或按约定换新 id——不要每次自动换单号再扣两笔。\n\n## 自检\n\n**问：** 客户端传了非 UUID 的 `requestId`，HTTP 状态码是什么？\n\n**问：** `AiBudgetSnapshot.idempotent` 为 true 表示什么？\n\n**问：** 为什么 `mapBudgetRow` 要把 `idempotent` 校验成 boolean，而不是缺省 `false`？\n\n## 一句话\n\n**幂等不是框架装饰品，是预算行的主键语义。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 159,
+                "lineEnd": 167,
+                "nodeIds": [],
+                "note": "resolveRequestId：UUID 或自动生成"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 287,
+                "lineEnd": 290,
+                "nodeIds": [],
+                "note": "非法 requestId 返回 400"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                "lineStart": 129,
+                "lineEnd": 152,
+                "nodeIds": [],
+                "note": "mapBudgetRow 解析 idempotent 与金额字段"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                "lineStart": 181,
+                "lineEnd": 185,
+                "nodeIds": [],
+                "note": "reserve 把 requestId 写入 p_request_id"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "uuid-required",
+                "kind": "basic",
+                "front": "客户端传了非 UUID 的 requestId 会怎样？",
+                "back": "resolveRequestId 返回 undefined，handler 以 400 拒绝，文案要求 UUID。",
+                "tags": [
+                  "budget",
+                  "idempotency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 163,
+                    "lineEnd": 165,
+                    "nodeIds": [],
+                    "note": "非 UUID 返回 undefined"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 288,
+                    "lineEnd": 290,
+                    "nodeIds": [],
+                    "note": "400：requestId must be a UUID"
+                  }
+                ]
+              },
+              {
+                "id": "idempotent-flag",
+                "kind": "basic",
+                "front": "AiBudgetSnapshot.idempotent 为 true 表示什么？",
+                "back": "这次 RPC 命中了已有预算行（重放），不是全新预扣；handler 用 409 拦住重复执行。",
+                "tags": [
+                  "budget",
+                  "idempotency"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                    "lineStart": 136,
+                    "lineEnd": 136,
+                    "nodeIds": [],
+                    "note": "idempotent 字段映射"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 326,
+                    "lineEnd": 328,
+                    "nodeIds": [],
+                    "note": "idempotent 时 409"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "bad-request-id-status",
+                "kind": "short-answer",
+                "title": "非法 requestId",
+                "prompt": "非法 requestId 时 HTTP 状态码是？",
+                "expectedAnswer": "400",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 288,
+                    "lineEnd": 290,
+                    "nodeIds": [],
+                    "note": "非 UUID 返回 400"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "settle-and-wire",
+        "title": "结算与接线：失败怎么收钱",
+        "objective": "我能在 usage 不可信时按预扣全额收，在失败路径上选择退扣还是实扣，并把客户端与 env 边界接到同一条防烧钱链上。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "settle-with-usage",
+            "title": "模型没带回合法 usage，这次还会按 0 结算吗？",
+            "content": "# 模型没带回合法 usage，这次还会按 0 结算吗？\n\n## 现象\n\n成功路径上，你并不是直接 `commit` 预扣额。非流式在 `complete` 之后、流式在 `done` 事件里，都会先把模型消息丢进同一个函数，再拿返回值去结算。\n\n上游塞 usage 的方式很脆。`extractUsage` 读 `totalUsage`；字段缺失，或 input/output 任一侧解析失败，整段变成 `undefined`：\n\n```ts\n  const usage = maybeResult.totalUsage;\n  if (!usage) {\n    return undefined;\n  }\n\n  const inputTokens =\n    asTokenCount(usage.inputTokens) ?? asTokenCount(usage.promptTokens);\n  const outputTokens =\n    asTokenCount(usage.outputTokens) ?? asTokenCount(usage.completionTokens);\n  if (inputTokens === undefined || outputTokens === undefined) {\n    return undefined;\n  }\n```\n\n[[evidence:services/mastra/src/runtime/mastra-chat.ts:67-89]]\n\n你手里于是只有：一次已经发生的预扣，加上一份可能没有 `usage` 的消息。结算函数必须给 `commit` 一个整数。\n\n## 先猜一下\n\n当 `message.usage` 缺失或非法时，`usageCostMicroUsd` 会把这次 commit 算成多少？会不会是 0？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不会是 0。它直接返回 `reservedMicroUsd`——按预扣全额结算。\n\n## 为什么是这样\n\n决策树只有两支：\n\n```ts\nfunction usageCostMicroUsd(\n  modelId: string,\n  message: GatewayAssistantMessage,\n  reservedMicroUsd: number,\n): number {\n  const usage = message.usage;\n  if (\n    usage &&\n    Number.isSafeInteger(usage.inputTokens) &&\n    usage.inputTokens >= 0 &&\n    Number.isSafeInteger(usage.outputTokens) &&\n    usage.outputTokens >= 0\n  ) {\n    return Math.min(\n      reservedMicroUsd,\n      estimateMeteredModelCostMicroUsd(modelId, usage),\n    );\n  }\n\n  return reservedMicroUsd;\n}\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:169-189]]\n\n你要同时满足：对象存在，且 input/output 都是安全整数、非负。少一条就不信 usage。\n\n信了也不开闸：实测再与 `reservedMicroUsd` 取 `Math.min`。usage 被异常放大时，你最多扣到预扣时冻住的上界。\n\n实测仍走硬计价——`requireMeteredPrice` 与 `Math.ceil`，与预扣同一纪律：\n\n```ts\n  const price = requireMeteredPrice(modelId);\n  // ...\n  return Math.ceil(\n    inputTokens * price.inputUsdPerMillion +\n      outputTokens * price.outputUsdPerMillion,\n  );\n```\n\n[[evidence:services/mastra/src/runtime/model-cost.ts:58-70]]\n\n缺省成 0 会激励你（或代理层）只要丢掉 usage 字段，真钱调用就记成免费，监控成本也变 0。供应商侧可能已经计费——字段丢了不代表调用没发生。你拿不准时按已冻结上界收，再对账。\n\n## 自检\n\n**问：** 若你把「无 usage → 0」写进结算，会激励集成层做什么？\n\n**问：** 有合法 usage 时，你最终 commit 的金额与预扣额是什么关系？\n\n## 一句话\n\n**usage 不可信时按预扣全额收——缺省值的方向，决定有没有人靠丢字段逃费。**\n",
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 169,
+                "lineEnd": 189,
+                "nodeIds": [],
+                "note": "usageCostMicroUsd 决策：实测封顶或回退预扣"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/model-cost.ts",
+                "lineStart": 58,
+                "lineEnd": 70,
+                "nodeIds": [],
+                "note": "实测仍走硬计价与 ceil"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/mastra-chat.ts",
+                "lineStart": 67,
+                "lineEnd": 89,
+                "nodeIds": [],
+                "note": "extractUsage：缺字段则 undefined"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "missing-usage-cost",
+                "kind": "basic",
+                "front": "模型响应没有合法 usage 时，commit 金额是多少？",
+                "back": "等于 reservedMicroUsd（预扣全额），不是 0。",
+                "tags": [
+                  "budget",
+                  "settle"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 187,
+                    "lineEnd": 188,
+                    "nodeIds": [],
+                    "note": "无 usage 返回 reservedMicroUsd"
+                  }
+                ]
+              },
+              {
+                "id": "usage-capped",
+                "kind": "basic",
+                "front": "有合法 usage 时最终 commit 如何计算？",
+                "back": "estimateMeteredModelCostMicroUsd 后与 reserved 取 min。",
+                "tags": [
+                  "budget",
+                  "settle"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 182,
+                    "lineEnd": 185,
+                    "nodeIds": [],
+                    "note": "min(reserved, metered)"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "no-usage-fallback",
+                "kind": "short-answer",
+                "title": "无 usage 回退",
+                "prompt": "usage 缺失时 usageCostMicroUsd 返回什么字段？",
+                "expectedAnswer": "reservedMicroUsd",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 187,
+                    "lineEnd": 188,
+                    "nodeIds": [],
+                    "note": "回退 reservedMicroUsd"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "failure-refund-or-charge",
+            "title": "上游已经失败了，预扣的额度还会回到你账上吗？",
+            "content": "# 上游已经失败了，预扣的额度还会回到你账上吗？\n\n## 两个东西\n\n预扣已成功，模型调用却在后面炸了。结算只剩两条路：\n\n- **退还（refund）**：额度回到你的日限额。\n- **按预扣结算（commit reserved）**：用户侧看到 502，钱仍按预扣额扣定。\n\n分叉靠一个很窄的错误类型——几乎只有名字，没有字段告诉你退还是扣：\n\n```ts\nexport class NonBillableProviderError extends Error {\n  constructor(message: string) {\n    super(message);\n    this.name = \"NonBillableProviderError\";\n  }\n}\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:73-78]]\n\n你在 catch 里要拿它和「其它上游错误」做二选一；非流式与流式都面对同一题。\n\n## 先猜一下\n\n若 OpenRouter 返回 500（普通上游错误，不是这个类型），你这次预扣额度会回到日限额，还是按 reserved 扣掉？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n按 reserved 扣掉。只有 `NonBillableProviderError` 才 refund；其它默认 commit 预扣。\n\n## 逐条对照\n\n非流式 catch 把选择写死成 `instanceof`：\n\n```ts\n          if (error instanceof NonBillableProviderError) {\n            await refundBudget(deps, requestId);\n          } else {\n            await commitBudget(deps, requestId, reservation.reservedMicroUsd);\n          }\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:368-383]]\n\n| | 退还 | 照扣预扣 |\n| --- | --- | --- |\n| 触发 | `NonBillableProviderError` | 其它上游错误 |\n| 动作 | `refundBudget` | `commitBudget(..., reserved)` |\n| 含义 | 明确不该向你收钱 | 默认假设供应商侧可能已计费 |\n\n流式不另起策略。stream 启动失败同一分叉：\n\n```ts\n        if (error instanceof NonBillableProviderError) {\n          await refundBudget(deps, requestId);\n        } else {\n          await commitBudget(deps, requestId, reservation.reservedMicroUsd);\n        }\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:392-397]]\n\nstream fatal 同理：NonBillable → `settleRefund`，否则 `settleCommit(reserved)`。\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:477-480]]\n\n第三条坑：refund/commit **自己**再抛 → `AI budget settlement failed` 503，响应与账本可能已不一致。\n\n## 什么时候用哪个\n\n你只问：**这次失败能否证明供应商侧不该计费？**\n\n- 能（配置错、明确不可计费）→ `NonBillableProviderError`，refund\n- 不能（超时、5xx、半截流）→ 默认 commit 预扣，避免失败重试在厂商侧烧钱、本地无限退\n\n所有 catch 都 refund，等于给可刷免费重试开闸。新错误类型时，你要同时答：退还是扣？\n\n## 自检\n\n**问：** 什么错误类会 refund 而不是 commit 预扣？\n\n**问：** commit/refund 自己失败时，你看到的状态码与含义是什么？\n\n## 一句话\n\n**错误分类就是计费策略：默认假设上游可能已计费，只有明确不可计费才退。**\n",
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 368,
+                "lineEnd": 383,
+                "nodeIds": [],
+                "note": "非流式：NonBillable 则 refund 否则 commit 预扣"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 392,
+                "lineEnd": 397,
+                "nodeIds": [],
+                "note": "流式启动失败同样分支"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 477,
+                "lineEnd": 480,
+                "nodeIds": [],
+                "note": "流式 fatal：NonBillable refund 否则 commit"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 73,
+                "lineEnd": 78,
+                "nodeIds": [],
+                "note": "NonBillableProviderError 类型定义"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "when-refund",
+                "kind": "basic",
+                "front": "什么错误会 refund 而不是 commit 预扣？",
+                "back": "NonBillableProviderError。其它上游错误默认按 reservedMicroUsd commit。",
+                "tags": [
+                  "budget",
+                  "failure"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 374,
+                    "lineEnd": 377,
+                    "nodeIds": [],
+                    "note": "NonBillable → refund 否则 commit"
+                  }
+                ]
+              },
+              {
+                "id": "settlement-failed",
+                "kind": "basic",
+                "front": "commit/refund 自己失败时 handler 返回什么状态码与含义？",
+                "back": "503，AI budget settlement failed——预算行可能与响应不一致。",
+                "tags": [
+                  "budget",
+                  "failure"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 357,
+                    "lineEnd": 359,
+                    "nodeIds": [],
+                    "note": "commit 失败返回 503"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "refund-error-class",
+                "kind": "short-answer",
+                "title": "可退款错误类",
+                "prompt": "会触发 refund 的错误类名是？",
+                "expectedAnswer": "NonBillableProviderError",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 73,
+                    "lineEnd": 77,
+                    "nodeIds": [],
+                    "note": "NonBillableProviderError 类名"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "wire-budget-client",
+            "title": "日预算 RPC 发出去时，用的是谁的身份？",
+            "content": "# 日预算 RPC 发出去时，用的是谁的身份？\n\n## 你看到的结果\n\n`createAiBudgetClient` 建客户端时，除了 URL 和 publishable key，还把 `accessToken` 写进全局 `Authorization: Bearer …`：\n\n```ts\n  const supabase = createClient(config.supabaseUrl, config.publishableKey, {\n    auth: {\n      autoRefreshToken: false,\n      persistSession: false,\n    },\n    global: {\n      headers: {\n        Authorization: `Bearer ${config.accessToken}`,\n      },\n    },\n  }) as unknown as AiBudgetRpcGateway;\n```\n\n[[evidence:services/mastra/src/runtime/ai-budget.ts:198-213]]\n\nreserve / commit / refund 都走这扇门。你若只盯 RPC 函数名，会漏掉：真正决定「扣谁的日限额」的，是这枚 token。\n\n## 先猜一下\n\n这枚 `accessToken` 是从请求链路的哪一站灌进来的？没有它时，你这边的 `reserve` 会怎样？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n鉴权成功后的 `context.accessToken`。没有 `context` 就不建预算客户端，落到 `nonConfiguredBudget`，`reserve` 抛 503。\n\n## 一站一站往回走\n\n**第 1 站：鉴权 deps 组装。** `createAiChatAuthDeps` 从 env 取 URL 与公钥；你缺一不可——缺了直接抛，不是静默免计费：\n\n```ts\n  const supabaseUrl = getSupabaseUrl();\n  const publishableKey = getSupabasePublishableKey();\n\n  if (!supabaseUrl || !publishableKey) {\n    throw new Error('Missing SwimmerCore Supabase URL or publishable key');\n  }\n```\n\n[[evidence:services/mastra/src/runtime/ai-chat-auth.ts:93-120]]\n\n公钥读取来自 `env.ts` 的 `getSupabasePublishableKey` / `getSupabaseUrl` 导入。\n\n[[evidence:services/mastra/src/runtime/ai-chat-auth.ts:10-10]]\n\n**第 2 站：有 context 才建预算。** 同一文件里，`handleRequest` 只有在鉴权给出 `context` 时才调用 `createAiBudgetClient`，并把你的 `context.accessToken` 注入：\n\n```ts\n    handleRequest: (request, context) => {\n      const budget = context\n        ? createAiBudgetClient({\n          supabaseUrl,\n          publishableKey,\n          accessToken: context.accessToken,\n        })\n        : undefined;\n\n      return handleAiChatRequest(request, createAiChatRuntimeDeps(budget));\n    },\n```\n\n[[evidence:services/mastra/src/runtime/ai-chat-auth.ts:93-120]]\n\nOPTIONS 等无 context 的路径上传 `undefined` budget。\n\n**第 3 站：未配置即全失败。** runtime 侧 `nonConfiguredBudget` 的三方法共用同一个 `fail`：\n\n```ts\nfunction nonConfiguredBudget(): AiBudgetLifecycle {\n  const fail = async () => {\n    throw new AiBudgetRpcError('AI budget client is not configured', 503);\n  };\n\n  return {\n    reserve: fail,\n    commit: fail,\n    refund: fail,\n  };\n}\n```\n\n[[evidence:services/mastra/src/runtime/mastra-chat.ts:49-58]]\n\n你不能靠「开发模式跳过预算」蒙混：漏配在生产会立刻 503。身份与鉴权一致——用用户 JWT 调 invoker，限额按用户走，而不是 service role 硬扣任意账户。\n\n## 自检\n\n**问：** `createAiBudgetClient` 除了 URL 与 publishableKey，你还必须注入什么？\n\n**问：** 未注入预算客户端时，`reserve` 抛错的 HTTP status 是多少？\n\n## 一句话\n\n**预算客户端跟用户 token 走；漏配必须 fail-closed，不能静默免计费。**\n",
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                "lineStart": 93,
+                "lineEnd": 120,
+                "nodeIds": [],
+                "note": "createAiChatAuthDeps：env 配密钥并创建预算客户端"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-chat-auth.ts",
+                "lineStart": 10,
+                "lineEnd": 10,
+                "nodeIds": [],
+                "note": "从 env 导入 getSupabaseUrl/PublishableKey"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/mastra-chat.ts",
+                "lineStart": 49,
+                "lineEnd": 58,
+                "nodeIds": [],
+                "note": "nonConfiguredBudget 三方法皆 503"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                "lineStart": 198,
+                "lineEnd": 213,
+                "nodeIds": [],
+                "note": "createAiBudgetClient 注入 Bearer accessToken"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "budget-needs-token",
+                "kind": "basic",
+                "front": "createAiBudgetClient 除了 URL 与 publishableKey 还要什么？",
+                "back": "accessToken（用户 JWT），并设为 Authorization Bearer。",
+                "tags": [
+                  "budget",
+                  "auth"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/ai-budget.ts",
+                    "lineStart": 198,
+                    "lineEnd": 210,
+                    "nodeIds": [],
+                    "note": "config.accessToken 写入 Authorization"
+                  }
+                ]
+              },
+              {
+                "id": "nonconfigured-503",
+                "kind": "basic",
+                "front": "未注入预算客户端时 reserve 会怎样？",
+                "back": "nonConfiguredBudget 抛 AiBudgetRpcError 503：AI budget client is not configured。",
+                "tags": [
+                  "budget",
+                  "fail-closed"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/mastra-chat.ts",
+                    "lineStart": 49,
+                    "lineEnd": 52,
+                    "nodeIds": [],
+                    "note": "未配置抛 503"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "nonconfigured-status",
+                "kind": "short-answer",
+                "title": "未配置预算",
+                "prompt": "nonConfiguredBudget 抛错的 HTTP status 是？",
+                "expectedAnswer": "503",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/mastra-chat.ts",
+                    "lineStart": 51,
+                    "lineEnd": 51,
+                    "nodeIds": [],
+                    "note": "status 503"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "env-and-request-bounds",
+            "title": "只接预算 RPC，为什么还不够防烧钱？",
+            "content": "# 只接预算 RPC，为什么还不够防烧钱？\n\n## 情境和约束\n\n前面几课把预扣、结算、客户端身份都钉上了。但请求还没进估价之前，你手里有两层「前级」：环境变量里装的是哪把钥匙，以及单次请求允许多大。\n\n公钥读取会先过 `normalizePublicKey`。空串，或以 `sb_secret_` 开头，直接丢成 `undefined`：\n\n```ts\nfunction normalizePublicKey(value: string | undefined): string | undefined {\n  const normalized = value?.trim();\n  if (!normalized || normalized.startsWith('sb_secret_')) {\n    return undefined;\n  }\n  return normalized;\n}\n```\n\n[[evidence:services/mastra/src/runtime/env.ts:10-16]]\n\n`getSupabasePublishableKey` 只扫公钥候选名：\n\n```ts\n  return firstPublicEnv(envGet, [\n    'SWIMMER_CORE_PUBLISHABLE_KEY',\n    'SUPABASE_PUBLISHABLE_KEY',\n    'SUPABASE_ANON_KEY',\n    'SUPABASE_DEFAULT_KEY',\n  ]);\n```\n\n[[evidence:services/mastra/src/runtime/env.ts:67-76]]\n\n密钥另有通道——`getSupabaseSecretKey` 读 `SWIMMER_CORE_SECRET_KEY` 等，与公钥列表分离。\n\n[[evidence:services/mastra/src/runtime/env.ts:29-35]]\n\nhandler 侧还有硬顶常量与校验：\n\n```ts\nconst MAX_MESSAGES = 40;\nconst MAX_MESSAGE_BYTES = 32 * 1024;\nconst MAX_SYSTEM_PROMPT_BYTES = 8 * 1024;\nconst MIN_OUTPUT_TOKENS = 1;\nconst MAX_OUTPUT_TOKENS = 500;\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:95-101]]\n\n```ts\n  if (\n    !Number.isInteger(maxTokens) ||\n    maxTokens < MIN_OUTPUT_TOKENS ||\n    maxTokens > MAX_OUTPUT_TOKENS\n  ) {\n    return `AI chat maxTokens must be an integer between ${MIN_OUTPUT_TOKENS} and ${MAX_OUTPUT_TOKENS}`;\n  }\n```\n\n[[evidence:services/mastra/src/contracts/ai-chat-handler.ts:140-146]]\n\n## 先猜一下\n\n若你只做预算 RPC、不设 `MAX_OUTPUT_TOKENS`，攻击面漏在哪？对日限额会怎样？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n单次预扣可按巨大输出上界占满日限额，造成额度屠宰；再配合无 usage 按预扣结算，伤害更大。\n\n## 代价和收益\n\n**密钥分轨的收益：** 有人把 `sb_secret_…` 填进 publishable 槽位时，你不会带着上帝密钥上线——公钥路径直接丢弃，鉴权/预算客户端创建失败。代价是运维要分清两套变量名，不能「随便找个 key 填上」。\n\n**请求硬顶的收益：** `maxTokens` 既限制生成长度，也直接进入 worst-case 预扣；消息字节上限限制 `inputBytes`。你在 400 阶段就能挡掉离谱请求，根本不算预扣。代价是合法长输出被 500 token 封顶，产品若需要更长回答得改常量并接受更高单次上界。\n\n两层叠在一起：身份不错轨 × 单次体量有盖子 × 价表白名单 × 预扣 RPC。单做预算 RPC 仍可能被「开大 maxTokens」抬高每次冻结额。\n\n## 什么时候该反过来\n\n- **内部工具、调用方完全可信**，且你接受单次失败占满日限额的运维成本 → 可以提高或去掉部分请求硬顶，但仍应保留密钥分轨。\n- **需要更长生成** → 调高 `MAX_OUTPUT_TOKENS` 可以，但你同时抬高了 worst-case 预扣；应配套调日限额或按用户分层，而不是只松一边。\n- **绝不能反过来的：** 把 service secret 当 publishable 用，或让未知/超大 `maxTokens` 静默通过进入预扣。\n\n## 自检\n\n**问：** AI chat 允许的 `maxTokens` 上限常量是多少？它如何影响成本？\n\n**问：** 为什么 publishable 读取要丢掉 `sb_secret_` 前缀的值？\n\n## 一句话\n\n**成本控制是多层的：密钥分轨 × 请求边界 × 价表 × 预扣——只接 RPC 不够。**\n",
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/env.ts",
+                "lineStart": 10,
+                "lineEnd": 16,
+                "nodeIds": [],
+                "note": "normalizePublicKey 拒绝 sb_secret_"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/env.ts",
+                "lineStart": 67,
+                "lineEnd": 76,
+                "nodeIds": [],
+                "note": "getSupabasePublishableKey 只读公钥候选"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/runtime/env.ts",
+                "lineStart": 29,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "getSupabaseSecretKey 独立密钥通道"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 95,
+                "lineEnd": 101,
+                "nodeIds": [],
+                "note": "MAX_MESSAGES/字节/输出 token 硬顶"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                "lineStart": 140,
+                "lineEnd": 146,
+                "nodeIds": [],
+                "note": "maxTokens 越界直接 400"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "reject-secret-as-public",
+                "kind": "basic",
+                "front": "为什么 publishable 读取要丢掉 sb_secret_ 前缀的值？",
+                "back": "防止 service secret 被误配进公钥槽位，扩大泄露与越权面。",
+                "tags": [
+                  "env",
+                  "security"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/runtime/env.ts",
+                    "lineStart": 10,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "sb_secret_ 视为无效公钥"
+                  }
+                ]
+              },
+              {
+                "id": "max-output-tokens",
+                "kind": "basic",
+                "front": "AI chat 允许的 maxTokens 上限常量是多少？它如何影响成本？",
+                "back": "500。它钳制生成长度，并作为 worst-case 预扣的 maxOutputTokens。",
+                "tags": [
+                  "bounds",
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 99,
+                    "lineEnd": 99,
+                    "nodeIds": [],
+                    "note": "MAX_OUTPUT_TOKENS = 500"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 294,
+                    "lineEnd": 297,
+                    "nodeIds": [],
+                    "note": "maxTokens 进入 worst-case"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "max-output-tokens-value",
+                "kind": "short-answer",
+                "title": "输出 token 上限",
+                "prompt": "MAX_OUTPUT_TOKENS 常量等于几？",
+                "expectedAnswer": "500",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "services/mastra/src/contracts/ai-chat-handler.ts",
+                    "lineStart": 99,
+                    "lineEnd": 99,
+                    "nodeIds": [],
+                    "note": "MAX_OUTPUT_TOKENS = 500"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

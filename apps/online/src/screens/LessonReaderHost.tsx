@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import { readCourseProgress } from "@pieai/university-core";
 
+import { evidenceSourceOf } from "../content/evidence-source";
 import type { Course } from "../content/library";
 import { LessonScreen } from "../lesson/Lesson";
 import { courseShapeOf, progressSource } from "../progress/source";
@@ -30,6 +32,7 @@ export function LessonReaderHost({
   const lesson = unit.lessons.find((entry) => entry.id === lessonId) ?? unit.lessons[0]!;
   const flat = course.units.flatMap((entry) => entry.lessons);
   const index = flat.findIndex((entry) => entry.id === lesson.id);
+  const evidenceBasePath = useMemo(() => evidenceSourceOf(lesson.evidence), [lesson.evidence]);
 
   return (
     <main className="reader">
@@ -40,6 +43,7 @@ export function LessonReaderHost({
         courseTitle={course.title}
         unitTitle={unit.title}
         position={`${index + 1}/${flat.length}`}
+        {...(evidenceBasePath ? { evidenceBasePath } : {})}
         onFollowLink={onFollowLink}
         onBack={onBack}
         onPass={() => {

@@ -3,7 +3,7 @@ import { useEffect, useId, useState } from "react";
 import type { EvidenceSnippetView, EvidenceToken, EvidenceUaView } from "../view/lesson-view.js";
 import { EvidenceCode } from "./EvidenceCode.js";
 import { EvidenceUaPlace } from "./EvidenceUaPlace.js";
-import { loadEvidenceSnippet } from "./load-evidence-snippet.js";
+import { loadEvidenceSnippet, type EvidenceSource } from "./load-evidence-snippet.js";
 
 function formatLineRange(start: number, end: number): string {
   return start === end ? `L${start}` : `L${start}–${end}`;
@@ -34,7 +34,7 @@ export function EvidenceInlineSource({
   onOpenEvidence,
 }: {
   readonly index: number;
-  readonly basePath: string;
+  readonly basePath: EvidenceSource;
   readonly sourcePath: string;
   readonly lines: string;
   readonly ua?: EvidenceUaView | null;
@@ -129,7 +129,14 @@ export function EvidenceInlineSource({
         </p>
       ) : null}
 
-      {status === "ready" && snippet ? <EvidenceCode snippet={snippet} lines={tokens} /> : null}
+      {status === "ready" && snippet ? (
+        <>
+          <EvidenceCode snippet={snippet} lines={tokens} />
+          {snippet.attribution ? (
+            <p className="evidence-inline-source__attribution">{snippet.attribution}</p>
+          ) : null}
+        </>
+      ) : null}
     </div>
   );
 }

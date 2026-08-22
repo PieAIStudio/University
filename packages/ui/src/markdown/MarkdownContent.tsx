@@ -7,6 +7,7 @@ import type { LanguageLayer, TermRange } from "@pieai/university-core/domain/les
 import type { LexiconEntry } from "@pieai/university-core/domain/schemas.js";
 import { EvidenceInlineSource } from "../evidence/EvidenceInlineSource.js";
 import { CopyLocatorButton } from "../evidence/CopyLocatorButton.js";
+import type { EvidenceSource } from "../evidence/load-evidence-snippet.js";
 import {
   ReferencePanel,
   TermReferenceBody,
@@ -342,7 +343,7 @@ export function MarkdownContent({
   readonly onFollowLink?: (target: LessonLinkTarget) => void;
   readonly evidenceAnchors?: readonly EvidenceAnchorRange[];
   readonly evidence?: readonly EvidenceView[];
-  readonly evidenceBasePath?: string;
+  readonly evidenceBasePath?: EvidenceSource;
   readonly onOpenEvidence?: (index: number, trigger: HTMLElement) => void;
   readonly termAnchors?: readonly TermRange[];
   readonly assets?: readonly LessonAssetView[];
@@ -744,7 +745,7 @@ function ReferenceBody({
 }: {
   readonly reference: OpenReference;
   readonly evidence: readonly EvidenceView[] | undefined;
-  readonly evidenceBasePath: string | undefined;
+  readonly evidenceBasePath: EvidenceSource | undefined;
   readonly placeTellsThemApart: boolean;
 }) {
   if (reference.kind === "lesson") {
@@ -777,17 +778,10 @@ function ReferenceBody({
       />
     );
   }
-  // No snippet source. That is the delivery shell, and it is not an oversight:
-  // the authoring shell has a clone of the cited repository on disk and can
-  // serve the lines, and a static build served to customers does not — showing
-  // them would mean shipping the source itself, which is a disclosure decision
-  // and not a rendering one.
-  //
-  // What a reader can still be given is the locator. Someone with access to the
-  // repository can paste it straight into their editor's Quick Open and land on
-  // the line; someone without access at least sees precisely what was cited
-  // rather than a claim that something was. That is the difference between a
-  // citation and a footnote, and it costs nothing to keep.
+  // No snippet source. The authoring shell always passes one. The delivery
+  // shell passes a resolver when import baked the cited ranges, and omits it
+  // when the machine had no checkout — a fresh clone, CI — so a coordinate is
+  // still better than a claim that the lines could not be read.
   return (
     <>
       <p className="reference-panel__meta">
