@@ -1,6 +1,8 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { Avatar, dressScene, randomRecipe } from "@pieai/university-avatar";
+import { randomRecipe } from "@pieai/swimmer-avatar-kit";
+import { dressScene } from "@pieai/swimmer-avatar-kit/materials";
+import { Avatar } from "@pieai/swimmer-avatar-kit/react-three-fiber";
 import { useMemo } from "react";
 
 /** The avatar-lab's creature, as a preview. Full editor stays at `#/avatar-lab`. */
