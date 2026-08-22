@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>多邻国拆解 · Duolingo Teardown</title>
+<style>
+  :root{
+    --bg:#0f1216; --panel:#161b22; --line:#252c37; --ink:#e6edf3; --dim:#8b98a8;
+    --duo:#58cc02; --blue:#1cb0f6; --pink:#ce82ff; --gold:#ffc800; --red:#ff4b4b;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.7 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px 120px}
+  header.top{padding:56px 0 32px;border-bottom:1px solid var(--line);margin-bottom:40px}
+  h1{font-size:34px;margin:0 0 8px;letter-spacing:-.02em}
+  .sub{color:var(--dim);font-size:15px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .meta code{background:var(--panel);border:1px solid var(--line);border-radius:6px;
+    padding:4px 10px;font:12px/1.6 var(--mono);color:var(--dim)}
+  h2{font-size:24px;margin:56px 0 6px;padding-top:24px;border-top:1px solid var(--line)}
+  h2 .tag{font:12px/1 var(--mono);color:var(--bg);background:var(--duo);
+    padding:5px 8px;border-radius:5px;vertical-align:6px;margin-right:10px}
+  h2.b .tag{background:var(--pink)} h2.c .tag{background:var(--blue)}
+  h2.d .tag{background:var(--gold)} h2.e .tag{background:#ff9600}
+  h2.f .tag{background:var(--red)}  h2.g .tag{background:#a560ff}
+  .lede{color:var(--dim);margin:0 0 28px;max-width:70ch}
+  .screen{display:grid;grid-template-columns:250px 1fr;gap:32px;
+    padding:28px 0;border-top:1px solid var(--line)}
+  .screen:first-of-type{border-top:none}
+  .shot img{width:100%;border-radius:14px;border:1px solid var(--line);display:block}
+  .shot .cap{font:11px/1.5 var(--mono);color:var(--dim);margin-top:8px;text-align:center}
+  .body h3{margin:0 0 4px;font-size:19px}
+  .body .id{font:12px/1 var(--mono);color:var(--duo);letter-spacing:.08em}
+  dl{margin:16px 0 0;display:grid;grid-template-columns:86px 1fr;gap:10px 16px}
+  dt{color:var(--dim);font-size:13px;padding-top:2px}
+  dd{margin:0}
+  ul{margin:0;padding-left:18px} li{margin:3px 0}
+  .why{margin-top:16px;padding:12px 16px;background:#12261a;
+    border-left:3px solid var(--duo);border-radius:0 8px 8px 0;font-size:14.5px}
+  .why b{color:var(--duo)}
+  .port{margin-top:10px;padding:12px 16px;background:#1a1526;
+    border-left:3px solid var(--pink);border-radius:0 8px 8px 0;font-size:14.5px}
+  .port b{color:var(--pink)}
+  table{width:100%;border-collapse:collapse;margin:24px 0;font-size:14.5px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-weight:600;font-size:13px}
+  td code,p code{font:13px/1.5 var(--mono);background:var(--panel);padding:2px 6px;border-radius:4px}
+  .map{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:22px 26px;font:13.5px/2 var(--mono);white-space:pre;overflow-x:auto;color:var(--dim)}
+  .map b{color:var(--ink);font-weight:600}
+  .strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin:20px 0}
+  .strip figure{margin:0}
+  .strip img{width:100%;border-radius:8px;border:1px solid var(--line);display:block}
+  .strip figcaption{font:11px/1.4 var(--mono);color:var(--dim);margin-top:6px;text-align:center}
+  @media(max-width:760px){
+    .screen{grid-template-columns:1fr}
+    .shot{max-width:230px}
+    dl{grid-template-columns:1fr;gap:2px 0}
+    dt{padding-top:10px}
+  }
+</style>
+</head>
+<body><div class="wrap">
+
+<header class="top">
+  <h1>多邻国拆解</h1>
+  <div class="sub">一段 147 秒录屏里的全部屏幕、入口和机制，逐屏拆开。<br>
+  这是「他们做了什么」的记录，不是「我们要做什么」的方案——方案在 v3 用户旅程里。</div>
+  <div class="meta">
+    <code>来源：多邻国ScreenRecording_08-22-2026 11-35-19_1.MP4</code>
+    <code>146.8s · 1284×2778 · 60fps · iPhone 竖屏</code>
+    <code>拆帧：1 帧/秒 → 147 帧，取 27 帧为证据</code>
+    <code>录制时账号状态：连胜 0 天 · 宝石 1527 · 能量 25/25 · 经验 67,539</code>
+  </div>
+</header>
+
+<p class="lede">读法：每一屏有一个编号（<code>C5</code> 这样），后面 v3 用户旅程会直接引用这些编号，
+所以两份文档能对上。每屏给四件事：<b>怎么进来</b>、<b>屏上有什么</b>、
+<b>为什么这么做</b>、<b>能不能搬</b>。</p>
+
+<h2><span class="tag">MAP</span>全局结构：一张图看完</h2>
+<p class="lede">最重要的一句话先说：<b>多邻国没有首页。</b>打开就是那条路径，路径本身就是产品。
+没有 dashboard，没有「我的课程」列表，没有欢迎语。这一点决定了下面所有别的东西。</p>
+
+<div class="map"><b>桌面小组件</b>「791 天没学了」        ← 应用外的召回钩子（A1）
+   │
+   ├─ <b>启动页</b>（A2）
+   │     └─ <b>Super 全屏付费墙</b>（B1）  ← 冷启动第一屏就是变现
+   │
+   └─ <b>主屏 = 学习路径 The Path</b>（C1–C6）  ← tab 1
+         │
+         ├─ 顶部状态条 4 个入口
+         │     ├─ 🇺🇸 旗帜+分数 → <b>课程切换器</b>（D1）
+         │     ├─ 🔥 连胜      → <b>连胜页</b>（D2）
+         │     ├─ 💎 宝石      → <b>宝石小店</b>（D3）
+         │     └─ ⚡ 能量      → <b>能量页</b>（D4）
+         │
+         ├─ sticky 单元条 →（右侧列表图标）<b>重点语句面板</b>（C6）
+         │                 →（点标题）    <b>阶段总览 / 跳级</b>（E1）
+         │
+         ├─ 点路径节点 → <b>节点弹窗</b>（C5）→ <b>加载页</b>（F1）→ <b>答题</b>（F2）
+         │
+         └─ 底部 6 个 tab
+               1 🏠 学习      = 本页
+               2 🎯 任务      <b>特别任务 / 每日任务</b>（G2）
+               3 🏆 排行榜    <b>白银等级 / 周赛</b>（G3）
+               4 💗 消息中心  <b>社交 feed / 好友</b>（G4）
+               5 💠 Super     <b>套餐对比页</b>（G5）
+               6 ⋯  个人      <b>个人主页</b>（G6）
+                              ├─ 发音（G7）
+                              ├─ 视频通话（G8）
+                              └─ 练习中心（G9）</div>
+
+<table>
+  <tr><th>层</th><th>屏数</th><th>它在解决什么</th></tr>
+  <tr><td>A 应用外</td><td>2</td><td>把「你已经 791 天没学了」贴到你的桌面上。召回发生在启动之前。</td></tr>
+  <tr><td>B 变现拦截</td><td>1</td><td>启动第一帧就要钱，而且要的是 ¥0.00（试用），不是钱。</td></tr>
+  <tr><td>C 主路径</td><td>6</td><td>整个产品。下面一句话展开讲。</td></tr>
+  <tr><td>D 顶栏四计数器</td><td>4</td><td>四个数字，四个独立的经济系统，每个都能点开成一整屏。</td></tr>
+  <tr><td>E 课程结构</td><td>1</td><td>唯一一处让你「跳过」的地方，而且要收费/考试。</td></tr>
+  <tr><td>F 学习会话</td><td>2</td><td>进去之后世界消失：没有 tab bar，没有返回，只有 X 和一根进度条。</td></tr>
+  <tr><td>G 其余 tab</td><td>8</td><td>五个 tab 里，<b>只有一个</b>（练习）是学习，其余四个是留存和变现。</td></tr>
+</table>
+
+<h2><span class="tag">A</span>应用之外：召回在你打开之前就开始了</h2>
+
+<div class="screen">
+  <div class="shot"><img src="frames/A1-widget.jpg" alt="iOS 桌面上的 Duolingo 小组件，紫色卡片写着 791 天没学了，旁边是流泪的猫头鹰">
+    <div class="cap">A1 · 00:00</div></div>
+  <div class="body">
+    <div class="id">A1</div><h3>桌面小组件</h3>
+    <dl>
+      <dt>入口</dt><dd>不需要入口。它一直在 iOS 桌面第一屏。</dd>
+      <dt>屏上</dt><dd>紫色大卡 +「791 天没学了」+ 一只哭到眼睛发亮的猫头鹰。除此之外什么都没有。</dd>
+    </dl>
+    <div class="why"><b>为什么</b>：这句话不是通知，是<b>状态</b>。通知会被划掉，状态一直在那儿。
+    而且它说的是「你欠了多少」，不是「来学习吧」——用的是已经投入的沉没成本，不是新的号召力。</div>
+    <div class="port"><b>能不能搬</b>：不能（我们是 Web，没有桌面小组件）。但「用离开的天数当召回文案」这个写法可以搬到
+    首屏和邮件里。注意：我们现在的顶栏写「连击 0 天」——那是同一件事写在了没人会因此回来的地方。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/A2-splash.jpg" alt="纯绿色启动页，中间是猫头鹰的眼睛，底部 duolingo 字样">
+    <div class="cap">A2 · 00:07</div></div>
+  <div class="body">
+    <div class="id">A2</div><h3>启动页</h3>
+    <dl><dt>屏上</dt><dd>满屏品牌绿、一双眼睛、小写 wordmark。眼睛在这两秒里会眨。</dd></dl>
+    <div class="why"><b>为什么</b>：启动页不能省，因为它是「加载」的唯一合法借口。他们把这两秒用来演一个表情。</div>
+  </div>
+</div>
+
+<h2 class="b"><span class="tag">B</span>启动第一屏就是付费墙</h2>
+
+<div class="screen">
+  <div class="shot"><img src="frames/B1-paywall.jpg" alt="深蓝渐变全屏页，无限符号电池，底部按钮写 ¥0.00 就能体验 SUPER">
+    <div class="cap">B1 · 00:11</div></div>
+  <div class="body">
+    <div class="id">B1</div><h3>Super 全屏付费墙</h3>
+    <dl>
+      <dt>入口</dt><dd>冷启动后自动弹，<b>先于学习路径</b>。左上角一个 ✕。</dd>
+      <dt>屏上</dt><dd>「用 Super 的<b>无限能量</b>为你的学习加速！」· 无限符号电池插画 ·
+      小字「可随时取消自动续费」· 主按钮 <b>¥0.00 就能体验 SUPER！</b> · 次要链接「查看全部套餐」</dd>
+    </dl>
+    <div class="why"><b>为什么</b>：注意主按钮上写的是 <b>¥0.00</b> 而不是「免费试用」。
+    把价格显示成零，比说「免费」更能压过防御心理——因为它长得像一个价格，只是这个价格是零。
+    另外「可随时取消」放在按钮<b>上方</b>，先解除顾虑再给按钮。</div>
+    <div class="port"><b>能不能搬</b>：机制能搬，时机<b>不建议</b>搬。多邻国敢在第一屏要钱，是因为这个用户已经学了
+    67,539 经验。对一个第一次打开我们产品的人这么干，就是在还没证明价值之前先收费。</div>
+  </div>
+</div>
+
+<h2 class="c"><span class="tag">C</span>主屏：路径就是产品</h2>
+<p class="lede">这是整份文档最重要的一节。多邻国的主屏不是一个「找课的地方」，
+它是<b>一条你正站在上面的路</b>。你不需要选择，你只需要往下走。</p>
+
+<div class="strip">
+  <figure><img src="frames/C4-path-done.jpg" alt="绿色节点的已完成路径段"><figcaption>绿=已完成</figcaption></figure>
+  <figure><img src="frames/C3-path-current.jpg" alt="洋红色节点的当前路径段"><figcaption>亮色=当前</figcaption></figure>
+  <figure><img src="frames/C2-path-unlocked.jpg" alt="蓝色节点的已解锁路径段"><figcaption>亮色=已解锁</figcaption></figure>
+  <figure><img src="frames/C1-path-locked.jpg" alt="灰黑色节点的未解锁路径段"><figcaption>灰=未解锁</figcaption></figure>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/C3-path-current.jpg" alt="学习路径主视图，顶部状态条，洋红色单元条，蛇形排列的圆形节点">
+    <div class="cap">C1–C4 · 00:16–00:21</div></div>
+  <div class="body">
+    <div class="id">C1–C4</div><h3>学习路径 The Path</h3>
+    <dl>
+      <dt>入口</dt><dd>App 的默认屏。tab 1。</dd>
+      <dt>顶部</dt><dd>四个计数器，从左到右：<code>🇺🇸 60</code>（课程+分数）
+        <code>🔥 0</code>（连胜）<code>💎 1527</code>（宝石）<code>⚡ 25</code>（能量）。
+        每一个都是可点的入口，见 D 节。</dd>
+      <dt>单元条</dt><dd>sticky 彩色卡片，两行：小字「第 5 阶段，第 2 部分」+ 大字单元名
+        「Solo trip: Ask about transportation」。右侧竖分割线 + 列表图标 → C6。<b>颜色跟随当前 section</b>。</dd>
+      <dt>路径</dt><dd>圆形节点垂直蛇形排列（左右摆动），间距不等。节点上是图标不是文字：
+        ★ 普通课 · 📖 故事 · 🎧 听力 · 🏋️ 练习 · 🎥 视频通话 · 🏆 单元测验 · 🎁 宝箱 · 🔁 传奇复习（带环形进度）。</dd>
+      <dt>装饰</dt><dd>路径旁散落着不参与交互的角色插画（弹琴的人、骑车的熊）。灰色时代表「这一段还没到」。</dd>
+      <dt>分段</dt><dd>section 之间用一条横线 + 居中标题分隔：<code>— Solo trip: Reserve a hotel room —</code></dd>
+      <dt>浮动</dt><dd>右下角 <code>↓</code> 按钮 = 跳回当前进度。左上角挂着连胜小挂件（猫头鹰 + 「7天」）。</dd>
+    </dl>
+    <div class="why"><b>为什么用颜色分段而不是编号</b>：滚动的时候你不需要读字就知道自己滚过了几个单元。
+    颜色是这里唯一不需要认知成本的信息。<br>
+    <b>为什么节点是图标不是标题</b>：因为标题会长短不一，路径就没法保持形状。形状比内容重要——
+    形状是「还有多远」，内容是「这一节讲啥」，前者是你每次打开都要回答的问题。<br>
+    <b>为什么灰色的锁定段也画出来</b>：让你看见还有多少。这是进度条的反面——不给你看已完成的比例，给你看未完成的实体。</div>
+    <div class="port"><b>能不能搬</b>：<b>这就是我们的 3D 群岛。</b>我们已经有了这条路，只是它躺在一个 3D 场景里、
+    横着展开、而且没有「当前位置」的强指示。C 节的三条规则（颜色分段 / 图标节点 / 锁定段可见）
+    在我们的岛上一条都不成立——这是 v3 最大的一块工作。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/C5-node-popup.jpg" alt="点击节点后弹出的洋红色气泡卡，含标题、说明和两个按钮">
+    <div class="cap">C5 · 01:10</div></div>
+  <div class="body">
+    <div class="id">C5</div><h3>节点弹窗 ★ 关键交互</h3>
+    <dl>
+      <dt>入口</dt><dd>点路径上任意一个已解锁节点。</dd>
+      <dt>屏上</dt><dd>从节点长出来的带尖角气泡卡（颜色 = 当前 section 色），三层：
+        <ul>
+          <li>标题：<code>Ask about transportation</code></li>
+          <li>一句说明：<code>完成传奇挑战，展示你的传奇实力</code></li>
+          <li>按钮，<b>按钮上直接印着奖励</b>：白底「开始复习 <b>+5 经验</b>」/ 金底「晋升传奇 <b>+40 经验</b>」</li>
+        </ul></dd>
+    </dl>
+    <div class="why"><b>为什么这是最关键的一屏</b>：它把「点一个东西」和「知道会发生什么」压在了同一次点击里。
+    你不用跳到详情页再决定。<br>
+    <b>为什么奖励印在按钮上</b>：这是整个 app 里唯一一处让你在两个难度之间做选择的地方，
+    +5 和 +40 的差距就是选择的理由。把理由写在按钮上，选择只需要零点几秒。</div>
+    <div class="port"><b>能搬，而且应该马上搬。</b>我们现在点岛 → 直接进课，中间没有这一层。
+    加上这一层能同时解决三件事：确认（我点对了吗）、预期（这节多长）、动机（做完得到什么）。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/C6-key-phrases.jpg" alt="重点语句面板，一列带喇叭图标的英文句子">
+    <div class="cap">C6 · 00:58</div></div>
+  <div class="body">
+    <div class="id">C6</div><h3>重点语句面板</h3>
+    <dl>
+      <dt>入口</dt><dd>单元条右侧那个列表图标。</dd>
+      <dt>屏上</dt><dd>顶部「第 5 阶段，第 1 部分」+ ✕。小标题「重点语句」。
+        然后是一列句子卡，每句左边一个 🔊，句中的关键词带虚线下划线（可点查词）。
+        对话中「对方说的」用实心底色、尖角朝右，区分说话人。</dd>
+    </dl>
+    <div class="why"><b>为什么</b>：这是「学完之后我会说什么」的<b>预览</b>，也是「学完之后我该会什么」的<b>清单</b>。
+    一个单元的价值在这里被具体化成六句话，而不是抽象的「掌握交通用语」。</div>
+    <div class="port"><b>能搬。</b>我们有 1,597 条真实项目证据锚点和 281 个概念词条——
+    「这一单元结束后你能看懂这几段真代码」就是我们版本的重点语句，而且比背句子更有说服力。</div>
+  </div>
+</div>
+
+<h2 class="d"><span class="tag">D</span>顶栏四个数字，四个独立经济系统</h2>
+<p class="lede">四个计数器不是装饰。每一个点开都是一整屏，而且四屏各自有独立的商业模型：
+连胜卖<b>焦虑</b>，宝石卖<b>货币</b>，能量卖<b>次数</b>，课程分数卖<b>身份</b>。</p>
+
+<div class="screen">
+  <div class="shot"><img src="frames/D1-course-switch.jpg" alt="顶部拉下的课程切换面板，四个课程方块和分数进度条">
+    <div class="cap">D1 · 00:25</div></div>
+  <div class="body">
+    <div class="id">D1</div><h3>课程切换器</h3>
+    <dl>
+      <dt>入口</dt><dd>点顶栏最左边的旗帜。从顶部<b>下拉</b>覆盖，路径仍在下方可见。</dd>
+      <dt>屏上</dt><dd>横排课程方块（英语 / 中文（粤语）/ Music / Math…），当前项有蓝色描边。
+        下面是分数条 <code>60 ▓▓▓░░ 61</code> +「你的英语分数为 60」+「了解分数详情」链接。
+        再下面「新课程」区，国际象棋带「最新」红标。</dd>
+    </dl>
+    <div class="why"><b>为什么是下拉而不是新页面</b>：换课是个高频但低承诺的动作。下拉保留了「我还在路径上」的感觉。
+    <br><b>那个分数条</b>：60→61 的进度条比「你已完成 47%」有效得多，因为下一个整数触手可及。</div>
+    <div class="port"><b>能搬。</b>我们有 4 个 study（Buzz / SupaLuv / TuringPact / UniversityLocal）、52 门课。
+    现在换 study 要回世界地图重新找。做成顶栏下拉可以省掉这一整跳。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/D2-streak.jpg" alt="连胜页，巨大的 0，日历，连胜精英俱乐部">
+    <div class="cap">D2 · 00:30–00:33</div></div>
+  <div class="body">
+    <div class="id">D2</div><h3>连胜页</h3>
+    <dl>
+      <dt>入口</dt><dd>点火苗。</dd>
+      <dt>屏上</dt><dd>两个 tab：<b>个人连胜 / 友情连胜</b>。
+        <ul>
+          <li>个人：巨大的「0 天连胜啦！」+ 灰色火苗 → 月历（2026年8月，今天 22 高亮）→
+            两个计数「打卡天数 0 / 使用激冻次数 0」→ 锁着的「连胜精英俱乐部（连胜达到 7 天）」</li>
+          <li>友情：橙色插画头图 → <b>新邀请</b>（一条待处理，带「同意」按钮）→ 5 个空的「邀请好友」槽位</li>
+        </ul></dd>
+    </dl>
+    <div class="why"><b>为什么把 0 放这么大</b>：这是我见过最狠的一处设计。数字是 0，字号却是全屏最大，
+    火苗是灰的。它不是在报喜，是在展示一个<b>空洞</b>。<br>
+    <b>为什么用月历</b>：日历上的空格比数字更难受，因为你能看见具体是哪几天被浪费了。<br>
+    <b>五个空槽位</b>：空槽位是邀请。填满的欲望被做成了增长渠道。</div>
+    <div class="port"><b>机制能搬，程度要收。</b>我们卖的是「学会做产品」，不是每日打卡。
+    做成「本周学了几天」的温和版本可以，把 0 放大成一个空洞不合适——我们的用户是成年人在学一门手艺。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/D3-shop.jpg" alt="宝石小店，开学季特惠横幅，我的物品，订阅套餐，任务奖励">
+    <div class="cap">D3 · 00:38</div></div>
+  <div class="body">
+    <div class="id">D3</div><h3>宝石小店</h3>
+    <dl>
+      <dt>入口</dt><dd>点宝石。</dd>
+      <dt>屏上</dt><dd>从上到下五段：
+        <ul>
+          <li><b>限时横幅</b>：「Super家庭套餐特惠：每人立省 80%！优惠将在 <b>7 天</b>后结束」</li>
+          <li><b>我的物品</b>：时间宝 ×4 / 经验宝 ×0（0 用红色）/ 连胜冻结… 横向滚动</li>
+          <li><b>订阅套餐</b>：Super Duolingo「免费体验」</li>
+          <li><b>任务奖励</b>：早起鸟宝箱 / 夜猫子宝箱，都是「未解锁」灰态</li>
+          <li><b>连胜激冻</b>：1 天 = 💎425</li>
+        </ul></dd>
+    </dl>
+    <div class="why"><b>×0 为什么标红</b>：库存为零是一个可以被修复的缺口。红色让它看起来像个错误。<br>
+    <b>灰色的未解锁宝箱为什么要展示</b>：跟路径上的灰色节点同一个手法——先让你看见你没有的。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/D3b-shop-gems.jpg" alt="宝石售卖列表，1200 宝石 38 元，3000 宝石 68 元，6500 宝石 148 元">
+    <div class="cap">D3b · 00:46</div></div>
+  <div class="body">
+    <div class="id">D3b</div><h3>宝石小店（真钱段）</h3>
+    <dl>
+      <dt>屏上</dt><dd>道具用宝石计价（5 个 = 💎1800，标「人气推荐」；15 个 = 💎4500）。
+        再往下「宝石」段用<b>人民币</b>计价：1200 = ¥38 / 3000 = ¥68 / 6500 = ¥148。</dd>
+    </dl>
+    <div class="why"><b>为什么要两层货币</b>：真钱买宝石，宝石买道具。中间隔一层之后，
+    你在花「1800」而不是在花「57 块」。<b>这是游戏内购的标准做法，不是我们该抄的部分</b>——
+    我们卖课程，一层定价（人民币）更诚实，也更好解释。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/D4-energy.jpg" alt="能量页，25/25 粉色进度条，SUPER 无限模式，能量回满 600 宝石">
+    <div class="cap">D4 · 00:50</div></div>
+  <div class="body">
+    <div class="id">D4</div><h3>能量页</h3>
+    <dl>
+      <dt>入口</dt><dd>点闪电。</dd>
+      <dt>屏上</dt><dd>粉色能量条 <code>25 / 25</code>（满格）。三个选项：
+        SUPER「无限模式 · 免费体验」（彩虹渐变，最显眼）/「能量回满 · 💎600」/「+5 能量 · 免费」（看广告）。
+        满格时后两个都是灰的。</dd>
+    </dl>
+    <div class="why"><b>能量 = 答错的次数上限</b>。这是把「学习」变成「有限资源」的机关：
+    错太多就得等、看广告、或者付费。<b>教育上这是负面的</b>——它惩罚试错，而试错正是学习本身。
+    多邻国能这么做是因为语言学习错了没成本；我们教做产品，错误是教材。</div>
+    <div class="port"><b>不建议搬。</b>如果一定要有一个「有限资源」，
+    我们已经有一个更诚实的：<b>AI 判题额度</b>——它是真实成本，不是人造稀缺。</div>
+  </div>
+</div>
+
+<h2 class="e"><span class="tag">E</span>课程结构：唯一能跳过的地方</h2>
+
+<div class="screen">
+  <div class="shot"><img src="frames/E1-stages.jpg" alt="英语课程阶段总览，第7阶段第8阶段，跳级到这里链接">
+    <div class="cap">E1 · 01:03</div></div>
+  <div class="body">
+    <div class="id">E1</div><h3>阶段总览 / 跳级</h3>
+    <dl>
+      <dt>入口</dt><dd>点单元条的标题区（不是右边的列表图标）。</dd>
+      <dt>屏上</dt><dd>纵向的「阶段」卡片列表。每张卡：<b>第 N 阶段</b> + 右上角能力区间
+        <code>🇺🇸 100～114</code> + 蓝色链接「<b>跳级到这里</b>」。
+        阶段之间穿插 Duo 的对话气泡，用<b>第一人称</b>描述该阶段的能力：
+        「I feel comfortable in English, and I can express myself spontaneously…」。
+        最底下是锁着的「每日巩固练习 · 完成整个课程才能解锁这部分内容哦！」</dd>
+    </dl>
+    <div class="why"><b>能力描述用第一人称</b>：不是「掌握 500 个高频词」，是「我能自如地表达自己」。
+    前者描述教材，后者描述<b>你</b>。这是整个 app 里最值得抄的一句文案手法。<br>
+    <b>跳级放在这里</b>：跳过是允许的，但你必须先滚过一整屏「你还没到的地方」才能看到那个链接。</div>
+    <div class="port"><b>能搬，且我们缺这一屏。</b>我们的 <code>#/catalog</code> 列了 52 门课 560 节，
+    但没有任何一句话说「学完这门你能做什么」。给每门课加一句第一人称能力描述，成本极低，
+    对「这课值不值得买」的回答提升极大。</div>
+  </div>
+</div>
+
+<h2 class="f"><span class="tag">F</span>学习会话：进去之后世界消失</h2>
+
+<div class="screen">
+  <div class="shot"><img src="frames/F1-loading.jpg" alt="加载页，猫头鹰趴在书上，加载中，下面一句冷知识">
+    <div class="cap">F1 · 01:16</div></div>
+  <div class="body">
+    <div class="id">F1</div><h3>加载页</h3>
+    <dl>
+      <dt>屏上</dt><dd>顶部只剩 wordmark（tab bar 已消失）。中间是趴在书堆上的猫头鹰。
+        「加载中...」下面一行冷知识：<b>「我们教濒危语言，包括夏威夷语和纳瓦霍语。」</b></dd>
+    </dl>
+    <div class="why"><b>为什么冷知识不是进度条</b>：进度条让你盯着等待；一句话让你读完了才发现已经加载好了。
+    而且这句话在讲品牌价值观，不是在讲加载。</div>
+    <div class="port"><b>能搬，几乎零成本。</b>我们有 281 个概念词条现成的，
+    加载时随机显示一条「你知道吗：<i>幂等</i> 的意思是……」——素材已经写完了。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/F2-exercise.jpg" alt="答题页，进度条，新单词标签，三个选项卡片，底部继续按钮">
+    <div class="cap">F2 · 01:24</div></div>
+  <div class="body">
+    <div class="id">F2</div><h3>答题页</h3>
+    <dl>
+      <dt>顶栏</dt><dd><code>✕</code> · 绿色进度条 · <code>⚡25</code>。<b>没有 tab bar，没有返回键。</b>
+        退出只有 ✕ 一条路，且会二次确认。</dd>
+      <dt>题干</dt><dd>紫色小标签「<b>新单词</b>」标注题型 → 大字问题「"Public transportation"的意思是…」</dd>
+      <dt>正文</dt><dd>🔊 按钮 + 例句。目标词 <b>紫色加粗</b>，其余词带<b>虚线下划线</b>（可点查词），
+        已读过的部分逐渐变灰——阅读进度用颜色表示。</dd>
+      <dt>选项</dt><dd>三张全宽卡片，纯文字，无 A/B/C 编号。</dd>
+      <dt>底部</dt><dd>「继续」按钮，<b>未选择时是灰色禁用态</b>，一直占着位置不移动。</dd>
+    </dl>
+    <div class="why"><b>为什么禁用而不是隐藏</b>：按钮的位置从进来就固定了，你的拇指提前知道该放哪儿。
+    隐藏再出现会让布局跳动，而布局跳动是误触的来源。<br>
+    <b>为什么没有 A/B/C</b>：编号是给「记住答案是 B」用的，去掉编号，你只能记住内容。<br>
+    <b>为什么虚线下划线</b>：它说「这里可以点」，但不像链接那样喊。在满屏都是可点词的时候，
+    实线会变成噪音。</div>
+    <div class="port"><b>大部分能搬。</b>尤其是「进入学习后隐藏全部导航」——
+    我们现在进课时顶栏还在，等于一直在提醒你可以离开。</div>
+  </div>
+</div>
+
+<h2 class="g"><span class="tag">G</span>另外五个 tab：只有一个是学习</h2>
+<p class="lede">底部 6 个 tab，第 1 个是路径。剩下 5 个里，
+<b>任务 / 排行榜 / 消息中心 / Super 都不是学习</b>，它们是留存和变现。
+只有第 6 个 tab 底下埋着的「练习」是学习。这个比例本身就是一条情报。</p>
+
+<div class="screen">
+  <div class="shot"><img src="frames/G2-quests.jpg" alt="八月特别任务页，绿色头部，进度条列表，宝箱奖励">
+    <div class="cap">G2 · 01:40</div></div>
+  <div class="body">
+    <div class="id">G2</div><h3>tab 2 · 任务</h3>
+    <dl>
+      <dt>屏上</dt><dd><b>月度</b>：「八月特别任务 ⏱9天」·「赢取 30 个特别任务点数 0/30」<br>
+        <b>周期</b>：「连续打卡 2 天 0/2」<br>
+        <b>每日</b>（⏱12 小时）：开启连胜 0/1 · 2 个单元至少答对 80% 0/2 · 学习时长满 10 分钟 0/10，
+        每条右侧一个<b>不同等级</b>的宝箱（木/蓝/金）</dd>
+    </dl>
+    <div class="why"><b>三层时间尺度叠在一起</b>：日（12小时）、周（2天）、月（9天）。
+    任何时刻你都同时有三个快过期的东西。这不是三个任务系统，是<b>一个</b>——三根不同长度的倒计时。<br>
+    <b>全部都是 0/N</b>：进度条空着比满着更催人。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/G3-leaderboard.jpg" alt="白银等级页，四个奖杯，睡觉的猫头鹰，别打盹提示">
+    <div class="cap">G3 · 01:43</div></div>
+  <div class="body">
+    <div class="id">G3</div><h3>tab 3 · 排行榜</h3>
+    <dl>
+      <dt>屏上</dt><dd>顶部一排奖杯（青铜=已得 / 白银=当前，高亮放大 / 后两个上锁）+「白银等级 ⏱1天」。
+        主体是空的：一只<b>睡着的</b>猫头鹰 +「别打盹！学个单元开始这周的挑战吧！」</dd>
+    </dl>
+    <div class="why"><b>空状态没有显示排行榜</b>：因为这个用户本周没学，还没资格进榜。
+    他们没有显示一个「第 30 名」羞辱你，而是显示一只睡着的鸟——把责任放在角色身上，不放在你身上。
+    这是<b>空状态设计</b>的教科书：空的时候讲下一步，不讲现状。</div>
+    <div class="port"><b>空状态手法能搬，排行榜本身要慎重。</b>成年人学技能，跟陌生人比排名的动力远低于青少年学语言。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/G4-feed.jpg" alt="消息中心，好友动态圈，排行榜推广卡，好友分数动态">
+    <div class="cap">G4 · 01:47</div></div>
+  <div class="body">
+    <div class="id">G4</div><h3>tab 4 · 消息中心</h3>
+    <dl>
+      <dt>屏上</dt><dd>顶部一排空的「+」头像圈（像 Story）→ 提示卡「开启友情连胜，每天都能赠送和接收礼物！」→
+        运营卡片（插画 +「实力不俗？快来每周排行榜…」+ <b>去看看排行榜</b> 按钮）→
+        好友动态流：「BG 我的英语分数达到了 33 分！」带 ♡ 计数 → 数据卡
+        「<b>8.1x</b> 拿到 7 天连胜的话，完成整个课程的可能性会高 8.1 倍！」→ 好友推荐（关注/互相关注）</dd>
+    </dl>
+    <div class="why"><b>那张 8.1x 的卡是全场最聪明的一张。</b>它不是广告，是<b>数据</b>——
+    「我们统计过，7 天连胜的人完课率高 8.1 倍」。它给了你一个理由，而这个理由碰巧是他们想要的行为。
+    用真实数据说服用户去做对双方都好的事，这是我们完全可以学、而且我们有数据可用的。</div>
+    <div class="port"><b>8.1x 那张卡能搬。</b>我们可以说「做完练习的人，同一门课的完成率是 N 倍」——
+    前提是我们真的统计过。<b>编一个数字就毁了这个手法。</b></div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/G5-super.jpg" alt="Super 套餐页，家庭套餐立省80%，个人套餐，Super Lite 含广告">
+    <div class="cap">G5 · 01:59</div></div>
+  <div class="body">
+    <div class="id">G5</div><h3>tab 5 · Super 套餐</h3>
+    <dl>
+      <dt>屏上</dt><dd>亮色（<b>全 app 唯一的浅色页面</b>）。三张卡纵向排列：
+        <ul>
+          <li><b>家庭套餐</b>：「一起学，更优惠」/ 付单人价 6 人共享 · 所有福利无限 · 免广告 /
+            金色按钮「<b>立省 80%</b>」<b>← 放第一个</b></li>
+          <li><b>个人套餐</b>：「自信开口」/ 无限能量 · 无限视频通话 · 免广告 /「¥0.00 领取体验」</li>
+          <li><b>Super Lite（含广告）</b>：「额外 2 倍能量超划算」/ 每天 50 能量 · 更快能量回满</li>
+          <li>底部还有<b>赠送套餐</b>：送 SUPER 会员给别人</li>
+        </ul>
+        顶部横幅「优惠将于 <b>7 天</b>后结束」跟着滚动。</dd>
+    </dl>
+    <div class="why"><b>三个价位的排序是反的</b>（贵的放最上面）。这是价格锚定：
+    先看 6 人份，再看 1 人份，1 人份就显得便宜。<br>
+    <b>为什么整页是浅色的</b>：整个 app 都是深色，只有付费页是亮的。你的眼睛会认为自己到了另一个地方——
+    一个更正式、更像商店的地方。这是用<b>主题</b>来标记语境切换，成本几乎为零，效果很强。</div>
+    <div class="port"><b>「付费页用不同主题」能搬。</b>三档定价、家庭套餐这些商业结构，
+    取决于我们卖什么（按课买断？订阅？），是产品决策不是设计决策。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/G6-profile.jpg" alt="个人主页，绿色头像横幅，统计概览，友情连胜槽位">
+    <div class="cap">G6 · 02:07</div></div>
+  <div class="body">
+    <div class="id">G6</div><h3>tab 6 · 个人主页</h3>
+    <dl>
+      <dt>屏上</dt><dd>绿色大横幅 + 头像（右上角：换装衣架 ⚙️设置）→ <code>@PIECAISKY · 2021 年加入</code> →
+        三个数「课程 🇺🇸+3 / 关注 5 / 关注者 6」→「添加好友」+ QR 码 →
+        <b>概览</b>：🔥0 天 · 🇺🇸60 · 🏆白银 · ⚡<b>67,539 经验</b> →
+        友情连胜 5 个空槽 → 每月独家徽章</dd>
+      <dt>下方菜单</dt><dd>个人档案 / 发音 / 视频通话 / 练习</dd>
+    </dl>
+    <div class="why"><b>67,539 经验放在这里</b>：这个数字五年才攒出来，它是<b>转换成本</b>。
+    个人主页的真正作用不是给别人看，是给你自己看你走不了。</div>
+  </div>
+</div>
+
+<div class="strip">
+  <figure><img src="frames/G6b-profile-menu.jpg" alt="个人主页下方的四项菜单"><figcaption>G6b 菜单</figcaption></figure>
+  <figure><img src="frames/G7-pronunciation.jpg" alt="发音页，音标卡片网格，每张带掌握度进度条"><figcaption>G7 发音</figcaption></figure>
+  <figure><img src="frames/G8-videocall.jpg" alt="视频通话页，AI 角色头像，SUPER 标记"><figcaption>G8 视频通话</figcaption></figure>
+  <figure><img src="frames/G9-practice.jpg" alt="练习中心，听力提升卡片，错题本，单词，听力，口语"><figcaption>G9 练习</figcaption></figure>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/G7-pronunciation.jpg" alt="发音页，一格一格的音标卡，每张下面一条黄色掌握度条">
+    <div class="cap">G7 · 02:13</div></div>
+  <div class="body">
+    <div class="id">G7</div><h3>发音 · 把「掌握度」画成网格</h3>
+    <dl>
+      <dt>屏上</dt><dd>顶部蓝色按钮「开始 <b>+10 经验</b>」。下面是音标卡网格，
+        每张卡：音标 <code>b</code> + 例词 <code>book</code> + <b>一条黄色进度条</b>。
+        未解锁的卡整张变暗、进度条是灰的。</dd>
+    </dl>
+    <div class="why"><b>这是路径的另一种形态。</b>路径回答「往哪走」，网格回答「哪块弱」。
+    同一套进度数据，两种投影。<br>
+    <b>每张卡自带进度条</b>，所以「掌握度」不是一个总分，是 40 个分别可见的小分——
+    你能一眼看出该练哪个。</div>
+    <div class="port"><b>能搬，而且我们已经有数据。</b>我们有 FSRS 调度器和 281 个概念——
+    「概念掌握网格」几乎是现成的：每个概念一张卡，卡上一条 FSRS 记忆强度条。</div>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="shot"><img src="frames/G9-practice.jpg" alt="练习中心，蓝色听力提升大卡，下面是错题本单词听力口语列表">
+    <div class="cap">G9 · 02:19</div></div>
+  <div class="body">
+    <div class="id">G9</div><h3>练习中心 · 唯一的「自由学习」入口</h3>
+    <dl>
+      <dt>入口</dt><dd>个人主页 → 练习。<b>藏在第 6 个 tab 底下的第 4 项。</b></dd>
+      <dt>屏上</dt><dd>蓝色推荐大卡「听力提升 / 沉浸式练习，帮你磨磨耳朵 /「开始 <b>+20 经验</b>」」→
+        <b>对话练习</b>（带 SUPER 标）：视频通话「最新」→
+        <b>技能练习</b>：错题本（红标 <b>3</b>）· 单词「最新」· 听力 · 口语</dd>
+    </dl>
+    <div class="why"><b>为什么埋这么深</b>：因为自由练习会跟路径抢注意力。
+    多邻国希望你走路径，练习只是给「今天不想推进但想学点什么」的人的出口。
+    <b>它的存在是为了不让你关掉 app，不是为了让你学得更好。</b><br>
+    <b>错题本上的红标 3</b>：这是全 app 唯一一个「你欠着三道题」的提示。</div>
+    <div class="port"><b>我们的定位相反。</b>我们的「练习」（281 个概念的题库）和「图鉴」是<b>差异化卖点</b>，
+    不该埋到第六个 tab 底下。多邻国埋它是因为它是副产品，对我们它是主产品之一。
+    <b>这是一处应该看懂了之后反着做的地方。</b></div>
+  </div>
+</div>
+
+<h2><span class="tag">END</span>拆完之后，八条可迁移的规则</h2>
+<table>
+  <tr><th>#</th><th>规则</th><th>证据</th><th>我们</th></tr>
+  <tr><td>1</td><td><b>没有首页，打开就在路上。</b>不给选择，给位置。</td><td>C1–C4</td><td>3D 群岛已经是这条路，缺「我在哪」</td></tr>
+  <tr><td>2</td><td><b>点节点先弹卡，不直接进。</b>卡上写清标题+时长+奖励。</td><td>C5</td><td>缺，应该马上补</td></tr>
+  <tr><td>3</td><td><b>颜色分段，图标当节点。</b>滚动时不用读字就知道走到哪。</td><td>C1–C4</td><td>缺</td></tr>
+  <tr><td>4</td><td><b>锁着的东西也要画出来。</b>看得见的未完成比进度条有力。</td><td>C1 / D3</td><td>目录里做了，地图上做了「雾」——方向相反</td></tr>
+  <tr><td>5</td><td><b>能力描述用第一人称。</b>「我能自如表达」而不是「掌握 500 词」。</td><td>E1</td><td>52 门课一句都没有，成本最低收益最高</td></tr>
+  <tr><td>6</td><td><b>进入学习就隐藏一切导航。</b>只留 ✕ 和进度条。</td><td>F2</td><td>缺，顶栏一直在</td></tr>
+  <tr><td>7</td><td><b>空状态讲下一步，不讲现状。</b>睡着的鸟，不是「第 30 名」。</td><td>G3</td><td>可搬</td></tr>
+  <tr><td>8</td><td><b>用真实数据当劝说文案。</b>「7 天连胜完课率高 8.1 倍」。</td><td>G4</td><td>可搬，<b>但必须真统计过</b></td></tr>
+</table>
+
+<h2><span class="tag">⚠︎</span>看懂了之后<i>不</i>该搬的四件事</h2>
+<table>
+  <tr><th>他们做的</th><th>为什么对他们成立</th><th>为什么对我们不成立</th></tr>
+  <tr><td><b>能量/红心</b>（答错次数上限）</td><td>语言学习答错没成本，稀缺性纯属人造，用来卖 Super</td>
+      <td>我们教做产品，<b>错误就是教材</b>。惩罚试错等于惩罚学习。真要有额度，用 AI 判题额度——那是真实成本</td></tr>
+  <tr><td><b>双层货币</b>（钱→宝石→道具）</td><td>游戏内购标准做法，模糊真实价格</td>
+      <td>我们卖课，一层人民币定价更诚实也更好解释。模糊定价会让「够商业」变成「像手游」</td></tr>
+  <tr><td><b>冷启动第一屏付费墙</b></td><td>面对的是学了 67,539 经验的老用户</td>
+      <td>我们的访客第一次打开，<b>价值还没被证明</b>。第一屏要钱只会提高跳出率</td></tr>
+  <tr><td><b>把自由练习埋到第 6 个 tab</b></td><td>练习是副产品，会跟主路径抢注意力</td>
+      <td><b>对我们练习和图鉴是差异化主产品。</b>这一条要反着做</td></tr>
+</table>
+
+</div></body></html>

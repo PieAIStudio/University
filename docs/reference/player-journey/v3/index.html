@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V3 用户旅程 · University</title>
+<style>
+:root{
+  --bg:#0d1014; --panel:#141920; --panel2:#1b222c; --line:#252d39;
+  --ink:#e8eef5; --dim:#8a97a8; --faint:#5b6675;
+  --go:#58cc02; --sky:#1cb0f6; --plum:#ce82ff; --gold:#ffc800; --hot:#ff4b4b; --amber:#ff9600;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px 140px}
+a{color:var(--sky)}
+code{font:13px/1.5 var(--mono);background:var(--panel);border:1px solid var(--line);
+  padding:2px 6px;border-radius:4px;color:#b9c6d6}
+
+/* ---- header ---- */
+header.top{padding:60px 0 28px;border-bottom:1px solid var(--line);margin-bottom:8px}
+h1{font-size:38px;margin:0 0 10px;letter-spacing:-.025em}
+.tagline{color:var(--dim);max-width:74ch;font-size:15.5px}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.pills code{background:var(--panel);padding:5px 10px;color:var(--dim);font-size:12px}
+
+/* ---- viewport switcher ---- */
+.switch{position:sticky;top:0;z-index:50;background:rgba(13,16,20,.94);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+  margin:0 -24px 44px;padding:12px 24px;display:flex;gap:10px;align-items:center}
+.switch b{font-size:12.5px;color:var(--dim);font-weight:600;margin-right:4px}
+.switch button{font:600 13px/1 inherit;color:var(--dim);background:var(--panel);
+  border:1px solid var(--line);border-radius:99px;padding:8px 16px;cursor:pointer}
+.switch button[aria-pressed=true]{background:var(--go);border-color:var(--go);color:#0d1014}
+.switch .spacer{flex:1}
+.switch a{font-size:12.5px;color:var(--faint);text-decoration:none}
+
+/* ---- sections ---- */
+h2{font-size:26px;margin:64px 0 8px;padding-top:28px;border-top:1px solid var(--line);
+  letter-spacing:-.02em}
+h2 .n{font:12px/1 var(--mono);background:var(--go);color:#0d1014;
+  padding:6px 9px;border-radius:5px;vertical-align:5px;margin-right:12px}
+h2.alt .n{background:var(--sky)} h2.alt2 .n{background:var(--plum)}
+h2.warn .n{background:var(--hot)} h2.gold .n{background:var(--gold)}
+.lede{color:var(--dim);max-width:76ch;margin:0 0 26px}
+h3{font-size:19px;margin:34px 0 6px}
+p{max-width:78ch}
+
+/* ---- decision block ---- */
+.dec{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--go);
+  border-radius:0 12px 12px 0;padding:20px 24px;margin:22px 0}
+.dec h4{margin:0 0 8px;font-size:17px;color:var(--go)}
+.dec.no{border-left-color:var(--hot)} .dec.no h4{color:var(--hot)}
+.dec.hm{border-left-color:var(--gold)} .dec.hm h4{color:var(--gold)}
+.dec p{margin:8px 0 0;font-size:15px}
+.dec p:first-of-type{margin-top:0}
+
+/* ---- screen card ---- */
+.scr{border-top:1px solid var(--line);padding:34px 0}
+.scr-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.scr-head .id{font:700 12px/1 var(--mono);color:var(--go);letter-spacing:.1em}
+.scr-head h3{margin:0;font-size:22px}
+.scr-head .route{font:12px/1.6 var(--mono);color:var(--faint)}
+.have{font:600 11px/1 var(--mono);padding:5px 8px;border-radius:4px;letter-spacing:.06em}
+.have.yes{background:#12301a;color:var(--go)}
+.have.part{background:#33280a;color:var(--gold)}
+.have.no{background:#331416;color:var(--hot)}
+
+.frames{display:flex;gap:32px;align-items:flex-start;margin:22px 0 6px;flex-wrap:wrap}
+.frames.only-m .fr-w{display:none} .frames.only-w .fr-m{display:none}
+.fr{flex:0 0 auto}
+.fr .lab{font:11px/1 var(--mono);color:var(--faint);margin-bottom:8px;letter-spacing:.08em}
+
+/* ---- wireframe primitives ---- */
+.wf{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:6px;display:flex;flex-direction:column;gap:5px;overflow:hidden}
+.wf-m{width:216px;height:468px}          /* 375x812 @0.576 */
+.wf-w{width:520px;height:293px}          /* 16:9 */
+.wf .box{border:1px dashed #3a4553;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;text-align:center;color:var(--faint);
+  font:10px/1.35 var(--mono);padding:3px;min-height:0}
+.wf .box.solid{border-style:solid}
+.wf .box.go{border-color:var(--go);color:var(--go);background:#12301a}
+.wf .box.sky{border-color:var(--sky);color:var(--sky);background:#0d2634}
+.wf .box.plum{border-color:var(--plum);color:var(--plum);background:#241a30}
+.wf .box.gold{border-color:var(--gold);color:var(--gold);background:#2e2609}
+.wf .box.hot{border-color:var(--hot);color:var(--hot);background:#2e1417}
+.wf .box.dim{border-color:#2b3441;color:#4a5563}
+.wf .row{display:flex;gap:5px;min-height:0}
+.wf .col{display:flex;flex-direction:column;gap:5px;min-height:0}
+.wf .grow{flex:1;min-height:0}
+.wf .scrolly{overflow:hidden;position:relative}
+
+/* serpentine path mock */
+.path{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0}
+.path .nd{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:11px;color:#0d1014;font-weight:700;flex:0 0 auto}
+.path .nd.done{background:var(--go)} .path .nd.now{background:var(--plum);
+  box-shadow:0 0 0 3px rgba(206,130,255,.28)}
+.path .nd.lock{background:#2b3441;color:#5b6675}
+.p-off-1{transform:translateX(30px)} .p-off-2{transform:translateX(46px)}
+.p-off-3{transform:translateX(-30px)} .p-off-4{transform:translateX(-46px)}
+
+dl.spec{display:grid;grid-template-columns:96px 1fr;gap:9px 18px;margin:20px 0 0;
+  font-size:14.5px}
+dl.spec dt{color:var(--dim);font-size:13px;padding-top:2px}
+dl.spec dd{margin:0}
+dl.spec ul{margin:0;padding-left:17px} dl.spec li{margin:2px 0}
+
+.ac{margin-top:16px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:10px;padding:14px 18px}
+.ac b{font-size:12px;color:var(--dim);letter-spacing:.06em;display:block;margin-bottom:6px}
+.ac ol{margin:0;padding-left:20px;font-size:14px}
+.ac li{margin:4px 0}
+
+table{width:100%;border-collapse:collapse;margin:24px 0;font-size:14.5px}
+th,td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-size:12.5px;font-weight:600}
+tbody tr:hover{background:#12171e}
+
+.cite{font-size:13px;color:var(--faint);margin-top:12px;font-style:italic}
+.cite b{color:var(--dim);font-style:normal}
+
+@media(max-width:900px){
+  .frames{gap:20px}
+  .wf-w{width:100%;max-width:440px;height:248px}
+  dl.spec{grid-template-columns:1fr;gap:1px 0}
+  dl.spec dt{padding-top:12px}
+}
+
+</style>
+</head>
+<body><div class="wrap">
+
+<header class="top">
+  <h1>V3 用户旅程</h1>
+  <p class="tagline">把 University 往多邻国的方向改，一屏一屏地说清楚。
+  移动端和 Web 端是<b>同一个产品的两种布局</b>，所以它们写在同一份文档里、每一屏并排画出来——
+  分成两份文档它们就会漂移，而「两份东西描述同一件事一定漂移」正是
+  <code>SPEC-0001</code> 整份文档在讲的问题。</p>
+  <div class="pills">
+    <code>依据：docs/reference/借鉴的App/duolingo-teardown/index.html</code>
+    <code>屏幕编号 C5 / E1 这类 = 引用拆解文档里的那一屏</code>
+    <code>取代：v1 / v2</code>
+    <code>现状基线：52 门课 · 146 单元 · 560 节 · 1,597 条证据锚点 · 281 概念 · 267 术语</code>
+  </div>
+</header>
+
+<div class="switch">
+  <b>视口</b>
+  <button data-vp="both" aria-pressed="true">并排</button>
+  <button data-vp="m" aria-pressed="false">只看移动端</button>
+  <button data-vp="w" aria-pressed="false">只看 Web</button>
+  <span class="spacer"></span>
+  <a href="../../借鉴的App/duolingo-teardown/index.html">← 多邻国拆解</a>
+</div>
+
+<h2><span class="n">决策</span>先看三个决定，其余全是它们的推论</h2>
+<p class="lede">这三条决定了下面每一屏。如果你不同意其中任何一条，先停在这里说，
+因为改这三条 = 整份文档重写；改下面任何一屏 = 只改那一屏。</p>
+
+<div class="dec hm">
+  <h4>决定一 · 3D 不当落地屏，改当「世界选择器 + 常驻舞台 + 奖励面」<span style="font-size:13px;color:var(--gold)"> ⟵ 待你拍板</span></h4>
+  <p><b>这一条和 <code>SPEC-0003</code> 有冲突，我不替你决定。</b></p>
+  <p><code>SPEC-0003: One World, Two Shells</code>（2026-08-21，active / canonical / owner: human）
+  第 3 步写着「<b>退役 2D 书架</b>」，Non-Negotiables 写着「一个场景，两个覆盖层」。
+  它要求两个 shell 的落地屏都是 3D 群岛。</p>
+  <p>而多邻国官方博客给出的改版理由只有一句：学习者
+  <b>「不确定自己有没有在用『对的』或者『最好的』方式用多邻国」</b>（blog.duolingo.com, 2022）。
+  他们的解法是<b>取消选择</b>——把网状技能树压成一条线。
+  <b>我们的 3D 群岛正是网状技能树的 3D 版</b>：52 座岛按先修关系铺开，一打开就是「你自己看着办」。
+  这正是多邻国花大力气删掉的东西，我们做了个立体的。</p>
+  <p><b>我的方案（三选一里的第三个）：按视口分岗，两份文档同时成立。</b></p>
+  <table>
+    <tr><th>视口</th><th>落地屏</th><th>3D 在哪</th><th>SPEC-0003 还成立吗</th></tr>
+    <tr><td><b>Web ≥1180px</b></td><td>三栏</td>
+        <td><b>右栏常驻</b>，一直在你眼前</td>
+        <td><b>成立。</b>一个共享场景，两个覆盖层，2D 书架照样退役</td></tr>
+    <tr><td><b>Web 768–1180</b></td><td>双栏</td><td>不加载</td><td>降级，同 SPEC-0003 未覆盖的情况</td></tr>
+    <tr><td><b>移动端</b></td><td>2D 路径</td>
+        <td>按需 <code>import()</code>：「看看我的世界」+ 结算庆祝</td>
+        <td><b>场景仍是同一个</b>，只是不默认挂载</td></tr>
+  </table>
+  <p>这样 3D 的三个岗位是：① <b>世界选择器</b>——4 个 study 是 4 片群岛，
+  「选学哪个真实项目」是有意义的选择，保留；
+  ② <b>常驻舞台</b>——桌面右栏，你随时看得见自己站在哪；
+  ③ <b>奖励面</b>——学完一节岛上真的多一间房，这是多邻国用一句「+40 经验」代替掉的东西，我们有实体。
+  <b>它唯一不再承担的岗位是「从这里找出下一节课」。</b></p>
+  <p class="cite"><b>本项目自己早就写过同一句话</b>：<code>v2/build-brief.html</code> 第 ⑤ 屏原话——
+  「它是先于 3D 存在的，不是 3D 的降级」。那一屏至今没被建出来（<code>#/catalog</code> 是它的一半）。</p>
+</div>
+
+<div class="dec">
+  <h4>决定二 · 四层内容压成三层，多出来的那层交给「路径分段」</h4>
+  <p>多邻国是三层：<b>课程</b>（英语/Math）→ <b>Section</b>（第5阶段第1部分，彩色）→ <b>节点</b>（一节课）。
+  我们是四层：<b>Study</b>（4）→ <b>Course</b>（52）→ <b>Unit</b>（146）→ <b>Lesson</b>（560）。多了一层。</p>
+  <table>
+    <tr><th>多邻国</th><th>我们</th><th>放在哪</th></tr>
+    <tr><td>课程切换器（顶栏旗帜下拉，D1）</td><td><b>Study</b> · 4</td><td>顶栏下拉 + 3D 群岛作为富视图</td></tr>
+    <tr><td>Section（彩色分段，C1–C4）</td><td><b>Course</b> · 52</td><td>路径上的<b>彩色段</b>，一段一个色</td></tr>
+    <tr><td>（无对应）</td><td><b>Unit</b> · 146</td><td>路径上的<b>分隔线 + 居中标题</b>（多邻国用它分 section，我们用它分 unit）</td></tr>
+    <tr><td>节点（C1–C4）</td><td><b>Lesson</b> · 560</td><td>路径上的<b>圆节点</b></td></tr>
+  </table>
+  <p><b>先修关系（DAG）怎么办</b>：我们的 52 门课是有向图不是链条——
+  <code>turing-pact</code> 是一条 9 环长的主干，然后<b>九条支线同时打开</b>
+  （证据：<code>apps/online/src/world/layout.ts:49-58</code> 的注释）。一条线画不出图。
+  <br>解法：<b>路径把图拓扑排序成线，3D 地图保留图的真实形状。</b>
+  路径说「这是一条对的顺序」，地图说「这是知识真实的样子」。两句话都不假。
+  拓扑排序我们<b>已经有了</b>——<code>apps/online/src/catalog/listing.ts</code> 的
+  <code>depthsFromPrerequisites</code>。</p>
+</div>
+
+<div class="dec hm">
+  <h4>决定三 · Web 端不是「把手机版拉宽」，是「把手机版放中间，两边补手机放不下的东西」</h4>
+  <p>这是你问的「web 端 16:9 怎么解决」。<b>答案不是响应式拉伸。</b>
+  一条 600px 宽的路径放进 1440px 的屏幕，拉宽会让节点间距大到看不出是一条路，
+  居中留白又浪费掉 60% 的屏幕。</p>
+  <p>多邻国 Web 端的做法（<b>注：这条我没能亲自验证</b>——<code>duolingo.com/learn</code> 需要登录，
+  我不会去登录你的账号。这是模型调研结论，不是我量出来的）：三栏，
+  左侧 ~256px 导航、中间 ~600px 路径、右侧 ~368px 挂件（每日任务 / 排行榜缩略 / 升级推广）。</p>
+  <p><b>我们的三栏，右栏放的不是广告，是 3D。</b>
+  多邻国右边填的是排行榜和促销，因为他们没有别的东西可放。
+  我们有一座会长房子的岛——<b>16:9 多出来的那块地方，正好是移动端装不下 three.js 的地方。</b>
+  同一个约束，在两个视口上一个是负担、一个是机会。</p>
+  <p class="cite">这也顺带解决了移动端的性能问题：<code>three</code> + <code>@react-three/fiber</code> + <code>drei</code>
+  在移动端首屏是实打实的几百 KB 和一次 GPU 唤醒。移动端<b>默认不加载 3D</b>，
+  只在「看看我的世界」和结算庆祝时按需 <code>import()</code>。</p>
+</div>
+
+<h2 class="alt"><span class="n">骨架</span>导航壳：一份代码，两个布局</h2>
+<p class="lede">下面所有屏都长在这个壳里。壳本身是<b>一个组件</b>，
+两套布局靠 CSS 断点切换，不是两个组件——否则第一条项目规则就破了。</p>
+
+<div class="frames">
+  <div class="fr fr-m">
+    <div class="lab">MOBILE · 375×812</div>
+    <div class="wf wf-m">
+      <div class="box solid" style="height:30px">顶栏 · 世界▾ 🔥连击 ⚡额度</div>
+      <div class="box grow">内容区（每一屏的主体）</div>
+      <div class="row" style="height:42px">
+        <div class="box go grow">学习</div><div class="box grow dim">图鉴</div>
+        <div class="box grow dim">练习</div><div class="box grow dim">复习</div>
+        <div class="box grow dim">我</div>
+      </div>
+    </div>
+  </div>
+  <div class="fr fr-w">
+    <div class="lab">WEB · 1440×810（16:9）</div>
+    <div class="wf wf-w">
+      <div class="row grow">
+        <div class="col" style="width:120px">
+          <div class="box solid" style="height:26px">品牌</div>
+          <div class="box go" style="height:24px">学习</div>
+          <div class="box dim" style="height:24px">图鉴</div>
+          <div class="box dim" style="height:24px">练习</div>
+          <div class="box dim" style="height:24px">复习</div>
+          <div class="box dim" style="height:24px">目录</div>
+          <div class="box dim grow">我 / 设置</div>
+        </div>
+        <div class="box grow">中栏 · 内容区 max-width 620px</div>
+        <div class="col" style="width:150px">
+          <div class="box solid" style="height:26px">🔥连击 ⚡额度</div>
+          <div class="box plum grow">3D 岛 · 常驻舞台<br>（你正站在哪）</div>
+          <div class="box gold" style="height:46px">今日目标 / 复习到期</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<dl class="spec">
+  <dt>断点</dt><dd>
+    <ul>
+      <li><code>&lt; 768px</code> — 单栏 + 底部 tab bar。<b>不加载 3D。</b></li>
+      <li><code>768–1180px</code> — 双栏：左导航坍成 <code>72px</code> 图标条，右栏隐藏，
+        状态条上移进中栏顶部。3D 仍不加载。</li>
+      <li><code>≥ 1180px</code> — 三栏。<b>此时才 <code>import()</code> 3D。</b></li>
+    </ul></dd>
+  <dt>为什么<br>断在这</dt><dd>1180 = 120（左）+ 620（中）+ 150（右）+ 间距，是三栏能站住的最小宽度。
+    低于它右栏会挤到 3D 画布小于 200px，那时候 3D 传达不了任何信息，只剩耗电。</dd>
+  <dt>共享</dt><dd>壳、路径、节点弹窗、阅读器、答题、结算 → 全部在 <code>packages/ui</code>。
+    <b>本地端和在线端用同一个壳。</b>见文末「和任务一的关系」。</dd>
+</dl>
+
+<p class="cite"><b>三栏尺寸的来源</b>：Grok 与 Gemini 独立调研 duolingo.com 后收敛到
+左 ~256px / 中 ~600–630px / 右 ~368px，断点 ~768（去底栏）与 ~1160（放出右栏）。
+两家都明确说「<b>不要做横向 timeline</b>，2022 改版就是为了消灭分支树」。
+<b>我没能亲自量</b>——<code>/learn</code> 需要登录，我不会登录你的账号。这条按「两家一致但未亲验」采信。</p>
+
+<h2 class="alt2"><span class="n">屏</span>十二屏，一屏一节</h2>
+<p class="lede">每屏四件事：<b>线框</b>（移动 + Web 并排）、<b>规格</b>、<b>我们现在有什么</b>（诚实标注）、
+<b>验收</b>（可测的句子，不是形容词）。<code>C5</code> 这类编号引用多邻国拆解文档。</p>
+
+<!-- ============ 01 ============ -->
+<div class="scr">
+  <div class="scr-head"><span class="id">01</span><h3>学习路径</h3>
+    <span class="route">#/ （落地屏）</span><span class="have part">部分：有 3D 地图，无路径</span></div>
+  <p>整个产品。用户 90% 的时间在这一屏，或者在从这一屏出发的两跳之内。</p>
+  <div class="frames">
+    <div class="fr fr-m"><div class="lab">MOBILE</div>
+      <div class="wf wf-m">
+        <div class="box solid" style="height:26px">Buzz ▾ · 🔥3 · ⚡额度</div>
+        <div class="box sky solid" style="height:38px">第 2 课 · 让 AI 读懂你的仓库<br>（sticky，跟随分段变色）→ 📋</div>
+        <div class="box grow scrolly" style="border:none;padding:0">
+          <div class="path">
+            <div class="nd done p-off-3">✓</div><div class="nd done p-off-1">✓</div>
+            <div class="nd now p-off-2">▶</div>
+            <div class="box dim" style="width:100%;height:15px;border:none">— 单元 3：证据锚点 —</div>
+            <div class="nd lock p-off-4">🔒</div><div class="nd lock">🔒</div>
+            <div class="nd lock p-off-1">🎁</div>
+          </div>
+        </div>
+        <div class="box gold" style="height:22px">↓ 回到当前</div>
+        <div class="row" style="height:38px">
+          <div class="box go grow">学习</div><div class="box grow dim">图鉴</div>
+          <div class="box grow dim">练习</div><div class="box grow dim">复习</div>
+          <div class="box grow dim">我</div></div>
+      </div></div>
+    <div class="fr fr-w"><div class="lab">WEB ≥1160</div>
+      <div class="wf wf-w">
+        <div class="row grow">
+          <div class="col" style="width:100px">
+            <div class="box solid" style="height:22px">University</div>
+            <div class="box go" style="height:20px">学习</div><div class="box dim" style="height:20px">图鉴</div>
+            <div class="box dim" style="height:20px">练习</div><div class="box dim" style="height:20px">复习</div>
+            <div class="box dim" style="height:20px">目录</div><div class="box dim grow">我</div></div>
+          <div class="col grow">
+            <div class="box sky solid" style="height:26px">第 2 课 · 让 AI 读懂你的仓库 → 📋</div>
+            <div class="box grow scrolly" style="border:none;padding:0">
+              <div class="path" style="gap:4px">
+                <div class="nd done p-off-3" style="width:20px;height:20px">✓</div>
+                <div class="nd done p-off-1" style="width:20px;height:20px">✓</div>
+                <div class="nd now p-off-2" style="width:20px;height:20px">▶</div>
+                <div class="nd lock p-off-4" style="width:20px;height:20px">🔒</div>
+                <div class="nd lock" style="width:20px;height:20px">🔒</div></div></div></div>
+          <div class="col" style="width:132px">
+            <div class="box solid" style="height:22px">🔥3 · ⚡额度</div>
+            <div class="box plum grow">3D 岛 · 常驻<br>当前岛高亮<br>其余压暗</div>
+            <div class="box gold" style="height:38px">今天 · 复习 4 张<br>预计 12 分钟</div></div>
+        </div></div></div>
+  </div>
+  <dl class="spec">
+    <dt>顶栏</dt><dd><b>三个</b>，不是多邻国的四个。<code>世界▾</code>（D1 下拉切 study）·
+      <code>🔥 连击</code>（温和版，见「不做的事」）· <code>⚡ AI 判题额度</code>。
+      <b>没有宝石，没有能量。</b>理由在文末。</dd>
+    <dt>分段</dt><dd>一个 <b>Course</b> 一个颜色。sticky 单元条<b>跟随当前分段变色</b>（C1–C4）。
+      单元之间用 <code>— 单元名 —</code> 横线分隔。</dd>
+    <dt>节点</dt><dd>圆形，<b>图标不是标题</b>。已完成=品牌绿实心、当前=高亮+呼吸环、
+      未解锁=灰。类型：📖 课文 · ✍️ 练习 · 🎯 单元测验 · 🎁 宝箱（= 一个概念词条解锁）· 🔁 复习。
+      <b>锁定的节点必须画出来</b>（C1）——看得见的未完成比进度条有力。</dd>
+    <dt>浮动</dt><dd>右下 <code>↓ 回到当前</code>，仅当当前节点滚出视口时出现。</dd>
+    <dt>Web 右栏</dt><dd>3D 岛常驻，<b>当前岛高亮、其余压暗</b>——这正是 SPEC-0003
+      「focus track 让世界压暗其余」那一行，只是搬到了右栏。</dd>
+  </dl>
+  <div class="ac"><b>验收</b><ol>
+    <li>不用滚动就能看见当前节点，或看见 <code>↓ 回到当前</code>。</li>
+    <li>560 个 lesson 全部是可 Tab 到达的 <code>&lt;a href&gt;</code>，节点上有 <code>aria-label</code>。</li>
+    <li>移动端首屏<b>不下载 three.js</b>（Network 面板可验）。</li>
+    <li>路径节点顺序 === <code>depthsFromPrerequisites</code> 的拓扑序，有测试比对。</li>
+    <li>把窗口从 1440 拖到 375，布局在 1160 / 768 两处切换，中间无横向滚动条。</li>
+  </ol></div>
+</div>
+
+<!-- ============ 02 ============ -->
+<div class="scr">
+  <div class="scr-head"><span class="id">02</span><h3>节点弹窗</h3>
+    <span class="route">路径上就地展开，不换路由</span><span class="have no">完全没有</span></div>
+  <p><b>拆解文档标为「最关键的一屏」（C5），我们完全没有。</b>
+  现在点岛 → 直接进课，中间没有任何确认、预期或动机。</p>
+  <div class="frames">
+    <div class="fr fr-m"><div class="lab">MOBILE · 从节点长出的气泡</div>
+      <div class="wf wf-m" style="height:300px">
+        <div class="box dim" style="height:40px">…路径…</div>
+        <div class="nd now" style="align-self:center">▶</div>
+        <div class="box sky solid col" style="flex:0 0 auto;padding:8px;gap:6px">
+          <div class="box" style="border:none;color:var(--ink);font-size:11px">证据锚点：让课文指向真实提交</div>
+          <div class="box" style="border:none;font-size:10px">读 6 分钟 · 3 道题 · 4 条真实代码引用</div>
+          <div class="box go solid" style="height:26px">开始 · 学完解锁「幂等」词条</div>
+          <div class="box" style="height:20px">先看这节讲什么 ▾</div>
+        </div>
+        <div class="box dim grow">…路径…</div>
+      </div></div>
+    <div class="fr fr-w"><div class="lab">WEB · 同一组件，中栏内展开</div>
+      <div class="wf wf-w" style="height:200px">
+        <div class="row grow">
+          <div class="box dim" style="width:100px">导航</div>
+          <div class="col grow">
+            <div class="box dim" style="height:20px">…路径…</div>
+            <div class="box sky solid col" style="flex:0 0 auto;padding:6px;gap:4px">
+              <div class="box" style="border:none;color:var(--ink);font-size:10px">证据锚点：让课文指向真实提交</div>
+              <div class="box" style="border:none;font-size:9px">读 6 分钟 · 3 道题 · 4 条真实代码引用</div>
+              <div class="box go solid" style="height:22px">开始 · 学完解锁「幂等」词条</div></div>
+            <div class="box dim grow">…路径…</div></div>
+          <div class="box plum" style="width:132px">3D · 该岛<br>脉冲一下</div>
+        </div></div></div>
+  </div>
+  <dl class="spec">
+    <dt>三层</dt><dd>① 标题 ② 一行代价与内容 ③ <b>按钮上直接印奖励</b>（C5）。
+      多邻国印「+40 经验」；我们印<b>真实的东西</b>：「学完解锁『幂等』词条」「学完你能读懂这段 commit」。
+      <b>我们不需要发明积分——我们有 281 个概念和 1,597 条真实锚点可以当奖励。</b></dd>
+    <dt>「读 6 分钟」</dt><dd>从课文字数算，不是拍脑袋。这是<b>降低启动门槛</b>的关键数字：
+      「6 分钟」比「一节课」更容易被现在的你接受。</dd>
+    <dt>次要动作</dt><dd>「先看这节讲什么 ▾」→ 就地展开屏 03，不跳页。</dd>
+    <dt>Web</dt><dd>同一个组件。右栏 3D 里对应的岛<b>脉冲一次</b>——把 2D 选择和 3D 位置连起来，
+      这是我们有而多邻国没有的反馈。</dd>
+  </dl>
+  <div class="ac"><b>验收</b><ol>
+    <li>点节点<b>不改变 URL</b>；按 Esc 或点空白关闭；焦点回到原节点。</li>
+    <li>弹窗打开时焦点进入弹窗，Tab 不会逃到背后的路径上（focus trap）。</li>
+    <li>按钮文案由内容算出，<b>没有一个写死的字符串</b>。</li>
+  </ol></div>
+</div>
+
+<!-- ============ 03 ============ -->
+<div class="scr">
+  <div class="scr-head"><span class="id">03</span><h3>单元卡 · 学完你能做什么</h3>
+    <span class="route">单元条右侧 📋 / 弹窗内展开</span><span class="have no">没有</span></div>
+  <p>对应 C6（重点语句）+ E1（阶段能力描述）。<b>E1 那条是整个拆解里最值钱的文案手法</b>：
+  多邻国的能力描述用<b>第一人称</b>——「I feel comfortable in English, and I can express myself spontaneously」——
+  而不是「掌握 500 个高频词」。前者描述<b>你</b>，后者描述教材。</p>
+  <div class="frames">
+    <div class="fr fr-m"><div class="lab">MOBILE</div>
+      <div class="wf wf-m" style="height:340px">
+        <div class="box solid" style="height:24px">✕　单元 3 · 证据锚点</div>
+        <div class="box go solid col" style="flex:0 0 auto;padding:8px;gap:5px">
+          <div class="box" style="border:none;font-size:10px">学完这一单元，你能——</div>
+          <div class="box" style="border:none;color:var(--ink);font-size:11px">「我能让一节课文指向真实的那次提交，<br>而不是我编的例子。」</div>
+        </div>
+        <div class="box" style="height:16px;border:none;font-size:10px">这一单元会带你读的真实代码</div>
+        <div class="box sky" style="height:30px">📄 import-courses.mjs:117–139<br>Buzz · @3b402e06</div>
+        <div class="box sky" style="height:30px">📄 answer-key.ts:16–24</div>
+        <div class="box plum" style="height:26px">🎁 学完解锁：幂等 · 证据锚点 · 快照</div>
+        <div class="box grow dim">4 节 · 约 24 分钟</div>
+        <div class="box go solid" style="height:32px">从第 1 节开始</div>
+      </div></div>
+    <div class="fr fr-w"><div class="lab">WEB · 中栏 sheet，不占满屏</div>
+      <div class="wf wf-w" style="height:210px">
+        <div class="row grow">
+          <div class="box dim" style="width:100px">导航</div>
+          <div class="col grow">
+            <div class="box solid" style="height:20px">✕ 单元 3 · 证据锚点</div>
+            <div class="box go solid" style="height:44px">学完这一单元，你能——<br>「我能让一节课文指向真实的那次提交。」</div>
+            <div class="box sky" style="height:22px">📄 import-courses.mjs:117–139</div>
+            <div class="box plum" style="height:20px">🎁 解锁 3 个词条</div>
+            <div class="box go solid grow">从第 1 节开始</div></div>
+          <div class="box plum" style="width:132px">3D · 该岛<br>预览建筑</div>
+        </div></div></div>
+  </div>
+  <dl class="spec">
+    <dt>能力句</dt><dd><b>第一人称，一句话，作者写。</b>52 门课 + 146 单元各一句。
+      这是本文档里<b>成本最低、收益最高</b>的一项：纯文案，无代码，直接回答「这课值不值得买」。</dd>
+    <dt>代码预告</dt><dd>C6 的我们版本。多邻国预告六个句子，<b>我们预告六段真实代码的坐标</b>。
+      <b>只给坐标不给内容</b>——正文在私有仓库，不进交付包（这条已在 <code>current-work.md</code> 里定过）。</dd>
+    <dt>解锁物</dt><dd>把学完会得到的词条<b>提前列出来</b>。这就是我们的「+40 经验」，但它是真东西。</dd>
+  </dl>
+  <div class="ac"><b>验收</b><ol>
+    <li>52 门课 + 146 单元<b>各有一句第一人称能力描述</b>，缺一句就构建失败（跟 lint-lessons 同一条路子）。</li>
+    <li>代码预告的坐标能在课包里查到，坐标失效则 CI 红。</li>
+  </ol></div>
+</div>
+
+<!-- ============ 04 ============ -->
+<div class="scr">
+  <div class="scr-head"><span class="id">04</span><h3>世界 · 3D 群岛（改岗后）</h3>
+    <span class="route">#/world · Web 右栏常驻 / 移动端按需</span><span class="have part">有，但岗位错了</span></div>
+  <p>对应决定一。<b>它不再是「找一节课」的地方</b>，它是三件事：选世界、看自己在哪、看自己盖了什么。</p>
+  <div class="frames">
+    <div class="fr fr-m"><div class="lab">MOBILE · 全屏，从「我」或结算进入</div>
+      <div class="wf wf-m" style="height:340px">
+        <div class="box solid" style="height:24px">✕　我的世界</div>
+        <div class="box plum grow">4 片群岛<br>当前岛脉冲<br>其余压暗<br><br>（按需 import()）</div>
+        <div class="box solid col" style="flex:0 0 auto;padding:6px;gap:4px">
+          <div class="box" style="border:none;color:var(--ink);font-size:11px">Buzz · 你在这里</div>
+          <div class="box" style="border:none;font-size:10px">12/41 节 · 岛上已有 12 间房</div>
+          <div class="box go solid" style="height:24px">回到路径</div></div>
+        <div class="box dim" style="height:20px">拖动平移 · 滚轮缩放 · 点岛切换世界</div>
+      </div></div>
+    <div class="fr fr-w"><div class="lab">WEB · 右栏常驻（不是全屏）</div>
+      <div class="wf wf-w" style="height:200px">
+        <div class="row grow">
+          <div class="box dim" style="width:100px">导航</div>
+          <div class="box dim grow">路径（主体不变）</div>
+          <div class="col" style="width:150px">
+            <div class="box solid" style="height:20px">🔥3 · ⚡额度</div>
+            <div class="box plum grow">3D · 当前岛高亮<br>其余压暗<br>点岛=切世界<br>⤢ 放大</div>
+            <div class="box" style="height:26px">Buzz · 12/41<br>岛上 12 间房</div></div>
+        </div></div></div>
+  </div>
+  <dl class="spec">
+    <dt>点岛 =</dt><dd><b>切换 study</b>，不是进课。切完中栏路径整条换成那个世界的课。
+      这跟 D1 课程切换器是同一个动作的两种形态——<b>一个动作，两个入口，不是两套逻辑。</b></dd>
+    <dt>压暗</dt><dd>SPEC-0003 表格里「focus track → 世界压暗其余」那一行，原样保留。</dd>
+    <dt>加载</dt><dd>移动端与 &lt;1160 的 Web <b>不挂载</b>。动态 <code>import()</code>，
+      加载时显示屏 11 的加载文案（F1 手法）。</dd>
+    <dt>共享</dt><dd>场景本体搬到 <b><code>packages/world</code></b>（独立包，不是 <code>packages/ui</code>）。
+      理由见文末「和任务一的关系」。</dd>
+  </dl>
+  <div class="ac"><b>验收</b><ol>
+    <li>移动端首屏 Network 里<b>没有 three</b>；点「我的世界」后才出现。</li>
+    <li>两个 shell 渲染的是<b>同一个组件</b>，<code>check-module-boundaries.mjs</code> 能证明没有第二份。</li>
+    <li>3D 挂了（WebGL 不可用 / 加载失败）时，路径与全部功能<b>照常工作</b>，右栏换成文字摘要。</li>
+  </ol></div>
+</div>
+
+<!-- ============ 05 ============ -->
+<div class="scr">
+  <div class="scr-head"><span class="id">05</span><h3>课文阅读</h3>
+    <span class="route">#/&lt;study&gt;/&lt;course&gt;/&lt;unit&gt;/&lt;lesson&gt;</span>
+    <span class="have part">两端各一份（最大的重复）</span></div>
+  <p>对应 F2 的顶栏规则：<b>进入学习，一切导航消失。</b>
+  现在我们进课时顶栏还在——等于一直在提醒你可以离开。</p>
+  <div class="frames">
+    <div class="fr fr-m"><div class="lab">MOBILE</div>
+      <div class="wf wf-m">
+        <div class="box solid" style="height:24px">✕ ▓▓▓▓░░░░ 3/8</div>
+        <div class="box grow" style="justify-content:flex-start;align-items:stretch;padding:6px"
+          >课文正文<br><br>行宽 62rem 上限<br>术语带虚线下划线<br>点击 → 底部 sheet<br><br>
+          📄 证据锚点行内标记</div>
+        <div class="box sky" style="height:26px">📄 出自真实项目：answer-key.ts 第 16–24 行</div>
+        <div class="box go solid" style="height:32px">读完了 →</div>
+      </div></div>
+    <div class="fr fr-w"><div class="lab">WEB · 双栏，证据进右栏</div>
+      <div class="wf wf-w">
+        <div class="box solid" style="height:22px">✕ ▓▓▓▓░░░░ 3/8　　（左导航也消失）</div>
+        <div class="row grow">
+          <div class="box grow" style="justify-content:flex-start;padding:6px">课文正文 · max-width 62rem</div>
+          <div class="col" style="width:150px">
+            <div class="box sky grow">证据栏<br>4 条锚点<br>点开看坐标</div>
+            <div class="box dim" style="height:30px">术语面板</div></div>
+        </div>
+        <div class="box go solid" style="height:26px">读完了 →</div>
+      </div></div>
+  </div>
+  <dl class="spec">
+    <dt>导航</dt><dd><b>全部隐藏</b>：底部 tab（移动）、左侧栏（Web）、右栏 3D。只剩 ✕ 和进度条（F2）。</dd>
+    <dt>进度条</dt><dd>是<b>本节内</b>的进度（3/8 段），不是课程进度。多邻国也是这样。</dd>
+    <dt>「读完了」</dt><dd>SPEC-0003 点名的那个行为差异：作者端要求「确认已读」与「答完题」分开，
+      交付端现在一次写两个。<b>SPEC-0003 明确说这个改动要在 player-journey 里设计——就是这里。</b>
+      <b>方案：两端都分开。</b>确认已读 = 一个显式动作，理由是它也让「读了但没做题」这个真实状态可被记录。</dd>
+    <dt>Web 证据栏</dt><dd>16:9 的第二个红利：证据锚点从行内脚注升级成常驻侧栏，读的时候一直看得见。</dd>
+  </dl>
+  <div class="ac"><b>验收</b><ol>
+    <li>进入课文后，DOM 里<b>不存在</b> tab bar / 侧栏节点（不是 <code>visibility:hidden</code>）。</li>
+    <li>两个 shell 用<b>同一个阅读器组件</b>，<code>apps/online/src/lesson/Lesson.tsx</code> 的重复实现被删除。</li>
+    <li><code>已读</code> 与 <code>已答题</code> 在 <code>progress/contract.ts</code> 里是两个独立标志，两端都不再置相等。</li>
+  </ol></div>
+</div>
+
+<!-- ============ 06–07 ============ -->
+<div class="scr">
+  <div class="scr-head"><span class="id">06</span><h3>答题</h3>
+    <span class="route">课文内联</span><span class="have part">两端各一份</span></div>
+  <dl class="spec">
+    <dt>照搬 F2</dt><dd>① 题型小标签（「新概念」/「回忆」/「应用」）② 选项<b>无 A/B/C 编号</b>
+      ③ 提交按钮<b>禁用而非隐藏</b>，位置从进来就固定 ④ 判定后从底部升起结果条，
+      对/错用<b>颜色 + 图标 + 文字</b>三重编码（不能只靠颜色，色盲）。</dd>
+    <dt>判分</dt><dd>沿用现有三层：确定性 → 小模型 → 开放辅导。
+      <b>学习者看到的文案里不出现「第 N 层」「额度」这类内部词</b>（这条已经修过，别退回去）。</dd>
+    <dt>两端差异</dt><dd><b>唯一差异在这里，而且这正是老板说的那条</b>：
+      在线端 → SwimmerAIKit 实时判；本地端 → 复制提示词到剪贴板，宿主判完粘回来。
+      <b>同一个组件，一个 <code>GradingPort</code> 两种实现。</b></dd>
+  </dl>
+</div>
+
+<div class="scr">
+  <div class="scr-head"><span class="id">07</span><h3>结算</h3>
+    <span class="route">…/done</span><span class="have yes">有</span></div>
+  <dl class="spec">
+    <dt>保留</dt><dd>「岛上又立起了一间房子」——这是 3D 唯一无可替代的时刻，也是我们对多邻国
+      「+40 经验」的实体回答。<b>移动端在这里、也只在这里，值得按需加载 3D。</b></dd>
+    <dt>加上</dt><dd>结算页底部<b>直接给下一个节点弹窗</b>（屏 02），不要求用户先回路径再找。
+      多邻国在这里放「继续」直连下一节，这是连续学习率最高的一个按钮。</dd>
+    <dt>加上</dt><dd>本节解锁的词条，做成可点的卡片（我们的「宝箱」）。</dd>
+  </dl>
+</div>
+
+<!-- ============ 08–12 ============ -->
+<div class="scr">
+  <div class="scr-head"><span class="id">08</span><h3>目录</h3>
+    <span class="route">#/catalog</span><span class="have yes">有（缺能力句）</span></div>
+  <dl class="spec">
+    <dt>不动</dt><dd>560 节全部真 <code>&lt;a href&gt;</code>、键盘可达、<code>&lt;details&gt;</code> 折叠——这些已经对了。</dd>
+    <dt>加</dt><dd>每门课、每个单元<b>那一句第一人称能力描述</b>（屏 03）。
+      目录现在列出了 52 门课，但<b>没有一句话说学完能干什么</b>——这是「这课值不值得买」的直接答案。</dd>
+    <dt>Web</dt><dd>三栏里的中栏，右栏 3D 跟着高亮鼠标悬停的课。</dd>
+  </dl>
+</div>
+
+<div class="scr">
+  <div class="scr-head"><span class="id">09</span><h3>图鉴 · 概念掌握网格</h3>
+    <span class="route">#/library/&lt;tab&gt;</span><span class="have part">有列表，缺掌握度</span></div>
+  <p>对应 G7（发音网格）。多邻国把 40 个音标做成带掌握度条的卡片网格——
+  <b>路径回答「往哪走」，网格回答「哪块弱」，同一套数据两种投影。</b></p>
+  <dl class="spec">
+    <dt>加</dt><dd>281 个概念每个一张卡，卡上一条<b>掌握度条</b>。数据源：FSRS 的记忆强度，
+      <b>我们已经有调度器了</b>（<code>packages/core/src/scheduling/fsrs.ts</code>），只是没投影成网格。</dd>
+    <dt>反着做</dt><dd>多邻国把自由练习埋到第 6 个 tab 底下第 4 项，因为练习是副产品、会跟路径抢注意力。
+      <b>对我们它是差异化主产品</b>——281 概念 + 267 术语 + 25 反模式 + 一键复制成 AI 上下文。
+      <b>图鉴留在一级 tab。这是看懂之后要反着做的地方。</b></dd>
+  </dl>
+</div>
+
+<div class="scr">
+  <div class="scr-head"><span class="id">10</span><h3>练习流</h3>
+    <span class="route">#/practice</span><span class="have yes">有</span></div>
+  <dl class="spec">
+    <dt>加</dt><dd>入口卡照 G9 的写法：一句话说清这是什么 +「开始」。现在它只是一个 tab 名。</dd>
+    <dt>加</dt><dd><b>错题本</b>（G9 里那个带红标 3 的）。答错的题进队列，红点告诉你欠着几道。
+      我们有 FSRS，这本质是「到期的错题」，不是新系统。</dd>
+  </dl>
+</div>
+
+<div class="scr">
+  <div class="scr-head"><span class="id">11</span><h3>加载页</h3>
+    <span class="route">全局</span><span class="have no">没有</span></div>
+  <dl class="spec">
+    <dt>照搬 F1</dt><dd>加载时<b>随机显示一条概念词条</b>：「你知道吗：<i>幂等</i> 的意思是……」
+      不放进度条——进度条让你盯着等，一句话让你读完了才发现已经好了。</dd>
+    <dt>为什么<br>几乎白捡</dt><dd><b>281 条素材已经写完了。</b>这是全文档里工作量最小的一屏。</dd>
+  </dl>
+</div>
+
+<div class="scr">
+  <div class="scr-head"><span class="id">12</span><h3>我</h3>
+    <span class="route">#/me</span><span class="have no">没有</span></div>
+  <dl class="spec">
+    <dt>放</dt><dd>学习总览（学了多少天 / 完成 N 节 / 解锁 N 个概念）· 收藏 · 设置 · 账号与订阅（仅在线端）。</dd>
+    <dt>G6 的<br>那一手</dt><dd>多邻国把「67,539 经验」放在个人主页最显眼处，因为<b>那个数字是转换成本</b>——
+      个人主页的真正作用不是给别人看，是给你自己看你走不了。<br>
+      <b>我们的等价物是「你读过 N 段真实代码」</b>，而且它比经验值诚实，因为它指向真东西。</dd>
+    <dt>两端</dt><dd>本地端这一屏放 airlock 三个时钟、UA 面板、知识笔记——
+      SPEC-0003 表格里「authoring only 覆盖层」的那些行，全部落在这里。</dd>
+  </dl>
+</div>
+
+<h2 class="gold"><span class="n">任务一</span>和「两端合流」的关系：你说对了一大半</h2>
+<p class="lede">你要求两端几乎一模一样、唯一差异是 AI 接入方式。
+我去查了仓库和三份 spec，<b>你的目标完全正确，而且已经被写进了 canonical spec；
+但其中一条做法会打破它自己的验收条件，而且不需要打破——目标能用别的做法 100% 达成。</b></p>
+
+<table>
+  <tr><th>你说的</th><th>核实结果</th></tr>
+  <tr><td><b>「唯一区别是 AI：online 接 API key，local 走剪贴板 + AI 宿主」</b></td>
+    <td><b>✅ 完全正确，而且早就写下来了。</b><code>SPEC-0001:141</code> 原话：
+      「model access（一边是 coding host，另一边是 metered online APIs）」。你记得没错。</td></tr>
+  <tr><td><b>「local 找课也变成那片岛」</b></td>
+    <td><b>✅ 正确，而且已经是一份 active / canonical spec。</b>
+      <code>SPEC-0003: One World, Two Shells</code>（2026-08-21）第一句就是这件事。
+      <b>它不需要重新决定，它需要被建出来。</b></td></tr>
+  <tr><td><b>「课文、答题、写课仍然是 2D」</b></td>
+    <td><b>✅ 正确，而且是 portfolio 硬法。</b>Web3D 基线第 7 条：可读文字是 DOM，永远不是几何体。
+      中文输入法、屏幕阅读器、文本选择、手机键盘在 canvas 里全部会死。</td></tr>
+  <tr><td><b>「local 后端也用 SwimmerBackend」</b></td>
+    <td><b>❌ 这一条会打破三份文档，而且不做它你也能拿到你要的东西。</b>见下。</td></tr>
+</table>
+
+<div class="dec no">
+  <h4>为什么「local 用 SwimmerBackend」不成立</h4>
+  <p><b>先说一个你可能没意识到的事实：<code>apps/online</code> 现在根本没有后端。</b>
+  它是一个纯静态站点，全仓<b>只有 1 处 <code>fetch</code></b>
+  （<code>apps/online/src/content/library.ts:116</code>），读的是打包进去的静态 JSON。
+  没有账号、没有支付、没有 API、没有 AI 调用。<b>SwimmerBackend 在这个仓库里一行代码都没有。</b></p>
+  <p>所以「让 local 用 online 的后端」这句话里，那个后端还不存在。
+  <b>真正该做的是：给 online 建 SwimmerBackend</b>（账号、支付、权限、计费 AI）——
+  <code>SPEC-0001:140</code> 已经为它留好了位置。<b>而 local 不该接它</b>：</p>
+  <ul>
+    <li><code>SPEC-0001:140</code> — 共享包不得拥有 storage：「一边本地文件 + SQLite，<b>另一边 SwimmerBackend</b>」</li>
+    <li><code>SPEC-0001:208</code> — 验收条件 4：UniversityLocal 内<b>没有 uploader，也没有 backend client</b></li>
+    <li><code>SPEC-0003</code> 结尾 Non-Negotiable — 「<b>创作端保持离线。</b>共享一个包不是联网。」</li>
+  </ul>
+  <p><b>打个比方。</b>你想要的是「我在家做的菜和店里一模一样」。
+  正确做法是<b>共用同一份菜谱、同一套锅、同一个摆盘</b>——那样你在家改进的任何一步，店里立刻也有。
+  你提的做法是「我家厨房接店里的中央厨房」——一旦断网，<b>你每天赖以学习的那一端就做不了饭了</b>，
+  而且它对「共用菜谱」这个真正的目标<b>几乎没有帮助</b>：代码复用发生在菜谱层，不在中央厨房层。</p>
+</div>
+
+<div class="dec">
+  <h4>能 100% 达成你目标的做法：把「数据从哪来」切成一个口子</h4>
+  <p>那 18 处 <code>fetch</code> 是两端无法共用课文阅读器的<b>唯一原因</b>——
+  <code>packages/ui</code> 里的「共享」组件写死了 <code>/api/*</code>，所以 online 用不了，只好自己写了第二份
+  （<code>apps/online/src/lesson/Lesson.tsx</code>）。<b>这就是你说的「两套代码」，它只有这一个根。</b></p>
+  <p>做法：定义几个<b>口（Port）</b>，组件只认口，两端各给一个实现（Adapter）。</p>
+  <table>
+    <tr><th>口</th><th>local 的实现</th><th>online 的实现</th></tr>
+    <tr><td><code>ContentPort</code> 读课文/单元/课程</td><td>本地 HTTP <code>/api/*</code></td><td>静态 JSON（将来 SwimmerBackend）</td></tr>
+    <tr><td><code>ProgressPort</code> 读写进度</td><td>SQLite</td><td>localStorage（将来账号）</td></tr>
+    <tr><td><code>GradingPort</code> 判题</td><td>剪贴板 + AI 宿主</td><td>指纹当场判 + SwimmerAIKit</td></tr>
+    <tr><td><code>EvidencePort</code> 取代码片段</td><td>本地 git 检出</td><td><b>只给坐标不给内容</b>（私有仓库不进交付包）</td></tr>
+  </table>
+  <p><b>这样你要的闭环就成立了</b>：口<b>之上</b>的一切——路径、节点弹窗、阅读器、答题、结算、图鉴、复习——
+  是<b>一份代码</b>。你每天用 local 时发现的任何问题，改在口之上，online 自动就有了。
+  口<b>之下</b>只有四个小适配器，各几十行。<br>
+  <b>而 local 保持离线</b>，这不是妥协，这是保护你每天要用的那一端。</p>
+  <p class="cite">Grok 和 Gemini 独立审计后给了同一句结论。Grok 原话：
+  「不要让 local 去用 SwimmerBackend——那是在拆掉你每天用的那一端，
+  而且对『local 发现的问题自动惠及 online』几乎没有帮助。」</p>
+</div>
+
+<div class="dec hm">
+  <h4>顺带查出一个两份 spec 自己打架的地方（需要你裁决）</h4>
+  <p><code>SPEC-0001:141</code>：共享包<b>不得</b>拥有「任何 3D、世界地图、关卡或激励系统」。<br>
+  <code>SPEC-0003:122</code>：「把场景<b>搬进 <code>packages/ui</code></b>」——而 <code>packages/ui</code> 就是共享包。</p>
+  <p><b>两个模型独立给出同一个解法，我也认同：新建 <code>packages/world</code>。</b>
+  这样 SPEC-0001「共享课文包不碰 3D」成立，SPEC-0003「一个场景两个覆盖层」也成立。
+  代价：<code>apps/local</code> 需要装 <code>three</code> 系列依赖（它现在没有）——但只有 local <b>选择</b>依赖
+  <code>packages/world</code> 时才装，<code>packages/ui</code> 保持零 three。</p>
+  <p class="cite">按 <code>CLAUDE.md</code> 的 Upstream Rule，改 spec 不是我能自己决定的。
+  这条要么你拍板改 SPEC-0003 的第 1 步，要么在 PGS 上游提。</p>
+</div>
+
+<h2><span class="n">顺序</span>施工顺序：先切口，再换屏</h2>
+<p class="lede">顺序不是偏好。<b>先切口</b>是因为口没切开之前，任何一屏都会被做成两遍——
+这正是我们要消灭的东西。每一波做完都能跑、能验证、能停。</p>
+<table>
+  <tr><th>波</th><th>做什么</th><th>做完能验证什么</th><th>风险</th></tr>
+  <tr><td><b>0</b></td><td>你回答文末三个问题</td><td>方向锁定</td><td>—</td></tr>
+  <tr><td><b>1</b></td><td>切 <code>ContentPort</code> / <code>EvidencePort</code>，
+      删掉 <code>apps/online/src/lesson/Lesson.tsx</code> 那份重复阅读器</td>
+    <td><b>两端课文页看起来完全没变</b>——这就是测试</td><td>高（最大的一条缝）</td></tr>
+  <tr><td><b>2</b></td><td>屏 05/06 的导航隐藏 + 已读/已答分离</td><td>进课后 DOM 里没有 tab bar</td><td>低</td></tr>
+  <tr><td><b>3</b></td><td>屏 01 路径 + 屏 02 节点弹窗（<b>2D，无 3D 依赖</b>）</td>
+    <td>560 节可 Tab 到达；移动端首屏无 three</td><td>中</td></tr>
+  <tr><td><b>4</b></td><td>屏 03 能力句 + 屏 08 目录补句（<b>纯文案</b>）</td>
+    <td>52 门课各有一句「学完你能——」，缺则 CI 红</td><td>无代码风险</td></tr>
+  <tr><td><b>5</b></td><td>抽 <code>packages/world</code>，local 接上（= 建 SPEC-0003）</td>
+    <td>两端同一个场景；<code>check-module-boundaries</code> 证明没有第二份</td><td>中</td></tr>
+  <tr><td><b>6</b></td><td>Web 三栏 + 右栏常驻 3D（屏 04）</td><td>1160/768 两处断点无横向滚动</td><td>低</td></tr>
+  <tr><td><b>7</b></td><td>屏 09 掌握度网格 · 屏 11 加载页 · 屏 10 错题本</td><td>—</td><td>低</td></tr>
+  <tr><td><b>8</b></td><td>online 建 SwimmerBackend（账号 / 支付 / 计费 AI）</td><td>能收到第一笔钱</td><td>高，独立立项</td></tr>
+</table>
+<p class="cite"><b>波 4 建议插队到最前面。</b>它零代码风险、成本最低，
+而且它直接回答「这课值不值得买」——那是「能卖钱」这个目标最短的一条路。</p>
+
+<h2 class="warn"><span class="n">不做</span>看懂了之后<i>不</i>抄的五件事</h2>
+<table>
+  <tr><th>他们做的</th><th>为什么对他们成立</th><th>为什么我们不做</th></tr>
+  <tr><td><b>能量 / 红心</b>（答错次数上限）</td><td>语言学习答错没成本，稀缺纯属人造，用来卖 Super</td>
+    <td>我们教做产品，<b>错误就是教材</b>。惩罚试错 = 惩罚学习。
+      真要有额度就用 <b>AI 判题额度</b>——那是真实成本，不是人造稀缺</td></tr>
+  <tr><td><b>双层货币</b>（钱→宝石→道具）</td><td>模糊真实价格，游戏内购标准做法</td>
+    <td>一层人民币定价更诚实也更好解释。模糊定价会让「够商业」变成「像手游」</td></tr>
+  <tr><td><b>冷启动第一屏付费墙</b></td><td>面对的是已投入 67,539 经验的老用户</td>
+    <td>我们的访客第一次打开，<b>价值还没被证明</b></td></tr>
+  <tr><td><b>把 0 天连胜放大成一个空洞</b></td><td>对青少年学语言有效</td>
+    <td>我们的用户是成年人在学一门手艺。做「本周学了 3 天」的温和版，不做羞辱</td></tr>
+  <tr><td><b>把自由练习埋到第 6 个 tab</b></td><td>练习是副产品，会跟主路径抢注意力</td>
+    <td><b>对我们图鉴和练习是差异化主产品。这一条要反着做。</b></td></tr>
+</table>
+
+<h2 class="warn"><span class="n">?</span>三个问题，回答完我就开工</h2>
+<table>
+  <tr><th>#</th><th>问题</th><th>我的建议</th></tr>
+  <tr><td>1</td><td><b>落地屏之争</b>：SPEC-0003 要求两端落地屏都是 3D 群岛并退役 2D 书架；
+      多邻国的证据说落地屏该是 2D 路径。</td>
+    <td><b>按视口分岗</b>（决定一的表）：Web ≥1160 三栏、3D 常驻右栏（SPEC-0003 仍成立）；
+      移动端落地屏是 2D 路径、3D 按需。<b>需要你同意「移动端落地屏不是 3D」。</b></td></tr>
+  <tr><td>2</td><td><b>SwimmerBackend</b>：三份文档说 local 必须离线。</td>
+    <td><b>local 保持离线，用四个 Port 共享口以上的全部代码</b>；
+      SwimmerBackend 只建在 online 侧。这样你的闭环 100% 成立。</td></tr>
+  <tr><td>3</td><td><b>SPEC-0001 与 SPEC-0003 打架</b>（3D 能不能进共享包）。</td>
+    <td>新建 <code>packages/world</code>，两份都成立。需要你拍板改 SPEC-0003 第 1 步的措辞。</td></tr>
+</table>
+
+</div>
+<script>
+document.querySelectorAll('.switch button').forEach(function(b){
+  b.addEventListener('click', function(){
+    var vp = b.dataset.vp;
+    document.querySelectorAll('.switch button').forEach(function(o){
+      o.setAttribute('aria-pressed', String(o === b));
+    });
+    document.querySelectorAll('.frames').forEach(function(f){
+      f.classList.remove('only-m','only-w');
+      if (vp === 'm') f.classList.add('only-m');
+      if (vp === 'w') f.classList.add('only-w');
+    });
+  });
+});
+</script>
+</body></html>
