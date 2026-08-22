@@ -84,6 +84,56 @@ for (const name of [...emitted].sort()) {
   if (inLocal !== inOnline) lopsided.push(`${name} (${inLocal ? "local" : "online"} only)`);
 }
 
+/**
+ * A stylesheet in `packages/ui` that no shell imports styles nothing.
+ *
+ * This is the failure the class-name check above cannot see, because the rules
+ * *are* in `packages/ui` — they are simply never loaded. Three sheets were in
+ * that state: `choice-block.css` and `practice.css` were not in the exports
+ * map at all, and `loading-trivia.css` was exported and imported by nobody. So
+ * the answer options on the practice screen were bare `<button>` elements
+ * wearing the user agent's 1px padding, in both shells, on the screen where
+ * the learning happens, with the correct CSS sitting in the repository.
+ *
+ * The rule is deliberately blunt: every sheet, every shell, always. A shell
+ * either wears the shared package's look or that look does not exist. A few
+ * kilobytes of unused CSS is far cheaper than one more screen that is dressed
+ * in one shell and naked in the other.
+ */
+function unreachableStylesheets() {
+  const sheets = walk(join(ROOT, "packages/ui/src"))
+    .filter((p) => extname(p) === ".css")
+    .map((p) => p.slice(join(ROOT, "packages/ui/src/").length));
+  const exportsMap = JSON.parse(readFileSync(join(ROOT, "packages/ui/package.json"), "utf8")).exports;
+  const entries = {
+    "apps/online": readFileSync(join(ROOT, "apps/online/src/main.tsx"), "utf8"),
+    "apps/local": readFileSync(join(ROOT, "apps/local/src/main.tsx"), "utf8"),
+  };
+  const problems = [];
+  for (const sheet of sheets.sort()) {
+    if (!exportsMap[`./${sheet}`]) {
+      problems.push(`${sheet} — not in packages/ui exports, so no app can import it`);
+      continue;
+    }
+    for (const [app, source] of Object.entries(entries)) {
+      if (!source.includes(`@pieai/university-ui/${sheet}`)) {
+        problems.push(`${sheet} — ${app}/src/main.tsx does not import it`);
+      }
+    }
+  }
+  return problems;
+}
+
+const unreachable = unreachableStylesheets();
+if (unreachable.length > 0 && !process.argv.includes("--write-baseline")) {
+  console.error(
+    "shared styles: a packages/ui stylesheet is not reaching a shell.\n" +
+      "Add it to the exports map and import it from both apps' main.tsx.\n",
+  );
+  for (const problem of unreachable) console.error(`  ${problem}`);
+  process.exit(1);
+}
+
 if (process.argv.includes("--write-baseline")) {
   writeFileSync(BASELINE, JSON.stringify(lopsided, null, 2) + "\n");
   console.log(`shared styles: baseline written, ${lopsided.length} known`);
