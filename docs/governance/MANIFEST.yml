@@ -1,9 +1,37 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-21T10:01:23.084Z
+generated_at: 2026-08-22T09:15:02.212Z
 generator_version: doc-gov@0.9.1
-docs_count: 20
+docs_count: 24
 docs:
+  - id: ADR-0001
+    path: docs/adr/ADR-0001-both-shells-hold-an-account.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-08-22
+    pinned: false
+  - id: ADR-0002
+    path: docs/adr/ADR-0002-courses-publish-to-the-backend.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-08-22
+    pinned: false
+  - id: ADR-0003
+    path: docs/adr/ADR-0003-evidence-code-ships.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-08-22
+    pinned: false
+  - id: ADR-0004
+    path: docs/adr/ADR-0004-the-renderer-lives-in-packages-world.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-08-22
+    pinned: false
   - id: GOV-AGENTS-ROUTING-ENGINEERING-RUNTIME-V1-1
     path: docs/governance/agents-routing/engineering-runtime-v1.1.md
     type: policy
@@ -100,7 +128,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-18
+    last_reviewed: 2026-08-22
     pinned: true
   - id: REF-LEARNING-WORKFLOW-ISSUES-EVIDENCE-WIKI-TOKENS-CANNOT-RENDER-AS-BLOCK-SOURCE-INSIDE-A-PARAGRAPH
     path: docs/reference/learnings/workflow-issues/evidence-wiki-tokens-cannot-render-as-block-source-inside-a-paragraph.md

@@ -54,31 +54,11 @@ halves of one pipeline.
 Once that is fixed, "the courses must be identical" stops being a synchronisation
 problem and becomes a supply problem: there is exactly one producer.
 
-**Amended 2026-08-22.** The storage row used to read "Local files and SQLite"
-against "SwimmerBackend", one backend for one side. It is now two rows, because
-one row was hiding two different questions.
-
-*Where the course lives* is still split, and it has to be: `apps/local` reads
-the thing being written — prose, four registered private repositories, snapshots
-— and `apps/online` reads the thing that was published. That asymmetry is not
-an inconvenience to be tidied away; it **is** the single-producer pipeline this
-document exists to protect.
-
-*Who the learner is, and how far they have got* is no longer split. Both shells
-sign in to SwimmerBackend and read and write one account, one progress record,
-one review schedule. The instruction behind the change was to reduce what a
-person has to hold in their head, and two answers to "where is my progress" was
-one of them. The practical wins are ordinary and real: sign in on a second
-machine and your place is there.
-
-The objection this replaces was that networking the authoring shell would cost
-it offline use. That objection was answered rather than overruled, and answered
-twice. Its own premise was thin — the authoring shell's central act is grading
-through an AI host, and an AI host needs the network too, so "works offline"
-was already only true of the parts that do not need a model. And the
-replacement does not spend it anyway: learner state is small, it caches locally,
-and it reconciles. Content, which is the large and private half, does not sync
-at all.
+Course storage is split and has to be: `apps/local` reads the thing being
+written — prose, four registered private repositories, snapshots — and
+`apps/online` reads what was published. That asymmetry **is** the
+single-producer pipeline. Identity and learner state are not split: one
+account, one progress record, one review schedule (ADR-0001).
 
 ## Layer 1 — Course content
 
@@ -112,22 +92,14 @@ Requirements:
 University reads. UniversityLocal is never modified to push **content**.
 
 Read the noun. This clause is about course prose, cards, exercises and
-evidence, and it is absolute: the day a second thing can produce a lesson, "the
-courses are identical" goes back to being a synchronisation problem and this
-whole document stops working. An uploader in the authoring shell is still
-forbidden, and always will be.
+evidence, and it is absolute: the day a second thing can produce a lesson,
+"the courses are identical" goes back to being a synchronisation problem and
+this document stops working.
 
-It is not a statement about the network. Until 2026-08-22 it read as one,
-because the two lanes were never separated and the authoring shell had no
-outbound call of any kind, so nobody had to. It now has exactly one: it signs
-in, and it syncs who the learner is and how far they have got. That lane
-carries no lesson content in either direction, and the test for whether a new
-call belongs on it is that question and no other.
-
-Concretely: the pull is a University command that reads a configured local path
-to a UniversityLocal checkout. If that path is absent — a fresh clone, or CI —
-the command reports "no upstream configured" and exits cleanly. It never fails
-the build for being unable to see a sibling checkout.
+It is not a statement about the network. Content reaches customers by being
+**published**, which is a gated act (ADR-0002); learner identity and progress
+travel freely in both directions (ADR-0001). A new outbound call belongs on
+the second lane only if it carries no lesson content.
 
 ### Publishing is a separate, deliberate gate
 
@@ -182,20 +154,14 @@ The shared package must **not** own:
 Those differ by design, and forcing them into the kit would make the kit a
 second product.
 
-Accounts, entitlement and learner state used to be on that list and were
-removed on 2026-08-22. They are now the same on both sides, so the kit is
-exactly where they belong: one `ProgressPort`, one implementation over
-SwimmerBackend, one local cache. A thing both shells do identically is the
-definition of what this kit is for.
+Accounts, entitlement and learner state **are** the kit's: one `ProgressPort`,
+one implementation over SwimmerBackend, one local cache (ADR-0001). A thing
+both shells do identically is the definition of what this kit is for.
 
 "The shared package" here means this parity kit — `packages/core` and
-`packages/ui`. It does not mean "any package both shells import". The world
-map is shared by both shells and lives in **`packages/world`**, which is a
-different package with a different dependency set; SPEC-0003 names it and
-explains why. A reader who takes the line above to forbid sharing a scene at
-all will rediscover a contradiction that was settled on 2026-08-22: the rule
-is that the kit which carries lessons must not also carry a renderer, not that
-two shells may never look at the same world.
+`packages/ui`. It does not mean "any package both shells import". The world map
+is shared by both shells and lives in **`packages/world`**, a different package
+with a different dependency set (ADR-0004).
 
 Beginner version: the kit is the recipe and the prepared sauce. Where you store
 the ingredients, who cooks, and what the dining room looks like stay local.
@@ -226,13 +192,10 @@ visible the day it happens instead of the quarter it is discovered.
 Neither side reaches into the other's column, and no item in these columns
 belongs in the kit.
 
-Two rows left this table on 2026-08-22 and it is worth saying where they went
-rather than only that they are gone. **Learner state and the review store** are
-now one implementation over SwimmerBackend, shared. **The 3D world** was already
-shared before this amendment — SPEC-0003 put it in `packages/world`, and a
-column called "owned by University" was the last place still implying
-otherwise. What stays on the right is what a paying customer's side genuinely
-owns alone: the money, and what has been published.
+Learner state and the review store are not in this table: they are one shared
+implementation (ADR-0001). Neither is the 3D world (ADR-0004). What remains on
+the right is what the paying side genuinely owns alone — the money, and what
+has been published.
 
 ## Cost
 
@@ -264,12 +227,11 @@ by a command, not by reading code:
 2. Deleting University's imported content and re-running the import from the
    same manifest reproduces byte-identical content.
 3. No file in University generates lesson prose, cards, exercises, or evidence.
-4. UniversityLocal contains no code that references University and no content
-   uploader: no path by which lesson prose, cards, exercises or evidence leave
-   it other than a recovery export written to disk. It does hold a backend
-   client, and that client's request surface is account, progress, review,
-   favourites and settings — a list short enough to read, which is the point
-   of writing it out. Anything carrying lesson content on it fails this clause.
+4. Lesson prose, cards, exercises and evidence leave the authoring shell only
+   as a recovery package — to disk, or to the publish lane, which is gated
+   (ADR-0002). No other path exists. Its backend client's request surface is
+   account, progress, review, favourites, settings and publish: a list short
+   enough to read, which is why it is written out.
 5. The parity check reports the upstream commit it compared against, and fails
    when the vendored schema differs from that commit.
 6. Every published course has a recorded review of the exact package hash being

@@ -145,10 +145,6 @@ Step 3 is where this can go wrong, and the ordering is the whole safeguard.
   failing.
 - No text in WebGL. Labels are DOM elements positioned over the canvas, which
   is how the delivery shell already does it.
-- ~~The authoring shell stays offline.~~ **Superseded 2026-08-22.** Both shells
-  sign in to SwimmerBackend and share one account, progress and review
-  schedule. What survives from this bullet is the part that was always the real
-  constraint: **no lesson content leaves the authoring shell over a network.**
-  Content leaves it exactly one way, as a recovery export written to disk. See
-  SPEC-0001 §"Direction is one-way", which now separates the two lanes this
-  bullet used to run together.
+- No lesson content leaves the authoring shell except as a recovery package,
+  and reaching a customer means passing the publish gate (ADR-0002). Identity
+  and learner state are shared and travel freely (ADR-0001).
