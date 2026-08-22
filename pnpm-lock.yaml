@@ -9,11 +9,11 @@ importers:
   .:
     devDependencies:
       '@pieai/doc-gov':
-        specifier: 0.9.1
-        version: 0.9.1
+        specifier: 0.9.3
+        version: 0.9.3
       '@pieai/pro-gov':
-        specifier: 0.9.1
-        version: 0.9.1
+        specifier: 0.9.3
+        version: 0.9.3
       lefthook:
         specifier: ^2.1.10
         version: 2.1.10
@@ -653,8 +653,18 @@ packages:
     engines: {node: '>=24 <25'}
     hasBin: true
 
+  '@pieai/doc-gov@0.9.3':
+    resolution: {integrity: sha512-+//r/bdH5WjX/lwwSgIBIi3GsD+5HGDf4TrQBSJsusg/Awo2KM63WLmQRFYock356HvtkGIUmjrTiqD+LXxHZg==}
+    engines: {node: '>=24 <25'}
+    hasBin: true
+
   '@pieai/pro-gov@0.9.1':
     resolution: {integrity: sha512-HquFh7IbVl4kojJeKG8b+bs+qY67gY7jsH7dnaYU9qN8EEkp1tOK3arAg4XuC+pWYblbMjh1HZJ3gz/q2gnruQ==}
+    engines: {node: '>=24 <25'}
+    hasBin: true
+
+  '@pieai/pro-gov@0.9.3':
+    resolution: {integrity: sha512-J6zVvFdy8b2xSQ/tLLCLiYm3Za2Dak1iA7EyfVnL0ajoWl9qlqOb+IQLRdTdRa41po7mY/S0n7TPLAw+S27vkA==}
     engines: {node: '>=24 <25'}
     hasBin: true
 
@@ -2577,9 +2587,15 @@ snapshots:
 
   '@pieai/doc-gov@0.9.1': {}
 
+  '@pieai/doc-gov@0.9.3': {}
+
   '@pieai/pro-gov@0.9.1':
     dependencies:
       '@pieai/doc-gov': 0.9.1
+
+  '@pieai/pro-gov@0.9.3':
+    dependencies:
+      '@pieai/doc-gov': 0.9.3
 
   '@pieai/swimmer-render-kit@0.3.0(three@0.185.1)':
     optionalDependencies:

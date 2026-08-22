@@ -21,8 +21,8 @@
     "content": "pnpm --filter @pieai/university-online content"
   },
   "devDependencies": {
-    "@pieai/doc-gov": "0.9.1",
-    "@pieai/pro-gov": "0.9.1",
+    "@pieai/doc-gov": "0.9.3",
+    "@pieai/pro-gov": "0.9.3",
     "lefthook": "^2.1.10"
   }
 }
