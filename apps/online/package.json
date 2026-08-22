@@ -20,7 +20,6 @@
     "@pieai/swimmer-avatar-kit": "0.2.0",
     "@pieai/swimmer-render-kit": "0.3.0",
     "@pieai/swimmer-ui-kit": "1.5.0",
-    "@pieai/university-avatar": "workspace:*",
     "@pieai/university-core": "workspace:*",
     "@pieai/university-ui": "workspace:*",
     "@react-three/drei": "^10.7.8",

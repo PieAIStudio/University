@@ -17,6 +17,7 @@ related:
   - ADR-0002
   - ADR-0003
   - ADR-0004
+  - ADR-0005
 ---
 
 # Current Work
@@ -35,7 +36,6 @@ apps/online     delivery  — 3D archipelago, progress, review  (9998)
 packages/core   the domain model. No React, no fs, no network.
 packages/ui     the learning surface and the app chrome, both shells
 packages/world  the scene. packages/ui stays at zero three.   (ADR-0004)
-packages/avatar 3D avatars, vendored from kindergrimm (Unlicense)
 ```
 
 ```bash
@@ -87,6 +87,8 @@ Fixing either means editing content, which is authoring work.
   a second kind is a new renderer, not a schema migration.
 - Layout differs by CSS breakpoint inside one component tree. A second
   implementation is not a responsive layout.
+- 3D avatars come from `@pieai/swimmer-avatar-kit`. Capability the kit lacks
+  goes upstream, not into a University fork (ADR-0005).
 
 ## Design Before Build
 
@@ -134,9 +136,6 @@ Next:
    answered.
 7. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
 8. SwimmerBackend: accounts, payment, metered AI.
-
-Open, needing a person: `migrate/swimmer-avatar-kit` is built and verified but
-unmerged — it decides whether `packages/avatar` stays.
 
 ## Traps, Found The Hard Way
 

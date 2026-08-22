@@ -9,20 +9,19 @@ import {
   GameToggle,
 } from "@pieai/swimmer-ui-kit";
 import {
-  Avatar,
-  dressScene,
   fillRecipe,
   PALETTES,
-  PALETTE_SWATCHES,
-  PARTS,
   randomRecipe,
   rerollPart,
   SPECIES,
   type AvatarRecipe,
-} from "@pieai/university-avatar";
+} from "@pieai/swimmer-avatar-kit";
+import { dressScene } from "@pieai/swimmer-avatar-kit/materials";
+import { Avatar } from "@pieai/swimmer-avatar-kit/react-three-fiber";
 import { useCallback, useMemo, useState } from "react";
 
 import { WORLD, type View } from "../url-state";
+import { REROLLABLE_PARTS } from "./rerollable-parts";
 
 export function AvatarLab({ onOpen }: { onOpen: (view: View) => void }) {
   const [recipe, setRecipe] = useState<AvatarRecipe>(() => randomRecipe());
@@ -34,7 +33,7 @@ export function AvatarLab({ onOpen }: { onOpen: (view: View) => void }) {
 
   const swatches = useMemo(
     () =>
-      PALETTE_SWATCHES.map((palette) => ({
+      PALETTES.map((palette) => ({
         id: palette.id,
         label: palette.label,
         color: palette.colors[0] ?? "#ccc",
@@ -68,7 +67,7 @@ export function AvatarLab({ onOpen }: { onOpen: (view: View) => void }) {
   }, []);
 
   const setPalette = useCallback((paletteId: string) => {
-    const swatch = PALETTE_SWATCHES.find((entry) => entry.id === paletteId);
+    const swatch = PALETTES.find((entry) => entry.id === paletteId);
     setRecipe((current) =>
       fillRecipe({
         ...current,
@@ -91,7 +90,7 @@ export function AvatarLab({ onOpen }: { onOpen: (view: View) => void }) {
             camera.lookAt(0, 0.9, 0);
           }}
         >
-          <Avatar recipe={recipe} gaze={gaze} onBuilt={setStats} />
+          <Avatar recipe={recipe} gaze={gaze} onBuilt={(avatar) => setStats(avatar.stats)} />
           <OrbitControls
             enablePan={false}
             enableDamping
@@ -173,7 +172,7 @@ export function AvatarLab({ onOpen }: { onOpen: (view: View) => void }) {
 
         <GamePanel title="重掷部位">
           <div className="avatar-lab__chips" role="group" aria-label="重掷部位">
-            {PARTS.filter((part) => part.id !== "body" && part.id !== "frame").map((part) => (
+            {REROLLABLE_PARTS.map((part) => (
               <GameButton
                 key={part.id}
                 type="button"

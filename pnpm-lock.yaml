@@ -93,9 +93,6 @@ importers:
       '@pieai/swimmer-ui-kit':
         specifier: 1.5.0
         version: 1.5.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@pieai/university-avatar':
-        specifier: workspace:*
-        version: link:../../packages/avatar
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -151,33 +148,6 @@ importers:
       vitest:
         specifier: 4.1.10
         version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.1.4(@types/node@24.13.2))
-
-  packages/avatar:
-    devDependencies:
-      '@react-three/fiber':
-        specifier: 9.6.1
-        version: 9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
-      '@types/react':
-        specifier: 19.2.17
-        version: 19.2.17
-      '@types/three':
-        specifier: 0.185.1
-        version: 0.185.1
-      oxfmt:
-        specifier: 0.58.0
-        version: 0.58.0
-      oxlint:
-        specifier: 1.73.0
-        version: 1.73.0
-      react:
-        specifier: 19.2.7
-        version: 19.2.7
-      three:
-        specifier: 0.185.1
-        version: 0.185.1
-      typescript:
-        specifier: 6.0.3
-        version: 6.0.3
 
   packages/core:
     dependencies:
