@@ -13,3 +13,14 @@ export {
 } from "./contract.js";
 
 export { nextCourseAfter, spineOf, validateSpine, type SpineEntry } from "./spine.js";
+
+export {
+  cloneProgress,
+  emptyProgress,
+  lessonKey,
+  parseProgress,
+  PROGRESS_STORAGE_KEY,
+} from "./document.js";
+export { mergeProgress } from "./merge.js";
+export { createMemoryPersistence, createMemoryRemoteStore } from "./memory.js";
+export { createProgressPort } from "./port.js";
