@@ -36,6 +36,16 @@ import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./path-langu
  * The world's palette. Two greens for land, one warm accent for the only thing
  * that is lit, and a sea that is dark enough for a white label to sit on.
  */
+/**
+ * Painted sky, as three hex stops. Exported so a test can refuse a sky that
+ * has collapsed back into one colour, which is how the last one went cheap.
+ */
+export const SKY_STOPS = {
+  zenith: 0x2e7fd4,
+  mid: 0x8ec8ea,
+  horizon: 0xf2d4b0,
+} as const;
+
 const PALETTE = {
   // The sea is most of the frame, so the sea is what sets the exposure of the
   // whole product. Measured: with a near-navy sea the scene's median linear
@@ -46,8 +56,14 @@ const PALETTE = {
   sea: 0x2f89a0,
   seaDeep: 0x1c5c72,
   foam: 0xc9f0ea,
-  sky: 0xa9d6e9,
-  horizon: 0xdcefef,
+  // Three luminance stops, zenith → horizon. v3: a dead-white sky is the
+  // cheapest 3D-demo signal; a cool cyan wash was better than white and still
+  // not a sky. Saturation lives at the top, warmth at the rim. The sea number
+  // above is not in this list on purpose — it was measured for exposure, and
+  // rewriting it to "look more like sky" is how the midtones fall out.
+  skyZenith: SKY_STOPS.zenith,
+  skyMid: SKY_STOPS.mid,
+  skyHorizon: SKY_STOPS.horizon,
   causeway: 0xc0a373,
   steps: 0x9aa0a8,
   accent: 0xffb347,
@@ -466,6 +482,66 @@ function Learner({ position, scale = 1 }: { position: THREE.Vector3; scale?: num
   );
 }
 
+/**
+ * Three-stop sky, glued to the camera so it never leaves the far clip.
+ *
+ * drei's `<Sky>` is a Preetham atmosphere. That is a real sky for a real
+ * landscape, and the wrong language for a low-poly board whose colour script
+ * names hex stops. A dome we can pin to those stops is the cheaper, more
+ * honest fit — and it does not pull a second lighting model into a scene
+ * that already has a hemisphere and a sun.
+ */
+function SkyDome() {
+  const mesh = useRef<THREE.Mesh>(null);
+  const uniforms = useMemo(
+    () => ({
+      uZenith: { value: new THREE.Color(PALETTE.skyZenith) },
+      uMid: { value: new THREE.Color(PALETTE.skyMid) },
+      uHorizon: { value: new THREE.Color(PALETTE.skyHorizon) },
+    }),
+    [],
+  );
+  useFrame(({ camera }) => {
+    mesh.current?.position.copy(camera.position);
+  });
+  return (
+    <mesh ref={mesh} frustumCulled={false} renderOrder={-1000}>
+      <sphereGeometry args={[420, 24, 16]} />
+      <shaderMaterial
+        side={THREE.BackSide}
+        depthWrite={false}
+        fog={false}
+        uniforms={uniforms}
+        vertexShader={SKY_VERTEX}
+        fragmentShader={SKY_FRAGMENT}
+      />
+    </mesh>
+  );
+}
+
+const SKY_VERTEX = /* glsl */ `
+varying vec3 vDir;
+void main() {
+  vDir = position;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const SKY_FRAGMENT = /* glsl */ `
+uniform vec3 uZenith;
+uniform vec3 uMid;
+uniform vec3 uHorizon;
+varying vec3 vDir;
+void main() {
+  float h = normalize(vDir).y;
+  vec3 col = mix(uHorizon, uMid, smoothstep(0.0, 0.22, h));
+  col = mix(col, uZenith, smoothstep(0.22, 0.88, h));
+  vec3 nadir = uHorizon * 0.78;
+  col = mix(nadir, col, smoothstep(-0.2, 0.0, h));
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
 /** Sky, sun and sea. Shared by both map levels so they feel like one world. */
 function Weather({
   extent,
@@ -487,9 +563,15 @@ function Weather({
   const [fogFrom, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
   return (
     <>
-      <color attach="background" args={[PALETTE.sky]} />
-      <fog attach="fog" args={[PALETTE.horizon, fogFrom, fogTo]} />
-      <hemisphereLight args={[PALETTE.sky, 0x4a5a3a, 1.15]} />
+      <color attach="background" args={[PALETTE.skyZenith]} />
+      <fog attach="fog" args={[PALETTE.skyHorizon, fogFrom, fogTo]} />
+      <SkyDome />
+      {/*
+        Hemisphere sky is a stop lighter than the painted zenith on purpose:
+        the dome can sit at a saturated blue without pulling the islands'
+        midtones down with it. Ground stays the moss the land already is.
+      */}
+      <hemisphereLight args={[PALETTE.skyMid, 0x4a5a3a, 1.15]} />
       {/*
         The shadow camera is deliberately far smaller than the world.
         Stretched across the whole archipelago, one 2048 map gives each texel a
