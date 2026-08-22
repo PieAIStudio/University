@@ -107,8 +107,17 @@ export {
 } from "./practice/index.js";
 
 // Shared surface — the path cards. DOM over the 3D path, never geometry.
-export { NodeCard, type PathLesson } from "./path/NodeCard.js";
+export { NodeCard, unlockedConceptIds, type PathLesson } from "./path/NodeCard.js";
 export { UnitCard, type PathUnit } from "./path/UnitCard.js";
+
+// Shared surface — screen 09. A concept while the canvas is still empty.
+export {
+  LoadingTrivia,
+  pickLoadingConcept,
+  useMapCover,
+  MAP_COVER_GIVE_UP_MS,
+  MAP_COVER_REOPEN_MS,
+} from "./loading/LoadingTrivia.js";
 
 // Authoring-shell read model: the shapes `/api/*` returns, and the pure
 // functions that turn them into what the campus shows. Exporting the module

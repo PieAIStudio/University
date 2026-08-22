@@ -17,9 +17,12 @@
  * whole claim — the reading happens in the DOM and the reason to care happens
  * on the map, and this is the sentence that connects them.
  */
-import { useEffect } from "react";
-import type { Card } from "../content/library";
+import { useEffect, useState } from "react";
+import { GameButton, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
+import { NodeCard, type PathLesson, type PathUnit } from "@pieai/university-ui";
 import { playSound } from "@pieai/university-ui/sound/index.js";
+
+import type { Card } from "../content/library";
 
 /** How the settlement talks about a due date a learner has to plan around. */
 function whenDue(dueAt: number, now = Date.now()): string {
@@ -48,18 +51,30 @@ function whatGrew(builtBefore: number, builtAfter: number, complete: boolean): s
   return builtBefore === 0 ? "岛上开出了第一块地，井挖好了。" : "岛上又立起了一间房子。";
 }
 
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 export function Settlement({
   lessonTitle,
   courseTitle,
   dropped,
   builtBefore,
   builtAfter,
+  doneBefore,
   doneAfter,
   lessons,
   streakDays,
+  unlocked,
+  nextLesson,
+  nextUnit,
   onNext,
   onMap,
-  nextTitle,
+  onStartUnit,
 }: {
   lessonTitle: string;
   courseTitle: string;
@@ -68,12 +83,17 @@ export function Settlement({
   /** Buildings on this island before and after, measured by the map itself. */
   builtBefore: number;
   builtAfter: number;
+  doneBefore: number;
   doneAfter: number;
   lessons: number;
   streakDays: number;
+  /** Catalogue entries this lesson named, already resolved. Missing ids are omitted. */
+  unlocked: readonly { readonly id: string; readonly zh: string; readonly tagline: string }[];
+  nextLesson: PathLesson | null;
+  nextUnit: PathUnit | null;
   onNext: (() => void) | null;
   onMap: () => void;
-  nextTitle: string | null;
+  onStartUnit: (() => void) | null;
 }) {
   const soonest = dropped.reduce(
     (best, entry) => (best === null || entry.dueAt < best ? entry.dueAt : best),
@@ -81,6 +101,15 @@ export function Settlement({
   );
   const grew = whatGrew(builtBefore, builtAfter, lessons > 0 && doneAfter >= lessons);
   const finished = lessons > 0 && doneAfter >= lessons;
+  const canShowProgress = lessons > 0;
+  const reduceMotion = prefersReducedMotion();
+  const [shownDone, setShownDone] = useState(reduceMotion ? doneAfter : doneBefore);
+
+  useEffect(() => {
+    if (!canShowProgress || reduceMotion || shownDone === doneAfter) return;
+    const frame = window.requestAnimationFrame(() => setShownDone(doneAfter));
+    return () => window.cancelAnimationFrame(frame);
+  }, [canShowProgress, doneAfter, reduceMotion, shownDone]);
 
   // One sound, not three. This screen can be simultaneously "cards dropped",
   // "the island grew" and "the course is done", and playing all three turns a
@@ -101,13 +130,18 @@ export function Settlement({
       <h1 className="settle__title">{lessonTitle}</h1>
       <p className="settle__done">读完了。</p>
 
+      {canShowProgress ? (
+        <GameProgress
+          className="settle__progress"
+          label="课程进度"
+          value={shownDone}
+          max={lessons}
+          tone={finished ? "success" : "accent"}
+          valueLabel={`${shownDone} / ${lessons} 关`}
+        />
+      ) : null}
+
       <ol className="settle__gains">
-        <li>
-          <b>{doneAfter}</b>
-          <span>
-            / {lessons} 关 · 还剩 {Math.max(0, lessons - doneAfter)} 关
-          </span>
-        </li>
         {dropped.length > 0 ? (
           <li>
             <b>{dropped.length}</b>
@@ -124,6 +158,17 @@ export function Settlement({
 
       {grew ? <p className="settle__world">{grew}</p> : null}
 
+      {unlocked.length > 0 ? (
+        <section className="settle__unlocks">
+          <h2>这一节记下的概念</h2>
+          {unlocked.map((entry) => (
+            <GamePanel key={entry.id} title={entry.zh}>
+              <p className="settle__unlock-tagline">{entry.tagline}</p>
+            </GamePanel>
+          ))}
+        </section>
+      ) : null}
+
       {dropped.length > 0 ? (
         <section className="settle__cards">
           <h2>今天记下的是这些</h2>
@@ -137,15 +182,24 @@ export function Settlement({
         </section>
       ) : null}
 
+      {onNext && nextLesson && nextUnit ? (
+        <section className="settle__next">
+          <h2>下一关</h2>
+          <NodeCard
+            open
+            embedded
+            lesson={nextLesson}
+            unit={nextUnit}
+            onStart={onNext}
+            onStartUnit={onStartUnit ?? onNext}
+          />
+        </section>
+      ) : null}
+
       <div className="settle__actions">
-        {onNext ? (
-          <button className="primary" onClick={onNext}>
-            下一关{nextTitle ? ` · ${nextTitle}` : ""} →
-          </button>
-        ) : null}
-        <button className={onNext ? "ghost" : "primary"} onClick={onMap}>
+        <GameButton variant={onNext ? "ghost" : "primary"} onClick={onMap}>
           回关卡地图
-        </button>
+        </GameButton>
       </div>
     </div>
   );

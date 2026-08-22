@@ -9,6 +9,7 @@ import {
   PREVIEW_UNIT_LABEL,
   lessonCostLine,
   startButtonLabel,
+  unlockedConceptIds,
   type PathLesson,
   type PathUnit,
 } from "./path-stats.js";
@@ -196,5 +197,33 @@ describe("NodeCard", () => {
     });
     expect(onStartUnit).toHaveBeenCalledTimes(1);
     expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1);
+  });
+
+  it("sits in the page as the same card, not a second dialog, when embedded", async () => {
+    await renderCard({ embedded: true });
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    const card = document.querySelector(".path-card--embedded");
+    expect(card).not.toBeNull();
+    expect(card?.textContent).toContain(LESSON.title);
+    expect(card?.textContent).toContain(lessonCostLine(LESSON));
+    expect(buttonWith("开始")).toBeTruthy();
+  });
+});
+
+describe("unlockedConceptIds", () => {
+  it("returns unique concept ids in order and ignores other wiki tokens", () => {
+    expect(
+      unlockedConceptIds(
+        "见 [[concept:idempotent]] 与 [[term:app.program]] 再 [[concept:idempotent]]。",
+      ),
+    ).toEqual(["idempotent"]);
+    expect(unlockedConceptIds("[[concept:frontend]] 然后 [[concept:react]]")).toEqual([
+      "frontend",
+      "react",
+    ]);
+  });
+
+  it("is empty when the lesson never names a concept", () => {
+    expect(unlockedConceptIds("没有词条。[[evidence:src/app.ts:1-2]]")).toEqual([]);
   });
 });

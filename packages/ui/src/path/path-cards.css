@@ -105,6 +105,12 @@
   width: 100%;
 }
 
+.path-card--embedded {
+  width: 100%;
+  max-height: none;
+  position: relative;
+}
+
 .node-card__cost {
   margin: 0;
   color: var(--game-ui-text-muted, #9aa6bb);

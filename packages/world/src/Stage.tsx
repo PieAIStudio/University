@@ -26,7 +26,7 @@
  * pause/resume have nothing to attach to.
  */
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Suspense, useEffect, useMemo, useRef, type ReactNode } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 
 import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
@@ -128,13 +128,43 @@ function sample(gl: THREE.WebGLRenderer, target: THREE.WebGLRenderTarget) {
   };
 }
 
+/**
+ * Fires when the kit models inside Suspense have committed, and again when
+ * they suspend. The fallback stays `null` on purpose: a word inside the
+ * canvas is geometry, and readable text is DOM. The overlay that uses these
+ * callbacks lives next to the canvas, not in it.
+ */
+function ScenePresence({
+  onReady,
+  onBusy,
+}: {
+  readonly onReady?: () => void;
+  readonly onBusy?: () => void;
+}) {
+  useLayoutEffect(() => {
+    onReady?.();
+    return () => onBusy?.();
+  }, [onReady, onBusy]);
+  return null;
+}
+
 interface StageProps {
   readonly children: ReactNode;
   readonly cameraFrom: readonly [number, number, number];
   readonly lookAt?: readonly [number, number, number];
+  /** The DOM overlay's cue that the first real scene has committed. */
+  readonly onSceneReady?: () => void;
+  /** The DOM overlay's cue that kit models have gone back into flight. */
+  readonly onSceneBusy?: () => void;
 }
 
-export function Stage({ children, cameraFrom, lookAt = [0, 0, 0] }: StageProps) {
+export function Stage({
+  children,
+  cameraFrom,
+  lookAt = [0, 0, 0],
+  onSceneReady,
+  onSceneBusy,
+}: StageProps) {
   const tier = renderTier();
 
   useEffect(() => armSoundUnlock(), []);
@@ -146,6 +176,11 @@ export function Stage({ children, cameraFrom, lookAt = [0, 0, 0] }: StageProps) 
       // Antialiasing on the default framebuffer would be a second, redundant
       // resolve: the scene lands in a multisampled target instead.
       gl={{ antialias: false, powerPreference: "high-performance", alpha: false }}
+      // The element colour, before WebGL has a clear colour. Default WebGL
+      // clear is #000; this matches the page so a frame that lands before
+      // `onCreated` is a dark page, not a broken one. The DOM overlay still
+      // covers this — belt, not the actual loading screen.
+      style={{ background: "var(--game-ui-bg, #0d1019)" }}
       camera={{ position: [...cameraFrom], fov: 34, near: 0.5, far: 1200 }}
       onCreated={(state) => {
         state.gl.setClearColor(new THREE.Color(0x0d1019), 1);
@@ -176,9 +211,13 @@ export function Stage({ children, cameraFrom, lookAt = [0, 0, 0] }: StageProps) 
         course. See `Weather` in Maps.tsx.
 
         Suspense is load-bearing: the kit models stream in, and without a
-        boundary the first `useGLTF` would throw the whole canvas away.
+        boundary the first `useGLTF` would throw the whole canvas away. The
+        fallback is still `null` — a sentence drawn here would be geometry.
       */}
-      <Suspense fallback={null}>{children}</Suspense>
+      <Suspense fallback={null}>
+        <ScenePresence onReady={onSceneReady} onBusy={onSceneBusy} />
+        {children}
+      </Suspense>
     </Canvas>
   );
 }

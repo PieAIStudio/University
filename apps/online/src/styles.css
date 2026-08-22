@@ -945,8 +945,12 @@ button.label:focus-visible {
 }
 
 .settle__done {
-  margin: 0.5rem 0 2rem;
+  margin: 0.5rem 0 1.25rem;
   color: var(--game-ui-text-muted, #8c98ad);
+}
+
+.settle__progress {
+  margin: 0 0 1.5rem;
 }
 
 .settle__gains {
@@ -1019,6 +1023,32 @@ button.label:focus-visible {
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 2.5rem;
+}
+
+.settle__unlocks,
+.settle__next {
+  margin: 0 0 1.75rem;
+}
+
+.settle__unlocks h2,
+.settle__next h2 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--game-ui-text-muted, #8c98ad);
+  margin: 0 0 0.75rem;
+}
+
+.settle__unlocks {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.settle__unlock-tagline {
+  margin: 0;
+  color: var(--game-ui-text, #e9edf5);
+  font-size: var(--game-ui-font-md, 0.95rem);
+  line-height: var(--game-ui-line-body, 1.52);
 }
 
 /*
