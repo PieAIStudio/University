@@ -1,0 +1,195 @@
+{
+  "capturedAt": "2026-08-22T09:28:12.648Z",
+  "origin": "http://127.0.0.1:18080",
+  "headed": true,
+  "presets": [
+    {
+      "seed": "ak1-bear",
+      "species": "bear",
+      "recipeEqual": true,
+      "width": 624,
+      "height": 838,
+      "pixels": 522912,
+      "changed": 359,
+      "changedPct": 0.06865399914325929,
+      "maxDelta": 33,
+      "rmse": 0.25127801966644997,
+      "ours": {
+        "verts": 45566,
+        "buildMs": 19,
+        "meshes": 8
+      },
+      "kit": {
+        "verts": 45566,
+        "buildMs": 14,
+        "meshes": 8
+      },
+      "files": {
+        "ours": "apps/online/src/avatar-compare/evidence/bear-ak1-bear-ours.png",
+        "kit": "apps/online/src/avatar-compare/evidence/bear-ak1-bear-kit.png",
+        "diff": "apps/online/src/avatar-compare/evidence/bear-ak1-bear-diff.png",
+        "pair": "apps/online/src/avatar-compare/evidence/bear-ak1-bear-pair.png"
+      }
+    },
+    {
+      "seed": "ak1-bunny",
+      "species": "bunny",
+      "recipeEqual": true,
+      "width": 624,
+      "height": 838,
+      "pixels": 522912,
+      "changed": 1262,
+      "changedPct": 0.2413407992166942,
+      "maxDelta": 90,
+      "rmse": 0.6173178510070977,
+      "ours": {
+        "verts": 337135,
+        "buildMs": 77,
+        "meshes": 17
+      },
+      "kit": {
+        "verts": 337135,
+        "buildMs": 53,
+        "meshes": 17
+      },
+      "files": {
+        "ours": "apps/online/src/avatar-compare/evidence/bunny-ak1-bunny-ours.png",
+        "kit": "apps/online/src/avatar-compare/evidence/bunny-ak1-bunny-kit.png",
+        "diff": "apps/online/src/avatar-compare/evidence/bunny-ak1-bunny-diff.png",
+        "pair": "apps/online/src/avatar-compare/evidence/bunny-ak1-bunny-pair.png"
+      }
+    },
+    {
+      "seed": "ak1-cat",
+      "species": "cat",
+      "recipeEqual": true,
+      "width": 624,
+      "height": 838,
+      "pixels": 522912,
+      "changed": 1468,
+      "changedPct": 0.2807355730983416,
+      "maxDelta": 73,
+      "rmse": 0.7303171682693036,
+      "ours": {
+        "verts": 63934,
+        "buildMs": 23,
+        "meshes": 19
+      },
+      "kit": {
+        "verts": 63934,
+        "buildMs": 15,
+        "meshes": 19
+      },
+      "files": {
+        "ours": "apps/online/src/avatar-compare/evidence/cat-ak1-cat-ours.png",
+        "kit": "apps/online/src/avatar-compare/evidence/cat-ak1-cat-kit.png",
+        "diff": "apps/online/src/avatar-compare/evidence/cat-ak1-cat-diff.png",
+        "pair": "apps/online/src/avatar-compare/evidence/cat-ak1-cat-pair.png"
+      }
+    },
+    {
+      "seed": "ak1-robot",
+      "species": "robot",
+      "recipeEqual": true,
+      "width": 624,
+      "height": 838,
+      "pixels": 522912,
+      "changed": 3189,
+      "changedPct": 0.6098540480998715,
+      "maxDelta": 85,
+      "rmse": 1.1061206403920505,
+      "ours": {
+        "verts": 190210,
+        "buildMs": 49,
+        "meshes": 15
+      },
+      "kit": {
+        "verts": 190210,
+        "buildMs": 33,
+        "meshes": 15
+      },
+      "files": {
+        "ours": "apps/online/src/avatar-compare/evidence/robot-ak1-robot-ours.png",
+        "kit": "apps/online/src/avatar-compare/evidence/robot-ak1-robot-kit.png",
+        "diff": "apps/online/src/avatar-compare/evidence/robot-ak1-robot-diff.png",
+        "pair": "apps/online/src/avatar-compare/evidence/robot-ak1-robot-pair.png"
+      }
+    },
+    {
+      "seed": "ak1-slime",
+      "species": "slime",
+      "recipeEqual": true,
+      "width": 624,
+      "height": 838,
+      "pixels": 522912,
+      "changed": 253,
+      "changedPct": 0.048382901903188294,
+      "maxDelta": 42,
+      "rmse": 0.22583809599596846,
+      "ours": {
+        "verts": 195554,
+        "buildMs": 42,
+        "meshes": 9
+      },
+      "kit": {
+        "verts": 195554,
+        "buildMs": 30,
+        "meshes": 9
+      },
+      "files": {
+        "ours": "apps/online/src/avatar-compare/evidence/slime-ak1-slime-ours.png",
+        "kit": "apps/online/src/avatar-compare/evidence/slime-ak1-slime-kit.png",
+        "diff": "apps/online/src/avatar-compare/evidence/slime-ak1-slime-diff.png",
+        "pair": "apps/online/src/avatar-compare/evidence/slime-ak1-slime-pair.png"
+      }
+    },
+    {
+      "seed": "ak1-humanoid",
+      "species": "humanoid",
+      "recipeEqual": true,
+      "width": 624,
+      "height": 838,
+      "pixels": 522912,
+      "changed": 408,
+      "changedPct": 0.07802460069763173,
+      "maxDelta": 50,
+      "rmse": 0.5620341101232262,
+      "ours": {
+        "verts": 42644,
+        "buildMs": 24,
+        "meshes": 16
+      },
+      "kit": {
+        "verts": 42644,
+        "buildMs": 19,
+        "meshes": 16
+      },
+      "files": {
+        "ours": "apps/online/src/avatar-compare/evidence/humanoid-ak1-humanoid-ours.png",
+        "kit": "apps/online/src/avatar-compare/evidence/humanoid-ak1-humanoid-kit.png",
+        "diff": "apps/online/src/avatar-compare/evidence/humanoid-ak1-humanoid-diff.png",
+        "pair": "apps/online/src/avatar-compare/evidence/humanoid-ak1-humanoid-pair.png"
+      }
+    }
+  ],
+  "solo": [
+    {
+      "side": "ours",
+      "seed": "3033764913",
+      "species": "bear",
+      "verts": 45566,
+      "buildMs": 17,
+      "meshes": 8,
+      "frameMs": 0.2
+    },
+    {
+      "side": "kit",
+      "seed": "3033764913",
+      "species": "bear",
+      "verts": 45566,
+      "buildMs": 18,
+      "meshes": 8,
+      "frameMs": 0.1
+    }
+  ]
+}
