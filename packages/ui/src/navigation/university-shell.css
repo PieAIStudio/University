@@ -117,6 +117,37 @@
   border-radius: var(--game-ui-radius-card, 12px);
 }
 
+.profile-screen__stat--invite {
+  position: relative;
+  grid-column: 1 / -1;
+}
+
+.profile-screen__stat--invite dt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.profile-screen__stats dd.profile-screen__invite {
+  margin: 0;
+  font-size: var(--game-ui-font-sm, 0.82rem);
+  line-height: var(--game-ui-line-body, 1.52);
+  font-variant-numeric: normal;
+}
+
+.profile-screen__invite a {
+  color: var(--game-ui-text);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.profile-screen__invite a:focus-visible {
+  outline: 2px solid var(--game-ui-focus-ring);
+  outline-offset: 2px;
+}
+
 .profile-screen__stats dt {
   color: var(--game-ui-text-muted, #9aa6bb);
   font-size: 0.78rem;

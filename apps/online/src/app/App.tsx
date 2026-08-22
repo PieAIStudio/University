@@ -944,6 +944,23 @@ export function App() {
           avatar={<ProfileAvatar />}
           passagesRead={profileStats.passagesRead}
           lessonsCompleted={profileStats.lessonsCompleted}
+          nextHref={
+            nextUpProgress?.next
+              ? toHash({
+                  kind: "lesson",
+                  studyId: nextUpProgress.next.studyId,
+                  courseId: nextUpProgress.next.courseId,
+                  unitId: nextUpProgress.next.unitId,
+                  lessonId: nextUpProgress.next.lessonId,
+                })
+              : nextUp
+                ? toHash({
+                    kind: "course",
+                    studyId: nextUp.node.studyId,
+                    courseId: nextUp.node.courseId,
+                  })
+                : "#/"
+          }
         />
       ) : null}
     </>
