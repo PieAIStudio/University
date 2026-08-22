@@ -25,7 +25,8 @@ import {
 import * as THREE from "three";
 
 import { readCourseProgress } from "@pieai/university-core";
-import { NodeCard, UnitCard } from "@pieai/university-ui";
+import { LoadingTrivia, NodeCard, UnitCard, useMapCover } from "@pieai/university-ui";
+import "@pieai/university-ui/loading/loading-trivia.css";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import {
   LeagueEmpty,
@@ -127,6 +128,11 @@ export function App() {
   // reached by its own URL — arriving at `/done` from a bookmark is not
   // evidence that anything just grew, so that screen stays quiet about the map.
   const [grewFrom, setGrewFrom] = useState<{ key: string; doneBefore: number } | null>(null);
+  // Screen 09. False until the kit models inside Stage have committed. The
+  // overlay is DOM, so this flag is the only thing Stage has to say.
+  const [sceneReady, setSceneReady] = useState(false);
+  const onSceneReady = useCallback(() => setSceneReady(true), []);
+  const onSceneBusy = useCallback(() => setSceneReady(false), []);
 
   useEffect(() => {
     if (!hasContent) return;
@@ -343,6 +349,12 @@ export function App() {
   const due = dueCards();
   const dueTomorrowCount = dueTomorrow();
   const showMap = SHOWS_THE_MAP.has(view.kind);
+  // Suspense reports the models; this reports the JSON they stand on. Either
+  // one alone still paints an empty sea, which is the same broken-page read.
+  const waitingForData =
+    (view.kind === "world" && !world) ||
+    ((view.kind === "course" || view.kind === "lesson") && lessons.length === 0);
+  const mapCover = useMapCover(showMap && (!sceneReady || waitingForData));
   const counters = universityCounters({
     projectName,
     streakDays: progress.streak.days,
@@ -501,7 +513,12 @@ export function App() {
         }}
         hidden={!SHOWS_THE_MAP.has(view.kind)}
       >
-        <Stage cameraFrom={cameraFrom} lookAt={lookAt}>
+        <Stage
+          cameraFrom={cameraFrom}
+          lookAt={lookAt}
+          onSceneReady={onSceneReady}
+          onSceneBusy={onSceneBusy}
+        >
           <Controls
             target={lookAt}
             polar={view.kind === "course" || view.kind === "lesson" ? COURSE_POLAR : WORLD_POLAR}
@@ -733,6 +750,7 @@ export function App() {
           learner to right-drag taught them the app was broken.
         */}
         <p className="hint">{hovered ? hovered : MAP_CONTROLS_HINT}</p>
+        {mapCover ? <LoadingTrivia /> : null}
       </div>
     );
 

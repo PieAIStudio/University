@@ -1,0 +1,42 @@
+/*
+  Screen 09. Mounted over the canvas, unmounted when the scene is ready.
+  Colour and type come from SwimmerUIKit tokens; this file is placement.
+*/
+
+.loading-trivia {
+  position: absolute;
+  inset: 0;
+  z-index: var(--game-ui-z-overlay, 60);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
+    max(1.25rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+  background: var(--game-ui-bg);
+  color: var(--game-ui-text);
+  pointer-events: auto;
+}
+
+.loading-trivia__card {
+  width: min(22.5rem, 100%);
+}
+
+.loading-trivia__kicker {
+  margin: 0 0 0.75rem;
+  color: var(--game-ui-text-muted);
+  font-size: var(--game-ui-font-sm, 0.82rem);
+  letter-spacing: 0.08em;
+}
+
+.loading-trivia__tagline {
+  margin: 0;
+  color: var(--game-ui-text);
+  font-size: var(--game-ui-font-md, 0.95rem);
+  line-height: var(--game-ui-line-body, 1.52);
+}
+
+.loading-trivia__en {
+  margin: 0.35rem 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: var(--game-ui-font-sm, 0.82rem);
+}
