@@ -72,6 +72,18 @@ export interface Marker {
    * a single course, and a screen reader was handed an `aria-hidden` layer.
    */
   readonly activate?: () => void;
+  /**
+   * In the DOM and reachable, but not drawn until it is focused.
+   *
+   * A path with forty-one names on it is not a path, it is a list lying on top
+   * of a picture — and every one of them truncates, so it is a list you cannot
+   * read either. Only the stone you are standing on says its name out loud.
+   * The rest stay here rather than being dropped because a keyboard has no
+   * other way through: quiet is a visual state, never an accessibility one.
+   */
+  readonly quiet?: boolean;
+  /** Overrides the per-kind default. Larger wins a collision. */
+  readonly weight?: number;
 }
 
 const TREES: Role[] = ["tree-broad-a", "tree-broad-b", "tree-tall-a", "tree-tall-b"];
@@ -369,11 +381,28 @@ function Learner({ position, scale = 1 }: { position: THREE.Vector3; scale?: num
 }
 
 /** Sky, sun and sea. Shared by both map levels so they feel like one world. */
-function Weather({ extent }: { extent: number }) {
+function Weather({
+  extent,
+  fog,
+}: {
+  extent: number;
+  /**
+   * Where the world fades, in world units.
+   *
+   * Defaults to a fraction of `extent`, which is correct when the camera frames
+   * the whole thing at once — the archipelago. A road is the case where it is
+   * not: the course is three hundred units long and you can see forty of it, so
+   * here the fog has to be told the sight line rather than the size. Derived
+   * from `extent` it would begin further away than anything ever drawn, which
+   * is a fog that costs a uniform and does nothing.
+   */
+  fog?: readonly [number, number];
+}) {
+  const [fogFrom, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
   return (
     <>
       <color attach="background" args={[PALETTE.sky]} />
-      <fog attach="fog" args={[PALETTE.horizon, extent * 0.9, extent * 3.1]} />
+      <fog attach="fog" args={[PALETTE.horizon, fogFrom, fogTo]} />
       <hemisphereLight args={[PALETTE.sky, 0x4a5a3a, 1.15]} />
       {/*
         The shadow camera is deliberately far smaller than the world.
@@ -523,7 +552,9 @@ export function placeCourse(
       lessonId: entry.lesson.id,
       lessonTitle: entry.lesson.title,
       chars: entry.lesson.content.length,
-      position: new THREE.Vector3(points[index]!.x, 0, points[index]!.z),
+      // The road climbs. Flattening it to y=0 threw away the one thing a
+      // course path has that a page cannot: looking back down it.
+      position: new THREE.Vector3(points[index]!.x, points[index]!.y, points[index]!.z),
       state: done
         ? "done"
         : index === firstOpen
@@ -591,7 +622,12 @@ export function CourseScene({
 
   return (
     <>
-      <Weather extent={extent * 1.3} />
+      {/*
+        The sight line, not the length of the road. Stones eight or so ahead
+        start to go, which is the same thing the locked colour says and the
+        reason both are here: one of them you read, the other you just see.
+      */}
+      <Weather extent={extent * 1.3} fog={[52, 148]} />
       {lessons.map((lesson, index) =>
         index > 0 ? (
           <Causeway

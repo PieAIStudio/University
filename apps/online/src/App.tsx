@@ -6,11 +6,23 @@
  * for. That split is not taste — a Chinese IME, selectable code, a screen
  * reader and a phone keyboard all degrade to nothing inside WebGL.
  *
- * There is exactly one `<Canvas>`, in `Stage`, and it stays mounted across the
- * two map levels. Mounting a second one per view would be the fastest way to
+ * There is exactly one `<Canvas>` at a time. `Stage` owns the world map and
+ * stays mounted across the two map levels. The temporary `#/avatar-lab` route
+ * unmounts `Stage` and mounts its own studio canvas, so the two never share a
+ * frame. Mounting a second one beside the first would be the fastest way to
  * end up with two renderers and a colour pipeline nobody can count.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+} from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { MapControls } from "three/addons/controls/MapControls.js";
@@ -80,6 +92,10 @@ import {
   type Marker,
 } from "./world/Maps";
 import { Stage } from "./world/Stage";
+
+const AvatarLab = lazy(() =>
+  import("./avatar-lab/AvatarLab.js").then((mod) => ({ default: mod.AvatarLab })),
+);
 
 /**
  * Camera rig. Still MapControls, but with the map idiom's two habits removed.
@@ -213,7 +229,19 @@ const SHOWS_THE_MAP = new Set<View["kind"]>(["world", "course"]);
 const MAP_CONTROLS_HINT = "拖动平移 · 滚轮缩放 · 点岛进入";
 
 const WORLD_POLAR = THREE.MathUtils.degToRad(54);
-const COURSE_POLAR = THREE.MathUtils.degToRad(50);
+/**
+ * Inside a course the eye is on the road, not above it.
+ *
+ * This tilt is pinned at both ends by `Controls`, which makes it — not the
+ * camera position — the thing that decides how high the shot sits: `Flight`
+ * sets the distance to the target and `MapControls.update()` then forces the
+ * angle, so every offset tuned into the eye position was being overwritten on
+ * the next frame. Fifty degrees off vertical is a level-select map looking
+ * down at its own layout. Seventy-four is a road going away from you, which is
+ * the only angle at which the stones ahead overlap into a line, the fog does
+ * anything, and the climb reads as a climb.
+ */
+const COURSE_POLAR = THREE.MathUtils.degToRad(74);
 
 /**
  * A camera move, eased, with no tween library.
@@ -304,23 +332,43 @@ function LabelProbe({
     // stack at the bottom — the names were all "near", they were just on top of
     // one another. Overlap is a screen-space problem and has to be solved in
     // screen space, with the boxes the labels actually occupy.
+    //
+    // Quiet markers never enter the contest. They are drawn at zero opacity
+    // until something focuses them, so an overlap between two of them is not a
+    // defect anybody can see — but letting them compete spends the visible
+    // budget on names nobody is reading, and on a forty-one stone road they
+    // took every slot and left the one loud name unplaced. Invisible things do
+    // not get to win arguments about space.
     const candidates: LabelCandidate[] = [];
+    // Every marker that projected this frame, quiet or not. The reset below
+    // keys off this rather than off `candidates`, which no longer holds the
+    // quiet ones — without it the reset immediately undoes the transform the
+    // quiet branch just wrote, and nothing on the road can ever be focused.
+    const projectedIds = new Set<string>();
     for (const marker of markers) {
       const projected = scratch.current.copy(marker.position).project(camera);
       if (projected.z >= 1 || Math.abs(projected.x) > 1 || Math.abs(projected.y) > 1) continue;
       const element = nodes.get(marker.id);
       if (!element) continue;
+      const x = ((projected.x + 1) / 2) * size.width;
+      const y = ((1 - projected.y) / 2) * size.height;
+      projectedIds.add(marker.id);
+      if (marker.quiet) {
+        element.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+        element.style.setProperty("--placed", "1");
+        continue;
+      }
       candidates.push({
         id: marker.id,
-        x: ((projected.x + 1) / 2) * size.width,
-        y: ((1 - projected.y) / 2) * size.height,
+        x,
+        y,
         z: projected.z,
         // Measured, not guessed: a Chinese lesson title and a study name are
         // different widths, and a fixed box would either clip or over-reserve.
         width: element.offsetWidth,
         height: element.offsetHeight,
         // A study name orients the whole view, so it outranks any one course.
-        weight: marker.kind === "study" ? 2 : marker.kind === "lesson" ? 0 : 1,
+        weight: marker.weight ?? (marker.kind === "study" ? 2 : marker.kind === "lesson" ? 0 : 1),
       });
     }
 
@@ -334,13 +382,15 @@ function LabelProbe({
       const element = nodes.get(placement.id);
       if (!element) continue;
       element.style.transform = `translate(${placement.x}px, ${placement.y}px) translate(-50%, -50%)`;
-      element.style.opacity = placement.visible ? "1" : "0";
+      // A custom property rather than `opacity`, so a stylesheet can still have
+      // an opinion. An inline opacity wins against every rule that is not
+      // `!important`, which would make `.label--quiet` unenforceable.
+      element.style.setProperty("--placed", placement.visible ? "1" : "0");
     }
     // Anything that did not project at all this frame is behind the camera or
     // off the far plane, and must not keep the position it had last frame.
-    const seen = new Set(candidates.map((entry) => entry.id));
     for (const [id, element] of nodes) {
-      if (!seen.has(id)) element.style.opacity = "0";
+      if (!projectedIds.has(id)) element.style.setProperty("--placed", "0");
     }
   }, 2);
 
@@ -457,9 +507,20 @@ export function App() {
     if (view.kind === "course" || view.kind === "lesson") {
       return lessons.map((lesson) => ({
         id: lesson.lessonId,
-        position: lesson.position.clone().setY(lesson.position.y + 1.6),
-        text: lesson.lessonTitle,
+        // A low lift, because the tilt is shallow. At seventy-four degrees a
+        // world-space unit of height travels a long way up the screen, and the
+        // bubble that was lifted clear of its own stone arrived next to the
+        // following one — pointing at the wrong lesson is worse than sitting a
+        // little close to the right one.
+        position: lesson.position.clone().setY(lesson.position.y + 1.7),
+        // Not the lesson title. Forty-one Chinese titles down a road all
+        // truncate, and the reference this is built from does not put them
+        // there either: the stone you are on says "start", and what it is
+        // called belongs to the card that opens when you choose it.
+        text: lesson.state === "live" ? "开始" : lesson.lessonTitle,
         kind: "lesson" as const,
+        quiet: lesson.state !== "live",
+        weight: lesson.state === "live" ? 3 : 0,
         activate:
           view.kind === "lesson"
             ? undefined
@@ -552,16 +613,61 @@ export function App() {
     return [spot.x, spot.y, spot.z];
   }, [world, learnerAt]);
 
-  // Was [0, 40, 46] onto [0, 4, -18]: 60.6° from vertical. Held at the same
-  // look-at, 50° with the narrower lens puts the eye here instead.
-  const cameraFrom: readonly [number, number, number] =
-    view.kind === "course" || view.kind === "lesson" ? [0, 68, 58] : eye;
-  const lookAt: readonly [number, number, number] =
-    view.kind === "course" || view.kind === "lesson"
-      ? [0, 4, -18]
-      : learnerAt
-        ? [learnerAt.x, learnerAt.y, learnerAt.z]
-        : [0, 0, 0];
+  /**
+   * Inside a course the camera stands on the road instead of above it.
+   *
+   * The overview it replaces framed the whole folded course at once, which is
+   * the right shot for a map and the wrong one for a path: every stone sat at
+   * the same distance, so none of them was *next*. Standing behind the live
+   * stone and looking up the road puts the answer to "what now" in the middle
+   * of the frame, and lets the rest recede into the fog the scene already has.
+   *
+   * The camera tracks half the road's lateral swing rather than all of it. At
+   * full swing it moves with the curve, the curve cancels, and the road looks
+   * dead straight — the shot would be hiding the one thing it is framing.
+   */
+  const roadCamera = useMemo(() => {
+    if (view.kind !== "course" && view.kind !== "lesson") return null;
+    const found = lessons.findIndex((lesson) => lesson.state === "live");
+    const liveIndex = found < 0 ? 0 : found;
+    const live = lessons[liveIndex];
+    if (!live) return null;
+    // Stand two stones back and aim four ahead — both are stones, not offsets.
+    //
+    // The first version of this positioned the eye with hand-tuned distances
+    // and trigonometry, and put the live stone exactly on the bottom edge:
+    // its label was judged off-screen and the one name that must never be
+    // dropped was the one that never appeared. Anchoring both ends of the shot
+    // to real positions makes "the live stone is in frame, with road visible
+    // behind it" a property of the geometry rather than of a number I guessed.
+    const ahead = lessons[Math.min(liveIndex + 4, lessons.length - 1)] ?? live;
+    // Only the distance and the compass bearing of this survive.
+    //
+    // `Controls` pins the tilt, so `MapControls.update()` recomputes the eye
+    // from (target, distance, bearing) on the next frame and the height here is
+    // discarded. Forty units back is therefore not "forty units up and back",
+    // it is the radius that, at the pinned tilt, leaves the live stone about
+    // two thirds of the way down the frame with road behind it.
+    return {
+      from: [live.position.x, live.position.y + 22, live.position.z + 45] as readonly [
+        number,
+        number,
+        number,
+      ],
+      look: [ahead.position.x * 0.6, ahead.position.y + 1.8, ahead.position.z] as readonly [
+        number,
+        number,
+        number,
+      ],
+    };
+  }, [view.kind, lessons]);
+
+  const cameraFrom: readonly [number, number, number] = roadCamera ? roadCamera.from : eye;
+  const lookAt: readonly [number, number, number] = roadCamera
+    ? roadCamera.look
+    : learnerAt
+      ? [learnerAt.x, learnerAt.y, learnerAt.z]
+      : [0, 0, 0];
 
   return (
     <div className="app">
@@ -588,6 +694,13 @@ export function App() {
         >
           目录
         </button>
+        <button
+          className="ghost"
+          aria-current={view.kind === "avatar-lab" ? "page" : undefined}
+          onClick={() => setView({ kind: "avatar-lab" })}
+        >
+          头像
+        </button>
         <button className="ghost" onClick={() => setView({ kind: "library", tab: "concepts" })}>
           图鉴
         </button>
@@ -602,57 +715,58 @@ export function App() {
         </button>
       </nav>
 
-      <div
-        className="stagewrap"
-        onPointerDownCapture={(event) => {
-          pointerOrigin.current = { x: event.clientX, y: event.clientY };
-          draggedRef.current = false;
-        }}
-        onPointerMoveCapture={(event) => {
-          const origin = pointerOrigin.current;
-          if (!origin || draggedRef.current) return;
-          if (Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 6) {
-            draggedRef.current = true;
-          }
-        }}
-        hidden={!SHOWS_THE_MAP.has(view.kind)}
-      >
-        <Stage cameraFrom={cameraFrom} lookAt={lookAt}>
-          <Controls
-            target={lookAt}
-            polar={view.kind === "course" || view.kind === "lesson" ? COURSE_POLAR : WORLD_POLAR}
-          />
-          <Flight to={cameraFrom} look={lookAt} />
-          <LabelProbe markers={markers} limit={9} nodes={labelNodes.current} />
-          {view.kind === "world" && world ? (
-            <WorldScene
-              placements={world.placements}
-              centres={world.centres}
-              ring={world.ring}
-              learnerAt={learnerAt}
-              onPick={(node) => setPicked(node)}
-              onHover={(node) => setHovered(node ? node.courseId : null)}
+      {view.kind !== "avatar-lab" ? (
+        <div
+          className="stagewrap"
+          onPointerDownCapture={(event) => {
+            pointerOrigin.current = { x: event.clientX, y: event.clientY };
+            draggedRef.current = false;
+          }}
+          onPointerMoveCapture={(event) => {
+            const origin = pointerOrigin.current;
+            if (!origin || draggedRef.current) return;
+            if (Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 6) {
+              draggedRef.current = true;
+            }
+          }}
+          hidden={!SHOWS_THE_MAP.has(view.kind)}
+        >
+          <Stage cameraFrom={cameraFrom} lookAt={lookAt}>
+            <Controls
+              target={lookAt}
+              polar={view.kind === "course" || view.kind === "lesson" ? COURSE_POLAR : WORLD_POLAR}
             />
-          ) : null}
-          {(view.kind === "course" || view.kind === "lesson") && lessons.length > 0 ? (
-            <CourseScene
-              lessons={lessons}
-              onPick={(lesson) =>
-                view.kind !== "lesson" &&
-                setView({
-                  kind: "lesson",
-                  studyId: view.studyId,
-                  courseId: view.courseId,
-                  unitId: lesson.unitId,
-                  lessonId: lesson.lessonId,
-                })
-              }
-              onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
-            />
-          ) : null}
-        </Stage>
+            <Flight to={cameraFrom} look={lookAt} />
+            <LabelProbe markers={markers} limit={9} nodes={labelNodes.current} />
+            {view.kind === "world" && world ? (
+              <WorldScene
+                placements={world.placements}
+                centres={world.centres}
+                ring={world.ring}
+                learnerAt={learnerAt}
+                onPick={(node) => setPicked(node)}
+                onHover={(node) => setHovered(node ? node.courseId : null)}
+              />
+            ) : null}
+            {(view.kind === "course" || view.kind === "lesson") && lessons.length > 0 ? (
+              <CourseScene
+                lessons={lessons}
+                onPick={(lesson) =>
+                  view.kind !== "lesson" &&
+                  setView({
+                    kind: "lesson",
+                    studyId: view.studyId,
+                    courseId: view.courseId,
+                    unitId: lesson.unitId,
+                    lessonId: lesson.lessonId,
+                  })
+                }
+                onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
+              />
+            ) : null}
+          </Stage>
 
-        {/*
+          {/*
           The first thing to do, said out loud.
 
           It sits opposite the selection panel rather than in a dismissible
@@ -660,71 +774,75 @@ export function App() {
           just as much as a stranger needs "what is this", and a modal answers
           only the second and only once.
         */}
-        {view.kind === "world" && nextUp && !picked ? (
-          <aside className="nextup">
-            <p className="nextup__eyebrow">
-              {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
-            </p>
-            <h2 className="nextup__title">{nextUp.node.title}</h2>
-            <p className="nextup__meta">
-              {nextUp.node.studyTitle} · {nextUp.node.lessons} 节
-            </p>
-            <button
-              className="primary block"
-              onClick={() =>
-                setView({
-                  kind: "course",
-                  studyId: nextUp.node.studyId,
-                  courseId: nextUp.node.courseId,
-                })
-              }
-            >
-              {progress.streak.days > 0 ? "继续" : "开始第一节"} →
-            </button>
-          </aside>
-        ) : null}
+          {view.kind === "world" && nextUp && !picked ? (
+            <aside className="nextup">
+              <p className="nextup__eyebrow">
+                {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
+              </p>
+              <h2 className="nextup__title">{nextUp.node.title}</h2>
+              <p className="nextup__meta">
+                {nextUp.node.studyTitle} · {nextUp.node.lessons} 节
+              </p>
+              <button
+                className="primary block"
+                onClick={() =>
+                  setView({
+                    kind: "course",
+                    studyId: nextUp.node.studyId,
+                    courseId: nextUp.node.courseId,
+                  })
+                }
+              >
+                {progress.streak.days > 0 ? "继续" : "开始第一节"} →
+              </button>
+            </aside>
+          ) : null}
 
-        {view.kind === "world" ? (
-          <aside className="picked" hidden={!picked}>
-            {picked ? (
-              <>
-                <h3>{picked.title}</h3>
-                <p className="picked__study">{picked.studyTitle}</p>
-                <dl>
-                  <dt>课时</dt>
-                  <dd>{picked.lessons}</dd>
-                  <dt>层</dt>
-                  <dd>{picked.depth + 1}</dd>
-                  <dt>先修</dt>
-                  <dd>{picked.prerequisiteCourseIds.length || "无"}</dd>
-                </dl>
-                <button
-                  className="primary block"
-                  onClick={() =>
-                    setView({ kind: "course", studyId: picked.studyId, courseId: picked.courseId })
-                  }
-                >
-                  进入这门课 →
-                </button>
-              </>
-            ) : null}
-          </aside>
-        ) : null}
+          {view.kind === "world" ? (
+            <aside className="picked" hidden={!picked}>
+              {picked ? (
+                <>
+                  <h3>{picked.title}</h3>
+                  <p className="picked__study">{picked.studyTitle}</p>
+                  <dl>
+                    <dt>课时</dt>
+                    <dd>{picked.lessons}</dd>
+                    <dt>层</dt>
+                    <dd>{picked.depth + 1}</dd>
+                    <dt>先修</dt>
+                    <dd>{picked.prerequisiteCourseIds.length || "无"}</dd>
+                  </dl>
+                  <button
+                    className="primary block"
+                    onClick={() =>
+                      setView({
+                        kind: "course",
+                        studyId: picked.studyId,
+                        courseId: picked.courseId,
+                      })
+                    }
+                  >
+                    进入这门课 →
+                  </button>
+                </>
+              ) : null}
+            </aside>
+          ) : null}
 
-        {view.kind === "course" && course ? (
-          <aside className="picked picked--left">
-            <h3>{course.title}</h3>
-            <p className="picked__study">
-              {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
-              {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
-            </p>
-            <button className="ghost block" onClick={() => setView({ kind: "world" })}>
-              ← 回到世界地图
-            </button>
-          </aside>
-        ) : null}
+          {view.kind === "course" && course ? (
+            <aside className="picked picked--left">
+              <h3>{course.title}</h3>
+              <p className="picked__study">
+                {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
+                {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
+              </p>
+              <button className="ghost block" onClick={() => setView({ kind: "world" })}>
+                ← 回到世界地图
+              </button>
+            </aside>
+          ) : null}
 
-        {/*
+          {/*
           The map's names, and — where the thing under them can be entered —
           the way you enter it.
 
@@ -738,52 +856,62 @@ export function App() {
           A label that can be entered is a real `<button>`. A label that names a
           world is not, because a world is not somewhere you go.
         */}
-        <nav className="labels" aria-label="世界地图上的去处">
-          {markers.map((marker) => {
-            const content = (
-              <>
-                {marker.text}
-                {marker.sub ? <small>{marker.sub}</small> : null}
-              </>
-            );
-            const attach = (element: HTMLElement | null) => {
-              if (element) labelNodes.current.set(marker.id, element);
-              else labelNodes.current.delete(marker.id);
-            };
-            const className = `label label--${marker.kind}`;
-            return marker.activate ? (
-              <button
-                key={marker.id}
-                ref={attach}
-                type="button"
-                className={className}
-                style={{ opacity: 0 }}
-                onClick={() => {
-                  // A drag that happens to end on a label is a pan, not a
-                  // choice. Without this, moving the map by grabbing near a
-                  // course name would open that course.
-                  if (draggedRef.current) return;
-                  marker.activate?.();
-                }}
-              >
-                {content}
-              </button>
-            ) : (
-              <div key={marker.id} ref={attach} className={className} style={{ opacity: 0 }}>
-                {content}
-              </div>
-            );
-          })}
-        </nav>
+          <nav className="labels" aria-label="世界地图上的去处">
+            {markers.map((marker) => {
+              const content = (
+                <>
+                  {marker.text}
+                  {marker.sub ? <small>{marker.sub}</small> : null}
+                </>
+              );
+              const attach = (element: HTMLElement | null) => {
+                if (element) labelNodes.current.set(marker.id, element);
+                else labelNodes.current.delete(marker.id);
+              };
+              const className = `label label--${marker.kind}${marker.quiet ? " label--quiet" : ""}`;
+              return marker.activate ? (
+                <button
+                  key={marker.id}
+                  ref={attach}
+                  type="button"
+                  className={className}
+                  style={{ "--placed": 0 } as CSSProperties}
+                  onClick={() => {
+                    // A drag that happens to end on a label is a pan, not a
+                    // choice. Without this, moving the map by grabbing near a
+                    // course name would open that course.
+                    if (draggedRef.current) return;
+                    marker.activate?.();
+                  }}
+                >
+                  {content}
+                </button>
+              ) : (
+                <div
+                  key={marker.id}
+                  ref={attach}
+                  className={className}
+                  style={{ "--placed": 0 } as CSSProperties}
+                >
+                  {content}
+                </div>
+              );
+            })}
+          </nav>
 
-        {/*
+          {/*
           The hint has to describe the controls that exist. It said 「右键旋转」
           for as long as rotation had been disabled — the camera is locked to a
           fixed pitch on purpose, the way a map app locks it, and telling a
           learner to right-drag taught them the app was broken.
         */}
-        <p className="hint">{hovered ? hovered : MAP_CONTROLS_HINT}</p>
-      </div>
+          <p className="hint">{hovered ? hovered : MAP_CONTROLS_HINT}</p>
+        </div>
+      ) : (
+        <Suspense fallback={null}>
+          <AvatarLab onOpen={setView} />
+        </Suspense>
+      )}
 
       {view.kind === "lesson" && course ? (
         <LessonReaderHost

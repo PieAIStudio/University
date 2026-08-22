@@ -129,33 +129,44 @@ export function layoutStudy(
 }
 
 /**
- * One course, folded four lessons to a row.
+ * One course as a road, not a contact sheet.
  *
- * Straight, a 41-lesson course is a corridor with no visible end — and that is
- * the first course a beginner meets here. Folded, 41 and 12 are the same shape
- * and both fit one frame. The fold is at four because the content already folds
- * there: 93 of 146 units hold exactly four lessons.
+ * Folded four to a row, forty-one lessons read as a grid: four things at the
+ * same distance from you, and your eye has to pick one. A learner opening a
+ * course is not shopping for a lesson, they want the next step — so the fold is
+ * one. Every lesson is its own row, and what keeps that from being a corridor
+ * with no visible end is the swing.
+ *
+ * The swing is a sine rather than a strict left-right alternation. Alternating
+ * every step reads as a zigzag, and a zigzag is a decoration; a curve that
+ * leans out, comes back, and leans the other way reads as a road that is going
+ * somewhere. The period is seven, which is deliberately not four: a period that
+ * matched the unit size would put every unit boundary at the same point in the
+ * curve, and the road would visibly repeat.
+ *
+ * The rise is the part a flat page cannot have. The road climbs, and each unit
+ * boundary is a step up, so looking back shows how far you have come as
+ * distance rather than as a percentage, and looking ahead shows the next shelf
+ * before you can read what is on it.
  */
 export function layoutCourse(unitSizes: readonly number[]): Placed[] {
-  const STRIDE = 5.2;
-  const ROW = 6.4;
-  const STEP_UP = 1.15;
+  const STEP = 7.2; // forward, per lesson — stones run to r≈2.9, so this is the gap
+  const AMPLITUDE = 4.6; // lateral swing, peak — scaled with STEP or the curve flattens
+  const PERIOD = 7; // lessons per swing, coprime with the common unit size
+  const CLIMB = 0.34; // rise per lesson
+  const SHELF = 1.1; // extra rise at each unit boundary
   const out: Placed[] = [];
-  let rowIndex = 0;
+  let index = 0;
   unitSizes.forEach((count, unitIndex) => {
-    const rowsBefore = rowIndex;
     for (let slot = 0; slot < count; slot += 1) {
-      const row = rowsBefore + Math.floor(slot / 4);
-      const column = slot % 4;
-      const forward = row % 2 === 0 ? 1 : -1;
       out.push({
-        x: (column - 1.5) * STRIDE * forward,
-        y: unitIndex * STEP_UP,
-        z: -row * ROW,
+        x: AMPLITUDE * Math.sin((index / PERIOD) * Math.PI * 2),
+        y: index * CLIMB + unitIndex * SHELF,
+        z: -index * STEP,
         depth: unitIndex,
       });
+      index += 1;
     }
-    rowIndex = rowsBefore + Math.ceil(count / 4);
   });
   return out;
 }
