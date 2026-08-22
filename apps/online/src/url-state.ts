@@ -70,7 +70,10 @@ export type View =
   // The 2D course directory. It is not a downgrade of the world map: the
   // product's own journey puts it first, and a keyboard has to be able to
   // reach every lesson without touching the canvas.
-  | { readonly kind: "catalog" };
+  | { readonly kind: "catalog" }
+  // Temporary gloss-avatar lab. Not a product surface; hash-only so a static
+  // host cannot 404 it. Drop the kind when the lab is retired.
+  | { readonly kind: "avatar-lab" };
 
 export const WORLD: View = { kind: "world" };
 
@@ -100,6 +103,8 @@ export function toHash(view: View): string {
       return "#/practice";
     case "catalog":
       return "#/catalog";
+    case "avatar-lab":
+      return "#/avatar-lab";
     case "course":
       return `#/${enc(view.studyId)}/${enc(view.courseId)}`;
     case "lesson":
@@ -133,6 +138,7 @@ export function fromHash(hash: string): View {
   }
   if (parts.length === 1 && parts[0] === "practice") return { kind: "practice" };
   if (parts.length === 1 && parts[0] === "catalog") return { kind: "catalog" };
+  if (parts.length === 1 && parts[0] === "avatar-lab") return { kind: "avatar-lab" };
   if (parts.length === 1 && parts[0] === "concepts") return { kind: "concepts" };
   if (parts.length === 2 && parts[0] === "concepts" && parts[1]) {
     return { kind: "concept", id: parts[1] };

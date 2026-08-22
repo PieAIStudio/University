@@ -1,0 +1,32 @@
+{
+  "name": "@pieai/university-avatar",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Procedural 3D gloss avatars. One generator, used by both shells.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "oxlint --deny-warnings src/Avatar.tsx src/index.ts",
+    "format": "oxfmt --write package.json tsconfig.json src/Avatar.tsx src/index.ts",
+    "format:check": "oxfmt --check package.json tsconfig.json src/Avatar.tsx src/index.ts",
+    "build": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@react-three/fiber": "9.6.1",
+    "@types/react": "19.2.17",
+    "@types/three": "0.185.1",
+    "oxfmt": "0.58.0",
+    "oxlint": "1.73.0",
+    "react": "19.2.7",
+    "three": "0.185.1",
+    "typescript": "6.0.3"
+  },
+  "peerDependencies": {
+    "@react-three/fiber": "9.6.1",
+    "react": "19.2.7",
+    "three": "0.185.1"
+  }
+}

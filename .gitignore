@@ -72,3 +72,7 @@ packages/*/dist/
 docs/reference/借鉴的App/*.MP4
 docs/reference/借鉴的App/*.mp4
 docs/reference/借鉴的App/*.mov
+
+# Subagent working notes and their screenshots. The findings that matter get
+# written into docs or a commit message; the scratch pad does not.
+SCRATCH/

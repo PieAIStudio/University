@@ -21,6 +21,7 @@ const views: View[] = [
     lessonId: "you-already-know-apps",
   },
   { kind: "catalog" },
+  { kind: "avatar-lab" },
 ];
 
 describe("the address bar", () => {
@@ -66,5 +67,10 @@ describe("the address bar", () => {
   it("keeps the 2D directory on its own hash instead of falling back to the world", () => {
     expect(toHash({ kind: "catalog" })).toBe("#/catalog");
     expect(fromHash("#/catalog")).toEqual({ kind: "catalog" });
+  });
+
+  it("keeps the temporary avatar lab on its own hash instead of treating it as a study", () => {
+    expect(toHash({ kind: "avatar-lab" })).toBe("#/avatar-lab");
+    expect(fromHash("#/avatar-lab")).toEqual({ kind: "avatar-lab" });
   });
 });

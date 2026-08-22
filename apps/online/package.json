@@ -19,6 +19,7 @@
   "dependencies": {
     "@pieai/swimmer-render-kit": "0.3.0",
     "@pieai/swimmer-ui-kit": "1.3.2",
+    "@pieai/university-avatar": "workspace:*",
     "@pieai/university-core": "workspace:*",
     "@pieai/university-ui": "workspace:*",
     "@react-three/drei": "^10.7.8",
