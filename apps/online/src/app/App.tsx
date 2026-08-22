@@ -30,6 +30,7 @@ import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/Loading
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import {
+  AccountPanel,
   LeagueEmpty,
   PlansEmpty,
   ProfileScreen,
@@ -59,8 +60,10 @@ import {
   type Course,
   type CourseNode,
 } from "../content/library";
+import { identityPort } from "../account/identity";
+import { bindProgressToIdentity } from "../account/session";
 import { progressSource } from "../progress/source";
-import { dueCards, dueTomorrow, snapshot, subscribe } from "../progress/store";
+import { dueCards, dueTomorrow, progressPort, snapshot, subscribe } from "../progress/store";
 import { AvatarLab } from "../screens/AvatarLab";
 import {
   AntiPatternEntryHost,
@@ -147,6 +150,8 @@ export function App() {
     if (!hasContent) return;
     void loadGraph().then(setNodes);
   }, []);
+
+  useEffect(() => bindProgressToIdentity(progressPort, identityPort, null), []);
 
   useEffect(() => {
     if (view.kind !== "course") setPathOverlay(null);
@@ -1030,6 +1035,7 @@ export function App() {
               <ProfileAvatar />
             </Suspense>
           }
+          account={<AccountPanel identity={identityPort} />}
           passagesRead={profileStats.passagesRead}
           lessonsCompleted={profileStats.lessonsCompleted}
           nextHref={
