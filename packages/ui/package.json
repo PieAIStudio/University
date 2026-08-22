@@ -14,6 +14,8 @@
     "./evidence/EvidenceRail.js": "./src/evidence/EvidenceRail.tsx",
     "./evidence/evidence.css": "./src/evidence/evidence.css",
     "./favourites/favourites.css": "./src/favourites/favourites.css",
+    "./feedback/FeedbackNote.js": "./src/feedback/FeedbackNote.tsx",
+    "./feedback/feedback-note.css": "./src/feedback/feedback-note.css",
     "./language/ForeignSettingsPanel.js": "./src/language/ForeignSettingsPanel.tsx",
     "./language/foreign-settings.js": "./src/language/foreign-settings.ts",
     "./language/reading-mode.js": "./src/language/reading-mode.ts",

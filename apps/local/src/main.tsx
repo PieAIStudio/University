@@ -21,6 +21,8 @@ import { App } from "./App";
 */
 import "@pieai/university-ui/entry/entry-page.css";
 import "@pieai/university-ui/evidence/evidence.css";
+import "@pieai/university-ui/feedback/feedback-note.css";
+import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 import "@pieai/university-ui/favourites/favourites.css";
 import "@pieai/university-ui/language/word-layer.css";
 import "@pieai/university-ui/lesson/lesson-toolbar.css";
@@ -45,5 +47,10 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <App />
+    {/*
+      Review scaffolding, not a product surface. `import.meta.env.DEV`
+      keeps it out of a build; see FeedbackNote.tsx for why that matters.
+    */}
+    {import.meta.env.DEV ? <FeedbackNote shell="本地端" /> : null}
   </StrictMode>,
 );

@@ -1,0 +1,103 @@
+/*
+  Quiet until it is wanted. This sits on every screen during a review pass, so
+  at rest it has to cost nothing visually — anything with the product's action
+  colour would compete with the one control the screen actually wants pressed.
+*/
+.feedback-note__open {
+  position: fixed;
+  left: 12px;
+  bottom: calc(12px + var(--game-ui-safe-bottom, 0px));
+  z-index: 40;
+  padding: 6px 12px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 999px;
+  background: var(--game-ui-panel-strong);
+  color: var(--game-ui-text-muted);
+  font: inherit;
+  font-size: var(--game-ui-font-xs);
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.feedback-note__open:hover,
+.feedback-note__open:focus-visible {
+  opacity: 1;
+  color: var(--game-ui-text);
+}
+
+.feedback-note {
+  position: fixed;
+  left: 12px;
+  bottom: calc(12px + var(--game-ui-safe-bottom, 0px));
+  z-index: 40;
+  display: grid;
+  gap: 8px;
+  width: min(22rem, calc(100vw - 24px));
+  padding: 12px;
+  border: 1px solid var(--game-ui-border-strong);
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: var(--game-ui-panel-strong);
+  color: var(--game-ui-text);
+}
+
+.feedback-note__text {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: var(--game-ui-panel);
+  color: var(--game-ui-text);
+  font: inherit;
+  font-size: var(--game-ui-font-md);
+  line-height: var(--game-ui-line-body);
+  resize: vertical;
+}
+
+.feedback-note__meta {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: var(--game-ui-font-xs);
+}
+
+.feedback-note__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.feedback-note__copy,
+.feedback-note__close {
+  padding: 7px 12px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: var(--game-ui-font-sm);
+  cursor: pointer;
+}
+
+.feedback-note__copy {
+  border: 0;
+  background: var(--game-ui-accent);
+  color: var(--game-ui-accent-contrast);
+}
+
+.feedback-note__close {
+  border: 1px solid var(--game-ui-border-subtle);
+  background: transparent;
+  color: var(--game-ui-text-muted);
+}
+
+/*
+  Above the tab bar, never on it.
+
+  Measured at 375×812: the tab bar's top edge is at 755 and the open panel
+  reached 786, so it sat on the 学习 tab — and the closed pill sat on it too.
+  A review tool that covers the way home is worse than no review tool.
+
+  767px because that is where `app-shell.css` hides the tab bar; above it
+  there is nothing down here to avoid.
+*/
+@media (max-width: 767px) {
+  .feedback-note__open,
+  .feedback-note {
+    bottom: calc(69px + var(--game-ui-safe-bottom, 0px));
+  }
+}
