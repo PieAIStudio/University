@@ -14,7 +14,7 @@
     "format": "pnpm -r format",
     "format:check": "pnpm -r format:check",
     "test": "pnpm -r test",
-    "boundaries": "node apps/local/scripts/check-module-boundaries.mjs && node scripts/check-kit-portability.mjs",
+    "boundaries": "node apps/local/scripts/check-module-boundaries.mjs && node scripts/check-kit-portability.mjs && node scripts/check-contrast.mjs",
     "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm boundaries && pnpm build && pnpm docs:check",
     "pro-gov": "pro-gov",
     "doc-gov": "doc-gov",

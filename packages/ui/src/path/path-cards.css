@@ -172,8 +172,14 @@
   padding: 8px 10px;
   border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
   border-radius: var(--game-ui-radius-control, 10px);
-  background: var(--game-ui-panel-deep, #0c1018);
-  color: var(--game-ui-accent-bright, #7fe0d8);
+  /*
+    `accent-ink` is exactly this: accent-coloured ink for use on a surface,
+    dark orange on light and light orange on night. `accent-bright` is tuned
+    to sit against dark and measured 1.65:1 on light — and on `panel-deep`,
+    which is a pale tan there, no shipped ink reaches AA at all.
+  */
+  background: var(--game-ui-panel, #121826);
+  color: var(--game-ui-accent-ink, #ffb072);
   font-family: var(--game-ui-font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace);
   font-size: 0.78rem;
   word-break: break-all;

@@ -410,7 +410,8 @@ button.block {
 }
 
 .lesson__en--on {
-  color: var(--game-ui-bg, #0b0f1a);
+  /* The ink for the accent. `bg` is dark on night and cream on light (2.48:1). */
+  color: var(--game-ui-accent-contrast, #241609);
   background: var(--game-ui-accent, #5ec8c0);
   border-color: var(--game-ui-accent, #5ec8c0);
 }

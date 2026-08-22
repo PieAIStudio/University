@@ -362,7 +362,8 @@ span.entry-section__sense {
 
 .entry-section__flow-step.is-current .entry-section__part-index {
   background: var(--game-ui-accent, #5ec8c0);
-  color: var(--game-ui-panel-deep, #0c1018);
+  /* The ink meant to sit on the accent. `panel-deep` measured 2.05:1 on light. */
+  color: var(--game-ui-accent-contrast, #241609);
 }
 
 .entry-page__float-navs {
@@ -597,7 +598,13 @@ span.entry-section__sense {
   flex: 1 1 100%;
   border: 1px dashed var(--game-ui-border, #253048);
   border-radius: 8px;
-  background: var(--game-ui-panel-deep, #0c1018);
+  /*
+    `panel` rather than `panel-deep`. On night the two are close; on light
+    `panel-deep` is a pale tan (#efd1a3) and no ink the kit ships reads on it
+    at AA — muted text and accent ink both land at 3.91:1. The inset surfaces
+    the kit tunes its inks against are `panel` and `surface`.
+  */
+  background: var(--game-ui-panel, #121826);
   color: var(--game-ui-text-muted, #93a0b8);
   cursor: pointer;
   font: inherit;

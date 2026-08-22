@@ -216,7 +216,8 @@
   padding: 0 5px;
   border-radius: 999px;
   background: var(--game-ui-accent, #5ec8c0);
-  color: var(--game-ui-panel-deep, #0c1018);
+  /* The ink meant to sit on the accent. `panel-deep` measured 2.05:1 on light. */
+  color: var(--game-ui-accent-contrast, #241609);
   font-size: 0.7rem;
   font-weight: 700;
   line-height: 1.3;

@@ -21,8 +21,8 @@ importers:
   apps/local:
     dependencies:
       '@pieai/swimmer-ui-kit':
-        specifier: 1.3.2
-        version: 1.3.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 1.5.0
+        version: 1.5.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -88,8 +88,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
-        specifier: 1.3.2
-        version: 1.3.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 1.5.0
+        version: 1.5.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/university-avatar':
         specifier: workspace:*
         version: link:../../packages/avatar
@@ -204,8 +204,8 @@ importers:
         specifier: ^0.27.20
         version: 0.27.20(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/swimmer-ui-kit':
-        specifier: 1.3.2
-        version: 1.3.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 1.5.0
+        version: 1.5.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
@@ -677,8 +677,8 @@ packages:
       three:
         optional: true
 
-  '@pieai/swimmer-ui-kit@1.3.2':
-    resolution: {integrity: sha512-CIEtCGLpzD5Brepvu0KzHLM5CsyZvYKWFDeRCp8coNj4BQK9LkxYMkt1WZlfw9K31GoB16yIVruc5v9ohNm0wA==}
+  '@pieai/swimmer-ui-kit@1.5.0':
+    resolution: {integrity: sha512-yf6Vmr5pTRPDzUUn9/71ArsyXrEuqZpU1+TZG1KuhzJHxc0NBfEHlgP7Lz6c+mUdq9eIZ1/y36TZlhLaZ6iP3Q==}
     engines: {node: '>=24 <25'}
     hasBin: true
     peerDependencies:
@@ -2601,7 +2601,7 @@ snapshots:
     optionalDependencies:
       three: 0.185.1
 
-  '@pieai/swimmer-ui-kit@1.3.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+  '@pieai/swimmer-ui-kit@1.5.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)

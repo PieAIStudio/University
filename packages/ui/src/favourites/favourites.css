@@ -16,7 +16,12 @@
   border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
   border-radius: var(--game-ui-radius-control, 10px);
   background: var(--game-ui-panel-deep, #0c1018);
-  color: var(--game-ui-text-muted, #9aa6bb);
+  /*
+    `panel-deep` is deep on night and a light tan on light, so muted ink only
+    reads on one of them (3.91:1 on light). Full text reads on both, and the
+    border already carries the quiet.
+  */
+  color: var(--game-ui-text, #e9edf5);
   font: inherit;
   font-size: 1.05rem;
   line-height: 1;

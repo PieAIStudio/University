@@ -33,7 +33,7 @@
     "lint:hedges": "node scripts/check-lesson-hedges.mjs"
   },
   "dependencies": {
-    "@pieai/swimmer-ui-kit": "1.3.2",
+    "@pieai/swimmer-ui-kit": "1.5.0",
     "@pieai/university-core": "workspace:*",
     "@pieai/university-ui": "workspace:*",
     "react": "19.2.7",
