@@ -2,13 +2,14 @@
   "name": "@pieai/university",
   "version": "0.0.0",
   "private": true,
-  "description": "University \u2014 one learning core, two shells. apps/local authors courses on a machine; apps/online sells them.",
+  "description": "University — one learning core, two shells. apps/local authors courses on a machine; apps/online sells them.",
   "type": "module",
   "scripts": {
     "boundaries": "node apps/local/scripts/check-module-boundaries.mjs && node scripts/check-kit-portability.mjs && node scripts/check-contrast.mjs && node scripts/check-shared-styles.mjs",
     "build": "pnpm -r build",
     "content": "pnpm --filter @pieai/university-online content",
     "dev": "pnpm --filter @pieai/university-online dev",
+    "e2e": "playwright test --config e2e/playwright.config.ts",
     "doc-gov": "doc-gov",
     "docs:check": "pnpm pro-gov doctor && pnpm doc-gov router-check && pnpm doc-gov check && pnpm doc-gov scan --check && pnpm doc-gov links && pnpm doc-gov audit && pnpm doc-gov doctor",
     "format": "pnpm -r format",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@pieai/doc-gov": "0.9.3",
     "@pieai/pro-gov": "0.9.3",
+    "@playwright/test": "^1.62.1",
     "lefthook": "^2.1.10"
   }
 }
