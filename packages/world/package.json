@@ -1,0 +1,50 @@
+{
+  "name": "@pieai/university-world",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The 3D scene both shells will render. packages/ui stays at zero three.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./Maps.js": "./src/Maps.tsx",
+    "./Stage.js": "./src/Stage.tsx",
+    "./labels.js": "./src/labels.ts",
+    "./path-overlay.js": "./src/path-overlay.ts",
+    "./course.js": "./src/course.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "oxlint --deny-warnings src vitest.config.ts",
+    "format": "oxfmt --write package.json tsconfig.json vitest.config.ts src",
+    "format:check": "oxfmt --check package.json tsconfig.json vitest.config.ts src",
+    "test": "vitest run --passWithNoTests",
+    "build": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@pieai/swimmer-render-kit": "0.3.0",
+    "@pieai/university-core": "workspace:*",
+    "@pieai/university-ui": "workspace:*",
+    "three-stdlib": "^2.36.1"
+  },
+  "devDependencies": {
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "9.6.1",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "jsdom": "29.1.1",
+    "oxfmt": "0.58.0",
+    "oxlint": "1.73.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "three": "0.185.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  },
+  "peerDependencies": {
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "9.6.1",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "three": "0.185.1"
+  }
+}

@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { readCourseProgress } from "@pieai/university-core";
+import { courseShapeOf } from "@pieai/university-world/course.js";
 
 import { evidenceSourceOf } from "../content/evidence-source";
 import type { Course } from "../content/library";
 import { LessonScreen } from "../lesson/Lesson";
-import { courseShapeOf, progressSource } from "../progress/source";
+import { progressSource } from "../progress/source";
 import { advanceLesson, dropCards, lessonKey } from "../progress/store";
 
 export function LessonReaderHost({

@@ -22,6 +22,7 @@
     "@pieai/swimmer-ui-kit": "1.5.0",
     "@pieai/university-core": "workspace:*",
     "@pieai/university-ui": "workspace:*",
+    "@pieai/university-world": "workspace:*",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "9.6.1",
     "react": "19.2.7",

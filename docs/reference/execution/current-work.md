@@ -35,7 +35,8 @@ apps/local      authoring — filesystem, CLI, single machine   (9999)
 apps/online     delivery  — 3D archipelago, progress, review  (9998)
 packages/core   the domain model. No React, no fs, no network.
 packages/ui     the learning surface and the app chrome, both shells
-packages/world  the scene. packages/ui stays at zero three.   (ADR-0004)
+packages/world  the scene — delivery already imports it.        (ADR-0004)
+                packages/ui stays at zero three.
 ```
 
 ```bash
@@ -52,7 +53,7 @@ concepts · 267 terms · 25 anti-patterns.
 420 lesson-to-lesson links, 383 inside their own course and **five** crossing
 one: the mesh does not exist yet. `[[term:]]` links: zero.
 
-Tests: core 227 · ui 143 · online 45 · local 444.
+Tests: core 227 · ui 159 · online 32 · world 23 · local 444.
 
 **Re-run the script before quoting any of these.** Every number on this page
 has been wrong at least once.
@@ -116,26 +117,26 @@ Done, and verified in a browser rather than by a passing suite:
 - **Path legibility** — nodes from 6% of viewport width to 14.8%, three states,
   one hue per course, unit boundaries, kind icons.
 - **Evidence code in the delivery shell** (ADR-0003). 1,597 anchors baked.
+- **One overlay layer.** Titles, kind icons and unit names share one avoidance
+  pass. The invisible-but-clickable labels that ate the unit-strip button are
+  gone with it.
+- **The reading screen.** A ✕ and a bar over sections within the lesson.
+- **`packages/world`.** SPEC-0003 step 1. The scene lives there; delivery
+  imports it. Authoring does not, yet.
+- **One counter row.** Both shells call `universityCounters`; neither keeps its
+  own idea of what belongs in it.
 
 Next:
 
-1. **One overlay layer.** Lesson titles project from `app/`, kind icons and
-   unit names from `world/`, and they share no avoidance pass — so a long
-   title still crosses a unit name. Merging them also fixes the unit-strip
-   button, which the canvas currently covers: `element.click()` opens the
-   card and a human click does not.
-2. **The reading screen.** Navigation is already gone. Still to do: a ✕ in
-   place of the breadcrumb, and a progress bar showing sections within the
-   lesson rather than the lesson's index in the course.
-3. **A loading state.** The canvas paints black before its first frame, which
+1. **A loading state.** The canvas paints black before its first frame, which
    reads as a broken page. v3 screen 09 spends one of the 281 concepts on it.
-4. **`packages/world`.** SPEC-0003 step 1, and it blocks the sky work.
-5. **Islands in the sky** — sky layers, cloud, island underside, foreground
+2. **Islands in the sky** — sky layers, cloud, island underside, foreground
    frame, AO and colour grading.
-6. The four ports; delete online's duplicate reader; separate read from
+3. **SPEC-0003 step 2.** Authoring takes the same scene plus its overlay.
+4. The four ports; delete online's duplicate reader; separate read from
    answered.
-7. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
-8. SwimmerBackend: accounts, payment, metered AI.
+5. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
+6. SwimmerBackend: accounts, payment, metered AI.
 
 ## Traps, Found The Hard Way
 
@@ -164,10 +165,6 @@ Next:
   `pnpm doc-gov scan`, not the filtered form.
 - **Videos never enter git.** `.gitignore` excludes
   `docs/reference/借鉴的App/*.mp4|MP4|mov`.
-- **Two overlay layers project over one canvas.** Lesson titles come from
-  `apps/online/src/app/`, kind icons and unit names from
-  `apps/online/src/world/`, and neither knows about the other. Anything that
-  positions DOM over the scene has to reckon with both until they are merged.
 - **A control over the canvas can be in the accessibility tree and still be
   unclickable.** The canvas stacks above the overlay, so `element.click()`
   succeeds where a human click does not — and a test written with `.click()`

@@ -2,8 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { NOT_STARTED } from "@pieai/university-core";
 
-import type { Course, Lesson } from "../content/library";
-import { courseShapeOf, progressSource } from "./source";
+import { progressSource } from "./source";
 import { advanceLesson, lessonKey, resetAll } from "./store";
 
 afterEach(() => {
@@ -16,31 +15,6 @@ const ref = {
   unitId: "what-is-an-app",
   lessonId: "you-already-know-apps",
 };
-
-function lesson(id: string): Lesson {
-  return {
-    id,
-    title: id,
-    content: "",
-    evidence: [],
-    assets: [],
-    cards: [],
-    exercises: [],
-  };
-}
-
-function courseOf(id: string, units: Course["units"]): Course {
-  return {
-    id,
-    title: id,
-    description: "",
-    audience: "",
-    objectives: [],
-    prerequisiteCourseIds: [],
-    trackId: null,
-    units,
-  };
-}
 
 describe("the online progress source", () => {
   it("returns NOT_STARTED for an untouched lesson", () => {
@@ -62,28 +36,6 @@ describe("the online progress source", () => {
     expect(progressSource().completionOf({ ...ref, unitId: "a-different-unit" })).toEqual({
       exercisesPassed: true,
       readConfirmed: true,
-    });
-  });
-});
-
-describe("the online course shape", () => {
-  it("keeps the study id the package itself does not store", () => {
-    const course = courseOf("foundations-before-zero", [
-      {
-        id: "u1",
-        title: "One",
-        objective: "",
-        lessons: [lesson("a"), lesson("b")],
-      },
-      { id: "u2", title: "Two", objective: "", lessons: [lesson("c")] },
-    ]);
-    expect(courseShapeOf(course, "turing-pact")).toEqual({
-      studyId: "turing-pact",
-      courseId: "foundations-before-zero",
-      units: [
-        { unitId: "u1", lessonIds: ["a", "b"] },
-        { unitId: "u2", lessonIds: ["c"] },
-      ],
     });
   });
 });

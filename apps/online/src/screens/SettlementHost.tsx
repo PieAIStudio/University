@@ -1,11 +1,12 @@
 import { useSyncExternalStore } from "react";
 import { readCourseProgress } from "@pieai/university-core";
+import { courseShapeOf } from "@pieai/university-world/course.js";
+import { settlementSize } from "@pieai/university-world/Maps.js";
 
 import type { Course } from "../content/library";
 import { Settlement } from "../lesson/Settlement";
-import { courseShapeOf, progressSource } from "../progress/source";
+import { progressSource } from "../progress/source";
 import { snapshot, subscribe } from "../progress/store";
-import { settlementSize } from "../world/Maps";
 
 /**
  * Reads the reward out of real state rather than being handed it.
