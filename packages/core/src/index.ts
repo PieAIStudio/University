@@ -20,7 +20,8 @@
  *   only deep paths `package.json` still exposes are:
  *   `domain/schemas.js`, `domain/lesson-marks.js`, `domain/reader-marks.js`,
  *   `domain/merge-text-runs.js`, `marks/references.js`, `marks/terms.js`,
- *   `marks/evidence.js`, `language/layer.js`, `language/resolve-anchors.js`.
+ *   `marks/evidence.js`, `language/layer.js`, `language/resolve-anchors.js`,
+ *   `concepts/heads.js`.
  *   Anything else under `src/` is internal assembly.
  */
 
@@ -188,6 +189,7 @@ export {
   conceptsInCategory,
   getConceptEntry,
 } from "./concepts/catalogue.js";
+export { CONCEPT_HEADS } from "./concepts/heads.js";
 export {
   createConceptIndex,
   searchConceptIndex,
