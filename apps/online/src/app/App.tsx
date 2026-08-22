@@ -71,6 +71,7 @@ import { TermEntryHost } from "../screens/TermEntryHost";
 import { fromHash, toHash, WORLD, type View } from "../url-state";
 import { ProfileAvatar } from "./ProfileAvatar";
 import { TodayCard, todayMeta } from "./TodayCard";
+import { studySub } from "./map-labels";
 import {
   Controls,
   COURSE_POLAR,
@@ -157,6 +158,16 @@ export function App() {
       current = false;
     };
   }, [view]);
+
+  /** Lessons finished in one course, or 0 for a course not on disk yet. */
+  const lessonsDone = useCallback(
+    (node: CourseNode) => {
+      const loaded = peekCourse(node.studyId, node.courseId);
+      if (!loaded) return 0;
+      return readCourseProgress(courseShapeOf(loaded, node.studyId), progressSource()).done;
+    },
+    [progress],
+  );
 
   // A fraction, not a flag. The world map now shows how far a course got, not
   // only whether it is finished, so a course two lessons in has to be able to
@@ -327,7 +338,10 @@ export function App() {
         id: `study:${studyId}`,
         position: centre.clone().setY(centre.y + 9),
         text: own[0]?.node.studyTitle ?? studyId,
-        sub: `${own.length} 门课 · ${own.reduce((sum, entry) => sum + entry.node.lessons, 0)} 节`,
+        sub: studySub(
+          own.length,
+          own.reduce((sum, entry) => sum + lessonsDone(entry.node), 0),
+        ),
         kind: "study" as const,
       };
     });
