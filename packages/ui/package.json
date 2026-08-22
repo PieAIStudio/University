@@ -26,6 +26,12 @@
     "./reference/term-index.css": "./src/reference/term-index.css",
     "./review/ReviewCard.js": "./src/review/ReviewCard.tsx",
     "./review/VocabularyReview.js": "./src/review/VocabularyReview.tsx",
+    "./shell/AppShell.js": "./src/shell/AppShell.tsx",
+    "./shell/CounterRow.js": "./src/shell/CounterRow.tsx",
+    "./shell/NavRail.js": "./src/shell/NavRail.tsx",
+    "./shell/TabBar.js": "./src/shell/TabBar.tsx",
+    "./shell/app-shell.css": "./src/shell/app-shell.css",
+    "./shell/icons.js": "./src/shell/icons.tsx",
     "./sound/index.js": "./src/sound/index.ts",
     "./sound/sound-toggle.css": "./src/sound/sound-toggle.css",
     "./view/lesson-view.js": "./src/view/lesson-view.ts"

@@ -1,0 +1,447 @@
+/*
+  App chrome: three-column web layout, icon rail, mobile tab bar, counter row.
+
+  Shells that mount AppShell load this file the same way they load
+  path-cards.css. A shared surface whose appearance depends on which app
+  remembered the CSS is one implementation in name only.
+
+  Breakpoints are CSS, not matchMedia. The counter row is one grid item; named
+  areas move it. display: none (not visibility/opacity) is how a slot the
+  table marks "not rendered" leaves the accessibility tree.
+*/
+
+.app-shell,
+.nav-rail,
+.tab-bar,
+.counter-row,
+.app-shell__main,
+.app-shell__aside {
+  box-sizing: border-box;
+}
+
+.app-shell {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100dvh;
+  overflow-x: clip;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "counters"
+    "main";
+  row-gap: 12px;
+  padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.nav-rail {
+  grid-area: rail;
+  display: none;
+}
+
+.counter-row {
+  grid-area: counters;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 16px;
+}
+
+.counter-row:empty {
+  display: none;
+}
+
+.app-shell__main {
+  grid-area: main;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.app-shell__aside {
+  grid-area: aside;
+  display: none;
+  min-width: 0;
+}
+
+.tab-bar {
+  position: fixed;
+  z-index: 40;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: stretch;
+  box-sizing: border-box;
+  min-height: 3.5rem;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  border-top: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  background: var(--game-ui-panel-deep, #0c1018);
+}
+
+/* ---- Rail -------------------------------------------------------------- */
+
+.nav-rail {
+  flex-direction: column;
+  gap: 12px;
+  align-self: start;
+  height: 100dvh;
+  padding: 16px 12px;
+  overflow: auto;
+  border-right: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  background: var(--game-ui-panel-deep, #0c1018);
+}
+
+.nav-rail__brand {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 4px 8px 8px;
+}
+
+.nav-rail__list,
+.tab-bar__list {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-rail__list {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-rail__slot {
+  min-width: 0;
+}
+
+.nav-rail__link,
+.nav-rail__flyout-trigger,
+.nav-rail__flyout-item,
+.tab-bar__link,
+.counter-row__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--game-ui-radius-card, 12px);
+  background: transparent;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.3;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.nav-rail__flyout-trigger {
+  width: 100%;
+  text-align: start;
+}
+
+.nav-rail__link:hover,
+.nav-rail__link:focus-visible,
+.nav-rail__flyout-trigger:hover,
+.nav-rail__flyout-trigger:focus-visible,
+.nav-rail__flyout-item:hover,
+.nav-rail__flyout-item:focus-visible,
+.tab-bar__link:hover,
+.tab-bar__link:focus-visible,
+.counter-row__item:hover,
+.counter-row__item:focus-visible {
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.nav-rail__link:focus-visible,
+.nav-rail__flyout-trigger:focus-visible,
+.nav-rail__flyout-item:focus-visible,
+.tab-bar__link:focus-visible,
+.counter-row__item:focus-visible {
+  outline: 2px solid var(--game-ui-accent, #5ec8c0);
+  outline-offset: 2px;
+}
+
+.nav-rail__link[aria-current="page"],
+.nav-rail__flyout-trigger[aria-current="page"],
+.nav-rail__flyout-item[aria-current="page"],
+.tab-bar__link[aria-current="page"] {
+  color: var(--game-ui-accent, #5ec8c0);
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 14%, transparent);
+  border-color: var(--game-ui-accent, #5ec8c0);
+}
+
+.nav-rail__icon,
+.tab-bar__icon,
+.counter-row__icon {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-rail__icon svg,
+.counter-row__icon svg {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.tab-bar__icon svg {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.nav-rail__label,
+.tab-bar__label {
+  min-width: 0;
+}
+
+.nav-rail__badge,
+.tab-bar__badge {
+  flex: 0 0 auto;
+  min-width: 1.1rem;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--game-ui-accent, #5ec8c0);
+  color: var(--game-ui-panel-deep, #0c1018);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.nav-rail__badge--dot,
+.tab-bar__badge--dot {
+  min-width: 0;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+}
+
+.nav-rail__flyout {
+  z-index: 50;
+  box-sizing: border-box;
+  display: grid;
+  gap: 2px;
+  min-width: 12rem;
+  padding: 8px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 94%, transparent);
+  color: var(--game-ui-text, #e9edf5);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 35%);
+}
+
+.nav-rail__flyout-item {
+  width: 100%;
+}
+
+/* ---- Tab bar ----------------------------------------------------------- */
+
+.tab-bar__list {
+  flex: 1 1 auto;
+  align-items: stretch;
+  justify-content: space-around;
+  min-width: 0;
+}
+
+.tab-bar__slot {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.tab-bar__link {
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 3.5rem;
+  gap: 2px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 0;
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.tab-bar__link[aria-current="page"] {
+  border-color: transparent;
+  background: transparent;
+}
+
+.tab-bar__label {
+  /*
+    C3's tab bar is icon-only. The label stays in the tree so the accessible
+    name is the word, not the glyph. Labels become visible on the rail at
+    1160px, not here and not on the icon-only tablet rail.
+  */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Counters ---------------------------------------------------------- */
+
+.counter-row__item {
+  flex: 1 1 0;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 4px;
+  font-size: 0.9rem;
+}
+
+.counter-row__item--muted {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  opacity: 0.55;
+}
+
+.counter-row__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 768–1159: icon rail, no tabs, no aside, counters above main ------ */
+
+@media (min-width: 768px) {
+  .app-shell {
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+    grid-template-areas:
+      "rail counters"
+      "rail main";
+    column-gap: 8px;
+    padding-bottom: 0;
+    padding-inline: 12px;
+  }
+
+  .nav-rail {
+    display: flex;
+    position: sticky;
+    top: 0;
+    padding-inline: 8px;
+  }
+
+  .nav-rail__brand {
+    display: flex;
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .nav-rail__link,
+  .nav-rail__flyout-trigger {
+    justify-content: center;
+    padding-inline: 8px;
+  }
+
+  .nav-rail__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .tab-bar {
+    display: none;
+  }
+
+  .counter-row {
+    padding-inline: 8px;
+  }
+}
+
+/* ---- ≥1160: 257 / minmax(0, 618) / 366, counters on the aside column -- */
+
+@media (min-width: 1160px) {
+  .app-shell {
+    height: 100dvh;
+    overflow: hidden;
+    grid-template-columns: 257px minmax(0, 618px) 366px;
+    grid-template-areas:
+      "rail main counters"
+      "rail main aside";
+    column-gap: 24px;
+    justify-content: center;
+    padding-inline: 24px;
+  }
+
+  .nav-rail {
+    position: static;
+    align-self: stretch;
+    height: auto;
+    max-height: none;
+    padding-inline: 16px;
+  }
+
+  .nav-rail__brand {
+    justify-content: flex-start;
+    padding: 4px 8px 12px;
+  }
+
+  .nav-rail__link,
+  .nav-rail__flyout-trigger {
+    justify-content: flex-start;
+    padding: 10px 12px;
+  }
+
+  .nav-rail__label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: nowrap;
+  }
+
+  .app-shell__main {
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .app-shell__aside {
+    display: block;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .counter-row {
+    padding: 12px 4px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-rail__link,
+  .nav-rail__flyout-trigger,
+  .nav-rail__flyout-item,
+  .tab-bar__link,
+  .counter-row__item,
+  .nav-rail__flyout {
+    transition: none;
+  }
+}

@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 // Brand tokens first, product layout second: the kit defines the custom
 // properties everything below reads.
 import "@pieai/swimmer-ui-kit/styles.css";
-import { App } from "./App";
+import { App } from "./app/App";
 // The word layer's rules travel with the component that emits its class names,
 // so both shells render it the same way.
 import "@pieai/university-ui/language/word-layer.css";
