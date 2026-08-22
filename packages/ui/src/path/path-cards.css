@@ -14,10 +14,21 @@
   justify-content: center;
   padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
     max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+.path-card__scrim {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
   background: rgb(6 10 18 / 52%);
+  cursor: pointer;
 }
 
 .path-card {
+  position: relative;
+  z-index: 1;
   box-sizing: border-box;
   display: grid;
   gap: 12px;

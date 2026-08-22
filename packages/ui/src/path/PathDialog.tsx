@@ -17,6 +17,7 @@ function focusableIn(root: HTMLElement): HTMLElement[] {
   return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((element) => {
     if (element.hasAttribute("disabled")) return false;
     if (element.getAttribute("aria-hidden") === "true") return false;
+    if (element.tabIndex < 0) return false;
     return true;
   });
 }
@@ -96,13 +97,8 @@ export function PathDialog({
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
-    <div
-      ref={layerRef}
-      className="path-card-layer"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
+    <div ref={layerRef} className="path-card-layer">
+      <div className="path-card__scrim" onClick={onClose} />
       <div
         ref={cardRef}
         className="path-card"
@@ -110,7 +106,6 @@ export function PathDialog({
         aria-modal="true"
         aria-labelledby={headingId}
         tabIndex={-1}
-        onClick={(event) => event.stopPropagation()}
       >
         <header className="path-card__header">
           <h2 id={headingId} className="path-card__title">

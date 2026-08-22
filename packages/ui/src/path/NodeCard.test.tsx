@@ -176,9 +176,7 @@ describe("NodeCard", () => {
   it("closes when the blank around the card is clicked", async () => {
     const { onClose } = await renderCard();
     await act(async () => {
-      document
-        .querySelector(".path-card-layer")
-        ?.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+      document.querySelector<HTMLElement>(".path-card__scrim")?.click();
     });
     expect(onClose).toHaveBeenCalledTimes(1);
   });
