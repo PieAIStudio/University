@@ -11,6 +11,30 @@
   gap: 16px;
 }
 
+.practice-stream__leave {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font: inherit;
+  cursor: pointer;
+}
+
+.practice-stream__leave:hover,
+.practice-stream__leave:focus-visible {
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.practice-stream__leave:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+.practice-stream__intro-copy {
+  margin: 0 0 16px;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
 .practice-stream__ordinal {
   margin: 0;
   color: var(--game-ui-text-muted, #9aa6bb);

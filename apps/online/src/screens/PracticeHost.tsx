@@ -45,7 +45,7 @@ export function PracticeHost({ onOpen }: { onOpen: (view: View) => void }) {
 
   return (
     <div className="terms">
-      <button className="linkish" onClick={() => onOpen(WORLD)}>
+      <button type="button" className="practice-stream__leave" onClick={() => onOpen(WORLD)}>
         ← 关卡地图
       </button>
       <PracticeStream

@@ -2,8 +2,12 @@ export {
   PRACTICE_EMPTY_ACTION,
   PRACTICE_EMPTY_DESCRIPTION,
   PRACTICE_EMPTY_TITLE,
+  PRACTICE_INTRO_ACTION,
+  PRACTICE_INTRO_DESCRIPTION,
+  PRACTICE_INTRO_TITLE,
   PracticeStream,
-  practiceOrdinalLabel,
+  practiceSolvedLabel,
+  sittingSolvedCount,
 } from "./PracticeStream.js";
 export { PRACTICE_UNLOCK_HINT, PracticeRewardPanel } from "./PracticeRewardPanel.js";
 export {
