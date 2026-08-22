@@ -222,6 +222,14 @@ button.block {
   height: 100%;
 }
 
+/*
+  Solid, not frosted. `backdrop-filter` over a live WebGL canvas samples
+  wrongly once the panel is wider than about 260px — on a phone `.picked` is
+  full-bleed and the course header (including the only way back to the map)
+  becomes an unread grey brick. A moving 3D scene also makes the blur a
+  per-frame GPU tax for almost no visible gain. Duolingo's path cards are
+  opaque for the same reason.
+*/
 .picked {
   position: absolute;
   top: 14px;
@@ -229,8 +237,9 @@ button.block {
   width: 260px;
   border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
   border-radius: var(--game-ui-radius-panel, 14px);
-  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 92%, transparent);
-  backdrop-filter: blur(8px);
+  background: var(--game-ui-panel-strong);
+  color: var(--game-ui-text);
+  backdrop-filter: none;
   padding: 14px 16px;
 }
 
@@ -250,8 +259,9 @@ button.block {
   width: 280px;
   border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
   border-radius: var(--game-ui-radius-panel, 14px);
-  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 92%, transparent);
-  backdrop-filter: blur(8px);
+  background: var(--game-ui-panel-strong);
+  color: var(--game-ui-text);
+  backdrop-filter: none;
   padding: 14px 16px;
 }
 
