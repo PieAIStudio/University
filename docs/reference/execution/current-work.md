@@ -53,7 +53,7 @@ concepts · 267 terms · 25 anti-patterns.
 420 lesson-to-lesson links, 383 inside their own course and **five** crossing
 one: the mesh does not exist yet. `[[term:]]` links: zero.
 
-Tests: core 227 · ui 159 · online 32 · world 23 · local 444.
+Tests: core 229 · ui 178 · online 51 · world 29 · local 444.
 
 **Re-run the script before quoting any of these.** Every number on this page
 has been wrong at least once.
@@ -134,15 +134,20 @@ Done, and verified in a browser rather than by a passing suite:
 
 Next:
 
-1. **A loading state.** The canvas paints black before its first frame, which
-   reads as a broken page. v3 screen 09 spends one of the 281 concepts on it.
-2. **Islands in the sky** — sky layers, cloud, island underside, foreground
-   frame, AO and colour grading.
-3. **SPEC-0003 step 2.** Authoring takes the same scene plus its overlay.
-4. The four ports; delete online's duplicate reader; separate read from
+1. **The 19 seconds after the canvas mounts.** Of the 28.4s to first frame on
+   throttled 4G, roughly 19 are `loadGraph()` fetching 52 course JSON files and
+   the kit's GLBs. The JavaScript half is solved; this is data, and it is now
+   the whole wait.
+2. **SPEC-0003 step 2.** Authoring takes the same scene plus its overlay.
+3. **The light theme cannot work yet.** 270 raw colour literals are invisible
+   to the contrast checker, which only reads token pairs. Until they are
+   tokens, no amount of contrast fixing makes that theme usable.
+4. **A persisted record of a wrong answer.** 错题本 (v3 16) has nothing to
+   count: wrong picks live in component state and vanish with the question.
+5. The four ports; delete online's duplicate reader; separate read from
    answered.
-5. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
-6. SwimmerBackend: accounts, payment, metered AI.
+6. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
+7. SwimmerBackend: accounts, payment, metered AI.
 
 ## Traps, Found The Hard Way
 
