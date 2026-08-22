@@ -28,6 +28,8 @@ import {
   termRangeOf,
 } from "@pieai/university-core";
 import { MarkdownContent, type EvidenceSnippetView } from "@pieai/university-ui";
+import { LessonToolbar } from "@pieai/university-ui/lesson/LessonNav.js";
+import { readingSections } from "@pieai/university-ui/view/lesson-view.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
 import { ForeignSettingsPanel } from "@pieai/university-ui/language/ForeignSettingsPanel.js";
 import {
@@ -52,9 +54,6 @@ export function LessonScreen({
   lesson,
   course,
   unitId,
-  courseTitle,
-  unitTitle,
-  position,
   evidenceBasePath,
   onPass,
   onBack,
@@ -63,9 +62,6 @@ export function LessonScreen({
   lesson: LessonData;
   course: Course;
   unitId: string;
-  courseTitle: string;
-  unitTitle: string;
-  position: string;
   evidenceBasePath?: string | ((index: number) => Promise<EvidenceSnippetView>);
   onPass: () => void;
   onBack: () => void;
@@ -124,6 +120,10 @@ export function LessonScreen({
     [english, lesson.content, words],
   );
   const stages = useMemo(() => wordStages(), [words]);
+  const sections = useMemo(
+    () => readingSections(lesson.sections, lesson.content),
+    [lesson.sections, lesson.content],
+  );
 
   const exercise = lesson.exercises[0];
   const [answer, setAnswer] = useState("");
@@ -169,21 +169,16 @@ export function LessonScreen({
 
   return (
     <article className="lesson">
-      <header className="lesson__bar">
-        <button
-          className="linkish"
-          onClick={() => {
-            playSound("nav.back");
-            onBack();
-          }}
-        >
-          ← 关卡地图
-        </button>
-        <span className="lesson__where">
-          {courseTitle} · {unitTitle}
-        </span>
+      <LessonToolbar
+        onClose={() => {
+          playSound("nav.back");
+          onBack();
+        }}
+        sections={sections}
+      >
         <span className="lesson__lang">
           <button
+            type="button"
             className={`lesson__en${english ? " lesson__en--on" : ""}`}
             aria-pressed={english}
             title={english ? "关掉英文词" : "在课文里认几个英文词"}
@@ -206,8 +201,7 @@ export function LessonScreen({
           ) : null}
           <SoundToggle />
         </span>
-        <span className="lesson__pos">{position}</span>
-      </header>
+      </LessonToolbar>
 
       <div className="lesson__body">
         <MarkdownContent
@@ -231,6 +225,7 @@ export function LessonScreen({
           }))}
           {...(evidenceBasePath ? { evidenceBasePath } : {})}
           {...(onFollowLink ? { onFollowLink } : {})}
+          sections={sections}
         >
           {lesson.content}
         </MarkdownContent>

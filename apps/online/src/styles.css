@@ -323,34 +323,6 @@ button.block {
   min-height: 0;
 }
 
-.lesson__bar {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 94%, transparent);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.12));
-  font-size: 0.78rem;
-  color: var(--game-ui-text-muted, #9aa6bb);
-}
-
-.lesson__where {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.lesson__pos {
-  font-family: var(--mono);
-  color: var(--game-ui-accent, #5ec8c0);
-}
-
 /*
   The English toggle sits off by itself rather than reading as a third piece of
   lesson metadata: it is the one control in this bar that changes the page.

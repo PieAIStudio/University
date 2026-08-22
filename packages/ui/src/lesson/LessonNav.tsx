@@ -1,9 +1,6 @@
-import { useEffect, useRef } from "react";
-import { GameBadge, GameButton, GameSegmentedControl, GameToggle } from "@pieai/swimmer-ui-kit";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
-import { Tip } from "../Tip.js";
-import type { DetailMode } from "../language/detail-mode.js";
-import type { CourseView, LessonRef } from "../view/lesson-view.js";
+import type { CourseView, LessonRef, LessonSectionView } from "../view/lesson-view.js";
 
 export interface LessonNeighbour extends LessonRef {
   readonly title: string;
@@ -53,18 +50,12 @@ export function lessonNeighbours(
   };
 }
 
-const DETAIL_OPTIONS = [
-  { id: "standard", label: "标准讲解" },
-  { id: "all", label: "详细讲解" },
-] as const;
-
 /**
  * How far down a scrollable page a position is, as 0–1.
  *
- * Measured against the whole document rather than the lesson body: the page
- * continues past the prose into the exercise and the next-lesson block, and a
- * bar that filled before the page ended would answer a question nobody asked
- * with a number that looks wrong.
+ * Fallback for a lesson that has no `##` sections to count. Measured against
+ * the scrolling box the toolbar lives in — on the delivery shell that is
+ * `.reader`, not `window`.
  *
  * A page that does not scroll reads 0, not 1. There is nothing left to read,
  * but a full bar on arrival says "finished" to someone who has not started.
@@ -79,162 +70,184 @@ export function readProgress(
   return Math.min(1, Math.max(0, scrollY / scrollable));
 }
 
+export interface HeadingBox {
+  readonly top: number;
+  readonly height: number;
+}
+
 /**
- * Publishes `readProgress` into `--lesson-read` on the toolbar.
+ * 1-based index of the section the reader is in.
  *
- * Reads and writes are coalesced into one animation frame, so a fast scroll
- * costs one layout read and one style write per painted frame rather than one
- * per scroll event, and the listener is passive so it can never delay a
- * scroll.
+ * A heading whose top is at or above `readLine` has been entered. Until the
+ * first heading crosses, the reader is in section 1 — the opening of the
+ * lesson is the first section, not a prologue with no number.
  *
- * `animation-timeline: scroll(root)` would do all of this with no listener at
- * all and no main-thread work, and is the better mechanism on paper. It is not
- * used because it could not be confirmed working here: the review browser runs
- * with `visibilityState: "hidden"`, which stops both the compositor and
- * `requestAnimationFrame`, so a scroll timeline and a rAF loop are equally
- * unobservable. That is a limitation of the harness rather than evidence
- * against the CSS, but shipping the mechanism that also carries a unit test is
- * the one that can be shown to be right.
+ * Headings that have not been laid out yet (height 0) are ignored, so a jsdom
+ * mount with empty rects stays on 1 rather than jumping to the last section.
  */
-function useReadProgress() {
+export function currentSectionNumber(headings: readonly HeadingBox[], readLine: number): number {
+  if (headings.length === 0) return 0;
+  let current = 1;
+  let sawLaidOut = false;
+  for (let index = 0; index < headings.length; index += 1) {
+    const heading = headings[index]!;
+    if (!(heading.height > 0)) continue;
+    sawLaidOut = true;
+    if (heading.top <= readLine) current = index + 1;
+  }
+  return sawLaidOut ? current : 1;
+}
+
+export function sectionProgressRatio(current: number, total: number): number {
+  if (!(total > 0)) return 0;
+  return Math.min(1, Math.max(0, current / total));
+}
+
+function boxOf(node: HTMLElement): HeadingBox {
+  const rect = node.getBoundingClientRect();
+  return { top: rect.top, height: rect.height };
+}
+
+function headingBoxesFor(sections: readonly LessonSectionView[]): HeadingBox[] {
+  if (sections.length === 0) return [];
+  const nodes = document.querySelectorAll<HTMLElement>("[data-section-id]");
+  const byId = new Map<string, HTMLElement>();
+  for (const node of nodes) {
+    const id = node.dataset.sectionId;
+    if (id && !byId.has(id)) byId.set(id, node);
+  }
+  const matched = sections.map((section) => byId.get(section.id));
+  if (matched.every((node) => node)) {
+    return matched.map((node) => boxOf(node!));
+  }
+  // Title matching can miss (smart quotes, trimmed markdown). The prose
+  // headings are still the sections; count them in document order.
+  const prose = document.querySelector(".lesson-prose, .lesson__body, .markdown-body");
+  const headings = [...(prose?.querySelectorAll<HTMLElement>("h2") ?? [])];
+  return sections.map((_, index) => {
+    const node = headings[index];
+    return node ? boxOf(node) : { top: Number.POSITIVE_INFINITY, height: 0 };
+  });
+}
+
+function nearestScroller(node: HTMLElement): HTMLElement | null {
+  let current: HTMLElement | null = node.parentElement;
+  while (current) {
+    const overflowY = getComputedStyle(current).overflowY;
+    if (overflowY === "auto" || overflowY === "scroll") return current;
+    current = current.parentElement;
+  }
+  return null;
+}
+
+function scrollMetrics(from: HTMLElement | null): {
+  readonly scrollY: number;
+  readonly scrollHeight: number;
+  readonly viewportHeight: number;
+} {
+  const scroller = from ? nearestScroller(from) : null;
+  if (scroller) {
+    return {
+      scrollY: scroller.scrollTop,
+      scrollHeight: scroller.scrollHeight,
+      viewportHeight: scroller.clientHeight,
+    };
+  }
+  return {
+    scrollY: window.scrollY,
+    scrollHeight: document.documentElement.scrollHeight,
+    viewportHeight: window.innerHeight,
+  };
+}
+
+/**
+ * Section progress into state, coalesced to one layout read per frame.
+ *
+ * Capture-phase `scroll` is required: the delivery shell scrolls `.reader`,
+ * not the window, and scroll events do not bubble.
+ */
+function useLessonProgress(sections: readonly LessonSectionView[]) {
   const ref = useRef<HTMLDivElement>(null);
+  const total = sections.length;
+  const [current, setCurrent] = useState(total > 0 ? 1 : 0);
+  const [ratio, setRatio] = useState(total > 0 ? sectionProgressRatio(1, total) : 0);
+
   useEffect(() => {
     let frame = 0;
     const paint = () => {
       frame = 0;
       const node = ref.current;
-      if (!node) return;
-      const read = readProgress(
-        window.scrollY,
-        document.documentElement.scrollHeight,
-        window.innerHeight,
-      );
-      node.style.setProperty("--lesson-read", read.toFixed(4));
+      if (sections.length > 0) {
+        const readLine = node?.getBoundingClientRect().bottom ?? 0;
+        const now = currentSectionNumber(headingBoxesFor(sections), readLine);
+        setCurrent(now);
+        setRatio(sectionProgressRatio(now, sections.length));
+        return;
+      }
+      const metrics = scrollMetrics(node);
+      const read = readProgress(metrics.scrollY, metrics.scrollHeight, metrics.viewportHeight);
+      setCurrent(0);
+      setRatio(read);
     };
     const schedule = () => {
       frame ||= requestAnimationFrame(paint);
     };
     paint();
-    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("scroll", schedule, { passive: true, capture: true });
     window.addEventListener("resize", schedule, { passive: true });
     return () => {
       if (frame) cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("scroll", schedule, { capture: true });
       window.removeEventListener("resize", schedule);
     };
-  }, []);
-  return ref;
+  }, [sections]);
+
+  return { ref, current, total, ratio };
 }
 
 /**
- * Every lesson control in one sticky band: leave, position, reading prefs,
- * status, and prev/next. Sits under the campus header so the reader never has
- * to scroll back up for navigation or the detail switch.
+ * Entering a lesson leaves one way out and how far you are. The right-hand
+ * slot is for in-lesson tools (language, reading mode), not destinations.
  */
 export function LessonToolbar({
-  neighbours,
-  onOpenLesson,
-  onBackToCourse,
-  annotated,
-  englishMode,
-  onEnglishModeChange,
-  detailMode,
-  onDetailModeChange,
-  completed,
-  readConfirmed,
+  onClose,
+  sections,
+  children,
 }: {
-  readonly neighbours: LessonNeighbours;
-  readonly onOpenLesson: (locator: LessonRef) => void;
-  readonly onBackToCourse: () => void;
-  readonly annotated: boolean;
-  readonly englishMode: boolean;
-  readonly onEnglishModeChange: (enabled: boolean) => void;
-  readonly detailMode: DetailMode;
-  readonly onDetailModeChange: (mode: DetailMode) => void;
-  readonly completed: boolean;
-  readonly readConfirmed: boolean;
+  readonly onClose: () => void;
+  readonly sections: readonly LessonSectionView[];
+  readonly children?: ReactNode;
 }) {
-  const { previous, next } = neighbours;
-  const detailed = detailMode === "all";
-  const barRef = useReadProgress();
+  const { ref, current, total, ratio } = useLessonProgress(sections);
+  const valued = total > 0;
+  const valueNow = valued ? current : Math.round(ratio * 100);
+  const valueMax = valued ? total : 100;
 
   return (
-    <div className="lesson-toolbar" ref={barRef}>
-      {/*
-        Two zones, not three.
-
-        The band used to run 返回/位置 · 外语模式/讲解层级/状态 · 上一节/下一节 —
-        three groups with no separation, and the state badge parked between two
-        pressable chips, where it read as a third one. Nothing about
-        「待确认本次更新」 is pressable; it is the answer to "does this lesson
-        count yet", which is the same kind of fact as 「第 2 节 / 共 41 节」.
-        So the left side is now everything that describes where you are, and
-        the right side is everything you can do.
-      */}
-      <nav className="lesson-toolbar__nav" aria-label="课程导航">
-        <GameButton variant="ghost" onClick={onBackToCourse}>
-          ← 返回课程
-        </GameButton>
-        <span className="lesson-toolbar__position">
-          第 {neighbours.position} 节 / 共 {neighbours.total} 节
-        </span>
-        <GameBadge tone={completed ? "success" : "warning"}>
-          {completed ? "已完成" : readConfirmed ? "课文已确认 · 练习待完成" : "待确认本次更新"}
-        </GameBadge>
-      </nav>
-
-      <div className="lesson-toolbar__controls">
-        {annotated ? (
-          // Only offered where there is something to offer. A toggle that
-          // does nothing on most lessons teaches the learner to ignore it.
-          //
-          // The kit's, now that it can show its own state. On 1.3.0
-          // `.game-ui-toggle-track` had one unconditional rule and no
-          // `[aria-checked="true"]` anywhere, so on and off were identical in
-          // every theme; 1.3.1 fixes that upstream rather than here.
-          <Tip term="english-mode">
-            <GameToggle
-              checked={englishMode}
-              label="外语模式"
-              onClick={() => onEnglishModeChange(!englishMode)}
-            />
-          </Tip>
-        ) : null}
-
-        {/*
-          The kit's own segmented control, replacing a hand-rolled one whose
-          pressed, hover and focus states were maintained here alone, on a
-          surface where every other control comes from the kit. A reader learns
-          one vocabulary of "this is pressable" per product, and a switch that
-          is nearly but not quite the kit's is the expensive kind of nearly.
-
-          `label` reaches the group's `aria-label` and nothing else, so the
-          visible one is ours: two bare pills reading 标准讲解 / 详细讲解 do not
-          say what they are two settings *of*.
-        */}
-        <span className="lesson-toolbar__label" id="lesson-detail-label">
-          讲解层级
-        </span>
-        <GameSegmentedControl
-          label="讲解层级"
-          activeId={detailed ? "all" : "standard"}
-          options={DETAIL_OPTIONS}
-          onSelect={(id) => onDetailModeChange(id === "all" ? "all" : "standard")}
+    <div className="lesson-toolbar" ref={ref}>
+      <button
+        type="button"
+        className="lesson-toolbar__close"
+        aria-label="离开课文"
+        onClick={onClose}
+      >
+        ✕
+      </button>
+      <div
+        className="lesson-toolbar__progress"
+        role="progressbar"
+        aria-label="课文进度"
+        aria-valuemin={0}
+        aria-valuemax={valueMax}
+        aria-valuenow={valueNow}
+        {...(valued ? { "aria-valuetext": `${current}/${total}` } : {})}
+      >
+        <div
+          className="lesson-toolbar__progress-fill"
+          style={{ width: `${(ratio * 100).toFixed(3)}%` }}
         />
-
-        <span className="lesson-toolbar__split" aria-hidden="true" />
-
-        {previous ? (
-          <GameButton variant="ghost" onClick={() => onOpenLesson(previous)}>
-            上一节
-          </GameButton>
-        ) : null}
-        {next ? (
-          <GameButton variant="ghost" onClick={() => onOpenLesson(next)}>
-            下一节
-          </GameButton>
-        ) : null}
       </div>
+      {children ? <div className="lesson-toolbar__tools">{children}</div> : null}
     </div>
   );
 }
