@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-08-22
+last_reviewed: 2026-08-23
 domain: execution
 tags:
   - current-work
@@ -125,6 +125,12 @@ Done, and verified in a browser rather than by a passing suite:
   imports it. Authoring does not, yet.
 - **One counter row.** Both shells call `universityCounters`; neither keeps its
   own idea of what belongs in it.
+- **One remaining-count sentence.** The rail's `TodayCard` and the mobile
+  `.nextup` overlay both call `todayMeta`; neither quotes the catalogue size.
+- **Mermaid and external-link CSS.** The last `packages/ui` component styles
+  that lived only in `apps/local` now live next to the component.
+- **`courseShapeOf` in core.** The 2D catalog no longer imports "world" for a
+  pure fold of lesson ids.
 
 Next:
 
@@ -133,15 +139,10 @@ Next:
 2. **Islands in the sky** — sky layers, cloud, island underside, foreground
    frame, AO and colour grading.
 3. **SPEC-0003 step 2.** Authoring takes the same scene plus its overlay.
-4. **The three loose ends from the "implemented twice" round.** The mobile
-   `.nextup` card still quotes the course size the desktop `TodayCard` stopped
-   quoting; mermaid and external-link marks are the last `packages/ui`
-   components whose CSS lives only in `apps/local`; and `courseShapeOf` wants
-   to sink into `packages/core` so the 2D catalog stops importing "world".
-5. The four ports; delete online's duplicate reader; separate read from
+4. The four ports; delete online's duplicate reader; separate read from
    answered.
-6. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
-7. SwimmerBackend: accounts, payment, metered AI.
+5. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
+6. SwimmerBackend: accounts, payment, metered AI.
 
 ## Traps, Found The Hard Way
 

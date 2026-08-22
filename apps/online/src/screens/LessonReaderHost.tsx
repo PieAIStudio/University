@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { readCourseProgress } from "@pieai/university-core";
-import { courseShapeOf } from "@pieai/university-world/course.js";
+import { courseShapeOf, readCourseProgress } from "@pieai/university-core";
 
 import { evidenceSourceOf } from "../content/evidence-source";
 import type { Course } from "../content/library";

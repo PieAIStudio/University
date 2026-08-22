@@ -24,7 +24,7 @@ import {
 } from "react";
 import * as THREE from "three";
 
-import { readCourseProgress } from "@pieai/university-core";
+import { courseShapeOf, readCourseProgress } from "@pieai/university-core";
 import { LoadingTrivia, NodeCard, UnitCard, useMapCover } from "@pieai/university-ui";
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
@@ -36,7 +36,6 @@ import {
   SettingsScreen,
   SettingsSubnav,
 } from "@pieai/university-ui/navigation/empty.js";
-import { courseShapeOf } from "@pieai/university-world/course.js";
 import {
   CourseScene,
   placeCourse,

@@ -4,6 +4,7 @@ export {
   NOT_STARTED,
   parseLessonRefKey,
   readCourseProgress,
+  courseShapeOf,
   type CourseProgress,
   type CourseShape,
   type LessonCompletion,

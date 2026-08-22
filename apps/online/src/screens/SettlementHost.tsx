@@ -1,7 +1,11 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { getConceptEntry, isLessonComplete, readCourseProgress } from "@pieai/university-core";
+import {
+  courseShapeOf,
+  getConceptEntry,
+  isLessonComplete,
+  readCourseProgress,
+} from "@pieai/university-core";
 import { unlockedConceptIds } from "@pieai/university-ui";
-import { courseShapeOf } from "@pieai/university-world/course.js";
 import { settlementSize } from "@pieai/university-world/Maps.js";
 
 import type { Course } from "../content/library";

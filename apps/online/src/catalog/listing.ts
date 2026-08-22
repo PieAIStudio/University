@@ -11,12 +11,12 @@
  * the list prettier would be the opposite of why this page exists.
  */
 import {
+  courseShapeOf,
   isLessonComplete,
   readCourseProgress,
   type LessonRef,
   type ProgressSource,
 } from "@pieai/university-core";
-import { courseShapeOf } from "@pieai/university-world/course.js";
 
 import { depthsFromPrerequisites, library, type Course } from "../content/library";
 

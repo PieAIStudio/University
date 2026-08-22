@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  courseShapeOf,
   isLessonComplete,
   lessonRefKey,
   NOT_STARTED,
@@ -101,5 +102,29 @@ describe("the read model", () => {
     const progress = readCourseProgress(empty, sourceOf([]));
     expect(progress.complete).toBe(false);
     expect(progress.next).toBeNull();
+  });
+});
+
+describe("courseShapeOf", () => {
+  it("keeps the study id the package itself does not store", () => {
+    expect(
+      courseShapeOf(
+        {
+          id: "foundations-before-zero",
+          units: [
+            { id: "u1", lessons: [{ id: "a" }, { id: "b" }] },
+            { id: "u2", lessons: [{ id: "c" }] },
+          ],
+        },
+        "turing-pact",
+      ),
+    ).toEqual({
+      studyId: "turing-pact",
+      courseId: "foundations-before-zero",
+      units: [
+        { unitId: "u1", lessonIds: ["a", "b"] },
+        { unitId: "u2", lessonIds: ["c"] },
+      ],
+    });
   });
 });
