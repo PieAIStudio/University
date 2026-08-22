@@ -164,6 +164,38 @@ export interface LessonSectionView {
 }
 
 /**
+ * The sections a reading progress bar can count.
+ *
+ * Authored `lesson.sections` wins when the manifest actually listed them.
+ * Many lessons still ship an empty array even though the prose is built from
+ * `##` headings — the first Turing Pact lesson has eight of those, which is
+ * the "3/8" in the player-journey wireframe. Counting those headings is
+ * finding the sections, not inventing a second counter (this lesson's index
+ * in the course).
+ *
+ * Only `##` headings count. The lesson title is `#` and already has its own
+ * place on the page.
+ */
+export function readingSections(
+  authored: readonly LessonSectionView[] | undefined,
+  content: string,
+): readonly LessonSectionView[] {
+  if (authored && authored.length > 0) return authored;
+  return sectionsFromMarkdown(content);
+}
+
+/** `##` headings in source order, which is the pedagogical spine of a lesson. */
+export function sectionsFromMarkdown(content: string): readonly LessonSectionView[] {
+  const sections: LessonSectionView[] = [];
+  for (const match of content.matchAll(/^##[ \t]+(.+?)\s*$/gm)) {
+    const title = match[1]!.trim();
+    if (!title) continue;
+    sections.push({ id: `s${sections.length + 1}`, title });
+  }
+  return sections;
+}
+
+/**
  * `contentRevision` is the revision the lesson is on now. Progress earned on an
  * earlier revision is real history but not current standing: the lesson's cards
  * are re-enrolled for review only when it is completed again, so calling it

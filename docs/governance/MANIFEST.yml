@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-22T11:09:15.573Z
+generated_at: 2026-08-22T12:59:39.136Z
 generator_version: doc-gov@0.9.3
-docs_count: 24
+docs_count: 25
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -136,6 +136,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-21
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-INVISIBLE-DOM-OVERLAY-BUTTONS-STILL-STEAL-CLICKS-ELEMENT-CLICK-WILL-NOT-CATCH-IT
+    path: docs/reference/learnings/workflow-issues/invisible-dom-overlay-buttons-still-steal-clicks-element-click-will-not-catch-it.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-22
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-WIDENING-EXERCISESCHEMA-KIND-BREAKS-LOCAL-RECOVERY-AND-COACHING-PACKETS
     path: docs/reference/learnings/workflow-issues/widening-exerciseschema-kind-breaks-local-recovery-and-coaching-packets.md

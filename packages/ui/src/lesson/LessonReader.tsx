@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { GameSegmentedControl, GameToggle } from "@pieai/swimmer-ui-kit";
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
@@ -15,7 +16,12 @@ import { readForeignLanguageMode, writeForeignLanguageMode } from "../language/r
 import type { LessonLinkTarget } from "../markdown/remark-lesson-links.js";
 import { ExerciseBlock } from "../review/ExerciseBlock.js";
 import { ReviewCard } from "../review/ReviewCard.js";
-import { isCurrentLessonCompleted, type LessonRef, type LessonView } from "../view/lesson-view.js";
+import {
+  isCurrentLessonCompleted,
+  readingSections,
+  type LessonRef,
+  type LessonView,
+} from "../view/lesson-view.js";
 import { LessonToolbar, type LessonNeighbours } from "./LessonNav.js";
 import { LessonMarkList } from "./LessonMarkList.js";
 import { LessonMargin } from "./LessonMargin.js";
@@ -37,6 +43,11 @@ import {
  * remembers twenty hops is a stack nobody can predict.
  */
 export const LINK_RETURN_DEPTH = 5;
+
+const DETAIL_OPTIONS = [
+  { id: "standard", label: "标准讲解" },
+  { id: "all", label: "详细讲解" },
+] as const;
 
 type SourceTriggerKind = "inline" | "rail" | "unknown";
 
@@ -394,6 +405,11 @@ export function LessonReader({
     them, so they sit at the end rather than beside a paragraph they have no
     relationship to.
   */
+  const sections = useMemo(
+    () => readingSections(view.lesson.sections, view.lesson.content),
+    [view.lesson.sections, view.lesson.content],
+  );
+  const detailed = detailMode === "all";
   const showLeftContent = Boolean(onReturn) || lessonMarks.length > 0;
   const showWords = englishMode && annotated && lexicon.length > 0;
   // Marks are not part of the English layer, so the rail has to open for them
@@ -403,19 +419,29 @@ export function LessonReader({
 
   return (
     <article className="lesson-reader">
-      {neighbours && onOpenLesson && onBackToCourse ? (
-        <LessonToolbar
-          neighbours={neighbours}
-          onOpenLesson={onOpenLesson}
-          onBackToCourse={onBackToCourse}
-          annotated={annotated}
-          englishMode={englishMode}
-          onEnglishModeChange={setEnglishModePersisted}
-          detailMode={detailMode}
-          onDetailModeChange={setDetailModePersisted}
-          completed={completed}
-          readConfirmed={readConfirmed}
-        />
+      {onBackToCourse ? (
+        <LessonToolbar onClose={onBackToCourse} sections={sections}>
+          {annotated ? (
+            // Only offered where there is something to offer. A toggle that
+            // does nothing on most lessons teaches the learner to ignore it.
+            <Tip term="english-mode">
+              <GameToggle
+                checked={englishMode}
+                label="外语模式"
+                onClick={() => setEnglishModePersisted(!englishMode)}
+              />
+            </Tip>
+          ) : null}
+          <span className="lesson-toolbar__label" id="lesson-detail-label">
+            讲解层级
+          </span>
+          <GameSegmentedControl
+            label="讲解层级"
+            activeId={detailed ? "all" : "standard"}
+            options={DETAIL_OPTIONS}
+            onSelect={(id) => setDetailModePersisted(id === "all" ? "all" : "standard")}
+          />
+        </LessonToolbar>
       ) : null}
       {/*
         Three columns always: empty rails still reserve width so the prose
@@ -492,7 +518,7 @@ export function LessonReader({
               evidenceBasePath={lessonPath(locator)}
               onOpenEvidence={(index, trigger) => openSourceSheet(index, trigger)}
               assets={view.lesson.assets}
-              sections={view.lesson.sections ?? []}
+              sections={sections}
               detailMode={detailMode}
             >
               {view.lesson.content}

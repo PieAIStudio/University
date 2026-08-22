@@ -20,6 +20,7 @@
     "./language/word-layer.css": "./src/language/word-layer.css",
     "./lesson/LessonNav.js": "./src/lesson/LessonNav.tsx",
     "./lesson/LessonReader.js": "./src/lesson/LessonReader.tsx",
+    "./lesson/lesson-toolbar.css": "./src/lesson/lesson-toolbar.css",
     "./markdown/MarkdownContent.js": "./src/markdown/MarkdownContent.tsx",
     "./markdown/remark-lesson-links.js": "./src/markdown/remark-lesson-links.ts",
     "./path/path-cards.css": "./src/path/path-cards.css",

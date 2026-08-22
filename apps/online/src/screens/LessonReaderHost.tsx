@@ -30,8 +30,6 @@ export function LessonReaderHost({
 }) {
   const unit = course.units.find((entry) => entry.id === unitId) ?? course.units[0]!;
   const lesson = unit.lessons.find((entry) => entry.id === lessonId) ?? unit.lessons[0]!;
-  const flat = course.units.flatMap((entry) => entry.lessons);
-  const index = flat.findIndex((entry) => entry.id === lesson.id);
   const evidenceBasePath = useMemo(() => evidenceSourceOf(lesson.evidence), [lesson.evidence]);
 
   return (
@@ -40,9 +38,6 @@ export function LessonReaderHost({
         lesson={lesson}
         course={course}
         unitId={unit.id}
-        courseTitle={course.title}
-        unitTitle={unit.title}
-        position={`${index + 1}/${flat.length}`}
         {...(evidenceBasePath ? { evidenceBasePath } : {})}
         onFollowLink={onFollowLink}
         onBack={onBack}

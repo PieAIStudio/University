@@ -24,7 +24,7 @@ import imported from "./imported.json";
  * there; only this repository's type was a stub.
  */
 import type { AnswerKey } from "@pieai/university-core";
-import type { LessonAssetView } from "@pieai/university-ui";
+import type { LessonAssetView, LessonSectionView } from "@pieai/university-ui";
 
 export type LessonAsset = LessonAssetView;
 
@@ -60,6 +60,7 @@ export interface Lesson {
   readonly title: string;
   readonly content: string;
   readonly variant?: string | null;
+  readonly sections?: readonly LessonSectionView[];
   readonly evidence: readonly EvidenceAnchor[];
   readonly assets: readonly LessonAsset[];
   readonly cards: readonly Card[];
