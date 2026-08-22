@@ -681,11 +681,16 @@ function Weather({
    */
   fog?: readonly [number, number];
 }) {
-  const [fogFrom, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
+  const [, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
+  // FogExp2 has no near plane. Density is derived from the old far so the
+  // sight-line contract stays: a course still fades where you stop reading,
+  // not where the world ends. Linear-with-near ate less of the mid-ground;
+  // if locked stones collapse into the horizon, this number is the lever.
+  const density = 1.15 / fogTo;
   return (
     <>
       <color attach="background" args={[PALETTE.skyZenith]} />
-      <fog attach="fog" args={[PALETTE.skyHorizon, fogFrom, fogTo]} />
+      <fogExp2 attach="fog" args={[PALETTE.skyHorizon, density]} />
       <SkyDome />
       {/*
         Hemisphere sky is a stop lighter than the painted zenith on purpose:
