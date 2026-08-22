@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CONCEPT_ENTRIES, type ConceptHead } from "@pieai/university-core";
+import { CONCEPT_HEADS, type ConceptHead } from "@pieai/university-core";
 
 import { LoadingTrivia } from "./LoadingTrivia.js";
 import { pickLoadingConcept } from "./pick-loading-concept.js";
@@ -43,9 +43,9 @@ function CoverProbe({ busy }: { readonly busy: boolean }) {
 
 describe("pickLoadingConcept", () => {
   it("returns a real catalogue head, never a placeholder", () => {
-    const head = pickLoadingConcept(CONCEPT_ENTRIES, () => 0);
+    const head = pickLoadingConcept(CONCEPT_HEADS, () => 0);
     expect(head).not.toBeNull();
-    expect(head?.zh).toBe(CONCEPT_ENTRIES[0]?.head.zh);
+    expect(head?.zh).toBe(CONCEPT_HEADS[0]?.zh);
     expect(head?.tagline.length).toBeGreaterThan(0);
   });
 

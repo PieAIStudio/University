@@ -31,6 +31,8 @@
     "./navigation/empty.js": "./src/navigation/empty/index.ts",
     "./navigation/slots.js": "./src/navigation/slots.tsx",
     "./navigation/university-shell.css": "./src/navigation/university-shell.css",
+    "./path/NodeCard.js": "./src/path/NodeCard.tsx",
+    "./path/UnitCard.js": "./src/path/UnitCard.tsx",
     "./path/path-cards.css": "./src/path/path-cards.css",
     "./reference/reference-panel.css": "./src/reference/reference-panel.css",
     "./reference/term-index.css": "./src/reference/term-index.css",
