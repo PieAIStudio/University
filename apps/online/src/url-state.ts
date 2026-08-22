@@ -73,7 +73,10 @@ export type View =
   | { readonly kind: "catalog" }
   // Temporary gloss-avatar lab. Not a product surface; hash-only so a static
   // host cannot 404 it. Drop the kind when the lab is retired.
-  | { readonly kind: "avatar-lab" };
+  | { readonly kind: "avatar-lab" }
+  // Side-by-side measurement of packages/avatar vs @pieai/swimmer-avatar-kit.
+  // Evidence route, not a product surface.
+  | { readonly kind: "avatar-compare" };
 
 export const WORLD: View = { kind: "world" };
 
@@ -105,6 +108,8 @@ export function toHash(view: View): string {
       return "#/catalog";
     case "avatar-lab":
       return "#/avatar-lab";
+    case "avatar-compare":
+      return "#/avatar-compare";
     case "course":
       return `#/${enc(view.studyId)}/${enc(view.courseId)}`;
     case "lesson":
@@ -123,7 +128,8 @@ export function toHash(view: View): string {
  * valid place to be.
  */
 export function fromHash(hash: string): View {
-  const parts = hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(dec);
+  const path = (hash.split("?")[0] ?? hash).replace(/^#\/?/, "");
+  const parts = path.split("/").filter(Boolean).map(dec);
   if (parts.length === 0) return WORLD;
   if (parts.length === 1 && parts[0] === "review") return { kind: "review" };
   if (parts[0] === "library") {
@@ -139,6 +145,7 @@ export function fromHash(hash: string): View {
   if (parts.length === 1 && parts[0] === "practice") return { kind: "practice" };
   if (parts.length === 1 && parts[0] === "catalog") return { kind: "catalog" };
   if (parts.length === 1 && parts[0] === "avatar-lab") return { kind: "avatar-lab" };
+  if (parts.length === 1 && parts[0] === "avatar-compare") return { kind: "avatar-compare" };
   if (parts.length === 1 && parts[0] === "concepts") return { kind: "concepts" };
   if (parts.length === 2 && parts[0] === "concepts" && parts[1]) {
     return { kind: "concept", id: parts[1] };

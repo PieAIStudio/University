@@ -6,11 +6,12 @@
  * for. That split is not taste — a Chinese IME, selectable code, a screen
  * reader and a phone keyboard all degrade to nothing inside WebGL.
  *
- * There is exactly one `<Canvas>` at a time. `Stage` owns the world map and
- * stays mounted across the two map levels. The temporary `#/avatar-lab` route
- * unmounts `Stage` and mounts its own studio canvas, so the two never share a
- * frame. Mounting a second one beside the first would be the fastest way to
- * end up with two renderers and a colour pipeline nobody can count.
+ * There is exactly one `<Canvas>` at a time on product routes. `Stage` owns
+ * the world map and stays mounted across the two map levels. The temporary
+ * `#/avatar-lab` route unmounts `Stage` and mounts its own studio canvas, so
+ * the two never share a frame. `#/avatar-compare` also unmounts `Stage`, then
+ * mounts two studio canvases on purpose — one renderer per implementation —
+ * and is not a product surface.
  */
 import {
   Suspense,
@@ -40,6 +41,7 @@ import {
 import { courseShapeOf, progressSource } from "../progress/source";
 import { dueCards, dueTomorrow, snapshot, subscribe } from "../progress/store";
 import { AntiPatternEntryHost } from "../screens/AntiPatternEntryHost";
+import { AvatarCompare } from "../screens/AvatarCompare";
 import { AvatarLab } from "../screens/AvatarLab";
 import { ConceptEntryHost } from "../screens/ConceptEntryHost";
 import { LibraryHost, LIBRARY_VIEW_TAB, libraryTabOf } from "../screens/LibraryHost";
@@ -422,6 +424,13 @@ export function App() {
         >
           头像
         </button>
+        <button
+          className="ghost"
+          aria-current={view.kind === "avatar-compare" ? "page" : undefined}
+          onClick={() => setView({ kind: "avatar-compare" })}
+        >
+          对照
+        </button>
         <button className="ghost" onClick={() => setView({ kind: "library", tab: "concepts" })}>
           图鉴
         </button>
@@ -436,7 +445,15 @@ export function App() {
         </button>
       </nav>
 
-      {view.kind !== "avatar-lab" ? (
+      {view.kind === "avatar-lab" ? (
+        <Suspense fallback={null}>
+          <AvatarLab onOpen={setView} />
+        </Suspense>
+      ) : view.kind === "avatar-compare" ? (
+        <Suspense fallback={null}>
+          <AvatarCompare onOpen={setView} />
+        </Suspense>
+      ) : (
         <div
           className="stagewrap"
           onPointerDownCapture={(event) => {
@@ -664,10 +681,6 @@ export function App() {
         */}
           <p className="hint">{hovered ? hovered : MAP_CONTROLS_HINT}</p>
         </div>
-      ) : (
-        <Suspense fallback={null}>
-          <AvatarLab onOpen={setView} />
-        </Suspense>
       )}
 
       {view.kind === "course" &&

@@ -84,6 +84,9 @@ importers:
 
   apps/online:
     dependencies:
+      '@pieai/swimmer-avatar-kit':
+        specifier: 0.1.0
+        version: 0.1.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)
       '@pieai/swimmer-render-kit':
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)
@@ -657,6 +660,19 @@ packages:
     resolution: {integrity: sha512-HquFh7IbVl4kojJeKG8b+bs+qY67gY7jsH7dnaYU9qN8EEkp1tOK3arAg4XuC+pWYblbMjh1HZJ3gz/q2gnruQ==}
     engines: {node: '>=24 <25'}
     hasBin: true
+
+  '@pieai/swimmer-avatar-kit@0.1.0':
+    resolution: {integrity: sha512-0eR/F7TWWAp1c8sgfS8hkDvl+XpJA2x/YC8ocmvYIxHffkbGnzHicv1ap/4fN+ySgZjfLYhdc5lO4BHdISp1Sw==}
+    engines: {node: '>=24 <25'}
+    peerDependencies:
+      '@react-three/fiber': '>=9 <10'
+      react: '>=19 <20'
+      three: '>=0.180.0 <1'
+    peerDependenciesMeta:
+      '@react-three/fiber':
+        optional: true
+      react:
+        optional: true
 
   '@pieai/swimmer-render-kit@0.3.0':
     resolution: {integrity: sha512-NUWumyQdEQs52Wl83YsidJrxlZKnCF2EYPZRPAo/aH1n2Cv/BNQuNirvXvJily+07q933ts/nXxV1JT4o8RW9Q==}
@@ -2580,6 +2596,13 @@ snapshots:
   '@pieai/pro-gov@0.9.1':
     dependencies:
       '@pieai/doc-gov': 0.9.1
+
+  '@pieai/swimmer-avatar-kit@0.1.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)':
+    dependencies:
+      three: 0.185.1
+    optionalDependencies:
+      '@react-three/fiber': 9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
+      react: 19.2.7
 
   '@pieai/swimmer-render-kit@0.3.0(three@0.185.1)':
     optionalDependencies:

@@ -22,6 +22,7 @@ const views: View[] = [
   },
   { kind: "catalog" },
   { kind: "avatar-lab" },
+  { kind: "avatar-compare" },
 ];
 
 describe("the address bar", () => {
@@ -72,5 +73,13 @@ describe("the address bar", () => {
   it("keeps the temporary avatar lab on its own hash instead of treating it as a study", () => {
     expect(toHash({ kind: "avatar-lab" })).toBe("#/avatar-lab");
     expect(fromHash("#/avatar-lab")).toEqual({ kind: "avatar-lab" });
+  });
+
+  it("keeps the avatar comparison route on its own hash, including a query string", () => {
+    expect(toHash({ kind: "avatar-compare" })).toBe("#/avatar-compare");
+    expect(fromHash("#/avatar-compare")).toEqual({ kind: "avatar-compare" });
+    expect(fromHash("#/avatar-compare?seed=ak1-bear&species=bear")).toEqual({
+      kind: "avatar-compare",
+    });
   });
 });
