@@ -45,6 +45,26 @@ export function unlockEntryCount(content: string): number {
 }
 
 /**
+ * Concept ids this lesson actually names, in order, unique.
+ *
+ * Settlement shows a card only for an id that also exists in the catalogue.
+ * Resolving that second half is the caller's job: a missing catalogue entry
+ * is not a reward, and this function does not invent one.
+ */
+export function unlockedConceptIds(content: string): readonly string[] {
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  for (const link of parseLessonLinks(content)) {
+    if (tokenKind(link) !== "concept") continue;
+    const id = link.rawTarget.slice("concept:".length).trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+  }
+  return ids;
+}
+
+/**
  * The start button prints the reward. Zero is not a reward, so it is not
  * printed — "解锁 0 个" would be the product admitting the catalogue is empty.
  */

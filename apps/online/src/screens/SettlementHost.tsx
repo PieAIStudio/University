@@ -1,5 +1,6 @@
-import { useSyncExternalStore } from "react";
-import { readCourseProgress } from "@pieai/university-core";
+import { useEffect, useSyncExternalStore } from "react";
+import { getConceptEntry, isLessonComplete, readCourseProgress } from "@pieai/university-core";
+import { unlockedConceptIds } from "@pieai/university-ui";
 import { courseShapeOf } from "@pieai/university-world/course.js";
 import { settlementSize } from "@pieai/university-world/Maps.js";
 
@@ -24,6 +25,7 @@ export function SettlementHost({
   lessonId,
   onMap,
   onNext,
+  onIncomplete,
 }: {
   course: Course;
   grewFrom: { key: string; doneBefore: number } | null;
@@ -32,12 +34,31 @@ export function SettlementHost({
   lessonId: string;
   onMap: () => void;
   onNext: (unitId: string, lessonId: string) => void;
+  onIncomplete: () => void;
 }) {
   const progress = useSyncExternalStore(subscribe, snapshot);
-  const unit = course.units.find((entry) => entry.id === unitId) ?? course.units[0]!;
-  const lesson = unit.lessons.find((entry) => entry.id === lessonId) ?? unit.lessons[0]!;
+  const unit = course.units.find((entry) => entry.id === unitId);
+  const lesson = unit?.lessons.find((entry) => entry.id === lessonId);
+  const completed =
+    unit != null &&
+    lesson != null &&
+    isLessonComplete(
+      progressSource().completionOf({
+        studyId,
+        courseId: course.id,
+        unitId: unit.id,
+        lessonId: lesson.id,
+      }),
+    );
+
+  useEffect(() => {
+    if (!completed) onIncomplete();
+  }, [completed, onIncomplete]);
+
+  if (!completed || !unit || !lesson) return null;
+
   const flat = course.units.flatMap((entry) =>
-    entry.lessons.map((item) => ({ unitId: entry.id, lesson: item })),
+    entry.lessons.map((item) => ({ unit: entry, lesson: item })),
   );
   const index = flat.findIndex((entry) => entry.lesson.id === lesson.id);
   // The button is "the lesson after this one", not the world's accent.
@@ -64,6 +85,11 @@ export function SettlementHost({
   const grown = (done: number) =>
     lessons > 0 ? settlementSize(studyId, course.id, lessons, done / lessons).built : 0;
 
+  const unlocked = unlockedConceptIds(lesson.content).flatMap((id) => {
+    const entry = getConceptEntry(id);
+    return entry ? [{ id: entry.head.id, zh: entry.head.zh, tagline: entry.head.tagline }] : [];
+  });
+
   return (
     <Settlement
       lessonTitle={lesson.title}
@@ -71,11 +97,23 @@ export function SettlementHost({
       dropped={dropped}
       builtBefore={grown(doneBefore)}
       builtAfter={grown(doneAfter)}
+      doneBefore={doneBefore}
       doneAfter={doneAfter}
       lessons={lessons}
       streakDays={progress.streak.days}
-      nextTitle={next?.lesson.title ?? null}
-      onNext={next ? () => onNext(next.unitId, next.lesson.id) : null}
+      unlocked={unlocked}
+      nextLesson={next?.lesson ?? null}
+      nextUnit={next?.unit ?? null}
+      onNext={next ? () => onNext(next.unit.id, next.lesson.id) : null}
+      onStartUnit={
+        next
+          ? () => {
+              const first = next.unit.lessons[0];
+              if (!first) return;
+              onNext(next.unit.id, first.id);
+            }
+          : null
+      }
       onMap={onMap}
     />
   );

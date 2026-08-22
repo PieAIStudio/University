@@ -144,7 +144,7 @@ export function App() {
   }, [view.kind]);
 
   useEffect(() => {
-    if (view.kind !== "course" && view.kind !== "lesson") return;
+    if (view.kind !== "course" && view.kind !== "lesson" && view.kind !== "settled") return;
     // Whichever course was asked for last is the one that gets rendered, even
     // if an earlier request answers after it. Courses are fetched once and
     // cached, so this only bites on a first visit over a slow connection — and
@@ -932,6 +932,15 @@ export function App() {
               courseId: view.courseId,
               unitId,
               lessonId,
+            })
+          }
+          onIncomplete={() =>
+            setView({
+              kind: "lesson",
+              studyId: view.studyId,
+              courseId: view.courseId,
+              unitId: view.unitId,
+              lessonId: view.lessonId,
             })
           }
         />
