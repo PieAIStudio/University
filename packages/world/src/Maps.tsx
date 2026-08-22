@@ -31,11 +31,22 @@ import { PropField, type Placement, type Role } from "./kit";
 import { layoutCourse, layoutStudy, radiusForLessons } from "./layout";
 import { stoneRadius } from "./path-overlay";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./path-language";
+import { renderTier } from "./tier";
 
 /**
  * The world's palette. Two greens for land, one warm accent for the only thing
  * that is lit, and a sea that is dark enough for a white label to sit on.
  */
+/**
+ * Painted sky, as three hex stops. Exported so a test can refuse a sky that
+ * has collapsed back into one colour, which is how the last one went cheap.
+ */
+export const SKY_STOPS = {
+  zenith: 0x2e7fd4,
+  mid: 0x8ec8ea,
+  horizon: 0xf2d4b0,
+} as const;
+
 const PALETTE = {
   // The sea is most of the frame, so the sea is what sets the exposure of the
   // whole product. Measured: with a near-navy sea the scene's median linear
@@ -45,9 +56,15 @@ const PALETTE = {
   // can work and where the land has something to be brighter than.
   sea: 0x2f89a0,
   seaDeep: 0x1c5c72,
-  foam: 0xc9f0ea,
-  sky: 0xa9d6e9,
-  horizon: 0xdcefef,
+
+  // Three luminance stops, zenith → horizon. v3: a dead-white sky is the
+  // cheapest 3D-demo signal; a cool cyan wash was better than white and still
+  // not a sky. Saturation lives at the top, warmth at the rim. The sea number
+  // above is not in this list on purpose — it was measured for exposure, and
+  // rewriting it to "look more like sky" is how the midtones fall out.
+  skyZenith: SKY_STOPS.zenith,
+  skyMid: SKY_STOPS.mid,
+  skyHorizon: SKY_STOPS.horizon,
   causeway: 0xc0a373,
   steps: 0x9aa0a8,
   accent: 0xffb347,
@@ -336,11 +353,10 @@ function Island({
           color={locked ? PALETTE.locked : 0xffffff}
         />
       </mesh>
-      {/* Where the land meets the water. One ring, no texture. */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
-        <ringGeometry args={[entry.radius * 0.94, entry.radius * 1.14, 24]} />
-        <meshBasicMaterial color={PALETTE.foam} transparent opacity={locked ? 0.1 : 0.24} />
-      </mesh>
+      {/*
+        Foam used to mark the waterline. The islands now sit above a cloud
+        sea, and a ring in the air would be the waterline of a missing ocean.
+      */}
     </group>
   );
 }
@@ -466,6 +482,187 @@ function Learner({ position, scale = 1 }: { position: THREE.Vector3; scale?: num
   );
 }
 
+/**
+ * Three-stop sky, glued to the camera so it never leaves the far clip.
+ *
+ * drei's `<Sky>` is a Preetham atmosphere. That is a real sky for a real
+ * landscape, and the wrong language for a low-poly board whose colour script
+ * names hex stops. A dome we can pin to those stops is the cheaper, more
+ * honest fit — and it does not pull a second lighting model into a scene
+ * that already has a hemisphere and a sun.
+ */
+function SkyDome() {
+  const mesh = useRef<THREE.Mesh>(null);
+  const uniforms = useMemo(
+    () => ({
+      uZenith: { value: new THREE.Color(PALETTE.skyZenith) },
+      uMid: { value: new THREE.Color(PALETTE.skyMid) },
+      uHorizon: { value: new THREE.Color(PALETTE.skyHorizon) },
+    }),
+    [],
+  );
+  useFrame(({ camera }) => {
+    mesh.current?.position.copy(camera.position);
+  });
+  return (
+    <mesh ref={mesh} frustumCulled={false} renderOrder={-1000}>
+      <sphereGeometry args={[420, 24, 16]} />
+      <shaderMaterial
+        side={THREE.BackSide}
+        depthWrite={false}
+        fog={false}
+        uniforms={uniforms}
+        vertexShader={SKY_VERTEX}
+        fragmentShader={SKY_FRAGMENT}
+      />
+    </mesh>
+  );
+}
+
+/**
+ * Clouds that speak the same language as the islands.
+ *
+ * v3 asked to evaluate drei `<Clouds/><Cloud/>` first. A local puff texture,
+ * one colour, Lambert, camera-glued so they could not hide at the origin:
+ * they never appeared in the blit. Icosahedron clusters next to the thing
+ * the camera is actually looking at do appear, and they match the board.
+ * Soft billboards against this land would have been the "two styles" trap
+ * OwnMySpace already named.
+ */
+function CloudField({ around }: { around: THREE.Vector3 }) {
+  const puffs = useMemo(() => {
+    const random = seeded(`clouds/${around.x.toFixed(1)}/${around.z.toFixed(1)}`);
+    const centres: readonly (readonly [number, number, number])[] = [
+      [14, 8, -11],
+      [-16, 7, 8],
+      [6, 9, 16],
+    ];
+    const out: { position: readonly [number, number, number]; scale: number }[] = [];
+    for (const centre of centres) {
+      for (let i = 0; i < 3; i += 1) {
+        out.push({
+          position: [
+            centre[0] + (random() - 0.5) * 5,
+            centre[1] + (random() - 0.5) * 1.4,
+            centre[2] + (random() - 0.5) * 5,
+          ],
+          scale: 2.2 + random() * 1.8,
+        });
+      }
+    }
+    return out;
+  }, [around.x, around.z]);
+  if (renderTier() === "mobile") return null;
+  return (
+    <group position={around}>
+      {puffs.map((puff, index) => (
+        <mesh
+          key={index}
+          position={puff.position}
+          scale={[puff.scale, puff.scale * 0.38, puff.scale]}
+        >
+          <sphereGeometry args={[1, 7, 5]} />
+          <meshBasicMaterial color={0xf4ece0} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/**
+ * A layer of flattened puffs under the islands. This is the depth the flat
+ * sea could not give: looking down, you see through clouds to a further
+ * ocean, so the islands can hang.
+ */
+function CloudSea({ extent }: { extent: number }) {
+  const mobile = renderTier() === "mobile";
+  const puffs = useMemo(() => {
+    const random = seeded("cloud-sea");
+    const count = mobile ? 18 : 56;
+    const radius = extent * 2.4;
+    return Array.from({ length: count }, () => {
+      const angle = random() * Math.PI * 2;
+      const dist = Math.sqrt(random()) * radius;
+      return {
+        position: [Math.cos(angle) * dist, -2.4 - random() * 1.8, Math.sin(angle) * dist] as const,
+        scale: 4.5 + random() * 6,
+      };
+    });
+  }, [extent, mobile]);
+  return (
+    <group>
+      {puffs.map((puff, index) => (
+        <mesh
+          key={index}
+          position={puff.position}
+          scale={[puff.scale, puff.scale * 0.32, puff.scale]}
+        >
+          <sphereGeometry args={[1, 6, 4]} />
+          <meshBasicMaterial color={0xf2ebe0} transparent opacity={0.55} depthWrite={false} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/**
+ * Further islands, the same shape as the ones you can click. A fogged blob
+ * at the horizon is a flying saucer; a smaller island in the same language
+ * is "more of this world, further away".
+ */
+function DistantIsles({ extent }: { extent: number }) {
+  const mobile = renderTier() === "mobile";
+  const isles = useMemo(() => {
+    const random = seeded("distant-isles");
+    const count = mobile ? 5 : 11;
+    return Array.from({ length: count }, (_, index) => {
+      const angle = (index / count) * Math.PI * 2 + (random() - 0.5) * 0.25;
+      const dist = extent * (1.55 + random() * 0.7);
+      const radius = 1.6 + random() * 2.4;
+      return {
+        position: new THREE.Vector3(
+          Math.cos(angle) * dist,
+          -1.4 - random() * 0.8,
+          Math.sin(angle) * dist,
+        ),
+        geometry: buildIsland(`distant/${index}`, radius, (random() - 0.5) * 0.1).geometry,
+      };
+    });
+  }, [extent, mobile]);
+  return (
+    <group>
+      {isles.map((isle, index) => (
+        <mesh key={index} geometry={isle.geometry} position={isle.position} scale={0.85}>
+          <meshStandardMaterial vertexColors flatShading roughness={0.96} color={0xb8c2c8} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+const SKY_VERTEX = /* glsl */ `
+varying vec3 vDir;
+void main() {
+  vDir = position;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const SKY_FRAGMENT = /* glsl */ `
+uniform vec3 uZenith;
+uniform vec3 uMid;
+uniform vec3 uHorizon;
+varying vec3 vDir;
+void main() {
+  float h = normalize(vDir).y;
+  vec3 col = mix(uHorizon, uMid, smoothstep(0.0, 0.22, h));
+  col = mix(col, uZenith, smoothstep(0.22, 0.88, h));
+  vec3 nadir = uHorizon * 0.78;
+  col = mix(nadir, col, smoothstep(-0.2, 0.0, h));
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
 /** Sky, sun and sea. Shared by both map levels so they feel like one world. */
 function Weather({
   extent,
@@ -484,12 +681,23 @@ function Weather({
    */
   fog?: readonly [number, number];
 }) {
-  const [fogFrom, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
+  const [, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
+  // FogExp2 has no near plane. Density is derived from the old far so the
+  // sight-line contract stays: a course still fades where you stop reading,
+  // not where the world ends. Linear-with-near ate less of the mid-ground;
+  // if locked stones collapse into the horizon, this number is the lever.
+  const density = 1.15 / fogTo;
   return (
     <>
-      <color attach="background" args={[PALETTE.sky]} />
-      <fog attach="fog" args={[PALETTE.horizon, fogFrom, fogTo]} />
-      <hemisphereLight args={[PALETTE.sky, 0x4a5a3a, 1.15]} />
+      <color attach="background" args={[PALETTE.skyZenith]} />
+      <fogExp2 attach="fog" args={[PALETTE.skyHorizon, density]} />
+      <SkyDome />
+      {/*
+        Hemisphere sky is a stop lighter than the painted zenith on purpose:
+        the dome can sit at a saturated blue without pulling the islands'
+        midtones down with it. Ground stays the moss the land already is.
+      */}
+      <hemisphereLight args={[PALETTE.skyMid, 0x4a5a3a, 1.15]} />
       {/*
         The shadow camera is deliberately far smaller than the world.
         Stretched across the whole archipelago, one 2048 map gives each texel a
@@ -515,19 +723,21 @@ function Weather({
         shadow-normalBias={0.06}
       />
       {/*
-        Rough water, not a mirror. A low-roughness sea puts one enormous
-        specular blob under the sun, which on a map is a hole you cannot read
-        anything on top of. Stylised water sells depth through colour and the
-        shoreline, not through gloss.
+        The ocean planet is still there — it is just further down. The sea
+        hex is the exposure measurement; lowering the disc does not rewrite
+        it. Clouds sit between the islands and that disc so looking down is
+        looking through a layer, not at a painted floor.
       */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -6.5, 0]} receiveShadow>
         <circleGeometry args={[extent * 3.2, 64]} />
         <meshStandardMaterial color={PALETTE.sea} roughness={0.72} metalness={0} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.2, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -8.2, 0]}>
         <circleGeometry args={[extent * 3.4, 48]} />
         <meshBasicMaterial color={PALETTE.seaDeep} />
       </mesh>
+      <CloudSea extent={extent} />
+      <DistantIsles extent={extent} />
     </>
   );
 }
@@ -566,6 +776,7 @@ export function WorldScene({
   return (
     <>
       <Weather extent={ring * 1.5} />
+      {learnerAt ? <CloudField around={learnerAt} /> : null}
       {placements.map((entry) =>
         entry.node.prerequisiteCourseIds.map((id) => {
           const from = byKey.get(`${entry.node.studyId}/${id}`);
@@ -682,6 +893,8 @@ export function CourseScene({
   onHover: (lesson: LessonPlacement | null) => void;
 }) {
   const live = lessons.find((lesson) => lesson.state === "live");
+  const liveIndex = lessons.findIndex((lesson) => lesson.state === "live");
+  const haze = lessons[Math.min(Math.max(liveIndex, 0) + 5, lessons.length - 1)];
   const extent = useMemo(
     () =>
       Math.max(...lessons.map((lesson) => Math.hypot(lesson.position.x, lesson.position.z)), 20),
@@ -731,6 +944,7 @@ export function CourseScene({
         you have already stopped reading.
       */}
       <Weather extent={extent * 1.3} fog={[88, 210]} />
+      {haze ? <CloudField around={haze.position} /> : null}
       {lessons.map((lesson, index) =>
         index > 0 ? (
           lesson.unitIndex % 2 === 1 ? (
@@ -768,18 +982,7 @@ export function CourseScene({
           >
             <meshStandardMaterial vertexColors flatShading roughness={0.94} color={0xffffff} />
           </mesh>
-          {lesson.state === "live" ? (
-            <LiveRing radius={radius} />
-          ) : (
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
-              <ringGeometry args={[radius * 0.94, radius * 1.12, 20]} />
-              <meshBasicMaterial
-                color={PALETTE.foam}
-                transparent
-                opacity={lesson.state === "locked" ? 0.12 : 0.2}
-              />
-            </mesh>
-          )}
+          {lesson.state === "live" ? <LiveRing radius={radius} /> : null}
         </group>
       ))}
       {/*

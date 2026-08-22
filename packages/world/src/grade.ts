@@ -5,8 +5,10 @@
  * EffectComposer, a material, or any React wrapper.
  *
  * Pipeline, counted in one place so it stays counted: the scene renders linear
- * into `target`; the kit's `standalone` fragment then does ACES, the look, and
+ * into `target` (with a readable depth texture); `ao.ts` may darken that
+ * linear colour; the kit's `standalone` fragment then does ACES, the look, and
  * exactly one sRGB encode; the renderer is told to own neither for that draw.
+ * AO is a linear multiply. It is not a second grade, and it must not encode.
  *
  * Starting look is `diorama`. This world is a low-poly archipelago seen from
  * above — a miniature board — and that is the look `diorama` was measured for.
@@ -43,6 +45,8 @@ import {
   GRADE_VERTEX_SHADER,
 } from "@pieai/swimmer-render-kit/shader";
 import * as THREE from "three";
+
+import { createSceneDepthTexture } from "./ao";
 
 /**
  * Diorama plus the numbers this map actually measured.
@@ -148,8 +152,11 @@ export function assertWorldGradePipeline(renderer: THREE.WebGLRenderer): void {
 interface GradePass {
   readonly target: THREE.WebGLRenderTarget;
   resize(width: number, height: number): void;
-  /** Draw the target to the canvas. The caller has already filled the target. */
-  render(renderer: THREE.WebGLRenderer): void;
+  /**
+   * Draw `input` (or the scene target) to the canvas. The caller has already
+   * filled the scene target, and may have run AO into a different texture.
+   */
+  render(renderer: THREE.WebGLRenderer, input?: THREE.Texture): void;
   dispose(): void;
 }
 
@@ -172,6 +179,7 @@ export function createGradePass(): GradePass {
     // Linear in, always. The conversion happens once, in the kit fragment.
     colorSpace: THREE.LinearSRGBColorSpace,
     type: THREE.HalfFloatType,
+    depthTexture: createSceneDepthTexture(),
   });
 
   const uniforms = createUniforms(target.texture);
@@ -203,11 +211,12 @@ export function createGradePass(): GradePass {
       target.setSize(nextWidth, nextHeight);
       uniforms.uRes.value.set(nextWidth, nextHeight);
     },
-    render(renderer) {
+    render(renderer, input) {
       if (import.meta.env.DEV && !guarded) {
         assertWorldGradePipeline(renderer);
         guarded = true;
       }
+      uniforms.tDiffuse.value = input ?? target.texture;
       uniforms.uTime.value = performance.now() / 1000;
       const previousColorSpace = renderer.outputColorSpace;
       const previousToneMapping = renderer.toneMapping;
