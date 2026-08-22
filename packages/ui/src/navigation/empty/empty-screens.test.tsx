@@ -9,7 +9,12 @@ import {
   LEAGUE_EMPTY_DESCRIPTION,
   LEAGUE_EMPTY_TITLE,
 } from "./LeagueEmpty.js";
-import { PlansEmpty, PLANS_EMPTY_DESCRIPTION, PLANS_EMPTY_TITLE } from "./PlansEmpty.js";
+import {
+  PlansEmpty,
+  PLANS_EMPTY_ACTION,
+  PLANS_EMPTY_DESCRIPTION,
+  PLANS_EMPTY_TITLE,
+} from "./PlansEmpty.js";
 import { ProfileScreen } from "./ProfileScreen.js";
 import {
   QuestsEmpty,
@@ -34,11 +39,22 @@ describe("empty destinations", () => {
     expect(markup).toContain(QUESTS_EMPTY_ACTION);
   });
 
-  it("keeps the plans copy verbatim and has no action", () => {
+  /**
+   * The copy is pinned here because the wrong sentence on this page is
+   * expensive in a way no other empty state is. It once said the catalogue was
+   * already complete and missing nothing, which reads as "this is all yours"
+   * — and every future price is then measured against that. Nothing on this
+   * page may describe what the free product includes until someone decides
+   * what the paid one does.
+   */
+  it("promises transparency instead of describing what is included", () => {
     const markup = renderToStaticMarkup(<PlansEmpty />);
     expect(markup).toContain(PLANS_EMPTY_TITLE);
     expect(markup).toContain(PLANS_EMPTY_DESCRIPTION);
-    expect(markup).not.toContain("<button");
+    expect(markup).toContain(PLANS_EMPTY_ACTION);
+    for (const claim of ["全部内容", "不缺", "免费", "都是你的"]) {
+      expect(PLANS_EMPTY_DESCRIPTION).not.toContain(claim);
+    }
   });
 
   it("renders settings as a real page with sound and language controls", () => {
