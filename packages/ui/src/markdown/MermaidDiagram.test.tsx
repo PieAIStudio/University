@@ -48,6 +48,19 @@ describe("mermaid four-layer diagram end-to-end", () => {
     }
     expect(host.querySelector("svg")).not.toBeNull();
     expect(host.textContent).not.toContain("暂时无法渲染");
+
+    /*
+      Every label in this diagram is Chinese, and mermaid's default stack —
+      trebuchet ms, verdana, arial — contains no CJK glyph. Wherever the
+      generic `sans-serif` is a Latin face, that renders as tofu boxes with
+      the text sitting correctly in the DOM the whole time, so no assertion
+      about content can catch it. Assert the font instead: the diagram must
+      inherit the page's own token rather than a stack copied beside it.
+    */
+    const injected = host.querySelector("svg style")?.textContent ?? "";
+    expect(injected).toContain("var(--game-ui-font-body)");
+    expect(injected).not.toContain("trebuchet");
+
     root.unmount();
     host.remove();
   }, 20000);

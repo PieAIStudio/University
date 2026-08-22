@@ -36,6 +36,21 @@ async function loadMermaidRenderer(): Promise<MermaidRenderer> {
         startOnLoad: false,
         suppressErrorRendering: true,
         theme: "dark",
+        /*
+          Mermaid's own stack is `"trebuchet ms", verdana, arial, sans-serif`,
+          and not one of those fonts has a Chinese glyph in it. On a machine
+          whose generic `sans-serif` is not a CJK face — a stripped Linux
+          container, plenty of Windows installs — every label in every diagram
+          renders as tofu while the text sits correctly in the DOM. It fails
+          exactly where nobody testing on a Mac would ever see it.
+
+          The token rather than a copy of the stack: mermaid writes this into a
+          `<style>` inside the SVG, the SVG is in the document, and custom
+          properties cascade into `foreignObject`. Measured — the label font
+          resolves to the same 「Geist Variable, Noto Sans SC, …」 the prose
+          around it uses, so a diagram cannot drift away from its page.
+        */
+        fontFamily: "var(--game-ui-font-body)",
         flowchart: {
           htmlLabels: true,
           useMaxWidth: true,

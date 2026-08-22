@@ -150,6 +150,9 @@ describe("MarkdownContent Mermaid rendering", () => {
       startOnLoad: false,
       suppressErrorRendering: true,
       theme: "dark",
+      // Mermaid's default stack has no CJK glyph, and every label in this
+      // product is Chinese. See MermaidDiagram.tsx.
+      fontFamily: "var(--game-ui-font-body)",
       flowchart: {
         htmlLabels: true,
         useMaxWidth: true,
