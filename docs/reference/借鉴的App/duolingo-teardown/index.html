@@ -29,6 +29,8 @@
   .lede{color:var(--dim);margin:0 0 28px;max-width:70ch}
   .screen{display:grid;grid-template-columns:250px 1fr;gap:32px;
     padding:28px 0;border-top:1px solid var(--line)}
+  .screen.wide{grid-template-columns:480px 1fr}
+  @media(max-width:1000px){.screen.wide{grid-template-columns:1fr}.screen.wide .shot{max-width:100%}}
   .screen:first-of-type{border-top:none}
   .shot img{width:100%;border-radius:14px;border:1px solid var(--line);display:block}
   .shot .cap{font:11px/1.5 var(--mono);color:var(--dim);margin-top:8px;text-align:center}
@@ -70,9 +72,9 @@
   <div class="sub">一段 147 秒录屏里的全部屏幕、入口和机制，逐屏拆开。<br>
   这是「他们做了什么」的记录，不是「我们要做什么」的方案——方案在 v3 用户旅程里。</div>
   <div class="meta">
-    <code>来源：多邻国ScreenRecording_08-22-2026 11-35-19_1.MP4</code>
-    <code>146.8s · 1284×2778 · 60fps · iPhone 竖屏</code>
-    <code>拆帧：1 帧/秒 → 147 帧，取 27 帧为证据</code>
+    <code>来源①手机：多邻国ScreenRecording_08-22-2026 · 146.8s · 1284×2778</code>
+    <code>来源②Web：多邻国web端录屏.mp4 · 65s · 3756×2158</code>
+    <code>拆帧：1 帧/秒 → 147 + 65 帧，取 33 帧为证据</code>
     <code>录制时账号状态：连胜 0 天 · 宝石 1527 · 能量 25/25 · 经验 67,539</code>
   </div>
 </header>
@@ -477,6 +479,11 @@
   </div>
 </div>
 
+<div class="strip" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
+  <figure><img src="frames/G4b-feed-social.jpg" alt="消息中心里的 8.1x 数据卡与好友动态">
+    <figcaption>G4b · 那张 <b>8.1x</b> 数据卡——全场最聪明的一张，用真实统计当劝说文案</figcaption></figure>
+</div>
+
 <div class="screen">
   <div class="shot"><img src="frames/G5-super.jpg" alt="Super 套餐页，家庭套餐立省80%，个人套餐，Super Lite 含广告">
     <div class="cap">G5 · 01:59</div></div>
@@ -565,6 +572,81 @@
     <b>这是一处应该看懂了之后反着做的地方。</b></div>
   </div>
 </div>
+
+
+<h2 class="c"><span class="tag">W</span>Web 端：同一条蛇，两边加栏</h2>
+<p class="lede">第二段录屏（65 秒 · 3756×2158 · 桌面 Chrome）。
+<b>结论一句话：他们没有为宽屏重新设计，他们把手机版原样放中间，然后在两边补东西。</b>
+路径的形状、节点、单元条、颜色，全部和手机端一模一样。</p>
+
+<div class="screen wide">
+  <div class="shot">
+    <img src="frames/W1-web-learn.jpg" alt="Duolingo 网页版学习页，左侧导航栏，中间蛇形路径，右侧状态与任务卡片">
+    <div class="cap">W1 · duolingo.com/learn</div></div>
+  <div class="body">
+    <div class="id">W1</div><h3>三栏，尺寸是量出来的</h3>
+    <dl>
+      <dt>左 257px</dt><dd>品牌 wordmark，然后 8 项垂直导航：
+        <b>学习 · 发音 · 练习基地 · 排行榜 · 特别任务 · 宝石小店 · 个人档案 · 更多</b>。
+        当前项有描边高亮。底部一张推广卡（「想学国际象棋吗？」）。</dd>
+      <dt>中 618px</dt><dd><b>和手机端逐像素同构</b>：sticky 彩色单元条 → 蛇形路径 → 分段横线。</dd>
+      <dt>右 366px</dt><dd>顶部状态条（🇺🇸 / 🔥0 / 💎1527 / <b>❤️5</b>）+ 三张卡：
+        Super 推广 · 白银等级（排行榜缩略）· 每日特别任务（3 条带进度条）+ 一张反广告拦截器卡。</dd>
+    </dl>
+    <div class="why"><b>手机端的 6 个 tab 去哪了</b>：拆成两半。
+    「学习/排行榜/特别任务/商店/个人」变成左栏导航；
+    「状态数字 + 任务进度 + 排行榜战况」变成右栏卡片。
+    <b>底部 tab bar 承担的两件事——去哪、现在怎么样——在宽屏被分给了两侧。</b><br>
+    <b>右栏是随路由变的</b>：/learn 是任务与排行榜，/quests 变成徽章墙，/settings 变成设置子导航。
+    它不是固定挂件区，是<b>「当前页的上下文栏」</b>。</div>
+    <div class="port"><b>这正是 v3 决定三。</b>我们右栏放 3D——多邻国那三张卡是广告、排行榜和任务，
+    我们有一座会长房子的岛。<b>同样的位置，我们放得进更值钱的东西。</b></div>
+  </div>
+</div>
+
+<div class="screen wide">
+  <div class="shot">
+    <img src="frames/W2-web-path-skip.jpg" alt="网页版路径滚动到锁定段，节点上方有开始气泡，段落之间有跳级到这儿按钮">
+    <div class="cap">W2 · 路径细节</div></div>
+  <div class="body">
+    <div class="id">W2</div><h3>手机端没看清的两个东西</h3>
+    <dl>
+      <dt>「开始」<br>气泡</dt><dd>当前节点<b>正上方常驻</b>一个小橙色标签写着「开始」。
+        不是点击才出现——它一直在，就是「你在这儿」的路标。</dd>
+      <dt>「跳级到<br>这儿?」</dt><dd>两个分段之间的路上，<b>直接立着一个按钮</b>。
+        E1 里那个藏在阶段总览里的跳级，在路径上也有入口。</dd>
+      <dt>分段标题</dt><dd>灰色居中文字 + 两侧横线：
+        <code>— Solo trip: Express feelings about travel —</code>，前后段都标出来。</dd>
+    </dl>
+    <div class="why"><b>「跳级」放在路上而不是只放在菜单里</b>：
+    它出现在你<b>刚好开始觉得无聊的那个位置</b>——你滚到了还没解锁的一段，正在想「这些我会不会已经会了」。
+    <b>把出口放在动机产生的地方，而不是放在设置里。</b></div>
+    <div class="port"><b>能搬。</b>我们的 52 门课有难度差，一个已经会写代码的人不该被迫从《读懂一行代码》开始。
+    路径上的「跳级」+ 三题定级测验（<code>CourseRouteQuiz.tsx</code> 已经写好了，只是没挂上）就是答案。</div>
+  </div>
+</div>
+
+<div class="strip">
+  <figure><img src="frames/W3-web-characters.jpg" alt="网页版发音页，音标卡网格"><figcaption>W3 · 发音（web 上是一级导航）</figcaption></figure>
+  <figure><img src="frames/W4-web-shop.jpg" alt="网页版宝石小店，红心补给"><figcaption>W4 · 商店（web 仍是红心）</figcaption></figure>
+  <figure><img src="frames/W5-web-quests.jpg" alt="网页版特别任务，右栏变成徽章墙"><figcaption>W5 · 任务（右栏=徽章墙）</figcaption></figure>
+  <figure><img src="frames/W6-web-settings.jpg" alt="网页版设置，右栏变成设置子导航"><figcaption>W6 · 设置（右栏=子导航）</figcaption></figure>
+</div>
+
+<h3>两端不一致的地方（同一个账号，同一天）</h3>
+<table>
+  <tr><th></th><th>手机端</th><th>Web 端</th><th>说明</th></tr>
+  <tr><td><b>体力系统</b></td><td>⚡ 能量 25/25</td><td><b>❤️ 红心 5</b></td>
+      <td>Web 还没换成能量。商店里卖的也是「补心 / 无限红心」而不是能量</td></tr>
+  <tr><td><b>发音 / 练习</b></td><td>埋在「个人主页」下面第 2、4 项</td><td><b>左栏一级导航</b></td>
+      <td>宽屏有位置，就不用埋</td></tr>
+  <tr><td><b>Super</b></td><td>独立一个 tab</td><td>并进「宝石小店」</td><td>—</td></tr>
+  <tr><td><b>消息中心</b></td><td>独立一个 tab（社交 feed）</td><td><b>没有</b></td><td>社交只在 App</td></tr>
+</table>
+<p class="lede" style="margin-top:14px"><b>这张表本身是一条情报</b>：
+连多邻国这个体量，两端也没有做到一致——而且不一致的正好是<b>变现系统</b>（能量 vs 红心）。
+<b>我们要求两端一致，这个目标比多邻国自己做到的还高。</b>
+能达成的前提是我们从一开始就把它做成一份代码，而不是先做两份再去对齐。</p>
 
 <h2><span class="tag">END</span>拆完之后，八条可迁移的规则</h2>
 <table>

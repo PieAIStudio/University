@@ -224,9 +224,9 @@ tbody tr:hover{background:#12171e}
   多邻国右边填的是排行榜和促销，因为他们没有别的东西可放。
   我们有一座会长房子的岛——<b>16:9 多出来的那块地方，正好是移动端装不下 three.js 的地方。</b>
   同一个约束，在两个视口上一个是负担、一个是机会。</p>
-  <p class="cite">这也顺带解决了移动端的性能问题：<code>three</code> + <code>@react-three/fiber</code> + <code>drei</code>
-  在移动端首屏是实打实的几百 KB 和一次 GPU 唤醒。移动端<b>默认不加载 3D</b>，
-  只在「看看我的世界」和结算庆祝时按需 <code>import()</code>。</p>
+  <p class="cite"><b>性能不在这份文档的讨论范围内。</b>模型还没进来，现有的都是占位几何体，
+  这时候估体积和帧率是在给还不存在的东西做优化。等模型进来了再量真机、再收敛。
+  这一版只解决三件事：<b>好看、好用、认知负担低</b>。</p>
 </div>
 
 <h2 class="alt"><span class="n">骨架</span>导航壳：一份代码，两个布局</h2>
@@ -273,10 +273,9 @@ tbody tr:hover{background:#12171e}
 <dl class="spec">
   <dt>断点</dt><dd>
     <ul>
-      <li><code>&lt; 768px</code> — 单栏 + 底部 tab bar。<b>不加载 3D。</b></li>
-      <li><code>768–1180px</code> — 双栏：左导航坍成 <code>72px</code> 图标条，右栏隐藏，
-        状态条上移进中栏顶部。3D 仍不加载。</li>
-      <li><code>≥ 1180px</code> — 三栏。<b>此时才 <code>import()</code> 3D。</b></li>
+      <li><code>&lt; 768px</code> — 单栏 + 底部 tab bar。</li>
+      <li><code>768–1180px</code> — 双栏：左导航坍成图标条，右栏隐藏，状态条上移进中栏顶部。</li>
+      <li><code>≥ 1180px</code> — 三栏。</li>
     </ul></dd>
   <dt>为什么<br>断在这</dt><dd>1180 = 120（左）+ 620（中）+ 150（右）+ 间距，是三栏能站住的最小宽度。
     低于它右栏会挤到 3D 画布小于 200px，那时候 3D 传达不了任何信息，只剩耗电。</dd>
@@ -288,6 +287,182 @@ tbody tr:hover{background:#12171e}
 左 ~256px / 中 ~600–630px / 右 ~368px，断点 ~768（去底栏）与 ~1160（放出右栏）。
 两家都明确说「<b>不要做横向 timeline</b>，2022 改版就是为了消灭分支树」。
 <b>我没能亲自量</b>——<code>/learn</code> 需要登录，我不会登录你的账号。这条按「两家一致但未亲验」采信。</p>
+
+
+<h2 class="alt2"><span class="n">网</span>主路径与岔口：网状学习，但一次只露三个</h2>
+<p class="lede">网状学习确实更符合大脑——关联记忆比孤立记忆牢。
+但把 52 门课 558 节课 281 个概念之间的关系一次画出来，那不是地图，是毛线球。
+这一节给出的折中是：<b>前方永远只有一条路加最多三个岔口；网只在你身后显现。</b></p>
+
+<h3>先看真实数据：网现在几乎不存在</h3>
+<table>
+  <tr><th>东西</th><th>数量</th><th>说明</th></tr>
+  <tr><td><code>[[evidence:]]</code> 证据锚点</td><td><b>1,815</b></td><td>指向真实提交。不是岔口，是课文内的引用</td></tr>
+  <tr><td><code>[[lesson:]]</code> 课时引用</td><td>420</td>
+      <td>其中 <b>383 条是同一门课内部</b>（「见上一节」），<b>跨课的只有 5 条</b></td></tr>
+  <tr><td><code>[[term:]]</code> 词条引用</td><td><b>0</b></td><td>机制建好了，一条没用</td></tr>
+  <tr><td>概念词条</td><td>281</td><td><b>现成的网材料</b>，只是还没有任何一节课链过去</td></tr>
+  <tr><td>悬空链接</td><td><b>32</b></td><td>⚠️ 指向不存在的课时 id。这是 bug，要单独修</td></tr>
+</table>
+<p>换句话说：<b>你担心的「网太密会让人痛苦」现在不是风险，因为网还没织。</b>
+这是好消息——我们可以按设计决定密度，而不是去收拾一团已经乱掉的线。</p>
+
+<h3>三层链接，分工明确</h3>
+<table>
+  <tr><th>层</th><th>是什么</th><th>上不上 3D 路径</th><th>数据</th></tr>
+  <tr><td><b>① 主路径 Spine</b></td><td>硬先修 + 推荐顺序，合成<b>一条线</b>。永远只有一个「下一步」</td>
+      <td><b>上。</b>路中央的大节点</td><td>先修 DAG 有了，<b>全序缺</b></td></tr>
+  <tr><td><b>② 岔口 Spur</b></td><td>「想深入就拐一下」：一个概念词条，或另一门课的一节</td>
+      <td><b>上，但受收敛规则限制</b>。路边小节点 + 细线</td><td><b>要补</b>：主要靠 <code>[[term:]]</code></td></tr>
+  <tr><td><b>③ 行内引用 Inline</b></td><td>课文里的链接，点开是浮层</td>
+      <td><b>不上。</b>281 个词条全上路径必然爆炸</td><td>281 概念 + 267 术语已有</td></tr>
+</table>
+<p>你说的「岔出去一个名词解释，比如什么叫前端」和「跳到别的课程」——<b>都是第 ② 层</b>。
+第 ③ 层是同样的词条在<b>课文内部</b>被提到时的样子，两者共用同一批内容，只是出现的位置不同。</p>
+
+<h3>收敛规则：三格窗</h3>
+<div class="frames" style="align-items:flex-start">
+  <div class="fr">
+    <div class="lab">路上视角 · 岔口只在窗口内出现</div>
+    <svg viewBox="0 0 460 300" style="width:460px;max-width:100%;background:#0a0d11;border:1px solid var(--line);border-radius:10px">
+      <defs><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#0a0d11"/><stop offset="1" stop-color="#0a0d11" stop-opacity="0"/></linearGradient></defs>
+      <path d="M230 40 C210 70 260 92 250 112 C238 138 178 150 190 168 C204 190 288 200 276 220 C262 244 150 258 162 278"
+        stroke="#3f6b52" stroke-width="15" fill="none" stroke-linecap="round" opacity=".8"/>
+      <!-- spurs from current -->
+      <g stroke="#ce82ff" stroke-width="1.6" opacity=".75" fill="none">
+        <path d="M190 168 L112 146"/><path d="M190 168 L104 186"/><path d="M190 168 L126 208"/></g>
+      <g stroke="#58cc02" stroke-width="1.4" opacity=".45" fill="none">
+        <path d="M276 220 L352 202"/><path d="M276 220 L358 238"/></g>
+      <!-- behind: the mesh appearing -->
+      <g stroke="#58cc02" stroke-width="1" opacity=".3" stroke-dasharray="3 3" fill="none">
+        <path d="M352 202 L358 238"/><path d="M352 202 L300 268"/></g>
+      <!-- main nodes -->
+      <circle cx="162" cy="278" r="15" fill="#58cc02"/><text x="162" y="284" text-anchor="middle" font-size="12">✓</text>
+      <circle cx="276" cy="220" r="14" fill="#58cc02"/><text x="276" y="226" text-anchor="middle" font-size="11">✓</text>
+      <circle cx="190" cy="168" r="17" fill="#ce82ff" stroke="#ce82ff" stroke-opacity=".28" stroke-width="8"/>
+      <text x="190" y="175" text-anchor="middle" font-size="13">▶</text>
+      <circle cx="250" cy="112" r="12" fill="#2b3441"/><text x="250" y="117" text-anchor="middle" font-size="9">🔒</text>
+      <circle cx="230" cy="42" r="8" fill="#2b3441" opacity=".55"/>
+      <!-- spur nodes -->
+      <g><circle cx="112" cy="146" r="8" fill="#ce82ff"/><circle cx="104" cy="186" r="8" fill="#ce82ff"/>
+         <circle cx="126" cy="208" r="8" fill="#ce82ff"/></g>
+      <g opacity=".5"><circle cx="352" cy="202" r="7" fill="#58cc02"/><circle cx="358" cy="238" r="7" fill="#58cc02"/>
+         <circle cx="300" cy="268" r="6" fill="#58cc02"/></g>
+      <rect x="0" y="20" width="460" height="60" fill="url(#fg)"/>
+      <text x="60" y="132" fill="#ce82ff" font-size="10" font-family="monospace">当前 · 岔口全亮 ≤3</text>
+      <text x="326" y="180" fill="#58cc02" font-size="10" font-family="monospace" opacity=".7">身后 · 网显现</text>
+      <text x="286" y="100" fill="#5b6675" font-size="10" font-family="monospace">前方 · 岔口不画</text>
+    </svg>
+  </div>
+  <div style="flex:1;min-width:280px">
+    <p style="margin-top:26px"><b>规则一句话</b>：岔口只在<b>当前节点前后各一格</b>的窗口里出现，
+    每个节点最多 3 个。</p>
+    <p><b>所以屏幕上任何时刻岔口数 ≤ 9，而且这是常数上界</b>——
+    52 门课变成 200 门、281 个概念变成 2000 个，屏幕上还是 ≤9。
+    <b>认知负担不随内容增长</b>，这是这条规则唯一存在的理由。</p>
+    <div class="ac"><b>编程上就是四行</b>
+    <pre style="margin:6px 0 0;font:12px/1.7 var(--mono);color:#b9c6d6;overflow-x:auto">const SPUR_WINDOW = 1;  // 当前节点前后各 1 格
+const SPUR_MAX = 3;     // 每节点最多 3 个岔口
+const visible = nodes
+  .filter(n =&gt; Math.abs(n.index - currentIndex) &lt;= SPUR_WINDOW)
+  .flatMap(n =&gt; n.spurs.slice(0, SPUR_MAX));</pre></div>
+    <p style="margin-top:14px">没有图算法，没有力导向布局，没有遍历。<b>一个 filter 加一个 flatMap。</b>
+    这就是你要的「不要为了实现网状把程序弄得特复杂」。</p>
+  </div>
+</div>
+
+<div class="dec">
+  <h4>关键设计：网只在身后显现</h4>
+  <p><b>前方是路，身后是网。</b>没走过的节点，岔口完全不画——前方永远清清爽爽一条路。
+  走过之后，那些你点开过的岔口<b>亮着留在原地</b>，而且<b>彼此之间连线</b>
+  （因为同一个概念会被好几节课引用到）。</p>
+  <p>你往前走得越远，回头看，身后的网越密越亮。
+  <b>那张网就是「我学到的东西是互相连着的」这件事本身，被画了出来。</b></p>
+  <p>这也是 <b>3D 才做得好</b>的地方：平面上画身后的网会糊成一团，
+  3D 里往回看是有纵深的——近的清楚，远的淡去，网自然分层。
+  <b>这是 3D 在这个产品里第一次不是装饰，而是唯一能表达这个信息的媒介。</b></p>
+</div>
+
+<h2 class="warn"><span class="n">序</span>课程顺序：你指出的问题是真的，这是数据</h2>
+<p class="lede">你说「所有课程都不能是多门课同时进行，肯定有先后顺序」。
+我把 52 门课的先修关系全跑了一遍，<b>你说对了，而且问题集中在两个 study</b>。</p>
+<table>
+  <tr><th>Study</th><th>课数</th><th>结构</th><th>诊断</th></tr>
+  <tr><td><b>supaluv</b></td><td>7</td><td>7 门完全链式，深度 0→6 每层 1 门</td>
+      <td>✅ <b>已经是一条完美的线</b>，不用动</td></tr>
+  <tr><td><b>university-local</b></td><td>9</td><td>深度 0–4 单线，深度 5 分出 3 门，深度 6 收回 1 门</td>
+      <td>🟡 只有一处要排序（3 门）</td></tr>
+  <tr><td><b>buzz</b></td><td>5</td><td><b>5 门全部零先修</b></td>
+      <td>❌ 完全平铺，没有任何顺序信息</td></tr>
+  <tr><td><b>turing-pact</b></td><td>31</td>
+      <td>深度 0 有 3 门；深度 1–8 是漂亮的单线（foundations 九连）；
+        <b>深度 9 一次炸开 9 门</b>；深度 10 再 6 门；深度 11 再 3 门</td>
+      <td>❌ <b>主要问题在这</b></td></tr>
+</table>
+
+<h3>foundations 九连是对的，别动它</h3>
+<p><code>turing-pact</code> 的主干本身就是一条从简单到难的完美路径，标题自己就在讲这件事：</p>
+<p style="font:13.5px/2.1 var(--mono);color:var(--dim);background:var(--panel);
+  border:1px solid var(--line);border-radius:10px;padding:14px 18px;max-width:none">
+《在开始之前：App、代码、和你》→《认识地形》→《读懂一行代码》→《读懂一段逻辑》→
+《数据从哪来》→《等待与失败》→《界面是怎么长出来的》→《怎么知道没写错》→《代码之外》</p>
+<p>问题在这条主干<b>之后</b>：走完《代码之外》，9 门课同时解锁，而且它们只共享一个先修。</p>
+
+<h3>解法：先修是硬约束，顺序是软推荐，两者分开</h3>
+<div class="dec">
+  <h4>不要改先修关系，要新增一个字段</h4>
+  <p><b>先修（<code>prerequisiteCourseIds</code>）说的是「不学 X 就看不懂 Y」——那是真的，不能为了排队去撒谎。</b>
+  《契约与防漂移》确实只需要《代码之外》打底，硬加一个假先修会让内容说谎。</p>
+  <p>要补的是另一个东西：<b>推荐顺序</b>。9 门都解锁了，我们建议先学哪个。
+  加一个 <code>spineOrder</code>（或一份显式有序清单），规则只有一条：</p>
+  <p style="font:13px/1.8 var(--mono);background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;padding:12px 16px"><b>spineOrder 必须是先修 DAG 的一个线性扩展。</b><br>
+    也就是：如果 A 是 B 的先修，那么 order(A) &lt; order(B)。</p>
+  <p>这一条可以<b>写成测试</b>，作者排错顺序 CI 直接红。
+  这样主路径永远是一条线、永远只有一个下一步，而先修图仍然诚实——
+  <b>它退到幕后，只负责「你还没资格进这里」的判定。</b></p>
+</div>
+
+<h3>depth 9 那九门，排序初稿（供作者审，不是我说了算）</h3>
+<p>排序原则：<b>具体 → 抽象</b>。能指着屏幕说「就是这个」的排前面，
+需要先有系统观才谈得上的排后面。</p>
+<table>
+  <tr><th>#</th><th>课程</th><th>为什么在这个位置</th></tr>
+  <tr><td>1</td><td>《谁在线，谁在打字》<br><code>realtime-presence</code></td>
+      <td>最具体，屏幕上看得见的东西。而且它已经是 4 门课的先修，排前面天然合理</td></tr>
+  <tr><td>2</td><td>《身份、账号、和「你是谁」》<br><code>identity-and-accounts</code></td>
+      <td>每个人都用过登录，有现成直觉可借</td></tr>
+  <tr><td>3</td><td>《用户那边出错时，产品怎么自己爬起来》<br><code>failure-recovery</code></td>
+      <td>具体场景驱动，且承接《等待与失败》</td></tr>
+  <tr><td>4</td><td>《测试策略：把钱花在刀刃上》<br><code>testing-strategy</code></td>
+      <td>承接《怎么知道没写错》，是它的产品级延伸</td></tr>
+  <tr><td>5</td><td>《同一个能力，三种实现》<br><code>platform-capabilities</code></td>
+      <td>开始抽象，但仍有具体对照物。且它是 AI 那条支线的入口</td></tr>
+  <tr><td>6</td><td>《双语不是翻译表》<br><code>bilingual-by-design</code></td>
+      <td>本项目的真实痛点，有大量证据锚点可用</td></tr>
+  <tr><td>7</td><td>《一套代码，多端交付》<br><code>one-codebase-many-hosts</code></td>
+      <td>需要先见过两个 shell 才有感觉</td></tr>
+  <tr><td>8</td><td>《契约与防漂移》<br><code>contracts-and-drift</code></td>
+      <td>抽象，需要前面所有具体例子当素材</td></tr>
+  <tr><td>9</td><td>《状态与过程：半年后还改得动》<br><code>state-and-process</code></td>
+      <td>最抽象，必须有维护经验才听得懂</td></tr>
+</table>
+<p class="cite"><b>这是初稿，作者说了算。</b>我能给的是原则和一个起点，
+「哪门课更难」是内容判断，不是算法判断——我不会假装它是。</p>
+
+<h3>buzz 的 5 门：零先修，需要作者直接给顺序</h3>
+<p><code>buzz-orientation</code>（定位/入门）从名字看应该在最前，
+其余 4 门（<code>agents-as-members</code> / <code>design-tokens</code> / <code>one-message</code> /
+<code>reading-rust</code>）之间没有任何顺序信息。<b>这个我给不了有依据的建议，需要你或作者定。</b></p>
+
+<div class="dec hm">
+  <h4>顺带发现一个要单独修的 bug</h4>
+  <p><b>32 条 <code>[[lesson:]]</code> 链接指向不存在的课时 id。</b>
+  它们现在应该是渲染成了死链或者被静默丢弃。
+  这不属于 v3 设计范围，但既然查出来了就记在这里——修它需要一个校验脚本，
+  和 <code>check-lesson-anchors.mjs</code> 是同一类工具。</p>
+</div>
 
 <h2 class="alt2"><span class="n">屏</span>十二屏，一屏一节</h2>
 <p class="lede">每屏四件事：<b>线框</b>（移动 + Web 并排）、<b>规格</b>、<b>我们现在有什么</b>（诚实标注）、
@@ -357,7 +532,7 @@ tbody tr:hover{background:#12171e}
   <div class="ac"><b>验收</b><ol>
     <li>不用滚动就能看见当前节点，或看见 <code>↓ 回到当前</code>。</li>
     <li>560 个 lesson 全部是可 Tab 到达的 <code>&lt;a href&gt;</code>，节点上有 <code>aria-label</code>。</li>
-    <li>移动端首屏<b>不下载 three.js</b>（Network 面板可验）。</li>
+    <li>当前节点周围的岔口 ≤ 3 个，其余节点的岔口不渲染（见「主路径与岔口」）。</li>
     <li>路径节点顺序 === <code>depthsFromPrerequisites</code> 的拓扑序，有测试比对。</li>
     <li>把窗口从 1440 拖到 375，布局在 1160 / 768 两处切换，中间无横向滚动条。</li>
   </ol></div>
@@ -492,13 +667,12 @@ tbody tr:hover{background:#12171e}
     <dt>点岛 =</dt><dd><b>切换 study</b>，不是进课。切完中栏路径整条换成那个世界的课。
       这跟 D1 课程切换器是同一个动作的两种形态——<b>一个动作，两个入口，不是两套逻辑。</b></dd>
     <dt>压暗</dt><dd>SPEC-0003 表格里「focus track → 世界压暗其余」那一行，原样保留。</dd>
-    <dt>加载</dt><dd>移动端与 &lt;1160 的 Web <b>不挂载</b>。动态 <code>import()</code>，
-      加载时显示屏 11 的加载文案（F1 手法）。</dd>
+    <dt>缩放档</dt><dd>路上视角 ⇄ 地图视角是<b>同一个场景的两个相机档位</b>，不是两个页面。
+      缩出 = 看全局与选世界，缩进 = 回到路上。</dd>
     <dt>共享</dt><dd>场景本体搬到 <b><code>packages/world</code></b>（独立包，不是 <code>packages/ui</code>）。
       理由见文末「和任务一的关系」。</dd>
   </dl>
   <div class="ac"><b>验收</b><ol>
-    <li>移动端首屏 Network 里<b>没有 three</b>；点「我的世界」后才出现。</li>
     <li>两个 shell 渲染的是<b>同一个组件</b>，<code>check-module-boundaries.mjs</code> 能证明没有第二份。</li>
     <li>3D 挂了（WebGL 不可用 / 加载失败）时，路径与全部功能<b>照常工作</b>，右栏换成文字摘要。</li>
   </ol></div>
