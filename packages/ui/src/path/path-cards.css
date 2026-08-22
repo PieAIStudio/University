@@ -186,7 +186,7 @@
   */
   background: var(--game-ui-panel, #121826);
   color: var(--game-ui-accent-ink, #ffb072);
-  font-family: var(--game-ui-font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace);
+  font-family: var(--game-ui-font-mono);
   font-size: 0.78rem;
   word-break: break-all;
 }

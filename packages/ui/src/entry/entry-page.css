@@ -102,7 +102,7 @@
 }
 
 .entry-head__phonetic {
-  font-family: var(--game-ui-font-mono, ui-monospace, monospace);
+  font-family: var(--game-ui-font-mono);
 }
 
 .entry-head__colloquial,
@@ -488,7 +488,7 @@ span.entry-section__sense {
 }
 
 .demo__viewport {
-  border: 1px solid var(--game-ui-border, #253048);
+  border: 1px solid var(--game-ui-border-subtle);
   border-radius: 12px;
   background: var(--game-ui-panel, #121826);
   padding: 20px;
@@ -550,8 +550,8 @@ span.entry-section__sense {
     135deg,
     var(--game-ui-panel-deep, #0c1018),
     var(--game-ui-panel-deep, #0c1018) 6px,
-    var(--game-ui-border, #253048) 6px,
-    var(--game-ui-border, #253048) 7px
+    var(--game-ui-border-subtle) 6px,
+    var(--game-ui-border-subtle) 7px
   );
   display: grid;
   place-items: center;
@@ -589,14 +589,14 @@ span.entry-section__sense {
   flex-wrap: wrap;
   gap: 8px;
   padding: 12px;
-  border: 1px solid var(--game-ui-border, #253048);
+  border: 1px solid var(--game-ui-border-subtle);
   border-radius: 12px;
   background: var(--game-ui-panel, #121826);
 }
 
 .region-quiz__region {
   flex: 1 1 100%;
-  border: 1px dashed var(--game-ui-border, #253048);
+  border: 1px dashed var(--game-ui-border-subtle);
   border-radius: 8px;
   /*
     `panel` rather than `panel-deep`. On night the two are close; on light
@@ -649,6 +649,6 @@ span.entry-section__sense {
 .demo__divider {
   width: 100%;
   border: 0;
-  border-top: 1px solid var(--game-ui-border, #253048);
+  border-top: 1px solid var(--game-ui-border-subtle);
   margin: 4px 0;
 }

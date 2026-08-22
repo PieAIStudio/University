@@ -21,8 +21,8 @@ importers:
   apps/local:
     dependencies:
       '@pieai/swimmer-ui-kit':
-        specifier: 1.5.0
-        version: 1.5.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 1.6.0
+        version: 1.6.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -91,8 +91,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
-        specifier: 1.5.0
-        version: 1.5.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 1.6.0
+        version: 1.6.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -180,8 +180,8 @@ importers:
         specifier: ^0.27.20
         version: 0.27.20(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/swimmer-ui-kit':
-        specifier: 1.5.0
-        version: 1.5.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 1.6.0
+        version: 1.6.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
@@ -718,8 +718,8 @@ packages:
       three:
         optional: true
 
-  '@pieai/swimmer-ui-kit@1.5.0':
-    resolution: {integrity: sha512-yf6Vmr5pTRPDzUUn9/71ArsyXrEuqZpU1+TZG1KuhzJHxc0NBfEHlgP7Lz6c+mUdq9eIZ1/y36TZlhLaZ6iP3Q==}
+  '@pieai/swimmer-ui-kit@1.6.0':
+    resolution: {integrity: sha512-9BHx+kNHcf5ju/opdYAvNO+iGP65sCV41v9yrk2fSbb0aRBKMaiMU6MabNgWzNgKwh6DFVhTdoPSUxAEIP7ZrA==}
     engines: {node: '>=24 <25'}
     hasBin: true
     peerDependencies:
@@ -2649,7 +2649,7 @@ snapshots:
     optionalDependencies:
       three: 0.185.1
 
-  '@pieai/swimmer-ui-kit@1.5.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+  '@pieai/swimmer-ui-kit@1.6.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)

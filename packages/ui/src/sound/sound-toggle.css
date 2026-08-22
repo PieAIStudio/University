@@ -3,7 +3,7 @@
  * the world map, so it carries its own box rather than inheriting one.
  */
 .sound-toggle {
-  border: 1px solid var(--line, rgb(255 255 255 / 18%));
+  border: 1px solid var(--game-ui-border-subtle);
   background: transparent;
   color: inherit;
   border-radius: 999px;

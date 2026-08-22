@@ -12,7 +12,6 @@
   --read-body: 1.06rem;
   --read-line: 1.9;
   --read-measure: 34em;
-  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 }
 
 * {
@@ -362,7 +361,7 @@ button.block {
 
 .picked dd {
   margin: 0;
-  font-family: var(--mono);
+  font-family: var(--game-ui-font-mono);
   color: var(--game-ui-text, #e9edf5);
 }
 
@@ -401,7 +400,7 @@ button.block {
 .lesson__en {
   flex: 0 0 auto;
   padding: 3px 8px;
-  font: 600 0.68rem / 1 var(--mono);
+  font: 600 0.68rem / 1 var(--game-ui-font-mono);
   letter-spacing: 0.06em;
   color: var(--game-ui-text-muted, #9aa6bb);
   background: transparent;
@@ -416,7 +415,7 @@ button.block {
 
 .lesson__en:hover {
   color: var(--game-ui-text, #e6ecf5);
-  border-color: var(--game-ui-border, rgba(255, 255, 255, 0.24));
+  border-color: var(--game-ui-border-strong);
 }
 
 .lesson__en--on {
@@ -466,7 +465,7 @@ button.block {
 }
 
 .lesson__body code {
-  font-family: var(--mono);
+  font-family: var(--game-ui-font-mono);
 }
 
 .lesson__body p code {
@@ -487,7 +486,7 @@ button.block {
   background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 9%, transparent);
   border-radius: 0 8px 8px 0;
   font-size: 0.76rem;
-  font-family: var(--mono);
+  font-family: var(--game-ui-font-mono);
   color: var(--game-ui-text-muted, #9aa6bb);
 }
 
@@ -564,7 +563,7 @@ button.block {
 .tier {
   display: inline-block;
   margin-left: 8px;
-  font-family: var(--mono);
+  font-family: var(--game-ui-font-mono);
   font-size: 0.72rem;
   color: var(--game-ui-text-muted, #9aa6bb);
 }
@@ -592,7 +591,7 @@ button.block {
 }
 
 .clue__src {
-  font-family: var(--mono);
+  font-family: var(--game-ui-font-mono);
   font-size: 0.74rem;
   color: var(--game-ui-text-muted, #9aa6bb);
   overflow-wrap: anywhere;
@@ -707,7 +706,7 @@ button.block {
 }
 
 .empty code {
-  font-family: var(--mono);
+  font-family: var(--game-ui-font-mono);
   color: var(--game-ui-accent, #5ec8c0);
 }
 
@@ -997,7 +996,7 @@ button.label:focus-visible {
 
 .settle__card {
   padding: 0.8rem 0;
-  border-top: 1px solid var(--game-ui-line, rgba(255, 255, 255, 0.09));
+  border-top: 1px solid var(--game-ui-border-subtle);
   display: grid;
   gap: 0.3rem;
 }
@@ -1230,7 +1229,7 @@ button.label:focus-visible {
 }
 
 .catalog__depth {
-  font-family: var(--mono);
+  font-family: var(--game-ui-font-mono);
   font-size: 0.78rem;
   padding: 2px 6px;
   border-radius: 4px;
@@ -1376,7 +1375,7 @@ button.label:focus-visible {
   border-radius: var(--game-ui-radius-control, 10px);
   background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 78%, transparent);
   color: var(--game-ui-text, #e9edf5);
-  font-family: var(--mono);
+  font-family: var(--game-ui-font-mono);
   font-size: 0.72rem;
   letter-spacing: 0.01em;
   pointer-events: none;

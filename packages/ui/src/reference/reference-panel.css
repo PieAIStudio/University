@@ -54,7 +54,7 @@
   background: rgb(0 0 0 / 22%);
   color: var(--game-ui-text-muted, #cbb49c);
   cursor: pointer;
-  font-family: var(--game-ui-font-mono, ui-monospace, monospace);
+  font-family: var(--game-ui-font-mono);
   font-size: 0.78em;
   white-space: nowrap;
 }

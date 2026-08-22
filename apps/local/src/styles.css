@@ -294,7 +294,7 @@ summary:focus-visible,
 }
 
 .today-focus strong {
-  color: var(--game-ui-color-accent, #f0894f);
+  color: var(--game-ui-accent);
   font-weight: 600;
 }
 
