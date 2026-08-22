@@ -73,9 +73,12 @@ The source videos are gitignored; the frames and the analysis are not.
   blurred ground far below. Two products sharing one world is worth more than
   either art direction alone, and water is flat, so the sea gave the frame
   nothing to make depth out of.
-- **The authoring shell stays offline.** Four ports — content, progress,
-  grading, evidence — and everything above them is one implementation.
-  SwimmerBackend is built on the delivery side only.
+- **Both shells hold an account; content still flows one way.** Four ports —
+  content, progress, grading, evidence — and everything above them is one
+  implementation. `ProgressPort` is one implementation *below* the port too,
+  over SwimmerBackend. `GradingPort` is the single permitted divergence. See
+  "Both Shells Get An Account" below; this bullet used to read "the authoring
+  shell stays offline" and was withdrawn on 2026-08-22.
 - **The renderer lives in `packages/world`.** Both shells share one scene, and
   `packages/ui` stays at zero `three`. SPEC-0001 read against SPEC-0003 looked
   like a contradiction; it was settled on 2026-08-22 and both specs now carry
@@ -127,6 +130,57 @@ Recorded in `packages/core/src/progress/spine.ts` with a test that pins the
 list, because this is the one study whose linear-extension test guards
 nothing. Still a draft; the courses will change a lot. Overruling it means
 editing that test in the same commit.
+
+## Both Shells Get An Account, 2026-08-22
+
+The rule that the authoring shell stays offline is withdrawn. Both shells sign
+in to SwimmerBackend and share one account, one progress record, one review
+schedule, one set of favourites and settings — one implementation of each,
+living in the kit.
+
+The reasoning that retired it is worth keeping, because the old rule was not
+foolish and the difference between the two is a distinction nobody had drawn.
+
+**Two lanes were being governed by one sentence.** "UniversityLocal must not
+depend on, integrate with, upload to, or prepare a sync lane for any
+application backend" was written to protect the single-producer pipeline: if a
+second thing can produce a lesson, "the courses are identical" goes back to
+being a synchronisation problem and SPEC-0001 stops working. That is about
+**course content**, and it is untouched — permanently. What the sentence also
+happened to forbid, without ever arguing for it, was **the learner having a
+name**. Those are different data with different risks and they now have
+different rules.
+
+**The offline objection was answered, not overruled.** Its premise was already
+thin: the authoring shell's central act is grading through an AI coding host,
+and a host needs the network, so "works offline" was only ever true of the
+parts that need no model. And the replacement does not spend it anyway.
+
+**Local-first, because the data forces it — this part was not in the
+instruction and is not a compromise on it.** `apps/local/studies/` holds four
+registered private repositories and the prose being written. That is the large,
+private half and it does not go to a backend under any design. So the disk
+stays the source of truth for what only exists on disk, and the backend owns
+account, progress, review, favourites and settings — which is small, portable,
+and is precisely the list that "sign in on the Windows machine and carry on"
+requires. Nothing asked for was traded away to get offline authoring back; it
+came free, because the two halves of the data want opposite homes.
+
+### What this changes downstream
+
+- **`ProgressPort`'s two implementations become one.** Of v3's four ports, this
+  is the only one that merges. `ContentPort` stays split because the split *is*
+  the pipeline; `EvidencePort` stays split because of the disclosure decision
+  recorded below; `GradingPort` stays split by explicit instruction, and is now
+  the single permitted divergence between the shells.
+- **The chrome is built once.** Under the old rule the shells were allowed to
+  look like different products. They are not any more, so the Duolingo-shaped
+  navigation, the path, the reader and the settlement are built in
+  `packages/ui` and mounted by both. This is where most of the "one less thing
+  to hold in your head" actually arrives — well before any backend exists.
+- **Nothing here is built yet.** There is still zero backend code in this
+  repository: `apps/online` is a static site with one `fetch`. This section
+  changes what is allowed, not what exists.
 
 ### Corrections To Numbers Previously Reported Here
 
@@ -357,9 +411,13 @@ exists rather than against a sketch.
 ## Standing Constraints
 
 - Courses are imported from UniversityLocal, never authored here. See SPEC-0001.
-- UniversityLocal is never given an uploader, a sync client, or any awareness
-  that this product exists. Course taxonomy and authoring changes there are
-  ordinary authoring work; a push lane is not.
+- UniversityLocal is never given a content uploader or any awareness that a
+  paying customer exists. Lesson prose, cards, exercises and evidence leave it
+  one way only: a recovery export written to disk. Course taxonomy and
+  authoring changes there are ordinary authoring work; a push lane is not.
+- Both shells sign in to SwimmerBackend and share one account, progress record
+  and review schedule. Amended 2026-08-22; see "Both Shells Get An Account"
+  below for what changed and what did not.
 - 3D owns the map and the rituals. Reading, answering, reviewing, account and
   payment are 2D DOM through SwimmerUIKit.
 - All model calls go through SwimmerAIKit, tiered cheapest-first.

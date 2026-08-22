@@ -98,9 +98,23 @@ What follows from them:
   runs the same workflows the local shell runs.
 - **The shells never import each other.** `apps/local` importing `apps/online`
   is the modularity rule broken, and `check-module-boundaries.mjs` is where
-  that gets enforced rather than remembered. UniversityLocal still has no
-  awareness that a commercial product exists — sharing a package is not
-  awareness, and it must not grow an uploader or a sync client.
+  that gets enforced rather than remembered.
+- **Two lanes cross between the shells, and only one of them is open in both
+  directions.** Superseded the "authoring shell stays offline" rule on
+  2026-08-22 — see `docs/reference/execution/current-work.md`.
+  - **Content flows one way, forever.** Course prose, cards, exercises and
+    evidence are authored in `apps/local`, exported as a hashed package, and
+    imported by `apps/online`. `apps/local` never publishes, never uploads
+    content, and never learns that a paying customer exists. One producer is
+    the whole of SPEC-0001; a second one dissolves it.
+  - **Identity and learner state flow both ways.** Both shells sign in to
+    SwimmerBackend and both read and write the same account, progress, review
+    schedule, favourites and settings. There is one implementation of each.
+  - The disk stays the source of truth for what only exists on disk: the
+    registered repositories under `apps/local/studies/`, their clones, the
+    prose being written. Those are four private repositories, and a backend
+    is not where they go. Learner state caches locally and reconciles; content
+    does not sync at all.
 - **Readable text is DOM, never geometry.** A Chinese IME, a screen reader,
   text selection and a phone keyboard all die inside a canvas, so text in
   WebGL is the legibility rule broken for a human. The canvas owns the world
@@ -110,6 +124,12 @@ What follows from them:
 - **Grading stays tiered by cost.** Deterministic first, structured small-model
   second, open tutoring last and metered. An unmetered large model behind a
   free tier is the robustness rule broken, in the direction of the bank.
+- **How a model gets reached is the one permitted difference between the
+  shells.** `apps/local` grades through the clipboard and the AI coding host
+  it already runs inside; `apps/online` grades through SwimmerAIKit, metered
+  against an account. Everything above `GradingPort` — the question, the
+  attempt, the clue, the record — is one implementation. This is the only
+  divergence anyone is allowed to add without proposing a rule change first.
 - **Design before build.** A user-facing behaviour gets designed in
   `docs/reference/player-journey/` before it gets implemented. The current
   journey is `docs/reference/player-journey/v3/`; it replaces v1 and v2.

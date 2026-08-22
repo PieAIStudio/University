@@ -1066,23 +1066,53 @@ const visible = nodes
 </table>
 
 <div class="dec no">
-  <h4>为什么「local 用 SwimmerBackend」不成立</h4>
-  <p><b>先说一个你可能没意识到的事实：<code>apps/online</code> 现在根本没有后端。</b>
-  它是一个纯静态站点，全仓<b>只有 1 处 <code>fetch</code></b>
-  （<code>apps/online/src/content/library.ts:116</code>），读的是打包进去的静态 JSON。
-  没有账号、没有支付、没有 API、没有 AI 调用。<b>SwimmerBackend 在这个仓库里一行代码都没有。</b></p>
-  <p>所以「让 local 用 online 的后端」这句话里，那个后端还不存在。
-  <b>真正该做的是：给 online 建 SwimmerBackend</b>（账号、支付、权限、计费 AI）——
-  <code>SPEC-0001:140</code> 已经为它留好了位置。<b>而 local 不该接它</b>：</p>
-  <ul>
-    <li><code>SPEC-0001:140</code> — 共享包不得拥有 storage：「一边本地文件 + SQLite，<b>另一边 SwimmerBackend</b>」</li>
-    <li><code>SPEC-0001:208</code> — 验收条件 4：UniversityLocal 内<b>没有 uploader，也没有 backend client</b></li>
-    <li><code>SPEC-0003</code> 结尾 Non-Negotiable — 「<b>创作端保持离线。</b>共享一个包不是联网。」</li>
-  </ul>
-  <p><b>打个比方。</b>你想要的是「我在家做的菜和店里一模一样」。
-  正确做法是<b>共用同一份菜谱、同一套锅、同一个摆盘</b>——那样你在家改进的任何一步，店里立刻也有。
-  你提的做法是「我家厨房接店里的中央厨房」——一旦断网，<b>你每天赖以学习的那一端就做不了饭了</b>，
-  而且它对「共用菜谱」这个真正的目标<b>几乎没有帮助</b>：代码复用发生在菜谱层，不在中央厨房层。</p>
+  <h4>✔ 改判：local 接 SwimmerBackend。这一段原来说「不成立」，2026-08-22 推翻</h4>
+  <p class="cite">下面保留了原文的论证，因为<b>它错在哪里，比它的结论有用</b>。
+  原文引了三条规则、打了一个中央厨房的比方，然后判「不成立」。三条规则都引对了，
+  比方也没打歪——错在<b>三条规则里有两条在管两件不同的事，而原文把它们当成一件</b>。</p>
+
+  <p><b>那两条车道。</b>「UniversityLocal 不得上传、不得准备同步通道」这句话
+  当初是为了保住<b>唯一生产者</b>：一旦第二个东西也能产出课程，「两端课程一致」
+  就退回成同步问题，SPEC-0001 整份就失效了。这管的是<b>课程内容</b>，
+  <b>永远不改</b>。但这句话顺带还禁掉了另一件它从没论证过的事：<b>学习者有个名字</b>。
+  这两样数据不同、风险不同，现在归两条规则管。</p>
+
+  <p><b>断网那条被回答了，不是被推翻。</b>它的前提本来就薄：创作端的核心动作是
+  通过 AI 宿主判题，而宿主要联网——所以「能离线用」从来只对不需要模型的那部分成立。
+  更关键的是，<b>新做法根本没花掉离线这件东西</b>。</p>
+
+  <p><b>本地优先，而且这不是折中，是数据本身逼出来的。</b>
+  <code>apps/local/studies/</code> 里躺着四个已登记的<b>私有仓库</b>和正在写的课文。
+  那是又大又私密的一半，<b>任何设计下它都不会进后端</b>。所以磁盘继续是磁盘上那些东西的
+  唯一真相，后端拿走的是账号、进度、复习、收藏、设置——又小又可携带，
+  而且<b>恰好就是「在 Windows 那台登录就能接着用」需要的全部</b>。
+  你要的四样（登录 / 云端记录 / 换机器 / 减少认知）一样没少，离线是白送的。</p>
+
+  <p><b>那个中央厨房的比方，现在该这么打。</b>原文说「我家厨房接店里的中央厨房，断网就做不了饭」。
+  真正在做的事不是接中央厨房，是<b>把会员卡和吃到第几道菜记在店里</b>——
+  食材、灶台、正在试的新菜，全都还在你自己家。<b>换一家分店，你还是那个会员，还是吃到第七道。</b>
+  而菜谱依然只有你一个人写，店里只能照着做，一个字都改不了——那才是原文真正在保护的东西，
+  它一点没动。</p>
+</div>
+
+<div class="dec">
+  <h4>四个口里，只有一个合并了</h4>
+  <p>改判之后要立刻算清楚的是：这动了几个口？答案是<b>一个</b>。</p>
+  <table>
+    <tr><th>口</th><th>改判后</th><th>为什么</th></tr>
+    <tr><td><code>ProgressPort</code></td><td><b>✔ 合并成一份实现</b>（SwimmerBackend + 本地缓存）</td>
+        <td>就是这次改的东西</td></tr>
+    <tr><td><code>ContentPort</code></td><td>仍然分开</td>
+        <td>local 读<b>正在写的</b>，online 读<b>已发布的</b>。<b>这个不对称就是那条流水线本身</b>，
+          抹平它等于抹掉唯一生产者</td></tr>
+    <tr><td><code>GradingPort</code></td><td>仍然分开</td>
+        <td><b>老板明令保留的唯一分歧。</b>剪贴板 + AI 宿主 vs 计费 API</td></tr>
+    <tr><td><code>EvidencePort</code></td><td>仍然分开</td>
+        <td>私有仓库的代码不进交付包——那是已经做过的披露决定，不是没接完的线</td></tr>
+  </table>
+  <p><b>真正的「减少认知」大头不在口上，在壳上。</b>旧规则允许两端长得像两个产品；
+  新规则不允许了。所以导航、路径、阅读器、结算<b>建在 <code>packages/ui</code>，两端各挂一次</b>——
+  这件事<b>不需要等任何后端存在</b>，而它才是你每天睁眼看到的那个「一模一样」。</p>
 </div>
 
 <div class="dec">
@@ -1094,17 +1124,13 @@ const visible = nodes
   <table>
     <tr><th>口</th><th>local 的实现</th><th>online 的实现</th></tr>
     <tr><td><code>ContentPort</code> 读课文/单元/课程</td><td>本地 HTTP <code>/api/*</code></td><td>静态 JSON（将来 SwimmerBackend）</td></tr>
-    <tr><td><code>ProgressPort</code> 读写进度</td><td>SQLite</td><td>localStorage（将来账号）</td></tr>
+    <tr><td><code>ProgressPort</code> 读写进度</td><td colspan="2"><b>一份实现</b>：SwimmerBackend + 本地缓存（2026-08-22 合并）</td></tr>
     <tr><td><code>GradingPort</code> 判题</td><td>剪贴板 + AI 宿主</td><td>指纹当场判 + SwimmerAIKit</td></tr>
     <tr><td><code>EvidencePort</code> 取代码片段</td><td>本地 git 检出</td><td><b>只给坐标不给内容</b>（私有仓库不进交付包）</td></tr>
   </table>
   <p><b>这样你要的闭环就成立了</b>：口<b>之上</b>的一切——路径、节点弹窗、阅读器、答题、结算、图鉴、复习——
   是<b>一份代码</b>。你每天用 local 时发现的任何问题，改在口之上，online 自动就有了。
-  口<b>之下</b>只有四个小适配器，各几十行。<br>
-  <b>而 local 保持离线</b>，这不是妥协，这是保护你每天要用的那一端。</p>
-  <p class="cite">Grok 和 Gemini 独立审计后给了同一句结论。Grok 原话：
-  「不要让 local 去用 SwimmerBackend——那是在拆掉你每天用的那一端，
-  而且对『local 发现的问题自动惠及 online』几乎没有帮助。」</p>
+  口<b>之下</b>只剩三个小适配器，各几十行。</p>
 </div>
 
 <div class="dec">
@@ -1171,7 +1197,10 @@ const visible = nodes
 <table>
   <tr><th>事</th><th>结论</th></tr>
   <tr><td>落地屏</td><td>✔ <b>3D 不退位，换镜头。</b>路上视角为默认，俯瞰降级为缩出层</td></tr>
-  <tr><td>本地端后端</td><td>✔ <b>local 保持离线 + 四个 Port。</b>SwimmerBackend 只建在 online 侧</td></tr>
+  <tr><td>本地端后端</td><td>✔ <b>两端都登录 SwimmerBackend，共用一个账号 / 进度 / 复习表。</b>
+    2026-08-22 改判，取代原来的「local 保持离线」。<b>不变的是内容单向</b>：课文只能以磁盘上的
+    recovery 导出离开创作端。四个 Port 里只有 <code>ProgressPort</code> 合并，
+    <code>GradingPort</code> 是唯一保留的分歧</td></tr>
   <tr><td>网状学习</td><td>✔ <b>主路径 + 岔口 + 行内引用三层，三格窗收敛，网只在身后显现</b></td></tr>
   <tr><td>三端</td><td>✔ <b>一份代码，三个壳。</b>浏览器不需要壳，桌面 Electron，移动 Capacitor</td></tr>
   <tr><td>导航</td><td>✔ <b>槽位一比一照搬多邻国，格子里换成我们的东西，缺的先占位</b></td></tr>
