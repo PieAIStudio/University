@@ -84,3 +84,13 @@ SCRATCH/
 # That cost a content rebuild once. These extensionless twins catch the link.
 apps/online/content
 node_modules
+
+# Agent scratch reports. Subagents are asked to write a REPORT.md in their own
+# worktree; one of them staged it and it rode a merge into the repository root
+# (66d3213). The report is for the person reading the branch, not for main.
+REPORT.md
+/REPORT.md
+*-REPORT.md
+BRIEF.md
+BRIEF-RESULT*.md
+SCRATCH/
