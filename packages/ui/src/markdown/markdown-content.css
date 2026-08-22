@@ -157,3 +157,68 @@
   border: 1px dashed rgb(255 180 164 / 45%);
   color: #ffb4a4;
 }
+
+/*
+  Mermaid diagrams, the external-link mark, and the blocked-image placeholder
+  are also emitted by this package. Their rules lived in the authoring shell,
+  so delivery rendered the same figures with nothing on them — which reads as
+  broken, not as plain. `--campus-rule` is a `.campus` token; the shared
+  border is `--game-ui-border-subtle` (night is ~2% more opaque). Box size
+  is unchanged.
+*/
+.mermaid-diagram {
+  overflow-x: auto;
+  margin: 1.6em 0;
+  padding: 18px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 12px;
+  background: rgb(12 8 6 / 72%);
+}
+
+.mermaid-diagram figcaption {
+  color: var(--game-ui-text-muted);
+  font-size: 0.9rem;
+}
+
+.mermaid-diagram__canvas {
+  min-width: 0;
+}
+
+.mermaid-diagram__canvas svg {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.mermaid-diagram--error figcaption {
+  color: #f3c58c;
+}
+
+.mermaid-diagram--error pre {
+  margin: 14px 0 0;
+}
+
+.markdown-external-link__mark {
+  margin-left: 3px;
+  font-size: 0.78em;
+  vertical-align: super;
+}
+
+.markdown-blocked-image {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-panel);
+  background: rgb(42 30 22 / 45%);
+  color: var(--game-ui-text-muted);
+  font-size: 0.86rem;
+}
+
+.markdown-blocked-image code {
+  overflow-wrap: anywhere;
+  color: #e5c49a;
+}
