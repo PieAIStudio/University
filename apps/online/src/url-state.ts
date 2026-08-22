@@ -80,6 +80,19 @@ export type View =
   | { readonly kind: "settings" }
   | { readonly kind: "me" };
 
+/** Which library tab a legacy single-segment route lands on. */
+export const LIBRARY_VIEW_TAB: Partial<Record<View["kind"], LibraryTab>> = {
+  library: "concepts",
+  concepts: "concepts",
+  terms: "terms",
+  "anti-pattern": "flavour",
+  favourites: "favourites",
+};
+
+export function libraryTabOf(view: View): LibraryTab {
+  return view.kind === "library" ? view.tab : (LIBRARY_VIEW_TAB[view.kind] ?? "concepts");
+}
+
 export const WORLD: View = { kind: "world" };
 
 export function toHash(view: View): string {

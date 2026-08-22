@@ -1,4 +1,4 @@
-import { parseLessonLinks, tokenKind } from "@pieai/university-core";
+import { parseLessonLinks, tokenKind } from "@pieai/university-core/marks/references.js";
 
 /**
  * The shapes the path cards read. A subset of a delivered lesson/unit: title,

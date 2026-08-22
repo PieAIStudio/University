@@ -10,6 +10,7 @@ import {
   conceptGroupsIn,
   conceptNeighbours,
 } from "./catalogue.js";
+import { CONCEPT_HEADS } from "./heads.js";
 import { searchConcepts } from "./search.js";
 
 /**
@@ -100,6 +101,10 @@ describe("concept catalogue", () => {
 
   it("holds all 281 entries", () => {
     expect(CONCEPT_ENTRIES).toHaveLength(TOTAL);
+  });
+
+  it("keeps the heads-only list in lockstep with the catalogue", () => {
+    expect(CONCEPT_HEADS).toEqual(CONCEPT_ENTRIES.map((entry) => entry.head));
   });
 
   it("has no duplicate ids", () => {

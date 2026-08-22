@@ -13,6 +13,7 @@
  * end up with two renderers and a colour pipeline nobody can count.
  */
 import {
+  lazy,
   Suspense,
   useCallback,
   useEffect,
@@ -25,7 +26,7 @@ import {
 import * as THREE from "three";
 
 import { courseShapeOf, readCourseProgress } from "@pieai/university-core";
-import { LoadingTrivia, NodeCard, UnitCard, useMapCover } from "@pieai/university-ui";
+import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import {
@@ -36,6 +37,8 @@ import {
   SettingsScreen,
   SettingsSubnav,
 } from "@pieai/university-ui/navigation/empty.js";
+import { NodeCard } from "@pieai/university-ui/path/NodeCard.js";
+import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
 import {
   CourseScene,
   placeCourse,
@@ -47,7 +50,6 @@ import {
 import { courseSprites } from "@pieai/university-world/path-overlay.js";
 import { Stage } from "@pieai/university-world/Stage.js";
 
-import { CourseCatalog } from "../catalog/CourseCatalog";
 import {
   hasContent,
   library,
@@ -59,17 +61,20 @@ import {
 } from "../content/library";
 import { progressSource } from "../progress/source";
 import { dueCards, dueTomorrow, snapshot, subscribe } from "../progress/store";
-import { AntiPatternEntryHost } from "../screens/AntiPatternEntryHost";
 import { AvatarLab } from "../screens/AvatarLab";
-import { ConceptEntryHost } from "../screens/ConceptEntryHost";
-import { LibraryHost, LIBRARY_VIEW_TAB, libraryTabOf } from "../screens/LibraryHost";
-import { LessonReaderHost } from "../screens/LessonReaderHost";
-import { PracticeHost } from "../screens/PracticeHost";
+import {
+  AntiPatternEntryHost,
+  ConceptEntryHost,
+  CourseCatalog,
+  LessonReaderHost,
+  LibraryHost,
+  PracticeHost,
+  RouteFallback,
+  SettlementHost,
+  TermEntryHost,
+} from "../screens/lazy";
 import { ReviewHost } from "../screens/ReviewHost";
-import { SettlementHost } from "../screens/SettlementHost";
-import { TermEntryHost } from "../screens/TermEntryHost";
-import { fromHash, toHash, WORLD, type View } from "../url-state";
-import { ProfileAvatar } from "./ProfileAvatar";
+import { fromHash, LIBRARY_VIEW_TAB, libraryTabOf, toHash, WORLD, type View } from "../url-state";
 import { TodayCard, todayMeta } from "./TodayCard";
 import { studySub } from "./map-labels";
 import {
@@ -83,6 +88,10 @@ import {
 } from "./map-controls";
 import { activeIdForView, isBareView, useMinWidth } from "./shell-route";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
+
+const ProfileAvatar = lazy(() =>
+  import("./ProfileAvatar.js").then((mod) => ({ default: mod.ProfileAvatar })),
+);
 
 type PathOverlay =
   | {
@@ -871,7 +880,7 @@ export function App() {
         ) : null}
       </div>
       {view.kind === "avatar-lab" ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<RouteFallback />}>
           <AvatarLab onOpen={setView} />
         </Suspense>
       ) : null}
@@ -934,50 +943,74 @@ export function App() {
       ) : null}
 
       {view.kind === "settled" && course ? (
-        <SettlementHost
-          course={course}
-          grewFrom={grewFrom}
-          studyId={view.studyId}
-          unitId={view.unitId}
-          lessonId={view.lessonId}
-          onMap={() => setView({ kind: "course", studyId: view.studyId, courseId: view.courseId })}
-          onNext={(unitId, lessonId) =>
-            setView({
-              kind: "lesson",
-              studyId: view.studyId,
-              courseId: view.courseId,
-              unitId,
-              lessonId,
-            })
-          }
-          onIncomplete={() =>
-            setView({
-              kind: "lesson",
-              studyId: view.studyId,
-              courseId: view.courseId,
-              unitId: view.unitId,
-              lessonId: view.lessonId,
-            })
-          }
-        />
+        <Suspense fallback={<RouteFallback />}>
+          <SettlementHost
+            course={course}
+            grewFrom={grewFrom}
+            studyId={view.studyId}
+            unitId={view.unitId}
+            lessonId={view.lessonId}
+            onMap={() =>
+              setView({ kind: "course", studyId: view.studyId, courseId: view.courseId })
+            }
+            onNext={(unitId, lessonId) =>
+              setView({
+                kind: "lesson",
+                studyId: view.studyId,
+                courseId: view.courseId,
+                unitId,
+                lessonId,
+              })
+            }
+            onIncomplete={() =>
+              setView({
+                kind: "lesson",
+                studyId: view.studyId,
+                courseId: view.courseId,
+                unitId: view.unitId,
+                lessonId: view.lessonId,
+              })
+            }
+          />
+        </Suspense>
       ) : null}
 
       {view.kind === "review" ? <ReviewHost onDone={() => setView(WORLD)} /> : null}
 
-      {view.kind === "term" ? <TermEntryHost senseId={view.senseId} onOpen={setView} /> : null}
-
-      {LIBRARY_VIEW_TAB[view.kind] ? (
-        <LibraryHost tab={libraryTabOf(view)} onOpen={setView} />
+      {view.kind === "term" ? (
+        <Suspense fallback={<RouteFallback />}>
+          <TermEntryHost senseId={view.senseId} onOpen={setView} />
+        </Suspense>
       ) : null}
 
-      {view.kind === "concept" ? <ConceptEntryHost id={view.id} onOpen={setView} /> : null}
+      {LIBRARY_VIEW_TAB[view.kind] ? (
+        <Suspense fallback={<RouteFallback />}>
+          <LibraryHost tab={libraryTabOf(view)} onOpen={setView} />
+        </Suspense>
+      ) : null}
 
-      {view.kind === "practice" ? <PracticeHost onOpen={setView} /> : null}
+      {view.kind === "concept" ? (
+        <Suspense fallback={<RouteFallback />}>
+          <ConceptEntryHost id={view.id} onOpen={setView} />
+        </Suspense>
+      ) : null}
 
-      {view.kind === "catalog" ? <CourseCatalog onOpen={setView} /> : null}
+      {view.kind === "practice" ? (
+        <Suspense fallback={<RouteFallback />}>
+          <PracticeHost onOpen={setView} />
+        </Suspense>
+      ) : null}
+
+      {view.kind === "catalog" ? (
+        <Suspense fallback={<RouteFallback />}>
+          <CourseCatalog onOpen={setView} />
+        </Suspense>
+      ) : null}
 
       {view.kind === "anti-pattern-entry" ? (
-        <AntiPatternEntryHost id={view.id} onOpen={setView} />
+        <Suspense fallback={<RouteFallback />}>
+          <AntiPatternEntryHost id={view.id} onOpen={setView} />
+        </Suspense>
       ) : null}
 
       {view.kind === "league" ? <LeagueEmpty /> : null}
@@ -986,7 +1019,17 @@ export function App() {
       {view.kind === "settings" ? <SettingsScreen /> : null}
       {view.kind === "me" ? (
         <ProfileScreen
-          avatar={<ProfileAvatar />}
+          avatar={
+            <Suspense
+              fallback={
+                <div className="profile-avatar">
+                  <LoadingTrivia />
+                </div>
+              }
+            >
+              <ProfileAvatar />
+            </Suspense>
+          }
           passagesRead={profileStats.passagesRead}
           lessonsCompleted={profileStats.lessonsCompleted}
           nextHref={
@@ -1014,32 +1057,36 @@ export function App() {
   if (isBareView(view) && view.kind === "lesson" && course) {
     return (
       <div className="app">
-        <LessonReaderHost
-          course={course}
-          studyId={view.studyId}
-          unitId={view.unitId}
-          lessonId={view.lessonId}
-          onFollowLink={(target) =>
-            setView({
-              kind: "lesson",
-              studyId: view.studyId,
-              courseId: target.courseId,
-              unitId: target.unitId,
-              lessonId: target.lessonId,
-            })
-          }
-          onBack={() => setView({ kind: "course", studyId: view.studyId, courseId: view.courseId })}
-          onSettled={(doneBefore) => {
-            setGrewFrom({ key: `${view.studyId}/${view.courseId}/${view.lessonId}`, doneBefore });
-            setView({
-              kind: "settled",
-              studyId: view.studyId,
-              courseId: view.courseId,
-              unitId: view.unitId,
-              lessonId: view.lessonId,
-            });
-          }}
-        />
+        <Suspense fallback={<RouteFallback />}>
+          <LessonReaderHost
+            course={course}
+            studyId={view.studyId}
+            unitId={view.unitId}
+            lessonId={view.lessonId}
+            onFollowLink={(target) =>
+              setView({
+                kind: "lesson",
+                studyId: view.studyId,
+                courseId: target.courseId,
+                unitId: target.unitId,
+                lessonId: target.lessonId,
+              })
+            }
+            onBack={() =>
+              setView({ kind: "course", studyId: view.studyId, courseId: view.courseId })
+            }
+            onSettled={(doneBefore) => {
+              setGrewFrom({ key: `${view.studyId}/${view.courseId}/${view.lessonId}`, doneBefore });
+              setView({
+                kind: "settled",
+                studyId: view.studyId,
+                courseId: view.courseId,
+                unitId: view.unitId,
+                lessonId: view.lessonId,
+              });
+            }}
+          />
+        </Suspense>
       </div>
     );
   }
