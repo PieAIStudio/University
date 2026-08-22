@@ -133,10 +133,15 @@ Next:
 2. **Islands in the sky** — sky layers, cloud, island underside, foreground
    frame, AO and colour grading.
 3. **SPEC-0003 step 2.** Authoring takes the same scene plus its overlay.
-4. The four ports; delete online's duplicate reader; separate read from
+4. **The three loose ends from the "implemented twice" round.** The mobile
+   `.nextup` card still quotes the course size the desktop `TodayCard` stopped
+   quoting; mermaid and external-link marks are the last `packages/ui`
+   components whose CSS lives only in `apps/local`; and `courseShapeOf` wants
+   to sink into `packages/core` so the 2D catalog stops importing "world".
+5. The four ports; delete online's duplicate reader; separate read from
    answered.
-5. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
-6. SwimmerBackend: accounts, payment, metered AI.
+6. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
+7. SwimmerBackend: accounts, payment, metered AI.
 
 ## Traps, Found The Hard Way
 
@@ -176,6 +181,23 @@ Next:
   never started, a handle plus an empty `scene` means the scene failed, and a
   handle plus a populated scene means you are early in the load. Only one of
   the three is fixed by moving the camera.
+- **Two size heuristics fire on things that are fine, and both were
+  measured before being left alone.** `packages/core/src/concepts/data/` is
+  1.6MB of concept prose across six files, one of them 930KB — but a full
+  `packages/core` typecheck including it is 4.3s, so the cost the size implies
+  is not there. `apps/local/server/workflows/` has 34 direct children, over the
+  grab-bag threshold — 17 single-purpose workflows and 17 colocated tests, not
+  a junk drawer. Splitting either on the number alone is the anti-pattern the
+  refactor methodology names first.
+- **`backdrop-filter` over a live WebGL canvas breaks past roughly 260px
+  wide.** The panel and everything inside it turns into a flat grey slab.
+  `docs/reference/learnings/workflow-issues/` has the measurements. Panels over
+  the scene are opaque now and should stay that way.
+- **A shared component's stylesheet belongs in `packages/ui`, not in an app.**
+  `scripts/check-shared-styles.mjs` ratchets this: 120 classes are already
+  styled by exactly one shell, and only new ones fail. Nine components already
+  ship their own CSS and both shells import it — copy that pattern rather than
+  adding a rule to an app.
 - **This file is pinned.** A commit touching it needs
   `Pinned-Override: REF-CURRENT-WORK` in the message. SPEC-0001 needs its own.
 
@@ -187,6 +209,6 @@ broken with every test green.
 
 ```bash
 pnpm -r typecheck && pnpm -r lint && pnpm -r test
-node apps/local/scripts/check-module-boundaries.mjs
+pnpm boundaries    # module boundaries · kit portability · contrast · shared styles
 pnpm verify
 ```
