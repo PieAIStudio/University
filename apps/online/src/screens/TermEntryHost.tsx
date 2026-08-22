@@ -26,17 +26,17 @@ export function TermEntryHost({
   const entry = LEXICON.find((item) => item.senseId === senseId);
   if (!entry) {
     return (
-      <main className="terms">
+      <div className="terms">
         <button className="linkish" onClick={() => onOpen({ kind: "terms" })}>
           ← 词义索引
         </button>
         <p className="reference-panel__note">词库里没有这个词义。</p>
-      </main>
+      </div>
     );
   }
   const assembled = assembleTermEntry(entry, []);
   return (
-    <main className="terms">
+    <div className="terms">
       <EntryPage
         breadcrumb={[{ label: "词义索引", href: "#/terms" }, { label: entry.headword }]}
         head={
@@ -63,6 +63,6 @@ export function TermEntryHost({
         lexicon={LEXICON_BY_SENSE}
         onOpenSense={(id) => onOpen({ kind: "term", senseId: id })}
       />
-    </main>
+    </div>
   );
 }

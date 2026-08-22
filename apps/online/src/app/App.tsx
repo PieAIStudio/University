@@ -26,6 +26,15 @@ import * as THREE from "three";
 
 import { readCourseProgress } from "@pieai/university-core";
 import { NodeCard, UnitCard } from "@pieai/university-ui";
+import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
+import {
+  LeagueEmpty,
+  PlansEmpty,
+  ProfileScreen,
+  QuestsEmpty,
+  SettingsScreen,
+  SettingsSubnav,
+} from "@pieai/university-ui/navigation/empty.js";
 
 import { CourseCatalog } from "../catalog/CourseCatalog";
 import {
@@ -58,6 +67,8 @@ import {
   type Marker,
 } from "../world/Maps";
 import { Stage } from "../world/Stage";
+import { ProfileAvatar } from "./ProfileAvatar";
+import { TodayCard } from "./TodayCard";
 import {
   Controls,
   COURSE_POLAR,
@@ -67,6 +78,7 @@ import {
   SHOWS_THE_MAP,
   WORLD_POLAR,
 } from "./map-controls";
+import { activeIdForView, isBareView, shellCounters, useMinWidth } from "./shell-route";
 
 type PathOverlay =
   | {
@@ -92,10 +104,15 @@ export function App() {
     setViewState(next);
   }, []);
   useEffect(() => {
-    const onPop = () => setViewState(fromHash(location.hash));
-    addEventListener("popstate", onPop);
-    return () => removeEventListener("popstate", onPop);
+    const onHash = () => setViewState(fromHash(location.hash));
+    addEventListener("popstate", onHash);
+    addEventListener("hashchange", onHash);
+    return () => {
+      removeEventListener("popstate", onHash);
+      removeEventListener("hashchange", onHash);
+    };
   }, []);
+  const wide = useMinWidth(1160);
   const [course, setCourse] = useState<Course | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [picked, setPicked] = useState<CourseNode | null>(null);
@@ -195,19 +212,36 @@ export function App() {
   const pointerOrigin = useRef<{ x: number; y: number } | null>(null);
 
   /**
-   * The project's own name and its own length, or the library when nothing is
-   * picked. A study is a path with a start and an end; the four of them do not
-   * add up to a fifth, longer one.
+   * The project's own name, or the first study when nothing is picked.
+   * The island counter is a flag slot: no number, just the name.
    */
-  const currentStudy = useMemo(() => {
+  const projectName = useMemo(() => {
     const studyId =
       view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
         ? view.studyId
         : null;
-    const study = studyId ? library.studies.find((entry) => entry.studyId === studyId) : null;
-    if (study) return `${study.title} · ${study.courses.length} 门课`;
-    return `${library.studies.length} 个项目 · 各有各的路`;
-  }, [view, library]);
+    const study = studyId
+      ? library.studies.find((entry) => entry.studyId === studyId)
+      : library.studies[0];
+    return study?.title ?? "University";
+  }, [view]);
+
+  const profileStats = useMemo(() => {
+    let lessonsCompleted = 0;
+    let passagesRead = 0;
+    for (const [key, lesson] of Object.entries(progress.lessons)) {
+      if (lesson.completedAt == null && lesson.progress < 1) continue;
+      lessonsCompleted += 1;
+      const [studyId, courseId, lessonId] = key.split("/");
+      if (!studyId || !courseId || !lessonId) continue;
+      const loaded = peekCourse(studyId, courseId);
+      const found = loaded?.units
+        .flatMap((unit) => unit.lessons)
+        .find((entry) => entry.id === lessonId);
+      if (found) passagesRead += found.evidence.length;
+    }
+    return { lessonsCompleted, passagesRead };
+  }, [progress]);
 
   const markers: readonly Marker[] = useMemo(() => {
     if (view.kind === "course" || view.kind === "lesson") {
@@ -265,6 +299,12 @@ export function App() {
   }, [world, lessons, view]);
 
   const due = dueCards();
+  const dueTomorrowCount = dueTomorrow();
+  const showMap = SHOWS_THE_MAP.has(view.kind);
+  const counters = shellCounters({
+    projectName,
+    streakDays: progress.streak.days,
+  });
 
   if (!hasContent) {
     return (
@@ -384,109 +424,76 @@ export function App() {
       ? pathUnit?.lessons.find((lesson) => lesson.id === pathOverlay.lessonId)
       : undefined;
 
-  return (
-    <div className="app">
-      <nav className="topbar">
-        <button className="brand" onClick={() => setView({ kind: "world" })}>
-          University
-        </button>
-        {/*
-          The project you are in, not the size of the catalogue.
-          "4 worlds · 52 courses" described the whole library, which is a
-          shape nobody learns: there are four separate paths here and a
-          learner walks one of them. Quoting the total made it read as a
-          single fifty-two course march, which is a product that turns people
-          away at the door. Duolingo has forty languages and never shows a
-          learner anything but the one they picked.
-        */}
-        <span className="topbar__stat">{currentStudy}</span>
-        <span className="spacer" />
-        <span className="topbar__stat">连击 {progress.streak.days} 天</span>
-        {/*
-          The term index is reachable from everywhere on purpose. A learner
-          who cannot remember which lesson a word came from is exactly the
-          person it is for, so making them find the right course first would
-          defeat it.
-        */}
-        <button
-          className="ghost"
-          aria-current={view.kind === "catalog" ? "page" : undefined}
-          onClick={() => setView({ kind: "catalog" })}
-        >
-          目录
-        </button>
-        <button
-          className="ghost"
-          aria-current={view.kind === "avatar-lab" ? "page" : undefined}
-          onClick={() => setView({ kind: "avatar-lab" })}
-        >
-          头像
-        </button>
-        <button className="ghost" onClick={() => setView({ kind: "library", tab: "concepts" })}>
-          图鉴
-        </button>
-        <button className="ghost" onClick={() => setView({ kind: "practice" })}>
-          练习
-        </button>
-        <button
-          className={due.length > 0 ? "primary" : "ghost"}
-          onClick={() => setView({ kind: "review" })}
-        >
-          复习 {due.length > 0 ? `· ${due.length} 张到期` : `· 明天 ${dueTomorrow()} 张`}
-        </button>
-      </nav>
+  const todayCard = (
+    <TodayCard
+      nextTitle={nextUp?.node.title ?? null}
+      nextMeta={nextUp ? `${nextUp.node.studyTitle} · ${nextUp.node.lessons} 节` : null}
+      continueLabel={progress.streak.days > 0 ? "继续" : "开始第一节"}
+      onContinue={() => {
+        if (!nextUp) return;
+        setView({
+          kind: "course",
+          studyId: nextUp.node.studyId,
+          courseId: nextUp.node.courseId,
+        });
+      }}
+      dueCount={due.length}
+      dueTomorrow={dueTomorrowCount}
+    />
+  );
 
-      {view.kind !== "avatar-lab" ? (
-        <div
-          className="stagewrap"
-          onPointerDownCapture={(event) => {
-            pointerOrigin.current = { x: event.clientX, y: event.clientY };
-            draggedRef.current = false;
-          }}
-          onPointerMoveCapture={(event) => {
-            const origin = pointerOrigin.current;
-            if (!origin || draggedRef.current) return;
-            if (Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 6) {
-              draggedRef.current = true;
-            }
-          }}
-          hidden={!SHOWS_THE_MAP.has(view.kind)}
-        >
-          <Stage cameraFrom={cameraFrom} lookAt={lookAt}>
-            <Controls
-              target={lookAt}
-              polar={view.kind === "course" || view.kind === "lesson" ? COURSE_POLAR : WORLD_POLAR}
+  const stage =
+    view.kind === "avatar-lab" ? null : (
+      <div
+        className="stagewrap"
+        onPointerDownCapture={(event) => {
+          pointerOrigin.current = { x: event.clientX, y: event.clientY };
+          draggedRef.current = false;
+        }}
+        onPointerMoveCapture={(event) => {
+          const origin = pointerOrigin.current;
+          if (!origin || draggedRef.current) return;
+          if (Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 6) {
+            draggedRef.current = true;
+          }
+        }}
+        hidden={!SHOWS_THE_MAP.has(view.kind)}
+      >
+        <Stage cameraFrom={cameraFrom} lookAt={lookAt}>
+          <Controls
+            target={lookAt}
+            polar={view.kind === "course" || view.kind === "lesson" ? COURSE_POLAR : WORLD_POLAR}
+          />
+          <Flight to={cameraFrom} look={lookAt} />
+          <LabelProbe markers={markers} limit={9} nodes={labelNodes.current} />
+          {view.kind === "world" && world ? (
+            <WorldScene
+              placements={world.placements}
+              centres={world.centres}
+              ring={world.ring}
+              learnerAt={learnerAt}
+              onPick={(node) => setPicked(node)}
+              onHover={(node) => setHovered(node ? node.courseId : null)}
             />
-            <Flight to={cameraFrom} look={lookAt} />
-            <LabelProbe markers={markers} limit={9} nodes={labelNodes.current} />
-            {view.kind === "world" && world ? (
-              <WorldScene
-                placements={world.placements}
-                centres={world.centres}
-                ring={world.ring}
-                learnerAt={learnerAt}
-                onPick={(node) => setPicked(node)}
-                onHover={(node) => setHovered(node ? node.courseId : null)}
-              />
-            ) : null}
-            {(view.kind === "course" || view.kind === "lesson") && lessons.length > 0 ? (
-              <CourseScene
-                lessons={lessons}
-                onPick={(lesson) => {
-                  if (view.kind === "lesson") return;
-                  setPathOverlay({
-                    kind: "node",
-                    unitId: lesson.unitId,
-                    lessonId: lesson.lessonId,
-                    returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
-                  });
-                }}
-                onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
-              />
-            ) : null}
-          </Stage>
+          ) : null}
+          {(view.kind === "course" || view.kind === "lesson") && lessons.length > 0 ? (
+            <CourseScene
+              lessons={lessons}
+              onPick={(lesson) => {
+                if (view.kind === "lesson") return;
+                setPathOverlay({
+                  kind: "node",
+                  unitId: lesson.unitId,
+                  lessonId: lesson.lessonId,
+                  returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
+                });
+              }}
+              onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
+            />
+          ) : null}
+        </Stage>
 
-          {/*
+        {/*
           The first thing to do, said out loud.
 
           It sits opposite the selection panel rather than in a dismissible
@@ -494,6 +501,198 @@ export function App() {
           just as much as a stranger needs "what is this", and a modal answers
           only the second and only once.
         */}
+        {wide ? null : view.kind === "world" && nextUp && !picked ? (
+          <aside className="nextup">
+            <p className="nextup__eyebrow">
+              {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
+            </p>
+            <h2 className="nextup__title">{nextUp.node.title}</h2>
+            <p className="nextup__meta">
+              {nextUp.node.studyTitle} · {nextUp.node.lessons} 节
+            </p>
+            <button
+              className="primary block"
+              onClick={() =>
+                setView({
+                  kind: "course",
+                  studyId: nextUp.node.studyId,
+                  courseId: nextUp.node.courseId,
+                })
+              }
+            >
+              {progress.streak.days > 0 ? "继续" : "开始第一节"} →
+            </button>
+          </aside>
+        ) : null}
+
+        {wide ? null : view.kind === "world" ? (
+          <aside className="picked" hidden={!picked}>
+            {picked ? (
+              <>
+                <h3>{picked.title}</h3>
+                <p className="picked__study">{picked.studyTitle}</p>
+                <dl>
+                  <dt>课时</dt>
+                  <dd>{picked.lessons}</dd>
+                  <dt>层</dt>
+                  <dd>{picked.depth + 1}</dd>
+                  <dt>先修</dt>
+                  <dd>{picked.prerequisiteCourseIds.length || "无"}</dd>
+                </dl>
+                <button
+                  className="primary block"
+                  onClick={() =>
+                    setView({
+                      kind: "course",
+                      studyId: picked.studyId,
+                      courseId: picked.courseId,
+                    })
+                  }
+                >
+                  进入这门课 →
+                </button>
+              </>
+            ) : null}
+          </aside>
+        ) : null}
+
+        {wide ? null : view.kind === "course" && course ? (
+          <aside className="picked picked--left">
+            <h3>{course.title}</h3>
+            <p className="picked__study">
+              {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
+              {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
+            </p>
+            {pathUnit ? (
+              <div className="unit-strip">
+                <p className="unit-strip__name">{pathUnit.title}</p>
+                <button
+                  type="button"
+                  className="unit-strip__list"
+                  aria-label="先看这一单元讲什么"
+                  aria-haspopup="dialog"
+                  aria-expanded={pathOverlay?.kind === "unit" ? true : undefined}
+                  onClick={(event) =>
+                    setPathOverlay({
+                      kind: "unit",
+                      unitId: pathUnit.id,
+                      returnFocusTo: event.currentTarget,
+                    })
+                  }
+                >
+                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path
+                      d="M3 4.5h10M3 8h10M3 11.5h7"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeWidth="1.5"
+                    />
+                  </svg>
+                </button>
+              </div>
+            ) : null}
+            <button className="ghost block" onClick={() => setView({ kind: "world" })}>
+              ← 回到世界地图
+            </button>
+          </aside>
+        ) : null}
+
+        {/*
+          The map's names, and — where the thing under them can be entered —
+          the way you enter it.
+
+          This layer used to be `aria-hidden` divs with `pointer-events: none`,
+          which meant the only way into any course in the product was clicking a
+          shape inside the canvas. That is a mouse-only affordance, so keyboard
+          and screen-reader users had no path into a single lesson. Rule 7 of
+          the Web3D baseline says readable text is DOM; it is worth just as
+          little if the *reachable* control stays in the canvas.
+
+          A label that can be entered is a real `<button>`. A label that names a
+          world is not, because a world is not somewhere you go.
+        */}
+        <nav className="labels" aria-label="世界地图上的去处">
+          {markers.map((marker) => {
+            const content = (
+              <>
+                {marker.text}
+                {marker.sub ? <small>{marker.sub}</small> : null}
+              </>
+            );
+            const attach = (element: HTMLElement | null) => {
+              if (element) labelNodes.current.set(marker.id, element);
+              else labelNodes.current.delete(marker.id);
+            };
+            const className = `label label--${marker.kind}${marker.quiet ? " label--quiet" : ""}`;
+            return marker.activate ? (
+              <button
+                key={marker.id}
+                ref={attach}
+                type="button"
+                className={className}
+                style={{ "--placed": 0 } as CSSProperties}
+                aria-haspopup={marker.kind === "lesson" ? "dialog" : undefined}
+                aria-expanded={
+                  marker.kind === "lesson" &&
+                  pathOverlay?.kind === "node" &&
+                  pathOverlay.lessonId === marker.id
+                    ? true
+                    : undefined
+                }
+                onClick={() => {
+                  // A drag that happens to end on a label is a pan, not a
+                  // choice. Without this, moving the map by grabbing near a
+                  // course name would open that course.
+                  if (draggedRef.current) return;
+                  marker.activate?.();
+                }}
+              >
+                {content}
+              </button>
+            ) : (
+              <div
+                key={marker.id}
+                ref={attach}
+                className={className}
+                style={{ "--placed": 0 } as CSSProperties}
+              >
+                {content}
+              </div>
+            );
+          })}
+        </nav>
+
+        {/*
+          The hint has to describe the controls that exist. It said 「右键旋转」
+          for as long as rotation had been disabled — the camera is locked to a
+          fixed pitch on purpose, the way a map app locks it, and telling a
+          learner to right-drag taught them the app was broken.
+        */}
+        <p className="hint">{hovered ? hovered : MAP_CONTROLS_HINT}</p>
+      </div>
+    );
+
+  /*
+    The stage stays in the centre column at every width. v3 draws a small
+    persistent island in the right rail, and that is right — but only once the
+    centre holds a path of its own. It does not: for us the scene *is* the path,
+    so moving it to a 366px rail leaves the main column empty and shrinks the
+    thing a learner came for into a thumbnail. The rail gets it back when there
+    is a DOM path to take its place.
+  */
+  const aside = (
+    <>
+      {showMap ? todayCard : null}
+      {view.kind === "settings" ? <SettingsSubnav /> : null}
+    </>
+  );
+
+  const main = (
+    <>
+      {stage}
+      {wide && showMap ? (
+        <div className="learn-hud">
           {view.kind === "world" && nextUp && !picked ? (
             <aside className="nextup">
               <p className="nextup__eyebrow">
@@ -517,38 +716,32 @@ export function App() {
               </button>
             </aside>
           ) : null}
-
-          {view.kind === "world" ? (
-            <aside className="picked" hidden={!picked}>
-              {picked ? (
-                <>
-                  <h3>{picked.title}</h3>
-                  <p className="picked__study">{picked.studyTitle}</p>
-                  <dl>
-                    <dt>课时</dt>
-                    <dd>{picked.lessons}</dd>
-                    <dt>层</dt>
-                    <dd>{picked.depth + 1}</dd>
-                    <dt>先修</dt>
-                    <dd>{picked.prerequisiteCourseIds.length || "无"}</dd>
-                  </dl>
-                  <button
-                    className="primary block"
-                    onClick={() =>
-                      setView({
-                        kind: "course",
-                        studyId: picked.studyId,
-                        courseId: picked.courseId,
-                      })
-                    }
-                  >
-                    进入这门课 →
-                  </button>
-                </>
-              ) : null}
+          {view.kind === "world" && picked ? (
+            <aside className="picked">
+              <h3>{picked.title}</h3>
+              <p className="picked__study">{picked.studyTitle}</p>
+              <dl>
+                <dt>课时</dt>
+                <dd>{picked.lessons}</dd>
+                <dt>层</dt>
+                <dd>{picked.depth + 1}</dd>
+                <dt>先修</dt>
+                <dd>{picked.prerequisiteCourseIds.length || "无"}</dd>
+              </dl>
+              <button
+                className="primary block"
+                onClick={() =>
+                  setView({
+                    kind: "course",
+                    studyId: picked.studyId,
+                    courseId: picked.courseId,
+                  })
+                }
+              >
+                进入这门课 →
+              </button>
             </aside>
           ) : null}
-
           {view.kind === "course" && course ? (
             <aside className="picked picked--left">
               <h3>{course.title}</h3>
@@ -590,85 +783,13 @@ export function App() {
               </button>
             </aside>
           ) : null}
-
-          {/*
-          The map's names, and — where the thing under them can be entered —
-          the way you enter it.
-
-          This layer used to be `aria-hidden` divs with `pointer-events: none`,
-          which meant the only way into any course in the product was clicking a
-          shape inside the canvas. That is a mouse-only affordance, so keyboard
-          and screen-reader users had no path into a single lesson. Rule 7 of
-          the Web3D baseline says readable text is DOM; it is worth just as
-          little if the *reachable* control stays in the canvas.
-
-          A label that can be entered is a real `<button>`. A label that names a
-          world is not, because a world is not somewhere you go.
-        */}
-          <nav className="labels" aria-label="世界地图上的去处">
-            {markers.map((marker) => {
-              const content = (
-                <>
-                  {marker.text}
-                  {marker.sub ? <small>{marker.sub}</small> : null}
-                </>
-              );
-              const attach = (element: HTMLElement | null) => {
-                if (element) labelNodes.current.set(marker.id, element);
-                else labelNodes.current.delete(marker.id);
-              };
-              const className = `label label--${marker.kind}${marker.quiet ? " label--quiet" : ""}`;
-              return marker.activate ? (
-                <button
-                  key={marker.id}
-                  ref={attach}
-                  type="button"
-                  className={className}
-                  style={{ "--placed": 0 } as CSSProperties}
-                  aria-haspopup={marker.kind === "lesson" ? "dialog" : undefined}
-                  aria-expanded={
-                    marker.kind === "lesson" &&
-                    pathOverlay?.kind === "node" &&
-                    pathOverlay.lessonId === marker.id
-                      ? true
-                      : undefined
-                  }
-                  onClick={() => {
-                    // A drag that happens to end on a label is a pan, not a
-                    // choice. Without this, moving the map by grabbing near a
-                    // course name would open that course.
-                    if (draggedRef.current) return;
-                    marker.activate?.();
-                  }}
-                >
-                  {content}
-                </button>
-              ) : (
-                <div
-                  key={marker.id}
-                  ref={attach}
-                  className={className}
-                  style={{ "--placed": 0 } as CSSProperties}
-                >
-                  {content}
-                </div>
-              );
-            })}
-          </nav>
-
-          {/*
-          The hint has to describe the controls that exist. It said 「右键旋转」
-          for as long as rotation had been disabled — the camera is locked to a
-          fixed pitch on purpose, the way a map app locks it, and telling a
-          learner to right-drag taught them the app was broken.
-        */}
-          <p className="hint">{hovered ? hovered : MAP_CONTROLS_HINT}</p>
         </div>
-      ) : (
+      ) : null}
+      {view.kind === "avatar-lab" ? (
         <Suspense fallback={null}>
           <AvatarLab onOpen={setView} />
         </Suspense>
-      )}
+      ) : null}
 
       {view.kind === "course" &&
       course &&
@@ -727,35 +848,6 @@ export function App() {
         />
       ) : null}
 
-      {view.kind === "lesson" && course ? (
-        <LessonReaderHost
-          course={course}
-          studyId={view.studyId}
-          unitId={view.unitId}
-          lessonId={view.lessonId}
-          onFollowLink={(target) =>
-            setView({
-              kind: "lesson",
-              studyId: view.studyId,
-              courseId: target.courseId,
-              unitId: target.unitId,
-              lessonId: target.lessonId,
-            })
-          }
-          onBack={() => setView({ kind: "course", studyId: view.studyId, courseId: view.courseId })}
-          onSettled={(doneBefore) => {
-            setGrewFrom({ key: `${view.studyId}/${view.courseId}/${view.lessonId}`, doneBefore });
-            setView({
-              kind: "settled",
-              studyId: view.studyId,
-              courseId: view.courseId,
-              unitId: view.unitId,
-              lessonId: view.lessonId,
-            });
-          }}
-        />
-      ) : null}
-
       {view.kind === "settled" && course ? (
         <SettlementHost
           course={course}
@@ -793,6 +885,64 @@ export function App() {
       {view.kind === "anti-pattern-entry" ? (
         <AntiPatternEntryHost id={view.id} onOpen={setView} />
       ) : null}
+
+      {view.kind === "league" ? <LeagueEmpty /> : null}
+      {view.kind === "quests" ? <QuestsEmpty /> : null}
+      {view.kind === "plans" ? <PlansEmpty /> : null}
+      {view.kind === "settings" ? <SettingsScreen /> : null}
+      {view.kind === "me" ? (
+        <ProfileScreen
+          avatar={<ProfileAvatar />}
+          passagesRead={profileStats.passagesRead}
+          lessonsCompleted={profileStats.lessonsCompleted}
+        />
+      ) : null}
+    </>
+  );
+
+  if (isBareView(view) && view.kind === "lesson" && course) {
+    return (
+      <div className="app">
+        <LessonReaderHost
+          course={course}
+          studyId={view.studyId}
+          unitId={view.unitId}
+          lessonId={view.lessonId}
+          onFollowLink={(target) =>
+            setView({
+              kind: "lesson",
+              studyId: view.studyId,
+              courseId: target.courseId,
+              unitId: target.unitId,
+              lessonId: target.lessonId,
+            })
+          }
+          onBack={() => setView({ kind: "course", studyId: view.studyId, courseId: view.courseId })}
+          onSettled={(doneBefore) => {
+            setGrewFrom({ key: `${view.studyId}/${view.courseId}/${view.lessonId}`, doneBefore });
+            setView({
+              kind: "settled",
+              studyId: view.studyId,
+              courseId: view.courseId,
+              unitId: view.unitId,
+              lessonId: view.lessonId,
+            });
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="app">
+      <UniversityShell
+        activeId={activeIdForView(view)}
+        counters={counters}
+        aside={aside}
+        asideLabel={view.kind === "settings" ? "设置" : "今天"}
+      >
+        {main}
+      </UniversityShell>
     </div>
   );
 }

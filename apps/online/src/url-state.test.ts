@@ -73,4 +73,14 @@ describe("the address bar", () => {
     expect(toHash({ kind: "avatar-lab" })).toBe("#/avatar-lab");
     expect(fromHash("#/avatar-lab")).toEqual({ kind: "avatar-lab" });
   });
+
+  it("keeps the shell destinations as reserved first segments", () => {
+    expect(fromHash("#/league")).toEqual({ kind: "league" });
+    expect(fromHash("#/quests")).toEqual({ kind: "quests" });
+    expect(fromHash("#/plans")).toEqual({ kind: "plans" });
+    expect(fromHash("#/settings")).toEqual({ kind: "settings" });
+    expect(fromHash("#/me")).toEqual({ kind: "me" });
+    expect(toHash({ kind: "league" })).toBe("#/league");
+    expect(toHash({ kind: "me" })).toBe("#/me");
+  });
 });

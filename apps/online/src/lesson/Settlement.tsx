@@ -96,7 +96,7 @@ export function Settlement({
   }, []);
 
   return (
-    <main className="settle">
+    <div className="settle">
       <p className="settle__eyebrow">{courseTitle}</p>
       <h1 className="settle__title">{lessonTitle}</h1>
       <p className="settle__done">读完了。</p>
@@ -147,6 +147,6 @@ export function Settlement({
           回关卡地图
         </button>
       </div>
-    </main>
+    </div>
   );
 }

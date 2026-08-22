@@ -44,7 +44,7 @@ export function PracticeHost({ onOpen }: { onOpen: (view: View) => void }) {
   }, []);
 
   return (
-    <main className="terms">
+    <div className="terms">
       <button className="linkish" onClick={() => onOpen(WORLD)}>
         ← 关卡地图
       </button>
@@ -71,7 +71,7 @@ export function PracticeHost({ onOpen }: { onOpen: (view: View) => void }) {
           />
         )}
       />
-    </main>
+    </div>
   );
 }
 

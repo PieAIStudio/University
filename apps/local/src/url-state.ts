@@ -20,6 +20,44 @@ import type { LessonRef } from "@pieai/university-core";
 
 export type SectionId = "today" | "studies";
 
+export type ShellSlot =
+  | "learn"
+  | "library"
+  | "practice"
+  | "league"
+  | "quests"
+  | "plan"
+  | "profile"
+  | "catalog"
+  | "review"
+  | "favourites"
+  | "settings"
+  | "studio";
+
+const SLOT_BY_HEAD: Record<string, ShellSlot> = {
+  "": "learn",
+  library: "library",
+  practice: "practice",
+  league: "league",
+  quests: "quests",
+  plans: "plan",
+  me: "profile",
+  catalog: "catalog",
+  review: "review",
+  favourites: "favourites",
+  settings: "settings",
+  studio: "studio",
+};
+
+export function parseShellHash(hash: string): ShellSlot {
+  const head = hash.replace(/^#\/?/, "").split("/")[0] ?? "";
+  return SLOT_BY_HEAD[head] ?? "learn";
+}
+
+export function activeIdForSlot(slot: ShellSlot): string {
+  return slot;
+}
+
 export interface AppAddress {
   readonly section: SectionId;
   readonly studyId: string | null;

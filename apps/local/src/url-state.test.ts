@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { formatAddress, parseAddress, sameAddress, type AppAddress } from "./url-state.js";
+import {
+  formatAddress,
+  parseAddress,
+  parseShellHash,
+  sameAddress,
+  type AppAddress,
+} from "./url-state.js";
 
 const LESSON: AppAddress = {
   section: "studies",
@@ -66,6 +72,15 @@ describe("addresses", () => {
 
   it("sends an unknown top-level path home rather than nowhere", () => {
     expect(parseAddress("/wat").section).toBe("today");
+  });
+
+  it("reads shell slots from the hash without changing pathname addresses", () => {
+    expect(parseShellHash("")).toBe("learn");
+    expect(parseShellHash("#/")).toBe("learn");
+    expect(parseShellHash("#/library")).toBe("library");
+    expect(parseShellHash("#/studio")).toBe("studio");
+    expect(parseShellHash("#/me")).toBe("profile");
+    expect(parseShellHash("#/plans")).toBe("plan");
   });
 
   it("compares addresses by the URL they produce", () => {

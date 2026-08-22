@@ -79,7 +79,7 @@ export function AvatarLab({ onOpen }: { onOpen: (view: View) => void }) {
   }, []);
 
   return (
-    <main className="avatar-lab">
+    <div className="avatar-lab">
       <section className="avatar-lab__stage" aria-label="头像舞台">
         <Canvas
           dpr={[1, 2]}
@@ -190,6 +190,6 @@ export function AvatarLab({ onOpen }: { onOpen: (view: View) => void }) {
           {PALETTES.length} 套色盘 · {SPECIES.length} 个物种
         </p>
       </aside>
-    </main>
+    </div>
   );
 }

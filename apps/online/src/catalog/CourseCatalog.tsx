@@ -58,7 +58,7 @@ export function CourseCatalog({ onOpen }: { onOpen: (view: View) => void }) {
 
   if (failed) {
     return (
-      <main className="catalog">
+      <div className="catalog">
         <div className="catalog__inner">
           <h1>目录</h1>
           <p>课程目录读不出来。刷新这一页再试。</p>
@@ -66,25 +66,25 @@ export function CourseCatalog({ onOpen }: { onOpen: (view: View) => void }) {
             在地图上看
           </button>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (!listing) {
     return (
-      <main className="catalog" aria-busy="true">
+      <div className="catalog" aria-busy="true">
         <div className="catalog__inner">
           <h1>目录</h1>
           <p>正在读入课程目录。</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   const here = listing.nextLesson;
 
   return (
-    <main className="catalog" aria-label="课程目录">
+    <div className="catalog" aria-label="课程目录">
       <div className="catalog__inner">
         <button type="button" className="linkish" onClick={() => onOpen(WORLD)}>
           在地图上看
@@ -109,7 +109,7 @@ export function CourseCatalog({ onOpen }: { onOpen: (view: View) => void }) {
           />
         ))}
       </div>
-    </main>
+    </div>
   );
 }
 

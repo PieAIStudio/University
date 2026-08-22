@@ -40,7 +40,7 @@ const LIBRARY_TAB_LABEL: Record<LibraryTab, string> = {
  */
 export function LibraryHost({ tab, onOpen }: { tab: LibraryTab; onOpen: (view: View) => void }) {
   return (
-    <main className="terms">
+    <div className="terms">
       <button className="linkish" onClick={() => onOpen(WORLD)}>
         ← 关卡地图
       </button>
@@ -76,6 +76,6 @@ export function LibraryHost({ tab, onOpen }: { tab: LibraryTab; onOpen: (view: V
         />
       ) : null}
       {tab === "favourites" ? <FavouritesHost onOpen={onOpen} /> : null}
-    </main>
+    </div>
   );
 }

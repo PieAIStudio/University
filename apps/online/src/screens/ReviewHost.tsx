@@ -31,7 +31,7 @@ export function ReviewHost({ onDone }: { onDone: () => void }) {
 
   if (!current) {
     return (
-      <main className="review">
+      <div className="review">
         <div className="review__done">
           <b>今天没有到期卡片</b>
           <p>学一节新课，它会掉落新的卡片，明天就有事做了。</p>
@@ -39,14 +39,14 @@ export function ReviewHost({ onDone }: { onDone: () => void }) {
             回到世界地图
           </button>
         </div>
-      </main>
+      </div>
     );
   }
 
   const card = cards[current.cardKey];
 
   return (
-    <main className="review">
+    <div className="review">
       <div className="review__bar">
         <span>还剩 {queue.length} 张</span>
         <button className="linkish" onClick={onDone}>
@@ -87,6 +87,6 @@ export function ReviewHost({ onDone }: { onDone: () => void }) {
           </button>
         )}
       </div>
-    </main>
+    </div>
   );
 }

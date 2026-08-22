@@ -73,7 +73,12 @@ export type View =
   | { readonly kind: "catalog" }
   // Temporary gloss-avatar lab. Not a product surface; hash-only so a static
   // host cannot 404 it. Drop the kind when the lab is retired.
-  | { readonly kind: "avatar-lab" };
+  | { readonly kind: "avatar-lab" }
+  | { readonly kind: "league" }
+  | { readonly kind: "quests" }
+  | { readonly kind: "plans" }
+  | { readonly kind: "settings" }
+  | { readonly kind: "me" };
 
 export const WORLD: View = { kind: "world" };
 
@@ -105,6 +110,16 @@ export function toHash(view: View): string {
       return "#/catalog";
     case "avatar-lab":
       return "#/avatar-lab";
+    case "league":
+      return "#/league";
+    case "quests":
+      return "#/quests";
+    case "plans":
+      return "#/plans";
+    case "settings":
+      return "#/settings";
+    case "me":
+      return "#/me";
     case "course":
       return `#/${enc(view.studyId)}/${enc(view.courseId)}`;
     case "lesson":
@@ -139,6 +154,11 @@ export function fromHash(hash: string): View {
   if (parts.length === 1 && parts[0] === "practice") return { kind: "practice" };
   if (parts.length === 1 && parts[0] === "catalog") return { kind: "catalog" };
   if (parts.length === 1 && parts[0] === "avatar-lab") return { kind: "avatar-lab" };
+  if (parts.length === 1 && parts[0] === "league") return { kind: "league" };
+  if (parts.length === 1 && parts[0] === "quests") return { kind: "quests" };
+  if (parts.length === 1 && parts[0] === "plans") return { kind: "plans" };
+  if (parts.length === 1 && parts[0] === "settings") return { kind: "settings" };
+  if (parts.length === 1 && parts[0] === "me") return { kind: "me" };
   if (parts.length === 1 && parts[0] === "concepts") return { kind: "concepts" };
   if (parts.length === 2 && parts[0] === "concepts" && parts[1]) {
     return { kind: "concept", id: parts[1] };

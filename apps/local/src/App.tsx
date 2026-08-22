@@ -1,8 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { GameBadge, GameCallout, GameTabs } from "@pieai/swimmer-ui-kit";
+import { GameCallout } from "@pieai/swimmer-ui-kit";
+import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
+import {
+  LeagueEmpty,
+  NextStepEmpty,
+  PlansEmpty,
+  ProfileScreen,
+  QuestsEmpty,
+  SettingsScreen,
+  SettingsSubnav,
+} from "@pieai/university-ui/navigation/empty.js";
+import { FavouritesEmpty } from "@pieai/university-ui";
+import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
+import {
+  CreditIcon,
+  EnergyIcon,
+  IslandIcon,
+  StreakIcon,
+} from "@pieai/university-ui/shell/icons.js";
+import { isCurrentLessonCompleted } from "@pieai/university-ui/view/lesson-view.js";
 
 import { lessonRefKey } from "@pieai/university-core";
-import { Tip } from "@pieai/university-ui/Tip.js";
 import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
 import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
@@ -14,13 +32,18 @@ import type {
   LessonView,
   StudyView,
 } from "@pieai/university-ui/view/lesson-view.js";
-import { formatAddress, parseAddress, type AppAddress } from "./url-state.js";
+import {
+  formatAddress,
+  parseAddress,
+  parseShellHash,
+  type AppAddress,
+  type ShellSlot,
+} from "./url-state.js";
 import { EmptyCampus } from "./shell/EmptyCampus.js";
 import { recentStudies, StudyShelf } from "./shell/StudyShelf.js";
+import { StudioSection } from "./shell/StudioSection.js";
 import { StudyDetail } from "./shell/StudyDetail.js";
 import { TodaySection } from "./shell/TodaySection.js";
-
-type SectionId = "today" | "studies";
 
 interface DisplayedStudy {
   readonly locator: string;
@@ -73,11 +96,6 @@ function commitView(update: () => void): void {
   update();
 }
 
-const tabs = [
-  { id: "today", label: "今日学习", panelId: "panel-today" },
-  { id: "studies", label: "学习项目", panelId: "panel-studies" },
-] as const;
-
 export function App() {
   // Same latch as the delivery shell, for the same reason: the browser will not
   // start an AudioContext until a gesture, and this is where the gesture is
@@ -88,7 +106,8 @@ export function App() {
   // Seeded from the address bar, so a refresh or a pasted link lands where it
   // says it will rather than dropping the reader back on Today.
   const initialAddress = useMemo(() => parseAddress(window.location.pathname), []);
-  const [activeSection, setActiveSection] = useState<SectionId>(initialAddress.section);
+  const [slot, setSlot] = useState<ShellSlot>(() => parseShellHash(window.location.hash));
+  const [activeSection, setActiveSection] = useState(initialAddress.section);
   const [data, setData] = useState<BootstrapData | null>(null);
   const [selectedStudyId, setSelectedStudyId] = useState<string | null>(initialAddress.studyId);
   const [displayedStudy, setDisplayedStudy] = useState<DisplayedStudy | null>(null);
@@ -115,7 +134,7 @@ export function App() {
   // with a second request for the old lesson.
   const skipLessonLoadRef = useRef<string | null>(null);
   const pendingSectionIdRef = useRef<string | null>(null);
-  const mainRef = useRef<HTMLElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
 
   async function loadBootstrap() {
     const next = await readJson<BootstrapData>(await fetch("/api/bootstrap"));
@@ -161,7 +180,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (activeSection !== "studies" || !selectedStudyId) return;
+    if (!selectedStudyId) return;
     const controller = new AbortController();
     const expectedRequestId = studyRequestId.current + 1;
     setPendingStudyId(selectedStudyId);
@@ -174,7 +193,7 @@ export function App() {
         setError(reason instanceof Error ? reason.message : "无法读取学习项目");
       });
     return () => controller.abort();
-  }, [activeSection, selectedStudyId]);
+  }, [selectedStudyId]);
 
   useEffect(() => {
     if (!lessonLocator) {
@@ -227,13 +246,6 @@ export function App() {
     lessonWasOpen.current = lessonIsOpen;
   }, [lessonLocator]);
 
-  // The header counts courses, not studies with courses. It used to read the
-  // study's single default course, so the number could never exceed the number
-  // of studies no matter how many courses were published.
-  const learnableCourses = useMemo(
-    () => data?.studies.reduce((total, study) => total + study.activeCourseCount, 0) ?? 0,
-    [data],
-  );
   const studyView = displayedStudy?.view ?? null;
   /*
     The counters come from the shelf, not from the study page.
@@ -335,175 +347,225 @@ export function App() {
   // to do nothing and the reader presses it again.
   useEffect(() => {
     const next = formatAddress(address);
-    if (next !== window.location.pathname) window.history.pushState(null, "", next);
+    if (next === window.location.pathname) return;
+    const hash = address.lesson ? "" : window.location.hash;
+    window.history.pushState(null, "", next + hash);
   }, [address]);
 
   useEffect(() => {
-    const onPopState = () => {
+    const sync = () => {
       const restored = parseAddress(window.location.pathname);
       setActiveSection(restored.section);
       setSelectedStudyId(restored.studyId);
       setLessonRef(restored.lesson);
+      setSlot(parseShellHash(window.location.hash));
       // The detour stack belongs to a reading session, not to a URL. Going Back
       // past the lesson that offered a link makes "回到刚才那一课" meaningless.
       setReturnStack([]);
     };
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
+    const onHash = () => setSlot(parseShellHash(window.location.hash));
+    window.addEventListener("popstate", sync);
+    window.addEventListener("hashchange", onHash);
+    return () => {
+      window.removeEventListener("popstate", sync);
+      window.removeEventListener("hashchange", onHash);
+    };
   }, []);
 
-  // Reading a lesson is the one screen with a single job. The section tabs and
-  // the campus-wide counters answer questions nobody has while they are three
-  // paragraphs into an explanation, and they cost the top of every page.
-  const reading = activeSection === "studies" && lessonLocator !== null;
+  const reading = lessonLocator !== null;
+  const projectName =
+    studySummary?.title ??
+    data?.studies.find((study) => study.id === selectedStudyId)?.title ??
+    "University";
+  const lessonsCompleted = studyView
+    ? studyView.courses
+        .flatMap((course) => course.units.flatMap((unit) => unit.lessons))
+        .filter((lesson) => isCurrentLessonCompleted(lesson.progress, lesson.contentRevision))
+        .length
+    : 0;
 
-  return (
-    <div className="campus" data-game-ui-theme="night" data-reading={reading || undefined}>
-      <header className="campus-header">
-        <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">
-            U
-          </span>
-          <div>
-            <p>PIE · PERSONAL CAMPUS</p>
-            <h1>UniversityLocal</h1>
-          </div>
-        </div>
-        {reading ? null : (
-          <div className="campus-status" aria-label="校园状态">
-            <Tip term="airlock">
-              <GameBadge tone="success">资料仅在本机</GameBadge>
-            </Tip>
-            <Tip term="study">
-              <span>{data?.studies.length ?? 0} 个 study</span>
-            </Tip>
-            <span>{learnableCourses} 门可学课程</span>
-          </div>
-        )}
-      </header>
+  const alerts = (
+    <>
+      {error ? (
+        <GameCallout
+          heading="有一项操作没有完成"
+          tone="warning"
+          className="global-error"
+          role="alert"
+        >
+          {error}
+        </GameCallout>
+      ) : null}
+      {data && data.shelfIssues.length > 0 ? (
+        <GameCallout heading="书架上有资料读不出来" tone="warning" className="global-error">
+          {data.shelfIssues.join("；")}
+        </GameCallout>
+      ) : null}
+      {loading ? <p className="loading-copy">正在打开校园档案…</p> : null}
+    </>
+  );
 
-      {reading ? null : (
-        <nav className="campus-nav" aria-label="UniversityLocal 主导航">
-          <GameTabs
-            id="campus-section"
-            tabs={tabs}
-            activeId={activeSection}
-            onSelect={(id) => {
-              setActiveSection(id as SectionId);
-              if (id === "today") setLessonRef(null);
+  const learnBody = (
+    <>
+      {data && data.studies.length === 0 ? <EmptyCampus /> : null}
+      {data && data.studies.length > 0 ? (
+        <div className="studies-layout">
+          <StudyShelf
+            data={data}
+            selectedStudyId={selectedStudyId}
+            onSelect={(studyId) => {
+              setSelectedStudyId(studyId);
+              setLessonRef(null);
             }}
           />
-        </nav>
-      )}
+          {pendingStudyId && displayedStudy && pendingStudyId !== displayedStudy.locator ? (
+            <p className="loading-copy" role="status" aria-live="polite">
+              正在打开另一个学习项目；当前项目仍保留在屏幕上。
+            </p>
+          ) : null}
+          {studyView ? (
+            <StudyDetail
+              view={studyView}
+              summary={studySummary}
+              focus={data?.today.focus ?? null}
+              onOpenLesson={openLesson}
+            />
+          ) : null}
+        </div>
+      ) : null}
+    </>
+  );
 
-      <main
-        ref={mainRef}
-        id={`panel-${activeSection}`}
-        // Without the tab list on screen there is no tab for this panel to be
-        // labelled by, and claiming the role anyway points assistive tech at an
-        // element that is not there.
-        {...(reading
-          ? { "aria-label": "课程正文" }
-          : { role: "tabpanel", "aria-labelledby": `campus-section-${activeSection}` })}
-        tabIndex={-1}
-        className="campus-main"
+  const lessonBody = (
+    <div>
+      {pendingLessonKey && !displayedLessonIsCurrent ? (
+        <p className="loading-copy" role="status" aria-live="polite">
+          正在打开下一节课；当前内容仍保留在屏幕上。
+        </p>
+      ) : null}
+      {lessonError ? (
+        <GameCallout heading="这节课打不开" tone="warning" role="alert">
+          <p>{lessonError}</p>
+          <button type="button" className="text-button" onClick={retryLesson}>
+            重试这节课
+          </button>
+        </GameCallout>
+      ) : null}
+      {lessonView && displayedLesson && data ? (
+        <LessonReader
+          locator={displayedLesson.locator}
+          view={lessonView}
+          requestToken={data.requestToken}
+          onLearningChanged={refreshLearning}
+          neighbours={
+            studyView ? lessonNeighbours(studyView.courses, displayedLesson.locator) : null
+          }
+          onOpenLesson={(locator) => {
+            setReturnStack([]);
+            openLesson(locator);
+          }}
+          onBackToCourse={() => {
+            setReturnStack([]);
+            setLessonRef(null);
+          }}
+          onFollowLink={followLessonLink}
+          onReturn={returnStack.length > 0 ? goBackFromLink : undefined}
+        />
+      ) : !lessonError ? (
+        <p className="loading-copy">正在打开这节课…</p>
+      ) : null}
+    </div>
+  );
+
+  if (reading) {
+    return (
+      <div className="campus" data-game-ui-theme="night" data-reading>
+        {alerts}
+        <div ref={mainRef} tabIndex={-1} className="campus-main" role="main" aria-label="课程正文">
+          {lessonBody}
+        </div>
+      </div>
+    );
+  }
+
+  const aside =
+    slot === "settings" ? (
+      <SettingsSubnav />
+    ) : slot === "learn" && data && data.studies.length > 0 ? (
+      <TodaySection data={data} onOpenLesson={openLesson} onReviewed={refreshLearning} />
+    ) : undefined;
+
+  return (
+    <div data-game-ui-theme="night">
+      <UniversityShell
+        activeId={slot}
+        extraMoreItems={[STUDIO_MORE_ITEM]}
+        counters={[
+          { id: "island", icon: <IslandIcon />, label: projectName },
+          {
+            id: "streak",
+            icon: <StreakIcon />,
+            value: "0",
+            label: "连击",
+            href: "#/quests",
+            muted: true,
+          },
+          { id: "credit", icon: <CreditIcon />, value: "0", label: "学分", href: "#/plans" },
+          { id: "energy", icon: <EnergyIcon />, value: "0", label: "额度", href: "#/plans" },
+        ]}
+        aside={aside}
+        asideLabel={slot === "settings" ? "设置" : "今天"}
       >
-        {error ? (
-          <GameCallout
-            heading="有一项操作没有完成"
-            tone="warning"
-            className="global-error"
-            role="alert"
-          >
-            {error}
-          </GameCallout>
-        ) : null}
-        {data && data.shelfIssues.length > 0 ? (
-          <GameCallout heading="书架上有资料读不出来" tone="warning" className="global-error">
-            {data.shelfIssues.join("；")}
-          </GameCallout>
-        ) : null}
-        {loading ? <p className="loading-copy">正在打开校园档案…</p> : null}
-        {data && data.studies.length === 0 ? <EmptyCampus /> : null}
-        {data && data.studies.length > 0 && activeSection === "today" ? (
-          <TodaySection data={data} onOpenLesson={openLesson} onReviewed={refreshLearning} />
-        ) : null}
-        {data && data.studies.length > 0 && activeSection === "studies" ? (
-          lessonLocator ? (
-            <div>
-              {pendingLessonKey && !displayedLessonIsCurrent ? (
-                <p className="loading-copy" role="status" aria-live="polite">
-                  正在打开下一节课；当前内容仍保留在屏幕上。
-                </p>
-              ) : null}
-              {lessonError ? (
-                <GameCallout heading="这节课打不开" tone="warning" role="alert">
-                  <p>{lessonError}</p>
-                  <button type="button" className="text-button" onClick={retryLesson}>
-                    重试这节课
-                  </button>
-                </GameCallout>
-              ) : null}
-              {lessonView && displayedLesson ? (
-                <LessonReader
-                  locator={displayedLesson.locator}
-                  view={lessonView}
-                  requestToken={data.requestToken}
-                  onLearningChanged={refreshLearning}
-                  neighbours={
-                    studyView ? lessonNeighbours(studyView.courses, displayedLesson.locator) : null
-                  }
-                  onOpenLesson={(locator) => {
-                    setReturnStack([]);
-                    openLesson(locator);
-                  }}
-                  onBackToCourse={() => {
-                    setReturnStack([]);
-                    setLessonRef(null);
-                  }}
-                  onFollowLink={followLessonLink}
-                  onReturn={returnStack.length > 0 ? goBackFromLink : undefined}
-                />
-              ) : !lessonError ? (
-                <p className="loading-copy">正在打开这节课…</p>
-              ) : null}
-            </div>
-          ) : (
-            <div className="studies-layout">
-              <StudyShelf
-                data={data}
-                selectedStudyId={selectedStudyId}
-                onSelect={(studyId) => {
-                  setSelectedStudyId(studyId);
-                  setLessonRef(null);
-                }}
-              />
-              {pendingStudyId && displayedStudy && pendingStudyId !== displayedStudy.locator ? (
-                <p className="loading-copy" role="status" aria-live="polite">
-                  正在打开另一个学习项目；当前项目仍保留在屏幕上。
-                </p>
-              ) : null}
-              {studyView ? (
-                <StudyDetail
-                  view={studyView}
-                  summary={studySummary}
-                  focus={data?.today.focus ?? null}
-                  onOpenLesson={openLesson}
-                />
-              ) : null}
-            </div>
-          )
-        ) : null}
-      </main>
-
-      <footer className="campus-footer">
-        <span>学习资料默认保存在</span>
-        {/* `~` rather than the literal home directory. The path is worth
-            keeping — it is the whole "资料仅在本机" promise, made checkable —
-            but it sits on every page, and the part that repeats on every
-            machine is the part nobody is reading it for. */}
-        <code>{shortenHomePath(data?.studiesRoot ?? "./studies")}</code>
-      </footer>
+        <div ref={mainRef} tabIndex={-1} className="campus-main">
+          {alerts}
+          {slot === "learn" ? learnBody : null}
+          {slot === "studio" && data ? (
+            <StudioSection
+              data={data}
+              selectedStudyId={selectedStudyId}
+              studyView={studyView}
+              summary={studySummary}
+              studiesRootLabel={shortenHomePath(data.studiesRoot)}
+              onSelectStudy={(studyId) => {
+                setSelectedStudyId(studyId);
+                setLessonRef(null);
+              }}
+              onOpenLesson={openLesson}
+            />
+          ) : null}
+          {slot === "library" ? (
+            <NextStepEmpty
+              title="图鉴在学习页的对面"
+              description="概念、术语和收藏长在投放端的图鉴里。今天该读的那一课，在学习页上等着。"
+            />
+          ) : null}
+          {slot === "practice" ? (
+            <NextStepEmpty
+              title="练习还没接到这边"
+              description="无尽题流在投放端已经能跑。先把今天的那一节读完。"
+            />
+          ) : null}
+          {slot === "league" ? <LeagueEmpty /> : null}
+          {slot === "quests" ? <QuestsEmpty /> : null}
+          {slot === "plan" ? <PlansEmpty /> : null}
+          {slot === "catalog" ? (
+            <NextStepEmpty
+              title="目录在投放端"
+              description="键盘能走到的课程目录长在投放端。这边从书架上的项目进去。"
+            />
+          ) : null}
+          {slot === "review" && data ? (
+            <TodaySection data={data} onOpenLesson={openLesson} onReviewed={refreshLearning} />
+          ) : null}
+          {slot === "favourites" ? (
+            <FavouritesEmpty onBrowse={() => (window.location.hash = "#/")} />
+          ) : null}
+          {slot === "settings" ? <SettingsScreen /> : null}
+          {slot === "profile" ? (
+            <ProfileScreen passagesRead={0} lessonsCompleted={lessonsCompleted} />
+          ) : null}
+        </div>
+      </UniversityShell>
     </div>
   );
 }

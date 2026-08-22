@@ -19,17 +19,17 @@ export function ConceptEntryHost({ id, onOpen }: { id: string; onOpen: (view: Vi
   const entry = getConceptEntry(id);
   if (!entry) {
     return (
-      <main className="terms">
+      <div className="terms">
         <button className="linkish" onClick={() => onOpen({ kind: "concepts" })}>
           ← 概念图解
         </button>
         <p className="reference-panel__note">没有这一条。</p>
-      </main>
+      </div>
     );
   }
   const { previous, next } = conceptNeighbours(id);
   return (
-    <main className="terms">
+    <div className="terms">
       <EntryPage
         breadcrumb={[
           { label: "概念图解", href: "#/concepts" },
@@ -65,6 +65,6 @@ export function ConceptEntryHost({ id, onOpen }: { id: string; onOpen: (view: Vi
             : null,
         }}
       />
-    </main>
+    </div>
   );
 }

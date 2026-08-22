@@ -11,10 +11,7 @@ import type {
   StudyView,
 } from "@pieai/university-ui/view/lesson-view.js";
 import { CourseSection } from "./CourseSection.js";
-import { CourseRouteQuiz } from "./CourseRouteQuiz.js";
-import { KnowledgeNotesSection } from "./KnowledgeNotesSection.js";
 import { LayerCoverage } from "./LayerCoverage.js";
-import { UaDashboardButton } from "./UaDashboardButton.js";
 
 export function StudyEvidenceStatus({
   snapshotCount,
@@ -134,7 +131,7 @@ function AirlockClocks({ studyId }: { readonly studyId: string }) {
   );
 }
 
-function StudyAnalysisPanel({
+export function StudyAnalysisPanel({
   studyId,
   summary,
 }: {
@@ -204,7 +201,7 @@ export function splitByFocus(
 
 export function StudyDetail({
   view,
-  summary,
+  summary: _summary,
   focus = null,
   onOpenLesson,
 }: {
@@ -236,7 +233,6 @@ export function StudyDetail({
     return done > 0 && done < lessons.length;
   });
   const grouped = splitByFocus(view.courses, focus, view.study.id);
-  const routeCourse = view.courses.find((course) => course.id === "foundations-before-zero");
   const renderCourse = (course: CourseView, index: number) => (
     <CourseSection
       key={course.id}
@@ -255,15 +251,7 @@ export function StudyDetail({
           <h2>{view.study.title}</h2>
           <p>{view.study.description}</p>
         </div>
-        <UaDashboardButton
-          studyId={view.study.id}
-          available={(summary?.readyUaAnalysisCount ?? 0) > 0}
-        />
       </header>
-      <StudyAnalysisPanel studyId={view.study.id} summary={summary} />
-      {routeCourse ? (
-        <CourseRouteQuiz studyId={view.study.id} course={routeCourse} onOpenLesson={onOpenLesson} />
-      ) : null}
       {view.courses.length === 0 ? null : grouped ? (
         <>
           <p className="course-group__eyebrow">主攻路线 · {grouped.route.length} 门</p>
@@ -291,7 +279,6 @@ export function StudyDetail({
           <p>源码、UA 地图与课堂笔记可以先存在，但它们不会冒充经过编排的正式课程。</p>
         </GamePanel>
       )}
-      <KnowledgeNotesSection studyId={view.study.id} notes={view.notes} />
     </section>
   );
 }

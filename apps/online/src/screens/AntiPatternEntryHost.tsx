@@ -15,16 +15,16 @@ export function AntiPatternEntryHost({ id, onOpen }: { id: string; onOpen: (view
   const entry = getAntiPatternEntry(id);
   if (!entry) {
     return (
-      <main className="terms">
+      <div className="terms">
         <button className="linkish" onClick={() => onOpen({ kind: "anti-pattern" })}>
           ← 防 AI 味儿
         </button>
         <p className="reference-panel__note">没有这一条。</p>
-      </main>
+      </div>
     );
   }
   return (
-    <main className="terms">
+    <div className="terms">
       <EntryPage
         breadcrumb={[{ label: "防 AI 味儿", href: "#/flavour" }, { label: entry.head.name }]}
         head={
@@ -38,6 +38,6 @@ export function AntiPatternEntryHost({ id, onOpen }: { id: string; onOpen: (view
         lexicon={LEXICON_BY_SENSE}
         onOpenSense={(senseId) => onOpen({ kind: "term", senseId })}
       />
-    </main>
+    </div>
   );
 }

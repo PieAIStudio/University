@@ -1,0 +1,248 @@
+/*
+  University chrome extras: brand, empty destinations, profile, settings,
+  the today card. AppShell's own rules live in shell/app-shell.css; apps
+  import both, the same way they import path-cards.css.
+*/
+
+.university-shell__brand {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: -0.03em;
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.shell-empty {
+  max-width: 32rem;
+  margin: 2rem auto;
+  padding: 0 16px 48px;
+}
+
+.settings-screen,
+.profile-screen {
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 16px 16px 48px;
+}
+
+.settings-screen__title,
+.profile-screen__hero + .profile-screen__stats,
+.settings-screen__heading,
+.profile-screen h2 {
+  margin: 0 0 12px;
+}
+
+.settings-screen__title {
+  font-size: 1.6rem;
+}
+
+.settings-screen__heading {
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.settings-screen__block {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 28px;
+}
+
+.foreign-settings--page {
+  position: static;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  box-shadow: none;
+}
+
+.settings-subnav {
+  display: grid;
+  gap: 18px;
+  padding: 8px 4px 24px;
+}
+
+.settings-subnav__group {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 80%, transparent);
+}
+
+.settings-subnav__label {
+  margin: 0 0 6px;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.settings-subnav a {
+  display: block;
+  padding: 8px 6px;
+  border-radius: 8px;
+  color: var(--game-ui-text, #e9edf5);
+  text-decoration: none;
+}
+
+.settings-subnav a[aria-current="page"] {
+  color: var(--game-ui-accent, #5ec8c0);
+}
+
+.profile-screen__hero {
+  min-height: 180px;
+  margin: 0 0 20px;
+  border-radius: var(--game-ui-radius-panel, 14px);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 18%, #12332f);
+}
+
+.profile-screen__hero:empty {
+  min-height: 120px;
+}
+
+.profile-screen__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 0 28px;
+}
+
+.profile-screen__stats div {
+  padding: 12px;
+  border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  border-radius: var(--game-ui-radius-card, 12px);
+}
+
+.profile-screen__stats dt {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.78rem;
+}
+
+.profile-screen__stats dd {
+  margin: 6px 0 0;
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-screen__stats dd span {
+  font-size: 0.9rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.profile-screen__badges h2 {
+  font-size: 1rem;
+}
+
+.profile-screen__badges p {
+  margin: 0 0 12px;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.profile-screen__badges ul {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-screen__badges li {
+  width: 48px;
+  height: 48px;
+  border: 2px dashed var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: 999px;
+}
+
+.profile-screen__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.profile-screen__links a {
+  padding: 8px 14px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-control, 10px);
+  color: var(--game-ui-text, #e9edf5);
+  text-decoration: none;
+}
+
+.today-card {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 88%, transparent);
+}
+
+.today-card h2 {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--game-ui-accent, #ffd479);
+}
+
+.today-card__title {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+.today-card__meta,
+.today-card__review {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.today-card__review {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-shell__aside .stagewrap {
+  position: relative;
+  height: min(320px, 42dvh);
+  min-height: 200px;
+  overflow: hidden;
+  border-radius: var(--game-ui-radius-panel, 14px);
+}
+
+.app-shell__main .stagewrap {
+  position: relative;
+  min-height: min(70dvh, 720px);
+  height: 100%;
+}
+
+.app-shell__main .nextup,
+.app-shell__main .picked {
+  position: static;
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 12px;
+}
+
+.profile-avatar {
+  position: relative;
+  width: 100%;
+  height: 220px;
+}
+
+.profile-avatar canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.profile-avatar__lab {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+}

@@ -39,6 +39,20 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 100%;
+}
+
+.app > .app-shell {
+  flex: 1 1 auto;
+  min-height: 100%;
+}
+
+.app-shell__main .terms,
+.app-shell__main .review,
+.app-shell__main .catalog,
+.app-shell__main .settle,
+.app-shell__main .avatar-lab {
+  min-width: 0;
 }
 
 .topbar {
@@ -137,6 +151,24 @@ button.block {
 
 .stagewrap[hidden] {
   display: none;
+}
+
+/*
+  R3F measures its container on mount and sizes the canvas from that. Inside the
+  shell grid the measurement lands before the grid has resolved, so the canvas
+  keeps the HTML default of 300x150 and never hears about it again — the
+  container's size is correct from that point on, so nothing changes and the
+  observer stays quiet. One synthetic resize event repairs it, which is how this
+  was diagnosed rather than guessed.
+
+  Sizing the element in CSS means the first paint is right whatever the
+  measurement did. The two avatar canvases already carried this rule; the stage
+  was the one that did not, which is why it was the one that broke.
+*/
+.stagewrap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .picked {
