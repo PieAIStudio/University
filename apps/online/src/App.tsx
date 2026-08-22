@@ -525,6 +525,21 @@ export function App() {
   const draggedRef = useRef(false);
   const pointerOrigin = useRef<{ x: number; y: number } | null>(null);
 
+  /**
+   * The project's own name and its own length, or the library when nothing is
+   * picked. A study is a path with a start and an end; the four of them do not
+   * add up to a fifth, longer one.
+   */
+  const currentStudy = useMemo(() => {
+    const studyId =
+      view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
+        ? view.studyId
+        : null;
+    const study = studyId ? library.studies.find((entry) => entry.studyId === studyId) : null;
+    if (study) return `${study.title} · ${study.courses.length} 门课`;
+    return `${library.studies.length} 个项目 · 各有各的路`;
+  }, [view, library]);
+
   const markers: readonly Marker[] = useMemo(() => {
     if (view.kind === "course" || view.kind === "lesson") {
       return lessons.map((lesson) => ({
@@ -706,10 +721,16 @@ export function App() {
         <button className="brand" onClick={() => setView({ kind: "world" })}>
           University
         </button>
-        <span className="topbar__stat">
-          {library.studies.length} 个世界 ·{" "}
-          {library.studies.reduce((sum, study) => sum + study.courses.length, 0)} 门课
-        </span>
+        {/*
+          The project you are in, not the size of the catalogue.
+          "4 worlds · 52 courses" described the whole library, which is a
+          shape nobody learns: there are four separate paths here and a
+          learner walks one of them. Quoting the total made it read as a
+          single fifty-two course march, which is a product that turns people
+          away at the door. Duolingo has forty languages and never shows a
+          learner anything but the one they picked.
+        */}
+        <span className="topbar__stat">{currentStudy}</span>
         <span className="spacer" />
         <span className="topbar__stat">连击 {progress.streak.days} 天</span>
         {/*

@@ -224,7 +224,7 @@ tbody tr:hover{background:#12171e}
     <div class="lab">MOBILE · 顶部四计数 + 底部六 tab（与多邻国同构）</div>
     <div class="wf wf-m">
       <div class="row" style="height:26px">
-        <div class="box solid grow" style="font-size:9px">🌍 世界▾</div>
+        <div class="box solid grow gold" style="font-size:9px">🏝 TuringPact ▾</div>
         <div class="box grow" style="font-size:9px">🔥 3</div>
         <div class="box grow" style="font-size:9px">💎 120</div>
         <div class="box grow" style="font-size:9px">⚡ 额度</div>
@@ -312,7 +312,7 @@ tbody tr:hover{background:#12171e}
 <h4>顶部四计数（两端都有，多邻国也是四个）</h4>
 <table>
   <tr><th>多邻国</th><th>我们</th><th>点开是什么</th><th>状态</th></tr>
-  <tr><td>🇺🇸 语言旗 + 分数</td><td><b>🌍 世界▾</b> + 进度</td><td>Study 切换下拉（4 个世界）</td><td>🔲</td></tr>
+  <tr><td>🇺🇸 语言旗 + 分数</td><td><b>🏝 当前项目名 ▾</b> + 「第 N 课 / 总数」</td><td><b>项目切换器（屏 05）</b>——四个项目各有自己的主路径</td><td>🔲</td></tr>
   <tr><td>🔥 连胜</td><td><b>🔥 连击</b></td><td>连击页 · 月历 · 温和版（见「不做」）</td><td>🟡</td></tr>
   <tr><td>💎 宝石</td><td><b>💎 学分</b></td><td>做完课得到，可换 AI 辅导额度。<b>不能用真钱买</b></td><td>🔲</td></tr>
   <tr><td>⚡ 能量</td><td><b>⚡ AI 判题额度</b></td><td>额度页。<b>这是真实成本，不是人造稀缺</b></td><td>🔲</td></tr>
@@ -525,6 +525,122 @@ const visible = nodes
   <b>这是 3D 在这个产品里第一次不是装饰，而是唯一能表达这个信息的媒介。</b></p>
 </div>
 
+
+<h2 class="gold"><span class="n">项目</span>切项目：四条独立的路，不是一条 52 门的长路</h2>
+<p class="lede">这是 v3 里最容易被误解、也最必须说清的一件事。
+<b>我们不是一门课，是四个项目，每个项目有自己的一条主路径。</b>
+学习者进来先选<b>学哪个项目</b>，然后在那个项目里沿着它自己的路走——
+跟多邻国先选「学英语还是学 Math」、再在里面走路径，是同一个层级关系。</p>
+
+<table>
+  <tr><th>项目</th><th>课数</th><th>主路径起点 → 终点</th><th>它教什么</th></tr>
+  <tr><td><b>TuringPact</b></td><td><b>31</b></td>
+      <td><code>foundations-before-zero</code> → <code>directing-ai-agents</code></td>
+      <td>最长的一条。《在开始之前》起步的九连基础，然后分支展开</td></tr>
+  <tr><td><b>UniversityLocal</b></td><td>9</td>
+      <td><code>how-this-campus-works</code> → <code>airlock-supply-chain</code></td>
+      <td>这个学习系统自己是怎么造的</td></tr>
+  <tr><td><b>SupaLuv</b></td><td>7</td>
+      <td><code>founder-engineer</code> → <code>automated-playtesting</code></td>
+      <td>一个人做 AI 产品的成本与边界</td></tr>
+  <tr><td><b>Buzz</b></td><td>5</td>
+      <td><code>buzz-orientation</code> → <code>buzz-design-tokens</code></td>
+      <td>协作产品的结构</td></tr>
+</table>
+<p class="cite"><b>代码上已经是这样了</b>：<code>spineOf(studyId)</code> 按项目取，
+<code>nextCourseAfter("buzz", "buzz-design-tokens")</code> 返回 <code>null</code>——
+走完一个项目<b>不会串到另一个项目</b>。这一节是把这件事在界面上也说清楚。</p>
+
+<div class="scr">
+  <div class="scr-head"><span class="id">05</span><h3>项目切换器</h3>
+    <span class="route">顶栏最左侧点击 → 下拉覆盖</span><span class="have no">没有</span></div>
+  <p>对应多邻国 <b>D1</b>（点国旗弹出的那一屏）。它表面上是"换语言"，
+  <b>本质是换项目</b>——这正是我们需要的那个动作。</p>
+  <div class="frames">
+    <div class="fr fr-m"><div class="lab">MOBILE · 从顶部下拉，路径仍在下方</div>
+      <div class="wf wf-m">
+        <div class="row" style="height:24px">
+          <div class="box solid grow gold" style="font-size:9px">🏝 TuringPact ▲</div>
+          <div class="box grow" style="font-size:9px">🔥3</div>
+          <div class="box grow" style="font-size:9px">💎120</div>
+          <div class="box grow" style="font-size:9px">⚡</div>
+        </div>
+        <div class="box solid col" style="flex:0 0 auto;padding:6px;gap:5px">
+          <div class="row" style="height:52px">
+            <div class="box gold grow" style="font-size:8px">TuringPact<br>31 门</div>
+            <div class="box dim grow" style="font-size:8px">University<br>Local · 9</div>
+            <div class="box dim grow" style="font-size:8px">SupaLuv<br>7</div>
+            <div class="box dim grow" style="font-size:8px">Buzz<br>5</div>
+          </div>
+          <div class="box sky" style="height:34px;font-size:9px">
+            第 3 课 / 31　▓▓▓░░░░░░<br>已完成 2 门 · 还剩 29 门</div>
+          <div class="box" style="height:18px;font-size:9px">看这个项目的全部课程 →</div>
+        </div>
+        <div class="box grow dim">…路径（仍可见，未被遮住）…</div>
+        <div class="row" style="height:34px">
+          <div class="box go grow" style="font-size:8px">学习</div>
+          <div class="box grow dim" style="font-size:8px">任务</div>
+          <div class="box grow dim" style="font-size:8px">排行</div>
+          <div class="box grow dim" style="font-size:8px">图鉴</div>
+          <div class="box grow dim" style="font-size:8px">会员</div>
+          <div class="box grow dim" style="font-size:8px">我</div>
+        </div>
+      </div></div>
+    <div class="fr fr-w"><div class="lab">WEB · 右栏顶部展开，中栏不动</div>
+      <div class="wf wf-w">
+        <div class="row grow">
+          <div class="box dim" style="width:100px;font-size:9px">左栏导航</div>
+          <div class="box dim grow" style="font-size:9px">中栏 · 路径不动</div>
+          <div class="col" style="width:150px">
+            <div class="box gold solid" style="height:20px;font-size:8px">🏝 TuringPact ▲</div>
+            <div class="row" style="height:38px">
+              <div class="box gold grow" style="font-size:7px">TP<br>31</div>
+              <div class="box dim grow" style="font-size:7px">UL<br>9</div>
+              <div class="box dim grow" style="font-size:7px">SL<br>7</div>
+              <div class="box dim grow" style="font-size:7px">Bz<br>5</div>
+            </div>
+            <div class="box sky" style="height:26px;font-size:8px">第 3 课 / 31<br>▓▓▓░░░░</div>
+            <div class="box plum grow" style="font-size:8px">3D · 四片群岛<br>当前那片发亮</div>
+          </div>
+        </div></div></div>
+  </div>
+  <dl class="spec">
+    <dt>入口</dt><dd>顶栏<b>最左侧</b>，写当前项目名 + <code>▾</code>。
+      多邻国把它放在国旗的位置，那是视线第一落点。</dd>
+    <dt>为什么是<br>下拉不是<br>新页面</dt><dd>换项目是<b>高频但低承诺</b>的动作——看一眼别的项目有多少课，然后多半还是回来。
+      下拉保留了「我还在路上」的感觉；跳一个新页面会让人觉得自己离开了。这是 D1 的原样照搬。</dd>
+    <dt>每块砖<br>上写什么</dt><dd>项目名 + <b>课数</b>。<b>不写百分比</b>——
+      「31 门」是一个可以掂量的重量，「完成 6%」是一个让人泄气的数字。</dd>
+    <dt>进度条</dt><dd>照 D1 的做法：<b>当前项目</b>的「第 3 课 / 31」。
+      多邻国那条是「60 → 61」，下一个整数触手可及，比「完成 47%」有效得多。
+      我们的等价物是<b>下一门课</b>，不是百分比。</dd>
+    <dt>切换<br>发生什么</dt><dd>① 中栏路径整条换成新项目的路
+      ② 3D 场景<b>飞过去</b>（2–3 秒，见「三个镜头」的飞行档）
+      ③ 顶栏名字改掉 ④ <b>URL 变成 <code>#/&lt;study&gt;</code></b>，可收藏、可后退</dd>
+    <dt>「新项目」<br>区</dt><dd>D1 底部有个「新课程」区放没开始的课。
+      我们对应的是<b>还没开始的项目</b>，带一句它教什么。
+      以后加第 5、第 6 个项目时，这块地方已经留好了。</dd>
+  </dl>
+  <div class="ac"><b>验收</b><ol>
+    <li>顶栏<b>不再显示「4 个世界 · 52 门课」</b>——那是把四条独立的路说成了一条。
+      改成<b>当前项目名 + 它自己的课数</b>。</li>
+    <li>切项目后，路径上的「下一步」来自新项目的 <code>spineOf</code>，且与旧项目的进度互不影响。</li>
+    <li>走完一个项目的最后一门，<b>不会自动跳进另一个项目</b>——
+      给一屏「这个项目学完了」，然后让人自己选下一个。</li>
+    <li>下拉打开时路径仍然可见（不是全屏遮罩），Esc 关闭。</li>
+  </ol></div>
+</div>
+
+<div class="dec">
+  <h4>一个必须避免的误解</h4>
+  <p><b>「主路径」是一个项目内部的概念，不是整个产品的。</b>
+  产品有四条主路径，不是一条。学习者不需要、也不应该学完全部 52 门——
+  他选一个项目，走完那一条，然后决定要不要开下一个。</p>
+  <p><b>为什么这一点值得单独写一段</b>：因为「52 门课全序」这句话读起来像一条 52 节的长路，
+  而那会是一个吓退所有人的产品。多邻国有 40 多种语言，
+  <b>但没有任何一个用户面对的是「40 种语言的总路径」</b>——他面对的永远是他选的那一种。</p>
+</div>
+
 <h2 class="warn"><span class="n">序</span>课程顺序：你指出的问题是真的，这是数据</h2>
 <p class="lede">你说「所有课程都不能是多门课同时进行，肯定有先后顺序」。
 我把 52 门课的先修关系全跑了一遍，<b>你说对了，而且问题集中在两个 study</b>。</p>
@@ -679,7 +795,7 @@ const visible = nodes
   <div class="frames">
     <div class="fr fr-m"><div class="lab">MOBILE</div>
       <div class="wf wf-m">
-        <div class="box solid" style="height:26px">Buzz ▾ · 🔥3 · ⚡额度</div>
+        <div class="box solid" style="height:26px">🏝 TuringPact ▾ · 🔥3 · ⚡</div>
         <div class="box sky solid" style="height:38px">第 2 课 · 让 AI 读懂你的仓库<br>（sticky，跟随分段变色）→ 📋</div>
         <div class="box grow scrolly" style="border:none;padding:0">
           <div class="path">
