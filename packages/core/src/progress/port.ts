@@ -158,7 +158,28 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     state.streak = { days: lastDay === yesterday ? days + 1 : 1, lastDay: today };
   }
 
-  /** New cards enter the queue due tomorrow — that is the reason to come back. */
+  /**
+   * New cards enter the queue due tomorrow — that is the reason to come back.
+   *
+   * This comment used to describe an intention the code did not carry out.
+   * FSRS's `newCard()` is due immediately, because in a flashcard app the new
+   * queue *is* the study-it-now queue, so a learner finished a lesson and the
+   * settlement offered 「现在就可以复习」 while the review screen's own empty
+   * state promised 「学一节新课，它会掉落新的卡片，明天就有事做了」. Two screens,
+   * opposite promises, about the same two cards.
+   *
+   * Tomorrow is the right one, and not only because the copy says so. A card
+   * reviewed thirty seconds after reading measures short-term memory and
+   * nothing else, and it spends the first interval — the most informative one
+   * FSRS ever gets — on an answer the learner could not have forgotten yet.
+   * Spaced repetition with no space is a quiz.
+   *
+   * The next calendar day rather than +24h, because the streak already counts
+   * in calendar days and "tomorrow" should mean the same thing on both screens.
+   * Someone finishing at 23:50 gets a short first gap; someone finishing at
+   * 09:00 and returning at 08:00 the next morning finds their cards waiting,
+   * which is the case that actually happens.
+   */
   function dropCards(
     studyId: string,
     courseId: string,
@@ -174,7 +195,7 @@ export function createProgressPort(options: { readonly persistence: Persistence 
         studyId,
         courseId,
         lessonId,
-        dueAt: fresh.due.getTime(),
+        dueAt: startOfNextDay(Date.now()),
         fsrs: storeCard(fresh),
       };
     }
@@ -308,6 +329,13 @@ function safeRead(persistence: Persistence): string | null {
  * count, while a session either side of local midnight was one day and broke
  * it. Both directions were wrong, and neither looked wrong from the outside.
  */
+/** Midnight at the start of the day after `at`, in the learner's own timezone. */
+function startOfNextDay(at: number): number {
+  const date = new Date(at);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime() + DAY;
+}
+
 function calendarDay(at: number): string {
   const date = new Date(at);
   const month = `${date.getMonth() + 1}`.padStart(2, "0");

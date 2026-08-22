@@ -143,6 +143,16 @@ export async function walkFirstOnlineLesson(page: Page): Promise<void> {
 }
 
 /** Same person, next morning: due dates pulled into the past, then one load. */
+/**
+ * Rewind the dropped cards so the review queue behaves as it will tomorrow.
+ *
+ * The reload at the end is load-bearing. The progress port keeps its state in
+ * memory and writes through to `localStorage`, so editing storage underneath a
+ * running page changes nothing a screen can see — and a `goto` that only
+ * changes the hash does not reload the document. This helper looked like it
+ * worked for as long as new cards were due immediately: the review screen had
+ * cards either way, so nobody found out that the simulation was a no-op.
+ */
 export async function makeDroppedCardsDue(page: Page): Promise<number> {
   const count = await page.evaluate(() => {
     const key = "university.progress.v2";
@@ -156,5 +166,6 @@ export async function makeDroppedCardsDue(page: Page): Promise<number> {
     localStorage.setItem(key, JSON.stringify(data));
     return cards.length;
   });
+  await page.reload({ waitUntil: "domcontentloaded" });
   return count;
 }
