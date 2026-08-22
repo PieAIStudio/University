@@ -5,19 +5,6 @@ import { LEXICON } from "../lesson/language";
 import { LIBRARY_TABS, WORLD, type LibraryTab, type View } from "../url-state";
 import { FavouritesHost } from "./FavouritesHost";
 
-/** Which library tab a legacy single-segment route lands on. */
-export const LIBRARY_VIEW_TAB: Partial<Record<View["kind"], LibraryTab>> = {
-  library: "concepts",
-  concepts: "concepts",
-  terms: "terms",
-  "anti-pattern": "flavour",
-  favourites: "favourites",
-};
-
-export function libraryTabOf(view: View): LibraryTab {
-  return view.kind === "library" ? view.tab : (LIBRARY_VIEW_TAB[view.kind] ?? "concepts");
-}
-
 const LIBRARY_TAB_LABEL: Record<LibraryTab, string> = {
   concepts: "概念图解",
   terms: "词义索引",

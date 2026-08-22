@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fromHash, toHash, WORLD, type View } from "./url-state";
+import { fromHash, libraryTabOf, toHash, WORLD, type View } from "./url-state";
 
 const views: View[] = [
   WORLD,
@@ -82,5 +82,13 @@ describe("the address bar", () => {
     expect(fromHash("#/me")).toEqual({ kind: "me" });
     expect(toHash({ kind: "league" })).toBe("#/league");
     expect(toHash({ kind: "me" })).toBe("#/me");
+  });
+
+  it("maps legacy library hashes onto the tab the index already has", () => {
+    expect(libraryTabOf({ kind: "concepts" })).toBe("concepts");
+    expect(libraryTabOf({ kind: "terms" })).toBe("terms");
+    expect(libraryTabOf({ kind: "anti-pattern" })).toBe("flavour");
+    expect(libraryTabOf({ kind: "favourites" })).toBe("favourites");
+    expect(libraryTabOf({ kind: "library", tab: "flavour" })).toBe("flavour");
   });
 });
