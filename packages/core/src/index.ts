@@ -248,6 +248,10 @@ export {
   type LexiconSearchResult,
 } from "./lexicon/search.js";
 
+// Who is signed in, and where their progress lives. Ports are types plus the
+// one in-process implementation; network and filesystem stay in the shells.
+export * from "./ports/index.js";
+
 // The one thing both shells must agree on before either can render the other's
 // world: what a lesson is called, and what finished means. A read model, not a
 // storage migration — neither store is told where to put its bytes. The whole
@@ -257,6 +261,20 @@ export * from "./progress/contract.js";
 // Recommended learning sequence (spine order) per study — a linear extension
 // of the prerequisite DAG so there is always exactly one "next step".
 export * from "./progress/spine.js";
+
+// The learner's progress document, the merge that keeps two machines honest,
+// and the one port both shells construct. Persistence and remote are injected.
+export {
+  PROGRESS_STORAGE_KEY,
+  cloneProgress,
+  createMemoryPersistence,
+  createMemoryRemoteStore,
+  createProgressPort,
+  emptyProgress,
+  lessonKey,
+  mergeProgress,
+  parseProgress,
+} from "./progress/index.js";
 
 // Favourites are a versioned document of sense ids. Pure: storage is an
 // adapter, so the account-backed store is a different reader/writer rather

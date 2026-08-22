@@ -53,7 +53,7 @@ concepts · 267 terms · 25 anti-patterns.
 420 lesson-to-lesson links, 383 inside their own course and **five** crossing
 one: the mesh does not exist yet. `[[term:]]` links: zero.
 
-Tests: core 229 · ui 178 · online 51 · world 29 · local 444.
+Tests: core 249 · ui 184 · online 57 · world 29 · local 444.
 
 **Re-run the script before quoting any of these.** Every number on this page
 has been wrong at least once.
@@ -131,6 +131,10 @@ Done, and verified in a browser rather than by a passing suite:
   that lived only in `apps/local` now live next to the component.
 - **`courseShapeOf` in core.** The 2D catalog no longer imports "world" for a
   pure fold of lesson ids.
+- **IdentityPort and ProgressPort.** Sign-in is optional. Missing env is
+  silent. Progress stays on the machine; merge is tested against a replaceable
+  remote. University is not a SwimmerBackend consumer yet, so the real table
+  is not wired.
 
 Next:
 
@@ -144,10 +148,11 @@ Next:
    tokens, no amount of contrast fixing makes that theme usable.
 4. **A persisted record of a wrong answer.** 错题本 (v3 16) has nothing to
    count: wrong picks live in component state and vanish with the question.
-5. The four ports; delete online's duplicate reader; separate read from
-   answered.
+5. ContentPort and EvidencePort; delete online's duplicate reader; separate
+   read from answered.
 6. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
-7. SwimmerBackend: accounts, payment, metered AI.
+7. Register University in SwimmerBackend (schema + RLS), then payment and
+   metered AI. Identity UI is in; the table is not.
 
 ## Traps, Found The Hard Way
 

@@ -16,11 +16,14 @@ import type { ReactNode } from "react";
  */
 export function ProfileScreen({
   avatar,
+  account,
   passagesRead,
   lessonsCompleted,
   nextHref = "#/",
 }: {
   readonly avatar?: ReactNode;
+  /** Quiet account door. Absent when a shell has not wired identity yet. */
+  readonly account?: ReactNode;
   readonly passagesRead: number;
   readonly lessonsCompleted: number;
   readonly nextHref?: string;
@@ -28,6 +31,7 @@ export function ProfileScreen({
   return (
     <div className="profile-screen">
       <div className="profile-screen__hero">{avatar}</div>
+      {account}
       <dl className="profile-screen__stats">
         <Stat
           label="读过真实代码"

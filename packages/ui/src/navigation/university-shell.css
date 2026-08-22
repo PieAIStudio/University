@@ -203,6 +203,25 @@
   text-decoration: none;
 }
 
+.account-panel {
+  margin: 0 0 28px;
+}
+
+.account-panel__form {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 80%, transparent);
+}
+
+.account-panel__form form {
+  display: grid;
+  gap: 12px;
+}
+
 .today-card {
   display: grid;
   gap: 10px;

@@ -2,7 +2,18 @@
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { createIdentityPort, createMemoryIdentityPort } from "@pieai/university-core";
 
+import {
+  ACCOUNT_PENDING_LABEL,
+  ACCOUNT_SIGNED_IN_TITLE,
+  ACCOUNT_SIGN_IN,
+  ACCOUNT_SIGN_OUT,
+  ACCOUNT_UNCONFIGURED_DESCRIPTION,
+  ACCOUNT_UNSIGNED_DESCRIPTION,
+  ACCOUNT_UNSIGNED_TITLE,
+  AccountPanel,
+} from "./AccountPanel.js";
 import {
   LeagueEmpty,
   LEAGUE_EMPTY_ACTION,
@@ -94,5 +105,63 @@ describe("empty destinations", () => {
     expect(markup).toContain("徽章还没开张");
     expect(markup).not.toContain("<span>段</span>");
     expect(markup).not.toContain("<span>节</span>");
+  });
+
+  it("renders a passed-in account slot on the profile page", () => {
+    const markup = renderToStaticMarkup(
+      <ProfileScreen passagesRead={0} lessonsCompleted={0} account={<p>登录入口</p>} />,
+    );
+    expect(markup).toContain("登录入口");
+  });
+});
+
+describe("AccountPanel", () => {
+  it("stays a quiet sentence when the backend is not configured, with no form", () => {
+    const markup = renderToStaticMarkup(<AccountPanel identity={createIdentityPort(null)} />);
+    expect(markup).toContain(ACCOUNT_UNSIGNED_TITLE);
+    expect(markup).toContain(ACCOUNT_UNCONFIGURED_DESCRIPTION);
+    expect(markup).not.toContain('type="password"');
+    expect(markup).not.toContain(ACCOUNT_SIGN_IN);
+  });
+
+  it("offers a kit form when signed out, not a modal", () => {
+    const markup = renderToStaticMarkup(<AccountPanel identity={createMemoryIdentityPort()} />);
+    expect(markup).toContain(ACCOUNT_UNSIGNED_TITLE);
+    expect(markup).toContain(ACCOUNT_UNSIGNED_DESCRIPTION);
+    expect(markup).toContain(ACCOUNT_SIGN_IN);
+    expect(markup).toContain('type="password"');
+    expect(markup).toContain("game-ui-input");
+    expect(markup).toContain("game-ui-field");
+  });
+
+  it("has a real pending state", () => {
+    const identity = createMemoryIdentityPort();
+    identity.status = () => ({ kind: "pending" });
+    const markup = renderToStaticMarkup(<AccountPanel identity={identity} />);
+    expect(markup).toContain(ACCOUNT_PENDING_LABEL);
+  });
+
+  it("shows who is signed in and a way out", () => {
+    const markup = renderToStaticMarkup(
+      <AccountPanel
+        identity={createMemoryIdentityPort({
+          id: "memory:ada@example.com",
+          email: "ada@example.com",
+        })}
+      />,
+    );
+    expect(markup).toContain(ACCOUNT_SIGNED_IN_TITLE);
+    expect(markup).toContain("ada@example.com");
+    expect(markup).toContain(ACCOUNT_SIGN_OUT);
+    expect(markup).not.toContain('type="password"');
+  });
+
+  it("has a real error state that still leaves the form up", () => {
+    const identity = createMemoryIdentityPort();
+    identity.status = () => ({ kind: "error", message: "登录没有成功，邮箱或密码不对。" });
+    const markup = renderToStaticMarkup(<AccountPanel identity={identity} />);
+    expect(markup).toContain("登录没有成功，邮箱或密码不对。");
+    expect(markup).toContain('type="password"');
+    expect(markup).toContain("没登上");
   });
 });
