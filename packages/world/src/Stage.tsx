@@ -11,10 +11,11 @@
  *      and `useFrame` at priority 1 takes rendering away from R3F's automatic
  *      pass, so the draw happens exactly once per frame, here.
  *   2. One tone map, one sRGB encode. The scene renders linear into a target;
- *      `grade.ts` runs the kit's standalone blit (ACES, then grade, then one
- *      sRGB encode) and forces `toneMapping` to `NoToneMapping` while that
- *      blit runs, so the renderer does not add a second pair. The kit guard
- *      asserts the count in development, below.
+ *      `ao.ts` may darken that linear colour (desktop only); `grade.ts` then
+ *      runs the kit's standalone blit (ACES, then grade, then one sRGB encode)
+ *      and forces `toneMapping` to `NoToneMapping` while that blit runs, so
+ *      the renderer does not add a second pair. The kit guard asserts the
+ *      count in development, below. AO is skipped on the mobile tier.
  *   3. A grade exists — `grade.ts` starts from the kit's `diorama` preset and
  *      records the scene-specific overrides.
  *   4. DPR is clamped, with a lower ceiling and no multisampling on small
@@ -30,6 +31,7 @@ import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, type ReactNode }
 import * as THREE from "three";
 
 import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
+import { createAoPass } from "./ao";
 import { assertWorldGradePipeline, createGradePass } from "./grade";
 
 /**
@@ -50,12 +52,20 @@ function renderTier() {
 function Pipeline() {
   const { gl, scene, camera, size, viewport } = useThree();
   const pass = useMemo(() => createGradePass(), []);
+  const ao = useMemo(() => createAoPass(), []);
+  // Recomputed each render is fine: the viewport does not change mid-frame,
+  // and the mobile skip has to follow a rotate-to-landscape the way dpr does.
+  const mobile = renderTier() === "mobile";
 
   useEffect(() => () => pass.dispose(), [pass]);
+  useEffect(() => () => ao.dispose(), [ao]);
 
   useEffect(() => {
-    pass.resize(size.width * viewport.dpr, size.height * viewport.dpr);
-  }, [pass, size.width, size.height, viewport.dpr]);
+    const width = size.width * viewport.dpr;
+    const height = size.height * viewport.dpr;
+    pass.resize(width, height);
+    ao.resize(width, height);
+  }, [pass, ao, size.width, size.height, viewport.dpr]);
 
   // The kit guard is the reason the package exists: double tone-map / double
   // sRGB encode fails silently. Gate on DEV because the kit does not sniff
@@ -80,7 +90,14 @@ function Pipeline() {
       measuring.current(sample(gl, pass.target));
       measuring.current = null;
     }
-    pass.render(gl);
+    // AO before the encode. On a phone the directional map is the contact
+    // shadow we can afford; this pass is the desktop crease.
+    if (!mobile && pass.target.depthTexture) {
+      ao.render(gl, pass.target, camera);
+      pass.render(gl, ao.target.texture);
+    } else {
+      pass.render(gl);
+    }
   }, 1);
 
   // Baseline rule 3 says a grade must have recorded provenance, and the shared
