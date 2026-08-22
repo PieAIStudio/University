@@ -1,12 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 import type { ShellCounter } from "@pieai/university-ui/navigation/UniversityShell.js";
-import {
-  CreditIcon,
-  EnergyIcon,
-  IslandIcon,
-  StreakIcon,
-} from "@pieai/university-ui/shell/icons.js";
+import { IslandIcon, StreakIcon } from "@pieai/university-ui/shell/icons.js";
 
 import type { View } from "../url-state";
 
@@ -57,9 +52,31 @@ export function shellCounters(args: {
   readonly projectName: string;
   readonly streakDays: number;
 }): readonly ShellCounter[] {
+  /*
+    Only counters that count something.
+
+    学分 and ⚡额度 were rendering a hardcoded "0", and neither system exists —
+    so the first thing a new learner read about themselves was three zeros in
+    muted brown. A zero is a claim: it says you have none of a thing. Nothing
+    is the honest state for a thing that has not been built, and it reads
+    better besides.
+
+    Their slots are held in the player journey (v3 「顶部四计数」) and they come
+    back the moment they carry a real number. The streak stays at zero because
+    zero days is a true fact about a real system, and greying it is how
+    Duolingo says the same thing.
+  */
   const muted = args.streakDays === 0;
   return [
-    { id: "island", icon: <IslandIcon />, label: args.projectName },
+    /*
+      The project's name, not just its icon. v3 「顶部四计数」 puts the current
+      project where Duolingo puts the language flag, and that slot is the
+      answer to "where am I" — the first question a returning learner has.
+      Rendering the icon alone meant the only place the project was named was
+      a label floating in the 3D scene, which disappears the moment you enter
+      a course.
+    */
+    { id: "island", icon: <IslandIcon />, value: args.projectName, label: "当前项目" },
     {
       id: "streak",
       icon: <StreakIcon />,
@@ -68,8 +85,6 @@ export function shellCounters(args: {
       href: "#/quests",
       muted,
     },
-    { id: "credit", icon: <CreditIcon />, value: "0", label: "学分", href: "#/plans" },
-    { id: "energy", icon: <EnergyIcon />, value: "0", label: "额度", href: "#/plans" },
   ];
 }
 

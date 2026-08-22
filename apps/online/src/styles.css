@@ -130,7 +130,16 @@ button.primary,
 a.primary {
   border: 0;
   background: var(--game-ui-accent, #5ec8c0);
-  color: var(--game-ui-accent-ink, #07110f);
+  /*
+    `accent-contrast`, not `accent-ink`. The names invite the mistake: ink
+    sounds like "the ink for accent things", and it means the opposite —
+    accent-COLOURED ink for use on a surface (#ffb072 on night). Painted on the
+    accent fill it gave the app's primary button 1.48:1, light orange on
+    orange, on the one control every learner has to find. `accent-contrast`
+    (#241609) is the ink meant to sit on the accent, and it is what every
+    button inside SwimmerUIKit itself uses.
+  */
+  color: var(--game-ui-accent-contrast, #241609);
   font-weight: 600;
   padding: 8px 16px;
 }

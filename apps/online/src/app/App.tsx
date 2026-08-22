@@ -220,12 +220,19 @@ export function App() {
     const studyId =
       view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
         ? view.studyId
-        : null;
+        : /*
+             On the world view nothing is picked, and falling back to the first
+             study in the catalogue named Buzz while the map was centred on
+             TuringPact and the 「今天」 card said TuringPact — three places, two
+             answers. The learner's own next course is the one thing all three
+             already agree on, so ask it.
+          */
+          (nextUp?.node.studyId ?? null);
     const study = studyId
       ? library.studies.find((entry) => entry.studyId === studyId)
       : library.studies[0];
     return study?.title ?? "University";
-  }, [view]);
+  }, [view, nextUp]);
 
   const profileStats = useMemo(() => {
     let lessonsCompleted = 0;
@@ -735,29 +742,15 @@ export function App() {
         {stage}
         {wide && showMap ? (
           <div className="learn-hud">
-            {view.kind === "world" && nextUp && !picked ? (
-              <aside className="nextup">
-                <p className="nextup__eyebrow">
-                  {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
-                </p>
-                <h2 className="nextup__title">{nextUp.node.title}</h2>
-                <p className="nextup__meta">
-                  {nextUp.node.studyTitle} · {nextUp.node.lessons} 节
-                </p>
-                <button
-                  className="primary block"
-                  onClick={() =>
-                    setView({
-                      kind: "course",
-                      studyId: nextUp.node.studyId,
-                      courseId: nextUp.node.courseId,
-                    })
-                  }
-                >
-                  {progress.streak.days > 0 ? "继续" : "开始第一节"} →
-                </button>
-              </aside>
-            ) : null}
+            {/*
+              No 「next lesson」 card here at this width. The right rail's
+              「今天」 already carries the same title, the same metadata and the
+              same button, so rendering both put two competing orange calls to
+              action on one screen — and this one sat on top of the map,
+              covering an island's own label. The rail owns it where the rail
+              exists; below 1160 there is no rail and the floating card above
+              takes over. One call to action at every width.
+            */}
             {view.kind === "world" && picked ? (
               <aside className="picked">
                 <h3>{picked.title}</h3>
