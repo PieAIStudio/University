@@ -16,9 +16,35 @@
  */
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
+import { networkInterfaces } from "node:os";
 import { join } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
+
+/**
+ * `--lan` puts the delivery shell on this machine's network address so a real
+ * phone can open it.
+ *
+ * This product is designed mobile-first — six tabs, 375px layouts, a map meant
+ * for a thumb — and without this the only way to see that is a narrow window
+ * on a desktop, which is not the same thing and never has been.
+ *
+ * Opt-in, and only the delivery shell. The authoring shell serves the
+ * filesystem: `studies/`, real checkouts of private repositories, an API that
+ * writes to disk. Putting that on a network by default is a decision nobody
+ * asked for. `--lan-local` exists for when you do mean it.
+ */
+const lanWanted = process.argv.includes("--lan") || process.argv.includes("--lan-local");
+const lanIncludesLocal = process.argv.includes("--lan-local");
+
+function lanAddress() {
+  for (const entries of Object.values(networkInterfaces())) {
+    for (const entry of entries ?? []) {
+      if (entry.family === "IPv4" && !entry.internal) return entry.address;
+    }
+  }
+  return null;
+}
 
 const SHELLS = [
   {
@@ -27,6 +53,7 @@ const SHELLS = [
     url: "http://localhost:9998",
     filter: "@pieai/university-online",
     script: "dev",
+    lan: true,
   },
   {
     name: "本地端",
@@ -34,6 +61,7 @@ const SHELLS = [
     url: "http://localhost:9999",
     filter: "@pieai/university-local",
     script: "dev",
+    lan: false,
   },
 ];
 
@@ -48,7 +76,11 @@ const SHELLS = [
  * error about something the person had already stopped.
  */
 function run(command, args, label) {
-  const child = spawn(command, args, { cwd: ROOT, detached: true, stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(command, args, {
+    cwd: ROOT,
+    detached: true,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
   const forward = (stream, sink) => {
     stream.setEncoding("utf8");
     let rest = "";
@@ -69,18 +101,44 @@ async function main() {
     await new Promise((resolve, reject) => {
       const build = run("pnpm", ["content"], "[内容]");
       build.unref();
-      build.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`pnpm content 退出码 ${code}`))));
+      build.on("exit", (code) =>
+        code === 0 ? resolve() : reject(new Error(`pnpm content 退出码 ${code}`)),
+      );
     });
   }
 
+  const address = lanWanted ? lanAddress() : null;
+  const onLan = (shell) => lanWanted && (shell.lan || lanIncludesLocal) && address !== null;
+
   const children = SHELLS.map((shell) =>
-    run("pnpm", ["--filter", shell.filter, shell.script], `[${shell.name}]`),
+    run(
+      "pnpm",
+      [
+        "--filter",
+        shell.filter,
+        shell.script,
+        // No `--` separator: pnpm forwards it literally, so vite received
+        // `vite -- --host 0.0.0.0` and read the host flag as a positional.
+        // Measured — the network address never answered.
+        ...(onLan(shell) ? ["--host", "0.0.0.0"] : []),
+      ],
+      `[${shell.name}]`,
+    ),
   );
 
   console.log("");
   for (const shell of SHELLS) {
     console.log(`  ${shell.name}  ${shell.url}`);
+    if (onLan(shell)) {
+      console.log(`         手机上打开  http://${address}:${new URL(shell.url).port}`);
+    }
     console.log(`         ${shell.purpose}`);
+  }
+  if (lanWanted && address === null) {
+    console.log("\n  找不到本机的网络地址，两个壳都只在 localhost 上。");
+  }
+  if (!lanWanted) {
+    console.log("\n  想在手机上看：pnpm start --lan");
   }
   console.log("\n  Ctrl-C 停止两个。\n");
 
