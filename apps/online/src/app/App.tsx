@@ -86,9 +86,9 @@ import {
   Flight,
   LabelProbe,
   MAP_CONTROLS_HINT,
-  SHOWS_THE_MAP,
   WORLD_POLAR,
-} from "./map-controls";
+} from "@pieai/university-world/controls.js";
+import { SHOWS_THE_MAP } from "./map-controls";
 import { activeIdForView, isBareView, useMinWidth } from "./shell-route";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 
