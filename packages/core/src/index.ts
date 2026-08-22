@@ -252,6 +252,10 @@ export {
 // module is that question.
 export * from "./progress/contract.js";
 
+// Recommended learning sequence (spine order) per study — a linear extension
+// of the prerequisite DAG so there is always exactly one "next step".
+export * from "./progress/spine.js";
+
 // Favourites are a versioned document of sense ids. Pure: storage is an
 // adapter, so the account-backed store is a different reader/writer rather
 // than a second model. The whole document algebra is the contract.

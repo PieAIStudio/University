@@ -10,3 +10,5 @@ export {
   type LessonRef,
   type ProgressSource,
 } from "./contract.js";
+
+export { nextCourseAfter, spineOf, validateSpine, type SpineEntry } from "./spine.js";

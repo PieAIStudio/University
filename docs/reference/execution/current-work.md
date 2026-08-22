@@ -94,10 +94,20 @@ The source videos are gitignored; the frames and the analysis are not.
 
 ### Corrections To Numbers Previously Reported Here
 
-558 lessons, not 560. `[[evidence:]]` markers number 1,815 and resolve to 1,597
-anchors — both figures are right, they count different things. Of 420
+**560 lessons** — the count a learner walks through, and the one the app shows.
+There are 558 *unique* ids among them, because two ids are claimed twice; both
+figures get quoted and they count different things. `[[evidence:]]` markers
+number 1,815 and resolve to 1,597 anchors, same kind of distinction. Of 420
 lesson-to-lesson links, 383 stay inside their own course and **five** cross one,
 so the mesh that a reader of earlier notes might expect does not exist yet.
+
+`apps/local/scripts/check-lesson-links.mjs` reports the two content faults that
+fall out of this: **four** dangling links, and **two duplicated lesson ids**
+(`fetch-not-clone`, `refuse-not-skip`, both in `university-local`). An earlier
+note here said thirty-two dangling links; that was a parsing mistake on my part
+— those thirty-two are full-path `[[lesson:course/unit/lesson]]` tokens and they
+resolve. The duplicates are the more interesting fault, because nothing fails:
+the token resolves, to whichever lesson the lookup reaches first.
 
 
 ## Order Of Work

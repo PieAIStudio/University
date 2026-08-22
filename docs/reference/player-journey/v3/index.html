@@ -144,7 +144,7 @@ tbody tr:hover{background:#12171e}
     <code>依据：docs/reference/借鉴的App/duolingo-teardown/index.html</code>
     <code>屏幕编号 C5 / E1 这类 = 引用拆解文档里的那一屏</code>
     <code>取代：v1 / v2</code>
-    <code>现状基线：52 门课 · 146 单元 · 560 节 · 1,597 条证据锚点 · 281 概念 · 267 术语</code>
+    <code>现状基线：52 门课 · 146 单元 · 560 节（558 个唯一 id）· 1,597 条证据锚点 · 281 概念 · 267 术语</code>
   </div>
 </header>
 
@@ -440,7 +440,10 @@ tbody tr:hover{background:#12171e}
       <td>其中 <b>383 条是同一门课内部</b>（「见上一节」），<b>跨课的只有 5 条</b></td></tr>
   <tr><td><code>[[term:]]</code> 词条引用</td><td><b>0</b></td><td>机制建好了，一条没用</td></tr>
   <tr><td>概念词条</td><td>281</td><td><b>现成的网材料</b>，只是还没有任何一节课链过去</td></tr>
-  <tr><td>悬空链接</td><td><b>32</b></td><td>⚠️ 指向不存在的课时 id。这是 bug，要单独修</td></tr>
+  <tr><td>悬空链接</td><td><b>4</b></td><td>⚠️ 指向不存在的课时 id</td></tr>
+  <tr><td>重复的课时 id</td><td><b>2</b></td>
+      <td>⚠️ 两节不同的课共用一个 id，<code>[[lesson:x]]</code> 指向哪一节<b>不确定</b>。
+        都在 <code>university-local</code>：<code>fetch-not-clone</code> 与 <code>refuse-not-skip</code></td></tr>
 </table>
 <p>换句话说：<b>你担心的「网太密会让人痛苦」现在不是风险，因为网还没织。</b>
 这是好消息——我们可以按设计决定密度，而不是去收拾一团已经乱掉的线。</p>
@@ -1017,9 +1020,10 @@ const visible = nodes
   <tr><td><b>移动端 30% 抽成</b></td>
       <td>走 App Store / Google Play 卖课，苹果谷歌强制抽 30%，网页和桌面没有。
         <b>影响定价，是商业决策</b></td></tr>
-  <tr><td><b>32 条悬空链接</b></td>
-      <td><code>[[lesson:]]</code> 指向不存在的课时 id。要一个校验脚本，和
-        <code>check-lesson-anchors.mjs</code> 同类</td></tr>
+  <tr><td><b>内容里的两处 id 问题</b></td>
+      <td>4 条悬空 <code>[[lesson:]]</code> + <b>2 个重复的课时 id</b>。
+        校验脚本 <code>check-lesson-links.mjs</code> 已经能查出来，
+        <b>但修要改内容，那是作者的事</b>。重复 id 更值得先修——它不会报错，只会打开错的那一节</td></tr>
 </table>
 
 </div>
