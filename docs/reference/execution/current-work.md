@@ -53,7 +53,7 @@ concepts · 267 terms · 25 anti-patterns.
 420 lesson-to-lesson links, 383 inside their own course and **five** crossing
 one: the mesh does not exist yet. `[[term:]]` links: zero.
 
-Tests: core 249 · ui 186 · online 57 · world 33 · local 448.
+Tests: core 252 · ui 186 · online 57 · world 33 · local 448. Plus 4 browser walks (`pnpm e2e`).
 
 **Re-run the script before quoting any of these.** Every number on this page
 has been wrong at least once.
@@ -138,25 +138,38 @@ Done, and verified in a browser rather than by a passing suite:
   silent. Progress stays on the machine; merge is tested against a replaceable
   remote. University is not a SwimmerBackend consumer yet, so the real table
   is not wired.
+- **`pnpm start`** opens both shells and says which is which; `--lan` puts the
+  delivery shell on this machine's network address so a real phone can reach
+  the layouts it was drawn for.
+- **`pnpm e2e`** — four walks in a real browser, deliberately outside
+  `pnpm verify`. It has already caught two things no unit test could: a review
+  simulation that was a silent no-op, and new cards contradicting the screen
+  that promised them.
+- **A new card is tomorrow's work.** The settlement and the review empty state
+  used to make opposite promises about the same two cards.
 
 Next:
 
-1. **The 19 seconds after the canvas mounts.** Of the 28.4s to first frame on
+1. **Register University in SwimmerBackend** — *needs the owner.* An app id, a
+   `university` schema that is neither `core` nor `public`, one progress row
+   per user, RLS scoped to `auth.uid()`, and a real sign-in from a real
+   address. Everything on this side is written and tested against a fake, so
+   this is the only step nobody here can take.
+2. **The 19 seconds after the canvas mounts.** Of the 28.4s to first frame on
    throttled 4G, roughly 19 are `loadGraph()` fetching 52 course JSON files and
    the kit's GLBs. The JavaScript half is solved; this is data, and it is now
    the whole wait.
-2. **SPEC-0003 step 3.** Retire the authoring 2D catalog only after every row
+3. **SPEC-0003 step 3.** Retire the authoring 2D catalog only after every row
    in the overlay table is visible on the world landing without scrolling to it.
-3. **The light theme cannot work yet.** 270 raw colour literals are invisible
+4. **The light theme cannot work yet.** 270 raw colour literals are invisible
    to the contrast checker, which only reads token pairs. Until they are
    tokens, no amount of contrast fixing makes that theme usable.
-4. **A persisted record of a wrong answer.** 错题本 (v3 16) has nothing to
+5. **A persisted record of a wrong answer.** 错题本 (v3 16) has nothing to
    count: wrong picks live in component state and vanish with the question.
-5. ContentPort and EvidencePort; delete online's duplicate reader; separate
+6. ContentPort and EvidencePort; delete online's duplicate reader; separate
    read from answered.
-6. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
-7. Register University in SwimmerBackend (schema + RLS), then payment and
-   metered AI. Identity UI is in; the table is not.
+7. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
+8. Payment and metered AI, after 1.
 
 ## Traps, Found The Hard Way
 
