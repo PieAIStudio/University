@@ -119,9 +119,20 @@ it is a user-facing behaviour change, so it gets designed in
 
 ## Order Of Work
 
-1. Move the scene to `packages/ui` and cut its import of the delivery shell's
-   library. Nothing user-visible changes; the delivery shell must look
-   identical afterwards, and that is the test.
+1. Move the scene to **`packages/world`** — a new package, not `packages/ui` —
+   and cut its import of the delivery shell's library. Nothing user-visible
+   changes; the delivery shell must look identical afterwards, and that is the
+   test.
+
+   This document first said `packages/ui`, which contradicted SPEC-0001's rule
+   that the shared package must not own any 3D or world map. The owner settled
+   it on 2026-08-22: a separate package satisfies both. `packages/ui` is the
+   2D learning surface and stays at zero `three`, so a unit test of the lesson
+   reader never has to stand up a WebGL mock and no module that imports a
+   Markdown component drags a renderer behind it. The authoring shell takes
+   `three`, `@react-three/fiber` and `@react-three/drei` **only** when it
+   chooses to depend on `packages/world`, which is a decision it makes once and
+   in the open.
 2. Give the authoring shell the same scene plus its overlay.
 3. Retire the 2D shelf **only after** every row in the table above is visible
    in the new landing. Deleting it earlier trades information for a screenshot.

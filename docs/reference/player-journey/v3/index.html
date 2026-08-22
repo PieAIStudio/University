@@ -943,16 +943,18 @@ const visible = nodes
   而且对『local 发现的问题自动惠及 online』几乎没有帮助。」</p>
 </div>
 
-<div class="dec hm">
-  <h4>顺带查出一个两份 spec 自己打架的地方（需要你裁决）</h4>
-  <p><code>SPEC-0001:141</code>：共享包<b>不得</b>拥有「任何 3D、世界地图、关卡或激励系统」。<br>
-  <code>SPEC-0003:122</code>：「把场景<b>搬进 <code>packages/ui</code></b>」——而 <code>packages/ui</code> 就是共享包。</p>
-  <p><b>两个模型独立给出同一个解法，我也认同：新建 <code>packages/world</code>。</b>
-  这样 SPEC-0001「共享课文包不碰 3D」成立，SPEC-0003「一个场景两个覆盖层」也成立。
-  代价：<code>apps/local</code> 需要装 <code>three</code> 系列依赖（它现在没有）——但只有 local <b>选择</b>依赖
-  <code>packages/world</code> 时才装，<code>packages/ui</code> 保持零 three。</p>
-  <p class="cite">按 <code>CLAUDE.md</code> 的 Upstream Rule，改 spec 不是我能自己决定的。
-  这条要么你拍板改 SPEC-0003 的第 1 步，要么在 PGS 上游提。</p>
+<div class="dec">
+  <h4>3D 场景放哪：已定，两份 spec 都已改到位</h4>
+  <p><b><code>packages/world</code></b>，一个独立的新包，不是 <code>packages/ui</code>。</p>
+  <p><code>packages/ui</code> 是 2D 学习表面，<b>保持零 <code>three</code></b>——
+  这样课文阅读器的单测永远不用起一个假的 WebGL 环境，
+  任何 import 了 Markdown 组件的模块也不会顺手拖上一个渲染器。
+  <code>apps/local</code> 只有在<b>主动依赖 <code>packages/world</code></b> 时才装 three 系列，
+  那是它一次性、公开做的决定。</p>
+  <p class="cite">2026-08-22 裁决。<code>SPEC-0003</code> 第 1 步已从
+  <code>packages/ui</code> 改为 <code>packages/world</code>；
+  <code>SPEC-0001</code> 已点名说明「共享包」指的是 core + ui 这套平价套件，
+  不是「任何两端都 import 的包」。<b>这个矛盾不会再被推导出来一次。</b></p>
 </div>
 
 <h2><span class="n">顺序</span>施工顺序</h2>
@@ -1011,10 +1013,10 @@ const visible = nodes
   <tr><td>导航</td><td>✔ <b>槽位一比一照搬多邻国，格子里换成我们的东西，缺的先占位</b></td></tr>
   <tr><td>3D 美术</td><td>✔ <b>云上的岛，与 OwnMySpace 同一世界观</b></td></tr>
   <tr><td>3D 头像</td><td>✔ 已跑通。<b>升级成品牌共享包是 PGS 的决定</b>，不在这里定</td></tr>
+  <tr><td>3D 场景放哪</td><td>✔ <b><code>packages/world</code></b> 独立包。
+    <code>packages/ui</code> 保持零 three。SPEC-0001 与 SPEC-0003 均已改到位</td></tr>
   <tr><td colspan="2" style="background:#12171e;font-weight:600;color:var(--gold)">还开着的</td></tr>
-  <tr><td><b>SPEC-0001 vs SPEC-0003</b></td>
-      <td>3D 能不能进共享包，两份 canonical spec 打架。建议新建 <code>packages/world</code>，
-        需要改 SPEC-0003 第 1 步的措辞——<b>这是记账，不是方向</b></td></tr>
+
   <tr><td><b>buzz 5 门课的顺序</b></td>
       <td>零先修，除了 <code>buzz-orientation</code> 该在最前，其余我给不了有依据的建议。<b>要作者定</b></td></tr>
   <tr><td><b>移动端 30% 抽成</b></td>

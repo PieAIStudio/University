@@ -76,16 +76,20 @@ The source videos are gitignored; the frames and the analysis are not.
 - **The authoring shell stays offline.** Four ports — content, progress,
   grading, evidence — and everything above them is one implementation.
   SwimmerBackend is built on the delivery side only.
+- **The renderer lives in `packages/world`.** Both shells share one scene, and
+  `packages/ui` stays at zero `three`. SPEC-0001 read against SPEC-0003 looked
+  like a contradiction; it was settled on 2026-08-22 and both specs now carry
+  the note, so nobody has to derive it a second time.
+- **One codebase, three shells.** Browser needs no wrapper; Electron and
+  Capacitor wrap the same build. Layout differs by breakpoint inside one
+  component tree. Device capability is the only permitted divergence and it
+  goes behind a port.
 - **Mesh learning, bounded.** Spine, spur, inline reference. Spurs render only
   within one node of the current position, three per node, so what is on screen
   is bounded by a constant however much content exists.
 
 ### What Is Open
 
-- `SPEC-0001:141` forbids the shared package from owning 3D; `SPEC-0003:122`
-  says move the scene into `packages/ui`, which is the shared package. Two
-  canonical specs, one contradiction. A separate `packages/world` satisfies
-  both and needs SPEC-0003's first step reworded.
 - `buzz`'s five courses have no prerequisites and no defensible order beyond
   `buzz-orientation` going first. That is an authoring decision.
 - Shipping through the app stores costs thirty per cent of digital sales. Web

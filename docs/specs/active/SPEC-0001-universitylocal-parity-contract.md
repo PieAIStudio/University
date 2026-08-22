@@ -146,6 +146,15 @@ The shared package must **not** own:
 Those differ by design, and forcing them into the kit would make the kit a
 second product.
 
+"The shared package" here means this parity kit — `packages/core` and
+`packages/ui`. It does not mean "any package both shells import". The world
+map is shared by both shells and lives in **`packages/world`**, which is a
+different package with a different dependency set; SPEC-0003 names it and
+explains why. A reader who takes the line above to forbid sharing a scene at
+all will rediscover a contradiction that was settled on 2026-08-22: the rule
+is that the kit which carries lessons must not also carry a renderer, not that
+two shells may never look at the same world.
+
 Beginner version: the kit is the recipe and the prepared sauce. Where you store
 the ingredients, who cooks, and what the dining room looks like stay local.
 

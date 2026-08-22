@@ -111,7 +111,21 @@ What follows from them:
   second, open tutoring last and metered. An unmetered large model behind a
   free tier is the robustness rule broken, in the direction of the bank.
 - **Design before build.** A user-facing behaviour gets designed in
-  `docs/reference/player-journey/` before it gets implemented.
+  `docs/reference/player-journey/` before it gets implemented. The current
+  journey is `docs/reference/player-journey/v3/`; it replaces v1 and v2.
+- **One codebase, three shells.** Browser, desktop and phone run the same
+  build. The browser needs no wrapper; Electron and Capacitor are wrappers
+  around that same output, not separate products. Layout differs by CSS
+  breakpoint inside one component tree — never by a second component. The only
+  permitted divergence is device capability, and it goes behind a port:
+  storage, payment, notification, grading. Everything above a port is identical
+  on all three. A responsive layout is not two implementations; a second
+  implementation is.
+- **The renderer lives in `packages/world`, never in `packages/ui`.** Both
+  shells share one scene, and `packages/ui` stays at zero `three` so that a
+  test of the lesson reader never has to stand up a WebGL mock. SPEC-0001 and
+  SPEC-0003 both say this; if a reading of either suggests otherwise, that
+  contradiction was settled on 2026-08-22 and the specs carry the note.
 
 ## Verification
 
