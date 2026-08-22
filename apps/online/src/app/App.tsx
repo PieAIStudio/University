@@ -79,7 +79,8 @@ import {
   SHOWS_THE_MAP,
   WORLD_POLAR,
 } from "./map-controls";
-import { activeIdForView, isBareView, shellCounters, useMinWidth } from "./shell-route";
+import { activeIdForView, isBareView, useMinWidth } from "./shell-route";
+import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 
 type PathOverlay =
   | {
@@ -328,7 +329,7 @@ export function App() {
   const due = dueCards();
   const dueTomorrowCount = dueTomorrow();
   const showMap = SHOWS_THE_MAP.has(view.kind);
-  const counters = shellCounters({
+  const counters = universityCounters({
     projectName,
     streakDays: progress.streak.days,
   });

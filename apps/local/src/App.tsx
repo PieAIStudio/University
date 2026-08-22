@@ -12,12 +12,7 @@ import {
 } from "@pieai/university-ui/navigation/empty.js";
 import { FavouritesEmpty } from "@pieai/university-ui";
 import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
-import {
-  CreditIcon,
-  EnergyIcon,
-  IslandIcon,
-  StreakIcon,
-} from "@pieai/university-ui/shell/icons.js";
+import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 import { isCurrentLessonCompleted } from "@pieai/university-ui/view/lesson-view.js";
 
 import { lessonRefKey } from "@pieai/university-core";
@@ -500,19 +495,13 @@ export function App() {
       <UniversityShell
         activeId={slot}
         extraMoreItems={[STUDIO_MORE_ITEM]}
-        counters={[
-          { id: "island", icon: <IslandIcon />, label: projectName },
-          {
-            id: "streak",
-            icon: <StreakIcon />,
-            value: "0",
-            label: "连击",
-            href: "#/quests",
-            muted: true,
-          },
-          { id: "credit", icon: <CreditIcon />, value: "0", label: "学分", href: "#/plans" },
-          { id: "energy", icon: <EnergyIcon />, value: "0", label: "额度", href: "#/plans" },
-        ]}
+        /*
+          `streakDays: null` is not a zero. This shell has no streak signal at
+          all until ADR-0001's shared progress lands, and it was rendering a
+          literal "0" — a number it had no way to know — beside two counters
+          for systems that do not exist.
+        */
+        counters={universityCounters({ projectName, streakDays: null })}
         aside={aside}
         asideLabel={slot === "settings" ? "设置" : "今天"}
       >
