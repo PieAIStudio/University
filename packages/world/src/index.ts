@@ -14,5 +14,14 @@ export { CourseScene, placeCourse, placeWorld, settlementSize, WorldScene } from
 export type { LessonPlacement, Marker } from "./Maps.js";
 export { Stage } from "./Stage.js";
 export { courseSprites } from "./path-overlay.js";
-export { courseShapeOf } from "./course.js";
+export { courseShapeOf, depthsFromPrerequisites, isFocusDimmed, studySub } from "./course.js";
 export type { Course, CourseNode } from "./course.js";
+export {
+  Controls,
+  COURSE_POLAR,
+  Flight,
+  LabelProbe,
+  MAP_CONTROLS_HINT,
+  WORLD_POLAR,
+} from "./controls.js";
+export { frameWorld } from "./frame.js";

@@ -39,6 +39,7 @@ import { recentStudies, StudyShelf } from "./shell/StudyShelf.js";
 import { StudioSection } from "./shell/StudioSection.js";
 import { StudyDetail } from "./shell/StudyDetail.js";
 import { TodaySection } from "./shell/TodaySection.js";
+import { WorldLanding } from "./shell/WorldLanding.js";
 
 interface DisplayedStudy {
   readonly locator: string;
@@ -106,6 +107,7 @@ export function App() {
   const [data, setData] = useState<BootstrapData | null>(null);
   const [selectedStudyId, setSelectedStudyId] = useState<string | null>(initialAddress.studyId);
   const [displayedStudy, setDisplayedStudy] = useState<DisplayedStudy | null>(null);
+  const [catalog, setCatalog] = useState<ReadonlyMap<string, StudyView>>(() => new Map());
   const [pendingStudyId, setPendingStudyId] = useState<string | null>(null);
   const [lessonLocator, setLessonRef] = useState<LessonRef | null>(initialAddress.lesson);
   /** Lessons a cross-lesson link led away from, innermost last. */
@@ -173,6 +175,34 @@ export function App() {
       )
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!data) return;
+    const controller = new AbortController();
+    void Promise.all(
+      data.studies.map(async (study) => {
+        const view = await readJson<StudyView>(
+          await fetch(`/api/studies/${study.id}`, { signal: controller.signal }),
+        );
+        return [study.id, view] as const;
+      }),
+    )
+      .then((entries) => setCatalog(new Map(entries)))
+      .catch((reason: unknown) => {
+        if (isAbort(reason)) return;
+      });
+    return () => controller.abort();
+  }, [data]);
+
+  useEffect(() => {
+    if (!displayedStudy) return;
+    setCatalog((current) => {
+      if (current.get(displayedStudy.locator) === displayedStudy.view) return current;
+      const next = new Map(current);
+      next.set(displayedStudy.locator, displayedStudy.view);
+      return next;
+    });
+  }, [displayedStudy]);
 
   useEffect(() => {
     if (!selectedStudyId) return;
@@ -404,28 +434,41 @@ export function App() {
     <>
       {data && data.studies.length === 0 ? <EmptyCampus /> : null}
       {data && data.studies.length > 0 ? (
-        <div className="studies-layout">
-          <StudyShelf
+        <div className="learn-layout">
+          <WorldLanding
             data={data}
+            catalog={catalog}
             selectedStudyId={selectedStudyId}
-            onSelect={(studyId) => {
+            onSelectStudy={(studyId) => {
               setSelectedStudyId(studyId);
               setLessonRef(null);
             }}
+            onOpenLesson={openLesson}
           />
-          {pendingStudyId && displayedStudy && pendingStudyId !== displayedStudy.locator ? (
-            <p className="loading-copy" role="status" aria-live="polite">
-              正在打开另一个学习项目；当前项目仍保留在屏幕上。
-            </p>
-          ) : null}
-          {studyView ? (
-            <StudyDetail
-              view={studyView}
-              summary={studySummary}
-              focus={data?.today.focus ?? null}
-              onOpenLesson={openLesson}
+          <div className="studies-layout">
+            <StudyShelf
+              data={data}
+              selectedStudyId={selectedStudyId}
+              onSelect={(studyId) => {
+                setSelectedStudyId(studyId);
+                setLessonRef(null);
+              }}
             />
-          ) : null}
+            {pendingStudyId && displayedStudy && pendingStudyId !== displayedStudy.locator ? (
+              <p className="loading-copy" role="status" aria-live="polite">
+                正在打开另一个学习项目；当前项目仍保留在屏幕上。
+              </p>
+            ) : null}
+            {studyView ? (
+              <StudyDetail
+                view={studyView}
+                summary={studySummary}
+                focus={data?.today.focus ?? null}
+                onOpenLesson={openLesson}
+                showCourseEntry={false}
+              />
+            ) : null}
+          </div>
         </div>
       ) : null}
     </>

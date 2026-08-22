@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { shortenHomePath } from "./App.js";
 import { KnowledgeNotesSection } from "./shell/KnowledgeNotesSection.js";
+import { CourseSection } from "./shell/CourseSection.js";
 import { classifyCourseRoute } from "./shell/CourseRouteQuiz.js";
 import { splitByFocus, StudyEvidenceStatus } from "./shell/StudyDetail.js";
 import { recentStudies, relativeTimeLabel } from "./shell/StudyShelf.js";
@@ -14,6 +15,57 @@ import {
   buildCardRevealPayload,
   highlightEvidenceCode,
 } from "@pieai/university-ui/view/lesson-view.js";
+
+describe("CourseSection entry", () => {
+  const course = {
+    id: "foundations-before-zero",
+    title: "从零开始之前",
+    description: "简介",
+    audience: "",
+    objectives: ["说出 App 是什么"],
+    status: "active",
+    isDefault: true,
+    units: [
+      {
+        id: "u",
+        title: "U",
+        objective: "",
+        status: "active",
+        lessons: [
+          {
+            id: "a",
+            title: "第一节",
+            status: "active",
+            contentRevision: 1,
+            cardCount: 0,
+            exerciseCount: 0,
+            progress: null,
+          },
+        ],
+      },
+    ],
+  };
+
+  it("names the first unfinished lesson when the catalog owns the start button", () => {
+    const markup = renderToStaticMarkup(
+      <CourseSection studyId="pact" course={course} onOpenLesson={() => undefined} />,
+    );
+    expect(markup).toContain("开始第 1 节");
+  });
+
+  it("drops the per-course start button when the landing already named the next step", () => {
+    const markup = renderToStaticMarkup(
+      <CourseSection
+        studyId="pact"
+        course={course}
+        onOpenLesson={() => undefined}
+        showEntry={false}
+      />,
+    );
+    expect(markup).not.toContain("开始第 1 节");
+    expect(markup).toContain("从零开始之前");
+  });
+});
 
 describe("StudyEvidenceStatus", () => {
   it("shows source and ready-UA counts without presenting UA as a course", () => {

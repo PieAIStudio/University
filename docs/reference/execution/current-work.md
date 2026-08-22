@@ -35,7 +35,7 @@ apps/local      authoring — filesystem, CLI, single machine   (9999)
 apps/online     delivery  — 3D archipelago, progress, review  (9998)
 packages/core   the domain model. No React, no fs, no network.
 packages/ui     the learning surface and the app chrome, both shells
-packages/world  the scene — delivery already imports it.        (ADR-0004)
+packages/world  the scene — both shells import it.              (ADR-0004)
                 packages/ui stays at zero three.
 ```
 
@@ -53,7 +53,7 @@ concepts · 267 terms · 25 anti-patterns.
 420 lesson-to-lesson links, 383 inside their own course and **five** crossing
 one: the mesh does not exist yet. `[[term:]]` links: zero.
 
-Tests: core 229 · ui 178 · online 51 · world 29 · local 444.
+Tests: core 229 · ui 178 · online 51 · world 33 · local 448.
 
 **Re-run the script before quoting any of these.** Every number on this page
 has been wrong at least once.
@@ -122,7 +122,10 @@ Done, and verified in a browser rather than by a passing suite:
   gone with it.
 - **The reading screen.** A ✕ and a bar over sections within the lesson.
 - **`packages/world`.** SPEC-0003 step 1. The scene lives there; delivery
-  imports it. Authoring does not, yet.
+  imports it.
+- **Authoring overlay.** SPEC-0003 step 2. The local shell renders the same
+  scene plus its overlay. The 2D catalog is still on the landing (no entry
+  buttons) until every row in the SPEC table is visible in the new surface.
 - **One counter row.** Both shells call `universityCounters`; neither keeps its
   own idea of what belongs in it.
 - **One remaining-count sentence.** The rail's `TodayCard` and the mobile
@@ -138,7 +141,8 @@ Next:
    throttled 4G, roughly 19 are `loadGraph()` fetching 52 course JSON files and
    the kit's GLBs. The JavaScript half is solved; this is data, and it is now
    the whole wait.
-2. **SPEC-0003 step 2.** Authoring takes the same scene plus its overlay.
+2. **SPEC-0003 step 3.** Retire the authoring 2D catalog only after every row
+   in the overlay table is visible on the world landing without scrolling to it.
 3. **The light theme cannot work yet.** 270 raw colour literals are invisible
    to the contrast checker, which only reads token pairs. Until they are
    tokens, no amount of contrast fixing makes that theme usable.

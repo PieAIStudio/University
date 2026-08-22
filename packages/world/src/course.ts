@@ -54,3 +54,60 @@ export interface CourseLesson {
 
 /** The fold into CourseShape lives in core. Re-exported so the scene keeps one import. */
 export { courseShapeOf } from "@pieai/university-core";
+
+/**
+ * Distance from a root along prerequisites, computed over one study.
+ *
+ * Depth is a property of the set, not of a course: adding one prerequisite
+ * upstream moves everything behind it. Both shells derive it with this
+ * function rather than storing it on the package.
+ */
+export function depthsFromPrerequisites(
+  courses: readonly {
+    readonly id: string;
+    readonly prerequisiteCourseIds: readonly string[];
+  }[],
+): Map<string, number> {
+  const byId = new Map(courses.map((course) => [course.id, course]));
+  const depths = new Map<string, number>();
+  const visiting = new Set<string>();
+  const walk = (id: string): number => {
+    const known = depths.get(id);
+    if (known !== undefined) return known;
+    const course = byId.get(id);
+    if (!course || visiting.has(id)) return 0;
+    visiting.add(id);
+    const depth = course.prerequisiteCourseIds.length
+      ? Math.max(...course.prerequisiteCourseIds.map(walk)) + 1
+      : 0;
+    visiting.delete(id);
+    depths.set(id, depth);
+    return depth;
+  };
+  for (const course of courses) walk(course.id);
+  return depths;
+}
+
+/**
+ * Whether this island sits outside the authoring shell's focus track.
+ *
+ * Null or empty focus means nothing is dimmed: the delivery shell never
+ * passes one, and an authoring session with no pin is the whole campus.
+ */
+export function isFocusDimmed(
+  node: { readonly studyId: string; readonly courseId: string },
+  focus: { readonly studyId: string; readonly courseIds: readonly string[] } | null | undefined,
+): boolean {
+  if (!focus || focus.courseIds.length === 0) return false;
+  return node.studyId !== focus.studyId || !focus.courseIds.includes(node.courseId);
+}
+
+/**
+ * What a study island says under its name.
+ *
+ * Before anything is finished, the course count orients a chooser. After,
+ * the count of finished lessons is "where am I", not how much mountain is left.
+ */
+export function studySub(courses: number, done: number): string {
+  return done > 0 ? `已学 ${done} 关` : `${courses} 门课`;
+}

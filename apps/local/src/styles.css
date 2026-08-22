@@ -551,6 +551,33 @@ summary:focus-visible,
   line-height: 1.7;
 }
 
+.learn-layout {
+  display: grid;
+  gap: 20px;
+}
+
+.world-landing__stage {
+  height: min(62dvh, 680px);
+  min-height: 280px;
+  border-radius: 14px;
+  background: #0d1019;
+}
+
+.world-landing__authoring {
+  display: grid;
+  gap: 12px;
+}
+
+.world-landing .picked > button,
+.world-landing .nextup > button {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.app-shell .campus-main:has(.world-landing) {
+  padding-top: 0;
+}
+
 .studies-layout {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);

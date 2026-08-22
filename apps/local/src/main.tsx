@@ -34,6 +34,7 @@ import "@pieai/university-ui/reference/term-index.css";
 import "@pieai/university-ui/review/choice-block.css";
 import "@pieai/university-ui/shell/app-shell.css";
 import "@pieai/university-ui/sound/sound-toggle.css";
+import "@pieai/university-world/overlay.css";
 import "./styles.css";
 
 const root = document.getElementById("root");
