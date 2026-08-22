@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: human
 created: 2026-08-17
-last_reviewed: 2026-08-17
+last_reviewed: 2026-08-22
 domain: product-line-architecture
 tags:
   - shared-rule
@@ -32,6 +32,7 @@ superseded_by: null
 | 产品代码调用模型                         | `SwimmerAIKit`（portfolio id: `swimmer-ai-kit`）                  | `@pieai/swimmer-ai-kit`            |
 | 账号、钱包、Auth、Realtime、schema、迁移 | `SwimmerBackend`（portfolio id: `swimmer-backend`）               | `@pieai/swimmer-backend-client` 等 |
 | 色彩管线、grade、sRGB 只编码一次         | `SwimmerRenderKit`（portfolio id: `swimmer-render-kit`）          | `@pieai/swimmer-render-kit`        |
+| 程序化 3D 头像、recipe、GLOSS runtime    | `SwimmerAvatarKit`（portfolio id: `swimmer-avatar-kit`）          | `@pieai/swimmer-avatar-kit`        |
 | Colyseus 房间骨架、认证、健康检查        | `SwimmerGameServerKit`（portfolio id: `swimmer-game-server-kit`） | `@pieai/swimmer-game-server-kit`   |
 
 仓库名和 portfolio id 是身份，某台电脑上的绝对路径不是。组合工作区里由 PGS
@@ -40,24 +41,29 @@ portfolio manifest 解析 checkout；独立 clone 里先用已发布包和本项
 
 方向口径在 HQ `docs/canon/pie-product-technology-stack.md`。本文是工作程序。
 
+`SwimmerAvatarKit` 内固定并校验 Kindergrimm 上游源码；这属于品牌包自己的
+第三方来源管理，不把 Kindergrimm 再登记成产品 donor。上游新提交必须先在 kit
+里审查、验证和发版，产品只能升级已发布的 kit 版本，不能自动跟随上游 `main`。
+
 ## 判断
 
 1. 这个产品现在真的需要这个能力吗？不需要就不要装。写作 CLI 不要装
    SwimmerGameServerKit；没有 3D 的产品不要装 SwimmerRenderKit；没有产品级
-   模型调用就不要为了「对齐」去装 SwimmerAIKit。
+   模型调用就不要为了「对齐」去装 SwimmerAIKit；没有程序化 3D 头像就不要装
+   SwimmerAvatarKit。
 2. 需要，就先读对应品牌仓库和已发布包，直接用。
 3. 品牌仓库缺功能或不好用：去改那个品牌仓库，发新版本，再让本产品升级引用。
-   不要在产品仓库里复制一份「差不多的」按钮、解锁器、调色 pass 或 Auth。
+   不要在产品仓库里复制一份「差不多的」按钮、头像生成器、调色 pass 或 Auth。
 4. 只有品牌仓库明确不该拥有的产品规则（玩法、文案、关卡、商业 Gate）才留在
    产品仓库。
 
 ## 品牌仓库自己
 
-你正在改的如果就是上面五个仓库之一：缺的能力加在这里，而不是让消费产品分叉。
+你正在改的如果就是上面六个仓库之一：缺的能力加在这里，而不是让消费产品分叉。
 第二个产品出现同一需求时，再考虑从产品抽回 kit；不要为第一个调用方过度设计。
 
 ## 禁止
 
 - 产品代码直连 OpenRouter 或模型厂商 SDK。
 - 产品仓库自己定义 `supabase/migrations` 或 `supabase/functions`。
-- 为了「先跑起来」在产品里重写 kit 已有的按钮、grade、音频解锁或房间骨架。
+- 为了「先跑起来」在产品里重写 kit 已有的按钮、头像 generator、grade、音频解锁或房间骨架。

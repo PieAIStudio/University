@@ -153,7 +153,7 @@
       "id": "pie-rules/brand-kit-first",
       "sourcePath": "rules/pie-rules/brand-kit-first.md",
       "delivery": "snapshot",
-      "contentHash": "sha256:eb74748102972fc97cc62837cefb8098ad4f75731559a079c2ad4d59c71989de",
+      "contentHash": "sha256:db55812e9d198c45e5fc9e934f7b783fe74c5cd53d91ab347ea2e939b435123f",
       "targetPath": "docs/policy/shared-rules/brand-kit-first.md"
     },
     {
