@@ -9,6 +9,12 @@ export function ProfileAvatar() {
   return (
     <div className="profile-avatar">
       <Canvas
+        /*
+          `dressScene` lays down a shadow-catching floor and a key light, and
+          without this the floor has nothing to catch. The avatar-lab canvas
+          has always had it; this preview was written later and did not.
+        */
+        shadows
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: false }}
         camera={{ position: [0.55, 1.2, 3.5], fov: 30, near: 0.05, far: 60 }}

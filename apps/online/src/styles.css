@@ -107,15 +107,27 @@ body {
   }
 }
 
+/*
+  Element-qualified on purpose everywhere else, but these three shapes are
+  also worn by links — an <a class="ghost"> got browser-default blue on the
+  profile page because `button.ghost` cannot match it. A control that looks
+  like a control should be styled by what it claims to be, not by its tag.
+*/
 button.primary,
 button.ghost,
-button.linkish {
+button.linkish,
+a.primary,
+a.ghost,
+a.linkish {
+  display: inline-block;
+  text-decoration: none;
   font: inherit;
   cursor: pointer;
   border-radius: var(--game-ui-radius-control, 10px);
 }
 
-button.primary {
+button.primary,
+a.primary {
   border: 0;
   background: var(--game-ui-accent, #5ec8c0);
   color: var(--game-ui-accent-ink, #07110f);
@@ -123,14 +135,16 @@ button.primary {
   padding: 8px 16px;
 }
 
-button.ghost {
+button.ghost,
+a.ghost {
   background: transparent;
   color: var(--game-ui-text-muted, #9aa6bb);
   border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
   padding: 8px 16px;
 }
 
-button.linkish {
+button.linkish,
+a.linkish {
   border: 0;
   background: none;
   color: var(--game-ui-accent, #5ec8c0);
@@ -148,6 +162,21 @@ button.block {
   height: 100%;
   min-height: min(70dvh, 720px);
   min-width: 0;
+}
+
+/*
+  The stage stays mounted across every route — unmounting it would throw away
+  the WebGL context and rebuild the world on each navigation — so on a
+  non-map route its wrapper is `hidden` but its parent still claimed a
+  screen's worth of height. Every other page therefore opened one full
+  viewport below its own content: the profile started at y=916 on a 900px
+  window, which reads as a blank page, not as a page you should scroll.
+
+  Hidden means it costs nothing.
+*/
+.learn-stage:has(> .stagewrap[hidden]) {
+  height: auto;
+  min-height: 0;
 }
 
 .stagewrap {
