@@ -90,11 +90,43 @@ The source videos are gitignored; the frames and the analysis are not.
 
 ### What Is Open
 
-- `buzz`'s five courses have no prerequisites and no defensible order beyond
-  `buzz-orientation` going first. That is an authoring decision.
 - Shipping through the app stores costs thirty per cent of digital sales. Web
-  and desktop do not. That is a pricing decision, not a technical one.
-- 32 `[[lesson:]]` links point at lesson ids that do not exist.
+  and desktop do not. That is a pricing decision, not a technical one, and it
+  stays one for as long as `PaymentPort` exists.
+- Four `[[lesson:]]` links point at lesson ids that do not exist, and two ids
+  are claimed by two lessons each. Both are authoring fixes;
+  `check-lesson-links.mjs` names them.
+
+### Closed On 2026-08-22: The Buzz Order
+
+`buzz`'s five courses have no prerequisites, so the prerequisite graph could
+not order them and the spine test that guards the other three studies is
+vacuous here — any permutation passes. The order was recorded as "author's
+decision" for that reason.
+
+The reason was sound and the conclusion was avoidable. A second, checkable
+source of order exists: **which layer of the Buzz dependency graph each
+course's evidence anchors sit in.** Which code a course cites is a judgement
+the author already made; nobody had read it as ordering information.
+
+`buzz-orientation` (41 anchors, 100% `.md`) → `buzz-reading-rust` (39, all in
+`crates/buzz-core/`, which has no `buzz-*` dependency and is the floor of the
+graph) → `buzz-one-message` (44, `crates/buzz-relay/handlers/`, and relay
+depends on core) → `buzz-agents-as-members` (40, `crates/buzz-acp/`) →
+`buzz-design-tokens` (21, `desktop/` CSS, the only course that touches no
+Rust and shares no file with the other four).
+
+One correction the Cargo.toml forced, and the reason this was read rather than
+assumed: **`buzz-acp` does not depend on `buzz-relay`.** They are siblings on
+top of core, not a chain. Fourth place is earned by a runtime dependency — an
+agent needs a relay to subscribe to — plus a content one: that course's second
+unit is "how an agent turns an event into a turn of work", and "event" is the
+whole subject of the course before it.
+
+Recorded in `packages/core/src/progress/spine.ts` with a test that pins the
+list, because this is the one study whose linear-extension test guards
+nothing. Still a draft; the courses will change a lot. Overruling it means
+editing that test in the same commit.
 
 ### Corrections To Numbers Previously Reported Here
 

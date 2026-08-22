@@ -22,23 +22,31 @@ export interface SpineEntry {
  * 显式定义的各 Study 推荐学习清单。
  *
  * 排序原则：具体 → 抽象（能指着屏幕说的排前面，需要先有系统观的排后面）。
- * - `buzz`: 5 门全部零先修。buzz-orientation 作为入门先导排第 1，其余 4 门保持文件顺序（待作者确定）。
+ * - `buzz`: 5 门全部零先修，所以先修图对它完全没有约束力。顺序改从
+ *   「每门课的证据锚点落在依赖图的哪一层」取，理由见下方 buzz 数组的注释。
  * - `supaluv`: 7 门完全单链（深度 0→6 每层 1 门），保持链式顺序不变。
  * - `university-local`: 深度 0–4 单线；深度 5 分出 3 门（按具体→抽象排序：本地持久化/隔离 → 算法/表映射 → 内容全生命周期治理）；深度 6 收回 1 门。
  * - `turing-pact`: 深度 0 的入门基础 + 深度 1–8 foundations 九连；深度 9 的 9 门采用 v3 文档推荐顺序；深度 10 的 6 门按具体→抽象；深度 11 的 3 门按具体→抽象；深度 12–13 进阶；收尾 2 门全栈实践与指挥大课。
  */
 const STUDY_SPINES: Readonly<Record<string, readonly string[]>> = {
-  // 5 门全部零先修
+  // 5 门全部零先修，先修图给不出任何顺序。改用一条能查证的依据：
+  // 每门课的 [[evidence:]] 锚点集中在 Buzz 仓库的哪一层，就按那一层排。
+  // 依赖关系读自 buzz@02f640bc 的 Cargo.toml，不是猜的。
   buzz: [
-    // 1. 入门先导：URL 即工作区边界、7 个 surface 与事件日志基础
+    // 1. 41 条锚点，100% 是 VISION/ARCHITECTURE/README —— 全课唯一不看代码的一门。
     "buzz-orientation",
-    // 2. 待作者确定（5 门全部零先修，除 orientation 置顶外保持文件顺序）
+    // 2. 39 条锚点，100% .rs，主要在 crates/buzz-core/（event / filter / verification）。
+    //    buzz-core 的 Cargo.toml 没有任何 buzz-* 依赖，是整张图的底。先学名词。
     "buzz-reading-rust",
-    // 3. 待作者确定（5 门全部零先修，除 orientation 置顶外保持文件顺序）
+    // 3. 44 条锚点，100% .rs，主要在 crates/buzz-relay/handlers/。relay 依赖 buzz-core，
+    //    所以它在图上就在上一门之上。名词认全了再看动词。
     "buzz-one-message",
-    // 4. 待作者确定（5 门全部零先修，除 orientation 置顶外保持文件顺序）
+    // 4. 40 条锚点，crates/buzz-acp/。注意 buzz-acp 并不 Cargo 依赖 buzz-relay——
+    //    它是运行时依赖：agent 连上一个 relay 才有事件可订阅。本课第 2 单元
+    //    「Agent 怎样把事件变成一轮工作」以「事件」为前提，那是上一门的全部内容。
     "buzz-agents-as-members",
-    // 5. 待作者确定（5 门全部零先修，除 orientation 置顶外保持文件顺序）
+    // 5. 21 条锚点，desktop/ 下的 .css 与 tailwind.config.js —— 唯一不碰 Rust 的一门，
+    //    与前四门零重叠。放最后是为了不在主线中间换子系统，也让最短的一门收尾。
     "buzz-design-tokens",
   ],
 

@@ -318,6 +318,19 @@ tbody tr:hover{background:#12171e}
   <tr><td>⚡ 能量</td><td><b>⚡ AI 判题额度</b></td><td>额度页。<b>这是真实成本，不是人造稀缺</b></td><td>🔲</td></tr>
 </table>
 
+<div class="dec hm">
+  <h4>「顶部」在 Web 上不是顶栏，这一条会改 DOM 结构</h4>
+  <p>回去逐像素看了 <code>W1</code>：Web 端这四个计数<b>不在一条通栏顶栏里，
+  它们在右栏的头部</b>，左边缘与中栏的分段条对齐，下面紧接着就是 Super 卡。
+  数量确实是四个（旗 / 🔥0 灰着 / 💎1527 / ❤️5），和移动端一致——
+  <b>数对了，位置写错了</b>。移动端才是通栏顶部（见 <code>C3</code>）。</p>
+  <p>为什么这条值得在动工前写下来：本节下面的断点表要求 768–1160 时
+  「四计数上移进中栏顶部」。如果实现时把计数写成右栏的子节点，那次上移就得靠
+  第二份 DOM 或者一段 <code>position</code> 特技——而<b>第二份 DOM 正是这份文档整体在反对的东西</b>。
+  正确做法：计数条是<b>外层壳的一个具名 slot</b>，壳按断点决定把它放进右栏头部还是中栏顶部，
+  组件本身三个断点下是同一个实例。这是波 1 的骨架决定，不是波 1 的样式细节。</p>
+</div>
+
 <h3>断点：一份代码，三个壳</h3>
 <dl class="spec">
   <dt>断点</dt><dd>
@@ -708,17 +721,52 @@ const visible = nodes
 <p class="cite"><b>这是初稿，作者说了算。</b>我能给的是原则和一个起点，
 「哪门课更难」是内容判断，不是算法判断——我不会假装它是。</p>
 
-<h3>buzz 的 5 门：零先修，需要作者直接给顺序</h3>
-<p><code>buzz-orientation</code>（定位/入门）从名字看应该在最前，
-其余 4 门（<code>agents-as-members</code> / <code>design-tokens</code> / <code>one-message</code> /
-<code>reading-rust</code>）之间没有任何顺序信息。<b>这个我给不了有依据的建议，需要你或作者定。</b></p>
+<h3>buzz 的 5 门：先修图给不出顺序，那就换一条能查证的依据 ✔ 已定</h3>
+<p>这一节原本写的是「我给不了有依据的建议，需要作者定」。那句话是对的，
+但它只对一种依据成立——先修图。5 门课先修全空，先修图确实一个字都说不出来。
+换一条依据就有话可说了：<b>每门课的证据锚点落在 Buzz 仓库依赖图的哪一层。</b>
+课程引用什么代码是作者已经做过的判断，只是没人把它当成排序信息用过。</p>
+
+<table>
+  <tr><th>#</th><th>课程</th><th>锚点集中在哪</th><th>为什么在这个位置</th></tr>
+  <tr><td>1</td><td>《你屏幕上这套东西背后是什么？》<br><code>buzz-orientation</code></td>
+      <td>41 条，<b>100% <code>.md</code></b><br>VISION / ARCHITECTURE / README</td>
+      <td>全 study 唯一一门不看代码的课。读文档的成本最低，且它本来就是
+        <code>defaultCourseId</code></td></tr>
+  <tr><td>2</td><td>《如何读懂 Buzz 里的 Rust 结构？》<br><code>buzz-reading-rust</code></td>
+      <td>39 条，100% <code>.rs</code><br><code>crates/buzz-core/</code>：event / filter / verification</td>
+      <td><code>buzz-core</code> 的 Cargo.toml 里<b>没有任何 <code>buzz-*</code> 依赖</b>，
+        它是整张依赖图的底。先认名词</td></tr>
+  <tr><td>3</td><td>《一条消息怎样走完 Buzz？》<br><code>buzz-one-message</code></td>
+      <td>44 条，100% <code>.rs</code><br><code>crates/buzz-relay/handlers/</code></td>
+      <td><code>buzz-relay</code> 依赖 <code>buzz-core</code>，在图上就压在上一门之上。
+        名词认全了再看动词</td></tr>
+  <tr><td>4</td><td>《Agent 为什么可以像成员一样工作？》<br><code>buzz-agents-as-members</code></td>
+      <td>40 条，<code>crates/buzz-acp/</code>（28 <code>.rs</code> + 12 <code>.md</code>）</td>
+      <td>注意：<code>buzz-acp</code> <b>并不</b> Cargo 依赖 <code>buzz-relay</code>，
+        它们是兄弟。这里的先后是<b>运行时</b>依赖——agent 得连上一个 relay 才有事件可订阅——
+        加上内容依赖：本课第 2 单元「Agent 怎样把事件变成一轮工作」以「事件」为前提</td></tr>
+  <tr><td>5</td><td>《Buzz 如何把视觉设计变成可维护的令牌？》<br><code>buzz-design-tokens</code></td>
+      <td>21 条，<code>desktop/</code> 下的 <code>.css</code> + <code>tailwind.config.js</code></td>
+      <td>唯一不碰 Rust 的一门，与前四门<b>零文件重叠</b>。放最后是为了不在主线中间换子系统，
+        也让最短的一门收尾</td></tr>
+</table>
+
+<p class="cite">依赖关系读自 <code>buzz@02f640bc</code> 的 <code>Cargo.toml</code>，不是按「典型 Rust 工程」猜的——
+第 4 条那个「兄弟不是父子」正是猜会猜错的地方。结论写进
+<code>packages/core/src/progress/spine.ts</code>，
+并且<b>单独加了一条钉住顺序的测试</b>：这门 study 先修全空，上面那条
+「必须是先修图的合法线性扩展」对它是真空的，任何排列都能通过，所以它是四个 study 里唯一
+没有测试守着的那个。<b>这仍然是初稿</b>——课程还会大改，作者随时可以推翻，
+推翻时顺手改那条测试即可。</p>
 
 <div class="dec hm">
   <h4>顺带发现一个要单独修的 bug</h4>
-  <p><b>32 条 <code>[[lesson:]]</code> 链接指向不存在的课时 id。</b>
-  它们现在应该是渲染成了死链或者被静默丢弃。
-  这不属于 v3 设计范围，但既然查出来了就记在这里——修它需要一个校验脚本，
-  和 <code>check-lesson-anchors.mjs</code> 是同一类工具。</p>
+  <p><b>4 条 <code>[[lesson:]]</code> 链接指向不存在的课时 id，外加 2 个被两节课共用的 id。</b>
+  这一段先前写的是「32 条悬空」——那个数字是错的，来自一次只认单段 id 的粗解析，
+  那 32 条其实是三段式全路径写法，它们全都解析得到。真实数字由
+  <code>apps/local/scripts/check-lesson-links.mjs</code> 跑出来。
+  重复 id 是两个里更值得先修的那个：它不会报错，只会打开错的那一节。</p>
 </div>
 
 <h2 class="alt2"><span class="n">屏</span>全量页面清单：23 个面，一个都不漏</h2>
@@ -1131,10 +1179,12 @@ const visible = nodes
   <tr><td>3D 头像</td><td>✔ 已跑通。<b>升级成品牌共享包是 PGS 的决定</b>，不在这里定</td></tr>
   <tr><td>3D 场景放哪</td><td>✔ <b><code>packages/world</code></b> 独立包。
     <code>packages/ui</code> 保持零 three。SPEC-0001 与 SPEC-0003 均已改到位</td></tr>
+  <tr><td>buzz 5 门课的顺序</td>
+      <td>✔ <b>orientation → reading-rust → one-message → agents-as-members → design-tokens。</b>
+        依据不是先修图（它是空的），是<b>证据锚点落在依赖图的哪一层</b>。见上方专节。
+        仍是初稿，作者可推翻</td></tr>
   <tr><td colspan="2" style="background:#12171e;font-weight:600;color:var(--gold)">还开着的</td></tr>
 
-  <tr><td><b>buzz 5 门课的顺序</b></td>
-      <td>零先修，除了 <code>buzz-orientation</code> 该在最前，其余我给不了有依据的建议。<b>要作者定</b></td></tr>
   <tr><td><b>移动端 30% 抽成</b></td>
       <td>走 App Store / Google Play 卖课，苹果谷歌强制抽 30%，网页和桌面没有。
         <b>影响定价，是商业决策</b></td></tr>

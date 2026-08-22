@@ -139,11 +139,7 @@ for (const lesson of allLessons) {
   for (const match of lesson.content.matchAll(LINK_PATTERN)) {
     const start = match.index;
     const end = start + match[0].length;
-    if (
-      protectedRegions.some(
-        (region) => start < region.end && region.start < end,
-      )
-    ) {
+    if (protectedRegions.some((region) => start < region.end && region.start < end)) {
       continue;
     }
 
@@ -171,8 +167,7 @@ for (const lesson of allLessons) {
       found = byPath.get(pathTarget);
     } else if (segments.length === 1) {
       singleSegmentLinksCount++;
-      const candidates =
-        byCourseAndLesson.get(lesson.courseId)?.get(pathTarget) ?? [];
+      const candidates = byCourseAndLesson.get(lesson.courseId)?.get(pathTarget) ?? [];
       if (candidates.length === 1) {
         found = candidates[0];
       } else if (candidates.length > 1) {
@@ -201,10 +196,7 @@ for (const lesson of allLessons) {
       continue;
     }
 
-    if (
-      targetSectionId &&
-      !found.sections.some((s) => s.id === targetSectionId)
-    ) {
+    if (targetSectionId && !found.sections.some((s) => s.id === targetSectionId)) {
       brokenLinks.push({
         source: sourcePath,
         target,
@@ -260,6 +252,4 @@ if (duplicateIds.length === 0) {
   }
 }
 console.log("");
-console.log(
-  `Unique lesson ids: ${idOwners.size} across ${allLessons.length} lesson entries.`,
-);
+console.log(`Unique lesson ids: ${idOwners.size} across ${allLessons.length} lesson entries.`);

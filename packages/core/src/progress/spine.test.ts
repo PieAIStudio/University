@@ -95,6 +95,23 @@ describe("validateSpine on all 4 studies", () => {
     const totalCourses = studies.reduce((sum, studyId) => sum + spineOf(studyId).length, 0);
     expect(totalCourses).toBe(52);
   });
+
+  /**
+   * buzz 的 5 门课先修全空，所以上面那条线性扩展测试对它是真空的——
+   * 任何排列都能通过。这门 study 的顺序是一个纯粹的编辑判断（依据记在
+   * spine.ts 的注释里：按证据锚点落在 Buzz 依赖图的哪一层排），
+   * 而一个没有任何测试守着的编辑判断，下一次有人重新生成这份清单时就没了。
+   * 所以这里显式钉住它。改顺序是允许的，改完顺手改这条测试也是应该的。
+   */
+  it("pins the buzz order, because its empty prerequisite graph guards nothing", () => {
+    expect(spineOf("buzz").map((entry) => entry.courseId)).toEqual([
+      "buzz-orientation",
+      "buzz-reading-rust",
+      "buzz-one-message",
+      "buzz-agents-as-members",
+      "buzz-design-tokens",
+    ]);
+  });
 });
 
 describe("spineOf and nextCourseAfter", () => {
