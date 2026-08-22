@@ -10,7 +10,10 @@
     "./Stage.js": "./src/Stage.tsx",
     "./labels.js": "./src/labels.ts",
     "./path-overlay.js": "./src/path-overlay.ts",
-    "./course.js": "./src/course.ts"
+    "./course.js": "./src/course.ts",
+    "./controls.js": "./src/controls.tsx",
+    "./frame.js": "./src/frame.ts",
+    "./overlay.css": "./src/overlay.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

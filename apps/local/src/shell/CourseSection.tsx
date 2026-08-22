@@ -11,6 +11,7 @@ export function CourseSection({
   onOpenLesson,
   openWhenNothingInProgress = false,
   seedOpen = true,
+  showEntry = true,
 }: {
   readonly studyId: string;
   readonly course: CourseView;
@@ -19,6 +20,8 @@ export function CourseSection({
   readonly openWhenNothingInProgress?: boolean;
   /** False on a shelf where one unrolled course would hide the others. */
   readonly seedOpen?: boolean;
+  /** False when a parent already named the one next lesson. */
+  readonly showEntry?: boolean;
 }) {
   const lessons = course.units.flatMap((unit) =>
     unit.lessons.map((lesson) => ({ unitId: unit.id, lesson })),
@@ -106,7 +109,7 @@ export function CourseSection({
           valueLabel={`${completed} / ${lessons.length} 节`}
         />
       ) : null}
-      {entryPoint ? (
+      {entryPoint && showEntry ? (
         <div className="course-entry">
           <GameButton
             variant={finished ? "ghost" : "primary"}

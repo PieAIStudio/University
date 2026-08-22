@@ -71,7 +71,7 @@ interface AirlockView {
  * that no longer matches its checkout, and that is the only thing coloured as a
  * problem.
  */
-function AirlockClocks({ studyId }: { readonly studyId: string }) {
+export function AirlockClocks({ studyId }: { readonly studyId: string }) {
   const [view, setView] = useState<AirlockView | null>(null);
 
   useEffect(() => {
@@ -204,6 +204,7 @@ export function StudyDetail({
   summary: _summary,
   focus = null,
   onOpenLesson,
+  showCourseEntry = true,
 }: {
   readonly view: StudyView;
   /** Null only while the shelf is still loading; the study reads fine without it. */
@@ -211,6 +212,12 @@ export function StudyDetail({
   /** The learner's pinned run, from `/api/bootstrap`; null when none is set. */
   readonly focus?: LearningFocus | null;
   readonly onOpenLesson: (locator: LessonRef) => void;
+  /**
+   * False on the world landing: the rail (and the island you pick) own the
+   * one next step. Thirty-one identical 「开始第 1 节」 buttons were the
+   * other thirty answers to a question that already had one.
+   */
+  readonly showCourseEntry?: boolean;
 }) {
   /*
     Above this many courses, no course unrolls itself. The number is not a
@@ -241,6 +248,7 @@ export function StudyDetail({
       onOpenLesson={onOpenLesson}
       openWhenNothingInProgress={index === 0 && !anyCourseInProgress}
       seedOpen={seedOpen}
+      showEntry={showCourseEntry}
     />
   );
   return (

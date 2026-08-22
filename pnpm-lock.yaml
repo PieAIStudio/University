@@ -29,12 +29,27 @@ importers:
       '@pieai/university-ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@pieai/university-world':
+        specifier: workspace:*
+        version: link:../../packages/world
+      '@react-three/drei':
+        specifier: ^10.7.8
+        version: 10.7.8(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(@types/react@19.2.17)(@types/three@0.185.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
+      '@react-three/fiber':
+        specifier: 9.6.1
+        version: 9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
       react:
         specifier: 19.2.7
         version: 19.2.7
       react-dom:
         specifier: 19.2.7
         version: 19.2.7(react@19.2.7)
+      three:
+        specifier: 0.185.1
+        version: 0.185.1
+      three-stdlib:
+        specifier: ^2.36.1
+        version: 2.36.1(three@0.185.1)
       ts-fsrs:
         specifier: 5.4.1
         version: 5.4.1

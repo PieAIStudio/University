@@ -25,7 +25,7 @@ import { useFrame } from "@react-three/fiber";
 import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import { courseShapeOf, type Course, type CourseNode } from "./course";
+import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course";
 import { buildIsland, hash, lockIslandGeometry, seeded } from "./island";
 import { PropField, type Placement, type Role } from "./kit";
 import { layoutCourse, layoutStudy, radiusForLessons } from "./layout";
@@ -316,10 +316,13 @@ function shapeOf(studyId: string, courseId: string, radius: number) {
 
 function Island({
   entry,
+  dimmed = false,
   onClick,
   onOver,
 }: {
   entry: WorldPlacement;
+  /** Authoring focus track: this island is one the learner is ignoring. */
+  dimmed?: boolean;
   onClick: () => void;
   onOver: (over: boolean) => void;
 }) {
@@ -350,7 +353,9 @@ function Island({
           metalness={0}
           // A locked island is the same island seen through colder air. Hiding
           // it would hide the shape of the course tree, which is information.
-          color={locked ? PALETTE.locked : 0xffffff}
+          // Focus-dimmed islands use the same colder air: they are still
+          // places, just not the ones this session is walking.
+          color={locked || dimmed ? PALETTE.locked : 0xffffff}
         />
       </mesh>
       {/*
@@ -748,6 +753,7 @@ export function WorldScene({
   ring,
   onPick,
   onHover,
+  focus,
 }: {
   placements: readonly WorldPlacement[];
   centres: Map<string, THREE.Vector3>;
@@ -755,6 +761,11 @@ export function WorldScene({
   learnerAt: THREE.Vector3 | null;
   onPick: (node: CourseNode) => void;
   onHover: (node: CourseNode | null) => void;
+  /**
+   * Authoring-only. Islands not on this track dim; the delivery shell
+   * omits the prop and the world looks as it does today.
+   */
+  focus?: { readonly studyId: string; readonly courseIds: readonly string[] };
 }) {
   const byKey = new Map(
     placements.map((entry) => [`${entry.node.studyId}/${entry.node.courseId}`, entry]),
@@ -793,6 +804,7 @@ export function WorldScene({
         <Island
           key={`${entry.node.studyId}/${entry.node.courseId}`}
           entry={entry}
+          dimmed={isFocusDimmed(entry.node, focus)}
           onClick={() => onPick(entry.node)}
           onOver={(over) => onHover(over ? entry.node : null)}
         />
