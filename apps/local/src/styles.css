@@ -1666,40 +1666,6 @@ summary:focus-visible,
   background: rgb(12 8 6 / 72%);
 }
 
-.mermaid-diagram {
-  overflow-x: auto;
-  margin: 1.6em 0;
-  padding: 18px;
-  border: 1px solid var(--campus-rule);
-  border-radius: 12px;
-  background: rgb(12 8 6 / 72%);
-}
-
-.mermaid-diagram figcaption {
-  color: var(--game-ui-text-muted);
-  font-size: 0.9rem;
-}
-
-.mermaid-diagram__canvas {
-  min-width: 0;
-}
-
-.mermaid-diagram__canvas svg {
-  display: block;
-  width: auto;
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
-}
-
-.mermaid-diagram--error figcaption {
-  color: #f3c58c;
-}
-
-.markdown-body .mermaid-diagram--error pre {
-  margin: 14px 0 0;
-}
-
 .markdown-body table {
   width: 100%;
   border-collapse: collapse;
@@ -2697,31 +2663,9 @@ summary:focus-visible,
   }
 }
 
-/* Markdown safety affordances: an external destination should look different
-   from an in-app one, and a blocked image should read as content, not as a
-   broken page. */
-.markdown-external-link__mark {
-  margin-left: 3px;
-  font-size: 0.78em;
-  vertical-align: super;
-}
-
-.markdown-blocked-image {
-  display: grid;
-  gap: 5px;
-  margin: 12px 0;
-  padding: 12px 14px;
-  border: 1px dashed var(--campus-rule);
-  border-radius: var(--game-ui-radius-panel);
-  background: rgb(42 30 22 / 45%);
-  color: var(--game-ui-text-muted);
-  font-size: 0.86rem;
-}
-
-.markdown-blocked-image code {
-  overflow-wrap: anywhere;
-  color: #e5c49a;
-}
+/* Mermaid, external-link mark, and blocked-image styles moved to
+   @pieai/university-ui/markdown/markdown-content.css, which this entry
+   imports, so both shells render the same MarkdownContent class names. */
 
 /* The English word layer moved to @pieai/university-ui/language/word-layer.css,
    which this stylesheet imports at the top, so both shells look the same. */

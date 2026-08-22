@@ -7,7 +7,6 @@
  * stays in the shell because its assets and sections are `packages/ui` view
  * types, and `packages/core` already owns the on-disk `CourseManifest`.
  */
-import type { CourseShape } from "@pieai/university-core";
 
 /**
  * A course as a node on the world map.
@@ -53,14 +52,5 @@ export interface CourseLesson {
   readonly cards: readonly unknown[];
 }
 
-/** Fold a loaded course into the progress contract's shape. Pure. */
-export function courseShapeOf(course: Course, studyId: string): CourseShape {
-  return {
-    studyId,
-    courseId: course.id,
-    units: course.units.map((unit) => ({
-      unitId: unit.id,
-      lessonIds: unit.lessons.map((lesson) => lesson.id),
-    })),
-  };
-}
+/** The fold into CourseShape lives in core. Re-exported so the scene keeps one import. */
+export { courseShapeOf } from "@pieai/university-core";

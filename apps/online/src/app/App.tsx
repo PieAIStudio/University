@@ -24,7 +24,7 @@ import {
 } from "react";
 import * as THREE from "three";
 
-import { readCourseProgress } from "@pieai/university-core";
+import { courseShapeOf, readCourseProgress } from "@pieai/university-core";
 import { LoadingTrivia, NodeCard, UnitCard, useMapCover } from "@pieai/university-ui";
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
@@ -36,7 +36,6 @@ import {
   SettingsScreen,
   SettingsSubnav,
 } from "@pieai/university-ui/navigation/empty.js";
-import { courseShapeOf } from "@pieai/university-world/course.js";
 import {
   CourseScene,
   placeCourse,
@@ -478,10 +477,15 @@ export function App() {
       ? pathUnit?.lessons.find((lesson) => lesson.id === pathOverlay.lessonId)
       : undefined;
 
+  // One sentence, both widths. The rail's TodayCard and the floating .nextup
+  // overlay used to format this independently, and the overlay kept quoting
+  // the catalogue size after the rail had stopped.
+  const nextUpMeta = nextUp ? todayMeta(nextUp.node.studyTitle, nextUpProgress) : null;
+
   const todayCard = (
     <TodayCard
       nextTitle={nextUp?.node.title ?? null}
-      nextMeta={nextUp ? todayMeta(nextUp.node.studyTitle, nextUpProgress) : null}
+      nextMeta={nextUpMeta}
       continueLabel={progress.streak.days > 0 ? "继续" : "开始第一节"}
       onContinue={() => {
         if (!nextUp) return;
@@ -566,9 +570,7 @@ export function App() {
               {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
             </p>
             <h2 className="nextup__title">{nextUp.node.title}</h2>
-            <p className="nextup__meta">
-              {nextUp.node.studyTitle} · {nextUp.node.lessons} 节
-            </p>
+            <p className="nextup__meta">{nextUpMeta}</p>
             <button
               className="primary block"
               onClick={() =>

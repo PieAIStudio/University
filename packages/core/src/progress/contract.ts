@@ -117,6 +117,35 @@ export interface CourseShape {
 }
 
 /**
+ * Fold a loaded course into the progress contract. Pure.
+ *
+ * This is a domain calculation, not a scene input. The path scene, the 2D
+ * catalog and the settlement screen all need the same fold of ids; putting it
+ * next to `CourseShape` means a directory page does not import "world" to
+ * count lessons. The input is structural: anything with a course id and
+ * unit/lesson ids qualifies, including the richer types the shells load.
+ */
+export function courseShapeOf(
+  course: {
+    readonly id: string;
+    readonly units: readonly {
+      readonly id: string;
+      readonly lessons: readonly { readonly id: string }[];
+    }[];
+  },
+  studyId: string,
+): CourseShape {
+  return {
+    studyId,
+    courseId: course.id,
+    units: course.units.map((unit) => ({
+      unitId: unit.id,
+      lessonIds: unit.lessons.map((lesson) => lesson.id),
+    })),
+  };
+}
+
+/**
  * What a shared surface renders.
  *
  * `next` is the single lesson the world accents. One, never several: the world
