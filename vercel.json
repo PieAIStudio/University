@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm content && pnpm --filter @pieai/university-online build",
+  "buildCommand": "pnpm --filter @pieai/university-core build && pnpm content && pnpm --filter @pieai/university-online... build",
   "outputDirectory": "apps/online/dist",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
