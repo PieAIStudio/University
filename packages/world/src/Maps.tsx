@@ -370,6 +370,12 @@ function Island({
         castShadow
         receiveShadow
         onClick={(event) => {
+          // Islands register a pointer handler; sea and sky do not.
+          // R3F only raycasts `internal.interaction` (objects with
+          // handlers), so this stop is what makes a sea click a miss —
+          // Stage's onPointerMissed is that miss. Without it, a pick
+          // would also look like empty space and close the card it
+          // just opened.
           event.stopPropagation();
           playSound("map.select");
           onClick();

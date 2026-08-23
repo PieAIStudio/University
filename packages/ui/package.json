@@ -38,6 +38,7 @@
     "./navigation/university-shell.css": "./src/navigation/university-shell.css",
     "./path/NodeCard.js": "./src/path/NodeCard.tsx",
     "./path/UnitCard.js": "./src/path/UnitCard.tsx",
+    "./path/CoursePickCard.js": "./src/path/CoursePickCard.tsx",
     "./path/path-cards.css": "./src/path/path-cards.css",
     "./practice/practice.css": "./src/practice/practice.css",
     "./progress/store.js": "./src/progress/store.ts",

@@ -113,6 +113,7 @@ export {
 // Shared surface — the path cards. DOM over the 3D path, never geometry.
 export { NodeCard, unlockedConceptIds, type PathLesson } from "./path/NodeCard.js";
 export { UnitCard, type PathUnit } from "./path/UnitCard.js";
+export { CoursePickCard } from "./path/CoursePickCard.js";
 
 // Shared surface — screen 09. A concept while the canvas is still empty.
 export {

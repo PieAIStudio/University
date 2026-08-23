@@ -132,6 +132,88 @@ describe("placeLabels", () => {
     expect(clash).toBe(false);
   });
 
+  it("sits an aside card to the right of its island, not on top of it", () => {
+    const placed = placeLabels(
+      [
+        candidate({
+          id: "card",
+          x: 280,
+          y: 300,
+          width: 260,
+          height: 160,
+          anchor: "aside",
+          clearance: 56,
+        }),
+      ],
+      VIEW,
+    );
+    const card = byId(placed, "card");
+    expect(card.visible).toBe(true);
+    expect(card.x).toBeGreaterThan(280);
+    const box = {
+      left: card.x - 130,
+      top: card.y - 80,
+      right: card.x + 130,
+      bottom: card.y + 80,
+    };
+    expect(box.left).toBeGreaterThanOrEqual(280);
+    expect(280 >= box.left && 280 <= box.right && 300 >= box.top && 300 <= box.bottom).toBe(false);
+  });
+
+  it("flips an aside card around a reserved box on its preferred side", () => {
+    // Island far enough from both edges that left and right both fit; a
+    // reserved box occupies the preferred (right) slot, so the card must
+    // take the left one rather than hiding.
+    const reserved = { left: 460, top: 220, right: 720, bottom: 380 };
+    const placed = placeLabels(
+      [
+        candidate({
+          id: "card",
+          x: 400,
+          y: 300,
+          width: 260,
+          height: 160,
+          anchor: "aside",
+          clearance: 56,
+        }),
+      ],
+      VIEW,
+      { reserved: [reserved] },
+    );
+    const card = byId(placed, "card");
+    expect(card.visible).toBe(true);
+    expect(card.x).toBeLessThan(400);
+  });
+
+  it("flips an aside card to the left when the island is on the right edge", () => {
+    const placed = placeLabels(
+      [
+        candidate({
+          id: "card",
+          x: 760,
+          y: 300,
+          width: 260,
+          height: 160,
+          anchor: "aside",
+          clearance: 56,
+        }),
+      ],
+      VIEW,
+    );
+    const card = byId(placed, "card");
+    expect(card.visible).toBe(true);
+    expect(card.x).toBeLessThan(760);
+    expect(card.x - 130).toBeGreaterThanOrEqual(0);
+    expect(card.x + 130).toBeLessThanOrEqual(VIEW.width);
+    const box = {
+      left: card.x - 130,
+      top: card.y - 80,
+      right: card.x + 130,
+      bottom: card.y + 80,
+    };
+    expect(760 >= box.left && 760 <= box.right && 300 >= box.top && 300 <= box.bottom).toBe(false);
+  });
+
   it("places a start-anchored name at its projected point, not above it", () => {
     const placed = placeLabels(
       [candidate({ id: "unit", x: 120, y: 180, width: 100, height: 16, anchor: "start" })],

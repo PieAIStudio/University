@@ -85,7 +85,7 @@ async function hitTest(
 }
 
 /** Path labels drift while the camera flies. Clicking a moving box is a miss. */
-async function waitForStableBox(target: Locator): Promise<void> {
+export async function waitForStableBox(target: Locator): Promise<void> {
   let previous = await target.boundingBox();
   for (let i = 0; i < 20; i += 1) {
     await target.page().waitForTimeout(80);

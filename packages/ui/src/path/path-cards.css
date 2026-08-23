@@ -256,3 +256,24 @@
   clip-path: polygon(100% 0, 100% 100%, 0 100%);
   pointer-events: none;
 }
+
+/*
+  CoursePickCard lives in this package, so these class names have to be
+  styled here — overlay.css is in packages/world, and the shared-styles
+  check does not look there. Positioning still belongs to overlay.css
+  (the same projector as the names).
+*/
+.picked--follow .game-ui-panel {
+  backdrop-filter: none;
+}
+
+.picked__study {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.picked__enter {
+  width: 100%;
+  margin-top: 4px;
+}

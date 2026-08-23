@@ -16,6 +16,7 @@ import {
 } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
+import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
 import type { BootstrapData, LessonRef, StudyView } from "@pieai/university-ui/view/lesson-view.js";
 import { studySub, type CourseNode } from "@pieai/university-world/course.js";
 import {
@@ -72,8 +73,10 @@ export function WorldLanding({
   const [picked, setPicked] = useState<CourseNode | null>(null);
   const [sceneReady, setSceneReady] = useState(false);
   const labelNodes = useRef(new Map<string, HTMLElement>());
+  const pickCardRef = useRef<HTMLElement | null>(null);
   const draggedRef = useRef(false);
   const pointerOrigin = useRef<{ x: number; y: number } | null>(null);
+  const dismissPick = useCallback(() => setPicked(null), []);
 
   const progressOf = useCallback(
     (node: CourseNode) => {
@@ -203,10 +206,20 @@ export function WorldLanding({
             lookAt={framed.lookAt}
             onSceneReady={onSceneReady}
             onSceneBusy={onSceneBusy}
+            onPointerMissed={dismissPick}
           >
             <Controls target={framed.lookAt} polar={WORLD_POLAR} />
             <Flight to={framed.cameraFrom} look={framed.lookAt} />
-            <LabelProbe markers={markers} limit={9} nodes={labelNodes.current} />
+            <LabelProbe
+              markers={markers}
+              limit={9}
+              nodes={labelNodes.current}
+              // This shell's course markers use `studyId/courseId` as `id`.
+              // The projector looks that id up in the same array; inventing
+              // a second key here would place the card at (0,0).
+              followId={picked ? `${picked.studyId}/${picked.courseId}` : null}
+              followNode={pickCardRef}
+            />
             <WorldScene
               placements={placements}
               centres={world.centres}
@@ -277,21 +290,16 @@ export function WorldLanding({
         ) : null}
 
         {picked ? (
-          <aside className="picked">
-            <h3>{picked.title}</h3>
-            <p className="picked__study">{picked.studyTitle}</p>
-            <dl>
-              <dt>课时</dt>
-              <dd>{picked.lessons}</dd>
-              <dt>层</dt>
-              <dd>{picked.depth + 1}</dd>
-              <dt>先修</dt>
-              <dd>{picked.prerequisiteCourseIds.length || "无"}</dd>
-            </dl>
-            <GameButton variant="primary" onClick={() => enter(picked)}>
-              进入这门课
-            </GameButton>
-          </aside>
+          <CoursePickCard
+            title={picked.title}
+            studyTitle={picked.studyTitle}
+            lessons={picked.lessons}
+            depth={picked.depth}
+            prerequisiteCount={picked.prerequisiteCourseIds.length}
+            onEnter={() => enter(picked)}
+            onDismiss={dismissPick}
+            cardRef={pickCardRef}
+          />
         ) : null}
 
         <p className="hint">{hovered ?? MAP_CONTROLS_HINT}</p>
