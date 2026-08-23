@@ -270,6 +270,9 @@ importers:
       '@pieai/swimmer-render-kit':
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)
+      '@pieai/swimmer-ui-kit':
+        specifier: 1.7.0
+        version: 1.7.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
