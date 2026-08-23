@@ -197,9 +197,20 @@ export function Stage({
         }
       }}
       // Shadows are what make flat-shaded low poly read as solid rather than
-      // as stickers. Soft on desktop; a phone gets the cheap filter, because a
-      // 2048 PCF-soft map is most of a mobile frame budget on its own.
-      shadows={tier === "mobile" ? "basic" : "soft"}
+      // as stickers. A phone gets the cheap filter; everything else gets PCF.
+      //
+      // `"percentage"` rather than `"soft"`, and that is not a downgrade — it
+      // is what was already on screen. three 0.185 deprecated
+      // `PCFSoftShadowMap` and silently rewrites it to `PCFShadowMap` on the
+      // first shadow render, warning once per canvas. So this file asked for
+      // soft, the comment above it promised soft, and the renderer had been
+      // drawing PCF the whole time.
+      //
+      // Genuinely soft shadows now mean `"variance"` (VSM) plus a tuned
+      // `shadow.radius`, and VSM light-bleeds through thin geometry — the
+      // islands are thin plates. That is a look to choose on purpose with the
+      // scene in front of you, not a word to swap in a comment.
+      shadows={tier === "mobile" ? "basic" : "percentage"}
       // Nothing animates on its own once the camera settles, so frames are
       // requested rather than burned continuously. A learner reading a lesson
       // beside the map should not hear the fan.
