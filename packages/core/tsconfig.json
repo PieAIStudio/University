@@ -14,7 +14,14 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    // Without this, `tsc -p` has no memory and rewrites every file in `dist`
+    // on every run — including the ~40 the delivery shell's dev server is
+    // watching. Starting both shells then made the online one hot-reload
+    // dozens of times over files nobody had touched. Incremental compares the
+    // text it is about to emit and skips the write when it matches.
+    "incremental": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
   },
   "include": ["src"],
   "exclude": ["src/**/*.test.ts"]
