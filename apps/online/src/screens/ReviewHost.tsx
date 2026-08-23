@@ -42,7 +42,7 @@ export function ReviewHost({ onDone }: { onDone: () => void }) {
           {/* The delivery shell always has another lesson to offer. */}
           <p>{reviewEmptyDescription(true)}</p>
           <button className="primary" onClick={onDone}>
-            回到世界地图
+            回到地图
           </button>
         </div>
       </div>

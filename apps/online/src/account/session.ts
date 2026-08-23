@@ -1,10 +1,10 @@
 /**
  * Glue: when identity changes, tell the progress port.
  *
- * There is no University schema in SwimmerBackend yet, so the remote is not
- * constructed here. Tests inject a fake. Until the boss registers the
- * product, sign-in still works as identity; progress stays on the machine
- * and the merge path is already tested against the replaceable store.
+ * The product-specific remote is injected by the progress store when the
+ * public SwimmerBackend configuration is present. Tests still inject a fake.
+ * Without that public configuration, sign-in remains usable as identity and
+ * progress intentionally stays on the machine; the merge path is unchanged.
  */
 import type { IdentityPort, ProgressPort, ProgressRemoteStore } from "@pieai/university-core";
 

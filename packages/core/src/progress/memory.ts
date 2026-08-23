@@ -1,9 +1,10 @@
 /**
  * Test doubles for the two injected ports. Not production storage.
  *
- * The in-memory remote is the stand-in for a University schema that does not
- * exist yet. End-to-end tests bind a progress port to one of these, never to
- * a live database, and `goOffline` is how those tests pull the plug.
+ * The in-memory remote is a deterministic test/offline fallback for the
+ * University schema. End-to-end tests bind a progress port to one of these,
+ * while the browser product injects its Supabase adapter for live sync;
+ * `goOffline` is how tests pull the plug.
  */
 
 import type { Persistence, ProgressDocument, ProgressRemoteStore } from "../ports/progress.js";

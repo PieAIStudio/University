@@ -61,8 +61,8 @@ describe("studySwitchMeta", () => {
 });
 
 describe("StudySwitcher", () => {
-  it("lists four studies plus 看全部四片海, and reports the pick", async () => {
-    const picked: Array<string | null> = [];
+  it("lists every project and reports the pick", async () => {
+    const picked: string[] = [];
     await act(async () => {
       root.render(
         <StudySwitcher
@@ -89,7 +89,6 @@ describe("StudySwitcher", () => {
       "Buzz 5 门 · 没开始",
       "SupaLuv 7 门 · 没开始",
       "UniversityLocal 9 门 · 没开始",
-      "看全部四片海",
     ]);
 
     const buzz = [...container.querySelectorAll("[role='option']")].find((node) =>

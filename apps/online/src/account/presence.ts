@@ -5,18 +5,18 @@
  * who is online and which lesson they stopped on, Broadcast for the cursor.
  * This file would construct the Supabase channel that adapter talks to.
  *
- * It does not, today. `university.study_groups` (and
- * `study_group_members.shares_presence`) is written on SwimmerBackend
- * `work/university-schema` and has not been deployed. Opening a channel
- * against a missing table would fail at subscribe, and that failure would
- * look like "together-learning is broken" rather than "the table is not
- * there yet". Forging peers to hide the gap is the other way to lie; we
- * do not do that either. The running app uses `createBrowserPresencePort`,
- * an in-memory bus, until the steps below actually happen.
+ * It does not, today. The `university.study_groups` and
+ * `study_group_members.shares_presence` contract is now registered in
+ * SwimmerBackend and has passed an isolated staging rehearsal, but the
+ * production release and the product's group-id/toggle flow are separate
+ * gates. Opening a channel before those gates are complete would make
+ * together-learning appear flaky. The running app therefore uses
+ * `createBrowserPresencePort`, an in-memory bus, until the steps below
+ * actually happen.
  *
- * To wire, after the schema is live:
- * 1. Register University as a SwimmerBackend consumer (owner).
- * 2. Deploy `university.study_groups` / `study_group_members` with RLS
+ * To wire, after the production schema release:
+ * 1. Keep University registered as a SwimmerBackend consumer (owner).
+ * 2. Verify `university.study_groups` / `study_group_members` with RLS
  *    (a member may UPDATE only their own `shares_presence` row).
  * 3. Flip `presenceAdapterIsWired` to return true.
  * 4. Call `createOnlinePresencePort` from both shells once identity is

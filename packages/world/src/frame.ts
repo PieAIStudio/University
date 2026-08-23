@@ -8,7 +8,7 @@
  */
 import * as THREE from "three";
 
-import { WORLD_DISTANCE_MAX, WORLD_DISTANCE_MIN, WORLD_POLAR } from "./controls.js";
+import { WORLD_DISTANCE_MIN, WORLD_POLAR } from "./controls.js";
 import { STUDY_PATH } from "./layout.js";
 
 /**
@@ -33,21 +33,21 @@ function pose(
   return [look.x + offset.x, look.y + offset.y, look.z + offset.z];
 }
 
-export function frameWorld(
-  learnerAt: THREE.Vector3 | null,
-  studyCentre: THREE.Vector3 | null,
-  options?: { readonly overview?: boolean },
-): {
+/**
+ * @param standingAt Where the learner is on this project's road, or the head of
+ *   the road in a project they have not started. `null` only while the course
+ *   list is still resolving.
+ *
+ * The old signature took a study centre and an `overview` flag as well, because
+ * the map used to hold every project at once and 「看全部四片海」 pulled the
+ * camera back to the origin to show all of them. One project per scene retires
+ * both: there is no ring to centre on any more, and the way to see the other
+ * projects is the planet, which is a page and not a camera distance.
+ */
+export function frameWorld(standingAt: THREE.Vector3 | null): {
   readonly cameraFrom: readonly [number, number, number];
   readonly lookAt: readonly [number, number, number];
 } {
-  if (options?.overview || (!learnerAt && !studyCentre)) {
-    const look = new THREE.Vector3(0, 0, 0);
-    return {
-      cameraFrom: pose(look, WORLD_DISTANCE_MAX, WORLD_POLAR, Math.PI / 4),
-      lookAt: [0, 0, 0],
-    };
-  }
   /*
     The study is a road running along −Z, and the shot has to be down it.
 
@@ -63,7 +63,7 @@ export function frameWorld(
     the rest, which is the same composition the course view uses and the same
     answer to the same question.
   */
-  const at = (learnerAt ?? studyCentre)!.clone();
+  const at = (standingAt ?? new THREE.Vector3(0, 0, 0)).clone();
   const look = new THREE.Vector3(at.x, at.y, at.z - WORLD_LOOK_AHEAD);
   // A few degrees off the axis so the islands stagger instead of stacking into
   // one column of discs.

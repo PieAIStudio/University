@@ -61,8 +61,11 @@ export const SKY_STOPS = {
 export type SkyStops = { readonly zenith: number; readonly mid: number; readonly horizon: number };
 
 /**
- * One study, one climate. Hue-only so the three luminance steps stay a sky.
- * `null` is the overview — all four seas under the default dome.
+ * One project, one climate. Hue-only so the three luminance steps stay a sky.
+ * `null` is the undecided dome — nothing picked yet, or a caller that has no
+ * project to name. It used to mean the four-seas overview, which no longer
+ * exists; the fallback stayed because a sky still has to be some colour while
+ * the catalogue loads.
  */
 export function skyStopsForStudy(studyId: string | null): SkyStops {
   if (!studyId) {
@@ -162,84 +165,133 @@ interface WorldPlacement {
   readonly state: "done" | "live" | "open" | "idle";
 }
 
-/** Positions for every course, plus each study's centre, computed once. */
-export function placeWorld(nodes: readonly CourseNode[], progressOf: (node: CourseNode) => number) {
+/**
+ * The state of one course to a learner who has done `progressOf` of it.
+ *
+ * Unlocked is not the same as next. The accent marks exactly one place — where
+ * to go now — and a map that accents everything reachable has answered "what
+ * could I do" instead of "what do I do", which is the question the eight-second
+ * test actually asks. So `open` is as far as this goes; exactly one `open`
+ * course is promoted to `live` by whoever is looking.
+ */
+function stateOf(
+  node: CourseNode,
+  siblings: readonly CourseNode[],
+  progressOf: (node: CourseNode) => number,
+): WorldPlacement["state"] {
+  const progress = progressOf(node);
+  if (progress >= 1) return "done";
+  const unlocked = node.prerequisiteCourseIds.every((id) =>
+    siblings.some((peer) => peer.courseId === id && progressOf(peer) >= 1),
+  );
+  return unlocked ? "open" : "idle";
+}
+
+/**
+ * The one course to open next, across every project.
+ *
+ * Lifted out of `placeWorld` when the map stopped showing every project at
+ * once. Two different questions were being answered by one number: "where am I
+ * standing on this map" is local to the project you are looking at, and "what
+ * should I do today" is not — a learner who wanders into Buzz to have a look
+ * has not stopped being three lessons from finishing TuringPact. The 「今天」
+ * card asks the second question, so it gets its own answer.
+ *
+ * A project already underway wins first. Splitting this out of the map made the
+ * old ordering visible for what it was: finish alpha's first course and the
+ * card would send you to *beta*, because beta's opening course is shallower
+ * than alpha's second one. Depth compares two courses inside one spine; across
+ * projects it is not a comparison at all. Somebody halfway into a project is
+ * telling you which project they are doing.
+ *
+ * Within that, the shallowest course a learner can actually start wins, and
+ * ties break on lesson count so a one-lesson preface does not outrank the spine
+ * it introduces.
+ */
+export function nextCourse(
+  nodes: readonly CourseNode[],
+  progressOf: (node: CourseNode) => number,
+): CourseNode | null {
   const byStudy = new Map<string, CourseNode[]>();
   for (const node of nodes) {
-    const list = byStudy.get(node.studyId) ?? [];
-    list.push(node);
-    byStudy.set(node.studyId, list);
+    byStudy.set(node.studyId, (byStudy.get(node.studyId) ?? []).concat(node));
   }
+  const started = new Set(
+    [...byStudy.entries()]
+      .filter(([, own]) => own.some((node) => progressOf(node) > 0))
+      .map(([studyId]) => studyId),
+  );
+  const rank = (node: CourseNode) => (started.has(node.studyId) ? 0 : 1);
+  return (
+    nodes
+      .filter((node) => stateOf(node, byStudy.get(node.studyId) ?? [], progressOf) === "open")
+      .sort((a, b) => rank(a) - rank(b) || a.depth - b.depth || b.lessons - a.lessons)[0] ?? null
+  );
+}
 
-  // Lay each world out first, measure what it took, then place the worlds so
-  // the big one is not sitting on its neighbours. Sizing the ring by guess is
-  // what made the first attempt unreadable.
-  const laid = [...byStudy.entries()].map(([studyId, own]) => {
-    // `LayoutInput` speaks in `id`; a course node calls the same thing
-    // `courseId`. Translating here keeps the layout maths independent of the
-    // content schema, which is what lets it be tested without a library.
-    // Teaching order, not graph order. The spine is authored and validated as
-    // a legal linear extension of the prerequisites, so walking it is walking
-    // the graph. A course missing from the spine (a draft, an import that has
-    // not been slotted yet) falls in behind the spine by depth, so it is on the
-    // road rather than at the origin.
-    const spine = spineOf(studyId).map((entry) => entry.courseId);
-    const rank = new Map(spine.map((courseId, index) => [courseId, index]));
-    const ordered = [...own]
-      .sort(
-        (a, b) =>
-          (rank.get(a.courseId) ?? spine.length + a.depth) -
-            (rank.get(b.courseId) ?? spine.length + b.depth) ||
-          a.courseId.localeCompare(b.courseId),
-      )
-      .map((node) => node.courseId);
-    const placed = layoutStudyRoad(ordered);
-    const extent =
-      Math.max(...[...placed.values()].map((point) => Math.hypot(point.x, point.z)), 1) + 8;
-    return { studyId, own, placed, extent };
-  });
-  const total = laid.reduce((sum, entry) => sum + entry.extent, 0) || 1;
-  const ring = Math.max((total * 1.35) / Math.PI, ...laid.map((entry) => entry.extent * 1.5));
+/**
+ * One project's courses, laid out around the origin.
+ *
+ * This used to place all four projects at once, on a ring, in one sea — and it
+ * was the boss who worked out why that was wrong. Two reasons, both real:
+ * dragging the map a little too far lands you among another project's islands
+ * with the top bar still naming the one you left, and a single ground plate
+ * stretched over four projects has to cover roughly three times the distance,
+ * at which point its resolution stops holding up and you can see it repeat.
+ *
+ * So a project is a place, not a region of a bigger place. The way to another
+ * project is to say so — the switcher, or the planet — not to keep dragging and
+ * hope. Nothing else is in this scene, which is also why the pan has no fence:
+ * there is nothing on the other side of it to wander into.
+ */
+export function placeWorld(
+  nodes: readonly CourseNode[],
+  progressOf: (node: CourseNode) => number,
+  studyId: string,
+): { readonly placements: readonly WorldPlacement[]; readonly extent: number } {
+  const own = nodes.filter((node) => node.studyId === studyId);
+
+  // Teaching order, not graph order. The spine is authored and validated as a
+  // legal linear extension of the prerequisites, so walking it is walking the
+  // graph. A course missing from the spine (a draft, an import that has not
+  // been slotted yet) falls in behind the spine by depth, so it is on the road
+  // rather than at the origin.
+  const spine = spineOf(studyId).map((entry) => entry.courseId);
+  const rank = new Map(spine.map((courseId, index) => [courseId, index]));
+  const ordered = [...own]
+    .sort(
+      (a, b) =>
+        (rank.get(a.courseId) ?? spine.length + a.depth) -
+          (rank.get(b.courseId) ?? spine.length + b.depth) || a.courseId.localeCompare(b.courseId),
+    )
+    .map((node) => node.courseId);
+  const laid = layoutStudyRoad(ordered);
+  const extent =
+    Math.max(...[...laid.values()].map((point) => Math.hypot(point.x, point.z)), 1) + 8;
 
   const placements: WorldPlacement[] = [];
-  const centres = new Map<string, THREE.Vector3>();
-  let bearingCursor = 0;
-  for (const entry of laid) {
-    const share = entry.extent / total;
-    const bearing = bearingCursor + share * Math.PI;
-    bearingCursor += share * Math.PI * 2;
-    const centre = new THREE.Vector3(Math.cos(bearing) * ring, 0, Math.sin(bearing) * ring);
-    centres.set(entry.studyId, centre);
-    for (const node of entry.own) {
-      const local = entry.placed.get(node.courseId);
-      if (!local) continue;
-      const progress = progressOf(node);
-      const unlocked = node.prerequisiteCourseIds.every((id) =>
-        entry.own.some((peer) => peer.courseId === id && progressOf(peer) >= 1),
-      );
-      placements.push({
-        node,
-        position: new THREE.Vector3(local.x, 0, local.z).add(centre),
-        radius: radiusForLessons(node.lessons),
-        progress,
-        // Unlocked is not the same as next. The accent marks exactly one place
-        // — where to go now — and a map that accents everything reachable has
-        // answered "what could I do" instead of "what do I do", which is the
-        // question the eight-second test actually asks.
-        state: progress >= 1 ? "done" : unlocked ? "open" : "idle",
-      });
-    }
+  for (const node of own) {
+    const local = laid.get(node.courseId);
+    if (!local) continue;
+    placements.push({
+      node,
+      position: new THREE.Vector3(local.x, 0, local.z),
+      radius: radiusForLessons(node.lessons),
+      progress: progressOf(node),
+      state: stateOf(node, own, progressOf),
+    });
   }
-  // The shallowest unfinished course a learner can actually start is "next".
-  // Ties break on lesson count so a one-lesson preface does not outrank the
-  // spine it introduces.
+
+  // The live course is this project's own next, not the whole catalogue's. On
+  // a map that only shows one project, an accent pointing at a course that is
+  // not in the frame would be a light with nothing under it.
   const next = placements
     .filter((entry) => entry.state === "open")
     .sort((a, b) => a.node.depth - b.node.depth || b.node.lessons - a.node.lessons)[0];
   const marked = placements.map((entry) =>
     entry === next ? { ...entry, state: "live" as const } : entry,
   );
-  return { placements: marked, centres, ring };
+  return { placements: marked, extent };
 }
 
 /**
@@ -754,15 +806,20 @@ function Weather({
 export function WorldScene({
   placements,
   learnerAt,
-  ring,
+  extent,
   onPick,
   onHover,
   focus,
   skyStudyId = null,
 }: {
   placements: readonly WorldPlacement[];
-  centres: Map<string, THREE.Vector3>;
-  ring: number;
+  /**
+   * How far this project's road reaches from the origin. It used to be the
+   * radius of a ring holding every project; one project per scene means the
+   * weather, the cloud sea and the ground plate can be sized to the thing
+   * actually in front of the camera instead of to the whole catalogue.
+   */
+  extent: number;
   learnerAt: THREE.Vector3 | null;
   onPick: (node: CourseNode) => void;
   onHover: (node: CourseNode | null) => void;
@@ -788,7 +845,7 @@ export function WorldScene({
 
   return (
     <>
-      <Weather extent={ring * 1.5} sky={skyStopsForStudy(skyStudyId)} />
+      <Weather extent={extent * 1.5} sky={skyStopsForStudy(skyStudyId)} />
       {/*
         No roads between islands. They used to be drawn from
         `prerequisiteCourseIds`, one causeway per edge — furniture for a graph

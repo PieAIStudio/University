@@ -16,9 +16,14 @@ export function studySwitchMeta(item: StudySwitchItem): string {
 }
 
 /**
- * The ▾ next to the current study. One control, both shells: pick a sea or
- * pull back to all four. The list is the way you change course without
- * hunting for an island.
+ * The ▾ next to the current project. One control, both shells: this is the way
+ * you change project without hunting for an island.
+ *
+ * It used to end with 「看全部四片海」, which pulled the camera back to show all
+ * four archipelagos in one ocean. That view no longer exists — a project is its
+ * own scene now — and the control had stopped doing anything at all, so it is
+ * gone rather than left lying there. What replaces it is a page, not a camera
+ * distance.
  */
 export function StudySwitcher({
   studies,
@@ -27,12 +32,12 @@ export function StudySwitcher({
 }: {
   readonly studies: readonly StudySwitchItem[];
   readonly focusedId: string | null;
-  readonly onSelect: (studyId: string | null) => void;
+  readonly onSelect: (studyId: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const focused = studies.find((study) => study.id === focusedId);
-  const label = focused?.title ?? "四片海";
+  const label = focused?.title ?? "选一个项目";
 
   useEffect(() => {
     if (!open) return;
@@ -87,20 +92,6 @@ export function StudySwitcher({
               </button>
             </li>
           ))}
-          <li role="presentation">
-            <button
-              type="button"
-              role="option"
-              aria-selected={focusedId == null}
-              className="study-switcher__option"
-              onClick={() => {
-                setOpen(false);
-                onSelect(null);
-              }}
-            >
-              看全部四片海
-            </button>
-          </li>
         </ul>
       ) : null}
     </div>

@@ -5,7 +5,8 @@
  * did when the bytes only lived in `university.progress.v2`: learn, review,
  * streak, all of it. With an account the same document is merged onto the
  * remote row so a second machine does not wipe the first. The merge lives in
- * `@pieai/university-core`.
+ * `@pieai/university-core`; the product-specific Supabase adapter lives
+ * beside the account boundary.
  *
  * The localStorage adapter used to live in this file. Copying those eighteen
  * lines into the authoring shell would have given it a document by lunchtime,
@@ -22,12 +23,23 @@
  *
  * What stays local-first is where the state is kept, not how it is computed.
  */
-import { lessonKey, type ProgressPort, type RatingName } from "@pieai/university-core";
+import {
+  lessonKey,
+  type ProgressPort,
+  type ProgressRemoteStore,
+  type RatingName,
+} from "@pieai/university-core";
 import { createBrowserProgressPort } from "@pieai/university-ui/progress/store.js";
+
+import { swimmerCoreClient } from "../account/identity";
+import { createSupabaseProgressRemoteStore } from "../account/progress-remote";
 
 export { lessonKey };
 
 export const progressPort: ProgressPort = createBrowserProgressPort();
+export const progressRemoteStore: ProgressRemoteStore | null = swimmerCoreClient
+  ? createSupabaseProgressRemoteStore(swimmerCoreClient)
+  : null;
 
 export function subscribe(listener: () => void): () => void {
   return progressPort.subscribe(listener);

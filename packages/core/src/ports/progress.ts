@@ -3,7 +3,8 @@
  *
  * The bytes sit behind two injected ports: a local `Persistence` (today a
  * `localStorage` key, tomorrow a file) and an optional `ProgressRemoteStore`
- * (today an in-memory fake, tomorrow a University schema in SwimmerBackend).
+ * (the browser app may inject its University/SwimmerBackend adapter; tests
+ * use an in-memory fake).
  * Neither lives in this file. This package has no `fetch`, no `fs`, and no
  * React; a store that imported any of them would stop being something the
  * authoring server and the delivery shell could share. The browser adapter
@@ -68,10 +69,11 @@ export interface Persistence {
 /**
  * Replaceable remote for one learner's progress document.
  *
- * University is not a SwimmerBackend consumer yet, so the shipping adapter is
- * an in-memory fake. A real table is a migration in that repository, not a
- * `fetch` from this one. `load` returning `null` means "this user has no row",
- * which is the first-login case, not an error.
+ * The concrete network adapter is owned by the browser product because this
+ * package must stay platform-neutral. SwimmerBackend owns the University
+ * table and its migration; this port only describes the contract. `load`
+ * returning `null` means "this user has no row", which is the first-login
+ * case, not an error.
  */
 export interface ProgressRemoteStore {
   load(userId: string): Promise<ProgressDocument | null>;

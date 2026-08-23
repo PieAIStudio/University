@@ -8,7 +8,7 @@
  * Only the publishable key. A secret key in a Vite env is a leak; if one
  * shows up we treat the backend as unconfigured rather than shipping it.
  */
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createAuthClient } from "@pieai/swimmer-backend-client";
 import { createIdentityPort, type IdentityPort } from "@pieai/university-core";
 
@@ -41,25 +41,33 @@ function stringValue(value: string | boolean | undefined): string | undefined {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
 }
 
-export function createOnlineIdentityPort(env: BrowserEnv): IdentityPort {
+export function createOnlineSupabaseClient(env: BrowserEnv): SupabaseClient | null {
   const config = readSwimmerCorePublicEnv(env);
-  if (!config) return createIdentityPort(null);
+  if (!config) return null;
 
   try {
-    const client = createClient(config.url, config.publishableKey, {
+    return createClient(config.url, config.publishableKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
       },
     });
-    return createIdentityPort(createAuthClient(client));
   } catch {
-    // A malformed public config is the same as no config: keep the app open.
-    return createIdentityPort(null);
+    return null;
   }
 }
 
-export const identityPort: IdentityPort = createOnlineIdentityPort(
+export function createOnlineIdentityPort(env: BrowserEnv): IdentityPort {
+  const client = createOnlineSupabaseClient(env);
+  return createIdentityPort(client ? createAuthClient(client) : null);
+}
+
+/** One browser client is shared by Auth, progress sync and Realtime. */
+export const swimmerCoreClient = createOnlineSupabaseClient(
   import.meta.env as unknown as BrowserEnv,
+);
+
+export const identityPort: IdentityPort = createIdentityPort(
+  swimmerCoreClient ? createAuthClient(swimmerCoreClient) : null,
 );

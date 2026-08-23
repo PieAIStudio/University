@@ -608,9 +608,7 @@
       arithmetic stay true when the padding changes.
     */
     --shell-aside-inset: 12px;
-    --shell-nested-radius: calc(
-      var(--game-ui-radius-panel, 14px) - var(--shell-aside-inset) - 1px
-    );
+    --shell-nested-radius: calc(var(--game-ui-radius-panel, 14px) - var(--shell-aside-inset) - 1px);
 
     display: block;
     min-height: 0;

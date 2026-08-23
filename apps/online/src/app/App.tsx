@@ -49,6 +49,7 @@ import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
 import {
   CourseScene,
   placeCourse,
+  nextCourse,
   placeWorld,
   WorldScene,
   type LessonPlacement,
@@ -71,7 +72,14 @@ import { identityPort } from "../account/identity";
 import { bindProgressToIdentity } from "../account/session";
 import { presencePort } from "../presence/store";
 import { progressSource } from "../progress/source";
-import { dueCards, dueTomorrow, progressPort, snapshot, subscribe } from "../progress/store";
+import {
+  dueCards,
+  dueTomorrow,
+  progressPort,
+  progressRemoteStore,
+  snapshot,
+  subscribe,
+} from "../progress/store";
 import { AvatarLab } from "../screens/AvatarLab";
 import {
   AntiPatternEntryHost,
@@ -87,7 +95,6 @@ import {
 import { ReviewHost } from "../screens/ReviewHost";
 import { fromHash, LIBRARY_VIEW_TAB, libraryTabOf, toHash, WORLD, type View } from "../url-state";
 import { TodayCard, todayMeta } from "./TodayCard";
-import { studySub } from "./map-labels";
 import {
   Controls,
   COURSE_POLAR,
@@ -168,7 +175,7 @@ export function App() {
     void loadGraph().then(setNodes);
   }, []);
 
-  useEffect(() => bindProgressToIdentity(progressPort, identityPort, null), []);
+  useEffect(() => bindProgressToIdentity(progressPort, identityPort, progressRemoteStore), []);
 
   useEffect(() => {
     if (view.kind !== "course") setPathOverlay(null);
@@ -220,11 +227,6 @@ export function App() {
     [progress],
   );
 
-  const world = useMemo(
-    () => (nodes ? placeWorld(nodes, courseProgress) : null),
-    [nodes, courseProgress],
-  );
-
   /**
    * The course the learner is actually on, as a node rather than a coordinate.
    *
@@ -233,12 +235,17 @@ export function App() {
    * frame of the product was four unexplained archipelagos and five equally
    * weighted buttons, and the one thing the app already knew — which course to
    * open — was the one thing it did not say.
+   *
+   * It is computed across every project on purpose, and it used to fall out of
+   * the map for free because the map held every project. Now that the map holds
+   * one, the two have to be separated: wandering into Buzz to have a look does
+   * not stop a learner being three lessons from finishing TuringPact, and
+   * 「今天」 should keep saying so.
    */
-  const nextUp = useMemo(() => {
-    if (!world) return null;
-    const live = world.placements.find((entry) => entry.state === "live");
-    return live ?? world.placements[0] ?? null;
-  }, [world]);
+  const todayNode = useMemo(
+    () => (nodes ? nextCourse(nodes, courseProgress) : null),
+    [nodes, courseProgress],
+  );
 
   /**
    * Same `{ done, total }` the course path header prints as 「还剩 N 关」.
@@ -247,13 +254,11 @@ export function App() {
    * a second source.
    */
   const nextUpProgress = useMemo(() => {
-    if (!nextUp) return null;
-    const loaded = peekCourse(nextUp.node.studyId, nextUp.node.courseId);
+    if (!todayNode) return null;
+    const loaded = peekCourse(todayNode.studyId, todayNode.courseId);
     if (!loaded) return null;
-    return readCourseProgress(courseShapeOf(loaded, nextUp.node.studyId), progressSource());
-  }, [nextUp, progress]);
-
-  const learnerAt = nextUp?.position ?? null;
+    return readCourseProgress(courseShapeOf(loaded, todayNode.studyId), progressSource());
+  }, [todayNode, progress]);
 
   const lessons: readonly LessonPlacement[] = useMemo(() => {
     if (!course || (view.kind !== "course" && view.kind !== "lesson")) return [];
@@ -293,9 +298,40 @@ export function App() {
     if (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") {
       return mapFocus === undefined ? view.studyId : mapFocus;
     }
-    if (mapFocus !== undefined) return mapFocus;
-    return nextUp?.node.studyId ?? null;
-  }, [view, mapFocus, nextUp]);
+    if (mapFocus != null) return mapFocus;
+    /*
+      The map shows one project and may never show none, so this can no longer
+      resolve to null the way it did when null meant 「看全部四片海」. Today's
+      course names the project; an account with nothing started falls back to
+      the first project in the catalogue.
+    */
+    return todayNode?.studyId ?? library.studies[0]?.studyId ?? null;
+  }, [view, mapFocus, todayNode]);
+
+  /**
+   * One project's islands, at the origin. Never every project at once.
+   *
+   * The boss worked out why the shared ocean was wrong before we did: drag a
+   * little too far and you are among another project's islands while the top
+   * bar still names the one you left, and one ground plate stretched over four
+   * projects runs out of resolution and starts to repeat. A project is a place
+   * now, and the way to another one is to say so.
+   */
+  const world = useMemo(
+    () => (nodes && focusedStudyId ? placeWorld(nodes, courseProgress, focusedStudyId) : null),
+    [nodes, courseProgress, focusedStudyId],
+  );
+
+  /**
+   * Where the little figure stands, which is a question about the project on
+   * screen and not about the catalogue. In a project nobody has opened there is
+   * no live course, so the head of the road is the honest answer.
+   */
+  const learnerAt = useMemo(() => {
+    if (!world) return null;
+    const live = world.placements.find((entry) => entry.state === "live");
+    return (live ?? world.placements[0])?.position ?? null;
+  }, [world]);
 
   const studyItems: readonly StudySwitchItem[] = useMemo(
     () =>
@@ -314,13 +350,31 @@ export function App() {
     [nodes, lessonsDone],
   );
 
-  const projectName = useMemo(() => {
-    if (focusedStudyId == null) return "四片海";
-    return library.studies.find((entry) => entry.studyId === focusedStudyId)?.title ?? "University";
-  }, [focusedStudyId]);
+  /**
+   * The way back out of a course.
+   *
+   * It used to say 「回到世界地图」 and the boss was right that it is not one: a
+   * world would be everything, and what is behind this button is one project's
+   * islands. A category word alone — 系列地图, 课程地图 — still leaves the reader
+   * working out which series, and the name is right there to be used. So the
+   * button names the place it goes to.
+   */
+  const backToMapLabel = useMemo(() => {
+    const studyId =
+      view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
+        ? view.studyId
+        : focusedStudyId;
+    const title = library.studies.find((entry) => entry.studyId === studyId)?.title;
+    return title ? `← 回到 ${title} 地图` : "← 回到课程地图";
+  }, [view, focusedStudyId]);
+
+  const projectName = useMemo(
+    () => library.studies.find((entry) => entry.studyId === focusedStudyId)?.title ?? "University",
+    [focusedStudyId],
+  );
 
   const focusStudy = useCallback(
-    (studyId: string | null) => {
+    (studyId: string) => {
       setMapFocus(studyId);
       if (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") {
         setView({ kind: "world" });
@@ -424,34 +478,24 @@ export function App() {
       ];
     }
     if (!world) return [];
-    const studyMarkers: Marker[] = [...world.centres.entries()].map(([studyId, centre]) => {
-      const own = world.placements.filter((entry) => entry.node.studyId === studyId);
-      return {
-        id: `study:${studyId}`,
-        position: centre.clone().setY(centre.y + 9),
-        text: own[0]?.node.studyTitle ?? studyId,
-        sub: studySub(
-          own.length,
-          own.reduce((sum, entry) => sum + lessonsDone(entry.node), 0),
-        ),
-        kind: "study" as const,
-      };
-    });
-    return [
-      ...studyMarkers,
-      ...world.placements.map((entry) => ({
-        id: entry.node.courseId,
-        position: entry.position.clone().setY(entry.position.y + entry.radius * 0.4 + 1.4),
-        text: entry.node.title,
-        kind: "course" as const,
-        // Same target as the island, so a label and the shape under it cannot
-        // disagree about what selecting a course means.
-        activate: () => {
-          setPicked(entry.node);
-          setMapFocus(entry.node.studyId);
-        },
-      })),
-    ];
+    /*
+      The study badge that used to float over each archipelago is gone with the
+      shared ocean. It answered "which one of these am I looking at", and there
+      is only one now — the capsule at the top already says its name, in a place
+      that does not scroll away.
+    */
+    return world.placements.map((entry) => ({
+      id: entry.node.courseId,
+      position: entry.position.clone().setY(entry.position.y + entry.radius * 0.4 + 1.4),
+      text: entry.node.title,
+      kind: "course" as const,
+      // Same target as the island, so a label and the shape under it cannot
+      // disagree about what selecting a course means.
+      activate: () => {
+        setPicked(entry.node);
+        setMapFocus(entry.node.studyId);
+      },
+    }));
   }, [world, lessons, view, pathSprites]);
 
   const due = dueCards();
@@ -493,14 +537,7 @@ export function App() {
    * they came, up, and off the axis so the road does not stack into a column of
    * discs — is what makes the map answer "where am I" in one glance.
    */
-  const framed = useMemo(() => {
-    if (focusedStudyId == null || !world) {
-      return frameWorld(null, null, { overview: true });
-    }
-    const centre = world.centres.get(focusedStudyId) ?? null;
-    const at = nextUp?.node.studyId === focusedStudyId ? learnerAt : centre;
-    return frameWorld(at, centre);
-  }, [world, focusedStudyId, nextUp, learnerAt]);
+  const framed = useMemo(() => frameWorld(learnerAt), [learnerAt]);
 
   /**
    * Inside a course the camera stands on the road instead of above it.
@@ -569,7 +606,7 @@ export function App() {
   // One sentence, both widths. The rail's TodayCard and the floating .nextup
   // overlay used to format this independently, and the overlay kept quoting
   // the catalogue size after the rail had stopped.
-  const nextUpMeta = nextUp ? todayMeta(nextUp.node.studyTitle, nextUpProgress) : null;
+  const nextUpMeta = todayNode ? todayMeta(todayNode.studyTitle, nextUpProgress) : null;
 
   const presenceView = presenceViewKey(view);
   const presenceLocation = useMemo(() => {
@@ -584,15 +621,15 @@ export function App() {
         lessonId: live?.lessonId ?? null,
       };
     }
-    if (nextUp) {
+    if (todayNode) {
       return {
-        studyId: nextUp.node.studyId,
-        courseId: nextUp.node.courseId,
+        studyId: todayNode.studyId,
+        courseId: todayNode.courseId,
         lessonId: null,
       };
     }
     return null;
-  }, [view, lessons, nextUp]);
+  }, [view, lessons, todayNode]);
   const companionAnchors = useMemo(() => {
     if (view.kind === "course" || view.kind === "lesson") {
       return lessons.map((lesson) => ({
@@ -610,15 +647,15 @@ export function App() {
 
   const todayCard = (
     <TodayCard
-      nextTitle={nextUp?.node.title ?? null}
+      nextTitle={todayNode?.title ?? null}
       nextMeta={nextUpMeta}
       continueLabel={progress.streak.days > 0 ? "继续" : "开始第一节"}
       onContinue={() => {
-        if (!nextUp) return;
+        if (!todayNode) return;
         setView({
           kind: "course",
-          studyId: nextUp.node.studyId,
-          courseId: nextUp.node.courseId,
+          studyId: todayNode.studyId,
+          courseId: todayNode.courseId,
         });
       }}
       dueCount={due.length}
@@ -674,8 +711,7 @@ export function App() {
           {view.kind === "world" && world ? (
             <WorldScene
               placements={world.placements}
-              centres={world.centres}
-              ring={world.ring}
+              extent={world.extent}
               learnerAt={learnerAt}
               skyStudyId={focusedStudyId}
               onPick={(node) => {
@@ -711,20 +747,20 @@ export function App() {
           just as much as a stranger needs "what is this", and a modal answers
           only the second and only once.
         */}
-        {wide ? null : view.kind === "world" && nextUp && !picked ? (
+        {wide ? null : view.kind === "world" && todayNode && !picked ? (
           <aside className="nextup">
             <p className="nextup__eyebrow">
               {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
             </p>
-            <h2 className="nextup__title">{nextUp.node.title}</h2>
+            <h2 className="nextup__title">{todayNode.title}</h2>
             <p className="nextup__meta">{nextUpMeta}</p>
             <button
               className="primary block"
               onClick={() =>
                 setView({
                   kind: "course",
-                  studyId: nextUp.node.studyId,
-                  courseId: nextUp.node.courseId,
+                  studyId: todayNode.studyId,
+                  courseId: todayNode.courseId,
                 })
               }
             >
@@ -789,7 +825,7 @@ export function App() {
               </div>
             ) : null}
             <button className="ghost block" onClick={() => setView({ kind: "world" })}>
-              ← 回到世界地图
+              {backToMapLabel}
             </button>
           </aside>
         ) : null}
@@ -808,7 +844,7 @@ export function App() {
           A label that can be entered is a real `<button>`. A label that names a
           world is not, because a world is not somewhere you go.
         */}
-        <nav className="labels" aria-label="世界地图上的去处">
+        <nav className="labels" aria-label="地图上的去处">
           {markers.map((marker) => {
             const content = (
               <>
@@ -967,7 +1003,7 @@ export function App() {
                   </div>
                 ) : null}
                 <button className="ghost block" onClick={() => setView({ kind: "world" })}>
-                  ← 回到世界地图
+                  {backToMapLabel}
                 </button>
               </aside>
             ) : null}
@@ -1144,11 +1180,11 @@ export function App() {
                   unitId: nextUpProgress.next.unitId,
                   lessonId: nextUpProgress.next.lessonId,
                 })
-              : nextUp
+              : todayNode
                 ? toHash({
                     kind: "course",
-                    studyId: nextUp.node.studyId,
-                    courseId: nextUp.node.courseId,
+                    studyId: todayNode.studyId,
+                    courseId: todayNode.courseId,
                   })
                 : "#/"
           }

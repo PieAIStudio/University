@@ -10,7 +10,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "../..");
 
 describe("createOnlinePresencePort", () => {
-  it("is not wired while university.study_groups is undeployed", () => {
+  it("is not wired until the production schema and group flow are released", () => {
     expect(presenceAdapterIsWired()).toBe(false);
     const port = createOnlinePresencePort(
       {

@@ -18,7 +18,7 @@ import { GameButton } from "@pieai/swimmer-ui-kit";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
 import type { BootstrapData, LessonRef, StudyView } from "@pieai/university-ui/view/lesson-view.js";
-import { studySub, type CourseNode } from "@pieai/university-world/course.js";
+import type { CourseNode } from "@pieai/university-world/course.js";
 import {
   Controls,
   Flight,
@@ -35,12 +35,7 @@ import type { PresencePort } from "@pieai/university-core";
 
 import { AirlockClocks } from "./StudyDetail.js";
 import { UaDashboardButton } from "./UaDashboardButton.js";
-import {
-  courseNodesFromCatalog,
-  courseProgressOf,
-  lessonsDoneOf,
-  resumeOf,
-} from "./world-graph.js";
+import { courseNodesFromCatalog, courseProgressOf, resumeOf } from "./world-graph.js";
 
 function useMinWidth(px: number): boolean {
   return useSyncExternalStore(
@@ -97,9 +92,29 @@ export function WorldLanding({
     [data.studies, catalog],
   );
 
+  /**
+   * The scene always shows exactly one project, so it always needs to know
+   * which. `selectedStudyId` is allowed to be null — nothing picked yet — and
+   * the map is not allowed to be empty because of it, so an unpicked map falls
+   * back to the project holding today's lesson, and failing that to the first
+   * one in the catalogue.
+   */
+  const shownStudyId = useMemo(
+    () =>
+      selectedStudyId ??
+      data.today.nextLesson?.studyId ??
+      worldNodes[0]?.studyId ??
+      data.studies[0]?.id ??
+      null,
+    [selectedStudyId, data.today.nextLesson, data.studies, worldNodes],
+  );
+
   const world = useMemo(
-    () => (worldNodes.length > 0 ? placeWorld(worldNodes, progressOf) : null),
-    [worldNodes, progressOf],
+    () =>
+      worldNodes.length > 0 && shownStudyId
+        ? placeWorld(worldNodes, progressOf, shownStudyId)
+        : null,
+    [worldNodes, progressOf, shownStudyId],
   );
 
   const nextLesson = data.today.nextLesson;
@@ -122,45 +137,32 @@ export function WorldLanding({
   }, [placements]);
 
   const learnerAt = nextUp?.position ?? null;
-  const framed = useMemo(() => {
-    if (selectedStudyId == null) return frameWorld(null, null, { overview: true });
-    const centre = world?.centres.get(selectedStudyId) ?? null;
-    const at = nextUp?.node.studyId === selectedStudyId ? learnerAt : centre;
-    return frameWorld(at, centre);
-  }, [world, nextUp, learnerAt, selectedStudyId]);
+  const framed = useMemo(
+    () => frameWorld(learnerAt ?? placements[0]?.position ?? null),
+    [learnerAt, placements],
+  );
 
+  /*
+    No study badge floating in the sea any more.
+
+    It named which archipelago you were looking at, which was a real question
+    while four of them shared one ocean. There is one project in the scene now
+    and the top capsule already names it, so the badge would be the same word
+    twice — once in a place you can read and once in a place that scrolls away.
+  */
   const markers: readonly Marker[] = useMemo(() => {
     if (!world) return [];
-    const studyMarkers: Marker[] = [...world.centres.entries()].map(([studyId, centre]) => {
-      const own = placements.filter((entry) => entry.node.studyId === studyId);
-      const done = own.reduce((sum, entry) => {
-        const course = catalog
-          .get(entry.node.studyId)
-          ?.courses.find((item) => item.id === entry.node.courseId);
-        return sum + (course ? lessonsDoneOf(course) : 0);
-      }, 0);
-      return {
-        id: `study:${studyId}`,
-        position: centre.clone().setY(centre.y + 9),
-        text: own[0]?.node.studyTitle ?? studyId,
-        sub: studySub(own.length, done),
-        kind: "study" as const,
-      };
-    });
-    return [
-      ...studyMarkers,
-      ...placements.map((entry) => ({
-        id: `${entry.node.studyId}/${entry.node.courseId}`,
-        position: entry.position.clone().setY(entry.position.y + entry.radius * 0.4 + 1.4),
-        text: entry.node.title,
-        kind: "course" as const,
-        activate: () => {
-          setPicked(entry.node);
-          onSelectStudy(entry.node.studyId);
-        },
-      })),
-    ];
-  }, [world, placements, catalog, onSelectStudy]);
+    return placements.map((entry) => ({
+      id: `${entry.node.studyId}/${entry.node.courseId}`,
+      position: entry.position.clone().setY(entry.position.y + entry.radius * 0.4 + 1.4),
+      text: entry.node.title,
+      kind: "course" as const,
+      activate: () => {
+        setPicked(entry.node);
+        onSelectStudy(entry.node.studyId);
+      },
+    }));
+  }, [world, placements, onSelectStudy]);
 
   useEffect(() => {
     const id = window.requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
@@ -240,10 +242,9 @@ export function WorldLanding({
             />
             <WorldScene
               placements={placements}
-              centres={world.centres}
-              ring={world.ring}
+              extent={world.extent}
               learnerAt={learnerAt}
-              skyStudyId={selectedStudyId}
+              skyStudyId={shownStudyId}
               focus={focus ?? undefined}
               onPick={(node) => {
                 setPicked(node);
@@ -254,7 +255,7 @@ export function WorldLanding({
           </Stage>
         ) : null}
 
-        <nav className="labels" aria-label="世界地图上的去处">
+        <nav className="labels" aria-label="地图上的去处">
           {markers.map((marker) => {
             const content = (
               <>

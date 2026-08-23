@@ -442,12 +442,16 @@ export function App() {
     });
   }, [data, catalog]);
 
+  /*
+    No 「四片海」 fallback any more: the map shows one project and picks a default
+    when nothing is selected, so a capsule reading 「四片海」 would be naming a
+    place that is not on screen.
+  */
   const projectName =
-    selectedStudyId == null && data
-      ? "四片海"
-      : (studySummary?.title ??
-        data?.studies.find((study) => study.id === selectedStudyId)?.title ??
-        "University");
+    studySummary?.title ??
+    data?.studies.find((study) => study.id === selectedStudyId)?.title ??
+    data?.studies[0]?.title ??
+    "University";
   const alerts = (
     <>
       {error ? (
