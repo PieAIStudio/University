@@ -2,6 +2,10 @@ import { GameBadge, GameButton, GameCallout } from "@pieai/swimmer-ui-kit";
 
 import { Tip } from "@pieai/university-ui/Tip.js";
 import { ReviewCard } from "@pieai/university-ui/review/ReviewCard.js";
+import {
+  REVIEW_EMPTY_TITLE,
+  reviewEmptyDescription,
+} from "@pieai/university-ui/review/review-empty.js";
 import { VocabularyReview } from "@pieai/university-ui/review/VocabularyReview.js";
 import type { BootstrapData, LessonRef } from "@pieai/university-ui/view/lesson-view.js";
 import { focusParts, progressLabel } from "@pieai/university-ui/view/lesson-view.js";
@@ -76,8 +80,8 @@ export function TodaySection({
           remaining={data.today.dueCount}
         />
       ) : (
-        <GameCallout heading="今天没有到期卡片" tone="success" className="today-empty">
-          {next ? "完成上面的课程后，新卡片会进入 FSRS 复习安排。" : "今天的复习已经清空。"}
+        <GameCallout heading={REVIEW_EMPTY_TITLE} tone="success" className="today-empty">
+          {reviewEmptyDescription(Boolean(next))}
         </GameCallout>
       )}
 

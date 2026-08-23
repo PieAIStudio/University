@@ -1,5 +1,10 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
+import {
+  REVIEW_EMPTY_TITLE,
+  reviewEmptyDescription,
+} from "@pieai/university-ui/review/review-empty.js";
+
 import { loadCourse } from "../content/library";
 import { dueCards, gradeCard, snapshot, subscribe } from "../progress/store";
 
@@ -33,8 +38,9 @@ export function ReviewHost({ onDone }: { onDone: () => void }) {
     return (
       <div className="review">
         <div className="review__done">
-          <b>今天没有到期卡片</b>
-          <p>学一节新课，它会掉落新的卡片，明天就有事做了。</p>
+          <b>{REVIEW_EMPTY_TITLE}</b>
+          {/* The delivery shell always has another lesson to offer. */}
+          <p>{reviewEmptyDescription(true)}</p>
           <button className="primary" onClick={onDone}>
             回到世界地图
           </button>

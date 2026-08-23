@@ -40,6 +40,7 @@
     "./reference/reference-panel.css": "./src/reference/reference-panel.css",
     "./reference/term-index.css": "./src/reference/term-index.css",
     "./review/ReviewCard.js": "./src/review/ReviewCard.tsx",
+    "./review/review-empty.js": "./src/review/review-empty.ts",
     "./review/VocabularyReview.js": "./src/review/VocabularyReview.tsx",
     "./review/choice-block.css": "./src/review/choice-block.css",
     "./shell/AppShell.js": "./src/shell/AppShell.tsx",
