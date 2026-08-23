@@ -34,7 +34,8 @@ export function ProfileAvatar() {
           maxDistance={6}
         />
       </Canvas>
-      <a className="profile-avatar__lab ghost" href="#/avatar-lab">
+      {/* Not `ghost`: that variant is transparent, and this sits on a canvas. */}
+      <a className="profile-avatar__lab" href="#/avatar-lab">
         打开头像工坊
       </a>
     </div>
