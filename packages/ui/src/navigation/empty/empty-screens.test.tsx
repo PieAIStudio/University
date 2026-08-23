@@ -104,8 +104,8 @@ describe("empty destinations", () => {
     expect(markup).toContain("#/turing-pact/foundations-before-zero");
     /*
       The wall is a real screen now (navigation/screens/BadgeWall), and it needs
-      the progress document. A shell that has one passes it in; this fallback is
-      what the authoring shell shows, and it points at the door rather than
+      the progress document. Both shells pass it in. This fallback is what a
+      caller that has not still shows, and it points at the door rather than
       promising a feature that already exists elsewhere.
     */
     expect(markup).toContain("徽章长在投放端");

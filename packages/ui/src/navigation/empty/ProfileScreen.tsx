@@ -53,9 +53,10 @@ export function ProfileScreen({
       </dl>
       {/*
         The wall itself lives in navigation/screens/BadgeWall, because it needs
-        the progress document and this component takes only two counts. A shell
-        that has the document renders it here; one that does not shows the door
-        rather than five grey circles and a promise.
+        the progress document and this component takes only two counts. Both
+        shells have that document now and pass the wall in. The fallback is
+        for a caller that has not — five grey circles and a promise would be
+        worse than pointing at the door.
       */}
       {badges ?? (
         <section className="profile-screen__badges" aria-label="徽章墙">

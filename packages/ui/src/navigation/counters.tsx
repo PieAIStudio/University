@@ -37,10 +37,10 @@ export function universityCounters(args: {
   readonly projectControl?: ReactNode;
   /**
    * `null` means this shell has no streak signal yet — not that the streak is
-   * zero. The authoring shell is in that state until ADR-0001's shared
-   * progress lands, and it was rendering a literal "0" for a number it had no
-   * way to know. A counter that cannot be wrong is worth more than a counter
-   * that is always there.
+   * zero. That was the authoring campus before it shared the progress
+   * document, and it was rendering a literal "0" for a number it had no way
+   * to know. A counter that cannot be wrong is worth more than a counter
+   * that is always there. Both shells now pass a real count, including zero.
    *
    * A real zero still renders, greyed. Zero days is a true fact about a system
    * that exists, and greying it is how Duolingo says the same thing.
