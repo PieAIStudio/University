@@ -93,9 +93,13 @@ Fixing either means editing content, which is authoring work.
 
 ## Design Before Build
 
-`docs/reference/player-journey/v3/index.html` — **open it in a browser**, it
-uses relative image paths. It supersedes v1 and v2 and covers every
-learner-facing surface. Its evidence base is
+`docs/reference/player-journey/v4/index.html` — **open it in a browser.** It
+supersedes v1, v2 and v3, and is an amendment rather than a rewrite: anything
+v3 says that v4 does not contradict still stands. V4's law is that the shells
+may differ in exactly one place, where the AI comes from.
+
+`docs/reference/player-journey/v3/index.html` still holds the screen inventory
+and the Duolingo mapping. Its evidence base is
 `docs/reference/借鉴的App/duolingo-teardown/index.html`, 33 frames with stable
 ids (`C5`, `E1`, `W2`) that v3 cites.
 
@@ -155,7 +159,10 @@ Done, and verified in a browser rather than by a passing suite:
 - **A label that does not fit is not placed.** Containment, not intersection —
   the four slots already offered a side that fits.
 
-Next:
+Next — **the order is set by
+`docs/reference/player-journey/v4/index.html` §10, not by this list.** V4's
+first item is ReaderPort, because until the delivery shell stops carrying its
+own lesson reader every new feature has to be written twice.
 
 1. **Register University in SwimmerBackend** — *needs the owner.* An app id, a
    `university` schema that is neither `core` nor `public`, one progress row

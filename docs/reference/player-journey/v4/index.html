@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V4 用户旅程 · University</title>
+<style>
+/* 沿用 V3 的配色，因为这是同一套文件的下一版，不是另一个东西。 */
+:root{
+  --bg:#0d1014; --panel:#141920; --panel2:#1b222c; --line:#252d39;
+  --ink:#e8eef5; --dim:#8a97a8; --faint:#5b6675;
+  --go:#58cc02; --sky:#1cb0f6; --plum:#ce82ff; --gold:#ffc800; --hot:#ff4b4b; --amber:#ff9600;
+  --mono:ui-monospace,SFMono-Regular,Menlo,"SF Mono",monospace;
+}
+*{box-sizing:border-box}
+html{background:#0d1014}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.78 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 160px}
+a{color:var(--sky)}
+code{font:13px/1.5 var(--mono);background:var(--panel);border:1px solid var(--line);
+  padding:2px 6px;border-radius:4px;color:#b9c6d6}
+b,strong{color:#fff;font-weight:600}
+
+header.top{padding:64px 0 30px;border-bottom:1px solid var(--line)}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.2em;color:var(--faint);text-transform:uppercase;margin:0 0 18px}
+h1{font-size:40px;margin:0 0 14px;letter-spacing:-.03em;line-height:1.18}
+.tagline{color:var(--dim);max-width:70ch;font-size:16px;margin:0}
+.supersede{margin-top:22px;font-size:13.5px;color:var(--faint)}
+.supersede b{color:var(--dim);font-weight:600}
+
+/* 法则 */
+.law{margin:44px 0 8px;padding:30px 34px;background:linear-gradient(180deg,#16351a,#141920);
+  border:1px solid #2c5e2e;border-radius:16px}
+.law .k{font:600 11.5px/1 var(--mono);letter-spacing:.22em;color:var(--go);text-transform:uppercase}
+.law p{margin:16px 0 0;font-size:23px;line-height:1.55;max-width:52ch;color:#fff;font-weight:600;letter-spacing:-.01em}
+.law .sub{font-size:15px;font-weight:400;color:var(--dim);margin-top:14px;max-width:62ch}
+
+h2{font-size:27px;margin:76px 0 10px;padding-top:30px;border-top:1px solid var(--line);letter-spacing:-.02em;line-height:1.35}
+h2 .n{font:700 12px/1 var(--mono);background:var(--go);color:#0d1014;padding:6px 9px;border-radius:5px;vertical-align:4px;margin-right:12px}
+h2.alt .n{background:var(--sky)} h2.alt2 .n{background:var(--plum)}
+h2.warn .n{background:var(--hot)} h2.gold .n{background:var(--gold);color:#0d1014}
+.lede{color:var(--dim);max-width:74ch;margin:0 0 26px;font-size:15.5px}
+h3{font-size:19px;margin:38px 0 8px;letter-spacing:-.01em}
+h4{font-size:16px;margin:26px 0 6px;color:var(--dim)}
+p{max-width:74ch;margin:0 0 14px}
+ul,ol{max-width:74ch;padding-left:22px;margin:0 0 16px}
+li{margin-bottom:7px}
+
+/* 决策块 */
+.dec{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--go);
+  border-radius:0 12px 12px 0;padding:20px 24px;margin:24px 0}
+.dec h4{margin:0 0 10px;font-size:16.5px;color:var(--go)}
+.dec.no{border-left-color:var(--hot)} .dec.no h4{color:var(--hot)}
+.dec.hm{border-left-color:var(--gold)} .dec.hm h4{color:var(--gold)}
+.dec.sky{border-left-color:var(--sky)} .dec.sky h4{color:var(--sky)}
+.dec p{margin:10px 0 0;font-size:15px;color:var(--dim)}
+.dec p:first-of-type{margin-top:0}
+.dec b{color:var(--ink)}
+
+/* 打比方 */
+.fig{margin:22px 0;padding:18px 22px;background:#101820;border:1px dashed #2a3a48;border-radius:12px;max-width:74ch}
+.fig .t{font:600 11.5px/1 var(--mono);letter-spacing:.18em;color:var(--sky);text-transform:uppercase;margin-bottom:12px}
+.fig p{color:var(--dim);font-size:15px;margin:0 0 10px}
+.fig p:last-child{margin:0}
+
+/* 表 */
+.tw{overflow-x:auto;margin:22px 0}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px}
+th{text-align:left;padding:10px 14px 10px 0;border-bottom:1px solid var(--line);
+  font:600 11.5px/1.4 var(--mono);letter-spacing:.12em;color:var(--faint);text-transform:uppercase;vertical-align:bottom}
+td{padding:12px 14px 12px 0;border-bottom:1px solid #1c232c;vertical-align:top;color:var(--dim)}
+td:first-child{color:var(--ink);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font:600 11.5px/1.7 var(--mono);white-space:nowrap}
+.tag.y{background:rgba(88,204,2,.13);color:var(--go);box-shadow:inset 0 0 0 1px rgba(88,204,2,.5)}
+.tag.n{background:rgba(255,75,75,.12);color:var(--hot);box-shadow:inset 0 0 0 1px rgba(255,75,75,.45)}
+.tag.p{background:rgba(255,200,0,.12);color:var(--gold);box-shadow:inset 0 0 0 1px rgba(255,200,0,.45)}
+.tag.i{background:rgba(28,176,246,.12);color:var(--sky);box-shadow:inset 0 0 0 1px rgba(28,176,246,.45)}
+
+/* 代码 */
+pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+  overflow-x:auto;font:13px/1.7 var(--mono);color:#b9c6d6;max-width:74ch;margin:16px 0}
+pre b{color:var(--go);font-weight:600}
+
+/* 线框 */
+.wire{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:22px 0;max-width:74ch}
+.wire .cap{font:600 11.5px/1 var(--mono);letter-spacing:.16em;color:var(--faint);text-transform:uppercase;margin-bottom:14px}
+.wire pre{background:#0d1014;border-color:#1c2530;margin:0;font-size:12.5px;line-height:1.72}
+
+/* 清单 */
+.chk{list-style:none;padding:0;max-width:74ch}
+.chk li{padding-left:30px;position:relative;margin-bottom:11px;color:var(--dim)}
+.chk li::before{content:"";position:absolute;left:6px;top:11px;width:7px;height:7px;border-radius:2px;background:var(--go)}
+.chk li.no::before{background:var(--hot)}
+.chk li.q::before{background:var(--gold)}
+.chk li b{color:var(--ink)}
+
+.foot{margin-top:80px;padding-top:24px;border-top:1px solid var(--line);color:var(--faint);font:12.5px/1.9 var(--mono)}
+@media(max-width:640px){
+  h1{font-size:29px} h2{font-size:21px;margin-top:52px} .law p{font-size:19px}
+  .wrap{padding:0 16px 90px} .dec{padding:16px 18px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Player Journey · V4 · 2026-08-23</p>
+  <h1>一套代码，两个入口，<br>只允许一个差异</h1>
+  <p class="tagline">
+    V3 定下了方法：照搬多邻国的结构，格子里换成我们的东西。那条仍然有效。
+    V4 加的是一条更硬的法则，并把老板在 2026-08-23 提出的九件事逐条落成可施工的决定。
+  </p>
+  <p class="supersede">
+    <b>取代</b> V1 / V2 / V3。V3 里没有被本文推翻的部分继续有效——本文是修正案，不是重抄一遍。
+    <b>读法</b> 每一节先写「决定」，再写「为什么」，最后写「怎么验」。
+  </p>
+</header>
+
+<div class="law">
+  <div class="k">The one law</div>
+  <p>本地端和在线端之间，只允许存在一个差异：<br>AI 从哪里来。</p>
+  <p class="sub">
+    本地端把题目交给你电脑上那个 AI 编程工具（剪贴板），不花我们一分钱。
+    在线端调 API，每一次都是老板在付费。所以只有这一处必须不同，
+    而且它被关在一个叫「口」的东西后面。<br>
+    <b>其余任何差异都是缺陷，不是选择。</b>看到一处，修一处，不需要再讨论。
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="warn"><span class="n">00</span>先纠正三件事</h2>
+<p class="lede">
+  老板从四张截图里得出的判断，有一半是对的（而且指出了这个仓库最大的一处违规），
+  另一半基于误解。不先说清楚，V4 会照着错的前提写。
+</p>
+
+<div class="dec no">
+  <h4>「在线端好像只有一套课」——不是</h4>
+  <p>
+    在线端<b>四套课全在</b>：Buzz 5 门、SupaLuv 7 门、TuringPact 31 门、UniversityLocal 自身 9 门，
+    和本地端一模一样，内容目录都对得上。
+  </p>
+  <p>
+    截图里的地址是 <code>#/turing-pact/foundations-before-zero</code>——那是<b>某一门课的内部</b>，
+    当然只看得到这门课的关卡路径。要看全部得回到 <code>#/</code>。
+  </p>
+  <p>
+    <b>但这暴露了一个真问题：</b>从课程内部回到世界地图这条路，你没找到。那是导航的失败，见 05。
+  </p>
+</div>
+
+<div class="dec no">
+  <h4>「3D 能旋转，转完就晕」——已经不能转了</h4>
+  <p>
+    相机代码里明确写着 <code>enableRotate = false</code>，而且俯仰角被<b>两端钉死在同一个值</b>，
+    连倾斜都不允许。截图 6 那个别扭的画面不是转出来的。
+  </p>
+  <p>
+    <b>真正的原因是缩得太近。</b>世界地图这一层允许的距离是 <code>6</code> 到 <code>460</code>——
+    <b>76 倍</b>的范围。到了 6，镜头已经钻进岛的模型里了。你看到的「转过头」，
+    其实是「贴脸」。修法在 06。
+  </p>
+</div>
+
+<div class="dec no">
+  <h4>「写了滚轮缩放，但好像没有」——提示语在骗你</h4>
+  <p>
+    画面左下角写着「拖动平移 · <b>滚轮缩放</b> · 点岛进入」。代码里滚轮事件被拦下来做了<b>平移</b>，
+    只有触控板双指捏合（浏览器会给这个手势打 <code>ctrlKey</code> 标记）才会缩放。
+  </p>
+  <p>
+    所以你滚轮滚的时候它在平移，偶尔捏一下才缩放——完全对不上那行字。
+    <b>这是今天第五次遇到同一种形状的毛病：写的是 A，做的是 B，而且什么都没报错。</b>
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2><span class="n">01</span>一个阅读器，不是两个</h2>
+<p class="lede">
+  老板问「为什么在线端点代码是侧窗弹出，本地端直接在中间显示」。答案不是那一个控件，
+  是<b>两个 shell 各有一个课文阅读器</b>——这是这个仓库现在最大的一处违规。
+</p>
+
+<h3>证据</h3>
+<div class="tw">
+<table>
+<thead><tr><th>阅读器</th><th>位置</th><th>行数</th><th>渲染的组件数</th></tr></thead>
+<tbody>
+<tr><td>共用（本地端在用）</td><td><code>packages/ui/src/lesson/LessonReader.tsx</code></td><td>672</td><td><b>18</b></td></tr>
+<tr><td>在线端自己另写的</td><td><code>apps/online/src/lesson/Lesson.tsx</code></td><td>343</td><td><b>6</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>在线端缺的 12 个，全部是<b>学习功能</b>，不是装饰：</p>
+<div class="tw">
+<table>
+<thead><tr><th>缺的东西</th><th>学习者因此少了什么</th></tr></thead>
+<tbody>
+<tr><td>讲解层级</td><td>不能在「标准讲解 / 详细讲解」之间切换</td></tr>
+<tr><td>我的标记</td><td>读不懂的地方标不下来，也没有「拷贝全部去问 AI」</td></tr>
+<tr><td>生词表</td><td>这节课的生词不汇总，学过的词不进复习队列</td></tr>
+<tr><td>选中文字菜单</td><td>选中一段话不能标记、不能查词</td></tr>
+<tr><td>左侧边注</td><td>看不到「这段已不在本版课文里」这类提示</td></tr>
+<tr><td>相关课程</td><td>不知道还有哪几节课引用了这一节</td></tr>
+<tr><td>下一步</td><td>读完之后没有唯一的下一件事</td></tr>
+<tr><td>练习块</td><td>课文里的练习不出现</td></tr>
+<tr><td>卡片</td><td>课文里的记忆卡片不出现</td></tr>
+<tr><td>源码证据面板</td><td>看代码的方式和本地端不一样（老板问的那个）</td></tr>
+<tr><td>版本 / 来源</td><td>看不到这节课钉在哪个 commit</td></tr>
+<tr><td>Tip</td><td>术语旁边没有可展开的解释</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>为什么会有两个（不是谁偷懒）</h3>
+<p>
+  共用那份阅读器里有 <b>9 处直接 <code>fetch('/api/…')</code></b>，打的是本地端那台
+  只跑在作者电脑上的小服务器（端口 4317）。在线端没有这台服务器，所以当时的人
+  照着样子重做了一台能跑的简化版。
+</p>
+
+<div class="fig">
+  <div class="t">打个比方</div>
+  <p>共用的阅读器是一台<b>插着墙上专用插座</b>的机器。在线端那面墙上没有那个插座，
+  于是有人重新做了一台简化版。</p>
+  <p>正确的修法不是把插座砍掉——那样本地端也用不了了。是<b>把电源线换成通用插头</b>：
+  本地端插墙，在线端插自己的电池。<b>机器只留一台。</b></p>
+</div>
+
+<div class="dec">
+  <h4>决定 · ReaderPort</h4>
+  <p>把那 9 处请求收进一个接口。<code>packages/core</code> 只定义「读一节课要问哪些问题」，
+  不关心答案从哪来。</p>
+  <p>
+    <b>本地端</b>的实现 → HTTP 打到 4317，和今天一样。<br>
+    <b>在线端</b>的实现 → 发布好的内容包 + 本机进度 +（登录后）SwimmerBackend。
+  </p>
+  <p><b>然后删掉 <code>apps/online/src/lesson/Lesson.tsx</code>。</b>
+  上面 12 行缺失自动补齐，因为它们本来就在共用那份里。</p>
+</div>
+
+<h4>怎么验</h4>
+<ul class="chk">
+  <li><b>零重复：</b>全仓库搜 <code>LessonScreen</code> 只剩一个定义。</li>
+  <li><b>逐屏对拍：</b>同一节课，两个 shell 各截一张图，除了 AI 那一处，其余像素级同构。</li>
+  <li><b>门禁：</b><code>check-shared-styles.mjs</code> 已有的棘轮再加一条——
+  <code>apps/*/src/lesson/</code> 下不允许出现新的阅读器组件。</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="alt"><span class="n">02</span>三层身份，AI 有两道门</h2>
+<p class="lede">
+  老板原话是「都要登录」，讨论之后改成了「不登录也能学」，并给出了理由。
+  这一节按最终结论写。
+</p>
+
+<div class="fig">
+  <div class="t">老板的理由，写进来免得以后被推翻</div>
+  <p>真想学的人<b>自己会登录</b>，因为学习者最痛的事就是「学过的东西丢了」。
+  不肯登录的人是来浏览的——让他浏览完，他看得到课好不好，才有下一步。</p>
+  <p>而且<b>注册和付费是两件事</b>。免费注册用户也该有一点 AI 额度；
+  AI 之所以要门槛，是因为在线端每调一次 API 都是老板在花钱。</p>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th>层</th><th>能读课</th><th>进度</th><th>排行榜 / 任务</th><th>AI 讲解</th></tr></thead>
+<tbody>
+<tr><td>未登录</td><td><span class="tag y">全部</span></td><td>只存这台设备</td><td><span class="tag n">不参与</span></td><td><span class="tag n">没有</span></td></tr>
+<tr><td>登录 · 免费</td><td><span class="tag y">全部</span></td><td>上云 · 跨设备</td><td><span class="tag y">参与</span></td><td><span class="tag p">每天 1–3 次</span></td></tr>
+<tr><td>登录 · 付费</td><td><span class="tag y">全部</span></td><td>上云 · 跨设备</td><td><span class="tag y">参与</span></td><td><span class="tag y">按点数</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="dec sky">
+  <h4>决定 · 课程内容永不设墙</h4>
+  <p>
+    <b>付费买的是 AI，不是课文。</b>任何人任何时候都能读完全部 560 节。
+    这条直接推翻了 <code>#/plans</code> 上曾经那句「现在全部内容都是完整的」——
+    那句话之所以危险，是因为它暗示以后会变。现在明确：不会变。
+  </p>
+</div>
+
+<div class="dec hm">
+  <h4>决定 · 未登录时，AI 入口要「暗着在」，不能藏</h4>
+  <p>
+    按钮画出来，点下去告诉你「登录后每天有 N 次」。<b>不要把它藏起来。</b>
+    藏起来的功能不会让人去注册——人只会为自己看得见、又够不到的东西行动。
+  </p>
+</div>
+
+<h3>那 0.1% 的差异，写死在这里</h3>
+<div class="tw">
+<table>
+<thead><tr><th></th><th>本地端</th><th>在线端</th></tr></thead>
+<tbody>
+<tr><td>AI 从哪来</td><td>你电脑上的 AI 编程工具（剪贴板往返）</td><td>SwimmerAIKit 调 API</td></tr>
+<tr><td>谁付钱</td><td>你已经付过了（你的编程工具订阅）</td><td>老板，每次调用</td></tr>
+<tr><td>要不要点数</td><td><span class="tag n">不要</span></td><td><span class="tag y">要</span></td></tr>
+<tr><td>登录</td><td>可选（登录后进度同步）</td><td>可选（同上）</td></tr>
+</tbody>
+</table>
+</div>
+<p>
+  <b>除了这张表，两个 shell 不允许有第二处不同。</b>
+  要加第三处，先改这份文档。
+</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="gold"><span class="n">03</span>「打开正在学习的 App」——在线端不但要留，还要放大</h2>
+<p class="lede">
+  这是老板纠正我的地方。我原本建议在线端去掉它，理由是「客户电脑上没有那个文件夹」。
+  这个理由成立，结论是错的。
+</p>
+
+<div class="dec no">
+  <h4>我错在哪</h4>
+  <p>
+    我把它当成了「本地端的文件系统功能」。它不是。<b>它是这个产品唯一别人抄不走的东西。</b>
+  </p>
+  <p>
+    市面上的编程课，例子都是编的。这里的每一门课讲的是<b>真实存在、并且会变成商业产品的软件</b>
+    ——TuringPact 就是。学习者能把它跑起来，这门课的可信度就和其他所有课不在一个量级。
+    去掉它，等于把最贵的那件事扔了。
+  </p>
+</div>
+
+<div class="dec">
+  <h4>决定 · 在线端点它，弹出的是「怎么把这个版本跑起来」的教程</h4>
+  <p>客户没有那个文件夹——那就<b>教他怎么有</b>。教程钉在这节课引用的那个 commit 上，
+  不是泛泛的「怎么装 Node」。</p>
+</div>
+
+<h3>教程分两版，学习者自己选</h3>
+<div class="tw">
+<table>
+<thead><tr><th></th><th>初学者版</th><th>专业版</th></tr></thead>
+<tbody>
+<tr><td>默认</td><td><span class="tag y">是</span></td><td>—</td></tr>
+<tr><td>语气</td><td>话多，每一步说清楚「你现在应该看到什么」</td><td>命令为主，只说不显然的部分</td></tr>
+<tr><td>打比方</td><td>有——「克隆仓库」≈ 把整个文件夹连同它的全部历史复制一份到你电脑</td><td>无</td></tr>
+<tr><td>失败怎么办</td><td>列出最常撞上的三种报错，各配一句人话</td><td>只标注前置条件</td></tr>
+<tr><td>长度</td><td>可以长</td><td>一屏</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="wire">
+  <div class="cap">线框 · 在线端点开之后</div>
+<pre>┌──────────────────────────────────────────┐
+│  跑一下这个版本                        ✕ │
+│  《在开始之前：App、代码、和你》          │
+│  钉在 TuringPact · 3b402e06 · 7月22日     │
+├──────────────────────────────────────────┤
+│  ( 我是初学者 )  ( 我会用命令行 )         │  ← 两版切换
+├──────────────────────────────────────────┤
+│  1. 你需要先有 Git ……                     │
+│     打比方：Git 就像文档的「历史版本」…    │
+│     [ 复制这条命令 ]                      │
+│                                          │
+│  2. ……                                   │
+│                                          │
+│  ⚠ 卡住了？最常见的三种：                 │
+│     · 提示 command not found → …          │
+└──────────────────────────────────────────┘</pre>
+</div>
+
+<div class="dec hm">
+  <h4>决定 · 改名</h4>
+  <p>
+    「打开正在学习的 App」七个字，而且在线端并不「打开」。改成 <b>「跑一下这个版本」</b>。
+  </p>
+  <p>
+    「跑」说清了这是要在你自己机器上运行的；「这个版本」说清了它钉在某个具体时点，
+    不是随便一个最新代码。<b>两个 shell 用同一个名字</b>——本地端点了直接开，
+    在线端点了给教程，动作不同，承诺一样。
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="alt2"><span class="n">04</span>什么该收进 Tip：一条能执行的判据</h2>
+<p class="lede">
+  老板要求「好多信息都应该通过 Tip 的方式呈现，这个需要你主动思考」。
+  凭感觉挑等于没有规则，下次就又长回来了。所以先写判据，再列清单。
+</p>
+
+<div class="dec">
+  <h4>判据 · 两个问题，四个格子</h4>
+  <p>问每一条信息两件事：<b>①每次都要看吗？ ②不解释就看不懂吗？</b></p>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th></th><th>每次都要看</th><th>偶尔才关心</th></tr></thead>
+<tbody>
+<tr><td><b>一眼就懂</b></td><td><span class="tag y">直接显示</span><br>课文标题、进度条、下一步</td><td><span class="tag i">折叠 / 次级位置</span><br>相关课程、生词表</td></tr>
+<tr><td><b>要解释才懂</b></td><td><span class="tag p">显示 + 旁边一个 Tip</span><br>连击、到期卡片数</td><td><span class="tag i">只留一个小图标，做成 Tip</span><br>版本号、证据来源、FSRS</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><b>还有第三条，压在最上面：</b>只有作者关心的信息，在线端连 Tip 都不给，直接不出现。</p>
+
+<h3>这一轮要动的清单</h3>
+<div class="tw">
+<table>
+<thead><tr><th>现在长什么样</th><th>改成</th><th>为什么</th></tr></thead>
+<tbody>
+<tr><td>「第 8 版」直接印在标题下</td><td><span class="tag p">Tip</span></td><td>要解释（第 8 版是什么意思？）+ 偶尔才关心</td></tr>
+<tr><td>「这节课钉在 7月22日 的版本（3b402e06）」</td><td><span class="tag p">Tip</span></td><td>同上。但<b>必须留着</b>——它是可信度</td></tr>
+<tr><td>「来源 · file-manager:&lt;source-root&gt; · en-US · 1521×652」</td><td><span class="tag p">Tip</span>，正文只留「真实截图」</td><td><code>&lt;source-root&gt;</code> 对学习者是噪音</td></tr>
+<tr><td>「课文已确认 · 练习待完成」徽章</td><td><span class="tag p">Tip</span></td><td>要解释：确认和完成有什么区别</td></tr>
+<tr><td>复习按钮「没想起来 / 有点吃力 / 想起来了 / 很轻松」</td><td><span class="tag y">保持直接显示</span></td><td>每次都要看，而且一眼就懂——不要动它</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="dec hm">
+  <h4>Tip 本身的规矩</h4>
+  <p>
+    <b>触发必须包含点击，不能只有悬停。</b>手机没有鼠标；只做 hover 的 Tip 在手机上等于不存在，
+    而这个产品是照手机画的。
+  </p>
+  <p>
+    <b>Tip 里不能藏唯一入口。</b>它只放解释，不放「点这里才能继续」的按钮——
+    藏起来的路等于没有路。
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="alt"><span class="n">05</span>世界地图留着，但要能一眼看懂怎么换课</h2>
+<p class="lede">
+  老板选了「保留现状，只把它做好用」。所以不删这一层，补它缺的东西。
+</p>
+
+<p>他说飞岛群难操作，这是真的，而且我找到了具体的失败：</p>
+
+<div class="dec no">
+  <h4>观察到的失败：标题和地图各说各的</h4>
+  <p>
+    截图 4 里，地址是 <code>/studies/turing-pact</code>，右栏顶上写着 <b>TuringPact</b>，
+    但地图上显示的是 <b>Buzz</b> 的岛，右栏推荐的那一节也是 Buzz 的。
+  </p>
+  <p>
+    原因是「当前 study」和「镜头正对着哪片海」是<b>两个互不相干的状态</b>，
+    而切换 study 的唯一办法是在海里找到并点中那一片的某座岛。
+    <b>没有任何一处告诉你「点岛=换课」。</b>
+  </p>
+</div>
+
+<div class="dec">
+  <h4>决定 · 三件事</h4>
+  <p>
+    <b>① 标题旁边给一个明确的换课控件。</b>课程标题右边一个可点的标识（下拉），
+    列出四套课，点一下直接换，镜头和天空跟着换。这就是老板说的那个「标识」。
+  </p>
+  <p>
+    <b>② 当前 study 和镜头必须同步。</b>换了 study，镜头就飞到那片海；
+    在海里点了别片的岛，顶上的 study 名字也跟着变。两个状态合成一个。
+  </p>
+  <p>
+    <b>③ 从课程内部回世界地图的路要一直看得见。</b>老板没找到它——那就是它不够明显。
+  </p>
+</div>
+
+<div class="wire">
+  <div class="cap">线框 · 换课控件</div>
+<pre>┌─────────────────────────────────────────┐
+│  ⛵ TuringPact  ▾          🔥 1          │  ← ▾ 就是换课，一直在
+│  ─────────────────────────────────────  │
+│    ⛵ TuringPact      31 门 · 学到 1/41  │
+│    ⛵ Buzz             5 门 · 没开始      │
+│    ⛵ SupaLuv          7 门 · 没开始      │
+│    ⛵ UniversityLocal  9 门 · 没开始      │
+│    ───────────────────────────────────  │
+│    🗺 看全部四片海                        │  ← 世界地图从这儿进
+└─────────────────────────────────────────┘</pre>
+</div>
+
+<p>
+  <b>注意这个换课控件同时解决了 00 里那条：</b>
+  「在线端好像只有一套课」——因为在课程内部时，顶上那个 ▾ 会一直告诉你还有三套。
+</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="alt"><span class="n">06</span>相机：三条，全部可量</h2>
+
+<div class="dec">
+  <h4>① 不能旋转 —— 已经是了，保持</h4>
+  <p>
+    <code>enableRotate = false</code>，俯仰角两端钉死。<b>这条写进文档，是为了防止以后有人「顺手」打开它。</b>
+    路径要么一直向上要么一直向下，这是多邻国那条路能被看懂的原因；
+    可旋转的路没有「上」。
+  </p>
+</div>
+
+<div class="dec hm">
+  <h4>② 缩放范围收窄 —— 这才是老板晕的真原因</h4>
+  <p>
+    世界地图层现在允许 <code>6</code> 到 <code>460</code>，<b>76 倍</b>。到 6 的时候镜头在岛的模型内部。
+    课程层是 <code>22</code> 到 <code>48</code>，只有 2.2 倍，从来没人抱怨过——<b>这就是对照组。</b>
+  </p>
+  <p>
+    <b>决定：</b>世界地图层收到「看得见全部四片海」到「一片海占满屏」之间，
+    上下限之比不超过 <b>3 倍</b>。具体数值对着画面调，但比值写死在这里。
+  </p>
+</div>
+
+<div class="dec">
+  <h4>③ 提示语必须说实话</h4>
+  <p>
+    「拖动平移 · 滚轮缩放 · 点岛进入」里的「滚轮缩放」是假的。
+    先把行为定死，再照着行为写字：
+  </p>
+  <p>
+    <b>鼠标滚轮 → 缩放</b>（大多数人的直觉，也是这行字原本承诺的）<br>
+    <b>触控板双指滑 → 平移</b>（Mac 用户的直觉，现在的实现）<br>
+    <b>触控板捏合 → 缩放</b><br>
+    <b>拖拽 → 平移</b>
+  </p>
+  <p>
+    然后这行字改成 <b>「拖动平移 · 滚轮缩放 · 点岛进入」</b>——字不用改，
+    <b>改的是让它变成真的。</b>
+  </p>
+</div>
+
+<h4>怎么验</h4>
+<ul class="chk">
+  <li><b>不可能钻进岛里：</b>浏览器里把镜头推到最近，采样相机到地面的距离，断言大于岛的半径。</li>
+  <li><b>提示语和行为对得上：</b>e2e 里真的派发一次 <code>wheel</code>，断言距离变了；再派发一次带 <code>ctrlKey</code> 的，断言也变了；两指平移断言距离<b>不</b>变。</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="gold"><span class="n">07</span>四个空页面要开：先说我搜到了什么</h2>
+<p class="lede">
+  老板要求「有成熟的开源方案就直接用，不要自己造轮子」。我搜了。
+  结论有一半和他预期的不一样，先说结论再说理由。
+</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>方案</th><th>是什么</th><th>用不用</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td>Trophy UI</td><td>17 个游戏化 React 组件（连击、积分、成就、排行榜），开源</td><td><span class="tag p">当参考，不装</span></td><td>它建在 Tailwind + shadcn 上。这个项目的 UI 套件<b>刻意零 Tailwind</b>，装它等于把整条 CSS 管线拖进来。<b>但它的交互设计值得逐个看过再画。</b></td></tr>
+<tr><td>Questlog</td><td>游戏化即服务：REST API + 后台</td><td><span class="tag n">不用</span></td><td>是<b>另一个后端</b>。我们已经有 SwimmerBackend，再接一个等于两套账号两套数据。</td></tr>
+<tr><td>Oasis</td><td>事件驱动的 PBML 平台（Java）</td><td><span class="tag n">不用</span></td><td>体量远大于需求。</td></tr>
+<tr><td><b>SwimmerBackend 的钱包</b></td><td>已有的 <code>wallet_grant / reserve / commit / refund / get_balance</code></td><td><span class="tag y">用</span></td><td><b>这才是「别人的成功」。</b>Anvil、Collapse、Sea、YaZu 四个产品已经在用，扣点数、退款、结算全都写好测好了。AI 额度直接接它。</td></tr>
+<tr><td><b>多邻国的赛段机制</b></td><td>公开可查的数字</td><td><span class="tag y">抄</span></td><td>V3 定的方法就是照搬结构。这些数字是公开的，抄它比自己设计对得多。</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="fig">
+  <div class="t">为什么排行榜不需要「装个库」</div>
+  <p>排行榜的核心是一句 SQL。Postgres 有一个叫<b>窗口函数</b>的东西，一行就能算出所有人的名次：</p>
+  <p style="margin-top:12px"><code>RANK() OVER (ORDER BY xp DESC)</code></p>
+  <p>为这一行去接一整套服务，是<b>多写代码，不是少写</b>。真正难的部分不是排名，
+  是「一周怎么切、谁升谁降、时区怎么算」——那是设计，抄多邻国就行，没有库能替你决定。</p>
+</div>
+
+<h3>排行榜 · 抄来的数字</h3>
+<ul class="chk">
+  <li><b>一个赛段 30 人</b>，随机分组。人少的时候先不分组，全站一张榜。</li>
+  <li><b>10 个段位</b>，青铜 → 钻石。</li>
+  <li><b>按 XP 排，每周一切</b>，按学习者自己的时区算。</li>
+  <li><b>越往上升得越少：</b>青铜升前 2/3，黄金升前 1/3，蓝宝石前 23%，黑曜石前 17%，钻石不升。</li>
+  <li class="q"><b>还开着：</b>XP 怎么算？「学完一节 = ?」「复习一张卡 = ?」——这决定了刷分的姿势，要单独定。</li>
+</ul>
+
+<h3>四个页面各自的最小可用</h3>
+<div class="tw">
+<table>
+<thead><tr><th>页面</th><th>最小可用</th><th>依赖</th></tr></thead>
+<tbody>
+<tr><td>排行榜</td><td>本周 XP 榜 + 我在第几 + 升降线</td><td>要登录（02）</td></tr>
+<tr><td>任务</td><td>日 3 条 / 周 1 条，完成即时反馈</td><td>本机就能做，不必等登录</td></tr>
+<tr><td>徽章墙</td><td>10 枚：首节、连击 3/7/30、首次复习、读满 10 段真实代码…</td><td>本机就能做</td></tr>
+<tr><td>会员 · 订阅</td><td>写清楚每档给多少 AI 点数、多少钱</td><td>钱包（已有）+ <b>老板定价</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2><span class="n">08</span>全量页面清单：两端逐屏对齐</h2>
+<p class="lede">
+  V3 列了 23 个面。V4 只回答一个问题：<b>每一个面，两端是不是一样。</b>
+</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>面</th><th>两端一样？</th><th>差在哪（只允许 AI）</th></tr></thead>
+<tbody>
+<tr><td>世界地图</td><td><span class="tag y">一样</span></td><td>—</td></tr>
+<tr><td>课程关卡路径</td><td><span class="tag y">一样</span></td><td>—</td></tr>
+<tr><td>关卡卡片（进关前报价）</td><td><span class="tag y">一样</span></td><td>—</td></tr>
+<tr><td><b>课文阅读</b></td><td><span class="tag n">今天不一样</span></td><td>01 之后一样。AI 判分走口</td></tr>
+<tr><td>练习 / 答题</td><td><span class="tag n">今天不一样</span></td><td>01 之后一样。<b>判分是那唯一的差异</b></td></tr>
+<tr><td>结算</td><td><span class="tag y">一样</span></td><td>—</td></tr>
+<tr><td>复习</td><td><span class="tag y">一样</span></td><td>—</td></tr>
+<tr><td>图鉴（概念/词义/防 AI 味儿/收藏）</td><td><span class="tag y">一样</span></td><td>—</td></tr>
+<tr><td>练习流</td><td><span class="tag y">一样</span></td><td>—</td></tr>
+<tr><td>目录</td><td><span class="tag y">一样</span></td><td>—</td></tr>
+<tr><td>设置</td><td><span class="tag y">一样</span></td><td>—</td></tr>
+<tr><td>个人档案 / 账号</td><td><span class="tag y">一样</span></td><td>—</td></tr>
+<tr><td>排行榜 · 任务 · 徽章</td><td><span class="tag i">都还没开</span></td><td>开的时候一起开，一套代码</td></tr>
+<tr><td>会员 · 订阅</td><td><span class="tag i">还没开</span></td><td>本地端也显示，但本地端不需要点数</td></tr>
+<tr><td>「跑一下这个版本」</td><td><span class="tag p">动作不同</span></td><td>本地端直接开；在线端给教程（03）</td></tr>
+<tr><td><b>写课 / 改课</b></td><td><span class="tag n">只有本地端</span></td><td><b>这是唯一允许在线端没有的整块。</b>课只有一个产地（ADR-0002）</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="warn"><span class="n">09</span>明确不做</h2>
+<ul class="chk">
+  <li class="no"><b>不做「在线端简化版」。</b>任何以「在线端用户不需要这个」开头的提案，先看 01。</li>
+  <li class="no"><b>不给课文设付费墙。</b>付费买 AI，不买课文（02）。</li>
+  <li class="no"><b>不做强制登录。</b>门口查身份证的试衣间没人进（02）。</li>
+  <li class="no"><b>不引入第二个后端。</b>钱包、账号、排行榜全部走 SwimmerBackend（07）。</li>
+  <li class="no"><b>不为了游戏化装 Tailwind。</b>参考 Trophy UI 的设计，用 SwimmerUIKit 画（07）。</li>
+  <li class="no"><b>不打开相机旋转。</b>哪怕「就这一个页面」（06）。</li>
+  <li class="no"><b>不把唯一入口藏进 Tip。</b>Tip 只放解释（04）。</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2><span class="n">10</span>施工顺序</h2>
+<p class="lede">按「拆掉挡路的 → 补齐承诺 → 加新东西」排，不按老板提的顺序排。</p>
+<ol>
+  <li><b>ReaderPort + 删掉在线端阅读器</b>（01）。这一步不做，后面每加一个功能都要写两遍。</li>
+  <li><b>相机三条</b>（06）。改动小，立刻能感觉到，而且不依赖任何人。</li>
+  <li><b>换课控件 + study 与镜头同步</b>（05）。</li>
+  <li><b>Tip 判据落地</b>（04）。跟着 01 一起做最省事，因为都在阅读器里。</li>
+  <li><b>SwimmerBackend 登记 + 登录 + 进度同步</b>（02 的前两层）。</li>
+  <li><b>「跑一下这个版本」教程</b>（03）。</li>
+  <li><b>任务 + 徽章</b>（07，不依赖登录，可以先做）。</li>
+  <li><b>排行榜</b>（07，依赖第 5 步）。</li>
+  <li><b>钱包 + AI 额度 + 会员页</b>（02 第三层，依赖老板定价）。</li>
+</ol>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="gold"><span class="n">11</span>还开着的问题</h2>
+
+<ul class="chk">
+  <li class="q"><b>XP 怎么算？</b>学完一节多少分、复习一张卡多少分、连击算不算。这决定了人会怎么刷分。</li>
+  <li class="q"><b>会员几档、各多少钱、各多少 AI 点数？</b>页面能画，数字要老板定。</li>
+  <li class="q"><b>免费用户每天几次 AI？</b>老板说 1–3 次。定死一个数才好写。</li>
+  <li class="q"><b>纳入 PMaker 课程 · 授权。</b>作者「空格的键盘」的站上<b>没有任何授权声明</b>。
+  口头同意在产品免费时够用，一旦收费就不够。<b>建议：把同意留成书面的（聊天截图或邮件），
+  存进仓库，并在课程页署名和回链。</b>这是我强烈建议先做的一步。</li>
+  <li class="q"><b>纳入 PMaker 课程 · 它没有仓库。</b>这个产品的承诺是「每段解释旁边是真实代码」。
+  PMaker 讲的是产品方法，<b>背后没有可跑的软件</b>，给不了证据锚点。
+  那就必须让学习者<b>一眼看出这是另一类课</b>——否则第一次有人点开发现没有代码，
+  「有真实代码」这个承诺对<b>全部 560 节</b>都失效了。
+  <b>倾向：给这类课一个明确的标记，和「有仓库」的课分开陈列。</b>需要老板拍板。</li>
+</ul>
+
+<div class="foot">
+  V4 · 2026-08-23 · 取代 V1 / V2 / V3<br>
+  证据取自当天跑着的代码：在线端阅读器 6 个组件 vs 共用 18 个 · 缩放 6–460 · enableRotate=false<br>
+  未决问题 5 条，全部需要老板拍板
+</div>
+
+</div>
+</body>
+</html>

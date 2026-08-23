@@ -123,7 +123,11 @@ What follows from them:
   this rule first.
 - **Design before build.** A user-facing behaviour gets designed in
   `docs/reference/player-journey/` before it gets implemented. The current
-  journey is `docs/reference/player-journey/v3/`; it replaces v1 and v2.
+  journey is `docs/reference/player-journey/v4/`; it replaces v1, v2 and v3.
+  V4 is an amendment: what v3 says and v4 does not contradict still stands.
+- **One permitted difference between the shells: where the AI comes from.**
+  V4 states this as law. Any other divergence is a defect — fix it, do not
+  debate it. Adding a second difference means changing v4 first.
 - **One codebase, three shells.** Browser, desktop and phone run the same
   build. The browser needs no wrapper; Electron and Capacitor are wrappers
   around that same output, not separate products. Layout differs by CSS

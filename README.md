@@ -19,7 +19,7 @@ packages/ui     两个壳共用的学习面：阅读器、证据、复习、mark
 
 设计阶段。仓库里还没有产品实现，只有：
 
-- `docs/reference/player-journey/v1/` — 用户旅程 V1，这一版要先被推翻和修订
+- `docs/reference/player-journey/v4/` — 用户旅程 V4，当前有效的一版（取代 V1/V2/V3）
 - `docs/specs/active/SPEC-0001-universitylocal-parity-contract.md` — 内容与功能的
   一致性契约
 - 一个 DOM 占位页，用来让 `pnpm verify` 从第一天起就是真的门禁
