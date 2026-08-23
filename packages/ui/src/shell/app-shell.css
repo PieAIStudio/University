@@ -457,7 +457,23 @@
     width: var(--shell-aside-width);
     flex: 0 1 auto;
     max-height: calc(100dvh - 2 * var(--shell-gutter));
-    overflow: auto;
+
+    /*
+      There is deliberately no `overflow` here, and the absence is load-bearing.
+
+      This stack is exactly as wide as the panels inside it, so `overflow: auto`
+      clipped at their own edges. Every panel's drop shadow was cut off flush
+      with its straight sides and survived only in the four corner notches —
+      which is why a soft `0 18px 48px` shadow read on screen as a hard dark
+      wedge sitting outside a rounded corner. The same clip also put a scrollbar
+      on a frame nobody can see and cut the study menu off at its edge, and a
+      menu you have to scroll an invisible box to reach is not a menu.
+
+      Height is still bounded: the panels may not run off the screen. But the
+      scrolling belongs to `.app-shell__aside`, which is a brown panel you can
+      actually see, and which already carries `overflow: auto` and
+      `min-height: 0` so flexbox will shrink it before the stack overflows.
+    */
   }
 
   .app-shell:not(:has(.app-shell__aside:not(:empty))) .app-shell__east-stack,
@@ -582,11 +598,25 @@
   }
 
   .app-shell__aside {
+    /*
+      A panel nested inside a panel needs a smaller radius, not the same one.
+      Two boxes with equal radii and a uniform inset are not concentric: their
+      corner arcs share a radius but not a centre, so the brown ring between
+      them measures 13px along the straights and 18px across the diagonal. It
+      reads as a frame that bulges at the corners. Inner radius = outer radius
+      minus the gap is the fix, and stating the gap once is what lets the
+      arithmetic stay true when the padding changes.
+    */
+    --shell-aside-inset: 12px;
+    --shell-nested-radius: calc(
+      var(--game-ui-radius-panel, 14px) - var(--shell-aside-inset) - 1px
+    );
+
     display: block;
     min-height: 0;
     overflow: auto;
     flex: 0 1 auto;
-    padding: 12px;
+    padding: var(--shell-aside-inset);
     border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
     border-radius: var(--game-ui-radius-panel, 14px);
     background: var(--game-ui-panel-strong, #151b2b);

@@ -46,6 +46,21 @@ export interface LabelCandidate {
    * covers the thing it is about.
    */
   readonly clearance?: number;
+  /**
+   * Drawn on top of everything, and reserving nothing.
+   *
+   * The enter-course card used to claim a box like any other label, so opening
+   * it shoved the names of neighbouring islands sideways — click one island and
+   * three unrelated titles jump. Those names are about islands the card is not
+   * about; moving them to protect an opaque panel that would have covered them
+   * harmlessly is motion with no information in it.
+   *
+   * So an overlay is placed but not negotiated with. It still has to fit on
+   * screen and still sits beside its own island rather than on it — those are
+   * about the card being readable and about not hiding its own subject. It just
+   * no longer pushes, and is no longer pushed.
+   */
+  readonly overlay?: boolean;
 }
 
 export interface LabelPlacement {
@@ -261,8 +276,10 @@ export function placeLabels(
       // An offset that leaves the frame is not a placement: it would spend a
       // maxVisible slot on a name nobody can read.
       if (!fitsInViewport(rect, viewport)) continue;
-      if (occupied.some((other) => boxesOverlap(rect, other, gap))) continue;
-      occupied.push(rect);
+      if (!candidate.overlay) {
+        if (occupied.some((other) => boxesOverlap(rect, other, gap))) continue;
+        occupied.push(rect);
+      }
       placed[index] = { id: candidate.id, x: slot.x, y: slot.y, visible: true };
       visibleCount += 1;
       break;

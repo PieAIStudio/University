@@ -185,6 +185,60 @@ describe("placeLabels", () => {
     expect(card.x).toBeLessThan(400);
   });
 
+  it("does not move a name because an overlay card opened on top of it", () => {
+    // Item the boss caught: click one island and the titles of neighbouring
+    // islands slid away to make room for the card. The card is opaque and on
+    // top; covering a name costs nothing, and moving one costs the reader the
+    // belief that a name is attached to its island.
+    const names = [
+      candidate({ id: "left", x: 300, y: 300 }),
+      candidate({ id: "right", x: 460, y: 320 }),
+    ];
+    const withoutCard = placeLabels(names, VIEW);
+    const withCard = placeLabels(
+      [
+        ...names,
+        candidate({
+          id: "card",
+          x: 380,
+          y: 300,
+          width: 260,
+          height: 160,
+          anchor: "aside",
+          clearance: 56,
+          weight: 100,
+          overlay: true,
+        }),
+      ],
+      VIEW,
+    );
+    for (const id of ["left", "right"]) {
+      expect(byId(withCard, id)).toEqual(byId(withoutCard, id));
+    }
+    expect(byId(withCard, "card").visible).toBe(true);
+  });
+
+  it("shows an overlay card even where every slot is already taken", () => {
+    // A card that hides because a study badge got there first is a click that
+    // produced nothing. It is allowed to cover the badge.
+    const placed = placeLabels(
+      [
+        candidate({
+          id: "card",
+          x: 400,
+          y: 300,
+          width: 260,
+          height: 160,
+          anchor: "aside",
+          overlay: true,
+        }),
+      ],
+      VIEW,
+      { reserved: [{ left: 0, top: 0, right: VIEW.width, bottom: VIEW.height }] },
+    );
+    expect(byId(placed, "card").visible).toBe(true);
+  });
+
   it("flips an aside card to the left when the island is on the right edge", () => {
     const placed = placeLabels(
       [

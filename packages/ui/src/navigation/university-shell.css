@@ -235,7 +235,13 @@
   margin-top: 12px;
   padding: 14px 16px;
   border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
-  border-radius: var(--game-ui-radius-panel, 14px);
+
+  /*
+    Inside the aside this resolves to the parent's radius minus the gap, so the
+    brown frame around this card stays one width the whole way round. Standing
+    alone somewhere without that variable, it keeps the plain panel radius.
+  */
+  border-radius: var(--shell-nested-radius, var(--game-ui-radius-panel, 14px));
   background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 88%, transparent);
 }
 

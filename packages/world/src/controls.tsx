@@ -560,9 +560,13 @@ export function LabelProbe({
       } else {
         const width = Math.max(follow.offsetWidth, 260);
         const height = Math.max(follow.offsetHeight, 120);
-        // Card first, then names. The card is what the learner just asked
-        // for; a name that took its slot would hide the confirmation, and
-        // a card that yielded to names would cover the island it names.
+        // The card is an overlay: it lands beside the island it is about and
+        // covers whatever happens to be there. It used to reserve its box
+        // before the names were placed, so opening it slid the titles of
+        // neighbouring islands out of the way — a click on one island moved
+        // three other islands' names, which reads as the map rearranging
+        // itself. The card is opaque and on top; being covered costs a name
+        // nothing.
         const [card] = placeLabels(
           [
             {
@@ -575,16 +579,16 @@ export function LabelProbe({
               weight: 100,
               anchor: "aside",
               clearance: FOLLOW_CLEARANCE,
+              overlay: true,
             },
           ],
           viewport,
-          { maxVisible: 1, gap: 8, reserved },
+          { maxVisible: 1, gap: 8 },
         );
         if (card?.visible) {
           follow.style.transform = `translate(${card.x}px, ${card.y}px) translate(-50%, -50%)`;
           follow.style.setProperty("--placed", "1");
           follow.classList.add("is-visible");
-          reserved.push(labelBox({ x: card.x, y: card.y }, width, height, "aside"));
         } else {
           hideFollow();
         }

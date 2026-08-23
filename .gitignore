@@ -99,3 +99,10 @@ BRIEF.md
 BRIEF-RESULT*.md
 SCRATCH/
 .vercel
+
+# Throwaway browser probes: screenshots and DOM measurements while chasing a
+# visual bug. They belong to one debugging session, not to the repo.
+/.shot.mjs
+/.probe.mjs
+/.probe2.mjs
+/.pix.mjs
