@@ -12,6 +12,10 @@ export function activeIdForView(view: View): string {
     case "world":
     case "course":
     case "settled":
+    // The planet is where you choose which series to learn, so the rail's
+    // 学习 stays lit while you are on it — you have not left learning to go
+    // somewhere else, you are picking what to learn.
+    case "planet":
       return "learn";
     case "library":
     case "terms":

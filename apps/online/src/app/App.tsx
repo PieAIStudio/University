@@ -23,7 +23,7 @@ import {
   useSyncExternalStore,
   type CSSProperties,
 } from "react";
-import { courseShapeOf, readCourseProgress } from "@pieai/university-core";
+import { courseShapeOf, readCourseProgress, spineOf } from "@pieai/university-core";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
@@ -104,6 +104,7 @@ import {
   WORLD_POLAR,
 } from "@pieai/university-world/controls.js";
 import { frameWorld } from "@pieai/university-world/frame.js";
+import { PlanetPage, type PlanetStudy } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { activeIdForView, isBareView, useMinWidth } from "./shell-route";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
@@ -351,6 +352,41 @@ export function App() {
   );
 
   /**
+   * The same four rows the switcher shows, plus what the planet's detail card
+   * needs. It is a second projection of one source rather than a second source:
+   * every number here is counted off `nodes`, and the course names are the
+   * spine order the map already walks.
+   *
+   * There is no blurb, and there is no place to put one — a study in
+   * `imported.json` carries an id, a title, a default course and a course list.
+   * The honest introduction is what the data actually knows: how big it is, how
+   * far in you are, and what the courses are called. Writing a sentence here
+   * would be this shell inventing content, which is the one thing it may not do.
+   */
+  const planetStudies: readonly PlanetStudy[] = useMemo(
+    () =>
+      library.studies.map((study) => {
+        const own = (nodes ?? []).filter((node) => node.studyId === study.studyId);
+        const ranked = spineOf(study.studyId).map((entry) => entry.courseId);
+        const rank = new Map(ranked.map((courseId, index) => [courseId, index]));
+        const ordered = [...own].sort(
+          (a, b) =>
+            (rank.get(a.courseId) ?? ranked.length + a.depth) -
+            (rank.get(b.courseId) ?? ranked.length + b.depth),
+        );
+        return {
+          id: study.studyId,
+          title: study.title,
+          courseCount: own.length || study.courses.length,
+          lessonCount: own.reduce((sum, node) => sum + node.lessons, 0),
+          lessonsDone: own.reduce((sum, node) => sum + lessonsDone(node), 0),
+          courseTitles: ordered.map((node) => node.title),
+        };
+      }),
+    [nodes, lessonsDone],
+  );
+
+  /**
    * The way back out of a course.
    *
    * It used to say 「回到世界地图」 and the boss was right that it is not one: a
@@ -511,7 +547,12 @@ export function App() {
     projectName,
     streakDays: progress.streak.days,
     projectControl: (
-      <StudySwitcher studies={studyItems} focusedId={focusedStudyId} onSelect={focusStudy} />
+      <StudySwitcher
+        studies={studyItems}
+        focusedId={focusedStudyId}
+        onSelect={focusStudy}
+        onOpenPlanet={() => setView({ kind: "planet" })}
+      />
     ),
   });
 
@@ -686,6 +727,7 @@ export function App() {
           onSceneReady={onSceneReady}
           onSceneBusy={onSceneBusy}
           onPointerMissed={dismissPick}
+          paused={!showMap}
         >
           <Controls
             target={lookAt}
@@ -1150,6 +1192,18 @@ export function App() {
         show 0/1 next to a lesson that was just finished. Nothing about them is
         stored; see packages/core progress/goals.ts.
       */}
+      {view.kind === "planet" ? (
+        <PlanetPage
+          studies={planetStudies}
+          selectedId={focusedStudyId}
+          onSelect={setMapFocus}
+          onEnter={(studyId) => {
+            setMapFocus(studyId);
+            setView({ kind: "world" });
+          }}
+          onClose={() => setView({ kind: "world" })}
+        />
+      ) : null}
       {view.kind === "league" ? <LeagueScreen document={progress} /> : null}
       {view.kind === "quests" ? <QuestsScreen document={progress} /> : null}
       {view.kind === "plans" ? <PlansScreen /> : null}

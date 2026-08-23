@@ -180,7 +180,7 @@ describe("PlanetPage", () => {
 
     expect(container.textContent).toContain("没开始");
     const enter = [...container.querySelectorAll("button")].find((node) =>
-      (node.textContent ?? "").includes("进入这个项目"),
+      (node.textContent ?? "").includes("进入 "),
     );
     expect(enter).toBeTruthy();
     await act(async () => {

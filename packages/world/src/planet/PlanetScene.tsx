@@ -38,27 +38,59 @@ import { placeStudies, rotationFor, stepRotation, type YawPitch } from "./placem
  */
 const SEA = 0x2f89a0;
 const SEA_DEEP = 0x1c5c72;
-const SKY_ZENITH = 0x2e7fd4;
 const SKY_MID = 0x8ec8ea;
 const SKY_HORIZON = 0xf2d4b0;
+/**
+ * The ground this globe hangs on. Not sky and not black: the panel's own family
+ * two steps darker, so the pane reads as part of the page. `--game-ui-panel` is
+ * roughly `#3a2a1e`; these are that hue with the light taken out.
+ */
+const SPACE_LOW = 0x5a4433;
+const SPACE_HIGH = 0x241a13;
 const ACCENT = 0xffb347;
 
 /**
- * Camera sits on +Z looking at the origin — the front `rotationFor` aims at.
+ * How far back the eye has to stand to hold the whole globe.
  *
- * Distance is a function of the panel, not of the globe. Stage's FOV is
- * vertical and pinned (34° desktop, 42° phone). The desktop pane is a tall
- * 34% column (~0.64 aspect), so 3.2 units of distance only showed a crop
- * of facets; 6.8 fits the whole sphere. The phone pane is wide and short,
- * and the wider FOV already frames it at 3.4.
+ * This was two hand-measured constants, one per tier, and both were measured
+ * against a pane shape that only exists in the preview harness. Dropped into
+ * the real shell the desktop column is far narrower than it is tall, and the
+ * binding constraint stops being the vertical field of view — the sphere ran
+ * off both sides while there was empty sky above and below it.
+ *
+ * So: fit whichever half-angle is smaller. Stage pins the *vertical* FOV, and
+ * the horizontal one falls out of the aspect, which means a tall narrow column
+ * is always horizontally constrained and a wide short one is not. Solving it
+ * rather than measuring it also means the phone, the desktop and whatever pane
+ * shape somebody builds next all get a globe that fits.
  */
+const GLOBE_RADIUS = 1.06;
+const GLOBE_PADDING = 1.1;
+
+export function planetDistance(aspect: number, fovDegrees: number): number {
+  const vertical = (fovDegrees * Math.PI) / 180 / 2;
+  const horizontal = Math.atan(Math.tan(vertical) * Math.max(aspect, 0.05));
+  return (GLOBE_RADIUS * GLOBE_PADDING) / Math.sin(Math.min(vertical, horizontal));
+}
+
 function planetCamera(): readonly [number, number, number] {
   return renderTier() === "mobile" ? [0, 0.12, 3.4] : [0, 0.18, 6.8];
 }
 
 const TURN_RATE = 5.5;
-const MARKER_R = 0.028;
-const MARKER_R_SELECTED = 0.062;
+/*
+  A marker is a place on a map, so it has to survive being drawn at the size the
+  pane actually gives it. At 0.028 of a unit sphere in a 300px column it landed
+  at roughly three pixels — present in the render, absent to a reader.
+*/
+/*
+  Unselected markers used to be `ISLAND_PALETTE.rock`, which is the colour of a
+  rock on a green island — against a globe that is mostly green and blue it is
+  camouflage. A pin has to be lighter than everything under it.
+*/
+const MARKER_QUIET = 0xf2e6d2;
+const MARKER_R = 0.055;
+const MARKER_R_SELECTED = 0.095;
 
 const REST: YawPitch = { yaw: 0.35, pitch: 0.18 };
 
@@ -96,8 +128,7 @@ function buildSkyGeometry(): THREE.BufferGeometry {
   const colour = new THREE.Color();
   for (let index = 0; index < position.count; index += 1) {
     const y = position.getY(index) / 40;
-    if (y > 0.2) colour.copy(colourLerp(SKY_MID, SKY_ZENITH, (y - 0.2) / 0.8));
-    else colour.copy(colourLerp(SKY_HORIZON, SKY_MID, (y + 1) / 1.2));
+    colour.copy(colourLerp(SPACE_LOW, SPACE_HIGH, Math.min(1, Math.max(0, (y + 1) / 2))));
     colours[index * 3] = colour.r;
     colours[index * 3 + 1] = colour.g;
     colours[index * 3 + 2] = colour.b;
@@ -128,14 +159,29 @@ function buildPlanetGeometry(): THREE.BufferGeometry {
     // Elevation is a function of the point, not of the vertex index, so a
     // future subdivision cannot redraw the coastline.
     const n = hash(`${nx.toFixed(4)},${ny.toFixed(4)},${nz.toFixed(4)}`);
-    const band = Math.sin(nx * 4.2) * Math.cos(nz * 3.6);
-    const elev = (n - 0.44) * 0.2 + band * 0.055;
-    const radius = 1 + Math.max(-0.035, elev * 0.2);
+    /*
+      Continents, not static. The first pass weighted per-face noise about four
+      times as heavily as the low-frequency term, so every face decided its own
+      biome and the globe came out mottled — green and blue speckle that reads
+      as a tennis ball going off rather than as land and sea. Three long waves
+      carry the shape now and the noise only breaks up their coastlines, which
+      is the same ordering the island profiles use.
+    */
+    const band =
+      Math.sin(nx * 2.05 + 1.1) * Math.cos(nz * 1.75) +
+      0.62 * Math.sin(ny * 2.6 + 0.4) +
+      0.34 * Math.cos(nx * 3.4 - nz * 2.9);
+    // +0.035 is sea level, and it is a design number rather than a physical
+    // one: at zero this globe came out about nine-tenths ocean, which is the
+    // honest output of a symmetric noise field and a poor picture of a world
+    // that is supposed to be made of islands you can visit.
+    const elev = band * 0.075 + (n - 0.5) * 0.045 + 0.035;
+    const radius = 1 + Math.max(-0.02, elev * 0.16);
     position.setXYZ(index, nx * radius, ny * radius, nz * radius);
 
-    if (elev > 0.045) colour.copy(n > 0.72 ? grassDry : grass);
-    else if (elev > 0.008) colour.copy(rock);
-    else colour.copy(ny < -0.38 ? seaDeep : sea);
+    if (elev > 0.052) colour.copy(n > 0.7 ? grassDry : grass);
+    else if (elev > 0.028) colour.copy(rock);
+    else colour.copy(elev < -0.02 ? seaDeep : sea);
 
     colours[index * 3] = colour.r;
     colours[index * 3 + 1] = colour.g;
@@ -149,26 +195,23 @@ function buildPlanetGeometry(): THREE.BufferGeometry {
 function PlanetLights() {
   return (
     <>
-      <hemisphereLight args={[SKY_MID, 0x786e5f, 1.2]} />
-      <ambientLight color={SKY_HORIZON} intensity={0.22} />
+      {/*
+        The dark side of a planet is still a planet. A single key light on a
+        sphere makes a hard terminator and a black hemisphere, which reads as a
+        ball half-eaten rather than as a world turning — and the points on that
+        half stop existing. Fill carries the shadow side; the key is only there
+        to say which way is up.
+      */}
+      <hemisphereLight args={[SKY_MID, 0x9a8b74, 1.35]} />
+      <ambientLight color={SKY_HORIZON} intensity={0.55} />
       {/*
         Shadow frustum is the globe, not the archipelago. The map's 2048 map
         stretched across a whole sea is what turned every tree into six
         texels; a 2-unit subject does not have that problem.
       */}
-      <directionalLight
-        position={[2.4, 3.2, 2]}
-        intensity={1.9}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-left={-2.2}
-        shadow-camera-right={2.2}
-        shadow-camera-top={2.2}
-        shadow-camera-bottom={-2.2}
-        shadow-camera-far={12}
-        shadow-bias={-0.0002}
-        shadow-normalBias={0.04}
-      />
+      <directionalLight position={[2.4, 3.2, 2]} intensity={1.35} />
+      {/* A cool rim from behind, so the far edge stays a sphere against a dark ground. */}
+      <directionalLight position={[-3, -1.2, -2.6]} intensity={0.5} color={SKY_MID} />
     </>
   );
 }
@@ -201,12 +244,30 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
 
   return (
     <>
+      {/*
+        A planet is looked at from outside it. The first pass wrapped this globe
+        in the same painted dome the archipelago stands under, which put a
+        daytime sky behind the thing that is supposed to *contain* the daytime —
+        and a pale wash beside a brown panel was the largest, palest area on the
+        page.
+
+        The dome stays, recoloured: near-black at the top going warm at the
+        bottom, in the panel's own family. Deleting it outright left a hard
+        cold-black rectangle butted against warm brown, which reads as a hole
+        cut in the page rather than as a window onto space.
+      */}
       <mesh geometry={sky} frustumCulled={false}>
         <meshBasicMaterial vertexColors side={THREE.BackSide} depthWrite={false} fog={false} />
       </mesh>
       <group ref={yawGroup}>
         <group ref={pitchGroup}>
-          <mesh geometry={planet} castShadow receiveShadow>
+          {/*
+            No shadows on the globe. It is the only body in the scene, so the
+            only thing its shadow map could fall on is itself — and it did: a
+            hard terminator with a black lower hemisphere, which is a ball with
+            a bite out of it, not a world. The lights carry the form.
+          */}
+          <mesh geometry={planet}>
             <meshStandardMaterial vertexColors flatShading roughness={0.92} metalness={0} />
           </mesh>
           {[...placed.entries()].map(([id, point]) => {
@@ -243,7 +304,7 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
               >
                 <octahedronGeometry args={[selected ? MARKER_R_SELECTED : MARKER_R, 0]} />
                 <meshStandardMaterial
-                  color={selected ? ACCENT : ISLAND_PALETTE.rock}
+                  color={selected ? ACCENT : MARKER_QUIET}
                   emissive={selected ? ACCENT : 0x000000}
                   emissiveIntensity={selected ? 0.55 : 0}
                   roughness={0.55}
@@ -259,24 +320,21 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
 }
 
 /**
- * Stage's camera prop is the initial pose, not a live binding. The desktop
- * pane needs 6.8 units of distance and the phone pane 3.4; without this
- * rig a rotate-to-portrait keeps the desktop eye and the globe shrinks
- * into a marble. Lives on PlanetStage, not PlanetScene, so dropping the
- * globe into the map's canvas cannot steal that camera.
+ * Stage's camera prop is the initial pose, not a live binding, so a pane that
+ * changes shape — a rotate to portrait, a rail collapsing, a window drag —
+ * would keep the eye it was born with. This rig re-solves the distance from
+ * the pane R3F actually measured. Lives on PlanetStage, not PlanetScene, so
+ * dropping the globe into the map's canvas cannot steal that camera.
  */
 function CameraRig() {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   useLayoutEffect(() => {
-    const apply = () => {
-      const [x, y, z] = planetCamera();
-      camera.position.set(x, y, z);
-      camera.lookAt(0, 0, 0);
-    };
-    apply();
-    window.addEventListener("resize", apply);
-    return () => window.removeEventListener("resize", apply);
-  }, [camera]);
+    if (!(camera instanceof THREE.PerspectiveCamera)) return;
+    const aspect = size.height > 0 ? size.width / size.height : 1;
+    camera.position.set(0, 0.16, planetDistance(aspect, camera.fov));
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+  }, [camera, size.width, size.height]);
   return null;
 }
 

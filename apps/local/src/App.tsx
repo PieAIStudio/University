@@ -49,6 +49,8 @@ import { recentStudies, StudyShelf } from "./shell/StudyShelf.js";
 import { StudioSection } from "./shell/StudioSection.js";
 import { StudyDetail } from "./shell/StudyDetail.js";
 import { TodaySection } from "./shell/TodaySection.js";
+import { PlanetPage, type PlanetStudy } from "@pieai/university-world/planet.js";
+
 import { WorldLanding } from "./shell/WorldLanding.js";
 import { lessonsDoneOf } from "./shell/world-graph.js";
 
@@ -122,6 +124,13 @@ export function App() {
   const [activeSection, setActiveSection] = useState(initialAddress.section);
   const [data, setData] = useState<BootstrapData | null>(null);
   const [selectedStudyId, setSelectedStudyId] = useState<string | null>(initialAddress.studyId);
+  /*
+    The planet, over the learn body. This shell has no hash router — its
+    address is study + lesson — so 「看所有课程系列」 is a piece of state rather
+    than a route. Same component, same contract; only the way in differs,
+    because the way in is the one thing these two shells already do differently.
+  */
+  const [planetOpen, setPlanetOpen] = useState(false);
   const [displayedStudy, setDisplayedStudy] = useState<DisplayedStudy | null>(null);
   const [catalog, setCatalog] = useState<ReadonlyMap<string, StudyView>>(() => new Map());
   const [pendingStudyId, setPendingStudyId] = useState<string | null>(null);
@@ -442,6 +451,31 @@ export function App() {
     });
   }, [data, catalog]);
 
+  /**
+   * The same rows plus what the planet's detail card needs. Counted off the
+   * catalogue this shell already has; there is no blurb because a study record
+   * has no blurb field, and inventing one here would be the authoring shell
+   * writing content outside the authoring pipeline.
+   */
+  const planetStudies: readonly PlanetStudy[] = useMemo(() => {
+    if (!data) return [];
+    return data.studies.map((study) => {
+      const courses = catalog.get(study.id)?.courses ?? [];
+      return {
+        id: study.id,
+        title: study.title,
+        courseCount: courses.length,
+        lessonCount: courses.reduce(
+          (sum, course) =>
+            sum + course.units.reduce((count, unit) => count + unit.lessons.length, 0),
+          0,
+        ),
+        lessonsDone: courses.reduce((sum, course) => sum + lessonsDoneOf(course), 0),
+        courseTitles: courses.map((course) => course.title),
+      };
+    });
+  }, [data, catalog]);
+
   /*
     No 「四片海」 fallback any more: the map shows one project and picks a default
     when nothing is selected, so a capsule reading 「四片海」 would be naming a
@@ -476,7 +510,20 @@ export function App() {
   const learnBody = (
     <>
       {data && data.studies.length === 0 ? <EmptyCampus /> : null}
-      {data && data.studies.length > 0 ? (
+      {planetOpen && data ? (
+        <PlanetPage
+          studies={planetStudies}
+          selectedId={selectedStudyId}
+          onSelect={setSelectedStudyId}
+          onEnter={(studyId) => {
+            setSelectedStudyId(studyId);
+            setLessonRef(null);
+            setPlanetOpen(false);
+          }}
+          onClose={() => setPlanetOpen(false)}
+        />
+      ) : null}
+      {data && data.studies.length > 0 && !planetOpen ? (
         <div className="learn-layout">
           <WorldLanding
             data={data}
@@ -616,6 +663,7 @@ export function App() {
                   setSelectedStudyId(studyId);
                   setLessonRef(null);
                 }}
+                onOpenPlanet={() => setPlanetOpen(true)}
               />
             ) : undefined,
         })}

@@ -75,6 +75,13 @@ export type View =
   // host cannot 404 it. Drop the kind when the lab is retired.
   | { readonly kind: "avatar-lab" }
   | { readonly kind: "league" }
+  /*
+    The planet: every course series at once, which is the one thing the map
+    deliberately cannot show any more. A route rather than an overlay, because
+    an overlay would leave the map's canvas mounted and rendering behind an
+    opaque page — and because 「我在哪」 deserves a back button.
+  */
+  | { readonly kind: "planet" }
   | { readonly kind: "quests" }
   | { readonly kind: "plans" }
   | { readonly kind: "settings" }
@@ -125,6 +132,8 @@ export function toHash(view: View): string {
       return "#/avatar-lab";
     case "league":
       return "#/league";
+    case "planet":
+      return "#/planet";
     case "quests":
       return "#/quests";
     case "plans":
@@ -168,6 +177,7 @@ export function fromHash(hash: string): View {
   if (parts.length === 1 && parts[0] === "catalog") return { kind: "catalog" };
   if (parts.length === 1 && parts[0] === "avatar-lab") return { kind: "avatar-lab" };
   if (parts.length === 1 && parts[0] === "league") return { kind: "league" };
+  if (parts.length === 1 && parts[0] === "planet") return { kind: "planet" };
   if (parts.length === 1 && parts[0] === "quests") return { kind: "quests" };
   if (parts.length === 1 && parts[0] === "plans") return { kind: "plans" };
   if (parts.length === 1 && parts[0] === "settings") return { kind: "settings" };

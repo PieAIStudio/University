@@ -20,19 +20,26 @@ export function studySwitchMeta(item: StudySwitchItem): string {
  * you change project without hunting for an island.
  *
  * It used to end with 「看全部四片海」, which pulled the camera back to show all
- * four archipelagos in one ocean. That view no longer exists — a project is its
- * own scene now — and the control had stopped doing anything at all, so it is
- * gone rather than left lying there. What replaces it is a page, not a camera
- * distance.
+ * four archipelagos in one ocean. That view no longer exists — a series is its
+ * own scene now — so what replaces it is a page: the planet, where every series
+ * is a point and the list beside it is the control.
  */
 export function StudySwitcher({
   studies,
   focusedId,
   onSelect,
+  onOpenPlanet,
 }: {
   readonly studies: readonly StudySwitchItem[];
   readonly focusedId: string | null;
   readonly onSelect: (studyId: string) => void;
+  /**
+   * Opens the planet. Separate from `onSelect` rather than `onSelect(null)`,
+   * because they are different verbs: one changes which series you are in, the
+   * other leaves the map to go looking. Passing null for "go somewhere else" is
+   * how the old four-seas option got away with doing nothing for a while.
+   */
+  readonly onOpenPlanet?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -92,6 +99,22 @@ export function StudySwitcher({
               </button>
             </li>
           ))}
+          {onOpenPlanet ? (
+            <li role="presentation">
+              <button
+                type="button"
+                role="option"
+                aria-selected={false}
+                className="study-switcher__option study-switcher__option--all"
+                onClick={() => {
+                  setOpen(false);
+                  onOpenPlanet();
+                }}
+              >
+                看所有课程系列
+              </button>
+            </li>
+          ) : null}
         </ul>
       ) : null}
     </div>

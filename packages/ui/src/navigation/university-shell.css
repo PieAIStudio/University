@@ -361,6 +361,21 @@
   color: var(--game-ui-accent, #5ec8c0);
 }
 
+/*
+  The last row leaves the list instead of choosing inside it, so it gets a rule
+  above it. Without the rule it reads as a fifth series called 「看所有课程系列」,
+  which is exactly the mistake 「看全部四片海」 made when it sat here looking like
+  a place you could go.
+*/
+.study-switcher__option--all {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
 .study-switcher__name {
   font-weight: 650;
 }

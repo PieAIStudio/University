@@ -172,6 +172,18 @@ interface StageProps {
    * and we would have to guess which clicks were "outside".
    */
   readonly onPointerMissed?: (event: MouseEvent) => void;
+  /**
+   * The canvas is on the page but nobody is looking at it.
+   *
+   * The shells keep this canvas mounted across routes rather than tearing it
+   * down: rebuilding the archipelago costs a visible stall, and destroying a
+   * WebGL context to get it back a moment later is the expensive way to save
+   * nothing. But `display: none` does not stop a render loop, so a learner
+   * reading a lesson beside a hidden map was paying for sixty frames a second
+   * of a scene behind an opaque panel — and now that the planet has a canvas of
+   * its own, paying for two.
+   */
+  readonly paused?: boolean;
 }
 
 export function Stage({
@@ -181,6 +193,7 @@ export function Stage({
   onSceneReady,
   onSceneBusy,
   onPointerMissed,
+  paused = false,
 }: StageProps) {
   const tier = renderTier();
 
@@ -230,10 +243,11 @@ export function Stage({
       // islands are thin plates. That is a look to choose on purpose with the
       // scene in front of you, not a word to swap in a comment.
       shadows={tier === "mobile" ? "basic" : "percentage"}
-      // Nothing animates on its own once the camera settles, so frames are
-      // requested rather than burned continuously. A learner reading a lesson
-      // beside the map should not hear the fan.
-      frameloop="always"
+      // `always` while anyone is looking: the beacon pulses, the controls
+      // damp, and the clouds drift, so there is no settled state to stop at.
+      // `never` the moment the canvas is hidden — that is the only thing here
+      // that was ever burning frames for nobody.
+      frameloop={paused ? "never" : "always"}
     >
       <Pipeline />
       {/*

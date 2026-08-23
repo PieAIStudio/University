@@ -24,7 +24,7 @@ export interface PlanetPageProps {
   readonly studies: readonly PlanetStudy[];
   readonly selectedId: string | null;
   readonly onSelect: (studyId: string) => void;
-  /** 「进入这个项目」 */
+  /** 「进入 <名字>」 */
   readonly onEnter: (studyId: string) => void;
   readonly onClose: () => void;
 }
@@ -133,7 +133,13 @@ function StudyDetail({
         className="planet-page__enter"
         onClick={() => onEnter(study.id)}
       >
-        进入这个项目
+        {/*
+          The button names where it goes, the same way the way back out of a
+          course does. 「进入这个项目」 was two problems in five characters: a
+          category word the reader has to resolve against the card they are
+          looking at, and the wrong category word — 通用课 is nobody's project.
+        */}
+        进入 {study.title}
       </GameButton>
     </GamePanel>
   );
