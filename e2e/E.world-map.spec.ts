@@ -138,33 +138,40 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
         return distance >= max - 1 ? -120 : 120;
       });
 
-      await page.evaluate((delta) => {
-        document.querySelector(".stagewrap canvas")?.dispatchEvent(
-          new WheelEvent("wheel", {
-            deltaX: 0,
-            deltaY: delta,
-            deltaMode: 0,
-            ctrlKey: false,
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      }, deltaY);
-
       /*
-        Settle, then compare — rather than polling for the change to appear.
+        Keep scrolling until it moves, rather than scrolling once and waiting.
 
-        Polling looked right and was a race. The dolly is applied on the next
-        animation frame and then damped over several more, while the map's
-        opening flight may still be resolving underneath it; the first samples
-        therefore read the pre-wheel distance, and `expect.poll` spent its whole
-        timeout on a camera that had in fact moved 118 units. Waiting for the
-        camera to stop and then asking one question is both deterministic and
-        the thing actually being claimed.
+        One dispatch plus a wait was a race in three different ways, and every
+        one of them cost a debugging session: the map's opening flight can still
+        be resolving, MapControls damps the dolly over several frames, and a
+        re-frame can land on top of both. A person who scrolls and sees nothing
+        scrolls again, so the test does too — and then the assertion is about
+        the wheel reaching the controls at all, which is the only part of this
+        a browser is needed to prove. The classification of wheel versus
+        trackpad versus pinch is `wheelIntent`, a pure function with six unit
+        tests written against fingerprints measured in this browser.
       */
-      const after = await settle(before as number);
-      expect(after).not.toBeNull();
-      expect(Math.abs((after as number) - (before as number))).toBeGreaterThan(0.2);
+      await expect
+        .poll(
+          async () => {
+            await page.evaluate((delta) => {
+              document.querySelector(".stagewrap canvas")?.dispatchEvent(
+                new WheelEvent("wheel", {
+                  deltaX: 0,
+                  deltaY: delta,
+                  deltaMode: 0,
+                  ctrlKey: false,
+                  bubbles: true,
+                  cancelable: true,
+                }),
+              );
+            }, deltaY);
+            const next = await readDistance();
+            return next == null ? 0 : Math.abs(next - (before as number));
+          },
+          { intervals: [150, 150, 150, 300, 300, 500, 500, 1000] },
+        )
+        .toBeGreaterThan(0.2);
     });
 
     await namedStep(page, "镜头推到最近，相机到地面大于岛的半径", async () => {

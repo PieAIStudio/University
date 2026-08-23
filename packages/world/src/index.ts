@@ -35,3 +35,5 @@ export {
 } from "./controls.js";
 export { frameWorld } from "./frame.js";
 export { wheelIntent } from "./wheel-intent.js";
+export { CompanionProbe, screenFromProjected } from "./companion-probe.js";
+export type { CompanionAnchor } from "./companion-probe.js";

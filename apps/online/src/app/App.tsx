@@ -69,6 +69,7 @@ import {
 } from "../content/library";
 import { identityPort } from "../account/identity";
 import { bindProgressToIdentity } from "../account/session";
+import { presencePort } from "../presence/store";
 import { progressSource } from "../progress/source";
 import { dueCards, dueTomorrow, progressPort, snapshot, subscribe } from "../progress/store";
 import { AvatarLab } from "../screens/AvatarLab";
@@ -99,6 +100,8 @@ import { frameWorld } from "@pieai/university-world/frame.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { activeIdForView, isBareView, useMinWidth } from "./shell-route";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
+import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
+import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
 
 const ProfileAvatar = lazy(() =>
   import("./ProfileAvatar.js").then((mod) => ({ default: mod.ProfileAvatar })),
@@ -265,6 +268,7 @@ export function App() {
   const labelNodes = useRef(new Map<string, HTMLElement>());
   const pickCardRef = useRef<HTMLElement | null>(null);
   const dismissPick = useCallback(() => setPicked(null), []);
+  const companionNodes = useRef(new Map<string, HTMLElement>());
 
   /**
    * Whether the pointer travelled far enough since it went down to count as a
@@ -567,6 +571,43 @@ export function App() {
   // the catalogue size after the rail had stopped.
   const nextUpMeta = nextUp ? todayMeta(nextUp.node.studyTitle, nextUpProgress) : null;
 
+  const presenceView = presenceViewKey(view);
+  const presenceLocation = useMemo(() => {
+    if (view.kind === "lesson" || view.kind === "settled") {
+      return { studyId: view.studyId, courseId: view.courseId, lessonId: view.lessonId };
+    }
+    if (view.kind === "course") {
+      const live = lessons.find((lesson) => lesson.state === "live");
+      return {
+        studyId: view.studyId,
+        courseId: view.courseId,
+        lessonId: live?.lessonId ?? null,
+      };
+    }
+    if (nextUp) {
+      return {
+        studyId: nextUp.node.studyId,
+        courseId: nextUp.node.courseId,
+        lessonId: null,
+      };
+    }
+    return null;
+  }, [view, lessons, nextUp]);
+  const companionAnchors = useMemo(() => {
+    if (view.kind === "course" || view.kind === "lesson") {
+      return lessons.map((lesson) => ({
+        id: `lesson:${lesson.lessonId}`,
+        position: lesson.position,
+      }));
+    }
+    if (!world) return [];
+    return world.placements.map((entry) => ({
+      id: `course:${entry.node.studyId}/${entry.node.courseId}`,
+      position: entry.position,
+    }));
+  }, [view.kind, lessons, world]);
+  const companionSurface = view.kind === "course" || view.kind === "lesson" ? "course" : "world";
+
   const todayCard = (
     <TodayCard
       nextTitle={nextUp?.node.title ?? null}
@@ -624,6 +665,12 @@ export function App() {
             followId={view.kind === "world" && picked ? picked.courseId : null}
             followNode={pickCardRef}
           />
+          {/*
+            A separate probe from LabelProbe on purpose: companions must not
+            compete with course names for the label budget, and a companion
+            that lost that competition would silently stop existing.
+          */}
+          <CompanionProbe anchors={companionAnchors} nodes={companionNodes.current} />
           {view.kind === "world" && world ? (
             <WorldScene
               placements={world.placements}
@@ -832,6 +879,15 @@ export function App() {
             );
           })}
         </nav>
+        <PresenceLayer
+          port={presencePort}
+          surface={companionSurface}
+          viewKey={presenceView}
+          attach={(userId, element) => {
+            if (element) companionNodes.current.set(userId, element);
+            else companionNodes.current.delete(userId);
+          }}
+        />
 
         {/*
           The hint has to describe the controls that exist. It said 「右键旋转」
@@ -1061,7 +1117,7 @@ export function App() {
       {view.kind === "league" ? <LeagueScreen document={progress} /> : null}
       {view.kind === "quests" ? <QuestsScreen document={progress} /> : null}
       {view.kind === "plans" ? <PlansScreen /> : null}
-      {view.kind === "settings" ? <SettingsScreen /> : null}
+      {view.kind === "settings" ? <SettingsScreen presence={presencePort} /> : null}
       {view.kind === "me" ? (
         <ProfileScreen
           avatar={
@@ -1155,6 +1211,7 @@ export function App() {
         aside={aside}
         asideLabel={view.kind === "settings" ? "设置" : "今天"}
       >
+        <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
         {main}
       </UniversityShell>
     </div>

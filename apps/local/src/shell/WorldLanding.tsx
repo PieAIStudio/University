@@ -29,6 +29,9 @@ import {
 import { frameWorld } from "@pieai/university-world/frame.js";
 import { placeWorld, WorldScene, type Marker } from "@pieai/university-world/Maps.js";
 import { Stage } from "@pieai/university-world/Stage.js";
+import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
+import { PresenceLayer } from "@pieai/university-ui/presence.js";
+import type { PresencePort } from "@pieai/university-core";
 
 import { AirlockClocks } from "./StudyDetail.js";
 import { UaDashboardButton } from "./UaDashboardButton.js";
@@ -58,12 +61,14 @@ function useMinWidth(px: number): boolean {
 export function WorldLanding({
   data,
   catalog,
+  presence,
   selectedStudyId,
   onSelectStudy,
   onOpenLesson,
 }: {
   readonly data: BootstrapData;
   readonly catalog: ReadonlyMap<string, StudyView>;
+  readonly presence: PresencePort;
   readonly selectedStudyId: string | null;
   readonly onSelectStudy: (studyId: string) => void;
   readonly onOpenLesson: (locator: LessonRef) => void;
@@ -74,6 +79,7 @@ export function WorldLanding({
   const [sceneReady, setSceneReady] = useState(false);
   const labelNodes = useRef(new Map<string, HTMLElement>());
   const pickCardRef = useRef<HTMLElement | null>(null);
+  const companionNodes = useRef(new Map<string, HTMLElement>());
   const draggedRef = useRef(false);
   const pointerOrigin = useRef<{ x: number; y: number } | null>(null);
   const dismissPick = useCallback(() => setPicked(null), []);
@@ -220,6 +226,18 @@ export function WorldLanding({
               followId={picked ? `${picked.studyId}/${picked.courseId}` : null}
               followNode={pickCardRef}
             />
+            {/*
+              A separate probe from LabelProbe on purpose: companions must not
+              compete with course names for the label budget, and a companion
+              that lost that competition would silently stop existing.
+            */}
+            <CompanionProbe
+              anchors={placements.map((entry) => ({
+                id: `course:${entry.node.studyId}/${entry.node.courseId}`,
+                position: entry.position,
+              }))}
+              nodes={companionNodes.current}
+            />
             <WorldScene
               placements={placements}
               centres={world.centres}
@@ -275,6 +293,15 @@ export function WorldLanding({
             );
           })}
         </nav>
+        <PresenceLayer
+          port={presence}
+          surface="world"
+          viewKey="world"
+          attach={(userId, element) => {
+            if (element) companionNodes.current.set(userId, element);
+            else companionNodes.current.delete(userId);
+          }}
+        />
 
         {wide ? null : nextLesson && !picked ? (
           <aside className="nextup">

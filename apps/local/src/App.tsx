@@ -42,6 +42,8 @@ import {
   type ShellSlot,
 } from "./url-state.js";
 import { progressPort } from "./progress/store.js";
+import { presencePort } from "./presence/store.js";
+import { PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
 import { EmptyCampus } from "./shell/EmptyCampus.js";
 import { recentStudies, StudyShelf } from "./shell/StudyShelf.js";
 import { StudioSection } from "./shell/StudioSection.js";
@@ -475,6 +477,7 @@ export function App() {
           <WorldLanding
             data={data}
             catalog={catalog}
+            presence={presencePort}
             selectedStudyId={selectedStudyId}
             onSelectStudy={(studyId) => {
               setSelectedStudyId(studyId);
@@ -554,9 +557,21 @@ export function App() {
     </div>
   );
 
+  const presenceLocation = lessonLocator
+    ? {
+        studyId: lessonLocator.studyId,
+        courseId: lessonLocator.courseId,
+        lessonId: lessonLocator.lessonId,
+      }
+    : (data?.today.nextLesson ?? null);
+  const presenceView = lessonLocator
+    ? presenceViewKey({ kind: "lesson", ...lessonLocator })
+    : "world";
+
   if (reading) {
     return (
       <div className="campus" data-game-ui-theme="night" data-reading>
+        <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
         {alerts}
         <div ref={mainRef} tabIndex={-1} className="campus-main" role="main" aria-label="课程正文">
           {lessonBody}
@@ -574,6 +589,7 @@ export function App() {
 
   return (
     <div data-game-ui-theme="night">
+      <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
       <UniversityShell
         activeId={slot}
         extraMoreItems={[STUDIO_MORE_ITEM]}
@@ -661,7 +677,7 @@ export function App() {
           {slot === "favourites" ? (
             <FavouritesEmpty onBrowse={() => (window.location.hash = "#/")} />
           ) : null}
-          {slot === "settings" ? <SettingsScreen /> : null}
+          {slot === "settings" ? <SettingsScreen presence={presencePort} /> : null}
           {slot === "profile" ? (
             <ProfileScreen
               passagesRead={0}

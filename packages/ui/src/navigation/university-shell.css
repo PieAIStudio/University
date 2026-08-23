@@ -50,6 +50,13 @@
   margin: 0 0 28px;
 }
 
+.settings-screen__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
 .foreign-settings--page {
   position: static;
   width: 100%;
