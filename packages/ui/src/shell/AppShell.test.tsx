@@ -44,6 +44,7 @@ let root: Root;
 
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  localStorage.clear();
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -155,4 +156,50 @@ describe("AppShell", () => {
     expect(document.querySelectorAll(".counter-row")).toHaveLength(1);
     expect(document.querySelector(".counter-row")?.children).toHaveLength(0);
   });
+
+  it("gives each floating column a collapse control and remembers the choice", async () => {
+    localStorage.clear();
+    await renderShell({ aside: <p>右栏</p>, asideLabel: "上下文" });
+    const rail = document.querySelector<HTMLButtonElement>(".app-shell__collapse--rail");
+    const aside = document.querySelector<HTMLButtonElement>(".app-shell__collapse--aside");
+    expect(rail).toBeTruthy();
+    expect(aside).toBeTruthy();
+    expect(document.querySelector(".app-shell")?.getAttribute("data-rail-collapsed")).toBe("false");
+
+    await act(async () => {
+      dispatchPointerSequence(rail!, 8, 8);
+    });
+    expect(document.querySelector(".app-shell")?.getAttribute("data-rail-collapsed")).toBe("true");
+    expect(localStorage.getItem("app-shell.collapsed")).toContain('"rail":true');
+
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await renderShell({ aside: <p>右栏</p>, asideLabel: "上下文" });
+    expect(document.querySelector(".app-shell")?.getAttribute("data-rail-collapsed")).toBe("true");
+  });
 });
+
+function dispatchPointerSequence(target: Element, x: number, y: number) {
+  const base = { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 };
+  const pointer =
+    typeof PointerEvent === "function"
+      ? (type: string, buttons: number) =>
+          new PointerEvent(type, {
+            ...base,
+            buttons,
+            pointerId: 1,
+            pointerType: "mouse",
+            isPrimary: true,
+          })
+      : null;
+  const mouse = (type: string, buttons: number) => new MouseEvent(type, { ...base, buttons });
+  const fire = (type: string, buttons: number) => {
+    if (pointer && type.startsWith("pointer")) target.dispatchEvent(pointer(type, buttons));
+    else target.dispatchEvent(mouse(type, buttons));
+  };
+  fire("pointerdown", 1);
+  fire("mousedown", 1);
+  fire("pointerup", 0);
+  fire("mouseup", 0);
+  fire("click", 0);
+}

@@ -101,14 +101,24 @@ console.log("e2e: building @pieai/university-core (the local API cannot import .
 must("pnpm", ["--filter", "@pieai/university-core", "build"], ROOT);
 must("pnpm", ["exec", "tsc", "-p", "tsconfig.server.build.json"], LOCAL);
 
+const nestedStudies = join(LOCAL, "studies", "studies");
+const localApiEnv = {
+  UNIVERSITY_LOCAL_PORT: String(LOCAL_API_PORT),
+  UNIVERSITY_LOCAL_PROJECT_ROOT: LOCAL,
+};
+// This worktree keeps personal studies behind a nested symlink so the
+// checkout does not own learner data. Point the API at the containers
+// themselves, otherwise bootstrap is an empty shelf and the authoring
+// walk never finds 「开始学习」.
+if (existsSync(nestedStudies)) {
+  localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT = nestedStudies;
+}
+
 run(
   "node",
   [join(LOCAL, ".university-local-build/server/http-server.js")],
   LOCAL,
-  {
-    UNIVERSITY_LOCAL_PORT: String(LOCAL_API_PORT),
-    UNIVERSITY_LOCAL_PROJECT_ROOT: LOCAL,
-  },
+  localApiEnv,
 );
 
 run(

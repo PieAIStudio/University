@@ -172,6 +172,13 @@ button.block {
   min-width: 0;
 }
 
+@media (min-width: 768px) {
+  .learn-stage {
+    min-height: 100dvh;
+    height: 100%;
+  }
+}
+
 /*
   The stage stays mounted across every route — unmounting it would throw away
   the WebGL context and rebuild the world on each navigation — so on a
@@ -232,7 +239,7 @@ button.block {
 .picked {
   position: absolute;
   top: 14px;
-  right: 14px;
+  right: calc(var(--shell-gutter, 16px) + var(--shell-aside-width, 0px) + 12px);
   width: 260px;
   border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
   border-radius: var(--game-ui-radius-panel, 14px);
@@ -254,7 +261,7 @@ button.block {
 .nextup {
   position: absolute;
   top: 14px;
-  left: 14px;
+  left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
   width: 280px;
   border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
   border-radius: var(--game-ui-radius-panel, 14px);
@@ -368,7 +375,7 @@ button.block {
 .hint {
   position: absolute;
   z-index: 2;
-  left: 14px;
+  left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
   bottom: 12px;
   margin: 0;
   font-size: 0.76rem;
@@ -765,17 +772,17 @@ button.block {
 }
 
 .app-shell__main .learn-hud .nextup {
-  left: 14px;
+  left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
   width: 280px;
 }
 
 .app-shell__main .learn-hud .picked {
-  right: 14px;
+  right: calc(var(--shell-gutter, 16px) + var(--shell-aside-width, 0px) + 12px);
 }
 
 .app-shell__main .learn-hud .picked--left {
   right: auto;
-  left: 14px;
+  left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
 }
 
 /*

@@ -13,6 +13,10 @@ import {
 import { FavouritesEmpty } from "@pieai/university-ui";
 import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
+import {
+  StudySwitcher,
+  type StudySwitchItem,
+} from "@pieai/university-ui/navigation/StudySwitcher.js";
 import { isCurrentLessonCompleted } from "@pieai/university-ui/view/lesson-view.js";
 
 import { lessonRefKey } from "@pieai/university-core";
@@ -42,6 +46,7 @@ import { StudioSection } from "./shell/StudioSection.js";
 import { StudyDetail } from "./shell/StudyDetail.js";
 import { TodaySection } from "./shell/TodaySection.js";
 import { WorldLanding } from "./shell/WorldLanding.js";
+import { lessonsDoneOf } from "./shell/world-graph.js";
 
 interface DisplayedStudy {
   readonly locator: string;
@@ -408,10 +413,32 @@ export function App() {
   }, []);
 
   const reading = lessonLocator !== null;
+  const studyItems: readonly StudySwitchItem[] = useMemo(() => {
+    if (!data) return [];
+    return data.studies.map((study) => {
+      const view = catalog.get(study.id);
+      const courses = view?.courses ?? [];
+      const done = courses.reduce((sum, course) => sum + lessonsDoneOf(course), 0);
+      const total = courses.reduce(
+        (sum, course) => sum + course.units.reduce((count, unit) => count + unit.lessons.length, 0),
+        0,
+      );
+      return {
+        id: study.id,
+        title: study.title,
+        courseCount: courses.length,
+        done,
+        total,
+      };
+    });
+  }, [data, catalog]);
+
   const projectName =
-    studySummary?.title ??
-    data?.studies.find((study) => study.id === selectedStudyId)?.title ??
-    "University";
+    selectedStudyId == null && data
+      ? "四片海"
+      : (studySummary?.title ??
+        data?.studies.find((study) => study.id === selectedStudyId)?.title ??
+        "University");
   const lessonsCompleted = studyView
     ? studyView.courses
         .flatMap((course) => course.units.flatMap((unit) => unit.lessons))
@@ -556,7 +583,21 @@ export function App() {
           literal "0" — a number it had no way to know — beside two counters
           for systems that do not exist.
         */
-        counters={universityCounters({ projectName, streakDays: null })}
+        counters={universityCounters({
+          projectName,
+          streakDays: null,
+          projectControl:
+            data && studyItems.length > 0 ? (
+              <StudySwitcher
+                studies={studyItems}
+                focusedId={selectedStudyId}
+                onSelect={(studyId) => {
+                  setSelectedStudyId(studyId);
+                  setLessonRef(null);
+                }}
+              />
+            ) : undefined,
+        })}
         aside={aside}
         asideLabel={slot === "settings" ? "设置" : "今天"}
       >

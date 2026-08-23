@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { CounterRow } from "./CounterRow.js";
 import { NavRail } from "./NavRail.js";
@@ -8,8 +8,8 @@ import { TabBar } from "./TabBar.js";
  * Product-neutral chrome. Labels, routes and icons all arrive as props so this
  * can graduate to SwimmerUIKit later; a University-named prop would fail that
  * test. One component tree at every breakpoint — the counter row is a single
- * grid item whose `grid-area` moves, because a second copy is how the two
- * layouts would start to drift.
+ * node; CSS moves it. Below 768px it is a strip above main. At ≥768 the canvas
+ * is full-bleed and the rail / aside float on top of it as opaque cards.
  */
 
 export interface ShellNavItem {
@@ -36,6 +36,11 @@ export interface ShellCounter {
   readonly href?: string;
   /** Duolingo greys a zero streak rather than hiding it. */
   readonly muted?: boolean;
+  /**
+   * Replaces the default icon+value control. The study switcher uses this so
+   * the island slot can open a menu without a second counter row.
+   */
+  readonly control?: ReactNode;
 }
 
 export interface AppShellProps {
@@ -49,6 +54,28 @@ export interface AppShellProps {
   readonly children: ReactNode;
 }
 
+export const SHELL_COLLAPSED_KEY = "app-shell.collapsed";
+
+function readCollapsed(): { rail: boolean; aside: boolean } {
+  if (typeof localStorage === "undefined") return { rail: false, aside: false };
+  try {
+    const raw = localStorage.getItem(SHELL_COLLAPSED_KEY);
+    if (!raw) return { rail: false, aside: false };
+    const parsed = JSON.parse(raw) as { rail?: unknown; aside?: unknown };
+    return { rail: parsed.rail === true, aside: parsed.aside === true };
+  } catch {
+    return { rail: false, aside: false };
+  }
+}
+
+function writeCollapsed(next: { rail: boolean; aside: boolean }) {
+  try {
+    localStorage.setItem(SHELL_COLLAPSED_KEY, JSON.stringify(next));
+  } catch {
+    // private mode / quota
+  }
+}
+
 export function AppShell({
   nav,
   tabs,
@@ -59,16 +86,61 @@ export function AppShell({
   asideLabel,
   children,
 }: AppShellProps) {
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const persist = (next: { rail: boolean; aside: boolean }) => {
+    setCollapsed(next);
+    writeCollapsed(next);
+  };
+  const hasAside = aside != null;
+
   return (
-    <div className="app-shell">
-      <NavRail items={nav} activeId={activeId} brand={brand} />
+    <div
+      className="app-shell"
+      data-rail-collapsed={collapsed.rail ? "true" : "false"}
+      data-aside-collapsed={collapsed.aside ? "true" : "false"}
+    >
+      <div className="app-shell__west">
+        <NavRail items={nav} activeId={activeId} brand={brand} />
+        <button
+          type="button"
+          className="app-shell__collapse app-shell__collapse--rail"
+          aria-expanded={!collapsed.rail}
+          aria-controls="app-shell-rail"
+          onClick={() => persist({ ...collapsed, rail: !collapsed.rail })}
+        >
+          <span className="app-shell__collapse-icon" aria-hidden="true">
+            {collapsed.rail ? "▶" : "◀"}
+          </span>
+          <span className="app-shell__collapse-label">{collapsed.rail ? "展开导航" : "收起"}</span>
+        </button>
+      </div>
       <main className="app-shell__main">{children}</main>
-      <CounterRow counters={counters ?? []} />
-      {aside != null ? (
-        <aside className="app-shell__aside" aria-label={asideLabel}>
-          {aside}
-        </aside>
-      ) : null}
+      <div className="app-shell__east">
+        <div className="app-shell__east-stack">
+          <CounterRow counters={counters ?? []} />
+          {hasAside ? (
+            <aside className="app-shell__aside" id="app-shell-aside" aria-label={asideLabel}>
+              {aside}
+            </aside>
+          ) : null}
+        </div>
+        {hasAside ? (
+          <button
+            type="button"
+            className="app-shell__collapse app-shell__collapse--aside"
+            aria-expanded={!collapsed.aside}
+            aria-controls="app-shell-aside"
+            onClick={() => persist({ ...collapsed, aside: !collapsed.aside })}
+          >
+            <span className="app-shell__collapse-icon" aria-hidden="true">
+              {collapsed.aside ? "◀" : "▶"}
+            </span>
+            <span className="app-shell__collapse-label">
+              {collapsed.aside ? "展开上下文" : "收起"}
+            </span>
+          </button>
+        ) : null}
+      </div>
       <TabBar items={tabs} activeId={activeId} />
     </div>
   );

@@ -33,6 +33,7 @@
     "./navigation/counters.js": "./src/navigation/counters.tsx",
     "./navigation/empty.js": "./src/navigation/empty/index.ts",
     "./navigation/slots.js": "./src/navigation/slots.tsx",
+    "./navigation/StudySwitcher.js": "./src/navigation/StudySwitcher.tsx",
     "./navigation/university-shell.css": "./src/navigation/university-shell.css",
     "./path/NodeCard.js": "./src/path/NodeCard.tsx",
     "./path/UnitCard.js": "./src/path/UnitCard.tsx",

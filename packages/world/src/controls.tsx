@@ -29,6 +29,7 @@ import {
   type LabelCandidate,
 } from "@pieai/university-world/labels.js";
 import type { Marker } from "./Maps";
+import { wheelIntent } from "./wheel-intent.js";
 
 /**
  * Camera rig. Still MapControls, but with the map idiom's two habits removed.
@@ -96,6 +97,18 @@ export const COURSE_DISTANCE = 38;
 export const COURSE_DISTANCE_MIN = 22;
 export const COURSE_DISTANCE_MAX = 48;
 /**
+ * World-map dolly range. The lever is distance, not camera height: polar is
+ * pinned, and MapControls rebuilds position from (target, distance, azimuth).
+ *
+ * These two numbers used to be 6 and 460 — a 76× span that let the eye sit
+ * inside an island's mesh. The ratio is the product rule (≤ 3×); the values
+ * are tuned so min is "one sea fills the frame" and max is "all four seas
+ * in view". Polar is 54°, so camera height at min is
+ * `WORLD_DISTANCE_MIN * cos(polar)` ≈ 53, well above the largest island.
+ */
+export const WORLD_DISTANCE_MIN = 90;
+export const WORLD_DISTANCE_MAX = 270;
+/**
  * App.tsx aims four stones ahead. Dolly-in toward that far look drops the
  * live stone under the chrome. Pulling the target back along the ground
  * toward the eye (about two stones) keeps the live stone in the lower
@@ -122,8 +135,8 @@ export function Controls({
     instance.enableDamping = true;
     instance.dampingFactor = 0.08;
     instance.enableRotate = false;
-    instance.minDistance = 6;
-    instance.maxDistance = 460;
+    instance.minDistance = WORLD_DISTANCE_MIN;
+    instance.maxDistance = WORLD_DISTANCE_MAX;
     // Two fingers zoom. They do not also rotate, which is what DOLLY_ROTATE
     // would do with any accidental twist.
     instance.touches.TWO = THREE.TOUCH.DOLLY_PAN;
@@ -151,19 +164,23 @@ export function Controls({
       instance.minDistance = COURSE_DISTANCE_MIN;
       instance.maxDistance = COURSE_DISTANCE_MAX;
     } else {
-      instance.minDistance = 6;
-      instance.maxDistance = 460;
+      instance.minDistance = WORLD_DISTANCE_MIN;
+      instance.maxDistance = WORLD_DISTANCE_MAX;
     }
   }, [polar]);
 
   /**
-   * A two-finger trackpad swipe pans.
+   * A two-finger trackpad swipe pans. A mouse wheel zooms.
    *
    * The browser reports that swipe as a `wheel` event, and MapControls reads
    * every `wheel` as zoom — so on a laptop, the gesture every Mac user makes
    * to move a map was zooming it instead. A pinch is distinguishable: the
    * browser sets `ctrlKey` on it, which is how Apple Maps and Mapbox tell the
    * two apart, so a pinch still falls through to the zoom MapControls does.
+   *
+   * A mouse wheel is the same `wheel` event without `ctrlKey`. The split is
+   * `wheelIntent` in `wheel-intent.ts` — measured, not guessed. Events this
+   * classifies as zoom are left for MapControls; pans are applied here.
    *
    * The listener sits on the canvas's parent in the capture phase because
    * MapControls binds its own to the canvas. Registering on the same element
@@ -174,7 +191,19 @@ export function Controls({
     const host = canvas.parentElement;
     if (!host) return;
     const onWheel = (event: WheelEvent) => {
-      if (event.ctrlKey) return; // a pinch — let it zoom
+      const wheelDeltaY = (event as WheelEvent & { wheelDeltaY?: number }).wheelDeltaY;
+      if (
+        wheelIntent({
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          deltaX: event.deltaX,
+          deltaY: event.deltaY,
+          deltaMode: event.deltaMode,
+          wheelDeltaY,
+        }) === "zoom"
+      ) {
+        return;
+      }
       const instance = controls.current;
       if (!instance) return;
       event.preventDefault();
