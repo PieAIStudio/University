@@ -6,7 +6,10 @@
  * (today an in-memory fake, tomorrow a University schema in SwimmerBackend).
  * Neither lives in this file. This package has no `fetch`, no `fs`, and no
  * React; a store that imported any of them would stop being something the
- * authoring server and the delivery shell could share.
+ * authoring server and the delivery shell could share. The browser adapter
+ * is `createBrowserPersistence` in `@pieai/university-ui/progress` — next to
+ * favourites and practice — because `localStorage` is the same kind of
+ * platform I/O as `fs`, and putting it here would be the rule broken.
  *
  * The document itself is `progress/document.ts`. Merge is `progress/merge.ts`.
  * The one implementation both shells are supposed to call is

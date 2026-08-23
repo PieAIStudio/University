@@ -5,8 +5,16 @@
  * did when the bytes only lived in `university.progress.v2`: learn, review,
  * streak, all of it. With an account the same document is merged onto the
  * remote row so a second machine does not wipe the first. The merge lives in
- * `@pieai/university-core`; this file is the browser adapter — localStorage
- * for persistence, and a remote only when a session actually exists.
+ * `@pieai/university-core`.
+ *
+ * The localStorage adapter used to live in this file. Copying those eighteen
+ * lines into the authoring shell would have given it a document by lunchtime,
+ * and given the next person two try/catch blocks to keep in step. The
+ * adapter and the port assembly now live in `@pieai/university-ui/progress`,
+ * next to the other browser stores; this file is still the process singleton
+ * the rest of the delivery shell already imports, so those relative paths do
+ * not have to move with it — and so `App.tsx` can keep importing from here
+ * while other work is in that file.
  *
  * Card scheduling is not decided here. It comes from
  * `@pieai/university-core`, which is real FSRS with recorded parameters, and
@@ -14,36 +22,12 @@
  *
  * What stays local-first is where the state is kept, not how it is computed.
  */
-import {
-  createProgressPort,
-  PROGRESS_STORAGE_KEY,
-  type ProgressPort,
-  type RatingName,
-} from "@pieai/university-core";
+import { lessonKey, type ProgressPort, type RatingName } from "@pieai/university-core";
+import { createBrowserProgressPort } from "@pieai/university-ui/progress/store.js";
 
-function browserPersistence() {
-  return {
-    read(): string | null {
-      try {
-        return localStorage.getItem(PROGRESS_STORAGE_KEY);
-      } catch {
-        return null;
-      }
-    },
-    write(raw: string) {
-      try {
-        localStorage.setItem(PROGRESS_STORAGE_KEY, raw);
-      } catch {
-        // Private browsing, or a full quota. Losing the write is survivable;
-        // throwing in the middle of a lesson is not.
-      }
-    },
-  };
-}
+export { lessonKey };
 
-export const progressPort: ProgressPort = createProgressPort({
-  persistence: browserPersistence(),
-});
+export const progressPort: ProgressPort = createBrowserProgressPort();
 
 export function subscribe(listener: () => void): () => void {
   return progressPort.subscribe(listener);
@@ -52,9 +36,6 @@ export function subscribe(listener: () => void): () => void {
 export function snapshot() {
   return progressPort.snapshot();
 }
-
-export const lessonKey = (studyId: string, courseId: string, lessonId: string) =>
-  `${studyId}/${courseId}/${lessonId}`;
 
 export function lessonState(key: string) {
   return progressPort.lessonState(key);

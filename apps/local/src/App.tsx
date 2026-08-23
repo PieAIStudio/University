@@ -1,15 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { GameCallout } from "@pieai/swimmer-ui-kit";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import {
-  LeagueEmpty,
   NextStepEmpty,
   ProfileScreen,
-  QuestsEmpty,
   SettingsScreen,
   SettingsSubnav,
 } from "@pieai/university-ui/navigation/empty.js";
-import { PlansScreen } from "@pieai/university-ui/navigation/screens.js";
+import {
+  BadgeWall,
+  LeagueScreen,
+  PlansScreen,
+  QuestsScreen,
+} from "@pieai/university-ui/navigation/screens.js";
 import { FavouritesEmpty } from "@pieai/university-ui";
 import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
@@ -17,9 +20,7 @@ import {
   StudySwitcher,
   type StudySwitchItem,
 } from "@pieai/university-ui/navigation/StudySwitcher.js";
-import { isCurrentLessonCompleted } from "@pieai/university-ui/view/lesson-view.js";
-
-import { lessonRefKey } from "@pieai/university-core";
+import { completedLessons, lessonRefKey } from "@pieai/university-core";
 import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
 import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
@@ -40,6 +41,7 @@ import {
   type AppAddress,
   type ShellSlot,
 } from "./url-state.js";
+import { progressPort } from "./progress/store.js";
 import { EmptyCampus } from "./shell/EmptyCampus.js";
 import { recentStudies, StudyShelf } from "./shell/StudyShelf.js";
 import { StudioSection } from "./shell/StudioSection.js";
@@ -105,6 +107,11 @@ export function App() {
   // noticed. Authoring and delivery share one implementation of this, which is
   // the point of `packages/ui`.
   useEffect(() => armSoundUnlock(), []);
+
+  // Same document the delivery shell reads, same subscription. A quest that
+  // took its numbers from a hardcoded empty object would compile and still be
+  // the invented answer this campus used to refuse to give.
+  const progress = useSyncExternalStore(progressPort.subscribe, progressPort.snapshot);
 
   // Seeded from the address bar, so a refresh or a pasted link lands where it
   // says it will rather than dropping the reader back on Today.
@@ -439,13 +446,6 @@ export function App() {
       : (studySummary?.title ??
         data?.studies.find((study) => study.id === selectedStudyId)?.title ??
         "University");
-  const lessonsCompleted = studyView
-    ? studyView.courses
-        .flatMap((course) => course.units.flatMap((unit) => unit.lessons))
-        .filter((lesson) => isCurrentLessonCompleted(lesson.progress, lesson.contentRevision))
-        .length
-    : 0;
-
   const alerts = (
     <>
       {error ? (
@@ -578,14 +578,15 @@ export function App() {
         activeId={slot}
         extraMoreItems={[STUDIO_MORE_ITEM]}
         /*
-          `streakDays: null` is not a zero. This shell has no streak signal at
-          all until ADR-0001's shared progress lands, and it was rendering a
-          literal "0" — a number it had no way to know — beside two counters
-          for systems that do not exist.
+          The streak is a question asked of the same document the quest
+          screen reads. A 0 here is a real zero — this shell now has that
+          document — not the hardcoded lie it used to render when it had no
+          way to know. Disk completions in SQLite are a different store;
+          they do not inflate this number until the reader writes here too.
         */
         counters={universityCounters({
           projectName,
-          streakDays: null,
+          streakDays: progress.streak.days,
           projectControl:
             data && studyItems.length > 0 ? (
               <StudySwitcher
@@ -630,19 +631,22 @@ export function App() {
               description="无尽题流在投放端已经能跑。先把今天的那一节读完。"
             />
           ) : null}
-          {slot === "league" ? <LeagueEmpty /> : null}
-          {slot === "quests" ? <QuestsEmpty /> : null}
+          {slot === "league" ? <LeagueScreen document={progress} /> : null}
+          {slot === "quests" ? <QuestsScreen document={progress} /> : null}
           {/*
             The same component the delivery shell renders, from the same prices
             in `@pieai/university-core`. A pricing page that disagreed with
             itself between two shells is the exact failure V4's one-law rule
             exists to prevent, and it needs no progress document to be correct.
 
-            League and quests below still show placeholders here, and that is
-            honest rather than lazy: this shell has no progress document at all
-            — completion lives on disk behind the loopback API (ADR-0001) —
-            so it cannot answer "did you finish a lesson today" without
-            inventing an answer.
+            League, quests and the badge wall now read the shared progress
+            document too — the same `ProgressPort` the delivery shell
+            constructs, injected with the same localStorage adapter. They can
+            answer "did you finish a lesson today" without inventing a number.
+            What they cannot yet see is a lesson completed only in the
+            authoring SQLite store: that write still lives on disk, and
+            teaching the reader to call `advanceLesson` is the next seam,
+            not a second copy of this document.
           */}
           {slot === "plan" ? <PlansScreen /> : null}
           {slot === "catalog" ? (
@@ -659,7 +663,11 @@ export function App() {
           ) : null}
           {slot === "settings" ? <SettingsScreen /> : null}
           {slot === "profile" ? (
-            <ProfileScreen passagesRead={0} lessonsCompleted={lessonsCompleted} />
+            <ProfileScreen
+              passagesRead={0}
+              lessonsCompleted={completedLessons(progress)}
+              badges={<BadgeWall document={progress} />}
+            />
           ) : null}
         </div>
       </UniversityShell>
