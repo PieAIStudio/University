@@ -1,0 +1,27 @@
+{
+  "name": "University",
+  "short_name": "University",
+  "description": "在群岛上把一件事学到会。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#221812",
+  "theme_color": "#221812",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
