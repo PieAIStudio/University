@@ -194,13 +194,22 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
       expect(sample.y).toBeGreaterThan(3.24);
     });
 
-    await namedStep(page, "换课控件列出四套课", async () => {
+    await namedStep(page, "换系列控件列出每一个系列", async () => {
       const trigger = page.locator(".study-switcher__trigger");
       await expect(trigger).toBeVisible();
-      await humanClick(page, trigger, "换课 ▾");
-      const menu = page.locator("[role='listbox'][aria-label='换课']");
+      await humanClick(page, trigger, "换系列 ▾");
+      const menu = page.locator("[role='listbox'][aria-label='换系列']");
       await expect(menu).toBeVisible();
-      await expect(menu).toContainText("看全部四片海");
+      /*
+        The list used to end with 看全部四片海, which pulled the camera back to
+        show all four archipelagos at once. That view is gone — a series is its
+        own scene now — and a control that does nothing is worse than no control,
+        so the option went with it. What this asserts instead is that every
+        series is reachable from here, which is the job the menu actually has.
+      */
+      await expect(menu.locator("[role='option']")).toHaveCount(4);
+      await expect(menu).toContainText("TuringPact");
+      await expect(menu).toContainText("Buzz");
       await page.screenshot({ path: `${SHOTS}/switcher.png` });
     });
 

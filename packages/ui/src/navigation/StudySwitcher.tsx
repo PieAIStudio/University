@@ -60,7 +60,7 @@ export function StudySwitcher({
       <button
         type="button"
         className="study-switcher__trigger counter-row__item"
-        aria-label={`当前项目 ${label}`}
+        aria-label={`当前系列 ${label}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
@@ -74,7 +74,7 @@ export function StudySwitcher({
         </span>
       </button>
       {open ? (
-        <ul className="study-switcher__menu" role="listbox" aria-label="换课">
+        <ul className="study-switcher__menu" role="listbox" aria-label="换系列">
           {studies.map((study) => (
             <li key={study.id} role="presentation">
               <button

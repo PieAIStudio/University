@@ -34,7 +34,7 @@ const TABS: readonly ShellNavItem[] = [
 ];
 
 const COUNTERS: readonly ShellCounter[] = [
-  { id: "island", icon: "🏝", label: "当前项目", href: "#/switch" },
+  { id: "island", icon: "🏝", label: "当前系列", href: "#/switch" },
   { id: "streak", icon: "🔥", value: "0", label: "连击", muted: true },
   { id: "credit", icon: "💎", value: "120", label: "学分", href: "#/credit" },
 ];
@@ -145,7 +145,7 @@ describe("AppShell", () => {
     const streak = document.querySelector('[aria-label="连击 0"]');
     expect(streak).toBeTruthy();
     expect(streak?.className).toContain("counter-row__item--muted");
-    expect(document.querySelector('[aria-label="当前项目"]')?.getAttribute("href")).toBe(
+    expect(document.querySelector('[aria-label="当前系列"]')?.getAttribute("href")).toBe(
       "#/switch",
     );
   });

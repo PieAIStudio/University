@@ -26,7 +26,7 @@ import type { ShellCounter } from "../shell/AppShell.js";
  */
 export function universityCounters(args: {
   /**
-   * The project you are in, not the size of the catalogue. v3 「顶部四计数」
+   * The course series you are in, not the size of the catalogue. v3 「顶部四计数」
    * puts it where Duolingo puts the language flag, and that slot answers
    * "where am I" — the first question a returning learner has. Rendering the
    * icon alone left the project named nowhere but a label floating in the 3D
@@ -65,7 +65,7 @@ export function universityCounters(args: {
       id: "island",
       icon: <IslandIcon />,
       value: args.projectName,
-      label: "当前项目",
+      label: "当前系列",
       control: args.projectControl,
     },
   ];

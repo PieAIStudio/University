@@ -59,7 +59,7 @@ test.describe("B 同一个人回来复习", () => {
 
     await namedStep(page, "复习完的空态", async () => {
       await assertVisibleText(page, "今天没有到期卡片");
-      await expect(page.getByRole("button", { name: "回到世界地图" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "回到地图" })).toBeVisible();
     });
 
     consoleErrors.assertClean();
