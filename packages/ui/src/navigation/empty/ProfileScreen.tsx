@@ -19,6 +19,7 @@ export function ProfileScreen({
   account,
   passagesRead,
   lessonsCompleted,
+  badges,
   nextHref = "#/",
 }: {
   readonly avatar?: ReactNode;
@@ -26,6 +27,8 @@ export function ProfileScreen({
   readonly account?: ReactNode;
   readonly passagesRead: number;
   readonly lessonsCompleted: number;
+  /** The badge wall, from a shell that has a progress document to build it from. */
+  readonly badges?: ReactNode;
   readonly nextHref?: string;
 }) {
   return (
@@ -48,15 +51,18 @@ export function ProfileScreen({
           href={nextHref}
         />
       </dl>
-      <section className="profile-screen__badges" aria-label="徽章墙">
-        <h2>徽章墙</h2>
-        <p>徽章还没开张。学完的课会记在上面。</p>
-        <ul>
-          {Array.from({ length: 5 }, (_, index) => (
-            <li key={index} aria-hidden="true" />
-          ))}
-        </ul>
-      </section>
+      {/*
+        The wall itself lives in navigation/screens/BadgeWall, because it needs
+        the progress document and this component takes only two counts. A shell
+        that has the document renders it here; one that does not shows the door
+        rather than five grey circles and a promise.
+      */}
+      {badges ?? (
+        <section className="profile-screen__badges" aria-label="徽章墙">
+          <h2>徽章墙</h2>
+          <p>徽章长在投放端。学完的课会记在上面。</p>
+        </section>
+      )}
       <div className="profile-screen__links">
         <a href="#/practice">练习</a>
         <a href="#/review">复习</a>

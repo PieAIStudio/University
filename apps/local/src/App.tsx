@@ -4,12 +4,12 @@ import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell
 import {
   LeagueEmpty,
   NextStepEmpty,
-  PlansEmpty,
   ProfileScreen,
   QuestsEmpty,
   SettingsScreen,
   SettingsSubnav,
 } from "@pieai/university-ui/navigation/empty.js";
+import { PlansScreen } from "@pieai/university-ui/navigation/screens.js";
 import { FavouritesEmpty } from "@pieai/university-ui";
 import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
@@ -632,7 +632,19 @@ export function App() {
           ) : null}
           {slot === "league" ? <LeagueEmpty /> : null}
           {slot === "quests" ? <QuestsEmpty /> : null}
-          {slot === "plan" ? <PlansEmpty /> : null}
+          {/*
+            The same component the delivery shell renders, from the same prices
+            in `@pieai/university-core`. A pricing page that disagreed with
+            itself between two shells is the exact failure V4's one-law rule
+            exists to prevent, and it needs no progress document to be correct.
+
+            League and quests below still show placeholders here, and that is
+            honest rather than lazy: this shell has no progress document at all
+            — completion lives on disk behind the loopback API (ADR-0001) —
+            so it cannot answer "did you finish a lesson today" without
+            inventing an answer.
+          */}
+          {slot === "plan" ? <PlansScreen /> : null}
           {slot === "catalog" ? (
             <NextStepEmpty
               title="目录在投放端"

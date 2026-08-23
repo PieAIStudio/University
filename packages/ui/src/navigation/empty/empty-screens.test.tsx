@@ -102,7 +102,13 @@ describe("empty destinations", () => {
     expect(markup).toContain("还没读过真实代码 —— 第一节里就有");
     expect(markup).toContain("还没学完一节 —— 从这里开始");
     expect(markup).toContain("#/turing-pact/foundations-before-zero");
-    expect(markup).toContain("徽章还没开张");
+    /*
+      The wall is a real screen now (navigation/screens/BadgeWall), and it needs
+      the progress document. A shell that has one passes it in; this fallback is
+      what the authoring shell shows, and it points at the door rather than
+      promising a feature that already exists elsewhere.
+    */
+    expect(markup).toContain("徽章长在投放端");
     expect(markup).not.toContain("<span>段</span>");
     expect(markup).not.toContain("<span>节</span>");
   });

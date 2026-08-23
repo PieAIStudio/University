@@ -262,6 +262,8 @@ export * from "./progress/contract.js";
 // of the prerequisite DAG so there is always exactly one "next step".
 export * from "./progress/spine.js";
 export * from "./progress/xp.js";
+export * from "./progress/goals.js";
+export * from "./billing/plans.js";
 
 // The learner's progress document, the merge that keeps two machines honest,
 // and the one port both shells construct. Persistence and remote are injected.

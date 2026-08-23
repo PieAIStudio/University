@@ -33,13 +33,16 @@ import {
 } from "@pieai/university-ui/navigation/StudySwitcher.js";
 import {
   AccountPanel,
-  LeagueEmpty,
-  PlansEmpty,
   ProfileScreen,
-  QuestsEmpty,
   SettingsScreen,
   SettingsSubnav,
 } from "@pieai/university-ui/navigation/empty.js";
+import {
+  BadgeWall,
+  LeagueScreen,
+  PlansScreen,
+  QuestsScreen,
+} from "@pieai/university-ui/navigation/screens.js";
 import { NodeCard } from "@pieai/university-ui/path/NodeCard.js";
 import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
 import {
@@ -328,7 +331,35 @@ export function App() {
         .find((entry) => entry.id === lessonId);
       if (found) passagesRead += found.evidence.length;
     }
-    return { lessonsCompleted, passagesRead };
+    /*
+      A course counts as finished only when every lesson in it is, which needs
+      the course's own shape rather than the progress document alone — the
+      document knows what was completed, not how many there were to complete.
+      `peekCourse` returns only what has already been loaded, so this is the
+      count among courses the learner has actually opened; a course they
+      finished on another device and never opened here does not appear until
+      it loads, which under-counts rather than over-counts.
+    */
+    const byCourse = new Map<string, Set<string>>();
+    for (const [key, lesson] of Object.entries(progress.lessons)) {
+      if (lesson.completedAt == null && lesson.progress < 1) continue;
+      const [studyId, courseId, lessonId] = key.split("/");
+      if (!studyId || !courseId || !lessonId) continue;
+      const at = `${studyId}/${courseId}`;
+      const done = byCourse.get(at) ?? new Set<string>();
+      done.add(lessonId);
+      byCourse.set(at, done);
+    }
+    let coursesFinished = 0;
+    for (const [at, done] of byCourse) {
+      const [studyId, courseId] = at.split("/");
+      const loaded = studyId && courseId ? peekCourse(studyId, courseId) : null;
+      if (!loaded) continue;
+      const total = loaded.units.reduce((sum, unit) => sum + unit.lessons.length, 0);
+      if (total > 0 && done.size >= total) coursesFinished += 1;
+    }
+
+    return { lessonsCompleted, passagesRead, coursesFinished };
   }, [progress]);
 
   const pathSprites = useMemo(() => {
@@ -1041,9 +1072,15 @@ export function App() {
         </Suspense>
       ) : null}
 
-      {view.kind === "league" ? <LeagueEmpty /> : null}
-      {view.kind === "quests" ? <QuestsEmpty /> : null}
-      {view.kind === "plans" ? <PlansEmpty /> : null}
+      {/*
+        These three read the same progress document the learning screens write,
+        through the same `useSyncExternalStore` subscription — so a quest cannot
+        show 0/1 next to a lesson that was just finished. Nothing about them is
+        stored; see packages/core progress/goals.ts.
+      */}
+      {view.kind === "league" ? <LeagueScreen document={progress} /> : null}
+      {view.kind === "quests" ? <QuestsScreen document={progress} /> : null}
+      {view.kind === "plans" ? <PlansScreen /> : null}
       {view.kind === "settings" ? <SettingsScreen /> : null}
       {view.kind === "me" ? (
         <ProfileScreen
@@ -1059,6 +1096,7 @@ export function App() {
             </Suspense>
           }
           account={<AccountPanel identity={identityPort} />}
+          badges={<BadgeWall document={progress} coursesFinished={profileStats.coursesFinished} />}
           passagesRead={profileStats.passagesRead}
           lessonsCompleted={profileStats.lessonsCompleted}
           nextHref={

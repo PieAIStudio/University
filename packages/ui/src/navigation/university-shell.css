@@ -409,3 +409,290 @@
 .profile-avatar__lab:focus-visible {
   background: var(--game-ui-bg);
 }
+
+/*
+  The four screens that used to say 「还没开张」: 任务, 徽章墙, 排行榜, 会员.
+
+  One stylesheet, both shells — the screens themselves are in packages/ui and
+  neither app owns a copy. Every colour comes from the kit's tokens with a
+  fallback, so a kit release restyles these without touching this file.
+*/
+
+.shell-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: min(72ch, 100%);
+  margin-inline: auto;
+  padding: 1.5rem 1.25rem 3rem;
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.shell-screen__head h1 {
+  margin: 0 0 0.4rem;
+  font-size: var(--game-ui-font-xl, 1.5rem);
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.shell-screen__lede {
+  margin: 0;
+  max-width: 54ch;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: var(--game-ui-font-sm, 0.88rem);
+  line-height: var(--game-ui-line-body, 1.6);
+}
+
+/* 任务 ------------------------------------------------------------------ */
+
+.quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quest {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  border-radius: var(--game-ui-radius-card, 12px);
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 80%, transparent);
+}
+
+.quest--done {
+  border-color: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 45%, transparent);
+}
+
+.quest__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.quest__title {
+  font-weight: 600;
+}
+
+.quest__detail {
+  margin: 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: var(--game-ui-font-sm, 0.82rem);
+  line-height: var(--game-ui-line-body, 1.55);
+}
+
+/* 徽章墙 ---------------------------------------------------------------- */
+
+.badge-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.badge-tile {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  border-radius: var(--game-ui-radius-card, 12px);
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 70%, transparent);
+}
+
+/*
+  A locked badge is dimmed, not hidden. The rule stays readable because the
+  wall's job is to be a list of things worth doing, and a row of question marks
+  is a list of things you are behind on.
+*/
+.badge-tile:not(.badge-tile--earned) {
+  opacity: 0.72;
+}
+
+.badge-tile__disc {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--game-ui-panel-strong, #1d2438) 85%, transparent);
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 1.05rem;
+}
+
+.badge-tile--earned .badge-tile__disc {
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 22%, #12332f);
+  color: var(--game-ui-accent, #5ec8c0);
+}
+
+.badge-tile__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.badge-tile__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.badge-tile__name {
+  font-weight: 600;
+}
+
+.badge-tile__how {
+  margin: 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: var(--game-ui-font-sm, 0.8rem);
+  line-height: 1.5;
+}
+
+/* 排行榜 ---------------------------------------------------------------- */
+
+.league-standing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.league-standing__tier {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.league-standing__name {
+  font-size: var(--game-ui-font-lg, 1.15rem);
+  font-weight: 700;
+}
+
+.league-standing__note {
+  margin: 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: var(--game-ui-font-sm, 0.8rem);
+  line-height: 1.55;
+}
+
+.league-ladder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.league-rung {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: var(--game-ui-radius-card, 12px);
+  color: var(--game-ui-text-muted, #9aa6bb);
+  /* Digits line up down the ladder, so the steps read as a scale. */
+  font-variant-numeric: tabular-nums;
+}
+
+.league-rung--here {
+  border-color: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 45%, transparent);
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 12%, transparent);
+  color: var(--game-ui-text, #e9edf5);
+  font-weight: 600;
+}
+
+/* 会员 ------------------------------------------------------------------ */
+
+.plan-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  align-items: stretch;
+}
+
+.plan-card > * {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.plan-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.plan-card__name {
+  margin: 0;
+  font-size: var(--game-ui-font-lg, 1.1rem);
+}
+
+.plan-card__price {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-card__amount {
+  font-size: 1.65rem;
+  font-weight: 700;
+}
+
+.plan-card__period,
+.plan-card__note {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: var(--game-ui-font-sm, 0.82rem);
+}
+
+.plan-card__note {
+  margin: 0;
+}
+
+.plan-card__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  /* Room for the marker, which sits outside the text column. */
+  padding-inline-start: 1.1rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: var(--game-ui-font-sm, 0.84rem);
+  line-height: 1.5;
+  /* The list grows; the button below it stays pinned to the card's bottom. */
+  flex: 1 1 auto;
+}
+
+@media (width <= 30rem) {
+  .badge-wall,
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/*
+  A quest the scheduler has nothing for is shown but not scored, so it reads
+  quieter than the two that are actually asking for something.
+*/
+.quest--informational {
+  opacity: 0.78;
+}
