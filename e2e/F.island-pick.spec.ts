@@ -60,10 +60,36 @@ async function clickEmptySky(page: Page): Promise<void> {
   const canvas = page.locator(".stagewrap canvas").first();
   const box = await canvas.boundingBox();
   if (!box) throw new Error("画布没有屏幕矩形");
-  // Top-centre is sky. Collapse capsules sit on the left and right edges;
-  // islands sit lower. A document click listener is forbidden here — this
-  // is a pointer on the canvas, which is the 3D miss the product has to see.
-  await page.mouse.click(box.x + box.width * 0.5, box.y + 36);
+  // Collapse capsules sit on the left and right edges; islands sit lower.
+  // A document click listener is forbidden here — this is a pointer on
+  // the canvas, which is the 3D miss the product has to see. Probe a few
+  // sky candidates: a study name can sit near the top-centre.
+  const candidates = [
+    { x: box.x + box.width * 0.5, y: box.y + 28 },
+    { x: box.x + box.width * 0.42, y: box.y + 40 },
+    { x: box.x + box.width * 0.58, y: box.y + 40 },
+    { x: box.x + box.width * 0.5, y: box.y + box.height - 36 },
+  ];
+  for (const point of candidates) {
+    const empty = await page.evaluate(({ x, y }) => {
+      const stack = document.elementsFromPoint(x, y);
+      const blocked = stack.some((entry) => {
+        const el = entry as HTMLElement;
+        return Boolean(
+          el.closest(".picked--follow") ||
+            el.closest("button.label") ||
+            el.closest(".app-shell__collapse") ||
+            el.closest(".nav-rail") ||
+            el.closest(".app-shell__aside"),
+        );
+      });
+      return stack.some((entry) => entry.tagName === "CANVAS") && !blocked;
+    }, point);
+    if (!empty) continue;
+    await page.mouse.click(point.x, point.y);
+    return;
+  }
+  throw new Error("找不到能点到画布的空处（海面/天空）");
 }
 
 async function pickLeftishIsland(page: Page): Promise<Box> {

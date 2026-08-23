@@ -52,8 +52,16 @@ export function CoursePickCard({
       const target = event.target;
       if (!(target instanceof Element)) return;
       if (card.contains(target)) return;
+      // Canvas clicks are Stage's onPointerMissed / island onClick — the
+      // same <canvas> node is both sea and island, so this listener must
+      // not decide them.
       if (target.closest("canvas")) return;
-      if (target.closest(".labels")) return;
+      // A course-name button is the same activate as the island mesh.
+      // Dismissing on pointerdown would unmount this card before the
+      // click replaced `picked`, and the projector would spend a frame
+      // placing nothing. Study names are not buttons; clicking one is
+      // "elsewhere" and should close.
+      if (target.closest("button.label")) return;
       onDismiss();
     };
     const onKey = (event: KeyboardEvent) => {
@@ -71,9 +79,7 @@ export function CoursePickCard({
 
   return (
     <aside
-      ref={(node) => {
-        cardRef.current = node;
-      }}
+      ref={cardRef}
       className="picked picked--follow"
       role="dialog"
       aria-labelledby={headingId}

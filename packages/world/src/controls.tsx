@@ -529,28 +529,17 @@ export function LabelProbe({
       if (free) reserved.push(box);
     }
 
-    const namePlaced = placeLabels(candidates, viewport, {
-      maxVisible: limit,
-      reserved,
-    });
-    for (const placement of namePlaced) {
-      const element = nodes.get(placement.id);
-      if (!element) continue;
-      const marker = markers.find((entry) => entry.id === placement.id);
-      if (!marker) continue;
-      writePlacement(element, marker, placement.x, placement.y, placement.visible);
-    }
-
-    // The card is committed in the DOM root; this loop runs in the Canvas
-    // root. The ref is the contract, the query is the frame it has not
-    // been written yet — without it the card sits at (0,0) for a tick
-    // that Playwright will happily call "visible".
-    const follow =
-      followNodeRef.current?.current ??
-      (typeof document === "undefined"
-        ? null
-        : document.querySelector<HTMLElement>(".picked--follow"));
+    // The card lives in the DOM root; this loop runs in the Canvas root.
+    // The ref is the contract. A document.querySelector would find "a"
+    // follow card, not "the" follow card this probe is placing — two
+    // shells on one page is not the product, but a test of this file is.
+    const follow = followNodeRef.current?.current ?? null;
     const followNow = followIdRef.current;
+    const hideFollow = () => {
+      if (!follow) return;
+      follow.style.setProperty("--placed", "0");
+      follow.classList.remove("is-visible");
+    };
     if (follow && followNow) {
       let at = projectedById.get(followNow);
       if (!at) {
@@ -567,11 +556,13 @@ export function LabelProbe({
         }
       }
       if (!at) {
-        follow.style.setProperty("--placed", "0");
-        follow.classList.remove("is-visible");
+        hideFollow();
       } else {
         const width = Math.max(follow.offsetWidth, 260);
         const height = Math.max(follow.offsetHeight, 120);
+        // Card first, then names. The card is what the learner just asked
+        // for; a name that took its slot would hide the confirmation, and
+        // a card that yielded to names would cover the island it names.
         const [card] = placeLabels(
           [
             {
@@ -587,20 +578,31 @@ export function LabelProbe({
             },
           ],
           viewport,
-          { maxVisible: 1, gap: 8 },
+          { maxVisible: 1, gap: 8, reserved },
         );
         if (card?.visible) {
           follow.style.transform = `translate(${card.x}px, ${card.y}px) translate(-50%, -50%)`;
           follow.style.setProperty("--placed", "1");
           follow.classList.add("is-visible");
+          reserved.push(labelBox({ x: card.x, y: card.y }, width, height, "aside"));
         } else {
-          follow.style.setProperty("--placed", "0");
-          follow.classList.remove("is-visible");
+          hideFollow();
         }
       }
-    } else if (follow) {
-      follow.style.setProperty("--placed", "0");
-      follow.classList.remove("is-visible");
+    } else {
+      hideFollow();
+    }
+
+    const namePlaced = placeLabels(candidates, viewport, {
+      maxVisible: limit,
+      reserved,
+    });
+    for (const placement of namePlaced) {
+      const element = nodes.get(placement.id);
+      if (!element) continue;
+      const marker = markers.find((entry) => entry.id === placement.id);
+      if (!marker) continue;
+      writePlacement(element, marker, placement.x, placement.y, placement.visible);
     }
 
     // Anything that did not project at all this frame is behind the camera or

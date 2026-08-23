@@ -214,6 +214,9 @@ export function WorldLanding({
               markers={markers}
               limit={9}
               nodes={labelNodes.current}
+              // This shell's course markers use `studyId/courseId` as `id`.
+              // The projector looks that id up in the same array; inventing
+              // a second key here would place the card at (0,0).
               followId={picked ? `${picked.studyId}/${picked.courseId}` : null}
               followNode={pickCardRef}
             />

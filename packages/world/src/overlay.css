@@ -128,6 +128,7 @@ button.label:focus-visible {
   Playwright treats as not-there; opacity 0 is still "visible".
 */
 .picked.picked--follow {
+  position: absolute;
   top: 0;
   left: 0;
   right: auto;
@@ -300,6 +301,10 @@ button.label:focus-visible {
 }
 
 .app-shell__main .stagewrap > .picked.picked--follow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: auto;
   width: 260px;
   max-width: min(260px, calc(100% - 24px));
 }

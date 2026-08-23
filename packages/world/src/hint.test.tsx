@@ -48,6 +48,18 @@ describe("MAP_CONTROLS_HINT", () => {
   });
 });
 
+describe("overlay.css .picked--follow", () => {
+  it("is placed by transform, not pinned to a screen corner", () => {
+    const follow = ruleBlock(CSS, ".picked.picked--follow");
+    expect(follow).toMatch(/position:\s*absolute/);
+    expect(follow).toMatch(/left:\s*0/);
+    expect(follow).toMatch(/top:\s*0/);
+    expect(follow).toMatch(/right:\s*auto/);
+    expect(follow).not.toMatch(/right:\s*calc/);
+    expect(follow).toMatch(/opacity:\s*var\(--placed/);
+  });
+});
+
 describe("overlay.css .hint", () => {
   it("sits at the horizontal centre, near the bottom, with a transparent ground", () => {
     const hint = ruleBlock(CSS, ".hint");

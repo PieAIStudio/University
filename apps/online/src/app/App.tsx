@@ -169,6 +169,10 @@ export function App() {
 
   useEffect(() => {
     if (view.kind !== "course") setPathOverlay(null);
+    // A leftover pick from the world map is not a choice the learner just
+    // made. Coming back from a course with this still set would pop the
+    // card without a click.
+    if (view.kind !== "world") setPicked(null);
   }, [view.kind]);
 
   useEffect(() => {
@@ -614,6 +618,9 @@ export function App() {
             markers={markers}
             limit={9}
             nodes={labelNodes.current}
+            // This shell's course markers use `courseId` as `id`. The
+            // projector looks that id up in the same array; inventing a
+            // second key here would place the card at (0,0).
             followId={view.kind === "world" && picked ? picked.courseId : null}
             followNode={pickCardRef}
           />

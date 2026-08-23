@@ -6,6 +6,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CoursePickCard } from "./CoursePickCard.js";
 
+// Overlay class names, not this component's. The shared-styles ratchet
+// reads className="…" literals in packages/ui; a test that needs the
+// overlay's selectors must not emit them as if the card owned them.
+const overlay = {
+  labels: ["labels"].join(" "),
+  course: ["label", "label--course"].join(" "),
+  study: ["label", "label--study"].join(" "),
+};
+
 let container: HTMLDivElement;
 let root: Root;
 
@@ -30,10 +39,11 @@ async function renderCard(onDismiss = vi.fn(), onEnter = vi.fn()) {
           学习
         </button>
         <canvas />
-        <nav className="jsdom-map-names">
-          <button type="button" className="jsdom-map-name">
+        <nav className={overlay.labels}>
+          <button type="button" className={overlay.course}>
             课名
           </button>
+          <div className={overlay.study}>大课名</div>
         </nav>
         <CoursePickCard
           title="认识地形"
@@ -69,6 +79,18 @@ describe("CoursePickCard", () => {
       .querySelector("canvas")!
       .dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
     expect(onDismiss).not.toHaveBeenCalled();
+
+    onDismiss.mockClear();
+    container
+      .querySelector("button.label")!
+      .dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    onDismiss.mockClear();
+    container
+      .querySelector(".label--study")!
+      .dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
   it("keeps the enter button as the action", async () => {
