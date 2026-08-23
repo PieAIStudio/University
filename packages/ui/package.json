@@ -22,6 +22,7 @@
     "./language/word-layer.css": "./src/language/word-layer.css",
     "./lesson/LessonNav.js": "./src/lesson/LessonNav.tsx",
     "./lesson/LessonReader.js": "./src/lesson/LessonReader.tsx",
+    "./lesson/lesson-reader.css": "./src/lesson/lesson-reader.css",
     "./lesson/lesson-toolbar.css": "./src/lesson/lesson-toolbar.css",
     "./loading/LoadingTrivia.js": "./src/loading/LoadingTrivia.tsx",
     "./loading/loading-trivia.css": "./src/loading/loading-trivia.css",

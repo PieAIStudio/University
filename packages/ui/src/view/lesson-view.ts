@@ -486,8 +486,8 @@ export interface CoachingPacketResponse {
 /**
  * The `/api/studies/:id/courses/:id/units/:id/lessons/:id` payload.
  *
- * A read model, like `CourseView` and `StudyView`. The delivery shell's React
- * screen is `LessonScreen` — same subject, different thing, different name.
+ * A read model, like `CourseView` and `StudyView`. Both shells render it
+ * through `LessonReader`.
  */
 export interface LessonView {
   readonly lesson: {

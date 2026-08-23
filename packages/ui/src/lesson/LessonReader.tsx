@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { GameSegmentedControl, GameToggle } from "@pieai/swimmer-ui-kit";
+import type { GradingPort, ReaderPort } from "@pieai/university-core";
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
-import { lessonPath, readJson } from "../api/client.js";
 import { EvidenceSourceSheet } from "../evidence/EvidenceSourceSheet.js";
 import { LessonUaLayers } from "../evidence/EvidenceUaPlace.js";
 import { readDetailMode, writeDetailMode, type DetailMode } from "../language/detail-mode.js";
@@ -61,6 +61,8 @@ interface SourceReturnFocus {
 export function LessonReader({
   locator,
   view,
+  reader,
+  grading,
   requestToken,
   onLearningChanged,
   neighbours,
@@ -68,9 +70,12 @@ export function LessonReader({
   onBackToCourse,
   onFollowLink,
   onReturn,
+  toolbarExtras,
 }: {
   readonly locator: LessonRef;
   readonly view: LessonView;
+  readonly reader: ReaderPort;
+  readonly grading: GradingPort;
   readonly requestToken: string;
   readonly onLearningChanged: () => Promise<void>;
   /** Absent until the study tree has loaded; the lesson reads fine without it. */
@@ -80,6 +85,8 @@ export function LessonReader({
   readonly onFollowLink?: ((target: LessonLinkTarget) => void) | undefined;
   /** Present only when a cross-lesson link brought the reader here. */
   readonly onReturn?: (() => void) | undefined;
+  /** Shell-owned tools that sit with the reading controls, not a second toolbar. */
+  readonly toolbarExtras?: ReactNode;
 }) {
   const completed = isCurrentLessonCompleted(view.lesson.progress, view.lesson.contentRevision);
   const readConfirmed = Boolean(
@@ -129,9 +136,7 @@ export function LessonReader({
     let cancelled = false;
     void (async () => {
       try {
-        const body = await readJson<{
-          readonly states: readonly { readonly senseId: string; readonly stage: string }[];
-        }>(await fetch("/api/vocabulary"));
+        const body = await reader.listVocabulary();
         if (cancelled) return;
         setVocabularyStages(new Map(body.states.map((state) => [state.senseId, state.stage])));
         setVocabularyError(null);
@@ -142,20 +147,18 @@ export function LessonReader({
       // Recording that words appeared is deliberately fire-and-forget, and the
       // server counts one appearance per word per lesson per day however many
       // times this fires.
-      void fetch("/api/vocabulary/presented", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-University-Local-Token": requestToken },
-        body: JSON.stringify({
+      void reader
+        .recordPresented({
           studyId: locator.studyId,
           lessonId: locator.lessonId,
           senseIds: senseKey.split(","),
-        }),
-      }).catch(() => undefined);
+        })
+        .catch(() => undefined);
     })();
     return () => {
       cancelled = true;
     };
-  }, [englishMode, senseKey, locator.studyId, locator.lessonId, requestToken]);
+  }, [englishMode, senseKey, locator.studyId, locator.lessonId, reader]);
 
   /**
    * Marks are per-lesson here, even though the store keeps them per study: this
@@ -166,10 +169,8 @@ export function LessonReader({
     let cancelled = false;
     void (async () => {
       try {
-        const body = await readJson<{ readonly marks: readonly ReaderMark[] }>(
-          await fetch(`/api/studies/${encodeURIComponent(locator.studyId)}/marks`),
-        );
-        if (!cancelled) setMarks(body.marks);
+        const listed = await reader.listMarks(locator.studyId);
+        if (!cancelled) setMarks(listed);
       } catch {
         // Marks are the reader's own annotations on top of a lesson that reads
         // fine without them.
@@ -178,7 +179,7 @@ export function LessonReader({
     return () => {
       cancelled = true;
     };
-  }, [locator.studyId, view.lesson.id]);
+  }, [locator.studyId, view.lesson.id, reader]);
 
   const lessonKey = `${locator.courseId}/${locator.unitId}/${locator.lessonId}`;
   /*
@@ -198,24 +199,17 @@ export function LessonReader({
   async function recordMark(kind: "question" | "highlight", target: SelectionTarget) {
     setMarkBusy(true);
     try {
-      const body = await readJson<{ readonly mark: ReaderMark }>(
-        await fetch(`${lessonPath(locator)}/marks`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-University-Local-Token": requestToken,
-          },
-          body: JSON.stringify({
-            contentRevision: view.lesson.contentRevision,
-            kind,
-            exact: target.quote.exact,
-            prefix: target.quote.prefix,
-            suffix: target.quote.suffix,
-            ...(target.sectionTitle ? { sectionTitle: target.sectionTitle } : {}),
-          }),
-        }),
-      );
-      setMarks((current) => [...current, body.mark]);
+      const mark = await reader.writeMark(locator, {
+        contentRevision: view.lesson.contentRevision,
+        kind,
+        quote: {
+          exact: target.quote.exact,
+          prefix: target.quote.prefix,
+          suffix: target.quote.suffix,
+        },
+        ...(target.sectionTitle ? { sectionTitle: target.sectionTitle } : {}),
+      });
+      setMarks((current) => [...current, mark]);
     } catch (reason) {
       setMarkError(reason instanceof Error ? reason.message : "这条标记没有保存");
     } finally {
@@ -235,21 +229,8 @@ export function LessonReader({
           ),
     );
     try {
-      const response = await fetch(
-        `/api/studies/${encodeURIComponent(locator.studyId)}/marks/${encodeURIComponent(markId)}`,
-        {
-          method,
-          // Bodyless, but the server requires this on every state-changing
-          // request: a form-encoded POST is the shape a cross-site form can
-          // send without a preflight, so demanding JSON is part of what keeps
-          // the loopback API from being driven by a page in another tab.
-          headers: {
-            "Content-Type": "application/json",
-            "X-University-Local-Token": requestToken,
-          },
-        },
-      );
-      if (!response.ok) throw new Error("标记没有更新");
+      if (method === "DELETE") await reader.deleteMark(locator.studyId, markId);
+      else await reader.resolveMark(locator.studyId, markId);
     } catch (reason) {
       setMarks(previous);
       setMarkError(reason instanceof Error ? reason.message : "标记没有更新");
@@ -261,19 +242,8 @@ export function LessonReader({
     setVocabularyError(null);
     setVocabularyStages((current) => new Map(current).set(senseId, stage));
     try {
-      const body = await readJson<{
-        readonly state: { readonly senseId: string; readonly stage: string };
-      }>(
-        await fetch(`/api/vocabulary/${encodeURIComponent(senseId)}/stage`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-University-Local-Token": requestToken,
-          },
-          body: JSON.stringify({ stage }),
-        }),
-      );
-      setVocabularyStages((current) => new Map(current).set(body.state.senseId, body.state.stage));
+      const body = await reader.stageWord(senseId, stage);
+      setVocabularyStages((current) => new Map(current).set(body.senseId, body.stage));
     } catch (reason) {
       setVocabularyStages(previous);
       setVocabularyError(reason instanceof Error ? reason.message : "词义状态没有保存");
@@ -354,19 +324,10 @@ export function LessonReader({
     setConfirming(true);
     setConfirmationError(null);
     try {
-      await readJson(
-        await fetch(`${lessonPath(locator)}/complete`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-University-Local-Token": requestToken,
-          },
-          body: JSON.stringify({
-            commandId: crypto.randomUUID(),
-            contentRevision: view.lesson.contentRevision,
-          }),
-        }),
-      );
+      await reader.completeLesson(locator, {
+        commandId: crypto.randomUUID(),
+        contentRevision: view.lesson.contentRevision,
+      });
       await onLearningChanged();
     } catch (reason) {
       setConfirmationError(reason instanceof Error ? reason.message : "暂时无法记录阅读确认");
@@ -374,6 +335,15 @@ export function LessonReader({
       setConfirming(false);
     }
   }
+
+  const loadWindowedEvidence = useCallback(
+    (index: number) => reader.loadEvidenceSnippet(locator, index),
+    [reader, locator],
+  );
+  const loadFullEvidence = useCallback(
+    (index: number) => reader.loadEvidenceSnippet(locator, index, "full"),
+    [reader, locator],
+  );
 
   function setEnglishModePersisted(enabled: boolean) {
     setEnglishMode(enabled);
@@ -441,6 +411,7 @@ export function LessonReader({
             options={DETAIL_OPTIONS}
             onSelect={(id) => setDetailModePersisted(id === "all" ? "all" : "standard")}
           />
+          {toolbarExtras}
         </LessonToolbar>
       ) : null}
       {/*
@@ -515,7 +486,7 @@ export function LessonReader({
                 : {})}
               {...(view.lesson.termAnchors ? { termAnchors: view.lesson.termAnchors } : {})}
               evidence={view.lesson.evidence}
-              evidenceBasePath={lessonPath(locator)}
+              evidenceBasePath={loadWindowedEvidence}
               onOpenEvidence={(index, trigger) => openSourceSheet(index, trigger)}
               assets={view.lesson.assets}
               sections={sections}
@@ -554,7 +525,7 @@ export function LessonReader({
               key={exercise.id}
               locator={locator}
               exercise={exercise}
-              requestToken={requestToken}
+              grading={grading}
               onRefresh={onLearningChanged}
             />
           ))}
@@ -661,7 +632,7 @@ export function LessonReader({
       />
       <EvidenceSourceSheet
         studyId={locator.studyId}
-        basePath={lessonPath(locator)}
+        source={loadFullEvidence}
         evidence={view.lesson.evidence}
         index={sourceIndex}
         onClose={closeSourceSheet}

@@ -1,22 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
 
-import { readJson } from "../api/client.js";
 import type { EvidenceSnippetView, EvidenceToken, EvidenceView } from "../view/lesson-view.js";
-import { highlightEvidenceCode } from "../view/lesson-view.js";
 import { EvidenceCode } from "./EvidenceCode.js";
 import { EvidenceUaPlace } from "./EvidenceUaPlace.js";
+import { loadEvidenceSnippet, type EvidenceSource } from "./load-evidence-snippet.js";
 
 export function EvidenceSourceSheet({
   studyId,
-  basePath,
+  source,
   evidence,
   index,
   onClose,
   onSelectIndex,
 }: {
   readonly studyId?: string;
-  readonly basePath: string;
+  readonly source: EvidenceSource;
   readonly evidence: readonly EvidenceView[];
   readonly index: number | null;
   readonly onClose: () => void;
@@ -32,12 +31,10 @@ export function EvidenceSourceSheet({
   const requestSequence = useRef(0);
 
   const reference = index === null ? null : (evidence[index] ?? null);
-  const fullUrl = index === null ? null : `${basePath}/evidence/${index}?view=full`;
 
   useEffect(() => {
-    if (index === null || !fullUrl) return;
+    if (index === null) return;
     const sequence = ++requestSequence.current;
-    const controller = new AbortController();
     setSnippet(null);
     setTokenLines([]);
     setFindText("");
@@ -45,24 +42,22 @@ export function EvidenceSourceSheet({
     setLoading(true);
     setError(null);
     void (async () => {
-      try {
-        const nextSnippet = await readJson<EvidenceSnippetView>(
-          await fetch(fullUrl, { signal: controller.signal }),
-        );
-        const nextTokens = await highlightEvidenceCode(nextSnippet.code, nextSnippet.language);
-        if (requestSequence.current !== sequence) return;
-        setSnippet(nextSnippet);
-        setTokenLines(nextTokens);
-        window.setTimeout(() => findRef.current?.focus(), 0);
-      } catch (reason) {
-        if (controller.signal.aborted || requestSequence.current !== sequence) return;
-        setError(reason instanceof Error ? reason.message : "无法打开固定提交的源码");
-      } finally {
-        if (requestSequence.current === sequence) setLoading(false);
+      const loaded = await loadEvidenceSnippet(source, index);
+      if (requestSequence.current !== sequence) return;
+      if (!loaded.ok) {
+        setError(loaded.message);
+        setLoading(false);
+        return;
       }
+      setSnippet(loaded.snippet);
+      setTokenLines(loaded.tokens);
+      setLoading(false);
+      window.setTimeout(() => findRef.current?.focus(), 0);
     })();
-    return () => controller.abort();
-  }, [fullUrl, index]);
+    return () => {
+      requestSequence.current += 1;
+    };
+  }, [source, index]);
 
   const matchCount = useMemo(() => {
     if (!snippet || !findText.trim()) return 0;

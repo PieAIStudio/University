@@ -1,0 +1,1386 @@
+/*
+  The shared lesson reader. These rules used to live only in the authoring
+  shell, so the delivery shell rendering the same components had nothing on
+  them. `--campus-rule` is a `.campus` token; the shared fallback is the kit
+  border. Box size is unchanged.
+*/
+.loading-copy,
+.inline-error {
+  color: var(--game-ui-text-muted);
+}
+
+.inline-error {
+  margin: 16px 0 0;
+  color: #ffb4a4;
+}
+.answer-field {
+  display: grid;
+  gap: 9px;
+  margin: 26px 0 16px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.answer-field textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid rgb(246 231 211 / 20%);
+  border-radius: 12px;
+  padding: 14px 15px;
+  color: #fff5e8;
+  background: rgb(20 14 10 / 72%);
+  line-height: 1.55;
+}
+
+.answer-field textarea::placeholder {
+  color: rgb(247 234 214 / 38%);
+}
+
+.answer-field textarea[readonly] {
+  border-style: dashed;
+  color: rgb(255 245 232 / 72%);
+  background: rgb(20 14 10 / 45%);
+}
+.lesson-reader {
+  min-width: 0;
+  margin-top: 0;
+}
+
+/* Shared `.lesson-toolbar` lives in packages/ui. The campus reading surface
+   is inset, so the band keeps a little space under itself before the prose. */
+.campus[data-reading] .lesson-toolbar {
+  margin: 0 0 28px;
+}
+
+/*
+ * Three columns always: left rail · prose · right rail.
+ * Equal 1fr rails centre the prose even when a rail has nothing to show.
+ * Extra shell width goes to the rails and side air, not to longer lines.
+ */
+.lesson-layout {
+  display: grid;
+  /*
+    The rails carry a floor, and the prose column yields to it.
+    `minmax(0, 1fr)` let the 68rem centre take everything it wanted first, so
+    between the 1100px breakpoint and roughly 1700px the rails still existed —
+    at twelve pixels wide. Content in them was clipped to nothing, which reads
+    as "the panel is broken" rather than "the window is narrow". Above ~1700px
+    the 1fr still governs, so a wide screen looks exactly as it did.
+  */
+  grid-template-columns:
+    minmax(var(--lesson-rail-left, 14rem), 1fr)
+    minmax(0, 68rem)
+    minmax(var(--lesson-rail-right, 14rem), 1fr);
+  gap: clamp(28px, 3vw, 48px);
+  align-items: start;
+  margin-top: 8px;
+}
+
+/*
+  The floor is for a rail that has something in it. Most lessons carry no margin
+  notes and cite their source inline, so both rails render literally empty — and
+  at 1440 they were still holding 534px of a 1356px shell open to show nothing,
+  while the code in the centre column scrolled sideways to be read. An empty
+  rail gives its width back.
+*/
+.lesson-layout:has(> .lesson-margin-column:empty) {
+  --lesson-rail-left: 0px;
+}
+
+.lesson-layout:has(> .lesson-rail--right:empty) {
+  --lesson-rail-right: 0px;
+}
+
+.lesson-main {
+  /* Two measures, and only two, for the whole lesson: one for reading and one
+     for evidence. Declared here rather than on the prose so the title, the
+     completion callout and the exercise all sit on the same axis as the text
+     they belong to. */
+  --lesson-measure: 40rem;
+  --lesson-evidence-measure: 60rem;
+  min-width: 0;
+  max-width: 68rem;
+  justify-self: center;
+  width: 100%;
+}
+
+.lesson-reader__header,
+.lesson-completion,
+.lesson-next,
+.lesson-main > .exercise-panel {
+  width: min(var(--lesson-measure), 100%);
+  margin-inline: auto;
+}
+
+.lesson-reader__header {
+  display: block;
+  min-width: 0;
+  /* Block-only, so the inline `auto` that puts the title on the reading axis
+     survives. */
+  margin-block: 0 22px;
+  padding: 0;
+}
+
+.lesson-reader__title {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.lesson-ua-layers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  max-width: 40rem;
+  margin: 14px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.lesson-reader__title h2 {
+  margin: 6px 0 0;
+}
+
+/*
+  Which version of the studied project this lesson is about, and a way to run
+  it. Sits under the title with the layer line because that is where the reader
+  has just been told the lesson is pinned to a date — the question "so where is
+  that one" occurs here and nowhere else.
+
+  Set at footnote weight: it answers a question that only some readings raise,
+  and a lesson whose screenshots still match today's app never needs it.
+*/
+.lesson-version {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: baseline;
+  margin-top: 10px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.lesson-version__label {
+  min-width: 0;
+}
+
+.lesson-version__ready {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  border-left: 3px solid #f6c177;
+  background: rgb(246 193 119 / 6%);
+}
+
+.lesson-version__ready p {
+  margin: 0;
+}
+
+.lesson-version__ready code {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  color: #e5c49a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.lesson-version__run {
+  overflow-x: auto;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.lesson-version__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.lesson-prose {
+  display: grid;
+  grid-template-columns:
+    [wide-start] minmax(0, 1fr)
+    [text-start] min(var(--lesson-measure), 100%) [text-end]
+    minmax(0, 1fr) [wide-end];
+  font-size: 1.1rem;
+  line-height: 1.85;
+}
+
+/*
+  Grid containers do not collapse their children's margins, so the inherited
+  `margin: 1em 0` rhythm would have doubled at every boundary. The rhythm is
+  stated once as a row gap instead, and blocks that want more air ask for it on
+  top of that — one direction only, which is also why the spacing below a
+  heading is now readable straight off the rule.
+*/
+.markdown-body.lesson-prose {
+  row-gap: 1.05em;
+}
+
+.markdown-body.lesson-prose > * {
+  grid-column: text;
+  min-width: 0;
+  margin-block: 0;
+}
+
+.markdown-body.lesson-prose > h2 {
+  margin-block-start: 1.15em;
+}
+
+.markdown-body.lesson-prose > h3 {
+  margin-block-start: 0.7em;
+}
+
+.markdown-body.lesson-prose > :first-child {
+  margin-block-start: 0;
+}
+
+.markdown-body.lesson-prose > .evidence-inline-source,
+.markdown-body.lesson-prose > .lesson-media,
+.markdown-body.lesson-prose > .mermaid-diagram,
+.markdown-body.lesson-prose > table {
+  grid-column: wide;
+  justify-self: center;
+  width: min(var(--lesson-evidence-measure), 100%);
+}
+
+/*
+ * The spine, made visible.
+ *
+ * Every lesson is built on the same sequence — guess, answer, explain, check
+ * yourself, one line to keep — and until now all five looked identical: same
+ * size, same weight, same colour. A reader who cannot see where the lesson
+ * stops asking and starts telling reads straight past the asking, which is the
+ * only part that does the teaching. So the three roles that change what the
+ * reader is supposed to *do* each get a treatment, and everything else keeps
+ * the plain one. Three, deliberately: a vocabulary only works if it is small
+ * enough to learn without being taught.
+ *
+ * Which heading carries which role is decided in `markdown/lesson-sections.ts`.
+ */
+
+/* Asking. `先猜一下`, `自检` — the reader owes an answer before reading on, so
+   this is drawn as a full stop: a rule, real air, and the only amber at heading
+   size anywhere in the body. */
+.markdown-body.lesson-prose > h2[data-role="ask"] {
+  margin-block-start: 2.1em;
+  padding-block-start: 1.15em;
+  border-block-start: 1px solid
+    var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  color: #f6c177;
+}
+
+/* Answering. The other half of the exchange above it, so it hangs off that
+   section's last paragraph instead of opening a new one — close spacing, no
+   rule, and a short amber stroke pointing back at the question. */
+.markdown-body.lesson-prose > h2[data-role="reveal"] {
+  margin-block-start: 0.75em;
+}
+
+.markdown-body.lesson-prose > h2[data-role="reveal"]::before {
+  content: "";
+  display: inline-block;
+  width: 0.66em;
+  height: 2px;
+  margin-inline-end: 0.5em;
+  vertical-align: 0.3em;
+  background: #f6c177;
+}
+
+/* Keeping. In `一句话` the heading is a label and the sentence under it is the
+   whole point, so the emphasis goes where the content is: the heading shrinks
+   to a caption and the line it introduces is set larger than body text. */
+.markdown-body.lesson-prose > h2[data-role="takeaway"] {
+  margin-block-start: 1.9em;
+  color: var(--game-ui-text-muted);
+  font-family: inherit;
+  font-size: 0.82em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.markdown-body.lesson-prose > h2[data-role="takeaway"] + p {
+  color: #fff5e8;
+  font-size: 1.26em;
+  line-height: 1.6;
+}
+.exercise-panel {
+  margin-top: 42px;
+  padding: 26px;
+}
+
+.lesson-completion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px 24px;
+  align-items: center;
+  margin-top: 34px;
+  padding: 20px 22px;
+  border: 1px solid rgb(246 193 119 / 30%);
+  border-left: 3px solid #f6c177;
+  background: rgb(246 193 119 / 7%);
+}
+
+.lesson-completion h3 {
+  margin: 6px 0 0;
+  color: #fff5e8;
+  font-size: 1.18rem;
+}
+
+.lesson-completion p:not(.eyebrow):not(.inline-error) {
+  margin: 8px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.lesson-completion__action,
+.text-button {
+  border: 1px solid rgb(246 193 119 / 48%);
+  padding: 9px 14px;
+  background: rgb(246 193 119 / 13%);
+  color: #f7d3a0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lesson-completion__action:hover,
+.lesson-completion__action:focus-visible,
+.text-button:hover,
+.text-button:focus-visible {
+  border-color: #f6c177;
+  background: rgb(246 193 119 / 22%);
+}
+
+.lesson-completion__action:disabled,
+.text-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/*
+ * Where a lesson ends.
+ *
+ * The last thing on the page used to be the campus footer, so the reader who
+ * had just finished had to scroll back four thousand pixels to a ghost button
+ * that said 下一节 and nothing else. This names the lesson instead — a title is
+ * something you can decide about, "next" is something you take on faith.
+ *
+ * How loudly it says it depends on whether the lesson is actually done, since
+ * a bright exit above an unfinished lesson would be arguing with the rule that
+ * reading alone does not complete anything.
+ */
+.lesson-next {
+  margin-top: 46px;
+  padding-top: 26px;
+  border-top: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+}
+
+.lesson-next__eyebrow {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.lesson-next__title {
+  margin: 10px 0 0;
+  color: #fff5e8;
+  font-family: var(--game-ui-font-display);
+  font-size: clamp(1.32rem, 2.2vw, 1.66rem);
+  line-height: 1.28;
+}
+
+.lesson-next__note {
+  margin: 12px 0 0;
+  max-width: 34rem;
+  color: var(--game-ui-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.lesson-next :is(button, a) {
+  margin-top: 20px;
+}
+
+/* Done: the only thing left to decide is whether to keep going, so the block
+   gets the accent edge the completion callout uses for its own primary. */
+.lesson-next[data-state="ready"],
+.lesson-next[data-state="course-end"] {
+  padding: 26px 24px;
+  border: 1px solid rgb(246 193 119 / 26%);
+  border-left: 3px solid #f6c177;
+  background: rgb(246 193 119 / 6%);
+}
+
+.exercise-panel > p {
+  color: #fff0dc;
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+
+.exercise-panel > :last-child {
+  margin-top: 18px;
+}
+
+.coaching-packet {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(247, 211, 160, 0.28);
+  border-radius: 12px;
+  background: rgba(247, 211, 160, 0.07);
+}
+
+.coaching-packet__status {
+  margin: 0 0 10px;
+  color: #f7d3a0;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.coaching-packet__contents {
+  margin: -4px 0 10px;
+  color: rgba(255, 245, 232, 0.72);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.coaching-packet__steps {
+  margin: 0 0 10px;
+  padding-left: 1.25rem;
+  color: rgba(255, 245, 232, 0.88);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.coaching-packet__steps li + li {
+  margin-top: 4px;
+}
+
+.coaching-packet__note {
+  margin: 0 0 12px;
+  color: rgba(255, 245, 232, 0.62);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.coaching-packet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.host-grade {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(247, 211, 160, 0.28);
+  background: rgba(247, 211, 160, 0.08);
+}
+
+.host-grade--pass {
+  border-color: rgba(120, 200, 140, 0.45);
+  background: rgba(80, 160, 100, 0.12);
+}
+
+.host-grade--fail {
+  border-color: rgba(230, 150, 100, 0.4);
+  background: rgba(160, 90, 50, 0.12);
+}
+
+.host-grade__eyebrow {
+  margin: 0 0 10px;
+  color: #f7d3a0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.host-grade__body {
+  color: rgba(255, 245, 232, 0.9);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.host-grade__extensions {
+  margin-top: 12px;
+}
+
+.host-grade__extensions ul {
+  margin: 6px 0 0;
+  padding-left: 1.2rem;
+  color: rgba(255, 245, 232, 0.82);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+/* Each extension is one sentence rendered as Markdown, so its paragraph must
+   not reintroduce block spacing inside a list item. */
+.host-grade__extensions li > .markdown-body > :first-child {
+  margin-top: 0;
+}
+
+.host-grade__extensions li > .markdown-body > :last-child {
+  margin-bottom: 0;
+}
+
+.lesson-practice {
+  display: grid;
+  gap: 18px;
+  margin-top: 52px;
+  padding-top: 38px;
+  border-top: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+}
+
+.lesson-practice > div:first-child h2 {
+  margin: 7px 0 8px;
+  color: #fff5e8;
+  font-size: clamp(1.7rem, 4vw, 2.8rem);
+}
+
+.evidence-rail {
+  position: sticky;
+  top: 24px;
+  padding: 16px 18px;
+  border: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  border-radius: 14px;
+  background: rgb(39 28 21 / 60%);
+}
+
+/* Quiet single-line rail panel chrome: label + ? */
+.rail-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.rail-panel__label {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.rail-panel__help {
+  display: inline-grid;
+  place-items: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  border: 1px solid rgb(247 211 160 / 28%);
+  color: rgb(247 211 160 / 72%);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  cursor: help;
+}
+
+.rail-panel__help:hover,
+.rail-panel__help:focus-visible {
+  border-color: rgb(246 193 119 / 65%);
+  color: #f7d3a0;
+}
+.source-sheet .evidence-ua-place {
+  margin: 12px 0 4px;
+  padding: 10px 12px;
+  border: 1px solid rgb(246 231 211 / 14%);
+  border-radius: 10px;
+  background: rgb(0 0 0 / 18%);
+}
+.source-sheet {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.source-sheet__meta,
+.source-sheet__tools,
+.source-sheet__footer,
+.source-sheet__navigation,
+.source-sheet__copy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.source-sheet__meta {
+  justify-content: space-between;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+}
+
+.source-sheet__meta code {
+  overflow-wrap: anywhere;
+  color: #f7d3a0;
+}
+
+.source-sheet__tools {
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  border-bottom: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+}
+
+.source-sheet__tools label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+}
+
+.source-sheet__tools input {
+  min-width: min(280px, 60vw);
+  border: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  padding: 7px 9px;
+  color: #fff5e8;
+  background: #1a1512;
+  font: inherit;
+}
+
+.source-sheet__find-status,
+.source-sheet__truncation {
+  color: var(--game-ui-text-muted);
+  font-size: 0.76rem;
+}
+
+.source-sheet__truncation {
+  margin: 0;
+  color: #f7d3a0;
+}
+
+.source-sheet__footer {
+  justify-content: space-between;
+  width: 100%;
+}
+
+.source-sheet__navigation {
+  justify-content: center;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 1100px) {
+  .lesson-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /*
+     One column, so there is no margin to sit in. The notes become an ordinary
+     list below the lesson: absolute positioning against prose coordinates has
+     nothing to align to once the prose is the full width, and would stack every
+     note at the top of the page.
+  */
+  .lesson-margin-column {
+    order: 2;
+  }
+
+  /*
+     The batch button goes last, after the notes it summarises. And the rail
+     stops being sticky here rather than at 820px: single-column starts at this
+     breakpoint, and a sticky box in a one-column flow pins itself over the
+     prose the reader is trying to read.
+  */
+  .lesson-rail--right {
+    order: 3;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .margin-note {
+    position: static;
+    margin-bottom: 8px;
+    border-radius: 9px;
+  }
+
+  /* No hover on the way to a note on a touch screen, so the controls stay. */
+  .margin-note__actions {
+    opacity: 1;
+  }
+
+  .lesson-toolbar {
+    top: 0;
+  }
+}
+
+@media (max-width: 820px) {
+  .lesson-completion {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lesson-completion__action {
+    width: 100%;
+  }
+
+  .lesson-toolbar {
+    top: 0;
+  }
+
+  .source-sheet__meta,
+  .source-sheet__tools {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .source-sheet__tools input {
+    width: 100%;
+    min-width: 0;
+  }
+}
+.host-grade__coach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(247, 211, 160, 0.18);
+}
+
+.host-grade__coach-hint {
+  color: rgba(255, 245, 232, 0.6);
+  font-size: 0.8rem;
+}
+
+/* Left and right lesson columns. Sticky as one unit so the column does not
+   scroll away mid-lesson. Clears sticky campus header + lesson toolbar.
+   Empty rails still occupy the grid track (that is what centres the prose)
+   but render no surface chrome. */
+.lesson-rail {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  min-width: 0;
+  position: sticky;
+  top: calc(var(--campus-reading-header-h, 3.75rem) + var(--campus-reading-toolbar-h, 4rem));
+  max-height: calc(
+    100vh - var(--campus-reading-header-h, 3.75rem) - var(--campus-reading-toolbar-h, 4rem) - 0.5rem
+  );
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.exercise-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.exercise-actions__hint {
+  color: var(--game-ui-text-muted);
+  font-size: 0.86rem;
+}
+
+/* Says the box is showing something the server kept, not something typed and
+   about to be lost. Without it a restored answer is indistinguishable from a
+   draft the page is holding in memory. */
+.answer-field__saved {
+  margin: -6px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+}
+.word-list {
+  padding: 16px 18px;
+  border: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  border-radius: 14px;
+  background: var(--campus-surface, var(--game-ui-surface, rgb(53 39 29 / 80%)));
+}
+
+.word-list__summary {
+  margin: 8px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.8rem;
+}
+
+/* ── Backlinks, at the end of the lesson ────────────────────────────────── */
+
+.lesson-backlinks {
+  margin-top: 28px;
+  padding: 16px 18px;
+  border: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  border-radius: 14px;
+  background: var(--campus-surface, var(--game-ui-surface, rgb(53 39 29 / 80%)));
+}
+
+.lesson-backlinks__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lesson-backlinks__list button {
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--game-ui-text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lesson-backlinks__list button:hover,
+.lesson-backlinks__list button:focus-visible {
+  color: #f0a868;
+}
+
+.lesson-backlinks__list button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* ── The margin, where notes sit beside their passages ──────────────────── */
+
+/*
+   Not sticky, unlike the right rail. Notes are placed against coordinates
+   measured from the prose, so this column has to travel with the prose; a
+   sticky container would pin them in place while the text they point at
+   scrolled away, which is the exact defect the margin exists to fix.
+*/
+.lesson-margin-column {
+  position: relative;
+  min-width: 0;
+}
+
+.lesson-margin {
+  position: relative;
+}
+
+/* Absolute, with `top` written by the layout pass. Notes are pushed apart
+   vertically when two passages sit too close to share a line. */
+.margin-note {
+  position: absolute;
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-left: 2px solid rgb(246 193 119 / 55%);
+  border-radius: 0 9px 9px 0;
+  background: rgb(255 245 232 / 4%);
+  transition: background 140ms ease;
+}
+
+/* A highlight is a note to self, not unfinished business, so it recedes. */
+.margin-note[data-kind="highlight"] {
+  border-left-color: rgb(255 245 232 / 22%);
+}
+
+/* The passage is gone from this revision — the note is kept, but it can no
+   longer claim to point at anything. */
+.margin-note[data-orphaned] {
+  border-left-style: dashed;
+  border-left-color: rgb(240 168 104 / 50%);
+  opacity: 0.72;
+}
+
+.margin-note:hover,
+.margin-note[data-active] {
+  background: rgb(247 211 160 / 12%);
+}
+
+.margin-note__body {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.margin-note__body small {
+  color: rgb(255 245 232 / 42%);
+  font-size: 0.68rem;
+}
+
+.margin-note__orphan {
+  color: #f0a868;
+}
+
+/* Two lines: enough to recognise the passage, not enough to re-read it here. */
+.margin-note__body span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.margin-note__actions {
+  display: flex;
+  gap: 8px;
+  /* Hidden until the note is being looked at: a permanent row of controls
+     beside every paragraph is chrome the reader never asked for. */
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.margin-note:hover .margin-note__actions,
+.margin-note:focus-within .margin-note__actions {
+  opacity: 1;
+}
+
+.margin-note__actions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(255 245 232 / 45%);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.margin-note__actions button:hover {
+  color: #f7d3a0;
+}
+
+.word-list--quiet {
+  padding: 14px 16px;
+}
+
+.word-list__history {
+  margin-top: 14px;
+  border-top: 1px solid rgb(247 211 160 / 16%);
+  padding-top: 10px;
+}
+
+.word-list__history summary {
+  color: var(--game-ui-text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.word-list__history .word-list__items {
+  margin-top: 8px;
+}
+
+.word-list__history-item {
+  flex-wrap: wrap;
+}
+
+.word-list__history-item > .word-list__word {
+  opacity: 0.72;
+}
+
+.word-list__undo {
+  flex: 0 0 auto;
+  border: 0;
+  background: none;
+  color: #f0a868;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.74rem;
+}
+
+.word-list__undo:hover,
+.word-list__undo:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.word-list__voice {
+  display: grid;
+  gap: 5px;
+  margin-top: 14px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+}
+
+.word-list__voice select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  border-radius: 8px;
+  background: #1a1512;
+  color: #f7ead6;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.word-list__items {
+  display: grid;
+  gap: 4px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.word-list__items li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.word-list__word {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.word-list__word:hover {
+  background: rgb(247 211 160 / 10%);
+}
+
+.word-list__word span {
+  color: #f7d3a0;
+  font-weight: 700;
+}
+
+/* The gloss is the reason to scan this list at all, but it is the second thing
+   read; truncating keeps one word per row so the list stays scannable. */
+.word-list__word small {
+  overflow: hidden;
+  color: var(--game-ui-text-muted);
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Tips ------------------------------------------------------------- */
+
+/* The trigger keeps the layout of whatever it wraps — a badge, a heading, a
+   metric label — and only adds the hint that there is something to read. */
+.tip-trigger {
+  cursor: help;
+  /* Dotted rather than solid so it never reads as a link the learner failed to
+     click. `from-font` keeps it clear of descenders in both scripts. */
+  text-decoration: underline dotted
+    var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  text-underline-offset: 4px;
+  text-decoration-thickness: from-font;
+}
+
+.tip-trigger:focus-visible {
+  outline: 2px solid var(--game-ui-accent, #f0a868);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.tip-panel {
+  z-index: 60;
+  max-width: 320px;
+  padding: 12px 14px;
+  border: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  border-radius: 12px;
+  background: #2a1e16;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 45%);
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+.tip-panel__term {
+  margin: 0 0 6px;
+  color: #f0a868;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.tip-panel__summary {
+  margin: 0;
+  color: #fff5e8;
+}
+
+.tip-panel__detail {
+  margin: 8px 0 0;
+  color: var(--game-ui-text-muted, #cbb49c);
+}
+
+/* --- Review queue + Markdown in prompts -------------------------------- */
+
+.review-card__queue {
+  margin: 6px 0 0;
+  color: var(--game-ui-text-muted, #cbb49c);
+  font-size: 0.84rem;
+}
+
+.review-card__queue strong {
+  color: #f0a868;
+}
+
+.rating-row__help {
+  flex-basis: 100%;
+  color: var(--game-ui-text-muted, #cbb49c);
+  font-size: 0.78rem;
+}
+
+/* Card and exercise text is authored Markdown. It used to be printed raw, so
+   the backticks around every identifier landed on screen — and a CJK font
+   draws a lone ` as an accent floating over the next letter. */
+.review-card__question code,
+.answer-reveal__body code,
+.exercise-prompt code {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: rgb(0 0 0 / 30%);
+  font-size: 0.92em;
+}
+
+.answer-reveal__body > :first-child,
+.exercise-prompt > :first-child {
+  margin-top: 0;
+}
+
+.answer-reveal__body > :last-child,
+.exercise-prompt > :last-child {
+  margin-bottom: 0;
+}
+
+.word-list__items > li[data-reason="familiar"] {
+  opacity: 0.6;
+}
+
+/* Cross-lesson and evidence trigger styles moved to
+   @pieai/university-ui/reference/reference-panel.css, imported from main.tsx. */
+
+.lesson-return {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  border-radius: 999px;
+  background: rgb(240 168 104 / 12%);
+  color: #f0a868;
+  cursor: pointer;
+  font-size: 0.84rem;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.lesson-return:hover,
+.lesson-return:focus-visible {
+  border-color: rgb(240 168 104 / 40%);
+  color: #f7d3a0;
+}
+
+.lesson-backlinks {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+}
+
+.lesson-backlinks ul {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.lesson-backlinks button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--game-ui-text-muted, #cbb49c);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.lesson-backlinks button:hover,
+.lesson-backlinks button:focus-visible {
+  color: #f0a868;
+}
+
+/* The lesson header already states the title, and every lesson's Markdown
+   opens with the same line as an `# H1`. Two identical headings stacked is
+   the first thing a reader sees and the first thing they have to skip.
+
+   Hidden rather than stripped from the source: the language and link layers
+   index by character offset into the exact bytes, so removing the line would
+   move every anchor in the lesson. It stays in the file, where it also keeps
+   the Markdown readable on its own. */
+.markdown-body > h1:first-child {
+  display: none;
+}
+
+/* ── The reader's own marks ─────────────────────────────────────────────── */
+
+/* Floats over the selection, so it sits above the source sheet's backdrop but
+   below a modal that has taken over the screen. */
+.selection-menu {
+  z-index: 25;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid rgb(247 211 160 / 30%);
+  border-radius: 10px;
+  background: #1a1512;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 50%);
+}
+
+.selection-menu__action {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: #f7ead6;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.selection-menu__action:hover:not(:disabled) {
+  background: rgb(247 211 160 / 14%);
+}
+
+.selection-menu__action:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* The one action this bar exists for reads as the default; the rest are
+   alternatives to it, not peers of it. */
+.selection-menu__action--primary {
+  color: #f6c177;
+  font-weight: 700;
+}
+
+.mark-list__summary {
+  margin: 0 0 8px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.85rem;
+}
+
+.mark-list__items {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mark-list__item {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 9px;
+  background: rgb(255 245 232 / 4%);
+}
+
+/* An open question is unfinished business and says so; a highlight is a note to
+   self and should not compete with it for attention. */
+.mark-list__item[data-kind="question"] {
+  border-left: 2px solid rgb(246 193 119 / 70%);
+}
+
+.mark-list__quote {
+  display: grid;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mark-list__quote small {
+  color: rgb(255 245 232 / 45%);
+  font-size: 0.72rem;
+}
+
+/* Three lines of the passage is enough to recognise it; the whole thing would
+   turn the rail into a second copy of the lesson. */
+.mark-list__quote span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.mark-list__quote:hover span {
+  color: #f7d3a0;
+}
+
+.mark-list__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mark-list__actions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(255 245 232 / 45%);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.mark-list__actions button:hover {
+  color: #f7d3a0;
+}
+
+.mark-list__missing {
+  margin: 0;
+  color: #f0a878;
+  font-size: 0.75rem;
+}
+
+.mark-list__copy-all {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgb(247 211 160 / 34%);
+  border-radius: 9px;
+  background: rgb(247 211 160 / 10%);
+  color: #f7d3a0;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.mark-list__copy-all:hover {
+  background: rgb(247 211 160 / 18%);
+}
+
+.mark-list__highlights {
+  margin-top: 12px;
+}
+
+.mark-list__highlights summary {
+}

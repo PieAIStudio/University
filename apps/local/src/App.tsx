@@ -21,6 +21,8 @@ import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
 import { LINK_RETURN_DEPTH, LessonReader } from "@pieai/university-ui/lesson/LessonReader.js";
 import { lessonNeighbours } from "@pieai/university-ui/lesson/LessonNav.js";
+import { createHttpGradingPort } from "./ports/http-grading.js";
+import { createHttpReaderPort } from "./ports/http-reader.js";
 import type {
   BootstrapData,
   LessonRef,
@@ -272,6 +274,14 @@ export function App() {
   }, [lessonLocator]);
 
   const studyView = displayedStudy?.view ?? null;
+  const readerPort = useMemo(
+    () => (data ? createHttpReaderPort({ requestToken: data.requestToken }) : null),
+    [data],
+  );
+  const gradingPort = useMemo(
+    () => (data ? createHttpGradingPort({ requestToken: data.requestToken }) : null),
+    [data],
+  );
   /*
     The counters come from the shelf, not from the study page.
 
@@ -489,10 +499,12 @@ export function App() {
           </button>
         </GameCallout>
       ) : null}
-      {lessonView && displayedLesson && data ? (
+      {lessonView && displayedLesson && data && readerPort && gradingPort ? (
         <LessonReader
           locator={displayedLesson.locator}
           view={lessonView}
+          reader={readerPort}
+          grading={gradingPort}
           requestToken={data.requestToken}
           onLearningChanged={refreshLearning}
           neighbours={

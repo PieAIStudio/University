@@ -21,7 +21,7 @@
  * means deleting its line from the baseline, which is the point — the list can
  * only get shorter.
  */
-import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -169,6 +169,34 @@ if (fixed.length > 0) {
       "Run `node scripts/check-shared-styles.mjs --write-baseline` so the list shrinks.\n",
   );
   for (const entry of fixed) console.error(`  ${entry}`);
+  process.exit(1);
+}
+
+/**
+ * V4 §01: a shell must not grow a second lesson reader. Settlement, grading
+ * and language composition may live under apps/<shell>/src/lesson; the screen
+ * that renders a lesson may not.
+ */
+function forbiddenShellReaders() {
+  const names = new Set(["Lesson.tsx", "LessonReader.tsx", "LessonScreen.tsx"]);
+  const hits = [];
+  for (const app of ["apps/local/src/lesson", "apps/online/src/lesson"]) {
+    const dir = join(ROOT, app);
+    if (!existsSync(dir) || !statSync(dir).isDirectory()) continue;
+    for (const name of readdirSync(dir)) {
+      if (names.has(name)) hits.push(`${app}/${name}`);
+    }
+  }
+  return hits;
+}
+
+const readers = forbiddenShellReaders();
+if (readers.length > 0) {
+  console.error(
+    "shared styles: a shell is carrying its own lesson reader.\n" +
+      "Both shells render packages/ui LessonReader. Delete the duplicate.\n",
+  );
+  for (const hit of readers) console.error(`  ${hit}`);
   process.exit(1);
 }
 

@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
+import type {
+  CoachingPacket,
+  ExerciseAttemptResult,
+  GradingPort,
+  HostExerciseGrade,
+} from "@pieai/university-core";
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
-import { STALE_TOKEN_NOTICE, isStaleTokenFailure, lessonPath, readJson } from "../api/client.js";
-import type {
-  CoachingPacketResponse,
-  ExerciseAttemptResult,
-  HostExerciseGradeView,
-  LessonRef,
-  LessonView,
-} from "../view/lesson-view.js";
+import { STALE_TOKEN_NOTICE, isStaleTokenFailure } from "../api/client.js";
+import type { LessonRef, LessonView } from "../view/lesson-view.js";
 
 /**
  * How long the page keeps watching for a host grade on its own. Past this the
@@ -22,12 +22,12 @@ const HOST_GRADE_POLL_LIMIT_MS = 10 * 60 * 1000;
 export function ExerciseBlock({
   locator,
   exercise,
-  requestToken,
+  grading,
   onRefresh,
 }: {
   readonly locator: LessonRef;
   readonly exercise: LessonView["lesson"]["exercises"][number];
-  readonly requestToken: string;
+  readonly grading: GradingPort;
   /**
    * Reloads campus data after a submission or a host write-back. Completion is
    * owned by the explicit lesson confirmation endpoint, never by rendering a
@@ -49,11 +49,9 @@ export function ExerciseBlock({
   const [error, setError] = useState<string | null>(null);
   const [packetCopied, setPacketCopied] = useState(false);
   const [packetCopyFailed, setPacketCopyFailed] = useState(false);
-  const [packetInfo, setPacketInfo] = useState<CoachingPacketResponse | null>(null);
+  const [packetInfo, setPacketInfo] = useState<CoachingPacket | null>(null);
   const [expressionCopied, setExpressionCopied] = useState(false);
-  const [hostGrade, setHostGrade] = useState<HostExerciseGradeView | null>(
-    exercise.hostGrade ?? null,
-  );
+  const [hostGrade, setHostGrade] = useState<HostExerciseGrade | null>(exercise.hostGrade ?? null);
   /**
    * A passed exercise is read-only until the learner asks for it back. Locking
    * it forever was the wrong end of the trade: rehearsing an answer you already
@@ -137,19 +135,10 @@ export function ExerciseBlock({
     };
   }, [awaitingGrade]);
 
-  function post(action: "attempt" | "rubric", payload: Record<string, unknown>) {
-    return fetch(`${lessonPath(locator)}/exercises/${exercise.id}/${action}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-University-Local-Token": requestToken },
-      body: JSON.stringify({ contentRevision: exercise.contentRevision, answer, ...payload }),
-    });
-  }
-
   async function copyExpressionPacket() {
+    if (!grading.expressionPacket) return;
     try {
-      const body = await readJson<{ readonly packet: string }>(
-        await fetch(`/api/studies/${locator.studyId}/expression-packet`),
-      );
+      const body = await grading.expressionPacket(locator.studyId);
       if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
       await navigator.clipboard.writeText(body.packet);
       setExpressionCopied(true);
@@ -160,10 +149,9 @@ export function ExerciseBlock({
   }
 
   async function copyCoachingPacket() {
+    if (!grading.coachingPacket) return;
     try {
-      const body = await readJson<CoachingPacketResponse>(
-        await fetch(`${lessonPath(locator)}/exercises/${exercise.id}/coaching-packet`),
-      );
+      const body = await grading.coachingPacket({ locator, exerciseId: exercise.id });
       if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
       await navigator.clipboard.writeText(body.packet);
       setPacketInfo(body);
@@ -182,15 +170,17 @@ export function ExerciseBlock({
     setPacketCopyFailed(false);
     setPacketInfo(null);
     try {
-      const body = await readJson<ExerciseAttemptResult>(
-        await post("attempt", {
-          commandId: crypto.randomUUID(),
-        }),
-      );
+      const body: ExerciseAttemptResult = await grading.submitExercise({
+        locator,
+        exerciseId: exercise.id,
+        contentRevision: exercise.contentRevision,
+        answer,
+        commandId: crypto.randomUUID(),
+      });
       setResult(body);
       if (body.hostGrade) setHostGrade(body.hostGrade);
       setGradeWatermark(body.hostGrade?.occurredAt ?? "");
-      await copyCoachingPacket();
+      if (!body.hostGrade?.passed) await copyCoachingPacket();
       await onRefresh();
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : "暂时无法提交练习";
@@ -230,8 +220,12 @@ export function ExerciseBlock({
           }}
           placeholder={
             isExplain
-              ? "用自己的话完整解释；对错与点评由 AI 宿主完成。"
-              : "用自己的话回答；对错由 AI 宿主判定，不要求一字不差。"
+              ? grading.coachingPacket
+                ? "用自己的话完整解释；对错与点评由 AI 宿主完成。"
+                : "用自己的话完整解释。"
+              : grading.coachingPacket
+                ? "用自己的话回答；对错由 AI 宿主判定，不要求一字不差。"
+                : "用自己的话回答。"
           }
           rows={isExplain ? 6 : 3}
           readOnly={solved}
@@ -257,8 +251,12 @@ export function ExerciseBlock({
             : solved
               ? "已完成"
               : reopened
-                ? "重新提交并复制给 AI 判分"
-                : "提交并复制给 AI 判分"}
+                ? grading.coachingPacket
+                  ? "重新提交并复制给 AI 判分"
+                  : "重新提交"
+                : grading.coachingPacket
+                  ? "提交并复制给 AI 判分"
+                  : "提交"}
         </GameButton>
         {passed ? (
           <GameButton
@@ -291,7 +289,7 @@ export function ExerciseBlock({
         ) : null}
       </div>
 
-      {result && !hostGrade?.passed ? (
+      {result && !hostGrade?.passed && grading.coachingPacket ? (
         <GameCallout heading="答案已记录 · 等 AI 评估" tone="warning" role="status">
           {awaitingGrade
             ? "本页不自己判对错。把答疑包贴给任意 AI 宿主，它写回后这里会自动出现评估 —— 不用守着，回到这个页面时也会立刻刷新。"
@@ -328,7 +326,7 @@ export function ExerciseBlock({
               </ul>
             </div>
           ) : null}
-          {isExplain ? (
+          {isExplain && grading.expressionPacket ? (
             <div className="host-grade__coach">
               {/* Grading answered "was it right"; this offers "was it clear". The
                   page only prepares the material — the coaching itself happens in
@@ -352,7 +350,7 @@ export function ExerciseBlock({
         </div>
       ) : null}
 
-      {result && !hostGrade?.passed ? (
+      {result && !hostGrade?.passed && grading.coachingPacket ? (
         <div className="coaching-packet" role="region" aria-label="答疑包与粘贴步骤">
           <p className="coaching-packet__status">
             {packetCopied
