@@ -143,6 +143,32 @@ describe("placeLabels", () => {
     expect(unit.y).toBe(180);
   });
 
+  /*
+    Measured on a real phone-width map, not imagined: 《读懂一段逻辑》 sat at
+    x=293 on a 375-wide screen and was placed running to x=411. Intersecting
+    the frame is not the same as being readable inside it.
+  */
+  it("never places a name that hangs off the edge of a phone screen", () => {
+    const phone = { width: 375, height: 812 } as const;
+    const placed = placeLabels(
+      [candidate({ id: "course", x: 352, y: 400, width: 118, height: 22 })],
+      phone,
+    );
+    const course = byId(placed, "course");
+    expect(course.visible).toBe(true);
+    expect(course.x - 118 / 2).toBeGreaterThanOrEqual(0);
+    expect(course.x + 118 / 2).toBeLessThanOrEqual(phone.width);
+  });
+
+  it("still shows a name too wide for the screen rather than dropping it", () => {
+    const narrow = { width: 100, height: 600 } as const;
+    const placed = placeLabels(
+      [candidate({ id: "wide", x: 50, y: 300, width: 260, height: 20 })],
+      narrow,
+    );
+    expect(byId(placed, "wide").visible).toBe(true);
+  });
+
   it("keeps a 41-lesson pile readable: visible labels never intersect", () => {
     const candidates: LabelCandidate[] = Array.from({ length: 41 }, (_, index) => ({
       id: `lesson-${index}`,

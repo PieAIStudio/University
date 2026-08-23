@@ -137,6 +137,38 @@ function intersectsViewport(
   );
 }
 
+/**
+ * Fully inside the frame, not merely touching it.
+ *
+ * Placement used to ask only whether the box intersected the viewport, which
+ * is a different question from whether anyone can read it. Measured at 375
+ * wide: 《读懂一段逻辑》 was placed from x=293 to x=411 — it intersects, so it
+ * passed, and 36px of the name hung off the right edge, unreadable and
+ * unclickable. The `left` slot beside it was free the whole time.
+ *
+ * Because the slot list already offers down / right / left, requiring
+ * containment does not lose the label — it moves it to the side that fits,
+ * which is what the four slots were for.
+ *
+ * A box wider or taller than the viewport itself can satisfy no containment
+ * test. Hiding it would drop a name for being long rather than for being in
+ * the way, so for that case only, touching remains the best available answer.
+ */
+function fitsInViewport(
+  rect: LabelBox,
+  viewport: { readonly width: number; readonly height: number },
+): boolean {
+  if (rect.right - rect.left > viewport.width || rect.bottom - rect.top > viewport.height) {
+    return intersectsViewport(rect, viewport);
+  }
+  return (
+    rect.left >= 0 &&
+    rect.top >= 0 &&
+    rect.right <= viewport.width &&
+    rect.bottom <= viewport.height
+  );
+}
+
 function anchorOnScreen(
   candidate: LabelCandidate,
   viewport: { readonly width: number; readonly height: number },
@@ -191,7 +223,7 @@ export function placeLabels(
       const rect = labelBox(slot, width, height, anchor);
       // An offset that leaves the frame is not a placement: it would spend a
       // maxVisible slot on a name nobody can read.
-      if (!intersectsViewport(rect, viewport)) continue;
+      if (!fitsInViewport(rect, viewport)) continue;
       if (occupied.some((other) => boxesOverlap(rect, other, gap))) continue;
       occupied.push(rect);
       placed[index] = { id: candidate.id, x: slot.x, y: slot.y, visible: true };
