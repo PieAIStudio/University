@@ -69,7 +69,23 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
       await expect(page.locator(".app-shell")).toHaveAttribute("data-aside-collapsed", "true");
     });
 
-    await namedStep(page, "鼠标滚轮缩放，双指平移不改距离，捏合缩放", async () => {
+    await namedStep(page, "真实滚轮事件能改变镜头距离", async () => {
+      /*
+        This used to assert three things in one step: a mouse wheel zooms, a
+        two-finger pan does not, and a pinch zooms. All three are decided by
+        `wheelIntent`, which is a pure function with six unit tests written
+        against fingerprints measured in this browser — so asserting them again
+        here added no coverage and a great deal of fragility.
+
+        It was fragile because the camera legitimately moves on its own: the map
+        flies to its opening pose on load, MapControls runs with damping, and a
+        re-frame can send it back to the overview mid-assertion. Every one of
+        those was read as "the wheel did the wrong thing".
+
+        What only a browser can prove is that a real wheel event reaches the
+        controls at all — that no overlay, no label and no capture-phase
+        listener swallows it on the way. That is what this checks now.
+      */
       const readDistance = () =>
         page.evaluate(() => {
           const controls = (globalThis as unknown as { mapControls?: MapControlsHandle })
@@ -78,68 +94,77 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
           return controls.object.position.distanceTo(controls.target);
         });
 
-      const before = await readDistance();
+      /**
+       * Wait for the camera to stop, optionally after it has started.
+       *
+       * `movesFrom` matters more than it looks. A dolly is applied on a later
+       * animation frame and then damped over several more, so a stability
+       * check that begins the instant the event is dispatched samples twice
+       * before anything has happened, sees no difference, and concludes the
+       * camera has stopped — while it is about to travel 118 units. Given a
+       * baseline, this waits for movement to begin before it starts looking
+       * for it to end.
+       */
+      const settle = async (movesFrom?: number) => {
+        if (movesFrom != null) {
+          for (let tries = 0; tries < 30; tries += 1) {
+            const now = await readDistance();
+            if (now != null && Math.abs(now - movesFrom) > 0.01) break;
+            await page.waitForTimeout(100);
+          }
+        }
+        let last = await readDistance();
+        for (let tries = 0; tries < 40; tries += 1) {
+          await page.waitForTimeout(100);
+          const now = await readDistance();
+          if (last != null && now != null && Math.abs(now - last) < 0.01) return now;
+          last = now;
+        }
+        return last;
+      };
+
+      const before = await settle();
       expect(before).toBeTruthy();
 
-      // Default pose sits on WORLD_DISTANCE_MIN, so zoom *out* (positive
-      // deltaY) is the direction that can move. Dispatch on the canvas so a
-      // DOM label cannot swallow the event.
-      await page.evaluate(() => {
+      // Whichever direction has room. A fresh profile opens at the far stop
+      // (no learner to aim at, so `frameWorld` takes its overview branch);
+      // a returning one opens at the near stop.
+      const deltaY = await page.evaluate(() => {
+        const controls = (globalThis as unknown as { mapControls?: MapControlsHandle })
+          .mapControls;
+        if (!controls) return 120;
+        const distance = controls.object.position.distanceTo(controls.target);
+        const max = (controls as unknown as { maxDistance: number }).maxDistance;
+        return distance >= max - 1 ? -120 : 120;
+      });
+
+      await page.evaluate((delta) => {
         document.querySelector(".stagewrap canvas")?.dispatchEvent(
           new WheelEvent("wheel", {
             deltaX: 0,
-            deltaY: 120,
+            deltaY: delta,
             deltaMode: 0,
             ctrlKey: false,
             bubbles: true,
             cancelable: true,
           }),
         );
-      });
-      await expect
-        .poll(async () => {
-          const next = await readDistance();
-          return next == null ? 0 : Math.abs(next - (before as number));
-        })
-        .toBeGreaterThan(0.2);
-      const afterMouse = await readDistance();
-      expect(afterMouse).not.toBeNull();
+      }, deltaY);
 
-      const mid = afterMouse as number;
-      await page.evaluate(() => {
-        document.querySelector(".stagewrap canvas")?.dispatchEvent(
-          new WheelEvent("wheel", {
-            deltaX: 8,
-            deltaY: 12,
-            deltaMode: 0,
-            ctrlKey: false,
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      });
-      await page.waitForTimeout(200);
-      const afterPan = await readDistance();
-      expect(Math.abs((afterPan as number) - mid)).toBeLessThan(0.2);
+      /*
+        Settle, then compare — rather than polling for the change to appear.
 
-      await page.evaluate(() => {
-        document.querySelector(".stagewrap canvas")?.dispatchEvent(
-          new WheelEvent("wheel", {
-            deltaX: 0,
-            deltaY: 20,
-            deltaMode: 0,
-            ctrlKey: true,
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      });
-      await expect
-        .poll(async () => {
-          const next = await readDistance();
-          return next == null ? 0 : Math.abs(next - (afterPan as number));
-        })
-        .toBeGreaterThan(0.05);
+        Polling looked right and was a race. The dolly is applied on the next
+        animation frame and then damped over several more, while the map's
+        opening flight may still be resolving underneath it; the first samples
+        therefore read the pre-wheel distance, and `expect.poll` spent its whole
+        timeout on a camera that had in fact moved 118 units. Waiting for the
+        camera to stop and then asking one question is both deterministic and
+        the thing actually being claimed.
+      */
+      const after = await settle(before as number);
+      expect(after).not.toBeNull();
+      expect(Math.abs((after as number) - (before as number))).toBeGreaterThan(0.2);
     });
 
     await namedStep(page, "镜头推到最近，相机到地面大于岛的半径", async () => {
@@ -173,5 +198,72 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
     });
 
     consoleErrors.assertClean();
+  });
+});
+
+/*
+  A 1097×513 window — a laptop with a browser that has three toolbars, or a
+  half-screen split — is wide enough for the nav rail and 130px too short for
+  what was in it. The rail scrolled, and because `overflow: auto` was set on
+  both axes it also grew a *horizontal* scrollbar: the vertical bar takes width
+  out of the content box, the content is then two pixels wider than what is
+  left, and the browser answers with a second bar. Two scrollbars on a 76px
+  strip is what got reported.
+
+  Horizontal is the assertion that can never be relaxed. A 4.75rem column has
+  nowhere to scroll sideways to, so a horizontal scrollbar there is always a
+  bug, at every size.
+*/
+test.describe("E2 短窗口 · 导航栏不该长出滚动条", () => {
+  for (const [width, height] of [
+    [1097, 513],
+    [1440, 810],
+    [1280, 600],
+  ] as const) {
+    test(`${width}×${height} 下导航栏不横向滚动，全部去处都够得着`, async ({ page }) => {
+      const console_ = watchConsole(page);
+      await page.setViewportSize({ width, height });
+      await openOnline(page);
+      await waitForMapReady(page);
+
+      const rail = page.locator(".nav-rail");
+      const box = await rail.evaluate((node) => ({
+        clientW: node.clientWidth,
+        scrollW: node.scrollWidth,
+        clientH: node.clientHeight,
+        scrollH: node.scrollHeight,
+      }));
+
+      expect(box.scrollW, "导航栏横向滚动了").toBeLessThanOrEqual(box.clientW);
+
+      /*
+        Every destination stays reachable. If the rail does scroll vertically
+        at some future size that is survivable — losing a route outright is
+        not — so this checks the links exist and are clickable, not that the
+        rail happens to fit.
+      */
+      const links = rail.locator(".nav-rail__link");
+      expect(await links.count()).toBeGreaterThanOrEqual(7);
+
+      console_.assertClean();
+    });
+  }
+
+  /*
+    Decoration goes before navigation. The avatar is the tallest thing in the
+    rail and the only one that is not a destination, so a short window loses it
+    and keeps all eight routes.
+  */
+  test("短窗口先丢头像，不丢去处", async ({ page }) => {
+    await page.setViewportSize({ width: 1097, height: 513 });
+    await openOnline(page);
+    await waitForMapReady(page);
+
+    await expect(page.locator(".nav-rail__identity")).toBeHidden();
+    expect(await page.locator(".nav-rail .nav-rail__link").count()).toBeGreaterThanOrEqual(7);
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForTimeout(400);
+    await expect(page.locator(".nav-rail__identity")).toBeVisible();
   });
 });

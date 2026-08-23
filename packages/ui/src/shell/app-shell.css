@@ -475,7 +475,16 @@
     align-self: stretch;
     width: 4.75rem;
     padding: 16px 8px;
-    overflow: auto;
+    /*
+      Vertical only. A 4.75rem column has nothing to scroll sideways to, and
+      `overflow: auto` on both axes gave it a horizontal scrollbar anyway —
+      the vertical bar takes width from the content box, the content is two
+      pixels wider than what is left, and the browser answers with a second
+      scrollbar. Two scrollbars on a 76px strip is how a short window reported
+      this as broken.
+    */
+    overflow-y: auto;
+    overflow-x: clip;
     border-right: 0;
     border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
     border-radius: var(--game-ui-radius-panel, 14px);
@@ -768,4 +777,80 @@
 
 .avatar-chip__stage canvas {
   display: block;
+}
+
+/*
+  Short windows.
+
+  A 1097×513 window is wide enough for the rail and 130px too short for its
+  contents, so the rail scrolled. Scrolling navigation is not broken, but it is
+  the wrong answer here: everything in that rail is one tap away by design, and
+  a list you have to scroll to reach 「更多」 has lost the property it was built
+  for.
+
+  The alternative that gets suggested first is scaling the whole interface —
+  `zoom`, or a transform on the root. It is the wrong tool. Transforms shift
+  hit-testing away from what is painted, text stops landing on pixel
+  boundaries, and the 3D canvas would be rendering at one size and displayed at
+  another. Every one of those is a worse defect than a slightly tighter rail.
+
+  So the rail gives up its least load-bearing parts first, by height. The order
+  is deliberate: decoration before navigation, always. The avatar shrinks, then
+  goes; the eight destinations never move.
+*/
+@media (height <= 780px) and (width >= 768px) {
+  .nav-rail {
+    padding-block: 10px;
+    gap: 2px;
+  }
+
+  .nav-rail__list {
+    gap: 2px;
+  }
+
+  .avatar-chip__stage,
+  .avatar-chip--placeholder {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+@media (height <= 620px) and (width >= 768px) {
+  /*
+    The avatar is the single tallest thing in the rail and the only one that is
+    not a destination. Below this height it is the difference between a rail
+    that fits and a rail that scrolls, so it goes — and the learner loses a
+    decoration rather than a route.
+  */
+  .nav-rail__identity {
+    display: none;
+  }
+
+  .nav-rail {
+    padding-block: 6px;
+  }
+}
+
+/*
+  If it still does not fit — a 400px-tall window, a browser with three toolbars
+  — it scrolls rather than clipping, because losing a destination outright is
+  worse than having to reach for it. The bar is thin and dim so that state
+  reads as "there is more" rather than as a rendering fault.
+*/
+.nav-rail {
+  scrollbar-width: thin;
+  scrollbar-color: var(--game-ui-border-subtle, rgb(255 255 255 / 18%)) transparent;
+}
+
+.nav-rail::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nav-rail::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: var(--game-ui-border-subtle, rgb(255 255 255 / 18%));
+}
+
+.nav-rail::-webkit-scrollbar-track {
+  background: transparent;
 }
