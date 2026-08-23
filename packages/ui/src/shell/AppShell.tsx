@@ -10,6 +10,14 @@ import { TabBar } from "./TabBar.js";
  * test. One component tree at every breakpoint — the counter row is a single
  * node; CSS moves it. Below 768px it is a strip above main. At ≥768 the canvas
  * is full-bleed and the rail / aside float on top of it as opaque cards.
+ *
+ * Collapse controls live *inside* those cards (brand row, counter row), not
+ * as sibling pills in the gutter. A remote next to a card is a second object;
+ * a chevron on the card is the card folding. The rail, when collapsed, shrinks
+ * to that same chevron rather than `display: none` — hiding the button with
+ * the panel would leave no way to expand it. The aside hides; the counter row
+ * stays, because the study switcher is not the thing being folded, and it is
+ * where the aside's chevron already lives.
  */
 
 export interface ShellNavItem {
@@ -100,46 +108,58 @@ export function AppShell({
       data-aside-collapsed={collapsed.aside ? "true" : "false"}
     >
       <div className="app-shell__west">
-        <NavRail items={nav} activeId={activeId} brand={brand} />
-        <button
-          type="button"
-          className="app-shell__collapse app-shell__collapse--rail"
-          aria-expanded={!collapsed.rail}
-          aria-controls="app-shell-rail"
-          onClick={() => persist({ ...collapsed, rail: !collapsed.rail })}
-        >
-          <span className="app-shell__collapse-icon" aria-hidden="true">
-            {collapsed.rail ? "▶" : "◀"}
-          </span>
-          <span className="app-shell__collapse-label">{collapsed.rail ? "展开导航" : "收起"}</span>
-        </button>
+        <NavRail
+          items={nav}
+          activeId={activeId}
+          brand={brand}
+          collapse={
+            <button
+              type="button"
+              className="app-shell__collapse app-shell__collapse--rail"
+              aria-expanded={!collapsed.rail}
+              aria-controls="app-shell-rail"
+              onClick={() => persist({ ...collapsed, rail: !collapsed.rail })}
+            >
+              <span className="app-shell__collapse-icon" aria-hidden="true">
+                {collapsed.rail ? "▶" : "◀"}
+              </span>
+              <span className="app-shell__collapse-label">
+                {collapsed.rail ? "展开导航" : "收起"}
+              </span>
+            </button>
+          }
+        />
       </div>
       <main className="app-shell__main">{children}</main>
       <div className="app-shell__east">
         <div className="app-shell__east-stack">
-          <CounterRow counters={counters ?? []} />
+          <CounterRow
+            counters={counters ?? []}
+            collapse={
+              hasAside ? (
+                <button
+                  type="button"
+                  className="app-shell__collapse app-shell__collapse--aside"
+                  aria-expanded={!collapsed.aside}
+                  aria-controls="app-shell-aside"
+                  onClick={() => persist({ ...collapsed, aside: !collapsed.aside })}
+                >
+                  <span className="app-shell__collapse-icon" aria-hidden="true">
+                    {collapsed.aside ? "◀" : "▶"}
+                  </span>
+                  <span className="app-shell__collapse-label">
+                    {collapsed.aside ? "展开上下文" : "收起"}
+                  </span>
+                </button>
+              ) : null
+            }
+          />
           {hasAside ? (
             <aside className="app-shell__aside" id="app-shell-aside" aria-label={asideLabel}>
               {aside}
             </aside>
           ) : null}
         </div>
-        {hasAside ? (
-          <button
-            type="button"
-            className="app-shell__collapse app-shell__collapse--aside"
-            aria-expanded={!collapsed.aside}
-            aria-controls="app-shell-aside"
-            onClick={() => persist({ ...collapsed, aside: !collapsed.aside })}
-          >
-            <span className="app-shell__collapse-icon" aria-hidden="true">
-              {collapsed.aside ? "◀" : "▶"}
-            </span>
-            <span className="app-shell__collapse-label">
-              {collapsed.aside ? "展开上下文" : "收起"}
-            </span>
-          </button>
-        ) : null}
       </div>
       <TabBar items={tabs} activeId={activeId} />
     </div>

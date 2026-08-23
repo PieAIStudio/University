@@ -175,15 +175,76 @@ button.label:focus-visible {
   color: var(--game-ui-text, #e9edf5);
 }
 
+/*
+  The canvas is full-bleed now. Offsetting by the rail width was the old
+  three-column habit: the hint sat in the canvas column's bottom-left.
+  Centring it on the viewport is the sentence sitting on the map, not on
+  the chrome. Transparent on purpose — a chip here would be a third
+  floating object, and backdrop-filter over live WebGL is the grey-slab
+  fault this overlay already refuses.
+
+  Pointer-events stay none. A decorative caption that hit-tests would
+  steal the click meant for the island under it; element.click() would
+  not catch that.
+*/
 .hint {
   position: absolute;
   z-index: 2;
-  left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
-  bottom: 12px;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
   margin: 0;
   font-size: 0.76rem;
   color: var(--game-ui-text-muted, #9aa6bb);
+  background: transparent;
   pointer-events: none;
+  white-space: nowrap;
+}
+
+.hint__row,
+.hint__item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.hint__row {
+  gap: 0.7em;
+}
+
+.hint__item {
+  gap: 0.35em;
+}
+
+.hint__sep {
+  opacity: 0.55;
+}
+
+/*
+  Lucide ISC silhouettes, used as masks so they take `currentColor` and
+  cannot pick up a platform emoji palette. Clay PNGs from the kit cannot
+  tint, which is why the rail already draws its own glyphs.
+*/
+.hint__icon {
+  display: block;
+  width: 0.95em;
+  height: 0.95em;
+  background: currentColor;
+  -webkit-mask: var(--hint-icon) center / contain no-repeat;
+  mask: var(--hint-icon) center / contain no-repeat;
+}
+
+.hint__item--pan {
+  --hint-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 9 2 12 5 15'/%3E%3Cpolyline points='9 5 12 2 15 5'/%3E%3Cpolyline points='15 19 12 22 9 19'/%3E%3Cpolyline points='19 9 22 12 19 15'/%3E%3Cline x1='2' y1='12' x2='22' y2='12'/%3E%3Cline x1='12' y1='2' x2='12' y2='22'/%3E%3C/svg%3E");
+}
+
+.hint__item--zoom {
+  --hint-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='2' width='14' height='20' rx='7'/%3E%3Cpath d='M12 6v4'/%3E%3C/svg%3E");
+}
+
+.hint__item--enter {
+  --hint-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4l7.07 17 2.51-7.39L21 11.07z'/%3E%3Cpath d='M13 13l6 6'/%3E%3C/svg%3E");
 }
 
 .app-shell__main .stagewrap > .picked,

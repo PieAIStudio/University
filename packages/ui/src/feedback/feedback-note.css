@@ -8,11 +8,19 @@
   interleaved: not a discreet control over text, a rendering fault. The
   background stays fully opaque and the *label* is the muted one.
 */
+.feedback-note__open--docked {
+  width: 100%;
+  text-align: start;
+}
+
 .feedback-note__open {
   position: fixed;
   left: 12px;
   bottom: calc(12px + var(--game-ui-safe-bottom, 0px));
   z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 12px;
   border: 1px solid var(--game-ui-border-subtle);
   border-radius: 999px;
@@ -24,6 +32,18 @@
   transition:
     opacity 160ms ease,
     transform 160ms ease;
+}
+
+/*
+  Wide layout: the rail has the control. The float would be a second
+  「提意见」 in the accessibility tree, and it is the thing the owner called
+  too special. `is-fallback` is the lesson route with no rail — there the
+  pill is the only way in, so it stays.
+*/
+@media (min-width: 768px) {
+  .feedback-note__open--float:not(.is-fallback) {
+    display: none;
+  }
 }
 
 .feedback-note__open:hover,
@@ -125,5 +145,12 @@
   .feedback-note__open,
   .feedback-note {
     bottom: calc(69px + var(--game-ui-safe-bottom, 0px));
+  }
+}
+
+@media (min-width: 768px) {
+  .feedback-note {
+    left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 4.75rem) + 12px);
+    bottom: var(--shell-gutter, 16px);
   }
 }

@@ -100,6 +100,18 @@ export function ProfileIcon() {
   );
 }
 
+/** Speech bubble — a note about this screen, not a destination. */
+export function FeedbackIcon() {
+  return (
+    <Glyph>
+      <path
+        fill="currentColor"
+        d="M5.2 4.4h13.6A2.6 2.6 0 0 1 21.4 7v7.4a2.6 2.6 0 0 1-2.6 2.6h-6.2L7.4 20.8v-3.8H5.2A2.6 2.6 0 0 1 2.6 14.4V7a2.6 2.6 0 0 1 2.6-2.6Z"
+      />
+    </Glyph>
+  );
+}
+
 /** Three dots — the more slot. */
 export function MoreIcon() {
   return (
