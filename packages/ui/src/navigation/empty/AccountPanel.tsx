@@ -22,8 +22,17 @@ import type { IdentityPort } from "@pieai/university-core";
 export const ACCOUNT_UNSIGNED_TITLE = "进度记在这台设备上";
 export const ACCOUNT_UNSIGNED_DESCRIPTION =
   "登录之后换一台也能接着学。不登录也完全没问题，今天的课一样能上完。";
+/**
+ * Said from the learner's side of the screen, not ours.
+ *
+ * It used to read 「账号还没接到这台构建上」. 「构建」 is what we call the
+ * compiled copy of the app; to the person reading it that sentence names
+ * nothing they can see. What they actually need to know is two facts and no
+ * vocabulary: there is nowhere to sign in yet, and their progress is safe on
+ * this machine meanwhile.
+ */
 export const ACCOUNT_UNCONFIGURED_DESCRIPTION =
-  "账号还没接到这台构建上。先学，进度会留在这台设备里。";
+  "现在还没有可以登录的地方。你的进度就存在这台设备里，照常学就行。";
 export const ACCOUNT_SIGNED_IN_TITLE = "已经登录";
 export const ACCOUNT_SIGNED_IN_DESCRIPTION =
   "这一台和账号上的进度会并在一起。断网也能继续学，连上再同步。";

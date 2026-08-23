@@ -121,7 +121,16 @@ describe("AccountPanel", () => {
     expect(markup).toContain(ACCOUNT_UNSIGNED_TITLE);
     expect(markup).toContain(ACCOUNT_UNCONFIGURED_DESCRIPTION);
     expect(markup).not.toContain('type="password"');
-    expect(markup).not.toContain(ACCOUNT_SIGN_IN);
+    /*
+      No sign-in *machinery* — which is not the same as never saying the word.
+      This used to search the whole markup for 「登录」, which forbade the
+      sentence from explaining that there is nowhere to sign in yet — the one
+      thing a reader on this screen actually wants to know. Structure cannot be
+      confused with prose, so assert on that instead.
+    */
+    expect(markup).not.toContain("<form");
+    expect(markup).not.toContain('type="submit"');
+    expect(markup).not.toContain('role="tablist"');
   });
 
   it("offers a kit form when signed out, not a modal", () => {
