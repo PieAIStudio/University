@@ -443,7 +443,9 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         studiesRoot: config.studiesRoot,
         id: input.command.studyId,
         title: input.command.title,
-        sourceRoot: resolve(input.cwd ?? process.cwd(), input.command.sourceRoot),
+        ...(input.command.sourceRoot
+          ? { sourceRoot: resolve(input.cwd ?? process.cwd(), input.command.sourceRoot) }
+          : {}),
         ...(input.command.reference ? { reference: input.command.reference } : {}),
       });
     case "study-source-rebind":

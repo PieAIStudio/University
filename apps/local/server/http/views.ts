@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
 
-import type {
-  EvidenceReference,
-  KnowledgeNote,
-  StudyManifest,
+import {
+  isRepositoryEvidence,
+  isUrlEvidence,
+  type EvidenceReference,
+  type KnowledgeNote,
+  type StudyManifest,
 } from "@pieai/university-core/domain/schemas.js";
 import { resolveTermLinks, termRangeOf } from "@pieai/university-core/marks/terms.js";
 import { resolveEvidenceAnchors } from "../content/evidence-anchors.js";
@@ -44,9 +46,21 @@ function publicEvidence(
   evidence: readonly EvidenceReference[],
   ua: ReturnType<typeof resolveEvidenceUa> = [],
 ): unknown {
-  return evidence.map((reference, index) => {
-    const place = ua[index] ?? null;
+  let uaIndex = 0;
+  return evidence.map((reference) => {
+    if (isUrlEvidence(reference)) {
+      return {
+        origin: "url" as const,
+        kind: reference.kind,
+        sourceUrl: reference.sourceUrl,
+        sourceTitle: reference.sourceTitle,
+        sourceAuthority: reference.sourceAuthority,
+        note: reference.note ?? null,
+      };
+    }
+    const place = ua[uaIndex++] ?? null;
     return {
+      origin: "repository" as const,
       kind: reference.kind,
       sourcePath: reference.sourcePath,
       lineStart: reference.lineStart ?? null,
@@ -149,7 +163,7 @@ function pinnedVersion(
   evidence: readonly EvidenceReference[],
   repository: string | null,
 ): { readonly pinnedCommit?: { readonly commit: string; readonly date?: string } } {
-  const commits = new Set(evidence.map((item) => item.sourceCommit));
+  const commits = new Set(evidence.filter(isRepositoryEvidence).map((item) => item.sourceCommit));
   const [commit] = [...commits];
   if (commits.size !== 1 || !commit) return {};
   const date = repository ? readCommitDate(repository, commit) : null;
@@ -240,7 +254,10 @@ function buildLessonView(
       ...pinnedVersion(lesson.evidence, assetRepository),
       // Resolved against this lesson's own citations, so prose can only point
       // at lines the manifest already pinned to the snapshot.
-      evidenceAnchors: resolveEvidenceAnchors(content, lesson.evidence),
+      evidenceAnchors: resolveEvidenceAnchors(
+        content,
+        lesson.evidence.filter(isRepositoryEvidence),
+      ),
       termAnchors: resolveTermLinks(parsedLinks, loadLexicon()).map(termRangeOf),
       language: {
         status: language.status,
@@ -253,7 +270,7 @@ function buildLessonView(
       },
       evidence: publicEvidence(
         lesson.evidence,
-        resolveEvidenceUa(studiesRoot, route.studyId, lesson.evidence),
+        resolveEvidenceUa(studiesRoot, route.studyId, lesson.evidence.filter(isRepositoryEvidence)),
       ),
       assets: lesson.assets.map((asset) => ({
         id: asset.id,
@@ -358,6 +375,7 @@ const PACKET_EVIDENCE_LIMIT = 5;
 const PACKET_EVIDENCE_CONTEXT_LINES = 2;
 
 function evidenceIdentity(reference: EvidenceReference): string {
+  if (isUrlEvidence(reference)) return `url:${reference.sourceUrl}`;
   return `${reference.sourcePath}:${reference.lineStart ?? ""}-${reference.lineEnd ?? ""}`;
 }
 
@@ -374,6 +392,12 @@ function collectPacketEvidence(
     if (seen.has(identity)) continue;
     seen.add(identity);
     if (evidence.length >= PACKET_EVIDENCE_LIMIT) {
+      omitted += 1;
+      continue;
+    }
+    if (isUrlEvidence(reference)) {
+      // The packet pastes source excerpts. A URL citation has none; putting a
+      // dead locator in the paste would look like missing evidence.
       omitted += 1;
       continue;
     }

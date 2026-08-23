@@ -7,6 +7,7 @@ import { z } from "zod";
 import {
   CardContentSchema,
   EvidenceReferenceSchema,
+  isUrlEvidence,
   ExerciseSchema,
   IsoDateTime,
   LessonManifestSchema,
@@ -422,14 +423,23 @@ function resolveLessonAssetFiles(
   });
 }
 
+/**
+ * What a proposal claims to be written against, or `null` when it claims
+ * nothing — a course in a study with no repository.
+ *
+ * Null is not "the snapshot could not be read". A missing snapshot for a study
+ * that has one is still an error and still throws below; this branch is only
+ * for a proposal that never named one, which is the honest shape for 通用课.
+ */
 export function readTargetIdentity(
   studiesRoot: string,
   studyId: string,
   proposal: {
-    readonly targetSnapshotId: string;
+    readonly targetSnapshotId?: string | undefined;
     readonly targetAnalysisId?: string | undefined;
   },
-): TargetIdentity {
+): TargetIdentity | null {
+  if (!proposal.targetSnapshotId) return null;
   const snapshot = SnapshotManifestSchema.parse(
     readJson(getSnapshotPaths(studiesRoot, studyId, proposal.targetSnapshotId).manifest),
   );
@@ -463,11 +473,18 @@ export function validateTargetEvidence(
   studiesRoot: string,
   studyId: string,
   evidence: readonly EvidenceReference[],
-  target: TargetIdentity,
+  /** Null when the study has no repository; only URL citations are legal then. */
+  target: TargetIdentity | null,
   label: string,
 ): void {
   for (const reference of evidence) {
     validateEvidence(studiesRoot, studyId, reference);
+    if (isUrlEvidence(reference)) continue;
+    if (!target) {
+      throw new Error(
+        `${label} repository evidence needs a target snapshot; this study has no repository`,
+      );
+    }
     if (
       reference.snapshotId !== target.snapshotId ||
       reference.sourceCommit !== target.sourceCommit
@@ -563,7 +580,7 @@ function buildBundle(
   studiesRoot: string,
   studyId: string,
   proposal: CourseRevisionProposal,
-  target: TargetIdentity,
+  target: TargetIdentity | null,
   timestamp: string,
   allowInstalledTargetRevision: boolean,
   requireStaleContainers: boolean,

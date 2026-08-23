@@ -17,6 +17,7 @@ import { lessonSectionRole } from "./lesson-sections.js";
 import { MermaidDiagram } from "./MermaidDiagram.js";
 import {
   evidenceUaLayers,
+  isUrlEvidenceView,
   type EvidenceView,
   type LessonAssetView,
   type LessonSectionView,
@@ -765,8 +766,27 @@ function ReferenceBody({
   if (reference.kind === "term") {
     return <TermReferenceBody entry={reference.entry} />;
   }
-  const cited =
+  const anyCited =
     reference.evidenceIndex !== null ? (evidence?.[reference.evidenceIndex] ?? null) : null;
+  /*
+    A public-page citation opens rather than expands. Everything below this
+    point is the repository panel — a path, a line range, a short commit and an
+    editor locator — and a 通用课 has none of those, so it gets the one thing it
+    does have: the link, named.
+  */
+  if (anyCited && isUrlEvidenceView(anyCited)) {
+    return (
+      <>
+        <p className="reference-panel__meta">
+          <a href={anyCited.sourceUrl} target="_blank" rel="noreferrer">
+            {anyCited.sourceTitle}
+          </a>
+        </p>
+        {anyCited.note ? <p className="reference-panel__note">{anyCited.note}</p> : null}
+      </>
+    );
+  }
+  const cited = anyCited;
   if (reference.evidenceIndex !== null && evidenceBasePath) {
     return (
       <EvidenceInlineSource

@@ -12,6 +12,7 @@ import {
   type HostExerciseGrade,
 } from "@pieai/university-core";
 
+import { isRepositoryAnchor } from "../content/library";
 import type { Lesson } from "../content/library";
 import { normalise } from "../lesson/grading";
 
@@ -88,7 +89,12 @@ function failCopy(lesson: Lesson, prompt: string | undefined): string {
     .find((row) => row.includes(needle) && !row.startsWith("```") && row.length > 12);
   if (!line) return "再想一下，答案就在上面这段里。";
   const quoted = line.replace(/[*`]/g, "").trim();
-  const evidence = lesson.evidence[0];
+  /*
+    「出自真实项目」 is a claim about a repository, so it is only offered when
+    one of this lesson's citations actually is one. A 通用课 cites MDN; naming
+    a file and a line range it never had would be the wrong kind of confident.
+  */
+  const evidence = lesson.evidence.find(isRepositoryAnchor);
   const source = evidence
     ? `\n\n出自真实项目：${evidence.sourcePath} 第 ${evidence.lineStart}–${evidence.lineEnd} 行`
     : "";

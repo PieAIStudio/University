@@ -277,7 +277,8 @@ export interface EvidenceUaView {
   readonly layerName: string | null;
 }
 
-export interface EvidenceView {
+/** A citation pinned to lines in the studied repository. */
+export interface RepositoryEvidenceView {
   readonly kind: string;
   readonly sourcePath: string;
   readonly lineStart: number | null;
@@ -288,12 +289,42 @@ export interface EvidenceView {
   readonly ua?: EvidenceUaView | null;
 }
 
+/**
+ * A citation pinned to a public authority page — MDN, the W3C, an RFC.
+ *
+ * A 通用课 has no repository to point into, so it cites the documents everyone
+ * can already open. There is no commit to shorten, no file to name and no
+ * snippet to expand: the whole citation *is* the link, and the reader's job is
+ * to make that obvious rather than to render an empty version of the other
+ * kind's furniture.
+ */
+export interface UrlEvidenceView {
+  readonly kind: string;
+  readonly sourceUrl: string;
+  readonly sourceTitle: string;
+  readonly sourceAuthority: string;
+  readonly note: string | null;
+}
+
+export type EvidenceView = RepositoryEvidenceView | UrlEvidenceView;
+
+export function isUrlEvidenceView(reference: EvidenceView): reference is UrlEvidenceView {
+  return "sourceUrl" in reference;
+}
+
+/** The host, for a citation the reader can open. `MDN · HTML` already says who. */
+export function evidenceHost(reference: UrlEvidenceView): string {
+  const match = /^https:\/\/([^/]+)/u.exec(reference.sourceUrl);
+  return match?.[1] ?? reference.sourceUrl;
+}
+
 /** Unique layer names this lesson's citations landed on, in first-seen order. */
 export function evidenceUaLayers(evidence: readonly EvidenceView[]): readonly string[] {
   const layers: string[] = [];
   const seen = new Set<string>();
   for (const item of evidence) {
-    const layer = item.ua?.layerName;
+    // A public page belongs to no layer of the studied codebase.
+    const layer = isUrlEvidenceView(item) ? null : item.ua?.layerName;
     if (!layer || seen.has(layer)) continue;
     seen.add(layer);
     layers.push(layer);
@@ -306,13 +337,13 @@ export function evidenceUaLayers(evidence: readonly EvidenceView[]): readonly st
  * style Quick Open accepts `path:line`, not `path:7-9` or a trailing commit.
  * Commit pin and full line range stay in the post-copy hint, not the paste.
  */
-export function evidenceEditorLocator(reference: EvidenceView): string {
+export function evidenceEditorLocator(reference: RepositoryEvidenceView): string {
   return reference.lineStart
     ? `${reference.sourcePath}:${reference.lineStart}`
     : reference.sourcePath;
 }
 
-export function evidenceRangeLabel(reference: EvidenceView): string | null {
+export function evidenceRangeLabel(reference: RepositoryEvidenceView): string | null {
   if (!reference.lineStart) return null;
   if (reference.lineEnd && reference.lineEnd !== reference.lineStart) {
     return `L${reference.lineStart}–${reference.lineEnd}`;

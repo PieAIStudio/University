@@ -20,7 +20,18 @@ export type { EvidenceAnchorRange } from "../domain/lesson-marks.js";
  */
 
 export interface EvidenceCitation {
-  readonly sourcePath: string;
+  /**
+   * Absent for a citation that is not a file at all — a public authority page,
+   * which a 通用课 uses in place of a repository.
+   *
+   * It stays in the array rather than being filtered out, because
+   * `evidenceIndex` below indexes into the lesson's *whole* citation list and
+   * the reader uses that index to open the right one. Dropping a member to
+   * tidy the type would silently renumber every citation after it. A citation
+   * with no path simply never covers a `[[evidence:path:line]]` marker, which
+   * is exactly true.
+   */
+  readonly sourcePath?: string | undefined;
   /** Absent or null both mean "the whole file", which the manifest allows. */
   readonly lineStart?: number | null | undefined;
   readonly lineEnd?: number | null | undefined;
@@ -48,6 +59,7 @@ function isCovered(
   target: { readonly sourcePath: string; readonly lineStart: number; readonly lineEnd: number },
 ): number | null {
   const index = citations.findIndex((citation) => {
+    if (citation.sourcePath === undefined) return false;
     if (citation.sourcePath !== target.sourcePath) return false;
     // A whole-file citation carries no lines and covers anything in that file.
     if (citation.lineStart == null || citation.lineEnd == null) return true;

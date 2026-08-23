@@ -32,7 +32,7 @@
     "format": "oxfmt --write package.json tsconfig.json src",
     "format:check": "oxfmt --check package.json tsconfig.json src",
     "test": "vitest run --passWithNoTests",
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json && cp src/domain/url-evidence-hosts.json dist/domain/url-evidence-hosts.json"
   },
   "dependencies": {
     "ts-fsrs": "5.4.1",

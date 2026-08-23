@@ -106,7 +106,8 @@ export function validateLessonEvidence(
   studiesRoot: string,
   studyId: string,
   lesson: LessonCreationProposal,
-  target: TargetIdentity,
+  /** Null in a study with no repository; only URL citations survive then. */
+  target: TargetIdentity | null,
 ): void {
   validateTargetEvidence(studiesRoot, studyId, lesson.evidence, target, `Lesson ${lesson.id}`);
   for (const card of lesson.cards) {

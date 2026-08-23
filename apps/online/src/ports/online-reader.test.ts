@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createMemoryPersistence, createProgressPort } from "@pieai/university-core";
 
+import { isRepositoryAnchor } from "../content/library";
 import type { Lesson } from "../content/library";
 import { createOnlineReaderPort, READER_MARKS_STORAGE_KEY } from "./online-reader";
 
@@ -76,6 +77,10 @@ describe("createOnlineReaderPort", () => {
     const progress = createProgressPort({ persistence: createMemoryPersistence() });
     const port = createOnlineReaderPort({ progress, lesson, onComplete: () => undefined });
     await expect(port.loadEvidenceSnippet(locator, 0, "full")).resolves.toEqual(snippet);
-    expect(fetch).toHaveBeenCalledWith(lesson.evidence[0]?.snippetUrl);
+    const anchor = lesson.evidence[0];
+    expect(anchor && isRepositoryAnchor(anchor) ? anchor.snippetUrl : null).toBeTruthy();
+    expect(fetch).toHaveBeenCalledWith(
+      anchor && isRepositoryAnchor(anchor) ? anchor.snippetUrl : undefined,
+    );
   });
 });

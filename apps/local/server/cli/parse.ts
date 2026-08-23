@@ -375,7 +375,12 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       kind: "study-create",
       studyId: required(values.study, "study"),
       title: required(values.title, "title"),
-      sourceRoot: required(values.source, "source"),
+      /*
+        Optional, and its absence is a statement: a study with no `--source` is
+        a general study, whose lessons cite public authorities instead of a
+        commit. Requiring it used to be the reason 通用课 had nowhere to live.
+      */
+      ...(values.source ? { sourceRoot: values.source } : {}),
       ...(values.ref ? { reference: values.ref } : {}),
     };
   }

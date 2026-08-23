@@ -9,6 +9,7 @@
 import type { EvidenceSnippet, LessonRef, ProgressPort, ReaderPort } from "@pieai/university-core";
 import type { ReaderMark } from "@pieai/university-core/domain/reader-marks.js";
 
+import { isRepositoryAnchor } from "../content/library";
 import type { Lesson } from "../content/library";
 
 export const READER_MARKS_STORAGE_KEY = "university.reader-marks.v1";
@@ -108,7 +109,10 @@ export function createOnlineReaderPort(options: {
     },
 
     async loadEvidenceSnippet(_locator, index): Promise<EvidenceSnippet> {
-      const url = lesson.evidence[index]?.snippetUrl;
+      const anchor = lesson.evidence[index];
+      // A public-page citation has no baked snippet and never will; the reader
+      // renders it as a link rather than asking for one.
+      const url = anchor && isRepositoryAnchor(anchor) ? anchor.snippetUrl : undefined;
       if (!url) throw new Error("这条证据没有烘焙源码");
       const response = await fetch(url);
       if (!response.ok) throw new Error(`无法读取固定源码（${response.status}）`);

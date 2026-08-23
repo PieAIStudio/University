@@ -49,6 +49,21 @@
       ]
     },
     {
+      "studyId": "general",
+      "title": "通用课",
+      "defaultCourseId": "product-website",
+      "courses": [
+        {
+          "courseId": "product-website",
+          "title": "从零做一个产品官网",
+          "sha256": "sha256:efc7c6b0711855bd1fca65eeb8122e1e2cb82e0d8fe3188675cb1f40b6e689df",
+          "packageBytes": 162324,
+          "servedBytes": 129436,
+          "lessons": 19
+        }
+      ]
+    },
+    {
       "studyId": "supaluv",
       "title": "SupaLuv",
       "defaultCourseId": "ai-cost-and-boundaries",

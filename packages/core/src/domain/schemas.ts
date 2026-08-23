@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { AUTHORITY_TAGS, urlEvidenceIssue } from "./url-evidence.js";
+
 const SchemaVersion = z.literal(1);
 export const StableId = z
   .string()
@@ -302,7 +304,15 @@ export const UaAnalysisManifestSchema = z.discriminatedUnion("status", [
 export const ContentStatus = z.enum(["draft", "active", "stale", "retired"]);
 const EvidenceKind = z.enum(["fact", "inference"]);
 
-export const EvidenceReferenceSchema = z
+/**
+ * A citation pinned to an immutable git snapshot.
+ *
+ * Required fields are the pin: snapshot, commit, path. UA binding is optional
+ * because not every file is in the graph. This shape is unchanged on purpose —
+ * general courses add a *second* type below rather than making these optional,
+ * which would let a URL citation pretend to be a code pin.
+ */
+export const RepositoryEvidenceSchema = z
   .object({
     kind: EvidenceKind,
     snapshotId: StableId,
@@ -347,6 +357,55 @@ export const EvidenceReferenceSchema = z
       });
     }
   });
+
+/**
+ * A citation pinned to a public authority page (MDN, RFC, W3C, …).
+ *
+ * General courses have no repository, so they cannot use the shape above.
+ * Inventing a snapshot to get past that check would make "the cited lines
+ * exist in the studied project" a lie. This type is the honest alternative:
+ * the pin is an https URL on a named authority host, and never the site the
+ * course was rewritten from.
+ */
+export const UrlEvidenceSchema = z
+  .object({
+    kind: EvidenceKind,
+    sourceUrl: z.string().min(1),
+    sourceTitle: z.string().min(1).max(200),
+    sourceAuthority: z.enum(AUTHORITY_TAGS),
+    note: z.string().max(1_000).optional(),
+  })
+  .strict()
+  .superRefine((evidence, context) => {
+    const issue = urlEvidenceIssue(evidence.sourceUrl);
+    if (issue) {
+      context.addIssue({
+        code: "custom",
+        message: issue,
+        path: ["sourceUrl"],
+      });
+    }
+  });
+
+/**
+ * Two exclusive pins. Repository first so a half-written git citation still
+ * fails with "snapshotId is missing" rather than a union error that starts
+ * with "sourceUrl is missing" — that second message is true of every git
+ * citation and would bury the actual fault.
+ */
+export const EvidenceReferenceSchema = z.union([RepositoryEvidenceSchema, UrlEvidenceSchema]);
+
+export function isUrlEvidence(
+  evidence: EvidenceReference,
+): evidence is z.infer<typeof UrlEvidenceSchema> {
+  return "sourceUrl" in evidence;
+}
+
+export function isRepositoryEvidence(
+  evidence: EvidenceReference,
+): evidence is z.infer<typeof RepositoryEvidenceSchema> {
+  return "sourcePath" in evidence;
+}
 
 /**
  * Whether a course is supposed to keep up with the repository or to stay where
@@ -726,6 +785,8 @@ export type SnapshotManifest = z.infer<typeof SnapshotManifestSchema>;
 export type UaAnalysisManifest = z.infer<typeof UaAnalysisManifestSchema>;
 export type UaEngineProvenance = z.infer<typeof UaEngineProvenanceSchema>;
 export type EvidenceReference = z.infer<typeof EvidenceReferenceSchema>;
+export type RepositoryEvidence = z.infer<typeof RepositoryEvidenceSchema>;
+export type UrlEvidence = z.infer<typeof UrlEvidenceSchema>;
 export type CourseManifest = z.infer<typeof CourseManifestSchema>;
 /**
  * What a caller has to supply to write a course, as opposed to what it gets

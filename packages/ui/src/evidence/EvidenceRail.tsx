@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { Tip } from "../Tip.js";
 import { readJson } from "../api/client.js";
 import type { EvidenceSnippetView, EvidenceToken, EvidenceView } from "../view/lesson-view.js";
-import { highlightEvidenceCode } from "../view/lesson-view.js";
+import { evidenceHost, highlightEvidenceCode, isUrlEvidenceView } from "../view/lesson-view.js";
 import { CopyLocatorButton } from "./CopyLocatorButton.js";
 import { EvidenceCode } from "./EvidenceCode.js";
 
@@ -75,6 +75,28 @@ export function EvidenceRail({
         {evidence.map((reference, index) => {
           const expanded = expandedIndex === index;
           const panelId = `evidence-snippet-${panelIdPrefix}-${index}`;
+          if (isUrlEvidenceView(reference)) {
+            /*
+              A public page is the citation, not a pointer to one. There is no
+              commit to shorten, no file to name and nothing to expand inline —
+              rendering the repository furniture with the fields blank would
+              claim this course is pinned to code it has never seen.
+            */
+            return (
+              <li className="evidence-item" key={`${index}:${reference.sourceUrl}`}>
+                <a
+                  className="evidence-item__link"
+                  href={reference.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <strong>{reference.sourceTitle}</strong>
+                  <small>{evidenceHost(reference)}</small>
+                </a>
+                {reference.note ? <p className="evidence-item__note">{reference.note}</p> : null}
+              </li>
+            );
+          }
           return (
             <li
               className="evidence-item"

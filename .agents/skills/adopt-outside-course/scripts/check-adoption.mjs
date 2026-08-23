@@ -20,36 +20,26 @@
  *   node check-adoption.mjs <proposal.json> --forbid extra-host.com,another.org
  */
 import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-/** 允许作为出处的主机。子域名一并允许（`docs.python.org` 命中 `python.org`）。 */
-const AUTHORITY_HOSTS = [
-  "developer.mozilla.org",
-  "developer.chrome.com",
-  "web.dev",
-  "www.w3.org",
-  "w3.org",
-  "wicg.github.io",
-  "whatwg.org",
-  "rfc-editor.org",
-  "datatracker.ietf.org",
-  "git-scm.com",
-  "nodejs.org",
-  "developer.apple.com",
-  "developer.android.com",
-  "docs.python.org",
-  "react.dev",
-  "vite.dev",
-  "vitejs.dev",
-  "typescriptlang.org",
-  "postgresql.org",
-  "supabase.com",
-  "developer.chrome.com",
-];
-
-/** 被参考过的课程站。出现在出处里就是硬错误，没有例外。 */
-const FORBIDDEN_HOSTS = ["pmaker.space", "vibe-hub.org", "vibehub.org", "oiloil.org"];
-
-const AUTHORITY_TAGS = ["mdn", "rfc", "w3c", "whatwg", "official-docs", "spec"];
+/**
+ * One list, shared with the persist-time schema. Duplicating it here used to
+ * mean a host could pass adoption and then fail `course create`, or the other
+ * way around — both are the same rule, so they read the same file.
+ */
+const hosts = JSON.parse(
+  readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../../../../packages/core/src/domain/url-evidence-hosts.json",
+    ),
+    "utf8",
+  ),
+);
+const AUTHORITY_HOSTS = hosts.authorityHosts;
+const FORBIDDEN_HOSTS = hosts.forbiddenHosts;
+const AUTHORITY_TAGS = hosts.authorityTags;
 
 const argv = process.argv.slice(2);
 const forbidAt = argv.indexOf("--forbid");

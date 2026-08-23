@@ -25,6 +25,8 @@ import {
   LessonVariantSchema,
   SnapshotManifestSchema,
   StableId,
+  isRepositoryEvidence,
+  isUrlEvidence,
   type CourseManifest,
   type EvidenceReference,
   type LessonAsset,
@@ -83,9 +85,10 @@ const COURSE_RECOVERY_LIMITS = Object.freeze({
 
 const SourceOnlyEvidenceSchema = EvidenceReferenceSchema.refine(
   (evidence) =>
-    evidence.analysisId === undefined &&
-    evidence.graphHash === undefined &&
-    evidence.nodeIds.length === 0,
+    isUrlEvidence(evidence) ||
+    (evidence.analysisId === undefined &&
+      evidence.graphHash === undefined &&
+      evidence.nodeIds.length === 0),
   "Recovery evidence must be source-only",
 );
 
@@ -275,6 +278,7 @@ function assertUnique(values: readonly string[], label: string): void {
 }
 
 function sourceOnlyEvidence(evidence: EvidenceReference): EvidenceReference {
+  if (isUrlEvidence(evidence)) return evidence;
   return EvidenceReferenceSchema.parse({
     kind: evidence.kind,
     snapshotId: evidence.snapshotId,
@@ -290,9 +294,10 @@ function sourceOnlyEvidence(evidence: EvidenceReference): EvidenceReference {
 function uaBindingCount(evidence: readonly EvidenceReference[]): number {
   return evidence.filter(
     (reference) =>
-      reference.analysisId !== undefined ||
-      reference.graphHash !== undefined ||
-      reference.nodeIds.length > 0,
+      !isUrlEvidence(reference) &&
+      (reference.analysisId !== undefined ||
+        reference.graphHash !== undefined ||
+        reference.nodeIds.length > 0),
   ).length;
 }
 
@@ -424,7 +429,13 @@ function serializeCourse(
   course: CourseManifest,
 ): CourseRecoveryPackage {
   if (course.status !== "active") throw new Error(`Course is not active: ${course.id}`);
-  const registeredSourceRoot = readSourceRegistration(studiesRoot, studyId).sourceRoot;
+  const registrationPath = getStudyPaths(studiesRoot, studyId).source.registration;
+  // General studies have no git source. Assets that record a capture route
+  // still need one, so a lesson with screenshots on a sourceless study is
+  // refused rather than exported with a made-up path.
+  const registeredSourceRoot = existsSync(registrationPath)
+    ? readSourceRegistration(studiesRoot, studyId).sourceRoot
+    : null;
   let droppedUaBindingCount = 0;
   const units = course.unitIds.map((unitId) => {
     const unit = readUnit(studiesRoot, studyId, course.id, unitId);
@@ -498,18 +509,25 @@ function serializeCourse(
           sections: lesson.manifest.sections,
           ...(lesson.manifest.variant === undefined ? {} : { variant: lesson.manifest.variant }),
           evidence: lesson.manifest.evidence.map(sourceOnlyEvidence),
-          assets: lesson.manifest.assets.map((asset) => ({
-            metadata: portableAssetMetadata(asset, registeredSourceRoot),
-            dataBase64: readAssetBytes(
-              studiesRoot,
-              studyId,
-              course.id,
-              unit.id,
-              lesson.manifest.id,
-              lesson.manifest.contentRevision,
-              asset,
-            ).toString("base64"),
-          })),
+          assets: lesson.manifest.assets.map((asset) => {
+            if (!registeredSourceRoot) {
+              throw new Error(
+                `Lesson ${lesson.manifest.id} has assets but study ${studyId} has no registered source`,
+              );
+            }
+            return {
+              metadata: portableAssetMetadata(asset, registeredSourceRoot),
+              dataBase64: readAssetBytes(
+                studiesRoot,
+                studyId,
+                course.id,
+                unit.id,
+                lesson.manifest.id,
+                lesson.manifest.contentRevision,
+                asset,
+              ).toString("base64"),
+            };
+          }),
           cards,
           exercises,
         };
@@ -835,7 +853,16 @@ function validateSourceEvidence(
   sourceRoot: string,
   packages: readonly CourseRecoveryPackage[],
 ): readonly string[] {
-  const references = packages.flatMap(allEvidence);
+  /*
+    Only the git-pinned half. This whole function exists to prove that a
+    citation's lines really are in the studied repository at the commit it
+    names, and a URL citation has no commit, no path and no line range to
+    check — the thing that makes it trustworthy is its host and its scheme,
+    and `UrlEvidenceSchema` already refused it at parse time if either was
+    wrong. Running it through here would not be stricter; it would be a type
+    error dressed as a check.
+  */
+  const references = packages.flatMap(allEvidence).filter(isRepositoryEvidence);
   const commits = [...new Set(references.map((reference) => reference.sourceCommit))].sort();
   const snapshotOwners = new Map<string, string>();
   const treeByCommit = new Map<string, ReadonlyMap<string, GitTreeEntry>>();
@@ -972,7 +999,10 @@ export function exportCourseRecovery(input: ExportCourseRecoveryInput) {
   ) {
     throw new Error(`Study default course is not active: ${study.defaultCourseId}`);
   }
-  const sourceRegistration = readSourceRegistration(input.studiesRoot, study.id);
+  const registrationPath = getStudyPaths(input.studiesRoot, study.id).source.registration;
+  const sourceRegistration = existsSync(registrationPath)
+    ? readSourceRegistration(input.studiesRoot, study.id)
+    : null;
 
   const entries: Array<z.infer<typeof RecoveryIndexEntrySchema>> = [];
   const artifacts: CourseRecoveryArtifact[] = [];
@@ -1014,7 +1044,7 @@ export function exportCourseRecovery(input: ExportCourseRecoveryInput) {
       defaultCourseId: study.defaultCourseId,
       status: study.status,
     },
-    source: { defaultRef: sourceRegistration.defaultRef },
+    ...(sourceRegistration ? { source: { defaultRef: sourceRegistration.defaultRef } } : {}),
     courses: entries,
   });
   const indexBytes = jsonBytes(index);

@@ -8,8 +8,10 @@ import {
   SnapshotManifestSchema,
   StableId,
   UaAnalysisManifestSchema,
+  isRepositoryEvidence,
   type CourseManifest,
   type EvidenceReference,
+  type RepositoryEvidence,
   type Exercise,
   type KnowledgeNote,
 } from "@pieai/university-core/domain/schemas.js";
@@ -205,7 +207,17 @@ function uniqueIdentities(values: readonly TargetIdentity[]): readonly TargetIde
     .map(([, identity]) => identity);
 }
 
-function evidenceIdentity(evidence: EvidenceReference): TargetIdentity {
+/**
+ * Which snapshot and analysis a citation came from, so the audit can say what
+ * a lesson is still pinned to after the studied repository moves.
+ *
+ * Only repository citations have one. A URL citation names a public page, and
+ * a public page has no relationship to the studied repo's HEAD — 「MDN 那篇改过
+ * 没有」 is an editorial question, not something a commit comparison can answer.
+ * Including them would put a row of nulls in the audit that reads as "pinned to
+ * nothing" rather than as "not pinned to this at all".
+ */
+function evidenceIdentity(evidence: RepositoryEvidence): TargetIdentity {
   return {
     snapshotId: evidence.snapshotId,
     sourceCommit: evidence.sourceCommit,
@@ -308,7 +320,9 @@ function evaluateReferences(
     status: reasons.length === 0 ? "fresh" : "stale",
     waitingForUa: reasons.includes(MISSING_TARGET_UA_REASON),
     reasons,
-    previousIdentities: uniqueIdentities(evidence.map(evidenceIdentity)),
+    previousIdentities: uniqueIdentities(
+      evidence.filter(isRepositoryEvidence).map(evidenceIdentity),
+    ),
   };
 }
 

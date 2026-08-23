@@ -6,6 +6,7 @@ import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
 import { EvidenceSourceSheet } from "../evidence/EvidenceSourceSheet.js";
 import { LessonUaLayers } from "../evidence/EvidenceUaPlace.js";
+import { LessonSources } from "../evidence/LessonSources.js";
 import { readDetailMode, writeDetailMode, type DetailMode } from "../language/detail-mode.js";
 import {
   readForeignSettings,
@@ -550,6 +551,7 @@ export function LessonReader({
               ))}
             </section>
           ) : null}
+          <LessonSources evidence={view.lesson.evidence} />
           <LessonBacklinks backlinks={backlinks} {...(onFollowLink ? { onFollowLink } : {})} />
           {neighbours && onOpenLesson && onBackToCourse ? (
             <LessonNextStep

@@ -14,7 +14,16 @@ interface CreateStudyWorkflowInput {
   readonly studiesRoot: string;
   readonly id: string;
   readonly title: string;
-  readonly sourceRoot: string;
+  /**
+   * The repository this study is *about*, when there is one.
+   *
+   * Absent means a study with no source: 通用课, whose lessons cite MDN and the
+   * W3C rather than a commit in somebody's project. That is not a repository
+   * study missing its repository — it is a different kind, and inventing an
+   * empty snapshot to make it fit the first kind would turn "every citation
+   * points at real lines in the studied code" from a guarantee into a lie.
+   */
+  readonly sourceRoot?: string;
   readonly description?: string;
   readonly goals?: readonly string[];
   readonly reference?: string;
@@ -26,8 +35,10 @@ interface CreateStudyReceipt {
   readonly operation: "study-create";
   readonly disposition: "created" | "resumed";
   readonly study: StudyManifest;
-  readonly sourceRoot: string;
-  readonly snapshot: SnapshotManifest;
+  /** Null for a study with no repository. */
+  readonly sourceRoot: string | null;
+  /** Null for a study with no repository: there is nothing to snapshot. */
+  readonly snapshot: SnapshotManifest | null;
 }
 
 /**
@@ -43,6 +54,11 @@ interface CreateStudyReceipt {
  *
  * Resumable on purpose. Each step checks whether it has already happened, so an
  * interrupted run can be repeated instead of demanding a hand-cleaned shelf.
+ *
+ * Without a `sourceRoot` the middle two steps do not happen: there is no
+ * repository to register and nothing to snapshot. The container and the learner
+ * database are the same either way, which is why this is one function with a
+ * skipped middle rather than two functions that would drift.
  */
 export function createStudyWithSource(input: CreateStudyWorkflowInput): CreateStudyReceipt {
   const id = StableId.parse(input.id);
@@ -59,17 +75,15 @@ export function createStudyWithSource(input: CreateStudyWorkflowInput): CreateSt
         ...(input.now === undefined ? {} : { now: input.now }),
       });
 
-  if (!existsSync(paths.source.registration)) {
-    registerLocalGitSource(
-      input.studiesRoot,
-      id,
-      input.sourceRoot,
-      input.reference ?? "HEAD",
-      input.now,
-    );
+  const sourceRoot = input.sourceRoot ?? null;
+  if (sourceRoot !== null && !existsSync(paths.source.registration)) {
+    registerLocalGitSource(input.studiesRoot, id, sourceRoot, input.reference ?? "HEAD", input.now);
   }
 
-  const snapshot = createCleanSnapshot(input.studiesRoot, id, input.reference, input.now);
+  const snapshot =
+    sourceRoot === null
+      ? null
+      : createCleanSnapshot(input.studiesRoot, id, input.reference, input.now);
 
   // Opening the store is part of creating the study, not an afterthought: it is
   // what runs the schema migrations and validates the scheduler profile, so a
@@ -83,7 +97,7 @@ export function createStudyWithSource(input: CreateStudyWorkflowInput): CreateSt
     operation: "study-create",
     disposition: existed ? "resumed" : "created",
     study,
-    sourceRoot: input.sourceRoot,
+    sourceRoot,
     snapshot,
   };
 }

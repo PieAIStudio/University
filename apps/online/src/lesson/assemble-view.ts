@@ -18,6 +18,7 @@ import {
 } from "@pieai/university-core";
 import type { LessonProgress, LessonView } from "@pieai/university-ui/view/lesson-view.js";
 
+import { isRepositoryAnchor } from "../content/library";
 import type { Course, Lesson } from "../content/library";
 import { languageLayerFor, LEXICON } from "./language";
 
@@ -48,7 +49,14 @@ export function assembleLessonView(input: {
   );
   const from = { courseId: course.id, unitId, lessonId: lesson.id };
   const language = languageLayerFor(lesson.content);
-  const commits = [...new Set(lesson.evidence.map((item) => item.sourceCommit))];
+  /*
+    Only repository citations pin a lesson to a commit. A 通用课 cites public
+    pages, so it has no pinned commit at all — and `commits.length === 1` below
+    would otherwise be satisfied by a single `undefined` and print 「这节课钉在
+    undefined 的版本」.
+  */
+  const repositoryEvidence = lesson.evidence.filter(isRepositoryAnchor);
+  const commits = [...new Set(repositoryEvidence.map((item) => item.sourceCommit))];
   const completed = progress.progress >= 1;
 
   return {
@@ -76,18 +84,43 @@ export function assembleLessonView(input: {
       ),
       backlinks: backlinksOf(index, from),
       ...(commits.length === 1 ? { pinnedCommit: { commit: commits[0]! } } : {}),
-      evidenceAnchors: resolveEvidenceAnchors(lesson.content, lesson.evidence),
+      /*
+        Both kinds, in their original order. `evidenceIndex` on a resolved
+        anchor indexes into this list and the reader opens that entry, so
+        filtering the public-page citations out here would renumber every
+        repository citation after one of them. A citation with no path simply
+        never covers a `[[evidence:path:line]]` marker — which is the truth,
+        stated rather than arranged for.
+      */
+      evidenceAnchors: resolveEvidenceAnchors(
+        lesson.content,
+        lesson.evidence.map((item) =>
+          isRepositoryAnchor(item)
+            ? { sourcePath: item.sourcePath, lineStart: item.lineStart, lineEnd: item.lineEnd }
+            : { sourcePath: undefined },
+        ),
+      ),
       termAnchors: resolveTermLinks(parsed, LEXICON_BY_ID).map(termRangeOf),
       progress: lessonProgressOf(progress, completed),
-      evidence: lesson.evidence.map((item) => ({
-        kind: item.kind,
-        sourcePath: item.sourcePath,
-        lineStart: item.lineStart,
-        lineEnd: item.lineEnd,
-        sourceCommit: item.sourceCommit,
-        nodeIds: [],
-        note: item.note ?? null,
-      })),
+      evidence: lesson.evidence.map((item) =>
+        isRepositoryAnchor(item)
+          ? {
+              kind: item.kind,
+              sourcePath: item.sourcePath,
+              lineStart: item.lineStart,
+              lineEnd: item.lineEnd,
+              sourceCommit: item.sourceCommit,
+              nodeIds: [],
+              note: item.note ?? null,
+            }
+          : {
+              kind: item.kind,
+              sourceUrl: item.sourceUrl,
+              sourceTitle: item.sourceTitle,
+              sourceAuthority: item.sourceAuthority,
+              note: item.note ?? null,
+            },
+      ),
       assets: lesson.assets ?? [],
       exercises: lesson.exercises.map((exercise) => ({
         id: exercise.id,

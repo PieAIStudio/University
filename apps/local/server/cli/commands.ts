@@ -222,7 +222,8 @@ interface StudyCreateCommand {
   readonly kind: "study-create";
   readonly studyId: string;
   readonly title: string;
-  readonly sourceRoot: string;
+  /** Absent for a study with no repository — a 通用课 shelf. */
+  readonly sourceRoot?: string;
   readonly reference?: string;
 }
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
 
 import type { EvidenceSnippetView, EvidenceToken, EvidenceView } from "../view/lesson-view.js";
+import { isUrlEvidenceView } from "../view/lesson-view.js";
 import { EvidenceCode } from "./EvidenceCode.js";
 import { EvidenceUaPlace } from "./EvidenceUaPlace.js";
 import { loadEvidenceSnippet, type EvidenceSource } from "./load-evidence-snippet.js";
@@ -67,6 +68,15 @@ export function EvidenceSourceSheet({
   }, [findText, snippet]);
 
   if (index === null || !reference) return null;
+  /*
+    Only the sheet's own kind gets past here. A public-page citation has no
+    snippet to load, no line range to highlight and no editor locator to copy;
+    it is reachable in this array only because the rail keeps one index space
+    for both kinds, and the button that opens this sheet exists only on the
+    repository branch. Returning null is the honest answer rather than
+    rendering a source viewer with every field blank.
+  */
+  if (isUrlEvidenceView(reference)) return null;
 
   const citedStart = reference.lineStart ?? snippet?.highlightStartLine ?? snippet?.startLine ?? 1;
   const citedEnd = reference.lineEnd ?? snippet?.highlightEndLine ?? snippet?.endLine ?? citedStart;

@@ -608,10 +608,21 @@ describe("study and airlock verbs", () => {
     });
   });
 
-  it("requires the source a study is about", () => {
-    expect(() =>
-      parseUniversityLocalCli(["study", "create", "--study", "x", "--title", "X"]),
-    ).toThrow(/--source/);
+  /*
+    It used to require `--source`, and that requirement was the reason 通用课 had
+    nowhere to live: a course whose citations are MDN and the W3C is about no
+    repository at all, and the only way past the check was to invent a snapshot
+    — which would have made "every citation points at real lines in the studied
+    code" false for every study on the shelf.
+  */
+  it("creates a study with no repository when no source is given", () => {
+    expect(
+      parseUniversityLocalCli(["study", "create", "--study", "general", "--title", "通用课"]),
+    ).toEqual({
+      kind: "study-create",
+      studyId: "general",
+      title: "通用课",
+    });
   });
 
   it("parses a source rebind without conflating it with study creation", () => {

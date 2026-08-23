@@ -18,6 +18,7 @@ import {
   StableId,
   UaAnalysisManifestSchema,
   UaEngineProvenanceSchema,
+  isRepositoryEvidence,
   type EvidenceReference,
   type UaAnalysisManifest,
   type UaEngineProvenance,
@@ -689,11 +690,19 @@ export function verifyUaAnalysisQuality(
   );
 }
 
+/*
+  A URL citation cannot reference a UA analysis: it names a page on MDN, not a
+  node in a graph built from the studied repository. `some` over the union would
+  simply never match one, so filtering first says the same thing and lets the
+  type say it too.
+*/
 function evidenceReferencesAnalysis(
   evidence: readonly EvidenceReference[],
   analysisId: string,
 ): boolean {
-  return evidence.some((reference) => reference.analysisId === analysisId);
+  return evidence
+    .filter(isRepositoryEvidence)
+    .some((reference) => reference.analysisId === analysisId);
 }
 
 function courseActiveContentReferencesAnalysis(

@@ -118,7 +118,22 @@ node scripts/fetch-outline.mjs <url> --out outline/x.md --body-out source/x.md -
 怎么写出真的好懂的句子，见 [rewriting.md](references/rewriting.md)。
 六个小节各自该装什么、卡片和练习怎么配，见 [lesson-shape.md](references/lesson-shape.md)。
 
-### 3.5 组件：他的搬过来，我们的加上去
+## 提案的信封
+
+产出的 JSON 顶层必须是：
+
+```json
+{ "schemaVersion": 1, "proposalId": "<和文件名同一个 kebab id>", "course": { ... } }
+```
+
+只写 `{ "course": ... }` 的提案**落不了盘**——`course create` 的
+`CourseCreationProposalSchema` 要这三个字段。第一份 VibeHub 提案就少了信封，
+是落盘那天才发现的。
+
+**不要写 `targetSnapshotId`。** 通用课没有被研究的仓库，所以没有快照可指。
+那个字段现在是可选的，留空就是「这门课不研究任何代码」的正式说法。
+
+## 3.5 组件：他的搬过来，我们的加上去
 
 原课里的图、示意图、对照表，往往是他把事情想清楚的地方——**那些要留**。
 留的方式有两种，先看能不能重画：

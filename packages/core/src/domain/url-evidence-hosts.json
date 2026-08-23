@@ -1,0 +1,26 @@
+{
+  "authorityHosts": [
+    "developer.mozilla.org",
+    "developer.chrome.com",
+    "web.dev",
+    "www.w3.org",
+    "w3.org",
+    "wicg.github.io",
+    "whatwg.org",
+    "rfc-editor.org",
+    "datatracker.ietf.org",
+    "git-scm.com",
+    "nodejs.org",
+    "developer.apple.com",
+    "developer.android.com",
+    "docs.python.org",
+    "react.dev",
+    "vite.dev",
+    "vitejs.dev",
+    "typescriptlang.org",
+    "postgresql.org",
+    "supabase.com"
+  ],
+  "forbiddenHosts": ["pmaker.space", "vibe-hub.org", "vibehub.org", "oiloil.org"],
+  "authorityTags": ["mdn", "rfc", "w3c", "whatwg", "official-docs", "spec"]
+}

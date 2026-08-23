@@ -37,7 +37,14 @@ const CourseCreationProposalSchema = z
   .object({
     schemaVersion: z.literal(1),
     proposalId: StableId,
-    targetSnapshotId: StableId,
+    /*
+      Optional, because a course in a study with no repository is written
+      against no snapshot. Its citations are public authority pages, which the
+      evidence schema checks by host and scheme rather than by commit — see
+      `UrlEvidenceSchema`. A repository course that forgets this field still
+      fails, one line below, when its git citations find no target to match.
+    */
+    targetSnapshotId: StableId.optional(),
     targetAnalysisId: StableId.optional(),
     course: z
       .object({
@@ -73,7 +80,7 @@ interface CreateCourseResult {
   readonly lessonIds: readonly string[];
   readonly cardIds: readonly string[];
   readonly exerciseIds: readonly string[];
-  readonly targetSnapshotId: string;
+  readonly targetSnapshotId: string | null;
   readonly targetAnalysisId: string | null;
   readonly courseStatus: CourseManifest["status"];
 }
@@ -116,7 +123,7 @@ function validateAllEvidence(
   studiesRoot: string,
   studyId: string,
   proposal: CourseCreationProposal,
-  target: TargetIdentity,
+  target: TargetIdentity | null,
 ): void {
   for (const unit of proposal.course.units) {
     for (const lesson of unit.lessons) {
@@ -192,7 +199,7 @@ export function createCourse(input: CreateCourseInput): CreateCourseResult {
   const proposal = CourseCreationProposalSchema.parse(input.proposal);
   assertProposalIdsAreUnique(proposal);
   const target = readTargetIdentity(input.studiesRoot, input.studyId, {
-    targetSnapshotId: proposal.targetSnapshotId,
+    ...(proposal.targetSnapshotId ? { targetSnapshotId: proposal.targetSnapshotId } : {}),
     ...(proposal.targetAnalysisId ? { targetAnalysisId: proposal.targetAnalysisId } : {}),
   });
   validateAllEvidence(input.studiesRoot, input.studyId, proposal, target);
@@ -224,7 +231,7 @@ export function createCourse(input: CreateCourseInput): CreateCourseResult {
       lessonIds,
       cardIds,
       exerciseIds,
-      targetSnapshotId: proposal.targetSnapshotId,
+      targetSnapshotId: proposal.targetSnapshotId ?? null,
       targetAnalysisId: proposal.targetAnalysisId ?? null,
       courseStatus: "draft",
     };
@@ -271,7 +278,7 @@ export function createCourse(input: CreateCourseInput): CreateCourseResult {
     lessonIds,
     cardIds,
     exerciseIds,
-    targetSnapshotId: proposal.targetSnapshotId,
+    targetSnapshotId: proposal.targetSnapshotId ?? null,
     targetAnalysisId: proposal.targetAnalysisId ?? null,
     courseStatus: course.status,
   };

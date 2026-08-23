@@ -29,7 +29,7 @@ import type { CourseNode } from "@pieai/university-world/course.js";
 
 export type LessonAsset = LessonAssetView;
 
-export interface EvidenceAnchor {
+export interface RepositoryEvidenceAnchor {
   readonly kind: string;
   readonly sourceCommit: string;
   readonly sourcePath: string;
@@ -38,6 +38,24 @@ export interface EvidenceAnchor {
   readonly note?: string;
   /** Content-addressed snippet written at import; absent when no checkout baked it. */
   readonly snippetUrl?: string;
+}
+
+/**
+ * A citation on a public authority page. 通用课 has no repository to point at,
+ * so its claims are anchored in the documents anyone can already open.
+ */
+export interface UrlEvidenceAnchor {
+  readonly kind: string;
+  readonly sourceUrl: string;
+  readonly sourceTitle: string;
+  readonly sourceAuthority: string;
+  readonly note?: string;
+}
+
+export type EvidenceAnchor = RepositoryEvidenceAnchor | UrlEvidenceAnchor;
+
+export function isRepositoryAnchor(anchor: EvidenceAnchor): anchor is RepositoryEvidenceAnchor {
+  return "sourcePath" in anchor;
 }
 
 export interface Card {

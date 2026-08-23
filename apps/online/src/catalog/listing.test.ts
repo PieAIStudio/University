@@ -40,7 +40,14 @@ describe("the 2D directory against the library the map uses", () => {
     const fromLibrary = libraryCourseCount();
     expect(listing.totals.courses).toBe(fromLibrary);
     expect(listing.studies.flatMap((study) => study.courses).length).toBe(fromLibrary);
-    expect(fromLibrary).toBe(52);
+    /*
+      The literal is the point of this line: the two sides above could agree
+      with each other while both silently dropping a study, and this is what
+      would catch that. It moves when the shelf really moves — 53 is 52
+      repository courses plus 通用课's first, which cites MDN rather than a
+      commit and is the first course here that studies no codebase.
+    */
+    expect(fromLibrary).toBe(53);
   });
 
   it("keeps each course's units and lessons identical to the package the map loads", () => {
@@ -70,8 +77,9 @@ describe("the 2D directory against the library the map uses", () => {
       }
     }
 
-    expect(listing.totals.units).toBe(146);
-    expect(listing.totals.lessons).toBe(560);
+    // 146 + 4 units and 560 + 19 lessons: 通用课's first course.
+    expect(listing.totals.units).toBe(150);
+    expect(listing.totals.lessons).toBe(579);
   });
 
   it("lays buzz flat instead of inventing a chain", () => {

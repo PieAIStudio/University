@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "study": {
+    "id": "general",
+    "title": "通用课",
+    "description": "",
+    "goals": [],
+    "defaultCourseId": "product-website",
+    "status": "active"
+  },
+  "courses": [
+    {
+      "courseId": "product-website",
+      "file": "product-website.efc7c6b0711855bd1fca65eeb8122e1e2cb82e0d8fe3188675cb1f40b6e689df.recovery.json",
+      "sha256": "sha256:efc7c6b0711855bd1fca65eeb8122e1e2cb82e0d8fe3188675cb1f40b6e689df"
+    }
+  ]
+}

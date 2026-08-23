@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { EvidenceView } from "../view/lesson-view.js";
+import type { RepositoryEvidenceView } from "../view/lesson-view.js";
 import {
   evidenceEditorLocator,
   evidenceRangeLabel,
@@ -11,7 +11,8 @@ import {
  * Copies a clean editor locator; shows commit pin + how-to beside the button.
  * Keeping version out of the clipboard is deliberate — paste must work in Quick Open.
  */
-export function CopyLocatorButton({ reference }: { readonly reference: EvidenceView }) {
+/* Repository citations only: a public page has no editor locator to paste. */
+export function CopyLocatorButton({ reference }: { readonly reference: RepositoryEvidenceView }) {
   const [copied, setCopied] = useState(false);
   const locator = evidenceEditorLocator(reference);
   const range = evidenceRangeLabel(reference);

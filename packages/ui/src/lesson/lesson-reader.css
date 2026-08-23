@@ -1384,3 +1384,38 @@
 
 .mark-list__highlights summary {
 }
+
+/*
+  出处 — the public pages a 通用课's claims rest on.
+
+  Quiet on purpose. It is a bibliography, not a call to action: the reader who
+  wants it goes looking, and the reader who does not should be able to reach the
+  next lesson without stepping over it. Repository courses never render this
+  block, because their citations already sit on the sentences that need them.
+*/
+.lesson-sources {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+}
+
+.lesson-sources__label {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.lesson-sources__list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.15em;
+  font-size: 0.9rem;
+}
+
+.lesson-sources__list small {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.78rem;
+}

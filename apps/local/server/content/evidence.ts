@@ -6,6 +6,7 @@ import {
   EvidenceReferenceSchema,
   SnapshotManifestSchema,
   UaAnalysisManifestSchema,
+  isUrlEvidence,
   type EvidenceReference,
 } from "@pieai/university-core/domain/schemas.js";
 import { getSnapshotPaths, getUaAnalysisPaths } from "../studies/paths.js";
@@ -210,6 +211,9 @@ export function readEvidenceSnippet(
   contextLines: number | "full" = EVIDENCE_SNIPPET_LIMITS.defaultContextLines,
 ): EvidenceSnippet {
   const evidence = validateEvidence(studiesRoot, studyId, candidate);
+  if (isUrlEvidence(evidence)) {
+    throw new Error("URL evidence is a public page, not a source excerpt");
+  }
   if (
     contextLines !== "full" &&
     (!Number.isInteger(contextLines) ||
@@ -323,6 +327,10 @@ export function validateEvidence(
   candidate: EvidenceReference,
 ): EvidenceReference {
   const evidence = EvidenceReferenceSchema.parse(candidate);
+  // URL citations are fully checked by the schema (https, host list, not the
+  // adopted source). Opening a git mirror here would invent a repository the
+  // study does not have.
+  if (isUrlEvidence(evidence)) return evidence;
   const snapshotPaths = getSnapshotPaths(studiesRoot, studyId, evidence.snapshotId);
   const snapshot = SnapshotManifestSchema.parse(readJson(snapshotPaths.manifest));
   if (snapshot.sourceCommit !== evidence.sourceCommit) {
@@ -378,6 +386,11 @@ export function evaluateEvidenceFreshness(
   targetAnalysisId?: string,
 ): EvidenceFreshness {
   const evidence = validateEvidence(studiesRoot, studyId, candidate);
+  if (isUrlEvidence(evidence)) {
+    // A public page is not a moving git tree. Whether MDN rewrote that article
+    // is an editorial question, not something a snapshot comparison can answer.
+    return { status: "fresh", reasons: [] };
+  }
   const targetSnapshot = SnapshotManifestSchema.parse(
     readJson(getSnapshotPaths(studiesRoot, studyId, targetSnapshotId).manifest),
   );

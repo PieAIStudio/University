@@ -25,6 +25,7 @@ import {
 } from "react";
 import { courseShapeOf, readCourseProgress, spineOf } from "@pieai/university-core";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
+import { spacedName } from "@pieai/university-ui/text/spaced-name.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import {
@@ -401,7 +402,7 @@ export function App() {
         ? view.studyId
         : focusedStudyId;
     const title = library.studies.find((entry) => entry.studyId === studyId)?.title;
-    return title ? `← 回到 ${title} 地图` : "← 回到课程地图";
+    return title ? `← 回到${spacedName(title)}地图` : "← 回到课程地图";
   }, [view, focusedStudyId]);
 
   const projectName = useMemo(
