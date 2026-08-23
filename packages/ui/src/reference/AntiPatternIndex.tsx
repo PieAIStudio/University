@@ -19,7 +19,7 @@ import { CollectionIndex } from "./CollectionIndex.js";
  * complaint, a spoken fragment, so you can find an entry before you have
  * its official title.
  */
-export const ANTI_PATTERN_SEARCH_PLACEHOLDER = "试试「稳稳接住」「三张一样大」「别再说灯塔」";
+export const ANTI_PATTERN_SEARCH_PLACEHOLDER = "试试「稳稳接住」「别再说灯塔」";
 
 type CategoryFilter = "all" | AntiPatternCategory;
 

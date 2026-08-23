@@ -14,8 +14,12 @@ import { CollectionIndex } from "./CollectionIndex.js";
 /**
  * Teaching placeholder, the same job the other two indexes give theirs: show
  * that you may arrive with a symptom rather than a name.
+ *
+ * Two examples, not three, and that is a measurement rather than taste — see
+ * `SEARCH_PLACEHOLDER_MAX_CHARS`. A third example clipped mid-character taught
+ * nothing and made the field look broken.
  */
-export const CONCEPT_SEARCH_PLACEHOLDER = "试试「点了没反应」「上线之后白屏」「怎么退回上一版」";
+export const CONCEPT_SEARCH_PLACEHOLDER = "试试「点了没反应」「怎么退回上一版」";
 
 type CategoryFilter = "all" | ConceptCategory;
 
