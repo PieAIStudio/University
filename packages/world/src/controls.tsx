@@ -72,49 +72,69 @@ export const MAP_CONTROLS_HINT = "拖动平移 · 滚轮缩放 · 点岛进入";
 
 export const WORLD_POLAR = THREE.MathUtils.degToRad(54);
 /**
- * Inside a course the eye is on the road, not above it.
+ * Inside a course the eye is above the island, not down a road.
  *
- * This tilt is pinned at both ends by `Controls`, which makes it — not the
+ * This was 74° — a road going away from you — and every reason given for it
+ * has since stopped being true. There is no climb to read as a climb, because
+ * the lessons lie on one island's surface instead of on 41 islands stepping up
+ * through the air; and stones overlapping into a line is what you want when
+ * the line *is* the subject, not when the subject is a piece of ground with
+ * markers on it. At 74° that ground is seen almost edge-on and the far half of
+ * it is a sliver.
+ *
+ * 56° is a level-select map looking down at its own layout, two degrees off
+ * the world map's 54° — near enough that entering a course reads as flying
+ * closer to the same world rather than as arriving somewhere else.
+ *
+ * The tilt is pinned at both ends by `Controls`, which makes it — not the
  * camera position — the thing that decides how high the shot sits: `Flight`
  * sets the distance to the target and `MapControls.update()` then forces the
- * angle, so every offset tuned into the eye position was being overwritten on
- * the next frame. Fifty degrees off vertical is a level-select map looking
- * down at its own layout. Seventy-four is a road going away from you, which is
- * the only angle at which the stones ahead overlap into a line, the fog does
- * anything, and the climb reads as a climb.
+ * angle, so any offset tuned into the eye position is overwritten next frame.
  */
-export const COURSE_POLAR = THREE.MathUtils.degToRad(74);
+export const COURSE_POLAR = THREE.MathUtils.degToRad(56);
 
 /**
  * How far the eye sits from the look target inside a course.
  *
- * App.tsx still aims four stones ahead; this is the radius MapControls is
- * allowed to keep. 76 (the old `from`) made each stone ~6% of the viewport.
- * 38 is the distance at which a stone reads as a button (~12%) while five
- * still fit, given COURSE_STEP. Height is not a lever — polar is pinned.
+ * These grew with the tilt. At 74° the eye was nearly level and 38 units put
+ * five stones in frame; from 56° the same distance is mostly sky, because a
+ * shallower angle spends its frame on the ground in front of the target rather
+ * than on the road behind it. 54 keeps a marker reading as a button while the
+ * island it sits on has visible shore on both sides.
+ *
+ * The span is 2.2×, inside the same ≤3× rule the world map is held to, and
+ * the max stays under WORLD_DISTANCE_MIN so pulling all the way out of a
+ * course is still closer than the sea it sits in. Height is not a lever —
+ * polar is pinned.
  */
-export const COURSE_DISTANCE = 38;
-export const COURSE_DISTANCE_MIN = 22;
-export const COURSE_DISTANCE_MAX = 48;
+export const COURSE_DISTANCE = 54;
+export const COURSE_DISTANCE_MIN = 34;
+export const COURSE_DISTANCE_MAX = 76;
 /**
  * World-map dolly range. The lever is distance, not camera height: polar is
  * pinned, and MapControls rebuilds position from (target, distance, azimuth).
  *
- * These two numbers used to be 6 and 460 — a 76× span that let the eye sit
- * inside an island's mesh. The ratio is the product rule (≤ 3×); the values
- * are tuned so min is "one sea fills the frame" and max is "all four seas
- * in view". Polar is 54°, so camera height at min is
- * `WORLD_DISTANCE_MIN * cos(polar)` ≈ 53, well above the largest island.
+ * These were 6 and 460 once — a 76× span that let the eye sit inside an
+ * island's mesh — then 90 and 270, tuned against a radial tree that spread a
+ * study across a disc. The study is a road now: eleven units wide and as long
+ * as it has courses. Ninety units back from a road that narrow spends most of
+ * the frame on sea, and the islands come out at about 4% of the viewport.
+ *
+ * 62 puts a course island at roughly the size a lesson marker gets inside a
+ * course, which is the size at which a thing reads as something you click. The
+ * span is 2.9×, inside the ≤3× rule; polar is 54°, so camera height at min is
+ * `WORLD_DISTANCE_MIN * cos(polar)` ≈ 36, well above the largest island.
  */
-export const WORLD_DISTANCE_MIN = 90;
-export const WORLD_DISTANCE_MAX = 270;
+export const WORLD_DISTANCE_MIN = 62;
+export const WORLD_DISTANCE_MAX = 180;
 /**
- * App.tsx aims four stones ahead. Dolly-in toward that far look drops the
- * live stone under the chrome. Pulling the target back along the ground
- * toward the eye (about two stones) keeps the live stone in the lower
- * third with road still visible behind it.
+ * App.tsx aims four markers ahead. Pulling the target back along the ground
+ * toward the eye keeps the live marker out of the lower chrome with island
+ * still visible behind it. Smaller than it was: from 56° the frame already
+ * holds more ground in front of the target than 74° did, so the old 12 pushed
+ * the live marker up into the middle and wasted the bottom third on shore.
  */
-export const COURSE_LOOK_PULL = 12;
+export const COURSE_LOOK_PULL = 6;
 
 export function Controls({
   target,

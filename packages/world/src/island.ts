@@ -67,6 +67,31 @@ const PROFILE: readonly (readonly [number, number])[] = [
   [0.0, 0.62],
 ];
 
+/**
+ * Height of the lathe profile at `fraction` of the island's radius, in units of
+ * that radius.
+ *
+ * The course map needs this. It lays lesson stones on one island's surface, and
+ * a stone placed at y=0 sinks into the dome near the middle and floats off the
+ * rim near the edge. Reading the same profile the mesh was built from is the
+ * only way the two stay agreed when the profile is next adjusted.
+ */
+export function surfaceHeight(fraction: number): number {
+  const at = Math.min(Math.max(fraction, 0), 1);
+  // The profile runs bottom-to-top; the top surface is the tail of it, from the
+  // widest point up to the centre. Walk it from the rim inward.
+  for (let index = PROFILE.length - 1; index > 0; index -= 1) {
+    const [innerX, innerY] = PROFILE[index]!;
+    const [outerX, outerY] = PROFILE[index - 1]!;
+    if (at >= innerX && at <= outerX) {
+      const span = outerX - innerX;
+      const t = span === 0 ? 0 : (at - innerX) / span;
+      return (innerY + (outerY - innerY) * t) * 0.42;
+    }
+  }
+  return PROFILE[PROFILE.length - 1]![1]! * 0.42;
+}
+
 interface IslandShape {
   readonly geometry: THREE.BufferGeometry;
   /** Where props may stand, in island-local space, already on the surface. */
@@ -82,11 +107,13 @@ interface IslandShape {
  * cut into pieces — it is a hue nudge, not a repaint, so the world still reads
  * as one place.
  */
-export function buildIsland(seed: string, radius: number, tint = 0): IslandShape {
+export function buildIsland(seed: string, radius: number, tint = 0, segments = 9): IslandShape {
   const random = seeded(seed);
   // Few segments on purpose. Nine reads as hand-made; thirty-two reads as a
-  // primitive nobody styled.
-  const segments = 9;
+  // primitive nobody styled. It is a parameter because the count that reads as
+  // hand-made depends on how much of the screen the island takes: nine facets
+  // on a course node is a stylised rock, and nine facets on the ground a whole
+  // course stands on is a cut gem.
   const points = PROFILE.map(([x, y]) => new THREE.Vector2(x * radius, y * radius * 0.42));
   const geometry = new THREE.LatheGeometry(points, segments);
 
@@ -109,9 +136,18 @@ export function buildIsland(seed: string, radius: number, tint = 0): IslandShape
     const z = position.getZ(index) * scale;
     position.setXYZ(index, x, y, z);
 
-    // Hard bands, not a gradient. The waterline should be a line.
+    /*
+      Hard bands, not a gradient. The waterline should be a line.
+
+      The grass line is 0.15 and not 0.03. The profile's widest point sits at
+      y≈0.042, so at 0.03 the grass ran all the way down to the shoulder and
+      the rock was a sliver underneath it. On a course node that is a green
+      pebble and nobody notices; on the course island — one piece of ground
+      filling half the frame — it was a faceted green gem with a lid. Land
+      reads as land because there is a cliff under the turf.
+    */
     const band =
-      y > radius * 0.03 ? (column % 2 ? grassTop : grassDry) : y > -radius * 0.3 ? ROCK : ROCK_DEEP;
+      y > radius * 0.15 ? (column % 2 ? grassTop : grassDry) : y > -radius * 0.3 ? ROCK : ROCK_DEEP;
     colour.copy(band);
     colours[index * 3] = colour.r;
     colours[index * 3 + 1] = colour.g;
@@ -147,28 +183,4 @@ export function buildIsland(seed: string, radius: number, tint = 0): IslandShape
   }
 
   return { geometry, slots, top };
-}
-
-/**
- * The locked look, baked into a clone of the island's vertex colours.
- *
- * Grey is not blur: saturation drops to ~15% of what it was and lightness
- * drops ~40%, but the facets stay hard. A material tint cannot do this —
- * multiplying vertex colours by a grey only darkens, it does not desaturate.
- */
-export function lockIslandGeometry(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
-  const locked = geometry.clone();
-  const colour = locked.getAttribute("color");
-  if (!colour) return locked;
-  const baked = colour.clone();
-  const pixel = new THREE.Color();
-  const hsl = { h: 0, s: 0, l: 0 };
-  for (let index = 0; index < baked.count; index += 1) {
-    pixel.setRGB(baked.getX(index), baked.getY(index), baked.getZ(index));
-    pixel.getHSL(hsl);
-    pixel.setHSL(hsl.h, hsl.s * 0.15, hsl.l * 0.6);
-    baked.setXYZ(index, pixel.r, pixel.g, pixel.b);
-  }
-  locked.setAttribute("color", baked);
-  return locked;
 }

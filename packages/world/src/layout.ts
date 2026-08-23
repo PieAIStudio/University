@@ -22,8 +22,6 @@ function hash(text: string): number {
   return (value >>> 0) / 0xffffffff;
 }
 
-const jitter = (id: string, salt: string) => hash(`${id}:${salt}`) * 2 - 1;
-
 /**
  * A lesson count turned into a radius.
  *
@@ -34,147 +32,166 @@ const jitter = (id: string, salt: string) => hash(`${id}:${salt}`) * 2 - 1;
  */
 export const radiusForLessons = (lessons: number) => 0.55 + Math.sqrt(lessons) * 0.42;
 
-interface Placed {
+export interface Placed {
   readonly x: number;
   readonly y: number;
   readonly z: number;
   readonly depth: number;
 }
 
-interface LayoutInput {
-  readonly id: string;
-  readonly depth: number;
-  readonly prerequisiteCourseIds: readonly string[];
+/**
+ * The one road shape in this product, used at both map levels.
+ *
+ * Both levels used to have their own: courses were a radial prerequisite tree,
+ * lessons were a sine road. Two shapes meant two mental models, and the tree
+ * was the one nobody could steer — islands scattered across a sea, and finding
+ * the next one meant hunting rather than walking.
+ *
+ * So there is one shape now, and it is a road. What differs between the levels
+ * is scale, not idea: a study is a road of islands, a course is a road of
+ * stones on one island. That is also why `step` and `amplitude` are parameters
+ * rather than two copies of this function.
+ *
+ * The swing is a sine, not a strict left-right alternation. Alternating every
+ * step reads as a zigzag, and a zigzag is a decoration; a curve that leans out,
+ * comes back and leans the other way reads as a road going somewhere.
+ */
+export interface PathShape {
+  /** Forward spacing between two neighbours. */
+  readonly step: number;
+  /** How far the road leans off centre. */
+  readonly amplitude: number;
+  /** Nodes per full swing. Deliberately not the unit size — see below. */
+  readonly period: number;
 }
 
 /**
- * One study, laid out as a radial tree.
+ * Islands on the study road.
  *
- * The tree is the honest shape of this library: turing-pact is a trunk nine
- * links long — the foundations spine — then nine branches open at once and
- * taper away. Drawn as depth rings that reads as noise and, worse, overlaps:
- * islands two units wide on rings under two units apart. Drawn as a tree it
- * reads as what it is, a long climb to a plateau and then a choice.
+ * `step` matches the spacing the radial tree happened to produce (6.4 to 7.4
+ * between neighbours), so swapping the shape did not silently rescale the
+ * whole world and invalidate the camera distances tuned against it.
  *
- * Sibling spread is clamped rather than filling the inherited wedge. Without
- * the clamp, nine branches at radius 56 fan across two hundred units and stop
- * being one place the learner has arrived at.
+ * The period is 7 and not the number of courses in anything, because a period
+ * that matched a structural size would put every boundary at the same point in
+ * the curve and the road would visibly repeat.
  */
-export function layoutStudy(
-  courses: readonly LayoutInput[],
-  options: { step?: number; rise?: number; siblingGap?: number } = {},
-): Map<string, Placed> {
-  const step = options.step ?? 6.4;
-  const rise = options.rise ?? 0.9;
-  const siblingGap = options.siblingGap ?? 7.4;
+export const STUDY_PATH: PathShape = { step: 7.4, amplitude: 5.5, period: 7 };
 
-  const byId = new Map(courses.map((course) => [course.id, course]));
-  const children = new Map<string, LayoutInput[]>(courses.map((course) => [course.id, []]));
-  const roots: LayoutInput[] = [];
-  for (const course of [...courses].sort((a, b) => a.id.localeCompare(b.id))) {
-    // The first prerequisite that exists here is the parent. A course with two
-    // still sits on one branch; the other stays visible as a road, which is
-    // honest about the graph without turning the map into one.
-    const parentId = course.prerequisiteCourseIds.find((id) => byId.has(id));
-    if (parentId === undefined) roots.push(course);
-    else children.get(parentId)?.push(course);
-  }
+/**
+ * Stones on the course road, which now lie on one island's surface rather than
+ * on 41 islands of their own.
+ *
+ * Tighter than the study road in both axes: these are markers on the ground,
+ * not land masses, so they can sit close without touching. Amplitude is wide
+ * relative to step on purpose — a shallow wiggle on a flat surface reads as a
+ * straight line with a rendering error.
+ */
+export const COURSE_PATH: PathShape = { step: 4.4, amplitude: 6.4, period: 7 };
 
-  const leaves = new Map<string, number>();
-  const countLeaves = (course: LayoutInput): number => {
-    const known = leaves.get(course.id);
-    if (known !== undefined) return known;
-    const own = children.get(course.id) ?? [];
-    const total = own.length === 0 ? 1 : own.reduce((sum, kid) => sum + countLeaves(kid), 0);
-    leaves.set(course.id, total);
-    return total;
-  };
-  for (const root of roots) countLeaves(root);
+/** Kept for the camera: the forward spacing the course shot is framed against. */
+export const COURSE_STEP = COURSE_PATH.step;
+export const COURSE_AMPLITUDE = COURSE_PATH.amplitude;
 
+/**
+ * `count` nodes along one road, centred on the origin.
+ *
+ * Centred rather than starting at zero because both callers measure the extent
+ * of what came back to size something — the sea ring at study level, the island
+ * at course level — and a road that runs from 0 to −222 has a centroid nowhere
+ * near its own origin, which makes every such measurement wrong by half the
+ * road.
+ *
+ * `depth` is the index. Nothing reads it as a tree depth any more; it stays so
+ * a caller can recover the order from a placement without zipping two arrays.
+ */
+export function layoutPath(count: number, shape: PathShape): Placed[] {
+  const span = (count - 1) * shape.step;
+  return Array.from({ length: count }, (_, index) => ({
+    x: shape.amplitude * Math.sin((index / shape.period) * Math.PI * 2),
+    y: 0,
+    z: span / 2 - index * shape.step,
+    depth: index,
+  }));
+}
+
+/**
+ * One study, laid out as a road in teaching order.
+ *
+ * This used to be a radial tree drawn from `prerequisiteCourseIds`, with a
+ * causeway per prerequisite. The tree was the honest shape of the graph and it
+ * was still the wrong drawing: nine branches opening at once is a decision the
+ * learner is not being asked to make, so the map spent its pixels illustrating
+ * a structure instead of answering "where do I go now".
+ *
+ * The order comes from the caller, which gets it from the study spine — an
+ * authored teaching order that `validateSpine` already proves is a legal linear
+ * extension of the prerequisite graph. So nothing pedagogical is lost by
+ * drawing a line: the line *is* the prerequisites, flattened by someone who
+ * decided which branch to teach first.
+ *
+ * What is lost is the picture of the branches. Prerequisites still gate what
+ * opens; they are simply no longer drawn as roads, because a road you cannot
+ * walk is furniture.
+ */
+export function layoutStudyRoad(orderedCourseIds: readonly string[]): Map<string, Placed> {
+  const points = layoutPath(orderedCourseIds.length, STUDY_PATH);
   const placed = new Map<string, Placed>();
-  const place = (course: LayoutInput, angle: number, depth: number) => {
-    const radius = depth * step;
-    placed.set(course.id, {
-      x: Math.cos(angle) * radius,
-      y: depth * rise,
-      z: Math.sin(angle) * radius,
-      depth,
+  orderedCourseIds.forEach((id, index) => {
+    const point = points[index]!;
+    // A hair of jitter so a long straight-ish stretch does not read as a ruler.
+    // Two percent of a step is below the threshold where anyone reads it as
+    // disorder and above the one where the eye starts seeing a grid.
+    placed.set(id, {
+      ...point,
+      x: point.x + (hash(`${id}:sway`) * 2 - 1) * STUDY_PATH.step * 0.02,
     });
-    const own = children.get(course.id) ?? [];
-    if (own.length === 0) return;
-    const childRadius = (depth + 1) * step;
-    const spread =
-      own.length === 1
-        ? 0
-        : Math.min((own.length - 1) * siblingGap, childRadius * 1.5) / childRadius;
-    own.forEach((kid, slot) => {
-      const offset = own.length === 1 ? 0 : (slot / (own.length - 1) - 0.5) * spread;
-      place(kid, angle + offset + jitter(kid.id, "angle") * 0.02, depth + 1);
-    });
-  };
-
-  // Roots share the circle by how much grows behind each, so a lone preface
-  // does not get the same quarter of the world as a nine-course spine.
-  const totalLeaves = roots.reduce((sum, root) => sum + countLeaves(root), 0) || 1;
-  let cursor = 0;
-  for (const root of roots) {
-    const share = countLeaves(root) / totalLeaves;
-    place(root, cursor + share * Math.PI, roots.length === 1 ? 0 : 1);
-    cursor += share * Math.PI * 2;
-  }
-  // A study with no prerequisites at all comes out of this same code as a ring
-  // with no roads, which is the truth about it. Inventing an order to make the
-  // picture tidier would tell the learner something the author never said.
+  });
   return placed;
 }
 
 /**
- * One course as a road, not a contact sheet.
+ * One course as a road of stones, flat, because it is lying on an island.
  *
- * Folded four to a row, forty-one lessons read as a grid: four things at the
- * same distance from you, and your eye has to pick one. A learner opening a
- * course is not shopping for a lesson, they want the next step — so the fold is
- * one. Every lesson is its own row, and what keeps that from being a corridor
- * with no visible end is the swing.
+ * The climb this function used to have was the best thing about it — looking
+ * back down a course showed distance rather than a percentage. It is gone
+ * because the stones are no longer islands in the air; they sit on one surface,
+ * and a surface that steps up under every fourth stone is a staircase, not
+ * ground. The island's own dome supplies what rise there is.
  *
- * The swing is a sine rather than a strict left-right alternation. Alternating
- * every step reads as a zigzag, and a zigzag is a decoration; a curve that
- * leans out, comes back, and leans the other way reads as a road that is going
- * somewhere. The period is seven, which is deliberately not four: a period that
- * matched the unit size would put every unit boundary at the same point in the
- * curve, and the road would visibly repeat.
- *
- * The rise is the part a flat page cannot have. The road climbs, and each unit
- * boundary is a step up, so looking back shows how far you have come as
- * distance rather than as a percentage, and looking ahead shows the next shelf
- * before you can read what is on it.
+ * `unitSizes` still comes in, and is still ignored for the shape. Unit
+ * boundaries are a label on the ground now, not a shelf in the terrain: a unit
+ * is a chapter heading, and a chapter heading does not change the floor.
  */
-/**
- * Forward spacing between lessons on the course road.
- *
- * Stones run to r≈2.9. 7.2 packed them like landscape; 4.2 is close enough
- * that five stay in frame when the camera dolly (see COURSE_DISTANCE) makes
- * each one a button. Amplitude scales with it or the curve flattens.
- */
-export const COURSE_STEP = 4.2;
-export const COURSE_AMPLITUDE = 2.7;
-
 export function layoutCourse(unitSizes: readonly number[]): Placed[] {
-  const PERIOD = 7; // lessons per swing, coprime with the common unit size
-  const CLIMB = 0.34; // rise per lesson
-  const SHELF = 1.1; // extra rise at each unit boundary
+  const total = unitSizes.reduce((sum, count) => sum + count, 0);
+  const points = layoutPath(total, COURSE_PATH);
   const out: Placed[] = [];
   let index = 0;
   unitSizes.forEach((count, unitIndex) => {
     for (let slot = 0; slot < count; slot += 1) {
-      out.push({
-        x: COURSE_AMPLITUDE * Math.sin((index / PERIOD) * Math.PI * 2),
-        y: index * CLIMB + unitIndex * SHELF,
-        z: -index * COURSE_STEP,
-        depth: unitIndex,
-      });
+      out.push({ ...points[index]!, depth: unitIndex });
       index += 1;
     }
   });
   return out;
+}
+
+/**
+ * The island a course road lies on, as half-extents.
+ *
+ * Sized from the road rather than from the lesson count so the ground always
+ * contains its own path — a 41-lesson course is a long ridge because it *is*
+ * long, and inventing a rounder island for it would put stones in the sea.
+ */
+export function courseIslandExtent(lessons: number): { readonly x: number; readonly z: number } {
+  const points = layoutPath(Math.max(lessons, 1), COURSE_PATH);
+  const halfX = Math.max(...points.map((point) => Math.abs(point.x)), COURSE_PATH.amplitude);
+  const halfZ = Math.max(...points.map((point) => Math.abs(point.z)), COURSE_PATH.step);
+  // Margin is a step's worth of shore — enough that the outermost marker is not
+  // sitting on the rim where the lathe profile has already started falling
+  // away. It was 1.8 steps, which put 60% of the island's width outside the
+  // road: the markers then read as specks on a field rather than as the thing
+  // the field is for.
+  return { x: halfX + COURSE_PATH.step * 1.2, z: halfZ + COURSE_PATH.step * 1.2 };
 }

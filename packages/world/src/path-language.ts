@@ -23,12 +23,27 @@ export const COURSE_HUE_SHIFTS = [0, 0.16, -0.14, 0.28, -0.24, 0.4] as const;
 
 export type PathNodeKind = "lesson" | "practice" | "quiz" | "chest" | "review";
 
+/**
+ * The mark on a lesson marker.
+ *
+ * These were emoji — 📖 ✍️ 🎯 🎁 🔁 — and two of them were red. On a green
+ * island under a warm sky, a red-and-white dartboard and a red-ribboned present
+ * are the two loudest things on screen, and they were landing on whichever
+ * lesson happened to be the end of a unit. The map's one job is to say where to
+ * go next, and the accent that says it was losing to decoration.
+ *
+ * So: text-presentation glyphs, no colour of their own. They inherit the CSS
+ * colour of the label they sit in, which means locked reads grey and live reads
+ * warm without a second palette. U+FE0E on the ones a platform might otherwise
+ * promote to emoji — ✎, ★ and ↻ all have colour forms on some systems, and
+ * without the selector this fix would quietly undo itself on someone's phone.
+ */
 export const PATH_KIND_ICON: Record<PathNodeKind, string> = {
-  lesson: "📖",
-  practice: "✍️",
-  quiz: "🎯",
-  chest: "🎁",
-  review: "🔁",
+  lesson: "\u2630", // ☰ lines of text
+  practice: "\u270E\uFE0E", // ✎
+  quiz: "\u2605\uFE0E", // ★ the unit's milestone
+  chest: "\u25C6", // ◆ a term unlocked
+  review: "\u21BB\uFE0E", // ↻
 };
 
 export const PATH_KIND_LABEL: Record<PathNodeKind, string> = {

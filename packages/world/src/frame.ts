@@ -9,6 +9,17 @@
 import * as THREE from "three";
 
 import { WORLD_DISTANCE_MAX, WORLD_DISTANCE_MIN, WORLD_POLAR } from "./controls.js";
+import { STUDY_PATH } from "./layout.js";
+
+/**
+ * How far down the road the world shot aims, past the learner's own island.
+ *
+ * Two and a half courses. Less and the learner sits in the middle of the frame
+ * with as much sea behind them as road ahead; more and their own island slides
+ * off the bottom edge, which is the one thing on the map they are entitled to
+ * always be able to find.
+ */
+const WORLD_LOOK_AHEAD = STUDY_PATH.step * 2.5;
 
 function pose(
   look: THREE.Vector3,
@@ -37,17 +48,26 @@ export function frameWorld(
       lookAt: [0, 0, 0],
     };
   }
-  const look = (learnerAt ?? studyCentre)!.clone();
-  const away = look
-    .clone()
-    .sub(studyCentre ?? new THREE.Vector3())
-    .setY(0);
-  if (away.lengthSq() < 0.01) away.set(0, 0, 1);
-  away.normalize();
-  // A small azimuth bias so a road along the view does not stack into a
-  // column of discs — the same "off the axis" habit the cartesian framing
-  // used to get by adding a 15-unit side vector.
-  const azimuth = Math.atan2(away.x, away.z) + 0.32;
+  /*
+    The study is a road running along −Z, and the shot has to be down it.
+
+    This used to point the camera along `learner − studyCentre`, which was the
+    right idea for a radial tree: the learner was somewhere out on a disc and
+    that vector said which way "outward" was. On a road it says almost nothing
+    — near the middle of a study it is a rounding error, and the ±0.32 bias
+    then decided the whole composition. The result was a road running corner to
+    corner with 60% of the frame on empty sea.
+
+    So: look down the road, and pull the target forward along it. The learner
+    lands in the lower third with the courses they have not opened yet filling
+    the rest, which is the same composition the course view uses and the same
+    answer to the same question.
+  */
+  const at = (learnerAt ?? studyCentre)!.clone();
+  const look = new THREE.Vector3(at.x, at.y, at.z - WORLD_LOOK_AHEAD);
+  // A few degrees off the axis so the islands stagger instead of stacking into
+  // one column of discs.
+  const azimuth = 0.16;
   return {
     cameraFrom: pose(look, WORLD_DISTANCE_MIN, WORLD_POLAR, azimuth),
     lookAt: [look.x, look.y, look.z],

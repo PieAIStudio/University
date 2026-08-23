@@ -19,16 +19,21 @@
  * so the eight-second question the map has to answer ("where do I go now")
  * is answered by looking, not by reading.
  */
-import { isLessonComplete, readCourseProgress, type ProgressSource } from "@pieai/university-core";
+import {
+  isLessonComplete,
+  readCourseProgress,
+  spineOf,
+  type ProgressSource,
+} from "@pieai/university-core";
 import { playSound } from "@pieai/university-ui/sound/index.js";
 import { useFrame } from "@react-three/fiber";
 import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course";
-import { buildIsland, hash, lockIslandGeometry, seeded } from "./island";
+import { buildIsland, hash, seeded, surfaceHeight } from "./island";
 import { PropField, type Placement, type Role } from "./kit";
-import { layoutCourse, layoutStudy, radiusForLessons } from "./layout";
+import { courseIslandExtent, layoutCourse, layoutStudyRoad, radiusForLessons } from "./layout";
 import { stoneRadius } from "./path-overlay";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./path-language";
 import { renderTier } from "./tier";
@@ -88,8 +93,6 @@ const PALETTE = {
   skyZenith: SKY_STOPS.zenith,
   skyMid: SKY_STOPS.mid,
   skyHorizon: SKY_STOPS.horizon,
-  causeway: 0xc0a373,
-  steps: 0x9aa0a8,
   accent: 0xffb347,
   // A locked island multiplies its vertex colours by this, so it has to stay
   // light: a dark tint reads as a hole in the sea rather than as land that is
@@ -169,13 +172,22 @@ export function placeWorld(nodes: readonly CourseNode[], progressOf: (node: Cour
     // `LayoutInput` speaks in `id`; a course node calls the same thing
     // `courseId`. Translating here keeps the layout maths independent of the
     // content schema, which is what lets it be tested without a library.
-    const placed = layoutStudy(
-      own.map((node) => ({
-        id: node.courseId,
-        depth: node.depth,
-        prerequisiteCourseIds: node.prerequisiteCourseIds,
-      })),
-    );
+    // Teaching order, not graph order. The spine is authored and validated as
+    // a legal linear extension of the prerequisites, so walking it is walking
+    // the graph. A course missing from the spine (a draft, an import that has
+    // not been slotted yet) falls in behind the spine by depth, so it is on the
+    // road rather than at the origin.
+    const spine = spineOf(studyId).map((entry) => entry.courseId);
+    const rank = new Map(spine.map((courseId, index) => [courseId, index]));
+    const ordered = [...own]
+      .sort(
+        (a, b) =>
+          (rank.get(a.courseId) ?? spine.length + a.depth) -
+            (rank.get(b.courseId) ?? spine.length + b.depth) ||
+          a.courseId.localeCompare(b.courseId),
+      )
+      .map((node) => node.courseId);
+    const placed = layoutStudyRoad(ordered);
     const extent =
       Math.max(...[...placed.values()].map((point) => Math.hypot(point.x, point.z)), 1) + 8;
     return { studyId, own, placed, extent };
@@ -389,81 +401,24 @@ function Island({
   );
 }
 
-/** A prerequisite, drawn as a causeway you could actually walk. */
-function Causeway({
-  from,
-  to,
-  color = PALETTE.causeway,
-}: {
-  from: THREE.Vector3;
-  to: THREE.Vector3;
-  color?: number;
-}) {
-  const { position, quaternion, length } = useMemo(() => {
-    const direction = new THREE.Vector3().subVectors(to, from).setY(0);
-    const mid = from.clone().add(to).multiplyScalar(0.5).setY(0.08);
-    const rotation = new THREE.Quaternion().setFromUnitVectors(
-      new THREE.Vector3(0, 0, 1),
-      direction.clone().normalize(),
-    );
-    return { position: mid, quaternion: rotation, length: direction.length() };
-  }, [from, to]);
-  return (
-    <mesh position={position} quaternion={quaternion} rotation-x={0} receiveShadow>
-      <boxGeometry args={[0.7, 0.12, length]} />
-      <meshStandardMaterial color={color} roughness={1} />
-    </mesh>
-  );
-}
-
-/**
- * The other path surface. A unit that isn't a causeway is a flight of slabs,
- * so the change of pavement is the unit boundary you feel with your eye
- * before you read the name.
- */
-function StoneSteps({ from, to }: { from: THREE.Vector3; to: THREE.Vector3 }) {
-  const pieces = useMemo(() => {
-    const direction = new THREE.Vector3().subVectors(to, from);
-    const length = direction.length();
-    if (length < 0.05) return [];
-    const rotation = new THREE.Quaternion().setFromUnitVectors(
-      new THREE.Vector3(0, 0, 1),
-      direction.clone().setY(0).normalize(),
-    );
-    const count = Math.max(3, Math.round(length / 0.72));
-    const depth = (length / count) * 0.68;
-    return Array.from({ length: count }, (_, index) => {
-      const t = (index + 0.5) / count;
-      return {
-        position: from
-          .clone()
-          .lerp(to, t)
-          .setY(THREE.MathUtils.lerp(from.y, to.y, t) + 0.1 + (index % 2) * 0.08),
-        quaternion: rotation,
-        depth,
-      };
-    });
-  }, [from, to]);
-  return (
-    <>
-      {pieces.map((piece, index) => (
-        <mesh
-          key={index}
-          position={piece.position}
-          quaternion={piece.quaternion}
-          receiveShadow
-          castShadow
-        >
-          <boxGeometry args={[1.2, 0.18, piece.depth]} />
-          <meshStandardMaterial color={PALETTE.steps} roughness={1} />
-        </mesh>
-      ))}
-    </>
-  );
-}
+/*
+  Causeway and StoneSteps used to live here — a plank between two islands and
+  a flight of slabs between two stones. Both are gone. A drawn connection
+  between two things you travel between by clicking is decoration that has to
+  be kept in sync with a layout, and it was reading as scaffolding rather than
+  as landscape. Order carries the sequence; nothing needs to be tied together.
+*/
 
 /** Gold ring on the live stone. Opacity and scale breathe; the learner stands in it. */
-function LiveRing({ radius }: { radius: number }) {
+/**
+ * The pulse around the one live thing.
+ *
+ * `lift` exists because a lesson marker is deliberately sunk into the ground
+ * (see MARKER_BIAS), so its group origin is below the surface. A ring drawn at
+ * a fixed height off that origin comes out half-buried, which on screen is not
+ * a ring at all — it is two gold slivers either side of the marker.
+ */
+function LiveRing({ radius, lift = 0.08 }: { radius: number; lift?: number }) {
   const mesh = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
     const ring = mesh.current;
@@ -475,7 +430,7 @@ function LiveRing({ radius }: { radius: number }) {
     ring.scale.set(scale, scale, scale);
   });
   return (
-    <mesh ref={mesh} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, 0]}>
+    <mesh ref={mesh} rotation={[-Math.PI / 2, 0, 0]} position={[0, lift, 0]}>
       <ringGeometry args={[radius * 1.02, radius * 1.2, 28]} />
       <meshBasicMaterial color={PALETTE.accent} transparent opacity={0.85} />
     </mesh>
@@ -795,10 +750,6 @@ export function WorldScene({
   /** `null` keeps the default dome — the four-seas overview. */
   skyStudyId?: string | null;
 }) {
-  const byKey = new Map(
-    placements.map((entry) => [`${entry.node.studyId}/${entry.node.courseId}`, entry]),
-  );
-
   // Every prop in the world, gathered per model so each becomes one instanced
   // draw rather than one draw per tree.
   const fields = useMemo(() => {
@@ -816,18 +767,12 @@ export function WorldScene({
     <>
       <Weather extent={ring * 1.5} sky={skyStopsForStudy(skyStudyId)} />
       {learnerAt ? <CloudField around={learnerAt} /> : null}
-      {placements.map((entry) =>
-        entry.node.prerequisiteCourseIds.map((id) => {
-          const from = byKey.get(`${entry.node.studyId}/${id}`);
-          return from ? (
-            <Causeway
-              key={`${entry.node.courseId}-${id}`}
-              from={from.position}
-              to={entry.position}
-            />
-          ) : null;
-        }),
-      )}
+      {/*
+        No roads between islands. They used to be drawn from
+        `prerequisiteCourseIds`, one causeway per edge — furniture for a graph
+        the learner cannot walk anyway, and the thing that made the sea read as
+        a diagram. The order is the road now; the islands sit on it.
+      */}
       {placements.map((entry) => (
         <Island
           key={`${entry.node.studyId}/${entry.node.courseId}`}
@@ -897,9 +842,14 @@ export function placeCourse(
       lessonId: entry.lesson.id,
       lessonTitle: entry.lesson.title,
       chars: entry.lesson.content.length,
-      // The road climbs. Flattening it to y=0 threw away the one thing a
-      // course path has that a page cannot: looking back down it.
-      position: new THREE.Vector3(points[index]!.x, points[index]!.y, points[index]!.z),
+      // On the island's surface, sunk by a fraction of the marker so the
+      // profile-vs-mesh disagreement (see courseSurfaceY) can only ever bury a
+      // marker slightly, never float it.
+      position: new THREE.Vector3(
+        points[index]!.x,
+        courseSurfaceY(points[index]!.x, points[index]!.z, flat.length) - MARKER_BIAS * 0.72,
+        points[index]!.z,
+      ),
       state: done
         ? "done"
         : index === firstOpen
@@ -920,8 +870,115 @@ export function placeCourse(
 }
 
 /**
- * Inside a course, the same world at walking scale: each lesson is a stepping
- * stone, and the ones already crossed have something growing on them.
+ * The surface of one island, sized to hold its own road.
+ *
+ * A course used to be a chain of small islands in the air, one per lesson, tied
+ * together with planks. That put the course's structure in the sky and made
+ * every lesson look like a destination, when a lesson is a step. So there is
+ * one island — the course — and the lessons are markers lying on it.
+ *
+ * The island is a unit-radius lathe scaled per axis, which is why a long course
+ * is a long ridge rather than a bigger circle: the ground follows the road, and
+ * the road's length is the number of lessons. Rough on purpose; the shape of
+ * the terrain is not carrying information yet.
+ */
+export function courseIslandScale(lessons: number) {
+  const extent = courseIslandExtent(lessons);
+  // Height follows the narrow axis, halved. Scaling it with the long axis would
+  // turn a 41-lesson course into a mountain range for no reason a learner could
+  // read; scaling it 1:1 with the narrow one gave a block — the lathe profile
+  // spends most of its length on a root that hangs below the waterline, so a
+  // full-height island seen from above is a tall dark cone with a lid. This is
+  // a plate with a shore, which is what the markers need to sit on.
+  return { x: extent.x, y: Math.min(extent.x, extent.z) * 0.38, z: extent.z };
+}
+
+/**
+ * Where the ground is under a point on the course island.
+ *
+ * `buildIsland` also jitters each radial column by up to ±17%, so this is the
+ * profile's height, not the mesh's, and a marker can end up slightly proud or
+ * slightly sunk. Markers are sunk by a fixed bias below so the error only ever
+ * buries them a little — a stone half in the ground reads as a stone, and a
+ * stone hovering above it reads as a bug.
+ */
+export function courseSurfaceY(x: number, z: number, lessons: number): number {
+  const scale = courseIslandScale(lessons);
+  const fraction = Math.hypot(x / scale.x, z / scale.z);
+  return surfaceHeight(fraction) * scale.y;
+}
+
+/** How far a marker sinks into the ground, in marker radii. */
+const MARKER_BIAS = 0.55;
+
+/**
+ * The colour of a lesson marker.
+ *
+ * Four states, and only one of them is warm and bright. The accent belongs to
+ * exactly one marker on the island — the next lesson — for the same reason the
+ * beacon burns on exactly one island in the sea: a map that highlights
+ * everything available has answered "what could I do", and the question is
+ * "what do I do".
+ */
+const MARKER_COLOUR = {
+  done: 0xcbb277,
+  live: PALETTE.accent,
+  idle: 0xe8e4d8,
+  locked: 0x8f959c,
+} as const;
+
+function LessonMarker({
+  lesson,
+  radius,
+  onPick,
+  onHover,
+}: {
+  lesson: LessonPlacement;
+  radius: number;
+  onPick: (lesson: LessonPlacement) => void;
+  onHover: (lesson: LessonPlacement | null) => void;
+}) {
+  return (
+    <group position={lesson.position}>
+      <mesh
+        castShadow
+        receiveShadow
+        onClick={(event) => {
+          event.stopPropagation();
+          playSound("map.select");
+          onPick(lesson);
+        }}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          playSound("map.hover");
+          onHover(lesson);
+        }}
+        onPointerOut={() => onHover(null)}
+      >
+        {/*
+          Slightly wider at the base than the top, so the light finds an edge
+          and the marker reads as a disc set into the ground rather than as a
+          circle painted on it. Sixteen sides at this size is already a circle;
+          more is spent on nothing.
+        */}
+        <cylinderGeometry args={[radius, radius * 1.1, radius * 0.55, 18]} />
+        <meshStandardMaterial
+          color={MARKER_COLOUR[lesson.state]}
+          roughness={lesson.state === "live" ? 0.5 : 0.85}
+          emissive={lesson.state === "live" ? PALETTE.accent : 0x000000}
+          emissiveIntensity={lesson.state === "live" ? 0.32 : 0}
+          flatShading
+        />
+      </mesh>
+      {lesson.state === "live" ? (
+        <LiveRing radius={radius * 1.5} lift={MARKER_BIAS * 0.72 + 0.07} />
+      ) : null}
+    </group>
+  );
+}
+
+/**
+ * Inside a course: one island, and the lessons lying on it in order.
  */
 export function CourseScene({
   lessons,
@@ -935,102 +992,90 @@ export function CourseScene({
   skyStudyId?: string | null;
 }) {
   const live = lessons.find((lesson) => lesson.state === "live");
-  const liveIndex = lessons.findIndex((lesson) => lesson.state === "live");
-  const haze = lessons[Math.min(Math.max(liveIndex, 0) + 5, lessons.length - 1)];
-  const extent = useMemo(
-    () =>
-      Math.max(...lessons.map((lesson) => Math.hypot(lesson.position.x, lesson.position.z)), 20),
+  const scale = useMemo(() => courseIslandScale(lessons.length), [lessons.length]);
+  const extent = Math.max(scale.x, scale.z);
+
+  // One island, built once at unit radius and scaled. The seed is the course's
+  // first lesson id rather than the course id, because this component is only
+  // ever handed placements — and a stable seed matters more than a tidy one:
+  // the island a learner remembers has to still be there next month.
+  const island = useMemo(
+    () => buildIsland(lessons[0]?.lessonId ?? "course", 1, lessons[0]?.hueShift ?? 0, 15),
     [lessons],
   );
 
-  const stones = useMemo(
+  const markers = useMemo(
     () =>
-      lessons.map((lesson) => {
-        const radius = stoneRadius(lesson.chars);
-        const shape = buildIsland(lesson.lessonId, radius, lesson.hueShift);
-        const lockedGeometry =
-          lesson.state === "locked" ? lockIslandGeometry(shape.geometry) : shape.geometry;
-        return { lesson, radius, shape, lockedGeometry };
-      }),
+      lessons.map((lesson) => ({
+        lesson,
+        // Still varies with the length of the lesson, but across a fifth of the
+        // old range: these are markers in a row now, and a row of discs at
+        // wildly different sizes reads as noise rather than as information.
+        radius: 1.5 + Math.min(stoneRadius(lesson.chars) - 1.5, 1.4) * 0.42,
+      })),
     [lessons],
   );
 
+  // Growth marks progress, same rule as the sea: a finished lesson has
+  // something growing beside it, an unfinished one has bare ground.
   const fields = useMemo(() => {
     const merged = new Map<Role, Placement[]>();
-    for (const { lesson, radius, shape } of stones) {
-      if (lesson.state === "locked") continue;
+    for (const { lesson, radius } of markers) {
+      if (lesson.state === "locked" || lesson.state === "idle") continue;
       const random = seeded(`${lesson.lessonId}/dress`);
       const grown = lesson.state === "done";
-      for (const slot of shape.slots.slice(0, grown ? 4 : 2)) {
+      for (let slot = 0; slot < (grown ? 2 : 1); slot += 1) {
+        const angle = random() * Math.PI * 2;
+        const away = radius * (2.1 + random() * 1.4);
+        const x = lesson.position.x + Math.cos(angle) * away;
+        const z = lesson.position.z + Math.sin(angle) * away;
         const role = grown
           ? TREES[Math.floor(random() * TREES.length)]!
           : STONES[Math.floor(random() * STONES.length)]!;
         const list = merged.get(role) ?? [];
         list.push({
-          position: slot.clone().add(lesson.position),
-          height: radius * (grown ? 0.44 : 0.16),
+          position: new THREE.Vector3(x, courseSurfaceY(x, z, lessons.length) - 0.1, z),
+          height: grown ? 1.5 + random() * 0.9 : 0.5,
           turn: random() * Math.PI * 2,
         });
         merged.set(role, list);
       }
     }
     return [...merged.entries()];
-  }, [stones]);
+  }, [markers, lessons.length]);
 
   return (
     <>
       {/*
-        Sight line past the five readable stones, not the length of the road.
-        Fog used to start at 52, which ate locked nodes into the same grey as
-        "far away". Locked is a colour treatment now; fog only takes the ones
-        you have already stopped reading.
+        Sight line past the readable markers, not the length of the road. Fog
+        used to start at 52, which ate locked nodes into the same grey as "far
+        away". Locked is a colour treatment; fog only takes the ones you have
+        already stopped reading.
       */}
-      <Weather extent={extent * 1.3} fog={[88, 210]} sky={skyStopsForStudy(skyStudyId)} />
-      {haze ? <CloudField around={haze.position} /> : null}
-      {lessons.map((lesson, index) =>
-        index > 0 ? (
-          lesson.unitIndex % 2 === 1 ? (
-            <StoneSteps
-              key={`road-${lesson.lessonId}`}
-              from={lessons[index - 1]!.position}
-              to={lesson.position}
-            />
-          ) : (
-            <Causeway
-              key={`road-${lesson.lessonId}`}
-              from={lessons[index - 1]!.position}
-              to={lesson.position}
-            />
-          )
-        ) : null,
-      )}
-      {stones.map(({ lesson, radius, lockedGeometry }) => (
-        <group key={lesson.lessonId} position={lesson.position}>
-          <mesh
-            geometry={lockedGeometry}
-            castShadow
-            receiveShadow
-            onClick={(event) => {
-              event.stopPropagation();
-              playSound("map.select");
-              onPick(lesson);
-            }}
-            onPointerOver={(event) => {
-              event.stopPropagation();
-              playSound("map.hover");
-              onHover(lesson);
-            }}
-            onPointerOut={() => onHover(null)}
-          >
-            <meshStandardMaterial vertexColors flatShading roughness={0.94} color={0xffffff} />
-          </mesh>
-          {lesson.state === "live" ? <LiveRing radius={radius} /> : null}
-        </group>
+      {/*
+        `Weather` already lays a cloud sea *under* the islands. A CloudField
+        used to sit here as well, centred five lessons ahead of the learner —
+        which was five islands away when lessons were islands, and is five
+        metres away now that they are markers on one. It rendered as a white
+        blob lying on the ground covering three of them.
+      */}
+      <Weather extent={extent * 1.6} fog={[88, 210]} sky={skyStopsForStudy(skyStudyId)} />
+      <mesh geometry={island.geometry} scale={[scale.x, scale.y, scale.z]} castShadow receiveShadow>
+        <meshStandardMaterial vertexColors flatShading roughness={0.94} color={0xffffff} />
+      </mesh>
+      {markers.map(({ lesson, radius }) => (
+        <LessonMarker
+          key={lesson.lessonId}
+          lesson={lesson}
+          radius={radius}
+          onPick={onPick}
+          onHover={onHover}
+        />
       ))}
       {/*
         Only the kit models suspend, so only they sit behind a boundary. Sky,
-        sea, islands and roads are computed here and owe nothing to the network
-        — gating them on a tree finishing its download is what turns a slow
+        sea and island are computed here and owe nothing to the network —
+        gating them on a tree finishing its download is what turns a slow
         connection into a blank screen instead of a world that fills in.
       */}
       <Suspense fallback={null}>
