@@ -10,7 +10,14 @@
  *   import. Anything not listed there is internal assembly.
  */
 
-export { CourseScene, placeCourse, placeWorld, settlementSize, WorldScene } from "./Maps.js";
+export {
+  CourseScene,
+  placeCourse,
+  placeWorld,
+  settlementSize,
+  skyStopsForStudy,
+  WorldScene,
+} from "./Maps.js";
 export type { LessonPlacement, Marker } from "./Maps.js";
 export { Stage } from "./Stage.js";
 export { courseSprites } from "./path-overlay.js";
@@ -22,6 +29,9 @@ export {
   Flight,
   LabelProbe,
   MAP_CONTROLS_HINT,
+  WORLD_DISTANCE_MAX,
+  WORLD_DISTANCE_MIN,
   WORLD_POLAR,
 } from "./controls.js";
 export { frameWorld } from "./frame.js";
+export { wheelIntent } from "./wheel-intent.js";

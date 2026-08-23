@@ -158,7 +158,7 @@ export function NavRail({
   readonly brand?: ReactNode;
 }) {
   return (
-    <nav className="nav-rail" aria-label="Primary">
+    <nav className="nav-rail" id="app-shell-rail" aria-label="Primary">
       {brand != null ? <div className="nav-rail__brand">{brand}</div> : null}
       <ul className="nav-rail__list">
         {items.map((item) => (

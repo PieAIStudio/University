@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { SKY_STOPS } from "./Maps";
+import { SKY_STOPS, skyStopsForStudy } from "./Maps";
 
 function luma(hex: number) {
   const r = ((hex >> 16) & 255) / 255;
@@ -32,5 +32,15 @@ describe("sky stops", () => {
     expect(zenith.b).toBeGreaterThan(zenith.r + 40);
     expect(horizon.r).toBeGreaterThan(horizon.b);
     expect(horizon.r).toBeGreaterThan(horizon.g);
+  });
+
+  it("keeps the default dome for the four-seas overview and shifts a named study", () => {
+    const unset = skyStopsForStudy(null);
+    expect(unset.zenith).toBe(SKY_STOPS.zenith);
+    const turing = skyStopsForStudy("turing-pact");
+    const buzz = skyStopsForStudy("buzz");
+    expect(turing.zenith).not.toBe(SKY_STOPS.zenith);
+    expect(turing.zenith).not.toBe(buzz.zenith);
+    expect(luma(turing.mid) - luma(turing.zenith)).toBeGreaterThan(0.05);
   });
 });

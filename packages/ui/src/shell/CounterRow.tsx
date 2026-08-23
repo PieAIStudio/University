@@ -19,6 +19,13 @@ export function CounterRow({ counters }: { readonly counters: readonly ShellCoun
           ? "counter-row__item counter-row__item--muted"
           : "counter-row__item";
         const name = counterName(counter);
+        if (counter.control) {
+          return (
+            <div key={counter.id} className="counter-row__slot">
+              {counter.control}
+            </div>
+          );
+        }
         const body = (
           <>
             <span className="counter-row__icon">{counter.icon}</span>

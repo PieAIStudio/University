@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { IslandIcon, StreakIcon } from "../shell/icons.js";
 import type { ShellCounter } from "../shell/AppShell.js";
 
@@ -31,6 +33,8 @@ export function universityCounters(args: {
    * scene, which disappears the moment you enter a course.
    */
   readonly projectName: string;
+  /** The ▾ next to the name. Absent, the slot stays a labelled value. */
+  readonly projectControl?: ReactNode;
   /**
    * `null` means this shell has no streak signal yet — not that the streak is
    * zero. The authoring shell is in that state until ADR-0001's shared
@@ -44,7 +48,13 @@ export function universityCounters(args: {
   readonly streakDays: number | null;
 }): readonly ShellCounter[] {
   const counters: ShellCounter[] = [
-    { id: "island", icon: <IslandIcon />, value: args.projectName, label: "当前项目" },
+    {
+      id: "island",
+      icon: <IslandIcon />,
+      value: args.projectName,
+      label: "当前项目",
+      control: args.projectControl,
+    },
   ];
   if (args.streakDays !== null) {
     counters.push({

@@ -47,6 +47,29 @@ export const SKY_STOPS = {
   horizon: 0xf2d4b0,
 } as const;
 
+export type SkyStops = { readonly zenith: number; readonly mid: number; readonly horizon: number };
+
+/**
+ * One study, one climate. Hue-only so the three luminance steps stay a sky.
+ * `null` is the overview — all four seas under the default dome.
+ */
+export function skyStopsForStudy(studyId: string | null): SkyStops {
+  if (!studyId) {
+    return { zenith: SKY_STOPS.zenith, mid: SKY_STOPS.mid, horizon: SKY_STOPS.horizon };
+  }
+  const turn = (hash(studyId) - 0.5) * 0.28;
+  const shift = (hex: number) => {
+    const color = new THREE.Color(hex);
+    color.offsetHSL(turn, 0, 0);
+    return color.getHex();
+  };
+  return {
+    zenith: shift(SKY_STOPS.zenith),
+    mid: shift(SKY_STOPS.mid),
+    horizon: shift(SKY_STOPS.horizon),
+  };
+}
+
 const PALETTE = {
   // The sea is most of the frame, so the sea is what sets the exposure of the
   // whole product. Measured: with a near-navy sea the scene's median linear
@@ -496,16 +519,16 @@ function Learner({ position, scale = 1 }: { position: THREE.Vector3; scale?: num
  * honest fit — and it does not pull a second lighting model into a scene
  * that already has a hemisphere and a sun.
  */
-function SkyDome() {
+function SkyDome({ stops }: { stops: SkyStops }) {
   const mesh = useRef<THREE.Mesh>(null);
-  const uniforms = useMemo(
-    () => ({
-      uZenith: { value: new THREE.Color(PALETTE.skyZenith) },
-      uMid: { value: new THREE.Color(PALETTE.skyMid) },
-      uHorizon: { value: new THREE.Color(PALETTE.skyHorizon) },
-    }),
-    [],
-  );
+  const uniforms = useRef({
+    uZenith: { value: new THREE.Color(stops.zenith) },
+    uMid: { value: new THREE.Color(stops.mid) },
+    uHorizon: { value: new THREE.Color(stops.horizon) },
+  }).current;
+  uniforms.uZenith.value.setHex(stops.zenith);
+  uniforms.uMid.value.setHex(stops.mid);
+  uniforms.uHorizon.value.setHex(stops.horizon);
   useFrame(({ camera }) => {
     mesh.current?.position.copy(camera.position);
   });
@@ -672,6 +695,7 @@ void main() {
 function Weather({
   extent,
   fog,
+  sky = SKY_STOPS,
 }: {
   extent: number;
   /**
@@ -685,6 +709,7 @@ function Weather({
    * is a fog that costs a uniform and does nothing.
    */
   fog?: readonly [number, number];
+  sky?: SkyStops;
 }) {
   const [, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
   // FogExp2 has no near plane. Density is derived from the old far so the
@@ -694,15 +719,15 @@ function Weather({
   const density = 1.15 / fogTo;
   return (
     <>
-      <color attach="background" args={[PALETTE.skyZenith]} />
-      <fogExp2 attach="fog" args={[PALETTE.skyHorizon, density]} />
-      <SkyDome />
+      <color attach="background" args={[sky.zenith]} />
+      <fogExp2 attach="fog" args={[sky.horizon, density]} />
+      <SkyDome stops={sky} />
       {/*
         Hemisphere sky is a stop lighter than the painted zenith on purpose:
         the dome can sit at a saturated blue without pulling the islands'
         midtones down with it. Ground stays the moss the land already is.
       */}
-      <hemisphereLight args={[PALETTE.skyMid, 0x4a5a3a, 1.15]} />
+      <hemisphereLight args={[sky.mid, 0x4a5a3a, 1.15]} />
       {/*
         The shadow camera is deliberately far smaller than the world.
         Stretched across the whole archipelago, one 2048 map gives each texel a
@@ -754,6 +779,7 @@ export function WorldScene({
   onPick,
   onHover,
   focus,
+  skyStudyId = null,
 }: {
   placements: readonly WorldPlacement[];
   centres: Map<string, THREE.Vector3>;
@@ -766,6 +792,8 @@ export function WorldScene({
    * omits the prop and the world looks as it does today.
    */
   focus?: { readonly studyId: string; readonly courseIds: readonly string[] };
+  /** `null` keeps the default dome — the four-seas overview. */
+  skyStudyId?: string | null;
 }) {
   const byKey = new Map(
     placements.map((entry) => [`${entry.node.studyId}/${entry.node.courseId}`, entry]),
@@ -786,7 +814,7 @@ export function WorldScene({
 
   return (
     <>
-      <Weather extent={ring * 1.5} />
+      <Weather extent={ring * 1.5} sky={skyStopsForStudy(skyStudyId)} />
       {learnerAt ? <CloudField around={learnerAt} /> : null}
       {placements.map((entry) =>
         entry.node.prerequisiteCourseIds.map((id) => {
@@ -899,10 +927,12 @@ export function CourseScene({
   lessons,
   onPick,
   onHover,
+  skyStudyId = null,
 }: {
   lessons: readonly LessonPlacement[];
   onPick: (lesson: LessonPlacement) => void;
   onHover: (lesson: LessonPlacement | null) => void;
+  skyStudyId?: string | null;
 }) {
   const live = lessons.find((lesson) => lesson.state === "live");
   const liveIndex = lessons.findIndex((lesson) => lesson.state === "live");
@@ -955,7 +985,7 @@ export function CourseScene({
         "far away". Locked is a colour treatment now; fog only takes the ones
         you have already stopped reading.
       */}
-      <Weather extent={extent * 1.3} fog={[88, 210]} />
+      <Weather extent={extent * 1.3} fog={[88, 210]} sky={skyStopsForStudy(skyStudyId)} />
       {haze ? <CloudField around={haze.position} /> : null}
       {lessons.map((lesson, index) =>
         index > 0 ? (

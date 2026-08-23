@@ -563,6 +563,26 @@ summary:focus-visible,
   background: #0d1019;
 }
 
+@media (min-width: 768px) {
+  .world-landing {
+    position: relative;
+    min-height: 100dvh;
+  }
+
+  .world-landing__stage {
+    height: 100dvh;
+    min-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .world-landing__authoring {
+    position: absolute;
+    z-index: 4;
+    left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
+    bottom: 48px;
+  }
+}
+
 .world-landing__authoring {
   display: grid;
   gap: 12px;

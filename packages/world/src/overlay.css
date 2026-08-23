@@ -116,12 +116,12 @@ button.label:focus-visible {
 }
 
 .picked {
-  right: 14px;
+  right: calc(var(--shell-gutter, 16px) + var(--shell-aside-width, 0px) + 12px);
   width: 260px;
 }
 
 .nextup {
-  left: 14px;
+  left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
   width: 280px;
 }
 
@@ -178,7 +178,7 @@ button.label:focus-visible {
 .hint {
   position: absolute;
   z-index: 2;
-  left: 14px;
+  left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
   bottom: 12px;
   margin: 0;
   font-size: 0.76rem;

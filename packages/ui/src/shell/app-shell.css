@@ -15,7 +15,11 @@
 .tab-bar,
 .counter-row,
 .app-shell__main,
-.app-shell__aside {
+.app-shell__aside,
+.app-shell__west,
+.app-shell__east,
+.app-shell__east-stack,
+.app-shell__collapse {
   box-sizing: border-box;
 }
 
@@ -32,6 +36,24 @@
   row-gap: 12px;
   padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
   color: var(--game-ui-text, #e9edf5);
+  --shell-gutter: 16px;
+  --shell-rail-width: 0px;
+  --shell-aside-width: 0px;
+}
+
+/*
+  Mobile: flatten the west/east wrappers so the original grid areas still
+  apply. Collapse controls exist in the tree (one tree at every width) and
+  leave it via display: none, the same way the rail already does.
+*/
+.app-shell__west,
+.app-shell__east,
+.app-shell__east-stack {
+  display: contents;
+}
+
+.app-shell__collapse {
+  display: none;
 }
 
 .nav-rail {
@@ -323,24 +345,120 @@
   white-space: nowrap;
 }
 
-/* ---- 768–1159: icon rail, no tabs, no aside, counters above main ------ */
+/*
+  ≥768: the canvas owns the viewport. Rail and aside become opaque cards
+  floating on top of it, with a gutter so the sea shows around them.
+
+  Not frosted. `backdrop-filter` over a live WebGL canvas greys out anything
+  wider than about 260px — see docs/reference/learnings/workflow-issues/.
+  Opacity and shadow are how these read as floating; the see-through is the
+  water around the cards, not the cards themselves.
+*/
 
 @media (min-width: 768px) {
   .app-shell {
-    grid-template-columns: 4.75rem minmax(0, 1fr);
-    grid-template-areas:
-      "rail counters"
-      "rail main";
-    column-gap: 8px;
-    padding-bottom: 0;
-    padding-inline: 12px;
+    display: block;
+    position: relative;
+    height: 100dvh;
+    overflow: hidden;
+    padding: 0;
+    --shell-rail-width: 4.75rem;
+    --shell-aside-width: 300px;
+  }
+
+  .app-shell[data-rail-collapsed="true"] {
+    --shell-rail-width: 0px;
+  }
+
+  .app-shell[data-aside-collapsed="true"] {
+    --shell-aside-width: 0px;
+  }
+
+  .app-shell__main {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: auto;
+    height: 100%;
+    max-width: none;
+  }
+
+  .app-shell__main:has(.stagewrap:not([hidden])) {
+    overflow: hidden;
+  }
+
+  .app-shell__west,
+  .app-shell__east,
+  .app-shell__east-stack {
+    display: flex;
+  }
+
+  .app-shell__west,
+  .app-shell__east {
+    position: absolute;
+    z-index: 20;
+    top: var(--shell-gutter);
+    bottom: var(--shell-gutter);
+    align-items: stretch;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .app-shell__west > *,
+  .app-shell__east > * {
+    pointer-events: auto;
+  }
+
+  .app-shell__west {
+    left: var(--shell-gutter);
+    flex-direction: row;
+  }
+
+  .app-shell__east {
+    right: var(--shell-gutter);
+    bottom: auto;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    max-width: min(366px, calc(100% - 8rem));
+    max-height: calc(100dvh - 2 * var(--shell-gutter));
+  }
+
+  .app-shell__east-stack {
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    width: var(--shell-aside-width);
+    flex: 0 1 auto;
+    max-height: calc(100dvh - 2 * var(--shell-gutter));
+    overflow: auto;
+  }
+
+  .app-shell:not(:has(.app-shell__aside:not(:empty))) .app-shell__east-stack,
+  .app-shell[data-aside-collapsed="true"] .app-shell__east-stack {
+    width: auto;
+    min-width: 12rem;
   }
 
   .nav-rail {
     display: flex;
-    position: sticky;
-    top: 0;
-    padding-inline: 8px;
+    position: relative;
+    top: auto;
+    height: auto;
+    max-height: none;
+    align-self: stretch;
+    width: 4.75rem;
+    padding: 16px 8px;
+    overflow: auto;
+    border-right: 0;
+    border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+    border-radius: var(--game-ui-radius-panel, 14px);
+    background: var(--game-ui-panel-strong, #151b2b);
+    backdrop-filter: none;
+    box-shadow: 0 18px 48px rgb(0 0 0 / 35%);
+  }
+
+  .app-shell[data-rail-collapsed="true"] .nav-rail {
+    display: none;
   }
 
   .nav-rail__brand {
@@ -372,37 +490,78 @@
   }
 
   .counter-row {
-    padding-inline: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+    border-radius: var(--game-ui-radius-panel, 14px);
+    background: var(--game-ui-panel-strong, #151b2b);
+    backdrop-filter: none;
+    box-shadow: 0 18px 48px rgb(0 0 0 / 35%);
+  }
+
+  .app-shell__aside {
+    display: block;
+    min-height: 0;
+    overflow: auto;
+    flex: 0 1 auto;
+    padding: 12px;
+    border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+    border-radius: var(--game-ui-radius-panel, 14px);
+    background: var(--game-ui-panel-strong, #151b2b);
+    backdrop-filter: none;
+    box-shadow: 0 18px 48px rgb(0 0 0 / 35%);
+  }
+
+  .app-shell__aside:empty,
+  .app-shell[data-aside-collapsed="true"] .app-shell__aside {
+    display: none;
+  }
+
+  .app-shell__collapse {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    gap: 4px;
+    min-width: 2rem;
+    min-height: 2.5rem;
+    padding: 6px 8px;
+    border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+    border-radius: var(--game-ui-radius-control, 10px);
+    background: var(--game-ui-panel-strong, #151b2b);
+    backdrop-filter: none;
+    box-shadow: 0 10px 28px rgb(0 0 0 / 30%);
+    color: var(--game-ui-text, #e9edf5);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .app-shell:not(:has(.app-shell__aside:not(:empty))) .app-shell__collapse--aside {
+    display: none;
+  }
+
+  .app-shell[data-rail-collapsed="true"] .app-shell__collapse--rail .app-shell__collapse-label,
+  .app-shell[data-aside-collapsed="true"] .app-shell__collapse--aside .app-shell__collapse-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 }
 
-/* ---- ≥1160: 257 / minmax(0, 618) / 366, counters on the aside column -- */
+/* ---- ≥1160: labelled rail, slightly wider aside. Same overlay, not a grid. */
 
 @media (min-width: 1160px) {
   .app-shell {
-    height: 100dvh;
-    overflow: hidden;
-    grid-template-columns: 257px minmax(0, 618px) 366px;
-    /*
-      Without this the two rows split the viewport evenly and the counter strip
-      claims 368px of the right column, pushing the aside below the fold. The
-      counters are a strip: they take what they need and the aside takes the
-      rest.
-    */
-    grid-template-rows: auto minmax(0, 1fr);
-    grid-template-areas:
-      "rail main counters"
-      "rail main aside";
-    column-gap: 24px;
-    justify-content: center;
-    padding-inline: 24px;
+    --shell-rail-width: 257px;
+    --shell-aside-width: 320px;
   }
 
   .nav-rail {
-    position: static;
-    align-self: stretch;
-    height: auto;
-    max-height: none;
+    width: 257px;
     padding-inline: 16px;
   }
 
@@ -427,46 +586,8 @@
     white-space: nowrap;
   }
 
-  .app-shell__main {
-    min-height: 0;
-    overflow: auto;
-  }
-
-  .app-shell__aside {
-    display: block;
-    min-height: 0;
-    overflow: auto;
-  }
-
-  .counter-row {
-    padding: 12px 4px 0;
-  }
-
-  /*
-    A page with nothing to say in the context column should not reserve a
-    quarter of the screen to say it.
-
-    The rail is per-page context, not a fixed widget shelf — settings turns it
-    into settings sub-navigation, learn puts the scene and today's card there,
-    and five pages have nothing for it yet. Those were rendering 366px of
-    background beside a card floating at the top of an empty column, which
-    reads as broken rather than as empty.
-
-    `:empty` is the honest test: a caller passing a fragment that renders
-    nothing still produces an `<aside>` element, so `aside != null` in the
-    component cannot see it, but the DOM can. When it matches, the layout
-    falls back to the same two-column arrangement the 768–1159 range already
-    uses — counters above main — rather than inventing a third one.
-  */
-  .app-shell:not(:has(.app-shell__aside:not(:empty))) {
-    grid-template-columns: 257px minmax(0, 618px);
-    grid-template-areas:
-      "rail counters"
-      "rail main";
-  }
-
-  .app-shell__aside:empty {
-    display: none;
+  .app-shell__east-stack {
+    width: 320px;
   }
 }
 

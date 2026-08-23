@@ -67,7 +67,7 @@ export function WorldLanding({
   readonly onSelectStudy: (studyId: string) => void;
   readonly onOpenLesson: (locator: LessonRef) => void;
 }) {
-  const wide = useMinWidth(1160);
+  const wide = useMinWidth(768);
   const [hovered, setHovered] = useState<string | null>(null);
   const [picked, setPicked] = useState<CourseNode | null>(null);
   const [sceneReady, setSceneReady] = useState(false);
@@ -114,9 +114,11 @@ export function WorldLanding({
 
   const learnerAt = nextUp?.position ?? null;
   const framed = useMemo(() => {
-    const centre = nextUp ? (world?.centres.get(nextUp.node.studyId) ?? null) : null;
-    return frameWorld(learnerAt, centre);
-  }, [world, nextUp, learnerAt]);
+    if (selectedStudyId == null) return frameWorld(null, null, { overview: true });
+    const centre = world?.centres.get(selectedStudyId) ?? null;
+    const at = nextUp?.node.studyId === selectedStudyId ? learnerAt : centre;
+    return frameWorld(at, centre);
+  }, [world, nextUp, learnerAt, selectedStudyId]);
 
   const markers: readonly Marker[] = useMemo(() => {
     if (!world) return [];
@@ -210,6 +212,7 @@ export function WorldLanding({
               centres={world.centres}
               ring={world.ring}
               learnerAt={learnerAt}
+              skyStudyId={selectedStudyId}
               focus={focus ?? undefined}
               onPick={(node) => {
                 setPicked(node);

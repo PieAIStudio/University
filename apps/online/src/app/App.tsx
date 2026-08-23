@@ -23,12 +23,14 @@ import {
   useSyncExternalStore,
   type CSSProperties,
 } from "react";
-import * as THREE from "three";
-
 import { courseShapeOf, readCourseProgress } from "@pieai/university-core";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
+import {
+  StudySwitcher,
+  type StudySwitchItem,
+} from "@pieai/university-ui/navigation/StudySwitcher.js";
 import {
   AccountPanel,
   LeagueEmpty,
@@ -88,6 +90,7 @@ import {
   MAP_CONTROLS_HINT,
   WORLD_POLAR,
 } from "@pieai/university-world/controls.js";
+import { frameWorld } from "@pieai/university-world/frame.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { activeIdForView, isBareView, useMinWidth } from "./shell-route";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
@@ -128,7 +131,13 @@ export function App() {
       removeEventListener("hashchange", onHash);
     };
   }, []);
-  const wide = useMinWidth(1160);
+  const wide = useMinWidth(768);
+  /**
+   * The study the camera is looking at. `undefined` means "not chosen yet" —
+   * fall back to the learner's next course so the name, the sky and the eye
+   * agree. `null` is the overview, all four seas.
+   */
+  const [mapFocus, setMapFocus] = useState<string | null | undefined>(undefined);
   const [course, setCourse] = useState<Course | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [picked, setPicked] = useState<CourseNode | null>(null);
@@ -258,26 +267,52 @@ export function App() {
   const pointerOrigin = useRef<{ x: number; y: number } | null>(null);
 
   /**
-   * The project's own name, or the first study when nothing is picked.
-   * The island counter is a flag slot: no number, just the name.
+   * One state: the study in the top bar is the sea the camera is looking at.
+   *
+   * These used to be independent, which is how the top bar said TuringPact
+   * while the map showed Buzz. A course URL names the study; on the world
+   * map the next course is the default until the learner picks another sea
+   * or pulls back to all four.
    */
+  const focusedStudyId = useMemo(() => {
+    if (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") {
+      return mapFocus === undefined ? view.studyId : mapFocus;
+    }
+    if (mapFocus !== undefined) return mapFocus;
+    return nextUp?.node.studyId ?? null;
+  }, [view, mapFocus, nextUp]);
+
+  const studyItems: readonly StudySwitchItem[] = useMemo(
+    () =>
+      library.studies.map((study) => {
+        const own = (nodes ?? []).filter((node) => node.studyId === study.studyId);
+        const done = own.reduce((sum, node) => sum + lessonsDone(node), 0);
+        const total = own.reduce((sum, node) => sum + node.lessons, 0);
+        return {
+          id: study.studyId,
+          title: study.title,
+          courseCount: own.length || study.courses.length,
+          done,
+          total,
+        };
+      }),
+    [nodes, lessonsDone],
+  );
+
   const projectName = useMemo(() => {
-    const studyId =
-      view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
-        ? view.studyId
-        : /*
-             On the world view nothing is picked, and falling back to the first
-             study in the catalogue named Buzz while the map was centred on
-             TuringPact and the 「今天」 card said TuringPact — three places, two
-             answers. The learner's own next course is the one thing all three
-             already agree on, so ask it.
-          */
-          (nextUp?.node.studyId ?? null);
-    const study = studyId
-      ? library.studies.find((entry) => entry.studyId === studyId)
-      : library.studies[0];
-    return study?.title ?? "University";
-  }, [view, nextUp]);
+    if (focusedStudyId == null) return "四片海";
+    return library.studies.find((entry) => entry.studyId === focusedStudyId)?.title ?? "University";
+  }, [focusedStudyId]);
+
+  const focusStudy = useCallback(
+    (studyId: string | null) => {
+      setMapFocus(studyId);
+      if (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") {
+        setView({ kind: "world" });
+      }
+    },
+    [view.kind, setView],
+  );
 
   const profileStats = useMemo(() => {
     let lessonsCompleted = 0;
@@ -368,7 +403,10 @@ export function App() {
         kind: "course" as const,
         // Same target as the island, so a label and the shape under it cannot
         // disagree about what selecting a course means.
-        activate: () => setPicked(entry.node),
+        activate: () => {
+          setPicked(entry.node);
+          setMapFocus(entry.node.studyId);
+        },
       })),
     ];
   }, [world, lessons, view, pathSprites]);
@@ -385,6 +423,9 @@ export function App() {
   const counters = universityCounters({
     projectName,
     streakDays: progress.streak.days,
+    projectControl: (
+      <StudySwitcher studies={studyItems} focusedId={focusedStudyId} onSelect={focusStudy} />
+    ),
   });
 
   if (!hasContent) {
@@ -409,35 +450,14 @@ export function App() {
    * they came, up, and off the axis so the road does not stack into a column of
    * discs — is what makes the map answer "where am I" in one glance.
    */
-  const eye = useMemo((): readonly [number, number, number] => {
-    if (!world || !learnerAt) return [0, 90, 110] as const;
-    const centre = world.centres.get(
-      world.placements.find((entry) => entry.position === learnerAt)?.node.studyId ?? "",
-    );
-    const away = learnerAt
-      .clone()
-      .sub(centre ?? new THREE.Vector3())
-      .setY(0);
-    if (away.lengthSq() < 0.01) away.set(0, 0, 1);
-    away.normalize();
-    // This used to sit low and off to one side, with the horizon deliberately
-    // in shot, and the note here argued for it: a high camera makes islands
-    // flat shapes and hides the modelling. That reasoning is sound about a
-    // landscape and wrong about a map. At 16 units of height against a 40-unit
-    // standoff the eye was 68° from vertical — a holiday photograph of an
-    // archipelago, on the screen that has to answer "where do I go now".
-    //
-    // 54° is between true isometric and Mapbox's 3D examples, and the standoff
-    // grows with it because the field of view narrowed from 45° to 34°; a
-    // narrower lens sees less, so the same islands need more distance.
-    const side = new THREE.Vector3(-away.z, 0, away.x).multiplyScalar(15);
-    const spot = learnerAt
-      .clone()
-      .addScaledVector(away, 45)
-      .add(side)
-      .setY(learnerAt.y + 34);
-    return [spot.x, spot.y, spot.z];
-  }, [world, learnerAt]);
+  const framed = useMemo(() => {
+    if (focusedStudyId == null || !world) {
+      return frameWorld(null, null, { overview: true });
+    }
+    const centre = world.centres.get(focusedStudyId) ?? null;
+    const at = nextUp?.node.studyId === focusedStudyId ? learnerAt : centre;
+    return frameWorld(at, centre);
+  }, [world, focusedStudyId, nextUp, learnerAt]);
 
   /**
    * Inside a course the camera stands on the road instead of above it.
@@ -488,12 +508,10 @@ export function App() {
     };
   }, [view.kind, lessons]);
 
-  const cameraFrom: readonly [number, number, number] = roadCamera ? roadCamera.from : eye;
-  const lookAt: readonly [number, number, number] = roadCamera
-    ? roadCamera.look
-    : learnerAt
-      ? [learnerAt.x, learnerAt.y, learnerAt.z]
-      : [0, 0, 0];
+  const cameraFrom: readonly [number, number, number] = roadCamera
+    ? roadCamera.from
+    : framed.cameraFrom;
+  const lookAt: readonly [number, number, number] = roadCamera ? roadCamera.look : framed.lookAt;
 
   const pathUnitId =
     pathOverlay?.unitId ??
@@ -563,13 +581,18 @@ export function App() {
               centres={world.centres}
               ring={world.ring}
               learnerAt={learnerAt}
-              onPick={(node) => setPicked(node)}
+              skyStudyId={focusedStudyId}
+              onPick={(node) => {
+                setPicked(node);
+                setMapFocus(node.studyId);
+              }}
               onHover={(node) => setHovered(node ? node.courseId : null)}
             />
           ) : null}
           {(view.kind === "course" || view.kind === "lesson") && lessons.length > 0 ? (
             <CourseScene
               lessons={lessons}
+              skyStudyId={view.kind === "course" || view.kind === "lesson" ? view.studyId : null}
               onPick={(lesson) => {
                 if (view.kind === "lesson") return;
                 setPathOverlay({
