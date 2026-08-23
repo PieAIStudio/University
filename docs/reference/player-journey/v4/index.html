@@ -757,52 +757,73 @@ pre b{color:var(--go);font-weight:600}
   </p>
 </div>
 
-<h3 id="price">07.3 · 会员几档、多少钱、多少点数</h3>
+<h3 id="price">07.3 · 会员几档、多少钱 —— 对标多邻国，不是对标国内</h3>
 
-<p>老板说他不懂，让我定。那我先把<b>成本算给他看</b>，因为价格只有放在成本旁边才有意义。</p>
+<div class="dec no">
+  <h4>第一稿我算错了一件根本的事</h4>
+  <p>
+    我按<b>国内</b> AI 订阅的价格带（¥19.9–29）定了 ¥25 / ¥68。<b>错在前提：这个产品面向海外。</b>
+    海外用户的参照系不是国内的 AI 编程订阅，是<b>多邻国</b>——他们每天打开的那个学习 App。
+  </p>
+  <p>
+    价格是<b>相对</b>的。同样一个数字，放在「比国内的 AI 工具便宜」旁边和放在
+    「和 Super Duolingo 一样」旁边，是两个完全不同的意思。
+  </p>
+</div>
 
 <div class="fig">
-  <div class="t">一次 AI 讲解到底要花多少钱</div>
-  <p>2026 年 8 月的价格：<b>Haiku 4.5 是 $1 / $5 每百万 token</b>（输入/输出），
-  <b>Sonnet 5 是 $2 / $10</b>。</p>
-  <p>一次讲解大约要：输入 3,000 token（课文片段 + 学习者的答案 + 评分标准）、输出 800 token。算下来——</p>
-  <p><b>小模型一次 ≈ ¥0.05，大模型一次 ≈ ¥0.10。</b>
-  开了提示缓存还能再省一大截，因为课文是重复的。</p>
+  <div class="t">多邻国 2026 年的价目（美元）</div>
+  <p><b>Super</b> $12.99/月 · 约 $95.99/年（合每月约 $8）</p>
+  <p><b>Max</b>（带 AI 的那档）$29.99/月</p>
+  <p><b>Family</b> $119.99/年，最多 6 人，合每人每年约 $20</p>
 </div>
 
 <div class="dec">
-  <h4>决定 · 1 点 = 一次讲解，不用让人算 token</h4>
+  <h4>决定 · 逐档对位，包括家庭套餐</h4>
   <p>
-    <b>1 点</b> = 一次「讲清楚」（小模型）。<b>3 点</b> = 一次「深讲」（大模型，会读整节课文和你的全部标记）。
+    V3 定的方法是「照搬多邻国的结构，格子里换我们的东西」。<b>价目表也是一个格子。</b>
+    他们的 Max 恰好就是带 AI 的那档——和我们的付费理由天然对齐。
   </p>
   <p>
-    <b>不暴露 token、不暴露模型名。</b>学习者要知道的是「我还能问几次」，
-    不是「我还剩多少 token」——后者是我们的实现，不是他的问题。
+    <b>家庭套餐换成「学习小组」：3 个座位，不是 6 个。</b>
+    一起学编程的通常是同事、同学、朋友，三个人是最常见的规模；
+    六个人是家庭的规模，而这不是给家庭用的产品。
   </p>
 </div>
 
 <div class="tw">
 <table>
-<thead><tr><th>档</th><th>价格</th><th>点数</th><th>深讲</th><th>跑满时我们的成本</th><th>毛利（最坏情况）</th></tr></thead>
+<thead><tr><th>档</th><th>对标</th><th>月付</th><th>年付</th><th>给什么</th></tr></thead>
 <tbody>
-<tr><td>免费</td><td>¥0</td><td>每天挣，上限 4/天</td><td><span class="tag n">不能</span></td><td>≤ ¥6/月</td><td>—</td></tr>
-<tr><td><b>学徒</b></td><td><b>¥25/月</b></td><td>300 点/月</td><td><span class="tag n">不能</span></td><td>≤ ¥15</td><td>≥ 40%</td></tr>
-<tr><td><b>匠人</b></td><td><b>¥68/月</b></td><td>900 点/月</td><td><span class="tag y">能</span></td><td>≤ ¥45</td><td>≥ 34%</td></tr>
-<tr><td>年付</td><td>付 10 个月</td><td>同上 ×12</td><td>同上</td><td>—</td><td>—</td></tr>
+<tr><td>免费</td><td>Free</td><td>$0</td><td>—</td><td>全部 560 节课 · 每天挣最多 4 次 AI</td></tr>
+<tr><td><b>学徒</b> Apprentice</td><td>Super</td><td><b>$12.99</b></td><td><b>$95.99</b></td><td>500 次讲解/月</td></tr>
+<tr><td><b>匠人</b> Craftsman</td><td>Max</td><td><b>$29.99</b></td><td><b>$239.99</b></td><td>2,000 次/月 + 深讲 + 「跑一下这个版本」全程陪跑</td></tr>
+<tr><td><b>学习小组</b> Study Group</td><td>Family</td><td><b>$24.99</b></td><td><b>$179.99</b></td><td><b>3 个座位</b>，每人一份学徒额度 + 一起学（07.4）</td></tr>
 </tbody>
 </table>
 </div>
 
-<h4>这几个数是怎么来的</h4>
+<h4>成本对得上吗（最坏情况，假设点数一点不剩全用完）</h4>
+<div class="tw">
+<table>
+<thead><tr><th>档</th><th>月收入</th><th>跑满成本</th><th>毛利</th></tr></thead>
+<tbody>
+<tr><td>免费</td><td>$0</td><td>≤ $0.85（4 次/天 × 30）</td><td>—</td></tr>
+<tr><td>学徒</td><td>$12.99</td><td>$3.50</td><td><b>73%</b></td></tr>
+<tr><td>匠人</td><td>$29.99</td><td>$9.3–14</td><td><b>53–69%</b></td></tr>
+<tr><td>学习小组</td><td>$24.99</td><td>$10.50</td><td><b>58%</b></td></tr>
+</tbody>
+</table>
+</div>
+
 <ul class="chk">
-  <li><b>¥25 落在国内的甜点价里。</b>国内 AI 编程订阅入门档普遍在 <b>¥19.9–29/月</b>
-  （无问芯穹 ¥19.9、MiniMax ¥29），智谱和 Kimi 是 ¥49。<b>我们是学习产品，不是生产工具，
-  不能比工具贵。</b></li>
-  <li><b>毛利写的是最坏情况</b>——假设用户把点数一点不剩全用完。真实兑付率通常在三到五成，
-  实际毛利会高得多。</li>
-  <li><b>点数当月有效，不跨月累积。</b>累积会让成本的尾巴无限长，也会让人囤着不用。</li>
-  <li class="q"><b>这是起价，不是定价。</b>跑满 30 天真实数据后回来调。
-  现在定得再准也是猜——<b>唯一不该做的是等数据齐了才上线。</b></li>
+  <li><b>一次讲解的成本：</b>小模型 $0.007，大模型 $0.014（Haiku 4.5 $1/$5、Sonnet 5 $2/$10，
+  一次约输入 3,000 输出 800 token）。开提示缓存还能再省，因为课文是重复的。</li>
+  <li><b>学习小组比三份学徒便宜 36%</b>（$24.99 vs $38.97）。折扣不能像多邻国那么狠——
+  他们家庭套餐打到约两折，因为<b>多一个人对他们的边际成本近乎为零</b>；
+  我们多一个人是真的多一份 AI 账单。</li>
+  <li><b>点数当月有效，不跨月累积。</b></li>
+  <li class="q"><b>这是起价。</b>跑满 30 天真实兑付率后回来调一次。</li>
 </ul>
 
 <div class="dec hm">
@@ -814,7 +835,74 @@ pre b{color:var(--go);font-weight:600}
   </p>
 </div>
 
-<!-- ═══════════════════════════════════════════ -->
+<h3 id="live">07.4 · 一起学：看得见别人在哪一关</h3>
+
+<p>
+  这是学习小组套餐<b>值得买的原因</b>。一个人学编程最容易停在第三天，
+  而「另一个人也在学、而且已经到第 7 关了」是所有排行榜都做不到的推力——
+  排行榜是分数，这个是<b>人</b>。
+</p>
+
+<div class="dec sky">
+  <h4>决定 · 用 Supabase Realtime，不引入第四个服务</h4>
+  <p>
+    我查了 Liveblocks、PartyKit、Yjs、Ably。结论：<b>我们已经有的那个就是对的那个。</b>
+    SwimmerBackend 跑在 Supabase 上，<code>[realtime]</code> 在配置里已经开着。
+  </p>
+  <p>
+    Liveblocks 是<b>托管服务</b>（要付费、要接第三方账号体系）；PartyKit 跑在 Cloudflare Workers 上，
+    是给多人游戏和白板那种<b>有状态边缘逻辑</b>准备的；Yjs 是 CRDT 库，
+    解决的是「两个人同时改一份文档」——<b>我们没有这个问题</b>，
+    两个人不会同时编辑同一节课。
+  </p>
+</div>
+
+<div class="dec hm">
+  <h4>两个需求，两种机制，不能混用</h4>
+  <p>
+    <b>Presence（<code>track()</code>）→ 谁在线、停在哪一关。</b>低频，一节课变一次，
+    带 CRDT 合并，断线自动清理。这正是它设计出来要干的事。
+  </p>
+  <p>
+    <b>Broadcast → 鼠标位置。</b>高频。
+    <b>Supabase 官方文档明确警告：不要用 <code>track()</code> 发每一次鼠标移动，
+    会把频道冲垮。</b>这条写在这里，是因为它是最容易踩的那一脚——
+    两个功能看起来像一件事，用错一个的后果是整个频道卡死。
+  </p>
+</div>
+
+<h4>谁看得见谁</h4>
+<div class="tw">
+<table>
+<thead><tr><th>关系</th><th>看得到在哪一关</th><th>看得到鼠标</th><th>怎么建立</th></tr></thead>
+<tbody>
+<tr><td><b>学习小组</b>（同一份订阅）</td><td><span class="tag y">默认可见</span></td><td><span class="tag y">同屏时可见</span></td><td>买套餐时邀请</td></tr>
+<tr><td><b>好友</b></td><td><span class="tag y">可见</span></td><td><span class="tag p">同屏时可见</span></td><td>互相加</td></tr>
+<tr><td>同一张排行榜</td><td><span class="tag p">只看得到分数</span></td><td><span class="tag n">看不到</span></td><td>自动</td></tr>
+<tr><td>陌生人</td><td><span class="tag n">看不到</span></td><td><span class="tag n">看不到</span></td><td>—</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="dec">
+  <h4>这不是网络游戏，别按网络游戏的标准做</h4>
+  <p>
+    <b>不需要 60 帧，不需要保证送达，丢包无所谓。</b>鼠标位置每秒发 20 次足够，
+    而且要节流；掉一帧没有人会发现，因为下一帧 50 毫秒后就到了。
+  </p>
+  <p>
+    <b>可以随时关。</b>设置里一个开关：「让小组看到我在学什么」。
+    默认开（这是套餐的价值），但被人看着学习这件事必须能拒绝。
+  </p>
+</div>
+
+<h4>怎么验</h4>
+<ul class="chk">
+  <li><b>两个浏览器：</b>e2e 里开两个 context，A 进第 3 关，断言 B 在 5 秒内看到 A 在第 3 关。</li>
+  <li><b>频道不被冲垮：</b>连续甩鼠标 10 秒，断言发出的消息数 &lt; 250（节流生效）。</li>
+  <li><b>关掉就真的看不见：</b>A 关掉开关，断言 B 那边 A 消失。</li>
+</ul>
+
 <h2 class="alt2"><span class="n">08</span>两类课：实战学习，和通用课</h2>
 <p class="lede">
   老板给这件事起了名字，这个名字解决了我在 V4 初版里提出的第五个疑问。
@@ -938,6 +1026,7 @@ pre b{color:var(--go);font-weight:600}
 <tr><td>个人档案 / 账号</td><td><span class="tag y">一样</span></td><td>—</td></tr>
 <tr><td>排行榜 · 任务 · 徽章</td><td><span class="tag i">都还没开</span></td><td>开的时候一起开，一套代码</td></tr>
 <tr><td>会员 · 订阅</td><td><span class="tag i">还没开</span></td><td>本地端也显示，但本地端不需要点数</td></tr>
+<tr><td>一起学（在线状态 / 光标）</td><td><span class="tag i">还没开</span></td><td>两端一样。本地端也能看到小组在哪一关</td></tr>
 <tr><td>「跑一下这个版本」</td><td><span class="tag p">动作不同</span></td><td>本地端直接开；在线端给教程（03）</td></tr>
 <tr><td><b>写课 / 改课</b></td><td><span class="tag n">只有本地端</span></td><td><b>这是唯一允许在线端没有的整块。</b>课只有一个产地（ADR-0002）</td></tr>
 </tbody>
@@ -950,7 +1039,10 @@ pre b{color:var(--go);font-weight:600}
   <li class="no"><b>不做「在线端简化版」。</b>任何以「在线端用户不需要这个」开头的提案，先看 01。</li>
   <li class="no"><b>不给课文设付费墙。</b>付费买 AI，不买课文（02）。</li>
   <li class="no"><b>不做强制登录。</b>门口查身份证的试衣间没人进（02）。</li>
-  <li class="no"><b>不引入第二个后端。</b>钱包、账号、排行榜全部走 SwimmerBackend（07）。</li>
+  <li class="no"><b>不引入第二个后端。</b>钱包、账号、排行榜、在线状态全部走 SwimmerBackend
+  （07）。Liveblocks / PartyKit / Ably 都不接。</li>
+  <li class="no"><b>不按网络游戏的标准做一起学。</b>不保证送达、不追求 60 帧；
+  用 Broadcast 发光标，永远不要用 <code>track()</code> 发（07.4）。</li>
   <li class="no"><b>不为了游戏化装 Tailwind。</b>参考 Trophy UI 的设计，用 SwimmerUIKit 画（07）。</li>
   <li class="no"><b>不打开相机旋转。</b>哪怕「就这一个页面」（06）。</li>
   <li class="no"><b>不把唯一入口藏进 Tip。</b>Tip 只放解释（04）。</li>
@@ -974,7 +1066,9 @@ pre b{color:var(--go);font-weight:600}
   <li><b>XP + 任务 + 徽章</b>（07）。XP 的账本本地就能记，不必等登录。</li>
   <li><b>「跑一下这个版本」教程</b>（03）。</li>
   <li><b>排行榜</b>（07），依赖第 6 步。</li>
-  <li><b>钱包 + AI 额度 + 会员页</b>（02 第三层 / 07.3），依赖第 6 步。</li>
+  <li><b>钱包 + AI 额度 + 会员页 + 学习小组</b>（02 第三层 / 07.3），依赖第 6 步。</li>
+  <li><b>一起学：在线状态与光标</b>（07.4），依赖第 6 步。<b>先做在线状态，光标放最后</b>——
+  「谁在学、在哪一关」是套餐的价值，光标是锦上添花。</li>
   <li><b>部署到 Vercel + 绑 <code>university.pieaistudio.com</code> + 官网加卡片。</b>
   不在旅程里，但排在这儿说明它的位置：<b>可以很早做，因为它不依赖上面任何一条。</b></li>
 </ol>
@@ -1012,11 +1106,11 @@ pre b{color:var(--go);font-weight:600}
 </ul>
 
 <div class="foot">
-  V4 · 2026-08-23 · 取代 V1 / V2 / V3 · 第二稿（补入 8-23 第二次留言）<br>
+  V4 · 2026-08-23 · 取代 V1 / V2 / V3 · 第三稿<br>
   证据取自当天跑着的代码与当天查到的价格：在线端阅读器 6 个组件 vs 共用 18 个 ·
   缩放 6–460 · enableRotate=false · Haiku 4.5 $1/$5 · Sonnet 5 $2/$10 ·
-  国内 AI 订阅入门 ¥19.9–29<br>
-  五个待定问题已全部关闭，新开三个
+  Super Duolingo $12.99 · Max $29.99 · Family $119.99/年<br>
+  第三稿改正：定价改为对标多邻国（第二稿按国内定价，前提就是错的）；补入学习小组与一起学
 </div>
 
 </div>
