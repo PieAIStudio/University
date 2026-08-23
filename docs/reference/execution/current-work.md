@@ -158,6 +158,11 @@ Done, and verified in a browser rather than by a passing suite:
   differing only in colour so two tabs can be told apart. `theme-color` too.
 - **A label that does not fit is not placed.** Containment, not intersection —
   the four slots already offered a side that fits.
+- **One project, one scene.** `placeWorld` takes the project to show and puts it
+  on the origin. Nothing else is in the scene, so the pan needs no fence. The
+  vocabulary is 星球 / 课程系列 / 岛 / 单元 / 关 (v4 §05D).
+- **An overlay reserves nothing.** The enter-course card is placed but does not
+  push: opening it used to slide three neighbouring islands' names sideways.
 
 Next — **the order is set by
 `docs/reference/player-journey/v4/index.html` §10, not by this list.** V4's
@@ -184,6 +189,13 @@ own lesson reader every new feature has to be written twice.
    read from answered.
 7. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
 8. Payment and metered AI, after 1.
+9. **A quiet label under the rail.** Inside a 41-lesson course, twelve lesson
+   names project into the strip the nav rail covers. They are `quiet`, so
+   nothing is drawn there — but a keyboard walk reveals them on focus, and the
+   reveal lands under an opaque panel. `placeLabels` cannot help: quiet markers
+   skip placement by design. The fix is either a clamp out of the chrome's box
+   or a camera that keeps content out of it, and it is worth measuring which
+   before writing either.
 
 ## Traps, Found The Hard Way
 
