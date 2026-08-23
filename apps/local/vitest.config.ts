@@ -3,6 +3,7 @@ import { configDefaults, defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     exclude: [...configDefaults.exclude, ".university-local-build/**", "studies/**"],
+    setupFiles: ["./vitest.setup.ts"],
     // The course-generation and course-revision suites drive real Git objects
     // and real SQLite files through a temporary studies shelf. Alone on a warm
     // laptop that is 8s; inside `pnpm -r test`, with four packages compiling

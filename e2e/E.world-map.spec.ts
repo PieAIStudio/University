@@ -207,9 +207,14 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
         so the option went with it. What this asserts instead is that every
         series is reachable from here, which is the job the menu actually has.
       */
-      await expect(menu.locator("[role='option']")).toHaveCount(4);
+      // Four series plus the way out to the planet. The count is pinned rather
+      // than left open because the row that leaves the list is exactly where
+      // the dead 「看全部四片海」 used to sit, and a menu is allowed to grow a
+      // series without anyone noticing but not to grow another exit.
+      await expect(menu.locator("[role='option']")).toHaveCount(5);
       await expect(menu).toContainText("TuringPact");
       await expect(menu).toContainText("Buzz");
+      await expect(menu).toContainText("看所有课程系列");
       await page.screenshot({ path: `${SHOTS}/switcher.png` });
     });
 

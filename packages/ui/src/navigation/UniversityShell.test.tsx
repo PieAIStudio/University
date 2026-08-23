@@ -28,7 +28,7 @@ async function renderShell(
 ): Promise<void> {
   await act(async () => {
     root.render(
-      <UniversityShell activeId="learn" {...props}>
+      <UniversityShell activeId="learn" identity={null} {...props}>
         <p>主体</p>
       </UniversityShell>,
     );

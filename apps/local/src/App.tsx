@@ -49,6 +49,7 @@ import { recentStudies, StudyShelf } from "./shell/StudyShelf.js";
 import { StudioSection } from "./shell/StudioSection.js";
 import { StudyDetail } from "./shell/StudyDetail.js";
 import { TodaySection } from "./shell/TodaySection.js";
+import { RailIdentity } from "@pieai/university-world/avatar.js";
 import { PlanetPage, type PlanetStudy } from "@pieai/university-world/planet.js";
 
 import { WorldLanding } from "./shell/WorldLanding.js";
@@ -667,6 +668,21 @@ export function App() {
               />
             ) : undefined,
         })}
+        /*
+          The face at the foot of the rail. It was missing here and present in
+          the delivery shell, and the boss found it by opening both — the one
+          divergence the two campuses are allowed is where the AI comes from,
+          and this was not that. Nothing had been forked: `identity` is an
+          optional slot on a shared component, and an optional slot left empty
+          is invisible to the compiler and to anyone reading one file.
+        */
+        identity={
+          <RailIdentity
+            onOpen={() => {
+              window.location.hash = "#/me";
+            }}
+          />
+        }
         aside={aside}
         asideLabel={slot === "settings" ? "设置" : "今天"}
       >

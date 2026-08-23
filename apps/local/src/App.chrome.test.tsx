@@ -14,7 +14,12 @@ function Frame({
   readonly children: React.ReactNode;
 }) {
   if (lessonOpen) return <div className="campus">{children}</div>;
-  return <UniversityShell activeId="learn">{children}</UniversityShell>;
+  // Not the avatar under test here, and `null` says so out loud.
+  return (
+    <UniversityShell activeId="learn" identity={null}>
+      {children}
+    </UniversityShell>
+  );
 }
 
 let container: HTMLDivElement;

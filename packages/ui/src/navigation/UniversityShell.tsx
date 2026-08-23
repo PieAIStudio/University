@@ -27,8 +27,23 @@ export function UniversityShell({
   readonly asideLabel?: string;
   readonly extraMoreItems?: readonly ShellNavItem[];
   readonly brand?: ReactNode;
-  /** The learner's avatar, at the foot of the rail. */
-  readonly identity?: ReactNode;
+  /**
+   * The learner's avatar, at the foot of the rail. **Required, and `null` is a
+   * legal answer** — that combination is the whole point.
+   *
+   * It used to be optional, and the delivery shell passed one while the
+   * authoring shell passed nothing. Nobody forked anything; this is one
+   * component and both shells render it. But an optional slot left empty is
+   * indistinguishable from an optional slot nobody wanted, so the compiler saw
+   * no difference, a reviewer reading either file saw no difference, and the
+   * only way to find it was to open the two campuses side by side — which is
+   * how it was found.
+   *
+   * Making it required does not stop a shell deciding it has no identity to
+   * show. It stops a shell deciding that by accident: `identity={null}` is a
+   * sentence somebody wrote, and omission is not.
+   */
+  readonly identity: ReactNode;
   readonly children: ReactNode;
 }) {
   return (

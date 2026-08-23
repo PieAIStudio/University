@@ -19,7 +19,12 @@ const LESSON: View = {
 
 function Frame({ view, children }: { readonly view: View; readonly children: React.ReactNode }) {
   if (isBareView(view)) return <div className="app">{children}</div>;
-  return <UniversityShell activeId={activeIdForView(view)}>{children}</UniversityShell>;
+  // Not the avatar under test here, and `null` says so out loud.
+  return (
+    <UniversityShell activeId={activeIdForView(view)} identity={null}>
+      {children}
+    </UniversityShell>
+  );
 }
 
 let container: HTMLDivElement;
