@@ -53,7 +53,7 @@ concepts · 267 terms · 25 anti-patterns.
 420 lesson-to-lesson links, 383 inside their own course and **five** crossing
 one: the mesh does not exist yet. `[[term:]]` links: zero.
 
-Tests: core 252 · ui 186 · online 57 · world 33 · local 448. Plus 4 browser walks (`pnpm e2e`).
+Tests: core 252 · ui 192 · online 57 · world 35 · local 448. Plus 4 browser walks (`pnpm e2e`).
 
 **Re-run the script before quoting any of these.** Every number on this page
 has been wrong at least once.
@@ -147,6 +147,13 @@ Done, and verified in a browser rather than by a passing suite:
   that promised them.
 - **A new card is tomorrow's work.** The settlement and the review empty state
   used to make opposite promises about the same two cards.
+- **One empty-queue sentence.** Both shells call `reviewEmptyDescription`;
+  neither writes its own, and neither says FSRS at a learner again.
+- **Both shells have an icon.** `scripts/make-icons.mjs` writes favicon,
+  apple-touch-icon, maskable icons and a manifest for each from `IslandIcon`,
+  differing only in colour so two tabs can be told apart. `theme-color` too.
+- **A label that does not fit is not placed.** Containment, not intersection —
+  the four slots already offered a side that fits.
 
 Next:
 
@@ -226,6 +233,21 @@ Next:
   styled by exactly one shell, and only new ones fail. Nine components already
   ship their own CSS and both shells import it — copy that pattern rather than
   adding a rule to an app.
+- **A control over live render brings its own ground.** No stylesheet knows
+  what the canvas is drawing this frame, so `ghost` and any other transparent
+  variant is wrong on top of one. The avatar-lab link shipped cream-on-cream
+  this way. Same family as the `backdrop-filter` finding above.
+- **Quiet is a colour, never `opacity` on a whole control.** Dimming the box
+  dims its background too, and the text underneath interleaves with the label.
+- **`tsc -p` has no memory; `tsc -b` and `incremental` do.** Plain `tsc -p`
+  rewrites every output on every run, and anything watching `dist` reacts to
+  all of it — forty HMR updates on a `pnpm start` over files nobody touched.
+- **three deprecates by silently substituting.** `PCFSoftShadowMap` now warns
+  once and draws `PCFShadowMap`; a `console.warn` in a dev log is the only
+  notice that a rendering choice stopped applying. Read the warnings.
+- **A test that greps prose forbids the prose.** The account panel's test
+  banned the string 「登录」 to mean "no sign-in control", and so banned the
+  sentence explaining that there is nowhere to sign in. Assert on structure.
 - **This file is pinned.** A commit touching it needs
   `Pinned-Override: REF-CURRENT-WORK` in the message. SPEC-0001 needs its own.
 
