@@ -1,14 +1,22 @@
 #!/usr/bin/env node
 /**
- * 只抓提纲，不抓正文。
+ * 抓一门外部课程：提纲总是要，正文按需要。
  *
- * 外部课程在这个流程里的角色是「目录」——它告诉我们讲什么、按什么顺序讲。
- * 正文如果落了盘，早晚有一天会被当成素材复制进课文里，而那正是不能发生的事。
- * 所以这个脚本**只写标题**：正文在终端打印一遍供人阅读，不进文件。
+ * 这个脚本原来**拒绝把正文写进文件**，理由是「正文一旦落盘，早晚有人把它
+ * 复制进课文」。那条规矩防住了抄袭，也顺手防住了改写——因为把一件事重新讲
+ * 一遍，本来就需要反复读原文，而原文正是作者想清楚的地方。授权已经拿到了，
+ * 我们本来就该读他的正文。
+ *
+ * 禁止是廉价的，测量是对的。需要保证的不是「没读过」，而是**读完之后写出来的
+ * 是自己的话**——那是 `check-verbatim.mjs` 能量的东西。
+ *
+ * 正文写进 `--body-out`，那个目录应当被 gitignore：它是**原料，不是内容**。
+ * 文件头会写上这句话，因为六个月后翻到它的人不会记得。
  *
  * 用法：
- *   node fetch-outline.mjs <url> --out outline/vibehub-product-website.md
- *   node fetch-outline.mjs <url> --show-body     # 正文打到终端，仍然不落盘
+ *   node fetch-outline.mjs <url> --out outline/vibehub.md
+ *   node fetch-outline.mjs <url> --out outline/vibehub.md --body-out source/vibehub.md
+ *   node fetch-outline.mjs <url> --show-body     # 只打到终端
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
@@ -19,19 +27,55 @@ const outAt = argv.indexOf("--out");
 const out = outAt === -1 ? null : argv[outAt + 1];
 const showBody = argv.includes("--show-body");
 
+const bodyOutAt = argv.indexOf("--body-out");
+const bodyOut = bodyOutAt === -1 ? null : argv[bodyOutAt + 1];
+const render = argv.includes("--render");
+
 if (!url || !out) {
-  console.error("usage: node fetch-outline.mjs <url> --out <path.md> [--show-body]");
+  console.error(
+    "usage: node fetch-outline.mjs <url> --out <path.md> [--body-out <path.md>] [--render] [--show-body]",
+  );
   process.exit(2);
 }
 
-const response = await fetch(url, {
-  headers: { "user-agent": "University course-outline reader (contact: PieAI Studio)" },
-});
-if (!response.ok) {
-  console.error(`fetch failed: ${response.status} ${response.statusText}`);
-  process.exit(1);
+/*
+  Half the sites worth adopting from render their lessons in the browser.
+  VibeHub is one: a plain fetch of a course page returns a shell whose entire
+  body is 「正在载入路线」 — six characters — and an outline built from that is
+  a nav menu wearing a syllabus's name. `--render` drives a real browser
+  instead, which is also the only honest way to see what a reader sees.
+*/
+async function fetchHtml() {
+  if (!render) {
+    const response = await fetch(url, {
+      headers: { "user-agent": "University course reader (contact: PieAI Studio)" },
+    });
+    if (!response.ok) {
+      console.error(`取不到 ${url}：HTTP ${response.status}`);
+      process.exit(1);
+    }
+    return response.text();
+  }
+  const { chromium } = await import("@playwright/test");
+  const browser = await chromium.launch({ channel: "chrome" });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 2400 } });
+    await page.goto(url, { waitUntil: "networkidle", timeout: 60_000 });
+    // Lazy sections below the fold only mount once they are scrolled to.
+    await page.evaluate(async () => {
+      for (let y = 0; y < document.body.scrollHeight; y += 800) {
+        window.scrollTo(0, y);
+        await new Promise((done) => setTimeout(done, 120));
+      }
+    });
+    await page.waitForTimeout(800);
+    return await page.content();
+  } finally {
+    await browser.close();
+  }
 }
-const html = await response.text();
+
+const html = await fetchHtml();
 
 const strip = (s) =>
   s
@@ -64,8 +108,8 @@ const today = new Date().toISOString().slice(0, 10);
 const lines = [
   `# 提纲 · ${strip((/<title[^>]*>([\s\S]*?)<\/title>/iu.exec(html) ?? [, ""])[1]) || url}`,
   "",
-  `> 只有结构，没有正文。${today} 读取自 ${url}`,
-  "> 这份文件是目录，不是素材。课文自己写，出处引 MDN / 官方文档。",
+  `> 只有结构。${today} 读取自 ${url}`,
+  "> 正文用 --body-out 单独抓，那份是原料。出处永远引 MDN / 官方文档。",
   "",
   ...headings.map((h) => `${"  ".repeat(Math.max(0, h.level - 1))}- ${h.text}`),
   "",
@@ -75,10 +119,35 @@ mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, lines.join("\n"));
 console.log(`提纲写入 ${out}（${headings.length} 个标题，0 字正文）`);
 
-if (showBody) {
-  const body = strip(
-    (/<(?:main|article)[^>]*>([\s\S]*?)<\/(?:main|article)>/iu.exec(html) ?? [, html])[1],
+const body = strip(
+  (/<(?:main|article)[^>]*>([\s\S]*?)<\/(?:main|article)>/iu.exec(html) ?? [, html])[1],
+);
+
+if (bodyOut) {
+  /*
+    The header is load-bearing. Six months from now somebody opens this file
+    looking for something to paste, and the only thing standing between them
+    and a copyright problem is a sentence at the top saying what it is.
+  */
+  mkdirSync(dirname(bodyOut), { recursive: true });
+  writeFileSync(
+    bodyOut,
+    [
+      `# 原文 · ${url}`,
+      "",
+      `> ${today} 抓取。**这是原料，不是内容。**`,
+      "> 作者已授权改写。改写的意思是合上这份文件、用自己的话讲一遍，",
+      "> 不是把句子换几个词。`check-verbatim.mjs` 会量出来差别。",
+      "> 出处永远引 MDN / RFC / 官方文档，**绝不引这一份**。",
+      "",
+      body,
+      "",
+    ].join("\n"),
   );
-  console.log("\n──── 正文（只在终端，不落盘）────\n");
+  console.log(`正文写入 ${bodyOut}（${body.length} 字，原料，不要提交）`);
+}
+
+if (showBody) {
+  console.log("\n──── 正文 ────\n");
   console.log(body.slice(0, 6000));
 }
