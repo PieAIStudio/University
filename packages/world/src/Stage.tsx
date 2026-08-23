@@ -198,7 +198,11 @@ export function Stage({
       // `onCreated` is a dark page, not a broken one. The DOM overlay still
       // covers this — belt, not the actual loading screen.
       style={{ background: "var(--game-ui-bg, #0d1019)" }}
-      camera={{ position: [...cameraFrom], fov: 34, near: 0.5, far: 1200 }}
+      // Mobile chrome occupies the top course card and the bottom tab bar.
+      // A slightly wider lens is the shared 3D safe-area treatment: it keeps
+      // the same target and tilt, but fits the current island plus the next
+      // few nodes into the unobscured middle instead of cropping both ends.
+      camera={{ position: [...cameraFrom], fov: tier === "mobile" ? 42 : 34, near: 0.5, far: 1200 }}
       onPointerMissed={onPointerMissed}
       onCreated={(state) => {
         state.gl.setClearColor(new THREE.Color(0x0d1019), 1);

@@ -10,7 +10,7 @@
  */
 import { spineOf } from "@pieai/university-core";
 
-import { hash } from "./island";
+import { hash } from "./random.js";
 
 /**
  * Hue offsets applied to the grass, in turns.
