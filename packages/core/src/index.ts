@@ -261,6 +261,7 @@ export * from "./progress/contract.js";
 // Recommended learning sequence (spine order) per study — a linear extension
 // of the prerequisite DAG so there is always exactly one "next step".
 export * from "./progress/spine.js";
+export * from "./progress/xp.js";
 
 // The learner's progress document, the merge that keeps two machines honest,
 // and the one port both shells construct. Persistence and remote are injected.
