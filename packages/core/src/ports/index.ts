@@ -6,6 +6,24 @@ export {
   type IdentityStatus,
   type IdentityUser,
 } from "./identity.js";
+export {
+  createCursorThrottle,
+  createMemoryPresencePort,
+  createRealtimePresencePort,
+  CURSOR_BROADCAST_HZ,
+  CURSOR_BROADCAST_INTERVAL_MS,
+  type CursorThrottleClock,
+  type MemoryPresenceBus,
+  type MemoryPresencePort,
+  type PresenceCursor,
+  type PresenceLocation,
+  type PresencePeer,
+  type PresencePort,
+  type PresenceRealtimeChannel,
+  type PresenceRelation,
+  type PresenceSelf,
+  type PresenceSnapshot,
+} from "./presence.js";
 export type {
   CardProgress,
   LessonProgress,

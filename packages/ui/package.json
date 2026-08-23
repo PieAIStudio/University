@@ -40,6 +40,8 @@
     "./path/UnitCard.js": "./src/path/UnitCard.tsx",
     "./path/path-cards.css": "./src/path/path-cards.css",
     "./practice/practice.css": "./src/practice/practice.css",
+    "./presence.js": "./src/presence/index.ts",
+    "./presence/presence.css": "./src/presence/presence.css",
     "./progress/store.js": "./src/progress/store.ts",
     "./reference/reference-panel.css": "./src/reference/reference-panel.css",
     "./reference/term-index.css": "./src/reference/term-index.css",

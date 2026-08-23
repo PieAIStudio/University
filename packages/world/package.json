@@ -9,6 +9,7 @@
     "./Maps.js": "./src/Maps.tsx",
     "./Stage.js": "./src/Stage.tsx",
     "./avatar.js": "./src/avatar/index.ts",
+    "./companion-probe.js": "./src/companion-probe.tsx",
     "./controls.js": "./src/controls.tsx",
     "./course.js": "./src/course.ts",
     "./frame.js": "./src/frame.ts",
