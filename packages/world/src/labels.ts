@@ -13,7 +13,7 @@
  * jitter or a live layout measurement; we do not.
  */
 
-export type LabelAnchor = "center" | "start";
+export type LabelAnchor = "center" | "start" | "aside";
 
 export interface LabelBox {
   readonly left: number;
@@ -36,9 +36,16 @@ export interface LabelCandidate {
   readonly weight?: number;
   /**
    * Where (x, y) sits on the box. `center` is a caption over a point;
-   * `start` is a left-aligned name growing toward the path.
+   * `start` is a left-aligned name growing toward the path;
+   * `aside` is a follow card sitting beside a point, never on it.
    */
   readonly anchor?: LabelAnchor;
+  /**
+   * Extra pixels between the anchor and an `aside` box. A name sits on its
+   * point; a card has to sit off the island that point belongs to, or it
+   * covers the thing it is about.
+   */
+  readonly clearance?: number;
 }
 
 export interface LabelPlacement {
@@ -56,6 +63,15 @@ export interface LabelPlacement {
 
 const DEFAULT_MAX_VISIBLE = 12;
 const DEFAULT_GAP = 4;
+/**
+ * How far an `aside` card sits off the projected peak.
+ *
+ * A caption may sit on its point; a follow card that did the same would
+ * cover the island it is naming, which is the click target the card exists
+ * to confirm. Fifty-six pixels keeps a 260px panel off a typical course
+ * island at the world-map default zoom.
+ */
+export const FOLLOW_CLEARANCE = 56;
 
 interface Slot {
   readonly x: number;
@@ -85,6 +101,27 @@ function slotsFor(candidate: LabelCandidate, gap: number): readonly Slot[] {
       { x, y: y + stepY },
       { x: x + stepX, y },
       { x: x - stepX, y },
+    ];
+  }
+  if (candidate.anchor === "aside") {
+    // A follow card is the same problem as a name — a screen-space box that
+    // must not leave the frame and must not sit on its point — with one
+    // different preference: beside, never covering. Right first because that
+    // is the direction a line of Chinese continues toward; left is the flip
+    // when the right edge would clip. Vertical nudges come before "below",
+    // because below is the island the card is about.
+    const clearance = candidate.clearance ?? FOLLOW_CLEARANCE;
+    const offsetX = width / 2 + gap + clearance;
+    const nudgeY = height / 2 + gap;
+    return [
+      { x: x + offsetX, y },
+      { x: x - offsetX, y },
+      { x: x + offsetX, y: y - nudgeY * 0.45 },
+      { x: x - offsetX, y: y - nudgeY * 0.45 },
+      { x: x + offsetX, y: y + nudgeY * 0.45 },
+      { x: x - offsetX, y: y + nudgeY * 0.45 },
+      { x, y: y + nudgeY },
+      { x, y: y - nudgeY },
     ];
   }
   const aboveY = y - height / 2;

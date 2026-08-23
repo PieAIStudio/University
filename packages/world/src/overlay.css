@@ -120,6 +120,51 @@ button.label:focus-visible {
   width: 260px;
 }
 
+/*
+  Follow card: same projector as the names, not a CSS `right:`. Pinning this
+  to the corner is why collapsing the context rail stacked it on the capsule.
+  Opacity goes through --placed so an unplaced first frame at (0,0) cannot
+  steal clicks — the overlay-click bug, again. visibility:hidden is what
+  Playwright treats as not-there; opacity 0 is still "visible".
+*/
+.picked.picked--follow {
+  top: 0;
+  left: 0;
+  right: auto;
+  width: 260px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  pointer-events: none;
+  opacity: var(--placed, 0);
+  will-change: transform;
+}
+
+.picked--follow:not(.is-visible) {
+  visibility: hidden;
+}
+
+.picked--follow.is-visible {
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.picked--follow .game-ui-panel {
+  width: 100%;
+  backdrop-filter: none;
+  background: var(--game-ui-panel-strong, #151b2b);
+  color: var(--game-ui-text, #e9edf5);
+  border: 1px solid var(--game-ui-border-strong, rgba(255, 255, 255, 0.22));
+}
+
+.picked__enter {
+  width: 100%;
+  margin-top: 4px;
+}
+
 .nextup {
   left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
   width: 280px;
@@ -254,8 +299,13 @@ button.label:focus-visible {
   pointer-events: auto;
 }
 
+.app-shell__main .stagewrap > .picked.picked--follow {
+  width: 260px;
+  max-width: min(260px, calc(100% - 24px));
+}
+
 @media (max-width: 720px) {
-  .picked,
+  .picked:not(.picked--follow),
   .nextup {
     left: 14px;
     right: 14px;

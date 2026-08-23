@@ -22,6 +22,7 @@ import { MapControls } from "three/addons/controls/MapControls.js";
 
 import {
   boxesOverlap,
+  FOLLOW_CLEARANCE,
   labelBox,
   placeLabels,
   type LabelAnchor,
@@ -416,13 +417,33 @@ export function LabelProbe({
   markers,
   limit,
   nodes,
+  followId = null,
+  followNode,
 }: {
   markers: readonly Marker[];
   limit: number;
   nodes: Map<string, HTMLElement>;
+  /**
+   * Marker id of the island the follow card is about. Null hides it.
+   *
+   * The card is the same problem as a name — a world point becomes a
+   * screen-space box — so it goes through this projector rather than a
+   * second one. CSS `right:` on `.picked` was a different answer to the
+   * same question, and it is why collapsing the context rail stacked the
+   * card on the collapse capsule.
+   */
+  followId?: string | null;
+  followNode?: { readonly current: HTMLElement | null };
 }) {
   const { camera, size } = useThree();
   const scratch = useRef(new THREE.Vector3());
+  // R3F's tree is a second React root. The follow node lives in the DOM
+  // root, and this callback must not close over a stale `followId` from the
+  // render that created the Canvas children the first time.
+  const followIdRef = useRef(followId);
+  const followNodeRef = useRef(followNode);
+  followIdRef.current = followId;
+  followNodeRef.current = followNode;
 
   useFrame(() => {
     // Project first, then let `placeLabels` decide who survives.
@@ -459,6 +480,7 @@ export function LabelProbe({
     // quiet ones — without it the reset immediately undoes the transform the
     // quiet branch just wrote, and nothing on the road can ever be focused.
     const projectedIds = new Set<string>();
+    const projectedById = new Map<string, { x: number; y: number; z: number }>();
     const viewport = { width: size.width, height: size.height };
     for (const marker of markers) {
       const projected = scratch.current.copy(marker.position).project(camera);
@@ -468,6 +490,7 @@ export function LabelProbe({
       const x = ((projected.x + 1) / 2) * size.width;
       const y = ((1 - projected.y) / 2) * size.height;
       projectedIds.add(marker.id);
+      projectedById.set(marker.id, { x, y, z: projected.z });
       if (marker.quiet) {
         writePlacement(element, marker, x, y, false);
         // Quiet still needs `--placed: 1` so focus-visible can fade it in.
@@ -506,16 +529,80 @@ export function LabelProbe({
       if (free) reserved.push(box);
     }
 
-    for (const placement of placeLabels(candidates, viewport, {
+    const namePlaced = placeLabels(candidates, viewport, {
       maxVisible: limit,
       reserved,
-    })) {
+    });
+    for (const placement of namePlaced) {
       const element = nodes.get(placement.id);
       if (!element) continue;
       const marker = markers.find((entry) => entry.id === placement.id);
       if (!marker) continue;
       writePlacement(element, marker, placement.x, placement.y, placement.visible);
     }
+
+    // The card is committed in the DOM root; this loop runs in the Canvas
+    // root. The ref is the contract, the query is the frame it has not
+    // been written yet — without it the card sits at (0,0) for a tick
+    // that Playwright will happily call "visible".
+    const follow =
+      followNodeRef.current?.current ??
+      (typeof document === "undefined"
+        ? null
+        : document.querySelector<HTMLElement>(".picked--follow"));
+    const followNow = followIdRef.current;
+    if (follow && followNow) {
+      let at = projectedById.get(followNow);
+      if (!at) {
+        const marker = markers.find((entry) => entry.id === followNow);
+        if (marker) {
+          const projected = scratch.current.copy(marker.position).project(camera);
+          if (!(projected.z >= 1 || Math.abs(projected.x) > 1 || Math.abs(projected.y) > 1)) {
+            at = {
+              x: ((projected.x + 1) / 2) * size.width,
+              y: ((1 - projected.y) / 2) * size.height,
+              z: projected.z,
+            };
+          }
+        }
+      }
+      if (!at) {
+        follow.style.setProperty("--placed", "0");
+        follow.classList.remove("is-visible");
+      } else {
+        const width = Math.max(follow.offsetWidth, 260);
+        const height = Math.max(follow.offsetHeight, 120);
+        const [card] = placeLabels(
+          [
+            {
+              id: "__follow",
+              x: at.x,
+              y: at.y,
+              z: at.z,
+              width,
+              height,
+              weight: 100,
+              anchor: "aside",
+              clearance: FOLLOW_CLEARANCE,
+            },
+          ],
+          viewport,
+          { maxVisible: 1, gap: 8 },
+        );
+        if (card?.visible) {
+          follow.style.transform = `translate(${card.x}px, ${card.y}px) translate(-50%, -50%)`;
+          follow.style.setProperty("--placed", "1");
+          follow.classList.add("is-visible");
+        } else {
+          follow.style.setProperty("--placed", "0");
+          follow.classList.remove("is-visible");
+        }
+      }
+    } else if (follow) {
+      follow.style.setProperty("--placed", "0");
+      follow.classList.remove("is-visible");
+    }
+
     // Anything that did not project at all this frame is behind the camera or
     // off the far plane, and must not keep the position it had last frame.
     for (const [id, element] of nodes) {

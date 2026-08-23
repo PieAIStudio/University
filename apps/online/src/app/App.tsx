@@ -43,6 +43,7 @@ import {
   PlansScreen,
   QuestsScreen,
 } from "@pieai/university-ui/navigation/screens.js";
+import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
 import { NodeCard } from "@pieai/university-ui/path/NodeCard.js";
 import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
 import {
@@ -258,6 +259,8 @@ export function App() {
   }, [course, view, progress]);
 
   const labelNodes = useRef(new Map<string, HTMLElement>());
+  const pickCardRef = useRef<HTMLElement | null>(null);
+  const dismissPick = useCallback(() => setPicked(null), []);
 
   /**
    * Whether the pointer travelled far enough since it went down to count as a
@@ -600,13 +603,20 @@ export function App() {
           lookAt={lookAt}
           onSceneReady={onSceneReady}
           onSceneBusy={onSceneBusy}
+          onPointerMissed={dismissPick}
         >
           <Controls
             target={lookAt}
             polar={view.kind === "course" || view.kind === "lesson" ? COURSE_POLAR : WORLD_POLAR}
           />
           <Flight to={cameraFrom} look={lookAt} />
-          <LabelProbe markers={markers} limit={9} nodes={labelNodes.current} />
+          <LabelProbe
+            markers={markers}
+            limit={9}
+            nodes={labelNodes.current}
+            followId={view.kind === "world" && picked ? picked.courseId : null}
+            followNode={pickCardRef}
+          />
           {view.kind === "world" && world ? (
             <WorldScene
               placements={world.placements}
@@ -669,35 +679,23 @@ export function App() {
           </aside>
         ) : null}
 
-        {wide ? null : view.kind === "world" ? (
-          <aside className="picked" hidden={!picked}>
-            {picked ? (
-              <>
-                <h3>{picked.title}</h3>
-                <p className="picked__study">{picked.studyTitle}</p>
-                <dl>
-                  <dt>课时</dt>
-                  <dd>{picked.lessons}</dd>
-                  <dt>层</dt>
-                  <dd>{picked.depth + 1}</dd>
-                  <dt>先修</dt>
-                  <dd>{picked.prerequisiteCourseIds.length || "无"}</dd>
-                </dl>
-                <button
-                  className="primary block"
-                  onClick={() =>
-                    setView({
-                      kind: "course",
-                      studyId: picked.studyId,
-                      courseId: picked.courseId,
-                    })
-                  }
-                >
-                  进入这门课 →
-                </button>
-              </>
-            ) : null}
-          </aside>
+        {view.kind === "world" && picked ? (
+          <CoursePickCard
+            title={picked.title}
+            studyTitle={picked.studyTitle}
+            lessons={picked.lessons}
+            depth={picked.depth}
+            prerequisiteCount={picked.prerequisiteCourseIds.length}
+            onEnter={() =>
+              setView({
+                kind: "course",
+                studyId: picked.studyId,
+                courseId: picked.courseId,
+              })
+            }
+            onDismiss={dismissPick}
+            cardRef={pickCardRef}
+          />
         ) : null}
 
         {wide ? null : view.kind === "course" && course ? (
@@ -869,32 +867,6 @@ export function App() {
               exists; below 1160 there is no rail and the floating card above
               takes over. One call to action at every width.
             */}
-            {view.kind === "world" && picked ? (
-              <aside className="picked">
-                <h3>{picked.title}</h3>
-                <p className="picked__study">{picked.studyTitle}</p>
-                <dl>
-                  <dt>课时</dt>
-                  <dd>{picked.lessons}</dd>
-                  <dt>层</dt>
-                  <dd>{picked.depth + 1}</dd>
-                  <dt>先修</dt>
-                  <dd>{picked.prerequisiteCourseIds.length || "无"}</dd>
-                </dl>
-                <button
-                  className="primary block"
-                  onClick={() =>
-                    setView({
-                      kind: "course",
-                      studyId: picked.studyId,
-                      courseId: picked.courseId,
-                    })
-                  }
-                >
-                  进入这门课 →
-                </button>
-              </aside>
-            ) : null}
             {view.kind === "course" && course ? (
               <aside className="picked picked--left">
                 <h3>{course.title}</h3>

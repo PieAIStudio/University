@@ -159,6 +159,19 @@ interface StageProps {
   readonly onSceneReady?: () => void;
   /** The DOM overlay's cue that kit models have gone back into flight. */
   readonly onSceneBusy?: () => void;
+  /**
+   * A click that hit no island. Island `onClick` already stopPropagates, so
+   * this is "the ray hit nothing the scene cares about".
+   *
+   * Why `onPointerMissed`, not a document click listener: island and sea are
+   * the same `<canvas>` node. A DOM target cannot tell them apart; R3F's
+   * raycaster already did. Only objects with pointer handlers (the islands)
+   * are tested, so a miss is sea, sky, empty. R3F also drops the event when
+   * the pointer moved more than 2px, so a pan is not a miss. A document
+   * listener would fire for 「进入这门课」 itself and for every rail button,
+   * and we would have to guess which clicks were "outside".
+   */
+  readonly onPointerMissed?: (event: MouseEvent) => void;
 }
 
 export function Stage({
@@ -167,6 +180,7 @@ export function Stage({
   lookAt = [0, 0, 0],
   onSceneReady,
   onSceneBusy,
+  onPointerMissed,
 }: StageProps) {
   const tier = renderTier();
 
@@ -185,6 +199,7 @@ export function Stage({
       // covers this — belt, not the actual loading screen.
       style={{ background: "var(--game-ui-bg, #0d1019)" }}
       camera={{ position: [...cameraFrom], fov: 34, near: 0.5, far: 1200 }}
+      onPointerMissed={onPointerMissed}
       onCreated={(state) => {
         state.gl.setClearColor(new THREE.Color(0x0d1019), 1);
         state.camera.lookAt(new THREE.Vector3(...lookAt));
