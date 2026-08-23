@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { createReadStream, existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, createReadStream, existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { isAbsolute, relative, resolve } from "node:path";
 
@@ -74,6 +74,15 @@ function analyzeChunks(): Plugin {
  * `pnpm content` writes gitignored packages into `content/`. Vite only serves
  * `public/` as static files, so without this the reader fetches HTML for every
  * course JSON and every baked snippet.
+ *
+ * This plugin used to have only `configureServer`, which meant `/content/`
+ * existed in `pnpm dev` and nowhere else. A production build shipped a bundle
+ * that fetches `/content/<study>/<course>.json` into a 404 — an app that looks
+ * like it loaded and then shows an empty sea. Nobody had noticed because
+ * nobody had deployed it yet, and every test runs against the dev server.
+ *
+ * So `writeBundle` copies the tree into `dist/content/` as well. One directory,
+ * two ways of reaching it, and the second one is the one customers use.
  */
 function serveImportedContent(): Plugin {
   const contentDir = resolve(import.meta.dirname, "content");
@@ -118,6 +127,18 @@ function serveImportedContent(): Plugin {
         res.setHeader("Content-Type", mimeFor(target));
         createReadStream(target).pipe(res);
       });
+    },
+    writeBundle(options) {
+      const outDir = options.dir ?? resolve(import.meta.dirname, "dist");
+      if (!existsSync(contentDir)) {
+        // Failing loudly here rather than shipping an empty sea: a build with
+        // no content is not a smaller build, it is a broken one.
+        throw new Error(
+          "apps/online/content is missing — run `pnpm content` before building, " +
+            "or the deployed app will load and show no courses at all.",
+        );
+      }
+      cpSync(contentDir, resolve(outDir, "content"), { recursive: true, dereference: true });
     },
   };
 }
