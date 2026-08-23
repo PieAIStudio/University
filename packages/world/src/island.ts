@@ -21,27 +21,26 @@
  * island next to a Quaternius tree looks like a bug.
  */
 import * as THREE from "three";
+import { seeded } from "./random.js";
 
-/** FNV-1a. The same hash the layout uses, for the same reason: no Math.random. */
-export function hash(text: string) {
-  let value = 2166136261;
-  for (let index = 0; index < text.length; index += 1) {
-    value ^= text.charCodeAt(index);
-    value = Math.imul(value, 16777619);
-  }
-  return (value >>> 0) / 4294967295;
-}
+// Compatibility exports for existing imports. The implementation lives in one
+// place; new modules import random.ts directly.
+export { hash, seeded } from "./random.js";
 
-/** A stream of stable numbers in [0,1) from one seed. */
-export function seeded(seed: string) {
-  let step = 0;
-  return () => hash(`${seed}#${(step += 1)}`);
-}
+/** Shared material language for every island representation. */
+export const ISLAND_PALETTE = {
+  grass: 0x6f9e52,
+  grassDry: 0x86a459,
+  rock: 0x8a7965,
+  // Kept lighter than the original near-black root. AO and the sun add the
+  // depth; albedo does not need to turn a locked island into a hole in the sky.
+  rockDeep: 0x6b6054,
+} as const;
 
-const GRASS = new THREE.Color(0x6f9e52);
-const GRASS_DRY = new THREE.Color(0x86a459);
-const ROCK = new THREE.Color(0x6b6152);
-const ROCK_DEEP = new THREE.Color(0x4a4438);
+const GRASS = new THREE.Color(ISLAND_PALETTE.grass);
+const GRASS_DRY = new THREE.Color(ISLAND_PALETTE.grassDry);
+const ROCK = new THREE.Color(ISLAND_PALETTE.rock);
+const ROCK_DEEP = new THREE.Color(ISLAND_PALETTE.rockDeep);
 
 /**
  * The silhouette, as a lathe profile: a slightly domed top, an undercut rim

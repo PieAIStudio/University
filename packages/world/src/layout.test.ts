@@ -5,6 +5,7 @@ import {
   COURSE_STEP,
   courseIslandExtent,
   layoutCourse,
+  layoutCourseRoad,
   layoutPath,
   layoutStudyRoad,
   STUDY_PATH,
@@ -109,6 +110,17 @@ describe("layoutCourse", () => {
     const placed = layoutCourse([4, 4]);
     expect(placed[4]!.y).toBe(placed[3]!.y);
   });
+
+  it("spends a long course across a compact, evenly spaced meander", () => {
+    const placed = layoutCourseRoad(41);
+    const gaps = placed
+      .slice(1)
+      .map((point, index) => Math.hypot(point.x - placed[index]!.x, point.z - placed[index]!.z));
+    expect(Math.max(...gaps) / Math.min(...gaps)).toBeLessThan(1.15);
+    expect(Math.max(...placed.map((point) => Math.abs(point.z)))).toBeLessThan(
+      ((41 - 1) * COURSE_STEP) / 3,
+    );
+  });
 });
 
 describe("courseIslandExtent", () => {
@@ -132,7 +144,8 @@ describe("courseIslandExtent", () => {
     expect(Math.min(extent.x, extent.z)).toBeGreaterThan(COURSE_PATH.step * 1.5);
   });
 
-  it("grows along the road, so a long course is a long ridge", () => {
-    expect(courseIslandExtent(41).z).toBeGreaterThan(courseIslandExtent(8).z * 3);
+  it("keeps a 41-lesson island broad enough to read as land, not a strip", () => {
+    const extent = courseIslandExtent(41);
+    expect(extent.z / extent.x).toBeLessThan(2.5);
   });
 });

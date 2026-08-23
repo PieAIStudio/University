@@ -11,16 +11,8 @@
  * learner's whole world overnight. Determinism and stability are different
  * properties and a map needs both.
  */
-
-/** FNV-1a. Small, stable across machines, adequate for scattering nodes. */
-function hash(text: string): number {
-  let value = 0x811c9dc5;
-  for (let index = 0; index < text.length; index += 1) {
-    value ^= text.charCodeAt(index);
-    value = Math.imul(value, 0x01000193);
-  }
-  return (value >>> 0) / 0xffffffff;
-}
+import * as THREE from "three";
+import { hash } from "./random.js";
 
 /**
  * A lesson count turned into a radius.
@@ -165,7 +157,7 @@ export function layoutStudyRoad(orderedCourseIds: readonly string[]): Map<string
  */
 export function layoutCourse(unitSizes: readonly number[]): Placed[] {
   const total = unitSizes.reduce((sum, count) => sum + count, 0);
-  const points = layoutPath(total, COURSE_PATH);
+  const points = layoutCourseRoad(total);
   const out: Placed[] = [];
   let index = 0;
   unitSizes.forEach((count, unitIndex) => {
@@ -178,6 +170,51 @@ export function layoutCourse(unitSizes: readonly number[]): Placed[] {
 }
 
 /**
+ * A course road is compact without becoming a maze.
+ *
+ * The old road advanced `COURSE_PATH.step` along Z for every lesson. Forty-one
+ * lessons therefore needed 176 world units of ground while the whole lateral
+ * swing was only 13, which is the long green strip the course screenshot
+ * exposed. Making the markers smaller would only hide the symptom.
+ *
+ * This road spends the same distance by meandering. A Catmull-Rom curve gives
+ * it a continuous tangent (the island generator uses that tangent for its
+ * shoreline), and `getSpacedPoints` keeps neighbouring lesson markers evenly
+ * separated even where the curve turns. Short courses keep the quieter road;
+ * there is no reason to draw a full S for three lessons.
+ */
+export function layoutCourseRoad(count: number): Placed[] {
+  if (count <= 0) return [];
+  if (count === 1) return [{ x: 0, y: 0, z: 0, depth: 0 }];
+  if (count <= 6) {
+    return layoutPath(count, {
+      ...COURSE_PATH,
+      amplitude: Math.min(COURSE_PATH.amplitude, 1.8 + count * 0.55),
+      period: 9,
+    });
+  }
+
+  const swings = Math.max(1, Math.ceil(count / 16));
+  const span = Math.max(COURSE_PATH.step * 5, (count - 1) * COURSE_PATH.step * 0.34);
+  const amplitude = Math.min(14.5, 5.5 + Math.sqrt(count) * 1.35);
+  const controls = Array.from({ length: swings * 6 + 1 }, (_, index) => {
+    const t = index / (swings * 6);
+    return new THREE.Vector3(
+      Math.sin(t * swings * Math.PI * 2) * amplitude,
+      0,
+      span / 2 - t * span,
+    );
+  });
+  const curve = new THREE.CatmullRomCurve3(controls, false, "centripetal", 0.5);
+  return curve.getSpacedPoints(count - 1).map((point, index) => ({
+    x: point.x,
+    y: 0,
+    z: point.z,
+    depth: index,
+  }));
+}
+
+/**
  * The island a course road lies on, as half-extents.
  *
  * Sized from the road rather than from the lesson count so the ground always
@@ -185,7 +222,7 @@ export function layoutCourse(unitSizes: readonly number[]): Placed[] {
  * long, and inventing a rounder island for it would put stones in the sea.
  */
 export function courseIslandExtent(lessons: number): { readonly x: number; readonly z: number } {
-  const points = layoutPath(Math.max(lessons, 1), COURSE_PATH);
+  const points = layoutCourseRoad(Math.max(lessons, 1));
   const halfX = Math.max(...points.map((point) => Math.abs(point.x)), COURSE_PATH.amplitude);
   const halfZ = Math.max(...points.map((point) => Math.abs(point.z)), COURSE_PATH.step);
   // Margin is a step's worth of shore — enough that the outermost marker is not
@@ -193,5 +230,5 @@ export function courseIslandExtent(lessons: number): { readonly x: number; reado
   // away. It was 1.8 steps, which put 60% of the island's width outside the
   // road: the markers then read as specks on a field rather than as the thing
   // the field is for.
-  return { x: halfX + COURSE_PATH.step * 1.2, z: halfZ + COURSE_PATH.step * 1.2 };
+  return { x: halfX + COURSE_PATH.step * 1.4, z: halfZ + COURSE_PATH.step * 1.4 };
 }

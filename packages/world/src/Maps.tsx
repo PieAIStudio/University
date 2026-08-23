@@ -26,16 +26,22 @@ import {
   type ProgressSource,
 } from "@pieai/university-core";
 import { playSound } from "@pieai/university-ui/sound/index.js";
-import { useFrame } from "@react-three/fiber";
-import { Suspense, useMemo, useRef } from "react";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
+import { Suspense, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
+import aerialWorldPlate2k from "./assets/generated/aerial-world-plate-2k.webp?url";
+import aerialWorldPlate4k from "./assets/generated/aerial-world-plate-4k.webp?url";
+import { cloudPuffs } from "./cloud-layout.js";
 import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course";
-import { buildIsland, hash, seeded, surfaceHeight } from "./island";
+import { GeneratedCourseLandmark } from "./generated-landmark.js";
+import { islandBlueprint, islandSurfaceY, type IslandBlueprint } from "./island-blueprint.js";
+import { buildBlueprintIsland } from "./island-geometry.js";
 import { PropField, type Placement, type Role } from "./kit";
-import { courseIslandExtent, layoutCourse, layoutStudyRoad, radiusForLessons } from "./layout";
+import { layoutCourse, layoutStudyRoad, radiusForLessons } from "./layout";
 import { stoneRadius } from "./path-overlay";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./path-language";
+import { hash, seeded } from "./random.js";
 import { renderTier } from "./tier";
 
 /**
@@ -239,7 +245,7 @@ export function placeWorld(nodes: readonly CourseNode[], progressOf: (node: Cour
 /**
  * Decide what stands on one island.
  *
- * Slots come back from `buildIsland` scattered; sorting them by distance from
+ * Slots come back from the shared blueprint scattered; sorting them by distance from
  * the middle is what turns a scatter into a settlement — buildings take the
  * centre, nature keeps the shore, and the boundary between them moves outward
  * as the course is finished.
@@ -293,8 +299,22 @@ function dress(entry: WorldPlacement) {
   // is not a rendering error anyone gets to see, so this is the kind of thing
   // that just looks like "the beacon never worked".
   if (entry.state === "live") {
+    const blueprint = islandBlueprint(entry.node.studyId, entry.node.courseId, entry.node.lessons);
+    const shape = shapeOf(
+      entry.node.studyId,
+      entry.node.courseId,
+      entry.node.lessons,
+      entry.radius,
+    );
+    const [x, z] = blueprint.anchors.entrance;
     push("beacon", {
-      position: world(new THREE.Vector3(0, entry.radius * 0.24, 0)),
+      position: world(
+        new THREE.Vector3(
+          x * shape.horizontalScale,
+          islandSurfaceY(blueprint, x, z) * shape.heightScale,
+          z * shape.horizontalScale,
+        ),
+      ),
       height: entry.radius * 0.34,
       turn: 0,
     });
@@ -302,12 +322,12 @@ function dress(entry: WorldPlacement) {
   return out;
 }
 
-/** Island geometry is expensive enough to be worth keeping between renders. */
-const shapes = new Map<string, ReturnType<typeof buildIsland>>();
+/** Geometry is cached by blueprint version and semantic detail. */
+const shapes = new Map<string, ReturnType<typeof buildBlueprintIsland>>();
 
 /** Slots nearest the middle first: the order the settlement fills in. */
-function settlementSlots(studyId: string, courseId: string, radius: number) {
-  const { slots } = shapeOf(studyId, courseId, radius);
+function settlementSlots(studyId: string, courseId: string, lessons: number, radius: number) {
+  const { slots } = shapeOf(studyId, courseId, lessons, radius);
   return [...slots].sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
 }
 
@@ -332,19 +352,17 @@ export function settlementSize(
   lessons: number,
   progress: number,
 ) {
-  const ordered = settlementSlots(studyId, courseId, radiusForLessons(lessons));
+  const ordered = settlementSlots(studyId, courseId, lessons, radiusForLessons(lessons));
   const claim = Math.max(1, Math.round(ordered.length * 0.45));
   return { ordered, claim, built: Math.round(progress * claim) };
 }
 
-function shapeOf(studyId: string, courseId: string, radius: number) {
-  const key = `${studyId}/${courseId}/${radius.toFixed(2)}`;
+function shapeOf(studyId: string, courseId: string, lessons: number, radius: number) {
+  const blueprint = islandBlueprint(studyId, courseId, lessons);
+  const key = `${blueprint.version}/${blueprint.seed}/${blueprint.lessons}/world/${radius.toFixed(2)}`;
   const found = shapes.get(key);
   if (found) return found;
-  // A gentle hue shift per study, so four studies are four places without the
-  // world turning into four unrelated colour schemes.
-  const tint = (hash(studyId) - 0.5) * 0.14;
-  const made = buildIsland(`${studyId}/${courseId}`, radius, tint);
+  const made = buildBlueprintIsland(blueprint, "world", radius);
   shapes.set(key, made);
   return made;
 }
@@ -361,8 +379,15 @@ function Island({
   onClick: () => void;
   onOver: (over: boolean) => void;
 }) {
-  const shape = shapeOf(entry.node.studyId, entry.node.courseId, entry.radius);
+  const blueprint = islandBlueprint(entry.node.studyId, entry.node.courseId, entry.node.lessons);
+  const shape = shapeOf(entry.node.studyId, entry.node.courseId, entry.node.lessons, entry.radius);
   const locked = entry.state === "idle";
+  const [landmarkX, landmarkZ] = blueprint.anchors.landmark;
+  const landmarkAt = [
+    landmarkX * shape.horizontalScale,
+    islandSurfaceY(blueprint, landmarkX, landmarkZ) * shape.heightScale,
+    landmarkZ * shape.horizontalScale,
+  ] as const;
   return (
     <group position={entry.position}>
       <mesh
@@ -399,6 +424,15 @@ function Island({
           color={locked || dimmed ? PALETTE.locked : 0xffffff}
         />
       </mesh>
+      <Suspense fallback={null}>
+        <GeneratedCourseLandmark
+          studyId={entry.node.studyId}
+          courseId={entry.node.courseId}
+          position={landmarkAt}
+          height={entry.radius * 0.58}
+          detail="world"
+        />
+      </Suspense>
       {/*
         Foam used to mark the waterline. The islands now sit above a cloud
         sea, and a ring in the air would be the waterline of a missing ocean.
@@ -509,123 +543,105 @@ function SkyDome({ stops }: { stops: SkyStops }) {
 }
 
 /**
- * Clouds that speak the same language as the islands.
- *
- * v3 asked to evaluate drei `<Clouds/><Cloud/>` first. A local puff texture,
- * one colour, Lambert, camera-glued so they could not hide at the origin:
- * they never appeared in the blit. Icosahedron clusters next to the thing
- * the camera is actually looking at do appear, and they match the board.
- * Soft billboards against this land would have been the "two styles" trap
- * OwnMySpace already named.
- */
-function CloudField({ around }: { around: THREE.Vector3 }) {
-  const puffs = useMemo(() => {
-    const random = seeded(`clouds/${around.x.toFixed(1)}/${around.z.toFixed(1)}`);
-    const centres: readonly (readonly [number, number, number])[] = [
-      [14, 8, -11],
-      [-16, 7, 8],
-      [6, 9, 16],
-    ];
-    const out: { position: readonly [number, number, number]; scale: number }[] = [];
-    for (const centre of centres) {
-      for (let i = 0; i < 3; i += 1) {
-        out.push({
-          position: [
-            centre[0] + (random() - 0.5) * 5,
-            centre[1] + (random() - 0.5) * 1.4,
-            centre[2] + (random() - 0.5) * 5,
-          ],
-          scale: 2.2 + random() * 1.8,
-        });
-      }
-    }
-    return out;
-  }, [around.x, around.z]);
-  if (renderTier() === "mobile") return null;
-  return (
-    <group position={around}>
-      {puffs.map((puff, index) => (
-        <mesh
-          key={index}
-          position={puff.position}
-          scale={[puff.scale, puff.scale * 0.38, puff.scale]}
-        >
-          <sphereGeometry args={[1, 7, 5]} />
-          <meshBasicMaterial color={0xf4ece0} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-/**
  * A layer of flattened puffs under the islands. This is the depth the flat
  * sea could not give: looking down, you see through clouds to a further
  * ocean, so the islands can hang.
  */
-function CloudSea({ extent }: { extent: number }) {
+function CloudSea({ extent, level }: { extent: number; level: number }) {
   const mobile = renderTier() === "mobile";
-  const puffs = useMemo(() => {
-    const random = seeded("cloud-sea");
-    const count = mobile ? 18 : 56;
-    const radius = extent * 2.4;
-    return Array.from({ length: count }, () => {
-      const angle = random() * Math.PI * 2;
-      const dist = Math.sqrt(random()) * radius;
-      return {
-        position: [Math.cos(angle) * dist, -2.4 - random() * 1.8, Math.sin(angle) * dist] as const,
-        scale: 4.5 + random() * 6,
-      };
+  const puffs = useMemo(() => cloudPuffs(extent, mobile, level), [extent, level, mobile]);
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const lobes = useMemo(
+    () =>
+      puffs.flatMap((puff) => [
+        { x: -0.3, y: -0.02, z: 0.08, scale: 0.62, puff },
+        { x: 0.28, y: 0, z: 0.03, scale: 0.58, puff },
+        { x: 0.02, y: 0.08, z: -0.22, scale: 0.72, puff },
+        { x: 0.05, y: -0.03, z: 0.27, scale: 0.5, puff },
+      ]),
+    [puffs],
+  );
+  useLayoutEffect(() => {
+    const target = mesh.current;
+    if (!target) return;
+    const dummy = new THREE.Object3D();
+    lobes.forEach((lobe, index) => {
+      const scale = lobe.puff.scale * lobe.scale;
+      dummy.position.set(
+        lobe.puff.position[0] + lobe.x * lobe.puff.scale,
+        lobe.puff.position[1] + lobe.y * lobe.puff.scale,
+        lobe.puff.position[2] + lobe.z * lobe.puff.scale,
+      );
+      dummy.scale.set(scale, scale * 0.28, scale * 0.82);
+      dummy.updateMatrix();
+      target.setMatrixAt(index, dummy.matrix);
     });
-  }, [extent, mobile]);
+    target.instanceMatrix.needsUpdate = true;
+    target.computeBoundingSphere();
+  }, [lobes]);
   return (
-    <group>
-      {puffs.map((puff, index) => (
-        <mesh
-          key={index}
-          position={puff.position}
-          scale={[puff.scale, puff.scale * 0.32, puff.scale]}
-        >
-          <sphereGeometry args={[1, 6, 4]} />
-          <meshBasicMaterial color={0xf2ebe0} transparent opacity={0.55} depthWrite={false} />
-        </mesh>
-      ))}
-    </group>
+    <instancedMesh ref={mesh} args={[undefined, undefined, Math.max(lobes.length, 1)]}>
+      <sphereGeometry args={[1, 16, 10]} />
+      <meshStandardMaterial
+        color={0xf2eee8}
+        roughness={1}
+        metalness={0}
+        transparent
+        opacity={0.72}
+        depthWrite={false}
+      />
+    </instancedMesh>
   );
 }
 
 /**
- * Further islands, the same shape as the ones you can click. A fogged blob
- * at the horizon is a flying saucer; a smaller island in the same language
- * is "more of this world, further away".
+ * A deliberately low-frequency aerial plate below the cloud deck.
+ *
+ * This is background scenery, not another source of world truth: the playable
+ * islands, their landmarks and their path all remain 3D and come from the
+ * versioned blueprint. The plate only gives the eye the same cue it gets from
+ * an aeroplane window — distant coast, sea depth and cloud shadow. Keeping it
+ * on a horizontal disc also avoids pretending a top-down painting is an HDRI.
  */
-function DistantIsles({ extent }: { extent: number }) {
+function AerialWorldPlate({ extent, level }: { extent: number; level: number }) {
   const mobile = renderTier() === "mobile";
-  const isles = useMemo(() => {
-    const random = seeded("distant-isles");
-    const count = mobile ? 5 : 11;
-    return Array.from({ length: count }, (_, index) => {
-      const angle = (index / count) * Math.PI * 2 + (random() - 0.5) * 0.25;
-      const dist = extent * (1.55 + random() * 0.7);
-      const radius = 1.6 + random() * 2.4;
-      return {
-        position: new THREE.Vector3(
-          Math.cos(angle) * dist,
-          -1.4 - random() * 0.8,
-          Math.sin(angle) * dist,
-        ),
-        geometry: buildIsland(`distant/${index}`, radius, (random() - 0.5) * 0.1).geometry,
-      };
-    });
-  }, [extent, mobile]);
+  const gl = useThree((state) => state.gl);
+  const sourceTexture = useLoader(
+    THREE.TextureLoader,
+    mobile ? aerialWorldPlate2k : aerialWorldPlate4k,
+  );
+  // useLoader caches by URL. World and course views need different UV offsets,
+  // so mutating the cached texture would let the last route poison the next.
+  const texture = useMemo(() => sourceTexture.clone(), [sourceTexture]);
+
+  useLayoutEffect(() => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.MirroredRepeatWrapping;
+    texture.wrapT = THREE.MirroredRepeatWrapping;
+    texture.repeat.set(1.32, 1.32);
+    // The overview looks at a much larger central patch than a course camera.
+    // Shift that patch toward a coastline; otherwise it samples only the
+    // quiet middle of the sea and the authored 2D depth reads as a flat fill.
+    texture.offset.set(level > -8 ? 0.06 : -0.16, -0.16);
+    texture.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+    texture.needsUpdate = true;
+    return () => texture.dispose();
+  }, [gl, level, texture]);
+
   return (
-    <group>
-      {isles.map((isle, index) => (
-        <mesh key={index} geometry={isle.geometry} position={isle.position} scale={0.85}>
-          <meshStandardMaterial vertexColors flatShading roughness={0.96} color={0xb8c2c8} />
-        </mesh>
-      ))}
-    </group>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, level - 4, 0]}>
+      <circleGeometry args={[extent * 1.45, 96]} />
+      <meshBasicMaterial map={texture} color={0xe8f5ef} transparent opacity={0.7} fog={false} />
+    </mesh>
+  );
+}
+
+function AerialWorldPlateFallback({ extent, level }: { extent: number; level: number }) {
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, level - 4, 0]} receiveShadow>
+      <circleGeometry args={[extent * 3.2, 64]} />
+      <meshStandardMaterial color={PALETTE.sea} roughness={0.72} metalness={0} />
+    </mesh>
   );
 }
 
@@ -657,6 +673,7 @@ function Weather({
   extent,
   fog,
   sky = SKY_STOPS,
+  cloudLevel = -5.2,
 }: {
   extent: number;
   /**
@@ -671,6 +688,8 @@ function Weather({
    */
   fog?: readonly [number, number];
   sky?: SkyStops;
+  /** Vertical centre of the cloud layer; course islands have deeper roots. */
+  cloudLevel?: number;
 }) {
   const [, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
   // FogExp2 has no near plane. Density is derived from the old far so the
@@ -688,7 +707,8 @@ function Weather({
         the dome can sit at a saturated blue without pulling the islands'
         midtones down with it. Ground stays the moss the land already is.
       */}
-      <hemisphereLight args={[sky.mid, 0x4a5a3a, 1.15]} />
+      <hemisphereLight args={[sky.mid, 0x786e5f, 1.35]} />
+      <ambientLight color={sky.horizon} intensity={0.22} />
       {/*
         The shadow camera is deliberately far smaller than the world.
         Stretched across the whole archipelago, one 2048 map gives each texel a
@@ -719,16 +739,14 @@ function Weather({
         it. Clouds sit between the islands and that disc so looking down is
         looking through a layer, not at a painted floor.
       */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -6.5, 0]} receiveShadow>
-        <circleGeometry args={[extent * 3.2, 64]} />
-        <meshStandardMaterial color={PALETTE.sea} roughness={0.72} metalness={0} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -8.2, 0]}>
+      <Suspense fallback={<AerialWorldPlateFallback extent={extent} level={cloudLevel} />}>
+        <AerialWorldPlate extent={extent} level={cloudLevel} />
+      </Suspense>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, cloudLevel - 5.8, 0]}>
         <circleGeometry args={[extent * 3.4, 48]} />
         <meshBasicMaterial color={PALETTE.seaDeep} />
       </mesh>
-      <CloudSea extent={extent} />
-      <DistantIsles extent={extent} />
+      <CloudSea extent={extent} level={cloudLevel} />
     </>
   );
 }
@@ -761,7 +779,6 @@ export function WorldScene({
   const fields = useMemo(() => {
     const merged = new Map<Role, Placement[]>();
     for (const entry of placements) {
-      if (entry.state === "idle") continue; // a locked island stays bare rock
       for (const [role, list] of dress(entry)) {
         merged.set(role, (merged.get(role) ?? []).concat(list));
       }
@@ -772,7 +789,6 @@ export function WorldScene({
   return (
     <>
       <Weather extent={ring * 1.5} sky={skyStopsForStudy(skyStudyId)} />
-      {learnerAt ? <CloudField around={learnerAt} /> : null}
       {/*
         No roads between islands. They used to be drawn from
         `prerequisiteCourseIds`, one causeway per edge — furniture for a graph
@@ -805,6 +821,8 @@ export function WorldScene({
 }
 
 export interface LessonPlacement {
+  readonly studyId: string;
+  readonly courseId: string;
   readonly unitId: string;
   readonly unitTitle: string;
   readonly unitIndex: number;
@@ -827,6 +845,7 @@ export function placeCourse(
   const flat = course.units.flatMap((unit, unitIndex) =>
     unit.lessons.map((lesson, slot) => ({ unit, unitIndex, lesson, slot })),
   );
+  const blueprint = islandBlueprint(studyId, course.id, flat.length);
   const points = layoutCourse(course.units.map((unit) => unit.lessons.length));
   const hueShift = hueShiftForCourse(studyId, course.id);
   const firstOpen = next
@@ -842,18 +861,18 @@ export function placeCourse(
       }),
     );
     return {
+      studyId,
+      courseId: course.id,
       unitId: entry.unit.id,
       unitTitle: entry.unit.title,
       unitIndex: entry.unitIndex,
       lessonId: entry.lesson.id,
       lessonTitle: entry.lesson.title,
       chars: entry.lesson.content.length,
-      // On the island's surface, sunk by a fraction of the marker so the
-      // profile-vs-mesh disagreement (see courseSurfaceY) can only ever bury a
-      // marker slightly, never float it.
+      // The mesh, props and markers all query this one continuous surface.
       position: new THREE.Vector3(
         points[index]!.x,
-        courseSurfaceY(points[index]!.x, points[index]!.z, flat.length) - MARKER_BIAS * 0.72,
+        islandSurfaceY(blueprint, points[index]!.x, points[index]!.z) - MARKER_SINK,
         points[index]!.z,
       ),
       state: done
@@ -888,34 +907,30 @@ export function placeCourse(
  * the road's length is the number of lessons. Rough on purpose; the shape of
  * the terrain is not carrying information yet.
  */
-export function courseIslandScale(lessons: number) {
-  const extent = courseIslandExtent(lessons);
-  // Height follows the narrow axis, halved. Scaling it with the long axis would
-  // turn a 41-lesson course into a mountain range for no reason a learner could
-  // read; scaling it 1:1 with the narrow one gave a block — the lathe profile
-  // spends most of its length on a root that hangs below the waterline, so a
-  // full-height island seen from above is a tall dark cone with a lid. This is
-  // a plate with a shore, which is what the markers need to sit on.
-  return { x: extent.x, y: Math.min(extent.x, extent.z) * 0.38, z: extent.z };
+export function courseIslandScale(lessons: number, studyId = "course", courseId = "course") {
+  const blueprint = islandBlueprint(studyId, courseId, lessons);
+  return { x: blueprint.bounds.halfX, y: 1, z: blueprint.bounds.halfZ };
 }
 
 /**
  * Where the ground is under a point on the course island.
  *
- * `buildIsland` also jitters each radial column by up to ±17%, so this is the
- * profile's height, not the mesh's, and a marker can end up slightly proud or
- * slightly sunk. Markers are sunk by a fixed bias below so the error only ever
- * buries them a little — a stone half in the ground reads as a stone, and a
- * stone hovering above it reads as a bug.
+ * The blueprint, the terrain mesh, the trail and every marker ask this same
+ * continuous rule. That is why a world-map icon can become course ground
+ * without a second height approximation or a marker hovering over the turf.
  */
-export function courseSurfaceY(x: number, z: number, lessons: number): number {
-  const scale = courseIslandScale(lessons);
-  const fraction = Math.hypot(x / scale.x, z / scale.z);
-  return surfaceHeight(fraction) * scale.y;
+export function courseSurfaceY(
+  x: number,
+  z: number,
+  lessons: number,
+  studyId = "course",
+  courseId = "course",
+): number {
+  return islandSurfaceY(islandBlueprint(studyId, courseId, lessons), x, z);
 }
 
-/** How far a marker sinks into the ground, in marker radii. */
-const MARKER_BIAS = 0.55;
+/** A shallow seat in the turf; enough to belong to the ground, not disappear in it. */
+const MARKER_SINK = 0.08;
 
 /**
  * The colour of a lesson marker.
@@ -977,10 +992,110 @@ function LessonMarker({
         />
       </mesh>
       {lesson.state === "live" ? (
-        <LiveRing radius={radius * 1.5} lift={MARKER_BIAS * 0.72 + 0.07} />
+        <LiveRing radius={radius * 1.5} lift={MARKER_SINK + 0.07} />
       ) : null}
     </group>
   );
+}
+
+const UNIT_TRAIL_COLOURS = [0xd7c28d, 0xc0c990, 0xaec6b1, 0xb7b4ce, 0xd0ae92, 0xa9c2c7] as const;
+
+/** A narrow ground ribbon makes lesson order readable without another text layer. */
+function CourseTrail({
+  blueprint,
+  lessons,
+}: {
+  blueprint: IslandBlueprint;
+  lessons: readonly LessonPlacement[];
+}) {
+  const geometry = useMemo(() => {
+    const made = new THREE.BufferGeometry();
+    if (lessons.length < 2) return made;
+    const positions: number[] = [];
+    const colours: number[] = [];
+    const indices: number[] = [];
+    lessons.forEach((lesson, index) => {
+      const before = lessons[Math.max(0, index - 1)]!.position;
+      const after = lessons[Math.min(lessons.length - 1, index + 1)]!.position;
+      const dx = after.x - before.x;
+      const dz = after.z - before.z;
+      const length = Math.hypot(dx, dz) || 1;
+      const normalX = -dz / length;
+      const normalZ = dx / length;
+      const colour = new THREE.Color(
+        UNIT_TRAIL_COLOURS[lesson.unitIndex % UNIT_TRAIL_COLOURS.length]!,
+      );
+      for (const side of [-1, 1]) {
+        const x = lesson.position.x + normalX * side * 0.24;
+        const z = lesson.position.z + normalZ * side * 0.24;
+        positions.push(x, islandSurfaceY(blueprint, x, z) + 0.045, z);
+        colours.push(colour.r, colour.g, colour.b);
+      }
+      if (index === lessons.length - 1) return;
+      const at = index * 2;
+      indices.push(at, at + 1, at + 2, at + 1, at + 3, at + 2);
+    });
+    made.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    made.setAttribute("color", new THREE.Float32BufferAttribute(colours, 3));
+    made.setIndex(indices);
+    made.computeVertexNormals();
+    return made;
+  }, [blueprint, lessons]);
+  return (
+    <mesh geometry={geometry} receiveShadow>
+      <meshStandardMaterial
+        vertexColors
+        roughness={0.96}
+        metalness={0}
+        side={THREE.DoubleSide}
+        polygonOffset
+        polygonOffsetFactor={-1}
+      />
+    </mesh>
+  );
+}
+
+const COURSE_BIOMES: readonly (readonly Role[])[] = [
+  ["tree-broad-a", "bush", "fern"],
+  ["rock-a", "rock-b", "fern"],
+  ["tree-tall-a", "tree-tall-b", "mushroom"],
+  ["tree-broad-b", "bush-flowering", "rock-c"],
+  ["tree-broad-a", "tree-tall-a", "bush"],
+  ["rock-c", "fern", "bush-flowering"],
+];
+
+/** Six unit climates, scattered from the blueprint rather than hand-authored coordinates. */
+function courseLandscape(
+  blueprint: IslandBlueprint,
+  lessons: readonly LessonPlacement[],
+): Map<Role, Placement[]> {
+  const out = new Map<Role, Placement[]>();
+  blueprint.surfaceSlots.forEach((slot, index) => {
+    let nearest: LessonPlacement | undefined;
+    let distance = Number.POSITIVE_INFINITY;
+    for (const lesson of lessons) {
+      const next = Math.hypot(slot.x - lesson.position.x, slot.z - lesson.position.z);
+      if (next >= distance) continue;
+      distance = next;
+      nearest = lesson;
+    }
+    if (!nearest || distance < 3.15 || hash(`${blueprint.seed}/landscape/${index}`) > 0.58) return;
+    const roles = COURSE_BIOMES[nearest.unitIndex % COURSE_BIOMES.length]!;
+    const role = roles[Math.floor(hash(`${blueprint.seed}/role/${index}`) * roles.length)]!;
+    const height = TREES.includes(role)
+      ? 1.7 + hash(`${blueprint.seed}/height/${index}`) * 1.15
+      : SCRUB.includes(role)
+        ? 0.48 + hash(`${blueprint.seed}/height/${index}`) * 0.46
+        : 0.42 + hash(`${blueprint.seed}/height/${index}`) * 0.45;
+    const at = out.get(role) ?? [];
+    at.push({
+      position: new THREE.Vector3(slot.x, slot.y - 0.05, slot.z),
+      height,
+      turn: slot.turn,
+    });
+    out.set(role, at);
+  });
+  return out;
 }
 
 /**
@@ -998,17 +1113,28 @@ export function CourseScene({
   skyStudyId?: string | null;
 }) {
   const live = lessons.find((lesson) => lesson.state === "live");
-  const scale = useMemo(() => courseIslandScale(lessons.length), [lessons.length]);
-  const extent = Math.max(scale.x, scale.z);
-
-  // One island, built once at unit radius and scaled. The seed is the course's
-  // first lesson id rather than the course id, because this component is only
-  // ever handed placements — and a stable seed matters more than a tidy one:
-  // the island a learner remembers has to still be there next month.
-  const island = useMemo(
-    () => buildIsland(lessons[0]?.lessonId ?? "course", 1, lessons[0]?.hueShift ?? 0, 15),
-    [lessons],
+  const studyId = lessons[0]?.studyId ?? "course";
+  const courseId = lessons[0]?.courseId ?? "course";
+  const blueprint = useMemo(
+    () => islandBlueprint(studyId, courseId, lessons.length),
+    [courseId, lessons.length, studyId],
   );
+  const extent = blueprint.bounds.maxHalf;
+
+  // This is the high-detail projection of the same versioned blueprint used
+  // by the small world-map island. Lesson prose can change without changing
+  // the seed or inventing a second representation.
+  const island = useMemo(() => buildBlueprintIsland(blueprint, "course"), [blueprint]);
+  const [landmarkX, landmarkZ] = blueprint.anchors.landmark;
+  const landmarkHeight = Math.max(
+    2.8,
+    Math.min(4.8, Math.min(blueprint.bounds.halfX, blueprint.bounds.halfZ) * 0.32),
+  );
+  const landmarkAt = [
+    landmarkX,
+    islandSurfaceY(blueprint, landmarkX, landmarkZ),
+    landmarkZ,
+  ] as const;
 
   const markers = useMemo(
     () =>
@@ -1017,7 +1143,7 @@ export function CourseScene({
         // Still varies with the length of the lesson, but across a fifth of the
         // old range: these are markers in a row now, and a row of discs at
         // wildly different sizes reads as noise rather than as information.
-        radius: 1.5 + Math.min(stoneRadius(lesson.chars) - 1.5, 1.4) * 0.42,
+        radius: 1.12 + Math.min(stoneRadius(lesson.chars) - 1.5, 1.4) * 0.3,
       })),
     [lessons],
   );
@@ -1025,7 +1151,7 @@ export function CourseScene({
   // Growth marks progress, same rule as the sea: a finished lesson has
   // something growing beside it, an unfinished one has bare ground.
   const fields = useMemo(() => {
-    const merged = new Map<Role, Placement[]>();
+    const merged = courseLandscape(blueprint, lessons);
     for (const { lesson, radius } of markers) {
       if (lesson.state === "locked" || lesson.state === "idle") continue;
       const random = seeded(`${lesson.lessonId}/dress`);
@@ -1040,7 +1166,7 @@ export function CourseScene({
           : STONES[Math.floor(random() * STONES.length)]!;
         const list = merged.get(role) ?? [];
         list.push({
-          position: new THREE.Vector3(x, courseSurfaceY(x, z, lessons.length) - 0.1, z),
+          position: new THREE.Vector3(x, islandSurfaceY(blueprint, x, z) - 0.1, z),
           height: grown ? 1.5 + random() * 0.9 : 0.5,
           turn: random() * Math.PI * 2,
         });
@@ -1048,7 +1174,7 @@ export function CourseScene({
       }
     }
     return [...merged.entries()];
-  }, [markers, lessons.length]);
+  }, [blueprint, markers]);
 
   return (
     <>
@@ -1065,10 +1191,25 @@ export function CourseScene({
         metres away now that they are markers on one. It rendered as a white
         blob lying on the ground covering three of them.
       */}
-      <Weather extent={extent * 1.6} fog={[88, 210]} sky={skyStopsForStudy(skyStudyId)} />
-      <mesh geometry={island.geometry} scale={[scale.x, scale.y, scale.z]} castShadow receiveShadow>
+      <Weather
+        extent={extent * 1.6}
+        fog={[88, 210]}
+        sky={skyStopsForStudy(skyStudyId)}
+        cloudLevel={-10.2}
+      />
+      <mesh geometry={island.geometry} castShadow receiveShadow>
         <meshStandardMaterial vertexColors flatShading roughness={0.94} color={0xffffff} />
       </mesh>
+      <Suspense fallback={null}>
+        <GeneratedCourseLandmark
+          studyId={studyId}
+          courseId={courseId}
+          position={landmarkAt}
+          height={landmarkHeight}
+          detail="course"
+        />
+      </Suspense>
+      <CourseTrail blueprint={blueprint} lessons={lessons} />
       {markers.map(({ lesson, radius }) => (
         <LessonMarker
           key={lesson.lessonId}

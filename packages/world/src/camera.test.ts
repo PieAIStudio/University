@@ -9,8 +9,8 @@ import {
   WORLD_POLAR,
 } from "./controls";
 import { courseIslandScale } from "./Maps";
+import { islandBlueprint, islandSurfaceY } from "./island-blueprint.js";
 import { radiusForLessons } from "./layout";
-import { surfaceHeight } from "./island";
 
 /*
   Dolly span, both levels. This started at 76× on the world map, which let the
@@ -47,7 +47,8 @@ describe("the eye stays above the ground", () => {
   it("clears the course island, including the longest course", () => {
     for (const lessons of [1, 12, 41]) {
       const scale = courseIslandScale(lessons);
-      const peak = surfaceHeight(0) * scale.y;
+      const blueprint = islandBlueprint("course", "course", lessons);
+      const peak = islandSurfaceY(blueprint, 0, 0) * scale.y;
       expect(COURSE_DISTANCE_MIN * Math.cos(COURSE_POLAR)).toBeGreaterThan(peak);
     }
   });
