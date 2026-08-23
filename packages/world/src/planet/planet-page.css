@@ -1,0 +1,169 @@
+/*
+  Layout borrowed from Non-Heroes' deployment grid (map + list + detail,
+  selection syncs). Art is ours: kit tokens, opaque panels. backdrop-filter
+  over a live canvas greys out anything wider than ~260px; this page puts
+  the list *beside* the canvas on desktop so the two never share a stack,
+  and the panel still stays opaque in case a host overlays it later.
+*/
+
+.planet-page {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(11rem, 34%) minmax(0, 1fr);
+  grid-template-areas:
+    "head"
+    "globe"
+    "rail";
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  color: var(--game-ui-text, #e9edf5);
+  background: var(--game-ui-bg, #0d1019);
+  font-family: var(--game-ui-font-body, system-ui, -apple-system, "PingFang SC", sans-serif);
+}
+
+.planet-page__head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  background: var(--game-ui-panel-strong, #151b2b);
+}
+
+.planet-page__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.planet-page__globe {
+  grid-area: globe;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--game-ui-bg, #0d1019);
+}
+
+.planet-page__globe canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.planet-page__rail {
+  grid-area: rail;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+  background: var(--game-ui-panel-strong, #151b2b);
+  border-top: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+}
+
+.planet-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+}
+
+.planet-page__row {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.planet-page__row:hover,
+.planet-page__row:focus-visible {
+  background: color-mix(in srgb, var(--game-ui-accent, #ffb347) 14%, transparent);
+  outline: none;
+}
+
+.planet-page__row:focus-visible {
+  outline: 2px solid var(--game-ui-accent, #ffb347);
+  outline-offset: 2px;
+}
+
+.planet-page__row[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--game-ui-accent, #ffb347) 55%, transparent);
+  background: color-mix(in srgb, var(--game-ui-accent, #ffb347) 16%, transparent);
+}
+
+.planet-page__row-name {
+  font-weight: 650;
+}
+
+.planet-page__row-meta,
+.planet-page__counts,
+.planet-page__rest,
+.planet-page__hint {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.82rem;
+}
+
+.planet-page__detail {
+  padding: 10px 12px 14px;
+  border-top: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  background: var(--game-ui-panel, #151b2b);
+}
+
+.planet-page__card {
+  display: grid;
+  gap: 10px;
+}
+
+.planet-page__counts,
+.planet-page__hint,
+.planet-page__rest {
+  margin: 0;
+}
+
+.planet-page__courses {
+  margin: 0;
+  padding-left: 1.15em;
+}
+
+.planet-page__courses li {
+  margin: 0.15em 0;
+}
+
+.planet-page__enter {
+  justify-self: start;
+}
+
+@media (min-width: 768px) {
+  .planet-page {
+    grid-template-columns: minmax(15rem, 34%) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      "head head"
+      "globe rail";
+  }
+
+  .planet-page__rail {
+    border-top: 0;
+    border-left: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planet-page__row {
+    transition: none;
+  }
+}
