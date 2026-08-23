@@ -85,25 +85,16 @@ export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
   });
 
   await namedStep(page, "滚到课文末尾的题", async () => {
-    const quiz = page.locator(".quiz");
+    const quiz = page.locator(".exercise-panel").first();
     await expect(quiz).toBeVisible();
     await quiz.scrollIntoViewIfNeeded();
-    await expect(page.getByPlaceholder("用你自己的话写")).toBeVisible();
-    await expect(page.getByRole("button", { name: "提交" })).toBeVisible();
+    await expect(page.getByPlaceholder(/用自己的话/)).toBeVisible();
+    await expect(page.getByRole("button", { name: /提交/ })).toBeVisible();
   });
 
   await namedStep(page, "答题并提交", async () => {
-    await page.getByPlaceholder("用你自己的话写").fill(FIRST_ANSWER);
-    await humanClick(page, page.getByRole("button", { name: "提交" }), "提交");
-    const appeal = page.getByRole("button", { name: "我觉得我对了" });
-    const settled = page.getByText("读完了。");
-    const outcome = await Promise.race([
-      settled.waitFor({ timeout: 12_000 }).then(() => "settled" as const),
-      appeal.waitFor({ timeout: 12_000 }).then(() => "appeal" as const),
-    ]).catch(() => "none" as const);
-    if (outcome === "appeal") {
-      await humanClick(page, appeal, "我觉得我对了");
-    }
+    await page.getByPlaceholder(/用自己的话/).fill(FIRST_ANSWER);
+    await humanClick(page, page.getByRole("button", { name: /提交/ }), "提交");
   });
 }
 

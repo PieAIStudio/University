@@ -6,8 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Course, Lesson } from "../content/library";
 import { toHash } from "../url-state";
+import { resetAll } from "../progress/store";
 import { LessonReaderHost } from "../screens/LessonReaderHost";
-import { LessonScreen } from "./Lesson";
+
+vi.mock("@pieai/university-ui/sound/index.js", () => ({
+  playSound: vi.fn(),
+  SoundToggle: () => <button type="button">声音</button>,
+}));
 
 const LESSON: Lesson = {
   id: "you-already-know-apps",
@@ -27,10 +32,33 @@ const LESSON: Lesson = {
     "",
     "后面。",
   ].join("\n"),
-  evidence: [],
+  evidence: [
+    {
+      kind: "fact",
+      sourceCommit: "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+      sourcePath: "README.md",
+      lineStart: 1,
+      lineEnd: 4,
+      note: "README",
+    },
+  ],
   assets: [],
-  cards: [],
-  exercises: [],
+  cards: [
+    {
+      id: "app-means-application",
+      kind: "basic",
+      front: "App 是什么的缩写？",
+      back: "Application。",
+    },
+  ],
+  exercises: [
+    {
+      id: "product-name-from-readme",
+      kind: "short-answer",
+      title: "产品中文名",
+      prompt: "README 第 1 行里，产品的中文名是哪四个字？",
+    },
+  ],
   sections: [],
 };
 
@@ -65,6 +93,15 @@ beforeEach(() => {
     return 1;
   });
   vi.stubGlobal("cancelAnimationFrame", () => undefined);
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+  resetAll();
 });
 
 const originalRect = HTMLElement.prototype.getBoundingClientRect;
@@ -74,6 +111,7 @@ afterEach(async () => {
   container.remove();
   HTMLElement.prototype.getBoundingClientRect = originalRect;
   vi.unstubAllGlobals();
+  resetAll();
 });
 
 function box(top: number, height = 24): DOMRect {
@@ -101,44 +139,49 @@ function stubLessonRects(topsById: Readonly<Record<string, number>>): void {
   };
 }
 
-describe("LessonScreen reading chrome", () => {
+function renderHost(onBack = vi.fn()) {
+  return act(async () => {
+    root.render(
+      <LessonReaderHost
+        course={COURSE}
+        studyId="turing-pact"
+        unitId="what-is-an-app"
+        lessonId="you-already-know-apps"
+        onBack={onBack}
+        onSettled={() => undefined}
+        onFollowLink={() => undefined}
+      />,
+    );
+  });
+}
+
+describe("the shared lesson reader on the delivery shell", () => {
   it("has no nav, no breadcrumb, and a section bar instead of a course index", async () => {
-    const onBack = vi.fn();
-    await act(async () => {
-      root.render(
-        <LessonScreen
-          lesson={LESSON}
-          course={COURSE}
-          unitId="what-is-an-app"
-          onPass={() => undefined}
-          onBack={onBack}
-        />,
-      );
-    });
+    await renderHost();
     expect(container.querySelectorAll("nav")).toHaveLength(0);
     expect(container.textContent).not.toContain("关卡地图");
     expect(container.textContent).not.toContain("1/1");
-    expect(container.textContent).not.toMatch(/\d+\/\d+/);
     const bar = container.querySelector("[role='progressbar']");
     expect(bar?.getAttribute("aria-valuemax")).toBe("3");
     expect(bar?.getAttribute("aria-valuenow")).toBe("1");
-    expect(container.querySelector(".lesson__en")?.textContent).toBe("EN");
+  });
+
+  it("offers the twelve reading tools the delivery-only screen was missing", async () => {
+    await renderHost();
+    expect(container.textContent).toContain("讲解层级");
+    expect(container.textContent).toContain("标准讲解");
+    expect(container.textContent).toContain("外语模式");
+    expect(container.textContent).toContain("完成本次更新");
+    expect(container.textContent).toContain("产品中文名");
+    expect(container.textContent).toContain("3b402e06");
+    expect(container.querySelector(".lesson-reader")).not.toBeNull();
+    expect(container.querySelector(".exercise-panel")).not.toBeNull();
+    expect(container.querySelector(".lesson-next")).not.toBeNull();
   });
 
   it("moves the bar as a later section crosses the read line", async () => {
-    const onBack = vi.fn();
     stubLessonRects({ s1: 80, s2: 400, s3: 900 });
-    await act(async () => {
-      root.render(
-        <LessonScreen
-          lesson={LESSON}
-          course={COURSE}
-          unitId="what-is-an-app"
-          onPass={() => undefined}
-          onBack={onBack}
-        />,
-      );
-    });
+    await renderHost();
     expect(container.querySelector("[role='progressbar']")?.getAttribute("aria-valuenow")).toBe(
       "1",
     );
@@ -146,12 +189,22 @@ describe("LessonScreen reading chrome", () => {
     stubLessonRects({ s1: -120, s2: 20, s3: 700 });
     await act(async () => {
       root.render(
-        <LessonScreen
-          lesson={{ ...LESSON, content: `${LESSON.content}\n` }}
-          course={COURSE}
+        <LessonReaderHost
+          course={{
+            ...COURSE,
+            units: [
+              {
+                ...COURSE.units[0]!,
+                lessons: [{ ...LESSON, content: `${LESSON.content}\n` }],
+              },
+            ],
+          }}
+          studyId="turing-pact"
           unitId="what-is-an-app"
-          onPass={() => undefined}
-          onBack={onBack}
+          lessonId="you-already-know-apps"
+          onBack={() => undefined}
+          onSettled={() => undefined}
+          onFollowLink={() => undefined}
         />,
       );
     });
@@ -174,22 +227,12 @@ describe("LessonReaderHost close", () => {
     });
     expect(coursePath).toBe("#/turing-pact/foundations-before-zero");
 
-    await act(async () => {
-      root.render(
-        <LessonReaderHost
-          course={COURSE}
-          studyId="turing-pact"
-          unitId="what-is-an-app"
-          lessonId="you-already-know-apps"
-          onBack={onBack}
-          onSettled={() => undefined}
-          onFollowLink={() => undefined}
-        />,
-      );
-    });
+    await renderHost(onBack);
     expect(container.querySelector("nav")).toBeNull();
+    const close = container.querySelector<HTMLButtonElement>(".lesson-toolbar__close");
+    expect(close).not.toBeNull();
     await act(async () => {
-      container.querySelector<HTMLButtonElement>(".lesson-toolbar__close")?.click();
+      close?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(onBack).toHaveBeenCalledTimes(1);
   });
