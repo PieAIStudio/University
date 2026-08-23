@@ -2,6 +2,11 @@
   Quiet until it is wanted. This sits on every screen during a review pass, so
   at rest it has to cost nothing visually — anything with the product's action
   colour would compete with the one control the screen actually wants pressed.
+
+  Quiet is a colour choice, never `opacity` on the whole control. At 0.55 the
+  paragraph underneath showed through the pill and the two sets of glyphs
+  interleaved: not a discreet control over text, a rendering fault. The
+  background stays fully opaque and the *label* is the muted one.
 */
 .feedback-note__open {
   position: fixed;
@@ -16,13 +21,34 @@
   font: inherit;
   font-size: var(--game-ui-font-xs);
   cursor: pointer;
-  opacity: 0.55;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
 }
 
 .feedback-note__open:hover,
 .feedback-note__open:focus-visible {
-  opacity: 1;
   color: var(--game-ui-text);
+}
+
+/*
+  Gone while the page is moving. `pointer-events: none` matters as much as the
+  fade: a control you cannot see must not still be catching the tap meant for
+  the paragraph behind it.
+*/
+.feedback-note__open.is-away {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback-note__open {
+    transition: none;
+  }
+  .feedback-note__open.is-away {
+    transform: none;
+  }
 }
 
 .feedback-note {

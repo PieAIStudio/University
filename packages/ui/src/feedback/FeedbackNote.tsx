@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 /**
  * A note about the screen you are looking at, on the clipboard, in one move.
@@ -41,11 +41,49 @@ export function feedbackNote(args: {
   ].join("\n");
 }
 
+/**
+ * Out of the way while the page is moving.
+ *
+ * Pinned to a corner, this covered whatever was under it — measured on the
+ * concepts index, the closed pill sat directly on 「界面此刻必须记住、而且会跟着
+ * 操作变的信息。」 A phone has no gutter to hide in: the reading column is the
+ * whole width, so there is no corner that is reliably empty.
+ *
+ * Scrolling is the signal. Someone moving the page is reading it and wants
+ * nothing on top of it; someone who has stopped is looking at one screen and
+ * may be about to say something about it. So it leaves on the first scroll and
+ * comes back a beat after the last one.
+ *
+ * `capture: true` because `scroll` does not bubble, and the shells scroll an
+ * inner element on some screens and the document on others. Capturing at the
+ * document catches both without either shell having to declare which it is.
+ */
+function useHiddenWhileScrolling(): boolean {
+  const [scrolling, setScrolling] = useState(false);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onScroll = () => {
+      setScrolling(true);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => setScrolling(false), 420);
+    };
+    document.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    return () => {
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("scroll", onScroll, { capture: true });
+    };
+  }, []);
+
+  return scrolling;
+}
+
 export function FeedbackNote({ shell }: { readonly shell: string }) {
   const [open, setOpen] = useState(false);
   const [said, setSaid] = useState("");
   const [copied, setCopied] = useState(false);
   const [handCopy, setHandCopy] = useState(false);
+  const scrolling = useHiddenWhileScrolling();
 
   const copy = useCallback(async () => {
     const note = feedbackNote({
@@ -80,7 +118,11 @@ export function FeedbackNote({ shell }: { readonly shell: string }) {
 
   if (!open) {
     return (
-      <button type="button" className="feedback-note__open" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className={`feedback-note__open${scrolling ? " is-away" : ""}`}
+        onClick={() => setOpen(true)}
+      >
         提意见
       </button>
     );
