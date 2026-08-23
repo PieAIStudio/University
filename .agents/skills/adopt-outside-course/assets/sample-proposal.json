@@ -1,0 +1,168 @@
+{
+  "unit": {
+    "id": "control-feedback",
+    "title": "控件要有反应",
+    "objective": "读完这一单元，你能说出一个按钮该有哪几种状态、每种什么时候出现，并且能检查出「用鼠标好好的、用键盘就瞎了」这类问题。"
+  },
+  "lessons": [
+    {
+      "id": "four-states-of-a-control",
+      "title": "一个按钮不是一种样子，是四种",
+      "content": "## 学习目标\n\n读完你能说出按钮的四种状态分别在什么时候出现，并在一个做好的页面上把它们一个一个指出来。\n\n## 先给结论\n\n一个能点的东西，至少要长四个样子：\n\n- **平时**：没人碰它\n- **鼠标停在上面**（hover）：告诉你「这儿能点」\n- **正在按下去**（active）：告诉你「我收到了」\n- **点不了**（disabled）：告诉你「现在别费劲」\n\n少一种，用的人就少一次确认。最常被漏掉的是第三种：按下去毫无变化，人会以为没点中，于是再点一次。\n\n## 一个类比\n\n这四种状态就像电梯按钮。\n\n平时它是暗的。你手指靠近，它不会变——但一按下去，灯亮了，这是「我收到了」。灯一直亮着，直到电梯来，这是「正在处理」。而如果这一层被锁了，按钮压根按不下去，这是「点不了」。\n\n没有那盏灯，你会一直按。网页上没有 active 状态，人也会一直点。\n\n不一样的地方是：电梯按钮没有「鼠标停上去」这个状态，因为你的手指要么碰到要么没碰到。屏幕上多出来的这一种，是因为鼠标可以「悬在上面还没按」——这是实体世界里没有的处境，也是它最容易被忘掉的原因。\n\n## 工作示例\n\n一个按钮的四种状态，写全了是这样：\n\n```css\n.btn {\n  background: #2f6feb;   /* 平时 */\n  color: white;\n}\n\n.btn:hover {\n  background: #2559c4;   /* 鼠标停上去：稍微深一点 */\n}\n\n.btn:active {\n  background: #1c4499;   /* 按下去：更深，而且立刻变 */\n}\n\n.btn:disabled {\n  background: #c9ccd1;   /* 点不了：灰掉 */\n  cursor: not-allowed;\n}\n```\n\n冒号后面那个词叫**伪类**，意思是「这个元素处在某种状态的时候」。`:hover` 就是「鼠标停在上面的时候」。\n\n把这四段贴进任意一个页面，鼠标移上去、按下去、松开，你会看到三次不同的颜色。\n\n## 自检\n\n**做对了你会看到：** 鼠标移上去颜色变一次，按住不放再变一次，松手弹回 hover 的颜色。三次变化，一次都不少。\n\n**最常见的两种做错了：**\n\n1. **按下去没反应。** 只写了 `:hover` 没写 `:active`。表现是「点了好像没点」，人会连点好几下。回去补上 `:active`。\n2. **灰掉的按钮还能点。** 只把颜色改灰了，没有真的禁用。表现是「看起来不能点，点了却真的提交了」。颜色是给人看的，禁用要靠 `disabled` 属性本身。\n\n## 重点\n\n- 一个能点的东西至少要有四种状态：平时、hover、active、disabled。\n- `:hover` 是鼠标停在上面，`:active` 是正在按下去，两者不能互相替代。\n- 最常被漏掉的是 `:active`，漏掉的表现是用户连点。\n- 把按钮改成灰色不等于禁用它；禁用要靠 `disabled` 属性。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": ":hover 匹配「用户把指针悬停在元素上」的状态。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:hover",
+          "sourceTitle": "MDN · :hover",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": ":active 匹配元素正在被激活的那一刻，鼠标按下到松开之间。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:active",
+          "sourceTitle": "MDN · :active",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": ":disabled 只匹配真正可被禁用的元素，改颜色不会让它命中。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:disabled",
+          "sourceTitle": "MDN · :disabled",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "hover-versus-active",
+          "front": "CSS 里 :hover 和 :active 分别是什么时候？",
+          "back": ":hover 是鼠标停在元素上还没按下的时候；:active 是从按下到松开的那一段。两者是先后发生的两种状态，不能互相替代。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": ":hover 是悬停，:active 是从按下到松开这一段。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:active",
+              "sourceTitle": "MDN · :active",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "grey-is-not-disabled",
+          "front": "把按钮改成灰色，它就点不了了吗？",
+          "back": "不会。颜色只是给人看的样子，真正禁用要靠元素的 disabled 属性；只改颜色的按钮点下去仍然会触发。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": ":disabled 只匹配真正被禁用的元素，改颜色不会让它命中。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:disabled",
+              "sourceTitle": "MDN · :disabled",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "spot-the-missing-state",
+          "title": "找出漏掉的那一种",
+          "kind": "short-answer",
+          "prompt": "一个页面上的按钮，鼠标移上去会变色，但按下去毫无变化。用户反馈说「点了好像没点，我又点了两下」。这个按钮漏掉了哪一种状态？",
+          "expectedAnswer": "active",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": ":active 覆盖按下到松开这一段，缺它就没有「我收到了」的反馈。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:active",
+              "sourceTitle": "MDN · :active",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "keyboard-users-cannot-hover",
+      "title": "用键盘的人看不见 hover，所以还要一种状态",
+      "content": "## 学习目标\n\n读完你能说清 focus 为什么不能用 hover 代替，并能用一次键盘操作检查出一个页面有没有这个毛病。\n\n## 先给结论\n\n有人不用鼠标。他们按 Tab 键，一个一个控件跳过去。\n\n对这些人来说，`:hover` 永远不会发生——**他们没有指针可以悬停**。所以需要另一种状态告诉他们「你现在停在这个按钮上」，这个状态叫 **focus**（焦点）。\n\n浏览器默认会画一个焦点圈。很多人嫌它丑，写一行 `outline: none` 把它删掉——**这一行是网页上最常见的无障碍事故**。删掉之后，用键盘的人在页面上完全瞎了：他在按 Tab，但屏幕上什么都没变。\n\n## 一个类比\n\n把网页想成一间黑屋子，控件是墙上的开关。\n\n用鼠标的人手里有手电筒——照到哪儿，哪儿亮，这是 hover。用键盘的人没有手电筒，他是沿着墙一个一个摸过去；`:focus` 就是他摸到某个开关时那个开关自己亮起来。\n\n`outline: none` 等于把这些开关自己会亮的能力关掉了。有手电筒的人毫无察觉，没有手电筒的人从此在黑屋子里乱摸。\n\n不一样的地方是：黑屋子里你至少还摸得到墙。网页上按 Tab 却看不见焦点，连自己走到哪儿了都不知道——比摸墙更糟。\n\n## 工作示例\n\n先按一次 Tab 检查你的页面：\n\n1. 打开页面，点一下页面空白处\n2. 按 Tab 键，一次一次按\n3. 看每一次有没有东西**明显地**变了样子\n\n看不出来，就是有问题。修法是给焦点画一个看得见的圈：\n\n```css\n.btn:focus-visible {\n  outline: 3px solid #2f6feb;\n  outline-offset: 2px;\n}\n```\n\n`:focus-visible` 比 `:focus` 好用：它只在浏览器判断「这个人是用键盘来的」时才生效。所以用鼠标点按钮不会留下一个圈，用 Tab 走到按钮上会。这样既不丑，又没有把人丢在黑屋子里。\n\n## 自检\n\n**做对了你会看到：** 按 Tab 依次经过每个控件，每一次都有一个清楚的框跟着走；用鼠标点同一个按钮，不会留下这个框。\n\n**最常见的两种做错了：**\n\n1. **按 Tab 什么都不变。** 多半是某处写了 `outline: none` 却没给替代样式。搜一遍代码里的 `outline`，凡是设成 `none` 的，旁边必须有一个 `:focus-visible` 的样式补上。\n2. **焦点框和背景一样看不清。** 框在，但颜色太浅。WCAG 要求焦点指示必须和周围有足够对比——把它换成一个明显的颜色，别用浅灰。\n\n## 重点\n\n- 用键盘的人不会触发 `:hover`，他们靠 `:focus`。\n- `outline: none` 不补替代样式，是网页上最常见的无障碍事故。\n- `:focus-visible` 只在键盘操作时出现，所以不会让鼠标用户看到多余的框。\n- 检查方法只要一步：按 Tab，看有没有东西明显地变。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": ":focus-visible 只在浏览器认为该显示焦点指示时匹配，键盘操作会，鼠标点击通常不会。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:focus-visible",
+          "sourceTitle": "MDN · :focus-visible",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "WCAG 2.2 要求键盘焦点指示必须可见，这是「焦点可见」这条成功准则。",
+          "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+          "sourceTitle": "W3C WAI · Understanding Focus Visible",
+          "sourceAuthority": "w3c"
+        }
+      ],
+      "cards": [
+        {
+          "id": "why-focus-not-hover",
+          "front": "为什么有了 :hover 还需要 :focus？",
+          "back": "用键盘的人没有指针，:hover 对他们永远不会发生。:focus 是他们唯一能看出「现在停在哪个控件上」的信号。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": ":focus-visible 在键盘操作时出现，这是键盘用户唯一的位置信号。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:focus-visible",
+              "sourceTitle": "MDN · :focus-visible",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "outline-none-hazard",
+          "front": "CSS 里写 outline: none 有什么风险？",
+          "back": "它会删掉浏览器默认的焦点圈。如果不补一个 :focus-visible 样式，用键盘的人按 Tab 时屏幕上没有任何变化，等于看不见自己走到了哪里。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "WCAG 2.2 要求键盘焦点指示必须可见。",
+              "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+              "sourceTitle": "W3C WAI · Understanding Focus Visible",
+              "sourceAuthority": "w3c"
+            }
+          ]
+        },
+        {
+          "id": "tab-check",
+          "front": "只用一步，怎么检查一个页面的键盘可用性？",
+          "back": "按 Tab 键依次走过所有控件，看每一次有没有东西明显地变样子。没有变化就说明焦点指示丢了。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "焦点指示可见是一条可检查的成功准则，按 Tab 即可验证。",
+              "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+              "sourceTitle": "W3C WAI · Understanding Focus Visible",
+              "sourceAuthority": "w3c"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "diagnose-invisible-focus",
+          "title": "诊断看不见的焦点",
+          "kind": "short-answer",
+          "prompt": "一个页面用鼠标操作一切正常，但用户反馈「用键盘按 Tab 完全不知道自己在哪」。最可能是哪一行 CSS 造成的？",
+          "expectedAnswer": "outline none",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "移除 outline 而不提供替代焦点样式，会让键盘用户失去焦点指示。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:focus-visible",
+              "sourceTitle": "MDN · :focus-visible",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

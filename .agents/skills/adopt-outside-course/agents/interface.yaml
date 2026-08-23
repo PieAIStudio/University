@@ -1,0 +1,50 @@
+# 这个技能对外承诺什么、不承诺什么。
+# 契约变了就要改这里 —— 它是给下一个人看的，不是给机器看的。
+name: adopt-outside-course
+version: 1.0.0
+mode: production
+owner: University
+review_cadence: 每纳入一个新来源后
+
+job: >
+  照着别人课程的提纲，重新写一门 University 的通用课：
+  零基础能读的口语、必须有类比、带记忆卡片和练习，
+  每一条引用都指向 MDN / RFC / 官方文档这类权威原始资料。
+
+inputs:
+  - name: source_url
+    kind: url
+    note: 外部课程的章节页。只用来抽提纲，正文不落盘。
+  - name: study_id
+    kind: string
+    note: 这门通用课要落进哪个 study。
+
+output_contract:
+  - path: outline/<source>.md
+    note: 只有章节标题和顺序，0 字正文。
+  - path: proposal.json
+    note: |
+      两个门禁都必须绿：
+        node .agents/skills/adopt-outside-course/scripts/check-adoption.mjs <p> --verify-urls
+        node apps/local/scripts/check-proposal-shape.mjs <p>
+  - path: SOURCES.md
+    note: 按节列出引用的权威资料。不出现被参考的那门课。
+
+gates:
+  - check-adoption.mjs        # 通用课专属：出处必须权威、不得指向被参考的课、链接真的打得开
+  - check-proposal-shape.mjs  # 仓库原有：六小节骨架、禁用词、卡片自足、id 规范
+  - 人读一节                    # 机器证明不了「读得懂」，这一步不能跳
+
+rollback_boundary: >
+  技能只产出 proposal.json，不落盘。
+  落盘由 `course add-lessons` 负责，撤销就是不执行那一步 —— 课程目录不会被动过。
+
+hard_rules:
+  - 通用课的出处绝不能指向被参考的那门课。这是和原作者说好的边界，一次都不许。
+  - 外部课程的句子、图、例子一句都不复制。它的角色是目录，不是原文。
+  - 找不到权威出处的说法就不要写进课里。
+
+missing_evidence:
+  - 还没有真实学习者读过这门样课，所以「零基础读得懂」目前只有作者判断，没有外部证据。
+  - 产品方法类的章节（例如「确定目标用户」）常常没有权威原始资料可引；
+    这类内容该怎么处理还没有定论，见 SKILL.md 的边界一节。
