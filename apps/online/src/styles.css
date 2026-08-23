@@ -372,16 +372,17 @@ button.block {
   color: var(--game-ui-text, #e9edf5);
 }
 
-.hint {
-  position: absolute;
-  z-index: 2;
-  left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
-  bottom: 12px;
-  margin: 0;
-  font-size: 0.76rem;
-  color: var(--game-ui-text-muted, #9aa6bb);
-  pointer-events: none;
-}
+/*
+  `.hint` used to be redeclared here, pinned to the left edge just past the
+  rail. packages/world/src/overlay.css — which both shells import — had
+  already been changed to centre it near the bottom, and this copy silently
+  won, so the caption stayed in the corner and spent half its width behind
+  the navigation rail.
+
+  One implementation. The shared stylesheet owns this caption; a shell that
+  needs it somewhere else needs to say so in packages/world, where the other
+  shell will see it too.
+*/
 
 /* ---- reading ---------------------------------------------------------- */
 

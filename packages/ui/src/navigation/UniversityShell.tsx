@@ -18,6 +18,7 @@ export function UniversityShell({
   asideLabel = "上下文",
   extraMoreItems,
   brand,
+  identity,
   children,
 }: {
   readonly activeId: string;
@@ -26,6 +27,8 @@ export function UniversityShell({
   readonly asideLabel?: string;
   readonly extraMoreItems?: readonly ShellNavItem[];
   readonly brand?: ReactNode;
+  /** The learner's avatar, at the foot of the rail. */
+  readonly identity?: ReactNode;
   readonly children: ReactNode;
 }) {
   return (
@@ -35,6 +38,7 @@ export function UniversityShell({
       activeId={activeId}
       counters={counters}
       brand={brand ?? <span className="university-shell__brand">University</span>}
+      identity={identity}
       aside={aside}
       asideLabel={asideLabel}
     >

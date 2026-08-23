@@ -153,6 +153,7 @@ export function NavRail({
   activeId,
   brand,
   collapse,
+  identity,
 }: {
   readonly items: readonly ShellNavItem[];
   readonly activeId: string;
@@ -163,6 +164,17 @@ export function NavRail({
    * the card folding, not like a remote being left on the table.
    */
   readonly collapse?: ReactNode;
+  /**
+   * Who you are, at the foot of the rail.
+   *
+   * Not in the counter capsule, which was the first attempt: that row is a
+   * strip of 38–44px slots, and a 3D avatar rendered into one is a coloured
+   * circle — the species, the ears and the shy glance are all below the
+   * resolution the slot can carry, so the thing we built in 3D arrived looking
+   * like a 2D dot. The rail has room, it is on every screen, and it is where
+   * the eye already goes for "me".
+   */
+  readonly identity?: ReactNode;
 }) {
   return (
     <nav className="nav-rail" id="app-shell-rail" aria-label="Primary">
@@ -189,7 +201,10 @@ export function NavRail({
         into this host when the host is there. Putting the note in the list
         would make it a tab — it opens a panel, it does not go anywhere.
       */}
-      <div className="nav-rail__footer" id="app-shell-rail-footer" />
+      <div className="nav-rail__foot">
+        {identity != null ? <div className="nav-rail__identity">{identity}</div> : null}
+        <div className="nav-rail__footer" id="app-shell-rail-footer" />
+      </div>
     </nav>
   );
 }

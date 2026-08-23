@@ -713,3 +713,59 @@
     transition: none;
   }
 }
+
+/*
+  The avatar's slot in the counter capsule.
+
+  It is a live WebGL canvas, so it gets a fixed box the row can lay out before
+  the canvas has drawn anything — without one the capsule reflows the moment
+  the avatar's geometry finishes building, and the whole row jumps.
+*/
+.avatar-chip {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  line-height: 0;
+}
+
+.avatar-chip--button {
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.avatar-chip--button:focus-visible {
+  outline: 2px solid var(--game-ui-focus-ring, #ffb347);
+  outline-offset: 2px;
+}
+
+.nav-rail__foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/*
+  The avatar sits above the feedback note, centred in the rail's own width so
+  it stays centred when the rail collapses to icons.
+*/
+.nav-rail__identity {
+  display: flex;
+  justify-content: center;
+  padding: 0.35rem 0 0.15rem;
+}
+
+.avatar-chip__stage,
+.avatar-chip--placeholder {
+  display: block;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--game-ui-panel-strong, #1d2438) 60%, transparent);
+}
+
+.avatar-chip__stage canvas {
+  display: block;
+}

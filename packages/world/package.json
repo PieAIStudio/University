@@ -8,12 +8,13 @@
     ".": "./src/index.ts",
     "./Maps.js": "./src/Maps.tsx",
     "./Stage.js": "./src/Stage.tsx",
-    "./labels.js": "./src/labels.ts",
-    "./path-overlay.js": "./src/path-overlay.ts",
-    "./course.js": "./src/course.ts",
+    "./avatar.js": "./src/avatar/index.ts",
     "./controls.js": "./src/controls.tsx",
+    "./course.js": "./src/course.ts",
     "./frame.js": "./src/frame.ts",
-    "./overlay.css": "./src/overlay.css"
+    "./labels.js": "./src/labels.ts",
+    "./overlay.css": "./src/overlay.css",
+    "./path-overlay.js": "./src/path-overlay.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -24,6 +25,7 @@
     "build": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@pieai/swimmer-avatar-kit": "0.2.0",
     "@pieai/swimmer-render-kit": "0.3.0",
     "@pieai/university-core": "workspace:*",
     "@pieai/university-ui": "workspace:*",

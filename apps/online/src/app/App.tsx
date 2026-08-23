@@ -54,6 +54,7 @@ import {
   type Marker,
 } from "@pieai/university-world/Maps.js";
 import { courseSprites } from "@pieai/university-world/path-overlay.js";
+import { AvatarChip } from "@pieai/university-world/avatar.js";
 import { Stage } from "@pieai/university-world/Stage.js";
 
 import {
@@ -1163,6 +1164,15 @@ export function App() {
       <UniversityShell
         activeId={activeIdForView(view)}
         counters={counters}
+        /*
+          Suspense because the avatar drags in the kit's geometry builder, and
+          the rail must not wait on it — the rail is how you leave this screen.
+        */
+        identity={
+          <Suspense fallback={<span className="avatar-chip avatar-chip--placeholder" />}>
+            <AvatarChip signedIn={false} size={78} onClick={() => setView({ kind: "me" })} />
+          </Suspense>
+        }
         aside={aside}
         asideLabel={view.kind === "settings" ? "设置" : "今天"}
       >

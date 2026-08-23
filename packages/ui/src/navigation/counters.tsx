@@ -46,6 +46,19 @@ export function universityCounters(args: {
    * that exists, and greying it is how Duolingo says the same thing.
    */
   readonly streakDays: number | null;
+  /**
+   * The learner's face, at the right-hand end of the capsule.
+   *
+   * This is where every product that has an account puts it, and the reason is
+   * that the row already answers "where am I" and "how am I doing"; "who am I"
+   * is the third question and belongs beside them, not on a separate page you
+   * have to go looking for.
+   *
+   * A `ReactNode` rather than a recipe, because the avatar is WebGL and
+   * `packages/ui` is held at zero `three` — the component lives in
+   * `packages/world` and the shell only holds the slot open.
+   */
+  readonly avatar?: ReactNode;
 }): readonly ShellCounter[] {
   const counters: ShellCounter[] = [
     {
@@ -65,6 +78,9 @@ export function universityCounters(args: {
       href: "#/quests",
       muted: args.streakDays === 0,
     });
+  }
+  if (args.avatar) {
+    counters.push({ id: "avatar", icon: args.avatar, label: "你" });
   }
   return counters;
 }

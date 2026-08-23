@@ -264,6 +264,9 @@ importers:
 
   packages/world:
     dependencies:
+      '@pieai/swimmer-avatar-kit':
+        specifier: 0.2.0
+        version: 0.2.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)
       '@pieai/swimmer-render-kit':
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)

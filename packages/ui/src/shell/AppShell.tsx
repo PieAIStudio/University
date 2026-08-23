@@ -52,6 +52,8 @@ export interface ShellCounter {
 }
 
 export interface AppShellProps {
+  /** Who you are — rendered at the foot of the nav rail. See NavRail. */
+  readonly identity?: ReactNode;
   readonly nav: readonly ShellNavItem[];
   readonly tabs: readonly ShellNavItem[];
   readonly activeId: string;
@@ -93,6 +95,7 @@ export function AppShell({
   aside,
   asideLabel,
   children,
+  identity,
 }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const persist = (next: { rail: boolean; aside: boolean }) => {
@@ -111,6 +114,7 @@ export function AppShell({
         <NavRail
           items={nav}
           activeId={activeId}
+          identity={identity}
           brand={brand}
           collapse={
             <button
