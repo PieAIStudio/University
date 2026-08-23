@@ -177,6 +177,36 @@ describe("AppShell", () => {
     await renderShell({ aside: <p>右栏</p>, asideLabel: "上下文" });
     expect(document.querySelector(".app-shell")?.getAttribute("data-rail-collapsed")).toBe("true");
   });
+
+  it("docks the rail collapse in the brand capsule and the aside collapse at the left of the counter row", async () => {
+    await renderShell({
+      brand: <span>University</span>,
+      aside: <p>右栏</p>,
+      asideLabel: "上下文",
+    });
+    const railBtn = document.querySelector(".app-shell__collapse--rail");
+    const asideBtn = document.querySelector(".app-shell__collapse--aside");
+    expect(document.querySelector(".nav-rail__brand")?.contains(railBtn)).toBe(true);
+    expect(document.querySelector(".counter-row")?.firstElementChild).toBe(asideBtn);
+    expect(document.querySelector(".app-shell__west > .app-shell__collapse")).toBeNull();
+    expect(document.querySelector(".app-shell__east > .app-shell__collapse")).toBeNull();
+  });
+
+  it("keeps the rail collapse inside the rail after collapsing, so the same control can expand it", async () => {
+    await renderShell({ brand: <span>University</span>, aside: <p>右栏</p>, asideLabel: "上下文" });
+    const railBtn = document.querySelector<HTMLButtonElement>(".app-shell__collapse--rail");
+    expect(railBtn).toBeTruthy();
+    await act(async () => {
+      dispatchPointerSequence(railBtn!, 8, 8);
+    });
+    expect(document.querySelector(".app-shell")?.getAttribute("data-rail-collapsed")).toBe("true");
+    const still = document.querySelector(".nav-rail .app-shell__collapse--rail");
+    expect(still).toBeTruthy();
+    await act(async () => {
+      dispatchPointerSequence(still!, 8, 8);
+    });
+    expect(document.querySelector(".app-shell")?.getAttribute("data-rail-collapsed")).toBe("false");
+  });
 });
 
 function dispatchPointerSequence(target: Element, x: number, y: number) {

@@ -152,14 +152,26 @@ export function NavRail({
   items,
   activeId,
   brand,
+  collapse,
 }: {
   readonly items: readonly ShellNavItem[];
   readonly activeId: string;
   readonly brand?: ReactNode;
+  /**
+   * Lives in the brand row, not beside the rail. A sibling pill next to an
+   * opaque card is a second piece of furniture; collapsing has to feel like
+   * the card folding, not like a remote being left on the table.
+   */
+  readonly collapse?: ReactNode;
 }) {
   return (
     <nav className="nav-rail" id="app-shell-rail" aria-label="Primary">
-      {brand != null ? <div className="nav-rail__brand">{brand}</div> : null}
+      {brand != null || collapse != null ? (
+        <div className="nav-rail__brand">
+          {brand}
+          {collapse}
+        </div>
+      ) : null}
       <ul className="nav-rail__list">
         {items.map((item) => (
           <li key={item.id} className="nav-rail__slot">
@@ -171,6 +183,13 @@ export function NavRail({
           </li>
         ))}
       </ul>
+      {/*
+        Empty on purpose. The review note mounts next to `App`, not in this
+        tree, so it can still exist on routes that drop the shell. It portals
+        into this host when the host is there. Putting the note in the list
+        would make it a tab — it opens a panel, it does not go anywhere.
+      */}
+      <div className="nav-rail__footer" id="app-shell-rail-footer" />
     </nav>
   );
 }

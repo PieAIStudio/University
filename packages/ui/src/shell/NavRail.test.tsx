@@ -128,6 +128,14 @@ describe("NavRail", () => {
     expect(document.querySelector(".nav-rail__scrim")).toBeNull();
   });
 
+  it("keeps an empty footer host so a review control can sit at the bottom without becoming a tab", async () => {
+    await renderRail();
+    const footer = document.getElementById("app-shell-rail-footer");
+    expect(footer).toBeTruthy();
+    expect(footer?.className).toBe("nav-rail__footer");
+    expect(document.querySelector(".nav-rail__list")?.contains(footer)).toBe(false);
+  });
+
   it("marks the trigger current when a child page is active and the menu is closed", async () => {
     await renderRail("settings");
     expect(trigger().getAttribute("aria-current")).toBe("page");

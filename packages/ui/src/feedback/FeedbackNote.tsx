@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { createPortal } from "react-dom";
+
+import { FeedbackIcon } from "../shell/icons.js";
 
 /**
  * A note about the screen you are looking at, on the clipboard, in one move.
@@ -42,17 +45,41 @@ export function feedbackNote(args: {
 }
 
 /**
- * Out of the way while the page is moving.
+ * Finds the rail footer without living in the rail's tree.
  *
- * Pinned to a corner, this covered whatever was under it — measured on the
- * concepts index, the closed pill sat directly on 「界面此刻必须记住、而且会跟着
- * 操作变的信息。」 A phone has no gutter to hide in: the reading column is the
- * whole width, so there is no corner that is reliably empty.
+ * The note is mounted next to `App` (DEV-only, in each shell's `main.tsx`) so
+ * it still exists on routes that drop UniversityShell. The footer is an empty
+ * host the rail always renders. Watching the body is how a sibling finds a
+ * node it does not own, and how it lets go when a lesson route removes it.
+ */
+function useRailFooter(): HTMLElement | null {
+  const [host, setHost] = useState<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    const sync = () => setHost(document.getElementById("app-shell-rail-footer"));
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
+  return host;
+}
+
+/**
+ * Out of the way while the page is moving — but only the floating pill.
  *
- * Scrolling is the signal. Someone moving the page is reading it and wants
- * nothing on top of it; someone who has stopped is looking at one screen and
- * may be about to say something about it. So it leaves on the first scroll and
- * comes back a beat after the last one.
+ * It used to be pinned to a corner on every screen, and there it covered
+ * whatever was under it — measured on the concepts index, the closed pill sat
+ * directly on 「界面此刻必须记住、而且会跟着操作变的信息。」 A phone has no
+ * gutter to hide in: the reading column is the whole width, so there is no
+ * corner that is reliably empty.
+ *
+ * On the wide layout it now sits in the rail footer, same visual language as
+ * the tabs but a button that opens a panel, not a link that goes somewhere.
+ * A rail item that vanishes while you scroll would be a tab that cannot be
+ * trusted. The hide-on-scroll stays for the floating pill, which still has
+ * to live above the tab bar on a phone and on routes with no rail.
  *
  * `capture: true` because `scroll` does not bubble, and the shells scroll an
  * inner element on some screens and the document on others. Capturing at the
@@ -78,12 +105,38 @@ function useHiddenWhileScrolling(): boolean {
   return scrolling;
 }
 
+function FeedbackTrigger({
+  className,
+  open,
+  onOpen,
+}: {
+  readonly className: string;
+  readonly open: boolean;
+  readonly onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={className}
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      onClick={onOpen}
+    >
+      <span className="nav-rail__icon">
+        <FeedbackIcon />
+      </span>
+      <span className="nav-rail__label">提意见</span>
+    </button>
+  );
+}
+
 export function FeedbackNote({ shell }: { readonly shell: string }) {
   const [open, setOpen] = useState(false);
   const [said, setSaid] = useState("");
   const [copied, setCopied] = useState(false);
   const [handCopy, setHandCopy] = useState(false);
   const scrolling = useHiddenWhileScrolling();
+  const host = useRailFooter();
 
   const copy = useCallback(async () => {
     const note = feedbackNote({
@@ -116,20 +169,8 @@ export function FeedbackNote({ shell }: { readonly shell: string }) {
     }
   }, [shell, said]);
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        className={`feedback-note__open${scrolling ? " is-away" : ""}`}
-        onClick={() => setOpen(true)}
-      >
-        提意见
-      </button>
-    );
-  }
-
-  return (
-    <div className="feedback-note" role="group" aria-label="提意见">
+  const panel = open ? (
+    <div className="feedback-note" role="dialog" aria-label="提意见">
       <textarea
         className="feedback-note__text"
         value={said}
@@ -163,5 +204,35 @@ export function FeedbackNote({ shell }: { readonly shell: string }) {
         </button>
       </div>
     </div>
+  ) : null;
+
+  const docked = (
+    <FeedbackTrigger
+      className="nav-rail__link feedback-note__open--docked"
+      open={open}
+      onOpen={() => setOpen(true)}
+    />
+  );
+
+  const floatClass = [
+    "feedback-note__open",
+    "feedback-note__open--float",
+    host ? "" : "is-fallback",
+    scrolling ? "is-away" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const shellRoot =
+    typeof document !== "undefined"
+      ? (document.querySelector(".app-shell") ?? document.body)
+      : null;
+
+  return (
+    <>
+      {host ? createPortal(docked, host) : null}
+      <FeedbackTrigger className={floatClass} open={open} onOpen={() => setOpen(true)} />
+      {panel && shellRoot ? createPortal(panel, shellRoot) : panel}
+    </>
   );
 }
