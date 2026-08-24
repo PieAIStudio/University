@@ -8,7 +8,7 @@
  * to the shared ProgressDocument first.
  */
 import {
-  lessonRefKey,
+  lessonKeyOf,
   type EvidenceSnippet,
   type LessonRef,
   type ProgressPort,
@@ -119,7 +119,11 @@ export function createOnlineReaderPort(options: {
     },
 
     async completeLesson(locator, input) {
-      progress.confirmLessonRead(lessonRefKey(locator), input.contentRevision);
+      // `lessonKeyOf`, not `lessonRefKey`: this writes into the progress
+      // document, and the document keys lessons without the unit. Writing the
+      // four-segment name here put the confirmation in a row nobody read, so a
+      // lesson could never be finished.
+      progress.confirmLessonRead(lessonKeyOf(locator), input.contentRevision);
       onComplete(locator);
     },
 

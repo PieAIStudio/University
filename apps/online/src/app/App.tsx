@@ -21,7 +21,6 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-  type CSSProperties,
 } from "react";
 import { courseShapeOf, readCourseProgress, spineOf } from "@pieai/university-core";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
@@ -29,6 +28,7 @@ import { spacedName } from "@pieai/university-ui/text/spaced-name.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import {
+  focusedStudyId as resolveFocusedStudy,
   StudySwitcher,
   type StudySwitchItem,
 } from "@pieai/university-ui/navigation/StudySwitcher.js";
@@ -57,7 +57,6 @@ import {
 } from "@pieai/university-world/Maps.js";
 import { courseSprites } from "@pieai/university-world/path-overlay.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
-import { Stage } from "@pieai/university-world/Stage.js";
 
 import {
   hasContent,
@@ -93,6 +92,7 @@ import {
 } from "../screens/lazy";
 import { fromHash, LIBRARY_VIEW_TAB, libraryTabOf, toHash, type View } from "../url-state";
 import {
+  todayCtaLabel,
   TodaySection,
   todayMeta,
   type TodaySectionData,
@@ -103,13 +103,7 @@ import {
   nextLessonOf,
   todayCardOf,
 } from "./today-data";
-import {
-  Controls,
-  COURSE_POLAR,
-  Flight,
-  LabelProbe,
-  MAP_CONTROLS_HINT,
-} from "@pieai/university-world/controls.js";
+import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
 import { frameWorld } from "@pieai/university-world/frame.js";
 import { PlanetPage, type PlanetStudy } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
@@ -292,17 +286,6 @@ export function App() {
   const companionNodes = useRef(new Map<string, HTMLElement>());
 
   /**
-   * Whether the pointer travelled far enough since it went down to count as a
-   * drag rather than a click.
-   *
-   * A ref rather than state on purpose: this is read inside a click handler and
-   * must never cause a render. Six pixels is the usual slop for a hand resting
-   * on a trackpad — below it, people believe they clicked.
-   */
-  const draggedRef = useRef(false);
-  const pointerOrigin = useRef<{ x: number; y: number } | null>(null);
-
-  /**
    * One state: the study in the top bar is the sea the camera is looking at.
    *
    * These used to be independent, which is how the top bar said TuringPact
@@ -311,17 +294,29 @@ export function App() {
    * or pulls back to all four.
    */
   const focusedStudyId = useMemo(() => {
-    if (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") {
-      return mapFocus === undefined ? view.studyId : mapFocus;
-    }
-    if (mapFocus != null) return mapFocus;
+    /*
+      Reading a lesson pins the map to that lesson's project until the learner
+      says otherwise — `mapFocus === undefined` is "has not said otherwise",
+      which is why it is distinct from null.
+    */
+    const chosen =
+      view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
+        ? mapFocus === undefined
+          ? view.studyId
+          : mapFocus
+        : mapFocus;
     /*
       The map shows one project and may never show none, so this can no longer
       resolve to null the way it did when null meant 「看全部四片海」. Today's
       course names the project; an account with nothing started falls back to
-      the first project in the catalogue.
+      the first project in the catalogue. Null now means one thing only: the
+      catalogue is empty.
     */
-    return todayNode?.studyId ?? library.studies[0]?.studyId ?? null;
+    return resolveFocusedStudy(
+      library.studies.map((entry) => entry.studyId),
+      chosen,
+      todayNode?.studyId,
+    );
   }, [view, mapFocus, todayNode]);
 
   /**
@@ -572,14 +567,16 @@ export function App() {
   const counters = universityCounters({
     projectName,
     streakDays: progress.streak.days,
-    projectControl: (
+    // A picker with nothing to pick is not a control. Null here means the
+    // catalogue is empty, which is the only case where no series can be named.
+    projectControl: focusedStudyId ? (
       <StudySwitcher
         studies={studyItems}
         focusedId={focusedStudyId}
         onSelect={focusStudy}
         onOpenPlanet={() => setView({ kind: "planet" })}
       />
-    ),
+    ) : undefined,
   });
 
   if (!hasContent) {
@@ -674,6 +671,8 @@ export function App() {
   // overlay used to format this independently, and the overlay kept quoting
   // the catalogue size after the rail had stopped.
   const nextUpMeta = todayNode ? todayMeta(todayNode.studyTitle, nextUpProgress) : null;
+  /** The very lesson the rail's panel offers, so the phone offers the same one. */
+  const todayLesson = todayData.nextLesson;
 
   const presenceView = presenceViewKey(view);
   const presenceLocation = useMemo(() => {
@@ -712,233 +711,40 @@ export function App() {
   }, [view.kind, lessons, world]);
   const companionSurface = view.kind === "course" || view.kind === "lesson" ? "course" : "world";
 
-  const legacyStage =
+  /*
+    One stage for every scene, mounted once.
+
+    There used to be two: `sharedWorldStage` for the map and a hand-written
+    copy beside it for a course path, swapped by `view.kind`. Swapped, not
+    hidden — so stepping from the map into a course tore down a WebGL context
+    and built another, on the transition a learner makes more than any other,
+    and the seventy lines of label markup underneath were maintained twice.
+    The authoring shell had been on the shared component for a while; this is
+    the delivery shell catching up to it.
+  */
+  const inCourse = view.kind === "course" || view.kind === "lesson";
+  const stage =
     view.kind === "avatar-lab" ? null : (
-      <div
-        className="stagewrap"
-        onPointerDownCapture={(event) => {
-          pointerOrigin.current = { x: event.clientX, y: event.clientY };
-          draggedRef.current = false;
-        }}
-        onPointerMoveCapture={(event) => {
-          const origin = pointerOrigin.current;
-          if (!origin || draggedRef.current) return;
-          if (Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 6) {
-            draggedRef.current = true;
-          }
-        }}
-        hidden={!SHOWS_THE_MAP.has(view.kind)}
-      >
-        <Stage
-          cameraFrom={cameraFrom}
-          lookAt={lookAt}
-          onSceneReady={onSceneReady}
-          onSceneBusy={onSceneBusy}
-          onPointerMissed={dismissPick}
-          paused={!showMap}
-        >
-          <Controls target={lookAt} polar={COURSE_POLAR} />
-          <Flight to={cameraFrom} look={lookAt} />
-          <LabelProbe
-            markers={markers}
-            limit={9}
-            nodes={labelNodes.current}
-            // This shell's course markers use `courseId` as `id`. The
-            // projector looks that id up in the same array; inventing a
-            // second key here would place the card at (0,0).
-            followId={null}
-            followNode={pickCardRef}
-          />
-          {/*
-            A separate probe from LabelProbe on purpose: companions must not
-            compete with course names for the label budget, and a companion
-            that lost that competition would silently stop existing.
-          */}
-          <CompanionProbe anchors={companionAnchors} nodes={companionNodes.current} />
-          {(view.kind === "course" || view.kind === "lesson") && lessons.length > 0 ? (
-            <CourseScene
-              lessons={lessons}
-              skyStudyId={view.kind === "course" || view.kind === "lesson" ? view.studyId : null}
-              onPick={(lesson) => {
-                if (view.kind === "lesson") return;
-                setPathOverlay({
-                  kind: "node",
-                  unitId: lesson.unitId,
-                  lessonId: lesson.lessonId,
-                  returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
-                });
-              }}
-              onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
-            />
-          ) : null}
-        </Stage>
-
-        {/*
-          The first thing to do, said out loud.
-
-          It sits opposite the selection panel rather than in a dismissible
-          first-run modal: someone returning on day nine needs "where was I"
-          just as much as a stranger needs "what is this", and a modal answers
-          only the second and only once.
-        */}
-        {wide ? null : view.kind === "course" && course ? (
-          <aside className="picked picked--left">
-            <h3>{course.title}</h3>
-            <p className="picked__study">
-              {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
-              {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
-            </p>
-            {pathUnit ? (
-              <div className="unit-strip">
-                <p className="unit-strip__name">{pathUnit.title}</p>
-                <button
-                  type="button"
-                  className="unit-strip__list"
-                  aria-label="先看这一单元讲什么"
-                  aria-haspopup="dialog"
-                  aria-expanded={pathOverlay?.kind === "unit" ? true : undefined}
-                  onClick={(event) =>
-                    setPathOverlay({
-                      kind: "unit",
-                      unitId: pathUnit.id,
-                      returnFocusTo: event.currentTarget,
-                    })
-                  }
-                >
-                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                    <path
-                      d="M3 4.5h10M3 8h10M3 11.5h7"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeWidth="1.5"
-                    />
-                  </svg>
-                </button>
-              </div>
-            ) : null}
-            <button className="ghost block" onClick={() => setView({ kind: "world" })}>
-              {backToMapLabel}
-            </button>
-          </aside>
-        ) : null}
-
-        {/*
-          The map's names, and — where the thing under them can be entered —
-          the way you enter it.
-
-          This layer used to be `aria-hidden` divs with `pointer-events: none`,
-          which meant the only way into any course in the product was clicking a
-          shape inside the canvas. That is a mouse-only affordance, so keyboard
-          and screen-reader users had no path into a single lesson. Rule 7 of
-          the Web3D baseline says readable text is DOM; it is worth just as
-          little if the *reachable* control stays in the canvas.
-
-          A label that can be entered is a real `<button>`. A label that names a
-          world is not, because a world is not somewhere you go.
-        */}
-        <nav className="labels" aria-label="地图上的去处">
-          {markers.map((marker) => {
-            const content = (
-              <>
-                {marker.text}
-                {marker.sub ? <small>{marker.sub}</small> : null}
-              </>
-            );
-            const attach = (element: HTMLElement | null) => {
-              if (element) labelNodes.current.set(marker.id, element);
-              else labelNodes.current.delete(marker.id);
-            };
-            const className = [
-              "label",
-              `label--${marker.kind}`,
-              marker.quiet ? "label--quiet" : "",
-              marker.locked ? "is-locked" : "",
-            ]
-              .filter(Boolean)
-              .join(" ");
-            if (marker.kind === "icon") {
-              return (
-                <span
-                  key={marker.id}
-                  ref={attach}
-                  className={className}
-                  style={{ "--placed": 0 } as CSSProperties}
-                  role="img"
-                  aria-label={marker.label ?? marker.text}
-                >
-                  {marker.text}
-                </span>
-              );
-            }
-            return marker.activate ? (
-              <button
-                key={marker.id}
-                ref={attach}
-                type="button"
-                className={className}
-                style={{ "--placed": 0 } as CSSProperties}
-                aria-haspopup={marker.kind === "lesson" ? "dialog" : undefined}
-                aria-expanded={
-                  marker.kind === "lesson" &&
-                  pathOverlay?.kind === "node" &&
-                  pathOverlay.lessonId === marker.id
-                    ? true
-                    : undefined
-                }
-                onClick={() => {
-                  // A drag that happens to end on a label is a pan, not a
-                  // choice. Without this, moving the map by grabbing near a
-                  // course name would open that course.
-                  if (draggedRef.current) return;
-                  marker.activate?.();
-                }}
-              >
-                {content}
-              </button>
-            ) : (
-              <div
-                key={marker.id}
-                ref={attach}
-                className={className}
-                style={{ "--placed": 0 } as CSSProperties}
-              >
-                {content}
-              </div>
-            );
-          })}
-        </nav>
-        <PresenceLayer
-          port={presencePort}
-          surface={companionSurface}
-          viewKey={presenceView}
-          attach={(userId, element) => {
-            if (element) companionNodes.current.set(userId, element);
-            else companionNodes.current.delete(userId);
-          }}
-        />
-
-        {/*
-          The hint has to describe the controls that exist. It said 「右键旋转」
-          for as long as rotation had been disabled — the camera is locked to a
-          fixed pitch on purpose, the way a map app locks it, and telling a
-          learner to right-drag taught them the app was broken.
-        */}
-        <p className="hint">{hovered ? hovered : MAP_CONTROLS_HINT}</p>
-        {mapCover ? <LoadingTrivia /> : null}
-      </div>
-    );
-
-  const sharedWorldStage =
-    view.kind === "world" ? (
       <WorldMapCanvas
-        world={world}
-        cameraFrom={framed.cameraFrom}
-        lookAt={framed.lookAt}
+        hidden={!SHOWS_THE_MAP.has(view.kind)}
+        paused={!showMap}
+        // A course path is read at a shallower pitch than a world of islands.
+        polar={view.kind === "world" ? WORLD_POLAR : COURSE_POLAR}
+        // No world in a course view: the path below replaces it rather than
+        // sitting behind it.
+        world={view.kind === "world" ? world : null}
+        cameraFrom={cameraFrom}
+        lookAt={lookAt}
         learnerAt={learnerAt}
         skyStudyId={focusedStudyId}
         markers={markers}
-        followId={picked ? picked.courseId : null}
+        /*
+          This shell's course markers key on `courseId`, and the projector
+          looks the same id up in `markers`. Inventing a second key in a course
+          view would place the follow card at (0,0), which is why it is null
+          there rather than `picked`.
+        */
+        followId={view.kind === "world" && picked ? picked.courseId : null}
         followNode={pickCardRef}
         onPick={(node) => {
           setPicked(node);
@@ -948,40 +754,126 @@ export function App() {
         onSceneReady={onSceneReady}
         onSceneBusy={onSceneBusy}
         onPointerMissed={dismissPick}
-        stageChildren={<CompanionProbe anchors={companionAnchors} nodes={companionNodes.current} />}
+        stageChildren={
+          <>
+            {/*
+              A separate probe from LabelProbe on purpose: companions must not
+              compete with course names for the label budget, and a companion
+              that lost that competition would silently stop existing.
+            */}
+            <CompanionProbe anchors={companionAnchors} nodes={companionNodes.current} />
+            {inCourse && lessons.length > 0 ? (
+              <CourseScene
+                lessons={lessons}
+                skyStudyId={inCourse ? view.studyId : null}
+                onPick={(lesson) => {
+                  if (view.kind === "lesson") return;
+                  setPathOverlay({
+                    kind: "node",
+                    unitId: lesson.unitId,
+                    lessonId: lesson.lessonId,
+                    returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
+                  });
+                }}
+                onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
+              />
+            ) : null}
+          </>
+        }
+        underlay={
+          wide ? null : view.kind === "course" && course ? (
+            <aside className="picked picked--left">
+              <h3>{course.title}</h3>
+              <p className="picked__study">
+                {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
+                {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
+              </p>
+              {pathUnit ? (
+                <div className="unit-strip">
+                  <p className="unit-strip__name">{pathUnit.title}</p>
+                  <button
+                    type="button"
+                    className="unit-strip__list"
+                    aria-label="先看这一单元讲什么"
+                    aria-haspopup="dialog"
+                    aria-expanded={pathOverlay?.kind === "unit" ? true : undefined}
+                    onClick={(event) =>
+                      setPathOverlay({
+                        kind: "unit",
+                        unitId: pathUnit.id,
+                        returnFocusTo: event.currentTarget,
+                      })
+                    }
+                  >
+                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                      <path
+                        d="M3 4.5h10M3 8h10M3 11.5h7"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeWidth="1.5"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ) : null}
+              <button className="ghost block" onClick={() => setView({ kind: "world" })}>
+                {backToMapLabel}
+              </button>
+            </aside>
+          ) : null
+        }
         overlay={
           <>
             <PresenceLayer
               port={presencePort}
-              surface="world"
+              surface={companionSurface}
               viewKey={presenceView}
               attach={(userId, element) => {
                 if (element) companionNodes.current.set(userId, element);
                 else companionNodes.current.delete(userId);
               }}
             />
-            {wide ? null : todayNode && !picked ? (
+            {/*
+              「今天」 at phone width, where there is no rail to hold the panel.
+
+              It used to name the *course* and open the course path, while the
+              rail's panel named the lesson and opened the lesson. One product,
+              one button, two different answers to 「今天要做什么」 — decided by
+              how wide the window happened to be. It names the lesson now, from
+              the same data the panel reads, and goes to the same place.
+            */}
+            {view.kind === "world" && !wide && todayLesson && !picked ? (
               <aside className="nextup">
                 <p className="nextup__eyebrow">
                   {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
                 </p>
-                <h2 className="nextup__title">{todayNode.title}</h2>
+                <h2 className="nextup__title">{todayLesson.lessonTitle}</h2>
                 <p className="nextup__meta">{nextUpMeta}</p>
                 <button
                   className="primary block"
                   onClick={() =>
                     setView({
-                      kind: "course",
-                      studyId: todayNode.studyId,
-                      courseId: todayNode.courseId,
+                      kind: "lesson",
+                      studyId: todayLesson.studyId,
+                      courseId: todayLesson.courseId,
+                      unitId: todayLesson.unitId,
+                      lessonId: todayLesson.lessonId,
                     })
                   }
                 >
-                  {progress.streak.days > 0 ? "继续" : "开始第一节"} →
+                  {/*
+                    The same words the rail's 「今天」 panel uses, from the same
+                    function. This card is what replaces that panel below the
+                    rail's breakpoint, and it used to say 「开始第一节」/「继续」
+                    while the panel said 「开始学习」/「继续学习」 — one action,
+                    two vocabularies, chosen by window width.
+                  */}
+                  {todayCtaLabel(todayData.nextLesson?.progress)} →
                 </button>
               </aside>
             ) : null}
-            {picked ? (
+            {view.kind === "world" && picked ? (
               <CoursePickCard
                 title={picked.title}
                 studyTitle={picked.studyTitle}
@@ -1001,12 +893,16 @@ export function App() {
             ) : null}
           </>
         }
+        /*
+          The hint has to describe the controls that exist. It said 「右键旋转」
+          for as long as rotation had been disabled — the camera is locked to a
+          fixed pitch on purpose, the way a map app locks it, and telling a
+          learner to right-drag taught them the app was broken.
+        */
         hint={hovered ?? MAP_CONTROLS_HINT}
         loading={mapCover ? <LoadingTrivia /> : null}
       />
-    ) : null;
-
-  const stage = view.kind === "world" ? sharedWorldStage : legacyStage;
+    );
 
   /*
     The stage stays in the centre column at every width. v3 draws a small

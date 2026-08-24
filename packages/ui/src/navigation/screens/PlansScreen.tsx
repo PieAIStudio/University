@@ -1,4 +1,10 @@
-import { GameBadge, GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
+import {
+  GameBadge,
+  GameButton,
+  GameCallout,
+  GamePanel,
+  LiquidMetalButton,
+} from "@pieai/swimmer-ui-kit";
 import { groupPerSeatMonthly, PLANS, yearlySaving, type Plan } from "@pieai/university-core";
 import { useState } from "react";
 
@@ -55,9 +61,30 @@ function PlanCard({ plan, yearly }: { plan: Plan; yearly: boolean }) {
           ))}
         </ul>
 
-        <GameButton variant={plan.id === "apprentice" ? "primary" : "secondary"} type="button">
-          {price === null ? "你正在用这个" : "选这个"}
-        </GameButton>
+        {/*
+          One liquid-metal button on this page, and only this one.
+
+          The kit's own note says checkout and unlock, and warns that more than
+          two on a page means the page is the wrong place. Three of the four
+          cards take money, so painting all three would have been the literal
+          reading and the wrong one: a decoration every option wears is not a
+          recommendation, it is wallpaper, and the effect stops carrying
+          meaning at exactly the moment it is meant to carry the most.
+
+          So it marks the plan the page is actually recommending — the one
+          already carrying 「最多人选」 — and the other two stay quiet secondary
+          buttons that still say 「选这个」 just as plainly. Nothing about the
+          other plans is harder to choose; they are simply not being pushed.
+        */}
+        {plan.id === "apprentice" ? (
+          <LiquidMetalButton className="plan-card__cta" type="button">
+            选这个
+          </LiquidMetalButton>
+        ) : (
+          <GameButton variant="secondary" type="button">
+            {price === null ? "你正在用这个" : "选这个"}
+          </GameButton>
+        )}
       </GamePanel>
     </li>
   );

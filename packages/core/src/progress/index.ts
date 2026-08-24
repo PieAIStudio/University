@@ -18,6 +18,8 @@ export {
   cloneProgress,
   emptyProgress,
   lessonKey,
+  lessonKeyOf,
+  type LessonDocumentKey,
   parseProgress,
   PROGRESS_STORAGE_KEY,
 } from "./document.js";

@@ -5,7 +5,7 @@ import { ReviewCard } from "../review/ReviewCard.js";
 import { REVIEW_EMPTY_TITLE, reviewEmptyDescription } from "../review/review-empty.js";
 import type { ReviewCardPort, VocabularyReviewPort } from "../review/ports.js";
 import { VocabularyReview } from "../review/VocabularyReview.js";
-import type { LessonRef, NextLesson, TodayCard } from "../view/lesson-view.js";
+import type { LessonProgress, LessonRef, NextLesson, TodayCard } from "../view/lesson-view.js";
 import { progressLabel } from "../view/lesson-view.js";
 
 /** The richer Today surface shared by both shells. */
@@ -15,6 +15,23 @@ export interface TodaySectionData {
   readonly dueCount: number;
   readonly focus: { readonly study: string; readonly detail: string } | null;
   readonly issues: readonly string[];
+}
+
+/**
+ * What the button on 「今天」 says.
+ *
+ * Exported because this panel is not the only thing that offers today's
+ * lesson: below the rail's breakpoint a floating card on the map takes over,
+ * and it used to say 「开始第一节」/「继续」 while this said 「开始学习」/「继续学习」.
+ * Same action, same lesson, two vocabularies, decided by window width — which
+ * is exactly the kind of difference nobody can see until they resize.
+ *
+ * On progress rather than on a streak, too. The streak says how many days in a
+ * row you have shown up; it says nothing about whether *this* lesson is one
+ * you have already begun, which is the only thing 「继续」 can honestly mean.
+ */
+export function todayCtaLabel(progress: LessonProgress | null | undefined): string {
+  return progress ? "继续学习" : "开始学习";
 }
 
 export function todayMeta(
@@ -63,7 +80,7 @@ export function TodaySection({
             </p>
             <div className="today-hero__action">
               <GameButton variant="primary" onClick={() => onOpenLesson(next)}>
-                {next.progress ? "继续学习" : "开始学习"}
+                {todayCtaLabel(next.progress)}
               </GameButton>
               <GameBadge tone="warning">
                 {progressLabel(next.progress, next.contentRevision)}

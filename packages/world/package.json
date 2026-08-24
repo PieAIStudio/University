@@ -30,7 +30,7 @@
   "dependencies": {
     "@pieai/swimmer-avatar-kit": "0.2.0",
     "@pieai/swimmer-render-kit": "0.3.0",
-    "@pieai/swimmer-ui-kit": "1.7.0",
+    "@pieai/swimmer-ui-kit": "1.8.1",
     "@pieai/university-core": "workspace:*",
     "@pieai/university-ui": "workspace:*",
     "three-stdlib": "^2.36.1"

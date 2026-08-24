@@ -25,6 +25,7 @@ import type { HostExerciseGrade } from "./grading.js";
 import type { AccountData, AccountPreferences } from "./account-data.js";
 import type { FavouritesState } from "../favourites/model.js";
 import type { PracticeRecentState } from "../practice/recent.js";
+import type { LessonDocumentKey } from "../progress/document.js";
 
 export interface LessonProgress {
   /** 0 to 1. Never moves backwards — a failed attempt cannot undo progress. */
@@ -151,9 +152,17 @@ export interface ProgressSyncState {
 export interface ProgressPort {
   snapshot(): ProgressDocument;
   subscribe(listener: () => void): () => void;
-  lessonState(key: string): LessonProgress;
-  advanceLesson(key: string, progress: number): void;
-  confirmLessonRead(key: string, contentRevision: number): void;
+  /*
+    `LessonDocumentKey`, not `string`. `lessonRefKey` also produces a lesson
+    key, for shared surfaces, with the unit in it — and it was handed to
+    `confirmLessonRead`, which writes into the document. Both are strings, so
+    nothing complained; the confirmation landed under a name no reader used and
+    a lesson could not be finished in either shell. The brand is what makes
+    that a compile error instead of a silent row.
+  */
+  lessonState(key: LessonDocumentKey): LessonProgress;
+  advanceLesson(key: LessonDocumentKey, progress: number): void;
+  confirmLessonRead(key: LessonDocumentKey, contentRevision: number): void;
   dropCards(studyId: string, courseId: string, lessonId: string, cardIds: readonly string[]): void;
   dueCards(asOf?: number): readonly CardProgress[];
   dueTomorrow(asOf?: number): number;

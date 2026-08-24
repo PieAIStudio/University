@@ -43,14 +43,21 @@ export function WorldLanding({
   data,
   catalog,
   presence,
-  selectedStudyId,
+  shownStudyId,
   onSelectStudy,
   onOpenLesson,
 }: {
   readonly data: BootstrapData;
   readonly catalog: ReadonlyMap<string, StudyView>;
   readonly presence: PresencePort;
-  readonly selectedStudyId: string | null;
+  /**
+   * The series to draw, already resolved by the shell — never a raw pick.
+   *
+   * This component used to take the raw pick and fall back on its own, which
+   * meant the map knew which project it was drawing and the capsule above it
+   * did not. One resolution, at the top, and both read the same value.
+   */
+  readonly shownStudyId: string;
   readonly onSelectStudy: (studyId: string) => void;
   readonly onOpenLesson: (locator: LessonRef) => void;
 }) {
@@ -75,28 +82,8 @@ export function WorldLanding({
     [data.studies, catalog],
   );
 
-  /**
-   * The scene always shows exactly one project, so it always needs to know
-   * which. `selectedStudyId` is allowed to be null — nothing picked yet — and
-   * the map is not allowed to be empty because of it, so an unpicked map falls
-   * back to the project holding today's lesson, and failing that to the first
-   * one in the catalogue.
-   */
-  const shownStudyId = useMemo(
-    () =>
-      selectedStudyId ??
-      data.today.nextLesson?.studyId ??
-      worldNodes[0]?.studyId ??
-      data.studies[0]?.id ??
-      null,
-    [selectedStudyId, data.today.nextLesson, data.studies, worldNodes],
-  );
-
   const world = useMemo(
-    () =>
-      worldNodes.length > 0 && shownStudyId
-        ? placeWorld(worldNodes, progressOf, shownStudyId)
-        : null,
+    () => (worldNodes.length > 0 ? placeWorld(worldNodes, progressOf, shownStudyId) : null),
     [worldNodes, progressOf, shownStudyId],
   );
 
@@ -160,7 +147,7 @@ export function WorldLanding({
   const onSceneBusy = useCallback(() => setSceneReady(false), []);
 
   const focus = data.today.focus;
-  const summary = data.studies.find((study) => study.id === selectedStudyId) ?? null;
+  const summary = data.studies.find((study) => study.id === shownStudyId) ?? null;
 
   function enter(node: CourseNode) {
     const course = catalog.get(node.studyId)?.courses.find((entry) => entry.id === node.courseId);

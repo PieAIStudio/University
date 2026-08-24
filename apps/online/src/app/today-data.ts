@@ -1,3 +1,4 @@
+import { lessonKeyOf } from "@pieai/university-core";
 import type { CardProgress, ProgressPort, RatingName } from "@pieai/university-core";
 import type {
   LessonProgress,
@@ -30,7 +31,7 @@ export function nextLessonOf(
   const unit = course?.units.find((entry) => entry.id === ref.unitId);
   const lesson = unit?.lessons.find((entry) => entry.id === ref.lessonId);
   if (!course || !study || !unit || !lesson) return null;
-  const state = progress.lessonState(`${ref.studyId}/${ref.courseId}/${ref.lessonId}`);
+  const state = progress.lessonState(lessonKeyOf(ref));
   const lessonProgress: LessonProgress | null =
     state.progress === 0 && state.completedAt === null && state.readConfirmed !== true
       ? null

@@ -15,16 +15,29 @@ export async function openOnline(page: Page): Promise<void> {
   await page.goto(`${ONLINE_ORIGIN}/`, { waitUntil: "domcontentloaded" });
 }
 
+/**
+ * The 「今天」 panel's call to action, in both shells.
+ *
+ * It reads 「开始学习」 before you have opened the lesson and 「继续学习」 after,
+ * so a test that pins one of them passes or fails on the fixture's progress
+ * rather than on the product. It used to say 「开始第一节」 in the delivery shell
+ * only, because that shell had its own copy of the panel; the panel is one
+ * component now and this is its wording.
+ */
+export const TODAY_CTA = /开始学习|继续学习/;
+
 export async function waitForMapReady(page: Page): Promise<void> {
   await namedStep(page, "等待地图铺好", async () => {
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
-    await expect(page.getByRole("button", { name: /开始第一节/ })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("button", { name: TODAY_CTA }).first()).toBeVisible({
+      timeout: 30_000,
+    });
   });
 }
 
 export async function startFirstLessonFromLanding(page: Page): Promise<void> {
-  await namedStep(page, "点「开始第一节」", async () => {
-    await humanClick(page, page.getByRole("button", { name: /开始第一节/ }).first(), "开始第一节");
+  await namedStep(page, "点今天的那一课", async () => {
+    await humanClick(page, page.getByRole("button", { name: TODAY_CTA }).first(), "今天这一课");
   });
 }
 
@@ -96,6 +109,24 @@ export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
     await page.getByPlaceholder(/用自己的话/).fill(FIRST_ANSWER);
     await humanClick(page, page.getByRole("button", { name: /提交/ }), "提交");
   });
+
+  /*
+    A lesson is finished by two acts, not one: the exercises pass, and you say
+    you have read this revision.
+
+    This step used not to exist, and the test still went green — because the
+    settlement had a legacy branch that treated "this document has no
+    readConfirmed field at all" as confirmed, which was true of every document
+    written before the field existed. The shared progress document always
+    writes the field now, so that branch is correctly dead and the button is
+    the only way through. Clicking it is what a learner does.
+  */
+  await namedStep(page, "确认读完了这一版", async () => {
+    const confirm = page.getByRole("button", { name: /^完成本次更新$/ });
+    await expect(confirm).toBeVisible({ timeout: 20_000 });
+    await confirm.scrollIntoViewIfNeeded();
+    await humanClick(page, confirm, "完成本次更新");
+  });
 }
 
 export async function waitForSettlementProgress(page: Page): Promise<void> {
@@ -126,9 +157,16 @@ export async function walkFirstOnlineLesson(page: Page): Promise<void> {
     });
   }
 
+  /*
+    Straight into the lesson. 「今天」 names a lesson and its button opens that
+    lesson, at both widths — the phone card used to name a course and open the
+    course path instead, so this walk had to detour through the path and the
+    node card, and the detour only existed at one width.
+
+    The path and the node card are still tested: F walks in through the map,
+    which is the other way in and the one they belong to.
+  */
   await startFirstLessonFromLanding(page);
-  await openLiveNode(page);
-  await confirmNodeCardAndStart(page);
   await readAndAnswerFirstLesson(page);
   await waitForSettlementProgress(page);
 }

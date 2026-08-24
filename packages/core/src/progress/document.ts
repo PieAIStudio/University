@@ -28,8 +28,45 @@ export const emptyProgress = (): ProgressDocument => ({
   account: emptyAccountData(),
 });
 
+/**
+ * How this document names a lesson. Three segments, no unit.
+ *
+ * Not the same string as `lessonRefKey`, which carries the unit as well and is
+ * what *shared surfaces* use to talk about a lesson. Both are legitimate — a
+ * store may key its rows however it likes — and that is exactly why they have
+ * to stop being interchangeable at the door of this module.
+ *
+ * They were not. `confirmLessonRead` was reached through a reader port that
+ * built its argument with `lessonRefKey`, so the read confirmation landed on a
+ * four-segment key while every reader of this document looked under the
+ * three-segment one. Nothing threw: both are strings, both are valid keys, and
+ * the document simply grew a row nobody read. The visible result was that a
+ * lesson could not be finished in either shell — the confirm button never
+ * changed, the settlement never came, and the map never moved.
+ */
+/**
+ * A key in *this document's* `lessons` map, and nothing else.
+ *
+ * Branded so it cannot be confused with `lessonRefKey`'s four-segment name at
+ * a call site. That is not hypothetical caution: the two were passed to the
+ * same function, and because both are strings the compiler had nothing to say.
+ */
+export type LessonDocumentKey = string & { readonly __lessonDocumentKey: unique symbol };
+
 export const lessonKey = (studyId: string, courseId: string, lessonId: string) =>
-  `${studyId}/${courseId}/${lessonId}`;
+  `${studyId}/${courseId}/${lessonId}` as LessonDocumentKey;
+
+/**
+ * The same key, from a locator.
+ *
+ * Exists so a caller holding a `LessonRef` never has to decide which of the
+ * two key builders in this repository it wanted. Deciding is what went wrong.
+ */
+export const lessonKeyOf = (ref: {
+  readonly studyId: string;
+  readonly courseId: string;
+  readonly lessonId: string;
+}): LessonDocumentKey => lessonKey(ref.studyId, ref.courseId, ref.lessonId);
 
 export function parseProgress(raw: string | null): ProgressDocument {
   if (!raw) return emptyProgress();

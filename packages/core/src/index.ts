@@ -281,6 +281,8 @@ export {
   createProgressPort,
   emptyProgress,
   lessonKey,
+  lessonKeyOf,
+  type LessonDocumentKey,
   mergeProgress,
   parseProgress,
 } from "./progress/index.js";

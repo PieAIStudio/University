@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { IslandIcon } from "../shell/icons.js";
 
+export { focusedStudyId } from "./focused-study.js";
+
 export interface StudySwitchItem {
   readonly id: string;
   readonly title: string;
@@ -31,7 +33,16 @@ export function StudySwitcher({
   onOpenPlanet,
 }: {
   readonly studies: readonly StudySwitchItem[];
-  readonly focusedId: string | null;
+  /**
+   * The series being shown, already resolved — never the shell's raw pick.
+   *
+   * Not `string | null`. Null used to mean 「看全部四片海」 and, when that view
+   * was retired, quietly went on meaning 「选一个项目」 instead: the authoring
+   * shell passed its unresolved state and the capsule announced that no project
+   * was chosen while the map behind it was drawing one. Resolve with
+   * `focusedStudyId` and the mismatch cannot be written.
+   */
+  readonly focusedId: string;
   readonly onSelect: (studyId: string) => void;
   /**
    * Opens the planet. Separate from `onSelect` rather than `onSelect(null)`,
@@ -44,6 +55,8 @@ export function StudySwitcher({
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const focused = studies.find((study) => study.id === focusedId);
+  // Only reachable when the id names a study the catalogue no longer has;
+  // `focusedStudyId` already rejects those, so this is a seatbelt.
   const label = focused?.title ?? "选一个项目";
 
   useEffect(() => {

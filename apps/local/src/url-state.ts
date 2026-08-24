@@ -22,6 +22,7 @@ export type SectionId = "today" | "studies";
 
 export type ShellSlot =
   | "learn"
+  | "planet"
   | "library"
   | "practice"
   | "league"
@@ -34,8 +35,9 @@ export type ShellSlot =
   | "settings"
   | "studio";
 
-const SLOT_BY_HEAD: Record<string, ShellSlot> = {
+export const SLOT_BY_HEAD: Record<string, ShellSlot> = {
   "": "learn",
+  planet: "planet",
   library: "library",
   practice: "practice",
   league: "league",
@@ -55,7 +57,13 @@ export function parseShellHash(hash: string): ShellSlot {
 }
 
 export function activeIdForSlot(slot: ShellSlot): string {
-  return slot;
+  /*
+    The planet is where you go to change series, so it belongs to 学习 rather
+    than to a rail slot of its own — the same call the delivery shell makes in
+    `activeIdForView`. A rail that lit nothing while you stood on the planet
+    would say you had left the campus.
+  */
+  return slot === "planet" ? "learn" : slot;
 }
 
 export interface AppAddress {

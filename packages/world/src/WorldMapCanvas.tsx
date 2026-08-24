@@ -31,11 +31,14 @@ export function WorldMapCanvas({
   onSceneBusy,
   onPointerMissed,
   stageChildren,
+  underlay,
   overlay,
   hint,
   loading,
   className,
   paused = false,
+  hidden = false,
+  polar = WORLD_POLAR,
 }: {
   readonly className?: string;
   readonly world: WorldMap | null;
@@ -53,10 +56,36 @@ export function WorldMapCanvas({
   readonly onSceneBusy?: () => void;
   readonly onPointerMissed?: () => void;
   readonly stageChildren?: ReactNode;
+  /**
+   * DOM that sits on the map but **beneath** its labels.
+   *
+   * The labels are the only way into a course without a mouse, so anything
+   * that covers one takes that away. A panel pinned to the side of the map is
+   * this: at a desk it sits clear of the labels, and on a phone it overlaps
+   * them, and when it does the label has to win. `overlay` is the other
+   * answer — a popover attached to the thing you just picked, which is meant
+   * to be on top and is dismissed by looking away.
+   */
+  readonly underlay?: ReactNode;
   readonly overlay?: ReactNode;
   readonly hint?: ReactNode;
   readonly loading?: ReactNode;
   readonly paused?: boolean;
+  /**
+   * Off-screen, but still mounted and still holding its WebGL context.
+   *
+   * Not the same as not rendering it. The delivery shell used to swap between
+   * two Stage assemblies — one for the map, one for a course path — so every
+   * step between them tore down a WebGL context and built another, on the one
+   * transition a learner makes most. `paused` stops the frames; this stops the
+   * pixels; the context survives both.
+   */
+  readonly hidden?: boolean;
+  /**
+   * Camera pitch. A course path is read at a shallower angle than a world of
+   * islands, which is the only thing the two scenes disagree about.
+   */
+  readonly polar?: number;
 }) {
   const labelNodes = useRef(new Map<string, HTMLElement>());
   const draggedRef = useRef(false);
@@ -65,6 +94,7 @@ export function WorldMapCanvas({
   return (
     <div
       className={className ? `stagewrap ${className}` : "stagewrap"}
+      hidden={hidden}
       onPointerDownCapture={(event) => {
         pointerOrigin.current = { x: event.clientX, y: event.clientY };
         draggedRef.current = false;
@@ -80,24 +110,31 @@ export function WorldMapCanvas({
         pointerOrigin.current = null;
       }}
     >
-      {world ? (
-        <Stage
-          cameraFrom={cameraFrom}
-          lookAt={lookAt}
-          onSceneReady={onSceneReady}
-          onSceneBusy={onSceneBusy}
-          onPointerMissed={onPointerMissed}
-          paused={paused}
-        >
-          <Controls target={lookAt} polar={WORLD_POLAR} />
-          <Flight to={cameraFrom} look={lookAt} />
-          <LabelProbe
-            markers={markers}
-            limit={9}
-            nodes={labelNodes.current}
-            followId={followId}
-            followNode={followNode}
-          />
+      {/*
+        One Stage, mounted for as long as the shell is. `world` decides whether
+        there is a world in it — a course path arrives through `stageChildren`
+        and wants the same camera, the same label projector and the same
+        context. Mounting per scene is what made stepping from the map into a
+        course cost a context teardown.
+      */}
+      <Stage
+        cameraFrom={cameraFrom}
+        lookAt={lookAt}
+        onSceneReady={onSceneReady}
+        onSceneBusy={onSceneBusy}
+        onPointerMissed={onPointerMissed}
+        paused={paused}
+      >
+        <Controls target={lookAt} polar={polar} />
+        <Flight to={cameraFrom} look={lookAt} />
+        <LabelProbe
+          markers={markers}
+          limit={9}
+          nodes={labelNodes.current}
+          followId={followId}
+          followNode={followNode}
+        />
+        {world ? (
           <WorldScene
             placements={world.placements}
             extent={world.extent}
@@ -107,9 +144,11 @@ export function WorldMapCanvas({
             onPick={onPick}
             onHover={onHover}
           />
-          {stageChildren}
-        </Stage>
-      ) : null}
+        ) : null}
+        {stageChildren}
+      </Stage>
+
+      {underlay}
 
       <nav className="labels" aria-label="地图上的去处">
         {markers.map((marker) => {

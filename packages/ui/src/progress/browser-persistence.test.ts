@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 
-import { createProgressPort, emptyProgress, PROGRESS_STORAGE_KEY } from "@pieai/university-core";
+import {
+  lessonKey,
+  createProgressPort,
+  emptyProgress,
+  PROGRESS_STORAGE_KEY,
+} from "@pieai/university-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createBrowserPersistence } from "./browser-persistence.js";
@@ -39,10 +44,14 @@ describe("createBrowserPersistence", () => {
 describe("createBrowserProgressPort", () => {
   it("is the Persistence adapter wired to the one port, not a second store", () => {
     const port = createBrowserProgressPort();
-    port.advanceLesson("s/c/l", 1);
+    // Through the key builder, not a hand-typed string: the document's key and
+    // the shared four-segment key were interchangeable at call sites once, and
+    // a test that types its own string is a test that cannot notice.
+    const key = lessonKey("s", "c", "l");
+    port.advanceLesson(key, 1);
     const again = createProgressPort({ persistence: createBrowserPersistence() });
-    expect(again.lessonState("s/c/l").progress).toBe(1);
-    expect(again.snapshot().lessons["s/c/l"]?.progress).toBe(1);
+    expect(again.lessonState(key).progress).toBe(1);
+    expect(again.snapshot().lessons[key]?.progress).toBe(1);
     expect(port.snapshot()).not.toEqual(emptyProgress());
   });
 });

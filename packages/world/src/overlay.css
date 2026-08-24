@@ -300,6 +300,29 @@ button.label:focus-visible {
   pointer-events: auto;
 }
 
+/*
+ * The panel beside the path is not the card that pops out of an island, even
+ * though both are `.picked`.
+ *
+ * The popover belongs on top: you asked for it by picking the thing under it,
+ * and it goes away when you look elsewhere. This one is a standing heading for
+ * the course you are already in, and at phone width it is nearly the full
+ * width of the screen — so at z-index 3 it covered the path's own labels, and
+ * a label is the only way into a lesson that does not require aiming at a
+ * shape inside a canvas. Covering one takes the keyboard and the screen reader
+ * out of the product, which is Web3D baseline rule 7 with the DOM still there
+ * and unreachable.
+ *
+ * Under the labels, then. A label crossing this panel stays legible because a
+ * label carries its own dark ground — that is exactly why it was built that
+ * way, for a name that has to cross bright sea and black shadow in one pan.
+ */
+/* Two classes on purpose: `> .picked` above has the same specificity, and
+   which stylesheet loads last is not a thing a layering rule should depend on. */
+.app-shell__main .stagewrap > .picked.picked--left {
+  z-index: 0;
+}
+
 .app-shell__main .stagewrap > .picked.picked--follow {
   position: absolute;
   top: 0;

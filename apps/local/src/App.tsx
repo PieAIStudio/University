@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { GameCallout } from "@pieai/swimmer-ui-kit";
 import { bindProgressToIdentity } from "@pieai/university-backend/session.js";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
@@ -18,12 +18,15 @@ import { PracticeSurface, createProgressPracticeRecentStore } from "@pieai/unive
 import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 import {
+  focusedStudyId as resolveFocusedStudy,
   StudySwitcher,
   type StudySwitchItem,
 } from "@pieai/university-ui/navigation/StudySwitcher.js";
 import {
   completedLessons,
   lessonKey,
+  type LessonDocumentKey,
+  lessonKeyOf,
   lessonRefKey,
   type CardProgress,
   type ProgressPort,
@@ -50,6 +53,7 @@ import {
   formatAddress,
   parseAddress,
   parseShellHash,
+  SLOT_BY_HEAD,
   type AppAddress,
   type ShellSlot,
 } from "./url-state.js";
@@ -414,7 +418,7 @@ function syncStudyProgressToCloud(view: StudyView, progress: ProgressPort): void
 function cloudLessonProgress(
   current: StudyView["courses"][number]["units"][number]["lessons"][number]["progress"],
   progress: ProgressPort,
-  key: string,
+  key: LessonDocumentKey,
 ): typeof current {
   const state = progress.lessonState(key);
   const readConfirmed =
@@ -616,13 +620,6 @@ export function App() {
   const [activeSection, setActiveSection] = useState(initialAddress.section);
   const [data, setData] = useState<BootstrapData | null>(null);
   const [selectedStudyId, setSelectedStudyId] = useState<string | null>(initialAddress.studyId);
-  /*
-    The planet, over the learn body. This shell has no hash router — its
-    address is study + lesson — so 「看所有课程系列」 is a piece of state rather
-    than a route. Same component, same contract; only the way in differs,
-    because the way in is the one thing these two shells already do differently.
-  */
-  const [planetOpen, setPlanetOpen] = useState(false);
   const [displayedStudy, setDisplayedStudy] = useState<DisplayedStudy | null>(null);
   const [catalog, setCatalog] = useState<ReadonlyMap<string, StudyView>>(() => new Map());
   const [cloudTodayCard, setCloudTodayCard] = useState<TodayCard | null>(null);
@@ -870,10 +867,7 @@ export function App() {
             requestToken: data.requestToken,
             progress: progressPort,
             onLessonComplete: (locator) => {
-              progressPort.advanceLesson(
-                `${locator.studyId}/${locator.courseId}/${locator.lessonId}`,
-                1,
-              );
+              progressPort.advanceLesson(lessonKeyOf(locator), 1);
             },
           })
         : null,
@@ -1013,6 +1007,17 @@ export function App() {
     };
   }, []);
 
+  /*
+    Move between rail slots by writing the address, not by setting state.
+    The rail's own entries are `<a href="#/…">`, so state-only navigation would
+    give the same destination two different behaviours depending on how you got
+    there — one of them linkable and one of them not.
+  */
+  const goToSlot = useCallback((next: ShellSlot) => {
+    const head = Object.entries(SLOT_BY_HEAD).find(([, value]) => value === next)?.[0] ?? "";
+    window.location.hash = head ? `#/${head}` : "#/";
+  }, []);
+
   const reading = lessonLocator !== null;
   const studyItems: readonly StudySwitchItem[] = useMemo(() => {
     if (!data) return [];
@@ -1060,14 +1065,33 @@ export function App() {
   }, [data, catalog]);
 
   /*
+    Which series is on screen — one answer, shared by the capsule, the map, the
+    sky and the back button.
+
+    It used to be resolved inside `WorldLanding`, where only the map could see
+    it, while the capsule was handed the raw `selectedStudyId`. So on every
+    screen but the map the capsule read 「选一个项目」 with a project plainly
+    drawn behind it. The delivery shell had resolved it at the top the whole
+    time; this is that same decision, now in one function both shells call.
+  */
+  const shownStudyId = useMemo(
+    () =>
+      resolveFocusedStudy(
+        (data?.studies ?? []).map((study) => study.id),
+        selectedStudyId,
+        data?.today.nextLesson?.studyId,
+      ),
+    [data, selectedStudyId],
+  );
+
+  /*
     No 「四片海」 fallback any more: the map shows one project and picks a default
     when nothing is selected, so a capsule reading 「四片海」 would be naming a
     place that is not on screen.
   */
   const projectName =
+    data?.studies.find((study) => study.id === shownStudyId)?.title ??
     studySummary?.title ??
-    data?.studies.find((study) => study.id === selectedStudyId)?.title ??
-    data?.studies[0]?.title ??
     "University";
   const alerts = (
     <>
@@ -1093,26 +1117,13 @@ export function App() {
   const learnBody = (
     <>
       {data && data.studies.length === 0 ? <EmptyCampus /> : null}
-      {planetOpen && data ? (
-        <PlanetPage
-          studies={planetStudies}
-          selectedId={selectedStudyId}
-          onSelect={setSelectedStudyId}
-          onEnter={(studyId) => {
-            setSelectedStudyId(studyId);
-            setLessonRef(null);
-            setPlanetOpen(false);
-          }}
-          onClose={() => setPlanetOpen(false)}
-        />
-      ) : null}
-      {data && data.studies.length > 0 && !planetOpen ? (
+      {data && data.studies.length > 0 && shownStudyId ? (
         <div className="learn-layout">
           <WorldLanding
             data={data}
             catalog={catalog}
             presence={presencePort}
-            selectedStudyId={selectedStudyId}
+            shownStudyId={shownStudyId}
             onSelectStudy={(studyId) => {
               setSelectedStudyId(studyId);
               setLessonRef(null);
@@ -1246,15 +1257,15 @@ export function App() {
           projectName,
           streakDays: progress.streak.days,
           projectControl:
-            data && studyItems.length > 0 ? (
+            data && studyItems.length > 0 && shownStudyId ? (
               <StudySwitcher
                 studies={studyItems}
-                focusedId={selectedStudyId}
+                focusedId={shownStudyId}
                 onSelect={(studyId) => {
                   setSelectedStudyId(studyId);
                   setLessonRef(null);
                 }}
-                onOpenPlanet={() => setPlanetOpen(true)}
+                onOpenPlanet={() => goToSlot("planet")}
               />
             ) : undefined,
         })}
@@ -1279,6 +1290,25 @@ export function App() {
         <div ref={mainRef} tabIndex={-1} className="campus-main">
           {alerts}
           {slot === "learn" ? learnBody : null}
+          {/*
+            A route, not a piece of state. It was `planetOpen` here and
+            `#/planet` in the delivery shell, which meant the same page could be
+            linked, bookmarked and reloaded in one campus and not the other —
+            and typing `#/planet` here silently landed you on the map instead.
+          */}
+          {slot === "planet" && data ? (
+            <PlanetPage
+              studies={planetStudies}
+              selectedId={shownStudyId}
+              onSelect={setSelectedStudyId}
+              onEnter={(studyId) => {
+                setSelectedStudyId(studyId);
+                setLessonRef(null);
+                goToSlot("learn");
+              }}
+              onClose={() => goToSlot("learn")}
+            />
+          ) : null}
           {slot === "studio" && data ? (
             <StudioSection
               data={data}

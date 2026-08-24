@@ -18,7 +18,7 @@ async function firstVisible(page: Page, locators: Locator[]): Promise<Locator> {
     }
     await page.waitForTimeout(200);
   }
-  throw new Error("落地页上看不到「开始第 1 节 / 开始学习 / 继续学习」");
+  throw new Error("落地页上看不到「开始学习 / 继续学习」");
 }
 
 test.describe("D 本地端", () => {
@@ -31,7 +31,7 @@ test.describe("D 本地端", () => {
       await page.goto(`${LOCAL_ORIGIN}/`, { waitUntil: "domcontentloaded" });
       await expect(page.getByText("第一项学习还没有准备好。")).toHaveCount(0, { timeout: 30_000 });
       await expect(page.getByText(/正在打开校园档案/)).toHaveCount(0, { timeout: 30_000 });
-      await expect(page.getByRole("button", { name: /开始第 1 节|开始学习|继续学习/ }).first()).toBeVisible({
+      await expect(page.getByRole("button", { name: /开始学习|继续学习/ }).first()).toBeVisible({
         timeout: 30_000,
       });
       await page.waitForTimeout(600);
@@ -39,9 +39,7 @@ test.describe("D 本地端", () => {
 
     await namedStep(page, "进一节课", async () => {
       const start = await firstVisible(page, [
-        page.locator(".campus-main").getByRole("button", { name: /开始第 1 节/ }),
-        page.locator(".campus-main").getByRole("button", { name: /开始学习/ }),
-        page.getByRole("button", { name: /开始第 1 节/ }),
+                page.locator(".campus-main").getByRole("button", { name: /开始学习/ }),
         page.getByRole("button", { name: /开始学习/ }),
         page.getByRole("button", { name: /继续学习/ }),
       ]);

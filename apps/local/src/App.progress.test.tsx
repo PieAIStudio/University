@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import { lessonKey } from "@pieai/university-core";
+
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -63,7 +65,7 @@ describe("the authoring shell has a progress document", () => {
   });
 
   it("marks a lesson finished today as done, from the document not a hardcoded empty one", async () => {
-    progressPort.advanceLesson("s/c/l", 1);
+    progressPort.advanceLesson(lessonKey("s", "c", "l"), 1);
     await act(async () => {
       root.render(<App />);
     });
@@ -93,7 +95,7 @@ describe("the authoring shell has a progress document", () => {
   });
 
   it("counts a finished lesson on the profile from the document, not the disk shelf", async () => {
-    progressPort.advanceLesson("s/c/l", 1);
+    progressPort.advanceLesson(lessonKey("s", "c", "l"), 1);
     window.location.hash = "#/me";
     await act(async () => {
       root.render(<App />);

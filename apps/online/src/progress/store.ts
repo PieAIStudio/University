@@ -25,6 +25,7 @@
  * What stays local is the offline queue, not the account's source of truth.
  */
 import {
+  type LessonDocumentKey,
   lessonKey,
   type ProgressPort,
   type ProgressRemoteStore,
@@ -50,11 +51,11 @@ export function snapshot() {
   return progressPort.snapshot();
 }
 
-export function lessonState(key: string) {
+export function lessonState(key: LessonDocumentKey) {
   return progressPort.lessonState(key);
 }
 
-export function advanceLesson(key: string, progress: number) {
+export function advanceLesson(key: LessonDocumentKey, progress: number) {
   progressPort.advanceLesson(key, progress);
 }
 

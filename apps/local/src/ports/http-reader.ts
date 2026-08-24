@@ -6,7 +6,7 @@
  * is changing what 4317 has always answered, and that is a product change.
  */
 import {
-  lessonRefKey,
+  lessonKeyOf,
   type EvidenceSnippet,
   type LessonRef,
   type ProgressPort,
@@ -125,7 +125,8 @@ export function createHttpReaderPort(options: {
           }),
         }),
       );
-      options.progress?.confirmLessonRead(lessonRefKey(locator), input.contentRevision);
+      // Same key the document reads back — see online-reader.ts.
+      options.progress?.confirmLessonRead(lessonKeyOf(locator), input.contentRevision);
       if (body.lessonComplete) options.onLessonComplete?.(locator);
     },
 
