@@ -1,18 +1,21 @@
-import { EMPTY_FAVOURITES, parseFavourites, type FavouritesState } from "@pieai/university-core";
+import {
+  EMPTY_FAVOURITES,
+  parseFavourites,
+  type FavouritesState,
+  type ProgressPort,
+} from "@pieai/university-core";
 
 /**
- * Where a learner's starred senses live, for now.
+ * Legacy browser adapter for a learner's starred senses.
  *
  * A favourite is a fact about this person — which senses they want back —
- * not a way of reading a lesson, so it belongs on the account. The account
- * store does not exist yet. This adapter is the stand-in: the same document
- * the model already speaks, the same `read`/`write` an account client will
- * implement, so swapping storage later does not rewrite the star button.
+ * not a way of reading a lesson, so it belongs on the account. The shared
+ * `createProgressFavouritesStore` below is the canonical adapter; this one is
+ * retained only to migrate old browser profiles and to keep isolated tests
+ * useful.
  *
- * The bytes sit in the browser until that swap. A blocked or full store
- * still gets the toggle; it just does not remember. That is the same
- * contract as the reading-mode switch, for the same reason: a preference
- * control that throws takes the page down with it.
+ * A blocked or full browser store still gets the toggle; the cloud-backed
+ * adapter queues the same document through ProgressPort instead.
  *
  * The key is product-level, not `university-local`, because both shells
  * will read this list and the account adapter will keep the same document
@@ -30,6 +33,7 @@ export const FAVOURITES_STORAGE_KEY = "university.favourites";
 export interface FavouritesStore {
   read(): FavouritesState;
   write(state: FavouritesState): void;
+  subscribe?(listener: () => void): () => void;
 }
 
 export function readLocalFavourites(): FavouritesState {
@@ -54,5 +58,14 @@ export function createLocalFavouritesStore(): FavouritesStore {
   return {
     read: readLocalFavourites,
     write: writeLocalFavourites,
+  };
+}
+
+/** The account-backed adapter shared by both browser shells. */
+export function createProgressFavouritesStore(progress: ProgressPort): FavouritesStore {
+  return {
+    read: () => progress.accountData().favourites,
+    write: (state) => progress.setFavourites(parseFavourites(state)),
+    subscribe: progress.subscribe,
   };
 }

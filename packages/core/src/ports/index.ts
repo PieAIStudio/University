@@ -33,8 +33,20 @@ export type {
   ProgressRemoteStore,
   ProgressSyncState,
   ProgressSyncStatus,
+  ExerciseAttemptRecord,
+  RetrievalAttemptRecord,
+  StoredReaderMark,
   WordProgress,
 } from "./progress.js";
+export {
+  DEFAULT_ACCOUNT_PREFERENCES,
+  emptyAccountData,
+  type AccountData,
+  type AccountForeignSettings,
+  type AccountPreferenceKey,
+  type AccountPreferences,
+  type FavouriteChange,
+} from "./account-data.js";
 export {
   createMemoryReaderPort,
   type EvidenceSnippet,

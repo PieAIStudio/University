@@ -134,7 +134,9 @@ export function AppShell({
           }
         />
       </div>
-      <main className="app-shell__main">{children}</main>
+      <main className="app-shell__main">
+        <div className="app-shell__content">{children}</div>
+      </main>
       <div className="app-shell__east">
         <div className="app-shell__east-stack">
           <CounterRow

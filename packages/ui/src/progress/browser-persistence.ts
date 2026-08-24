@@ -6,7 +6,8 @@
  * and a store that closed over `localStorage` would stop being something a
  * Node process could load. The bytes still have to live somewhere on this
  * machine until SwimmerBackend has a University row, so the adapter sits
- * here, next to the other browser stores (favourites, practice, sound).
+ * here, next to the other browser stores (favourites, practice, sound). It is
+ * a cache/outbox, not the account's cross-device source of truth.
  *
  * Copying the eighteen lines into `apps/local` would have compiled. It
  * would also have been two implementations of the same try/catch, and the

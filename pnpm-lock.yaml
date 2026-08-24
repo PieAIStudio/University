@@ -26,6 +26,9 @@ importers:
       '@pieai/swimmer-ui-kit':
         specifier: 1.7.0
         version: 1.7.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@pieai/university-backend':
+        specifier: workspace:*
+        version: link:../../packages/backend
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -105,15 +108,15 @@ importers:
       '@pieai/swimmer-avatar-kit':
         specifier: 0.2.0
         version: 0.2.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)
-      '@pieai/swimmer-backend-client':
-        specifier: 0.4.0
-        version: 0.4.0(@supabase/supabase-js@2.110.3)
       '@pieai/swimmer-render-kit':
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
         specifier: 1.7.0
         version: 1.7.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@pieai/university-backend':
+        specifier: workspace:*
+        version: link:../../packages/backend
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -172,6 +175,34 @@ importers:
       vite:
         specifier: 8.1.4
         version: 8.1.4(@types/node@24.13.2)
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.1.4(@types/node@24.13.2))
+
+  packages/backend:
+    dependencies:
+      '@pieai/swimmer-backend-client':
+        specifier: 0.4.0
+        version: 0.4.0(@supabase/supabase-js@2.110.3)
+      '@pieai/university-core':
+        specifier: workspace:*
+        version: link:../core
+      '@supabase/supabase-js':
+        specifier: 2.110.3
+        version: 2.110.3
+    devDependencies:
+      '@types/node':
+        specifier: 24.13.2
+        version: 24.13.2
+      oxfmt:
+        specifier: 0.58.0
+        version: 0.58.0
+      oxlint:
+        specifier: 1.73.0
+        version: 1.73.0
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
       vitest:
         specifier: 4.1.10
         version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.1.4(@types/node@24.13.2))

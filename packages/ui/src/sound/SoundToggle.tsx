@@ -5,12 +5,29 @@
  * way to stop it is a product people mute at the operating system, which loses
  * every other sound on their machine as well.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { ProgressPort } from "@pieai/university-core";
 
 import { isSoundEnabled, playSound, writeSoundEnabled } from "./sound.js";
 
-export function SoundToggle({ className }: { className?: string }) {
-  const [on, setOn] = useState(isSoundEnabled);
+export function SoundToggle({
+  className,
+  progress,
+}: {
+  readonly className?: string;
+  readonly progress?: ProgressPort;
+}) {
+  const [on, setOn] = useState(
+    () => progress?.accountData().preferences.soundEnabled ?? isSoundEnabled(),
+  );
+  useEffect(() => {
+    if (!progress) return;
+    return progress.subscribe(() => {
+      const next = progress.accountData().preferences.soundEnabled;
+      setOn(next);
+      writeSoundEnabled(next);
+    });
+  }, [progress]);
   return (
     <button
       type="button"
@@ -22,6 +39,12 @@ export function SoundToggle({ className }: { className?: string }) {
         const next = !on;
         setOn(next);
         writeSoundEnabled(next);
+        if (progress) {
+          progress.setAccountPreferences({
+            ...progress.accountData().preferences,
+            soundEnabled: next,
+          });
+        }
         // Play *after* enabling, so turning it on demonstrates what was turned
         // on. Turning it off stays silent, which is the whole request.
         if (next) playSound("ui.press");

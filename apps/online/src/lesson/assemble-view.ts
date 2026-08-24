@@ -31,7 +31,12 @@ export function assembleLessonView(input: {
   readonly lesson: Lesson;
   readonly studyId: string;
   readonly unitId: string;
-  readonly progress: { readonly progress: number; readonly completedAt: number | null };
+  readonly progress: {
+    readonly progress: number;
+    readonly completedAt: number | null;
+    readonly readConfirmed?: boolean;
+    readonly readConfirmedRevision?: number;
+  };
 }): LessonView {
   const { course, lesson, unitId, progress } = input;
   const parsed = parseLessonLinks(lesson.content);
@@ -57,7 +62,12 @@ export function assembleLessonView(input: {
   */
   const repositoryEvidence = lesson.evidence.filter(isRepositoryAnchor);
   const commits = [...new Set(repositoryEvidence.map((item) => item.sourceCommit))];
-  const completed = progress.progress >= 1;
+  const readConfirmed =
+    progress.readConfirmed === true &&
+    (progress.readConfirmedRevision === undefined ||
+      progress.readConfirmedRevision === ONLINE_CONTENT_REVISION);
+  const completed =
+    progress.progress >= 1 && (readConfirmed || progress.readConfirmed === undefined);
 
   return {
     lesson: {
@@ -140,15 +150,24 @@ export function assembleLessonView(input: {
 }
 
 function lessonProgressOf(
-  progress: { readonly progress: number; readonly completedAt: number | null },
+  progress: {
+    readonly progress: number;
+    readonly completedAt: number | null;
+    readonly readConfirmed?: boolean;
+    readonly readConfirmedRevision?: number;
+  },
   completed: boolean,
 ): LessonProgress | null {
-  if (progress.progress === 0 && progress.completedAt === null) return null;
+  const readConfirmed =
+    progress.readConfirmed === true &&
+    (progress.readConfirmedRevision === undefined ||
+      progress.readConfirmedRevision === ONLINE_CONTENT_REVISION);
+  if (progress.progress === 0 && progress.completedAt === null && !readConfirmed) return null;
   return {
     contentRevision: ONLINE_CONTENT_REVISION,
     status: completed ? "completed" : "in-progress",
     progress: progress.progress,
     updatedAt: new Date(progress.completedAt ?? Date.now()).toISOString(),
-    readConfirmed: completed,
+    readConfirmed: readConfirmed || (completed && progress.readConfirmed === undefined),
   };
 }

@@ -10,6 +10,7 @@ import { HttpError } from "./http/errors.js";
 import { rejectNonLoopbackHost, sendJson } from "./http/wire.js";
 import { createServerContext } from "./http/context.js";
 import { createBootstrapHandler } from "./http/handlers/bootstrap.js";
+import { handleLearningExport } from "./http/handlers/learning-export.js";
 import { handleCard } from "./http/handlers/card.js";
 import { handleExercise } from "./http/handlers/exercise.js";
 import { handleLesson } from "./http/handlers/lesson.js";
@@ -49,6 +50,7 @@ export function createUniversityLocalHttpServer(projectRoot: string): Server {
   // handleAirlock after expression-packet (inside handleExercise), not next to
   // handleStudy. Do not sort by resource name.
   const handlers: Handler[] = [
+    handleLearningExport,
     createBootstrapHandler(config.focus),
     handleStudy,
     handleLesson,

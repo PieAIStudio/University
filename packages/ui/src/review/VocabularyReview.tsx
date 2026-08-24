@@ -3,12 +3,9 @@ import { GameBadge, GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 
 import { readJson } from "../api/client.js";
 import type { LexiconEntry } from "../language/WordPopover.js";
+import type { VocabularyDueWord, VocabularyReviewPort } from "./ports.js";
 
-interface DueWord {
-  readonly senseId: string;
-  readonly stage: string;
-  readonly entry: LexiconEntry;
-}
+type DueWord = VocabularyDueWord & { readonly entry: LexiconEntry };
 
 /**
  * The review queue for words the learner asked to be asked about.
@@ -18,7 +15,13 @@ interface DueWord {
  * broken. Recall is deliberately self-reported rather than typed — the claim
  * being tested is "do I know this word", and typing it out tests spelling.
  */
-export function VocabularyReview({ requestToken }: { readonly requestToken: string }) {
+export function VocabularyReview({
+  requestToken,
+  review,
+}: {
+  readonly requestToken?: string;
+  readonly review?: VocabularyReviewPort;
+}) {
   const [due, setDue] = useState<readonly DueWord[]>([]);
   const [revealed, setRevealed] = useState(false);
   const [pending, setPending] = useState(false);
@@ -27,12 +30,19 @@ export function VocabularyReview({ requestToken }: { readonly requestToken: stri
 
   const load = useCallback(async () => {
     try {
-      const body = await readJson<{
-        readonly due: readonly DueWord[];
-        readonly budget: { readonly reviewedToday: number };
-      }>(await fetch("/api/vocabulary"));
-      setDue(body.due);
-      setReviewedToday(body.budget.reviewedToday);
+      if (review) {
+        const body = await review.load();
+        setDue(body.due);
+        setReviewedToday(body.reviewedToday);
+      } else {
+        if (!requestToken) return;
+        const body = await readJson<{
+          readonly due: readonly DueWord[];
+          readonly budget: { readonly reviewedToday: number };
+        }>(await fetch("/api/vocabulary"));
+        setDue(body.due);
+        setReviewedToday(body.budget.reviewedToday);
+      }
     } catch {
       // A learner without a vocabulary database yet simply has nothing due;
       // that is not a failure worth interrupting the day with.
@@ -51,16 +61,21 @@ export function VocabularyReview({ requestToken }: { readonly requestToken: stri
     setPending(true);
     setError(null);
     try {
-      await readJson(
-        await fetch(`/api/vocabulary/${encodeURIComponent(word!.senseId)}/grade`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-University-Local-Token": requestToken,
-          },
-          body: JSON.stringify({ rating }),
-        }),
-      );
+      if (review) {
+        await review.rate(word.senseId, rating);
+      } else {
+        if (!requestToken) throw new Error("生词复习服务尚未接通");
+        await readJson(
+          await fetch(`/api/vocabulary/${encodeURIComponent(word!.senseId)}/grade`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-University-Local-Token": requestToken,
+            },
+            body: JSON.stringify({ rating }),
+          }),
+        );
+      }
       setRevealed(false);
       await load();
     } catch (cause) {

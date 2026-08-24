@@ -17,15 +17,19 @@ import {
   buildCardRevealPayload,
   createRetrievalAttemptDraft,
 } from "../view/lesson-view.js";
+import type { ReviewCardPort } from "./ports.js";
 
 export function ReviewCard({
   card,
   requestToken,
+  review,
   onReviewed,
   remaining,
 }: {
   readonly card: ReviewCardLocator;
-  readonly requestToken: string;
+  /** Required only for the local HTTP fallback. Online injects a cloud port. */
+  readonly requestToken?: string;
+  readonly review?: ReviewCardPort;
   readonly onReviewed: () => Promise<void>;
   /**
    * How many cards are still due today, this one included.
@@ -73,6 +77,7 @@ export function ReviewCard({
   }, [cardIdentity]);
 
   async function post(path: string, body: unknown) {
+    if (!requestToken) throw new Error("复习服务尚未接通");
     return fetch(path, {
       method: "POST",
       headers: {
@@ -87,14 +92,22 @@ export function ReviewCard({
     setPending(true);
     setError(null);
     try {
-      const response = await post(
-        cardActionPath(card, "reveal"),
-        buildCardRevealPayload(retrievalDraft, card.contentRevision, answer),
-      );
-      const result = await readJson<{
-        readonly back: string;
-        readonly priorAttempts?: readonly PriorAttempt[];
-      }>(response);
+      const result = review
+        ? await review.reveal(card, {
+            commandId: retrievalDraft.commandId,
+            contentRevision: card.contentRevision,
+            answer,
+            startedAt: retrievalDraft.startedAt,
+          })
+        : await readJson<{
+            readonly back: string;
+            readonly priorAttempts?: readonly PriorAttempt[];
+          }>(
+            await post(
+              cardActionPath(card, "reveal"),
+              buildCardRevealPayload(retrievalDraft, card.contentRevision, answer),
+            ),
+          );
       setBack(result.back);
       setPriorAttempts(result.priorAttempts ?? []);
       setRevealFailed(false);
@@ -123,13 +136,16 @@ export function ReviewCard({
     setPending(true);
     setError(null);
     try {
-      const response = await post(cardActionPath(card, "review"), {
-        commandId: crypto.randomUUID(),
-        contentRevision: card.contentRevision,
-        rating,
-      });
-      const result = await readJson<{ readonly state: { readonly dueAt: string } }>(response);
-      setNextDue(result.state.dueAt);
+      const result = review
+        ? await review.rate(card, rating)
+        : await readJson<{ readonly state: { readonly dueAt: string } }>(
+            await post(cardActionPath(card, "review"), {
+              commandId: crypto.randomUUID(),
+              contentRevision: card.contentRevision,
+              rating,
+            }),
+          ).then((body) => body.state);
+      setNextDue(result.dueAt);
       // After the grade is committed, never before: a sound that fires on the
       // click and then the save fails has told the learner something untrue.
       playSound("review.graded");

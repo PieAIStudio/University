@@ -1,6 +1,6 @@
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { GameToggle } from "@pieai/swimmer-ui-kit";
-import type { PresencePort } from "@pieai/university-core";
+import type { PresencePort, ProgressPort } from "@pieai/university-core";
 
 import { ForeignSettingsPanel } from "../../language/ForeignSettingsPanel.js";
 import { readForeignSettings, writeForeignSettings } from "../../language/foreign-settings.js";
@@ -12,8 +12,22 @@ import { SoundToggle } from "../../sound/SoundToggle.js";
  * this is where they live as a destination, with the right-column subnav W6
  * puts beside the preference form.
  */
-export function SettingsScreen({ presence }: { readonly presence?: PresencePort } = {}) {
-  const [settings, setSettings] = useState(readForeignSettings);
+export function SettingsScreen({
+  presence,
+  progress,
+}: {
+  readonly presence?: PresencePort;
+  readonly progress?: ProgressPort;
+} = {}) {
+  const [settings, setSettings] = useState(
+    () => progress?.accountData().preferences.foreignSettings ?? readForeignSettings(),
+  );
+  useEffect(() => {
+    if (!progress) return;
+    return progress.subscribe(() =>
+      setSettings(progress.accountData().preferences.foreignSettings),
+    );
+  }, [progress]);
   return (
     <div className="settings-screen">
       <h1 className="settings-screen__title">偏好设置</h1>
@@ -21,9 +35,9 @@ export function SettingsScreen({ presence }: { readonly presence?: PresencePort 
         <h2 id="settings-sound" className="settings-screen__heading">
           声音
         </h2>
-        <SoundToggle />
+        <SoundToggle progress={progress} />
       </section>
-      {presence ? <PresenceSettings presence={presence} /> : null}
+      {presence ? <PresenceSettings presence={presence} progress={progress} /> : null}
       <section className="settings-screen__block" aria-labelledby="settings-language">
         <h2 id="settings-language" className="settings-screen__heading">
           语言层
@@ -33,7 +47,14 @@ export function SettingsScreen({ presence }: { readonly presence?: PresencePort 
           settings={settings}
           onChange={(next) => {
             setSettings(next);
-            writeForeignSettings(next);
+            if (progress) {
+              progress.setAccountPreferences({
+                ...progress.accountData().preferences,
+                foreignSettings: next,
+              });
+            } else {
+              writeForeignSettings(next);
+            }
           }}
         />
       </section>
@@ -46,7 +67,13 @@ export function SettingsScreen({ presence }: { readonly presence?: PresencePort 
  * learn has to be refusable even on the plan whose value is being watched.
  * Default on. Off must untrack, not restyle a chip.
  */
-function PresenceSettings({ presence }: { readonly presence: PresencePort }) {
+function PresenceSettings({
+  presence,
+  progress,
+}: {
+  readonly presence: PresencePort;
+  readonly progress?: ProgressPort;
+}) {
   const snapshot = useSyncExternalStore(presence.subscribe, presence.snapshot, presence.snapshot);
   return (
     <section className="settings-screen__block" aria-labelledby="settings-presence">
@@ -59,7 +86,14 @@ function PresenceSettings({ presence }: { readonly presence: PresencePort }) {
         onClick={() => {
           const next = !snapshot.sharesPresence;
           presence.setSharesPresence(next);
-          writeSharesPresence(next);
+          if (progress) {
+            progress.setAccountPreferences({
+              ...progress.accountData().preferences,
+              sharesPresence: next,
+            });
+          } else {
+            writeSharesPresence(next);
+          }
         }}
       />
       <p className="settings-screen__hint">

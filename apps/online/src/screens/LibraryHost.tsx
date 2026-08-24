@@ -1,16 +1,9 @@
 import { ANTI_PATTERN_ENTRIES, CONCEPT_ENTRIES } from "@pieai/university-core";
-import { AntiPatternIndex, ConceptIndex, TermIndex } from "@pieai/university-ui";
+import { LibrarySurface } from "@pieai/university-ui";
 
 import { LEXICON } from "../lesson/language";
-import { LIBRARY_TABS, WORLD, type LibraryTab, type View } from "../url-state";
-import { FavouritesHost } from "./FavouritesHost";
-
-const LIBRARY_TAB_LABEL: Record<LibraryTab, string> = {
-  concepts: "概念图解",
-  terms: "词义索引",
-  flavour: "防 AI 味儿",
-  favourites: "收藏",
-};
+import { WORLD, type LibraryTab, type View } from "../url-state";
+import { FAVOURITES_STORE } from "./FavouritesHost";
 
 /**
  * One door for everything that is looked up rather than worked through.
@@ -27,42 +20,17 @@ const LIBRARY_TAB_LABEL: Record<LibraryTab, string> = {
  */
 export function LibraryHost({ tab, onOpen }: { tab: LibraryTab; onOpen: (view: View) => void }) {
   return (
-    <div className="terms">
-      <button className="linkish" onClick={() => onOpen(WORLD)}>
-        ← 关卡地图
-      </button>
-      <nav className="library-tabs" aria-label="图鉴">
-        {LIBRARY_TABS.map((candidate) => (
-          <button
-            key={candidate}
-            type="button"
-            className={candidate === tab ? "library-tabs__tab is-current" : "library-tabs__tab"}
-            aria-current={candidate === tab ? "page" : undefined}
-            onClick={() => onOpen({ kind: "library", tab: candidate })}
-          >
-            {LIBRARY_TAB_LABEL[candidate]}
-          </button>
-        ))}
-      </nav>
-      {tab === "concepts" ? (
-        <ConceptIndex
-          entries={CONCEPT_ENTRIES}
-          onOpen={(entry) => onOpen({ kind: "concept", id: entry.head.id })}
-        />
-      ) : null}
-      {tab === "terms" ? (
-        <TermIndex
-          entries={LEXICON}
-          onOpenFull={(entry) => onOpen({ kind: "term", senseId: entry.senseId })}
-        />
-      ) : null}
-      {tab === "flavour" ? (
-        <AntiPatternIndex
-          entries={ANTI_PATTERN_ENTRIES}
-          onOpen={(entry) => onOpen({ kind: "anti-pattern-entry", id: entry.head.id })}
-        />
-      ) : null}
-      {tab === "favourites" ? <FavouritesHost onOpen={onOpen} /> : null}
-    </div>
+    <LibrarySurface
+      activeTab={tab}
+      concepts={CONCEPT_ENTRIES}
+      terms={LEXICON}
+      antiPatterns={ANTI_PATTERN_ENTRIES}
+      favourites={FAVOURITES_STORE}
+      onBack={() => onOpen(WORLD)}
+      onTabChange={(next) => onOpen({ kind: "library", tab: next })}
+      onOpenConcept={(entry) => onOpen({ kind: "concept", id: entry.head.id })}
+      onOpenTerm={(entry) => onOpen({ kind: "term", senseId: entry.senseId })}
+      onOpenAntiPattern={(entry) => onOpen({ kind: "anti-pattern-entry", id: entry.head.id })}
+    />
   );
 }

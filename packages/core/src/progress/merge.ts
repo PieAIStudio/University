@@ -38,11 +38,21 @@
 
 import type {
   CardProgress,
+  ExerciseAttemptRecord,
   LessonProgress,
   ProgressDocument,
+  StoredReaderMark,
   WordProgress,
+  RetrievalAttemptRecord,
 } from "../ports/progress.js";
 import { cloneProgress, emptyProgress } from "./document.js";
+import {
+  changesFromFavourites,
+  cloneAccountData,
+  materializeFavourites,
+  mergeAccountPreferences,
+  mergeFavouriteChanges,
+} from "../ports/account-data.js";
 
 const WORD_RANK: Record<WordProgress["stage"], number> = {
   paused: 0,
@@ -76,12 +86,62 @@ export function mergeProgress(
     words[key] = current ? mergeWord(current, other) : { ...other };
   }
 
+  const readerMarks: Record<string, StoredReaderMark> = { ...left.readerMarks };
+  for (const [key, other] of Object.entries(right.readerMarks)) {
+    const current = readerMarks[key];
+    readerMarks[key] = current ? pickReaderMark(current, other) : { ...other };
+  }
+
+  const exerciseAttempts: Record<string, ExerciseAttemptRecord> = {
+    ...left.exerciseAttempts,
+  };
+  for (const [key, other] of Object.entries(right.exerciseAttempts)) {
+    const current = exerciseAttempts[key];
+    exerciseAttempts[key] = current ? pickAttempt(current, other) : { ...other };
+  }
+
+  const retrievalAttempts: Record<string, RetrievalAttemptRecord> = {
+    ...left.retrievalAttempts,
+  };
+  for (const [key, other] of Object.entries(right.retrievalAttempts)) {
+    const current = retrievalAttempts[key];
+    retrievalAttempts[key] = current ? pickRetrievalAttempt(current, other) : { ...other };
+  }
+
+  const leftAccount = cloneAccountData(left.account);
+  const rightAccount = cloneAccountData(right.account);
+  const favouriteChanges = mergeFavouriteChanges(
+    Object.keys(leftAccount.favouriteChanges).length > 0
+      ? leftAccount.favouriteChanges
+      : changesFromFavourites(leftAccount.favourites),
+    Object.keys(rightAccount.favouriteChanges).length > 0
+      ? rightAccount.favouriteChanges
+      : changesFromFavourites(rightAccount.favourites),
+  );
+
   return {
     lessons,
     cards,
     words,
     streak: mergeStreak(left.streak, right.streak),
+    readerMarks,
+    exerciseAttempts,
+    retrievalAttempts,
+    account: {
+      favourites: materializeFavourites(favouriteChanges),
+      favouriteChanges,
+      practiceRecent: mergePracticeRecent(leftAccount.practiceRecent, rightAccount.practiceRecent),
+      preferences: mergeAccountPreferences(leftAccount.preferences, rightAccount.preferences),
+    },
   };
+}
+
+function mergePracticeRecent(
+  left: ProgressDocument["account"]["practiceRecent"],
+  right: ProgressDocument["account"]["practiceRecent"],
+): ProgressDocument["account"]["practiceRecent"] {
+  const ids = [...right.ids, ...left.ids.filter((id) => !right.ids.includes(id))].slice(-12);
+  return { version: 1, ids };
 }
 
 function mergeLesson(a: LessonProgress, b: LessonProgress): LessonProgress {
@@ -92,11 +152,26 @@ function mergeLesson(a: LessonProgress, b: LessonProgress): LessonProgress {
       : b.completedAt == null
         ? a.completedAt
         : Math.min(a.completedAt, b.completedAt);
-  return {
+  const aRevision = a.readConfirmedRevision ?? 0;
+  const bRevision = b.readConfirmedRevision ?? 0;
+  const highestReadRevision = Math.max(aRevision, bRevision);
+  const readConfirmed =
+    highestReadRevision > 0
+      ? (aRevision === highestReadRevision && a.readConfirmed === true) ||
+        (bRevision === highestReadRevision && b.readConfirmed === true)
+      : a.readConfirmed === true || b.readConfirmed === true;
+  const merged: LessonProgress = {
     progress,
     completedAt,
     attempts: Math.max(a.attempts, b.attempts),
+    ...(readConfirmed
+      ? {
+          readConfirmed: true,
+          ...(highestReadRevision > 0 ? { readConfirmedRevision: highestReadRevision } : {}),
+        }
+      : {}),
   };
+  return merged;
 }
 
 function pickCard(a: CardProgress, b: CardProgress): CardProgress {
@@ -121,6 +196,33 @@ function mergeWord(a: WordProgress, b: WordProgress): WordProgress {
     ...winner,
     lapses: Math.max(a.lapses, b.lapses),
   };
+}
+
+function pickReaderMark(a: StoredReaderMark, b: StoredReaderMark): StoredReaderMark {
+  return eventAt(a) >= eventAt(b) ? { ...a } : { ...b };
+}
+
+function eventAt(mark: StoredReaderMark): number {
+  const candidates = [mark.createdAt, mark.resolvedAt, mark.deletedAt].filter(
+    (value): value is string => typeof value === "string",
+  );
+  return candidates.reduce((latest, value) => {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? latest : Math.max(latest, parsed);
+  }, 0);
+}
+
+function pickAttempt(a: ExerciseAttemptRecord, b: ExerciseAttemptRecord): ExerciseAttemptRecord {
+  const aAt = Date.parse(a.occurredAt);
+  const bAt = Date.parse(b.occurredAt);
+  return bAt > aAt ? { ...b } : { ...a };
+}
+
+function pickRetrievalAttempt(
+  a: RetrievalAttemptRecord,
+  b: RetrievalAttemptRecord,
+): RetrievalAttemptRecord {
+  return Date.parse(b.revealedAt) > Date.parse(a.revealedAt) ? { ...b } : { ...a };
 }
 
 function pickLearningWord(a: WordProgress, b: WordProgress): WordProgress {

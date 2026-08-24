@@ -26,19 +26,23 @@ governed target: that describes the governance relationship, not its strategic
 importance. It is not a consumer AI product line and is not a reason to modify the
 projects it studies.
 
-The future consumer product, if built, will live in a separate `University`
-repository. UniversityLocal permanently remains local-only: it does not connect
-to SwimmerBackend or another application backend. It is the personal AI-host
-edition and the proving ground for reusable learning contracts.
+The local shell is not a permanently-offline product. It connects to the same
+SwimmerBackend account and learner-data document as the online shell, so
+progress, answers, marks, review state, vocabulary, favourites, practice
+history, and settings follow the learner between Windows, macOS, and the web.
+Its only runtime difference is where grading AI comes from: the local shell
+uses the AI coding host/clipboard path and does not require a product API key;
+the online shell uses the metered online AI path. Course sources, study
+snapshots, and authoring notes remain local by design and are not part of the
+learner-data sync document.
 
 ## Current Status
 
 The repository now contains the PGS governance foundation, a commit-bound study
 store, full Understand Anything isolation, versioned courses and conversation
-notes, immutable evidence, SQLite + FSRS learner state, Grok-compatible local
-skills, and the Today / Studies Web learning loop. SupaLuv is the first registered
-study and proof source. Personal progress is local data, not a repository status
-claim.
+notes, immutable evidence, cloud-canonical learner state with a SQLite/browser
+cache and outbox, Grok-compatible local skills, and the Today / Studies Web
+learning loop. SupaLuv is the first registered study and proof source.
 
 ## Learning Data
 
@@ -51,14 +55,16 @@ studies/<study-id>/
   ua/        # UA maps and native tours
   courses/   # UniversityLocal lessons, exercises, and cards
   notes/     # atomic knowledge captured from owner/AI discussion
-  learner/   # SQLite progress, review history, and local backups
+  learner/   # authoring/runtime cache and migration data; account state syncs to cloud
 ```
 
 Set `studiesRoot` in `university-local.config.local.json` when the shelf should
 live elsewhere. Start from `university-local.config.local.example.json`; the
 configured root keeps the same `<study-id>/...` structure. Personal study data
-is ignored by this repository, uses explicit local backups, and is never uploaded
-by UniversityLocal.
+is ignored by this repository and remains on the configured studies shelf.
+Learner/account data created by the app is synced to the shared cloud document
+when signed in; the local shelf is only a cache, migration source, or offline
+outbox for that data.
 
 ## Commands
 

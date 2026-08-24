@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 // Brand tokens first, product layout second: the kit defines the custom
 // properties everything below reads.
 import "@pieai/swimmer-ui-kit/styles.css";
+import "@pieai/university-ui/catalog/catalog.css";
 import { App } from "./app/App";
 /*
   Every stylesheet `packages/ui` ships, in both shells, always.
@@ -39,6 +40,7 @@ import "@pieai/university-ui/reference/term-index.css";
 import "@pieai/university-ui/review/choice-block.css";
 import "@pieai/university-ui/shell/app-shell.css";
 import "@pieai/university-ui/sound/sound-toggle.css";
+import "@pieai/university-ui/today/today.css";
 import "@pieai/university-world/overlay.css";
 import "./styles.css";
 

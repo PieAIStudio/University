@@ -52,7 +52,6 @@ import {
   placeCourse,
   nextCourse,
   placeWorld,
-  WorldScene,
   type LessonPlacement,
   type Marker,
 } from "@pieai/university-world/Maps.js";
@@ -75,7 +74,6 @@ import { presencePort } from "../presence/store";
 import { progressSource } from "../progress/source";
 import {
   dueCards,
-  dueTomorrow,
   progressPort,
   progressRemoteStore,
   snapshot,
@@ -93,16 +91,24 @@ import {
   SettlementHost,
   TermEntryHost,
 } from "../screens/lazy";
-import { ReviewHost } from "../screens/ReviewHost";
-import { fromHash, LIBRARY_VIEW_TAB, libraryTabOf, toHash, WORLD, type View } from "../url-state";
-import { TodayCard, todayMeta } from "./TodayCard";
+import { fromHash, LIBRARY_VIEW_TAB, libraryTabOf, toHash, type View } from "../url-state";
+import {
+  TodaySection,
+  todayMeta,
+  type TodaySectionData,
+} from "@pieai/university-ui/today/TodaySection.js";
+import {
+  createOnlineReviewPort,
+  createOnlineVocabularyReviewPort,
+  nextLessonOf,
+  todayCardOf,
+} from "./today-data";
 import {
   Controls,
   COURSE_POLAR,
   Flight,
   LabelProbe,
   MAP_CONTROLS_HINT,
-  WORLD_POLAR,
 } from "@pieai/university-world/controls.js";
 import { frameWorld } from "@pieai/university-world/frame.js";
 import { PlanetPage, type PlanetStudy } from "@pieai/university-world/planet.js";
@@ -111,6 +117,7 @@ import { activeIdForView, isBareView, useMinWidth } from "./shell-route";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
+import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
 
 const ProfileAvatar = lazy(() =>
   import("./ProfileAvatar.js").then((mod) => ({ default: mod.ProfileAvatar })),
@@ -131,6 +138,13 @@ type PathOverlay =
 
 export function App() {
   const progress = useSyncExternalStore(subscribe, snapshot);
+  useEffect(
+    () =>
+      progressPort.subscribe(() =>
+        presencePort.setSharesPresence(progressPort.accountData().preferences.sharesPresence),
+      ),
+    [],
+  );
   const [nodes, setNodes] = useState<readonly CourseNode[] | null>(null);
   // The address bar is the source of truth for where the learner is, so a
   // reload lands where they were and a lesson can be sent to someone.
@@ -536,7 +550,18 @@ export function App() {
   }, [world, lessons, view, pathSprites]);
 
   const due = dueCards();
-  const dueTomorrowCount = dueTomorrow();
+  const todayData = useMemo<TodaySectionData>(
+    () => ({
+      card: due[0] ? todayCardOf(due[0]) : null,
+      nextLesson: nextLessonOf(nextUpProgress?.next ?? null, progressPort),
+      dueCount: due.length,
+      focus: null,
+      issues: [],
+    }),
+    [due, nextUpProgress],
+  );
+  const todayReview = useMemo(() => createOnlineReviewPort(progressPort), []);
+  const todayVocabularyReview = useMemo(() => createOnlineVocabularyReviewPort(progressPort), []);
   const showMap = SHOWS_THE_MAP.has(view.kind);
   // Suspense reports the models; this reports the JSON they stand on. Either
   // one alone still paints an empty sea, which is the same broken-page read.
@@ -687,25 +712,7 @@ export function App() {
   }, [view.kind, lessons, world]);
   const companionSurface = view.kind === "course" || view.kind === "lesson" ? "course" : "world";
 
-  const todayCard = (
-    <TodayCard
-      nextTitle={todayNode?.title ?? null}
-      nextMeta={nextUpMeta}
-      continueLabel={progress.streak.days > 0 ? "继续" : "开始第一节"}
-      onContinue={() => {
-        if (!todayNode) return;
-        setView({
-          kind: "course",
-          studyId: todayNode.studyId,
-          courseId: todayNode.courseId,
-        });
-      }}
-      dueCount={due.length}
-      dueTomorrow={dueTomorrowCount}
-    />
-  );
-
-  const stage =
+  const legacyStage =
     view.kind === "avatar-lab" ? null : (
       <div
         className="stagewrap"
@@ -730,10 +737,7 @@ export function App() {
           onPointerMissed={dismissPick}
           paused={!showMap}
         >
-          <Controls
-            target={lookAt}
-            polar={view.kind === "course" || view.kind === "lesson" ? COURSE_POLAR : WORLD_POLAR}
-          />
+          <Controls target={lookAt} polar={COURSE_POLAR} />
           <Flight to={cameraFrom} look={lookAt} />
           <LabelProbe
             markers={markers}
@@ -742,7 +746,7 @@ export function App() {
             // This shell's course markers use `courseId` as `id`. The
             // projector looks that id up in the same array; inventing a
             // second key here would place the card at (0,0).
-            followId={view.kind === "world" && picked ? picked.courseId : null}
+            followId={null}
             followNode={pickCardRef}
           />
           {/*
@@ -751,19 +755,6 @@ export function App() {
             that lost that competition would silently stop existing.
           */}
           <CompanionProbe anchors={companionAnchors} nodes={companionNodes.current} />
-          {view.kind === "world" && world ? (
-            <WorldScene
-              placements={world.placements}
-              extent={world.extent}
-              learnerAt={learnerAt}
-              skyStudyId={focusedStudyId}
-              onPick={(node) => {
-                setPicked(node);
-                setMapFocus(node.studyId);
-              }}
-              onHover={(node) => setHovered(node ? node.courseId : null)}
-            />
-          ) : null}
           {(view.kind === "course" || view.kind === "lesson") && lessons.length > 0 ? (
             <CourseScene
               lessons={lessons}
@@ -790,47 +781,6 @@ export function App() {
           just as much as a stranger needs "what is this", and a modal answers
           only the second and only once.
         */}
-        {wide ? null : view.kind === "world" && todayNode && !picked ? (
-          <aside className="nextup">
-            <p className="nextup__eyebrow">
-              {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
-            </p>
-            <h2 className="nextup__title">{todayNode.title}</h2>
-            <p className="nextup__meta">{nextUpMeta}</p>
-            <button
-              className="primary block"
-              onClick={() =>
-                setView({
-                  kind: "course",
-                  studyId: todayNode.studyId,
-                  courseId: todayNode.courseId,
-                })
-              }
-            >
-              {progress.streak.days > 0 ? "继续" : "开始第一节"} →
-            </button>
-          </aside>
-        ) : null}
-
-        {view.kind === "world" && picked ? (
-          <CoursePickCard
-            title={picked.title}
-            studyTitle={picked.studyTitle}
-            lessons={picked.lessons}
-            depth={picked.depth}
-            prerequisiteCount={picked.prerequisiteCourseIds.length}
-            onEnter={() =>
-              setView({
-                kind: "course",
-                studyId: picked.studyId,
-                courseId: picked.courseId,
-              })
-            }
-            onDismiss={dismissPick}
-            cardRef={pickCardRef}
-          />
-        ) : null}
-
         {wide ? null : view.kind === "course" && course ? (
           <aside className="picked picked--left">
             <h3>{course.title}</h3>
@@ -979,6 +929,85 @@ export function App() {
       </div>
     );
 
+  const sharedWorldStage =
+    view.kind === "world" ? (
+      <WorldMapCanvas
+        world={world}
+        cameraFrom={framed.cameraFrom}
+        lookAt={framed.lookAt}
+        learnerAt={learnerAt}
+        skyStudyId={focusedStudyId}
+        markers={markers}
+        followId={picked ? picked.courseId : null}
+        followNode={pickCardRef}
+        onPick={(node) => {
+          setPicked(node);
+          setMapFocus(node.studyId);
+        }}
+        onHover={(node) => setHovered(node ? node.title : null)}
+        onSceneReady={onSceneReady}
+        onSceneBusy={onSceneBusy}
+        onPointerMissed={dismissPick}
+        stageChildren={<CompanionProbe anchors={companionAnchors} nodes={companionNodes.current} />}
+        overlay={
+          <>
+            <PresenceLayer
+              port={presencePort}
+              surface="world"
+              viewKey={presenceView}
+              attach={(userId, element) => {
+                if (element) companionNodes.current.set(userId, element);
+                else companionNodes.current.delete(userId);
+              }}
+            />
+            {wide ? null : todayNode && !picked ? (
+              <aside className="nextup">
+                <p className="nextup__eyebrow">
+                  {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
+                </p>
+                <h2 className="nextup__title">{todayNode.title}</h2>
+                <p className="nextup__meta">{nextUpMeta}</p>
+                <button
+                  className="primary block"
+                  onClick={() =>
+                    setView({
+                      kind: "course",
+                      studyId: todayNode.studyId,
+                      courseId: todayNode.courseId,
+                    })
+                  }
+                >
+                  {progress.streak.days > 0 ? "继续" : "开始第一节"} →
+                </button>
+              </aside>
+            ) : null}
+            {picked ? (
+              <CoursePickCard
+                title={picked.title}
+                studyTitle={picked.studyTitle}
+                lessons={picked.lessons}
+                depth={picked.depth}
+                prerequisiteCount={picked.prerequisiteCourseIds.length}
+                onEnter={() =>
+                  setView({
+                    kind: "course",
+                    studyId: picked.studyId,
+                    courseId: picked.courseId,
+                  })
+                }
+                onDismiss={dismissPick}
+                cardRef={pickCardRef}
+              />
+            ) : null}
+          </>
+        }
+        hint={hovered ?? MAP_CONTROLS_HINT}
+        loading={mapCover ? <LoadingTrivia /> : null}
+      />
+    ) : null;
+
+  const stage = view.kind === "world" ? sharedWorldStage : legacyStage;
+
   /*
     The stage stays in the centre column at every width. v3 draws a small
     persistent island in the right rail, and that is right — but only once the
@@ -989,7 +1018,25 @@ export function App() {
   */
   const aside = (
     <>
-      {showMap ? todayCard : null}
+      {showMap ? (
+        <TodaySection
+          data={todayData}
+          review={todayReview}
+          vocabularyReview={todayVocabularyReview}
+          onOpenLesson={(locator) =>
+            setView({
+              kind: "lesson",
+              studyId: locator.studyId,
+              courseId: locator.courseId,
+              unitId: locator.unitId,
+              lessonId: locator.lessonId,
+            })
+          }
+          onReviewed={async () => {
+            await progressPort.flush();
+          }}
+        />
+      ) : null}
       {view.kind === "settings" ? <SettingsSubnav /> : null}
     </>
   );
@@ -1149,7 +1196,25 @@ export function App() {
         </Suspense>
       ) : null}
 
-      {view.kind === "review" ? <ReviewHost onDone={() => setView(WORLD)} /> : null}
+      {view.kind === "review" ? (
+        <TodaySection
+          data={todayData}
+          review={todayReview}
+          vocabularyReview={todayVocabularyReview}
+          onOpenLesson={(locator) =>
+            setView({
+              kind: "lesson",
+              studyId: locator.studyId,
+              courseId: locator.courseId,
+              unitId: locator.unitId,
+              lessonId: locator.lessonId,
+            })
+          }
+          onReviewed={async () => {
+            await progressPort.flush();
+          }}
+        />
+      ) : null}
 
       {view.kind === "term" ? (
         <Suspense fallback={<RouteFallback />}>
@@ -1208,7 +1273,9 @@ export function App() {
       {view.kind === "league" ? <LeagueScreen document={progress} /> : null}
       {view.kind === "quests" ? <QuestsScreen document={progress} /> : null}
       {view.kind === "plans" ? <PlansScreen /> : null}
-      {view.kind === "settings" ? <SettingsScreen presence={presencePort} /> : null}
+      {view.kind === "settings" ? (
+        <SettingsScreen presence={presencePort} progress={progressPort} />
+      ) : null}
       {view.kind === "me" ? (
         <ProfileScreen
           avatar={

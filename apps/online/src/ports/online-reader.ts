@@ -2,11 +2,18 @@
  * The delivery shell's ReaderPort: published packages plus the progress
  * document already on this machine.
  *
- * Marks are not in that document — they were never a delivery-shell concept
- * while this side had its own reader. They live in a sidecar key so adding
- * them cannot orphan a learner's existing `university.progress.v2` row.
+ * Marks now live in the same ProgressDocument as cards and words. The old
+ * sidecar remains a one-time offline migration/cache for existing browser
+ * profiles; it is not the cross-device source of truth. New marks are written
+ * to the shared ProgressDocument first.
  */
-import type { EvidenceSnippet, LessonRef, ProgressPort, ReaderPort } from "@pieai/university-core";
+import {
+  lessonRefKey,
+  type EvidenceSnippet,
+  type LessonRef,
+  type ProgressPort,
+  type ReaderPort,
+} from "@pieai/university-core";
 import type { ReaderMark } from "@pieai/university-core/domain/reader-marks.js";
 
 import { isRepositoryAnchor } from "../content/library";
@@ -55,11 +62,14 @@ export function createOnlineReaderPort(options: {
     },
 
     async listMarks(studyId) {
-      return readStore()[studyId] ?? [];
+      // Migrate marks created before the cloud document learned about reader
+      // annotations. A later cloud merge can then carry them to another
+      // computer instead of leaving them trapped in this browser profile.
+      for (const mark of readStore()[studyId] ?? []) progress.saveReaderMark(mark);
+      return progress.readerMarks(studyId);
     },
 
     async writeMark(locator, draft) {
-      const store = readStore();
       const mark: ReaderMark = {
         markId:
           typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -74,6 +84,8 @@ export function createOnlineReaderPort(options: {
         createdAt: new Date().toISOString(),
         resolvedAt: null,
       };
+      progress.saveReaderMark(mark);
+      const store = readStore();
       store[locator.studyId] = [...(store[locator.studyId] ?? []), mark];
       writeStore(store);
       return mark;
@@ -89,6 +101,7 @@ export function createOnlineReaderPort(options: {
         index === at ? { ...current, resolvedAt: new Date().toISOString() } : item,
       );
       writeStore(store);
+      progress.resolveReaderMark(studyId, markId);
     },
 
     async deleteMark(studyId, markId) {
@@ -97,6 +110,7 @@ export function createOnlineReaderPort(options: {
       if (!marks.some((item) => item.markId === markId)) throw new Error("No such mark");
       store[studyId] = marks.filter((item) => item.markId !== markId);
       writeStore(store);
+      progress.deleteReaderMark(studyId, markId);
     },
 
     async stageWord(senseId, stage) {
@@ -104,7 +118,8 @@ export function createOnlineReaderPort(options: {
       return { senseId, stage };
     },
 
-    async completeLesson(locator) {
+    async completeLesson(locator, input) {
+      progress.confirmLessonRead(lessonRefKey(locator), input.contentRevision);
       onComplete(locator);
     },
 

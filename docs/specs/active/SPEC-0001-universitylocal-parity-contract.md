@@ -48,8 +48,8 @@ halves of one pipeline.
 | Who uses it | One person, locally | Paying learners, on the web |
 | Where teaching intelligence comes from | The AI coding host reading a real repository | Published course packages plus metered online models |
 | What it produces | Course content | Learner outcomes and revenue |
-| Content storage | Local files, the registered clones, SQLite | Imported packages |
-| Identity and learner state | SwimmerBackend | SwimmerBackend |
+| Content storage | Local files and the registered clones | Imported packages |
+| Identity and learner state | Same SwimmerBackend account/document; local cache/outbox when disconnected | Same SwimmerBackend account/document; local cache/outbox when disconnected |
 
 Once that is fixed, "the courses must be identical" stops being a synchronisation
 problem and becomes a supply problem: there is exactly one producer.
@@ -58,7 +58,9 @@ Course storage is split and has to be: `apps/local` reads the thing being
 written — prose, four registered private repositories, snapshots — and
 `apps/online` reads what was published. That asymmetry **is** the
 single-producer pipeline. Identity and learner state are not split: one
-account, one progress record, one review schedule (ADR-0001).
+account, one cloud learner document, one review schedule (ADR-0001). A local
+  SQLite/browser copy may accelerate or queue learner work, but it is never a second
+cross-device source of truth.
 
 ## Layer 1 — Course content
 
@@ -155,7 +157,8 @@ Those differ by design, and forcing them into the kit would make the kit a
 second product.
 
 Accounts, entitlement and learner state **are** the kit's: one `ProgressPort`,
-one implementation over SwimmerBackend, one local cache (ADR-0001). A thing
+one implementation over SwimmerBackend, and one cache/outbox per shell
+(ADR-0001). A thing
 both shells do identically is the definition of what this kit is for.
 
 "The shared package" here means this parity kit — `packages/core` and
@@ -244,9 +247,10 @@ by a command, not by reading code:
 These are recorded as open rather than decided, because deciding them now would
 be guessing:
 
-- Which side owns the "course catalogue" concept — the shelf a learner browses —
-  given that UniversityLocal's studies are organised around source repositories
-  and a storefront is not.
+- The learner-facing "course catalogue" is shared by both shells through
+  `packages/ui/src/catalog/CatalogSurface.tsx`; the remaining question is only
+  how much authoring-source detail the local landing shelf should expose beside
+  that route.
 - Whether course freshness (`currency: follow-ref`, and UniversityLocal's
   freshness records against source commits) is surfaced to learners at all, or
   is purely an authoring signal.

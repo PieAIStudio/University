@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@pieai/swimmer-ui-kit": "1.7.0",
+    "@pieai/university-backend": "workspace:*",
     "@pieai/university-core": "workspace:*",
     "@pieai/university-ui": "workspace:*",
     "@pieai/university-world": "workspace:*",

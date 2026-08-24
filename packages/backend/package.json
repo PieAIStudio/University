@@ -1,0 +1,32 @@
+{
+  "name": "@pieai/university-backend",
+  "version": "0.0.0",
+  "private": true,
+  "description": "University's shared SwimmerBackend browser adapter.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./browser.js": "./src/browser.ts",
+    "./session.js": "./src/session.ts"
+  },
+  "scripts": {
+    "build": "tsc -b --pretty false",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "oxlint --deny-warnings src",
+    "format": "oxfmt --write package.json tsconfig.json src",
+    "format:check": "oxfmt --check package.json tsconfig.json src",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@pieai/swimmer-backend-client": "0.4.0",
+    "@pieai/university-core": "workspace:*",
+    "@supabase/supabase-js": "2.110.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.2",
+    "oxfmt": "0.58.0",
+    "oxlint": "1.73.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}

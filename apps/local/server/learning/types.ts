@@ -217,6 +217,18 @@ export interface RecordExerciseAttemptInput {
   readonly occurredAt?: Date;
 }
 
+/** A raw exercise event used only by the one-time browser migration. */
+export interface StoredExerciseAttempt {
+  readonly attemptId: string;
+  readonly commandId: string;
+  readonly exerciseKey: ExerciseContentKey;
+  readonly contentRevision: number;
+  readonly score: number;
+  readonly maxScore: number;
+  readonly response: unknown;
+  readonly occurredAt: Date;
+}
+
 /** Latest host (AI) grade written back for an exercise at one content revision. */
 export interface StoredHostExerciseGrade {
   readonly passed: boolean;
@@ -304,14 +316,17 @@ export interface LearningStore {
   readonly schedulerConfigHash: string;
   ensureCard(cardKey: ReviewContentKey, contentRevision: number, now?: Date): StoredCardState;
   getCard(cardKey: ReviewContentKey): StoredCardState | null;
+  listCards(limit?: number): readonly StoredCardState[];
   listDueCards(asOf?: Date, limit?: number): readonly StoredCardState[];
   reviewCard(input: ReviewCardInput): ReviewReceipt;
   rebuildCardStateFromReviewEvents(): CardProjectionReplayResult;
   getLessonProgress(lessonKey: LessonContentKey): StoredLessonProgress | null;
+  listLessonProgress(limit?: number): readonly StoredLessonProgress[];
   hasLessonCompletion(lessonKey: LessonContentKey, contentRevision: number): boolean;
   recordLessonCompletion(input: RecordLessonCompletionInput): LessonCompletionReceipt;
   recordLessonProgress(input: RecordLessonProgressInput): string;
   recordExerciseAttempt(input: RecordExerciseAttemptInput): string;
+  listExerciseAttempts(limit?: number): readonly StoredExerciseAttempt[];
   countExerciseAttempts(exerciseKey: ExerciseContentKey, contentRevision: number): number;
   countLearnerSubmissions(exerciseKey: ExerciseContentKey, contentRevision: number): number;
   getLatestLearnerSubmission(

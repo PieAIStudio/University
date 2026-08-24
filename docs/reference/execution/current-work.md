@@ -73,12 +73,14 @@ Fixing either means editing content, which is authoring work.
 
 - Courses are authored only in `apps/local`. One producer, always. Publishing
   is a separate, gated act (ADR-0002).
-- Both shells sign in to SwimmerBackend and share account, progress, review,
-  favourites, settings. `GradingPort` is the only permitted divergence:
-  clipboard and AI coding host on one side, metered SwimmerAIKit on the other
-  (ADR-0001).
-- The disk stays the source of truth for `apps/local/studies/` — registered
-  private repositories and prose being written.
+- Both shells sign in to SwimmerBackend and share one cloud learner document:
+  account, progress, review, answers, marks, vocabulary, favourites, practice
+  history and settings. Browser/SQLite state is only cache/outbox. `GradingPort`
+  is the only permitted divergence: local clipboard/AI host on one side,
+  metered SwimmerAIKit on the other (ADR-0001).
+- The disk stays the source of truth only for `apps/local/studies/` — registered
+  private repositories and prose being written. It is not the learner-data
+  source of truth.
 - Readable text is DOM, never geometry. Web3D baseline rule 7.
 - 3D owns the map and the rituals. Reading, answering, reviewing, account and
   payment are 2D DOM through SwimmerUIKit.
@@ -128,8 +130,10 @@ Done, and verified in a browser rather than by a passing suite:
 - **`packages/world`.** SPEC-0003 step 1. The scene lives there; delivery
   imports it.
 - **Authoring overlay.** SPEC-0003 step 2. The local shell renders the same
-  scene plus its overlay. The 2D catalog is still on the landing (no entry
-  buttons) until every row in the SPEC table is visible in the new surface.
+  scene plus its authoring overlay. The standalone keyboard-complete 2D
+  `CatalogSurface` is now shared by both shells; SPEC-0003 step 3 (retiring
+  the authoring shelf from the landing) remains open because that is a product
+  placement decision, not a reason to keep two catalog implementations.
 - **One counter row.** Both shells call `universityCounters`; neither keeps its
   own idea of what belongs in it.
 - **One remaining-count sentence.** The rail's `TodayCard` and the mobile
@@ -138,10 +142,11 @@ Done, and verified in a browser rather than by a passing suite:
   that lived only in `apps/local` now live next to the component.
 - **`courseShapeOf` in core.** The 2D catalog no longer imports "world" for a
   pure fold of lesson ids.
-- **IdentityPort and ProgressPort.** Sign-in is optional. Missing env is
-  silent. Progress stays on the machine; merge is tested against a replaceable
-  remote. University is not a SwimmerBackend consumer yet, so the real table
-  is not wired.
+- **IdentityPort and ProgressPort.** Sign-in is optional and missing env is
+  silent. Both shells bind the same cloud learner document when configured;
+  browser/SQLite state is only cache/outbox. The adapter is wired and tested
+  against a replaceable remote, but the SwimmerBackend owner still has to
+  provision the real `university.progress` table and RLS.
 - **`pnpm start`** opens both shells and says which is which; `--lan` puts the
   delivery shell on this machine's network address so a real phone can reach
   the layouts it was drawn for.
@@ -169,17 +174,21 @@ Next — **the order is set by
 first item is ReaderPort, because until the delivery shell stops carrying its
 own lesson reader every new feature has to be written twice.
 
-1. **Register University in SwimmerBackend** — *needs the owner.* An app id, a
-   `university` schema that is neither `core` nor `public`, one progress row
-   per user, RLS scoped to `auth.uid()`, and a real sign-in from a real
-   address. Everything on this side is written and tested against a fake, so
-   this is the only step nobody here can take.
+1. **Provision the University learner row in SwimmerBackend** — *needs the
+   owner.* Register the app, create a `university` schema that is neither
+   `core` nor `public`, add one `progress` row per user with `document jsonb`
+   and a guarded revision, scope RLS to `auth.uid()`, and verify a real sign-in
+   from a real address. The browser adapter and fake-remote tests are ready;
+   this external migration and staging rehearsal are the remaining authority
+   boundary.
 2. **The 19 seconds after the canvas mounts.** Of the 28.4s to first frame on
    throttled 4G, roughly 19 are `loadGraph()` fetching 52 course JSON files and
    the kit's GLBs. The JavaScript half is solved; this is data, and it is now
    the whole wait.
-3. **SPEC-0003 step 3.** Retire the authoring 2D catalog only after every row
-   in the overlay table is visible on the world landing without scrolling to it.
+3. **SPEC-0003 step 3.** Decide whether to retire the authoring shelf from the
+   world landing after every row in the overlay table is visible there. The
+   separate course catalog is already shared; this remaining item is only
+   about landing placement and authoring context.
 4. **The light theme cannot work yet.** 270 raw colour literals are invisible
    to the contrast checker, which only reads token pairs. Until they are
    tokens, no amount of contrast fixing makes that theme usable.

@@ -1,6 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toggleFavourite } from "@pieai/university-core";
-import { createLocalFavouritesStore } from "@pieai/university-ui";
+import { createProgressFavouritesStore } from "@pieai/university-ui";
+import { progressPort } from "../progress/store";
 
 import { LEXICON } from "../lesson/language";
 
@@ -9,15 +10,15 @@ const LEXICON_SENSE_IDS = new Set(LEXICON.map((entry) => entry.senseId));
 /**
  * One store for the whole session.
  *
- * Favourites are a shortlist a learner builds by hand, so they must survive a
- * reload; they live in localStorage today and behind an interface, which is
- * what makes the account-backed version a different adapter rather than a
- * rewrite of everything that reads them.
+ * Favourites are account data. The browser document remains the offline queue;
+ * binding the same ProgressPort to the University cloud row makes this hook
+ * behave identically in a second browser or shell.
  */
-const favourites = createLocalFavouritesStore();
+const favourites = createProgressFavouritesStore(progressPort);
 
 export function useFavourites() {
   const [state, setState] = useState(() => favourites.read());
+  useEffect(() => progressPort.subscribe(() => setState(favourites.read())), []);
   const toggle = useCallback((senseId: string) => {
     setState((current) => {
       // `now` is a parameter rather than something the model reads off the

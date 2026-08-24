@@ -14,6 +14,53 @@
   color: var(--game-ui-text, #e9edf5);
 }
 
+/* Shared route links used by the library and course catalogue surfaces. */
+button.linkish,
+a.linkish {
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  border-radius: var(--game-ui-radius-control, 10px);
+  background: none;
+  color: var(--game-ui-accent, #5ec8c0);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.library-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 12px 0 18px;
+  border-bottom: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+}
+
+.library-tabs__tab {
+  padding: 8px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font: inherit;
+  cursor: pointer;
+}
+
+.library-tabs__tab:hover,
+.library-tabs__tab.is-current {
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.library-tabs__tab.is-current {
+  border-bottom-color: var(--game-ui-accent, #ffd479);
+}
+
+.library-tabs__tab:focus-visible {
+  outline: 2px solid var(--game-ui-accent, #ffd479);
+  outline-offset: -2px;
+}
+
 .shell-empty {
   max-width: 32rem;
   margin: 2rem auto;

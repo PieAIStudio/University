@@ -56,11 +56,12 @@ path does not create a usable learning system.
    exercises and cards live with that lesson. Learner state remains separate in
    `learner/learning.sqlite`.
 7. The first UI is organized around Today and Studies. Rich graph visualization,
-   extra question types, analytics, exports, and cloud sync wait for evidence from
-   three real learning sessions.
-8. The local database contains only proven local learning state. UniversityLocal
-   never adds a SwimmerBackend or other cloud-sync outbox; ADR-0003 makes this a
-   permanent product boundary.
+   extra question types, analytics, and exports wait for evidence from three real
+   learning sessions; shared learner sync is supplied by the repository-level
+   account contract.
+8. The local database contains only a cache, migration source, or offline outbox
+   for learner state. Cloud is the cross-device source of truth; authoring content
+   remains on the local shelf.
 
 ## Consequences
 

@@ -76,6 +76,7 @@ import {
   type ReviewReceipt,
   type StoredCardState,
   type StoredHostExerciseGrade,
+  type StoredExerciseAttempt,
   type StoredLearnerSubmission,
   type WrittenAttempt,
   type StoredLessonProgress,
@@ -127,6 +128,7 @@ interface ReviewEventRow {
 
 interface ExerciseCommandRow {
   attempt_id: string;
+  command_id?: string;
   exercise_id: string;
   content_revision: number;
   score: number;
@@ -476,6 +478,14 @@ export class SqliteLearningStore implements LearningStore {
     return this.#getCard(cardKey);
   }
 
+  listCards(limit = 10_000): readonly StoredCardState[] {
+    const capped = Math.max(1, Math.min(Math.trunc(limit), 10_000));
+    const rows = this.#database
+      .prepare("SELECT * FROM card_state ORDER BY updated_at DESC, card_id LIMIT ?")
+      .all(capped) as unknown as CardStateRow[];
+    return rows.map(rowToState);
+  }
+
   listDueCards(asOf = new Date(), limit = 100): readonly StoredCardState[] {
     const asOfMs = timestamp(asOf, "Due-card cutoff");
     if (!Number.isInteger(limit) || limit < 1 || limit > 1_000) {
@@ -750,6 +760,30 @@ export class SqliteLearningStore implements LearningStore {
       progress: row.progress,
       updatedAt: new Date(row.updated_at),
     };
+  }
+
+  listLessonProgress(limit = 10_000): readonly StoredLessonProgress[] {
+    const capped = Math.max(1, Math.min(Math.trunc(limit), 10_000));
+    const rows = this.#database
+      .prepare(
+        `SELECT lesson_id, content_revision, status, progress, updated_at
+         FROM lesson_progress ORDER BY updated_at DESC, lesson_id LIMIT ?`,
+      )
+      .all(capped) as unknown as Array<LessonProgressRow & { readonly lesson_id: string }>;
+    return rows.map((row) => {
+      const lessonKey = parseLessonContentKey(row.lesson_id);
+      const key =
+        `${lessonKey.courseId}/${lessonKey.unitId}/${lessonKey.lessonId}` as LessonContentKey;
+      validateRevision(row.content_revision);
+      validateLessonProgress(row.status, row.progress);
+      return {
+        lessonKey: key,
+        contentRevision: row.content_revision,
+        status: row.status as StoredLessonProgress["status"],
+        progress: row.progress,
+        updatedAt: new Date(row.updated_at),
+      };
+    });
   }
 
   hasLessonCompletion(lessonKey: LessonContentKey, contentRevision: number): boolean {
@@ -1168,6 +1202,27 @@ export class SqliteLearningStore implements LearningStore {
         );
       return attemptId;
     });
+  }
+
+  listExerciseAttempts(limit = 10_000): readonly StoredExerciseAttempt[] {
+    const capped = Math.max(1, Math.min(Math.trunc(limit), 10_000));
+    const rows = this.#database
+      .prepare(
+        `SELECT attempt_id, command_id, exercise_id, content_revision,
+                score, max_score, response_json, occurred_at
+         FROM exercise_attempt ORDER BY occurred_at ASC, rowid ASC LIMIT ?`,
+      )
+      .all(capped) as unknown as ExerciseCommandRow[];
+    return rows.map((row) => ({
+      attemptId: row.attempt_id,
+      commandId: row.command_id ?? row.attempt_id,
+      exerciseKey: exerciseContentKey(parseExerciseContentKey(row.exercise_id)),
+      contentRevision: row.content_revision,
+      score: row.score,
+      maxScore: row.max_score,
+      response: row.response_json === null ? null : JSON.parse(row.response_json),
+      occurredAt: new Date(row.occurred_at),
+    }));
   }
 
   recordRetrievalAttempt(input: RecordRetrievalAttemptInput): StoredRetrievalAttempt {

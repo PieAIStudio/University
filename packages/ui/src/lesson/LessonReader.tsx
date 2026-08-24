@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { GameSegmentedControl, GameToggle } from "@pieai/swimmer-ui-kit";
-import type { GradingPort, ReaderPort } from "@pieai/university-core";
+import type { GradingPort, ProgressPort, ReaderPort } from "@pieai/university-core";
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
@@ -17,6 +17,7 @@ import { readForeignLanguageMode, writeForeignLanguageMode } from "../language/r
 import type { LessonLinkTarget } from "../markdown/remark-lesson-links.js";
 import { ExerciseBlock } from "../review/ExerciseBlock.js";
 import { ReviewCard } from "../review/ReviewCard.js";
+import type { ReviewCardPort } from "../review/ports.js";
 import {
   isCurrentLessonCompleted,
   readingSections,
@@ -64,6 +65,8 @@ export function LessonReader({
   view,
   reader,
   grading,
+  progress,
+  review,
   requestToken,
   onLearningChanged,
   neighbours,
@@ -77,6 +80,8 @@ export function LessonReader({
   readonly view: LessonView;
   readonly reader: ReaderPort;
   readonly grading: GradingPort;
+  readonly progress?: ProgressPort;
+  readonly review?: ReviewCardPort;
   readonly requestToken: string;
   readonly onLearningChanged: () => Promise<void>;
   /** Absent until the study tree has loaded; the lesson reads fine without it. */
@@ -94,11 +99,18 @@ export function LessonReader({
     view.lesson.progress?.readConfirmed &&
     view.lesson.progress.contentRevision === view.lesson.contentRevision,
   );
-  const [englishMode, setEnglishMode] = useState(readForeignLanguageMode);
-  const [detailMode, setDetailMode] = useState<DetailMode>(readDetailMode);
+  const accountPreferences = progress?.accountData().preferences;
+  const [englishMode, setEnglishMode] = useState(
+    () => accountPreferences?.foreignLanguageMode ?? readForeignLanguageMode(),
+  );
+  const [detailMode, setDetailMode] = useState<DetailMode>(
+    () => accountPreferences?.detailMode ?? readDetailMode(),
+  );
   const [vocabularyStages, setVocabularyStages] = useState<ReadonlyMap<string, string>>(new Map());
   const [vocabularyError, setVocabularyError] = useState<string | null>(null);
-  const [foreignSettings, setForeignSettings] = useState(readForeignSettings);
+  const [foreignSettings, setForeignSettings] = useState(
+    () => accountPreferences?.foreignSettings ?? readForeignSettings(),
+  );
   const [marks, setMarks] = useState<readonly ReaderMark[]>([]);
   const [markError, setMarkError] = useState<string | null>(null);
   const [markBusy, setMarkBusy] = useState(false);
@@ -114,6 +126,16 @@ export function LessonReader({
   /** Margin notes are placed relative to this column's top edge. */
   const marginRef = useRef<HTMLElement>(null);
   const annotated = view.lesson.language?.status === "annotated";
+
+  useEffect(() => {
+    if (!progress) return;
+    return progress.subscribe(() => {
+      const next = progress.accountData().preferences;
+      setEnglishMode(next.foreignLanguageMode);
+      setDetailMode(next.detailMode);
+      setForeignSettings(next.foreignSettings);
+    });
+  }, [progress]);
 
   const senseIds = view.lesson.language?.lexicon?.map((entry) => entry.senseId) ?? [];
   const senseKey = senseIds.join(",");
@@ -349,16 +371,34 @@ export function LessonReader({
   function setEnglishModePersisted(enabled: boolean) {
     setEnglishMode(enabled);
     writeForeignLanguageMode(enabled);
+    if (progress) {
+      progress.setAccountPreferences({
+        ...progress.accountData().preferences,
+        foreignLanguageMode: enabled,
+      });
+    }
   }
 
   function setDetailModePersisted(mode: DetailMode) {
     setDetailMode(mode);
     writeDetailMode(mode);
+    if (progress) {
+      progress.setAccountPreferences({
+        ...progress.accountData().preferences,
+        detailMode: mode,
+      });
+    }
   }
 
   function setForeignSettingsPersisted(next: ForeignSettings) {
     setForeignSettings(next);
     writeForeignSettings(next);
+    if (progress) {
+      progress.setAccountPreferences({
+        ...progress.accountData().preferences,
+        foreignSettings: next,
+      });
+    }
   }
 
   const lexicon = view.lesson.language?.lexicon ?? [];
@@ -546,6 +586,7 @@ export function LessonReader({
                     contentRevision: card.contentRevision,
                   }}
                   requestToken={requestToken}
+                  review={review}
                   onReviewed={onLearningChanged}
                 />
               ))}

@@ -2,21 +2,19 @@ import {
   EMPTY_PRACTICE_RECENT,
   parsePracticeRecent,
   type PracticeRecentState,
+  type ProgressPort,
 } from "@pieai/university-core";
 
 /**
- * Where a sitting's recent question ids live, for now.
+ * Legacy browser adapter for a sitting's recent question ids.
  *
  * The ring itself is a fact about this person — which term quizzes they just
  * saw — not a way of rendering a question, so it belongs on the account. The
- * account store does not exist yet. This adapter is the stand-in: the same
- * document the model already speaks, the same `read`/`write` an account client
- * will implement, so swapping storage later does not rewrite the stream.
+ * shared `createProgressPracticeRecentStore` below is canonical; this adapter
+ * only migrates old browser profiles and keeps isolated tests useful.
  *
- * The bytes sit in the browser until that swap. A blocked or full store still
- * gets the next question; it just may repeat one. That is the same contract
- * as the favourites star, for the same reason: a preference control that
- * throws takes the page down with it.
+ * A blocked or full browser store still gets the next question; the cloud
+ * adapter queues the ring through ProgressPort instead.
  *
  * The key is product-level, not `university-local`, because both shells will
  * read this list and the account adapter will keep the same document
@@ -34,6 +32,7 @@ export const PRACTICE_RECENT_STORAGE_KEY = "university.practice.recent";
 export interface PracticeRecentStore {
   read(): PracticeRecentState;
   write(state: PracticeRecentState): void;
+  subscribe?(listener: () => void): () => void;
 }
 
 export function readLocalPracticeRecent(): PracticeRecentState {
@@ -58,5 +57,14 @@ export function createLocalPracticeRecentStore(): PracticeRecentStore {
   return {
     read: readLocalPracticeRecent,
     write: writeLocalPracticeRecent,
+  };
+}
+
+/** The account-backed adapter shared by both browser shells. */
+export function createProgressPracticeRecentStore(progress: ProgressPort): PracticeRecentStore {
+  return {
+    read: () => progress.accountData().practiceRecent,
+    write: (state) => progress.setPracticeRecent(parsePracticeRecent(state)),
+    subscribe: progress.subscribe,
   };
 }

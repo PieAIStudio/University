@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GameButton, GameEmptyState, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
   advancePracticeSession,
@@ -83,6 +83,17 @@ export function PracticeStream<Head = unknown>({
   );
   const [started, setStarted] = useState(false);
   const seenBank = useRef(bankKey);
+  const seenRecent = useRef(store.read().ids.join("\0"));
+  useEffect(() => {
+    if (!store.subscribe) return;
+    return store.subscribe(() => {
+      const next = store.read().ids.join("\0");
+      if (next === seenRecent.current) return;
+      seenRecent.current = next;
+      setSession(startPracticeSession(indexed.ids, store.read()));
+      setStarted(false);
+    });
+  }, [bankKey, store]);
   let sitting = session;
   let intro = started;
   if (seenBank.current !== bankKey) {
@@ -101,6 +112,7 @@ export function PracticeStream<Head = unknown>({
 
   function handleNext() {
     const next = advancePracticeSession(sitting, indexed.ids, store.read());
+    seenRecent.current = next.recent.ids.join("\0");
     store.write(next.recent);
     setSession(next.session);
   }

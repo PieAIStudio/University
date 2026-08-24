@@ -20,6 +20,7 @@ export {
 } from "./Maps.js";
 export type { LessonPlacement, Marker } from "./Maps.js";
 export { Stage } from "./Stage.js";
+export { WorldMapCanvas, type WorldMap } from "./WorldMapCanvas.js";
 export { courseSprites } from "./path-overlay.js";
 export { courseShapeOf, depthsFromPrerequisites, isFocusDimmed, studySub } from "./course.js";
 export type { Course, CourseNode } from "./course.js";

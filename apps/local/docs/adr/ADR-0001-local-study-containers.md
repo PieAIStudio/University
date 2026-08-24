@@ -55,9 +55,9 @@ UA 2.9.4 把原生数据目录解析为被分析根目录下的 .ua 或旧目录
 8. 卡片内容与 FSRS 状态分离。review event 是追加式事实，card state 是当前
    可审计投影。
 9. 采用成熟的 ts-fsrs，不复用 PBMLS 的自研近似 FSRS 算法。
-10. UniversityLocal 永久只做本地数据，不预建 sync outbox，也不通过
-    SwimmerBackend 或其他后端扩展。未来商业化 `University` 必须在独立仓库
-    中建立自己的同步和隐私合同；本决定的最终边界由 ADR-0003 澄清。
+10. 课程原稿、源码快照、UA 和笔记仍只在本地 study shelf；learner/account
+    数据使用仓库级 ADR-0001 定义的共享云端文档、缓存和 outbox。AI 宿主/剪贴板
+    是本地端唯一允许的运行时差异。
 
 ## Consequences
 
@@ -68,8 +68,7 @@ UA 2.9.4 把原生数据目录解析为被分析根目录下的 .ua 或旧目录
 - 同一个 commit 可以保留多次 UA 分析，不会静默覆盖课程证据。
 - 正式课程不会被 UA Tour 的能力边界限制。
 - 动态学习历史拥有事务和重放能力，AI 宿主也能读取导出的可解释证据。
-- UniversityLocal 可以继续保持个人本地工具，未来 University 不会污染其
-  架构边界。
+- 作者书架与 learner account 仍有清晰边界：前者不上传，后者可跨设备同步。
 
 ### Negative
 

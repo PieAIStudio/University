@@ -22,15 +22,27 @@ import {
   type RatingName,
 } from "../scheduling/fsrs.js";
 import type {
+  ExerciseAttemptRecord,
   LessonProgress,
   Persistence,
   ProgressPort,
   ProgressRemoteStore,
   ProgressSyncState,
   WordProgress,
+  CardProgress,
+  RetrievalAttemptRecord,
 } from "../ports/progress.js";
+import type { ReaderMark } from "../domain/reader-marks.js";
+import type { LessonRef } from "./contract.js";
 import { cloneProgress, emptyProgress, parseProgress } from "./document.js";
 import { mergeProgress } from "./merge.js";
+import {
+  cloneAccountData,
+  type AccountData,
+  type AccountPreferences,
+} from "../ports/account-data.js";
+import type { FavouritesState } from "../favourites/model.js";
+import type { PracticeRecentState } from "../practice/recent.js";
 
 const DAY = 86_400_000;
 
@@ -141,11 +153,23 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     const current = lessonState(key);
     const next = Math.max(current.progress, Math.min(1, progress));
     state.lessons[key] = {
+      ...current,
       progress: next,
       completedAt: next >= 1 ? (current.completedAt ?? Date.now()) : current.completedAt,
       attempts: current.attempts + 1,
     };
     if (next >= 1) touchStreak();
+    commit();
+  }
+
+  function confirmLessonRead(key: string, contentRevision: number) {
+    if (!Number.isInteger(contentRevision) || contentRevision <= 0) return;
+    const current = lessonState(key);
+    state.lessons[key] = {
+      ...current,
+      readConfirmed: true,
+      readConfirmedRevision: contentRevision,
+    };
     commit();
   }
 
@@ -229,6 +253,40 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     commit();
   }
 
+  function gradeWord(senseId: string, rating: RatingName) {
+    const word = state.words[senseId];
+    if (!word || word.stage !== "learning") return;
+    const next = review(word.fsrs ? loadCard(word.fsrs) : newCard(), RATING[rating]);
+    state.words[senseId] = {
+      ...word,
+      dueAt: next.due.getTime(),
+      lapses: next.lapses,
+      fsrs: storeCard(next),
+    };
+    touchStreak();
+    commit();
+  }
+
+  function importCard(card: CardProgress): void {
+    const current = state.cards[card.cardKey];
+    if (current && !isImportedCardNewer(current, card)) return;
+    state.cards[card.cardKey] = {
+      ...card,
+      fsrs: { ...card.fsrs },
+    };
+    commit();
+  }
+
+  function importWord(word: WordProgress): void {
+    const current = state.words[word.senseId];
+    if (current && !isImportedWordNewer(current, word)) return;
+    state.words[word.senseId] = {
+      ...word,
+      ...(word.fsrs ? { fsrs: { ...word.fsrs } } : { fsrs: null }),
+    };
+    commit();
+  }
+
   /**
    * Record what the learner just said about a word.
    *
@@ -259,6 +317,129 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     commit();
   }
 
+  function readerMarks(studyId?: string): readonly ReaderMark[] {
+    return Object.values(state.readerMarks)
+      .filter((mark) => mark.deletedAt === null)
+      .filter((mark) => studyId === undefined || mark.lessonKey.startsWith(`${studyId}/`))
+      .map(({ deletedAt: _deletedAt, ...mark }) => mark);
+  }
+
+  function saveReaderMark(mark: ReaderMark): void {
+    const current = state.readerMarks[mark.markId];
+    // A late response from an older device must not resurrect a mark that was
+    // already resolved or deleted on this device. The cloud merge applies the
+    // same timestamp rule across machines.
+    if (current && eventAt(current) >= eventAt(mark)) return;
+    state.readerMarks[mark.markId] = { ...mark, deletedAt: null };
+    commit();
+  }
+
+  function resolveReaderMark(studyId: string, markId: string): void {
+    const current = state.readerMarks[markId];
+    if (!current || !current.lessonKey.startsWith(`${studyId}/`)) return;
+    state.readerMarks[markId] = { ...current, resolvedAt: new Date().toISOString() };
+    commit();
+  }
+
+  function deleteReaderMark(studyId: string, markId: string): void {
+    const current = state.readerMarks[markId];
+    if (!current || !current.lessonKey.startsWith(`${studyId}/`)) return;
+    state.readerMarks[markId] = { ...current, deletedAt: new Date().toISOString() };
+    commit();
+  }
+
+  function recordExerciseAttempt(record: ExerciseAttemptRecord): void {
+    const current = state.exerciseAttempts[record.commandId];
+    if (current && Date.parse(current.occurredAt) >= Date.parse(record.occurredAt)) return;
+    state.exerciseAttempts[record.commandId] = { ...record, locator: { ...record.locator } };
+    commit();
+  }
+
+  function exerciseAttempts(
+    locator: LessonRef,
+    exerciseId: string,
+    contentRevision: number,
+  ): readonly ExerciseAttemptRecord[] {
+    return Object.values(state.exerciseAttempts)
+      .filter(
+        (attempt) =>
+          attempt.exerciseId === exerciseId &&
+          attempt.contentRevision === contentRevision &&
+          attempt.locator.studyId === locator.studyId &&
+          attempt.locator.courseId === locator.courseId &&
+          attempt.locator.unitId === locator.unitId &&
+          attempt.locator.lessonId === locator.lessonId,
+      )
+      .sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt));
+  }
+
+  function latestExerciseAttempt(
+    locator: LessonRef,
+    exerciseId: string,
+    contentRevision: number,
+  ): ExerciseAttemptRecord | null {
+    return exerciseAttempts(locator, exerciseId, contentRevision)[0] ?? null;
+  }
+
+  function recordRetrievalAttempt(record: RetrievalAttemptRecord): void {
+    const current = state.retrievalAttempts[record.commandId];
+    if (current && Date.parse(current.revealedAt) >= Date.parse(record.revealedAt)) return;
+    state.retrievalAttempts[record.commandId] = { ...record };
+    commit();
+  }
+
+  function retrievalAttempts(cardKey: string): readonly RetrievalAttemptRecord[] {
+    return Object.values(state.retrievalAttempts)
+      .filter((attempt) => attempt.cardKey === cardKey)
+      .sort((a, b) => Date.parse(b.revealedAt) - Date.parse(a.revealedAt));
+  }
+
+  function accountData(): AccountData {
+    return cloneAccountData(state.account);
+  }
+
+  function setFavourites(next: FavouritesState): void {
+    const now = new Date().toISOString();
+    const previousById = new Map(
+      state.account.favourites.items.map((item) => [item.senseId, item]),
+    );
+    const nextById = new Map(next.items.map((item) => [item.senseId, item]));
+    const changes = { ...state.account.favouriteChanges };
+    for (const senseId of new Set([...previousById.keys(), ...nextById.keys()])) {
+      const before = previousById.get(senseId);
+      const after = nextById.get(senseId) ?? null;
+      if (JSON.stringify(before) === JSON.stringify(after)) continue;
+      changes[senseId] = { senseId, favourite: after, changedAt: now };
+    }
+    state.account = { ...state.account, favourites: next, favouriteChanges: changes };
+    commit();
+  }
+
+  function setPracticeRecent(next: PracticeRecentState): void {
+    state.account = { ...state.account, practiceRecent: next };
+    commit();
+  }
+
+  function setAccountPreferences(next: AccountPreferences): void {
+    const now = new Date().toISOString();
+    const current = state.account.preferences;
+    const updatedAt = { ...current.updatedAt };
+    for (const key of [
+      "foreignSettings",
+      "foreignLanguageMode",
+      "detailMode",
+      "soundEnabled",
+      "sharesPresence",
+    ] as const) {
+      if (JSON.stringify(current[key]) !== JSON.stringify(next[key])) updatedAt[key] = now;
+    }
+    state.account = {
+      ...state.account,
+      preferences: { ...next, version: 1, updatedAt },
+    };
+    commit();
+  }
+
   return {
     snapshot: () => state,
     subscribe(listener) {
@@ -269,11 +450,28 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     },
     lessonState,
     advanceLesson,
+    confirmLessonRead,
     dropCards,
     dueCards,
     dueTomorrow,
     gradeCard,
+    gradeWord,
+    importCard,
+    importWord,
     stageWord,
+    readerMarks,
+    saveReaderMark,
+    resolveReaderMark,
+    deleteReaderMark,
+    recordExerciseAttempt,
+    exerciseAttempts,
+    latestExerciseAttempt,
+    recordRetrievalAttempt,
+    retrievalAttempts,
+    accountData,
+    setFavourites,
+    setPracticeRecent,
+    setAccountPreferences,
     vocabularyStates() {
       return Object.values(state.words).map(
         (word): VocabularyState => ({
@@ -310,6 +508,41 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     flush,
     syncState: () => ({ dirty, status: syncStatus, userId }),
   };
+}
+
+function eventAt(mark: {
+  readonly createdAt: string;
+  readonly resolvedAt: string | null;
+  readonly deletedAt?: string | null;
+}): number {
+  return [mark.createdAt, mark.resolvedAt, mark.deletedAt]
+    .filter((value): value is string => typeof value === "string")
+    .reduce((latest, value) => {
+      const parsed = Date.parse(value);
+      return Number.isNaN(parsed) ? latest : Math.max(latest, parsed);
+    }, 0);
+}
+
+function isImportedCardNewer(current: CardProgress, incoming: CardProgress): boolean {
+  if (incoming.fsrs.reps !== current.fsrs.reps) return incoming.fsrs.reps > current.fsrs.reps;
+  const currentReview = current.fsrs.last_review ? Date.parse(current.fsrs.last_review) : 0;
+  const incomingReview = incoming.fsrs.last_review ? Date.parse(incoming.fsrs.last_review) : 0;
+  if (incomingReview !== currentReview) return incomingReview > currentReview;
+  return incoming.dueAt >= current.dueAt;
+}
+
+function isImportedWordNewer(current: WordProgress, incoming: WordProgress): boolean {
+  const rank: Record<WordProgress["stage"], number> = {
+    paused: 0,
+    familiar: 1,
+    learning: 2,
+  };
+  if (rank[incoming.stage] !== rank[current.stage])
+    return rank[incoming.stage] > rank[current.stage];
+  const incomingReps = incoming.fsrs?.reps ?? 0;
+  const currentReps = current.fsrs?.reps ?? 0;
+  if (incomingReps !== currentReps) return incomingReps > currentReps;
+  return (incoming.dueAt ?? 0) >= (current.dueAt ?? 0);
 }
 
 function safeRead(persistence: Persistence): string | null {

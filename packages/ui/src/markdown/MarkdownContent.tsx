@@ -222,11 +222,12 @@ function markdownText(children: ReactNode): string {
 }
 
 /**
- * UniversityLocal is a local-only product: nothing it renders should reach the
- * network on its own. Lesson and note Markdown is generated from a studied
- * repository, so its links and images are effectively third-party content.
+ * Authoring content must not make an unprompted third-party network request.
+ * The shell itself may sync learner data to SwimmerBackend, but lesson and
+ * note Markdown is generated from a studied repository, so its links and
+ * images are effectively third-party content.
  * An `![](https://…)` image fetches the moment a lesson opens — no click, no
- * consent — which quietly turns "资料仅在本机" into a page beacon.
+ * consent — which quietly turns a studied repository into a page beacon.
  *
  * Relative and in-page URLs stay as they are; anything that would leave the
  * machine is handled by the `a` and `img` components below.

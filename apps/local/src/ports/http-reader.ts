@@ -5,16 +5,24 @@
  * Behaviour is the contract. Changing a path, a header, or a body field here
  * is changing what 4317 has always answered, and that is a product change.
  */
-import type {
-  EvidenceSnippet,
-  LessonRef,
-  ReaderPort,
-  VocabularyState,
+import {
+  lessonRefKey,
+  type EvidenceSnippet,
+  type LessonRef,
+  type ProgressPort,
+  type ReaderPort,
+  type VocabularyState,
 } from "@pieai/university-core";
 import type { ReaderMark } from "@pieai/university-core/domain/reader-marks.js";
 import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
 
-export function createHttpReaderPort(options: { readonly requestToken: string }): ReaderPort {
+export function createHttpReaderPort(options: {
+  readonly requestToken: string;
+  /** Shared cloud document; absent only in isolated unit tests. */
+  readonly progress?: ProgressPort;
+  /** Called after the local server confirms a lesson is complete. */
+  readonly onLessonComplete?: (locator: LessonRef) => void;
+}): ReaderPort {
   const tokenHeaders = {
     "Content-Type": "application/json",
     "X-University-Local-Token": options.requestToken,
@@ -22,6 +30,14 @@ export function createHttpReaderPort(options: { readonly requestToken: string })
 
   return {
     async listVocabulary() {
+      if (options.progress) {
+        return {
+          states: options.progress.vocabularyStates().map((state) => ({
+            senseId: state.senseId,
+            stage: state.stage,
+          })),
+        };
+      }
       const body = await readJson<{
         readonly states: readonly Pick<VocabularyState, "senseId" | "stage">[];
       }>(await fetch("/api/vocabulary"));
@@ -29,8 +45,9 @@ export function createHttpReaderPort(options: { readonly requestToken: string })
     },
 
     async recordPresented(input) {
-      // The server counts one appearance per word per lesson per day however
-      // many times this fires.
+      // Appearance analytics are a local authoring cache. The learner's
+      // stage/schedule is the cloud document; a telemetry write must not make
+      // a lesson fail when the local database is unavailable.
       await fetch("/api/vocabulary/presented", {
         method: "POST",
         headers: tokenHeaders,
@@ -39,14 +56,15 @@ export function createHttpReaderPort(options: { readonly requestToken: string })
           lessonId: input.lessonId,
           senseIds: input.senseIds,
         }),
-      });
+      }).catch(() => undefined);
     },
 
     async listMarks(studyId) {
       const body = await readJson<{ readonly marks: readonly ReaderMark[] }>(
         await fetch(`/api/studies/${encodeURIComponent(studyId)}/marks`),
       );
-      return body.marks;
+      for (const mark of body.marks) options.progress?.saveReaderMark(mark);
+      return options.progress?.readerMarks(studyId) ?? body.marks;
     },
 
     async writeMark(locator: LessonRef, draft) {
@@ -64,32 +82,40 @@ export function createHttpReaderPort(options: { readonly requestToken: string })
           }),
         }),
       );
+      options.progress?.saveReaderMark(body.mark);
       return body.mark;
     },
 
     async resolveMark(studyId, markId) {
       await mutateMark(studyId, markId, "POST", tokenHeaders);
+      options.progress?.resolveReaderMark(studyId, markId);
     },
 
     async deleteMark(studyId, markId) {
       await mutateMark(studyId, markId, "DELETE", tokenHeaders);
+      options.progress?.deleteReaderMark(studyId, markId);
     },
 
     async stageWord(senseId, stage) {
-      const body = await readJson<{
-        readonly state: { readonly senseId: string; readonly stage: string };
-      }>(
-        await fetch(`/api/vocabulary/${encodeURIComponent(senseId)}/stage`, {
-          method: "POST",
-          headers: tokenHeaders,
-          body: JSON.stringify({ stage }),
-        }),
-      );
-      return { senseId: body.state.senseId, stage: body.state.stage };
+      options.progress?.stageWord(senseId, stage);
+      try {
+        const body = await readJson<{
+          readonly state: { readonly senseId: string; readonly stage: string };
+        }>(
+          await fetch(`/api/vocabulary/${encodeURIComponent(senseId)}/stage`, {
+            method: "POST",
+            headers: tokenHeaders,
+            body: JSON.stringify({ stage }),
+          }),
+        );
+        return { senseId: body.state.senseId, stage: body.state.stage };
+      } catch {
+        return { senseId, stage };
+      }
     },
 
     async completeLesson(locator, input) {
-      await readJson(
+      const body = await readJson<{ readonly lessonComplete?: boolean }>(
         await fetch(`${lessonPath(locator)}/complete`, {
           method: "POST",
           headers: tokenHeaders,
@@ -99,6 +125,8 @@ export function createHttpReaderPort(options: { readonly requestToken: string })
           }),
         }),
       );
+      options.progress?.confirmLessonRead(lessonRefKey(locator), input.contentRevision);
+      if (body.lessonComplete) options.onLessonComplete?.(locator);
     },
 
     async loadEvidenceSnippet(locator, index, view) {

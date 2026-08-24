@@ -21,7 +21,7 @@ tags:
 | 目录 | 它是什么 | 会变吗 |
 | --- | --- | --- |
 | `PieAI/UniversityLocal` | **产品本身**。应用的源码，我们干活的地方。 | 一直在变 |
-| `PieAI/UniversityLocal/studies/` | **成绩册**。课程、卡片、复习进度、词汇记忆。不进 git。 | 一直在变 |
+| `PieAI/UniversityLocal/studies/` | **作者书架和本地缓存**。课程、源码、UA、笔记，以及 learner 数据的缓存/outbox。不进 git。云端账户文档是跨设备成绩册。 | 一直在变 |
 | `PieAI/.ul-airlock` | **产品代码的冻结副本**，钉在某个确切提交上。 | 只有 `airlock promote` 时才变 |
 | `PieAI/UniversityLocal-SpecialStudies` | **已删除的第一次尝试**（见下） | 不存在 |
 

@@ -85,17 +85,20 @@ upstream repository first.
   centrally managed governance or frontend skills may remain PGS-managed
   links, but project-specific teaching behavior must not be scattered across
   source projects or user-global folders.
-- Keep generated lessons, exercises, review state, and imported project maps in
+- Keep generated lessons, exercises, and imported project maps in
   UniversityLocal-owned storage under root-level `studies/` by default. Storage
-  and source roots must be
-  configurable; do not hard-code this checkout path into portable data.
-- The AI host performs research and teaching. Do not add direct model-provider
-  calls merely to imitate the host; any product runtime AI call must go through
-  SwimmerAIKit and requires a concrete need.
-- UniversityLocal is permanently local-only and must not depend on, integrate with,
-  upload to, or prepare a sync lane for SwimmerBackend or any other application
-  backend. A future commercial `University` is a separate repository and product;
-  it may adopt SwimmerBackend under its own approved contract.
+  and source roots must be configurable; do not hard-code this checkout path
+  into portable data. Learner/account data is different: the shared cloud
+  document is canonical, while SQLite/browser storage is only an offline cache,
+  migration source, or outbox.
+- The AI host performs research and teaching. The local shell's AI always comes
+  from that host/clipboard path; it must not require a product API key. Do not
+  add direct model-provider calls merely to imitate the host. Online model calls
+  go through SwimmerAIKit and the shared grading boundary.
+- UniversityLocal is not a permanently-offline product. It uses the same
+  SwimmerBackend account and learner-data sync lane as the online shell. Its
+  only permitted runtime difference is the source of AI grading; course source
+  and authoring work remain local by design.
 - Canonical course recovery packages under `course-proposals/recovery/` are this
   project's only outward content surface, and they are a **pull** surface. The
   consuming product reads them; UniversityLocal never gains an uploader, a sync

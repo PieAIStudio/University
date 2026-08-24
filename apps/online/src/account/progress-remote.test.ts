@@ -8,7 +8,8 @@ type QueryBuilder = {
   select(columns: string): QueryBuilder;
   eq(column: string, value: string): QueryBuilder;
   maybeSingle<T>(): Promise<{ data: T | null; error: Error | null }>;
-  upsert(values: unknown, options: unknown): Promise<{ error: Error | null }>;
+  update(values: unknown): QueryBuilder;
+  insert(values: unknown): Promise<{ error: Error | null }>;
 };
 
 function fakeClient(rows: unknown[]) {
@@ -26,8 +27,12 @@ function fakeClient(rows: unknown[]) {
       calls.push({ kind: "maybeSingle" });
       return Promise.resolve({ data: (rows.shift() ?? null) as never, error: null });
     },
-    upsert(values, options) {
-      calls.push({ kind: "upsert", values, options });
+    update(values) {
+      calls.push({ kind: "update", values });
+      return builder;
+    },
+    insert(values) {
+      calls.push({ kind: "insert", values });
       return Promise.resolve({ error: null });
     },
   };
@@ -64,15 +69,18 @@ describe("createSupabaseProgressRemoteStore", () => {
 
   it("increments the server revision before saving the merged document", async () => {
     const document = emptyProgress();
-    const { client, calls } = fakeClient([{ revision: "4" }]);
+    const { client, calls } = fakeClient([
+      { document: emptyProgress(), revision: "4" },
+      { revision: 5 },
+    ]);
     const remote = createSupabaseProgressRemoteStore(client);
 
     await remote.save("user-1", document);
 
-    expect(calls.at(-1)).toEqual({
-      kind: "upsert",
-      values: { user_id: "user-1", document, revision: 5 },
-      options: { onConflict: "user_id" },
+    expect(calls).toContainEqual({
+      kind: "update",
+      values: { document, revision: 5 },
     });
+    expect(calls).toContainEqual({ kind: "eq", column: "revision", value: 4 });
   });
 });

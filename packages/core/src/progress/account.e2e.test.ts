@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import type { LessonRef } from "./contract.js";
 import { createIdentityPort, createMemoryIdentityPort } from "../ports/identity.js";
+import type { ReaderMark } from "../domain/reader-marks.js";
+import type { HostExerciseGrade } from "../ports/grading.js";
 import { emptyProgress, lessonKey, parseProgress } from "./document.js";
 import { createMemoryPersistence, createMemoryRemoteStore } from "./memory.js";
 import { createProgressPort } from "./port.js";
@@ -35,7 +38,7 @@ function expectConsoleClean(spies: ReturnType<typeof spyConsole>) {
   expect(spies.debug).not.toHaveBeenCalled();
 }
 
-describe("account is optional, progress is local-first", () => {
+describe("one cloud progress document across devices", () => {
   it("1. no backend configured: a lesson still saves locally and the console stays quiet", async () => {
     const spies = spyConsole();
     const identity = createIdentityPort(null);
@@ -179,5 +182,89 @@ describe("account is optional, progress is local-first", () => {
     expect(port.syncState().userId).toBeNull();
     expect(port.syncState().status).toBe("idle");
     expect(remote.records.get(status.user.id)?.lessons[LESSON]?.progress).toBe(1);
+  });
+
+  it("7. carries marks and AI answers from one computer to another", async () => {
+    const remote = createMemoryRemoteStore();
+    const userId = "memory:ada@example.com";
+    const locator: LessonRef = {
+      studyId: "turing-pact",
+      courseId: "foundations-before-zero",
+      unitId: "first-steps",
+      lessonId: "you-already-know-apps",
+    };
+    const mark: ReaderMark = {
+      markId: "mark-from-phone",
+      lessonKey: `${locator.studyId}/${locator.courseId}/${locator.unitId}/${locator.lessonId}`,
+      contentRevision: 3,
+      kind: "question",
+      quote: { exact: "这是什么", prefix: "", suffix: "？" },
+      sectionTitle: "先建立模型",
+      note: null,
+      createdAt: "2026-08-24T08:00:00.000Z",
+      resolvedAt: null,
+    };
+    const hostGrade: HostExerciseGrade = {
+      passed: true,
+      evaluation: "结构完整。",
+      extensions: [],
+      host: "clipboard-host",
+      learnerAnswer: "我的答案",
+      occurredAt: "2026-08-24T08:01:00.000Z",
+    };
+
+    const phone = createProgressPort({ persistence: createMemoryPersistence() });
+    phone.saveReaderMark(mark);
+    phone.recordExerciseAttempt({
+      commandId: "answer-from-phone",
+      locator,
+      exerciseId: "explain-the-model",
+      contentRevision: 3,
+      answer: "我的答案",
+      score: 1,
+      maxScore: 1,
+      hostGrade,
+      occurredAt: hostGrade.occurredAt,
+    });
+    await phone.bindAccount(userId, remote);
+
+    const laptop = createProgressPort({ persistence: createMemoryPersistence() });
+    await laptop.bindAccount(userId, remote);
+
+    expect(laptop.readerMarks(locator.studyId)).toEqual([mark]);
+    expect(laptop.latestExerciseAttempt(locator, "explain-the-model", 3)).toMatchObject({
+      commandId: "answer-from-phone",
+      answer: "我的答案",
+      hostGrade,
+    });
+  });
+
+  it("8. keeps a cloud deletion tombstone so an old device cannot resurrect a mark", async () => {
+    const remote = createMemoryRemoteStore();
+    const userId = "memory:ada@example.com";
+    const mark: ReaderMark = {
+      markId: "mark-to-delete",
+      lessonKey: "turing-pact/foundations-before-zero/first-steps/lesson",
+      contentRevision: 1,
+      kind: "highlight",
+      quote: { exact: "保留", prefix: "", suffix: "" },
+      sectionTitle: null,
+      note: null,
+      createdAt: "2026-08-24T08:00:00.000Z",
+      resolvedAt: null,
+    };
+    const phone = createProgressPort({ persistence: createMemoryPersistence() });
+    phone.saveReaderMark(mark);
+    await phone.bindAccount(userId, remote);
+
+    const laptop = createProgressPort({ persistence: createMemoryPersistence() });
+    await laptop.bindAccount(userId, remote);
+    laptop.deleteReaderMark("turing-pact", mark.markId);
+    await laptop.flush();
+
+    const returningPhone = createProgressPort({ persistence: createMemoryPersistence() });
+    await returningPhone.bindAccount(userId, remote);
+    expect(returningPhone.readerMarks("turing-pact")).toEqual([]);
+    expect(returningPhone.snapshot().readerMarks[mark.markId]?.deletedAt).not.toBeNull();
   });
 });

@@ -1,8 +1,4 @@
 [
-  "answer-history (local only)",
-  "answer-reveal (local only)",
-  "answer-reveal__coach (local only)",
-  "answer-reveal__coach-hint (local only)",
   "evidence-item (local only)",
   "evidence-item__copy (local only)",
   "evidence-item__copy-hint (local only)",
@@ -17,15 +13,5 @@
   "evidence-ua-place__error (local only)",
   "evidence-ua-place__layer (local only)",
   "evidence-ua-place__open (local only)",
-  "evidence-ua-place__summary (local only)",
-  "panel-heading (local only)",
-  "rating-row (local only)",
-  "review-card (local only)",
-  "vocab-review (local only)",
-  "vocab-review__answer (local only)",
-  "vocab-review__gloss (local only)",
-  "vocab-review__header (local only)",
-  "vocab-review__meta (local only)",
-  "vocab-review__phonetic (local only)",
-  "vocab-review__usage (local only)"
+  "evidence-ua-place__summary (local only)"
 ]

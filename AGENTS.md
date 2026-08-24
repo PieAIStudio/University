@@ -103,9 +103,11 @@ What follows from them:
   `apps/local` and nowhere else; publishing them is a separate, gated act, and
   a customer sees a package only once it is published (ADR-0002). A second
   thing that can emit a lesson dissolves SPEC-0001.
-- **Both shells hold an account.** They sign in to SwimmerBackend and share
-  account, progress, review schedule, favourites and settings — one
-  implementation each. The disk stays the source of truth for what only exists
+- **Both shells hold one cloud account.** They sign in to SwimmerBackend and
+  share account data, progress, review schedule, answers, reader marks,
+  vocabulary, favourites, practice history and settings — one implementation
+  each. The cloud document is canonical; the browser document is only an
+  offline cache/outbox. The disk stays the source of truth only for what exists
   on disk: `apps/local/studies/` and the prose being written (ADR-0001).
 - **Readable text is DOM, never geometry.** A Chinese IME, a screen reader,
   text selection and a phone keyboard all die inside a canvas, so text in
@@ -117,10 +119,10 @@ What follows from them:
   second, open tutoring last and metered. An unmetered large model behind a
   free tier is the robustness rule broken, in the direction of the bank.
 - **`GradingPort` is the only permitted difference between the shells.**
-  `apps/local` grades through the clipboard and the AI coding host it runs
-  inside; `apps/online` grades through SwimmerAIKit, metered. Everything above
-  the port is one implementation. Adding a second divergence means changing
-  this rule first.
+  `apps/local` grades through the clipboard and its local AI host, without an
+  API key in the product; `apps/online` grades through SwimmerAIKit, metered.
+  Everything above the port is one implementation. Adding a second divergence
+  means changing this rule first.
 - **Design before build.** A user-facing behaviour gets designed in
   `docs/reference/player-journey/` before it gets implemented. The current
   journey is `docs/reference/player-journey/v4/`; it replaces v1, v2 and v3.
@@ -128,6 +130,10 @@ What follows from them:
 - **One permitted difference between the shells: where the AI comes from.**
   V4 states this as law. Any other divergence is a defect — fix it, do not
   debate it. Adding a second difference means changing v4 first.
+- **“Local” does not mean permanently offline.** The local shell may keep
+  authoring sources and an offline cache on disk, but every learner/account
+  datum must bind to the same cloud row when an account is available and queue
+  safely while disconnected. Windows, macOS and browser sessions are peers.
 - **One codebase, three shells.** Browser, desktop and phone run the same
   build. The browser needs no wrapper; Electron and Capacitor are wrappers
   around that same output, not separate products. Layout differs by CSS

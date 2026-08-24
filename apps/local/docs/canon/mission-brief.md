@@ -37,14 +37,13 @@ UniversityLocal 在所有者的项目组合中与 HQ、Project Governance System
 它在 PGS 中仍应注册为 target，因为它消费 PGS 治理；target 描述治理关系，
 不代表产品级别较低。
 
-未来如果建设面向普通用户的 University，它必须使用独立仓库、独立部署和
-独立商业边界。UniversityLocal 不在原仓库中混入账号、计费、多租户和托管
-AI 等消费级复杂度。
+本地端和在线端现在是同一个学习产品的两个壳，而不是两套数据产品。两端
+都使用 SwimmerBackend 账号和同一份云端学习文档，进度、答案、批注、复习、
+词汇、收藏、练习历史和设置可以跨 Windows、macOS 与网页继续使用。
 
-UniversityLocal 永久保持本地版：不接 SwimmerBackend，也不接其他应用后端，
-不为未来同步预建 outbox、账号或云端合同。未来商业化 `University` 可以在它
-自己的仓库和产品边界中采用 SwimmerBackend；这不是 UniversityLocal 的演进
-步骤，而是另一个产品复用经过验证的学习合同。
+本地端仍保留作者工作流：被研究仓库、源码快照、UA 图谱、课程原稿和笔记
+留在本地书架，不进入学习账户同步文档。两端唯一允许的运行时差异是 AI
+判定来源：本地端走 AI 编码宿主/剪贴板，在线端走计量的在线 AI 适配器。
 
 ## Mental Model
 
@@ -53,7 +52,7 @@ UniversityLocal 永久保持本地版：不接 SwimmerBackend，也不接其他�
 - Understand Anything 是测绘队，生成项目地图和原生导览。
 - UniversityLocal 是大学，依据地图、源码和学习目标设计正式课程。
 - 练习和卡片是训练材料。
-- SQLite 学习状态是学生个人成绩册。
+- 云端学习文档是学生成绩册；SQLite/browser 只做缓存、迁移来源或离线 outbox。
 
 UA 导览、正式课程和个人学习记录是三个不同层级，不是两套互相竞争的
 课程。
@@ -75,7 +74,7 @@ UA 导览、正式课程和个人学习记录是三个不同层级，不是两�
 
 - 不建设消费级 University。
 - 不内置第二套自主 AI agent 代替 Grok Build、Codex 或 Claude Code。
-- 不接入 SwimmerBackend 或任何其他应用后端。
+- 不把源码快照、UA 图谱或中间文件上传到云端；学习账户数据仍然同步到云端。
 - 不实现多人课堂或权威游戏服务器。
 - 不把源码快照、UA 图谱或中间文件上传到云端。
 - 不删除 SupaLuv 现有的 UA 数据，直到导入和新分析均完成验收。

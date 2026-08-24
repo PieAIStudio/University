@@ -19,23 +19,20 @@ import type { IdentityPort } from "@pieai/university-core";
  * `GameInput` — so this file does not invent a password box.
  */
 
-export const ACCOUNT_UNSIGNED_TITLE = "进度记在这台设备上";
+export const ACCOUNT_UNSIGNED_TITLE = "登录后跨设备同步";
 export const ACCOUNT_UNSIGNED_DESCRIPTION =
-  "登录之后换一台也能接着学。不登录也完全没问题，今天的课一样能上完。";
+  "登录后进度、批注、答案、复习和收藏会跟账号走；断网时本机继续，联网后同步。";
 /**
  * Said from the learner's side of the screen, not ours.
  *
- * It used to read 「账号还没接到这台构建上」. 「构建」 is what we call the
- * compiled copy of the app; to the person reading it that sentence names
- * nothing they can see. What they actually need to know is two facts and no
- * vocabulary: there is nowhere to sign in yet, and their progress is safe on
- * this machine meanwhile.
+ * If the backend is not configured, say that plainly. The local cache still
+ * works, but it is not a cross-device guarantee until an account is connected.
  */
 export const ACCOUNT_UNCONFIGURED_DESCRIPTION =
-  "现在还没有可以登录的地方。你的进度就存在这台设备里，照常学就行。";
+  "云端账号还未配置；当前仅保留本机离线缓存，配置完成后登录即可跨设备同步。";
 export const ACCOUNT_SIGNED_IN_TITLE = "已经登录";
 export const ACCOUNT_SIGNED_IN_DESCRIPTION =
-  "这一台和账号上的进度会并在一起。断网也能继续学，连上再同步。";
+  "进度、批注、答案、复习、收藏和设置已绑定账号。断网也能继续学，连上再同步。";
 export const ACCOUNT_PENDING_LABEL = "正在登录…";
 export const ACCOUNT_SIGN_IN = "登录";
 export const ACCOUNT_SIGN_UP = "创建账号";

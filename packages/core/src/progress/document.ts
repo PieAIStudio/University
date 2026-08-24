@@ -11,6 +11,7 @@
  * second storage model that then has to be migrated.
  */
 
+import { cloneAccountData, emptyAccountData, parseAccountData } from "../ports/account-data.js";
 import type { ProgressDocument } from "../ports/progress.js";
 
 /** Keep this string. Changing it orphans everyone who has already learned a lesson. */
@@ -21,6 +22,10 @@ export const emptyProgress = (): ProgressDocument => ({
   cards: {},
   words: {},
   streak: { days: 0, lastDay: null },
+  readerMarks: {},
+  exerciseAttempts: {},
+  retrievalAttempts: {},
+  account: emptyAccountData(),
 });
 
 export const lessonKey = (studyId: string, courseId: string, lessonId: string) =>
@@ -37,6 +42,12 @@ export function parseProgress(raw: string | null): ProgressDocument {
       // lesson before the language layer existed, not a corrupt store.
       words: parsed.words ?? {},
       streak: parsed.streak ?? { days: 0, lastDay: null },
+      // Reader annotations and answer records were added after v2. An absent
+      // field is an older device, not a corrupt document.
+      readerMarks: parsed.readerMarks ?? {},
+      exerciseAttempts: parsed.exerciseAttempts ?? {},
+      retrievalAttempts: parsed.retrievalAttempts ?? {},
+      account: parseAccountData(parsed.account),
     };
   } catch {
     // A corrupt local store must not lock a learner out of their own campus.
@@ -50,5 +61,9 @@ export function cloneProgress(document: ProgressDocument): ProgressDocument {
     cards: { ...document.cards },
     words: { ...document.words },
     streak: { ...document.streak },
+    readerMarks: { ...document.readerMarks },
+    exerciseAttempts: { ...document.exerciseAttempts },
+    retrievalAttempts: { ...document.retrievalAttempts },
+    account: cloneAccountData(document.account),
   };
 }

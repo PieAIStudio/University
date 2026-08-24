@@ -1,7 +1,12 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { reviewLine, TodayCard, todayMeta } from "./TodayCard";
+import {
+  reviewLine,
+  TodaySection,
+  todayMeta,
+  type TodaySectionData,
+} from "@pieai/university-ui/today/TodaySection.js";
 
 describe("todayMeta", () => {
   it("names the project and withholds the count when the course is unstarted", () => {
@@ -31,21 +36,34 @@ describe("reviewLine", () => {
   });
 });
 
-describe("TodayCard", () => {
-  it("does not mention a zero review pile to someone who has not studied", () => {
+describe("TodaySection", () => {
+  it("does not mention a catalogue-size or zero review pile", () => {
+    const data: TodaySectionData = {
+      card: null,
+      nextLesson: {
+        studyId: "turing-pact",
+        courseId: "foundations-before-zero",
+        unitId: "first-steps",
+        lessonId: "before-start",
+        studyTitle: "TuringPact",
+        courseTitle: "Foundations",
+        lessonTitle: "在开始之前",
+        contentRevision: 1,
+        progress: null,
+      },
+      dueCount: 0,
+      focus: null,
+      issues: [],
+    };
     const markup = renderToStaticMarkup(
-      <TodayCard
-        nextTitle="在开始之前"
-        nextMeta="TuringPact"
-        continueLabel="开始第一节"
-        onContinue={() => undefined}
-        dueCount={0}
-        dueTomorrow={0}
+      <TodaySection
+        data={data}
+        onOpenLesson={() => undefined}
+        onReviewed={async () => undefined}
       />,
     );
     expect(markup).toContain("TuringPact");
     expect(markup).not.toContain("41");
-    expect(markup).not.toContain("复习");
     expect(markup).not.toContain("0 张");
   });
 });

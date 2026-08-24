@@ -1,5 +1,6 @@
 /**
- * What the learner has done, kept on this machine first.
+ * What the learner has done, kept in the shared cloud document with a durable
+ * browser cache/outbox for disconnected work.
  *
  * Sign-in is optional. Without an account this file behaves exactly as it
  * did when the bytes only lived in `university.progress.v2`: learn, review,
@@ -21,7 +22,7 @@
  * `@pieai/university-core`, which is real FSRS with recorded parameters, and
  * is the same function the authoring shell calls.
  *
- * What stays local-first is where the state is kept, not how it is computed.
+ * What stays local is the offline queue, not the account's source of truth.
  */
 import {
   lessonKey,
@@ -76,6 +77,10 @@ export function dueTomorrow() {
 
 export function gradeCard(cardKey: string, rating: RatingName) {
   progressPort.gradeCard(cardKey, rating);
+}
+
+export function gradeWord(senseId: string, rating: RatingName) {
+  progressPort.gradeWord(senseId, rating);
 }
 
 export function stageWord(senseId: string, stage: "learning" | "familiar" | "paused") {

@@ -1,0 +1,241 @@
+/* Shared keyboard-complete course directory. */
+.catalog {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 16px calc(40px + env(safe-area-inset-bottom));
+}
+
+.catalog__inner {
+  max-width: 52rem;
+  margin: 0 auto;
+}
+
+.catalog h1 {
+  margin: 10px 0 6px;
+  font-size: 1.6rem;
+  line-height: 1.3;
+}
+
+.catalog__lede,
+.catalog__totals {
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.catalog__lede {
+  margin: 0 0 10px;
+}
+
+.catalog__totals {
+  margin: 0 0 28px;
+  font-variant-numeric: tabular-nums;
+}
+
+.catalog details {
+  min-width: 0;
+}
+
+.catalog summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.catalog summary::-webkit-details-marker {
+  display: none;
+}
+
+.catalog summary::before {
+  flex-shrink: 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.75rem;
+  content: "▶";
+}
+
+.catalog details[open] > summary::before {
+  content: "▼";
+}
+
+.catalog summary h2,
+.catalog summary h3,
+.catalog summary h4 {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 650;
+}
+
+.catalog__study {
+  margin: 0 0 28px;
+}
+
+.catalog__study > summary {
+  padding: 4px 0 12px;
+}
+
+.catalog__study > summary h2 {
+  font-size: 1.25rem;
+}
+
+.catalog__count {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.catalog__flat {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--game-ui-accent, #ffd479);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--game-ui-accent, #ffd479) 10%, transparent);
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.catalog__course {
+  margin: 0 0 10px;
+  border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  border-left: 3px solid var(--game-ui-accent, #5ec8c0);
+  border-radius: 12px;
+  background: var(--game-ui-panel, #151b2b);
+}
+
+.catalog__course > summary {
+  align-items: flex-start;
+  padding: 14px 16px;
+}
+
+.catalog__course-head {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.catalog__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.catalog__title-row h3 {
+  min-width: 0;
+  font-size: 1.05rem;
+}
+
+.catalog__depth {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  border-radius: 4px;
+  color: var(--game-ui-accent, #5ec8c0);
+  font-family: var(--game-ui-font-mono);
+  font-size: 0.78rem;
+}
+
+.catalog__progress,
+.catalog__prereq {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.82rem;
+}
+
+.catalog__prereq {
+  font-size: 0.85rem;
+}
+
+.catalog__gate {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.catalog__gate--done {
+  background: rgb(75 185 138 / 15%);
+  color: #4bb98a;
+}
+
+.catalog__gate--live {
+  background: rgb(94 200 192 / 15%);
+  color: var(--game-ui-accent, #5ec8c0);
+}
+
+.catalog__gate--open {
+  background: rgb(255 212 121 / 12%);
+  color: #ffd479;
+}
+
+.catalog__gate--idle {
+  background: rgb(116 128 154 / 15%);
+  color: var(--game-ui-text-muted, #9aa6bb);
+}
+
+.catalog__unit {
+  border-top: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+}
+
+.catalog__unit > summary {
+  padding: 10px 16px 10px 42px;
+  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 70%, #0c1018);
+}
+
+.catalog__unit > summary h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.catalog__lessons {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.catalog__lesson {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 16px 10px 42px;
+  border-top: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  color: inherit;
+  text-decoration: none;
+}
+
+.catalog__lesson:hover {
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 8%, transparent);
+}
+
+.catalog__lesson[aria-current="location"] {
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 12%, transparent);
+}
+
+.catalog__lesson-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.catalog__variant {
+  flex-shrink: 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.78rem;
+}
+
+.catalog summary:focus-visible,
+.catalog a:focus-visible,
+.catalog button:focus-visible {
+  outline: 2px solid var(--game-ui-accent, #ffd479);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .catalog__lesson,
+  .catalog__unit > summary {
+    padding-left: 28px;
+  }
+}

@@ -30,8 +30,9 @@ export type VocabularyStage = "candidate" | "learning" | "familiar" | "stable" |
  * What the composer needs to know about a learner's relationship to a word.
  *
  * Deliberately narrower than either shell's own record: the authoring shell
- * keeps full FSRS rows in SQLite and the delivery shell keeps a small object in
- * localStorage, and neither of those shapes belongs in a placement decision.
+ * keeps full FSRS rows in its local offline cache and the delivery shell keeps
+ * the same cloud-backed projection in its browser cache; neither storage shape
+ * belongs in a placement decision.
  */
 export interface VocabularyState {
   readonly senseId: string;

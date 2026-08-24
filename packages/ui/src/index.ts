@@ -35,6 +35,13 @@ export {
   type ChoiceBlockOption,
 } from "./review/ChoiceBlock.js";
 export { VocabularyReview } from "./review/VocabularyReview.js";
+export type { ReviewCardPort, VocabularyDueWord, VocabularyReviewPort } from "./review/ports.js";
+export {
+  TodaySection,
+  reviewLine,
+  todayMeta,
+  type TodaySectionData,
+} from "./today/TodaySection.js";
 export { EvidenceRail } from "./evidence/EvidenceRail.js";
 export { EvidenceCode } from "./evidence/EvidenceCode.js";
 export { Tip } from "./Tip.js";
@@ -51,6 +58,15 @@ export { TermIndex, LEXICON_SEARCH_PLACEHOLDER } from "./reference/TermIndex.js"
 export { AntiPatternIndex, ANTI_PATTERN_SEARCH_PLACEHOLDER } from "./reference/AntiPatternIndex.js";
 export { ConceptIndex, CONCEPT_SEARCH_PLACEHOLDER } from "./reference/ConceptIndex.js";
 export { CollectionIndex } from "./reference/CollectionIndex.js";
+export { LibrarySurface, REFERENCE_TABS, type ReferenceTab } from "./reference/LibrarySurface.js";
+export {
+  CatalogSurface,
+  type CatalogCourse,
+  type CatalogLesson,
+  type CatalogListing,
+  type CatalogStudy,
+  type CatalogUnit,
+} from "./catalog/CatalogSurface.js";
 export {
   EntryPage,
   TermEntryHead,
@@ -79,12 +95,14 @@ export {
 } from "./entry/default-renderers.js";
 export {
   FavouriteStar,
+  FavouritesScreen,
   FavouritesEmpty,
   FAVOURITES_EMPTY_ACTION,
   FAVOURITES_EMPTY_DESCRIPTION,
   FAVOURITES_EMPTY_TITLE,
   FAVOURITES_STORAGE_KEY,
   createLocalFavouritesStore,
+  createProgressFavouritesStore,
   favouriteStarLabel,
   readLocalFavourites,
   shouldPlayFavouriteSound,
@@ -101,8 +119,10 @@ export {
   PRACTICE_RECENT_STORAGE_KEY,
   PRACTICE_UNLOCK_HINT,
   PracticeStream,
+  PracticeSurface,
   PracticeRewardPanel,
   createLocalPracticeRecentStore,
+  createProgressPracticeRecentStore,
   practiceSolvedLabel,
   sittingSolvedCount,
   readLocalPracticeRecent,

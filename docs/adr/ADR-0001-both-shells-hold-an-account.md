@@ -36,12 +36,15 @@ host needs the network.
 
 ## Decision
 
-Both shells sign in to SwimmerBackend and share one account, progress record,
-review schedule, favourites and settings. One implementation, in the kit.
+Both shells sign in to SwimmerBackend and share one account document containing
+progress, review schedule, answers, reader marks, vocabulary, favourites,
+practice history and settings. One implementation, in the kit.
 
-Storage is local-first. The disk keeps what only exists on disk — the
-registered private repositories under `apps/local/studies/` and the prose being
-written. The backend keeps account, progress, review, favourites, settings.
+The cloud document is canonical for learner/account data. Each shell keeps a
+durable browser/SQLite cache and an outbox so a lesson can continue while
+disconnected; binding the account merges and flushes that document. The disk
+keeps what only exists on disk — the registered private repositories under
+`apps/local/studies/` and the prose being written.
 
 `GradingPort` is the single permitted divergence between the shells: clipboard
 and AI coding host on one side, metered SwimmerAIKit on the other.
@@ -52,10 +55,10 @@ and AI coding host on one side, metered SwimmerAIKit on the other.
   theirs; see ADR-0002 and ADR-0003.
 - The shells may no longer look like different products, so navigation, path,
   reader and settlement are built once in `packages/ui` and mounted twice.
-- Offline authoring survives, unbought: the two halves of the data want
-  opposite homes.
+- Offline authoring survives, unbought: content sources remain local, while
+  learner data can travel to another computer as soon as it has connectivity.
 
 ## Rejected
 
-Backend as source of truth for everything. `studies/` is four private
-repositories; that half does not go to a backend under any design.
+Sending `studies/` and in-progress prose to the backend. Those are four private
+repositories and authoring sources; they remain local under every design.

@@ -1,4 +1,5 @@
 export { FavouriteStar } from "./FavouriteStar.js";
+export { FavouritesScreen } from "./FavouritesScreen.js";
 export { favouriteStarLabel, shouldPlayFavouriteSound } from "./favourite-star.js";
 export {
   FAVOURITES_EMPTY_ACTION,
@@ -9,6 +10,7 @@ export {
 export {
   FAVOURITES_STORAGE_KEY,
   createLocalFavouritesStore,
+  createProgressFavouritesStore,
   readLocalFavourites,
   writeLocalFavourites,
   type FavouritesStore,

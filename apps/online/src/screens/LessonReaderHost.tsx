@@ -21,6 +21,7 @@ import type { Course } from "../content/library";
 import { assembleLessonView } from "../lesson/assemble-view";
 import { createOnlineGradingPort } from "../ports/online-grading";
 import { createOnlineReaderPort } from "../ports/online-reader";
+import { createOnlineReviewPort } from "../app/today-data";
 import { progressSource } from "../progress/source";
 import {
   advanceLesson,
@@ -66,17 +67,16 @@ export function LessonReaderHost({
   );
 
   const progress = useSyncExternalStore(subscribe, snapshot);
-  const view = useMemo(
-    () =>
-      assembleLessonView({
-        course,
-        lesson,
-        studyId,
-        unitId: unit.id,
-        progress: lessonState(lessonKey(studyId, course.id, lesson.id)),
-      }),
-    [course, lesson, studyId, unit.id, progress],
-  );
+  const view = useMemo(() => {
+    const assembled = assembleLessonView({
+      course,
+      lesson,
+      studyId,
+      unitId: unit.id,
+      progress: lessonState(lessonKey(studyId, course.id, lesson.id)),
+    });
+    return overlayCloudExerciseRecords(assembled, locator, progressPort);
+  }, [course, lesson, studyId, unit.id, progress]);
 
   const neighbours = useMemo(
     () => lessonNeighbours([courseViewOf(course, studyId)], locator),
@@ -86,6 +86,20 @@ export function LessonReaderHost({
   const settledFor = useRef<string | null>(null);
   const finish = useCallback(() => {
     const key = lessonKey(studyId, course.id, lesson.id);
+    const state = progressPort.lessonState(key);
+    const readConfirmed =
+      state.readConfirmed === true &&
+      (state.readConfirmedRevision === undefined || state.readConfirmedRevision === 1);
+    const legacyReadConfirmed = state.readConfirmed === undefined && state.progress >= 1;
+    const exercisesComplete = lesson.exercises.every(
+      (exercise) =>
+        progressPort.latestExerciseAttempt(
+          { studyId, courseId: course.id, unitId: unit.id, lessonId: lesson.id },
+          exercise.id,
+          1,
+        )?.hostGrade?.passed === true,
+    );
+    if (!(readConfirmed || legacyReadConfirmed) || !exercisesComplete) return;
     if (settledFor.current === key) return;
     settledFor.current = key;
     // Counted before the write, because that is the only moment the
@@ -122,9 +136,11 @@ export function LessonReaderHost({
       createOnlineGradingPort({
         lesson,
         onPass: () => finish(),
+        progress: progressPort,
       }),
     [lesson, finish],
   );
+  const review = useMemo(() => createOnlineReviewPort(progressPort), []);
 
   return (
     <main className="reader">
@@ -133,6 +149,8 @@ export function LessonReaderHost({
         view={view}
         reader={reader}
         grading={grading}
+        progress={progressPort}
+        review={review}
         requestToken=""
         onLearningChanged={async () => undefined}
         neighbours={neighbours}
@@ -154,7 +172,7 @@ export function LessonReaderHost({
             lessonId: target.lessonId,
           })
         }
-        toolbarExtras={<SoundToggle />}
+        toolbarExtras={<SoundToggle progress={progressPort} />}
       />
     </main>
   );
@@ -174,15 +192,21 @@ function courseViewOf(course: Course, studyId: string): CourseView {
       title: entry.title,
       objective: entry.objective,
       status: "active",
-      lessons: entry.lessons.map((item) => ({
-        id: item.id,
-        title: item.title,
-        status: "active",
-        contentRevision: 1,
-        cardCount: item.cards.length,
-        exerciseCount: item.exercises.length,
-        progress:
-          lessonState(lessonKey(studyId, course.id, item.id)).progress >= 1
+      lessons: entry.lessons.map((item) => {
+        const state = lessonState(lessonKey(studyId, course.id, item.id));
+        const readConfirmed =
+          state.readConfirmed === true &&
+          (state.readConfirmedRevision === undefined || state.readConfirmedRevision === 1);
+        const completed =
+          state.progress >= 1 && (readConfirmed || state.readConfirmed === undefined);
+        return {
+          id: item.id,
+          title: item.title,
+          status: "active" as const,
+          contentRevision: 1,
+          cardCount: item.cards.length,
+          exerciseCount: item.exercises.length,
+          progress: completed
             ? {
                 contentRevision: 1,
                 status: "completed" as const,
@@ -190,8 +214,62 @@ function courseViewOf(course: Course, studyId: string): CourseView {
                 updatedAt: new Date().toISOString(),
                 readConfirmed: true,
               }
-            : null,
-      })),
+            : state.readConfirmed === true
+              ? {
+                  contentRevision: 1,
+                  status: "in-progress" as const,
+                  progress: state.progress,
+                  updatedAt: new Date(state.completedAt ?? Date.now()).toISOString(),
+                  readConfirmed: true,
+                }
+              : null,
+        };
+      }),
     })),
+  };
+}
+
+/** Cloud records win over a stale package-local view after a device switch. */
+function overlayCloudExerciseRecords(
+  view: ReturnType<typeof assembleLessonView>,
+  locator: {
+    readonly studyId: string;
+    readonly courseId: string;
+    readonly unitId: string;
+    readonly lessonId: string;
+  },
+  progress: typeof progressPort,
+): ReturnType<typeof assembleLessonView> {
+  return {
+    ...view,
+    lesson: {
+      ...view.lesson,
+      exercises: view.lesson.exercises.map((exercise) => {
+        const latest = progress.latestExerciseAttempt(
+          locator,
+          exercise.id,
+          exercise.contentRevision,
+        );
+        if (!latest) return exercise;
+        return {
+          ...exercise,
+          awaitingHostGrade: latest.hostGrade?.passed !== true,
+          latestSubmission: {
+            answer: latest.answer,
+            occurredAt: latest.occurredAt,
+          },
+          hostGrade: latest.hostGrade
+            ? {
+                passed: latest.hostGrade.passed,
+                evaluation: latest.hostGrade.evaluation,
+                extensions: latest.hostGrade.extensions,
+                host: latest.hostGrade.host,
+                learnerAnswer: latest.hostGrade.learnerAnswer,
+                occurredAt: latest.hostGrade.occurredAt,
+              }
+            : null,
+        };
+      }),
+    },
   };
 }

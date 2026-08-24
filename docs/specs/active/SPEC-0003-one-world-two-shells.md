@@ -92,18 +92,31 @@ Two rows above are the whole design. The focus track is the only authoring
 concept that changes the scene, and everything else is an overlay that the
 delivery shell simply does not render.
 
-## What Each Shell Keeps To Itself
+## What Is Shell Infrastructure, Not A Learner Difference
 
-Neither list is a gap to be closed later. They are the shells being different
-products, which they are allowed to be.
+The shell may still expose authoring infrastructure that only makes sense when
+the source tree is present: airlock clocks, the UA dashboard, knowledge notes,
+the source drawer, pinned-version checkout, and the author CLI. Those are local
+authoring capabilities, not a second implementation of a learner feature and
+not a second learner-data store.
 
-**Authoring only**, because each needs Node, git, SQLite, a clipboard or an AI
-host: airlock clocks, UA dashboard, knowledge notes, host grading, selection
-marks, the real source drawer, pinned-version checkout, the author CLI, reading
-confirmation, session objectives.
+Everything a learner reads, answers, reviews, annotates, favourites, practises,
+or configures is shared. The account document in SwimmerBackend is the one
+cross-device source of truth; browser/SQLite state is only a cache, migration
+source, or offline outbox. In particular, selection marks, exercise answers,
+review history, vocabulary, settings, Today, the map, and the navigation rail
+are not local-only.
 
-**Delivery only**: streak, settlement, paywall, prerequisite locking, the
-browser-side tier-one grader, account and payment.
+The keyboard-complete course catalogue is also one shared `CatalogSurface`.
+Each shell may adapt its content source — published packages online, local
+study views while authoring — but the learner-facing directory, expansion
+behaviour and lesson links are one implementation.
+
+The sole runtime difference in that shared learner surface is the grading
+boundary: the local shell obtains the AI verdict from the local AI host and
+clipboard path, while the online shell obtains it through the metered online AI
+adapter. Both write the same structured answer/verdict record to the shared
+account document.
 
 ## The One Behaviour That Must Change In The Delivery Shell
 
@@ -134,8 +147,10 @@ it is a user-facing behaviour change, so it gets designed in
    chooses to depend on `packages/world`, which is a decision it makes once and
    in the open.
 2. Give the authoring shell the same scene plus its overlay.
-3. Retire the 2D shelf **only after** every row in the table above is visible
-   in the new landing. Deleting it earlier trades information for a screenshot.
+3. Decide whether to retire the authoring 2D shelf **only after** every row in
+   the table above is visible in the new landing. The separate keyboard
+   catalogue is already shared; deleting the authoring shelf earlier would
+   trade information for a screenshot.
 
 Step 3 is where this can go wrong, and the ordering is the whole safeguard.
 

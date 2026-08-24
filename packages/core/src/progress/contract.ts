@@ -1,13 +1,12 @@
 /**
  * What both shells have to agree on before either can render the other's world.
  *
- * The two shells store progress in places that will never be the same: the
- * authoring shell keeps rows in a per-study SQLite file on the author's own
- * machine, and the delivery shell keeps one object in a browser's
- * localStorage. That difference is fine and should stay. What is not fine is
- * that they had also, quietly, come to disagree about *what a lesson is* and
- * *what finished means* — and a shared 3D landing page cannot be built on top
- * of two answers to those questions.
+ * Both shells now read and write the same cloud learner document. They may
+ * keep different local caches while disconnected — the authoring shell also
+ * has SQLite content/host state — but neither local copy is a cross-device
+ * source of truth. What is not fine is that they had also, quietly, come to
+ * disagree about *what a lesson is* and *what finished means* — and a shared
+ * 3D landing page cannot be built on top of two answers to those questions.
  *
  * Measured before designing, because the two disagreements were the opposite
  * of what everyone assumed:
@@ -16,10 +15,10 @@
  * | --- | --- | --- |
  * | progress key | `studyId/courseId/lessonId` | `courseId/unitId/lessonId` |
  * | dropped | `unitId` | `studyId` — it selects the database file |
- * | finished | `progress >= 1`, written once | exercises all passed **and** a separate read-confirmation event |
+ * | finished | exercises all passed **and** a separate read-confirmation event | exercises all passed **and** a separate read-confirmation event |
  *
- * So each side is lossy, in a different direction, and one side's definition
- * of "finished" is strictly richer than the other's.
+ * The shared cloud document now carries both facts so neither shell has to
+ * pretend that answering is the same as reading.
  *
  * This file is deliberately **a read model and not a storage migration**. It
  * does not tell either shell where to put its bytes. It says what a lesson is
@@ -71,8 +70,8 @@ export function parseLessonRefKey(key: string): LessonRef | null {
 /**
  * Why a lesson counts as finished.
  *
- * Two independent conditions, and the authoring shell is the one that had this
- * right: answering every exercise is not the same as having read the lesson,
+ * Two independent conditions: answering every exercise is not the same as
+ * having read the lesson,
  * and a learner who skips to the quiz and guesses correctly has not done the
  * thing the product is for. Keeping them as separate facts also means a shell
  * that cannot observe one of them has to say so, rather than silently

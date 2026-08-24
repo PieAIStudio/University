@@ -26,6 +26,12 @@ export function cardActionPath(card: ReviewCardLocator, action: "reveal" | "revi
   return `${lessonPath(card)}/cards/${card.cardId}/${action}`;
 }
 
+export function cardContentPath(
+  card: Extract<ReviewCardLocator, { readonly kind: "course-card" }>,
+): string {
+  return `${lessonPath(card)}/cards/${card.cardId}/content`;
+}
+
 /** Identity a card keeps across renders, including which revision it was asked at. */
 export function reviewCardIdentity(card: ReviewCardLocator): string {
   if (card.kind === "knowledge-card") {

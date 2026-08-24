@@ -31,6 +31,9 @@ authorization.
 one useful follow-up question becomes one atomic Markdown note and may derive a
 small number of cards. Both use the same evidence rules and learner scheduler.
 
-UniversityLocal is permanently local-only. Nothing under this shelf is uploaded
-to SwimmerBackend or another application backend; use the learner backup command
-and a separate filesystem backup for the shelf.
+This shelf is local authoring and study-source storage, not the learner
+account's cross-device source of truth. Course prose, source snapshots, UA
+artifacts, notes, and other authoring material remain here by design. Learner
+progress, answers, marks, review state, vocabulary, favourites, practice
+history, and settings use the shared SwimmerBackend account document; any
+SQLite/browser copy here is only a cache, migration source, or offline outbox.

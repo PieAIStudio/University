@@ -58,10 +58,11 @@ an older commit, but it must say so.
 - The AI host is the teacher and researcher. UniversityLocal should prepare context,
   evidence, durable state, exercises, and verification rather than hiding a
   second autonomous agent inside the app without a proven need.
-- UniversityLocal is permanently local-only. Do not connect it to SwimmerBackend
-  or any other application backend, and do not prebuild accounts, sync outboxes,
-  cloud schemas, upload queues, or remote fallbacks. A future commercial
-  `University` owns any backend contract in a separate repository.
+- The local shell is not permanently offline. It uses the same SwimmerBackend
+  account and cloud learner document as the online shell. Browser/SQLite data is
+  only a cache, migration source, or offline outbox; course sources, snapshots,
+  UA artifacts, and authoring notes remain local. The only runtime difference is
+  the grading source: local AI host/clipboard versus the metered online adapter.
 - SwimmerUIKit owns reusable Pie components and tokens; UniversityLocal owns learning
   workflows, pages, information architecture, and local visual composition.
 - SwimmerAIKit is used only for real runtime model calls. SwimmerGameServerKit is

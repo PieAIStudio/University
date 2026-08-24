@@ -9,10 +9,12 @@ export {
   practiceSolvedLabel,
   sittingSolvedCount,
 } from "./PracticeStream.js";
+export { PracticeSurface } from "./PracticeSurface.js";
 export { PRACTICE_UNLOCK_HINT, PracticeRewardPanel } from "./PracticeRewardPanel.js";
 export {
   PRACTICE_RECENT_STORAGE_KEY,
   createLocalPracticeRecentStore,
+  createProgressPracticeRecentStore,
   readLocalPracticeRecent,
   writeLocalPracticeRecent,
   type PracticeRecentStore,

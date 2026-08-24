@@ -1,12 +1,12 @@
 ---
 id: ADR-0003
-title: Keep UniversityLocal Permanently Local-Only
+title: Superseded: Keep UniversityLocal Permanently Local-Only
 type: decision
-status: accepted
+status: superseded
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-20
+last_reviewed: 2026-08-24
 domain: architecture
 tags:
   - local-only
@@ -19,10 +19,14 @@ related:
   - ADR-0002
   - SPEC-0002
 supersedes: []
-superseded_by: null
+superseded_by: ADR-0001-both-shells-hold-an-account
 ---
 
-# ADR-0003: Keep UniversityLocal Permanently Local-Only
+# ADR-0003: Keep UniversityLocal Permanently Local-Only (Superseded)
+
+> Superseded on 2026-08-24 by the repository-level account decision in
+> `docs/adr/ADR-0001-both-shells-hold-an-account.md`. The historical local-only
+> decision is retained for traceability; it is no longer product authority.
 
 ## Context
 
@@ -38,26 +42,27 @@ Local storage and model-host privacy are also separate questions. Keeping data o
 of SwimmerBackend does not imply that a hosted AI model receives no prompt or code
 context; each host's privacy controls must be checked independently.
 
-## Decision
+## Former Decision
 
-1. UniversityLocal never integrates with SwimmerBackend or any other application
+1. UniversityLocal never integrated with SwimmerBackend or any other application
    backend.
-2. It does not prebuild backend clients, auth, sync outboxes, upload queues, remote
+2. It did not prebuild backend clients, auth, sync outboxes, upload queues, remote
    fallbacks, cloud schemas, or deployment configuration.
-3. Courses, notes, snapshots, UA maps, learner state, and backups stay in the
+3. Courses, notes, snapshots, UA maps, learner state, and backups stayed in the
    configured local study shelf.
 4. Git may version UniversityLocal application code, schemas, skills, and public
    fixtures. Personal `studies/` data remains ignored and uses explicit local
    backups.
-5. A future consumer `University` lives in a separate repository. It may reuse
-   validated domain contracts and may adopt SwimmerBackend under its own product,
+5. A future consumer `University` lived in a separate repository. It could reuse
+   validated domain contracts and adopt SwimmerBackend under its own product,
    privacy, and deployment decisions.
 6. Any earlier document that describes SwimmerBackend as a future UniversityLocal
    sync candidate records a superseded possibility, not current authority.
 
 ## Consequences
 
-UniversityLocal stays small, inspectable, offline-capable, and easy to move. It
-avoids split-brain local/cloud truth and prevents speculative infrastructure from
-contaminating the personal workflow. Cross-device access is not a UniversityLocal
-feature; if it becomes a product requirement, it belongs to `University`.
+The former decision kept the shell small and offline-capable. It did not survive
+the 2026-08-24 product rule: local and online are now one learner product, with
+one cloud account document and one shared learner-data contract. Only the AI
+grading source remains different. Authoring sources and study snapshots still
+stay on the local shelf and are not uploaded as part of learner sync.

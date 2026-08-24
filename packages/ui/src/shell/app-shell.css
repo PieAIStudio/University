@@ -82,6 +82,10 @@
   overflow-x: clip;
 }
 
+.app-shell__content {
+  min-width: 0;
+}
+
 .app-shell__aside {
   grid-area: aside;
   display: none;
@@ -408,6 +412,30 @@
     overflow: auto;
     height: 100%;
     max-width: none;
+  }
+
+  .app-shell {
+    --shell-content-left: calc(var(--shell-rail-width) + var(--shell-gutter) + 16px);
+    --shell-content-right: calc(12rem + var(--shell-gutter) + 16px);
+  }
+
+  .app-shell[data-rail-collapsed="true"] {
+    /* The collapsed chevron is still a real card at the left edge. */
+    --shell-content-left: calc(4.75rem + var(--shell-gutter) + 16px);
+  }
+
+  .app-shell:has(.app-shell__aside:not(:empty)) {
+    --shell-content-right: calc(var(--shell-aside-width) + var(--shell-gutter) + 16px);
+  }
+
+  /*
+    The world map is intentionally full-bleed beneath the floating chrome.
+    Every other surface is a readable DOM page and needs to reserve the same
+    chrome space, otherwise a wide rail can sit on top of its buttons.
+  */
+  .app-shell__content:not(:has(.stagewrap:not([hidden]))) {
+    min-height: 100%;
+    padding: 32px var(--shell-content-right) 48px var(--shell-content-left);
   }
 
   .app-shell__main:has(.stagewrap:not([hidden])) {

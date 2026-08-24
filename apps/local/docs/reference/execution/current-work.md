@@ -65,8 +65,9 @@ while that source repository is being changed by another task.
 
 ## Stable Product Boundaries
 
-- UniversityLocal is single-user, local-first teaching infrastructure. It does
-  not connect to SwimmerBackend or become a mixed local/SaaS product.
+- The local shell shares one SwimmerBackend account and cloud learner document
+  with the online shell. Browser/SQLite state is cache/outbox; authoring
+  sources and study snapshots remain local. Only the grading AI source differs.
 - Analyze only commit-pinned snapshots. Dirty source files are excluded, and a
   dirty source requires explicit owner acknowledgement.
 - External repositories stay clean; generated study data belongs under the

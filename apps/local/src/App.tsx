@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { GameCallout } from "@pieai/swimmer-ui-kit";
+import { bindProgressToIdentity } from "@pieai/university-backend/session.js";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import {
-  NextStepEmpty,
+  AccountPanel,
   ProfileScreen,
   SettingsScreen,
   SettingsSubnav,
@@ -13,26 +14,37 @@ import {
   PlansScreen,
   QuestsScreen,
 } from "@pieai/university-ui/navigation/screens.js";
-import { FavouritesEmpty } from "@pieai/university-ui";
+import { PracticeSurface, createProgressPracticeRecentStore } from "@pieai/university-ui";
 import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 import {
   StudySwitcher,
   type StudySwitchItem,
 } from "@pieai/university-ui/navigation/StudySwitcher.js";
-import { completedLessons, lessonRefKey } from "@pieai/university-core";
-import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
-import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
+import {
+  completedLessons,
+  lessonKey,
+  lessonRefKey,
+  type CardProgress,
+  type ProgressPort,
+} from "@pieai/university-core";
+import type { LexiconEntry } from "@pieai/university-core";
+import { armSoundUnlock, SoundToggle } from "@pieai/university-ui/sound/index.js";
+import { cardContentPath, lessonPath, readJson } from "@pieai/university-ui/api/client.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
 import { LINK_RETURN_DEPTH, LessonReader } from "@pieai/university-ui/lesson/LessonReader.js";
 import { lessonNeighbours } from "@pieai/university-ui/lesson/LessonNav.js";
 import { createHttpGradingPort } from "./ports/http-grading.js";
 import { createHttpReaderPort } from "./ports/http-reader.js";
+import { createHttpReviewPort, createLocalVocabularyReviewPort } from "./ports/http-review.js";
 import type {
   BootstrapData,
+  CourseReviewCardLocator,
   LessonRef,
   LessonView,
+  NextLesson,
   StudyView,
+  TodayCard,
 } from "@pieai/university-ui/view/lesson-view.js";
 import {
   formatAddress,
@@ -42,18 +54,26 @@ import {
   type ShellSlot,
 } from "./url-state.js";
 import { progressPort } from "./progress/store.js";
+import { cloudProgressRemoteStore } from "./progress/store.js";
+import { identityPort } from "./account/identity.js";
 import { presencePort } from "./presence/store.js";
 import { PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
+import { TodaySection, type TodaySectionData } from "@pieai/university-ui/today/TodaySection.js";
 import { EmptyCampus } from "./shell/EmptyCampus.js";
+import { LibraryScreen } from "./screens/LibraryScreen.js";
+import { LocalCatalog } from "./screens/LocalCatalog.js";
 import { recentStudies, StudyShelf } from "./shell/StudyShelf.js";
 import { StudioSection } from "./shell/StudioSection.js";
 import { StudyDetail } from "./shell/StudyDetail.js";
-import { TodaySection } from "./shell/TodaySection.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
 import { PlanetPage, type PlanetStudy } from "@pieai/university-world/planet.js";
+import lexiconFile from "../data/vocabulary/en.json";
 
 import { WorldLanding } from "./shell/WorldLanding.js";
 import { lessonsDoneOf } from "./shell/world-graph.js";
+
+const LOCAL_LEXICON = lexiconFile.entries as readonly LexiconEntry[];
+const LOCAL_PRACTICE_STORE = createProgressPracticeRecentStore(progressPort);
 
 interface DisplayedStudy {
   readonly locator: string;
@@ -64,6 +84,466 @@ interface DisplayedLesson {
   readonly locatorKey: string;
   readonly locator: LessonRef;
   readonly view: LessonView;
+}
+
+function todayDataOf(
+  data: BootstrapData,
+  progress: ProgressPort,
+  cloudCard: TodayCard | null,
+  catalog: ReadonlyMap<string, StudyView>,
+): TodaySectionData {
+  const due = progress.dueCards();
+  const cloudDocumentIsActive =
+    progress.syncState().userId !== null || Object.keys(progress.snapshot().cards).length > 0;
+  return {
+    card: cloudCard ?? (!cloudDocumentIsActive ? data.today.card : null),
+    nextLesson: localNextLessonOf(data, progress, catalog),
+    dueCount: cloudDocumentIsActive ? due.length : data.today.dueCount,
+    focus: data.today.focus
+      ? {
+          study:
+            data.studies.find((study) => study.id === data.today.focus?.studyId)?.title ??
+            data.today.focus.studyId,
+          detail: data.today.focus.courseIds.join(" · "),
+        }
+      : null,
+    issues: data.today.issues,
+  };
+}
+
+function localNextLessonOf(
+  data: BootstrapData,
+  progress: ProgressPort,
+  catalog: ReadonlyMap<string, StudyView>,
+): NextLesson | null {
+  for (const study of data.studies) {
+    const view = catalog.get(study.id);
+    if (!view) continue;
+    for (const course of view.courses) {
+      for (const unit of course.units) {
+        for (const lesson of unit.lessons) {
+          const state = progress.lessonState(lessonKey(study.id, course.id, lesson.id));
+          const readConfirmed =
+            state.readConfirmed === true &&
+            (state.readConfirmedRevision === undefined ||
+              state.readConfirmedRevision === lesson.contentRevision);
+          const legacyComplete = state.readConfirmed === undefined && state.progress >= 1;
+          if (state.progress >= 1 && (readConfirmed || legacyComplete)) continue;
+          return {
+            studyId: study.id,
+            studyTitle: study.title,
+            courseId: course.id,
+            courseTitle: course.title,
+            unitId: unit.id,
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            contentRevision: lesson.contentRevision,
+            progress:
+              state.progress <= 0
+                ? state.readConfirmed === true
+                  ? {
+                      contentRevision: lesson.contentRevision,
+                      status: "in-progress",
+                      progress: state.progress,
+                      updatedAt: new Date().toISOString(),
+                      readConfirmed: true,
+                    }
+                  : null
+                : {
+                    contentRevision: lesson.contentRevision,
+                    status: state.progress >= 1 ? "completed" : "in-progress",
+                    progress: state.progress,
+                    updatedAt: new Date(state.completedAt ?? Date.now()).toISOString(),
+                    readConfirmed: readConfirmed || legacyComplete,
+                  },
+          };
+        }
+      }
+    }
+  }
+  return data.today.nextLesson;
+}
+
+function localCardLocatorOf(
+  card: CardProgress | null,
+  catalog: ReadonlyMap<string, StudyView>,
+): CourseReviewCardLocator | null {
+  if (!card) return null;
+  const parts = card.cardKey.split("/");
+  const cardId = parts.at(-1);
+  const course = catalog.get(card.studyId)?.courses.find((item) => item.id === card.courseId);
+  const lesson = course?.units
+    .flatMap((unit) => unit.lessons.map((item) => ({ unit, item })))
+    .find(({ item }) => item.id === card.lessonId);
+  if (!lesson || !cardId) return null;
+  return {
+    kind: "course-card",
+    studyId: card.studyId,
+    courseId: card.courseId,
+    unitId: lesson.unit.id,
+    lessonId: card.lessonId,
+    cardId,
+    // Lesson summaries intentionally do not carry card bodies. The review
+    // port resolves the body through the shell's content route, which also
+    // works when this scheduler state came from another computer.
+    front: "",
+    contentRevision: card.contentRevision ?? 1,
+  };
+}
+
+function todayCardKey(card: TodayCard): string {
+  if (card.kind !== "course-card") return "";
+  return `${card.studyId}/${card.courseId}/${card.lessonId}/${card.cardId}`;
+}
+
+interface LocalLearningExport {
+  readonly studies: readonly {
+    readonly studyId: string;
+    readonly lessons: readonly {
+      readonly lessonKey: string;
+      readonly contentRevision: number;
+      readonly status: "not-started" | "in-progress" | "completed";
+      readonly progress: number;
+      readonly updatedAt: string;
+      readonly readConfirmed?: boolean;
+    }[];
+    readonly cards: readonly {
+      readonly studyId: string;
+      readonly cardKey: string;
+      readonly contentRevision: number;
+      readonly dueAt: string;
+      readonly stability: number;
+      readonly difficulty: number;
+      readonly elapsedDays: number;
+      readonly scheduledDays: number;
+      readonly learningSteps: number;
+      readonly reps: number;
+      readonly lapses: number;
+      readonly state: number;
+      readonly lastReviewAt?: string;
+    }[];
+    readonly exercises: readonly {
+      readonly commandId: string;
+      readonly exerciseKey: string;
+      readonly contentRevision: number;
+      readonly score: number;
+      readonly maxScore: number;
+      readonly response: unknown;
+      readonly occurredAt: string;
+    }[];
+    readonly retrievalAttempts: readonly {
+      readonly commandId: string;
+      readonly cardKey: string;
+      readonly contentRevision: number;
+      readonly answer: string;
+      readonly revealedAt: string;
+      readonly durationMs: number;
+      readonly usedHint: boolean;
+      readonly confidence?: number;
+    }[];
+    readonly readerMarks: readonly {
+      readonly markId: string;
+      readonly lessonKey: string;
+      readonly contentRevision: number;
+      readonly kind: "question" | "highlight";
+      readonly quote: { readonly exact: string; readonly prefix: string; readonly suffix: string };
+      readonly sectionTitle: string | null;
+      readonly note: string | null;
+      readonly createdAt: string;
+      readonly resolvedAt: string | null;
+    }[];
+  }[];
+  readonly vocabulary: readonly {
+    readonly senseId: string;
+    readonly stage: "candidate" | "learning" | "familiar" | "stable" | "paused";
+    readonly dueAt: string | null;
+    readonly reps: number;
+    readonly lapses: number;
+    readonly updatedAt: string;
+  }[];
+}
+
+function cardProgressFromExport(
+  card: LocalLearningExport["studies"][number]["cards"][number],
+): CardProgress | null {
+  const parts = card.cardKey.split("/");
+  if (parts.length !== 4) return null;
+  const [courseId, , lessonId, cardId] = parts;
+  if (!courseId || !lessonId || !cardId) return null;
+  return {
+    cardKey: `${card.studyId}/${courseId}/${lessonId}/${cardId}`,
+    studyId: card.studyId,
+    courseId,
+    lessonId,
+    dueAt: Date.parse(card.dueAt),
+    fsrs: {
+      due: card.dueAt,
+      stability: card.stability,
+      difficulty: card.difficulty,
+      elapsed_days: card.elapsedDays,
+      scheduled_days: card.scheduledDays,
+      learning_steps: card.learningSteps,
+      reps: card.reps,
+      lapses: card.lapses,
+      state: card.state as CardProgress["fsrs"]["state"],
+      ...(card.lastReviewAt ? { last_review: card.lastReviewAt } : {}),
+    },
+  };
+}
+
+function importLocalLearningExport(exported: LocalLearningExport, progress: ProgressPort): void {
+  for (const study of exported.studies) {
+    for (const lesson of study.lessons) {
+      const [courseId, , lessonId] = lesson.lessonKey.split("/");
+      if (!courseId || !lessonId) continue;
+      const key = lessonKey(study.studyId, courseId, lessonId);
+      if (lesson.progress > progress.lessonState(key).progress) {
+        progress.advanceLesson(key, lesson.progress);
+      }
+      if (lesson.readConfirmed) {
+        progress.confirmLessonRead(key, lesson.contentRevision);
+      }
+    }
+    for (const card of study.cards) {
+      const imported = cardProgressFromExport(card);
+      if (imported) progress.importCard(imported);
+    }
+    for (const attempt of study.exercises) {
+      const [courseId, unitId, lessonId, exerciseId] = attempt.exerciseKey.split("/");
+      if (!courseId || !unitId || !lessonId || !exerciseId) continue;
+      const response =
+        attempt.response && typeof attempt.response === "object"
+          ? (attempt.response as Record<string, unknown>)
+          : {};
+      const answer = typeof response.answer === "string" ? response.answer : "";
+      const hostGrade =
+        response.phase === "host-grade"
+          ? {
+              passed: attempt.score >= attempt.maxScore,
+              evaluation: typeof response.evaluation === "string" ? response.evaluation : "",
+              extensions: Array.isArray(response.extensions)
+                ? response.extensions.filter((item): item is string => typeof item === "string")
+                : [],
+              host: typeof response.host === "string" ? response.host : null,
+              learnerAnswer: answer,
+              occurredAt: attempt.occurredAt,
+            }
+          : null;
+      progress.recordExerciseAttempt({
+        commandId: attempt.commandId,
+        locator: {
+          studyId: study.studyId,
+          courseId,
+          unitId,
+          lessonId,
+        },
+        exerciseId,
+        contentRevision: attempt.contentRevision,
+        answer,
+        score: attempt.score,
+        maxScore: attempt.maxScore,
+        hostGrade,
+        occurredAt: attempt.occurredAt,
+      });
+    }
+    for (const attempt of study.retrievalAttempts) {
+      progress.recordRetrievalAttempt({
+        commandId: attempt.commandId,
+        cardKey: attempt.cardKey,
+        contentRevision: attempt.contentRevision,
+        answer: attempt.answer,
+        revealedAt: attempt.revealedAt,
+        durationMs: attempt.durationMs,
+        usedHint: attempt.usedHint,
+        ...(attempt.confidence === undefined ? {} : { confidence: attempt.confidence }),
+      });
+    }
+    for (const mark of study.readerMarks) {
+      progress.saveReaderMark({
+        markId: mark.markId,
+        lessonKey: `${study.studyId}/${mark.lessonKey}`,
+        contentRevision: mark.contentRevision,
+        kind: mark.kind,
+        quote: mark.quote,
+        sectionTitle: mark.sectionTitle,
+        note: mark.note,
+        createdAt: mark.createdAt,
+        resolvedAt: mark.resolvedAt,
+      });
+      if (mark.resolvedAt) progress.resolveReaderMark(study.studyId, mark.markId);
+    }
+  }
+  for (const word of exported.vocabulary) {
+    if (word.stage === "candidate") continue;
+    progress.importWord({
+      senseId: word.senseId,
+      stage: word.stage === "stable" ? "familiar" : word.stage,
+      dueAt: word.dueAt === null ? null : Date.parse(word.dueAt),
+      lapses: word.lapses,
+      fsrs: null,
+    });
+  }
+}
+
+/**
+ * Move the old per-study SQLite read model into the shared cloud document on
+ * first sight, then read the cloud document back into the local view.
+ *
+ * The server still owns authoring content and the clipboard host workflow. It
+ * no longer owns the learner's cross-device standing; that is the one place
+ * this overlay deliberately crosses the local HTTP boundary.
+ */
+function syncStudyProgressToCloud(view: StudyView, progress: ProgressPort): void {
+  for (const course of view.courses) {
+    for (const unit of course.units) {
+      for (const lesson of unit.lessons) {
+        const local = lesson.progress;
+        if (!local) continue;
+        const key = lessonKey(view.study.id, course.id, lesson.id);
+        if (local.progress > progress.lessonState(key).progress) {
+          progress.advanceLesson(key, local.progress);
+        }
+        if (local.readConfirmed) {
+          progress.confirmLessonRead(key, local.contentRevision);
+        }
+      }
+    }
+  }
+}
+
+function cloudLessonProgress(
+  current: StudyView["courses"][number]["units"][number]["lessons"][number]["progress"],
+  progress: ProgressPort,
+  key: string,
+): typeof current {
+  const state = progress.lessonState(key);
+  const readConfirmed =
+    state.readConfirmed === true &&
+    (state.readConfirmedRevision === undefined ||
+      state.readConfirmedRevision === (current?.contentRevision ?? 1));
+  if (state.progress <= 0 && !readConfirmed) return current;
+  const completed = state.progress >= 1 && (readConfirmed || state.readConfirmed === undefined);
+  return {
+    contentRevision: current?.contentRevision ?? 1,
+    status: completed ? "completed" : "in-progress",
+    progress: state.progress,
+    updatedAt: new Date(state.completedAt ?? Date.now()).toISOString(),
+    readConfirmed: readConfirmed || current?.readConfirmed === true,
+  };
+}
+
+function overlayStudyProgress(view: StudyView, progress: ProgressPort): StudyView {
+  return {
+    ...view,
+    courses: view.courses.map((course) => ({
+      ...course,
+      units: course.units.map((unit) => ({
+        ...unit,
+        lessons: unit.lessons.map((lesson) => ({
+          ...lesson,
+          progress: cloudLessonProgress(
+            lesson.progress,
+            progress,
+            lessonKey(view.study.id, course.id, lesson.id),
+          ),
+        })),
+      })),
+    })),
+  };
+}
+
+function syncLessonRecordToCloud(
+  view: LessonView,
+  locator: LessonRef,
+  progress: ProgressPort,
+): void {
+  const local = view.lesson.progress;
+  const key = lessonKey(locator.studyId, locator.courseId, locator.lessonId);
+  if (local && local.progress > progress.lessonState(key).progress) {
+    progress.advanceLesson(key, local.progress);
+  }
+  if (local?.readConfirmed) {
+    progress.confirmLessonRead(key, local.contentRevision);
+  }
+  if (local?.status === "completed" && local.readConfirmed) {
+    progress.dropCards(
+      locator.studyId,
+      locator.courseId,
+      locator.lessonId,
+      view.lesson.cards.map((card) => card.id),
+    );
+  }
+  for (const exercise of view.lesson.exercises) {
+    const answer = exercise.latestSubmission?.answer ?? exercise.hostGrade?.learnerAnswer ?? null;
+    if (answer === null && !exercise.hostGrade) continue;
+    const occurredAt = exercise.hostGrade?.occurredAt ?? exercise.latestSubmission?.occurredAt;
+    if (!occurredAt) continue;
+    progress.recordExerciseAttempt({
+      commandId: `local-view:${locator.studyId}/${locator.courseId}/${locator.unitId}/${locator.lessonId}/${exercise.id}@${exercise.contentRevision}`,
+      locator,
+      exerciseId: exercise.id,
+      contentRevision: exercise.contentRevision,
+      answer: answer ?? "",
+      score: exercise.hostGrade?.passed ? 1 : 0,
+      maxScore: 1,
+      hostGrade: exercise.hostGrade
+        ? {
+            passed: exercise.hostGrade.passed,
+            evaluation: exercise.hostGrade.evaluation,
+            extensions: exercise.hostGrade.extensions,
+            host: exercise.hostGrade.host,
+            learnerAnswer: exercise.hostGrade.learnerAnswer,
+            occurredAt: exercise.hostGrade.occurredAt,
+          }
+        : null,
+      occurredAt,
+    });
+  }
+}
+
+function overlayLessonRecord(
+  view: LessonView,
+  locator: LessonRef,
+  progress: ProgressPort,
+): LessonView {
+  return {
+    ...view,
+    lesson: {
+      ...view.lesson,
+      progress: cloudLessonProgress(
+        view.lesson.progress,
+        progress,
+        lessonKey(locator.studyId, locator.courseId, locator.lessonId),
+      ),
+      exercises: view.lesson.exercises.map((exercise) => {
+        const latest = progress.latestExerciseAttempt(
+          locator,
+          exercise.id,
+          exercise.contentRevision,
+        );
+        if (!latest) return exercise;
+        const localAt = Date.parse(
+          exercise.hostGrade?.occurredAt ?? exercise.latestSubmission?.occurredAt ?? "",
+        );
+        if (Number.isFinite(localAt) && localAt > Date.parse(latest.occurredAt)) return exercise;
+        return {
+          ...exercise,
+          awaitingHostGrade: latest.hostGrade?.passed !== true,
+          latestSubmission: { answer: latest.answer, occurredAt: latest.occurredAt },
+          hostGrade: latest.hostGrade
+            ? {
+                passed: latest.hostGrade.passed,
+                evaluation: latest.hostGrade.evaluation,
+                extensions: latest.hostGrade.extensions,
+                host: latest.hostGrade.host,
+                learnerAnswer: latest.hostGrade.learnerAnswer,
+                occurredAt: latest.hostGrade.occurredAt,
+              }
+            : null,
+        };
+      }),
+    },
+  };
 }
 
 /**
@@ -118,6 +598,17 @@ export function App() {
   // the invented answer this campus used to refuse to give.
   const progress = useSyncExternalStore(progressPort.subscribe, progressPort.snapshot);
 
+  // Local and online use the same account-to-cloud binding. The local host
+  // grading path remains different; the learner's data path does not.
+  useEffect(() => bindProgressToIdentity(progressPort, identityPort, cloudProgressRemoteStore), []);
+  useEffect(
+    () =>
+      progressPort.subscribe(() =>
+        presencePort.setSharesPresence(progressPort.accountData().preferences.sharesPresence),
+      ),
+    [],
+  );
+
   // Seeded from the address bar, so a refresh or a pasted link lands where it
   // says it will rather than dropping the reader back on Today.
   const initialAddress = useMemo(() => parseAddress(window.location.pathname), []);
@@ -134,6 +625,7 @@ export function App() {
   const [planetOpen, setPlanetOpen] = useState(false);
   const [displayedStudy, setDisplayedStudy] = useState<DisplayedStudy | null>(null);
   const [catalog, setCatalog] = useState<ReadonlyMap<string, StudyView>>(() => new Map());
+  const [cloudTodayCard, setCloudTodayCard] = useState<TodayCard | null>(null);
   const [pendingStudyId, setPendingStudyId] = useState<string | null>(null);
   const [lessonLocator, setLessonRef] = useState<LessonRef | null>(initialAddress.lesson);
   /** Lessons a cross-lesson link led away from, innermost last. */
@@ -158,6 +650,7 @@ export function App() {
   const skipLessonLoadRef = useRef<string | null>(null);
   const pendingSectionIdRef = useRef<string | null>(null);
   const mainRef = useRef<HTMLDivElement>(null);
+  const learningMigrationRef = useRef<string | null>(null);
 
   async function loadBootstrap() {
     const next = await readJson<BootstrapData>(await fetch("/api/bootstrap"));
@@ -172,7 +665,9 @@ export function App() {
 
   async function loadStudy(studyId: string, signal?: AbortSignal) {
     const requestId = (studyRequestId.current += 1);
-    const next = await readJson<StudyView>(await fetch(`/api/studies/${studyId}`, { signal }));
+    const fetched = await readJson<StudyView>(await fetch(`/api/studies/${studyId}`, { signal }));
+    syncStudyProgressToCloud(fetched, progressPort);
+    const next = overlayStudyProgress(fetched, progressPort);
     if (studyRequestId.current !== requestId) return;
     commitView(() => setDisplayedStudy({ locator: studyId, view: next }));
     setPendingStudyId(null);
@@ -180,7 +675,9 @@ export function App() {
 
   async function loadLesson(locator: LessonRef, signal?: AbortSignal) {
     const requestId = (lessonRequestId.current += 1);
-    const next = await readJson<LessonView>(await fetch(lessonPath(locator), { signal }));
+    const fetched = await readJson<LessonView>(await fetch(lessonPath(locator), { signal }));
+    syncLessonRecordToCloud(fetched, locator, progressPort);
+    const next = overlayLessonRecord(fetched, locator, progressPort);
     if (lessonRequestId.current !== requestId) return;
     commitView(() =>
       setDisplayedLesson({ locatorKey: lessonRefKey(locator), locator, view: next }),
@@ -207,10 +704,11 @@ export function App() {
     const controller = new AbortController();
     void Promise.all(
       data.studies.map(async (study) => {
-        const view = await readJson<StudyView>(
+        const fetched = await readJson<StudyView>(
           await fetch(`/api/studies/${study.id}`, { signal: controller.signal }),
         );
-        return [study.id, view] as const;
+        syncStudyProgressToCloud(fetched, progressPort);
+        return [study.id, overlayStudyProgress(fetched, progressPort)] as const;
       }),
     )
       .then((entries) => setCatalog(new Map(entries)))
@@ -219,6 +717,73 @@ export function App() {
       });
     return () => controller.abort();
   }, [data]);
+
+  const dueCard = progressPort.dueCards()[0] ?? null;
+  const dueCardLocator = useMemo(
+    () => localCardLocatorOf(dueCard, catalog),
+    [catalog, dueCard?.cardKey],
+  );
+
+  // A cloud card may have been enrolled on another computer, so it is not
+  // guaranteed to exist in this machine's SQLite overview. Resolve its
+  // published/local content through the same card route the review port uses.
+  useEffect(() => {
+    if (!dueCard || !dueCardLocator) {
+      setCloudTodayCard(null);
+      return;
+    }
+    const legacy = data?.today.card;
+    if (legacy && todayCardKey(legacy) === dueCard.cardKey) {
+      setCloudTodayCard(legacy);
+      return;
+    }
+    let cancelled = false;
+    void fetch(cardContentPath(dueCardLocator))
+      .then((response) =>
+        readJson<{
+          readonly front: string;
+          readonly contentRevision: number;
+        }>(response),
+      )
+      .then((content) => {
+        if (cancelled) return;
+        setCloudTodayCard({
+          ...dueCardLocator,
+          front: content.front,
+          contentRevision: content.contentRevision,
+          dueAt: new Date(dueCard.dueAt).toISOString(),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setCloudTodayCard(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [data, dueCard?.cardKey, dueCard?.dueAt, dueCardLocator]);
+
+  const progressUserId = progressPort.syncState().userId;
+  useEffect(() => {
+    if (!data || !progressUserId) return;
+    const migrationKey = `${progressUserId}:${data.requestToken}`;
+    if (learningMigrationRef.current === migrationKey) return;
+    let cancelled = false;
+    void fetch("/api/learning/export")
+      .then((response) => readJson<LocalLearningExport>(response))
+      .then((exported) => {
+        if (cancelled) return;
+        importLocalLearningExport(exported, progressPort);
+        learningMigrationRef.current = migrationKey;
+        return progressPort.flush();
+      })
+      .catch(() => {
+        // The export is a compatibility bridge. A missing/old local database
+        // must not prevent a signed-in learner from opening the campus.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [data, progressUserId]);
 
   useEffect(() => {
     if (!displayedStudy) return;
@@ -299,13 +864,30 @@ export function App() {
 
   const studyView = displayedStudy?.view ?? null;
   const readerPort = useMemo(
-    () => (data ? createHttpReaderPort({ requestToken: data.requestToken }) : null),
+    () =>
+      data
+        ? createHttpReaderPort({
+            requestToken: data.requestToken,
+            progress: progressPort,
+            onLessonComplete: (locator) => {
+              progressPort.advanceLesson(
+                `${locator.studyId}/${locator.courseId}/${locator.lessonId}`,
+                1,
+              );
+            },
+          })
+        : null,
     [data],
   );
   const gradingPort = useMemo(
-    () => (data ? createHttpGradingPort({ requestToken: data.requestToken }) : null),
+    () =>
+      data
+        ? createHttpGradingPort({ requestToken: data.requestToken, progress: progressPort })
+        : null,
     [data],
   );
+  const reviewPort = useMemo(() => createHttpReviewPort(progressPort), []);
+  const vocabularyReviewPort = useMemo(() => createLocalVocabularyReviewPort(progressPort), []);
   /*
     The counters come from the shelf, not from the study page.
 
@@ -587,6 +1169,9 @@ export function App() {
           view={lessonView}
           reader={readerPort}
           grading={gradingPort}
+          progress={progressPort}
+          review={reviewPort}
+          toolbarExtras={<SoundToggle progress={progressPort} />}
           requestToken={data.requestToken}
           onLearningChanged={refreshLearning}
           neighbours={
@@ -636,7 +1221,14 @@ export function App() {
     slot === "settings" ? (
       <SettingsSubnav />
     ) : slot === "learn" && data && data.studies.length > 0 ? (
-      <TodaySection data={data} onOpenLesson={openLesson} onReviewed={refreshLearning} />
+      <TodaySection
+        data={todayDataOf(data, progressPort, cloudTodayCard, catalog)}
+        requestToken={data.requestToken}
+        review={reviewPort}
+        vocabularyReview={vocabularyReviewPort}
+        onOpenLesson={openLesson}
+        onReviewed={refreshLearning}
+      />
     ) : undefined;
 
   return (
@@ -646,11 +1238,9 @@ export function App() {
         activeId={slot}
         extraMoreItems={[STUDIO_MORE_ITEM]}
         /*
-          The streak is a question asked of the same document the quest
-          screen reads. A 0 here is a real zero — this shell now has that
-          document — not the hardcoded lie it used to render when it had no
-          way to know. Disk completions in SQLite are a different store;
-          they do not inflate this number until the reader writes here too.
+          The streak is a question asked of the same cloud-backed document the
+          quest screen reads. The local SQLite projection may be imported once,
+          but it is never a second source of learner truth.
         */
         counters={universityCounters({
           projectName,
@@ -704,15 +1294,18 @@ export function App() {
             />
           ) : null}
           {slot === "library" ? (
-            <NextStepEmpty
-              title="图鉴在学习页的对面"
-              description="概念、术语和收藏长在投放端的图鉴里。今天该读的那一课，在学习页上等着。"
-            />
+            <LibraryScreen onBack={() => (window.location.hash = "#/learn")} />
           ) : null}
           {slot === "practice" ? (
-            <NextStepEmpty
-              title="练习还没接到这边"
-              description="无尽题流在投放端已经能跑。先把今天的那一节读完。"
+            <PracticeSurface
+              store={LOCAL_PRACTICE_STORE}
+              lexicon={LOCAL_LEXICON}
+              onOpenWorld={() => {
+                window.location.hash = "#/learn";
+              }}
+              onBrowse={() => {
+                window.location.hash = "#/learn";
+              }}
             />
           ) : null}
           {slot === "league" ? <LeagueScreen document={progress} /> : null}
@@ -725,29 +1318,55 @@ export function App() {
 
             League, quests and the badge wall now read the shared progress
             document too — the same `ProgressPort` the delivery shell
-            constructs, injected with the same localStorage adapter. They can
-            answer "did you finish a lesson today" without inventing a number.
-            What they cannot yet see is a lesson completed only in the
-            authoring SQLite store: that write still lives on disk, and
-            teaching the reader to call `advanceLesson` is the next seam,
-            not a second copy of this document.
+            constructs, injected with the same cloud adapter and offline cache.
+            They can answer "did you finish a lesson today" without inventing a
+            number. The old authoring SQLite projection is imported through the
+            one-time migration bridge, not read as a competing source.
           */}
           {slot === "plan" ? <PlansScreen /> : null}
           {slot === "catalog" ? (
-            <NextStepEmpty
-              title="目录在投放端"
-              description="键盘能走到的课程目录长在投放端。这边从书架上的项目进去。"
-            />
+            data ? (
+              <LocalCatalog
+                data={data}
+                catalog={catalog}
+                onBack={() => {
+                  window.location.hash = "#/learn";
+                }}
+                onOpenLesson={openLesson}
+              />
+            ) : (
+              <p className="loading-copy">正在读入本地课程目录…</p>
+            )
           ) : null}
           {slot === "review" && data ? (
-            <TodaySection data={data} onOpenLesson={openLesson} onReviewed={refreshLearning} />
+            <TodaySection
+              data={todayDataOf(data, progressPort, cloudTodayCard, catalog)}
+              requestToken={data.requestToken}
+              review={reviewPort}
+              vocabularyReview={vocabularyReviewPort}
+              onOpenLesson={openLesson}
+              onReviewed={refreshLearning}
+            />
           ) : null}
           {slot === "favourites" ? (
-            <FavouritesEmpty onBrowse={() => (window.location.hash = "#/")} />
+            <LibraryScreen
+              onBack={() => (window.location.hash = "#/learn")}
+              initialTab="favourites"
+            />
           ) : null}
-          {slot === "settings" ? <SettingsScreen presence={presencePort} /> : null}
+          {slot === "settings" ? (
+            <SettingsScreen presence={presencePort} progress={progressPort} />
+          ) : null}
           {slot === "profile" ? (
             <ProfileScreen
+              avatar={
+                <RailIdentity
+                  onOpen={() => {
+                    window.location.hash = "#/me";
+                  }}
+                />
+              }
+              account={<AccountPanel identity={identityPort} />}
               passagesRead={0}
               lessonsCompleted={completedLessons(progress)}
               badges={<BadgeWall document={progress} />}

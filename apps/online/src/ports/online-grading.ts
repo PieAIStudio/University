@@ -10,6 +10,7 @@ import {
   type AnswerKey,
   type GradingPort,
   type HostExerciseGrade,
+  type ProgressPort,
 } from "@pieai/university-core";
 
 import { isRepositoryAnchor } from "../content/library";
@@ -19,8 +20,9 @@ import { normalise } from "../lesson/grading";
 export function createOnlineGradingPort(options: {
   readonly lesson: Lesson;
   readonly onPass: () => void;
+  readonly progress?: ProgressPort;
 }): GradingPort {
-  const { lesson, onPass } = options;
+  const { lesson, onPass, progress } = options;
   const attempts = new Map<string, number>();
 
   return {
@@ -35,7 +37,6 @@ export function createOnlineGradingPort(options: {
       const occurredAt = new Date().toISOString();
 
       if (verdict.outcome === "pass") {
-        onPass();
         const hostGrade: HostExerciseGrade = {
           passed: true,
           evaluation: "答对了。",
@@ -44,7 +45,7 @@ export function createOnlineGradingPort(options: {
           learnerAnswer: input.answer,
           occurredAt,
         };
-        return {
+        const result = {
           correct: false,
           attemptCount: count,
           score: 1,
@@ -52,25 +53,51 @@ export function createOnlineGradingPort(options: {
           awaitingHostGrade: false,
           hostGrade,
         };
+        progress?.recordExerciseAttempt({
+          commandId: input.commandId,
+          locator: input.locator,
+          exerciseId: input.exerciseId,
+          contentRevision: input.contentRevision,
+          answer: input.answer,
+          score: result.score,
+          maxScore: result.maxScore,
+          hostGrade,
+          occurredAt,
+        });
+        onPass();
+        return result;
       }
 
       const evaluation =
         verdict.outcome === "undecided" ? verdict.reason : failCopy(lesson, exercise?.prompt);
-      return {
+      const hostGrade: HostExerciseGrade = {
+        passed: false,
+        evaluation,
+        extensions: [],
+        host: "tier-1",
+        learnerAnswer: input.answer,
+        occurredAt,
+      };
+      const result = {
         correct: false,
         attemptCount: count,
         score: 0,
         maxScore: 1,
         awaitingHostGrade: false,
-        hostGrade: {
-          passed: false,
-          evaluation,
-          extensions: [],
-          host: "tier-1",
-          learnerAnswer: input.answer,
-          occurredAt,
-        },
+        hostGrade,
       };
+      progress?.recordExerciseAttempt({
+        commandId: input.commandId,
+        locator: input.locator,
+        exerciseId: input.exerciseId,
+        contentRevision: input.contentRevision,
+        answer: input.answer,
+        score: result.score,
+        maxScore: result.maxScore,
+        hostGrade,
+        occurredAt,
+      });
+      return result;
     },
   };
 }

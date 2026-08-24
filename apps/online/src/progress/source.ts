@@ -1,10 +1,10 @@
 /**
  * This shell's answer to the shared progress questions.
  *
- * Storage stays where it is — `university.progress.v2` and the three-part
- * lesson key in `store.ts`. This file is a read model on top of that store,
+ * This file is a read model on top of the shared cloud-backed ProgressPort,
  * so a world map, an island or a settlement can ask the same questions the
- * authoring shell will answer from a different store.
+ * authoring shell asks. `university.progress.v2` is only the browser cache and
+ * offline outbox.
  *
  * Two losses live here, and they are named rather than papered over.
  *
@@ -14,11 +14,9 @@
  * holds today only because no course does it, and nothing in the import
  * currently forbids it.
  *
- * This shell also has no separate read-confirmation signal. A lesson is
- * written complete once, when the exercises pass, so `readConfirmed` is
- * currently set equal to `exercisesPassed`. That is a known gap, not a claim
- * that answering is reading, and it is the place a real read-confirm will be
- * wired. Do not invent that feature here.
+ * The shared document carries the read-confirmation fact separately from
+ * exercise progress. A pre-migration row with progress 1 is treated as a
+ * completed legacy record; new rows must carry both facts.
  */
 import {
   NOT_STARTED,
@@ -33,8 +31,15 @@ export function progressSource(): ProgressSource {
   return {
     completionOf(ref: LessonRef): LessonCompletion {
       const state = lessonState(lessonKey(ref.studyId, ref.courseId, ref.lessonId));
-      if (state.progress < 1) return NOT_STARTED;
-      return { exercisesPassed: true, readConfirmed: true };
+      const readConfirmed =
+        state.readConfirmed === true &&
+        (state.readConfirmedRevision === undefined || state.readConfirmedRevision === 1);
+      const legacyComplete = state.readConfirmed === undefined && state.progress >= 1;
+      if (state.progress < 1 && !readConfirmed) return NOT_STARTED;
+      return {
+        exercisesPassed: state.progress >= 1,
+        readConfirmed: readConfirmed || legacyComplete,
+      };
     },
   };
 }

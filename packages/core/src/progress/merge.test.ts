@@ -7,6 +7,7 @@ import type {
   ProgressDocument,
   WordProgress,
 } from "../ports/progress.js";
+import { DEFAULT_ACCOUNT_PREFERENCES, emptyAccountData } from "../ports/account-data.js";
 import { emptyProgress } from "./document.js";
 import { mergeProgress } from "./merge.js";
 
@@ -148,6 +149,104 @@ describe("mergeProgress", () => {
     const low = doc({ streak: { days: 3, lastDay: "2026-08-22" } });
     const high = doc({ streak: { days: 9, lastDay: "2026-08-22" } });
     expect(mergeProgress(low, high).streak.days).toBe(9);
+  });
+
+  it("merges account library, practice history, and settings across devices", () => {
+    const phoneFavourite = {
+      senseId: "phone-sense",
+      createdAt: "2026-08-24T08:00:00.000Z",
+      updatedAt: "2026-08-24T08:00:00.000Z",
+    };
+    const laptopFavourite = {
+      senseId: "laptop-sense",
+      createdAt: "2026-08-24T09:00:00.000Z",
+      updatedAt: "2026-08-24T09:00:00.000Z",
+    };
+    const phone = doc({
+      account: {
+        ...emptyAccountData(),
+        favourites: { version: 1, items: [phoneFavourite] },
+        favouriteChanges: {
+          [phoneFavourite.senseId]: {
+            senseId: phoneFavourite.senseId,
+            favourite: phoneFavourite,
+            changedAt: phoneFavourite.updatedAt,
+          },
+        },
+        practiceRecent: { version: 1, ids: ["phone-question"] },
+        preferences: {
+          ...DEFAULT_ACCOUNT_PREFERENCES,
+          foreignLanguageMode: true,
+          updatedAt: { foreignLanguageMode: "2026-08-24T08:00:00.000Z" },
+        },
+      },
+    });
+    const laptop = doc({
+      account: {
+        ...emptyAccountData(),
+        favourites: { version: 1, items: [laptopFavourite] },
+        favouriteChanges: {
+          [laptopFavourite.senseId]: {
+            senseId: laptopFavourite.senseId,
+            favourite: laptopFavourite,
+            changedAt: laptopFavourite.updatedAt,
+          },
+        },
+        practiceRecent: { version: 1, ids: ["laptop-question"] },
+        preferences: {
+          ...DEFAULT_ACCOUNT_PREFERENCES,
+          detailMode: "all",
+          updatedAt: { detailMode: "2026-08-24T09:00:00.000Z" },
+        },
+      },
+    });
+
+    const merged = mergeProgress(phone, laptop);
+    expect(merged.account.favourites.items.map((item) => item.senseId).sort()).toEqual([
+      "laptop-sense",
+      "phone-sense",
+    ]);
+    expect(merged.account.practiceRecent.ids).toEqual(["laptop-question", "phone-question"]);
+    expect(merged.account.preferences.foreignLanguageMode).toBe(true);
+    expect(merged.account.preferences.detailMode).toBe("all");
+  });
+
+  it("keeps a newer favourite deletion tombstone over an older device copy", () => {
+    const favourite = {
+      senseId: "shared-sense",
+      createdAt: "2026-08-24T08:00:00.000Z",
+      updatedAt: "2026-08-24T08:00:00.000Z",
+    };
+    const older = doc({
+      account: {
+        ...emptyAccountData(),
+        favourites: { version: 1, items: [favourite] },
+        favouriteChanges: {
+          [favourite.senseId]: {
+            senseId: favourite.senseId,
+            favourite,
+            changedAt: favourite.updatedAt,
+          },
+        },
+      },
+    });
+    const deletionAt = "2026-08-24T10:00:00.000Z";
+    const newerDeletion = doc({
+      account: {
+        ...emptyAccountData(),
+        favouriteChanges: {
+          [favourite.senseId]: {
+            senseId: favourite.senseId,
+            favourite: null,
+            changedAt: deletionAt,
+          },
+        },
+      },
+    });
+
+    const merged = mergeProgress(older, newerDeletion);
+    expect(merged.account.favourites.items).toEqual([]);
+    expect(merged.account.favouriteChanges[favourite.senseId]?.favourite).toBeNull();
   });
 
   it("is commutative and idempotent so a retried save does not thrash", () => {

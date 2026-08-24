@@ -6,11 +6,25 @@ import {
 } from "../content-access.js";
 import { CardRevealSchema, CardReviewSchema } from "../request-schemas.js";
 import { parseKnowledgeCardRoute, parseRoute } from "../routes.js";
-import { readJsonBody, requireMutationAccess } from "../wire.js";
+import { readJsonBody, requireMutationAccess, sendJson } from "../wire.js";
 import type { Handler } from "./types.js";
 
 /** Course-card and knowledge-card reveal/review. */
 export const handleCard: Handler = async (ctx, request, response, url) => {
+  const cardContentRoute = parseRoute(
+    url.pathname,
+    /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/cards\/([^/]+)\/content$/,
+  );
+  if (request.method === "GET" && cardContentRoute) {
+    const card = courseReviewableCard(ctx.studiesRoot, cardContentRoute);
+    sendJson(response, 200, {
+      front: card.front,
+      back: card.back,
+      contentRevision: card.contentRevision,
+    });
+    return true;
+  }
+
   const cardRevealRoute = parseRoute(
     url.pathname,
     /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/cards\/([^/]+)\/reveal$/,

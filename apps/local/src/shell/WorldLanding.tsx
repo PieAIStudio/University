@@ -2,33 +2,19 @@
  * The authoring shell's world: the same scene as delivery, plus this overlay.
  *
  * Canvas answers "where do I go". DOM answers "what is true right now".
- * The 2D catalog stays below until every SPEC-0003 row is visible here;
- * retiring it earlier would trade information for a screenshot.
+ * The 2D catalog is a separate keyboard-complete route; this component owns
+ * the world view and the authoring overlay only.
  */
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type CSSProperties,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
 import type { BootstrapData, LessonRef, StudyView } from "@pieai/university-ui/view/lesson-view.js";
 import type { CourseNode } from "@pieai/university-world/course.js";
-import {
-  Controls,
-  Flight,
-  LabelProbe,
-  MAP_CONTROLS_HINT,
-  WORLD_POLAR,
-} from "@pieai/university-world/controls.js";
+import { MAP_CONTROLS_HINT } from "@pieai/university-world/controls.js";
 import { frameWorld } from "@pieai/university-world/frame.js";
-import { placeWorld, WorldScene, type Marker } from "@pieai/university-world/Maps.js";
-import { Stage } from "@pieai/university-world/Stage.js";
+import { placeWorld, type Marker } from "@pieai/university-world/Maps.js";
+import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
 import { PresenceLayer } from "@pieai/university-ui/presence.js";
 import type { PresencePort } from "@pieai/university-core";
@@ -72,11 +58,8 @@ export function WorldLanding({
   const [hovered, setHovered] = useState<string | null>(null);
   const [picked, setPicked] = useState<CourseNode | null>(null);
   const [sceneReady, setSceneReady] = useState(false);
-  const labelNodes = useRef(new Map<string, HTMLElement>());
   const pickCardRef = useRef<HTMLElement | null>(null);
   const companionNodes = useRef(new Map<string, HTMLElement>());
-  const draggedRef = useRef(false);
-  const pointerOrigin = useRef<{ x: number; y: number } | null>(null);
   const dismissPick = useCallback(() => setPicked(null), []);
 
   const progressOf = useCallback(
@@ -129,6 +112,8 @@ export function WorldLanding({
       return entry;
     });
   }, [world, nextLesson]);
+
+  const renderWorld = useMemo(() => (world ? { ...world, placements } : null), [world, placements]);
 
   const nextUp = useMemo(() => {
     if (placements.length === 0) return null;
@@ -194,145 +179,74 @@ export function WorldLanding({
 
   return (
     <div className="world-landing">
-      <div
-        className="stagewrap world-landing__stage"
-        onPointerDownCapture={(event) => {
-          pointerOrigin.current = { x: event.clientX, y: event.clientY };
-          draggedRef.current = false;
+      <WorldMapCanvas
+        className="world-landing__stage"
+        world={renderWorld}
+        cameraFrom={framed.cameraFrom}
+        lookAt={framed.lookAt}
+        learnerAt={learnerAt}
+        skyStudyId={shownStudyId}
+        focus={focus ?? undefined}
+        markers={markers}
+        followId={picked ? `${picked.studyId}/${picked.courseId}` : null}
+        followNode={pickCardRef}
+        onPick={(node) => {
+          setPicked(node);
+          onSelectStudy(node.studyId);
         }}
-        onPointerMoveCapture={(event) => {
-          const origin = pointerOrigin.current;
-          if (!origin || draggedRef.current) return;
-          if (Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 6) {
-            draggedRef.current = true;
-          }
-        }}
-      >
-        {world ? (
-          <Stage
-            cameraFrom={framed.cameraFrom}
-            lookAt={framed.lookAt}
-            onSceneReady={onSceneReady}
-            onSceneBusy={onSceneBusy}
-            onPointerMissed={dismissPick}
-          >
-            <Controls target={framed.lookAt} polar={WORLD_POLAR} />
-            <Flight to={framed.cameraFrom} look={framed.lookAt} />
-            <LabelProbe
-              markers={markers}
-              limit={9}
-              nodes={labelNodes.current}
-              // This shell's course markers use `studyId/courseId` as `id`.
-              // The projector looks that id up in the same array; inventing
-              // a second key here would place the card at (0,0).
-              followId={picked ? `${picked.studyId}/${picked.courseId}` : null}
-              followNode={pickCardRef}
-            />
-            {/*
-              A separate probe from LabelProbe on purpose: companions must not
-              compete with course names for the label budget, and a companion
-              that lost that competition would silently stop existing.
-            */}
-            <CompanionProbe
-              anchors={placements.map((entry) => ({
-                id: `course:${entry.node.studyId}/${entry.node.courseId}`,
-                position: entry.position,
-              }))}
-              nodes={companionNodes.current}
-            />
-            <WorldScene
-              placements={placements}
-              extent={world.extent}
-              learnerAt={learnerAt}
-              skyStudyId={shownStudyId}
-              focus={focus ?? undefined}
-              onPick={(node) => {
-                setPicked(node);
-                onSelectStudy(node.studyId);
-              }}
-              onHover={(node) => setHovered(node ? node.title : null)}
-            />
-          </Stage>
-        ) : null}
-
-        <nav className="labels" aria-label="地图上的去处">
-          {markers.map((marker) => {
-            const content = (
-              <>
-                {marker.text}
-                {marker.sub ? <small>{marker.sub}</small> : null}
-              </>
-            );
-            const attach = (element: HTMLElement | null) => {
-              if (element) labelNodes.current.set(marker.id, element);
-              else labelNodes.current.delete(marker.id);
-            };
-            const className = ["label", `label--${marker.kind}`].join(" ");
-            return marker.activate ? (
-              <button
-                key={marker.id}
-                ref={attach}
-                type="button"
-                className={className}
-                style={{ "--placed": 0 } as CSSProperties}
-                onClick={() => {
-                  if (draggedRef.current) return;
-                  marker.activate?.();
-                }}
-              >
-                {content}
-              </button>
-            ) : (
-              <div
-                key={marker.id}
-                ref={attach}
-                className={className}
-                style={{ "--placed": 0 } as CSSProperties}
-              >
-                {content}
-              </div>
-            );
-          })}
-        </nav>
-        <PresenceLayer
-          port={presence}
-          surface="world"
-          viewKey="world"
-          attach={(userId, element) => {
-            if (element) companionNodes.current.set(userId, element);
-            else companionNodes.current.delete(userId);
-          }}
-        />
-
-        {wide ? null : nextLesson && !picked ? (
-          <aside className="nextup">
-            <p className="nextup__eyebrow">今天的第一件事</p>
-            <h2 className="nextup__title">{nextLesson.lessonTitle}</h2>
-            <p className="nextup__meta">
-              {nextLesson.studyTitle} · {nextLesson.courseTitle}
-            </p>
-            <GameButton variant="primary" onClick={() => onOpenLesson(nextLesson)}>
-              {nextLesson.progress ? "继续学习" : "开始学习"}
-            </GameButton>
-          </aside>
-        ) : null}
-
-        {picked ? (
-          <CoursePickCard
-            title={picked.title}
-            studyTitle={picked.studyTitle}
-            lessons={picked.lessons}
-            depth={picked.depth}
-            prerequisiteCount={picked.prerequisiteCourseIds.length}
-            onEnter={() => enter(picked)}
-            onDismiss={dismissPick}
-            cardRef={pickCardRef}
+        onHover={(node) => setHovered(node ? node.title : null)}
+        onSceneReady={onSceneReady}
+        onSceneBusy={onSceneBusy}
+        onPointerMissed={dismissPick}
+        stageChildren={
+          <CompanionProbe
+            anchors={placements.map((entry) => ({
+              id: `course:${entry.node.studyId}/${entry.node.courseId}`,
+              position: entry.position,
+            }))}
+            nodes={companionNodes.current}
           />
-        ) : null}
-
-        <p className="hint">{hovered ?? MAP_CONTROLS_HINT}</p>
-        {mapCover ? <LoadingTrivia /> : null}
-      </div>
+        }
+        overlay={
+          <>
+            <PresenceLayer
+              port={presence}
+              surface="world"
+              viewKey="world"
+              attach={(userId, element) => {
+                if (element) companionNodes.current.set(userId, element);
+                else companionNodes.current.delete(userId);
+              }}
+            />
+            {wide ? null : nextLesson && !picked ? (
+              <aside className="nextup">
+                <p className="nextup__eyebrow">今天的第一件事</p>
+                <h2 className="nextup__title">{nextLesson.lessonTitle}</h2>
+                <p className="nextup__meta">
+                  {nextLesson.studyTitle} · {nextLesson.courseTitle}
+                </p>
+                <GameButton variant="primary" onClick={() => onOpenLesson(nextLesson)}>
+                  {nextLesson.progress ? "继续学习" : "开始学习"}
+                </GameButton>
+              </aside>
+            ) : null}
+            {picked ? (
+              <CoursePickCard
+                title={picked.title}
+                studyTitle={picked.studyTitle}
+                lessons={picked.lessons}
+                depth={picked.depth}
+                prerequisiteCount={picked.prerequisiteCourseIds.length}
+                onEnter={() => enter(picked)}
+                onDismiss={dismissPick}
+                cardRef={pickCardRef}
+              />
+            ) : null}
+          </>
+        }
+        hint={hovered ?? MAP_CONTROLS_HINT}
+        loading={mapCover ? <LoadingTrivia /> : null}
+      />
 
       <div className="world-landing__authoring">
         {summary ? (
