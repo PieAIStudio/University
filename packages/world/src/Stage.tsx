@@ -35,22 +35,22 @@ import { createAoPass } from "./ao";
 import { assertWorldGradePipeline, createGradePass } from "./grade";
 import { renderTier } from "./tier";
 
-function Pipeline() {
+function Pipeline({ ambientOcclusion }: { readonly ambientOcclusion: boolean }) {
   const { gl, scene, camera, size, viewport } = useThree();
   const pass = useMemo(() => createGradePass(), []);
-  const ao = useMemo(() => createAoPass(), []);
+  const ao = useMemo(() => (ambientOcclusion ? createAoPass() : null), [ambientOcclusion]);
   // Recomputed each render is fine: the viewport does not change mid-frame,
   // and the mobile skip has to follow a rotate-to-landscape the way dpr does.
   const mobile = renderTier() === "mobile";
 
   useEffect(() => () => pass.dispose(), [pass]);
-  useEffect(() => () => ao.dispose(), [ao]);
+  useEffect(() => () => ao?.dispose(), [ao]);
 
   useEffect(() => {
     const width = size.width * viewport.dpr;
     const height = size.height * viewport.dpr;
     pass.resize(width, height);
-    ao.resize(width, height);
+    ao?.resize(width, height);
   }, [pass, ao, size.width, size.height, viewport.dpr]);
 
   // The kit guard is the reason the package exists: double tone-map / double
@@ -78,7 +78,7 @@ function Pipeline() {
     }
     // AO before the encode. On a phone the directional map is the contact
     // shadow we can afford; this pass is the desktop crease.
-    if (!mobile && pass.target.depthTexture) {
+    if (ao && !mobile && pass.target.depthTexture) {
       ao.render(gl, pass.target, camera);
       pass.render(gl, ao.target.texture);
     } else {
@@ -184,6 +184,23 @@ interface StageProps {
    * its own, paying for two.
    */
   readonly paused?: boolean;
+  /**
+   * The screen-space crease pass. On by default; a scene made of one big
+   * curved body wants it off.
+   *
+   * The pass is a 16-tap spiral kernel with no bilateral blur, which is the
+   * right trade over a field of small islands — the creases land in contact
+   * shadows and read as weight. Put a marker in front of a sphere and the same
+   * sixteen taps straddle one steep depth edge instead, so each one darkens a
+   * different pixel and the result is a ring of black petals around the thing
+   * you just selected. Measured on the planet picker, where it looked like a
+   * corrupted texture rather than a shadow.
+   *
+   * Blurring the pass would fix both, and is the better answer when there is a
+   * second scene that needs it. One switch is the honest amount of machinery
+   * for one scene.
+   */
+  readonly ambientOcclusion?: boolean;
 }
 
 export function Stage({
@@ -194,6 +211,7 @@ export function Stage({
   onSceneBusy,
   onPointerMissed,
   paused = false,
+  ambientOcclusion = true,
 }: StageProps) {
   const tier = renderTier();
 
@@ -249,7 +267,7 @@ export function Stage({
       // that was ever burning frames for nobody.
       frameloop={paused ? "never" : "always"}
     >
-      <Pipeline />
+      <Pipeline ambientOcclusion={ambientOcclusion} />
       {/*
         Sky, sun, fog and sea belong to the scene rather than to this file. The
         two map levels are the same world at two scales, and their fog has to

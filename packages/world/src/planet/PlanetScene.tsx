@@ -138,7 +138,17 @@ function buildSkyGeometry(): THREE.BufferGeometry {
 }
 
 function buildPlanetGeometry(): THREE.BufferGeometry {
-  const geometry = asFaces(new THREE.IcosahedronGeometry(1, 2));
+  /*
+    Detail 4, not 2.
+
+    At 2 an icosahedron is 320 faces, and flat-shaded that reads as a die
+    rather than a planet — the coastline the elevation function draws is
+    coarser than the facets it is drawn on, so a continent is four triangles
+    and every one of them is visible. The islands get away with detail 1
+    because they are small and stylised; a whole world at arm's length does
+    not. 5120 faces on one sphere on a picker page is not a budget question.
+  */
+  const geometry = asFaces(new THREE.IcosahedronGeometry(1, 4));
   const position = geometry.attributes.position as THREE.BufferAttribute;
   const colours = new Float32Array(position.count * 3);
   const colour = new THREE.Color();
@@ -354,7 +364,12 @@ export function PlanetScene(props: PlanetSceneProps) {
  */
 export function PlanetStage(props: PlanetSceneProps) {
   return (
-    <Stage cameraFrom={planetCamera()} lookAt={[0, 0, 0]}>
+    /*
+      No screen-space AO here. The pass creases a field of small islands
+      convincingly and turns one marker in front of one sphere into a ring of
+      black petals — see the note on `ambientOcclusion` in Stage.
+    */
+    <Stage cameraFrom={planetCamera()} lookAt={[0, 0, 0]} ambientOcclusion={false}>
       <CameraRig />
       <PlanetScene {...props} />
     </Stage>

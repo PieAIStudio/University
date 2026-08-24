@@ -149,24 +149,37 @@
 
 @media (min-width: 768px) {
   /*
-    On desktop the shell floats its rail and its counter capsule *over* the
-    content area rather than beside it — that is what lets the map be
-    full-bleed. A page that is not a map has to make its own room, the way the
-    map hint and the feedback note already do. Without this the globe sat
-    behind the rail and 关闭 sat behind the streak capsule.
+    No room-making of its own any more.
+
+    This page used to add `padding-left: gutter + rail + 12` because the shell
+    floated its rail *over* a full-bleed content area, and without it the globe
+    sat behind the rail. `.app-shell__content` reserves that room itself now, so
+    the page was paying for the rail twice: 289px from the shell and 285px
+    again here, out of 1440. What was left was a 240px-wide slot, and a sphere
+    framed to fit 240 by 714 arrives as a marble.
+
+    A page that indents itself for chrome it cannot see is a page that will be
+    wrong again the next time the chrome moves. The shell owns its own room.
   */
   .planet-page {
-    padding-left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
-    grid-template-columns: minmax(15rem, 34%) minmax(0, 1fr);
+    /*
+      The globe takes the room; the list is a rail.
+
+      It was the other way round — 34% to the globe and the rest to the list —
+      and 34% of a column the floating shell has already narrowed is about
+      240px. A sphere framed to fit 240 wide by 714 tall shrinks to fit the
+      width, so the one thing this page exists to show arrived as a marble in a
+      tall grey slot. The list is a list: it wants a readable measure and
+      nothing more, which is what a rail is.
+    */
+    grid-template-columns: minmax(0, 1fr) minmax(19rem, 24rem);
     grid-template-rows: auto minmax(0, 1fr);
     grid-template-areas:
       "head head"
       "globe rail";
   }
 
-  .planet-page__head {
-    padding-right: calc(var(--shell-aside-width, 0px) + 20px);
-  }
+  /* Same reason: the aside's room comes from the shell, not from here. */
 
   .planet-page__rail {
     border-top: 0;

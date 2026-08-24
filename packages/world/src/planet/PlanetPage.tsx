@@ -12,7 +12,7 @@
  * not an action; the kit's button is the enter/close pair.
  */
 import { GameBadge, GameButton, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
-import { useEffect, useId } from "react";
+import { useEffect, useId, useMemo } from "react";
 
 import { PlanetStage } from "./PlanetScene.js";
 import { studyCounts, studyCourseList, type PlanetStudy } from "./planet-copy.js";
@@ -29,7 +29,32 @@ export interface PlanetPageProps {
   readonly onClose: () => void;
 }
 
-export function PlanetPage({ studies, selectedId, onSelect, onEnter, onClose }: PlanetPageProps) {
+export function PlanetPage({
+  studies: given,
+  selectedId,
+  onSelect,
+  onEnter,
+  onClose,
+}: PlanetPageProps) {
+  /*
+    One order, both shells.
+
+    Each shell hands this list over in whatever order its own source produced —
+    the authoring shell reads directories from disk, the delivery shell reads
+    an imported bundle — so the same five series arrived in two different
+    orders on the same page. Nobody chose either one, which is the tell: an
+    order that falls out of a file system is not a decision, and the reader has
+    to relearn the list when they change campus.
+
+    By title, zh collation, so a Chinese name sorts by pronunciation rather
+    than by code point. Not by progress: a list that rearranges itself as you
+    learn is a list you cannot build a habit of scanning.
+  */
+  const studies = useMemo(
+    () => [...given].sort((left, right) => left.title.localeCompare(right.title, "zh")),
+    [given],
+  );
+
   const titleId = useId();
   const selected = studies.find((study) => study.id === selectedId) ?? null;
 

@@ -210,6 +210,13 @@ describe("PlanetPage", () => {
     });
     const rows = [...container.querySelectorAll("[data-study-id]")];
     expect(rows.map((node) => node.tagName)).toEqual(["BUTTON", "BUTTON"]);
-    expect(rows.map((node) => node.getAttribute("data-study-id"))).toEqual(["turing-pact", "buzz"]);
+    /*
+      By title, not in the order the caller passed them. The two shells read
+      their catalogues from different places and handed this component two
+      different orders for the same five series; the list is sorted here so a
+      reader does not have to relearn it when they change campus. `STUDIES`
+      arrives TuringPact-then-Buzz, and Buzz sorts first.
+    */
+    expect(rows.map((node) => node.getAttribute("data-study-id"))).toEqual(["buzz", "turing-pact"]);
   });
 });
