@@ -31,6 +31,7 @@
     "./loading/LoadingTrivia.js": "./src/loading/LoadingTrivia.tsx",
     "./loading/loading-trivia.css": "./src/loading/loading-trivia.css",
     "./markdown/MarkdownContent.js": "./src/markdown/MarkdownContent.tsx",
+    "./markdown/markdown-body.css": "./src/markdown/markdown-body.css",
     "./markdown/markdown-content.css": "./src/markdown/markdown-content.css",
     "./markdown/remark-lesson-links.js": "./src/markdown/remark-lesson-links.ts",
     "./navigation/StudySwitcher.js": "./src/navigation/StudySwitcher.tsx",

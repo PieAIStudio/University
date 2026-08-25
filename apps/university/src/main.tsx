@@ -46,6 +46,7 @@ import "@pieai/university-ui/review/choice-block.css";
 import "@pieai/university-ui/shell/app-shell.css";
 import "@pieai/university-ui/sound/sound-toggle.css";
 import "@pieai/university-ui/today/today.css";
+import "@pieai/university-ui/markdown/markdown-body.css";
 import "@pieai/university-world/overlay.css";
 import "./styles.css";
 

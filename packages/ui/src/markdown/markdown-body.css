@@ -1,0 +1,124 @@
+.markdown-body {
+  color: #eee0ca;
+  font-size: 1.04rem;
+  line-height: 1.82;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  margin: 1.8em 0 0.7em;
+  color: #fff5e8;
+  font-family: var(--game-ui-font-display);
+  line-height: 1.2;
+}
+
+.markdown-body h1:first-child,
+.markdown-body h2:first-child {
+  margin-top: 0;
+}
+
+.markdown-body.lesson-prose {
+  row-gap: 1.05em;
+}
+
+.markdown-body.lesson-prose > * {
+  grid-column: text;
+  min-width: 0;
+  margin-block: 0;
+}
+
+.markdown-body.lesson-prose > h2 {
+  margin-block-start: 1.15em;
+}
+
+.markdown-body.lesson-prose > h3 {
+  margin-block-start: 0.7em;
+}
+
+.markdown-body.lesson-prose > :first-child {
+  margin-block-start: 0;
+}
+
+.markdown-body.lesson-prose > .evidence-inline-source,
+.markdown-body.lesson-prose > .lesson-media,
+.markdown-body.lesson-prose > .mermaid-diagram,
+.markdown-body.lesson-prose > table {
+  grid-column: wide;
+  justify-self: center;
+  width: min(var(--lesson-evidence-measure), 100%);
+}
+
+.markdown-body.lesson-prose > h2[data-role="ask"] {
+  margin-block-start: 2.1em;
+  padding-block-start: 1.15em;
+  border-block-start: 1px solid var(--campus-rule);
+  color: #f6c177;
+}
+
+.markdown-body.lesson-prose > h2[data-role="reveal"] {
+  margin-block-start: 0.75em;
+}
+
+.markdown-body.lesson-prose > h2[data-role="reveal"]::before {
+  content: "";
+  display: inline-block;
+  width: 0.66em;
+  height: 2px;
+  margin-inline-end: 0.5em;
+  vertical-align: 0.3em;
+  background: #f6c177;
+}
+
+.markdown-body.lesson-prose > h2[data-role="takeaway"] {
+  margin-block-start: 1.9em;
+  color: var(--game-ui-text-muted);
+  font-family: inherit;
+  font-size: 0.82em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.markdown-body.lesson-prose > h2[data-role="takeaway"] + p {
+  color: #fff5e8;
+  font-size: 1.26em;
+  line-height: 1.6;
+}
+
+.markdown-body code,
+.evidence-item code,
+.campus-footer code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.markdown-body :not(pre) > code {
+  overflow-wrap: anywhere;
+  padding: 0.18em 0.38em;
+  border-radius: 5px;
+  color: #f7c889;
+  background: rgb(12 8 6 / 65%);
+}
+
+.markdown-body pre {
+  overflow-x: auto;
+  padding: 18px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 12px;
+  background: rgb(12 8 6 / 72%);
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.markdown-body th,
+.markdown-body td {
+  padding: 10px;
+  border: 1px solid var(--campus-rule);
+  text-align: left;
+}
+
+.markdown-body > h1:first-child {
+  display: none;
+}
