@@ -14,5 +14,12 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
+  /*
+    Same reason as `packages/ui`: this package resolves `@pieai/university-core`
+    through node_modules to `dist/`, which does not exist until the core is
+    built. Without the reference `tsc -b` typechecks against nothing and reports
+    a missing module — which reads like a type error and is a build-order error.
+  */
+  "references": [{ "path": "../core" }],
   "include": ["src"]
 }

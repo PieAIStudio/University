@@ -17,5 +17,12 @@
     "jsx": "react-jsx",
     "types": ["vite/client"]
   },
+  /*
+    Same reason as the packages: `@pieai/university-core` resolves through
+    node_modules to `dist/`, which does not exist until the core is built.
+    Without the reference `tsc -b` reports a missing module — which reads like
+    a type error and is a build-order error.
+  */
+  "references": [{ "path": "../../packages/core" }],
   "include": ["src", "vite.config.ts", "vitest.config.ts", "vitest.setup.ts"]
 }
