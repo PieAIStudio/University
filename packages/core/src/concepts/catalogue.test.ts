@@ -92,6 +92,25 @@ const EXPECTED: {
 
 const TOTAL = 281;
 
+const EXPECTED_FLOW_CURRENT: Readonly<Record<string, number>> = {
+  clone: 1,
+  diff: 3,
+  commit: 4,
+  gitignore: 4,
+  stash: 4,
+  git: 4,
+  branch: 5,
+  worktree: 5,
+  merge: 6,
+  "pull-request": 6,
+  push: 7,
+  pull: 7,
+  ci: 8,
+  lint: 8,
+  npm: 9,
+  build: 9,
+};
+
 describe("concept catalogue", () => {
   it("assembles every record without a problem", () => {
     // Printed rather than counted: a failure here has to name the entry, or
@@ -101,6 +120,35 @@ describe("concept catalogue", () => {
 
   it("holds all 281 entries", () => {
     expect(CONCEPT_ENTRIES).toHaveLength(TOTAL);
+  });
+
+  it("keeps the ten-step flow on exactly the designated concepts", () => {
+    const flowEntries = CONCEPT_ENTRIES.filter((entry) =>
+      entry.sections.some((section) => section.type === "flow"),
+    );
+    expect(flowEntries.map((entry) => entry.head.id).sort()).toEqual(
+      Object.keys(EXPECTED_FLOW_CURRENT).sort(),
+    );
+
+    const invalidToolFlows = ["terminal", "browser-devtools"].filter((id) =>
+      flowEntries.some((entry) => entry.head.id === id),
+    );
+    expect(invalidToolFlows).toEqual([]);
+
+    const flowProblems = CONCEPT_PROBLEMS.filter((problem) =>
+      Object.hasOwn(EXPECTED_FLOW_CURRENT, problem.id),
+    );
+    expect(flowProblems).toEqual([]);
+
+    for (const entry of flowEntries) {
+      const section = entry.sections.find((candidate) => candidate.type === "flow");
+      expect(section?.type).toBe("flow");
+      if (section?.type !== "flow") continue;
+      expect(section.payload.steps).toHaveLength(10);
+      expect(section.payload.steps.findIndex((step) => step.current) + 1).toBe(
+        EXPECTED_FLOW_CURRENT[entry.head.id],
+      );
+    }
   });
 
   it("keeps the heads-only list in lockstep with the catalogue", () => {
