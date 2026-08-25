@@ -684,6 +684,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "网格、大号黑体、严格对齐，像瑞士海报。",
     body: {
       colloquial: "排成海报那样：字靠左排齐，很大，格子卡死，不要花体，不要居中堆成一朵。",
+      styleSample: {
+        alt: "白底的 MOKO 海报把黑色大标题、导航和三张栏卡牢牢左对齐，右侧留白，中央黑白几何图中压着一个醒目的红方块。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "swiss",
+        contrastSkin: "playful",
+      },
       definition: {
         statement:
           "瑞士排版（也叫国际字体风格）用严格的格子、一种没有字脚的字体（黑体一类）、左对齐、很少的颜色（常见红、黑、白）和摄影，把一页排得像能用尺量过的海报。",
@@ -896,6 +902,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "按钮画成真按钮，皮面木纹，像实物的电子版。",
     body: {
       colloquial: "早期 iPhone 那种，笔记像真的黄纸本，按钮鼓起来像能按下去的那种。",
+      styleSample: {
+        alt: "带细密亚麻纹的米灰 MOKO 面板像一台旧设备，白到米灰的凸起卡片和按钮带高光外阴影，中央媒体位嵌在仿相框里。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "skeuomorphism",
+        contrastSkin: "material",
+      },
       definition: {
         statement:
           "拟物化是把屏幕上的东西画成它在现实里的样子：笔记是黄纸和皮面，书架是木纹，按钮有高光和阴影，让人靠「像什么」来认出「能干什么」。",
@@ -1106,6 +1118,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "卡片像一层纸，影子表示叠了多高，点下去散开一圈。",
     body: {
       colloquial: "安卓手机那种：一块块卡片像纸，按下去会散开一圈，不要做成苹果那样。",
+      styleSample: {
+        alt: "浅灰底上的白色 MOKO 卡片按高度投出轻微 elevation，紫色大写动作与紫青媒体位旁边浮着一个圆形白色按钮示意。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "material",
+        contrastSkin: "skeuomorphism",
+      },
       definition: {
         statement:
           "材料设计是谷歌那套界面规矩：把界面当成一张张纸，影子表示这张纸叠了多高，点下去短暂散开一圈水波，底部常有一排主要入口。英文叫 Material Design。",
@@ -1713,6 +1731,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "自绘角色和插画当主角，颜色亮，可以开玩笑。",
     body: {
       colloquial: "活泼一点，画几个固定的小角色，空的时候也别只有一行字，别那么严肃。",
+      styleSample: {
+        alt: "奶油色的 MOKO 页面用橙青黄粗边围住圆头标题和圆角卡片，中央图像区漂着彩色圆点与波浪，三张卡片各自轻轻歪着。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "playful",
+        contrastSkin: "swiss",
+      },
       definition: {
         statement:
           "趣味插画是让一套自己的画和角色承担表情：颜色偏亮，口气可以开玩笑，空状态、错误、成功都由同一批角色来说，而不是严肃的灰表。",

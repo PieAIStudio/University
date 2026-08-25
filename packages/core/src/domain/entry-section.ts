@@ -508,6 +508,10 @@ export const STYLE_SKIN_IDS = [
   "editorial",
   "glass",
   "flat",
+  "swiss",
+  "playful",
+  "skeuomorphism",
+  "material",
 ] as const;
 export const StyleSkinIdSchema = z.enum(STYLE_SKIN_IDS);
 export type StyleSkinId = z.infer<typeof StyleSkinIdSchema>;
