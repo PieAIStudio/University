@@ -51,12 +51,11 @@ const SPACE_LOW = 0x5a4433;
 const SPACE_HIGH = 0x241a13;
 
 const PLANET_PALETTE = {
-  ocean: 0x4e878e,
-  deepOcean: 0x386f79,
-  olive: 0x7e8554,
-  moss: 0x5c795f,
-  clay: 0xa17a58,
-  coast: 0xb3946d,
+  ocean: 0x1e5f63,
+  deepOcean: 0x174f53,
+  olive: 0x5f7a38,
+  moss: 0x4a7a3f,
+  sand: 0xa97b4a,
 } as const;
 
 interface ContinentSeed {
@@ -65,15 +64,21 @@ interface ContinentSeed {
 }
 
 const CONTINENT_SEEDS: readonly ContinentSeed[] = [
-  { center: new THREE.Vector3(-0.42, -0.05, 0.9).normalize(), colour: PLANET_PALETTE.clay },
+  { center: new THREE.Vector3(-0.42, -0.05, 0.9).normalize(), colour: PLANET_PALETTE.olive },
   { center: new THREE.Vector3(0.75, 0.18, 0.64).normalize(), colour: PLANET_PALETTE.moss },
   { center: new THREE.Vector3(-0.25, -0.78, -0.58).normalize(), colour: PLANET_PALETTE.olive },
-  { center: new THREE.Vector3(0.7, -0.55, -0.45).normalize(), colour: PLANET_PALETTE.clay },
+  { center: new THREE.Vector3(0.7, -0.55, -0.45).normalize(), colour: PLANET_PALETTE.moss },
   { center: new THREE.Vector3(-0.55, 0.65, -0.52).normalize(), colour: PLANET_PALETTE.moss },
 ];
 
-const LAND_LEVEL = 0.68;
+const SAND_REGION_SEEDS: readonly THREE.Vector3[] = [
+  new THREE.Vector3(-0.42, -0.05, 0.9).normalize(),
+  new THREE.Vector3(0.7, -0.55, -0.45).normalize(),
+];
+
+const LAND_LEVEL = 0.76;
 const COAST_WIDTH = 0.055;
+const SAND_REGION_LEVEL = 0.9;
 
 const FRESNEL_VERTEX_SHADER = /* glsl */ `
   varying vec3 vWorldNormal;
@@ -165,6 +170,7 @@ const PIN_TIP_OFFSET = -PIN_TIP_Y * PIN_SCALE;
 const PIN_RADIAL_LIFT = 0.002;
 const PIN_BEAM_LENGTH = 0.065;
 const PIN_BEAM_RADIUS = 0.014;
+const BEACON_GLOW = 0xfff1d6;
 
 const REST: YawPitch = { yaw: 0.35, pitch: 0.18 };
 
@@ -286,11 +292,15 @@ function planetTerrainAt(x: number, y: number, z: number): PlanetTerrain {
     return { colour: oceanColour, elevation: -0.018 };
   }
 
-  // A single muted sand band follows the coastline; the warm colour does not
-  // appear as isolated orange triangles in the middle of an ocean or landmass.
+  const sandScore = Math.max(
+    ...SAND_REGION_SEEDS.map((seed) => x * seed.x + y * seed.y + z * seed.z),
+  );
+  // Sand follows the coastline and fills two seeded interior regions. It never
+  // crosses into the ocean, and it cannot become a separate continent.
   const coast = landScore < LAND_LEVEL + COAST_WIDTH;
+  const interiorSand = !coast && sandScore > SAND_REGION_LEVEL;
   return {
-    colour: coast ? PLANET_PALETTE.coast : strongestContinent.colour,
+    colour: coast || interiorSand ? PLANET_PALETTE.sand : strongestContinent.colour,
     elevation: coast ? 0.008 : 0.035,
   };
 }
@@ -588,6 +598,18 @@ function MarkerBeacon({
       </mesh>
       <group ref={pinVisual} position={placement.pin}>
         <group scale={PIN_SCALE}>
+          {/* The halo is a separate render layer; the pin scale and contact stay untouched. */}
+          <mesh geometry={pinGeometry} scale={1.1} renderOrder={4}>
+            <meshBasicMaterial
+              color={BEACON_GLOW}
+              transparent
+              opacity={selected ? 0.5 : 0.3}
+              depthTest={false}
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
           <lineSegments geometry={pinOutline} renderOrder={5}>
             <lineBasicMaterial color={markerColor.outlineHex} transparent opacity={0.95} />
           </lineSegments>
