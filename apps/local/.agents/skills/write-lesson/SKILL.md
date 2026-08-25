@@ -14,21 +14,25 @@ Why this shape (research, rejected alternatives):
 [docs/reference/lesson-pedagogy.md](../../../docs/reference/lesson-pedagogy.md).
 Read once; never restate it inside a lesson.
 
-Dispatching the work — which model writes, which one checks, and the CLI flags
-that silently fail: [references/pipeline.md](references/pipeline.md), and the
-models and CLI calls it uses: [references/models.md](references/models.md) —
-read that one before dispatching, and never copy a version id out of it, because
-it deliberately holds none. Not needed
-if you are the one writing.
+Dispatching the work — which model writes, which one checks, the preflight gate,
+and the CLI flags that silently fail: [references/pipeline.md](references/pipeline.md),
+and the models and CLI calls it uses: [references/models.md](references/models.md)
+— read both before any writing or checking run. The preflight is required even
+when you are the one writing. Never copy a version id out of `models.md`; it
+deliberately holds roles and families, not a stale current id.
 
 ## Start
 
+0. Run the CLI preflight in [references/models.md](references/models.md) and
+   record the selected Writer/fixer arm, Detector family, and Polisher status
+   **before dispatching any writing or checking task**.
 1. Read current `content.md` and `manifest.json` (evidence, card/exercise ids,
    `contentRevision`, `variant`).
 2. **Read the cited evidence in the study snapshot.** No invented paths or lines.
 3. Pick a variant → [references/variants.md](references/variants.md).
 4. Write. Run [references/checklist.md](references/checklist.md).
-5. **Polish.** See "The polish pass" below. Skip it and the lesson still ships;
+5. **Polish.** See "The polish pass" below. A no-polish run needs the explicit
+   status and reason required by `models.md` before the lesson ships;
    it just reads like documentation.
 6. Land only as a **new revision**. Never rewrite existing revision bytes.
 
@@ -43,11 +47,17 @@ not a reason to skip the freshness gate.
 
 ## The polish pass
 
-You and Grok reason well and write like documentation. Gemini Flash reasons
-less well and writes like a person talking. This step buys the second without
-losing the first, and it was measured rather than assumed —
+The measured Grok Writer/fixer arm reasons well and writes like documentation.
+Gemini Flash reasons less well and writes like a person talking. This step buys
+the second without losing the first, and it was measured rather than assumed —
 [references/pipeline.md](references/pipeline.md) has the numbers and the blind
 scoring.
+
+Before dispatching this polish or any earlier Writer/fixer or Detector task,
+complete the CLI preflight in [references/models.md](references/models.md).
+If Gemini Flash is unavailable, there is no declared Polisher fallback: stop
+the full run or report an explicitly accepted no-polish run. Do not silently
+use Claude for polishing.
 
 Run it on the finished draft, never on a draft you are still fixing:
 
@@ -57,8 +67,11 @@ agy -p "$(cat .agents/skills/write-lesson/references/polish-prompt.md)
 
 ---
 
-$(cat content.md)" --model gemini-3.7-flash-high --effort high --dangerously-skip-permissions > /tmp/after.md
+$(cat content.md)" --model <newest-gemini-flash> --effort <highest> --dangerously-skip-permissions > /tmp/after.md
 ```
+
+Select the placeholders from the just-completed `agy models` preflight; do not
+copy a model id from an old example.
 
 Then the gate, which is not optional:
 
@@ -434,7 +447,10 @@ names. Never put it in `content.md`.
 
 **Agent report every run:** variant + why; rotation exception if any; checklist
 result; evidence list changes; card/exercise changes; wrote a revision or left
-alone.
+alone; preflight results; the actual Writer/fixer arm; and the exact model id
+and effort for Writer/fixer, Detector, and Polisher (or an explicit `not run`
+reason). If Writer/fixer used the fallback, make that the first diagnostic
+clue in any quality follow-up.
 
 Known and predicted defects:
 [references/evidence-and-failures.md](references/evidence-and-failures.md).

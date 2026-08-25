@@ -12,6 +12,15 @@ grok writes  →  a second model reports where a beginner stops  →  grok fixes
              →  a human reads one lesson per course
 ```
 
+The measured path above uses Grok for both Writer/fixer jobs. If the models
+preflight says Grok is unavailable, the Codex CLI may replace that Writer/fixer
+arm only, after its own model-list preflight. The Detector and Polisher keep
+their declared families, and the Writer/fixer and Detector must remain
+different families. If preflight leaves only one family that could fill both
+jobs, stop and report; never let the writer check its own work. The Codex arm
+has not been included in the blind experiment below, so its use changes a
+measured variable and must be visible in the run report.
+
 Chosen by a controlled experiment on 2026-08-10, not by preference. Three
 pipelines, three rewrites and three new lessons each, scored blind by two
 independent readers whose scores agreed almost exactly:
@@ -129,14 +138,17 @@ lessons: if a run reports only defects the skill already names, stop running it.
 
 ## Commands
 
-**Which models, and how to invoke them: [models.md](models.md). Read it before
-dispatching a run.**
+**Which models, how to preflight them, and how to invoke them:
+[models.md](models.md). Read it before dispatching a run. Its preflight is a
+hard gate: no writing or checking prompt is sent before both model listings
+have been inspected and the selected arm has been recorded.**
 
 It is a separate file because model ids go stale every few weeks while the
 pipeline's shape does not, and a version number buried in this argument is a
 version number nobody updates. It names roles rather than versions, and says to
-ask `grok models` / `agy models` for what is current — always the newest in the
-family, always the highest effort it accepts.
+ask `grok models` / `agy models` for what is current — plus `codex debug models`
+when the Writer/fixer fallback is selected — always the newest in the family,
+always the highest effort it accepts.
 
 Two things there are worth knowing before you read it: `--effort` makes Claude
 models under `agy` fail outright, and the detector may never propose wording.
