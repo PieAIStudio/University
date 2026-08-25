@@ -15,6 +15,7 @@ import {
 const views: View[] = [
   WORLD,
   { kind: "review" },
+  { kind: "mistakes" },
   { kind: "course", studyId: "turing-pact", courseId: "foundations-before-zero" },
   {
     kind: "lesson",
@@ -69,8 +70,8 @@ describe("the address bar", () => {
   });
 
   it("keeps a settled lesson distinct from the lesson itself", () => {
-    const lesson = views[3]!;
-    const settled = views[4]!;
+    const lesson = views[4]!;
+    const settled = views[5]!;
     expect(toHash(lesson)).not.toBe(toHash(settled));
     expect(fromHash(toHash(settled)).kind).toBe("settled");
   });
@@ -92,6 +93,11 @@ describe("the address bar", () => {
   it("keeps the 2D directory on its own hash instead of falling back to the world", () => {
     expect(toHash({ kind: "catalog" })).toBe("#/catalog");
     expect(fromHash("#/catalog")).toEqual({ kind: "catalog" });
+  });
+
+  it("keeps the mistake book on its own hash", () => {
+    expect(toHash({ kind: "mistakes" })).toBe("#/mistakes");
+    expect(fromHash("#/mistakes")).toEqual({ kind: "mistakes" });
   });
 
   it("keeps the temporary avatar lab on its own hash instead of treating it as a study", () => {
@@ -126,8 +132,8 @@ describe("the address bar", () => {
   });
 
   it("names the series only where a view actually carries one", () => {
-    expect(studyIdOfView(views[2]!)).toBe("turing-pact");
     expect(studyIdOfView(views[3]!)).toBe("turing-pact");
+    expect(studyIdOfView(views[4]!)).toBe("turing-pact");
     expect(studyIdOfView(WORLD)).toBeNull();
     expect(studyIdOfView({ kind: "studio" })).toBeNull();
   });
@@ -135,7 +141,7 @@ describe("the address bar", () => {
 
 describe("which slot lights up", () => {
   it("keeps a lesson bare and everything else inside the shell", () => {
-    expect(isBareView(views[3]!)).toBe(true);
+    expect(isBareView(views[4]!)).toBe(true);
     for (const view of views.filter((candidate) => candidate.kind !== "lesson")) {
       expect(isBareView(view)).toBe(false);
     }
@@ -147,6 +153,7 @@ describe("which slot lights up", () => {
     expect(activeIdForView({ kind: "planet" })).toBe("learn");
     expect(activeIdForView({ kind: "me" })).toBe("profile");
     expect(activeIdForView({ kind: "favourites" })).toBe("favourites");
+    expect(activeIdForView({ kind: "mistakes" })).toBe("review");
     expect(activeIdForView({ kind: "library", tab: "terms" })).toBe("library");
     expect(activeIdForView({ kind: "concept", id: "state" })).toBe("library");
     expect(activeIdForView({ kind: "studio" })).toBe("studio");

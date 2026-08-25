@@ -38,7 +38,7 @@ export { VocabularyReview } from "./review/VocabularyReview.js";
 export type { ReviewCardPort, VocabularyDueWord, VocabularyReviewPort } from "./review/ports.js";
 // Where a lesson's text comes from, and the one review implementation both
 // campuses share on top of it.
-export type { CardBody, ContentPort } from "./content/port.js";
+export type { CardBody, ContentPort, MistakeExercise } from "./content/port.js";
 export {
   cardKeyOf,
   createReviewCardPort,

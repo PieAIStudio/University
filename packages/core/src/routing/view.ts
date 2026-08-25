@@ -51,6 +51,7 @@ export type View =
       readonly lessonId: string;
     }
   | { readonly kind: "review" }
+  | { readonly kind: "mistakes" }
   // The library: three collections and the learner's shortlist, behind one
   // door. They were four top-bar buttons, which told a visitor that looking a
   // word up, browsing concepts, checking a tic and re-reading a favourite were
@@ -131,6 +132,8 @@ export function toHash(view: View): string {
       return "#/";
     case "review":
       return "#/review";
+    case "mistakes":
+      return "#/mistakes";
     case "library":
       return `#/library/${view.tab}`;
     case "terms":
@@ -206,6 +209,7 @@ export function fromHash(hash: string): View {
   const parts = hash.replace(/^#\/?/u, "").split("/").filter(Boolean).map(dec);
   if (parts.length === 0) return WORLD;
   if (parts.length === 1 && parts[0] === "review") return { kind: "review" };
+  if (parts.length === 1 && parts[0] === "mistakes") return { kind: "mistakes" };
   if (parts[0] === "library") {
     const tab = LIBRARY_TABS.find((candidate) => candidate === parts[1]);
     return { kind: "library", tab: tab ?? "concepts" };
@@ -287,6 +291,7 @@ export function activeIdForView(view: View): string {
     case "catalog":
       return "catalog";
     case "review":
+    case "mistakes":
       return "review";
     case "settings":
       return "settings";

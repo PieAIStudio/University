@@ -68,6 +68,33 @@ afterEach(async () => {
 });
 
 describe("the four screens that read the progress document", () => {
+  it("puts the mistake book inside review when an uncorrected row exists", async () => {
+    progressPort.recordExerciseAttempt({
+      commandId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      locator: { studyId: "s", courseId: "c", unitId: "u", lessonId: "l" },
+      exerciseId: "exercise",
+      contentRevision: 1,
+      answer: "错",
+      score: 0,
+      maxScore: 1,
+      hostGrade: {
+        passed: false,
+        evaluation: "再想想",
+        extensions: [],
+        host: "test",
+        learnerAnswer: "错",
+        occurredAt: "2026-08-26T09:00:00.000Z",
+      },
+      occurredAt: "2026-08-26T09:00:00.000Z",
+    });
+    window.location.hash = "#/review";
+    await act(async () => {
+      root.render(<App />);
+    });
+    expect(container.textContent).toContain("错题本");
+    expect(container.textContent).toContain("1");
+  });
+
   it("renders QuestsScreen at #/quests, not the unopened placeholder", async () => {
     await act(async () => {
       root.render(<App />);

@@ -59,6 +59,24 @@ export interface CardBody {
   readonly contentRevision: number;
 }
 
+/**
+ * The small, explicit content read needed to explain one stored mistake.
+ *
+ * Normal lesson reads intentionally do not include the reference answer. The
+ * mistake book is the one place that asks for it, after the learner has
+ * already submitted an answer; keeping that question on ContentPort makes
+ * both campuses use the same UI without leaking the delivery package's raw
+ * authoring shape into the reader.
+ */
+export interface MistakeExercise {
+  readonly id: string;
+  readonly lessonTitle: string;
+  readonly title: string;
+  readonly prompt: string;
+  readonly correctAnswer: string;
+  readonly contentRevision: number;
+}
+
 export interface ContentPort {
   /**
    * Who is on the shelf without asking anyone — or null, for a build that has
@@ -102,6 +120,8 @@ export interface ContentPort {
    * not the shelf.
    */
   lesson(locator: LessonRef, options?: { readonly signal?: AbortSignal }): Promise<LessonView>;
+  /** The current question and reference answer for one stored mistake. */
+  exercise(locator: LessonRef, exerciseId: string): Promise<MistakeExercise>;
   /**
    * One review card's two sides.
    *

@@ -40,6 +40,9 @@ function shelf(body: Partial<CardBody> = {}): ContentPort {
     lesson(): Promise<LessonView> {
       throw new Error("not asked for in these tests");
     },
+    exercise(): Promise<never> {
+      throw new Error("not asked for in these tests");
+    },
     async card() {
       return { front: CARD.front, back: "一段在跑的程序", contentRevision: 1, ...body };
     },

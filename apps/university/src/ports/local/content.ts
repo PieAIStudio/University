@@ -12,8 +12,18 @@ import {
   type LessonRef,
   type ProgressPort,
 } from "@pieai/university-core";
-import { cardContentPath, lessonPath, readJson } from "@pieai/university-ui/api/client.js";
-import type { CardBody, ContentPort, Shelf } from "@pieai/university-ui/content/port.js";
+import {
+  cardContentPath,
+  exerciseContentPath,
+  lessonPath,
+  readJson,
+} from "@pieai/university-ui/api/client.js";
+import type {
+  CardBody,
+  ContentPort,
+  Shelf,
+  MistakeExercise,
+} from "@pieai/university-ui/content/port.js";
 import type {
   BootstrapData,
   CourseReviewCardLocator,
@@ -156,6 +166,12 @@ export function createLocalContentPort(options: {
       );
       importLegacyLessonRecords(view, locator, options.progress);
       return view;
+    },
+
+    async exercise(locator, exerciseId): Promise<MistakeExercise> {
+      guard(locator);
+      if (!isSafeId(exerciseId)) throw new Error(`这道题的地址不对：${exerciseId}`);
+      return readJson<MistakeExercise>(await fetch(exerciseContentPath(locator, exerciseId)));
     },
 
     async card(card: CourseReviewCardLocator) {

@@ -4,6 +4,7 @@ import {
   isRepositoryEvidence,
   isUrlEvidence,
   type EvidenceReference,
+  type Exercise,
   type KnowledgeNote,
   type StudyManifest,
 } from "@pieai/university-core/domain/schemas.js";
@@ -362,6 +363,24 @@ function buildLessonView(
   };
 }
 
+function referenceAnswerOf(exercise: Exercise): string {
+  return exercise.kind === "short-answer" ? exercise.expectedAnswer : exercise.rubric.join("\n");
+}
+
+/** The explicit content read used by the shared mistake book. */
+function buildExerciseView(studiesRoot: string, route: LearningRoute): unknown {
+  const { lesson } = requireActiveLesson(studiesRoot, route);
+  const exercise = requireActiveExercise(studiesRoot, route);
+  return {
+    id: exercise.id,
+    lessonTitle: lesson.title,
+    title: exercise.title,
+    prompt: exercise.prompt,
+    correctAnswer: referenceAnswerOf(exercise),
+    contentRevision: exercise.contentRevision,
+  };
+}
+
 /**
  * Evidence carried by the packet. The exercise's own references come first
  * because they are what the question is about; the lesson's references follow
@@ -481,4 +500,4 @@ function buildCoachingPacketResponse(
   };
 }
 
-export { buildStudyView, buildLessonView, buildCoachingPacketResponse };
+export { buildStudyView, buildLessonView, buildExerciseView, buildCoachingPacketResponse };

@@ -25,7 +25,15 @@ const course = {
           evidence: [],
           assets: [],
           cards: [{ id: "app-is-a-program", kind: "recall", front: "问", back: "答" }],
-          exercises: [],
+          exercises: [
+            {
+              id: "exercise",
+              kind: "short-answer",
+              title: "问题",
+              prompt: "题面",
+              referenceAnswer: "正确答案",
+            },
+          ],
         },
       ],
     },
@@ -80,6 +88,19 @@ describe("createOnlineContentPort", () => {
     expect(view.lesson.content).toContain("一段课文");
     // A published package is one snapshot, so there is exactly one edition.
     expect(view.lesson.contentRevision).toBe(1);
+  });
+
+  it("reads a mistake's question and reference answer from the published package", async () => {
+    servePackage();
+
+    await expect(createOnlineContentPort().exercise(locator, "exercise")).resolves.toEqual({
+      id: "exercise",
+      lessonTitle: "你已经会用 App 了",
+      title: "问题",
+      prompt: "题面",
+      correctAnswer: "正确答案",
+      contentRevision: 1,
+    });
   });
 
   it("says so plainly when the address names a lesson this course does not have", async () => {

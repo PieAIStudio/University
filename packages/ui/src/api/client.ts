@@ -19,6 +19,10 @@ export function lessonPath(locator: LessonRef): string {
   return `/api/studies/${locator.studyId}/courses/${locator.courseId}/units/${locator.unitId}/lessons/${locator.lessonId}`;
 }
 
+export function exerciseContentPath(locator: LessonRef, exerciseId: string): string {
+  return `${lessonPath(locator)}/exercises/${encodeURIComponent(exerciseId)}`;
+}
+
 export function cardActionPath(card: ReviewCardLocator, action: "reveal" | "review"): string {
   if (card.kind === "knowledge-card") {
     return `/api/studies/${card.studyId}/notes/${card.noteId}/cards/${card.cardId}/${action}`;

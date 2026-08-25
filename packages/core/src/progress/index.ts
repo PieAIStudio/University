@@ -29,3 +29,4 @@ export { mergeProgress } from "./merge.js";
 export { createMemoryPersistence, createMemoryRemoteStore } from "./memory.js";
 export { createProgressPort } from "./port.js";
 export { progressSourceOf } from "./source.js";
+export { mistakesOf, type Mistake } from "./mistakes.js";

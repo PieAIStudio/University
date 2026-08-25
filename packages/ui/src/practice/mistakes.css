@@ -1,0 +1,144 @@
+.mistakes-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  border-radius: var(--game-ui-radius-panel, 14px);
+  background: var(--game-ui-panel, #1a2030);
+  color: var(--game-ui-text, #e9edf5);
+  text-decoration: none;
+}
+
+.mistakes-entry:hover,
+.mistakes-entry:focus-visible {
+  border-color: var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+  color: var(--game-ui-text, #e9edf5);
+}
+
+.mistakes-entry:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 3px;
+}
+
+.mistakes-entry > span:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.mistakes-entry__eyebrow {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.8rem;
+}
+
+.mistakes-entry__done {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.85rem;
+}
+
+.mistake-list {
+  display: grid;
+  gap: 16px;
+}
+
+.mistake-list--loading {
+  min-height: 10rem;
+}
+
+.mistake-list--loading p,
+.mistake-list__celebration p {
+  margin: 0;
+}
+
+.mistake-list__items {
+  display: grid;
+  gap: 16px;
+}
+
+.mistake-card {
+  min-width: 0;
+}
+
+.mistake-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.mistake-card__header > div {
+  display: grid;
+  gap: 8px;
+}
+
+.mistake-card__lesson,
+.mistake-card__status,
+.mistake-card__footer p,
+.mistake-card__fallback {
+  margin: 0;
+}
+
+.mistake-card__lesson,
+.mistake-card__footer {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.9rem;
+}
+
+.mistake-card__status {
+  line-height: 1;
+}
+
+.mistake-card__content {
+  display: grid;
+  gap: 18px;
+}
+
+.mistake-card__content h3,
+.mistake-card__answers h3 {
+  margin: 0 0 8px;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.mistake-card__content p,
+.mistake-card__fallback {
+  margin-top: 0;
+}
+
+.mistake-card__answers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.mistake-card__answers > section {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  border-radius: 10px;
+  background: var(--game-ui-panel-deep, #0c1018);
+}
+
+.mistake-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+}
+
+@media (max-width: 47.99rem) {
+  .mistake-card__answers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mistake-card__footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

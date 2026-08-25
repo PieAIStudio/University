@@ -952,6 +952,17 @@ describe("UniversityLocal loopback API", () => {
     };
     const exercisePath = `${fixture.lessonPath}/exercises/name-auth-owner`;
 
+    const exerciseContent = await fetch(`${base}${exercisePath}`);
+    expect(exerciseContent.status).toBe(200);
+    expect(await exerciseContent.json()).toMatchObject({
+      id: "name-auth-owner",
+      lessonTitle: "Who owns authentication?",
+      title: "Name the owner",
+      prompt: "Name the authentication owner.",
+      correctAnswer: "identity-service",
+      contentRevision: 1,
+    });
+
     const submitted = await fetch(`${base}${exercisePath}/attempt`, {
       method: "POST",
       headers,

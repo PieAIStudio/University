@@ -36,6 +36,7 @@ import "@pieai/university-ui/navigation/university-shell.css";
 import "@pieai/university-ui/path/course-route-quiz.css";
 import "@pieai/university-ui/path/path-cards.css";
 import "@pieai/university-ui/practice/practice.css";
+import "@pieai/university-ui/practice/mistakes.css";
 import "@pieai/university-ui/presence/presence.css";
 import "@pieai/university-ui/reference/knowledge-notes.css";
 import "@pieai/university-ui/reference/reference-panel.css";

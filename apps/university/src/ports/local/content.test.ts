@@ -75,6 +75,27 @@ describe("createLocalContentPort", () => {
     expect(body).toEqual({ front: "问", back: "答", contentRevision: 3 });
   });
 
+  it("reads the question and reference answer for a mistake without loading the lesson view", async () => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      jsonOk({
+        id: "exercise",
+        lessonTitle: "你已经会用 App 了",
+        title: "问题",
+        prompt: "题面",
+        correctAnswer: "正确答案",
+        contentRevision: 3,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const body = await port().exercise(locator, "exercise");
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "/api/studies/turing-pact/courses/foundations-before-zero/units/what-is-an-app/lessons/you-already-know-apps/exercises/exercise",
+    );
+    expect(body.correctAnswer).toBe("正确答案");
+  });
+
   it("refuses an id that would become a directory traversal on the far side", async () => {
     // The address parser deliberately accepts any id — a published id is
     // authored upstream. The adapter that joins one into a filesystem path is

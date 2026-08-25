@@ -6,7 +6,12 @@
  * `contentRevision` is the constant 1 rather than a number off the wire.
  */
 import { lessonKeyOf, type LessonRef } from "@pieai/university-core";
-import type { CardBody, ContentPort, Shelf } from "@pieai/university-ui/content/port.js";
+import type {
+  CardBody,
+  ContentPort,
+  MistakeExercise,
+  Shelf,
+} from "@pieai/university-ui/content/port.js";
 import type { CourseReviewCardLocator } from "@pieai/university-ui/view/lesson-view.js";
 
 import { library, loadCourse, type Course } from "../../content/library";
@@ -47,6 +52,22 @@ export function createOnlineContentPort(): ContentPort {
         // without its unit, and the two are not interchangeable.
         progress: progressPort.lessonState(lessonKeyOf(locator)),
       });
+    },
+
+    async exercise(locator: LessonRef, exerciseId): Promise<MistakeExercise> {
+      const course = await loadCourse(locator.studyId, locator.courseId);
+      const unit = course.units.find((entry) => entry.id === locator.unitId);
+      const lesson = unit?.lessons.find((entry) => entry.id === locator.lessonId);
+      const exercise = lesson?.exercises.find((entry) => entry.id === exerciseId);
+      if (!unit || !lesson || !exercise) throw new Error("这道题不在这门课里");
+      return {
+        id: exercise.id,
+        lessonTitle: lesson.title,
+        title: exercise.title ?? "自检",
+        prompt: exercise.prompt,
+        correctAnswer: exercise.referenceAnswer ?? "参考答案暂时不可用",
+        contentRevision: ONLINE_CONTENT_REVISION,
+      };
     },
 
     async card(card: CourseReviewCardLocator) {

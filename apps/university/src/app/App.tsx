@@ -37,6 +37,7 @@ import {
   isBareView,
   LIBRARY_VIEW_TAB,
   libraryTabOf,
+  mistakesOf,
   progressSourceOf,
   readCourseProgress,
   spineOf,
@@ -69,6 +70,7 @@ import {
 import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
 import { NodeCard } from "@pieai/university-ui/path/NodeCard.js";
 import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
+import { MistakeList, MistakesEntry } from "@pieai/university-ui/practice/mistakes.js";
 import {
   CourseScene,
   placeCourse,
@@ -271,6 +273,11 @@ export function App() {
     [studies],
   );
   const source = useMemo(() => progressSourceOf(progressPort), []);
+  const mistakes = useMemo(() => mistakesOf(progress), [progress]);
+  const uncorrectedMistakeCount = useMemo(
+    () => mistakes.filter((mistake) => !mistake.corrected).length,
+    [mistakes],
+  );
 
   useEffect(() => bindProgressToIdentity(progressPort, identityPort, progressRemoteStore), []);
 
@@ -1131,22 +1138,33 @@ export function App() {
       ) : null}
 
       {view.kind === "review" ? (
-        <TodaySection
-          data={todayData}
-          review={todayReview}
-          vocabularyReview={todayVocabularyReview}
-          onOpenLesson={(locator) =>
-            setView({
-              kind: "lesson",
-              studyId: locator.studyId,
-              courseId: locator.courseId,
-              unitId: locator.unitId,
-              lessonId: locator.lessonId,
-            })
-          }
-          onReviewed={async () => {
-            await progressPort.flush();
-          }}
+        <div className="review-page">
+          <MistakesEntry count={uncorrectedMistakeCount} hasMistakes={mistakes.length > 0} />
+          <TodaySection
+            data={todayData}
+            review={todayReview}
+            vocabularyReview={todayVocabularyReview}
+            onOpenLesson={(locator) =>
+              setView({
+                kind: "lesson",
+                studyId: locator.studyId,
+                courseId: locator.courseId,
+                unitId: locator.unitId,
+                lessonId: locator.lessonId,
+              })
+            }
+            onReviewed={async () => {
+              await progressPort.flush();
+            }}
+          />
+        </div>
+      ) : null}
+
+      {view.kind === "mistakes" ? (
+        <MistakeList
+          mistakes={mistakes}
+          content={contentPort}
+          onOpenLesson={(locator) => setView({ kind: "lesson", ...locator })}
         />
       ) : null}
 

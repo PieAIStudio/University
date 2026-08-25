@@ -12,6 +12,12 @@ export {
 export { PracticeSurface } from "./PracticeSurface.js";
 export { PRACTICE_UNLOCK_HINT, PracticeRewardPanel } from "./PracticeRewardPanel.js";
 export {
+  MistakeList,
+  MistakesEntry,
+  type MistakeListProps,
+  type MistakesEntryProps,
+} from "./MistakeList.js";
+export {
   PRACTICE_RECENT_STORAGE_KEY,
   createLocalPracticeRecentStore,
   createProgressPracticeRecentStore,

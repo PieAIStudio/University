@@ -48,6 +48,8 @@
     "./path/path-cards.css": "./src/path/path-cards.css",
     "./path/path-stats.js": "./src/path/path-stats.ts",
     "./practice/practice.css": "./src/practice/practice.css",
+    "./practice/mistakes.js": "./src/practice/MistakeList.tsx",
+    "./practice/mistakes.css": "./src/practice/mistakes.css",
     "./presence.js": "./src/presence/index.ts",
     "./presence/presence.css": "./src/presence/presence.css",
     "./progress/store.js": "./src/progress/store.ts",

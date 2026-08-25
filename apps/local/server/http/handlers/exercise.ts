@@ -9,7 +9,7 @@ import {
 import { HttpError } from "../errors.js";
 import { ExerciseAttemptSchema } from "../request-schemas.js";
 import { parseRoute } from "../routes.js";
-import { buildCoachingPacketResponse } from "../views.js";
+import { buildCoachingPacketResponse, buildExerciseView } from "../views.js";
 import { readJsonBody, requireMutationAccess, sendJson } from "../wire.js";
 import { exerciseContentKey, lessonContentKey } from "../../learning/types.js";
 import {
@@ -24,6 +24,15 @@ import type { Handler } from "./types.js";
  * packet. Rubric stays as a clear 410 so old clients do not hang.
  */
 export const handleExercise: Handler = async (ctx, request, response, url) => {
+  const exerciseContentRoute = parseRoute(
+    url.pathname,
+    /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/exercises\/([^/]+)$/,
+  );
+  if (request.method === "GET" && exerciseContentRoute) {
+    sendJson(response, 200, buildExerciseView(ctx.studiesRoot, exerciseContentRoute));
+    return true;
+  }
+
   const exerciseRoute = parseRoute(
     url.pathname,
     /^\/api\/studies\/([^/]+)\/courses\/([^/]+)\/units\/([^/]+)\/lessons\/([^/]+)\/exercises\/([^/]+)\/attempt$/,
