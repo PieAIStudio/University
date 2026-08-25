@@ -35,7 +35,6 @@ import { placeStudies, rotationFor, stepRotation, type YawPitch } from "./placem
  * yet. The numbers are the ones Maps already measured (sea for exposure,
  * sky stops, accent for the one lit thing).
  */
-const SKY_MID = 0x8ec8ea;
 /**
  * The ground this globe hangs on. Not sky and not black: the panel's own family
  * two steps darker, so the pane reads as part of the page. `--game-ui-panel` is
@@ -77,6 +76,30 @@ const FRESNEL_FRAGMENT_SHADER = /* glsl */ `
     gl_FragColor = vec4(uColor, alpha);
   }
 `;
+
+const HORIZON_VERTEX_SHADER = /* glsl */ `
+  varying vec2 vUv;
+
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const HORIZON_FRAGMENT_SHADER = /* glsl */ `
+  uniform vec3 uColor;
+  varying vec2 vUv;
+
+  void main() {
+    vec2 point = vUv - vec2(0.5);
+    point.x *= 1.25;
+    float halo = 1.0 - smoothstep(0.08, 0.68, length(point));
+    float alpha = pow(max(halo, 0.0), 1.8) * 0.34;
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`;
+
+const STAR_COUNT = 150;
 
 /**
  * How far back the eye has to stand to hold the whole globe.
@@ -167,6 +190,64 @@ function buildSkyGeometry(): THREE.BufferGeometry {
   }
   geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
   return geometry;
+}
+
+function buildStarGeometry(): THREE.BufferGeometry {
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(STAR_COUNT * 4 * 3);
+  const indices = new Uint16Array(STAR_COUNT * 6);
+  for (let index = 0; index < STAR_COUNT; index += 1) {
+    // Lay the stars in the camera's deep-space view instead of using a naive
+    // lat/long hash: that hash clustered the visible hemisphere below the
+    // horizon, which made a valid star buffer look empty in this narrow pane.
+    const step = index + 1;
+    const x = (hash(String(step * 2654435761)) - 0.5) * 24;
+    const y = (hash(String(step * 2246822519)) - 0.5) * 17;
+    const z = -(24 + hash(String(step * 3266489917)) * 10);
+    const size = 0.02 + hash(String(step * 668265263)) * 0.018;
+    const vertex = index * 4;
+    const offset = vertex * 3;
+    positions[offset] = x - size;
+    positions[offset + 1] = y - size;
+    positions[offset + 2] = z;
+    positions[offset + 3] = x + size;
+    positions[offset + 4] = y - size;
+    positions[offset + 5] = z;
+    positions[offset + 6] = x + size;
+    positions[offset + 7] = y + size;
+    positions[offset + 8] = z;
+    positions[offset + 9] = x - size;
+    positions[offset + 10] = y + size;
+    positions[offset + 11] = z;
+    const triangle = index * 6;
+    indices[triangle] = vertex;
+    indices[triangle + 1] = vertex + 1;
+    indices[triangle + 2] = vertex + 2;
+    indices[triangle + 3] = vertex;
+    indices[triangle + 4] = vertex + 2;
+    indices[triangle + 5] = vertex + 3;
+  }
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+  return geometry;
+}
+
+function Starfield() {
+  const geometry = useMemo(() => buildStarGeometry(), []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <mesh geometry={geometry} frustumCulled={false} renderOrder={1}>
+      <meshBasicMaterial
+        color={0xffe4bd}
+        transparent
+        opacity={0.82}
+        depthTest
+        depthWrite={false}
+        side={THREE.DoubleSide}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
+  );
 }
 
 function buildPlanetGeometry(): THREE.BufferGeometry {
@@ -291,6 +372,23 @@ function FresnelRim() {
   );
 }
 
+function HorizonGlow() {
+  return (
+    <mesh position={[0, -1.04, -0.32]} scale={[1.42, 0.58, 1]} renderOrder={-1}>
+      <planeGeometry args={[2, 1]} />
+      <shaderMaterial
+        vertexShader={HORIZON_VERTEX_SHADER}
+        fragmentShader={HORIZON_FRAGMENT_SHADER}
+        uniforms={{ uColor: { value: new THREE.Color(0xffa24d) } }}
+        transparent
+        depthTest
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
+  );
+}
+
 function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
   const yawGroup = useRef<THREE.Group>(null);
   const pitchGroup = useRef<THREE.Group>(null);
@@ -334,6 +432,8 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
       <mesh geometry={sky} frustumCulled={false}>
         <meshBasicMaterial vertexColors side={THREE.BackSide} depthWrite={false} fog={false} />
       </mesh>
+      <Starfield />
+      <HorizonGlow />
       <group ref={yawGroup}>
         <group ref={pitchGroup}>
           {/*
