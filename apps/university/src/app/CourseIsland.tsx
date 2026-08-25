@@ -14,7 +14,15 @@ export interface CourseIslandProps {
   readonly onOpenLesson: (locator: LessonRef) => void;
 }
 
-/** The course island panel, shared by the narrow underlay and wide HUD slots. */
+/**
+ * The course island panel, rendered into the narrow underlay and the wide HUD.
+ *
+ * One component in two slots, not two panels. It was two: the same aside was
+ * written out twice in `App.tsx`, and the wide copy had grown a
+ * `CourseRouteQuiz` the narrow copy never got — so the quiz did not exist on a
+ * phone at all. Which slot the panel lands in is layout; what it contains is
+ * not, and `wide` may only decide the first.
+ */
 export function CourseIsland({
   course,
   studyId,
@@ -56,6 +64,15 @@ export function CourseIsland({
           </button>
         </div>
       ) : null}
+      {/*
+        「我该从哪一关开始」, asked once and only where it is live.
+
+        It was in the authoring workbench, three screens from any course and
+        compiled out of the delivery build entirely. A learner deciding where
+        to start is standing on the island — and only before the first stone is
+        done, because a quiz still offering to choose your starting point when
+        you are twenty lessons in is asking about a decision you already made.
+      */}
       {hasRouteQuiz(course.id) && viewedProgress?.done === 0 ? (
         <CourseRouteQuiz studyId={studyId} course={course} onOpenLesson={onOpenLesson} />
       ) : null}
