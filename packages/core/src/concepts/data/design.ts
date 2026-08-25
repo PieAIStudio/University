@@ -1447,6 +1447,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "这是给别的公司看的网站，要稳重，能找到案例、资质和联系人，别做成卡通，也别做成个人博客。",
+      styleSample: {
+        alt: "白底的 MOKO 企业仪表盘以蓝灰细线切出表头、表格和三张带表头卡片，深蓝按钮是唯一明确动作，图像区排着规整的柱条。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "enterprise",
+        contrastSkin: "organic",
+      },
       definition: {
         statement:
           "B2B 企业官网是卖给其他公司、而不是直接卖给路过个人的那种公司站。B2B 是 Business to Business 的缩写，即企业对企业。页上要让采购的人拿得出手：这公司是谁、做过什么、资质在哪、找谁谈。",
@@ -1546,6 +1552,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "品牌自己开的店：大图讲故事，路通向结算。",
     body: {
       colloquial: "我们自己卖，不靠商场。网站要有自己的样子，也能让人看完就下单。",
+      styleSample: {
+        alt: "白底的 MOKO 商品页在橙红促销标、划线次价和倒计时带之间塞入热闹信息，中央商品图左上压红色角标，三张卡片像货架一样紧密。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "commerce",
+        contrastSkin: "wabisabi",
+      },
       definition: {
         statement:
           "DTC 品牌电商是品牌不经过商场、自己开网站卖货的那种店。DTC 是 Direct to Consumer 的缩写，即直接卖给买的人。页上要有品牌自己的脾气，但每条路最后都要能看到价格、规格，并走向结算。",
@@ -1848,6 +1860,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "泥土色、圆润边、像手作，少用冷冰冰的直线格。",
     body: {
       colloquial: "自然一点，颜色像土和植物，边不要那么直，像手作的，不要工业风。",
+      styleSample: {
+        alt: "米纸色的 MOKO 页面被植物绿和沙色 blob 包住，标题、媒体位和三张卡片都有不规则圆角与柔和阴影，整体像手捏出的容器。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "organic",
+        contrastSkin: "enterprise",
+      },
       definition: {
         statement:
           "有机设计把页面往自然物上靠：泥土和植物的颜色、偏圆的边、纸和布的感觉、不规则但像河岸那样的曲线，整体像手作而不是像机床切出来的。",
@@ -2253,6 +2271,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "素一点，旧一点，不要那么新那么满。空可以留着，边可以不那么齐，但按钮别故意做坏。",
+      styleSample: {
+        alt: "米灰纸面上的 MOKO 页面几乎留满空白，小号衬线字沿不对称边缘慢慢排开，中央粗糙米灰媒体位只留一道浅斜纹，卡片像薄纸片。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "wabisabi",
+        contrastSkin: "commerce",
+      },
       definition: {
         statement:
           "日式侘寂（wabi-sabi）是一种审美：美在素、在旧、在不圆满。网页上常见米纸或灰陶色、少装饰、不对称的留白、像用过的材料，而不是全新塑料的亮。",
