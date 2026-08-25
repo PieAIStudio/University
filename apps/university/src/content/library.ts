@@ -27,7 +27,7 @@ import type { AnswerKey } from "@pieai/university-core";
 import type { LessonAssetView, LessonSectionView } from "@pieai/university-ui";
 import type { CourseNode } from "@pieai/university-world/course.js";
 
-export type LessonAsset = LessonAssetView;
+type LessonAsset = LessonAssetView;
 
 export interface RepositoryEvidenceAnchor {
   readonly kind: string;
@@ -44,7 +44,7 @@ export interface RepositoryEvidenceAnchor {
  * A citation on a public authority page. 通用课 has no repository to point at,
  * so its claims are anchored in the documents anyone can already open.
  */
-export interface UrlEvidenceAnchor {
+interface UrlEvidenceAnchor {
   readonly kind: string;
   readonly sourceUrl: string;
   readonly sourceTitle: string;
@@ -58,7 +58,7 @@ export function isRepositoryAnchor(anchor: EvidenceAnchor): anchor is Repository
   return "sourcePath" in anchor;
 }
 
-export interface Card {
+interface Card {
   readonly id: string;
   readonly kind: string;
   readonly front: string;
@@ -66,7 +66,7 @@ export interface Card {
   readonly tags?: readonly string[];
 }
 
-export interface Exercise {
+interface Exercise {
   readonly id: string;
   readonly kind: string;
   readonly title?: string;
@@ -87,7 +87,7 @@ export interface Lesson {
   readonly exercises: readonly Exercise[];
 }
 
-export interface Unit {
+interface Unit {
   readonly id: string;
   readonly title: string;
   readonly objective: string;
@@ -126,7 +126,7 @@ export const library = imported as {
   readonly studies: readonly LibraryStudy[];
 };
 
-export const hasContent = library.studies.length > 0;
+const hasContent = library.studies.length > 0;
 
 const cache = new Map<string, Promise<Course>>();
 const resolved = new Map<string, Course>();

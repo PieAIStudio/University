@@ -12,4 +12,4 @@
  * This re-export exists so call sites keep reading `./grading`, which is where
  * a person looks for it.
  */
-export { gradeDeterministically, normalise, type Verdict } from "@pieai/university-core";
+export { normalise } from "@pieai/university-core";

@@ -17,7 +17,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-export const SNIPPET_LIMITS = Object.freeze({
+const SNIPPET_LIMITS = Object.freeze({
   maxSourceBytes: 2 * 1024 * 1024,
   maxReturnedBytes: 64 * 1024,
   defaultContextLines: 5,
@@ -139,7 +139,7 @@ function decodeTextBlob(source, sourcePath) {
  * lines plus five of context, real line numbers, language inferred from path.
  * Returns null when the mirror cannot produce a displayable snippet.
  */
-export function readCitedSnippet(gitDir, evidence) {
+function readCitedSnippet(gitDir, evidence) {
   const sourceCommit = evidence?.sourceCommit;
   const sourcePath = evidence?.sourcePath;
   if (!gitDir || typeof sourceCommit !== "string" || typeof sourcePath !== "string") return null;

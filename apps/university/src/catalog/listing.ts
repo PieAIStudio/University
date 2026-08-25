@@ -22,20 +22,20 @@ import type { Shelf } from "@pieai/university-ui/content/port.js";
 
 import { library, type Course } from "../content/library";
 
-export interface CatalogLesson {
+interface CatalogLesson {
   readonly id: string;
   readonly title: string;
   readonly variant: string | null;
   readonly state: "done" | "live" | "idle";
 }
 
-export interface CatalogUnit {
+interface CatalogUnit {
   readonly id: string;
   readonly title: string;
   readonly lessons: readonly CatalogLesson[];
 }
 
-export interface CatalogCourse {
+interface CatalogCourse {
   readonly id: string;
   readonly title: string;
   readonly depth: number;
@@ -47,7 +47,7 @@ export interface CatalogCourse {
   readonly units: readonly CatalogUnit[];
 }
 
-export interface CatalogStudy {
+interface CatalogStudy {
   readonly id: string;
   readonly title: string;
   /**
