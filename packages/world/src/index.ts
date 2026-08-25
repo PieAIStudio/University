@@ -21,7 +21,7 @@ export {
 export type { LessonPlacement, Marker } from "./Maps.js";
 export { Stage } from "./Stage.js";
 export { WorldMapCanvas, type WorldMap } from "./WorldMapCanvas.js";
-export { courseSprites } from "./path-overlay.js";
+export { courseSprites } from "./labels/path-overlay.js";
 export {
   courseNodesOf,
   courseShapeOf,

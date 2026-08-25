@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
-import { islandBlueprint, islandSurfaceY, sampleIslandSurface } from "./island/island-blueprint.js";
-import { buildBlueprintIsland } from "./island/island-geometry.js";
-import { radiusForLessons } from "./course/layout.js";
+import { islandBlueprint, islandSurfaceY, sampleIslandSurface } from "../island/island-blueprint.js";
+import { buildBlueprintIsland } from "../island/island-geometry.js";
+import { radiusForLessons } from "../course/layout.js";
 
 const STUDY = "turing-pact";
 const COURSE = "foundations-before-zero";

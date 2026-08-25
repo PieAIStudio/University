@@ -10,7 +10,7 @@
  */
 import * as THREE from "three";
 
-import { PATH_KIND_ICON, PATH_KIND_LABEL, type PathNodeKind } from "./course/path-language";
+import { PATH_KIND_ICON, PATH_KIND_LABEL, type PathNodeKind } from "../course/path-language";
 
 /** The fields courseSprites reads. LessonPlacement satisfies this. */
 export interface PathLesson {

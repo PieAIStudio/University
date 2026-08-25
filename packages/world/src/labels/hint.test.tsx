@@ -9,9 +9,9 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it } from "vitest";
 
-import { MAP_CONTROLS_HINT } from "./camera/controls.js";
+import { MAP_CONTROLS_HINT } from "../camera/controls.js";
 
-const CSS = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "overlay.css"), "utf8");
+const CSS = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../overlay.css"), "utf8");
 
 function ruleBlock(css: string, selector: string): string {
   const start = css.indexOf(`${selector} {`);

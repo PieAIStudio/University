@@ -39,7 +39,7 @@ import { islandBlueprint, islandSurfaceY, type IslandBlueprint } from "./island/
 import { buildBlueprintIsland } from "./island/island-geometry.js";
 import { PropField, type Placement, type Role } from "./kit";
 import { layoutCourse, layoutStudyRoad, radiusForLessons } from "./course/layout";
-import { stoneRadius } from "./path-overlay";
+import { stoneRadius } from "./labels/path-overlay";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
 import { hash, seeded } from "./island/random.js";
 import { renderTier } from "./tier";
