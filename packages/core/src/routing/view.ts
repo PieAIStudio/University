@@ -24,7 +24,12 @@
 // `flavour` is the public hash segment (`#/flavour`, `#/library/flavour`).
 // The collection itself is anti-pattern; view kinds use that name. Do not
 // rename this string — bookmarked and shared URLs still have to parse.
-export const LIBRARY_TABS = ["concepts", "terms", "flavour", "favourites"] as const;
+//
+// `notes` is the learner's own collection: what they kept after arguing with
+// an AI host about a piece of source. It has no single-segment legacy route
+// because it has never had one — it was on the authoring workbench, where the
+// delivery build could not compile it at all.
+export const LIBRARY_TABS = ["concepts", "terms", "flavour", "favourites", "notes"] as const;
 
 export type LibraryTab = (typeof LIBRARY_TABS)[number];
 

@@ -28,6 +28,12 @@ function shelf(body: Partial<CardBody> = {}): ContentPort {
     studies(): Promise<never> {
       throw new Error("not asked for in these tests");
     },
+    notes(): Promise<never> {
+      throw new Error("not asked for in these tests");
+    },
+    noteEvidenceBase(): string {
+      throw new Error("not asked for in these tests");
+    },
     shelf(): Promise<never> {
       throw new Error("not asked for in these tests");
     },

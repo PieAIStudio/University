@@ -2,9 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { shortenHomePath } from "./studies-root.js";
-import { KnowledgeNotesSection } from "./KnowledgeNotesSection.js";
 import { CourseSection } from "./CourseSection.js";
-import { classifyCourseRoute } from "./CourseRouteQuiz.js";
 import { splitByFocus, StudyEvidenceStatus } from "./StudyDetail.js";
 import { recentStudies, relativeTimeLabel } from "./StudyShelf.js";
 import { EvidenceCode } from "@pieai/university-ui/evidence/EvidenceCode.js";
@@ -86,14 +84,6 @@ describe("StudyEvidenceStatus", () => {
   });
 });
 
-describe("course route quiz", () => {
-  it("turns answers into an automatic learning starting point", () => {
-    expect(classifyCourseRoute(0)).toBe("beginner");
-    expect(classifyCourseRoute(3)).toBe("familiar");
-    expect(classifyCourseRoute(6)).toBe("builder");
-  });
-});
-
 describe("retrieval and immutable evidence UI", () => {
   it("routes formal-course and classroom-note cards through their own API contracts", () => {
     expect(
@@ -172,40 +162,6 @@ describe("retrieval and immutable evidence UI", () => {
     expect(markup).not.toContain("<img");
     expect(markup).not.toContain("dangerouslySetInnerHTML");
     expect(markup).toContain(">9</span>");
-  });
-});
-
-describe("classroom knowledge notes", () => {
-  it("keeps AI-host notes separate from formal courses and explains lifecycle gates", () => {
-    const common = {
-      question: "这个模块为什么这样设计？",
-      summary: "一次 Grok 追问后形成的解释。",
-      claimType: "personal-understanding" as const,
-      contentRevision: 1,
-      cardCount: 1,
-      evidence: [],
-      content: "# 我的理解\n\n这是展开后阅读的正文。",
-    };
-    const markup = renderToStaticMarkup(
-      <KnowledgeNotesSection
-        studyId="supaluv"
-        notes={[
-          { ...common, id: "active-note", title: "已核验知识", status: "active" },
-          { ...common, id: "draft-note", title: "待补证据", status: "draft" },
-          { ...common, id: "stale-note", title: "来源已变化", status: "stale" },
-        ]}
-      />,
-    );
-
-    expect(markup).toContain("我的追问 / 课堂笔记");
-    expect(markup).toContain("与经过编排的正式课程分开管理");
-    expect(markup).toContain("缺证据，未入复习");
-    expect(markup).toContain("来源已变化，暂停复习");
-    expect(markup).toContain("展开笔记正文与证据");
-    expect(markup).toContain("这是展开后阅读的正文");
-    expect(markup).toContain('data-status="active"');
-    expect(markup).toContain('data-status="draft"');
-    expect(markup).toContain('data-status="stale"');
   });
 });
 

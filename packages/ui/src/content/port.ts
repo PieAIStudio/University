@@ -18,7 +18,12 @@
 
 import type { LessonRef } from "@pieai/university-core";
 
-import type { CourseReviewCardLocator, CourseView, LessonView } from "../view/lesson-view.js";
+import type {
+  CourseReviewCardLocator,
+  CourseView,
+  KnowledgeNoteView,
+  LessonView,
+} from "../view/lesson-view.js";
 
 /**
  * One series, and every course in it.
@@ -104,4 +109,24 @@ export interface ContentPort {
    * it, and no campus schedules one yet — see `KnowledgeReviewCardLocator`.
    */
   card(card: CourseReviewCardLocator): Promise<CardBody>;
+  /**
+   * What the learner kept from arguing with an AI host about one series.
+   *
+   * Empty is a real answer, not a failure: the delivery build's packages do
+   * not carry notes yet, so its library shows the fifth collection's empty
+   * state — the same shape as a collection nobody has added to. The question
+   * belongs on this port because it is the same question as 「where does a
+   * lesson's text come from」, asked about a different kind of text.
+   */
+  notes(studyId: string): Promise<readonly KnowledgeNoteView[]>;
+  /**
+   * Where one note's evidence is fetched from, in this build.
+   *
+   * The evidence rail needs a URL prefix and only the build knows it: the
+   * authoring server serves the repository off disk, and the delivery build
+   * will serve whatever the export pipeline publishes. It was written into the
+   * notes component as `/api/studies/…`, which is one server's address and
+   * nobody else's.
+   */
+  noteEvidenceBase(studyId: string, noteId: string): string;
 }

@@ -1,0 +1,223 @@
+/*
+ * 先测测你的学习起点 — the route quiz, on the course island.
+ *
+ * It was on the authoring workbench beside the study shelf, where nobody
+ * learning anything would look for it, and where the delivery build would have
+ * compiled it away entirely. 「我该从哪一关开始」 is only a live question on a
+ * course you have not started, so that is where and when it is asked.
+ */
+
+.course-route-quiz {
+  /*
+    Sized by the panel it is in, not by the window.
+
+    It was laid out for the workbench, a full-width page, and its options were
+    a three-column grid with a `max-width: 600px` fallback to one. Moved into
+    the course island's 260px rail, that fallback never fired — the viewport
+    was 1440 — so three columns were divided into a 260px box and every option
+    rendered as a vertical column of single characters. The window was never
+    the thing that decided this; the container was, and now it says so.
+  */
+  container-type: inline-size;
+  margin-top: 22px;
+  border: 1px solid rgb(47 179 162 / 34%);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 100% 0, rgb(47 179 162 / 14%), transparent 18rem), rgb(24 40 37 / 42%);
+}
+
+.course-route-quiz > summary {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 15px;
+  cursor: pointer;
+  list-style: none;
+}
+
+@container (min-width: 460px) {
+  .course-route-quiz > summary {
+    gap: 18px;
+    padding: 18px 22px;
+  }
+}
+
+.course-route-quiz > summary::-webkit-details-marker {
+  display: none;
+}
+
+.course-route-quiz > summary > span:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.course-route-quiz > summary strong {
+  color: #fff2dc;
+  font-family: var(--game-ui-font-display);
+  font-size: 1.2rem;
+}
+
+.course-route-quiz__summary-meta {
+  color: #7ad9c9;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.course-route-quiz__body {
+  padding: 0 15px 15px;
+}
+
+@container (min-width: 460px) {
+  .course-route-quiz__body {
+    padding: 0 22px 22px;
+  }
+}
+
+.course-route-quiz__question,
+.course-route-quiz__result {
+  padding: 18px 0 0;
+  border-top: 1px solid rgb(122 217 201 / 16%);
+}
+
+.course-route-quiz__progress {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  color: var(--game-ui-text-muted);
+  font-size: 0.74rem;
+}
+
+.course-route-quiz__progress span:first-child {
+  color: #f0a868;
+  font-weight: 800;
+}
+
+.course-route-quiz__question h4,
+.course-route-quiz__result h4 {
+  max-width: 760px;
+  margin: 12px 0 0;
+  color: #fff2dc;
+  font-family: var(--game-ui-font-display);
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+@container (min-width: 460px) {
+  .course-route-quiz__question h4,
+  .course-route-quiz__result h4 {
+    font-size: clamp(1.2rem, 2.2vw, 1.65rem);
+    line-height: 1.25;
+  }
+}
+
+.course-route-quiz__options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+}
+
+/* Wide enough to read three answers side by side, and only then. */
+@container (min-width: 460px) {
+  .course-route-quiz__options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.course-route-quiz__option {
+  display: flex;
+  min-height: 58px;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 15px;
+  border: 1px solid rgb(122 217 201 / 26%);
+  border-radius: 11px;
+  background: rgb(13 26 24 / 52%);
+  color: #e9f5ed;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.course-route-quiz__option span {
+  color: #7ad9c9;
+  font-size: 1.1rem;
+}
+
+.course-route-quiz__option:hover {
+  border-color: #7ad9c9;
+  background: rgb(47 179 162 / 13%);
+  transform: translateY(-1px);
+}
+
+.course-route-quiz__result-label,
+.course-route-quiz__reason,
+.course-route-quiz__note {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.course-route-quiz__result
+  > p:not(.course-route-quiz__result-label):not(.course-route-quiz__reason):not(
+    .course-route-quiz__note
+  ) {
+  max-width: 760px;
+  margin: 9px 0 0;
+  color: #e9f5ed;
+  line-height: 1.6;
+}
+
+.course-route-quiz__result h4 {
+  color: #7ad9c9;
+}
+
+.course-route-quiz__reason {
+  margin-top: 9px;
+  color: #f0d5ad;
+}
+
+.course-route-quiz__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.course-route-quiz__note {
+  margin-top: 14px;
+  color: rgb(233 245 237 / 58%);
+}
+
+/*
+  The summary row and the progress line stack when the panel is narrow. These
+  came down from the app stylesheet's 600px window breakpoint; the ones that
+  were really about the option grid and the padding are container queries above
+  instead, because the window was never what decided them.
+*/
+@container (max-width: 340px) {
+  .course-route-quiz > summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .course-route-quiz__summary-meta {
+    white-space: normal;
+  }
+
+  .course-route-quiz__progress {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+}

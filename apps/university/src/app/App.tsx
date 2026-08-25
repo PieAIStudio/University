@@ -67,6 +67,7 @@ import {
   QuestsScreen,
 } from "@pieai/university-ui/navigation/screens.js";
 import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
+import { CourseRouteQuiz, hasRouteQuiz } from "@pieai/university-ui/path/CourseRouteQuiz.js";
 import { NodeCard } from "@pieai/university-ui/path/NodeCard.js";
 import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
 import {
@@ -1069,6 +1070,23 @@ export function App() {
                     </button>
                   </div>
                 ) : null}
+                {/*
+                  「我该从哪一关开始」, asked once and only where it is live.
+
+                  It was in the authoring workbench, three screens from any
+                  course and compiled out of the delivery build entirely. A
+                  learner deciding where to start is standing on the island —
+                  and only before the first stone is done, because a quiz still
+                  offering to choose your starting point when you are twenty
+                  lessons in is asking about a decision you already made.
+                */}
+                {hasRouteQuiz(course.id) && viewedProgress?.done === 0 ? (
+                  <CourseRouteQuiz
+                    studyId={view.studyId}
+                    course={course}
+                    onOpenLesson={(locator) => setView({ kind: "lesson", ...locator })}
+                  />
+                ) : null}
                 <button className="ghost block" onClick={() => setView({ kind: "world" })}>
                   {backToMapLabel}
                 </button>
@@ -1216,7 +1234,7 @@ export function App() {
 
       {LIBRARY_VIEW_TAB[view.kind] ? (
         <Suspense fallback={<RouteFallback />}>
-          <LibraryHost tab={libraryTabOf(view)} onOpen={setView} />
+          <LibraryHost tab={libraryTabOf(view)} studyId={focusedStudyId} onOpen={setView} />
         </Suspense>
       ) : null}
 

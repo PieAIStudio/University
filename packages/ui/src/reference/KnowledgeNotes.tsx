@@ -1,8 +1,8 @@
 import { GameBadge, GameCallout } from "@pieai/swimmer-ui-kit";
 
-import { MarkdownContent } from "@pieai/university-ui/markdown/MarkdownContent.js";
-import { EvidenceRail } from "@pieai/university-ui/evidence/EvidenceRail.js";
-import type { KnowledgeNoteView } from "@pieai/university-ui/view/lesson-view.js";
+import { EvidenceRail } from "../evidence/EvidenceRail.js";
+import { MarkdownContent } from "../markdown/MarkdownContent.js";
+import type { KnowledgeNoteView } from "../view/lesson-view.js";
 
 const claimTypeLabels: Readonly<Record<KnowledgeNoteView["claimType"], string>> = {
   "source-fact": "源码事实",
@@ -27,12 +27,34 @@ function noteReviewAvailability(note: KnowledgeNoteView): string {
   return note.cardCount > 0 ? `${note.cardCount} 张卡片可进入复习` : "当前没有派生卡片";
 }
 
-export function KnowledgeNotesSection({
-  studyId,
+/**
+ * 我的追问 / 课堂笔记 — the library's fifth collection.
+ *
+ * A note is what a learner kept after arguing with an AI host about a piece of
+ * source, so it belongs beside the other things you look up rather than in the
+ * workbench where courses are made. It lived in the workbench because that is
+ * where the authoring API that serves it lives, and the merge made that
+ * accidental home fatal: `src/authoring/` is eliminated from the delivery
+ * build, so leaving it there would have compiled the feature out of the half
+ * of the product customers use.
+ *
+ * `basePathOf` is why this can be shared. The evidence rail needs a URL to
+ * fetch a citation's source from, and only the build knows what that URL is —
+ * the authoring build has a loopback server with the repository on disk, the
+ * delivery build will have whatever the export pipeline ends up publishing. It
+ * was written into the component as `/api/studies/…`, which is the authoring
+ * server's address and nobody else's.
+ */
+export function KnowledgeNotes({
   notes,
+  basePathOf,
+  panelIdPrefix,
 }: {
-  readonly studyId: string;
   readonly notes: readonly KnowledgeNoteView[];
+  /** Where this note's evidence is fetched from, in this build. */
+  readonly basePathOf: (note: KnowledgeNoteView) => string;
+  /** Disambiguates the evidence panels' ids when a page holds more than one. */
+  readonly panelIdPrefix: string;
 }) {
   return (
     <section className="knowledge-notes" aria-labelledby="knowledge-notes-title">
@@ -82,9 +104,9 @@ export function KnowledgeNotesSection({
                   </div>
                   {note.evidence.length > 0 ? (
                     <EvidenceRail
-                      basePath={`/api/studies/${studyId}/notes/${note.id}`}
+                      basePath={basePathOf(note)}
                       evidence={note.evidence}
-                      panelIdPrefix={`${studyId}-${note.id}`}
+                      panelIdPrefix={`${panelIdPrefix}-${note.id}`}
                       ariaLabel={`${note.title} 的知识证据`}
                       title="这条知识依据什么"
                     />

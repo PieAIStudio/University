@@ -118,6 +118,18 @@ export function createLocalContentPort(options: {
       guard(card);
       return readJson<CardBody>(await fetch(cardContentPath(card)));
     },
+
+    async notes(studyId: string) {
+      if (!isSafeId(studyId)) throw new Error(`这个项目的地址不对：${studyId}`);
+      const view = await readJson<StudyView>(
+        await fetch(`/api/studies/${encodeURIComponent(studyId)}`),
+      );
+      return view.notes;
+    },
+
+    noteEvidenceBase(studyId: string, noteId: string) {
+      return `/api/studies/${encodeURIComponent(studyId)}/notes/${encodeURIComponent(noteId)}`;
+    },
   };
 }
 

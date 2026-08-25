@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
-import type { CourseView, LessonRef } from "@pieai/university-ui/view/lesson-view.js";
+import type { CourseView, LessonRef } from "../view/lesson-view.js";
 
 type CourseRouteLevel = "beginner" | "familiar" | "builder";
 
@@ -37,14 +37,33 @@ const COURSE_ROUTE_QUESTIONS: readonly RouteQuestion[] = [
   },
 ];
 
-const ROUTE_STARTS: Record<
-  CourseRouteLevel,
-  { readonly unitId: string; readonly lessonId: string }
+/**
+ * Where each answer lands, per course.
+ *
+ * This used to be one flat table of three lesson ids, and the caller passed
+ * whatever course it had — which was always 「在开始之前」 because the workbench
+ * looked that course up by name and rendered nothing otherwise. A course whose
+ * entry points nobody has written down cannot be routed into thirds, and
+ * guessing would send a learner to a lesson that has no business being anyone's
+ * starting point, so a course that is not in this table simply does not ask.
+ */
+const ROUTE_STARTS: Readonly<
+  Record<
+    string,
+    Readonly<Record<CourseRouteLevel, { readonly unitId: string; readonly lessonId: string }>>
+  >
 > = {
-  beginner: { unitId: "what-is-an-app", lessonId: "you-already-know-apps" },
-  familiar: { unitId: "what-is-code", lessonId: "code-is-text" },
-  builder: { unitId: "files-and-folders", lessonId: "file-vs-folder" },
+  "foundations-before-zero": {
+    beginner: { unitId: "what-is-an-app", lessonId: "you-already-know-apps" },
+    familiar: { unitId: "what-is-code", lessonId: "code-is-text" },
+    builder: { unitId: "files-and-folders", lessonId: "file-vs-folder" },
+  },
 };
+
+/** Whether this course has written down where each answer should land. */
+export function hasRouteQuiz(courseId: string): boolean {
+  return courseId in ROUTE_STARTS;
+}
 
 const ROUTE_COPY: Record<
   CourseRouteLevel,
@@ -77,12 +96,14 @@ function getCourseRoutePlan(course: CourseView, level: CourseRouteLevel) {
   const lessons = course.units.flatMap((unit) =>
     unit.lessons.map((lesson) => ({ unitId: unit.id, lesson })),
   );
-  const requested = ROUTE_STARTS[level];
+  const requested = ROUTE_STARTS[course.id]?.[level];
   const startIndex = Math.max(
     0,
-    lessons.findIndex(
-      (entry) => entry.unitId === requested.unitId && entry.lesson.id === requested.lessonId,
-    ),
+    requested
+      ? lessons.findIndex(
+          (entry) => entry.unitId === requested.unitId && entry.lesson.id === requested.lessonId,
+        )
+      : 0,
   );
   return {
     ...ROUTE_COPY[level],
@@ -110,6 +131,20 @@ function isStoredRouteResult(value: unknown): value is StoredRouteResult {
   );
 }
 
+/**
+ * 「我该从哪一关开始」 — asked on the island of a course nobody has started.
+ *
+ * It was on the authoring workbench, three screens away from any course, next
+ * to the study shelf an author registers repositories on. Two things were
+ * wrong with that and the merge only made one of them urgent: the workbench is
+ * eliminated from the delivery build, so the half of the product that sells
+ * courses could not have shown it at all; and a learner deciding where to
+ * start is standing on the course, not in a workbench.
+ *
+ * The caller decides *when*: this is only a live question before the first
+ * lesson is done, and a quiz still offering to pick your starting point when
+ * you are twenty lessons in is asking about a decision you already made.
+ */
 export function CourseRouteQuiz({
   studyId,
   course,
@@ -169,6 +204,14 @@ export function CourseRouteQuiz({
   }
 
   return (
+    /*
+      `h4`, because the panel this now sits in is titled by an `h3` — the
+      course's own name. On the workbench the page was titled `h1` and these
+      were `h3`; moving the component without moving its heading level would
+      have put a second `h3` inside the first one's section, which is a broken
+      outline for a screen reader and was caught, less politely, by G2 finding
+      two 「the title of this panel」 where the product has one.
+    */
     <details className="course-route-quiz" open>
       <summary>
         <span>
@@ -183,7 +226,7 @@ export function CourseRouteQuiz({
         {result && plan ? (
           <div className="course-route-quiz__result">
             <p className="course-route-quiz__result-label">根据你的回答，推荐起点是</p>
-            <h3>{plan.label}</h3>
+            <h4>{plan.label}</h4>
             <p>{plan.description}</p>
             <p className="course-route-quiz__count">
               建议先学 {plan.recommendedCount} 节（这门课共 {plan.totalCount} 节）。
@@ -221,7 +264,7 @@ export function CourseRouteQuiz({
               </span>
               <span>{answers.length === 0 ? "凭直觉回答就好" : "继续回答，系统会自动判断"}</span>
             </div>
-            <h3>{currentQuestion.prompt}</h3>
+            <h4>{currentQuestion.prompt}</h4>
             <div className="course-route-quiz__options">
               {currentQuestion.options.map((option) => (
                 <button

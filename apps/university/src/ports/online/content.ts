@@ -76,6 +76,24 @@ export function createOnlineContentPort(): ContentPort {
         contentRevision: ONLINE_CONTENT_REVISION,
       } satisfies CardBody;
     },
+
+    /*
+      No notes in a published package yet.
+
+      Empty rather than absent, and deliberately so: the library draws the
+      fifth collection either way, and a customer seeing 「还没有课堂笔记」 is
+      being told the truth about a feature that exists. Making the tab
+      conditional would have put the delivery build back where this whole round
+      started — a surface one half of the product has and the other does not.
+      The export pipeline that fills this in is item 11 of the queue.
+    */
+    async notes() {
+      return [];
+    },
+
+    noteEvidenceBase(studyId: string, noteId: string) {
+      return `/content/${encodeURIComponent(studyId)}/notes/${encodeURIComponent(noteId)}`;
+    },
   };
 }
 

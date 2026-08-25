@@ -1,0 +1,139 @@
+/*
+ * 我的追问 / 课堂笔记 — the library's fifth collection.
+ *
+ * These lived on the authoring workbench, which is the one place they could
+ * not survive the merge: `src/authoring/` is dead-code-eliminated out of the
+ * delivery build, so leaving them there would have turned 「hard to find」 into
+ * 「not compiled」. A note is something a learner made, not something an author
+ * publishes, and the library is where the things you look up already live.
+ */
+
+.knowledge-notes {
+  /*
+    The rule between a note and the next used to be `--campus-rule`, a token
+    the authoring shell defined on `.campus` and nothing else did. Moving the
+    notes into the library moved them out of that element, so the token is
+    declared here, on the collection itself, and the colour travels with the
+    component rather than with the page that used to hold it.
+  */
+  --notes-rule: rgb(246 231 211 / 14%);
+}
+
+.knowledge-notes__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.knowledge-notes__header h2 {
+  margin: 7px 0 0;
+  color: #fff5e8;
+  font-family: var(--game-ui-font-display);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.08;
+}
+
+.knowledge-notes__boundary {
+  max-width: 680px;
+  margin: 12px 0 0;
+  color: var(--game-ui-text-muted);
+  line-height: 1.7;
+}
+
+.knowledge-note-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.knowledge-note {
+  padding: clamp(18px, 3vw, 26px);
+  border: 1px solid var(--notes-rule);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgb(58 42 31 / 72%), rgb(39 28 21 / 68%));
+}
+
+.knowledge-note[data-status="draft"],
+.knowledge-note[data-status="stale"] {
+  border-style: dashed;
+}
+
+.knowledge-note__summary h3 {
+  margin: 6px 0 0;
+  color: #fff5e8;
+  font-size: clamp(1.2rem, 2.5vw, 1.55rem);
+}
+
+.knowledge-note__question {
+  margin: 20px 0 0;
+  color: #f7d3a0;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.knowledge-note__abstract {
+  margin: 8px 0 0;
+  color: var(--game-ui-text-muted);
+  line-height: 1.65;
+}
+
+.knowledge-note__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 18px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+}
+
+.knowledge-note__meta strong {
+  color: var(--game-ui-accent-bright);
+}
+
+.knowledge-note__details {
+  margin-top: 20px;
+  border-top: 1px solid var(--notes-rule);
+  padding-top: 16px;
+}
+
+.knowledge-note__details > summary {
+  width: fit-content;
+  border-radius: 7px;
+  color: #f7d3a0;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.knowledge-note__details[open] > summary {
+  margin-bottom: 22px;
+}
+
+.knowledge-note__body {
+  padding: 20px;
+  border: 1px solid var(--notes-rule);
+  border-radius: 12px;
+  background: rgb(20 14 10 / 42%);
+}
+
+.knowledge-note .evidence-rail {
+  position: static;
+  margin-top: 16px;
+}
+
+.knowledge-note__no-evidence {
+  margin: 16px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  .knowledge-notes__header,
+  .knowledge-note__summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

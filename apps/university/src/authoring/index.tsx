@@ -100,7 +100,6 @@ export function StudioScreen({
         summary={summary}
         studiesRootLabel={shortenHomePath(data.studiesRoot)}
         onSelectStudy={onSelectStudy}
-        onOpenLesson={onOpenLesson}
       />
       {/*
         The course list with the pinned run first. It used to sit under the map

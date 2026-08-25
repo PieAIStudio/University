@@ -1,19 +1,37 @@
-import type { AntiPatternEntry, ConceptEntry, LexiconEntry } from "@pieai/university-core";
+import {
+  LIBRARY_TABS,
+  type AntiPatternEntry,
+  type ConceptEntry,
+  type LexiconEntry,
+  type LibraryTab,
+} from "@pieai/university-core";
 
 import { FavouritesScreen } from "../favourites/FavouritesScreen.js";
 import type { FavouritesStore } from "../favourites/storage.js";
+import type { KnowledgeNoteView } from "../view/lesson-view.js";
 import { AntiPatternIndex } from "./AntiPatternIndex.js";
 import { ConceptIndex } from "./ConceptIndex.js";
+import { KnowledgeNotes } from "./KnowledgeNotes.js";
 import { TermIndex } from "./TermIndex.js";
 
-export const REFERENCE_TABS = ["concepts", "terms", "flavour", "favourites"] as const;
-export type ReferenceTab = (typeof REFERENCE_TABS)[number];
+/*
+  One list of tabs, and it is the router's.
+
+  There were two — this one and `LIBRARY_TABS` in `core` — holding the same
+  four strings, so a fifth collection was two edits, and the version of this
+  file that had only made one of them would have routed to a tab it did not
+  draw, or drawn a tab no address could reach. They are the same list because
+  they are the same question.
+*/
+export const REFERENCE_TABS = LIBRARY_TABS;
+export type ReferenceTab = LibraryTab;
 
 const TAB_LABEL: Record<ReferenceTab, string> = {
   concepts: "概念图解",
   terms: "词义索引",
   flavour: "防 AI 味儿",
   favourites: "收藏",
+  notes: "课堂笔记",
 };
 
 /**
@@ -30,6 +48,8 @@ export function LibrarySurface({
   terms,
   antiPatterns,
   favourites,
+  notes,
+  notesBasePathOf,
   onBack,
   onTabChange,
   onOpenConcept,
@@ -41,6 +61,16 @@ export function LibrarySurface({
   readonly terms: readonly LexiconEntry[];
   readonly antiPatterns: readonly AntiPatternEntry[];
   readonly favourites: FavouritesStore;
+  /**
+   * What this learner kept from arguing with an AI host.
+   *
+   * Empty in a build whose packages do not carry notes yet, which is the same
+   * shape as any collection with nothing in it — the tab is there, it says so,
+   * and it fills in when the export pipeline starts shipping them.
+   */
+  readonly notes: readonly KnowledgeNoteView[];
+  /** Where a note's evidence is fetched from, in this build. */
+  readonly notesBasePathOf: (note: KnowledgeNoteView) => string;
   readonly onBack: () => void;
   readonly onTabChange: (tab: ReferenceTab) => void;
   readonly onOpenConcept: (entry: ConceptEntry) => void;
@@ -71,6 +101,9 @@ export function LibrarySurface({
       {activeTab === "terms" ? <TermIndex entries={terms} onOpenFull={onOpenTerm} /> : null}
       {activeTab === "flavour" ? (
         <AntiPatternIndex entries={antiPatterns} onOpen={onOpenAntiPattern} />
+      ) : null}
+      {activeTab === "notes" ? (
+        <KnowledgeNotes notes={notes} basePathOf={notesBasePathOf} panelIdPrefix="library-note" />
       ) : null}
       {activeTab === "favourites" ? (
         <FavouritesScreen
