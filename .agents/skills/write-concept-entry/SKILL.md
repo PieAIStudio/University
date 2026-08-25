@@ -86,7 +86,9 @@ flow 的 `steps` 活在词条上，不在共享目录里。跨词条共用一条
 - renderer 使用真正的 `<ol>`，不是 Mermaid、canvas 或 WebGL 图；不要把可选择的
   文字和读屏语义换成一张看起来像流程图的图片。
 - 同一个 `title` 的词条，去掉 `current` 后的 `steps` 必须逐字相等。改链子时要
-  一次更新所有副本，再运行根脚本 `scripts/check-concept-flows.mjs`。
+  一次更新所有副本。这两条规矩由 `packages/core/src/concepts/flow-consistency.test.ts`
+  把守，它读的是源码而不是构建产物——曾经有一版读 `dist/`，于是作者改完再跑，
+  它对着昨天的构建说「通过」。闸门失效的方向永远是这一个。
 - 有些词是执行链子的工具而不是一站；本批 `terminal` 和 `browser-devtools`
   明确不加 flow。这种排除是判断，不是覆盖率缺口，不要自行补上。
 
@@ -157,6 +159,6 @@ model id。
 - `regions` 至少两个区域，正确 id 存在，问题和 reveal 都是一句话。
 - 目标词条 `parseEntrySections` 零 problem，且根机械检查通过。
 - 实际浏览器滚到互动件看过，并留下截图路径；不要只引用 test green。
-- `pnpm verify` 必须包含并跑过 `pnpm check:concept-flows`；测试数量只能增加。
+- `pnpm verify` 里的 `pnpm test` 会跑 `flow-consistency.test.ts`；测试数量只能增加。
 - 报告要写实际模型 arm/id/effort、hedge gate 是否运行、schema 与浏览器两道闸门
   的结果，以及哪些词条被有意排除和为什么。

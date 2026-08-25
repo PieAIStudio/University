@@ -8,7 +8,6 @@
     "boundaries": "node apps/local/scripts/check-module-boundaries.mjs && node scripts/check-kit-portability.mjs && node scripts/check-contrast.mjs && node scripts/check-shared-styles.mjs",
     "build": "pnpm -r build",
     "bundle": "node scripts/check-authoring-excluded.mjs",
-    "check:concept-flows": "node scripts/check-concept-flows.mjs",
     "content": "pnpm --filter @pieai/university-app content",
     "check:generated-format": "pnpm --filter @pieai/university-app check:generated-format",
     "check:shelf": "node apps/university/scripts/check-shelf.mjs",
@@ -25,7 +24,7 @@
     "start": "node scripts/start.mjs",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm build && pnpm check:concept-flows && pnpm check:shelf && pnpm bundle && pnpm docs:check"
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm build && pnpm check:shelf && pnpm bundle && pnpm docs:check"
   },
   "devDependencies": {
     "@pieai/doc-gov": "0.9.5",
