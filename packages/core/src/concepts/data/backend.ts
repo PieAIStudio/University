@@ -18,6 +18,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "别人在地址栏里输入的那个好记的网站名字。",
     body: {
       colloquial: "别让同事记一串数字。我想买个好念的名字，输入就能打开我的网站。",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: true,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "域名是网站在网上的名字，人能读、能拼、能写在海报上，用来代替那串只有机器才认的数字地址。",
@@ -114,6 +164,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "域名我买了，输入名字还是打不开。是不是还要做一次「解析」，把名字指到我的机器上？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: true,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "DNS 是网上的电话簿：你输入网站名字，它查出对应的数字地址，浏览器才知道去哪台机器取网页。",
@@ -211,6 +311,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "地址栏里那一长串到底怎么拆？我想让报名页、成功页各有自己固定的地址，发到群里一点就能打开。",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: true,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "URL 是网页的完整地址：写明用哪种方式访问、去哪一家、打开哪一页，有时还带这次额外的条件和页内位置。",
@@ -317,6 +467,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "浏览器和网站之间传东西时用的说话规矩。",
     body: {
       colloquial: "点了提交一直转圈。我想知道浏览器跟网站之间到底有没有把话送出去、对方回了没有。",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: true,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "HTTP 是浏览器和网站之间传网页、图片、表单时用的约定：一方开口要，另一方给回来，每句话都有固定格式。",
@@ -413,6 +613,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "后台登录是成功的，一刷新又要重新登。是不是那种叫 Cookie 的小纸条没写上，或者写了但下次没带回去？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: true,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "Cookie 是网站写在你这台浏览器里的一小段记事。之后你再访问，浏览器会自动把它附在请求上带回去，网站才认得出「还是你」。",
@@ -513,6 +763,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "浏览器说我的网站「不安全」，地址栏没有小锁。报名表要填身份证，这个锁怎么弄出来？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: true,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "HTTPS 是加了锁的 HTTP：路上的内容别人偷看也是乱码，并且能核对你连的确实是这个域名，不是冒名的。",
@@ -609,6 +909,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "外省同学说招新海报转很久才出来，本地我这边是快的。能不能让他们从近一点的地方下载？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: true,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "CDN 是内容分发网络：把不常改的文件（图片、样式、让页面动起来的代码）事先放到许多地方的缓存点，用户打开时从最近的那一台取，而不必每次都跑回你真正放网站的那台机器（常叫源站）。",
@@ -707,6 +1057,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "页面跑在一个端口，接口跑在另一个。提交没反应，我怀疑浏览器连错门了。怎么确认它打的是哪一个？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: true,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "端口是一台机器上的门牌号。同一台电脑可以同时开好几个服务，靠这个数字区分：网页一扇门，接口另一扇门。",
@@ -799,6 +1199,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "春季招新的旧链接还印在海报上。我想让点进去的人自动去新版报名页，别一打开就是找不到。",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: true,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "重定向是网站告诉浏览器：你要的这个地址搬家了，去新的那边。浏览器会改掉地址栏，再打开新地址。",
@@ -897,6 +1347,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "报名页想显示已经有多少人交了表，数据在后台。听说要接个「接口」，那到底是啥？页面自己读数据库行不行？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: true,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "API 是事先约定好的门口：你按格式来请求（要什么、带哪些条件），对方按格式给你结果。网页、小程序、别的程序都可以走同一扇门。",
@@ -992,6 +1492,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "接口回我一堆大括号套方括号的东西。我想让页面读出里面的姓名和报名编号，这段该怎么写、怎么用？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: true,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "JSON 是把数据写成纯文本的一种格式：用大括号表示一组有名字的项，用方括号表示列表，文字要加引号。接口、配置、AI 按结构往外吐结果时都常用它。",
@@ -1091,6 +1641,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "报名页提交被拦住了。我用测试工具直接打接口是通的，从网页里发就不行。有人说是 CORS，这要改哪边？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: true,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "CORS 是浏览器的规矩：页面所在的地址和它要请求的接口地址，如果 http/https、域名、端口有一个不同，浏览器默认拦住，除非接口那边明确说「我允许你这个页面来」。",
@@ -1188,6 +1788,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "手机号填 abc、人数填 -1 也能提交成功，名单已经脏了。怎么在保存之前先拦住，并告诉人是哪一格不对？",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: false,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: true,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "数据校验是在收下数据之前按规则检查：必填有没有填、手机号像不像手机号、数字是否在合理范围。不合格就拒绝，并指出哪里不对、该怎么改。",
@@ -1284,6 +1924,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "我想接 AI 帮报名的人润色自我介绍。对方给了我一长串密钥，这串能写在网页代码里吗？感觉不太敢。",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: true,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "API 密钥是一串相当于密码的口令：你调用别人的接口时出示它，对方才知道是哪个账号在用、该扣谁的额度。",
@@ -1375,6 +2065,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "报名填到一半要先去吃饭，回来还想接着填。能存在我这个浏览器里吗？别搞得像上了一整套后台。",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: true,
+          },
+        ],
+      },
       definition: {
         statement:
           "浏览器存储是把数据写在用户这台浏览器里：刷新还在，关了再开也可能还在。它只属于这台设备上的这个浏览器，不是所有人共享的仓库。",
@@ -1478,6 +2218,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "刚交的报名，一刷新就没了。得找个地方真正存下来，组织者换一台电脑也能看到，别只活在这一页上。",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: true,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "数据库是专门存数据的仓库：多人共用、按规则查询、关掉网页也还在。报名名单、账号、订单，都该住在这里。",
@@ -1569,6 +2359,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "后台要把「还没签到的人」筛出来。这种查询是写在页面上，还是有专门对数据库说的写法？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: false,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: true,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "SQL 是跟一张张表组成的数据库说话的语言：查哪些行、改哪一格、按什么条件过滤、按什么排序。常见句子以查看、插入、更新、删除开头。",
@@ -1667,6 +2507,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "页面上点了保存，一刷新就没了。这是不是缺了个后端？后端是数据库吗，还是所有我看不见的代码都叫后端？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: true,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "后端是跑在用户浏览器外面的那一层程序：真正把报名写进仓库、判断谁能看全表、拿着密钥去调短信或 AI。浏览器只跟它的门口说话，不直接进仓库翻。",
@@ -1764,6 +2654,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "我想做提交报名的接口，是不是得自己处理浏览器发来的每一个字？有人让我先选个框架，那是什么，不选就写不了吗？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: true,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "后端框架是别人已经写好的一套规矩和零件：帮你收下请求、对上地址、把结果按规定格式送回去。你把力气花在报名怎么写入、谁能看全表，而不是从拆信封做起。",
@@ -1861,6 +2801,56 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "页面能打开，点提交没反应。有人问我接口的路由配了没、端点是哪个。这和地址栏里 #/terms 那种换页是一回事吗？",
+      flow: {
+        title: "一次网页请求，从你输入网址到看见页面",
+        steps: [
+          {
+            label: "输入网址",
+            description: "浏览器把网址交给网络请求。",
+            current: false,
+          },
+          {
+            label: "找到那台机器",
+            description: "域名先被翻成机器可找的地址。",
+            current: false,
+          },
+          {
+            label: "请求出发",
+            description: "浏览器带着方法和必要信息发出请求。",
+            current: false,
+          },
+          {
+            label: "路上加密",
+            description: "HTTPS 把传输内容和身份校验保护起来。",
+            current: false,
+          },
+          {
+            label: "后端按地址分派",
+            description: "服务器按端口和路径把请求交给程序。",
+            current: true,
+          },
+          {
+            label: "从库里取数",
+            description: "后端查询数据库，拿到要返回的数据。",
+            current: false,
+          },
+          {
+            label: "打包成 JSON 送回",
+            description: "接口把结果整理成 JSON 返回浏览器。",
+            current: false,
+          },
+          {
+            label: "浏览器画出来",
+            description: "浏览器把收到的文件和数据变成页面。",
+            current: false,
+          },
+          {
+            label: "下次先看缓存",
+            description: "浏览器先用本地副本，没命中才再请求。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "路由是后端怎么把一次请求对上要办的事；端点是对上之后的那条具体门口——哪个地址、哪种动作（查看还是提交）、进来什么、出去什么。",
@@ -2154,6 +3144,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "海报我换成新的了，外省同学刷新还是旧图。有人说是缓存。缓存是加速用的吧，那我改完怎么让他们看到新的？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: false,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: true,
+          },
+        ],
+      },
       definition: {
         statement:
           "缓存是把算过或下载过的结果先留一份：下次同样的请求直接拿这份，少算一次、少跑一趟远路。换了内容之后，旧的那份可能还在，这就是你改了对方看不见的原因。",
@@ -2254,6 +3284,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "报名页做好一周了，百度搜活动全称还是找不到我们。SEO 是不是就是多堆关键词？3D 很炫的首页会不会比较容易被搜到？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: false,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: true,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "SEO 是搜索引擎优化：让自动来转网站的程序能发现你的页、读懂这页讲什么、在别人搜索时把你排进结果。它读标题、正文、链接，不「看」画面漂不漂亮。",
@@ -2359,6 +3429,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "报名页带 www 能开、不带也能开，群里转发还自动加了一串追踪参数。搜索结果里出现三个差不多的条目，我该留哪个？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: false,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: true,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "规范网址是你指定的「这一页正式地址」：内容相同或几乎相同的多个地址，都指向这一个，搜索引擎才不会把它们当成三篇不同的文章。",
@@ -2456,6 +3566,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "活动站有三十多页，我想让搜索引擎尽快转一遍。是不是做一页「网站地图」把链接列出来就行？听说还要个 XML？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: false,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: true,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "XML 站点地图是一份给自动来转的程序看的网址清单，用机器好读的格式写出哪些页要被公开搜到。它不是给人点的那一页目录。",
@@ -2551,6 +3701,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "上线第二天还是搜不到我们。有人让我看网站地址最顶上那个 robots.txt，说可能整站写成了不许转。这文件是干嘛的，写了不许别人还能打开吗？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: false,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: true,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "robots.txt 是放在网站根上的一份说明书，告诉自动来转的程序：哪些路径可以转、哪些请别进，以及站点地图在哪。正规搜索引擎会先读它。",
@@ -2647,6 +3837,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "去年海报上的链接现在打开是浏览器自己那句英文报错。我想做一页人看得懂的「找不到」，是不是把所有错误地址都送回首页就行？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: true,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "找不到页面是地址不存在或已经被删时，诚实告诉人「这里没有」的那一页：说人话、给一条回去的路。服务器对这次请求也应明确说「没有」，而不是假装打开了别的页。",
@@ -2838,6 +4068,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "报名页在我电脑上没问题，明天开始对外收表。是把文件夹发给同事，还是还有一套「上线」的步骤？部署到底要做完哪些才算完？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: true,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "部署上线是把当前这一版放到别人能访问的环境里：先构建出浏览器能直接用的文件，放到托管上，域名指向它，配好 HTTPS（地址栏带小锁），再用一台不是你开发电脑的设备打开验证。",
@@ -2933,6 +4203,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "域名我买了，页面文件在桌面上。同事说还要找个「托管」？托管和域名是一回事吗，是不是租一台电脑？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: true,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "网站托管是把你的页面和接口放到一台一直连着网、别人能访问的地方。域名是名字，托管是房子。名字买了，房子没有，输入名字什么也打不开。",
@@ -3029,6 +4339,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "每次改完报名页都是我手工上传，上周传错一版，家长填了旧表。CD 和 CI 有什么区别？是不是一提交代码就自动上线？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: true,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "持续交付是让每一版在测试通过后随时能发出去，人按一下确认即可；持续部署是测试通过后自动发到用户碰到的环境。两者都建立在持续集成（改动自动检查还能不能用）之上。",
@@ -3223,6 +4573,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "周六报名高峰，周日才发现整晚接口都挂了。怎样才能当时就知道，而不是等家长群里来问？监控是不是就是看着日志？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: true,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "监控是持续看几件能说明网站还好不好的数字，并在超过你定下的数时通知值班的人：还能不能打开、提交是不是失败、慢不慢。目标是你比用户先知道。",
@@ -3319,6 +4709,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "新版上线十分钟，提交全部失败。我是在线上接着改，还是先退回上一版？回滚是不是就是 Git 里撤销那次提交？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: true,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "回滚是把正在接待用户的那一版换成上一版已经证实能用的：先让报名恢复，再在预发布修新版本。你手里必须留着上一包能跑的文件，而不是指望当场重写。",
@@ -3424,6 +4854,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "「亲友代报名」只想先给一个社区试用。我是再做一个网站给他们，还是有办法在同一套里打开给一部分人？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: true,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "功能开关是程序正在跑的时候就能改的开关：同一包代码里，某项功能对谁显示、对谁关闭，可以在不重新发版的情况下改。出问题就关上，不必整站回滚。",
@@ -3519,6 +4989,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "这次改了提交逻辑，怕全站一起翻车。听说可以先给 5% 的人用新的，这就是金丝雀？让老板先点一遍算不算？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: true,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "金丝雀发布是先让一小部分真实用户走新版本，盯失败率、打开耗时这些数字，没问题再逐步放大，直到所有人都走新的。名字来自矿工带金丝雀下井：鸟先撑不住，人就撤。",
@@ -3617,6 +5127,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "每次发新版报名页，总有几分钟打不开。能不能新的先在旁边完全准备好，再一下子切过去？蓝绿是两种颜色主题吗？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: true,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "蓝绿部署是同时准备两套完整环境：一套正在接待用户（习惯叫蓝），一套放新版本（习惯叫绿）。新的就绪后，把访问一次性切到绿；出问题切回蓝。蓝和绿只是两套的名字，与配色无关。",
@@ -3711,6 +5261,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "我们一年就招新那两周有人交表，平时几乎没人打开。还要整年租一台一直开着的机器吗？Serverless 是真的没有服务器吗？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: true,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "Serverless 是一种托管方式：你交出「有人提交时报名怎么写入」这一小段程序，云厂商在有请求时才去跑它，按次计费。你不租、不保养一台一直开着的机器。",
@@ -3807,6 +5397,46 @@ export const BACKEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "有人说交了报名但名单没有。我在自己浏览器里看一切正常。该去哪查？服务端日志是什么，会不会把身份证也记进去？",
+      flow: {
+        title: "一次被搜到",
+        steps: [
+          {
+            label: "页面先得能打开",
+            description: "先部署到稳定的托管环境，让页面能开。",
+            current: true,
+          },
+          {
+            label: "一个页面只留一个正式地址",
+            description: "把重复地址合到一个正式网址上。",
+            current: false,
+          },
+          {
+            label: "列一张站点清单",
+            description: "列出希望搜索引擎发现的页面地址。",
+            current: false,
+          },
+          {
+            label: "说明哪些不用来看",
+            description: "用规则告诉爬虫哪些页面不要抓。",
+            current: false,
+          },
+          {
+            label: "搜索引擎来抓",
+            description: "搜索引擎按清单和规则抓取页面内容。",
+            current: false,
+          },
+          {
+            label: "按内容排出名次",
+            description: "它根据内容、质量和相关性排出结果。",
+            current: false,
+          },
+          {
+            label: "常用的东西先存一份",
+            description: "把常用结果暂存，访问时少等一次。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "服务端日志是后端写下的流水账：什么时间、打到哪条门口、做成了没有、失败原因是哪一句。出了事，它是你在用户这台设备之外能看到的证据。",

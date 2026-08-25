@@ -19,6 +19,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "报名页想加个对话框，家长问「这周六还有空位吗」就能答。我拿到一串密钥，是不是写进网页就接上了？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: true,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "AI 应用基础是把能聊天、能写字的 AI 接到你自己的产品里：由你的程序去提问，把回答填回页面，并规定它能答什么、不能编什么。",
@@ -127,6 +177,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "它写得很肯定：词条页有购物车，地图还能转着看。我没用过这些，是我记错了，还是它编的？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: true,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement: "AI 幻觉是它把不知道、不确定、或你根本没做过的事，写成听起来完整、肯定的事实。",
         not: "它不是口误，也不是「AI 味儿」。口误会结巴；AI 味儿是排比和套话，读着假，但未必在造假事实。幻觉是内容是假的，语气还特别稳。",
@@ -231,6 +331,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "我代码一行都没写过。能不能跟它说话，让它把社区活动报名页做出来，我负责看对不对？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: true,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "Vibe Coding 是主要靠人话吩咐 AI 来写代码、改页面，人负责把约束说清、看结果、拦住胡说，而不是自己逐行敲。",
@@ -340,6 +490,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     tagline: "AI 不只读字，还能看图、听声音。",
     body: {
       colloquial: "报名页在手机上那颗提交按钮我点了没反应。光打字说不清楚，能不能把截图发给它看？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: true,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "多模态是同一次提问里，AI 不只读字，还能看图片、听声音、看短视频，把几种材料合在一起理解。",
@@ -445,6 +645,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "聊到后面它把刚确认的规矩忘了。下一轮到底该贴哪些资料？我是不是该把全书都丢进去？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: true,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "上下文工程是挑选、缩短、排列这一次提问时 AI 眼前能看见的全部材料：长期规矩、这一问、旧对话、参考资料、工具结果——以及主动丢掉什么。",
@@ -554,6 +804,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "后台说这个月 token 用超了。我一共就问了二十次，这是按次数算还是按字数算？中文是不是更贵？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: true,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "Token 是 AI 把文字切成的小块。计费、一次能装多少、生成多快，都按块算，不按『你点了几次发送』算。",
@@ -655,6 +955,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "开头跟它说了画布里不许有正文，聊到后面它自己往地图上写大字。是它故意的，还是记性有上限？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: true,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "上下文窗口是一次提问里，AI 能同时看见的 Token（文字块）上限：长期规矩、旧消息、资料、它正在写的回答，全挤在这一个框里。",
@@ -756,6 +1106,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "我想给它立规矩：只根据课程表回答空位，不许编数字，语气别像在开会。这写在哪，还是每句话都重复一遍？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: true,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "系统提示词是写给 AI 的长期规矩：你是谁、能做什么、不能做什么、默认用什么口气。它会跟几乎每一问一起寄出，不需要用户每次重打。",
@@ -860,6 +1260,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "界面上明明还显示着『报名者姓李』，我回了一句『那就按这个名字出确认短信』，它怎么写成了姓王？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: true,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "对话历史是这一条聊天里已经说过的话。聊天产品为了让 AI『接着聊』，通常会把这些旧消息再附到下一次请求里。",
@@ -964,6 +1414,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "我跟它说『做个报名页』，做出来什么都有，就是不像我要的。是不是该写得更具体？具体到什么程度？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: true,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement: "提示词是你这一次写给 AI 的吩咐：要做什么、做成什么样、不要什么、怎样算完。",
         not: "它不是咒语，不是越神秘越灵。也不是把一本白皮书粘进去就叫认真。空话和超长无关材料，都会让它开始补功能。",
@@ -1078,6 +1578,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "聊天里刚刚排出一张场地表，我只回了『继续把周日那一行补上』，它问我『什么表？』。不是刚刚才做的吗？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: true,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "无状态请求的意思是：对方默认不记得上一问。这一次它能用的，只有你这次寄出的材料；要接着做，就把需要的上文一并附上。",
@@ -1183,6 +1733,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "我想从报名表照片里抽出姓名、手机、场次，好贴进表格。它每次回一篇小作文，我还得自己抄，能不能规定格式？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: true,
+          },
+        ],
+      },
       definition: {
         statement:
           "结构化输出是事先约定字段和形状，让 AI 按格子给结果——比如姓名、手机、场次三列——而不是一段读起来完整、程序却拆不开的话。",
@@ -1285,6 +1885,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     tagline: "字一个接一个往外蹦，不用等整篇写完。",
     body: {
       colloquial: "点了发送，转圈转了十几秒什么都没有，我以为卡死了。能不能让字像打字一样往外蹦？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: true,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "流式响应是 AI 一边生成一边把已经写好的字送过来：屏幕上先出现开头，后面的字接着蹦，不必等整篇结束。",
@@ -1386,6 +2036,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "我有二十条微信群公告，想整理成一张本周场地占用表。能不能给它一个目标，让它自己去读、去列，别让我一句句指挥？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: true,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "AI Agent 是奔着一个目标去的 AI：它会自己拆步骤、调用工具（读文件、查网页、写结果）、看结果，再决定下一步，直到完成或停下来问人。",
@@ -1496,6 +2196,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "同一个 AI，有时只改对了提交按钮，有时把不相干的文件也改了。除了换一个更贵的 AI，还能管什么？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: true,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "Agent 运行框架工程是围着这个会写字的 AI 搭的那一层：能用哪些工具、能改哪些文件、失败怎么重试、怎样算完、何时必须问人。同一颗『大脑』，跑道和护栏不同，跑出来的结果就不同。",
@@ -1604,6 +2354,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "录取通知可以让它先拟稿，群发给家长之前必须我看过。这要怎么跟它说，才不会它写完就发出去？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: true,
+          },
+        ],
+      },
       definition: {
         statement:
           "人在回路是把必须由人拍板的步骤留在流程里：AI 可以准备，真正对外、真正删改、真正花钱，要等人点头。",
@@ -1708,6 +2508,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "每次把飞书表格截图丢进去太累了。能不能让它自己去表里查『这周六还有几个空位』，又不用把账号密码写进对话？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: true,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "MCP 是一套双方都认的接头约定，让 AI 程序用同一种方式接上表格、日历、文件这些外部东西，并按你允许的范围去读或写。",
@@ -1812,6 +2662,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "每周五都要出一份场地占用表，格式永远一样。能不能让它记住这套做法，别每周从零教一遍？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: true,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "Skill 是一份写好的做法说明：什么时候用、按哪些步骤、成品长什么样。任务对得上时，AI 才拿出来读，不必把全书塞进每一次聊天。",
@@ -1917,6 +2817,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "我让它一边改报名页上的字，一边检查手机上按钮好不好点，结果两件事缠在一起，字也改乱了，检查也没做完。",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: true,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "Sub-agent 是主助手把一块独立的活派给另一个助手：那个助手带着自己的一小段对话去干，干完把结果交回来，主助手再汇总。",
@@ -2016,6 +2966,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "我问它陶艺馆周六几点开门，它写得很肯定，但不敢当真。能不能让它真的去打开官网看一眼再回答？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: true,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "工具调用是 AI 在回答过程中点名使用一个外部动作：读文件、打开网页、查表、算一笔数。真正执行的是你这边的程序，执行完把结果交回给它，再写成给人看的话。",
@@ -2125,6 +3125,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "它修报名提交失败，一上来连改了八个文件。能不能让它先说判断，改一处，看结果，再决定要不要继续？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: true,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "ReAct 是一种干活顺序：先写出这一步的判断，再调用工具去做，再看返回的结果，然后才决定下一步。名字来自 Reason（判断）+ Act（动手）。",
@@ -2224,6 +3274,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     tagline: "AI 反复「想—做—看」直到完成或停下。",
     body: {
       colloquial: "检查没通过，它是该继续改、停下来问我，还是直接宣布完成？我怕它空转把账单刷高。",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: true,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "Agent 循环是那一段反复进行的过程：判断、调用工具、看结果，再判断——直到达到完成条件、问人、或碰到停止条件。",
@@ -2329,6 +3429,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "有的回答半天不出第一个字，有的第一个字很快后面却一顿一顿。这两种慢，是一回事吗？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: true,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "TTFT 是从发出提问到屏幕上出现第一个字的时间；TPS 是第一个字出现之后，每秒大概蹦出多少个 Token（文字块）。两个数描述的是两种不同的『慢』。",
@@ -2428,6 +3578,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     tagline: "按文字块计费：发给它的、它吐出来的都算。",
     body: {
       colloquial: "这个月问 AI 的账单突然很高。我没觉得自己问得更勤，钱到底花在哪了？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: false,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: true,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "Token 用量与成本是按文字块计的账：你寄过去的（输入）和它写回来的（输出）都算，单价往往不同；对话越长、重试越多、贴的资料越厚，账越大。",
@@ -2532,6 +3732,56 @@ export const AI_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "活动一开始，家长同时来问空位，页面上突然全是报错，说超过限制。这是欠费了，还是问得太勤？",
+      flow: {
+        title: "一次 AI 请求",
+        steps: [
+          {
+            label: "你打一句话",
+            description: "用户把问题或任务写进提示词。",
+            current: false,
+          },
+          {
+            label: "系统提示词定规矩",
+            description: "系统提示词规定角色、边界和输出要求。",
+            current: false,
+          },
+          {
+            label: "把对话历史一起带上",
+            description: "请求把前面的对话也带给模型。",
+            current: true,
+          },
+          {
+            label: "全部换算成 Token",
+            description: "文字、图片和其他输入都换成 Token。",
+            current: false,
+          },
+          {
+            label: "塞进上下文窗口",
+            description: "这些 Token 必须放进模型能读的窗口。",
+            current: false,
+          },
+          {
+            label: "模型算",
+            description: "模型根据输入计算下一步最可能的输出。",
+            current: false,
+          },
+          {
+            label: "一个字一个字吐出来",
+            description: "响应可以边生成边传回到界面。",
+            current: false,
+          },
+          {
+            label: "需要动手时调工具",
+            description: "模型决定需要时发起工具调用。",
+            current: false,
+          },
+          {
+            label: "按格式收回结果",
+            description: "程序校验并解析模型返回的结构。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "速率限制是对方为每个账号规定的『短时间内能问多少次、能寄多少文字块』。超过就暂时拒收，过一会儿才恢复，不一定是欠费。",

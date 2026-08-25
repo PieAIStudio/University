@@ -19,6 +19,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "我做的是页面上能看见能点的那些，还是后面存数据、判谁能看的那一层？老有人把这两个混着叫。",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: true,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "前端是跑在访问者这台手机或电脑上、让人看见并动手的那一层：字、按钮、表单，以及 University 学生端那张 3D 世界地图。",
@@ -119,6 +159,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "改一处，所有用到它的地方一起变的那块界面。",
     body: {
       colloquial: "词条页上那个「复制为 Markdown」每个词条都有，我能不能只做一份，改了全站跟着改？",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: true,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "组件是把一块界面和它负责的行为打包在一起的可复用单元：外观、能传入的内容、点了之后干什么，都在这一份里。",
@@ -220,6 +300,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "界面此刻必须记住、而且会跟着操作变的信息。",
     body: {
       colloquial: "点了星标，星星要亮着；再点，要灭。刷新之后亮不亮，谁记得？",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: true,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "状态是界面在这一刻必须记住、并且会随你的操作或后面返回的结果而变化的信息：星标亮不亮、表单是不是正在提交、地图被平移到了哪。",
@@ -321,6 +441,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "用少量符号标明标题、列表和代码的纯文本。",
     body: {
       colloquial: "点了「复制为 Markdown」，粘出来全是井号和星号，这是坏了还是本来就这样？",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: true,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "Markdown 是用很少的符号给纯文本做记号的写法：# 表示标题，- 表示列表，成对的星号表示加粗，三个反引号包住代码。",
@@ -426,6 +586,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "给网页每一块内容贴上「这是什么」的标签。",
     body: {
       colloquial: "AI 给的文件里一堆尖括号，那些是网页骨架吗？和 3D 地图上的岛是一回事吗？",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: true,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "HTML 是给网页里每一块内容贴标签的写法，告诉浏览器：这是标题、这是段落、这是按钮、这是链接。",
@@ -535,6 +735,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "管网页颜色、字体、间距和排法的那套规则。",
     body: {
       colloquial: "字已经写对了，按钮还是一片灰，这是坏了还是颜色被盖住了？",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: true,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "CSS 是管网页长什么样的规则：颜色、字体、间距、在手机上怎么排。浏览器按这些规则画出你看见的样子。",
@@ -643,6 +883,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "浏览器此刻手里的页面结构，不是硬盘上的文件。",
     body: {
       colloquial: "有人说课名要放 DOM 里，不要画在岛上。DOM 到底是什么？我又看不见那棵树。",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: true,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "DOM 是浏览器此刻手里的那棵页面结构树。你看见的每一个标题、按钮、输入框，都是这棵树上的一块。",
@@ -743,6 +1023,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "浏览器标签上那行字，用来认出你打开的是哪一页。",
     body: {
       colloquial: "浏览器最上面一排标签全写着「文档」，我切来切去根本找不到报名页。",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: true,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement: "页面标题是写在网页头部、给浏览器标签和窗口当名字的那一行字。",
         not: "它不是页内那行最大的标题。改了页内标题，标签上的字不会自己跟着改。搜索结果上的标题也不保证原样照抄它。",
@@ -843,6 +1163,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "写给浏览器和分享软件看、正文里不一定出现的说明。",
     body: {
       colloquial: "页面上挺完整的，丢到微信群里怎么没封面、标题还不对？",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: true,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "页面元数据是描述这一页、但通常不直接写在正文里的信息，给浏览器、搜索、聊天预览或手机主屏幕分别去读。",
@@ -952,6 +1312,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "浏览器标签和书签上那枚用来认站的小图标。",
     body: {
       colloquial: "页头 Logo 都换新了，标签上那只小图标怎么还是旧的？",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: true,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "网站图标是浏览器用来认出这个站的小图标，出现在标签、书签和历史记录上，不出现在页面正文里。",
@@ -1360,6 +1760,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "让更多人在更多情况下都能用你的页面。",
     body: {
       colloquial: "我自己鼠标点着都没问题，读屏能念吗？键盘能走到那个按钮吗？",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: true,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "无障碍是让更多人在更多情况下都能用你的页面：不只靠鼠标、不只靠好视力，屏幕被念出来也能懂。",
@@ -1738,6 +2178,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "一次打一行字的格子，比如姓名、手机号。",
     body: {
       colloquial: "报名页姓名和手机号让人打进去就行，别弄成一堆选项，也别做成能写小说的大框。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "输入框是一次只打一行字的格子：人点进去，键盘出来，字从左往右排。姓名、手机号、验证码、词义索引的搜索，都是这种。",
@@ -1873,6 +2353,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "能换行、能打一段话的那块大输入区。",
     body: {
       colloquial: "自我介绍要写好几句，现在这一格打两行就看不见了，回车还把表交出去了。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "多行文本框是让人写一段话的格子：可以换行，可以看到好几行，适合备注、自我介绍、群公告草稿这种长度不确定的字。",
@@ -1981,6 +2501,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "只接受数字，常带加减，用来填个数和数量。",
     body: {
       colloquial: "体验课人数只能 1 到 6，别让我打成「六位」，也别让我把手机号做成能按加号的那种。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "数字输入框是专门填个数的格子：只接受数字，常常带加减按钮，并能规定最小、最大和每次加几。用来填人数、件数、年龄。",
@@ -2175,6 +2735,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "选项不多、全部摊开，一次只能选一个。",
     body: {
       colloquial: "上午场还是下午场，两个选项摊开让我点一个就行，别藏进下拉，也别让我两个都勾。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "单选框是一组摊开的选项，人一次只能选其中一个：点了这个，上一个就取消。适合选项很少、而且必须看清每一项再决定的情况。",
@@ -2374,6 +2974,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "须知要我勾「我已阅读」，围裙和泥料想加再勾，这几个要能同时勾，别做成只能选一个。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "复选框是可以单独勾上或取消的方框。一组里可以勾多个，也可以一个都不勾。适合「这些里哪些要」以及「我同意某件事」。",
@@ -2566,6 +3206,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "拨一下当场开或关，不用再点保存。",
     body: {
       colloquial: "活动开始前发短信这个，拨一下马上就该生效，别让我勾完还得满页找保存。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "开关是表示某件事现在开着还是关着的拨杆：拨一下，开或关立刻改掉，通常不用再点保存。适合单独一项设置，比如通知、公开或隐藏。",
@@ -2691,6 +3371,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "拖一下，在一段范围内选出一个大概的值。",
     body: {
       colloquial: "教室音量让我拖一下就好，别让我填 0 到 100，也别让我拖着选身份证号。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "滑块是一条带按钮的轨道，人把按钮拖到某一处，就在最小值和最大值之间选出一个数。适合大概调、并且最好能立刻听见或看见效果的量。",
@@ -2819,6 +3539,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "课后给这节课打 1 到 5 分，别跟收藏用的那颗星混在一起，收藏是亮或不亮，评分是几颗。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "评分是让人用几颗星（或其他标记）打一个好坏分，常见是 1 到 5，一档一档，没有 3.7 这种。每一档表示程度，交出去的是一个分数。",
@@ -3072,6 +3832,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "点开一长串名单，从里面挑一项。",
     body: {
       colloquial: "省份有三十多个，别全摊在页面上，给我一个点开再选的。时段如果只有两个，就别藏。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "选择器是先收着、点开才看到名单、从里面挑一项的格子。适合选项很多、又不需要人自己发明一个名单里没有的答案。",
@@ -3254,6 +4054,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "边打字，边弹出可能匹配的现成选项。",
     body: {
       colloquial: "毕业院校全国太多了，我打「清华」就该弹出那几所，别让我从二百个里慢慢滚。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "自动完成是一个能打字的格子，人一边打，下面一边列出对得上的现成选项，再从里面挑。用来填学校、小区、药品名这种又长又记得住关键字的名单。",
@@ -3414,6 +4254,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "一层层往下选，上一层决定下一层有什么。",
     body: {
       colloquial: "收货地址先选省，再选市，再选区，下一层要跟着上一层变，别让我选出浙江加青岛。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "级联选择器是一串彼此依赖的选择：选了上一层，下一层的名单才出现、并且只出现属于它的那些。用来选一条完整路径，比如省 / 市 / 区。",
@@ -3596,6 +4476,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "审批人在部门树里，我想勾「设计组」整组，也可以只勾组里某个人，别逼我一层层走到最下面那个人。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "树选择是把选项按谁属于谁排成一棵能展开、能收起的树，人从里面勾一项或多项。勾的可以是中间的组，也可以是最下面的人。",
@@ -3704,6 +4624,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "从日历上点选日期，不要自己敲格式。",
     body: {
       colloquial: "入住离店让我点日历，别让我自己敲 2026/08/21，也别让我把到店钟点填进日期里。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "日期选择器是从一张日历上点出年、月、日的格子。人不用记住格式，也不用在「2026-08-21」和「21/08/2026」之间猜。",
@@ -3936,6 +4896,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "从钟点列表里选出一天里的某个时刻。",
     body: {
       colloquial: "到店时间选 14:30 就行，别让我打「下午两点半」，也别精确到秒。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "时间选择器是选出一天里某个时刻的格子：时、分，偶尔到秒。人从列表或转盘里挑，而不是自己发明「两点半」这种写法。",
@@ -4133,6 +5133,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "报名要交一寸照片，让我从相册里选一张图就行，别让我把图粘进自我介绍，也别不限大小收到 2GB 视频。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: false,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: true,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "上传是让人从自己的手机或电脑里挑出文件，把文件发到网站那一头的过程。常见是证件照、附件、发票。",
@@ -4309,6 +5349,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "姓名、电话、场次填完，要有一个「提交报名」，点了才算交上去，别每填一格就偷偷存，也别指望我按回车。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: true,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: false,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "表单是一组要人填写的格子，加上把这些内容一起交出去的动作。格子可以是输入框、单选、上传；没有「提交」或明确的保存，填了也不算数。",
@@ -4511,6 +5591,46 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
     tagline: "从色板或取色器里选出一个颜色。",
     body: {
       colloquial: "海报标题要我自己选颜色，给我色板点一下，别让我去背 #C45C26，也别选出白底白字。",
+      flow: {
+        title: "一次表单提交",
+        steps: [
+          {
+            label: "界面给出可填的空",
+            description: "表单把输入框、选项和提交按钮摆出来。",
+            current: false,
+          },
+          {
+            label: "用户填",
+            description: "用户填写文字、选择值或上传文件。",
+            current: true,
+          },
+          {
+            label: "前端先挑明显的错",
+            description: "浏览器先检查格式、必填项和范围。",
+            current: false,
+          },
+          {
+            label: "提交",
+            description: "前端把表单值按约定发给后端。",
+            current: false,
+          },
+          {
+            label: "后端再校验一次",
+            description: "后端重新检查类型、权限和业务规则。",
+            current: false,
+          },
+          {
+            label: "存进库里",
+            description: "校验通过后把数据写进数据库。",
+            current: false,
+          },
+          {
+            label: "回一句结果给人看",
+            description: "服务器返回成功或错误，界面告诉用户。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "颜色选择器是让人挑颜色的格子：常见是一块色板，或一块可以拖的取色区域。选出后马上用在标题、按钮或背景上给人看。",

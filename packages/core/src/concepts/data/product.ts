@@ -19,6 +19,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "别一上来就要搜索、收藏、会员。先写：学生不知道按钮的英文，想用中文把词条搜出来。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: true,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "用户故事是用一两句话写清：哪种人、现在卡在哪、做成了能干什么。拿它决定做不做、做到哪算完。",
@@ -119,6 +164,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "退订别只写能退。从哪点进去、填不填原因、场次已经开始怎么办、失败时屏幕上写什么，都写上。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: true,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "用户用例是把「某一种人办成某一件事」写成有头有尾的步骤：从哪进来、每一步看到什么、成功长什么样、失败长什么样。",
@@ -219,6 +309,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     tagline: "人从进来到办完经过哪几页、哪几个分岔。",
     body: {
       colloquial: "从打开预约页到约上场地，中间几步画给我看看。约满了走哪条，别等做完才发现没路。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: true,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "用户流程是人在产品里从进来到办完所经过的页面和分岔：先到哪一页、再点什么、走不通时去哪。",
@@ -320,6 +455,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "别只画网页上点哪。他们是群里听说的，确认短信经常收不到，门口还找不到牌子。这些卡住也写上。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: true,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "用户旅程是某一种人办成一件事时，产品里和产品外整段经历：怎么听说、中间等什么、在哪卡住、用完之后怎样。",
@@ -421,6 +601,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "别跟 AI 只说做个好看的报名页。先写谁来填、必填哪几项、提交成功看到什么、手机上要能填。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: true,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "PRD 是 Product Requirements Document 的缩写，就是产品需求文档：把要做什么、故意不做什么、做到哪算完写成可交给人执行的说明。",
@@ -521,6 +746,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     tagline: "先做刚够拿去给真人用的最小一版。",
     body: {
       colloquial: "先别做会员、积分、直播。我现在只想知道家长愿不愿意用手机约周六的体验课。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: true,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "MVP 是 Minimum Viable Product 的缩写，常说最小可用产品：刚够拿去给真人把那一件核心的事做完，从而看出这事值不值得继续做。",
@@ -621,6 +891,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     tagline: "所有可能做、还没答应做完的事排成的总单。",
     body: {
       colloquial: "群里提的那些先记下来排个序。别每条都当这周必须做完，也别提过就丢。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: true,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "产品待办列表是一张总单：所有可能做、但还没答应做完的事，按现在值不值得做排序。上面的不等于已经承诺上线。",
@@ -721,6 +1036,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "接下来几个月先干什么后干什么写一下。别排成每天的任务清单，也别写「持续优化」这种空话。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: true,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "产品路线图是按阶段写出接下来主攻什么、为什么现在做、故意把什么往后放。它说方向，不排到每一天。",
@@ -821,6 +1181,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "设计没完印刷就不能开工，号码布要提前五天。帮我排到日历上，哪件拖了能看出来后面会撞车。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: true,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "甘特图是把任务画在日历上的图：每件有开始和结束，谁必须先做完、拖了会挡住谁，一眼能看出来。",
@@ -920,6 +1325,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     tagline: "先用灰块排出这一页有什么、放哪，不上颜色。",
     body: {
       colloquial: "先画个灰的：顶上搜索，中间列表，旁边一个复制按钮。先别上色，也别画 3D 光影。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: true,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "线框图是这一页的结构稿：用灰块和框标出有什么、放哪、点了去哪。不上颜色、不上真实字体、不假装已经能用。",
@@ -1019,6 +1469,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     tagline: "把喜欢的和明确不要的样子拼在一页。",
     body: {
       colloquial: "我发几张图：这三张的安静劲儿要，那张霓虹灯别学。先按这个感觉给瑜伽馆官网配色。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: true,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "情绪板是一页参考拼图：几张喜欢的、至少一张明确不要的，用来让大家对「该长什么样」看着同一组图说话。",
@@ -1118,6 +1613,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "两个按钮文案别开会投票。一半人看到「预约周六体验课」，一半人看到「提交」，看哪个真的约上的多。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: true,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "A/B 测试是同时放出两个版本，把来的人随机分成两拨，用同一件要发生的事比较哪个更好，而不是靠开会投票。",
@@ -1219,6 +1759,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "打开预约页的有 200 人，开始填的 80，提交成功的 20。人是卡在选场次，还是卡在填电话？",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: false,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: true,
+          },
+        ],
+      },
       definition: {
         statement:
           "转化漏斗是把「他真的把你在意的那件事做完」拆成前后几步，数每一步还剩多少人，从而看见人主要从哪一步离开。转化就是把那件事做完，比如提交了报名。",
@@ -1318,6 +1903,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     tagline: "对同一批记录做新增、查看、修改、删除。",
     body: {
       colloquial: "预约名单要能新加一条、打开能看见、改场次、取消掉。别只能往里加、改不了。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: true,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "增删改查是 CRUD 的中文说法，四个英文字分别是 Create、Read、Update、Delete：对同一批记录做新增、查看、修改、删除。",
@@ -1417,6 +2047,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     tagline: "每一条记录上单独的一栏，比如姓名或金额。",
     body: {
       colloquial: "每条预约我只要姓名、手机、场次、备注这四栏。先别加内部编号、来源渠道。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: true,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "字段是每一条记录上单独的一栏：姓名一栏、金额一栏、日期一栏。栏定了，表单才知道要填什么，名单才知道要展示什么。",
@@ -1515,6 +2190,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     tagline: "这一栏是文字、数字、日期还是是非，决定能怎么用。",
     body: {
       colloquial: "金额那栏存成了「三十元」，加不起来。帮我改成数字；日期也要能按日历选，别手打。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: true,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "数据类型是这一栏存的种类：一段文字、一个能加减的数字、一个能排序的日期，或「是或不是」。种类错了，筛选、加总、选日期都会坏。",
@@ -1615,6 +2335,51 @@ export const PRODUCT_CONCEPTS: readonly RawConcept[] = [
     tagline: "把记录整批送进来，或整批拿出去给表格软件。",
     body: {
       colloquial: "名单在表格里，能不能导进来？也要能下载一份，用 Excel 打开中文别乱码。",
+      flow: {
+        title: "一个产品，从想法到上线",
+        steps: [
+          {
+            label: "先写清楚谁在什么时候要什么",
+            description: "先确认谁在什么场景遇到什么问题。",
+            current: false,
+          },
+          {
+            label: "摊开成一份需求",
+            description: "把目标、范围和规则写成一份需求。",
+            current: false,
+          },
+          {
+            label: "画成能看的草图",
+            description: "用草图先把页面和操作顺序画出来。",
+            current: false,
+          },
+          {
+            label: "砍到最小能用的一版",
+            description: "只保留能验证价值的最小版本。",
+            current: false,
+          },
+          {
+            label: "排出先做什么",
+            description: "按价值、依赖和风险排出顺序。",
+            current: false,
+          },
+          {
+            label: "做出来，上线",
+            description: "把版本做出来，交给真实用户使用。",
+            current: true,
+          },
+          {
+            label: "分两组比一比",
+            description: "随机分两组，只改变一个关键条件。",
+            current: false,
+          },
+          {
+            label: "看有多少人走到最后",
+            description: "统计多少人开始、完成并留下来。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "导入是把一批记录从表格文件送进系统；导出是把系统里的记录整批拿出去，用 Excel 一类软件打开，或交给别人。",

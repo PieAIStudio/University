@@ -883,6 +883,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "能当场核对的句子：怎样才算做完、怎样才算对。",
     body: {
       colloquial: "我跟它说搜索好用一点，它改完问我满不满意。我怎么知道算不算完？",
+      flow: {
+        title: "一次测试",
+        steps: [
+          {
+            label: "先说清楚怎样算做对",
+            description: "先定下输入、动作和预期结果。",
+            current: true,
+          },
+          {
+            label: "写成一条条能跑的用例",
+            description: "把标准写成每次都能执行的用例。",
+            current: false,
+          },
+          {
+            label: "单个零件先测",
+            description: "隔离一个函数或组件，单独检查它。",
+            current: false,
+          },
+          {
+            label: "零件拼起来再测",
+            description: "让多个零件接上，检查它们能否协作。",
+            current: false,
+          },
+          {
+            label: "当成真人走一遍",
+            description: "按真实用户路径操作一遍完整功能。",
+            current: false,
+          },
+          {
+            label: "上线前快速过一遍主流程",
+            description: "发布前快速确认最重要的路径仍能走通。",
+            current: false,
+          },
+          {
+            label: "交给自动跑的机器",
+            description: "把测试交给持续运行的机器自动执行。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "验收标准是几句能当场核对的话：做成什么样算过，缺了哪条算没做完。它不讲代码怎么写，只讲人打开后看得到、点得到的结果。",
@@ -986,6 +1026,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "一组「怎么操作、应当看到什么」的核对步骤。",
     body: {
       colloquial: "验收已经写了中文能搜到。还要写测试用例？那不就是把同一句话再抄一遍？",
+      flow: {
+        title: "一次测试",
+        steps: [
+          {
+            label: "先说清楚怎样算做对",
+            description: "先定下输入、动作和预期结果。",
+            current: false,
+          },
+          {
+            label: "写成一条条能跑的用例",
+            description: "把标准写成每次都能执行的用例。",
+            current: true,
+          },
+          {
+            label: "单个零件先测",
+            description: "隔离一个函数或组件，单独检查它。",
+            current: false,
+          },
+          {
+            label: "零件拼起来再测",
+            description: "让多个零件接上，检查它们能否协作。",
+            current: false,
+          },
+          {
+            label: "当成真人走一遍",
+            description: "按真实用户路径操作一遍完整功能。",
+            current: false,
+          },
+          {
+            label: "上线前快速过一遍主流程",
+            description: "发布前快速确认最重要的路径仍能走通。",
+            current: false,
+          },
+          {
+            label: "交给自动跑的机器",
+            description: "把测试交给持续运行的机器自动执行。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "测试用例是把「怎样才算对」拆成一次次可执行的核对：先准备什么、点哪、填什么、应当看到什么。可以人照着点，也可以写成程序自动跑。",
@@ -1091,6 +1171,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "只测一小块规则，不打开整个网站。",
     body: {
       colloquial: "每次改搜索都要我打开网站打一遍吗？有人说写单元测试就不用开页面。",
+      flow: {
+        title: "一次测试",
+        steps: [
+          {
+            label: "先说清楚怎样算做对",
+            description: "先定下输入、动作和预期结果。",
+            current: false,
+          },
+          {
+            label: "写成一条条能跑的用例",
+            description: "把标准写成每次都能执行的用例。",
+            current: false,
+          },
+          {
+            label: "单个零件先测",
+            description: "隔离一个函数或组件，单独检查它。",
+            current: true,
+          },
+          {
+            label: "零件拼起来再测",
+            description: "让多个零件接上，检查它们能否协作。",
+            current: false,
+          },
+          {
+            label: "当成真人走一遍",
+            description: "按真实用户路径操作一遍完整功能。",
+            current: false,
+          },
+          {
+            label: "上线前快速过一遍主流程",
+            description: "发布前快速确认最重要的路径仍能走通。",
+            current: false,
+          },
+          {
+            label: "交给自动跑的机器",
+            description: "把测试交给持续运行的机器自动执行。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "单元测试是只拿出一小块规则来对答案：给定这几个词条、这个搜索词，应当留下哪几条。它不启动浏览器，不点按钮，所以跑得快，也容易指到是哪一块算错了。",
@@ -1191,6 +1311,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "把相邻几块接上一起测，看拼得上拼不上。",
     body: {
       colloquial: "每一小块都是绿的，拼起来提交还是丢数据。这就是要集成测试？",
+      flow: {
+        title: "一次测试",
+        steps: [
+          {
+            label: "先说清楚怎样算做对",
+            description: "先定下输入、动作和预期结果。",
+            current: false,
+          },
+          {
+            label: "写成一条条能跑的用例",
+            description: "把标准写成每次都能执行的用例。",
+            current: false,
+          },
+          {
+            label: "单个零件先测",
+            description: "隔离一个函数或组件，单独检查它。",
+            current: false,
+          },
+          {
+            label: "零件拼起来再测",
+            description: "让多个零件接上，检查它们能否协作。",
+            current: true,
+          },
+          {
+            label: "当成真人走一遍",
+            description: "按真实用户路径操作一遍完整功能。",
+            current: false,
+          },
+          {
+            label: "上线前快速过一遍主流程",
+            description: "发布前快速确认最重要的路径仍能走通。",
+            current: false,
+          },
+          {
+            label: "交给自动跑的机器",
+            description: "把测试交给持续运行的机器自动执行。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "集成测试是让相邻的几块真的连起来跑：页面交出去的报名，门口（常叫接口，网页按约定把数据送去的那几条地址）能不能收下、名单真正存放的地方能不能多一条、再读回来还在不在。它比单元测试更接近真用，但通常还不必假装成一个真人从打开网站点到结束。",
@@ -1295,6 +1455,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "像真人一样打开页面，从进门点到事情做完。",
     body: {
       colloquial: "我想看真的浏览器里复制按钮行不行。端到端是不是最全面，有它就不用别的了？",
+      flow: {
+        title: "一次测试",
+        steps: [
+          {
+            label: "先说清楚怎样算做对",
+            description: "先定下输入、动作和预期结果。",
+            current: false,
+          },
+          {
+            label: "写成一条条能跑的用例",
+            description: "把标准写成每次都能执行的用例。",
+            current: false,
+          },
+          {
+            label: "单个零件先测",
+            description: "隔离一个函数或组件，单独检查它。",
+            current: false,
+          },
+          {
+            label: "零件拼起来再测",
+            description: "让多个零件接上，检查它们能否协作。",
+            current: false,
+          },
+          {
+            label: "当成真人走一遍",
+            description: "按真实用户路径操作一遍完整功能。",
+            current: true,
+          },
+          {
+            label: "上线前快速过一遍主流程",
+            description: "发布前快速确认最重要的路径仍能走通。",
+            current: false,
+          },
+          {
+            label: "交给自动跑的机器",
+            description: "把测试交给持续运行的机器自动执行。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "端到端测试是启动真正的浏览器（或像浏览器一样的环境），按用户的走法点：打开词条页、按按钮、看屏幕或剪贴板上出现什么。它验证的是整条路通不通，不是某一小块公式对不对。",
@@ -1407,6 +1607,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "先确认打得开、最要紧的那一下还能用。",
     body: {
       colloquial: "冒烟测试是测会不会着火吗？我是不是每次都要把所有功能点完？",
+      flow: {
+        title: "一次测试",
+        steps: [
+          {
+            label: "先说清楚怎样算做对",
+            description: "先定下输入、动作和预期结果。",
+            current: false,
+          },
+          {
+            label: "写成一条条能跑的用例",
+            description: "把标准写成每次都能执行的用例。",
+            current: false,
+          },
+          {
+            label: "单个零件先测",
+            description: "隔离一个函数或组件，单独检查它。",
+            current: false,
+          },
+          {
+            label: "零件拼起来再测",
+            description: "让多个零件接上，检查它们能否协作。",
+            current: false,
+          },
+          {
+            label: "当成真人走一遍",
+            description: "按真实用户路径操作一遍完整功能。",
+            current: false,
+          },
+          {
+            label: "上线前快速过一遍主流程",
+            description: "发布前快速确认最重要的路径仍能走通。",
+            current: true,
+          },
+          {
+            label: "交给自动跑的机器",
+            description: "把测试交给持续运行的机器自动执行。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "冒烟测试是最短的一组检查：页面打得开，最关键的那条路还能走。报名页就是能打开、能提交；词义索引就是搜一下能出结果。它不证明都对，只证明没全塌。",
@@ -1514,6 +1754,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "改完新的，再测以前能用的有没有坏。",
     body: {
       colloquial: "我只加了导出，提交怎么也坏了。回归测试是把代码退回去吗？",
+      flow: {
+        title: "一次测试",
+        steps: [
+          {
+            label: "先说清楚怎样算做对",
+            description: "先定下输入、动作和预期结果。",
+            current: false,
+          },
+          {
+            label: "写成一条条能跑的用例",
+            description: "把标准写成每次都能执行的用例。",
+            current: false,
+          },
+          {
+            label: "单个零件先测",
+            description: "隔离一个函数或组件，单独检查它。",
+            current: false,
+          },
+          {
+            label: "零件拼起来再测",
+            description: "让多个零件接上，检查它们能否协作。",
+            current: false,
+          },
+          {
+            label: "当成真人走一遍",
+            description: "按真实用户路径操作一遍完整功能。",
+            current: false,
+          },
+          {
+            label: "上线前快速过一遍主流程",
+            description: "发布前快速确认最重要的路径仍能走通。",
+            current: false,
+          },
+          {
+            label: "交给自动跑的机器",
+            description: "把测试交给持续运行的机器自动执行。",
+            current: true,
+          },
+        ],
+      },
       definition: {
         statement:
           "回归测试是改动之后，把以前已经通过的核对再跑一遍，确认旧能力还在。名字里的「回归」不是退回上一版，是问：旧问题会不会回来、旧功能会不会被踩坏。",
@@ -1619,6 +1899,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "测试跑过了多少代码，不是「测得有多好」。",
     body: {
       colloquial: "覆盖率 80% 是不是就比较安全？能不能把这个数字当分数看？",
+      flow: {
+        title: "一次测试",
+        steps: [
+          {
+            label: "先说清楚怎样算做对",
+            description: "先定下输入、动作和预期结果。",
+            current: false,
+          },
+          {
+            label: "写成一条条能跑的用例",
+            description: "把标准写成每次都能执行的用例。",
+            current: false,
+          },
+          {
+            label: "单个零件先测",
+            description: "隔离一个函数或组件，单独检查它。",
+            current: false,
+          },
+          {
+            label: "零件拼起来再测",
+            description: "让多个零件接上，检查它们能否协作。",
+            current: false,
+          },
+          {
+            label: "当成真人走一遍",
+            description: "按真实用户路径操作一遍完整功能。",
+            current: false,
+          },
+          {
+            label: "上线前快速过一遍主流程",
+            description: "发布前快速确认最重要的路径仍能走通。",
+            current: false,
+          },
+          {
+            label: "交给自动跑的机器",
+            description: "把测试交给持续运行的机器自动执行。",
+            current: true,
+          },
+        ],
+      },
       definition: {
         statement:
           "测试覆盖率是一个比例：自动测试跑起来时，你的代码里有多少行、多少「如果这样、否则那样」的分岔被真正走到了。它回答「测没测过这里」，不回答「这里测得对不对」。",
@@ -1719,6 +2039,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "测试里顶替真邻居的假东西，比如假发短信。",
     body: {
       colloquial: "测发短信总不能每次真发到家长手机。测试替身是造假数据吗？",
+      flow: {
+        title: "一次测试",
+        steps: [
+          {
+            label: "先说清楚怎样算做对",
+            description: "先定下输入、动作和预期结果。",
+            current: false,
+          },
+          {
+            label: "写成一条条能跑的用例",
+            description: "把标准写成每次都能执行的用例。",
+            current: false,
+          },
+          {
+            label: "单个零件先测",
+            description: "隔离一个函数或组件，单独检查它。",
+            current: true,
+          },
+          {
+            label: "零件拼起来再测",
+            description: "让多个零件接上，检查它们能否协作。",
+            current: false,
+          },
+          {
+            label: "当成真人走一遍",
+            description: "按真实用户路径操作一遍完整功能。",
+            current: false,
+          },
+          {
+            label: "上线前快速过一遍主流程",
+            description: "发布前快速确认最重要的路径仍能走通。",
+            current: false,
+          },
+          {
+            label: "交给自动跑的机器",
+            description: "把测试交给持续运行的机器自动执行。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "测试替身是测试时用来顶替真邻居的假东西：假的发短信口、假的支付、假的「现在几点」。被测的那一段还是真的，旁边那些贵、慢、会打扰真人的，换成你能控制的假邻居。",
@@ -1823,6 +2183,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "测试开始前摆好的那份固定假数据。",
     body: {
       colloquial: "测搜索要有词条，这些假数据叫 fixture？跟替身是一个东西吗？",
+      flow: {
+        title: "一次测试",
+        steps: [
+          {
+            label: "先说清楚怎样算做对",
+            description: "先定下输入、动作和预期结果。",
+            current: false,
+          },
+          {
+            label: "写成一条条能跑的用例",
+            description: "把标准写成每次都能执行的用例。",
+            current: false,
+          },
+          {
+            label: "单个零件先测",
+            description: "隔离一个函数或组件，单独检查它。",
+            current: true,
+          },
+          {
+            label: "零件拼起来再测",
+            description: "让多个零件接上，检查它们能否协作。",
+            current: false,
+          },
+          {
+            label: "当成真人走一遍",
+            description: "按真实用户路径操作一遍完整功能。",
+            current: false,
+          },
+          {
+            label: "上线前快速过一遍主流程",
+            description: "发布前快速确认最重要的路径仍能走通。",
+            current: false,
+          },
+          {
+            label: "交给自动跑的机器",
+            description: "把测试交给持续运行的机器自动执行。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "测试数据（常叫 fixture）是测试开始前就摆好的那份固定材料：几条词条、一份报名名单、一张图片。每次测试用同一份，结果才比得了。",
@@ -1927,6 +2327,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "代码没改，测试却有时过有时挂。",
     body: {
       colloquial: "我什么都没改，CI 一会儿红一会儿绿。是网络问题还是测试在瞎报？",
+      flow: {
+        title: "一次测试",
+        steps: [
+          {
+            label: "先说清楚怎样算做对",
+            description: "先定下输入、动作和预期结果。",
+            current: false,
+          },
+          {
+            label: "写成一条条能跑的用例",
+            description: "把标准写成每次都能执行的用例。",
+            current: false,
+          },
+          {
+            label: "单个零件先测",
+            description: "隔离一个函数或组件，单独检查它。",
+            current: false,
+          },
+          {
+            label: "零件拼起来再测",
+            description: "让多个零件接上，检查它们能否协作。",
+            current: false,
+          },
+          {
+            label: "当成真人走一遍",
+            description: "按真实用户路径操作一遍完整功能。",
+            current: false,
+          },
+          {
+            label: "上线前快速过一遍主流程",
+            description: "发布前快速确认最重要的路径仍能走通。",
+            current: false,
+          },
+          {
+            label: "交给自动跑的机器",
+            description: "把测试交给持续运行的机器自动执行。",
+            current: true,
+          },
+        ],
+      },
       definition: {
         statement:
           "不稳定测试是同一份代码、同一组步骤，多次跑会得出不同对错的测试。根子通常在「现在几点」、动画还没完、真网络快慢、几条测试抢同一份数据，而不是产品这次真的坏了。",
@@ -2143,6 +2583,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "让网页听懂点击和输入的语言，浏览器只认它。",
     body: {
       colloquial: "搜索框里一打字，下面的列表就要跟着变，这段到底写在哪儿？",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: true,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "JavaScript 是浏览器里能直接跑的编程语言，负责点了会怎样、输入了出什么、要把哪段文字放进剪贴板。",
@@ -2253,6 +2733,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "给 JavaScript 补上「这是数字还是文字」的检查。",
     body: {
       colloquial: "每条词条都得有测验，AI 老漏测验、漏中文名，有没有办法写的时候就拦住？",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: true,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: false,
+          },
+        ],
+      },
       definition: {
         statement:
           "TypeScript 是在 JavaScript 上面加的一层检查：你先写明「这里必须是文字、那里必须是数字、这条词条必须有测验」，保存或生成网页成品时对不上就报错。",
@@ -2457,6 +2977,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "老师端和学生端都有「复制为 Markdown」，我改一处，另一处也得跟着改，有没有办法抽出来？",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: true,
+          },
+        ],
+      },
       definition: {
         statement:
           "React 是一套用 JavaScript 写网页界面的方法：把界面拆成组件（可复用的一块，比如按钮、词条卡片），这份数据变了，用到它的那一块自己更新。",
@@ -2567,6 +3127,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "另一套用零件搭网页的写法，不能当 React 用。",
     body: {
       colloquial: "群里有人把一段 Vue 代码丢过来，说直接贴进我这个 React 项目就行。",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: true,
+          },
+        ],
+      },
       definition: {
         statement:
           "Vue 也是用组件搭网页的一套写法：页面拆成可复用的块，数据变了，绑在上面的那一块跟着变。常见是一个文件里同时放这一块的结构、样子和动作。",
@@ -2669,6 +3269,46 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
     tagline: "在 React 上补网址、打开就能读的字、给搜索引擎看。",
     body: {
       colloquial: "我想让百度能搜到每一条词条，现在地址都是井号开头的那种。",
+      flow: {
+        title: "一次界面渲染，从文件到屏幕",
+        steps: [
+          {
+            label: "浏览器拿到文件",
+            description: "浏览器先请求并收到 HTML、样式和脚本文件。",
+            current: false,
+          },
+          {
+            label: "HTML 说这是什么",
+            description: "HTML 标出标题、按钮和内容各是什么。",
+            current: false,
+          },
+          {
+            label: "CSS 决定长什么样",
+            description: "CSS 规定颜色、尺寸、间距和位置。",
+            current: false,
+          },
+          {
+            label: "组成一棵可改的结构",
+            description: "浏览器把这些内容组成可操作的 DOM 树。",
+            current: false,
+          },
+          {
+            label: "JS 决定按了会怎样",
+            description: "JavaScript 监听操作并决定界面怎么回应。",
+            current: false,
+          },
+          {
+            label: "状态变了",
+            description: "用户操作让保存的数据发生变化。",
+            current: false,
+          },
+          {
+            label: "只重画变了的那块",
+            description: "框架只更新状态影响到的那部分界面。",
+            current: true,
+          },
+        ],
+      },
       definition: {
         statement:
           "Next.js 是建立在 React 上的一套网站架子：哪个网址对应哪一页、第一次打开时把能读的字准备好、给搜索引擎看标题和摘要，这些它来补。",
