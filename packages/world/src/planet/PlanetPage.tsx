@@ -25,6 +25,7 @@ import {
   STUDY_STAGE_LABEL,
   studyCounts,
   studyCourseList,
+  studyMarkerColor,
   studyPercent,
   studyStage,
   type PlanetStudy,
@@ -127,7 +128,14 @@ export function PlanetRail({
                 onClick={() => onSelect(study.id)}
               >
                 <span className="planet-page__row-head">
-                  <span className="planet-page__row-name">{study.title}</span>
+                  <span className="planet-page__row-name-wrap">
+                    <span
+                      className="planet-page__row-swatch"
+                      aria-hidden="true"
+                      style={{ backgroundColor: studyMarkerColor(study.id).css }}
+                    />
+                    <span className="planet-page__row-name">{study.title}</span>
+                  </span>
                   {/*
                     The one fact that decides which row you pick. Five rows of
                     「N 门课 · M 节」 are five rows of the same shape; whether you

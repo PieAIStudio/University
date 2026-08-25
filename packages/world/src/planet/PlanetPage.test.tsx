@@ -150,6 +150,7 @@ describe("PlanetPage", () => {
     expect(container.textContent).toContain("开场");
     expect(container.textContent).toContain("还有 1 门");
     expect(container.textContent).not.toMatch(/探索|旅程|开启|精彩|沉浸|世界级|带你/);
+    expect(container.querySelectorAll(".planet-page__row-swatch")).toHaveLength(2);
 
     const buzz = [...container.querySelectorAll("button")].find((node) =>
       (node.textContent ?? "").includes("Buzz"),
@@ -220,5 +221,18 @@ describe("PlanetPage", () => {
       arrives TuringPact-then-Buzz, and Buzz sorts first.
     */
     expect(rows.map((node) => node.getAttribute("data-study-id"))).toEqual(["buzz", "turing-pact"]);
+  });
+
+  it("keeps the beacon contract in geometry and the project colour in the DOM", () => {
+    expect(SCENE_SRC).toContain("buildPinGeometry");
+    expect(SCENE_SRC).toContain("PIN_BEAM_RADIUS");
+    expect(SCENE_SRC).toContain("const PIN_SCALE = 0.34");
+    expect(SCENE_SRC).toContain("const PIN_BEAM_LENGTH = 0.065");
+    expect(SCENE_SRC).toContain("PIN_TIP_OFFSET");
+    expect(SCENE_SRC).toContain("pinContact");
+    expect(SCENE_SRC).toContain("beaconPlacement");
+    expect(SCENE_SRC).not.toMatch(
+      /PIN_PROFILE|PIN_SCREEN_LIFT|PIN_BEAM_HEIGHT|latheGeometry|MARKER_QUIET/,
+    );
   });
 });

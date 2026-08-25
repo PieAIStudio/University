@@ -67,6 +67,12 @@ async function main() {
     await page.screenshot({ path: shotPath("desktop-1440x810.png"), fullPage: false });
 
     const log = [];
+    // Fixed viewport, real canvas coordinates: this deliberately exercises the
+    // 3D beacon hit target rather than a DOM list button or element.click().
+    await page.mouse.click(775, 390);
+    const afterBeacon = await page.locator("[data-planet-page]").getAttribute("data-selected");
+    log.push(`real pointer on Buzz beacon at canvas (775,390) → selected=${afterBeacon}`);
+
     await page.keyboard.press("Tab");
     await page.keyboard.press("Tab");
     const afterTab = await page.evaluate(() => {

@@ -4,6 +4,7 @@ import {
   STUDY_STAGE_LABEL,
   studyCounts,
   studyCourseList,
+  studyMarkerColor,
   studyPercent,
   studyStage,
   type PlanetStudy,
@@ -87,5 +88,17 @@ describe("studyCourseList", () => {
     expect(listed.shown).toEqual(["入门", "场景"]);
     expect(listed.rest).toBe(0);
     expect(listed.restLabel).toBeNull();
+  });
+});
+
+describe("studyMarkerColor", () => {
+  it("keeps the canvas beacon and DOM swatch on one project colour", () => {
+    expect(studyMarkerColor("turing-pact").css).toBe("#d49a62");
+    expect(studyMarkerColor("buzz").css).toBe("#7d9a62");
+    expect(studyMarkerColor("turing-pact")).not.toEqual(studyMarkerColor("buzz"));
+  });
+
+  it("assigns an unknown series a deterministic palette entry", () => {
+    expect(studyMarkerColor("new-series")).toEqual(studyMarkerColor("new-series"));
   });
 });

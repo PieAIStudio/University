@@ -122,6 +122,24 @@
   min-width: 0;
 }
 
+.planet-page__row-name-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.planet-page__row-swatch {
+  flex: 0 0 auto;
+  width: 0.68rem;
+  height: 0.68rem;
+  border: 2px solid rgb(255 255 255 / 45%);
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 2px rgb(18 24 22 / 24%),
+    0 0 10px rgb(255 255 255 / 12%);
+}
+
 .planet-page__row-head > .game-ui-badge {
   flex: 0 0 auto;
 }

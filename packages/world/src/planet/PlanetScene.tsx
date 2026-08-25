@@ -26,6 +26,7 @@ import * as THREE from "three";
 import { hash } from "../random.js";
 import { Stage } from "../Stage.js";
 import { renderTier } from "../tier.js";
+import { studyMarkerColor } from "./planet-copy.js";
 import {
   placeStudies,
   rotationFor,
@@ -48,14 +49,31 @@ import {
  */
 const SPACE_LOW = 0x5a4433;
 const SPACE_HIGH = 0x241a13;
-const ACCENT = 0xffb347;
 
 const PLANET_PALETTE = {
-  oliveGreen: 0x81953f,
-  cyan: 0x218ca0,
-  sandBrown: 0xbd8c55,
-  deepGreen: 0x367852,
+  ocean: 0x4e878e,
+  deepOcean: 0x386f79,
+  olive: 0x7e8554,
+  moss: 0x5c795f,
+  clay: 0xa17a58,
+  coast: 0xb3946d,
 } as const;
+
+interface ContinentSeed {
+  readonly center: THREE.Vector3;
+  readonly colour: number;
+}
+
+const CONTINENT_SEEDS: readonly ContinentSeed[] = [
+  { center: new THREE.Vector3(-0.42, -0.05, 0.9).normalize(), colour: PLANET_PALETTE.clay },
+  { center: new THREE.Vector3(0.75, 0.18, 0.64).normalize(), colour: PLANET_PALETTE.moss },
+  { center: new THREE.Vector3(-0.25, -0.78, -0.58).normalize(), colour: PLANET_PALETTE.olive },
+  { center: new THREE.Vector3(0.7, -0.55, -0.45).normalize(), colour: PLANET_PALETTE.clay },
+  { center: new THREE.Vector3(-0.55, 0.65, -0.52).normalize(), colour: PLANET_PALETTE.moss },
+];
+
+const LAND_LEVEL = 0.68;
+const COAST_WIDTH = 0.055;
 
 const FRESNEL_VERTEX_SHADER = /* glsl */ `
   varying vec3 vWorldNormal;
@@ -139,18 +157,14 @@ function planetCamera(): readonly [number, number, number] {
 }
 
 const TURN_RATE = 5.5;
-const MARKER_QUIET = 0xf2e6d2;
 const MARKER_SURFACE = 1.026;
-const PIN_BEAM_HEIGHT = 0.34;
-const PIN_PROFILE = [
-  new THREE.Vector2(0, -0.14),
-  new THREE.Vector2(0.045, -0.105),
-  new THREE.Vector2(0.09, -0.035),
-  new THREE.Vector2(0.1, 0.045),
-  new THREE.Vector2(0.075, 0.115),
-  new THREE.Vector2(0.035, 0.16),
-  new THREE.Vector2(0, 0.17),
-];
+const DISC_HEIGHT = 0.026;
+const PIN_SCALE = 0.34;
+const PIN_TIP_Y = -0.18;
+const PIN_TIP_OFFSET = -PIN_TIP_Y * PIN_SCALE;
+const PIN_RADIAL_LIFT = 0.002;
+const PIN_BEAM_LENGTH = 0.065;
+const PIN_BEAM_RADIUS = 0.014;
 
 const REST: YawPitch = { yaw: 0.35, pitch: 0.18 };
 
@@ -169,8 +183,116 @@ function markerQuaternion(point: Pick<SpherePoint, "x" | "y" | "z">): THREE.Quat
   return new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
 }
 
+function buildPinGeometry(): THREE.ExtrudeGeometry {
+  const shape = new THREE.Shape();
+  shape.moveTo(0, PIN_TIP_Y);
+  shape.bezierCurveTo(-0.03, -0.12, -0.115, -0.04, -0.115, 0.065);
+  shape.bezierCurveTo(-0.115, 0.17, -0.06, 0.25, 0, 0.3);
+  shape.bezierCurveTo(0.06, 0.25, 0.115, 0.17, 0.115, 0.065);
+  shape.bezierCurveTo(0.115, -0.04, 0.03, -0.12, 0, PIN_TIP_Y);
+  shape.closePath();
+  return new THREE.ExtrudeGeometry(shape, {
+    bevelEnabled: true,
+    bevelSegments: 1,
+    bevelSize: 0.008,
+    bevelThickness: 0.008,
+    curveSegments: 3,
+    depth: 0.045,
+    steps: 1,
+  });
+}
+
+interface BeaconPlacement {
+  readonly contact: THREE.Vector3;
+  readonly pin: THREE.Vector3;
+  readonly beamMid: THREE.Vector3;
+  readonly beamLength: number;
+  readonly surfaceQuaternion: THREE.Quaternion;
+  readonly beamQuaternion: THREE.Quaternion;
+}
+
+function beaconPlacement(point: Pick<SpherePoint, "x" | "y" | "z">): BeaconPlacement {
+  const normal = new THREE.Vector3(point.x, point.y, point.z).normalize();
+  // The disc sits on the surface: its lower face meets the globe, and its top
+  // face is the one place the pin is allowed to touch.
+  const contact = normal.clone().multiplyScalar(MARKER_SURFACE + DISC_HEIGHT / 2);
+  const pinContact = contact.clone().addScaledVector(normal, DISC_HEIGHT / 2 + PIN_RADIAL_LIFT);
+  const screenUp = new THREE.Vector3(0, 1, 0).addScaledVector(normal, -normal.y);
+  if (screenUp.lengthSq() < 0.0001) screenUp.set(1, 0, 0);
+  screenUp.normalize();
+  // The geometry's local bottom tip is y=-0.18. Offset the screen-facing pin by
+  // scaled tip height so that its tip, rather than its centre, lands on the
+  // disc. The beam is a short normal-aligned glow at that contact, not a rod
+  // carrying the pin up from the surface.
+  const pin = pinContact.clone().addScaledVector(screenUp, PIN_TIP_OFFSET);
+  const beamStart = contact.clone().addScaledVector(normal, DISC_HEIGHT / 2);
+  const beam = beamStart.clone().addScaledVector(normal, PIN_BEAM_LENGTH).sub(beamStart);
+  const beamLength = beam.length();
+  return {
+    contact,
+    pin,
+    beamMid: beamStart.clone().addScaledVector(beam, 0.5),
+    beamLength,
+    surfaceQuaternion: markerQuaternion(point),
+    beamQuaternion: new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      beam.normalize(),
+    ),
+  };
+}
+
 function colourLerp(from: number, to: number, t: number): THREE.Color {
   return new THREE.Color(from).lerp(new THREE.Color(to), t);
+}
+
+/**
+ * One smooth field for the whole globe. It deliberately has no face hash:
+ * the old per-face salt changed colour every time a triangle crossed a
+ * threshold, so a coastline became a checkerboard. These long waves only
+ * bend a region boundary; they cannot turn neighbouring land into unrelated
+ * biomes.
+ */
+function smoothPlanetNoise(x: number, y: number, z: number): number {
+  return (
+    Math.sin(x * 1.55 + z * 1.1 + 0.35) * 0.5 +
+    Math.cos(y * 1.85 - x * 0.7) * 0.3 +
+    Math.sin(z * 2.35 - y * 1.15) * 0.2
+  );
+}
+
+interface PlanetTerrain {
+  readonly colour: number;
+  readonly elevation: number;
+}
+
+function planetTerrainAt(x: number, y: number, z: number): PlanetTerrain {
+  let strongestContinent = CONTINENT_SEEDS[0]!;
+  let strongestScore = -Infinity;
+  for (const continent of CONTINENT_SEEDS) {
+    const score = x * continent.center.x + y * continent.center.y + z * continent.center.z;
+    if (score > strongestScore) {
+      strongestScore = score;
+      strongestContinent = continent;
+    }
+  }
+
+  const coastlineWobble = smoothPlanetNoise(x, y, z) * 0.075;
+  const landScore = strongestScore + coastlineWobble;
+  if (landScore < LAND_LEVEL) {
+    const oceanColour =
+      smoothPlanetNoise(x * 0.8, y * 0.8, z * 0.8) > 0.08
+        ? PLANET_PALETTE.ocean
+        : PLANET_PALETTE.deepOcean;
+    return { colour: oceanColour, elevation: -0.018 };
+  }
+
+  // A single muted sand band follows the coastline; the warm colour does not
+  // appear as isolated orange triangles in the middle of an ocean or landmass.
+  const coast = landScore < LAND_LEVEL + COAST_WIDTH;
+  return {
+    colour: coast ? PLANET_PALETTE.coast : strongestContinent.colour,
+    elevation: coast ? 0.008 : 0.035,
+  };
 }
 
 /**
@@ -284,27 +406,8 @@ function buildPlanetGeometry(): THREE.BufferGeometry {
     const nx = x / length;
     const ny = y / length;
     const nz = z / length;
-    // Elevation is a function of the point, not of the vertex index, so a
-    // future subdivision cannot redraw the coastline.
-    const n = hash(`${nx.toFixed(4)},${ny.toFixed(4)},${nz.toFixed(4)}`);
-    /*
-      Continents, not static. The first pass weighted per-face noise about four
-      times as heavily as the low-frequency term, so every face decided its own
-      biome and the globe came out mottled — green and blue speckle that reads
-      as a tennis ball going off rather than as land and sea. Three long waves
-      carry the shape now and the noise only breaks up their coastlines, which
-      is the same ordering the island profiles use.
-    */
-    const band =
-      Math.sin(nx * 2.05 + 1.1) * Math.cos(nz * 1.75) +
-      0.62 * Math.sin(ny * 2.6 + 0.4) +
-      0.34 * Math.cos(nx * 3.4 - nz * 2.9);
-    // +0.035 is sea level, and it is a design number rather than a physical
-    // one: at zero this globe came out about nine-tenths ocean, which is the
-    // honest output of a symmetric noise field and a poor picture of a world
-    // that is supposed to be made of islands you can visit.
-    const elev = band * 0.075 + (n - 0.5) * 0.045 + 0.035;
-    const radius = 1 + Math.max(-0.02, elev * 0.16);
+    const terrain = planetTerrainAt(nx, ny, nz);
+    const radius = 1 + terrain.elevation * 0.16;
     position.setXYZ(index, nx * radius, ny * radius, nz * radius);
   }
 
@@ -312,8 +415,10 @@ function buildPlanetGeometry(): THREE.BufferGeometry {
     Vertex colours interpolate even when the material's normals are flat. Pick
     one palette entry per triangle and write it to all three vertices, so a
     neighbouring face can actually be a neighbouring colour block instead of a
-    hidden gradient. The grade still owns tone mapping and the single sRGB
-    encode; this is scene albedo, not a second colour pipeline.
+    hidden gradient. The region choice comes from the face's low-frequency
+    spherical terrain field, not from the face index or a high-frequency hash.
+    The grade still owns tone mapping and the single sRGB encode; this is scene
+    albedo, not a second colour pipeline.
   */
   for (let index = 0; index < position.count; index += 3) {
     const center = new THREE.Vector3(
@@ -321,16 +426,7 @@ function buildPlanetGeometry(): THREE.BufferGeometry {
       (position.getY(index) + position.getY(index + 1) + position.getY(index + 2)) / 3,
       (position.getZ(index) + position.getZ(index + 1) + position.getZ(index + 2)) / 3,
     ).normalize();
-    const faceNoise = hash(`${center.x.toFixed(4)},${center.y.toFixed(4)},${center.z.toFixed(4)}`);
-    const faceBand =
-      Math.sin(center.x * 2.05 + 1.1) * Math.cos(center.z * 1.75) +
-      0.62 * Math.sin(center.y * 2.6 + 0.4) +
-      0.34 * Math.cos(center.x * 3.4 - center.z * 2.9);
-    const faceElevation = faceBand * 0.075 + (faceNoise - 0.5) * 0.045 + 0.035;
-    if (faceElevation > 0.052) colour.setHex(PLANET_PALETTE.oliveGreen);
-    else if (faceElevation > 0.028) colour.setHex(PLANET_PALETTE.sandBrown);
-    else if (faceElevation < -0.02) colour.setHex(PLANET_PALETTE.deepGreen);
-    else colour.setHex(PLANET_PALETTE.cyan);
+    colour.setHex(planetTerrainAt(center.x, center.y, center.z).colour);
 
     for (let vertex = 0; vertex < 3; vertex += 1) {
       const offset = (index + vertex) * 3;
@@ -352,12 +448,12 @@ function PlanetLights() {
         that direction; the hemisphere and ambient fill keep the palette legible
         inside the shadow instead of turning the globe into a half-eaten ball.
       */}
-      <hemisphereLight args={[0x90c6d2, 0x3a6d52, 1]} />
-      <ambientLight color={0xf0c39a} intensity={0.5} />
-      {/* The warm key is upper-left in screen space; the far light is only a lift. */}
-      <directionalLight position={[-3.8, 4.6, 4.2]} intensity={1.2} color={0xffd1a4} />
-      {/* A tiny cool lift keeps the far side green-blue without flattening it. */}
-      <directionalLight position={[3.2, -1.6, -4]} intensity={0.22} color={0x4c8b91} />
+      <hemisphereLight args={[0xa5ced6, 0x56775e, 1.3]} />
+      <ambientLight color={0xf6d1ae} intensity={0.72} />
+      {/* The warm key is upper-left in screen space; the fill keeps the terminator soft. */}
+      <directionalLight position={[-3.8, 4.6, 4.2]} intensity={1.05} color={0xffd1a4} />
+      {/* A cool far-side lift keeps dark land blue-green instead of black. */}
+      <directionalLight position={[3.2, -1.6, -4]} intensity={0.48} color={0x67a8a2} />
     </>
   );
 }
@@ -398,16 +494,152 @@ function HorizonGlow() {
   );
 }
 
+interface MarkerBeaconProps {
+  readonly id: string;
+  readonly point: SpherePoint;
+  readonly selected: boolean;
+  readonly onSelect?: (studyId: string) => void;
+  readonly pinGeometry: THREE.ExtrudeGeometry;
+  readonly pinOutline: THREE.EdgesGeometry;
+  readonly hitGeometry: THREE.SphereGeometry;
+}
+
+function MarkerBeacon({
+  id,
+  point,
+  selected,
+  onSelect,
+  pinGeometry,
+  pinOutline,
+  hitGeometry,
+}: MarkerBeaconProps) {
+  const placement = useMemo(() => beaconPlacement(point), [point]);
+  const markerColor = useMemo(() => studyMarkerColor(id), [id]);
+  const pinVisual = useRef<THREE.Group>(null);
+  const { camera } = useThree();
+
+  useFrame(() => {
+    const node = pinVisual.current;
+    if (!node) return;
+    // Keep the flat droplet readable as the globe turns. This is geometry, not
+    // text: it may face the learner without stealing the DOM's text contract.
+    node.lookAt(camera.position);
+    node.rotateY(Math.PI);
+  });
+
+  const handleSelect = (event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
+    onSelect?.(id);
+  };
+  const handlePointerOver = (event: { stopPropagation: () => void; nativeEvent: Event }) => {
+    event.stopPropagation();
+    const target = event.nativeEvent.target;
+    if (target instanceof HTMLElement) target.style.cursor = "pointer";
+  };
+  const handlePointerOut = (event: { stopPropagation: () => void; nativeEvent: Event }) => {
+    event.stopPropagation();
+    const target = event.nativeEvent.target;
+    if (target instanceof HTMLElement) target.style.cursor = "";
+  };
+  const interactive = onSelect ? { onClick: handleSelect } : {};
+
+  return (
+    <>
+      <mesh
+        position={placement.contact}
+        quaternion={placement.surfaceQuaternion}
+        renderOrder={3}
+        {...interactive}
+      >
+        <cylinderGeometry
+          args={[selected ? 0.09 : 0.075, selected ? 0.078 : 0.066, DISC_HEIGHT, 20]}
+        />
+        <meshStandardMaterial
+          color={markerColor.hex}
+          emissive={markerColor.hex}
+          emissiveIntensity={selected ? 0.92 : 0.42}
+          roughness={0.34}
+          metalness={0.04}
+        />
+      </mesh>
+      <mesh
+        position={placement.beamMid}
+        quaternion={placement.beamQuaternion}
+        renderOrder={2}
+        {...interactive}
+      >
+        <cylinderGeometry
+          args={[
+            selected ? PIN_BEAM_RADIUS * 1.45 : PIN_BEAM_RADIUS,
+            selected ? PIN_BEAM_RADIUS * 1.45 : PIN_BEAM_RADIUS,
+            placement.beamLength,
+            8,
+            1,
+            true,
+          ]}
+        />
+        <meshBasicMaterial
+          color={markerColor.hex}
+          transparent
+          opacity={selected ? 0.62 : 0.35}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+      <group ref={pinVisual} position={placement.pin}>
+        <group scale={PIN_SCALE}>
+          <lineSegments geometry={pinOutline} renderOrder={5}>
+            <lineBasicMaterial color={markerColor.outlineHex} transparent opacity={0.95} />
+          </lineSegments>
+          <mesh geometry={pinGeometry} renderOrder={6} {...interactive}>
+            <meshStandardMaterial
+              color={markerColor.hex}
+              emissive={markerColor.hex}
+              emissiveIntensity={selected ? 0.74 : 0.26}
+              roughness={0.42}
+              metalness={0}
+              flatShading
+            />
+          </mesh>
+        </group>
+        {onSelect ? (
+          <mesh
+            name={`planet-beacon-${id}-hit`}
+            geometry={hitGeometry}
+            renderOrder={7}
+            onClick={handleSelect}
+            onPointerOver={handlePointerOver}
+            onPointerOut={handlePointerOut}
+          >
+            <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+          </mesh>
+        ) : null}
+      </group>
+    </>
+  );
+}
+
 function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
   const yawGroup = useRef<THREE.Group>(null);
   const pitchGroup = useRef<THREE.Group>(null);
   const current = useRef<YawPitch>({ ...REST });
   const planet = useMemo(() => buildPlanetGeometry(), []);
   const sky = useMemo(() => buildSkyGeometry(), []);
+  const pinGeometry = useMemo(() => buildPinGeometry(), []);
+  const pinOutline = useMemo(() => new THREE.EdgesGeometry(pinGeometry, 15), [pinGeometry]);
+  const pinHitGeometry = useMemo(() => new THREE.SphereGeometry(0.18, 12, 8), []);
   const placed = useMemo(() => placeStudies(studies.map((study) => study.id)), [studies]);
 
   useEffect(() => () => planet.dispose(), [planet]);
   useEffect(() => () => sky.dispose(), [sky]);
+  useEffect(
+    () => () => {
+      pinGeometry.dispose();
+      pinOutline.dispose();
+      pinHitGeometry.dispose();
+    },
+    [pinGeometry, pinOutline, pinHitGeometry],
+  );
 
   useFrame((_, delta) => {
     const yawNode = yawGroup.current;
@@ -452,87 +684,28 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
             a bite out of it, not a world. The lights carry the form.
           */}
           <mesh geometry={planet}>
-            <meshStandardMaterial vertexColors flatShading roughness={0.92} metalness={0} />
+            <meshStandardMaterial
+              vertexColors
+              flatShading
+              roughness={0.92}
+              metalness={0}
+              emissive={0x1d3a35}
+              emissiveIntensity={0.32}
+            />
           </mesh>
           <FresnelRim />
           {[...placed.entries()].map(([id, point]) => {
-            const selected = id === selectedId;
-            const pinColor = selected ? ACCENT : MARKER_QUIET;
-            const normalRotation = markerQuaternion(point);
             return (
-              <group
+              <MarkerBeacon
                 key={id}
-                position={[
-                  point.x * MARKER_SURFACE,
-                  point.y * MARKER_SURFACE,
-                  point.z * MARKER_SURFACE,
-                ]}
-                quaternion={normalRotation}
-                scale={selected ? 1.08 : 1}
-              >
-                <mesh position={[0, 0.012, 0]}>
-                  <cylinderGeometry args={[0.14, 0.12, 0.018, 24]} />
-                  <meshStandardMaterial
-                    color={pinColor}
-                    emissive={pinColor}
-                    emissiveIntensity={selected ? 0.9 : 0.42}
-                    roughness={0.38}
-                    metalness={0.05}
-                  />
-                </mesh>
-                <mesh position={[0, PIN_BEAM_HEIGHT / 2, 0]}>
-                  <cylinderGeometry
-                    args={[
-                      selected ? 0.026 : 0.018,
-                      selected ? 0.026 : 0.018,
-                      PIN_BEAM_HEIGHT,
-                      8,
-                      1,
-                      true,
-                    ]}
-                  />
-                  <meshBasicMaterial
-                    color={pinColor}
-                    transparent
-                    opacity={selected ? 0.58 : 0.32}
-                    depthWrite={false}
-                    blending={THREE.AdditiveBlending}
-                  />
-                </mesh>
-                <mesh position={[0, PIN_BEAM_HEIGHT + 0.14, 0]}>
-                  <latheGeometry args={[PIN_PROFILE, 12]} />
-                  <meshStandardMaterial
-                    color={pinColor}
-                    emissive={selected ? ACCENT : 0x8a6335}
-                    emissiveIntensity={selected ? 0.72 : 0.28}
-                    roughness={0.42}
-                    metalness={0}
-                    flatShading
-                  />
-                </mesh>
-                {onSelect ? (
-                  <mesh
-                    position={[0, 0.34, 0]}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onSelect(id);
-                    }}
-                    onPointerOver={(event) => {
-                      event.stopPropagation();
-                      const target = event.nativeEvent.target;
-                      if (target instanceof HTMLElement) target.style.cursor = "pointer";
-                    }}
-                    onPointerOut={(event) => {
-                      event.stopPropagation();
-                      const target = event.nativeEvent.target;
-                      if (target instanceof HTMLElement) target.style.cursor = "";
-                    }}
-                  >
-                    <cylinderGeometry args={[0.17, 0.17, 0.72, 8]} />
-                    <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-                  </mesh>
-                ) : null}
-              </group>
+                id={id}
+                point={point}
+                selected={id === selectedId}
+                onSelect={onSelect}
+                pinGeometry={pinGeometry}
+                pinOutline={pinOutline}
+                hitGeometry={pinHitGeometry}
+              />
             );
           })}
         </group>

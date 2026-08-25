@@ -1,18 +1,16 @@
 /**
  * Where a study sits on the planet, and how the globe turns to show it.
  *
- * Placement is a function of `studyId`, never of the array index. The world
- * map already learned this the hard way: a layout keyed to content (or to
- * "the third item") rearranges every island when an author inserts a course.
- * The globe would do the same thing, except the learner would watch their
- * project jump to a new continent. `random.ts` is the same FNV the islands
- * seed from, so a study that is stable on the map is stable here.
+ * A picker marker is a control, not a geographic claim. It therefore uses a
+ * count-aware layout: the current series are evenly spaced in one front-facing
+ * spherical cap, so a learner can see every entry without hunting around the
+ * back of the globe. The ids are sorted before slots are assigned, which keeps
+ * the result independent of filesystem order.
  *
- * The even packing (`planetPoints`) is a Fibonacci sphere. Hashing an id
- * straight onto that packing would still be index-like — slot 7 moves when
- * the packing is rebuilt for N+1. So the two APIs stay separate: Fibonacci
- * is how we prove N=4 and N=40 can share a sphere; `pointForStudy` is how a
- * real project finds its island, alone.
+ * `planetPoints` remains the generic full-sphere packing for geometry tests and
+ * future map uses. `pointForStudy` remains a deterministic single-id helper;
+ * the picker itself uses `placeStudies`, because only the collection knows how
+ * wide its visible cap needs to be.
  */
 
 import { hash } from "../random.js";
@@ -90,29 +88,67 @@ export function planetPoints(count: number, seed = 0): readonly SpherePoint[] {
   });
 }
 
+const VISIBLE_CAP_POLAR = 0.42;
+
+function visiblePointAt(index: number, count: number, phase: number): SpherePoint {
+  if (count <= 1) return toPoint(0, 0, 1, phase);
+
+  /*
+    Four real series fit comfortably on one latitude ring. Keeping the ring
+    narrow matters more than maximising the sphere: when a learner selects one
+    item, the other pins should remain in the same camera-facing hemisphere.
+    More than six entries graduate to a golden-angle cap while staying below
+    the horizon (`polar < π/2`).
+  */
+  if (count <= 6) {
+    const theta = phase + (Math.PI * 2 * index) / count;
+    return toPoint(
+      Math.sin(VISIBLE_CAP_POLAR) * Math.cos(theta),
+      Math.sin(VISIBLE_CAP_POLAR) * Math.sin(theta),
+      Math.cos(VISIBLE_CAP_POLAR),
+      theta,
+    );
+  }
+
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  const polar = 0.34 + 0.76 * Math.sqrt((index + 0.5) / count);
+  const theta = phase + golden * index;
+  return toPoint(
+    Math.sin(polar) * Math.cos(theta),
+    Math.sin(polar) * Math.sin(theta),
+    Math.cos(polar),
+    theta,
+  );
+}
+
 /**
- * One study, one point. Independent of every other study, so inserting a
- * neighbour cannot shove this one around the ocean.
+ * One study, one deterministic point in the camera-facing cap. This helper is
+ * intentionally independent of the collection; `placeStudies` is the API for
+ * a real picker, because it can distribute a known number of studies without
+ * overlap.
  *
- * Two hashes, not one: a single `[0,1)` used for both latitude and longitude
- * lays every id on a spiral stripe, and the four seas we actually have would
- * have landed in a belt. FNV on `id` and `id#lon` is the same trick
+ * Two hashes, not one: a single `[0,1)` used for both polar angle and azimuth
+ * would put ids on a stripe. FNV on the two salted keys is the same trick
  * `seeded()` uses to get a stream out of one string.
  */
 export function pointForStudy(studyId: string, seed = ""): SpherePoint {
   const key = seed ? `${seed}:${studyId}` : studyId;
-  const u = unitFrom(key, "lat");
-  const v = unitFrom(key, "lon");
-  const y = 1 - 2 * u;
-  const radius = Math.sqrt(Math.max(0, 1 - y * y));
-  const theta = 2 * Math.PI * v;
-  return toPoint(Math.cos(theta) * radius, y, Math.sin(theta) * radius, theta);
+  const polar = 0.28 + unitFrom(key, "polar") * 0.58;
+  const theta = 2 * Math.PI * unitFrom(key, "azimuth");
+  return toPoint(
+    Math.sin(polar) * Math.cos(theta),
+    Math.sin(polar) * Math.sin(theta),
+    Math.cos(polar),
+    theta,
+  );
 }
 
 export function placeStudies(ids: readonly string[], seed = ""): ReadonlyMap<string, SpherePoint> {
   const placed = new Map<string, SpherePoint>();
-  for (const id of ids) {
-    placed.set(id, pointForStudy(id, seed));
+  const ordered = [...new Set(ids)].sort((left, right) => left.localeCompare(right));
+  const phase = seed ? 2 * Math.PI * unitFrom(seed, "phase") : 0;
+  for (const [index, id] of ordered.entries()) {
+    placed.set(id, visiblePointAt(index, ordered.length, phase));
   }
   return placed;
 }

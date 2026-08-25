@@ -22,6 +22,36 @@ export interface PlanetStudy {
   readonly courseTitles: readonly string[];
 }
 
+export interface StudyMarkerColor {
+  readonly hex: number;
+  readonly css: string;
+  readonly outlineHex: number;
+}
+
+const FALLBACK_MARKER_COLORS: readonly StudyMarkerColor[] = [
+  { hex: 0xd49a62, css: "#d49a62", outlineHex: 0x4c352a },
+  { hex: 0x7d9a62, css: "#7d9a62", outlineHex: 0x30432b },
+  { hex: 0x5c9b99, css: "#5c9b99", outlineHex: 0x294c4d },
+  { hex: 0xa77768, css: "#a77768", outlineHex: 0x4c302d },
+];
+
+const MARKER_COLORS_BY_STUDY: Readonly<Record<string, StudyMarkerColor>> = {
+  "turing-pact": FALLBACK_MARKER_COLORS[0]!,
+  buzz: FALLBACK_MARKER_COLORS[1]!,
+  supaluv: FALLBACK_MARKER_COLORS[2]!,
+  "university-local": FALLBACK_MARKER_COLORS[3]!,
+};
+
+/** One project colour shared by the canvas beacon and the DOM list swatch. */
+export function studyMarkerColor(studyId: string): StudyMarkerColor {
+  const known = MARKER_COLORS_BY_STUDY[studyId];
+  if (known) return known;
+
+  let value = 0;
+  for (const character of studyId) value = (value * 31 + character.charCodeAt(0)) | 0;
+  return FALLBACK_MARKER_COLORS[Math.abs(value) % FALLBACK_MARKER_COLORS.length]!;
+}
+
 /**
  * How big a series is. Size only — where you stand in it is `studyStage`.
  *

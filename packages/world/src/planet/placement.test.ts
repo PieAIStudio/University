@@ -60,18 +60,16 @@ describe("planetPoints", () => {
 });
 
 describe("pointForStudy / placeStudies", () => {
-  it("lands the same id on the same point every time", () => {
+  it("keeps the single-id helper deterministic and the picker points in front", () => {
     expect(pointForStudy("buzz")).toEqual(pointForStudy("buzz"));
-    expect(placeStudies(FOUR).get("buzz")).toEqual(pointForStudy("buzz"));
+    expect(pointForStudy("buzz").z).toBeGreaterThan(0.6);
+    expect(placeStudies(FOUR).get("buzz")?.z).toBeGreaterThan(0.9);
   });
 
-  it("does not move an existing study when a new one is inserted", () => {
-    const before = placeStudies(FOUR);
-    const after = placeStudies([...FOUR, "aigc-studio"]);
-    for (const id of FOUR) {
-      expect(after.get(id)).toEqual(before.get(id));
-    }
-    expect(after.get("aigc-studio")).toEqual(pointForStudy("aigc-studio"));
+  it("reflows a collection into a separated front-facing ring as it grows", () => {
+    const five = [...placeStudies([...FOUR, "aigc-studio"]).values()];
+    expect(five.every((point) => point.z > 0.9)).toBe(true);
+    expect(minGap(five)).toBeGreaterThan(0.35);
   });
 
   it("does not key placement to array index: shuffling the input keeps the map", () => {
@@ -87,12 +85,11 @@ describe("pointForStudy / placeStudies", () => {
     const forty = [...placeStudies(FORTY).values()];
     expect(four.every((point) => Math.abs(unitLength(point) - 1) < 1e-10)).toBe(true);
     expect(forty.every((point) => Math.abs(unitLength(point) - 1) < 1e-10)).toBe(true);
-    // The four real ids are not a Fibonacci packing — they must not move
-    // when a fifth study arrives, so they cannot be re-laid as planetPoints(4).
-    expect(minGap(four)).toBeGreaterThan(0.12);
-    // Independent of N, so this cannot promise Fibonacci spacing. It can
-    // promise "not the same point": a gap of zero is a hash collision, and
-    // that is the overlap that would stack two islands into one marker.
+    // Four real ids use a narrow front-facing ring; generated ids use the
+    // larger cap but stay above the horizon so every entry remains findable.
+    expect(four.every((point) => point.z > 0.9)).toBe(true);
+    expect(forty.every((point) => point.z > 0.4)).toBe(true);
+    expect(minGap(four)).toBeGreaterThan(0.35);
     expect(minGap(forty)).toBeGreaterThan(0.02);
   });
 });
