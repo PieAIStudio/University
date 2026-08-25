@@ -24,9 +24,10 @@ related:
 
 The short, current handoff. **What is true now, never how it got that way.**
 
-> **合成一套代码**：`apps/local` 与 `apps/online` 合并为一个浏览器应用，用启动模式区分。
-> 计划、顺序、已经踩过的坑，都在 [One App Handoff](./one-app-handoff.md)。
-> `apps/local/server` 不在范围内。
+> **合成一套代码，已完成（2026-08-25）**：`apps/local` 与 `apps/online` 已合并为
+> `apps/university` 一个浏览器应用，用 `vite --mode authoring | delivery` 区分。
+> `apps/local` 现在只剩那台读磁盘的 Node 服务（4317），没有被改动。
+> 经过、踩过的坑和验收数字都在 [One App Handoff](./one-app-handoff.md)。
 
 Reversals live in `docs/adr/` as decision records with `supersedes` links.
 Nothing on this page explains what a rule used to be — if you need that, an ADR
@@ -35,18 +36,28 @@ has it, and you only need it when you are about to argue a rule should change.
 ## Shape
 
 ```
-apps/local      authoring — filesystem, CLI, single machine   (9999)
-apps/online     delivery  — 3D archipelago, progress, review  (9998)
-packages/core   the domain model. No React, no fs, no network.
-packages/ui     the learning surface and the app chrome, both shells
-packages/world  the scene — both shells import it.              (ADR-0004)
-                packages/ui stays at zero three.
+apps/university  the product. One source tree, built twice:
+                 --mode delivery   3D archipelago, progress, review   (9998)
+                 --mode authoring  the same, plus #/studio and 4317   (9999)
+                 src/ports/        the only place the two builds differ
+                 src/authoring/    workbench only; eliminated from delivery
+apps/local       the authoring Node server. Filesystem, CLI, no UI.   (4317)
+packages/core    the domain model. No React, no fs, no network.
+packages/ui      the learning surface and the app chrome, both modes
+packages/world   the scene — both modes import it.              (ADR-0004)
+                 packages/ui stays at zero three.
 ```
 
 ```bash
-pnpm content && pnpm dev                       # online, 9998
-pnpm --filter @pieai/university-local dev      # local, 9999
+pnpm content && pnpm dev                       # delivery, 9998
+pnpm --filter @pieai/university-app dev:local  # authoring, 9999 (needs 4317)
+pnpm --filter @pieai/university-local dev      # the authoring server, 4317
+pnpm start                                     # all three, labelled
 ```
+
+`pnpm bundle` reads `apps/university/dist/delivery/**` and fails the build if
+anything from `src/authoring/` survived into it. Tree-shaking is a belief until
+something reads the output.
 
 ## Numbers, Counted Not Remembered
 
@@ -57,7 +68,9 @@ concepts · 267 terms · 25 anti-patterns.
 420 lesson-to-lesson links, 383 inside their own course and **five** crossing
 one: the mesh does not exist yet. `[[term:]]` links: zero.
 
-Tests: core 252 · ui 192 · online 57 · world 35 · local 448. Plus 4 browser walks (`pnpm e2e`).
+Tests: core 340 · ui 249 · world 128 · university 108 · local 406 = **1,231**.
+Plus 13 browser walks (`pnpm e2e`), two of which (`G`, `G2`) exist only to
+compare the two builds against each other rather than to check either alone.
 
 **Re-run the script before quoting any of these.** Every number on this page
 has been wrong at least once.
@@ -75,13 +88,15 @@ Fixing either means editing content, which is authoring work.
 
 ## Standing Constraints
 
-- Courses are authored only in `apps/local`. One producer, always. Publishing
-  is a separate, gated act (ADR-0002).
+- Courses are authored only by the `apps/local` CLI and the files on disk. One
+  producer, always. Publishing is a separate, gated act (ADR-0002).
 - Both shells sign in to SwimmerBackend and share one cloud learner document:
   account, progress, review, answers, marks, vocabulary, favourites, practice
-  history and settings. Browser/SQLite state is only cache/outbox. `GradingPort`
-  is the only permitted divergence: local clipboard/AI host on one side,
-  metered SwimmerAIKit on the other (ADR-0001).
+  history and settings. Browser/SQLite state is only cache/outbox. The permitted
+  divergences are the files in `apps/university/src/ports/` and nothing else:
+  `GradingPort` (clipboard and the machine's AI host on one side, metered
+  SwimmerAIKit on the other — ADR-0001) and `ContentPort`/`ReaderPort` (a
+  loopback server reading the disk, or a published package).
 - The disk stays the source of truth only for `apps/local/studies/` — registered
   private repositories and prose being written. It is not the learner-data
   source of truth.
@@ -172,6 +187,25 @@ Done, and verified in a browser rather than by a passing suite:
   vocabulary is 星球 / 课程系列 / 岛 / 单元 / 关 (v4 §05D).
 - **An overlay reserves nothing.** The enter-course card is placed but does not
   push: opening it used to slide three neighbouring islands' names sideways.
+- **One app** (was 10). `apps/university`, built twice from one tree. Was two
+  apps whose difference set had shrunk to two ports while the drift rate had
+  not moved. The delivery build's duplicate lesson reader is gone, one `View`
+  parses one address for both, and four review-port factories are two. The
+  count that made it the right time and the traps paid for are in
+  [One App Handoff](./one-app-handoff.md).
+- **ContentPort, and the duplicate reader deleted** (was 6). `ContentPort` and
+  `ReaderPort` are where a lesson's text and its evidence come from; both live
+  in `apps/university/src/ports/` beside `GradingPort`, and the directory is
+  the complete list of what the two builds are allowed to disagree about.
+- **The two learner features are out of `#/studio`** (was 12). 知识笔记 is the
+  library's fifth collection in both builds — empty on the delivery side until
+  11 ships notes with the package. 分级测验 is on the course island, asked only
+  of a course with no progress, and `ROUTE_STARTS` is keyed by course id so a
+  second course is data rather than a branch.
+- **A stone under the rail is a stone nobody can click.** `frameCourse` aimed
+  at a damped fraction of the absolute x four stones ahead; on a serpentine
+  road that yawed the camera 15° and put 「开始」 at x=1115 of 1440, under the
+  right-hand panel. The eye and the target share a lateral position now.
 
 Next — **the order is set by
 `docs/reference/player-journey/v4/index.html` §10, not by this list.** V4's
@@ -198,8 +232,12 @@ own lesson reader every new feature has to be written twice.
    tokens, no amount of contrast fixing makes that theme usable.
 5. **A persisted record of a wrong answer.** 错题本 (v3 16) has nothing to
    count: wrong picks live in component state and vanish with the question.
-6. ContentPort and EvidencePort; delete online's duplicate reader; separate
-   read from answered.
+6. **Separate 「读完了」 from 「答对了」.** `progressSourceOf` still derives
+   `exercisesPassed` from `progress >= 1`, which is a proxy and reads as a
+   circular one from inside a lesson screen: the flag the settlement is about
+   to write is the flag it is asking about. The lesson reader works around it
+   by reading the two facts independently; the read model should stop needing
+   the workaround.
 7. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
 8. Payment and metered AI, after 1.
 9. **A quiet label under the rail.** Inside a 41-lesson course, twelve lesson
@@ -209,51 +247,18 @@ own lesson reader every new feature has to be written twice.
    skip placement by design. The fix is either a clamp out of the chrome's box
    or a camera that keeps content out of it, and it is worth measuring which
    before writing either.
-10. **One app.** `apps/local` and `apps/online` become one browser app whose
-    mode is chosen at startup; `apps/local/server` is out of scope. The
-    difference set is down to two ports, and the plan, the order and the traps
-    already paid for are in [One App Handoff](./one-app-handoff.md). Item 6
-    above is a subset of this one: ContentPort is what makes the delivery
-    shell's duplicate reader deletable.
-11. **The UA graph reaches the delivery shell.** 「打开 UA 项目地图」 exists only
-    in the authoring shell because it opens the local Understand Anything graph
-    and the delivery shell has no checkout. The fix is the content pipeline,
-    not the shell: export the graph with the course package the way evidence
-    and cards already travel. Until then this reads as a shell difference and
-    is not one.
-12. **Two learner features are buried in `#/studio`, and where they go is
-    decided.** Neither authors anything — authoring is the CLI and the files —
-    and both sit behind 更多 → 作者工作台 where a learner will never look.
-
-    - **`KnowledgeNotesSection` → a fifth collection in 图鉴.** The library is
-      already the one door to the collections, `LibrarySurface` already owns
-      the tabs, and notes-with-a-review-state is a collection. Both shells
-      mount it; the delivery shell shows an empty state until 11 ships the
-      notes with the package, which is the same shape as any collection with
-      nothing in it yet. Its `basePath` for evidence must become a prop — the
-      component hardcodes `/api/studies/…` today, which is the one thing in it
-      that is not shell-neutral. Its CSS moves with it and has to stop reading
-      `--campus-rule`, a variable only the authoring shell defines.
-    - **`CourseRouteQuiz` → the course island's side panel, before you start.**
-      「我该从哪一关开始」 is live exactly once: standing on a course with no
-      progress. `ROUTE_STARTS` is keyed to `foundations-before-zero` today, so
-      key it by course id and render the quiz only for a course that has an
-      entry — data-driven rather than one hardcoded special case, and it can
-      grow to a second course without another branch.
-
-    Do this **inside 10**, not before it: the merge session opens every one of
-    these files anyway, and moving them now means moving them twice. What must
-    not happen is `#/studio` going into the authoring-only tree with these two
-    still inside — the build would then exclude them from the delivery shell
-    and make the problem harder to see, not easier.
-
-    The drawer's remaining contents (a UA link, a read-only citation count) are
-    inspection tools and can keep a name that says so.
-13. **The picker's globe is not beautiful yet.** Framing, sky, the crease pass
+10. **The UA graph reaches the delivery build.** 「打开 UA 项目地图」 exists only
+    in the authoring build because it opens the local Understand Anything graph
+    and a customer has no checkout. The fix is the content pipeline, not the
+    build: export the graph with the course package the way evidence and cards
+    already travel. The same pipeline is what fills the library's fifth
+    collection on the delivery side — it shows an empty state until notes ship
+    with a package. Until then this reads as a build difference and is not one.
+11. **The picker's globe is not beautiful yet.** Framing, sky, the crease pass
     and the sea's edge are fixed; the sphere itself still reads as a mossy
     marble rather than a world. `docs/reference/生图重绘ui/` holds the target.
-    Art direction, and worth doing after 10 so it is done once.
-14. **A level and an XP curve.** `packages/core/progress/xp.ts` scores events
+    Art direction, and it waited for the merge so it is done once.
+12. **A level and an XP curve.** `packages/core/progress/xp.ts` scores events
     but there is no level concept and no accumulated total, so the avatar has
     no ring to fill. What a level costs and how the curve bends is a product
     decision; the rendering is small once it exists.

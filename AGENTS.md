@@ -125,14 +125,17 @@ What follows from them:
 - **Grading stays tiered by cost.** Deterministic first, structured small-model
   second, open tutoring last and metered. An unmetered large model behind a
   free tier is the robustness rule broken, in the direction of the bank.
-- **`GradingPort` is the only permitted difference between the modes.**
-  The authoring mode grades through the clipboard and the machine's own AI
+- **Two questions may be answered differently, and they both live in
+  `apps/university/src/ports/`.** *Where the AI comes from*: `GradingPort` —
+  the authoring mode grades through the clipboard and the machine's own AI
   host, without an API key in the product; the delivery mode grades through
-  SwimmerAIKit, metered. Everything above the port is one implementation. The
-  merge on 2026-08-25 found and named a second — `ContentPort`, where a
-  lesson's text comes from — and both now live in `apps/university/src/ports/`
-  so a third cannot be added by accident. Adding one means changing this rule
-  first.
+  SwimmerAIKit, metered. *Where the material comes from*: `ContentPort` and
+  `ReaderPort` — a loopback server reading the disk on one side, a published
+  package on the other. That second question was answered twice by copy before
+  the 2026-08-25 merge; naming it is what let the delivery build's duplicate
+  reader be deleted. Everything above these ports is one implementation, and a
+  third question means changing this rule first — the directory is the
+  complete list, so a new answer that is not a file in it is a defect.
 - **Design before build.** A user-facing behaviour gets designed in
   `docs/reference/player-journey/` before it gets implemented. The current
   journey is `docs/reference/player-journey/v4/`; it replaces v1, v2 and v3.

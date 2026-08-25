@@ -48,7 +48,7 @@ already have would be the copy that the share-the-code rule forbids.
 | --- | --- |
 | Term popover in prose | `[[term:sense.id]]`, one of three kinds handled by one parser in `packages/core/src/marks/` |
 | Side panel for a term | `packages/ui/src/reference/ReferencePanel.tsx`, shared by all three kinds |
-| A term dictionary | `apps/online/src/content/lexicon.json`, 267 senses, one meaning per entry |
+| A term dictionary | `apps/university/src/content/lexicon.json`, 267 senses, one meaning per entry |
 | Chapter progress, local-only | FSRS-backed progress store, and now the shared contract in `packages/core/src/progress/` |
 | Course as ordered chapters | Courses, units and lessons, with a 3D world instead of a list |
 | Cross-references between terms | `[[lesson:]]` and backlinks, already bidirectional |
@@ -255,7 +255,7 @@ exercises; lexicon 267 entries with **0** `colloquial`.
 
 The line above read **1,815** evidence anchors until 2026-08-21, and a product
 audit disputed it. Counting the delivered course packages directly —
-`apps/online/content/**/*.json`, `course.units[].lessons[].evidence` — gives
+`apps/university/content/**/*.json`, `course.units[].lessons[].evidence` — gives
 **1,597** across 560 lessons, alongside 1,236 cards, 673 short-answer exercises
 and 32 explain exercises.
 

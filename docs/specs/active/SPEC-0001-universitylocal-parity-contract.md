@@ -56,7 +56,7 @@ problem and becomes a supply problem: there is exactly one producer.
 
 Course storage is split and has to be: `apps/local` reads the thing being
 written — prose, four registered private repositories, snapshots — and
-`apps/online` reads what was published. That asymmetry **is** the
+the delivery build reads what was published. That asymmetry **is** the
 single-producer pipeline. Identity and learner state are not split: one
 account, one cloud learner document, one review schedule (ADR-0001). A local
   SQLite/browser copy may accelerate or queue learner work, but it is never a second

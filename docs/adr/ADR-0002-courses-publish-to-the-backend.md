@@ -27,6 +27,12 @@ superseded_by: null
 Courses reach delivery as static JSON: `pnpm content` writes 8.5 MB into
 `apps/online/content/`, fetched at `/content/<study>/<course>.json`.
 
+> Path only, 2026-08-25: the two apps became `apps/university`, so that
+> directory is `apps/university/content/` and it is copied into the bundle only
+> by the delivery build. The URL, the size and everything this record decided
+> are unchanged.
+
+
 Reachability was therefore never the problem. **Entitlement is.** Those files
 are served unauthenticated, so every course is free to anyone who opens
 devtools or runs `curl`. A commercial product cannot charge for a file it has
@@ -44,6 +50,10 @@ published.
 The single producer is unchanged: `apps/local` is the only place a lesson is
 authored, and `apps/online` still cannot author one. What changed is where the
 bytes travel, not who writes them.
+
+> Naming only, 2026-08-25: those two are now the authoring server and the
+> delivery build of one app. The producer is still one, and it is still the
+> filesystem side.
 
 ## Consequences
 

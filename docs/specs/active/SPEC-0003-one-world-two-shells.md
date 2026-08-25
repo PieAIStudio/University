@@ -56,7 +56,7 @@ overlay**, and the overlay is small.
 
 ## What Is Shared, And Where It Has To Live
 
-The scene is currently `apps/online/src/world/Maps.tsx`, which imports
+The scene is currently `packages/world/src/Maps.tsx`, which imports
 `../content/library` — a static JSON reader that the authoring shell does not
 have and must not grow. Sharing it means moving it into `packages/ui` and
 having it take its data as arguments instead of importing a shell's storage.
@@ -125,7 +125,7 @@ before it counts, separately from answering its exercises. The delivery shell
 has no such signal and currently writes both facts at once from one event.
 
 `packages/core/src/progress/contract.ts` already models these as two
-independent flags, and `apps/online/src/progress/source.ts` says in comments
+independent flags, and `apps/university/src/progress/source.ts` says in comments
 that it sets them equal and that this is a gap rather than a decision. Closing
 it is a user-facing behaviour change, so it gets designed in
 `docs/reference/player-journey/` before it is built, not decided here.

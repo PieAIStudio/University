@@ -36,7 +36,7 @@ for a different goal: the camera is a landscape shot, not a map shot.
 
 ## What The Camera Is Now, Measured
 
-Measured from `apps/online/src/App.tsx` and `Stage.tsx` rather than guessed:
+Measured from `apps/university/src/app/App.tsx` and `Stage.tsx` rather than guessed:
 
 | | World map | Course map |
 | --- | --- | --- |
@@ -150,7 +150,7 @@ Named references, with the one thing to take from each:
 **The single biggest lever is colour harmony plus tone mapping.** In low-poly
 there are no textures, so colour *is* the material, and four CC0 packs by four
 artists arrive with four saturated palettes that fight. The repaint table in
-`apps/online/src/world/kit.tsx` already exists to solve this; what it needs is
+`packages/world/src/kit.tsx` already exists to solve this; what it needs is
 a deliberate six-colour system rather than per-pack corrections, plus
 `ACESFilmicToneMapping`. No geometry changes and no GPU cost.
 

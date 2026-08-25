@@ -80,7 +80,7 @@ Collection   terms | anti-patterns | (more later)
 ### The head is the lexicon entry we already have
 
 A term's head is **not a new record**. It is the existing
-`apps/online/src/content/lexicon.json` entry — 267 of them, already carrying
+`apps/university/src/content/lexicon.json` entry — 267 of them, already carrying
 `senseId`, `headword`, `phonetic`, `partOfSpeech`, `gloss`, `usage`. Sections
 are optional and additive.
 
