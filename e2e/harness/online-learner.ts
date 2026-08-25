@@ -41,55 +41,6 @@ export async function startFirstLessonFromLanding(page: Page): Promise<void> {
   });
 }
 
-export async function openLiveNode(page: Page): Promise<void> {
-  await namedStep(page, "关卡路径出现", async () => {
-    await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 60_000 });
-    await assertVisibleText(page, FIRST_COURSE_TITLE);
-    await expect(page.locator("button.label.is-visible", { hasText: /^开始$/ })).toBeVisible({
-      timeout: 30_000,
-    });
-    // Flight still moves the camera after the label first appears.
-    await page.waitForTimeout(800);
-  });
-
-  const hud = page.locator(".picked, .nextup").first();
-  const stage = page.locator(".stagewrap").first();
-  if (await hud.isVisible().catch(() => false)) {
-    await namedStep(page, "课程头不是灰砖", async () => {
-      await assertPanelIsPainted(page, hud, stage, "课程头/下一课卡");
-    });
-  }
-
-  await namedStep(page, "点路径上的当前节点", async () => {
-    const node = page.locator("button.label.is-visible", { hasText: /^开始$/ }).first();
-    const dialog = page.getByRole("dialog");
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      await humanClick(page, node, "路径节点「开始」");
-      try {
-        await dialog.waitFor({ state: "visible", timeout: 2_000 });
-        return;
-      } catch {
-        // Camera may still be flying; the box we clicked is no longer the stone.
-      }
-    }
-    await dialog.waitFor({ state: "visible", timeout: 5_000 });
-  });
-}
-
-export async function confirmNodeCardAndStart(page: Page): Promise<void> {
-  const dialog = page.getByRole("dialog");
-  await namedStep(page, "节点卡带着读分钟和题数", async () => {
-    await expect(dialog).toBeVisible();
-    await expect(dialog).toContainText(FIRST_LESSON_TITLE);
-    await expect(dialog).toContainText(COST_LINE);
-    await assertPanelIsPainted(page, dialog.locator(".path-card").or(dialog), page.locator(".stagewrap"), "节点卡");
-  });
-
-  await namedStep(page, "点节点卡上的「开始」", async () => {
-    await humanClick(page, dialog.getByRole("button", { name: /^开始/ }), "节点卡开始");
-  });
-}
-
 export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
   await namedStep(page, "课文出现", async () => {
     await assertVisibleText(page, FIRST_LESSON_TITLE);
