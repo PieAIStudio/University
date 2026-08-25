@@ -1,0 +1,7 @@
+interface:
+  display_name: "编写概念词条"
+  short_description: "按教学形状编写概念正文与 flow、demo、regions 互动件"
+  default_prompt: "Use $write-concept-entry：按词条形状编写或复核概念内容，验证 zod、共享 flow 一致性并做真实浏览器检查。"
+
+policy:
+  allow_implicit_invocation: true
