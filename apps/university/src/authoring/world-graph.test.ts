@@ -15,6 +15,7 @@ function lesson(
     contentRevision: 1,
     cardCount: 0,
     exerciseCount: 0,
+    exerciseIds: [],
     contentChars: 900,
     progress,
   };

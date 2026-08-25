@@ -137,6 +137,10 @@ for (const studyId of readdirSync(upstream).sort()) {
     // can cache it forever.
     for (const unit of course.units) {
       for (const lesson of unit.lessons) {
+        // Delivery packages are frozen at one published revision. Keep the
+        // revision on the package itself so shared progress code receives the
+        // caller's current version instead of inventing one in core.
+        lesson.contentRevision = 1;
         // The answer never leaves the build.
         //
         // `expectedAnswer` was being served inside the lesson JSON, so every
@@ -237,6 +241,7 @@ for (const studyId of readdirSync(upstream).sort()) {
           contentRevision: 1,
           cardCount: lesson.cards.length,
           exerciseCount: lesson.exercises.length,
+          exerciseIds: lesson.exercises.map((exercise) => exercise.id),
           contentChars: lesson.content.length,
           evidenceCount: evidenceCount(lesson.content),
           unlockCount: unlockEntryCount(lesson.content),

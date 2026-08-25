@@ -12,6 +12,7 @@ const lesson: Lesson = {
   id: "you-already-know-apps",
   title: "t",
   content: "body",
+  contentRevision: 1,
   evidence: [
     {
       kind: "fact",

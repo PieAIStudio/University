@@ -940,7 +940,8 @@ export function placeCourse(
   course: Course,
   source: ProgressSource,
 ): LessonPlacement[] {
-  const { next } = readCourseProgress(courseShapeOf(course, studyId), source);
+  const shape = courseShapeOf(course, studyId);
+  const { next } = readCourseProgress(shape, source);
   const flat = course.units.flatMap((unit, unitIndex) =>
     unit.lessons.map((lesson, slot) => ({ unit, unitIndex, lesson, slot })),
   );
@@ -951,13 +952,17 @@ export function placeCourse(
     ? flat.findIndex((entry) => entry.unit.id === next.unitId && entry.lesson.id === next.lessonId)
     : -1;
   return flat.map((entry, index) => {
+    const lessonShape = shape.units[entry.unitIndex]!.lessons[entry.slot]!;
     const done = isLessonComplete(
-      source.completionOf({
-        studyId,
-        courseId: course.id,
-        unitId: entry.unit.id,
-        lessonId: entry.lesson.id,
-      }),
+      source.completionOf(
+        {
+          studyId,
+          courseId: course.id,
+          unitId: entry.unit.id,
+          lessonId: entry.lesson.id,
+        },
+        lessonShape,
+      ),
     );
     return {
       studyId,

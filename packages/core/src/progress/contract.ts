@@ -84,6 +84,20 @@ export interface LessonCompletion {
   readonly readConfirmed: boolean;
 }
 
+/**
+ * The current content facts a progress source cannot discover from storage.
+ *
+ * The caller already has the lesson structure, so it supplies the revision
+ * and the complete exercise id list. The source then asks the progress port
+ * about each id instead of guessing from the aggregate lesson progress.
+ */
+export interface LessonProgressSnapshot {
+  readonly contentRevision: number;
+  readonly exerciseIds: readonly string[];
+  /** False while an adapter has not yet loaded the lesson's exercise list. */
+  readonly exerciseIdsComplete?: boolean;
+}
+
 export const NOT_STARTED: LessonCompletion = {
   exercisesPassed: false,
   readConfirmed: false,
@@ -102,16 +116,25 @@ export function isLessonComplete(completion: LessonCompletion): boolean {
  * shared component depend on a storage detail that only one shell has.
  */
 export interface ProgressSource {
-  completionOf(ref: LessonRef): LessonCompletion;
+  /**
+   * The snapshot is required by the shared source. It is optional only at the
+   * type boundary so the local server's older, self-contained learning
+   * source can continue to compile until that server is migrated separately.
+   */
+  completionOf(ref: LessonRef, lesson?: LessonProgressSnapshot): LessonCompletion;
 }
 
 /** The shape a course has to present to be placed in a world. */
+export interface CourseLessonShape extends LessonProgressSnapshot {
+  readonly lessonId: string;
+}
+
 export interface CourseShape {
   readonly studyId: string;
   readonly courseId: string;
   readonly units: readonly {
     readonly unitId: string;
-    readonly lessonIds: readonly string[];
+    readonly lessons: readonly CourseLessonShape[];
   }[];
 }
 
@@ -129,7 +152,14 @@ export function courseShapeOf(
     readonly id: string;
     readonly units: readonly {
       readonly id: string;
-      readonly lessons: readonly { readonly id: string }[];
+      readonly lessons: readonly {
+        readonly id: string;
+        readonly contentRevision: number;
+        /** The shelf supplies ids; a packaged course supplies the exercises. */
+        readonly exerciseIds?: readonly string[];
+        readonly exercises?: readonly { readonly id: string }[];
+        readonly exerciseIdsComplete?: boolean;
+      }[];
     }[];
   },
   studyId: string,
@@ -139,7 +169,12 @@ export function courseShapeOf(
     courseId: course.id,
     units: course.units.map((unit) => ({
       unitId: unit.id,
-      lessonIds: unit.lessons.map((lesson) => lesson.id),
+      lessons: unit.lessons.map((lesson) => ({
+        lessonId: lesson.id,
+        contentRevision: lesson.contentRevision,
+        exerciseIds: lesson.exerciseIds ?? lesson.exercises?.map((exercise) => exercise.id) ?? [],
+        ...(lesson.exerciseIdsComplete === false ? { exerciseIdsComplete: false } : {}),
+      })),
     })),
   };
 }
@@ -170,15 +205,15 @@ export function readCourseProgress(course: CourseShape, source: ProgressSource):
   let total = 0;
   let next: LessonRef | null = null;
   for (const unit of course.units) {
-    for (const lessonId of unit.lessonIds) {
+    for (const lesson of unit.lessons) {
       total += 1;
       const ref: LessonRef = {
         studyId: course.studyId,
         courseId: course.courseId,
         unitId: unit.unitId,
-        lessonId,
+        lessonId: lesson.lessonId,
       };
-      if (isLessonComplete(source.completionOf(ref))) done += 1;
+      if (isLessonComplete(source.completionOf(ref, lesson))) done += 1;
       else next ??= ref;
     }
   }

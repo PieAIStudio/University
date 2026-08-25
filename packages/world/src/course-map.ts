@@ -31,6 +31,9 @@ export function worldCourse(view: {
       readonly id: string;
       readonly title: string;
       readonly contentChars: number;
+      readonly contentRevision: number;
+      readonly exerciseIds: readonly string[];
+      readonly exerciseIdsComplete?: boolean;
     }[];
   }[];
 }): Course {
@@ -46,7 +49,10 @@ export function worldCourse(view: {
         // length is the honest way to say "this is how long it is" without
         // dragging the prose into a package that has no business holding it.
         content: " ".repeat(Math.max(0, lesson.contentChars)),
-        exercises: [],
+        contentRevision: lesson.contentRevision,
+        exerciseIds: lesson.exerciseIds,
+        ...(lesson.exerciseIdsComplete === false ? { exerciseIdsComplete: false } : {}),
+        exercises: lesson.exerciseIds.map((id) => ({ id })),
         cards: [],
       })),
     })),

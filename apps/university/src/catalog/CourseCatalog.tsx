@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CatalogSurface } from "@pieai/university-ui";
 import type { Shelf } from "@pieai/university-ui/content/port.js";
+import { progressSourceOf, toHash, WORLD, type View } from "@pieai/university-core";
 
 import { contentPort } from "../ports";
-import { progressSource } from "../progress/source";
-import { snapshot, subscribe } from "../progress/store";
-import { toHash, WORLD, type View } from "@pieai/university-core";
+import { progressPort, snapshot, subscribe } from "../progress/store";
 import { assembleCatalogListingFromShelf } from "./listing";
 
 /** The content port supplies the shelf; the shared catalog surface supplies the UI. */
@@ -30,7 +29,7 @@ export function CourseCatalog({ onOpen }: { onOpen: (view: View) => void }) {
   }, []);
 
   const listing = useMemo(
-    () => (shelf ? assembleCatalogListingFromShelf(shelf, progressSource()) : null),
+    () => (shelf ? assembleCatalogListingFromShelf(shelf, progressSourceOf(progressPort)) : null),
     [shelf, progress],
   );
 

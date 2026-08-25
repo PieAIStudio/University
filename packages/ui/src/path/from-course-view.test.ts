@@ -4,7 +4,9 @@ import type { CourseView } from "../view/lesson-view.js";
 import { lessonCostLine, startButtonLabel } from "./path-stats.js";
 import { pathLessonOf, pathUnitOf } from "./from-course-view.js";
 
-function summary(extra: Partial<CourseView["units"][number]["lessons"][number]> = {}) {
+function summary(
+  extra: Partial<CourseView["units"][number]["lessons"][number]> = {},
+): CourseView["units"][number]["lessons"][number] {
   return {
     id: "you-already-know-apps",
     title: "你已经会用 App 了",
@@ -15,6 +17,7 @@ function summary(extra: Partial<CourseView["units"][number]["lessons"][number]> 
     contentChars: 800,
     progress: null,
     ...extra,
+    exerciseIds: extra.exerciseIds ?? [],
   };
 }
 

@@ -43,6 +43,7 @@ function lesson(id: string, title: string, exerciseCount = 0) {
     contentRevision: 1,
     cardCount: 0,
     exerciseCount,
+    exerciseIds: Array.from({ length: exerciseCount }, (_, index) => `${id}-exercise-${index}`),
     contentChars: 3,
     evidenceCount: 0,
     unlockCount: 0,

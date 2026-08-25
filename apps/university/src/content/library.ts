@@ -78,6 +78,7 @@ export interface Lesson {
   readonly id: string;
   readonly title: string;
   readonly content: string;
+  readonly contentRevision: number;
   readonly variant?: string | null;
   readonly sections?: readonly LessonSectionView[];
   readonly evidence: readonly EvidenceAnchor[];

@@ -83,6 +83,10 @@ interface CatalogCourseInput {
       readonly id: string;
       readonly title: string;
       readonly variant?: string | null;
+      readonly contentRevision: number;
+      readonly exerciseIds?: readonly string[];
+      readonly exercises?: readonly { readonly id: string }[];
+      readonly exerciseIdsComplete?: boolean;
     }[];
   }[];
 }
@@ -247,12 +251,20 @@ function unitsOf(
     title: unit.title,
     lessons: unit.lessons.map((lesson) => {
       const done = isLessonComplete(
-        source.completionOf({
-          studyId,
-          courseId: course.id,
-          unitId: unit.id,
-          lessonId: lesson.id,
-        }),
+        source.completionOf(
+          {
+            studyId,
+            courseId: course.id,
+            unitId: unit.id,
+            lessonId: lesson.id,
+          },
+          {
+            contentRevision: lesson.contentRevision,
+            exerciseIds:
+              lesson.exerciseIds ?? lesson.exercises?.map((exercise) => exercise.id) ?? [],
+            ...(lesson.exerciseIdsComplete === false ? { exerciseIdsComplete: false } : {}),
+          },
+        ),
       );
       return {
         id: lesson.id,

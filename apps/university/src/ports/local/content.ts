@@ -5,12 +5,19 @@
  * mode exists. Behaviour is the contract: changing a path or a field here is
  * changing what 4317 has always answered, and that is a product change.
  */
-import { isSafeId, lessonKey, type LessonRef, type ProgressPort } from "@pieai/university-core";
+import {
+  isSafeId,
+  lessonKey,
+  lessonRefKey,
+  type LessonRef,
+  type ProgressPort,
+} from "@pieai/university-core";
 import { cardContentPath, lessonPath, readJson } from "@pieai/university-ui/api/client.js";
 import type { CardBody, ContentPort, Shelf } from "@pieai/university-ui/content/port.js";
 import type {
   BootstrapData,
   CourseReviewCardLocator,
+  CourseView,
   LessonView,
   StudyView,
 } from "@pieai/university-ui/view/lesson-view.js";
@@ -52,13 +59,23 @@ export function refreshLocalBootstrap(): Promise<BootstrapData> {
 }
 
 async function fetchBootstrap(): Promise<BootstrapData> {
-  return readJson<BootstrapData>(await fetch("/api/bootstrap"));
+  return readLocalJson<BootstrapData>("/api/bootstrap");
+}
+
+async function readLocalJson<T>(url: string): Promise<T> {
+  try {
+    return await readJson<T>(await fetch(url));
+  } catch (reason) {
+    const message = reason instanceof Error ? reason.message : String(reason);
+    throw new Error(`${url}: ${message}`);
+  }
 }
 
 export function createLocalContentPort(options: {
   /** The shared document, for the one-time import of the old SQLite projection. */
   readonly progress: ProgressPort;
 }): ContentPort {
+  const exerciseIdsByLesson = new Map<string, readonly string[] | null>();
   return {
     // Nothing is known before the loopback server answers. The screen says so
     // rather than painting a capsule with no series in it, which is what the
@@ -73,12 +90,24 @@ export function createLocalContentPort(options: {
 
     async shelf(): Promise<Shelf> {
       const boot = await localBootstrap();
+      const lessonRequests = concurrencyGate(8);
       const studies = await Promise.all(
         boot.studies.map(async (summary) => {
-          const view = await readJson<StudyView>(
-            await fetch(`/api/studies/${encodeURIComponent(summary.id)}`),
+          const view = await readLocalJson<StudyView>(
+            `/api/studies/${encodeURIComponent(summary.id)}`,
           );
           importLegacyProgress(view, options.progress);
+          const courses = await Promise.all(
+            view.courses.map((course) =>
+              enrichCourseExerciseIds(
+                summary.id,
+                course,
+                options.progress,
+                exerciseIdsByLesson,
+                lessonRequests,
+              ),
+            ),
+          );
           return {
             id: view.study.id,
             title: view.study.title,
@@ -89,11 +118,22 @@ export function createLocalContentPort(options: {
               lights a stone the other leaves dark. `importLegacyProgress`
               above is the bridge that makes dropping them safe.
             */
-            courses: view.courses.map((course) => ({
+            courses: courses.map((course) => ({
               ...course,
               units: course.units.map((unit) => ({
                 ...unit,
-                lessons: unit.lessons.map((lesson) => ({ ...lesson, progress: null })),
+                lessons: unit.lessons.map((lesson) =>
+                  withExerciseSnapshot(
+                    { ...lesson, progress: null },
+                    lessonRefKey({
+                      studyId: summary.id,
+                      courseId: course.id,
+                      unitId: unit.id,
+                      lessonId: lesson.id,
+                    }),
+                    exerciseIdsByLesson,
+                  ),
+                ),
               })),
             })),
           };
@@ -109,6 +149,10 @@ export function createLocalContentPort(options: {
           lessonPath(locator),
           requestOptions?.signal ? { signal: requestOptions.signal } : {},
         ),
+      );
+      exerciseIdsByLesson.set(
+        lessonRefKey(locator),
+        (view.lesson.exercises ?? []).map((exercise) => exercise.id),
       );
       importLegacyLessonRecords(view, locator, options.progress);
       return view;
@@ -130,6 +174,108 @@ export function createLocalContentPort(options: {
     noteEvidenceBase(studyId: string, noteId: string) {
       return `/api/studies/${encodeURIComponent(studyId)}/notes/${encodeURIComponent(noteId)}`;
     },
+  };
+}
+
+/**
+ * The shelf endpoint deliberately carries shape, not lesson bodies. The
+ * authoring server's summary predates current-version exercise progress and
+ * exposes only the count, so this adapter fills the missing stable ids from
+ * the existing lesson route. The delivery shelf already carries them and
+ * therefore never pays for these requests.
+ */
+async function enrichCourseExerciseIds(
+  studyId: string,
+  course: CourseView,
+  progress: ProgressPort,
+  exerciseIdsByLesson: Map<string, readonly string[] | null>,
+  request: <T>(task: () => Promise<T>) => Promise<T>,
+): Promise<CourseView> {
+  const units = await Promise.all(
+    course.units.map(async (unit) => ({
+      ...unit,
+      lessons: await Promise.all(
+        unit.lessons.map(async (lesson) => {
+          const locator: LessonRef = {
+            studyId,
+            courseId: course.id,
+            unitId: unit.id,
+            lessonId: lesson.id,
+          };
+          const key = lessonRefKey(locator);
+          if (lesson.exerciseCount === 0) {
+            exerciseIdsByLesson.set(key, []);
+            return lesson;
+          }
+          const state = progress.lessonState(
+            lessonKey(locator.studyId, locator.courseId, locator.lessonId),
+          );
+          const currentRead =
+            state.readConfirmed === true &&
+            (state.readConfirmedRevision === undefined ||
+              state.readConfirmedRevision === lesson.contentRevision);
+          const legacyComplete = state.readConfirmed === undefined && state.progress >= 1;
+          if (!currentRead && !legacyComplete) {
+            exerciseIdsByLesson.set(key, null);
+            return lesson;
+          }
+          if (legacyComplete && !currentRead) {
+            // Legacy completion is authoritative for this pre-migration row;
+            // no exercise list is needed to keep it complete.
+            exerciseIdsByLesson.set(key, []);
+            return lesson;
+          }
+          guard(locator);
+          const view = await request(() => readLocalJson<LessonView>(lessonPath(locator)));
+          exerciseIdsByLesson.set(
+            key,
+            view.lesson.exercises.map((exercise) => exercise.id),
+          );
+          importLegacyLessonRecords(view, locator, progress);
+          return {
+            ...lesson,
+            exerciseIds: view.lesson.exercises.map((exercise) => exercise.id),
+          };
+        }),
+      ),
+    })),
+  );
+  return { ...course, units };
+}
+
+function withExerciseSnapshot(
+  lesson: CourseView["units"][number]["lessons"][number],
+  key: string,
+  exerciseIdsByLesson: Map<string, readonly string[] | null>,
+): CourseView["units"][number]["lessons"][number] {
+  const shaped = { ...lesson };
+  Object.defineProperty(shaped, "exerciseIds", {
+    configurable: true,
+    enumerable: true,
+    get: () => exerciseIdsByLesson.get(key) ?? [],
+  });
+  Object.defineProperty(shaped, "exerciseIdsComplete", {
+    configurable: true,
+    enumerable: true,
+    get: () => exerciseIdsByLesson.has(key) && exerciseIdsByLesson.get(key) !== null,
+  });
+  return shaped;
+}
+
+/** Keep a large local shelf from opening hundreds of filesystem reads at once. */
+function concurrencyGate(limit: number): <T>(task: () => Promise<T>) => Promise<T> {
+  let active = 0;
+  const waiting: (() => void)[] = [];
+
+  return async <T>(task: () => Promise<T>): Promise<T> => {
+    if (active >= limit) await new Promise<void>((resolve) => waiting.push(resolve));
+    active += 1;
+    try {
+      return await task();
+    } finally {
+      active -= 1;
+      waiting.shift()?.();
+    }
   };
 }
 

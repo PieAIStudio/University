@@ -33,6 +33,7 @@ const LESSON: Lesson = {
     "",
     "后面。",
   ].join("\n"),
+  contentRevision: 1,
   evidence: [
     {
       kind: "fact",
@@ -106,6 +107,7 @@ const SHELF_COURSE: CourseView = {
           contentRevision: 1,
           cardCount: LESSON.cards.length,
           exerciseCount: LESSON.exercises.length,
+          exerciseIds: LESSON.exercises.map((exercise) => exercise.id),
           contentChars: LESSON.content.length,
           evidenceCount: 1,
           unlockCount: 0,

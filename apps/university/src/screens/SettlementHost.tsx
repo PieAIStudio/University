@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   courseShapeOf,
   getConceptEntry,
@@ -40,6 +40,7 @@ export function SettlementHost({
   readonly onIncomplete: () => void;
 }) {
   const progress = useSyncExternalStore(subscribe, snapshot);
+  const source = useMemo(() => progressSourceOf(progressPort), []);
   const [lesson, setLesson] = useState<LessonView | null>(null);
   /*
     Both sides of the cards that just dropped. The front travels on the lesson
@@ -51,9 +52,7 @@ export function SettlementHost({
   const unit = course.units.find((entry) => entry.id === locator.unitId);
   const summary = unit?.lessons.find((entry) => entry.id === locator.lessonId);
   const completed =
-    unit != null &&
-    summary != null &&
-    isLessonComplete(progressSourceOf(progressPort).completionOf(locator));
+    unit != null && summary != null && isLessonComplete(source.completionOf(locator, summary));
 
   useEffect(() => {
     if (!completed) onIncomplete();
@@ -104,7 +103,7 @@ export function SettlementHost({
   const prefix = `${locator.studyId}/${course.id}/`;
   const { done: doneAfter, total: lessons } = readCourseProgress(
     courseShapeOf(course, locator.studyId),
-    progressSourceOf(progressPort),
+    source,
   );
 
   const dropped = lesson.lesson.cards

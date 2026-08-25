@@ -47,8 +47,11 @@ export interface CourseLesson {
   readonly id: string;
   readonly title: string;
   readonly content: string;
+  readonly contentRevision: number;
+  readonly exerciseIds: readonly string[];
+  readonly exerciseIdsComplete?: boolean;
   readonly variant?: string | null;
-  readonly exercises: readonly unknown[];
+  readonly exercises: readonly { readonly id: string }[];
   readonly cards: readonly unknown[];
 }
 

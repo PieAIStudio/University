@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createMemoryPersistence, createProgressPort, lessonKey } from "@pieai/university-core";
 
-import { createLocalContentPort } from "./content";
+import { createLocalContentPort, refreshLocalBootstrap } from "./content";
 
 /** The document the port imports the old SQLite projection into. */
 function port() {
@@ -88,6 +88,83 @@ describe("createLocalContentPort", () => {
 });
 
 describe("the shelf the authoring API answers with", () => {
+  it("fills current exercise ids from the existing lesson route", async () => {
+    const progress = createProgressPort({ persistence: createMemoryPersistence() });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url === "/api/bootstrap") {
+          return jsonOk({ studies: [{ id: "turing-pact", title: "TuringPact" }] });
+        }
+        if (
+          url ===
+          "/api/studies/turing-pact/courses/foundations-before-zero/units/what-is-an-app/lessons/you-already-know-apps"
+        ) {
+          return jsonOk({
+            lesson: {
+              exercises: [
+                {
+                  id: "current-exercise",
+                  contentRevision: 8,
+                  hostGrade: {
+                    passed: true,
+                    evaluation: "通过",
+                    extensions: [],
+                    host: "test",
+                    learnerAnswer: "答",
+                    occurredAt: "2026-08-26T00:00:00.000Z",
+                  },
+                },
+              ],
+            },
+          });
+        }
+        return jsonOk({
+          study: { id: "turing-pact", title: "TuringPact" },
+          courses: [
+            {
+              id: "foundations-before-zero",
+              title: "在开始之前",
+              units: [
+                {
+                  id: "what-is-an-app",
+                  title: "u",
+                  lessons: [
+                    {
+                      id: "you-already-know-apps",
+                      title: "l",
+                      contentRevision: 8,
+                      contentChars: 10,
+                      cardCount: 0,
+                      exerciseCount: 1,
+                      progress: null,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          notes: [],
+        });
+      }),
+    );
+    await refreshLocalBootstrap();
+    progress.confirmLessonRead(
+      lessonKey("turing-pact", "foundations-before-zero", "you-already-know-apps"),
+      8,
+    );
+
+    const shelf = await createLocalContentPort({ progress }).shelf();
+
+    expect(shelf.studies[0]?.courses[0]?.units[0]?.lessons[0]?.exerciseIds).toEqual([
+      "current-exercise",
+    ]);
+    expect(progress.latestExerciseAttempt(locator, "current-exercise", 8)?.hostGrade?.passed).toBe(
+      true,
+    );
+  });
+
   it("drops the server's own progress and imports it into the document instead", async () => {
     // Two answers to 「这一关学完了吗」 is how one campus lights a stone the
     // other leaves dark. The SQLite projection is a bridge, not a source.
@@ -117,6 +194,7 @@ describe("the shelf the authoring API answers with", () => {
                       contentChars: 10,
                       cardCount: 0,
                       exerciseCount: 0,
+                      exerciseIds: [],
                       progress: {
                         contentRevision: 2,
                         status: "completed",

@@ -13,6 +13,8 @@ function lesson(id: string): Course["units"][number]["lessons"][number] {
     id,
     title: id,
     content: "",
+    contentRevision: 1,
+    exerciseIds: [],
     exercises: [],
     cards: [],
   };
@@ -36,8 +38,14 @@ describe("courseShapeOf", () => {
       studyId: "turing-pact",
       courseId: "foundations-before-zero",
       units: [
-        { unitId: "u1", lessonIds: ["a", "b"] },
-        { unitId: "u2", lessonIds: ["c"] },
+        {
+          unitId: "u1",
+          lessons: [
+            { lessonId: "a", contentRevision: 1, exerciseIds: [] },
+            { lessonId: "b", contentRevision: 1, exerciseIds: [] },
+          ],
+        },
+        { unitId: "u2", lessons: [{ lessonId: "c", contentRevision: 1, exerciseIds: [] }] },
       ],
     });
   });

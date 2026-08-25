@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   courseShapeOf,
+  isLessonComplete,
   lessonKeyOf,
   lessonRefKey,
   progressSourceOf,
@@ -56,6 +57,7 @@ export function LessonScreen({
   const [error, setError] = useState<string | null>(null);
   const [reloads, setReloads] = useState(0);
   const requested = lessonRefKey(locator);
+  const source = useMemo(() => progressSourceOf(progressPort), []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -83,27 +85,19 @@ export function LessonScreen({
   const settled = useRef<string | null>(null);
   const shown = view?.key === requested ? view.view : null;
   /*
-    Two independent facts, read separately, because they are separate.
-
-    Not `progressSourceOf(...).completionOf(...)`: that read model answers 「这
-    一关学完了吗」 for a map, and it takes `progress >= 1` as its stand-in for
-    「题都做对了」 — which is exactly the number this effect is about to write.
-    Asking it here would make the condition depend on its own result, and the
-    settlement would never open.
+    The shared source can now answer both facts independently because this
+    caller supplies the current lesson revision and its complete exercise id
+    list. It used to be unsafe here: it asked the document's aggregate
+    `progress` for the exercise result, then this effect wrote that same result
+    back as `progress`, forming a read/write cycle.
   */
-  const state = progressPort.lessonState(lessonKeyOf(locator));
-  const revision = shown?.lesson.contentRevision ?? 1;
-  const readConfirmed =
-    (state.readConfirmed === true &&
-      (state.readConfirmedRevision === undefined || state.readConfirmedRevision === revision)) ||
-    // A row written before the document carried the read fact separately.
-    (state.readConfirmed === undefined && state.progress >= 1);
-  const exercisesPassed = (shown?.lesson.exercises ?? []).every(
-    (exercise) =>
-      progressPort.latestExerciseAttempt(locator, exercise.id, exercise.contentRevision)?.hostGrade
-        ?.passed === true,
-  );
-  const finished = shown != null && readConfirmed && exercisesPassed;
+  const completion = shown
+    ? source.completionOf(locator, {
+        contentRevision: shown.lesson.contentRevision,
+        exerciseIds: shown.lesson.exercises.map((exercise) => exercise.id),
+      })
+    : null;
+  const finished = completion != null && isLessonComplete(completion);
 
   useEffect(() => {
     if (!finished || !course || settled.current === requested) return;
@@ -112,10 +106,7 @@ export function LessonScreen({
     // number exists. Deriving it afterwards as `done - 1` was wrong on a lesson
     // finished twice: the count does not move, and the subtraction invented a
     // step the map had not made.
-    const doneBefore = readCourseProgress(
-      courseShapeOf(course, locator.studyId),
-      progressSourceOf(progressPort),
-    ).done;
+    const doneBefore = readCourseProgress(courseShapeOf(course, locator.studyId), source).done;
     progressPort.advanceLesson(lessonKeyOf(locator), 1);
     // The drop is the reason to come back tomorrow, so it happens the moment
     // the lesson is passed rather than on some later screen.
@@ -126,7 +117,7 @@ export function LessonScreen({
       (shown?.lesson.cards ?? []).map((card) => card.id),
     );
     onSettled(doneBefore);
-  }, [finished, course, requested, shown, locator, onSettled]);
+  }, [finished, course, requested, shown, locator, onSettled, source]);
 
   const overlaid = useMemo(
     () => (shown ? overlayCloudRecords(shown, locator) : null),

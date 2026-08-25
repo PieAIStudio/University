@@ -9,6 +9,7 @@ const lesson: Lesson = {
   id: "you-already-know-apps",
   title: "会使用 App 和会开发 App，差在哪儿？",
   content: "## 先猜一下\n\n产品叫图灵密约。\n",
+  contentRevision: 1,
   evidence: [
     {
       kind: "fact",

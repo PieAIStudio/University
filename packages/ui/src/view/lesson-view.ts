@@ -230,6 +230,10 @@ interface LessonSummary {
   readonly contentRevision: number;
   readonly cardCount: number;
   readonly exerciseCount: number;
+  /** The stable exercise ids needed to answer current-version progress. */
+  readonly exerciseIds: readonly string[];
+  /** False while the authoring adapter is still missing those ids. */
+  readonly exerciseIdsComplete?: boolean;
   /**
    * How long the prose is. Sets the size of the stone on the course island.
    *

@@ -21,6 +21,7 @@
  */
 import {
   NOT_STARTED,
+  type LessonProgressSnapshot,
   type LessonCompletion,
   type LessonRef,
   type ProgressSource,
@@ -30,15 +31,26 @@ import { lessonKeyOf } from "./document.js";
 
 export function progressSourceOf(port: ProgressPort): ProgressSource {
   return {
-    completionOf(ref: LessonRef): LessonCompletion {
+    completionOf(ref: LessonRef, lesson?: LessonProgressSnapshot): LessonCompletion {
+      if (!lesson) {
+        throw new Error("progressSourceOf requires the current lesson snapshot");
+      }
       const state = port.lessonState(lessonKeyOf(ref));
+      const exercisesPassed =
+        lesson.exerciseIdsComplete !== false &&
+        lesson.exerciseIds.every(
+          (exerciseId) =>
+            port.latestExerciseAttempt(ref, exerciseId, lesson.contentRevision)?.hostGrade
+              ?.passed === true,
+        );
       const readConfirmed =
         state.readConfirmed === true &&
-        (state.readConfirmedRevision === undefined || state.readConfirmedRevision === 1);
+        (state.readConfirmedRevision === undefined ||
+          state.readConfirmedRevision === lesson.contentRevision);
       const legacyComplete = state.readConfirmed === undefined && state.progress >= 1;
-      if (state.progress < 1 && !readConfirmed) return NOT_STARTED;
+      if (!exercisesPassed && !readConfirmed && !legacyComplete) return NOT_STARTED;
       return {
-        exercisesPassed: state.progress >= 1,
+        exercisesPassed: exercisesPassed || legacyComplete,
         readConfirmed: readConfirmed || legacyComplete,
       };
     },

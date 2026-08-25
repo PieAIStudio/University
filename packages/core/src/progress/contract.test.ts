@@ -17,8 +17,14 @@ const course: CourseShape = {
   studyId: "turingpact",
   courseId: "foundations-before-zero",
   units: [
-    { unitId: "u1", lessonIds: ["a", "b"] },
-    { unitId: "u2", lessonIds: ["c"] },
+    {
+      unitId: "u1",
+      lessons: [
+        { lessonId: "a", contentRevision: 8, exerciseIds: [] },
+        { lessonId: "b", contentRevision: 8, exerciseIds: [] },
+      ],
+    },
+    { unitId: "u2", lessons: [{ lessonId: "c", contentRevision: 8, exerciseIds: [] }] },
   ],
 };
 
@@ -112,8 +118,14 @@ describe("courseShapeOf", () => {
         {
           id: "foundations-before-zero",
           units: [
-            { id: "u1", lessons: [{ id: "a" }, { id: "b" }] },
-            { id: "u2", lessons: [{ id: "c" }] },
+            {
+              id: "u1",
+              lessons: [
+                { id: "a", contentRevision: 8, exerciseIds: ["a-exercise"] },
+                { id: "b", contentRevision: 8, exerciseIds: [] },
+              ],
+            },
+            { id: "u2", lessons: [{ id: "c", contentRevision: 8, exerciseIds: [] }] },
           ],
         },
         "turing-pact",
@@ -122,8 +134,14 @@ describe("courseShapeOf", () => {
       studyId: "turing-pact",
       courseId: "foundations-before-zero",
       units: [
-        { unitId: "u1", lessonIds: ["a", "b"] },
-        { unitId: "u2", lessonIds: ["c"] },
+        {
+          unitId: "u1",
+          lessons: [
+            { lessonId: "a", contentRevision: 8, exerciseIds: ["a-exercise"] },
+            { lessonId: "b", contentRevision: 8, exerciseIds: [] },
+          ],
+        },
+        { unitId: "u2", lessons: [{ lessonId: "c", contentRevision: 8, exerciseIds: [] }] },
       ],
     });
   });

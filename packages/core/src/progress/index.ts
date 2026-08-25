@@ -6,8 +6,10 @@ export {
   readCourseProgress,
   courseShapeOf,
   type CourseProgress,
+  type CourseLessonShape,
   type CourseShape,
   type LessonCompletion,
+  type LessonProgressSnapshot,
   type LessonRef,
   type ProgressSource,
 } from "./contract.js";
