@@ -36,7 +36,6 @@ import { placeStudies, rotationFor, stepRotation, type YawPitch } from "./placem
  * sky stops, accent for the one lit thing).
  */
 const SKY_MID = 0x8ec8ea;
-const SKY_HORIZON = 0xf2d4b0;
 /**
  * The ground this globe hangs on. Not sky and not black: the panel's own family
  * two steps darker, so the pane reads as part of the page. `--game-ui-panel` is
@@ -52,6 +51,32 @@ const PLANET_PALETTE = {
   sandBrown: 0xbd8c55,
   deepGreen: 0x367852,
 } as const;
+
+const FRESNEL_VERTEX_SHADER = /* glsl */ `
+  varying vec3 vWorldNormal;
+  varying vec3 vWorldPosition;
+
+  void main() {
+    vWorldNormal = normalize(mat3(modelMatrix) * normal);
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    vWorldPosition = worldPosition.xyz;
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+  }
+`;
+
+const FRESNEL_FRAGMENT_SHADER = /* glsl */ `
+  uniform vec3 uColor;
+  varying vec3 vWorldNormal;
+  varying vec3 vWorldPosition;
+
+  void main() {
+    vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+    float facing = max(dot(normalize(vWorldNormal), viewDirection), 0.0);
+    float rim = pow(1.0 - facing, 3.1);
+    float alpha = smoothstep(0.28, 0.9, rim) * 0.42;
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`;
 
 /**
  * How far back the eye has to stand to hold the whole globe.
@@ -233,23 +258,36 @@ function PlanetLights() {
   return (
     <>
       {/*
-        The dark side of a planet is still a planet. A single key light on a
-        sphere makes a hard terminator and a black hemisphere, which reads as a
-        ball half-eaten rather than as a world turning — and the points on that
-        half stop existing. Fill carries the shadow side; the key is only there
-        to say which way is up.
+        The lower-right side should be shaded, not erased. The warm key creates
+        that direction; the hemisphere and ambient fill keep the palette legible
+        inside the shadow instead of turning the globe into a half-eaten ball.
       */}
-      <hemisphereLight args={[SKY_MID, 0x9a8b74, 1.35]} />
-      <ambientLight color={SKY_HORIZON} intensity={0.55} />
-      {/*
-        Shadow frustum is the globe, not the archipelago. The map's 2048 map
-        stretched across a whole sea is what turned every tree into six
-        texels; a 2-unit subject does not have that problem.
-      */}
-      <directionalLight position={[2.4, 3.2, 2]} intensity={1.35} />
-      {/* A cool rim from behind, so the far edge stays a sphere against a dark ground. */}
-      <directionalLight position={[-3, -1.2, -2.6]} intensity={0.5} color={SKY_MID} />
+      <hemisphereLight args={[0x90c6d2, 0x3a6d52, 1]} />
+      <ambientLight color={0xf0c39a} intensity={0.5} />
+      {/* The warm key is upper-left in screen space; the far light is only a lift. */}
+      <directionalLight position={[-3.8, 4.6, 4.2]} intensity={1.2} color={0xffd1a4} />
+      {/* A tiny cool lift keeps the far side green-blue without flattening it. */}
+      <directionalLight position={[3.2, -1.6, -4]} intensity={0.22} color={0x4c8b91} />
     </>
+  );
+}
+
+function FresnelRim() {
+  // Linear additive edge light; Stage's SwimmerRenderKit grade still owns the
+  // single tone map and sRGB encode after this scene pass.
+  return (
+    <mesh scale={1.018} renderOrder={2}>
+      <sphereGeometry args={[1, 48, 32]} />
+      <shaderMaterial
+        vertexShader={FRESNEL_VERTEX_SHADER}
+        fragmentShader={FRESNEL_FRAGMENT_SHADER}
+        uniforms={{ uColor: { value: new THREE.Color(0xffc47a) } }}
+        transparent
+        depthTest={false}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
   );
 }
 
@@ -307,6 +345,7 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
           <mesh geometry={planet}>
             <meshStandardMaterial vertexColors flatShading roughness={0.92} metalness={0} />
           </mesh>
+          <FresnelRim />
           {[...placed.entries()].map(([id, point]) => {
             const selected = id === selectedId;
             return (
