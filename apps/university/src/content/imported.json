@@ -11,7 +11,7 @@
           "title": "《你屏幕上这套东西背后是什么？》",
           "sha256": "sha256:ca7e871f2cab4dbaa69b70ff20f3da6d9682f53c250445d114f667700f4a3d7f",
           "packageBytes": 76302,
-          "servedBytes": 54935,
+          "servedBytes": 51685,
           "lessons": 12
         },
         {
@@ -19,7 +19,7 @@
           "title": "《如何读懂 Buzz 里的 Rust 结构？》",
           "sha256": "sha256:c6d19ab2ea81aed3d0c415538d09ff51185c95c7b0d2b4c9ea9007b55acd9d7d",
           "packageBytes": 81685,
-          "servedBytes": 59654,
+          "servedBytes": 56126,
           "lessons": 12
         },
         {
@@ -27,7 +27,7 @@
           "title": "《一条消息怎样走完 Buzz？》",
           "sha256": "sha256:f72195c543c3d408672abe9a67a4c8f8cfdface2ff955c1b9da2af26bd1ce9e1",
           "packageBytes": 88597,
-          "servedBytes": 65253,
+          "servedBytes": 60753,
           "lessons": 12
         },
         {
@@ -35,7 +35,7 @@
           "title": "《Agent 为什么可以像成员一样工作？》",
           "sha256": "sha256:2da8d17e6587936ff7ebbd5eaaaf2f079805319c572e7f2f0d76796e12f74212",
           "packageBytes": 83712,
-          "servedBytes": 61576,
+          "servedBytes": 57384,
           "lessons": 12
         },
         {
@@ -43,7 +43,7 @@
           "title": "《Buzz 如何把视觉设计变成可维护的令牌？》",
           "sha256": "sha256:8807b4b7b21ee734eb7d4645fa6601d70d5ba68058570828defa51d1277b3e1d",
           "packageBytes": 78806,
-          "servedBytes": 57354,
+          "servedBytes": 54687,
           "lessons": 12
         }
       ]
@@ -73,7 +73,7 @@
           "title": "创始人工程师：SupaLuv",
           "sha256": "sha256:75acd5a50c3ca13c2af9600dee6d351ffd62e3441ede2f894f6980d30ebd01f8",
           "packageBytes": 18034,
-          "servedBytes": 13633,
+          "servedBytes": 12865,
           "lessons": 1
         },
         {
@@ -81,7 +81,7 @@
           "title": "AI 产品的成本与边界",
           "sha256": "sha256:0defd86b19203c7a0427f31af66a300678703388384535bd17124116a33862d8",
           "packageBytes": 36702,
-          "servedBytes": 29828,
+          "servedBytes": 28354,
           "lessons": 4
         },
         {
@@ -89,7 +89,7 @@
           "title": "分支叙事：作者意图与 AI 的分工",
           "sha256": "sha256:77ca28f4ed1e563696a39923e0e1339d68139da6e6a42955ce8eab339aaa23cf",
           "packageBytes": 111567,
-          "servedBytes": 92551,
+          "servedBytes": 86119,
           "lessons": 12
         },
         {
@@ -97,7 +97,7 @@
           "title": "一个人如何量产内容",
           "sha256": "sha256:afd2a5318261edca5f1c6471bd9ec61311d41b53e146984fd05aa7837a741aad",
           "packageBytes": 36027,
-          "servedBytes": 28749,
+          "servedBytes": 27469,
           "lessons": 3
         },
         {
@@ -105,7 +105,7 @@
           "title": "一个人的媒体流水线",
           "sha256": "sha256:e936093c94ecde1853e6bfb5914a85e2321d80fc2ecdf5a998dd8a068c434c9f",
           "packageBytes": 98457,
-          "servedBytes": 80260,
+          "servedBytes": 76135,
           "lessons": 12
         },
         {
@@ -113,7 +113,7 @@
           "title": "把内容当依赖包管理",
           "sha256": "sha256:7b230243e35c162d9c09ad700fd2edbc37f71067cc2f7a4c7c7ec408fc03d589",
           "packageBytes": 98831,
-          "servedBytes": 82094,
+          "servedBytes": 77804,
           "lessons": 11
         },
         {
@@ -121,7 +121,7 @@
           "title": "让机器替你玩一千遍",
           "sha256": "sha256:86864c40220af35cf76872bad03d3811d46fa00b0c28e21661cf1f30284aed73",
           "packageBytes": 91658,
-          "servedBytes": 75051,
+          "servedBytes": 70662,
           "lessons": 11
         }
       ]
@@ -136,7 +136,7 @@
           "title": "《在开始之前：App、代码、和你》",
           "sha256": "sha256:8bb94b8236cba7834183e3086085ff3553175f3510761401ca8158fb234ce1ec",
           "packageBytes": 6883155,
-          "servedBytes": 368615,
+          "servedBytes": 353603,
           "lessons": 41
         },
         {
@@ -144,7 +144,7 @@
           "title": "《认识地形》",
           "sha256": "sha256:85dc4a28f2ebe75695d35601e33c6915468adaefcc2f5ada09c73d38d9580d8d",
           "packageBytes": 128891,
-          "servedBytes": 96629,
+          "servedBytes": 92579,
           "lessons": 12
         },
         {
@@ -152,7 +152,7 @@
           "title": "《读懂一行代码》",
           "sha256": "sha256:d4ec70bd102c7894d0070a1ee9cad71b65a964f119c474ef0fe69c9d43e361af",
           "packageBytes": 133541,
-          "servedBytes": 110363,
+          "servedBytes": 106303,
           "lessons": 11
         },
         {
@@ -160,7 +160,7 @@
           "title": "《读懂一段逻辑》",
           "sha256": "sha256:a26ce2d152fe609e14b5b49f9de6b819ef3967e222af38cfe0fc4f2733fdfb11",
           "packageBytes": 148619,
-          "servedBytes": 124030,
+          "servedBytes": 120838,
           "lessons": 13
         },
         {
@@ -168,7 +168,7 @@
           "title": "《数据从哪来》",
           "sha256": "sha256:b98d107dc6ba0594b8d126f262dafb2e9e87bab203e50ca72a849b2b51cbdffe",
           "packageBytes": 152415,
-          "servedBytes": 126494,
+          "servedBytes": 121874,
           "lessons": 13
         },
         {
@@ -176,7 +176,7 @@
           "title": "《等待与失败》",
           "sha256": "sha256:d4ce14ed7793d8463e648a9eb8e33fe095ca17db498000f38536c16d5fdb1920",
           "packageBytes": 129097,
-          "servedBytes": 103561,
+          "servedBytes": 100369,
           "lessons": 12
         },
         {
@@ -184,7 +184,7 @@
           "title": "《界面是怎么长出来的》",
           "sha256": "sha256:d303445fc642481db1a962cc04a63fa252e3914ffbe8ba14f22d2729fcf5e087",
           "packageBytes": 145360,
-          "servedBytes": 119100,
+          "servedBytes": 115980,
           "lessons": 12
         },
         {
@@ -192,7 +192,7 @@
           "title": "《怎么知道没写错》",
           "sha256": "sha256:7591b7f2691d104d032d9a0e984b4f57895f8881137ada5ecedb55618b2b2ba5",
           "packageBytes": 132409,
-          "servedBytes": 105846,
+          "servedBytes": 101796,
           "lessons": 13
         },
         {
@@ -200,7 +200,7 @@
           "title": "《代码之外》",
           "sha256": "sha256:26d688714264e334040d398c5dea0d6736af77f0ae81d7b350d357e79c6d3463",
           "packageBytes": 134999,
-          "servedBytes": 108911,
+          "servedBytes": 104861,
           "lessons": 12
         },
         {
@@ -208,7 +208,7 @@
           "title": "契约与防漂移",
           "sha256": "sha256:755fbb77bd6677d26adac2335b475cb1bf1b842d18bbc791e454785612cb1db0",
           "packageBytes": 29851,
-          "servedBytes": 24840,
+          "servedBytes": 23760,
           "lessons": 3
         },
         {
@@ -216,7 +216,7 @@
           "title": "测试策略：把钱花在刀刃上",
           "sha256": "sha256:c3eb83036e45c1424e65d62d09d3517628d8922fcfbec4d7658f5a4ddcc7f5e3",
           "packageBytes": 42311,
-          "servedBytes": 33242,
+          "servedBytes": 31790,
           "lessons": 3
         },
         {
@@ -224,7 +224,7 @@
           "title": "状态与过程：半年后还改得动",
           "sha256": "sha256:186a3c65055daaef852005c52220a0f05c2b281c478f81c1105ff26196794d66",
           "packageBytes": 46035,
-          "servedBytes": 38285,
+          "servedBytes": 36689,
           "lessons": 4
         },
         {
@@ -232,7 +232,7 @@
           "title": "一套代码，多端交付",
           "sha256": "sha256:8d3b6b2d34469dfe69db6e9594f68891881060891dd48ab57f14a6c01381486d",
           "packageBytes": 58323,
-          "servedBytes": 50030,
+          "servedBytes": 46694,
           "lessons": 4
         },
         {
@@ -240,7 +240,7 @@
           "title": "身份、账号、和「你是谁」",
           "sha256": "sha256:b7ea3ae6a6860684326675bf950ddd68b638ec0d15055bd2f819d040557f3df1",
           "packageBytes": 119333,
-          "servedBytes": 100209,
+          "servedBytes": 94181,
           "lessons": 12
         },
         {
@@ -248,7 +248,7 @@
           "title": "双语不是翻译表",
           "sha256": "sha256:0983984a47d792cf6028aa2ed0177f9021d5c45611d0f2c291e4a97f162f8931",
           "packageBytes": 122076,
-          "servedBytes": 103601,
+          "servedBytes": 97256,
           "lessons": 12
         },
         {
@@ -256,7 +256,7 @@
           "title": "谁在线，谁在打字",
           "sha256": "sha256:f1c3674d9a8a276961b272575e609ca62c341d1ab01a72157045b119ba3da8b2",
           "packageBytes": 101332,
-          "servedBytes": 83940,
+          "servedBytes": 79019,
           "lessons": 11
         },
         {
@@ -264,7 +264,7 @@
           "title": "同一个能力，三种实现",
           "sha256": "sha256:f35650ff7ed8d38987ed9799d770b86ee84c7aec15f68cdeee49312a1a0c18fa",
           "packageBytes": 102908,
-          "servedBytes": 85006,
+          "servedBytes": 80485,
           "lessons": 12
         },
         {
@@ -272,7 +272,7 @@
           "title": "先定契约，再接模型",
           "sha256": "sha256:f84b898e6f8602f3f310fe62306542967becd529b3cf7fa64a4862b85d47625a",
           "packageBytes": 98489,
-          "servedBytes": 79301,
+          "servedBytes": 73941,
           "lessons": 12
         },
         {
@@ -280,7 +280,7 @@
           "title": "一次对话到底花多少钱",
           "sha256": "sha256:d7507f5bde233712c145ecbf8e67868ebc7dd8a72b749ad4d1931fa73b67a0bb",
           "packageBytes": 99969,
-          "servedBytes": 80394,
+          "servedBytes": 74900,
           "lessons": 12
         },
         {
@@ -288,7 +288,7 @@
           "title": "从不可靠的模型里拿到可靠结构",
           "sha256": "sha256:d910008a6ecef2e98d83f1b2c05aaac353b9ca4f424b74748b6c227e82cdf7d1",
           "packageBytes": 87736,
-          "servedBytes": 70889,
+          "servedBytes": 67249,
           "lessons": 11
         },
         {
@@ -296,7 +296,7 @@
           "title": "怎么知道我的 AI 够好",
           "sha256": "sha256:95ffb304710409df42d335b7380ea923b5f306186ce64cbd78bd61291b3510b7",
           "packageBytes": 84202,
-          "servedBytes": 66599,
+          "servedBytes": 62213,
           "lessons": 11
         },
         {
@@ -304,7 +304,7 @@
           "title": "让 AI 角色像同一个人",
           "sha256": "sha256:b9f2a80192357c7dd9f337256cbfbb809233e4a2798104225089a0fd40500695",
           "packageBytes": 84387,
-          "servedBytes": 67508,
+          "servedBytes": 63419,
           "lessons": 11
         },
         {
@@ -312,7 +312,7 @@
           "title": "用户那边出错时，产品怎么自己爬起来",
           "sha256": "sha256:1b5f941217e7aede1143e99d25923c1126fe6074b722d0e710037274ec762a7a",
           "packageBytes": 104911,
-          "servedBytes": 86092,
+          "servedBytes": 80680,
           "lessons": 12
         },
         {
@@ -320,7 +320,7 @@
           "title": "先登记，再上线",
           "sha256": "sha256:b77c399ce43bf6fe75c59f2ba8b4b6dea03e685b12d0558ceffa36c94c6c2d76",
           "packageBytes": 106498,
-          "servedBytes": 88083,
+          "servedBytes": 82106,
           "lessons": 12
         },
         {
@@ -328,7 +328,7 @@
           "title": "给人一个回来的理由",
           "sha256": "sha256:e090e602607320576c7c75821f8727ece43ee7dff4a508d02172853765fa89ca",
           "packageBytes": 109654,
-          "servedBytes": 92853,
+          "servedBytes": 88058,
           "lessons": 11
         },
         {
@@ -336,7 +336,7 @@
           "title": "产品的「时刻」是怎么搭出来的",
           "sha256": "sha256:b917dd7e27749b41e0e01679967e5422dcb705d18f1d45690c2edf085dfe4bb7",
           "packageBytes": 113037,
-          "servedBytes": 93973,
+          "servedBytes": 88942,
           "lessons": 12
         },
         {
@@ -344,7 +344,7 @@
           "title": "导航是产品结构的外化",
           "sha256": "sha256:30ac5e0fd2fb62c4023ed7957ee9c66cbbf4fd8d68c428e30aeda8ce0d80ff46",
           "packageBytes": 116352,
-          "servedBytes": 96956,
+          "servedBytes": 91016,
           "lessons": 12
         },
         {
@@ -352,7 +352,7 @@
           "title": "一个人怎么替代一个 QA 团队",
           "sha256": "sha256:5f7a7e3fb9710a01a52fd1a66617b54b39445d0f42a81540741dfd6aa515d252",
           "packageBytes": 108828,
-          "servedBytes": 90761,
+          "servedBytes": 86071,
           "lessons": 12
         },
         {
@@ -360,7 +360,7 @@
           "title": "351 个素材怎么进产品而不失控",
           "sha256": "sha256:dd47b8b6dbc9fc637e7420fdd41acb2ece08147c119a46d0ebeba76508336b7c",
           "packageBytes": 110157,
-          "servedBytes": 91851,
+          "servedBytes": 86911,
           "lessons": 12
         },
         {
@@ -368,7 +368,7 @@
           "title": "出事的时候只有你",
           "sha256": "sha256:e47b8c2b425fbc31defcd7731eb304e4836cba8b1fe95d8e06c1c3dd5cfd3bba",
           "packageBytes": 117328,
-          "servedBytes": 92443,
+          "servedBytes": 86155,
           "lessons": 12
         },
         {
@@ -376,7 +376,7 @@
           "title": "指挥 AI 干活",
           "sha256": "sha256:1dbcadd8eb5ecac539d7ffda8ef7de87ad663666e5fedb87c22729d89c8c640f",
           "packageBytes": 88853,
-          "servedBytes": 69069,
+          "servedBytes": 65289,
           "lessons": 10
         }
       ]
@@ -391,7 +391,7 @@
           "title": "《这所大学自己是怎么盖的》",
           "sha256": "sha256:7620f16a5545c563a33beecccf49c3f8d4a22bb4f0ca1da1bb71ebd86b6779cb",
           "packageBytes": 8214,
-          "servedBytes": 6697,
+          "servedBytes": 6555,
           "lessons": 1
         },
         {
@@ -399,7 +399,7 @@
           "title": "AI 时代的四层工作台",
           "sha256": "sha256:fba8ac6c7e8ea7ef961d060a24c68c1996c434b085bbe182eb2861129682850e",
           "packageBytes": 37525,
-          "servedBytes": 31723,
+          "servedBytes": 29749,
           "lessons": 4
         },
         {
@@ -407,7 +407,7 @@
           "title": "《这所大学自己是怎么盖的·下》",
           "sha256": "sha256:e34e279913b20612b74c9c553aff1be8eb49c25cea4954233d5b4ddf8a09c553",
           "packageBytes": 75938,
-          "servedBytes": 62242,
+          "servedBytes": 59938,
           "lessons": 10
         },
         {
@@ -415,7 +415,7 @@
           "title": "《把话说清楚：跟 AI 协作的表达》",
           "sha256": "sha256:5b5e121e15bf1d9800b641fe252eca8787581b68909ce5df48a52e139419517a",
           "packageBytes": 97642,
-          "servedBytes": 80385,
+          "servedBytes": 76745,
           "lessons": 12
         },
         {
@@ -423,7 +423,7 @@
           "title": "怎么让教材没法撒谎",
           "sha256": "sha256:6d650eca5f16c0129619bd8e0acebd14c5c482bdb8e2409913cef22445bbb664",
           "packageBytes": 87953,
-          "servedBytes": 70965,
+          "servedBytes": 66961,
           "lessons": 11
         },
         {
@@ -431,7 +431,7 @@
           "title": "遗忘曲线怎么变成一张表",
           "sha256": "sha256:bd79b498427c35cff80d2c822dc8abd14fbe107a628e410bb820d012a1b77ae4",
           "packageBytes": 102434,
-          "servedBytes": 84491,
+          "servedBytes": 79523,
           "lessons": 12
         },
         {
@@ -439,7 +439,7 @@
           "title": "「资料仅在本机」不是一句口号",
           "sha256": "sha256:4647d4bf97a8fb0e36dff985e0b6f684226b3d88284eb8139846c6bc521e74f7",
           "packageBytes": 92573,
-          "servedBytes": 73587,
+          "servedBytes": 68868,
           "lessons": 12
         },
         {
@@ -447,7 +447,7 @@
           "title": "学自己的代码，为什么要先隔离",
           "sha256": "sha256:a94595d8b0a1fd45cfdc6e63970a1dca9796ff75d0aaa148d891f89de268217a",
           "packageBytes": 91180,
-          "servedBytes": 74276,
+          "servedBytes": 70328,
           "lessons": 11
         },
         {
@@ -455,7 +455,7 @@
           "title": "草稿、发布、过期、退休",
           "sha256": "sha256:1d762563bd3b64abb1ef339e01fad11b0085e612a9a32fc7048f406f11ab6162",
           "packageBytes": 91324,
-          "servedBytes": 75137,
+          "servedBytes": 71523,
           "lessons": 11
         }
       ]

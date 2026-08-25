@@ -7,15 +7,9 @@
  */
 import { lessonKeyOf, type LessonRef } from "@pieai/university-core";
 import type { CardBody, ContentPort, Shelf } from "@pieai/university-ui/content/port.js";
-import type { CourseReviewCardLocator, CourseView } from "@pieai/university-ui/view/lesson-view.js";
+import type { CourseReviewCardLocator } from "@pieai/university-ui/view/lesson-view.js";
 
-import {
-  evidenceCount,
-  evidenceLocatorsIn,
-  unlockEntryCount,
-} from "@pieai/university-ui/path/path-stats.js";
-
-import { library, loadCourse, peekCourse, type Course } from "../../content/library";
+import { library, loadCourse, type Course } from "../../content/library";
 import { assembleLessonView, ONLINE_CONTENT_REVISION } from "../../lesson/assemble-view";
 import { progressPort } from "../../progress/store";
 
@@ -83,61 +77,6 @@ export function createOnlineContentPort(): ContentPort {
     noteEvidenceBase(studyId: string, noteId: string) {
       return `/content/${encodeURIComponent(studyId)}/notes/${encodeURIComponent(noteId)}`;
     },
-  };
-}
-
-/** A course this session already fetched, folded into the shared shape. */
-export function peekShelfCourse(studyId: string, courseId: string): CourseView | undefined {
-  const course = peekCourse(studyId, courseId);
-  return course ? shelfCourse(course, null) : undefined;
-}
-
-/**
- * A published package as the shelf holds it.
- *
- * `contentChars` is the prose length rather than the prose: it sizes the stone
- * on the course island, and the shelf has no business carrying lesson text to
- * answer a question about geometry. `progress` is always null — the shared
- * document answers that, and a second answer here is how one campus ends up
- * drawing a stone the other does not.
- */
-function shelfCourse(course: Course, defaultCourseId: string | null): CourseView {
-  return {
-    id: course.id,
-    title: course.title,
-    description: course.description,
-    audience: course.audience,
-    objectives: course.objectives,
-    status: "active",
-    isDefault: course.id === defaultCourseId,
-    prerequisiteCourseIds: course.prerequisiteCourseIds,
-    trackId: course.trackId,
-    units: course.units.map((unit) => ({
-      id: unit.id,
-      title: unit.title,
-      objective: unit.objective,
-      status: "active",
-      lessons: unit.lessons.map((lesson) => ({
-        id: lesson.id,
-        title: lesson.title,
-        status: "active",
-        variant: lesson.variant ?? null,
-        contentRevision: ONLINE_CONTENT_REVISION,
-        cardCount: lesson.cards.length,
-        exerciseCount: lesson.exercises.length,
-        contentChars: lesson.content.length,
-        /*
-          Counted here, once, rather than by handing the prose to a card. This
-          build has the package in memory; the authoring build has a summary
-          and sends none of these, so its cards say nothing about citations
-          instead of saying zero.
-        */
-        evidenceCount: evidenceCount(lesson.content),
-        unlockCount: unlockEntryCount(lesson.content),
-        evidenceLocators: evidenceLocatorsIn(lesson.content),
-        progress: null,
-      })),
-    })),
   };
 }
 

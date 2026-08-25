@@ -240,7 +240,10 @@ for (const studyId of readdirSync(upstream).sort()) {
           contentChars: lesson.content.length,
           evidenceCount: evidenceCount(lesson.content),
           unlockCount: unlockEntryCount(lesson.content),
-          evidenceLocators: evidenceLocatorsIn(lesson.content),
+          // The unit card de-duplicates in lesson order and returns at five.
+          // Each lesson's list is already unique and ordered, so keeping its
+          // first five can never remove a locator that the unit card would read.
+          evidenceLocators: evidenceLocatorsIn(lesson.content).slice(0, 5),
           progress: null,
         })),
       })),
@@ -269,14 +272,16 @@ for (const studyId of readdirSync(upstream).sort()) {
 }
 
 writeFileSync(join(contentRoot, "manifest.json"), `${JSON.stringify(manifest, null, 1)}\n`);
-writeFileSync(join(contentRoot, "shelf.json"), `${JSON.stringify(shelf, null, 1)}\n`);
+// The manifest is human-reviewed and stays pretty; shelf is machine-only and
+// is kept compact so its projection does not spend bytes on indentation.
+writeFileSync(join(contentRoot, "shelf.json"), `${JSON.stringify(shelf)}\n`);
 // The manifest is the tracked half of this: it records exactly which package
 // hash each course came from, so a fresh clone can reproduce the import and a
 // review can be recorded against a version rather than a name.
 mkdirSync(join(projectRoot, "src", "content"), { recursive: true });
 writeFileSync(
   join(projectRoot, "src", "content", "imported.json"),
-  `${JSON.stringify(manifest, null, 1)}\n`,
+  `${JSON.stringify(manifest, null, 2)}\n`,
 );
 
 // The lexicon is bundled rather than fetched, unlike lesson prose.
@@ -297,7 +302,7 @@ if (existsSync(lexiconSource)) {
   lexiconSenses = lexicon.entries.length;
   writeFileSync(
     join(projectRoot, "src", "content", "lexicon.json"),
-    `${JSON.stringify(lexicon, null, 1)}\n`,
+    `${JSON.stringify(lexicon, null, 2)}\n`,
   );
 } else {
   // Not fatal: the reader treats an absent lexicon as "no words to annotate",

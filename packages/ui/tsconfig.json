@@ -14,6 +14,7 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
+  "references": [{ "path": "../core" }],
   "include": ["src"],
   "exclude": ["src/lesson/LessonReader.port.test.ts"]
 }

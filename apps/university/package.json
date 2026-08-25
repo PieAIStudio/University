@@ -10,12 +10,13 @@
     "journey": "node scripts/pull-taxonomy.mjs",
     "kit": "node scripts/import-kit.mjs",
     "build": "tsc -b && vite build --mode delivery && vite build --mode authoring",
+    "check:generated-format": "oxfmt --check src/content/imported.json src/content/lexicon.json",
     "typecheck": "tsc -b --pretty false",
     "lint": "oxlint --deny-warnings src vite.config.ts vitest.config.ts",
     "format": "oxfmt --write package.json tsconfig.app.json vite.config.ts vitest.config.ts index.html src",
     "format:check": "oxfmt --check package.json tsconfig.app.json vite.config.ts vitest.config.ts index.html src",
     "test": "vitest run --passWithNoTests",
-    "content": "node scripts/import-courses.mjs"
+    "content": "pnpm --filter @pieai/university-core build && node scripts/import-courses.mjs"
   },
   "dependencies": {
     "@pieai/swimmer-avatar-kit": "0.2.0",

@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-25T07:27:41.105Z
-generator_version: doc-gov@0.9.3
-docs_count: 29
+generated_at: 2026-08-25T16:02:29.823Z
+generator_version: doc-gov@0.9.5
+docs_count: 30
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -164,6 +164,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-21
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-FRESH-CLONE-TSC-B-NEEDS-PROJECT-REFERENCES-AND-IMPORTED-JSON-IN-COMPOSITE-PACKAG
+    path: docs/reference/learnings/workflow-issues/fresh-clone-tsc-b-needs-project-references-and-imported-json-in-composite-packag.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-25
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-INVISIBLE-DOM-OVERLAY-BUTTONS-STILL-STEAL-CLICKS-ELEMENT-CLICK-WILL-NOT-CATCH-IT
     path: docs/reference/learnings/workflow-issues/invisible-dom-overlay-buttons-still-steal-clicks-element-click-will-not-catch-it.md
