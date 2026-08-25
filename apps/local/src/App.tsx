@@ -14,7 +14,12 @@ import {
   PlansScreen,
   QuestsScreen,
 } from "@pieai/university-ui/navigation/screens.js";
-import { PracticeSurface, createProgressPracticeRecentStore } from "@pieai/university-ui";
+import {
+  createProgressPracticeRecentStore,
+  createReviewCardPort,
+  createVocabularyReviewPort,
+  PracticeSurface,
+} from "@pieai/university-ui";
 import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 import {
@@ -39,13 +44,13 @@ import {
 } from "@pieai/university-core";
 import type { LexiconEntry } from "@pieai/university-core";
 import { armSoundUnlock, SoundToggle } from "@pieai/university-ui/sound/index.js";
-import { cardContentPath, lessonPath, readJson } from "@pieai/university-ui/api/client.js";
+import { readJson } from "@pieai/university-ui/api/client.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
 import { LINK_RETURN_DEPTH, LessonReader } from "@pieai/university-ui/lesson/LessonReader.js";
 import { lessonNeighbours } from "@pieai/university-ui/lesson/LessonNav.js";
 import { createHttpGradingPort } from "./ports/http-grading.js";
 import { createHttpReaderPort } from "./ports/http-reader.js";
-import { createHttpReviewPort, createLocalVocabularyReviewPort } from "./ports/http-review.js";
+import { createHttpContentPort } from "./ports/http-content.js";
 import type {
   BootstrapData,
   CourseReviewCardLocator,
@@ -77,6 +82,11 @@ import { lessonsDoneOf } from "./shell/world-graph.js";
 
 const LOCAL_LEXICON = lexiconFile.entries as readonly LexiconEntry[];
 const LOCAL_PRACTICE_STORE = createProgressPracticeRecentStore(progressPort);
+/*
+  One shelf reader for the whole document. It is stateless — a URL builder and
+  a `fetch` — so there is nothing to rebuild per render and nothing per view.
+*/
+const contentPort = createHttpContentPort();
 
 interface DisplayedStudy {
   readonly locator: string;
@@ -720,7 +730,7 @@ export function App() {
 
   async function loadLesson(locator: LessonRef, signal?: AbortSignal) {
     const requestId = (lessonRequestId.current += 1);
-    const fetched = await readJson<LessonView>(await fetch(lessonPath(locator), { signal }));
+    const fetched = await contentPort.lesson(locator, signal ? { signal } : undefined);
     syncLessonRecordToCloud(fetched, locator, progressPort);
     const next = overlayLessonRecord(fetched, locator, progressPort);
     if (lessonRequestId.current !== requestId) return;
@@ -783,13 +793,8 @@ export function App() {
       return;
     }
     let cancelled = false;
-    void fetch(cardContentPath(dueCardLocator))
-      .then((response) =>
-        readJson<{
-          readonly front: string;
-          readonly contentRevision: number;
-        }>(response),
-      )
+    void contentPort
+      .card(dueCardLocator)
       .then((content) => {
         if (cancelled) return;
         setCloudTodayCard({
@@ -924,8 +929,11 @@ export function App() {
         : null,
     [data],
   );
-  const reviewPort = useMemo(() => createHttpReviewPort(progressPort), []);
-  const vocabularyReviewPort = useMemo(() => createLocalVocabularyReviewPort(progressPort), []);
+  const reviewPort = useMemo(() => createReviewCardPort(contentPort, progressPort), []);
+  const vocabularyReviewPort = useMemo(
+    () => createVocabularyReviewPort(progressPort, LOCAL_LEXICON),
+    [],
+  );
   /*
     The counters come from the shelf, not from the study page.
 

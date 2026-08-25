@@ -36,6 +36,14 @@ export {
 } from "./review/ChoiceBlock.js";
 export { VocabularyReview } from "./review/VocabularyReview.js";
 export type { ReviewCardPort, VocabularyDueWord, VocabularyReviewPort } from "./review/ports.js";
+// Where a lesson's text comes from, and the one review implementation both
+// campuses share on top of it.
+export type { CardBody, ContentPort } from "./content/port.js";
+export {
+  cardKeyOf,
+  createReviewCardPort,
+  createVocabularyReviewPort,
+} from "./review/scheduler-ports.js";
 export {
   TodaySection,
   reviewLine,

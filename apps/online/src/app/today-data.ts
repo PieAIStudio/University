@@ -1,20 +1,14 @@
 import { lessonKeyOf } from "@pieai/university-core";
-import type { CardProgress, ProgressPort, RatingName } from "@pieai/university-core";
+import type { CardProgress, ProgressPort } from "@pieai/university-core";
 import type {
   LessonProgress,
   CourseReviewCardLocator,
   NextLesson,
-  ReviewCardLocator,
   TodayCard,
 } from "@pieai/university-ui/view/lesson-view.js";
-import type { ReviewCardPort, VocabularyDueWord, VocabularyReviewPort } from "@pieai/university-ui";
-
 import { library, peekCourse, type Course } from "../content/library";
-import { LEXICON } from "../lesson/language";
 
 const ONLINE_CONTENT_REVISION = 1;
-const RATINGS: readonly RatingName[] = ["again", "hard", "good", "easy"];
-const LEXICON_BY_SENSE = new Map(LEXICON.map((entry) => [entry.senseId, entry]));
 
 export function nextLessonOf(
   ref: {
@@ -71,68 +65,6 @@ export function todayCardOf(card: CardProgress): TodayCard | null {
     contentRevision: ONLINE_CONTENT_REVISION,
     dueAt: new Date(card.dueAt).toISOString(),
   };
-}
-
-export function createOnlineReviewPort(progress: ProgressPort): ReviewCardPort {
-  return {
-    async reveal(card: ReviewCardLocator, input) {
-      if (card.kind !== "course-card") throw new Error("在线端暂不支持这类复习卡");
-      const course = peekCourse(card.studyId, card.courseId);
-      const content = course && findCard(course, card);
-      if (!content) throw new Error("复习卡内容尚未加载");
-      const cardKey = cardKeyOf(card);
-      const priorAttempts = progress
-        .retrievalAttempts(cardKey)
-        .slice(0, 3)
-        .map((attempt) => ({
-          answer: attempt.answer,
-          revealedAt: attempt.revealedAt,
-          contentRevision: attempt.contentRevision,
-        }));
-      const startedAt = input.startedAt ? Date.parse(input.startedAt) : Date.now();
-      progress.recordRetrievalAttempt({
-        commandId: input.commandId,
-        cardKey,
-        contentRevision: card.contentRevision,
-        answer: input.answer,
-        revealedAt: new Date().toISOString(),
-        durationMs: Math.max(0, Date.now() - (Number.isFinite(startedAt) ? startedAt : Date.now())),
-        usedHint: false,
-      });
-      return { back: content.card.back, priorAttempts };
-    },
-    async rate(card, rating) {
-      if (card.kind !== "course-card") throw new Error("在线端暂不支持这类复习卡");
-      progress.gradeCard(cardKeyOf(card), RATINGS[rating - 1]!);
-      const next = progress.snapshot().cards[cardKeyOf(card)]?.dueAt;
-      if (next === undefined) throw new Error("复习结果没有写入云端缓存");
-      return { dueAt: new Date(next).toISOString() };
-    },
-  };
-}
-
-export function createOnlineVocabularyReviewPort(progress: ProgressPort): VocabularyReviewPort {
-  return {
-    async load() {
-      const now = Date.now();
-      const due: VocabularyDueWord[] = progress
-        .vocabularyStates()
-        .filter((state) => state.stage === "learning" && state.dueAt !== null)
-        .filter((state) => Date.parse(state.dueAt!) <= now)
-        .flatMap((state) => {
-          const entry = LEXICON_BY_SENSE.get(state.senseId);
-          return entry ? [{ senseId: state.senseId, stage: state.stage, entry }] : [];
-        });
-      return { due, reviewedToday: 0 };
-    },
-    async rate(senseId, rating) {
-      progress.gradeWord(senseId, RATINGS[rating - 1]!);
-    },
-  };
-}
-
-function cardKeyOf(card: Extract<ReviewCardLocator, { readonly kind: "course-card" }>): string {
-  return `${card.studyId}/${card.courseId}/${card.lessonId}/${card.cardId}`;
 }
 
 function findCard(

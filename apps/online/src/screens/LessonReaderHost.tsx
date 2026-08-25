@@ -21,7 +21,8 @@ import type { Course } from "../content/library";
 import { assembleLessonView } from "../lesson/assemble-view";
 import { createOnlineGradingPort } from "../ports/online-grading";
 import { createOnlineReaderPort } from "../ports/online-reader";
-import { createOnlineReviewPort } from "../app/today-data";
+import { createReviewCardPort } from "@pieai/university-ui/review/scheduler-ports.js";
+import { createOnlineContentPort } from "../ports/online-content";
 import { progressSource } from "../progress/source";
 import {
   advanceLesson,
@@ -140,7 +141,7 @@ export function LessonReaderHost({
       }),
     [lesson, finish],
   );
-  const review = useMemo(() => createOnlineReviewPort(progressPort), []);
+  const review = useMemo(() => createReviewCardPort(createOnlineContentPort(), progressPort), []);
 
   return (
     <main className="reader">

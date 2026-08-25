@@ -109,12 +109,13 @@ import {
   todayMeta,
   type TodaySectionData,
 } from "@pieai/university-ui/today/TodaySection.js";
+import { nextLessonOf, todayCardOf } from "./today-data";
 import {
-  createOnlineReviewPort,
-  createOnlineVocabularyReviewPort,
-  nextLessonOf,
-  todayCardOf,
-} from "./today-data";
+  createReviewCardPort,
+  createVocabularyReviewPort,
+} from "@pieai/university-ui/review/scheduler-ports.js";
+import { createOnlineContentPort } from "../ports/online-content";
+import { LEXICON } from "../lesson/language";
 import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
 import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
 import { PlanetRail, PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
@@ -138,6 +139,12 @@ const ProfileAvatar = lazy(() =>
  * hash lands on the map, which is where it landed before the two campuses
  * shared a parser and `studio` read as a study nobody has.
  */
+/*
+  One published shelf per document. Stateless — `loadCourse` already caches the
+  packages — so there is nothing to rebuild per render.
+*/
+const contentPort = createOnlineContentPort();
+
 function routable(view: View): View {
   return view.kind === "studio" ? WORLD : view;
 }
@@ -548,8 +555,11 @@ export function App() {
     }),
     [due, nextUpProgress],
   );
-  const todayReview = useMemo(() => createOnlineReviewPort(progressPort), []);
-  const todayVocabularyReview = useMemo(() => createOnlineVocabularyReviewPort(progressPort), []);
+  const todayReview = useMemo(() => createReviewCardPort(contentPort, progressPort), []);
+  const todayVocabularyReview = useMemo(
+    () => createVocabularyReviewPort(progressPort, LEXICON),
+    [],
+  );
   const showMap = SHOWS_THE_MAP.has(view.kind);
   // Suspense reports the models; this reports the JSON they stand on. Either
   // one alone still paints an empty sea, which is the same broken-page read.
