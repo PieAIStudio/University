@@ -24,6 +24,13 @@ const CARD: CourseReviewCardLocator = {
 
 function shelf(body: Partial<CardBody> = {}): ContentPort {
   return {
+    knownStudies: null,
+    studies(): Promise<never> {
+      throw new Error("not asked for in these tests");
+    },
+    shelf(): Promise<never> {
+      throw new Error("not asked for in these tests");
+    },
     lesson(): Promise<LessonView> {
       throw new Error("not asked for in these tests");
     },

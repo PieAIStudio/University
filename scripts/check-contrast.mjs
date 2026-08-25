@@ -24,8 +24,7 @@ const require = createRequire(join(ROOT, "packages", "ui", "package.json"));
 
 const TARGETS = [
   "packages/ui/src",
-  "apps/online/src",
-  "apps/local/src",
+  "apps/university/src",
 ];
 
 let kitBin;

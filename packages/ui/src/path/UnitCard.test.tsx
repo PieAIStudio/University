@@ -14,31 +14,34 @@ import {
   type PathUnit,
 } from "./path-stats.js";
 
-const SECRET = "function stealPrivateSource() { return 42; }";
-
 const UNIT: PathUnit = {
   title: "证据锚点",
   objective: "用三行真实文件建立 export 的读法。",
   lessons: [
     {
       title: "第一节",
-      content: `${SECRET}\n[[evidence:src/app.ts:4-5]]\n[[evidence:src/app.ts:4-5]]`,
-      exercises: [{}],
+      contentChars: 88,
+      exerciseCount: 1,
+      evidenceCount: 2,
+      unlockCount: 0,
+      // The same coordinate twice: the card lists a source once, not per marker.
+      evidenceLocators: ["src/app.ts:4-5", "src/app.ts:4-5"],
     },
     {
       title: "第二节",
-      content: "[[evidence:lib/parse.ts:10-12]] more [[evidence:src/boot.ts:1]]",
-      exercises: [{}, {}],
+      contentChars: 62,
+      exerciseCount: 2,
+      evidenceCount: 2,
+      unlockCount: 0,
+      evidenceLocators: ["lib/parse.ts:10-12", "src/boot.ts:1"],
     },
     {
       title: "第三节",
-      content: [
-        "[[evidence:a.ts:1]]",
-        "[[evidence:b.ts:1]]",
-        "[[evidence:c.ts:1]]",
-        "[[evidence:d.ts:1]]",
-      ].join("\n"),
-      exercises: [],
+      contentChars: 76,
+      exerciseCount: 0,
+      evidenceCount: 4,
+      unlockCount: 0,
+      evidenceLocators: ["a.ts:1", "b.ts:1", "c.ts:1", "d.ts:1"],
     },
   ],
 };
@@ -109,7 +112,12 @@ describe("UnitCard", () => {
     expect(card.textContent).toContain("src/app.ts:4-5");
     expect(card.textContent).toContain("lib/parse.ts:10-12");
     expect(card.textContent).toContain(unitMetaLine(UNIT.lessons));
-    expect(card.textContent).not.toContain(SECRET);
+    /*
+      The card used to be handed lesson prose and measure it, so a private
+      repository's source could reach a screenshot a paying learner takes. It
+      cannot any more: `PathLesson` carries counts and coordinates, and there is
+      no prose on it to leak. The cap is still worth asserting.
+    */
     expect(card.textContent).not.toContain("c.ts:1");
     expect(card.textContent).not.toContain("d.ts:1");
     expect(

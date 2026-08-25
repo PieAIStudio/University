@@ -20,8 +20,11 @@ const UNIT: PathUnit = {
   lessons: [
     {
       title: "证据锚点：让课文指向真实提交",
-      content: `${"学".repeat(400)}[[evidence:src/app.ts:4-5]]`,
-      exercises: [{}, {}, {}],
+      contentChars: 400,
+      exerciseCount: 3,
+      evidenceCount: 1,
+      unlockCount: 0,
+      evidenceLocators: ["src/app.ts:4-5"],
     },
   ],
 };
@@ -119,8 +122,10 @@ describe("NodeCard", () => {
     await renderCard({
       lesson: {
         title: "词条课",
-        content: "见 [[term:app.program]] 与 [[concept:idempotent]]。",
-        exercises: [],
+        contentChars: 24,
+        exerciseCount: 0,
+        evidenceCount: 0,
+        unlockCount: 2,
       },
     });
     expect(buttonWith("开始 · 学完解锁 2 个词条")).toBeTruthy();

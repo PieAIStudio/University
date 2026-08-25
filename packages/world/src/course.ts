@@ -89,6 +89,52 @@ export function depthsFromPrerequisites(
 }
 
 /**
+ * The whole shelf, folded into the nodes the map places.
+ *
+ * Depth is computed per study rather than stored, for the reason above. The
+ * input is structural — anything with a series id, a title and courses with
+ * unit/lesson ids qualifies — so this package still knows nothing about where
+ * a course came from, which is the only reason one function can serve a
+ * published package and a directory on a disk.
+ */
+export function courseNodesOf(
+  studies: readonly {
+    readonly id: string;
+    readonly title: string;
+    readonly courses: readonly {
+      readonly id: string;
+      readonly title: string;
+      readonly units: readonly { readonly lessons: readonly unknown[] }[];
+      readonly prerequisiteCourseIds?: readonly string[];
+      readonly trackId?: string | null;
+    }[];
+  }[],
+): CourseNode[] {
+  const nodes: CourseNode[] = [];
+  for (const study of studies) {
+    const depths = depthsFromPrerequisites(
+      study.courses.map((course) => ({
+        id: course.id,
+        prerequisiteCourseIds: course.prerequisiteCourseIds ?? [],
+      })),
+    );
+    for (const course of study.courses) {
+      nodes.push({
+        courseId: course.id,
+        title: course.title,
+        lessons: course.units.reduce((count, unit) => count + unit.lessons.length, 0),
+        studyId: study.id,
+        studyTitle: study.title,
+        depth: depths.get(course.id) ?? 0,
+        prerequisiteCourseIds: course.prerequisiteCourseIds ?? [],
+        trackId: course.trackId ?? null,
+      });
+    }
+  }
+  return nodes;
+}
+
+/**
  * Whether this island sits outside the authoring shell's focus track.
  *
  * Null or empty focus means nothing is dimmed: the delivery shell never

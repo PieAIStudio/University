@@ -2,16 +2,15 @@ import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { createServer } from "node:net";
 
 /**
- * Both ports are deliberately fixed: the web client proxies `/api` to a known
- * API port, and the campus should live at a stable bookmark. A port that is
- * already taken is therefore a stop, not something to route around silently —
- * moving the web server would break the bookmark, and moving the API port would
- * break the proxy.
+ * The API port is deliberately fixed: the browser half of this campus lives in
+ * `apps/university` and proxies `/api` here by number. A port that is already
+ * taken is therefore a stop, not something to route around silently — moving
+ * it would break the proxy on the other side of the repository.
+ *
+ * The web port is not this package's any more. `pnpm start` runs
+ * `@pieai/university-app dev:local` beside this, and that is where 9999 lives.
  */
-const PORTS = [
-  { port: 4317, label: "API 服务" },
-  { port: 9999, label: "网页界面" },
-];
+const PORTS = [{ port: 4317, label: "API 服务" }];
 
 function isPortFree(port) {
   return new Promise((resolve) => {
@@ -44,7 +43,7 @@ for (const entry of PORTS) {
 if (taken.length > 0) {
   const lines = [
     "",
-    "UniversityLocal 起不来：端口已被占用。",
+    "UniversityLocal 的 API 起不来：端口已被占用。",
     "",
     ...taken.map(
       ({ port, label, pid }) =>
@@ -80,7 +79,6 @@ const children = [
     stdio: "inherit",
     env: { ...process.env, UNIVERSITY_LOCAL_PROJECT_ROOT: process.cwd() },
   }),
-  spawn("pnpm", ["exec", "vite"], { stdio: "inherit" }),
 ];
 
 let stopping = false;

@@ -1,12 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm --filter @pieai/university-core build && pnpm content && pnpm --filter @pieai/university-online... build",
-  "outputDirectory": "apps/online/dist",
+  "buildCommand": "pnpm --filter @pieai/university-core build && pnpm content && pnpm --filter @pieai/university-app... build",
+  "outputDirectory": "apps/university/dist/delivery",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
   "git": {
     "//": "Pushing to GitHub must not deploy this site.",
-    "//2": "The courses are not in this repository. apps/local/studies is 1.1G of source checkouts and apps/online/content is generated from them; both are gitignored, so a build that starts from a clone has nothing to import and produces an app with no courses in it. A deploy therefore has to run from a machine that holds the studies — `vercel build && vercel deploy --prebuilt` — which uploads the built output and never the source repositories.",
+    "//2": "The courses are not in this repository. apps/local/studies is 1.1G of source checkouts and apps/university/content is generated from them; both are gitignored, so a build that starts from a clone has nothing to import and produces an app with no courses in it. A deploy therefore has to run from a machine that holds the studies — `vercel build && vercel deploy --prebuilt` — which uploads the built output and never the source repositories.",
     "//3": "That also matches ADR-0002: publishing a course is a separate, gated act, not a side effect of pushing a commit.",
     "deploymentEnabled": false
   },

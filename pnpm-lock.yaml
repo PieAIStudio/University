@@ -23,39 +23,9 @@ importers:
 
   apps/local:
     dependencies:
-      '@pieai/swimmer-ui-kit':
-        specifier: 1.8.1
-        version: 1.8.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@pieai/university-backend':
-        specifier: workspace:*
-        version: link:../../packages/backend
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@pieai/university-ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      '@pieai/university-world':
-        specifier: workspace:*
-        version: link:../../packages/world
-      '@react-three/drei':
-        specifier: ^10.7.8
-        version: 10.7.8(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(@types/react@19.2.17)(@types/three@0.185.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
-      '@react-three/fiber':
-        specifier: 9.6.1
-        version: 9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
-      react:
-        specifier: 19.2.7
-        version: 19.2.7
-      react-dom:
-        specifier: 19.2.7
-        version: 19.2.7(react@19.2.7)
-      three:
-        specifier: 0.185.1
-        version: 0.185.1
-      three-stdlib:
-        specifier: ^2.36.1
-        version: 2.36.1(three@0.185.1)
       ts-fsrs:
         specifier: 5.4.1
         version: 5.4.1
@@ -72,18 +42,6 @@ importers:
       '@types/node':
         specifier: 24.13.2
         version: 24.13.2
-      '@types/react':
-        specifier: 19.2.17
-        version: 19.2.17
-      '@types/react-dom':
-        specifier: 19.2.3
-        version: 19.2.3(@types/react@19.2.17)
-      '@vitejs/plugin-react':
-        specifier: 6.0.3
-        version: 6.0.3(vite@8.1.4(@types/node@24.13.2))
-      jsdom:
-        specifier: 29.1.1
-        version: 29.1.1
       lefthook:
         specifier: ^2.1.10
         version: 2.1.10
@@ -96,14 +54,11 @@ importers:
       typescript:
         specifier: 6.0.3
         version: 6.0.3
-      vite:
-        specifier: 8.1.4
-        version: 8.1.4(@types/node@24.13.2)
       vitest:
         specifier: 4.1.10
         version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.1.4(@types/node@24.13.2))
 
-  apps/online:
+  apps/university:
     dependencies:
       '@pieai/swimmer-avatar-kit':
         specifier: 0.2.0
@@ -147,6 +102,12 @@ importers:
       three-stdlib:
         specifier: ^2.36.1
         version: 2.36.1(three@0.185.1)
+      ts-fsrs:
+        specifier: 5.4.1
+        version: 5.4.1
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
     devDependencies:
       '@types/node':
         specifier: 24.13.2
@@ -163,6 +124,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: 6.0.3
         version: 6.0.3(vite@8.1.4(@types/node@24.13.2))
+      jsdom:
+        specifier: 29.1.1
+        version: 29.1.1
       oxfmt:
         specifier: 0.58.0
         version: 0.58.0

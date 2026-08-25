@@ -40,6 +40,8 @@
     "./navigation/StudySwitcher.js": "./src/navigation/StudySwitcher.tsx",
     "./navigation/university-shell.css": "./src/navigation/university-shell.css",
     "./path/NodeCard.js": "./src/path/NodeCard.tsx",
+    "./path/from-course-view.js": "./src/path/from-course-view.ts",
+    "./path/path-stats.js": "./src/path/path-stats.ts",
     "./path/UnitCard.js": "./src/path/UnitCard.tsx",
     "./path/CoursePickCard.js": "./src/path/CoursePickCard.tsx",
     "./path/path-cards.css": "./src/path/path-cards.css",

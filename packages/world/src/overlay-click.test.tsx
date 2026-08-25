@@ -15,7 +15,15 @@ import { UnitCard, type PathUnit } from "@pieai/university-ui";
 const UNIT: PathUnit = {
   title: "从零开始之前",
   objective: "读完能说出这一单元在讲什么。",
-  lessons: [{ title: "第一节", content: "正文", exercises: [] }],
+  lessons: [
+    {
+      title: "第一节",
+      contentChars: 2,
+      exerciseCount: 0,
+      evidenceCount: 0,
+      unlockCount: 0,
+    },
+  ],
 };
 
 let container: HTMLDivElement;

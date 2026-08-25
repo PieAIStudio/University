@@ -83,8 +83,8 @@ Two rules, and everything below them is a consequence rather than a separate
 restriction. The earlier list of prohibitions was retired when this became one
 repository; what survived, survived because it follows from these.
 
-1. **Share the code.** One implementation of anything, ever. If a shell needs a
-   behaviour the other shell already has, it imports it — it does not write a
+1. **Share the code.** One implementation of anything, ever. If one mode needs
+   a behaviour the other already has, it imports it — it does not write a
    second one, and it does not copy the first.
 2. **Keep the architecture efficient, clear, modular, robust, and legible to
    both a person and an AI.** When those pull against each other, legibility
@@ -92,18 +92,25 @@ repository; what survived, survived because it follows from these.
 
 What follows from them:
 
-- **`apps/local` authors, `apps/online` sells, `packages/*` is everything
-  both of them do.** Neither app may own something the other also needs. The
-  online shell is not forbidden from authoring courses; when it authors, it
-  runs the same workflows the local shell runs.
-- **The shells never import each other.** `apps/local` importing `apps/online`
-  is the modularity rule broken, and `check-module-boundaries.mjs` is where
-  that gets enforced rather than remembered.
-- **One producer of course content, always.** Lessons are authored in
-  `apps/local` and nowhere else; publishing them is a separate, gated act, and
-  a customer sees a package only once it is published (ADR-0002). A second
+- **One browser app, two modes.** `apps/university` is the whole product;
+  `vite --mode authoring` writes courses on a machine and `vite --mode
+  delivery` sells them. There were two apps until 2026-08-25, and the reason
+  they were merged is written down: the difference set had shrunk to two ports
+  while the drift rate had not moved, because two files meant two places one
+  decision could be made. `packages/*` is still everything neither mode may own
+  twice. The delivery mode is not forbidden from authoring courses; when it
+  authors, it runs the same workflows.
+- **The app and the authoring server never import each other.**
+  `apps/local` is the Node server that reads the disk on 4317, and nothing
+  else; `apps/university/src` is bundled for a browser. Either import
+  type-checks and fails at runtime, so `check-module-boundaries.mjs` is where
+  that gets caught rather than remembered. They share
+  `@pieai/university-core`.
+- **One producer of course content, always.** Lessons are authored by the
+  `apps/local` CLI and nowhere else; publishing them is a separate, gated act,
+  and a customer sees a package only once it is published (ADR-0002). A second
   thing that can emit a lesson dissolves SPEC-0001.
-- **Both shells hold one cloud account.** They sign in to SwimmerBackend and
+- **Both modes hold one cloud account.** They sign in to SwimmerBackend and
   share account data, progress, review schedule, answers, reader marks,
   vocabulary, favourites, practice history and settings — one implementation
   each. The cloud document is canonical; the browser document is only an
@@ -118,19 +125,22 @@ What follows from them:
 - **Grading stays tiered by cost.** Deterministic first, structured small-model
   second, open tutoring last and metered. An unmetered large model behind a
   free tier is the robustness rule broken, in the direction of the bank.
-- **`GradingPort` is the only permitted difference between the shells.**
-  `apps/local` grades through the clipboard and its local AI host, without an
-  API key in the product; `apps/online` grades through SwimmerAIKit, metered.
-  Everything above the port is one implementation. Adding a second divergence
-  means changing this rule first.
+- **`GradingPort` is the only permitted difference between the modes.**
+  The authoring mode grades through the clipboard and the machine's own AI
+  host, without an API key in the product; the delivery mode grades through
+  SwimmerAIKit, metered. Everything above the port is one implementation. The
+  merge on 2026-08-25 found and named a second — `ContentPort`, where a
+  lesson's text comes from — and both now live in `apps/university/src/ports/`
+  so a third cannot be added by accident. Adding one means changing this rule
+  first.
 - **Design before build.** A user-facing behaviour gets designed in
   `docs/reference/player-journey/` before it gets implemented. The current
   journey is `docs/reference/player-journey/v4/`; it replaces v1, v2 and v3.
   V4 is an amendment: what v3 says and v4 does not contradict still stands.
-- **One permitted difference between the shells: where the AI comes from.**
+- **One permitted difference between the modes: where the AI comes from.**
   V4 states this as law. Any other divergence is a defect — fix it, do not
   debate it. Adding a second difference means changing v4 first.
-- **“Local” does not mean permanently offline.** The local shell may keep
+- **“Local” does not mean permanently offline.** The authoring mode may keep
   authoring sources and an offline cache on disk, but every learner/account
   datum must bind to the same cloud row when an account is available and queue
   safely while disconnected. Windows, macOS and browser sessions are peers.
@@ -143,7 +153,7 @@ What follows from them:
   on all three. A responsive layout is not two implementations; a second
   implementation is.
 - **The renderer lives in `packages/world`, never in `packages/ui`.** Both
-  shells share one scene, and `packages/ui` stays at zero `three` so that a
+  modes share one scene, and `packages/ui` stays at zero `three` so that a
   test of the lesson reader never has to stand up a WebGL mock. SPEC-0001 and
   SPEC-0003 both say this; if a reading of either suggests otherwise, that
   contradiction was settled on 2026-08-22 and the specs carry the note.

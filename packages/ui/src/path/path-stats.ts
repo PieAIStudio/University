@@ -1,15 +1,29 @@
 import { parseLessonLinks, tokenKind } from "@pieai/university-core/marks/references.js";
 
 /**
- * The shapes the path cards read. A subset of a delivered lesson/unit: title,
- * prose, exercises, objective. The delivery shell's `Course` type is larger
- * and structurally compatible; the authoring shell can pass the same fields
- * if it ever opens these cards.
+ * The shapes the path cards read: counts, not prose.
+ *
+ * They used to take the lesson body and measure it. That worked while only the
+ * campus with the whole package in memory opened these cards; the other one
+ * synthesised a string of the right length to get the reading time, which also
+ * produced 「0 条真实代码引用」 — a number that is wrong rather than absent, on
+ * the card a learner reads before deciding to spend twenty minutes.
+ *
+ * So the counts are what crosses the boundary, and the two that a shelf may not
+ * know are nullable. A build whose content source cannot count citations says
+ * nothing about them; it does not say zero.
  */
 export interface PathLesson {
   readonly title: string;
-  readonly content: string;
-  readonly exercises: readonly unknown[];
+  /** Prose length in characters. Sets the reading time, and nothing else. */
+  readonly contentChars: number;
+  readonly exerciseCount: number;
+  /** Pinned-source citations in the prose, or null where the shelf cannot say. */
+  readonly evidenceCount: number | null;
+  /** Entries this lesson unlocks, or null where the shelf cannot say. */
+  readonly unlockCount: number | null;
+  /** `path:start-end` coordinates for the unit card, where the shelf has them. */
+  readonly evidenceLocators?: readonly string[];
 }
 
 export interface PathUnit {
@@ -26,8 +40,8 @@ export const PREVIEW_UNIT_LABEL = "先看这一单元讲什么";
 export const START_UNIT_LABEL = "从第 1 节开始";
 export const UNIT_EVIDENCE_HEADING = "这一单元会带你读的真实代码";
 
-export function readingMinutes(content: string): number {
-  return Math.max(1, Math.round(content.length / READING_CHARS_PER_MINUTE));
+export function readingMinutes(contentChars: number): number {
+  return Math.max(1, Math.round(contentChars / READING_CHARS_PER_MINUTE));
 }
 
 /** Count of a wiki-token prefix in prose, as written. Fences are not skipped. */
@@ -66,14 +80,24 @@ export function unlockedConceptIds(content: string): readonly string[] {
 
 /**
  * The start button prints the reward. Zero is not a reward, so it is not
- * printed — "解锁 0 个" would be the product admitting the catalogue is empty.
+ * printed — "解锁 0 个" would be the product admitting the catalogue is empty —
+ * and neither is a count the shelf could not take.
  */
-export function startButtonLabel(unlockCount: number): string {
-  return unlockCount > 0 ? `开始 · 学完解锁 ${unlockCount} 个词条` : "开始";
+export function startButtonLabel(unlockCount: number | null): string {
+  return unlockCount !== null && unlockCount > 0 ? `开始 · 学完解锁 ${unlockCount} 个词条` : "开始";
 }
 
+/**
+ * What this lesson costs, and only what is known.
+ *
+ * The citation clause is dropped rather than printed as zero where the shelf
+ * cannot count them — a wrong number on the card that sells the lesson is worse
+ * than a shorter card.
+ */
 export function lessonCostLine(lesson: PathLesson): string {
-  return `读 ${readingMinutes(lesson.content)} 分钟 · ${lesson.exercises.length} 道题 · ${evidenceCount(lesson.content)} 条真实代码引用`;
+  const parts = [`读 ${readingMinutes(lesson.contentChars)} 分钟`, `${lesson.exerciseCount} 道题`];
+  if (lesson.evidenceCount !== null) parts.push(`${lesson.evidenceCount} 条真实代码引用`);
+  return parts.join(" · ");
 }
 
 /**
@@ -90,10 +114,8 @@ export function unitEvidenceLocators(lessons: readonly PathLesson[]): readonly s
   const seen = new Set<string>();
   const locators: string[] = [];
   for (const lesson of lessons) {
-    for (const link of parseLessonLinks(lesson.content)) {
-      if (tokenKind(link) !== "evidence") continue;
-      const locator = evidenceLocatorOf(link.rawTarget);
-      if (!locator || seen.has(locator)) continue;
+    for (const locator of lesson.evidenceLocators ?? []) {
+      if (seen.has(locator)) continue;
       seen.add(locator);
       locators.push(locator);
       if (locators.length === 5) return locators;
@@ -102,8 +124,22 @@ export function unitEvidenceLocators(lessons: readonly PathLesson[]): readonly s
   return locators;
 }
 
+/** The coordinates a lesson's prose cites, in order, unique, for a shelf to carry. */
+export function evidenceLocatorsIn(content: string): readonly string[] {
+  const seen = new Set<string>();
+  const locators: string[] = [];
+  for (const link of parseLessonLinks(content)) {
+    if (tokenKind(link) !== "evidence") continue;
+    const locator = evidenceLocatorOf(link.rawTarget);
+    if (!locator || seen.has(locator)) continue;
+    seen.add(locator);
+    locators.push(locator);
+  }
+  return locators;
+}
+
 export function unitMinutes(lessons: readonly PathLesson[]): number {
-  return lessons.reduce((sum, lesson) => sum + readingMinutes(lesson.content), 0);
+  return lessons.reduce((sum, lesson) => sum + readingMinutes(lesson.contentChars), 0);
 }
 
 export function unitMetaLine(lessons: readonly PathLesson[]): string {

@@ -50,10 +50,10 @@ docs/reference/player-journey/*/data/sample-lesson.json
 #
 # Anchored. Written when this app was the repository root, an unanchored
 # `content/` matched at every depth — and quietly swallowed
-# `apps/online/src/content/`, whose `library.ts` is hand-written source. A
+# `apps/university/src/content/`, whose `library.ts` is hand-written source. A
 # fresh clone could not build, and nobody would have found out until they
 # cloned it.
-/apps/online/content/
+/apps/university/content/
 
 # The imported CC0 art kit is committed, not fetched.
 #
@@ -82,7 +82,7 @@ SCRATCH/
 # checkout — a normal way to run isolated agents — then commits the symlink,
 # and merging it replaces the real directory with a link pointing at itself.
 # That cost a content rebuild once. These extensionless twins catch the link.
-apps/online/content
+apps/university/content
 node_modules
 
 # Agent scratch reports. Subagents are asked to write a REPORT.md in their own

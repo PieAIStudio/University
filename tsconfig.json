@@ -1,4 +1,4 @@
 {
   "files": [],
-  "references": [{ "path": "./apps/online" }]
+  "references": [{ "path": "./apps/university" }, { "path": "./apps/local" }]
 }

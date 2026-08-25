@@ -140,6 +140,7 @@ export {
 
 // Shared surface — the path cards. DOM over the 3D path, never geometry.
 export { NodeCard, unlockedConceptIds, type PathLesson } from "./path/NodeCard.js";
+export { pathLessonOf, pathUnitOf } from "./path/from-course-view.js";
 export { UnitCard, type PathUnit } from "./path/UnitCard.js";
 export { CoursePickCard } from "./path/CoursePickCard.js";
 

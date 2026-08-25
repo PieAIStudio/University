@@ -7,7 +7,6 @@ import {
   PREVIEW_UNIT_LABEL,
   lessonCostLine,
   startButtonLabel,
-  unlockEntryCount,
   type PathLesson,
   type PathUnit,
 } from "./path-stats.js";
@@ -48,7 +47,7 @@ export function NodeCard({
   const headingId = useId();
   const [previewUnit, setPreviewUnit] = useState(false);
   const cost = lessonCostLine(lesson);
-  const startLabel = startButtonLabel(unlockEntryCount(lesson.content));
+  const startLabel = startButtonLabel(lesson.unlockCount);
 
   useEffect(() => {
     if (!open) setPreviewUnit(false);

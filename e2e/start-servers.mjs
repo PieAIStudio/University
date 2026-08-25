@@ -1,11 +1,17 @@
 #!/usr/bin/env node
 /**
- * Bring up both shells on the e2e ports, then sit until Playwright kills us.
+ * Bring up both modes on the e2e ports, then sit until Playwright kills us.
  *
- * The authoring shell is a chain (core build → server emit → API → Vite).
- * Spawning `pnpm dev` would also take 9999/4317 and watch studies/, which is
- * the opposite of what a test run wants. This script is the one place that
+ * The authoring mode is a chain (core build → server emit → API → Vite).
+ * Spawning `pnpm dev` would also take 9998/9999/4317 and watch studies/, which
+ * is the opposite of what a test run wants. This script is the one place that
  * knows the ports, so the tests never invent a second launcher.
+ *
+ * Both Vite instances now run in one app directory, so each gets its own
+ * pre-bundle cache — `UNIVERSITY_E2E` plus the mode name, decided in
+ * `apps/university/vite.config.ts`. Sharing one would have the second instance
+ * rewrite the first's dependency hashes, and a campus that was working a second
+ * ago answers 504 Outdated Optimize Dep with a white page.
  */
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -14,7 +20,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const LOCAL = join(ROOT, "apps/local");
-const ONLINE = join(ROOT, "apps/online");
+const APP = join(ROOT, "apps/university");
 
 const ONLINE_PORT = Number(process.env.E2E_ONLINE_PORT ?? 18093);
 const LOCAL_WEB_PORT = Number(process.env.E2E_LOCAL_WEB_PORT ?? 18094);
@@ -29,7 +35,7 @@ function run(command, args, cwd, extraEnv = {}) {
     env: { ...process.env, ...extraEnv },
     stdio: ["ignore", "pipe", "pipe"],
   });
-  const tag = `[${cwd === ONLINE ? "online" : cwd === LOCAL ? "local" : "e2e"}]`;
+  const tag = `[${extraEnv.E2E_TAG ?? (cwd === LOCAL ? "api" : "e2e")}]`;
   const pipe = (stream, sink) => {
     stream.setEncoding("utf8");
     let rest = "";
@@ -92,8 +98,8 @@ process.on("SIGINT", () => stop("SIGINT"));
 process.on("SIGTERM", () => stop("SIGTERM"));
 process.on("exit", () => stop("SIGTERM"));
 
-if (!existsSync(join(ONLINE, "content", "manifest.json"))) {
-  console.log("e2e: importing course content into the online shell");
+if (!existsSync(join(APP, "content", "manifest.json"))) {
+  console.log("e2e: importing course content for the delivery mode");
   must("pnpm", ["content"], ROOT);
 }
 
@@ -123,21 +129,14 @@ run(
 
 run(
   "pnpm",
-  [
-    "exec",
-    "vite",
-    "--config",
-    join(ROOT, "e2e/vite.local.config.ts"),
-    "--host",
-    "127.0.0.1",
-    "--port",
-    String(LOCAL_WEB_PORT),
-    "--strictPort",
-  ],
-  LOCAL,
+  ["exec", "vite", "--mode", "authoring", "--host", "127.0.0.1", "--port", String(LOCAL_WEB_PORT), "--strictPort"],
+  APP,
   {
-    E2E_LOCAL_WEB_PORT: String(LOCAL_WEB_PORT),
-    E2E_LOCAL_API_ORIGIN: LOCAL_API_ORIGIN,
+    E2E_TAG: "local",
+    UNIVERSITY_E2E: "1",
+    // The config builds the `/api` proxy target from this, so the suite's Vite
+    // talks to the suite's API rather than to a campus somebody left running.
+    UNIVERSITY_LOCAL_PORT: String(LOCAL_API_PORT),
   },
 );
 
@@ -152,11 +151,11 @@ try {
 
 run(
   "pnpm",
-  ["exec", "vite", "--host", "127.0.0.1", "--port", String(ONLINE_PORT), "--strictPort"],
-  ONLINE,
+  ["exec", "vite", "--mode", "delivery", "--host", "127.0.0.1", "--port", String(ONLINE_PORT), "--strictPort"],
+  APP,
   // Keeps this run's pre-bundled dependencies out of the dev server's cache;
-  // see the note in apps/online/vite.config.ts.
-  { UNIVERSITY_E2E: "1" },
+  // see the note in apps/university/vite.config.ts.
+  { E2E_TAG: "online", UNIVERSITY_E2E: "1" },
 );
 
 try {

@@ -237,6 +237,18 @@ interface LessonSummary {
    * stones without anything complaining.
    */
   readonly contentChars: number;
+  /**
+   * What the path cards print about this lesson, when the shelf can count it.
+   *
+   * A published package carries the prose, so the delivery build counts these
+   * exactly. The authoring API sends a summary and not a body, so it sends
+   * neither — and the card omits the clause rather than printing zero. Optional
+   * rather than nullable because that is what "the server did not send it"
+   * looks like on the wire.
+   */
+  readonly evidenceCount?: number;
+  readonly unlockCount?: number;
+  readonly evidenceLocators?: readonly string[];
   readonly progress: LessonProgress | null;
 }
 
@@ -257,6 +269,19 @@ export interface CourseView {
   readonly status: string;
   readonly isDefault: boolean;
   readonly units: readonly UnitView[];
+  /**
+   * The prerequisite graph, and the track a course belongs to.
+   *
+   * They are the world map's input, not the study page's, which is why they
+   * were unnamed here for so long: the authoring API has always spread the
+   * course manifest into this payload, so both rode along undeclared and the
+   * map read them through a cast. Optional rather than required because that
+   * is the truth — a course with no prerequisites sends no array — and because
+   * making them required would be a change to a server this merge does not
+   * touch.
+   */
+  readonly prerequisiteCourseIds?: readonly string[];
+  readonly trackId?: string | null;
 }
 
 export interface StudyView {

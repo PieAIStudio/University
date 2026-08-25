@@ -46,21 +46,36 @@ function lanAddress() {
   return null;
 }
 
+/**
+ * Two modes of one app, and the authoring server behind one of them.
+ *
+ * `pnpm --filter @pieai/university-local dev` is the chain that emits the
+ * server and starts it on 4317; the browser half of that campus is
+ * `@pieai/university-app dev:local`, which proxies `/api` to it.
+ */
 const SHELLS = [
   {
     name: "在线端",
     purpose: "试用、提意见 — 3D 世界、关卡、复习",
     url: "http://localhost:9998",
-    filter: "@pieai/university-online",
+    filter: "@pieai/university-app",
     script: "dev",
     lan: true,
+  },
+  {
+    name: "本地端 · 服务",
+    purpose: "读磁盘上的课、剪贴板判分 — 4317",
+    url: null,
+    filter: "@pieai/university-local",
+    script: "dev",
+    lan: false,
   },
   {
     name: "本地端",
     purpose: "自己学习、写课 — 文件系统、剪贴板判分",
     url: "http://localhost:9999",
-    filter: "@pieai/university-local",
-    script: "dev",
+    filter: "@pieai/university-app",
+    script: "dev:local",
     lan: false,
   },
 ];
@@ -96,7 +111,7 @@ function run(command, args, label) {
 }
 
 async function main() {
-  if (!existsSync(join(ROOT, "apps/online/content"))) {
+  if (!existsSync(join(ROOT, "apps/university/content"))) {
     console.log("· 第一次启动：先把课程内容导进在线端（一次性，约一分钟）");
     await new Promise((resolve, reject) => {
       const build = run("pnpm", ["content"], "[内容]");
@@ -128,8 +143,8 @@ async function main() {
 
   console.log("");
   for (const shell of SHELLS) {
-    console.log(`  ${shell.name}  ${shell.url}`);
-    if (onLan(shell)) {
+    console.log(`  ${shell.name}  ${shell.url ?? ""}`);
+    if (shell.url && onLan(shell)) {
       console.log(`         手机上打开  http://${address}:${new URL(shell.url).port}`);
     }
     console.log(`         ${shell.purpose}`);

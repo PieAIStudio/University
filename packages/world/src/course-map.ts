@@ -57,11 +57,27 @@ export function worldCourse(view: {
  * Where the eye stands on a course road.
  *
  * Both ends of the shot are anchored to real stones rather than to hand-tuned
- * offsets: stand two back from the live one, aim four ahead. That makes "the
- * live stone is in frame with road behind it" a property of the geometry
+ * offsets: stand behind the live one, aim at the road four ahead. That makes
+ * "the live stone is in frame with road behind it" a property of the geometry
  * instead of a number somebody guessed — the first version put the live stone
  * exactly on the bottom edge, so its label was judged off-screen and the one
  * name that must never be dropped was the one that never appeared.
+ *
+ * The eye and the target share a lateral position, which is the whole reason
+ * this is worth a comment. An earlier shot aimed at a damped fraction of the
+ * *absolute* x four stones ahead, on the theory that following only half the
+ * road's swing would keep the curve from cancelling. On a serpentine road that
+ * is not a small nudge: at lesson six of 「在开始之前」 the stone four ahead sits
+ * 17 units to the other side, the target went with it, the camera yawed 15°,
+ * and the live stone — the only button on the screen — was projected to
+ * x=1115 of 1440, underneath the right-hand rail, where Chrome refused to
+ * click it because a paragraph of the today panel was on top. Measured, by G2
+ * failing on the campus whose learner had got six lessons in.
+ *
+ * Sharing x costs nothing the shot wanted: the eye still slides sideways with
+ * the road as the learner advances, so the walk still feels like a road, and
+ * looking straight down the axis makes the curve ahead *more* visible rather
+ * than less, because the frame no longer turns with it.
  *
  * Only the distance and the bearing survive: `Controls` pins the tilt and
  * recomputes the eye from (target, distance, bearing) on the next frame, so
@@ -78,7 +94,7 @@ export function frameCourse(lessons: readonly LessonPlacement[]): {
   const ahead = lessons[Math.min(liveIndex + 4, lessons.length - 1)] ?? live;
   return {
     cameraFrom: [live.position.x, live.position.y + 22, live.position.z + 45],
-    lookAt: [ahead.position.x * 0.6, ahead.position.y + 1.8, ahead.position.z],
+    lookAt: [live.position.x, ahead.position.y + 1.8, ahead.position.z],
   };
 }
 
