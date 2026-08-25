@@ -61,27 +61,52 @@ export const SKY_STOPS = {
 export type SkyStops = { readonly zenith: number; readonly mid: number; readonly horizon: number };
 
 /**
- * One project, one climate. Hue-only so the three luminance steps stay a sky.
- * `null` is the undecided dome — nothing picked yet, or a caller that has no
- * project to name. It used to mean the four-seas overview, which no longer
- * exists; the fallback stayed because a sky still has to be some colour while
- * the catalogue loads.
+ * Skies a project can have. Written down, not computed.
+ *
+ * This used to rotate all three stops by one hash-derived hue angle, and both
+ * halves of that were wrong. A sky gradient is not one hue: the zenith is blue
+ * because air scatters blue, and the horizon is warm because you are looking
+ * through more of it. Rotate them together and the warm horizon becomes pink
+ * or yellow, the scene's fog takes that colour, and the whole world goes with
+ * it — 通用课 rendered as a pink wash with a mint dome. Worse, the angle was
+ * ±0.14 turn, so `buzz`, `turing-pact` and `general` landed within four
+ * degrees of each other: three projects, one climate, and the promise the
+ * function's own name makes was quietly broken.
+ *
+ * Eight authored skies instead, each one a sky. Two projects may draw the same
+ * climate, which is a smaller cost than any project drawing a sky that does
+ * not exist — and a project keeps its own for as long as its id does, which a
+ * round-robin over the catalogue could not promise once a sixth project
+ * arrived.
+ */
+const CLIMATES: readonly SkyStops[] = [
+  // Midday, the reference. Warm sand horizon under a clean blue.
+  { zenith: 0x2e7fd4, mid: 0x8ec8ea, horizon: 0xf2d4b0 },
+  // Late afternoon: the blue deepens and the horizon takes on peach.
+  { zenith: 0x3a5fa8, mid: 0x9fb0dd, horizon: 0xf6c39a },
+  // Early morning: everything a step paler, horizon towards cream.
+  { zenith: 0x4fa3c9, mid: 0xa9dcea, horizon: 0xffe6c4 },
+  // Sea fog: desaturated through the whole gradient, horizon nearly bone.
+  { zenith: 0x4d7f93, mid: 0xa8c6cf, horizon: 0xe8dcc9 },
+  // High and dry: the deepest zenith, horizon still sand.
+  { zenith: 0x1f5fb0, mid: 0x7cb4e0, horizon: 0xf0d9bd },
+  // Golden hour: same blue, a horizon with real gold in it.
+  { zenith: 0x2c6ba8, mid: 0x86bcd8, horizon: 0xf3c78e },
+  // Cold clear: a green-leaning blue, horizon pulled towards ash.
+  { zenith: 0x2c86bd, mid: 0x93cfdf, horizon: 0xecd9c2 },
+  // Warm overcast: low contrast, the horizon carrying most of the light.
+  { zenith: 0x5b86ab, mid: 0xb0c8d9, horizon: 0xf4dcbe },
+];
+
+/**
+ * One project, one climate. `null` is the undecided dome — nothing picked yet,
+ * or a caller that has no project to name. It used to mean the four-seas
+ * overview, which no longer exists; the fallback stayed because a sky still
+ * has to be some colour while the catalogue loads.
  */
 export function skyStopsForStudy(studyId: string | null): SkyStops {
-  if (!studyId) {
-    return { zenith: SKY_STOPS.zenith, mid: SKY_STOPS.mid, horizon: SKY_STOPS.horizon };
-  }
-  const turn = (hash(studyId) - 0.5) * 0.28;
-  const shift = (hex: number) => {
-    const color = new THREE.Color(hex);
-    color.offsetHSL(turn, 0, 0);
-    return color.getHex();
-  };
-  return {
-    zenith: shift(SKY_STOPS.zenith),
-    mid: shift(SKY_STOPS.mid),
-    horizon: shift(SKY_STOPS.horizon),
-  };
+  if (!studyId) return CLIMATES[0]!;
+  return CLIMATES[Math.floor(hash(studyId) * CLIMATES.length) % CLIMATES.length]!;
 }
 
 const PALETTE = {
@@ -655,6 +680,13 @@ function CloudSea({ extent, level }: { extent: number; level: number }) {
  * an aeroplane window — distant coast, sea depth and cloud shadow. Keeping it
  * on a horizontal disc also avoids pretending a top-down painting is an HDRI.
  */
+/**
+ * Big enough that the sea reaches past the frame at the widest world camera.
+ * `WORLD_DISTANCE_MIN * sin(WORLD_POLAR)` is roughly half the ground the
+ * camera covers; twice that with room to spare.
+ */
+const WORLD_PLATE_MIN_RADIUS = 130;
+
 function AerialWorldPlate({ extent, level }: { extent: number; level: number }) {
   const mobile = renderTier() === "mobile";
   const gl = useThree((state) => state.gl);
@@ -682,7 +714,17 @@ function AerialWorldPlate({ extent, level }: { extent: number; level: number }) 
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, level - 4, 0]}>
-      <circleGeometry args={[extent * 1.45, 96]} />
+      {/*
+        A floor under the radius, not just a multiple of the world.
+
+        `extent` is how far the furthest course sits from the origin, so a
+        series with one course gives about 9 and a plate about 13 across —
+        while the camera sits 62 back and sees a ground footprint several times
+        that. The result was a visible disc of sea with sky beyond it: the edge
+        of the world, in a product whose first screen is a world. The floor is
+        set past what this camera can see at `WORLD_DISTANCE_MIN`.
+      */}
+      <circleGeometry args={[Math.max(extent * 1.45, WORLD_PLATE_MIN_RADIUS), 96]} />
       <meshBasicMaterial map={texture} color={0xe8f5ef} transparent opacity={0.7} fog={false} />
     </mesh>
   );
@@ -691,7 +733,7 @@ function AerialWorldPlate({ extent, level }: { extent: number; level: number }) 
 function AerialWorldPlateFallback({ extent, level }: { extent: number; level: number }) {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, level - 4, 0]} receiveShadow>
-      <circleGeometry args={[extent * 3.2, 64]} />
+      <circleGeometry args={[Math.max(extent * 3.2, WORLD_PLATE_MIN_RADIUS), 64]} />
       <meshStandardMaterial color={PALETTE.sea} roughness={0.72} metalness={0} />
     </mesh>
   );

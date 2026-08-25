@@ -34,6 +34,25 @@ function pose(
 }
 
 /**
+ * How much road is still in front of the learner, along −Z.
+ *
+ * Zero in a series with one course, which is the case that broke the shot: the
+ * camera aimed a fixed two and a half course-steps down a road that had no
+ * second course, so it framed open sea with the only island clinging to the
+ * bottom edge. 通用课 shipped with exactly one course and looked broken on the
+ * day it landed.
+ */
+export function roadAhead(
+  placements: readonly { readonly position: THREE.Vector3 }[],
+  standingAt: THREE.Vector3 | null,
+): number {
+  if (placements.length === 0) return 0;
+  const from = standingAt?.z ?? 0;
+  const furthest = Math.min(...placements.map((entry) => entry.position.z));
+  return Math.max(0, from - furthest);
+}
+
+/**
  * @param standingAt Where the learner is on this project's road, or the head of
  *   the road in a project they have not started. `null` only while the course
  *   list is still resolving.
@@ -44,7 +63,14 @@ function pose(
  * both: there is no ring to centre on any more, and the way to see the other
  * projects is the planet, which is a page and not a camera distance.
  */
-export function frameWorld(standingAt: THREE.Vector3 | null): {
+export function frameWorld(
+  standingAt: THREE.Vector3 | null,
+  /**
+   * Distance still to travel. The shot leads the learner by up to two and a
+   * half course-steps, but never past the end of what there is to look at.
+   */
+  ahead = Number.POSITIVE_INFINITY,
+): {
   readonly cameraFrom: readonly [number, number, number];
   readonly lookAt: readonly [number, number, number];
 } {
@@ -64,7 +90,7 @@ export function frameWorld(standingAt: THREE.Vector3 | null): {
     answer to the same question.
   */
   const at = (standingAt ?? new THREE.Vector3(0, 0, 0)).clone();
-  const look = new THREE.Vector3(at.x, at.y, at.z - WORLD_LOOK_AHEAD);
+  const look = new THREE.Vector3(at.x, at.y, at.z - Math.min(WORLD_LOOK_AHEAD, ahead));
   // A few degrees off the axis so the islands stagger instead of stacking into
   // one column of discs.
   const azimuth = 0.16;

@@ -22,10 +22,45 @@ export interface PlanetStudy {
   readonly courseTitles: readonly string[];
 }
 
+/**
+ * How big a series is. Size only — where you stand in it is `studyStage`.
+ *
+ * This used to end with 「没开始」 or 「学了 3/60 节」 as well, and once the row
+ * grew a stage chip and a progress bar the same fact was on screen three times
+ * in three shapes. A row that says one thing three times reads as a row with
+ * nothing to say.
+ */
 export function studyCounts(study: PlanetStudy): string {
-  const progress =
-    study.lessonsDone <= 0 ? "没开始" : `学了 ${study.lessonsDone}/${study.lessonCount} 节`;
-  return `${study.courseCount} 门课 · ${study.lessonCount} 节 · ${progress}`;
+  return `${study.courseCount} 门课 · ${study.lessonCount} 节`;
+}
+
+/**
+ * Where a series stands, in one word.
+ *
+ * The list used to say only how many courses and lessons a series holds, so
+ * five rows of very similar numbers were the entire basis for choosing one —
+ * and the one fact that actually decides it, whether you are already partway
+ * into a series, was the one fact missing. Three states, because a fourth
+ * ("nearly done") would be a judgement about a number the reader can already
+ * see on the bar beside it.
+ */
+export type StudyStage = "not-started" | "learning" | "done";
+
+export function studyStage(study: PlanetStudy): StudyStage {
+  if (study.lessonCount > 0 && study.lessonsDone >= study.lessonCount) return "done";
+  return study.lessonsDone > 0 ? "learning" : "not-started";
+}
+
+export const STUDY_STAGE_LABEL: Record<StudyStage, string> = {
+  "not-started": "没开始",
+  learning: "学习中",
+  done: "已学完",
+};
+
+/** Whole percent, floored, so 99.6% never reads as a finished series. */
+export function studyPercent(study: PlanetStudy): number {
+  if (study.lessonCount <= 0) return 0;
+  return Math.floor((study.lessonsDone / study.lessonCount) * 100);
 }
 
 export function studyCourseList(

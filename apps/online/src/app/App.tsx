@@ -104,7 +104,7 @@ import {
   todayCardOf,
 } from "./today-data";
 import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
-import { frameWorld } from "@pieai/university-world/frame.js";
+import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
 import { PlanetPage, type PlanetStudy } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { activeIdForView, isBareView, useMinWidth } from "./shell-route";
@@ -601,7 +601,10 @@ export function App() {
    * they came, up, and off the axis so the road does not stack into a column of
    * discs — is what makes the map answer "where am I" in one glance.
    */
-  const framed = useMemo(() => frameWorld(learnerAt), [learnerAt]);
+  const framed = useMemo(
+    () => frameWorld(learnerAt, roadAhead(world?.placements ?? [], learnerAt)),
+    [learnerAt, world],
+  );
 
   /**
    * Inside a course the camera stands on the road instead of above it.

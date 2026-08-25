@@ -12,7 +12,7 @@ import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
 import type { BootstrapData, LessonRef, StudyView } from "@pieai/university-ui/view/lesson-view.js";
 import type { CourseNode } from "@pieai/university-world/course.js";
 import { MAP_CONTROLS_HINT } from "@pieai/university-world/controls.js";
-import { frameWorld } from "@pieai/university-world/frame.js";
+import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
 import { placeWorld, type Marker } from "@pieai/university-world/Maps.js";
 import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
@@ -109,10 +109,10 @@ export function WorldLanding({
   }, [placements]);
 
   const learnerAt = nextUp?.position ?? null;
-  const framed = useMemo(
-    () => frameWorld(learnerAt ?? placements[0]?.position ?? null),
-    [learnerAt, placements],
-  );
+  const framed = useMemo(() => {
+    const standingAt = learnerAt ?? placements[0]?.position ?? null;
+    return frameWorld(standingAt, roadAhead(placements, standingAt));
+  }, [learnerAt, placements]);
 
   /*
     No study badge floating in the sea any more.

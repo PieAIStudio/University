@@ -76,6 +76,8 @@
 
 .planet-page__row {
   display: grid;
+  gap: 6px;
+  display: grid;
   gap: 2px;
   width: 100%;
   margin: 0;
@@ -103,6 +105,15 @@
 .planet-page__row[aria-pressed="true"] {
   border-color: color-mix(in srgb, var(--game-ui-accent, #ffb347) 55%, transparent);
   background: color-mix(in srgb, var(--game-ui-accent, #ffb347) 16%, transparent);
+}
+
+/* Title and stage on one line, so the stage reads as a property of the name
+   rather than as another row of metadata under it. */
+.planet-page__row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
 }
 
 .planet-page__row-name {

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { studyCounts, studyCourseList, type PlanetStudy } from "./planet-copy.js";
+import {
+  STUDY_STAGE_LABEL,
+  studyCounts,
+  studyCourseList,
+  studyPercent,
+  studyStage,
+  type PlanetStudy,
+} from "./planet-copy.js";
 
 const TURING: PlanetStudy = {
   id: "turing-pact",
@@ -21,17 +28,49 @@ const BUZZ: PlanetStudy = {
 };
 
 describe("studyCounts", () => {
-  it("reports real counts, and 没开始 before any lesson is done", () => {
-    expect(studyCounts(TURING)).toBe("31 门课 · 41 节 · 学了 1/41 节");
-    expect(studyCounts(BUZZ)).toBe("5 门课 · 12 节 · 没开始");
+  it("reports how big a series is, and nothing about where you stand in it", () => {
+    /*
+      Size only. The row carries a stage chip and a progress bar now, so a
+      third statement of the same fact in a third shape was noise — see
+      `studyCounts`. Where you stand is `studyStage` and `studyPercent`.
+    */
+    expect(studyCounts(TURING)).toBe("31 门课 · 41 节");
+    expect(studyCounts(BUZZ)).toBe("5 门课 · 12 节");
   });
 
-  it("does not invent a slogan: every token is a number or a status word the data earned", () => {
+  it("does not invent a slogan: every token is a number the data earned", () => {
     const text = studyCounts(TURING);
     expect(text).toContain("31");
     expect(text).toContain("41");
-    expect(text).toContain("1/41");
     expect(text).not.toMatch(/探索|旅程|开启|精彩|沉浸|世界级|带你/);
+  });
+});
+
+describe("studyStage", () => {
+  it("separates not started, underway and finished", () => {
+    expect(studyStage(BUZZ)).toBe("not-started");
+    expect(studyStage(TURING)).toBe("learning");
+    expect(studyStage({ ...TURING, lessonsDone: 41 })).toBe("done");
+  });
+
+  it("calls an empty series not started rather than finished", () => {
+    // 0 of 0 is arithmetically complete and is not a series anybody finished.
+    expect(studyStage({ ...BUZZ, lessonCount: 0, lessonsDone: 0 })).toBe("not-started");
+  });
+
+  it("names each stage in the learner's words", () => {
+    expect(STUDY_STAGE_LABEL[studyStage(TURING)]).toBe("学习中");
+  });
+});
+
+describe("studyPercent", () => {
+  it("floors, so a nearly finished series never reads as finished", () => {
+    expect(studyPercent({ ...TURING, lessonsDone: 40, lessonCount: 41 })).toBe(97);
+    expect(studyPercent(TURING)).toBe(2);
+  });
+
+  it("is zero rather than NaN for a series with no lessons yet", () => {
+    expect(studyPercent({ ...BUZZ, lessonCount: 0 })).toBe(0);
   });
 });
 

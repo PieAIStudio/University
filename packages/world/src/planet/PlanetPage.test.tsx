@@ -144,7 +144,9 @@ describe("PlanetPage", () => {
     expect(container.textContent).toContain("TuringPact");
     expect(container.textContent).toContain("Buzz");
     expect(container.textContent).toContain("31 门课");
-    expect(container.textContent).toContain("学了 1/41 节");
+    // Where you stand is a chip and a bar now, not a clause in the size line.
+    expect(container.textContent).toContain("学习中");
+    expect(container.textContent).toContain("2%");
     expect(container.textContent).toContain("开场");
     expect(container.textContent).toContain("还有 1 门");
     expect(container.textContent).not.toMatch(/探索|旅程|开启|精彩|沉浸|世界级|带你/);

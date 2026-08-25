@@ -11,11 +11,24 @@
  * would fight. Why the list rows are not GameButton: a row is a choice,
  * not an action; the kit's button is the enter/close pair.
  */
-import { GameBadge, GameButton, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
+import {
+  GameBadge,
+  GameButton,
+  GamePanel,
+  GameProgress,
+  GameStatList,
+} from "@pieai/swimmer-ui-kit";
 import { useEffect, useId, useMemo } from "react";
 
 import { PlanetStage } from "./PlanetScene.js";
-import { studyCounts, studyCourseList, type PlanetStudy } from "./planet-copy.js";
+import {
+  STUDY_STAGE_LABEL,
+  studyCounts,
+  studyCourseList,
+  studyPercent,
+  studyStage,
+  type PlanetStudy,
+} from "./planet-copy.js";
 import "./planet-page.css";
 
 export type { PlanetStudy };
@@ -94,6 +107,7 @@ export function PlanetPage({
         <nav className="planet-page__list" aria-label="项目">
           {studies.map((study) => {
             const active = study.id === selectedId;
+            const stage = studyStage(study);
             return (
               <button
                 key={study.id}
@@ -103,8 +117,26 @@ export function PlanetPage({
                 aria-pressed={active}
                 onClick={() => onSelect(study.id)}
               >
-                <span className="planet-page__row-name">{study.title}</span>
+                <span className="planet-page__row-head">
+                  <span className="planet-page__row-name">{study.title}</span>
+                  {/*
+                    The one fact that decides which row you pick. Five rows of
+                    「N 门课 · M 节」 are five rows of the same shape; whether you
+                    are already inside one of them is what makes it yours.
+                  */}
+                  <GameBadge tone={stage === "learning" ? "warning" : "neutral"}>
+                    {STUDY_STAGE_LABEL[stage]}
+                  </GameBadge>
+                </span>
                 <span className="planet-page__row-meta">{studyCounts(study)}</span>
+                {study.lessonCount > 0 ? (
+                  <GameProgress
+                    label={`${study.title} 进度`}
+                    value={study.lessonsDone}
+                    max={study.lessonCount}
+                    valueLabel={`${studyPercent(study)}%`}
+                  />
+                ) : null}
               </button>
             );
           })}
@@ -141,9 +173,21 @@ function StudyDetail({
           valueLabel={`${study.lessonsDone} / ${study.lessonCount}`}
         />
       ) : null}
-      <GameBadge tone={study.lessonsDone > 0 ? "success" : "neutral"}>
-        {study.courseCount} 门课
-      </GameBadge>
+      {/*
+        The three numbers a reader wants before committing, in the kit's own
+        stat strip rather than in three shapes invented here. The kit had this
+        component the whole time; this page was hand-rolling a badge because
+        nobody looked.
+      */}
+      <GameStatList
+        label={`${study.title} 概况`}
+        density="dense"
+        facts={[
+          { id: "courses", label: "门课", value: study.courseCount },
+          { id: "lessons", label: "关", value: study.lessonCount },
+          { id: "done", label: "已学", value: study.lessonsDone },
+        ]}
+      />
       {listed.shown.length > 0 ? (
         <ul className="planet-page__courses">
           {listed.shown.map((title) => (

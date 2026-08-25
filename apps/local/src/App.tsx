@@ -984,16 +984,35 @@ export function App() {
     const next = formatAddress(address);
     if (next === window.location.pathname) return;
     const hash = address.lesson ? "" : window.location.hash;
+    syncedPath.current = next;
     window.history.pushState(null, "", next + hash);
   }, [address]);
 
+  /*
+    The last path we rebuilt state from.
+
+    This shell carries two addresses — a pathname for study+lesson and a hash
+    for the rail slot — and `popstate` fires for a fragment navigation too, so
+    writing the hash ran the pathname restore as a side effect. The pathname on
+    the learn route encodes no study, so 「进入通用课」 chose a project, wrote
+    `#/`, and the restore immediately put the project back to nothing. The
+    capsule and the map then fell back to today's project and the learner was
+    returned to where they had just asked to leave.
+
+    Two addresses is the actual defect and one address is the actual fix; this
+    keeps the hash from speaking for the path until that lands.
+  */
+  const syncedPath = useRef(window.location.pathname);
+
   useEffect(() => {
     const sync = () => {
+      setSlot(parseShellHash(window.location.hash));
+      if (window.location.pathname === syncedPath.current) return;
+      syncedPath.current = window.location.pathname;
       const restored = parseAddress(window.location.pathname);
       setActiveSection(restored.section);
       setSelectedStudyId(restored.studyId);
       setLessonRef(restored.lesson);
-      setSlot(parseShellHash(window.location.hash));
       // The detour stack belongs to a reading session, not to a URL. Going Back
       // past the lesson that offered a link makes "回到刚才那一课" meaningless.
       setReturnStack([]);
