@@ -24,6 +24,10 @@ related:
 
 The short, current handoff. **What is true now, never how it got that way.**
 
+> **合成一套代码**：`apps/local` 与 `apps/online` 合并为一个浏览器应用，用启动模式区分。
+> 计划、顺序、已经踩过的坑，都在 [One App Handoff](./one-app-handoff.md)。
+> `apps/local/server` 不在范围内。
+
 Reversals live in `docs/adr/` as decision records with `supersedes` links.
 Nothing on this page explains what a rule used to be — if you need that, an ADR
 has it, and you only need it when you are about to argue a rule should change.

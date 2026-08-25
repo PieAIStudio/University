@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-24T07:09:59.841Z
+generated_at: 2026-08-25T07:06:08.435Z
 generator_version: doc-gov@0.9.3
-docs_count: 28
+docs_count: 29
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -137,6 +137,13 @@ docs:
     canonical: true
     last_reviewed: 2026-08-23
     pinned: true
+  - id: REF-ONE-APP-HANDOFF
+    path: docs/reference/execution/one-app-handoff.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-08-25
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-BACKDROP-FILTER-OVER-A-LIVE-WEBGL-CANVAS-GREYS-OUT-WIDE-HUD-PANELS
     path: docs/reference/learnings/workflow-issues/backdrop-filter-over-a-live-webgl-canvas-greys-out-wide-hud-panels.md
     type: reference
