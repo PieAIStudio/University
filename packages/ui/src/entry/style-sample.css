@@ -16,36 +16,46 @@
   gap: 8px;
 }
 
+/*
+  The switch is the only part of this section that is *not* a sample. It is
+  application chrome sitting on the application's own background, so it wears
+  application tokens — unlike everything inside `.stylesample__frame`, which is
+  a closed world on purpose.
+
+  It shipped once with a hardcoded light palette: a near-black pill for the
+  pressed state and a white pill for the unpressed one. On the dark shell that
+  inverted the affordance — the *inactive* button was the bright one, and the
+  active one receded into the page. Accent means selected here, the same as
+  everywhere else in the product.
+*/
 .stylesample__switch-button {
   appearance: none;
-  border: 1px solid #c8ccd5;
+  border: 1px solid var(--game-ui-border-subtle);
   border-radius: 999px;
-  background-color: #ffffff;
-  color: #222631;
+  background-color: transparent;
+  color: var(--game-ui-text-muted);
   cursor: pointer;
-  font:
-    600 0.82rem/1.2 -apple-system,
-    BlinkMacSystemFont,
-    "PingFang SC",
-    "Microsoft YaHei",
-    sans-serif;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
   padding: 8px 13px;
 }
 
-.stylesample__switch-button:hover,
-.stylesample__switch-button:focus-visible {
-  border-color: #222631;
+.stylesample__switch-button:hover {
+  border-color: var(--game-ui-border-strong);
+  color: var(--game-ui-text);
 }
 
 .stylesample__switch-button:focus-visible {
-  outline: 2px solid #222631;
+  outline: 2px solid var(--game-ui-accent);
   outline-offset: 2px;
 }
 
 .stylesample__switch-button[aria-pressed="true"] {
-  border-color: #222631;
-  background-color: #222631;
-  color: #ffffff;
+  border-color: var(--game-ui-accent);
+  background-color: var(--game-ui-accent);
+  color: var(--game-ui-accent-contrast);
 }
 
 .stylesample__frame {
