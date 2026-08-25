@@ -247,13 +247,27 @@ own lesson reader every new feature has to be written twice.
    from a real address. The browser adapter and fake-remote tests are ready;
    this external migration and staging rehearsal are the remaining authority
    boundary.
-2. **The seconds after the canvas mounts, re-measured.** The old entry blamed
-   `loadGraph()` fetching 52 course JSON files. `loadGraph` no longer exists:
-   the generated shelf replaced that walk and left the function exported with
-   no callers until it was deleted. Whatever remains of the 28.4s is the kit's
-   GLBs and the bundle, and **it has not been measured since the shelf landed**
-   — measure before optimising, and measure a build rather than the dev server,
-   which serves hundreds of unbundled modules and is not what a customer gets.
+2. ~~**The 19 seconds after the canvas mounts.**~~ **Measured, and it is
+   gone.** The old entry said 28.4s to first frame on throttled 4G, of which
+   ~19s was `loadGraph()` fetching 52 course JSON files. `loadGraph` no longer
+   exists — the generated shelf replaced that walk — so the number was quoting
+   a function with no callers.
+
+   Re-measured against `dist/delivery` on a static server, headless Chrome,
+   time from navigation to the 「开始学习」 button being visible:
+
+   | | domcontentloaded | 「开始学习」 visible | requests | transferred |
+   | --- | ---: | ---: | ---: | ---: |
+   | unthrottled | 218ms | **328ms** | 15 | 1.33 MB |
+   | fast 4G, 9 Mbps / 60ms | 2,474ms | **2,966ms** | 18 | 2.59 MB |
+
+   Two honest caveats. The static server sends **no compression**, so those
+   bytes are the worst case a real host would serve. And this measures the DOM
+   call to action, not the scene fully populated — headless has no GPU and the
+   canvas never sizes, so a 3D first-frame number still needs a real display.
+   What it does establish is that **a learner can start learning in about three
+   seconds on 4G**, and that optimising this next would be optimising the wrong
+   thing. Re-measure before anyone reopens it.
 3. **SPEC-0003 step 3.** Decide whether to retire the authoring shelf from the
    world landing after every row in the overlay table is visible there. The
    separate course catalog is already shared; this remaining item is only
