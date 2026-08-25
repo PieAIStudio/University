@@ -67,6 +67,13 @@
   overflow: hidden;
 }
 
+/*
+  The frame is the sample page's content box, not a shape illustration. Keep
+  it a rounded rectangle: its border-radius is px-only and never above 32px.
+  Put capsule geometry on actions and irregular curves on media or cards;
+  `overflow: hidden` must never turn the frame into a content crop.
+*/
+
 .stylesample__nav {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -1834,27 +1841,44 @@
   box-shadow:
     inset 0 0 0 10px #e6e2d8,
     inset 0 0 0 11px #b8b2a3,
+    inset 2px 2px 0 11px rgba(255, 255, 255, 0.72),
+    inset -2px -2px 0 11px rgba(74, 69, 60, 0.34),
     inset 0 3px 8px rgba(74, 69, 60, 0.48),
     0 4px 8px rgba(74, 69, 60, 0.18);
 }
 
 .stylesample--skeuomorphism .stylesample__media::before {
-  top: 22%;
-  right: 22%;
-  bottom: 22%;
-  left: 22%;
+  top: 19%;
+  right: 19%;
+  bottom: 19%;
+  left: 19%;
   border: 1px solid rgba(255, 255, 255, 0.44);
-  background-color: rgba(216, 211, 198, 0.28);
-  box-shadow: inset 0 2px 8px rgba(74, 69, 60, 0.38);
+  background-image:
+    radial-gradient(circle at 72% 23%, rgba(255, 247, 200, 0.92) 0 7%, transparent 8%),
+    linear-gradient(145deg, transparent 0 45%, rgba(63, 86, 77, 0.58) 46% 61%, transparent 62%),
+    linear-gradient(160deg, #a8c7d4 0%, #e5cfad 52%, #718c72 100%);
+  box-shadow:
+    inset 0 0 0 5px rgba(255, 255, 255, 0.3),
+    inset 0 2px 8px rgba(74, 69, 60, 0.38),
+    0 1px 0 rgba(255, 255, 255, 0.62);
 }
 
 .stylesample--skeuomorphism .stylesample__media::after {
-  top: 31%;
-  left: 32%;
-  width: 36%;
-  height: 1px;
-  background-color: rgba(255, 255, 255, 0.55);
-  box-shadow: 0 12px 0 rgba(255, 255, 255, 0.32);
+  top: 14%;
+  right: 15%;
+  bottom: 14%;
+  left: 15%;
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.32),
+    transparent 22% 72%,
+    rgba(74, 69, 60, 0.16)
+  );
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.72),
+    inset -1px -1px 0 rgba(74, 69, 60, 0.28);
+  transform: rotate(-1deg);
 }
 
 .stylesample--skeuomorphism .stylesample__cards {
@@ -2520,7 +2544,7 @@
 
 .stylesample--y2k {
   border: 2px solid #00fff0;
-  border-radius: 999px;
+  border-radius: 24px;
   background-color: #0b0b3b;
   background-image: linear-gradient(132deg, #dce5ff 0%, #75a5ff 27%, #00aaff 53%, #0b0b3b 100%);
   color: #0b0b3b;
@@ -2554,15 +2578,26 @@
 .stylesample--y2k .stylesample__nav-action {
   border: 2px solid #ff00e5;
   border-radius: 999px;
-  background-color: #dce5ff;
+  background-image: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #dce5ff 24%,
+    #7f9eff 52%,
+    #f7f9ff 78%,
+    #a8bfff 100%
+  );
   padding: 5px 10px;
+  box-shadow:
+    0 0 0 2px rgba(0, 255, 240, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -2px 4px rgba(11, 11, 59, 0.22);
   transform: skewX(-8deg);
 }
 
 .stylesample--y2k .stylesample__hero {
   gap: 13px;
   border: 2px solid #ff00e5;
-  border-radius: 999px;
+  border-radius: 18px;
   background-image: linear-gradient(115deg, #f5f8ff, #9cbfff 48%, #d8e2ff 100%);
   padding: clamp(22px, 4vw, 30px);
 }
@@ -2596,29 +2631,40 @@
   font-style: italic;
   font-weight: 950;
   text-transform: uppercase;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.64),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -3px 5px rgba(11, 11, 59, 0.26);
 }
 
 .stylesample--y2k .stylesample__cta {
   background-color: #ff00e5;
+  background-image: linear-gradient(180deg, #ffd6fb 0%, #ff4be9 25%, #ff00e5 56%, #a90098 100%);
 }
 
 .stylesample--y2k .stylesample__cta2 {
   background-color: #00fff0;
+  background-image: linear-gradient(180deg, #e6ffff 0%, #58fff5 25%, #00fff0 56%, #009f9b 100%);
 }
 
 .stylesample--y2k .stylesample__media {
   min-height: clamp(180px, 25vw, 270px);
   border: 2px solid #ff00e5;
-  border-radius: 999px;
+  border-radius: 28px;
   background-color: #6f9fff;
   background-image: linear-gradient(
-    125deg,
-    #eef3ff 0%,
-    #8baaff 30%,
-    #00bfff 57%,
-    #9daeff 72%,
-    #f3f6ff 100%
+    135deg,
+    #f8fbff 0%,
+    #b9caff 18%,
+    #6f9fff 39%,
+    #00bfff 54%,
+    #a7b8ff 70%,
+    #f9fbff 86%,
+    #8da4ef 100%
   );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -10px 18px rgba(11, 11, 59, 0.2);
 }
 
 .stylesample--y2k .stylesample__media::before {
@@ -2638,7 +2684,7 @@
   bottom: 22%;
   width: 24%;
   height: 10px;
-  border-radius: 999px;
+  border-radius: 5px;
   background-color: #ff00e5;
   box-shadow:
     0 -18px 0 #00fff0,
@@ -2653,7 +2699,7 @@
 .stylesample--y2k .stylesample__card {
   min-height: 104px;
   border: 2px solid #00fff0;
-  border-radius: 999px;
+  border-radius: 18px;
   background-image: linear-gradient(120deg, #ffffff, #a6bdff 52%, #eef3ff);
   padding: 14px;
   transform: skewX(-4deg);
@@ -2661,6 +2707,7 @@
 
 .stylesample--y2k .stylesample__card:nth-child(2) {
   border-color: #ff00e5;
+  border-radius: 14px;
   transform: skewX(4deg);
 }
 
@@ -2845,7 +2892,7 @@
 
 .stylesample--organic {
   border: 0;
-  border-radius: 40% 60% 55% 45% / 24% 38% 62% 76%;
+  border-radius: 24px;
   background-color: #f7f4ee;
   color: #2f3a2e;
   font-family: Georgia, "Songti SC", "Microsoft YaHei", serif;
@@ -2872,14 +2919,14 @@
 }
 
 .stylesample--organic .stylesample__nav-action {
-  border-radius: 48% 52% 44% 56%;
+  border-radius: 18px;
   background-color: #dce8d5;
   padding: 7px 12px;
 }
 
 .stylesample--organic .stylesample__hero {
   gap: 18px;
-  border-radius: 33% 67% 58% 42% / 46% 31% 69% 54%;
+  border-radius: 20px;
   background-color: #ebe6d9;
   padding: clamp(24px, 4vw, 36px);
   box-shadow: 6px 8px 18px rgba(73, 82, 61, 0.11);
@@ -2903,7 +2950,7 @@
 .stylesample--organic .stylesample__cta,
 .stylesample--organic .stylesample__cta2 {
   min-height: 40px;
-  border-radius: 42% 58% 51% 49%;
+  border-radius: 18px;
   padding: 0 18px;
   color: #f7f4ee;
   font-size: 0.8rem;
@@ -2955,6 +3002,7 @@
   min-height: 118px;
   border-radius: 55% 45% 41% 59% / 44% 58% 42% 56%;
   background-color: #e7eee1;
+  overflow: visible;
   padding: 17px;
   box-shadow: 5px 7px 15px rgba(73, 82, 61, 0.1);
 }
