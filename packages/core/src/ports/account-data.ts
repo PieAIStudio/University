@@ -106,7 +106,7 @@ function parseForeignSettings(value: unknown): AccountForeignSettings {
   };
 }
 
-export function parseAccountPreferences(value: unknown): AccountPreferences {
+function parseAccountPreferences(value: unknown): AccountPreferences {
   if (!isRecord(value)) return cloneAccountPreferences(DEFAULT_ACCOUNT_PREFERENCES);
   const updatedAt: Partial<Record<AccountPreferenceKey, string>> = {};
   if (isRecord(value.updatedAt)) {
@@ -133,7 +133,7 @@ export function parseAccountPreferences(value: unknown): AccountPreferences {
   };
 }
 
-export function cloneAccountPreferences(value: AccountPreferences): AccountPreferences {
+function cloneAccountPreferences(value: AccountPreferences): AccountPreferences {
   return {
     ...value,
     foreignSettings: { ...value.foreignSettings },
@@ -187,7 +187,7 @@ export function mergeAccountPreferences(
   return result;
 }
 
-export function parseFavouriteChanges(value: unknown): Record<string, FavouriteChange> {
+function parseFavouriteChanges(value: unknown): Record<string, FavouriteChange> {
   if (!isRecord(value)) return {};
   const changes: Record<string, FavouriteChange> = {};
   for (const [senseId, raw] of Object.entries(value)) {

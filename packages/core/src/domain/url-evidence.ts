@@ -14,8 +14,8 @@
  */
 import hosts from "./url-evidence-hosts.json" with { type: "json" };
 
-export const AUTHORITY_HOSTS: readonly string[] = hosts.authorityHosts;
-export const FORBIDDEN_EVIDENCE_HOSTS: readonly string[] = hosts.forbiddenHosts;
+const AUTHORITY_HOSTS: readonly string[] = hosts.authorityHosts;
+const FORBIDDEN_EVIDENCE_HOSTS: readonly string[] = hosts.forbiddenHosts;
 /**
  * Tags are a TypeScript tuple so `z.enum` can use them. The JSON file is the
  * host-list SSOT; a test below refuses the two copies drifting.
@@ -23,7 +23,7 @@ export const FORBIDDEN_EVIDENCE_HOSTS: readonly string[] = hosts.forbiddenHosts;
 export const AUTHORITY_TAGS = ["mdn", "rfc", "w3c", "whatwg", "official-docs", "spec"] as const;
 
 /** `docs.python.org` matches `python.org`; `notmdn.org` does not match `mdn.org`. */
-export function hostMatches(host: string, allowed: string): boolean {
+function hostMatches(host: string, allowed: string): boolean {
   return host === allowed || host.endsWith(`.${allowed}`);
 }
 
