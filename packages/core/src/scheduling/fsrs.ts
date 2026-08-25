@@ -30,7 +30,7 @@ import {
   type Grade,
 } from "ts-fsrs";
 
-export { FSRSVersion, Rating, State };
+export { Rating, State };
 export type { Card, FSRSParameters, Grade };
 
 /**
