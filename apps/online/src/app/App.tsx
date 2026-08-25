@@ -55,7 +55,7 @@ import {
   type LessonPlacement,
   type Marker,
 } from "@pieai/university-world/Maps.js";
-import { courseSprites } from "@pieai/university-world/path-overlay.js";
+import { courseMarkers, frameCourse } from "@pieai/university-world/course-map.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
 
 import {
@@ -105,7 +105,7 @@ import {
 } from "./today-data";
 import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
 import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
-import { PlanetPage, type PlanetStudy } from "@pieai/university-world/planet.js";
+import { PlanetRail, PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { activeIdForView, isBareView, useMinWidth } from "./shell-route";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
@@ -474,54 +474,22 @@ export function App() {
     return { lessonsCompleted, passagesRead, coursesFinished };
   }, [progress]);
 
-  const pathSprites = useMemo(() => {
-    if (view.kind !== "course" && view.kind !== "lesson") return [];
-    return courseSprites(lessons);
-  }, [view.kind, lessons]);
-
   const markers: readonly Marker[] = useMemo(() => {
-    const fromPath: Marker[] = pathSprites.map((sprite) => ({
-      id: sprite.id,
-      position: sprite.position,
-      text: sprite.text,
-      kind: sprite.role === "icon" ? ("icon" as const) : ("unit" as const),
-      pinned: sprite.role === "icon",
-      origin: sprite.role === "unit" ? ("start" as const) : ("center" as const),
-      locked: sprite.locked,
-      label: sprite.label,
-      weight: sprite.role === "unit" ? 2 : undefined,
-    }));
     if (view.kind === "course" || view.kind === "lesson") {
-      return [
-        ...fromPath,
-        ...lessons.map((lesson) => ({
-          id: lesson.lessonId,
-          // A low lift, because the tilt is shallow. At seventy-four degrees a
-          // world-space unit of height travels a long way up the screen, and the
-          // bubble that was lifted clear of its own stone arrived next to the
-          // following one — pointing at the wrong lesson is worse than sitting a
-          // little close to the right one.
-          position: lesson.position.clone().setY(lesson.position.y + 1.7),
-          // Not the lesson title. Forty-one Chinese titles down a road all
-          // truncate, and the reference this is built from does not put them
-          // there either: the stone you are on says "start", and what it is
-          // called belongs to the card that opens when you choose it.
-          text: lesson.state === "live" ? "开始" : lesson.lessonTitle,
-          kind: "lesson" as const,
-          quiet: lesson.state !== "live",
-          weight: lesson.state === "live" ? 3 : 0,
-          activate:
-            view.kind === "lesson"
-              ? undefined
-              : () =>
-                  setPathOverlay({
-                    kind: "node",
-                    unitId: lesson.unitId,
-                    lessonId: lesson.lessonId,
-                    returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
-                  }),
-        })),
-      ];
+      return courseMarkers(lessons, {
+        // No picking from inside the reader: choosing a stone you are already
+        // standing on is not a choice.
+        onPick:
+          view.kind === "lesson"
+            ? undefined
+            : (lesson) =>
+                setPathOverlay({
+                  kind: "node",
+                  unitId: lesson.unitId,
+                  lessonId: lesson.lessonId,
+                  returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
+                }),
+      });
     }
     if (!world) return [];
     /*
@@ -542,7 +510,7 @@ export function App() {
         setMapFocus(entry.node.studyId);
       },
     }));
-  }, [world, lessons, view, pathSprites]);
+  }, [world, lessons, view]);
 
   const due = dueCards();
   const todayData = useMemo<TodaySectionData>(
@@ -619,46 +587,17 @@ export function App() {
    * full swing it moves with the curve, the curve cancels, and the road looks
    * dead straight — the shot would be hiding the one thing it is framing.
    */
-  const roadCamera = useMemo(() => {
-    if (view.kind !== "course" && view.kind !== "lesson") return null;
-    const found = lessons.findIndex((lesson) => lesson.state === "live");
-    const liveIndex = found < 0 ? 0 : found;
-    const live = lessons[liveIndex];
-    if (!live) return null;
-    // Stand two stones back and aim four ahead — both are stones, not offsets.
-    //
-    // The first version of this positioned the eye with hand-tuned distances
-    // and trigonometry, and put the live stone exactly on the bottom edge:
-    // its label was judged off-screen and the one name that must never be
-    // dropped was the one that never appeared. Anchoring both ends of the shot
-    // to real positions makes "the live stone is in frame, with road visible
-    // behind it" a property of the geometry rather than of a number I guessed.
-    const ahead = lessons[Math.min(liveIndex + 4, lessons.length - 1)] ?? live;
-    // Only the distance and the compass bearing of this survive.
-    //
-    // `Controls` pins the tilt, so `MapControls.update()` recomputes the eye
-    // from (target, distance, bearing) on the next frame and the height here is
-    // discarded. Forty units back is therefore not "forty units up and back",
-    // it is the radius that, at the pinned tilt, leaves the live stone about
-    // two thirds of the way down the frame with road behind it.
-    return {
-      from: [live.position.x, live.position.y + 22, live.position.z + 45] as readonly [
-        number,
-        number,
-        number,
-      ],
-      look: [ahead.position.x * 0.6, ahead.position.y + 1.8, ahead.position.z] as readonly [
-        number,
-        number,
-        number,
-      ],
-    };
-  }, [view.kind, lessons]);
+  // `frameCourse`, not a second copy: the authoring shell needs the same shot,
+  // and a camera that exists in one app file is a camera the other cannot have.
+  const roadCamera = useMemo(
+    () => (view.kind === "course" || view.kind === "lesson" ? frameCourse(lessons) : null),
+    [view.kind, lessons],
+  );
 
   const cameraFrom: readonly [number, number, number] = roadCamera
-    ? roadCamera.from
+    ? roadCamera.cameraFrom
     : framed.cameraFrom;
-  const lookAt: readonly [number, number, number] = roadCamera ? roadCamera.look : framed.lookAt;
+  const lookAt: readonly [number, number, number] = roadCamera ? roadCamera.lookAt : framed.lookAt;
 
   const pathUnitId =
     pathOverlay?.unitId ??
@@ -936,6 +875,18 @@ export function App() {
           }}
         />
       ) : null}
+      {view.kind === "planet" ? (
+        <PlanetRail
+          studies={planetStudies}
+          selectedId={focusedStudyId}
+          onSelect={setMapFocus}
+          onEnter={(studyId) => {
+            setMapFocus(studyId);
+            setView({ kind: "world" });
+          }}
+          onClose={() => setView({ kind: "world" })}
+        />
+      ) : null}
       {view.kind === "settings" ? <SettingsSubnav /> : null}
     </>
   );
@@ -1157,17 +1108,15 @@ export function App() {
         show 0/1 next to a lesson that was just finished. Nothing about them is
         stored; see packages/core progress/goals.ts.
       */}
+      {/*
+        Only the globe here. The list is in the shell's aside, where the map
+        puts 「今天」 — so stepping out to the planet keeps the frame and
+        changes the world inside it, instead of swapping a world for a page.
+      */}
       {view.kind === "planet" ? (
-        <PlanetPage
-          studies={planetStudies}
-          selectedId={focusedStudyId}
-          onSelect={setMapFocus}
-          onEnter={(studyId) => {
-            setMapFocus(studyId);
-            setView({ kind: "world" });
-          }}
-          onClose={() => setView({ kind: "world" })}
-        />
+        <div className="planet-page__globe" data-planet-globe="true">
+          <PlanetStage studies={planetStudies} selectedId={focusedStudyId} onSelect={setMapFocus} />
+        </div>
       ) : null}
       {view.kind === "league" ? <LeagueScreen document={progress} /> : null}
       {view.kind === "quests" ? <QuestsScreen document={progress} /> : null}
@@ -1258,7 +1207,7 @@ export function App() {
         counters={counters}
         identity={<RailIdentity onOpen={() => setView({ kind: "me" })} />}
         aside={aside}
-        asideLabel={view.kind === "settings" ? "设置" : "今天"}
+        asideLabel={view.kind === "settings" ? "设置" : view.kind === "planet" ? "选课" : "今天"}
       >
         <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
         {main}

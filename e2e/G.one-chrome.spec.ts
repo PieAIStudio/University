@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { watchConsole } from "./harness/console.js";
 import { namedStep } from "./harness/step.js";
 import { openOnline } from "./harness/online-learner.js";
-import { LOCAL_ORIGIN } from "./ports.js";
+import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 
 /*
   Two campuses, one chrome — checked by looking at both, not by trusting that
@@ -76,6 +76,70 @@ test.describe("G 两个校园穿同一套壳", () => {
       expect(local).toEqual(online);
     });
 
+    consoleErrors.assertClean();
+  });
+});
+
+/*
+  The same walk in both campuses: map → island → course → stone → card.
+
+  This is the second time the two campuses turned out to differ in a way no
+  component check could see. The chrome test above compares what is *around* a
+  screen; this compares whether a screen exists at all. Picking an island in
+  the authoring campus used to resolve the resume lesson and open the reader,
+  so the level in between — the island seen from inside, one stone per lesson —
+  was a whole part of the product that only one campus had. Nothing was forked:
+  the composition simply lived in an app file the other app could not import.
+
+  Every assertion here is 「两边都要」 rather than 「这边有」, for the same reason
+  as above: a presence check passes on the working side and tells you nothing.
+*/
+async function walkToNodeCard(page: Page, origin: string) {
+  await page.goto(`${origin}/#/`, { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".labels button.label").first()).toBeVisible({ timeout: 60_000 });
+  await page.locator(".labels button.label").first().click();
+
+  const enter = page.getByRole("button", { name: /进入这门课/ });
+  await expect(enter).toBeVisible({ timeout: 30_000 });
+  await enter.click();
+
+  // The course scene: a lit stone that says 开始, and the panel naming the
+  // course you are standing on.
+  const start = page.locator("button.label", { hasText: /^开始$/ });
+  await expect(start).toBeVisible({ timeout: 60_000 });
+  const courseName = (await page.locator(".picked--left h3").innerText()).trim();
+
+  await start.click();
+  const card = page.locator("[aria-modal='true'], .path-card").first();
+  await expect(card).toBeVisible({ timeout: 30_000 });
+
+  return {
+    courseNamed: courseName.length > 0,
+    // Both the way in and the way to read the unit first, because the card
+    // offering only one of them is a different card.
+    cardStarts: await card.getByRole("button", { name: /^开始/ }).isVisible(),
+    cardPreviewsUnit: await card.getByRole("button", { name: /先看这一单元讲什么/ }).isVisible(),
+  };
+}
+
+test.describe("G2 两个校园走同一条路", () => {
+  test.use({ viewport: { width: 1440, height: 810 } });
+
+  test("点岛 → 课程岛 → 关卡石头 → 关卡卡片，两端一样", async ({ page }) => {
+    const consoleErrors = watchConsole(page);
+
+    let online: Awaited<ReturnType<typeof walkToNodeCard>> | null = null;
+    await namedStep(page, "投放端走一遍", async () => {
+      online = await walkToNodeCard(page, ONLINE_ORIGIN);
+    });
+
+    let local: Awaited<ReturnType<typeof walkToNodeCard>> | null = null;
+    await namedStep(page, "作者端走一遍", async () => {
+      local = await walkToNodeCard(page, LOCAL_ORIGIN);
+    });
+
+    expect(local).toEqual(online);
+    expect(online).toEqual({ courseNamed: true, cardStarts: true, cardPreviewsUnit: true });
     consoleErrors.assertClean();
   });
 });

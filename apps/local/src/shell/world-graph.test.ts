@@ -2,12 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CourseView, StudySummary, StudyView } from "@pieai/university-ui/view/lesson-view.js";
 
-import {
-  courseNodesFromCatalog,
-  courseProgressOf,
-  lessonsDoneOf,
-  resumeOf,
-} from "./world-graph.js";
+import { courseNodesFromCatalog, courseProgressOf, lessonsDoneOf } from "./world-graph.js";
 
 function lesson(
   id: string,
@@ -20,6 +15,7 @@ function lesson(
     contentRevision: 1,
     cardCount: 0,
     exerciseCount: 0,
+    contentChars: 900,
     progress,
   };
 }
@@ -74,11 +70,16 @@ const summary = (id: string): StudySummary =>
   }) as StudySummary;
 
 describe("world-graph", () => {
-  it("counts progress against the current revision and resumes at the first unfinished lesson", () => {
+  it("counts progress against the current revision", () => {
+    /*
+      `resumeOf` used to be asserted here too. It picked the first unfinished
+      lesson so the map could jump straight into the reader — which is exactly
+      the step that made this shell skip the course view the other shell has.
+      Picking an island opens the island now, and the resume shortcut is gone.
+    */
     const viewed = course("foundations");
     expect(courseProgressOf(viewed)).toBe(0.5);
     expect(lessonsDoneOf(viewed)).toBe(1);
-    expect(resumeOf(viewed)).toEqual({ unitId: "u", lessonId: "b" });
   });
 
   it("reads prerequisites off the study payload and computes depth", () => {

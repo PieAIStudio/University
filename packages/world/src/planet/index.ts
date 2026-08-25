@@ -14,6 +14,6 @@ export {
 export type { SpherePoint, YawPitch } from "./placement.js";
 export { PlanetScene, PlanetStage } from "./PlanetScene.js";
 export type { PlanetSceneProps } from "./PlanetScene.js";
-export { PlanetPage } from "./PlanetPage.js";
+export { PlanetPage, PlanetRail } from "./PlanetPage.js";
 export type { PlanetPageProps, PlanetStudy } from "./PlanetPage.js";
 export { studyCounts, studyCourseList } from "./planet-copy.js";

@@ -110,24 +110,21 @@ function buildStudyView(
       return {
         ...unit,
         lessons: unit.lessonIds.map((lessonId) => {
-          const lesson = readLatestLesson(
-            studiesRoot,
-            study.id,
-            course.id,
-            unit.id,
-            lessonId,
-          ).manifest;
+          const lesson = readLatestLesson(studiesRoot, study.id, course.id, unit.id, lessonId);
           const key = lessonContentKey({ courseId: course.id, unitId: unit.id, lessonId });
           return {
-            id: lesson.id,
-            title: lesson.title,
-            status: lesson.status,
-            contentRevision: lesson.contentRevision,
-            cardCount: lesson.cardIds.length,
-            exerciseCount: lesson.exerciseIds.length,
+            id: lesson.manifest.id,
+            title: lesson.manifest.title,
+            status: lesson.manifest.status,
+            contentRevision: lesson.manifest.contentRevision,
+            cardCount: lesson.manifest.cardIds.length,
+            exerciseCount: lesson.manifest.exerciseIds.length,
+            // Already in hand: `readLatestLesson` reads the body to check it
+            // against the unit. The course island sizes its stones by this.
+            contentChars: lesson.content.length,
             progress: serializeProgress(
               store?.getLessonProgress(key) ?? null,
-              store?.hasLessonCompletion(key, lesson.contentRevision) ?? false,
+              store?.hasLessonCompletion(key, lesson.manifest.contentRevision) ?? false,
             ),
           };
         }),

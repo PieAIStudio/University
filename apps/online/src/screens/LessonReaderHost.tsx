@@ -206,6 +206,7 @@ function courseViewOf(course: Course, studyId: string): CourseView {
           contentRevision: 1,
           cardCount: item.cards.length,
           exerciseCount: item.exercises.length,
+          contentChars: item.content.length,
           progress: completed
             ? {
                 contentRevision: 1,

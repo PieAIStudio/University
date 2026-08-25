@@ -70,7 +70,7 @@ import { recentStudies, StudyShelf } from "./shell/StudyShelf.js";
 import { StudioSection } from "./shell/StudioSection.js";
 import { StudyDetail } from "./shell/StudyDetail.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
-import { PlanetPage, type PlanetStudy } from "@pieai/university-world/planet.js";
+import { PlanetRail, PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
 import lexiconFile from "../data/vocabulary/en.json";
 
 import { WorldLanding } from "./shell/WorldLanding.js";
@@ -620,6 +620,12 @@ export function App() {
   const [activeSection, setActiveSection] = useState(initialAddress.section);
   const [data, setData] = useState<BootstrapData | null>(null);
   const [selectedStudyId, setSelectedStudyId] = useState<string | null>(initialAddress.studyId);
+  /*
+    Which course island you are standing on, or null out on the map.
+    The delivery shell keeps this in its address; here it is state until the
+    two shells share one router.
+  */
+  const [openCourseId, setOpenCourseId] = useState<string | null>(null);
   const [displayedStudy, setDisplayedStudy] = useState<DisplayedStudy | null>(null);
   const [catalog, setCatalog] = useState<ReadonlyMap<string, StudyView>>(() => new Map());
   const [cloudTodayCard, setCloudTodayCard] = useState<TodayCard | null>(null);
@@ -1142,7 +1148,11 @@ export function App() {
             data={data}
             catalog={catalog}
             presence={presencePort}
+            progressPort={progressPort}
             shownStudyId={shownStudyId}
+            openCourseId={openCourseId}
+            onOpenCourse={setOpenCourseId}
+            onCloseCourse={() => setOpenCourseId(null)}
             onSelectStudy={(studyId) => {
               setSelectedStudyId(studyId);
               setLessonRef(null);
@@ -1250,6 +1260,23 @@ export function App() {
   const aside =
     slot === "settings" ? (
       <SettingsSubnav />
+    ) : slot === "planet" && data ? (
+      /*
+        The list goes where 「今天」 goes, and the globe goes where the islands
+        go — the same two slots the map uses, so stepping out to the planet
+        keeps the frame and changes only the world inside it.
+      */
+      <PlanetRail
+        studies={planetStudies}
+        selectedId={shownStudyId}
+        onSelect={setSelectedStudyId}
+        onEnter={(studyId) => {
+          setSelectedStudyId(studyId);
+          setLessonRef(null);
+          goToSlot("learn");
+        }}
+        onClose={() => goToSlot("learn")}
+      />
     ) : slot === "learn" && data && data.studies.length > 0 ? (
       <TodaySection
         data={todayDataOf(data, progressPort, cloudTodayCard, catalog)}
@@ -1304,7 +1331,7 @@ export function App() {
           />
         }
         aside={aside}
-        asideLabel={slot === "settings" ? "设置" : "今天"}
+        asideLabel={slot === "settings" ? "设置" : slot === "planet" ? "选课" : "今天"}
       >
         <div ref={mainRef} tabIndex={-1} className="campus-main">
           {alerts}
@@ -1316,17 +1343,13 @@ export function App() {
             and typing `#/planet` here silently landed you on the map instead.
           */}
           {slot === "planet" && data ? (
-            <PlanetPage
-              studies={planetStudies}
-              selectedId={shownStudyId}
-              onSelect={setSelectedStudyId}
-              onEnter={(studyId) => {
-                setSelectedStudyId(studyId);
-                setLessonRef(null);
-                goToSlot("learn");
-              }}
-              onClose={() => goToSlot("learn")}
-            />
+            <div className="planet-page__globe" data-planet-globe="true">
+              <PlanetStage
+                studies={planetStudies}
+                selectedId={shownStudyId}
+                onSelect={setSelectedStudyId}
+              />
+            </div>
           ) : null}
           {slot === "studio" && data ? (
             <StudioSection

@@ -41,19 +41,6 @@ export function lessonsDoneOf(course: CourseView): number {
     .filter((lesson) => isCurrentLessonCompleted(lesson.progress, lesson.contentRevision)).length;
 }
 
-export function resumeOf(
-  course: CourseView,
-): { readonly unitId: string; readonly lessonId: string } | null {
-  const lessons = course.units.flatMap((unit) =>
-    unit.lessons.map((lesson) => ({ unitId: unit.id, lesson })),
-  );
-  const resume = lessons.find(
-    (entry) => !isCurrentLessonCompleted(entry.lesson.progress, entry.lesson.contentRevision),
-  );
-  const entry = resume ?? lessons[0];
-  return entry ? { unitId: entry.unitId, lessonId: entry.lesson.id } : null;
-}
-
 export function courseNodesFromCatalog(
   summaries: readonly StudySummary[],
   views: ReadonlyMap<string, StudyView>,

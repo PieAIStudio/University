@@ -228,6 +228,15 @@ interface LessonSummary {
   readonly contentRevision: number;
   readonly cardCount: number;
   readonly exerciseCount: number;
+  /**
+   * How long the prose is. Sets the size of the stone on the course island.
+   *
+   * Required rather than optional: the delivery shell had it (its bundle
+   * carries the text) and the authoring shell did not, and an optional field
+   * would have let the two campuses draw the same course with different-sized
+   * stones without anything complaining.
+   */
+  readonly contentChars: number;
   readonly progress: LessonProgress | null;
 }
 

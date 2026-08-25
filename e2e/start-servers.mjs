@@ -150,7 +150,14 @@ try {
   process.exit(1);
 }
 
-run("pnpm", ["exec", "vite", "--host", "127.0.0.1", "--port", String(ONLINE_PORT), "--strictPort"], ONLINE);
+run(
+  "pnpm",
+  ["exec", "vite", "--host", "127.0.0.1", "--port", String(ONLINE_PORT), "--strictPort"],
+  ONLINE,
+  // Keeps this run's pre-bundled dependencies out of the dev server's cache;
+  // see the note in apps/online/vite.config.ts.
+  { UNIVERSITY_E2E: "1" },
+);
 
 try {
   await waitFor(`http://127.0.0.1:${ONLINE_PORT}/`, 180_000);

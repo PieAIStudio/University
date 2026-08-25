@@ -15,6 +15,18 @@ const base = appConfig;
 export default {
   ...base,
   root: fileURLToPath(new URL("../apps/local", import.meta.url)),
+  /*
+    Its own optimizer cache, away from the dev server's.
+
+    Vite pre-bundles dependencies into `node_modules/.vite` and hands the
+    browser hashed URLs for them. Two Vite instances in one app directory share
+    that directory: this suite re-optimises on start, rewrites the hashes, and
+    a `pnpm start` server that has been up all along keeps serving the old ones
+    — so the campus that was working a second ago answers 504 Outdated Optimize
+    Dep and paints a white page. Running the tests should not break the thing
+    the tests are about.
+  */
+  cacheDir: fileURLToPath(new URL("../apps/local/node_modules/.vite-e2e", import.meta.url)),
   server: {
     ...base.server,
     host: "127.0.0.1",

@@ -144,6 +144,20 @@ function serveImportedContent(): Plugin {
 }
 
 export default defineConfig({
+  /*
+    A separate optimizer cache when the e2e suite is the one running Vite.
+
+    Vite pre-bundles dependencies into `cacheDir` and hands the browser hashed
+    URLs for them. Two Vite instances in one app directory share that
+    directory, so starting the suite re-optimises, rewrites the hashes, and a
+    `pnpm start` server that has been up all along keeps serving the old ones —
+    the campus answers 504 Outdated Optimize Dep and paints a white page.
+    Measured the hard way: the delivery shell went blank in the middle of a
+    session because the tests had been run beside it.
+  */
+  ...(process.env.UNIVERSITY_E2E === "1"
+    ? { cacheDir: resolve(import.meta.dirname, "node_modules/.vite-e2e") }
+    : {}),
   plugins: [react(), serveImportedContent(), analyzeChunks()],
   server: {
     host: "127.0.0.1",

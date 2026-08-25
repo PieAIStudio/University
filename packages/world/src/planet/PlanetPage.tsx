@@ -42,7 +42,22 @@ export interface PlanetPageProps {
   readonly onClose: () => void;
 }
 
-export function PlanetPage({
+/**
+ * The list, on its own, for the shell's aside slot.
+ *
+ * The picker used to be a page: its own header, its own two-column grid, its
+ * own scroll box, laid inside the content area while the shell's rail and
+ * counter capsule floated *over* everything else. So going from a series map
+ * to the planet did not read as pulling back from one world to see them all —
+ * it read as leaving the world for a settings screen, because the frame around
+ * the 3D changed shape at the same moment the 3D did.
+ *
+ * The map's answer was already right and already built: the canvas fills the
+ * frame, and every panel floats on top of it. The planet uses the same two
+ * slots — this list goes where 「今天」 goes, and the globe goes where the
+ * islands go. Same shell, same positions, only the world underneath changes.
+ */
+export function PlanetRail({
   studies: given,
   selectedId,
   onSelect,
@@ -83,25 +98,19 @@ export function PlanetPage({
 
   return (
     <div
-      className="planet-page"
+      className="planet-rail"
       data-planet-page="true"
       data-selected={selectedId ?? ""}
-      role="dialog"
-      aria-modal="true"
       aria-labelledby={titleId}
     >
-      <header className="planet-page__head">
-        <h1 id={titleId} className="planet-page__title">
+      <header className="planet-rail__head">
+        <h2 id={titleId} className="planet-rail__title">
           选课
-        </h1>
+        </h2>
         <GameButton variant="ghost" type="button" onClick={onClose} aria-label="关闭">
           关闭
         </GameButton>
       </header>
-
-      <div className="planet-page__globe" data-planet-globe="true">
-        <PlanetStage studies={studies} selectedId={selectedId} onSelect={onSelect} />
-      </div>
 
       <div className="planet-page__rail">
         <nav className="planet-page__list" aria-label="项目">
@@ -150,6 +159,28 @@ export function PlanetPage({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The whole picker in one element, for a caller that has no aside slot.
+ *
+ * `PlanetRail` and `PlanetStage` are what the shells mount, into the same two
+ * places the map uses. This keeps the composed form for tests and for any
+ * surface that wants the picker without the shell around it.
+ */
+export function PlanetPage(props: PlanetPageProps) {
+  return (
+    <div className="planet-page" role="dialog" aria-modal="true" aria-label="选课">
+      <div className="planet-page__globe" data-planet-globe="true">
+        <PlanetStage
+          studies={props.studies}
+          selectedId={props.selectedId}
+          onSelect={props.onSelect}
+        />
+      </div>
+      <PlanetRail {...props} />
     </div>
   );
 }

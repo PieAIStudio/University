@@ -279,6 +279,7 @@ export {
   createMemoryPersistence,
   createMemoryRemoteStore,
   createProgressPort,
+  progressSourceOf,
   emptyProgress,
   lessonKey,
   lessonKeyOf,
