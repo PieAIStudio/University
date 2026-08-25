@@ -1223,6 +1223,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "按钮跟背景同色，靠一明一暗的软影鼓起来。",
     body: {
       colloquial: "按钮不要另做一种颜色，让它像从背景里鼓出来，软软的，同色系那种。",
+      styleSample: {
+        alt: "浅蓝灰的 MOKO 面板从同色背景里以双向软影鼓起，标题、按钮、媒体凹槽和三张卡片都保持同色系但深灰字清晰可读。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "neumorphism",
+        contrastSkin: "terminal",
+      },
       definition: {
         statement:
           "新拟态是让可点的块和背景几乎同色，一边用浅影、一边用深影，看起来像从底上鼓起或凹下去。英文叫 Neumorphism。",
@@ -1330,6 +1336,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "就是那种软件介绍网站：上面一句大标题和一个试用按钮，往下是功能、客户标志、价格表。",
+      styleSample: {
+        alt: "白底的 MOKO 软件官网用中等粗标题和紫靛渐变徽章，中央产品截图带侧边栏与图表条，三张卡片由淡灰边和柔和阴影托住。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "saas",
+        contrastSkin: "y2k",
+      },
       definition: {
         statement:
           "SaaS 产品官网是给「按月租来用的软件」做的介绍站。SaaS 是 Software as a Service 的缩写，即软件不装光盘、在网上按订阅使用。这种官网有一套很稳的区块顺序：第一眼的大标题和试用、功能介绍、客户标志、定价、常见问题。",
@@ -1938,6 +1950,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "做成 2000 年前后那种：银闪闪、泡泡糖色、半透明塑料，有点复古未来，但别让字看不清。",
+      styleSample: {
+        alt: "亮蓝银色金属渐变包住 MOKO 的粗斜胶囊标题，洋红和青色外描边穿过媒体区，星形闪光与三张歪斜金属卡片把页面推向喧闹。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "y2k",
+        contrastSkin: "saas",
+      },
       definition: {
         statement:
           "Y2K 指公元 2000 年前后那一阵流行的样子：金属光、水滴和泡泡、半透明塑料、粉和青、细星星或蝴蝶，像当时的手机壳、光盘和网页。今天多用在主题活动，不是日常工具的默认皮肤。",
@@ -2135,6 +2153,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "做成黑客电影那种窗口：黑底绿字，每个字母一样宽，像在敲命令，但别真让人敲命令才能报名。",
+      styleSample: {
+        alt: "近黑色的 MOKO 命令行窗口用绿色 `$` 提示符引出标题，图像区滚着字符矩阵，三张卡片和底栏以细灰线密集分隔。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "terminal",
+        contrastSkin: "neumorphism",
+      },
       definition: {
         statement:
           "终端极客风是学电脑里那种命令行窗口的样子：深底、绿或黄澄澄的字、每个字母一样宽的字体（叫等宽，像打字机），偶有一条闪一下的竖线。它是一种打扮，不是真的要人在网页里敲系统命令。",
