@@ -31,11 +31,11 @@ export const ACCOUNT_UNSIGNED_DESCRIPTION =
 export const ACCOUNT_UNCONFIGURED_DESCRIPTION =
   "云端账号还未配置；当前仅保留本机离线缓存，配置完成后登录即可跨设备同步。";
 export const ACCOUNT_SIGNED_IN_TITLE = "已经登录";
-export const ACCOUNT_SIGNED_IN_DESCRIPTION =
+const ACCOUNT_SIGNED_IN_DESCRIPTION =
   "进度、批注、答案、复习、收藏和设置已绑定账号。断网也能继续学，连上再同步。";
 export const ACCOUNT_PENDING_LABEL = "正在登录…";
 export const ACCOUNT_SIGN_IN = "登录";
-export const ACCOUNT_SIGN_UP = "创建账号";
+const ACCOUNT_SIGN_UP = "创建账号";
 export const ACCOUNT_SIGN_OUT = "退出登录";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;

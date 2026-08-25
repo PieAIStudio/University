@@ -19,7 +19,7 @@ type LoadedEvidenceSnippet =
  * such API: import bakes content-addressed JSON, so it passes a resolver that
  * loads the file for that index. The component does not care which.
  */
-export type EvidenceSnippetResolver = (index: number) => Promise<EvidenceSnippetView>;
+type EvidenceSnippetResolver = (index: number) => Promise<EvidenceSnippetView>;
 export type EvidenceSource = string | EvidenceSnippetResolver;
 
 const cache = new Map<string, Promise<LoadedEvidenceSnippet>>();
