@@ -149,3 +149,19 @@
   font-size: 0.9rem;
   line-height: 1.6;
 }
+
+.mistake-list__head {
+  margin-bottom: 20px;
+}
+
+.mistake-list__head h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.3;
+}
+
+.mistake-list__count {
+  margin: 4px 0 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.9rem;
+}

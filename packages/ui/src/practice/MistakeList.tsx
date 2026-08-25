@@ -116,8 +116,24 @@ export function MistakeList({ mistakes, content, onOpenLesson }: MistakeListProp
   const visible = resolved.filter((item) => !item.stale);
   const allCorrected = mistakes.every((mistake) => mistake.corrected);
 
+  const pending = mistakes.filter((mistake) => !mistake.corrected).length;
+
   return (
-    <section className="mistake-list" aria-label="错题本">
+    <section className="mistake-list" aria-labelledby="mistake-list-title">
+      {/*
+        Named for a person, not only for a screen reader.
+
+        The loading state and the empty state both said 「错题本」 and the state
+        a learner actually spends time in said it in an `aria-label` — so the
+        page opened straight into a card with no title on it, and the only clue
+        to where you were was that the rail had lit 「更多」.
+      */}
+      <header className="mistake-list__head">
+        <h2 id="mistake-list-title">错题本</h2>
+        <p className="mistake-list__count">
+          {pending > 0 ? `${pending} 道还没订正` : `${mistakes.length} 道，都订正过了`}
+        </p>
+      </header>
       {allCorrected ? (
         <GameCallout className="mistake-list__celebration" heading="都订正好了" tone="success">
           这本错题本已经清空，之前绊住你的题都被你修好了。它们还留在下面，随时可以再看。
