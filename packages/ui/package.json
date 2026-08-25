@@ -32,6 +32,7 @@
     "./lesson/lesson-reader.css": "./src/lesson/lesson-reader.css",
     "./lesson/lesson-toolbar.css": "./src/lesson/lesson-toolbar.css",
     "./lesson/word-list.css": "./src/lesson/word-list.css",
+    "./lesson/mark-list.css": "./src/lesson/mark-list.css",
     "./loading/LoadingTrivia.js": "./src/loading/LoadingTrivia.tsx",
     "./loading/loading-trivia.css": "./src/loading/loading-trivia.css",
     "./markdown/MarkdownContent.js": "./src/markdown/MarkdownContent.tsx",

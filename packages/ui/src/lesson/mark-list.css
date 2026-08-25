@@ -1,0 +1,107 @@
+.mark-list__summary {
+  margin: 0 0 8px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.85rem;
+}
+
+.mark-list__items {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mark-list__item {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 9px;
+  background: rgb(255 245 232 / 4%);
+}
+
+.mark-list__item[data-kind="question"] {
+  border-left: 2px solid rgb(246 193 119 / 70%);
+}
+
+.mark-list__quote {
+  display: grid;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mark-list__quote small {
+  color: rgb(255 245 232 / 45%);
+  font-size: 0.72rem;
+}
+
+.mark-list__quote span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.mark-list__quote:hover span {
+  color: #f7d3a0;
+}
+
+.mark-list__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mark-list__actions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(255 245 232 / 45%);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.mark-list__actions button:hover {
+  color: #f7d3a0;
+}
+
+.mark-list__missing {
+  margin: 0;
+  color: #f0a878;
+  font-size: 0.75rem;
+}
+
+.mark-list__copy-all {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgb(247 211 160 / 34%);
+  border-radius: 9px;
+  background: rgb(247 211 160 / 10%);
+  color: #f7d3a0;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.mark-list__copy-all:hover {
+  background: rgb(247 211 160 / 18%);
+}
+
+.mark-list__highlights {
+  margin-top: 12px;
+}
+
+.mark-list__highlights summary {
+  color: var(--game-ui-text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
