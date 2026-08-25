@@ -25,6 +25,7 @@ import { CAMPUS_NAME } from "./mode";
 import "@pieai/university-ui/entry/entry-page.css";
 import "@pieai/university-ui/entry/style-sample.css";
 import "@pieai/university-ui/evidence/evidence.css";
+import "@pieai/university-ui/evidence/evidence-item.css";
 import "@pieai/university-ui/evidence/evidence-inline-source.css";
 import "@pieai/university-ui/evidence/source-sheet.css";
 import "@pieai/university-ui/feedback/feedback-note.css";
