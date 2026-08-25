@@ -65,7 +65,10 @@ const ACCENT = 0xffb347;
  * shape somebody builds next all get a globe that fits.
  */
 const GLOBE_RADIUS = 1.06;
-const GLOBE_PADDING = 1.1;
+// Keep the globe a world-sized object in the frame: the 1.10 pass filled about
+// 86% of the desktop globe pane, while the intended picker composition is
+// closer to 70%, with space for sky and marker silhouettes around it.
+const GLOBE_PADDING = 1.35;
 
 export function planetDistance(aspect: number, fovDegrees: number): number {
   const vertical = (fovDegrees * Math.PI) / 180 / 2;
