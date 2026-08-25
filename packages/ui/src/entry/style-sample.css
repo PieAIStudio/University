@@ -1,0 +1,476 @@
+/*
+  One fixed MOKO page, two closed visual worlds. The frame deliberately does
+  not read application theme tokens: a sample page should stay itself when the
+  University shell switches between light and dark mode.
+*/
+
+.stylesample {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.stylesample__switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stylesample__switch-button {
+  appearance: none;
+  border: 1px solid #c8ccd5;
+  border-radius: 999px;
+  background-color: #ffffff;
+  color: #222631;
+  cursor: pointer;
+  font:
+    600 0.82rem/1.2 -apple-system,
+    BlinkMacSystemFont,
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+  padding: 8px 13px;
+}
+
+.stylesample__switch-button:hover,
+.stylesample__switch-button:focus-visible {
+  border-color: #222631;
+}
+
+.stylesample__switch-button:focus-visible {
+  outline: 2px solid #222631;
+  outline-offset: 2px;
+}
+
+.stylesample__switch-button[aria-pressed="true"] {
+  border-color: #222631;
+  background-color: #222631;
+  color: #ffffff;
+}
+
+.stylesample__frame {
+  box-sizing: border-box;
+  display: grid;
+  gap: 24px;
+  width: 100%;
+  max-width: 900px;
+  overflow: hidden;
+}
+
+.stylesample__nav {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+}
+
+.stylesample__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+.stylesample__link {
+  white-space: nowrap;
+}
+
+.stylesample__hero {
+  display: grid;
+  gap: 16px;
+}
+
+.stylesample__headline,
+.stylesample__sub,
+.stylesample__note,
+.stylesample__caption,
+.stylesample__card-title,
+.stylesample__card-note {
+  margin: 0;
+}
+
+.stylesample__headline {
+  max-width: 16ch;
+}
+
+.stylesample__sub {
+  max-width: 42rem;
+}
+
+.stylesample__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.stylesample__cta,
+.stylesample__cta2 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.stylesample__media {
+  position: relative;
+  min-height: 220px;
+  overflow: hidden;
+}
+
+.stylesample__media::before,
+.stylesample__media::after {
+  position: absolute;
+  content: "";
+}
+
+.stylesample__cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stylesample__card {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+}
+
+.stylesample__card-note {
+  display: block;
+}
+
+.stylesample__foot {
+  display: block;
+}
+
+.stylesample__note,
+.stylesample__caption {
+  color: #747b8a;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+/* Apple: quiet, spacious, softly material, and deliberately light. */
+
+.stylesample--apple {
+  border: 1px solid #e6e9ef;
+  border-radius: 28px;
+  background-color: #f8f9fb;
+  color: #1d1d1f;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    sans-serif;
+  padding: clamp(24px, 5vw, 64px);
+  box-shadow: 0 24px 72px rgba(29, 29, 31, 0.1);
+}
+
+.stylesample--apple .stylesample__nav {
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e5e8ed;
+}
+
+.stylesample--apple .stylesample__brand {
+  color: #1d1d1f;
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.stylesample--apple .stylesample__links,
+.stylesample--apple .stylesample__nav-action {
+  color: #777d88;
+  font-size: 0.86rem;
+}
+
+.stylesample--apple .stylesample__hero {
+  padding-top: clamp(12px, 2vw, 26px);
+}
+
+.stylesample--apple .stylesample__headline {
+  color: #1d1d1f;
+  font-size: clamp(2.2rem, 6vw, 4.8rem);
+  font-weight: 450;
+  letter-spacing: -0.075em;
+  line-height: 1.02;
+}
+
+.stylesample--apple .stylesample__sub {
+  color: #6e737c;
+  font-size: clamp(0.95rem, 1.8vw, 1.08rem);
+  line-height: 1.7;
+}
+
+.stylesample--apple .stylesample__cta,
+.stylesample--apple .stylesample__cta2 {
+  min-height: 42px;
+  border-radius: 999px;
+  padding: 0 18px;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.stylesample--apple .stylesample__cta {
+  background-color: #1d1d1f;
+  color: #ffffff;
+}
+
+.stylesample--apple .stylesample__cta2 {
+  background-color: #e9ebef;
+  color: #1d1d1f;
+}
+
+.stylesample--apple .stylesample__media {
+  min-height: clamp(190px, 28vw, 300px);
+  border-radius: 22px;
+  background-color: #dcecff;
+  background-image:
+    radial-gradient(circle at 22% 28%, rgba(255, 194, 211, 0.92) 0 13%, transparent 36%),
+    radial-gradient(circle at 76% 65%, rgba(187, 213, 255, 0.9) 0 15%, transparent 42%),
+    linear-gradient(135deg, #fbe4ec 0%, #e9e5fb 47%, #cae6ff 100%);
+}
+
+.stylesample--apple .stylesample__media::before {
+  top: 12%;
+  left: 18%;
+  width: 37%;
+  height: 54%;
+  border-radius: 42% 58% 54% 46%;
+  background-color: rgba(255, 255, 255, 0.5);
+  transform: rotate(-16deg);
+}
+
+.stylesample--apple .stylesample__media::after {
+  right: 12%;
+  bottom: 10%;
+  width: 30%;
+  height: 45%;
+  border-radius: 58% 42% 44% 56%;
+  background-color: rgba(255, 255, 255, 0.34);
+  transform: rotate(20deg);
+}
+
+.stylesample--apple .stylesample__card {
+  min-height: 124px;
+  border: 1px solid #e6e9ef;
+  border-radius: 18px;
+  background-color: #ffffff;
+  padding: 18px;
+  box-shadow: 0 12px 34px rgba(29, 29, 31, 0.07);
+}
+
+.stylesample--apple .stylesample__card-title {
+  color: #1d1d1f;
+  font-size: 0.98rem;
+  font-weight: 650;
+}
+
+.stylesample--apple .stylesample__card-note {
+  color: #777d88;
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+
+.stylesample--apple .stylesample__foot {
+  border-top: 1px solid #e5e8ed;
+  color: #8b919c;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  padding-top: 14px;
+}
+
+/* Neo-brutalism: hard ink, no radius, no blur, and colour with a raised voice. */
+
+.stylesample--brutalism {
+  border: 3px solid #000000;
+  border-radius: 0;
+  background-color: #ffffff;
+  color: #000000;
+  font-family: Impact, Haettenschweiler, "Arial Black", "Microsoft YaHei", sans-serif;
+  padding: 22px;
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.stylesample--brutalism .stylesample__nav {
+  padding-bottom: 14px;
+  border-bottom: 3px solid #000000;
+}
+
+.stylesample--brutalism .stylesample__brand {
+  color: #000000;
+  font-size: 1.15rem;
+  letter-spacing: 0.05em;
+}
+
+.stylesample--brutalism .stylesample__links,
+.stylesample--brutalism .stylesample__nav-action {
+  color: #000000;
+  font-family: "Arial Black", "Microsoft YaHei", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.stylesample--brutalism .stylesample__nav-action {
+  border-bottom: 2px solid #000000;
+}
+
+.stylesample--brutalism .stylesample__hero {
+  border: 3px solid #000000;
+  background-color: #ff4d00;
+  color: #000000;
+  padding: 22px;
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.stylesample--brutalism .stylesample__headline {
+  max-width: 20ch;
+  color: #000000;
+  font-family: Impact, Haettenschweiler, "Arial Black", "Microsoft YaHei", sans-serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 0.98;
+}
+
+.stylesample--brutalism .stylesample__sub {
+  max-width: 42rem;
+  color: #000000;
+  font-family: "Arial Black", "Microsoft YaHei", sans-serif;
+  font-size: 0.91rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.stylesample--brutalism .stylesample__cta,
+.stylesample--brutalism .stylesample__cta2 {
+  min-height: 42px;
+  border: 3px solid #000000;
+  border-radius: 0;
+  padding: 0 15px;
+  color: #000000;
+  font-family: "Arial Black", "Microsoft YaHei", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 900;
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.stylesample--brutalism .stylesample__cta {
+  background-color: #00e0a4;
+}
+
+.stylesample--brutalism .stylesample__cta2 {
+  background-color: #ffffff;
+}
+
+.stylesample--brutalism .stylesample__media {
+  min-height: clamp(190px, 28vw, 300px);
+  border: 3px solid #000000;
+  border-radius: 0;
+  background-color: #f8ef00;
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent 0 18%,
+      #ff4d00 18% 46%,
+      transparent 46% 70%,
+      #00e0a4 70% 100%
+    ),
+    linear-gradient(0deg, transparent 0 28%, #000000 28% 33%, transparent 33% 65%, #ffffff 65% 100%);
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.stylesample--brutalism .stylesample__media::before {
+  top: 16%;
+  right: 16%;
+  width: 28%;
+  height: 48%;
+  border: 3px solid #000000;
+  border-radius: 0;
+  background-color: #ffffff;
+  transform: rotate(8deg);
+}
+
+.stylesample--brutalism .stylesample__media::after {
+  bottom: 12%;
+  left: 12%;
+  width: 24%;
+  height: 30%;
+  border: 3px solid #000000;
+  border-radius: 0;
+  background-color: #00e0a4;
+  transform: rotate(-10deg);
+}
+
+.stylesample--brutalism .stylesample__card {
+  min-height: 124px;
+  border: 3px solid #000000;
+  border-radius: 0;
+  background-color: #ffffff;
+  padding: 15px;
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.stylesample--brutalism .stylesample__card:nth-child(2) {
+  background-color: #00e0a4;
+}
+
+.stylesample--brutalism .stylesample__card:nth-child(3) {
+  background-color: #f8ef00;
+}
+
+.stylesample--brutalism .stylesample__card-title,
+.stylesample--brutalism .stylesample__card-note {
+  color: #000000;
+}
+
+.stylesample--brutalism .stylesample__card-title {
+  font-family: "Arial Black", "Microsoft YaHei", sans-serif;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.stylesample--brutalism .stylesample__card-note {
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 0.83rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.stylesample--brutalism .stylesample__foot {
+  border-top: 3px solid #000000;
+  color: #000000;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.5;
+  padding-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .stylesample__nav {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+
+  .stylesample__links {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  .stylesample__cards {
+    grid-template-columns: 1fr;
+  }
+
+  .stylesample--apple {
+    padding: 22px;
+  }
+
+  .stylesample--brutalism {
+    padding: 16px;
+  }
+}

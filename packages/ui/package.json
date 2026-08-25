@@ -13,6 +13,7 @@
     "./catalog/catalog.css": "./src/catalog/catalog.css",
     "./content/port.js": "./src/content/port.ts",
     "./entry/entry-page.css": "./src/entry/entry-page.css",
+    "./entry/style-sample.css": "./src/entry/style-sample.css",
     "./evidence/EvidenceCode.js": "./src/evidence/EvidenceCode.tsx",
     "./evidence/EvidenceRail.js": "./src/evidence/EvidenceRail.tsx",
     "./evidence/evidence.css": "./src/evidence/evidence.css",

@@ -16,5 +16,5 @@
   },
   "references": [{ "path": "../core" }],
   "include": ["src"],
-  "exclude": ["src/lesson/LessonReader.port.test.ts"]
+  "exclude": ["src/lesson/LessonReader.port.test.ts", "src/entry/style-sample.test.ts"]
 }

@@ -15,6 +15,7 @@ import { SenseId, StableId } from "./schemas.js";
  *
  * C10 (`flow`) is the readable chain: where this entry sits in a path.
  * `demo` is C9 and C11 — one miniature with one state or several — and
+ * `style-sample` is a fixed product mockup with a swappable visual skin.
  * `regions` is C12. They arrived later than the text types and that order was
  * right: a demo is only worth building once there is a page for it to sit on.
  *
@@ -38,6 +39,7 @@ export const SECTION_TYPES = [
   "when-not",
   "quiz",
   "demo",
+  "style-sample",
   "regions",
 ] as const;
 
@@ -73,6 +75,7 @@ export const SECTION_HEADING: { readonly [T in EntrySectionType]: string } = {
   "when-not": "什么时候不用",
   quiz: "小测",
   demo: "动手看看",
+  "style-sample": "换个风格看看",
   regions: "点一下试试",
 };
 
@@ -489,6 +492,50 @@ const DemoPayloadSchema = z
   });
 
 /**
+ * A single fixed mockup with swappable CSS skins. This is the catalogue's
+ * version of CSS Zen Garden (2003): one HTML structure, many stylesheets. The
+ * product copy and DOM stay constant so the learner can see what the skin
+ * changes instead of confusing a new product with a new visual language.
+ */
+export const STYLE_SKIN_IDS = ["apple", "brutalism"] as const;
+export const StyleSkinIdSchema = z.enum(STYLE_SKIN_IDS);
+export type StyleSkinId = z.infer<typeof StyleSkinIdSchema>;
+
+export const STYLE_SAMPLE_PAGE = {
+  brand: "MOKO",
+  navLinks: ["产品", "价格", "文档"],
+  navAction: "登录",
+  headline: "把想法做成能打开的东西",
+  sub: "选个模板，改几行字，两分钟后你有一条能发给别人的链接。",
+  primary: "免费开始",
+  secondary: "先看示例",
+  cards: [
+    { title: "现成模板", note: "挑一个，改文字就行。" },
+    { title: "边改边看", note: "改完立刻出现，不用刷新。" },
+    { title: "一键发布", note: "生成一条链接，谁都能打开。" },
+  ],
+  footnote: "MOKO 是示意用的虚构产品，不是真实网站。",
+} as const;
+
+export const StyleSamplePayloadSchema = z
+  .object({
+    alt: Sentence,
+    caption: Sentence.optional(),
+    skin: StyleSkinIdSchema,
+    contrastSkin: StyleSkinIdSchema.optional(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.contrastSkin !== undefined && value.contrastSkin === value.skin) {
+      context.addIssue({
+        code: "custom",
+        path: ["contrastSkin"],
+        message: "contrastSkin must differ from skin.",
+      });
+    }
+  });
+
+/**
  * C12. Click the part of the mockup being named.
  *
  * Their most distinctive exercise, and the reason is worth stating: a learner
@@ -552,6 +599,7 @@ export const SECTION_PAYLOAD_SCHEMAS = {
   "when-not": WhenNotPayloadSchema,
   quiz: QuizPayloadSchema,
   demo: DemoPayloadSchema,
+  "style-sample": StyleSamplePayloadSchema,
   regions: RegionsPayloadSchema,
 } as const;
 
@@ -794,6 +842,12 @@ function sectionBody(section: EntrySection): string {
           : "";
       const caption = section.payload.caption ? `\n\n${section.payload.caption}` : "";
       return `${section.payload.alt}${states}${caption}`;
+    }
+    case "style-sample": {
+      // CSS cannot travel in the clipboard. Keep the shared heading, alt text
+      // and optional caption; the visual comparison only exists in the page.
+      const caption = section.payload.caption ? `\n\n${section.payload.caption}` : "";
+      return `${section.payload.alt}${caption}`;
     }
     case "regions":
       // The answer is left out for the same reason the quiz answer is.

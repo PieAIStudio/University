@@ -13,6 +13,7 @@ import { ChoiceBlock } from "../review/ChoiceBlock.js";
 import { CopyTextButton } from "./CopyTextButton.js";
 import { DemoMiniature } from "./DemoMiniature.js";
 import { RegionQuiz } from "./RegionQuiz.js";
+import { StyleSample } from "./StyleSample.js";
 import {
   registerSectionRenderer,
   type EntryRenderContext,
@@ -353,6 +354,20 @@ const DEFAULT_BY_TYPE = {
           alt={section.payload.alt}
           caption={section.payload.caption}
           states={section.payload.states}
+        />
+      </SectionFrame>
+    ),
+  },
+  "style-sample": {
+    type: "style-sample",
+    toMarkdown: sectionToMarkdown,
+    render: (section) => (
+      <SectionFrame section={section}>
+        <StyleSample
+          alt={section.payload.alt}
+          caption={section.payload.caption}
+          skin={section.payload.skin}
+          contrastSkin={section.payload.contrastSkin}
         />
       </SectionFrame>
     ),

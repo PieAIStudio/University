@@ -23,6 +23,7 @@ import { CAMPUS_NAME } from "./mode";
   and bare in the other. `check-shared-styles.mjs` enforces it.
 */
 import "@pieai/university-ui/entry/entry-page.css";
+import "@pieai/university-ui/entry/style-sample.css";
 import "@pieai/university-ui/evidence/evidence.css";
 import "@pieai/university-ui/feedback/feedback-note.css";
 import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";

@@ -146,6 +146,16 @@ const SAMPLES = {
       ],
     },
   },
+  "style-sample": {
+    id: "style-look",
+    type: "style-sample",
+    payload: {
+      alt: "同一张产品页换了另一套外观。",
+      caption: "结构不变，皮肤可换。",
+      skin: "apple",
+      contrastSkin: "brutalism",
+    },
+  },
   regions: {
     id: "where",
     type: "regions",

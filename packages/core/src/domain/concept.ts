@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import type { StyleSkinId } from "./entry-section.js";
 import { SenseId } from "./schemas.js";
 import {
   assembleStructuredEntry,
@@ -99,6 +100,13 @@ export interface ConceptBody {
       readonly nodes: readonly unknown[];
     }[];
   };
+  /** A fixed product mockup whose visual skin can be compared with another. */
+  readonly styleSample?: {
+    readonly alt: string;
+    readonly caption?: string;
+    readonly skin: StyleSkinId;
+    readonly contrastSkin?: StyleSkinId;
+  };
   /** C12. Click the part of the mockup being named. */
   readonly regions?: {
     readonly question: string;
@@ -179,6 +187,13 @@ function conceptBodySections(body: ConceptBody): unknown[] {
   // point at, seeing it settles the question that the paragraph then explains.
   if (body.demo) {
     sections.push({ id: "demo", type: "demo", payload: { ...body.demo } });
+  }
+  if (body.styleSample) {
+    sections.push({
+      id: "style-sample",
+      type: "style-sample",
+      payload: { ...body.styleSample },
+    });
   }
   sections.push({
     id: "definition",

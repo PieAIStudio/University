@@ -125,6 +125,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "大图、大字、大片空，克制得像苹果的产品页。",
     body: {
       colloquial: "就想像苹果官网那样：一张很大的图，一行很大的字，下面一个按钮，别的先别说话。",
+      styleSample: {
+        alt: "一张接近白色、留白很大的 MOKO 产品页，超大标题字重偏细、字距收紧，深色胶囊主按钮和三个圆角卡片下方铺着柔和的粉蓝渐变。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "apple",
+        contrastSkin: "brutalism",
+      },
       definition: {
         statement:
           "苹果风是学苹果官网和苹果设备上那种排法：照片很大、标题很大、空着的地方很多，一屏只说一件事、只突出一个动作。行业里常把它和 Apple HIG 连着说——HIG 是 Human Interface Guidelines 的缩写，即苹果公司给 iPhone、Mac 上的应用写的界面规矩。",
@@ -543,6 +549,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "粗黑边、硬影子、大色块，故意看起来冲。",
     body: {
       colloquial: "不要那么圆滑。边框加粗，影子不要模糊，颜色冲一点，像用马克笔描过的海报。",
+      styleSample: {
+        alt: "一张白底配橙绿大色块的 MOKO 产品页，标题粗重，导航、按钮和三张卡片都有黑色硬边与错开的硬影，中央是拼接色块的图像区。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "brutalism",
+        contrastSkin: "apple",
+      },
       definition: {
         statement:
           "新粗野是一种故意不圆滑的打扮：很粗的黑边、错开而不模糊的硬影子、大块亮色、又大又重的字，看起来像用马克笔和色纸拼的。英文常叫 Neo-Brutalism。",
