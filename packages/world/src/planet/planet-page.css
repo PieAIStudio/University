@@ -249,3 +249,29 @@
   inset: 0;
   overflow: hidden;
 }
+
+/* The composed preview is a grid; its globe must not cover the rail. */
+.planet-page > .planet-page__globe {
+  position: relative;
+  inset: auto;
+}
+
+.planet-page > .planet-rail {
+  grid-area: rail;
+}
+
+@media (max-width: 767px) {
+  .planet-page {
+    grid-template-rows: minmax(16rem, 45%) minmax(0, 1fr);
+    grid-template-areas:
+      "globe"
+      "rail";
+  }
+}
+
+@media (min-width: 768px) {
+  .planet-page {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "globe rail";
+  }
+}

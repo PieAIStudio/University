@@ -3,7 +3,7 @@
  * `element.click()` is banned here for the same reason it is banned in e2e:
  * it skips hit-testing and would bless a canvas that looks clickable.
  *
- * Vite and the React plugin live on the online shell. This file reaches
+ * Vite and the React plugin live on the university shell. This file reaches
  * them by resolved path rather than adding a second copy of either to
  * `packages/world` — the preview is evidence, not a product dependency.
  */
@@ -17,28 +17,33 @@ import { chromium } from "@playwright/test";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "../../../..");
 const SHOTS = join(ROOT, "SHOTS");
-const PREVIEW = "http://127.0.0.1:5198/preview.html";
+const PREVIEW = "http://127.0.0.1:9994/preview.html";
+const SHOT_TAG = process.env.PLANET_SHOT_TAG?.trim() || "latest";
 
-const requireFromOnline = createRequire(join(ROOT, "apps/online/package.json"));
+const requireFromUniversity = createRequire(join(ROOT, "apps/university/package.json"));
 
-async function loadFromOnline(specifier) {
-  const resolved = requireFromOnline.resolve(specifier);
+async function loadFromUniversity(specifier) {
+  const resolved = requireFromUniversity.resolve(specifier);
   return import(pathToFileURL(resolved).href);
+}
+
+function shotPath(name) {
+  return join(SHOTS, `planet-${SHOT_TAG}-${name}`);
 }
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function main() {
   const [{ createServer }, reactMod] = await Promise.all([
-    loadFromOnline("vite"),
-    loadFromOnline("@vitejs/plugin-react"),
+    loadFromUniversity("vite"),
+    loadFromUniversity("@vitejs/plugin-react"),
   ]);
   const react = reactMod.default ?? reactMod;
   const server = await createServer({
     configFile: false,
     root: HERE,
     plugins: [react()],
-    server: { host: "127.0.0.1", port: 5198, strictPort: true },
+    server: { host: "127.0.0.1", port: 9994, strictPort: true },
     resolve: {
       dedupe: ["react", "react-dom", "three", "@react-three/fiber"],
     },
@@ -49,11 +54,17 @@ async function main() {
     await mkdir(SHOTS, { recursive: true });
     const browser = await chromium.launch({ channel: "chrome" });
     const page = await browser.newPage({ viewport: { width: 1440, height: 810 } });
+    const warnings = [];
+    page.on("console", (message) => {
+      if (message.type() === "warning" || message.type() === "error") {
+        warnings.push(`${message.type()}: ${message.text()}`);
+      }
+    });
     await page.goto(PREVIEW, { waitUntil: "networkidle" });
     await page.locator("[data-planet-page]").waitFor();
     await page.locator("canvas").waitFor();
     await wait(1200);
-    await page.screenshot({ path: join(SHOTS, "planet-desktop-1440x810.png"), fullPage: false });
+    await page.screenshot({ path: shotPath("desktop-1440x810.png"), fullPage: false });
 
     const log = [];
     await page.keyboard.press("Tab");
@@ -88,10 +99,11 @@ async function main() {
     await page.locator("[data-planet-page]").waitFor();
     await page.locator("canvas").waitFor();
     await wait(1200);
-    await page.screenshot({ path: join(SHOTS, "planet-mobile-390x844.png"), fullPage: false });
+    await page.screenshot({ path: shotPath("mobile-390x844.png"), fullPage: false });
 
     await browser.close();
     console.log(log.join("\n"));
+    if (warnings.length > 0) console.log(`console warnings/errors:\n${warnings.join("\n")}`);
   } finally {
     await server.close();
   }
