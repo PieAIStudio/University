@@ -209,6 +209,54 @@ own lesson reader every new feature has to be written twice.
    skip placement by design. The fix is either a clamp out of the chrome's box
    or a camera that keeps content out of it, and it is worth measuring which
    before writing either.
+10. **One app.** `apps/local` and `apps/online` become one browser app whose
+    mode is chosen at startup; `apps/local/server` is out of scope. The
+    difference set is down to two ports, and the plan, the order and the traps
+    already paid for are in [One App Handoff](./one-app-handoff.md). Item 6
+    above is a subset of this one: ContentPort is what makes the delivery
+    shell's duplicate reader deletable.
+11. **The UA graph reaches the delivery shell.** 「打开 UA 项目地图」 exists only
+    in the authoring shell because it opens the local Understand Anything graph
+    and the delivery shell has no checkout. The fix is the content pipeline,
+    not the shell: export the graph with the course package the way evidence
+    and cards already travel. Until then this reads as a shell difference and
+    is not one.
+12. **Two learner features are buried in `#/studio`, and where they go is
+    decided.** Neither authors anything — authoring is the CLI and the files —
+    and both sit behind 更多 → 作者工作台 where a learner will never look.
+
+    - **`KnowledgeNotesSection` → a fifth collection in 图鉴.** The library is
+      already the one door to the collections, `LibrarySurface` already owns
+      the tabs, and notes-with-a-review-state is a collection. Both shells
+      mount it; the delivery shell shows an empty state until 11 ships the
+      notes with the package, which is the same shape as any collection with
+      nothing in it yet. Its `basePath` for evidence must become a prop — the
+      component hardcodes `/api/studies/…` today, which is the one thing in it
+      that is not shell-neutral. Its CSS moves with it and has to stop reading
+      `--campus-rule`, a variable only the authoring shell defines.
+    - **`CourseRouteQuiz` → the course island's side panel, before you start.**
+      「我该从哪一关开始」 is live exactly once: standing on a course with no
+      progress. `ROUTE_STARTS` is keyed to `foundations-before-zero` today, so
+      key it by course id and render the quiz only for a course that has an
+      entry — data-driven rather than one hardcoded special case, and it can
+      grow to a second course without another branch.
+
+    Do this **inside 10**, not before it: the merge session opens every one of
+    these files anyway, and moving them now means moving them twice. What must
+    not happen is `#/studio` going into the authoring-only tree with these two
+    still inside — the build would then exclude them from the delivery shell
+    and make the problem harder to see, not easier.
+
+    The drawer's remaining contents (a UA link, a read-only citation count) are
+    inspection tools and can keep a name that says so.
+13. **The picker's globe is not beautiful yet.** Framing, sky, the crease pass
+    and the sea's edge are fixed; the sphere itself still reads as a mossy
+    marble rather than a world. `docs/reference/生图重绘ui/` holds the target.
+    Art direction, and worth doing after 10 so it is done once.
+14. **A level and an XP curve.** `packages/core/progress/xp.ts` scores events
+    but there is no level concept and no accumulated total, so the avatar has
+    no ring to fill. What a level costs and how the curve bends is a product
+    decision; the rendering is small once it exists.
 
 ## Traps, Found The Hard Way
 
