@@ -2,7 +2,13 @@
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { createIdentityPort, createMemoryIdentityPort } from "@pieai/university-core";
+import {
+  XP_EXERCISE_FIRST_TRY,
+  XP_READ_LESSON,
+  createIdentityPort,
+  createMemoryIdentityPort,
+  levelOf,
+} from "@pieai/university-core";
 
 import {
   ACCOUNT_PENDING_LABEL,
@@ -118,6 +124,17 @@ describe("empty destinations", () => {
       <ProfileScreen passagesRead={0} lessonsCompleted={0} account={<p>登录入口</p>} />,
     );
     expect(markup).toContain("登录入口");
+  });
+
+  it("shows the shared level badge and a linear XP bar", () => {
+    const totalXp = XP_READ_LESSON + XP_EXERCISE_FIRST_TRY;
+    const markup = renderToStaticMarkup(
+      <ProfileScreen passagesRead={0} lessonsCompleted={0} totalXp={totalXp} />,
+    );
+    expect(markup).toContain(`Lv. ${levelOf(totalXp).level}`);
+    expect(markup).toContain("XP");
+    expect(markup).toContain('role="progressbar"');
+    expect(markup).not.toContain("progress-ring");
   });
 });
 

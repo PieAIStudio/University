@@ -63,6 +63,7 @@ import {
 } from "@pieai/university-ui/navigation/empty.js";
 import {
   BadgeWall,
+  LevelProgress,
   LeagueScreen,
   PlansScreen,
   QuestsScreen,
@@ -1247,6 +1248,7 @@ export function App() {
             </Suspense>
           }
           account={<AccountPanel identity={identityPort} />}
+          totalXp={progress.totalXp}
           badges={<BadgeWall document={progress} coursesFinished={profileStats.coursesFinished} />}
           passagesRead={profileStats.passagesRead}
           lessonsCompleted={profileStats.lessonsCompleted}
@@ -1365,7 +1367,12 @@ export function App() {
         */
         {...(AUTHORING ? { extraMoreItems: [STUDIO_MORE_ITEM] } : {})}
         counters={counters}
-        identity={<RailIdentity onOpen={() => setView({ kind: "me" })} />}
+        identity={
+          <>
+            <RailIdentity onOpen={() => setView({ kind: "me" })} />
+            <LevelProgress totalXp={progress.totalXp} rail />
+          </>
+        }
         aside={aside}
         asideLabel={view.kind === "settings" ? "设置" : view.kind === "planet" ? "选课" : "今天"}
       >

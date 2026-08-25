@@ -22,6 +22,8 @@ export const emptyProgress = (): ProgressDocument => ({
   cards: {},
   words: {},
   streak: { days: 0, lastDay: null },
+  totalXp: 0,
+  xpEvents: {},
   readerMarks: {},
   exerciseAttempts: {},
   retrievalAttempts: {},
@@ -72,6 +74,15 @@ export function parseProgress(raw: string | null): ProgressDocument {
   if (!raw) return emptyProgress();
   try {
     const parsed = JSON.parse(raw) as Partial<ProgressDocument>;
+    const xpEvents = parseXpEvents(parsed.xpEvents);
+    const parsedTotalXp = parseXpAmount(parsed.totalXp);
+    const eventTotal = sumXpEvents(xpEvents);
+    if (parsedTotalXp > eventTotal) {
+      xpEvents[LEGACY_XP_EVENT_ID] = Math.max(
+        xpEvents[LEGACY_XP_EVENT_ID] ?? 0,
+        parsedTotalXp - eventTotal,
+      );
+    }
     return {
       lessons: parsed.lessons ?? {},
       cards: parsed.cards ?? {},
@@ -79,6 +90,8 @@ export function parseProgress(raw: string | null): ProgressDocument {
       // lesson before the language layer existed, not a corrupt store.
       words: parsed.words ?? {},
       streak: parsed.streak ?? { days: 0, lastDay: null },
+      totalXp: sumXpEvents(xpEvents),
+      xpEvents,
       // Reader annotations and answer records were added after v2. An absent
       // field is an older device, not a corrupt document.
       readerMarks: parsed.readerMarks ?? {},
@@ -98,9 +111,32 @@ export function cloneProgress(document: ProgressDocument): ProgressDocument {
     cards: { ...document.cards },
     words: { ...document.words },
     streak: { ...document.streak },
+    totalXp: document.totalXp,
+    xpEvents: { ...document.xpEvents },
     readerMarks: { ...document.readerMarks },
     exerciseAttempts: { ...document.exerciseAttempts },
     retrievalAttempts: { ...document.retrievalAttempts },
     account: cloneAccountData(document.account),
   };
+}
+
+/** Older snapshots had only a scalar total, so keep that amount as a seed event. */
+export const LEGACY_XP_EVENT_ID = "__legacy_total__";
+
+export function parseXpAmount(value: unknown): number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : 0;
+}
+
+function parseXpEvents(value: unknown): Record<string, number> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const events: Record<string, number> = {};
+  for (const [eventId, amount] of Object.entries(value)) {
+    const parsedAmount = parseXpAmount(amount);
+    if (eventId.length > 0 && parsedAmount >= 0) events[eventId] = parsedAmount;
+  }
+  return events;
+}
+
+export function sumXpEvents(events: Record<string, number>): number {
+  return Object.values(events).reduce((total, amount) => total + parseXpAmount(amount), 0);
 }

@@ -158,6 +158,23 @@ a.linkish {
   min-height: 120px;
 }
 
+.learner-level {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.profile-screen > .learner-level {
+  width: min(100%, 24rem);
+  margin: 0 auto 1.25rem;
+}
+
+.learner-level__head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
 .profile-screen__stats {
   display: grid;
   grid-template-columns: 1fr 1fr;

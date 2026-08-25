@@ -36,6 +36,7 @@ import type { ReaderMark } from "../domain/reader-marks.js";
 import type { LessonRef } from "./contract.js";
 import { cloneProgress, emptyProgress, parseProgress } from "./document.js";
 import { mergeProgress } from "./merge.js";
+import { xpFor } from "./xp.js";
 import {
   cloneAccountData,
   type AccountData,
@@ -165,12 +166,35 @@ export function createProgressPort(options: { readonly persistence: Persistence 
   function confirmLessonRead(key: string, contentRevision: number) {
     if (!Number.isInteger(contentRevision) || contentRevision <= 0) return;
     const current = lessonState(key);
+    const firstRead = current.readConfirmed !== true;
     state.lessons[key] = {
       ...current,
       readConfirmed: true,
       readConfirmedRevision: contentRevision,
     };
+    if (firstRead) {
+      awardXp(
+        `lesson-read:${key}`,
+        xpFor([{ kind: "read-lesson", firstTime: true }], {
+          streakDays: state.streak.days,
+          now: Date.now(),
+        }),
+      );
+    }
     commit();
+  }
+
+  function addXp(eventId: string, amount: number): void {
+    if (awardXp(eventId, amount)) commit();
+  }
+
+  function awardXp(eventId: string, amount: number): boolean {
+    const id = eventId.trim();
+    if (id.length === 0 || !Number.isSafeInteger(amount) || amount < 0) return false;
+    if (Object.hasOwn(state.xpEvents, id)) return false;
+    state.xpEvents[id] = amount;
+    state.totalXp += amount;
+    return true;
   }
 
   function touchStreak() {
@@ -247,16 +271,27 @@ export function createProgressPort(options: { readonly persistence: Persistence 
   function gradeCard(cardKey: string, rating: RatingName) {
     const card = state.cards[cardKey];
     if (!card) return;
-    const next = review(loadCard(card.fsrs), RATING[rating]);
+    const now = Date.now();
+    const lastReviewedAt = card.fsrs.last_review ? Date.parse(card.fsrs.last_review) : null;
+    const next = review(loadCard(card.fsrs), RATING[rating], new Date(now));
     state.cards[cardKey] = { ...card, dueAt: next.due.getTime(), fsrs: storeCard(next) };
     touchStreak();
+    awardXp(
+      xpEventId("review", cardKey),
+      xpFor([{ kind: "review", rating, lastReviewedAt }], {
+        streakDays: state.streak.days,
+        now,
+      }),
+    );
     commit();
   }
 
   function gradeWord(senseId: string, rating: RatingName) {
     const word = state.words[senseId];
     if (!word || word.stage !== "learning") return;
-    const next = review(word.fsrs ? loadCard(word.fsrs) : newCard(), RATING[rating]);
+    const now = Date.now();
+    const lastReviewedAt = word.fsrs?.last_review ? Date.parse(word.fsrs.last_review) : null;
+    const next = review(word.fsrs ? loadCard(word.fsrs) : newCard(), RATING[rating], new Date(now));
     state.words[senseId] = {
       ...word,
       dueAt: next.due.getTime(),
@@ -264,6 +299,13 @@ export function createProgressPort(options: { readonly persistence: Persistence 
       fsrs: storeCard(next),
     };
     touchStreak();
+    awardXp(
+      xpEventId("word-review", senseId),
+      xpFor([{ kind: "review", rating, lastReviewedAt }], {
+        streakDays: state.streak.days,
+        now,
+      }),
+    );
     commit();
   }
 
@@ -351,7 +393,24 @@ export function createProgressPort(options: { readonly persistence: Persistence 
   function recordExerciseAttempt(record: ExerciseAttemptRecord): void {
     const current = state.exerciseAttempts[record.commandId];
     if (current && Date.parse(current.occurredAt) >= Date.parse(record.occurredAt)) return;
+    const firstTry = !Object.values(state.exerciseAttempts).some(
+      (attempt) =>
+        attempt.commandId !== record.commandId &&
+        attempt.exerciseId === record.exerciseId &&
+        attempt.contentRevision === record.contentRevision &&
+        sameLesson(attempt.locator, record.locator),
+    );
     state.exerciseAttempts[record.commandId] = { ...record, locator: { ...record.locator } };
+    if (record.maxScore > 0 && record.score >= record.maxScore) {
+      const occurredAt = Date.parse(record.occurredAt);
+      awardXp(
+        `exercise:${record.commandId}`,
+        xpFor([{ kind: "exercise", firstTry }], {
+          streakDays: state.streak.days,
+          now: Number.isFinite(occurredAt) ? occurredAt : Date.now(),
+        }),
+      );
+    }
     commit();
   }
 
@@ -451,6 +510,7 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     lessonState,
     advanceLesson,
     confirmLessonRead,
+    addXp,
     dropCards,
     dueCards,
     dueTomorrow,
@@ -521,6 +581,20 @@ function eventAt(mark: {
       const parsed = Date.parse(value);
       return Number.isNaN(parsed) ? latest : Math.max(latest, parsed);
     }, 0);
+}
+
+function sameLesson(a: LessonRef, b: LessonRef): boolean {
+  return (
+    a.studyId === b.studyId &&
+    a.courseId === b.courseId &&
+    a.unitId === b.unitId &&
+    a.lessonId === b.lessonId
+  );
+}
+
+function xpEventId(kind: string, key: string): string {
+  const random = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `${kind}:${key}:${random}`;
 }
 
 function isImportedCardNewer(current: CardProgress, incoming: CardProgress): boolean {

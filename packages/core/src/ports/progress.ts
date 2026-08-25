@@ -112,6 +112,10 @@ export interface ProgressDocument {
   cards: Record<string, CardProgress>;
   words: Record<string, WordProgress>;
   streak: { days: number; lastDay: string | null };
+  /** Total XP is shared learner data, not a browser-only display cache. */
+  totalXp: number;
+  /** Immutable event id to XP amount; the merge is a set union followed by a sum. */
+  xpEvents: Record<string, number>;
   /** Cloud-synchronised reader annotations, keyed by mark id. */
   readerMarks: Record<string, StoredReaderMark>;
   /** Cloud-synchronised learner answers and host evaluations, keyed by command id. */
@@ -163,6 +167,8 @@ export interface ProgressPort {
   lessonState(key: LessonDocumentKey): LessonProgress;
   advanceLesson(key: LessonDocumentKey, progress: number): void;
   confirmLessonRead(key: LessonDocumentKey, contentRevision: number): void;
+  /** Record one idempotent XP event in the shared learner document. */
+  addXp(eventId: string, amount: number): void;
   dropCards(studyId: string, courseId: string, lessonId: string, cardIds: readonly string[]): void;
   dueCards(asOf?: number): readonly CardProgress[];
   dueTomorrow(asOf?: number): number;

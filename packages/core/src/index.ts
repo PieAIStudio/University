@@ -99,6 +99,8 @@ export {
   type ChoiceExerciseValidation,
 } from "./domain/choice-exercise.js";
 
+export { levelOf, totalXpForLevel, type Level } from "./progress/level.js";
+
 // Structured entries: one collection system, head + typed sections. A section
 // type that cannot serialise itself is a missing `sectionToMarkdown` branch,
 // not a silent clipboard omission later. Consumers: both shells' reference

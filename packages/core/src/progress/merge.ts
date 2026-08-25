@@ -45,7 +45,13 @@ import type {
   WordProgress,
   RetrievalAttemptRecord,
 } from "../ports/progress.js";
-import { cloneProgress, emptyProgress } from "./document.js";
+import {
+  cloneProgress,
+  emptyProgress,
+  LEGACY_XP_EVENT_ID,
+  parseXpAmount,
+  sumXpEvents,
+} from "./document.js";
 import {
   changesFromFavourites,
   cloneAccountData,
@@ -86,6 +92,16 @@ export function mergeProgress(
     words[key] = current ? mergeWord(current, other) : { ...other };
   }
 
+  /*
+   * XP is an append-only fact set, not a snapshot counter. Taking `max` would
+   * erase a phone's independent addition when a laptop had added a different
+   * event from the same starting document. Event IDs make retries idempotent:
+   * merge the union once, then sum it. A document from before the event ledger
+   * is represented by one legacy seed event; two such forks cannot reveal
+   * their independent delta after the fact, but all new writes are lossless.
+   */
+  const xpEvents = mergeXpEvents(xpEventsOf(left), xpEventsOf(right));
+
   const readerMarks: Record<string, StoredReaderMark> = { ...left.readerMarks };
   for (const [key, other] of Object.entries(right.readerMarks)) {
     const current = readerMarks[key];
@@ -124,6 +140,8 @@ export function mergeProgress(
     cards,
     words,
     streak: mergeStreak(left.streak, right.streak),
+    totalXp: sumXpEvents(xpEvents),
+    xpEvents,
     readerMarks,
     exerciseAttempts,
     retrievalAttempts,
@@ -134,6 +152,34 @@ export function mergeProgress(
       preferences: mergeAccountPreferences(leftAccount.preferences, rightAccount.preferences),
     },
   };
+}
+
+function xpEventsOf(document: ProgressDocument): Record<string, number> {
+  const events = { ...document.xpEvents };
+  const eventTotal = sumXpEvents(events);
+  const totalXp = parseXpAmount(document.totalXp);
+  if (totalXp > eventTotal) {
+    events[LEGACY_XP_EVENT_ID] = Math.max(events[LEGACY_XP_EVENT_ID] ?? 0, totalXp - eventTotal);
+  }
+  return events;
+}
+
+function mergeXpEvents(
+  left: Record<string, number>,
+  right: Record<string, number>,
+): Record<string, number> {
+  const merged = { ...left };
+  for (const [eventId, amount] of Object.entries(right)) {
+    const current = merged[eventId];
+    if (current === undefined) {
+      merged[eventId] = parseXpAmount(amount);
+    } else {
+      // An immutable event should never disagree; max is a deterministic guard
+      // against malformed input that also never undercounts the event.
+      merged[eventId] = Math.max(current, parseXpAmount(amount));
+    }
+  }
+  return merged;
 }
 
 function mergePracticeRecent(

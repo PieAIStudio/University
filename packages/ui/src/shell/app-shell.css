@@ -567,6 +567,10 @@
     display: none;
   }
 
+  .app-shell[data-rail-collapsed="true"] .learner-level--rail {
+    display: none;
+  }
+
   .app-shell[data-rail-collapsed="true"] .nav-rail__brand {
     justify-content: center;
     padding: 0;
@@ -829,8 +833,29 @@
 */
 .nav-rail__identity {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   padding: 0.35rem 0 0.15rem;
+}
+
+.learner-level--rail {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 1159px) and (min-width: 768px) {
+  /* The icon rail is too narrow for readable XP copy; ProfileScreen is the fallback. */
+  .learner-level--rail {
+    display: none;
+  }
+}
+
+@media (min-width: 1160px) {
+  .learner-level--rail {
+    padding-inline: 0.35rem;
+  }
 }
 
 .avatar-chip__stage,

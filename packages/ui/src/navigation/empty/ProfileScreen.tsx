@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { LevelProgress } from "../screens/LevelProgress.js";
+
 /**
  * Personal archive. The 3D avatar is a slot: `packages/ui` stays at zero
  * `three`, so each app passes the canvas it actually has.
@@ -19,6 +21,7 @@ export function ProfileScreen({
   account,
   passagesRead,
   lessonsCompleted,
+  totalXp,
   badges,
   nextHref = "#/",
 }: {
@@ -27,6 +30,8 @@ export function ProfileScreen({
   readonly account?: ReactNode;
   readonly passagesRead: number;
   readonly lessonsCompleted: number;
+  /** Shared XP total; absent keeps this reusable screen's old empty state. */
+  readonly totalXp?: number;
   /** The badge wall, from a shell that has a progress document to build it from. */
   readonly badges?: ReactNode;
   readonly nextHref?: string;
@@ -34,6 +39,7 @@ export function ProfileScreen({
   return (
     <div className="profile-screen">
       <div className="profile-screen__hero">{avatar}</div>
+      {totalXp === undefined ? null : <LevelProgress totalXp={totalXp} />}
       {account}
       <dl className="profile-screen__stats">
         <Stat

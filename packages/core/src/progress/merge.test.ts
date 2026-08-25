@@ -10,6 +10,7 @@ import type {
 import { DEFAULT_ACCOUNT_PREFERENCES, emptyAccountData } from "../ports/account-data.js";
 import { emptyProgress } from "./document.js";
 import { mergeProgress } from "./merge.js";
+import { XP_EXERCISE_FIRST_TRY, XP_READ_LESSON } from "./xp.js";
 
 const AT = Date.parse("2026-08-22T12:00:00.000Z");
 
@@ -149,6 +150,28 @@ describe("mergeProgress", () => {
     const low = doc({ streak: { days: 3, lastDay: "2026-08-22" } });
     const high = doc({ streak: { days: 9, lastDay: "2026-08-22" } });
     expect(mergeProgress(low, high).streak.days).toBe(9);
+  });
+
+  it("sums independent XP events without double-counting a retried merge", () => {
+    const phoneXp = XP_READ_LESSON;
+    const laptopXp = XP_EXERCISE_FIRST_TRY;
+    const phone = doc({
+      totalXp: phoneXp,
+      xpEvents: { "phone/read": phoneXp },
+    });
+    const laptop = doc({
+      totalXp: laptopXp,
+      xpEvents: { "laptop/exercise": laptopXp },
+    });
+
+    const merged = mergeProgress(phone, laptop);
+    expect(merged.totalXp).toBe(phoneXp + laptopXp);
+    expect(merged.xpEvents).toEqual({
+      "laptop/exercise": laptopXp,
+      "phone/read": phoneXp,
+    });
+    expect(mergeProgress(laptop, phone)).toEqual(merged);
+    expect(mergeProgress(merged, phone)).toEqual(merged);
   });
 
   it("merges account library, practice history, and settings across devices", () => {

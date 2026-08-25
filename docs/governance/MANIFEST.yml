@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-25T20:37:58.664Z
+generated_at: 2026-08-25T20:59:45.032Z
 generator_version: doc-gov@0.9.5
-docs_count: 31
+docs_count: 32
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -178,6 +178,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-24
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-SHARED-PROGRESS-COUNTERS-NEED-AN-IDEMPOTENT-EVENT-LEDGER
+    path: docs/reference/learnings/workflow-issues/shared-progress-counters-need-an-idempotent-event-ledger.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-25
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-SHARED-PROGRESS-MUST-CONSUME-A-CURRENT-LESSON-SNAPSHOT
     path: docs/reference/learnings/workflow-issues/shared-progress-must-consume-a-current-lesson-snapshot.md

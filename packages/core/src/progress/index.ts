@@ -26,6 +26,7 @@ export {
   PROGRESS_STORAGE_KEY,
 } from "./document.js";
 export { mergeProgress } from "./merge.js";
+export { levelOf, totalXpForLevel, type Level } from "./level.js";
 export { createMemoryPersistence, createMemoryRemoteStore } from "./memory.js";
 export { createProgressPort } from "./port.js";
 export { progressSourceOf } from "./source.js";
