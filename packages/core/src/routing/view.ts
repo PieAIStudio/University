@@ -1,5 +1,5 @@
 /**
- * Where you are, in the address bar.
+ * Where you are, in the address bar — for both shells, in one file.
  *
  * Without this, refreshing throws a learner back to the world map — which they
  * will do, because a 3D page that stutters is a page people reload. Losing your
@@ -7,10 +7,20 @@
  * sessions. It also makes a lesson unlinkable, and a course nobody can send to
  * anyone is a course nobody talks about.
  *
- * The hash rather than the path, because this ships as a static bundle and a
- * real path would 404 on refresh without a server rewrite rule. The hash is the
- * one part of a URL a static host cannot get wrong.
+ * The hash rather than the path, because delivery ships as a static bundle and
+ * a real path would 404 on refresh without a server rewrite rule. The hash is
+ * the one part of a URL a static host cannot get wrong.
+ *
+ * It lives in `packages/core` because the authoring campus used to carry a
+ * second address space — a pathname for study+lesson beside a hash for the rail
+ * slot. Two addresses in one document is not a style difference: Chrome fires
+ * `popstate` for a same-document fragment change too, so writing the hash ran
+ * the pathname restore as a side effect and quietly threw the chosen project
+ * away. One address, one parser, both campuses.
+ *
+ * No React, no DOM, no network — the same rule as the rest of this package.
  */
+
 // `flavour` is the public hash segment (`#/flavour`, `#/library/flavour`).
 // The collection itself is anti-pattern; view kinds use that name. Do not
 // rename this string — bookmarked and shared URLs still have to parse.
@@ -85,7 +95,15 @@ export type View =
   | { readonly kind: "quests" }
   | { readonly kind: "plans" }
   | { readonly kind: "settings" }
-  | { readonly kind: "me" };
+  | { readonly kind: "me" }
+  /*
+    The authoring workbench. Reached from 更多, and only offered where the
+    authoring pipeline is on the other end of the address — it is a mode, not a
+    ninth rail slot. The kind lives here rather than in one shell because the
+    address space is one thing; whether a build answers this route is a separate
+    question, decided where the routes are rendered.
+  */
+  | { readonly kind: "studio" };
 
 /** Which library tab a legacy single-segment route lands on. */
 export const LIBRARY_VIEW_TAB: Partial<Record<View["kind"], LibraryTab>> = {
@@ -142,6 +160,8 @@ export function toHash(view: View): string {
       return "#/settings";
     case "me":
       return "#/me";
+    case "studio":
+      return "#/studio";
     case "course":
       return `#/${enc(view.studyId)}/${enc(view.courseId)}`;
     case "lesson":
@@ -149,6 +169,24 @@ export function toHash(view: View): string {
     case "settled":
       return `#/${enc(view.studyId)}/${enc(view.courseId)}/${enc(view.unitId)}/${enc(view.lessonId)}/done`;
   }
+}
+
+/**
+ * A content segment that could have been produced by formatting one.
+ *
+ * Study, course, unit and lesson ids are authored as directory names, and the
+ * authoring campus joins them into a filesystem path on the far side of
+ * `/api/studies/…`. Anything with a slash, a dot-dot, or an encoded separator
+ * is a typo or a probe there, and its adapter refuses it before the join.
+ *
+ * Deliberately not applied inside `fromHash`. Parsing an address and deciding
+ * an id is servable are different questions: delivery fetches a published
+ * package by name and has never restricted the shape of one, so putting the
+ * rule in the parser would quietly unroute a course the moment upstream
+ * authored an id this regex did not expect.
+ */
+export function isSafeId(value: string): boolean {
+  return /^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(value) && !value.includes("..");
 }
 
 /**
@@ -160,7 +198,7 @@ export function toHash(view: View): string {
  * valid place to be.
  */
 export function fromHash(hash: string): View {
-  const parts = hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(dec);
+  const parts = hash.replace(/^#\/?/u, "").split("/").filter(Boolean).map(dec);
   if (parts.length === 0) return WORLD;
   if (parts.length === 1 && parts[0] === "review") return { kind: "review" };
   if (parts[0] === "library") {
@@ -182,6 +220,7 @@ export function fromHash(hash: string): View {
   if (parts.length === 1 && parts[0] === "plans") return { kind: "plans" };
   if (parts.length === 1 && parts[0] === "settings") return { kind: "settings" };
   if (parts.length === 1 && parts[0] === "me") return { kind: "me" };
+  if (parts.length === 1 && parts[0] === "studio") return { kind: "studio" };
   if (parts.length === 1 && parts[0] === "concepts") return { kind: "concepts" };
   if (parts.length === 2 && parts[0] === "concepts" && parts[1]) {
     return { kind: "concept", id: parts[1] };
@@ -194,6 +233,63 @@ export function fromHash(hash: string): View {
   if (!unitId || !lessonId) return { kind: "course", studyId, courseId };
   if (tail === "done") return { kind: "settled", studyId, courseId, unitId, lessonId };
   return { kind: "lesson", studyId, courseId, unitId, lessonId };
+}
+
+/** The series a view names, or null when it names none. */
+export function studyIdOfView(view: View): string | null {
+  return view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
+    ? view.studyId
+    : null;
+}
+
+/** Lesson is a bare route: UniversityShell must not mount. */
+export function isBareView(view: View): boolean {
+  return view.kind === "lesson";
+}
+
+/** Which rail slot lights up for a view. */
+export function activeIdForView(view: View): string {
+  switch (view.kind) {
+    case "world":
+    case "course":
+    case "settled":
+    // The planet is where you choose which series to learn, so the rail's
+    // 学习 stays lit while you are on it — you have not left learning to go
+    // somewhere else, you are picking what to learn.
+    case "planet":
+      return "learn";
+    case "library":
+    case "terms":
+    case "term":
+    case "concepts":
+    case "concept":
+    case "anti-pattern":
+    case "anti-pattern-entry":
+      return "library";
+    case "favourites":
+      return "favourites";
+    case "practice":
+      return "practice";
+    case "league":
+      return "league";
+    case "quests":
+      return "quests";
+    case "plans":
+      return "plan";
+    case "me":
+    case "avatar-lab":
+      return "profile";
+    case "catalog":
+      return "catalog";
+    case "review":
+      return "review";
+    case "settings":
+      return "settings";
+    case "studio":
+      return "studio";
+    case "lesson":
+      return "learn";
+  }
 }
 
 // Ids are slugs today, but they are authored upstream and this side does not

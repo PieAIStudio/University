@@ -83,7 +83,7 @@ export function WorldLanding({
    * `@pieai/university-world/course-map.js` so there is one of each.
    */
   readonly openCourseId: string | null;
-  readonly onOpenCourse: (courseId: string) => void;
+  readonly onOpenCourse: (studyId: string, courseId: string) => void;
   readonly onCloseCourse: () => void;
   readonly onOpenLesson: (locator: LessonRef) => void;
 }) {
@@ -249,7 +249,7 @@ export function WorldLanding({
   */
   function enter(node: CourseNode) {
     onSelectStudy(node.studyId);
-    onOpenCourse(node.courseId);
+    onOpenCourse(node.studyId, node.courseId);
     setPicked(null);
   }
 

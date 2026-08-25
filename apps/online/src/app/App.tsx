@@ -22,7 +22,19 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { courseShapeOf, readCourseProgress, spineOf } from "@pieai/university-core";
+import {
+  activeIdForView,
+  courseShapeOf,
+  fromHash,
+  isBareView,
+  LIBRARY_VIEW_TAB,
+  libraryTabOf,
+  readCourseProgress,
+  spineOf,
+  toHash,
+  WORLD,
+  type View,
+} from "@pieai/university-core";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import { spacedName } from "@pieai/university-ui/text/spaced-name.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
@@ -90,7 +102,7 @@ import {
   SettlementHost,
   TermEntryHost,
 } from "../screens/lazy";
-import { fromHash, LIBRARY_VIEW_TAB, libraryTabOf, toHash, type View } from "../url-state";
+
 import {
   todayCtaLabel,
   TodaySection,
@@ -107,7 +119,7 @@ import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-
 import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
 import { PlanetRail, PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
-import { activeIdForView, isBareView, useMinWidth } from "./shell-route";
+import { useMinWidth } from "./shell-route";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
@@ -116,6 +128,19 @@ import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
 const ProfileAvatar = lazy(() =>
   import("./ProfileAvatar.js").then((mod) => ({ default: mod.ProfileAvatar })),
 );
+
+/**
+ * A destination this build can actually answer.
+ *
+ * `#/studio` belongs to the shared address space because the workbench is a
+ * mode of one product, not a second one — but the workbench needs an authoring
+ * pipeline on the other end of the address, and this build has none. So the
+ * hash lands on the map, which is where it landed before the two campuses
+ * shared a parser and `studio` read as a study nobody has.
+ */
+function routable(view: View): View {
+  return view.kind === "studio" ? WORLD : view;
+}
 
 type PathOverlay =
   | {
@@ -142,13 +167,13 @@ export function App() {
   const [nodes, setNodes] = useState<readonly CourseNode[] | null>(null);
   // The address bar is the source of truth for where the learner is, so a
   // reload lands where they were and a lesson can be sent to someone.
-  const [view, setViewState] = useState<View>(() => fromHash(location.hash));
+  const [view, setViewState] = useState<View>(() => routable(fromHash(location.hash)));
   const setView = useCallback((next: View) => {
     if (toHash(next) !== location.hash) history.pushState(null, "", toHash(next));
     setViewState(next);
   }, []);
   useEffect(() => {
-    const onHash = () => setViewState(fromHash(location.hash));
+    const onHash = () => setViewState(routable(fromHash(location.hash)));
     addEventListener("popstate", onHash);
     addEventListener("hashchange", onHash);
     return () => {

@@ -5,7 +5,7 @@ import {
 } from "@pieai/university-ui";
 import { conceptHeadToMarkdown } from "@pieai/university-core";
 
-import { WORLD, type View } from "../url-state";
+import { WORLD, type View } from "@pieai/university-core";
 import { CONCEPT_POINTERS } from "./concept-pointers";
 import { LEXICON_BY_SENSE } from "./lexicon-by-sense";
 import { progressPort } from "../progress/store";

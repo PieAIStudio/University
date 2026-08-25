@@ -2,7 +2,7 @@ import { assembleTermEntry, hasFavourite, termHeadToMarkdown } from "@pieai/univ
 import { EntryPage, FavouriteStar } from "@pieai/university-ui";
 
 import { LEXICON } from "../lesson/language";
-import type { View } from "../url-state";
+import type { View } from "@pieai/university-core";
 import { useFavourites } from "./favourites";
 import { LEXICON_BY_SENSE } from "./lexicon-by-sense";
 

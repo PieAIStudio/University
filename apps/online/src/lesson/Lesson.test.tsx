@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Course, Lesson } from "../content/library";
-import { toHash } from "../url-state";
+import { toHash } from "@pieai/university-core";
 import { resetAll } from "../progress/store";
 import { LessonReaderHost } from "../screens/LessonReaderHost";
 

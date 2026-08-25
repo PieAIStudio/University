@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { lessonKey, type LessonRef } from "@pieai/university-core";
+import { lessonKey, toHash, type LessonRef } from "@pieai/university-core";
 import { CatalogSurface, type CatalogListing } from "@pieai/university-ui";
 import type { BootstrapData, StudyView } from "@pieai/university-ui/view/lesson-view.js";
 
 import { readJson } from "@pieai/university-ui/api/client.js";
-import { formatAddress } from "../url-state.js";
 import { progressPort } from "../progress/store.js";
 
 function completed(
@@ -204,9 +203,7 @@ export function LocalCatalog({
       listing={listing}
       onBack={onBack}
       onOpenLesson={onOpenLesson}
-      lessonHref={(lesson) =>
-        formatAddress({ section: "studies", studyId: lesson.studyId, lesson })
-      }
+      lessonHref={(lesson) => toHash({ kind: "lesson", ...lesson })}
     />
   );
 }

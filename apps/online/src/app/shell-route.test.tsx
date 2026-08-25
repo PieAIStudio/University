@@ -6,8 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 
-import { activeIdForView, isBareView } from "./shell-route.js";
-import type { View } from "../url-state";
+import { activeIdForView, isBareView, type View } from "@pieai/university-core";
 
 const LESSON: View = {
   kind: "lesson",

@@ -1,7 +1,7 @@
 import { conceptHeadToMarkdown, conceptNeighbours, getConceptEntry } from "@pieai/university-core";
 import { EntryPage } from "@pieai/university-ui";
 
-import type { View } from "../url-state";
+import type { View } from "@pieai/university-core";
 import { CONCEPT_POINTERS } from "./concept-pointers";
 import { LEXICON_BY_SENSE } from "./lexicon-by-sense";
 

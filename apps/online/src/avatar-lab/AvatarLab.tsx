@@ -20,7 +20,7 @@ import { dressScene } from "@pieai/swimmer-avatar-kit/materials";
 import { Avatar } from "@pieai/swimmer-avatar-kit/react-three-fiber";
 import { useCallback, useMemo, useState } from "react";
 
-import { WORLD, type View } from "../url-state";
+import { WORLD, type View } from "@pieai/university-core";
 import { REROLLABLE_PARTS } from "./rerollable-parts";
 
 export function AvatarLab({ onOpen }: { onOpen: (view: View) => void }) {

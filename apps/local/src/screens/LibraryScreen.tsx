@@ -11,9 +11,12 @@ import {
   hasFavourite,
   toggleFavourite,
   termHeadToMarkdown,
+  libraryTabOf,
+  LIBRARY_VIEW_TAB,
   type AntiPatternEntry,
   type ConceptEntry,
   type LexiconEntry,
+  type View,
 } from "@pieai/university-core";
 import { EntryPage, FavouriteStar, LibrarySurface, type ReferenceTab } from "@pieai/university-ui";
 import { createProgressFavouritesStore } from "@pieai/university-ui";
@@ -32,6 +35,27 @@ type OpenEntry =
 
 function conceptOrTerm(id: string): OpenEntry {
   return getConceptEntry(id) ? { kind: "concept", id } : { kind: "term", senseId: id };
+}
+
+/**
+ * Which shelf an address opens on, and which entry it opens.
+ *
+ * The library is one screen with its own tab and entry state, so a route into
+ * it is a starting position rather than a component. Without this, the four
+ * entry addresses the shared union carries — `#/terms/:id`, `#/concepts/:id`,
+ * `#/flavour/:id` — rendered nothing at all here.
+ */
+export function libraryOpening(
+  view: View,
+): { readonly tab: ReferenceTab; readonly entry: OpenEntry | null } | null {
+  if (view.kind === "term") return { tab: "terms", entry: { kind: "term", senseId: view.senseId } };
+  if (view.kind === "concept") {
+    return { tab: "concepts", entry: { kind: "concept", id: view.id } };
+  }
+  if (view.kind === "anti-pattern-entry") {
+    return { tab: "flavour", entry: { kind: "anti-pattern", id: view.id } };
+  }
+  return LIBRARY_VIEW_TAB[view.kind] ? { tab: libraryTabOf(view), entry: null } : null;
 }
 
 function ConceptEntryView({
@@ -177,12 +201,14 @@ function AntiPatternEntryView({
 export function LibraryScreen({
   onBack,
   initialTab = "concepts",
+  initialEntry = null,
 }: {
   readonly onBack: () => void;
   readonly initialTab?: ReferenceTab;
+  readonly initialEntry?: OpenEntry | null;
 }) {
   const [tab, setTab] = useState<ReferenceTab>(initialTab);
-  const [openEntry, setOpenEntry] = useState<OpenEntry | null>(null);
+  const [openEntry, setOpenEntry] = useState<OpenEntry | null>(initialEntry);
 
   if (openEntry?.kind === "concept") {
     const entry = getConceptEntry(openEntry.id);

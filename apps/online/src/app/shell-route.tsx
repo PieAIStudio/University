@@ -1,54 +1,15 @@
 import { useSyncExternalStore } from "react";
 
-import type { View } from "../url-state";
-
-/** Lesson is a bare route: UniversityShell must not mount. */
-export function isBareView(view: View): boolean {
-  return view.kind === "lesson";
-}
-
-export function activeIdForView(view: View): string {
-  switch (view.kind) {
-    case "world":
-    case "course":
-    case "settled":
-    // The planet is where you choose which series to learn, so the rail's
-    // 学习 stays lit while you are on it — you have not left learning to go
-    // somewhere else, you are picking what to learn.
-    case "planet":
-      return "learn";
-    case "library":
-    case "terms":
-    case "term":
-    case "concepts":
-    case "concept":
-    case "anti-pattern":
-    case "anti-pattern-entry":
-      return "library";
-    case "favourites":
-      return "favourites";
-    case "practice":
-      return "practice";
-    case "league":
-      return "league";
-    case "quests":
-      return "quests";
-    case "plans":
-      return "plan";
-    case "me":
-    case "avatar-lab":
-      return "profile";
-    case "catalog":
-      return "catalog";
-    case "review":
-      return "review";
-    case "settings":
-      return "settings";
-    case "lesson":
-      return "learn";
-  }
-}
-
+/**
+ * What a route decides about layout, once the route itself stopped being this
+ * shell's private business.
+ *
+ * `isBareView` and `activeIdForView` moved to `@pieai/university-core` with the
+ * `View` union: both campuses ask the same two questions of the same address,
+ * and a second answer to 「这个地址点亮哪个槽」 is exactly the kind of drift the
+ * shared union exists to remove. What is left here is a media query, which is
+ * about this document rather than about the address.
+ */
 export function useMinWidth(px: number): boolean {
   return useSyncExternalStore(
     (onStoreChange) => {

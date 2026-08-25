@@ -24,7 +24,8 @@
     "./marks/terms.js": "./dist/marks/terms.js",
     "./marks/evidence.js": "./dist/marks/evidence.js",
     "./language/layer.js": "./dist/language/layer.js",
-    "./language/resolve-anchors.js": "./dist/language/resolve-anchors.js"
+    "./language/resolve-anchors.js": "./dist/language/resolve-anchors.js",
+    "./routing/view.js": "./dist/routing/view.js"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

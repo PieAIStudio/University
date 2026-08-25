@@ -1,6 +1,6 @@
 import { getConceptEntry as lookupConcept } from "@pieai/university-core";
 
-import type { View } from "../url-state";
+import type { View } from "@pieai/university-core";
 
 /**
  * How a concept page resolves its own 「先知道」 and 「相关」 pointers.

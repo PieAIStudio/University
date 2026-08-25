@@ -23,13 +23,19 @@ import {
   type StudySwitchItem,
 } from "@pieai/university-ui/navigation/StudySwitcher.js";
 import {
+  activeIdForView,
   completedLessons,
+  fromHash,
   lessonKey,
   type LessonDocumentKey,
   lessonKeyOf,
   lessonRefKey,
+  studyIdOfView,
+  toHash,
+  WORLD,
   type CardProgress,
   type ProgressPort,
+  type View,
 } from "@pieai/university-core";
 import type { LexiconEntry } from "@pieai/university-core";
 import { armSoundUnlock, SoundToggle } from "@pieai/university-ui/sound/index.js";
@@ -49,14 +55,7 @@ import type {
   StudyView,
   TodayCard,
 } from "@pieai/university-ui/view/lesson-view.js";
-import {
-  formatAddress,
-  parseAddress,
-  parseShellHash,
-  SLOT_BY_HEAD,
-  type AppAddress,
-  type ShellSlot,
-} from "./url-state.js";
+import { legacyAddressOf } from "./legacy-address.js";
 import { progressPort } from "./progress/store.js";
 import { cloudProgressRemoteStore } from "./progress/store.js";
 import { identityPort } from "./account/identity.js";
@@ -64,7 +63,7 @@ import { presencePort } from "./presence/store.js";
 import { PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
 import { TodaySection, type TodaySectionData } from "@pieai/university-ui/today/TodaySection.js";
 import { EmptyCampus } from "./shell/EmptyCampus.js";
-import { LibraryScreen } from "./screens/LibraryScreen.js";
+import { libraryOpening, LibraryScreen } from "./screens/LibraryScreen.js";
 import { LocalCatalog } from "./screens/LocalCatalog.js";
 import { recentStudies, StudyShelf } from "./shell/StudyShelf.js";
 import { StudioSection } from "./shell/StudioSection.js";
@@ -562,6 +561,37 @@ export function shortenHomePath(path: string): string {
   return match ? `~${path.slice(match[0].length)}` : path;
 }
 
+/**
+ * Where this document opens.
+ *
+ * One address now — the hash — so this also translates the pathname the
+ * authoring campus used to carry. `replaceState`, not `pushState`: the old
+ * form is not a place anyone should be able to press Back into. Idempotent, so
+ * StrictMode's double render is not a second migration.
+ */
+function openingAddress(): { readonly view: View; readonly studyId: string | null } {
+  const legacy = legacyAddressOf(window.location.pathname);
+  const view = routable(legacy?.view ?? fromHash(window.location.hash));
+  if (legacy) window.history.replaceState(null, "", `/${toHash(view)}`);
+  return { view, studyId: legacy?.studyId ?? studyIdOfView(view) };
+}
+
+/**
+ * A destination this campus can actually answer.
+ *
+ * The settlement screen and the gloss-avatar lab are delivery surfaces; this
+ * campus has never had either. One address space does not mean one set of
+ * screens, so a hash with nothing behind it here lands on the nearest place
+ * that does — which is what it did before, when an unknown segment simply read
+ * as the learn slot.
+ */
+function routable(view: View): View {
+  if (view.kind === "settled") {
+    return { kind: "course", studyId: view.studyId, courseId: view.courseId };
+  }
+  return view.kind === "avatar-lab" ? WORLD : view;
+}
+
 function commitView(update: () => void): void {
   const documentWithTransition = document as Document & {
     startViewTransition?: (callback: () => void) => {
@@ -615,22 +645,34 @@ export function App() {
 
   // Seeded from the address bar, so a refresh or a pasted link lands where it
   // says it will rather than dropping the reader back on Today.
-  const initialAddress = useMemo(() => parseAddress(window.location.pathname), []);
-  const [slot, setSlot] = useState<ShellSlot>(() => parseShellHash(window.location.hash));
-  const [activeSection, setActiveSection] = useState(initialAddress.section);
+  const opening = useMemo(openingAddress, []);
+  const [view, setViewState] = useState<View>(opening.view);
   const [data, setData] = useState<BootstrapData | null>(null);
-  const [selectedStudyId, setSelectedStudyId] = useState<string | null>(initialAddress.studyId);
-  /*
-    Which course island you are standing on, or null out on the map.
-    The delivery shell keeps this in its address; here it is state until the
-    two shells share one router.
-  */
-  const [openCourseId, setOpenCourseId] = useState<string | null>(null);
+  const [selectedStudyId, setSelectedStudyId] = useState<string | null>(opening.studyId);
   const [displayedStudy, setDisplayedStudy] = useState<DisplayedStudy | null>(null);
   const [catalog, setCatalog] = useState<ReadonlyMap<string, StudyView>>(() => new Map());
   const [cloudTodayCard, setCloudTodayCard] = useState<TodayCard | null>(null);
   const [pendingStudyId, setPendingStudyId] = useState<string | null>(null);
-  const [lessonLocator, setLessonRef] = useState<LessonRef | null>(initialAddress.lesson);
+  /*
+    The lesson on screen, and the island you are standing on — read off the
+    address rather than kept beside it. They were two pieces of state and one
+    of them (the island) was not in any URL at all, so the level between a
+    project and a lesson could not be linked, bookmarked or reloaded here while
+    it could in the delivery campus.
+  */
+  const lessonLocator = useMemo<LessonRef | null>(
+    () =>
+      view.kind === "lesson"
+        ? {
+            studyId: view.studyId,
+            courseId: view.courseId,
+            unitId: view.unitId,
+            lessonId: view.lessonId,
+          }
+        : null,
+    [view],
+  );
+  const openCourseId = view.kind === "course" ? view.courseId : null;
   /** Lessons a cross-lesson link led away from, innermost last. */
   const [returnStack, setReturnStack] = useState<readonly LessonRef[]>([]);
   const [displayedLesson, setDisplayedLesson] = useState<DisplayedLesson | null>(null);
@@ -839,15 +881,11 @@ export function App() {
         setLessonError(reason instanceof Error ? reason.message : "无法读取课程");
         const fallback = displayedLesson;
         if (fallback && fallback.locatorKey !== requestedKey) {
-          const fallbackAddress = formatAddress({
-            section: "studies",
-            studyId: fallback.locator.studyId,
-            lesson: fallback.locator,
-          });
-          window.history.replaceState(null, "", fallbackAddress);
+          const fallbackView: View = { kind: "lesson", ...fallback.locator };
+          window.history.replaceState(null, "", toHash(fallbackView));
           setSelectedStudyId(fallback.locator.studyId);
           skipLessonLoadRef.current = fallback.locatorKey;
-          setLessonRef(fallback.locator);
+          setViewState(fallbackView);
         }
       });
     return () => controller.abort();
@@ -909,8 +947,7 @@ export function App() {
   function openLesson(locator: LessonRef, sectionId?: string) {
     pendingSectionIdRef.current = sectionId ?? null;
     setSelectedStudyId(locator.studyId);
-    setLessonRef(locator);
-    setActiveSection("studies");
+    setView({ kind: "lesson", ...locator });
   }
 
   /**
@@ -975,80 +1012,74 @@ export function App() {
       });
   }
 
-  const address: AppAddress = {
-    section: activeSection,
-    studyId: activeSection === "studies" ? selectedStudyId : null,
-    lesson: activeSection === "studies" ? lessonLocator : null,
-  };
+  /*
+    Move by writing the address, never by setting state beside it.
 
-  // Push on navigation, and listen for the back button.
-  //
-  // Compared as formatted paths rather than as objects: two states that render
-  // the same screen must not stack duplicate history entries, or Back appears
-  // to do nothing and the reader presses it again.
-  useEffect(() => {
-    const next = formatAddress(address);
-    if (next === window.location.pathname) return;
-    const hash = address.lesson ? "" : window.location.hash;
-    syncedPath.current = next;
-    window.history.pushState(null, "", next + hash);
-  }, [address]);
+    The rail's own entries are `<a href="#/…">`, so a state-only navigation
+    would give the same destination two behaviours depending on how you reached
+    it — one linkable and one not. Compared as formatted hashes rather than as
+    objects: two states that render the same screen must not stack duplicate
+    history entries, or Back appears to do nothing and the reader presses it
+    again.
+  */
+  const setView = useCallback((next: View) => {
+    if (toHash(next) !== window.location.hash) {
+      window.history.pushState(null, "", toHash(next));
+    }
+    setViewState(next);
+  }, []);
 
   /*
-    The last path we rebuilt state from.
+    Back, forward, and any `<a href="#/…">` in the chrome.
 
-    This shell carries two addresses — a pathname for study+lesson and a hash
-    for the rail slot — and `popstate` fires for a fragment navigation too, so
-    writing the hash ran the pathname restore as a side effect. The pathname on
-    the learn route encodes no study, so 「进入通用课」 chose a project, wrote
-    `#/`, and the restore immediately put the project back to nothing. The
-    capsule and the map then fell back to today's project and the learner was
-    returned to where they had just asked to leave.
-
-    Two addresses is the actual defect and one address is the actual fix; this
-    keeps the hash from speaking for the path until that lands.
+    This campus used to carry two addresses — a pathname for study+lesson and a
+    hash for the rail slot — and Chrome fires `popstate` for a same-document
+    fragment change too, so writing the hash ran the pathname restore as a side
+    effect and threw the chosen project away. One address removes the whole
+    class: there is nothing left for the hash to speak over.
   */
-  const syncedPath = useRef(window.location.pathname);
-
   useEffect(() => {
     const sync = () => {
-      setSlot(parseShellHash(window.location.hash));
-      if (window.location.pathname === syncedPath.current) return;
-      syncedPath.current = window.location.pathname;
-      const restored = parseAddress(window.location.pathname);
-      setActiveSection(restored.section);
-      setSelectedStudyId(restored.studyId);
-      setLessonRef(restored.lesson);
+      const restored = routable(fromHash(window.location.hash));
+      setViewState(restored);
+      const study = studyIdOfView(restored);
+      if (study) setSelectedStudyId(study);
       // The detour stack belongs to a reading session, not to a URL. Going Back
       // past the lesson that offered a link makes "回到刚才那一课" meaningless.
       setReturnStack([]);
     };
-    const onHash = () => setSlot(parseShellHash(window.location.hash));
     window.addEventListener("popstate", sync);
-    window.addEventListener("hashchange", onHash);
+    window.addEventListener("hashchange", sync);
     return () => {
       window.removeEventListener("popstate", sync);
-      window.removeEventListener("hashchange", onHash);
+      window.removeEventListener("hashchange", sync);
     };
   }, []);
 
-  /*
-    Move between rail slots by writing the address, not by setting state.
-    The rail's own entries are `<a href="#/…">`, so state-only navigation would
-    give the same destination two different behaviours depending on how you got
-    there — one of them linkable and one of them not.
-  */
-  const goToSlot = useCallback((next: ShellSlot) => {
-    const head = Object.entries(SLOT_BY_HEAD).find(([, value]) => value === next)?.[0] ?? "";
-    window.location.hash = head ? `#/${head}` : "#/";
-  }, []);
+  /**
+   * Look at another series.
+   *
+   * Standing on an island belonging to the series you just left is not a place;
+   * the delivery campus pulls back to the map for the same reason, in the same
+   * shape.
+   */
+  const focusStudy = useCallback(
+    (studyId: string) => {
+      setSelectedStudyId(studyId);
+      if (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") {
+        setView(WORLD);
+      }
+    },
+    [view.kind, setView],
+  );
 
+  const libraryView = libraryOpening(view);
   const reading = lessonLocator !== null;
   const studyItems: readonly StudySwitchItem[] = useMemo(() => {
     if (!data) return [];
     return data.studies.map((study) => {
-      const view = catalog.get(study.id);
-      const courses = view?.courses ?? [];
+      const catalogued = catalog.get(study.id);
+      const courses = catalogued?.courses ?? [];
       const done = courses.reduce((sum, course) => sum + lessonsDoneOf(course), 0);
       const total = courses.reduce(
         (sum, course) => sum + course.units.reduce((count, unit) => count + unit.lessons.length, 0),
@@ -1151,23 +1182,13 @@ export function App() {
             progressPort={progressPort}
             shownStudyId={shownStudyId}
             openCourseId={openCourseId}
-            onOpenCourse={setOpenCourseId}
-            onCloseCourse={() => setOpenCourseId(null)}
-            onSelectStudy={(studyId) => {
-              setSelectedStudyId(studyId);
-              setLessonRef(null);
-            }}
+            onOpenCourse={(studyId, courseId) => setView({ kind: "course", studyId, courseId })}
+            onCloseCourse={() => setView(WORLD)}
+            onSelectStudy={focusStudy}
             onOpenLesson={openLesson}
           />
           <div className="studies-layout">
-            <StudyShelf
-              data={data}
-              selectedStudyId={selectedStudyId}
-              onSelect={(studyId) => {
-                setSelectedStudyId(studyId);
-                setLessonRef(null);
-              }}
-            />
+            <StudyShelf data={data} selectedStudyId={selectedStudyId} onSelect={focusStudy} />
             {pendingStudyId && displayedStudy && pendingStudyId !== displayedStudy.locator ? (
               <p className="loading-copy" role="status" aria-live="polite">
                 正在打开另一个学习项目；当前项目仍保留在屏幕上。
@@ -1223,7 +1244,11 @@ export function App() {
           }}
           onBackToCourse={() => {
             setReturnStack([]);
-            setLessonRef(null);
+            setView({
+              kind: "course",
+              studyId: displayedLesson.locator.studyId,
+              courseId: displayedLesson.locator.courseId,
+            });
           }}
           onFollowLink={followLessonLink}
           onReturn={returnStack.length > 0 ? goBackFromLink : undefined}
@@ -1258,9 +1283,9 @@ export function App() {
   }
 
   const aside =
-    slot === "settings" ? (
+    view.kind === "settings" ? (
       <SettingsSubnav />
-    ) : slot === "planet" && data ? (
+    ) : view.kind === "planet" && data ? (
       /*
         The list goes where 「今天」 goes, and the globe goes where the islands
         go — the same two slots the map uses, so stepping out to the planet
@@ -1272,12 +1297,11 @@ export function App() {
         onSelect={setSelectedStudyId}
         onEnter={(studyId) => {
           setSelectedStudyId(studyId);
-          setLessonRef(null);
-          goToSlot("learn");
+          setView(WORLD);
         }}
-        onClose={() => goToSlot("learn")}
+        onClose={() => setView(WORLD)}
       />
-    ) : slot === "learn" && data && data.studies.length > 0 ? (
+    ) : (view.kind === "world" || view.kind === "course") && data && data.studies.length > 0 ? (
       <TodaySection
         data={todayDataOf(data, progressPort, cloudTodayCard, catalog)}
         requestToken={data.requestToken}
@@ -1292,7 +1316,7 @@ export function App() {
     <div data-game-ui-theme="night">
       <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
       <UniversityShell
-        activeId={slot}
+        activeId={activeIdForView(view)}
         extraMoreItems={[STUDIO_MORE_ITEM]}
         /*
           The streak is a question asked of the same cloud-backed document the
@@ -1307,11 +1331,8 @@ export function App() {
               <StudySwitcher
                 studies={studyItems}
                 focusedId={shownStudyId}
-                onSelect={(studyId) => {
-                  setSelectedStudyId(studyId);
-                  setLessonRef(null);
-                }}
-                onOpenPlanet={() => goToSlot("planet")}
+                onSelect={focusStudy}
+                onOpenPlanet={() => setView({ kind: "planet" })}
               />
             ) : undefined,
         })}
@@ -1323,26 +1344,20 @@ export function App() {
           optional slot on a shared component, and an optional slot left empty
           is invisible to the compiler and to anyone reading one file.
         */
-        identity={
-          <RailIdentity
-            onOpen={() => {
-              window.location.hash = "#/me";
-            }}
-          />
-        }
+        identity={<RailIdentity onOpen={() => setView({ kind: "me" })} />}
         aside={aside}
-        asideLabel={slot === "settings" ? "设置" : slot === "planet" ? "选课" : "今天"}
+        asideLabel={view.kind === "settings" ? "设置" : view.kind === "planet" ? "选课" : "今天"}
       >
         <div ref={mainRef} tabIndex={-1} className="campus-main">
           {alerts}
-          {slot === "learn" ? learnBody : null}
+          {view.kind === "world" || view.kind === "course" ? learnBody : null}
           {/*
             A route, not a piece of state. It was `planetOpen` here and
             `#/planet` in the delivery shell, which meant the same page could be
             linked, bookmarked and reloaded in one campus and not the other —
             and typing `#/planet` here silently landed you on the map instead.
           */}
-          {slot === "planet" && data ? (
+          {view.kind === "planet" && data ? (
             <div className="planet-page__globe" data-planet-globe="true">
               <PlanetStage
                 studies={planetStudies}
@@ -1351,37 +1366,44 @@ export function App() {
               />
             </div>
           ) : null}
-          {slot === "studio" && data ? (
+          {view.kind === "studio" && data ? (
             <StudioSection
               data={data}
               selectedStudyId={selectedStudyId}
               studyView={studyView}
               summary={studySummary}
               studiesRootLabel={shortenHomePath(data.studiesRoot)}
-              onSelectStudy={(studyId) => {
-                setSelectedStudyId(studyId);
-                setLessonRef(null);
-              }}
+              onSelectStudy={focusStudy}
               onOpenLesson={openLesson}
             />
           ) : null}
-          {slot === "library" ? (
-            <LibraryScreen onBack={() => (window.location.hash = "#/learn")} />
+          {/*
+            One branch for the whole library, the way the delivery campus routes
+            it. Seven addresses land here and only two of them used to be
+            wired — `#/terms`, `#/concepts` and every entry address fell through
+            to the map, because this campus read a rail slot out of the hash and
+            had no slot by those names. The key re-seeds the surface when the
+            address changes and leaves it alone when the learner moves around
+            inside it.
+          */}
+          {libraryView ? (
+            <LibraryScreen
+              key={toHash(view)}
+              onBack={() => setView(WORLD)}
+              initialTab={libraryView.tab}
+              initialEntry={libraryView.entry}
+            />
           ) : null}
-          {slot === "practice" ? (
+          {view.kind === "practice" ? (
             <PracticeSurface
               store={LOCAL_PRACTICE_STORE}
               lexicon={LOCAL_LEXICON}
-              onOpenWorld={() => {
-                window.location.hash = "#/learn";
-              }}
-              onBrowse={() => {
-                window.location.hash = "#/learn";
-              }}
+              onOpenWorld={() => setView(WORLD)}
+              onBrowse={() => setView(WORLD)}
             />
           ) : null}
-          {slot === "league" ? <LeagueScreen document={progress} /> : null}
-          {slot === "quests" ? <QuestsScreen document={progress} /> : null}
+          {view.kind === "league" ? <LeagueScreen document={progress} /> : null}
+          {view.kind === "quests" ? <QuestsScreen document={progress} /> : null}
           {/*
             The same component the delivery shell renders, from the same prices
             in `@pieai/university-core`. A pricing page that disagreed with
@@ -1395,22 +1417,20 @@ export function App() {
             number. The old authoring SQLite projection is imported through the
             one-time migration bridge, not read as a competing source.
           */}
-          {slot === "plan" ? <PlansScreen /> : null}
-          {slot === "catalog" ? (
+          {view.kind === "plans" ? <PlansScreen /> : null}
+          {view.kind === "catalog" ? (
             data ? (
               <LocalCatalog
                 data={data}
                 catalog={catalog}
-                onBack={() => {
-                  window.location.hash = "#/learn";
-                }}
+                onBack={() => setView(WORLD)}
                 onOpenLesson={openLesson}
               />
             ) : (
               <p className="loading-copy">正在读入本地课程目录…</p>
             )
           ) : null}
-          {slot === "review" && data ? (
+          {view.kind === "review" && data ? (
             <TodaySection
               data={todayDataOf(data, progressPort, cloudTodayCard, catalog)}
               requestToken={data.requestToken}
@@ -1420,24 +1440,13 @@ export function App() {
               onReviewed={refreshLearning}
             />
           ) : null}
-          {slot === "favourites" ? (
-            <LibraryScreen
-              onBack={() => (window.location.hash = "#/learn")}
-              initialTab="favourites"
-            />
-          ) : null}
-          {slot === "settings" ? (
+
+          {view.kind === "settings" ? (
             <SettingsScreen presence={presencePort} progress={progressPort} />
           ) : null}
-          {slot === "profile" ? (
+          {view.kind === "me" ? (
             <ProfileScreen
-              avatar={
-                <RailIdentity
-                  onOpen={() => {
-                    window.location.hash = "#/me";
-                  }}
-                />
-              }
+              avatar={<RailIdentity onOpen={() => setView({ kind: "me" })} />}
               account={<AccountPanel identity={identityPort} />}
               passagesRead={0}
               lessonsCompleted={completedLessons(progress)}

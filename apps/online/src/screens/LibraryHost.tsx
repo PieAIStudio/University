@@ -2,7 +2,7 @@ import { ANTI_PATTERN_ENTRIES, CONCEPT_ENTRIES } from "@pieai/university-core";
 import { LibrarySurface } from "@pieai/university-ui";
 
 import { LEXICON } from "../lesson/language";
-import { WORLD, type LibraryTab, type View } from "../url-state";
+import { WORLD, type LibraryTab, type View } from "@pieai/university-core";
 import { FAVOURITES_STORE } from "./FavouritesHost";
 
 /**

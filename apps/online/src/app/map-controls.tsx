@@ -1,4 +1,4 @@
-import type { View } from "../url-state";
+import type { View } from "@pieai/university-core";
 
 /**
  * Which routes render the world behind them.

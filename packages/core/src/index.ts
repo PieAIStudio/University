@@ -319,3 +319,22 @@ export {
   type PracticeSession,
   type PracticeSubject,
 } from "./practice/index.js";
+
+// One address space, both campuses. `View` names every destination the product
+// has; `toHash`/`fromHash` are the only two functions allowed to know what a
+// URL looks like. Delivery has always parsed hashes this way; the authoring
+// campus carried a second, pathname-shaped address until this became shared.
+export {
+  activeIdForView,
+  fromHash,
+  isBareView,
+  isSafeId,
+  libraryTabOf,
+  LIBRARY_TABS,
+  LIBRARY_VIEW_TAB,
+  studyIdOfView,
+  toHash,
+  WORLD,
+  type LibraryTab,
+  type View,
+} from "./routing/view.js";
