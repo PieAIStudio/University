@@ -83,16 +83,15 @@
 
 @media (max-width: 600px) {
   .source-sheet__meta,
-    .source-sheet__tools {
-      align-items: flex-start;
-      flex-direction: column;
-    }
+  .source-sheet__tools {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 600px) {
   .source-sheet__tools input {
-      width: 100%;
-      min-width: 0;
-    }
+    width: 100%;
+    min-width: 0;
+  }
 }
-

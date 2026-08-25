@@ -2782,10 +2782,6 @@ button.label:focus-visible {
   align-items: center;
 }
 
-
-
-
-
 /*
   Prose and evidence want opposite widths, and a single column can only be wrong
   for one of them. The lesson body was inheriting whatever the rails left over —
@@ -2816,11 +2812,6 @@ button.label:focus-visible {
   heading is now readable straight off the rule.
 */
 
-
-
-
-
-
 /*
  * The spine, made visible.
  *
@@ -2844,16 +2835,9 @@ button.label:focus-visible {
    section's last paragraph instead of opening a new one — close spacing, no
    rule, and a short amber stroke pointing back at the question. */
 
-
 /* Keeping. In `一句话` the heading is a label and the sentence under it is the
    whole point, so the emphasis goes where the content is: the heading shrinks
    to a caption and the line it introduces is set larger than body text. */
-
-
-
-
-
-
 
 .exercise-panel {
   margin-top: 42px;
@@ -3023,60 +3007,8 @@ button.label:focus-visible {
   gap: 10px;
 }
 
-.host-grade {
-  margin-top: 16px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(247, 211, 160, 0.28);
-  background: rgba(247, 211, 160, 0.08);
-}
-
-.host-grade--pass {
-  border-color: rgba(120, 200, 140, 0.45);
-  background: rgba(80, 160, 100, 0.12);
-}
-
-.host-grade--fail {
-  border-color: rgba(230, 150, 100, 0.4);
-  background: rgba(160, 90, 50, 0.12);
-}
-
-.host-grade__eyebrow {
-  margin: 0 0 10px;
-  color: #f7d3a0;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.host-grade__body {
-  color: rgba(255, 245, 232, 0.9);
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-.host-grade__extensions {
-  margin-top: 12px;
-}
-
-.host-grade__extensions ul {
-  margin: 6px 0 0;
-  padding-left: 1.2rem;
-  color: rgba(255, 245, 232, 0.82);
-  font-size: 0.88rem;
-  line-height: 1.5;
-}
-
 /* Each extension is one sentence rendered as Markdown, so its paragraph must
    not reintroduce block spacing inside a list item. */
-.host-grade__extensions li > .markdown-body > :first-child {
-  margin-top: 0;
-}
-
-.host-grade__extensions li > .markdown-body > :last-child {
-  margin-bottom: 0;
-}
 
 .lesson-practice {
   display: grid;
@@ -3144,20 +3076,6 @@ button.label:focus-visible {
   padding: 0;
   list-style: none;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 .evidence-snippet {
   margin-top: 14px;
@@ -3269,8 +3187,6 @@ button.label:focus-visible {
 
 /* In-prose [[evidence:…]] — real pinned snippet, not a chip that hides it. */
 
-
-
 .evidence-ua-place {
   display: grid;
   gap: 6px;
@@ -3321,20 +3237,6 @@ button.label:focus-visible {
   font-size: 0.78rem;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @keyframes evidence-inline-shimmer {
   0% {
     background-position: 100% 0;
@@ -3343,17 +3245,6 @@ button.label:focus-visible {
     background-position: -100% 0;
   }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 .evidence-source-open {
   margin-top: 10px;
@@ -3393,7 +3284,6 @@ button.label:focus-visible {
     max-height: none;
     overflow-y: visible;
   }
-
 
   /* No hover on the way to a note on a touch screen, so the controls stay. */
 
@@ -3534,8 +3424,6 @@ button.label:focus-visible {
   .lesson-toolbar {
     top: 0;
   }
-
-
 }
 
 /* Mermaid, external-link mark, and blocked-image styles moved to
@@ -3544,21 +3432,6 @@ button.label:focus-visible {
 
 /* The English word layer moved to @pieai/university-ui/language/word-layer.css,
    which this stylesheet imports at the top, so both shells look the same. */
-
-.host-grade__coach {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(247, 211, 160, 0.18);
-}
-
-.host-grade__coach-hint {
-  color: rgba(255, 245, 232, 0.6);
-  font-size: 0.8rem;
-}
 
 .airlock-clocks {
   margin: 16px 0;
@@ -3739,8 +3612,6 @@ button.label:focus-visible {
   line-height: 1.5;
 }
 
-
-
 /* ── Backlinks, at the end of the lesson ────────────────────────────────── */
 
 .lesson-backlinks {
@@ -3807,30 +3678,7 @@ button.label:focus-visible {
 /* The passage is gone from this revision — the note is kept, but it can no
    longer claim to point at anything. */
 
-
-
-
-
 /* Two lines: enough to recognise the passage, not enough to re-read it here. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* The gloss is the reason to scan this list at all, but it is the second thing
    read; truncating keeps one word per row so the list stays scannable. */
@@ -3923,7 +3771,6 @@ button.label:focus-visible {
 .exercise-prompt > :last-child {
   margin-bottom: 0;
 }
-
 
 /* Cross-lesson and evidence trigger styles moved to
    @pieai/university-ui/reference/reference-panel.css, imported from main.tsx. */
@@ -4040,25 +3887,11 @@ button.label:focus-visible {
   font-weight: 700;
 }
 
-
-
-
 /* An open question is unfinished business and says so; a highlight is a note to
    self and should not compete with it for attention. */
 
-
-
 /* Three lines of the passage is enough to recognise it; the whole thing would
    turn the rail into a second copy of the lesson. */
-
-
-
-
-
-
-
-
-
 
 /* ── Project map: how far the courses reach into the studied project ────── */
 

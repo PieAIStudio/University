@@ -68,6 +68,7 @@
     "./review/ReviewCard.js": "./src/review/ReviewCard.tsx",
     "./review/VocabularyReview.js": "./src/review/VocabularyReview.tsx",
     "./review/choice-block.css": "./src/review/choice-block.css",
+    "./review/host-grade.css": "./src/review/host-grade.css",
     "./review/ports.js": "./src/review/ports.ts",
     "./review/review-empty.js": "./src/review/review-empty.ts",
     "./review/scheduler-ports.js": "./src/review/scheduler-ports.ts",

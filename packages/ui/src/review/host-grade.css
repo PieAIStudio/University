@@ -1,0 +1,67 @@
+.host-grade {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(247, 211, 160, 0.28);
+  background: rgba(247, 211, 160, 0.08);
+}
+
+.host-grade--pass {
+  border-color: rgba(120, 200, 140, 0.45);
+  background: rgba(80, 160, 100, 0.12);
+}
+
+.host-grade--fail {
+  border-color: rgba(230, 150, 100, 0.4);
+  background: rgba(160, 90, 50, 0.12);
+}
+
+.host-grade__eyebrow {
+  margin: 0 0 10px;
+  color: #f7d3a0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.host-grade__body {
+  color: rgba(255, 245, 232, 0.9);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.host-grade__extensions {
+  margin-top: 12px;
+}
+
+.host-grade__extensions ul {
+  margin: 6px 0 0;
+  padding-left: 1.2rem;
+  color: rgba(255, 245, 232, 0.82);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.host-grade__extensions li > .markdown-body > :first-child {
+  margin-top: 0;
+}
+
+.host-grade__extensions li > .markdown-body > :last-child {
+  margin-bottom: 0;
+}
+
+.host-grade__coach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(247, 211, 160, 0.18);
+}
+
+.host-grade__coach-hint {
+  color: rgba(255, 245, 232, 0.6);
+  font-size: 0.8rem;
+}
