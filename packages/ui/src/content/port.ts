@@ -62,18 +62,23 @@ export interface CardBody {
 /**
  * The small, explicit content read needed to explain one stored mistake.
  *
- * Normal lesson reads intentionally do not include the reference answer. The
- * mistake book is the one place that asks for it, after the learner has
- * already submitted an answer; keeping that question on ContentPort makes
- * both campuses use the same UI without leaking the delivery package's raw
- * authoring shape into the reader.
+ * `correctAnswer` is nullable, and that is the contract rather than an
+ * oversight. Reference answers are stripped from the delivery package on
+ * purpose — shipping them would put every answer in the product one network
+ * tab away from a learner who has attempted none of them — so the delivery
+ * build can name the question a learner got wrong but cannot yet name the
+ * answer. The authoring build asks its own server and gets one.
+ *
+ * Null therefore means 「这个 build 现在拿不到」, not 「这题没有答案」, and the
+ * list says so. It stops being null for delivery when the answer becomes a
+ * server read; nothing above this line changes on that day.
  */
 export interface MistakeExercise {
   readonly id: string;
   readonly lessonTitle: string;
   readonly title: string;
   readonly prompt: string;
-  readonly correctAnswer: string;
+  readonly correctAnswer: string | null;
   readonly contentRevision: number;
 }
 

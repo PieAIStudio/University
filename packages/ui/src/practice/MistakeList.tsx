@@ -168,9 +168,21 @@ function MistakeCard({
               <h3>你当时答</h3>
               <p>{answer}</p>
             </section>
+            {/*
+              A build that cannot fetch the answer says so, and says why it is
+              still worth being here: the question and your own answer are the
+              two halves you need to have another go. Printing 「暂时不可用」 in
+              the answer's place would read as a fault; this is a boundary.
+            */}
             <section>
               <h3>正确答案</h3>
-              <MarkdownContent>{exercise.correctAnswer}</MarkdownContent>
+              {exercise.correctAnswer === null ? (
+                <p className="mistake-card__withheld">
+                  这个版本不随课程包下发参考答案。题目和你当时的答案都在上面，先自己再想一遍。
+                </p>
+              ) : (
+                <MarkdownContent>{exercise.correctAnswer}</MarkdownContent>
+              )}
             </section>
           </div>
         </div>

@@ -72,7 +72,6 @@ export interface Exercise {
   readonly title?: string;
   readonly prompt: string;
   readonly answerKey?: AnswerKey;
-  readonly referenceAnswer?: string;
 }
 
 export interface Lesson {

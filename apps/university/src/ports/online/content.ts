@@ -65,7 +65,13 @@ export function createOnlineContentPort(): ContentPort {
         lessonTitle: lesson.title,
         title: exercise.title ?? "自检",
         prompt: exercise.prompt,
-        correctAnswer: exercise.referenceAnswer ?? "参考答案暂时不可用",
+        /*
+          Not shipped, by design. `import-courses.mjs` strips the reference
+          answer out of every package; what survives is a fingerprint the
+          local grader can compare against, and a fingerprint cannot be read
+          back out into a sentence. See the note on `MistakeExercise`.
+        */
+        correctAnswer: null,
         contentRevision: ONLINE_CONTENT_REVISION,
       };
     },

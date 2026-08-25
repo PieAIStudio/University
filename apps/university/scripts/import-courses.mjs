@@ -21,9 +21,7 @@
  * verbatim. What is tracked is `content/manifest.json`: study and course ids,
  * package hashes, counts. The generated `content/shelf.json` is the small
  * delivery projection beside those packages; it carries structure and derived
- * path facts; it never carries lesson prose or answer material. A course
- * package also keeps a reference-answer field for the mistake-book ContentPort; the
- * normal lesson read model still drops it. The manifest satisfies the
+ * path facts, never lesson prose or answer material. The manifest satisfies the
  * parity contract's requirement that an import be reproducible from a tracked
  * record without the bytes themselves being tracked, and it is also the file a
  * review gate will one day sign.
@@ -143,13 +141,21 @@ for (const studyId of readdirSync(upstream).sort()) {
         // revision on the package itself so shared progress code receives the
         // caller's current version instead of inventing one in core.
         lesson.contentRevision = 1;
-        // The normal lesson read model never returns the answer. The mistake
-        // book is an explicit post-attempt content read, so keep one
-        // reference-answer field in the package and remove the authoring-only
-        // discriminant fields that the grader does not need.
+        // The answer never leaves the build.
+        //
+        // `expectedAnswer` was being served inside the lesson JSON, so every
+        // answer in the product sat in plain text one network tab away before
+        // the learner had typed anything. The authoring shell discloses a
+        // reference answer only after repeated attempts or a pass; the shell
+        // people pay for was giving it away. What ships now is a fingerprint.
+        //
+        // The mistake book asked for this back, and the answer is still no. A
+        // read model that drops a field does not unsend the bytes: whoever
+        // opens a network tab reads all 1,800 answers, and they have attempted
+        // none of them. Showing one learner the answer to the one question
+        // they just got wrong is a *server* read, and it waits for the server.
         for (const exercise of lesson.exercises ?? []) {
           if (typeof exercise.expectedAnswer === "string") {
-            exercise.referenceAnswer = exercise.expectedAnswer;
             const key = compileAnswerKey(exercise.expectedAnswer);
             exercise.answerKey = key;
             keysCompiled += 1;
@@ -161,8 +167,6 @@ for (const studyId of readdirSync(upstream).sort()) {
             if (Math.max(key.len, key.symLen ?? 0) === 0) {
               unusableKeys.push(`${studyId}/${course.id}/${lesson.id}`);
             }
-          } else if (Array.isArray(exercise.rubric)) {
-            exercise.referenceAnswer = exercise.rubric.join("\n");
           }
           delete exercise.expectedAnswer;
           delete exercise.rubric;
@@ -325,7 +329,7 @@ const totalServed = manifest.studies.reduce(
   0,
 );
 console.log(
-  `import-courses: ${keysCompiled} answer keys compiled (normal lesson reads strip answers), ` +
+  `import-courses: ${keysCompiled} answer keys compiled (answers stripped), ` +
     `${manifest.studies.length} studies, ${totalCourses} courses, ` +
     `${(totalServed / 1048576).toFixed(1)} MB of lesson JSON, ` +
     `${assetCount} assets lifted out (${(assetBytes / 1048576).toFixed(1)} MB, ` +
