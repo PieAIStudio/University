@@ -383,8 +383,8 @@ argument:
 | --- | --- | --- |
 | R0 | Delete dead code | **done** |
 | R1 | Narrow the export surface | **done** |
-| R2 | `packages/world/src`, 47 direct children into directories | in progress |
-| R3 | Shared components' CSS back beside the components | |
+| R2 | `packages/world/src`, 47 direct children into directories | **done** — 47 → 10 |
+| R3 | Shared components' CSS back beside the components | in progress |
 | R4 | Split `App.tsx` | |
 | R5 | 359 colour literals into tokens | |
 
@@ -472,6 +472,12 @@ still one 4,896-line file is paving a moving road.
   was green: typecheck, lint and 120 unit tests all passed, because nothing in
   the unit suite renders `App`. All 15 browser walks failed. This is the whole
   argument for keeping `pnpm e2e` outside `verify` and running it anyway.
+- **A moved file's asset imports are invisible to typecheck.** Grouping
+  `packages/world/src` into directories left three GLB imports in
+  `island/generated-landmark.tsx` pointing at the old relative path.
+  `tsc` does not resolve `.glb`, so typecheck, lint and 131 world tests were
+  all green; only `pnpm build` failed. Same family as the `exports` trap above
+  — the build is the only step that resolves what the bundler resolves.
 - **This file is pinned.** A commit touching it needs
   `Pinned-Override: REF-CURRENT-WORK` in the message. SPEC-0001 needs its own.
 
