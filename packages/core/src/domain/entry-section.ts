@@ -360,7 +360,7 @@ const QuizPayloadSchema = z
   });
 
 /**
- * The vocabulary a miniature demo is built from. Ten leaves and two containers.
+ * The vocabulary a miniature demo is built from. Nine leaves and two containers.
  *
  * Deliberately not arbitrary markup. A demo authored as HTML would be a second
  * component library nobody reviews, it would drift from the product's own
@@ -442,7 +442,7 @@ const DemoLeafSchema = z.discriminatedUnion("kind", [
 // `row` and `stack` are two literal members rather than one member with a
 // two-value `kind`. Only literals make this a discriminated union, and only a
 // discriminated union lets a renderer narrow "not a container" by elimination
-// instead of re-listing all ten leaves every time a new one is added.
+// instead of re-listing all nine leaves every time a new one is added.
 const DemoContainerChildren = z.array(DemoLeafSchema).min(1).max(12);
 
 const DemoNodeSchema = z.discriminatedUnion("kind", [

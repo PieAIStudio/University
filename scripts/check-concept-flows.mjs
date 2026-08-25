@@ -32,6 +32,48 @@ function withoutCurrent(steps) {
   return steps.map(({ current: _current, ...step }) => step);
 }
 
+const FLOW_DESCRIPTION_MAX_LENGTH = 40;
+const FORBIDDEN_FLOW_DESCRIPTION_TEXT = ["；", "打个比方"];
+
+const wordingFailures = [];
+for (const entry of CONCEPT_ENTRIES) {
+  const flow = flowOf(entry);
+  if (!flow) continue;
+
+  flow.payload.steps.forEach((step, index) => {
+    const length = Array.from(step.description).length;
+    const forbidden = FORBIDDEN_FLOW_DESCRIPTION_TEXT.filter((text) =>
+      step.description.includes(text),
+    );
+    if (length <= FLOW_DESCRIPTION_MAX_LENGTH && forbidden.length === 0) return;
+    wordingFailures.push({
+      id: entry.head.id,
+      step: index + 1,
+      length,
+      forbidden,
+      description: step.description,
+    });
+  });
+}
+
+if (wordingFailures.length > 0) {
+  console.error(`Concept flow wording failed: ${wordingFailures.length} violation(s).`);
+  for (const failure of wordingFailures) {
+    const reasons = [];
+    if (failure.length > FLOW_DESCRIPTION_MAX_LENGTH) {
+      reasons.push(
+        `description is ${failure.length} characters (maximum ${FLOW_DESCRIPTION_MAX_LENGTH})`,
+      );
+    }
+    for (const forbidden of failure.forbidden) {
+      reasons.push(`contains forbidden text ${JSON.stringify(forbidden)}`);
+    }
+    console.error(`  ${failure.id} step ${failure.step}: ${reasons.join(", ")}`);
+    console.error(`    description: ${JSON.stringify(failure.description)}`);
+  }
+  process.exit(1);
+}
+
 function firstDifference(left, right) {
   if (left.length !== right.length) {
     return {
