@@ -35,7 +35,11 @@ import aerialWorldPlate4k from "./assets/generated/aerial-world-plate-4k.webp?ur
 import { cloudPuffs } from "./sky/cloud-layout.js";
 import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course/course";
 import { GeneratedCourseLandmark } from "./island/generated-landmark.js";
-import { islandBlueprint, islandSurfaceY, type IslandBlueprint } from "./island/island-blueprint.js";
+import {
+  islandBlueprint,
+  islandSurfaceY,
+  type IslandBlueprint,
+} from "./island/island-blueprint.js";
 import { buildBlueprintIsland } from "./island/island-geometry.js";
 import { PropField, type Placement, type Role } from "./kit";
 import { layoutCourse, layoutStudyRoad, radiusForLessons } from "./course/layout";

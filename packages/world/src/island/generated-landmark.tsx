@@ -3,9 +3,9 @@ import { useGLTF } from "@react-three/drei";
 import { useMemo } from "react";
 import * as THREE from "three";
 
-import twinPactGate1024Url from "./assets/generated/twin-pact-gate-1024.glb?url";
-import twinPactGate512Url from "./assets/generated/twin-pact-gate-512.glb?url";
-import twinPactGateUrl from "./assets/generated/twin-pact-gate.glb?url";
+import twinPactGate1024Url from "../assets/generated/twin-pact-gate-1024.glb?url";
+import twinPactGate512Url from "../assets/generated/twin-pact-gate-512.glb?url";
+import twinPactGateUrl from "../assets/generated/twin-pact-gate.glb?url";
 import { renderTier } from "../sky/tier.js";
 
 const TWIN_PACT_STUDY = "turing-pact";
