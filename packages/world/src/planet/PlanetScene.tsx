@@ -26,7 +26,13 @@ import * as THREE from "three";
 import { hash } from "../random.js";
 import { Stage } from "../Stage.js";
 import { renderTier } from "../tier.js";
-import { placeStudies, rotationFor, stepRotation, type YawPitch } from "./placement.js";
+import {
+  placeStudies,
+  rotationFor,
+  stepRotation,
+  type SpherePoint,
+  type YawPitch,
+} from "./placement.js";
 
 /**
  * Copied hexes, not imported from Maps.tsx. A value import of Maps pulls
@@ -133,19 +139,18 @@ function planetCamera(): readonly [number, number, number] {
 }
 
 const TURN_RATE = 5.5;
-/*
-  A marker is a place on a map, so it has to survive being drawn at the size the
-  pane actually gives it. At 0.028 of a unit sphere in a 300px column it landed
-  at roughly three pixels — present in the render, absent to a reader.
-*/
-/*
-  Unselected markers used to be `ISLAND_PALETTE.rock`, which is the colour of a
-  rock on a green island — against a globe that is mostly green and blue it is
-  camouflage. A pin has to be lighter than everything under it.
-*/
 const MARKER_QUIET = 0xf2e6d2;
-const MARKER_R = 0.055;
-const MARKER_R_SELECTED = 0.095;
+const MARKER_SURFACE = 1.026;
+const PIN_BEAM_HEIGHT = 0.34;
+const PIN_PROFILE = [
+  new THREE.Vector2(0, -0.14),
+  new THREE.Vector2(0.045, -0.105),
+  new THREE.Vector2(0.09, -0.035),
+  new THREE.Vector2(0.1, 0.045),
+  new THREE.Vector2(0.075, 0.115),
+  new THREE.Vector2(0.035, 0.16),
+  new THREE.Vector2(0, 0.17),
+];
 
 const REST: YawPitch = { yaw: 0.35, pitch: 0.18 };
 
@@ -157,6 +162,11 @@ export interface PlanetSceneProps {
 
 function prefersReducedMotion(): boolean {
   return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function markerQuaternion(point: Pick<SpherePoint, "x" | "y" | "z">): THREE.Quaternion {
+  const normal = new THREE.Vector3(point.x, point.y, point.z).normalize();
+  return new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
 }
 
 function colourLerp(from: number, to: number, t: number): THREE.Color {
@@ -296,7 +306,6 @@ function buildPlanetGeometry(): THREE.BufferGeometry {
     const elev = band * 0.075 + (n - 0.5) * 0.045 + 0.035;
     const radius = 1 + Math.max(-0.02, elev * 0.16);
     position.setXYZ(index, nx * radius, ny * radius, nz * radius);
-
   }
 
   /*
@@ -448,45 +457,82 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
           <FresnelRim />
           {[...placed.entries()].map(([id, point]) => {
             const selected = id === selectedId;
+            const pinColor = selected ? ACCENT : MARKER_QUIET;
+            const normalRotation = markerQuaternion(point);
             return (
-              <mesh
+              <group
                 key={id}
-                position={[point.x * 1.04, point.y * 1.04, point.z * 1.04]}
-                onClick={
-                  onSelect
-                    ? (event) => {
-                        event.stopPropagation();
-                        onSelect(id);
-                      }
-                    : undefined
-                }
-                onPointerOver={
-                  onSelect
-                    ? (event) => {
-                        event.stopPropagation();
-                        const target = event.nativeEvent.target;
-                        if (target instanceof HTMLElement) target.style.cursor = "pointer";
-                      }
-                    : undefined
-                }
-                onPointerOut={
-                  onSelect
-                    ? (event) => {
-                        const target = event.nativeEvent.target;
-                        if (target instanceof HTMLElement) target.style.cursor = "";
-                      }
-                    : undefined
-                }
+                position={[
+                  point.x * MARKER_SURFACE,
+                  point.y * MARKER_SURFACE,
+                  point.z * MARKER_SURFACE,
+                ]}
+                quaternion={normalRotation}
+                scale={selected ? 1.08 : 1}
               >
-                <octahedronGeometry args={[selected ? MARKER_R_SELECTED : MARKER_R, 0]} />
-                <meshStandardMaterial
-                  color={selected ? ACCENT : MARKER_QUIET}
-                  emissive={selected ? ACCENT : 0x000000}
-                  emissiveIntensity={selected ? 0.55 : 0}
-                  roughness={0.55}
-                  flatShading
-                />
-              </mesh>
+                <mesh position={[0, 0.012, 0]}>
+                  <cylinderGeometry args={[0.14, 0.12, 0.018, 24]} />
+                  <meshStandardMaterial
+                    color={pinColor}
+                    emissive={pinColor}
+                    emissiveIntensity={selected ? 0.9 : 0.42}
+                    roughness={0.38}
+                    metalness={0.05}
+                  />
+                </mesh>
+                <mesh position={[0, PIN_BEAM_HEIGHT / 2, 0]}>
+                  <cylinderGeometry
+                    args={[
+                      selected ? 0.026 : 0.018,
+                      selected ? 0.026 : 0.018,
+                      PIN_BEAM_HEIGHT,
+                      8,
+                      1,
+                      true,
+                    ]}
+                  />
+                  <meshBasicMaterial
+                    color={pinColor}
+                    transparent
+                    opacity={selected ? 0.58 : 0.32}
+                    depthWrite={false}
+                    blending={THREE.AdditiveBlending}
+                  />
+                </mesh>
+                <mesh position={[0, PIN_BEAM_HEIGHT + 0.14, 0]}>
+                  <latheGeometry args={[PIN_PROFILE, 12]} />
+                  <meshStandardMaterial
+                    color={pinColor}
+                    emissive={selected ? ACCENT : 0x8a6335}
+                    emissiveIntensity={selected ? 0.72 : 0.28}
+                    roughness={0.42}
+                    metalness={0}
+                    flatShading
+                  />
+                </mesh>
+                {onSelect ? (
+                  <mesh
+                    position={[0, 0.34, 0]}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSelect(id);
+                    }}
+                    onPointerOver={(event) => {
+                      event.stopPropagation();
+                      const target = event.nativeEvent.target;
+                      if (target instanceof HTMLElement) target.style.cursor = "pointer";
+                    }}
+                    onPointerOut={(event) => {
+                      event.stopPropagation();
+                      const target = event.nativeEvent.target;
+                      if (target instanceof HTMLElement) target.style.cursor = "";
+                    }}
+                  >
+                    <cylinderGeometry args={[0.17, 0.17, 0.72, 8]} />
+                    <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+                  </mesh>
+                ) : null}
+              </group>
             );
           })}
         </group>
