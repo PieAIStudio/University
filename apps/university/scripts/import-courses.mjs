@@ -19,10 +19,12 @@
  *
  * What lands in `content/` is ignored by git — it quotes private repositories
  * verbatim. What is tracked is `content/manifest.json`: study and course ids,
- * package hashes, counts. That satisfies the parity contract's requirement
- * that an import be reproducible from a tracked manifest without the bytes
- * themselves being tracked, and it is also the file a review gate will one day
- * sign.
+ * package hashes, counts. The generated `content/shelf.json` is the small
+ * delivery projection beside those packages; it carries structure and derived
+ * path facts, never lesson prose or answer material. The manifest satisfies the
+ * parity contract's requirement that an import be reproducible from a tracked
+ * record without the bytes themselves being tracked, and it is also the file a
+ * review gate will one day sign.
  *
  * Direction is one-way. This reads a UniversityLocal checkout and never writes
  * to it; with no checkout it reports that and exits 0.
@@ -42,6 +44,11 @@ import {
 import { createHash } from "node:crypto";
 
 import { compileAnswerKey } from "@pieai/university-core";
+import {
+  evidenceCount,
+  evidenceLocatorsIn,
+  unlockEntryCount,
+} from "@pieai/university-core/marks/path-stats.js";
 import { join, resolve } from "node:path";
 
 import { bakeLessonEvidence, hasAnyStudyRepository } from "./bake-evidence.mjs";
@@ -94,6 +101,7 @@ let keysCompiled = 0;
 /** Keys with nothing left to compare, reported at the end rather than shipped. */
 const unusableKeys = [];
 const manifest = { importedAt: new Date().toISOString().slice(0, 10), studies: [] };
+const shelf = { studies: [] };
 let assetCount = 0;
 let assetBytes = 0;
 let inlineBytes = 0;
@@ -118,6 +126,7 @@ for (const studyId of readdirSync(upstream).sort()) {
   mkdirSync(join(contentRoot, studyId), { recursive: true });
 
   const courses = [];
+  const shelfCourses = [];
   for (const entry of index.courses) {
     const raw = readFileSync(join(studyDir, entry.file));
     const pkg = JSON.parse(raw.toString("utf8"));
@@ -205,6 +214,37 @@ for (const studyId of readdirSync(upstream).sort()) {
 
     const body = Buffer.from(`${JSON.stringify(pkg)}\n`, "utf8");
     writeFileSync(join(contentRoot, studyId, `${course.id}.json`), body);
+    shelfCourses.push({
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      audience: course.audience,
+      objectives: course.objectives,
+      status: "active",
+      isDefault: course.id === index.study.defaultCourseId,
+      prerequisiteCourseIds: course.prerequisiteCourseIds,
+      trackId: course.trackId,
+      units: course.units.map((unit) => ({
+        id: unit.id,
+        title: unit.title,
+        objective: unit.objective,
+        status: "active",
+        lessons: unit.lessons.map((lesson) => ({
+          id: lesson.id,
+          title: lesson.title,
+          variant: lesson.variant ?? null,
+          status: "active",
+          contentRevision: 1,
+          cardCount: lesson.cards.length,
+          exerciseCount: lesson.exercises.length,
+          contentChars: lesson.content.length,
+          evidenceCount: evidenceCount(lesson.content),
+          unlockCount: unlockEntryCount(lesson.content),
+          evidenceLocators: evidenceLocatorsIn(lesson.content),
+          progress: null,
+        })),
+      })),
+    });
     courses.push({
       courseId: course.id,
       title: course.title,
@@ -221,9 +261,15 @@ for (const studyId of readdirSync(upstream).sort()) {
     defaultCourseId: index.study.defaultCourseId,
     courses,
   });
+  shelf.studies.push({
+    id: index.study.id,
+    title: index.study.title,
+    courses: shelfCourses,
+  });
 }
 
 writeFileSync(join(contentRoot, "manifest.json"), `${JSON.stringify(manifest, null, 1)}\n`);
+writeFileSync(join(contentRoot, "shelf.json"), `${JSON.stringify(shelf, null, 1)}\n`);
 // The manifest is the tracked half of this: it records exactly which package
 // hash each course came from, so a fresh clone can reproduce the import and a
 // review can be recorded against a version rather than a name.
@@ -256,7 +302,9 @@ if (existsSync(lexiconSource)) {
 } else {
   // Not fatal: the reader treats an absent lexicon as "no words to annotate",
   // which is the same path a lesson with no matches already takes.
-  console.warn(`import-courses: no lexicon at ${lexiconSource}, foreign-language mode will be empty.`);
+  console.warn(
+    `import-courses: no lexicon at ${lexiconSource}, foreign-language mode will be empty.`,
+  );
 }
 
 const totalCourses = manifest.studies.reduce((sum, study) => sum + study.courses.length, 0);

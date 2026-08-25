@@ -21,6 +21,7 @@ import { progressPort } from "../../progress/store";
 
 export function createOnlineContentPort(): ContentPort {
   const named = library.studies.map((study) => ({ id: study.studyId, title: study.title }));
+  let shelfPromise: Promise<Shelf> | null = null;
   return {
     // The manifest is imported JSON: the catalogue is in the bundle, so the
     // capsule can name the series on the very first render.
@@ -31,23 +32,11 @@ export function createOnlineContentPort(): ContentPort {
     },
 
     async shelf(): Promise<Shelf> {
-      /*
-        Every package, once. This is not a new cost: the world map has always
-        had to load them all to compute the prerequisite graph, and
-        `loadCourse` keeps one promise per course for the session.
-      */
-      const studies = await Promise.all(
-        library.studies.map(async (study) => ({
-          id: study.studyId,
-          title: study.title,
-          courses: await Promise.all(
-            study.courses.map(async (summary) =>
-              shelfCourse(await loadCourse(study.studyId, summary.courseId), study.defaultCourseId),
-            ),
-          ),
-        })),
-      );
-      return { studies };
+      shelfPromise ??= fetch("/content/shelf.json").then((response) => {
+        if (!response.ok) throw new Error(`shelf: ${response.status}`);
+        return response.json() as Promise<Shelf>;
+      });
+      return shelfPromise;
     },
 
     async lesson(locator: LessonRef) {
@@ -107,8 +96,8 @@ export function peekShelfCourse(studyId: string, courseId: string): CourseView |
  * A published package as the shelf holds it.
  *
  * `contentChars` is the prose length rather than the prose: it sizes the stone
- * on the course island, and the shelf has no business carrying 3.8 MB of text
- * to answer a question about geometry. `progress` is always null — the shared
+ * on the course island, and the shelf has no business carrying lesson text to
+ * answer a question about geometry. `progress` is always null — the shared
  * document answers that, and a second answer here is how one campus ends up
  * drawing a stone the other does not.
  */
@@ -132,6 +121,7 @@ function shelfCourse(course: Course, defaultCourseId: string | null): CourseView
         id: lesson.id,
         title: lesson.title,
         status: "active",
+        variant: lesson.variant ?? null,
         contentRevision: ONLINE_CONTENT_REVISION,
         cardCount: lesson.cards.length,
         exerciseCount: lesson.exercises.length,

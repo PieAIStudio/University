@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { NOT_STARTED, type ProgressSource } from "@pieai/university-core";
+import type { Shelf } from "@pieai/university-ui/content/port.js";
 
+import shelf from "../../content/shelf.json";
 import { library, type Course } from "../content/library";
 import { progressSource } from "../progress/source";
 import { advanceLesson, lessonKey, resetAll } from "../progress/store";
-import { assembleCatalogListing } from "./listing";
+import { assembleCatalogListing, assembleCatalogListingFromShelf } from "./listing";
 
 afterEach(() => {
   resetAll();
@@ -80,6 +82,10 @@ describe("the 2D directory against the library the map uses", () => {
     // 146 + 4 units and 560 + 19 lessons: 通用课's first course.
     expect(listing.totals.units).toBe(150);
     expect(listing.totals.lessons).toBe(579);
+  });
+
+  it("folds the generated shelf into the same directory read model", () => {
+    expect(assembleCatalogListingFromShelf(shelf as Shelf, progressSource())).toEqual(listingOf());
   });
 
   it("lays buzz flat instead of inventing a chain", () => {

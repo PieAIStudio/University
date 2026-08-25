@@ -1,32 +1,25 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CatalogSurface } from "@pieai/university-ui";
+import type { Shelf } from "@pieai/university-ui/content/port.js";
 
-import { library, loadCourse, type Course } from "../content/library";
+import { contentPort } from "../ports";
 import { progressSource } from "../progress/source";
 import { snapshot, subscribe } from "../progress/store";
 import { toHash, WORLD, type View } from "@pieai/university-core";
-import { assembleCatalogListing } from "./listing";
+import { assembleCatalogListingFromShelf } from "./listing";
 
-/** The online adapter supplies published content and the shared catalog surface supplies the UI. */
+/** The content port supplies the shelf; the shared catalog surface supplies the UI. */
 export function CourseCatalog({ onOpen }: { onOpen: (view: View) => void }) {
   const progress = useSyncExternalStore(subscribe, snapshot);
-  const [packaged, setPackaged] = useState<ReadonlyMap<string, Course> | null>(null);
+  const [shelf, setShelf] = useState<Shelf | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let alive = true;
     void (async () => {
       try {
-        const next = new Map<string, Course>();
-        await Promise.all(
-          library.studies.flatMap((study) =>
-            study.courses.map(async (summary) => {
-              const course = await loadCourse(study.studyId, summary.courseId);
-              next.set(`${study.studyId}/${summary.courseId}`, course);
-            }),
-          ),
-        );
-        if (alive) setPackaged(next);
+        const next = await contentPort.shelf();
+        if (alive) setShelf(next);
       } catch {
         if (alive) setFailed(true);
       }
@@ -37,8 +30,8 @@ export function CourseCatalog({ onOpen }: { onOpen: (view: View) => void }) {
   }, []);
 
   const listing = useMemo(
-    () => (packaged ? assembleCatalogListing(packaged, progressSource()) : null),
-    [packaged, progress],
+    () => (shelf ? assembleCatalogListingFromShelf(shelf, progressSource()) : null),
+    [shelf, progress],
   );
 
   if (failed) {

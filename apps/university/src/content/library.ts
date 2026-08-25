@@ -7,10 +7,10 @@
  * fallback here starts filling something in, the two halves have begun to
  * drift.
  *
- * Courses load one at a time. The library is 52 courses and 3.8 MB of lesson
- * JSON after assets are lifted out at import; loading all of it to draw a map
- * that only needs titles and counts would be paying the whole download to
- * answer "where am I".
+ * The delivery shelf is a generated structural projection: the map, picker,
+ * planet and 2D directory fetch `shelf.json` rather than paying for every
+ * lesson package. Full course JSON remains an on-demand resource for a lesson
+ * or review card, where its prose and answer content are actually needed.
  */
 import imported from "./imported.json";
 
@@ -203,11 +203,12 @@ export function depthsFromPrerequisites(
 }
 
 /**
- * The map's nodes, with depth computed rather than stored.
+ * The legacy full-package map nodes, with depth computed rather than stored.
  *
- * Prerequisites are not in the tracked manifest, so this needs the courses
- * themselves. It is the one place that pays for loading them all, and it is
- * called once.
+ * Prerequisites are not in the tracked manifest, so callers that explicitly
+ * need this legacy shape still load the courses themselves. Delivery's map
+ * uses the generated shelf projection instead; this remains for callers that
+ * already own full course packages.
  */
 export async function loadGraph(): Promise<readonly CourseNode[]> {
   const nodes: CourseNode[] = [];

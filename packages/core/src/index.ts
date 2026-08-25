@@ -19,7 +19,8 @@
  *   the markdown pipeline wants one function, not this whole barrel. The
  *   only deep paths `package.json` still exposes are:
  *   `domain/schemas.js`, `domain/lesson-marks.js`, `domain/reader-marks.js`,
- *   `domain/merge-text-runs.js`, `marks/references.js`, `marks/terms.js`,
+ *   `domain/merge-text-runs.js`, `marks/references.js`, `marks/path-stats.js`,
+ *   `marks/terms.js`,
  *   `marks/evidence.js`, `language/layer.js`, `language/resolve-anchors.js`,
  *   `concepts/heads.js`.
  *   Anything else under `src/` is internal assembly.

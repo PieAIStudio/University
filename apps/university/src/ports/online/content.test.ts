@@ -51,6 +51,28 @@ afterEach(() => {
 });
 
 describe("createOnlineContentPort", () => {
+  it("reads the structural shelf once instead of loading every course package", async () => {
+    const shelf = {
+      studies: [
+        {
+          id: "turing-pact",
+          title: "TuringPact",
+          courses: [],
+        },
+      ],
+    };
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      expect(String(input)).toBe("/content/shelf.json");
+      return { ok: true, json: async () => shelf } as Response;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const port = createOnlineContentPort();
+    await expect(port.shelf()).resolves.toEqual(shelf);
+    await expect(port.shelf()).resolves.toEqual(shelf);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("folds a published lesson into the read model the shared reader speaks", async () => {
     servePackage();
     const view = await createOnlineContentPort().lesson(locator);

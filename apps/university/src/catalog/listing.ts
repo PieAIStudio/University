@@ -2,9 +2,9 @@
  * The 2D course directory's read model.
  *
  * Responsible: the same study → course → unit → lesson tree the world map
- * draws, plus the same prerequisite gates. Both surfaces read the imported
- * library and this shell's progress source; this file does not fetch, store,
- * or invent a second graph.
+ * draws, plus the same prerequisite gates. Both surfaces read the content
+ * port's structural shelf and this shell's progress source; this file does not
+ * fetch, store, or invent a second graph.
  *
  * Not responsible: camera, islands, search, or a walking-scale fog of war.
  * A lesson more than a few steps ahead is still a lesson. Hiding it to make
@@ -17,6 +17,7 @@ import {
   type LessonRef,
   type ProgressSource,
 } from "@pieai/university-core";
+import type { Shelf } from "@pieai/university-ui/content/port.js";
 
 import { depthsFromPrerequisites, library, type Course } from "../content/library";
 
@@ -71,6 +72,27 @@ export interface CatalogListing {
 
 const courseKey = (studyId: string, courseId: string) => `${studyId}/${courseId}`;
 
+interface CatalogCourseInput {
+  readonly id: string;
+  readonly title: string;
+  readonly prerequisiteCourseIds?: readonly string[];
+  readonly units: readonly {
+    readonly id: string;
+    readonly title: string;
+    readonly lessons: readonly {
+      readonly id: string;
+      readonly title: string;
+      readonly variant?: string | null;
+    }[];
+  }[];
+}
+
+interface CatalogStudyInput {
+  readonly id: string;
+  readonly title: string;
+  readonly courses: readonly CatalogCourseInput[];
+}
+
 interface DraftedCourse {
   readonly studyId: string;
   readonly libraryIndex: number;
@@ -88,8 +110,8 @@ interface DraftedCourse {
 }
 
 /**
- * Fold the imported library, the loaded packages, and this shell's progress
- * into one directory.
+ * Fold the shelf projection, the imported library's ordering, and this shell's
+ * progress into one directory.
  *
  * Course order inside a study is library order, stably sorted by depth so a
  * fourteen-layer chain reads as a climb. Same-depth neighbours keep the order
@@ -105,34 +127,63 @@ export function assembleCatalogListing(
   source: ProgressSource,
   catalog = library,
 ): CatalogListing {
+  return assembleCatalogListingFromStudies(
+    catalog.studies.map((study) => ({
+      id: study.studyId,
+      title: study.title,
+      courses: study.courses.map((summary) => {
+        const course = packaged.get(courseKey(study.studyId, summary.courseId));
+        if (!course) {
+          throw new Error(`catalog missing package ${study.studyId}/${summary.courseId}`);
+        }
+        return course;
+      }),
+    })),
+    source,
+  );
+}
+
+/** Build the same directory from the structural shelf without loading packages. */
+export function assembleCatalogListingFromShelf(
+  shelf: Shelf,
+  source: ProgressSource,
+): CatalogListing {
+  return assembleCatalogListingFromStudies(shelf.studies, source);
+}
+
+function assembleCatalogListingFromStudies(
+  studies: readonly CatalogStudyInput[],
+  source: ProgressSource,
+): CatalogListing {
   const drafted: DraftedCourse[] = [];
 
-  for (const study of catalog.studies) {
-    const packages = study.courses.map((summary) => {
-      const course = packaged.get(courseKey(study.studyId, summary.courseId));
-      if (!course) {
-        throw new Error(`catalog missing package ${study.studyId}/${summary.courseId}`);
-      }
-      return { summary, course };
-    });
-    const depths = depthsFromPrerequisites(packages.map((entry) => entry.course));
+  for (const study of studies) {
+    const packages = study.courses.map((course) => ({ course }));
+    const depths = depthsFromPrerequisites(
+      packages.map((entry) => ({
+        id: entry.course.id,
+        prerequisiteCourseIds: entry.course.prerequisiteCourseIds ?? [],
+      })),
+    );
     const titleById = new Map(packages.map((entry) => [entry.course.id, entry.course.title]));
 
-    const inStudy: DraftedCourse[] = packages.map(({ summary, course }, libraryIndex) => {
-      const progress = readCourseProgress(courseShapeOf(course, study.studyId), source);
+    const inStudy: DraftedCourse[] = packages.map(({ course }, libraryIndex) => {
+      const progress = readCourseProgress(courseShapeOf(course, study.id), source);
       return {
-        studyId: study.studyId,
+        studyId: study.id,
         libraryIndex,
         id: course.id,
         title: course.title,
         depth: depths.get(course.id) ?? 0,
-        prerequisiteCourseIds: course.prerequisiteCourseIds,
-        prerequisiteTitles: course.prerequisiteCourseIds.map((id) => titleById.get(id) ?? id),
+        prerequisiteCourseIds: course.prerequisiteCourseIds ?? [],
+        prerequisiteTitles: (course.prerequisiteCourseIds ?? []).map(
+          (id) => titleById.get(id) ?? id,
+        ),
         done: progress.done,
         total: progress.total,
         complete: progress.complete,
-        summaryLessons: summary.lessons,
-        units: unitsOf(study.studyId, course, source),
+        summaryLessons: course.units.reduce((sum, unit) => sum + unit.lessons.length, 0),
+        units: unitsOf(study.id, course, source),
         state: "idle",
       };
     });
@@ -155,13 +206,13 @@ export function assembleCatalogListing(
       (left, right) => left.depth - right.depth || right.summaryLessons - left.summaryLessons,
     )[0];
 
-  const studies = catalog.studies.map((study) => {
+  const studyListings = studies.map((study) => {
     const own = drafted
-      .filter((entry) => entry.studyId === study.studyId)
+      .filter((entry) => entry.studyId === study.id)
       .sort((left, right) => left.depth - right.depth || left.libraryIndex - right.libraryIndex)
       .map((entry) => toCatalogCourse(entry, live));
     return {
-      id: study.studyId,
+      id: study.id,
       title: study.title,
       flat: own.length > 1 && own.every((course) => course.depth === 0),
       courses: own,
@@ -171,7 +222,7 @@ export function assembleCatalogListing(
   let units = 0;
   let lessons = 0;
   let courses = 0;
-  for (const study of studies) {
+  for (const study of studyListings) {
     courses += study.courses.length;
     for (const course of study.courses) {
       units += course.units.length;
@@ -180,13 +231,17 @@ export function assembleCatalogListing(
   }
 
   return {
-    studies,
-    totals: { studies: studies.length, courses, units, lessons },
-    nextLesson: nextLessonOf(studies, live ?? null),
+    studies: studyListings,
+    totals: { studies: studyListings.length, courses, units, lessons },
+    nextLesson: nextLessonOf(studyListings, live ?? null),
   };
 }
 
-function unitsOf(studyId: string, course: Course, source: ProgressSource): readonly CatalogUnit[] {
+function unitsOf(
+  studyId: string,
+  course: CatalogCourseInput,
+  source: ProgressSource,
+): readonly CatalogUnit[] {
   return course.units.map((unit) => ({
     id: unit.id,
     title: unit.title,

@@ -1,5 +1,13 @@
 import { parseLessonLinks, tokenKind } from "@pieai/university-core/marks/references.js";
 
+export {
+  evidenceCount,
+  evidenceLocatorOf,
+  evidenceLocatorsIn,
+  tokenPrefixCount,
+  unlockEntryCount,
+} from "@pieai/university-core/marks/path-stats.js";
+
 /**
  * The shapes the path cards read: counts, not prose.
  *
@@ -44,20 +52,6 @@ export function readingMinutes(contentChars: number): number {
   return Math.max(1, Math.round(contentChars / READING_CHARS_PER_MINUTE));
 }
 
-/** Count of a wiki-token prefix in prose, as written. Fences are not skipped. */
-export function tokenPrefixCount(content: string, prefix: string): number {
-  if (prefix.length === 0) return 0;
-  return content.split(prefix).length - 1;
-}
-
-export function evidenceCount(content: string): number {
-  return tokenPrefixCount(content, "[[evidence:");
-}
-
-export function unlockEntryCount(content: string): number {
-  return tokenPrefixCount(content, "[[term:") + tokenPrefixCount(content, "[[concept:");
-}
-
 /**
  * Concept ids this lesson actually names, in order, unique.
  *
@@ -100,16 +94,7 @@ export function lessonCostLine(lesson: PathLesson): string {
   return parts.join(" · ");
 }
 
-/**
- * Coordinates only: `path:start-end`. The cited source is a private
- * repository and must not appear in a card a paying learner can screenshot.
- */
-export function evidenceLocatorOf(rawTarget: string): string | null {
-  if (!rawTarget.startsWith("evidence:")) return null;
-  const rest = rawTarget.slice("evidence:".length).trim();
-  return rest.length > 0 ? rest : null;
-}
-
+/** Unique coordinates across the lessons in one unit, capped for the card. */
 export function unitEvidenceLocators(lessons: readonly PathLesson[]): readonly string[] {
   const seen = new Set<string>();
   const locators: string[] = [];
@@ -120,20 +105,6 @@ export function unitEvidenceLocators(lessons: readonly PathLesson[]): readonly s
       locators.push(locator);
       if (locators.length === 5) return locators;
     }
-  }
-  return locators;
-}
-
-/** The coordinates a lesson's prose cites, in order, unique, for a shelf to carry. */
-export function evidenceLocatorsIn(content: string): readonly string[] {
-  const seen = new Set<string>();
-  const locators: string[] = [];
-  for (const link of parseLessonLinks(content)) {
-    if (tokenKind(link) !== "evidence") continue;
-    const locator = evidenceLocatorOf(link.rawTarget);
-    if (!locator || seen.has(locator)) continue;
-    seen.add(locator);
-    locators.push(locator);
   }
   return locators;
 }

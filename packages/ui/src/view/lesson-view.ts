@@ -224,6 +224,8 @@ export function isCurrentLessonCompleted(
 interface LessonSummary {
   readonly id: string;
   readonly title: string;
+  /** The catalogue badge, when the content source carries the lesson shape. */
+  readonly variant?: string | null;
   readonly status: string;
   readonly contentRevision: number;
   readonly cardCount: number;

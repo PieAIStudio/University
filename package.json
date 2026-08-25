@@ -9,6 +9,7 @@
     "build": "pnpm -r build",
     "bundle": "node scripts/check-authoring-excluded.mjs",
     "content": "pnpm --filter @pieai/university-app content",
+    "check:shelf": "node apps/university/scripts/check-shelf.mjs",
     "dev": "pnpm --filter @pieai/university-app dev",
     "doc-gov": "doc-gov",
     "docs:check": "pnpm pro-gov doctor && pnpm doc-gov router-check && pnpm doc-gov check && pnpm doc-gov scan --check && pnpm doc-gov links && pnpm doc-gov audit && pnpm doc-gov doctor",
@@ -22,7 +23,7 @@
     "start": "node scripts/start.mjs",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm boundaries && pnpm build && pnpm bundle && pnpm docs:check"
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm boundaries && pnpm build && pnpm check:shelf && pnpm bundle && pnpm docs:check"
   },
   "devDependencies": {
     "@pieai/doc-gov": "0.9.3",
