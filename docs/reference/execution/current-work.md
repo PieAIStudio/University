@@ -292,10 +292,17 @@ own lesson reader every new feature has to be written twice.
     in `src/authoring/`, and it is correctly compiled out of delivery — the
     same category as the CLI, not a build divergence.
 
-    The real, shippable half is **知识笔记**: the library's fifth collection is
-    an empty state on the delivery side because notes live under
-    `apps/local/studies/*/notes` and never enter a package. That is a content
-    pipeline change, and it is small.
+    The other half, **知识笔记**, turned out not to be a pipeline problem
+    either. Counted: **there are zero knowledge notes**, and
+    `apps/local/studies/*/notes` does not exist in any of the five studies.
+    The feature has a complete stack — schema in core, a repository and HTTP
+    routes on the server, CLI workflows, a shared `KnowledgeNotes` surface, the
+    library's fifth tab — and no content at all. Exporting it would ship an
+    empty array to a customer.
+
+    So the open question is a product one and not an engineering one: **start
+    using 知识笔记, or retire it.** Building the export before that decision
+    would be building a pipeline for nothing.
 11. **The picker's globe is not beautiful yet.** Framing, sky, the crease pass
     and the sea's edge are fixed; the sphere itself still reads as a mossy
     marble rather than a world. `docs/reference/生图重绘ui/` holds the target.
@@ -375,6 +382,14 @@ own lesson reader every new feature has to be written twice.
 - **A test that greps prose forbids the prose.** The account panel's test
   banned the string 「登录」 to mean "no sign-in control", and so banned the
   sentence explaining that there is nowhere to sign in. Assert on structure.
+- **`cond ? { thing } : null` inside JSX is an object literal, not a child.**
+  Hoisting `<TodaySection>` into a `const` and dropping `{todaySection}` into
+  `{showMap ? … : null}` produced `{showMap ? { todaySection } : null}`. The
+  brace was already open, so the second one built an object — and React threw
+  「Objects are not valid as a React child」 on **every** screen. `pnpm verify`
+  was green: typecheck, lint and 120 unit tests all passed, because nothing in
+  the unit suite renders `App`. All 15 browser walks failed. This is the whole
+  argument for keeping `pnpm e2e` outside `verify` and running it anyway.
 - **This file is pinned.** A commit touching it needs
   `Pinned-Override: REF-CURRENT-WORK` in the message. SPEC-0001 needs its own.
 

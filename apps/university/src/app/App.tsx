@@ -988,7 +988,7 @@ export function App() {
 
   const aside = (
     <>
-      {showMap ? { todaySection } : null}
+      {showMap ? todaySection : null}
       {view.kind === "planet" ? (
         <PlanetRail
           studies={planetStudies}
