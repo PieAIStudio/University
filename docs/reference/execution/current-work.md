@@ -247,6 +247,30 @@ own lesson reader every new feature has to be written twice.
    from a real address. The browser adapter and fake-remote tests are ready;
    this external migration and staging rehearsal are the remaining authority
    boundary.
+
+   **Provision XP as a server counter, not as the client's ledger.** The XP
+   total merges losslessly across devices by keeping one entry per scoring
+   event and summing the union — `max` would erase a phone's addition when a
+   laptop had added a different event from the same starting document. That is
+   correct, and it is unbounded: every card review appends a permanent
+   ~124-byte entry to the document. Counted at review volumes this product is
+   built to encourage — `xp.ts` deliberately pays the most for remembering
+   something after two months, so reviews are the fastest-growing entry:
+
+   | 复习量 | 一年后 | 文档增量 |
+   | --- | ---: | ---: |
+   | 10 张/天 | 3,650 条 | 0.43 MB |
+   | 50 张/天 | 18,250 条 | 2.16 MB |
+   | 120 张/天 · 两年 | 87,600 条 | 10.36 MB |
+
+   One `jsonb` row, read and written under an optimistic lock on every
+   progress change. It does not bite yet because the row does not exist —
+   which is exactly why the shape has to be decided *with* the migration
+   rather than after it. Compacting on the client is the wrong fix: folding
+   old events into a seed loses the idempotency the ledger exists for, unless
+   the fold carries a watermark both devices can compare. A server-side
+   increment with a bounded idempotency window (say 30 days of event ids) gets
+   the same guarantee without the growth.
 2. ~~**The 19 seconds after the canvas mounts.**~~ **Measured, and it is
    gone.** The old entry said 28.4s to first frame on throttled 4G, of which
    ~19s was `loadGraph()` fetching 52 course JSON files. `loadGraph` no longer
@@ -321,10 +345,20 @@ own lesson reader every new feature has to be written twice.
     and the sea's edge are fixed; the sphere itself still reads as a mossy
     marble rather than a world. `docs/reference/生图重绘ui/` holds the target.
     Art direction, and it waited for the merge so it is done once.
-12. **A level and an XP curve.** `packages/core/progress/xp.ts` scores events
-    but there is no level concept and no accumulated total, so the avatar has
-    no ring to fill. What a level costs and how the curve bends is a product
-    decision; the rendering is small once it exists.
+12. ~~**A level and an XP curve.**~~ **Done, except the ring.**
+    `totalXpForLevel(n) = round(35 * (n - 1) ** 2.2)`, and the two constants
+    are anchored rather than chosen: one lesson is `XP_READ_LESSON +
+    XP_EXERCISE_FIRST_TRY`, which clears level 2 — **the first lesson levels
+    you up** — and reading the whole library once lands at level 20, leaving
+    the rest of the curve to spaced review, which is what `xp.ts` pays for.
+    Both anchors are tests computed from the constants and the real lesson
+    count, so changing a score or adding courses fails the suite.
+
+    No ring around the avatar: `@pieai/swimmer-avatar-kit` has no progress-ring
+    capability and ADR-0005 says a missing capability goes upstream rather than
+    into a fork here. It is a `Lv. N` badge and a linear bar, which is what
+    `docs/reference/生图重绘ui/` draws anyway. **The ring is the open upstream
+    request**, not an open item here.
 
 ## Traps, Found The Hard Way
 
