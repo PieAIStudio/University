@@ -9,7 +9,7 @@
 import * as THREE from "three";
 
 import { WORLD_DISTANCE_MIN, WORLD_POLAR } from "./controls.js";
-import { STUDY_PATH } from "./layout.js";
+import { STUDY_PATH } from "../layout.js";
 
 /**
  * How far down the road the world shot aims, past the learner's own island.

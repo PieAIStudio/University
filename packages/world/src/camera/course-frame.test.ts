@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
-import { frameCourse } from "./course-map.js";
-import { layoutCourse } from "./layout.js";
-import type { LessonPlacement } from "./Maps.js";
+import { frameCourse } from "../course-map.js";
+import { layoutCourse } from "../layout.js";
+import type { LessonPlacement } from "../Maps.js";
 
 /*
   The shot on a course road, checked where it went wrong: the live stone must

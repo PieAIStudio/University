@@ -29,7 +29,7 @@ import {
   type LabelBox,
   type LabelCandidate,
 } from "@pieai/university-world/labels.js";
-import type { Marker } from "./Maps";
+import type { Marker } from "../Maps";
 import { wheelIntent } from "./wheel-intent.js";
 
 /**

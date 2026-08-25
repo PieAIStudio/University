@@ -8,9 +8,9 @@ import {
   WORLD_DISTANCE_MIN,
   WORLD_POLAR,
 } from "./controls";
-import { courseIslandScale } from "./Maps";
-import { islandBlueprint, islandSurfaceY } from "./island-blueprint.js";
-import { radiusForLessons } from "./layout";
+import { courseIslandScale } from "../Maps";
+import { islandBlueprint, islandSurfaceY } from "../island-blueprint.js";
+import { radiusForLessons } from "../layout";
 
 /*
   Dolly span, both levels. This started at 76× on the world map, which let the

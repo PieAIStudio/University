@@ -39,8 +39,8 @@ export {
   WORLD_DISTANCE_MAX,
   WORLD_DISTANCE_MIN,
   WORLD_POLAR,
-} from "./controls.js";
-export { frameWorld } from "./frame.js";
-export { wheelIntent } from "./wheel-intent.js";
+} from "./camera/controls.js";
+export { frameWorld } from "./camera/frame.js";
+export { wheelIntent } from "./camera/wheel-intent.js";
 export { CompanionProbe, screenFromProjected } from "./companion-probe.js";
 export type { CompanionAnchor } from "./companion-probe.js";
