@@ -29,7 +29,6 @@ import {
   lessonKey,
   type ProgressPort,
   type ProgressRemoteStore,
-  type RatingName,
 } from "@pieai/university-core";
 import { createBrowserProgressPort } from "@pieai/university-ui/progress/store.js";
 
@@ -51,49 +50,16 @@ export function snapshot() {
   return progressPort.snapshot();
 }
 
-export function lessonState(key: LessonDocumentKey) {
-  return progressPort.lessonState(key);
-}
-
 export function advanceLesson(key: LessonDocumentKey, progress: number) {
   progressPort.advanceLesson(key, progress);
-}
-
-export function dropCards(
-  studyId: string,
-  courseId: string,
-  lessonId: string,
-  cardIds: readonly string[],
-) {
-  progressPort.dropCards(studyId, courseId, lessonId, cardIds);
 }
 
 export function dueCards(asOf = Date.now()) {
   return progressPort.dueCards(asOf);
 }
 
-export function dueTomorrow() {
-  return progressPort.dueTomorrow();
-}
-
-export function gradeCard(cardKey: string, rating: RatingName) {
-  progressPort.gradeCard(cardKey, rating);
-}
-
-export function gradeWord(senseId: string, rating: RatingName) {
-  progressPort.gradeWord(senseId, rating);
-}
-
-export function stageWord(senseId: string, stage: "learning" | "familiar" | "paused") {
-  progressPort.stageWord(senseId, stage);
-}
-
 export function vocabularyStates() {
   return progressPort.vocabularyStates();
-}
-
-export function wordStages() {
-  return progressPort.wordStages();
 }
 
 export function resetAll() {
