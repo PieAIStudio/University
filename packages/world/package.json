@@ -11,7 +11,7 @@
     "./Stage.js": "./src/Stage.tsx",
     "./WorldMapCanvas.js": "./src/WorldMapCanvas.tsx",
     "./avatar.js": "./src/avatar/index.ts",
-    "./companion-probe.js": "./src/companion-probe.tsx",
+    "./companion-probe.js": "./src/companion/companion-probe.tsx",
     "./controls.js": "./src/camera/controls.tsx",
     "./course.js": "./src/course/course.ts",
     "./frame.js": "./src/camera/frame.ts",
