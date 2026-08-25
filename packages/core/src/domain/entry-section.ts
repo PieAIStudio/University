@@ -520,6 +520,8 @@ export const STYLE_SKIN_IDS = [
   "organic",
   "commerce",
   "wabisabi",
+  "dark-tech",
+  "bauhaus",
 ] as const;
 export const StyleSkinIdSchema = z.enum(STYLE_SKIN_IDS);
 export type StyleSkinId = z.infer<typeof StyleSkinIdSchema>;

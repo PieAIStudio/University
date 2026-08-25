@@ -3311,6 +3311,340 @@
   padding-top: 16px;
 }
 
+/* Dark tech: a restrained HUD, cyan/purple signal lines, and no fake 3D chrome. */
+
+.stylesample--dark-tech {
+  border: 1px solid rgba(120, 180, 255, 0.18);
+  border-radius: 8px;
+  background-color: #07090f;
+  color: #e6edf3;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  gap: 18px;
+  padding: clamp(20px, 4vw, 34px);
+  box-shadow:
+    0 0 24px rgba(0, 229, 255, 0.12),
+    inset 0 0 22px rgba(124, 58, 237, 0.08);
+}
+
+.stylesample--dark-tech .stylesample__nav {
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(120, 180, 255, 0.18);
+}
+
+.stylesample--dark-tech .stylesample__brand {
+  color: #00e5ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.stylesample--dark-tech .stylesample__links,
+.stylesample--dark-tech .stylesample__nav-action {
+  color: #8292a6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.67rem;
+  letter-spacing: 0.06em;
+}
+
+.stylesample--dark-tech .stylesample__nav-action {
+  border: 1px solid rgba(0, 229, 255, 0.58);
+  border-radius: 4px;
+  color: #00e5ff;
+  padding: 5px 9px;
+}
+
+.stylesample--dark-tech .stylesample__hero {
+  gap: 15px;
+  border: 1px solid rgba(120, 180, 255, 0.18);
+  border-left: 2px solid #00e5ff;
+  border-radius: 8px;
+  background-color: #0a101a;
+  padding: clamp(22px, 4vw, 32px);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.08);
+}
+
+.stylesample--dark-tech .stylesample__headline {
+  max-width: 17ch;
+  color: #e6edf3;
+  font-size: clamp(2rem, 5vw, 3.7rem);
+  font-weight: 650;
+  letter-spacing: -0.06em;
+  line-height: 1.03;
+}
+
+.stylesample--dark-tech .stylesample__sub {
+  color: #aebdcb;
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+.stylesample--dark-tech .stylesample__cta,
+.stylesample--dark-tech .stylesample__cta2 {
+  min-height: 38px;
+  border: 1px solid #00e5ff;
+  border-radius: 5px;
+  padding: 0 15px;
+  color: #00e5ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.stylesample--dark-tech .stylesample__cta {
+  background-color: #00e5ff;
+  color: #07090f;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.28);
+}
+
+.stylesample--dark-tech .stylesample__cta2 {
+  border-color: #7c3aed;
+  color: #b99cff;
+}
+
+.stylesample--dark-tech .stylesample__media {
+  min-height: clamp(190px, 27vw, 290px);
+  border: 1px solid rgba(120, 180, 255, 0.22);
+  border-radius: 8px;
+  background-color: #080d16;
+  background-image:
+    linear-gradient(rgba(0, 229, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+  box-shadow: inset 0 0 20px rgba(124, 58, 237, 0.16);
+}
+
+.stylesample--dark-tech .stylesample__media::before {
+  top: 28%;
+  right: 12%;
+  bottom: 28%;
+  left: 12%;
+  background-color: #00e5ff;
+  clip-path: polygon(0 78%, 26% 48%, 48% 65%, 72% 24%, 100% 0, 100% 9%, 72% 33%, 48% 74%, 26% 58%, 0 90%);
+  filter: drop-shadow(0 0 7px #00e5ff);
+}
+
+.stylesample--dark-tech .stylesample__media::after {
+  top: 22%;
+  left: 22%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #7c3aed;
+  box-shadow:
+    116px 32px 0 #7c3aed,
+    226px -10px 0 #00e5ff,
+    0 0 12px #7c3aed;
+}
+
+.stylesample--dark-tech .stylesample__cards {
+  gap: 10px;
+}
+
+.stylesample--dark-tech .stylesample__card {
+  min-height: 108px;
+  border: 1px solid rgba(120, 180, 255, 0.2);
+  border-radius: 6px;
+  background-color: #0a101a;
+  padding: 13px;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.06);
+}
+
+.stylesample--dark-tech .stylesample__card-title {
+  color: #00e5ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.stylesample--dark-tech .stylesample__card-note {
+  color: #94a6b8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  line-height: 1.6;
+}
+
+.stylesample--dark-tech .stylesample__foot {
+  border-top: 1px solid rgba(120, 180, 255, 0.18);
+  color: #68798d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.64rem;
+  line-height: 1.5;
+  padding-top: 10px;
+}
+
+/* Bauhaus: primary geometry held together by heavy black structure. */
+
+.stylesample--bauhaus {
+  border: 5px solid #1a1a1a;
+  border-radius: 0;
+  background-color: #f4f1ea;
+  color: #1a1a1a;
+  font-family: Futura, "Century Gothic", Arial, "Microsoft YaHei", sans-serif;
+  gap: 18px;
+  padding: clamp(20px, 4vw, 34px);
+}
+
+.stylesample--bauhaus .stylesample__nav {
+  padding-bottom: 13px;
+  border-bottom: 5px solid #1a1a1a;
+}
+
+.stylesample--bauhaus .stylesample__brand {
+  color: #1a1a1a;
+  font-size: 0.96rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stylesample--bauhaus .stylesample__links,
+.stylesample--bauhaus .stylesample__nav-action {
+  color: #1a1a1a;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stylesample--bauhaus .stylesample__nav-action {
+  border-bottom: 4px solid #d62828;
+  padding-bottom: 4px;
+}
+
+.stylesample--bauhaus .stylesample__hero {
+  gap: 15px;
+  border: 5px solid #1a1a1a;
+  background-color: #fcbf49;
+  padding: clamp(22px, 4vw, 32px);
+}
+
+.stylesample--bauhaus .stylesample__headline {
+  max-width: 16ch;
+  color: #1a1a1a;
+  font-size: clamp(2.1rem, 5.5vw, 4rem);
+  font-weight: 900;
+  letter-spacing: -0.075em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.stylesample--bauhaus .stylesample__sub {
+  color: #1a1a1a;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.stylesample--bauhaus .stylesample__cta,
+.stylesample--bauhaus .stylesample__cta2 {
+  min-height: 40px;
+  border: 5px solid #1a1a1a;
+  border-radius: 0;
+  padding: 0 15px;
+  color: #f4f1ea;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stylesample--bauhaus .stylesample__cta {
+  background-color: #d62828;
+}
+
+.stylesample--bauhaus .stylesample__cta2 {
+  background-color: #003049;
+}
+
+.stylesample--bauhaus .stylesample__media {
+  min-height: clamp(190px, 27vw, 290px);
+  border: 5px solid #1a1a1a;
+  border-radius: 0;
+  background-color: #f4f1ea;
+  background-image:
+    linear-gradient(90deg, transparent 0 64%, #fcbf49 64% 100%),
+    linear-gradient(0deg, #003049 0 24%, transparent 24% 100%);
+}
+
+.stylesample--bauhaus .stylesample__media::before {
+  top: 17%;
+  left: 17%;
+  width: 34%;
+  height: 54%;
+  border-radius: 50%;
+  background-color: #d62828;
+}
+
+.stylesample--bauhaus .stylesample__media::after {
+  right: 18%;
+  bottom: 25%;
+  width: 0;
+  height: 0;
+  border-right: 34px solid transparent;
+  border-bottom: 62px solid #003049;
+  border-left: 34px solid transparent;
+}
+
+.stylesample--bauhaus .stylesample__cards {
+  gap: 10px;
+}
+
+.stylesample--bauhaus .stylesample__card {
+  min-height: 110px;
+  border: 5px solid #1a1a1a;
+  border-radius: 0;
+  padding: 13px;
+}
+
+.stylesample--bauhaus .stylesample__card:nth-child(1) {
+  background-color: #d62828;
+}
+
+.stylesample--bauhaus .stylesample__card:nth-child(2) {
+  background-color: #003049;
+}
+
+.stylesample--bauhaus .stylesample__card:nth-child(3) {
+  background-color: #fcbf49;
+}
+
+.stylesample--bauhaus .stylesample__card-title,
+.stylesample--bauhaus .stylesample__card-note {
+  color: #1a1a1a;
+}
+
+.stylesample--bauhaus .stylesample__card:nth-child(1) .stylesample__card-title,
+.stylesample--bauhaus .stylesample__card:nth-child(1) .stylesample__card-note,
+.stylesample--bauhaus .stylesample__card:nth-child(2) .stylesample__card-title,
+.stylesample--bauhaus .stylesample__card:nth-child(2) .stylesample__card-note {
+  color: #f4f1ea;
+}
+
+.stylesample--bauhaus .stylesample__card-title {
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stylesample--bauhaus .stylesample__card-note {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.stylesample--bauhaus .stylesample__foot {
+  border-top: 5px solid #1a1a1a;
+  color: #1a1a1a;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.5;
+  padding-top: 10px;
+}
+
 /* Apple: quiet, spacious, softly material, and deliberately light. */
 
 .stylesample--apple {

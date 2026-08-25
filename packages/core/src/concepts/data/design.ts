@@ -1657,6 +1657,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "产品本来就是深底浅字，不是晚上才涂一层黑。",
     body: {
       colloquial: "就做成黑底那种，数字和状态清楚就行，不要搞得像科幻电影。",
+      styleSample: {
+        alt: "近黑蓝底的 MOKO 控制面板以青色发光折线穿过网格媒体位，紫色状态点与等宽小标签点亮边框，主按钮像一条冷光指令。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "dark-tech",
+        contrastSkin: "bauhaus",
+      },
       definition: {
         statement:
           "深色界面是产品一开始就用深底浅字来做，而不是另做一套夜间切换。底、字、边、图表从第一天就按深底来配，强调色只用一两种。",
@@ -2372,6 +2378,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "想要几何感：圆的方的三角的，红黄蓝，但每个形状都得派上用场，别只在角落贴几个色块。",
+      styleSample: {
+        alt: "米白底的 MOKO 页面用粗黑线切出红黄蓝块，媒体位由一个红圆、蓝三角和黄方构成，标题和三张卡片全按几何结构对齐。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "bauhaus",
+        contrastSkin: "dark-tech",
+      },
       definition: {
         statement:
           "包豪斯是约一百年前德国一所设计学校的名字，也成了一种办法：形状跟功能绑在一起，圆、方、三角和红、黄、蓝是在排结构，不是在贴装饰。字常用没有字脚的那一种，装饰能少则少。",
