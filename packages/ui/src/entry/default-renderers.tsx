@@ -363,7 +363,17 @@ const DEFAULT_BY_TYPE = {
     toMarkdown: sectionToMarkdown,
     render: (section) => (
       <SectionFrame section={section}>
+        {/*
+          Keyed by skin so the compare toggle does not follow you.
+
+          The entry pages are one component tree and React keeps a component's
+          state when it stays in the same position, so flipping 苹果风 to 新粗野
+          and then opening Notion 风 rendered 新粗野 under Notion 风's heading —
+          a page showing a style it is not about. The key makes each entry its
+          own instance.
+        */}
         <StyleSample
+          key={section.payload.skin}
           alt={section.payload.alt}
           caption={section.payload.caption}
           skin={section.payload.skin}

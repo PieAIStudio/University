@@ -526,6 +526,46 @@ export const STYLE_SKIN_IDS = [
 export const StyleSkinIdSchema = z.enum(STYLE_SKIN_IDS);
 export type StyleSkinId = z.infer<typeof StyleSkinIdSchema>;
 
+/**
+ * What to call each skin on the compare switch.
+ *
+ * Beside the id list rather than in the renderer, and `satisfies` rather than
+ * a test, so **a skin cannot be added without a name**: the map is checked
+ * against `StyleSkinId` at compile time and a missing key is a type error.
+ *
+ * It shipped the other way first. The renderer kept its own two-entry map and
+ * fell back to the raw id, so when 22 skins arrived the switch offered
+ * 「wabisabi」 and 「dark-tech」 to a Chinese-reading beginner and nothing failed.
+ * These match the entry names in `concepts/data/design.ts`; the entry titles a
+ * page, this labels a button, and neither can quietly lose the other.
+ */
+export const STYLE_SKIN_LABELS = {
+  apple: "苹果风",
+  brutalism: "新粗野",
+  minimal: "现代简约",
+  memphis: "孟菲斯",
+  notion: "Notion 风",
+  "art-deco": "装饰艺术",
+  bento: "Bento 便当格",
+  editorial: "杂志编辑风",
+  glass: "玻璃拟态",
+  flat: "扁平化",
+  swiss: "瑞士排版",
+  playful: "趣味插画",
+  skeuomorphism: "拟物化",
+  material: "材料设计",
+  neumorphism: "新拟态",
+  terminal: "终端极客风",
+  saas: "SaaS 产品官网",
+  y2k: "Y2K",
+  enterprise: "B2B 企业官网",
+  organic: "有机设计",
+  commerce: "DTC 品牌电商",
+  wabisabi: "日式侘寂",
+  "dark-tech": "深色界面",
+  bauhaus: "包豪斯",
+} as const satisfies Record<StyleSkinId, string>;
+
 export const STYLE_SAMPLE_PAGE = {
   brand: "MOKO",
   navLinks: ["产品", "价格", "文档"],

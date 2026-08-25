@@ -110,6 +110,7 @@ export {
   FLOW_CAPTION,
   STYLE_SKIN_IDS,
   STYLE_SAMPLE_PAGE,
+  STYLE_SKIN_LABELS,
   StyleSamplePayloadSchema,
   StyleSkinIdSchema,
   SectionTypeSchema,

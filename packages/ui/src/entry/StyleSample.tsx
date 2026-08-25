@@ -1,18 +1,18 @@
 import { useState } from "react";
-import { STYLE_SAMPLE_PAGE, type PayloadOf, type StyleSkinId } from "@pieai/university-core";
+import {
+  STYLE_SAMPLE_PAGE,
+  STYLE_SKIN_LABELS,
+  type PayloadOf,
+  type StyleSkinId,
+} from "@pieai/university-core";
 
 type StyleSampleProps = Pick<
   PayloadOf<"style-sample">,
   "alt" | "caption" | "skin" | "contrastSkin"
 >;
 
-const SKIN_LABELS: Partial<Record<StyleSkinId, string>> = {
-  apple: "苹果风",
-  brutalism: "新粗野",
-};
-
 function skinLabel(skin: StyleSkinId): string {
-  return SKIN_LABELS[skin] ?? skin;
+  return STYLE_SKIN_LABELS[skin];
 }
 
 /*
