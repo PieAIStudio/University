@@ -34,6 +34,7 @@ import "@pieai/university-ui/favourites/favourites.css";
 import "@pieai/university-ui/language/word-layer.css";
 import "@pieai/university-ui/lesson/lesson-reader.css";
 import "@pieai/university-ui/lesson/lesson-toolbar.css";
+import "@pieai/university-ui/lesson/margin-note.css";
 import "@pieai/university-ui/lesson/word-list.css";
 import "@pieai/university-ui/lesson/mark-list.css";
 import "@pieai/university-ui/loading/loading-trivia.css";
