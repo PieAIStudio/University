@@ -341,10 +341,22 @@ own lesson reader every new feature has to be written twice.
     So the open question is a product one and not an engineering one: **start
     using 知识笔记, or retire it.** Building the export before that decision
     would be building a pipeline for nothing.
-11. **The picker's globe is not beautiful yet.** Framing, sky, the crease pass
-    and the sea's edge are fixed; the sphere itself still reads as a mossy
-    marble rather than a world. `docs/reference/生图重绘ui/` holds the target.
-    Art direction, and it waited for the merge so it is done once.
+11. ~~**The picker's globe is not beautiful yet.**~~ **Done, in four rounds.**
+    Framing, flat shading, a warm key with a rim, stars and a horizon glow,
+    and study markers that are landing beacons — a coloured pin standing on a
+    lit contact disc, matched to a swatch on its row in the list, so the point
+    on the globe and the row in the panel are visibly the same thing.
+
+    The terrain reads as a world rather than a beach ball because the colour is
+    quantised into **regions**, not per face. Randomness has a scale: per-face
+    random is noise, region-random is terrain. The final split is measured on
+    the sphere, not eyeballed — sea 40.05%, land 40.22%, sand 19.74%.
+
+    The process is the reusable part. Rounds 1–3 each fixed the named problem
+    and broke the colour balance, because the direction given was **relative**
+    (「暖一点」, 「成片一点」) and a relative direction overshoots by
+    construction. Round 4 gave absolute proportions and hex values and landed
+    first try. Give an absolute when you have one.
 12. ~~**A level and an XP curve.**~~ **Done, except the ring.**
     `totalXpForLevel(n) = round(35 * (n - 1) ** 2.2)`, and the two constants
     are anchored rather than chosen: one lesson is `XP_READ_LESSON +
@@ -359,6 +371,28 @@ own lesson reader every new feature has to be written twice.
     into a fork here. It is a `Lv. N` badge and a linear bar, which is what
     `docs/reference/生图重绘ui/` draws anyway. **The ring is the open upstream
     request**, not an open item here.
+
+## Refactor Program
+
+Structural work is a program, not a change. The audit behind it, the evidence
+for each finding, and the order with its dependencies are in the artifact
+published 2026-08-26; the order is repeated here because the order *is* the
+argument:
+
+| | | 状态 |
+| --- | --- | --- |
+| R0 | Delete dead code | **done** |
+| R1 | Narrow the export surface | **done** |
+| R2 | `packages/world/src`, 47 direct children into directories | in progress |
+| R3 | Shared components' CSS back beside the components | |
+| R4 | Split `App.tsx` | |
+| R5 | 359 colour literals into tokens | |
+
+R4 is last because the first four are its safety net, not because it matters
+least: it is the highest-churn file in the repository and the one where
+`pnpm verify` has been proven unable to catch a fault. **Every step of R4 runs
+`pnpm e2e`.** R5 depends on R3 — replacing literals while `styles.css` is
+still one 4,896-line file is paving a moving road.
 
 ## Traps, Found The Hard Way
 
