@@ -3404,13 +3404,6 @@ button.label:focus-visible {
   font-size: 0.78rem;
 }
 
-.source-sheet .evidence-ua-place {
-  margin: 12px 0 4px;
-  padding: 10px 12px;
-  border: 1px solid rgb(246 231 211 / 14%);
-  border-radius: 10px;
-  background: rgb(0 0 0 / 18%);
-}
 
 
 
@@ -3434,80 +3427,16 @@ button.label:focus-visible {
   }
 }
 
-.source-sheet {
-  display: grid;
-  gap: 14px;
-  min-width: 0;
-}
 
-.source-sheet__meta,
-.source-sheet__tools,
-.source-sheet__footer,
-.source-sheet__navigation,
-.source-sheet__copy-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
 
-.source-sheet__meta {
-  justify-content: space-between;
-  color: var(--game-ui-text-muted);
-  font-size: 0.78rem;
-}
 
-.source-sheet__meta code {
-  overflow-wrap: anywhere;
-  color: #f7d3a0;
-}
 
-.source-sheet__tools {
-  justify-content: space-between;
-  padding: 10px 0;
-  border-top: 1px solid var(--campus-rule);
-  border-bottom: 1px solid var(--campus-rule);
-}
 
-.source-sheet__tools label {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 10px;
-  align-items: center;
-  color: var(--game-ui-text-muted);
-  font-size: 0.78rem;
-}
 
-.source-sheet__tools input {
-  min-width: min(280px, 60vw);
-  border: 1px solid var(--campus-rule);
-  padding: 7px 9px;
-  color: #fff5e8;
-  background: #1a1512;
-  font: inherit;
-}
 
-.source-sheet__find-status,
-.source-sheet__truncation {
-  color: var(--game-ui-text-muted);
-  font-size: 0.76rem;
-}
 
-.source-sheet__truncation {
-  margin: 0;
-  color: #f7d3a0;
-}
 
-.source-sheet__footer {
-  justify-content: space-between;
-  width: 100%;
-}
 
-.source-sheet__navigation {
-  justify-content: center;
-  color: var(--game-ui-text-muted);
-  font-size: 0.78rem;
-}
 
 .evidence-source-open {
   margin-top: 10px;
@@ -3697,16 +3626,7 @@ button.label:focus-visible {
     top: 0;
   }
 
-  .source-sheet__meta,
-  .source-sheet__tools {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 
-  .source-sheet__tools input {
-    width: 100%;
-    min-width: 0;
-  }
 }
 
 /* Mermaid, external-link mark, and blocked-image styles moved to
