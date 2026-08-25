@@ -8,6 +8,17 @@
  * types, and `packages/core` already owns the on-disk `CourseManifest`.
  */
 
+/*
+  Re-exported, not redefined. The scene needs course depth and so does the 2D
+  catalogue — and the catalogue must not import the scene to get a pure fold,
+  the same boundary `courseShapeOf` was moved for. This file held the original;
+  `apps/university/src/content/library.ts` had grown a byte-identical second
+  copy, kept in step by nobody in particular.
+*/
+import { depthsFromPrerequisites } from "@pieai/university-core";
+
+export { depthsFromPrerequisites };
+
 /**
  * A course as a node on the world map.
  *
@@ -57,39 +68,6 @@ export interface CourseLesson {
 
 /** The fold into CourseShape lives in core. Re-exported so the scene keeps one import. */
 export { courseShapeOf } from "@pieai/university-core";
-
-/**
- * Distance from a root along prerequisites, computed over one study.
- *
- * Depth is a property of the set, not of a course: adding one prerequisite
- * upstream moves everything behind it. Both shells derive it with this
- * function rather than storing it on the package.
- */
-export function depthsFromPrerequisites(
-  courses: readonly {
-    readonly id: string;
-    readonly prerequisiteCourseIds: readonly string[];
-  }[],
-): Map<string, number> {
-  const byId = new Map(courses.map((course) => [course.id, course]));
-  const depths = new Map<string, number>();
-  const visiting = new Set<string>();
-  const walk = (id: string): number => {
-    const known = depths.get(id);
-    if (known !== undefined) return known;
-    const course = byId.get(id);
-    if (!course || visiting.has(id)) return 0;
-    visiting.add(id);
-    const depth = course.prerequisiteCourseIds.length
-      ? Math.max(...course.prerequisiteCourseIds.map(walk)) + 1
-      : 0;
-    visiting.delete(id);
-    depths.set(id, depth);
-    return depth;
-  };
-  for (const course of courses) walk(course.id);
-  return depths;
-}
 
 /**
  * The whole shelf, folded into the nodes the map places.

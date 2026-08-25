@@ -155,8 +155,11 @@ export function loadCourse(studyId: string, courseId: string): Promise<Course> {
  *
  * The world map asks the progress contract how far each island got, and that
  * question needs the course's units and lesson ids on the same tick as the
- * render. `loadGraph` has already paid for those fetches; this is the
- * synchronous answer for a callback that cannot wait.
+ * render — this is the synchronous answer for a callback that cannot wait.
+ *
+ * It used to say `loadGraph` had already paid for those fetches. `loadGraph`
+ * is gone: the generated shelf replaced the 52-package walk and left the
+ * function exported with no callers.
  */
 export function peekCourse(studyId: string, courseId: string): Course | undefined {
   return resolved.get(`${studyId}/${courseId}`);
@@ -164,72 +167,3 @@ export function peekCourse(studyId: string, courseId: string): Course | undefine
 
 /** Defined in `@pieai/university-world`. The map's input contract. */
 export type { CourseNode };
-
-/**
- * Distance from a root along prerequisites, computed over one study.
- *
- * Depth is a property of the set, not of a course: adding one prerequisite
- * upstream moves everything behind it. Storing it on the package would be this
- * repository keeping a second copy of the course structure, which is the drift
- * the parity contract exists to prevent — so both the world map and the 2D
- * directory derive it with this function.
- *
- * A prerequisite the schema cannot express across studies reads as a root
- * rather than as an error.
- */
-export function depthsFromPrerequisites(
-  courses: readonly {
-    readonly id: string;
-    readonly prerequisiteCourseIds: readonly string[];
-  }[],
-): Map<string, number> {
-  const byId = new Map(courses.map((course) => [course.id, course]));
-  const depths = new Map<string, number>();
-  const visiting = new Set<string>();
-  const walk = (id: string): number => {
-    const known = depths.get(id);
-    if (known !== undefined) return known;
-    const course = byId.get(id);
-    if (!course || visiting.has(id)) return 0;
-    visiting.add(id);
-    const depth = course.prerequisiteCourseIds.length
-      ? Math.max(...course.prerequisiteCourseIds.map(walk)) + 1
-      : 0;
-    visiting.delete(id);
-    depths.set(id, depth);
-    return depth;
-  };
-  for (const course of courses) walk(course.id);
-  return depths;
-}
-
-/**
- * The legacy full-package map nodes, with depth computed rather than stored.
- *
- * Prerequisites are not in the tracked manifest, so callers that explicitly
- * need this legacy shape still load the courses themselves. Delivery's map
- * uses the generated shelf projection instead; this remains for callers that
- * already own full course packages.
- */
-export async function loadGraph(): Promise<readonly CourseNode[]> {
-  const nodes: CourseNode[] = [];
-  for (const study of library.studies) {
-    const courses = await Promise.all(
-      study.courses.map((summary) => loadCourse(study.studyId, summary.courseId)),
-    );
-    const byId = new Map(courses.map((course) => [course.id, course]));
-    const depths = depthsFromPrerequisites(courses);
-    for (const summary of study.courses) {
-      const course = byId.get(summary.courseId);
-      nodes.push({
-        ...summary,
-        studyId: study.studyId,
-        studyTitle: study.title,
-        depth: depths.get(summary.courseId) ?? 0,
-        prerequisiteCourseIds: course?.prerequisiteCourseIds ?? [],
-        trackId: course?.trackId ?? null,
-      });
-    }
-  }
-  return nodes;
-}

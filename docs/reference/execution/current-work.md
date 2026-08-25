@@ -61,15 +61,16 @@ something reads the output.
 
 ## Numbers, Counted Not Remembered
 
-52 courses · 146 units · **560 lessons** (558 unique ids — two ids are claimed
+**53 courses · 150 units · 579 lessons** (577 unique ids — two ids are claimed
 twice) · 1,815 `[[evidence:]]` markers resolving to **1,597 anchors** · 281
-concepts · 267 terms · 25 anti-patterns.
+concepts (**138 carry a shared flow map**, 24 carry a style sample) · 267 terms
+· 25 anti-patterns.
 
 420 lesson-to-lesson links, 383 inside their own course and **five** crossing
 one: the mesh does not exist yet. `[[term:]]` links: zero.
 
-Tests: core 340 · ui 249 · world 128 · university 108 · local 406 = **1,231**.
-Plus 13 browser walks (`pnpm e2e`), two of which (`G`, `G2`) exist only to
+Tests: core 364 · ui 255 · world 128 · university 120 · local 406 = **1,273**.
+Plus 15 browser walks (`pnpm e2e`), two of which (`G`, `G2`) exist only to
 compare the two builds against each other rather than to check either alone.
 
 **Re-run the script before quoting any of these.** Every number on this page
@@ -202,6 +203,33 @@ Done, and verified in a browser rather than by a passing suite:
   11 ships notes with the package. 分级测验 is on the course island, asked only
   of a course with no progress, and `ROUTE_STARTS` is keyed by course id so a
   second course is data rather than a branch.
+- **One course island, two slots.** The panel was written out twice in
+  `App.tsx` and the wide copy had grown a 分级测验 the narrow one never got, so
+  the question 「我该从哪一关开始」 did not exist on a phone. `CourseIsland` is
+  one component now; `wide` chooses the slot and nothing else.
+- **On a phone the way out was under the tab bar.** `.picked` capped itself at
+  `100dvh - 28px` — measured from the window, while the panel is positioned
+  from the top of `.stagewrap` — so the cap computed larger than the panel and
+  never bound. The exit is sticky and the bar publishes `--tab-bar-height`.
+  The e2e assertion is `humanClick`, because the first one measured a bounding
+  box and passed while the button was unreachable.
+- **错题本, out of a fold rather than a migration.** See 5 below: the data was
+  already there and already syncing.
+- **The delivery package still ships no answers.** Adding 错题本 put
+  `referenceAnswer` back into every course package and rewrote the comment
+  explaining why answers are stripped. A read model dropping a field does not
+  unsend the bytes. `correctAnswer` is nullable now and delivery says so;
+  `no-answers-shipped.test.ts` checks the bytes, and its own first draft used
+  `[^a-z]` as a word boundary and passed on `referenceAnswer`.
+- **24 design styles are visible, not described.** One fixed mockup, 24 CSS
+  skins, the CSS Zen Garden model — the constant is the product and the only
+  variable is the style, which is what a page-per-style cannot teach. The DOM
+  is identical for every skin; a skin that needs an extra element means the
+  contract is wrong.
+- **One `depthsFromPrerequisites`.** It existed byte-identically in
+  `packages/world` and `apps/university/src/content/library.ts`. It is a pure
+  fold, so it lives in `packages/core` for the same reason `courseShapeOf`
+  does, and the 2D catalogue no longer reaches for the scene to get it.
 - **A stone under the rail is a stone nobody can click.** `frameCourse` aimed
   at a damped fraction of the absolute x four stones ahead; on a serpentine
   road that yawed the camera 15° and put 「开始」 at x=1115 of 1440, under the
@@ -219,10 +247,13 @@ own lesson reader every new feature has to be written twice.
    from a real address. The browser adapter and fake-remote tests are ready;
    this external migration and staging rehearsal are the remaining authority
    boundary.
-2. **The 19 seconds after the canvas mounts.** Of the 28.4s to first frame on
-   throttled 4G, roughly 19 are `loadGraph()` fetching 52 course JSON files and
-   the kit's GLBs. The JavaScript half is solved; this is data, and it is now
-   the whole wait.
+2. **The seconds after the canvas mounts, re-measured.** The old entry blamed
+   `loadGraph()` fetching 52 course JSON files. `loadGraph` no longer exists:
+   the generated shelf replaced that walk and left the function exported with
+   no callers until it was deleted. Whatever remains of the 28.4s is the kit's
+   GLBs and the bundle, and **it has not been measured since the shelf landed**
+   — measure before optimising, and measure a build rather than the dev server,
+   which serves hundreds of unbundled modules and is not what a customer gets.
 3. **SPEC-0003 step 3.** Decide whether to retire the authoring shelf from the
    world landing after every row in the overlay table is visible there. The
    separate course catalog is already shared; this remaining item is only
@@ -230,8 +261,12 @@ own lesson reader every new feature has to be written twice.
 4. **The light theme cannot work yet.** 270 raw colour literals are invisible
    to the contrast checker, which only reads token pairs. Until they are
    tokens, no amount of contrast fixing makes that theme usable.
-5. **A persisted record of a wrong answer.** 错题本 (v3 16) has nothing to
-   count: wrong picks live in component state and vanish with the question.
+5. ~~**A persisted record of a wrong answer.**~~ **Done, and the premise was
+   already wrong.** Failed attempts had been persisted and cloud-merged all
+   along — `ExerciseAttemptRecord` carries the answer, the score and the
+   revision, and all four grading call sites wrote them. Nothing *read* the
+   failed ones, so the feature read as unbuilt when it was unsurfaced. 错题本
+   is `#/mistakes`, a pure fold over the document with no new storage.
 6. **Separate 「读完了」 from 「答对了」.** `progressSourceOf` still derives
    `exercisesPassed` from `progress >= 1`, which is a proxy and reads as a
    circular one from inside a lesson screen: the flag the settlement is about
@@ -247,13 +282,20 @@ own lesson reader every new feature has to be written twice.
    skip placement by design. The fix is either a clamp out of the chrome's box
    or a camera that keeps content out of it, and it is worth measuring which
    before writing either.
-10. **The UA graph reaches the delivery build.** 「打开 UA 项目地图」 exists only
-    in the authoring build because it opens the local Understand Anything graph
-    and a customer has no checkout. The fix is the content pipeline, not the
-    build: export the graph with the course package the way evidence and cards
-    already travel. The same pipeline is what fills the library's fifth
-    collection on the delivery side — it shows an empty state until notes ship
-    with a package. Until then this reads as a build difference and is not one.
+10. **Notes reach the delivery build. The UA graph does not, and should not.**
+    This entry used to say the fix was to 「export the graph with the course
+    package the way evidence and cards already travel」. Measured: the UA graph
+    is not content. 「打开 UA 项目地图」 asks the 4317 bridge to *launch a separate
+    local application* and returns a tokenised URL, and the data behind it is
+    150MB for `turing-pact` alone. Shipping it is shipping a second product,
+    not extending a pipeline. It is an authoring instrument, it already lives
+    in `src/authoring/`, and it is correctly compiled out of delivery — the
+    same category as the CLI, not a build divergence.
+
+    The real, shippable half is **知识笔记**: the library's fifth collection is
+    an empty state on the delivery side because notes live under
+    `apps/local/studies/*/notes` and never enter a package. That is a content
+    pipeline change, and it is small.
 11. **The picker's globe is not beautiful yet.** Framing, sky, the crease pass
     and the sea's edge are fixed; the sphere itself still reads as a mossy
     marble rather than a world. `docs/reference/生图重绘ui/` holds the target.

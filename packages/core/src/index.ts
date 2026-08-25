@@ -264,6 +264,7 @@ export * from "./ports/index.js";
 // storage migration — neither store is told where to put its bytes. The whole
 // module is that question.
 export * from "./progress/contract.js";
+export * from "./progress/depth.js";
 
 // Recommended learning sequence (spine order) per study — a linear extension
 // of the prerequisite DAG so there is always exactly one "next step".

@@ -10,6 +10,7 @@
  * A lesson more than a few steps ahead is still a lesson. Hiding it to make
  * the list prettier would be the opposite of why this page exists.
  */
+import { depthsFromPrerequisites } from "@pieai/university-core";
 import {
   courseShapeOf,
   isLessonComplete,
@@ -19,7 +20,7 @@ import {
 } from "@pieai/university-core";
 import type { Shelf } from "@pieai/university-ui/content/port.js";
 
-import { depthsFromPrerequisites, library, type Course } from "../content/library";
+import { library, type Course } from "../content/library";
 
 export interface CatalogLesson {
   readonly id: string;
