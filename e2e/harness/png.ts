@@ -87,7 +87,7 @@ export function decodePng(bytes: Uint8Array): {
   return { width, height, data: rgba };
 }
 
-export function pixelAt(
+function pixelAt(
   image: { readonly width: number; readonly height: number; readonly data: Uint8Array },
   x: number,
   y: number,
