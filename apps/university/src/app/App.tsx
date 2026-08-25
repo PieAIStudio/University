@@ -958,27 +958,37 @@ export function App() {
     thing a learner came for into a thumbnail. The rail gets it back when there
     is a DOM path to take its place.
   */
+  /*
+    One 「今天」 panel, in two places it can appear.
+
+    It hangs off the rail while the map is up, and it is the body of the
+    review page. Those are two placements, not two panels — the element was
+    written out twice with byte-identical props, which is how the course
+    island came to have a 分级测验 on one side and not the other.
+  */
+  const todaySection = (
+    <TodaySection
+      data={todayData}
+      review={todayReview}
+      vocabularyReview={todayVocabularyReview}
+      onOpenLesson={(locator) =>
+        setView({
+          kind: "lesson",
+          studyId: locator.studyId,
+          courseId: locator.courseId,
+          unitId: locator.unitId,
+          lessonId: locator.lessonId,
+        })
+      }
+      onReviewed={async () => {
+        await progressPort.flush();
+      }}
+    />
+  );
+
   const aside = (
     <>
-      {showMap ? (
-        <TodaySection
-          data={todayData}
-          review={todayReview}
-          vocabularyReview={todayVocabularyReview}
-          onOpenLesson={(locator) =>
-            setView({
-              kind: "lesson",
-              studyId: locator.studyId,
-              courseId: locator.courseId,
-              unitId: locator.unitId,
-              lessonId: locator.lessonId,
-            })
-          }
-          onReviewed={async () => {
-            await progressPort.flush();
-          }}
-        />
-      ) : null}
+      {showMap ? { todaySection } : null}
       {view.kind === "planet" ? (
         <PlanetRail
           studies={planetStudies}
@@ -1140,23 +1150,7 @@ export function App() {
       {view.kind === "review" ? (
         <div className="review-page">
           <MistakesEntry count={uncorrectedMistakeCount} hasMistakes={mistakes.length > 0} />
-          <TodaySection
-            data={todayData}
-            review={todayReview}
-            vocabularyReview={todayVocabularyReview}
-            onOpenLesson={(locator) =>
-              setView({
-                kind: "lesson",
-                studyId: locator.studyId,
-                courseId: locator.courseId,
-                unitId: locator.unitId,
-                lessonId: locator.lessonId,
-              })
-            }
-            onReviewed={async () => {
-              await progressPort.flush();
-            }}
-          />
+          {todaySection}
         </div>
       ) : null}
 
