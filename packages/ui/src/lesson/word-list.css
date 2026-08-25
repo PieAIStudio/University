@@ -1,0 +1,126 @@
+.word-list {
+  padding: 16px 18px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 14px;
+  background: var(--campus-surface);
+}
+
+.word-list__summary {
+  margin: 8px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.8rem;
+}
+
+.word-list--quiet {
+  padding: 14px 16px;
+}
+
+.word-list__history {
+  margin-top: 14px;
+  border-top: 1px solid rgb(247 211 160 / 16%);
+  padding-top: 10px;
+}
+
+.word-list__history summary {
+  color: var(--game-ui-text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.word-list__history .word-list__items {
+  margin-top: 8px;
+}
+
+.word-list__history-item {
+  flex-wrap: wrap;
+}
+
+.word-list__history-item > .word-list__word {
+  opacity: 0.72;
+}
+
+.word-list__undo {
+  flex: 0 0 auto;
+  border: 0;
+  background: none;
+  color: #f0a868;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.74rem;
+}
+
+.word-list__undo:hover,
+.word-list__undo:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.word-list__voice {
+  display: grid;
+  gap: 5px;
+  margin-top: 14px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+}
+
+.word-list__voice select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 8px;
+  background: #1a1512;
+  color: #f7ead6;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.word-list__items {
+  display: grid;
+  gap: 4px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.word-list__items li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.word-list__word {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.word-list__word:hover {
+  background: rgb(247 211 160 / 10%);
+}
+
+.word-list__word span {
+  color: #f7d3a0;
+  font-weight: 700;
+}
+
+.word-list__word small {
+  overflow: hidden;
+  color: var(--game-ui-text-muted);
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.word-list__items > li[data-reason="familiar"] {
+  opacity: 0.6;
+}
+
