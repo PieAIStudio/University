@@ -355,6 +355,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "功能介绍别做成十二张一样大的卡片。给我那种有的格很大、有的格很小、拼在一起的，现在常见的那种。",
+      styleSample: {
+        alt: "浅灰底的 MOKO 页面像一盘便当，大白主格旁边贴着橙红和米色小格，媒体区的大圆角块又切出两个小色块，三张卡片大小有主次。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "bento",
+        contrastSkin: "editorial",
+      },
       definition: {
         statement:
           "Bento 便当格是一种排法：把一屏内容装进大小不一的格子里，像日式便当盒——大格装主菜，小格装配菜。格子的大小就是重要性。",
@@ -453,6 +459,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "半透明磨砂板叠在花背景上，后面隐约透出来。",
     body: {
       colloquial: "卡片做成磨砂玻璃那种，后面的背景能隐约透出来，但上面的字还是要能看清。",
+      styleSample: {
+        alt: "紫粉青渐变从半透明白色面板后透出，MOKO 标题和按钮浮在磨砂亮边上，媒体区的彩色光团与半透明卡片一起形成玻璃层次。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "glass",
+        contrastSkin: "flat",
+      },
       definition: {
         statement:
           "玻璃拟态是一整套打扮：半透明的板、把后面的画面抹糊（毛玻璃）、常常加一圈很淡的亮边，下面还要有够花、够亮的背景，人才能看出「这是玻璃」。",
@@ -781,6 +793,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "像翻杂志：大图咬着字，引文突出，栏宽有戏剧。",
     body: {
       colloquial: "不要做成说明书。排得像时尚杂志那样，大图、大标题，中间再抽出一句特别大的话。",
+      styleSample: {
+        alt: "米白杂志页把 MOKO 的大标题压在棕米渐变横幅上，衬线正文收进窄栏，下面三列以细棕线分隔并留出像图注的安静空白。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "editorial",
+        contrastSkin: "bento",
+      },
       definition: {
         statement:
           "杂志编辑风是把网页按杂志来排：大图和标题咬在一起、中间抽出一句放大的话、栏宽有变化、标题常常用带字脚的字体（末尾有小脚，像报纸标题），让人愿意一页页翻下去。",
@@ -977,6 +995,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "去掉立体和材质，用纯色块和简单图形把界面摊平。",
     body: {
       colloquial: "不要立体，不要皮面木纹，色块加简单图标就行，平平的那种。",
+      styleSample: {
+        alt: "浅灰底的 MOKO 页面由蓝、绿、红的纯色块直接分区，标题和按钮没有阴影或渐变，中央图像区明确切成四个矩形。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "flat",
+        contrastSkin: "glass",
+      },
       definition: {
         statement:
           "扁平化是拿掉仿真材料、高光和厚阴影，用纯色、简单图形和清楚的字来做界面。按钮仍是按钮，只是不再画成真的塑料键。",

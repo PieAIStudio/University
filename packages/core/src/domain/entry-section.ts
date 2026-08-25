@@ -504,6 +504,10 @@ export const STYLE_SKIN_IDS = [
   "memphis",
   "notion",
   "art-deco",
+  "bento",
+  "editorial",
+  "glass",
+  "flat",
 ] as const;
 export const StyleSkinIdSchema = z.enum(STYLE_SKIN_IDS);
 export type StyleSkinId = z.infer<typeof StyleSkinIdSchema>;
