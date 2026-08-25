@@ -9,11 +9,11 @@ importers:
   .:
     devDependencies:
       '@pieai/doc-gov':
-        specifier: 0.9.3
-        version: 0.9.3
+        specifier: 0.9.5
+        version: 0.9.5
       '@pieai/pro-gov':
-        specifier: 0.9.3
-        version: 0.9.3
+        specifier: 0.9.5
+        version: 0.9.5
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
@@ -711,13 +711,18 @@ packages:
     engines: {node: '>=24 <25'}
     hasBin: true
 
+  '@pieai/doc-gov@0.9.5':
+    resolution: {integrity: sha512-7E3oVLZKMTh8x1S8SBJxXaUG6TEsqr7ADfqr5bdzPdAOL7SeHnzod72Ch4vkt3Re76RIUfO+egYWh25p1HCZxQ==}
+    engines: {node: '>=24 <25'}
+    hasBin: true
+
   '@pieai/pro-gov@0.9.1':
     resolution: {integrity: sha512-HquFh7IbVl4kojJeKG8b+bs+qY67gY7jsH7dnaYU9qN8EEkp1tOK3arAg4XuC+pWYblbMjh1HZJ3gz/q2gnruQ==}
     engines: {node: '>=24 <25'}
     hasBin: true
 
-  '@pieai/pro-gov@0.9.3':
-    resolution: {integrity: sha512-J6zVvFdy8b2xSQ/tLLCLiYm3Za2Dak1iA7EyfVnL0ajoWl9qlqOb+IQLRdTdRa41po7mY/S0n7TPLAw+S27vkA==}
+  '@pieai/pro-gov@0.9.5':
+    resolution: {integrity: sha512-bxswkWKef6F2yyQmwld0krNcDy0JDS0VX4NyZJPVe1B2MBmKtV4gJ7NjeXS+eqSiC6tlrdgQ7VZ47iznoPcX+A==}
     engines: {node: '>=24 <25'}
     hasBin: true
 
@@ -2712,13 +2717,15 @@ snapshots:
 
   '@pieai/doc-gov@0.9.3': {}
 
+  '@pieai/doc-gov@0.9.5': {}
+
   '@pieai/pro-gov@0.9.1':
     dependencies:
-      '@pieai/doc-gov': 0.9.1
-
-  '@pieai/pro-gov@0.9.3':
-    dependencies:
       '@pieai/doc-gov': 0.9.3
+
+  '@pieai/pro-gov@0.9.5':
+    dependencies:
+      '@pieai/doc-gov': 0.9.5
 
   '@pieai/swimmer-avatar-kit@0.2.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)':
     dependencies:

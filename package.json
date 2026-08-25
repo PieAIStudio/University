@@ -2,7 +2,7 @@
   "name": "@pieai/university",
   "version": "0.0.0",
   "private": true,
-  "description": "University \u2014 one browser app in two modes, and the authoring server behind one of them.",
+  "description": "University — one browser app in two modes, and the authoring server behind one of them.",
   "type": "module",
   "scripts": {
     "boundaries": "node apps/local/scripts/check-module-boundaries.mjs && node scripts/check-kit-portability.mjs && node scripts/check-contrast.mjs && node scripts/check-shared-styles.mjs",
@@ -26,8 +26,8 @@
     "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm boundaries && pnpm build && pnpm check:shelf && pnpm bundle && pnpm docs:check"
   },
   "devDependencies": {
-    "@pieai/doc-gov": "0.9.3",
-    "@pieai/pro-gov": "0.9.3",
+    "@pieai/doc-gov": "0.9.5",
+    "@pieai/pro-gov": "0.9.5",
     "@playwright/test": "^1.62.1",
     "lefthook": "^2.1.10"
   }
