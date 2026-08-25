@@ -13,7 +13,7 @@
  * wide its visible cap needs to be.
  */
 
-import { hash } from "../random.js";
+import { hash } from "../island/random.js";
 
 export interface SpherePoint {
   readonly x: number;

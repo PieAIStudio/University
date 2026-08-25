@@ -9,7 +9,7 @@ import {
   WORLD_POLAR,
 } from "./controls";
 import { courseIslandScale } from "../Maps";
-import { islandBlueprint, islandSurfaceY } from "../island-blueprint.js";
+import { islandBlueprint, islandSurfaceY } from "../island/island-blueprint.js";
 import { radiusForLessons } from "../layout";
 
 /*

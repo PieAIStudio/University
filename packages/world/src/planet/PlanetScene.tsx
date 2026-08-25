@@ -23,7 +23,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import { hash } from "../random.js";
+import { hash } from "../island/random.js";
 import { Stage } from "../Stage.js";
 import { renderTier } from "../tier.js";
 import { studyMarkerColor } from "./planet-copy.js";

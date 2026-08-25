@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
-import { islandBlueprint, islandSurfaceY, sampleIslandSurface } from "./island-blueprint.js";
-import { buildBlueprintIsland } from "./island-geometry.js";
+import { islandBlueprint, islandSurfaceY, sampleIslandSurface } from "./island/island-blueprint.js";
+import { buildBlueprintIsland } from "./island/island-geometry.js";
 import { radiusForLessons } from "./layout.js";
 
 const STUDY = "turing-pact";

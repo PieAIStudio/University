@@ -31,8 +31,8 @@ import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, type ReactNode }
 import * as THREE from "three";
 
 import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
-import { createAoPass } from "./ao";
-import { assertWorldGradePipeline, createGradePass } from "./grade";
+import { createAoPass } from "./island/ao";
+import { assertWorldGradePipeline, createGradePass } from "./island/grade";
 import { renderTier } from "./tier";
 
 function Pipeline({ ambientOcclusion }: { readonly ambientOcclusion: boolean }) {
