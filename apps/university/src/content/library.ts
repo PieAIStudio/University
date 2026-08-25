@@ -126,7 +126,7 @@ export const library = imported as {
   readonly studies: readonly LibraryStudy[];
 };
 
-const hasContent = library.studies.length > 0;
+export const hasContent = library.studies.length > 0;
 
 const cache = new Map<string, Promise<Course>>();
 const resolved = new Map<string, Course>();
