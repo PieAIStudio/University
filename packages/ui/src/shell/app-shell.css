@@ -34,8 +34,20 @@
     "counters"
     "main";
   row-gap: 12px;
-  padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: var(--tab-bar-height);
   color: var(--game-ui-text, #e9edf5);
+  /*
+    The phone tab bar's height, in one place, because three things need it and
+    two of them used to restate it.
+
+    The bar is fixed to the bottom, so it is the floor for anything floating
+    over the stage — not the window. `.picked` capped itself at `100dvh - 28px`
+    and its last child, the way back to the map, sat *under* the bar on a
+    phone: present in the DOM, clickable by `element.click()`, unreachable by a
+    thumb. Read this variable instead of writing 3.5rem again, so the bar
+    cannot grow without the things above it noticing.
+  */
+  --tab-bar-height: calc(3.5rem + env(safe-area-inset-bottom, 0px));
   --shell-gutter: 16px;
   --shell-rail-width: 0px;
   --shell-aside-width: 0px;
@@ -101,7 +113,7 @@
   display: flex;
   align-items: stretch;
   box-sizing: border-box;
-  min-height: 3.5rem;
+  min-height: var(--tab-bar-height);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);

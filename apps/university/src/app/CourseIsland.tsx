@@ -76,7 +76,15 @@ export function CourseIsland({
       {hasRouteQuiz(course.id) && viewedProgress?.done === 0 ? (
         <CourseRouteQuiz studyId={studyId} course={course} onOpenLesson={onOpenLesson} />
       ) : null}
-      <button className="ghost block" onClick={onBackToMap}>
+      {/*
+        The way out is pinned, not last.
+
+        On a phone the panel is bounded by the stage and scrolls, and a
+        三题分级测验 is tall enough to push this below the panel's own fold. An
+        exit you have to discover a scroll to reach is an exit a beginner does
+        not have.
+      */}
+      <button className="ghost block picked__exit" onClick={onBackToMap}>
         {backToMapLabel}
       </button>
     </aside>

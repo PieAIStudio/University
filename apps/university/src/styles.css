@@ -775,6 +775,41 @@ button.block {
     left: 14px;
     right: 14px;
     width: auto;
+    /*
+      Bounded by the stage it floats in, not by the window.
+
+      `max-height: 100dvh - 28px` is the base rule and it is measured from the
+      top of the *window*, while this panel is positioned from the top of
+      `.stagewrap` — 141px down on a phone. So the cap computed to 728px, the
+      panel came out 650px, the cap never bound, and the last 36px of the panel
+      — the way back to the map — ran under the fixed tab bar. It was in the
+      DOM the whole time, and `element.click()` reached it.
+
+      Pinning `bottom` as well as `top` hands the height to the container,
+      which already ends above the tab bar. Nothing here has to know how tall
+      that bar is.
+    */
+    bottom: 14px;
+    max-height: none;
+  }
+
+  /*
+    Pinned to the floor of a panel that scrolls.
+
+    `button.ghost` is (0,1,1) and sets `background: transparent`, so a bare
+    `.picked__exit` rule loses to it and the quiz's last option reads straight
+    through the pinned button. Hence the element in the selector.
+
+    `panel-strong` is translucent — the panel only looks solid because of what
+    is behind it — so it is painted over an opaque base here. The result is the
+    colour the panel already appears to be, with nothing scrolling under it.
+  */
+  .picked button.picked__exit {
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    background-color: var(--game-ui-panel-deep, #0c1018);
+    background-image: linear-gradient(var(--game-ui-panel-strong), var(--game-ui-panel-strong));
   }
 }
 
