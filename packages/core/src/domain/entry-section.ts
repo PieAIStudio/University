@@ -497,7 +497,14 @@ const DemoPayloadSchema = z
  * product copy and DOM stay constant so the learner can see what the skin
  * changes instead of confusing a new product with a new visual language.
  */
-export const STYLE_SKIN_IDS = ["apple", "brutalism"] as const;
+export const STYLE_SKIN_IDS = [
+  "apple",
+  "brutalism",
+  "minimal",
+  "memphis",
+  "notion",
+  "art-deco",
+] as const;
 export const StyleSkinIdSchema = z.enum(STYLE_SKIN_IDS);
 export type StyleSkinId = z.infer<typeof StyleSkinIdSchema>;
 

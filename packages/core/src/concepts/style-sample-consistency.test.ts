@@ -20,7 +20,12 @@ const STYLE_SAMPLES = CONCEPT_ENTRIES.flatMap((entry) => {
 describe("concept style samples", () => {
   it("keeps the current sample entries on the shared skin list", () => {
     expect(CONCEPT_PROBLEMS).toEqual([]);
-    expect(STYLE_SAMPLES.map(({ entryId }) => entryId)).toEqual(["style-apple", "style-brutalism"]);
+    expect(STYLE_SAMPLES.map(({ entryId }) => entryId).sort()).toEqual(
+      [...STYLE_SKIN_IDS].map((skinId) => `style-${skinId}`).sort(),
+    );
+    expect(STYLE_SAMPLES.map(({ payload }) => payload.skin).sort()).toEqual(
+      [...STYLE_SKIN_IDS].sort(),
+    );
 
     for (const { payload } of STYLE_SAMPLES) {
       expect(STYLE_SKIN_IDS).toContain(payload.skin);

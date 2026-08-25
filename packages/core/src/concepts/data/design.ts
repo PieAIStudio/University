@@ -18,6 +18,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "少颜色、多留白，让内容和主按钮自己说话。",
     body: {
       colloquial: "别搞那么花，干净一点。该填的能找到，该点的按钮一眼能看见就行。",
+      styleSample: {
+        alt: "一张近白色、四边留着克制空白的 MOKO 页面，黑色标题和唯一深色按钮被细灰线、浅灰渐变图像区与三张轻卡片安静地托住。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "minimal",
+        contrastSkin: "memphis",
+      },
       definition: {
         statement:
           "现代简约是一种做页面的办法：颜色少、装饰少、空着的地方多，只留下人要用的字、图和按钮，而且留下来的这些必须自己清楚、好用。",
@@ -235,6 +241,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     tagline: "像一本打开的笔记本：字是主角，装饰尽量少。",
     body: {
       colloquial: "帮我做成 Notion 那种：打开就是一张能写字的纸，左边是目录，不要大图大广告。",
+      styleSample: {
+        alt: "白纸般的 MOKO 文档块沿左侧铺着淡蓝竖条，系统字体标题和大行距正文下方排着细边卡片，米白图像区只有几根灰色占位线。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "notion",
+        contrastSkin: "art-deco",
+      },
       definition: {
         statement:
           "Notion 风是学 Notion 这款笔记软件的样子：每一页默认像一张纸，字是主角，左边或顶部是目录，图标简单，颜色淡，来的人是来写和读的。",
@@ -1970,6 +1982,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "那种五颜六色的几何图形、波浪线、波点，很 80 年代，闹一点没关系，但名字和价格还是要对齐。",
+      styleSample: {
+        alt: "米白底的 MOKO 页面被粉红、青蓝和黄的几何贴纸撞开，标题、按钮和三张卡片都有粗黑描边、硬影与轻微倾斜，中央图像区还压着斜线。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "memphis",
+        contrastSkin: "minimal",
+      },
       definition: {
         statement:
           "孟菲斯来自 1980 年代意大利一个叫 Memphis 的设计团体：三角形、圆柱、波浪线、波点、特别亮且互相撞的颜色，像故意把积木撒在家具上。网页上用它，是要闹、要活力，不是要齐整的企业站。",
@@ -2355,6 +2373,12 @@ export const DESIGN_CONCEPTS: readonly RawConcept[] = [
     body: {
       colloquial:
         "想要复古奢华：左右对称，有扇形或太阳纹，黑金配，像老剧院海报。不是只把标题改成金色。",
+      styleSample: {
+        alt: "深海军蓝的 MOKO 页面用金色双线框住，居中的衬线大标题、对称扇形放射图像区和细金线卡片组成老剧院海报般的秩序。",
+        caption: "产品结构和文案不变，切换只换外观。",
+        skin: "art-deco",
+        contrastSkin: "notion",
+      },
       definition: {
         statement:
           "装饰艺术（Art Deco）是 1920–1930 年代那种排场：左右对称、扇形或阳光放射纹、几何装饰、金和黑或深绿，像老剧院、老旅馆、老火车海报。网页上要用怎么摆、用什么花纹当主结构，不是只换一种金字。",

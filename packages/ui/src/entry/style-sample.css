@@ -164,6 +164,650 @@
   line-height: 1.55;
 }
 
+/* Minimal: quiet paper, one ink colour, and only the lines that aid reading. */
+
+.stylesample--minimal {
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  background-color: #fafafa;
+  color: #111111;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  gap: 28px;
+  padding: clamp(28px, 5vw, 52px);
+}
+
+.stylesample--minimal .stylesample__nav {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.stylesample--minimal .stylesample__brand {
+  color: #111111;
+  font-size: 0.9rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+}
+
+.stylesample--minimal .stylesample__links,
+.stylesample--minimal .stylesample__nav-action {
+  color: #666666;
+  font-size: 0.8rem;
+}
+
+.stylesample--minimal .stylesample__hero {
+  gap: 20px;
+  max-width: 44rem;
+}
+
+.stylesample--minimal .stylesample__headline {
+  color: #111111;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 1.04;
+}
+
+.stylesample--minimal .stylesample__sub {
+  color: #4d4d4d;
+  font-size: 0.96rem;
+  line-height: 1.75;
+}
+
+.stylesample--minimal .stylesample__cta,
+.stylesample--minimal .stylesample__cta2 {
+  min-height: 40px;
+  border-radius: 4px;
+  padding: 0 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.stylesample--minimal .stylesample__cta {
+  background-color: #111111;
+  color: #fafafa;
+}
+
+.stylesample--minimal .stylesample__cta2 {
+  border: 1px solid #d8d8d8;
+  background-color: #fafafa;
+  color: #111111;
+}
+
+.stylesample--minimal .stylesample__media {
+  min-height: clamp(180px, 24vw, 250px);
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  background-color: #eeeeee;
+  background-image: linear-gradient(155deg, #f6f6f6 0%, #e7e7e7 100%);
+}
+
+.stylesample--minimal .stylesample__media::before {
+  top: 50%;
+  right: 9%;
+  left: 9%;
+  height: 1px;
+  background-color: #b9b9b9;
+}
+
+.stylesample--minimal .stylesample__media::after {
+  top: 42%;
+  left: 9%;
+  width: 18%;
+  height: 1px;
+  background-color: #888888;
+}
+
+.stylesample--minimal .stylesample__cards {
+  gap: 16px;
+}
+
+.stylesample--minimal .stylesample__card {
+  min-height: 112px;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 14px;
+}
+
+.stylesample--minimal .stylesample__card-title {
+  color: #111111;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.stylesample--minimal .stylesample__card-note {
+  color: #666666;
+  font-size: 0.8rem;
+  line-height: 1.65;
+}
+
+.stylesample--minimal .stylesample__foot {
+  border-top: 1px solid #e5e5e5;
+  color: #777777;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  padding-top: 14px;
+}
+
+/* Memphis: loud geometry, black outlines, and decoration that stays decorative. */
+
+.stylesample--memphis {
+  border: 4px solid #111111;
+  border-radius: 8px;
+  background-color: #fffdf5;
+  background-image:
+    radial-gradient(circle at 8% 18%, #ff2d55 0 4px, transparent 5px),
+    radial-gradient(circle at 92% 34%, #00b4d8 0 5px, transparent 6px),
+    radial-gradient(circle at 78% 88%, #ffd60a 0 4px, transparent 5px);
+  color: #111111;
+  font-family: Arial, "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  gap: 18px;
+  padding: 24px;
+}
+
+.stylesample--memphis .stylesample__nav {
+  padding-bottom: 14px;
+  border-bottom: 4px solid #111111;
+}
+
+.stylesample--memphis .stylesample__brand {
+  color: #111111;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stylesample--memphis .stylesample__links,
+.stylesample--memphis .stylesample__nav-action {
+  color: #111111;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stylesample--memphis .stylesample__nav-action {
+  border: 3px solid #111111;
+  border-radius: 8px;
+  background-color: #ffd60a;
+  padding: 6px 10px;
+}
+
+.stylesample--memphis .stylesample__hero {
+  position: relative;
+  overflow: hidden;
+  border: 4px solid #111111;
+  border-radius: 0;
+  background-color: #ff2d55;
+  padding: 22px;
+}
+
+.stylesample--memphis .stylesample__hero::before {
+  position: absolute;
+  top: -28px;
+  right: 8%;
+  width: 64px;
+  height: 64px;
+  border: 4px solid #111111;
+  border-radius: 50%;
+  background-color: #ffd60a;
+  content: "";
+  transform: rotate(14deg);
+}
+
+.stylesample--memphis .stylesample__headline {
+  position: relative;
+  z-index: 1;
+  max-width: 18ch;
+  color: #111111;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 950;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+
+.stylesample--memphis .stylesample__sub {
+  position: relative;
+  z-index: 1;
+  max-width: 38rem;
+  color: #111111;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.stylesample--memphis .stylesample__cta,
+.stylesample--memphis .stylesample__cta2 {
+  min-height: 42px;
+  border: 4px solid #111111;
+  border-radius: 0;
+  padding: 0 15px;
+  color: #111111;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  box-shadow: 4px 4px 0 #111111;
+}
+
+.stylesample--memphis .stylesample__cta {
+  background-color: #00b4d8;
+}
+
+.stylesample--memphis .stylesample__cta2 {
+  background-color: #ffd60a;
+}
+
+.stylesample--memphis .stylesample__media {
+  min-height: clamp(190px, 27vw, 290px);
+  border: 4px solid #111111;
+  border-radius: 8px;
+  background-color: #00b4d8;
+  background-image:
+    linear-gradient(135deg, transparent 0 37%, #111111 37% 41%, transparent 41% 100%),
+    linear-gradient(90deg, #ffd60a 0 22%, transparent 22% 56%, #ff2d55 56% 78%, transparent 78%),
+    linear-gradient(0deg, transparent 0 66%, #fffdf5 66% 70%, transparent 70%);
+}
+
+.stylesample--memphis .stylesample__media::before {
+  top: 14%;
+  left: 12%;
+  width: 26%;
+  height: 44%;
+  border: 4px solid #111111;
+  border-radius: 50%;
+  background-color: #ff2d55;
+  content: "";
+  transform: rotate(-11deg);
+}
+
+.stylesample--memphis .stylesample__media::after {
+  right: 13%;
+  bottom: 12%;
+  width: 0;
+  height: 0;
+  border-right: 30px solid transparent;
+  border-bottom: 58px solid #ffd60a;
+  border-left: 30px solid transparent;
+  content: "";
+  filter: drop-shadow(4px 4px 0 #111111);
+  transform: rotate(12deg);
+}
+
+.stylesample--memphis .stylesample__cards {
+  gap: 12px;
+}
+
+.stylesample--memphis .stylesample__card {
+  min-height: 122px;
+  border: 4px solid #111111;
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 4px 4px 0 #111111;
+}
+
+.stylesample--memphis .stylesample__card:nth-child(1) {
+  background-color: #ffd60a;
+  transform: rotate(-1deg);
+}
+
+.stylesample--memphis .stylesample__card:nth-child(2) {
+  background-color: #00b4d8;
+  border-radius: 0;
+  transform: rotate(1.2deg);
+}
+
+.stylesample--memphis .stylesample__card:nth-child(3) {
+  background-color: #ff2d55;
+  transform: rotate(-0.6deg);
+}
+
+.stylesample--memphis .stylesample__card-title,
+.stylesample--memphis .stylesample__card-note {
+  color: #111111;
+}
+
+.stylesample--memphis .stylesample__card-title {
+  font-size: 0.86rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.stylesample--memphis .stylesample__card-note {
+  font-size: 0.79rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.stylesample--memphis .stylesample__foot {
+  border-top: 4px solid #111111;
+  color: #111111;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.5;
+  padding-top: 12px;
+}
+
+/* Notion: a document block first, with a faint blue index rail at the edge. */
+
+.stylesample--notion {
+  border: 1px solid #e9e9e7;
+  border-left: 4px solid #dbeafe;
+  border-radius: 3px;
+  background-color: #ffffff;
+  color: #37352f;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  gap: 30px;
+  padding: clamp(26px, 5vw, 50px);
+}
+
+.stylesample--notion .stylesample__nav {
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e9e9e7;
+}
+
+.stylesample--notion .stylesample__brand {
+  color: #37352f;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.stylesample--notion .stylesample__links,
+.stylesample--notion .stylesample__nav-action {
+  color: #787774;
+  font-size: 0.8rem;
+}
+
+.stylesample--notion .stylesample__nav-action {
+  color: #2383e2;
+}
+
+.stylesample--notion .stylesample__hero {
+  gap: 20px;
+  max-width: 45rem;
+}
+
+.stylesample--notion .stylesample__headline {
+  color: #37352f;
+  font-size: clamp(2rem, 5vw, 3.75rem);
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 1.06;
+}
+
+.stylesample--notion .stylesample__sub {
+  color: #5b5955;
+  font-size: 0.98rem;
+  line-height: 2;
+}
+
+.stylesample--notion .stylesample__cta,
+.stylesample--notion .stylesample__cta2 {
+  min-height: 38px;
+  border-radius: 3px;
+  padding: 0 15px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.stylesample--notion .stylesample__cta {
+  background-color: #2383e2;
+  color: #ffffff;
+}
+
+.stylesample--notion .stylesample__cta2 {
+  border: 1px solid #d9e9f8;
+  background-color: #f7fbff;
+  color: #2383e2;
+}
+
+.stylesample--notion .stylesample__media {
+  min-height: clamp(190px, 26vw, 280px);
+  border: 1px solid #e9e9e7;
+  border-radius: 3px;
+  background-color: #fbfaf7;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0 31px,
+    #e5e3df 31px 32px
+  );
+}
+
+.stylesample--notion .stylesample__media::before {
+  top: 22%;
+  right: 13%;
+  left: 13%;
+  height: 9px;
+  border-radius: 2px;
+  background-color: #d8d6d1;
+  box-shadow:
+    0 33px 0 #e5e3df,
+    0 66px 0 #ebe9e5;
+}
+
+.stylesample--notion .stylesample__media::after {
+  top: 22%;
+  left: 13%;
+  width: 28%;
+  height: 9px;
+  border-radius: 2px;
+  background-color: #2383e2;
+}
+
+.stylesample--notion .stylesample__cards {
+  gap: 12px;
+}
+
+.stylesample--notion .stylesample__card {
+  min-height: 118px;
+  border: 1px solid #e9e9e7;
+  border-left: 3px solid #dbeafe;
+  border-radius: 3px;
+  background-color: #ffffff;
+  padding: 15px;
+}
+
+.stylesample--notion .stylesample__card-title {
+  color: #37352f;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.stylesample--notion .stylesample__card-note {
+  color: #787774;
+  font-size: 0.81rem;
+  line-height: 1.9;
+}
+
+.stylesample--notion .stylesample__foot {
+  border-top: 1px solid #e9e9e7;
+  color: #9b9a97;
+  font-size: 0.74rem;
+  line-height: 1.8;
+  padding-top: 14px;
+}
+
+/* Art deco: symmetry, stepped corners, and two fine lines of old gold. */
+
+.stylesample--art-deco {
+  position: relative;
+  border: 1px solid #c9a227;
+  border-radius: 0;
+  background-color: #10171f;
+  color: #f2e6cf;
+  font-family: Georgia, "Songti SC", "Times New Roman", serif;
+  gap: 24px;
+  padding: clamp(28px, 5vw, 54px);
+  box-shadow:
+    inset 0 0 0 4px #10171f,
+    inset 0 0 0 5px #c9a227,
+    inset 0 0 0 9px #10171f,
+    inset 0 0 0 10px #c9a227;
+}
+
+.stylesample--art-deco::before,
+.stylesample--art-deco::after {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: #c9a227;
+  border-style: solid;
+  content: "";
+}
+
+.stylesample--art-deco::before {
+  top: 18px;
+  left: 18px;
+  border-width: 1px 0 0 1px;
+  box-shadow: 5px 5px 0 -4px #c9a227;
+}
+
+.stylesample--art-deco::after {
+  right: 18px;
+  bottom: 18px;
+  border-width: 0 1px 1px 0;
+  box-shadow: -5px -5px 0 -4px #c9a227;
+}
+
+.stylesample--art-deco .stylesample__nav {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #c9a227;
+}
+
+.stylesample--art-deco .stylesample__brand {
+  color: #c9a227;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+.stylesample--art-deco .stylesample__links,
+.stylesample--art-deco .stylesample__nav-action {
+  color: #d9c8a9;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.stylesample--art-deco .stylesample__nav-action {
+  border-bottom: 1px solid #c9a227;
+  padding-bottom: 4px;
+}
+
+.stylesample--art-deco .stylesample__hero {
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.stylesample--art-deco .stylesample__headline {
+  max-width: 20ch;
+  color: #f2e6cf;
+  font-size: clamp(2rem, 5vw, 4.1rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.08;
+  text-transform: uppercase;
+}
+
+.stylesample--art-deco .stylesample__sub {
+  max-width: 40rem;
+  color: #d9c8a9;
+  font-size: 0.91rem;
+  line-height: 1.8;
+}
+
+.stylesample--art-deco .stylesample__cta,
+.stylesample--art-deco .stylesample__cta2 {
+  min-height: 40px;
+  border: 1px solid #c9a227;
+  border-radius: 0;
+  padding: 0 18px;
+  color: #f2e6cf;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.stylesample--art-deco .stylesample__cta {
+  background-color: #c9a227;
+  color: #10171f;
+}
+
+.stylesample--art-deco .stylesample__cta2 {
+  background-color: #10171f;
+}
+
+.stylesample--art-deco .stylesample__media {
+  min-height: clamp(190px, 27vw, 290px);
+  border: 1px solid #c9a227;
+  border-radius: 0;
+  background-color: #0b121a;
+  background-image: repeating-conic-gradient(
+    from -34deg at 50% 100%,
+    transparent 0 7deg,
+    rgba(201, 162, 39, 0.72) 7.4deg 8.2deg,
+    transparent 8.6deg 15deg
+  );
+}
+
+.stylesample--art-deco .stylesample__media::before {
+  top: 19%;
+  left: calc(50% - 18%);
+  width: 36%;
+  height: 64%;
+  border: 1px solid #c9a227;
+  border-radius: 50% 50% 0 0;
+  background-color: rgba(16, 23, 31, 0.45);
+}
+
+.stylesample--art-deco .stylesample__media::after {
+  top: 15%;
+  bottom: 12%;
+  left: calc(50% - 1px);
+  width: 1px;
+  background-color: #c9a227;
+}
+
+.stylesample--art-deco .stylesample__cards {
+  gap: 14px;
+}
+
+.stylesample--art-deco .stylesample__card {
+  min-height: 116px;
+  border-top: 1px solid #c9a227;
+  border-bottom: 1px solid #c9a227;
+  padding: 15px 8px;
+  text-align: center;
+}
+
+.stylesample--art-deco .stylesample__card-title {
+  color: #f2e6cf;
+  font-size: 0.83rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stylesample--art-deco .stylesample__card-note {
+  color: #d9c8a9;
+  font-size: 0.78rem;
+  line-height: 1.8;
+}
+
+.stylesample--art-deco .stylesample__foot {
+  border-top: 1px solid #c9a227;
+  color: #bcae95;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  line-height: 1.7;
+  padding-top: 14px;
+  text-align: center;
+}
+
 /* Apple: quiet, spacious, softly material, and deliberately light. */
 
 .stylesample--apple {
