@@ -67,7 +67,6 @@ import {
   QuestsScreen,
 } from "@pieai/university-ui/navigation/screens.js";
 import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
-import { CourseRouteQuiz, hasRouteQuiz } from "@pieai/university-ui/path/CourseRouteQuiz.js";
 import { NodeCard } from "@pieai/university-ui/path/NodeCard.js";
 import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
 import {
@@ -128,6 +127,7 @@ import { LEXICON } from "../lesson/language";
 import { EMPTY_SHELF_HINT } from "../mode";
 import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
 import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
+import { CourseIsland } from "./CourseIsland.js";
 import { PlanetRail, PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { useMinWidth } from "./shell-route";
@@ -725,6 +725,29 @@ export function App() {
       ? pathUnit?.lessons.find((lesson) => lesson.id === pathOverlay.lessonId)
       : undefined;
 
+  const openUnitOverlay = useCallback((unitId: string, returnFocusTo: HTMLElement) => {
+    setPathOverlay({ kind: "unit", unitId, returnFocusTo });
+  }, []);
+  const openCourseLesson = useCallback(
+    (locator: LessonRef) => setView({ kind: "lesson", ...locator }),
+    [setView],
+  );
+  const backToCourseMap = useCallback(() => setView({ kind: "world" }), [setView]);
+  const courseIslandProps =
+    view.kind === "course" && course
+      ? {
+          course,
+          studyId: view.studyId,
+          viewedProgress,
+          pathUnit,
+          unitOverlayOpen: pathOverlay?.kind === "unit",
+          backToMapLabel,
+          onOpenUnitOverlay: openUnitOverlay,
+          onBackToMap: backToCourseMap,
+          onOpenLesson: openCourseLesson,
+        }
+      : null;
+
   // One sentence, both widths. The rail's TodayCard and the floating .nextup
   // overlay used to format this independently, and the overlay kept quoting
   // the catalogue size after the rail had stopped.
@@ -838,49 +861,7 @@ export function App() {
             ) : null}
           </>
         }
-        underlay={
-          wide ? null : view.kind === "course" && course ? (
-            <aside className="picked picked--left">
-              <h3>{course.title}</h3>
-              <p className="picked__study">
-                {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
-                {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
-              </p>
-              {pathUnit ? (
-                <div className="unit-strip">
-                  <p className="unit-strip__name">{pathUnit.title}</p>
-                  <button
-                    type="button"
-                    className="unit-strip__list"
-                    aria-label="先看这一单元讲什么"
-                    aria-haspopup="dialog"
-                    aria-expanded={pathOverlay?.kind === "unit" ? true : undefined}
-                    onClick={(event) =>
-                      setPathOverlay({
-                        kind: "unit",
-                        unitId: pathUnit.id,
-                        returnFocusTo: event.currentTarget,
-                      })
-                    }
-                  >
-                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                      <path
-                        d="M3 4.5h10M3 8h10M3 11.5h7"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeWidth="1.5"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ) : null}
-              <button className="ghost block" onClick={() => setView({ kind: "world" })}>
-                {backToMapLabel}
-              </button>
-            </aside>
-          ) : null
-        }
+        underlay={wide ? null : courseIslandProps ? <CourseIsland {...courseIslandProps} /> : null}
         overlay={
           <>
             <PresenceLayer
@@ -1034,64 +1015,7 @@ export function App() {
               exists; below 1160 there is no rail and the floating card above
               takes over. One call to action at every width.
             */}
-            {view.kind === "course" && course ? (
-              <aside className="picked picked--left">
-                <h3>{course.title}</h3>
-                <p className="picked__study">
-                  {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
-                  {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
-                </p>
-                {pathUnit ? (
-                  <div className="unit-strip">
-                    <p className="unit-strip__name">{pathUnit.title}</p>
-                    <button
-                      type="button"
-                      className="unit-strip__list"
-                      aria-label="先看这一单元讲什么"
-                      aria-haspopup="dialog"
-                      aria-expanded={pathOverlay?.kind === "unit" ? true : undefined}
-                      onClick={(event) =>
-                        setPathOverlay({
-                          kind: "unit",
-                          unitId: pathUnit.id,
-                          returnFocusTo: event.currentTarget,
-                        })
-                      }
-                    >
-                      <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                        <path
-                          d="M3 4.5h10M3 8h10M3 11.5h7"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeWidth="1.5"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ) : null}
-                {/*
-                  「我该从哪一关开始」, asked once and only where it is live.
-
-                  It was in the authoring workbench, three screens from any
-                  course and compiled out of the delivery build entirely. A
-                  learner deciding where to start is standing on the island —
-                  and only before the first stone is done, because a quiz still
-                  offering to choose your starting point when you are twenty
-                  lessons in is asking about a decision you already made.
-                */}
-                {hasRouteQuiz(course.id) && viewedProgress?.done === 0 ? (
-                  <CourseRouteQuiz
-                    studyId={view.studyId}
-                    course={course}
-                    onOpenLesson={(locator) => setView({ kind: "lesson", ...locator })}
-                  />
-                ) : null}
-                <button className="ghost block" onClick={() => setView({ kind: "world" })}>
-                  {backToMapLabel}
-                </button>
-              </aside>
-            ) : null}
+            {courseIslandProps ? <CourseIsland {...courseIslandProps} /> : null}
           </div>
         ) : null}
       </div>
