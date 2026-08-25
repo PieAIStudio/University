@@ -10,7 +10,7 @@ import {
 } from "./controls";
 import { courseIslandScale } from "../Maps";
 import { islandBlueprint, islandSurfaceY } from "../island/island-blueprint.js";
-import { radiusForLessons } from "../layout";
+import { radiusForLessons } from "../course/layout";
 
 /*
   Dolly span, both levels. This started at 76× on the world map, which let the

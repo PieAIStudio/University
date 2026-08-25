@@ -12,7 +12,7 @@
  * properties and a map needs both.
  */
 import * as THREE from "three";
-import { hash } from "./island/random.js";
+import { hash } from "../island/random.js";
 
 /**
  * A lesson count turned into a radius.

@@ -33,14 +33,14 @@ import * as THREE from "three";
 import aerialWorldPlate2k from "./assets/generated/aerial-world-plate-2k.webp?url";
 import aerialWorldPlate4k from "./assets/generated/aerial-world-plate-4k.webp?url";
 import { cloudPuffs } from "./cloud-layout.js";
-import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course";
+import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course/course";
 import { GeneratedCourseLandmark } from "./island/generated-landmark.js";
 import { islandBlueprint, islandSurfaceY, type IslandBlueprint } from "./island/island-blueprint.js";
 import { buildBlueprintIsland } from "./island/island-geometry.js";
 import { PropField, type Placement, type Role } from "./kit";
-import { layoutCourse, layoutStudyRoad, radiusForLessons } from "./layout";
+import { layoutCourse, layoutStudyRoad, radiusForLessons } from "./course/layout";
 import { stoneRadius } from "./path-overlay";
-import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./path-language";
+import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
 import { hash, seeded } from "./island/random.js";
 import { renderTier } from "./tier";
 

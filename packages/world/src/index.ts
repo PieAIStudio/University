@@ -28,8 +28,8 @@ export {
   depthsFromPrerequisites,
   isFocusDimmed,
   studySub,
-} from "./course.js";
-export type { Course, CourseNode } from "./course.js";
+} from "./course/course.js";
+export type { Course, CourseNode } from "./course/course.js";
 export {
   Controls,
   COURSE_POLAR,

@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
-import { frameCourse } from "../course-map.js";
-import { layoutCourse } from "../layout.js";
+import { frameCourse } from "../course/course-map.js";
+import { layoutCourse } from "../course/layout.js";
 import type { LessonPlacement } from "../Maps.js";
 
 /*

@@ -8,9 +8,9 @@
  * one shell and not the other, and the only reason was that the composition
  * lived in an app file where the second shell could not reach it.
  */
-import { courseSprites } from "./path-overlay.js";
+import { courseSprites } from "../path-overlay.js";
 import type { Course } from "./course.js";
-import type { LessonPlacement, Marker } from "./Maps.js";
+import type { LessonPlacement, Marker } from "../Maps.js";
 
 /**
  * A course the way a screen holds it, as the shape the scene places.

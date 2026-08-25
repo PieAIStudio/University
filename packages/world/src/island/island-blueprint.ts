@@ -7,7 +7,7 @@
  * terrain, colour family and semantic anchors. No Three.js object lives here,
  * so the same blueprint can later be cached at build time or sent to a worker.
  */
-import { layoutCourseRoad } from "../layout.js";
+import { layoutCourseRoad } from "../course/layout.js";
 import { hash, seeded } from "./random.js";
 
 export const ISLAND_BLUEPRINT_VERSION = 1 as const;

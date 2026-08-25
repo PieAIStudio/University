@@ -2,7 +2,7 @@ import { useRef, type CSSProperties, type ReactNode } from "react";
 
 import { Controls, Flight, LabelProbe, WORLD_POLAR } from "./camera/controls.js";
 import { placeWorld, WorldScene, type Marker } from "./Maps.js";
-import type { CourseNode } from "./course.js";
+import type { CourseNode } from "./course/course.js";
 import { Stage } from "./Stage.js";
 
 export type WorldMap = ReturnType<typeof placeWorld>;

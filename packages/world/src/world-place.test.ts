@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { CourseNode } from "./course.js";
+import type { CourseNode } from "./course/course.js";
 import { nextCourse, placeWorld } from "./Maps.js";
 
 function node(partial: Partial<CourseNode> & Pick<CourseNode, "studyId" | "courseId">): CourseNode {
