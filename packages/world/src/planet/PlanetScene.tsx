@@ -23,7 +23,6 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import { ISLAND_PALETTE } from "../island.js";
 import { hash } from "../random.js";
 import { Stage } from "../Stage.js";
 import { renderTier } from "../tier.js";
@@ -36,8 +35,6 @@ import { placeStudies, rotationFor, stepRotation, type YawPitch } from "./placem
  * yet. The numbers are the ones Maps already measured (sea for exposure,
  * sky stops, accent for the one lit thing).
  */
-const SEA = 0x2f89a0;
-const SEA_DEEP = 0x1c5c72;
 const SKY_MID = 0x8ec8ea;
 const SKY_HORIZON = 0xf2d4b0;
 /**
@@ -48,6 +45,13 @@ const SKY_HORIZON = 0xf2d4b0;
 const SPACE_LOW = 0x5a4433;
 const SPACE_HIGH = 0x241a13;
 const ACCENT = 0xffb347;
+
+const PLANET_PALETTE = {
+  oliveGreen: 0x81953f,
+  cyan: 0x218ca0,
+  sandBrown: 0xbd8c55,
+  deepGreen: 0x367852,
+} as const;
 
 /**
  * How far back the eye has to stand to hold the whole globe.
@@ -142,24 +146,19 @@ function buildSkyGeometry(): THREE.BufferGeometry {
 
 function buildPlanetGeometry(): THREE.BufferGeometry {
   /*
-    Detail 4, not 2.
+    Detail 3, not 4 or 2.
 
-    At 2 an icosahedron is 320 faces, and flat-shaded that reads as a die
-    rather than a planet — the coastline the elevation function draws is
-    coarser than the facets it is drawn on, so a continent is four triangles
-    and every one of them is visible. The islands get away with detail 1
-    because they are small and stylised; a whole world at arm's length does
-    not. 5120 faces on one sphere on a picker page is not a budget question.
+    Detail 2 made the silhouette too close to a die. Detail 4 made the
+    triangles too fine after the framing pass, so the surface read as a smooth
+    colour field again. Detail 3 leaves a visible low-poly rhythm at the
+    distance the picker actually uses: 1,280 faces around the whole world,
+    with the visible hemisphere carrying the map's facets rather than a noise
+    texture.
   */
-  const geometry = asFaces(new THREE.IcosahedronGeometry(1, 4));
+  const geometry = asFaces(new THREE.IcosahedronGeometry(1, 3));
   const position = geometry.attributes.position as THREE.BufferAttribute;
   const colours = new Float32Array(position.count * 3);
   const colour = new THREE.Color();
-  const grass = new THREE.Color(ISLAND_PALETTE.grass);
-  const grassDry = new THREE.Color(ISLAND_PALETTE.grassDry);
-  const rock = new THREE.Color(ISLAND_PALETTE.rock);
-  const sea = new THREE.Color(SEA);
-  const seaDeep = new THREE.Color(SEA_DEEP);
 
   for (let index = 0; index < position.count; index += 1) {
     const x = position.getX(index);
@@ -192,13 +191,38 @@ function buildPlanetGeometry(): THREE.BufferGeometry {
     const radius = 1 + Math.max(-0.02, elev * 0.16);
     position.setXYZ(index, nx * radius, ny * radius, nz * radius);
 
-    if (elev > 0.052) colour.copy(n > 0.7 ? grassDry : grass);
-    else if (elev > 0.028) colour.copy(rock);
-    else colour.copy(elev < -0.02 ? seaDeep : sea);
+  }
 
-    colours[index * 3] = colour.r;
-    colours[index * 3 + 1] = colour.g;
-    colours[index * 3 + 2] = colour.b;
+  /*
+    Vertex colours interpolate even when the material's normals are flat. Pick
+    one palette entry per triangle and write it to all three vertices, so a
+    neighbouring face can actually be a neighbouring colour block instead of a
+    hidden gradient. The grade still owns tone mapping and the single sRGB
+    encode; this is scene albedo, not a second colour pipeline.
+  */
+  for (let index = 0; index < position.count; index += 3) {
+    const center = new THREE.Vector3(
+      (position.getX(index) + position.getX(index + 1) + position.getX(index + 2)) / 3,
+      (position.getY(index) + position.getY(index + 1) + position.getY(index + 2)) / 3,
+      (position.getZ(index) + position.getZ(index + 1) + position.getZ(index + 2)) / 3,
+    ).normalize();
+    const faceNoise = hash(`${center.x.toFixed(4)},${center.y.toFixed(4)},${center.z.toFixed(4)}`);
+    const faceBand =
+      Math.sin(center.x * 2.05 + 1.1) * Math.cos(center.z * 1.75) +
+      0.62 * Math.sin(center.y * 2.6 + 0.4) +
+      0.34 * Math.cos(center.x * 3.4 - center.z * 2.9);
+    const faceElevation = faceBand * 0.075 + (faceNoise - 0.5) * 0.045 + 0.035;
+    if (faceElevation > 0.052) colour.setHex(PLANET_PALETTE.oliveGreen);
+    else if (faceElevation > 0.028) colour.setHex(PLANET_PALETTE.sandBrown);
+    else if (faceElevation < -0.02) colour.setHex(PLANET_PALETTE.deepGreen);
+    else colour.setHex(PLANET_PALETTE.cyan);
+
+    for (let vertex = 0; vertex < 3; vertex += 1) {
+      const offset = (index + vertex) * 3;
+      colours[offset] = colour.r;
+      colours[offset + 1] = colour.g;
+      colours[offset + 2] = colour.b;
+    }
   }
   geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
   geometry.computeVertexNormals();
