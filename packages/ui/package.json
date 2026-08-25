@@ -17,6 +17,7 @@
     "./evidence/EvidenceCode.js": "./src/evidence/EvidenceCode.tsx",
     "./evidence/EvidenceRail.js": "./src/evidence/EvidenceRail.tsx",
     "./evidence/evidence.css": "./src/evidence/evidence.css",
+    "./evidence/evidence-inline-source.css": "./src/evidence/evidence-inline-source.css",
     "./favourites/favourites.css": "./src/favourites/favourites.css",
     "./feedback/FeedbackNote.js": "./src/feedback/FeedbackNote.tsx",
     "./feedback/feedback-note.css": "./src/feedback/feedback-note.css",
