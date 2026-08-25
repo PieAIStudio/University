@@ -25,7 +25,7 @@ import * as THREE from "three";
 
 import { hash } from "../island/random.js";
 import { Stage } from "../Stage.js";
-import { renderTier } from "../tier.js";
+import { renderTier } from "../sky/tier.js";
 import { studyMarkerColor } from "./planet-copy.js";
 import {
   placeStudies,

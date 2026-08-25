@@ -33,7 +33,7 @@ import * as THREE from "three";
 import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
 import { createAoPass } from "./island/ao";
 import { assertWorldGradePipeline, createGradePass } from "./island/grade";
-import { renderTier } from "./tier";
+import { renderTier } from "./sky/tier";
 
 function Pipeline({ ambientOcclusion }: { readonly ambientOcclusion: boolean }) {
   const { gl, scene, camera, size, viewport } = useThree();

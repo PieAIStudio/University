@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { SKY_STOPS, skyStopsForStudy } from "./Maps";
+import { SKY_STOPS, skyStopsForStudy } from "../Maps";
 
 function luma(hex: number) {
   const r = ((hex >> 16) & 255) / 255;

@@ -1,4 +1,4 @@
-import { seeded } from "./island/random.js";
+import { seeded } from "../island/random.js";
 
 export interface CloudPuff {
   readonly position: readonly [number, number, number];
