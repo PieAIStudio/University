@@ -29,7 +29,7 @@ import { LessonMarkList } from "./LessonMarkList.js";
 import { LessonMargin } from "./LessonMargin.js";
 import { LessonBacklinks } from "./LessonRelated.js";
 import { LessonNextStep } from "./LessonNextStep.js";
-import { LessonSourceVersion } from "./LessonSourceVersion.js";
+import { LessonSourceVersion, type LessonSourceVersionAction } from "./LessonSourceVersion.js";
 import { LessonWordList } from "./LessonWordList.js";
 import { SelectionMenu, type SelectionTarget } from "./SelectionMenu.js";
 import {
@@ -74,6 +74,7 @@ export function LessonReader({
   onBackToCourse,
   onFollowLink,
   onReturn,
+  onSourceVersionAction,
   toolbarExtras,
 }: {
   readonly locator: LessonRef;
@@ -91,6 +92,8 @@ export function LessonReader({
   readonly onFollowLink?: ((target: LessonLinkTarget) => void) | undefined;
   /** Present only when a cross-lesson link brought the reader here. */
   readonly onReturn?: (() => void) | undefined;
+  /** Authoring-only action; delivery still shows the pinned version without a dead button. */
+  readonly onSourceVersionAction?: LessonSourceVersionAction;
   /** Shell-owned tools that sit with the reading controls, not a second toolbar. */
   readonly toolbarExtras?: ReactNode;
 }) {
@@ -502,6 +505,7 @@ export function LessonReader({
                   {...(view.lesson.pinnedCommit.date
                     ? { sourceCommitDate: view.lesson.pinnedCommit.date }
                     : {})}
+                  {...(onSourceVersionAction ? { onAction: onSourceVersionAction } : {})}
                 />
               ) : null}
             </div>

@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
-import { readJson } from "../api/client.js";
-
-interface CheckoutView {
+export interface LessonSourceVersionCheckout {
   readonly snapshotId: string;
   readonly path: string;
   readonly created: boolean;
   readonly run: readonly string[];
 }
+
+export type LessonSourceVersionAction = (
+  method: "open" | "close",
+  input: { readonly studyId: string; readonly sourceCommit: string },
+) => Promise<LessonSourceVersionCheckout | null>;
 
 /**
  * Running the version this lesson teaches.
@@ -33,24 +36,26 @@ export function LessonSourceVersion({
   studyId,
   sourceCommit,
   sourceCommitDate,
+  onAction,
 }: {
   readonly studyId: string;
   readonly sourceCommit: string;
   readonly sourceCommitDate?: string;
+  /** The authoring shell supplies the local action; delivery deliberately does not. */
+  readonly onAction?: LessonSourceVersionAction;
 }) {
-  const [checkout, setCheckout] = useState<CheckoutView | null>(null);
+  const [checkout, setCheckout] = useState<LessonSourceVersionCheckout | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const endpoint = `/api/studies/${studyId}/checkout?sourceCommit=${encodeURIComponent(sourceCommit)}`;
-
-  async function call(method: "POST" | "DELETE") {
+  async function call(method: "open" | "close") {
+    if (!onAction) return;
     setPending(true);
     setError(null);
     try {
-      const body = await readJson<CheckoutView>(await fetch(endpoint, { method }));
-      setCheckout(method === "POST" ? body : null);
+      const body = await onAction(method, { studyId, sourceCommit });
+      setCheckout(method === "open" ? body : null);
       setCopied(false);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "打不开正在学习的 App");
@@ -68,14 +73,16 @@ export function LessonSourceVersion({
           <span className="lesson-version__label">
             这节课钉在{dated ? ` ${dated} ` : ""}的版本（{sourceCommit.slice(0, 8)}）
           </span>
-          <button
-            type="button"
-            className="text-button"
-            onClick={() => void call("POST")}
-            disabled={pending}
-          >
-            {pending ? "正在打开…" : "打开正在学习的 App"}
-          </button>
+          {onAction ? (
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => void call("open")}
+              disabled={pending}
+            >
+              {pending ? "正在打开…" : "打开正在学习的 App"}
+            </button>
+          ) : null}
         </>
       ) : (
         <div className="lesson-version__ready">
@@ -103,14 +110,14 @@ export function LessonSourceVersion({
                 >
                   {copied ? "已复制" : "复制命令"}
                 </button>
-                <GameButton variant="ghost" onClick={() => void call("DELETE")} disabled={pending}>
+                <GameButton variant="ghost" onClick={() => void call("close")} disabled={pending}>
                   {pending ? "正在删除…" : "用完了，删掉"}
                 </GameButton>
               </div>
             </>
           ) : (
             <div className="lesson-version__actions">
-              <GameButton variant="ghost" onClick={() => void call("DELETE")} disabled={pending}>
+              <GameButton variant="ghost" onClick={() => void call("close")} disabled={pending}>
                 用完了，删掉
               </GameButton>
             </div>

@@ -234,6 +234,13 @@ describe("the shared lesson reader", () => {
     expect(container.querySelector(".lesson-next")).not.toBeNull();
   });
 
+  it("does not offer a clickable local source checkout in delivery", async () => {
+    await renderHost();
+    expect(container.textContent).toContain("这节课钉在");
+    expect(container.textContent).not.toContain("打开正在学习的 App");
+    expect(container.querySelector(".lesson-version button")).toBeNull();
+  });
+
   it("moves the bar as a later section crosses the read line", async () => {
     stubLessonRects({ s1: 80, s2: 400, s3: 900 });
     await renderHost();

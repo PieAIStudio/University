@@ -21,6 +21,7 @@ import {
 } from "@pieai/university-core";
 import { GameCallout } from "@pieai/swimmer-ui-kit";
 import { LessonReader } from "@pieai/university-ui/lesson/LessonReader.js";
+import type { LessonSourceVersionAction } from "@pieai/university-ui";
 import { lessonNeighbours } from "@pieai/university-ui/lesson/LessonNav.js";
 import { playSound, SoundToggle } from "@pieai/university-ui/sound/index.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
@@ -39,6 +40,7 @@ export function LessonScreen({
   onOpenLesson,
   onReturn,
   onSettled,
+  onSourceVersionAction,
 }: {
   readonly locator: LessonRef;
   /** The course's shape, for prev/next. Null while the shelf is still arriving. */
@@ -49,6 +51,8 @@ export function LessonScreen({
   readonly onOpenLesson: (next: LessonRef) => void;
   readonly onReturn: () => void;
   readonly onSettled: (doneBefore: number) => void;
+  /** Authoring-only source checkout; delivery leaves the version line read-only. */
+  readonly onSourceVersionAction?: LessonSourceVersionAction;
 }) {
   const progress = useSyncExternalStore(progressPort.subscribe, progressPort.snapshot);
   const [view, setView] = useState<{ readonly key: string; readonly view: LessonView } | null>(
@@ -173,6 +177,7 @@ export function LessonScreen({
         onBackToCourse={back}
         onFollowLink={onFollowLink}
         {...(returnDepth > 0 ? { onReturn } : {})}
+        {...(onSourceVersionAction ? { onSourceVersionAction } : {})}
         toolbarExtras={<SoundToggle progress={progressPort} />}
       />
     </main>
