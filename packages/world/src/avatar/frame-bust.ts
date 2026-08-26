@@ -25,8 +25,8 @@ export interface BustBounds {
  */
 export const BUST_SLICE = 0.7;
 
-/** A hair of air around the ears. At 1.0 they touch the edge of the circle. */
-export const BUST_PADDING = 1.12;
+/** A little air around the top and lower face without turning the bust into a distant shot. */
+export const BUST_PADDING = 1.2;
 
 export function frameBust(bounds: BustBounds, fovDegrees: number) {
   const slice = Math.max(bounds.h * BUST_SLICE, 0.01);
