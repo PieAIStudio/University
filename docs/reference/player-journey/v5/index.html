@@ -125,8 +125,22 @@ pre b{color:var(--go);font-weight:600}
 <tr><td><code>GradingPort</code> 与 <code>SourceAccessPort</code> 只换端口能力，不复制学习者面</td><td>AI 来源、源码仓库可达性是边界；能力缺席时控件仍在，并打开解释</td></tr>
 <tr><td>可读文字在 DOM，3D 只负责世界、路径和反馈</td><td>TTS 四档已定；学习者口述的 ASR 仍是开放决定</td></tr>
 <tr><td>课程内容不设付费墙；AI 按既定成本层级走端口</td><td>打开 TTS 不等于同意上传学习者的声音</td></tr>
+<tr><td>tier-1 确定性判题先在浏览器免费完成</td><td>只有 tier-1 <code>undecided</code> 的练习答案，才在明确提交后进入带额度的 tier-2 服务</td></tr>
 </tbody>
 </table>
+</div>
+
+<div class="dec sky">
+  <h4>裁决 B · 练习的 tier-2 是窄例外，不是「学习者文字自动出网」</h4>
+  <p>
+    学习者点击提交练习答案，是一次明确的动作：浏览器先用 <code>gradeDeterministically</code> 处理能处理的短事实答案；只有结果为
+    <code>undecided</code> 时，才把这道题的公开题目元数据、答案和自己的 Supabase access token 发给交付端的计量批改服务。
+    浏览器不碰钱包的 reserve / commit / refund，也不携带模型密钥或答案 key。
+  </p>
+  <p>
+    服务端验证 JWT 后才预留额度；模型成功才 commit，模型失败就 refund，并把余额不足、还剩多少、这次需要多少和充值方向说清楚。
+    这条例外只覆盖明确提交的练习答案；课后「讲一遍」复述卡、阅读标记和 ASR 仍遵守本稿的本地默认与单独选择加入边界。
+  </p>
 </div>
 
 <div class="dec sky">
@@ -183,6 +197,7 @@ pre b{color:var(--go);font-weight:600}
   <li><b>先读后答：</b>点击「我读完了」后，课程仍显示未完成，直到所有练习通过。</li>
   <li><b>跨设备：</b>两个事实都写进同一个云端学习者文档；本地缓存只是离线缓存和 outbox。</li>
   <li><b>版本：</b>确认动作带着当前 <code>contentRevision</code>，不会把旧课文的确认误套到新版本。</li>
+  <li><b>计量批改：</b>tier-1 能决定的答案没有服务请求；tier-2 服务先验 JWT 和余额，重复 <code>commandId</code> 不重复扣费，模型失败可见地退回预留额度。</li>
 </ul>
 
 <!-- ═══════════════════════════════════════════ -->
@@ -388,6 +403,7 @@ pre b{color:var(--go);font-weight:600}
   <li><b>落地「讲一遍」文字路径。</b>使用单元现有能力句，保存到学习者文档，接入已有 FSRS，不新增模型调用。</li>
   <li><b>保持 TTS 四档。</b>所有调用经过共享 <code>speech.ts</code> 的声音选择；自动存请求，手动降级可解释，高品质等钱包。</li>
   <li><b>单独设计 ASR 选择加入。</b>先做载荷、目的地、处理位置、保存和删除的决定；决定前不接麦克风，不把「开放」写成已上线。</li>
+  <li><b>加入计量 tier-2。</b>仍只通过 <code>GradingPort</code>；先过免费 tier-1，服务端验证 token 后 reserve → structured output → commit/refund，余额不足在现有答题控件里解释，不隐藏入口。</li>
   <li><b>双模式逐屏对齐。</b>本地与交付模式共享学习者面、课后提示、文字输入、复习卡和 TTS 设置；AI 来源、课文材料来源、以及能否触达课文背后的源码仓库，分别留在 <code>GradingPort</code>、<code>ContentPort</code>/<code>ReaderPort</code>、<code>SourceAccessPort</code>。能力缺席时照常显示入口并解释原因与未来支持路径。</li>
 </ol>
 
@@ -400,6 +416,7 @@ pre b{color:var(--go);font-weight:600}
 <tr><td>讲一遍</td><td>文字复述生成 FSRS 卡，到期回来，显示历史答案，默认零模型调用</td></tr>
 <tr><td>TTS</td><td>四档设置真实可见；自动仍是 <code>auto</code> 请求；在线 TTS 只收到产品单词</td></tr>
 <tr><td>ASR</td><td>当前不默认收音；未来若打开，必须另有选择加入和数据生命周期说明</td></tr>
+<tr><td>tier-2 批改</td><td>tier-1 判不出的练习才请求服务；JWT / 钱包在服务端；余额不足有解释，reserve 后模型失败有 refund，重复 command 不重复扣费</td></tr>
 <tr><td>两模式</td><td>同一棵组件树、同一份学习者数据、同一套可见行为；不因为「本机」两个字复制一份功能</td></tr>
 </tbody>
 </table>
@@ -420,6 +437,8 @@ pre b{color:var(--go);font-weight:600}
   事实依据：<code>packages/core/src/progress/contract.ts</code> ·
   <code>packages/ui/src/language/speech.ts</code> ·
   <code>packages/core/src/ports/account-data.ts</code> ·
+  <code>apps/university/src/ports/online/grading.ts</code> ·
+  <code>apps/university-grading/src/config.ts</code> ·
   <code>docs/specs/active/SPEC-0001-universitylocal-parity-contract.md</code>
 </div>
 

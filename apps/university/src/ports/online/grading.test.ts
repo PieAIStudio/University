@@ -78,8 +78,16 @@ beforeAll(async () => {
 });
 
 describe("createOnlineGradingPort", () => {
-  it("passes the four-character product name without a host", async () => {
-    const port = createOnlineGradingPort({});
+  it("passes a deterministic answer without calling the metered service", async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error("tier one must not call the service");
+    });
+    const readAccessToken = vi.fn(async () => "should-not-be-read");
+    const port = createOnlineGradingPort({
+      fetchImpl,
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken,
+    });
     const result = await port.submitExercise({
       locator,
       exerciseId: "product-name-from-readme",
@@ -88,18 +96,79 @@ describe("createOnlineGradingPort", () => {
       commandId: "c1",
     });
     expect(result.hostGrade?.passed).toBe(true);
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(readAccessToken).not.toHaveBeenCalled();
   });
 
-  it("does not mark an undecidable sentence wrong", async () => {
-    const port = createOnlineGradingPort({});
+  it("keeps a deterministic wrong answer free too", async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error("tier one must not call the service");
+    });
+    const port = createOnlineGradingPort({
+      fetchImpl,
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken: async () => "should-not-be-read",
+    });
+    const result = await port.submitExercise({
+      locator,
+      exerciseId: "product-name-from-readme",
+      contentRevision: 1,
+      answer: "错",
+      commandId: "c2",
+    });
+    expect(result.hostGrade?.passed).toBe(false);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("sends only an undecidable answer to the authenticated tier-two service", async () => {
+    const readAccessToken = vi.fn(async () => "learner-access-token");
+    const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      expect(init?.headers).toEqual({
+        Authorization: "Bearer learner-access-token",
+        "Content-Type": "application/json",
+      });
+      const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      expect(body).toMatchObject({
+        answer: "我的理解是另一回事。",
+        commandId: "c3",
+        contentRevision: 1,
+        exerciseId: "explain",
+        prompt: "为什么？",
+      });
+      return new Response(
+        JSON.stringify({
+          hostGrade: {
+            passed: true,
+            evaluation: "你的解释抓住了关键关系。",
+            extensions: [],
+            host: "tier-2",
+            learnerAnswer: "我的理解是另一回事。",
+            occurredAt: "2026-08-26T00:00:00.000Z",
+          },
+          balance: {
+            availablePowerUnits: "900",
+            balancePowerUnits: "1000",
+            reservedPowerUnits: "100",
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    });
+    const port = createOnlineGradingPort({
+      fetchImpl,
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken,
+    });
     const result = await port.submitExercise({
       locator: { ...locator, lessonId: long.id },
       exerciseId: "explain",
       contentRevision: 1,
       answer: "我的理解是另一回事。",
-      commandId: "c2",
+      commandId: "c3",
     });
-    expect(result.hostGrade?.passed).toBe(false);
-    expect(result.hostGrade?.evaluation).toMatch(/第 1 层判不了|升到第 2 层/);
+    expect(result.hostGrade?.passed).toBe(true);
+    expect(result.hostGrade?.host).toBe("tier-2");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(readAccessToken).toHaveBeenCalledTimes(1);
   });
 });

@@ -59,6 +59,25 @@ export interface ExerciseSubmitInput {
   readonly commandId: string;
 }
 
+/**
+ * The JSON envelope returned by delivery's server-side tier two grader.
+ *
+ * This is a wire shape behind the existing GradingPort, not a fourth port.
+ * Keeping it in the platform-neutral contract lets the browser and the
+ * server agree on one response without making the core package own fetch,
+ * Supabase, a wallet, or a model client.
+ */
+export interface MeteredGradingBalance {
+  readonly availablePowerUnits: string;
+  readonly balancePowerUnits: string;
+  readonly reservedPowerUnits: string;
+}
+
+export interface MeteredGradingResponse {
+  readonly hostGrade: HostExerciseGrade;
+  readonly balance: MeteredGradingBalance;
+}
+
 export interface GradingPort {
   submitExercise(input: ExerciseSubmitInput): Promise<ExerciseAttemptResult>;
   coachingPacket?(input: {

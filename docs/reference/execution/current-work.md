@@ -412,11 +412,13 @@ the list below contains the remaining implementation and authority boundaries.
    `get_balance`, idempotent orders, failure and cancellation, entitlement
    refreshed after purchase, and wire the pricing page's empty CTA. It is
    after 1 because taking money needs an account first.
-10. **Metered AI grading, after 9.** SwimmerAIKit becomes a dependency, behind
-    the same `GradingPort`, with the wallet reserved before the call and
-    committed or refunded after, keeping the deterministic-first tiering. It is
-    after payment because metering needs a wallet. This is the thing a paying
-    customer is actually buying, and today there is no call path to it at all.
+10. **Metered AI grading, after 9.** **Local path implemented (2026-08-26); the
+    launch gate remains.** `apps/university-grading` is the independent
+    server-only Vercel function: the same `GradingPort` keeps tier-1 free and
+    sends only `undecided` answers through JWT verification, wallet
+    reserve/commit/refund, and structured SwimmerAIKit grading. Deployment,
+    environment variables, wallet top-up/payment, and product pricing still
+    belong to the release step; no model call has been made from this branch.
 11. ~~**A quiet label under the rail.**~~ **Measured and fixed (2026-08-26).**
    In the 41-lesson course, the baseline sweep counted projected quiet labels
    under the rail at 768×900: 12; 1024×768: 6; 1280×720: 8; 1440×810: 4;

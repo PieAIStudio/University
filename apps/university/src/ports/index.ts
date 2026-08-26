@@ -20,6 +20,7 @@
 import type { GradingPort, ReaderPort, SourceAccessPort } from "@pieai/university-core";
 import type { ContentPort } from "@pieai/university-ui/content/port.js";
 
+import { identityPort } from "../account/identity";
 import { AUTHORING } from "../mode.js";
 import { progressPort } from "../progress/store.js";
 import { createLocalContentPort } from "./local/content.js";
@@ -42,7 +43,10 @@ export const readerPort: ReaderPort = AUTHORING
 
 export const gradingPort: GradingPort = AUTHORING
   ? createLocalGradingPort({ progress: progressPort })
-  : createOnlineGradingPort({ progress: progressPort });
+  : createOnlineGradingPort({
+      progress: progressPort,
+      readAccessToken: () => identityPort.readAccessToken(),
+    });
 
 /** Repository access is the third boundary: action locally, explanation in delivery. */
 export const sourceAccessPort: SourceAccessPort = AUTHORING

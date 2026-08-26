@@ -67,6 +67,8 @@ export {
   type ExerciseSubmitInput,
   type GradingPort,
   type HostExerciseGrade,
+  type MeteredGradingBalance,
+  type MeteredGradingResponse,
   type MemoryGradingPort,
 } from "./grading.js";
 export type {

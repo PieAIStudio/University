@@ -1,0 +1,33 @@
+{
+  "name": "@pieai/university-grading-service",
+  "version": "0.0.0",
+  "private": true,
+  "description": "University's server-only metered structured grading endpoint.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "oxlint --deny-warnings src api",
+    "format": "oxfmt --write package.json tsconfig.json vercel.json src api",
+    "format:check": "oxfmt --check package.json tsconfig.json vercel.json src api",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@pieai/swimmer-ai-kit": "0.6.0",
+    "@pieai/swimmer-backend-client": "0.4.0",
+    "@pieai/university-core": "workspace:*",
+    "@supabase/supabase-js": "2.110.3",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.2",
+    "oxfmt": "0.58.0",
+    "oxlint": "1.73.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  },
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=11.22.0 <12"
+  }
+}

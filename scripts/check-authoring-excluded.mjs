@@ -210,6 +210,19 @@ function checkCssFreshness(cssFiles) {
 /** A phrase only the workbench says. Minification cannot touch a string. */
 const AUTHORING_COPY = ["本机上的课从这里长出来", "作者工作台"];
 
+/**
+ * SwimmerAIKit is server-only. The delivery app may call the grading service,
+ * but its emitted JavaScript must never contain the kit, its transport, or the
+ * server key name. This is checked on the artifact because a source-only
+ * import scan cannot see a dependency that leaked through a barrel.
+ */
+const SERVER_ONLY_AI_FINGERPRINTS = [
+  "@pieai/swimmer-ai-kit",
+  "createOpenRouterChatTransport",
+  "createStructuredOutputClient",
+  "OPENROUTER_API_KEY",
+];
+
 function bundleFiles(dir, extension = ".js") {
   const out = [];
   const walk = (at) => {
@@ -279,6 +292,26 @@ if (found.length > 0) {
   for (const hit of found) console.error(`  ${hit}`);
   process.exit(1);
 }
+
+const aiBoundaryLeaks = [];
+for (const file of bundleFiles(DELIVERY_DIST)) {
+  const code = readFileSync(file, "utf8");
+  const where = relative(ROOT, file);
+  for (const fingerprint of SERVER_ONLY_AI_FINGERPRINTS) {
+    if (code.includes(fingerprint)) aiBoundaryLeaks.push(`${where}: ${fingerprint}`);
+  }
+}
+
+if (aiBoundaryLeaks.length > 0) {
+  console.error(
+    "browser AI boundary: delivery bundle contains server-only SwimmerAIKit material.\n" +
+      "The browser may send an authenticated answer to the grading service, but it must never bundle the model transport or its key name.\n",
+  );
+  for (const leak of aiBoundaryLeaks) console.error(`  ${leak}`);
+  process.exit(1);
+}
+
+console.log("browser AI boundary: ok (server-only kit and key fingerprints absent)");
 
 const authoringCssNames = authoringCssClassNames();
 if (authoringCssNames.length === 0) {

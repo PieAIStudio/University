@@ -143,6 +143,40 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.1.4(@types/node@24.13.2))
 
+  apps/university-grading:
+    dependencies:
+      '@pieai/swimmer-ai-kit':
+        specifier: 0.6.0
+        version: 0.6.0
+      '@pieai/swimmer-backend-client':
+        specifier: 0.4.0
+        version: 0.4.0(@supabase/supabase-js@2.110.3)
+      '@pieai/university-core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@supabase/supabase-js':
+        specifier: 2.110.3
+        version: 2.110.3
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: 24.13.2
+        version: 24.13.2
+      oxfmt:
+        specifier: 0.58.0
+        version: 0.58.0
+      oxlint:
+        specifier: 1.73.0
+        version: 1.73.0
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.1.4(@types/node@24.13.2))
+
   packages/backend:
     dependencies:
       '@pieai/swimmer-backend-client':
@@ -725,6 +759,10 @@ packages:
     resolution: {integrity: sha512-bxswkWKef6F2yyQmwld0krNcDy0JDS0VX4NyZJPVe1B2MBmKtV4gJ7NjeXS+eqSiC6tlrdgQ7VZ47iznoPcX+A==}
     engines: {node: '>=24 <25'}
     hasBin: true
+
+  '@pieai/swimmer-ai-kit@0.6.0':
+    resolution: {integrity: sha512-mc1t/w0BbcOtC8SrQt3AWy6XXrBJeVY35oAxAIAcDK1jeUvXDLQxw0VkNb6zfUdYNAcknKrZr7N/Qc8OwmvslA==}
+    engines: {node: '>=24 <25'}
 
   '@pieai/swimmer-avatar-kit@0.2.0':
     resolution: {integrity: sha512-Qe3iZ+II1CYo6K9RIE26dK/Ne/ct2/dbi/NKz1DcvBKt4PlUcr6tJEGZaWMryML61AQPICGUr16EupqZgnGknw==}
@@ -2726,6 +2764,8 @@ snapshots:
   '@pieai/pro-gov@0.9.5':
     dependencies:
       '@pieai/doc-gov': 0.9.5
+
+  '@pieai/swimmer-ai-kit@0.6.0': {}
 
   '@pieai/swimmer-avatar-kit@0.2.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)':
     dependencies:
