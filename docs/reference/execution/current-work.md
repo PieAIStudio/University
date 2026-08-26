@@ -109,17 +109,15 @@ Fixing either means editing content, which is authoring work.
 - **The payload decides what may leave the machine, not the transport.** An
   English word the product itself chose is product material, so a browser's
   cloud voice may read it aloud. The learner's own writing, speech and private
-  repository text are the learner's, and stay local unless they explicitly
-  choose otherwise. This replaced a blanket 「nothing here reaches the network」
-  in `packages/ui/src/language/speech.ts`, which reasoned about the mechanism
-  instead of the content and so kept the best voices out for a rule that was
-  protecting nothing. Voice quality is four settings — 自动 / 本机 / 在线 /
-  高品质 — stored in `preferences` like every other learner setting. 自动 is
-  stored as a *request*, never as a resolved tier, and re-resolves
-  premium → online → local on every use; storing the resolved value would
-  strand a learner on the free tier the day they pay. 高品质 renders disabled
-  until the wallet exists, because a control that hides what paying buys is a
-  pricing page that forgot to mention the price.
+  repository text are the learner's, and stay local by default. Learner speech
+  input is a separate, still-open product decision and needs explicit opt-in;
+  opening TTS never implies consent to it. Voice quality is four settings —
+  自动 / 本机 / 在线 / 高品质 — stored in `preferences` like every other
+  learner setting. 自动 is stored as a *request*, never as a resolved tier,
+  and re-resolves premium → online → local on every use; storing the resolved
+  value would strand a learner on the free tier the day they pay. 高品质
+  renders disabled until the wallet exists, because a control that hides what
+  paying buys is a pricing page that forgot to mention the price.
 - Evidence is an opaque typed anchor rendered by a registered renderer. Adding
   a second kind is a new renderer, not a schema migration.
 - Layout differs by CSS breakpoint inside one component tree. A second
@@ -129,10 +127,11 @@ Fixing either means editing content, which is authoring work.
 
 ## Design Before Build
 
-`docs/reference/player-journey/v4/index.html` — **open it in a browser.** It
-supersedes v1, v2 and v3, and is an amendment rather than a rewrite: anything
-v3 says that v4 does not contradict still stands. V4's law is that the shells
-may differ in exactly one place, where the AI comes from.
+`docs/reference/player-journey/v5/index.html` — **open it in a browser.** It
+supersedes v1, v2, v3 and v4, and is an amendment rather than a rewrite:
+anything v4 says that v5 does not contradict still stands. V5 adds the
+read-versus-answer split, the 「讲一遍」 card, and the payload boundary for
+TTS versus learner speech input.
 
 `docs/reference/player-journey/v3/index.html` still holds the screen inventory
 and the Duolingo mapping. Its evidence base is
@@ -199,7 +198,7 @@ Done, and verified in a browser rather than by a passing suite:
   the four slots already offered a side that fits.
 - **One project, one scene.** `placeWorld` takes the project to show and puts it
   on the origin. Nothing else is in the scene, so the pan needs no fence. The
-  vocabulary is 星球 / 课程系列 / 岛 / 单元 / 关 (v4 §05D).
+  vocabulary is 星球 / 课程系列 / 岛 / 单元 / 关 (V5 §00, inherited from V4 §05D).
 - **An overlay reserves nothing.** The enter-course card is placed but does not
   push: opening it used to slide three neighbouring islands' names sideways.
 - **One app** (was 10). `apps/university`, built twice from one tree. Was two
@@ -212,11 +211,11 @@ Done, and verified in a browser rather than by a passing suite:
   `ReaderPort` are where a lesson's text and its evidence come from; both live
   in `apps/university/src/ports/` beside `GradingPort`, and the directory is
   the complete list of what the two builds are allowed to disagree about.
-- **The two learner features are out of `#/studio`** (was 12). 知识笔记 is the
-  library's fifth collection in both builds — empty on the delivery side until
-  11 ships notes with the package. 分级测验 is on the course island, asked only
-  of a course with no progress, and `ROUTE_STARTS` is keyed by course id so a
-  second course is data rather than a branch.
+- **The two learner features are out of `#/studio`** (was 12). The existing
+  知识笔记 stack remains an authoring content pipeline; the learner-facing
+  feature is 「讲一遍」, a shared FSRS card described in V5. 分级测验 is on the
+  course island, asked only of a course with no progress, and `ROUTE_STARTS` is
+  keyed by course id so a second course is data rather than a branch.
 - **One course island, two slots.** The panel was written out twice in
   `App.tsx` and the wide copy had grown a 分级测验 the narrow one never got, so
   the question 「我该从哪一关开始」 did not exist on a phone. `CourseIsland` is
@@ -250,9 +249,9 @@ Done, and verified in a browser rather than by a passing suite:
   right-hand panel. The eye and the target share a lateral position now.
 
 Next — **the order is set by
-`docs/reference/player-journey/v4/index.html` §10, not by this list.** V4's
-first item is ReaderPort, because until the delivery shell stops carrying its
-own lesson reader every new feature has to be written twice.
+`docs/reference/player-journey/v5/index.html` §05, not by this list.** The
+ReaderPort and duplicate-reader work from the earlier journey is already done;
+the list below contains the remaining implementation and authority boundaries.
 
 1. **Provision the University learner row in SwimmerBackend** — *needs the
    owner.* Register the app, create a `university` schema that is neither
@@ -368,7 +367,7 @@ own lesson reader every new feature has to be written twice.
    same build, they are not products.
 8. **Entitlement, and it starts by splitting one word in two.** 「published」
    and 「paid for」 are different questions and the code currently answers them
-   with one. V4 says the prose is never walled, so entitlement governs AI and
+   with one. V5 keeps the prose open, so entitlement governs AI and
    sync only — but a learner should still only ever read a *published*
    revision. ADR-0002 says course packages are served from the backend under
    entitlement; they are in fact public static files on Vercel. One of those
@@ -390,89 +389,10 @@ own lesson reader every new feature has to be written twice.
    skip placement by design. The fix is either a clamp out of the chrome's box
    or a camera that keeps content out of it, and it is worth measuring which
    before writing either.
-12. **Notes reach the delivery build. The UA graph does not, and should not.**
-    This entry used to say the fix was to 「export the graph with the course
-    package the way evidence and cards already travel」. Measured: the UA graph
-    is not content. 「打开 UA 项目地图」 asks the 4317 bridge to *launch a separate
-    local application* and returns a tokenised URL, and the data behind it is
-    150MB for `turing-pact` alone. Shipping it is shipping a second product,
-    not extending a pipeline. It is an authoring instrument, it already lives
-    in `src/authoring/`, and it is correctly compiled out of delivery — the
-    same category as the CLI, not a build divergence.
+12. **「讲一遍」与语音边界。** 当前决定（读完 / 答对分开、学习者复述进
+    FSRS、TTS 四档）和仍开放的边界（ASR 必须单独选择加入）只写在
+    [V5 用户旅程](../player-journey/v5/index.html) §01–04；这里不再复制一份。
 
-    The other half, **知识笔记**, turned out not to be a pipeline problem
-    either. Counted: **there are zero knowledge notes**, and
-    `apps/local/studies/*/notes` does not exist in any of the five studies.
-    The feature has a complete stack — schema in core, a repository and HTTP
-    routes on the server, CLI workflows, a shared `KnowledgeNotes` surface, the
-    library's fifth tab — and no content at all. Exporting it would ship an
-    empty array to a customer.
-
-    **Answered 2026-08-26, and the question was wrong.** It was never "start
-    using 知识笔记 or retire it" — the stack that exists is a *content
-    publishing pipeline* wearing a learner feature's name.
-    `KnowledgeNoteSchema` gates `active` claims behind an evidence reference,
-    keeps numbered revisions under a write lock, and can only be written by the
-    `capture` CLI. That is the seriousness course content needs. What a learner
-    saying 「我大概是这么理解的」 needs is the opposite, and ADR-0001 already
-    says which bucket that belongs in: the cloud document, not the disk.
-
-    So it splits in two.
-
-    **The existing stack stays, as an authoring instrument** — the same
-    category as the UA graph above, and for the same reason: it is a tool for
-    producing material, it already lives behind the authoring build, and it is
-    correctly compiled out of delivery. It is not a learner feature and should
-    stop occupying a learner feature's slot.
-
-    **What the learner gets is a new, much smaller thing: 「讲一遍」.** After a
-    lesson or an `explain` exercise, one prompt — *say it in your own words to
-    somebody who knows none of this* — one text box, and the answer becomes a
-    card in the FSRS queue the product already runs. When it comes due the
-    prompt comes back, the learner answers again, and the screen shows their
-    own previous answers side by side. They grade themselves again/hard/good/
-    easy. **Zero model calls**, so it is the free tier by construction.
-
-    Three things that decide the shape, in descending order of how much they
-    surprised us:
-
-    - **The framing does the work, not the input device.** 「说比写记得牢」 is
-      not supported as a general result (Kellogg 2007 found written recall
-      *better*). What is supported, across several studies, is explaining *to
-      an imagined other* beating writing to them (Hoogerheide et al. 2016;
-      Fiorella & Mayer 2023). That is a sentence in a prompt, and it is free.
-      Voice is a convenience layer, not the mechanism.
-    - **Saving is not learning.** Storm & Stone (2015) — saving a thing lowers
-      memory *for that thing*. A recap that is filed and never re-asked is
-      cognitive offloading with extra steps. The card is not optional; it is
-      the feature.
-    - **The prompt costs no authoring.** Every unit already carries a
-      first-person capability sentence — 146 of them. That is the prompt. No
-      author writes anything new, and no model generates anything.
-
-    Not doing: multiple-choice recaps as the default, because they swap
-    generating an explanation for recognising one, which is the part that
-    works; and AI judging whether a recap is correct, which is exactly the
-    unmetered model behind a free tier that SPEC-0001 forbids.
-
-    **Voice is a privacy decision, not an engineering one, and it is open.**
-    `packages/ui/src/language/speech.ts` maintains 「nothing here reaches the
-    network」 as a principle; Chrome and Edge implement the Web Speech API by
-    streaming audio to Google and Microsoft. A learner recapping a lesson about
-    `turing-pact` would be dictating a private repository into someone else's
-    service. Firefox does not implement it at all, and Mandarin with embedded
-    English identifiers is the weakest case for every ASR benchmark we found —
-    which is precisely what this product's prose sounds like. Full survey:
-    `scratchpad/notes-research.md`.
-
-    **A defect found while answering this.**
-    `apps/local/server/workflows/learning-overview.ts:381` puts
-    `knowledge-card` into the due queue, and
-    `packages/ui/src/review/scheduler-ports.ts:37` — the only review entry
-    either build uses — throws 「这类复习卡还不能在这里复习」 on anything that
-    is not a `course-card`. The backend schedules a card the frontend refuses.
-    Nobody has hit it because there are no knowledge notes; 「讲一遍」 lands in
-    that same branch, so it gets fixed there rather than separately.
 13. ~~**The picker's globe is not beautiful yet.**~~ **Done, in four rounds.**
     Framing, flat shading, a warm key with a rim, stars and a horizon glow,
     and study markers that are landing beacons — a coloured pin standing on a

@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V5 用户旅程 · University</title>
+<style>
+:root{
+  --bg:#0d1014; --panel:#141920; --panel2:#1b222c; --line:#252d39;
+  --ink:#e8eef5; --dim:#8a97a8; --faint:#5b6675;
+  --go:#58cc02; --sky:#1cb0f6; --plum:#ce82ff; --gold:#ffc800; --hot:#ff4b4b;
+  --mono:ui-monospace,SFMono-Regular,Menlo,"SF Mono",monospace;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.78 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 150px}
+a{color:var(--sky)}
+code{font:13px/1.5 var(--mono);background:var(--panel);border:1px solid var(--line);
+  padding:2px 6px;border-radius:4px;color:#b9c6d6;overflow-wrap:anywhere}
+p,li,td,.dec p{overflow-wrap:anywhere}
+b,strong{color:#fff;font-weight:600}
+header.top{padding:64px 0 30px;border-bottom:1px solid var(--line)}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.2em;color:var(--faint);text-transform:uppercase;margin:0 0 18px}
+h1{font-size:40px;margin:0 0 14px;letter-spacing:-.03em;line-height:1.18}
+.tagline{color:var(--dim);max-width:72ch;font-size:16px;margin:0}
+.supersede{margin-top:22px;font-size:13.5px;color:var(--faint)}
+.supersede b{color:var(--dim);font-weight:600}
+.law{margin:44px 0 8px;padding:30px 34px;background:linear-gradient(180deg,#16351a,#141920);
+  border:1px solid #2c5e2e;border-radius:16px}
+.law .k{font:600 11.5px/1 var(--mono);letter-spacing:.22em;color:var(--go);text-transform:uppercase}
+.law p{margin:16px 0 0;font-size:23px;line-height:1.55;max-width:52ch;color:#fff;font-weight:600;letter-spacing:-.01em}
+.law .sub{font-size:15px;font-weight:400;color:var(--dim);margin-top:14px;max-width:68ch}
+h2{font-size:27px;margin:76px 0 10px;padding-top:30px;border-top:1px solid var(--line);letter-spacing:-.02em;line-height:1.35}
+h2 .n{font:700 12px/1 var(--mono);background:var(--go);color:#0d1014;padding:6px 9px;border-radius:5px;vertical-align:4px;margin-right:12px}
+h2.alt .n{background:var(--sky)} h2.alt2 .n{background:var(--plum)}
+h2.warn .n{background:var(--hot)} h2.gold .n{background:var(--gold);color:#0d1014}
+.lede{color:var(--dim);max-width:74ch;margin:0 0 26px;font-size:15.5px}
+h3{font-size:19px;margin:38px 0 8px;letter-spacing:-.01em}
+h4{font-size:16px;margin:26px 0 6px;color:var(--dim)}
+p{max-width:74ch;margin:0 0 14px}
+ul,ol{max-width:74ch;padding-left:22px;margin:0 0 16px}
+li{margin-bottom:7px}
+.dec{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--go);
+  border-radius:0 12px 12px 0;padding:20px 24px;margin:24px 0}
+.dec h4{margin:0 0 10px;font-size:16.5px;color:var(--go)}
+.dec.no{border-left-color:var(--hot)} .dec.no h4{color:var(--hot)}
+.dec.hm{border-left-color:var(--gold)} .dec.hm h4{color:var(--gold)}
+.dec.sky{border-left-color:var(--sky)} .dec.sky h4{color:var(--sky)}
+.dec p{margin:10px 0 0;font-size:15px;color:var(--dim)}
+.dec p:first-of-type{margin-top:0}
+.dec b{color:var(--ink)}
+.fig{margin:22px 0;padding:18px 22px;background:#101820;border:1px dashed #2a3a48;border-radius:12px;max-width:74ch}
+.fig .t{font:600 11.5px/1 var(--mono);letter-spacing:.18em;color:var(--sky);text-transform:uppercase;margin-bottom:12px}
+.fig p{color:var(--dim);font-size:15px;margin:0 0 10px}
+.fig p:last-child{margin:0}
+.tw{overflow-x:auto;margin:22px 0}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px}
+th{text-align:left;padding:10px 14px 10px 0;border-bottom:1px solid var(--line);
+  font:600 11.5px/1.4 var(--mono);letter-spacing:.12em;color:var(--faint);text-transform:uppercase;vertical-align:bottom}
+td{padding:12px 14px 12px 0;border-bottom:1px solid #1c232c;vertical-align:top;color:var(--dim)}
+td:first-child{color:var(--ink);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font:600 11.5px/1.7 var(--mono);white-space:nowrap}
+.tag.y{background:rgba(88,204,2,.13);color:var(--go);box-shadow:inset 0 0 0 1px rgba(88,204,2,.5)}
+.tag.n{background:rgba(255,75,75,.12);color:var(--hot);box-shadow:inset 0 0 0 1px rgba(255,75,75,.45)}
+.tag.p{background:rgba(255,200,0,.12);color:var(--gold);box-shadow:inset 0 0 0 1px rgba(255,200,0,.45)}
+.tag.i{background:rgba(28,176,246,.12);color:var(--sky);box-shadow:inset 0 0 0 1px rgba(28,176,246,.45)}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+  overflow-x:auto;font:13px/1.7 var(--mono);color:#b9c6d6;max-width:74ch;margin:16px 0}
+pre b{color:var(--go);font-weight:600}
+.chk{list-style:none;padding:0;max-width:74ch}
+.chk li{padding-left:30px;position:relative;margin-bottom:11px;color:var(--dim)}
+.chk li::before{content:"";position:absolute;left:6px;top:11px;width:7px;height:7px;border-radius:2px;background:var(--go)}
+.chk li.no::before{background:var(--hot)} .chk li.q::before{background:var(--gold)}
+.chk li b{color:var(--ink)}
+.foot{margin-top:80px;padding-top:24px;border-top:1px solid var(--line);color:var(--faint);font:12.5px/1.9 var(--mono)}
+@media(max-width:640px){
+  h1{font-size:29px} h2{font-size:21px;margin-top:52px} .law p{font-size:19px}
+  .wrap{padding:0 16px 90px} .dec{padding:16px 18px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Player Journey · V5 · 2026-08-26</p>
+  <h1>产品挑的词可以，<br>学习者说的话不行</h1>
+  <p class="tagline">
+    V4 定下了地图、双模式和共享阅读器；当前执行记录又把「讲一遍」分成作者知识笔记与学习者复述卡。V5 只把其中一条还会被误读的边界钉牢：
+    <b>语音输出已经定了，语音输入仍然开放。</b>这不是重画世界地图，也不是给两个模式再加一个差异。
+  </p>
+  <p class="supersede">
+    <b>承接</b> <a href="../v4/index.html">V4</a>：V4 没有被本文推翻的地图、组件、商业和双模式决定继续有效。
+    <b>本稿新增</b> 读完与答对分开、学习者复述进 FSRS、TTS 与 ASR 的边界。<b>读法</b> 先看裁决，再看为什么，最后看怎么验。
+  </p>
+</header>
+
+<div class="law">
+  <div class="k">The V5 boundary</div>
+  <p>决定权在载荷，不在传输方式。</p>
+  <p class="sub">
+    那条「什么都不出网」的笼统规矩已经没有了。产品自己挑的一个英文单词是产品材料，
+    可以交给浏览器的在线声音读出来；学习者自己写的、自己说的、以及私有仓库里的文字是学习者的数据，
+    默认留在本地。<b>所以不是「语音不能出网」，而是「产品挑的词可以，学习者说的话不行」。</b>
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="warn"><span class="n">00</span>这一版到底改什么</h2>
+<p class="lede">
+  V4 的大部分决定已经是产品骨架，不需要因为语音再开一套架构。V5 只处理一条用户会实际遇到的路径：
+  读一节课、答练习、用自己的话复述，以及想不想把这段话说出来。
+</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>继续沿用 V4</th><th>V5 新增的裁决</th></tr></thead>
+<tbody>
+<tr><td>一个 <code>apps/university</code>，两个模式；学习面一套实现</td><td>读完与答对是两个事实，不能由一个事件代替另一个</td></tr>
+<tr><td><code>ContentPort</code> / <code>ReaderPort</code> 只换材料从哪来，不复制阅读器</td><td>「讲一遍」是学习者自己的复述卡，不是作者的知识笔记</td></tr>
+<tr><td>可读文字在 DOM，3D 只负责世界、路径和反馈</td><td>TTS 四档已定；学习者口述的 ASR 仍是开放决定</td></tr>
+<tr><td>课程内容不设付费墙；AI 按既定成本层级走端口</td><td>打开 TTS 不等于同意上传学习者的声音</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="dec sky">
+  <h4>裁决 A · 先把复述做成文字卡，TTS 做窄，ASR 不顺手打开</h4>
+  <p>
+    实现后，学习者先用文字完成「讲一遍」，并让它进入已有的 FSRS 复习队列。
+    读单词的 TTS 按四档工作，其中在线声音可以读产品挑的单词。
+    <b>学习者口述复述的语音输入不在这次实现里；它保持开放，直到明确的选择加入设计完成。</b>
+  </p>
+</div>
+
+<p>
+  V4 已统一的世界词汇也继续有效：<b>星球 / 课程系列 / 岛 / 单元 / 关</b>。
+  本稿只把它作为学习者复述卡的定位层级，不重新定义地图；完整解释见 <a href="../v4/index.html">V4 §05D</a>。
+</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2><span class="n">01</span>读完和答对，是两盏不同的灯</h2>
+<p class="lede">
+  当前模型已经把这两个事实分开：<code>readConfirmed</code> 记录学习者确认读过，
+  <code>exercisesPassed</code> 记录所有练习通过。问题在于交互还曾经把它们从一个事件一起写下去，
+  于是「跳到题目并猜对」看起来像完成了阅读。
+</p>
+
+<div class="dec">
+  <h4>决定 · 两个动作，最后才合成「完成」</h4>
+  <p>
+    学习者读到课文底部后，看到一个明确的「我读完了」动作。它只写
+    <code>readConfirmed = true</code>，不替任何练习判分。
+  </p>
+  <p>
+    练习提交只写对应的答案和判分记录。即使全部答对，也不能替读完动作盖章；
+    即使确认读完，也不能跳过练习。只有 <code>readConfirmed</code> 和
+    <code>exercisesPassed</code> 都为真，地图、结算和 XP 才把这节课当作完成。
+  </p>
+</div>
+
+<div class="fig">
+  <div class="t">线框 · 一节课的事实顺序</div>
+<pre>课文底部
+  [ 我读完了 ]  ──只写 readConfirmed
+
+练习区
+  [ 提交答案 ]  ──只写该 exercise 的 attempt / passed
+
+结算
+  readConfirmed && exercisesPassed
+  └─ 两盏灯都亮，才显示「完成」和下一关</pre>
+</div>
+
+<h4>怎么验</h4>
+<ul class="chk">
+  <li><b>先答后读：</b>所有练习答对后，课程仍显示未完成，直到明确点击「我读完了」。</li>
+  <li><b>先读后答：</b>点击「我读完了」后，课程仍显示未完成，直到所有练习通过。</li>
+  <li><b>跨设备：</b>两个事实都写进同一个云端学习者文档；本地缓存只是离线缓存和 outbox。</li>
+  <li><b>版本：</b>确认动作带着当前 <code>contentRevision</code>，不会把旧课文的确认误套到新版本。</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="alt"><span class="n">02</span>「讲一遍」是复习卡，不是知识笔记</h2>
+<p class="lede">
+  作者需要把真实、有证据的知识写进课程；学习者需要把刚学到的东西用自己的话说一遍。
+  两者都叫「笔记」会把内容生产和学习记录混成一件事，V5 把它们拆回各自该在的地方。
+</p>
+
+<div class="tw">
+<table>
+<thead><tr><th></th><th>知识笔记</th><th>讲一遍</th></tr></thead>
+<tbody>
+<tr><td>谁写</td><td>作者，通过 <code>capture</code> CLI</td><td>学习者，在课后或复习时</td></tr>
+<tr><td>依据</td><td>需要证据引用，按版本锁定</td><td>来自现有的单元能力句，不要求作者另写提示</td></tr>
+<tr><td>放哪</td><td>作者端的内容发布管线</td><td>共享云端学习者文档；离线时进本机 outbox</td></tr>
+<tr><td>是否进课程包</td><td>会，经过发布门</td><td>不会；它不是课程内容</td></tr>
+<tr><td>是否调用模型</td><td>作者工作流另说</td><td><span class="tag n">零模型调用</span>，免费层也成立</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="dec">
+  <h4>决定 · 一句提示、一个输入框、一张会回来的卡</h4>
+  <p>
+    读完一节课或完成一个 <code>explain</code> 练习后，给学习者一个提示：
+    <b>「请用自己的话，讲给一个完全不知道这件事的人听。」</b>
+    提示来自该单元已有的第一人称能力句，不新增作者工作。
+  </p>
+  <p>
+    默认输入是文字。提交后答案成为一张 FSRS 卡；到期时再次问同一个问题，
+    把这次答案和之前的答案并排给学习者看，由学习者自己选「again / hard / good / easy」。
+    保存本身不是学习，<b>回来再答才是这个功能存在的原因。</b>
+  </p>
+</div>
+
+<div class="dec hm">
+  <h4>不做 · 选择题和 AI 判卷都不是默认答案</h4>
+  <p>
+    选择题把「生成一个解释」换成「认出一个选项」，少了这条路径真正要练的东西。
+    AI 判学习者的复述则会给免费层带来无法封顶的模型成本，也会把「我怎么理解」变成一个外部裁判的问题。
+    V5 先让学习者生成、重看、再生成，并且不替他假装判断。
+  </p>
+</div>
+
+<div class="wire">
+  <div class="cap">线框 · 先文字，语音输入不偷偷出现</div>
+<pre>讲一遍
+  请用自己的话，讲给一个完全不知道这件事的人听。
+
+  [ 在这里写你的复述……                         ]
+  [ 保存为复习卡 ]
+
+  语音输入：还在设计
+  （不会因为你打开了「听发音」就自动启用。）</pre>
+</div>
+
+<h4>怎么验</h4>
+<ul class="chk">
+  <li><b>一次写入：</b>提交后生成一张可定位到课程系列 / 岛 / 关 / 版本的复习卡，不生成课程包文件。</li>
+  <li><b>真的会回来：</b>到期卡出现在同一套复习队列，能看到自己的历史答案并完成四档自评。</li>
+  <li><b>成本封顶：</b>从写入、再次提问到自评，默认路径的模型调用次数为 0。</li>
+  <li><b>两模式同形：</b>本地模式和交付模式共用这套输入、卡片和复习表面，只通过既有端口取材料与判分。</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="alt2"><span class="n">03</span>语音分成输出和输入，不能用一个开关代替</h2>
+<p class="lede">
+  「语音」不是一个整体功能。一个动作是产品读出它自己挑的单词，另一个动作是学习者把自己的理解说出来。
+  前者已经定案，后者仍开放；把两个动作放进同一个「允许语音」开关，会让学习者在不知情时交出另一种数据。
+</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>动作</th><th>载荷是谁的</th><th>现在状态</th><th>网络与默认行为</th></tr></thead>
+<tbody>
+<tr><td><b>TTS · 听发音</b></td><td>产品选中的一个英文单词</td><td><span class="tag y">已定</span></td><td>可以使用本机或浏览器云声音；只读产品单词，不代表收集学习者内容</td></tr>
+<tr><td><b>ASR · 口述复述</b></td><td>学习者自己的声音、句子，以及可能提到的私有仓库</td><td><span class="tag p">开放</span></td><td>默认不启用；必须另做明确的选择加入，不能从 TTS 设置推导同意</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="dec">
+  <h4>决定 · 边界看载荷，不看「本机 / 在线」这个标签</h4>
+  <p>
+    「在线」不自动等于不允许，「本机」也不自动等于可以把任何数据塞进去。
+    判断顺序是：先问这段东西是谁选的、属于谁；再问实现它需要哪种传输。
+    产品选定的 <code>word</code> 是课程材料，所以浏览器的云端声音可以读它。
+  </p>
+  <p>
+    学习者的写作、声音和私有仓库文字属于学习者，默认留在本地。
+    这条许可只覆盖「读一个产品单词」，<b>不覆盖「收集学习者的解释」</b>。
+  </p>
+</div>
+
+<h3>TTS · 四档已经定了</h3>
+<p>
+  <code>packages/ui/src/language/speech.ts</code> 现在把本机和在线英语声音收集后再做新奇音色过滤与排序，
+  <code>localService</code> 只负责判断它属于哪一档，不再把在线声音一刀切掉。
+  设置存的是学习者的请求，不存某次运行的解析结果。
+</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>设置</th><th>含义</th><th>存什么</th><th>拿不到时</th></tr></thead>
+<tbody>
+<tr><td><b>自动</b></td><td>每次按当前能力选最好的可用层级</td><td>永远存 <code>auto</code> 这个请求</td><td>每次重新尝试：高品质 → 在线 → 本机</td></tr>
+<tr><td><b>本机</b></td><td>只用本机英语声音</td><td>存 <code>local</code></td><td>向下退无可退，显示没有可用本机语音；绝不静默改用在线</td></tr>
+<tr><td><b>在线</b></td><td>可以使用浏览器提供的云端英语声音</td><td>存 <code>online</code></td><td>浏览器没有云端英语声音时，说明原因并按既定降级规则处理</td></tr>
+<tr><td><b>高品质</b></td><td>付费高品质声音</td><td>存 <code>premium</code> 请求</td><td>钱包和权益接入前置灰；付款后自动请求仍能重新解析到它</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="dec sky">
+  <h4>这里已经关掉的三个坑</h4>
+  <p>
+    <b>第一，自动不是一次性答案。</b>今天只有本机声音，明天登录后有高品质权益，或浏览器后来暴露了新的在线声音，
+    都应该在下一次使用时生效；把「自动」写成「本机」会把学习者困在过去的能力上。
+  </p>
+  <p>
+    <b>第二，本机是明确选择。</b>学习者手动选「本机」时，不能因为本机暂时没有声音就偷偷改走网络。
+  </p>
+  <p>
+    <b>第三，高品质不是假装存在。</b>钱包还没接好时把它显示为不可用，并解释是权益尚未接入；
+    不把一个没有兑现路径的付费承诺伪装成普通声音。
+  </p>
+</div>
+
+<h3>ASR · 仍然开放，而且正因为新规矩才开放</h3>
+<div class="dec no">
+  <h4>这不是「旧规矩还在」</h4>
+  <p>
+    浏览器实现 Web Speech API 的方式会把音频送到服务商：Chrome 和 Edge 的语音识别会把声音流向 Google 或 Microsoft。
+    Firefox 则根本没有实现这套能力。两件事都不能被一个「浏览器支持，所以打开」的判断抹平。
+  </p>
+  <p>
+    这个产品最常见的口述不是干净的单语句子，而是<b>普通话夹着英文标识符</b>；这是 ASR 最弱的场景。
+    学习者复述的主题还可能是 <code>turing-pact</code> 这样的真实私有仓库——他是在说自己的数据，
+    不是在朗读产品挑出来的一个词。
+  </p>
+  <p>
+    所以 ASR 不是被「语音不能出网」挡住，而是被新边界保留下来：<b>学习者说的话需要单独、明确的选择加入。</b>
+    TTS 放开之后，这个问题没有被顺带回答。
+  </p>
+</div>
+
+<div class="dec hm">
+  <h4>ASR 未来要先回答的五个问题</h4>
+  <ol>
+    <li><b>去哪处理：</b>本机识别、哪一种在线服务，还是两者都给；不能把浏览器实现误说成本机。</li>
+    <li><b>什么时候同意：</b>在第一次收音前说明会发送什么、发给谁、为了什么，且不能用 TTS 的同意代替。</li>
+    <li><b>保存什么：</b>原始音频、转写文字、还是只在本机临时使用；保存与否、保留多久、怎么删除都要明说。</li>
+    <li><b>识别失败怎么办：</b>Firefox 没有能力时给文字输入；中英混杂时不能把错误转写当成学习者说错。</li>
+    <li><b>学习者能否反悔：</b>取消、拒绝和关闭后都不能留下一个已经上传却没有说明的录音。</li>
+  </ol>
+</div>
+
+<h4>怎么验</h4>
+<ul class="chk">
+  <li><b>TTS 的载荷：</b>点击「听发音」只给合成器一个产品选中的英文单词，不把复述框、读者标记或仓库文字拼进去。</li>
+  <li><b>TTS 的设置：</b>四个值能持久化；自动持久化为请求而不是解析出的层级；高品质在钱包未就绪时不可用且有解释。</li>
+  <li><b>ASR 的门：</b>当前没有任何「听发音」动作会打开麦克风；未来 ASR 进入产品前必须有单独的选择加入界面。</li>
+  <li><b>浏览器差异：</b>Firefox 走文字复述；不能用「没有按钮」掩盖能力不存在，也不能把 Chrome / Edge 的在线实现叫成本机。</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="gold"><span class="n">04</span>已关的和还开着的</h2>
+<p class="lede">
+  把开放问题写出来不是把产品做成半成品，而是避免一个已经定的 TTS 选择替另一个高风险决定背书。
+</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>问题</th><th>状态</th><th>当前正确说法</th></tr></thead>
+<tbody>
+<tr><td>TTS 能否使用在线声音</td><td><span class="tag y">已关</span></td><td>可以；产品挑选的英文单词是产品材料，边界由载荷决定</td></tr>
+<tr><td>语音质量设置</td><td><span class="tag y">已关</span></td><td>自动 / 本机 / 在线 / 高品质；自动存请求，高品质等钱包</td></tr>
+<tr><td>学习者口述复述是否默认开启</td><td><span class="tag p">开放</span></td><td>不默认开启；它涉及学习者自己的数据，需要明确选择加入</td></tr>
+<tr><td>ASR 的处理位置与服务商</td><td><span class="tag p">开放</span></td><td>本机、在线或两者的取舍尚未定，不从浏览器 API 的名字猜答案</td></tr>
+<tr><td>录音 / 转写的保存与删除</td><td><span class="tag p">开放</span></td><td>在隐私和数据生命周期说清楚前，不把它写进学习者功能承诺</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="dec">
+  <h4>不会再打开的旧问题</h4>
+  <p>
+    「自动到底选本机还是在线」「高品质是否要等钱包」「TTS 能不能读产品单词」已经由代码与设置契约回答。
+    后续如果发现浏览器声音质量不好，修排序、降级说明或品牌 kit；<b>不要借机把学习者口述也接上同一条路径。</b>
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2><span class="n">05</span>施工顺序与完成线</h2>
+<p class="lede">
+  先把两个事实和一张文字复述卡做成一套，再决定是否值得为 ASR 支付隐私和识别失败的复杂度。
+  TTS 的四档设置已经有共享实现，本节描述它必须守住的产品行为。
+</p>
+
+<ol>
+  <li><b>分离读完与答对。</b>阅读器只在明确动作上写 <code>readConfirmed</code>，练习只写自己的 attempt 和 verdict。</li>
+  <li><b>落地「讲一遍」文字路径。</b>使用单元现有能力句，保存到学习者文档，接入已有 FSRS，不新增模型调用。</li>
+  <li><b>保持 TTS 四档。</b>所有调用经过共享 <code>speech.ts</code> 的声音选择；自动存请求，手动降级可解释，高品质等钱包。</li>
+  <li><b>单独设计 ASR 选择加入。</b>先做载荷、目的地、处理位置、保存和删除的决定；决定前不接麦克风，不把「开放」写成已上线。</li>
+  <li><b>双模式逐屏对齐。</b>本地与交付模式共享课后提示、文字输入、复习卡和 TTS 设置；唯一的 AI 来源差异仍留在既有端口。</li>
+</ol>
+
+<h3>完成线</h3>
+<div class="tw">
+<table>
+<thead><tr><th>检查</th><th>必须看到什么</th></tr></thead>
+<tbody>
+<tr><td>读完 / 答对</td><td>任意顺序都不能互相冒充；两个事实都存在且能跨设备合并</td></tr>
+<tr><td>讲一遍</td><td>文字复述生成 FSRS 卡，到期回来，显示历史答案，默认零模型调用</td></tr>
+<tr><td>TTS</td><td>四档设置真实可见；自动仍是 <code>auto</code> 请求；在线 TTS 只收到产品单词</td></tr>
+<tr><td>ASR</td><td>当前不默认收音；未来若打开，必须另有选择加入和数据生命周期说明</td></tr>
+<tr><td>两模式</td><td>同一棵组件树、同一份学习者数据、同一套可见行为；不因为「本机」两个字复制一份功能</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="fig">
+  <div class="t">回到完整旅程</div>
+  <p>
+    地图、换系列、浮动栏、Tip、会员、一起学、课程分类和明确不做，继续看
+    <a href="../v4/index.html">V4 用户旅程</a>；当前执行索引只保留指针，见
+    <a href="../../execution/current-work.md">current-work</a>。
+  </p>
+  <p>本稿只新增一个提醒：<b>产品挑的词可以，学习者说的话不行；前半句已定，后半句正因为它成立而仍开放。</b></p>
+</div>
+
+<div class="foot">
+  V5 · 2026-08-26 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界<br>
+  事实依据：<code>packages/core/src/progress/contract.ts</code> ·
+  <code>packages/ui/src/language/speech.ts</code> ·
+  <code>packages/core/src/ports/account-data.ts</code> ·
+  <code>docs/specs/active/SPEC-0001-universitylocal-parity-contract.md</code>
+</div>
+
+</div>
+</body>
+</html>

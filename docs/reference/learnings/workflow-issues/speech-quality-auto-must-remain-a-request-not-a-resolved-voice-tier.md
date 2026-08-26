@@ -22,7 +22,7 @@ capture_mode: pgs-native
 
 ## Guidance
 
-When Web Speech exposes cloud voices, use localService only to classify local versus online after the shared novelty blacklist and ranking; the payload, not the transport, determines the privacy boundary. Persist auto in account preferences and resolve premium, then online, then local at read time because device capabilities and paid entitlement can change. Manual choices may only fall downward and must explain fallback. Apply this in the shared authoring and delivery speech path.
+When Web Speech exposes cloud voices, use localService only to classify local versus online after the shared novelty blacklist and ranking; the payload, not the transport, determines the privacy boundary. Product-selected words may use online TTS, but learner speech, writing, and private-repository text are learner data: any ASR path needs its own explicit opt-in, and enabling TTS must never imply consent to capture learner speech. Persist auto in account preferences and resolve premium, then online, then local at read time because device capabilities and paid entitlement can change. Manual choices may only fall downward and must explain fallback. Apply this in the shared authoring and delivery speech path.
 
 ## Applies When
 

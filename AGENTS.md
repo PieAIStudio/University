@@ -138,11 +138,12 @@ What follows from them:
   complete list, so a new answer that is not a file in it is a defect.
 - **Design before build.** A user-facing behaviour gets designed in
   `docs/reference/player-journey/` before it gets implemented. The current
-  journey is `docs/reference/player-journey/v4/`; it replaces v1, v2 and v3.
-  V4 is an amendment: what v3 says and v4 does not contradict still stands.
+  journey is `docs/reference/player-journey/v5/`; it replaces v1, v2, v3 and
+  v4. V5 is an amendment: what v4 says and v5 does not contradict still
+  stands.
 - **One permitted difference between the modes: where the AI comes from.**
-  V4 states this as law. Any other divergence is a defect — fix it, do not
-  debate it. Adding a second difference means changing v4 first.
+  V5 states this as law. Any other divergence is a defect — fix it, do not
+  debate it. Adding a second difference means changing v5 first.
 - **“Local” does not mean permanently offline.** The authoring mode may keep
   authoring sources and an offline cache on disk, but every learner/account
   datum must bind to the same cloud row when an account is available and queue

@@ -21,7 +21,7 @@ packages/world  3D 场景：世界地图、课程岛、星球。packages/ui 里 
 
 设计阶段。仓库里还没有产品实现，只有：
 
-- `docs/reference/player-journey/v4/` — 用户旅程 V4，当前有效的一版（取代 V1/V2/V3）
+- `docs/reference/player-journey/v5/` — 用户旅程 V5，当前有效的一版（承接并取代 V1–V4）
 - `docs/specs/active/SPEC-0001-universitylocal-parity-contract.md` — 内容与功能的
   一致性契约
 - 一个 DOM 占位页，用来让 `pnpm verify` 从第一天起就是真的门禁
