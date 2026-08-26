@@ -17,7 +17,7 @@
  * whole claim — the reading happens in the DOM and the reason to care happens
  * on the map, and this is the sentence that connects them.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { GameButton, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { NodeCard, type PathLesson, type PathUnit } from "@pieai/university-ui";
 import { playSound } from "@pieai/university-ui/sound/index.js";
@@ -81,6 +81,7 @@ export function Settlement({
   lessons,
   streakDays,
   unlocked,
+  recap,
   nextLesson,
   nextUnit,
   onNext,
@@ -100,6 +101,8 @@ export function Settlement({
   streakDays: number;
   /** Catalogue entries this lesson named, already resolved. Missing ids are omitted. */
   unlocked: readonly { readonly id: string; readonly zh: string; readonly tagline: string }[];
+  /** The shared learner teach-back prompt, supplied by the screen host. */
+  recap?: ReactNode;
   nextLesson: PathLesson | null;
   nextUnit: PathUnit | null;
   onNext: (() => void) | null;
@@ -192,6 +195,8 @@ export function Settlement({
           <p className="settle__note">现在不用背。到期时它们会自己回来，这是间隔重复该做的事。</p>
         </section>
       ) : null}
+
+      {recap ? <section className="settle__recap">{recap}</section> : null}
 
       {onNext && nextLesson && nextUnit ? (
         <section className="settle__next">

@@ -9,6 +9,7 @@ import {
 } from "@pieai/university-core";
 import { unlockedConceptIds } from "@pieai/university-ui";
 import { pathLessonOf, pathUnitOf } from "@pieai/university-ui/path/from-course-view.js";
+import { RecapPrompt } from "@pieai/university-ui/review/RecapPrompt.js";
 import type { CourseView, LessonView } from "@pieai/university-ui/view/lesson-view.js";
 import { settlementSize } from "@pieai/university-world/Maps.js";
 
@@ -73,7 +74,7 @@ export function SettlementHost({
               front: card.front,
               contentRevision: card.contentRevision,
             });
-            return [card.id, body.back] as const;
+            return [card.id, body.back ?? ""] as const;
           } catch {
             // A card whose body cannot be read still dropped; showing its
             // question without its answer is better than showing neither.
@@ -150,6 +151,14 @@ export function SettlementHost({
       lessons={lessons}
       streakDays={progress.streak.days}
       unlocked={unlocked}
+      recap={
+        <RecapPrompt
+          locator={locator}
+          unitObjective={unit.objective}
+          contentRevision={lesson.lesson.contentRevision}
+          progress={progressPort}
+        />
+      }
       nextLesson={next ? pathLessonOf(next.lesson) : null}
       nextUnit={next ? pathUnitOf(next.unit) : null}
       onNext={next ? () => onNext(next.unit.id, next.lesson.id) : null}

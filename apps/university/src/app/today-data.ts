@@ -11,6 +11,7 @@
 import {
   lessonKeyOf,
   progressSourceOf,
+  RECAP_CARD_ID,
   type CardProgress,
   type LessonRef,
   type ProgressPort,
@@ -20,6 +21,7 @@ import type {
   CourseReviewCardLocator,
   LessonProgress,
   NextLesson,
+  RecapReviewCardLocator,
 } from "@pieai/university-ui/view/lesson-view.js";
 import { lessonProgressOf } from "@pieai/university-ui/view/lesson-view.js";
 
@@ -78,23 +80,44 @@ export function nextLessonOf(
 /**
  * Where a due card lives, without its text.
  *
- * The scheduler stores three segments — study, course, lesson — and a card
- * needs four to be addressable, so the unit is found on the shelf. The front
- * is deliberately absent: a card body is content, and content comes through
- * `ContentPort`. The caller fetches it and fills it in.
+ * Course-card fronts are deliberately absent here: a card body is content,
+ * and content comes through `ContentPort`. A recap front is the existing unit
+ * capability sentence, so its locator carries that derived sentence directly;
+ * both kinds still go through the same content port before they are shown.
  */
 export function todayCardLocatorOf(
   studies: readonly ShelfStudy[],
   card: CardProgress,
-): CourseReviewCardLocator | null {
+): CourseReviewCardLocator | RecapReviewCardLocator | null {
   const cardId = card.cardKey.split("/").at(-1);
   const course = studies
     .find((study) => study.id === card.studyId)
     ?.courses.find((entry) => entry.id === card.courseId);
   const found = course?.units
     .flatMap((unit) => unit.lessons.map((lesson) => ({ unit, lesson })))
-    .find(({ lesson }) => lesson.id === card.lessonId);
+    .find(
+      ({ unit, lesson }) =>
+        lesson.id === card.lessonId && (card.kind !== "recap-card" || unit.id === card.unitId),
+    );
   if (!cardId || !found) return null;
+  if (card.kind === "recap-card") {
+    if (cardId !== RECAP_CARD_ID) return null;
+    return {
+      kind: "recap-card",
+      studyId: card.studyId,
+      courseId: card.courseId,
+      unitId: found.unit.id,
+      lessonId: card.lessonId,
+      cardId: RECAP_CARD_ID,
+      front: found.unit.objective,
+      contentRevision: revisionOf(studies, {
+        studyId: card.studyId,
+        courseId: card.courseId,
+        unitId: found.unit.id,
+        lessonId: card.lessonId,
+      }),
+    };
+  }
   return {
     kind: "course-card",
     studyId: card.studyId,

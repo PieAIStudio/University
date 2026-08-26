@@ -31,6 +31,7 @@ export { LayerCoverage } from "./evidence/LayerCoverage.js";
 export { LessonToolbar, lessonNeighbours, readProgress } from "./lesson/LessonNav.js";
 export { MarkdownContent, isLocalUrl } from "./markdown/MarkdownContent.js";
 export { ReviewCard } from "./review/ReviewCard.js";
+export { RecapPrompt } from "./review/RecapPrompt.js";
 export { ExerciseBlock } from "./review/ExerciseBlock.js";
 export {
   ChoiceBlock,

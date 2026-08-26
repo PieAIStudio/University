@@ -130,6 +130,7 @@ export function LessonScreen({
     () => (course ? lessonNeighbours([course], locator) : null),
     [course, locator],
   );
+  const unitObjective = course?.units.find((unit) => unit.id === locator.unitId)?.objective ?? "";
   const back = useCallback(() => {
     playSound("nav.back");
     onBack();
@@ -159,6 +160,7 @@ export function LessonScreen({
         locator={locator}
         view={overlaid}
         completion={completion ?? NOT_STARTED}
+        unitObjective={unitObjective}
         reader={readerPort}
         grading={gradingPort}
         sourceAccess={sourceAccessPort}

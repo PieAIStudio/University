@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createMemoryPersistence, createProgressPort, lessonKey } from "@pieai/university-core";
+import {
+  createMemoryPersistence,
+  createProgressPort,
+  lessonKey,
+  RECAP_CARD_ID,
+} from "@pieai/university-core";
 
 import { createLocalContentPort, refreshLocalBootstrap } from "./content";
 
@@ -103,6 +108,26 @@ describe("createLocalContentPort", () => {
       "/api/studies/turing-pact/courses/foundations-before-zero/units/what-is-an-app/lessons/you-already-know-apps/cards/app-is-a-program/content",
     );
     expect(body).toEqual({ front: "问", back: "答", contentRevision: 3 });
+  });
+
+  it("serves a recap from its locator without creating an authoring content route", async () => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => jsonOk({}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const body = await port().card({
+      kind: "recap-card",
+      ...locator,
+      cardId: RECAP_CARD_ID,
+      front: "我能说出使用 App 和开发 App 的差别。",
+      contentRevision: 3,
+    });
+
+    expect(body).toEqual({
+      front: "我能说出使用 App 和开发 App 的差别。",
+      back: null,
+      contentRevision: 3,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("reads the question and reference answer for a mistake without loading the lesson view", async () => {

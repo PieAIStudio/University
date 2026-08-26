@@ -325,6 +325,48 @@
   padding: 26px;
 }
 
+.recap-prompt {
+  width: min(var(--lesson-measure, 40rem), 100%);
+  margin: 42px auto 0;
+  padding: 26px;
+}
+
+.recap-prompt h2 {
+  margin: 6px 0 0;
+}
+
+.recap-prompt__instruction {
+  margin: 22px 0 0;
+  color: var(--game-ui-text-on-dark, #fff5e8);
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+
+.recap-prompt__objective {
+  margin-top: 20px;
+  border: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
+  padding: 16px;
+  background: var(--campus-surface, var(--game-ui-surface, rgb(53 39 29 / 80%)));
+}
+
+.recap-prompt__objective p {
+  margin: 0;
+}
+
+.recap-prompt__objective p:last-child {
+  margin-top: 9px;
+  color: var(--game-ui-text-on-dark, #fff5e8);
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+
+.recap-prompt__voice-note {
+  margin: 18px 0 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
 .lesson-completion {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

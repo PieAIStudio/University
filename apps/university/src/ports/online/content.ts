@@ -12,7 +12,10 @@ import type {
   MistakeExercise,
   Shelf,
 } from "@pieai/university-ui/content/port.js";
-import type { CourseReviewCardLocator } from "@pieai/university-ui/view/lesson-view.js";
+import type {
+  CourseReviewCardLocator,
+  RecapReviewCardLocator,
+} from "@pieai/university-ui/view/lesson-view.js";
 
 import { library, loadCourse, type Course } from "../../content/library";
 import { assembleLessonView, ONLINE_CONTENT_REVISION } from "../../lesson/assemble-view";
@@ -82,8 +85,18 @@ export function createOnlineContentPort(): ContentPort {
       };
     },
 
-    async card(card: CourseReviewCardLocator) {
+    async card(card: CourseReviewCardLocator | RecapReviewCardLocator) {
       const course = await loadCourse(card.studyId, card.courseId);
+      if (card.kind === "recap-card") {
+        const unit = course.units.find((entry) => entry.id === card.unitId);
+        const lesson = unit?.lessons.find((entry) => entry.id === card.lessonId);
+        if (!unit || !lesson) throw new Error("复述卡内容尚未加载");
+        return {
+          front: unit.objective,
+          back: null,
+          contentRevision: ONLINE_CONTENT_REVISION,
+        } satisfies CardBody;
+      }
       const found = findCard(course, card);
       if (!found) throw new Error("复习卡内容尚未加载");
       return {

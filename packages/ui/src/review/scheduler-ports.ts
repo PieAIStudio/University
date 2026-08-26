@@ -11,6 +11,7 @@
  * different lexicon import — and the two lexicon files were the same 90 KB.
  */
 
+import { recapCardKeyOf } from "@pieai/university-core";
 import type { LexiconEntry, ProgressPort, RatingName } from "@pieai/university-core";
 
 import type { ContentPort } from "../content/port.js";
@@ -34,6 +35,7 @@ type ReviewCardKindSupport = "supported" | "unsupported";
 /** Every review-card kind must declare whether this surface can serve it. */
 const REVIEW_CARD_KIND_REGISTRY = {
   "course-card": "supported",
+  "recap-card": "supported",
   "knowledge-card": "unsupported",
 } as const satisfies Record<ReviewCardLocator["kind"], ReviewCardKindSupport>;
 
@@ -131,5 +133,6 @@ export function createVocabularyReviewPort(
 }
 
 export function cardKeyOf(card: SupportedReviewCard): string {
+  if (card.kind === "recap-card") return recapCardKeyOf(card);
   return `${card.studyId}/${card.courseId}/${card.lessonId}/${card.cardId}`;
 }

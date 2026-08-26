@@ -139,6 +139,13 @@
   line-height: 1.25;
 }
 
+.review-card__instruction {
+  margin: 12px 0 0;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
 .review-card__queue {
   margin: 6px 0 0;
   color: var(--game-ui-text-muted, #9aa6bb);
@@ -177,6 +184,54 @@
   margin-top: 22px;
   padding-top: 22px;
   border-top: 1px solid var(--campus-rule, rgb(255 255 255 / 14%));
+}
+
+.recap-review__comparison {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.recap-review__answer {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--campus-rule, rgb(255 255 255 / 14%));
+  border-radius: 12px;
+  background: var(--campus-surface, var(--game-ui-surface, rgb(53 39 29 / 80%)));
+}
+
+.recap-review__answer > p:last-child {
+  margin-top: 10px;
+  white-space: pre-wrap;
+  line-height: 1.65;
+}
+
+.recap-review__history {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recap-review__history li {
+  display: grid;
+  gap: 4px;
+}
+
+.recap-review__history time {
+  color: var(--game-ui-accent, #f0a868);
+  font-size: 0.78rem;
+}
+
+.recap-review__history span {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.recap-review__history small {
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: 0.74rem;
 }
 
 .answer-reveal > p:nth-child(2) {
@@ -325,5 +380,9 @@
 
   .today-hero__action > button {
     width: 100%;
+  }
+
+  .recap-review__comparison {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

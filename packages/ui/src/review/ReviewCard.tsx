@@ -43,6 +43,7 @@ export function ReviewCard({
 }) {
   const [answer, setAnswer] = useState("");
   const [back, setBack] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState(false);
   const [nextDue, setNextDue] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +69,7 @@ export function ReviewCard({
     previousCardIdentity.current = cardIdentity;
     setAnswer("");
     setBack(null);
+    setRevealed(false);
     setNextDue(null);
     setError(null);
     setRevealFailed(false);
@@ -100,7 +102,7 @@ export function ReviewCard({
             startedAt: retrievalDraft.startedAt,
           })
         : await readJson<{
-            readonly back: string;
+            readonly back: string | null;
             readonly priorAttempts?: readonly PriorAttempt[];
           }>(
             await post(
@@ -109,6 +111,7 @@ export function ReviewCard({
             ),
           );
       setBack(result.back);
+      setRevealed(true);
       setPriorAttempts(result.priorAttempts ?? []);
       setRevealFailed(false);
       setRetrievalDraft(createRetrievalAttemptDraft());
@@ -167,13 +170,19 @@ export function ReviewCard({
     }
   }
 
+  const isRecap = card.kind === "recap-card";
+
   return (
     <GamePanel className="review-card" tone="strong">
       <div className="panel-heading">
         <div>
-          <Tip term="retrieval-practice">
-            <h2>通过答题复习</h2>
-          </Tip>
+          {isRecap ? (
+            <h2>讲一遍</h2>
+          ) : (
+            <Tip term="retrieval-practice">
+              <h2>通过答题复习</h2>
+            </Tip>
+          )}
           {remaining !== undefined && remaining > 1 ? (
             <p className="review-card__queue">
               今天还剩 <strong>{remaining}</strong> 张 · 评分后自动换下一张
@@ -187,76 +196,125 @@ export function ReviewCard({
       <p className="review-card__question">
         <MarkdownContent inline>{card.front}</MarkdownContent>
       </p>
+      {isRecap ? (
+        <p className="review-card__instruction">请用自己的话，讲给一个完全不知道这件事的人听。</p>
+      ) : null}
       <label className="answer-field">
-        <span>你的回答</span>
+        <span>{isRecap ? "这次复述" : "你的回答"}</span>
         <textarea
           value={answer}
           onChange={(event) => setAnswer(event.target.value)}
-          disabled={pending || back !== null || nextDue !== null}
-          placeholder="先写下自己的答案；非空后才能揭示。"
+          disabled={pending || revealed || nextDue !== null}
+          placeholder={isRecap ? "在这里写你的复述……" : "先写下自己的答案；非空后才能揭示。"}
           rows={4}
         />
       </label>
-      {back === null ? (
+      {!revealed ? (
         <GameButton
           variant="primary"
           onClick={() => void reveal()}
           disabled={!answer.trim() || pending}
         >
-          {pending ? "正在核对…" : revealFailed ? "重试揭示" : "揭示答案"}
+          {pending
+            ? isRecap
+              ? "正在记录…"
+              : "正在核对…"
+            : isRecap
+              ? revealFailed
+                ? "重试查看"
+                : "查看以前的复述"
+              : revealFailed
+                ? "重试揭示"
+                : "揭示答案"}
         </GameButton>
       ) : (
-        <div className="answer-reveal" aria-live="polite">
-          <p className="eyebrow">参考答案</p>
-          <div className="answer-reveal__body">
-            <MarkdownContent>{back}</MarkdownContent>
-          </div>
-          {priorAttempts.length > 0 ? (
-            <div className="answer-history">
-              <p className="eyebrow">你以前答过 {priorAttempts.length} 次</p>
-              <ul>
-                {priorAttempts.map((attempt) => (
-                  <li key={`${attempt.revealedAt}:${attempt.answer}`}>
-                    <time dateTime={attempt.revealedAt}>
-                      {new Date(attempt.revealedAt).toLocaleDateString("zh-CN")}
-                    </time>
-                    <span>{attempt.answer}</span>
-                    {attempt.contentRevision !== card.contentRevision ? (
-                      // The card has been rewritten since. The old answer is
-                      // still real history, but it answered a different card.
-                      <small>答的是旧版</small>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
+        <div
+          className={`answer-reveal${isRecap ? " answer-reveal--recap" : ""}`}
+          aria-live="polite"
+        >
+          {isRecap ? (
+            <div className="recap-review__comparison" aria-label="本次与以前的复述">
+              <div className="recap-review__answer">
+                <p className="eyebrow">这次复述</p>
+                <p>{answer}</p>
+              </div>
+              <div className="recap-review__answer">
+                <p className="eyebrow">以前的复述（{priorAttempts.length} 次）</p>
+                {priorAttempts.length > 0 ? (
+                  <ul className="recap-review__history">
+                    {priorAttempts.map((attempt) => (
+                      <li key={`${attempt.revealedAt}:${attempt.answer}`}>
+                        <time dateTime={attempt.revealedAt}>
+                          {new Date(attempt.revealedAt).toLocaleDateString("zh-CN")}
+                        </time>
+                        <span>{attempt.answer}</span>
+                        {attempt.contentRevision !== card.contentRevision ? (
+                          // The card has been rewritten since. The old answer is
+                          // still real history, but it answered a different card.
+                          <small>答的是旧版</small>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>还没有更早的复述。</p>
+                )}
+              </div>
             </div>
-          ) : null}
-          <div className="answer-reveal__coach">
-            <GameButton
-              variant="ghost"
-              onClick={() => {
-                void navigator.clipboard
-                  ?.writeText(
-                    buildCardCoachingPacket({
-                      front: card.front,
-                      back,
-                      answer,
-                      priorAttempts,
-                    }),
-                  )
-                  .then(() => setCoachCopied(true))
-                  .catch(() => setError("复制失败，剪贴板不可用"));
-              }}
-            >
-              {coachCopied ? "已复制讲解包" : "让 AI 讲讲这张卡"}
-            </GameButton>
-            {coachCopied ? (
-              <span className="answer-reveal__coach-hint">
-                贴到任意 AI 宿主。它只负责讲解 —— 下面这四个按钮问的是「你回忆得费不费劲」，
-                只有你答得了。
-              </span>
-            ) : null}
-          </div>
+          ) : (
+            <>
+              <p className="eyebrow">参考答案</p>
+              <div className="answer-reveal__body">
+                <MarkdownContent>{back ?? ""}</MarkdownContent>
+              </div>
+              {priorAttempts.length > 0 ? (
+                <div className="answer-history">
+                  <p className="eyebrow">你以前答过 {priorAttempts.length} 次</p>
+                  <ul>
+                    {priorAttempts.map((attempt) => (
+                      <li key={`${attempt.revealedAt}:${attempt.answer}`}>
+                        <time dateTime={attempt.revealedAt}>
+                          {new Date(attempt.revealedAt).toLocaleDateString("zh-CN")}
+                        </time>
+                        <span>{attempt.answer}</span>
+                        {attempt.contentRevision !== card.contentRevision ? (
+                          // The card has been rewritten since. The old answer is
+                          // still real history, but it answered a different card.
+                          <small>答的是旧版</small>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <div className="answer-reveal__coach">
+                <GameButton
+                  variant="ghost"
+                  onClick={() => {
+                    void navigator.clipboard
+                      ?.writeText(
+                        buildCardCoachingPacket({
+                          front: card.front,
+                          back: back ?? "",
+                          answer,
+                          priorAttempts,
+                        }),
+                      )
+                      .then(() => setCoachCopied(true))
+                      .catch(() => setError("复制失败，剪贴板不可用"));
+                  }}
+                >
+                  {coachCopied ? "已复制讲解包" : "让 AI 讲讲这张卡"}
+                </GameButton>
+                {coachCopied ? (
+                  <span className="answer-reveal__coach-hint">
+                    贴到任意 AI 宿主。它只负责讲解 —— 下面这四个按钮问的是「你回忆得费不费劲」，
+                    只有你答得了。
+                  </span>
+                ) : null}
+              </div>
+            </>
+          )}
           {nextDue ? (
             <GameCallout heading="复习结果已保存" tone="success">
               下一次安排：{new Date(nextDue).toLocaleString("zh-CN")}

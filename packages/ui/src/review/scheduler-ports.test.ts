@@ -2,13 +2,19 @@ import { describe, expect, it } from "vitest";
 import {
   createMemoryPersistence,
   createProgressPort,
+  recapCardKeyOf,
+  RECAP_CARD_ID,
   type CardProgress,
   type LexiconEntry,
   type ProgressPort,
 } from "@pieai/university-core";
 
 import type { CardBody, ContentPort } from "../content/port.js";
-import type { CourseReviewCardLocator, LessonView } from "../view/lesson-view.js";
+import type {
+  CourseReviewCardLocator,
+  LessonView,
+  RecapReviewCardLocator,
+} from "../view/lesson-view.js";
 import { cardKeyOf, createReviewCardPort, createVocabularyReviewPort } from "./scheduler-ports.js";
 
 const CARD: CourseReviewCardLocator = {
@@ -19,6 +25,17 @@ const CARD: CourseReviewCardLocator = {
   lessonId: "you-already-know-apps",
   cardId: "app-is-a-program",
   front: "App 是什么？",
+  contentRevision: 1,
+};
+
+const RECAP: RecapReviewCardLocator = {
+  kind: "recap-card",
+  studyId: CARD.studyId,
+  courseId: CARD.courseId,
+  unitId: CARD.unitId,
+  lessonId: CARD.lessonId,
+  cardId: RECAP_CARD_ID,
+  front: "我能说出使用 App 和开发 App 的差别。",
   contentRevision: 1,
 };
 
@@ -43,8 +60,13 @@ function shelf(body: Partial<CardBody> = {}): ContentPort {
     exercise(): Promise<never> {
       throw new Error("not asked for in these tests");
     },
-    async card() {
-      return { front: CARD.front, back: "一段在跑的程序", contentRevision: 1, ...body };
+    async card(card) {
+      return {
+        front: card.front,
+        back: card.kind === "recap-card" ? null : "一段在跑的程序",
+        contentRevision: 1,
+        ...body,
+      };
     },
   };
 }
@@ -107,6 +129,30 @@ describe("one review card port for both campuses", () => {
       answer: "最后一次",
     });
     expect(last.priorAttempts).toHaveLength(3);
+  });
+
+  it("serves a recap through the shared card surface and keeps its history self-rated", async () => {
+    const progress = createProgressPort({ persistence: createMemoryPersistence() });
+    progress.createRecapCard({
+      locator: RECAP,
+      contentRevision: RECAP.contentRevision,
+      commandId: "44444444-4444-4444-8444-444444444444",
+      answer: "第一次复述。",
+    });
+    const port = createReviewCardPort(shelf(), progress);
+
+    const revealed = await port.reveal(RECAP, {
+      commandId: "55555555-5555-4555-8555-555555555555",
+      contentRevision: RECAP.contentRevision,
+      answer: "第二次复述。",
+    });
+
+    expect(revealed.back).toBeNull();
+    expect(revealed.priorAttempts).toEqual([expect.objectContaining({ answer: "第一次复述。" })]);
+    expect(progress.retrievalAttempts(recapCardKeyOf(RECAP))).toHaveLength(2);
+
+    const rated = await port.rate(RECAP, 4);
+    expect(Date.parse(rated.dueAt)).toBeGreaterThan(Date.now());
   });
 
   it("refuses a card whose lesson has been edited under the schedule", async () => {

@@ -13,7 +13,7 @@ export interface ReviewCardPort {
       readonly startedAt?: string;
     },
   ): Promise<{
-    readonly back: string;
+    readonly back: string | null;
     readonly priorAttempts?: readonly PriorAttempt[];
   }>;
   rate(card: ReviewCardLocator, rating: 1 | 2 | 3 | 4): Promise<{ readonly dueAt: string }>;

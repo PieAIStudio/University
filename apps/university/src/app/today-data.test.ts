@@ -4,11 +4,12 @@ import {
   createMemoryPersistence,
   createProgressPort,
   lessonKey,
+  RECAP_CARD_ID,
   type ProgressPort,
 } from "@pieai/university-core";
 import type { ShelfStudy } from "@pieai/university-ui/content/port.js";
 
-import { nextLessonOf } from "./today-data";
+import { nextLessonOf, todayCardLocatorOf } from "./today-data";
 
 const REF = {
   studyId: "study",
@@ -36,7 +37,7 @@ const STUDIES: readonly ShelfStudy[] = [
           {
             id: REF.unitId,
             title: "Unit",
-            objective: "",
+            objective: "我能说出使用 App 和开发 App 的差别。",
             status: "active",
             lessons: [
               {
@@ -74,6 +75,30 @@ describe("nextLessonOf", () => {
       status: "in-progress",
       progress: 1,
       readConfirmed: true,
+    });
+  });
+});
+
+describe("todayCardLocatorOf", () => {
+  it("projects a due recap card with the existing unit capability sentence", () => {
+    progress = createProgressPort({ persistence: createMemoryPersistence() });
+    progress.createRecapCard({
+      locator: REF,
+      contentRevision: 2,
+      commandId: "11111111-1111-4111-8111-111111111111",
+      answer: "我会解释它。",
+    });
+    const stored = progress.recapCard(REF);
+    expect(stored).not.toBeNull();
+    const due = progress.dueCards(stored!.dueAt)[0];
+    expect(due).toBeDefined();
+
+    expect(todayCardLocatorOf(STUDIES, due!)).toEqual({
+      kind: "recap-card",
+      ...REF,
+      cardId: RECAP_CARD_ID,
+      front: "我能说出使用 App 和开发 App 的差别。",
+      contentRevision: 2,
     });
   });
 });

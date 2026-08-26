@@ -76,7 +76,7 @@ const COURSE: Course = {
     {
       id: "what-is-an-app",
       title: "你每天用的 App，拆开是什么",
-      objective: "",
+      objective: "我能说出使用 App 和开发 App 的差别。",
       lessons: [LESSON],
     },
   ],
@@ -97,7 +97,7 @@ const SHELF_COURSE: CourseView = {
     {
       id: "what-is-an-app",
       title: "你每天用的 App，拆开是什么",
-      objective: "",
+      objective: "我能说出使用 App 和开发 App 的差别。",
       status: "active",
       lessons: [
         {
@@ -244,6 +244,23 @@ describe("the shared lesson reader", () => {
     expect(container.textContent).toContain("练习通过后");
     expect(container.textContent).toContain("再次确认本次更新");
     expect(container.querySelector(".lesson-practice")).toBeNull();
+  });
+
+  it("offers the unit capability sentence as a text recap after reading is confirmed", async () => {
+    const key = lessonKey(LOCATOR.studyId, LOCATOR.courseId, LOCATOR.lessonId);
+    progressPort.confirmLessonRead(key, LESSON.contentRevision);
+
+    await renderHost();
+
+    expect(container.textContent).toContain("讲一遍");
+    expect(container.textContent).toContain("请用自己的话，讲给一个完全不知道这件事的人听。");
+    expect(container.textContent).toContain("我能说出使用 App 和开发 App 的差别。");
+    expect(container.querySelector(".recap-prompt textarea")?.getAttribute("placeholder")).toBe(
+      "在这里写你的复述……",
+    );
+    expect(container.textContent).toContain("保存为复习卡");
+    expect(container.textContent).toContain("语音输入：还在设计");
+    expect(container.querySelector("button[aria-label*='语音']")).toBeNull();
   });
 
   it("keeps the source checkout entry visible and explains the delivery boundary", async () => {

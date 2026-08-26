@@ -27,6 +27,9 @@ export function cardActionPath(card: ReviewCardLocator, action: "reveal" | "revi
   if (card.kind === "knowledge-card") {
     return `/api/studies/${card.studyId}/notes/${card.noteId}/cards/${card.cardId}/${action}`;
   }
+  if (card.kind === "recap-card") {
+    return `${lessonPath(card)}/recap/${action}`;
+  }
   return `${lessonPath(card)}/cards/${card.cardId}/${action}`;
 }
 
@@ -40,6 +43,9 @@ export function cardContentPath(
 export function reviewCardIdentity(card: ReviewCardLocator): string {
   if (card.kind === "knowledge-card") {
     return `knowledge/${card.studyId}/${card.noteId}/${card.cardId}@${card.contentRevision}`;
+  }
+  if (card.kind === "recap-card") {
+    return `recap/${card.studyId}/${card.courseId}/${card.unitId}/${card.lessonId}@${card.contentRevision}`;
   }
   return `course/${card.studyId}/${card.courseId}/${card.unitId}/${card.lessonId}/${card.cardId}@${card.contentRevision}`;
 }

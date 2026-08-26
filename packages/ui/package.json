@@ -68,6 +68,7 @@
     "./reference/reference-panel.css": "./src/reference/reference-panel.css",
     "./reference/term-index.css": "./src/reference/term-index.css",
     "./review/ReviewCard.js": "./src/review/ReviewCard.tsx",
+    "./review/RecapPrompt.js": "./src/review/RecapPrompt.tsx",
     "./review/VocabularyReview.js": "./src/review/VocabularyReview.tsx",
     "./review/choice-block.css": "./src/review/choice-block.css",
     "./review/host-grade.css": "./src/review/host-grade.css",

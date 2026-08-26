@@ -23,6 +23,7 @@ import type {
   CourseView,
   KnowledgeNoteView,
   LessonView,
+  RecapReviewCardLocator,
 } from "../view/lesson-view.js";
 
 /**
@@ -55,7 +56,8 @@ export interface ContentStudy {
 /** Both sides of one card, at the revision the shelf currently holds. */
 export interface CardBody {
   readonly front: string;
-  readonly back: string;
+  /** Null for a learner recap: there is no authored reference answer to show. */
+  readonly back: string | null;
   readonly contentRevision: number;
 }
 
@@ -130,11 +132,11 @@ export interface ContentPort {
   /**
    * One review card's two sides.
    *
-   * The learner review surface currently serves course cards only. Knowledge
+   * Course cards and learner recap cards use the same review surface. Knowledge
    * cards belong to the notes/authoring surface and stay out of the review
    * queue until their learner flow has been designed.
    */
-  card(card: CourseReviewCardLocator): Promise<CardBody>;
+  card(card: CourseReviewCardLocator | RecapReviewCardLocator): Promise<CardBody>;
   /**
    * What the learner kept from arguing with an AI host about one series.
    *

@@ -1,4 +1,9 @@
-import { isLessonComplete, type LessonCompletion, type LessonRef } from "@pieai/university-core";
+import {
+  isLessonComplete,
+  RECAP_CARD_ID,
+  type LessonCompletion,
+  type LessonRef,
+} from "@pieai/university-core";
 import type {
   EvidenceAnchorRange,
   LanguageLayer,
@@ -67,6 +72,14 @@ export interface CourseReviewCardLocator extends LessonRef {
   readonly contentRevision: number;
 }
 
+/** A learner's one teach-back card, whose front is the unit capability sentence. */
+export interface RecapReviewCardLocator extends LessonRef {
+  readonly kind: "recap-card";
+  readonly cardId: typeof RECAP_CARD_ID;
+  readonly front: string;
+  readonly contentRevision: number;
+}
+
 export interface KnowledgeReviewCardLocator {
   readonly kind: "knowledge-card";
   readonly studyId: string;
@@ -76,7 +89,10 @@ export interface KnowledgeReviewCardLocator {
   readonly contentRevision: number;
 }
 
-export type ReviewCardLocator = CourseReviewCardLocator | KnowledgeReviewCardLocator;
+export type ReviewCardLocator =
+  | CourseReviewCardLocator
+  | RecapReviewCardLocator
+  | KnowledgeReviewCardLocator;
 
 export type TodayCard = ReviewCardLocator & {
   readonly dueAt: string;

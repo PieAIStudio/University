@@ -31,6 +31,7 @@ import type {
   CourseReviewCardLocator,
   CourseView,
   LessonView,
+  RecapReviewCardLocator,
   StudyView,
 } from "@pieai/university-ui/view/lesson-view.js";
 import { lessonProgressOf } from "@pieai/university-ui/view/lesson-view.js";
@@ -196,8 +197,15 @@ export function createLocalContentPort(options: {
       return readJson<MistakeExercise>(await fetch(exerciseContentPath(locator, exerciseId)));
     },
 
-    async card(card: CourseReviewCardLocator) {
+    async card(card: CourseReviewCardLocator | RecapReviewCardLocator) {
       guard(card);
+      if (card.kind === "recap-card") {
+        return {
+          front: card.front,
+          back: null,
+          contentRevision: card.contentRevision,
+        } satisfies CardBody;
+      }
       return readJson<CardBody>(await fetch(cardContentPath(card)));
     },
 

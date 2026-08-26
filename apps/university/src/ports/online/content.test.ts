@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { lessonKey } from "@pieai/university-core";
+import { lessonKey, RECAP_CARD_ID } from "@pieai/university-core";
 
 import { progressPort, resetAll } from "../../progress/store";
 import { createOnlineContentPort } from "./content";
@@ -19,7 +19,7 @@ const course = {
     {
       id: "what-is-an-app",
       title: "App 是什么",
-      objective: "",
+      objective: "我能说出使用 App 和开发 App 的差别。",
       lessons: [
         {
           id: "you-already-know-apps",
@@ -148,6 +148,23 @@ describe("createOnlineContentPort", () => {
       contentRevision: 1,
     });
     expect(body).toEqual({ front: "问", back: "答", contentRevision: 1 });
+  });
+
+  it("builds a recap front from the published unit objective and has no reference back", async () => {
+    servePackage();
+    const body = await createOnlineContentPort().card({
+      kind: "recap-card",
+      ...locator,
+      cardId: RECAP_CARD_ID,
+      front: "旧的能力句副本",
+      contentRevision: 1,
+    });
+
+    expect(body).toEqual({
+      front: "我能说出使用 App 和开发 App 的差别。",
+      back: null,
+      contentRevision: 1,
+    });
   });
 
   it("refuses a card the package does not carry instead of showing a blank back", async () => {

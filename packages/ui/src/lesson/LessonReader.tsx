@@ -28,6 +28,7 @@ import {
 } from "../language/speech.js";
 import type { LessonLinkTarget } from "../markdown/remark-lesson-links.js";
 import { ExerciseBlock } from "../review/ExerciseBlock.js";
+import { RecapPrompt } from "../review/RecapPrompt.js";
 import { ReviewCard } from "../review/ReviewCard.js";
 import type { ReviewCardPort } from "../review/ports.js";
 import { readingSections, type LessonRef, type LessonView } from "../view/lesson-view.js";
@@ -71,6 +72,7 @@ export function LessonReader({
   locator,
   view,
   completion,
+  unitObjective,
   reader,
   grading,
   sourceAccess,
@@ -89,6 +91,8 @@ export function LessonReader({
   readonly view: LessonView;
   /** The core read model's answer for this current lesson snapshot. */
   readonly completion: LessonCompletion;
+  /** The existing first-person capability sentence for this lesson's unit. */
+  readonly unitObjective: string;
   readonly reader: ReaderPort;
   readonly grading: GradingPort;
   /** Repository actions or explanations, selected once by the app shell. */
@@ -109,6 +113,10 @@ export function LessonReader({
 }) {
   const completed = isLessonComplete(completion);
   const readConfirmed = completion.readConfirmed;
+  const explainPassed = view.lesson.exercises.some(
+    (exercise) => exercise.kind === "explain" && exercise.hostGrade?.passed === true,
+  );
+  const recapReady = readConfirmed || explainPassed;
   const accountPreferences = progress?.accountData().preferences;
   const [englishMode, setEnglishMode] = useState(
     () => accountPreferences?.foreignLanguageMode ?? readForeignLanguageMode(),
@@ -592,6 +600,15 @@ export function LessonReader({
               onRefresh={onLearningChanged}
             />
           ))}
+          {recapReady && progress ? (
+            <RecapPrompt
+              locator={locator}
+              unitObjective={unitObjective}
+              contentRevision={view.lesson.contentRevision}
+              progress={progress}
+              onSaved={onLearningChanged}
+            />
+          ) : null}
           {completed && view.lesson.cards.length > 0 ? (
             <section className="lesson-practice">
               <div>
