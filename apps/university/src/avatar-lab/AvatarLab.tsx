@@ -18,13 +18,21 @@ import {
 } from "@pieai/swimmer-avatar-kit";
 import { dressScene } from "@pieai/swimmer-avatar-kit/materials";
 import { Avatar } from "@pieai/swimmer-avatar-kit/react-three-fiber";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { WORLD, type View } from "@pieai/university-core";
 import { REROLLABLE_PARTS } from "./rerollable-parts";
 
-export function AvatarLab({ onOpen }: { onOpen: (view: View) => void }) {
-  const [recipe, setRecipe] = useState<AvatarRecipe>(() => randomRecipe());
+export function AvatarLab({
+  avatarRecipe,
+  onRecipeChange,
+  onOpen,
+}: {
+  readonly avatarRecipe?: AvatarRecipe | null;
+  readonly onRecipeChange?: (recipe: AvatarRecipe) => void;
+  readonly onOpen: (view: View) => void;
+}) {
+  const [recipe, setRecipe] = useState<AvatarRecipe>(() => avatarRecipe ?? randomRecipe());
   const [seedText, setSeedText] = useState(() => String(recipe.seed));
   const [gaze, setGaze] = useState(true);
   const [stats, setStats] = useState<{ meshes: number; verts: number; buildMs: number } | null>(
@@ -42,40 +50,65 @@ export function AvatarLab({ onOpen }: { onOpen: (view: View) => void }) {
     [],
   );
 
+  useEffect(() => {
+    if (!avatarRecipe) return;
+    setRecipe(avatarRecipe);
+    setSeedText(String(avatarRecipe.seed));
+  }, [avatarRecipe]);
+
+  const commitRecipe = useCallback(
+    (next: AvatarRecipe) => {
+      setRecipe(next);
+      onRecipeChange?.(next);
+    },
+    [onRecipeChange],
+  );
+
   const applySeed = useCallback(() => {
     const next = randomRecipe(seedText.trim());
-    setRecipe(next);
+    commitRecipe(next);
     setSeedText(String(next.seed));
-  }, [seedText]);
+  }, [commitRecipe, seedText]);
 
   const rollNew = useCallback(() => {
     const next = randomRecipe();
-    setRecipe(next);
+    commitRecipe(next);
     setSeedText(String(next.seed));
-  }, []);
+  }, [commitRecipe]);
 
-  const setSpecies = useCallback((speciesId: string) => {
-    setRecipe((current) =>
-      fillRecipe({
-        ...current,
-        species: speciesId,
-        body: null,
-        stance: null,
-        parts: {},
-      }),
-    );
-  }, []);
+  const setSpecies = useCallback(
+    (speciesId: string) => {
+      commitRecipe(
+        fillRecipe({
+          ...recipe,
+          species: speciesId,
+          body: null,
+          stance: null,
+          parts: {},
+        }),
+      );
+    },
+    [commitRecipe, recipe],
+  );
 
-  const setPalette = useCallback((paletteId: string) => {
-    const swatch = PALETTES.find((entry) => entry.id === paletteId);
-    setRecipe((current) =>
-      fillRecipe({
-        ...current,
-        palette: paletteId,
-        colorIx: Math.min(current.colorIx ?? 0, (swatch?.colors.length ?? 1) - 1),
-      }),
-    );
-  }, []);
+  const setPalette = useCallback(
+    (paletteId: string) => {
+      const swatch = PALETTES.find((entry) => entry.id === paletteId);
+      commitRecipe(
+        fillRecipe({
+          ...recipe,
+          palette: paletteId,
+          colorIx: Math.min(recipe.colorIx ?? 0, (swatch?.colors.length ?? 1) - 1),
+        }),
+      );
+    },
+    [commitRecipe, recipe],
+  );
+
+  const reroll = useCallback(
+    (partId: string) => commitRecipe(rerollPart(recipe, partId)),
+    [commitRecipe, recipe],
+  );
 
   return (
     <div className="avatar-lab">
@@ -177,7 +210,7 @@ export function AvatarLab({ onOpen }: { onOpen: (view: View) => void }) {
                 key={part.id}
                 type="button"
                 variant="ghost"
-                onClick={() => setRecipe((current) => rerollPart(current, part.id))}
+                onClick={() => reroll(part.id)}
               >
                 {part.label}
               </GameButton>

@@ -590,6 +590,7 @@ export function createProgressPort(options: { readonly persistence: Persistence 
       "soundEnabled",
       "sharesPresence",
       "speechQuality",
+      "avatarRecipe",
     ] as const) {
       if (JSON.stringify(current[key]) !== JSON.stringify(next[key])) updatedAt[key] = now;
     }

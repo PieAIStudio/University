@@ -52,7 +52,12 @@ import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
 import { CourseScene } from "@pieai/university-world/Maps.js";
 import { frameCourse } from "@pieai/university-world/course-map.js";
 import { type CourseNode } from "@pieai/university-world/course.js";
-import { RailIdentity } from "@pieai/university-world/avatar.js";
+import {
+  avatarRecipeForAccount,
+  avatarRecipeFromAccount,
+  RailIdentity,
+  type AvatarRecipe,
+} from "@pieai/university-world/avatar.js";
 
 import { AUTHORING } from "../mode";
 import { contentPort, reviewReminderPort } from "../ports/index";
@@ -111,6 +116,27 @@ import {
 
 export function App() {
   const progress = useSyncExternalStore(subscribe, snapshot);
+  const identityStatus = useSyncExternalStore(
+    identityPort.subscribe,
+    identityPort.status,
+    identityPort.status,
+  );
+  const avatarSignedIn = identityStatus.kind === "signed_in";
+  const avatarRecipe = useMemo(
+    () => avatarRecipeFromAccount(progress.account.preferences.avatarRecipe),
+    [progress.account.preferences.avatarRecipe],
+  );
+  const saveAvatarRecipe = useCallback(
+    (recipe: AvatarRecipe) => {
+      if (!avatarSignedIn) return;
+      const preferences = progressPort.accountData().preferences;
+      progressPort.setAccountPreferences({
+        ...preferences,
+        avatarRecipe: avatarRecipeForAccount(recipe),
+      });
+    },
+    [avatarSignedIn],
+  );
   useEffect(
     () =>
       progressPort.subscribe(() =>
@@ -512,6 +538,8 @@ export function App() {
         cameraFrom={cameraFrom}
         lookAt={lookAt}
         learnerAt={learnerAt}
+        avatarRecipe={avatarRecipe}
+        avatarSignedIn={avatarSignedIn}
         skyStudyId={focusedStudyId}
         markers={markers}
         /*
@@ -541,6 +569,8 @@ export function App() {
             {inCourse && lessons.length > 0 ? (
               <CourseScene
                 lessons={lessons}
+                avatarRecipe={avatarRecipe}
+                avatarSignedIn={avatarSignedIn}
                 skyStudyId={inCourse ? view.studyId : null}
                 onPick={(lesson) => {
                   if (view.kind === "lesson") return;
@@ -701,6 +731,9 @@ export function App() {
       focusedStudyId={focusedStudyId}
       focusStudy={focusStudy}
       grewFrom={grewFrom}
+      avatarRecipe={avatarRecipe}
+      avatarSignedIn={avatarSignedIn}
+      onAvatarRecipeChange={saveAvatarRecipe}
       onDismissReviewReminder={setReviewReminderDismissedFor}
       identityPort={analyticsIdentityPort}
       paymentPort={analyticsPaymentPort}
@@ -826,7 +859,11 @@ export function App() {
         counters={counters}
         identity={
           <>
-            <RailIdentity onOpen={() => setView({ kind: "me" })} />
+            <RailIdentity
+              recipe={avatarRecipe}
+              signedIn={avatarSignedIn}
+              onOpen={() => setView({ kind: "me" })}
+            />
             <LevelProgress totalXp={progress.totalXp} rail />
           </>
         }

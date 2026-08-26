@@ -1,13 +1,21 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { randomRecipe } from "@pieai/swimmer-avatar-kit";
+import { guestAvatarRecipe } from "@pieai/university-world/avatar.js";
+import type { AvatarRecipe } from "@pieai/swimmer-avatar-kit";
 import { dressScene } from "@pieai/swimmer-avatar-kit/materials";
 import { Avatar } from "@pieai/swimmer-avatar-kit/react-three-fiber";
 import { useMemo } from "react";
 
 /** The avatar-lab's creature, as a preview. Full editor stays at `#/avatar-lab`. */
-export function ProfileAvatar() {
-  const recipe = useMemo(() => randomRecipe(), []);
+export function ProfileAvatar({
+  avatarRecipe,
+  signedIn = false,
+}: {
+  readonly avatarRecipe?: AvatarRecipe | null;
+  readonly signedIn?: boolean;
+}) {
+  const guest = useMemo(() => guestAvatarRecipe(), []);
+  const recipe = signedIn && avatarRecipe ? avatarRecipe : guest;
   return (
     <div className="profile-avatar">
       <Canvas

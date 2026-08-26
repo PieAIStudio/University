@@ -2,6 +2,7 @@ import { useRef, type CSSProperties, type ReactNode } from "react";
 
 import { Controls, Flight, LabelProbe, WORLD_POLAR } from "./camera/controls.js";
 import { placeWorld, WorldScene, type Marker } from "./Maps.js";
+import type { AvatarRecipe } from "./avatar/index.js";
 import type { CourseNode } from "./course/course.js";
 import { Stage } from "./Stage.js";
 
@@ -20,6 +21,8 @@ export function WorldMapCanvas({
   cameraFrom,
   lookAt,
   learnerAt,
+  avatarRecipe,
+  avatarSignedIn,
   skyStudyId,
   focus,
   markers,
@@ -45,6 +48,8 @@ export function WorldMapCanvas({
   readonly cameraFrom: readonly [number, number, number];
   readonly lookAt: readonly [number, number, number];
   readonly learnerAt: Parameters<typeof WorldScene>[0]["learnerAt"];
+  readonly avatarRecipe: AvatarRecipe | null;
+  readonly avatarSignedIn: boolean;
   readonly skyStudyId: string | null;
   readonly focus?: { readonly studyId: string; readonly courseIds: readonly string[] };
   readonly markers: readonly Marker[];
@@ -139,6 +144,8 @@ export function WorldMapCanvas({
             placements={world.placements}
             extent={world.extent}
             learnerAt={learnerAt}
+            avatarRecipe={avatarRecipe}
+            avatarSignedIn={avatarSignedIn}
             skyStudyId={skyStudyId}
             focus={focus}
             onPick={onPick}

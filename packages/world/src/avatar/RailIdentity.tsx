@@ -18,6 +18,7 @@
  * `packages/ui` because the avatar is WebGL, and `packages/ui` is held at zero
  * `three` so a test of the lesson reader never has to stand up a GL mock.
  */
+import type { AvatarRecipe } from "@pieai/swimmer-avatar-kit";
 import { Suspense } from "react";
 
 import { AvatarChip } from "./AvatarChip.js";
@@ -32,10 +33,12 @@ import { AvatarChip } from "./AvatarChip.js";
 export const RAIL_IDENTITY_SIZE = 78;
 
 export function RailIdentity({
+  recipe,
   signedIn = false,
   onOpen,
 }: {
-  /** A signed-in learner wears their own recipe; a guest wears the shy one. */
+  /** A signed-in learner wears their own recipe; a guest wears the stable default. */
+  readonly recipe?: AvatarRecipe | null;
   readonly signedIn?: boolean;
   /** Where "me" is. The one thing a shell is allowed to answer differently. */
   readonly onOpen: () => void;
@@ -44,7 +47,12 @@ export function RailIdentity({
     // Suspense because the avatar drags in the kit's geometry builder, and the
     // rail must not wait on it — the rail is how you leave this screen.
     <Suspense fallback={<span className="avatar-chip avatar-chip--placeholder" />}>
-      <AvatarChip signedIn={signedIn} size={RAIL_IDENTITY_SIZE} onClick={onOpen} />
+      <AvatarChip
+        recipe={recipe ?? undefined}
+        signedIn={signedIn}
+        size={RAIL_IDENTITY_SIZE}
+        onClick={onOpen}
+      />
     </Suspense>
   );
 }

@@ -41,6 +41,7 @@ import {
 } from "./island/island-blueprint.js";
 import { buildBlueprintIsland } from "./island/island-geometry.js";
 import { PropField, type Placement, type Role } from "./kit";
+import { PlayerMarker, type AvatarRecipe } from "./avatar/index.js";
 import { layoutCourse, layoutStudyRoad, radiusForLessons } from "./course/layout";
 import { stoneRadius } from "./labels/path-overlay";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
@@ -541,30 +542,22 @@ function LiveRing({ radius, lift = 0.08 }: { radius: number; lift?: number }) {
   );
 }
 
-/** The learner. Small, bobbing, and always on the island the map is telling you about. */
-function Learner({ position, scale = 1 }: { position: THREE.Vector3; scale?: number }) {
-  const body = useRef<THREE.Group>(null);
-  const ring = useRef<THREE.Mesh>(null);
-  useFrame((state, delta) => {
-    if (ring.current) ring.current.rotation.z += delta * 0.6;
-    if (body.current) body.current.position.y = Math.sin(state.clock.elapsedTime * 1.6) * 0.08;
-  });
+function LearnerMarker({
+  position,
+  recipe,
+  signedIn,
+}: {
+  readonly position: THREE.Vector3;
+  readonly recipe: AvatarRecipe | null;
+  readonly signedIn: boolean;
+}) {
   return (
-    <group position={position} scale={scale}>
-      <group ref={body}>
-        <mesh position={[0, 0.62, 0]} castShadow>
-          <capsuleGeometry args={[0.3, 0.5, 4, 12]} />
-          <meshStandardMaterial color={0xf6f2e8} roughness={0.6} />
-        </mesh>
-        <mesh position={[0, 1.12, 0]} castShadow>
-          <sphereGeometry args={[0.24, 12, 10]} />
-          <meshStandardMaterial color={0xe9c9a3} roughness={0.7} />
-        </mesh>
+    <group>
+      <PlayerMarker position={position} recipe={recipe} signedIn={signedIn} />
+      {/* The ring is a navigation cue; avatar motion stays inside the kit. */}
+      <group position={position}>
+        <LiveRing radius={0.72} />
       </group>
-      <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, 0]}>
-        <ringGeometry args={[0.6, 0.86, 28]} />
-        <meshBasicMaterial color={PALETTE.accent} transparent opacity={0.85} />
-      </mesh>
     </group>
   );
 }
@@ -835,6 +828,8 @@ function Weather({
 export function WorldScene({
   placements,
   learnerAt,
+  avatarRecipe = null,
+  avatarSignedIn = false,
   extent,
   onPick,
   onHover,
@@ -850,6 +845,8 @@ export function WorldScene({
    */
   extent: number;
   learnerAt: THREE.Vector3 | null;
+  avatarRecipe?: AvatarRecipe | null;
+  avatarSignedIn?: boolean;
   onPick: (node: CourseNode) => void;
   onHover: (node: CourseNode | null) => void;
   /**
@@ -901,7 +898,9 @@ export function WorldScene({
           <PropField key={role} role={role} at={at} />
         ))}
       </Suspense>
-      {learnerAt ? <Learner position={learnerAt} /> : null}
+      {learnerAt ? (
+        <LearnerMarker position={learnerAt} recipe={avatarRecipe} signedIn={avatarSignedIn} />
+      ) : null}
     </>
   );
 }
@@ -1194,11 +1193,15 @@ function courseLandscape(
  */
 export function CourseScene({
   lessons,
+  avatarRecipe = null,
+  avatarSignedIn = false,
   onPick,
   onHover,
   skyStudyId = null,
 }: {
   lessons: readonly LessonPlacement[];
+  avatarRecipe?: AvatarRecipe | null;
+  avatarSignedIn?: boolean;
   onPick: (lesson: LessonPlacement) => void;
   onHover: (lesson: LessonPlacement | null) => void;
   skyStudyId?: string | null;
@@ -1301,7 +1304,9 @@ export function CourseScene({
           <PropField key={role} role={role} at={at} />
         ))}
       </Suspense>
-      {live ? <Learner position={live.position} /> : null}
+      {live ? (
+        <LearnerMarker position={live.position} recipe={avatarRecipe} signedIn={avatarSignedIn} />
+      ) : null}
     </>
   );
 }

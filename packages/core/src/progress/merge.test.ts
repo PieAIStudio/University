@@ -286,6 +286,32 @@ describe("mergeProgress", () => {
     expect(mergeProgress(laptop, phone).account.preferences.speechQuality).toBe("local");
   });
 
+  it("merges the saved avatar recipe as one timestamped account preference", () => {
+    const phone = doc({
+      account: {
+        ...emptyAccountData(),
+        preferences: {
+          ...DEFAULT_ACCOUNT_PREFERENCES,
+          avatarRecipe: "phone-recipe",
+          updatedAt: { avatarRecipe: "2026-08-24T08:00:00.000Z" },
+        },
+      },
+    });
+    const laptop = doc({
+      account: {
+        ...emptyAccountData(),
+        preferences: {
+          ...DEFAULT_ACCOUNT_PREFERENCES,
+          avatarRecipe: "laptop-recipe",
+          updatedAt: { avatarRecipe: "2026-08-24T09:00:00.000Z" },
+        },
+      },
+    });
+
+    expect(mergeProgress(phone, laptop).account.preferences.avatarRecipe).toBe("laptop-recipe");
+    expect(mergeProgress(laptop, phone).account.preferences.avatarRecipe).toBe("laptop-recipe");
+  });
+
   it("keeps a newer favourite deletion tombstone over an older device copy", () => {
     const favourite = {
       senseId: "shared-sense",

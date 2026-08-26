@@ -29,7 +29,8 @@ export type AccountPreferenceKey =
   | "detailMode"
   | "soundEnabled"
   | "sharesPresence"
-  | "speechQuality";
+  | "speechQuality"
+  | "avatarRecipe";
 
 export interface AccountPreferences {
   readonly version: 1;
@@ -39,6 +40,8 @@ export interface AccountPreferences {
   readonly soundEnabled: boolean;
   readonly sharesPresence: boolean;
   readonly speechQuality: SpeechQuality;
+  /** Serialized SwimmerAvatarKit recipe; null means the learner has not saved one. */
+  readonly avatarRecipe: string | null;
   /** Per-field timestamps make two devices' independent setting changes merge. */
   readonly updatedAt: Partial<Record<AccountPreferenceKey, string>>;
 }
@@ -72,6 +75,7 @@ export const DEFAULT_ACCOUNT_PREFERENCES: AccountPreferences = {
   soundEnabled: true,
   sharesPresence: true,
   speechQuality: "auto",
+  avatarRecipe: null,
   updatedAt: {},
 };
 
@@ -123,6 +127,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       "soundEnabled",
       "sharesPresence",
       "speechQuality",
+      "avatarRecipe",
     ] as const) {
       const timestamp = value.updatedAt[key];
       if (validTimestamp(timestamp)) updatedAt[key] = timestamp;
@@ -142,6 +147,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       value.speechQuality === "premium"
         ? value.speechQuality
         : "auto",
+    avatarRecipe: typeof value.avatarRecipe === "string" ? value.avatarRecipe : null,
     updatedAt,
   };
 }
@@ -170,6 +176,8 @@ export function mergeAccountPreferences(
   const rightPresence = timestampMs(right.updatedAt.sharesPresence);
   const leftSpeechQuality = timestampMs(left.updatedAt.speechQuality);
   const rightSpeechQuality = timestampMs(right.updatedAt.speechQuality);
+  const leftAvatarRecipe = timestampMs(left.updatedAt.avatarRecipe);
+  const rightAvatarRecipe = timestampMs(right.updatedAt.avatarRecipe);
   const newer = (leftAt: number, rightAt: number) => rightAt >= leftAt;
   const updatedAt = { ...left.updatedAt };
   const result: AccountPreferences = {
@@ -186,6 +194,9 @@ export function mergeAccountPreferences(
     speechQuality: newer(leftSpeechQuality, rightSpeechQuality)
       ? right.speechQuality
       : left.speechQuality,
+    avatarRecipe: newer(leftAvatarRecipe, rightAvatarRecipe)
+      ? right.avatarRecipe
+      : left.avatarRecipe,
     updatedAt,
   };
   for (const key of [
@@ -195,6 +206,7 @@ export function mergeAccountPreferences(
     "soundEnabled",
     "sharesPresence",
     "speechQuality",
+    "avatarRecipe",
   ] as const) {
     if (
       right.updatedAt[key] &&

@@ -32,6 +32,7 @@ import { pathLessonOf, pathUnitOf } from "@pieai/university-ui/path/from-course-
 import type { ContentPort, ContentStudy, Shelf } from "@pieai/university-ui/content/port.js";
 import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view.js";
 import { PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
+import type { AvatarRecipe } from "@pieai/university-world/avatar.js";
 
 import { AUTHORING } from "../mode";
 import { AuthoringMapNotes, StudioScreen } from "../authoring/index";
@@ -67,6 +68,9 @@ interface MainRouterProps {
   readonly grewFrom: { readonly key: string; readonly doneBefore: number } | null;
   readonly reviewReminderDismissedFor: string | null;
   readonly onDismissReviewReminder: (key: string) => void;
+  readonly avatarRecipe: AvatarRecipe | null;
+  readonly avatarSignedIn: boolean;
+  readonly onAvatarRecipeChange: (recipe: AvatarRecipe) => void;
   readonly identityPort: IdentityPort;
   readonly paymentPort: PaymentPort;
   readonly mistakes: readonly Mistake[];
@@ -107,6 +111,9 @@ export function MainRouter({
   grewFrom,
   reviewReminderDismissedFor,
   onDismissReviewReminder,
+  avatarRecipe,
+  avatarSignedIn,
+  onAvatarRecipeChange,
   identityPort,
   paymentPort,
   mistakes,
@@ -176,7 +183,11 @@ export function MainRouter({
       {AUTHORING && view.kind === "world" ? <AuthoringMapNotes studyId={focusedStudyId} /> : null}
       {view.kind === "avatar-lab" ? (
         <Suspense fallback={<RouteFallback />}>
-          <AvatarLab onOpen={setView} />
+          <AvatarLab
+            avatarRecipe={avatarRecipe}
+            onRecipeChange={onAvatarRecipeChange}
+            onOpen={setView}
+          />
         </Suspense>
       ) : null}
 
@@ -380,7 +391,7 @@ export function MainRouter({
                 </div>
               }
             >
-              <ProfileAvatar />
+              <ProfileAvatar avatarRecipe={avatarRecipe} signedIn={avatarSignedIn} />
             </Suspense>
           }
           account={<AccountPanel identity={identityPort} />}
