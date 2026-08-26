@@ -111,3 +111,6 @@ SCRATCH/
 /.pix.mjs
 /.probe3.mjs
 /.probe4.mjs
+
+# Receipts and explainer output written by tooling outside the build.
+artifacts/
