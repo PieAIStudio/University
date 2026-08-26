@@ -69,8 +69,8 @@ concepts (**138 carry a shared flow map**, 24 carry a style sample) · 267 terms
 420 lesson-to-lesson links, 383 inside their own course and **five** crossing
 one: the mesh does not exist yet. `[[term:]]` links: zero.
 
-Tests: core 364 · ui 255 · world 128 · university 120 · local 406 = **1,273**.
-Plus 15 browser walks (`pnpm e2e`), two of which (`G`, `G2`) exist only to
+Tests: core 373 · ui 259 · world 131 · university 126 · local 409 = **1,298**.
+Plus 16 browser walks (`pnpm e2e`), two of which (`G`, `G2`) exist only to
 compare the two builds against each other rather than to check either alone.
 
 **Re-run the script before quoting any of these.** Every number on this page
@@ -271,6 +271,12 @@ own lesson reader every new feature has to be written twice.
    the fold carries a watermark both devices can compare. A server-side
    increment with a bounded idempotency window (say 30 days of event ids) gets
    the same guarantee without the growth.
+
+   **Decided (2026-08-26): the server-side counter with the bounded window.**
+   XP总数 is a server counter; the document keeps only recent event ids for
+   deduplication. Cross-device merges keep the idempotency the ledger exists
+   for, and the row stops growing. This has to ship *with* the migration —
+   deciding it afterwards is a data migration rather than a decision.
 2. ~~**The 19 seconds after the canvas mounts.**~~ **Measured, and it is
    gone.** The old entry said 28.4s to first frame on throttled 4G, of which
    ~19s was `loadGraph()` fetching 52 course JSON files. `loadGraph` no longer
@@ -296,9 +302,38 @@ own lesson reader every new feature has to be written twice.
    world landing after every row in the overlay table is visible there. The
    separate course catalog is already shared; this remaining item is only
    about landing placement and authoring context.
-4. **The light theme cannot work yet.** 270 raw colour literals are invisible
-   to the contrast checker, which only reads token pairs. Until they are
-   tokens, no amount of contrast fixing makes that theme usable.
+4. **The light theme cannot work yet — but it needs far less than it looked
+   like.** Surveyed 2026-08-26 across the nine files R3 left: 359 raw colour
+   literals, of which **322 map onto tokens the kit already defines**, 8 need a
+   genuinely new role, and 29 are fixed material that should stay fixed. The
+   light palette is not missing: `swimmer-ui-kit`'s `:root` *is* the light
+   theme and `night` only overrides it, so 78 of its 143 `--game-ui-*` names
+   already carry a colour. What blocks the theme is the application layer
+   writing colours instead of reading them.
+
+   **117 of the 359 are fallbacks inside `var(--token, fallback)`** — and the
+   fallback values are a dead cool-blue palette (`#0d1019`, `#151b2b`,
+   `#9aa6bb`, `#5ec8c0`) from before the kit went warm. They never render,
+   because the kit stylesheet always loads first; only the contrast checker
+   sees them. Deleting them is a third of the problem removed with no visual
+   change, and it dissolves four of the ten colour-drift groups outright.
+
+   **Decided (2026-08-26): fixed material gets an explicit registry, not an
+   exemption by category.** The checker counts `var(--x, fallback)` fallbacks
+   as raw colours, so "leave the 29 alone" and "the checker only accepts
+   tokens" cannot both hold. Each fixed colour — brand marks, the GitHub-like
+   code reading surfaces — goes in a registry with one line saying why, the
+   checker reads the registry, and anything outside it is red. Same shape as
+   `scripts/check-canvas-registry.mjs`: a rule that is counted survives a
+   refactor.
+
+   The acceptance test is **not** "zero literals". It is "every colour that
+   must change with the theme is a token". Naming is by role
+   (`--surface-raised`), never by value (`--blue-500`) — a value name still
+   has to be blue in the light theme, which defeats the point. The survey is
+   `scratchpad/r5-report.md`; `packages/ui/src/entry/style-sample.css` is out
+   of scope, because each skin there is a closed world that deliberately does
+   not follow the theme.
 5. ~~**A persisted record of a wrong answer.**~~ **Done, and the premise was
    already wrong.** Failed attempts had been persisted and cloud-merged all
    along — `ExerciseAttemptRecord` carries the answer, the score and the
@@ -311,16 +346,37 @@ own lesson reader every new feature has to be written twice.
    to write is the flag it is asking about. The lesson reader works around it
    by reading the two facts independently; the read model should stop needing
    the workaround.
-7. Publish lane and entitlement (ADR-0002); Electron and Capacitor shells.
-8. Payment and metered AI, after 1.
-9. **A quiet label under the rail.** Inside a 41-lesson course, twelve lesson
+7. **A publish lane that reproduces from a clean clone.** Today's delivery
+   build does not: the course sources live on one machine's disk, the
+   generated `content/` is gitignored, and Vercel builds from a checkout that
+   holds local state. It needs a version, a checksum on its output, and inputs
+   named rather than assumed. Then the shells: Electron and Capacitor wrap the
+   same build, they are not products.
+8. **Entitlement, and it starts by splitting one word in two.** 「published」
+   and 「paid for」 are different questions and the code currently answers them
+   with one. V4 says the prose is never walled, so entitlement governs AI and
+   sync only — but a learner should still only ever read a *published*
+   revision. ADR-0002 says course packages are served from the backend under
+   entitlement; they are in fact public static files on Vercel. One of those
+   two has to change, and which one is a decision, not an oversight.
+9. **Payment, after 1.** One port over the backend's
+   `wallet_grant` / `reserve` / `commit` / `refund` / `get_balance`, idempotent
+   orders, failure and cancellation, entitlement refreshed after purchase, and
+   the pricing page's empty CTA finally wired to something. It is after 1
+   because taking money needs an account first.
+10. **Metered AI grading, after 9.** SwimmerAIKit becomes a dependency, behind
+    the same `GradingPort`, with the wallet reserved before the call and
+    committed or refunded after, keeping the deterministic-first tiering. It is
+    after payment because metering needs a wallet. This is the thing a paying
+    customer is actually buying, and today there is no call path to it at all.
+11. **A quiet label under the rail.** Inside a 41-lesson course, twelve lesson
    names project into the strip the nav rail covers. They are `quiet`, so
    nothing is drawn there — but a keyboard walk reveals them on focus, and the
    reveal lands under an opaque panel. `placeLabels` cannot help: quiet markers
    skip placement by design. The fix is either a clamp out of the chrome's box
    or a camera that keeps content out of it, and it is worth measuring which
    before writing either.
-10. **Notes reach the delivery build. The UA graph does not, and should not.**
+12. **Notes reach the delivery build. The UA graph does not, and should not.**
     This entry used to say the fix was to 「export the graph with the course
     package the way evidence and cards already travel」. Measured: the UA graph
     is not content. 「打开 UA 项目地图」 asks the 4317 bridge to *launch a separate
@@ -338,10 +394,72 @@ own lesson reader every new feature has to be written twice.
     library's fifth tab — and no content at all. Exporting it would ship an
     empty array to a customer.
 
-    So the open question is a product one and not an engineering one: **start
-    using 知识笔记, or retire it.** Building the export before that decision
-    would be building a pipeline for nothing.
-11. ~~**The picker's globe is not beautiful yet.**~~ **Done, in four rounds.**
+    **Answered 2026-08-26, and the question was wrong.** It was never "start
+    using 知识笔记 or retire it" — the stack that exists is a *content
+    publishing pipeline* wearing a learner feature's name.
+    `KnowledgeNoteSchema` gates `active` claims behind an evidence reference,
+    keeps numbered revisions under a write lock, and can only be written by the
+    `capture` CLI. That is the seriousness course content needs. What a learner
+    saying 「我大概是这么理解的」 needs is the opposite, and ADR-0001 already
+    says which bucket that belongs in: the cloud document, not the disk.
+
+    So it splits in two.
+
+    **The existing stack stays, as an authoring instrument** — the same
+    category as the UA graph above, and for the same reason: it is a tool for
+    producing material, it already lives behind the authoring build, and it is
+    correctly compiled out of delivery. It is not a learner feature and should
+    stop occupying a learner feature's slot.
+
+    **What the learner gets is a new, much smaller thing: 「讲一遍」.** After a
+    lesson or an `explain` exercise, one prompt — *say it in your own words to
+    somebody who knows none of this* — one text box, and the answer becomes a
+    card in the FSRS queue the product already runs. When it comes due the
+    prompt comes back, the learner answers again, and the screen shows their
+    own previous answers side by side. They grade themselves again/hard/good/
+    easy. **Zero model calls**, so it is the free tier by construction.
+
+    Three things that decide the shape, in descending order of how much they
+    surprised us:
+
+    - **The framing does the work, not the input device.** 「说比写记得牢」 is
+      not supported as a general result (Kellogg 2007 found written recall
+      *better*). What is supported, across several studies, is explaining *to
+      an imagined other* beating writing to them (Hoogerheide et al. 2016;
+      Fiorella & Mayer 2023). That is a sentence in a prompt, and it is free.
+      Voice is a convenience layer, not the mechanism.
+    - **Saving is not learning.** Storm & Stone (2015) — saving a thing lowers
+      memory *for that thing*. A recap that is filed and never re-asked is
+      cognitive offloading with extra steps. The card is not optional; it is
+      the feature.
+    - **The prompt costs no authoring.** Every unit already carries a
+      first-person capability sentence — 146 of them. That is the prompt. No
+      author writes anything new, and no model generates anything.
+
+    Not doing: multiple-choice recaps as the default, because they swap
+    generating an explanation for recognising one, which is the part that
+    works; and AI judging whether a recap is correct, which is exactly the
+    unmetered model behind a free tier that SPEC-0001 forbids.
+
+    **Voice is a privacy decision, not an engineering one, and it is open.**
+    `packages/ui/src/language/speech.ts` maintains 「nothing here reaches the
+    network」 as a principle; Chrome and Edge implement the Web Speech API by
+    streaming audio to Google and Microsoft. A learner recapping a lesson about
+    `turing-pact` would be dictating a private repository into someone else's
+    service. Firefox does not implement it at all, and Mandarin with embedded
+    English identifiers is the weakest case for every ASR benchmark we found —
+    which is precisely what this product's prose sounds like. Full survey:
+    `scratchpad/notes-research.md`.
+
+    **A defect found while answering this.**
+    `apps/local/server/workflows/learning-overview.ts:381` puts
+    `knowledge-card` into the due queue, and
+    `packages/ui/src/review/scheduler-ports.ts:37` — the only review entry
+    either build uses — throws 「这类复习卡还不能在这里复习」 on anything that
+    is not a `course-card`. The backend schedules a card the frontend refuses.
+    Nobody has hit it because there are no knowledge notes; 「讲一遍」 lands in
+    that same branch, so it gets fixed there rather than separately.
+13. ~~**The picker's globe is not beautiful yet.**~~ **Done, in four rounds.**
     Framing, flat shading, a warm key with a rim, stars and a horizon glow,
     and study markers that are landing beacons — a coloured pin standing on a
     lit contact disc, matched to a swatch on its row in the list, so the point
@@ -357,7 +475,7 @@ own lesson reader every new feature has to be written twice.
     (「暖一点」, 「成片一点」) and a relative direction overshoots by
     construction. Round 4 gave absolute proportions and hex values and landed
     first try. Give an absolute when you have one.
-12. ~~**A level and an XP curve.**~~ **Done, except the ring.**
+14. ~~**A level and an XP curve.**~~ **Done, except the ring.**
     `totalXpForLevel(n) = round(35 * (n - 1) ** 2.2)`, and the two constants
     are anchored rather than chosen: one lesson is `XP_READ_LESSON +
     XP_EXERCISE_FIRST_TRY`, which clears level 2 — **the first lesson levels
@@ -385,8 +503,8 @@ argument:
 | R1 | Narrow the export surface | **done** |
 | R2 | `packages/world/src`, 47 direct children into directories | **done** — 47 → 10 |
 | R3 | Shared components' CSS back beside the components | **done** — 8 families, 830 lines |
-| R4 | Split `App.tsx` | |
-| R5 | 359 colour literals into tokens | |
+| R4 | Split `App.tsx` | **done** — 1,384 → 757, six files |
+| R5 | 359 colour literals into tokens | surveyed; see 4 below |
 
 R4 is last because the first four are its safety net, not because it matters
 least: it is the highest-churn file in the repository and the one where
@@ -485,6 +603,20 @@ still one 4,896-line file is paving a moving road.
   `tsc` does not resolve `.glb`, so typecheck, lint and 131 world tests were
   all green; only `pnpm build` failed. Same family as the `exports` trap above
   — the build is the only step that resolves what the bundler resolves.
+- **A worktree without the study checkouts fails in a way that looks like
+  broken code.** `apps/local/studies/` is gitignored, so a new worktree does
+  not have it, and `mkwt.sh` links it in for a reason. Without it: four `pnpm
+  e2e` walks fail on the authoring side with an empty shelf — which reads as a
+  regression in whatever you just changed — and `pnpm content` silently bakes
+  no evidence, so `imported.json`'s `servedBytes` come out kilobytes short.
+  Both happened on 2026-08-26, the second one for the second time (`e04bcfa`
+  fixed it once and recorded it only in the commit message). Check the symlink
+  before believing an authoring-side e2e failure or any `servedBytes` number.
+- **A gate that walks the repository walks into the study checkouts too.**
+  `check-canvas-registry.mjs` reported ten `<Canvas>` mounts belonging to a
+  learner's own cloned repository. It passed everywhere it was written and
+  tested, because those machines had no studies registered. Any new source
+  scan needs `apps/local/studies` excluded.
 - **This file is pinned.** A commit touching it needs
   `Pinned-Override: REF-CURRENT-WORK` in the message. SPEC-0001 needs its own.
 
