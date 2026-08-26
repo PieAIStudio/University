@@ -8,6 +8,7 @@ coverage/
 .env.*
 !.env.example
 .scratch/
+.artifacts/
 university.config.local.json
 
 # PGS workstation materializations. University-owned skills stay tracked;

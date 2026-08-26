@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { publicDtoViolations } from "../../scripts/delivery-artifact.mjs";
 
 /**
  * No reference answer may reach a customer's browser.
@@ -20,55 +21,6 @@ const PACKAGES = import.meta.glob<unknown>("../../content/*/*.json", {
   import: "default",
 });
 
-/*
-  Substring, deliberately, and it took two tries to get here. The first draft
-  was `/(^|[^a-z])(answer|solution|rubric)/i`, meaning to spare `answerKey` by
-  requiring a boundary — and `[^a-z]` never matches inside camelCase, so
-  `referenceAnswer` sailed through the gate written to catch `referenceAnswer`.
-  It read as a working check and caught nothing. The allow-list below is what
-  spares the fingerprint now; the pattern is allowed to be greedy.
-*/
-const ANSWER_KEY_PATTERN = /answer|solution|rubric/i;
-/** The compiled fingerprint. It is not the answer and cannot be read back. */
-const ALLOWED = new Set(["answerKey"]);
-const AUTHOR_ONLY_KEYS = new Set([
-  "schemaVersion",
-  "packageKind",
-  "evidenceMode",
-  "droppedUaBindingCount",
-  "currency",
-  "captureRecipe",
-  "dataBase64",
-  "snapshotId",
-  "nodeIds",
-  "path",
-  "sha256",
-  "bytes",
-  "source",
-  "sourceRoot",
-]);
-const AUTHOR_ONLY_VALUE_PATTERNS = [/^file-manager:/i];
-
-function offendingFields(value: unknown, path: string, found: string[]): void {
-  if (typeof value === "string") {
-    for (const pattern of AUTHOR_ONLY_VALUE_PATTERNS) {
-      if (pattern.test(value)) found.push(`${path}=${JSON.stringify(value)}`);
-    }
-    return;
-  }
-  if (Array.isArray(value)) {
-    value.forEach((item, index) => offendingFields(item, `${path}[${index}]`, found));
-    return;
-  }
-  if (value === null || typeof value !== "object") return;
-  for (const [key, child] of Object.entries(value)) {
-    if (!ALLOWED.has(key) && (ANSWER_KEY_PATTERN.test(key) || AUTHOR_ONLY_KEYS.has(key))) {
-      found.push(`${path}.${key}`);
-    }
-    offendingFields(child, `${path}.${key}`, found);
-  }
-}
-
 describe("the packages the delivery build ships", () => {
   it("has packages to check", () => {
     expect(Object.keys(PACKAGES).length).toBeGreaterThan(0);
@@ -77,7 +29,7 @@ describe("the packages the delivery build ships", () => {
   it("carries no reference answer, author fields, or author-machine route values", () => {
     const found: string[] = [];
     for (const [path, pkg] of Object.entries(PACKAGES)) {
-      offendingFields(pkg, path.replace("../../content/", ""), found);
+      found.push(...publicDtoViolations(pkg, path.replace("../../content/", "")));
     }
     expect(found.slice(0, 12)).toEqual([]);
   });

@@ -15,6 +15,8 @@
     "check:review-cards": "node scripts/check-review-card-registry.mjs",
     "check:shelf": "node apps/university/scripts/check-shelf.mjs",
     "dev": "pnpm --filter @pieai/university-app dev",
+    "delivery:build": "pnpm --filter @pieai/university-app delivery:build",
+    "delivery:check": "pnpm --filter @pieai/university-app delivery:check",
     "doc-gov": "doc-gov",
     "docs:check": "pnpm pro-gov doctor && pnpm doc-gov router-check && pnpm doc-gov check && pnpm doc-gov scan --check && pnpm doc-gov links && pnpm doc-gov audit && pnpm doc-gov doctor",
     "e2e": "playwright test --config e2e/playwright.config.ts",
@@ -34,5 +36,9 @@
     "@pieai/pro-gov": "0.9.5",
     "@playwright/test": "^1.62.1",
     "lefthook": "^2.1.10"
-  }
+  },
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "packageManager": "pnpm@11.22.0"
 }

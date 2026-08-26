@@ -52,6 +52,7 @@ import {
 import { join, resolve } from "node:path";
 
 import { bakeLessonEvidence, hasAnyStudyRepository } from "./bake-evidence.mjs";
+import { validateRecoveryInput } from "./delivery-artifact.mjs";
 import { toPublicPackage } from "./public-course.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
@@ -67,9 +68,16 @@ const upstream = resolve(
 );
 
 if (!existsSync(upstream)) {
+  if (process.env["UNIVERSITY_UPSTREAM_RECOVERY"] !== undefined) {
+    throw new Error(`import-courses: explicit recovery input is missing at ${upstream}`);
+  }
   console.log(`import-courses: no upstream configured at ${upstream}, nothing to import.`);
   process.exit(0);
 }
+
+const recoveryInput = validateRecoveryInput(upstream, {
+  projectRoot: resolve(projectRoot, "../.."),
+});
 
 const onlyStudy = (() => {
   const at = process.argv.indexOf("--study");
@@ -77,6 +85,19 @@ const onlyStudy = (() => {
 })();
 
 const sha = (buffer) => createHash("sha256").update(buffer).digest("hex");
+
+const evidenceMode = process.env["UNIVERSITY_EVIDENCE_MODE"] ?? "auto";
+if (evidenceMode !== "auto" && evidenceMode !== "none") {
+  throw new Error(
+    `import-courses: UNIVERSITY_EVIDENCE_MODE must be auto or none, got ${evidenceMode}`,
+  );
+}
+const requestedImportDate = process.env["UNIVERSITY_IMPORT_DATE"];
+if (requestedImportDate !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(requestedImportDate)) {
+  throw new Error(
+    `import-courses: UNIVERSITY_IMPORT_DATE must be YYYY-MM-DD, got ${requestedImportDate}`,
+  );
+}
 
 /** `data:image/png;base64,...` or a bare base64 blob, either way to bytes. */
 function decodeAsset(dataBase64) {
@@ -101,17 +122,21 @@ mkdirSync(join(contentRoot, "assets"), { recursive: true });
 let keysCompiled = 0;
 /** Keys with nothing left to compare, reported at the end rather than shipped. */
 const unusableKeys = [];
-const manifest = { importedAt: new Date().toISOString().slice(0, 10), studies: [] };
+const manifest = {
+  importedAt: requestedImportDate ?? new Date().toISOString().slice(0, 10),
+  studies: [],
+};
 const shelf = { studies: [] };
 let assetCount = 0;
 let assetBytes = 0;
 let inlineBytes = 0;
-const studiesRoot = resolve(
-  projectRoot,
-  process.env["UNIVERSITY_STUDIES_ROOT"] ?? "../local/studies",
-);
+const studiesRoot =
+  evidenceMode === "none"
+    ? null
+    : resolve(projectRoot, process.env["UNIVERSITY_STUDIES_ROOT"] ?? "../local/studies");
 let snippetBaked = 0;
 let snippetSkipped = 0;
+let snippetDisabled = 0;
 let snippetBytes = 0;
 let snippetFiles = 0;
 let snippetEvidence = 0;
@@ -177,19 +202,24 @@ for (const studyId of readdirSync(upstream).sort()) {
             ...(answerKey ? { answerKey } : {}),
           });
         }
-        snippetEvidence += (lesson.evidence ?? []).length;
-        const baked = bakeLessonEvidence({
-          studiesRoot,
-          studyId,
-          courseId: course.id,
-          evidence: lesson.evidence ?? [],
-          contentRoot,
-          sha,
-        });
-        snippetBaked += baked.baked;
-        snippetSkipped += baked.skipped;
-        snippetBytes += baked.bytes;
-        snippetFiles += baked.files;
+        const evidence = lesson.evidence ?? [];
+        snippetEvidence += evidence.length;
+        if (evidenceMode === "none") {
+          snippetDisabled += evidence.length;
+        } else {
+          const baked = bakeLessonEvidence({
+            studiesRoot,
+            studyId,
+            courseId: course.id,
+            evidence,
+            contentRoot,
+            sha,
+          });
+          snippetBaked += baked.baked;
+          snippetSkipped += baked.skipped;
+          snippetBytes += baked.bytes;
+          snippetFiles += baked.files;
+        }
 
         const deliveryAssets = (lesson.assets ?? []).map((asset) => {
           if (!asset.dataBase64) {
@@ -334,6 +364,9 @@ if (existsSync(lexiconSource)) {
     `${JSON.stringify(lexicon, null, 2)}\n`,
   );
 } else {
+  if (process.env["UNIVERSITY_UPSTREAM_LEXICON"] !== undefined) {
+    throw new Error(`import-courses: explicit lexicon input is missing at ${lexiconSource}`);
+  }
   // Not fatal: the reader treats an absent lexicon as "no words to annotate",
   // which is the same path a lesson with no matches already takes.
   console.warn(
@@ -355,7 +388,11 @@ console.log(
     `${lexiconSenses} lexicon senses bundled.`,
 );
 
-if (snippetBaked === 0) {
+if (evidenceMode === "none") {
+  console.log(
+    `import-courses: evidence mode none; ${snippetDisabled} cited ranges intentionally not baked.`,
+  );
+} else if (snippetBaked === 0) {
   console.log(
     hasAnyStudyRepository(studiesRoot)
       ? `import-courses: baked 0 evidence snippets (${snippetSkipped} cited ranges unreadable).`
@@ -367,6 +404,12 @@ if (snippetBaked === 0) {
       `into ${snippetFiles} files (${(snippetBytes / 1048576).toFixed(2)} MB` +
       (snippetSkipped > 0 ? `; ${snippetSkipped} skipped` : "") +
       `).`,
+  );
+}
+
+if (recoveryInput.courses !== totalCourses) {
+  throw new Error(
+    `import-courses: recovery input changed while importing (${recoveryInput.courses} != ${totalCourses} courses)`,
   );
 }
 

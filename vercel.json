@@ -1,33 +1,29 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm --filter @pieai/university-core build && pnpm content && pnpm --filter @pieai/university-app... build",
+  "buildCommand": "pnpm delivery:build -- --version \"${DELIVERY_VERSION:-0.0.0+${VERCEL_GIT_COMMIT_SHA}}\" --recovery-root apps/local/course-proposals/recovery --lexicon apps/local/data/vocabulary/en.json --evidence none",
   "outputDirectory": "apps/university/dist/delivery",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
   "git": {
     "//": "Pushing to GitHub must not deploy this site.",
-    "//2": "The courses are not in this repository. apps/local/studies is 1.1G of source checkouts and apps/university/content is generated from them; both are gitignored, so a build that starts from a clone has nothing to import and produces an app with no courses in it. A deploy therefore has to run from a machine that holds the studies — `vercel build && vercel deploy --prebuilt` — which uploads the built output and never the source repositories.",
-    "//3": "That also matches ADR-0002: publishing a course is a separate, gated act, not a side effect of pushing a commit.",
+    "//2": "The delivery lane consumes the tracked recovery packages under apps/local/course-proposals/recovery and never reads apps/local/studies. Evidence mode none keeps this build reproducible from a clean clone and the release artifact records the input and payload hashes.",
+    "//3": "Git deployment stays disabled: this build prepares a versioned artifact, while the deliberate `vercel deploy --prebuilt` remains the manual deployment gate until ADR-0002's backend/static target is resolved.",
     "deploymentEnabled": false
   },
   "rewrites": [
     {
-      "source": "/((?!assets/|content/|kit/|basis/|favicon|apple-touch-icon|icon-|manifest).*)",
+      "source": "/((?!assets/|content/|kit/|basis/|favicon|apple-touch-icon|icon-|manifest|release.json|SHA256SUMS).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
     {
       "source": "/assets/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     },
     {
       "source": "/content/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
-      ]
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }]
     },
     {
       "source": "/(.*)",
