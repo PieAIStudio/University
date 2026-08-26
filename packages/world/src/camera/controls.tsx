@@ -22,6 +22,7 @@ import { MapControls } from "three/addons/controls/MapControls.js";
 
 import {
   boxesOverlap,
+  clampLabelOutOfChrome,
   FOLLOW_CLEARANCE,
   labelBox,
   placeLabels,
@@ -398,6 +399,18 @@ function defaultWeight(marker: Marker): number {
   return 1;
 }
 
+function readRailBox(stage: HTMLElement, rail: HTMLElement): LabelBox | null {
+  const stageRect = stage.getBoundingClientRect();
+  const railRect = rail.getBoundingClientRect();
+  if (railRect.width <= 0 || railRect.height <= 0) return null;
+  return {
+    left: railRect.left - stageRect.left,
+    top: railRect.top - stageRect.top,
+    right: railRect.right - stageRect.left,
+    bottom: railRect.bottom - stageRect.top,
+  };
+}
+
 function writePlacement(
   element: HTMLElement,
   marker: Marker,
@@ -435,8 +448,40 @@ export function LabelProbe({
   followId?: string | null;
   followNode?: { readonly current: HTMLElement | null };
 }) {
-  const { camera, size } = useThree();
+  const { camera, gl, size } = useThree();
   const scratch = useRef(new THREE.Vector3());
+  const railBoxRef = useRef<LabelBox | null>(null);
+  useEffect(() => {
+    const stage = gl.domElement.closest<HTMLElement>(".stagewrap");
+    const shell = stage?.closest<HTMLElement>(".app-shell");
+    const rail = shell?.querySelector<HTMLElement>(".nav-rail");
+    if (!stage || !rail) return;
+
+    const update = () => {
+      railBoxRef.current = readRailBox(stage, rail);
+    };
+    update();
+    window.addEventListener("resize", update);
+
+    const resizeObserver =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
+    resizeObserver?.observe(rail);
+
+    let mutationObserver: MutationObserver | null = null;
+    if (typeof MutationObserver !== "undefined" && shell) {
+      mutationObserver = new MutationObserver(update);
+      mutationObserver.observe(shell, {
+        attributes: true,
+        attributeFilter: ["data-rail-collapsed"],
+      });
+    }
+
+    return () => {
+      window.removeEventListener("resize", update);
+      resizeObserver?.disconnect();
+      mutationObserver?.disconnect();
+    };
+  }, [gl]);
   // R3F's tree is a second React root. The follow node lives in the DOM
   // root, and this callback must not close over a stale `followId` from the
   // render that created the Canvas children the first time.
@@ -475,6 +520,15 @@ export function LabelProbe({
       height: number;
       anchor: LabelAnchor;
     }[] = [];
+    const quietLabels: {
+      marker: Marker;
+      element: HTMLElement;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      anchor: LabelAnchor;
+    }[] = [];
     // Every marker that projected this frame, quiet or not. The reset below
     // keys off this rather than off `candidates`, which no longer holds the
     // quiet ones — without it the reset immediately undoes the transform the
@@ -492,9 +546,15 @@ export function LabelProbe({
       projectedIds.add(marker.id);
       projectedById.set(marker.id, { x, y, z: projected.z });
       if (marker.quiet) {
-        writePlacement(element, marker, x, y, false);
-        // Quiet still needs `--placed: 1` so focus-visible can fade it in.
-        element.style.setProperty("--placed", "1");
+        quietLabels.push({
+          marker,
+          element,
+          x,
+          y,
+          width: element.offsetWidth,
+          height: element.offsetHeight,
+          anchor: marker.origin === "start" ? "start" : "center",
+        });
         continue;
       }
       const width = element.offsetWidth;
@@ -607,6 +667,30 @@ export function LabelProbe({
       const marker = markers.find((entry) => entry.id === placement.id);
       if (!marker) continue;
       writePlacement(element, marker, placement.x, placement.y, placement.visible);
+      if (placement.visible) {
+        const candidate = candidates.find((entry) => entry.id === placement.id);
+        if (candidate) {
+          reserved.push(
+            labelBox(
+              { x: placement.x, y: placement.y },
+              candidate.width,
+              candidate.height,
+              candidate.anchor,
+            ),
+          );
+        }
+      }
+    }
+
+    // Quiet names stay outside the normal avoidance contest. They are not
+    // visible until focus, but their focus reveal must not land underneath the
+    // opaque rail. A focused name also gets the closest free vertical slot so
+    // the boundary fix does not cover a visible icon or unit name.
+    for (const item of quietLabels) {
+      const position = clampLabelOutOfChrome(item, railBoxRef.current, viewport, { reserved });
+      writePlacement(item.element, item.marker, position.x, position.y, false);
+      // Quiet still needs `--placed: 1` so focus-visible can fade it in.
+      item.element.style.setProperty("--placed", "1");
     }
 
     // Anything that did not project at all this frame is behind the camera or

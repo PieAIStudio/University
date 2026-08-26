@@ -180,10 +180,103 @@ export function boxesOverlap(a: LabelBox, b: LabelBox, gap: number): boolean {
   );
 }
 
-function intersectsViewport(
-  rect: LabelBox,
-  viewport: { readonly width: number; readonly height: number },
-): boolean {
+export interface LabelViewport {
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface LabelPosition {
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
+ * Move a label which would be hidden by chrome to the nearest readable slot.
+ *
+ * Quiet labels are deliberately not candidates for `placeLabels`: making all
+ * forty-one lesson names negotiate space would turn the map back into a list.
+ * They still need a safe focused position, though. This small boundary pass
+ * only runs for a quiet label whose home box intersects an opaque chrome box;
+ * it first crosses the boundary, then tries the closest vertical nudges that
+ * do not cover an already placed label.
+ *
+ * The caller supplies the chrome box in stage coordinates. Keeping the
+ * geometry here makes the rule deterministic and leaves DOM measurement in
+ * the frame owner, where the browser is available.
+ */
+export function clampLabelOutOfChrome(
+  candidate: Pick<LabelCandidate, "x" | "y" | "width" | "height" | "anchor">,
+  chrome: LabelBox | null,
+  viewport: LabelViewport,
+  options?: {
+    /** Space between the label and the opaque boundary. */
+    readonly chromeGap?: number;
+    /** Space between this focused label and visible labels. */
+    readonly labelGap?: number;
+    readonly reserved?: readonly LabelBox[];
+  },
+): LabelPosition {
+  const anchor = candidate.anchor ?? "center";
+  const home = { x: candidate.x, y: candidate.y };
+  if (!chrome) return home;
+
+  const homeBox = labelBox(home, candidate.width, candidate.height, anchor);
+  if (!boxesOverlap(homeBox, chrome, 0)) return home;
+
+  const chromeGap = options?.chromeGap ?? 8;
+  const labelGap = options?.labelGap ?? 4;
+  const horizontalSlots =
+    anchor === "start"
+      ? [{ x: chrome.right + chromeGap }, { x: chrome.left - chromeGap - candidate.width }]
+      : [
+          { x: chrome.right + chromeGap + candidate.width / 2 },
+          { x: chrome.left - chromeGap - candidate.width / 2 },
+        ];
+  const verticalStep = candidate.height + chromeGap;
+  const verticalOffsets = [0];
+  for (let index = 1; index <= Math.ceil(viewport.height / verticalStep) + 1; index += 1) {
+    verticalOffsets.push(index * verticalStep, -index * verticalStep);
+  }
+
+  const slots = horizontalSlots.flatMap((horizontal) =>
+    verticalOffsets.map((offset) => ({ x: horizontal.x, y: candidate.y + offset })),
+  );
+  const readable = slots
+    .map((slot) => ({ slot, box: labelBox(slot, candidate.width, candidate.height, anchor) }))
+    .filter(({ box }) => fitsInViewport(box, viewport))
+    .filter(({ box }) => !boxesOverlap(box, chrome, 0))
+    .filter(
+      ({ box }) =>
+        !(options?.reserved ?? []).some((reserved) => boxesOverlap(box, reserved, labelGap)),
+    )
+    .sort((left, right) => {
+      const leftDistance =
+        Math.abs(left.slot.x - candidate.x) + Math.abs(left.slot.y - candidate.y);
+      const rightDistance =
+        Math.abs(right.slot.x - candidate.x) + Math.abs(right.slot.y - candidate.y);
+      return leftDistance - rightDistance;
+    });
+
+  // A desktop rail always leaves room on one side for a lesson title. The
+  // fallback keeps the boundary guarantee if a future chrome layout consumes
+  // every readable, non-overlapping slot; the label may cover a label, but it
+  // will not be put back underneath the opaque chrome.
+  const boundaryOnly = slots
+    .map((slot) => ({ slot, box: labelBox(slot, candidate.width, candidate.height, anchor) }))
+    .filter(({ box }) => fitsInViewport(box, viewport))
+    .filter(({ box }) => !boxesOverlap(box, chrome, 0))
+    .sort((left, right) => {
+      const leftDistance =
+        Math.abs(left.slot.x - candidate.x) + Math.abs(left.slot.y - candidate.y);
+      const rightDistance =
+        Math.abs(right.slot.x - candidate.x) + Math.abs(right.slot.y - candidate.y);
+      return leftDistance - rightDistance;
+    });
+
+  return readable[0]?.slot ?? boundaryOnly[0]?.slot ?? home;
+}
+
+function intersectsViewport(rect: LabelBox, viewport: LabelViewport): boolean {
   return (
     rect.left < viewport.width && rect.right > 0 && rect.top < viewport.height && rect.bottom > 0
   );
@@ -206,10 +299,7 @@ function intersectsViewport(
  * test. Hiding it would drop a name for being long rather than for being in
  * the way, so for that case only, touching remains the best available answer.
  */
-function fitsInViewport(
-  rect: LabelBox,
-  viewport: { readonly width: number; readonly height: number },
-): boolean {
+function fitsInViewport(rect: LabelBox, viewport: LabelViewport): boolean {
   if (rect.right - rect.left > viewport.width || rect.bottom - rect.top > viewport.height) {
     return intersectsViewport(rect, viewport);
   }
@@ -221,10 +311,7 @@ function fitsInViewport(
   );
 }
 
-function anchorOnScreen(
-  candidate: LabelCandidate,
-  viewport: { readonly width: number; readonly height: number },
-): boolean {
+function anchorOnScreen(candidate: LabelCandidate, viewport: LabelViewport): boolean {
   return (
     candidate.x >= 0 &&
     candidate.y >= 0 &&
@@ -235,7 +322,7 @@ function anchorOnScreen(
 
 export function placeLabels(
   candidates: readonly LabelCandidate[],
-  viewport: { readonly width: number; readonly height: number },
+  viewport: LabelViewport,
   options?: {
     readonly maxVisible?: number;
     readonly gap?: number;

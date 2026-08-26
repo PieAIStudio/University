@@ -387,13 +387,17 @@ the list below contains the remaining implementation and authority boundaries.
     committed or refunded after, keeping the deterministic-first tiering. It is
     after payment because metering needs a wallet. This is the thing a paying
     customer is actually buying, and today there is no call path to it at all.
-11. **A quiet label under the rail.** Inside a 41-lesson course, twelve lesson
-   names project into the strip the nav rail covers. They are `quiet`, so
-   nothing is drawn there — but a keyboard walk reveals them on focus, and the
-   reveal lands under an opaque panel. `placeLabels` cannot help: quiet markers
-   skip placement by design. The fix is either a clamp out of the chrome's box
-   or a camera that keeps content out of it, and it is worth measuring which
-   before writing either.
+11. ~~**A quiet label under the rail.**~~ **Measured and fixed (2026-08-26).**
+   In the 41-lesson course, the baseline sweep counted projected quiet labels
+   under the rail at 768×900: 12; 1024×768: 6; 1280×720: 8; 1440×810: 4;
+   1440×900: 7; and 1920×1080: 2. Mobile widths hide the rail. A direct
+   boundary clamp would have caused five visible-label conflicts and seven
+   quiet-pair conflicts among the twelve narrow-viewport labels; the
+   collision-aware clamp resolved all twelve. The camera was rejected: at the
+   allowed maximum distance it still left 12 under the rail, while the target
+   shift that cleared the narrow rail put 27 under the right panel. `LabelProbe`
+   now measures the rail box and moves quiet focus reveals outside it through
+   `--placed`; `placeLabels` still intentionally excludes quiet markers.
 12. **「讲一遍」与语音边界。** 当前决定（读完 / 答对分开、学习者复述进
     FSRS、TTS 四档）和仍开放的边界（ASR 必须单独选择加入）只写在
     [V5 用户旅程](../player-journey/v5/index.html) §01–04；这里不再复制一份。

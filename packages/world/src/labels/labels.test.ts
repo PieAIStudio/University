@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { placeLabels, type LabelCandidate, type LabelPlacement } from "./labels";
+import {
+  boxesOverlap,
+  clampLabelOutOfChrome,
+  labelBox,
+  placeLabels,
+  type LabelCandidate,
+  type LabelPlacement,
+} from "./labels";
 
 const VIEW = { width: 800, height: 600 } as const;
 
@@ -49,6 +56,33 @@ function boxesClash(
 }
 
 describe("placeLabels", () => {
+  it("moves a quiet label across chrome and around a visible label", () => {
+    const chrome = { left: 16, top: 16, right: 92, bottom: 584 };
+    const reserved = [{ left: 100, top: 260, right: 320, bottom: 284 }];
+    const position = clampLabelOutOfChrome(
+      { x: 40, y: 272, width: 220, height: 20 },
+      chrome,
+      VIEW,
+      { reserved },
+    );
+    const box = labelBox(position, 220, 20);
+
+    expect(box.left).toBe(100);
+    expect(boxesOverlap(box, chrome, 0)).toBe(false);
+    expect(reserved.some((other) => boxesOverlap(box, other, 4))).toBe(false);
+    expect(position.y).toBeGreaterThan(272);
+  });
+
+  it("leaves a label alone when it is outside chrome", () => {
+    const position = clampLabelOutOfChrome(
+      { x: 400, y: 200, width: 80, height: 20 },
+      { left: 16, top: 16, right: 92, bottom: 584 },
+      VIEW,
+    );
+
+    expect(position).toEqual({ x: 400, y: 200 });
+  });
+
   it("keeps one of two overlapping names at the preferred slot and moves or hides the other", () => {
     const near = candidate({ id: "near", z: 0.1 });
     const far = candidate({ id: "far", z: 0.4 });
