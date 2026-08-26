@@ -169,6 +169,11 @@ describe("createOnlineGradingPort", () => {
       fetchImpl,
       gradingUrl: "https://grading.example.test/api/grade",
       readAccessToken,
+      readBalance: async () => ({
+        availablePowerUnits: "1000",
+        balancePowerUnits: "1000",
+        reservedPowerUnits: "0",
+      }),
     });
     const result = await port.submitExercise({
       locator: { ...locator, lessonId: long.id },
@@ -176,11 +181,62 @@ describe("createOnlineGradingPort", () => {
       contentRevision: 1,
       answer: "我的理解是另一回事。",
       commandId: "c3",
+      allowMetered: true,
     });
     expect(result.hostGrade?.passed).toBe(true);
     expect(result.hostGrade?.host).toBe("tier-2");
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(readAccessToken).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps tier two free-by-default until the learner opts in", async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error("the free first pass must not call tier two");
+    });
+    const readAccessToken = vi.fn(async () => "learner-access-token");
+    const readBalance = vi.fn(async () => ({
+      availablePowerUnits: "1000",
+      balancePowerUnits: "1000",
+      reservedPowerUnits: "0",
+    }));
+    const port = createOnlineGradingPort({
+      fetchImpl,
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken,
+      readBalance,
+    });
+
+    const result = await port.submitExercise(undecidableSubmission("free-first"));
+
+    expect(result.hostGrade?.host).toBe("tier-1");
+    expect(result.hostGrade?.evaluation).toContain("再看一眼你刚才读过的这句");
+    expect(result.meteredEligible).toBe(true);
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(readAccessToken).not.toHaveBeenCalled();
+    expect(readBalance).not.toHaveBeenCalled();
+  });
+
+  it("quotes the cost and remaining balance without contacting the grading service", async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error("quoting must not submit an answer");
+    });
+    const port = createOnlineGradingPort({
+      fetchImpl,
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken: async () => "learner-access-token",
+      readBalance: async () => ({
+        availablePowerUnits: "900",
+        balancePowerUnits: "1000",
+        reservedPowerUnits: "100",
+      }),
+    });
+
+    await expect(port.meteredGradingOffer()).resolves.toEqual({
+      kind: "available",
+      costPowerUnits: "100",
+      availablePowerUnits: "900",
+    });
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 
   it("falls back to the tier-one clue when the learner is signed out", async () => {
@@ -190,7 +246,7 @@ describe("createOnlineGradingPort", () => {
     });
 
     await expect(
-      port.submitExercise(undecidableSubmission("red-signed-out")),
+      port.submitExercise({ ...undecidableSubmission("red-signed-out"), allowMetered: true }),
     ).resolves.toMatchObject({
       hostGrade: {
         host: "tier-1",
@@ -206,7 +262,7 @@ describe("createOnlineGradingPort", () => {
     });
 
     await expect(
-      port.submitExercise(undecidableSubmission("red-no-service")),
+      port.submitExercise({ ...undecidableSubmission("red-no-service"), allowMetered: true }),
     ).resolves.toMatchObject({
       hostGrade: {
         host: "tier-1",
@@ -231,10 +287,15 @@ describe("createOnlineGradingPort", () => {
       fetchImpl,
       gradingUrl: "https://grading.example.test/api/grade",
       readAccessToken: async () => "learner-access-token",
+      readBalance: async () => ({
+        availablePowerUnits: "1000",
+        balancePowerUnits: "1000",
+        reservedPowerUnits: "0",
+      }),
     });
 
     await expect(
-      port.submitExercise(undecidableSubmission("red-insufficient")),
+      port.submitExercise({ ...undecidableSubmission("red-insufficient"), allowMetered: true }),
     ).resolves.toMatchObject({
       hostGrade: {
         host: "tier-1",
@@ -252,9 +313,16 @@ describe("createOnlineGradingPort", () => {
       fetchImpl,
       gradingUrl: "https://grading.example.test/api/grade",
       readAccessToken: async () => "learner-access-token",
+      readBalance: async () => ({
+        availablePowerUnits: "1000",
+        balancePowerUnits: "1000",
+        reservedPowerUnits: "0",
+      }),
     });
 
-    await expect(port.submitExercise(undecidableSubmission("red-timeout"))).resolves.toMatchObject({
+    await expect(
+      port.submitExercise({ ...undecidableSubmission("red-timeout"), allowMetered: true }),
+    ).resolves.toMatchObject({
       hostGrade: {
         host: "tier-1",
         passed: false,

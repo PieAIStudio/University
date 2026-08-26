@@ -10,6 +10,9 @@
 
 import type { LessonRef } from "../progress/contract.js";
 
+/** The provisional charge for one structured tier-two grading request. */
+export const METERED_GRADING_COST_POWER_UNITS = "100";
+
 /** An AI host's verdict, written back through the CLI or returned immediately. */
 export interface HostExerciseGrade {
   readonly passed: boolean;
@@ -34,6 +37,8 @@ export interface ExerciseAttemptResult {
   readonly maxScore: number;
   readonly awaitingHostGrade?: boolean;
   readonly hostGrade?: HostExerciseGrade | null;
+  /** True when the free verdict was undecidable and an optional tier two exists. */
+  readonly meteredEligible?: boolean;
 }
 
 /**
@@ -57,6 +62,8 @@ export interface ExerciseSubmitInput {
   readonly contentRevision: number;
   readonly answer: string;
   readonly commandId: string;
+  /** Safe by default: tier two needs an explicit learner choice. */
+  readonly allowMetered?: boolean;
 }
 
 /**
@@ -78,8 +85,32 @@ export interface MeteredGradingResponse {
   readonly balance: MeteredGradingBalance;
 }
 
+/** The explanation shown when a metered grading capability is not available. */
+export interface MeteredGradingExplanation {
+  readonly kind: "explanation";
+  readonly title: string;
+  readonly whatItDoes: string;
+  readonly whyUnavailable: string;
+  readonly futureSupport: string;
+}
+
+/** A quote is read before an explicit paid choice, never after a charge. */
+export type MeteredGradingOffer =
+  | {
+      readonly kind: "available";
+      readonly costPowerUnits: string;
+      readonly availablePowerUnits: string;
+    }
+  | {
+      readonly kind: "unavailable";
+      readonly costPowerUnits: string;
+      readonly availablePowerUnits: string | null;
+      readonly explanation: MeteredGradingExplanation;
+    };
+
 export interface GradingPort {
   submitExercise(input: ExerciseSubmitInput): Promise<ExerciseAttemptResult>;
+  meteredGradingOffer(): Promise<MeteredGradingOffer>;
   coachingPacket?(input: {
     readonly locator: LessonRef;
     readonly exerciseId: string;
@@ -112,6 +143,20 @@ export function createMemoryGradingPort(): MemoryGradingPort {
           host: "memory",
           learnerAnswer: input.answer,
           occurredAt: new Date().toISOString(),
+        },
+      };
+    },
+    async meteredGradingOffer() {
+      return {
+        kind: "unavailable",
+        costPowerUnits: METERED_GRADING_COST_POWER_UNITS,
+        availablePowerUnits: null,
+        explanation: {
+          kind: "explanation",
+          title: "AI 语义批改暂不可用",
+          whatItDoes: "它会在确定性判题无法判断的开放题上提供一次额外的结构化评估。",
+          whyUnavailable: "当前只是内存测试端口，没有登录态、钱包或线上批改服务。",
+          futureSupport: "线上端会先显示费用和余额，再让学习者明确选择是否使用。",
         },
       };
     },

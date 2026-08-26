@@ -1,7 +1,14 @@
 import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
-import type { PaymentExplanation, SourceAccessExplanation } from "@pieai/university-core";
+import type {
+  MeteredGradingExplanation,
+  PaymentExplanation,
+  SourceAccessExplanation,
+} from "@pieai/university-core";
 
-export type CapabilityExplanationData = SourceAccessExplanation | PaymentExplanation;
+export type CapabilityExplanationData =
+  | SourceAccessExplanation
+  | PaymentExplanation
+  | MeteredGradingExplanation;
 
 /**
  * The common answer when a learner-facing capability is not available in one

@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
+import { METERED_GRADING_COST_POWER_UNITS } from "@pieai/university-core";
 import type {
   CoachingPacket,
   ExerciseAttemptResult,
   GradingPort,
   HostExerciseGrade,
+  MeteredGradingExplanation,
+  MeteredGradingOffer,
 } from "@pieai/university-core";
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { STALE_TOKEN_NOTICE, isStaleTokenFailure } from "../api/client.js";
+import { CapabilityExplanation } from "../capability/CapabilityExplanation.js";
 import type { LessonRef, LessonView } from "../view/lesson-view.js";
 
 /**
@@ -18,6 +22,20 @@ import type { LessonRef, LessonView } from "../view/lesson-view.js";
  * still refreshes immediately.
  */
 const HOST_GRADE_POLL_LIMIT_MS = 10 * 60 * 1000;
+
+const METERED_OFFER_READ_FAILURE: MeteredGradingOffer = {
+  kind: "unavailable",
+  costPowerUnits: METERED_GRADING_COST_POWER_UNITS,
+  availablePowerUnits: null,
+  explanation: {
+    kind: "explanation",
+    title: "AI 批改额度暂时读不到",
+    whatItDoes: "它会在确定性判题无法判断的开放题上提供一次额外的结构化评估。",
+    whyUnavailable:
+      "这次没有读到费用或钱包余额，所以不会发起可能扣费的请求；下面的免费提示仍然可用。",
+    futureSupport: "服务恢复后，重新提交这道题就会再次读取费用和余额。",
+  },
+};
 
 export function ExerciseBlock({
   locator,
@@ -52,6 +70,12 @@ export function ExerciseBlock({
   const [packetInfo, setPacketInfo] = useState<CoachingPacket | null>(null);
   const [expressionCopied, setExpressionCopied] = useState(false);
   const [hostGrade, setHostGrade] = useState<HostExerciseGrade | null>(exercise.hostGrade ?? null);
+  const [meteredOffer, setMeteredOffer] = useState<MeteredGradingOffer | null>(null);
+  const [meteredOfferLoading, setMeteredOfferLoading] = useState(false);
+  const [meteredChoice, setMeteredChoice] = useState<"free" | "paid" | null>(null);
+  const [meteredExplanation, setMeteredExplanation] = useState<MeteredGradingExplanation | null>(
+    null,
+  );
   /**
    * A passed exercise is read-only until the learner asks for it back. Locking
    * it forever was the wrong end of the trade: rehearsing an answer you already
@@ -78,7 +102,35 @@ export function ExerciseBlock({
     setAnswer(storedAnswer);
     setReopened(false);
     setResult(null);
+    setMeteredOffer(null);
+    setMeteredChoice(null);
   }, [exercise.id, exercise.contentRevision, storedAnswer]);
+
+  useEffect(() => {
+    if (result?.meteredEligible !== true || hostGrade?.host !== "tier-1") {
+      setMeteredOffer(null);
+      setMeteredOfferLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setMeteredOfferLoading(true);
+    void grading
+      .meteredGradingOffer()
+      .then((offer) => {
+        if (cancelled) return;
+        setMeteredOffer(offer);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setMeteredOffer(METERED_OFFER_READ_FAILURE);
+      })
+      .finally(() => {
+        if (!cancelled) setMeteredOfferLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [exercise.id, exercise.contentRevision, grading, hostGrade?.host, result?.meteredEligible]);
 
   useEffect(() => {
     if (!packetCopied) return;
@@ -163,12 +215,15 @@ export function ExerciseBlock({
     }
   }
 
-  async function submit() {
+  async function submit(allowMetered = false) {
     setPending(true);
     setError(null);
     setPacketCopied(false);
     setPacketCopyFailed(false);
     setPacketInfo(null);
+    setResult(null);
+    setMeteredOffer(null);
+    setMeteredChoice(allowMetered ? "paid" : null);
     try {
       const body: ExerciseAttemptResult = await grading.submitExercise({
         locator,
@@ -176,6 +231,7 @@ export function ExerciseBlock({
         contentRevision: exercise.contentRevision,
         answer,
         commandId: crypto.randomUUID(),
+        allowMetered,
       });
       setResult(body);
       if (body.hostGrade) setHostGrade(body.hostGrade);
@@ -215,6 +271,8 @@ export function ExerciseBlock({
           onChange={(event) => {
             setAnswer(event.target.value);
             setResult(null);
+            setMeteredOffer(null);
+            setMeteredChoice(null);
             setPacketCopied(false);
             setPacketCopyFailed(false);
           }}
@@ -346,6 +404,75 @@ export function ExerciseBlock({
         </div>
       ) : null}
 
+      {result?.meteredEligible ? (
+        <section className="metered-grading-choice" aria-label="AI 语义批改选择">
+          {meteredOfferLoading ? (
+            <GameCallout heading="正在读取 AI 批改费用与余额" tone="neutral" role="status">
+              先把这次大约要花多少、你的钱包还剩多少读清楚；读取完成前不会发起计量请求。
+            </GameCallout>
+          ) : meteredOffer?.kind === "available" ? (
+            <GameCallout heading="AI 语义批改会使用额度" tone="warning" role="region">
+              <div className="metered-grading-choice__copy">
+                <p>
+                  这次约消耗 <strong>{meteredOffer.costPowerUnits} power units</strong>
+                  ；你的钱包还剩 <strong>{meteredOffer.availablePowerUnits} power units</strong>。
+                </p>
+                <p>只有点“使用 AI 批改”才会扣除额度；下面的 tier‑1 免费提示不花额度。</p>
+              </div>
+              {meteredChoice === "free" ? (
+                <p className="metered-grading-choice__selected" role="status">
+                  已选择免费提示（不花额度）。
+                </p>
+              ) : null}
+              <div className="metered-grading-choice__actions">
+                <GameButton variant="primary" onClick={() => void submit(true)} disabled={pending}>
+                  使用 AI 批改（消耗 {meteredOffer.costPowerUnits}）
+                </GameButton>
+                <GameButton
+                  variant="ghost"
+                  onClick={() => setMeteredChoice("free")}
+                  disabled={pending}
+                >
+                  只看免费提示（不花额度）
+                </GameButton>
+              </div>
+            </GameCallout>
+          ) : meteredOffer ? (
+            <GameCallout heading={meteredOffer.explanation.title} tone="neutral" role="status">
+              <div className="metered-grading-choice__copy">
+                <p>
+                  本次 AI 批改约消耗 <strong>{meteredOffer.costPowerUnits} power units</strong>。
+                  {meteredOffer.availablePowerUnits !== null
+                    ? ` 你的钱包还剩 ${meteredOffer.availablePowerUnits} power units。`
+                    : " 钱包余额暂时读不到。"}
+                </p>
+                <p>{meteredOffer.explanation.whyUnavailable}</p>
+              </div>
+              {meteredChoice === "free" ? (
+                <p className="metered-grading-choice__selected" role="status">
+                  已选择免费提示（不花额度）。
+                </p>
+              ) : null}
+              <div className="metered-grading-choice__actions">
+                <GameButton
+                  variant="secondary"
+                  onClick={() => setMeteredExplanation(meteredOffer.explanation)}
+                >
+                  查看 AI 批改说明
+                </GameButton>
+                <GameButton
+                  variant="ghost"
+                  onClick={() => setMeteredChoice("free")}
+                  disabled={pending}
+                >
+                  只看免费提示（不花额度）
+                </GameButton>
+              </div>
+            </GameCallout>
+          ) : null}
+        </section>
+      ) : null}
+
       {result && !hostGrade?.passed && grading.coachingPacket ? (
         <div className="coaching-packet" role="region" aria-label="答疑包与粘贴步骤">
           <p className="coaching-packet__status">
@@ -397,6 +524,13 @@ export function ExerciseBlock({
         <p className="inline-error" role="alert">
           {error}
         </p>
+      ) : null}
+
+      {meteredExplanation ? (
+        <CapabilityExplanation
+          explanation={meteredExplanation}
+          onClose={() => setMeteredExplanation(null)}
+        />
       ) : null}
     </GamePanel>
   );

@@ -61,6 +61,7 @@ export {
   type VocabularyStageResult,
 } from "./reader.js";
 export {
+  METERED_GRADING_COST_POWER_UNITS,
   createMemoryGradingPort,
   type CoachingPacket,
   type ExerciseAttemptResult,
@@ -68,6 +69,8 @@ export {
   type GradingPort,
   type HostExerciseGrade,
   type MeteredGradingBalance,
+  type MeteredGradingExplanation,
+  type MeteredGradingOffer,
   type MeteredGradingResponse,
   type MemoryGradingPort,
 } from "./grading.js";

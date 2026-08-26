@@ -42,6 +42,38 @@
   color: rgb(255 245 232 / 72%);
   background: rgb(20 14 10 / 45%);
 }
+
+.metered-grading-choice {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.metered-grading-choice__copy {
+  display: grid;
+  gap: 8px;
+}
+
+.metered-grading-choice__copy p,
+.metered-grading-choice__selected {
+  margin: 0;
+}
+
+.metered-grading-choice__copy strong {
+  color: var(--game-ui-text, #fff5e8);
+}
+
+.metered-grading-choice__selected {
+  color: var(--game-ui-accent-bright);
+  font-weight: 700;
+}
+
+.metered-grading-choice__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
 .lesson-reader {
   min-width: 0;
   margin-top: 0;

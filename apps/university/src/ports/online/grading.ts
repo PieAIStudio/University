@@ -6,13 +6,17 @@
  * learner already read, never the answer.
  */
 import {
+  METERED_GRADING_COST_POWER_UNITS,
   gradeDeterministically,
   type AnswerKey,
   type ExerciseAttemptResult,
   type GradingPort,
   type LessonRef,
+  type MeteredGradingExplanation,
+  type MeteredGradingOffer,
   type MeteredGradingResponse,
   type ProgressPort,
+  type WalletBalance,
 } from "@pieai/university-core";
 import { readJson } from "@pieai/university-ui/api/client.js";
 
@@ -38,6 +42,7 @@ function lessonAt(locator: LessonRef): Lesson | undefined {
 export function createOnlineGradingPort(options: {
   readonly progress?: ProgressPort;
   readonly readAccessToken?: () => Promise<string | null>;
+  readonly readBalance?: () => Promise<WalletBalance | null>;
   readonly gradingUrl?: string;
   readonly fetchImpl?: typeof fetch;
 }): GradingPort {
@@ -49,6 +54,14 @@ export function createOnlineGradingPort(options: {
     options.gradingUrl?.trim() || import.meta.env.VITE_UNIVERSITY_GRADING_URL?.trim();
 
   return {
+    async meteredGradingOffer() {
+      return readMeteredGradingOffer({
+        gradingUrl,
+        readAccessToken,
+        readBalance: options.readBalance,
+      });
+    },
+
     async submitExercise(input) {
       const lesson = lessonAt(input.locator);
       const exercise = lesson?.exercises.find((item) => item.id === input.exerciseId);
@@ -80,7 +93,7 @@ export function createOnlineGradingPort(options: {
         return result;
       }
 
-      if (verdict.outcome === "undecided" && exercise?.prompt) {
+      if (verdict.outcome === "undecided" && exercise?.prompt && input.allowMetered === true) {
         try {
           const result = await submitToMeteredService({
             fetchImpl,
@@ -88,6 +101,7 @@ export function createOnlineGradingPort(options: {
             input,
             prompt: exercise.prompt,
             readAccessToken,
+            readBalance: options.readBalance,
             attemptCount: count,
           });
           recordAttempt(progress, input, result);
@@ -121,6 +135,7 @@ export function createOnlineGradingPort(options: {
           learnerAnswer: input.answer,
           occurredAt,
         },
+        meteredEligible: verdict.outcome === "undecided" && Boolean(exercise?.prompt),
       };
       recordAttempt(progress, input, result);
       return result;
@@ -152,6 +167,7 @@ async function submitToMeteredService(options: {
   readonly input: Parameters<GradingPort["submitExercise"]>[0];
   readonly prompt: string;
   readonly readAccessToken: () => Promise<string | null>;
+  readonly readBalance: (() => Promise<WalletBalance | null>) | undefined;
   readonly attemptCount: number;
 }): Promise<ExerciseAttemptResult> {
   const accessToken = await options.readAccessToken();
@@ -160,6 +176,18 @@ async function submitToMeteredService(options: {
   }
   if (!options.gradingUrl) {
     throw new Error("AI 语义批改服务尚未配置。确定性判题仍然免费；请联系产品管理员完成服务配置。");
+  }
+  if (!options.readBalance) {
+    throw new Error("AI 批改额度暂时读不到。确定性判题仍然免费；请稍后再试。");
+  }
+  const balance = await options.readBalance();
+  if (
+    !balance ||
+    !hasEnoughPowerUnits(balance.availablePowerUnits, METERED_GRADING_COST_POWER_UNITS)
+  ) {
+    throw new Error(
+      `AI 批改余额不足：还剩 ${balance?.availablePowerUnits ?? "未知"} power units，这次需要 ${METERED_GRADING_COST_POWER_UNITS}。`,
+    );
   }
 
   try {
@@ -197,6 +225,100 @@ async function submitToMeteredService(options: {
       throw error;
     }
     throw new Error("AI 语义批改服务暂时不可用，请稍后重试。");
+  }
+}
+
+async function readMeteredGradingOffer(options: {
+  readonly gradingUrl: string | undefined;
+  readonly readAccessToken: () => Promise<string | null>;
+  readonly readBalance: (() => Promise<WalletBalance | null>) | undefined;
+}): Promise<MeteredGradingOffer> {
+  let accessToken: string | null;
+  try {
+    accessToken = await options.readAccessToken();
+  } catch {
+    accessToken = null;
+  }
+  if (!accessToken) {
+    return unavailableOffer({
+      title: "AI 语义批改可以选择，但需要登录",
+      whyUnavailable:
+        "当前没有登录账号，服务端无法把这次计量批改绑定到你的钱包；免费提示仍然可用。",
+      futureSupport: "登录后，这里会读取同一个账号的 AI 批改余额，再由你决定是否使用。",
+    });
+  }
+  if (!options.gradingUrl) {
+    return unavailableOffer({
+      title: "AI 语义批改服务还没接通",
+      whyUnavailable:
+        "当前交付环境还没有配置线上批改服务；这不是你的答案有问题，免费提示仍然可用。",
+      futureSupport: "服务部署后，这里会先展示费用和余额，再让你明确选择是否使用。",
+    });
+  }
+  if (!options.readBalance) {
+    return unavailableOffer({
+      title: "AI 批改额度暂时读不到",
+      whyUnavailable:
+        "当前没有可用的钱包读取通道，所以页面不会猜一个余额，也不会直接发起可能扣费的请求。",
+      futureSupport: "登录并连接钱包后，这里会显示服务端返回的可用余额。",
+    });
+  }
+
+  let balance: WalletBalance | null;
+  try {
+    balance = await options.readBalance();
+  } catch {
+    balance = null;
+  }
+  if (!balance) {
+    return unavailableOffer({
+      title: "AI 批改额度暂时读不到",
+      whyUnavailable:
+        "当前没有读到服务端钱包余额，所以页面不会把未知余额当成可用，也不会直接发起可能扣费的请求。",
+      futureSupport: "钱包服务恢复后，这里会先显示本次费用和你的可用余额。",
+    });
+  }
+  if (!hasEnoughPowerUnits(balance.availablePowerUnits, METERED_GRADING_COST_POWER_UNITS)) {
+    return unavailableOffer({
+      title: "这次 AI 批改的额度不够",
+      availablePowerUnits: balance.availablePowerUnits,
+      whyUnavailable: `你的钱包还剩 ${balance.availablePowerUnits} power units，这次约需要 ${METERED_GRADING_COST_POWER_UNITS}；不充值也不影响你查看下面的免费提示。`,
+      futureSupport: "充值后重新打开这道题，页面会再次读取余额；免费提示始终可用。",
+    });
+  }
+  return {
+    kind: "available",
+    costPowerUnits: METERED_GRADING_COST_POWER_UNITS,
+    availablePowerUnits: balance.availablePowerUnits,
+  };
+}
+
+function unavailableOffer(options: {
+  readonly title: string;
+  readonly whyUnavailable: string;
+  readonly futureSupport: string;
+  readonly availablePowerUnits?: string;
+}): MeteredGradingOffer {
+  const explanation: MeteredGradingExplanation = {
+    kind: "explanation",
+    title: options.title,
+    whatItDoes: `它会在确定性判题无法判断的开放题上提供一次结构化 AI 评估，本次约消耗 ${METERED_GRADING_COST_POWER_UNITS} power units。`,
+    whyUnavailable: options.whyUnavailable,
+    futureSupport: options.futureSupport,
+  };
+  return {
+    kind: "unavailable",
+    costPowerUnits: METERED_GRADING_COST_POWER_UNITS,
+    availablePowerUnits: options.availablePowerUnits ?? null,
+    explanation,
+  };
+}
+
+function hasEnoughPowerUnits(available: string, required: string): boolean {
+  try {
+    return BigInt(available) >= BigInt(required);
+  } catch {
+    return false;
   }
 }
 
