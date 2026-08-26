@@ -1,6 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -31,6 +30,7 @@ import {
   readLatestKnowledgeNote,
 } from "../knowledge/repository.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
+import { canonicalJson, readJson, sha256 } from "../storage/serialization.js";
 import {
   getCoursePaths,
   getKnowledgeNotePaths,
@@ -178,24 +178,6 @@ function gitText(sourceRoot: string, args: readonly string[]): string {
   });
 }
 
-function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map((child) => (child === undefined ? "null" : canonicalJson(child))).join(",")}]`;
-  }
-  if (value !== null && typeof value === "object") {
-    return `{${Object.entries(value as Record<string, unknown>)
-      .filter(([, child]) => child !== undefined)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([key, child]) => `${JSON.stringify(key)}:${canonicalJson(child)}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value) ?? "undefined";
-}
-
-function sha256(value: string): string {
-  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
-}
-
 function uniqueSorted(values: readonly string[]): readonly string[] {
   return [...new Set(values)].sort((left, right) => left.localeCompare(right));
 }
@@ -263,10 +245,6 @@ export function inspectSourceStatus(studiesRoot: string, studyId: string): Sourc
     localCommitSufficient: true,
     dirtyChangesIncluded: false,
   };
-}
-
-function readJson(path: string): unknown {
-  return JSON.parse(readFileSync(path, "utf8")) as unknown;
 }
 
 function targetIdentity(input: AuditStudyFreshnessInput): TargetIdentity {

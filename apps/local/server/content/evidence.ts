@@ -1,5 +1,4 @@
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
 import {
@@ -11,6 +10,7 @@ import {
 } from "@pieai/university-core/domain/schemas.js";
 import { getSnapshotPaths, getUaAnalysisPaths } from "../studies/paths.js";
 import { openStudyRepository } from "../studies/snapshots.js";
+import { canonicalJson, readJson, sha256 } from "../storage/serialization.js";
 
 interface GraphNode {
   readonly id?: string;
@@ -53,24 +53,6 @@ export interface EvidenceSnippet {
   readonly code: string;
   readonly truncatedBefore?: boolean;
   readonly truncatedAfter?: boolean;
-}
-
-function readJson(path: string): unknown {
-  return JSON.parse(readFileSync(path, "utf8")) as unknown;
-}
-
-function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map((child) => (child === undefined ? "null" : canonicalJson(child))).join(",")}]`;
-  }
-  if (value !== null && typeof value === "object") {
-    return `{${Object.entries(value as Record<string, unknown>)
-      .filter(([, child]) => child !== undefined)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([key, child]) => `${JSON.stringify(key)}:${canonicalJson(child)}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value) ?? "undefined";
 }
 
 function gitBuffer(repository: string, args: readonly string[]): Buffer {
@@ -310,7 +292,7 @@ export function readEvidenceSnippet(
 
 function readVerifiedGraphNodes(path: string, expectedHash: string): Map<string, GraphNode> {
   const bytes = readFileSync(path);
-  const actualHash = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+  const actualHash = sha256(bytes);
   if (actualHash !== expectedHash) {
     throw new Error("UA knowledge graph no longer matches its immutable graphHash");
   }
@@ -437,7 +419,9 @@ export function evaluateEvidenceFreshness(
         target.graphHash,
       );
       for (const nodeId of evidence.nodeIds) {
-        if (canonicalJson(oldNodes.get(nodeId)) !== canonicalJson(targetNodes.get(nodeId))) {
+        const oldNode = oldNodes.get(nodeId);
+        const targetNode = targetNodes.get(nodeId);
+        if (targetNode === undefined || canonicalJson(oldNode) !== canonicalJson(targetNode)) {
           reasons.push(`UA node changed or disappeared: ${nodeId}`);
         }
       }

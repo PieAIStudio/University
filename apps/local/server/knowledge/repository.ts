@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import {
   closeSync,
   existsSync,
@@ -24,6 +24,7 @@ import {
 } from "@pieai/university-core/domain/schemas.js";
 import { validateEvidence } from "../content/evidence.js";
 import { writeJsonAtomically, writeTextAtomically } from "../storage/atomic-json.js";
+import { canonicalJson, readJson, sha256 } from "../storage/serialization.js";
 import { getKnowledgeNotePaths, getStudyPaths } from "../studies/paths.js";
 import { readStudy } from "../studies/repository.js";
 
@@ -82,28 +83,6 @@ interface MarkKnowledgeNoteStaleInput {
 interface MarkKnowledgeNoteStaleResult {
   readonly note: KnowledgeNote;
   readonly transitioned: boolean;
-}
-
-function sha256(value: string): string {
-  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
-}
-
-function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map((child) => (child === undefined ? "null" : canonicalJson(child))).join(",")}]`;
-  }
-  if (value !== null && typeof value === "object") {
-    return `{${Object.entries(value as Record<string, unknown>)
-      .filter(([, child]) => child !== undefined)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([key, child]) => `${JSON.stringify(key)}:${canonicalJson(child)}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
-
-function readJson(path: string): unknown {
-  return JSON.parse(readFileSync(path, "utf8")) as unknown;
 }
 
 function syncDirectory(directory: string): void {

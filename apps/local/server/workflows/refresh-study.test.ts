@@ -684,4 +684,41 @@ describe("study refresh workflow", () => {
       graphHash: targetAnalysis.graphHash,
     });
   });
+
+  it("marks UA-backed evidence stale when the target graph drops its bound node", () => {
+    const { studiesRoot, initialSnapshot } = setup();
+    const oldAnalysis = createReadyUaAnalysis(studiesRoot, initialSnapshot, "ua-old-missing", {
+      id: "file:unchanged.ts",
+      type: "file",
+      filePath: "unchanged.ts",
+    });
+    createKnowledgeNote(studiesRoot, {
+      id: "ua-node-disappeared",
+      evidence: [
+        {
+          ...evidence(initialSnapshot, "unchanged.ts"),
+          analysisId: oldAnalysis.id,
+          graphHash: oldAnalysis.graphHash,
+          nodeIds: ["file:unchanged.ts"],
+        },
+      ],
+    });
+    const targetAnalysis = createReadyUaAnalysis(studiesRoot, initialSnapshot, "ua-new-missing", {
+      id: "file:replacement.ts",
+      type: "file",
+      filePath: "replacement.ts",
+    });
+
+    const compared = auditStudyFreshness({
+      studiesRoot,
+      studyId: "sample",
+      targetSnapshotId: initialSnapshot.id,
+      targetAnalysisId: targetAnalysis.id,
+    });
+
+    expect(compared.noteReports[0]).toMatchObject({
+      status: "stale",
+      reasons: ["UA node changed or disappeared: file:unchanged.ts"],
+    });
+  });
 });

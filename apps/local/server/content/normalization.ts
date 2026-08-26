@@ -1,11 +1,10 @@
-import { createHash } from "node:crypto";
-
 import {
   CardContentSchema,
   ExerciseSchema,
   type CardContent,
   type Exercise,
 } from "@pieai/university-core/domain/schemas.js";
+import { canonicalJson, sha256 } from "../storage/serialization.js";
 
 const EMPTY_SHA256 = `sha256:${"0".repeat(64)}`;
 
@@ -14,24 +13,6 @@ export type ExerciseWithoutHash = Exercise extends infer Item
     ? Omit<Item, "contentHash">
     : never
   : never;
-
-function sha256(value: string): string {
-  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
-}
-
-function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map((child) => (child === undefined ? "null" : canonicalJson(child))).join(",")}]`;
-  }
-  if (value !== null && typeof value === "object") {
-    return `{${Object.entries(value as Record<string, unknown>)
-      .filter(([, child]) => child !== undefined)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([key, child]) => `${JSON.stringify(key)}:${canonicalJson(child)}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
 
 export function normalizeCard(candidate: Omit<CardContent, "contentHash">): CardContent {
   const parsed = CardContentSchema.parse({ ...candidate, contentHash: EMPTY_SHA256 });

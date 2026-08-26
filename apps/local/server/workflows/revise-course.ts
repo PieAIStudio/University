@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -39,6 +38,7 @@ import { matchesAssetMime, sniffAssetMime } from "../content/asset-bytes.js";
 import { validateEvidence } from "../content/evidence.js";
 import { normalizeCard, normalizeExercise } from "../content/normalization.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
+import { canonicalJson, readJson, sha256 } from "../storage/serialization.js";
 import {
   getCoursePaths,
   getLessonPaths,
@@ -280,28 +280,6 @@ export class CourseRevisionPartialError extends Error {
     this.name = "CourseRevisionPartialError";
     this.receipt = receipt;
   }
-}
-
-function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map((child) => (child === undefined ? "null" : canonicalJson(child))).join(",")}]`;
-  }
-  if (value !== null && typeof value === "object") {
-    return `{${Object.entries(value as Record<string, unknown>)
-      .filter(([, child]) => child !== undefined)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([key, child]) => `${JSON.stringify(key)}:${canonicalJson(child)}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value) ?? "undefined";
-}
-
-function sha256(value: string | Buffer): string {
-  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
-}
-
-function readJson(path: string): unknown {
-  return JSON.parse(readFileSync(path, "utf8")) as unknown;
 }
 
 function assertUniqueIds(items: readonly { readonly id: string }[], label: string): void {
