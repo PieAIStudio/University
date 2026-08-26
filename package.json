@@ -5,7 +5,7 @@
   "description": "University — one browser app in two modes, and the authoring server behind one of them.",
   "type": "module",
   "scripts": {
-    "boundaries": "node apps/local/scripts/check-module-boundaries.mjs && node scripts/check-kit-portability.mjs && node scripts/check-contrast.mjs && node scripts/check-shared-styles.mjs",
+    "boundaries": "node apps/local/scripts/check-module-boundaries.mjs && node scripts/check-kit-portability.mjs && node scripts/check-contrast.mjs && node scripts/check-raw-colours.mjs && node scripts/check-shared-styles.mjs",
     "build": "pnpm -r build",
     "bundle": "node scripts/check-authoring-excluded.mjs",
     "content": "pnpm --filter @pieai/university-app content",
@@ -23,7 +23,7 @@
     "prepare": "lefthook install",
     "pro-gov": "pro-gov",
     "start": "node scripts/start.mjs",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test && node scripts/check-raw-colours.mjs --self-test",
     "typecheck": "pnpm -r typecheck",
     "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm check:canvas && pnpm build && pnpm check:shelf && pnpm bundle && pnpm docs:check"
   },

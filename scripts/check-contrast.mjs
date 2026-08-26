@@ -41,17 +41,18 @@ for (const target of TARGETS) {
   try {
     output = execFileSync("node", [kitBin, join(ROOT, target)], {
       encoding: "utf8",
-      // Capture the child's stderr too. Its raw-colour rule is not adopted
-      // here — this repository has hundreds of literals predating the kit —
-      // and letting that summary through would bury the finding that matters.
+      // Capture the child's stderr too. Its broad raw-colour rule is not
+      // adopted here — this repository has hundreds of literals predating the
+      // kit; the scoped R5 ratchet lives in check-raw-colours.mjs — and letting
+      // that summary through would bury the finding that matters.
       stdio: ["ignore", "pipe", "pipe"],
     });
   } catch (error) {
     output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
   }
-  // Two of that CLI's three rules are adopted here. The raw-colour rule is not
-  // yet — this repository has hundreds of literals predating the kit, and a
-  // gate that is red for a reason nobody is acting on trains people to skip it.
+  // Two of that CLI's three rules are adopted here. Its broad raw-colour rule
+  // remains separate: the R5 nine-file ratchet is explicit about every fixed
+  // material occurrence and every pending migration.
   const found = output
     .split("\n")
     .filter((line) => line.includes("below AA") || line.includes("is not a token"));
