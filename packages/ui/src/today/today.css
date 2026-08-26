@@ -15,6 +15,15 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+/*
+  The page layout puts the due-count metric in column 2. The aside is a
+  one-column layout, so leaving that placement here would create an implicit
+  second track and squeeze the hero into the leftover sliver.
+*/
+.app-shell__aside .today-metric {
+  grid-column: 1;
+}
+
 .app-shell__aside .today-hero h2 {
   max-width: none;
   font-size: clamp(1.4rem, 2.4vw, 2rem);
