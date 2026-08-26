@@ -52,6 +52,7 @@ import {
 import { join, resolve } from "node:path";
 
 import { bakeLessonEvidence, hasAnyStudyRepository } from "./bake-evidence.mjs";
+import { toPublicPackage } from "./public-course.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const contentRoot = join(projectRoot, "content");
@@ -131,16 +132,18 @@ for (const studyId of readdirSync(upstream).sort()) {
     const raw = readFileSync(join(studyDir, entry.file));
     const pkg = JSON.parse(raw.toString("utf8"));
     const course = pkg.course;
+    const deliveryUnits = [];
 
     // Assets leave the JSON here. Each becomes its own file named by its hash,
     // so two lessons quoting the same screenshot store it once and a browser
     // can cache it forever.
     for (const unit of course.units) {
+      const deliveryLessons = [];
       for (const lesson of unit.lessons) {
         // Delivery packages are frozen at one published revision. Keep the
         // revision on the package itself so shared progress code receives the
         // caller's current version instead of inventing one in core.
-        lesson.contentRevision = 1;
+        const deliveryExercises = [];
         // The answer never leaves the build.
         //
         // `expectedAnswer` was being served inside the lesson JSON, so every
@@ -155,9 +158,10 @@ for (const studyId of readdirSync(upstream).sort()) {
         // none of them. Showing one learner the answer to the one question
         // they just got wrong is a *server* read, and it waits for the server.
         for (const exercise of lesson.exercises ?? []) {
+          let answerKey;
           if (typeof exercise.expectedAnswer === "string") {
             const key = compileAnswerKey(exercise.expectedAnswer);
-            exercise.answerKey = key;
+            answerKey = key;
             keysCompiled += 1;
             // A key with nothing left to compare cannot decide anything, and
             // before this check it decided everything: the empty fingerprint
@@ -168,8 +172,10 @@ for (const studyId of readdirSync(upstream).sort()) {
               unusableKeys.push(`${studyId}/${course.id}/${lesson.id}`);
             }
           }
-          delete exercise.expectedAnswer;
-          delete exercise.rubric;
+          deliveryExercises.push({
+            ...exercise,
+            ...(answerKey ? { answerKey } : {}),
+          });
         }
         snippetEvidence += (lesson.evidence ?? []).length;
         const baked = bakeLessonEvidence({
@@ -185,8 +191,12 @@ for (const studyId of readdirSync(upstream).sort()) {
         snippetBytes += baked.bytes;
         snippetFiles += baked.files;
 
-        lesson.assets = (lesson.assets ?? []).map((asset) => {
-          if (!asset.dataBase64) return asset;
+        const deliveryAssets = (lesson.assets ?? []).map((asset) => {
+          if (!asset.dataBase64) {
+            throw new Error(
+              `Recovery asset ${asset.metadata?.id ?? "unknown"} is missing dataBase64`,
+            );
+          }
           inlineBytes += asset.dataBase64.length;
           const { bytes, type } = decodeAsset(asset.dataBase64);
           // The package stores bare base64 with no `data:` prefix, so the mime
@@ -219,10 +229,18 @@ for (const studyId of readdirSync(upstream).sort()) {
             bytes: bytes.length,
           };
         });
+        deliveryLessons.push({
+          ...lesson,
+          contentRevision: 1,
+          assets: deliveryAssets,
+          exercises: deliveryExercises,
+        });
       }
+      deliveryUnits.push({ ...unit, lessons: deliveryLessons });
     }
 
-    const body = Buffer.from(`${JSON.stringify(pkg)}\n`, "utf8");
+    const publicPackage = toPublicPackage({ course: { ...course, units: deliveryUnits } });
+    const body = Buffer.from(`${JSON.stringify(publicPackage)}\n`, "utf8");
     writeFileSync(join(contentRoot, studyId, `${course.id}.json`), body);
     shelfCourses.push({
       id: course.id,

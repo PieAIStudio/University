@@ -11,9 +11,9 @@ import { describe, expect, it } from "vitest";
  * were served, in plain text, to a learner who had attempted none of them.
  *
  * So the rule is checked here rather than remembered. This reads the packages
- * the delivery build actually imports, and it fails on the *shape* — any key
- * that looks like an answer — rather than on the three names known today,
- * because the last regression arrived under a name nobody had listed.
+ * the delivery build actually imports, and it fails on both the *shape* and
+ * the *values*: an author field or an author-machine route is a leak even when
+ * somebody gives it a new name.
  */
 const PACKAGES = import.meta.glob<unknown>("../../content/*/*.json", {
   eager: true,
@@ -31,16 +31,41 @@ const PACKAGES = import.meta.glob<unknown>("../../content/*/*.json", {
 const ANSWER_KEY_PATTERN = /answer|solution|rubric/i;
 /** The compiled fingerprint. It is not the answer and cannot be read back. */
 const ALLOWED = new Set(["answerKey"]);
+const AUTHOR_ONLY_KEYS = new Set([
+  "schemaVersion",
+  "packageKind",
+  "evidenceMode",
+  "droppedUaBindingCount",
+  "currency",
+  "captureRecipe",
+  "dataBase64",
+  "snapshotId",
+  "nodeIds",
+  "path",
+  "sha256",
+  "bytes",
+  "source",
+  "sourceRoot",
+]);
+const AUTHOR_ONLY_VALUE_PATTERNS = [/^file-manager:/i];
 
-function offendingKeys(value: unknown, path: string, found: string[]): void {
+function offendingFields(value: unknown, path: string, found: string[]): void {
+  if (typeof value === "string") {
+    for (const pattern of AUTHOR_ONLY_VALUE_PATTERNS) {
+      if (pattern.test(value)) found.push(`${path}=${JSON.stringify(value)}`);
+    }
+    return;
+  }
   if (Array.isArray(value)) {
-    value.forEach((item, index) => offendingKeys(item, `${path}[${index}]`, found));
+    value.forEach((item, index) => offendingFields(item, `${path}[${index}]`, found));
     return;
   }
   if (value === null || typeof value !== "object") return;
   for (const [key, child] of Object.entries(value)) {
-    if (!ALLOWED.has(key) && ANSWER_KEY_PATTERN.test(key)) found.push(`${path}.${key}`);
-    offendingKeys(child, `${path}.${key}`, found);
+    if (!ALLOWED.has(key) && (ANSWER_KEY_PATTERN.test(key) || AUTHOR_ONLY_KEYS.has(key))) {
+      found.push(`${path}.${key}`);
+    }
+    offendingFields(child, `${path}.${key}`, found);
   }
 }
 
@@ -49,10 +74,10 @@ describe("the packages the delivery build ships", () => {
     expect(Object.keys(PACKAGES).length).toBeGreaterThan(0);
   });
 
-  it("carries no reference answer under any name", () => {
+  it("carries no reference answer, author fields, or author-machine route values", () => {
     const found: string[] = [];
     for (const [path, pkg] of Object.entries(PACKAGES)) {
-      offendingKeys(pkg, path.replace("../../content/", ""), found);
+      offendingFields(pkg, path.replace("../../content/", ""), found);
     }
     expect(found.slice(0, 12)).toEqual([]);
   });
