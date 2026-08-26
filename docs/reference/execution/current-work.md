@@ -347,6 +347,27 @@ the list below contains the remaining implementation and authority boundaries.
    `scratchpad/r5-report.md`; `packages/ui/src/entry/style-sample.css` is out
    of scope, because each skin there is a closed world that deliberately does
    not follow the theme.
+
+   **And the remaining 213 are not engineering work.** Attempted 2026-08-26 and
+   stopped as a verified no-op: of the 205 that the survey called class A —
+   "a purpose the existing vocabulary can express" — **not one is byte-equal to
+   the kit token that expresses it**, normalised on RGB and alpha. The
+   classification was semantic, not numeric. This repository's stylesheet was
+   written against its own warm palette and the kit later shipped a different
+   warm palette, so pointing a rule at the kit's token changes the colour that
+   renders. That is a design change wearing a refactor's clothes, and it is
+   the same trap in the small that the whole programme avoided in the large.
+
+   So what is left is a decision, not a migration: for each of the ten drift
+   groups in `r5-report.md §3.2`, either the application adopts the kit's
+   value (visible colour change, needs somebody to look at it) or the kit
+   publishes a paired token at the application's value (brand-kit-first, so it
+   goes upstream rather than forking a palette here). The eight class-B roles
+   the kit has no name for — scrollbar thumb/track, idle status surface, prose
+   code ink and surface — are already written up as upstream proposals in
+   `r5-report.md §4`, with dark values, suggested light values and a reason
+   each. **Nobody should touch the 213 until that choice is made**, and the
+   ratchet holds the line meanwhile.
 5. ~~**A persisted record of a wrong answer.**~~ **Done, and the premise was
    already wrong.** Failed attempts had been persisted and cloud-merged all
    along — `ExerciseAttemptRecord` carries the answer, the score and the
@@ -438,7 +459,7 @@ argument:
 | R2 | `packages/world/src`, 47 direct children into directories | **done** — 47 → 10 |
 | R3 | Shared components' CSS back beside the components | **done** — 8 families, 830 lines |
 | R4 | Split `App.tsx` | **done** — 1,384 → 757, six files |
-| R5 | 359 colour literals into tokens | 117 dead fallbacks gone, ratchet in place; **213 left** |
+| R5 | 359 colour literals into tokens | fallbacks gone, ratchet in place; the **213 left are a colour decision, not a refactor** |
 
 R4 is last because the first four are its safety net, not because it matters
 least: it is the highest-churn file in the repository and the one where
