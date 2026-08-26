@@ -37,6 +37,7 @@ import {
 } from "../content/repository.js";
 import { matchesAssetMime, sniffAssetMime } from "../content/asset-bytes.js";
 import { validateEvidence } from "../content/evidence.js";
+import { normalizeCard, normalizeExercise } from "../content/normalization.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
 import {
   getCoursePaths,
@@ -46,7 +47,6 @@ import {
 } from "../studies/paths.js";
 import { auditStudyFreshness, inspectSourceStatus } from "./refresh-study.js";
 
-const EMPTY_SHA256 = `sha256:${"0".repeat(64)}`;
 const MAX_LESSON_CONTENT_BYTES = 512 * 1024;
 
 /**
@@ -144,12 +144,6 @@ type ExerciseRevisionProposal = z.infer<typeof ExerciseRevisionProposalSchema>;
 type LessonAsset = z.infer<typeof LessonAssetSchema>;
 type LessonAssetFileProposal = z.infer<typeof LessonAssetFileProposalSchema>;
 type OperationReceipt = z.infer<typeof OperationReceiptSchema>;
-type ExerciseWithoutHash = Exercise extends infer Item
-  ? Item extends { contentHash: string }
-    ? Omit<Item, "contentHash">
-    : never
-  : never;
-
 export interface TargetIdentity {
   readonly snapshotId: string;
   readonly sourceCommit: string;
@@ -497,18 +491,6 @@ export function validateTargetEvidence(
       }
     }
   }
-}
-
-function normalizeCard(candidate: Omit<CardContent, "contentHash">): CardContent {
-  const parsed = CardContentSchema.parse({ ...candidate, contentHash: EMPTY_SHA256 });
-  const { contentHash: _contentHash, ...content } = parsed;
-  return CardContentSchema.parse({ ...content, contentHash: sha256(canonicalJson(content)) });
-}
-
-function normalizeExercise(candidate: ExerciseWithoutHash): Exercise {
-  const parsed = ExerciseSchema.parse({ ...candidate, contentHash: EMPTY_SHA256 });
-  const { contentHash: _contentHash, ...content } = parsed;
-  return ExerciseSchema.parse({ ...content, contentHash: sha256(canonicalJson(content)) });
 }
 
 /** Where an item lives, for the case where there is no stored item to copy it from. */

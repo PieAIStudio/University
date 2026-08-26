@@ -36,8 +36,11 @@ import { writeJsonAtomically, writeTextAtomically } from "../storage/atomic-json
 import { getCoursePaths, getLessonPaths, getStudyPaths, getUnitPaths } from "../studies/paths.js";
 import { readStudy } from "../studies/repository.js";
 import { validateEvidence } from "./evidence.js";
-
-const EMPTY_SHA256 = `sha256:${"0".repeat(64)}`;
+import {
+  normalizeCard,
+  normalizeExercise,
+  type ExerciseWithoutHash,
+} from "./normalization.js";
 
 const LatestRevisionPointerSchema = z
   .object({
@@ -48,12 +51,6 @@ const LatestRevisionPointerSchema = z
   .strict();
 
 type LatestRevisionPointer = z.infer<typeof LatestRevisionPointerSchema>;
-
-type ExerciseWithoutHash = Exercise extends infer Item
-  ? Item extends { contentHash: string }
-    ? Omit<Item, "contentHash">
-    : never
-  : never;
 
 interface WriteLessonRevisionInput {
   readonly manifest: Omit<z.input<typeof LessonManifestSchema>, "contentHash">;
@@ -822,18 +819,6 @@ export function readLatestLesson(
   assertLessonStructure(unit, manifest, content);
   if (manifest.contentHash !== sha256(content)) throw new Error("Lesson content hash mismatch");
   return { manifest, content };
-}
-
-function normalizeCard(candidate: Omit<CardContent, "contentHash">): CardContent {
-  const parsed = CardContentSchema.parse({ ...candidate, contentHash: EMPTY_SHA256 });
-  const { contentHash: _ignored, ...content } = parsed;
-  return CardContentSchema.parse({ ...content, contentHash: sha256(canonicalJson(content)) });
-}
-
-function normalizeExercise(candidate: ExerciseWithoutHash): Exercise {
-  const parsed = ExerciseSchema.parse({ ...candidate, contentHash: EMPTY_SHA256 });
-  const { contentHash: _ignored, ...content } = parsed;
-  return ExerciseSchema.parse({ ...content, contentHash: sha256(canonicalJson(content)) });
 }
 
 function cardRoot(
