@@ -17,6 +17,11 @@ const ROOT = resolve(import.meta.dirname, "..");
 const SOURCE_ROOTS = [join(ROOT, "apps"), join(ROOT, "packages")];
 const SOURCE_EXTENSIONS = new Set([".cjs", ".js", ".jsx", ".mjs", ".ts", ".tsx"]);
 const IGNORED_DIRECTORIES = new Set([".git", "dist", "node_modules"]);
+// The study checkouts are somebody else's repository, cloned onto this machine
+// for a learner to read. Their `<Canvas>` mounts are not ours to register, and
+// they only exist on a machine that has actually registered a study — so a gate
+// that walked into them would pass in CI and fail on the author's laptop.
+const IGNORED_PATHS = new Set([join(ROOT, "apps", "local", "studies")]);
 
 const CANVAS_MOUNTS = [
   {
@@ -43,6 +48,7 @@ function walk(directory, files = []) {
   )) {
     if (IGNORED_DIRECTORIES.has(entry.name)) continue;
     const path = join(directory, entry.name);
+    if (IGNORED_PATHS.has(path)) continue;
     if (entry.isDirectory()) {
       walk(path, files);
     } else if (SOURCE_EXTENSIONS.has(extname(entry.name))) {
