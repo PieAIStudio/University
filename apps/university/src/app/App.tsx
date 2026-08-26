@@ -32,13 +32,11 @@ import {
 } from "react";
 import {
   activeIdForView,
-  courseShapeOf,
   isBareView,
   LIBRARY_VIEW_TAB,
   libraryTabOf,
   mistakesOf,
   progressSourceOf,
-  readCourseProgress,
   spineOf,
   toHash,
   type LessonRef,
@@ -69,15 +67,8 @@ import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
 import { NodeCard } from "@pieai/university-ui/path/NodeCard.js";
 import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
 import { MistakeList, MistakesEntry } from "@pieai/university-ui/practice/mistakes.js";
-import {
-  CourseScene,
-  placeCourse,
-  nextCourse,
-  placeWorld,
-  type LessonPlacement,
-  type Marker,
-} from "@pieai/university-world/Maps.js";
-import { courseMarkers, frameCourse, worldCourse } from "@pieai/university-world/course-map.js";
+import { CourseScene, placeWorld, type Marker } from "@pieai/university-world/Maps.js";
+import { courseMarkers, frameCourse } from "@pieai/university-world/course-map.js";
 import { type CourseNode } from "@pieai/university-world/course.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
 import { pathLessonOf, pathUnitOf } from "@pieai/university-ui/path/from-course-view.js";
@@ -128,6 +119,7 @@ import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
 import { CourseIsland } from "./CourseIsland.js";
 import { PlanetRail, PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
+import { useCourseProgress } from "./course-progress";
 import { useMinWidth } from "./shell-route";
 import { useRoute } from "./use-route";
 import { useShelf } from "./use-shelf";
@@ -217,73 +209,8 @@ export function App() {
       ? courseOf(view.studyId, view.courseId)
       : null;
 
-  /** Lessons finished in one course, or 0 for a course not on the shelf yet. */
-  const lessonsDone = useCallback(
-    (node: CourseNode) => {
-      const shape = courseOf(node.studyId, node.courseId);
-      if (!shape) return 0;
-      return readCourseProgress(courseShapeOf(shape, node.studyId), source).done;
-    },
-    [courseOf, source, progress],
-  );
-
-  // A fraction, not a flag. The world map now shows how far a course got, not
-  // only whether it is finished, so a course two lessons in has to be able to
-  // say so — that partly-built island is the whole reason to come back.
-  const courseProgress = useCallback(
-    (node: CourseNode) => {
-      const shape = courseOf(node.studyId, node.courseId);
-      if (!shape) return 0;
-      const { done, total } = readCourseProgress(courseShapeOf(shape, node.studyId), source);
-      return total > 0 ? Math.min(1, done / total) : 0;
-    },
-    [courseOf, source, progress],
-  );
-
-  /**
-   * The course the learner is actually on, as a node rather than a coordinate.
-   *
-   * This was already computed and used only to aim the camera at it. Pointing a
-   * camera at something is not the same as telling anyone about it: the first
-   * frame of the product was four unexplained archipelagos and five equally
-   * weighted buttons, and the one thing the app already knew — which course to
-   * open — was the one thing it did not say.
-   *
-   * It is computed across every project on purpose, and it used to fall out of
-   * the map for free because the map held every project. Now that the map holds
-   * one, the two have to be separated: wandering into Buzz to have a look does
-   * not stop a learner being three lessons from finishing TuringPact, and
-   * 「今天」 should keep saying so.
-   */
-  const todayNode = useMemo(
-    () => (nodes ? nextCourse(nodes, courseProgress) : null),
-    [nodes, courseProgress],
-  );
-
-  /**
-   * Same `{ done, total }` the course path header prints as 「还剩 N 关」.
-   * Null only while the course JSON has not resolved this session — then
-   * the card names the project and withholds the count rather than inventing
-   * a second source.
-   */
-  const nextUpProgress = useMemo(() => {
-    if (!todayNode) return null;
-    const shape = courseOf(todayNode.studyId, todayNode.courseId);
-    if (!shape) return null;
-    return readCourseProgress(courseShapeOf(shape, todayNode.studyId), source);
-  }, [todayNode, courseOf, source, progress]);
-
-  const lessons: readonly LessonPlacement[] = useMemo(() => {
-    if (!course || (view.kind !== "course" && view.kind !== "lesson")) return [];
-    // `worldCourse`, not the course itself: the scene needs ids, titles and how
-    // long each lesson is, and has no business holding the prose.
-    return placeCourse(view.studyId, worldCourse(course), source);
-  }, [course, view, source, progress]);
-
-  const viewedProgress = useMemo(() => {
-    if (!course || (view.kind !== "course" && view.kind !== "lesson")) return null;
-    return readCourseProgress(courseShapeOf(course, view.studyId), source);
-  }, [course, view, source, progress]);
+  const { lessonsDone, courseProgress, lessons, viewedProgress, nextUpProgress, todayNode } =
+    useCourseProgress({ course, courseOf, nodes, progress, source, view });
 
   const labelNodes = useRef(new Map<string, HTMLElement>());
   const pickCardRef = useRef<HTMLElement | null>(null);
