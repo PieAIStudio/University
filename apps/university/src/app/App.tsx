@@ -14,11 +14,17 @@
  * for. That split is not taste — a Chinese IME, selectable code, a screen
  * reader and a phone keyboard all degrade to nothing inside WebGL.
  *
- * There is exactly one `<Canvas>` at a time. `Stage` owns the world map and
- * stays mounted across the two map levels. The temporary `#/avatar-lab` route
- * unmounts `Stage` and mounts its own studio canvas, so the two never share a
- * frame. Mounting a second one beside the first would be the fastest way to
- * end up with two renderers and a colour pipeline nobody can count.
+ * One world renderer at a time, and small avatar viewports alongside it.
+ * `Stage` owns the world map and stays mounted across the two map levels; the
+ * temporary `#/avatar-lab` route unmounts it and mounts its own studio canvas
+ * instead of beside it, so two world-sized renderers never share a frame. The
+ * avatar viewports are a different thing and do sit alongside: the navigation
+ * avatar is mounted on every screen and the profile page adds a third. That is
+ * fine — what is not fine is an unnoticed fifth, because that is how you end up
+ * with a colour pipeline nobody can count. `Stage.tsx` carries the registry of
+ * every mount and `scripts/check-canvas-registry.mjs` fails the build on one
+ * that is not in it. A rule that is counted survives a refactor; this comment
+ * claimed there was exactly one until somebody counted.
  */
 import {
   Suspense,
