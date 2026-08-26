@@ -140,6 +140,7 @@ function releaseInputMetadata(recoveryPath, recovery, lexiconPath, lexicon) {
       bytes: recovery.bytes,
       studies: recovery.studies,
       courses: recovery.courses,
+      unreferencedFiles: recovery.unreferencedFiles,
     },
     lexicon: {
       path: lexiconPath.relative,

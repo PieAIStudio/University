@@ -259,13 +259,15 @@ export function validateRecoveryInput(root, { projectRoot = PROJECT_ROOT } = {})
   const unexpected = fingerprint.entries
     .map((entry) => entry.path)
     .filter((path) => !referenced.has(path));
-  if (unexpected.length > 0) {
-    fail(`recovery root contains unreferenced files: ${unexpected.join(", ")}`);
+  const unsupported = unexpected.filter((path) => !path.endsWith(".recovery.json"));
+  if (unsupported.length > 0) {
+    fail(`recovery root contains unrecognized unreferenced files: ${unsupported.join(", ")}`);
   }
   return {
     ...fingerprint,
     studies: studies.length,
     courses: studies.reduce((sum, study) => sum + study.courses.length, 0),
+    unreferencedFiles: unexpected,
   };
 }
 
