@@ -66,8 +66,8 @@ twice) · 1,815 `[[evidence:]]` markers resolving to **1,597 anchors** · 281
 concepts (**138 carry a shared flow map**, 24 carry a style sample) · 267 terms
 · 25 anti-patterns.
 
-420 lesson-to-lesson links, 383 inside their own course and **five** crossing
-one: the mesh does not exist yet. `[[term:]]` links: zero.
+427 lesson-to-lesson links, 414 inside their own course and **13** crossing
+courses: the mesh does not exist yet. `[[term:]]` links: zero.
 
 Tests: core 373 · ui 259 · world 131 · university 126 · local 409 = **1,298**.
 Plus 16 browser walks (`pnpm e2e`), two of which (`G`, `G2`) exist only to
@@ -78,14 +78,26 @@ has been wrong at least once.
 
 ## Known Content Faults
 
-`apps/local/scripts/check-lesson-links.mjs` reports both:
+The old 4 / 2 note was an old output from a checker that still looked for the
+removed `apps/online/content` tree. The source-based checker now reads each
+study's latest lesson revision from disk and reuses the shared resolver. The
+first real source run found 4 dangling links and **0** resolver-scoped duplicate
+id groups. The four cross-course bare links were then revised through the
+`apps/local` course workflow and exported into the recovery transport packages.
 
-- **4 dangling `[[lesson:]]` links** — targets that do not exist.
-- **2 duplicated lesson ids** — `fetch-not-clone` and `refuse-not-skip`, both in
-  `university-local`. This is the worse one: nothing errors, the token just
-  resolves to whichever lesson the lookup reaches first.
+The current re-run reports:
 
-Fixing either means editing content, which is authoring work.
+- **0 dangling `[[lesson:]]` links**.
+- **0 ambiguous duplicate lesson ids within a study/course**.
+- Informational only: `fetch-not-clone` and `refuse-not-skip` each occur in two
+  different `university-local` courses. Bare lesson ids resolve inside the
+  current course, so these are legal scopes, not the old “first match wins”
+  defect.
+
+The check exits `FAIL` for content faults, `PASS` for a clean source shelf, and
+`SKIP` when a machine has no local studies shelf. It is now part of `pnpm
+verify`; generated `apps/university/src/content/imported.json` remains outside
+this report and outside commits.
 
 ## Standing Constraints
 
