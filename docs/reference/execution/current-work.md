@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-08-23
+last_reviewed: 2026-08-26
 domain: execution
 tags:
   - current-work
@@ -254,42 +254,12 @@ ReaderPort and duplicate-reader work from the earlier journey is already done;
 the list below contains the remaining implementation and authority boundaries.
 
 1. **Provision the University learner row in SwimmerBackend** — *needs the
-   owner.* Register the app, create a `university` schema that is neither
-   `core` nor `public`, add one `progress` row per user with `document jsonb`
-   and a guarded revision, scope RLS to `auth.uid()`, and verify a real sign-in
-   from a real address. The browser adapter and fake-remote tests are ready;
-   this external migration and staging rehearsal are the remaining authority
-   boundary.
-
-   **Provision XP as a server counter, not as the client's ledger.** The XP
-   total merges losslessly across devices by keeping one entry per scoring
-   event and summing the union — `max` would erase a phone's addition when a
-   laptop had added a different event from the same starting document. That is
-   correct, and it is unbounded: every card review appends a permanent
-   ~124-byte entry to the document. Counted at review volumes this product is
-   built to encourage — `xp.ts` deliberately pays the most for remembering
-   something after two months, so reviews are the fastest-growing entry:
-
-   | 复习量 | 一年后 | 文档增量 |
-   | --- | ---: | ---: |
-   | 10 张/天 | 3,650 条 | 0.43 MB |
-   | 50 张/天 | 18,250 条 | 2.16 MB |
-   | 120 张/天 · 两年 | 87,600 条 | 10.36 MB |
-
-   One `jsonb` row, read and written under an optimistic lock on every
-   progress change. It does not bite yet because the row does not exist —
-   which is exactly why the shape has to be decided *with* the migration
-   rather than after it. Compacting on the client is the wrong fix: folding
-   old events into a seed loses the idempotency the ledger exists for, unless
-   the fold carries a watermark both devices can compare. A server-side
-   increment with a bounded idempotency window (say 30 days of event ids) gets
-   the same guarantee without the growth.
-
-   **Decided (2026-08-26): the server-side counter with the bounded window.**
-   XP总数 is a server counter; the document keeps only recent event ids for
-   deduplication. Cross-device merges keep the idempotency the ledger exists
-   for, and the row stops growing. This has to ship *with* the migration —
-   deciding it afterwards is a data migration rather than a decision.
+   owner.* The executable SQL, env wiring, XP storage decision, four real-browser
+   acceptance paths, and rollback are the single handoff in
+   [SwimmerBackend learner progress migration](./swimmer-backend-migration.md);
+   its only SQL source is [the adjacent migration file](./swimmer-backend-migration.sql).
+   The browser adapter and fake-remote tests are ready; owner execution and the
+   staging rehearsal remain open.
 2. ~~**The 19 seconds after the canvas mounts.**~~ **Measured, and it is
    gone.** The old entry said 28.4s to first frame on throttled 4G, of which
    ~19s was `loadGraph()` fetching 52 course JSON files. `loadGraph` no longer
