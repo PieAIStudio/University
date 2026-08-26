@@ -10,7 +10,7 @@
 
 .evidence-item__note {
   margin: 8px 0 0;
-  color: rgba(255, 245, 232, 0.7);
+  color: color-mix(in srgb, var(--game-ui-text-on-dark) 70%, transparent);
   font-size: 0.86rem;
   line-height: 1.5;
 }
@@ -25,7 +25,7 @@
   border-radius: 999px;
   padding: 3px 11px;
   background: transparent;
-  color: rgba(255, 245, 232, 0.55);
+  color: color-mix(in srgb, var(--game-ui-text-on-dark) 55%, transparent);
   font-family: inherit;
   font-size: 0.74rem;
   cursor: pointer;
@@ -35,17 +35,17 @@
 }
 
 .evidence-item__copy:hover {
-  border-color: rgba(255, 245, 232, 0.4);
-  color: rgba(255, 245, 232, 0.9);
+  border-color: color-mix(in srgb, var(--game-ui-text-on-dark) 40%, transparent);
+  color: color-mix(in srgb, var(--game-ui-text-on-dark) 90%, transparent);
 }
 
 .evidence-item__copy-hint {
   margin: 8px 0 0;
   padding: 8px 10px;
-  border: 1px solid rgba(247, 211, 160, 0.22);
+  border: 1px solid color-mix(in srgb, var(--game-ui-accent-ink) 22%, transparent);
   border-radius: 10px;
-  background: rgba(247, 211, 160, 0.06);
-  color: rgba(255, 245, 232, 0.78);
+  background: color-mix(in srgb, var(--game-ui-accent-pale) 6%, transparent);
+  color: color-mix(in srgb, var(--game-ui-text-on-dark) 78%, transparent);
   font-size: 0.74rem;
   line-height: 1.45;
 }
@@ -59,7 +59,7 @@
 }
 
 .evidence-item__copy-hint code {
-  color: #f7d3a0;
+  color: var(--game-ui-accent-ink);
   font-size: 0.72rem;
 }
 
@@ -80,7 +80,7 @@
 .evidence-item__trigger code {
   grid-column: 1 / -1;
   overflow-wrap: anywhere;
-  color: #f7d3a0;
+  color: var(--game-ui-accent-ink);
   font-size: 0.76rem;
 }
 

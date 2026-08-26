@@ -17,7 +17,7 @@
 
 .word-list__history {
   margin-top: 14px;
-  border-top: 1px solid rgb(247 211 160 / 16%);
+  border-top: 1px solid color-mix(in srgb, var(--game-ui-accent-ink) 16%, transparent);
   padding-top: 10px;
 }
 
@@ -43,7 +43,7 @@
   flex: 0 0 auto;
   border: 0;
   background: none;
-  color: #f0a868;
+  color: var(--game-ui-accent-ink);
   cursor: pointer;
   font: inherit;
   font-size: 0.74rem;
@@ -68,8 +68,8 @@
   padding: 6px 8px;
   border: 1px solid var(--campus-rule);
   border-radius: 8px;
-  background: #1a1512;
-  color: #f7ead6;
+  background: var(--game-ui-panel-deep);
+  color: var(--game-ui-text);
   font: inherit;
   font-size: 0.82rem;
 }
@@ -104,11 +104,11 @@
 }
 
 .word-list__word:hover {
-  background: rgb(247 211 160 / 10%);
+  background: color-mix(in srgb, var(--game-ui-accent-pale) 10%, transparent);
 }
 
 .word-list__word span {
-  color: #f7d3a0;
+  color: var(--game-ui-accent-ink);
   font-weight: 700;
 }
 

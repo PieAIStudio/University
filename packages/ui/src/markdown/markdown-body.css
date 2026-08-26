@@ -1,5 +1,5 @@
 .markdown-body {
-  color: #eee0ca;
+  color: var(--game-ui-text);
   font-size: 1.04rem;
   line-height: 1.82;
 }
@@ -8,7 +8,7 @@
 .markdown-body h2,
 .markdown-body h3 {
   margin: 1.8em 0 0.7em;
-  color: #fff5e8;
+  color: var(--game-ui-text-on-dark);
   font-family: var(--game-ui-font-display);
   line-height: 1.2;
 }
@@ -53,7 +53,7 @@
   margin-block-start: 2.1em;
   padding-block-start: 1.15em;
   border-block-start: 1px solid var(--campus-rule);
-  color: #f6c177;
+  color: var(--game-ui-warning);
 }
 
 .markdown-body.lesson-prose > h2[data-role="reveal"] {
@@ -67,7 +67,7 @@
   height: 2px;
   margin-inline-end: 0.5em;
   vertical-align: 0.3em;
-  background: #f6c177;
+  background: var(--game-ui-warning);
 }
 
 .markdown-body.lesson-prose > h2[data-role="takeaway"] {
@@ -80,7 +80,7 @@
 }
 
 .markdown-body.lesson-prose > h2[data-role="takeaway"] + p {
-  color: #fff5e8;
+  color: var(--game-ui-text-on-dark);
   font-size: 1.26em;
   line-height: 1.6;
 }

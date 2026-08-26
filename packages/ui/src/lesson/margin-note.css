@@ -19,25 +19,25 @@
   display: grid;
   gap: 4px;
   padding: 8px 10px;
-  border-left: 2px solid rgb(246 193 119 / 55%);
+  border-left: 2px solid color-mix(in srgb, var(--game-ui-warning) 55%, transparent);
   border-radius: 0 9px 9px 0;
-  background: rgb(255 245 232 / 4%);
+  background: color-mix(in srgb, var(--game-ui-text-on-dark) 4%, transparent);
   transition: background 140ms ease;
 }
 
 .margin-note[data-kind="highlight"] {
-  border-left-color: rgb(255 245 232 / 22%);
+  border-left-color: color-mix(in srgb, var(--game-ui-text-on-dark) 22%, transparent);
 }
 
 .margin-note[data-orphaned] {
   border-left-style: dashed;
-  border-left-color: rgb(240 168 104 / 50%);
+  border-left-color: color-mix(in srgb, var(--game-ui-danger-ink) 50%, transparent);
   opacity: 0.72;
 }
 
 .margin-note:hover,
 .margin-note[data-active] {
-  background: rgb(247 211 160 / 12%);
+  background: color-mix(in srgb, var(--game-ui-accent-pale) 12%, transparent);
 }
 
 .margin-note__body {
@@ -53,12 +53,12 @@
 }
 
 .margin-note__body small {
-  color: rgb(255 245 232 / 42%);
+  color: color-mix(in srgb, var(--game-ui-text-on-dark) 42%, transparent);
   font-size: 0.68rem;
 }
 
 .margin-note__orphan {
-  color: #f0a868;
+  color: var(--game-ui-danger-ink);
 }
 
 .margin-note__body span {
@@ -89,11 +89,11 @@
   padding: 0;
   border: 0;
   background: none;
-  color: rgb(255 245 232 / 45%);
+  color: color-mix(in srgb, var(--game-ui-text-on-dark) 45%, transparent);
   font-size: 0.72rem;
   cursor: pointer;
 }
 
 .margin-note__actions button:hover {
-  color: #f7d3a0;
+  color: var(--game-ui-accent-bright);
 }

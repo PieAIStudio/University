@@ -17,11 +17,11 @@
   gap: 4px;
   padding: 8px;
   border-radius: 9px;
-  background: rgb(255 245 232 / 4%);
+  background: color-mix(in srgb, var(--game-ui-text-on-dark) 4%, transparent);
 }
 
 .mark-list__item[data-kind="question"] {
-  border-left: 2px solid rgb(246 193 119 / 70%);
+  border-left: 2px solid color-mix(in srgb, var(--game-ui-warning) 70%, transparent);
 }
 
 .mark-list__quote {
@@ -37,7 +37,7 @@
 }
 
 .mark-list__quote small {
-  color: rgb(255 245 232 / 45%);
+  color: color-mix(in srgb, var(--game-ui-text-on-dark) 45%, transparent);
   font-size: 0.72rem;
 }
 
@@ -52,7 +52,7 @@
 }
 
 .mark-list__quote:hover span {
-  color: #f7d3a0;
+  color: var(--game-ui-accent-bright);
 }
 
 .mark-list__actions {
@@ -64,18 +64,18 @@
   padding: 0;
   border: 0;
   background: none;
-  color: rgb(255 245 232 / 45%);
+  color: color-mix(in srgb, var(--game-ui-text-on-dark) 45%, transparent);
   font-size: 0.75rem;
   cursor: pointer;
 }
 
 .mark-list__actions button:hover {
-  color: #f7d3a0;
+  color: var(--game-ui-accent-bright);
 }
 
 .mark-list__missing {
   margin: 0;
-  color: #f0a878;
+  color: var(--game-ui-danger-ink);
   font-size: 0.75rem;
 }
 
@@ -83,16 +83,16 @@
   width: 100%;
   margin-top: 10px;
   padding: 8px 10px;
-  border: 1px solid rgb(247 211 160 / 34%);
+  border: 1px solid color-mix(in srgb, var(--game-ui-accent-ink) 34%, transparent);
   border-radius: 9px;
-  background: rgb(247 211 160 / 10%);
-  color: #f7d3a0;
+  background: color-mix(in srgb, var(--game-ui-accent-pale) 10%, transparent);
+  color: var(--game-ui-accent-ink);
   font-size: 0.82rem;
   cursor: pointer;
 }
 
 .mark-list__copy-all:hover {
-  background: rgb(247 211 160 / 18%);
+  background: color-mix(in srgb, var(--game-ui-accent-pale) 18%, transparent);
 }
 
 .mark-list__highlights {

@@ -1,9 +1,9 @@
 .source-sheet .evidence-ua-place {
   margin: 12px 0 4px;
   padding: 10px 12px;
-  border: 1px solid rgb(246 231 211 / 14%);
+  border: 1px solid var(--game-ui-border-subtle);
   border-radius: 10px;
-  background: rgb(0 0 0 / 18%);
+  background: color-mix(in srgb, var(--game-ui-scrim-strong) 29%, transparent);
 }
 
 .source-sheet {
@@ -31,7 +31,7 @@
 
 .source-sheet__meta code {
   overflow-wrap: anywhere;
-  color: #f7d3a0;
+  color: var(--game-ui-accent-ink);
 }
 
 .source-sheet__tools {
@@ -54,8 +54,8 @@
   min-width: min(280px, 60vw);
   border: 1px solid var(--campus-rule);
   padding: 7px 9px;
-  color: #fff5e8;
-  background: #1a1512;
+  color: var(--game-ui-text);
+  background: var(--game-ui-panel-deep);
   font: inherit;
 }
 
@@ -67,7 +67,7 @@
 
 .source-sheet__truncation {
   margin: 0;
-  color: #f7d3a0;
+  color: var(--game-ui-accent-ink);
 }
 
 .source-sheet__footer {
