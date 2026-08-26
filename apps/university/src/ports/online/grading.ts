@@ -81,21 +81,29 @@ export function createOnlineGradingPort(options: {
       }
 
       if (verdict.outcome === "undecided" && exercise?.prompt) {
-        const result = await submitToMeteredService({
-          fetchImpl,
-          gradingUrl,
-          input,
-          prompt: exercise.prompt,
-          readAccessToken,
-          attemptCount: count,
-        });
-        recordAttempt(progress, input, result);
-        return result;
+        try {
+          const result = await submitToMeteredService({
+            fetchImpl,
+            gradingUrl,
+            input,
+            prompt: exercise.prompt,
+            readAccessToken,
+            attemptCount: count,
+          });
+          recordAttempt(progress, input, result);
+          return result;
+        } catch {
+          // Tier two is an enhancement. A missing account, configuration,
+          // balance or service must leave the learner with the free clue from
+          // tier one, not turn an open question into a wall.
+        }
       }
 
       const evaluation =
         verdict.outcome === "undecided"
-          ? verdict.reason
+          ? lesson
+            ? failCopy(lesson, exercise?.prompt)
+            : verdict.reason
           : lesson
             ? failCopy(lesson, exercise?.prompt)
             : "再想一下，答案就在上面这段里。";

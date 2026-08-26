@@ -35,6 +35,7 @@ const lesson: Lesson = {
 const long: Lesson = {
   ...lesson,
   id: "why-though",
+  content: "## 先猜一下\n\n这一段会说明为什么产品要先把问题说清楚。\n",
   exercises: [
     {
       id: "explain",
@@ -62,6 +63,16 @@ const locator = {
   unitId: "what-is-an-app",
   lessonId: lesson.id,
 };
+
+function undecidableSubmission(commandId: string) {
+  return {
+    locator: { ...locator, lessonId: long.id },
+    exerciseId: "explain",
+    contentRevision: 1,
+    answer: "我的理解是另一回事。",
+    commandId,
+  };
+}
 
 /*
   The port finds the lesson from the address rather than being handed one, so
@@ -170,5 +181,85 @@ describe("createOnlineGradingPort", () => {
     expect(result.hostGrade?.host).toBe("tier-2");
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(readAccessToken).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to the tier-one clue when the learner is signed out", async () => {
+    const port = createOnlineGradingPort({
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken: async () => null,
+    });
+
+    await expect(
+      port.submitExercise(undecidableSubmission("red-signed-out")),
+    ).resolves.toMatchObject({
+      hostGrade: {
+        host: "tier-1",
+        passed: false,
+        evaluation: expect.stringContaining("再看一眼你刚才读过的这句"),
+      },
+    });
+  });
+
+  it("falls back to the tier-one clue when the service is not configured", async () => {
+    const port = createOnlineGradingPort({
+      readAccessToken: async () => "learner-access-token",
+    });
+
+    await expect(
+      port.submitExercise(undecidableSubmission("red-no-service")),
+    ).resolves.toMatchObject({
+      hostGrade: {
+        host: "tier-1",
+        passed: false,
+        evaluation: expect.stringContaining("再看一眼你刚才读过的这句"),
+      },
+    });
+  });
+
+  it("falls back to the tier-one clue when the metered service reports an insufficient balance", async () => {
+    const fetchImpl = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            code: "insufficient_balance",
+            error: "AI 批改余额不足：还剩 50 power units，这次需要 100。",
+          }),
+          { status: 402, headers: { "Content-Type": "application/json" } },
+        ),
+    );
+    const port = createOnlineGradingPort({
+      fetchImpl,
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken: async () => "learner-access-token",
+    });
+
+    await expect(
+      port.submitExercise(undecidableSubmission("red-insufficient")),
+    ).resolves.toMatchObject({
+      hostGrade: {
+        host: "tier-1",
+        passed: false,
+        evaluation: expect.stringContaining("再看一眼你刚才读过的这句"),
+      },
+    });
+  });
+
+  it("falls back to the tier-one clue when the metered service times out", async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error("fake timeout");
+    });
+    const port = createOnlineGradingPort({
+      fetchImpl,
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken: async () => "learner-access-token",
+    });
+
+    await expect(port.submitExercise(undecidableSubmission("red-timeout"))).resolves.toMatchObject({
+      hostGrade: {
+        host: "tier-1",
+        passed: false,
+        evaluation: expect.stringContaining("再看一眼你刚才读过的这句"),
+      },
+    });
   });
 });
