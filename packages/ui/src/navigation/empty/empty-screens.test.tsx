@@ -54,6 +54,12 @@ describe("empty destinations", () => {
     const markup = renderToStaticMarkup(<SettingsScreen />);
     expect(markup).toContain("偏好设置");
     expect(markup).toContain("声音");
+    expect(markup).toContain("自动");
+    expect(markup).toContain("本机");
+    expect(markup).toContain("在线");
+    expect(markup).toContain("高品质");
+    expect(markup).toContain("钱包和付费权益尚未接入");
+    expect(markup).toContain("disabled");
     expect(markup).toContain("语言层");
     expect(renderToStaticMarkup(<SettingsSubnav />)).toContain("个人档案");
   });

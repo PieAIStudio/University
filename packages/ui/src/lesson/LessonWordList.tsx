@@ -7,11 +7,13 @@ import { ForeignSettingsPanel } from "../language/ForeignSettingsPanel.js";
 import type { ForeignSettings } from "../language/foreign-settings.js";
 import type { LexiconEntry } from "../language/WordPopover.js";
 import {
+  readSpeechQualityPreference,
   readVoicePreference,
-  selectVoice,
+  selectSpeechVoice,
   speakWord,
   useEnglishVoices,
   writeVoicePreference,
+  type SpeechQuality,
 } from "../language/speech.js";
 
 /**
@@ -49,6 +51,7 @@ export function LessonWordList({
   reasons,
   onStageWord,
   settings,
+  speechQuality,
   onSettingsChange,
 }: {
   readonly lexicon: readonly LexiconEntry[];
@@ -58,11 +61,14 @@ export function LessonWordList({
     | ((senseId: string, stage: "learning" | "familiar" | "paused") => void)
     | undefined;
   readonly settings: ForeignSettings;
+  readonly speechQuality?: SpeechQuality;
   readonly onSettingsChange: (next: ForeignSettings) => void;
 }) {
   const voices = useEnglishVoices();
   const [voiceURI, setVoiceURI] = useState(readVoicePreference);
-  const active = selectVoice(voices, voiceURI);
+  const selectedQuality = speechQuality ?? readSpeechQualityPreference();
+  const selection = selectSpeechVoice(voices, selectedQuality, voiceURI);
+  const active = selection.voice;
 
   const { activeEntries, historyEntries } = useMemo(() => {
     const activeEntries: LexiconEntry[] = [];
@@ -105,24 +111,27 @@ export function LessonWordList({
         </p>
       ) : null}
       {/* Picking a voice is only a question for someone who is listening. */}
-      {settings.showSpeak && activeEntries.length > 0 && voices.length > 1 ? (
+      {settings.showSpeak && activeEntries.length > 0 && selection.voices.length > 1 ? (
         <label className="word-list__voice">
           <span>朗读声音</span>
           {/*
             No ranking is right on every machine, and the person listening is
             the only one who can hear the result. The default is the best-ranked
-            local voice; this is the escape hatch when that judgement is wrong.
+            voice in the resolved quality tier; this is the escape hatch when
+            that judgement is wrong.
           */}
           <select
             value={active?.voiceURI ?? ""}
             onChange={(event) => {
               setVoiceURI(event.target.value);
               writeVoicePreference(event.target.value);
-              const chosen = voices.find((voice) => voice.voiceURI === event.target.value);
+              const chosen = selection.voices.find(
+                (voice) => voice.voiceURI === event.target.value,
+              );
               if (chosen) speakWord("preview", chosen);
             }}
           >
-            {voices.map((voice) => (
+            {selection.voices.map((voice) => (
               <option key={voice.voiceURI} value={voice.voiceURI}>
                 {voice.name}（{voice.lang}）
               </option>

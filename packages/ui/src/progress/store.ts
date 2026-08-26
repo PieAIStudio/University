@@ -17,6 +17,7 @@ import { readLocalPracticeRecent } from "../practice/storage.js";
 import { readDetailMode } from "../language/detail-mode.js";
 import { readForeignSettings } from "../language/foreign-settings.js";
 import { readForeignLanguageMode } from "../language/reading-mode.js";
+import { readSpeechQualityPreference, writeSpeechQualityPreference } from "../language/speech.js";
 import { readSharesPresence } from "../presence/shares-presence.js";
 import { isSoundEnabled } from "../sound/sound.js";
 
@@ -49,6 +50,10 @@ export function createBrowserProgressPort(): ProgressPort {
     sharesPresence: preferences.updatedAt.sharesPresence
       ? preferences.sharesPresence
       : readSharesPresence(),
+    speechQuality: preferences.updatedAt.speechQuality
+      ? preferences.speechQuality
+      : readSpeechQualityPreference(),
   });
+  writeSpeechQualityPreference(port.accountData().preferences.speechQuality);
   return port;
 }

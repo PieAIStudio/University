@@ -25,6 +25,7 @@ import {
 import { WordAnchor, type VocabularyStage } from "../language/WordPopover.js";
 import { DEFAULT_FOREIGN_SETTINGS, type ForeignSettings } from "../language/foreign-settings.js";
 import { remarkLanguageAnchors } from "../language/remark-language-anchors.js";
+import { readSpeechQualityPreference, type SpeechQuality } from "../language/speech.js";
 import {
   remarkEvidenceAnchors,
   remarkLessonLinks,
@@ -320,6 +321,7 @@ export function MarkdownContent({
   language,
   englishEnabled = false,
   foreignSettings = DEFAULT_FOREIGN_SETTINGS,
+  speechQuality = readSpeechQualityPreference(),
   vocabularyStages,
   onStageWord,
   inline = false,
@@ -339,6 +341,8 @@ export function MarkdownContent({
   readonly englishEnabled?: boolean;
   /** How the layer presents words; defaults to the least intrusive preset. */
   readonly foreignSettings?: ForeignSettings;
+  /** Which speech quality shelf the word popovers should resolve. */
+  readonly speechQuality?: SpeechQuality;
   readonly vocabularyStages?: ReadonlyMap<string, string>;
   readonly onStageWord?: (senseId: string, stage: VocabularyStage) => void;
   readonly lessonLinks?: readonly LessonLinkRange[];
@@ -651,6 +655,7 @@ export function MarkdownContent({
             entry={entry}
             original={value}
             settings={foreignSettings}
+            speechQuality={speechQuality}
             stage={vocabularyStages?.get(senseId)}
             reason={active?.reasons?.[senseId]}
             {...(onStageWord
@@ -674,6 +679,7 @@ export function MarkdownContent({
       sectionsByTitle,
       detailMode,
       foreignSettings,
+      speechQuality,
       termEntries,
     ],
   );

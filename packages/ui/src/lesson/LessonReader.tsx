@@ -14,6 +14,11 @@ import {
   type ForeignSettings,
 } from "../language/foreign-settings.js";
 import { readForeignLanguageMode, writeForeignLanguageMode } from "../language/reading-mode.js";
+import {
+  readSpeechQualityPreference,
+  writeSpeechQualityPreference,
+  type SpeechQuality,
+} from "../language/speech.js";
 import type { LessonLinkTarget } from "../markdown/remark-lesson-links.js";
 import { ExerciseBlock } from "../review/ExerciseBlock.js";
 import { ReviewCard } from "../review/ReviewCard.js";
@@ -109,6 +114,9 @@ export function LessonReader({
   const [detailMode, setDetailMode] = useState<DetailMode>(
     () => accountPreferences?.detailMode ?? readDetailMode(),
   );
+  const [speechQuality, setSpeechQuality] = useState<SpeechQuality>(
+    () => accountPreferences?.speechQuality ?? readSpeechQualityPreference(),
+  );
   const [vocabularyStages, setVocabularyStages] = useState<ReadonlyMap<string, string>>(new Map());
   const [vocabularyError, setVocabularyError] = useState<string | null>(null);
   const [foreignSettings, setForeignSettings] = useState(
@@ -136,6 +144,8 @@ export function LessonReader({
       const next = progress.accountData().preferences;
       setEnglishMode(next.foreignLanguageMode);
       setDetailMode(next.detailMode);
+      setSpeechQuality(next.speechQuality);
+      writeSpeechQualityPreference(next.speechQuality);
       setForeignSettings(next.foreignSettings);
     });
   }, [progress]);
@@ -522,6 +532,7 @@ export function LessonReader({
                 : {})}
               englishEnabled={englishMode}
               foreignSettings={foreignSettings}
+              speechQuality={speechQuality}
               vocabularyStages={vocabularyStages}
               onStageWord={stageWord}
               {...(view.lesson.links ? { lessonLinks: view.lesson.links } : {})}
@@ -640,6 +651,7 @@ export function LessonReader({
                   reasons={liveReasons}
                   onStageWord={stageWord}
                   settings={foreignSettings}
+                  speechQuality={speechQuality}
                   onSettingsChange={setForeignSettingsPersisted}
                 />
               ) : null}

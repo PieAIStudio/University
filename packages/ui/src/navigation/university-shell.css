@@ -97,6 +97,21 @@ a.linkish {
   margin: 0 0 28px;
 }
 
+.speech-quality-control {
+  display: grid;
+  gap: 8px;
+}
+
+.speech-quality-control__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.speech-quality-control__option {
+  flex: 1 1 7rem;
+}
+
 .settings-screen__hint {
   margin: 0;
   font-size: 0.85rem;

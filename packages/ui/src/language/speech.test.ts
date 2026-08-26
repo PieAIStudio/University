@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { isNoveltyVoice, selectVoice } from "./speech.js";
+import {
+  explainSpeechResolution,
+  isNoveltyVoice,
+  resolveSpeechTier,
+  selectSpeechVoice,
+  selectVoice,
+  speakWord,
+  voicesForSpeechTier,
+} from "./speech.js";
 
 function voice(name: string, overrides: Partial<SpeechSynthesisVoice> = {}): SpeechSynthesisVoice {
   return {
@@ -49,5 +57,57 @@ describe("English voice selection", () => {
 
     expect(selectVoice(voices, "Ava (Premium)")?.name).toBe("Samantha");
     expect(selectVoice([], "Samantha")).toBeNull();
+  });
+
+  it("keeps cloud voices in the online shelf while novelty voices stay excluded", () => {
+    const cloud = voice("Browser Cloud English", { localService: false });
+    const noveltyCloud = voice("Albert", { localService: false });
+    const local = voice("Samantha");
+
+    expect(voicesForSpeechTier([cloud, noveltyCloud, local], "online")).toEqual([cloud]);
+    expect(voicesForSpeechTier([cloud, noveltyCloud, local], "local")).toEqual([local]);
+    expect(selectSpeechVoice([cloud, noveltyCloud, local], "online", null).voice).toBe(cloud);
+  });
+
+  it("resolves auto to premium, then online, then local as availability changes", () => {
+    expect(resolveSpeechTier("auto", { premium: true, online: true, local: true }).tier).toBe(
+      "premium",
+    );
+    expect(resolveSpeechTier("auto", { premium: false, online: true, local: true }).tier).toBe(
+      "online",
+    );
+    expect(resolveSpeechTier("auto", { premium: false, online: false, local: true }).tier).toBe(
+      "local",
+    );
+  });
+
+  it("steps a manual request down and says why", () => {
+    const available = { premium: false, online: false, local: true } as const;
+    const resolution = resolveSpeechTier("online", available);
+
+    expect(resolution).toEqual({ requested: "online", tier: "local", fallbackFrom: "online" });
+    expect(explainSpeechResolution(resolution, available)).toContain("退到本机语音");
+    expect(explainSpeechResolution(resolution, available)).toContain("没有提供云端英语语音");
+  });
+
+  it("resolves the premium manual tier when that capability is present", () => {
+    expect(resolveSpeechTier("premium", { premium: true, online: true, local: true }).tier).toBe(
+      "premium",
+    );
+    expect(resolveSpeechTier("premium", { premium: false, online: true, local: true }).tier).toBe(
+      "online",
+    );
+  });
+
+  it("does not promote a manual local request to a network voice", () => {
+    const available = { premium: false, online: true, local: false } as const;
+    const resolution = resolveSpeechTier("local", available);
+
+    expect(resolution.tier).toBeNull();
+    expect(explainSpeechResolution(resolution, available)).toContain("没有可用的英语语音");
+  });
+
+  it("does not throw when speechSynthesis is absent", () => {
+    expect(() => speakWord("word", voice("Samantha"))).not.toThrow();
   });
 });

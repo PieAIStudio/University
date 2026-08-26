@@ -1,8 +1,9 @@
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
 import {
+  readSpeechQualityPreference,
   readVoicePreference,
-  selectVoice,
+  selectSpeechVoice,
   speakWord,
   useEnglishVoices,
 } from "../language/speech.js";
@@ -13,14 +14,19 @@ import {
  * The point is to make a learner dare to say the word out loud in a meeting.
  * A gloss they already read in Chinese does not help with that; the English
  * shape of the word does. Hidden when this machine has no `speechSynthesis` or
- * no local English voice, rather than offering a button that does nothing.
+ * no English voice in the resolved quality tier, rather than offering a button
+ * that does nothing.
  *
  * Voice picking lives in `language/speech.ts` so this button and the lesson
  * word card cannot disagree about Albert vs Samantha.
  */
 export function PronunciationButton({ word }: { readonly word: string }) {
   const voices = useEnglishVoices();
-  const voice = selectVoice(voices, readVoicePreference());
+  const voice = selectSpeechVoice(
+    voices,
+    readSpeechQualityPreference(),
+    readVoicePreference(),
+  ).voice;
   if (!voice) return null;
 
   return (

@@ -1,9 +1,18 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { GameToggle } from "@pieai/swimmer-ui-kit";
-import type { PresencePort, ProgressPort } from "@pieai/university-core";
+import { GameButton, GameToggle } from "@pieai/swimmer-ui-kit";
+import type { PresencePort, ProgressPort, SpeechQuality } from "@pieai/university-core";
 
 import { ForeignSettingsPanel } from "../../language/ForeignSettingsPanel.js";
 import { readForeignSettings, writeForeignSettings } from "../../language/foreign-settings.js";
+import {
+  explainSpeechResolution,
+  readSpeechQualityPreference,
+  resolveSpeechTier,
+  speechAvailabilityOf,
+  SPEECH_QUALITY_OPTIONS,
+  useEnglishVoices,
+  writeSpeechQualityPreference,
+} from "../../language/speech.js";
 import { writeSharesPresence } from "../../presence/shares-presence.js";
 import { SoundToggle } from "../../sound/SoundToggle.js";
 
@@ -36,6 +45,7 @@ export function SettingsScreen({
           声音
         </h2>
         <SoundToggle progress={progress} />
+        <SpeechQualityControl progress={progress} />
       </section>
       {presence ? <PresenceSettings presence={presence} progress={progress} /> : null}
       <section className="settings-screen__block" aria-labelledby="settings-language">
@@ -58,6 +68,72 @@ export function SettingsScreen({
           }}
         />
       </section>
+    </div>
+  );
+}
+
+function SpeechQualityControl({ progress }: { readonly progress?: ProgressPort }) {
+  const voices = useEnglishVoices();
+  const [speechQuality, setSpeechQuality] = useState<SpeechQuality>(
+    () => progress?.accountData().preferences.speechQuality ?? readSpeechQualityPreference(),
+  );
+  useEffect(() => {
+    if (!progress) return;
+    return progress.subscribe(() => {
+      const next = progress.accountData().preferences.speechQuality;
+      setSpeechQuality(next);
+      writeSpeechQualityPreference(next);
+    });
+  }, [progress]);
+
+  // The wallet/entitlement path does not exist yet. The resolver still takes
+  // that capability explicitly, so automatic mode will adopt it when it does.
+  const availability = speechAvailabilityOf(voices);
+  const resolution = resolveSpeechTier(speechQuality, availability);
+
+  function choose(next: SpeechQuality): void {
+    setSpeechQuality(next);
+    writeSpeechQualityPreference(next);
+    if (progress) {
+      progress.setAccountPreferences({
+        ...progress.accountData().preferences,
+        speechQuality: next,
+      });
+    }
+  }
+
+  return (
+    <div className="speech-quality-control">
+      <div className="speech-quality-control__options" role="group" aria-label="朗读语音质量">
+        {SPEECH_QUALITY_OPTIONS.map((option) => {
+          const premium = option.id === "premium";
+          return (
+            <GameButton
+              key={option.id}
+              className="speech-quality-control__option"
+              type="button"
+              variant={speechQuality === option.id ? "primary" : "secondary"}
+              aria-pressed={speechQuality === option.id}
+              disabled={premium}
+              title={premium ? "高品质语音暂未开放，钱包和付费权益尚未接入。" : undefined}
+              onClick={() => {
+                if (!premium) choose(option.id);
+              }}
+            >
+              {option.label}
+            </GameButton>
+          );
+        })}
+      </div>
+      <p className="settings-screen__hint">{explainSpeechResolution(resolution, availability)}</p>
+      <p className="settings-screen__hint">
+        自动每次按高品质、在线、本机顺序选择当前能拿到的一档，不会把“自动”存成具体档位。
+        高品质语音暂未开放；钱包和付费权益接入后才会启用。
+      </p>
+      <p className="settings-screen__hint">
+        在线语音只发送产品挑选的一个英文单词；学习者自己写的字、说的话和私有仓库内容不会因为打开朗读而外发。
+        学习者口述自己的理解要另行明确选择加入。
+      </p>
     </div>
   );
 }

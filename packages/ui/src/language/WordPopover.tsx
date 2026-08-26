@@ -15,7 +15,14 @@ import {
 } from "@floating-ui/react";
 import { useState } from "react";
 
-import { readVoicePreference, selectVoice, speakWord, useEnglishVoices } from "./speech.js";
+import {
+  readSpeechQualityPreference,
+  readVoicePreference,
+  selectSpeechVoice,
+  speakWord,
+  useEnglishVoices,
+  type SpeechQuality,
+} from "./speech.js";
 
 /**
  * Re-exported, not redeclared. The lexicon entry this popover renders is the
@@ -66,10 +73,12 @@ export function WordAnchor({
   reason,
   onStage,
   settings,
+  speechQuality,
 }: {
   readonly entry: LexiconEntry;
   readonly original: React.ReactNode;
   readonly settings: ForeignSettings;
+  readonly speechQuality?: SpeechQuality;
   readonly stage?: string | undefined;
   /**
    * Why this word is on the page. A word the learner has already claimed stays
@@ -166,6 +175,7 @@ export function WordAnchor({
               <WordPopoverBody
                 entry={entry}
                 settings={settings}
+                speechQuality={speechQuality ?? readSpeechQualityPreference()}
                 stage={stage}
                 pinned={pinned}
                 onDismiss={() => {
@@ -185,6 +195,7 @@ export function WordAnchor({
 function WordPopoverBody({
   entry,
   settings,
+  speechQuality,
   stage,
   pinned,
   onDismiss,
@@ -192,13 +203,15 @@ function WordPopoverBody({
 }: {
   readonly entry: LexiconEntry;
   readonly settings: ForeignSettings;
+  readonly speechQuality: SpeechQuality;
   readonly stage?: string | undefined;
   readonly pinned: boolean;
   readonly onDismiss: () => void;
   readonly onStage?: ((stage: VocabularyStage) => void) | undefined;
 }) {
   const voices = useEnglishVoices();
-  const voice = selectVoice(voices, readVoicePreference());
+  const selection = selectSpeechVoice(voices, speechQuality, readVoicePreference());
+  const voice = selection.voice;
 
   return (
     <>
@@ -232,7 +245,7 @@ function WordPopoverBody({
             onClick={() => voice && speakWord(entry.headword, voice)}
             disabled={!voice}
           >
-            {voice ? "🔊 朗读" : "本机没有英语语音"}
+            {voice ? "🔊 朗读" : "当前没有可用英语语音"}
           </button>
         </div>
       ) : null}
@@ -273,7 +286,7 @@ function WordPopoverBody({
       {/* Only worth explaining when speech was asked for and cannot be given. */}
       {settings.showSpeak && !voice ? (
         <p className="word-popover__note">
-          只用本机语音朗读。系统里没装英语语音时不联网合成 —— 音标仍然可以照着念。
+          当前档位没有可用的英语语音；可以去设置里换档，音标仍然可以照着念。
         </p>
       ) : null}
     </>
