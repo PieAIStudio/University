@@ -106,6 +106,20 @@ Fixing either means editing content, which is authoring work.
   payment are 2D DOM through SwimmerUIKit.
 - All model calls go through SwimmerAIKit, tiered cheapest-first: deterministic,
   then structured small model, then metered open tutoring.
+- **The payload decides what may leave the machine, not the transport.** An
+  English word the product itself chose is product material, so a browser's
+  cloud voice may read it aloud. The learner's own writing, speech and private
+  repository text are the learner's, and stay local unless they explicitly
+  choose otherwise. This replaced a blanket 「nothing here reaches the network」
+  in `packages/ui/src/language/speech.ts`, which reasoned about the mechanism
+  instead of the content and so kept the best voices out for a rule that was
+  protecting nothing. Voice quality is four settings — 自动 / 本机 / 在线 /
+  高品质 — stored in `preferences` like every other learner setting. 自动 is
+  stored as a *request*, never as a resolved tier, and re-resolves
+  premium → online → local on every use; storing the resolved value would
+  strand a learner on the free tier the day they pay. 高品质 renders disabled
+  until the wallet exists, because a control that hides what paying buys is a
+  pricing page that forgot to mention the price.
 - Evidence is an opaque typed anchor rendered by a registered renderer. Adding
   a second kind is a new renderer, not a schema migration.
 - Layout differs by CSS breakpoint inside one component tree. A second
@@ -504,7 +518,7 @@ argument:
 | R2 | `packages/world/src`, 47 direct children into directories | **done** — 47 → 10 |
 | R3 | Shared components' CSS back beside the components | **done** — 8 families, 830 lines |
 | R4 | Split `App.tsx` | **done** — 1,384 → 757, six files |
-| R5 | 359 colour literals into tokens | surveyed; see 4 below |
+| R5 | 359 colour literals into tokens | 117 dead fallbacks gone, ratchet in place; **213 left** |
 
 R4 is last because the first four are its safety net, not because it matters
 least: it is the highest-churn file in the repository and the one where
@@ -612,6 +626,16 @@ still one 4,896-line file is paving a moving road.
   Both happened on 2026-08-26, the second one for the second time (`e04bcfa`
   fixed it once and recorded it only in the commit message). Check the symlink
   before believing an authoring-side e2e failure or any `servedBytes` number.
+
+  **And the obvious way to link them does not work.** Per-study symlinks —
+  `studies/buzz -> …/studies/buzz` — are invisible to the shelf, because
+  `inspectStudyShelf` skips on `entry.isDirectory()`
+  (`apps/local/server/studies/repository.ts:157`) and a `Dirent` for a symlink
+  answers that with `false`. What works is linking the directory itself, as
+  `studies/studies -> …/apps/local/studies`, so the root resolves through
+  `realpath` to a place whose children are real directories. Measured both
+  ways against `e2e/D.local-authoring.spec.ts`: per-study fails at 31s, the
+  directory link passes at 4s.
 - **A gate that walks the repository walks into the study checkouts too.**
   `check-canvas-registry.mjs` reported ten `<Canvas>` mounts belonging to a
   learner's own cloned repository. It passed everywhere it was written and
