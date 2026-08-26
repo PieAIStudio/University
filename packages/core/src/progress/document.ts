@@ -13,9 +13,13 @@
 
 import { cloneAccountData, emptyAccountData, parseAccountData } from "../ports/account-data.js";
 import type { ProgressDocument } from "../ports/progress.js";
+import type { LessonRef } from "./contract.js";
 
 /** Keep this string. Changing it orphans everyone who has already learned a lesson. */
 export const PROGRESS_STORAGE_KEY = "university.progress.v2";
+
+/** The stable id of the one virtual card a lesson may create for teach-back. */
+export const RECAP_CARD_ID = "__recap__";
 
 export const emptyProgress = (): ProgressDocument => ({
   lessons: {},
@@ -69,6 +73,14 @@ export const lessonKeyOf = (ref: {
   readonly courseId: string;
   readonly lessonId: string;
 }): LessonDocumentKey => lessonKey(ref.studyId, ref.courseId, ref.lessonId);
+
+/**
+ * The recap card keeps the unit in its key because its prompt is the unit's
+ * capability sentence. It deliberately does not reuse `lessonKeyOf`: that
+ * three-segment document key predates unit-aware learner cards.
+ */
+export const recapCardKeyOf = (ref: LessonRef): string =>
+  `${ref.studyId}/${ref.courseId}/${ref.unitId}/${ref.lessonId}/${RECAP_CARD_ID}`;
 
 export function parseProgress(raw: string | null): ProgressDocument {
   if (!raw) return emptyProgress();

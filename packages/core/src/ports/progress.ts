@@ -27,6 +27,9 @@ import type { FavouritesState } from "../favourites/model.js";
 import type { PracticeRecentState } from "../practice/recent.js";
 import type { LessonDocumentKey } from "../progress/document.js";
 
+/** Learner-facing cards that share the one ProgressDocument scheduler. */
+export type LearnerCardKind = "course-card" | "recap-card";
+
 export interface LessonProgress {
   /** 0 to 1. Never moves backwards — a failed attempt cannot undo progress. */
   progress: number;
@@ -40,8 +43,12 @@ export interface LessonProgress {
 
 export interface CardProgress {
   readonly cardKey: string;
+  /** Absent on cards written before card kinds became explicit. */
+  readonly kind?: LearnerCardKind;
   readonly studyId: string;
   readonly courseId: string;
+  /** Required for recap cards; old course-card rows did not store the unit. */
+  readonly unitId?: string;
   readonly lessonId: string;
   /** Revision of the authored card content this scheduler state belongs to. */
   readonly contentRevision?: number;
@@ -107,6 +114,14 @@ export interface RetrievalAttemptRecord {
   readonly confidence?: number;
 }
 
+/** The one learner write that turns a typed teach-back into a scheduled card. */
+export interface RecapCardInput {
+  readonly locator: LessonRef;
+  readonly contentRevision: number;
+  readonly commandId: string;
+  readonly answer: string;
+}
+
 export interface ProgressDocument {
   lessons: Record<string, LessonProgress>;
   cards: Record<string, CardProgress>;
@@ -170,6 +185,10 @@ export interface ProgressPort {
   /** Record one idempotent XP event in the shared learner document. */
   addXp(eventId: string, amount: number): void;
   dropCards(studyId: string, courseId: string, lessonId: string, cardIds: readonly string[]): void;
+  /** Store one learner-authored teach-back and schedule its return. */
+  createRecapCard(input: RecapCardInput): void;
+  /** Read the recap card for a lesson without exposing the document key builder. */
+  recapCard(locator: LessonRef): CardProgress | null;
   dueCards(asOf?: number): readonly CardProgress[];
   dueTomorrow(asOf?: number): number;
   gradeCard(cardKey: string, rating: RatingName): void;

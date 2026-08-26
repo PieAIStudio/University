@@ -31,10 +31,11 @@ import type {
   WordProgress,
   CardProgress,
   RetrievalAttemptRecord,
+  RecapCardInput,
 } from "../ports/progress.js";
 import type { ReaderMark } from "../domain/reader-marks.js";
 import type { LessonRef } from "./contract.js";
-import { cloneProgress, emptyProgress, parseProgress } from "./document.js";
+import { cloneProgress, emptyProgress, parseProgress, recapCardKeyOf } from "./document.js";
 import { mergeProgress } from "./merge.js";
 import { xpFor } from "./xp.js";
 import {
@@ -240,6 +241,7 @@ export function createProgressPort(options: { readonly persistence: Persistence 
       const fresh = newCard();
       state.cards[cardKey] = {
         cardKey,
+        kind: "course-card",
         studyId,
         courseId,
         lessonId,
@@ -248,6 +250,63 @@ export function createProgressPort(options: { readonly persistence: Persistence 
       };
     }
     commit();
+  }
+
+  /**
+   * A teach-back is learner data, not authored content.
+   *
+   * The first answer is recorded in the same retrieval-attempt ledger used by
+   * later reviews. Saving is deliberately not a streak or XP event: the card
+   * exists so that returning to it, answering again, and self-rating become
+   * the learning loop.
+   */
+  function createRecapCard(input: RecapCardInput): void {
+    if (
+      !input.commandId.trim() ||
+      !input.answer.trim() ||
+      !Number.isSafeInteger(input.contentRevision) ||
+      input.contentRevision <= 0 ||
+      [
+        input.locator.studyId,
+        input.locator.courseId,
+        input.locator.unitId,
+        input.locator.lessonId,
+      ].some((id) => !id.trim())
+    ) {
+      return;
+    }
+
+    const cardKey = recapCardKeyOf(input.locator);
+    // One lesson gets one recap card. A command id is also an immutable event
+    // id, so a retry after an offline write cannot add another first answer.
+    if (state.cards[cardKey] || state.retrievalAttempts[input.commandId]) return;
+
+    const now = Date.now();
+    state.cards[cardKey] = {
+      cardKey,
+      kind: "recap-card",
+      studyId: input.locator.studyId,
+      courseId: input.locator.courseId,
+      unitId: input.locator.unitId,
+      lessonId: input.locator.lessonId,
+      contentRevision: input.contentRevision,
+      dueAt: startOfNextDay(now),
+      fsrs: storeCard(newCard()),
+    };
+    state.retrievalAttempts[input.commandId] = {
+      commandId: input.commandId,
+      cardKey,
+      contentRevision: input.contentRevision,
+      answer: input.answer,
+      revealedAt: new Date(now).toISOString(),
+      durationMs: 0,
+      usedHint: false,
+    };
+    commit();
+  }
+
+  function recapCard(locator: LessonRef): CardProgress | null {
+    return state.cards[recapCardKeyOf(locator)] ?? null;
   }
 
   function dueCards(asOf = Date.now()) {
@@ -513,6 +572,8 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     confirmLessonRead,
     addXp,
     dropCards,
+    createRecapCard,
+    recapCard,
     dueCards,
     dueTomorrow,
     gradeCard,

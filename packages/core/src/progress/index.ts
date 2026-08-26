@@ -21,6 +21,8 @@ export {
   emptyProgress,
   lessonKey,
   lessonKeyOf,
+  recapCardKeyOf,
+  RECAP_CARD_ID,
   type LessonDocumentKey,
   parseProgress,
   PROGRESS_STORAGE_KEY,

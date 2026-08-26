@@ -293,6 +293,8 @@ export {
   emptyProgress,
   lessonKey,
   lessonKeyOf,
+  recapCardKeyOf,
+  RECAP_CARD_ID,
   type LessonDocumentKey,
   mergeProgress,
   parseProgress,

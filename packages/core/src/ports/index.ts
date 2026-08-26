@@ -26,6 +26,7 @@ export {
 } from "./presence.js";
 export type {
   CardProgress,
+  LearnerCardKind,
   LessonProgress,
   Persistence,
   ProgressDocument,
@@ -35,6 +36,7 @@ export type {
   ProgressSyncStatus,
   ExerciseAttemptRecord,
   RetrievalAttemptRecord,
+  RecapCardInput,
   StoredReaderMark,
   WordProgress,
 } from "./progress.js";
