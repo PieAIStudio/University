@@ -33,7 +33,6 @@ import {
 import {
   activeIdForView,
   courseShapeOf,
-  fromHash,
   isBareView,
   LIBRARY_VIEW_TAB,
   libraryTabOf,
@@ -42,9 +41,7 @@ import {
   readCourseProgress,
   spineOf,
   toHash,
-  WORLD,
   type LessonRef,
-  type View,
 } from "@pieai/university-core";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import { spacedName } from "@pieai/university-ui/text/spaced-name.js";
@@ -132,6 +129,7 @@ import { CourseIsland } from "./CourseIsland.js";
 import { PlanetRail, PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { useMinWidth } from "./shell-route";
+import { useRoute } from "./use-route";
 import { useShelf } from "./use-shelf";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
@@ -142,23 +140,6 @@ import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
 const ProfileAvatar = lazy(() =>
   import("./ProfileAvatar.js").then((mod) => ({ default: mod.ProfileAvatar })),
 );
-
-/**
- * A destination this build can actually answer.
- *
- * `#/studio` belongs to the shared address space because the workbench is a
- * mode of one product, not a second one — but the workbench needs an authoring
- * pipeline on the other end of the address, and a delivery build has none. So
- * there the hash lands on the map, which is where it landed before the two
- * campuses shared a parser and `studio` read as a study nobody has.
- *
- * One address space is not one set of screens, and this is the whole list of
- * places the two disagree. It is one line long on purpose: a second entry
- * would be a second difference, and V4 allows one.
- */
-function routable(view: View): View {
-  return view.kind === "studio" && !AUTHORING ? WORLD : view;
-}
 
 type PathOverlay =
   | {
@@ -183,22 +164,7 @@ export function App() {
     [],
   );
   const { shelf, studyNames, shelfError, studies, nodes, courseOf } = useShelf();
-  // The address bar is the source of truth for where the learner is, so a
-  // reload lands where they were and a lesson can be sent to someone.
-  const [view, setViewState] = useState<View>(() => routable(fromHash(location.hash)));
-  const setView = useCallback((next: View) => {
-    if (toHash(next) !== location.hash) history.pushState(null, "", toHash(next));
-    setViewState(next);
-  }, []);
-  useEffect(() => {
-    const onHash = () => setViewState(routable(fromHash(location.hash)));
-    addEventListener("popstate", onHash);
-    addEventListener("hashchange", onHash);
-    return () => {
-      removeEventListener("popstate", onHash);
-      removeEventListener("hashchange", onHash);
-    };
-  }, []);
+  const { view, setView } = useRoute();
   const wide = useMinWidth(768);
   /**
    * The study the camera is looking at. `undefined` means "not chosen yet" —
