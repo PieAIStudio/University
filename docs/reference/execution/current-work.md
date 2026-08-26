@@ -384,7 +384,7 @@ argument:
 | R0 | Delete dead code | **done** |
 | R1 | Narrow the export surface | **done** |
 | R2 | `packages/world/src`, 47 direct children into directories | **done** — 47 → 10 |
-| R3 | Shared components' CSS back beside the components | in progress |
+| R3 | Shared components' CSS back beside the components | **done** — 8 families, 830 lines |
 | R4 | Split `App.tsx` | |
 | R5 | 359 colour literals into tokens | |
 
@@ -472,6 +472,13 @@ still one 4,896-line file is paving a moving road.
   was green: typecheck, lint and 120 unit tests all passed, because nothing in
   the unit suite renders `App`. All 15 browser walks failed. This is the whole
   argument for keeping `pnpm e2e` outside `verify` and running it anyway.
+- **Two files claiming the same class name is not automatically a bug.**
+  `margin-note` had a full duplicate rule set in `lesson-reader.css`, predating
+  the move; diffed selector by selector, every declaration was byte-identical
+  to the moved copy. Cascade order cannot change a computed style when both
+  candidates resolve to the same value — so the two rules should still be
+  collapsed into one (still open, low priority), but they were never a source
+  of drift.
 - **A moved file's asset imports are invisible to typecheck.** Grouping
   `packages/world/src` into directories left three GLB imports in
   `island/generated-landmark.tsx` pointing at the old relative path.
