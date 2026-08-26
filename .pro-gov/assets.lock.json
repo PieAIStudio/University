@@ -12,8 +12,8 @@
   "registryProvenance": {
     "schema": "agent-assets-registry",
     "version": 1,
-    "hash": "sha256:5a453b3521951b5f92afb0741ca9403dbce79205879b79956b4fbbf8d80c7211",
-    "assetCount": 40
+    "hash": "sha256:526e03f9fc20c4b21ef3507ac855a10e8e7327d67efa9285d22b358473a2e4ab",
+    "assetCount": 43
   },
   "assets": [
     {
@@ -29,6 +29,20 @@
       "delivery": "symlink",
       "contentHash": "sha256:a674b7d81066e3cc471a7512ddb4ae724418cbfefa75cbb050b0dc430e4d57a0",
       "targetPath": ".agents/skills/agent-browser"
+    },
+    {
+      "id": "npx-skills/eli5",
+      "sourcePath": "skills/npx-skills/.agents/skills/eli5",
+      "delivery": "symlink",
+      "contentHash": "sha256:9bda84c3a322554c8b93f2ccc681eff868a734a9bd35fa26c1c9ae096f795758",
+      "targetPath": ".agents/skills/eli5"
+    },
+    {
+      "id": "npx-skills/fireworks-open-eli5",
+      "sourcePath": "skills/npx-skills/.agents/skills/fireworks-open-eli5",
+      "delivery": "symlink",
+      "contentHash": "sha256:3a0d8b3a7d6a162adb1b868a06715de4d0bb6e688349a964783fe3626b3cd11d",
+      "targetPath": ".agents/skills/fireworks-open-eli5"
     },
     {
       "id": "npx-skills/frontend-design",
@@ -218,6 +232,13 @@
       "delivery": "symlink",
       "contentHash": "sha256:8dbcb90df1b95f2c4af24575aa0dfeb55c8eb504d301e8bf09cb0444f6780333",
       "targetPath": ".agents/manual-skills/design-taste-frontend-v1"
+    },
+    {
+      "id": "third-party-skills/fireworks-tech-graph",
+      "sourcePath": "skills/third-party-without-npx-skills/fireworks-tech-graph",
+      "delivery": "symlink",
+      "contentHash": "sha256:5ff232c0cd705161a67ea0c29cc78addc826d6adbe7aaaadcda65129570f1e90",
+      "targetPath": ".agents/manual-skills/fireworks-tech-graph"
     },
     {
       "id": "third-party-skills/full-output-enforcement",

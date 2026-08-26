@@ -12,6 +12,8 @@
   "assetIds": [
     "npx-skills/3d-web-experience",
     "npx-skills/agent-browser",
+    "npx-skills/eli5",
+    "npx-skills/fireworks-open-eli5",
     "npx-skills/frontend-design",
     "npx-skills/img2threejs",
     "npx-skills/impeccable",
@@ -39,6 +41,7 @@
     "third-party-skills/brandkit",
     "third-party-skills/design-taste-frontend",
     "third-party-skills/design-taste-frontend-v1",
+    "third-party-skills/fireworks-tech-graph",
     "third-party-skills/full-output-enforcement",
     "third-party-skills/game-studio",
     "third-party-skills/gpt-taste",

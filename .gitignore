@@ -13,6 +13,8 @@ university.config.local.json
 # PGS workstation materializations. University-owned skills stay tracked;
 # these generic links are recreated from the control-plane asset plan.
 .agents/skills/agent-browser
+.agents/skills/eli5
+.agents/skills/fireworks-open-eli5
 .agents/skills/experience-capture
 .agents/skills/frontend-design
 .agents/skills/mermaid-diagrams
