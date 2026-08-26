@@ -21,7 +21,6 @@
  * end up with two renderers and a colour pipeline nobody can count.
  */
 import {
-  lazy,
   Suspense,
   useCallback,
   useEffect,
@@ -33,42 +32,23 @@ import {
 import {
   activeIdForView,
   isBareView,
-  LIBRARY_VIEW_TAB,
-  libraryTabOf,
   mistakesOf,
   progressSourceOf,
-  toHash,
   type LessonRef,
 } from "@pieai/university-core";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import { StudySwitcher } from "@pieai/university-ui/navigation/StudySwitcher.js";
-import {
-  AccountPanel,
-  ProfileScreen,
-  SettingsScreen,
-  SettingsSubnav,
-} from "@pieai/university-ui/navigation/empty.js";
-import {
-  BadgeWall,
-  LevelProgress,
-  LeagueScreen,
-  PlansScreen,
-  QuestsScreen,
-} from "@pieai/university-ui/navigation/screens.js";
+import { SettingsSubnav } from "@pieai/university-ui/navigation/empty.js";
+import { LevelProgress } from "@pieai/university-ui/navigation/screens.js";
 import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
-import { NodeCard } from "@pieai/university-ui/path/NodeCard.js";
-import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
-import { MistakeList, MistakesEntry } from "@pieai/university-ui/practice/mistakes.js";
 import { CourseScene } from "@pieai/university-world/Maps.js";
 import { frameCourse } from "@pieai/university-world/course-map.js";
 import { type CourseNode } from "@pieai/university-world/course.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
-import { pathLessonOf, pathUnitOf } from "@pieai/university-ui/path/from-course-view.js";
 
 import { AUTHORING } from "../mode";
-import { MapNotes, StudioScreen } from "../authoring/index";
 import { contentPort } from "../ports/index";
 import { identityPort } from "../account/identity";
 import { bindProgressToIdentity } from "../account/session";
@@ -80,18 +60,7 @@ import {
   snapshot,
   subscribe,
 } from "../progress/store";
-import { AvatarLab } from "../screens/AvatarLab";
-import {
-  AntiPatternEntryHost,
-  ConceptEntryHost,
-  CourseCatalog,
-  LessonScreen,
-  LibraryHost,
-  PracticeHost,
-  RouteFallback,
-  SettlementHost,
-  TermEntryHost,
-} from "../screens/lazy";
+import { LessonScreen, RouteFallback } from "../screens/lazy";
 
 import {
   todayCtaLabel,
@@ -111,7 +80,7 @@ import { EMPTY_SHELF_HINT } from "../mode";
 import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
 import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
 import { CourseIsland } from "./CourseIsland.js";
-import { PlanetRail, PlanetStage } from "@pieai/university-world/planet.js";
+import { PlanetRail } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { useCourseProgress } from "./course-progress";
 import { useMinWidth } from "./shell-route";
@@ -124,10 +93,7 @@ import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
 import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
-
-const ProfileAvatar = lazy(() =>
-  import("./ProfileAvatar.js").then((mod) => ({ default: mod.ProfileAvatar })),
-);
+import { MainRouter } from "./MainRouter";
 
 export function App() {
   const progress = useSyncExternalStore(subscribe, snapshot);
@@ -641,273 +607,38 @@ export function App() {
   );
 
   const main = (
-    <>
-      {/*
-        The campus record is still opening.
-
-        Not decoration and not only for the learner: until the shelf has been
-        named there is no series for the capsule to show, so the picker beside
-        「University」 is missing and the two builds genuinely do not look alike.
-        The delivery build ships its catalogue and never renders this line; the
-        authoring build has to ask a loopback server, and saying so is what
-        makes 「the chrome is the same」 a claim about the settled screen instead
-        of a race against a fetch.
-      */}
-      {studyNames.length === 0 && !shelf ? <p className="loading-copy">正在打开校园档案…</p> : null}
-      <div className="learn-stage">
-        {stage}
-        {wide && showMap ? (
-          <div className="learn-hud">
-            {/*
-              No 「next lesson」 card here at this width. The right rail's
-              「今天」 already carries the same title, the same metadata and the
-              same button, so rendering both put two competing orange calls to
-              action on one screen — and this one sat on top of the map,
-              covering an island's own label. The rail owns it where the rail
-              exists; below 1160 there is no rail and the floating card above
-              takes over. One call to action at every width.
-            */}
-            {courseIslandProps ? <CourseIsland {...courseIslandProps} /> : null}
-          </div>
-        ) : null}
-      </div>
-      {/*
-        Which version of the project this campus teaches, and the way into the
-        UA graph. Under the stage rather than over it: an overlay child fills
-        the canvas's box, and a grid with pointer events on it swallows every
-        click aimed at an island — measured, by G2 failing to reach a stone.
-      */}
-      {AUTHORING && view.kind === "world" ? <MapNotes studyId={focusedStudyId} /> : null}
-      {view.kind === "avatar-lab" ? (
-        <Suspense fallback={<RouteFallback />}>
-          <AvatarLab onOpen={setView} />
-        </Suspense>
-      ) : null}
-
-      {view.kind === "course" &&
-      course &&
-      pathOverlay?.kind === "node" &&
-      pathUnit &&
-      pathLesson ? (
-        <NodeCard
-          open
-          /*
-            The cards read counts, not prose — one fold, shared with the
-            settlement's next-step card, so the two can never quote a different
-            cost for the same lesson.
-          */
-          lesson={pathLessonOf(pathLesson)}
-          unit={pathUnitOf(pathUnit)}
-          onClose={() => setPathOverlay(null)}
-          onStart={() => {
-            setPathOverlay(null);
-            setView({
-              kind: "lesson",
-              studyId: view.studyId,
-              courseId: view.courseId,
-              unitId: pathUnit.id,
-              lessonId: pathLesson.id,
-            });
-          }}
-          onStartUnit={() => {
-            const first = pathUnit.lessons[0];
-            if (!first) return;
-            setPathOverlay(null);
-            setView({
-              kind: "lesson",
-              studyId: view.studyId,
-              courseId: view.courseId,
-              unitId: pathUnit.id,
-              lessonId: first.id,
-            });
-          }}
-          returnFocusTo={pathOverlay.returnFocusTo}
-        />
-      ) : null}
-
-      {view.kind === "course" && course && pathOverlay?.kind === "unit" && pathUnit ? (
-        <UnitCard
-          open
-          unit={pathUnitOf(pathUnit)}
-          onClose={() => setPathOverlay(null)}
-          onStart={() => {
-            const first = pathUnit.lessons[0];
-            if (!first) return;
-            setPathOverlay(null);
-            setView({
-              kind: "lesson",
-              studyId: view.studyId,
-              courseId: view.courseId,
-              unitId: pathUnit.id,
-              lessonId: first.id,
-            });
-          }}
-          returnFocusTo={pathOverlay.returnFocusTo}
-        />
-      ) : null}
-
-      {view.kind === "settled" && course ? (
-        <Suspense fallback={<RouteFallback />}>
-          <SettlementHost
-            course={course}
-            grewFrom={grewFrom}
-            locator={{
-              studyId: view.studyId,
-              courseId: view.courseId,
-              unitId: view.unitId,
-              lessonId: view.lessonId,
-            }}
-            onMap={() =>
-              setView({ kind: "course", studyId: view.studyId, courseId: view.courseId })
-            }
-            onNext={(unitId, lessonId) =>
-              setView({
-                kind: "lesson",
-                studyId: view.studyId,
-                courseId: view.courseId,
-                unitId,
-                lessonId,
-              })
-            }
-            onIncomplete={() =>
-              setView({
-                kind: "lesson",
-                studyId: view.studyId,
-                courseId: view.courseId,
-                unitId: view.unitId,
-                lessonId: view.lessonId,
-              })
-            }
-          />
-        </Suspense>
-      ) : null}
-
-      {view.kind === "review" ? (
-        <div className="review-page">
-          <MistakesEntry count={uncorrectedMistakeCount} hasMistakes={mistakes.length > 0} />
-          {todaySection}
-        </div>
-      ) : null}
-
-      {view.kind === "mistakes" ? (
-        <MistakeList
-          mistakes={mistakes}
-          content={contentPort}
-          onOpenLesson={(locator) => setView({ kind: "lesson", ...locator })}
-        />
-      ) : null}
-
-      {view.kind === "term" ? (
-        <Suspense fallback={<RouteFallback />}>
-          <TermEntryHost senseId={view.senseId} onOpen={setView} />
-        </Suspense>
-      ) : null}
-
-      {LIBRARY_VIEW_TAB[view.kind] ? (
-        <Suspense fallback={<RouteFallback />}>
-          <LibraryHost tab={libraryTabOf(view)} studyId={focusedStudyId} onOpen={setView} />
-        </Suspense>
-      ) : null}
-
-      {view.kind === "concept" ? (
-        <Suspense fallback={<RouteFallback />}>
-          <ConceptEntryHost id={view.id} onOpen={setView} />
-        </Suspense>
-      ) : null}
-
-      {view.kind === "practice" ? (
-        <Suspense fallback={<RouteFallback />}>
-          <PracticeHost onOpen={setView} />
-        </Suspense>
-      ) : null}
-
-      {view.kind === "catalog" ? (
-        <Suspense fallback={<RouteFallback />}>
-          <CourseCatalog onOpen={setView} />
-        </Suspense>
-      ) : null}
-
-      {view.kind === "anti-pattern-entry" ? (
-        <Suspense fallback={<RouteFallback />}>
-          <AntiPatternEntryHost id={view.id} onOpen={setView} />
-        </Suspense>
-      ) : null}
-
-      {/*
-        These three read the same progress document the learning screens write,
-        through the same `useSyncExternalStore` subscription — so a quest cannot
-        show 0/1 next to a lesson that was just finished. Nothing about them is
-        stored; see packages/core progress/goals.ts.
-      */}
-      {/*
-        Only the globe here. The list is in the shell's aside, where the map
-        puts 「今天」 — so stepping out to the planet keeps the frame and
-        changes the world inside it, instead of swapping a world for a page.
-      */}
-      {view.kind === "planet" ? (
-        <div className="planet-page__globe" data-planet-globe="true">
-          <PlanetStage studies={planetStudies} selectedId={focusedStudyId} onSelect={setMapFocus} />
-        </div>
-      ) : null}
-      {/*
-        The workbench. `AUTHORING` is a build-time constant, so this branch and
-        everything `../authoring/` imports are gone from a delivery bundle —
-        which is also why `#/studio` lands on the map there rather than on an
-        empty column.
-      */}
-      {AUTHORING && view.kind === "studio" ? (
-        <StudioScreen
-          studyId={focusedStudyId}
-          onSelectStudy={focusStudy}
-          onOpenLesson={(locator) => setView({ kind: "lesson", ...locator })}
-        />
-      ) : null}
-      {view.kind === "league" ? <LeagueScreen document={progress} /> : null}
-      {view.kind === "quests" ? <QuestsScreen document={progress} /> : null}
-      {view.kind === "plans" ? <PlansScreen /> : null}
-      {view.kind === "settings" ? (
-        <SettingsScreen presence={presencePort} progress={progressPort} />
-      ) : null}
-      {view.kind === "me" ? (
-        <ProfileScreen
-          avatar={
-            <Suspense
-              fallback={
-                <div className="profile-avatar">
-                  <LoadingTrivia />
-                </div>
-              }
-            >
-              <ProfileAvatar />
-            </Suspense>
-          }
-          account={<AccountPanel identity={identityPort} />}
-          totalXp={progress.totalXp}
-          badges={<BadgeWall document={progress} coursesFinished={profileStats.coursesFinished} />}
-          passagesRead={profileStats.passagesRead}
-          lessonsCompleted={profileStats.lessonsCompleted}
-          nextHref={
-            nextUpProgress?.next
-              ? toHash({
-                  kind: "lesson",
-                  studyId: nextUpProgress.next.studyId,
-                  courseId: nextUpProgress.next.courseId,
-                  unitId: nextUpProgress.next.unitId,
-                  lessonId: nextUpProgress.next.lessonId,
-                })
-              : todayNode
-                ? toHash({
-                    kind: "course",
-                    studyId: todayNode.studyId,
-                    courseId: todayNode.courseId,
-                  })
-                : "#/"
-          }
-        />
-      ) : null}
-    </>
+    <MainRouter
+      contentPort={contentPort}
+      course={course}
+      courseIslandProps={courseIslandProps}
+      focusedStudyId={focusedStudyId}
+      focusStudy={focusStudy}
+      grewFrom={grewFrom}
+      identityPort={identityPort}
+      mistakes={mistakes}
+      nextUpProgress={nextUpProgress}
+      pathLesson={pathLesson}
+      pathOverlay={pathOverlay}
+      pathUnit={pathUnit}
+      planetStudies={planetStudies}
+      presencePort={presencePort}
+      profileStats={profileStats}
+      progress={progress}
+      progressPort={progressPort}
+      setMapFocus={setMapFocus}
+      setPathOverlay={setPathOverlay}
+      setView={setView}
+      shelf={shelf}
+      showMap={showMap}
+      stage={stage}
+      studyNames={studyNames}
+      todayNode={todayNode}
+      todaySection={todaySection}
+      uncorrectedMistakeCount={uncorrectedMistakeCount}
+      view={view}
+      wide={wide}
+    />
   );
-
   /*
     An empty shelf, after every hook rather than before some of them.
 
