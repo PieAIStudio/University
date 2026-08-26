@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Course, Lesson } from "../content/library";
 import { toHash } from "@pieai/university-core";
 import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
-import { resetAll } from "../progress/store";
+import { lessonKey, progressPort, resetAll } from "../progress/store";
 import { LessonScreen } from "./LessonScreen";
 
 vi.mock("@pieai/university-ui/sound/index.js", () => ({
@@ -232,6 +232,18 @@ describe("the shared lesson reader", () => {
     expect(container.querySelector(".lesson-reader")).not.toBeNull();
     expect(container.querySelector(".exercise-panel")).not.toBeNull();
     expect(container.querySelector(".lesson-next")).not.toBeNull();
+  });
+
+  it("keeps the current exercise gate visible when aggregate progress is already one", async () => {
+    const key = lessonKey(LOCATOR.studyId, LOCATOR.courseId, LOCATOR.lessonId);
+    progressPort.advanceLesson(key, 1);
+    progressPort.confirmLessonRead(key, LESSON.contentRevision);
+
+    await renderHost();
+
+    expect(container.textContent).toContain("练习通过后");
+    expect(container.textContent).toContain("再次确认本次更新");
+    expect(container.querySelector(".lesson-practice")).toBeNull();
   });
 
   it("does not offer a clickable local source checkout in delivery", async () => {

@@ -344,12 +344,14 @@ the list below contains the remaining implementation and authority boundaries.
    revision, and all four grading call sites wrote them. Nothing *read* the
    failed ones, so the feature read as unbuilt when it was unsurfaced. 错题本
    is `#/mistakes`, a pure fold over the document with no new storage.
-6. **Separate 「读完了」 from 「答对了」.** `progressSourceOf` still derives
-   `exercisesPassed` from `progress >= 1`, which is a proxy and reads as a
-   circular one from inside a lesson screen: the flag the settlement is about
-   to write is the flag it is asking about. The lesson reader works around it
-   by reading the two facts independently; the read model should stop needing
-   the workaround.
+6. ~~**Separate 「读完了」 from 「答对了」.**~~ **Done.** The shared
+   `ProgressSource` now receives the current revision and exercise ids:
+   `exercisesPassed` comes from current-version passing attempts, while
+   `readConfirmed` comes from the explicit current-version reading action.
+   The lesson reader, settlement, map/catalog and 「今天」 all consume that
+   answer. A current row with aggregate `progress = 1` but no current exercise
+   passes remains in progress until both lights are on; pre-migration rows with
+   no `readConfirmed` field keep their compatibility finish.
 7. **A publish lane that reproduces from a clean clone.** Today's delivery
    build does not: the course sources live on one machine's disk, the
    generated `content/` is gitignored, and Vercel builds from a checkout that

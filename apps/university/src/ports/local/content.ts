@@ -8,7 +8,9 @@
 import {
   isSafeId,
   lessonKey,
+  lessonKeyOf,
   lessonRefKey,
+  progressSourceOf,
   type LessonRef,
   type ProgressPort,
 } from "@pieai/university-core";
@@ -31,6 +33,7 @@ import type {
   LessonView,
   StudyView,
 } from "@pieai/university-ui/view/lesson-view.js";
+import { lessonProgressOf } from "@pieai/university-ui/view/lesson-view.js";
 
 /**
  * Ids reach a path join on the far side of this fetch.
@@ -86,6 +89,7 @@ export function createLocalContentPort(options: {
   readonly progress: ProgressPort;
 }): ContentPort {
   const exerciseIdsByLesson = new Map<string, readonly string[] | null>();
+  const source = progressSourceOf(options.progress);
   return {
     // Nothing is known before the loopback server answers. The screen says so
     // rather than painting a capsule with no series in it, which is what the
@@ -165,7 +169,25 @@ export function createLocalContentPort(options: {
         (view.lesson.exercises ?? []).map((exercise) => exercise.id),
       );
       importLegacyLessonRecords(view, locator, options.progress);
-      return view;
+      const state = options.progress.lessonState(lessonKeyOf(locator));
+      const exercises = view.lesson.exercises;
+      const completion = source.completionOf(locator, {
+        contentRevision: view.lesson.contentRevision,
+        exerciseIds: exercises?.map((exercise) => exercise.id) ?? [],
+        ...(exercises ? {} : { exerciseIdsComplete: false }),
+      });
+      return {
+        ...view,
+        lesson: {
+          ...view.lesson,
+          progress: lessonProgressOf(
+            state,
+            completion,
+            view.lesson.contentRevision,
+            exercises?.length ?? 0,
+          ),
+        },
+      };
     },
 
     async exercise(locator, exerciseId): Promise<MistakeExercise> {

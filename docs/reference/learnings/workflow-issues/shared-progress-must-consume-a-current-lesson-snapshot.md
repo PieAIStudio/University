@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: ai-assisted
 created: 2026-08-25
-last_reviewed: 2026-08-25
+last_reviewed: 2026-08-26
 domain: learning
 tags:
   - learning-recall
@@ -22,7 +22,7 @@ capture_mode: pgs-native
 
 ## Guidance
 
-Verified in the University progress read model: never derive exercisesPassed from aggregate lesson progress. Pass the current contentRevision and complete exerciseIds into progressSourceOf, then query latestExerciseAttempt(...).hostGrade.passed for every id and compare readConfirmedRevision to that same revision. Otherwise settlement writes progress=1 and the reader later asks that same aggregate field, creating a circular read/write result, while a delivery-only revision constant can reject authoring revisions. Keep an explicit incomplete exercise-list state so unloaded ids are not mistaken for a no-exercise lesson, and preserve legacy rows where readConfirmed is undefined and progress >= 1. Apply whenever shared progress serves delivery and authoring content versions.
+Verified in the University progress read model: never derive exercisesPassed from aggregate lesson progress. Pass the current contentRevision and complete exerciseIds into progressSourceOf, then query latestExerciseAttempt(...).hostGrade.passed for every id and compare readConfirmedRevision to that same revision. Otherwise settlement writes progress=1 and the reader later asks that same aggregate field, creating a circular read/write result, while a delivery-only revision constant can reject authoring revisions. Keep an explicit incomplete exercise-list state so unloaded ids are not mistaken for a no-exercise lesson, and preserve legacy rows where readConfirmed is undefined and progress >= 1. After the source is correct, re-project every screen-facing LessonProgress from that same completion result; carrying a server status or read flag forward can resurrect the old proxy in the reader or 「今天」 panel. Apply whenever shared progress serves delivery and authoring content versions.
 
 ## Applies When
 

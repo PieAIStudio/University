@@ -88,6 +88,23 @@ describe("progressSourceOf", () => {
     });
   });
 
+  it("does not use aggregate progress as current exercise proof", () => {
+    const source = progressSourceOf(
+      port({
+        progress: 1,
+        completedAt: null,
+        attempts: 1,
+        readConfirmed: true,
+        readConfirmedRevision: 8,
+      }),
+    );
+
+    expect(source.completionOf(REF, snapshot(8, ["exercise"]))).toEqual({
+      exercisesPassed: false,
+      readConfirmed: true,
+    });
+  });
+
   it("does not reuse a passing attempt from an older content revision", () => {
     const source = progressSourceOf(
       port(

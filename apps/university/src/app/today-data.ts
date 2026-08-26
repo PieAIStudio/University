@@ -8,14 +8,20 @@
  * are answerable from the shelf's shape plus the shared progress document, so
  * that is what this takes.
  */
-import { lessonKeyOf } from "@pieai/university-core";
-import type { CardProgress, LessonRef, ProgressPort } from "@pieai/university-core";
+import {
+  lessonKeyOf,
+  progressSourceOf,
+  type CardProgress,
+  type LessonRef,
+  type ProgressPort,
+} from "@pieai/university-core";
 import type { ShelfStudy } from "@pieai/university-ui/content/port.js";
 import type {
   CourseReviewCardLocator,
   LessonProgress,
   NextLesson,
 } from "@pieai/university-ui/view/lesson-view.js";
+import { lessonProgressOf } from "@pieai/university-ui/view/lesson-view.js";
 
 /**
  * The revision a shelf lesson is on.
@@ -48,20 +54,17 @@ export function nextLessonOf(
   if (!study || !course || !lesson) return null;
   const contentRevision = lesson.contentRevision;
   const state = progress.lessonState(lessonKeyOf(ref));
-  const lessonProgress: LessonProgress | null =
-    state.progress === 0 && state.completedAt === null && state.readConfirmed !== true
-      ? null
-      : {
-          contentRevision,
-          status:
-            state.progress >= 1 &&
-            (state.readConfirmed === true || state.readConfirmed === undefined)
-              ? "completed"
-              : "in-progress",
-          progress: state.progress,
-          updatedAt: new Date(state.completedAt ?? Date.now()).toISOString(),
-          readConfirmed: state.readConfirmed === true || state.progress >= 1,
-        };
+  const completion = progressSourceOf(progress).completionOf(ref, {
+    contentRevision,
+    exerciseIds: lesson.exerciseIds,
+    ...(lesson.exerciseIdsComplete === false ? { exerciseIdsComplete: false } : {}),
+  });
+  const lessonProgress: LessonProgress | null = lessonProgressOf(
+    state,
+    completion,
+    contentRevision,
+    lesson.exerciseIds.length,
+  );
   return {
     ...ref,
     studyTitle: study.title,

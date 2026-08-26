@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { GameSegmentedControl, GameToggle } from "@pieai/swimmer-ui-kit";
-import type { GradingPort, ProgressPort, ReaderPort } from "@pieai/university-core";
+import {
+  isLessonComplete,
+  type GradingPort,
+  type LessonCompletion,
+  type ProgressPort,
+  type ReaderPort,
+} from "@pieai/university-core";
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
@@ -23,12 +29,7 @@ import type { LessonLinkTarget } from "../markdown/remark-lesson-links.js";
 import { ExerciseBlock } from "../review/ExerciseBlock.js";
 import { ReviewCard } from "../review/ReviewCard.js";
 import type { ReviewCardPort } from "../review/ports.js";
-import {
-  isCurrentLessonCompleted,
-  readingSections,
-  type LessonRef,
-  type LessonView,
-} from "../view/lesson-view.js";
+import { readingSections, type LessonRef, type LessonView } from "../view/lesson-view.js";
 import { LessonToolbar, type LessonNeighbours } from "./LessonNav.js";
 import { LessonMarkList } from "./LessonMarkList.js";
 import { LessonMargin } from "./LessonMargin.js";
@@ -68,6 +69,7 @@ interface SourceReturnFocus {
 export function LessonReader({
   locator,
   view,
+  completion,
   reader,
   grading,
   progress,
@@ -84,6 +86,8 @@ export function LessonReader({
 }: {
   readonly locator: LessonRef;
   readonly view: LessonView;
+  /** The core read model's answer for this current lesson snapshot. */
+  readonly completion: LessonCompletion;
   readonly reader: ReaderPort;
   readonly grading: GradingPort;
   readonly progress?: ProgressPort;
@@ -102,11 +106,8 @@ export function LessonReader({
   /** Shell-owned tools that sit with the reading controls, not a second toolbar. */
   readonly toolbarExtras?: ReactNode;
 }) {
-  const completed = isCurrentLessonCompleted(view.lesson.progress, view.lesson.contentRevision);
-  const readConfirmed = Boolean(
-    view.lesson.progress?.readConfirmed &&
-    view.lesson.progress.contentRevision === view.lesson.contentRevision,
-  );
+  const completed = isLessonComplete(completion);
+  const readConfirmed = completion.readConfirmed;
   const accountPreferences = progress?.accountData().preferences;
   const [englishMode, setEnglishMode] = useState(
     () => accountPreferences?.foreignLanguageMode ?? readForeignLanguageMode(),

@@ -1,4 +1,4 @@
-import type { LessonRef } from "@pieai/university-core";
+import { isLessonComplete, type LessonCompletion, type LessonRef } from "@pieai/university-core";
 import type {
   EvidenceAnchorRange,
   LanguageLayer,
@@ -156,6 +156,39 @@ export interface LessonProgress {
   readonly progress: number;
   readonly updatedAt: string;
   readonly readConfirmed: boolean;
+}
+
+/**
+ * Project the shared completion facts into the progress shape a screen prints.
+ *
+ * `progress` is a learner-history number, not proof that the current revision's
+ * exercises passed. Completion status therefore comes only from the core read
+ * model; the number remains here for the progress percentage and timestamps.
+ */
+export function lessonProgressOf(
+  state: {
+    readonly progress: number;
+    readonly completedAt: number | null;
+    readonly attempts: number;
+  },
+  completion: LessonCompletion,
+  contentRevision: number,
+  exerciseCount: number,
+): LessonProgress | null {
+  const hasActivity =
+    state.progress !== 0 ||
+    state.completedAt !== null ||
+    state.attempts > 0 ||
+    (exerciseCount > 0 && completion.exercisesPassed) ||
+    completion.readConfirmed;
+  if (!hasActivity) return null;
+  return {
+    contentRevision,
+    status: isLessonComplete(completion) ? "completed" : "in-progress",
+    progress: state.progress,
+    updatedAt: new Date(state.completedAt ?? Date.now()).toISOString(),
+    readConfirmed: completion.readConfirmed,
+  };
 }
 
 export interface LessonSectionView {

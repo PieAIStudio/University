@@ -15,8 +15,9 @@ import {
   resolveLessonLinks,
   resolveTermLinks,
   termRangeOf,
+  type LessonCompletion,
 } from "@pieai/university-core";
-import type { LessonProgress, LessonView } from "@pieai/university-ui/view/lesson-view.js";
+import { lessonProgressOf, type LessonView } from "@pieai/university-ui/view/lesson-view.js";
 
 import { isRepositoryAnchor } from "../content/library";
 import type { Course, Lesson } from "../content/library";
@@ -31,14 +32,16 @@ export function assembleLessonView(input: {
   readonly lesson: Lesson;
   readonly studyId: string;
   readonly unitId: string;
+  readonly completion: LessonCompletion;
   readonly progress: {
     readonly progress: number;
     readonly completedAt: number | null;
+    readonly attempts: number;
     readonly readConfirmed?: boolean;
     readonly readConfirmedRevision?: number;
   };
 }): LessonView {
-  const { course, lesson, unitId, progress } = input;
+  const { course, lesson, unitId, progress, completion } = input;
   const parsed = parseLessonLinks(lesson.content);
   const index = assembleLessonIndex(
     course.units.flatMap((unit) =>
@@ -62,13 +65,6 @@ export function assembleLessonView(input: {
   */
   const repositoryEvidence = lesson.evidence.filter(isRepositoryAnchor);
   const commits = [...new Set(repositoryEvidence.map((item) => item.sourceCommit))];
-  const readConfirmed =
-    progress.readConfirmed === true &&
-    (progress.readConfirmedRevision === undefined ||
-      progress.readConfirmedRevision === ONLINE_CONTENT_REVISION);
-  const completed =
-    progress.progress >= 1 && (readConfirmed || progress.readConfirmed === undefined);
-
   return {
     lesson: {
       id: lesson.id,
@@ -111,7 +107,12 @@ export function assembleLessonView(input: {
         ),
       ),
       termAnchors: resolveTermLinks(parsed, LEXICON_BY_ID).map(termRangeOf),
-      progress: lessonProgressOf(progress, completed),
+      progress: lessonProgressOf(
+        progress,
+        completion,
+        ONLINE_CONTENT_REVISION,
+        lesson.exercises.length,
+      ),
       evidence: lesson.evidence.map((item) =>
         isRepositoryAnchor(item)
           ? {
@@ -146,28 +147,5 @@ export function assembleLessonView(input: {
         contentRevision: ONLINE_CONTENT_REVISION,
       })),
     },
-  };
-}
-
-function lessonProgressOf(
-  progress: {
-    readonly progress: number;
-    readonly completedAt: number | null;
-    readonly readConfirmed?: boolean;
-    readonly readConfirmedRevision?: number;
-  },
-  completed: boolean,
-): LessonProgress | null {
-  const readConfirmed =
-    progress.readConfirmed === true &&
-    (progress.readConfirmedRevision === undefined ||
-      progress.readConfirmedRevision === ONLINE_CONTENT_REVISION);
-  if (progress.progress === 0 && progress.completedAt === null && !readConfirmed) return null;
-  return {
-    contentRevision: ONLINE_CONTENT_REVISION,
-    status: completed ? "completed" : "in-progress",
-    progress: progress.progress,
-    updatedAt: new Date(progress.completedAt ?? Date.now()).toISOString(),
-    readConfirmed: readConfirmed || (completed && progress.readConfirmed === undefined),
   };
 }

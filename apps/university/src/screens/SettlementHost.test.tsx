@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
-import { advanceLesson, lessonKey } from "../progress/store";
+import { lessonKey, progressPort, resetAll } from "../progress/store";
 import { SettlementHost } from "./SettlementHost";
 
 vi.mock("@pieai/university-ui/sound/index.js", () => ({
@@ -14,6 +14,7 @@ vi.mock("@pieai/university-ui/sound/index.js", () => ({
 
 const LESSON_ID = "you-already-know-apps";
 const UNIT_ID = "what-is-an-app";
+const EXERCISE_ID = `${LESSON_ID}-exercise-0`;
 
 vi.mock("../ports/index", () => ({
   contentPort: {
@@ -68,7 +69,7 @@ const COURSE: CourseView = {
       objective: "能说出使用和开发的差别。",
       status: "active",
       lessons: [
-        lesson(LESSON_ID, "会使用 App 和会开发 App，差在哪儿？"),
+        lesson(LESSON_ID, "会使用 App 和会开发 App，差在哪儿？", 1),
         lesson("app-is-a-pile-of-files", "屏幕上的按钮，代码里能找到对应的哪几行？", 1),
       ],
     },
@@ -99,9 +100,41 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
+  resetAll();
   localStorage.clear();
   vi.unstubAllGlobals();
 });
+
+function locator(studyId: string) {
+  return {
+    studyId,
+    courseId: COURSE.id,
+    unitId: UNIT_ID,
+    lessonId: LESSON_ID,
+  } as const;
+}
+
+function passExercise(studyId: string): void {
+  const lesson = locator(studyId);
+  progressPort.recordExerciseAttempt({
+    commandId: `pass:${studyId}`,
+    locator: lesson,
+    exerciseId: EXERCISE_ID,
+    contentRevision: 1,
+    answer: "answer",
+    score: 1,
+    maxScore: 1,
+    hostGrade: {
+      passed: true,
+      evaluation: "通过",
+      extensions: [],
+      host: "test",
+      learnerAnswer: "answer",
+      occurredAt: "2026-08-26T00:00:00.000Z",
+    },
+    occurredAt: "2026-08-26T00:00:00.000Z",
+  });
+}
 
 describe("SettlementHost", () => {
   it("does not congratulate a visit that never finished the lesson", async () => {
@@ -111,12 +144,7 @@ describe("SettlementHost", () => {
         <SettlementHost
           course={COURSE}
           grewFrom={null}
-          locator={{
-            studyId: "turing-pact-open",
-            courseId: COURSE.id,
-            unitId: UNIT_ID,
-            lessonId: LESSON_ID,
-          }}
+          locator={locator("turing-pact-open")}
           onMap={vi.fn()}
           onNext={vi.fn()}
           onIncomplete={onIncomplete}
@@ -127,20 +155,59 @@ describe("SettlementHost", () => {
     expect(onIncomplete).toHaveBeenCalledTimes(1);
   });
 
-  it("renders the settlement once the document actually holds a finish", async () => {
-    advanceLesson(lessonKey("turing-pact-done", COURSE.id, LESSON_ID), 1);
+  it("does not congratulate correct exercises without a read confirmation", async () => {
+    const studyId = "turing-pact-answered";
+    passExercise(studyId);
     const onIncomplete = vi.fn();
     await act(async () => {
       root.render(
         <SettlementHost
           course={COURSE}
-          grewFrom={{ key: `turing-pact-done/${COURSE.id}/${LESSON_ID}`, doneBefore: 0 }}
-          locator={{
-            studyId: "turing-pact-done",
-            courseId: COURSE.id,
-            unitId: UNIT_ID,
-            lessonId: LESSON_ID,
-          }}
+          grewFrom={null}
+          locator={locator(studyId)}
+          onMap={vi.fn()}
+          onNext={vi.fn()}
+          onIncomplete={onIncomplete}
+        />,
+      );
+    });
+
+    expect(container.textContent).not.toContain("读完了");
+    expect(onIncomplete).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not congratulate a read confirmation without passing exercises", async () => {
+    const studyId = "turing-pact-read";
+    progressPort.confirmLessonRead(lessonKey(studyId, COURSE.id, LESSON_ID), 1);
+    const onIncomplete = vi.fn();
+    await act(async () => {
+      root.render(
+        <SettlementHost
+          course={COURSE}
+          grewFrom={null}
+          locator={locator(studyId)}
+          onMap={vi.fn()}
+          onNext={vi.fn()}
+          onIncomplete={onIncomplete}
+        />,
+      );
+    });
+
+    expect(container.textContent).not.toContain("读完了");
+    expect(onIncomplete).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders the settlement once the document actually holds a finish", async () => {
+    const studyId = "turing-pact-done";
+    progressPort.confirmLessonRead(lessonKey(studyId, COURSE.id, LESSON_ID), 1);
+    passExercise(studyId);
+    const onIncomplete = vi.fn();
+    await act(async () => {
+      root.render(
+        <SettlementHost
+          course={COURSE}
+          grewFrom={{ key: `${studyId}/${COURSE.id}/${LESSON_ID}`, doneBefore: 0 }}
+          locator={locator(studyId)}
           onMap={vi.fn()}
           onNext={vi.fn()}
           onIncomplete={onIncomplete}

@@ -2,6 +2,9 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { lessonKey } from "@pieai/university-core";
+
+import { progressPort, resetAll } from "../../progress/store";
 import { createOnlineContentPort } from "./content";
 
 const course = {
@@ -55,6 +58,7 @@ function servePackage() {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  resetAll();
 });
 
 describe("createOnlineContentPort", () => {
@@ -87,6 +91,22 @@ describe("createOnlineContentPort", () => {
     expect(view.lesson.content).toContain("一段课文");
     // A published package is one snapshot, so there is exactly one edition.
     expect(view.lesson.contentRevision).toBe(1);
+  });
+
+  it("does not trust aggregate progress over current exercise attempts", async () => {
+    servePackage();
+    const key = lessonKey(locator.studyId, locator.courseId, locator.lessonId);
+    progressPort.advanceLesson(key, 1);
+    progressPort.confirmLessonRead(key, 1);
+
+    const view = await createOnlineContentPort().lesson(locator);
+
+    expect(view.lesson.progress).toMatchObject({
+      contentRevision: 1,
+      status: "in-progress",
+      progress: 1,
+      readConfirmed: true,
+    });
   });
 
   /*

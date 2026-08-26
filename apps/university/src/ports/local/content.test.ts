@@ -41,6 +41,36 @@ describe("createLocalContentPort", () => {
     expect(view.lesson.id).toBe(locator.lessonId);
   });
 
+  it("does not trust the server's completed flag over current exercise attempts", async () => {
+    const progress = createProgressPort({ persistence: createMemoryPersistence() });
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      jsonOk({
+        lesson: {
+          id: locator.lessonId,
+          contentRevision: 2,
+          progress: {
+            contentRevision: 2,
+            status: "completed",
+            progress: 1,
+            updatedAt: "2026-01-01T00:00:00.000Z",
+            readConfirmed: true,
+          },
+          exercises: [{ id: "exercise", contentRevision: 2 }],
+        },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const view = await createLocalContentPort({ progress }).lesson(locator);
+
+    expect(view.lesson.progress).toMatchObject({
+      contentRevision: 2,
+      status: "in-progress",
+      progress: 1,
+      readConfirmed: true,
+    });
+  });
+
   it("passes the navigation's abort signal down to the request", async () => {
     // A slow answer for the lesson the learner has already left must never be
     // allowed to overwrite the one they are looking at.

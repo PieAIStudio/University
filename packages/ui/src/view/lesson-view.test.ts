@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { evidenceUaLayers, readingSections, type EvidenceView } from "./lesson-view.js";
+import {
+  evidenceUaLayers,
+  lessonProgressOf,
+  readingSections,
+  type EvidenceView,
+} from "./lesson-view.js";
 
 function ref(layer: string | null): EvidenceView {
   return {
@@ -62,5 +67,45 @@ describe("readingSections", () => {
   it("keeps authored sections when they exist rather than re-deriving", () => {
     const authored = [{ id: "ask", title: "先猜一下" }];
     expect(readingSections(authored, prose)).toEqual(authored);
+  });
+});
+
+describe("lessonProgressOf", () => {
+  it("does not call aggregate progress complete when current exercises are pending", () => {
+    expect(
+      lessonProgressOf(
+        { progress: 1, completedAt: null, attempts: 1 },
+        { exercisesPassed: false, readConfirmed: true },
+        2,
+        1,
+      ),
+    ).toMatchObject({
+      contentRevision: 2,
+      status: "in-progress",
+      progress: 1,
+      readConfirmed: true,
+    });
+  });
+
+  it("keeps an untouched lesson empty", () => {
+    expect(
+      lessonProgressOf(
+        { progress: 0, completedAt: null, attempts: 0 },
+        { exercisesPassed: false, readConfirmed: false },
+        2,
+        1,
+      ),
+    ).toBeNull();
+  });
+
+  it("does not treat an empty exercise list as learner activity", () => {
+    expect(
+      lessonProgressOf(
+        { progress: 0, completedAt: null, attempts: 0 },
+        { exercisesPassed: true, readConfirmed: false },
+        2,
+        0,
+      ),
+    ).toBeNull();
   });
 });

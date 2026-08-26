@@ -5,7 +5,7 @@
  * side has no revisions to track — one edition of every lesson, which is why
  * `contentRevision` is the constant 1 rather than a number off the wire.
  */
-import { lessonKeyOf, type LessonRef } from "@pieai/university-core";
+import { lessonKeyOf, progressSourceOf, type LessonRef } from "@pieai/university-core";
 import type {
   CardBody,
   ContentPort,
@@ -20,6 +20,7 @@ import { progressPort } from "../../progress/store";
 
 export function createOnlineContentPort(): ContentPort {
   const named = library.studies.map((study) => ({ id: study.studyId, title: study.title }));
+  const source = progressSourceOf(progressPort);
   let shelfPromise: Promise<Shelf> | null = null;
   return {
     // The manifest is imported JSON: the catalogue is in the bundle, so the
@@ -43,6 +44,7 @@ export function createOnlineContentPort(): ContentPort {
       const unit = course.units.find((entry) => entry.id === locator.unitId);
       const lesson = unit?.lessons.find((entry) => entry.id === locator.lessonId);
       if (!unit || !lesson) throw new Error("这节课不在这门课里");
+      const contentRevision = ONLINE_CONTENT_REVISION;
       return assembleLessonView({
         course,
         lesson,
@@ -51,6 +53,10 @@ export function createOnlineContentPort(): ContentPort {
         // `lessonKeyOf`, not `lessonRefKey`: the document keys a lesson
         // without its unit, and the two are not interchangeable.
         progress: progressPort.lessonState(lessonKeyOf(locator)),
+        completion: source.completionOf(locator, {
+          contentRevision,
+          exerciseIds: lesson.exercises.map((exercise) => exercise.id),
+        }),
       });
     },
 

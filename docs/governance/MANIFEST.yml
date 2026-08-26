@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-26T08:01:12.480Z
+generated_at: 2026-08-26T08:27:40.118Z
 generator_version: doc-gov@0.9.5
 docs_count: 38
 docs:
@@ -226,7 +226,7 @@ docs:
     type: reference
     status: stable
     canonical: true
-    last_reviewed: 2026-08-25
+    last_reviewed: 2026-08-26
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-SPEECH-QUALITY-AUTO-MUST-REMAIN-A-REQUEST-NOT-A-RESOLVED-VOICE-TIER
     path: docs/reference/learnings/workflow-issues/speech-quality-auto-must-remain-a-request-not-a-resolved-voice-tier.md

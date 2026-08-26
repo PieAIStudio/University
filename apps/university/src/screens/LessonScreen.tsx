@@ -15,6 +15,7 @@ import {
   isLessonComplete,
   lessonKeyOf,
   lessonRefKey,
+  NOT_STARTED,
   progressSourceOf,
   readCourseProgress,
   type LessonRef,
@@ -161,6 +162,7 @@ export function LessonScreen({
       <LessonReader
         locator={locator}
         view={overlaid}
+        completion={completion ?? NOT_STARTED}
         reader={readerPort}
         grading={gradingPort}
         progress={progressPort}
