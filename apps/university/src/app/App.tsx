@@ -57,6 +57,7 @@ import { RailIdentity } from "@pieai/university-world/avatar.js";
 import { AUTHORING } from "../mode";
 import { contentPort } from "../ports/index";
 import { identityPort } from "../account/identity";
+import { paymentPort } from "../account/payment";
 import { bindProgressToIdentity } from "../account/session";
 import { presencePort } from "../presence/store";
 import {
@@ -621,6 +622,7 @@ export function App() {
       focusStudy={focusStudy}
       grewFrom={grewFrom}
       identityPort={identityPort}
+      paymentPort={paymentPort}
       mistakes={mistakes}
       nextUpProgress={nextUpProgress}
       pathLesson={pathLesson}

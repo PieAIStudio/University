@@ -129,6 +129,13 @@ describe("PlansScreen", () => {
     expect(markup).toContain("免费");
   });
 
+  it("keeps a purchase CTA visible while the price is still a product decision", () => {
+    const markup = renderToStaticMarkup(<PlansScreen />);
+    expect(markup).toContain("待产品确认");
+    expect(markup).toContain("查看购买入口");
+    expect(markup).not.toContain('disabled=""');
+  });
+
   it("does not promise a price or a paid tier before configuration", () => {
     const markup = renderToStaticMarkup(<PlansScreen />);
     expect(markup).toContain("付费档位和价格尚未填入");

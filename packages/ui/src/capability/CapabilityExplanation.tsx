@@ -1,5 +1,7 @@
 import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
-import type { SourceAccessExplanation } from "@pieai/university-core";
+import type { PaymentExplanation, SourceAccessExplanation } from "@pieai/university-core";
+
+export type CapabilityExplanationData = SourceAccessExplanation | PaymentExplanation;
 
 /**
  * The common answer when a learner-facing capability is not available in one
@@ -9,7 +11,7 @@ export function CapabilityExplanation({
   explanation,
   onClose,
 }: {
-  readonly explanation: SourceAccessExplanation;
+  readonly explanation: CapabilityExplanationData;
   readonly onClose: () => void;
 }) {
   return (

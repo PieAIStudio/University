@@ -721,6 +721,28 @@ a.linkish {
 
 /* 会员 ------------------------------------------------------------------ */
 
+.payment-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1.2rem;
+  color: var(--game-ui-text-muted, #9aa6bb);
+  font-size: var(--game-ui-font-sm, 0.84rem);
+}
+
+.payment-summary p,
+.payment-order__line,
+.payment-order__error {
+  margin: 0;
+}
+
+.payment-order__line + .payment-order__line {
+  margin-top: 0.4rem;
+}
+
+.payment-order__error {
+  color: var(--game-ui-danger, #e77b78);
+}
+
 .plan-toggle {
   display: flex;
   gap: 0.5rem;

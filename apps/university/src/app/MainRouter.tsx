@@ -6,6 +6,7 @@ import {
   type CourseProgress,
   type IdentityPort,
   type Mistake,
+  type PaymentPort,
   type PresencePort,
   type ProgressDocument,
   type ProgressPort,
@@ -64,6 +65,7 @@ interface MainRouterProps {
   readonly focusStudy: (studyId: string) => void;
   readonly grewFrom: { readonly key: string; readonly doneBefore: number } | null;
   readonly identityPort: IdentityPort;
+  readonly paymentPort: PaymentPort;
   readonly mistakes: readonly Mistake[];
   readonly nextUpProgress: CourseProgress | null;
   readonly pathLesson: PathLesson | undefined;
@@ -100,6 +102,7 @@ export function MainRouter({
   focusStudy,
   grewFrom,
   identityPort,
+  paymentPort,
   mistakes,
   nextUpProgress,
   pathLesson,
@@ -350,7 +353,7 @@ export function MainRouter({
       ) : null}
       {view.kind === "league" ? <LeagueScreen document={progress} /> : null}
       {view.kind === "quests" ? <QuestsScreen document={progress} /> : null}
-      {view.kind === "plans" ? <PlansScreen /> : null}
+      {view.kind === "plans" ? <PlansScreen paymentPort={paymentPort} /> : null}
       {view.kind === "settings" ? (
         <SettingsScreen presence={presencePort} progress={progressPort} />
       ) : null}

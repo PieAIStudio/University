@@ -81,3 +81,15 @@ export type {
   SourceLayerCoverage,
   SourceVersionInput,
 } from "./source-access.js";
+export {
+  createPaymentPort,
+  createUnavailablePaymentPort,
+  type CreatePaymentPortOptions,
+  type PaymentExplanation,
+  type PaymentOrder,
+  type PaymentOrderStatus,
+  type PaymentPort,
+  type PaymentResult,
+  type PaymentTransport,
+  type WalletBalance,
+} from "./payment.js";

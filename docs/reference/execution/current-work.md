@@ -71,7 +71,7 @@ concepts (**138 carry a shared flow map**, 24 carry a style sample) · 267 terms
 427 lesson-to-lesson links, 414 inside their own course and **13** crossing
 courses: the mesh does not exist yet. `[[term:]]` links: zero.
 
-Tests: core 373 · ui 259 · world 131 · university 126 · local 409 = **1,298**.
+Tests: core 378 · backend 1 · ui 274 · world 133 · university 143 · local 409 = **1,338**.
 Plus 16 browser walks (`pnpm e2e`), two of which (`G`, `G2`) exist only to
 compare the two builds against each other rather than to check either alone.
 
@@ -403,15 +403,16 @@ the list below contains the remaining implementation and authority boundaries.
    content gate, the published delivery package is public static output, and
    `readEntitlements` governs AI and sync only. The shared billing config has a
    free baseline; paid tiers and prices remain unfilled.
-9. **Payment, after 1 and 8.** Before implementation, reconcile the payment
-   boundary with the port law: the existing port directory answers where AI
-   and material come from, while payment does not answer either question. Use
-   an existing backend/account capability or take the boundary change
-   upstream; do not add a port ad hoc. Once that boundary is authorized, add
-   the backend's `wallet_grant` / `reserve` / `commit` / `refund` /
-   `get_balance`, idempotent orders, failure and cancellation, entitlement
-   refreshed after purchase, and wire the pricing page's empty CTA. It is
-   after 1 because taking money needs an account first.
+9. **Payment, browser side complete (2026-08-26).** Payment is not a fourth
+   mode boundary: it does not answer where AI, material, or repository access
+   comes from. The shared `PaymentPort` reads the wallet/entitlement, generates
+   and coalesces browser order ids, requests and queries channel-neutral orders,
+   and refreshes entitlement after success. `PlansScreen` keeps the purchase
+   control visible with a “待产品确认” placeholder and explains the missing
+   server channel when clicked. Actual money-in remains a SwimmerBackend gap —
+   shared order/webhook/atomic-settlement machinery, domestic and overseas
+   adapters, and server-side `wallet_grant`; see [Payment Backend Gap](./payment-backend-gap.md).
+   It is after 1 because taking money needs an account first.
 10. **Metered AI grading, after 9.** **Local path implemented (2026-08-26); the
     launch gate remains.** `apps/university-grading` is the independent
     server-only Vercel function: the same `GradingPort` keeps tier-1 free and

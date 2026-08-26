@@ -1,13 +1,16 @@
 import { createAuthClient } from "@pieai/swimmer-backend-client";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
+  createPaymentPort,
   createIdentityPort,
   mergeProgress,
   parseProgress,
   type IdentityPort,
+  type PaymentPort,
   type ProgressDocument,
   type ProgressRemoteStore,
 } from "@pieai/university-core";
+import { createPaymentOrderId, createSupabasePaymentRemote } from "./payment.js";
 
 /** Canonical browser-facing SwimmerBackend environment names. */
 export const SWIMMER_BACKEND_SUPABASE_URL_ENV = "VITE_SWIMMER_BACKEND_SUPABASE_URL";
@@ -28,6 +31,7 @@ export type BrowserEnv = Record<string, string | boolean | undefined>;
 export interface UniversityBackend {
   readonly client: SupabaseClient | null;
   readonly identityPort: IdentityPort;
+  readonly paymentPort: PaymentPort;
   readonly progressRemoteStore: ProgressRemoteStore | null;
 }
 
@@ -42,9 +46,15 @@ export interface UniversityBackend {
  */
 export function createUniversityBackend(env: BrowserEnv): UniversityBackend {
   const client = createOnlineSupabaseClient(env);
+  const identityPort = createIdentityPort(client ? createAuthClient(client) : null);
   return {
     client,
-    identityPort: createIdentityPort(client ? createAuthClient(client) : null),
+    identityPort,
+    paymentPort: createPaymentPort({
+      identity: identityPort,
+      transport: client ? createSupabasePaymentRemote(client) : null,
+      orderIdFactory: createPaymentOrderId,
+    }),
     progressRemoteStore: client ? createSupabaseProgressRemoteStore(client) : null,
   };
 }
