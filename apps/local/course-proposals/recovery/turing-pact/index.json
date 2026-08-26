@@ -21,8 +21,8 @@
   "courses": [
     {
       "courseId": "foundations-before-zero",
-      "file": "foundations-before-zero.8bb94b8236cba7834183e3086085ff3553175f3510761401ca8158fb234ce1ec.recovery.json",
-      "sha256": "sha256:8bb94b8236cba7834183e3086085ff3553175f3510761401ca8158fb234ce1ec"
+      "file": "foundations-before-zero.50cb9a7ae1f10b3e4960be8552cbdfe92730fc7c55d401bb28daa053474e286b.recovery.json",
+      "sha256": "sha256:50cb9a7ae1f10b3e4960be8552cbdfe92730fc7c55d401bb28daa053474e286b"
     },
     {
       "courseId": "foundations-terrain",
@@ -31,8 +31,8 @@
     },
     {
       "courseId": "foundations-reading-code",
-      "file": "foundations-reading-code.d4ec70bd102c7894d0070a1ee9cad71b65a964f119c474ef0fe69c9d43e361af.recovery.json",
-      "sha256": "sha256:d4ec70bd102c7894d0070a1ee9cad71b65a964f119c474ef0fe69c9d43e361af"
+      "file": "foundations-reading-code.1a47214e7e6e314b161b0d28bf835002aeca4bb107c02c98fda2cf4b06ed7515.recovery.json",
+      "sha256": "sha256:1a47214e7e6e314b161b0d28bf835002aeca4bb107c02c98fda2cf4b06ed7515"
     },
     {
       "courseId": "foundations-logic",
@@ -76,8 +76,8 @@
     },
     {
       "courseId": "state-and-process",
-      "file": "state-and-process.186a3c65055daaef852005c52220a0f05c2b281c478f81c1105ff26196794d66.recovery.json",
-      "sha256": "sha256:186a3c65055daaef852005c52220a0f05c2b281c478f81c1105ff26196794d66"
+      "file": "state-and-process.a0b3a48d1aea24e38dab9e22e86f5290a63b9bcd3cd772efcb936b560c17f0b8.recovery.json",
+      "sha256": "sha256:a0b3a48d1aea24e38dab9e22e86f5290a63b9bcd3cd772efcb936b560c17f0b8"
     },
     {
       "courseId": "one-codebase-many-hosts",
