@@ -22,14 +22,13 @@ import {
 } from "@pieai/university-core";
 import { GameCallout } from "@pieai/swimmer-ui-kit";
 import { LessonReader } from "@pieai/university-ui/lesson/LessonReader.js";
-import type { LessonSourceVersionAction } from "@pieai/university-ui";
 import { lessonNeighbours } from "@pieai/university-ui/lesson/LessonNav.js";
 import { playSound, SoundToggle } from "@pieai/university-ui/sound/index.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
 import type { CourseView, LessonView } from "@pieai/university-ui/view/lesson-view.js";
 import { createReviewCardPort } from "@pieai/university-ui/review/scheduler-ports.js";
 
-import { contentPort, gradingPort, readerPort } from "../ports/index.js";
+import { contentPort, gradingPort, readerPort, sourceAccessPort } from "../ports/index.js";
 import { progressPort } from "../progress/store.js";
 
 export function LessonScreen({
@@ -41,7 +40,6 @@ export function LessonScreen({
   onOpenLesson,
   onReturn,
   onSettled,
-  onSourceVersionAction,
 }: {
   readonly locator: LessonRef;
   /** The course's shape, for prev/next. Null while the shelf is still arriving. */
@@ -52,8 +50,6 @@ export function LessonScreen({
   readonly onOpenLesson: (next: LessonRef) => void;
   readonly onReturn: () => void;
   readonly onSettled: (doneBefore: number) => void;
-  /** Authoring-only source checkout; delivery leaves the version line read-only. */
-  readonly onSourceVersionAction?: LessonSourceVersionAction;
 }) {
   const progress = useSyncExternalStore(progressPort.subscribe, progressPort.snapshot);
   const [view, setView] = useState<{ readonly key: string; readonly view: LessonView } | null>(
@@ -165,6 +161,7 @@ export function LessonScreen({
         completion={completion ?? NOT_STARTED}
         reader={readerPort}
         grading={gradingPort}
+        sourceAccess={sourceAccessPort}
         progress={progressPort}
         review={review}
         /*
@@ -179,7 +176,6 @@ export function LessonScreen({
         onBackToCourse={back}
         onFollowLink={onFollowLink}
         {...(returnDepth > 0 ? { onReturn } : {})}
-        {...(onSourceVersionAction ? { onSourceVersionAction } : {})}
         toolbarExtras={<SoundToggle progress={progressPort} />}
       />
     </main>

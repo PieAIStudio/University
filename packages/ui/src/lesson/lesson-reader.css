@@ -140,6 +140,10 @@
   word-break: keep-all;
 }
 
+.lesson-ua-layers__open {
+  margin-inline-start: 2px;
+}
+
 .lesson-reader__title h2 {
   margin: 6px 0 0;
 }

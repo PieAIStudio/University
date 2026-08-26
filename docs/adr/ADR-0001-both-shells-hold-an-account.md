@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-22
-last_reviewed: 2026-08-22
+last_reviewed: 2026-08-26
 domain: shells
 tags:
   - shells
@@ -46,8 +46,10 @@ disconnected; binding the account merges and flushes that document. The disk
 keeps what only exists on disk — the registered private repositories under
 `apps/local/studies/` and the prose being written.
 
-`GradingPort` is the single permitted divergence between the shells: clipboard
-and AI coding host on one side, metered SwimmerAIKit on the other.
+At the time of this decision, `GradingPort` was the only named divergence
+between the shells: clipboard and AI coding host on one side, metered
+SwimmerAIKit on the other. ADR-0006 supersedes that narrow enumeration with
+three port boundaries. This account and learner-data decision remains in force.
 
 ## Consequences
 

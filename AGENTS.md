@@ -95,11 +95,11 @@ What follows from them:
 - **One browser app, two modes.** `apps/university` is the whole product;
   `vite --mode authoring` writes courses on a machine and `vite --mode
   delivery` sells them. There were two apps until 2026-08-25, and the reason
-  they were merged is written down: the difference set had shrunk to two ports
-  while the drift rate had not moved, because two files meant two places one
-  decision could be made. `packages/*` is still everything neither mode may own
-  twice. The delivery mode is not forbidden from authoring courses; when it
-  authors, it runs the same workflows.
+  they were merged is written down: the difference set had shrunk to three
+  port boundaries while the drift rate had not moved, because two files meant
+  two places one decision could be made. `packages/*` is still everything
+  neither mode may own twice. The delivery mode is not forbidden from authoring
+  courses; when it authors, it runs the same workflows.
 - **The app and the authoring server never import each other.**
   `apps/local` is the Node server that reads the disk on 4317, and nothing
   else; `apps/university/src` is bundled for a browser. Either import
@@ -125,25 +125,33 @@ What follows from them:
 - **Grading stays tiered by cost.** Deterministic first, structured small-model
   second, open tutoring last and metered. An unmetered large model behind a
   free tier is the robustness rule broken, in the direction of the bank.
-- **Two questions may be answered differently, and they both live in
+- **Three boundary questions may be answered differently, and they all live in
   `apps/university/src/ports/`.** *Where the AI comes from*: `GradingPort` —
   the authoring mode grades through the clipboard and the machine's own AI
   host, without an API key in the product; the delivery mode grades through
   SwimmerAIKit, metered. *Where the material comes from*: `ContentPort` and
   `ReaderPort` — a loopback server reading the disk on one side, a published
-  package on the other. That second question was answered twice by copy before
-  the 2026-08-25 merge; naming it is what let the delivery build's duplicate
-  reader be deleted. Everything above these ports is one implementation, and a
-  third question means changing this rule first — the directory is the
-  complete list, so a new answer that is not a file in it is a defect.
+  package on the other. *Whether this side can reach the repository behind a
+  lesson*: `SourceAccessPort` — real checkout, project map and coverage actions
+  in authoring; an explanation of the boundary and the future desktop/manual/
+  mobile path in delivery. The second question was answered twice by copy
+  before the 2026-08-25 merge; naming it is what let the delivery build's
+  duplicate reader be deleted. Everything above these ports is one
+  implementation, and a fourth question means changing this rule first — the
+  directory is the complete list, so a new answer that is not a file in it is a
+  defect.
 - **Design before build.** A user-facing behaviour gets designed in
   `docs/reference/player-journey/` before it gets implemented. The current
   journey is `docs/reference/player-journey/v5/`; it replaces v1, v2, v3 and
   v4. V5 is an amendment: what v4 says and v5 does not contradict still
   stands.
-- **One permitted difference between the modes: where the AI comes from.**
-  V5 states this as law. Any other divergence is a defect — fix it, do not
-  debate it. Adding a second difference means changing v5 first.
+- **The learner surface is the same in both modes.** V5 permits only the three
+  port-boundary answers above: AI source, lesson material source and access to
+  the repository behind a lesson. A missing learner capability still renders
+  its control and opens an explanation; it is never hidden with an
+  `AUTHORING ? … : null` branch. The author workbench at `#/studio` is the
+  separate, explicit authoring exception. Any other divergence is a defect —
+  fix it, do not debate it. Adding another boundary means changing v5 first.
 - **“Local” does not mean permanently offline.** The authoring mode may keep
   authoring sources and an offline cache on disk, but every learner/account
   datum must bind to the same cloud row when an account is available and queue
@@ -151,11 +159,10 @@ What follows from them:
 - **One codebase, three shells.** Browser, desktop and phone run the same
   build. The browser needs no wrapper; Electron and Capacitor are wrappers
   around that same output, not separate products. Layout differs by CSS
-  breakpoint inside one component tree — never by a second component. The only
-  permitted divergence is device capability, and it goes behind a port:
-  storage, payment, notification, grading. Everything above a port is identical
-  on all three. A responsive layout is not two implementations; a second
-  implementation is.
+  breakpoint inside one component tree — never by a second component. Device
+  capability goes behind a port: storage, payment, notification, grading,
+  content and source access. Everything above a port is identical on all three.
+  A responsive layout is not two implementations; a second implementation is.
 - **The renderer lives in `packages/world`, never in `packages/ui`.** Both
   modes share one scene, and `packages/ui` stays at zero `three` so that a
   test of the lesson reader never has to stand up a WebGL mock. SPEC-0001 and

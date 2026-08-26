@@ -1,25 +1,23 @@
 import { useState } from "react";
 
-import { openBlankDashboardTab, requestUaDashboardUrl } from "../api/ua-dashboard.js";
-import { Tip } from "../Tip.js";
-import { evidenceUaLayers, type EvidenceUaView, type EvidenceView } from "../view/lesson-view.js";
+import type { SourceAccessExplanation, SourceAccessPort } from "@pieai/university-core";
 
-export function LessonUaLayers({ evidence }: { readonly evidence: readonly EvidenceView[] }) {
-  const layers = evidenceUaLayers(evidence);
-  if (layers.length === 0) return null;
-  const label =
-    layers.length === 1
-      ? `这节课的文件落在「${layers[0]}」`
-      : `这节课的文件落在：${layers.join("、")}`;
-  return (
-    <div className="lesson-ua-layers">
-      <span>{label}</span>
-      <Tip term="ua-place" className="rail-panel__help">
-        <span aria-label="关于项目位置">?</span>
-      </Tip>
-    </div>
-  );
-}
+import { CapabilityExplanation } from "../capability/CapabilityExplanation.js";
+import type { EvidenceUaView } from "../view/lesson-view.js";
+
+type EvidenceUaPlaceProps =
+  | {
+      readonly studyId?: string;
+      readonly ua: EvidenceUaView;
+      readonly compact: true;
+      readonly sourceAccess?: never;
+    }
+  | {
+      readonly studyId?: string;
+      readonly ua: EvidenceUaView;
+      readonly compact?: false;
+      readonly sourceAccess: SourceAccessPort;
+    };
 
 /**
  * Where this cited file sits in the studied project.
@@ -28,33 +26,30 @@ export function LessonUaLayers({ evidence }: { readonly evidence: readonly Evide
  * needs the smaller fact: this file belongs to that layer. Opening the full
  * map stays one click away and stays UA's own page.
  */
-export function EvidenceUaPlace({
-  studyId,
-  ua,
-  compact = false,
-}: {
-  readonly studyId?: string;
-  readonly ua: EvidenceUaView;
-  readonly compact?: boolean;
-}) {
+export function EvidenceUaPlace(props: EvidenceUaPlaceProps) {
+  const { studyId, ua, compact = false } = props;
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [explanation, setExplanation] = useState<SourceAccessExplanation | null>(null);
 
-  if (!ua.layerName && !ua.summary) return null;
+  // The delivery package deliberately omits the private graph metadata. The
+  // full source sheet still needs the same learner control, so it may pass an
+  // empty place and let the port explain the boundary. Compact inline prose
+  // keeps its old quiet shape when no place metadata exists.
+  if (!ua.layerName && !ua.summary && compact) return null;
 
   async function openMap() {
-    if (!studyId) return;
-    const popup = openBlankDashboardTab();
-    if (!popup) {
-      setError("浏览器拦截了新标签页，请允许后再试。");
+    if (!studyId || !("sourceAccess" in props) || !props.sourceAccess) return;
+    const access = props.sourceAccess.uaDashboard({ studyId, nodeId: ua.nodeId });
+    if (access.kind === "explanation") {
+      setExplanation(access);
       return;
     }
     setPending(true);
     setError(null);
     try {
-      popup.location.href = await requestUaDashboardUrl(studyId, ua.nodeId);
+      await access.run();
     } catch (reason: unknown) {
-      popup.close();
       setError(reason instanceof Error ? reason.message : "项目地图暂时打不开");
     } finally {
       setPending(false);
@@ -63,7 +58,9 @@ export function EvidenceUaPlace({
 
   return (
     <div className="evidence-ua-place">
-      {ua.layerName ? (
+      {!compact ? (
+        <p className="evidence-ua-place__layer">项目里的位置 · 这份课程引用的源码</p>
+      ) : ua.layerName ? (
         <p className="evidence-ua-place__layer">项目里的位置 · {ua.layerName}</p>
       ) : null}
       {!compact && ua.summary ? <p className="evidence-ua-place__summary">{ua.summary}</p> : null}
@@ -71,6 +68,7 @@ export function EvidenceUaPlace({
         <button
           type="button"
           className="evidence-ua-place__open"
+          data-parity-control="evidence-ua-dashboard"
           onClick={() => void openMap()}
           disabled={pending}
         >
@@ -81,6 +79,9 @@ export function EvidenceUaPlace({
         <p className="evidence-ua-place__error" role="alert">
           {error}
         </p>
+      ) : null}
+      {explanation ? (
+        <CapabilityExplanation explanation={explanation} onClose={() => setExplanation(null)} />
       ) : null}
     </div>
   );

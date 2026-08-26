@@ -24,7 +24,6 @@ import { localBootstrap } from "../ports/local/content.js";
 import { StudioSection } from "./StudioSection.js";
 import { AirlockClocks, StudyDetail } from "./StudyDetail.js";
 import { shortenHomePath } from "./studies-root.js";
-import { UaDashboardButton } from "./UaDashboardButton.js";
 
 export { shortenHomePath } from "./studies-root.js";
 
@@ -127,29 +126,11 @@ export function StudioScreen({
  * Which version of the project this campus is teaching, and the way into the UA
  * graph. Both are about the series on screen, so they sit with it.
  */
-export function MapNotes({ studyId }: { readonly studyId: string | null }) {
-  /*
-    Only the opening payload, never a study view. A study view makes the server
-    read every lesson of the series to measure it, and this block needs one
-    number off the shelf summary — so asking for one put a heavy request on the
-    screen a session starts on, for a button in the corner.
-  */
-  const [data, setData] = useState<BootstrapData | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    void localBootstrap().then((boot) => {
-      if (!cancelled) setData(boot);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  const summary = data?.studies.find((study) => study.id === studyId) ?? null;
-  if (!summary) return null;
+export function AuthoringMapNotes({ studyId }: { readonly studyId: string | null }) {
+  if (!studyId) return null;
   return (
     <div className="world-landing__authoring">
-      <UaDashboardButton studyId={summary.id} available={summary.readyUaAnalysisCount > 0} />
-      <AirlockClocks studyId={summary.id} />
+      <AirlockClocks studyId={studyId} />
     </div>
   );
 }

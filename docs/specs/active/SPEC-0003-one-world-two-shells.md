@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-21
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-26
 domain: learning-surface
 tags:
   - shared-package
@@ -51,8 +51,10 @@ A Chinese IME, a screen reader, text selection and a phone keyboard all die
 inside a canvas. Every number in the authoring shell's shelf is readable text,
 so every number stays in the DOM whatever the landing screen looks like.
 
-What follows is that the two shells share **one world** and differ by **one
-overlay**, and the overlay is small.
+What follows is that the two shells share **one world and one learner surface**.
+Authoring infrastructure may add an overlay, but a learner-facing control is
+present in both shells; when one side lacks the underlying capability, it
+explains the boundary instead of disappearing.
 
 ## What Is Shared, And Where It Has To Live
 
@@ -83,22 +85,25 @@ its destination. Nothing is dropped; that is the acceptance criterion.
 | Focus track | DOM panel, and **the world dims everything else** | This is the one number that earns a change to the scene, because "what am I ignoring right now" is genuinely spatial. |
 | Last activity per study | DOM panel, on the study's own card | A date is text. Putting it on a signpost in the water would be unreadable at map zoom and unselectable at any zoom. |
 | Airlock three clocks | DOM panel, authoring only | Depends on local git and a seal file. It cannot exist in the delivery shell at all, which is exactly why it belongs in the overlay and not the scene. |
-| UA analysis overlay | DOM button, authoring only | Spawns a local process. Same reason. |
+| UA analysis overlay | DOM button, shared learner surface; local action or delivery explanation | The source-access boundary owns whether the local graph can be reached; the control itself must stay visible in both shells. |
 | Study shelf ordering | The world's own layout | The archipelago already places studies; a second ordering would be a second answer to the same question. |
 | Empty campus | DOM, full screen | An empty world is an empty blue plane, which reads as a bug rather than as an invitation. The empty state must say what to do. |
 | Three-question placement quiz | DOM, on entering a course | Not a landing-screen concern. |
 
-Two rows above are the whole design. The focus track is the only authoring
-concept that changes the scene, and everything else is an overlay that the
-delivery shell simply does not render.
+The authoring-only rows are infrastructure, not learner controls. The focus
+track is the only authoring concept that changes the scene. Repository actions
+are the explicit exception to the old two-boundary rule: `SourceAccessPort`
+keeps their learner entries shared and returns either a local action or a
+delivery explanation.
 
 ## What Is Shell Infrastructure, Not A Learner Difference
 
 The shell may still expose authoring infrastructure that only makes sense when
-the source tree is present: airlock clocks, the UA dashboard, knowledge notes,
-the source drawer, pinned-version checkout, and the author CLI. Those are local
-authoring capabilities, not a second implementation of a learner feature and
-not a second learner-data store.
+the source tree is present: airlock clocks, knowledge notes, and the author
+CLI. The learner-facing UA dashboard, source drawer and pinned-version
+checkout are shared controls; `SourceAccessPort` gives them a local action or
+an explanation. The authoring workbench remains local and is not a second
+learner-data store.
 
 Everything a learner reads, answers, reviews, annotates, favourites, practises,
 or configures is shared. The account document in SwimmerBackend is the one
@@ -112,11 +117,13 @@ Each shell may adapt its content source — published packages online, local
 study views while authoring — but the learner-facing directory, expansion
 behaviour and lesson links are one implementation.
 
-The sole runtime difference in that shared learner surface is the grading
-boundary: the local shell obtains the AI verdict from the local AI host and
-clipboard path, while the online shell obtains it through the metered online AI
-adapter. Both write the same structured answer/verdict record to the shared
-account document.
+The runtime boundaries in that shared learner surface are the three ports:
+`GradingPort` for the AI source, `ContentPort` / `ReaderPort` for lesson
+material, and `SourceAccessPort` for reaching the repository behind a lesson.
+The local shell obtains the AI verdict and source actions from local adapters;
+the delivery shell uses metered online grading, published material and
+structured source-capability explanations. The learner controls and their
+shared composition remain the same.
 
 ## The One Behaviour That Must Change In The Delivery Shell
 

@@ -18,6 +18,7 @@ related:
   - ADR-0003
   - ADR-0004
   - ADR-0005
+  - ADR-0006
 ---
 
 # Current Work
@@ -39,7 +40,8 @@ has it, and you only need it when you are about to argue a rule should change.
 apps/university  the product. One source tree, built twice:
                  --mode delivery   3D archipelago, progress, review   (9998)
                  --mode authoring  the same, plus #/studio and 4317   (9999)
-                 src/ports/        the only place the two builds differ
+                 src/ports/        the only place the two builds differ:
+                                  Grading, Content/Reader, SourceAccess
                  src/authoring/    workbench only; eliminated from delivery
 apps/local       the authoring Node server. Filesystem, CLI, no UI.   (4317)
 packages/core    the domain model. No React, no fs, no network.
@@ -105,11 +107,15 @@ this report and outside commits.
   producer, always. Publishing is a separate, gated act (ADR-0002).
 - Both shells sign in to SwimmerBackend and share one cloud learner document:
   account, progress, review, answers, marks, vocabulary, favourites, practice
-  history and settings. Browser/SQLite state is only cache/outbox. The permitted
-  divergences are the files in `apps/university/src/ports/` and nothing else:
-  `GradingPort` (clipboard and the machine's AI host on one side, metered
-  SwimmerAIKit on the other — ADR-0001) and `ContentPort`/`ReaderPort` (a
-  loopback server reading the disk, or a published package).
+  history and settings. Browser/SQLite state is only cache/outbox. The
+  permitted boundary differences are the files in
+  `apps/university/src/ports/` and nothing else: `GradingPort` (clipboard and
+  the machine's AI host on one side, metered SwimmerAIKit on the other —
+  ADR-0001), `ContentPort`/`ReaderPort` (a loopback server reading the disk, or
+  a published package), and `SourceAccessPort` (real checkout and UA actions
+  locally, an explanation with a future desktop/manual/mobile path in
+  delivery). The learner surface remains one implementation; an unavailable
+  capability keeps its control and explains itself.
 - The disk stays the source of truth only for `apps/local/studies/` — registered
   private repositories and prose being written. It is not the learner-data
   source of truth.
@@ -214,15 +220,16 @@ Done, and verified in a browser rather than by a passing suite:
 - **An overlay reserves nothing.** The enter-course card is placed but does not
   push: opening it used to slide three neighbouring islands' names sideways.
 - **One app** (was 10). `apps/university`, built twice from one tree. Was two
-  apps whose difference set had shrunk to two ports while the drift rate had
-  not moved. The delivery build's duplicate lesson reader is gone, one `View`
+  apps whose difference set had shrunk to three port boundaries while the drift
+  rate had not moved. The delivery build's duplicate lesson reader is gone, one `View`
   parses one address for both, and four review-port factories are two. The
   count that made it the right time and the traps paid for are in
   [One App Handoff](./one-app-handoff.md).
 - **ContentPort, and the duplicate reader deleted** (was 6). `ContentPort` and
   `ReaderPort` are where a lesson's text and its evidence come from; both live
-  in `apps/university/src/ports/` beside `GradingPort`, and the directory is
-  the complete list of what the two builds are allowed to disagree about.
+  in `apps/university/src/ports/` beside `GradingPort` and `SourceAccessPort`,
+  and the directory is the complete list of what the two builds are allowed to
+  disagree about.
 - **The two learner features are out of `#/studio`** (was 12). The existing
   知识笔记 stack remains an authoring content pipeline; the learner-facing
   feature is 「讲一遍」, a shared FSRS card described in V5. 分级测验 is on the
@@ -259,6 +266,12 @@ Done, and verified in a browser rather than by a passing suite:
   at a damped fraction of the absolute x four stones ahead; on a serpentine
   road that yawed the camera 15° and put 「开始」 at x=1115 of 1440, under the
   right-hand panel. The eye and the target share a lateral position now.
+- **Learner surface parity for repository access.** `SourceAccessPort` is the
+  third boundary: authoring performs checkout, UA-map and layer-coverage
+  actions; delivery keeps the same controls and explains the published-package
+  boundary plus future desktop/manual/mobile support. `G` and `G2` now compare
+  the world and lesson learner-control inventories, including a one-sided
+  injection proof.
 
 Next — **the order is set by
 `docs/reference/player-journey/v5/index.html` §05, not by this list.** The

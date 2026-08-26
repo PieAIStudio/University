@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-25
-last_reviewed: 2026-08-25
+last_reviewed: 2026-08-26
 domain: execution
 tags:
   - current-work
@@ -17,7 +17,7 @@ pinned: false
 # 合成一套代码：交接给下一个 session
 
 这份文件是给**一个全新 session** 读的。它不知道前面几天发生了什么，所以这里写清楚：
-要做什么、为什么现在做、真正的差异只有几条、按什么顺序做、以及哪些坑已经踩过了。
+要做什么、为什么现在做、真正的差异有几条、按什么顺序做、以及哪些坑已经踩过了。
 
 ## 一句话
 
@@ -44,7 +44,7 @@ pinned: false
 星球页是个盒子页不是世界、UA 入口只有一端有）。减少的是每次分叉的**大小**，不是**频率**——
 频率来自「有两个地方可以做同一个决定」，只有合并能拿掉它。
 
-## 真正的差异只有两条
+## 真正的差异现在有三条
 
 数过了，不是感觉。两个壳各自构造的 port：
 
@@ -52,6 +52,7 @@ pinned: false
 | --- | --- | --- | --- |
 | Grading | `createOnlineGradingPort` | `createHttpGradingPort` | **是**（AI 从哪来） |
 | Reader | `createOnlineReaderPort` | `createHttpReaderPort` | 一半是（课文从哪来） |
+| SourceAccess | `createOnlineSourceAccessPort` | `createLocalSourceAccessPort` | **是**（能否触达课文背后的源码仓库） |
 | Review | `createOnlineReviewPort` | `createHttpReviewPort` | **不是** |
 | VocabularyReview | `createOnlineVocabularyReviewPort` | `createLocalVocabularyReviewPort` | **不是** |
 | Progress / Identity | `packages/backend` + 共享 port | 同上 | 已经是一份 |
@@ -65,12 +66,14 @@ progress document 上。
 ```
 1. GradingPort   —— 剪贴板/本地 AI 宿主   vs   SwimmerAIKit（计量）
 2. ContentPort   —— 本地 HTTP（存了就看见） vs   静态包（先冻结再发）
+3. SourceAccessPort —— 本地 checkout / UA 图谱 / 分层动作 vs 解释能力边界与未来支持路径
 ```
 
-第三条曾经被写成「有没有作者工作台」，那是错的。`#/studio` 里没有任何东西在写课——写课是
-CLI + 文件。它装的是：一个 UA 图表按钮、一个只读的「这门课引用了哪些文件」面板，以及**两个
-被埋在里面的学习者功能**（分级测验 `CourseRouteQuiz`、知识笔记 `KnowledgeNotesSection`）。
-那不是壳差异，那是**一个屏幕的数据只有一端有**，属于内容管线。
+「有没有作者工作台」不属于这三条。`#/studio` 里没有任何东西在写课——写课是 CLI + 文件；
+它仍是明确的作者端专属边界。UA 图谱入口和「这门课引用了哪些文件」面板则是学习者面，
+两端都渲染，`SourceAccessPort` 在本地执行或在交付端解释。分级测验 `CourseRouteQuiz` 与知识
+笔记 `KnowledgeNotesSection` 也不因此变成作者端专属学习面：它们有各自的共享落点，缺少内容时
+显示空态。
 
 ## 顺序
 
@@ -98,10 +101,11 @@ git worktree add ../University-wt-one-app -b work/one-app
 `sync()` 会从 pathname 重建全部状态，所以「写 hash」会顺带把 study 抹掉——2026-08-25 修过一次
 （见 `apps/local/src/App.tsx` 里 `syncedPath` 的注释）。换成一套地址之后，这个补丁应该整个删掉。
 
-### 第 2 步：把两条 port 收成一份接口
+### 第 2 步：把三条边界收成一份接口
 
 `ContentPort`：两端各自实现，但接口写死一份，放 `packages/core/src/ports/`。
-`GradingPort` 已经有共享接口了。
+`GradingPort` 已经有共享接口；`SourceAccessPort` 现在补上第三个问题：这一端能不能触达课文背后的
+仓库。它返回本地动作或结构化解释，学习者面不在端口里分叉。
 
 判断标准：**Review 和 Vocabulary 两个 port 应该消失**，变成共享实现 + 注入的 ContentPort。
 如果做完还留着四对 port，说明没做对。
@@ -155,7 +159,7 @@ vite --mode online --port 9998   （serve /content/）
 
 **这一步是唯一会改变行为的一步，所以它单独一个提交。** 前面 1–4 步的验收线是「数字一个不差」；
 这一步会新增两个可达的界面，所以它的验收线不同：
-测试数**只许涨不许跌**，`pnpm e2e` 仍然 13 passed，并且两端各截一张 图鉴→笔记 和
+测试数**只许涨不许跌**，`pnpm e2e` 仍然 16 passed，并且两端各截一张 图鉴→笔记 和
 一张「没开始的课程岛上有测验」。先把 1–4 做绿、提交，再做这一步——否则一旦出问题，
 你分不清是搬家搬坏的还是这一步带来的。
 
@@ -167,7 +171,7 @@ vite --mode online --port 9998   （serve /content/）
 
 ```
 pnpm verify           退出码 0
-pnpm e2e              13 passed
+pnpm e2e              16 passed
 测试数                 core 322 / ui 228 / world 121 / online 67 / local 454
 课程数                 5 个世界 · 53 门课 · 150 单元 · 579 节
 ```
@@ -195,7 +199,7 @@ pnpm e2e              13 passed
 
 不做的理由不是「没时间」，是**合并的全部安全性来自「每一步都不改变任何行为」**（第 5 步是
 唯一的例外，它单独一个提交，验收线也不同——见上）。每步做完，
-`pnpm verify` 和 `pnpm e2e` 必须和做之前一模一样：13 passed，测试数一个不差，课程数一节不差。
+`pnpm verify` 和 `pnpm e2e` 必须和做之前一模一样：16 passed，测试数一个不差，课程数一节不差。
 一旦掺进任何会改变行为的活，「数字变了」就不再是警报——你永远在想「是不是新功能带来的」。
 **会误报的警报等于没有警报。**
 

@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-08-18
+last_reviewed: 2026-08-26
 domain: content-pipeline
 tags:
   - parity
@@ -49,6 +49,7 @@ halves of one pipeline.
 | Where teaching intelligence comes from | The AI coding host reading a real repository | Published course packages plus metered online models |
 | What it produces | Course content | Learner outcomes and revenue |
 | Content storage | Local files and the registered clones | Imported packages |
+| Repository access from a lesson | Checkout and UA analysis are reachable locally | The same learner controls explain the published package boundary |
 | Identity and learner state | Same SwimmerBackend account/document; local cache/outbox when disconnected | Same SwimmerBackend account/document; local cache/outbox when disconnected |
 
 Once that is fixed, "the courses must be identical" stops being a synchronisation
@@ -148,9 +149,12 @@ The shared package must **not** own:
 
 - content storage (the registered clones and prose on one side, imported
   packages on the other);
-- model access — **the one remaining divergence.** The coding host and the
-  clipboard on one side, metered online APIs through SwimmerAIKit on the other.
-  Everything above `GradingPort` is shared;
+- model access — the coding host and the clipboard on one side, metered online
+  APIs through SwimmerAIKit on the other;
+- repository access — `SourceAccessPort` returns local checkout, UA and
+  coverage actions on one side, and a structured explanation on the other.
+  Everything above `GradingPort`, `ContentPort` / `ReaderPort`, and
+  `SourceAccessPort` is shared;
 - any 3D, world map, level, or motivation system.
 
 Those differ by design, and forcing them into the kit would make the kit a

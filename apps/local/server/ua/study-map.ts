@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
+import type { SourceCoverageLayer, SourceLayerCoverage } from "@pieai/university-core";
 import { UaAnalysisManifestSchema } from "@pieai/university-core/domain/schemas.js";
 import { getStudyPaths, getUaAnalysisPaths } from "../studies/paths.js";
 
@@ -27,29 +28,6 @@ import { getStudyPaths, getUaAnalysisPaths } from "../studies/paths.js";
  * library, no second bundle, and nothing to keep in sync with an engine that
  * ships its own releases.
  */
-
-/** One architectural layer, and how much of it the courses have reached. */
-interface CoverageLayer {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-  /** Files UA placed in this layer. */
-  readonly fileCount: number;
-  /** Of those, how many at least one lesson cites. */
-  readonly citedFileCount: number;
-  /** The cited ones, so a reader can jump from a layer to what taught it. */
-  readonly citedFiles: readonly string[];
-}
-
-interface LayerCoverage {
-  readonly analysisId: string;
-  readonly sourceCommit: string;
-  readonly outputLanguage: string;
-  readonly nodeCount: number;
-  readonly layers: readonly CoverageLayer[];
-  /** Files the courses cite that UA has no node for — a coverage question, not an error. */
-  readonly uncharted: readonly string[];
-}
 
 /** What UA knows about one file, for the panel beside a piece of evidence. */
 interface CoverageFile {
@@ -178,7 +156,7 @@ export function buildLayerCoverage(
   studiesRoot: string,
   studyId: string,
   citedPaths: ReadonlySet<string>,
-): LayerCoverage | null {
+): SourceLayerCoverage | null {
   const analysis = newestReadyAnalysis(studiesRoot, studyId);
   if (!analysis) return null;
   const graph = readGraph(studiesRoot, studyId, analysis.id);
@@ -195,7 +173,7 @@ export function buildLayerCoverage(
     charted.add(filePath);
   }
 
-  const layers: CoverageLayer[] = [];
+  const layers: SourceCoverageLayer[] = [];
   for (const layer of Array.isArray(graph.layers) ? graph.layers : []) {
     const files = new Set<string>();
     for (const nodeId of strings(layer.nodeIds)) {

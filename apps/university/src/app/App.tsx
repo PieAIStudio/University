@@ -82,7 +82,6 @@ import {
 } from "@pieai/university-ui/review/scheduler-ports.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
 import { LEXICON } from "../lesson/language";
-import { localSourceVersionAction } from "../lesson/source-version-action";
 import { EMPTY_SHELF_HINT } from "../mode";
 import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
 import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
@@ -721,7 +720,6 @@ export function App() {
                 lessonId: view.lessonId,
               });
             }}
-            {...(AUTHORING ? { onSourceVersionAction: localSourceVersionAction } : {})}
           />
         </Suspense>
       </div>

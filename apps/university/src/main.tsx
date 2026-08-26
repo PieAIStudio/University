@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 // properties everything below reads.
 import "@pieai/swimmer-ui-kit/styles.css";
 import "@pieai/university-ui/catalog/catalog.css";
+import "@pieai/university-ui/capability/capability.css";
 import { App } from "./app/App";
 import { CAMPUS_NAME } from "./mode";
 /*

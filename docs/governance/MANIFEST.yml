@@ -1,15 +1,15 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-26T08:33:48.547Z
+generated_at: 2026-08-26T11:22:08.178Z
 generator_version: doc-gov@0.9.5
-docs_count: 38
+docs_count: 40
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-08-22
+    last_reviewed: 2026-08-26
     pinned: false
   - id: ADR-0002
     path: docs/adr/ADR-0002-courses-publish-to-the-backend.md
@@ -38,6 +38,13 @@ docs:
     status: accepted
     canonical: true
     last_reviewed: 2026-08-22
+    pinned: false
+  - id: ADR-0006
+    path: docs/adr/ADR-0006-learner-surface-parity-source-access.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-08-26
     pinned: false
   - id: GOV-AGENTS-ROUTING-ENGINEERING-RUNTIME-V1-1
     path: docs/governance/agents-routing/engineering-runtime-v1.1.md
@@ -142,7 +149,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-25
+    last_reviewed: 2026-08-26
     pinned: false
   - id: REF-SWIMMER-BACKEND-MIGRATION
     path: docs/reference/execution/swimmer-backend-migration.md
@@ -207,6 +214,13 @@ docs:
     canonical: true
     last_reviewed: 2026-08-26
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-PARITY-INVENTORIES-MUST-INCLUDE-INJECTED-LEARNER-CONTROLS
+    path: docs/reference/learnings/workflow-issues/parity-inventories-must-include-injected-learner-controls.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-26
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-PUBLISH-BOUNDARIES-NEED-A-RECURSIVE-DTO-GATE-WITH-RED-GREEN-EVIDENCE
     path: docs/reference/learnings/workflow-issues/publish-boundaries-need-a-recursive-dto-gate-with-red-green-evidence.md
     type: reference
@@ -247,7 +261,7 @@ docs:
     type: spec
     status: active
     canonical: true
-    last_reviewed: 2026-08-18
+    last_reviewed: 2026-08-26
     pinned: true
   - id: SPEC-0002
     path: docs/specs/active/SPEC-0002-vibehub-absorption.md
@@ -261,7 +275,7 @@ docs:
     type: spec
     status: active
     canonical: true
-    last_reviewed: 2026-08-21
+    last_reviewed: 2026-08-26
     pinned: false
   - id: SPEC-0004
     path: docs/specs/active/SPEC-0004-structured-entries.md

@@ -246,11 +246,11 @@ describe("the shared lesson reader", () => {
     expect(container.querySelector(".lesson-practice")).toBeNull();
   });
 
-  it("does not offer a clickable local source checkout in delivery", async () => {
+  it("keeps the source checkout entry visible and explains the delivery boundary", async () => {
     await renderHost();
     expect(container.textContent).toContain("这节课钉在");
-    expect(container.textContent).not.toContain("打开正在学习的 App");
-    expect(container.querySelector(".lesson-version button")).toBeNull();
+    expect(container.textContent).toContain("打开正在学习的 App");
+    expect(container.querySelector("[data-parity-control='lesson-source-version']")).not.toBeNull();
   });
 
   it("moves the bar as a later section crosses the read line", async () => {

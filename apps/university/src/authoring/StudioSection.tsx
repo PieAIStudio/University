@@ -7,7 +7,8 @@ import type {
 import { EmptyCampus } from "./EmptyCampus.js";
 import { StudyAnalysisPanel } from "./StudyDetail.js";
 import { StudyShelf } from "./StudyShelf.js";
-import { UaDashboardButton } from "./UaDashboardButton.js";
+import { UaDashboardButton } from "../learner/UaDashboardButton.js";
+import { sourceAccessPort } from "../ports/index.js";
 
 /**
  * Local-only authoring surfaces, reached from 更多 → 作者工作台.
@@ -50,11 +51,12 @@ export function StudioSection({
       ) : null}
       {studyView ? (
         <>
-          <UaDashboardButton
+          <UaDashboardButton studyId={studyView.study.id} sourceAccess={sourceAccessPort} />
+          <StudyAnalysisPanel
             studyId={studyView.study.id}
-            available={(summary?.readyUaAnalysisCount ?? 0) > 0}
+            summary={summary}
+            sourceAccess={sourceAccessPort}
           />
-          <StudyAnalysisPanel studyId={studyView.study.id} summary={summary} />
         </>
       ) : null}
     </div>

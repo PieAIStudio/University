@@ -1,11 +1,11 @@
 /**
- * The two permitted differences, chosen once, at build time.
+ * The three permitted differences, chosen once, at build time.
  *
- * V4 states the law: where the AI comes from is the only thing the two campuses
- * may disagree about. Counting the code found a second — where a lesson's text
- * comes from — and this file is both of them, in one place, so a third cannot
- * be added by accident. Everything above these three ports is one
- * implementation.
+ * The learner surface is one implementation. The only questions the two
+ * builds answer differently are where the AI comes from, where the lesson
+ * material comes from, and whether this side can reach the repository behind
+ * the lesson. Keeping all three choices here prevents a UI component from
+ * growing an `AUTHORING ? ... : null` branch when a capability is missing.
  *
  * `AUTHORING` is a build-time constant, so Rollup keeps one branch and drops
  * the other along with everything it imports. A runtime capabilities object
@@ -17,7 +17,7 @@
  * other — and the two campuses then did different things with the news. It is
  * read off the shared document now, by the one screen that owns the reward.
  */
-import type { GradingPort, ReaderPort } from "@pieai/university-core";
+import type { GradingPort, ReaderPort, SourceAccessPort } from "@pieai/university-core";
 import type { ContentPort } from "@pieai/university-ui/content/port.js";
 
 import { AUTHORING } from "../mode.js";
@@ -25,9 +25,11 @@ import { progressPort } from "../progress/store.js";
 import { createLocalContentPort } from "./local/content.js";
 import { createLocalGradingPort } from "./local/grading.js";
 import { createLocalReaderPort } from "./local/reader.js";
+import { createLocalSourceAccessPort } from "./local/source-access.js";
 import { createOnlineContentPort } from "./online/content.js";
 import { createOnlineGradingPort } from "./online/grading.js";
 import { createOnlineReaderPort } from "./online/reader.js";
+import { createOnlineSourceAccessPort } from "./online/source-access.js";
 
 /** One shelf per document. Both implementations are stateless above their caches. */
 export const contentPort: ContentPort = AUTHORING
@@ -41,3 +43,8 @@ export const readerPort: ReaderPort = AUTHORING
 export const gradingPort: GradingPort = AUTHORING
   ? createLocalGradingPort({ progress: progressPort })
   : createOnlineGradingPort({ progress: progressPort });
+
+/** Repository access is the third boundary: action locally, explanation in delivery. */
+export const sourceAccessPort: SourceAccessPort = AUTHORING
+  ? createLocalSourceAccessPort()
+  : createOnlineSourceAccessPort();

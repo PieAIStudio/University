@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { GamePanel } from "@pieai/swimmer-ui-kit";
+import type { SourceAccessPort } from "@pieai/university-core";
 
 import { readJson } from "@pieai/university-ui/api/client.js";
 import { isCurrentLessonCompleted } from "@pieai/university-ui/view/lesson-view.js";
@@ -11,7 +12,7 @@ import type {
   StudyView,
 } from "@pieai/university-ui/view/lesson-view.js";
 import { CourseSection } from "./CourseSection.js";
-import { LayerCoverage } from "./LayerCoverage.js";
+import { LayerCoverage } from "@pieai/university-ui/evidence/LayerCoverage.js";
 
 export function StudyEvidenceStatus({
   snapshotCount,
@@ -134,9 +135,11 @@ export function AirlockClocks({ studyId }: { readonly studyId: string }) {
 export function StudyAnalysisPanel({
   studyId,
   summary,
+  sourceAccess,
 }: {
   readonly studyId: string;
   readonly summary: StudySummary | null;
+  readonly sourceAccess: SourceAccessPort;
 }) {
   return (
     <details className="study-analysis-panel">
@@ -158,7 +161,7 @@ export function StudyAnalysisPanel({
           />
         ) : null}
         <AirlockClocks studyId={studyId} />
-        <LayerCoverage studyId={studyId} />
+        <LayerCoverage studyId={studyId} sourceAccess={sourceAccess} />
       </div>
     </details>
   );

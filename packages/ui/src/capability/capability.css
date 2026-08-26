@@ -1,0 +1,24 @@
+.capability-explanation__body {
+  display: grid;
+  gap: 18px;
+}
+
+.capability-explanation__body section {
+  display: grid;
+  gap: 5px;
+}
+
+.capability-explanation__body h3,
+.capability-explanation__body p {
+  margin: 0;
+}
+
+.capability-explanation__body h3 {
+  color: var(--game-ui-accent-bright);
+  font-size: 0.86rem;
+}
+
+.capability-explanation__body p {
+  color: var(--game-ui-text-muted);
+  line-height: 1.7;
+}

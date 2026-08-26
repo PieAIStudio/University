@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
+import type { SourceAccessPort } from "@pieai/university-core";
 
 import type { EvidenceSnippetView, EvidenceToken, EvidenceView } from "../view/lesson-view.js";
 import { isUrlEvidenceView } from "../view/lesson-view.js";
@@ -9,6 +10,7 @@ import { loadEvidenceSnippet, type EvidenceSource } from "./load-evidence-snippe
 
 export function EvidenceSourceSheet({
   studyId,
+  sourceAccess,
   source,
   evidence,
   index,
@@ -16,6 +18,7 @@ export function EvidenceSourceSheet({
   onSelectIndex,
 }: {
   readonly studyId?: string;
+  readonly sourceAccess: SourceAccessPort;
   readonly source: EvidenceSource;
   readonly evidence: readonly EvidenceView[];
   readonly index: number | null;
@@ -139,7 +142,18 @@ export function EvidenceSourceSheet({
             </code>
           </span>
         </div>
-        {reference.ua ? <EvidenceUaPlace studyId={studyId} ua={reference.ua} /> : null}
+        <EvidenceUaPlace
+          studyId={studyId}
+          ua={
+            reference.ua ?? {
+              nodeId: "",
+              name: reference.sourcePath,
+              summary: "",
+              layerName: null,
+            }
+          }
+          sourceAccess={sourceAccess}
+        />
         <div className="source-sheet__tools">
           <label>
             <span>在这份源码中查找</span>

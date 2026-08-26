@@ -122,6 +122,7 @@ pre b{color:var(--go);font-weight:600}
 <tbody>
 <tr><td>一个 <code>apps/university</code>，两个模式；学习面一套实现</td><td>读完与答对是两个事实，不能由一个事件代替另一个</td></tr>
 <tr><td><code>ContentPort</code> / <code>ReaderPort</code> 只换材料从哪来，不复制阅读器</td><td>「讲一遍」是学习者自己的复述卡，不是作者的知识笔记</td></tr>
+<tr><td><code>GradingPort</code> 与 <code>SourceAccessPort</code> 只换端口能力，不复制学习者面</td><td>AI 来源、源码仓库可达性是边界；能力缺席时控件仍在，并打开解释</td></tr>
 <tr><td>可读文字在 DOM，3D 只负责世界、路径和反馈</td><td>TTS 四档已定；学习者口述的 ASR 仍是开放决定</td></tr>
 <tr><td>课程内容不设付费墙；AI 按既定成本层级走端口</td><td>打开 TTS 不等于同意上传学习者的声音</td></tr>
 </tbody>
@@ -387,7 +388,7 @@ pre b{color:var(--go);font-weight:600}
   <li><b>落地「讲一遍」文字路径。</b>使用单元现有能力句，保存到学习者文档，接入已有 FSRS，不新增模型调用。</li>
   <li><b>保持 TTS 四档。</b>所有调用经过共享 <code>speech.ts</code> 的声音选择；自动存请求，手动降级可解释，高品质等钱包。</li>
   <li><b>单独设计 ASR 选择加入。</b>先做载荷、目的地、处理位置、保存和删除的决定；决定前不接麦克风，不把「开放」写成已上线。</li>
-  <li><b>双模式逐屏对齐。</b>本地与交付模式共享课后提示、文字输入、复习卡和 TTS 设置；唯一的 AI 来源差异仍留在既有端口。</li>
+  <li><b>双模式逐屏对齐。</b>本地与交付模式共享学习者面、课后提示、文字输入、复习卡和 TTS 设置；AI 来源、课文材料来源、以及能否触达课文背后的源码仓库，分别留在 <code>GradingPort</code>、<code>ContentPort</code>/<code>ReaderPort</code>、<code>SourceAccessPort</code>。能力缺席时照常显示入口并解释原因与未来支持路径。</li>
 </ol>
 
 <h3>完成线</h3>

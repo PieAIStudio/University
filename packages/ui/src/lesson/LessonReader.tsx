@@ -6,12 +6,13 @@ import {
   type LessonCompletion,
   type ProgressPort,
   type ReaderPort,
+  type SourceAccessPort,
 } from "@pieai/university-core";
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
+import { LayerCoverage } from "../evidence/LayerCoverage.js";
 import { EvidenceSourceSheet } from "../evidence/EvidenceSourceSheet.js";
-import { LessonUaLayers } from "../evidence/EvidenceUaPlace.js";
 import { LessonSources } from "../evidence/LessonSources.js";
 import { readDetailMode, writeDetailMode, type DetailMode } from "../language/detail-mode.js";
 import {
@@ -35,7 +36,7 @@ import { LessonMarkList } from "./LessonMarkList.js";
 import { LessonMargin } from "./LessonMargin.js";
 import { LessonBacklinks } from "./LessonRelated.js";
 import { LessonNextStep } from "./LessonNextStep.js";
-import { LessonSourceVersion, type LessonSourceVersionAction } from "./LessonSourceVersion.js";
+import { LessonSourceVersion } from "./LessonSourceVersion.js";
 import { LessonWordList } from "./LessonWordList.js";
 import { SelectionMenu, type SelectionTarget } from "./SelectionMenu.js";
 import {
@@ -72,6 +73,7 @@ export function LessonReader({
   completion,
   reader,
   grading,
+  sourceAccess,
   progress,
   review,
   requestToken,
@@ -81,7 +83,6 @@ export function LessonReader({
   onBackToCourse,
   onFollowLink,
   onReturn,
-  onSourceVersionAction,
   toolbarExtras,
 }: {
   readonly locator: LessonRef;
@@ -90,6 +91,8 @@ export function LessonReader({
   readonly completion: LessonCompletion;
   readonly reader: ReaderPort;
   readonly grading: GradingPort;
+  /** Repository actions or explanations, selected once by the app shell. */
+  readonly sourceAccess: SourceAccessPort;
   readonly progress?: ProgressPort;
   readonly review?: ReviewCardPort;
   readonly requestToken: string;
@@ -101,8 +104,6 @@ export function LessonReader({
   readonly onFollowLink?: ((target: LessonLinkTarget) => void) | undefined;
   /** Present only when a cross-lesson link brought the reader here. */
   readonly onReturn?: (() => void) | undefined;
-  /** Authoring-only action; delivery still shows the pinned version without a dead button. */
-  readonly onSourceVersionAction?: LessonSourceVersionAction;
   /** Shell-owned tools that sit with the reading controls, not a second toolbar. */
   readonly toolbarExtras?: ReactNode;
 }) {
@@ -508,15 +509,20 @@ export function LessonReader({
               <h2 ref={titleRef} tabIndex={-1}>
                 {view.lesson.title}
               </h2>
-              <LessonUaLayers evidence={view.lesson.evidence} />
+              <LayerCoverage
+                variant="lesson"
+                studyId={locator.studyId}
+                evidence={view.lesson.evidence}
+                sourceAccess={sourceAccess}
+              />
               {view.lesson.pinnedCommit ? (
                 <LessonSourceVersion
                   studyId={locator.studyId}
                   sourceCommit={view.lesson.pinnedCommit.commit}
+                  sourceAccess={sourceAccess}
                   {...(view.lesson.pinnedCommit.date
                     ? { sourceCommitDate: view.lesson.pinnedCommit.date }
                     : {})}
-                  {...(onSourceVersionAction ? { onAction: onSourceVersionAction } : {})}
                 />
               ) : null}
             </div>
@@ -692,6 +698,7 @@ export function LessonReader({
       />
       <EvidenceSourceSheet
         studyId={locator.studyId}
+        sourceAccess={sourceAccess}
         source={loadFullEvidence}
         evidence={view.lesson.evidence}
         index={sourceIndex}

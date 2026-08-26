@@ -25,10 +25,9 @@
 
 // Shared surface — the lesson itself. Both shells.
 export { LessonReader } from "./lesson/LessonReader.js";
-export type {
-  LessonSourceVersionAction,
-  LessonSourceVersionCheckout,
-} from "./lesson/LessonSourceVersion.js";
+export type { LessonSourceVersionCheckout } from "./lesson/LessonSourceVersion.js";
+export { CapabilityExplanation } from "./capability/CapabilityExplanation.js";
+export { LayerCoverage } from "./evidence/LayerCoverage.js";
 export { LessonToolbar, lessonNeighbours, readProgress } from "./lesson/LessonNav.js";
 export { MarkdownContent, isLocalUrl } from "./markdown/MarkdownContent.js";
 export { ReviewCard } from "./review/ReviewCard.js";

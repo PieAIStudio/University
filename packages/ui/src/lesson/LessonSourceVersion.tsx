@@ -1,17 +1,14 @@
 import { useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
+import type {
+  SourceAccessExplanation,
+  SourceAccessPort,
+  SourceCheckout,
+} from "@pieai/university-core";
 
-export interface LessonSourceVersionCheckout {
-  readonly snapshotId: string;
-  readonly path: string;
-  readonly created: boolean;
-  readonly run: readonly string[];
-}
+import { CapabilityExplanation } from "../capability/CapabilityExplanation.js";
 
-export type LessonSourceVersionAction = (
-  method: "open" | "close",
-  input: { readonly studyId: string; readonly sourceCommit: string },
-) => Promise<LessonSourceVersionCheckout | null>;
+export type LessonSourceVersionCheckout = SourceCheckout;
 
 /**
  * Running the version this lesson teaches.
@@ -36,26 +33,41 @@ export function LessonSourceVersion({
   studyId,
   sourceCommit,
   sourceCommitDate,
-  onAction,
+  sourceAccess,
 }: {
   readonly studyId: string;
   readonly sourceCommit: string;
   readonly sourceCommitDate?: string;
-  /** The authoring shell supplies the local action; delivery deliberately does not. */
-  readonly onAction?: LessonSourceVersionAction;
+  /** Both shells render the entry; the port returns an action or an explanation. */
+  readonly sourceAccess: SourceAccessPort;
 }) {
   const [checkout, setCheckout] = useState<LessonSourceVersionCheckout | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [explanation, setExplanation] = useState<SourceAccessExplanation | null>(null);
 
   async function call(method: "open" | "close") {
-    if (!onAction) return;
     setPending(true);
     setError(null);
+    setExplanation(null);
     try {
-      const body = await onAction(method, { studyId, sourceCommit });
-      setCheckout(method === "open" ? body : null);
+      if (method === "open") {
+        const access = sourceAccess.lessonVersion({ studyId, sourceCommit });
+        if (access.kind === "explanation") {
+          setExplanation(access);
+          return;
+        }
+        setCheckout(await access.run());
+      } else {
+        const access = sourceAccess.closeLessonVersion({ studyId, sourceCommit });
+        if (access.kind === "explanation") {
+          setExplanation(access);
+          return;
+        }
+        await access.run();
+        setCheckout(null);
+      }
       setCopied(false);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "打不开正在学习的 App");
@@ -73,16 +85,15 @@ export function LessonSourceVersion({
           <span className="lesson-version__label">
             这节课钉在{dated ? ` ${dated} ` : ""}的版本（{sourceCommit.slice(0, 8)}）
           </span>
-          {onAction ? (
-            <button
-              type="button"
-              className="text-button"
-              onClick={() => void call("open")}
-              disabled={pending}
-            >
-              {pending ? "正在打开…" : "打开正在学习的 App"}
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="text-button"
+            data-parity-control="lesson-source-version"
+            onClick={() => void call("open")}
+            disabled={pending}
+          >
+            {pending ? "正在打开…" : "打开正在学习的 App"}
+          </button>
         </>
       ) : (
         <div className="lesson-version__ready">
@@ -128,6 +139,9 @@ export function LessonSourceVersion({
         <p className="inline-error" role="alert">
           {error}
         </p>
+      ) : null}
+      {explanation ? (
+        <CapabilityExplanation explanation={explanation} onClose={() => setExplanation(null)} />
       ) : null}
     </div>
   );

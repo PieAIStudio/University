@@ -67,3 +67,13 @@ export {
   type HostExerciseGrade,
   type MemoryGradingPort,
 } from "./grading.js";
+export type {
+  SourceAccess,
+  SourceAccessAction,
+  SourceAccessExplanation,
+  SourceAccessPort,
+  SourceCheckout,
+  SourceCoverageLayer,
+  SourceLayerCoverage,
+  SourceVersionInput,
+} from "./source-access.js";

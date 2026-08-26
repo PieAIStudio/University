@@ -4072,3 +4072,30 @@ dd,
 blockquote {
   text-wrap: pretty;
 }
+
+@media (min-width: 768px) {
+  .app-shell__main:has(.stagewrap:not([hidden])) .world-source-controls {
+    position: absolute;
+    z-index: 4;
+    left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
+    /* Keep the learner entry visible above the authoring clocks when both are present. */
+    bottom: 220px;
+  }
+}
+
+.world-source-controls {
+  display: grid;
+  gap: 12px;
+}
+
+@media (max-width: 767px) {
+  .world-source-controls {
+    margin: 12px 16px 0;
+  }
+}
+
+.study-map__status {
+  margin: 0 0 14px;
+  color: var(--game-ui-text-muted);
+  line-height: 1.6;
+}

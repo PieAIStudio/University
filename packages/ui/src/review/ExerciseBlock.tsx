@@ -246,17 +246,13 @@ export function ExerciseBlock({
         >
           {/* 「判」 alone is not a verb you can end a Chinese sentence on, and
               this is the primary action of every lesson in the product. */}
-          {pending
-            ? "正在提交…"
-            : solved
-              ? "已完成"
-              : reopened
-                ? grading.coachingPacket
-                  ? "重新提交并复制给 AI 判分"
-                  : "重新提交"
-                : grading.coachingPacket
-                  ? "提交并复制给 AI 判分"
-                  : "提交"}
+          {/*
+            The grading port may copy an authoring answer to an AI host while
+            delivery submits it to its metered grader. That is an implementation
+            boundary, not a second learner surface: the button says what the
+            learner is doing in both campuses.
+          */}
+          {pending ? "正在提交…" : solved ? "已完成" : reopened ? "重新提交" : "提交"}
         </GameButton>
         {passed ? (
           <GameButton

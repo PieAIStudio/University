@@ -32,7 +32,9 @@ import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view
 import { PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
 
 import { AUTHORING } from "../mode";
-import { MapNotes, StudioScreen } from "../authoring/index";
+import { AuthoringMapNotes, StudioScreen } from "../authoring/index";
+import { sourceAccessPort } from "../ports/index.js";
+import { WorldSourceControls } from "../learner/WorldSourceControls.js";
 import type { CourseNode } from "@pieai/university-world/course.js";
 import { AvatarLab } from "../screens/AvatarLab";
 import {
@@ -158,7 +160,10 @@ export function MainRouter({
         the canvas's box, and a grid with pointer events on it swallows every
         click aimed at an island — measured, by G2 failing to reach a stone.
       */}
-      {AUTHORING && view.kind === "world" ? <MapNotes studyId={focusedStudyId} /> : null}
+      {view.kind === "world" ? (
+        <WorldSourceControls studyId={focusedStudyId} sourceAccess={sourceAccessPort} />
+      ) : null}
+      {AUTHORING && view.kind === "world" ? <AuthoringMapNotes studyId={focusedStudyId} /> : null}
       {view.kind === "avatar-lab" ? (
         <Suspense fallback={<RouteFallback />}>
           <AvatarLab onOpen={setView} />
