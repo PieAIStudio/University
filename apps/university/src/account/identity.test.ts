@@ -1,44 +1,83 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createOnlineIdentityPort, readSwimmerCorePublicEnv } from "./identity";
+import { createOnlineIdentityPort, readSwimmerBackendPublicEnv } from "./identity";
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("readSwimmerCorePublicEnv", () => {
+describe("readSwimmerBackendPublicEnv", () => {
   it("is silent and empty when the env is missing", () => {
-    expect(readSwimmerCorePublicEnv({})).toBeNull();
+    expect(readSwimmerBackendPublicEnv({})).toBeNull();
     expect(
-      readSwimmerCorePublicEnv({
-        VITE_SWIMMER_CORE_SUPABASE_URL: "https://example.supabase.co",
+      readSwimmerBackendPublicEnv({
+        VITE_SWIMMER_BACKEND_SUPABASE_URL: "https://example.supabase.co",
       }),
     ).toBeNull();
     expect(
-      readSwimmerCorePublicEnv({
-        VITE_SWIMMER_CORE_PUBLISHABLE_KEY: "sb_publishable_test",
+      readSwimmerBackendPublicEnv({
+        VITE_SWIMMER_BACKEND_PUBLISHABLE_KEY: "sb_publishable_test",
       }),
     ).toBeNull();
   });
 
   it("refuses a secret key rather than putting one in the browser client", () => {
     expect(
-      readSwimmerCorePublicEnv({
-        VITE_SWIMMER_CORE_SUPABASE_URL: "https://example.supabase.co",
-        VITE_SWIMMER_CORE_PUBLISHABLE_KEY: "sb_secret_nope",
+      readSwimmerBackendPublicEnv({
+        VITE_SWIMMER_BACKEND_SUPABASE_URL: "https://example.supabase.co",
+        VITE_SWIMMER_BACKEND_PUBLISHABLE_KEY: "sb_secret_nope",
       }),
     ).toBeNull();
   });
 
-  it("accepts the portfolio env names with a publishable key", () => {
+  it("accepts the canonical env names with a publishable key", () => {
     expect(
-      readSwimmerCorePublicEnv({
-        VITE_SWIMMER_CORE_SUPABASE_URL: "https://example.supabase.co",
-        VITE_SWIMMER_CORE_PUBLISHABLE_KEY: "sb_publishable_test",
+      readSwimmerBackendPublicEnv({
+        VITE_SWIMMER_BACKEND_SUPABASE_URL: "https://example.supabase.co",
+        VITE_SWIMMER_BACKEND_PUBLISHABLE_KEY: "sb_publishable_test",
       }),
     ).toEqual({
       url: "https://example.supabase.co",
       publishableKey: "sb_publishable_test",
+    });
+  });
+
+  it("accepts the legacy env names while consumers migrate", () => {
+    expect(
+      readSwimmerBackendPublicEnv({
+        VITE_SWIMMER_CORE_SUPABASE_URL: "https://legacy.example.supabase.co",
+        VITE_SWIMMER_CORE_PUBLISHABLE_KEY: "sb_publishable_legacy",
+      }),
+    ).toEqual({
+      url: "https://legacy.example.supabase.co",
+      publishableKey: "sb_publishable_legacy",
+    });
+  });
+
+  it("prefers canonical names when both generations are configured", () => {
+    expect(
+      readSwimmerBackendPublicEnv({
+        VITE_SWIMMER_BACKEND_SUPABASE_URL: "https://new.example.supabase.co",
+        VITE_SWIMMER_BACKEND_PUBLISHABLE_KEY: "sb_publishable_new",
+        VITE_SWIMMER_CORE_SUPABASE_URL: "https://legacy.example.supabase.co",
+        VITE_SWIMMER_CORE_PUBLISHABLE_KEY: "sb_publishable_legacy",
+      }),
+    ).toEqual({
+      url: "https://new.example.supabase.co",
+      publishableKey: "sb_publishable_new",
+    });
+  });
+
+  it("does not mix a partial canonical pair with a legacy pair", () => {
+    expect(
+      readSwimmerBackendPublicEnv({
+        VITE_SWIMMER_BACKEND_SUPABASE_URL: "https://partial.example.supabase.co",
+        VITE_SWIMMER_CORE_SUPABASE_URL: "https://legacy.example.supabase.co",
+        VITE_SWIMMER_CORE_PUBLISHABLE_KEY: "sb_publishable_legacy",
+      }),
+    ).toEqual({
+      url: "https://legacy.example.supabase.co",
+      publishableKey: "sb_publishable_legacy",
     });
   });
 });

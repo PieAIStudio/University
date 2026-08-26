@@ -9,7 +9,18 @@ import {
   type ProgressRemoteStore,
 } from "@pieai/university-core";
 
+/** Canonical browser-facing SwimmerBackend environment names. */
+export const SWIMMER_BACKEND_SUPABASE_URL_ENV = "VITE_SWIMMER_BACKEND_SUPABASE_URL";
+export const SWIMMER_BACKEND_PUBLISHABLE_KEY_ENV = "VITE_SWIMMER_BACKEND_PUBLISHABLE_KEY";
+
+/**
+ * Legacy aliases kept for a rolling deployment migration. Other portfolio
+ * consumers still publish the old names, so removing these fallbacks would
+ * make an otherwise unrelated deployment lose cloud access.
+ */
+/** @deprecated Use SWIMMER_BACKEND_SUPABASE_URL_ENV. */
 export const SWIMMER_CORE_URL_ENV = "VITE_SWIMMER_CORE_SUPABASE_URL";
+/** @deprecated Use SWIMMER_BACKEND_PUBLISHABLE_KEY_ENV. */
 export const SWIMMER_CORE_PUBLISHABLE_KEY_ENV = "VITE_SWIMMER_CORE_PUBLISHABLE_KEY";
 
 export type BrowserEnv = Record<string, string | boolean | undefined>;
@@ -38,13 +49,28 @@ export function createUniversityBackend(env: BrowserEnv): UniversityBackend {
   };
 }
 
-export function readSwimmerCorePublicEnv(env: BrowserEnv): {
+export function readSwimmerBackendPublicEnv(env: BrowserEnv): {
   readonly url: string;
   readonly publishableKey: string;
 } | null {
-  const url = stringValue(env[SWIMMER_CORE_URL_ENV]);
-  const publishableKey = stringValue(env[SWIMMER_CORE_PUBLISHABLE_KEY_ENV]);
-  if (!url || !publishableKey || looksLikeSecretKey(publishableKey)) return null;
+  const candidate = [
+    {
+      url: stringValue(env[SWIMMER_BACKEND_SUPABASE_URL_ENV]),
+      publishableKey: stringValue(env[SWIMMER_BACKEND_PUBLISHABLE_KEY_ENV]),
+    },
+    {
+      url: stringValue(env[SWIMMER_CORE_URL_ENV]),
+      publishableKey: stringValue(env[SWIMMER_CORE_PUBLISHABLE_KEY_ENV]),
+    },
+  ].find((pair) => pair.url && pair.publishableKey);
+  if (
+    !candidate?.url ||
+    !candidate.publishableKey ||
+    looksLikeSecretKey(candidate.publishableKey)
+  ) {
+    return null;
+  }
+  const { url, publishableKey } = candidate;
   try {
     new URL(url);
   } catch {
@@ -53,8 +79,11 @@ export function readSwimmerCorePublicEnv(env: BrowserEnv): {
   return { url, publishableKey };
 }
 
+/** @deprecated Use readSwimmerBackendPublicEnv. */
+export const readSwimmerCorePublicEnv = readSwimmerBackendPublicEnv;
+
 export function createOnlineSupabaseClient(env: BrowserEnv): SupabaseClient | null {
-  const config = readSwimmerCorePublicEnv(env);
+  const config = readSwimmerBackendPublicEnv(env);
   if (!config) return null;
   try {
     return createClient(config.url, config.publishableKey, {

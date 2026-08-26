@@ -26,6 +26,8 @@
     "lint": "pnpm -r lint",
     "prepare": "lefthook install",
     "pro-gov": "pro-gov",
+    "secrets:check:university": "node scripts/materialize-swimmer-backend-public-env.mjs --check",
+    "secrets:materialize:university": "node scripts/materialize-swimmer-backend-public-env.mjs",
     "start": "node scripts/start.mjs",
     "test": "pnpm -r test && node scripts/check-raw-colours.mjs --self-test && node scripts/check-review-card-registry.mjs --self-test",
     "typecheck": "pnpm -r typecheck",

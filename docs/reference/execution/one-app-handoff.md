@@ -209,7 +209,7 @@ pnpm e2e              16 passed
 
 | 队列编号 | 事 | 为什么这一轮不碰 |
 | --- | --- | --- |
-| 1 | 学习数据接云端 | **归属者是人，不是 AI。** 需要一次真实的 Supabase 部署（`university.progress` + RLS），SwimmerBackend 的 `work/university-schema` 还没并；而且 `.env` 里要放一个 key —— 凭据由老板放置。**代码这边已经写完并且两端共用**：`ProgressPort` 写文档、`packages/backend` 挂远端、`flush()` 有冲突处理。今天没有远端只是因为 `VITE_SWIMMER_CORE_SUPABASE_URL` 没配，于是 `progressRemoteStore` 是 null。**顺带一提**：这也是两端进度看起来不一样的真正原因——`localhost:9999` 和 `localhost:9998` 是两个 origin，`localStorage` 各存各的；云端一接上就是同一行。 |
+| 1 | 学习数据接云端 | **归属者是人，不是 AI。** 需要一次真实的 Supabase 部署（`university.progress` + RLS），SwimmerBackend 的 `work/university-schema` 还没并；而且 `.env` 里要放一个 key —— 凭据由老板放置。**代码这边已经写完并且两端共用**：`ProgressPort` 写文档、`packages/backend` 挂远端、`flush()` 有冲突处理。今天没有远端只是因为 `VITE_SWIMMER_BACKEND_SUPABASE_URL` 没配，于是 `progressRemoteStore` 是 null。**顺带一提**：这也是两端进度看起来不一样的真正原因——`localhost:9999` 和 `localhost:9998` 是两个 origin，`localStorage` 各存各的；云端一接上就是同一行。 |
 | 11 | UA 图谱进投放端 | 要改导出格式、导入脚本和阅读器 —— **是加功能，不是搬代码。** |
 | 13 / 14 | 星球的美术、等级与 XP 曲线 | 一个是美术方向，一个要老板定曲线。 |
 

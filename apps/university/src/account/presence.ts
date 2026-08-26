@@ -34,7 +34,7 @@ import {
   type PresenceSelf,
 } from "@pieai/university-core";
 
-import { readSwimmerCorePublicEnv } from "./identity";
+import { readSwimmerBackendPublicEnv } from "./identity";
 
 type BrowserEnv = Record<string, string | boolean | undefined>;
 
@@ -53,7 +53,7 @@ export function createOnlinePresencePort(
 ): PresencePort {
   if (!presenceAdapterIsWired()) return createRealtimePresencePort(null);
 
-  const config = readSwimmerCorePublicEnv(env);
+  const config = readSwimmerBackendPublicEnv(env);
   if (!config) return createRealtimePresencePort(null);
 
   try {

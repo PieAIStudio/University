@@ -12,7 +12,7 @@
   "registryProvenance": {
     "schema": "agent-assets-registry",
     "version": 1,
-    "hash": "sha256:b4b7b22e004cfda73a7dcd299d904de8f174c13810e60ba766571d56ed19e22b",
+    "hash": "sha256:b935cbdc4664894e4d999f16b2a9b542aeffa31010973ee618d3580ec6688dcf",
     "assetCount": 44
   },
   "assets": [
@@ -27,7 +27,7 @@
       "id": "npx-skills/agent-browser",
       "sourcePath": "skills/npx-skills/.agents/skills/agent-browser",
       "delivery": "symlink",
-      "contentHash": "sha256:a674b7d81066e3cc471a7512ddb4ae724418cbfefa75cbb050b0dc430e4d57a0",
+      "contentHash": "sha256:80161e6836b3b40f4e83730a290deb40ac14d877d38c97ad5f6d71be37ce74c3",
       "targetPath": ".agents/skills/agent-browser"
     },
     {
@@ -55,14 +55,14 @@
       "id": "npx-skills/img2threejs",
       "sourcePath": "skills/npx-skills/.agents/skills/img2threejs",
       "delivery": "symlink",
-      "contentHash": "sha256:669d4937fce0a2d8df6f1c5948de8cf1b1d19b7824e6717b6215bcc2640d4ed1",
+      "contentHash": "sha256:483cf5d0e40bc19bc0d16b8de0516a66c4f8f7e78812a6489f16ba663cc87e07",
       "targetPath": ".agents/manual-skills/img2threejs"
     },
     {
       "id": "npx-skills/impeccable",
       "sourcePath": "skills/npx-skills/.agents/skills/impeccable",
       "delivery": "symlink",
-      "contentHash": "sha256:16f7f1f484ab99c1149d2decd6c7e830849072dfa1057d6324af8bba84965a9d",
+      "contentHash": "sha256:8ae15976ef5453e1fd1307eedc80b8c9efcbd8dadabba21f221cbd6d99c2791c",
       "targetPath": ".agents/skills/impeccable"
     },
     {

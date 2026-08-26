@@ -11,17 +11,10 @@ coverage/
 .scratch/
 university-local.config.local.json
 
-# PGS workstation materializations. UniversityLocal-owned teaching skills stay
-# tracked; these generic links are recreated from the control-plane asset plan.
-.agents/skills/agent-browser
-.agents/skills/comm-coach
-.agents/skills/experience-capture
-.agents/skills/frontend-design
-.agents/skills/impeccable
-.agents/skills/mermaid-diagrams
-.agents/skills/screenwalk
-.agents/skills/ui-ux-pro-max
-.agents/manual-skills/
+# PGS skill symlinks are intentionally visible in Git as part of the internal
+# checkout setup contract. Their relative targets require the sibling
+# ProjectGovernanceSystem checkout; .pro-gov/assets.lock.json records the exact
+# assets and the control-plane plan can recreate them after checkout.
 .pro-gov/agent-assets/
 
 # Personal campus data stays visible at ./studies but must never enter source control.

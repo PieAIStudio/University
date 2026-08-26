@@ -11,27 +11,10 @@ coverage/
 .artifacts/
 university.config.local.json
 
-# PGS workstation materializations. University-owned skills stay tracked;
-# these generic links are recreated from the control-plane asset plan.
-.agents/skills/agent-browser
-.agents/skills/eli5
-.agents/skills/fireworks-open-eli5
-.agents/skills/experience-capture
-.agents/skills/frontend-design
-.agents/skills/mermaid-diagrams
-.agents/skills/impeccable
-.agents/skills/screenwalk
-.agents/skills/threejs-3d-generator
-.agents/skills/threejs-aaa-graphics-builder
-.agents/skills/threejs-audio-generator
-.agents/skills/threejs-debug-profiler
-.agents/skills/threejs-game-director
-.agents/skills/threejs-game-ui-designer
-.agents/skills/threejs-gameplay-systems
-.agents/skills/threejs-image-generator
-.agents/skills/threejs-qa-release
-.agents/skills/ui-ux-pro-max
-.agents/manual-skills/
+# PGS skill symlinks are intentionally visible in Git as part of the project
+# setup contract. Their relative targets require the sibling
+# ProjectGovernanceSystem checkout; .pro-gov/assets.lock.json records the exact
+# assets and the control-plane plan can recreate them after checkout.
 .pro-gov/agent-assets/
 
 # Imported UniversityLocal course recovery packages are content, not source.

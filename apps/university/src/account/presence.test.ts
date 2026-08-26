@@ -14,8 +14,8 @@ describe("createOnlinePresencePort", () => {
     expect(presenceAdapterIsWired()).toBe(false);
     const port = createOnlinePresencePort(
       {
-        VITE_SWIMMER_CORE_SUPABASE_URL: "https://example.supabase.co",
-        VITE_SWIMMER_CORE_PUBLISHABLE_KEY: "sb_publishable_test",
+        VITE_SWIMMER_BACKEND_SUPABASE_URL: "https://example.supabase.co",
+        VITE_SWIMMER_BACKEND_PUBLISHABLE_KEY: "sb_publishable_test",
       },
       {
         self: { userId: "ada", displayName: "Ada" },

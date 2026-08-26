@@ -65,10 +65,12 @@ related:
   该外部 shelf 实测约 1.1 GiB。干净 clone 不拥有它，也不应把它放进任何
   交付产物。
 - `.env` / `.env.*`：被忽略。浏览器用的
-  `VITE_SWIMMER_CORE_SUPABASE_URL` 和
-  `VITE_SWIMMER_CORE_PUBLISHABLE_KEY` 缺失时，backend assembly 按现有
+  `VITE_SWIMMER_BACKEND_SUPABASE_URL` 和
+  `VITE_SWIMMER_BACKEND_PUBLISHABLE_KEY` 缺失时，backend assembly 按现有
   契约静默返回离线/null adapter；它们不是构建课程包的输入。真实环境若
-  需要登录/同步，仍须由部署环境提供公开 publishable 配置。
+  需要登录/同步，仍须由部署环境提供公开 publishable 配置。迁移期间仍兼容
+  旧的 `VITE_SWIMMER_CORE_*` 名称，但新的本机文件和 Vercel 配置应使用
+  `VITE_SWIMMER_BACKEND_*`。
 
 工具链也有一个此前未钉死的输入：仓库根 `package.json` 没有声明
 `packageManager` 或 Node engine；`.github/workflows/docs-check.yml` 才把

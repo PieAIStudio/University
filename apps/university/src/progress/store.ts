@@ -32,14 +32,14 @@ import {
 } from "@pieai/university-core";
 import { createBrowserProgressPort } from "@pieai/university-ui/progress/store.js";
 
-import { swimmerCoreClient } from "../account/identity";
+import { swimmerBackendClient } from "../account/identity";
 import { createSupabaseProgressRemoteStore } from "../account/progress-remote";
 
 export { lessonKey };
 
 export const progressPort: ProgressPort = createBrowserProgressPort();
-export const progressRemoteStore: ProgressRemoteStore | null = swimmerCoreClient
-  ? createSupabaseProgressRemoteStore(swimmerCoreClient)
+export const progressRemoteStore: ProgressRemoteStore | null = swimmerBackendClient
+  ? createSupabaseProgressRemoteStore(swimmerBackendClient)
   : null;
 
 export function subscribe(listener: () => void): () => void {

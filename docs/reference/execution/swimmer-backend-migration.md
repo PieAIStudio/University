@@ -41,6 +41,12 @@ superseded_by: null
 占位符。真实 project URL、publishable key、测试邮箱和密码由 owner 在自己的
 SwimmerBackend 控制台、部署变量或本机 `.env.local` 中填写；本仓库不保存它们。
 
+University 的浏览器环境变量现以 `VITE_SWIMMER_BACKEND_*` 为规范名称；代码在
+迁移窗口内仍接受旧的 `VITE_SWIMMER_CORE_*` 名称，以免尚未迁移的部署立即回到
+离线模式。`SWIMMER_CORE` 仍可能出现在其他项目的旧配置、Supabase 的历史显示名
+和 `core` schema 中；本次只改 University 的环境契约，不改 project ref、URL、
+数据库 schema 或迁移历史。
+
 ## 1. 代码已经钉死的契约
 
 | 远端事实 | 为什么是这个形状 | 代码证据 |
@@ -104,8 +110,8 @@ SwimmerBackend 控制台、部署变量或本机 `.env.local` 中填写；本仓
 
    | 变量 | 喂给谁 | 代码证据 |
    | --- | --- | --- |
-   | `VITE_SWIMMER_CORE_SUPABASE_URL` | `@pieai/university-backend` 的 Supabase client；同时承载 Auth 和 `university.progress` Data API | `packages/backend/src/browser.ts:12,41-69` |
-   | `VITE_SWIMMER_CORE_PUBLISHABLE_KEY` | 同一个 browser client 的公开 publishable key | `packages/backend/src/browser.ts:13,41-53,56-74` |
+   | `VITE_SWIMMER_BACKEND_SUPABASE_URL` | `@pieai/university-backend` 的 Supabase client；同时承载 Auth 和 `university.progress` Data API | `packages/backend/src/browser.ts:13,52-80` |
+   | `VITE_SWIMMER_BACKEND_PUBLISHABLE_KEY` | 同一个 browser client 的公开 publishable key | `packages/backend/src/browser.ts:14,52-66,77-85` |
 
    `apps/university/.env.example` 是键名和占位符的唯一模板。复制为本地
    `.env.local` 或填入部署平台的构建变量后，重启 / 重新构建 Vite；Vite 是构建期
@@ -311,8 +317,8 @@ revision guard，可在 B 的保存请求变 pending 时让 A 完成 X，再等 
 
 ### 迁移成功但还没有写入 learner row
 
-1. 先停止 staging 构建或从构建变量移除两项 `VITE_SWIMMER_CORE_*`，让浏览器回到
-   既有的本机模式；缺少 env 在 `packages/backend/src/browser.ts:45-69` 是静默
+1. 先停止 staging 构建或从构建变量移除两项 `VITE_SWIMMER_BACKEND_*`，让浏览器回到
+   既有的本机模式；缺少 env 在 `packages/backend/src/browser.ts:52-80` 是静默
    unconfigured，不会连接后端。
 2. 确认 `select count(*) from university.progress` 为 0，且 schema 中没有 owner
    另建的对象。
