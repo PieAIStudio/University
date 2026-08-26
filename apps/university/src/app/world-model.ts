@@ -1,0 +1,246 @@
+import { spineOf, type View } from "@pieai/university-core";
+import type { ShelfStudy } from "@pieai/university-ui/content/port.js";
+import {
+  focusedStudyId as resolveFocusedStudy,
+  type StudySwitchItem,
+} from "@pieai/university-ui/navigation/StudySwitcher.js";
+import { spacedName } from "@pieai/university-ui/text/spaced-name.js";
+import { type LessonPlacement, placeWorld, type Marker } from "@pieai/university-world/Maps.js";
+import { courseMarkers } from "@pieai/university-world/course-map.js";
+import type { CourseNode } from "@pieai/university-world/course.js";
+import type { PlanetStudy } from "@pieai/university-world/planet.js";
+import { useMemo, type Dispatch, type SetStateAction } from "react";
+
+export type PathOverlay =
+  | {
+      readonly kind: "node";
+      readonly unitId: string;
+      readonly lessonId: string;
+      readonly returnFocusTo: HTMLElement | null;
+    }
+  | {
+      readonly kind: "unit";
+      readonly unitId: string;
+      readonly returnFocusTo: HTMLElement | null;
+    };
+
+type LabelNodes = { readonly current: Map<string, HTMLElement> };
+type World = ReturnType<typeof placeWorld>;
+
+interface WorldModelOptions {
+  readonly courseProgress: (node: CourseNode) => number;
+  readonly lessonsDone: (node: CourseNode) => number;
+  readonly mapFocus: string | null | undefined;
+  readonly nodes: readonly CourseNode[] | null;
+  readonly studies: readonly ShelfStudy[];
+  readonly todayNode: CourseNode | null;
+  readonly view: View;
+}
+
+export function useWorldModel({
+  courseProgress,
+  lessonsDone,
+  mapFocus,
+  nodes,
+  studies,
+  todayNode,
+  view,
+}: WorldModelOptions) {
+  /**
+   * One state: the study in the top bar is the sea the camera is looking at.
+   *
+   * These used to be independent, which is how the top bar said TuringPact
+   * while the map showed Buzz. A course URL names the study; on the world
+   * map the next course is the default until the learner picks another sea
+   * or pulls back to all four.
+   */
+  const focusedStudyId = useMemo(() => {
+    /*
+      Reading a lesson pins the map to that lesson's project until the learner
+      says otherwise — `mapFocus === undefined` is "has not said otherwise",
+      which is why it is distinct from null.
+    */
+    const chosen =
+      view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
+        ? mapFocus === undefined
+          ? view.studyId
+          : mapFocus
+        : mapFocus;
+    /*
+      The map shows one project and may never show none, so this can no longer
+      resolve to null the way it did when null meant 「看全部四片海」. Today's
+      course names the project; an account with nothing started falls back to
+      the first project in the catalogue. Null now means one thing only: the
+      catalogue is empty.
+    */
+    return resolveFocusedStudy(
+      studies.map((entry) => entry.id),
+      chosen,
+      todayNode?.studyId,
+    );
+  }, [view, mapFocus, todayNode, studies]);
+
+  /**
+   * One project's islands, at the origin. Never every project at once.
+   *
+   * The boss worked out why the shared ocean was wrong before we did: drag a
+   * little too far and you are among another project's islands while the top
+   * bar still names the one you left, and one ground plate stretched over four
+   * projects runs out of resolution and starts to repeat. A project is a place
+   * now, and the way to another one is to say so.
+   */
+  const world = useMemo(
+    () => (nodes && focusedStudyId ? placeWorld(nodes, courseProgress, focusedStudyId) : null),
+    [nodes, courseProgress, focusedStudyId],
+  );
+
+  /**
+   * Where the little figure stands, which is a question about the project on
+   * screen and not about the catalogue. In a project nobody has opened there is
+   * no live course, so the head of the road is the honest answer.
+   */
+  const learnerAt = useMemo(() => {
+    if (!world) return null;
+    const live = world.placements.find((entry) => entry.state === "live");
+    return (live ?? world.placements[0])?.position ?? null;
+  }, [world]);
+
+  const studyItems: readonly StudySwitchItem[] = useMemo(
+    () =>
+      studies.map((study) => {
+        const own = (nodes ?? []).filter((node) => node.studyId === study.id);
+        const done = own.reduce((sum, node) => sum + lessonsDone(node), 0);
+        const total = own.reduce((sum, node) => sum + node.lessons, 0);
+        return {
+          id: study.id,
+          title: study.title,
+          courseCount: own.length || study.courses.length,
+          done,
+          total,
+        };
+      }),
+    [studies, nodes, lessonsDone],
+  );
+
+  /**
+   * The same four rows the switcher shows, plus what the planet's detail card
+   * needs. It is a second projection of one source rather than a second source:
+   * every number here is counted off `nodes`, and the course names are the
+   * spine order the map already walks.
+   *
+   * There is no blurb, and there is no place to put one — a study in
+   * `imported.json` carries an id, a title, a default course and a course list.
+   * The honest introduction is what the data actually knows: how big it is, how
+   * far in you are, and what the courses are called. Writing a sentence here
+   * would be this shell inventing content, which is the one thing it may not do.
+   */
+  const planetStudies: readonly PlanetStudy[] = useMemo(
+    () =>
+      studies.map((study) => {
+        const own = (nodes ?? []).filter((node) => node.studyId === study.id);
+        const ranked = spineOf(study.id).map((entry) => entry.courseId);
+        const rank = new Map(ranked.map((courseId, index) => [courseId, index]));
+        const ordered = [...own].sort(
+          (a, b) =>
+            (rank.get(a.courseId) ?? ranked.length + a.depth) -
+            (rank.get(b.courseId) ?? ranked.length + b.depth),
+        );
+        return {
+          id: study.id,
+          title: study.title,
+          courseCount: own.length || study.courses.length,
+          lessonCount: own.reduce((sum, node) => sum + node.lessons, 0),
+          lessonsDone: own.reduce((sum, node) => sum + lessonsDone(node), 0),
+          courseTitles: ordered.map((node) => node.title),
+        };
+      }),
+    [studies, nodes, lessonsDone],
+  );
+
+  /**
+   * The way back out of a course.
+   *
+   * It used to say 「回到世界地图」 and the boss was right that it is not one: a
+   * world would be everything, and what is behind this button is one project's
+   * islands. A category word alone — 系列地图, 课程地图 — still leaves the reader
+   * working out which series, and the name is right there to be used. So the
+   * button names the place it goes to.
+   */
+  const backToMapLabel = useMemo(() => {
+    const studyId =
+      view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
+        ? view.studyId
+        : focusedStudyId;
+    const title = studies.find((entry) => entry.id === studyId)?.title;
+    return title ? `← 回到${spacedName(title)}地图` : "← 回到课程地图";
+  }, [view, focusedStudyId, studies]);
+
+  return {
+    focusedStudyId,
+    world,
+    learnerAt,
+    studyItems,
+    planetStudies,
+    backToMapLabel,
+  };
+}
+
+interface WorldMarkersOptions {
+  readonly labelNodes: LabelNodes;
+  readonly lessons: readonly LessonPlacement[];
+  readonly setMapFocus: Dispatch<SetStateAction<string | null | undefined>>;
+  readonly setPathOverlay: Dispatch<SetStateAction<PathOverlay | null>>;
+  readonly setPicked: Dispatch<SetStateAction<CourseNode | null>>;
+  readonly view: View;
+  readonly world: World | null;
+}
+
+export function useWorldMarkers({
+  labelNodes,
+  lessons,
+  setMapFocus,
+  setPathOverlay,
+  setPicked,
+  view,
+  world,
+}: WorldMarkersOptions) {
+  const markers: readonly Marker[] = useMemo(() => {
+    if (view.kind === "course" || view.kind === "lesson") {
+      return courseMarkers(lessons, {
+        // No picking from inside the reader: choosing a stone you are already
+        // standing on is not a choice.
+        onPick:
+          view.kind === "lesson"
+            ? undefined
+            : (lesson) =>
+                setPathOverlay({
+                  kind: "node",
+                  unitId: lesson.unitId,
+                  lessonId: lesson.lessonId,
+                  returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
+                }),
+      });
+    }
+    if (!world) return [];
+    /*
+      The study badge that used to float over each archipelago is gone with the
+      shared ocean. It answered "which one of these am I looking at", and there
+      is only one now — the capsule at the top already says its name, in a place
+      that does not scroll away.
+    */
+    return world.placements.map((entry) => ({
+      id: entry.node.courseId,
+      position: entry.position.clone().setY(entry.position.y + entry.radius * 0.4 + 1.4),
+      text: entry.node.title,
+      kind: "course" as const,
+      // Same target as the island, so a label and the shape under it cannot
+      // disagree about what selecting a course means.
+      activate: () => {
+        setPicked(entry.node);
+        setMapFocus(entry.node.studyId);
+      },
+    }));
+  }, [world, lessons, view]);
+
+  return markers;
+}
