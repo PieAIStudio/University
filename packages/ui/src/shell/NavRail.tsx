@@ -12,18 +12,13 @@ import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom";
 
 import type { ShellNavItem } from "./AppShell.js";
+import { itemAccessibleName } from "./accessibility.js";
 
 /**
  * Left rail, including the flyout. Items with `children` are a menu, not a
  * dialog: no scrim and no focus trap, because the rest of the page stays
  * usable and Escape is enough to put the keyboard back on the button.
  */
-
-function itemAccessibleName(item: ShellNavItem): string {
-  if (item.badgeLabel) return item.badgeLabel;
-  if (typeof item.badge === "number") return `${item.label} ${item.badge}`;
-  return item.label;
-}
 
 function descendantIsActive(item: ShellNavItem, activeId: string): boolean {
   return Boolean(item.children?.some((child) => child.id === activeId));

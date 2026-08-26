@@ -1,4 +1,11 @@
+import type {
+  ReaderMark,
+  ReaderMarkKind,
+  TextQuote,
+} from "@pieai/university-core/domain/reader-marks.js";
 import type { Card, FSRSParameters, Grade } from "ts-fsrs";
+
+export type { ReaderMarkKind, TextQuote } from "@pieai/university-core/domain/reader-marks.js";
 
 const CONTENT_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const CONTENT_ID_MAX_LENGTH = 64;
@@ -396,21 +403,6 @@ export interface LearningStore {
  * would mean either pestering the reader about passages they understood
  * perfectly, or burying the ones they did not.
  */
-export type ReaderMarkKind = "question" | "highlight";
-
-/**
- * A passage identified by what it says and what surrounds it.
- *
- * The W3C Web Annotation TextQuoteSelector shape. `prefix` and `suffix` are
- * what make it survive an edit elsewhere in the lesson, and what disambiguate a
- * sentence that occurs more than once.
- */
-export interface TextQuote {
-  readonly exact: string;
-  readonly prefix: string;
-  readonly suffix: string;
-}
-
 export interface RecordReaderMarkInput {
   readonly lessonKey: string;
   readonly contentRevision: number;
@@ -422,17 +414,7 @@ export interface RecordReaderMarkInput {
   readonly createdAt?: Date | undefined;
 }
 
-export interface StoredReaderMark {
-  readonly markId: string;
-  readonly lessonKey: string;
-  readonly contentRevision: number;
-  readonly kind: ReaderMarkKind;
-  readonly quote: TextQuote;
-  readonly sectionTitle: string | null;
-  readonly note: string | null;
-  readonly createdAt: string;
-  readonly resolvedAt: string | null;
-}
+export type StoredReaderMark = ReaderMark;
 
 export interface ListReaderMarksOptions {
   readonly lessonKey?: string | undefined;

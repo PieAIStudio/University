@@ -1,8 +1,8 @@
 /**
  * A passage identified by what it says and what surrounds it.
  *
- * The W3C Web Annotation TextQuoteSelector shape, mirroring
- * `server/learning/types.ts`. Character offsets would be simpler and would rot:
+ * The shared W3C Web Annotation TextQuoteSelector shape. Character offsets
+ * would be simpler and would rot:
  * a lesson revision rewrites the whole content, so every offset past an edited
  * paragraph moves, and a mark saved yesterday would silently point at the wrong
  * sentence today.

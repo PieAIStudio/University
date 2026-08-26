@@ -1,16 +1,11 @@
 import type { ShellNavItem } from "./AppShell.js";
+import { itemAccessibleName } from "./accessibility.js";
 
 /**
  * Mobile bottom bar. Displayed only below 768px (CSS, not a JS branch) so the
  * tree stays one tree; `display: none` drops it from the accessibility tree
  * rather than leaving an invisible tab stop.
  */
-
-function itemAccessibleName(item: ShellNavItem): string {
-  if (item.badgeLabel) return item.badgeLabel;
-  if (typeof item.badge === "number") return `${item.label} ${item.badge}`;
-  return item.label;
-}
 
 export function TabBar({
   items,
