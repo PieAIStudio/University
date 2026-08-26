@@ -466,6 +466,18 @@ the list below contains the remaining implementation and authority boundaries.
     `docs/reference/生图重绘ui/` draws anyway. **The ring is the open upstream
     request**, not an open item here.
 
+15. **Review reminders, browser side complete (2026-08-27).** The shared
+    settlement shows the real next-day card count only after a fresh lesson
+    completion; the plain-language in-app prompt precedes the browser permission
+    request, and only “好” reaches `Notification.requestPermission()`. Settings
+    keeps the current permission/capability state, never re-asks after denial,
+    and honestly says that an active subscription will not deliver until the
+    server sender exists. The worker has no fetch/cache handler and is registered
+    only after opt-in. Endpoint-keyed subscriptions, revoke tombstones and old
+    document parsing live in the existing progress document; the sender,
+    scheduler, VAPID secret and cleanup remain a SwimmerBackend gap — see
+    [Review Reminders Backend Gap](./review-reminders-backend-gap.md).
+
 ## Refactor Program
 
 Structural work is a program, not a change. The audit behind it, the evidence

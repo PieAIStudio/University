@@ -7,8 +7,9 @@ import type {
   ProgressDocument,
   WordProgress,
 } from "../ports/progress.js";
+import type { PushSubscriptionRecord } from "../ports/notifications.js";
 import { DEFAULT_ACCOUNT_PREFERENCES, emptyAccountData } from "../ports/account-data.js";
-import { emptyProgress } from "./document.js";
+import { cloneProgress, emptyProgress, parseProgress } from "./document.js";
 import { mergeProgress } from "./merge.js";
 import { XP_EXERCISE_FIRST_TRY, XP_READ_LESSON } from "./xp.js";
 
@@ -52,6 +53,21 @@ function doc(partial: Partial<ProgressDocument>): ProgressDocument {
   return { ...emptyProgress(), ...partial };
 }
 
+function pushSubscription(
+  endpoint: string,
+  partial: Partial<PushSubscriptionRecord> = {},
+): PushSubscriptionRecord {
+  return {
+    endpoint,
+    expirationTime: null,
+    keys: { p256dh: `p256dh-${endpoint}`, auth: `auth-${endpoint}` },
+    state: "active",
+    updatedAt: "2026-08-22T12:00:00.000Z",
+    vapidPublicKey: "public-key",
+    ...partial,
+  };
+}
+
 describe("mergeProgress", () => {
   it("is a no-op on two empty documents", () => {
     expect(mergeProgress(emptyProgress(), emptyProgress())).toEqual(emptyProgress());
@@ -64,6 +80,16 @@ describe("mergeProgress", () => {
     });
     expect(mergeProgress(local, null).lessons["s/c/l"]?.progress).toBe(1);
     expect(mergeProgress(null, local).lessons["s/c/l"]?.progress).toBe(1);
+  });
+
+  it("keeps pre-reminder documents readable when the subscription field is absent", () => {
+    const legacy = emptyProgress() as unknown as { pushSubscriptions?: unknown };
+    delete legacy.pushSubscriptions;
+    const oldDocument = legacy as never;
+
+    expect(parseProgress(JSON.stringify(legacy)).pushSubscriptions).toEqual({});
+    expect(cloneProgress(oldDocument).pushSubscriptions).toEqual({});
+    expect(mergeProgress(oldDocument, emptyProgress()).pushSubscriptions).toEqual({});
   });
 
   it("never lets a lesson move backwards", () => {
@@ -296,6 +322,68 @@ describe("mergeProgress", () => {
     const merged = mergeProgress(older, newerDeletion);
     expect(merged.account.favourites.items).toEqual([]);
     expect(merged.account.favouriteChanges[favourite.senseId]?.favourite).toBeNull();
+  });
+
+  it("unions device subscriptions and keeps their endpoint as the identity", () => {
+    const phone = doc({
+      pushSubscriptions: {
+        "https://push.example/phone": pushSubscription("https://push.example/phone"),
+      },
+    });
+    const laptop = doc({
+      pushSubscriptions: {
+        "https://push.example/laptop": pushSubscription("https://push.example/laptop"),
+      },
+    });
+
+    const merged = mergeProgress(phone, laptop);
+    expect(Object.keys(merged.pushSubscriptions).sort()).toEqual([
+      "https://push.example/laptop",
+      "https://push.example/phone",
+    ]);
+    expect(mergeProgress(laptop, phone)).toEqual(merged);
+    expect(mergeProgress(merged, phone)).toEqual(merged);
+  });
+
+  it("keeps a newer revoke tombstone over an older active endpoint", () => {
+    const endpoint = "https://push.example/phone";
+    const active = doc({ pushSubscriptions: { [endpoint]: pushSubscription(endpoint) } });
+    const revoked = doc({
+      pushSubscriptions: {
+        [endpoint]: pushSubscription(endpoint, {
+          state: "revoked",
+          updatedAt: "2026-08-22T13:00:00.000Z",
+        }),
+      },
+    });
+
+    expect(mergeProgress(active, revoked).pushSubscriptions[endpoint]?.state).toBe("revoked");
+    expect(mergeProgress(revoked, active).pushSubscriptions[endpoint]?.state).toBe("revoked");
+    expect(mergeProgress(mergeProgress(active, revoked), active)).toEqual(
+      mergeProgress(active, revoked),
+    );
+  });
+
+  it("lets an explicit later re-enable replace an older revoke", () => {
+    const endpoint = "https://push.example/phone";
+    const revoked = doc({
+      pushSubscriptions: {
+        [endpoint]: pushSubscription(endpoint, {
+          state: "revoked",
+          updatedAt: "2026-08-22T13:00:00.000Z",
+        }),
+      },
+    });
+    const reenabled = doc({
+      pushSubscriptions: {
+        [endpoint]: pushSubscription(endpoint, {
+          state: "active",
+          updatedAt: "2026-08-22T14:00:00.000Z",
+        }),
+      },
+    });
+
+    expect(mergeProgress(revoked, reenabled).pushSubscriptions[endpoint]?.state).toBe("active");
   });
 
   it("is commutative and idempotent so a retried save does not thrash", () => {

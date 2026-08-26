@@ -82,6 +82,8 @@ export function Settlement({
   streakDays,
   unlocked,
   recap,
+  tomorrowDueCount = 0,
+  reviewReminder,
   nextLesson,
   nextUnit,
   onNext,
@@ -103,6 +105,10 @@ export function Settlement({
   unlocked: readonly { readonly id: string; readonly zh: string; readonly tagline: string }[];
   /** The shared learner teach-back prompt, supplied by the screen host. */
   recap?: ReactNode;
+  /** All cards due on the learner's next calendar day. */
+  tomorrowDueCount?: number;
+  /** The consented reminder prompt, supplied by the screen host. */
+  reviewReminder?: ReactNode;
   nextLesson: PathLesson | null;
   nextUnit: PathUnit | null;
   onNext: (() => void) | null;
@@ -169,6 +175,14 @@ export function Settlement({
           </li>
         ) : null}
       </ol>
+
+      {tomorrowDueCount > 0 ? (
+        <p className="settle__tomorrow">
+          明天有 <b>{tomorrowDueCount}</b> 张复习卡到期。
+        </p>
+      ) : null}
+
+      {reviewReminder}
 
       {grew ? <p className="settle__world">{grew}</p> : null}
 

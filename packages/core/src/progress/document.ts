@@ -12,6 +12,7 @@
  */
 
 import { cloneAccountData, emptyAccountData, parseAccountData } from "../ports/account-data.js";
+import type { PushSubscriptionRecord } from "../ports/notifications.js";
 import type { ProgressDocument } from "../ports/progress.js";
 import type { LessonRef } from "./contract.js";
 
@@ -31,6 +32,7 @@ export const emptyProgress = (): ProgressDocument => ({
   readerMarks: {},
   exerciseAttempts: {},
   retrievalAttempts: {},
+  pushSubscriptions: {},
   account: emptyAccountData(),
 });
 
@@ -109,6 +111,7 @@ export function parseProgress(raw: string | null): ProgressDocument {
       readerMarks: parsed.readerMarks ?? {},
       exerciseAttempts: parsed.exerciseAttempts ?? {},
       retrievalAttempts: parsed.retrievalAttempts ?? {},
+      pushSubscriptions: parsePushSubscriptions(parsed.pushSubscriptions),
       account: parseAccountData(parsed.account),
     };
   } catch {
@@ -128,8 +131,78 @@ export function cloneProgress(document: ProgressDocument): ProgressDocument {
     readerMarks: { ...document.readerMarks },
     exerciseAttempts: { ...document.exerciseAttempts },
     retrievalAttempts: { ...document.retrievalAttempts },
+    pushSubscriptions: clonePushSubscriptions(document.pushSubscriptions ?? {}),
     account: cloneAccountData(document.account),
   };
+}
+
+function clonePushSubscriptions(
+  subscriptions: Record<string, PushSubscriptionRecord>,
+): Record<string, PushSubscriptionRecord> {
+  return Object.fromEntries(
+    Object.entries(subscriptions).map(([endpoint, record]) => [
+      endpoint,
+      clonePushSubscription(record),
+    ]),
+  );
+}
+
+function clonePushSubscription(record: PushSubscriptionRecord): PushSubscriptionRecord {
+  return { ...record, keys: { ...record.keys } };
+}
+
+function parsePushSubscriptions(value: unknown): Record<string, PushSubscriptionRecord> {
+  if (!isRecord(value)) return {};
+  const subscriptions: Record<string, PushSubscriptionRecord> = {};
+  for (const [endpoint, candidate] of Object.entries(value)) {
+    const record = parsePushSubscription(candidate);
+    if (record && record.endpoint === endpoint) subscriptions[endpoint] = record;
+  }
+  return subscriptions;
+}
+
+function parsePushSubscription(value: unknown): PushSubscriptionRecord | null {
+  if (!isRecord(value) || typeof value.endpoint !== "string" || value.endpoint.length === 0) {
+    return null;
+  }
+  if (
+    !isRecord(value.keys) ||
+    typeof value.keys.p256dh !== "string" ||
+    value.keys.p256dh.length === 0 ||
+    typeof value.keys.auth !== "string" ||
+    value.keys.auth.length === 0
+  ) {
+    return null;
+  }
+  if (value.state !== "active" && value.state !== "revoked") return null;
+  if (typeof value.updatedAt !== "string" || !Number.isFinite(Date.parse(value.updatedAt))) {
+    return null;
+  }
+  if (
+    value.expirationTime !== null &&
+    (typeof value.expirationTime !== "number" || !Number.isFinite(value.expirationTime))
+  ) {
+    return null;
+  }
+  if (
+    value.vapidPublicKey !== undefined &&
+    value.vapidPublicKey !== null &&
+    typeof value.vapidPublicKey !== "string"
+  ) {
+    return null;
+  }
+  return {
+    endpoint: value.endpoint,
+    expirationTime: value.expirationTime,
+    keys: { p256dh: value.keys.p256dh, auth: value.keys.auth },
+    state: value.state,
+    updatedAt: value.updatedAt,
+    vapidPublicKey: value.vapidPublicKey ?? null,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /** Older snapshots had only a scalar total, so keep that amount as a seed event. */

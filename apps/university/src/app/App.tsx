@@ -55,7 +55,7 @@ import { type CourseNode } from "@pieai/university-world/course.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
 
 import { AUTHORING } from "../mode";
-import { contentPort } from "../ports/index";
+import { contentPort, reviewReminderPort } from "../ports/index";
 import { identityPort } from "../account/identity";
 import { paymentPort } from "../account/payment";
 import { bindProgressToIdentity } from "../account/session";
@@ -137,6 +137,10 @@ export function App() {
   // reached by its own URL — arriving at `/done` from a bookmark is not
   // evidence that anything just grew, so that screen stays quiet about the map.
   const [grewFrom, setGrewFrom] = useState<{ key: string; doneBefore: number } | null>(null);
+  // 「以后再说」 belongs to this completion event, not to the component mount.
+  // Leaving a settlement and coming back must not turn the same value into a
+  // second prompt; a later completed lesson resets the key below.
+  const [reviewReminderDismissedFor, setReviewReminderDismissedFor] = useState<string | null>(null);
   /** Lessons a cross-lesson link led away from, innermost last. */
   const [returnStack, setReturnStack] = useState<readonly LessonRef[]>([]);
   const lastRouteAnalyticsKey = useRef<string | null>(null);
@@ -160,6 +164,13 @@ export function App() {
 
   useEffect(() => {
     if (view.kind !== "course") setPathOverlay(null);
+    if (view.kind !== "settled") {
+      // The settlement is the only place that can prove a fresh value event.
+      // Once the learner leaves it, an old URL must not make the reminder ask
+      // again when the learner later returns to that lesson.
+      setGrewFrom(null);
+      setReviewReminderDismissedFor(null);
+    }
     // A leftover pick from the world map is not a choice the learner just
     // made. Coming back from a course with this still set would pop the
     // card without a click.
@@ -690,6 +701,7 @@ export function App() {
       focusedStudyId={focusedStudyId}
       focusStudy={focusStudy}
       grewFrom={grewFrom}
+      onDismissReviewReminder={setReviewReminderDismissedFor}
       identityPort={analyticsIdentityPort}
       paymentPort={analyticsPaymentPort}
       mistakes={mistakes}
@@ -699,6 +711,7 @@ export function App() {
       pathUnit={pathUnit}
       planetStudies={planetStudies}
       presencePort={presencePort}
+      reviewReminderPort={reviewReminderPort}
       profileStats={profileStats}
       progress={progress}
       progressPort={progressPort}
@@ -782,7 +795,9 @@ export function App() {
               setView({ kind: "course", studyId: view.studyId, courseId: view.courseId });
             }}
             onSettled={(doneBefore) => {
-              setGrewFrom({ key: `${view.studyId}/${view.courseId}/${view.lessonId}`, doneBefore });
+              const key = `${view.studyId}/${view.courseId}/${view.lessonId}`;
+              setGrewFrom({ key, doneBefore });
+              setReviewReminderDismissedFor(null);
               setView({
                 kind: "settled",
                 studyId: view.studyId,

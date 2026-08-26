@@ -33,6 +33,7 @@ import type {
   RetrievalAttemptRecord,
   RecapCardInput,
 } from "../ports/progress.js";
+import type { PushSubscriptionRecord } from "../ports/notifications.js";
 import type { ReaderMark } from "../domain/reader-marks.js";
 import type { LessonRef } from "./contract.js";
 import { cloneProgress, emptyProgress, parseProgress, recapCardKeyOf } from "./document.js";
@@ -316,8 +317,12 @@ export function createProgressPort(options: { readonly persistence: Persistence 
   }
 
   function dueTomorrow(asOf = Date.now()) {
-    const end = asOf + DAY;
-    return Object.values(state.cards).filter((card) => card.dueAt <= end).length;
+    const start = startOfNextDay(asOf);
+    const endDate = new Date(start);
+    endDate.setDate(endDate.getDate() + 1);
+    const end = endDate.getTime();
+    return Object.values(state.cards).filter((card) => card.dueAt >= start && card.dueAt < end)
+      .length;
   }
 
   /**
@@ -512,6 +517,42 @@ export function createProgressPort(options: { readonly persistence: Persistence 
       .sort((a, b) => Date.parse(b.revealedAt) - Date.parse(a.revealedAt));
   }
 
+  function pushSubscriptions(): readonly PushSubscriptionRecord[] {
+    return Object.values(state.pushSubscriptions)
+      .sort((a, b) => a.endpoint.localeCompare(b.endpoint))
+      .map((record) => ({ ...record, keys: { ...record.keys } }));
+  }
+
+  function savePushSubscription(record: PushSubscriptionRecord): void {
+    if (!validPushSubscription(record)) return;
+    const current = state.pushSubscriptions[record.endpoint];
+    if (current && JSON.stringify(current) === JSON.stringify(record)) return;
+    state.pushSubscriptions[record.endpoint] = {
+      ...record,
+      keys: { ...record.keys },
+    };
+    commit();
+  }
+
+  function revokePushSubscription(endpointOrRecord: string | PushSubscriptionRecord): void {
+    const incoming = typeof endpointOrRecord === "string" ? null : endpointOrRecord;
+    const normalized = (
+      typeof endpointOrRecord === "string" ? endpointOrRecord : endpointOrRecord.endpoint
+    ).trim();
+    if (!normalized) return;
+    const current = state.pushSubscriptions[normalized];
+    if (current?.state === "revoked") return;
+    if (!current && !incoming) return;
+    const base = current ?? incoming;
+    state.pushSubscriptions[normalized] = {
+      ...base,
+      state: "revoked",
+      updatedAt: new Date().toISOString(),
+      keys: { ...base.keys },
+    };
+    commit();
+  }
+
   function accountData(): AccountData {
     return cloneAccountData(state.account);
   }
@@ -590,6 +631,9 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     latestExerciseAttempt,
     recordRetrievalAttempt,
     retrievalAttempts,
+    pushSubscriptions,
+    savePushSubscription,
+    revokePushSubscription,
     accountData,
     setFavourites,
     setPracticeRecent,
@@ -681,6 +725,26 @@ function isImportedWordNewer(current: WordProgress, incoming: WordProgress): boo
   return (incoming.dueAt ?? 0) >= (current.dueAt ?? 0);
 }
 
+function validPushSubscription(record: PushSubscriptionRecord): boolean {
+  return (
+    typeof record === "object" &&
+    record !== null &&
+    typeof record.endpoint === "string" &&
+    record.endpoint.trim().length > 0 &&
+    typeof record.keys === "object" &&
+    record.keys !== null &&
+    typeof record.keys.p256dh === "string" &&
+    typeof record.keys.auth === "string" &&
+    (record.expirationTime === null ||
+      (typeof record.expirationTime === "number" && Number.isFinite(record.expirationTime))) &&
+    record.keys.p256dh.trim().length > 0 &&
+    record.keys.auth.trim().length > 0 &&
+    (record.state === "active" || record.state === "revoked") &&
+    Number.isFinite(Date.parse(record.updatedAt)) &&
+    (record.vapidPublicKey === null || typeof record.vapidPublicKey === "string")
+  );
+}
+
 function safeRead(persistence: Persistence): string | null {
   try {
     return persistence.read();
@@ -702,7 +766,8 @@ function safeRead(persistence: Persistence): string | null {
 function startOfNextDay(at: number): number {
   const date = new Date(at);
   date.setHours(0, 0, 0, 0);
-  return date.getTime() + DAY;
+  date.setDate(date.getDate() + 1);
+  return date.getTime();
 }
 
 function calendarDay(at: number): string {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { State } from "../scheduling/fsrs.js";
 import { createMemoryPersistence } from "./memory.js";
 import { createProgressPort } from "./port.js";
 
@@ -40,5 +41,48 @@ describe("a new card is tomorrow's work", () => {
 
   it("still counts toward what is coming tomorrow", () => {
     expect(drop().dueTomorrow()).toBe(2);
+  });
+
+  it("does not call overdue cards tomorrow's work", () => {
+    const port = createProgressPort({ persistence: createMemoryPersistence() });
+    const midnight = new Date("2026-08-22T00:00:00.000").getTime();
+    port.importCard({
+      cardKey: "overdue",
+      studyId: "turing-pact",
+      courseId: "foundations-before-zero",
+      lessonId: "you-already-know-apps",
+      dueAt: midnight - 1,
+      fsrs: {
+        due: new Date(midnight - 1).toISOString(),
+        stability: 1,
+        difficulty: 5,
+        elapsed_days: 0,
+        scheduled_days: 1,
+        learning_steps: 0,
+        reps: 1,
+        lapses: 0,
+        state: State.Review,
+      },
+    });
+    port.importCard({
+      cardKey: "tomorrow",
+      studyId: "turing-pact",
+      courseId: "foundations-before-zero",
+      lessonId: "you-already-know-apps",
+      dueAt: midnight + 86_400_000,
+      fsrs: {
+        due: new Date(midnight + 86_400_000).toISOString(),
+        stability: 1,
+        difficulty: 5,
+        elapsed_days: 0,
+        scheduled_days: 1,
+        learning_steps: 0,
+        reps: 1,
+        lapses: 0,
+        state: State.Review,
+      },
+    });
+
+    expect(port.dueTomorrow(midnight)).toBe(1);
   });
 });

@@ -49,6 +49,8 @@
     "./navigation/screens.js": "./src/navigation/screens/index.ts",
     "./navigation/slots.js": "./src/navigation/slots.tsx",
     "./navigation/university-shell.css": "./src/navigation/university-shell.css",
+    "./notifications/ReviewReminderPrompt.js": "./src/notifications/ReviewReminderPrompt.tsx",
+    "./notifications/review-reminders.css": "./src/notifications/review-reminders.css",
     "./path/CoursePickCard.js": "./src/path/CoursePickCard.tsx",
     "./path/CourseRouteQuiz.js": "./src/path/CourseRouteQuiz.tsx",
     "./path/NodeCard.js": "./src/path/NodeCard.tsx",

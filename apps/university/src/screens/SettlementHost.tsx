@@ -7,14 +7,14 @@ import {
   readCourseProgress,
   type LessonRef,
 } from "@pieai/university-core";
-import { unlockedConceptIds } from "@pieai/university-ui";
+import { ReviewReminderPrompt, unlockedConceptIds } from "@pieai/university-ui";
 import { pathLessonOf, pathUnitOf } from "@pieai/university-ui/path/from-course-view.js";
 import { RecapPrompt } from "@pieai/university-ui/review/RecapPrompt.js";
 import type { CourseView, LessonView } from "@pieai/university-ui/view/lesson-view.js";
 import { settlementSize } from "@pieai/university-world/Maps.js";
 
 import { Settlement, type SettledCard } from "../lesson/Settlement";
-import { contentPort } from "../ports/index";
+import { contentPort, reviewReminderPort } from "../ports/index";
 import { progressPort, snapshot, subscribe } from "../progress/store";
 
 /**
@@ -29,6 +29,8 @@ export function SettlementHost({
   course,
   locator,
   grewFrom,
+  reviewReminderDismissedFor,
+  onDismissReviewReminder,
   onMap,
   onNext,
   onIncomplete,
@@ -36,6 +38,8 @@ export function SettlementHost({
   readonly course: CourseView;
   readonly locator: LessonRef;
   readonly grewFrom: { readonly key: string; readonly doneBefore: number } | null;
+  readonly reviewReminderDismissedFor?: string | null;
+  readonly onDismissReviewReminder?: (key: string) => void;
   readonly onMap: () => void;
   readonly onNext: (unitId: string, lessonId: string) => void;
   readonly onIncomplete: () => void;
@@ -124,6 +128,10 @@ export function SettlementHost({
         : [],
     );
 
+  const tomorrowDueCount = progressPort.dueTomorrow();
+  const reminderKey = `${locator.studyId}/${course.id}/${summary.id}`;
+  const reminderEligible = grewFrom?.key === reminderKey;
+
   // Both counts go through the map's own measurement, so the sentence about the
   // island can only say what the island did. With no observed "before" — a
   // reload, a shared link — they are equal and the screen says nothing.
@@ -158,6 +166,19 @@ export function SettlementHost({
           contentRevision={lesson.lesson.contentRevision}
           progress={progressPort}
         />
+      }
+      tomorrowDueCount={tomorrowDueCount}
+      reviewReminder={
+        tomorrowDueCount > 0 && reviewReminderPort ? (
+          <ReviewReminderPrompt
+            dueTomorrow={tomorrowDueCount}
+            eligible={reminderEligible}
+            eventKey={reminderKey}
+            dismissed={reviewReminderDismissedFor === reminderKey}
+            onDismiss={() => onDismissReviewReminder?.(reminderKey)}
+            reminders={reviewReminderPort}
+          />
+        ) : null
       }
       nextLesson={next ? pathLessonOf(next.lesson) : null}
       nextUnit={next ? pathUnitOf(next.unit) : null}

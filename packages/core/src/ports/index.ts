@@ -40,6 +40,14 @@ export type {
   StoredReaderMark,
   WordProgress,
 } from "./progress.js";
+export type {
+  NotificationExplanation,
+  PushSubscriptionRecord,
+  PushSubscriptionState,
+  ReviewReminderPort,
+  ReviewReminderStatus,
+  ReviewReminderUnsupportedReason,
+} from "./notifications.js";
 export {
   DEFAULT_ACCOUNT_PREFERENCES,
   emptyAccountData,

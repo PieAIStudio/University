@@ -10,6 +10,7 @@ import {
   type PresencePort,
   type ProgressDocument,
   type ProgressPort,
+  type ReviewReminderPort,
   type View,
 } from "@pieai/university-core";
 import { LoadingTrivia } from "@pieai/university-ui/loading/LoadingTrivia.js";
@@ -64,6 +65,8 @@ interface MainRouterProps {
   readonly focusedStudyId: string | null;
   readonly focusStudy: (studyId: string) => void;
   readonly grewFrom: { readonly key: string; readonly doneBefore: number } | null;
+  readonly reviewReminderDismissedFor: string | null;
+  readonly onDismissReviewReminder: (key: string) => void;
   readonly identityPort: IdentityPort;
   readonly paymentPort: PaymentPort;
   readonly mistakes: readonly Mistake[];
@@ -73,6 +76,7 @@ interface MainRouterProps {
   readonly pathUnit: UnitView | undefined;
   readonly planetStudies: readonly PlanetStudy[];
   readonly presencePort: PresencePort;
+  readonly reviewReminderPort: ReviewReminderPort;
   readonly profileStats: {
     readonly coursesFinished: number;
     readonly lessonsCompleted: number;
@@ -101,6 +105,8 @@ export function MainRouter({
   focusedStudyId,
   focusStudy,
   grewFrom,
+  reviewReminderDismissedFor,
+  onDismissReviewReminder,
   identityPort,
   paymentPort,
   mistakes,
@@ -110,6 +116,7 @@ export function MainRouter({
   pathUnit,
   planetStudies,
   presencePort,
+  reviewReminderPort,
   profileStats,
   progress,
   progressPort,
@@ -240,6 +247,8 @@ export function MainRouter({
           <SettlementHost
             course={course}
             grewFrom={grewFrom}
+            reviewReminderDismissedFor={reviewReminderDismissedFor}
+            onDismissReviewReminder={onDismissReviewReminder}
             locator={{
               studyId: view.studyId,
               courseId: view.courseId,
@@ -355,7 +364,11 @@ export function MainRouter({
       {view.kind === "quests" ? <QuestsScreen document={progress} /> : null}
       {view.kind === "plans" ? <PlansScreen paymentPort={paymentPort} /> : null}
       {view.kind === "settings" ? (
-        <SettingsScreen presence={presencePort} progress={progressPort} />
+        <SettingsScreen
+          presence={presencePort}
+          progress={progressPort}
+          reminders={reviewReminderPort}
+        />
       ) : null}
       {view.kind === "me" ? (
         <ProfileScreen

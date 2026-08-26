@@ -12,11 +12,15 @@
   },
   "rewrites": [
     {
-      "source": "/((?!assets/|content/|kit/|basis/|favicon|apple-touch-icon|icon-|manifest|release.json|SHA256SUMS).*)",
+      "source": "/((?!assets/|content/|kit/|basis/|favicon|apple-touch-icon|icon-|manifest|service-worker\\.js|release.json|SHA256SUMS).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/service-worker.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+    },
     {
       "source": "/assets/(.*)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]

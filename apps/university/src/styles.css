@@ -4099,3 +4099,14 @@ blockquote {
   color: var(--game-ui-text-muted);
   line-height: 1.6;
 }
+
+.settle__tomorrow {
+  margin: -0.5rem 0 1.25rem;
+  color: var(--game-ui-text-muted);
+  line-height: 1.55;
+}
+
+.settle__tomorrow b {
+  color: var(--game-ui-accent);
+  font-variant-numeric: tabular-nums;
+}

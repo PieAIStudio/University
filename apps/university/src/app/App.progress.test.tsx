@@ -37,6 +37,13 @@ vi.mock("../ports/index", () => ({
   },
   readerPort: {},
   gradingPort: {},
+  reviewReminderPort: {
+    snapshot: () => ({ kind: "unsupported", reason: "notifications" }),
+    subscribe: () => () => undefined,
+    enable: async () => undefined,
+    disable: async () => undefined,
+    refresh: async () => undefined,
+  },
 }));
 let container: HTMLDivElement;
 let root: Root;

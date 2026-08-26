@@ -27,6 +27,7 @@
 export { LessonReader } from "./lesson/LessonReader.js";
 export type { LessonSourceVersionCheckout } from "./lesson/LessonSourceVersion.js";
 export { CapabilityExplanation } from "./capability/CapabilityExplanation.js";
+export { ReviewReminderPrompt } from "./notifications/ReviewReminderPrompt.js";
 export { LayerCoverage } from "./evidence/LayerCoverage.js";
 export { LessonToolbar, lessonNeighbours, readProgress } from "./lesson/LessonNav.js";
 export { MarkdownContent, isLocalUrl } from "./markdown/MarkdownContent.js";

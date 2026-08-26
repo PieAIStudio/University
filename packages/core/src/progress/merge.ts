@@ -45,6 +45,7 @@ import type {
   WordProgress,
   RetrievalAttemptRecord,
 } from "../ports/progress.js";
+import type { PushSubscriptionRecord } from "../ports/notifications.js";
 import {
   cloneProgress,
   emptyProgress,
@@ -124,6 +125,11 @@ export function mergeProgress(
     retrievalAttempts[key] = current ? pickRetrievalAttempt(current, other) : { ...other };
   }
 
+  const pushSubscriptions = mergePushSubscriptions(
+    left.pushSubscriptions ?? {},
+    right.pushSubscriptions ?? {},
+  );
+
   const leftAccount = cloneAccountData(left.account);
   const rightAccount = cloneAccountData(right.account);
   const favouriteChanges = mergeFavouriteChanges(
@@ -145,6 +151,7 @@ export function mergeProgress(
     readerMarks,
     exerciseAttempts,
     retrievalAttempts,
+    pushSubscriptions,
     account: {
       favourites: materializeFavourites(favouriteChanges),
       favouriteChanges,
@@ -152,6 +159,42 @@ export function mergeProgress(
       preferences: mergeAccountPreferences(leftAccount.preferences, rightAccount.preferences),
     },
   };
+}
+
+function mergePushSubscriptions(
+  left: Record<string, PushSubscriptionRecord>,
+  right: Record<string, PushSubscriptionRecord>,
+): Record<string, PushSubscriptionRecord> {
+  const merged: Record<string, PushSubscriptionRecord> = {};
+  for (const [endpoint, record] of Object.entries(left)) {
+    merged[endpoint] = clonePushSubscription(record);
+  }
+  for (const [endpoint, record] of Object.entries(right)) {
+    const current = merged[endpoint];
+    merged[endpoint] = current
+      ? pickPushSubscription(current, record)
+      : clonePushSubscription(record);
+  }
+  return merged;
+}
+
+function pickPushSubscription(
+  a: PushSubscriptionRecord,
+  b: PushSubscriptionRecord,
+): PushSubscriptionRecord {
+  const aAt = Date.parse(a.updatedAt);
+  const bAt = Date.parse(b.updatedAt);
+  if (aAt !== bAt) return clonePushSubscription(bAt > aAt ? b : a);
+  if (a.state !== b.state) {
+    return clonePushSubscription(a.state === "revoked" ? a : b);
+  }
+  const aFingerprint = JSON.stringify(a);
+  const bFingerprint = JSON.stringify(b);
+  return clonePushSubscription(aFingerprint >= bFingerprint ? a : b);
+}
+
+function clonePushSubscription(record: PushSubscriptionRecord): PushSubscriptionRecord {
+  return { ...record, keys: { ...record.keys } };
 }
 
 function xpEventsOf(document: ProgressDocument): Record<string, number> {

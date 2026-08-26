@@ -17,7 +17,12 @@
  * other — and the two campuses then did different things with the news. It is
  * read off the shared document now, by the one screen that owns the reward.
  */
-import type { GradingPort, ReaderPort, SourceAccessPort } from "@pieai/university-core";
+import type {
+  GradingPort,
+  ReaderPort,
+  ReviewReminderPort,
+  SourceAccessPort,
+} from "@pieai/university-core";
 import type { ContentPort } from "@pieai/university-ui/content/port.js";
 
 import { identityPort } from "../account/identity";
@@ -31,6 +36,7 @@ import { createOnlineContentPort } from "./online/content.js";
 import { createOnlineGradingPort } from "./online/grading.js";
 import { createOnlineReaderPort } from "./online/reader.js";
 import { createOnlineSourceAccessPort } from "./online/source-access.js";
+import { createBrowserReviewReminderPort } from "./notifications.js";
 
 /** One shelf per document. Both implementations are stateless above their caches. */
 export const contentPort: ContentPort = AUTHORING
@@ -52,3 +58,8 @@ export const gradingPort: GradingPort = AUTHORING
 export const sourceAccessPort: SourceAccessPort = AUTHORING
   ? createLocalSourceAccessPort()
   : createOnlineSourceAccessPort();
+
+export const reviewReminderPort: ReviewReminderPort = createBrowserReviewReminderPort({
+  progress: progressPort,
+  vapidPublicKey: import.meta.env.VITE_UNIVERSITY_VAPID_PUBLIC_KEY,
+});

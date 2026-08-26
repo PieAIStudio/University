@@ -1,6 +1,11 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { GameButton, GameToggle } from "@pieai/swimmer-ui-kit";
-import type { PresencePort, ProgressPort, SpeechQuality } from "@pieai/university-core";
+import type {
+  PresencePort,
+  ProgressPort,
+  ReviewReminderPort,
+  SpeechQuality,
+} from "@pieai/university-core";
 
 import { ForeignSettingsPanel } from "../../language/ForeignSettingsPanel.js";
 import { readForeignSettings, writeForeignSettings } from "../../language/foreign-settings.js";
@@ -15,6 +20,7 @@ import {
 } from "../../language/speech.js";
 import { writeSharesPresence } from "../../presence/shares-presence.js";
 import { SoundToggle } from "../../sound/SoundToggle.js";
+import { ReviewReminderSettings } from "./ReviewReminderSettings.js";
 
 /**
  * Settings is not an empty page. Sound and the language layer already exist;
@@ -24,9 +30,11 @@ import { SoundToggle } from "../../sound/SoundToggle.js";
 export function SettingsScreen({
   presence,
   progress,
+  reminders,
 }: {
   readonly presence?: PresencePort;
   readonly progress?: ProgressPort;
+  readonly reminders?: ReviewReminderPort;
 } = {}) {
   const [settings, setSettings] = useState(
     () => progress?.accountData().preferences.foreignSettings ?? readForeignSettings(),
@@ -48,6 +56,7 @@ export function SettingsScreen({
         <SpeechQualityControl progress={progress} />
       </section>
       {presence ? <PresenceSettings presence={presence} progress={progress} /> : null}
+      {reminders ? <ReviewReminderSettings reminders={reminders} /> : null}
       <section className="settings-screen__block" aria-labelledby="settings-language">
         <h2 id="settings-language" className="settings-screen__heading">
           语言层

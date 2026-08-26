@@ -26,6 +26,7 @@ import type { AccountData, AccountPreferences } from "./account-data.js";
 import type { FavouritesState } from "../favourites/model.js";
 import type { PracticeRecentState } from "../practice/recent.js";
 import type { LessonDocumentKey } from "../progress/document.js";
+import type { PushSubscriptionRecord } from "./notifications.js";
 
 /** Learner-facing cards that share the one ProgressDocument scheduler. */
 export type LearnerCardKind = "course-card" | "recap-card";
@@ -137,6 +138,8 @@ export interface ProgressDocument {
   exerciseAttempts: Record<string, ExerciseAttemptRecord>;
   /** Cloud-synchronised recall answers for review-card coaching. */
   retrievalAttempts: Record<string, RetrievalAttemptRecord>;
+  /** Device-specific push endpoints, including revoked tombstones. */
+  pushSubscriptions: Record<string, PushSubscriptionRecord>;
   /** Account-owned library, practice and reading preferences. */
   account: AccountData;
 }
@@ -217,6 +220,12 @@ export interface ProgressPort {
   ): ExerciseAttemptRecord | null;
   recordRetrievalAttempt(record: RetrievalAttemptRecord): void;
   retrievalAttempts(cardKey: string): readonly RetrievalAttemptRecord[];
+  /** Return active and revoked device subscriptions for diagnostics and sync. */
+  pushSubscriptions(): readonly PushSubscriptionRecord[];
+  /** Add or refresh one browser endpoint in the shared progress document. */
+  savePushSubscription(record: PushSubscriptionRecord): void;
+  /** Leave a tombstone so another device cannot resurrect a disabled endpoint. */
+  revokePushSubscription(endpointOrRecord: string | PushSubscriptionRecord): void;
   accountData(): AccountData;
   setFavourites(state: FavouritesState): void;
   setPracticeRecent(state: PracticeRecentState): void;

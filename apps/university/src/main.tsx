@@ -44,6 +44,7 @@ import "@pieai/university-ui/reference/knowledge-notes.css";
 import "@pieai/university-ui/reference/reference-panel.css";
 import "@pieai/university-ui/reference/term-index.css";
 import "@pieai/university-ui/review/choice-block.css";
+import "@pieai/university-ui/notifications/review-reminders.css";
 import "@pieai/university-ui/shell/app-shell.css";
 import "@pieai/university-ui/sound/sound-toggle.css";
 import "@pieai/university-ui/today/today.css";

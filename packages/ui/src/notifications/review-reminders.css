@@ -1,0 +1,42 @@
+.review-reminder-prompt {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 1.75rem;
+}
+
+.review-reminder-prompt h2,
+.review-reminder-prompt p {
+  margin: 0;
+}
+
+.review-reminder-prompt h2 {
+  font-size: 1.15rem;
+  line-height: 1.35;
+}
+
+.review-reminder-prompt p {
+  color: var(--game-ui-text-muted);
+  line-height: 1.55;
+}
+
+.review-reminder-prompt__eyebrow {
+  color: var(--game-ui-accent-bright) !important;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+
+.review-reminder-prompt__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.review-reminder-prompt__error {
+  color: var(--game-ui-danger-ink) !important;
+  font-size: 0.86rem;
+}
+
+.review-reminder-prompt__note {
+  font-size: 0.82rem;
+}
