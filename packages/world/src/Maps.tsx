@@ -34,7 +34,6 @@ import aerialWorldPlate2k from "./assets/generated/aerial-world-plate-2k.webp?ur
 import aerialWorldPlate4k from "./assets/generated/aerial-world-plate-4k.webp?url";
 import { cloudPuffs } from "./sky/cloud-layout.js";
 import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course/course";
-import { GeneratedCourseLandmark } from "./island/generated-landmark.js";
 import {
   islandBlueprint,
   islandSurfaceY,
@@ -460,15 +459,8 @@ function Island({
   onClick: () => void;
   onOver: (over: boolean) => void;
 }) {
-  const blueprint = islandBlueprint(entry.node.studyId, entry.node.courseId, entry.node.lessons);
   const shape = shapeOf(entry.node.studyId, entry.node.courseId, entry.node.lessons, entry.radius);
   const locked = entry.state === "idle";
-  const [landmarkX, landmarkZ] = blueprint.anchors.landmark;
-  const landmarkAt = [
-    landmarkX * shape.horizontalScale,
-    islandSurfaceY(blueprint, landmarkX, landmarkZ) * shape.heightScale,
-    landmarkZ * shape.horizontalScale,
-  ] as const;
   return (
     <group position={entry.position}>
       <mesh
@@ -505,15 +497,6 @@ function Island({
           color={locked || dimmed ? PALETTE.locked : 0xffffff}
         />
       </mesh>
-      <Suspense fallback={null}>
-        <GeneratedCourseLandmark
-          studyId={entry.node.studyId}
-          courseId={entry.node.courseId}
-          position={landmarkAt}
-          height={entry.radius * 0.58}
-          detail="world"
-        />
-      </Suspense>
       {/*
         Foam used to mark the waterline. The islands now sit above a cloud
         sea, and a ring in the air would be the waterline of a missing ocean.
@@ -1233,17 +1216,6 @@ export function CourseScene({
   // by the small world-map island. Lesson prose can change without changing
   // the seed or inventing a second representation.
   const island = useMemo(() => buildBlueprintIsland(blueprint, "course"), [blueprint]);
-  const [landmarkX, landmarkZ] = blueprint.anchors.landmark;
-  const landmarkHeight = Math.max(
-    2.8,
-    Math.min(4.8, Math.min(blueprint.bounds.halfX, blueprint.bounds.halfZ) * 0.32),
-  );
-  const landmarkAt = [
-    landmarkX,
-    islandSurfaceY(blueprint, landmarkX, landmarkZ),
-    landmarkZ,
-  ] as const;
-
   const markers = useMemo(
     () =>
       lessons.map((lesson) => ({
@@ -1308,15 +1280,6 @@ export function CourseScene({
       <mesh geometry={island.geometry} castShadow receiveShadow>
         <meshStandardMaterial vertexColors flatShading roughness={0.94} color={0xffffff} />
       </mesh>
-      <Suspense fallback={null}>
-        <GeneratedCourseLandmark
-          studyId={studyId}
-          courseId={courseId}
-          position={landmarkAt}
-          height={landmarkHeight}
-          detail="course"
-        />
-      </Suspense>
       <CourseTrail blueprint={blueprint} lessons={lessons} />
       {markers.map(({ lesson, radius }) => (
         <LessonMarker
