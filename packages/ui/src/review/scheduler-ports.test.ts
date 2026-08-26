@@ -122,9 +122,9 @@ describe("one review card port for both campuses", () => {
     ).rejects.toThrow(/复习卡内容已更新/);
   });
 
-  it("says the same thing in both campuses about a card neither can serve", async () => {
-    // These two messages used to differ only in 「本地端」 and 「在线端」, which
-    // told a learner nothing about what had happened.
+  it("rejects an unsupported card kind before either review operation runs", async () => {
+    // The registry keeps this kind in the content model while the learner-facing
+    // review flow is intentionally not implemented yet.
     const port = createReviewCardPort(shelf(), enrolled());
     const knowledge = {
       kind: "knowledge-card",

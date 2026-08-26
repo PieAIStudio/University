@@ -23,18 +23,38 @@ const RATINGS: readonly RatingName[] = ["again", "hard", "good", "easy"];
 const PRIOR_ATTEMPTS_SHOWN = 3;
 
 /**
- * A card nobody can serve yet.
- *
- * Neither campus schedules knowledge cards, and the message says what is true
- * rather than which half of the product is speaking — the two used to differ
- * only in the words 「本地端」 and 「在线端」, which told a learner nothing.
+ * A card kind may exist in the content model without having a learner review
+ * flow. This registry is the one decision for this shared implementation; the
+ * queue publisher is checked separately.
  */
 const UNSUPPORTED_CARD = "这类复习卡还不能在这里复习";
+
+type ReviewCardKindSupport = "supported" | "unsupported";
+
+/** Every review-card kind must declare whether this surface can serve it. */
+const REVIEW_CARD_KIND_REGISTRY = {
+  "course-card": "supported",
+  "knowledge-card": "unsupported",
+} as const satisfies Record<ReviewCardLocator["kind"], ReviewCardKindSupport>;
+
+type SupportedReviewCardKind = {
+  [Kind in keyof typeof REVIEW_CARD_KIND_REGISTRY]: (typeof REVIEW_CARD_KIND_REGISTRY)[Kind] extends "supported"
+    ? Kind
+    : never;
+}[keyof typeof REVIEW_CARD_KIND_REGISTRY];
+
+type SupportedReviewCard = Extract<ReviewCardLocator, { readonly kind: SupportedReviewCardKind }>;
+
+function assertSupportedReviewCard(card: ReviewCardLocator): asserts card is SupportedReviewCard {
+  if (REVIEW_CARD_KIND_REGISTRY[card.kind] !== "supported") {
+    throw new Error(UNSUPPORTED_CARD);
+  }
+}
 
 export function createReviewCardPort(content: ContentPort, progress: ProgressPort): ReviewCardPort {
   return {
     async reveal(card: ReviewCardLocator, input) {
-      if (card.kind !== "course-card") throw new Error(UNSUPPORTED_CARD);
+      assertSupportedReviewCard(card);
       const body = await content.card(card);
       /*
         A card scheduled against an older revision is not this card. The
@@ -70,7 +90,7 @@ export function createReviewCardPort(content: ContentPort, progress: ProgressPor
     },
 
     async rate(card, rating) {
-      if (card.kind !== "course-card") throw new Error(UNSUPPORTED_CARD);
+      assertSupportedReviewCard(card);
       const cardKey = cardKeyOf(card);
       progress.gradeCard(cardKey, RATINGS[rating - 1]!);
       const dueAt = progress.snapshot().cards[cardKey]?.dueAt;
@@ -110,8 +130,6 @@ export function createVocabularyReviewPort(
   };
 }
 
-export function cardKeyOf(
-  card: Extract<ReviewCardLocator, { readonly kind: "course-card" }>,
-): string {
+export function cardKeyOf(card: SupportedReviewCard): string {
   return `${card.studyId}/${card.courseId}/${card.lessonId}/${card.cardId}`;
 }
