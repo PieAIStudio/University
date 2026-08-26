@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-26T05:10:14.715Z
+generated_at: 2026-08-26T06:18:35.244Z
 generator_version: doc-gov@0.9.5
-docs_count: 36
+docs_count: 37
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -171,6 +171,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-21
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-EXHAUSTIVE-REVIEW-CARD-REGISTRIES-MUST-GUARD-BOTH-SCHEDULER-AND-DUE-QUEUE
+    path: docs/reference/learnings/workflow-issues/exhaustive-review-card-registries-must-guard-both-scheduler-and-due-queue.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-26
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-FRESH-CLONE-TSC-B-NEEDS-PROJECT-REFERENCES-AND-IMPORTED-JSON-IN-COMPOSITE-PACKAG
     path: docs/reference/learnings/workflow-issues/fresh-clone-tsc-b-needs-project-references-and-imported-json-in-composite-packag.md
