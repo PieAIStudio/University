@@ -2,16 +2,22 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "university",
+      "name": "university-delivery",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev"],
+      "runtimeArgs": ["--filter", "@pieai/university-app", "dev"],
       "port": 9998
     },
     {
-      "name": "university-local",
+      "name": "university-authoring",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@pieai/university-app", "dev:local"],
+      "port": 9999
+    },
+    {
+      "name": "university-local-server",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@pieai/university-local", "dev"],
-      "port": 9999
+      "port": 4317
     }
   ]
 }
