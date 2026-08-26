@@ -48,6 +48,16 @@ describe("placeWorld", () => {
     }
   });
 
+  it("walks every series from its first island at the top toward the viewer", () => {
+    for (const studyId of ["alpha", "beta"]) {
+      const world = placeWorld(NODES, nothingDone, studyId);
+      const ordered = [...world.placements].sort((a, b) => a.node.depth - b.node.depth);
+      for (let index = 1; index < ordered.length; index += 1) {
+        expect(ordered[index]!.position.z).toBeGreaterThan(ordered[index - 1]!.position.z);
+      }
+    }
+  });
+
   /*
     Exactly one lit island, and it has to be one that is in the frame. When the
     accent was chosen across the whole catalogue, three projects out of four

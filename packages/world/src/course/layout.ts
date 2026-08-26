@@ -33,6 +33,9 @@ export interface Placed {
 
 export type PathDirection = "toward-negative-z" | "toward-positive-z";
 
+/** The teaching direction shared by every series map. */
+export const STUDY_PATH_DIRECTION: PathDirection = "toward-positive-z";
+
 /**
  * The one road shape in this product, used at both map levels.
  *
@@ -136,7 +139,7 @@ export function layoutPath(
  * walk is furniture.
  */
 export function layoutStudyRoad(orderedCourseIds: readonly string[]): Map<string, Placed> {
-  const points = layoutPath(orderedCourseIds.length, STUDY_PATH);
+  const points = layoutPath(orderedCourseIds.length, STUDY_PATH, STUDY_PATH_DIRECTION);
   const placed = new Map<string, Placed>();
   orderedCourseIds.forEach((id, index) => {
     const point = points[index]!;

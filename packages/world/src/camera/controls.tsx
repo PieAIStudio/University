@@ -413,6 +413,12 @@ function readRailBox(stage: HTMLElement, rail: HTMLElement): LabelBox | null {
   };
 }
 
+function readChromeBoxes(stage: HTMLElement, shell: HTMLElement): readonly LabelBox[] {
+  return [...shell.querySelectorAll<HTMLElement>(".nav-rail, .app-shell__aside, .nextup, .tab-bar")]
+    .map((element) => readRailBox(stage, element))
+    .filter((box): box is LabelBox => box !== null);
+}
+
 function writePlacement(
   element: HTMLElement,
   marker: Marker,
@@ -452,22 +458,21 @@ export function LabelProbe({
 }) {
   const { camera, gl, size } = useThree();
   const scratch = useRef(new THREE.Vector3());
-  const railBoxRef = useRef<LabelBox | null>(null);
+  const chromeBoxesRef = useRef<readonly LabelBox[]>([]);
   useEffect(() => {
     const stage = gl.domElement.closest<HTMLElement>(".stagewrap");
     const shell = stage?.closest<HTMLElement>(".app-shell");
-    const rail = shell?.querySelector<HTMLElement>(".nav-rail");
-    if (!stage || !rail) return;
+    if (!stage || !shell) return;
 
     const update = () => {
-      railBoxRef.current = readRailBox(stage, rail);
+      chromeBoxesRef.current = readChromeBoxes(stage, shell);
     };
     update();
     window.addEventListener("resize", update);
 
     const resizeObserver =
       typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
-    resizeObserver?.observe(rail);
+    resizeObserver?.observe(shell);
 
     let mutationObserver: MutationObserver | null = null;
     if (typeof MutationObserver !== "undefined" && shell) {
@@ -475,6 +480,8 @@ export function LabelProbe({
       mutationObserver.observe(shell, {
         attributes: true,
         attributeFilter: ["data-rail-collapsed"],
+        childList: true,
+        subtree: true,
       });
     }
 
@@ -661,7 +668,7 @@ export function LabelProbe({
 
     const namePlaced = placeLabels(candidates, viewport, {
       maxVisible: limit,
-      reserved,
+      reserved: [...chromeBoxesRef.current, ...reserved],
     });
     for (const placement of namePlaced) {
       const element = nodes.get(placement.id);
@@ -686,10 +693,18 @@ export function LabelProbe({
 
     // Quiet names stay outside the normal avoidance contest. They are not
     // visible until focus, but their focus reveal must not land underneath the
-    // opaque rail. A focused name also gets the closest free vertical slot so
-    // the boundary fix does not cover a visible icon or unit name.
+    // opaque chrome. A focused name also gets the closest free vertical slot
+    // so the boundary fix does not cover a visible icon or unit name.
     for (const item of quietLabels) {
-      const position = clampLabelOutOfChrome(item, railBoxRef.current, viewport, { reserved });
+      let position = { x: item.x, y: item.y };
+      for (const chrome of chromeBoxesRef.current) {
+        position = clampLabelOutOfChrome(
+          { ...item, x: position.x, y: position.y },
+          chrome,
+          viewport,
+          { reserved },
+        );
+      }
       writePlacement(item.element, item.marker, position.x, position.y, false);
       // Quiet still needs `--placed: 1` so focus-visible can fade it in.
       item.element.style.setProperty("--placed", "1");

@@ -166,6 +166,23 @@ describe("placeLabels", () => {
     expect(clash).toBe(false);
   });
 
+  it("keeps a name off the mobile HUD when the path flips toward the viewer", () => {
+    const phone = { width: 375, height: 812 } as const;
+    // LabelProbe and the chrome reader use stage-local coordinates. On the
+    // real phone shot the HUD is 14–183px down inside a stage that starts
+    // below the top bar.
+    const hud = { left: 14, top: 14, right: 361, bottom: 183 };
+    const placed = placeLabels(
+      [candidate({ id: "first-island", x: 220, y: 190, width: 220, height: 24 })],
+      phone,
+      { reserved: [hud] },
+    );
+    const name = byId(placed, "first-island");
+    expect(name.visible).toBe(true);
+    const box = labelBox({ x: name.x, y: name.y }, 220, 24);
+    expect(boxesOverlap(box, hud, 4)).toBe(false);
+  });
+
   it("sits an aside card to the right of its island, not on top of it", () => {
     const placed = placeLabels(
       [

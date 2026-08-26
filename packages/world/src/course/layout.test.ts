@@ -66,11 +66,11 @@ describe("layoutPath", () => {
 });
 
 describe("layoutStudyRoad", () => {
-  it("keeps the order it is given", () => {
+  it("keeps the order it is given from the top of the series toward the viewer", () => {
     const placed = layoutStudyRoad(["a", "b", "c", "d"]);
     const z = ["a", "b", "c", "d"].map((id) => placed.get(id)!.z);
     for (let index = 1; index < z.length; index += 1) {
-      expect(z[index]!).toBeLessThan(z[index - 1]!);
+      expect(z[index]!).toBeGreaterThan(z[index - 1]!);
     }
   });
 

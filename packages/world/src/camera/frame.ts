@@ -9,7 +9,7 @@
 import * as THREE from "three";
 
 import { WORLD_DISTANCE_MIN, WORLD_POLAR } from "./controls.js";
-import { STUDY_PATH } from "../course/layout.js";
+import { STUDY_PATH, STUDY_PATH_DIRECTION } from "../course/layout.js";
 
 /**
  * How far down the road the world shot aims, past the learner's own island.
@@ -34,7 +34,7 @@ function pose(
 }
 
 /**
- * How much road is still in front of the learner, along −Z.
+ * How much road is still in front of the learner, along the study path.
  *
  * Zero in a series with one course, which is the case that broke the shot: the
  * camera aimed a fixed two and a half course-steps down a road that had no
@@ -48,8 +48,13 @@ export function roadAhead(
 ): number {
   if (placements.length === 0) return 0;
   const from = standingAt?.z ?? 0;
-  const furthest = Math.min(...placements.map((entry) => entry.position.z));
-  return Math.max(0, from - furthest);
+  const furthest =
+    STUDY_PATH_DIRECTION === "toward-positive-z"
+      ? Math.max(...placements.map((entry) => entry.position.z))
+      : Math.min(...placements.map((entry) => entry.position.z));
+  return STUDY_PATH_DIRECTION === "toward-positive-z"
+    ? Math.max(0, furthest - from)
+    : Math.max(0, from - furthest);
 }
 
 /**
@@ -75,7 +80,7 @@ export function frameWorld(
   readonly lookAt: readonly [number, number, number];
 } {
   /*
-    The study is a road running along −Z, and the shot has to be down it.
+    The study is a road running along +Z, and the shot has to be down it.
 
     This used to point the camera along `learner − studyCentre`, which was the
     right idea for a radial tree: the learner was somewhere out on a disc and
@@ -90,7 +95,8 @@ export function frameWorld(
     answer to the same question.
   */
   const at = (standingAt ?? new THREE.Vector3(0, 0, 0)).clone();
-  const look = new THREE.Vector3(at.x, at.y, at.z - Math.min(WORLD_LOOK_AHEAD, ahead));
+  const direction = STUDY_PATH_DIRECTION === "toward-positive-z" ? 1 : -1;
+  const look = new THREE.Vector3(at.x, at.y, at.z + direction * Math.min(WORLD_LOOK_AHEAD, ahead));
   // A few degrees off the axis so the islands stagger instead of stacking into
   // one column of discs.
   const azimuth = 0.16;

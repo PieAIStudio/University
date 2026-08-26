@@ -12,10 +12,10 @@ describe("frameWorld", () => {
     // No lateral shift: the learner's island stays on the centre line, and the
     // road's own swing supplies whatever asymmetry the shot has.
     expect(framed.lookAt[0]).toBeCloseTo(40);
-    // The road runs along −Z, so aiming ahead means a smaller z than the
+    // The study road runs along +Z, so aiming ahead means a larger z than the
     // learner's. This used to look straight at them, which put as much sea
     // behind the shot as road in front of it.
-    expect(framed.lookAt[2]).toBeLessThan(10);
+    expect(framed.lookAt[2]).toBeGreaterThan(10);
 
     const from = new THREE.Vector3(...framed.cameraFrom);
     const at = new THREE.Vector3(...framed.lookAt);
@@ -47,7 +47,7 @@ describe("frameWorld", () => {
   it("frames the head of the road in a project with no learner on it", () => {
     const framed = frameWorld(null);
     expect(framed.lookAt[0]).toBeCloseTo(0);
-    expect(framed.lookAt[2]).toBeLessThan(0);
+    expect(framed.lookAt[2]).toBeGreaterThan(0);
     const from = new THREE.Vector3(...framed.cameraFrom);
     const at = new THREE.Vector3(...framed.lookAt);
     expect(from.distanceTo(at)).toBeCloseTo(WORLD_DISTANCE_MIN, 5);
