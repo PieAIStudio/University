@@ -3,7 +3,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryPresencePort, CURSOR_BROADCAST_INTERVAL_MS } from "@pieai/university-core";
 
 import { CompanionCursors, CompanionMarkers } from "./CompanionOverlay.js";
@@ -30,6 +30,34 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
+  vi.unstubAllEnvs();
+  window.history.replaceState({}, "", "/");
+});
+
+describe("presence fixture", () => {
+  it("seeds the requested companions in development", async () => {
+    window.history.replaceState({}, "", "/?presence-fixture");
+    vi.stubEnv("DEV", true);
+    vi.resetModules();
+
+    const { createBrowserPresencePort } = await import("./store.js");
+    const port = createBrowserPresencePort();
+
+    expect(new Set(port.snapshot().peers.map((peer) => peer.userId))).toEqual(
+      new Set(["fixture-ada", "fixture-lin"]),
+    );
+  });
+
+  it("ignores the query parameter in a production build", async () => {
+    window.history.replaceState({}, "", "/?presence-fixture");
+    vi.stubEnv("DEV", false);
+    vi.resetModules();
+
+    const { createBrowserPresencePort } = await import("./store.js");
+    const port = createBrowserPresencePort();
+
+    expect(port.snapshot().peers).toEqual([]);
+  });
 });
 
 describe("CompanionMarkers", () => {

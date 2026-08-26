@@ -8,9 +8,9 @@
  * would look like a broken feature rather than an unbuilt one.
  *
  * `?presence-fixture` seeds two group-mates so a screenshot or a local
- * walkthrough has something to look at. It is a query-param seam, not a
- * fake backend: production URLs never include it, and the Supabase adapter
- * stays unwired regardless.
+ * walkthrough has something to look at. It is a development/test-only
+ * query-param seam, not a fake backend: the production build does not read it,
+ * and the Supabase adapter stays unwired regardless.
  */
 import {
   createMemoryPresencePort,
@@ -62,6 +62,7 @@ export function createBrowserPresencePort(self?: PresenceSelf): PresencePort {
 }
 
 function fixtureRequested(): boolean {
+  if (!import.meta.env.DEV) return false;
   if (typeof window === "undefined") return false;
   try {
     return new URLSearchParams(window.location.search).has("presence-fixture");
