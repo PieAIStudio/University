@@ -11,6 +11,7 @@
     "content": "pnpm --filter @pieai/university-app content",
     "check:generated-format": "pnpm --filter @pieai/university-app check:generated-format",
     "check:canvas": "node scripts/check-canvas-registry.mjs",
+    "check:content-revisions": "node scripts/check-content-revisions.mjs",
     "check:lesson-links": "node apps/local/scripts/check-lesson-links.mjs",
     "check:review-cards": "node scripts/check-review-card-registry.mjs",
     "check:shelf": "node apps/university/scripts/check-shelf.mjs",
@@ -29,9 +30,9 @@
     "secrets:check:university": "node scripts/materialize-swimmer-backend-public-env.mjs --check",
     "secrets:materialize:university": "node scripts/materialize-swimmer-backend-public-env.mjs",
     "start": "node scripts/start.mjs",
-    "test": "pnpm -r test && node scripts/check-raw-colours.mjs --self-test && node scripts/check-review-card-registry.mjs --self-test",
+    "test": "pnpm -r test && node scripts/check-raw-colours.mjs --self-test && node scripts/check-review-card-registry.mjs --self-test && node scripts/check-content-revisions.mjs --self-test",
     "typecheck": "pnpm -r typecheck",
-    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm check:canvas && pnpm check:review-cards && pnpm build && pnpm check:shelf && pnpm check:lesson-links && pnpm bundle && pnpm docs:check"
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm check:canvas && pnpm check:review-cards && pnpm build && pnpm check:shelf && pnpm check:content-revisions && pnpm check:lesson-links && pnpm bundle && pnpm docs:check"
   },
   "devDependencies": {
     "@pieai/doc-gov": "0.9.5",

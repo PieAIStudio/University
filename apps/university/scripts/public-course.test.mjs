@@ -147,6 +147,7 @@ describe("the public course DTO", () => {
                 id: "public-lesson",
                 title: "课时",
                 content: "正文",
+                contentRevision: 3,
                 evidence: [],
                 assets: [
                   {
@@ -179,5 +180,19 @@ describe("the public course DTO", () => {
       viewport: { width: 100, height: 100 },
       locale: "zh-CN",
     });
+  });
+
+  it("rejects a lesson without a source content revision", () => {
+    expect(() =>
+      toPublicPackage({
+        course: {
+          units: [
+            {
+              lessons: [{ id: "missing-revision", content: "正文", cards: [], exercises: [] }],
+            },
+          ],
+        },
+      }),
+    ).toThrow(/contentRevision/);
   });
 });

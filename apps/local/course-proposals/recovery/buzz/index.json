@@ -17,28 +17,28 @@
   "courses": [
     {
       "courseId": "buzz-orientation",
-      "file": "buzz-orientation.ca7e871f2cab4dbaa69b70ff20f3da6d9682f53c250445d114f667700f4a3d7f.recovery.json",
-      "sha256": "sha256:ca7e871f2cab4dbaa69b70ff20f3da6d9682f53c250445d114f667700f4a3d7f"
+      "file": "buzz-orientation.1dc01e8b943da07bd32a8c010bfb75461771b1ec06e1a858f269c549ee062115.recovery.json",
+      "sha256": "sha256:1dc01e8b943da07bd32a8c010bfb75461771b1ec06e1a858f269c549ee062115"
     },
     {
       "courseId": "buzz-reading-rust",
-      "file": "buzz-reading-rust.c6d19ab2ea81aed3d0c415538d09ff51185c95c7b0d2b4c9ea9007b55acd9d7d.recovery.json",
-      "sha256": "sha256:c6d19ab2ea81aed3d0c415538d09ff51185c95c7b0d2b4c9ea9007b55acd9d7d"
+      "file": "buzz-reading-rust.78a06f7376e8dae6e0bacbcbd9df2597676d8c9043a6e5badeb6ac0553b85574.recovery.json",
+      "sha256": "sha256:78a06f7376e8dae6e0bacbcbd9df2597676d8c9043a6e5badeb6ac0553b85574"
     },
     {
       "courseId": "buzz-one-message",
-      "file": "buzz-one-message.f72195c543c3d408672abe9a67a4c8f8cfdface2ff955c1b9da2af26bd1ce9e1.recovery.json",
-      "sha256": "sha256:f72195c543c3d408672abe9a67a4c8f8cfdface2ff955c1b9da2af26bd1ce9e1"
+      "file": "buzz-one-message.a52282c8926d6523007d6de96790708ddb17c63e04d0a7a2a951ad6612e4fa7c.recovery.json",
+      "sha256": "sha256:a52282c8926d6523007d6de96790708ddb17c63e04d0a7a2a951ad6612e4fa7c"
     },
     {
       "courseId": "buzz-agents-as-members",
-      "file": "buzz-agents-as-members.2da8d17e6587936ff7ebbd5eaaaf2f079805319c572e7f2f0d76796e12f74212.recovery.json",
-      "sha256": "sha256:2da8d17e6587936ff7ebbd5eaaaf2f079805319c572e7f2f0d76796e12f74212"
+      "file": "buzz-agents-as-members.384dc8db10ce5ffb60a54d76a63d70c5d6e04588128f3addb8118a7591d079dc.recovery.json",
+      "sha256": "sha256:384dc8db10ce5ffb60a54d76a63d70c5d6e04588128f3addb8118a7591d079dc"
     },
     {
       "courseId": "buzz-design-tokens",
-      "file": "buzz-design-tokens.8807b4b7b21ee734eb7d4645fa6601d70d5ba68058570828defa51d1277b3e1d.recovery.json",
-      "sha256": "sha256:8807b4b7b21ee734eb7d4645fa6601d70d5ba68058570828defa51d1277b3e1d"
+      "file": "buzz-design-tokens.6a92c8042a67bf1d15785e2294b2a72f8cd0e9725112457a4c44cb3c0a73ac8f.recovery.json",
+      "sha256": "sha256:6a92c8042a67bf1d15785e2294b2a72f8cd0e9725112457a4c44cb3c0a73ac8f"
     }
   ]
 }

@@ -2,8 +2,9 @@
  * Delivery's ContentPort: a published package, frozen on purpose.
  *
  * A customer sees a course only once it has been published (ADR-0002), so this
- * side has no revisions to track — one edition of every lesson, which is why
- * `contentRevision` is the constant 1 rather than a number off the wire.
+ * side has no revision history to track. The one shipped edition still carries
+ * the source lesson's revision so shared progress can bind confirmation to the
+ * content the learner opened.
  */
 import { lessonKeyOf, progressSourceOf, type LessonRef } from "@pieai/university-core";
 import type {
@@ -47,7 +48,7 @@ export function createOnlineContentPort(): ContentPort {
       const unit = course.units.find((entry) => entry.id === locator.unitId);
       const lesson = unit?.lessons.find((entry) => entry.id === locator.lessonId);
       if (!unit || !lesson) throw new Error("这节课不在这门课里");
-      const contentRevision = ONLINE_CONTENT_REVISION;
+      const contentRevision = lesson.contentRevision;
       return assembleLessonView({
         course,
         lesson,
@@ -81,7 +82,7 @@ export function createOnlineContentPort(): ContentPort {
           back out into a sentence. See the note on `MistakeExercise`.
         */
         correctAnswer: null,
-        contentRevision: ONLINE_CONTENT_REVISION,
+        contentRevision: lesson.contentRevision,
       };
     },
 
@@ -100,9 +101,9 @@ export function createOnlineContentPort(): ContentPort {
       const found = findCard(course, card);
       if (!found) throw new Error("复习卡内容尚未加载");
       return {
-        front: found.front,
-        back: found.back,
-        contentRevision: ONLINE_CONTENT_REVISION,
+        front: found.card.front,
+        back: found.card.back,
+        contentRevision: found.lesson.contentRevision,
       } satisfies CardBody;
     },
 
@@ -129,9 +130,16 @@ export function createOnlineContentPort(): ContentPort {
 function findCard(
   course: Course,
   card: CourseReviewCardLocator,
-): Course["units"][number]["lessons"][number]["cards"][number] | undefined {
-  return course.units
-    .flatMap((unit) => unit.lessons)
-    .find((lesson) => lesson.id === card.lessonId)
-    ?.cards.find((entry) => entry.id === card.cardId);
+):
+  | {
+      lesson: Course["units"][number]["lessons"][number];
+      card: Course["units"][number]["lessons"][number]["cards"][number];
+    }
+  | undefined {
+  for (const lesson of course.units.flatMap((unit) => unit.lessons)) {
+    if (lesson.id !== card.lessonId) continue;
+    const found = lesson.cards.find((entry) => entry.id === card.cardId);
+    if (found) return { lesson, card: found };
+  }
+  return undefined;
 }

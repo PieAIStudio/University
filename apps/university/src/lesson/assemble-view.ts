@@ -2,10 +2,10 @@
  * The published lesson, folded into the read model the shared reader already
  * speaks.
  *
- * Delivery never had `contentRevision` on the wire: a published package is
- * one snapshot. The shared reader still asks for a number, so this is 1 —
- * not because the lesson is on its first draft, but because this shell has
- * exactly one edition of it.
+ * A published package is one immutable snapshot, but the lesson's
+ * `contentRevision` still identifies which source version that snapshot is.
+ * The shared reader and progress document must see that number so a read
+ * confirmation is bound to the version the learner actually opened.
  */
 import {
   assembleLessonIndex,
@@ -42,6 +42,7 @@ export function assembleLessonView(input: {
   };
 }): LessonView {
   const { course, lesson, unitId, progress, completion } = input;
+  const contentRevision = lesson.contentRevision;
   const parsed = parseLessonLinks(lesson.content);
   const index = assembleLessonIndex(
     course.units.flatMap((unit) =>
@@ -69,7 +70,7 @@ export function assembleLessonView(input: {
     lesson: {
       id: lesson.id,
       title: lesson.title,
-      contentRevision: ONLINE_CONTENT_REVISION,
+      contentRevision,
       content: lesson.content,
       sections: lesson.sections ?? [],
       language,
@@ -107,12 +108,7 @@ export function assembleLessonView(input: {
         ),
       ),
       termAnchors: resolveTermLinks(parsed, LEXICON_BY_ID).map(termRangeOf),
-      progress: lessonProgressOf(
-        progress,
-        completion,
-        ONLINE_CONTENT_REVISION,
-        lesson.exercises.length,
-      ),
+      progress: lessonProgressOf(progress, completion, contentRevision, lesson.exercises.length),
       evidence: lesson.evidence.map((item) =>
         isRepositoryAnchor(item)
           ? {
@@ -138,13 +134,13 @@ export function assembleLessonView(input: {
         kind: exercise.kind,
         title: exercise.title ?? "自检",
         prompt: exercise.prompt,
-        contentRevision: ONLINE_CONTENT_REVISION,
+        contentRevision,
       })),
       cards: lesson.cards.map((card) => ({
         id: card.id,
         kind: card.kind,
         front: card.front,
-        contentRevision: ONLINE_CONTENT_REVISION,
+        contentRevision,
       })),
     },
   };

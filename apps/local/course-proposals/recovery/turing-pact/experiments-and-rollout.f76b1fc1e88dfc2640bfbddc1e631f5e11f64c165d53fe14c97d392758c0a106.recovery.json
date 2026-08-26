@@ -1,0 +1,1405 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 25,
+  "course": {
+    "id": "experiments-and-rollout",
+    "title": "先登记，再上线",
+    "description": "凭感觉改功能上线，出事分不清因果；用 TuringPact 的实验登记、默认关闭、房间绑定与粗标签观测，学会上线前写下预期影响面，并在灰度出问题时立刻关掉。",
+    "audience": "独立开发者 / 一人公司技术负责人",
+    "objectives": [
+      "在登记表中为新实验声明 id、surfaces 与 analyticsTag，并说明未登记 id 无法激活",
+      "对比 hosted 与 preview 解析路径，指出 stray URL 不能污染正式默认房的那条分支",
+      "说明 bind / clear 与 experimentTag=none 如何构成可切片、可关闭的灰度边界",
+      "以 Hot Seat 或 Topic Ladder 为例，解释 soft-rule 如何挂接旧权威而不污染默认状态"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "realtime-presence"
+    ],
+    "trackId": null,
+    "units": [
+      {
+        "id": "register-before-ship",
+        "title": "先登记，才能变体",
+        "objective": "我能把实验 id 只从登记表解析出来，未登记的 id 永远是 none，下游不得硬编码。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "registry-is-the-gate",
+            "title": "地址栏写了 exp，为什么房间还是默认？",
+            "content": "# 地址栏写了 exp，为什么房间还是默认？\n\n## 现象\n\n你把预览链接改成 `/?exp=super-cool-mode`，回车。地址栏里参数还在，页面却和平时一样：没有实验徽章，默认房间规则照跑，下游没有任何实验分支被打开。\n\n字符串并没有丢——有人读过它。读完之后，系统仍像从没见过实验一样。\n\n## 先猜一下\n\nURL 里明明有一个非空的 `exp` 值，为什么整条链路仍可以当成「完全没开实验」？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n解析只认登记表里的闭集 id；`super-cool-mode` 查不到，分辨率塌成无实验，所有 surface 门控保持关闭。\n\n## 为什么是这样\n\n实验 id 不是任意字符串，而是类型上的闭集：\n\n```ts\nexport type ExperimentId = 'hot-seat' | 'persona-pack' | 'topic-ladder';\n```\n\n[[evidence:src/features/experiments/registry.ts:9]]\n\n正式目录是 `EXPERIMENT_REGISTRY`。条目长这样——`hot-seat` 声明自己会动 `round-shape` 和 `room-ui`；同表里还有 `persona-pack`、`topic-ladder`，一共三条：\n\n```ts\nexport const EXPERIMENT_REGISTRY: readonly ExperimentDefinition[] = [\n  {\n    id: 'hot-seat',\n    title: 'Hot Seat',\n    description:\n      'Mid-round nomination spotlight: one player answers a human-crafted pressure question.',\n    surfaces: ['round-shape', 'room-ui'],\n    analyticsTag: 'exp-hot-seat',\n  },\n```\n\n[[evidence:src/features/experiments/registry.ts:31-39]]\n\n新增实验的正式路径是往这份数组里 append，不是在业务文件里临时发明一个名字。\n\n查表入口只有一个。`getExperimentById` 先过 `isExperimentId`，Map 未命中就直接 `null`——没有「半开」状态：\n\n```ts\nexport function isExperimentId(value: string): value is ExperimentId {\n  return BY_ID.has(value as ExperimentId);\n}\n\nexport function getExperimentById(id: string): ExperimentDefinition | null {\n  if (!isExperimentId(id)) return null;\n  return BY_ID.get(id) ?? null;\n}\n```\n\n[[evidence:src/features/experiments/registry.ts:64-70]]\n\n所以 `?exp=super-cool-mode` 的路径是：读到 raw → `getExperimentById` → `null` → 分辨率变成无实验。你在业务里若写 `if (urlExp === 'my-feature')` 却不查这张表，就会出现观测与行为脱节：分析报 `none`、徽章不亮，UI 却偷偷改了。出事时你以为默认房间干净，其实已经被暗改。\n\n## 再想想\n\n登记表里每条实验还声明了它能动哪些层——那是下一课的 surface 契约：[[lesson:surfaces-are-the-contract|改的是表面，不是到处 if id]]。\n\n## 自检\n\n**问：** `ExperimentId` 为什么是三个字面量的联合，而不是 `string`？\n\n**问：** 你在业务代码里写 `if (urlExp === 'my-feature')` 却不经过 `getExperimentById`，会出现什么事故？\n\n## 一句话\n\n**开关的名字先出现在登记表，再出现在 URL——未登记就是不可激活。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/registry.ts",
+                "lineStart": 9,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "ExperimentId 闭集联合类型"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/registry.ts",
+                "lineStart": 31,
+                "lineEnd": 54,
+                "nodeIds": [],
+                "note": "EXPERIMENT_REGISTRY 三条正式实验定义"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/registry.ts",
+                "lineStart": 64,
+                "lineEnd": 70,
+                "nodeIds": [],
+                "note": "isExperimentId / getExperimentById 未知 id 返回 null"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-closed-id",
+                "kind": "basic",
+                "front": "为什么 ExperimentId 要做成闭集联合，而不是 string？",
+                "back": "未知字符串无法通过 isExperimentId，解析恒为 null，阻止幽灵开关。",
+                "tags": [
+                  "registry",
+                  "default-off"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/registry.ts",
+                    "lineStart": 64,
+                    "lineEnd": 70,
+                    "nodeIds": [],
+                    "note": "未知 id 被类型守卫挡下"
+                  }
+                ]
+              },
+              {
+                "id": "registry-append-path",
+                "kind": "basic",
+                "front": "要加第四个实验，代码上的正式入口是什么？",
+                "back": "向 EXPERIMENT_REGISTRY 追加一条完整 ExperimentDefinition。",
+                "tags": [
+                  "registry"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/registry.ts",
+                    "lineStart": 31,
+                    "lineEnd": 54,
+                    "nodeIds": [],
+                    "note": "登记表是目录与唯一来源"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "experiment-id-count",
+                "kind": "short-answer",
+                "title": "闭集成员数",
+                "prompt": "ExperimentId 联合类型里一共有几个合法 id？（只写数字）",
+                "expectedAnswer": "3",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/registry.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "三个字面量 id"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "surfaces-are-the-contract",
+            "title": "下游该问 id，还是该问「动哪一层」？",
+            "content": "# 下游该问 id，还是该问「动哪一层」？\n\n## 两个东西\n\n登记表里每一条实验同时带着两种名字，用途不同：\n\n**A. `id`**——给这次变体起名：`hot-seat`、`persona-pack`、`topic-ladder`。分析、徽章、建房绑定都认这个字。\n\n**B. `surfaces`**——声明它允许动哪些层。类型只有四档：\n\n```ts\nexport type ExperimentSurface = 'round-shape' | 'ai-persona' | 'topics' | 'room-ui';\n```\n\n[[evidence:src/features/experiments/registry.ts:15]]\n\n同一张表里，`hot-seat` 写的是 `['round-shape', 'room-ui']`，`topic-ladder` 写的是 `['topics', 'room-ui']`，`persona-pack` 写的是 `['ai-persona', 'room-ui']`——名字不同，勾选的层也不同：\n\n```ts\n  {\n    id: 'hot-seat',\n    title: 'Hot Seat',\n    description:\n      'Mid-round nomination spotlight: one player answers a human-crafted pressure question.',\n    surfaces: ['round-shape', 'room-ui'],\n    analyticsTag: 'exp-hot-seat',\n  },\n  {\n    id: 'persona-pack',\n    title: 'AI persona variety pack',\n    description: 'Server-selected AI voice archetypes so pressure stays fresh across rooms.',\n    surfaces: ['ai-persona', 'room-ui'],\n    analyticsTag: 'exp-persona-pack',\n  },\n  {\n    id: 'topic-ladder',\n    title: 'Topic escalation ladder',\n    description: 'Round-number rungs from warm-up topics to embodied and ambiguity traps.',\n    surfaces: ['topics', 'room-ui'],\n    analyticsTag: 'exp-topic-ladder',\n  },\n```\n\n[[evidence:src/features/experiments/registry.ts:32-53]]\n\n## 先猜一下\n\n`persona-pack` 已经上线，surfaces 里没有 `topics`。你要在 opening topic 选取路径加门控：如果按 `id === 'persona-pack'` 写死，而不是问「这个 resolution 有没有 `topics`」，六个月后再加一个也要改 topic 的实验，会坏在哪里？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n新实验要么被漏掉（改不到 topic），要么你到处复制 `if (id === …)`，漏一处就误伤默认房或让实验半死——爆炸半径绑在了名字上，而不是层上。\n\n## 逐条对照\n\n| | id（A） | surface（B） |\n| --- | --- | --- |\n| 回答的问题 | 这是哪次实验？ | 允许动哪一层？ |\n| 写在哪 | 登记表主键、绑定、分析 tag | 登记表 `surfaces` 列表 |\n| 下游典型用法 | 展示徽章、写 analytics | `hasExperimentSurface(resolution, 'topics')` |\n| 加新实验时 | 必须有新字面量 | 可复用已有层；门控点不必为每个 id 开洞 |\n\n解析成功时会把 `experiment.surfaces` 拷进 resolution。门控本身就是一次 `includes`：\n\n```ts\nexport function hasExperimentSurface(\n  resolution: ExperimentResolution,\n  surface: ExperimentSurface,\n): boolean {\n  return resolution.surfaces.includes(surface);\n}\n```\n\n[[evidence:src/features/experiments/resolve.ts:111-116]]\n\n所以 Topic Ladder 改话题前应先问 `topics`；Hot Seat 改回合形态前应问 `round-shape` 或 `room-ui`。`persona-pack` 没声明 `topics`，topic 路径用 surface 一挡就过——你不必在十几个文件里记住「谁是谁」。\n\n## 什么时候用哪个\n\n- **你在写「这次实验叫什么 / 上报什么 tag」**：用 id。\n- **你在写「这条代码能不能改房间的某一层」**：用 surface。`hasExperimentSurface` 是默认闸门。\n- **你想图省事写 `if (id === 'hot-seat')` 改 UI**：只有在该行为真的专属于这一个 id、且你接受每个新实验都要回来改时才勉强合理。一人公司没有 code review 时，surface 表就是你和未来自己的契约。\n\n## 再想想\n\nid 从哪张闭集表来，见上一课 [[lesson:registry-is-the-gate|地址栏写了 exp，为什么房间还是默认？]]。默认房间为什么能证明自己干净，见 [[lesson:default-is-off|没人显式打开时，解析结果长什么样？]]。\n\n## 自检\n\n**问：** `persona-pack` 的 surfaces 是 `ai-persona` + `room-ui`。它应不应该改 opening topic 选取逻辑？依据是什么？\n\n**问：** 登记表描述的是「会动哪些层」，还是「模块内部怎么动」？\n\n## 一句话\n\n**id 命名实验，surface 约束爆炸半径——下游优先问层，不要到处 if id。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/registry.ts",
+                "lineStart": 15,
+                "lineEnd": 15,
+                "nodeIds": [],
+                "note": "ExperimentSurface 四档影响面"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/registry.ts",
+                "lineStart": 31,
+                "lineEnd": 53,
+                "nodeIds": [],
+                "note": "各实验声明的 surfaces 列表"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/resolve.ts",
+                "lineStart": 111,
+                "lineEnd": 116,
+                "nodeIds": [],
+                "note": "hasExperimentSurface 用 includes 门控"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "surface-vs-id",
+                "kind": "basic",
+                "front": "为什么下游优先看 surface，而不是只比 experiment.id？",
+                "back": "surface 声明影响面，新实验可复用同一门控，避免 id 分叉散落。",
+                "tags": [
+                  "surfaces"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/resolve.ts",
+                    "lineStart": 111,
+                    "lineEnd": 116,
+                    "nodeIds": [],
+                    "note": "surface includes 门控"
+                  }
+                ]
+              },
+              {
+                "id": "hot-seat-surfaces",
+                "kind": "basic",
+                "front": "hot-seat 登记了哪两个 surface？",
+                "back": "round-shape 与 room-ui。",
+                "tags": [
+                  "surfaces",
+                  "hot-seat"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/registry.ts",
+                    "lineStart": 32,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "hot-seat surfaces 声明"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "topic-ladder-surface",
+                "kind": "short-answer",
+                "title": "topic 影响面",
+                "prompt": "topic-ladder 为了改开场题，登记的 surface 名字是？",
+                "expectedAnswer": "topics",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/registry.ts",
+                    "lineStart": 47,
+                    "lineEnd": 52,
+                    "nodeIds": [],
+                    "note": "topic-ladder surfaces 含 topics"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "default-is-off",
+            "title": "没人显式打开时，解析结果长什么样？",
+            "content": "# 没人显式打开时，解析结果长什么样？\n\n## 情境和约束\n\n建房前，host 侧要先解析「有没有实验意图」。来源可以是 URL 的 `?exp=`，也可以是 localStorage allowlist，两者都可能是空的。\n\n你要在两种形状里选一种失败结果：\n\n- 返回 `undefined` / 省略字段，调用方自己 optional chain；\n- 永远返回完整对象，用字段表达「关」。\n\n同时还要决定：没写任何来源时，默认算开还是算关。默认开意味着一次配置疏漏就能让全员进实验；默认关意味着实验体系存在，但零影响。\n\n## 先猜一下\n\n找不到任何来源时，你会返回「没有对象」，还是返回一个写满「空」的完整分辨率？这个选择主要保护谁？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了完整对象：`{ experiment: null, source: 'none', surfaces: [] }`——关是一等公民，默认路径可证明地干净，调用方不用猜 null 链。\n\n## 代价和收益\n\n来源类型把「关」和三种激活源并列：\n\n```ts\nexport type ExperimentResolveSource = 'none' | 'url' | 'allowlist' | 'room-local';\n```\n\n[[evidence:src/features/experiments/resolve.ts:5]]\n\n`toResolution` 在无实验时不省略字段，而是填空数组和 `none`：\n\n```ts\nfunction toResolution(\n  experiment: ExperimentDefinition | null,\n  source: ExperimentResolveSource,\n): ExperimentResolution {\n  if (!experiment) {\n    return { experiment: null, source: 'none', surfaces: [] };\n  }\n  return {\n    experiment,\n    source,\n    surfaces: experiment.surfaces,\n  };\n}\n```\n\n[[evidence:src/features/experiments/resolve.ts:56-68]]\n\n房外 intent 的优先级写死在函数里：先 URL，再 allowlist，否则落到 `none`：\n\n```ts\nexport function resolveExperimentIntent(input: ResolveIntentInput): ExperimentResolution {\n  const fromUrl = experimentFromUrl(input.search);\n  if (fromUrl) return toResolution(fromUrl, 'url');\n\n  const fromAllowlist = experimentFromAllowlist(input.storage);\n  if (fromAllowlist) return toResolution(fromAllowlist, 'allowlist');\n\n  return toResolution(null, 'none');\n}\n```\n\n[[evidence:src/features/experiments/resolve.ts:74-82]]\n\n**收益：** `hasExperimentSurface` 与分析 tag 可以统一读字段，不必每处写「有没有 resolution」。你打开首页、search 为空、allowlist 为空，得到的就是 `source: 'none'`；创建时 `if (experimentIntent.experiment)` 为假，**不会** bind——实验框架在，默认房间不被碰。\n\n**代价：** 多一个永远要构造的对象；「关」在类型和日志里占一个合法状态，读代码的人要习惯 `none` 不是错误。\n\n## 什么时候该反过来\n\n- **强制全量实验 / 全局 A/B，不允许对照组走默认房**：默认 `none` 会挡路，你需要的是「必须命中某一臂」的分配器，而不是 opt-in 登记。\n- **解析失败应中断建房**（合规、内测包）：返回完整「关」会让错误被静默吞掉；那时应 throw 或显式 error 通道，而不是 `source: 'none'`。\n- **调用方极少、且你更在意少分配一个对象**：`undefined` 够用——但一人产品里统一形状通常更便宜。\n\n## 再想想\n\n意图变成房间绑定的那一刀在 [[lesson:bind-at-create|intent 什么时候变成房间绑定？]]；登记表如何保证未知 id 也落到这条「关」路径，见 [[lesson:registry-is-the-gate|地址栏写了 exp，为什么房间还是默认？]]。\n\n## 自检\n\n**问：** `resolveExperimentIntent` 在 URL 与 allowlist 都 miss 时，`source` 是什么？\n\n**问：** 为什么 `toResolution(null, …)` 仍要填 `surfaces: []`，而不是省略字段？\n\n## 一句话\n\n**实验框架的第一职责不是做 A/B，是保证默认路径可证明地干净。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/resolve.ts",
+                "lineStart": 5,
+                "lineEnd": 5,
+                "nodeIds": [],
+                "note": "ResolveSource 含 none 与三种激活源"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/resolve.ts",
+                "lineStart": 74,
+                "lineEnd": 82,
+                "nodeIds": [],
+                "note": "resolveExperimentIntent 默认落到 none"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/resolve.ts",
+                "lineStart": 56,
+                "lineEnd": 68,
+                "nodeIds": [],
+                "note": "toResolution 无实验时 surfaces 为空数组"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "intent-priority",
+                "kind": "basic",
+                "front": "resolveExperimentIntent 里 URL 与 allowlist 谁优先？",
+                "back": "URL 优先；没有合法 URL id 才读 allowlist。",
+                "tags": [
+                  "default-off",
+                  "resolve"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/resolve.ts",
+                    "lineStart": 74,
+                    "lineEnd": 82,
+                    "nodeIds": [],
+                    "note": "url 先于 allowlist"
+                  }
+                ]
+              },
+              {
+                "id": "none-is-value",
+                "kind": "basic",
+                "front": "没有实验时 source 字段应是什么？",
+                "back": "none。",
+                "tags": [
+                  "default-off"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/resolve.ts",
+                    "lineStart": 60,
+                    "lineEnd": 61,
+                    "nodeIds": [],
+                    "note": "null 实验对应 source none"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-source-none",
+                "kind": "short-answer",
+                "title": "默认 source",
+                "prompt": "解析不到任何实验时 ExperimentResolveSource 的字面量是？",
+                "expectedAnswer": "none",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/resolve.ts",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "source 联合含 none"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "bind-at-create",
+            "title": "intent 什么时候变成房间绑定？",
+            "content": "# intent 什么时候变成房间绑定？\n\n## 你看到的结果\n\n你带着 `/?exp=hot-seat` 进过首页。某间房的本地存储里有一条按房间码切开的实验记录，进那间房时规则跟默认房不一样；另一间没有这条记录。\n\n:::detail[绑定和地址栏上的意图差在哪？]\n意图是「我想开哪条实验」，可以写在查询串里，也可以来自允许名单。绑定是「这间房已经登记成哪条实验」，落在按房间码切开的键上。两个词指两件东西：一个还停在这台浏览器的地址栏里，一个已经写成只属于某间房的键。你要分清它们，后面问落盘时机才有意义。\n:::\n\n## 先猜一下\n\n这条按房间切开的记录是在哪一步落盘的？建房前只改地址栏、不点创建，已经存在的默认房会不会被回写成实验房？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n落盘钉在创建房间成功之后那一刀：有实验意图才写入绑定；事后改地址栏不会回写已经存在的默认房。\n\n## 一站一站往回走\n\n**第 1 站 — 建房成功后才决定写不写**\n\n创建函数先过登录和电量，再解析当前地址栏上的意图，然后等 `createRoom()` 返回房间码。有实验才调用 `bindRoomExperiment`。`topic-ladder` 还会额外钉住阶梯进度。\n\n[[evidence:src/pages/HomePage.tsx:237-256]]\n\n你看到的因果顺序是：先有房间码，再有绑定。意图为「无实验」时，if 不进，房间保持默认。\n\n:::detail[为什么必须先有房间码再写？]\n绑定的键里带着房间码。房间还没生成，你没有可隔离的格子可写。先改地址栏只是改了这台浏览器里的意图，不会去翻已经存在的默认房。登录和电量不够时连创建都不会发生，更不会出现「先写绑定、后补房间码」这种顺序。你可以把建房想成开房柜台：房卡上写吸烟或无烟，发生在开卡那一刻，不是客人在走廊大喊房间就变。顺序反了，绑定就没有格子可落，旧房也不会被回头改写。\n:::\n\n**第 2 站 — 写之前再查一次登记表**\n\n`bindRoomExperiment` 不信任调用方塞来的字符串。房间码空、或 id 不在登记表，直接返回 false，不写。\n\n[[evidence:src/features/experiments/storage.ts:79-86]]\n\n忽略返回值很危险：你以为绑定成功，房间仍是默认——启用必须可失败。\n\n:::detail[返回 false 时，房间处于什么状态？]\n和从没绑定过一样。解析正式房时读不到合法 id，就会走到 none。建房事件里的实验标签却可能仍按意图算——调用点没有检查这次写入成没成。你若只看分析、不看返回值，会以为实验已经挂上。启用必须可失败：调用方丢掉这个 false，后面所有「这间房在实验组」的判断都会是错的。登记表是第二道门，不是客气：未登记的 id 连写都不会写。\n:::\n\n**第 3 站 — 键按房间码隔离**\n\n绑定不是全局开关，键里带着大写后的房间码：\n\n[[evidence:src/features/experiments/storage.ts:10-12]]\n\n所以 A 房绑了 `hot-seat`，不会让 B 房一起变。已经开出来的房再开一局，写的仍是这个函数。\n\n:::detail[再开一局的绑定从哪来？]\n不是再读一遍地址栏。再开一局若当前房已经解析出实验，就把同一个 id 写进新房间码；阶梯实验还会把下一档进度一起钉住。这是拷已生效的绑定，不是让查询串回头改写旧房。无绑定的正式房再开一局，新房间也还是默认。你不会因为地址栏里还挂着旧参数，就在再来一局时把默认房静默加成实验房。拷的是已经生效的那条，不是查询串。时机仍是「先有新房间码，再写绑定」。\n\n[[evidence:src/pages/RoomPage.tsx:730-735]]\n:::\n\n## 再想想\n\n意图默认如何落到 none，见 [[lesson:default-is-off|没人显式打开时，解析结果长什么样？]]。正式路径下地址栏为何改不了已有房，见 [[lesson:experiments-and-rollout/isolate-and-kill/hosted-ignores-stray-url|地址栏写了实验 id，正式房为什么还是默认]]。\n\n## 自检\n\n**问：** `bindRoomExperiment` 在 id 不在登记表时返回什么？调用方应否忽略返回值？\n\n**问：** 绑定键为什么要编码进房间码，而不是一个全局 `current-experiment` 键？\n\n**问：** 只改地址栏、不点创建，已经存在的默认房会变成实验房吗？\n\n## 一句话\n\n**意图不等于生效——生效发生在创建成功那一瞬的一次显式写入。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/HomePage.tsx",
+                "lineStart": 237,
+                "lineEnd": 256,
+                "nodeIds": [],
+                "note": "handleCreateHostedRoom：过登录和电量后解析意图，createRoom 成功才 bind。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/storage.ts",
+                "lineStart": 79,
+                "lineEnd": 86,
+                "nodeIds": [],
+                "note": "bindRoomExperiment 写前再查登记表，失败返回 false。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/storage.ts",
+                "lineStart": 10,
+                "lineEnd": 12,
+                "nodeIds": [],
+                "note": "roomExperimentStorageKey 按大写房间码隔离。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/RoomPage.tsx",
+                "lineStart": 730,
+                "lineEnd": 735,
+                "nodeIds": [],
+                "note": "再开一局拷当前解析出的实验 id，不重读地址栏。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "intent-vs-bind",
+                "kind": "basic",
+                "front": "URL 上的 ?exp= 在什么时刻变成房间绑定？",
+                "back": "创建房间返回房间码之后，且意图里真有实验，才调用 bindRoomExperiment。只改地址栏不会回写已有默认房。",
+                "tags": [
+                  "binding"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/pages/HomePage.tsx",
+                    "lineStart": 247,
+                    "lineEnd": 256,
+                    "nodeIds": [],
+                    "note": "createRoom 成功后才条件 bind。"
+                  }
+                ]
+              },
+              {
+                "id": "bind-rejects-unknown",
+                "kind": "basic",
+                "front": "bindRoomExperiment 对未登记 id 会怎样？",
+                "back": "getExperimentById 失败则返回 false，且不写入。",
+                "tags": [
+                  "binding",
+                  "registry"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/storage.ts",
+                    "lineStart": 79,
+                    "lineEnd": 86,
+                    "nodeIds": [],
+                    "note": "写前校验登记表。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "bind-fn-name",
+                "kind": "short-answer",
+                "title": "绑定函数名",
+                "prompt": "把实验 id 写入某房间 localStorage 的函数名是？",
+                "expectedAnswer": "bindRoomExperiment",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/storage.ts",
+                    "lineStart": 79,
+                    "lineEnd": 86,
+                    "nodeIds": [],
+                    "note": "bindRoomExperiment 定义。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "isolate-and-kill",
+        "title": "隔离默认，并能立刻关掉",
+        "objective": "我能让正式房忽略地址栏里的实验 id，并用清除绑定当紧急关闭，而不是改默认规则。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "hosted-ignores-stray-url",
+            "title": "地址栏里写了实验 id，正式房为什么还是默认规则？",
+            "content": "# 地址栏里写了实验 id，正式房为什么还是默认规则？\n\n## 现象\n\n你打开一间从未写过房间绑定的正式房。有人在分享链接末尾贴了 `?exp=hot-seat`。\n\n房间页并不是没读地址栏——它把问号后面那截查询串，和写死的 `mode: 'hosted'` 一起交给解析函数。热座界面却完全不出现。\n\n[[evidence:src/pages/RoomPage.tsx:196-203]]\n\n查询串传进去了，实验没亮。\n\n:::detail[hosted 指的是哪条路径？]\n就是真人进 `/room/:code` 一起玩的那条。preview 是你在自己电脑上预览、或让测试脚本跑的参观通道。房间页把 mode 写成 hosted，等于声明「我现在走的是正式房」。这两个名字先分开，后面才能问：正式房为什么看见了查询串却不亮实验。\n:::\n\n## 先猜一下\n\n地址栏里的 `?exp=` 已经传进解析函数了。若正式房也按地址栏开实验，最先脏掉的是谁的体验，或哪类指标？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n分享链接、书签、投放地址上残留的 `?exp=` 会把已验证默认房静默变成实验组——对照样本和体感一起脏。\n\n## 为什么是这样\n\n两种 mode 的职责写在类型旁边：hosted 只认房间本地绑定；preview 才允许 URL 和允许名单。\n\n[[evidence:src/features/experiments/resolve.ts:7-11]]\n\n解析函数默认就是 hosted。路径很短：先读房间绑定；合法就结束。hosted 且没绑定时，立刻回到 none，不再看 URL。\n\n[[evidence:src/features/experiments/resolve.ts:93-109]]\n\n:::detail[为什么要把 search 传进去却不读？]\n同一函数签名要服务两种 mode。房间页走正式路径，仍把 search 交进去，是因为调用点没有另写一套参数。hosted 分支在无绑定时直接返回，那份 search 被短路吃掉。你若只看调用点、不看短路，会误判成「传了就该生效」。读代码时先问 mode 是什么，再问这份 search 有没有走到意图解析——传进去不等于被读到。\n:::\n\n你读这三条规则：\n\n1. **有合法房间绑定** → `source: 'room-local'`，结束。\n2. **hosted 且无绑定** → 立刻 none，不再看 URL / 允许名单。\n3. **preview 且无绑定** → 才回落到意图解析（先 URL，再允许名单）。\n\n关键不是「忘了读 search」，而是 hosted 故意不读。这是隔离阀，不是功能缺失。默认房间的正确性不能依赖「每位访客浏览器是否干净」。\n\n:::detail[删掉这道短路，最先脏的是什么？]\n已验证的默认房。分享链接被人叠了 `?exp=`、书签留着旧参数、投放地址带了调试尾巴，后来的访客会在不知情时走进实验组。你的对照样本被污染，体感也会漂：同一间「默认房」在不同人浏览器里规则不一样。允许名单若也跟着生效，开发机上的本地开关还会泄漏进正式房。灰度的反面不是全开，而是未绑定的正式流量必须可证明地关掉。\n:::\n\n房间页上的埋点底稿也走这次解析结果。无绑定的正式房发出去的实验标签是 `'none'`，路边的 `?exp=` 连分析维度都改不了。同一间正式房再开一局，用的还是这份解析。\n\n:::detail[再开一局会不会改去读地址栏？]\n不会。再开一局若当前解析里已经有实验，就把那个 id 写进新房间码；阶梯实验还会把下一档进度一起钉住。当前解析是 hosted，无绑定就是 none，新房间也不会因为地址栏里还挂着 `?exp=` 突然亮起来。这是拷已生效的绑定，不是让查询串回头改规则。\n\n[[evidence:src/pages/RoomPage.tsx:730-735]]\n:::\n\npreview 才认你口袋里的参观证。本地演示和端到端测试需要客户端意图，且不声称多人权威。\n\n:::detail[preview 为什么可以认查询串？]\n因为那条路径不声称「所有进这间房的人看到同一套规则」。你在自己的浏览器里预览，或让测试脚本顶着查询串跑，改的是这一个客户端。正式房是多人权威：一位访客地址栏脏了，不该改所有人的规则，也不该改对照样本。preview 认查询串，是把参观证留在本地；hosted 扔掉查询串，是不让参观证冒充房契。你给真实玩家的链接再脏，也不该变成实验开关。\n:::\n\n## 再想想\n\n意图何时写成房间绑定，见 [[lesson:experiments-and-rollout/register-before-ship/bind-at-create|intent 什么时候变成房间绑定]]。没人打开时解析如何落到 none，见 [[lesson:experiments-and-rollout/register-before-ship/default-is-off|没人显式打开时，解析结果长什么样]]。\n\n## 自检\n\n**问：** `resolveRoomExperiment` 未传 `mode` 时默认是什么？为什么默认必须是这个值？\n\n**问：** hosted 下只有 `?exp=`、没有房间绑定，会激活实验吗？解析结果的 `source` 是什么？\n\n**问：** preview 为什么允许 URL 激活？它和正式 `/room/:code` 的产品承诺差在哪？\n\n## 一句话\n\n**正式房只认房间绑定；hosted 无绑定时直接 none，路边的查询串动不了已验证默认。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/RoomPage.tsx",
+                "lineStart": 196,
+                "lineEnd": 203,
+                "nodeIds": [],
+                "note": "正式房间页以 mode hosted 解析，同时传入查询串。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/resolve.ts",
+                "lineStart": 7,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "hosted 只认房间绑定；preview 才允许 URL 和允许名单。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/resolve.ts",
+                "lineStart": 93,
+                "lineEnd": 109,
+                "nodeIds": [],
+                "note": "默认 hosted；无绑定时 hosted 直接 none，不再读查询串。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/RoomPage.tsx",
+                "lineStart": 730,
+                "lineEnd": 735,
+                "nodeIds": [],
+                "note": "再开一局拷当前解析出的实验，不回头读地址栏。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "hosted-no-url",
+                "kind": "basic",
+                "front": "hosted 模式下只有 URL ?exp= 没有房间绑定，会激活实验吗？",
+                "back": "不会。无绑定直接 source none，查询串被短路吃掉。",
+                "tags": [
+                  "hosted",
+                  "isolation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/resolve.ts",
+                    "lineStart": 101,
+                    "lineEnd": 103,
+                    "nodeIds": [],
+                    "note": "hosted 无绑定短路到 none。"
+                  }
+                ]
+              },
+              {
+                "id": "preview-purpose",
+                "kind": "basic",
+                "front": "preview 模式为什么允许 URL 激活？",
+                "back": "本地演示和端到端测试需要客户端意图，且不声称多人权威。",
+                "tags": [
+                  "preview"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/resolve.ts",
+                    "lineStart": 7,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "preview 语义：URL + 允许名单可用于本地参观。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-resolve-mode",
+                "kind": "short-answer",
+                "title": "默认 mode",
+                "prompt": "resolveRoomExperiment 未传 mode 时使用的默认值是？",
+                "expectedAnswer": "hosted",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/resolve.ts",
+                    "lineStart": 93,
+                    "lineEnd": 94,
+                    "nodeIds": [],
+                    "note": "mode 默认 hosted。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "coarse-analytics-tag",
+            "title": "没开实验时，埋点为什么还要带上 experimentTag？",
+            "content": "# 没开实验时，埋点为什么还要带上 experimentTag？\n\n## 情境和约束\n\n你要把分析里的「跑过某实验的房」和「默认房」切开。能用的维度很窄：登记表里每条实验只有一个粗标签，类型钉成 `exp-` 开头。\n\n[[evidence:src/features/experiments/registry.ts:24-28]]\n\n:::detail[什么叫粗标签？]\n不是题干，不是房间码，也不是「这个人答了什么」。它是一个很短的闭集名字，只回答「这间房当时挂没挂某条实验」。细到哪道题、哪个措辞，本来就不该进产品事件。你若把原文塞进去，切片会变成几万条互不相同的句子，对照实验就做不成了。产品事件只负责回答「有没有挂上某条实验」；内容好不好，要另开一条你有权查看原文的管道。粗，是为了能切片；钝，是为了不把人的话带出房间。\n:::\n\n传输层再用正则卡一次：字母开头、小写、数字与 `_-`，最长 32。过不了就抛错，这条事件宁可不发。\n\n[[evidence:src/services/product-analytics/analytics.ts:120]]\n[[evidence:src/services/product-analytics/analytics.ts:146-151]]\n\n:::detail[为什么非法值要直接扔掉整条事件？]\n脏数据进库之后，你几乎洗不回来。一条带着自由文本的 `experimentTag` 会污染所有按这个维度切片的报表。抛错的代价是这条事件没了；放行的代价是整张漏斗以后都不敢信。正则卡的是形状：必须字母开头、只含小写数字和下划线短横，还不能太长。你一个人盯生产时，宁可少一条，也不要默默脏库。形状不对的值没有「先记下来以后再洗」的座位，校验失败就是不发。\n:::\n\n题干、房间码、别名都不能进这个维度。属性名 `prompt` 就在禁止名单里——热座问题原文连键名都不许出现。\n\n[[evidence:src/services/product-analytics/analytics.ts:85-104]]\n\n:::detail[为什么连键名 prompt 都不许出现？]\n禁止名单里还有房间码、别名、用户 id、角色。传输层不只检查值长得像不像隐私，连键名先拦一道。你就算只想记「这是热座题」，写成 `prompt: …` 也会被拒。粗标签的另一半是：内容原文根本没有合法的座位可坐。热座题干要分析，得走另一条你授权过的管道，不能搭便车混进产品事件。禁止名单和粗标签是同一刀的两面：一面规定能写什么，一面规定什么键名根本不许出现。\n:::\n\n现在的问题只剩一刀：房间没激活任何实验时，`experimentTag` 字段怎么处理？\n\n## 先猜一下\n\n没开实验时，你会省略 `experimentTag`，还是写成某个固定占位？省略之后，漏斗里「默认组」的样本量会发生什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们写死字符串 `'none'`：对照组必须可计数，不能和「字段丢了」混成一锅。\n\n## 代价和收益\n\n映射只有一行：有实验就用登记表上的 tag，没有就回落 `'none'`。\n\n[[evidence:src/features/experiments/analytics.ts:7-9]]\n\n正式房每次发事件，都会先走这个函数，再把结果塞进同一份房间埋点底稿。默认房发出去的也是 `'none'`，不是缺字段。\n\n[[evidence:src/pages/RoomPage.tsx:217-226]]\n\n:::detail[省略字段和写 none，在漏斗里差在哪？]\n省略之后，下游把空值当成默认组时，旧客户端、漏接的调用点、真的没开实验，三种情况长得一样。你修不了归因。写成 `'none'`，默认组有名字、能进分母。你对比「开了热座」和「没开」时，两边都是显式值。房间页把这个返回值写进每一条房间事件的底稿，所以默认房不会因为「这个调用点忘了写字段」而从分母里消失。你对比两组时，缺的是实验，不是数据。`'none'` 看起来像没写，其实是对照组的名字。\n:::\n\n建房成功那条 `room_created` 也走同一函数。它读的是建房前解析到的意图，不是写入绑定是否成功。\n\n[[evidence:src/pages/HomePage.tsx:257-263]]\n\n:::detail[类型注释写着可以省略，为什么调用点还是传 none？]\n`experimentTag` 在类型上是可选的，旁边注释还写「空或默认就省略」。那是字段允许缺席，不是产品决定缺席。真正的决定在那一行映射：永远返回一个有界字符串，登记表 tag 或 `'none'`。正式房把这个返回值写进每一条房间事件的底稿；建房成功那条也写。你读注释会以为「没实验就别传」；你读调用点会看见他们偏要传。以调用点为准。可选字段给你少写的自由，不给你把对照组从分母里抹掉的自由。字段能省略，不等于默认组可以被省略。你要的是一个能进分母的名字，不是一个空洞。缺席看起来干净，其实把对照样本藏起来了。\n:::\n\n收益你直接摸得到：有实验是 `exp-hot-seat` 这类闭集；没实验是固定 `'none'`；非法值在校验里直接失败。\n\n[[evidence:src/features/experiments/registry.ts:32-38]]\n\n代价也很清楚：你丢掉了细粒度；每个发事件的地方都得走 helper，不能手写自由字符串；登记表改 tag 形状时，要同时过类型和正则。\n\n## 什么时候该反过来\n\n- **该反过来（更细）的时候：** 你在内部评测管道、有合规授权的会话回放、或离线标注集里看内容质量——那是另一条管道，不是这个产品事件维度。\n- **不该反过来的时候：** 线上漏斗、留存、分享率。这里一旦允许自由文本或省略默认组，你就分不清「实验有害」和「对照组样本造假」。\n- **省略字段看起来省事，其实是假省事：** 下游把空值当成默认组，旧客户端和漏接 helper 会混进去。\n\n## 再想想\n\n正式房为什么连地址栏上的实验 id 都不认，见 [[lesson:hosted-ignores-stray-url|地址栏写了实验 id，正式房为什么还是默认]]。意图什么时候写成房间绑定，见 [[lesson:experiments-and-rollout/register-before-ship/bind-at-create|intent 什么时候变成房间绑定]]。\n\n## 自检\n\n**问：** 没有激活实验时，`experimentAnalyticsTag` 返回什么字符串？为什么不是缺字段？\n\n**问：** 登记表里 `hot-seat` 的 `analyticsTag` 字面量是什么？类型又把它约束成什么形状？\n\n**问：** 为什么不能把热座问题原文当作分析属性发出去？\n\n## 一句话\n\n**没激活时也要发出去一个叫 none 的粗标签，默认组才能从「字段丢了」里数出来。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/registry.ts",
+                "lineStart": 24,
+                "lineEnd": 28,
+                "nodeIds": [],
+                "note": "analyticsTag 被钉成 exp- 前缀的模板字面量。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/registry.ts",
+                "lineStart": 32,
+                "lineEnd": 38,
+                "nodeIds": [],
+                "note": "hot-seat 的 analyticsTag 字面量是 exp-hot-seat。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/analytics.ts",
+                "lineStart": 85,
+                "lineEnd": 104,
+                "nodeIds": [],
+                "note": "FORBIDDEN_ANALYTICS_PROPERTY_NAMES 含 prompt 等隐私键。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/analytics.ts",
+                "lineStart": 120,
+                "lineEnd": 120,
+                "nodeIds": [],
+                "note": "EXPERIMENT_TAG_PATTERN：字母开头、小写数字与 _-，最长 32。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/product-analytics/analytics.ts",
+                "lineStart": 146,
+                "lineEnd": 151,
+                "nodeIds": [],
+                "note": "experimentTag 校验失败直接 throw，宁可不发。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/features/experiments/analytics.ts",
+                "lineStart": 7,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "experimentAnalyticsTag 无实验时回落 none。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/RoomPage.tsx",
+                "lineStart": 217,
+                "lineEnd": 226,
+                "nodeIds": [],
+                "note": "正式房每条事件底稿都写入 experimentAnalyticsTag 的返回值。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/pages/HomePage.tsx",
+                "lineStart": 257,
+                "lineEnd": 263,
+                "nodeIds": [],
+                "note": "room_created 用意图解析的 tag，不是 bind 返回值。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "tag-when-off",
+                "kind": "basic",
+                "front": "没有激活实验时 experimentAnalyticsTag 返回什么？",
+                "back": "字符串 none。对照组必须能计数，不能和字段缺失混在一起。",
+                "tags": [
+                  "analytics"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 7,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "无实验时 ?? none。"
+                  }
+                ]
+              },
+              {
+                "id": "why-not-prompt",
+                "kind": "basic",
+                "front": "为什么不能把热座问题原文当作分析属性发出去？",
+                "back": "prompt 在禁止属性名名单里；原文会泄漏内容，也会把事件库炸成不可切片的自由文本。",
+                "tags": [
+                  "analytics",
+                  "privacy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/product-analytics/analytics.ts",
+                    "lineStart": 85,
+                    "lineEnd": 104,
+                    "nodeIds": [],
+                    "note": "FORBIDDEN 名单含 prompt。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "hot-seat-analytics-tag",
+                "kind": "short-answer",
+                "title": "hot-seat 标签",
+                "prompt": "登记表里 hot-seat 的 analyticsTag 字符串是？",
+                "expectedAnswer": "exp-hot-seat",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/features/experiments/registry.ts",
+                    "lineStart": 32,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "hot-seat.analyticsTag = exp-hot-seat。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "badge-states-the-limit",
+            "title": "实验开了却不贴徽章，A/B 数据最先骗你什么？",
+            "content": "# 实验开了却不贴徽章，A/B 数据最先骗你什么？\n\n## 现象\n\n解析结果已经是 `hot-seat`。房内 chrome 渲染了 `ExperimentBadge`：可见标签、实验标题，悬停还有一长串 tooltip。\n\n你看它怎么拼文案——通用 badge 文案 + 标题；若该实验配置了 soft-rule 文案，会**整段拼进** `title`：\n\n```ts\nexport function ExperimentBadge({ experiment, className }: ExperimentBadgeProps) {\n  const { t } = useTranslation('game');\n  const label = t('experiment.badge');\n  const title = t(`experiment.titles.${experiment.id}`, {\n    defaultValue: experiment.title,\n  });\n  // Soft-rule experiments (e.g. hot-seat) must surface the authority limit in-tooltip.\n  const softRule = t(`experiment.softRules.${experiment.id}`, { defaultValue: '' });\n  const tooltip = softRule ? `${label}: ${title}. ${softRule}` : `${label}: ${title}`;\n```\n\n[[evidence:src/features/experiments/ui/ExperimentBadge.tsx:13-21]]\n\nDOM 上还有 `role=\"status\"`、`data-experiment-id`、`data-testid=\"experiment-badge\"`，有 soft-rule 时再打 `data-soft-rule`：\n\n```ts\n  return (\n    <span\n      className={['experiment-badge', className].filter(Boolean).join(' ')}\n      data-experiment-badge=\"true\"\n      data-experiment-id={experiment.id}\n      data-soft-rule={softRule ? 'true' : undefined}\n      data-testid=\"experiment-badge\"\n      role=\"status\"\n      title={tooltip}\n    >\n      <span className=\"experiment-badge-label\">{label}</span>\n      <span className=\"experiment-badge-title\">{title}</span>\n    </span>\n```\n\n[[evidence:src/features/experiments/ui/ExperimentBadge.tsx:23-35]]\n\n模块公共出口把 Badge 和 resolve / bind 放在一起导出——徽章不是装饰插件，是实验面的一部分：\n\n```ts\nexport { experimentAnalyticsTag } from './analytics';\n\nexport {\n  resolveExperimentIntent,\n  resolveRoomExperiment,\n  type ExperimentResolution,\n} from './resolve';\n\nexport { bindRoomExperiment } from './storage';\n\nexport { ExperimentBadge, type ExperimentBadgeProps } from './ui/ExperimentBadge';\n```\n\n[[evidence:src/features/experiments/index.ts:8-18]]\n\n默认房没有这枚徽章；实验房有。e2e 就靠这些 data 属性断言两边。\n\n## 先猜一下\n\n若实验规则已经生效、房内却**不显示**徽章，A/B 里出现「留存下降」时，你最先分不清的是哪两件事？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n分不清是规则本身有害，还是玩家不知道规则变了导致操作失败——两者混在一起，你没法决定该修交互还是该杀实验。\n\n## 为什么是这样\n\n徽章干的是**诚实标签**，不是皮肤。\n\n- **可见性是隔离的一部分。** 玩家若不知道自己在实验里，你收集到的「乐趣」和「困惑」会污染对默认产品的判断。\n- **soft-rule 必须说清权威边界。** tooltip 里那句不是客套：客户端编排、可能不同步——防止玩家把本地演出当成服务器权威。有 soft-rule 文案时 `data-soft-rule=\"true\"`，测试和辅助技术都能感知。\n- **`role=\"status\"`** 让读屏知道「非标准规则正在生效」，不是一条可点的导航。\n\n你可以把徽章想成试吃装上的「非售卖品」贴纸：不贴的话，差评会算到正式菜单头上——你分不清是配方问题还是预期管理问题。\n\n灰度时敢 promote 或敢 kill，前提是标签一直诚实。藏着改规则，你永远学不到正确结论。\n\n## 自检\n\n**问：** 房内实验徽章的产品目的是什么？和「好看」有什么关系？\n\n**问：** soft-rule 文案存在时，DOM 上哪个 data 属性会被设为 `'true'`？\n\n**问：** `ExperimentBadge` 的 `data-testid` 是什么？你为什么需要它（而不只靠文案）？\n\n## 一句话\n\n**实验房必须贴诚实徽章（含 soft-rule 边界）；否则你的 A/B 分不清规则伤害和预期失败。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/ui/ExperimentBadge.tsx",
+                "lineStart": 13,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "标题与 softRules tooltip 拼装"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/ui/ExperimentBadge.tsx",
+                "lineStart": 23,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "data-experiment-id 与 role=status"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/index.ts",
+                "lineStart": 8,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "公共出口导出 Badge 与 resolve/bind"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-badge",
+                "kind": "basic",
+                "front": "房内实验徽章的产品目的是什么？",
+                "back": "让玩家始终知道非标准规则生效，避免与默认体验混淆。",
+                "tags": [
+                  "badge",
+                  "honesty"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/ui/ExperimentBadge.tsx",
+                    "lineStart": 10,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "组件职责注释"
+                  }
+                ]
+              },
+              {
+                "id": "soft-rule-attr",
+                "kind": "basic",
+                "front": "soft-rule 文案存在时，DOM 上哪个 data 属性会被设为 true？",
+                "back": "data-soft-rule。",
+                "tags": [
+                  "badge",
+                  "soft-rule"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/ui/ExperimentBadge.tsx",
+                    "lineStart": 27,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "data-soft-rule 条件写入"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "badge-testid",
+                "kind": "short-answer",
+                "title": "徽章 testid",
+                "prompt": "ExperimentBadge 的 data-testid 属性值是？",
+                "expectedAnswer": "experiment-badge",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/ui/ExperimentBadge.tsx",
+                    "lineStart": 29,
+                    "lineEnd": 29,
+                    "nodeIds": [],
+                    "note": "data-testid experiment-badge"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "clear-is-the-kill-switch",
+            "title": "线上实验出问题，你该先删登记表还是先清绑定？",
+            "content": "# 线上实验出问题，你该先删登记表还是先清绑定？\n\n## 情境和约束\n\n某房间绑了 `hot-seat`，线上出现「前三分钟理解变差」。实验模块代码还在，登记表条目还在，allowlist 里可能也有调试痕迹。\n\n你手里有几条路：\n\n- 从 `EXPERIMENT_REGISTRY` 删掉条目并热发；\n- 清掉该房间的 room-local 绑定；\n- 只从浏览器 allowlist 里摘掉某个 id。\n\n解析侧已经约定：hosted 只认合法 room-local 绑定；绑定一空，正式房立刻回默认。存储抽象 `SyncStorageAccess` **没有 delete**——清除语义必须在「写什么」上做文章，不能假设 `removeItem`。\n\n## 先猜一下\n\n作为第一紧急手段，你会先动登记表，还是先动房间绑定？先动错的那一个，会留下什么烂摊子？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们先清绑定隔离流量：`clearRoomExperiment` 写入空串哨兵；登记表和代码可以稍后 promote 或删除，不能当灭火按钮。\n\n## 代价和收益\n\n清除函数把「关」落成可解析的写：\n\n```ts\nexport function clearRoomExperiment(roomCode: string, storage?: SyncStorageAccess | null): boolean {\n  if (!roomCode.trim()) return false;\n  // Store empty sentinel rather than removeItem — SyncStorageAccess has no delete.\n  // Empty string fails isExperimentId, so resolution treats it as unbound.\n  return safeLocalStorageSet(roomExperimentStorageKey(roomCode), '', storage ?? undefined);\n}\n```\n\n[[evidence:src/features/experiments/storage.ts:88-93]]\n\n读侧不认空串——空串过不了 `isExperimentId`，等价未绑定：\n\n```ts\nexport function readRoomExperiment(\n  roomCode: string,\n  storage?: SyncStorageAccess | null,\n): ExperimentId | null {\n  if (!roomCode.trim()) return null;\n  const raw = safeLocalStorageGet(roomExperimentStorageKey(roomCode), storage ?? undefined);\n  if (!raw || !isExperimentId(raw)) return null;\n  return raw;\n}\n```\n\n[[evidence:src/features/experiments/storage.ts:69-76]]\n\n本地调试开过的 allowlist 是另一条开关，关掉的是浏览器名单里的 id，不是登记表本身：\n\n```ts\nexport function disableExperimentInAllowlist(\n  id: ExperimentId,\n  storage?: SyncStorageAccess | null,\n): boolean {\n  return writeAllowlist(\n    readAllowlist(storage).filter((entry) => entry !== id),\n    storage,\n  );\n}\n```\n\n[[evidence:src/features/experiments/storage.ts:59-67]]\n\n**你清绑定之后会发生什么：** 再次 `resolveRoomExperiment({ mode: 'hosted', ... })` → none；徽章消失，Hot Seat 门控关闭。模块代码和登记表都还在——这正是好处：历史分析 tag 仍可对上定义，其他房间的绑定不受影响。\n\n**若你先删登记表：** 已绑定房间读出的 id 变成不可解析脏数据；分析 tag 与定义失联；回滚要重新发版而不是清一个 key。kill switch 必须落在**解析路径**上，而不是「拆掉堆芯设计图」。\n\n## 什么时候该反过来\n\n- **该动登记表 / 删代码的时候：** 实验已决定 kill 或 promote 完成，你要防止**新的** bind，并做长期卫生——那是变更窗口，不是 P0 灭火。\n- **只动 allowlist 就够的时候：** 问题仅出现在本地 preview / 你自己的调试机，正式房从未 bind。\n- **清绑定仍不够的时候：** 权威在服务器、多人状态已写出——客户端空串挡不住已广播的权威变更；那是另一层回滚，不是 `clearRoomExperiment` 的职责。\n\n先登记再上线，对应的是：先能关再敢开。没有清除语义的开关，只是定时炸弹。\n\n## 自检\n\n**问：** 清除某房间实验绑定的函数名是什么？它写进存储的是什么值？\n\n**问：** 为什么写空字符串而不是 `removeItem`？读侧如何把它当成未绑定？\n\n**问：** `disableExperimentInAllowlist` 关掉的是什么？为什么它不是正式房的第一紧急手段？\n\n## 一句话\n\n**紧急关闭是清 room-local 绑定（空串哨兵），不是先拆登记表；代码可留，正式房立刻回默认。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/storage.ts",
+                "lineStart": 88,
+                "lineEnd": 93,
+                "nodeIds": [],
+                "note": "clearRoomExperiment 空串哨兵与注释"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/storage.ts",
+                "lineStart": 69,
+                "lineEnd": 76,
+                "nodeIds": [],
+                "note": "readRoomExperiment 依赖 isExperimentId"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/storage.ts",
+                "lineStart": 59,
+                "lineEnd": 67,
+                "nodeIds": [],
+                "note": "disableExperimentInAllowlist 单项关闭"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "empty-sentinel",
+                "kind": "basic",
+                "front": "clearRoomExperiment 为什么写空字符串而不是 removeItem？",
+                "back": "SyncStorageAccess 无 delete；空串无法通过 isExperimentId，等价未绑定。",
+                "tags": [
+                  "kill-switch"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/storage.ts",
+                    "lineStart": 88,
+                    "lineEnd": 93,
+                    "nodeIds": [],
+                    "note": "空串哨兵注释"
+                  }
+                ]
+              },
+              {
+                "id": "disable-allowlist",
+                "kind": "basic",
+                "front": "disableExperimentInAllowlist 关掉的是什么？",
+                "back": "浏览器 allowlist 里的该实验 id，不是登记表条目本身。",
+                "tags": [
+                  "kill-switch",
+                  "allowlist"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/storage.ts",
+                    "lineStart": 59,
+                    "lineEnd": 67,
+                    "nodeIds": [],
+                    "note": "过滤后写回 allowlist"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "clear-room-fn",
+                "kind": "short-answer",
+                "title": "清除函数名",
+                "prompt": "清除某房间实验绑定的函数名是？",
+                "expectedAnswer": "clearRoomExperiment",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/storage.ts",
+                    "lineStart": 88,
+                    "lineEnd": 93,
+                    "nodeIds": [],
+                    "note": "clearRoomExperiment 定义"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "hypothesis-and-promotion",
+        "title": "把上线写成可证伪的假设",
+        "objective": "我能把实验挂在已有权威上、用影子状态不污染计票，并按事先写好的预期决定升格还是杀死。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "no-new-timing-authority",
+            "title": "为什么 Hot Seat 不给后端另起一只钟？",
+            "content": "# 为什么 Hot Seat 不给后端另起一只钟？\n\n## 情境和约束\n\n你要在一局游戏的中段插入「提名 20 秒 → 热座 45 秒」，时间常量已经写死：\n\n```ts\nexport const NOMINATION_WINDOW_MS = 20_000;\nexport const HOT_SEAT_WINDOW_MS = 45_000;\n/** After spotlight opens, silence this long auto-offers the default question. */\nexport const NOMINATOR_SILENCE_MS = 15_000;\n```\n\n[[evidence:src/features/experiments/hot-seat/constants.ts:6-9]]\n\n局本身早有 `roundStartedAtMs` / `roundEndsAtMs`。实验还要能一刀关掉，关掉后默认局不能留下第二套服务器状态机。\n\n你有两条路：给后端加 `hot_seat_ends_at` 当新权威，或继续吃既有 round 起止。\n\n## 先猜一下\n\n在「能关、能回滚」的压力下，你会为 Hot Seat 在服务器上新增时间列，还是只在本地用旧 round 推演相位？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们挂在既有 round 上：日程从 round 起止推导，不另起服务器时钟。\n\n## 代价和收益\n\n`buildHotSeatSchedule` 只吃两个已有锚点，中点叠提名窗，再叠热座窗：\n\n```ts\n/**\n * Place nomination at the round midpoint for 20s, then spotlight for 45s.\n * Anchors to the existing round timer — no new timing authority.\n */\nexport function buildHotSeatSchedule(input: {\n  roundStartedAtMs: number;\n  roundEndsAtMs: number;\n}): HotSeatSchedule {\n  const started = input.roundStartedAtMs;\n  const ends = Math.max(input.roundEndsAtMs, started + 1);\n  const midpointMs = started + Math.floor((ends - started) / 2);\n  const nominationEndsAtMs = midpointMs + NOMINATION_WINDOW_MS;\n  const seatEndsAtMs = nominationEndsAtMs + HOT_SEAT_WINDOW_MS;\n  return {\n    roundStartedAtMs: started,\n    roundEndsAtMs: ends,\n    midpointMs,\n    nominationEndsAtMs,\n    seatEndsAtMs,\n  };\n}\n```\n\n[[evidence:src/features/experiments/hot-seat/timing.ts:4-24]]\n\n收益你一眼能看见：关掉 flag 就卸下演出，旧钟仍走，不迁 schema、不回滚列。相位是本地用 `nowMs` 和 schedule 比对推出来的 soft-rule，不是服务器广播的权威时刻。\n\n代价也写在代码里。没有存好的 start 锚点时，`resolveRoundStartedAtMs` 会把「现在」近似成 start——迟到加入的人会把窗口偏斜：\n\n```ts\nexport function resolveRoundStartedAtMs(input: {\n  nowMs: number;\n  roundEndsAtMs: number;\n  storedStartedAtMs?: number | null;\n}): number {\n  if (\n    typeof input.storedStartedAtMs === 'number' &&\n    Number.isFinite(input.storedStartedAtMs) &&\n    input.storedStartedAtMs < input.roundEndsAtMs\n  ) {\n    return input.storedStartedAtMs;\n  }\n  // Soft approximation: treat \"now\" as start so midpoint still lands mid-remaining.\n  // Documented limitation: late joiners skew the window.\n  return Math.min(input.nowMs, input.roundEndsAtMs - 1);\n}\n```\n\n[[evidence:src/features/experiments/hot-seat/timing.ts:31-45]]\n\n你拿不到「全员同一只实验钟」的保证；你换来的是 kill 实验时不必 schema 回滚。\n\n## 什么时候该反过来\n\n该反过来的信号是：实验已经通过 promote 漏斗，默认房要依赖热座相位，迟到偏斜变成产品 bug 而不只是 soft-rule 局限。那时再给后端权威时间字段才划算——那是正式功能的成本，不是实验的成本。\n\n若你在实验期就加 `hot_seat_ends_at` 却仍叫「实验」，灰度成本已经逼近 v2：关 flag 还要迁库。\n\n## 再想想\n\n关掉绑定比打开更要设计，见 [[lesson:clear-is-the-kill-switch|关掉比打开更要设计]]。\n\n## 自检\n\n**问：** `buildHotSeatSchedule` 的时间权威来自哪里？它有没有新建服务器时钟？\n\n**问：** 无 `storedStartedAtMs` 时，迟到加入会怎样影响提名窗？\n\n## 一句话\n\n**能挂接旧权威的实验，才配叫可回滚的实验。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                "lineStart": 6,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "提名/热座/沉默三个时间常量"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/hot-seat/timing.ts",
+                "lineStart": 4,
+                "lineEnd": 24,
+                "nodeIds": [],
+                "note": "buildHotSeatSchedule 锚在既有 round"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/hot-seat/timing.ts",
+                "lineStart": 31,
+                "lineEnd": 45,
+                "nodeIds": [],
+                "note": "无锚点时用 now 近似并记录偏斜局限"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "no-new-clock",
+                "kind": "basic",
+                "front": "buildHotSeatSchedule 为什么强调 no new timing authority？",
+                "back": "日程由既有 round 起止推导，不引入第二套服务器时钟权威。",
+                "tags": [
+                  "soft-rule",
+                  "hot-seat"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/hot-seat/timing.ts",
+                    "lineStart": 4,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "注释声明不新建时间权威"
+                  }
+                ]
+              },
+              {
+                "id": "silence-ms",
+                "kind": "basic",
+                "front": "提名人沉默多久后自动提供默认问题？（毫秒数）",
+                "back": "15000（NOMINATOR_SILENCE_MS）。",
+                "tags": [
+                  "hot-seat"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 8,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "NOMINATOR_SILENCE_MS 15000"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "nomination-window-ms",
+                "kind": "short-answer",
+                "title": "提名窗毫秒",
+                "prompt": "NOMINATION_WINDOW_MS 的数值是？（纯数字）",
+                "expectedAnswer": "20000",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/hot-seat/constants.ts",
+                    "lineStart": 6,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "NOMINATION_WINDOW_MS = 20000"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "shadow-not-real-votes",
+            "title": "提名计票为什么要先做一层影子玩家？",
+            "content": "# 提名计票为什么要先做一层影子玩家？\n\n## 两个东西\n\nHot Seat 要在局中数「谁被点得多」，手里却有两套可选的数据结构：\n\n- **A. 真投票通道**：直接改房间玩家的 `current_vote`，再走现有 `buildVoteCountsFromPlayers`。\n- **B. 实验域提名**：本地只攒 `HotSeatNomination`（voterId / targetId / castAtMs），计票前再投影。\n\n注释把意图写得很直：让你复用计票，同时不碰真 `current_vote`。\n\n```ts\n/**\n * Apply shadow nominations onto a player list so we can reuse\n * `buildVoteCountsFromPlayers` without touching real `current_vote`.\n */\n```\n\n[[evidence:src/features/experiments/hot-seat/nominations.ts:5-8]]\n\n你看着都像「数票」；差的是票写在哪。\n\n## 先猜一下\n\nkill 掉实验并清绑定之后，A 和 B 哪一条会在真房间状态里留下半截 `current_vote`？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\nA 会留下。B 的 `current_vote` 只活在内存投影里，`room_id` 写死为 `hot-seat-shadow`，从不进真房间权威。\n\n## 逐条对照\n\n投影函数把每人的提名填进**临时** `RoomPlayer`，其余字段是占位：\n\n```ts\n  return players.map((player) => ({\n    alias: player.alias,\n    avatar_seed: 'character.knight',\n    current_vote: byVoter.get(player.id) ?? null,\n    id: player.id,\n    is_ai: false,\n    is_ready: true,\n    joined_at: '1970-01-01T00:00:00.000Z',\n    role: 'resistance',\n    room_id: 'hot-seat-shadow',\n    seat_confirmed_at: null,\n    seat_id: null,\n    seat_reserved_at: null,\n    seat_state: null,\n    table_id: null,\n    user_id: player.id,\n  }));\n```\n\n[[evidence:src/features/experiments/hot-seat/nominations.ts:20-36]]\n\n| | A 写真 `current_vote` | B 影子投影 |\n| --- | --- | --- |\n| 复用 `buildVoteCountsFromPlayers` | 能 | 能 |\n| 真房间权威字段 | 被改 | 不动 |\n| kill 后残留 | 可能半截 vote | 投影随进程消失 |\n| `room_id` | 真房 | `hot-seat-shadow` |\n\n选座时先投影，再调用既有计票；平票用**最早一票**定座，避免客户端 soft-rule 下随机各端不一致：\n\n```ts\n  const shadowPlayers = playersWithShadowNominations(players, validNominations);\n  const counts = buildVoteCountsFromPlayers(shadowPlayers);\n  const maxVotes = counts[0]?.votes ?? 0;\n  if (maxVotes <= 0) return null;\n\n  const tiedTargets = counts.filter((row) => row.votes === maxVotes).map((row) => row.playerId);\n  const tied = tiedTargets.length > 1;\n\n  // Earliest first nomination among tied targets decides the seat.\n  let seatPlayerId = tiedTargets[0]!;\n  let earliestForSeat = Number.POSITIVE_INFINITY;\n  for (const targetId of tiedTargets) {\n    const firstCast = validNominations\n      .filter((nomination) => nomination.targetId === targetId)\n      .reduce((min, nomination) => Math.min(min, nomination.castAtMs), Number.POSITIVE_INFINITY);\n    if (firstCast < earliestForSeat) {\n      earliestForSeat = firstCast;\n      seatPlayerId = targetId;\n    }\n  }\n```\n\n[[evidence:src/features/experiments/hot-seat/nominations.ts:61-80]]\n\n到这里你应该看清：你借的是算法，不是权威字段。\n\n## 什么时候用哪个\n\n- **实验玩法、要可 kill**：走 B。你需要的是可复现的本地决胜，不是污染默认局。\n- **已经 promote、默认房正式投票**：才碰真 `current_vote` 通道——那是产品状态，不是彩排道具。\n\n若你在实验里图省事直接写真 vote，关掉 flag 时你还得清残留；影子路径把「清」变成「不写」。\n\n## 自检\n\n**问：** `playersWithShadowNominations` 存在的目的是什么？\n\n**问：** 平票时谁入座？为什么不用随机？\n\n## 一句话\n\n**可回滚实验优先污染投影，不污染权威状态。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/hot-seat/nominations.ts",
+                "lineStart": 5,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "shadow 投影且不碰真 current_vote 的注释"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/hot-seat/nominations.ts",
+                "lineStart": 20,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "影子玩家写入 current_vote 与 room_id hot-seat-shadow"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/hot-seat/nominations.ts",
+                "lineStart": 61,
+                "lineEnd": 80,
+                "nodeIds": [],
+                "note": "复用 buildVoteCounts 与 earliest-cast 决胜"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "shadow-purpose",
+                "kind": "basic",
+                "front": "playersWithShadowNominations 存在的目的是什么？",
+                "back": "把实验提名投影成临时 current_vote，复用计票且不碰真投票权威。",
+                "tags": [
+                  "hot-seat",
+                  "isolation"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/hot-seat/nominations.ts",
+                    "lineStart": 5,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "shadow 与不碰真 vote 的意图"
+                  }
+                ]
+              },
+              {
+                "id": "tie-break",
+                "kind": "basic",
+                "front": "Hot Seat 提名平票时谁入座？",
+                "back": "并列目标中最早收到提名的那位。",
+                "tags": [
+                  "hot-seat"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/hot-seat/nominations.ts",
+                    "lineStart": 69,
+                    "lineEnd": 80,
+                    "nodeIds": [],
+                    "note": "earliest-cast 决胜"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "shadow-room-id",
+                "kind": "short-answer",
+                "title": "影子 room_id",
+                "prompt": "影子玩家对象里写死的 room_id 字符串是？",
+                "expectedAnswer": "hot-seat-shadow",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/hot-seat/nominations.ts",
+                    "lineStart": 29,
+                    "lineEnd": 29,
+                    "nodeIds": [],
+                    "note": "room_id hot-seat-shadow"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "ladder-null-means-default",
+            "title": "阶梯题解不出来时，为什么返回 null 而不是抛错？",
+            "content": "# 阶梯题解不出来时，为什么返回 null 而不是抛错？\n\n## 现象\n\n你在默认托管房调 `resolveLadderTopicForRoom({ roomCode })`。房间没有 topic-ladder 的本地绑定。函数没有抛错，也没有随手塞一道默认题，而是直接返回 `null`。\n\n注释把默认路径的主权写在函数头上：\n\n```ts\n/**\n * Hosted rooms only resolve topic-ladder when a room-local binding exists.\n * Default rooms stay on the standard opening-topic path (returns null).\n */\nexport function resolveLadderTopicForRoom(input: {\n  roomCode: string;\n  search?: string;\n  storage?: SyncStorageAccess | null;\n  mode?: ExperimentResolveMode;\n  random?: () => number;\n}): string | null {\n```\n\n[[evidence:src/features/experiments/topic-ladder/roundProgress.ts:40-50]]\n\n你往下读会发现，同一文件里门控失败的出口也是 `null`。\n\n## 先猜一下\n\n这个 `null` 对调用方意味着「开场题坏了」，还是「请继续走未插旗的默认题库」？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n后者：实验模块明确不作为，默认 opening topic 路径保持主权。\n\n## 为什么是这样\n\n解析先走 `resolveRoomExperiment`（默认 `mode: 'hosted'`）。你要盯住双重门控——缺 binding 或 id 不是 `topic-ladder` 都立刻 `null`：\n\n```ts\n  if (resolution.experiment?.id !== 'topic-ladder' && !hasExperimentSurface(resolution, 'topics')) {\n    return null;\n  }\n\n  // Only this experiment owns the topics surface today.\n  if (resolution.experiment?.id !== 'topic-ladder') return null;\n```\n\n[[evidence:src/features/experiments/topic-ladder/roundProgress.ts:58-63]]\n\n第一道看 surface / id 粗筛；第二道把 `topics` 表面的所有权钉死在 `topic-ladder`。你以后登记了别的实验也声明 `topics`，在实现到位前仍拦得住误用。\n\n只有两道都过，才读本地 round、选梯题。进度键是 room 维度的 localStorage；缺省或非法值回到 1：\n\n```ts\nexport function readLadderRound(roomCode: string, storage?: SyncStorageAccess | null): number {\n  if (!roomCode.trim()) return 1;\n  const raw = safeLocalStorageGet(ladderRoundStorageKey(roomCode), storage ?? undefined);\n  if (!raw) return 1;\n  const parsed = Number.parseInt(raw, 10);\n  if (!Number.isFinite(parsed)) return 1;\n  return clampRound(parsed);\n}\n```\n\n[[evidence:src/features/experiments/topic-ladder/roundProgress.ts:18-24]]\n\n绑定生效后，你还会碰到三档封顶：round ≤1 → 1，=2 → 2，≥3 → 3（陷阱层）：\n\n```ts\n/** Map 1-based table round → ladder rung. Round 3+ stays on traps. */\nexport function rungForRound(roundNumber: number): LadderRung {\n  if (!Number.isFinite(roundNumber) || roundNumber <= 1) return 1;\n  if (roundNumber === 2) return 2;\n  return 3;\n}\n```\n\n[[evidence:src/features/experiments/topic-ladder/ladder.ts:8-13]]\n\n你若把「解不出」做成 throw，默认房会变成红屏；若乱给默认题，对照组和实验组混在一起，你再也切不清漏斗。`null` 是健康的不作为。\n\n## 再想想\n\n默认永远是关，绑定才算启用，见 [[lesson:default-is-off|默认永远是关]]。\n\n## 自检\n\n**问：** 未绑定 topic-ladder 时 `resolveLadderTopicForRoom` 返回什么？调用方该怎样？\n\n**问：** `rungForRound(2)` 与 `rungForRound(5)` 各是几？\n\n## 一句话\n\n**实验模块的健康返回值包括明确的不作为。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/topic-ladder/roundProgress.ts",
+                "lineStart": 40,
+                "lineEnd": 63,
+                "nodeIds": [],
+                "note": "resolveLadderTopicForRoom 双重门控后返回 null"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/topic-ladder/ladder.ts",
+                "lineStart": 8,
+                "lineEnd": 13,
+                "nodeIds": [],
+                "note": "rungForRound 三档映射与封顶"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/topic-ladder/roundProgress.ts",
+                "lineStart": 18,
+                "lineEnd": 24,
+                "nodeIds": [],
+                "note": "readLadderRound 缺省与非法值回 1"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "ladder-null",
+                "kind": "basic",
+                "front": "未绑定 topic-ladder 时 resolveLadderTopicForRoom 返回什么？",
+                "back": "null，让调用方走默认开场题路径。",
+                "tags": [
+                  "topic-ladder",
+                  "default-off"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/topic-ladder/roundProgress.ts",
+                    "lineStart": 58,
+                    "lineEnd": 63,
+                    "nodeIds": [],
+                    "note": "门控失败返回 null"
+                  }
+                ]
+              },
+              {
+                "id": "rung-cap",
+                "kind": "basic",
+                "front": "第 5 局时 rungForRound 落在第几档？",
+                "back": "第 3 档（陷阱层封顶）。",
+                "tags": [
+                  "topic-ladder"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/topic-ladder/ladder.ts",
+                    "lineStart": 8,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "round 3+ 返回 3"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rung-for-round-2",
+                "kind": "short-answer",
+                "title": "第二局 rung",
+                "prompt": "rungForRound(2) 的返回值是？（数字）",
+                "expectedAnswer": "2",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/topic-ladder/ladder.ts",
+                    "lineStart": 10,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "round === 2 返回 2"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "promote-or-kill",
+            "title": "实验跑完了，什么时候升格、什么时候必须杀死？",
+            "content": "# 实验跑完了，什么时候升格、什么时候必须杀死？\n\n## 情境和约束\n\n你已经把实验挂上 default-off、跑过 demo，手里有切片标签和人的观感。去路只有两条：promote 进默认房规则，或 kill 干净退场。框架把漏斗写死了：\n\n```text\nexperiment (default-off flag)\n  → weekly evidence pack demo (tmp/weekly-evidence/YYYY-Www/)\n  → director judgment (creator mandate)\n  → owner approval (G-C / weekly review veto)\n  → promote to default room rules  OR  kill\n```\n\n[[evidence:src/features/experiments/README.md:63-71]]\n\n默认房从不靠路边 URL 或浏览器 allowlist 自己亮旗——对照组要干净：\n\n```text\nDefault hosted rooms **never** resolve an experiment from a browser allowlist\nor a stray URL alone. That keeps validated default rooms unaffected.\n```\n\n[[evidence:src/features/experiments/README.md:32-33]]\n\n## 先猜一下\n\n一个实现很巧、但弄脏新玩家前三分钟理解的实验，按这份漏斗你会 promote 还是 kill？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\nkill。前三分钟理解被弄脏是一票否决，与 cleverness 无关。\n\n## 代价和收益\n\n否决句就在 promote 段落后面：\n\n```text\nAny experiment that muddies first-three-minutes comprehension for new\nplayers is killed regardless of cleverness. H1 human fun remains\nhuman-gated; machine evidence does not claim \"fun validated\".\n```\n\n[[evidence:src/features/experiments/README.md:73-75]]\n\n你留下的收益是：能按 `exp-…` / `none` 切片，能清绑定立刻回到默认路径，能在登记表里写清 surfaces。代价是：机器证据只证明契约与隔离，不替你盖章「好玩」——乐趣仍是人判。\n\n诚实也写进内容类型。`annotation` 只教 meta，禁止 detection certainty；`trapKind` 仅供内容审查，不进 UI：\n\n```ts\nexport interface LadderTopic {\n  id: string;\n  rung: LadderRung;\n  en: string;\n  'zh-CN': string;\n  /** One-line teaching note: what this prompt pressures, without detection certainty. */\n  annotation: LocalizedLadderText;\n  /** Optional trap subtype for content review only (not shown in UI). */\n  trapKind?:\n    | 'embodied-now'\n    | 'spatial-deixis'\n    | 'deliberate-ambiguity'\n    | 'anti-polish'\n    | 'local-texture';\n}\n```\n\n[[evidence:src/features/experiments/topic-ladder/types.ts:17-30]]\n\n你若在 annotation 里写「必抓 AI」，软规则的假设就不可证伪了——玩家和你自己都会把噪声当结论。\n\n## 什么时候该反过来\n\n- **kill（即使 demo 很亮）**：前三分钟更糊；对照组被 stray URL 污染；没 tag 切不动漏斗；文案在假装确定性。\n- **promote**：证据包站得住，导演与 owner 过会，且你愿意把规则搬进默认房——而不是永远挂 flag 装临时。\n\n反过来不是「数据差一点再等等」。没有登记、没有 tag、直接改默认房代码，两周后留存掉了，你也无法证明是这次改动——那时不是该 promote，是你从未进入过这条漏斗。\n\n## 再想想\n\n清绑定才是 kill 开关，见 [[lesson:clear-is-the-kill-switch|关掉比打开更要设计]]。\n\n## 自检\n\n**问：** 什么情况下实验必须 kill，哪怕实现很巧？\n\n**问：** `LadderTopic.annotation` 允许声称「必抓 AI」吗？为什么？\n\n## 一句话\n\n**先能关、先写预期，再谈数据和升格。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/README.md",
+                "lineStart": 63,
+                "lineEnd": 75,
+                "nodeIds": [],
+                "note": "promotion path 与 first-three-minutes kill 规则"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/topic-ladder/types.ts",
+                "lineStart": 17,
+                "lineEnd": 30,
+                "nodeIds": [],
+                "note": "annotation 教学向且 trapKind 不进 UI"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": "src/features/experiments/README.md",
+                "lineStart": 24,
+                "lineEnd": 33,
+                "nodeIds": [],
+                "note": "Default off 与 hosted 不认 stray URL"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "kill-criterion",
+                "kind": "basic",
+                "front": "什么情况下实验必须 kill，哪怕实现很巧？",
+                "back": "弄脏新玩家前三分钟理解时。",
+                "tags": [
+                  "promotion",
+                  "kill"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/README.md",
+                    "lineStart": 73,
+                    "lineEnd": 75,
+                    "nodeIds": [],
+                    "note": "first-three-minutes 否决"
+                  }
+                ]
+              },
+              {
+                "id": "annotation-limit",
+                "kind": "basic",
+                "front": "LadderTopic.annotation 允许声称「必抓 AI」吗？",
+                "back": "不允许；注释要求不写 detection certainty。",
+                "tags": [
+                  "topic-ladder",
+                  "honesty"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/topic-ladder/types.ts",
+                    "lineStart": 22,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "without detection certainty"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "analytics-tag-none",
+                "kind": "short-answer",
+                "title": "对照组标签",
+                "prompt": "无实验激活时 experimentAnalyticsTag 返回的字符串是？",
+                "expectedAnswer": "none",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": "src/features/experiments/analytics.ts",
+                    "lineStart": 7,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "回落 none"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

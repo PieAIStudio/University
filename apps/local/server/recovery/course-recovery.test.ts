@@ -550,6 +550,44 @@ describe("canonical course recovery", () => {
     expect(reused.courses).toEqual([{ courseId: COURSE_ID, outcome: "reused" }]);
   });
 
+  it("exports the lesson revision from the latest disk pointer", () => {
+    const fixture = setupActiveCourse();
+    const current = readLatestLesson(fixture.studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID);
+
+    updateCourseStatus(
+      fixture.studiesRoot,
+      STUDY_ID,
+      COURSE_ID,
+      "stale",
+      new Date("2026-08-17T02:00:00.000Z"),
+    );
+    updateUnitStatus(fixture.studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, "stale");
+    writeLessonRevision(fixture.studiesRoot, STUDY_ID, {
+      manifest: {
+        ...current.manifest,
+        contentRevision: 2,
+      },
+      content: current.content,
+      assetFiles: current.manifest.assets.map((asset) => ({
+        path: asset.path,
+        sourcePath: fixture.assetSource,
+      })),
+    });
+    updateUnitStatus(fixture.studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, "active");
+    updateCourseStatus(
+      fixture.studiesRoot,
+      STUDY_ID,
+      COURSE_ID,
+      "active",
+      new Date("2026-08-17T02:01:00.000Z"),
+    );
+
+    const output = exportFixture(fixture.studiesRoot, fixture.container, "revision-package");
+    const exported = loadCourseRecovery(output).packages[0]!.course.units[0]!.lessons[0]!;
+
+    expect(exported.contentRevision).toBe(2);
+  });
+
   it("preserves the source default ref and treats old indexes as HEAD", () => {
     const fixture = setupActiveCourse("main");
     const output = exportFixture(fixture.studiesRoot, fixture.container, "default-ref-package");

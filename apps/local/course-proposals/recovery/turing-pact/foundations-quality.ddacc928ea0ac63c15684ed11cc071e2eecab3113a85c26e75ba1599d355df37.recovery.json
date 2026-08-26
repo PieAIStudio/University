@@ -1,0 +1,1677 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 77,
+  "course": {
+    "id": "foundations-quality",
+    "title": "《怎么知道没写错》",
+    "description": "零基础主干第 6 阶段：没有同事 review 时，用测试、类型、lint、格式、提交钩子、CI 与端到端检查，把「我觉得没问题」换成「机器替我查过」。",
+    "audience": "零基础重建地基的独立开发者",
+    "objectives": [
+      "指着 describe/it/expect 与 vitest 的 include 说明一条测试如何被发现并断言",
+      "区分 typecheck、lint、format:check、test 各自在问什么，并说明 verify 如何定义完成",
+      "读懂 lefthook 与 CI 工作流的触发范围，解释门禁为何不必每次跑满",
+      "说明单元测试与端到端测试的分工，以及为何配置本身也可以被测试钉住"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "foundations-ui"
+    ],
+    "trackId": "foundations",
+    "units": [
+      {
+        "id": "a-test-is-a-sentence",
+        "title": "一个测试就是一句断言",
+        "objective": "我能读 describe/it/expect，指出测试文件住在哪、边界怎么钉，以及假时钟和假存储从哪注入。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "describe-it-expect",
+            "title": "最短的测试文件里，describe、it、expect 各干哪一层？",
+            "content": "# 最短的测试文件里，describe、it、expect 各干哪一层？\n\n## 一句真实出现的话\n\n图灵密约里有一份几乎最短的测试，整文件只有 9 行。你打开 `tests/turing-pact-schema.test.ts`，会先看到从 `vitest` 引进来的三个名字，然后是一层包一层的括号：\n\n[[evidence:tests/turing-pact-schema.test.ts:1-9]]\n\n:::detail[vitest 是什么？]\n它是这个仓库用来「再跑一遍你写的检查」的工具。你平时点按钮看结果；测试文件是把同一句检查写成文字，让工具替你重复执行。\n\n第一行从 `vitest` 引进三个帮手：`describe`、`it`、`expect`。文件其余部分就是用这三个名字把一句话叠起来。工具本身不替你想该检查什么，它只负责按你写的那几层去跑。\n\n你可以把 vitest 想成一台会念稿的录音机：稿是你写的，它只负责按稿再念一遍，念错了就响铃。录音机不会替你编稿，所以三个名字各自干什么，还得你自己分清。\n:::\n\n三个词叠在一起，读起来像一句完整的英文陈述。你能认出它们都来自同一个工具，但还说不清：谁只是在贴标签，谁在写「该发生的事」，谁真正让机器判对错？\n\n## 先猜一下\n\n在这份文件里，`describe`、`it`、`expect(...).toBe(...)` 三层分别管什么？谁在分组、谁在写「该发生的事」、谁在把那句话钉成机器能判对错的标准？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n`describe` 给人看的**分组**标题；`it` 是**一条用例**（一句该发生的事）；`expect(...).toBe(...)` 是**断言**——左边实际值、右边期望值，不相等整条就失败。\n\n## 三个真实用例\n\n证据只有这一份文件，但你可以从三个角度拆同一段代码。\n\n### 用例 1：最外层 `describe` 是货架标签，不是判断\n\n括号里的字符串是给人读的组名；后面的箭头函数里放用例。它不比较对错，只把相关的 `it` 收在同一标题下。报告里失败时，你会先看到这个组名，才找到具体哪一条挂了。\n\n[[evidence:tests/turing-pact-schema.test.ts:5-8]]\n\n:::detail[没有 describe 还能写测试吗？]\n能。真正让对错落地的是后面的 `expect`。这里用 `describe` 包一层，是为了报告好读：失败时先看到组名「database schema contract」，再看到那条 `it`。\n\n一人公司没有同事帮你在失败列表里划重点。组名就是你留给未来自己的货架标签。\n\n这份文件只有一条 `it`，组名看起来像多余。等你以后在同一主题下再加第二条，比如「拒绝空字符串」，报告里两条会挤在同一个标题下。那时你才体会到：分组不是判断，是目录。\n:::\n\n### 用例 2：`it` 是一条用例，字符串像现在时的承诺\n\n那句英文读起来像「它钉住……」。真正核对发生在函数体里；字符串本身不会被机器拿去当期望值——它是给人和报告用的说明。一条 `it` 对应你心里那一张便利贴上的一句话。\n\n[[evidence:tests/turing-pact-schema.test.ts:6-8]]\n\n:::detail[it 的英文标题会被拿去当期望值吗？]\n不会。标题是给人看的说明，机器不会把这句英文和 schema 名比一对。比一对的是函数体里那行 `expect`。\n\n你可以把标题写得很漂亮，若函数体是空的，仍然什么都没钉住。标题负责「这张便利贴写了什么」；钉钉子的是下一层。\n:::\n\n### 用例 3：`expect(...).toBe(...)` 才是闹钟对照的标准答案\n\n左边是代码跑出来的实际值，右边是你钉死的期望。两边相等，这条用例通过；不相等，整条失败。删掉这一行只留空的 `it`，机器往往仍会报「通过」——因为没有断言失败。价值在断言，不在「文件里有个 it」。\n\n[[evidence:tests/turing-pact-schema.test.ts:7]]\n\n:::detail[toBe 在比什么？]\n它要两边严格是同一个值。这里左边是导出的常量，右边是字面量 `turing_pact`。差一个字母，这条就红。\n\n删掉这行只留空的 `it`，常常仍然绿——因为没有东西失败。绿只表示「没炸」，不表示「你要的那件事被核对过」。\n\n左边是「代码现在拿出来的」，右边是「你事先钉死的」。两边对调写，机器仍会比，但失败信息会反过来，读起来更难受。养成习惯：`expect(实际).toBe(期望)`，别把标准答案塞进左边。\n:::\n\n类比：你一个人开店，每天要确认「默认币种还是人民币」。`describe` 是便利贴上的主题；`it` 是那句要确认的话；`expect(...).toBe(...)` 是闹钟对照的标准——念错了才响铃。\n\n## 它不是什么\n\n- **不是**另一门语言。`import`、箭头函数、字符串，都是你已经见过的 TypeScript；只是从 `vitest` 引进了三个帮手，写成机器可重复执行的断言。\n- **不是**「有 `it` 就等于测过了」。空 `it` 可以绿，却什么都没钉住。\n- **不是**只有 `describe` 才能写测试。这里用三层叠在一起，是为了报告可读；真正让对错落地的，仍是 `expect`。\n\n一人公司没有同事每天替你把同一句话再念一遍。这三件套替代的是那双眼睛——念的人变成了机器。\n\n:::detail[为什么空的 it 还会绿？]\n测试运行器的默认态度是：没碰到失败，就算过。`it` 只是开了一张工单；工单上若没有任何断言，等于巡检员进了店、什么都没核对就离开。\n\n所以你看绿的时候，先问：这一条里有没有 `expect`？没有，绿就不值钱。有，再去看它比的是不是你真正在乎的那件事。\n:::\n\n## 再想想\n\n下一课会问：只比较一个常量，为什么还值得写？见 [[lesson:pinning-a-promise]]。\n\n## 自检\n\n**问：** `describe` 的字符串参数主要给谁看？它会不会直接比较对错？\n\n**问：** 删掉 `expect(...).toBe(...)` 只留空的 `it`，测试会不会常常「通过」？那样算不算验证？\n\n**问：** `expect` 左边和右边各代表什么？\n\n## 一句话\n\n**`describe` 分组，`it` 写一句该发生的事，`expect` 把那句话钉成可重复检查的机器断言。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/turing-pact-schema.test.ts",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "全文件：import 三件套 + describe + it + expect().toBe()。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "describe-groups",
+                "kind": "basic",
+                "front": "`describe` 在测试文件里主要负责什么？",
+                "back": "给人看的分组：用一段说明文字包住若干条 `it` 用例。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/turing-pact-schema.test.ts",
+                    "lineStart": 5,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "describe 包住唯一的 it。"
+                  }
+                ]
+              },
+              {
+                "id": "it-is-one-case",
+                "kind": "basic",
+                "front": "`it` 字符串写的是什么？函数体里通常放什么？",
+                "back": "字符串写「它应当……」这种用例说明；函数体里放真正的断言。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/turing-pact-schema.test.ts",
+                    "lineStart": 6,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "it 的标题与 expect 断言同在。"
+                  }
+                ]
+              },
+              {
+                "id": "expect-tobe",
+                "kind": "basic",
+                "front": "`expect(A).toBe(B)` 在比较什么？",
+                "back": "比较实际值 A 是否严格等于期望值 B；不相等则这条用例失败。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/turing-pact-schema.test.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "expect(TURING_PACT_DATABASE_SCHEMA).toBe('turing_pact')。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "expect-matcher-name",
+                "kind": "short-answer",
+                "title": "写出严格相等断言的匹配器名",
+                "prompt": "在 `expect(实际值).____(期望值)` 里，表示严格相等的那个匹配器叫什么？只写匹配器名（例如 toEqual 那种写法）。",
+                "expectedAnswer": "toBe",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/turing-pact-schema.test.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "使用 .toBe('turing_pact')。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "pinning-a-promise",
+            "title": "一条只比较常量的测试，为什么还值得写？",
+            "content": "# 一条只比较常量的测试，为什么还值得写？\n\n## 现象\n\n源码里有一行常量导出：\n\n[[evidence:services/mastra/shared/turing-pact-schema.mjs:1]]\n\n:::detail[常量导出是什么意思？]\n就是给一段不会变的字起个名字，再让别的文件来用。这里的名字是 `TURING_PACT_DATABASE_SCHEMA`，值是 `turing_pact`。\n\n你可以把它想成门牌：门牌上的字一旦印错，整栋楼的投递都会走错。文件只有一行，不是因为它简单到不值得看，而是因为它把「门牌号」单独放在大家都找得到的地方。\n\n测试再把同一个字写进 `toBe`，等于在门牌旁边钉一张核对条。改名字的人必须同时改两处，否则下一次 `pnpm test` 会响。漏改测试、只改常量，正是这条测试要抓的。\n:::\n\n对应的测试几乎只做一件事——把同一个名字和同一个字符串再写一遍：\n\n[[evidence:tests/turing-pact-schema.test.ts:5-8]]\n\n没有模拟网络，没有假时钟，也没有分支。你若只盯着「逻辑难不难」，会觉得这像在浪费纸。可用例标题里写着 `pins`（钉住）——它在钉什么？\n\n## 先猜一下\n\n这样一条只比常量的测试，主要价值是在「验证复杂算法」，还是在「把一个不许悄悄改掉的约定钉死，改了就立刻红」？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n主要是后者：它钉的是全项目不许悄悄改掉的约定——schema 名必须是 `turing_pact`，改错会在 `pnpm test` 时立刻红，而不是等线上串库。\n\n## 为什么是这样\n\n你已经在上一课见过 `expect(...).toBe(...)`：左边是实际值，右边是期望。这里左边是导出的常量，右边是字面量 `'turing_pact'`。两边现在相等；有人把常量改成 `'public'`，这一行就会失败。\n\n[[evidence:tests/turing-pact-schema.test.ts:7]]\n\n:::detail[schema 名错了会怎样？]\n数据库里的「房间」按名字分。连到错的名字，轻则读不到表，重则写进别人的数据。这种错往往不在开发机上立刻爆炸，而在换环境、换账号之后才出现。\n\n所以作者不把这个名字只写在脑子里，而把它写成每次 `pnpm test` 都对照的字面量。绿的意思不是「算法很难」，是「门牌还是 302」。\n\n标题里的 `pins every runtime` 也在说这件事：不是某一个函数算得对，而是所有运行时都要连到同一个规范名。你改常量却不改测试，等于承认门牌可以悄悄换。\n:::\n\n类型检查拦不住这件事。两边都是字符串，类型仍然合法——`'public'` 和 `'turing_pact'` 在类型眼里都只是 `string`（若未收窄成字面量联合）。拦它的是**行为断言**，不是类型。\n\n:::detail[为什么类型经常看不出换了一个字符串？]\n类型问的是「这是不是一段文字」，不是「必须是这五个音节」。`public` 和 `turing_pact` 都是文字，形状没破。\n\n除非有人把类型收成「只许这一个字面量」，否则换错名字在类型眼里仍合法。这节课读到的导出就是普通字符串常量，所以要另写一行 `toBe` 来钉死具体值。\n\n你以后会在类型那一关再见到这件事。现在只要记住分工：类型管插头形状，这行 `expect` 管门牌上的字。两边都绿，才算「没写错」的一半。\n:::\n\n用例标题把意图写死了：`pins every runtime to the canonical turing_pact schema`——所有运行时都要连到规范的 schema 名。测试不是在问「代码会不会算」，而是在问「门牌号还是不是 302」。\n\n类比：公寓大门的门牌。你不会每天测门轴怎么转，但你会确认门牌还是 302。有人刷漆把 302 刷成 303，住户会进错门。钉常量的测试就是每天看一眼门牌：不是因为逻辑难，而是因为错了代价大。\n\n一人公司没有 DBA 同事每天盯连接串。这条测试替代的是「制度文档里写了不许改、但没人执行」——机器在每次跑测试时执行。\n\n## 再想想\n\n`expect` 怎么拆成三层，见 [[lesson:describe-it-expect]]。类型为什么仍拦不住换错字符串，见 [[lesson:types-are-a-test-you-do-not-write]]。\n\n## 自检\n\n**问：** 有人把 `TURING_PACT_DATABASE_SCHEMA` 改成 `'public'`，只靠类型检查通常拦得住吗？谁会拦？\n\n**问：** 这条测试主要在防「算错」，还是在防「约定被悄悄改掉」？\n\n**问：** 用例标题里的 `pins` 在说什么意图？\n\n## 一句话\n\n**有些测试的价值不在「逻辑难」，而在「这个值错了会很贵，所以钉死」。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "services/mastra/shared/turing-pact-schema.mjs",
+                "lineStart": 1,
+                "lineEnd": 1,
+                "nodeIds": [],
+                "note": "常量导出为 'turing_pact'。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/turing-pact-schema.test.ts",
+                "lineStart": 5,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "测试把 schema 名钉成 'turing_pact'。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "pin-what-value",
+                "kind": "basic",
+                "front": "这条最短测试钉住的期望字符串是什么？",
+                "back": "`turing_pact`——规范数据库 schema 名。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/turing-pact-schema.test.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "toBe('turing_pact')。"
+                  }
+                ]
+              },
+              {
+                "id": "pin-not-type",
+                "kind": "basic",
+                "front": "为什么把 schema 常量改成另一个字符串时，类型检查常常拦不住？",
+                "back": "两边仍是字符串类型，类型合法；只有行为断言比较具体字面量才会失败。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "services/mastra/shared/turing-pact-schema.mjs",
+                    "lineStart": 1,
+                    "lineEnd": 1,
+                    "nodeIds": [],
+                    "note": "导出的是字符串常量，不是收窄到唯一字面量的复杂约束。"
+                  }
+                ]
+              },
+              {
+                "id": "pin-role",
+                "kind": "basic",
+                "front": "钉常量的测试在一人公司里最像替代了哪类「角色」？",
+                "back": "替代「盯着不许改的约定」的那个人：每次跑测试都重新确认门牌还在。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/turing-pact-schema.test.ts",
+                    "lineStart": 6,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "用例标题写 pins every runtime…，就是在钉约定。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "pinned-schema-string",
+                "kind": "short-answer",
+                "title": "写出被钉住的 schema 名",
+                "prompt": "测试期望 `TURING_PACT_DATABASE_SCHEMA` 等于哪个字符串？只写字符串内容，不要引号。",
+                "expectedAnswer": "turing_pact",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/turing-pact-schema.test.ts",
+                    "lineStart": 7,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": "期望值是 turing_pact。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "where-tests-live",
+            "title": "测试文件放错文件夹，`pnpm test` 还会跑它吗？",
+            "content": "# 测试文件放错文件夹，`pnpm test` 还会跑它吗？\n\n## 两个东西\n\n你已经见过真实的测试文件：路径在 `tests/` 下，名字以 `.test.ts` 结尾。同一份文件的第一行是从 vitest 引入三件套：\n\n[[evidence:tests/turing-pact-schema.test.ts:1]]\n\n另一边，项目根上有一份 `vitest.config.ts`，用配置告诉测试运行器「去哪里找、什么名字才算测试」：\n\n[[evidence:vitest.config.ts:3-14]]\n\n一边是**磁盘上的文件**（你写的用例），一边是**include 模式**（配置里写的匹配规则）。两边同时出现在项目里，但「文件存在」和「会被 `pnpm test` 跑到」是不是一回事，你还不能从这两段代码直接下结论。\n\n:::detail[include 模式是什么？]\n它是一份「收件名单」。运行器不会把仓库里每一个 `.ts` 都当测试跑，只收名单上的路径和后缀。\n\n这里的名单有两条：`tests/**/*.test.ts` 和 `tests/**/*.test.tsx`。`**` 表示 `tests/` 下面任意层子目录。名字对、目录不对，或目录对、后缀不对，都进不了名单。\n\n`exclude` 是反面名单：依赖、构建产物、`ios` / `android` 那些目录就算碰巧有 `.test.ts`，也不扫。你找一份「消失」的测试时，先对 include，再对 exclude，别先改断言。\n:::\n\n## 先猜一下\n\n若你把同样的用例放到 `src/foo.test.ts`（不在 `tests/` 下），却不改 `include`，跑 `pnpm test` 时，这份文件会不会被执行？为什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n按这份配置，**不会**被执行——`include` 只收 `tests/` 下、名字以 `.test.ts` 或 `.test.tsx` 结尾的文件，位置和后缀都要对上。\n\n## 逐条对照\n\n| | 匹配 include 的文件 | 不匹配 include 的文件 |\n| --- | --- | --- |\n| 这节课里的实物 | `tests/…/*.test.ts` 或 `tests/…/*.test.tsx` | 例如 `src/foo.test.ts`，或 `tests/foo.ts`（少了 `.test`） |\n| 运行器怎么看 | 进入测试清单，会执行 | 默认当普通源码，不跑 |\n| 谁决定 | `include` 里那两条模式 | 同一条规则的反面 |\n| 你改名/挪位时 | 仍在模式内 → 继续被发现 | 一旦离开模式 → 静默消失，不是「绿了」，是「没上场」 |\n\n把配置拆开读：\n\n1. `environment: 'node'` —— 默认在 Node 环境跑（不是浏览器 DOM）。\n2. `include` 现在是两条：`.test.ts` 和 `.test.tsx`，都限制在 `tests/` 下。\n3. `exclude` —— 明确不扫依赖、构建产物等目录。\n\n[[evidence:vitest.config.ts:5-14]]\n\n:::detail[为什么后来又加了 .test.tsx？]\n注释写得很直白：工具链已经装了 React 测试库和 jsdom，但旧名单只收 `.test.ts`。你若写了一份组件测试，文件名是 `.test.tsx`，它会被写成、被提交，却**永远不会被跑到**。\n\n加第二条不是为了把测试散到全仓库，而是堵住「写了却没上场」的洞。默认环境仍是 `node`；真要 DOM 的文件，自己在文件头写 `@vitest-environment jsdom`，才为那一份打开浏览器式的环境。\n\n注意：`src/foo.test.ts` 仍然不会跑。新加的只是后缀，不是目录。组件测试也得放进 `tests/`，只是文件名可以带 `x`。\n:::\n\n所以「我觉得这是测试」不够；**名字和位置是门禁的一部分**。\n\n## 什么时候用哪个\n\n- **写新用例** → 放进 `tests/`，文件名带 `.test.ts` 或 `.test.tsx`，让它落在 include 里。\n- **改配置扩大范围** → 只有你真的想让别的目录也进测试时才动 `include`；默认保持窄范围，避免把无关 `.ts` 拖进来。\n- **文件「消失」了** → 先查路径和后缀是否仍匹配那两条模式，再查是不是被 `exclude` 扫掉——别先怀疑断言写错了。\n\n:::detail[默默没上场，和测试失败有什么差别？]\n失败是红的：你看得到哪一条断言炸了。没上场是安静的：报告里根本没有这份文件，总结果仍可能一片绿。\n\n绿在这里的意思是「被跑到的那些都过了」，不是「你以为是测试的文件都过了」。一人公司没有人提醒你「那份 `.tsx` 根本没进名单」，所以名单本身必须写对。\n\n旧配置就吃过这个亏：库装好了，模式却把能用它们的文件全部排除。注释把它写成教训，是怕你再写一份组件测试，然后信任一片并不包含它的绿。\n:::\n\n类比：快递分拣只认贴了「测试件」标签、且放进 `tests/` 货架的包裹。你把说明书放进 `src/`，分拣线不会当测试跑它——不是文件坏了，是标签和货架都不对。\n\n## 自检\n\n**问：** 本项目的 `include` 现在有哪两条模式？\n\n**问：** 把测试放到 `src/foo.test.ts` 但不改配置，`pnpm test` 会跑它吗？\n\n**问：** `environment: 'node'` 表示默认在什么环境跑这些测试？\n\n## 一句话\n\n**测试能不能被发现，由 `include` 模式和文件名共同决定，不是由「你觉得这是测试」决定。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/turing-pact-schema.test.ts",
+                "lineStart": 1,
+                "lineEnd": 1,
+                "nodeIds": [],
+                "note": "真实测试文件从 vitest 引入三件套。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "vitest.config.ts",
+                "lineStart": 3,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "environment 为 node；include 收 .test.ts 与 .test.tsx。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "include-glob",
+                "kind": "basic",
+                "front": "Vitest 配置里 include 收哪些文件？",
+                "back": "`tests/**/*.test.ts` 和 `tests/**/*.test.tsx`——只收集 tests 目录下以这两种后缀结尾的文件。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "vitest.config.ts",
+                    "lineStart": 13,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "include 现为两条 glob。"
+                  }
+                ]
+              },
+              {
+                "id": "why-test-ts-suffix",
+                "kind": "basic",
+                "front": "为什么文件名要带 `.test.ts` 或 `.test.tsx`，不能只叫 `foo.ts`？",
+                "back": "因为 include 模式要求 `*.test.ts` 或 `*.test.tsx`；不匹配的文件不会被 vitest 收集。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "vitest.config.ts",
+                    "lineStart": 13,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "glob 明确要求 .test.ts / .test.tsx。"
+                  }
+                ]
+              },
+              {
+                "id": "environment-node",
+                "kind": "basic",
+                "front": "这份 vitest 配置默认的 test.environment 是什么？",
+                "back": "`node`——在 Node 环境跑单元测试，而不是浏览器 DOM。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "vitest.config.ts",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "environment: 'node'。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "include-pattern-recall",
+                "kind": "short-answer",
+                "title": "写出 vitest 的 include 模式",
+                "prompt": "vitest.config.ts 里 include 数组现在有两条 glob。请按文件里的顺序，用英文逗号加一个空格连起来写出这两条。",
+                "expectedAnswer": "tests/**/*.test.ts, tests/**/*.test.tsx",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "vitest.config.ts",
+                    "lineStart": 13,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "include 两条模式。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "test-the-edges",
+            "title": "为什么不写一条「开心路径」，而要钉三条边界？",
+            "content": "# 为什么不写一条「开心路径」，而要钉三条边界？\n\n## 情境和约束\n\n`isNoRowsError` 要判断：手里这个东西是不是「PostgREST 查无行」那一类错误。实现几乎只有一行条件：\n\n[[evidence:src/services/room/roomOperationSupport.ts:31-35]]\n\n:::detail[查无行是什么意思？]\n就是「按你给的条件去找，库里没有对应的那一行」。接口用一个特殊错误码来表示这件事，而不是丢回一个空对象让你猜。\n\n这个仓库认的码是 `PGRST116`。函数名字直译是「这是不是无行错误」。你后面会看到：它不只测「真码要认出来」，还测「别的东西绝不能被认成这一类」。\n\n房间逻辑里，「没找到」和「没资格看」走的是两条路。把后者误判成前者，你可能会给用户看一个空房间，而不是一句权限失败。所以拒绝路径比开心路径更值钱。\n:::\n\n若你只关心「有时会返回 true」，写一条 `expect(...).toBe(true)` 就够绿。可仓库里的用例一次喂了三种输入：\n\n[[evidence:tests/room-operation-support.test.ts:18-22]]\n\n一人公司没有 QA 专门构造脏数据。篇幅和时间都有限时，多写两条「该返回 false」的断言，换来的是什么？\n\n## 先猜一下\n\n相对只钉 `{ code: 'PGRST116' } → true`，再钉「别的错误码」和「非对象字符串」两条拒绝路径，主要是在防什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了钉边界：真码认出来，假码和乱输入坚决不认——防的是把权限错误等误判成「没数据」。\n\n## 代价和收益\n\n**代价：** 多写两行断言，读测试时眼睛要多扫两遍。实现改窄或改宽时，失败信号也更密。\n\n**收益：** 三条各自挡住一种误判：\n\n| 输入 | 期望 | 在防什么 |\n| --- | --- | --- |\n| `{ code: 'PGRST116' }` | true | 真的「没有行」要被认出来 |\n| `{ code: '42501' }` | false | 别的数据库错误码不能误判成「没行」 |\n| `'nope'` | false | 非对象（纯字符串）不能误判 |\n\n[[evidence:tests/room-operation-support.test.ts:19-21]]\n\n:::detail[42501 为什么要单独钉 false？]\n它是另一种数据库错误码，常见于权限不够。若函数看见「有个 code 字段」就当成没数据，你可能把「没资格看」误判成「房间是空的」，然后走错业务分支。\n\n测试选一个**最像真的假码**，比枚举全世界更划算：它逼你比较的是码本身，不是「对象长得像错误」。\n\n实现最后一步是 `error.code === 'PGRST116'`。没有这条，前面三步（对象、非 null、有 code）会对任何带 code 的对象放行。`42501` 就是来证明：形状对了还不够，码必须对。\n:::\n\n只留 true 那一条，你只证明「有时会亮绿灯」，没证明「不该亮的时候必须灭」。生产里把权限错误当成空房间，比函数少返回一次 true 更难查。\n\n实现侧的四步检查（对象、非 null、有 `code`、码等于 `PGRST116`）和这三条输入是对齐的：测试在逼你别把安检台阶抹平。\n\n[[evidence:src/services/room/roomOperationSupport.ts:32-34]]\n\n:::detail[四步检查和三条输入怎么对齐？]\n`typeof === 'object'` 加上 `!== null`，把 `'nope'` 挡在门外。`'code' in error` 保证真有这个字段。最后一步才比是不是 `PGRST116`，把 `42501` 挡下。\n\n三条输入不是随便点的：一条走完全程该亮，一条同形状不同码，一条根本不是对象。你改实现时若删掉其中一阶，对应那条断言会先红。\n\n`null` 在 JavaScript 里 `typeof` 也是 `object`，所以必须单独写 `!== null`。测试没直接喂 `null`，但 `'nope'` 已经代表「根本不是对象」这一类。你若以后补 `null` 那条，也是同一类拒绝，不是新故事。\n:::\n\n类比：安检只认一种通行证。你要测的不是「正常人好好走路」，而是真证放行、假证拦下、递购物小票也拦下。\n\n:::detail[只留 true 那一条，绿了代表什么？]\n只代表「至少有一种输入会亮」。它没说假证会不会也亮，更没说你递小票会不会被当成通行证。\n\n生产事故往往出在「不该亮的时候亮了」。三条里两条是 false，就是在为那种事故付保险。篇幅多两行，换来的是误判被当场抓住。\n:::\n\n## 什么时候该反过来\n\n- **函数几乎没有拒绝语义**（纯格式化、总有合法输出）→ 边界用例可以更少，先钉主路径输出形状。\n- **边界组合爆炸**（上百种错误码）→ 不必枚举全世界；选「最像真的假码」和「完全错类型」各一例，往往就够代表一类失败。\n- **你还在探路、API 每天变** → 可以先写一条主断言，稳定后再补拒绝路径；但一旦误判代价变高（钱、权限、串数据），拒绝路径应尽快补上。\n\n「先钉边界」不是宗教，是在误判很贵时的默认赌注。\n\n## 再想想\n\n下一课会看：假时钟和假 storage 怎样把这类边界事故在测试里复现。见 [[lesson:fake-clocks-and-fake-storage]]。\n\n## 自检\n\n**问：** 只写 `expect(isNoRowsError({ code: 'PGRST116' })).toBe(true)` 够不够？缺了什么？\n\n**问：** `{ code: '42501' }` 那条期望是 true 还是 false？它在防什么？\n\n**问：** 字符串 `'nope'` 被期望成什么？为什么还要测非对象？\n\n## 一句话\n\n**先钉住边界：该认的认、不该认的坚决不认；中间的快乐路径往往没有边界重要。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/room/roomOperationSupport.ts",
+                "lineStart": 31,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "isNoRowsError 只认对象上的 PGRST116。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/room-operation-support.test.ts",
+                "lineStart": 18,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "三条输入：真码、假码、非对象。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "pgrst116-true",
+                "kind": "basic",
+                "front": "`isNoRowsError({ code: 'PGRST116' })` 期望是什么？",
+                "back": "`true`——这是 PostgREST 表示空行的错误码。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/room-operation-support.test.ts",
+                    "lineStart": 19,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "PGRST116 → true。"
+                  }
+                ]
+              },
+              {
+                "id": "other-code-false",
+                "kind": "basic",
+                "front": "为什么还要测 `{ code: '42501' }` 必须是 false？",
+                "back": "防止把其他数据库错误误判成「没有行」，从而走错业务分支。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/room-operation-support.test.ts",
+                    "lineStart": 20,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "42501 → false。"
+                  }
+                ]
+              },
+              {
+                "id": "string-input-false",
+                "kind": "basic",
+                "front": "对字符串 `'nope'` 期望 false，在验证实现的哪一点？",
+                "back": "非对象输入不能被当成空行错误；实现要求 error 是带 code 的对象。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/room-operation-support.test.ts",
+                    "lineStart": 21,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "'nope' → false。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "empty-row-code",
+                "kind": "short-answer",
+                "title": "写出空行错误码",
+                "prompt": "`isNoRowsError` 认为代表「没有行」的 PostgREST 错误码是什么？只写码本身。",
+                "expectedAnswer": "PGRST116",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/room-operation-support.test.ts",
+                    "lineStart": 19,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "PGRST116 为 true 的那条。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "fake-clocks-and-fake-storage",
+            "title": "测「存储被拒」时，假 storage 是从哪塞进函数的？",
+            "content": "# 测「存储被拒」时，假 storage 是从哪塞进函数的？\n\n## 你看到的结果\n\n你读到一条用例：隐私设置挡住存储时，读取应退回 `null`。它没有去改 Safari 开关，而是在测试里造了一个一碰就抛 `SecurityError` 的对象：\n\n[[evidence:tests/safe-local-storage.test.ts:11-18]]\n\n:::detail[假 storage 是什么？]\n就是一个长得像浏览器本地存储的替身：也有 `getItem` / `setItem`，但行为由你规定。这里两步都立刻抛 `SecurityError`，用来模拟「隐私设置拦住了存储」。\n\n你不必真去拨浏览器开关，也不必污染真实的本地存储。替身只活在这一条测试里。\n\n注意它不是改 `window.localStorage`。对象就地造出来，再当作参数递进去。全局世界保持干净，下一条用例不会踩到这个会抛错的替身。\n:::\n\n紧接着有一行断言：对 `safeLocalStorageGet` 的调用最终 `toBeNull()`。你先别急着翻函数签名——问题是：这个会抛错的 `blocked`，是怎么和被测函数对上号的？\n\n同项目另一条你也会碰到：测超时。永远不完成的 Promise，却不必真的干等 50ms——先挂上假时钟，再把时间拨过去：\n\n[[evidence:tests/room-operation-support.test.ts:11-15]]\n\n你看到的「结果」是：边界事故被复现了，环境却没被弄脏。假 storage 那条线，入口在哪？\n\n## 先猜一下\n\n`safeLocalStorageGet` 测 SecurityError 时，假 storage 是靠改全局 `window.localStorage` 塞进去的，还是靠函数参数递进去的？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n靠第二参数注入：测试传入 `blocked`，你在生产路径上可只传 key，默认仍走浏览器 `localStorage`。\n\n## 一站一站往回走\n\n**第 1 站：测试调用处把假货放进第二参数。**\n你看调用：`safeLocalStorageGet('key', blocked)`——第一个参数是键，第二个是整份 storage 替身。`getItem` 一碰就抛 `SecurityError`。期望是 `toBeNull()`，不是让进程炸掉。\n\n[[evidence:tests/safe-local-storage.test.ts:20]]\n\n:::detail[为什么期望是 null，不是抛错？]\n产品承诺是：存储被拒时，读取失败要收成「没读到」，而不是把异常甩给整页。测试钉的就是这句承诺。\n\n同一条用例里，`safeLocalStorageSet` 在同样的假货上期望 `false`：写入失败也收成布尔值，不炸进程。这节课顺着「读」那条线往回走就够。\n:::\n\n**第 2 站：函数签名把 storage 做成可替换的第二参数。**\n实现写明：`storage` 带默认值 `browserLocalStorage()`。你在生产调用里可以只传 key；测试替换第二参数，不必改全局。\n\n[[evidence:src/platform/safeLocalStorage.ts:15-18]]\n\n:::detail[默认参数是怎么同时服务生产和测试的？]\n你不传第二参数时，函数自己去拿浏览器的 `localStorage`。测试传入替身时，默认值根本不会被用到。\n\n这就是「可注入」：多出来的那个口，不是给用户看的功能，是给你在测试里换零件用的。写死 `window.localStorage`，你就只能去改真实环境，边界又慢又脏。\n\n`browserLocalStorage` 自己也会在拿不到 `window`、或一碰就抛错时退回 `null`。函数体第一句 `if (!storage) return null` 接的就是这条退路。假货走的是另一条：storage 存在，但 `getItem` 抛错，被 `catch` 收成 `null`。\n:::\n\n**第 3 站：函数体吞掉异常，把失败收成 `null`。**\n`storage` 缺失直接 `null`；`getItem` 抛错进 `catch`，同样 `null`。所以第 1 站的断言能成立——假货触发的是你写好的退路，不是未捕获异常。\n\n[[evidence:src/platform/safeLocalStorage.ts:19-24]]\n\n**并行一条线：假时钟。**\n超时用例先 `vi.useFakeTimers()`，再 `advanceTimersByTimeAsync(50)`：把「等」换成「拨」。假时钟和假 storage 是同一套路——你把不可控的外部世界，换成测试里可控的替身。\n\n[[evidence:tests/room-operation-support.test.ts:11-14]]\n\n:::detail[假时钟在替你省掉什么？]\n真的 `setTimeout(50)` 会让测试至少愣 50 毫秒，而且还可能被机器忙闲带偏。假时钟把时间变成你手里的拨盘：拨到 50，超时那条路径立刻走完。\n\n`afterEach` 里还会 `useRealTimers()`，避免下一条用例仍活在假时间里。替身用完要还，和假 storage 只活在一条用例里是同一个习惯。\n\n超时用例先挂上 `expect(pending).rejects`，再拨时间，最后 `await` 那个期望。顺序不能反：你得先告诉运行器「我在等它拒绝」，再把钟拨过去，拒绝才会被接到。\n:::\n\n## 再想想\n\n边界为什么要单独钉拒绝路径，见 [[lesson:test-the-edges]]。\n\n## 自检\n\n**问：** 若 `safeLocalStorageGet` 写死 `window.localStorage`、没有第二参数，模拟 SecurityError 会怎样？\n\n**问：** 第二参数的默认值在生产路径上通常是什么？\n\n**问：** `vi.useFakeTimers` 加 `advanceTimersByTimeAsync` 解决的是哪类「不可控」？\n\n## 一句话\n\n**默认参数服务真实调用；多出来的注入口服务边界测试——可测性往往长在签名上。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/room-operation-support.test.ts",
+                "lineStart": 10,
+                "lineEnd": 16,
+                "nodeIds": [],
+                "note": "useFakeTimers + advanceTimersByTimeAsync 测超时。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/safe-local-storage.test.ts",
+                "lineStart": 10,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "注入会抛 SecurityError 的假 storage。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/platform/safeLocalStorage.ts",
+                "lineStart": 15,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "第二参数 storage 带默认值，可被测试替换。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-fake-timers",
+                "kind": "basic",
+                "front": "测 50ms 超时时，为什么用 `vi.useFakeTimers` 而不是真的 sleep？",
+                "back": "假时钟可立刻拨到超时点，测试更快、更稳，不依赖真实墙钟。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/room-operation-support.test.ts",
+                    "lineStart": 11,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "useFakeTimers 与 advanceTimersByTimeAsync(50)。"
+                  }
+                ]
+              },
+              {
+                "id": "storage-second-arg",
+                "kind": "basic",
+                "front": "`safeLocalStorageGet` 的第二个参数默认是什么？测试为什么要传入别的？",
+                "back": "默认是浏览器 localStorage（经 browserLocalStorage）；测试传入假对象以模拟拒绝访问。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 15,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "storage 参数默认 browserLocalStorage()。"
+                  }
+                ]
+              },
+              {
+                "id": "blocked-get-null",
+                "kind": "basic",
+                "front": "假 storage 的 getItem 抛错时，测试期望 `safeLocalStorageGet` 返回什么？",
+                "back": "`null`——失败时安全降级，而不是把异常抛给调用方。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/safe-local-storage.test.ts",
+                    "lineStart": 20,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "expect(...).toBeNull()。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "fake-timers-api",
+                "kind": "short-answer",
+                "title": "写出启用假时钟的 vitest API",
+                "prompt": "在 room 超时测试里，启用假时钟调用的是 `vi.` 后面的哪个方法名？只写方法名。",
+                "expectedAnswer": "useFakeTimers",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/room-operation-support.test.ts",
+                    "lineStart": 11,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "vi.useFakeTimers()。"
+                  }
+                ]
+              },
+              {
+                "id": "why-inject-storage",
+                "kind": "explain",
+                "title": "解释为什么 storage 要可注入",
+                "prompt": "用自己的话说明：为什么 `safeLocalStorageGet` 要把 storage 做成可选第二参数，而不是函数体写死 `window.localStorage`？",
+                "rubric": [
+                  "提到生产可走默认 localStorage",
+                  "提到测试可传入假 storage",
+                  "提到可模拟抛错/隐私拦截等边界",
+                  "提到写死全局会让边界难测或只能改环境"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/platform/safeLocalStorage.ts",
+                    "lineStart": 15,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "可注入 storage + try/catch 降级。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "machines-that-read-your-code",
+        "title": "不跑代码也能查出错",
+        "objective": "我能分清类型、lint、格式和测试四道关各问什么，并说明提交钩子为什么按速度裁剪。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "four-different-questions",
+            "title": "只跑测试全绿，为什么还不能说做完了？",
+            "content": "# 只跑测试全绿，为什么还不能说做完了？\n\n## 现象\n\n你打开图灵密约的 `package.json`，scripts 里并排躺着几条名字很像的命令：\n\n[[evidence:package.json:15-19]]\n\n:::detail[scripts 里这些名字是什么？]\n它们是给一长串命令起的外号。你在终端敲 `pnpm test`，其实是在跑右边那句 `vitest run`。\n\n`typecheck`、`lint`、`format`、`format:check`、`test` 看起来都像「检查」，右边接的工具却不一样。这节课要你先看见：它们并排坐着，并不等于在问同一件事。\n\n`typecheck` 右边是 `tsc --noEmit`：只查类型，不写出文件。`lint` 右边是 `oxlint` 加一串路径和规则文件。`test` 右边只有两个词：`vitest run`。同名「检查」，问的问题从第一眼就不一样。\n:::\n\n再往下还有一条更长的：\n\n[[evidence:package.json:40-41]]\n\n你改完一段逻辑，习惯先敲 `pnpm test`。终端一片绿。心里很容易一声「好了」。\n\n同一文件里却还站着 typecheck、lint、format:check，以及把它们用 `&&` 串起来的 `verify`。测试绿了，其它行还没开口。\n\n## 先猜一下\n\n`pnpm test` 全绿时，把字符串当数字用的类型错误还会被这道关抓住吗？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不会。类型错误归 `typecheck`；`test` 只问行为对不对。\n\n## 为什么是这样\n\n四道关卡名字都像「检查」，问的却是四件不同的事。你可以按「它能抓、邻关抓不到」来记：\n\n| 脚本 | 在问 | 它能抓、邻关抓不到的例子 |\n| --- | --- | --- |\n| `typecheck` | 类型对不对 | 把字符串当成数字用 |\n| `lint` | 写法有没有坑 | 留下 `debugger`、滥用 `any` |\n| `format:check` | 排版是否一致 | 单引号/分号风格漂了 |\n| `test` | 行为对不对 | schema 名被改成错字符串 |\n\n:::detail[&& 是什么意思？]\n它是「前一件成功了才做下一件」。`verify:web` 把五步用 `&&` 串起来：typecheck → lint → format:check → test → build。\n\n前一关红了，后面的根本不跑。你看到 verify 在 typecheck 红灯处停住，不要以为测试也跑过了——它们还没轮到。\n\n顺序也是立场：先挡形状，再挡坑写法，再挡排版，然后才跑行为，最后问能不能打出产物。你只跑中间某一关，等于跳过了别人已经替你排好的安检口。\n:::\n\n`verify:web` 的顺序是固定的：typecheck → lint → format:check → test → build。前一关红了，`&&` 会拦住，后面的根本不跑。你读这条链时，把 `build` 当成第五问：能不能打出产物——类型擦干净之后，打包仍可能破。\n\n还有一对容易混的：`format` 带 `--write`，会**改写**文件；`format:check` 带 `--check`，只**检查**。verify 用的是 check——发现不一致就失败，而不是默默改你的工作区。\n\n[[evidence:package.json:17-18]]\n\n:::detail[为什么 verify 不用 format 而用 format:check？]\n`--write` 会动手改你的文件。门禁若一边检查一边改，你分不清「失败」和「被悄悄重排了」。\n\n`--check` 只举手：不一致就红。改文件是你自己跑 `format` 的事。门禁负责判定，不负责替你收拾桌子。\n\n两条脚本共享同一份 oxfmt 调用，只差这个旗标。verify 选 check，是怕「完成定义」变成「顺便改写工作区」。你本地先 `--write` 再让 check 点头，角色才分得清。\n:::\n\n一人公司没有「完成定义」会议。`verify` 这一行就是完成定义：机器说绿，才算这轮改动可以交。你用 `verify` 代替「我觉得做完了」。\n\n## 再想想\n\n上一单元里，你已经用 `expect` 钉过行为（见 [[lesson:describe-it-expect|describe、it、expect]]）。这节课补的是：行为只是完成定义里的一扇门。下一课会单独拆开类型那一关：[[lesson:types-are-a-test-you-do-not-write]]。\n\n## 自检\n\n**问：** 只跑 `pnpm test` 全绿，能不能说「没写错」？\n\n**问：** `verify:web` 里，`test` 前面固定先跑哪三步？\n\n**问：** `format` 和 `format:check` 哪个会改文件？\n\n## 一句话\n\n**typecheck / lint / format:check / test 问四个不同问题；`verify` 把它们合成一句「完成」。**\n",
+            "contentRevision": 4,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "package.json",
+                "lineStart": 15,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "typecheck、lint、format:check、test 四条脚本。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "package.json",
+                "lineStart": 40,
+                "lineEnd": 41,
+                "nodeIds": [],
+                "note": "verify:web 串联四关 + build；verify 指向它。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "typecheck-asks",
+                "kind": "basic",
+                "front": "`typecheck` 脚本实际跑的是什么命令？它在问什么？",
+                "back": "`tsc --noEmit`：类型是否一致，不写出编译产物。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 15,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "typecheck: tsc --noEmit。"
+                  }
+                ]
+              },
+              {
+                "id": "verify-order",
+                "kind": "basic",
+                "front": "`verify:web` 里，test 前面固定先跑哪三步？",
+                "back": "typecheck → lint → format:check，然后才是 test，最后 build。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 40,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build。"
+                  }
+                ]
+              },
+              {
+                "id": "format-vs-check",
+                "kind": "basic",
+                "front": "`format` 和 `format:check` 的差别是什么？",
+                "back": "`format` 会改写文件；`format:check` 只检查是否已符合规则。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 17,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "format 带 --write，format:check 带 --check。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "verify-first-gate",
+                "kind": "short-answer",
+                "title": "写出 verify 链的第一关脚本名",
+                "prompt": "`verify:web` 串联命令里，第一个 `pnpm` 后面的脚本名是什么？",
+                "expectedAnswer": "typecheck",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 40,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "以 typecheck 开头。"
+                  }
+                ]
+              },
+              {
+                "id": "test-script-tool",
+                "kind": "short-answer",
+                "title": "写出 test 脚本用的运行器",
+                "prompt": "`package.json` 的 `test` 脚本调用的命令是什么？两个词，空格分隔。",
+                "expectedAnswer": "vitest run",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 19,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "test: vitest run。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "types-are-a-test-you-do-not-write",
+            "title": "类型过了，为什么还要写 expect？",
+            "content": "# 类型过了，为什么还要写 expect？\n\n## 两个东西\n\n完成定义的第一关，右边命令只有两个词：\n\n[[evidence:package.json:15]]\n\n:::detail[tsc --noEmit 在干什么？]\n`tsc` 是 TypeScript 的检查器。`--noEmit` 表示：只检查，不写出另一份 JS 文件。\n\n它在编译期看形状——参数该是数字却来了字符串、对象少了必填字段。灯还没通电，插头对不对先过一遍。它不跑你的业务函数，也不看 schema 名到底是哪五个字母。\n\n`package.json` 把这两个词单独做成 `typecheck` 脚本，又把它放在 `verify:web` 的第一位。意思是：形状不过，后面的 lint、格式、测试、构建先别忙。你只跑 `pnpm test`，等于跳过了这道还不耗运行时的关。\n:::\n\n同一条质量链上，还有你上一课见过的 `pnpm test`（`vitest run`）。测试文件里到处是 `expect(...)`。\n\n两边终端都可能打印绿色。你改完代码时，常会只盯其中一边：类型全过了，或测试全过了——然后心里默认「另一边大概也没事」。\n\n可是有些改动只会让其中一边红，另一边继续绿。\n\n## 先猜一下\n\n若某次改动把 schema 名从 `turing_pact` 改成了另一个**仍是字符串**的错名字，类型检查和 `expect` 里，哪个更可能先亮红灯？另一个为什么可能安静？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n更可能是 `expect` 亮红灯：错名仍是 `string`，形状没破；行为测试才会钉住「必须是这一个字面量」。\n\n## 逐条对照\n\n| | 类型检查（`tsc --noEmit`） | 行为测试（`expect`） |\n| --- | --- | --- |\n| 何时发生 | 编译期，还没真正跑业务 | 运行测试时，代码真的在执行 |\n| 在问什么 | 形状与契约是否一致 | 具体值、分支、运行时约定是否成立 |\n| 典型能抓 | 该传 `number` 却传了 `string`；对象少了必填字段 | schema 字符串写错；超时文案不对 |\n| 典型抓不到 | 「这个 string 该是哪一个字面量」（仍是 string） | 纯类型不匹配、却从未被测到的路径 |\n\n`--noEmit` 表示：只检查，不写出 JS 文件。类型是你**不用手写 `it`** 的形状断言——很多「插头形状不对」的错，不必先通电。插座只有三孔，两孔插头硬塞，结构本身就不匹配。`pnpm test` 才是通电看灯亮不亮。\n\n项目还怕你把类型「关掉」。lint 规则里有这一条：\n\n[[evidence:.oxlintrc.json:7-12]]\n\n:::detail[any 为什么会让类型检查形同虚设？]\n`any` 的意思接近「别查我」。你在该写真实类型的地方写它，检查器就失去形状可看。\n\n这条规则把 `typescript/no-explicit-any` 设成 `error`：你想用逃逸口过关，lint 先红。一人公司没有人在评审里留言「别写 any」——规则替代那条留言。\n\n同一份规则里还有 `no-debugger: error`。debugger 是「运行时停住」；`any` 是「类型上停查」。两条都在防你为了图省事拆掉检查。类型关要有东西可查，lint 先把逃逸口焊死。\n:::\n\n到处写 `any`，类型检查就形同虚设。这条规则把逃逸口钉死，逼你留下真实类型，让 `tsc` 继续有东西可查。一人公司没有人在 PR 里留言「别写 any」——`tsc` 加上禁止 `any`，替代的就是那条留言。\n\n## 什么时候用哪个\n\n- 改函数签名、对象字段、参数类型 → 先看 `typecheck` 是否还绿。\n- 改业务约定、字符串常量、超时与分支结果 → 写或跑 `expect`，别指望类型替你记住字面量。\n- 想偷懒写 `any` 过关 → 在这个仓库里会被 lint 当错误拦住；你该补真实类型，而不是拆掉检查。\n\n:::detail[两关都绿，是不是就绝对没错？]\n不是。类型只看形状，测试只看你写到的路径。没写到的分支、观感、文案好不好，两边都不问。\n\n`verify` 要你两关都过，是因为它们挡住的错几乎不重叠。少跑一关，就是少挡一类。\n\n换错 schema 名：类型继续绿，`expect` 会红。把数字参数改成字符串：类型先红，测试可能还没跑到。你用「哪一边先亮」来记分工，比背定义记得住。\n\n所以「类型过了还要写 expect」不是重复劳动：一边查插头，一边查通电后灯亮不亮。少一边，就有一类错能溜进仓库。\n\n你改完若只盯其中一片绿，等于默认另一边也没事。这节课要你改掉这个默认：两边问的不是同一个问题。\n:::\n\n两者不是二选一：`verify` 要你两关都过。类型先挡住一类错；它不替代行为测试。\n\n## 再想想\n\n`expect` 怎么钉一个不许改的值，见 [[lesson:pinning-a-promise|测试可以只是钉住一个不许改的值]]。四道关卡如何合成「完成」，见 [[lesson:four-different-questions]]。\n\n## 自检\n\n**问：** `tsc --noEmit` 里的 `--noEmit` 表示什么？\n\n**问：** 类型全过，是否还需要 `pnpm test`？各管哪一层？\n\n**问：** 为什么要把 `typescript/no-explicit-any` 设为 error？\n\n## 一句话\n\n**类型检查是不用手写 `it` 的形状断言；它不替代行为测试，只是先挡住一类错。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "package.json",
+                "lineStart": 15,
+                "lineEnd": 15,
+                "nodeIds": [],
+                "note": "typecheck 为 tsc --noEmit。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": ".oxlintrc.json",
+                "lineStart": 7,
+                "lineEnd": 12,
+                "nodeIds": [],
+                "note": "rules 含 typescript/no-explicit-any: error。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "tsc-no-emit",
+                "kind": "basic",
+                "front": "`tsc --noEmit` 里 `--noEmit` 表示什么？",
+                "back": "只做类型检查，不生成输出文件。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 15,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "typecheck 使用 --noEmit。"
+                  }
+                ]
+              },
+              {
+                "id": "no-explicit-any",
+                "kind": "basic",
+                "front": "为什么 lint 要把 `no-explicit-any` 设为 error？",
+                "back": "避免用 any 逃掉类型检查，让 tsc 继续能抓形状错误。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": ".oxlintrc.json",
+                    "lineStart": 11,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "typescript/no-explicit-any: error。"
+                  }
+                ]
+              },
+              {
+                "id": "type-vs-test",
+                "kind": "basic",
+                "front": "类型检查与 vitest 断言如何分工？",
+                "back": "类型管形状与契约是否一致；vitest 管运行时行为与具体值是否符合约定。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 15,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "typecheck 与 test 是两条独立脚本。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "typecheck-command",
+                "kind": "short-answer",
+                "title": "写出 typecheck 的完整命令",
+                "prompt": "`typecheck` 脚本的值是什么？两个词，含 flag。",
+                "expectedAnswer": "tsc --noEmit",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 15,
+                    "lineEnd": 15,
+                    "nodeIds": [],
+                    "note": "tsc --noEmit。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "style-is-not-worth-arguing-about",
+            "title": "单引号还是双引号，为什么不让人来吵？",
+            "content": "# 单引号还是双引号，为什么不让人来吵？\n\n## 情境和约束\n\n写代码时，总有一堆「对错说不清、但看起来不一样」的选择：单引号还是双引号、要不要分号、一行写多长、列表最后一项后面要不要逗号。\n\n这些选择几乎不影响程序算不算对。它们却会在 diff 里制造噪声：你改了一行逻辑，旁边却因引号风格飘了而多出半屏红绿。一人公司里，争论的对手往往是**昨天的你**——没有同事帮你拍板，注意力却照样被吸走。\n\n图灵密约没有把这些交给口头约定。仓库根上有一份格式规则，还有两条脚本：一条负责改文件，一条只负责检查。\n\n:::detail[diff 里的噪声是什么？]\ndiff 是两版文件的对照。你改了一行业务，格式化器或手滑把旁边的引号也换了，对照里就会多出一堆红绿。\n\n那些红绿不代表逻辑变了，却逼你的眼睛去扫。一人公司没有同事帮你过滤「这只是风格」。机器先统一写法，对照才能只留下真改动。\n\n`.oxfmtrc.json` 就是那次「别再吵」的会议纪要。引号、分号、逗号、行宽写死之后，昨天的你和今天的你不再为双引号开战。注意力留给真改了什么。\n:::\n\n## 先猜一下\n\nverify 用 `format:check` 而非 `--write` 时，失败会不会静默改工作区？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n不会。`--check` 只报失败、不改文件；静默改写是 `--write` 那条 `format` 的事。\n\n## 代价和收益\n\n规则文件很短，却句句是裁决：\n\n[[evidence:.oxfmtrc.json:1-8]]\n\n:::detail[这五条规则各自在裁什么？]\n`singleQuote: true`：字符串优先单引号。`semi: true`：语句要分号。`trailingComma: \"all\"`：多行列表末项也留逗号，减少以后改一行却对照两行。`printWidth: 100`：行宽上限，超出就由工具折行。`arrowParens: \"always\"`：箭头函数参数始终带括号。\n\n它们没有对错，只有「选定一种、以后别吵」。你读这文件，是在读一次已经结束的会议纪要。\n\n`printWidth: 100` 不是「一行必须写满 100」，是「超过就让工具折」。你手工对齐到 80 或 120，下次格式化可能又折回去。和工具作对，对照里又是噪声。\n:::\n\n你读几条就够用：\n\n- `singleQuote: true` —— 字符串优先单引号。\n- `semi: true` —— 语句要分号。\n- `trailingComma: \"all\"` —— 多行列表末项也留逗号，减少以后改一行却 diff 两行。\n- `printWidth: 100` —— 行宽上限，超出就由格式化器折行。\n\n脚本上还分成两种用法：\n\n[[evidence:package.json:17-18]]\n\n`format` 带 `--write`：负责**改**文件。`format:check` 带 `--check`：只验证、不改写。`verify` 链用的是后者——门禁发现不一致就失败，而不是静默改你的工作区。\n\n收益很具体：风格争论在第一次写配置时结束；以后 diff 更干净，你的眼睛留给业务。代价也清楚：你放弃「今天我想用双引号」的个人偏好；偶尔要先跑格式化再提交。\n\n## 什么时候该反过来\n\n- **该交给机器的：** 引号、分号、逗号、行宽——无对错、高噪声、可自动统一的表面写法。\n- **不该假装机器能替你定的：** 按钮好不好看、文案是否清楚、交互是否好用——那是产品判断，格式化器帮不上。\n- **可以本地先 `--write`、再让 check 过关：** 你自己改文件没关系；verify / CI 仍应使用 check，避免「检查」变成「偷偷改仓库」。\n\n:::detail[为什么门禁不能顺便帮你 format 掉？]\n门禁的工作是判定：过还是不过。若它一边判定一边改文件，你分不清「我提交的」和「机器刚重排的」。\n\n本地你可以先跑 `--write`，把桌子收拾干净，再让 `--check` 点头。两步角色不同：你负责改，门禁负责验。\n\n`verify:web` 用的是 `format:check`。它红了，只表示「和规则不一致」，不会动手改。你去跑 `format`，再重新 verify。这个来回故意留着，免得检查变成静默重写。\n:::\n\n格式化抓的是排版一致。逻辑对不对，仍靠类型、lint 与测试。\n\n## 再想想\n\n四道关卡如何合成「完成」，见 [[lesson:four-different-questions]]。\n\n## 自检\n\n**问：** `.oxfmtrc.json` 里 `printWidth` 是多少？\n\n**问：** verify 链里用的格式脚本，靠哪个 flag 做到「只检查不改写」？\n\n**问：** 格式化全过，代码逻辑就一定对吗？它主要省下什么？\n\n## 一句话\n\n**格式化省下的是注意力与争论，不是「把程序变正确」；正确性仍由其它关卡负责。**\n",
+            "contentRevision": 4,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": ".oxfmtrc.json",
+                "lineStart": 1,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "oxfmt 规则：singleQuote、semi、trailingComma 等。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "package.json",
+                "lineStart": 17,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "format --write 与 format:check --check。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "single-quote-rule",
+                "kind": "basic",
+                "front": "`.oxfmtrc.json` 里 `singleQuote` 的值是什么？含义？",
+                "back": "`true`：字符串优先使用单引号。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": ".oxfmtrc.json",
+                    "lineStart": 6,
+                    "lineEnd": 6,
+                    "nodeIds": [],
+                    "note": "singleQuote: true。"
+                  }
+                ]
+              },
+              {
+                "id": "format-check-flag",
+                "kind": "basic",
+                "front": "verify 链里用的格式脚本依赖哪个 flag 来「只检查不改写」？",
+                "back": "`--check`（在 format:check 脚本中）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 18,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "oxfmt ... --check ...。"
+                  }
+                ]
+              },
+              {
+                "id": "format-saves-what",
+                "kind": "basic",
+                "front": "格式化工具主要省下什么？它不保证什么？",
+                "back": "省下风格争论与注意力；不保证业务逻辑正确。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": ".oxfmtrc.json",
+                    "lineStart": 1,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "规则文件是一次性裁决，不是正确性证明。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "print-width-value",
+                "kind": "short-answer",
+                "title": "写出 printWidth 数值",
+                "prompt": "`.oxfmtrc.json` 的 `printWidth` 是多少？只写数字。",
+                "expectedAnswer": "100",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": ".oxfmtrc.json",
+                    "lineStart": 4,
+                    "lineEnd": 4,
+                    "nodeIds": [],
+                    "note": "printWidth: 100。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-gate-before-the-commit",
+            "title": "提交钩子绿了，为什么还不等于 verify 绿了？",
+            "content": "# 提交钩子绿了，为什么还不等于 verify 绿了？\n\n## 情境和约束\n\n你每次 `git commit`，仓库可以自动先跑一段检查——这叫提交钩子（hook）。图灵密约用 `lefthook.yml` 配置它。\n\n完整的「做完了」你已经认识：`pnpm verify` 串起 typecheck、lint、format:check、test、build。提交是高频动作；`verify` 是你主动宣布「这轮做完了」时才跑的那条。\n\n两边都叫检查。问题是：钩子里要不要塞进和 `verify` 一样多的东西？\n\n:::detail[提交钩子是什么？]\n就是「你说要提交」和「记录真的写进去」之间，自动插进去的一段检查。这仓库用 `lefthook.yml` 描述它跑什么。\n\n钩子绿，只表示「这段被选中的检查过了」。它不是 `verify` 的缩写，也不自动继承那条长链。\n\n顶层键 `pre-commit` 对应「提交之前」。旁边还有 `commit-msg`：提交信息写好后再查一回文案。两段都是钩子，都不是 `verify:web` 那条 typecheck 到 build 的链。\n:::\n\n## 先猜一下\n\n若 pre-commit 每次都跑满 typecheck + lint + test + build，长期最可能发生什么？完整正确性又该放在哪条命令里？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了窄门禁：pre-commit 主要跑文档治理，不跑 vitest / build；完整正确性仍以 `pnpm verify` 为准。\n\n## 代价和收益\n\n先看钩子实际写了什么：\n\n[[evidence:lefthook.yml:5-19]]\n\n:::detail[glob 和 run 怎么读？]\n`glob` 是触发条件：只有你改到匹配的路径，这条命令才跑。你改一行业务 TypeScript，不会无故去跑文档审计。\n\n`run` 是真正执行的检查。这里两条都是 `doc-gov`，不是 `vitest`，也不是 `build`。钩子按路径裁剪，也按种类裁剪。\n\n第一条 glob 盯 `AGENTS.md`、`README.md` 和 `docs/` 下的文档；第二条更集中在治理与政策文档。你只改 `src/` 里的逻辑，这两条通常不响。文档改动才会在提交前被拦。\n:::\n\n读法两步：\n\n1. `glob` —— 只有改到匹配路径才触发；你改一行业务 TS，不会无故跑文档审计。\n2. `run` —— 真正执行的检查；这里全是 `doc-gov`，不是 `vitest`。\n\n提交信息另有一段：\n\n[[evidence:lefthook.yml:21-26]]\n\n对照完成定义——它不在这份钩子里：\n\n[[evidence:package.json:40-41]]\n\n为什么不塞满？提交太频繁时，钩子太慢、太宽，人会开始加 `--no-verify` 绕过——门禁反而失效。一人公司尤其如此：你就是会绕过的那个人。\n\n:::detail[--no-verify 是怎么把门禁拆掉的？]\n它是「这次提交跳过钩子」的开关。钩子一旦又慢又爱误伤，人会养成每次都加这串字符的手势。\n\n门禁被绕过之后，绿不绿已经没人看。与其装一套人人跳过的全套检查，不如让高频钩子又快又窄，把完整正确性留在你主动跑的 `verify` 里。\n\n一人公司里，会加这串字符的人就是你自己。所以作者把 pre-commit 留在文档治理：快、路径可裁、失败了该立刻停手。类型和测试仍在 `verify`，等你准备说「这轮做完了」再跑。\n:::\n\n收益：提交保持轻；文档类改动仍被拦；你改业务代码时，钩子不拿全量测试拖你。代价：pre-commit 绿 **不等于** 类型、lint、格式、测试、构建都绿——那些仍要你主动跑 `verify`。\n\n:::detail[commit-msg 那段又在查什么？]\n它跑 `doc-gov verify-commit-msg`，检查的是提交说明本身，不是代码。`{1}` 是钩子传进去的那份说明文件。\n\n和 pre-commit 一样：窄、快、跟「写完了」不是同一句话。你提交信息过了，仍然可能类型是红的。\n:::\n\n## 什么时候该反过来\n\n- **适合放进高频钩子的：** 快、路径可裁剪、失败了立刻该停手的检查（本仓库选了文档治理）。\n- **适合留给 `verify` 的：** 慢、宽、定义「整轮改动可交」的全套关卡。\n- **该加宽钩子的信号：** 同一类低级错反复溜进提交、且检查本身仍然够快——再考虑把某一关挪进 pre-commit。\n- **不该做的：** 为了「更安心」把最慢的全量检查塞进每一次 commit，然后靠 `--no-verify` 过日子。\n\n门禁不是越多越好。提交钩子按路径、按速度裁剪；完整正确性以 `verify` 为准。\n\n## 再想想\n\n`verify` 到底串了哪几问，见 [[lesson:four-different-questions]]。\n\n## 自检\n\n**问：** `lefthook.yml` 里定义「提交之前」检查的顶层键名是什么？\n\n**问：** pre-commit 绿了，是否等于 `pnpm verify` 绿了？\n\n**问：** 为什么 pre-commit 不必默认跑满 typecheck + test + build？\n\n## 一句话\n\n**提交钩子按路径、按速度裁剪；完整正确性以 `verify` 为准，不要把两者当成同一个开关。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "lefthook.yml",
+                "lineStart": 5,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "pre-commit 只跑 doc-gov，带 glob。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "lefthook.yml",
+                "lineStart": 21,
+                "lineEnd": 26,
+                "nodeIds": [],
+                "note": "commit-msg 再跑 doc-gov verify-commit-msg。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "package.json",
+                "lineStart": 40,
+                "lineEnd": 41,
+                "nodeIds": [],
+                "note": "verify:web 才是完整链。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "lefthook-precommit-what",
+                "kind": "basic",
+                "front": "这份 lefthook 的 pre-commit 主要跑哪类检查？",
+                "back": "文档治理（doc-gov router-check / check / scan / links / audit），不是 vitest 全量测试。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "lefthook.yml",
+                    "lineStart": 14,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "run 行都是 doc-gov。"
+                  }
+                ]
+              },
+              {
+                "id": "lefthook-glob",
+                "kind": "basic",
+                "front": "pre-commit 命令上的 `glob` 起什么作用？",
+                "back": "限制：只有改动匹配路径时才跑该命令，避免无关提交被拖慢。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "lefthook.yml",
+                    "lineStart": 15,
+                    "lineEnd": 16,
+                    "nodeIds": [],
+                    "note": "glob 指向文档与入口文件。"
+                  }
+                ]
+              },
+              {
+                "id": "gate-not-verify",
+                "kind": "basic",
+                "front": "为什么提交门禁可以故意比 `verify` 更窄？",
+                "back": "每次提交都要快；过宽的钩子会被人绕过。完整正确性检查放在 verify 节奏里。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "lefthook.yml",
+                    "lineStart": 5,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "钩子内容远窄于 verify:web。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 40,
+                    "lineEnd": 40,
+                    "nodeIds": [],
+                    "note": "verify:web 含 typecheck 到 build。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "precommit-hook-name",
+                "kind": "short-answer",
+                "title": "写出提交前钩子段名",
+                "prompt": "`lefthook.yml` 里定义「提交之前」检查的那段顶层键名是什么？",
+                "expectedAnswer": "pre-commit",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "lefthook.yml",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "pre-commit:。"
+                  }
+                ]
+              },
+              {
+                "id": "why-not-all-gates",
+                "kind": "explain",
+                "title": "解释门禁为何不跑满 verify",
+                "prompt": "结合 lefthook 实际内容与 `verify:web`，说明为什么 pre-commit 不必（也不应默认）跑完整 typecheck+lint+test+build。",
+                "rubric": [
+                  "指出 pre-commit 实际主要是 doc-gov",
+                  "指出 verify 另有完整链",
+                  "提到速度/频率权衡",
+                  "提到过重钩子会被 --no-verify 绕过的风险"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "lefthook.yml",
+                    "lineStart": 5,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "pre-commit 范围。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 40,
+                    "lineEnd": 41,
+                    "nodeIds": [],
+                    "note": "verify 完整链。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "gates-beyond-your-laptop",
+        "title": "本机之外的关卡",
+        "objective": "我能读出 CI 何时跑、e2e 在点什么，并说明配置文件也可以被契约测试钉住。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "someone-elses-computer",
+            "title": "本机全绿了，为什么还要在另一台电脑上再跑一遍？",
+            "content": "# 本机全绿了，为什么还要在另一台电脑上再跑一遍？\n\n## 现象\n\n仓库里有一份工作流文件，第一行只写了名字：\n\n```yaml\nname: docs-check\n```\n\n[[evidence:.github/workflows/docs-check.yml:1]]\n\n再往下，它声明要在一台叫 `ubuntu-slim` 的机器上干活：先把代码拉下来，用锁文件装依赖，再跑一串 `doc-gov` 命令——\n\n```yaml\njobs:\n  doc-gov:\n    name: doc-gov\n    runs-on: ubuntu-slim\n    timeout-minutes: 10\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n      ...\n      - name: Install dependencies\n        run: pnpm install --frozen-lockfile\n      - name: Validate router and entry files\n        run: pnpm doc-gov router-check\n```\n\n[[evidence:.github/workflows/docs-check.yml:34-57]]\n\n你本机大概刚跑过同类检查，全绿。可仓库里仍钉着「在另一台机器上再跑一遍」。那台机器不是你的笔记本。\n\n## 先猜一下\n\n本机检查已经绿了，为什么还要在另一台干净机器上再复述同一套检查？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n因为本机绿只证明「你这台碰巧可以」；另一台机器从 git 拉干净代码再跑，抓的是「只在你电脑上才能过」的问题。这种在远端自动复述检查的做法，就叫 **CI**（持续集成，Continuous Integration）。\n\n## 为什么是这样\n\n你自己的电脑上常有一些「别人复制不走」的状态：没提交的脏文件、全局工具版本、缓存下来的 `node_modules`、你记得但没写进仓库的步骤。本机绿，可能只是这些独家习惯在帮你。\n\nCI 做的是另一回事。工作流把环境钉死：`runs-on: ubuntu-slim` 指定 runner（跑检查的那台远端机器）；`actions/checkout` 从 git 拉当前提交；`pnpm install --frozen-lockfile` 按锁文件装依赖；再按步骤跑 `doc-gov`。步骤写在仓库里，不在你脑子里。\n\n一人公司没有测试同事在另一台笔记本上复验。CI 替代的就是那位同事的笔记本电脑。\n\n它仍查不出「按钮好不好看」「文案是否伤人」——那些仍要你自己点、自己看。CI 负责可重复的机械检查，不负责审美。\n\n所以：本机绿是必要的，但不够。CI 绿才说明「仓库里那份状态，在干净环境也能过」。\n\n## 再想想\n\n本机提交前的门禁见 [[lesson:a-gate-before-the-commit|提交前的门禁]]；四种机器检查各问什么见 [[lesson:four-different-questions|四道关卡，四个问题]]。\n\n## 自检\n\n**问：** docs-check 的 `runs-on` 写的是什么？（提示：看 job 里那一行标签。）\n\n**问：** 本机 `pnpm docs:check` 全绿，CI 的 docs-check 还可能失败吗？举一种本机有、干净 runner 没有的情况。\n\n**问：** 用一句话：CI 替代的是谁？它不替代什么？\n\n## 一句话\n\n**CI 是干净环境里的复述；本机绿只证明「我这台可以」，不证明「仓库状态可以」。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".github/workflows/docs-check.yml",
+                "lineStart": 34,
+                "lineEnd": 57,
+                "nodeIds": [],
+                "note": "job 在 ubuntu-slim 上 checkout、安装并跑 doc-gov。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".github/workflows/docs-check.yml",
+                "lineStart": 1,
+                "lineEnd": 1,
+                "nodeIds": [],
+                "note": "工作流名称 docs-check。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "ci-runs-on",
+                "kind": "basic",
+                "front": "docs-check 工作流的 job 在什么环境跑？",
+                "back": "`ubuntu-slim`（GitHub Actions runner），不是你的笔记本。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".github/workflows/docs-check.yml",
+                    "lineStart": 37,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "runs-on: ubuntu-slim。"
+                  }
+                ]
+              },
+              {
+                "id": "why-ci-if-local-green",
+                "kind": "basic",
+                "front": "为什么本机检查绿了还要 CI？",
+                "back": "CI 用干净机器与仓库内状态复验，暴露「只有你电脑碰巧能过」的问题。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".github/workflows/docs-check.yml",
+                    "lineStart": 40,
+                    "lineEnd": 54,
+                    "nodeIds": [],
+                    "note": "checkout + frozen-lockfile 安装。"
+                  }
+                ]
+              },
+              {
+                "id": "ci-not-beauty",
+                "kind": "basic",
+                "front": "CI 通常查不出哪类问题？",
+                "back": "审美与主观体验，例如按钮好不好看、文案是否得体。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".github/workflows/docs-check.yml",
+                    "lineStart": 56,
+                    "lineEnd": 69,
+                    "nodeIds": [],
+                    "note": "步骤都是机械的 doc-gov 校验。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "docs-check-runner",
+                "kind": "short-answer",
+                "title": "写出 CI runner 标签",
+                "prompt": "docs-check 的 `runs-on` 值是什么？",
+                "expectedAnswer": "ubuntu-slim",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".github/workflows/docs-check.yml",
+                    "lineStart": 37,
+                    "lineEnd": 37,
+                    "nodeIds": [],
+                    "note": "runs-on: ubuntu-slim。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "when-and-what",
+            "title": "每次推代码，文档检查都该跟着跑吗？",
+            "content": "# 每次推代码，文档检查都该跟着跑吗？\n\n## 情境和约束\n\n上一课你知道了：CI 会在别人的电脑上复述检查。可「复述」也有成本——一人公司的 CI 分钟数是钱，也是你盯着小绿勾的等待。\n\n`docs-check` 每天可能被触发很多次。有的 PR 只动 `src/` 里的界面逻辑，有的改 `docs/` 里的说明，有的在同一条分支上连推三次修同一处笔误。每次都全量开工，队列会堵；永远不跑，文档约定又会悄悄烂掉。\n\n工作流还要决定两件事：权限开多大（只需读代码，还是顺手申请写仓库？）；同一条分支上旧的一次检查还在跑、新的一次又来了，旧的是跑完还是让路。\n\n这些不是装饰字段，是你在用分钟数和漏报风险做交换。\n\n## 先猜一下\n\n在「任何改动都跑 docs-check」和「只在相关文件变更时才跑」之间，你会怎么选？同一条分支上连续推两次时，旧的那次还该不该继续跑完？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了**路径过滤 + 取消进行中的旧运行**：只在文档相关路径变更时触发；同一 ref 上新运行会掐掉还在跑的旧运行。\n\n## 代价和收益\n\n真实配置长这样——分三块读：\n\n```yaml\non:\n  pull_request:\n    paths:\n      - \"AGENTS.md\"\n      - \"docs/**\"\n      ...\n  push:\n    branches:\n      - main\n    paths:\n      - \"AGENTS.md\"\n      - \"docs/**\"\n      ...\n```\n\n[[evidence:.github/workflows/docs-check.yml:3-25]]\n\n**1. `on`——什么事件才可能触发**\n\n`pull_request`，以及 `push` 到 `main`。不是仓库里随便一点动静，而是这两类 git 事件。\n\n**2. `paths`——哪些路径变更才值得跑**\n\n列表是 `AGENTS.md`、`docs/**`、工作流自身、`package.json` 等——和文档门禁相关的入口。你只改 `src/ui/utils.ts` 推 PR，通常**不会**触发 docs-check：业务源码不在范围内。\n\n收益：文档工作流不被纯业务改动空转。代价：若某次改动间接破坏了文档约定、却没碰列表，这次工作流不会报警——它本来就不是全能哨兵。\n\n```yaml\npermissions:\n  contents: read\n\nconcurrency:\n  group: docs-check-${{ github.ref }}\n  cancel-in-progress: true\n```\n\n[[evidence:.github/workflows/docs-check.yml:27-32]]\n\n**3. `concurrency` + `cancel-in-progress: true`——拥挤时谁让路**\n\n`group` 按 `github.ref` 分组。你在同一条 PR 上连推两次，新的一次会取消还在跑的旧的一次。收益：少排队、少看过时结果。代价：偶尔看到「cancelled」而不是完整绿勾——那是主动让路，不是机器坏了。\n\n`permissions: contents: read` 表示只申请读代码，不申请写仓库。权限同样按最小需要裁剪。\n\n## 什么时候该反过来\n\n- **拿掉 `paths`、任何 PR 都跑**：适合文档与代码强耦合、漏跑一次代价很高的仓库；你用分钟数换「绝不错过」。\n- **`cancel-in-progress: false`**：适合「每次运行都必须留完整日志、不能被顶掉」的审计型检查；代价是同 ref 上旧运行占着队列。\n- **权限开到 write**：只有工作流真的要改仓库（例如自动提交）才值得；docs-check 只读，开大了是白送攻击面。\n\n## 再想想\n\nCI 为什么要另一台机器，见 [[lesson:someone-elses-computer|本机全绿了，为什么还要在另一台电脑上再跑一遍]]。\n\n## 自检\n\n**问：** 只改 `src/ui/utils.ts` 并推 PR，按这份 `paths`，docs-check 会不会触发？（提示：看列表里有没有 `src/**`。）\n\n**问：** `cancel-in-progress` 在这份工作流里是 `true` 还是 `false`？\n\n**问：** `permissions.contents` 设成 `read` 在表达什么选择？\n\n## 一句话\n\n**先读 `on` 与 `paths` 知道何时跑，再读 `jobs` 知道跑什么；`concurrency` 决定拥挤时谁让路。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".github/workflows/docs-check.yml",
+                "lineStart": 3,
+                "lineEnd": 25,
+                "nodeIds": [],
+                "note": "on.pull_request / on.push 与 paths 过滤。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-3b402e069a5d",
+                "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                "sourcePath": ".github/workflows/docs-check.yml",
+                "lineStart": 27,
+                "lineEnd": 32,
+                "nodeIds": [],
+                "note": "permissions 与 concurrency.cancel-in-progress。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "paths-filter",
+                "kind": "basic",
+                "front": "`paths` 过滤在工作流里起什么作用？",
+                "back": "只有列出的路径发生变更时才触发该工作流，避免无关改动空跑。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".github/workflows/docs-check.yml",
+                    "lineStart": 5,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "pull_request.paths 列表。"
+                  }
+                ]
+              },
+              {
+                "id": "cancel-in-progress",
+                "kind": "basic",
+                "front": "`cancel-in-progress: true` 表示什么？",
+                "back": "同一 concurrency group 里，新的运行会取消仍在进行的旧运行。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".github/workflows/docs-check.yml",
+                    "lineStart": 30,
+                    "lineEnd": 32,
+                    "nodeIds": [],
+                    "note": "concurrency 段。"
+                  }
+                ]
+              },
+              {
+                "id": "permissions-read",
+                "kind": "basic",
+                "front": "docs-check 给 `contents` 什么权限？为什么这值得注意？",
+                "back": "`read`：只读仓库内容，符合最小权限，工作流不需要写代码。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".github/workflows/docs-check.yml",
+                    "lineStart": 27,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "permissions.contents: read。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "cancel-in-progress-value",
+                "kind": "short-answer",
+                "title": "写出 cancel-in-progress 的值",
+                "prompt": "docs-check 的 concurrency 里 `cancel-in-progress` 是 true 还是 false？只写 true 或 false。",
+                "expectedAnswer": "true",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".github/workflows/docs-check.yml",
+                    "lineStart": 32,
+                    "lineEnd": 32,
+                    "nodeIds": [],
+                    "note": "cancel-in-progress: true。"
+                  }
+                ]
+              },
+              {
+                "id": "read-on-paths",
+                "kind": "explain",
+                "title": "解释 on 与 paths 如何配合",
+                "prompt": "用 docs-check.yml 说明：工作流在哪些 git 事件下可能运行，以及为什么改业务源码不一定触发它。",
+                "rubric": [
+                  "提到 pull_request 与 push 到 main",
+                  "提到 paths 限制文档相关路径",
+                  "说明业务 src 不在 paths 时不触发",
+                  "点出目的是避免无用空跑"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-3b402e069a5d",
+                    "sourceCommit": "3b402e069a5db5fe9eb82dbc03aa05152b3d298b",
+                    "sourcePath": ".github/workflows/docs-check.yml",
+                    "lineStart": 3,
+                    "lineEnd": 25,
+                    "nodeIds": [],
+                    "note": "on + paths。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "clicking-through-for-real",
+            "title": "为什么不把所有测试都改成「真打开页面点一遍」？",
+            "content": "# 为什么不把所有测试都改成「真打开页面点一遍」？\n\n## 两个东西\n\n你打开 `package.json`，会看到测试脚本是两条，不是一条：\n\n[[evidence:package.json:19-20]]\n\n:::detail[两条脚本差在哪？]\n`test` 调用 `vitest run`：在 Node 里跑函数和模块，通常几秒结束。`test:e2e` 调用 `playwright test`：真的打开浏览器，按脚本去点页面。\n\n名字都叫测试。一个问「这根电线通不通」，一个问「整栋楼的灯能不能按图纸亮起来」。贵贱差很多。\n\n`verify:web` 只串了前一条。后一条要你自己决定什么时候跑。脚本分成两条，就是在说：别把贵的检查焊进每次「做完了」。\n:::\n\n一边，vitest 在 node 里跑，只收 `tests/` 下的测试文件：\n\n[[evidence:vitest.config.ts:5-13]]\n\n另一边，Playwright 把测试目录指到 `./tests/e2e`，还配了多个浏览器视口，并可以自己拉起开发服务器：\n\n[[evidence:playwright.config.ts:18-29]]\n\n[[evidence:playwright.config.ts:30-62]]\n\n你手里像有两种检查：一种不问浏览器，一种真的打开页面去点。名字都叫「测试」，贵贱差很多。\n\n## 先猜一下\n\n如果你把边界条件、纯函数、主流程全部改成「只开真浏览器点一遍」，反馈速度和定位失败的难度会变成什么样？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n会又慢又脆：你等的是分钟级反馈，失败也难落到具体函数。所以项目把便宜的逻辑检查留给 vitest，把「真浏览器主路径」留给少量 Playwright。\n\n## 逐条对照\n\n| | 单元（vitest） | 端到端 e2e（Playwright） |\n| --- | --- | --- |\n| 问什么 | 函数/模块行为对不对 | 真实页面流程通不通 |\n| 环境 | node，常可换假依赖 | 真浏览器 + 真 dev server |\n| 成本 | 秒级，可写密 | 慢，要养选择器与稳定性 |\n| 脚本 | `pnpm test` | `pnpm test:e2e` |\n\n:::detail[e2e 是什么意思？]\n就是从用户的一端走到系统的另一端：真的打开页面、点按钮、看结果。中间不拿假存储、假接口把路截短。\n\n它能抓住「函数都绿、页面却点不通」的那类洞。代价是慢，而且页面结构一变，选择器就可能碎。所以密度要克制。\n\n配置里 `testDir: './tests/e2e'` 把这类文件单独放夹。`projects` 还要跑手机、桌面、平板三种视口。同一条主路径乘以三，成本再翻一截。边界条件不该坐这班车。\n\n`trace: 'retain-on-failure'` 也在提醒你：失败时要留回放。单元测试失败通常指向函数名；e2e 失败常常要看一串点击。贵，不只是时间贵，定位也贵。\n\nvitest 这边默认 `environment: 'node'`，include 只收 `tests/` 下的 `.test.ts` / `.test.tsx`。它不启动浏览器，所以你才能把边界写密。两种工具不是同一把尺子。\n:::\n\nPlaywright 配置把「贵」写在明处：`testDir: './tests/e2e'` 单独成夹；`projects` 覆盖手机/桌面/平板视口；你没设 `PLAYWRIGHT_BASE_URL` 时，`webServer` 会执行 `pnpm dev` 起本地服务再测。这不是多写几个 `expect`，是整条用户路径的彩排。\n\n再看门禁节奏：`verify:web` 串联的是 `pnpm test`（vitest），**不**自动跑 e2e。e2e 更重，往往单独开——和 paths 过滤同一思路：贵的检查不要无差别空转。\n\n:::detail[为什么 verify 不串 e2e？]\n`verify:web` 已经串了 typecheck、lint、格式、单元测试和构建。再塞进真浏览器，每次宣布「做完了」都要等一套视口和一次启动开发服务器。\n\n一人公司没有专职点点点的测试员；少量 e2e 仍要跑，但放在单独的 `test:e2e` 里，按你改的是不是主路径来决定。默认完成定义先问便宜的那几关。\n\n没设 `PLAYWRIGHT_BASE_URL` 时，Playwright 还会自己执行 `pnpm dev` 拉起本地服务。这不是多写几个 `expect`，是整条用户路径的彩排。彩排很贵，所以不能当每日早操。\n:::\n\n## 什么时候用哪个\n\n- **你改纯函数、错误分支、数据形状**：用单元测试。便宜，失败信息贴着函数名。\n- **你改登录后主路径、关键按钮、跨页跳转**：加或改 e2e。一人公司没有专职点点点的测试员；少量 e2e 替代的是「发版前你亲手把主路径点一遍」。\n- **不要**用 e2e 去穷举边界：同一条边界你在单元里钉十次的成本，往往低于 e2e 里钉一次。\n\n## 再想想\n\n单元测试怎么写成句子，见 [[lesson:describe-it-expect|describe、it、expect：测试三件套]]。测试文件怎样才会被 vitest 发现，见 [[lesson:where-tests-live]]。\n\n## 自检\n\n**问：** `playwright.config.ts` 里 `testDir` 的值是什么？\n\n**问：** vitest 与 Playwright 各自更适合钉什么？为什么默认 verify 只串 vitest？\n\n**问：** 只用 e2e、不写单元，主要会在哪两点上吃亏？\n\n## 一句话\n\n**单元测试便宜地钉逻辑；e2e 昂贵地钉「真浏览器主路径」——密度放在便宜的一侧。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "package.json",
+                "lineStart": 19,
+                "lineEnd": 20,
+                "nodeIds": [],
+                "note": "test 与 test:e2e 两条脚本。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "vitest.config.ts",
+                "lineStart": 5,
+                "lineEnd": 13,
+                "nodeIds": [],
+                "note": "vitest 默认 node，include 收 tests 下的测试文件。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "playwright.config.ts",
+                "lineStart": 18,
+                "lineEnd": 29,
+                "nodeIds": [],
+                "note": "testDir、baseURL、trace。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "playwright.config.ts",
+                "lineStart": 30,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "多视口 projects 与 webServer。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "test-vs-e2e-script",
+                "kind": "basic",
+                "front": "`pnpm test` 与 `pnpm test:e2e` 分别调用什么？",
+                "back": "`vitest run` 与 `playwright test`。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 19,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "两条脚本并列。"
+                  }
+                ]
+              },
+              {
+                "id": "playwright-webserver",
+                "kind": "basic",
+                "front": "未设置 PLAYWRIGHT_BASE_URL 时，Playwright 如何得到本地站点？",
+                "back": "用 webServer.command 启动 `pnpm dev --host 127.0.0.1 --port ${port}`。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "playwright.config.ts",
+                    "lineStart": 54,
+                    "lineEnd": 61,
+                    "nodeIds": [],
+                    "note": "webServer.command。"
+                  }
+                ]
+              },
+              {
+                "id": "e2e-cost",
+                "kind": "basic",
+                "front": "为什么 e2e 不宜取代全部单元测试？",
+                "back": "更慢、更脆、失败更难定位；边界适合便宜的单元测试。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "playwright.config.ts",
+                    "lineStart": 18,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "真浏览器与 baseURL/trace 成本更高。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "e2e-test-dir",
+                "kind": "short-answer",
+                "title": "写出 Playwright 的 testDir",
+                "prompt": "playwright.config.ts 里 `testDir` 的值是什么？",
+                "expectedAnswer": "./tests/e2e",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "playwright.config.ts",
+                    "lineStart": 19,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "testDir: './tests/e2e'。"
+                  }
+                ]
+              },
+              {
+                "id": "unit-vs-e2e-split",
+                "kind": "explain",
+                "title": "说明单元与 e2e 的分工",
+                "prompt": "结合本仓库脚本与配置，说明 vitest 与 Playwright 各自适合钉什么，以及为什么 verify 默认只串 vitest。",
+                "rubric": [
+                  "vitest：函数/模块、node、便宜",
+                  "Playwright：真浏览器主路径、更贵",
+                  "提到 test 与 test:e2e 分离",
+                  "提到密度应偏向单元、e2e 抓主路径"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "package.json",
+                    "lineStart": 19,
+                    "lineEnd": 20,
+                    "nodeIds": [],
+                    "note": "脚本分离。"
+                  },
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "playwright.config.ts",
+                    "lineStart": 18,
+                    "lineEnd": 28,
+                    "nodeIds": [],
+                    "note": "e2e 配置。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "even-config-can-be-wrong",
+            "title": "为什么有个测试不去调函数，却去读配置文件原文？",
+            "content": "# 为什么有个测试不去调函数，却去读配置文件原文？\n\n## 现象\n\n你在 `tests/` 里会撞上这么一支测试：它不 `import` 业务函数，也不打开浏览器。它用 `readFileSync` 把 `playwright.config.ts` **整份读成字符串**，再对字符串做 `toContain` / `not.toContain`：\n\n[[evidence:tests/playwright-config-contract.test.ts:1-19]]\n\n:::detail[读成字符串再断言，和调用函数有什么不同？]\n普通测试是：把函数跑起来，看返回值。这支测试连配置模块都不执行，只盯源码文本里有没有某几个关键字面量。\n\n它不怕「跑起来碰巧绿」，它怕「那一行字被改成更危险的写法，而测试还在为旧行为鼓掌」。你读它时，要把「文本契约」和「行为测试」分开。\n\n`readFileSync('playwright.config.ts', 'utf8')` 读的是磁盘上的原文。`toContain` 要看到 `PLAYWRIGHT_PORT ?? 5183` 这种字面写法；`not.toContain` 则禁止出现 `reuseExistingServer: true`。跑一遍 Playwright 绿，拦不住这种改法。\n:::\n\n被它盯着的配置里，端口和「能不能复用已有服务」是这样写的：\n\n[[evidence:playwright.config.ts:3-11]]\n\n[[evidence:playwright.config.ts:54-61]]\n\n这和你前面写过的「调函数、看返回值」不是同一种钉子。\n\n## 先猜一下\n\n为什么不直接跑一遍 Playwright 看能不能通，却要读配置源码做字符串断言？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n因为有些配置错误「跑起来仍绿」——比如默默复用别人 worktree 的服务；只有把关键字面约定钉成文本契约，门禁才能在 review 缺席时盯住那一行。\n\n## 为什么是这样\n\n配置是可执行约定的一部分，它也会漂。你若图省事把 `reuseExistingServer` 改成字面 `true`，本机碰巧有个旧 dev server，e2e 全绿；换到干净环境或另一个 worktree，连的却是别人的进程——测起来仍绿，行为已经偏了。\n\n:::detail[worktree 是什么？]\n就是同一份仓库在磁盘上的另一份工作拷贝。你可能同时开两条线改代码，每条线自己起一个开发服务器。\n\n若 Playwright 默默复用「已经在听的那个服务」，它连上的可能是隔壁那条线的进程。测试仍绿，测到的却不是你刚改的这份。文本契约要挡住的，就是这种「绿得很安心、连错了人」的写法。\n\n配置里复用开关必须等于环境变量 `'1'` 才为真，默认是关的。测试把这句比较和「不得写成字面 true」一起钉住，等于把「想复用必须显式开口」写成机器可读的规矩。\n:::\n\n契约测试把「不许静默复用」写成机器可读的断言，替你盯住这些字面约定：\n\n- 端口允许覆盖，默认 **5183**；\n- 复用必须 `PLAYWRIGHT_REUSE_EXISTING_SERVER === '1'`，不能默默 `true`；\n- dev server 绑 `127.0.0.1` 与选定端口；\n- 相关 env 有本地默认值。\n\n:::detail[not.toContain 在禁止哪一种写法？]\n它禁止源码里出现 `reuseExistingServer: true` 这种字面量。配置必须引用那个由环境变量算出来的 `reuseExistingServer`，默认只有设成 `'1'` 才为真。\n\n你若图省事写成永远 `true`，本机旧服务会被悄悄复用。这支测试连「写成 true 再跑一遍」的机会都不给——它在文本阶段就红。\n\n同一条用例还钉了默认端口 5183、绑 `127.0.0.1`、以及本地 Supabase 的占位地址。它们都是「写错了跑起来仍可能绿」的旋钮。文本契约专门盯这类旋钮。\n:::\n\n一人公司没有人在 code review 里每次盯「你是不是又把 reuse 写成 true」。这支测试替代那句 review 评论。\n\n边界你也要清楚：它钉的是**源码文本**。你若把配置改成运行时动态拼字符串，`toContain` 可能失效或误报——契约测试要跟着生成方式一起改，不是万能锁。\n\n回望这门课：测试、类型、lint、格式、钩子、CI、e2e，都是把「我觉得没问题」换成「机器按约定查过」。机器仍查不出好看与否；但查得出的部分，包括配置文本，你不要只靠记忆。\n\n## 再想想\n\n真浏览器那条线为什么贵、为什么不能取代单元测试，见 [[lesson:clicking-through-for-real]]。\n\n## 自检\n\n**问：** 契约测试钉住的默认端口是多少？（`PLAYWRIGHT_PORT ??` 后面的数）\n\n**问：** 它用 `not.toContain` 禁止出现哪一种写法？\n\n**问：** 若配置改成运行时动态拼出那些字符串，这支测试可能怎样？\n\n## 一句话\n\n**配置也会错；把关键配置写成可读可断言的契约，门禁才能盯住「默默变危险」的那一行。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "tests/playwright-config-contract.test.ts",
+                "lineStart": 1,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "readFileSync 后对配置源码做 toContain / not.toContain。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "playwright.config.ts",
+                "lineStart": 3,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "默认端口 5183；复用必须环境变量 === '1'。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "playwright.config.ts",
+                "lineStart": 54,
+                "lineEnd": 61,
+                "nodeIds": [],
+                "note": "webServer 绑 127.0.0.1 与选定端口，reuseExistingServer 用变量。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "config-test-reads-file",
+                "kind": "basic",
+                "front": "playwright-config-contract 测试如何拿到配置内容？",
+                "back": "用 `readFileSync('playwright.config.ts', 'utf8')` 读源码字符串。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/playwright-config-contract.test.ts",
+                    "lineStart": 5,
+                    "lineEnd": 5,
+                    "nodeIds": [],
+                    "note": "readFileSync 读配置。"
+                  }
+                ]
+              },
+              {
+                "id": "no-silent-reuse",
+                "kind": "basic",
+                "front": "测试为什么 `not.toContain('reuseExistingServer: true')`？",
+                "back": "禁止默默复用未知已有服务；复用必须走显式环境变量，避免连到别的 worktree。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/playwright-config-contract.test.ts",
+                    "lineStart": 17,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "not.toContain reuseExistingServer: true。"
+                  }
+                ]
+              },
+              {
+                "id": "course-closing",
+                "kind": "basic",
+                "front": "把「我觉得没问题」换成机器检查时，仍查不出什么？",
+                "back": "主观体验与审美等（如按钮好不好看）；那些仍需人眼与产品判断。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/playwright-config-contract.test.ts",
+                    "lineStart": 7,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "契约测试只钉可文本化的配置约定。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "default-playwright-port",
+                "kind": "short-answer",
+                "title": "写出默认 Playwright 端口",
+                "prompt": "契约测试钉住的默认端口数字是多少？（`PLAYWRIGHT_PORT ??` 后面的数）",
+                "expectedAnswer": "5183",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "tests/playwright-config-contract.test.ts",
+                    "lineStart": 9,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "?? 5183。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

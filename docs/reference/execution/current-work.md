@@ -96,10 +96,19 @@ The current re-run reports:
   current course, so these are legal scopes, not the old “first match wins”
   defect.
 
+- **Lesson revision parity is now explicit.** Recovery exports carry each
+  lesson's `latest.json.contentRevision`; the delivery course package and
+  shelf preserve it, and `check-content-revisions` is part of `pnpm verify`.
+  This intentionally changes read confirmation behavior: a confirmation is
+  for the pinned lesson version, so republishing invalidates an older
+  `readConfirmedRevision` while a confirmation for the current version remains
+  valid.
+
 The check exits `FAIL` for content faults, `PASS` for a clean source shelf, and
 `SKIP` when a machine has no local studies shelf. It is now part of `pnpm
 verify`; generated `apps/university/src/content/imported.json` remains outside
-this report and outside commits.
+this report, but it is a tracked delivery manifest and is refreshed with the
+recovery packages when source content changes.
 
 ## Standing Constraints
 

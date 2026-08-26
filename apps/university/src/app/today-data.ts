@@ -28,12 +28,14 @@ import { lessonProgressOf } from "@pieai/university-ui/view/lesson-view.js";
 /**
  * The revision a shelf lesson is on.
  *
- * A published package is one snapshot, so the delivery build's shelf says 1
- * everywhere. The authoring build sends the real number, because a lesson on
- * disk is edited in place.
+ * Delivery has one immutable edition, while authoring has the live disk
+ * revision. Both shelves carry that number so the shared progress document
+ * asks the same version question in either mode.
  */
 function revisionOf(studies: readonly ShelfStudy[], ref: LessonRef): number {
-  return lessonAt(studies, ref)?.contentRevision ?? 1;
+  const lesson = lessonAt(studies, ref);
+  if (!lesson) throw new Error(`找不到这节课的版本：${ref.lessonId}`);
+  return lesson.contentRevision;
 }
 
 function lessonAt(studies: readonly ShelfStudy[], ref: LessonRef) {

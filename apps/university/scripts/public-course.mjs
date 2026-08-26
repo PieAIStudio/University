@@ -165,9 +165,17 @@ function publicExercise(exercise) {
   return result;
 }
 
+export function requireContentRevision(value, label = "Lesson") {
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${label} must include a positive integer contentRevision`);
+  }
+  return value;
+}
+
 function publicLesson(lesson) {
+  const contentRevision = requireContentRevision(lesson?.contentRevision);
   const result = pick(lesson, PUBLIC_DTO_FIELDS.lesson);
-  if (result.contentRevision === undefined) result.contentRevision = 1;
+  result.contentRevision = contentRevision;
   result.evidence = (lesson?.evidence ?? []).map(publicEvidence);
   result.assets = (lesson?.assets ?? []).map(publicAsset);
   result.cards = (lesson?.cards ?? []).map(publicCard);

@@ -1,0 +1,514 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 27,
+  "course": {
+    "id": "state-and-process",
+    "title": "状态与过程：半年后还改得动",
+    "description": "一个人维护的前端，最先烂掉的地方是状态。这门课讲两件事：把「事实」和「过程」分开存，以及把「加载中」拆成有名字的阶段。",
+    "audience": "一人公司 / 独立开发者，需要长期独自维护一个有真实用户的前端",
+    "objectives": [
+      "解释为什么身份和登录过程必须放在两个 store 里",
+      "写出一个只有一处定义的重置逻辑",
+      "把一个异步流程拆成可以逐个命名的阶段，而不是一个 loading 布尔值",
+      "说明状态里为什么存 key 而不是存给人看的话"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "foundations-product"
+    ],
+    "trackId": null,
+    "units": [
+      {
+        "id": "fact-vs-process",
+        "title": "事实与过程",
+        "objective": "我能把身份事实和登录过程拆成两个 store，让 reset 跑和 create 同一个空定义，过程清零不误伤身份。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "two-stores-not-one",
+            "title": "为什么身份和登录过程不在同一个 store 里？",
+            "content": "# 为什么身份和登录过程不在同一个 store 里？\n\n## 两个东西\n\n你打开登录相关的状态，会发现它落在两个文件里，不是一个。\n\n一边只记「你是谁」：`user`、`profile`、`isAnonymous`。\n\n[[evidence:src/stores/authStore.ts:4-12]]\n\n:::detail[authStore 里为什么没有 phase 或 error？]\n你把这个文件从上扫到下：值字段只有身份。`phase`、`statusKey`、`error` 一个都没有。登录进行到哪一步、失败原因是什么，不在这只袋子里。setter 只改身份字段；`reset` 也只动这只袋子。你若在这里搜 `error`，搜不到——不是漏写，是它被放到另一个文件里了。\n:::\n\n另一边只记「登录这件事进行得怎么样」：`phase`、`statusKey`、`error`。\n\n[[evidence:src/stores/authRuntimeStore.ts:5-11]]\n\n:::detail[error 和 statusKey 各记什么？]\n`error` 是 `string | null`，失败时可以放一段说明。`statusKey` 是另一条字段，记「这一步该显示哪条提示」的标识。两者都跟 `user` / `profile` 分开，都不在 `authStore` 里。你不要把 `error` 当成 `statusKey` 的别名：一个是偶然出现的说明文字，一个是有限名单里的标识。界面提示走 `statusKey`，失败细节走 `error`。\n:::\n\n房间侧同样拆开：`roomStore` 只留房间本身；`roomEntryStore` 只留进房过程，还多一个正在输入的 `code`。\n\n[[evidence:src/stores/roomStore.ts:4-14]]\n[[evidence:src/stores/roomEntryStore.ts:5-14]]\n\n两边字段都「跟登录 / 进房有关」。多数人会塞进同一个 store。这里没有。\n\n## 先猜一下\n\n如果把 `user` 和 `error` 塞进同一个 store，登录失败后你调 `reset()` 清错误——`user` 会怎样？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n要么跟着一起被清掉，界面把你当登出。要么你只能手写「只清 phase / error」——以后每加一个过程字段，都多一次漏改。\n\n## 逐条对照\n\n| | 事实 store（`authStore` / `roomStore`） | 过程 store（`authRuntimeStore` / `roomEntryStore`） |\n| --- | --- | --- |\n| 典型字段 | `user`、`profile`、`isAnonymous`；房间侧 `room`、`players` | `phase`、`statusKey`、`error`（进房还多 `code`） |\n| 活多久 | 该活得久：刷新、重连后身份 / 房间仍在 | 必须能随时清零：失败残留、卡住的 phase 不能拖进下一次 |\n| `reset` | 清身份 / 退房 | 只清过程；事实不动 |\n| 合成一个时 | 整体 `reset` 会误伤事实 | 或手写挑字段，清单追不上后来加的键 |\n\n关键不在字段多少，在两类值活得不一样长。事实要扛过刷新和重连；过程必须在下一次尝试前回到干净起点。登录过程的起点不是「什么都没有」，而是创建函数写死的那一份：`phase` 为 `bootstrapping`，`statusKey` 为 `checkingSession`，`error` 为 `null`。\n\n[[evidence:src/stores/authRuntimeStore.ts:13-21]]\n\n:::detail[reset 之后为什么不是 idle？]\n你可能觉得「清零」等于全部变成空。登录过程这份创建函数不是这样写的：一创建就进入 `bootstrapping`，并带上 `checkingSession`。`reset` 再跑同一函数，所以清完过程，你回到的是「正在核对会话」，不是一张白纸。进房过程的创建函数才回到 `idle` 和一串 `null`——两份「空」不一样，因为两份创建函数不一样。身份那只袋子不受这次 `reset` 影响。\n:::\n\n拆开之后，`useAuthRuntimeStore.getState().reset()` 语义完整：过程归零，`authStore` 里的 `user` 不动。你不用在「踢用户」和「漏字段」之间挑。\n\n## 什么时候用哪个\n\n写字段时只问一句：\n\n> **操作失败后，这个值应该消失，还是应该留着？**\n\n- **消失** → 过程 store（`phase` / `statusKey` / `error`，进房再加上 `code`）\n- **留着** → 事实 store（`user` / `room`）\n- **答不上来** → 字段还没想清楚，先别落进去\n\nauth 与 room 各拆一次，说明这是通行规矩，不是登录特例。你在自己项目里看见「都跟某某有关」就想合成一个 store 时，先用上面那句话拆一遍。\n\n:::detail[进房的 code 为什么算过程？]\n`code` 是用户正在输入或提交的房间码。一次失败的进房结束后，这份输入不该冒充「当前房间」。房间本身在 `roomStore.room`。失败后 `code` 该随过程清掉；房间事实留下。你用那句判定：操作失败后，这段输入该消失还是留着？该消失，所以它跟 `phase` 住在一起。\n:::\n\n:::detail[刷新页面之后，哪一只袋子该还在？]\n你刷新浏览器，身份不该丢——`user` 还在，才谈得上「我还是我」。登录失败留下的 `error`、卡在半路的 `phase`，刷新后不该继续吓唬下一屏。活得久的放事实 store，必须能清零的放过程 store。你拆字段时问的是寿命，不是「名字里有没有 auth」。同一屏幕上的值，寿命可以完全不同。\n:::\n\n:::detail[合成一个 store 时，手写清哪些字段？]\n你若不肯清掉 `user`，就得写 `set({ error: null, phase: 'bootstrapping' })` 这种点名清单。三个月后你给过程 store 加上 `statusKey`，这行不会自己长出新键。漏掉的那个键会在下一次失败里继续显示上一次的提示。拆开之后，`reset` 不用写清单。\n:::\n\n## 再想想\n\n过程侧的 `phase` 不是笼统的 loading 布尔值；下一单元会拆命名：[[lesson:state-and-process/name-the-waiting/phases-not-loading|等待为什么要叫 phase]]。\n\n## 自检\n\n**问：** 用哪一句话判断字段该进事实 store 还是过程 store？\n\n**问：** 把身份和登录过程合成一个 store 时，你被迫在哪两个坏选择之间挑？\n\n**问：** `authRuntimeStore` 的 `reset` 清掉过程之后，`authStore` 里的 `user` 会不会一起没？\n\n## 一句话\n\n**事实与过程活得不一样长——拆成两个 store，过程才能整包清零、不误伤身份。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/stores/authStore.ts",
+                "lineStart": 4,
+                "lineEnd": 12,
+                "nodeIds": [],
+                "note": "身份事实：user / profile / isAnonymous，不含过程字段。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/stores/authRuntimeStore.ts",
+                "lineStart": 5,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "登录过程接口与创建函数：phase / statusKey / error，初始为 bootstrapping。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/stores/roomStore.ts",
+                "lineStart": 4,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "房间事实：room / players / myPlayerId / myRole。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/stores/roomEntryStore.ts",
+                "lineStart": 5,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "进房过程：phase / statusKey / error / code。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "fact-process-test",
+                "kind": "basic",
+                "front": "要判断一个字段该放事实 store 还是过程 store，问哪一个问题？",
+                "back": "「操作失败后，这个值应该消失还是留着？」——消失的属于过程，留着的属于事实。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/stores/authRuntimeStore.ts",
+                    "lineStart": 5,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "过程 store 的字段都是失败后应当清零的。"
+                  }
+                ]
+              },
+              {
+                "id": "merged-store-cost",
+                "kind": "basic",
+                "front": "把身份和登录过程合成一个 store，会被迫在哪两个坏选择之间挑？",
+                "back": "要么整体重置——清错误的同时把用户登出了；要么手工挑字段重置——以后新增过程字段一定会漏掉一个。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/stores/authStore.ts",
+                    "lineStart": 4,
+                    "lineEnd": 12,
+                    "nodeIds": [],
+                    "note": "事实 store 里没有 error 与 phase，所以重置它不会影响登录过程，反之亦然。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "split-recall",
+                "kind": "short-answer",
+                "title": "回忆划分标准",
+                "prompt": "TuringPact 用哪一个问题来决定字段放进事实 store 还是过程 store？用一句话写出来。",
+                "expectedAnswer": "操作失败后这个值应该消失还是留着",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/stores/authRuntimeStore.ts",
+                    "lineStart": 5,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "phase / statusKey / error 都属于失败后应当清零的一类。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "one-definition-of-empty",
+            "title": "为什么 create 和 reset 要跑同一个函数？",
+            "content": "# 为什么 create 和 reset 要跑同一个函数？\n\n## 现象\n\n你打开 `authStore`，会看见两处都走进同一个函数。\n\n建 store 时：`create(...)` 的回调里调用 `createAuthState(set)`。\n`reset` 里：`set(createAuthState(set), true)`。\n\n[[evidence:src/stores/authStore.ts:14-26]]\n\n:::detail[这两处调用差在哪一个符号？]\n第一处把返回值交给 `create`，当初始状态。第二处把返回值交给 `set`，并且多一个 `true`。你先只看调用形状：字段字面量只写在 `createAuthState` 的返回值里。`true` 是你在这一行能数出来的第二个参数。它到底改了 `set` 的哪条规则，先记下有这么个记号。\n:::\n\n房间事实和进房过程逐字同一招：`reset` 都是「再跑一次创建函数，并带上那个 `true`」。\n\n[[evidence:src/stores/roomStore.ts:16-27]]\n[[evidence:src/stores/roomEntryStore.ts:16-24]]\n\n常见写法会另起一份 `initialState` 常量，`reset` 再手抄一遍字段。这里没有。\n\n## 先猜一下\n\n若有人把 `reset` 改成手写一份字面量、也不传第二个参数 `true`，三个月后你给 store 加了第四个字段——最容易出什么 bug？它会不会在编译期报错？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n「空」变成两份定义：新字段只改一处也不会报错，`reset` 静默地不再清它。缺了 `true` 时 `set` 是合并，别处塞进 store 的键还会留下来。\n\n## 为什么是这样\n\n两处刻意选择，合在一起才等于「回到刚创建的样子」。\n\n**一、同一份创建函数。** 初始状态和 `reset` 都调 `createAuthState(set)`。字段清单只在一处。你加 `lastLoginAt: null` 时只改这一处；`create` 与 `reset` 自动对齐。拆成两份时，机器帮不上忙——TypeScript 不会因为 `reset` 少写一个键而失败，用户连续操作时才会撞上「清不干净」。\n\n:::detail[为什么 TypeScript 抓不住两份空定义？]\n`set({ user: null, profile: null, isAnonymous: true })` 在类型上完全合法：你交了一个部分更新。编译器没有「这份对象必须列出 store 里每一个键」的约束。漏掉的键不是类型错误，是运行时的陈旧值。你加第四个字段时，改了创建函数、忘了手写那份 `reset`，两边都还能通过检查。所以要把两处收成一处，让机器没机会漏。\n:::\n\n**二、`set(..., true)` 的 `true`。** Zustand 的 `set` 默认合并：只覆盖你点名的键。不带 `true` 时，返回对象里的键会更新，但 store 上别处塞进来的键原样留下。第二个参数 `true` 是整包替换。auth / room / roomEntry 都写了它——这是语义，不是风格。\n\n登录过程 store 也是同一招。这里的「空」不是一张白纸，而是创建函数返回的那一份：`bootstrapping` 加 `checkingSession`。\n\n[[evidence:src/stores/authRuntimeStore.ts:13-21]]\n\n:::detail[「空」是一份固定的虚无吗？]\n不是。空由创建函数的返回值定义。身份的空是匿名（`isAnonymous: true`，`user` 为 `null`）。进房过程的空是 `idle` 加一串 `null`。登录过程再跑同一招时，回到的是「正在核对会话」。`reset` 等于回到创建时，不等于回到宇宙级的空白。你读任何一个 store 的 `reset`，先去看它调用的那个创建函数返回了什么，别假设所有空都长得一样。\n:::\n\n:::detail[别处塞进 store 的键是怎么来的？]\nZustand 的对象就是一块可变的记忆。测试、热更新、一次手滑的 `set({ extra: true })`，都可能往上多塞一个创建函数里没有的键。默认的 `set` 是合并：你点名的键被覆盖，没点名的键留着。第二个参数 `true` 换成整包替换，那些外来键才会一起消失。你若只手写三个字段还不传 `true`，外来键会在用户连点两次之后还活着。\n:::\n\n:::detail[这种 bug 为什么三个月后才爆？]\n开发时你只测「点一次 reset，这三个字段变回去了」。第四个字段是后来加的，手写那份 `reset` 没人改；类型也不抗议。用户路径是：先走到会写入新字段的流程，再 reset，再走下一次——陈旧值这才露头。你一个人维护时，这种「当时绿、以后脏」最难复现，所以才要把定义收成一处。\n:::\n\n上一课拆开的事实 store 与过程 store，各自都有完整的 `reset`。创建函数加整包替换保证：清过程时过程整包归零；清身份时身份回到匿名初始——没有「清单漏字段」的半残状态。\n\n## 再想想\n\n事实与过程为什么要拆成两个 store，见上一课：[[lesson:state-and-process/fact-vs-process/two-stores-not-one|为什么不合成一个 store]]。过程侧的等待阶段怎么命名，见：[[lesson:state-and-process/name-the-waiting/phases-not-loading|等待为什么要叫 phase]]。\n\n## 自检\n\n**问：** 初始状态和 `reset` 为什么要共用同一个创建函数？\n\n**问：** `set(createAuthState(set), true)` 里的 `true` 是什么？去掉之后 `reset` 还等于「回到初始」吗？\n\n**问：** 两份「空」定义不同步时，bug 通常在什么时候暴露？\n\n## 一句话\n\n**「空」只定义一次，并用整包替换换掉——reset 才真的等于回到创建时。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/stores/authStore.ts",
+                "lineStart": 14,
+                "lineEnd": 26,
+                "nodeIds": [],
+                "note": "createAuthState 同时被 create() 和 reset() 调用；reset 传了 replace=true。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/stores/roomStore.ts",
+                "lineStart": 16,
+                "lineEnd": 27,
+                "nodeIds": [],
+                "note": "同一个创建函数 + replace 模式在 roomStore 里逐字重复。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/stores/roomEntryStore.ts",
+                "lineStart": 16,
+                "lineEnd": 24,
+                "nodeIds": [],
+                "note": "进房过程 store 同一招。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/stores/authRuntimeStore.ts",
+                "lineStart": 13,
+                "lineEnd": 21,
+                "nodeIds": [],
+                "note": "登录过程的空由创建函数定义：bootstrapping + checkingSession。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "single-empty-definition",
+                "kind": "basic",
+                "front": "为什么初始状态和 reset 要调用同一个创建函数？",
+                "back": "让「空」只有一处定义。分成两份时，新增字段只改了一处也不会报错，reset 会静默地不再重置那个字段。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/stores/authStore.ts",
+                    "lineStart": 14,
+                    "lineEnd": 26,
+                    "nodeIds": [],
+                    "note": "create() 与 reset() 都调用 createAuthState。"
+                  }
+                ]
+              },
+              {
+                "id": "replace-flag",
+                "kind": "basic",
+                "front": "`set(createAuthState(set), true)` 里的 `true` 是什么？去掉会怎样？",
+                "back": "是 Zustand 的 replace 标志。去掉后 set 变成合并，reset 只会覆盖列出的字段，别处塞进 store 的键会留下来，reset 就不再等于「回到初始」。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/stores/authStore.ts",
+                    "lineStart": 22,
+                    "lineEnd": 22,
+                    "nodeIds": [],
+                    "note": "reset 显式传入第二个参数 true。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "two-definitions-explain",
+                "kind": "explain",
+                "title": "解释两份定义的代价",
+                "prompt": "假设有人把 reset 改写成手写一份字面量对象（`reset: () => set({ user: null, profile: null, isAnonymous: true })`），并且忘了传 replace。请解释这个改动引入了哪些问题，以及它们各自会在什么时候暴露出来。",
+                "rubric": [
+                  "指出「空」出现了两份定义，新增字段时只改一处不会报错",
+                  "说明少了 replace 后 set 变成合并，reset 不再等于回到初始状态",
+                  "指出这类 bug 不在开发期暴露，而是在用户连续操作时才出现，且难以复现"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/stores/authStore.ts",
+                    "lineStart": 14,
+                    "lineEnd": 26,
+                    "nodeIds": [],
+                    "note": "对照原始写法：创建函数复用 + replace=true。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "name-the-waiting",
+        "title": "给等待命名",
+        "objective": "我能把一个 loading 布尔值拆成具名阶段，状态里只存 syncingSession 这类标识符，句子留给界面。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "phases-not-loading",
+            "title": "进房卡了三十秒，用户凭什么知道该继续等还是该重来？",
+            "content": "# 进房卡了三十秒，用户凭什么知道该继续等还是该重来？\n\n## 现象\n\n你打开进房过程的类型。它不是 `isLoading: boolean`，也不是粗粒度的 `'loading' | 'done' | 'error'`，而是七个字符串：\n\n[[evidence:src/services/room-entry/types.ts:3-10]]\n\n:::detail[这七个名字分别对应哪一段活？]\n`idle` 还没开始。`waiting_for_auth` 在等登录先完成。`resolving_room` 在找这个房间在不在。`ensuring_membership` 在确认你是不是成员。`hydrating_room` 在把房间数据灌进界面。`ready` 进好了。`failed` 失败了。名字本身就是一条流水线，不是七个同义词。\n:::\n\n登录运行时同一套写法——也是具名阶段，并且把「就绪」拆成了两种：\n\n[[evidence:src/services/auth/types.ts:11-18]]\n\n界面若只画一个转圈，你第三秒和第三十秒看见的可以完全一样。类型里却提前写满了名字。\n\n## 先猜一下\n\n用户报「进不去房间」。若你手里只有 `isLoading === true`，和阶段停在 `ensuring_membership` 相比，排查时差在哪里？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n只有布尔值时，你只知道「还在转」——排查范围是整条进房链路。停在 `ensuring_membership` 时，你知道认证过了、房间找到了，卡在加入成员——范围缩到一个函数。\n\n## 为什么是这样\n\n**第一，等待时用户唯一想知道的是「卡在哪一步」。**\n\n一个转圈转三秒和转三十秒是同一画面时，用户没法判断该继续等还是退出重来——于是他们重来，常常就在还差一步成功的时候。七个阶段让界面可以说「正在确认房间」，而不是笼统的「加载中」。你交出去的不是文案润色，是「还要等多久」的可判定信息。\n\n**第二，对你自己，阶段名就是日志。**\n\n一个人做产品时没有客服，用户也不会给你复现步骤。停在 `waiting_for_auth` 和停在 `hydrating_room`，下一步该翻的文件完全不同。\n\n**第三，写下这个 union 会逼你把依赖顺序摊开。**\n\n`waiting_for_auth` 排在 `resolving_room` 前面，说明进房依赖登录先完成。这个顺序原先藏在调用链里；写成类型之后，谁依赖谁摆在明面上。\n\n:::detail[阶段顺序是随便排的吗？]\n不是装饰。你看见 `waiting_for_auth` 在 `resolving_room` 前面，等于类型在说：没登录完，不准去解析房间。漏一步，后面的名字会对不上实际调用。顺序是依赖，不是审美。你以后若要加「检查版本」这种步骤，先想它插在哪两个名字之间，再改 union——别先写完函数再回来补一个谁也读不懂的 `loading2`。\n:::\n\n登录侧还有一处写进了类型：`AuthReadyPhase` 单独抽出 `anonymous_ready | authenticated_ready`，两种都是合法终态。匿名就绪不是「还没登录完」——匿名用户可以直接玩。若你只设一个 `ready`，匿名与已登录在类型上就分不开，界面只能靠别的布尔值猜。\n\n:::detail[为什么不共用一个 ready？]\n进房只有一种「进好了」，所以 `RoomEntryPhase` 用单个 `ready`。登录有两种合法玩法：匿名进和已登录进。把它们写成两个终态，界面不用再问 `isAnonymous` 来猜「到底算不算登录完」。产品决定先写进类型，布尔值去猜是后路。你若把匿名当成「还在 loading」，匿名玩家会永远看见转圈。\n:::\n\n:::detail[只有一个转圈时，用户为什么会重来？]\n第三秒和第三十秒是同一画面，用户无法判断「还差一口气」还是「已经死了」。他们能做的只有退出重进。重进往往发生在 `hydrating_room` 这种最后一步——你这边其实快成功了。给等待起名，是把「还要不要等」交回给用户，也交给半年后的你。\n:::\n\n:::detail[阶段名怎么当日志用？]\n用户不会给你复现步骤，也没有客服帮你问。停在 `waiting_for_auth`，你去翻登录。停在 `ensuring_membership`，你去翻加入成员的那一次请求。停在 `hydrating_room`，你去翻灌数据。一个布尔值把这三件事揉成「还在转」，你只能整条链路重走一遍。\n:::\n\n## 再想想\n\n测试策略课里，降级矩阵要求每一种坏状况都对应玩家看得见的下一步动作：[[lesson:testing-strategy/degraded-design/degraded-matrix|为什么 e2e 文件开头是一张八行的表]]。没名字的等待，和没有下一步动作的错误，是同一个毛病：系统内部知道发生了什么，却没打算告诉任何人。\n\n过程侧的 phase 和 statusKey 会一起进 store；下一课讲为什么提示只存 key：[[lesson:keys-not-sentences|过程状态为什么存 key 不存句子]]。\n\n## 自检\n\n**问：** `RoomEntryPhase` 一共几个阶段？\n\n**问：** 用户报「进不去」、阶段停在 `ensuring_membership` 时，你已经能排除哪几步？\n\n**问：** `AuthReadyPhase` 拆成 `anonymous_ready` 与 `authenticated_ready`，表达了什么产品决策？\n\n**问：** 「没名字的等待」和「没有下一步动作的错误」共同点是什么？\n\n## 一句话\n\n**等待必须具名——布尔 loading 只告诉你「还在转」，阶段名才把现场交出来。**\n",
+            "contentRevision": 4,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/room-entry/types.ts",
+                "lineStart": 3,
+                "lineEnd": 10,
+                "nodeIds": [],
+                "note": "RoomEntryPhase 七个阶段，把进房流程写成了类型。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/auth/types.ts",
+                "lineStart": 11,
+                "lineEnd": 18,
+                "nodeIds": [],
+                "note": "AuthRuntimePhase 把 AuthReadyPhase 抽出来，匿名就绪与已认证就绪都是合法终态。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "phase-order-dependency",
+                "kind": "basic",
+                "front": "`waiting_for_auth` 排在 `resolving_room` 之前，暴露了什么原本藏起来的信息？",
+                "back": "进房依赖登录先完成。这个依赖原本只存在于函数调用顺序里，写成 union 之后摆在了明面上。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 3,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "阶段顺序编码了依赖关系。"
+                  }
+                ]
+              },
+              {
+                "id": "phase-union-value",
+                "kind": "basic",
+                "front": "把 `isLoading: boolean` 换成七个具名阶段，对一个没有客服的独立开发者最大的好处是什么？",
+                "back": "用户报「进不去」时，停住的阶段名就是现场。排查范围从整条链路缩到一个函数——你不需要用户复现。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 3,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "阶段名本身构成了可定位的现场信息。"
+                  }
+                ]
+              },
+              {
+                "id": "two-ready-phases",
+                "kind": "basic",
+                "front": "`AuthReadyPhase = 'anonymous_ready' | 'authenticated_ready'` 这个抽取表达了什么产品决策？",
+                "back": "匿名就绪也是合法终态——匿名用户可以直接玩，不是「还没登录完」。产品决策被写进了类型。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/auth/types.ts",
+                    "lineStart": 11,
+                    "lineEnd": 18,
+                    "nodeIds": [],
+                    "note": "AuthReadyPhase 单独定义并嵌入 AuthRuntimePhase。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "naming-waiting-explain",
+                "kind": "explain",
+                "title": "解释「给等待命名」",
+                "prompt": "这门课说「没名字的等待，和没有下一步动作的错误，是同一个毛病」。请解释这两者为什么是同一件事，并各举出它在 TuringPact 里的一处落点。",
+                "rubric": [
+                  "指出共同点：系统内部知道发生了什么，但没有把它交给用户",
+                  "举出等待侧的落点：RoomEntryPhase 的七个具名阶段",
+                  "举出错误侧的落点：降级矩阵要求每种降级都对应一个玩家可见的下一步动作"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 3,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "阶段与状态键一起构成了可以交给界面的信息。"
+                  }
+                ]
+              },
+              {
+                "id": "phase-count-recall",
+                "kind": "short-answer",
+                "title": "回忆阶段数",
+                "prompt": "RoomEntryPhase 一共定义了几个阶段？只填数字。",
+                "expectedAnswer": "7",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 3,
+                    "lineEnd": 10,
+                    "nodeIds": [],
+                    "note": "idle / waiting_for_auth / resolving_room / ensuring_membership / hydrating_room / ready / failed。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "keys-not-sentences",
+            "title": "过程状态为什么存 syncingSession，不存「正在同步会话…」？",
+            "content": "# 过程状态为什么存 syncingSession，不存「正在同步会话…」？\n\n## 两个东西\n\n图灵密约有中英文两套界面。你打开进房过程的类型：里面有一个 `statusKey`，是一串标识符，并显式允许 `null`。\n\n[[evidence:src/services/room-entry/types.ts:12-17]]\n\n登录过程侧同一形状：\n\n[[evidence:src/services/auth/types.ts:20-26]]\n\n你也会遇到另一条常见路：store 直接存给人看的句子，例如 `statusMessage: '正在加入房间…'`。两条路都想回答「现在该提示什么」；差别在落点。\n\n## 先猜一下\n\n若 store 存的是「正在加入房间…」这句中文，用户切到英文界面时，你绕不开的麻烦是什么？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n你要么清掉状态重跑一遍流程，要么在渲染层用中文句子反查该显示哪句英文——翻译从纯渲染问题变成了你的状态机问题。\n\n## 逐条对照\n\n| | 存标识（这里的做法） | 存句子 |\n| --- | --- | --- |\n| 切换语言 | 换翻译表即可，store 不动 | 清状态重跑，或反查字符串 |\n| 比较与测试 | `statusKey === 'syncingSession'` 稳定 | `=== '正在同步会话…'` 会被句号、空格、文案微调打断 |\n| 改文案 | 只动 locale 文件 | 动到状态值、测试期望、可能还有日志 |\n| 跨过程复用 | 同一标识可在两个 union 里显式共用 | 两句碰巧长得像，改一天就分叉 |\n\n注意 `syncingSession` 同时出现在两个 union 里。用标识，这种复用写在类型上；用句子，你只得到两句碰巧相似的话。\n\n:::detail[syncingSession 为什么能同时出现在两边？]\n登录要同步会话，进房也要同步会话——同一件对你可感知的事。写成同一个标识，翻译表可以共用一条。若一边存「正在同步会话…」、另一边存「同步中…」，它们看起来像同一句话，改一天就会各改各的。类型里把同一个标识写进两个 union，是故意的复用，不是复制粘贴没改干净。\n:::\n\n`null` 也是设计：有的阶段不需要提示条。显式写出来，你的界面就必须处理「此刻没有提示」；若你用空字符串 `''` 冒充，它会悄悄通过真值判断，最后渲染出一条空白提示条。\n\n:::detail[空字符串为什么能骗过界面？]\n`if (statusKey)` 时，`null` 是假，`''` 也是假——有的路径因此看起来都不会显示。但另一些渲染路径是「有这个字段就画出提示条」，只判断字段在不在。`''` 会给你一条没有字的条子。`null` 的意思是「现在没有这条状态」，类型逼你写没有提示的分支。你用空格或「暂无」去填，也会让测试和翻译表多一个假标识。没有提示就写 `null`。\n:::\n\n## 什么时候用哪个\n\n你写过程状态时只问一句：\n\n> **这个值是给机器比较的，还是给人直接读的？**\n\n- **给机器比较、给测试钉住、给双语映射** → 存标识；人话留在你渲染层的翻译表\n- **已经在渲染层、确定只服务当前语言的展示** → 句子可以出现在 UI，但不要回写进过程 store\n- **「暂时没有提示」** → 用 `null`，不要用 `''` 或占位空格\n\n对你这种常一个人扛产品的开发者，双语是极少数难以事后补的架构决定之一。开始时存标识的代价接近零；等句子和逻辑绞在几十个文件里再拆，近似重写。\n\n:::detail[为什么事后补特别痛？]\n句子一旦进了 store、测试期望、日志和分支判断，你要找的不是一份翻译表，是散落的中文。改一句文案可能让测试挂掉，也可能让比较对不上。一开始存标识，翻译只动 locale 文件。你现在付的是接近零的保单。等几十个文件都在比较中文句，再拆成标识，等于重写状态机。双语不是「以后加个翻译文件」就能补上的装饰，它从第一天就决定状态里能存什么。\n:::\n\n:::detail[改一句提示，该动 store 还是翻译表？]\n存标识时，你改「正在加入房间…」为更短的说法，只动 locale。`statusKey` 仍是 `joiningRoom`，测试仍比较这个标识，英文界面自己走自己的值。存句子时，改中文等于改状态值：测试期望、日志、可能还有 `if (status === '正在加入房间…')` 的分支，都要跟着改。提示是给人看的，不是给机器当主键的。\n:::\n\n:::detail[为什么测试要钉标识，不要钉整句？]\n你的练习和回归测试需要一个稳定的「现在是哪一种提示」。标识是闭集，加减都要改类型。句子是开放的，产品随时改语气。把测试钉在标识上，文案迭代不会误伤你的断言。把测试钉在中文句上，每一次润色都像一次协议变更。\n:::\n\n:::detail[比较一句中文时，什么会先碎？]\n`statusKey === 'syncingSession'` 不怕你改标点。`=== '正在同步会话…'` 会怕句号、省略号、空格、语气词。产品经理改三个字，你的测试和分支一起挂。标识把「是不是同一种提示」钉死，句子只负责给人看。\n:::\n\n## 再想想\n\n上一课你把等待拆成具名 phase：[[lesson:phases-not-loading|进房卡了三十秒，用户凭什么知道该继续等还是该重来]]。phase 说「卡在哪一步」，statusKey 说「这一步要显示哪条提示」——一个给流程，一个给文案层。\n\n双语课里同一条边界写得更开：[[lesson:bilingual-by-design/what-stays-out/machine-keys-human-values|机器码做键，人话做值]]。\n\n## 自检\n\n**问：** 过程 store 存 `statusKey` 而不是提示句，主要换来哪三件事？\n\n**问：** `AuthRuntimeStatusKey` 和 `RoomEntryStatusKey` 共用的那个标识叫什么？\n\n**问：** union 末尾的 `null` 表示什么？若改成空字符串会怎样？\n\n**问：** 为什么说双语很难事后补进已经散落句子的状态机？\n\n## 一句话\n\n**状态里存机器能比较的标识符，界面上才出现人看的句子。**\n",
+            "contentRevision": 4,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/room-entry/types.ts",
+                "lineStart": 12,
+                "lineEnd": 17,
+                "nodeIds": [],
+                "note": "RoomEntryStatusKey 是标识符 union，并显式允许 null。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-658b36ef0f55",
+                "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                "sourcePath": "src/services/auth/types.ts",
+                "lineStart": 20,
+                "lineEnd": 26,
+                "nodeIds": [],
+                "note": "AuthRuntimeStatusKey 与 RoomEntryStatusKey 共享 syncingSession。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "explicit-null-status",
+                "kind": "basic",
+                "front": "状态键 union 末尾的 `| null` 解决了什么，用空字符串会怎样？",
+                "back": "null 表示此刻没有提示（idle、ready），显式写出来界面就必须处理它。空字符串会悄悄通过真值判断，最后渲染出一条空白提示条。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 12,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "union 显式以 null 结尾。"
+                  }
+                ]
+              },
+              {
+                "id": "i18n-not-retrofittable",
+                "kind": "basic",
+                "front": "为什么说双语是极少数无法事后补的架构决定？",
+                "back": "补的时候要把散在几十个文件里的每一句话找出来，而它们已经和逻辑绞在一起。开始时存标识代价为零，两年后再改等于重写。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/auth/types.ts",
+                    "lineStart": 20,
+                    "lineEnd": 26,
+                    "nodeIds": [],
+                    "note": "双语产品从一开始就在状态里存标识。"
+                  }
+                ]
+              },
+              {
+                "id": "why-status-key",
+                "kind": "basic",
+                "front": "为什么过程 store 存 `statusKey` 而不是一句现成的提示语？",
+                "back": "翻译只剩渲染层的事；标识可以用 === 可靠比较因而可测；改文案不动代码。三者都因为存的是标识符而不是句子。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/room-entry/types.ts",
+                    "lineStart": 12,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "状态键是标识符 union。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "status-key-recall",
+                "kind": "short-answer",
+                "title": "回忆共用的状态键",
+                "prompt": "AuthRuntimeStatusKey 和 RoomEntryStatusKey 共同拥有的那个状态键叫什么？",
+                "expectedAnswer": "syncingSession",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-658b36ef0f55",
+                    "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+                    "sourcePath": "src/services/auth/types.ts",
+                    "lineStart": 20,
+                    "lineEnd": 26,
+                    "nodeIds": [],
+                    "note": "syncingSession 同时出现在两个状态键 union 中。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

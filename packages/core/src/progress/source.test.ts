@@ -159,6 +159,27 @@ describe("progressSourceOf", () => {
     });
   });
 
+  it("invalidates the old read confirmation after republishing and accepts the current one", () => {
+    const source = progressSourceOf(
+      port({
+        progress: 0,
+        completedAt: null,
+        attempts: 0,
+        readConfirmed: true,
+        readConfirmedRevision: 2,
+      }),
+    );
+
+    expect(source.completionOf(REF, snapshot(3, ["exercise"]))).toEqual({
+      exercisesPassed: false,
+      readConfirmed: false,
+    });
+    expect(source.completionOf(REF, snapshot(2, ["exercise"]))).toEqual({
+      exercisesPassed: false,
+      readConfirmed: true,
+    });
+  });
+
   it("counts a lesson with no exercises as passed after the current read confirmation", () => {
     const source = progressSourceOf(
       port({

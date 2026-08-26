@@ -53,7 +53,7 @@ import { join, resolve } from "node:path";
 
 import { bakeLessonEvidence, hasAnyStudyRepository } from "./bake-evidence.mjs";
 import { validateRecoveryInput } from "./delivery-artifact.mjs";
-import { toPublicPackage } from "./public-course.mjs";
+import { requireContentRevision, toPublicPackage } from "./public-course.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const contentRoot = join(projectRoot, "content");
@@ -165,9 +165,14 @@ for (const studyId of readdirSync(upstream).sort()) {
     for (const unit of course.units) {
       const deliveryLessons = [];
       for (const lesson of unit.lessons) {
-        // Delivery packages are frozen at one published revision. Keep the
-        // revision on the package itself so shared progress code receives the
-        // caller's current version instead of inventing one in core.
+        // A delivery package is frozen, but its lesson revision is not always
+        // one: it identifies the source version whose read confirmation is
+        // still valid. Missing it must stop the import rather than resurrect
+        // the old default and silently preserve stale learner progress.
+        const contentRevision = requireContentRevision(
+          lesson.contentRevision,
+          `Recovery lesson ${studyId}/${course.id}/${unit.id}/${lesson.id}`,
+        );
         const deliveryExercises = [];
         // The answer never leaves the build.
         //
@@ -261,7 +266,7 @@ for (const studyId of readdirSync(upstream).sort()) {
         });
         deliveryLessons.push({
           ...lesson,
-          contentRevision: 1,
+          contentRevision,
           assets: deliveryAssets,
           exercises: deliveryExercises,
         });
@@ -292,7 +297,7 @@ for (const studyId of readdirSync(upstream).sort()) {
           title: lesson.title,
           variant: lesson.variant ?? null,
           status: "active",
-          contentRevision: 1,
+          contentRevision: lesson.contentRevision,
           cardCount: lesson.cards.length,
           exerciseCount: lesson.exercises.length,
           exerciseIds: lesson.exercises.map((exercise) => exercise.id),

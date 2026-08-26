@@ -21,38 +21,38 @@
   "courses": [
     {
       "courseId": "founder-engineer",
-      "file": "founder-engineer.75acd5a50c3ca13c2af9600dee6d351ffd62e3441ede2f894f6980d30ebd01f8.recovery.json",
-      "sha256": "sha256:75acd5a50c3ca13c2af9600dee6d351ffd62e3441ede2f894f6980d30ebd01f8"
+      "file": "founder-engineer.ea3c4d1307873b706a681a75eb9da19d25f548a5cb756f2341f1752c2266bec4.recovery.json",
+      "sha256": "sha256:ea3c4d1307873b706a681a75eb9da19d25f548a5cb756f2341f1752c2266bec4"
     },
     {
       "courseId": "ai-cost-and-boundaries",
-      "file": "ai-cost-and-boundaries.0defd86b19203c7a0427f31af66a300678703388384535bd17124116a33862d8.recovery.json",
-      "sha256": "sha256:0defd86b19203c7a0427f31af66a300678703388384535bd17124116a33862d8"
+      "file": "ai-cost-and-boundaries.cf7f8add2d2a8e42dcba02b2a91da40a5453d2a88f909a213848f76203e22a62.recovery.json",
+      "sha256": "sha256:cf7f8add2d2a8e42dcba02b2a91da40a5453d2a88f909a213848f76203e22a62"
     },
     {
       "courseId": "ai-branching-narrative",
-      "file": "ai-branching-narrative.77ca28f4ed1e563696a39923e0e1339d68139da6e6a42955ce8eab339aaa23cf.recovery.json",
-      "sha256": "sha256:77ca28f4ed1e563696a39923e0e1339d68139da6e6a42955ce8eab339aaa23cf"
+      "file": "ai-branching-narrative.d1632dd4b606dea89123108954c8333b54db3a52dd305d7c1965c9ea55d96df9.recovery.json",
+      "sha256": "sha256:d1632dd4b606dea89123108954c8333b54db3a52dd305d7c1965c9ea55d96df9"
     },
     {
       "courseId": "generated-assets",
-      "file": "generated-assets.afd2a5318261edca5f1c6471bd9ec61311d41b53e146984fd05aa7837a741aad.recovery.json",
-      "sha256": "sha256:afd2a5318261edca5f1c6471bd9ec61311d41b53e146984fd05aa7837a741aad"
+      "file": "generated-assets.566373afe564a1fabbd7b4831e061486818d500ea3551adade0a422a2bf6381c.recovery.json",
+      "sha256": "sha256:566373afe564a1fabbd7b4831e061486818d500ea3551adade0a422a2bf6381c"
     },
     {
       "courseId": "media-tooling",
-      "file": "media-tooling.e936093c94ecde1853e6bfb5914a85e2321d80fc2ecdf5a998dd8a068c434c9f.recovery.json",
-      "sha256": "sha256:e936093c94ecde1853e6bfb5914a85e2321d80fc2ecdf5a998dd8a068c434c9f"
+      "file": "media-tooling.d74705dee80b7c278a2b74c52d8c6d0f35bd9991275bacdce1f493173f0a2302.recovery.json",
+      "sha256": "sha256:d74705dee80b7c278a2b74c52d8c6d0f35bd9991275bacdce1f493173f0a2302"
     },
     {
       "courseId": "content-as-package",
-      "file": "content-as-package.7b230243e35c162d9c09ad700fd2edbc37f71067cc2f7a4c7c7ec408fc03d589.recovery.json",
-      "sha256": "sha256:7b230243e35c162d9c09ad700fd2edbc37f71067cc2f7a4c7c7ec408fc03d589"
+      "file": "content-as-package.afedbcb002cf8f4614823d732ae85ef398b7496cccd99d7e1fa0050a716bb2b4.recovery.json",
+      "sha256": "sha256:afedbcb002cf8f4614823d732ae85ef398b7496cccd99d7e1fa0050a716bb2b4"
     },
     {
       "courseId": "automated-playtesting",
-      "file": "automated-playtesting.86864c40220af35cf76872bad03d3811d46fa00b0c28e21661cf1f30284aed73.recovery.json",
-      "sha256": "sha256:86864c40220af35cf76872bad03d3811d46fa00b0c28e21661cf1f30284aed73"
+      "file": "automated-playtesting.db9332fb48e901c32ebfdb2cadc93039257d92a7101681e4b80d2dc95ab7cb28.recovery.json",
+      "sha256": "sha256:db9332fb48e901c32ebfdb2cadc93039257d92a7101681e4b80d2dc95ab7cb28"
     }
   ]
 }

@@ -25,6 +25,7 @@ const course = {
           id: "you-already-know-apps",
           title: "你已经会用 App 了",
           content: "## 现象\n一段课文。",
+          contentRevision: 3,
           evidence: [],
           assets: [],
           cards: [{ id: "app-is-a-program", kind: "recall", front: "问", back: "答" }],
@@ -89,20 +90,20 @@ describe("createOnlineContentPort", () => {
     const view = await createOnlineContentPort().lesson(locator);
     expect(view.lesson.id).toBe(locator.lessonId);
     expect(view.lesson.content).toContain("一段课文");
-    // A published package is one snapshot, so there is exactly one edition.
-    expect(view.lesson.contentRevision).toBe(1);
+    // A published package is one snapshot, but it keeps the source revision.
+    expect(view.lesson.contentRevision).toBe(3);
   });
 
   it("does not trust aggregate progress over current exercise attempts", async () => {
     servePackage();
     const key = lessonKey(locator.studyId, locator.courseId, locator.lessonId);
     progressPort.advanceLesson(key, 1);
-    progressPort.confirmLessonRead(key, 1);
+    progressPort.confirmLessonRead(key, 3);
 
     const view = await createOnlineContentPort().lesson(locator);
 
     expect(view.lesson.progress).toMatchObject({
-      contentRevision: 1,
+      contentRevision: 3,
       status: "in-progress",
       progress: 1,
       readConfirmed: true,
@@ -127,7 +128,7 @@ describe("createOnlineContentPort", () => {
       title: "问题",
       prompt: "题面",
       correctAnswer: null,
-      contentRevision: 1,
+      contentRevision: 3,
     });
   });
 
@@ -145,9 +146,9 @@ describe("createOnlineContentPort", () => {
       ...locator,
       cardId: "app-is-a-program",
       front: "问",
-      contentRevision: 1,
+      contentRevision: 3,
     });
-    expect(body).toEqual({ front: "问", back: "答", contentRevision: 1 });
+    expect(body).toEqual({ front: "问", back: "答", contentRevision: 3 });
   });
 
   it("builds a recap front from the published unit objective and has no reference back", async () => {
@@ -175,7 +176,7 @@ describe("createOnlineContentPort", () => {
         ...locator,
         cardId: "not-a-card",
         front: "",
-        contentRevision: 1,
+        contentRevision: 3,
       }),
     ).rejects.toThrow(/尚未加载/);
   });

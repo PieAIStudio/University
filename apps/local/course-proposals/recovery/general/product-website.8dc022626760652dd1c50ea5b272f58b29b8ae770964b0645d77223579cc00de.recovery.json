@@ -1,0 +1,1935 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "product-website",
+    "title": "从零做一个产品官网",
+    "description": "用一个虚构案例，从确定给谁看开始，逐步写出页面结构、视觉规则、首屏、功能与示例、可核对的证据、间距和反馈、候补表单、手机重排，最后收成一份可重复的检查和可以直接发给 AI 的修改要求。不需要会写代码。",
+    "audience": "没写过代码、但要和一个 AI 一起做出产品官网的人",
+    "objectives": [
+      "写出这个官网主要给谁看，以及她打开时想确认什么",
+      "按访客会问的顺序排出页面区块，并让每一块只回答一个问题",
+      "为首屏写出一句能让人认出自己麻烦的话，并只保留一个主要行动",
+      "只展示能核对来源的说法；数字、评价和价格没有口径就撤下或标待补",
+      "用鼠标、键盘和窄屏各走一遍，说得出反馈、报错和重排有没有到位",
+      "把已确认的事实收成一段可以直接发给 AI 的要求，并由人按清单验收"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [],
+    "trackId": null,
+    "units": [
+      {
+        "id": "set-the-direction",
+        "title": "定方向",
+        "objective": "读完这一单元，你能说出这个官网给谁看、页面上看得到的叫什么、每一块管哪一件事，并写出一套全站共用的字号、颜色和间距规则。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "who-the-site-is-for",
+            "title": "官网先定给谁看",
+            "content": "## 学习目标\n\n学完这节，你能给官网定出一个具体的人：她是谁、打开页面想干什么。\n\n## 先给结论\n\n做产品官网，第一件事不是挑颜色，也不是画按钮。\n\n先想清楚两句话：这个页面给谁看？她为什么点开？\n\n没想清楚这两句，写出来的标题就对谁都说、对谁都没用。想清楚了，首页该说什么、按钮带她去哪，才有着落。\n\n官网的读者通常不是「所有人」。一次只对准一种打开原因。\n\n## 一个类比\n\n你可以把官网当作菜市场里的吆喝。\n\n摊主不会对着路过的每个人喊同一句。买葱的人想听「葱新鲜、论把卖」；买鱼的人站在旁边听了没用，也不会生气——他本来就不是这摊的客人。\n\n官网也一样：你得对着一种人喊。要是喊给「所有创作者」听，等于谁都没听见。\n\n不同的是：在菜市场，别人还能逛去下一摊。在网页上，听不懂的人通常抬手就关了，不会再给你第二次吆喝的机会。\n\n所以「写给谁」不是客套话，而是定下标题该怎么写的第一步。\n\n## 工作示例\n\n后面的课都会用同一个人做例子。她叫周宁，做独立产品设计，刚给一家社区食堂改完一版点餐小程序。\n\n改版的截图在设计稿里，改动的原因在聊天记录里，上线后的样子在手机相册里。她想把这些收成一份顺畅的作品页，好拿去谈下一次合作。\n\n正好有人做了一个工具，专干这件事：不替你编内容，只把你现成的材料理成「为什么改、怎么改的、改成什么样」，生成一个能直接分享的页面。\n\n这个工具的官网，主要给周宁这样的人看。她点开页面，只想确认一件事：我手头这些零散的材料，能不能理成一份完整的作品页？\n\n食堂里点餐的师傅不是这个官网的读者。师傅点开的是点餐小程序本身，要看的是「今天的菜」——那是另一个产品，该说另一套话。\n\n两类人做的事不同，不能写进同一句标题里。\n\n光写一句「让创作更简单」也不够。这句话谁看都会点头，但谁也看不出自己的痛点能不能被解决。更清楚的写法是直接点明她的麻烦：截图、聊天记录和成品图散在各处，这个工具能帮你收成一份别人能顺着读完的作品页。\n\n:::detail[为什么不写成「所有设计师」？]\n「所有设计师」听起来很大气，其实把人推远了。做海报、做建筑、做小程序的，手头材料各不相同。第一版先抓准一个具体任务：把做完的项目，整理成别人能顺着读完的介绍。等这个任务跑通了，再考虑要不要兼顾其他材料习惯。\n:::\n\n:::detail[卡住了，可以怎么问 AI？]\n把这段话复制过去，按你的产品改名字：\n\n> 我在做一款工具的官网。工具能把独立创作者已经有的项目材料，整理成背景、过程和结果，生成可分享的作品页。请根据这个用户来写官网标题：她刚做完一个小程序改版，材料散在设计稿、聊天记录和相册里。不要写成「让创作更简单」，也不要把点餐的顾客写成这个官网的用户。不要编造用户数量。\n:::\n\n## 自检\n\n**做对了你会看到：** 你能用一两句话讲清楚官网的读者是谁（像周宁这样、要整理作品页的独立创作者），以及她打开时想确认什么（手头零散的材料能不能收成一份完整介绍）。你也能指出谁不是读者（食堂顾客）。\n\n**最常见的两种做错：**\n\n1. **写成「所有人」或「所有创作者」。** 标题对谁都点头、对谁都没用。退回去找一个具体的人、一件具体的麻烦。\n2. **把产品的用户和官网的读者混在一起。** 点餐小程序的用户是食堂顾客；工具官网的读者是要展示项目的创作者。两拨人别写进同一句。\n\n## 重点\n\n- 官网先定给谁看、她打开想干什么，再去写标题和按钮。\n- 一次通常只对准一种打开原因；写给「所有人」等于没有读者。\n- 产品的用户和官网的读者可能不是同一拨人，别混淆。\n- 标题要让人认出自己的麻烦，而不是堆「高效、智能、专业」。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML",
+                "sourceTitle": "MDN · HTML",
+                "sourceAuthority": "mdn",
+                "note": "HTML 用来给网页上的每一块内容贴上「这是什么」的标签，写给要读它的人。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML",
+                "sourceTitle": "MDN · HTML",
+                "sourceAuthority": "mdn",
+                "note": "组织内容的第一步是弄清这段话是写给谁读的、这段结构在回答什么。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/headings-and-labels.html",
+                "sourceTitle": "W3C · Headings and Labels",
+                "sourceAuthority": "w3c",
+                "note": "标题和标签要描述主题或目的，读者才能从标题里认出自己要的东西。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML",
+                "sourceTitle": "MDN · HTML",
+                "sourceAuthority": "mdn",
+                "note": "文档结构是给读者用的：先让人知道这页是什么，再往下读细节。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "who-before-color",
+                "kind": "basic",
+                "front": "做产品官网，为什么先定给谁看，而不是先挑颜色？",
+                "back": "不知道这个人为什么点开，标题和按钮就没有着落，通常会写成对谁都说、对谁都没用的话。颜色是后面的规则，写给谁才决定说什么。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/headings-and-labels.html",
+                    "sourceTitle": "W3C · Headings and Labels",
+                    "sourceAuthority": "w3c",
+                    "note": "标题要描述目的；目的来自读者打开页面想干什么。"
+                  }
+                ]
+              },
+              {
+                "id": "product-user-not-site-reader",
+                "kind": "basic",
+                "front": "产品的用户，一定就是官网的读者吗？",
+                "back": "不一定。点餐小程序的用户可能是食堂顾客；介绍「整理作品页」这个工具的官网，读者通常是要展示项目的创作者。两类人要办的事不同，标题不能混写成一句。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML",
+                    "sourceTitle": "MDN · HTML",
+                    "sourceAuthority": "mdn",
+                    "note": "内容结构要匹配读者带着的那个问题，而不是把所有角色塞进同一段。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "spot-the-real-reader",
+                "kind": "short-answer",
+                "title": "谁才是这个官网的读者",
+                "prompt": "一个工具能把独立创作者散落的项目材料整理成作品页。它帮社区食堂做过点餐小程序。这个工具的官网，主要该写给谁看？",
+                "expectedAnswer": "独立创作者",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/headings-and-labels.html",
+                    "sourceTitle": "W3C · Headings and Labels",
+                    "sourceAuthority": "w3c",
+                    "note": "标题要对准读者带着的那个目的，不是把产品做过的所有场景都写上去。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "frontend-is-what-you-see",
+            "title": "页面上看得到的叫前端",
+            "content": "## 学习目标\n\n读完你能指着一个页面，说清哪些是前端、哪些不是，也明白「页面上变了」为什么不等于「资料存好了」。\n\n## 先给结论\n\n你在浏览器里能看到、能点的东西——标题、图片、导航、按钮，包括点完弹出的提示——统称叫 [[term:html.markup|前端]]，也就是网页露在外面的这一层。上一节那个[[lesson:who-the-site-is-for|具体的人]]，打开看的就是它。\n\n我们这门课做官网，只做这一层。账号怎么开、邮件怎么发、数据存在哪，页面上看不见。那些叫后端，这门课先不碰。\n\n所以先记住一件事：页面上出现「提交成功」，只说明画面变了。后面真正把邮箱收走、存起来的那一头还没接通之前，它通常并不表示资料已经存好。\n\n## 一个类比\n\n把网站想成一家餐厅。\n\n你能看见的门面、菜单、桌上的灯，就是前端。后厨怎么进货、账单怎么入账，客人不进后厨，也能吃完这顿饭。\n\n做官网就像先把门面摆利索：招牌写什么、菜单怎么排、按钮指向哪道菜。后厨进货和入账，是另一门课的事。\n\n不同的地方在哪？餐厅里服务员说「下单了」，后厨通常真收到了；网页上很容易只改门面上的字，后厨其实不知道。所以「页面上写了成功」，不能当作「后厨已经记账」。\n\n## 工作示例\n\n周宁要做的那一页，上面的产品名、一排入口、大标题、「查看完整示例」按钮，还有下面的能力说明，这些全在前端这一层。\n\n后面我们会做个「加入候补名单」的表单。在真正收邮箱的那一头接通前，点提交，页面可以先换成一句「我们记下了」——这只是画面变了，邮箱并没有真的存走。\n\n跟 AI 说「做个官网」时，它有时会顺手加上登录、支付、后台，那些不在本课范围内。你要跟它说清：这一版只改页面上看得到的部分；登录、存数据、发邮件先标成待确认，别假装已经接通。\n\n:::detail[前端这两个字，到底指哪一层？]\n用浏览器打开一个地址，屏幕上出现的字、图、按钮，就是前端。它通常由 [[term:html.markup|HTML]] 标明每一块是什么（这是标题、这是按钮），再用颜色和间距排好看。你看不见的那一层——谁登录了、数据存在哪台机器上——不在这里面。\n:::\n\n:::detail[卡住了，可以怎么问 AI？]\n> 请只改这个产品官网页面上看得到的部分：标题、导航、首屏、能力说明和候补表单的样子。不要做登录、支付、发邮件或保存到服务器。提交成功的提示先做成页面上的变化，并标明后面真正收走邮箱的那一头仍待确认。\n:::\n\n## 自检\n\n**做对了你会看到：** 你能指着一页，把标题、按钮、提示归到「页面上的」；把登录、存邮箱、发邮件归到「这版先不做」。你不会把「提交成功」四个字当作资料已经存好。\n\n**最常见的两种做错了：**\n\n1. **让 AI 顺手把登录和支付也做了。** 页面里突然多出账号体系，范围直接炸了。赶紧回去写清：这一版只改页面上看得到的部分。\n2. **把模拟的样子当作了真成功。** 页面提示只是用来检查样子；在后面那一头能返回可核对的结果之前，别把它当作事实写进正文。\n\n## 重点\n\n- 前端是你在页面上能看见、能点的那一层；这门课只做这一层。\n- 「页面上变了」不等于「资料已经存好了」。\n- 登录、存数据、发邮件在后面那一头确认之前，先标成待确认，别假装接通。\n- 跟 AI 说话时把范围框死，省得它用常见模板把后厨一起搭出来。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML",
+                "sourceTitle": "MDN · HTML",
+                "sourceAuthority": "mdn",
+                "note": "HTML 描述的是浏览器里那一层：标题、段落、链接、按钮。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML",
+                "sourceTitle": "MDN · HTML",
+                "sourceAuthority": "mdn",
+                "note": "做网站从浏览器里能看见的那一页开始：结构、文字和链接。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML",
+                "sourceTitle": "MDN · HTML",
+                "sourceAuthority": "mdn",
+                "note": "学 HTML 就是在学你在网页上看到的那些块怎么被标出来。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/form",
+                "sourceTitle": "MDN · form",
+                "sourceAuthority": "mdn",
+                "note": "表单是页面上收集输入的那一块；提交到哪台服务器，是另一件事。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "frontend-is-visible",
+                "kind": "basic",
+                "front": "前端指的是网站的哪一层？",
+                "back": "你在浏览器里能看见、能点的那一层：标题、图片、导航、按钮和点完之后的提示。账号怎么管、资料存到哪，通常不在这一层。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML",
+                    "sourceTitle": "MDN · HTML",
+                    "sourceAuthority": "mdn",
+                    "note": "HTML 管的是页面上每一块内容是什么。"
+                  }
+                ]
+              },
+              {
+                "id": "success-is-not-saved",
+                "kind": "basic",
+                "front": "页面上出现「提交成功」，等于邮箱已经存进服务器了吗？",
+                "back": "不等于。那只说明画面改了。后面那一头接通、并能核对结果之前，这只是用来检查样子的提示，不能当成已经登记成功。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/form",
+                    "sourceTitle": "MDN · form",
+                    "sourceAuthority": "mdn",
+                    "note": "表单可以在页面上收集输入；数据是否送到服务器，要看它有没有真正提交到后端。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-the-layer",
+                "kind": "short-answer",
+                "title": "这是不是前端",
+                "prompt": "点「加入候补名单」之后，按钮变成「处理中」，下面出现一句「我们记下了」。真正发信的那一头还没接。这句话证明了什么？",
+                "expectedAnswer": "页面变了",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/form",
+                    "sourceTitle": "MDN · form",
+                    "sourceAuthority": "mdn",
+                    "note": "页面上的提示只证明画面改了，不证明表单已经把数据交给服务器。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "one-job-per-block",
+            "title": "每一块只管一件事",
+            "content": "## 学习目标\n\n读完你能说清页头和导航栏各管哪件事，还能写出一句话，只让 AI 改其中一块，不把顶部整段重写。\n\n## 先给结论\n\n页面是一块一块拼出来的。前端把这种块叫 [[term:component.ui|组件]]：改一处，用到的地方跟着一起变。\n\n最容易搞混的是顶部那一条。很多人把「页头」和「导航栏」当作了一回事。\n\n其实分工很清楚：页头回答「这是谁的产品」，导航栏回答「想去哪个部分」。\n\n跟 AI 说「改页头的名字，别动导航」，比「把顶部弄好看点」准得多。后一种说法太笼统，经常让它把整个顶部重写一遍。\n\n## 一个类比\n\n你可以把页头当作店门口的招牌，把导航栏当作进门后的指路牌。\n\n招牌告诉你这是哪家店；指路牌告诉你厨房在左、座位在右、厕所在尽头。两块牌子贴在同一面墙上，管的事完全不同。\n\n你不会因为想换店名，就把指路牌上的箭头也顺手重画一遍。但在网页上，这种事经常发生——就因为你跟 AI 说的是「顶部」，而不是「招牌」或「指路牌」。\n\n实体店里两块牌子离得远，不容易看混；网页上它们常常贴在同一行，所以更要分开叫。\n\n## 工作示例\n\n周宁那一页，从上到下可以先拆成这几块：\n\n```mermaid\nflowchart TD\n  H[\"页头 header：产品名和标识\"] --> N[\"导航 nav：功能 / 完整示例 / 常见问题\"]\n  N --> M[\"主要内容 main：首屏到候补\"]\n  M --> F[\"页脚 footer：联系、条款、补充链接\"]\n```\n\n在 HTML 里，它们本来就不是同一种标签。`<header>` 是导语块，常放名称和标识；`<nav>` 是导航区块，专门放去各处的入口；`<main>` 是这一页的主体；`<footer>` 是页脚。\n\n所以跟 AI 可以这么说：\n\n- 「页头只放产品名，不要在页头里塞四个按钮。」\n- 「导航里放『功能』『完整示例』『常见问题』三个入口。别改产品名。」\n- 「页脚放联系和条款，不要把主要按钮放进页脚。」\n\n如果只说「把顶部弄好看点」，没指定改哪一块，AI 就可能连名字带入口一起换掉。\n\n:::detail[组件到底是什么？]\n组件就是「改一份、处处跟着变」的那块界面。页头做成组件后，你改一次产品名，每一页顶部的名字一起变。它不是装饰，是为了省得同一块在二十个页面里各写一份。\n:::\n\n:::detail[卡住了，可以怎么问 AI？]\n> 页面顶部请拆成两块，不要合成一块。页头只放产品名和标识，回答「这是谁的产品」。导航栏单独放三个入口：功能、完整示例、常见问题。改页头时不要重写导航，改导航时不要动产品名。\n:::\n\n## 自检\n\n**做对了你会看到：** 指着顶部你能说清「左边这是页头、右边或下面那一排是导航」；写修改要求时，一次只点名其中一块。\n\n**最常见的两种做错：**\n\n1. **把页头和导航混叫成「顶部」。** AI 会把整条重做，产品名和入口一起变。回去拆开叫。\n2. **页头里塞了一排和导航同样大的按钮。** 页头不再回答「这是谁」，访客会以为那些按钮才是产品名。把入口还给导航。\n\n## 重点\n\n- 页头回答「这是谁的产品」，导航栏回答「想去哪个部分」，两件事不要合成一块。\n- 每一块只管一件事，跟 AI 说话时直接点名那一块。\n- 「把顶部弄好看点」通常会让整段被重写；说「改页头的名字，别动导航」才改得准。\n- 页脚放补充信息和链接，不要把主要行动塞进去。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/header",
+                "sourceTitle": "MDN · header",
+                "sourceAuthority": "mdn",
+                "note": "header 表示导语性的一块，通常放一组介绍性内容，比如产品名。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/nav",
+                "sourceTitle": "MDN · nav",
+                "sourceAuthority": "mdn",
+                "note": "nav 表示导航区块，用来放前往其它页面或部分的入口。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/header",
+                "sourceTitle": "MDN · header",
+                "sourceAuthority": "mdn",
+                "note": "footer 表示页脚，通常放补充链接和次要信息。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/header",
+                "sourceTitle": "MDN · header",
+                "sourceAuthority": "mdn",
+                "note": "main 表示这一页的主体内容，和页头、导航、页脚分开。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/header",
+                "sourceTitle": "MDN · header",
+                "sourceAuthority": "mdn",
+                "note": "WHATWG 把 header 定义为导语性内容，不是「页面上所有靠上的东西」。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/nav",
+                "sourceTitle": "MDN · nav",
+                "sourceAuthority": "mdn",
+                "note": "WHATWG 把 nav 定义为导航区块，专门放站点内的主要入口。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "header-vs-nav",
+                "kind": "basic",
+                "front": "页头和导航栏各回答哪个问题？",
+                "back": "页头回答「这是谁的产品」，通常放名称和标识。导航栏回答「想去哪个部分」，放一排入口。它们常常贴在同一行，但不是同一块。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/header",
+                    "sourceTitle": "MDN · header",
+                    "sourceAuthority": "mdn",
+                    "note": "header 是导语性的一块；nav 才是导航入口所在的区块。"
+                  }
+                ]
+              },
+              {
+                "id": "dont-say-the-top",
+                "kind": "basic",
+                "front": "为什么不要跟 AI 说「把顶部弄好看点」？",
+                "back": "「顶部」没有指定改哪一块，页头和导航常常被当成一整条重写。要说「改页头的名字，别动导航」，一次只点名一块。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/nav",
+                    "sourceTitle": "MDN · nav",
+                    "sourceAuthority": "mdn",
+                    "note": "nav 是独立的导航区块，不该因为改产品名就被整段替换。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "which-block-is-which",
+                "kind": "short-answer",
+                "title": "改的是哪一块",
+                "prompt": "你只想把产品名从「工具」改成「页脊」，一排入口要保持不动。你该点名改哪一块？",
+                "expectedAnswer": "页头",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/header",
+                    "sourceTitle": "MDN · header",
+                    "sourceAuthority": "mdn",
+                    "note": "产品名属于 header 这类导语性内容，不是 nav 里的入口。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "order-by-visitor-questions",
+            "title": "从上到下按访客会问的顺序排",
+            "content": "## 学习目标\n\n读完你能按访客会问的顺序，从上到下排出这个官网该有的几块，并指出首屏为什么不能塞一排同样大的按钮。\n\n## 先给结论\n\n周宁这类访客打开一页，心里通常按这个顺序问：\n\n这是给我用的吗？它能干嘛？有没有一个完整例子？价格和疑问呢？我能先留个联系方式吗？\n\n页面从上到下，就按这个顺序排。每一块只回答一个问题，答完了才轮到下一块。\n\n这门课用一条省事的结构：整个官网就是一个长页面，访客从上往下滚。顺序不是装饰，是阅读顺序——读起来乱，通常是问题的顺序乱了。\n\n## 一个类比\n\n把官网想成你向一个陌生人介绍自己。\n\n你不会先报银行卡号，再报名字。通常是：我是谁、我能帮你什么、举一个你见过的例子、你可能担心的事、要不要先留个联系方式。\n\n官网从上到下就是这段自我介绍。把价格和登录塞进第一句，等于见面先掏钱包——对方还不知道你是谁。\n\n不一样的地方是：当面介绍时，对方可以打断你、让你跳到例子。网页上他只能往下滚。你把顺序写乱了，他通常不会回头找，会直接离开。\n\n## 工作示例\n\n周宁那个官网，一块接一块是这样：\n\n```mermaid\nflowchart TD\n  A[\"页头 + 导航：这是谁 · 想去哪\"] --> B[\"首屏：一句话 + 一个主要按钮\"]\n  B --> C[\"能力：整理背景、梳理过程、呈现结果\"]\n  C --> D[\"完整示例：一个项目从头读到尾\"]\n  D --> E[\"证据与常见问题\"]\n  E --> F[\"加入候补名单\"]\n  F --> G[\"页脚\"]\n```\n\n首屏是导航下面那一大块。它只回答第一个问题：这是给谁用的、解决什么麻烦、下一步看什么。周宁这一版的下一句话是「查看完整示例」——因为她要先看整理完长什么样，才决定要不要留邮箱。\n\nAI 给的第一版经常在首屏放四个一样大的按钮：开始创建、观看视频、查看功能、了解价格。访客不知道点哪个。对 AI 说：「首屏只保留一个主要按钮，其它入口收进导航。」\n\n这个顺序也别当作死模板。它其实就是你自己了解一个新工具的过程。换一个产品，把问法换成那个访客会问的就行，但「一次只回答一个问题」这一条通常不变。\n\n还有一件容易漏的事：看起来在上面的块，就要写在前面。有人不用眼睛看，软件会按你写下的先后把字读出来。上面的块如果写在后面，他听到的故事就是反的。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 这是一个单页滚动的产品官网。请按这个顺序排，不要打乱：页头与导航、首屏、三组能力、一个完整示例、证据与常见问题、加入候补名单、页脚。首屏只保留一个主要按钮「查看完整示例」，其它入口放进导航。不要在首屏放价格或登录。\n:::\n\n## 自检\n\n**做对了你会看到：** 你能按「是什么 → 能做什么 → 完整例子 → 疑问 → 留联系」说出整页顺序；首屏只有一个主要按钮，其它入口在导航里。\n\n**最常见的两种做错了：**\n\n1. **首屏塞了一排同样大的按钮。** 访客要自己猜下一步。回去只留一个主要行动。\n2. **把价格、登录或评价堆进第一屏。** 第一个问题还没回答。把它们挪到对应的那一块。\n\n## 重点\n\n- 整页顺序按访客会问的问题排，每一块只回答一个问题。\n- 首屏只回答「给我用吗、解决什么、下一步看什么」。\n- 首屏只留一个主要按钮，其它入口收进导航。\n- 视觉上的先后，要和代码里的先后一致，读屏听到的才是同一件事。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                "sourceTitle": "W3C WAI · 页面结构",
+                "sourceAuthority": "w3c",
+                "note": "内容必须以有意义的顺序呈现；视觉顺序和程序顺序不一致时，意思会乱。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                "sourceTitle": "W3C WAI · 页面结构",
+                "sourceAuthority": "w3c",
+                "note": "页面结构要让人能按区块找到内容，而不是在一堆并列按钮里猜。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/Heading_Elements",
+                "sourceTitle": "MDN · 标题元素",
+                "sourceAuthority": "mdn",
+                "note": "标题层级帮助读者按顺序扫过一页，而不是把所有句子做成同样大的按钮。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/header",
+                "sourceTitle": "MDN · header",
+                "sourceAuthority": "mdn",
+                "note": "主体内容放在 main 里，和导航分开，阅读顺序才清楚。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "one-question-per-block",
+                "kind": "basic",
+                "front": "产品官网从上到下，为什么要按访客会问的顺序排？",
+                "back": "访客通常先问这是给我用的吗、能干嘛、有没有完整例子、还有哪些疑问。每一块只回答一个问题，答完再往下，他才跟得上。顺序乱了，他通常直接离开。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                    "sourceTitle": "W3C WAI · 页面结构",
+                    "sourceAuthority": "w3c",
+                    "note": "有意义的顺序是一条可检查的要求，不是审美偏好。"
+                  }
+                ]
+              },
+              {
+                "id": "hero-one-button",
+                "kind": "basic",
+                "front": "首屏为什么不能放一排同样大的按钮？",
+                "back": "首屏只回答下一个行动是什么。按钮一样大，访客就要自己猜。主要行动留一个，其它入口放到导航里。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                    "sourceTitle": "W3C WAI · 页面结构",
+                    "sourceAuthority": "w3c",
+                    "note": "清楚的页面结构让人先找到这一页最想让他做的那件事。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-the-first-block-job",
+                "kind": "short-answer",
+                "title": "首屏回答哪个问题",
+                "prompt": "导航下面那一大块只该先回答访客心里的哪一件事？用六个字以内说。",
+                "expectedAnswer": "给我用吗",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/Heading_Elements",
+                    "sourceTitle": "MDN · 标题元素",
+                    "sourceAuthority": "mdn",
+                    "note": "第一块的标题要让人立刻知道这页跟自己有没有关系。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "reusable-visual-rules",
+            "title": "字号颜色间距写成一套规则",
+            "content": "## 学习目标\n\n学完这节，你能定出一套全站共用的字号、颜色和间距，也说得出为什么这些数值要起名字复用，而不是走到哪现编到哪。\n\n## 先给结论\n\n页面排顺之后，还得让每一块看起来像同一个人做的。\n\n先定三件事：字谁大谁小、哪种颜色干什么事、区块之间隔多远。定好就全站通用，不再临时挑。\n\n在网页里，把这些数值起个名字写成变量，也就是 CSS 自定义属性。改一次名字，引用的地方全跟着变。\n\n这步定的是规则，不是美术风格。官网得先说清工具干什么用、界面长什么样、下一步去哪——不是先纠结要不要搞蓝紫渐变。\n\n## 一个类比\n\n把视觉规则想成装修里的色卡和尺子。\n\n没人会每面墙现调一桶漆。都是先定好：墙用哪种白、门框用哪种木色、踢脚线留多高。客餐厅用同一套，房子才像一户人家。\n\n自定义属性就像给色卡起名字——「品牌色」「正文色」「区块间距」，而不是在每面墙上随手写「大概这么蓝」。\n\n不同的是：房子刷错了还能重刷一面；网页上要是随手写了二十个不同的蓝，改品牌色时得找二十处，通常还会漏。\n\n## 工作示例\n\n周宁这一版，先排阅读顺序，再定颜色和间距。\n\n检查字号层级要放真实文案，别拿「标题标题标题」这种短词占位。把最长的那句主标题、两行说明、按钮动作放进页面，窗口拉窄瞅一眼：挤不挤、浅不浅。\n\n`font-size` 管字有多大。标题最大最粗，说明小一号、颜色浅一档，按钮不必靠大字号抢戏——底色已经够显眼。文字和背景还要足够分明：浅灰字配浅底，有人可能看不清。这是通用的可读性要求，不是风格。\n\n颜色和间距统一写成名字，比如：\n\n```css\n:root {\n  --color-brand: #1f6feb;   /* 主要按钮和链接 */\n  --color-text: #1b1f24;    /* 标题和正文 */\n  --color-muted: #5c6570;   /* 辅助说明 */\n  --space-s: 8px;\n  --space-m: 16px;\n  --space-l: 24px;\n  --space-xl: 40px;         /* 区块和区块之间 */\n  --radius: 12px;\n}\n```\n\n名字写用途，不写长相。`--color-brand` 比 `--blue-500` 清楚：以后品牌色换成绿的，名字不用改。只用一次的装饰没必要做成变量；标题层级本身没排好，变量也救不了。\n\n检查每一块时问三句：这段字是什么角色？和旁边隔了哪一档？这个颜色有具体用途吗？删掉阴影或渐变之后，内容关系依然立得住，说明装饰没有喧宾夺主。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 请把字号、颜色、间距、圆角写成 CSS 自定义属性，名字按用途起：品牌色只用于主要按钮和链接，正文色用于标题和正文，辅助说明用更浅一档。区块之间用同一档大间距，卡片内部用小一档。不要用浅灰字配浅底。不要为了好看加渐变和重阴影。具体字体和最终色值仍待确认，先用这套规则占位。\n:::\n\n## 自检\n\n**做对了你会看到：** 全站标题、说明、按钮的大小关系很稳；主要按钮和链接共用一个品牌色；区块间距统一成固定档位，不是每个地方随手填的数字。\n\n**最常见的两种做错了：**\n\n1. **每一块现写一个颜色和间距。** 改一处别处不同步。回去做成自定义属性，按用途起名。\n2. **靠渐变和阴影硬凑「高级感」，文字层级却是一片平。** 删掉装饰更分不清主次。先把标题和间距理顺，再管表面。\n\n## 重点\n\n- 先定字号层级、颜色用途和间距档位，让每一块像同一个人做的。\n- 这些数值写成按用途命名的自定义属性，改一处全站跟着变。\n- 用真实的长标题和两行说明检查，短占位会把换行问题藏起来。\n- 装饰删掉以后内容关系还要站得住；站不住通常是层级或留白的问题。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/Using_CSS_custom_properties",
+                "sourceTitle": "MDN · CSS 自定义属性",
+                "sourceAuthority": "mdn",
+                "note": "CSS 自定义属性把反复使用的值写成带名字的变量，改一处，引用处一起变。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/Heading_Elements",
+                "sourceTitle": "MDN · 标题元素",
+                "sourceAuthority": "mdn",
+                "note": "font-size 设定文字大小；标题、正文、辅助说明通常不该一样大。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/Heading_Elements",
+                "sourceTitle": "MDN · 标题元素",
+                "sourceAuthority": "mdn",
+                "note": "标题元素表达层级，视觉大小要跟这个层级一致，读者才知道先看哪句。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/headings-and-labels.html",
+                "sourceTitle": "W3C · Headings and Labels",
+                "sourceAuthority": "w3c",
+                "note": "文字和背景必须达到最低对比；浅字配浅底会让人看不清。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/Heading_Elements",
+                "sourceTitle": "MDN · 标题元素",
+                "sourceAuthority": "mdn",
+                "note": "排版层级决定阅读顺序：先标题，再说明，按钮靠位置和底色，不必靠更大的字号。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "tokens-are-names",
+                "kind": "basic",
+                "front": "为什么颜色和间距要写成带名字的变量，而不是每一块写一个数？",
+                "back": "写成按用途起名的自定义属性之后，改一个名字，所有引用它的按钮、链接和区块一起变。每一块现写一个数，改品牌色时通常会漏。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/Using_CSS_custom_properties",
+                    "sourceTitle": "MDN · CSS 自定义属性",
+                    "sourceAuthority": "mdn",
+                    "note": "自定义属性的作用就是一处定义、多处使用。"
+                  }
+                ]
+              },
+              {
+                "id": "contrast-not-decoration",
+                "kind": "basic",
+                "front": "浅灰字配浅底，看起来很淡雅，有什么问题？",
+                "back": "文字和背景的对比不够时，有的人会看不清。这是一条可检查的对比要求，不是风格偏好。辅助说明可以比正文浅一档，但不能浅到读不出来。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/headings-and-labels.html",
+                    "sourceTitle": "W3C · Headings and Labels",
+                    "sourceAuthority": "w3c",
+                    "note": "对比最小值是针对文字可读性的成功准则。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-the-reusable-values",
+                "kind": "short-answer",
+                "title": "这套规则叫什么",
+                "prompt": "把品牌色、正文色、几档间距写成带名字的 CSS 变量，改一处全站跟着变。这种写法用的是 CSS 的哪一种能力？",
+                "expectedAnswer": "自定义属性",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/Using_CSS_custom_properties",
+                    "sourceTitle": "MDN · CSS 自定义属性",
+                    "sourceAuthority": "mdn",
+                    "note": "CSS 自定义属性就是带名字、可复用的值。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "write-the-page",
+        "title": "做内容",
+        "objective": "读完这一单元，你能为首屏写出一句能让人认出自己麻烦的话、只留一个主要行动，按任务给功能分组，放一个完整示例，并且不展示核对不了的数字和评价。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "hero-one-sentence-one-action",
+            "title": "首屏只说一句，只留一个按钮",
+            "content": "## 学习目标\n\n读完这节，你能给首屏写出一句话，让读者一眼认出自己的麻烦，而且主要行动只留一个。\n\n## 先给结论\n\n首屏就是导航下面那一大块。它得让[[lesson:who-the-site-is-for|周宁这样的人]]在几秒内看明白：这是不是我的麻烦，下一步该看什么。\n\n标题点出她的问题。说明补一句工具会把材料变成什么。主要行动只留一个。\n\n「让创作更简单」「高效、智能、专业」谁看都点头，但谁也看不出自己的材料能不能被整理好。标题不用把功能写全，能让人认出自己就行。\n\n还没接通的入口，直接标待补，别假装能点。\n\n## 一个类比\n\n你可以把首屏当作电梯门上的楼层牌。\n\n牌上只写这栋楼是干什么的、该按哪一层。它不会给「食堂、健身房、会议室、顶楼酒吧」画四个一样大的箭头——不然你站在门口就得做四次选择。\n\n官网首屏也是门口。一次只指一个下一层。\n\n不同的是：电梯按错了还能重按。网页上点错一个看起来同样重要的按钮，通常会跳到另一页，再退回来成本更高。所以门口只留一个箭头。\n\n## 工作示例\n\n周宁这一版，标题和说明可以这么写：\n\n- 标题：把改版时散落的稿子和记录，整理成一份别人能顺着读完的作品页\n- 说明：收齐为什么改、中间怎么改、最后改成什么样，生成可以分享的页面\n- 唯一按钮：查看完整示例\n\n左边是 AI 常给的第一版：口号加四个一样大的按钮。右边是我们要的结果。\n\n```mermaid\nflowchart LR\n  subgraph bad [常见第一版]\n    T1[\"让创作更简单\"]\n    B1[\"开始创建\"]\n    B2[\"观看视频\"]\n    B3[\"查看功能\"]\n    B4[\"了解价格\"]\n  end\n  subgraph good [这一版]\n    T2[\"散落的稿子和记录 → 能读完的作品页\"]\n    C[\"查看完整示例\"]\n  end\n  bad --> good\n```\n\n「加入候补名单」是次级行动，放到页面下方，别跟主要按钮抢。\n\n「开始动手做」现在还没有真实下一步。在想清楚下一步之前，别把它做成最显眼的按钮，更别偷接到留邮箱——免得让人以为现在就能创建。\n\n画面要用能说明结果的静态图：一张真实界面，或一个完整示例的画面。正式截图还没有时，位置先标待补，别编项目名、用户数、评价。标题和按钮不能单靠图才能懂；图还要有说明画面内容的替代文字，因为有人看不见图。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 首屏标题改成能让独立创作者认出「材料散落、需要整理成作品页」这件事。只保留一个主要按钮「查看完整示例」。不要放「开始创建」「了解价格」。次级行动「加入候补名单」放到页面下方。没有正式截图的位置标待补，不要编用户数。\n:::\n\n## 自检\n\n**做对了你会看到：** 不认识这个工具的人，光看标题就能判断跟自己有没有关系；首屏只有一个主要按钮；没接通的入口标着待补，而不是假装能点。\n\n**最常见的两种做错：**\n\n1. **标题是口号，按钮有四个。** 回去用她的麻烦重写标题，主要行动只留一个。\n2. **把还没接通的「开始创建」做成最显眼的按钮。** 点下去无处可去，或者被偷偷接到候补表单。先标待确认。\n\n## 重点\n\n- 首屏标题要让目标读者认出自己的麻烦，别堆形容词。\n- 主要行动只留一个；次级行动放下面，视觉更轻。\n- 还没接通的入口标待补，别假装能用。\n- 图片要有替代文字；没有正式截图时留位置，别编数字。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/Heading_Elements",
+                "sourceTitle": "MDN · 标题元素",
+                "sourceAuthority": "mdn",
+                "note": "标题要描述这一块的主题；读者应能从标题判断这页跟自己有没有关系。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/headings-and-labels.html",
+                "sourceTitle": "W3C · Headings and Labels",
+                "sourceAuthority": "w3c",
+                "note": "标题和标签要描述目的，不能用空口号代替。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/a",
+                "sourceTitle": "MDN · a",
+                "sourceAuthority": "mdn",
+                "note": "如果主要行动是前往另一个地址，它应是链接，并且要有明确的去处。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/figure",
+                "sourceTitle": "MDN · figure",
+                "sourceAuthority": "mdn",
+                "note": "图片必须有等效的文字替代；装饰图则应能被辅助技术跳过。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/figure",
+                "sourceTitle": "MDN · figure",
+                "sourceAuthority": "mdn",
+                "note": "img 的 alt 用来说明图画的是什么；空 alt 表示装饰。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "hero-says-the-trouble",
+                "kind": "basic",
+                "front": "首屏标题怎样才算写清了？",
+                "back": "目标读者能从标题里认出自己的麻烦，并从说明里知道材料会被整理成什么。谁都能点头的口号不算写清。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/headings-and-labels.html",
+                    "sourceTitle": "W3C · Headings and Labels",
+                    "sourceAuthority": "w3c",
+                    "note": "标题要描述目的，读者才能判断要不要继续。"
+                  }
+                ]
+              },
+              {
+                "id": "one-primary-action",
+                "kind": "basic",
+                "front": "首屏为什么只留一个主要按钮？",
+                "back": "首屏只决定下一步看什么。按钮同样大，访客就要自己猜。其它入口放到导航或页面下方。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                    "sourceTitle": "W3C WAI · 页面结构",
+                    "sourceAuthority": "w3c",
+                    "note": "清楚的结构让人先找到这一页最想让他做的那件事。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "pick-the-primary-cta",
+                "kind": "short-answer",
+                "title": "哪一个该留在首屏",
+                "prompt": "独立创作者打开工具官网，最需要先确认「整理完长什么样」。首屏唯一的主要按钮应写什么？",
+                "expectedAnswer": "查看完整示例",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/Heading_Elements",
+                    "sourceTitle": "MDN · 标题元素",
+                    "sourceAuthority": "mdn",
+                    "note": "第一块的行动要接在标题所回答的那个问题后面。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "link-or-button",
+            "title": "点下去是跳走还是就地做事",
+            "content": "## 学习目标\n\n读完这节，你能凭点完发生什么来选链接还是按钮，而不是看它长得像谁。\n\n## 先给结论\n\n[[lesson:hero-one-sentence-one-action|首屏那个唯一行动]]长得像色块，但它不一定是按钮。\n\n[[lesson:hero-one-sentence-one-action|首屏那个唯一行动]]点下去要是去别处——比如换一页、跳到本页某块、看外部资料——用链接。点下去在当前页做事——比如开菜单、交表单、确认或取消——用按钮。\n\n两样都能画成圆角色块。选哪个看动作结果，不看长相。混着用的后果是：右键「用新标签打开」和返回键常常会失灵；读屏也会报乱：明明是跳走，它却说这是按钮。\n\n## 一个类比\n\n把链接想成门牌上的箭头，把按钮想成门铃。\n\n箭头带你去别处：你走出这间屋，进到下一间。门铃是在这间屋里办件事：铃响了、有人来开门，你人还在原地。\n\n你不会因为门铃刷成箭头的颜色，就当作门走过去。网页上却常把「开始创建」画成按钮，点完却想跳去另一页——或者反过来，把提交画成链接。\n\n不同的是：现实里门和门铃摸着就不一样。屏幕上它们可以长得一模一样，所以更要按「点完去哪」来选。\n\n## 工作示例\n\n看周宁这一版：\n\n- 「查看完整示例」要是打开独立的示例页，或者滑到本页的示例区，它就该是链接。链接要保留浏览器原有的打开方式和返回。\n- 「加入候补名单」是在当前页提交表单，它就该是按钮。点完得给出等待、成功或失败的反馈，不能光变个颜色交差。\n\n网页用尖括号给每一块贴标签：链接那一块必须写上目标地址；按钮那一块负责在这一页里做事。别用没地址的链接冒充按钮，也别用按钮去冒充跳转。读屏按标签来报，外观骗得了眼，骗不了它。\n\n地址和流程没确认前，先留好行动层级，别假装已经接通。只把两者涂成同一个品牌色，却不处理跳转或提交结果，访客点完照样不知道发生了什么。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 「查看完整示例」请做成链接，指向本页完整示例那一块（或将来的示例地址）。「加入候补名单」请做成按钮，只负责在当前页提交表单。不要用没有 href 的 a 标签冒充按钮。不要把「开始创建」连到候补表单。\n:::\n\n## 自检\n\n**做对时的样子：** 跳走的是链接，能用新标签打开、能返回；就地提交的是按钮，点完有等待或结果。读屏会把它们报成不同的角色。\n\n**最常见的两处做错：**\n\n1. **用没地址的链接冒充按钮。** 右键没有「用新标签打开」，读屏也报成链接。改成 button。\n2. **用按钮去跳转。** 返回键的行为和预期对不上。有明确地址时用 a，并写上 href。\n\n## 重点\n\n- 点下去换地址，用链接；点下去在当前页做事，用按钮。\n- 外观可以一样，角色不能混；读屏按角色来报，不按颜色。\n- 链接要有真实去处，保留好打开方式和返回。\n- 按钮点完要给出等待、成功或失败，不能光靠变色交差。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/a",
+                "sourceTitle": "MDN · a",
+                "sourceAuthority": "mdn",
+                "note": "a 元素创建超链接，指向另一个 URL、页内锚点或其它资源。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/button",
+                "sourceTitle": "MDN · button",
+                "sourceAuthority": "mdn",
+                "note": "button 在当前页触发动作，比如提交表单，本身不是超链接。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/a",
+                "sourceTitle": "MDN · a",
+                "sourceAuthority": "mdn",
+                "note": "WHATWG 规定 a 在有 href 时才是超链接；没有 href 就不是拿来跳转的控件。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/button",
+                "sourceTitle": "MDN · button",
+                "sourceAuthority": "mdn",
+                "note": "button 的职责是提交、复位或作为脚本按钮，不是换页面。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/button",
+                "sourceTitle": "MDN · button",
+                "sourceAuthority": "mdn",
+                "note": "按钮模式用于就地执行动作；需要导航时应使用链接。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/a",
+                "sourceTitle": "MDN · a",
+                "sourceAuthority": "mdn",
+                "note": "控件的名称、角色和值必须能被辅助技术确定；角色选错，听到的就是错的。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "pick-by-result",
+                "kind": "basic",
+                "front": "什么时候用链接，什么时候用按钮？",
+                "back": "点下去会去另一个地址，用链接。点下去在当前页打开菜单、提交表单或确认，用按钮。看点完发生什么，不看它像不像色块。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/a",
+                    "sourceTitle": "MDN · a",
+                    "sourceAuthority": "mdn",
+                    "note": "超链接负责前往另一个地址；按钮负责当前页的动作。"
+                  }
+                ]
+              },
+              {
+                "id": "fake-link-hazard",
+                "kind": "basic",
+                "front": "用没有 href 的 a 标签做「提交」，会怎样？",
+                "back": "它看起来能点，但不是超链接：新标签打开和返回都不按链接来，读屏也会报成错误的角色。提交应使用 button。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/a",
+                    "sourceTitle": "MDN · a",
+                    "sourceAuthority": "mdn",
+                    "note": "没有 href 的 a 不是超链接。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "choose-control-for-cta",
+                "kind": "short-answer",
+                "title": "这个行动用哪种控件",
+                "prompt": "「查看完整示例」点下去会滚到本页下方的示例区。它该用链接还是按钮？",
+                "expectedAnswer": "链接",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/a",
+                    "sourceTitle": "MDN · a",
+                    "sourceAuthority": "mdn",
+                    "note": "指向页内另一处也是超链接，用 a 加页内地址。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "group-features-by-task",
+            "title": "功能按访客的任务分组",
+            "content": "## 学习目标\n\n学完这节，你能把官网中段的功能列表，改成访客一眼看懂的具体任务，不再堆内部模块名。\n\n## 先给结论\n\n首屏刚说完「这工具帮你整理作品页」，访客往下滑，脑子里问的是：具体怎么整理？\n\n别把功能名平铺一排。按她要办的事来分组。周宁这版分了三件：整理背景、梳理过程、呈现结果。\n\n组名要说人话。「智能模块 A」「内容引擎」谁也看不懂。三组讲完再放完整例子——先让人知道能做什么，再看做完长什么样。\n\n## 一个类比\n\n把功能列表想成餐厅菜单。\n\n菜单不会写成「模块 A：控温」「模块 B：餐具调度」，而是写「前菜、主菜、甜点」——按点餐任务来分。后厨怎么分工，客人不用先搞懂。\n\n官网中段也是菜单。按访客要办的事分，别按你们团队的代码目录分。\n\n不同的是：在餐厅通常还能问服务员。网页上可没人问，组名看不懂，底下的卡片看半天也接不上自己的项目。\n\n## 工作示例\n\n周宁要办的事，是把一次改版讲清楚，所以中段分成三组：\n\n1. 整理背景——项目为什么做\n2. 梳理过程——中间做了什么\n3. 呈现结果——最后做成什么样\n\n别写「素材中台」「流水线引擎」「渲染器」。\n\n还没确认的项目名、截图、网址，直接标「待补」，别硬编假客户填满格子。\n\n顺序也顺着她的疑问走：先看能做什么，再看完整例子，最后才是限制和补充。别把限制藏在功能名里，也别插在案例中间。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 页面中段不要平铺功能名。请改成三组访客能懂的任务：整理项目背景、梳理制作过程、呈现最终结果。每组一张说明。不要使用「智能模块」「内容引擎」这类内部名。没确认的项目名和截图标待补，不要编造。\n:::\n\n## 自检\n\n**做对了你会看到：** 完全没听过内部代号的人，只看三组标题，就能判断这工具跟自己的项目有没有关系。\n\n**最常见的两种踩坑：**\n\n1. **组名写成了内部模块名。** 改成动词开头的具体任务：整理、梳理、呈现。\n2. **功能、例子、限制挤在了一块。** 先任务，再例子，限制单独放。\n\n## 重点\n\n- 中段按访客要办的事分组，不按内部模块名分。\n- 组名要用人话，通常是动词加结果。\n- 没确认的名字和截图标待补，别编。\n- 先说能做什么，再给完整例子，限制别藏进功能名。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                "sourceTitle": "W3C WAI · 页面结构",
+                "sourceAuthority": "w3c",
+                "note": "section 表示文档里一个按主题分出来的区块；主题应对读者有意义。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                "sourceTitle": "W3C WAI · 页面结构",
+                "sourceAuthority": "w3c",
+                "note": "内容要按对读者有意义的标题组织，而不是按内部系统结构。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                "sourceTitle": "W3C WAI · 页面结构",
+                "sourceAuthority": "w3c",
+                "note": "信息和关系必须以能被程序确定的方式传达，标题是其中一种关系。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/Heading_Elements",
+                "sourceTitle": "MDN · 标题元素",
+                "sourceAuthority": "mdn",
+                "note": "每个分组需要能单独成立的标题，读者扫标题就能判断要不要读。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "task-not-module",
+                "kind": "basic",
+                "front": "功能分组为什么不要用内部模块名？",
+                "back": "访客不认识你们仓库里的名字。组名要说她能办成的事，比如「整理项目背景」。模块名只对写代码的人有意义。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                    "sourceTitle": "W3C WAI · 页面结构",
+                    "sourceAuthority": "w3c",
+                    "note": "标题和分组必须对读页面的人有意义。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rename-the-group",
+                "kind": "short-answer",
+                "title": "把模块名改成任务",
+                "prompt": "内部名叫「素材中台」。它实际做的是：把项目为什么开始的材料收在一起。写给访客看的组名，四个字到八个字，动词开头。",
+                "expectedAnswer": "整理背景",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/Heading_Elements",
+                    "sourceTitle": "MDN · 标题元素",
+                    "sourceAuthority": "mdn",
+                    "note": "标题要说出读者能办成的事，而不是内部系统名。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "one-complete-example",
+            "title": "放一个能顺着读完的完整例子",
+            "content": "## 学习目标\n\n读完你能给完整示例留出背景、过程、结果三个位置，也知道什么时候该标待补，而不是编个假项目填空。\n\n## 先给结论\n\n任务分组让人知道工具有哪三项能力。完整示例则是让人顺着读一遍，看这三件事怎么串成一个项目。\n\n例子不能只放一张好看的图。它得让人看清：项目为什么开始、中间经历了什么、最后做成了什么。\n\n素材不够，留好架子写「待补」就行。别拿编造的客户和增长数据硬塞——免得下一课还得当假证据撤下来。\n\n## 一个类比\n\n把完整示例想成作品集里的一个项目页。\n\n翻开一页，你得让人看到：这次委托从哪来、做过哪些选择、最后交了什么。少了一段，这就只是一张效果图，别人看不出你怎么想的。\n\n官网上的完整示例也是这一页，它不是广告海报。\n\n不同的是：纸质作品集里，拿不出来的过程通常就空着，翻的人看得见空白。网页上的空白却很容易被「示例项目 / 提升 20%」塞满，看着完整，其实是编的。\n\n## 工作示例\n\n周宁的食堂点餐改版，完整示例可以先占三个位置：\n\n1. 背景：高峰期师傅要记一堆口头加菜，点错之后账对不上。\n2. 过程：把加菜改成可选配菜，账单上每一项都能对齐。\n3. 结果：改版后的点单页和账单页，配上标着待补的真实截图框。\n\n还没拿到授权的截图、真实网址、客户名，写成「待补」。别编一个叫「星海食堂」的假客户去撑场面。\n\n补充说明和使用限制放在示例后头，单独成块。比如「工具只整理已有材料，不替你编过程」。这句话要是插进项目介绍中间，看着像项目的一部分，反而读乱了。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 完整示例请按背景、过程、结果三段来排，让人能顺着读完一个项目。没有授权的截图、客户名和网址标待补。不要编造商业结果。使用限制放到示例后面单独一小节，不要插在项目介绍中间。\n:::\n\n## 自检\n\n**做对了你会看到：** 陌生人顺着三段能讲出这个项目从哪来、怎么做、做成了什么；缺材料标着待补，没有假客户。\n\n**最常见的两种做错：**\n\n1. **只有一张效果图，没有过程。** 回去补上「为什么开始」和「中间做了什么」的位置。\n2. **用虚构项目把格子填满。** 删掉假名字和假数字，老老实实写待补。\n\n## 重点\n\n- 完整示例要能顺着读完：背景、过程、结果。\n- 缺材料就留结构标待补，不编客户和结果。\n- 限制和补充放在示例后头，别插进项目中间。\n- 一张好看的图代替不了这三段。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                "sourceTitle": "W3C WAI · 页面结构",
+                "sourceAuthority": "w3c",
+                "note": "article 适合一段可独立阅读的完整内容，比如一个项目介绍。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/figure",
+                "sourceTitle": "MDN · figure",
+                "sourceAuthority": "mdn",
+                "note": "figure 用来放配有说明的插图；图是补充，不能代替可读的文字结构。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/figure",
+                "sourceTitle": "MDN · figure",
+                "sourceAuthority": "mdn",
+                "note": "有信息的图必须有文字等效；只放图、没有文字，有人会什么都读不到。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                "sourceTitle": "W3C WAI · 页面结构",
+                "sourceAuthority": "w3c",
+                "note": "背景、过程、结果之间的关系要用标题等结构标出来，不能只靠视觉远近。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "three-beats",
+                "kind": "basic",
+                "front": "一个完整示例至少要让人读到哪三件事？",
+                "back": "项目为什么开始（背景）、中间做了什么（过程）、最后做成了什么（结果）。缺一段，它就只是一张效果图。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                    "sourceTitle": "W3C WAI · 页面结构",
+                    "sourceAuthority": "w3c",
+                    "note": "可独立阅读的一块内容要把一件事讲完整，而不是只放结果图。"
+                  }
+                ]
+              },
+              {
+                "id": "dont-invent-the-case",
+                "kind": "basic",
+                "front": "正式截图和客户名还没有时，完整示例该怎么办？",
+                "back": "保留背景、过程、结果的位置，把缺的标成待补。不要编客户名、网址或商业数字来填空。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/figure",
+                    "sourceTitle": "MDN · figure",
+                    "sourceAuthority": "mdn",
+                    "note": "没有真实图时，不要用假图冒充；结构可以先在。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-the-three-beats",
+                "kind": "short-answer",
+                "title": "完整示例缺了哪一段",
+                "prompt": "一页只放了改版后的界面截图和一句「效果很好」，没有为什么开始、中间做过什么。它缺的是完整示例里的哪两段？用顿号以外的写法，四个字加四个字。",
+                "expectedAnswer": "背景和过程",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                    "sourceTitle": "W3C WAI · 页面结构",
+                    "sourceAuthority": "w3c",
+                    "note": "独立可读的项目介绍需要把一件事从起因讲到结果。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "card-or-list",
+            "title": "独立的用卡片，连着的用列表",
+            "content": "## 学习目标\n\n学完这节，你能给内容挑对该用卡片还是列表；遇到三张并排的卡片，能说清外层用网格、里面用弹性布局。\n\n## 先给结论\n\n内容自带标题、摘要、图片或按钮，还要拿来并排比——用卡片。\n\n按同样结构一口气顺着读，不用单独点开比——用列表。常见问题通常是列表，别排成六张一样的卡。\n\n三张能力卡排成列，外层用网格（Grid）：它管行和列。单张卡里图标和文字怎么对齐，用弹性布局（Flex）：它管一条线上的排列。\n\n两者常一起出现，各管各的层级，谁也替不了谁。\n\n## 一个类比\n\n把卡片想成桌上并排的三道菜，把列表想成从上往下读的说明书。\n\n三道菜各占一盘，让人左右挑：吃这个还是吃那个。说明书得顺着看，拆成三盘反而看断了。\n\n网格就像摆盘的格子，先定三盘怎么摆。弹性布局像盘子内部：青菜靠左、酱汁靠右——那是盘子里的事。\n\n不同的是：桌上摆错了你能动手挪；网页上你只跟 AI 说「排好看点」，它可能把格子和盘里一起改，两件事搅在一起。所以要分开交代。\n\n## 工作示例\n\n周宁的三组能力，各有标题和一句说明，要并排比，用卡片。常见问题一行一条，用列表。\n\n常见问题就是这种一条条顺着排的结构。卡片没有专门的固定标签，通常是个带标题的小区块；关键看内容独不独立，别纠结它叫不叫卡片。\n\n三张卡的行列用 Grid，跟 AI 说：「三张卡片排三列，窄屏改单列」。卡片里图标和文字排成一行或一列，用 Flex。\n\n```mermaid\nflowchart TD\n  G[\"Grid：三张卡怎么分列\"] --> C1[整理背景]\n  G --> C2[梳理过程]\n  G --> C3[呈现结果]\n  C1 --> F[\"Flex：一张卡里面图标和文字怎么对齐\"]\n```\n\n间距直接用定好的档位：同组挨近点，不同区块拉开点。别随手到处写像素。\n\n拿不准时问一句：这几项需要单独拿来比、或者单独点吗？需要，卡片才有意义；连着看才顺的，就是列表。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 三组能力请做成三张独立卡片，外层用网格排三列，窄屏改单列。卡片内部用弹性布局对齐图标和文字。常见问题请用列表，不要做成卡片。同组间距用中档，区块之间用大档。\n:::\n\n## 自检\n\n**做对了你会看到：** 三组能力能左右对比；常见问题能顺着一眼扫完；屏幕变窄时三列变成一列，内容没被切掉。\n\n**最常见的两种做错了：**\n\n1. **什么都往卡片里塞。** 常见问题被拆成一堆方块，读着不连贯。改回列表。\n2. **只说「用 Flex 排三张卡」。** 外面行列和里面对齐搅在一起。记住：外层说 Grid，内里说 Flex。\n\n## 重点\n\n- 要并排比的独立内容用卡片；顺着往下读的内容用列表。\n- 不是所有内容都该进卡片。\n- Grid 管卡片之间的行列，Flex 管卡片内部的对齐。\n- 窄屏先保证内容完整，再让多列变单列。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/ul",
+                "sourceTitle": "MDN · ul",
+                "sourceAuthority": "mdn",
+                "note": "ul 表示无序列表，适合一组连续、结构相同、按条阅读的内容。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_grid_layout",
+                "sourceTitle": "MDN · Grid",
+                "sourceAuthority": "mdn",
+                "note": "CSS Grid 用来把页面分成行和列，适合安排一组卡片的位置。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_flexible_box_layout",
+                "sourceTitle": "MDN · Flexbox",
+                "sourceAuthority": "mdn",
+                "note": "Flexbox 用来在一条线上分配和对齐，适合卡片内部的图标和文字。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_grid_layout",
+                "sourceTitle": "MDN · Grid",
+                "sourceAuthority": "mdn",
+                "note": "Grid 和 Flex 解决不同层级的布局，经常一起用，不互相替代。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_grid_layout",
+                "sourceTitle": "MDN · Grid",
+                "sourceAuthority": "mdn",
+                "note": "网格适合二维排列；一维对齐更常交给弹性布局。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "card-vs-list",
+                "kind": "basic",
+                "front": "什么内容该用卡片，什么该用列表？",
+                "back": "各有标题、需要并排比较或单独点击的，用卡片。按同样结构一口气往下读的，用列表。常见问题通常是列表。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/ul",
+                    "sourceTitle": "MDN · ul",
+                    "sourceAuthority": "mdn",
+                    "note": "列表适合连续条目；独立成块、要比较的内容不该硬塞进同一条列表语义里冒充卡片。"
+                  }
+                ]
+              },
+              {
+                "id": "grid-outside-flex-inside",
+                "kind": "basic",
+                "front": "三张能力卡，外面和里面分别用哪种布局？",
+                "back": "外面用网格安排几列；里面用弹性布局对齐图标和文字。两者管的层级不同。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_grid_layout",
+                    "sourceTitle": "MDN · Grid",
+                    "sourceAuthority": "mdn",
+                    "note": "Grid 管二维格子，Flex 管一条线上的对齐。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "pick-container-for-faq",
+                "kind": "short-answer",
+                "title": "常见问题用什么容器",
+                "prompt": "六个问题都是一问一答，访客会从上往下连着扫。该用卡片还是列表？",
+                "expectedAnswer": "列表",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/ul",
+                    "sourceTitle": "MDN · ul",
+                    "sourceAuthority": "mdn",
+                    "note": "连续扫读的条目用列表更合适。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "only-checkable-evidence",
+            "title": "只展示能核对来源的说法",
+            "content": "## 学习目标\n\n读完这节，你能把官网上的宣传改成能核对来源的说法，并判断数字、评价和价格什么时候该撤下、什么时候标待补。\n\n## 先给结论\n\n给个完整示例能说明页面怎么工作，但证明不了有多少人在用、省了多少时间。\n\n官网上的每句话都要讲清：证据是什么、适用于谁、谁授权你展示。没来源的「大家都在用」，放上官网也不会变成事实。\n\n来源说不清时，补来源、标待补，或者删掉，换成能直接看的产品画面。\n\n价格也一样：金额、币种、周期、税费、试用和取消规则没定齐之前，不写假价格，也不标「最受欢迎」。\n\n## 一个类比\n\n把官网证据想成验货。\n\n包装盒上印了「畅销十万」，你不会看了就掏钱。你得问：十万是谁统计的、统计到哪天、算不算退货。答不上来，这句话就不能印在盒子正面。\n\n评价就像引用别人的话：得标明谁说的、在什么场合说的，不能改成更响亮的广告词。\n\n不同的是：实体盒子上的数字通常有人监管；网页上写「30000+ 用户」几乎没人当场核对，所以更得自己先撤下来。\n\n## 工作示例\n\nAI 常给的第一版：\n\n- 30,000+ 用户的选择\n- 好评率 99%\n- 效率提升 20%\n\n周宁的工具还没有真实用户数和商业结果。正确做法是：证据区先留位置，写「评价整理中，上线后公开口径」，或干脆不展示数字。\n\n如果以后真有授权评价，引用时尽量留原话。把「整理起来方便一些」改成「效率提升十倍」，原话就不可信了。不能公开姓名时，说明匿名原因，别补虚构头像。\n\n写「提升 20%」，必须同时讲清：哪类用户、跟什么比、统计了多久。缺一项，就还不是能发布的数字。\n\n价格区域不能只写一个数。用户还要知道对应哪个周期、包含什么、超限了会怎样。只要有一项没确认，就记进待确认清单，别用星号藏在页脚。\n\n常见问题要回答真实顾虑，第一句先给结论。比如问「能先看完整示例吗？」，别把十项功能再抄一遍。功能还没开放，就写正在准备，别写成已经开放。\n\n引用别人的话，要标明这是引用、从哪来的。光换斜体或变灰，看着像引用，结构上依然像你自己说的。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 请撤下所有没有来源的用户数、好评率和提升百分比。证据区改成「评价整理中」，或只放能直接查看的产品画面。不要编价格，不要标最受欢迎。常见问题只回答真实顾虑，尚未开放的能力写成仍在准备，不要写成已经可用。\n:::\n\n## 自检\n\n**做对了你会看到：** 页面上每句话都能核对：要么有来源和口径，要么明确标着待补或不显示。没有来路不明的大数字。\n\n**最常见的两种做错了：**\n\n1. **用大数字充场面。** 回去问对象、对比、时间和授权，答不上就撤。\n2. **把模拟的价格或「最受欢迎」标上去。** 方案条件没齐之前，只记录待确认字段。\n\n## 重点\n\n- 没有来源的数字和评价，放上官网也不能当作事实。\n- 评价尽量留原话；数字必须写清对象、对比和时间。\n- 价格要写周期、包含什么和取消规则；没齐就别写假价格。\n- 常见问题回答顾虑，别把功能列表再抄一遍。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/blockquote",
+                "sourceTitle": "MDN · blockquote",
+                "sourceAuthority": "mdn",
+                "note": "blockquote 表示引用其它来源的一段话，不能当成自己的数据。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/blockquote",
+                "sourceTitle": "MDN · blockquote",
+                "sourceAuthority": "mdn",
+                "note": "cite 标明作品或来源的标题，引用时要能指向出处。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/figure",
+                "sourceTitle": "MDN · figure",
+                "sourceAuthority": "mdn",
+                "note": "图和说明绑在一起，读者才知道这张图在证明哪一句，而不是装饰。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/figure",
+                "sourceTitle": "MDN · figure",
+                "sourceAuthority": "mdn",
+                "note": "有信息的图必须有文字等效；用图冒充统计证明时，更要说得清它展示的是什么。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML",
+                "sourceTitle": "MDN · HTML",
+                "sourceAuthority": "mdn",
+                "note": "HTML 把引用、来源、图注标成不同的块，就是为了让「谁说的」可核对。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "no-source-no-number",
+                "kind": "basic",
+                "front": "官网可以写「30000+ 用户」来显得可信吗？",
+                "back": "只有在统计对象、时间和口径都清楚、并且你有权展示时才可以。否则应标待补或撤下，改成能直接查看的产品画面。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/blockquote",
+                    "sourceTitle": "MDN · blockquote",
+                    "sourceAuthority": "mdn",
+                    "note": "一句话要能指向来源；没有来源的数字不是引用，是口号。"
+                  }
+                ]
+              },
+              {
+                "id": "keep-the-original-quote",
+                "kind": "basic",
+                "front": "引用用户评价时，为什么不要改成更响亮的广告句？",
+                "back": "改写之后就不再是那个人说的话，读者也无法核对。尽量留原话；不能公开姓名时说明原因，不要补虚构身份。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/blockquote",
+                    "sourceTitle": "MDN · blockquote",
+                    "sourceAuthority": "mdn",
+                    "note": "blockquote 的意义是标明这是引用，而不是作者自己的宣传句。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "what-to-do-with-fake-stats",
+                "kind": "short-answer",
+                "title": "没有来源的数字怎么办",
+                "prompt": "首屏放了「效率提升 20%」，问不到是谁、和谁比、统计了多久。这一句该怎么处理？两个字。",
+                "expectedAnswer": "撤下",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/blockquote",
+                    "sourceTitle": "MDN · blockquote",
+                    "sourceAuthority": "mdn",
+                    "note": "无法标明来源的说法不应作为可核对的证据留下。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "make-it-usable",
+        "title": "做体验",
+        "objective": "读完这一单元，你能把贴边和遮挡说成 AI 听得懂的话，给按钮补齐鼠标和键盘反馈，做出只收邮箱的候补表单，并让手机页完整可读而不是把桌面缩小。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "describe-spacing-to-ai",
+            "title": "贴边、挤在一起、挡住了，怎么说",
+            "content": "## 学习目标\n\n读完这节，遇到「字贴边、卡片挤、菜单被挡、内容被裁」，你不用自己算像素，也能把话跟 AI 说清楚。\n\n## 先给结论\n\n这些毛病你看得见，但不一定叫得出名字。不需要自己改样式，把看到的说清楚，通常就够了。\n\n字贴着卡片边：说「里面留点空隙」。\n两张卡挤在一起：说「卡片之间隔开一档」。\n文字被切掉一半：说「内容要完整展示，容器跟着变高，不要裁切」。\n菜单被横幅挡住：先说「被谁挡住」，让它查外层有没有把溢出裁掉，别一上来就报层级数字。\n\n同样叫空隙，位置不同，改的东西也不同。说话带上位置。\n\n## 一个类比\n\n把卡片想成相框。\n\n照片贴到了框边上，你要说「框里面留边」，不是「把两个相框拉开」。两个相框挤在一起，你要说「框和框之间」，不是「照片周围」。\n\n菜单被挡住，就像抽屉拉出来之后被桌布盖住了。你得先掀桌布（看看外层是不是把溢出剪掉了），再谈谁该压在谁上面。光喊「把抽屉往上抬」常常没用。\n\n不一样的是：相框你能伸手去挪，网页上你得跟 AI 说。它听成「改数字」还是「改位置」，取决于你有没有说清楚是里面还是外面。\n\n## 工作示例\n\n周宁的能力卡标题贴边了。跟 AI 说：「卡片里的文字贴边了，周围留点空隙。」\n\n它的回复里可能会出现「盒模型」。那只是尺寸怎么加总：你写的宽度常常只是内容本身，周围还有内边距和边框，卡片之间还有外边距。浏览器按加总后的整体来摆。「明明写了 200 像素却放不下」，通常是因为把周围那一圈也算进去了。我们不用会算，会描述就行。\n\n`padding` 是里面那圈空隙，会把背景撑大。`margin` 是外面那圈，把两张卡推开。\n\n长标题超出卡片高度时，别说「放不下了，处理一下」——它可能直接裁掉，或者在卡片里加滚动条。作品介绍不是工具面板，完整展示比整齐重要得多。明确跟它说：「内容要完整展示，卡片可以变高，不要裁切、不要内部滚动。」\n\n菜单被横幅挡住时，`z-index` 是层级数字，有时改了也不管用。常见原因是外层写了隐藏溢出，把菜单多出来的部分剪掉了。先跟它说：「先检查菜单外层的容器有没有把它裁切，再调层级。只给真正浮起来的菜单、弹窗、固定导航设高层级。」\n\n验收时拿真实的长标题、来源说明和报错文字看一眼。短占位看不出贴边和裁切。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 卡片里的标题贴边了，请加大内边距。同级卡片用同一档间距，区块之间用更大一档。长标题要完整显示，卡片跟着变高，不要 overflow 裁切，不要在卡片里做滚动条。下拉菜单被下面的横幅挡住时，先检查外层是否裁切溢出，再调层级。不要给普通内容设很高的 z-index。\n:::\n\n## 自检\n\n**做对了你会看到：** 文字和卡片边缘之间有一圈空隙；同级卡片间距一致；长标题完整；打开的菜单盖在横幅上面，而且能关上。\n\n**最常见的两种做错：**\n\n1. **只说「处理一下放不下」。** 结果内容被裁掉，或者出现奇怪的内部滚动。把「完整展示、不要裁切」写进要求。\n2. **遮挡时只报一个 z-index 数字。** 外层裁切没查。先说被谁挡住，再查溢出是不是被剪掉了。\n\n## 重点\n\n- 里面留空是内边距，卡片之间是外边距；描述时带上位置。\n- 长内容要完整展示，容器可以跟着变高；别靠裁切装整齐。\n- 遮挡先说被谁挡住，先查外层裁切，再谈层级。\n- 验收用真实长文本，短占位会把问题藏起来。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/padding",
+                "sourceTitle": "MDN · padding",
+                "sourceAuthority": "mdn",
+                "note": "盒模型把内容、内边距、边框、外边距加在一起，这就是「写了 200 却放不下」的原因。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/padding",
+                "sourceTitle": "MDN · padding",
+                "sourceAuthority": "mdn",
+                "note": "padding 是内容到边框的空隙，在盒子里面。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/padding",
+                "sourceTitle": "MDN · padding",
+                "sourceAuthority": "mdn",
+                "note": "margin 是盒子外面的空隙，用来把两个盒子推开。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/overflow",
+                "sourceTitle": "MDN · overflow",
+                "sourceAuthority": "mdn",
+                "note": "overflow 决定内容超出时是可见、滚动还是被裁切。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/z-index",
+                "sourceTitle": "MDN · z-index",
+                "sourceAuthority": "mdn",
+                "note": "z-index 只在定位上下文里比较谁叠在谁上面，不是随便填一个更大的数就一定有效。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/z-index",
+                "sourceTitle": "MDN · z-index",
+                "sourceAuthority": "mdn",
+                "note": "层叠顺序还受外层裁切和层叠上下文影响，只改数字常常不够。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/overflow",
+                "sourceTitle": "MDN · overflow",
+                "sourceAuthority": "mdn",
+                "note": "溢出被隐藏时，看起来像层级问题，其实是内容被剪掉了。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "padding-vs-margin",
+                "kind": "basic",
+                "front": "字贴边和两张卡片挤在一起，该分别怎么说？",
+                "back": "字贴边是盒子里面的空隙，说加大内边距。两张卡片挤在一起是盒子外面的空隙，说加大卡片之间的外边距。位置说清，改的东西才不同。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/padding",
+                    "sourceTitle": "MDN · padding",
+                    "sourceAuthority": "mdn",
+                    "note": "padding 在里面，margin 在外面。"
+                  }
+                ]
+              },
+              {
+                "id": "overflow-not-zindex",
+                "kind": "basic",
+                "front": "菜单被横幅挡住，为什么有时改 z-index 也不管用？",
+                "back": "外层容器常常把溢出裁掉了，菜单多出来的部分根本没画出来。先检查外层有没有裁切，再调层级。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/overflow",
+                    "sourceTitle": "MDN · overflow",
+                    "sourceAuthority": "mdn",
+                    "note": "overflow 为 hidden 时，超出的部分不会显示，再高的层级也看不见。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-the-inside-gap",
+                "kind": "short-answer",
+                "title": "贴边该调哪一个",
+                "prompt": "卡片里的标题紧贴着边缘。这是盒子里面的空隙还是外面的空隙？用它的中文名三个字回答。",
+                "expectedAnswer": "内边距",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/padding",
+                    "sourceTitle": "MDN · padding",
+                    "sourceAuthority": "mdn",
+                    "note": "内容到边缘的空隙是 padding，中文常叫内边距。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "hover-is-not-active",
+            "title": "停上去和按下去是两种反应",
+            "content": "## 学习目标\n\n读完你能讲清按钮平时、悬停、按下、点不了这四种样子，也能说出漏掉按下反馈时用户会怎样。\n\n## 先给结论\n\n界面上能点的东西，至少得有四个样子：\n\n- **平时**：没人碰它\n- **鼠标停在上面**（hover）：告诉你「这儿能点」\n- **正在按下去**（active）：告诉你「收到了」\n- **点不了**（disabled）：告诉你「现在别点」\n\n少一种，用户心里就少一次确认。最常被漏掉的是第三种：按下去没反应，大家以为没点中，就会再点一次。\n\nHover 只是辅助。链接平时就得让人认出来，不能只靠鼠标移上去才出下划线。触摸屏没有悬停，更不能把 Hover 当作唯一提示。\n\n## 一个类比\n\n这四种状态就像电梯按钮。\n\n平时它是暗的。手指靠近，它不会变；一按下去，灯亮了，这是「收到了」。如果这层被锁了，按钮按不下去，这是「点不了」。\n\n电梯按钮没有悬停。网页多出「鼠标停上去」，是因为光标能在上面悬着。所以它最容易被漏掉，也最容易被误当作唯一反馈。在手机触屏上，手指一碰就直接跳到了按下。\n\n## 工作示例\n\n周宁的「查看完整示例」，四种样子可以这么写：\n\n```css\n.btn {\n  background: #1f6feb;\n  color: white;\n}\n.btn:hover {\n  background: #1858c5; /* 停上去：深一点 */\n}\n.btn:active {\n  background: #13439a; /* 按下去：更深，立刻变 */\n}\n.btn:disabled {\n  background: #c9ccd1;\n  cursor: not-allowed;\n}\n```\n\n冒号后面那词叫伪类：只有元素处在某种状态时，它才生效。`:hover` 是鼠标停在上面，`:active` 是按住还没松手那一段。这两个动作一前一后，谁也替代不了谁。\n\n链接平时就要带颜色或下划线，Hover 是把变化再放大一点。普通正文别做成跟链接一个样，免得分不清哪句能点。\n\n流程没确认好之前，别摆一个看着能点、其实无处可去的浅色按钮。先不显示，并写明待确认说明。把按钮调灰却不写原因，大家不知道为什么点不了。真正禁用要靠 disabled，只改颜色依然能点。\n\n颜色变化别太生硬，加个很短的过渡让它滑过去，这一下叫 transition。焦点轮廓和报错提示，在动画前后都要能看清。有人选择减少动态效果时，位移和淡入可以去掉，但状态差异还要在。\n\n操作结束要给真实结果：点链接就跳转，点提交就进等待。不能一段动画播完就当作全部。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 请给主要按钮和导航链接补齐平时、hover、active 和 disabled。链接在平时就要能认出来，不要只靠悬停出现下划线。按下去要立刻有变化。不要放一个看起来能点却无处可去的「开始创建」。禁用必须用 disabled，不要只改成灰色。\n:::\n\n## 自检\n\n**做对了你会看到：** 鼠标移上去变一次色，按住不放再变一次，松手切回悬停色。点不动的按钮确实点不动，并且写了原因。\n\n**最常见的两种做错了：**\n\n1. **按下去没反应。** 只写了 hover。回去补 active。\n2. **变灰的按钮还能点。** 只改了颜色。要加上 disabled，并写清楚为什么现在不能点。\n\n## 重点\n\n- 能点的东西至少有平时、hover、active、disabled 四种样子。\n- hover 是停上去，active 是按下去，两者不能互相替代。\n- 平时就要能认出链接；触摸屏没有悬停。\n- 改成灰色不等于禁用；禁用靠 disabled，并要说明原因。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:hover",
+                "sourceTitle": "MDN · :hover",
+                "sourceAuthority": "mdn",
+                "note": ":hover 匹配指针悬停在元素上、还没有按下的状态。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:active",
+                "sourceTitle": "MDN · :active",
+                "sourceAuthority": "mdn",
+                "note": ":active 匹配元素正在被激活的那一刻，通常是按下到松开之间。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:disabled",
+                "sourceTitle": "MDN · :disabled",
+                "sourceAuthority": "mdn",
+                "note": ":disabled 只匹配真正被禁用的元素；只改颜色不会让它命中。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:hover",
+                "sourceTitle": "MDN · :hover",
+                "sourceAuthority": "mdn",
+                "note": "transition 让指定属性在状态之间平滑变化，时长应短到不耽误连续点击。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:hover",
+                "sourceTitle": "MDN · :hover",
+                "sourceAuthority": "mdn",
+                "note": "用户选择减少动态效果时，应削弱位移和淡入，但仍保留能分辨的状态差异。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "hover-versus-active",
+                "kind": "basic",
+                "front": "CSS 里 :hover 和 :active 分别是什么时候？",
+                "back": ":hover 是指针停在元素上还没按下的时候；:active 是从按下到松开的那一段。两者先后发生，不能互相替代。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:active",
+                    "sourceTitle": "MDN · :active",
+                    "sourceAuthority": "mdn",
+                    "note": ":active 覆盖按下到松开；:hover 是悬停。"
+                  }
+                ]
+              },
+              {
+                "id": "grey-is-not-disabled",
+                "kind": "basic",
+                "front": "把按钮改成灰色，它就点不了了吗？",
+                "back": "不会。颜色只是给人看的样子，真正禁用要靠 disabled；只改颜色的按钮点下去仍然会触发。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:disabled",
+                    "sourceTitle": "MDN · :disabled",
+                    "sourceAuthority": "mdn",
+                    "note": ":disabled 只匹配真正被禁用的控件。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "spot-the-missing-press",
+                "kind": "short-answer",
+                "title": "找出漏掉的那一种",
+                "prompt": "按钮鼠标移上去会变色，按下去毫无变化。用户说「点了好像没点，我又点了两下」。漏掉的是哪一种状态？",
+                "expectedAnswer": "active",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:active",
+                    "sourceTitle": "MDN · :active",
+                    "sourceAuthority": "mdn",
+                    "note": "缺少按下到松开这一段，就没有「我收到了」的反馈。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "keyboard-needs-focus",
+            "title": "用键盘的人看不见 hover",
+            "content": "## 学习目标\n\n读完你能说明白为什么有了 hover 还要 focus，也能按几下 Tab，查出一个页面有没有把键盘用户扔在黑处。\n\n## 先给结论\n\n有些人不用鼠标。他们按 Tab 键，一个控件一个控件跳着走。\n\n对他们来说，上一节讲的 [[lesson:hover-is-not-active|:hover]] 没法触发——手里没有鼠标指针，悬停不了。所以得有另一种状态告诉他们「你现在停在这个按钮上」，这就是 focus（焦点）。\n\n浏览器默认会画个焦点圈。很多人嫌它丑，随手写一行 `outline: none` 删掉。删了又不补替代样式，就成了网页上最常见的无障碍翻车：用户在按 Tab，屏幕上什么动静都没有。\n\n`:focus-visible` 比 `:focus` 更好用：它通常只在浏览器判断「这人在用键盘」时出现，鼠标点完不会留个圈。\n\n## 一个类比\n\n把网页想象成一间黑屋子，控件就是墙上的开关。\n\n拿鼠标的人手里有手电筒——照到哪哪亮，这就是 hover。用键盘的人没有手电筒，只能顺着墙挨个摸；focus 就是摸到某个开关时，开关自己亮起来。\n\n写 `outline: none`，等于把开关自己发光的功能关掉。拿手电的人毫无察觉，没手电的人就只能在黑屋里瞎摸。\n\n更糟糕的是：在黑屋里好歹还能摸到墙。网页上按 Tab 却看不到焦点，连自己停在哪都不知道——比摸墙还抓瞎。\n\n## 工作示例\n\n按几下 Tab 检查周宁那一页：\n\n1. 打开页面，点一下空白处\n2. 按 Tab，一下一下按\n3. 看看每按一下，有没有东西明显变了样\n\n看不出来，就是有问题。改法是给焦点画个看得见的圈：\n\n```css\n.btn:focus-visible {\n  outline: 3px solid #1f6feb;\n  outline-offset: 2px;\n}\n```\n\n焦点还得顺着阅读顺序走：从导航到主要入口，再进正文链接，别突然跳到页脚。菜单打开后，焦点进到菜单项里；关掉后，焦点退回刚才那个按钮。这叫焦点顺序，可不是什么多余的装饰。\n\nHover、Focus、Active 谁也替不了谁。鼠标停上去、键盘选中、手指按下去，是三种不同的情况。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 不要用 outline: none 去掉焦点圈，除非同时提供 :focus-visible 的明显样式。请用键盘 Tab 走通导航、主要按钮和候补表单。菜单打开时焦点进入菜单，关闭时回到菜单按钮。不要让鼠标点击留下一个多余的圈。\n:::\n\n## 自检\n\n**做对了你能看到：** 按 Tab 顺着经过每个控件，每一步都有个清楚的框跟着走；用鼠标点同一个按钮，通常不会留下这个框。\n\n**最常见的两种做错情况：**\n\n1. **按 Tab 屏幕毫无动静。** 多半是写了 outline: none 却没补替代。跟 AI 说：整份样式里如果写了去掉焦点圈，旁边必须同时补上键盘能看见的替代。不用自己翻代码找。\n2. **焦点框和背景混在一起看不清。** 换成对比度够高的颜色，别用浅灰。\n\n## 重点\n\n- 用键盘的人不会触发 hover，他们靠 focus。\n- 去掉默认焦点圈又不补替代，键盘用户等于看不见自己在哪。\n- focus-visible 通常只在键盘操作时出现。\n- 检查方法只要一步：按 Tab，看有没有东西明显地变。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:focus-visible",
+                "sourceTitle": "MDN · :focus-visible",
+                "sourceAuthority": "mdn",
+                "note": ":focus-visible 在浏览器认为应当显示焦点指示时匹配；键盘操作会，鼠标点击通常不会。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:focus-visible",
+                "sourceTitle": "MDN · :focus-visible",
+                "sourceAuthority": "mdn",
+                "note": ":focus 在元素成为焦点时匹配，不论焦点是怎么来的。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+                "sourceTitle": "W3C · Focus Visible",
+                "sourceAuthority": "w3c",
+                "note": "WCAG 要求键盘焦点指示必须可见。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+                "sourceTitle": "W3C · Focus Visible",
+                "sourceAuthority": "w3c",
+                "note": "焦点顺序要保持有意义，打开的面板要能走进去、关掉后要能走回来。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+                "sourceTitle": "W3C · Focus Visible",
+                "sourceAuthority": "w3c",
+                "note": "无障碍教程把键盘操作当成和鼠标同等的使用方式，而不是额外功能。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-focus-not-hover",
+                "kind": "basic",
+                "front": "为什么有了 :hover 还需要 :focus？",
+                "back": "用键盘的人没有指针，:hover 对他们永远不会发生。:focus 是他们唯一能看出「现在停在哪个控件上」的信号。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:focus-visible",
+                    "sourceTitle": "MDN · :focus-visible",
+                    "sourceAuthority": "mdn",
+                    "note": "键盘操作依赖可见的焦点指示，悬停帮不了他们。"
+                  }
+                ]
+              },
+              {
+                "id": "outline-none-hazard",
+                "kind": "basic",
+                "front": "CSS 里写 outline: none 有什么风险？",
+                "back": "它会删掉浏览器默认的焦点圈。如果不补 :focus-visible 样式，用键盘的人按 Tab 时屏幕上没有任何变化。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+                    "sourceTitle": "W3C · Focus Visible",
+                    "sourceAuthority": "w3c",
+                    "note": "焦点指示可见是一条成功准则，去掉又不补就是失败。"
+                  }
+                ]
+              },
+              {
+                "id": "tab-check",
+                "kind": "basic",
+                "front": "只用一步，怎么检查一个页面的键盘可用性？",
+                "back": "按 Tab 依次走过所有控件，看每一次有没有东西明显地变样子。没有变化就说明焦点指示丢了。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+                    "sourceTitle": "W3C · Focus Visible",
+                    "sourceAuthority": "w3c",
+                    "note": "焦点是否可见，按 Tab 就能检查。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "diagnose-invisible-focus",
+                "kind": "short-answer",
+                "title": "诊断看不见的焦点",
+                "prompt": "鼠标操作一切正常，用键盘按 Tab 完全不知道自己在哪。最可能是哪一行 CSS 造成的？两个英文单词。",
+                "expectedAnswer": "outline none",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/:focus-visible",
+                    "sourceTitle": "MDN · :focus-visible",
+                    "sourceAuthority": "mdn",
+                    "note": "去掉 outline 又不提供替代焦点样式，键盘用户会失去位置信号。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "smallest-waitlist-form",
+            "title": "候补名单只收必须问的",
+            "content": "## 学习目标\n\n学完这节，你能做出一个候补表单：只收必填邮箱和选填说明，每个输入框都配上一直可见的标签。\n\n## 先给结论\n\n进门最显眼的主入口，依然是去看做好的完整项目。这一版只开一个轻入口：先留下邮箱，等后续通知。\n\n这个入口视觉上要弱一档。别把「开始做」偷偷接到这——访客会以为现在就能用，结果只是留了联系方式。从入口名字、表单标题到提交提示，全都要写明是候补。\n\n表单就是把几项信息攒在一起、一次交上去的区域。字段越多，访客越烦。姓名、公司、预算、密码这版都不需要——别为了「以后可能用」提前塞进来。\n\n每个输入框旁边，都要放一直看得见的标签，比如「邮箱」。框里的提示字只是示例，一打字就消失，替代不了标签。\n\n## 一个类比\n\n把表单当作大门口的登记条。\n\n保安不会先让你填籍贯、爱好和紧急联系人，才放你进楼。我们这次只问两件事：怎么联系你，以及你想了解什么（选填）。问得越多，排队的人跑得越快。\n\n占位文字就像用铅笔在格子里写「例：你的邮箱」。手一落笔字就没了，所以格子外头必须贴一张常驻标签。\n\n区别在哪？纸质登记条的标签印在格外，擦不掉；网页上常有人图省地方，把标签藏进格子里，结果访客一打字，就不知道这格该填什么了。\n\n## 工作示例\n\n周宁这一版只留两项：\n\n- 邮箱：必填，用来后续联系，要检查格式\n- 补充说明：选填，可以留空，用来写想了解什么\n\n`<label>` 必须和输入框关联。点「邮箱」两个字，光标就得跳进输入框。这不是摆设，点文字也能聚焦到控件。`<input type=\"email\">` 会按邮箱格式检查；`required` 只加在邮箱上。\n\n每次想加新字段，先问两句：候补为什么需要它？收上来之后用在哪？答不上来就别加。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 候补表单只收必填邮箱和可选说明。每个字段用看得见的标签，不要只用输入时会消失的那行浅字（placeholder）当标签。点「邮箱」三个字要能聚焦到输入框。不要加姓名、公司、电话、密码。不要把这个表单叫做开始创建。\n:::\n\n## 自检\n\n**做对了你会看到：** 表单只有邮箱和说明两项；标签一直在；点标签文字，光标跳入对应输入框；说明留空也能提交。\n\n**最常见的两种做错了：**\n\n1. **用占位文字代替标签。** 一打字名称就没了。补上一直可见的 label。\n2. **为了以后可能用，加了姓名和公司。** 每一项都要能回答「候补为什么需要」。答不上来直接删。\n\n## 重点\n\n- 这一版次级行动是候补名单，别伪装成开始创建。\n- 只收现在真正要用的字段；答不上「为什么需要」的就不要。\n- 标签一直看得见，并且和输入框关联。\n- 占位文字是示例，不能代替标签。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/form",
+                "sourceTitle": "MDN · form",
+                "sourceAuthority": "mdn",
+                "note": "form 把若干控件组成一次可以提交的输入。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/label",
+                "sourceTitle": "MDN · label",
+                "sourceAuthority": "mdn",
+                "note": "label 给控件提供说明；关联之后，点标签文字也会聚焦到输入框。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/input/email",
+                "sourceTitle": "MDN · input type=email",
+                "sourceAuthority": "mdn",
+                "note": "type=email 表示这一格要填邮箱，并按邮箱格式参与检查。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/input/email",
+                "sourceTitle": "MDN · input type=email",
+                "sourceAuthority": "mdn",
+                "note": "required 表示提交前这一格不能空；只加在真正必填的字段上。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/forms/labels/",
+                "sourceTitle": "W3C WAI · 表单标签",
+                "sourceAuthority": "w3c",
+                "note": "每个输入都要有标签或说明，占位文字通常不够。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/forms/labels/",
+                "sourceTitle": "W3C WAI · 表单标签",
+                "sourceAuthority": "w3c",
+                "note": "可见标签是表单能被理解的基础，placeholder 不能替代。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "label-not-placeholder",
+                "kind": "basic",
+                "front": "为什么不能只用输入框里那行浅色提示当标签？",
+                "back": "那行字一开始输入就消失了，回头不知道这一格是什么。标签要一直看得见，并和输入框关联，点文字就能聚焦。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/tutorials/forms/labels/",
+                    "sourceTitle": "W3C WAI · 表单标签",
+                    "sourceAuthority": "w3c",
+                    "note": "占位文字不是标签的替代品。"
+                  }
+                ]
+              },
+              {
+                "id": "dont-collect-just-in-case",
+                "kind": "basic",
+                "front": "以后可能用得上的字段，为什么这一版先不加？",
+                "back": "字段越多，访客越不明白为什么要填，放弃也越快。每一项都要能回答候补登记现在为什么需要它。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/form",
+                    "sourceTitle": "MDN · form",
+                    "sourceAuthority": "mdn",
+                    "note": "表单只应收集这次提交真正需要的输入。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "which-fields-to-keep",
+                "kind": "short-answer",
+                "title": "这一版表单收哪两项",
+                "prompt": "候补名单现在只为了以后能联系上，并让人可选地写一句想了解什么。必填和选填各是哪一项？写成「必填x选填y」，中间用「和」。",
+                "expectedAnswer": "邮箱和说明",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/input/email",
+                    "sourceTitle": "MDN · input type=email",
+                    "sourceAuthority": "mdn",
+                    "note": "联系用邮箱；其它字段没有现在就必须收的理由。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "errors-stay-beside-the-field",
+            "title": "哪里填错了，字就写在旁边",
+            "content": "## 学习目标\n\n学完这节，你能让邮箱在提交前提示哪里写错了；而且处理中、成功、失败都在表单原位显示，不把人甩回页面顶端。\n\n## 先给结论\n\n在 [[lesson:smallest-waitlist-form|上一节那张只收邮箱的表]] 里，邮箱没填或者少了 `@`，要在输入框旁边说清怎么改。这就叫 [[term:validate.check|校验]]：拦住明显不对的输入，并告诉对方怎么改。选填项留空不要报错。\n\n出了错，填好的内容不能被清掉。改对重新提交，报错提示要消失。\n\n点提交后，先进入「处理中」，按钮暂时不能再点——这只是在等，不是结果。接着成功或失败直接在表单原处显示。失败时保留填好的内容，并说明可以稍后重试。\n\n后台接通之前，这些成功失败只用来检查页面怎么显示，别把模拟成功写成「已经登记进服务器」。\n\n## 一个类比\n\n把报错想成老师批作业，把提交结果想成窗口递回条。\n\n老师不会把错字圈在卷子背面、再叫你去办公室看。哪行错了，圈就画在哪行旁边，顺手写上「少了 @」。你改对了，圈擦掉，原句还在。\n\n递回条也是在同一个窗口递出来，不会让你跑到大楼另一头的公告栏去找「登记成功」。\n\n不同的是：纸上的字不会自己没掉，除非有人拿橡皮硬擦。但网页一刷新或一报错，输入的内容很容易被清空——这是额外的伤害，得特意禁止。\n\n## 工作示例\n\n三种时刻：\n\n1. 填写时：邮箱标签和输入框都看得见，占位只写示例格式。\n2. 写错了：输入框下方出现「邮箱格式好像不对，检查一下 @ 和后缀」，填好的内容还在。\n3. 提交成功：表单原位换成「邮箱已加入候补名单，有消息第一时间告诉你」，不用往上翻着找。\n\n邮箱这格如果标成邮箱类型而且必填，浏览器自己就会先拦一层。但还要用一句人话说明怎么改：「请输入完整的邮箱地址」可比单单一包「格式错误」管用。出错的输入框要显眼，并且尽量告诉人怎么改；这句话写在框旁边就好，别甩到页面顶端。\n\n处理中的那几秒把按钮禁用，免得连点两次发成两次请求。成功提示不要叠出好几条一样的。后台还没接通时，模拟成功只用来看样式，界面文字别写成已经保存。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 邮箱校验失败时，请在输入框正下方用一句话说明哪里不对，不要清空已填内容。可选说明留空不要报错。提交后先显示处理中并避免重复点击。成功和失败都出现在表单原来的位置。失败时保留输入。在后台真正接通前，不要把模拟成功写成已经保存。\n:::\n\n## 自检\n\n**做对了你会看到：** 没填和格式写错，输入框下方分别有对应说明；改对后说明消失；提交结果就在原处；失败时字还在。\n\n**最常见的两种做错情况：**\n\n1. **只在页面顶端弹一句「出错了」。** 人不知道改哪一格。把提示放到输入框旁边，说清楚怎么改。\n2. **报错或失败后输入被清空了。** 回去禁止清空；失败时保留内容，并允许重试。\n\n## 重点\n\n- 校验要拦住明显的错，并在输入框旁边说清怎么改。\n- 选填项留空不报错；报错时填好的内容不能被清掉。\n- 处理中、成功、失败都显示在表单原处。\n- 模拟成功只用来检查样子，不能当作已经存进服务器。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/input/email",
+                "sourceTitle": "MDN · input type=email",
+                "sourceAuthority": "mdn",
+                "note": "约束验证在提交前检查必填、类型和格式，并可以阻止提交。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/input/email",
+                "sourceTitle": "MDN · input type=email",
+                "sourceAuthority": "mdn",
+                "note": "WHATWG 把约束验证规定为提交前的检查，而不是提交后再猜。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html",
+                "sourceTitle": "W3C · Error Identification",
+                "sourceAuthority": "w3c",
+                "note": "出错时必须识别出哪些字段错了。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html",
+                "sourceTitle": "W3C · Error Identification",
+                "sourceAuthority": "w3c",
+                "note": "在能提供修正建议时，应说明如何改。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html",
+                "sourceTitle": "W3C · Error Identification",
+                "sourceAuthority": "w3c",
+                "note": "错误和成功通知应出现在相关表单附近，而不是把人甩到别处。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/input/email",
+                "sourceTitle": "MDN · input type=email",
+                "sourceAuthority": "mdn",
+                "note": "email 类型会按邮箱格式参与验证，但仍要用一句人话说明哪里不对。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "error-beside-field",
+                "kind": "basic",
+                "front": "邮箱格式不对时，提示应该出现在哪？",
+                "back": "出现在这个输入框旁边，并说明怎么改，比如少了 @。只在页顶说「出错了」，人不知道改哪一格。已填内容要保留。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html",
+                    "sourceTitle": "W3C · Error Identification",
+                    "sourceAuthority": "w3c",
+                    "note": "错误必须能被定位到具体字段。"
+                  }
+                ]
+              },
+              {
+                "id": "pending-is-not-success",
+                "kind": "basic",
+                "front": "按钮变成「处理中」，等于候补已经登记成功了吗？",
+                "back": "不等于。处理中只是在等结果，也防止连点。真正的成功或失败随后出现在表单附近。后面那一头还没接通时，连成功都只是在检查样子。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html",
+                    "sourceTitle": "W3C · Error Identification",
+                    "sourceAuthority": "w3c",
+                    "note": "等待和结果是不同的状态，要分开呈现。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "where-the-error-goes",
+                "kind": "short-answer",
+                "title": "报错写在哪",
+                "prompt": "用户提交了「abc」，不是邮箱。说明该出现在页顶横幅，还是邮箱输入框旁边？",
+                "expectedAnswer": "输入框旁边",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html",
+                    "sourceTitle": "W3C · Error Identification",
+                    "sourceAuthority": "w3c",
+                    "note": "错误要标在出错的那个字段上。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "phone-is-not-shrunk-desktop",
+            "title": "窄屏不是把桌面缩小",
+            "content": "## 学习目标\n\n学完这节，你能把桌面多列改成手机单列，用能关掉的抽屉收好导航，顺便排查掉整页的横向滚动。\n\n## 先给结论\n\n把窗口拉窄，不是把所有东西按比例缩小。字得看得清，按钮得按得到，完整示例也得留着。\n\n按宽度重新排版，叫响应式。电脑上左右并排的，在手机上通常改成上下排。顺序跟着阅读走：首屏文字在配图前面，报错提示挨着输入框，来源说明跟着对应的图。\n\n窄屏塞不下导航时，用盖住页面的抽屉：从一侧滑出来，得有关闭按钮，打开时背景不能点。上一节说的焦点——也就是键盘停在哪——要留在抽屉里，关掉后再回到菜单按钮。\n\n页面要是出现整页横向滚动，先找撑宽的元凶——大图、长标题、没断开的英文或写死的宽度。别先缩字号，更别把内容藏起来。\n\n固定在屏幕上的悬浮按钮，只有在人真需要随时点到时才用。它不能盖住抽屉关闭、表单报错或示例。\n\n## 一个类比\n\n把桌面版当作摊开的报纸，手机版就像把报纸按栏折起来读。\n\n你不会把整张报纸缩成邮票凑近看，而是按栏重排：重要标题依然在最前面，插图挨着对应的文字，不会为了省地方把图裁成一条缝。\n\n抽屉就像把目录收进能拉开的夹层。拉开时挡住报纸，你先挑目录；合上夹层，你回到刚才读的那一栏。\n\n不同的是：报纸折歪了还能用手摊平；网页要是有东西把整页撑出横向滚动，手指一滑左右打架，人通常直接走掉。\n\n## 工作示例\n\n周宁这一版，在手机宽度下：\n\n1. 主要内容排成单列，顺序依然是：价值 → 能力 → 完整示例 → 证据 → 候补。\n2. 右上角菜单点开抽屉，选「常见问题」后抽屉关闭、页面自动滚到那一块。\n3. 长标题允许换行，示例图不能把整页撑宽。\n4. 「查看完整示例」先跟着内容一起滚。只有确认人真的需要随时点到，才做固定；固定时给正文留出同等高度的空隙，并避开手机底部的工具栏。\n\n有一条通行的阅读规则：放大或变窄时，内容应该能单列读完，不用上下左右来回扯。真正需要横着看的（比如宽表格）可以有独立的局部滚动区；普通标题和说明应该换行。\n\n跟 AI 提抽屉需求时交代清三件事：从哪边滑出、怎么关、关掉后焦点回哪里。这三点都做对了，手机导航才算能用。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 请按手机阅读顺序把主要内容排成单列，不要整体缩小。导航用能从右侧滑出的抽屉，必须能关闭，打开时背景不能点，关掉后焦点回到菜单按钮。出现横向滚动先改图片和长标题，别藏内容。不要随便做固定吸底按钮；如果做了，不能挡住表单报错和抽屉关闭。\n:::\n\n## 自检\n\n**做对了你会看到：** 在 390 像素左右宽度下，整页没有左右乱晃；菜单能顺畅开关；示例和报错都完整；固定按钮如果存在，不挡任何东西。\n\n**最容易犯的两种错：**\n\n1. **把桌面版等比缩小。** 字和按钮全变小，看起来像张缩略图。回去重排成单列，保证字号看得清。\n2. **靠隐藏内容来消灭横向滚动。** 来源说明、报错提示或关闭按钮全不见了。找出撑宽的元素，让它换行或缩回尺寸。\n\n## 重点\n\n- 窄屏是重排版，不是缩小，也不是藏内容。\n- 手机导航用能关闭的抽屉，焦点跟进去、关掉退回来。\n- 遇到整页横向滚动，先找撑宽的图或长词。\n- 固定按钮先琢磨是不是真需要，并且不能遮挡。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                "sourceTitle": "W3C WAI · 页面结构",
+                "sourceAuthority": "w3c",
+                "note": "响应式是随宽度改变布局，不是把同一张桌面画布缩小。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://web.dev/articles/responsive-web-design-basics",
+                "sourceTitle": "web.dev · 响应式基础",
+                "sourceAuthority": "official-docs",
+                "note": "媒体查询按宽度等条件切换样式，用来把多列改成单列。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://web.dev/articles/responsive-web-design-basics",
+                "sourceTitle": "web.dev · 响应式基础",
+                "sourceAuthority": "official-docs",
+                "note": "viewport 元信息让移动浏览器按设备宽度排版，而不是把桌面页缩进去。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html",
+                "sourceTitle": "W3C · Reflow",
+                "sourceAuthority": "w3c",
+                "note": "内容应能在窄视口中重排成一列阅读，不必同时双向滚动。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/overflow",
+                "sourceTitle": "MDN · overflow",
+                "sourceAuthority": "mdn",
+                "note": "overflow-x 造成的整页横向滚动通常来自某个撑宽的子元素。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/position",
+                "sourceTitle": "MDN · position",
+                "sourceAuthority": "mdn",
+                "note": "sticky 或 fixed 会把元素钉在视口里；不预留空间就会盖住后面的内容。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                "sourceTitle": "W3C WAI · 页面结构",
+                "sourceAuthority": "w3c",
+                "note": "覆盖页面的抽屉按对话框模式处理：打开时焦点进入，关闭时焦点返回触发它的按钮。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                "sourceTitle": "W3C WAI · 页面结构",
+                "sourceAuthority": "w3c",
+                "note": "dialog 适合需要盖住页面、必须明确关闭的那一层。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "reflow-not-scale",
+                "kind": "basic",
+                "front": "官网在手机上，为什么不能把桌面版整体缩小？",
+                "back": "缩小之后字和按钮都会小到没法用。窄屏要把多列改成单列，让内容按阅读顺序完整出现，而不是变成一张缩略图。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html",
+                    "sourceTitle": "W3C · Reflow",
+                    "sourceAuthority": "w3c",
+                    "note": "重排要求内容在一列里可读，不是把整页缩放。"
+                  }
+                ]
+              },
+              {
+                "id": "drawer-focus-return",
+                "kind": "basic",
+                "front": "手机导航抽屉关掉以后，焦点应该回到哪？",
+                "back": "回到打开它的那个菜单按钮。打开时焦点留在抽屉里，背景暂时不能点。否则用键盘的人会丢在已经关掉的一层里。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                    "sourceTitle": "W3C WAI · 页面结构",
+                    "sourceAuthority": "w3c",
+                    "note": "模态层关闭后，焦点返回触发它的控件。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "fix-horizontal-scroll",
+                "kind": "short-answer",
+                "title": "横向滚动先查什么",
+                "prompt": "手机上整页可以左右滑。你该先做哪一件：缩小字号、隐藏示例图，还是找出把页面撑宽的那个元素？",
+                "expectedAnswer": "找出撑宽元素",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/CSS/overflow",
+                    "sourceTitle": "MDN · overflow",
+                    "sourceAuthority": "mdn",
+                    "note": "整页横向滚动通常由某个子元素撑出，应先找到它。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "hand-it-over",
+        "title": "交付",
+        "objective": "读完这一单元，你能把前面定下来的要求写成可重复的检查步骤，并整理一份可以直接发给 AI 的修改要求，由人来验收页面结果。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "repeatable-acceptance",
+            "title": "写成任何人都能照着做的检查",
+            "content": "## 学习目标\n\n学完这节，你能把「页面看起来正常」改写成带前置、操作和结果的检查步骤，分清哪些现在就能测、哪些要等真实地址接上。\n\n## 先给结论\n\n电脑和手机都能打开，可不代表官网能交付了。你得把前面的要求，写成别人照着做、结论都一样的具体步骤。\n\n一条检查就三件事：在什么条件下、做什么动作、页面上必须看到什么。\n\n「页面正常」「效果不错」都没法直接查。可以改写成：「390 像素宽没有整页横向滚动」「点关闭后抽屉收起，焦点回到菜单按钮」。\n\n真实示例地址和后端接口还没接上时，只能先测眼前已有的前端路径。每次改完先跑少量核心路径：首页能开、主入口在、菜单能开关、表单前端状态好使。这叫冒烟——先看屋里冒不冒烟，没着火再去细查每扇窗。\n\n端到端是另一码事：从首页点进真实示例、再回来提交真实邮箱，直到拿到最终回应。地址和后端没齐之前，别假装跑通了整条链路。\n\n## 一个类比\n\n把验收当作收房清单，别搞成「进去瞅一眼觉得还行」。\n\n清单上写的是：推开哪扇窗、按哪个开关、哪盏灯必须亮。两个人分开查，勾出来的表都一样，才叫可重复。写一句「整体不错」，等于没查。\n\n冒烟就像先看大门能不能开、总电闸合不合得上。总闸跳了还去数抽屉拉手，没有意义。端到端就像通水通电后，从进门一路走到打开热水。水管还没接，不能在单子上勾「热水正常」。\n\n不一样的是：收房时水龙头没装，一眼就看得见；网页上「查看完整示例」可能看起来能点，其实指向一个还没确认的地址。所以待确认要单独记，不能顺手勾成通过。\n\n## 工作示例\n\n把「手机菜单好用」改写成：\n\n1. 前置：用大约 390 像素宽度打开官网首页\n2. 操作：点右上角菜单，再点「常见问题」\n3. 结果：抽屉收起，页面跳到常见问题，标题和内容都看得见，没有整页横向滚动\n\n测表单时，分别试试空邮箱和错误格式，改对后再提交。后端接通前，可以临时提供等待、模拟成功、模拟失败三种状态，只检查页面怎么显示，别把模拟成功当作已经保存。\n\n每轮修改后的冒烟可以固定成很少几条：首页文案在、主按钮层级清楚、待确认标记在、手机导航能开关、完整示例的待补状态在、候补表单能打开。其中任何一条失败，先停下来修，别接着去看圆角。\n\n端到端要等真实示例地址、素材和后端那一头都确认。失败时记清楚发生在哪一步、页面实际显示了什么、用的是哪个地址。光留一张最后「通过」的截图，没法判断问题出在入口、请求还是结果页。\n\n验收只能证明页面展示了什么、操作后发生了什么。它不能证明数据库已经保存，也不能证明商业效果已经发生。\n\n:::detail[卡住了，可以怎么问 AI？]\n> 请按这个格式为首页、手机导航和候补表单各写一条检查：前置条件、操作、页面上能直接看到的结果。不要写「页面正常」。真实示例地址和后面收邮箱那一头仍待确认，不要把它们写成已经通过的端到端测试。冒烟失败时停止扩大检查。\n:::\n\n## 自检\n\n**做对了你会看到：** 每一条检查别人照着做一遍都能得出同一结论；待确认的真实链路单独列着，没有被勾成通过；冒烟失败时你没接着去查阴影。\n\n**最常见的两种做错了：**\n\n1. **整站压成一句「桌面和手机都正常」。** 一旦失败没法知道是哪一步。拆成一条路径一条记录。\n2. **在地址还没确认时勾了端到端通过。** 把真实链路标成待确认，只验收眼前已有的前端路径。\n\n## 重点\n\n- 一条检查写成前置条件、操作、能看见的结果。\n- 「看起来正常」不是检查，改成宽度、点击和必须出现的文字。\n- 每轮修改先跑少量冒烟；阻断问题没修好之前，不扩大检查。\n- 端到端要等真实地址和后面那一头；没齐就标待确认，别假装跑过。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/test-evaluate/",
+                "sourceTitle": "W3C WAI · 评测",
+                "sourceAuthority": "w3c",
+                "note": "无障碍评测强调可重复的步骤和观察到的结果，而不是一句主观印象。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html",
+                "sourceTitle": "W3C · Reflow",
+                "sourceAuthority": "w3c",
+                "note": "窄视口下能否一列阅读，是一条能当场检查的结果。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
+                "sourceTitle": "W3C · Focus Visible",
+                "sourceAuthority": "w3c",
+                "note": "焦点是否可见，可以用键盘操作直接检查。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html",
+                "sourceTitle": "W3C · Error Identification",
+                "sourceAuthority": "w3c",
+                "note": "表单错误是否出现在字段附近，也可以写成操作和结果。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/tutorials/page-structure/",
+                "sourceTitle": "W3C WAI · 页面结构",
+                "sourceAuthority": "w3c",
+                "note": "不同宽度下的布局是否可读，应分别记录，而不是用一句「手机也行」带过。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "three-parts-of-a-check",
+                "kind": "basic",
+                "front": "一条能重复的检查，至少要写哪三件事？",
+                "back": "在什么条件下、做什么、页面上必须看到什么。缺任何一件，别人照着做结论就会不一样。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/test-evaluate/",
+                    "sourceTitle": "W3C WAI · 评测",
+                    "sourceAuthority": "w3c",
+                    "note": "评测依赖可观察的步骤和结果，不是总体印象。"
+                  }
+                ]
+              },
+              {
+                "id": "smoke-before-e2e",
+                "kind": "basic",
+                "front": "真实示例地址还没有时，为什么不能勾「端到端通过」？",
+                "back": "端到端要走过真实去向和真正收走邮箱的那一头。地址没接上，只能检查已经具备的前端路径，并把真实链路标成待确认。勾通过等于假装跑过。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/test-evaluate/",
+                    "sourceTitle": "W3C WAI · 评测",
+                    "sourceAuthority": "w3c",
+                    "note": "没准备好的条件不能当成已经验证。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rewrite-looks-fine",
+                "kind": "short-answer",
+                "title": "把空话改成检查",
+                "prompt": "有人把验收写成「手机看起来正常」。它缺了检查三件里的哪一件都可以，但最缺的是能看见的结果。请用六个字写出一种可检查的结果。",
+                "expectedAnswer": "无横向滚动",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html",
+                    "sourceTitle": "W3C · Reflow",
+                    "sourceAuthority": "w3c",
+                    "note": "没有整页横向滚动是一条能当场看到的结果。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "pasteable-agent-request",
+            "title": "整理一份可以直接发给 AI 的要求",
+            "content": "## 学习目标\n\n读完你能把前面已经确认的事实、不能改的保留项和检查步骤，收成一段可以直接粘贴给 AI 的修改要求，并且不让它补写还没确认的产品事实。\n\n## 先给结论\n\n前面十八节已经定了：给谁看、页面怎么排、手机怎么显示、表单有哪些结果、怎样检查。这一节不新增能力，只把这些收成一段话。\n\n发给负责改页面的 AI 时，要同时写清三样：已经确认的事实、它可以改的范围、它不能自己编的东西。上一节的 [[lesson:repeatable-acceptance|检查步骤]] 也要一起贴进去。\n\n只说「做得更高级」，它通常会用常见官网模板补上登录、价格和用户评价。那些恰恰是这门课要求先不要的。\n\n改完之后，由人打开桌面和手机，按清单看页面上到底发生了什么。AI 返回「已完成」不能代替这一步。\n\n## 一个类比\n\n把这段要求想成交给装修队的施工单，而不是一句「把房子弄漂亮」。\n\n施工单写：这面墙不动、电路按图纸、材料用已经选好的那一款。没写的项目不准自行加装。厨房还没定灶台，就不要先砌一个假的出来充场面。\n\n验收是房主拿着同一张单子去按开关，不是听装修队说「都搞好了」。\n\n不一样的地方是：装修队加装一扇门，你进门就看得见。AI 补写「30000 用户」和假价格，看起来像成品，其实是它用模板填的空。所以「不要补写产品事实」要写进单子正文，不能只放在心里。\n\n## 工作示例\n\n下面这一段就是周宁这一版可以粘贴的施工单。把产品名换成你的，路径换成你的，但不要往里面填还没发生的事。\n\n请改这个介绍工具的网页，不要改工具本身。读者是要把做过的项目讲清楚的独立创作者。网页必须让她看懂：已有材料能被收成「为什么开始、中间怎么做、最后做成什么样」，并且能分享出去。登录、支付、账号体系，以及任何还没点头的能力，都不要私自加上去。\n\n区块顺序保持这样，不要重排：门口那一屏、三件任务、一个读得完的项目、可核对的说法、方案说明、常见问题、留下邮箱。门口只留「查看完整示例」。留下邮箱放在后面，别跟门口抢。「开始动手做」还没有真实下一步，禁止把它接到留邮箱。\n\n字谁大谁小、两块之间隔多远、圆角、窄了怎么折，按我们已经定的来。字体文件、最终色号、正式照片都还没定，不要用生成图冒充产品界面。\n\n能放上页的，只有真实界面、那一个读得完的项目、以及公开能对上的能力边界。人数、分数、媒体标志、客户好评、转化、标价、商业成果，一律不准编。对不上来源的句子，要么标明还没齐，要么拿掉。\n\n留邮箱只要必填邮箱加一句选填。标签一直看得见，格式不对写在格子旁边，提交时先进入等待。后面那一头没接上之前，成功和失败只用来看画面，禁止写成「已经存进名单」。\n\n窄了就改成一列读，不要缩小整页。导航收进能关上的夹层，从边上拉出来，关上之后回到菜单按钮。图和长标题把页面撑出左右滑时，先修它们。钉在屏幕上的按钮默认先不要；真要钉，正文先留空，别挡住报错和关闭。\n\n动手前先列出会碰到的文件和最小步骤。做完按清单写：在什么条件下、点了什么、屏幕上出现了什么。先查首页、导航、示例的待补标记、表单的前端状态。还没确认的跳转不要测。最后告诉我改了哪些文件、哪几条查过了、哪些仍然空着。禁止用「弄好了」代替这些。\n\n上面从「请改这个介绍工具的网页」到「禁止用『弄好了』代替这些」为止，是可以整段复制的。复制范围到此结束。\n\n产品范围、证据真假、大面积换皮，这些要停下来问人——有人把这叫「人在回路」。代码出得快，不能当作已经验收。\n\n:::detail[卡住了，可以怎么问 AI？]\n把上面「工作示例」里那一段原样贴过去，只改成你的产品名和页面路径。贴完后自己打开桌面和手机，按上一节的检查走一遍。AI 说完成了，仍以你在页面上看到的为准。\n:::\n\n## 自检\n\n**做对了你会看到：** 你贴出去的那段话里，已经确认的、可以改的、不能编的分开写着；回来时有实际改动的文件和检查结果，而不是一句完成。你按清单看过桌面和手机。\n\n**最常见的两种做错了：**\n\n1. **只说「优化一下官网」。** 模板式的登录、价格、评价会回来。回去把保留项和禁止项写进同一段。\n2. **相信「已完成」不再打开页面。** 把上一节的检查跑一遍；失败时记下宽度、操作和实际结果，再决定下一轮改哪。\n\n## 重点\n\n- 发给 AI 的要求要同时写清事实、范围和禁止编造的部分。\n- 没确认的用户数、价格、登录和真实地址，不能让它补成已经存在。\n- 返回内容必须包含改了哪些文件、跑了哪些检查、还剩什么待确认。\n- 改页面的是 AI，验收页面结果的是人。\n",
+            "contentRevision": 1,
+            "sections": [],
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML",
+                "sourceTitle": "MDN · HTML",
+                "sourceAuthority": "mdn",
+                "note": "页面上每一块是什么，要用 HTML 标清楚；AI 改的是这一层，不是替你发明产品事实。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/figure",
+                "sourceTitle": "MDN · figure",
+                "sourceAuthority": "mdn",
+                "note": "没有真实图时不能拿装饰图冒充产品证据；要求里要写明待确认。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/blockquote",
+                "sourceTitle": "MDN · blockquote",
+                "sourceAuthority": "mdn",
+                "note": "没有来源的评价和数字不应被补进页面；要求里要明确禁止。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/test-evaluate/",
+                "sourceTitle": "W3C WAI · 评测",
+                "sourceAuthority": "w3c",
+                "note": "是否改对，要用可重复的检查来看页面，而不是看一段「已完成」的总结。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/form",
+                "sourceTitle": "MDN · form",
+                "sourceAuthority": "mdn",
+                "note": "候补表单的字段和结果状态是已经确认的页面行为，接口没接上也不能写成已经保存。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html",
+                "sourceTitle": "W3C · Reflow",
+                "sourceAuthority": "w3c",
+                "note": "窄屏重排是已经确认的要求，应写进同一份发给 AI 的说明里。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "dont-invent-facts",
+                "kind": "basic",
+                "front": "为什么发给 AI 的要求里要写「不要新增用户数和价格」？",
+                "back": "只说优化时，它通常会用常见模板补上数字、评价和登录。那些如果还没确认，补上去就是假证据。禁止项要写进正文。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/blockquote",
+                    "sourceTitle": "MDN · blockquote",
+                    "sourceAuthority": "mdn",
+                    "note": "没有来源的数字和评价不能当成可核对的内容。"
+                  }
+                ]
+              },
+              {
+                "id": "human-accepts",
+                "kind": "basic",
+                "front": "AI 返回「已完成」之后，还要人做什么？",
+                "back": "打开桌面和手机，按前置条件、操作和结果检查主要按钮、顺序、示例、表单和遮挡。页面上看到的为准，总结句子不能代替。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://www.w3.org/WAI/test-evaluate/",
+                    "sourceTitle": "W3C WAI · 评测",
+                    "sourceAuthority": "w3c",
+                    "note": "评测看的是观察到的结果，不是执行者的自我报告。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "what-not-to-invent",
+                "kind": "short-answer",
+                "title": "哪一类不该让 AI 补",
+                "prompt": "真实用户数还没有。发给 AI 改官网时，下面哪一类必须写进禁止项：圆角大小，还是用户数？",
+                "expectedAnswer": "用户数",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/blockquote",
+                    "sourceTitle": "MDN · blockquote",
+                    "sourceAuthority": "mdn",
+                    "note": "没有来源的用户数不是可以补上的装饰，是未确认的事实。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

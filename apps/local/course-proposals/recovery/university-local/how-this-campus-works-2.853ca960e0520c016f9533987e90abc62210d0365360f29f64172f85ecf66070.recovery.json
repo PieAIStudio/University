@@ -1,0 +1,930 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "how-this-campus-works-2",
+    "title": "《这所大学自己是怎么盖的·下》",
+    "description": "接着上册的路径守卫，往里拆 airlock 的运转：如何用 fetch 钉住 commit、封条为何在 .git、根提交如何当身份、导入门禁拦什么、以及三只钟如何告诉你教材新不新。所有证据指向本项目真实代码。",
+    "audience": "已经知道「学自己」会被路径守卫拦住、现在想看懂 airlock 如何合法运转的人",
+    "objectives": [
+      "说清 airlock 解决的是路径分离与版本钉死，并指出 promote 开头的位置检查",
+      "解释为何用 fetch 而不是 clone，以及封条为何放在 .git 而不是工作区",
+      "说明仓库身份用根提交而不是路径，并指出浅克隆时会拒绝",
+      "列举导入门禁拦的学习数据、密钥与超大文件，并解释为何拒绝而不是跳过",
+      "读懂三只钟与 doctor/status 的差别，并说明落后 live 是特性"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [
+      "four-layer-workbench"
+    ],
+    "trackId": null,
+    "units": [
+      {
+        "id": "airlock-mechanics",
+        "title": "airlock 到底怎么运转",
+        "objective": "我能沿 promote、fetch 物化和 .git 里的封条，说明 airlock 如何变成一份路径合法、内容钉死的独立副本。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "path-not-recursion",
+            "title": "promote 一进来，为什么先查路径？",
+            "content": "# promote 一进来，为什么先查路径？\n\n## 现象\n\n你打开 `promoteAirlock`，以为第一步会是 `git fetch` 或写封条。实际入口是这样：\n\n```ts\nexport function promoteAirlock(input: PromoteAirlockInput): PromoteAirlockReceipt {\n  const airlockRoot = canonicalizePotentialPath(input.airlockRoot);\n  const upstream = inspectUpstreamIdentity(input.upstreamRoot);\n  const studiesRoot = canonicalizePotentialPath(input.studiesRoot);\n  assertAirlockLocation({ airlockRoot, upstreamRoot: upstream.root, studiesRoot });\n```\n\n[[evidence:server/airlock/promote.ts:92-96]]\n\n四行做完，还没有往 airlock 里写任何对象。你看到的是：路径先被拉直，再交给 `assertAirlockLocation`。只有这道门过了，后面的 materialize 才有机会跑。\n\n## 先猜一下\n\n这一步真正在拦的是什么？是「程序别递归分析自己」，还是别的东西？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n拦的是三块地盘的路径互相包含：airlock、被学项目、学习数据目录两两不能叠在一起——不是在躲某种递归调用。\n\n## 为什么是这样\n\n`assertAirlockLocation` 只干一件事：拿真实路径做包含检查。\n\n```ts\nexport function assertAirlockLocation(input: {\n  readonly airlockRoot: string;\n  readonly upstreamRoot: string;\n  readonly studiesRoot: string;\n}): void {\n  const pairs: readonly (readonly [string, string, string])[] = [\n    [input.airlockRoot, input.upstreamRoot, \"被学项目\"],\n    [input.airlockRoot, input.studiesRoot, \"学习数据目录\"],\n  ];\n  for (const [airlock, other, label] of pairs) {\n    if (isPathInside(airlock, other) || isPathInside(other, airlock)) {\n      throw new Error(`airlock 不能与${label}互相包含：${airlock} ↔ ${other}`);\n    }\n  }\n}\n```\n\n[[evidence:server/airlock/seal.ts:95-109]]\n\n注释写得很直：airlock 的意义就是成为一份**不**和学习数据、也不和 live 检出缠在一起的源。同一条路径分离规则，在 studies 那边已经说过一遍；这里对 airlock 再陈述一次——双向，用 real path，不信你随手打的字符串。\n\n「双向」不是套话。循环里写的是 `isPathInside(airlock, other) || isPathInside(other, airlock)`：airlock 嵌在上游里不行，上游嵌在 airlock 里也不行；对 `studiesRoot` 同样。你只要有一侧套住另一侧，分析范围和写入范围就会缠在一起。\n\n所以你看到的顺序说得通：\n\n1. `canonicalizePotentialPath` —— 把你给的路径拉直（去掉多余的 `.`/`..`），后面的包含比较才公平。\n2. `inspectUpstreamIdentity` —— 先弄清上游真正的仓库根，不只信你填的字符串。\n3. `assertAirlockLocation` —— 三块地盘两两不能互相包含；过不了就直接抛错，后面的 materialize 根本不跑。\n\n这里第一次看容易混的一点是：你可能以为「学自己」的障碍是程序递归分析自己，于是觉得 airlock 是在躲开递归。代码里没有这种递归防护——只有路径门。airlock 存在的理由是换一条合法的路径，放「被学的那份代码」，从而满足同一条路径分离规则。\n\n那你把 `studies` 挪到项目外面、直接对本仓库做分析，路径不也分离了吗？路径那一半可以。但 live 仓库每天在变，你的教材需要钉在某一瞬间的代码上，证据行号才对得上。airlock 同时做两件事：路径合法，再加上内容钉死在某个 commit。第二件是后面几课——`materialize` 和封条——的事；本课你先把路径门立住。\n\n```mermaid\nflowchart LR\n  L[\"live 上游仓库\"]\n  A[\"airlock 钉死的副本\"]\n  S[\"studies 学习记录\"]\n  L -.->|\"promote 某个 commit\"| A\n  A -.->|\"分析只读这里\"| S\n```\n\n## 自检\n\n- 若你把 airlock 目录放在 `studiesRoot` 里面，`assertAirlockLocation` 会怎样？\n- promote 入口为什么要先 `canonicalizePotentialPath`，再做位置检查？\n\n## 一句话\n\n**airlock 先过路径门，解决的是三块地盘不能叠在一起，不是「程序能不能递归分析自己」。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/promote.ts",
+                "lineStart": 92,
+                "lineEnd": 96,
+                "nodeIds": [],
+                "note": "promoteAirlock 开头：规范化路径并调用 assertAirlockLocation。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/seal.ts",
+                "lineStart": 95,
+                "lineEnd": 109,
+                "nodeIds": [],
+                "note": "assertAirlockLocation：airlock 不能与上游或学习数据互相包含。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "airlock-is-path-solution",
+                "kind": "basic",
+                "front": "airlock 主要是为了解决「程序递归分析自己」吗？",
+                "back": "不是。它解决的是路径分离：把钉死的只读副本放到不与 studies、不与 live 上游互相包含的位置。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/seal.ts",
+                    "lineStart": 86,
+                    "lineEnd": 109,
+                    "nodeIds": [],
+                    "note": "注释写明 airlock 不能与学习数据或 live 检出缠在一起。"
+                  }
+                ]
+              },
+              {
+                "id": "promote-canonicalizes-first",
+                "kind": "basic",
+                "front": "promoteAirlock 一进来为什么先 canonicalizePotentialPath？",
+                "back": "把调用者写的路径拉直成规范路径，后面的位置比较才不会被 . / .. 或写法差异绕过。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/promote.ts",
+                    "lineStart": 92,
+                    "lineEnd": 96,
+                    "nodeIds": [],
+                    "note": "对 airlockRoot 与 studiesRoot 做路径规范化。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-promote-location-check",
+                "kind": "short-answer",
+                "title": "位置检查叫什么",
+                "prompt": "promoteAirlock 在规范化路径之后调用哪个函数，检查 airlock 不能与上游/学习数据互相包含？只写函数名。",
+                "expectedAnswer": "assertAirlockLocation",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/promote.ts",
+                    "lineStart": 92,
+                    "lineEnd": 96,
+                    "nodeIds": [],
+                    "note": "调用 assertAirlockLocation 的那一行。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "fetch-not-clone",
+            "title": "为什么不用 `git clone` 填满 airlock？",
+            "content": "# 为什么不用 `git clone` 填满 airlock？\n\n## 情境和约束\n\n路径门过了。promote 还要把上游某一个不可变 commit 变成 airlock 工作区里的树。\n\n你手里有现成的 `git clone`，也能 `clone --shared` 省磁盘。上游却不会停：它还会继续提交，甚至跑 **GC**（垃圾回收：清掉不再被引用的对象）。airlock 之后要被分析、写教材、钉证据行号——底座坏了，上面整条链都不可信。\n\n函数名叫 `materialize`。问题是：在这种约束下，对象库应该怎么落盘？\n\n## 先猜一下\n\n在「对象库归谁」这件事上，你会怎么选：让 airlock 和上游共享（或硬链）对象，还是让它拥有自己的一份？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了后者：`git init` 建空库，再 `fetch` 指定 commit 进 airlock 自己的对象库，然后 detached checkout——故意不用 `git clone`。\n\n## 代价和收益\n\n实现就四步，注释写在函数头上：\n\n```ts\n/**\n * Fetches one immutable commit into the airlock and checks it out detached.\n *\n * Deliberately not `git clone`. A local clone may hardlink objects into the\n * source, and a `--shared` clone depends on the source's objects outright —\n * Git's own documentation warns that the source garbage-collecting can then\n * corrupt the copy. Fetching an exact commit into a repository the airlock owns\n * keeps the two object stores genuinely separate, which is the only reason the\n * airlock is safe to analyse while the upstream keeps moving.\n */\nfunction materialize(airlockRoot: string, upstreamRoot: string, commit: string): void {\n  mkdirSync(dirname(airlockRoot), { recursive: true, mode: 0o700 });\n  mkdirSync(airlockRoot, { recursive: true, mode: 0o700 });\n  gitText([\"init\", \"--quiet\"], airlockRoot);\n  gitText([\"fetch\", \"--no-tags\", \"--force\", \"--depth=1\", upstreamRoot, commit], airlockRoot);\n  gitText([\"checkout\", \"--detach\", \"--force\", commit], airlockRoot);\n  gitText([\"clean\", \"-xdff\"], airlockRoot);\n}\n```\n\n[[evidence:server/airlock/promote.ts:65-84]]\n\n你付的代价：\n\n- 多一次 init + fetch；磁盘上对象可能和上游重复一份。\n- 浅拉（`--depth=1`）只够这一次钉死的 commit，不是完整历史镜像。\n\n你换来的是对象库真正分开：\n\n1. `init` —— airlock 自己拥有空仓库，`.git/objects` 从零开始。\n2. `fetch ... commit` —— 只拉那一个不可变 commit；对象写进 airlock 自己的库。\n3. `checkout --detach` —— HEAD 钉在该 commit，不挂在分支上，避免「分支又往前走了」的错觉。\n4. `clean -xdff` —— 清掉工作区里不属于这次检出的残余，后面的封条与 doctor 才能把「任何差异」当篡改。\n\nclone 的某些模式做不到这一点。本地 clone 可能 **hardlink**（硬链接：两个路径指向同一份磁盘对象）到源；`--shared` clone 更是直接依赖源的对象。上游一 GC，shared 副本依赖的东西可能被删掉，你正在分析的那份就坏了。注释里说这是 Git 自己的文档也警告过的事。\n\nfetch 不也是从上游拷数据吗？和 clone 的本质差别不在「有没有拷」，而在「对象库归谁」。这里 init + fetch 把对象写进 airlock 自己的 `.git/objects`，两边真正分开；clone 的某些模式会共享或硬链，归谁就糊了。\n\n所以这里的取舍不是「clone 更短所以该用 clone」，而是：**分析安全压过安装便捷**。\n\n## 什么时候该反过来\n\n若你只是临时瞟一眼、可以接受「上游 GC 后副本作废」，并且磁盘极度紧张，shared clone 在工程上仍有人用。airlock 不是那种场景：它是后续分析与证据的固定底座。底座一坏，上面整条链都不可信——所以这里不该反过来。\n\n## 自检\n\n- `materialize` 实际执行的四步命令是什么？\n- 为什么 `checkout --detach`，而不是 checkout 到某个分支名？\n\n## 一句话\n\n**`materialize` 故意不用 clone：fetch 进自有仓库，上游 GC 时你仍有一份可分析的独立副本。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/promote.ts",
+                "lineStart": 65,
+                "lineEnd": 84,
+                "nodeIds": [],
+                "note": "materialize 注释否决 clone，并实现 init/fetch/detached checkout。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-not-shared-clone",
+                "kind": "basic",
+                "front": "为什么注释特别警告 --shared clone？",
+                "back": "shared clone 依赖源仓库的对象；源做 GC 清掉对象时，副本可能损坏。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/promote.ts",
+                    "lineStart": 65,
+                    "lineEnd": 74,
+                    "nodeIds": [],
+                    "note": "注释说明 shared clone 与 GC 风险。"
+                  }
+                ]
+              },
+              {
+                "id": "what-is-detached",
+                "kind": "basic",
+                "front": "checkout --detach 在这里是什么意思？",
+                "back": "HEAD 直接钉在该 commit 上，不挂在分支上，避免分支继续前进造成错觉。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/promote.ts",
+                    "lineStart": 80,
+                    "lineEnd": 80,
+                    "nodeIds": [],
+                    "note": "git checkout --detach --force commit。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-materialize",
+                "kind": "short-answer",
+                "title": "落地函数叫什么",
+                "prompt": "把某个 commit 装进 airlock 工作区的函数叫什么？只写函数名。",
+                "expectedAnswer": "materialize",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/promote.ts",
+                    "lineStart": 75,
+                    "lineEnd": 84,
+                    "nodeIds": [],
+                    "note": "function materialize(...) 定义。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "seal-in-git-dir",
+            "title": "封条为什么不能写进工作区？",
+            "content": "# 封条为什么不能写进工作区？\n\n## 现象\n\nairlock 提升完成后，磁盘上会多一份封条（seal）：记下钉在哪个 commit、上游是谁。拼路径的函数只有一行：\n\n```ts\nfunction getSealPath(airlockRoot: string): string {\n  return join(airlockRoot, \".git\", SEAL_FILENAME);\n}\n```\n\n[[evidence:server/airlock/seal.ts:21-23]]\n\n文件名是 `university-local-airlock.json`。落点在 `airlockRoot/.git/` 下面——工作区根目录里你找不到它。\n\n## 先猜一下\n\n如果改成把封条写到工作区根目录（和源码文件并列），第一次 promote 写完封条之后，airlock 自己的检查会怎样？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n`git status` 会看到一个未跟踪文件，airlock 自己的篡改检查（tamper check）当场失败——第一次 promote 就过不了自己的门。\n\n## 为什么是这样\n\n函数上方的注释把因果写死了：\n\n```ts\n/**\n * The seal lives in `.git/`, not in the checkout.\n *\n * It describes the repository rather than belonging to it, and the airlock's\n * central promise is that its working tree is byte-identical to the commit it\n * was promoted to. A seal sitting in the tree would break that promise the\n * moment it was written: `git status` would report an untracked file, and the\n * airlock would fail its own tamper check on the very first promotion.\n */\nfunction getSealPath(airlockRoot: string): string {\n  return join(airlockRoot, \".git\", SEAL_FILENAME);\n}\n```\n\n[[evidence:server/airlock/seal.ts:12-23]]\n\n分两层读：\n\n1. **角色**：封条描述仓库（钉在哪、属于谁），它本身不属于被学的那棵树。\n2. **承诺**：airlock 的中心承诺是工作区与所 promote 的 commit **字节级一致**。`inspectAirlock` 会看工作区是否干净、HEAD 是否等于封条记录的 commit。多一个未跟踪文件就会报「被改过」。\n\n这两层是绑在一起的。若封条「属于」工作树，它就成了树的一部分，树就不可能再等于「当时 promote 的那个 commit」——因为 commit 里根本没有这份文件。你不能把「说明柜里有什么」的纸条贴在展品表面：贴上去的瞬间，展品就不再等于原件。`.git/` 是档案槽：描述柜子，却不进 `git ls-tree` 列出的工作树文件。\n\n`writeSeal` / `readSeal` 都走 `getSealPath`，整条链路一致——你不会在半路上改用另一个落点。\n\n你可能会想：放进工作区但写进 `.gitignore`，`git status` 不就干净了吗？即使用 ignore 藏起来，封条仍改变了「磁盘上工作区的内容集合」，也违背「树与 commit 字节一致」的承诺；分析若扫工作区文件，还可能误读到封条。放进 `.git/` 最干净——这正是你看到路径落在 `.git/` 的原因。\n\n## 自检\n\n- `getSealPath` 拼出来的路径里，中间那一层目录名是什么？\n- 封条描述的是仓库，还是属于被学的工作树？\n\n## 一句话\n\n**封条在 `.git/` 里，因为它描述仓库、不属于工作树；放进 checkout 会当场破坏「与 commit 一致」的承诺。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/seal.ts",
+                "lineStart": 12,
+                "lineEnd": 23,
+                "nodeIds": [],
+                "note": "getSealPath 与注释：封条在 .git/ 下，不在 checkout 里。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "seal-breaks-promise-in-tree",
+                "kind": "basic",
+                "front": "若把封条写进工作区，会立刻破坏 airlock 的哪条中心承诺？",
+                "back": "工作区与所 promote 的 commit 字节级一致；封条会变成未跟踪文件并让篡改检查失败。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/seal.ts",
+                    "lineStart": 12,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "注释解释封条进树会让 git status 变脏。"
+                  }
+                ]
+              },
+              {
+                "id": "seal-describes-not-belongs",
+                "kind": "basic",
+                "front": "封条描述的是什么？它属于被学的那棵树吗？",
+                "back": "描述仓库被钉在哪；它不属于 checkout 里的源码树。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/seal.ts",
+                    "lineStart": 12,
+                    "lineEnd": 17,
+                    "nodeIds": [],
+                    "note": "It describes the repository rather than belonging to it。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "seal-filename-dir",
+                "kind": "short-answer",
+                "title": "封条放哪",
+                "prompt": "getSealPath 把封条文件放在 airlock 根目录下的哪个子目录里？只写目录名（例如 src 或 .git）。",
+                "expectedAnswer": ".git",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/seal.ts",
+                    "lineStart": 21,
+                    "lineEnd": 23,
+                    "nodeIds": [],
+                    "note": "join(airlockRoot, \".git\", SEAL_FILENAME)。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "root-commit-identity",
+            "title": "路径换了，怎么认出还是原来那家上游？",
+            "content": "# 路径换了，怎么认出还是原来那家上游？\n\n## 两个东西\n\npromote 要判断：这个 airlock 是不是还在服务**同一家**上游仓库。你手里有两种候选身份证：\n\n1. **磁盘路径** —— 上游现在住在哪个目录。\n2. **根提交（root commit）** —— 这段 Git 历史里没有父提交的那个 commit 的哈希。\n\n两者都能写进配置或日志。但只有一个适合当「仓库身份」。\n\n## 先猜一下\n\n有人把上游目录删掉，再在**同一个路径**塞进另一个完全不同的项目。你手里那两种身份证，哪一种会识破「这已经不是原来那个人」？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n路径不会：目录回来时路径字符串可以一模一样。根提交会：历史源头变了，content-addressed 的哈希必变。\n\n## 逐条对照\n\n`inspectUpstreamIdentity` 的注释和实现把选择钉死了：\n\n```ts\n/**\n * Who the upstream repository is, in terms that survive a rename.\n *\n * The identity that matters is the root commit. A path cannot serve — a\n * directory can be deleted and refilled with a different project, and the\n * `.git` path would come back identical while the contents are a stranger's.\n * The root commit is content-addressed, so it changes exactly when the history\n * being promoted is a different history.\n * ...\n */\nexport function inspectUpstreamIdentity(candidate: string): UpstreamIdentity {\n  const root = realpathSync.native(gitText([\"rev-parse\", \"--show-toplevel\"], candidate));\n  // ...\n  const roots = gitText([\"rev-list\", \"--max-parents=0\", \"HEAD\"], root)\n    .split(\"\\n\")\n    .map((line) => line.trim())\n    .filter(Boolean)\n    .sort();\n  rootCommit = roots[0] ?? null;\n  // ...\n}\n```\n\n[[evidence:server/airlock/seal.ts:48-84]]\n\n| | 路径 | 根提交 |\n| --- | --- | --- |\n| 改名 / 挪盘 | 变了，像换了人 | 不变，仍是同一段历史 |\n| 同路径塞进别的项目 | 不变，认错人 | 变了，当场识破 |\n| 每次新提交 | 通常不变 | 通常不变（变的是 HEAD，不是根） |\n| 浅克隆读不到根 | 仍有路径可写 | 返回 `null`，调用方应拒绝 |\n\n实现细节你读代码时对得上：\n\n1. **content-addressed**（内容寻址）：commit 的名字就是内容的哈希，历史源头不同，名字必变。\n2. `rev-list --max-parents=0` —— 列出没有父母的提交（历史起点）。\n3. 若有多个根（合并不相关历史），排序后取稳定的一个，避免「看 Git 怎么走就飘」。\n4. 读不到根（常见于 **shallow clone**，历史被截断）时返回 `null`——不假装认识。\n\n`promoteAirlock` 里若已有封条，会比较 `sealedIdentity !== upstream.rootCommit`；对不上就报「这个 airlock 属于另一个仓库」——你不能把同一份 airlock 偷偷接到别人的历史上。\n\n## 什么时候用哪个\n\n- **认仓库身份、决定能不能继续往这个 airlock 里 promote** → 用根提交。路径只是「此刻去哪找 upstream」。\n- **打开目录、跑 git 命令** → 你当然还要用路径；路径是定位，不是身份证。\n- **用当前 HEAD 当身份？** 不行。HEAD 每次提交都变，airlock 会以为你不断在换仓库。根提交在正常线性历史里几乎不变，才适合当「是不是同一个项目」的证。\n\n## 自检\n\n- 上游身份的关键字段叫什么？\n- 浅克隆读不到根提交时，系统应该继续猜，还是拒绝？\n\n## 一句话\n\n**仓库身份钉在根提交上，不钉在路径上：路径可被换成陌生人，根提交变了才算另一段历史。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/seal.ts",
+                "lineStart": 48,
+                "lineEnd": 84,
+                "nodeIds": [],
+                "note": "inspectUpstreamIdentity 注释与实现：身份是 rootCommit。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "path-is-not-identity",
+                "kind": "basic",
+                "front": "为什么路径不能当上游身份？",
+                "back": "目录可以删掉再填入另一个项目，路径字符串看起来一样，内容却是陌生人。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/seal.ts",
+                    "lineStart": 48,
+                    "lineEnd": 55,
+                    "nodeIds": [],
+                    "note": "注释说明路径可被替换。"
+                  }
+                ]
+              },
+              {
+                "id": "shallow-null-root",
+                "kind": "basic",
+                "front": "什么时候 rootCommit 会是 null？",
+                "back": "浅克隆等情况下走不到真正的根提交时；此时无法确认身份，调用方应拒绝而不是假装认识。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/seal.ts",
+                    "lineStart": 57,
+                    "lineEnd": 61,
+                    "nodeIds": [],
+                    "note": "null only for a shallow clone… caller says so。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "identity-field",
+                "kind": "short-answer",
+                "title": "身份字段",
+                "prompt": "UpstreamIdentity 里表示「这段历史是谁」的关键字段叫什么？只写字段名。",
+                "expectedAnswer": "rootCommit",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/seal.ts",
+                    "lineStart": 41,
+                    "lineEnd": 46,
+                    "nodeIds": [],
+                    "note": "UpstreamIdentity 含 rootCommit 字段。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "import-gate",
+        "title": "什么东西不许进来",
+        "objective": "我能说出进 airlock 的那棵树会因学习数据、密钥或超大文件被整批拒绝，命中不跳过。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "deny-rules",
+            "title": "进 airlock 的那棵树，什么会把整次 promote 拦下来？",
+            "content": "# 进 airlock 的那棵树，什么会把整次 promote 拦下来？\n\n## 现象\n\n你要 `promote` 被学项目。门禁不读你的工作区随口文件，它只扫**即将装进 airlock 的那棵 Git 树**——每个路径、每个 blob 的大小。\n\n扫完之后，结果不是「警告一下继续」，而是往 `blocked` 里塞条目：路径 + 一句 reason。只要 `blocked` 非空，整次提升取消。\n\n旁边还有一条和路径无关的线：\n\n```ts\nexport const MAX_IMPORT_BLOB_BYTES = 5 * 1024 * 1024;\n```\n\n[[evidence:server/airlock/import-gate.ts:38]]\n\n单个文件超过这条线，同样进 `blocked`。你若只记「别把密钥带进来」，会漏掉半张表。\n\n## 先猜一下\n\n树里同时有 `studies/learner.db`、`.env`、`.env.example`、一个 6MB 的 `assets/demo.mp4`。哪些会进 `blocked`？哪个会放过？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n`studies/…`、`.env`、超大的 `demo.mp4` 进 `blocked`；`.env.example` 放过——规则用否定前瞻把 example 模板从 `.env` 家族里抠出去。\n\n## 为什么是这样\n\n门禁的目标不是「尽量多导入」，是**保证进 airlock 的只能是可学源码**。所以 `DENY_RULES` 按路径正则拦三类东西，外加体积：\n\n```ts\nconst DENY_RULES: readonly DenyRule[] = [\n  { test: /(^|\\/)studies\\//, reason: \"学习数据（课程进度、复习记录）绝不能进入被分析的源\" },\n  { test: /(^|\\/)\\.env(\\.|$)(?!example)/, reason: \"环境变量文件通常含密钥\" },\n  { test: /\\.(pem|key|p12|pfx|keystore)$/i, reason: \"私钥或证书文件\" },\n  { test: /(^|\\/)id_(rsa|dsa|ecdsa|ed25519)$/, reason: \"SSH 私钥\" },\n  { test: /\\.sqlite(-wal|-shm)?$/i, reason: \"数据库文件；学习记录就存在这类文件里\" },\n  { test: /(^|\\/)\\.npmrc$/, reason: \".npmrc 常含发布令牌\" },\n];\n```\n\n[[evidence:server/airlock/import-gate.ts:45-70]]\n\n拆开看你需要记住的三层：\n\n1. **学习数据与数据库**：`studies/`、`.sqlite`（含 wal/shm）。这正是路径分离要保护的东西——进度库若混进「被分析的源」，分析会读到你的私人学习状态。\n2. **密钥材料**：`.env`（不含 example）、证书扩展名、SSH 私钥文件名、`.npmrc`。example 模板通常没有真密钥，所以 `(?!example)` 放行。\n3. **超大 blob**：`inspectImportRisk` 在没命中路径规则时，仍会查 `size > MAX_IMPORT_BLOB_BYTES`（约 5MB）。超大文件多半是构建产物或误提交的媒体——分析贵，且学不到机制。\n\n```ts\nexport function inspectImportRisk(entries: readonly ImportCandidate[]): ImportGateReport {\n  const blocked: ImportGateFinding[] = [];\n  // ...\n  for (const entry of entries) {\n    const rule = DENY_RULES.find((candidate) => candidate.test.test(entry.path));\n    if (rule) {\n      blocked.push({ path: entry.path, reason: rule.reason });\n      continue;\n    }\n    if (size > MAX_IMPORT_BLOB_BYTES) {\n      blocked.push({\n        path: entry.path,\n        reason: `单个文件超过 ${Math.round(MAX_IMPORT_BLOB_BYTES / 1024 / 1024)}MB 导入上限`,\n      });\n    }\n  }\n  // ...\n}\n```\n\n[[evidence:server/airlock/import-gate.ts:78-104]]\n\n注意顺序：先路径规则，再体积。命中规则就 `continue`，不会再叠一条体积 reason——你在拒绝文案里看到的是「为什么这条路径不该进」，不是堆叠标签。\n\n作用域再钉死一次：规则扫的是**即将 promote 的树条目**，不是你磁盘上随口存在、但未进入该 commit 的文件。没进树的东西，门禁看不见，也拦不着。\n\n## 自检\n\n**问：** 路径带 `studies/` 为什么必须拦？\n\n**问：** 为什么 `.env.example` 可以过，而 `.env` 不行？\n\n**问：** 单个文件大约超过多少 MB 会进 `blocked`？\n\n## 一句话\n\n**导入门禁按真实树路径拦学习数据、密钥和超大文件——进 airlock 的只能是可学源码。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/import-gate.ts",
+                "lineStart": 38,
+                "lineEnd": 70,
+                "nodeIds": [],
+                "note": "MAX_IMPORT_BLOB_BYTES 与 DENY_RULES 列表。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/import-gate.ts",
+                "lineStart": 78,
+                "lineEnd": 104,
+                "nodeIds": [],
+                "note": "inspectImportRisk：命中规则或超大则加入 blocked。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "studies-denied",
+                "kind": "basic",
+                "front": "为什么路径里带 studies/ 会被拒绝？",
+                "back": "那是学习数据（进度、复习记录），绝不能进入被分析的源。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/import-gate.ts",
+                    "lineStart": 46,
+                    "lineEnd": 49,
+                    "nodeIds": [],
+                    "note": "DENY_RULES 对 studies/ 的 reason。"
+                  }
+                ]
+              },
+              {
+                "id": "env-example-allowed",
+                "kind": "basic",
+                "front": "DENY_RULES 对 .env 的规则会放过哪类文件？",
+                "back": "名字匹配 .env.example 这类 example 模板（规则含 (?!example)）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/import-gate.ts",
+                    "lineStart": 50,
+                    "lineEnd": 53,
+                    "nodeIds": [],
+                    "note": ".env 规则与 reason。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "max-blob-mb",
+                "kind": "short-answer",
+                "title": "多大算超大",
+                "prompt": "单个文件超过多少 MB 会被导入门禁拦截？只写数字（如 5）。",
+                "expectedAnswer": "5",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/import-gate.ts",
+                    "lineStart": 38,
+                    "lineEnd": 38,
+                    "nodeIds": [],
+                    "note": "MAX_IMPORT_BLOB_BYTES = 5 * 1024 * 1024。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "gitignore-not-enough",
+            "title": "你已经写了 `.gitignore`，为什么门禁还要再扫一遍树？",
+            "content": "# 你已经写了 `.gitignore`，为什么门禁还要再扫一遍树？\n\n## 两个东西\n\n一边是仓库根上的 `.gitignore`：告诉 Git「这些路径默认别跟踪」。你改它、提交它，日常开发都靠它挡误加。\n\n另一边是 promote 前的导入门禁：它**不打开** `.gitignore` 当判决书。注释把角色拆成两句——主防御 vs 安全网——并点名一类 ignore 管不到的洞：\n\n```ts\n/**\n * This is a safety net, not the main defence. The main defence is that these\n * paths are gitignored and so cannot be tracked in the first place. But\n * `.gitignore` only governs files Git is not yet tracking — a `git add -f`, or\n * a file committed before the ignore rule existed, stays tracked forever.\n */\n```\n\n[[evidence:server/airlock/import-gate.ts:4-7]]\n\n两样东西都在说「别让脏东西进来」，认的名单却不是同一份。\n\n## 先猜一下\n\n只改 `.gitignore`、从不 `git rm --cached` 清跟踪时，下次 promote 会安静放过已跟踪的 `studies/`，还是仍被门禁 `blocked`？门禁判决时读的是 ignore 文本还是即将 promote 的树？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n仍会被门禁 `blocked`；判决读的是即将 promote 的真实树，不是 ignore 文本。\n\n## 逐条对照\n\n| | `.gitignore` | 导入门禁 |\n| --- | --- | --- |\n| 管什么 | 尚未被跟踪的候选路径 | 即将 promote 的树里的真实路径与大小 |\n| 对已跟踪文件 | 无效 | 有效——按路径/体积写入 `blocked` |\n| 漏洞 | `git add -f`；规则出现前已提交 | 主防御仍是「别跟踪」；它只是漏网时的网 |\n| 读什么 | ignore 规则文本 | 树条目（`listTreeEntries`），不是 ignore 文件 |\n\n注释后半句把判决对象钉死：\n\n```ts\n/**\n * So the gate reads the tree that is actually about to be promoted and refuses\n * on what it finds there. ...\n */\n```\n\n[[evidence:server/airlock/import-gate.ts:11-12]]\n\n（完整文件头还写了：只靠 ignore 会让学习库或私钥摸到分析 run——那是 review 点名的洞。）\n\n[[evidence:server/airlock/import-gate.ts:1-15]]\n\n所以你看到的 `inspectImportRisk(listTreeEntries(...))` 不是「再确认 ignore 写得很全吗」，而是「这棵树里到底躺着什么」。拒绝文案也会点破：这些文件**已经被 Git 跟踪**，`.gitignore` 对它们无效——下一步是 `git rm --cached` 再提交，不是再改一行 ignore 就完事。\n\n## 什么时候用哪个\n\n- **写库、日常提交**：靠 `.gitignore`（再加 code review）当主防御——门禁不是让你故意 `add -f` 的许可证。\n- **promote / 导入分析**：只信门禁对真实树的扫描。你改了 ignore 但没清跟踪，promote 仍会炸；这是预期行为。\n- **两边都要**：ignore 防「以后不小心加进去」；门禁防「历史上已经加进去」。叠在一起，不是二选一。\n\n## 自检\n\n**问：** 按文件头注释，`.gitignore` 只约束哪一类文件？\n\n**问：** 举一种 ignore 对已有文件无效的操作或历史情况。\n\n**问：** 导入门禁信任 `.gitignore` 的文件内容吗？它实际读什么？\n\n## 一句话\n\n**`.gitignore` 管不住已被跟踪的文件；导入门禁查的是即将 promote 的真实树，不是门口那块 ignore 牌子。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/import-gate.ts",
+                "lineStart": 1,
+                "lineEnd": 15,
+                "nodeIds": [],
+                "note": "文件头注释：ignore 管不住已跟踪文件，门禁读真实树。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "force-add-hole",
+                "kind": "basic",
+                "front": "举一种 .gitignore 对已存在文件无效的操作。",
+                "back": "git add -f 强制添加，或文件在 ignore 规则出现之前就已提交。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/import-gate.ts",
+                    "lineStart": 5,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "注释点名 git add -f 与历史已提交。"
+                  }
+                ]
+              },
+              {
+                "id": "gate-reads-tree",
+                "kind": "basic",
+                "front": "导入门禁信任 .gitignore 文件内容吗？",
+                "back": "不。它读取即将 promote 的真实树条目并按规则拒绝。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/import-gate.ts",
+                    "lineStart": 11,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "reads the tree… and refuses on what it finds。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ignore-only-untracked",
+                "kind": "short-answer",
+                "title": "ignore 管什么",
+                "prompt": "按 import-gate 文件头注释，.gitignore 只约束哪类文件？用一短句：尚未被 Git 跟踪的文件。",
+                "expectedAnswer": "尚未被 Git 跟踪的文件",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/import-gate.ts",
+                    "lineStart": 5,
+                    "lineEnd": 7,
+                    "nodeIds": [],
+                    "note": ".gitignore only governs files Git is not yet tracking。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "refuse-not-skip",
+            "title": "树里只有一个 `.env`，为什么整次 promote 都要停？",
+            "content": "# 树里只有一个 `.env`，为什么整次 promote 都要停？\n\n## 情境和约束\n\n你 promote 被学项目。`inspectImportRisk` 已经跑完：`blocked` 里只有一条——某个被跟踪的 `.env`。其余九十九个文件都是干干净净的源码。\n\n两条实现路径都摆在桌上：\n\n1. **跳过坏文件，继续 materialize**——airlock 变绿，分析照跑，密钥路径「好像没进来」。\n2. **整次拒绝**——promote 直接失败，什么都不写入，你必须先处理再重试。\n\n约束很硬：那份 `.env` **已经被 Git 跟踪**。这不是「工作区里多了个未提交文件」，而是历史与树里真实存在的秘密材料。工具可以帮你省一次操作，也可以逼你正视仓库状态——两种产品哲学，收益和代价反过来。\n\n## 先猜一下\n\n若你来定：一百个文件里一个 `.env` 命中门禁，你会选「跳过它继续 promote」，还是「整次拒绝」？跳过的话，最先被粉饰掉的是哪一类风险？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n他们选了整次拒绝：真跟踪了秘密是所有者必须看见的故障；跳过会把危险仓库粉饰成绿色成功。\n\n## 代价和收益\n\n实现与注释把选择钉死，没有「滤掉 blocked 再导入」的分支：\n\n```ts\n * So the gate reads the tree that is actually about to be promoted and refuses\n * on what it finds there. Refusing is the whole behaviour: there is no \"skip\n * it and carry on\", because a repository that really does track a secret is a\n * problem the owner has to see, not one a tool should route around.\n```\n\n[[evidence:server/airlock/import-gate.ts:11-14]]\n\n```ts\n  const risk = inspectImportRisk(listTreeEntries(upstream.root, commit));\n  if (risk.blocked.length > 0) throw new Error(describeImportRefusal(risk));\n```\n\n[[evidence:server/airlock/promote.ts:131-132]]\n\n**代价（你立刻感到的）：** 一个坏文件拖死整次 promote。九十九个干净文件也进不了 airlock，你得先清跟踪再来。\n\n**收益（设计要买的）：**\n\n1. **Fail closed**：发现危险时默认什么都不做，而不是「尽量多做一点」。\n2. **问题留在聚光灯下**：拒绝文案列出路径和 reason，并给出下一步：\n\n```ts\nreturn [\n  \"这次提升被拒绝：被学项目里跟踪着不该进入分析的文件。\",\n  ...lines,\n  \"\",\n  \"这些文件已经被 Git 跟踪，`.gitignore` 对它们无效。请先把它们从跟踪中移除\",\n  \"（`git rm --cached <路径>` 并提交），再重新提升。\",\n].join(\"\\n\");\n```\n\n[[evidence:server/airlock/import-gate.ts:112-118]]\n\n3. **不制造假成功**：若跳过密钥继续 promote，看板与 airlock 都显示成功，分析流水线继续——你更难发现「仓库里仍跟踪着秘密」这件事本身。\n\n注释原句：`Refusing is the whole behaviour`——拒绝不是错误处理的一种，**就是**门禁的全部行为。\n\n## 什么时候该反过来\n\n- **批量导入内部已审计、可自动隔离的资产**（例如可再生成的构建缓存）：有时「跳过并记日志」更合适——前提是跳过的东西**不构成安全事故**，且成功语义不会误导所有者。\n- **UniversityLocal 这条边界里**：blocked 项是学习数据、密钥、超大可疑 blob。这里「少导入一点」不等于安全；**看见故障**比**完成导入**优先。若你在别的产品里做内容同步、且危险文件可机器确认无密钥语义，再考虑 skip-with-report——不要把本课的 refuse 无脑搬去当教条。\n\n## 自检\n\n**问：** 文件头注释说拒绝就是全部行为，明确不存在哪一种做法？\n\n**问：** 为什么工具不能默默跳过密钥文件继续 promote？\n\n**问：** 拒绝文案建议你先执行哪类 Git 操作再重新提升？\n\n## 一句话\n\n**门禁只做拒绝、不做跳过：跟踪着秘密是必须被看见的故障，不能被工具粉饰成成功导入。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/import-gate.ts",
+                "lineStart": 11,
+                "lineEnd": 14,
+                "nodeIds": [],
+                "note": "注释：Refusing is the whole behaviour，没有 skip and carry on。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/import-gate.ts",
+                "lineStart": 106,
+                "lineEnd": 119,
+                "nodeIds": [],
+                "note": "describeImportRefusal：整次拒绝并指导 git rm --cached。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/promote.ts",
+                "lineStart": 131,
+                "lineEnd": 132,
+                "nodeIds": [],
+                "note": "promoteAirlock 在 blocked 非空时 throw。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "owner-must-see",
+                "kind": "basic",
+                "front": "为什么工具不能默默跳过密钥文件继续 promote？",
+                "back": "真跟踪了秘密是所有者必须看见的问题，工具不该绕开粉饰成成功。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/import-gate.ts",
+                    "lineStart": 12,
+                    "lineEnd": 14,
+                    "nodeIds": [],
+                    "note": "problem the owner has to see, not route around。"
+                  }
+                ]
+              },
+              {
+                "id": "rm-cached-hint",
+                "kind": "basic",
+                "front": "拒绝文案建议用户先执行哪类 Git 操作再重新提升？",
+                "back": "git rm --cached <路径> 并提交，把文件从跟踪中移除。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/import-gate.ts",
+                    "lineStart": 116,
+                    "lineEnd": 118,
+                    "nodeIds": [],
+                    "note": "describeImportRefusal 中的修复指引。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "whole-behaviour",
+                "kind": "short-answer",
+                "title": "门禁的全部行为",
+                "prompt": "import-gate 文件头注释说拒绝就是全部行为，明确不存在哪一种做法？用英文短语：skip it and carry on。",
+                "expectedAnswer": "skip it and carry on",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/import-gate.ts",
+                    "lineStart": 12,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "there is no \"skip it and carry on\"。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "three-clocks",
+        "title": "怎么知道教材新不新",
+        "objective": "我能用上游 HEAD、封条钉点和算得清或标成未知的超前数对表，判断这份 airlock 教材能不能信，绝不用 0 假装不知道。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "three-clocks",
+            "title": "超前数算不出来时，为什么绝不能写成 0？",
+            "content": "# 超前数算不出来时，为什么绝不能写成 0？\n\n## 现象\n\n你要判断教材新不新，系统不给你一个「新鲜度分数」，而是塞回一个三字段对象：\n\n```ts\nexport interface UpstreamClock {\n  readonly headCommit: string;\n  readonly dirtyCount: number;\n  /** How many upstream commits the airlock has not been promoted to yet. */\n  readonly commitsAhead: number | null;\n}\n```\n\n[[evidence:server/airlock/inspect.ts:17-22]]\n\n`headCommit` 是哈希，`dirtyCount` 是个数，只有 `commitsAhead` 的类型允许是 `null`。你可能想：算不出来就填 `0` 得了——反正屏幕上也是「没有可显示的步数」。\n\n## 先猜一下\n\n`rev-list` 数不出 `promotedCommit..HEAD` 时，如果把 `commitsAhead` 写成 `0` 而不是 `null`，你会把哪种真实情况误读成「教材已与上游对齐」？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n你会把「连不上、未知」误读成「差零步、已同步」。`0` 表示算过且中间没有新提交；`null` 表示两端连不上，你根本不知道差多少。\n\n## 为什么是这样\n\n三只钟分别回答三件事，由 `readUpstreamClock` 一次读齐：\n\n```ts\nfunction readUpstreamClock(upstreamRoot: string, promotedCommit: string): UpstreamClock {\n  const headCommit = gitText([\"rev-parse\", \"--verify\", \"HEAD\"], upstreamRoot);\n  const dirty = gitText([\"status\", \"--porcelain=v1\", \"-z\", \"--untracked-files=all\"], upstreamRoot);\n  const dirtyCount = dirty.split(\"\\0\").filter(Boolean).length;\n  // The promoted commit can be missing from the upstream after a rebase, and a\n  // count nobody can compute is better reported as unknown than as zero.\n  const ahead = readOrNull(\n    [\"rev-list\", \"--count\", `${promotedCommit}..${headCommit}`],\n    upstreamRoot,\n  );\n  return {\n    headCommit,\n    dirtyCount,\n    commitsAhead: ahead === null ? null : Number(ahead),\n  };\n}\n```\n\n[[evidence:server/airlock/inspect.ts:89-104]]\n\n1. **上游走到哪** — `headCommit`：live 仓库当前 `HEAD`。\n2. **有没有未装车的改动** — `dirtyCount`：上游工作区未提交路径数；它们默认不进只收已提交 commit 的 airlock。\n3. **中间隔几步** — `commitsAhead`：`rev-list --count promotedCommit..headCommit`，封条钉点到上游 `HEAD` 之间还有多少 commit。\n\nGit 的 `A..B` 是「从 A 走到 B 之间的提交」。这里 A 是 airlock 封条上的 `promotedCommit`，B 是上游 `HEAD`。\n\n绕的是这一点：rebase 之后，旧的 `promotedCommit` 可能从上游历史里消失，`rev-list` 直接失败。注释把策略写死了——**算不出就报未知，绝不当成零**。你读到 `0` 可以当真「已对齐」；读到 `null` 只能停下来查：封条还指不指得上这条历史上游。\n\n```mermaid\nflowchart LR\n  P[\"airlock 封条<br/>promotedCommit\"] -->|\"commitsAhead\"| H[\"上游 HEAD<br/>headCommit\"]\n  D[\"dirtyCount<br/>未提交改动\"] -.-> H\n```\n\n## 自检\n\n**问：** `commitsAhead === 0` 和 `commitsAhead === null` 一样吗？\n\n**问：** `dirtyCount` 数的是已提交 commit，还是工作区未提交改动？\n\n**问：** 计算超前数时，`rev-list --count` 的两端分别是什么？\n\n## 一句话\n\n**教材新不新靠三只钟对表——上游 HEAD、封条钉点、以及算得清或标成未知的超前数；绝不用 0 假装「不知道」。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/inspect.ts",
+                "lineStart": 17,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "UpstreamClock 三字段：headCommit、dirtyCount、commitsAhead。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/inspect.ts",
+                "lineStart": 89,
+                "lineEnd": 104,
+                "nodeIds": [],
+                "note": "readUpstreamClock：读 HEAD、脏计数、rev-list 超前数。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "ahead-null-vs-zero",
+                "kind": "basic",
+                "front": "commitsAhead 为 null 和为 0 有何不同？",
+                "back": "0 表示算过且无超前；null 表示算不出（例如 rebase 后旧 commit 消失），不能当成已同步。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/inspect.ts",
+                    "lineStart": 93,
+                    "lineEnd": 102,
+                    "nodeIds": [],
+                    "note": "算不出则 null，注释警告不要当成 zero。"
+                  }
+                ]
+              },
+              {
+                "id": "dirty-not-in-textbook",
+                "kind": "basic",
+                "front": "dirtyCount 在告诉你什么？",
+                "back": "上游工作区有多少未提交改动；它们默认不会进入只收已提交 commit 的 airlock。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/inspect.ts",
+                    "lineStart": 90,
+                    "lineEnd": 92,
+                    "nodeIds": [],
+                    "note": "用 porcelain status 统计 dirtyCount。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ahead-field",
+                "kind": "short-answer",
+                "title": "超前数字段",
+                "prompt": "UpstreamClock 里表示「上游比 airlock 多走了多少 commit」的字段名是什么？",
+                "expectedAnswer": "commitsAhead",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/inspect.ts",
+                    "lineStart": 20,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "commitsAhead 字段与注释。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "doctor-vs-status",
+            "title": "airlock 坏了时，谁该让进程停住？",
+            "content": "# airlock 坏了时，谁该让进程停住？\n\n## 两个东西\n\nCLI 里 `airlock-doctor` 与 `airlock-status` 落进**同一个** `case`，都调 `inspectAirlock`：\n\n```ts\ncase \"airlock-doctor\":\ncase \"airlock-status\": {\n  const inspection = inspectAirlock(\n    resolve(input.cwd ?? process.cwd(), input.command.airlockRoot),\n  );\n  // `doctor` is a gate and `status` is a report. They read the same state,\n  // so they share one implementation and differ only in whether a problem\n  // is allowed to pass silently.\n  if (input.command.kind === \"airlock-doctor\" && inspection.verdict === \"blocked\") {\n    throw new Error([\"airlock 未通过检查：\", ...inspection.problems].join(\"\\n  - \"));\n  }\n  return {\n    schemaVersion: 1 as const,\n    operation: input.command.kind,\n    verdict: inspection.verdict,\n    problems: inspection.problems,\n    clocks: { /* upstream + airlock */ },\n    seal: inspection.seal,\n  };\n}\n```\n\n[[evidence:server/cli.ts:847-873]]\n\n你能看见：status 在 `blocked` 时照样 `return` 完整报告；doctor 多了一条 `throw`。化验项目相同，差别在不合格时门开不开。\n\n## 先猜一下\n\nstatus 已经能在 `blocked` 时把 `problems` 完整返回。为什么还要单独做 doctor？如果只保留 status、指望每条流水线自己读 `verdict`，坏的是谁的体验？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n因为很多人会忘了读返回值。doctor 把失败变成进程级错误，CI 和脚本默认就停；只留 status 时，坏的是「门卫本该拦人、却只贴了张病历」的自动化。\n\n## 逐条对照\n\n| | doctor | status |\n| --- | --- | --- |\n| 注释称呼 | gate（闸门） | report（报告） |\n| 检查实现 | `inspectAirlock` | 同一个 `inspectAirlock` |\n| `blocked` 时 | `throw new Error(...)` | 仍 `return` 完整对象 |\n| 返回里有什么 | 若没抛，同样有 `verdict` / `problems` / `clocks` / `seal` | 总是带这些字段 |\n| 失败怎么被发现 | 非零退出 / 未捕获异常 | 你（或脚本）必须读 `verdict` |\n\n两个 `case` 共一块实现，是故意的：避免两套检查渐渐分叉——今天 doctor 多查一项、status 少查一项，你就再也说不清「到底信哪个」。\n\n## 什么时候用哪个\n\n- **CI、pre-publish、任何「坏了就必须停」的脚本** → `airlock-doctor`。你不必再写 `if (verdict === \"blocked\") process.exit(1)`。\n- **你自己坐在终端前排障** → `airlock-status`。你要完整诊断：`problems`、上游时钟、封条字段，而不是进程先死掉、输出截在半路。\n- **想看超前几步、封条钉在哪** → 两者返回值都带 `clocks`；不是另开一条查询。\n- **只差在「静默放行」** → 注释写得很直：共享实现，只在问题是否允许静默通过上分叉。\n\n## 自检\n\n**问：** doctor 和 status 是否各写了一套检查逻辑？\n\n**问：** `verdict === \"blocked\"` 时，哪一个会 `throw`？\n\n**问：** 注释里如何称呼 doctor 与 status？\n\n## 一句话\n\n**doctor 是闸门，status 是报告：同一套 `inspectAirlock`，只有 blocked 时是否抛错不同。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/cli.ts",
+                "lineStart": 847,
+                "lineEnd": 873,
+                "nodeIds": [],
+                "note": "airlock-doctor 与 airlock-status 共用实现；doctor 在 blocked 时 throw。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "same-inspect",
+                "kind": "basic",
+                "front": "doctor 和 status 是否各写了一套检查？",
+                "back": "不是。它们共用 inspectAirlock，只在 blocked 时是否抛错上不同。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/cli.ts",
+                    "lineStart": 849,
+                    "lineEnd": 855,
+                    "nodeIds": [],
+                    "note": "同一 inspection；注释说明 gate vs report。"
+                  }
+                ]
+              },
+              {
+                "id": "gate-vs-report",
+                "kind": "basic",
+                "front": "注释里如何称呼 doctor 与 status？",
+                "back": "doctor 是 gate（闸门），status 是 report（报告）。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/cli.ts",
+                    "lineStart": 852,
+                    "lineEnd": 854,
+                    "nodeIds": [],
+                    "note": "`doctor` is a gate and `status` is a report。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "which-throws",
+                "kind": "short-answer",
+                "title": "谁会抛错",
+                "prompt": "airlock 检查失败（blocked）时，doctor 和 status 哪一个会 throw？只写 doctor 或 status。",
+                "expectedAnswer": "doctor",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/cli.ts",
+                    "lineStart": 852,
+                    "lineEnd": 857,
+                    "nodeIds": [],
+                    "note": "仅 airlock-doctor 且 blocked 时 throw。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "lag-is-feature",
+            "title": "上游又提交了三刀，airlock 为什么还不跟？",
+            "content": "# 上游又提交了三刀，airlock 为什么还不跟？\n\n## 情境和约束\n\n教材证据钉在具体 commit 的行号上。live 上游每天都在长新提交；airlock 却停在封条上的 `promotedCommit`。两侧一拉开，时钟对象上会出现这个字段：\n\n```ts\nexport interface UpstreamClock {\n  readonly headCommit: string;\n  readonly dirtyCount: number;\n  /** How many upstream commits the airlock has not been promoted to yet. */\n  readonly commitsAhead: number | null;\n}\n```\n\n[[evidence:server/airlock/inspect.ts:17-22]]\n\n注释只描述计数语义：还没 promote 到的上游 commit 数。字段和 `headCommit`、`dirtyCount` 并列，挂在同一只上游时钟上。\n\n## 先猜一下\n\nlive 又往前走了 3 个 commit，`commitsAhead` 变成 `3`。你会不会把这判成系统坏了、该自动 promote？如果默认偷偷跟上，坏掉的是哪一类学习资产？\n\n随便猜，猜错不影响任何进度。\n\n## 答案\n\n这不是故障，是**故意冻结**后的待升级信号；默认不自动 promote。偷偷跟上会让昨天还对得上的证据行号、复习卡片和课文书签一起错位。\n\n## 代价和收益\n\n`readUpstreamClock` 专门算这个差值：\n\n```ts\nfunction readUpstreamClock(upstreamRoot: string, promotedCommit: string): UpstreamClock {\n  const headCommit = gitText([\"rev-parse\", \"--verify\", \"HEAD\"], upstreamRoot);\n  const dirty = gitText([\"status\", \"--porcelain=v1\", \"-z\", \"--untracked-files=all\"], upstreamRoot);\n  const dirtyCount = dirty.split(\"\\0\").filter(Boolean).length;\n  // The promoted commit can be missing from the upstream after a rebase, and a\n  // count nobody can compute is better reported as unknown than as zero.\n  const ahead = readOrNull(\n    [\"rev-list\", \"--count\", `${promotedCommit}..${headCommit}`],\n    upstreamRoot,\n  );\n  return {\n    headCommit,\n    dirtyCount,\n    commitsAhead: ahead === null ? null : Number(ahead),\n  };\n}\n```\n\n[[evidence:server/airlock/inspect.ts:89-104]]\n\n| | 故意落后（`commitsAhead > 0`） | 真故障（封条/工作区不对） |\n| --- | --- | --- |\n| 模型位置 | 时钟字段，可观测 | `inspectAirlock` 的 `problems` → `blocked` |\n| 副本是否仍自洽 | 是：仍钉在合法 promote 点 | 否：HEAD≠封条、工作区脏、借 objects 等 |\n| 你该做什么 | 需要新教材再 **promote** | 修复或重新提升，别继续教 |\n\n**收益：** 证据行号稳定；同一份 airlock 上的课、卡、练习不会因为上游今晚又 push 而整页错位。\n\n**代价：** 教材可以落后 live；你得自己看 `commitsAhead`，决定要不要付「再 promote + 重绑证据」的账。\n\n```mermaid\nsequenceDiagram\n  participant U as live 上游\n  participant A as airlock\n  U->>A: promote 到 commit T0\n  Note over A: 教材钉在 T0\n  U->>U: 继续提交 T1 T2 T3\n  Note over A: 仍钉在 T0<br/>commitsAhead=3（特性）\n  U->>A: 再次 promote 到 T3\n  Note over A: 教材前进到 T3\n```\n\n## 什么时候该反过来\n\n- **上游安全修复已经进 live、旧教材会教错东西** → 该 promote，别抱着「稳定」不放。\n- **你在写自动刷新流水线** → 可以做策略，但默认仍应是显式一步，并连带刷新证据绑定；别静默改 `promotedCommit`。\n- **`commitsAhead` 很大且你长期不看** → 落后从「特性」变成「过期风险」；时钟还在报数，是你没消费信号。\n- **别反过来的：** 把 `commitsAhead > 0` 当成和「工作区被改脏」同一类 blocked——前者是待升级，后者是副本不可信。\n\n## 自检\n\n**问：** 上游又提交了 3 次，airlock 会自动跟上吗？\n\n**问：** `commitsAhead > 0` 和 airlock 工作区被改脏，哪一个是该 `blocked` 的故障？\n\n**问：** 本课把 airlock 落后于 live 称作特性还是缺陷？\n\n## 一句话\n\n**airlock 故意可以落后于 live：冻结才有稳定教材；`commitsAhead` 是待升级信号，不是故障灯。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/inspect.ts",
+                "lineStart": 17,
+                "lineEnd": 22,
+                "nodeIds": [],
+                "note": "commitsAhead 把「尚未 promote 的上游提交数」建模为时钟字段。"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-90cf76c1177f",
+                "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                "sourcePath": "server/airlock/inspect.ts",
+                "lineStart": 89,
+                "lineEnd": 104,
+                "nodeIds": [],
+                "note": "readUpstreamClock 计算超前；落后是可观测状态。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "lag-vs-tamper",
+                "kind": "basic",
+                "front": "commitsAhead>0 和 airlock 工作区被改脏，哪一个是「该 blocked」的故障？",
+                "back": "工作区被改脏是篡改/不可信，应 blocked；仅超前是待升级信号，不是故障。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/inspect.ts",
+                    "lineStart": 20,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "超前是时钟字段；对照 inspect 对 dirty 才 push problem。"
+                  }
+                ]
+              },
+              {
+                "id": "promote-is-explicit",
+                "kind": "basic",
+                "front": "上游又提交了 3 次，airlock 会自动跟上吗？",
+                "back": "不会。必须再次 promote 才会前进；默认冻结以保证教材与证据稳定。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/inspect.ts",
+                    "lineStart": 20,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "字段语义是尚未 promote 的数量，不是自动同步。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ahead-means",
+                "kind": "short-answer",
+                "title": "落后是什么",
+                "prompt": "本课把 airlock 落后于 live 称作「特性」还是「缺陷」？只写其中一个词。",
+                "expectedAnswer": "特性",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-90cf76c1177f",
+                    "sourceCommit": "90cf76c1177fa19cd5d9d0a6c8257d934a586b5e",
+                    "sourcePath": "server/airlock/inspect.ts",
+                    "lineStart": 20,
+                    "lineEnd": 21,
+                    "nodeIds": [],
+                    "note": "How many upstream commits the airlock has not been promoted to yet。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
