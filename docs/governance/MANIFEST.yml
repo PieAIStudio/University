@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-26T03:36:20.172Z
+generated_at: 2026-08-26T04:15:06.826Z
 generator_version: doc-gov@0.9.5
-docs_count: 34
+docs_count: 35
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -185,6 +185,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-24
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-KEEP-CANONICAL-HASHING-SEPARATE-FROM-OPTIONAL-VALUE-COMPARISON
+    path: docs/reference/learnings/workflow-issues/keep-canonical-hashing-separate-from-optional-value-comparison.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-26
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-PUBLISH-BOUNDARIES-NEED-A-RECURSIVE-DTO-GATE-WITH-RED-GREEN-EVIDENCE
     path: docs/reference/learnings/workflow-issues/publish-boundaries-need-a-recursive-dto-gate-with-red-green-evidence.md
