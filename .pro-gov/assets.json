@@ -35,6 +35,7 @@
     "pie-rules/clean-image-generation-rules",
     "pie-rules/donors",
     "pie-rules/web3d-capability-alignment",
+    "pie-skills/ai-human-friendly-refactor",
     "pie-skills/experience-capture",
     "pie-skills/mermaid-diagrams",
     "pie-skills/screenwalk",

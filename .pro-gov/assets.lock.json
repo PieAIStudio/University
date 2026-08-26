@@ -12,8 +12,8 @@
   "registryProvenance": {
     "schema": "agent-assets-registry",
     "version": 1,
-    "hash": "sha256:526e03f9fc20c4b21ef3507ac855a10e8e7327d67efa9285d22b358473a2e4ab",
-    "assetCount": 43
+    "hash": "sha256:b4b7b22e004cfda73a7dcd299d904de8f174c13810e60ba766571d56ed19e22b",
+    "assetCount": 44
   },
   "assets": [
     {
@@ -190,6 +190,13 @@
       "delivery": "snapshot",
       "contentHash": "sha256:9834ff5cadf6b7a6a8479de7ba0c26c4e552224377327fba2b850bdab25d18c1",
       "targetPath": "docs/policy/shared-rules/web3d-capability-alignment.md"
+    },
+    {
+      "id": "pie-skills/ai-human-friendly-refactor",
+      "sourcePath": "skills/pie-skills/ai-human-friendly-refactor",
+      "delivery": "symlink",
+      "contentHash": "sha256:6099c06fef1a50d54492ce3c5b4ce75bb9655fcffbc7f5671290e6fc98269d00",
+      "targetPath": ".agents/manual-skills/ai-human-friendly-refactor"
     },
     {
       "id": "pie-skills/experience-capture",
