@@ -1,15 +1,24 @@
 /**
- * The one place this product owns a WebGL renderer.
+ * The world scene owns one WebGL renderer. Avatar previews are separate small
+ * viewports because they live in different DOM positions and have a different
+ * job from the world map.
  *
- * This file is the reason the portfolio manifest can drop its
- * `scheduled-migration` exceptions for Web3D baseline rules 1 to 5. Each is
- * answered here or in a file this one imports, and the answers are in one place
- * on purpose: a colour pipeline spread across four components is a pipeline
- * nobody can count the tone maps in.
+ * Canvas mount registry (the source gate checks this list):
+ *   - `packages/world/src/Stage.tsx` — world, map and planet renderer
+ *   - `packages/world/src/avatar/AvatarChip.tsx` — persistent navigation avatar
+ *   - `apps/university/src/app/ProfileAvatar.tsx` — profile-page avatar
+ *   - `apps/university/src/avatar-lab/AvatarLab.tsx` — avatar-workshop preview
  *
- *   1. One renderer owner, one loop. There is a single `<Canvas>` in the app,
- *      and `useFrame` at priority 1 takes rendering away from R3F's automatic
- *      pass, so the draw happens exactly once per frame, here.
+ * This file documents the world renderer's answers to the portfolio's
+ * `scheduled-migration` exceptions for Web3D baseline rules 1 to 5. The small
+ * avatar viewports follow the same per-viewport ownership rule and are listed
+ * below; keeping the world colour pipeline here means nobody has to count tone
+ * maps spread across four unrelated components.
+ *
+ *   1. One renderer owner, one loop per viewport. Stage owns the world loop;
+ *      each small avatar viewport owns only its own preview loop. `useFrame` at
+ *      priority 1 takes rendering away from R3F's automatic pass, so the world
+ *      draw happens exactly once per frame, here.
  *   2. One tone map, one sRGB encode. The scene renders linear into a target;
  *      `ao.ts` may darken that linear colour (desktop only); `grade.ts` then
  *      runs the kit's standalone blit (ACES, then grade, then one sRGB encode)

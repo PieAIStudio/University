@@ -10,6 +10,7 @@
     "bundle": "node scripts/check-authoring-excluded.mjs",
     "content": "pnpm --filter @pieai/university-app content",
     "check:generated-format": "pnpm --filter @pieai/university-app check:generated-format",
+    "check:canvas": "node scripts/check-canvas-registry.mjs",
     "check:shelf": "node apps/university/scripts/check-shelf.mjs",
     "dev": "pnpm --filter @pieai/university-app dev",
     "doc-gov": "doc-gov",
@@ -24,7 +25,7 @@
     "start": "node scripts/start.mjs",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm build && pnpm check:shelf && pnpm bundle && pnpm docs:check"
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm check:canvas && pnpm build && pnpm check:shelf && pnpm bundle && pnpm docs:check"
   },
   "devDependencies": {
     "@pieai/doc-gov": "0.9.5",

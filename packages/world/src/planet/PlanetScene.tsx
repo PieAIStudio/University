@@ -765,9 +765,11 @@ export function PlanetScene(props: PlanetSceneProps) {
 }
 
 /**
- * Own canvas, for a standalone route. Wraps `Stage` rather than a second
- * `<Canvas>` so the grade, the DPR clamp and the one-renderer-owner rule
- * stay the answers already written down in Stage.tsx.
+ * Owns the world viewport when a standalone route needs the planet scene.
+ * Wraps `Stage` rather than creating another world viewport, so the grade, DPR
+ * clamp and one-renderer-owner-per-viewport rule stay the answers written in
+ * Stage.tsx. The avatar viewports listed in the Canvas mount registry remain
+ * independent.
  */
 export function PlanetStage(props: PlanetSceneProps) {
   return (
