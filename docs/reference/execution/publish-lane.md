@@ -42,9 +42,10 @@ related:
 
 已在 Git 中、干净 clone 可取得的输入：
 
-- `apps/local/course-proposals/recovery/`：5 个 study index、53 个
-  recovery course package，共 61 个文件，原始 package 内容约 11.24 MiB。
-  每个 index 记录 course 文件名和 `sha256:`；这是当前可复现的课程输入。
+- `apps/local/course-proposals/recovery/`：5 个 study index，index 共引用 53
+  个 recovery course package；目录实际有 61 个文件、约 17.99 MiB，其中 3
+  个是未被 index 引用的历史 `.recovery.json`。每个被引用的 index/package
+  都有 `sha256:` 账；index 是课程集合的权威住处，未引用包不会进入课程产物。
 - `apps/local/data/vocabulary/en.json`：词典输入，约 92 KiB。
 - `apps/university/` 的源码、静态 kit、workspace 清单和
   `pnpm-lock.yaml`。
@@ -160,7 +161,9 @@ pnpm delivery:build -- \
 
 它会：
 
-1. 校验 recovery index、每个被引用文件和 `sha256:`，并计算输入指纹；
+1. 校验 recovery index、每个被引用文件和 `sha256:`，并计算输入指纹；当前
+   3 个未引用的历史 `.recovery.json` 会列在元数据中，其它未登记文件直接
+   失败；
 2. 用显式 recovery root 和 lexicon 执行现有 importer；
 3. 把 evidence mode 固定为 `none`，不读取 `apps/local/studies`；
 4. 构建 delivery，读取产物验证 authoring 未泄漏；
@@ -170,8 +173,8 @@ pnpm delivery:build -- \
    每个文件的 SHA-256 和总字节数。
 
 `release.json` 只记录相对输入名、Git commit、输入指纹、evidence mode 和
-payload 文件清单；`SHA256SUMS` 覆盖 payload 与 `release.json` 自身，但不
-   包含自身，避免自引用。构建会从 `HEAD` commit date 得到稳定的 import
+payload 文件清单；另外会记录未引用的历史包名。`SHA256SUMS` 覆盖 payload
+与 `release.json` 自身，但不包含自身，避免自引用。构建会从 `HEAD` commit date 得到稳定的 import
    date，也允许显式传 `--import-date`。命令会保留调用前的生成 source
    manifest，不把 `imported.json` 的变化带进提交。
 
@@ -227,3 +230,10 @@ cards、exercise fingerprint、evidence locator 和静态资源可复现；来�
 在这两项未决定前，本 lane 可以完成并校验 package-only artifact，但不声称
 已经完成后端意义上的“published course”或 source-snippet parity。
 
+## 实现后复测
+
+在实现提交后，用同一条命令分别在主工作树和一个没有 `node_modules/`、
+`content/`、`dist/` 或忽略状态的独立 clone 执行 `0.1.0` 构建。两边都得到
+5 studies、53 courses、579 lessons、`evidence:none`；对两个版本目录执行
+`diff -rq` 没有差异，主工作树的 `git status` 也保持 clean。独立的
+`sha256sum -c SHA256SUMS` 全部通过。

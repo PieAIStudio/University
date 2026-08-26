@@ -377,12 +377,12 @@ the list below contains the remaining implementation and authority boundaries.
    answer. A current row with aggregate `progress = 1` but no current exercise
    passes remains in progress until both lights are on; pre-migration rows with
    no `readConfirmed` field keep their compatibility finish.
-7. **A publish lane that reproduces from a clean clone.** Today's delivery
-   build does not: the course sources live on one machine's disk, the
-   generated `content/` is gitignored, and Vercel builds from a checkout that
-   holds local state. It needs a version, a checksum on its output, and inputs
-   named rather than assumed. Then the shells: Electron and Capacitor wrap the
-   same build, they are not products.
+7. ~~**A publish lane that reproduces from a clean clone.**~~ **Done.**
+   `pnpm delivery:build` takes an explicit recovery root, lexicon, evidence mode
+   and version, then seals `release.json` plus `SHA256SUMS` under a versioned
+   artifact directory. Vercel calls the same package-only lane while its Git
+   deployment gate remains off. Details and clean-clone evidence live in
+   [Delivery Publish Lane](./publish-lane.md).
 8. **Entitlement, and it starts by splitting one word in two.** 「published」
    and 「paid for」 are different questions and the code currently answers them
    with one. V5 keeps the prose open, so entitlement governs AI and
