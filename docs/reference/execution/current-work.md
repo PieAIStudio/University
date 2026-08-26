@@ -447,7 +447,7 @@ argument:
 | R2 | `packages/world/src`, 47 direct children into directories | **done** — 47 → 10 |
 | R3 | Shared components' CSS back beside the components | **done** — 8 families, 830 lines |
 | R4 | Split `App.tsx` | **done** — 1,384 → 757, six files |
-| R5 | 359 colour literals into tokens | fallbacks gone, ratchet in place; the **213 left are a colour decision, not a refactor** |
+| R5 | 359 colour literals into tokens | **done** — 8 left, and those are upstream kit proposals |
 
 R4 is last because the first four are its safety net, not because it matters
 least: it is the highest-churn file in the repository and the one where
