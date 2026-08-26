@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-26T15:02:23.168Z
+generated_at: 2026-08-26T15:02:23.826Z
 generator_version: doc-gov@0.9.5
-docs_count: 42
+docs_count: 43
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -237,6 +237,13 @@ docs:
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-RAW-COLOUR-REGISTRY-ENTRIES-ARE-SOURCE-ORDER-SENSITIVE
     path: docs/reference/learnings/workflow-issues/raw-colour-registry-entries-are-source-order-sensitive.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-26
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-RELEASE-BUILDS-MUST-PIN-EVIDENCE-INPUTS-AND-RESTORE-TRACKED-GENERATED-MANIFESTS
+    path: docs/reference/learnings/workflow-issues/release-builds-must-pin-evidence-inputs-and-restore-tracked-generated-manifests.md
     type: reference
     status: stable
     canonical: true
