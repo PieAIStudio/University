@@ -13,6 +13,9 @@ allowBuilds:
   # postinstall is a fallback for installers that cannot resolve the platform
   # package. pnpm does resolve it, so both the binary and the JS transform API
   # work with the script skipped.
+  # Denied. PostHog brings this polyfill transitively; its install hook is not
+  # needed by the browser build.
+  core-js: false
   esbuild: false
   # Allowed. lefthook's postinstall fetches the binary and syncs the Git
   # hooks; without it the commit gate in lefthook.yml never runs.

@@ -18,6 +18,7 @@ import {
   NOT_STARTED,
   progressSourceOf,
   readCourseProgress,
+  type ExerciseAttemptResult,
   type LessonRef,
 } from "@pieai/university-core";
 import { GameCallout } from "@pieai/swimmer-ui-kit";
@@ -28,8 +29,26 @@ import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-less
 import type { CourseView, LessonView } from "@pieai/university-ui/view/lesson-view.js";
 import { createReviewCardPort } from "@pieai/university-ui/review/scheduler-ports.js";
 
+import { trackEvent, withProductAnalyticsReview } from "../analytics/productAnalytics";
 import { contentPort, gradingPort, readerPort, sourceAccessPort } from "../ports/index.js";
 import { progressPort } from "../progress/store.js";
+
+function exerciseAnalyticsKey(locator: LessonRef, exerciseId: string): string {
+  return `${locator.studyId}/${locator.courseId}/${locator.unitId}/${locator.lessonId}/${exerciseId}`;
+}
+
+function isNewGrade(occurredAt: string, previousAt: string): boolean {
+  if (!previousAt) return true;
+  const next = Date.parse(occurredAt);
+  const previous = Date.parse(previousAt);
+  return Number.isFinite(next) && Number.isFinite(previous)
+    ? next > previous
+    : occurredAt !== previousAt;
+}
+
+function exerciseTierOf(result: ExerciseAttemptResult): "tier-1" | "tier-2" {
+  return result.hostGrade?.host === "tier-1" ? "tier-1" : "tier-2";
+}
 
 export function LessonScreen({
   locator,
@@ -59,6 +78,70 @@ export function LessonScreen({
   const [reloads, setReloads] = useState(0);
   const requested = lessonRefKey(locator);
   const source = useMemo(() => progressSourceOf(progressPort), []);
+  const pendingExerciseResults = useRef(
+    new Map<
+      string,
+      {
+        readonly attemptCount: number;
+        readonly previousGradeAt: string;
+      }
+    >(),
+  );
+  const knownExerciseGrades = useRef(new Map<string, string>());
+
+  const trackedReader = useMemo(
+    () => ({
+      ...readerPort,
+      async completeLesson(
+        target: LessonRef,
+        input: Parameters<typeof readerPort.completeLesson>[1],
+      ) {
+        await readerPort.completeLesson(target, input);
+        trackEvent({
+          name: "lesson_read_confirmed",
+          studyId: target.studyId,
+          courseId: target.courseId,
+          lessonId: target.lessonId,
+        });
+      },
+    }),
+    [],
+  );
+
+  const trackedGrading = useMemo(
+    () => ({
+      ...gradingPort,
+      async submitExercise(input: Parameters<typeof gradingPort.submitExercise>[0]) {
+        const key = exerciseAnalyticsKey(input.locator, input.exerciseId);
+        const previousGradeAt = knownExerciseGrades.current.get(key) ?? "";
+        const result = await gradingPort.submitExercise(input);
+        trackEvent({
+          name: "exercise_submitted",
+          studyId: input.locator.studyId,
+          courseId: input.locator.courseId,
+          lessonId: input.locator.lessonId,
+          tier: exerciseTierOf(result),
+        });
+        if (result.hostGrade && isNewGrade(result.hostGrade.occurredAt, previousGradeAt)) {
+          trackEvent({
+            name: "exercise_result",
+            studyId: input.locator.studyId,
+            courseId: input.locator.courseId,
+            lessonId: input.locator.lessonId,
+            passed: result.hostGrade.passed,
+            attemptCount: result.attemptCount,
+          });
+        } else {
+          pendingExerciseResults.current.set(key, {
+            attemptCount: result.attemptCount,
+            previousGradeAt,
+          });
+        }
+        return result;
+      },
+    }),
+    [],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -85,6 +168,27 @@ export function LessonScreen({
    */
   const settled = useRef<string | null>(null);
   const shown = view?.key === requested ? view.view : null;
+
+  useEffect(() => {
+    if (!shown) return;
+    for (const exercise of shown.lesson.exercises) {
+      const key = exerciseAnalyticsKey(locator, exercise.id);
+      const occurredAt = exercise.hostGrade?.occurredAt ?? "";
+      const pending = pendingExerciseResults.current.get(key);
+      if (pending && occurredAt && isNewGrade(occurredAt, pending.previousGradeAt)) {
+        pendingExerciseResults.current.delete(key);
+        trackEvent({
+          name: "exercise_result",
+          studyId: locator.studyId,
+          courseId: locator.courseId,
+          lessonId: locator.lessonId,
+          passed: exercise.hostGrade?.passed === true,
+          attemptCount: pending.attemptCount,
+        });
+      }
+      knownExerciseGrades.current.set(key, occurredAt);
+    }
+  }, [shown, locator.courseId, locator.lessonId, locator.studyId, locator.unitId]);
   /*
     The shared source can now answer both facts independently because this
     caller supplies the current lesson revision and its complete exercise id
@@ -125,7 +229,14 @@ export function LessonScreen({
     [shown, locator, progress],
   );
 
-  const review = useMemo(() => createReviewCardPort(contentPort, progressPort), []);
+  const review = useMemo(
+    () =>
+      withProductAnalyticsReview(
+        createReviewCardPort(contentPort, progressPort),
+        () => progressPort.dueCards().length,
+      ),
+    [],
+  );
   const neighbours = useMemo(
     () => (course ? lessonNeighbours([course], locator) : null),
     [course, locator],
@@ -161,8 +272,8 @@ export function LessonScreen({
         view={overlaid}
         completion={completion ?? NOT_STARTED}
         unitObjective={unitObjective}
-        reader={readerPort}
-        grading={gradingPort}
+        reader={trackedReader}
+        grading={trackedGrading}
         sourceAccess={sourceAccessPort}
         progress={progressPort}
         review={review}

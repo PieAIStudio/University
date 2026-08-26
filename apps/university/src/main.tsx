@@ -57,9 +57,12 @@ import "@pieai/university-ui/lesson/word-list.css";
 import "@pieai/university-ui/lesson/mark-list.css";
 import "@pieai/university-world/overlay.css";
 import "./styles.css";
+import { initProductAnalytics, trackEvent } from "./analytics/productAnalytics";
 
 const container = document.getElementById("root");
 if (!container) throw new Error("Missing #root container in index.html");
+
+void initProductAnalytics().then(() => trackEvent({ name: "app_open" }));
 
 createRoot(container).render(
   <StrictMode>

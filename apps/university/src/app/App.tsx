@@ -101,6 +101,13 @@ import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/universi
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
 import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
 import { MainRouter } from "./MainRouter";
+import {
+  trackEvent,
+  withProductAnalyticsIdentity,
+  withProductAnalyticsPayment,
+  withProductAnalyticsReview,
+  type AnalyticsEvent,
+} from "../analytics/productAnalytics";
 
 export function App() {
   const progress = useSyncExternalStore(subscribe, snapshot);
@@ -132,6 +139,8 @@ export function App() {
   const [grewFrom, setGrewFrom] = useState<{ key: string; doneBefore: number } | null>(null);
   /** Lessons a cross-lesson link led away from, innermost last. */
   const [returnStack, setReturnStack] = useState<readonly LessonRef[]>([]);
+  const lastRouteAnalyticsKey = useRef<string | null>(null);
+  const reviewDueAnalyticsReported = useRef(false);
   // Screen 09. False until the kit models inside Stage have committed. The
   // overlay is DOM, so this flag is the only thing Stage has to say.
   const [sceneReady, setSceneReady] = useState(false);
@@ -139,6 +148,8 @@ export function App() {
   const onSceneBusy = useCallback(() => setSceneReady(false), []);
 
   const source = useMemo(() => progressSourceOf(progressPort), []);
+  const analyticsIdentityPort = useMemo(() => withProductAnalyticsIdentity(identityPort), []);
+  const analyticsPaymentPort = useMemo(() => withProductAnalyticsPayment(paymentPort), []);
   const mistakes = useMemo(() => mistakesOf(progress), [progress]);
   const uncorrectedMistakeCount = useMemo(
     () => mistakes.filter((mistake) => !mistake.corrected).length,
@@ -263,12 +274,70 @@ export function App() {
     }),
     [studies, todayCard, due, nextUpProgress],
   );
-  const todayReview = useMemo(() => createReviewCardPort(contentPort, progressPort), []);
+  const todayReview = useMemo(
+    () =>
+      withProductAnalyticsReview(
+        createReviewCardPort(contentPort, progressPort),
+        () => progressPort.dueCards().length,
+      ),
+    [],
+  );
   const todayVocabularyReview = useMemo(
     () => createVocabularyReviewPort(progressPort, LEXICON),
     [],
   );
   const showMap = SHOWS_THE_MAP.has(view.kind);
+  const reviewVisible = showMap || view.kind === "review";
+
+  useEffect(() => {
+    let event: AnalyticsEvent | null = null;
+    let key: string | null = null;
+    if (view.kind === "course") {
+      key = `course:${view.studyId}/${view.courseId}`;
+      event = {
+        name: "course_opened",
+        studyId: view.studyId,
+        courseId: view.courseId,
+      };
+    } else if (view.kind === "lesson") {
+      key = `lesson:${view.studyId}/${view.courseId}/${view.lessonId}`;
+      event = {
+        name: "lesson_opened",
+        studyId: view.studyId,
+        courseId: view.courseId,
+        lessonId: view.lessonId,
+      };
+    } else if (view.kind === "settled") {
+      key = `settled:${view.studyId}/${view.courseId}/${view.lessonId}`;
+      event = {
+        name: "settlement_shown",
+        studyId: view.studyId,
+        courseId: view.courseId,
+        lessonId: view.lessonId,
+      };
+    } else if (view.kind === "plans") {
+      key = "plans";
+      event = { name: "plans_opened" };
+    }
+    if (!event) {
+      lastRouteAnalyticsKey.current = null;
+      return;
+    }
+    if (key === lastRouteAnalyticsKey.current) return;
+    lastRouteAnalyticsKey.current = key;
+    trackEvent(event);
+  }, [view]);
+
+  useEffect(() => {
+    if (due.length === 0) {
+      reviewDueAnalyticsReported.current = false;
+      return;
+    }
+    if (!reviewVisible || !todayCard || reviewDueAnalyticsReported.current) return;
+    reviewDueAnalyticsReported.current = true;
+    trackEvent({ name: "review_due_opened", cardCount: due.length });
+  }, [due.length, reviewVisible, todayCard]);
+
   // Suspense reports the models; this reports the JSON they stand on. Either
   // one alone still paints an empty sea, which is the same broken-page read.
   const waitingForData =
@@ -621,8 +690,8 @@ export function App() {
       focusedStudyId={focusedStudyId}
       focusStudy={focusStudy}
       grewFrom={grewFrom}
-      identityPort={identityPort}
-      paymentPort={paymentPort}
+      identityPort={analyticsIdentityPort}
+      paymentPort={analyticsPaymentPort}
       mistakes={mistakes}
       nextUpProgress={nextUpProgress}
       pathLesson={pathLesson}

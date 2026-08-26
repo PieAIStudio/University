@@ -17,13 +17,21 @@ const args = parseArgs(process.argv.slice(2));
 const secretsRoot = resolveSecretsRoot(args.secretsRoot);
 const sourcePath = join(secretsRoot, 'swimmer-backend', 'local.server.env');
 const outputPath = join(secretsRoot, 'university', 'local.public.env');
+const analyticsPath = join(secretsRoot, 'university', 'analytics.env');
 const appEnvPath = join(PROJECT_ROOT, 'apps', 'university', '.env.local');
+const ANALYTICS_VARIABLES = [
+  'VITE_POSTHOG_KEY',
+  'VITE_POSTHOG_HOST',
+  'VITE_ENABLE_POSTHOG',
+];
 
 const source = readEnvFile(sourcePath);
 const publicConfig = readPublicConfig(source);
+const analytics = readOptionalEnvFile(analyticsPath);
 const expectedBody = [
   `VITE_SWIMMER_BACKEND_SUPABASE_URL=${publicConfig.url}`,
   `VITE_SWIMMER_BACKEND_PUBLISHABLE_KEY=${publicConfig.publishableKey}`,
+  ...analyticsLines(analytics),
   '',
 ].join('\n');
 
@@ -90,6 +98,16 @@ function readEnvFile(path) {
     values[key] = rawValue.replace(/^['"]|['"]$/g, '');
   }
   return values;
+}
+
+function readOptionalEnvFile(path) {
+  return existsSync(path) ? readEnvFile(path) : {};
+}
+
+function analyticsLines(source) {
+  return ANALYTICS_VARIABLES.flatMap((key) =>
+    Object.hasOwn(source, key) ? [`${key}=${source[key]}`] : [],
+  );
 }
 
 function readPublicConfig(source) {
