@@ -49,8 +49,9 @@ const VALUE_FLAGS = new Set([
 
 function parseArgs(argv) {
   const args = {};
-  for (let index = 0; index < argv.length; index += 1) {
-    const flag = argv[index];
+  const options = argv[0] === "--" ? argv.slice(1) : argv;
+  for (let index = 0; index < options.length; index += 1) {
+    const flag = options[index];
     if (flag === "--help" || flag === "-h") {
       console.log(
         "Usage: pnpm delivery:build -- --version <version> " +
@@ -63,7 +64,7 @@ function parseArgs(argv) {
       throw new Error(`unknown option ${flag}`);
     }
     const name = flag.slice(2);
-    const value = argv[index + 1];
+    const value = options[index + 1];
     if (value === undefined || value.startsWith("--")) throw new Error(`${flag} needs a value`);
     args[name] = value;
     index += 1;
