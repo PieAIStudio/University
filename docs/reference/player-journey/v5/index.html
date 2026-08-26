@@ -92,11 +92,11 @@ pre b{color:var(--go);font-weight:600}
   <p class="tagline">
     V4 定下了地图、双模式和共享阅读器；当前执行记录又把「讲一遍」分成作者知识笔记与学习者复述卡。V5 只把其中一条还会被误读的边界钉牢：
     <b>语音输出已经定了，语音输入仍然开放。</b>这不是重画世界地图，也不是给两个模式再加一个差异。
-    本次 amendment 再把真实源码引文的可见性钉牢：短引文贴在正文旁，长引文留在芯片和侧栏。
+    本次 amendment 再把真实源码引文的可见性钉牢：短引文贴在正文旁，长引文留在芯片和侧栏；并补上一条学习者会遇到的路径：复习卡明天回来时，提醒要在价值兑现之后、用户点头之后才出现。
   </p>
   <p class="supersede">
     <b>承接</b> <a href="../v4/index.html">V4</a>：V4 没有被本文推翻的地图、组件、商业和双模式决定继续有效。
-    <b>本稿新增</b> 读完与答对分开、学习者复述进 FSRS、TTS / ASR 的边界，以及源码证据按长度选择呈现形状。<b>读法</b> 先看裁决，再看为什么，最后看怎么验。
+    <b>本稿新增</b> 读完与答对分开、学习者复述进 FSRS、TTS / ASR 的边界，源码证据按长度选择呈现形状，以及复习提醒的时机、权限和平台边界。<b>读法</b> 先看裁决，再看为什么，最后看怎么验。
   </p>
 </header>
 
@@ -128,6 +128,7 @@ pre b{color:var(--go);font-weight:600}
 <tr><td>课程内容不设付费墙；AI 按既定成本层级走端口</td><td>打开 TTS 不等于同意上传学习者的声音</td></tr>
 <tr><td>tier-1 确定性判题先在浏览器免费完成</td><td>只有 tier-1 <code>undecided</code> 的练习答案，才在明确提交后进入带额度的 tier-2 服务；每日免费额度有余量时先用它，不提示钱包扣费</td></tr>
 <tr><td>证据是学习者读课文时的真实源码，不是藏起来的附录</td><td>引用范围 ≤16 行直接在正文旁展开；长范围、整文件和公共网页保留芯片与侧栏</td></tr>
+<tr><td>提醒是复习价值的延伸，不是首页的欢迎词</td><td>先在结算页说明明天有几张卡，再由学习者选择是否打开；浏览器权限只在点「好」后请求</td></tr>
 </tbody>
 </table>
 </div>
@@ -446,7 +447,7 @@ pre b{color:var(--go);font-weight:600}
 <!-- ═══════════════════════════════════════════ -->
 <h2><span class="n">05</span>施工顺序与完成线</h2>
 <p class="lede">
-  先把两个事实和一张文字复述卡做成一套，再决定是否值得为 ASR 支付隐私和识别失败的复杂度。
+  先把两个事实和一张文字复述卡做成一套，再决定是否值得为 ASR 支付隐私和识别失败的复杂度；提醒只在学习者已经看到明天的复习安排之后接上。
   TTS 的四档设置已经有共享实现，本节描述它必须守住的产品行为。
 </p>
 
@@ -458,6 +459,7 @@ pre b{color:var(--go);font-weight:600}
   <li><b>加入计量 tier-2。</b>仍只通过 <code>GradingPort</code>；先过免费 tier-1，服务端验证 token 后按账号和 UTC 自然日读取并原子 reserve 每日免费额度，走 structured output 后 commit/refund；额度用完安静回到 tier-1 并说明明日恢复，钱包只有在学习者另选付费时才 reserve，任何情况下都不隐藏入口或把它禁用。</li>
   <li><b>双模式逐屏对齐。</b>本地与交付模式共享学习者面、课后提示、文字输入、复习卡和 TTS 设置；AI 来源、课文材料来源、以及能否触达课文背后的源码仓库，分别留在 <code>GradingPort</code>、<code>ContentPort</code>/<code>ReaderPort</code>、<code>SourceAccessPort</code>。能力缺席时照常显示入口并解释原因与未来支持路径。</li>
   <li><b>按证据长度呈现。</b>短仓库引文在正文中直接展开；长引文保留芯片、reference panel 和 full-source sheet。切分由共享策略常量决定，不能在两个模式各写一套。</li>
+  <li><b>把提醒放到价值兑现之后。</b>结算页先说「明天有 N 张复习卡到期」，再显示一张普通的应用内预提示；只有学习者点击「好」才请求浏览器权限，点击「以后再说」不消耗机会。</li>
 </ol>
 
 <h3>完成线</h3>
@@ -475,6 +477,92 @@ pre b{color:var(--go);font-weight:600}
 </tbody>
 </table>
 </div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="gold"><span class="n">06</span>提醒要在明天的卡片之后出现</h2>
+<p class="lede">
+  FSRS 已经排好了明天的工作，但提醒不是学习者打开首页时该付出的代价。
+  只有当结算页刚刚把「明天有几张卡」说清楚，提醒才有一个学习者能判断的价值。
+</p>
+
+<div class="dec sky">
+  <h4>决定 · 先用产品自己的卡问一次，再问浏览器</h4>
+  <p>
+    学习者完成一节课后，结算页必须先显示真实的明日卡数。若当前浏览器尚未开启提醒，紧接着显示普通应用内卡片：
+    <b>「明天有 N 张复习卡回来。要我提醒你吗？每天最多一条，有卡才提醒，随时可以在设置里关掉。」</b>
+    卡片只给「好」和「以后再说」；它不是系统权限弹窗。
+  </p>
+  <p>
+    点击「好」才执行 <code>Notification.requestPermission()</code>，并在同一个用户动作里注册 Service Worker、创建 Push 订阅、把订阅信息写进学习者文档。
+    点击「以后再说」只收起这一次卡片，不写浏览器权限，也不把学习者永久标成拒绝；下次又完成有明日卡的课程时还能再问。
+  </p>
+</div>
+
+<div class="dec no">
+  <h4>不做 · 页面加载、首页、注册后都不问</h4>
+  <p>
+    首页打开、注册完成、刷新页面和普通设置加载都不会自动调用权限请求，也不会自动弹预提示。
+    浏览器已经返回 <code>denied</code> 后，结算页永远不再自动出现预提示；设置页保留入口，但只说明「浏览器已拒绝，请到浏览器的通知设置里改」——不反复调用一个已经被拒绝的请求。
+  </p>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th>学习者看到的状态</th><th>控件怎么做</th><th>必须说清楚什么</th></tr></thead>
+<tbody>
+<tr><td>未开启</td><td>设置里显示「打开复习提醒」；点击才进入权限流程</td><td>每天最多一条，只在有到期卡片时提醒</td></tr>
+<tr><td>浏览器已拒绝</td><td>不再自动弹；设置里保留可见入口和人工处理提示</td><td>浏览器已经拒绝，需要去浏览器通知设置里开启</td></tr>
+<tr><td>已开启、已订阅</td><td>设置里显示可关闭的开关</td><td>「已订阅，但服务端还没接上，暂时不会真的收到提醒」</td></tr>
+<tr><td>iPhone 普通 Safari 页面</td><td>显示能力说明，不给按下去没反应的开关</td><td>「在 iPhone 上需要先把它添加到主屏幕」</td></tr>
+<tr><td>当前浏览器不支持</td><td>显示能力说明，保留提醒位置</td><td>说明可以继续用应用内复习，不假装已经能推送</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="dec">
+  <h4>平台事实 · iPhone 仍需要 Home Screen web app</h4>
+  <p>
+    Apple 当前开发者文档写明：iOS/iPadOS 16.4 及以后支持 Web Push，但适用对象是已经添加到主屏幕的 Home Screen web app；普通 Safari 页面不在这个能力范围内。
+    WebKit 的原始说明还要求权限请求来自直接用户操作。University 因此用能力检测判断「主屏幕 web app」，不把普通 Safari 页面渲染成一个不会工作的开关。
+    资料：<a href="https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers">Apple Developer · Sending web push notifications</a>、<a href="https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/">WebKit · Web Push for Web Apps on iOS and iPadOS</a>。
+  </p>
+</div>
+
+<div class="fig">
+  <div class="t">线框 · 价值兑现后的预提示</div>
+<pre>结算
+  明天有 3 张复习卡到期
+  [卡片已经进入复习队列]
+
+  明天有 3 张复习卡回来。要我提醒你吗？
+  每天最多一条，有卡才提醒，随时可以在设置里关掉。
+  [ 好 ]  [ 以后再说 ]
+
+点击「好」 → 浏览器权限 → Service Worker → Push 订阅
+点击「以后再说」 → 只收起这次，不消耗浏览器权限</pre>
+</div>
+
+<div class="dec hm">
+  <h4>数据与边界 · 订阅是设备记录，仍进同一份学习者文档</h4>
+  <p>
+    一个学习者可能在手机和电脑上各有一个 Push 订阅，所以文档保存的是按 endpoint 区分的订阅记录，而不是一个会被新设备覆盖的单值。
+    每条记录带订阅 endpoint、加密所需的公钥材料、状态和更新时间；关闭提醒保留可合并的撤销记录。<code>mergeProgress</code> 对订阅按 endpoint 做并集、取较新的更新时间，旧设备的课程、卡片、答案、设置和订阅都不会因为一次上传被抹掉。
+  </p>
+  <p>
+    Service Worker 只处理 <code>push</code> 和 <code>notificationclick</code>，不接管 fetch、不改现有缓存，也不在首屏注册。当前没有 University 推送服务端；所以订阅成功后的诚实状态仍然是「已订阅，但服务端还没接上，暂时不会真的收到提醒」。
+  </p>
+</div>
+
+<h4>怎么验</h4>
+<ul class="chk">
+  <li><b>时机：</b>首页、注册后、页面加载和设置加载都不调用权限请求；只有完成有明日卡的课程并点击预提示「好」，或在设置里主动点击打开，才进入流程。</li>
+  <li><b>两次选择：</b>「以后再说」不改变 <code>Notification.permission</code>；下一次价值兑现仍能看到预提示。</li>
+  <li><b>拒绝：</b>浏览器返回 <code>denied</code> 后结算页不再自动显示预提示；设置里仍显示「浏览器已拒绝」和人工开启说明。</li>
+  <li><b>iPhone：</b>普通 Safari 页面显示「在 iPhone 上需要先把它添加到主屏幕」；主屏幕 web app 才显示可操作的订阅路径。</li>
+  <li><b>文档：</b>两个设备的订阅按 endpoint 合并；关闭一台设备不会因为另一台旧快照上传而复活；旧的 <code>ProgressDocument</code> 没有订阅字段时仍能正常读取。</li>
+  <li><b>服务端缺口：</b>没有 VAPID 私钥、定时函数和发送清理前，设置显示已订阅但不会伪造“提醒已送达”。</li>
+  <li><b>首屏与离线：</b>未同意前不注册 Service Worker；Service Worker 没有 fetch/cache handler，现有离线缓存和首屏请求数不因提醒增加。</li>
+</ul>
 
 <h3>真实浏览器验收 · 2026-08-27</h3>
 <p>
@@ -531,7 +619,7 @@ pre b{color:var(--go);font-weight:600}
 </div>
 
 <div class="foot">
-  V5 · 2026-08-27 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界、每日免费 AI 批改额度、源码证据呈现边界<br>
+  V5 · 2026-08-27 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界、每日免费 AI 批改额度、源码证据呈现边界、复习提醒边界<br>
   事实依据：<code>packages/core/src/progress/contract.ts</code> ·
   <code>packages/ui/src/language/speech.ts</code> ·
   <code>packages/core/src/ports/account-data.ts</code> ·
