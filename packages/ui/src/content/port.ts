@@ -130,8 +130,9 @@ export interface ContentPort {
   /**
    * One review card's two sides.
    *
-   * Only course cards. A knowledge card is answered by the note that produced
-   * it, and no campus schedules one yet — see `KnowledgeReviewCardLocator`.
+   * The learner review surface currently serves course cards only. Knowledge
+   * cards belong to the notes/authoring surface and stay out of the review
+   * queue until their learner flow has been designed.
    */
   card(card: CourseReviewCardLocator): Promise<CardBody>;
   /**

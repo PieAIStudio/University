@@ -58,17 +58,7 @@ interface CourseDueCard {
   readonly dueAt: string;
 }
 
-interface KnowledgeDueCard {
-  readonly kind: "knowledge-card";
-  readonly studyId: string;
-  readonly noteId: string;
-  readonly cardId: string;
-  readonly front: string;
-  readonly contentRevision: number;
-  readonly dueAt: string;
-}
-
-type LearningOverviewDueCard = CourseDueCard | KnowledgeDueCard;
+type LearningOverviewDueCard = CourseDueCard;
 
 interface ResolvedLearningFocus extends LearningFocus {
   readonly courses: readonly { readonly id: string; readonly title: string }[];
@@ -353,37 +343,26 @@ export function buildLearningOverview(input: BuildLearningOverviewInput): Learni
     for (const state of states) {
       try {
         const identity = parseReviewContentKey(state.cardKey);
-        if (identity.kind === "course-card") {
-          const card = requireCurrentCourseCard(input.studiesRoot, study.id, coursesById, identity);
-          if (card.contentRevision !== state.contentRevision) continue;
-          dueCards.push({
-            kind: "course-card",
-            studyId: study.id,
-            courseId: identity.courseId,
-            unitId: identity.unitId,
-            lessonId: identity.lessonId,
-            cardId: identity.cardId,
-            front: card.front,
-            contentRevision: card.contentRevision,
-            dueAt: state.due.toISOString(),
-          });
+        if (identity.kind !== "course-card") {
+          // Knowledge cards remain part of the notes authoring/API surface, but
+          // the learner review surface has no designed flow for them. Validate
+          // the row so missing notes still appear in diagnostics, then keep the
+          // unsupported kind out of today's queue.
+          readActiveKnowledgeCard(input.studiesRoot, study.id, identity.noteId, identity.cardId);
           continue;
         }
 
-        const active = readActiveKnowledgeCard(
-          input.studiesRoot,
-          study.id,
-          identity.noteId,
-          identity.cardId,
-        );
-        if (active.note.contentRevision !== state.contentRevision) continue;
+        const card = requireCurrentCourseCard(input.studiesRoot, study.id, coursesById, identity);
+        if (card.contentRevision !== state.contentRevision) continue;
         dueCards.push({
-          kind: "knowledge-card",
+          kind: "course-card",
           studyId: study.id,
-          noteId: active.note.id,
-          cardId: active.card.id,
-          front: active.card.front,
-          contentRevision: active.note.contentRevision,
+          courseId: identity.courseId,
+          unitId: identity.unitId,
+          lessonId: identity.lessonId,
+          cardId: identity.cardId,
+          front: card.front,
+          contentRevision: card.contentRevision,
           dueAt: state.due.toISOString(),
         });
       } catch (error) {

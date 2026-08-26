@@ -773,7 +773,7 @@ describe("UniversityLocal loopback API", () => {
     expect(tampered.status).toBe(422);
   });
 
-  it("lists classroom notes safely and reviews only active derived cards", async () => {
+  it("lists classroom notes safely but keeps their cards out of the learner review queue", async () => {
     const fixture = makeLearningProject(false);
     addKnowledgeNotes(fixture);
     const learnerPath = getStudyPaths(fixture.studiesRoot, "sample").learner.database;
@@ -833,15 +833,8 @@ describe("UniversityLocal loopback API", () => {
       };
     };
     expect(bootstrap.today).toMatchObject({
-      dueCount: 1,
-      card: {
-        kind: "knowledge-card",
-        studyId: "sample",
-        noteId: "active-note",
-        cardId: "active-note-card",
-        front: "Recall active-note",
-        contentRevision: 1,
-      },
+      dueCount: 0,
+      card: null,
     });
     expect(bootstrap.today.issues.join(" ")).toContain("missing-note");
     expect(JSON.stringify(bootstrap)).not.toContain("BACK-SECRET");
