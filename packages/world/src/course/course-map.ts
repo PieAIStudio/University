@@ -12,6 +12,9 @@ import { courseSprites } from "../labels/path-overlay.js";
 import type { Course } from "./course.js";
 import type { LessonPlacement, Marker } from "../Maps.js";
 
+const COURSE_CAMERA_FRONT = 48;
+const COURSE_CAMERA_HEIGHT = 22;
+
 /**
  * A course the way a screen holds it, as the shape the scene places.
  *
@@ -63,11 +66,11 @@ export function worldCourse(view: {
  * Where the eye stands on a course road.
  *
  * Both ends of the shot are anchored to real stones rather than to hand-tuned
- * offsets: stand behind the live one, aim at the road four ahead. That makes
- * "the live stone is in frame with road behind it" a property of the geometry
- * instead of a number somebody guessed — the first version put the live stone
- * exactly on the bottom edge, so its label was judged off-screen and the one
- * name that must never be dropped was the one that never appeared.
+ * offsets: stand in front of the live one, aim at the road four lessons ahead.
+ * With the top-to-bottom road, the learner's marker recedes above the target
+ * while the next stones descend toward the viewer. That makes "the live stone
+ * is in frame with the road below it" a property of the geometry instead of a
+ * number somebody guessed.
  *
  * The eye and the target share a lateral position, which is the whole reason
  * this is worth a comment. An earlier shot aimed at a damped fraction of the
@@ -99,7 +102,13 @@ export function frameCourse(lessons: readonly LessonPlacement[]): {
   if (!live) return null;
   const ahead = lessons[Math.min(liveIndex + 4, lessons.length - 1)] ?? live;
   return {
-    cameraFrom: [live.position.x, live.position.y + 22, live.position.z + 45],
+    // The eye stays on the +Z side of the road. That is the kit avatar's front
+    // side, so the learner can read the face rather than the back of the head.
+    cameraFrom: [
+      live.position.x,
+      live.position.y + COURSE_CAMERA_HEIGHT,
+      live.position.z + COURSE_CAMERA_FRONT,
+    ],
     lookAt: [live.position.x, ahead.position.y + 1.8, ahead.position.z],
   };
 }

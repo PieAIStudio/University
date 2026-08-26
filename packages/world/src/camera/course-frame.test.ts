@@ -27,7 +27,7 @@ const road = (unitSizes: readonly number[], liveIndex: number): LessonPlacement[
   );
 
 describe("frameCourse", () => {
-  it("stands the eye directly behind the live stone, whatever the road is doing", () => {
+  it("stands the eye directly in front of the live stone, whatever the road is doing", () => {
     const sizes = [7, 8, 7, 7, 6, 6];
     for (const liveIndex of [0, 1, 5, 9, 20, 33, 40]) {
       const shot = frameCourse(road(sizes, liveIndex));
@@ -38,11 +38,12 @@ describe("frameCourse", () => {
     }
   });
 
-  it("aims further down the course than the stone it stands on", () => {
+  it("aims at later lessons below the stone it stands on", () => {
     const shot = frameCourse(road([7, 8, 7, 7, 6, 6], 5));
-    // The road runs towards -z, so a target further along has a smaller z than
-    // the eye. Without this the shot would be looking at its own feet.
-    expect(shot!.lookAt[2]).toBeLessThan(shot!.cameraFrom[2]);
+    // Teaching order runs towards +z, and the eye stays further along +z so
+    // the kit avatar presents its face to the camera.
+    expect(shot!.lookAt[2]).toBeGreaterThan(road([7, 8, 7, 7, 6, 6], 5)[5]!.position.z);
+    expect(shot!.cameraFrom[2]).toBeGreaterThan(shot!.lookAt[2]);
   });
 
   it("has nothing to frame in a course with no stones", () => {

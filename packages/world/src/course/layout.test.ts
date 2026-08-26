@@ -100,6 +100,11 @@ describe("layoutCourse", () => {
     expect(placed.map((point) => point.depth)).toEqual([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]);
   });
 
+  it("places teaching order from the top of the path toward the viewer", () => {
+    const placed = layoutCourse([4, 4, 3]);
+    expect(placed[0]!.z).toBeLessThan(placed.at(-1)!.z);
+  });
+
   /*
     A unit boundary used to be a shelf in the terrain. The stones lie on one
     island now, and a floor that steps up under every fourth stone is a

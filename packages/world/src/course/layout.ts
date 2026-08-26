@@ -31,6 +31,8 @@ export interface Placed {
   readonly depth: number;
 }
 
+export type PathDirection = "toward-negative-z" | "toward-positive-z";
+
 /**
  * The one road shape in this product, used at both map levels.
  *
@@ -97,12 +99,19 @@ export const COURSE_AMPLITUDE = COURSE_PATH.amplitude;
  * `depth` is the index. Nothing reads it as a tree depth any more; it stays so
  * a caller can recover the order from a placement without zipping two arrays.
  */
-export function layoutPath(count: number, shape: PathShape): Placed[] {
+export function layoutPath(
+  count: number,
+  shape: PathShape,
+  direction: PathDirection = "toward-negative-z",
+): Placed[] {
   const span = (count - 1) * shape.step;
   return Array.from({ length: count }, (_, index) => ({
     x: shape.amplitude * Math.sin((index / shape.period) * Math.PI * 2),
     y: 0,
-    z: span / 2 - index * shape.step,
+    z:
+      direction === "toward-negative-z"
+        ? span / 2 - index * shape.step
+        : -span / 2 + index * shape.step,
     depth: index,
   }));
 }
@@ -187,11 +196,15 @@ export function layoutCourseRoad(count: number): Placed[] {
   if (count <= 0) return [];
   if (count === 1) return [{ x: 0, y: 0, z: 0, depth: 0 }];
   if (count <= 6) {
-    return layoutPath(count, {
-      ...COURSE_PATH,
-      amplitude: Math.min(COURSE_PATH.amplitude, 1.8 + count * 0.55),
-      period: 9,
-    });
+    return layoutPath(
+      count,
+      {
+        ...COURSE_PATH,
+        amplitude: Math.min(COURSE_PATH.amplitude, 1.8 + count * 0.55),
+        period: 9,
+      },
+      "toward-positive-z",
+    );
   }
 
   const swings = Math.max(1, Math.ceil(count / 16));
@@ -202,7 +215,7 @@ export function layoutCourseRoad(count: number): Placed[] {
     return new THREE.Vector3(
       Math.sin(t * swings * Math.PI * 2) * amplitude,
       0,
-      span / 2 - t * span,
+      -span / 2 + t * span,
     );
   });
   const curve = new THREE.CatmullRomCurve3(controls, false, "centripetal", 0.5);

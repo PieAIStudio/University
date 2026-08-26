@@ -163,11 +163,12 @@ export const COURSE_DISTANCE_MAX = 76;
 export const WORLD_DISTANCE_MIN = 62;
 export const WORLD_DISTANCE_MAX = 180;
 /**
- * App.tsx aims four markers ahead. Pulling the target back along the ground
- * toward the eye keeps the live marker out of the lower chrome with island
- * still visible behind it. Smaller than it was: from 56° the frame already
- * holds more ground in front of the target than 74° did, so the old 12 pushed
- * the live marker up into the middle and wasted the bottom third on shore.
+ * App.tsx aims four markers ahead. Pulling the target forward along +Z toward
+ * the viewer keeps the live marker in the upper half, with the next lessons
+ * descending into the unobscured middle. Smaller than it was: from 56° the
+ * frame already holds more ground in front of the target than 74° did, so the
+ * old 12 pushed the live marker too far up and wasted the bottom third on
+ * shore.
  */
 export const COURSE_LOOK_PULL = 6;
 
@@ -283,9 +284,10 @@ export function Controls({
     const instance = controls.current;
     if (!instance) return;
     instance.target.set(...target);
-    // The course road is laid out in −Z. Pulling the look back along +Z
-    // (toward the live stone) does not depend on where the eye currently is,
-    // so a world→course flight cannot aim the target at the old archipelago.
+    // The course road is laid out from −Z to +Z in teaching order. Pulling the
+    // target along +Z keeps the live marker in the upper half while the next
+    // lessons descend toward the viewer; it also keeps a world→course flight
+    // from aiming at the old archipelago between two scenes.
     if (Math.abs(polarRef.current - COURSE_POLAR) < 1e-6) {
       instance.target.z += COURSE_LOOK_PULL;
     }
