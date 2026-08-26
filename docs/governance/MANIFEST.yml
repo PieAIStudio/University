@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-26T14:55:49.163Z
+generated_at: 2026-08-26T15:02:23.168Z
 generator_version: doc-gov@0.9.5
-docs_count: 41
+docs_count: 42
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -146,6 +146,13 @@ docs:
     pinned: true
   - id: REF-ONE-APP-HANDOFF
     path: docs/reference/execution/one-app-handoff.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-08-26
+    pinned: false
+  - id: REF-PUBLISH-LANE
+    path: docs/reference/execution/publish-lane.md
     type: reference
     status: active
     canonical: true
