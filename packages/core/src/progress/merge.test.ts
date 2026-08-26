@@ -234,6 +234,32 @@ describe("mergeProgress", () => {
     expect(merged.account.preferences.detailMode).toBe("all");
   });
 
+  it("merges the requested speech quality as one timestamped account preference", () => {
+    const phone = doc({
+      account: {
+        ...emptyAccountData(),
+        preferences: {
+          ...DEFAULT_ACCOUNT_PREFERENCES,
+          speechQuality: "online",
+          updatedAt: { speechQuality: "2026-08-24T08:00:00.000Z" },
+        },
+      },
+    });
+    const laptop = doc({
+      account: {
+        ...emptyAccountData(),
+        preferences: {
+          ...DEFAULT_ACCOUNT_PREFERENCES,
+          speechQuality: "local",
+          updatedAt: { speechQuality: "2026-08-24T09:00:00.000Z" },
+        },
+      },
+    });
+
+    expect(mergeProgress(phone, laptop).account.preferences.speechQuality).toBe("local");
+    expect(mergeProgress(laptop, phone).account.preferences.speechQuality).toBe("local");
+  });
+
   it("keeps a newer favourite deletion tombstone over an older device copy", () => {
     const favourite = {
       senseId: "shared-sense",

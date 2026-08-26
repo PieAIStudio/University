@@ -46,6 +46,7 @@ export {
   type AccountPreferenceKey,
   type AccountPreferences,
   type FavouriteChange,
+  type SpeechQuality,
 } from "./account-data.js";
 export {
   createMemoryReaderPort,

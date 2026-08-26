@@ -20,12 +20,16 @@ export interface AccountForeignSettings {
   readonly showUsage: boolean;
 }
 
+/** The learner's requested voice quality; `auto` is resolved at read time. */
+export type SpeechQuality = "auto" | "local" | "online" | "premium";
+
 export type AccountPreferenceKey =
   | "foreignSettings"
   | "foreignLanguageMode"
   | "detailMode"
   | "soundEnabled"
-  | "sharesPresence";
+  | "sharesPresence"
+  | "speechQuality";
 
 export interface AccountPreferences {
   readonly version: 1;
@@ -34,6 +38,7 @@ export interface AccountPreferences {
   readonly detailMode: "standard" | "all";
   readonly soundEnabled: boolean;
   readonly sharesPresence: boolean;
+  readonly speechQuality: SpeechQuality;
   /** Per-field timestamps make two devices' independent setting changes merge. */
   readonly updatedAt: Partial<Record<AccountPreferenceKey, string>>;
 }
@@ -66,6 +71,7 @@ export const DEFAULT_ACCOUNT_PREFERENCES: AccountPreferences = {
   detailMode: "standard",
   soundEnabled: true,
   sharesPresence: true,
+  speechQuality: "auto",
   updatedAt: {},
 };
 
@@ -116,6 +122,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       "detailMode",
       "soundEnabled",
       "sharesPresence",
+      "speechQuality",
     ] as const) {
       const timestamp = value.updatedAt[key];
       if (validTimestamp(timestamp)) updatedAt[key] = timestamp;
@@ -129,6 +136,12 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
     detailMode: value.detailMode === "all" ? "all" : "standard",
     soundEnabled: typeof value.soundEnabled === "boolean" ? value.soundEnabled : true,
     sharesPresence: typeof value.sharesPresence === "boolean" ? value.sharesPresence : true,
+    speechQuality:
+      value.speechQuality === "local" ||
+      value.speechQuality === "online" ||
+      value.speechQuality === "premium"
+        ? value.speechQuality
+        : "auto",
     updatedAt,
   };
 }
@@ -155,6 +168,8 @@ export function mergeAccountPreferences(
   const rightSound = timestampMs(right.updatedAt.soundEnabled);
   const leftPresence = timestampMs(left.updatedAt.sharesPresence);
   const rightPresence = timestampMs(right.updatedAt.sharesPresence);
+  const leftSpeechQuality = timestampMs(left.updatedAt.speechQuality);
+  const rightSpeechQuality = timestampMs(right.updatedAt.speechQuality);
   const newer = (leftAt: number, rightAt: number) => rightAt >= leftAt;
   const updatedAt = { ...left.updatedAt };
   const result: AccountPreferences = {
@@ -168,6 +183,9 @@ export function mergeAccountPreferences(
     detailMode: newer(leftDetail, rightDetail) ? right.detailMode : left.detailMode,
     soundEnabled: newer(leftSound, rightSound) ? right.soundEnabled : left.soundEnabled,
     sharesPresence: newer(leftPresence, rightPresence) ? right.sharesPresence : left.sharesPresence,
+    speechQuality: newer(leftSpeechQuality, rightSpeechQuality)
+      ? right.speechQuality
+      : left.speechQuality,
     updatedAt,
   };
   for (const key of [
@@ -176,6 +194,7 @@ export function mergeAccountPreferences(
     "detailMode",
     "soundEnabled",
     "sharesPresence",
+    "speechQuality",
   ] as const) {
     if (
       right.updatedAt[key] &&
