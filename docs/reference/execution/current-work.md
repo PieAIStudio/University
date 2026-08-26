@@ -14,11 +14,11 @@ tags:
 pinned: true
 related:
   - ADR-0001
-  - ADR-0002
+  - ADR-0006
   - ADR-0003
   - ADR-0004
   - ADR-0005
-  - ADR-0006
+  - ADR-0007
 ---
 
 # Current Work
@@ -104,7 +104,7 @@ this report and outside commits.
 ## Standing Constraints
 
 - Courses are authored only by the `apps/local` CLI and the files on disk. One
-  producer, always. Publishing is a separate, gated act (ADR-0002).
+  producer, always. Publishing is a separate, gated act (ADR-0007).
 - Both shells sign in to SwimmerBackend and share one cloud learner document:
   account, progress, review, answers, marks, vocabulary, favourites, practice
   history and settings. Browser/SQLite state is only cache/outbox. The
@@ -383,18 +383,26 @@ the list below contains the remaining implementation and authority boundaries.
    artifact directory. Vercel calls the same package-only lane while its Git
    deployment gate remains off. Details and clean-clone evidence live in
    [Delivery Publish Lane](./publish-lane.md).
-8. **Entitlement, and it starts by splitting one word in two.** 「published」
+8. ~~**Entitlement, and it starts by splitting one word in two.** 「published」
    and 「paid for」 are different questions and the code currently answers them
-   with one. V5 keeps the prose open, so entitlement governs AI and
-   sync only — but a learner should still only ever read a *published*
-   revision. ADR-0002 says course packages are served from the backend under
-   entitlement; they are in fact public static files on Vercel. One of those
-   two has to change, and which one is a decision, not an oversight.
-9. **Payment, after 1.** One port over the backend's
-   `wallet_grant` / `reserve` / `commit` / `refund` / `get_balance`, idempotent
-   orders, failure and cancellation, entitlement refreshed after purchase, and
-   the pricing page's empty CTA finally wired to something. It is after 1
-   because taking money needs an account first.
+   with one. V5 keeps the prose open, so entitlement governs AI and sync only —
+   but a learner should still only ever read a *published* revision. ADR-0002
+   says course packages are served from the backend under entitlement; they
+   are in fact public static files on Vercel. One of those two has to change,
+   and which one is a decision, not an oversight.~~ **Entitlement skeleton
+   landed (2026-08-26).** ADR-0007 supersedes ADR-0002: publication remains the
+   content gate, the published delivery package is public static output, and
+   `readEntitlements` governs AI and sync only. The shared billing config has a
+   free baseline; paid tiers and prices remain unfilled.
+9. **Payment, after 1 and 8.** Before implementation, reconcile the payment
+   boundary with the port law: the existing port directory answers where AI
+   and material come from, while payment does not answer either question. Use
+   an existing backend/account capability or take the boundary change
+   upstream; do not add a port ad hoc. Once that boundary is authorized, add
+   the backend's `wallet_grant` / `reserve` / `commit` / `refund` /
+   `get_balance`, idempotent orders, failure and cancellation, entitlement
+   refreshed after purchase, and wire the pricing page's empty CTA. It is
+   after 1 because taking money needs an account first.
 10. **Metered AI grading, after 9.** SwimmerAIKit becomes a dependency, behind
     the same `GradingPort`, with the wallet reserved before the call and
     committed or refunded after, keeping the deterministic-first tiering. It is

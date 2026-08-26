@@ -1,4 +1,9 @@
-import type { IdentityPort, ProgressPort, ProgressRemoteStore } from "@pieai/university-core";
+import {
+  readEntitlements,
+  type IdentityPort,
+  type ProgressPort,
+  type ProgressRemoteStore,
+} from "@pieai/university-core";
 
 /**
  * Account-to-data binding shared by the local and online shells.
@@ -15,11 +20,16 @@ export function bindProgressToIdentity(
   let tail = Promise.resolve();
   const sync = () => {
     const status = identity.status();
+    const entitlements = readEntitlements({
+      identity: status,
+      remoteAvailable: remote !== null,
+    });
+    const syncRemote = entitlements.sync.available ? remote : null;
     tail = tail
       .catch(() => undefined)
       .then(() =>
         status.kind === "signed_in"
-          ? progress.bindAccount(status.user.id, remote)
+          ? progress.bindAccount(status.user.id, syncRemote)
           : progress.bindAccount(null, null),
       );
   };

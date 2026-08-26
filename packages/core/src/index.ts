@@ -280,6 +280,7 @@ export * from "./progress/spine.js";
 export * from "./progress/xp.js";
 export * from "./progress/goals.js";
 export * from "./billing/plans.js";
+export * from "./billing/entitlements.js";
 
 // The learner's progress document, the merge that keeps two machines honest,
 // and the one port both shells construct. Persistence and remote are injected.

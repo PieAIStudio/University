@@ -100,7 +100,7 @@ evidence, and it is absolute: the day a second thing can produce a lesson,
 this document stops working.
 
 It is not a statement about the network. Content reaches customers by being
-**published**, which is a gated act (ADR-0002); learner identity and progress
+**published**, which is a gated act (ADR-0007); learner identity and progress
 travel freely in both directions (ADR-0001). A new outbound call belongs on
 the second lane only if it carries no lesson content.
 
@@ -160,10 +160,11 @@ The shared package must **not** own:
 Those differ by design, and forcing them into the kit would make the kit a
 second product.
 
-Accounts, entitlement and learner state **are** the kit's: one `ProgressPort`,
-one implementation over SwimmerBackend, and one cache/outbox per shell
-(ADR-0001). A thing
-both shells do identically is the definition of what this kit is for.
+Accounts and learner state **are** the kit's: one `ProgressPort`, one
+implementation over SwimmerBackend, and one cache/outbox per shell (ADR-0001).
+Entitlement resolution is shared pure core configuration (ADR-0007); it does
+not turn `ProgressPort` into a wallet or a course-content gate. A thing both
+shells do identically is the definition of what this kit is for.
 
 "The shared package" here means this parity kit — `packages/core` and
 `packages/ui`. It does not mean "any package both shells import". The world map
@@ -236,7 +237,7 @@ by a command, not by reading code:
 3. No file in University generates lesson prose, cards, exercises, or evidence.
 4. Lesson prose, cards, exercises and evidence leave the authoring shell only
    as a recovery package — to disk, or to the publish lane, which is gated
-   (ADR-0002). No other path exists. Its backend client's request surface is
+   (ADR-0007). No other path exists. Its backend client's request surface is
    account, progress, review, favourites, settings and publish: a list short
    enough to read, which is why it is written out.
 5. The parity check reports the upstream commit it compared against, and fails

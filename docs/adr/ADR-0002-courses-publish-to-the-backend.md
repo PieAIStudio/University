@@ -2,11 +2,11 @@
 id: ADR-0002
 title: Courses Publish To The Backend, Behind A Gate
 type: decision
-status: accepted
-canonical: true
+status: superseded
+canonical: false
 owner: human
 created: 2026-08-22
-last_reviewed: 2026-08-22
+last_reviewed: 2026-08-26
 domain: content
 tags:
   - content
@@ -17,7 +17,7 @@ related:
   - SPEC-0001
   - ADR-0001
 supersedes: []
-superseded_by: null
+superseded_by: ADR-0007
 ---
 
 # ADR-0002: Courses Publish To The Backend, Behind A Gate

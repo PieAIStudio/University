@@ -54,7 +54,7 @@ three port boundaries. This account and learner-data decision remains in force.
 ## Consequences
 
 - `ProgressPort` has one implementation. `ContentPort` and `EvidencePort` keep
-  theirs; see ADR-0002 and ADR-0003.
+  theirs; see ADR-0006 and ADR-0003.
 - The shells may no longer look like different products, so navigation, path,
   reader and settlement are built once in `packages/ui` and mounted twice.
 - Offline authoring survives, unbought: content sources remain local, while

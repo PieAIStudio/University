@@ -14,7 +14,7 @@ tags:
 pinned: false
 related:
   - SPEC-0001
-  - ADR-0002
+  - ADR-0007
 supersedes: []
 superseded_by: null
 ---

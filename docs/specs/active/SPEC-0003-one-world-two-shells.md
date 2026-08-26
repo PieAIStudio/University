@@ -168,5 +168,5 @@ Step 3 is where this can go wrong, and the ordering is the whole safeguard.
 - No text in WebGL. Labels are DOM elements positioned over the canvas, which
   is how the delivery shell already does it.
 - No lesson content leaves the authoring shell except as a recovery package,
-  and reaching a customer means passing the publish gate (ADR-0002). Identity
+  and reaching a customer means passing the publish gate (ADR-0007). Identity
   and learner state are shared and travel freely (ADR-0001).

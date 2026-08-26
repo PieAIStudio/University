@@ -122,16 +122,17 @@ describe("LeagueScreen", () => {
 });
 
 describe("PlansScreen", () => {
-  it("quotes the Duolingo-benchmarked prices, yearly by default", () => {
+  it("states that content is open and only AI and sync are in scope", () => {
     const markup = renderToStaticMarkup(<PlansScreen />);
-    expect(markup).toContain("$95.99");
-    expect(markup).toContain("$239.99");
-    expect(markup).toContain("$215.99");
+    expect(markup).toContain("课文不设付费墙");
+    expect(markup).toContain("AI 和同步");
+    expect(markup).toContain("免费");
   });
 
-  it("says the group plan is three seats and shows the per-seat price", () => {
+  it("does not promise a price or a paid tier before configuration", () => {
     const markup = renderToStaticMarkup(<PlansScreen />);
-    expect(markup).toContain("3 个座位");
-    expect(markup).toContain("合每人每月");
+    expect(markup).toContain("付费档位和价格尚未填入");
+    expect(markup).not.toContain("按年");
+    expect(markup).not.toContain("$95.99");
   });
 });

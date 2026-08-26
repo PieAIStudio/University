@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-26T15:02:23.826Z
+generated_at: 2026-08-26T15:05:11.716Z
 generator_version: doc-gov@0.9.5
-docs_count: 43
+docs_count: 44
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -14,9 +14,9 @@ docs:
   - id: ADR-0002
     path: docs/adr/ADR-0002-courses-publish-to-the-backend.md
     type: decision
-    status: accepted
-    canonical: true
-    last_reviewed: 2026-08-22
+    status: superseded
+    canonical: false
+    last_reviewed: 2026-08-26
     pinned: false
   - id: ADR-0003
     path: docs/adr/ADR-0003-evidence-code-ships.md
@@ -41,6 +41,13 @@ docs:
     pinned: false
   - id: ADR-0006
     path: docs/adr/ADR-0006-learner-surface-parity-source-access.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-08-26
+    pinned: false
+  - id: ADR-0007
+    path: docs/adr/ADR-0007-published-course-packages-are-separate-from-entitlement.md
     type: decision
     status: accepted
     canonical: true
