@@ -63,5 +63,17 @@ describe("mermaid four-layer diagram end-to-end", () => {
 
     root.unmount();
     host.remove();
-  }, 20000);
+    /*
+      60s, not the 20s this file used to ask for. The budget is spent on
+      `import("./MermaidDiagram.js")` pulling mermaid itself in, not on the
+      assertions: run alone this whole test finishes in about six seconds,
+      and the inner wait above can only ever spend 1.5s of it. Under
+      `pnpm -r test`, which builds and tests four packages at once, that one
+      import crossed 20s and killed the test at the clock instead of at an
+      assertion — the same failure `vitest.config.ts` documents for
+      `MarkdownContent.test.tsx`, arriving through a different door. A wrong
+      assertion still fails immediately and says what it expected; only a busy
+      machine needs the headroom.
+    */
+  }, 60000);
 });
