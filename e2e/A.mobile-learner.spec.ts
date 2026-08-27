@@ -32,7 +32,7 @@ test.describe("A 新学习者 · 在线端 · 手机宽度", () => {
       returning learner reaches it by bookmark or by tapping the island on the
       map, and the address is the cheaper of the two to hold steady.
     */
-    await page.goto(`${ONLINE_ORIGIN}/#/turing-pact/foundations-before-zero`, {
+    await page.goto(`${ONLINE_ORIGIN}/turing-pact/foundations-before-zero`, {
       waitUntil: "domcontentloaded",
     });
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CatalogSurface } from "@pieai/university-ui";
 import type { Shelf } from "@pieai/university-ui/content/port.js";
-import { progressSourceOf, toHash, WORLD, type View } from "@pieai/university-core";
+import { progressSourceOf, toPath, WORLD, type View } from "@pieai/university-core";
 
 import { contentPort } from "../ports";
 import { progressPort, snapshot, subscribe } from "../progress/store";
@@ -63,7 +63,7 @@ export function CourseCatalog({ onOpen }: { onOpen: (view: View) => void }) {
       listing={listing}
       onBack={() => onOpen(WORLD)}
       onOpenLesson={(lesson) => onOpen({ kind: "lesson", ...lesson })}
-      lessonHref={(lesson) => toHash({ kind: "lesson", ...lesson })}
+      lessonHref={(lesson) => toPath({ kind: "lesson", ...lesson })}
     />
   );
 }

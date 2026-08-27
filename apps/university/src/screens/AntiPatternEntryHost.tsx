@@ -26,7 +26,7 @@ export function AntiPatternEntryHost({ id, onOpen }: { id: string; onOpen: (view
   return (
     <div className="terms">
       <EntryPage
-        breadcrumb={[{ label: "防 AI 味儿", href: "#/flavour" }, { label: entry.head.name }]}
+        breadcrumb={[{ label: "防 AI 味儿", href: "/flavour" }, { label: entry.head.name }]}
         head={
           <>
             <h1>{entry.head.name}</h1>

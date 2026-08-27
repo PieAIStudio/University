@@ -67,7 +67,7 @@ describe("UniversityShell", () => {
   it("appends extra more-items to the flyout rather than forking the list", async () => {
     await renderShell({
       extraMoreItems: [
-        { id: "studio", label: "作者工作台", icon: <IslandIcon />, href: "#/studio" },
+        { id: "studio", label: "作者工作台", icon: <IslandIcon />, href: "/studio" },
       ],
     });
     const trigger = document.querySelector<HTMLButtonElement>(".nav-rail__flyout-trigger");
@@ -77,7 +77,7 @@ describe("UniversityShell", () => {
     const hrefs = [...document.querySelectorAll(".nav-rail__flyout-item")].map((item) =>
       item.getAttribute("href"),
     );
-    expect(hrefs).toEqual([...MORE_CHILDREN.map((item) => item.href), "#/studio"]);
+    expect(hrefs).toEqual([...MORE_CHILDREN.map((item) => item.href), "/studio"]);
     expect(document.querySelector("[role='menu']")?.textContent).toContain("作者工作台");
   });
 

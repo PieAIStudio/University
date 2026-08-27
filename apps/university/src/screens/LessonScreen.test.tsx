@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Course, Lesson } from "../content/library";
-import { toHash, type HostExerciseGrade } from "@pieai/university-core";
+import { toPath, type HostExerciseGrade } from "@pieai/university-core";
 import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
 import { lessonKey, progressPort, resetAll } from "../progress/store";
 import { LessonScreen } from "./LessonScreen";
@@ -352,12 +352,12 @@ describe("the shared lesson reader", () => {
 describe("LessonScreen close", () => {
   it("✕ returns through onBack, which the shell wires to the course path", async () => {
     const onBack = vi.fn();
-    const coursePath = toHash({
+    const coursePath = toPath({
       kind: "course",
       studyId: "turing-pact",
       courseId: "foundations-before-zero",
     });
-    expect(coursePath).toBe("#/turing-pact/foundations-before-zero");
+    expect(coursePath).toBe("/turing-pact/foundations-before-zero");
 
     await renderHost(onBack);
     expect(container.querySelector("nav")).toBeNull();

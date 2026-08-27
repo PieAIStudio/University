@@ -16,7 +16,7 @@
  *
  * One world renderer at a time, and small avatar viewports alongside it.
  * `Stage` owns the world map and stays mounted across the two map levels; the
- * temporary `#/avatar-lab` route unmounts it and mounts its own studio canvas
+ * temporary `/avatar-lab` route unmounts it and mounts its own studio canvas
  * instead of beside it, so two world-sized renderers never share a frame. The
  * avatar viewports are a different thing and do sit alongside: the navigation
  * avatar is mounted on every screen and the profile page adds a third. That is
@@ -106,6 +106,7 @@ import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/universi
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
 import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
 import { MainRouter } from "./MainRouter";
+import { usePageMetadata } from "./page-metadata";
 import {
   trackEvent,
   withProductAnalyticsIdentity,
@@ -215,6 +216,7 @@ export function App() {
     view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
       ? courseOf(view.studyId, view.courseId)
       : null;
+  usePageMetadata(view, course);
 
   const { lessonsDone, courseProgress, lessons, viewedProgress, nextUpProgress, todayNode } =
     useCourseProgress({ course, courseOf, nodes, progress, source, view });

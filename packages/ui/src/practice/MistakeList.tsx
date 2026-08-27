@@ -36,7 +36,7 @@ export function MistakesEntry({ count, hasMistakes }: MistakesEntryProps) {
   return (
     <a
       className="mistakes-entry"
-      href="#/mistakes"
+      href="/mistakes"
       aria-label={count > 0 ? "错题本，" + count + " 道未订正" : "错题本，全部已订正"}
     >
       <span>

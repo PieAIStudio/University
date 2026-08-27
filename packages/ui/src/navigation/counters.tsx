@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { toPath } from "@pieai/university-core";
 import { IslandIcon, StreakIcon } from "../shell/icons.js";
 import type { ShellCounter } from "../shell/AppShell.js";
 
@@ -75,7 +76,7 @@ export function universityCounters(args: {
       icon: <StreakIcon />,
       value: String(args.streakDays),
       label: "连击",
-      href: "#/quests",
+      href: toPath({ kind: "quests" }),
       muted: args.streakDays === 0,
     });
   }

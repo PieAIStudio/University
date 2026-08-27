@@ -38,7 +38,7 @@ export function TermEntryHost({
   return (
     <div className="terms">
       <EntryPage
-        breadcrumb={[{ label: "词义索引", href: "#/terms" }, { label: entry.headword }]}
+        breadcrumb={[{ label: "词义索引", href: "/terms" }, { label: entry.headword }]}
         head={
           <>
             <h1 lang="en">

@@ -3,11 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   activeIdForView,
   fromHash,
+  fromPath,
   isBareView,
   isSafeId,
   libraryTabOf,
   studyIdOfView,
   toHash,
+  toPath,
   WORLD,
   type View,
 } from "./view.js";
@@ -38,31 +40,31 @@ const views: View[] = [
 
 describe("the address bar", () => {
   it("round-trips every view", () => {
-    for (const view of views) expect(fromHash(toHash(view))).toEqual(view);
+    for (const view of views) expect(fromPath(toPath(view))).toEqual(view);
   });
 
   it("falls back to the world rather than throwing", () => {
     // A URL is user input: trimmed by a person, mangled by a chat client,
     // outliving the course it pointed at. None of those may break the app.
-    for (const junk of ["", "#", "#/", "#/onlyastudy", "#/%", "#//", "not-a-hash"]) {
-      expect(fromHash(junk).kind).toBe("world");
+    for (const junk of ["", "/", "/onlyastudy", "/%", "//", "not-a-path"]) {
+      expect(fromPath(junk).kind).toBe("world");
     }
   });
 
   it("survives a malformed percent-escape instead of throwing", () => {
-    expect(() => fromHash("#/%E0%A4%A/course")).not.toThrow();
+    expect(() => fromPath("/%E0%A4%A/course")).not.toThrow();
   });
 
   it("survives an id that is not a slug", () => {
     const view: View = { kind: "course", studyId: "a/b", courseId: "c d?e" };
-    expect(toHash(view)).not.toContain("a/b");
-    expect(fromHash(toHash(view))).toEqual(view);
+    expect(toPath(view)).not.toContain("a/b");
+    expect(fromPath(toPath(view))).toEqual(view);
   });
 
   it("falls back to the island when the lesson address is half-written", () => {
     // Half a lesson address is a typo or a truncated paste. Landing on the
     // course is recoverable; a blank screen is not.
-    expect(fromHash("#/turing-pact/foundations-before-zero/what-is-an-app")).toEqual({
+    expect(fromPath("/turing-pact/foundations-before-zero/what-is-an-app")).toEqual({
       kind: "course",
       studyId: "turing-pact",
       courseId: "foundations-before-zero",
@@ -72,55 +74,70 @@ describe("the address bar", () => {
   it("keeps a settled lesson distinct from the lesson itself", () => {
     const lesson = views[4]!;
     const settled = views[5]!;
-    expect(toHash(lesson)).not.toBe(toHash(settled));
-    expect(fromHash(toHash(settled)).kind).toBe("settled");
+    expect(toPath(lesson)).not.toBe(toPath(settled));
+    expect(fromPath(toPath(settled)).kind).toBe("settled");
   });
 
-  it("keeps the public flavour hashes as the anti-pattern collection", () => {
-    expect(toHash({ kind: "anti-pattern" })).toBe("#/flavour");
-    expect(fromHash("#/flavour")).toEqual({ kind: "anti-pattern" });
-    expect(toHash({ kind: "anti-pattern-entry", id: "steady-catch" })).toBe(
-      "#/flavour/steady-catch",
+  it("keeps the public flavour paths as the anti-pattern collection", () => {
+    expect(toPath({ kind: "anti-pattern" })).toBe("/flavour");
+    expect(fromPath("/flavour")).toEqual({ kind: "anti-pattern" });
+    expect(toPath({ kind: "anti-pattern-entry", id: "steady-catch" })).toBe(
+      "/flavour/steady-catch",
     );
-    expect(fromHash("#/flavour/steady-catch")).toEqual({
+    expect(fromPath("/flavour/steady-catch")).toEqual({
       kind: "anti-pattern-entry",
       id: "steady-catch",
     });
-    expect(toHash({ kind: "library", tab: "flavour" })).toBe("#/library/flavour");
-    expect(fromHash("#/library/flavour")).toEqual({ kind: "library", tab: "flavour" });
+    expect(toPath({ kind: "library", tab: "flavour" })).toBe("/library/flavour");
+    expect(fromPath("/library/flavour")).toEqual({ kind: "library", tab: "flavour" });
   });
 
-  it("keeps the 2D directory on its own hash instead of falling back to the world", () => {
-    expect(toHash({ kind: "catalog" })).toBe("#/catalog");
-    expect(fromHash("#/catalog")).toEqual({ kind: "catalog" });
+  it("keeps the 2D directory on its own path instead of falling back to the world", () => {
+    expect(toPath({ kind: "catalog" })).toBe("/catalog");
+    expect(fromPath("/catalog")).toEqual({ kind: "catalog" });
   });
 
-  it("keeps the mistake book on its own hash", () => {
-    expect(toHash({ kind: "mistakes" })).toBe("#/mistakes");
-    expect(fromHash("#/mistakes")).toEqual({ kind: "mistakes" });
+  it("keeps the mistake book on its own path", () => {
+    expect(toPath({ kind: "mistakes" })).toBe("/mistakes");
+    expect(fromPath("/mistakes")).toEqual({ kind: "mistakes" });
   });
 
-  it("keeps the temporary avatar lab on its own hash instead of treating it as a study", () => {
-    expect(toHash({ kind: "avatar-lab" })).toBe("#/avatar-lab");
-    expect(fromHash("#/avatar-lab")).toEqual({ kind: "avatar-lab" });
+  it("keeps the temporary avatar lab on its own path instead of treating it as a study", () => {
+    expect(toPath({ kind: "avatar-lab" })).toBe("/avatar-lab");
+    expect(fromPath("/avatar-lab")).toEqual({ kind: "avatar-lab" });
   });
 
   it("keeps the shell destinations as reserved first segments", () => {
-    expect(fromHash("#/league")).toEqual({ kind: "league" });
-    expect(fromHash("#/quests")).toEqual({ kind: "quests" });
-    expect(fromHash("#/plans")).toEqual({ kind: "plans" });
-    expect(fromHash("#/settings")).toEqual({ kind: "settings" });
-    expect(fromHash("#/me")).toEqual({ kind: "me" });
-    expect(toHash({ kind: "league" })).toBe("#/league");
-    expect(toHash({ kind: "me" })).toBe("#/me");
+    expect(fromPath("/league")).toEqual({ kind: "league" });
+    expect(fromPath("/quests")).toEqual({ kind: "quests" });
+    expect(fromPath("/plans")).toEqual({ kind: "plans" });
+    expect(fromPath("/settings")).toEqual({ kind: "settings" });
+    expect(fromPath("/me")).toEqual({ kind: "me" });
+    expect(toPath({ kind: "league" })).toBe("/league");
+    expect(toPath({ kind: "me" })).toBe("/me");
   });
 
   it("reserves the workbench segment instead of reading it as a study", () => {
-    // `#/studio` was the authoring campus's own hash before the two campuses
+    // `/studio` was the authoring campus's own route before the two campuses
     // shared a parser. Reading it as `{ study: "studio" }` would send the
     // 更多 entry to a course nobody has.
-    expect(fromHash("#/studio")).toEqual({ kind: "studio" });
-    expect(toHash({ kind: "studio" })).toBe("#/studio");
+    expect(fromPath("/studio")).toEqual({ kind: "studio" });
+    expect(toPath({ kind: "studio" })).toBe("/studio");
+  });
+
+  it("migrates legacy hashes through the canonical path parser", () => {
+    const lesson: View = {
+      kind: "lesson",
+      studyId: "turing-pact",
+      courseId: "foundations-before-zero",
+      unitId: "what-is-an-app",
+      lessonId: "you-already-know-apps",
+    };
+    expect(toHash(lesson)).toBe(
+      "#/turing-pact/foundations-before-zero/what-is-an-app/you-already-know-apps",
+    );
+    expect(fromHash(toHash(lesson))).toEqual(lesson);
+    expect(fromHash("#/terms")).toEqual({ kind: "terms" });
   });
 
   it("maps legacy library hashes onto the tab the index already has", () => {

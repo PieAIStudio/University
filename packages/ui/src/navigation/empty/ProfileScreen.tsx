@@ -23,7 +23,7 @@ export function ProfileScreen({
   lessonsCompleted,
   totalXp,
   badges,
-  nextHref = "#/",
+  nextHref = "/",
 }: {
   readonly avatar?: ReactNode;
   /** Quiet account door. Absent when a shell has not wired identity yet. */
@@ -71,9 +71,9 @@ export function ProfileScreen({
         </section>
       )}
       <div className="profile-screen__links">
-        <a href="#/practice">练习</a>
-        <a href="#/review">复习</a>
-        <a href="#/settings">设置</a>
+        <a href="/practice">练习</a>
+        <a href="/review">复习</a>
+        <a href="/settings">设置</a>
       </div>
     </div>
   );

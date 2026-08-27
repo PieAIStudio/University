@@ -14,7 +14,7 @@
  * one function, both shells call it, and `StudySwitcher` takes a plain `string`
  * so handing it unresolved state does not compile.
  *
- * `chosen` is checked against the catalogue rather than trusted. A hash someone
+ * `chosen` is checked against the catalogue rather than trusted. A path someone
  * bookmarked outlives the study it names, and an id that no longer resolves
  * should land you somewhere real rather than on a screen that cannot say where
  * it is.

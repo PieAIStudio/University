@@ -33,10 +33,7 @@ export function PracticeHost({ onOpen }: { onOpen: (view: View) => void }) {
       onBrowse={() => onOpen({ kind: "concepts" })}
       renderReward={(question) => (
         <EntryPage
-          breadcrumb={[
-            { label: "概念图解", href: "#/concepts" },
-            { label: question.entry.head.zh },
-          ]}
+          breadcrumb={[{ label: "概念图解", href: "/concepts" }, { label: question.entry.head.zh }]}
           head={
             <>
               <h1>{question.entry.head.zh}</h1>

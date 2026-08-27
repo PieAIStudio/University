@@ -54,7 +54,7 @@ beforeEach(() => {
   document.body.append(container);
   root = createRoot(container);
   progressPort.resetAll();
-  window.location.hash = "#/quests";
+  history.replaceState(null, "", "/quests");
   vi.stubGlobal("matchMedia", (query: string) => ({
     matches: false,
     media: query,
@@ -70,7 +70,7 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
-  window.location.hash = "";
+  history.replaceState(null, "", "/");
   vi.unstubAllGlobals();
 });
 
@@ -94,7 +94,7 @@ describe("the four screens that read the progress document", () => {
       },
       occurredAt: "2026-08-26T09:00:00.000Z",
     });
-    window.location.hash = "#/review";
+    history.replaceState(null, "", "/review");
     await act(async () => {
       root.render(<App />);
     });
@@ -102,7 +102,7 @@ describe("the four screens that read the progress document", () => {
     expect(container.textContent).toContain("1");
   });
 
-  it("renders QuestsScreen at #/quests, not the unopened placeholder", async () => {
+  it("renders QuestsScreen at /quests, not the unopened placeholder", async () => {
     await act(async () => {
       root.render(<App />);
     });
@@ -121,8 +121,8 @@ describe("the four screens that read the progress document", () => {
     expect(container.textContent).not.toContain("0 / 2");
   });
 
-  it("renders LeagueScreen at #/league, not the unopened placeholder", async () => {
-    window.location.hash = "#/league";
+  it("renders LeagueScreen at /league, not the unopened placeholder", async () => {
+    history.replaceState(null, "", "/league");
     await act(async () => {
       root.render(<App />);
     });
@@ -132,8 +132,8 @@ describe("the four screens that read the progress document", () => {
     expect(text).not.toContain("排行榜还没开");
   });
 
-  it("renders the badge wall on #/me, not the door that said badges live elsewhere", async () => {
-    window.location.hash = "#/me";
+  it("renders the badge wall on /me, not the door that said badges live elsewhere", async () => {
+    history.replaceState(null, "", "/me");
     await act(async () => {
       root.render(<App />);
     });
@@ -144,7 +144,7 @@ describe("the four screens that read the progress document", () => {
 
   it("counts a finished lesson on the profile from the document, not the disk shelf", async () => {
     progressPort.advanceLesson(lessonKey("s", "c", "l"), 1);
-    window.location.hash = "#/me";
+    history.replaceState(null, "", "/me");
     await act(async () => {
       root.render(<App />);
     });

@@ -16,7 +16,7 @@ export function NextStepEmpty({
       title={title}
       description={description}
       action={
-        <GameButton variant="primary" type="button" onClick={() => (window.location.hash = "#/")}>
+        <GameButton variant="primary" type="button" onClick={() => window.location.assign("/")}>
           {action}
         </GameButton>
       }

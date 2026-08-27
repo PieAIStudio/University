@@ -11,7 +11,7 @@ export function LeagueEmpty() {
       title={LEAGUE_EMPTY_TITLE}
       description={LEAGUE_EMPTY_DESCRIPTION}
       action={
-        <GameButton variant="primary" type="button" onClick={() => (window.location.hash = "#/")}>
+        <GameButton variant="primary" type="button" onClick={() => window.location.assign("/")}>
           {LEAGUE_EMPTY_ACTION}
         </GameButton>
       }

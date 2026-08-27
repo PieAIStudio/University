@@ -73,8 +73,8 @@ describe("empty destinations", () => {
     expect(markup).toContain("2");
     expect(markup).toContain("读过真实代码");
     expect(markup).toContain("徽章墙");
-    expect(markup).toContain("#/practice");
-    expect(markup).toContain("#/review");
+    expect(markup).toContain("/practice");
+    expect(markup).toContain("/review");
   });
 
   it("turns a zero into an invitation that points at the next lesson", () => {
@@ -82,14 +82,14 @@ describe("empty destinations", () => {
       <ProfileScreen
         passagesRead={0}
         lessonsCompleted={0}
-        nextHref="#/turing-pact/foundations-before-zero"
+        nextHref="/turing-pact/foundations-before-zero"
         avatar={<span>头像</span>}
       />,
     );
     expect(markup).toContain("头像");
     expect(markup).toContain("还没读过真实代码 —— 第一节里就有");
     expect(markup).toContain("还没学完一节 —— 从这里开始");
-    expect(markup).toContain("#/turing-pact/foundations-before-zero");
+    expect(markup).toContain("/turing-pact/foundations-before-zero");
     /*
       The wall is a real screen now (navigation/screens/BadgeWall), and it needs
       the progress document. Both shells pass it in. This fallback is what a

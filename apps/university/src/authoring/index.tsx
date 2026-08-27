@@ -76,8 +76,8 @@ function useShelfRecord(studyId: string | null): {
 }
 
 /**
- * `#/studio`. A mode, not a ninth rail slot — which is why it lives behind
- * 更多, and why the delivery build sends its hash to the map instead.
+ * `/studio`. A mode, not a ninth rail slot — which is why it lives behind
+ * 更多, and why the delivery build sends this path to the map instead.
  */
 export function StudioScreen({
   studyId,

@@ -13,7 +13,7 @@ const GRADES = ["重来", "困难", "良好", "简单"] as const;
 test.describe("B 同一个人回来复习", () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
-  test("#/review → 写下答案 → 揭示 → 四档评分 → 空态", async ({ page }) => {
+  test("/review → 写下答案 → 揭示 → 四档评分 → 空态", async ({ page }) => {
     const consoleErrors = watchConsole(page);
     await walkFirstOnlineLesson(page);
 
@@ -31,8 +31,8 @@ test.describe("B 同一个人回来复习", () => {
       retrieval card: an answer you recognise is not an answer you recalled.
       The old screen is gone, so the old script tested nothing.
     */
-    await namedStep(page, "打开 #/review", async () => {
-      await page.goto(`${ONLINE_ORIGIN}/#/review`, { waitUntil: "domcontentloaded" });
+    await namedStep(page, "打开 /review", async () => {
+      await page.goto(`${ONLINE_ORIGIN}/review`, { waitUntil: "domcontentloaded" });
       await expect(page.locator(".review-card")).toBeVisible({ timeout: 30_000 });
     });
 

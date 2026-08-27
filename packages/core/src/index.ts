@@ -335,12 +335,13 @@ export {
 } from "./practice/index.js";
 
 // One address space, both campuses. `View` names every destination the product
-// has; `toHash`/`fromHash` are the only two functions allowed to know what a
-// URL looks like. Delivery has always parsed hashes this way; the authoring
-// campus carried a second, pathname-shaped address until this became shared.
+// has; `toPath`/`fromPath` are the only two functions allowed to know what a
+// canonical URL looks like. `toHash`/`fromHash` remain compatibility adapters
+// for bookmarks written before the path migration.
 export {
   activeIdForView,
   fromHash,
+  fromPath,
   isBareView,
   isSafeId,
   libraryTabOf,
@@ -348,6 +349,7 @@ export {
   LIBRARY_VIEW_TAB,
   studyIdOfView,
   toHash,
+  toPath,
   WORLD,
   type LibraryTab,
   type View,

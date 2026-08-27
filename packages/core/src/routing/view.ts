@@ -7,9 +7,10 @@
  * sessions. It also makes a lesson unlinkable, and a course nobody can send to
  * anyone is a course nobody talks about.
  *
- * The hash rather than the path, because delivery ships as a static bundle and
- * a real path would 404 on refresh without a server rewrite rule. The hash is
- * the one part of a URL a static host cannot get wrong.
+ * The path is the public address. Delivery ships as a static bundle, so the
+ * host must rewrite lesson paths back to `index.html`; that is a deployment
+ * contract, not a reason to make 579 lessons look like one URL to a crawler.
+ * Legacy hashes are parsed only to migrate old bookmarks once.
  *
  * It lives in `packages/core` because the authoring campus used to carry a
  * second address space — a pathname for study+lesson beside a hash for the rail
@@ -21,7 +22,7 @@
  * No React, no DOM, no network — the same rule as the rest of this package.
  */
 
-// `flavour` is the public hash segment (`#/flavour`, `#/library/flavour`).
+// `flavour` is the public path segment (`/flavour`, `/library/flavour`).
 // The collection itself is anti-pattern; view kinds use that name. Do not
 // rename this string — bookmarked and shared URLs still have to parse.
 //
@@ -58,7 +59,7 @@ export type View =
   // four different kinds of activity. They are one, and the index component has
   // been shared between them since SPEC-0004.
   //
-  // The old single-segment routes still resolve, because a hash someone
+  // The old single-segment routes still resolve, because a path someone
   // bookmarked or pasted into a chat is a public contract.
   | { readonly kind: "library"; readonly tab: LibraryTab }
   | { readonly kind: "terms" }
@@ -69,8 +70,8 @@ export type View =
   // The learner's own shortlist. Single segment like review and terms, because
   // it belongs to the person rather than to any course.
   | { readonly kind: "favourites" }
-  // Anti-pattern catalogue. Public hashes stay `#/flavour` and
-  // `#/flavour/<id>` — those strings are the URL contract, these kinds are not.
+  // Anti-pattern catalogue. Public paths stay `/flavour` and
+  // `/flavour/<id>` — those strings are the URL contract, these kinds are not.
   | { readonly kind: "anti-pattern" }
   | { readonly kind: "anti-pattern-entry"; readonly id: string }
   // 概念图解. The third collection, and the routes are the same two shapes for
@@ -87,8 +88,9 @@ export type View =
   // product's own journey puts it first, and a keyboard has to be able to
   // reach every lesson without touching the canvas.
   | { readonly kind: "catalog" }
-  // Temporary gloss-avatar lab. Not a product surface; hash-only so a static
-  // host cannot 404 it. Drop the kind when the lab is retired.
+  // Temporary gloss-avatar lab. Not a product surface; it still has a path so
+  // a static host can rewrite it like every other app destination. Drop the
+  // kind when the lab is retired.
   | { readonly kind: "avatar-lab" }
   | { readonly kind: "league" }
   /*
@@ -126,57 +128,62 @@ export function libraryTabOf(view: View): LibraryTab {
 
 export const WORLD: View = { kind: "world" };
 
-export function toHash(view: View): string {
+export function toPath(view: View): string {
   switch (view.kind) {
     case "world":
-      return "#/";
+      return "/";
     case "review":
-      return "#/review";
+      return "/review";
     case "mistakes":
-      return "#/mistakes";
+      return "/mistakes";
     case "library":
-      return `#/library/${view.tab}`;
+      return view.tab === "concepts" ? "/library" : `/library/${view.tab}`;
     case "terms":
-      return "#/terms";
+      return "/terms";
     case "term":
-      return `#/terms/${enc(view.senseId)}`;
+      return `/terms/${enc(view.senseId)}`;
     case "favourites":
-      return "#/favourites";
+      return "/favourites";
     case "anti-pattern":
-      return "#/flavour";
+      return "/flavour";
     case "anti-pattern-entry":
-      return `#/flavour/${enc(view.id)}`;
+      return `/flavour/${enc(view.id)}`;
     case "concepts":
-      return "#/concepts";
+      return "/concepts";
     case "concept":
-      return `#/concepts/${enc(view.id)}`;
+      return `/concepts/${enc(view.id)}`;
     case "practice":
-      return "#/practice";
+      return "/practice";
     case "catalog":
-      return "#/catalog";
+      return "/catalog";
     case "avatar-lab":
-      return "#/avatar-lab";
+      return "/avatar-lab";
     case "league":
-      return "#/league";
+      return "/league";
     case "planet":
-      return "#/planet";
+      return "/planet";
     case "quests":
-      return "#/quests";
+      return "/quests";
     case "plans":
-      return "#/plans";
+      return "/plans";
     case "settings":
-      return "#/settings";
+      return "/settings";
     case "me":
-      return "#/me";
+      return "/me";
     case "studio":
-      return "#/studio";
+      return "/studio";
     case "course":
-      return `#/${enc(view.studyId)}/${enc(view.courseId)}`;
+      return `/${enc(view.studyId)}/${enc(view.courseId)}`;
     case "lesson":
-      return `#/${enc(view.studyId)}/${enc(view.courseId)}/${enc(view.unitId)}/${enc(view.lessonId)}`;
+      return `/${enc(view.studyId)}/${enc(view.courseId)}/${enc(view.unitId)}/${enc(view.lessonId)}`;
     case "settled":
-      return `#/${enc(view.studyId)}/${enc(view.courseId)}/${enc(view.unitId)}/${enc(view.lessonId)}/done`;
+      return `/${enc(view.studyId)}/${enc(view.courseId)}/${enc(view.unitId)}/${enc(view.lessonId)}/done`;
   }
+}
+
+/** Serialize the legacy hash spelling without giving it a second route table. */
+export function toHash(view: View): string {
+  return `#${toPath(view)}`;
 }
 
 /**
@@ -187,7 +194,7 @@ export function toHash(view: View): string {
  * `/api/studies/…`. Anything with a slash, a dot-dot, or an encoded separator
  * is a typo or a probe there, and its adapter refuses it before the join.
  *
- * Deliberately not applied inside `fromHash`. Parsing an address and deciding
+ * Deliberately not applied inside `fromPath`. Parsing an address and deciding
  * an id is servable are different questions: delivery fetches a published
  * package by name and has never restricted the shape of one, so putting the
  * rule in the parser would quietly unroute a course the moment upstream
@@ -198,15 +205,15 @@ export function isSafeId(value: string): boolean {
 }
 
 /**
- * Read a view back out of a hash.
+ * Read a view back out of a pathname.
  *
  * Anything unrecognised falls back to the world map rather than throwing. A URL
  * is user input — someone will trim it, a chat client will mangle it, an old
  * link will outlive the course it pointed at — and the world map is always a
  * valid place to be.
  */
-export function fromHash(hash: string): View {
-  const parts = hash.replace(/^#\/?/u, "").split("/").filter(Boolean).map(dec);
+export function fromPath(pathname: string): View {
+  const parts = pathname.replace(/^\/?/u, "").split("/").filter(Boolean).map(dec);
   if (parts.length === 0) return WORLD;
   if (parts.length === 1 && parts[0] === "review") return { kind: "review" };
   if (parts.length === 1 && parts[0] === "mistakes") return { kind: "mistakes" };
@@ -242,6 +249,11 @@ export function fromHash(hash: string): View {
   if (!unitId || !lessonId) return { kind: "course", studyId, courseId };
   if (tail === "done") return { kind: "settled", studyId, courseId, unitId, lessonId };
   return { kind: "lesson", studyId, courseId, unitId, lessonId };
+}
+
+/** Parse a legacy hash by delegating to the one canonical path parser. */
+export function fromHash(hash: string): View {
+  return fromPath(hash.replace(/^#/u, ""));
 }
 
 /** The series a view names, or null when it names none. */

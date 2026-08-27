@@ -34,7 +34,7 @@ function chipLabel(id: CategoryFilter): string {
  * in the header so a reader cannot browse the list as a lie detector.
  *
  * Clicking a hit calls `onOpen` — the shell owns the route, the way TermIndex
- * does not invent `#/terms/:id`. There is no second detail page in here.
+ * does not invent `/terms/:id`. There is no second detail page in here.
  */
 export function AntiPatternIndex({
   entries,

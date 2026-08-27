@@ -11,7 +11,7 @@ import {
 import type { IdentityPort } from "@pieai/university-core";
 
 /**
- * The account door on `#/me`. It is a door, not a wall.
+ * The account door on `/me`. It is a door, not a wall.
  *
  * Unsigned, it sits under the avatar the way the league empty sits under the
  * rail: a quiet sentence and, when a backend is actually configured, a form.

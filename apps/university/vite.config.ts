@@ -1,10 +1,21 @@
 /// <reference types="node" />
-import { cpSync, createReadStream, existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  createReadStream,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { gzipSync } from "node:zlib";
 import { isAbsolute, relative, resolve } from "node:path";
 
 import react from "@vitejs/plugin-react";
+import { toPath } from "@pieai/university-core";
 import { defineConfig, type Plugin } from "vite";
+
+import { buildSiteIndex } from "./scripts/site-index.mjs";
 
 /**
  * One app, two modes.
@@ -164,6 +175,32 @@ function serveImportedContent(mode: string): Plugin {
   };
 }
 
+/** Emit crawler files from the importer’s already-generated shelf. */
+function emitSiteIndex(mode: string): Plugin {
+  return {
+    name: "university-site-index",
+    generateBundle() {
+      if (mode !== "delivery") return;
+      const shelfPath = resolve(import.meta.dirname, "content", "shelf.json");
+      if (!existsSync(shelfPath)) {
+        throw new Error(
+          "apps/university/content/shelf.json is missing — run `pnpm content` before building.",
+        );
+      }
+      const shelf = JSON.parse(readFileSync(shelfPath, "utf8"));
+      const siteIndex = buildSiteIndex(shelf, {
+        publicOrigin:
+          process.env["UNIVERSITY_PUBLIC_ORIGIN"] ?? "https://university.pieaistudio.com",
+        pathForLesson: ({ studyId, courseId, unitId, lessonId }) =>
+          toPath({ kind: "lesson", studyId, courseId, unitId, lessonId }),
+      });
+      this.emitFile({ type: "asset", fileName: "robots.txt", source: siteIndex.robots });
+      this.emitFile({ type: "asset", fileName: "sitemap.xml", source: siteIndex.sitemap });
+      console.log(`site-index: ${siteIndex.lessonCount} lesson URLs emitted`);
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => ({
   /*
     A separate optimizer cache per mode, and another one for the test run.
@@ -180,7 +217,7 @@ export default defineConfig(({ mode }) => ({
     import.meta.dirname,
     `node_modules/.vite-${mode}${process.env.UNIVERSITY_E2E === "1" ? "-e2e" : ""}`,
   ),
-  plugins: [react(), serveImportedContent(mode), analyzeChunks()],
+  plugins: [react(), serveImportedContent(mode), emitSiteIndex(mode), analyzeChunks()],
   build: {
     outDir: `dist/${mode}`,
     emptyOutDir: true,

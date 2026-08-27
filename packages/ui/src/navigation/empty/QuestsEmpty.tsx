@@ -12,7 +12,7 @@ export function QuestsEmpty() {
       title={QUESTS_EMPTY_TITLE}
       description={QUESTS_EMPTY_DESCRIPTION}
       action={
-        <GameButton variant="primary" type="button" onClick={() => (window.location.hash = "#/")}>
+        <GameButton variant="primary" type="button" onClick={() => window.location.assign("/")}>
           {QUESTS_EMPTY_ACTION}
         </GameButton>
       }

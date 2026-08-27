@@ -32,7 +32,7 @@ export function ConceptEntryHost({ id, onOpen }: { id: string; onOpen: (view: Vi
     <div className="terms">
       <EntryPage
         breadcrumb={[
-          { label: "概念图解", href: "#/concepts" },
+          { label: "概念图解", href: "/concepts" },
           { label: entry.head.group },
           { label: entry.head.zh },
         ]}

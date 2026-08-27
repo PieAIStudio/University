@@ -6,7 +6,7 @@ import { dressScene } from "@pieai/swimmer-avatar-kit/materials";
 import { Avatar } from "@pieai/swimmer-avatar-kit/react-three-fiber";
 import { useMemo } from "react";
 
-/** The avatar-lab's creature, as a preview. Full editor stays at `#/avatar-lab`. */
+/** The avatar-lab's creature, as a preview. Full editor stays at `/avatar-lab`. */
 export function ProfileAvatar({
   avatarRecipe,
   signedIn = false,
@@ -43,7 +43,7 @@ export function ProfileAvatar({
         />
       </Canvas>
       {/* Not `ghost`: that variant is transparent, and this sits on a canvas. */}
-      <a className="profile-avatar__lab" href="#/avatar-lab">
+      <a className="profile-avatar__lab" href="/avatar-lab">
         打开头像工坊
       </a>
     </div>

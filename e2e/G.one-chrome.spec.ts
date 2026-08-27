@@ -8,8 +8,8 @@ import { FIRST_COURSE_TITLE, openOnline } from "./harness/online-learner.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 
 const PARITY_SCREENSHOT_DIR = join(process.cwd(), "SCRATCH", "e2e", "parity");
-const PARITY_LESSON_HASH =
-  "#/turing-pact/foundations-before-zero/what-is-an-app/why-so-many-files-preview";
+const PARITY_LESSON_PATH =
+  "/turing-pact/foundations-before-zero/what-is-an-app/why-so-many-files-preview";
 mkdirSync(PARITY_SCREENSHOT_DIR, { recursive: true });
 
 async function parityScreenshot(page: Page, name: string) {
@@ -158,7 +158,7 @@ test.describe("G 两个校园穿同一套壳", () => {
   as above: a presence check passes on the working side and tells you nothing.
 */
 async function walkToNodeCard(page: Page, origin: string) {
-  await page.goto(`${origin}/#/`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" });
   const firstCourse = page.locator(".labels button.label", { hasText: FIRST_COURSE_TITLE });
   await expect(firstCourse).toHaveCount(1, { timeout: 60_000 });
   await firstCourse.click();
@@ -204,7 +204,7 @@ async function walkToLesson(page: Page, origin: string, screenshotName: string) 
     stable lesson, so the path ends at the same explicit, unstarted route in
     both builds after the card has been inspected.
   */
-  await page.goto(`${origin}/${PARITY_LESSON_HASH}`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${origin}${PARITY_LESSON_PATH}`, { waitUntil: "domcontentloaded" });
   await expect(page.locator(".lesson-reader__header")).toBeVisible({ timeout: 30_000 });
   await expect(page.locator("[data-parity-control='lesson-source-version']")).toBeVisible({
     timeout: 30_000,

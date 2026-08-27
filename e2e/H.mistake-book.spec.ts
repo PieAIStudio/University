@@ -32,7 +32,7 @@ test.describe("H 错题本 · 在线端", () => {
     await page.getByPlaceholder(/用自己的话/).fill(wrong);
     await humanClick(page, page.getByRole("button", { name: /提交/ }), "提交");
 
-    await page.goto(`${ONLINE_ORIGIN}/#/mistakes`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${ONLINE_ORIGIN}/mistakes`, { waitUntil: "domcontentloaded" });
 
     const card = page.locator(".mistake-card").first();
     await expect(card).toBeVisible({ timeout: 30_000 });

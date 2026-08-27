@@ -30,7 +30,7 @@ test.describe("I 风格样例 · 在线端", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
 
     for (const [id, skin, contrast, contrastLabel] of CASES) {
-      await page.goto(`${ONLINE_ORIGIN}/#/concepts/${id}`, { waitUntil: "domcontentloaded" });
+      await page.goto(`${ONLINE_ORIGIN}/concepts/${id}`, { waitUntil: "domcontentloaded" });
       const frame = page.locator(".stylesample__frame");
       await expect(frame, id).toBeVisible({ timeout: 60_000 });
       await expect(frame, id).toHaveClass(new RegExp(`stylesample--${skin}(\\s|$)`));

@@ -2,7 +2,7 @@ import { lazy, Suspense, type Dispatch, type ReactNode, type SetStateAction } fr
 import {
   LIBRARY_VIEW_TAB,
   libraryTabOf,
-  toHash,
+  toPath,
   type CourseProgress,
   type IdentityPort,
   type Mistake,
@@ -364,7 +364,7 @@ export function MainRouter({
       {/*
         The workbench. `AUTHORING` is a build-time constant, so this branch and
         everything `../authoring/` imports are gone from a delivery bundle —
-        which is also why `#/studio` lands on the map there rather than on an
+        which is also why `/studio` lands on the map there rather than on an
         empty column.
       */}
       {AUTHORING && view.kind === "studio" ? (
@@ -404,7 +404,7 @@ export function MainRouter({
           lessonsCompleted={profileStats.lessonsCompleted}
           nextHref={
             nextUpProgress?.next
-              ? toHash({
+              ? toPath({
                   kind: "lesson",
                   studyId: nextUpProgress.next.studyId,
                   courseId: nextUpProgress.next.courseId,
@@ -412,12 +412,12 @@ export function MainRouter({
                   lessonId: nextUpProgress.next.lessonId,
                 })
               : todayNode
-                ? toHash({
+                ? toPath({
                     kind: "course",
                     studyId: todayNode.studyId,
                     courseId: todayNode.courseId,
                   })
-                : "#/"
+                : "/"
           }
         />
       ) : null}

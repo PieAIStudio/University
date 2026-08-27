@@ -194,14 +194,14 @@ export function SettingsSubnav() {
     <nav className="settings-subnav" aria-label="设置">
       <section className="settings-subnav__group">
         <p className="settings-subnav__label">帐户</p>
-        <a href="#/settings" aria-current="page">
+        <a href="/settings" aria-current="page">
           偏好设置
         </a>
-        <a href="#/me">个人档案</a>
+        <a href="/me">个人档案</a>
       </section>
       <section className="settings-subnav__group">
         <p className="settings-subnav__label">订阅</p>
-        <a href="#/plans">会员</a>
+        <a href="/plans">会员</a>
       </section>
     </nav>
   );
