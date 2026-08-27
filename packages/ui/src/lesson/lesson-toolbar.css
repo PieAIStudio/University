@@ -79,3 +79,25 @@
   font-size: 0.76rem;
   white-space: nowrap;
 }
+
+/*
+  The reading tools have four independent controls. At phone width their
+  natural widths are wider than the toolbar, so a `flex: none` tools row
+  pushes the last controls past the viewport instead of wrapping them. Give
+  the row the toolbar's real content width; its existing flex-wrap then keeps
+  every control in the DOM and on screen.
+*/
+@media (max-width: 640px) {
+  .lesson-toolbar__tools {
+    flex: 1 1 100%;
+    width: 100%;
+    justify-content: flex-start;
+    row-gap: 8px;
+  }
+
+  .lesson-toolbar__tools .sound-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+  }
+}

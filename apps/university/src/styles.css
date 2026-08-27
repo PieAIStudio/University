@@ -206,7 +206,15 @@ button.block {
 
 .learn-stage {
   position: relative;
-  height: 100%;
+  /*
+    A percentage height is not definite in the phone shell: its grid row is
+    content-sized. R3F's own `height: 100%` wrapper therefore resolved to its
+    195px intrinsic canvas height even though this element's min-height was
+    visibly 70dvh. Give the mobile stage a definite height so the renderer,
+    its DOM labels and the hit targets all agree on the same rectangle on the
+    very first paint.
+  */
+  height: min(70dvh, 720px);
   min-height: min(70dvh, 720px);
   min-width: 0;
 }
@@ -786,8 +794,13 @@ button.block {
       which already ends above the tab bar. Nothing here has to know how tall
       that bar is.
     */
-    bottom: 14px;
-    max-height: none;
+    /*
+      Keep the map as a real surface on a phone. The panel grows naturally
+      while the route quiz is collapsed, and becomes its own scroll region
+      when the learner deliberately opens the three questions.
+    */
+    bottom: auto;
+    max-height: min(52dvh, 440px);
   }
 
   /*

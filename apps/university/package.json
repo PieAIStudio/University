@@ -9,6 +9,7 @@
     "dev:local": "vite --mode authoring",
     "journey": "node scripts/pull-taxonomy.mjs",
     "kit": "node scripts/import-kit.mjs",
+    "kenney:r01": "node scripts/import-kenney-r01.mjs",
     "build": "tsc -b && vite build --mode delivery && vite build --mode authoring",
     "delivery:build": "node scripts/build-delivery.mjs",
     "delivery:check": "node scripts/check-delivery.mjs",

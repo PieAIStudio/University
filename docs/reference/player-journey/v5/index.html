@@ -1180,8 +1180,8 @@ pre b{color:var(--go);font-weight:600}
   <p>
     自然底盘负责浮岛轮廓、地形起伏、植被和岩层，可以使用 <code>Kenney Nature</code> 的自然物件，但不占强调主题槽；
     在它之上最多放两个强调主题族，并统一尺度、材质和色彩管线。
-    第一座岛 <code>foundations-before-zero</code> 的垂直切片固定为：<code>Kenney Nature</code> 自然底盘 + <code>Fantasy Town</code> + <code>Space/Modular Space</code>。
-    这里的斜线表示一个统一的科技主题族，因此强调主题仍是两个，不能再加第三套建筑或道具语汇。
+    第一座岛 <code>foundations-before-zero</code> 的垂直切片固定为：<code>Kenney Nature</code> 自然底盘 + <code>Fantasy Town</code> 一个物理强调包。
+    这次切片故意只用一个强调包；后续星港岛再使用 <code>Space</code> + <code>Modular Space</code> 两个物理包，不能用斜线把多个包伪装成一个预算槽。
   </p>
   <p>
     Kenney 素材逐项走现有的授权登记、导入和 provenance 清单；不把别的项目的渲染代码或一整套资产目录抄进 University。
@@ -1217,7 +1217,7 @@ pre b{color:var(--go);font-weight:600}
 <tr><td>两种投影</td><td>course 与 world 使用同一份可序列化 blueprint、seed 和语义锚点；course 有贴地节点路，world 的岛之间桥接对象数量为 0，远景只留下身份线索。</td></tr>
 <tr><td>自然地形 / unit</td><td>跨 unit 边界采样地形时没有由 unit 触发的一级台阶或高度跳变；unit 作为 DOM 标签存在，不生成可进入地形层。</td></tr>
 <tr><td>unit 视觉家族</td><td>同一 unit 的小节节点共享颜色和非颜色符号 / 环形纹样；状态动画若出现则共享运动词汇，但不会让所有节点持续跳动。去掉颜色后仍能靠符号 / 环纹 / DOM 标签归组，且地形、空间分区和主题不改变 unit 边界。</td></tr>
-<tr><td>主题预算</td><td>每座岛的强调主题清单长度 ≤2；全局包目录和覆盖账本可包含所有合规 Kenney 包。<code>foundations-before-zero</code> 使用 Kenney Nature 自然底盘，强调主题严格为 Fantasy Town 与 Space/Modular Space，未登记的第三强调主题会被拒绝。</td></tr>
+<tr><td>主题预算</td><td>每座岛的强调主题清单长度 ≤2；全局包目录和覆盖账本可包含所有合规 Kenney 包。<code>foundations-before-zero</code> 使用 Kenney Nature 自然底盘，强调主题严格为 Fantasy Town；未登记的第二或第三强调主题会被拒绝。</td></tr>
 <tr><td>云模块</td><td>云模块可用替身独立替换；截图中云瓣圆润有厚度、由实例化低模 / 共享材质 / 远景 LOD 构成，不使用 ray-marched 真体积云，且不遮挡交互命中区或 DOM 信息，不引入天气系统。</td></tr>
 <tr><td>文字与交互</td><td>课程名、关卡名、unit 标签、状态和提示可在 DOM 中选中、聚焦和读出；canvas 不承载可读文字，鼠标 / 触摸点选节点可进入课程，不需要自由行走。</td></tr>
 </tbody>

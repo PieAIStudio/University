@@ -22,13 +22,18 @@
  */
 import { useGLTF } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 // three-stdlib rather than three/examples: drei's GLTFLoader is the stdlib one,
 // and `setKTX2Loader` will only accept the loader from the same package.
 import { KTX2Loader } from "three-stdlib";
 
 import manifest from "./kit.json";
+import {
+  cloneOwnedPartGeometry,
+  disposeOwnedPartResources,
+  type OwnedPartResources,
+} from "./kit-resources.js";
 
 export type Role = keyof typeof manifest.assets;
 
@@ -95,8 +100,23 @@ const PAINT: readonly (readonly [RegExp, number])[] = [
   [/metal|iron|steel|nail/i, 0x8f949c],
 ];
 
-function repaint(source: THREE.Material): THREE.Material {
+function repaint(source: THREE.Material, preserveMap = false): THREE.Material {
   const original = source as THREE.MeshStandardMaterial;
+  if (preserveMap) {
+    // Kenney's GLB packs intentionally share a tiny `colormap.png` per pack.
+    // The old WOC kit is repainted because its donor atlas is not shipped with
+    // the same material contract; throwing the Kenney map away would turn a
+    // colourful accent pack into a grey block. Clone, rather than mutate, so
+    // drei's cached GLTF remains safe for another projection.
+    const painted = source.clone();
+    if (painted instanceof THREE.MeshStandardMaterial) {
+      painted.flatShading = true;
+      painted.roughness = Math.max(0.72, painted.roughness);
+      painted.side = THREE.DoubleSide;
+      painted.needsUpdate = true;
+    }
+    return painted;
+  }
   const match = PAINT.find(([pattern]) => pattern.test(original.name ?? ""));
   const painted = new THREE.MeshStandardMaterial({
     color: match ? match[1] : (original.color?.getHex() ?? 0xffffff),
@@ -116,8 +136,10 @@ function repaint(source: THREE.Material): THREE.Material {
 }
 
 interface Part {
-  readonly geometry: THREE.BufferGeometry;
-  readonly material: THREE.Material;
+  /** The cached GLTF resources; PartField clones them after commit. */
+  readonly sourceGeometry: THREE.BufferGeometry;
+  readonly sourceMaterial: THREE.Material;
+  readonly preserveMap: boolean;
   /** The mesh's own place inside the model, after normalisation. */
   readonly offset: THREE.Matrix4;
 }
@@ -152,10 +174,10 @@ function useKtx2() {
 /**
  * Flatten a model to a list of instanceable parts, normalised to unit height.
  */
-function useParts(role: Role): readonly Part[] {
+function usePartsFromSource(src: string, preserveMap = false): readonly Part[] {
   const ktx2 = useKtx2();
-  const gltf = useGLTF(kit[role].src, false, true, (loader) => loader.setKTX2Loader(ktx2));
-  return useMemo(() => {
+  const gltf = useGLTF(src, false, true, (loader) => loader.setKTX2Loader(ktx2));
+  const parts = useMemo(() => {
     const root = gltf.scene;
     root.updateMatrixWorld(true);
 
@@ -174,15 +196,24 @@ function useParts(role: Role): readonly Part[] {
       if (!mesh.isMesh) return;
       const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
       if (!material) return;
-      lift(mesh.geometry);
       parts.push({
-        geometry: mesh.geometry,
-        material: repaint(material),
+        // Keep the loader's source geometry/material immutable. PartField
+        // clones both only after the component commits, so a StrictMode render
+        // that React abandons cannot strand GPU resources created in render.
+        sourceGeometry: mesh.geometry,
+        sourceMaterial: material,
+        preserveMap,
         offset: new THREE.Matrix4().multiplyMatrices(normalise, mesh.matrixWorld),
       });
     });
     return parts;
-  }, [gltf]);
+  }, [gltf, preserveMap]);
+
+  return parts;
+}
+
+function useParts(role: Role): readonly Part[] {
+  return usePartsFromSource(kit[role].src, false);
 }
 
 export interface Placement {
@@ -206,8 +237,71 @@ export function PropField({ role, at }: { role: Role; at: readonly Placement[] }
   );
 }
 
-function PartField({ part, at }: { part: Part; at: readonly Placement[] }) {
+/**
+ * Render an explicitly curated external GLB through the same instancing and
+ * normalisation path as the legacy kit.  Recipes pass one URL per asset and a
+ * list of placements; they never create a new loader or a second scene
+ * implementation.  `preserveMap` is the Kenney path, while the old kit keeps
+ * its authored material repaint above.
+ */
+export function AssetField({
+  src,
+  at,
+  preserveMap = true,
+  castShadow = true,
+}: {
+  readonly src: string;
+  readonly at: readonly Placement[];
+  readonly preserveMap?: boolean;
+  readonly castShadow?: boolean;
+}) {
+  const parts = usePartsFromSource(src, preserveMap);
+  return (
+    <>
+      {parts.map((part, index) => (
+        <PartField key={`${src}-${index}`} part={part} at={at} castShadow={castShadow} />
+      ))}
+    </>
+  );
+}
+
+function PartField({
+  part,
+  at,
+  castShadow = true,
+}: {
+  part: Part;
+  at: readonly Placement[];
+  castShadow?: boolean;
+}) {
   const mesh = useRef<THREE.InstancedMesh>(null);
+  const ownedRef = useRef<OwnedPartResources | null>(null);
+  const [owned, setOwned] = useState<OwnedPartResources | null>(null);
+
+  // R3F receives geometry/material through constructor args and only disposes
+  // the InstancedMesh itself. Create the projection-owned clones in a layout
+  // effect, after commit, and release the exact pair in that effect's cleanup.
+  // This also makes React StrictMode's setup/cleanup/setup probe harmless: the
+  // first pair is disposed before the second pair is installed.
+  useLayoutEffect(() => {
+    const geometry = cloneOwnedPartGeometry(part.sourceGeometry);
+    // The legacy donor stores baked AO in COLOR_0; Kenney's unlit packs use
+    // authored colour there. Lifting the latter would wash its palette out,
+    // so the correction belongs only to the repainting path it was written
+    // for. The source geometry is never mutated.
+    if (!part.preserveMap) lift(geometry);
+    const resources: OwnedPartResources = {
+      geometry,
+      material: repaint(part.sourceMaterial, part.preserveMap),
+    };
+    ownedRef.current = resources;
+    setOwned(resources);
+
+    return () => {
+      if (ownedRef.current === resources) ownedRef.current = null;
+      disposeOwnedPartResources([resources]);
+    };
+  }, [part]);
 
   useLayoutEffect(() => {
     const target = mesh.current;
@@ -224,16 +318,17 @@ function PartField({ part, at }: { part: Part; at: readonly Placement[] }) {
     });
     target.instanceMatrix.needsUpdate = true;
     target.computeBoundingSphere();
-  }, [at, part]);
+  }, [at, owned, part]);
 
   // `key` on the count: an InstancedMesh cannot grow, and the world's prop
   // count changes the moment a lesson is finished.
+  if (!owned) return null;
   return (
     <instancedMesh
       key={at.length}
       ref={mesh}
-      args={[part.geometry, part.material, Math.max(at.length, 1)]}
-      castShadow
+      args={[owned.geometry, owned.material, Math.max(at.length, 1)]}
+      castShadow={castShadow}
       // Casting but not receiving, on purpose. A tree receiving its own shadow
       // map at this scale is the acne case; the shadow it throws on the island
       // is the part that reads.

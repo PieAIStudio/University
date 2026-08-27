@@ -183,6 +183,23 @@ describe("placeLabels", () => {
     expect(boxesOverlap(box, hud, 4)).toBe(false);
   });
 
+  it("keeps a first course name visible when the top card blocks its home and next slot", () => {
+    const phone = { width: 390, height: 590 } as const;
+    const topCard = { left: 28, top: 14, right: 376, bottom: 161 };
+    const occupiedBelow = { left: 90, top: 165, right: 350, bottom: 195 };
+    const placed = placeLabels(
+      [candidate({ id: "first-course", x: 225, y: 163, width: 219, height: 24 })],
+      phone,
+      { reserved: [topCard, occupiedBelow] },
+    );
+    const first = byId(placed, "first-course");
+    const box = labelBox({ x: first.x, y: first.y }, 219, 24);
+
+    expect(first.visible).toBe(true);
+    expect(boxesOverlap(box, topCard, 4)).toBe(false);
+    expect(boxesOverlap(box, occupiedBelow, 4)).toBe(false);
+  });
+
   it("sits an aside card to the right of its island, not on top of it", () => {
     const placed = placeLabels(
       [

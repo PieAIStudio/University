@@ -148,6 +148,19 @@ function slotsFor(candidate: LabelCandidate, gap: number): readonly Slot[] {
   ];
 }
 
+/**
+ * Extra vertical slots are a fallback for a label boxed in by chrome and
+ * neighbouring names. The common path keeps the original four-slot search;
+ * only a crowded candidate pays for this wider search.
+ */
+function additionalVerticalSlots(candidate: LabelCandidate, gap: number): readonly Slot[] {
+  if (candidate.anchor === "aside") return [];
+  const step = candidate.height + gap;
+  const baseY = candidate.anchor === "start" ? candidate.y : candidate.y - candidate.height / 2;
+  const offsets = [-1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8];
+  return offsets.map((offset) => ({ x: candidate.x, y: baseY + offset * step }));
+}
+
 export function labelBox(
   slot: Slot,
   width: number,
@@ -376,18 +389,24 @@ export function placeLabels(
 
     const { width, height } = candidate;
     const anchor = candidate.anchor ?? "center";
-    for (const slot of slotsFor(candidate, gap)) {
-      const rect = labelBox(slot, width, height, anchor);
-      // An offset that leaves the frame is not a placement: it would spend a
-      // maxVisible slot on a name nobody can read.
-      if (!fitsInViewport(rect, viewport)) continue;
-      if (!candidate.overlay) {
-        if (occupied.some((other) => boxesOverlap(rect, other, gap))) continue;
-        occupied.push(rect);
+    let didPlace = false;
+    const slotGroups = [slotsFor(candidate, gap), additionalVerticalSlots(candidate, gap)];
+    for (const slots of slotGroups) {
+      for (const slot of slots) {
+        const rect = labelBox(slot, width, height, anchor);
+        // An offset that leaves the frame is not a placement: it would spend a
+        // maxVisible slot on a name nobody can read.
+        if (!fitsInViewport(rect, viewport)) continue;
+        if (!candidate.overlay) {
+          if (occupied.some((other) => boxesOverlap(rect, other, gap))) continue;
+          occupied.push(rect);
+        }
+        placed[index] = { id: candidate.id, x: slot.x, y: slot.y, visible: true };
+        visibleCount += 1;
+        didPlace = true;
+        break;
       }
-      placed[index] = { id: candidate.id, x: slot.x, y: slot.y, visible: true };
-      visibleCount += 1;
-      break;
+      if (didPlace) break;
     }
 
     if (!placed[index]!.visible && candidate.overlay && anchor === "aside") {

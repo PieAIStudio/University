@@ -137,6 +137,15 @@ function sample(gl: THREE.WebGLRenderer, target: THREE.WebGLRenderTarget) {
     p75: at(0.75),
     p95: at(0.95),
     max: +luma[luma.length - 1]!.toFixed(3),
+    renderer: {
+      calls: gl.info.render.calls,
+      triangles: gl.info.render.triangles,
+      lines: gl.info.render.lines,
+      points: gl.info.render.points,
+      geometries: gl.info.memory.geometries,
+      textures: gl.info.memory.textures,
+      programs: gl.info.programs?.length ?? 0,
+    },
   };
 }
 

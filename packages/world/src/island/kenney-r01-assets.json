@@ -1,0 +1,472 @@
+{
+  "schemaVersion": 1,
+  "assetSet": "R01-forest-academy",
+  "status": "prototype/local donor; PGS donor registered",
+  "sourceRoot": "local-donor:Kenney",
+  "sourceRootHint": "../../../_donors/Kenney or KENNEY_DONOR_ROOT",
+  "outputRoot": "public/kenney/r01",
+  "runtimeBasePath": "/kenney/r01",
+  "selection": {
+    "naturalBasePackId": "nature-kit",
+    "accentPackIds": ["fantasy-town-kit"],
+    "physicalAccentCount": 1,
+    "rawGlbBudget": 14,
+    "whitelistPolicy": "explicit filenames only; no donor glob"
+  },
+  "packs": [
+    {
+      "id": "nature-kit",
+      "folder": "kenney_nature-kit",
+      "title": "Nature Kit",
+      "version": "2.1",
+      "source": "https://kenney.nl/assets/nature-kit",
+      "materialMode": "unlit-color",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      }
+    },
+    {
+      "id": "fantasy-town-kit",
+      "folder": "kenney_fantasy-town-kit_2.0",
+      "title": "Fantasy Town Kit",
+      "version": "2.0",
+      "source": "https://kenney.nl/assets/fantasy-town-kit",
+      "materialMode": "external-colormap",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      }
+    }
+  ],
+  "assets": [
+    {
+      "type": "model",
+      "id": "nature-tree_default",
+      "assetId": "tree_default",
+      "src": "/kenney/r01/nature/tree_default.glb",
+      "bytes": 9428,
+      "sha256": "562d29638c902de3c7bee465d3a53bb77117efbc392ae04ed894faf6b5dc691d",
+      "source": "kenney_nature-kit/Models/GLTF format/tree_default.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["vegetation", "canopy"],
+      "dependencies": [],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_default.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "nature-tree_detailed",
+      "assetId": "tree_detailed",
+      "src": "/kenney/r01/nature/tree_detailed.glb",
+      "bytes": 31412,
+      "sha256": "c041daf2f0fb1d49e4325227cbcd58667adbe51e9b55e8c1f0a94b74cc521b3b",
+      "source": "kenney_nature-kit/Models/GLTF format/tree_detailed.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["vegetation", "hero-vegetation"],
+      "dependencies": [],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_detailed.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "nature-tree_pineDefaultB",
+      "assetId": "tree_pineDefaultB",
+      "src": "/kenney/r01/nature/tree_pineDefaultB.glb",
+      "bytes": 18180,
+      "sha256": "a752ea5775c6fb17513f764d57ead534f44dfdd85188b842995ac9ba0e7065c1",
+      "source": "kenney_nature-kit/Models/GLTF format/tree_pineDefaultB.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["vegetation", "silhouette"],
+      "dependencies": [],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_pineDefaultB.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "nature-rock_largeA",
+      "assetId": "rock_largeA",
+      "src": "/kenney/r01/nature/rock_largeA.glb",
+      "bytes": 7552,
+      "sha256": "6dd15390fd96501dcd1454765a17ba61dbbd8d47705dfe5149c8dd92b353ce25",
+      "source": "kenney_nature-kit/Models/GLTF format/rock_largeA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["rock", "terrain-dressing"],
+      "dependencies": [],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/rock_largeA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "nature-rock_smallA",
+      "assetId": "rock_smallA",
+      "src": "/kenney/r01/nature/rock_smallA.glb",
+      "bytes": 3044,
+      "sha256": "df9fff9d711e61370e8df0caa2514c89b8f8a8dc6c6fafaf4eb2ec79c5ae07c1",
+      "source": "kenney_nature-kit/Models/GLTF format/rock_smallA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["rock", "terrain-dressing"],
+      "dependencies": [],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/rock_smallA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "nature-plant_bushDetailed",
+      "assetId": "plant_bushDetailed",
+      "src": "/kenney/r01/nature/plant_bushDetailed.glb",
+      "bytes": 10172,
+      "sha256": "2e0487020d68ccf664435db9d829c78ae00e6d2785ee3ec10b9f89cc70a10406",
+      "source": "kenney_nature-kit/Models/GLTF format/plant_bushDetailed.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["vegetation", "shore-dressing"],
+      "dependencies": [],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/plant_bushDetailed.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "fantasy-town-wall",
+      "assetId": "wall",
+      "src": "/kenney/r01/fantasy-town/wall.glb",
+      "bytes": 4792,
+      "sha256": "cab1dff37610e2a214237cc62ec0b1506e8fd76bb66c29f6c585b4b643b569c4",
+      "source": "kenney_fantasy-town-kit_2.0/Models/GLB format/wall.glb",
+      "pack": "fantasy-town-kit",
+      "version": "2.0",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["structure", "settlement-anchor"],
+      "dependencies": ["/kenney/r01/fantasy-town/Textures/colormap.png"],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_fantasy-town-kit_2.0/Models/GLB format/wall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "fantasy-town-wall-corner",
+      "assetId": "wall-corner",
+      "src": "/kenney/r01/fantasy-town/wall-corner.glb",
+      "bytes": 6788,
+      "sha256": "d67d4c6210d5e877ce24ccfb42cb3eab1576f7addb689924e7776d6b73e4165a",
+      "source": "kenney_fantasy-town-kit_2.0/Models/GLB format/wall-corner.glb",
+      "pack": "fantasy-town-kit",
+      "version": "2.0",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["structure", "settlement-anchor"],
+      "dependencies": ["/kenney/r01/fantasy-town/Textures/colormap.png"],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_fantasy-town-kit_2.0/Models/GLB format/wall-corner.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "fantasy-town-wall-doorway-square",
+      "assetId": "wall-doorway-square",
+      "src": "/kenney/r01/fantasy-town/wall-doorway-square.glb",
+      "bytes": 7844,
+      "sha256": "1ad6ca0f201c602d7ead56f395744ffd87ba8e5d6e16148d60d0c13e31cf85f3",
+      "source": "kenney_fantasy-town-kit_2.0/Models/GLB format/wall-doorway-square.glb",
+      "pack": "fantasy-town-kit",
+      "version": "2.0",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["structure", "landmark"],
+      "dependencies": ["/kenney/r01/fantasy-town/Textures/colormap.png"],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_fantasy-town-kit_2.0/Models/GLB format/wall-doorway-square.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "fantasy-town-roof",
+      "assetId": "roof",
+      "src": "/kenney/r01/fantasy-town/roof.glb",
+      "bytes": 9324,
+      "sha256": "8f245dfc04b8e76b2833081462f7530c2aea9114a703161c1d9a4a975927347d",
+      "source": "kenney_fantasy-town-kit_2.0/Models/GLB format/roof.glb",
+      "pack": "fantasy-town-kit",
+      "version": "2.0",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["structure", "silhouette"],
+      "dependencies": ["/kenney/r01/fantasy-town/Textures/colormap.png"],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_fantasy-town-kit_2.0/Models/GLB format/roof.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "fantasy-town-roof-gable",
+      "assetId": "roof-gable",
+      "src": "/kenney/r01/fantasy-town/roof-gable.glb",
+      "bytes": 7632,
+      "sha256": "4bb6bdbcadbb8ebeb69d720e29f6c2e57c99d98966baa41fd86914d3c13d6039",
+      "source": "kenney_fantasy-town-kit_2.0/Models/GLB format/roof-gable.glb",
+      "pack": "fantasy-town-kit",
+      "version": "2.0",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["structure", "hero-architecture"],
+      "dependencies": ["/kenney/r01/fantasy-town/Textures/colormap.png"],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_fantasy-town-kit_2.0/Models/GLB format/roof-gable.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "fantasy-town-fountain-round",
+      "assetId": "fountain-round",
+      "src": "/kenney/r01/fantasy-town/fountain-round.glb",
+      "bytes": 84848,
+      "sha256": "8d19741e2cca6cbdce114b950b4aa12af625979bbc17b2910ef2366834af5565",
+      "source": "kenney_fantasy-town-kit_2.0/Models/GLB format/fountain-round.glb",
+      "pack": "fantasy-town-kit",
+      "version": "2.0",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["landmark", "water-feature"],
+      "dependencies": ["/kenney/r01/fantasy-town/Textures/colormap.png"],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_fantasy-town-kit_2.0/Models/GLB format/fountain-round.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": "Water material contains alpha; retain the source material settings."
+      }
+    },
+    {
+      "type": "model",
+      "id": "fantasy-town-stall",
+      "assetId": "stall",
+      "src": "/kenney/r01/fantasy-town/stall.glb",
+      "bytes": 11500,
+      "sha256": "f0a636fccb7d57c38f5acd58881c468f4872f1bcda1e9fd9b1118e76110565a1",
+      "source": "kenney_fantasy-town-kit_2.0/Models/GLB format/stall.glb",
+      "pack": "fantasy-town-kit",
+      "version": "2.0",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["prop", "settlement-dressing"],
+      "dependencies": ["/kenney/r01/fantasy-town/Textures/colormap.png"],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_fantasy-town-kit_2.0/Models/GLB format/stall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "fantasy-town-lantern",
+      "assetId": "lantern",
+      "src": "/kenney/r01/fantasy-town/lantern.glb",
+      "bytes": 14984,
+      "sha256": "f270637e3083d6e84a30626ee05df2b09597a642985a7f5c3e4ab5bb1c7a8d55",
+      "source": "kenney_fantasy-town-kit_2.0/Models/GLB format/lantern.glb",
+      "pack": "fantasy-town-kit",
+      "version": "2.0",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["prop", "wayfinding"],
+      "dependencies": ["/kenney/r01/fantasy-town/Textures/colormap.png"],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_fantasy-town-kit_2.0/Models/GLB format/lantern.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "type": "texture",
+      "uri": "Textures/colormap.png",
+      "src": "/kenney/r01/fantasy-town/Textures/colormap.png",
+      "bytes": 11143,
+      "sha256": "4aac939dc33195e35caf8c382ee3cb170054da763577f22d3c22692ec6afccdf",
+      "source": "kenney_fantasy-town-kit_2.0/Models/GLB format/Textures/colormap.png",
+      "pack": "fantasy-town-kit",
+      "version": "2.0",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_fantasy-town-kit_2.0/Models/GLB format/Textures/colormap.png",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    }
+  ],
+  "summary": {
+    "modelCount": 14,
+    "dependencyCount": 1,
+    "totalBytes": 238643
+  }
+}

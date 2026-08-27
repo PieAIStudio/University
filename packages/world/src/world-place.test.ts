@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { CourseNode } from "./course/course.js";
-import { nextCourse, placeWorld } from "./Maps.js";
+import {
+  nextCourse,
+  placeWorld,
+  WORLD_ISLAND_STATE_SCALE,
+  worldIslandRadiusForState,
+} from "./Maps.js";
 
 function node(partial: Partial<CourseNode> & Pick<CourseNode, "studyId" | "courseId">): CourseNode {
   return {
@@ -74,6 +79,24 @@ describe("placeWorld", () => {
 
   it("gives an unknown project an empty scene rather than someone else's", () => {
     expect(placeWorld(NODES, nothingDone, "gamma").placements).toEqual([]);
+  });
+
+  it("uses one generic state scale to make the live island the focal point", () => {
+    const base = worldIslandRadiusForState(12, "done") / WORLD_ISLAND_STATE_SCALE.done;
+    expect(worldIslandRadiusForState(12, "live") / base).toBeCloseTo(1.2, 8);
+    expect(worldIslandRadiusForState(12, "live")).toBeGreaterThan(
+      worldIslandRadiusForState(12, "open"),
+    );
+    expect(worldIslandRadiusForState(12, "open")).toBeGreaterThan(
+      worldIslandRadiusForState(12, "idle"),
+    );
+
+    const world = placeWorld(NODES, nothingDone, "alpha");
+    const live = world.placements.find((entry) => entry.state === "live");
+    const satellite = world.placements.find((entry) => entry.state === "idle");
+    expect(live?.radius).toBeCloseTo(worldIslandRadiusForState(12, "live"), 8);
+    expect(satellite?.radius).toBeCloseTo(worldIslandRadiusForState(10, "idle"), 8);
+    expect(live?.radius ?? 0).toBeGreaterThan(satellite?.radius ?? 0);
   });
 });
 

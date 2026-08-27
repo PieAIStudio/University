@@ -212,7 +212,7 @@ export function CourseRouteQuiz({
       outline for a screen reader and was caught, less politely, by G2 finding
       two 「the title of this panel」 where the product has one.
     */
-    <details className="course-route-quiz" open>
+    <details className="course-route-quiz">
       <summary>
         <span>
           <span className="eyebrow">学习路线</span>
