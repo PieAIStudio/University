@@ -9,7 +9,7 @@ import {
   ISLAND_SURFACE_STYLE_SHADER_MARKER,
   parseIslandSurfaceStyle,
   resolveIslandSurfaceStyle,
-} from "./island-surface-style-v2.js";
+} from "./island-surface-style.js";
 
 function stockShaderFixture(): THREE.WebGLProgramParametersWithUniforms {
   return {
@@ -31,7 +31,7 @@ void main() {
   } as unknown as THREE.WebGLProgramParametersWithUniforms;
 }
 
-describe("Island V2 surface style", () => {
+describe("Island surface style", () => {
   it("accepts only the four named styles", () => {
     expect(parseIslandSurfaceStyle(" Elemental ")).toBe("elemental");
     expect(parseIslandSurfaceStyle("mossy")).toBe("mossy");

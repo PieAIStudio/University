@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import manifest from "./kenney-r01-assets.json";
-import { islandBlueprintV2 } from "./island-blueprint-v2.js";
-import { islandDressingFieldsV2 } from "./island-dressing-v2-render.js";
-import { planIslandDressingV2 } from "./island-dressing-v2.js";
+import { islandBlueprint } from "./island-blueprint.js";
+import { islandDressingFields } from "./island-dressing-render.js";
+import { planIslandDressing } from "./island-dressing.js";
 import { islandThemeSelectionForCourse } from "./kenney-recipes.js";
 
 describe("R01 Kenney runtime whitelist", () => {
@@ -19,14 +19,14 @@ describe("R01 Kenney runtime whitelist", () => {
   });
 
   it("resolves every generated R01 placement through the shared asset adapter", () => {
-    const blueprint = islandBlueprintV2({
+    const blueprint = islandBlueprint({
       studyId: "turing-pact",
       courseId: "foundations-before-zero",
       lessonCount: 41,
       themeSelection: islandThemeSelectionForCourse("turing-pact", "foundations-before-zero"),
     });
-    const plan = planIslandDressingV2(blueprint, "course");
-    const fields = islandDressingFieldsV2(plan, 1);
+    const plan = planIslandDressing(blueprint, "course");
+    const fields = islandDressingFields(plan, 1);
     expect(fields.reduce((count, field) => count + field.at.length, 0)).toBe(
       plan.placements.length,
     );

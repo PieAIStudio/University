@@ -2,7 +2,15 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { CUTE_CLOUD_BATCH_NAMES, CUTE_CLOUD_CONTRACT, cuteCloudLayout } from "./cloud-sea-v2.js";
+import {
+  CLOUD_LAYOUT_CONTRACT,
+  CUTE_CLOUD_BATCH_NAMES,
+  CUTE_CLOUD_CONTRACT,
+  cloudHorizontalFootprint,
+  cloudPuffs,
+  cloudSafeCorridorRadius,
+  cuteCloudLayout,
+} from "./cloud-sea.js";
 
 describe("cute cloud sea", () => {
   it("keeps a deterministic sculpted layout for each quality tier", () => {
@@ -62,8 +70,57 @@ describe("cute cloud sea", () => {
     }
   });
 
+  it("keeps each complete cloud footprint outside the central play corridor", () => {
+    for (const extent of [12, 40, 80]) {
+      for (const puff of cloudPuffs(extent, false, -5.2)) {
+        const driftMargin = Math.max(extent * 0.035, 0.7);
+        const centreDistance = Math.hypot(puff.position[0], puff.position[2]);
+        expect(centreDistance).toBeGreaterThanOrEqual(
+          cloudSafeCorridorRadius(extent) +
+            cloudHorizontalFootprint(puff.scale) +
+            driftMargin -
+            1e-9,
+        );
+      }
+    }
+  });
+
+  it("uses six designed framing clusters with two background masses and one near edge", () => {
+    const puffs = cloudPuffs(40, false, -5.2);
+    const clusters = new Set(puffs.map((puff) => puff.clusterIndex));
+    const backgroundClusters = new Set(
+      puffs.filter((puff) => puff.role === "background").map((puff) => puff.clusterIndex),
+    );
+    const nearEdge = puffs.filter((puff) => puff.role === "near-edge");
+
+    expect(clusters).toHaveLength(CLOUD_LAYOUT_CONTRACT.compositionClusterCount);
+    expect(backgroundClusters).toHaveLength(CLOUD_LAYOUT_CONTRACT.backgroundClusterCount);
+    expect(nearEdge.length).toBeGreaterThan(0);
+    // The world road camera looks toward -Z, so the near-edge cluster remains
+    // on that authored camera-facing arc rather than drifting behind the eye.
+    expect(nearEdge.every((puff) => puff.position[2] < 0)).toBe(true);
+    expect(
+      puffs.filter((puff) => puff.role === "background").every((puff) => puff.position[2] < 0),
+    ).toBe(true);
+    expect(
+      nearEdge.reduce((sum, puff) => sum + Math.hypot(puff.position[0], puff.position[2]), 0) /
+        nearEdge.length,
+    ).toBeLessThan(
+      puffs
+        .filter((puff) => puff.role === "background")
+        .reduce((sum, puff) => sum + Math.hypot(puff.position[0], puff.position[2]), 0) /
+        puffs.filter((puff) => puff.role === "background").length,
+    );
+    expect(
+      Math.min(...puffs.filter((puff) => puff.role === "background").map((puff) => puff.scale)),
+    ).toBeGreaterThan(
+      Math.max(...puffs.filter((puff) => puff.role === "frame").map((puff) => puff.scale)),
+    );
+    expect(new Set(puffs.map((puff) => puff.scale.toFixed(3))).size).toBeGreaterThan(6);
+  });
+
   it("renders exactly two named InstancedMesh batches", () => {
-    const source = readFileSync(new URL("./cloud-sea-v2.tsx", import.meta.url), "utf8");
+    const source = readFileSync(new URL("./cloud-sea.tsx", import.meta.url), "utf8");
     expect(CUTE_CLOUD_BATCH_NAMES).toEqual(["cute-cloud-upper", "cute-cloud-underbelly"]);
     expect(CUTE_CLOUD_CONTRACT.drawBatches).toBe(2);
     expect(CUTE_CLOUD_CONTRACT.batchNames).toEqual(CUTE_CLOUD_BATCH_NAMES);
@@ -72,7 +129,7 @@ describe("cute cloud sea", () => {
   });
 
   it("depth-tests after the opaque scene without contributing cloud depth to AO", () => {
-    const source = readFileSync(new URL("./cloud-sea-v2.tsx", import.meta.url), "utf8");
+    const source = readFileSync(new URL("./cloud-sea.tsx", import.meta.url), "utf8");
     expect(CUTE_CLOUD_CONTRACT.renderOrder).toEqual({ underbelly: 3, upper: 4 });
     expect(source.match(/depthTest:\s*true/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
     expect(source.match(/depthWrite:\s*false/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);

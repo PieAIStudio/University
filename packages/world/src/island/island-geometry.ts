@@ -1,83 +1,458 @@
-/** Three.js render adapters for the serialisable IslandBlueprint. */
+/**
+ * Three.js adapters for the serialisable IslandBlueprint.
+ *
+ * The blueprint is deliberately renderer-free.  This file is the thin layer
+ * that turns the same outline, relief and centreline into either a small
+ * world-map silhouette or a readable course island.  Keeping the conversion
+ * here means a future game can reuse the generator without importing React.
+ */
 import * as THREE from "three";
 
 import {
-  islandSurfaceY,
-  type BlueprintOutlinePoint,
+  sampleIslandSurface,
   type IslandBlueprint,
+  type IslandOutlinePoint,
+  type IslandPoint,
 } from "./island-blueprint.js";
-import { ISLAND_PALETTE } from "./island.js";
+import { hash } from "./random.js";
 
-export type IslandDetail = "course" | "world";
+export type IslandGeometryDetail = "course" | "world";
 
-export interface BlueprintIslandShape {
-  readonly geometry: THREE.BufferGeometry;
-  readonly slots: readonly THREE.Vector3[];
-  readonly horizontalScale: number;
-  readonly heightScale: number;
+export interface IslandGeometryShape {
+  readonly terrain: THREE.BufferGeometry;
   readonly bounds: {
     readonly halfX: number;
     readonly halfZ: number;
     readonly depth: number;
   };
+  readonly scale: number;
+  readonly point: (x: number, z: number) => THREE.Vector3;
 }
 
-function pushColour(target: number[], hex: number, tint: number, lightness = 0): void {
-  const colour = new THREE.Color(hex).offsetHSL(tint, 0, lightness);
-  target.push(colour.r, colour.g, colour.b);
-}
-
-function pushTop(
-  positions: number[],
-  colours: number[],
+export function islandGeometryScale(
   blueprint: IslandBlueprint,
-  point: BlueprintOutlinePoint,
+  detail: IslandGeometryDetail,
+  targetRadius?: number,
+): number {
+  return targetRadius
+    ? targetRadius / blueprint.bounds.maxHalf
+    : detail === "world"
+      ? 1 / blueprint.bounds.maxHalf
+      : 1;
+}
+
+const GRASS = new THREE.Color(0x74a957);
+const GRASS_LIGHT = new THREE.Color(0x9cc66a);
+const GRASS_DARK = new THREE.Color(0x507c4b);
+const GRASS_WARM = new THREE.Color(0x87b85a);
+const CLIFF = new THREE.Color(0x7c7467);
+const CLIFF_DARK = new THREE.Color(0x4e5055);
+// Muted earth colours deliberately sit between the meadow's olive greens and
+// the cliff: they describe exposed soil without becoming a painted brown line.
+const DIRT = new THREE.Color(0x806d4e);
+const DIRT_LIGHT = new THREE.Color(0xa28b65);
+const DIRT_DARK = new THREE.Color(0x655741);
+const SOIL_HINT = new THREE.Color(0x8a765a);
+
+function sampleCount(detail: IslandGeometryDetail, outline: readonly IslandOutlinePoint[]) {
+  return detail === "course" ? outline.length : Math.min(32, Math.max(16, outline.length));
+}
+
+/**
+ * These are the actual radial rings emitted by the top terrain mesh.  Keeping
+ * the list in one place lets overlays (the soil route, grass roots, and
+ * dressing) ask for the height of the rendered mesh instead of the ideal
+ * continuous surface, which avoids tiny floating/embedded seams between the
+ * authored surface and its low-poly presentation.
+ */
+const COURSE_TOP_RADIALS = [
+  0.06, 0.13, 0.22, 0.32, 0.43, 0.54, 0.65, 0.74, 0.82, 0.88, 0.93, 0.97, 1,
+] as const;
+const WORLD_TOP_RADIALS = [0.22, 0.52, 0.82, 1] as const;
+
+function topRadials(detail: IslandGeometryDetail): readonly number[] {
+  return detail === "course" ? COURSE_TOP_RADIALS : WORLD_TOP_RADIALS;
+}
+
+function outlineAt(
+  outline: readonly IslandOutlinePoint[],
+  index: number,
+  count: number,
+): IslandOutlinePoint {
+  const at = (index / count) * outline.length;
+  const left = Math.floor(at) % outline.length;
+  const right = (left + 1) % outline.length;
+  const amount = at - Math.floor(at);
+  const a = outline[left]!;
+  const b = outline[right]!;
+  return {
+    angle: a.angle + (b.angle - a.angle) * amount,
+    scale: a.scale + (b.scale - a.scale) * amount,
+    x: a.x + (b.x - a.x) * amount,
+    z: a.z + (b.z - a.z) * amount,
+  };
+}
+
+interface TopMeshVertex {
+  readonly x: number;
+  readonly z: number;
+  readonly y: number;
+}
+
+function topMeshVertex(
+  blueprint: IslandBlueprint,
   radial: number,
-  horizontalScale: number,
-  heightScale: number,
-): void {
+  index: number,
+  segments: number,
+): TopMeshVertex {
+  if (radial === 0) {
+    return { x: 0, z: 0, y: sampleIslandSurface(blueprint, 0, 0).y };
+  }
+  const point = outlineAt(blueprint.outline, index, segments);
   const x = point.x * radial;
   const z = point.z * radial;
-  positions.push(
-    x * horizontalScale,
-    islandSurfaceY(blueprint, x, z) * heightScale,
-    z * horizontalScale,
-  );
-  const dry =
-    radial > 0.78 || (radial > 0.55 && Math.sin(point.angle * 5 + blueprint.terrainPhase) > 0.66);
-  pushColour(
-    colours,
-    dry ? ISLAND_PALETTE.grassDry : ISLAND_PALETTE.grass,
-    blueprint.tint,
-    radial < 0.35 ? 0.025 : 0,
-  );
+  return { x, z, y: sampleIslandSurface(blueprint, x, z).y };
 }
 
-/** Render the same outline as detailed course ground or a semantic world icon. */
-export function buildBlueprintIsland(
-  blueprint: IslandBlueprint,
-  detail: IslandDetail,
-  targetRadius?: number,
-): BlueprintIslandShape {
-  const horizontalScale = targetRadius ? targetRadius / blueprint.bounds.maxHalf : 1;
-  const heightScale = targetRadius ? targetRadius / 6.2 : 1;
-  const radials = detail === "course" ? [0.18, 0.36, 0.56, 0.76, 1] : [0.34, 0.68, 1];
-  const positions: number[] = [0, islandSurfaceY(blueprint, 0, 0) * heightScale, 0];
-  const colours: number[] = [];
-  const indices: number[] = [];
-  pushColour(colours, ISLAND_PALETTE.grass, blueprint.tint, 0.035);
+function barycentricHeight(
+  point: IslandPoint,
+  first: TopMeshVertex,
+  second: TopMeshVertex,
+  third: TopMeshVertex,
+): number | null {
+  const denominator =
+    (second.z - third.z) * (first.x - third.x) + (third.x - second.x) * (first.z - third.z);
+  if (Math.abs(denominator) < 1e-8) return null;
+  const firstWeight =
+    ((second.z - third.z) * (point.x - third.x) + (third.x - second.x) * (point.z - third.z)) /
+    denominator;
+  const secondWeight =
+    ((third.z - first.z) * (point.x - third.x) + (first.x - third.x) * (point.z - third.z)) /
+    denominator;
+  const thirdWeight = 1 - firstWeight - secondWeight;
+  if (firstWeight < -1e-5 || secondWeight < -1e-5 || thirdWeight < -1e-5) return null;
+  return first.y * firstWeight + second.y * secondWeight + third.y * thirdWeight;
+}
 
-  for (const radial of radials) {
-    for (const point of blueprint.outline) {
-      pushTop(positions, colours, blueprint, point, radial, horizontalScale, heightScale);
+/**
+ * Sample the height of the low-poly top mesh generated by `buildTerrain`.
+ *
+ * `sampleIslandSurface` remains the canonical continuous authoring rule;
+ * this adapter is intentionally renderer-facing and only interpolates the
+ * same vertices/triangles that are emitted for a requested semantic detail.
+ */
+export function sampleIslandTerrainTop(
+  blueprint: IslandBlueprint,
+  detail: IslandGeometryDetail,
+  x: number,
+  z: number,
+): ReturnType<typeof sampleIslandSurface> {
+  const continuous = sampleIslandSurface(blueprint, x, z);
+  if (!continuous.inside) return continuous;
+
+  const segments = sampleCount(detail, blueprint.outline);
+  const radials = topRadials(detail);
+  const normalX = x / blueprint.bounds.halfX;
+  const normalZ = z / blueprint.bounds.halfZ;
+  const angle = (Math.atan2(normalZ, normalX) + Math.PI * 2) % (Math.PI * 2);
+  const sector = Math.min(segments - 1, Math.floor((angle / (Math.PI * 2)) * segments));
+  const nextSector = (sector + 1) % segments;
+  const radial = continuous.radial;
+
+  const tryTriangle = (
+    first: TopMeshVertex,
+    second: TopMeshVertex,
+    third: TopMeshVertex,
+  ): number | null => barycentricHeight({ x, z }, first, second, third);
+
+  let y: number | null = null;
+  if (radial <= radials[0]!) {
+    y = tryTriangle(
+      topMeshVertex(blueprint, 0, 0, segments),
+      topMeshVertex(blueprint, radials[0]!, sector, segments),
+      topMeshVertex(blueprint, radials[0]!, nextSector, segments),
+    );
+  } else {
+    for (let ring = 1; ring < radials.length && y === null; ring += 1) {
+      if (radial > radials[ring]!) continue;
+      const inner = radials[ring - 1]!;
+      const outer = radials[ring]!;
+      const innerSector = topMeshVertex(blueprint, inner, sector, segments);
+      const innerNext = topMeshVertex(blueprint, inner, nextSector, segments);
+      const outerSector = topMeshVertex(blueprint, outer, sector, segments);
+      const outerNext = topMeshVertex(blueprint, outer, nextSector, segments);
+      y =
+        tryTriangle(innerSector, innerNext, outerSector) ??
+        tryTriangle(innerNext, outerNext, outerSector);
     }
   }
 
-  const segments = blueprint.outline.length;
-  const firstRing = 1;
+  // A point can be inside the 96-sample authored outline while falling just
+  // outside a deliberately coarser world polygon. In that rare case, the
+  // continuous sample is safer than returning an invalid height.
+  return { ...continuous, y: y ?? continuous.y };
+}
+
+function colorForTop(
+  seed: string,
+  x: number,
+  z: number,
+  radial: number,
+  height: number,
+): THREE.Color {
+  // Colour follows broad world-space patches instead of the triangulation.
+  // Random colour per vertex produced radial spokes from the centre fan — a
+  // topology debug view, not grass. These three low frequencies make soft
+  // meadow regions that stay deterministic without shipping another texture.
+  const phase = hash(`${seed}/terrain-colour`) * Math.PI * 2;
+  const patch =
+    (Math.sin(x * 0.105 + phase) +
+      Math.cos(z * 0.087 - phase * 0.7) +
+      Math.sin((x + z) * 0.052 + phase * 0.31)) /
+    3;
+  const colour = GRASS.clone();
+  if (patch > 0.2) colour.lerp(GRASS_WARM, Math.min(0.72, patch));
+  if (patch < -0.18) colour.lerp(GRASS_DARK, Math.min(0.46, -patch));
+  if (height > 2.75) colour.lerp(GRASS_LIGHT, Math.min(0.34, (height - 2.75) * 0.18));
+  if (radial > 0.86) colour.lerp(GRASS_LIGHT, ((radial - 0.86) / 0.14) * 0.34);
+  return colour;
+}
+
+function pushColor(target: number[], color: THREE.Color): void {
+  target.push(color.r, color.g, color.b);
+}
+
+function smoothUnit(value: number): number {
+  return value * value * (3 - 2 * value);
+}
+
+/** Stable low-frequency variation for a hand-worn-looking route. */
+function pathNoise(seed: string, channel: string, position: number): number {
+  const left = Math.floor(position);
+  const amount = smoothUnit(position - left);
+  const a = hash(`${seed}/dirt-path/${channel}/${left}`);
+  const b = hash(`${seed}/dirt-path/${channel}/${left + 1}`);
+  return a + (b - a) * amount;
+}
+
+function pathHalfWidth(
+  blueprint: IslandBlueprint,
+  index: number,
+  count: number,
+  baseHalfWidth: number,
+  side: "left" | "right",
+): number {
+  const progress = count <= 1 ? 0 : index / (count - 1);
+  const broadPhase = hash(`${blueprint.seed}/dirt-path/broad-phase`) * Math.PI * 2;
+  const broad = 0.5 + Math.sin(progress * Math.PI * 4.6 + broadPhase) * 0.5;
+  const local = pathNoise(blueprint.seed, `width-${side}`, index / 3.2);
+  // A route is hand-worn ground, not a tile strip. The broad term makes the
+  // path breathe over whole bends; the local term breaks its two edges apart
+  // so width changes remain visible from the aerial course camera.
+  return baseHalfWidth * (0.66 + broad * 0.22 + local * 0.38);
+}
+
+function pathSoilColour(
+  blueprint: IslandBlueprint,
+  index: number,
+  side: "left" | "right",
+  x: number,
+  z: number,
+  radial: number,
+  height: number,
+): THREE.Color {
+  const tone =
+    pathNoise(blueprint.seed, "colour-shared", index / 3.4) * 0.72 +
+    pathNoise(blueprint.seed, `colour-${side}`, index / 4.8) * 0.28;
+  const colour = colorForTop(blueprint.seed, x, z, radial, height).multiplyScalar(
+    0.68 + tone * 0.16,
+  );
+  // Keep a trace of the meadow at the verge, but let the worn centre read as
+  // earth. A 24% blend looked like a dark green stripe in the first pass.
+  colour.lerp(SOIL_HINT, 0.66);
+  if (tone < 0.5) colour.lerp(DIRT_DARK, 0.22);
+  if (tone > 0.72) colour.lerp(DIRT_LIGHT, 0.19);
+  return colour;
+}
+
+/** Keep a wide bend from ever punching through the authored shoreline. */
+function safePathSurface(
+  blueprint: IslandBlueprint,
+  centre: { readonly x: number; readonly z: number },
+  target: { readonly x: number; readonly z: number },
+): {
+  readonly point: { readonly x: number; readonly z: number };
+  readonly sample: ReturnType<typeof sampleIslandSurface>;
+} {
+  const direct = sampleIslandSurface(blueprint, target.x, target.z);
+  if (direct.inside) {
+    return {
+      point: target,
+      sample: sampleIslandTerrainTop(blueprint, "course", target.x, target.z),
+    };
+  }
+  // The route centre is inside by construction. Binary-searching toward an
+  // over-wide edge preserves the path silhouette while avoiding a y=0 spike
+  // or a floating quad when an outline is particularly tight.
+  let low = 0;
+  let high = 1;
+  let bestPoint = centre;
+  let bestSample = sampleIslandTerrainTop(blueprint, "course", centre.x, centre.z);
+  for (let iteration = 0; iteration < 12; iteration += 1) {
+    const amount = (low + high) * 0.5;
+    const point = {
+      x: centre.x + (target.x - centre.x) * amount,
+      z: centre.z + (target.z - centre.z) * amount,
+    };
+    const sample = sampleIslandSurface(blueprint, point.x, point.z);
+    if (sample.inside) {
+      low = amount;
+      bestPoint = point;
+      bestSample = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
+    } else {
+      high = amount;
+    }
+  }
+  return { point: bestPoint, sample: bestSample };
+}
+
+/** Append the flush soil strip to the terrain mesh; it creates no second draw. */
+function appendSoilPath(
+  blueprint: IslandBlueprint,
+  scale: number,
+  positions: number[],
+  colors: number[],
+  indices: number[],
+): void {
+  const points = blueprint.centerline;
+  const baseHalfWidth = blueprint.route.roadWidth / 2 + blueprint.route.shoulderWidth;
+  for (let index = 0; index < points.length; index += 1) {
+    const point = points[index]!;
+    const before = points[Math.max(0, index - 1)]!;
+    const after = points[Math.min(points.length - 1, index + 1)]!;
+    const dx = after.x - before.x;
+    const dz = after.z - before.z;
+    const length = Math.hypot(dx, dz) || 1;
+    const nx = -dz / length;
+    const nz = dx / length;
+    const leftWidth = pathHalfWidth(blueprint, index, points.length, baseHalfWidth, "left");
+    const rightWidth = pathHalfWidth(blueprint, index, points.length, baseHalfWidth, "right");
+    const crossSection = [
+      {
+        x: point.x + nx * leftWidth,
+        z: point.z + nz * leftWidth,
+        side: "left" as const,
+        outer: true,
+      },
+      {
+        x: point.x + nx * leftWidth * 0.62,
+        z: point.z + nz * leftWidth * 0.62,
+        side: "left" as const,
+        outer: false,
+      },
+      {
+        x: point.x - nx * rightWidth * 0.62,
+        z: point.z - nz * rightWidth * 0.62,
+        side: "right" as const,
+        outer: false,
+      },
+      {
+        x: point.x - nx * rightWidth,
+        z: point.z - nz * rightWidth,
+        side: "right" as const,
+        outer: true,
+      },
+    ];
+    for (const vertex of crossSection) {
+      const safe = safePathSurface(blueprint, point, vertex);
+      const sample = safe.sample;
+      positions.push(safe.point.x * scale, (sample.y + 0.002) * scale, safe.point.z * scale);
+      const meadow = colorForTop(
+        blueprint.seed,
+        safe.point.x,
+        safe.point.z,
+        sample.radial,
+        sample.y,
+      );
+      const colour = vertex.outer
+        ? meadow.lerp(
+            pathSoilColour(
+              blueprint,
+              index,
+              vertex.side,
+              safe.point.x,
+              safe.point.z,
+              sample.radial,
+              sample.y,
+            ),
+            0.22,
+          )
+        : pathSoilColour(
+            blueprint,
+            index,
+            vertex.side,
+            safe.point.x,
+            safe.point.z,
+            sample.radial,
+            sample.y,
+          );
+      pushColor(colors, colour);
+    }
+    if (index === points.length - 1) continue;
+    const at = positions.length / 3 - 4;
+    const next = at + 4;
+    for (let band = 0; band < 3; band += 1) {
+      indices.push(at + band, next + band, at + band + 1);
+      indices.push(at + band + 1, next + band, next + band + 1);
+    }
+  }
+}
+
+function addTopVertex(
+  positions: number[],
+  colors: number[],
+  blueprint: IslandBlueprint,
+  x: number,
+  z: number,
+  scale: number,
+  _index: number,
+): void {
+  const sample = sampleIslandSurface(blueprint, x, z);
+  positions.push(x * scale, sample.y * scale, z * scale);
+  pushColor(colors, colorForTop(blueprint.seed, x, z, sample.radial, sample.y));
+}
+
+function buildTerrain(
+  blueprint: IslandBlueprint,
+  detail: IslandGeometryDetail,
+  scale: number,
+  depth: number,
+): THREE.BufferGeometry {
+  const segments = sampleCount(detail, blueprint.outline);
+  // The inner rings produce a broad, visibly undulating plateau.  A single
+  // centre fan is cheap but reads as a cone; six rings give the eye enough
+  // information to see a real playable landscape.
+  const radials = topRadials(detail);
+  const positions: number[] = [];
+  const colors: number[] = [];
+  const indices: number[] = [];
+
+  const centre = sampleIslandSurface(blueprint, 0, 0);
+  positions.push(0, centre.y * scale, 0);
+  pushColor(colors, colorForTop(blueprint.seed, 0, 0, centre.radial, centre.y));
+  for (let ring = 0; ring < radials.length; ring += 1) {
+    const radial = radials[ring]!;
+    for (let index = 0; index < segments; index += 1) {
+      const point = outlineAt(blueprint.outline, index, segments);
+      const x = point.x * radial;
+      const z = point.z * radial;
+      addTopVertex(positions, colors, blueprint, x, z, scale, ring * segments + index);
+    }
+  }
+
   for (let index = 0; index < segments; index += 1) {
     const next = (index + 1) % segments;
-    indices.push(0, firstRing + next, firstRing + index);
+    indices.push(0, 1 + next, 1 + index);
   }
   for (let ring = 0; ring < radials.length - 1; ring += 1) {
     const inner = 1 + ring * segments;
@@ -88,28 +463,33 @@ export function buildBlueprintIsland(
       indices.push(inner + next, outer + next, outer + index);
     }
   }
+  if (detail === "course") appendSoilPath(blueprint, scale, positions, colors, indices);
 
-  // Duplicate the shoreline so hard cliff normals do not smooth into turf.
-  const cliffRings = [
-    { scale: 1, depth: 0, colour: ISLAND_PALETTE.grassDry },
-    { scale: 0.98, depth: -1.15, colour: ISLAND_PALETTE.rock },
-    { scale: 0.73, depth: -4.05, colour: ISLAND_PALETTE.rock },
-    { scale: 0.34, depth: -8.05, colour: ISLAND_PALETTE.rockDeep },
+  // A broad, faceted cliff and a tapered root are the silhouette cue that the
+  // island is flying.  The tech ring is a separate component so it can be LOD
+  // switched without rebuilding the terrain mesh.
+  const rings = [
+    { radial: 1, depth: 0, color: GRASS_DARK },
+    { radial: 0.99, depth: -depth * 0.18, color: CLIFF },
+    { radial: 0.82, depth: -depth * 0.43, color: CLIFF },
+    { radial: 0.55, depth: -depth * 0.75, color: CLIFF_DARK },
+    { radial: 0.22, depth: -depth * 0.98, color: CLIFF_DARK },
   ] as const;
   const cliffStart = positions.length / 3;
-  for (let ringIndex = 0; ringIndex < cliffRings.length; ringIndex += 1) {
-    const ring = cliffRings[ringIndex]!;
-    for (const point of blueprint.outline) {
-      const edgeY = islandSurfaceY(blueprint, point.x, point.z);
+  for (let ring = 0; ring < rings.length; ring += 1) {
+    const profile = rings[ring]!;
+    for (let index = 0; index < segments; index += 1) {
+      const point = outlineAt(blueprint.outline, index, segments);
+      const sample = sampleIslandSurface(blueprint, point.x, point.z);
       positions.push(
-        point.x * ring.scale * horizontalScale,
-        (edgeY + ring.depth) * heightScale,
-        point.z * ring.scale * horizontalScale,
+        point.x * profile.radial * scale,
+        (sample.y + profile.depth) * scale,
+        point.z * profile.radial * scale,
       );
-      pushColour(colours, ring.colour, blueprint.tint, ringIndex === 1 ? 0.015 : 0);
+      pushColor(colors, profile.color);
     }
   }
-  for (let ring = 0; ring < cliffRings.length - 1; ring += 1) {
+  for (let ring = 0; ring < rings.length - 1; ring += 1) {
     const upper = cliffStart + ring * segments;
     const lower = upper + segments;
     for (let index = 0; index < segments; index += 1) {
@@ -118,46 +498,69 @@ export function buildBlueprintIsland(
       indices.push(upper + next, lower + next, lower + index);
     }
   }
-
   const bottom = positions.length / 3;
-  positions.push(0, -8.1 * heightScale, 0);
-  pushColour(colours, ISLAND_PALETTE.rockDeep, blueprint.tint, -0.015);
-  const lastRing = cliffStart + (cliffRings.length - 1) * segments;
+  positions.push(0, -depth * 1.08 * scale, 0);
+  pushColor(colors, CLIFF_DARK);
+  const last = cliffStart + (rings.length - 1) * segments;
   for (let index = 0; index < segments; index += 1) {
     const next = (index + 1) % segments;
-    indices.push(bottom, lastRing + index, lastRing + next);
+    indices.push(bottom, last + index, last + next);
   }
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute("color", new THREE.Float32BufferAttribute(colours, 3));
+  geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
+  return geometry;
+}
 
-  const wantedSlots =
-    detail === "course"
-      ? blueprint.surfaceSlots.length
-      : Math.min(
-          blueprint.surfaceSlots.length,
-          Math.max(8, Math.round((targetRadius ?? 2) ** 2 * 1.45)),
-        );
-  const slots = blueprint.surfaceSlots
-    .slice(0, wantedSlots)
-    .map(
-      (slot) =>
-        new THREE.Vector3(slot.x * horizontalScale, slot.y * heightScale, slot.z * horizontalScale),
-    );
+export function buildIslandGeometry(
+  blueprint: IslandBlueprint,
+  detail: IslandGeometryDetail,
+  targetRadius?: number,
+): IslandGeometryShape {
+  const scale = islandGeometryScale(blueprint, detail, targetRadius);
+  // The course camera lives on the surface, where a seven-unit root is enough.
+  // The world map compresses a long island into a small icon; scaling that same
+  // absolute depth makes its underside a one-pixel line. Preserve a readable
+  // floating-island silhouette in that projection without duplicating the
+  // outline or terrain data.
+  const depth = detail === "world" ? blueprint.bounds.maxHalf * 0.54 : blueprint.underside.depth;
   return {
-    geometry,
-    slots,
-    horizontalScale,
-    heightScale,
+    terrain: buildTerrain(blueprint, detail, scale, depth),
     bounds: {
-      halfX: blueprint.bounds.halfX * horizontalScale,
-      halfZ: blueprint.bounds.halfZ * horizontalScale,
-      depth: 8.1 * heightScale,
+      halfX: blueprint.bounds.halfX * scale,
+      halfZ: blueprint.bounds.halfZ * scale,
+      depth: depth * scale,
+    },
+    scale,
+    point: (x, z) => {
+      const sample = sampleIslandSurface(blueprint, x, z);
+      return new THREE.Vector3(x * scale, sample.y * scale, z * scale);
     },
   };
 }
+
+/** Stable key useful to renderer caches and worker-side previews. */
+export function islandGeometryKey(
+  blueprint: IslandBlueprint,
+  detail: IslandGeometryDetail,
+  targetRadius?: number,
+): string {
+  return `${blueprint.version}/${blueprint.layoutRevision}/${blueprint.seed}/${detail}/${targetRadius ?? "full"}`;
+}
+
+/** Palette exports keep art-direction tests independent of JSX. */
+export const ISLAND_GEOMETRY_PALETTE = {
+  grass: GRASS.getHex(),
+  grassLight: GRASS_LIGHT.getHex(),
+  grassDark: GRASS_DARK.getHex(),
+  cliff: CLIFF.getHex(),
+  cliffDark: CLIFF_DARK.getHex(),
+  dirt: DIRT.getHex(),
+  dirtLight: DIRT_LIGHT.getHex(),
+  dirtDark: DIRT_DARK.getHex(),
+} as const;

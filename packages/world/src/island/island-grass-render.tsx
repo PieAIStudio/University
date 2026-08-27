@@ -1,5 +1,5 @@
 /**
- * R3F adapter for the bounded IslandGrass V2 plan.
+ * R3F adapter for the bounded IslandGrass plan.
  *
  * One course owns one low-poly blade geometry, one material, and one
  * InstancedMesh. Wind updates the material's uniform through the Stage-owned
@@ -12,20 +12,20 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import {
-  planIslandGrassV2,
-  type IslandGrassPlanV2,
-  type IslandGrassPlanOptionsV2,
-  type IslandGrassSafetyZoneV2,
-  type IslandGrassRenderTierV2,
-} from "./island-grass-v2.js";
-import { islandGeometryV2Scale, type IslandGeometryV2Detail } from "./island-geometry-v2.js";
-import type { IslandBlueprintV2 } from "./island-blueprint-v2.js";
+  planIslandGrass,
+  type IslandGrassPlan,
+  type IslandGrassPlanOptions,
+  type IslandGrassSafetyZone,
+  type IslandGrassRenderTier,
+} from "./island-grass.js";
+import { islandGeometryScale, type IslandGeometryDetail } from "./island-geometry.js";
+import type { IslandBlueprint } from "./island-blueprint.js";
 import { renderTier } from "../sky/tier.js";
 
 const DEFAULT_GRASS_BOTTOM = new THREE.Color(0x4f7c38);
 const DEFAULT_GRASS_TOP = new THREE.Color(0x9fc862);
 
-export interface IslandGrassStyleV2 {
+export interface IslandGrassStyle {
   readonly bottom?: THREE.ColorRepresentation;
   readonly top?: THREE.ColorRepresentation;
   readonly windStrength?: number;
@@ -34,13 +34,13 @@ export interface IslandGrassStyleV2 {
   readonly windDirection?: readonly [number, number];
 }
 
-export interface IslandGrassV2Props {
-  readonly blueprint: IslandBlueprintV2;
-  readonly detail: IslandGeometryV2Detail;
+export interface IslandGrassProps {
+  readonly blueprint: IslandBlueprint;
+  readonly detail: IslandGeometryDetail;
   readonly targetRadius?: number;
-  readonly style?: IslandGrassStyleV2;
-  readonly options?: Omit<IslandGrassPlanOptionsV2, "tier" | "safetyZones"> & {
-    readonly safetyZones?: readonly IslandGrassSafetyZoneV2[];
+  readonly style?: IslandGrassStyle;
+  readonly options?: Omit<IslandGrassPlanOptions, "tier" | "safetyZones"> & {
+    readonly safetyZones?: readonly IslandGrassSafetyZone[];
   };
 }
 
@@ -62,7 +62,7 @@ function colorOr(value: THREE.ColorRepresentation | undefined, fallback: THREE.C
   return value === undefined ? fallback.clone() : new THREE.Color(value);
 }
 
-function styleValues(style: IslandGrassStyleV2 | undefined) {
+function styleValues(style: IslandGrassStyle | undefined) {
   const direction = style?.windDirection ?? [0.78, 0.62];
   const length = Math.hypot(direction[0] ?? 0, direction[1] ?? 0) || 1;
   return {
@@ -75,7 +75,7 @@ function styleValues(style: IslandGrassStyleV2 | undefined) {
   };
 }
 
-function createGrassUniforms(style?: IslandGrassStyleV2): GrassUniforms {
+function createGrassUniforms(style?: IslandGrassStyle): GrassUniforms {
   const values = styleValues(style);
   return {
     uTime: { value: 0 },
@@ -88,7 +88,7 @@ function createGrassUniforms(style?: IslandGrassStyleV2): GrassUniforms {
   };
 }
 
-function updateGrassUniforms(uniforms: GrassUniforms, style?: IslandGrassStyleV2): void {
+function updateGrassUniforms(uniforms: GrassUniforms, style?: IslandGrassStyle): void {
   const values = styleValues(style);
   uniforms.uWindStrength.value = values.windStrength;
   uniforms.uWindSpeed.value = values.windSpeed;
@@ -99,7 +99,7 @@ function updateGrassUniforms(uniforms: GrassUniforms, style?: IslandGrassStyleV2
 }
 
 /** One shared three-plane tuft, deliberately tiny enough for a course field. */
-export function createIslandGrassBladeGeometryV2(): THREE.BufferGeometry {
+export function createIslandGrassBladeGeometry(): THREE.BufferGeometry {
   const segments = 2;
   const planes = 3;
   const verticesPerPlane = segments * 2 + 1;
@@ -193,7 +193,7 @@ const GRASS_FRAGMENT_SHADER = /* glsl */ `
   }
 `;
 
-function createIslandGrassMaterialV2(style?: IslandGrassStyleV2): THREE.ShaderMaterial {
+function createIslandGrassMaterial(style?: IslandGrassStyle): THREE.ShaderMaterial {
   const uniforms = createGrassUniforms(style);
   const material = new THREE.ShaderMaterial({
     uniforms,
@@ -206,7 +206,7 @@ function createIslandGrassMaterialV2(style?: IslandGrassStyleV2): THREE.ShaderMa
     // Stage owns the one ACES/sRGB grade. Grass emits working-linear colour.
     toneMapped: false,
   });
-  material.name = "IslandGrassV2Material";
+  material.name = "IslandGrassMaterial";
   return material;
 }
 
@@ -215,8 +215,8 @@ function materialUniforms(material: THREE.Material): GrassUniforms | null {
   return material.uniforms as unknown as GrassUniforms;
 }
 
-/** Resources made by IslandGrassV2 only; never pass terrain resources here. */
-export function disposeIslandGrassV2Resources(
+/** Resources made by IslandGrass only; never pass terrain resources here. */
+export function disposeIslandGrassResources(
   geometry: THREE.BufferGeometry,
   material: THREE.Material,
 ): void {
@@ -225,9 +225,9 @@ export function disposeIslandGrassV2Resources(
 }
 
 function mergeOptions(
-  options: IslandGrassV2Props["options"],
-  tier: IslandGrassRenderTierV2,
-): IslandGrassPlanOptionsV2 {
+  options: IslandGrassProps["options"],
+  tier: IslandGrassRenderTier,
+): IslandGrassPlanOptions {
   return {
     ...options,
     tier,
@@ -235,32 +235,26 @@ function mergeOptions(
 }
 
 /** World projection deliberately mounts no hooks, mesh, geometry, or material. */
-export function IslandGrassV2(props: IslandGrassV2Props) {
+export function IslandGrass(props: IslandGrassProps) {
   if (props.detail === "world") return null;
-  return <CourseIslandGrassV2 {...props} />;
+  return <CourseIslandGrass {...props} />;
 }
 
 /** One bounded, instanced course field inside the Stage-owned render loop. */
-function CourseIslandGrassV2({
-  blueprint,
-  detail,
-  targetRadius,
-  style,
-  options,
-}: IslandGrassV2Props) {
+function CourseIslandGrass({ blueprint, detail, targetRadius, style, options }: IslandGrassProps) {
   const tier = renderTier();
   const planOptions = useMemo(() => mergeOptions(options, tier), [options, tier]);
   const plan = useMemo(
-    () => planIslandGrassV2(blueprint, detail, planOptions),
+    () => planIslandGrass(blueprint, detail, planOptions),
     [blueprint, detail, planOptions],
   );
-  const scale = islandGeometryV2Scale(blueprint, detail, targetRadius);
+  const scale = islandGeometryScale(blueprint, detail, targetRadius);
 
   if (plan.placements.length === 0) return null;
   return <CourseIslandGrassField plan={plan} scale={scale} style={style} />;
 }
 
-interface IslandGrassOwnedResourcesV2 {
+interface IslandGrassOwnedResources {
   readonly geometry: THREE.BufferGeometry;
   readonly material: THREE.ShaderMaterial;
 }
@@ -275,25 +269,25 @@ function CourseIslandGrassField({
   scale,
   style,
 }: {
-  readonly plan: IslandGrassPlanV2;
+  readonly plan: IslandGrassPlan;
   readonly scale: number;
-  readonly style?: IslandGrassStyleV2;
+  readonly style?: IslandGrassStyle;
 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
-  const ownedRef = useRef<IslandGrassOwnedResourcesV2 | null>(null);
-  const [owned, setOwned] = useState<IslandGrassOwnedResourcesV2 | null>(null);
+  const ownedRef = useRef<IslandGrassOwnedResources | null>(null);
+  const [owned, setOwned] = useState<IslandGrassOwnedResources | null>(null);
 
   useLayoutEffect(() => {
-    const resources: IslandGrassOwnedResourcesV2 = {
-      geometry: createIslandGrassBladeGeometryV2(),
-      material: createIslandGrassMaterialV2(style),
+    const resources: IslandGrassOwnedResources = {
+      geometry: createIslandGrassBladeGeometry(),
+      material: createIslandGrassMaterial(style),
     };
     ownedRef.current = resources;
     setOwned(resources);
 
     return () => {
       if (ownedRef.current === resources) ownedRef.current = null;
-      disposeIslandGrassV2Resources(resources.geometry, resources.material);
+      disposeIslandGrassResources(resources.geometry, resources.material);
     };
   }, []);
 

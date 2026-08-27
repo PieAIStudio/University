@@ -9,7 +9,7 @@ import {
   WORLD_POLAR,
 } from "./controls";
 import { courseIslandScale } from "../Maps";
-import { islandBlueprint, islandSurfaceY } from "../island/island-blueprint.js";
+import { islandBlueprint, sampleIslandSurface } from "../island/island-blueprint.js";
 import { radiusForLessons } from "../course/layout";
 
 /*
@@ -47,8 +47,12 @@ describe("the eye stays above the ground", () => {
   it("clears the course island, including the longest course", () => {
     for (const lessons of [1, 12, 41]) {
       const scale = courseIslandScale(lessons);
-      const blueprint = islandBlueprint("course", "course", lessons);
-      const peak = islandSurfaceY(blueprint, 0, 0) * scale.y;
+      const blueprint = islandBlueprint({
+        studyId: "course",
+        courseId: "course",
+        lessonCount: lessons,
+      });
+      const peak = sampleIslandSurface(blueprint, 0, 0).y * scale.y;
       expect(COURSE_DISTANCE_MIN * Math.cos(COURSE_POLAR)).toBeGreaterThan(peak);
     }
   });

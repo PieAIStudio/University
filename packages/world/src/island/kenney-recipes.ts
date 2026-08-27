@@ -10,7 +10,7 @@
  * cannot hide a third physical pack from the budget.
  */
 
-import type { IslandThemeSelectionV2 } from "./island-blueprint-v2.js";
+import type { IslandThemeSelection } from "./island-blueprint.js";
 import { hash } from "./random.js";
 
 export const KENNEY_CATALOG_SCHEMA_VERSION = 1 as const;
@@ -783,7 +783,7 @@ export const ISLAND_RECIPE_ASSIGNMENTS: Readonly<Record<string, string>> = {
 export function islandThemeSelectionForCourse(
   studyId: string,
   courseId: string,
-): IslandThemeSelectionV2 {
+): IslandThemeSelection {
   const key = `${studyId}/${courseId}`;
   const explicit = ISLAND_RECIPE_ASSIGNMENTS[key];
   const recipe = explicit

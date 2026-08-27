@@ -5,12 +5,12 @@ import * as THREE from "three";
 import { AssetField, type Placement } from "../kit.js";
 import manifestJson from "./kenney-r01-assets.json";
 import {
-  planIslandDressingV2,
-  type IslandDressingDetailV2,
-  type IslandDressingPlanV2,
-} from "./island-dressing-v2.js";
-import { islandGeometryV2Scale } from "./island-geometry-v2.js";
-import type { IslandBlueprintV2 } from "./island-blueprint-v2.js";
+  planIslandDressing,
+  type IslandDressingDetail,
+  type IslandDressingPlan,
+} from "./island-dressing.js";
+import { islandGeometryScale } from "./island-geometry.js";
+import type { IslandBlueprint } from "./island-blueprint.js";
 
 interface RuntimeAsset {
   readonly type: "model";
@@ -29,7 +29,7 @@ const runtimeAssets = new Map<string, RuntimeAsset>(
   manifest.assets.map((asset) => [`${asset.pack}/${asset.assetId}`, asset] as const),
 );
 
-export interface IslandDressingFieldV2 {
+export interface IslandDressingField {
   readonly key: string;
   readonly pack: string;
   readonly src: string;
@@ -40,11 +40,11 @@ export interface IslandDressingFieldV2 {
  * Resolve data before JSX so missing whitelist entries are measurable in a
  * unit test and never become one-off loader logic in the scene.
  */
-export function islandDressingFieldsV2(
-  plan: IslandDressingPlanV2,
+export function islandDressingFields(
+  plan: IslandDressingPlan,
   scale: number,
   heightMultiplier = 1,
-): readonly IslandDressingFieldV2[] {
+): readonly IslandDressingField[] {
   const grouped = new Map<string, { pack: string; src: string; at: Placement[] }>();
   for (const placement of plan.placements) {
     const key = `${placement.packId}/${placement.assetId}`;
@@ -61,24 +61,24 @@ export function islandDressingFieldsV2(
   return [...grouped.entries()].map(([key, field]) => ({ key, ...field }));
 }
 
-export function IslandDressingV2({
+export function IslandDressing({
   blueprint,
   detail,
   targetRadius,
 }: {
-  readonly blueprint: IslandBlueprintV2;
-  readonly detail: IslandDressingDetailV2;
+  readonly blueprint: IslandBlueprint;
+  readonly detail: IslandDressingDetail;
   readonly targetRadius?: number;
 }) {
-  const plan = useMemo(() => planIslandDressingV2(blueprint, detail), [blueprint, detail]);
-  const scale = islandGeometryV2Scale(blueprint, detail, targetRadius);
+  const plan = useMemo(() => planIslandDressing(blueprint, detail), [blueprint, detail]);
+  const scale = islandGeometryScale(blueprint, detail, targetRadius);
   // A mathematically faithful world projection turns a tree into a dark
   // three-pixel pin. Slight silhouette exaggeration is the same convention a
   // board-game miniature uses: positions stay identical, only readable height
   // survives the LOD.
   const heightMultiplier = detail === "world" ? 3.2 : 1;
   const fields = useMemo(
-    () => islandDressingFieldsV2(plan, scale, heightMultiplier),
+    () => islandDressingFields(plan, scale, heightMultiplier),
     [heightMultiplier, plan, scale],
   );
   return (

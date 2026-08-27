@@ -33,24 +33,22 @@ import * as THREE from "three";
 import aerialWorldPlate2k from "./assets/generated/aerial-world-plate-2k.webp?url";
 import aerialWorldPlate4k from "./assets/generated/aerial-world-plate-4k.webp?url";
 import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course/course";
-import { islandBlueprint } from "./island/island-blueprint.js";
-import { buildBlueprintIsland } from "./island/island-geometry.js";
 import {
-  islandGeometryBlueprintV2,
-  islandBlueprintV2,
-  projectIslandBlueprintV2,
-  sampleIslandSurfaceV2,
-  type IslandBlueprintV2,
-  type IslandUnitVisualTokenV2,
-} from "./island/island-blueprint-v2.js";
+  islandGeometryBlueprint,
+  islandBlueprint,
+  projectIslandBlueprint,
+  sampleIslandSurface,
+  type IslandBlueprint,
+  type IslandUnitVisualToken,
+} from "./island/island-blueprint.js";
 import { islandThemeSelectionForCourse } from "./island/kenney-recipes.js";
-import { IslandDressingV2 } from "./island/island-dressing-v2-render.js";
-import { IslandV2Render, UnitSigilV2 } from "./island/island-v2-render.js";
+import { IslandDressing } from "./island/island-dressing-render.js";
+import { IslandRender, UnitSigil } from "./island/island-render.js";
 import { hopPose, PlayerMarker, type AvatarRecipe } from "./avatar/index.js";
 import { layoutStudyRoad, radiusForLessons } from "./course/layout";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
 import { hash } from "./island/random.js";
-import { CuteCloudSea } from "./sky/cloud-sea-v2.js";
+import { CuteCloudSea } from "./sky/cloud-sea.js";
 import { renderTier } from "./sky/tier";
 
 /**
@@ -192,7 +190,7 @@ interface WorldPlacement {
    * has course summary data, so its node ids are synthetic; the course projects
    * real lesson/unit ids onto the same geometry base.
    */
-  readonly blueprint: IslandBlueprintV2;
+  readonly blueprint: IslandBlueprint;
   readonly radius: number;
   /** 0 to 1 — how much of the course is finished. */
   readonly progress: number;
@@ -326,13 +324,13 @@ export function placeWorld(
   for (const node of own) {
     const local = laid.get(node.courseId);
     if (!local) continue;
-    const geometry = islandGeometryBlueprintV2({
+    const geometry = islandGeometryBlueprint({
       studyId: node.studyId,
       courseId: node.courseId,
       lessonCount: node.lessons,
       themeSelection: islandThemeSelectionForCourse(node.studyId, node.courseId),
     });
-    const blueprint = projectIslandBlueprintV2(geometry);
+    const blueprint = projectIslandBlueprint(geometry);
     placements.push({
       node,
       position: new THREE.Vector3(local.x, 0, local.z),
@@ -360,49 +358,30 @@ export function placeWorld(
   return { placements: marked, extent };
 }
 
-/** Geometry is cached by blueprint version and semantic detail. */
-const shapes = new Map<string, ReturnType<typeof buildBlueprintIsland>>();
-
-/** Slots nearest the middle first: the order the settlement fills in. */
-function settlementSlots(studyId: string, courseId: string, lessons: number, radius: number) {
-  const { slots } = shapeOf(studyId, courseId, lessons, radius);
-  return [...slots].sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
-}
-
 /**
- * How much of one island is built, at a given progress.
+ * How much of one course's settlement reward is built, at a given progress.
  *
  * Exported because the settlement screen tells the learner what just grew, and
- * it was answering that from its own arithmetic — `lessons * 0.45` against the
- * lesson count, while the map used `0.45` against the *slot* count, which comes
- * from the island's radius. The two agreed only by coincidence. A reward screen
- * that claims a house appeared where none did is worse than one that says
- * nothing, so both now ask the same function.
+ * the reward capacity is deliberately derived from the course lesson count.
+ * The map itself owns the island blueprint and its semantic LOD; this helper
+ * only turns the same progress fraction into a stable reward number and does
+ * not create another geometry or placement model.
  *
  * `progress` is `done / total` from `readCourseProgress`. This function does
- * not count lessons itself — it only turns that fraction into buildings — so
- * the map and the reward screen stay on one number even as the shells agree
- * on what "done" means.
+ * not grade lessons itself — it only turns that fraction into a bounded reward
+ * count — so the map and the reward screen stay on one number even as the
+ * shells agree on what "done" means.
  */
 export function settlementSize(
-  studyId: string,
-  courseId: string,
+  _studyId: string,
+  _courseId: string,
   lessons: number,
   progress: number,
 ) {
-  const ordered = settlementSlots(studyId, courseId, lessons, radiusForLessons(lessons));
-  const claim = Math.max(1, Math.round(ordered.length * 0.45));
-  return { ordered, claim, built: Math.round(progress * claim) };
-}
-
-function shapeOf(studyId: string, courseId: string, lessons: number, radius: number) {
-  const blueprint = islandBlueprint(studyId, courseId, lessons);
-  const key = `${blueprint.version}/${blueprint.seed}/${blueprint.lessons}/world/${radius.toFixed(2)}`;
-  const found = shapes.get(key);
-  if (found) return found;
-  const made = buildBlueprintIsland(blueprint, "world", radius);
-  shapes.set(key, made);
-  return made;
+  const safeLessons = Math.max(1, Math.floor(lessons));
+  const capacity = Math.max(18, safeLessons * 3);
+  const claim = Math.max(1, Math.round(capacity * 0.45));
+  return { claim, built: Math.round(progress * claim) };
 }
 
 function Island({
@@ -435,14 +414,14 @@ function Island({
       }}
       onPointerOut={() => onOver(false)}
     >
-      <IslandV2Render
+      <IslandRender
         blueprint={entry.blueprint}
         detail="world"
         targetRadius={entry.radius}
         dimmed={locked || dimmed}
       />
       <Suspense fallback={null}>
-        <IslandDressingV2 blueprint={entry.blueprint} detail="world" targetRadius={entry.radius} />
+        <IslandDressing blueprint={entry.blueprint} detail="world" targetRadius={entry.radius} />
       </Suspense>
       {/*
         Foam used to mark the waterline. The islands now sit above a cloud
@@ -858,8 +837,8 @@ export interface LessonPlacement {
    * blueprint that was built from real lesson/unit ids instead of regenerating
    * a parallel layout from a count.
    */
-  readonly blueprint: IslandBlueprintV2;
-  readonly visualToken: IslandUnitVisualTokenV2;
+  readonly blueprint: IslandBlueprint;
+  readonly visualToken: IslandUnitVisualToken;
 }
 
 export function placeCourse(
@@ -873,13 +852,13 @@ export function placeCourse(
     unit.lessons.map((lesson, slot) => ({ unit, unitIndex, lesson, slot })),
   );
   if (flat.length === 0) return [];
-  const geometry = islandGeometryBlueprintV2({
+  const geometry = islandGeometryBlueprint({
     studyId,
     courseId: course.id,
     lessonCount: flat.length,
     themeSelection: islandThemeSelectionForCourse(studyId, course.id),
   });
-  const blueprint = projectIslandBlueprintV2(geometry, {
+  const blueprint = projectIslandBlueprint(geometry, {
     lessonIds: flat.map(({ lesson }) => lesson.id),
     unitIds: flat.map(({ unit }) => unit.id),
   });
@@ -947,7 +926,7 @@ export function placeCourse(
  * the terrain is not carrying information yet.
  */
 export function courseIslandScale(lessons: number, studyId = "course", courseId = "course") {
-  const blueprint = islandBlueprintV2({
+  const blueprint = islandBlueprint({
     studyId,
     courseId,
     lessonCount: Math.max(1, Math.floor(lessons)),
@@ -969,8 +948,8 @@ export function courseSurfaceY(
   studyId = "course",
   courseId = "course",
 ): number {
-  return sampleIslandSurfaceV2(
-    islandBlueprintV2({
+  return sampleIslandSurface(
+    islandBlueprint({
       studyId,
       courseId,
       lessonCount: Math.max(1, Math.floor(lessons)),
@@ -1041,7 +1020,7 @@ function LessonMarker({
           flatShading
         />
       </mesh>
-      <UnitSigilV2
+      <UnitSigil
         sigil={lesson.visualToken.sigil}
         unitIndex={lesson.unitIndex}
         radius={radius}
@@ -1052,7 +1031,7 @@ function LessonMarker({
   );
 }
 
-/* The V2 renderer owns the single route ribbon; no second trail is drawn here. */
+/* The renderer owns the single route ribbon; no second trail is drawn here. */
 
 /**
  * Inside a course: one island, and the lessons lying on it in order.
@@ -1078,7 +1057,7 @@ export function CourseScene({
   const blueprint = useMemo(
     () =>
       lessons[0]?.blueprint ??
-      islandBlueprintV2({
+      islandBlueprint({
         studyId,
         courseId,
         lessonCount: Math.max(1, lessons.length),
@@ -1125,9 +1104,9 @@ export function CourseScene({
         sky={skyStopsForStudy(skyStudyId)}
         cloudLevel={-10.2}
       />
-      <IslandV2Render blueprint={blueprint} detail="course" />
+      <IslandRender blueprint={blueprint} detail="course" />
       <Suspense fallback={null}>
-        <IslandDressingV2 blueprint={blueprint} detail="course" />
+        <IslandDressing blueprint={blueprint} detail="course" />
       </Suspense>
       {markers.map(({ lesson, radius }) => (
         <LessonMarker

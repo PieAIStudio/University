@@ -1,5 +1,5 @@
 /**
- * Development-only surface looks for Island V2.
+ * Development-only surface looks for the island.
  *
  * The island blueprint and its geometry are the product contract. These looks
  * are deliberately a material adapter instead of another renderer: a debug
@@ -13,7 +13,7 @@ export type IslandSurfaceStyleId = (typeof ISLAND_SURFACE_STYLE_IDS)[number];
 export type IslandSurfaceRole = "terrain";
 
 export const DEFAULT_ISLAND_SURFACE_STYLE: IslandSurfaceStyleId = "diorama";
-export const ISLAND_SURFACE_SHADER_VARIANT = "island-surface-v2-uniforms-1";
+export const ISLAND_SURFACE_SHADER_VARIANT = "island-surface-uniforms-1";
 
 export interface IslandSurfaceStylePreset {
   readonly id: IslandSurfaceStyleId;
@@ -233,7 +233,7 @@ varying float vIslandStyleSlope;`;
 const SURFACE_STYLE_VERTEX_ASSIGNMENT = `
 vIslandStyleWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;
 vIslandStyleHeight = transformed.y;
-// Island V2 never tilts its local up axis. Object-space normal therefore gives
+// The island never tilts its local up axis. Object-space normal therefore gives
 // a camera-stable slope; transformedNormal is view-space and would make the
 // terrain bands swim when the camera orbits.
 vIslandStyleSlope = 1.0 - clamp(abs(normalize(objectNormal).y), 0.0, 1.0);`;

@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { islandBlueprintV2 } from "./island-blueprint-v2.js";
+import { islandBlueprint } from "./island-blueprint.js";
 import {
-  buildIslandGeometryV2,
-  islandGeometryV2Key,
-  sampleIslandTerrainTopV2,
-} from "./island-geometry-v2.js";
+  buildIslandGeometry,
+  islandGeometryKey,
+  sampleIslandTerrainTop,
+} from "./island-geometry.js";
 
-const blueprint = islandBlueprintV2({
+const blueprint = islandBlueprint({
   studyId: "turing-pact",
   courseId: "foundations-before-zero",
   lessonCount: 41,
@@ -19,13 +19,13 @@ const blueprint = islandBlueprintV2({
   },
 });
 
-function dispose(shape: ReturnType<typeof buildIslandGeometryV2>): void {
+function dispose(shape: ReturnType<typeof buildIslandGeometry>): void {
   shape.terrain.dispose();
 }
 
-describe("Island V2 geometry projections", () => {
+describe("Island geometry projections", () => {
   it("compiles one finite terrain mesh with the route colour baked into its surface", () => {
-    const shape = buildIslandGeometryV2(blueprint, "course");
+    const shape = buildIslandGeometry(blueprint, "course");
     const position = shape.terrain.getAttribute("position");
     const colour = shape.terrain.getAttribute("color");
 
@@ -47,8 +47,8 @@ describe("Island V2 geometry projections", () => {
   });
 
   it("keeps terrain colour deterministic for one blueprint", () => {
-    const first = buildIslandGeometryV2(blueprint, "course");
-    const second = buildIslandGeometryV2(blueprint, "course");
+    const first = buildIslandGeometry(blueprint, "course");
+    const second = buildIslandGeometry(blueprint, "course");
 
     expect(Array.from(first.terrain.getAttribute("color").array)).toEqual(
       Array.from(second.terrain.getAttribute("color").array),
@@ -58,7 +58,7 @@ describe("Island V2 geometry projections", () => {
   });
 
   it("samples the same top-mesh height used by overlay roots", () => {
-    const shape = buildIslandGeometryV2(blueprint, "course");
+    const shape = buildIslandGeometry(blueprint, "course");
     const position = shape.terrain.getAttribute("position");
     const segments = blueprint.outline.length;
     const vertices = [
@@ -76,7 +76,7 @@ describe("Island V2 geometry projections", () => {
     ];
 
     for (const vertex of vertices) {
-      const top = sampleIslandTerrainTopV2(blueprint, "course", vertex.x, vertex.z);
+      const top = sampleIslandTerrainTop(blueprint, "course", vertex.x, vertex.z);
       expect(top.inside).toBe(true);
       expect(top.y).toBeCloseTo(position.getY(vertex.index), 7);
     }
@@ -85,8 +85,8 @@ describe("Island V2 geometry projections", () => {
 
   it("uses semantic LOD without creating a miniature road mesh", () => {
     const targetRadius = 3.2;
-    const course = buildIslandGeometryV2(blueprint, "course");
-    const world = buildIslandGeometryV2(blueprint, "world", targetRadius);
+    const course = buildIslandGeometry(blueprint, "course");
+    const world = buildIslandGeometry(blueprint, "world", targetRadius);
 
     expect(world.scale).toBeCloseTo(targetRadius / blueprint.bounds.maxHalf, 8);
     expect(world.bounds.halfX).toBeLessThanOrEqual(targetRadius + 0.001);
@@ -96,8 +96,8 @@ describe("Island V2 geometry projections", () => {
     );
     expect("path" in course).toBe(false);
     expect("path" in world).toBe(false);
-    expect(islandGeometryV2Key(blueprint, "world", targetRadius)).not.toBe(
-      islandGeometryV2Key(blueprint, "course"),
+    expect(islandGeometryKey(blueprint, "world", targetRadius)).not.toBe(
+      islandGeometryKey(blueprint, "course"),
     );
     dispose(course);
     dispose(world);

@@ -1,16 +1,12 @@
 /**
- * Deterministic, renderer-free dressing for an IslandBlueprint V2.
+ * Deterministic, renderer-free dressing for an IslandBlueprint.
  *
  * A catalog says what *may* appear. This planner decides what earns a place in
  * the composition. It builds one full course plan, then the world projection
  * removes low-importance detail; it never rolls a second island.
  */
-import {
-  sampleIslandSurfaceV2,
-  type IslandBlueprintV2,
-  type IslandPointV2,
-} from "./island-blueprint-v2.js";
-import { sampleIslandTerrainTopV2 } from "./island-geometry-v2.js";
+import { sampleIslandSurface, type IslandBlueprint, type IslandPoint } from "./island-blueprint.js";
+import { sampleIslandTerrainTop } from "./island-geometry.js";
 import {
   recipeById,
   validateIslandRecipe,
@@ -19,17 +15,17 @@ import {
 } from "./kenney-recipes.js";
 import { seeded } from "./random.js";
 
-export type IslandDressingDetailV2 = "course" | "world";
-export type IslandDressingKindV2 = "tree" | "bush" | "rock" | "landmark" | "prop";
-export type IslandDressingSegmentV2 = "arrival" | "journey" | "summit";
+export type IslandDressingDetail = "course" | "world";
+export type IslandDressingKind = "tree" | "bush" | "rock" | "landmark" | "prop";
+export type IslandDressingSegment = "arrival" | "journey" | "summit";
 
-export interface IslandDressingPlacementV2 extends IslandPointV2 {
+export interface IslandDressingPlacement extends IslandPoint {
   readonly id: string;
   readonly packId: KenneyPackId;
   readonly assetId: string;
-  readonly kind: IslandDressingKindV2;
+  readonly kind: IslandDressingKind;
   /** Authored beat along the single route, when the placement is a landmark accent. */
-  readonly segment?: IslandDressingSegmentV2;
+  readonly segment?: IslandDressingSegment;
   readonly y: number;
   /** Optional authored lift above the sampled surface, used for stacks and paths. */
   readonly lift?: number;
@@ -40,15 +36,15 @@ export interface IslandDressingPlacementV2 extends IslandPointV2 {
   readonly importance: number;
 }
 
-export interface IslandDressingPlanV2 {
+export interface IslandDressingPlan {
   readonly version: 1;
-  readonly detail: IslandDressingDetailV2;
+  readonly detail: IslandDressingDetail;
   readonly seed: string;
   readonly recipeId: string | null;
-  readonly placements: readonly IslandDressingPlacementV2[];
+  readonly placements: readonly IslandDressingPlacement[];
 }
 
-export interface IslandDressingSafetyZoneV2 extends IslandPointV2 {
+export interface IslandDressingSafetyZone extends IslandPoint {
   /** A conservative ground apron in unscaled blueprint units. */
   readonly radius: number;
   readonly kind: "landmark";
@@ -56,7 +52,7 @@ export interface IslandDressingSafetyZoneV2 extends IslandPointV2 {
 
 interface CandidateRule {
   readonly assets: readonly string[];
-  readonly kind: IslandDressingKindV2;
+  readonly kind: IslandDressingKind;
   readonly count: number;
   readonly minSpacing: number;
   readonly radial: readonly [number, number];
@@ -68,7 +64,7 @@ interface CandidateRule {
 
 interface AccentSlot {
   /** Overrides the layout's default route beat for a split modular set. */
-  readonly segment?: IslandDressingSegmentV2;
+  readonly segment?: IslandDressingSegment;
   /** Offset along the local courtyard tangent from the composition anchor. */
   readonly along: number;
   /** Offset away from the course route from the composition anchor. */
@@ -79,8 +75,8 @@ interface AccentSlot {
 }
 
 interface AccentLayout {
-  readonly segment: IslandDressingSegmentV2;
-  readonly kind: IslandDressingKindV2;
+  readonly segment: IslandDressingSegment;
+  readonly kind: IslandDressingKind;
   readonly height: number;
   readonly importance: number;
   readonly slots: readonly AccentSlot[];
@@ -206,7 +202,7 @@ const ACCENT_LAYOUT: Readonly<Record<string, AccentLayout>> = {
   },
 };
 
-function distanceToSegment(point: IslandPointV2, first: IslandPointV2, second: IslandPointV2) {
+function distanceToSegment(point: IslandPoint, first: IslandPoint, second: IslandPoint) {
   const dx = second.x - first.x;
   const dz = second.z - first.z;
   const lengthSquared = dx * dx + dz * dz;
@@ -220,10 +216,7 @@ function distanceToSegment(point: IslandPointV2, first: IslandPointV2, second: I
   return Math.hypot(point.x - (first.x + dx * amount), point.z - (first.z + dz * amount));
 }
 
-export function distanceToIslandRouteV2(
-  blueprint: IslandBlueprintV2,
-  point: IslandPointV2,
-): number {
+export function distanceToIslandRoute(blueprint: IslandBlueprint, point: IslandPoint): number {
   let distance = Number.POSITIVE_INFINITY;
   for (let index = 1; index < blueprint.centerline.length; index += 1) {
     distance = Math.min(
@@ -234,16 +227,16 @@ export function distanceToIslandRouteV2(
   return distance;
 }
 
-function slopeAt(blueprint: IslandBlueprintV2, point: IslandPointV2): number {
+function slopeAt(blueprint: IslandBlueprint, point: IslandPoint): number {
   const step = 0.42;
-  const left = sampleIslandSurfaceV2(blueprint, point.x - step, point.z).y;
-  const right = sampleIslandSurfaceV2(blueprint, point.x + step, point.z).y;
-  const before = sampleIslandSurfaceV2(blueprint, point.x, point.z - step).y;
-  const after = sampleIslandSurfaceV2(blueprint, point.x, point.z + step).y;
+  const left = sampleIslandSurface(blueprint, point.x - step, point.z).y;
+  const right = sampleIslandSurface(blueprint, point.x + step, point.z).y;
+  const before = sampleIslandSurface(blueprint, point.x, point.z - step).y;
+  const after = sampleIslandSurface(blueprint, point.x, point.z + step).y;
   return Math.atan(Math.hypot((right - left) / (step * 2), (after - before) / (step * 2)));
 }
 
-function routeClearance(blueprint: IslandBlueprintV2): number {
+function routeClearance(blueprint: IslandBlueprint): number {
   // Centreline distance already covers every lesson node because every node
   // lies on that line. Adding nodeRadius again left a sterile several-metre
   // corridor around the path. Keep the authored shoulder and a small gardening
@@ -252,15 +245,15 @@ function routeClearance(blueprint: IslandBlueprintV2): number {
 }
 
 function available(
-  blueprint: IslandBlueprintV2,
-  point: IslandPointV2,
-  placements: readonly IslandDressingPlacementV2[],
+  blueprint: IslandBlueprint,
+  point: IslandPoint,
+  placements: readonly IslandDressingPlacement[],
   minSpacing: number,
   maxSlope: number,
 ): boolean {
-  const surface = sampleIslandSurfaceV2(blueprint, point.x, point.z);
+  const surface = sampleIslandSurface(blueprint, point.x, point.z);
   if (!surface.inside || surface.radial > 0.91) return false;
-  if (distanceToIslandRouteV2(blueprint, point) < routeClearance(blueprint)) return false;
+  if (distanceToIslandRoute(blueprint, point) < routeClearance(blueprint)) return false;
   if (
     Math.hypot(point.x - blueprint.hero.x, point.z - blueprint.hero.z) <
     blueprint.hero.radius + 1.4
@@ -274,10 +267,10 @@ function available(
 }
 
 function radialPoint(
-  blueprint: IslandBlueprintV2,
+  blueprint: IslandBlueprint,
   random: () => number,
   radial: readonly [number, number],
-): IslandPointV2 {
+): IslandPoint {
   const angle = random() * Math.PI * 2;
   const amount = radial[0] + (radial[1] - radial[0]) * Math.sqrt(random());
   return {
@@ -287,10 +280,10 @@ function radialPoint(
 }
 
 function routeClusterCandidate(
-  blueprint: IslandBlueprintV2,
+  blueprint: IslandBlueprint,
   fraction: number,
   preferredSide: number,
-): IslandPointV2 | null {
+): IslandPoint | null {
   const index = Math.min(
     blueprint.centerline.length - 1,
     Math.max(0, Math.round(fraction * (blueprint.centerline.length - 1))),
@@ -308,9 +301,9 @@ function routeClusterCandidate(
         x: point.x + normal.x * offset * side,
         z: point.z + normal.z * offset * side,
       };
-      const surface = sampleIslandSurfaceV2(blueprint, candidate.x, candidate.z);
+      const surface = sampleIslandSurface(blueprint, candidate.x, candidate.z);
       if (!surface.inside || surface.radial > 0.84) continue;
-      if (distanceToIslandRouteV2(blueprint, candidate) < routeClearance(blueprint) + 1.4) {
+      if (distanceToIslandRoute(blueprint, candidate) < routeClearance(blueprint) + 1.4) {
         continue;
       }
       if (
@@ -325,10 +318,10 @@ function routeClusterCandidate(
   return null;
 }
 
-function clusterCentres(blueprint: IslandBlueprintV2): readonly IslandPointV2[] {
+function clusterCentres(blueprint: IslandBlueprint): readonly IslandPoint[] {
   const side =
     seeded(`${blueprint.seed}/${blueprint.layoutRevision}/dressing-side`)() < 0.5 ? -1 : 1;
-  const centres: IslandPointV2[] = [];
+  const centres: IslandPoint[] = [];
   // Five route beats read like designed groves: arrival, early journey,
   // midpoint, late journey, summit.  Units never enter this calculation.
   for (const [index, fraction] of [0.035, 0.24, 0.48, 0.72, 0.955].entries()) {
@@ -344,16 +337,16 @@ function clusterCentres(blueprint: IslandBlueprintV2): readonly IslandPointV2[] 
 }
 
 interface RouteBeatAnchor {
-  readonly point: IslandPointV2;
+  readonly point: IslandPoint;
   /** Forward tangent follows the authored route, not the island's screen axis. */
-  readonly tangent: IslandPointV2;
+  readonly tangent: IslandPoint;
   /** Outward normal points from the route toward the selected safe courtyard. */
-  readonly normal: IslandPointV2;
+  readonly normal: IslandPoint;
 }
 
 function routeBeatAnchor(
-  blueprint: IslandBlueprintV2,
-  segment: IslandDressingSegmentV2,
+  blueprint: IslandBlueprint,
+  segment: IslandDressingSegment,
 ): RouteBeatAnchor | null {
   const zone = blueprint.zones.find((candidate) => candidate.id === segment);
   if (!zone || blueprint.centerline.length === 0) return null;
@@ -381,8 +374,8 @@ function routeBeatAnchor(
     layout.slots.filter((slot) => (slot.segment ?? layout.segment) === segment),
   );
   let best: {
-    readonly point: IslandPointV2;
-    readonly normal: IslandPointV2;
+    readonly point: IslandPoint;
+    readonly normal: IslandPoint;
     score: number;
   } | null = null;
   for (const side of [preferredSide, -preferredSide]) {
@@ -391,9 +384,9 @@ function routeBeatAnchor(
         x: routePoint.x + baseNormal.x * offset * side,
         z: routePoint.z + baseNormal.z * offset * side,
       };
-      const surface = sampleIslandTerrainTopV2(blueprint, "course", point.x, point.z);
+      const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
       if (!surface.inside || surface.radial > 0.84) continue;
-      if (distanceToIslandRouteV2(blueprint, point) < routeClearance(blueprint) + 1.4) continue;
+      if (distanceToIslandRoute(blueprint, point) < routeClearance(blueprint) + 1.4) continue;
       if (
         Math.hypot(point.x - blueprint.hero.x, point.z - blueprint.hero.z) <
         blueprint.hero.radius + 3.6
@@ -406,11 +399,11 @@ function routeBeatAnchor(
           x: point.x + tangent.x * slot.along + normal.x * slot.away,
           z: point.z + tangent.z * slot.along + normal.z * slot.away,
         };
-        const at = sampleIslandSurfaceV2(blueprint, candidate.x, candidate.z);
+        const at = sampleIslandSurface(blueprint, candidate.x, candidate.z);
         return (
           at.inside &&
           at.radial <= 0.88 &&
-          distanceToIslandRouteV2(blueprint, candidate) >= routeClearance(blueprint) &&
+          distanceToIslandRoute(blueprint, candidate) >= routeClearance(blueprint) &&
           Math.hypot(candidate.x - blueprint.hero.x, candidate.z - blueprint.hero.z) >=
             blueprint.hero.radius + 1.4
         );
@@ -424,11 +417,11 @@ function routeBeatAnchor(
 }
 
 function candidatePoint(
-  blueprint: IslandBlueprintV2,
+  blueprint: IslandBlueprint,
   rule: CandidateRule,
-  centres: readonly IslandPointV2[],
+  centres: readonly IslandPoint[],
   random: () => number,
-): IslandPointV2 {
+): IslandPoint {
   if (!rule.clustered || centres.length === 0 || random() < 0.18) {
     return radialPoint(blueprint, random, rule.radial);
   }
@@ -439,13 +432,13 @@ function candidatePoint(
 }
 
 function naturalPlacements(
-  blueprint: IslandBlueprintV2,
+  blueprint: IslandBlueprint,
   recipe: IslandRecipe,
-  reserved: readonly IslandDressingPlacementV2[] = [],
-): IslandDressingPlacementV2[] {
+  reserved: readonly IslandDressingPlacement[] = [],
+): IslandDressingPlacement[] {
   const allowed = new Set(recipe.base.assetIds);
-  const placements: IslandDressingPlacementV2[] = [];
-  const occupied: IslandDressingPlacementV2[] = [...reserved];
+  const placements: IslandDressingPlacement[] = [];
+  const occupied: IslandDressingPlacement[] = [...reserved];
   const centres = clusterCentres(blueprint);
   const density = Math.min(1.78, Math.max(0.9, 0.72 + Math.sqrt(blueprint.lessonCount) / 6.8));
   for (const rule of NATURAL_RULES) {
@@ -458,10 +451,10 @@ function naturalPlacements(
       if (placements.length - start >= targetCount) break;
       const point = candidatePoint(blueprint, rule, centres, random);
       if (!available(blueprint, point, occupied, rule.minSpacing, rule.maxSlope)) continue;
-      const surface = sampleIslandTerrainTopV2(blueprint, "course", point.x, point.z);
+      const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
       const assetId = assets[Math.floor(random() * assets.length)]!;
       const amount = random();
-      const placement: IslandDressingPlacementV2 = {
+      const placement: IslandDressingPlacement = {
         id: `nature-${rule.kind}-${placements.length + 1}`,
         packId: recipe.base.packId,
         assetId,
@@ -481,18 +474,18 @@ function naturalPlacements(
 }
 
 function accentPlacements(
-  blueprint: IslandBlueprintV2,
+  blueprint: IslandBlueprint,
   recipe: IslandRecipe,
-): IslandDressingPlacementV2[] {
+): IslandDressingPlacement[] {
   const accentPackByAsset = new Map<string, KenneyPackId>();
   recipe.accentRoles.forEach((role) =>
     role.assetIds.forEach((assetId) => accentPackByAsset.set(assetId, role.packId)),
   );
-  const anchors = new Map<IslandDressingSegmentV2, RouteBeatAnchor | null>();
+  const anchors = new Map<IslandDressingSegment, RouteBeatAnchor | null>();
   for (const segment of ["arrival", "journey", "summit"] as const) {
     anchors.set(segment, routeBeatAnchor(blueprint, segment));
   }
-  const result: IslandDressingPlacementV2[] = [];
+  const result: IslandDressingPlacement[] = [];
   // Kenney Fantasy Town's modular walls and roads use local +Z as their long
   // axis. `hero.heading` describes the route's +X-style tangent instead, so
   // adding it directly rotated every wall by the wrong basis and made the
@@ -509,9 +502,9 @@ function accentPlacements(
         x: anchor.point.x + anchor.tangent.x * slot.along + anchor.normal.x * slot.away,
         z: anchor.point.z + anchor.tangent.z * slot.along + anchor.normal.z * slot.away,
       };
-      const surface = sampleIslandTerrainTopV2(blueprint, "course", point.x, point.z);
+      const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
       if (!surface.inside || surface.radial > 0.88) return;
-      if (distanceToIslandRouteV2(blueprint, point) < routeClearance(blueprint)) return;
+      if (distanceToIslandRoute(blueprint, point) < routeClearance(blueprint)) return;
       if (
         Math.hypot(point.x - blueprint.hero.x, point.z - blueprint.hero.z) <
         blueprint.hero.radius + 1.4
@@ -538,7 +531,7 @@ function accentPlacements(
   return result;
 }
 
-function resolveRecipe(blueprint: IslandBlueprintV2, supplied?: IslandRecipe): IslandRecipe {
+function resolveRecipe(blueprint: IslandBlueprint, supplied?: IslandRecipe): IslandRecipe {
   const recipe = supplied ?? recipeById(blueprint.themeSelection.recipeId ?? "");
   if (!recipe) throw new Error("Island dressing needs a registered recipe");
   const validation = validateIslandRecipe(recipe);
@@ -553,8 +546,8 @@ function resolveRecipe(blueprint: IslandBlueprintV2, supplied?: IslandRecipe): I
 }
 
 function worldSilhouettePlacements(
-  placements: readonly IslandDressingPlacementV2[],
-): readonly IslandDressingPlacementV2[] {
+  placements: readonly IslandDressingPlacement[],
+): readonly IslandDressingPlacement[] {
   // World view keeps the authored landmark silhouette and only the two most
   // important trees that frame it. Roads, walls, lanterns, bushes, and rocks
   // remain course detail rather than becoming a noisy miniature settlement.
@@ -583,9 +576,9 @@ function worldSilhouettePlacements(
  * still read as layered ground cover. Large accent structures get a wider
  * apron based on their semantic kind and authored height.
  */
-export function islandDressingSafetyZonesV2(
-  plan: IslandDressingPlanV2,
-): readonly IslandDressingSafetyZoneV2[] {
+export function islandDressingSafetyZones(
+  plan: IslandDressingPlan,
+): readonly IslandDressingSafetyZone[] {
   return plan.placements
     .filter((placement) => placement.kind === "landmark" || placement.kind === "prop")
     .map((placement) => ({
@@ -600,11 +593,11 @@ export function islandDressingSafetyZonesV2(
 }
 
 /** Build the full authored-feeling plan, then remove minor detail for world LOD. */
-export function planIslandDressingV2(
-  blueprint: IslandBlueprintV2,
-  detail: IslandDressingDetailV2,
+export function planIslandDressing(
+  blueprint: IslandBlueprint,
+  detail: IslandDressingDetail,
   suppliedRecipe?: IslandRecipe,
-): IslandDressingPlanV2 {
+): IslandDressingPlan {
   const recipe = resolveRecipe(blueprint, suppliedRecipe);
   const accents = accentPlacements(blueprint, recipe);
   const full = [...naturalPlacements(blueprint, recipe, accents), ...accents];

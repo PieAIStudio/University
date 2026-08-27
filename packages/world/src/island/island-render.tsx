@@ -1,11 +1,11 @@
-/** React Three Fiber presentation for an IslandBlueprint V2. */
+/** React Three Fiber presentation for an IslandBlueprint. */
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import { buildIslandGeometryV2, type IslandGeometryV2Detail } from "./island-geometry-v2.js";
-import { IslandGrassV2, type IslandGrassStyleV2 } from "./island-grass-v2-render.js";
-import { islandDressingSafetyZonesV2, planIslandDressingV2 } from "./island-dressing-v2.js";
+import { buildIslandGeometry, type IslandGeometryDetail } from "./island-geometry.js";
+import { IslandGrass, type IslandGrassStyle } from "./island-grass-render.js";
+import { islandDressingSafetyZones, planIslandDressing } from "./island-dressing.js";
 import {
   createIslandSurfaceMaterialAdapter,
   DEFAULT_ISLAND_SURFACE_STYLE,
@@ -13,8 +13,8 @@ import {
   type IslandSurfaceTimeUniform,
   type IslandSurfaceRole,
   type IslandSurfaceStyleId,
-} from "./island-surface-style-v2.js";
-import type { IslandBlueprintV2, IslandUnitSigilV2 } from "./island-blueprint-v2.js";
+} from "./island-surface-style.js";
+import type { IslandBlueprint, IslandUnitSigil } from "./island-blueprint.js";
 
 const TECH = 0x5a6572;
 const TECH_DARK = 0x303a46;
@@ -24,7 +24,7 @@ const HERO_GOLD = 0xffc75a;
 const GRASS_LOOKS: Readonly<
   Record<
     IslandSurfaceStyleId,
-    { readonly style: IslandGrassStyleV2; readonly options: { readonly density: number } }
+    { readonly style: IslandGrassStyle; readonly options: { readonly density: number } }
   >
 > = {
   diorama: {
@@ -50,9 +50,9 @@ const GRASS_LOOKS: Readonly<
   },
 };
 
-export interface IslandV2RenderProps {
-  readonly blueprint: IslandBlueprintV2;
-  readonly detail: IslandGeometryV2Detail;
+export interface IslandRenderProps {
+  readonly blueprint: IslandBlueprint;
+  readonly detail: IslandGeometryDetail;
   readonly targetRadius?: number;
   readonly onClick?: () => void;
   readonly onPointerOver?: () => void;
@@ -111,10 +111,10 @@ function TechUnderside({
   detail,
   dimmed,
 }: {
-  readonly blueprint: IslandBlueprintV2;
+  readonly blueprint: IslandBlueprint;
   readonly scale: number;
   readonly depth: number;
-  readonly detail: IslandGeometryV2Detail;
+  readonly detail: IslandGeometryDetail;
   readonly dimmed: boolean;
 }) {
   const ringRef = useRef<THREE.Mesh>(null);
@@ -239,9 +239,9 @@ function HeroLandmark({
   detail,
   dimmed,
 }: {
-  readonly blueprint: IslandBlueprintV2;
+  readonly blueprint: IslandBlueprint;
   readonly scale: number;
-  readonly detail: IslandGeometryV2Detail;
+  readonly detail: IslandGeometryDetail;
   readonly dimmed: boolean;
 }) {
   const crystal = useRef<THREE.Mesh>(null);
@@ -311,7 +311,7 @@ function HeroLandmark({
 }
 
 /** One terrain projection; callers decide whether it is clickable. */
-export function IslandV2Render({
+export function IslandRender({
   blueprint,
   detail,
   targetRadius,
@@ -319,7 +319,7 @@ export function IslandV2Render({
   onPointerOver,
   onPointerOut,
   dimmed = false,
-}: IslandV2RenderProps) {
+}: IslandRenderProps) {
   const surfaceStyle = import.meta.env.DEV
     ? resolveIslandSurfaceStyle()
     : DEFAULT_ISLAND_SURFACE_STYLE;
@@ -331,12 +331,12 @@ export function IslandV2Render({
   const dressingPlan = useMemo(
     () =>
       detail === "course" && blueprint.themeSelection.recipeId
-        ? planIslandDressingV2(blueprint, "course")
+        ? planIslandDressing(blueprint, "course")
         : null,
     [blueprint, detail],
   );
   const grassSafetyZones = useMemo(
-    () => (dressingPlan ? islandDressingSafetyZonesV2(dressingPlan) : undefined),
+    () => (dressingPlan ? islandDressingSafetyZones(dressingPlan) : undefined),
     [dressingPlan],
   );
   useFrame(({ clock }) => {
@@ -347,7 +347,7 @@ export function IslandV2Render({
     }
   });
   const shape = useMemo(
-    () => buildIslandGeometryV2(blueprint, detail, targetRadius),
+    () => buildIslandGeometry(blueprint, detail, targetRadius),
     [blueprint, detail, targetRadius],
   );
   useEffect(
@@ -395,7 +395,7 @@ export function IslandV2Render({
       </mesh>
       {detail === "course" ? (
         <>
-          <IslandGrassV2
+          <IslandGrass
             blueprint={blueprint}
             detail="course"
             targetRadius={targetRadius}
@@ -421,13 +421,13 @@ export function IslandV2Render({
 const SIGIL_COLOURS = [0x80bd62, 0x5cc6c8, 0xf0b45c, 0xc18fe4, 0x8ea7d8, 0xff9b69] as const;
 
 /** Non-colour unit cue; the geometry survives colour-blind / low-contrast views. */
-export function UnitSigilV2({
+export function UnitSigil({
   sigil,
   unitIndex,
   radius,
   active = false,
 }: {
-  readonly sigil: IslandUnitSigilV2;
+  readonly sigil: IslandUnitSigil;
   readonly unitIndex: number;
   readonly radius: number;
   readonly active?: boolean;

@@ -1,22 +1,22 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  DEFAULT_NATURAL_BASE_PACK_ID_V2,
-  ISLAND_BLUEPRINT_V2_LAYOUT_REVISION,
-  ISLAND_ROUTE_ARCHETYPES_V2,
-  islandBlueprintV2,
-  islandGeometryBlueprintV2,
-  islandGeometryProjectionV2,
-  projectIslandBlueprintV2,
-  sampleIslandSurfaceV2,
-  selectRouteArchetypeV2,
-  unitVisualTokenV2,
-  validateIslandBlueprintV2,
-} from "./island-blueprint-v2";
+  DEFAULT_NATURAL_BASE_PACK_ID,
+  ISLAND_BLUEPRINT_LAYOUT_REVISION,
+  ISLAND_ROUTE_ARCHETYPES,
+  islandBlueprint,
+  islandGeometryBlueprint,
+  islandGeometryProjection,
+  projectIslandBlueprint,
+  sampleIslandSurface,
+  selectRouteArchetype,
+  unitVisualToken,
+  validateIslandBlueprint,
+} from "./island-blueprint";
 
 const INPUT = {
   studyId: "turing-pact",
-  courseId: "island-v2-fixtures",
+  courseId: "island-fixtures",
   seed: "stable-fixture-seed",
 } as const;
 
@@ -47,31 +47,31 @@ function distanceToPolyline(
   );
 }
 
-function geometryProjection(blueprint: ReturnType<typeof islandBlueprintV2>) {
-  return islandGeometryProjectionV2(blueprint);
+function geometryProjection(blueprint: ReturnType<typeof islandBlueprint>) {
+  return islandGeometryProjection(blueprint);
 }
 
-function sampledRelief(blueprint: ReturnType<typeof islandBlueprintV2>): number {
+function sampledRelief(blueprint: ReturnType<typeof islandBlueprint>): number {
   const values: number[] = [];
   for (let x = -blueprint.bounds.halfX * 0.92; x <= blueprint.bounds.halfX * 0.92; x += 1.5) {
     for (let z = -blueprint.bounds.halfZ * 0.92; z <= blueprint.bounds.halfZ * 0.92; z += 1.5) {
-      const sample = sampleIslandSurfaceV2(blueprint, x, z);
+      const sample = sampleIslandSurface(blueprint, x, z);
       if (sample.inside) values.push(sample.y);
     }
   }
   return Math.max(...values) - Math.min(...values);
 }
 
-describe("IslandBlueprint V2", () => {
+describe("IslandBlueprint", () => {
   it.each([3, 12, 24, 41])("builds a valid linear blueprint for %i lessons", (lessonCount) => {
-    const blueprint = islandBlueprintV2({ ...INPUT, lessonCount });
+    const blueprint = islandBlueprint({ ...INPUT, lessonCount });
     expect(blueprint.version).toBe(2);
-    expect(blueprint.layoutRevision).toBe(ISLAND_BLUEPRINT_V2_LAYOUT_REVISION);
+    expect(blueprint.layoutRevision).toBe(ISLAND_BLUEPRINT_LAYOUT_REVISION);
     expect(blueprint.lessonCount).toBe(lessonCount);
     expect(blueprint.nodes).toHaveLength(lessonCount);
     expect(blueprint.centerline.length).toBeGreaterThan(lessonCount);
     expect(blueprint.route.semantic).toBe("linear");
-    expect(ISLAND_ROUTE_ARCHETYPES_V2).toContain(blueprint.route.archetype);
+    expect(ISLAND_ROUTE_ARCHETYPES).toContain(blueprint.route.archetype);
     expect(blueprint.route.centerlineSamples).toBe(blueprint.centerline.length);
     expect(blueprint.route.roadWidth).toBeGreaterThan(0);
     expect(blueprint.route.shoulderWidth).toBeGreaterThanOrEqual(0);
@@ -80,14 +80,14 @@ describe("IslandBlueprint V2", () => {
     expect(blueprint.terrainPatches.length).toBeGreaterThanOrEqual(2);
     expect(blueprint.terrainPatches.length).toBeLessThanOrEqual(4);
     expect(blueprint.themeSelection).toEqual({
-      naturalBasePackId: DEFAULT_NATURAL_BASE_PACK_ID_V2,
+      naturalBasePackId: DEFAULT_NATURAL_BASE_PACK_ID,
       accentPackIds: [],
     });
-    expect(validateIslandBlueprintV2(blueprint)).toEqual([]);
+    expect(validateIslandBlueprint(blueprint)).toEqual([]);
   });
 
   it("keeps the authored road subordinate to the lesson stones", () => {
-    const blueprint = islandBlueprintV2({ ...INPUT, lessonCount: 41 });
+    const blueprint = islandBlueprint({ ...INPUT, lessonCount: 41 });
     const nodeDiameter = blueprint.route.nodeRadius * 2;
     const roadRatio = blueprint.route.roadWidth / nodeDiameter;
     const fullPathRatio =
@@ -101,18 +101,18 @@ describe("IslandBlueprint V2", () => {
   it("validates multiple stable seeds at every supported fixture size", () => {
     for (const seedIndex of Array.from({ length: 8 }, (_, index) => index)) {
       for (const lessonCount of [3, 12, 24, 41]) {
-        const blueprint = islandBlueprintV2({
+        const blueprint = islandBlueprint({
           ...INPUT,
           lessonCount,
-          seed: `island-v2-seed-${seedIndex}`,
+          seed: `island-seed-${seedIndex}`,
         });
-        expect(validateIslandBlueprintV2(blueprint), `${lessonCount}/${seedIndex}`).toEqual([]);
+        expect(validateIslandBlueprint(blueprint), `${lessonCount}/${seedIndex}`).toEqual([]);
       }
     }
   });
 
   it("keeps one ordered route and terminal next identity", () => {
-    const blueprint = islandBlueprintV2({ ...INPUT, lessonCount: 41 });
+    const blueprint = islandBlueprint({ ...INPUT, lessonCount: 41 });
     expect(blueprint.route.branchCount).toBe(0);
     expect(blueprint.nodes.map((node) => node.index)).toEqual(
       Array.from({ length: 41 }, (_, index) => index),
@@ -131,7 +131,7 @@ describe("IslandBlueprint V2", () => {
 
   it("round-trips real lesson identities without rewriting them", () => {
     const lessonIds = ["lesson/arrival", "lesson/shape", "lesson/finish"];
-    const blueprint = islandBlueprintV2({
+    const blueprint = islandBlueprint({
       ...INPUT,
       courseId: "real-course",
       lessonIds,
@@ -141,24 +141,24 @@ describe("IslandBlueprint V2", () => {
     expect(blueprint.nodes.map((node) => node.id)).toEqual(lessonIds);
     expect(blueprint.nodes.map((node) => node.next)).toEqual([lessonIds[1], lessonIds[2], null]);
     expect(JSON.parse(JSON.stringify(blueprint))).toEqual(blueprint);
-    expect(validateIslandBlueprintV2(blueprint)).toEqual([]);
+    expect(validateIslandBlueprint(blueprint)).toEqual([]);
   });
 
   it("projects world and course semantics from one serializable geometry base", () => {
-    const geometry = islandGeometryBlueprintV2({
+    const geometry = islandGeometryBlueprint({
       ...INPUT,
       courseId: "shared-course",
       lessonCount: 3,
     });
-    const world = projectIslandBlueprintV2(geometry);
-    const course = projectIslandBlueprintV2(geometry, {
+    const world = projectIslandBlueprint(geometry);
+    const course = projectIslandBlueprint(geometry, {
       lessonIds: ["lesson/one", "lesson/two", "lesson/three"],
       unitIds: ["unit/one", "unit/one", "unit/two"],
     });
 
     expect(JSON.parse(JSON.stringify(geometry))).toEqual(geometry);
-    expect(islandGeometryProjectionV2(world)).toEqual(geometry);
-    expect(islandGeometryProjectionV2(course)).toEqual(geometry);
+    expect(islandGeometryProjection(world)).toEqual(geometry);
+    expect(islandGeometryProjection(course)).toEqual(geometry);
     expect(world.nodes.map((node) => node.id)).toEqual([
       "shared-course/fixture-lesson-1",
       "shared-course/fixture-lesson-2",
@@ -172,23 +172,23 @@ describe("IslandBlueprint V2", () => {
     expect(course.nodes.map(({ index, t, x, y, z }) => ({ index, t, x, y, z }))).toEqual(
       geometry.geometryNodes,
     );
-    expect(validateIslandBlueprintV2(world)).toEqual([]);
-    expect(validateIslandBlueprintV2(course)).toEqual([]);
+    expect(validateIslandBlueprint(world)).toEqual([]);
+    expect(validateIslandBlueprint(course)).toEqual([]);
   });
 
   it("rejects malformed lesson identity input", () => {
-    expect(() =>
-      islandBlueprintV2({ ...INPUT, lessonCount: 3, lessonIds: ["a", "a", "b"] }),
-    ).toThrow(/unique/);
-    expect(() => islandBlueprintV2({ ...INPUT, lessonCount: 3, lessonIds: ["a", "b"] })).toThrow(
+    expect(() => islandBlueprint({ ...INPUT, lessonCount: 3, lessonIds: ["a", "a", "b"] })).toThrow(
+      /unique/,
+    );
+    expect(() => islandBlueprint({ ...INPUT, lessonCount: 3, lessonIds: ["a", "b"] })).toThrow(
       /length/,
     );
-    expect(() => islandBlueprintV2({ ...INPUT, lessonIds: ["a", "", "b"] })).toThrow(/non-empty/);
+    expect(() => islandBlueprint({ ...INPUT, lessonIds: ["a", "", "b"] })).toThrow(/non-empty/);
   });
 
   it("uses only the natural base by default and preserves an explicit recipe", () => {
-    const naturalOnly = islandBlueprintV2({ ...INPUT, lessonCount: 12 });
-    const explicit = islandBlueprintV2({
+    const naturalOnly = islandBlueprint({ ...INPUT, lessonCount: 12 });
+    const explicit = islandBlueprint({
       ...INPUT,
       lessonCount: 12,
       themeSelection: {
@@ -204,7 +204,7 @@ describe("IslandBlueprint V2", () => {
       recipeId: "foundations-before-zero-v1",
     });
     expect(
-      islandBlueprintV2({ ...INPUT, courseId: "another-course", lessonCount: 12 }).themeSelection,
+      islandBlueprint({ ...INPUT, courseId: "another-course", lessonCount: 12 }).themeSelection,
     ).toEqual(naturalOnly.themeSelection);
     const broken = structuredClone(explicit);
     const mutableAccentPackIds = broken.themeSelection.accentPackIds as unknown as string[];
@@ -215,41 +215,41 @@ describe("IslandBlueprint V2", () => {
       "fantasy-town-kit",
       "third-pack",
     );
-    expect(
-      validateIslandBlueprintV2(broken).some((issue) => issue.includes("themeSelection")),
-    ).toBe(true);
+    expect(validateIslandBlueprint(broken).some((issue) => issue.includes("themeSelection"))).toBe(
+      true,
+    );
   });
 
   it("accepts an explicit compact switchback for the 41-lesson island", () => {
-    const blueprint = islandBlueprintV2({
+    const blueprint = islandBlueprint({
       ...INPUT,
       lessonCount: 41,
       routeArchetype: "switchback",
     });
     expect(blueprint.route.archetype).toBe("switchback");
-    expect(validateIslandBlueprintV2(blueprint)).toEqual([]);
+    expect(validateIslandBlueprint(blueprint)).toEqual([]);
   });
 
   it("retains deterministic default route selection and covers all archetypes", () => {
     const seen = new Set<string>();
     for (const seedIndex of Array.from({ length: 32 }, (_, index) => index)) {
-      seen.add(selectRouteArchetypeV2(12, `archetype-seed-${seedIndex}`));
+      seen.add(selectRouteArchetype(12, `archetype-seed-${seedIndex}`));
     }
-    expect(seen).toEqual(new Set(ISLAND_ROUTE_ARCHETYPES_V2));
+    expect(seen).toEqual(new Set(ISLAND_ROUTE_ARCHETYPES));
   });
 
   it("keeps every explicit route archetype valid across fixture sizes and seeds", () => {
-    for (const archetype of ISLAND_ROUTE_ARCHETYPES_V2) {
+    for (const archetype of ISLAND_ROUTE_ARCHETYPES) {
       for (const seedIndex of Array.from({ length: 8 }, (_, index) => index)) {
         for (const lessonCount of [3, 12, 24, 41]) {
-          const blueprint = islandBlueprintV2({
+          const blueprint = islandBlueprint({
             ...INPUT,
             lessonCount,
             seed: `explicit-${archetype}-${seedIndex}`,
             routeArchetype: archetype,
           });
           expect(
-            validateIslandBlueprintV2(blueprint),
+            validateIslandBlueprint(blueprint),
             `${archetype}/${lessonCount}/${seedIndex}`,
           ).toEqual([]);
         }
@@ -258,13 +258,13 @@ describe("IslandBlueprint V2", () => {
   });
 
   it("keeps the stable surface rule for nodes, centerline, and offset hero", () => {
-    const blueprint = islandBlueprintV2({
+    const blueprint = islandBlueprint({
       ...INPUT,
       lessonCount: 41,
       routeArchetype: "switchback",
     });
     for (const point of [...blueprint.nodes, ...blueprint.centerline, blueprint.hero]) {
-      const sample = sampleIslandSurfaceV2(blueprint, point.x, point.z);
+      const sample = sampleIslandSurface(blueprint, point.x, point.z);
       expect(sample.inside).toBe(true);
       expect(sample.y).toBeCloseTo(point.y, 8);
       expect(Number.isFinite(sample.y)).toBe(true);
@@ -288,7 +288,7 @@ describe("IslandBlueprint V2", () => {
   });
 
   it("rejects route self-intersection and derives non-adjacent clearance from route widths", () => {
-    const blueprint = islandBlueprintV2({ ...INPUT, lessonCount: 12, routeArchetype: "arc" });
+    const blueprint = islandBlueprint({ ...INPUT, lessonCount: 12, routeArchetype: "arc" });
     const crossing = structuredClone(blueprint) as typeof blueprint & {
       centerline: Array<(typeof blueprint.centerline)[number]>;
     };
@@ -296,12 +296,12 @@ describe("IslandBlueprint V2", () => {
     crossing.centerline[9] = { ...crossing.centerline[9]!, x: 8, z: 8 };
     crossing.centerline[10] = { ...crossing.centerline[10]!, x: -8, z: 8 };
     crossing.centerline[11] = { ...crossing.centerline[11]!, x: 8, z: -8 };
-    const crossingIssues = validateIslandBlueprintV2(crossing);
+    const crossingIssues = validateIslandBlueprint(crossing);
     expect(crossingIssues.some((issue) => issue.includes("self-intersects"))).toBe(true);
 
     const tooClose = structuredClone(blueprint);
     (tooClose.route as unknown as { clearance: number }).clearance = 1000;
-    const clearanceIssues = validateIslandBlueprintV2(tooClose);
+    const clearanceIssues = validateIslandBlueprint(tooClose);
     expect(
       clearanceIssues.some(
         (issue) => issue.includes("non-adjacent") || issue.includes("clearance"),
@@ -311,7 +311,7 @@ describe("IslandBlueprint V2", () => {
 
   it("gives medium and long islands visible macro relief", () => {
     for (const lessonCount of [24, 41]) {
-      const blueprint = islandBlueprintV2({ ...INPUT, lessonCount, seed: `relief-${lessonCount}` });
+      const blueprint = islandBlueprint({ ...INPUT, lessonCount, seed: `relief-${lessonCount}` });
       const relief = sampledRelief(blueprint);
       expect(relief, `${lessonCount} relief`).toBeGreaterThanOrEqual(2.5);
       expect(relief, `${lessonCount} relief`).toBeLessThanOrEqual(4.5);
@@ -320,13 +320,13 @@ describe("IslandBlueprint V2", () => {
 
   it("keeps route, terrain, theme, and anchor geometry independent of unit identity", () => {
     const lessonIds = Array.from({ length: 24 }, (_, index) => `lesson-${index + 1}`);
-    const first = islandBlueprintV2({
+    const first = islandBlueprint({
       ...INPUT,
       lessonCount: lessonIds.length,
       lessonIds,
       unitIds: lessonIds.map(() => "unit-a"),
     });
-    const second = islandBlueprintV2({
+    const second = islandBlueprint({
       ...INPUT,
       lessonCount: lessonIds.length,
       lessonIds: lessonIds.map((_, index) => `other-lesson-${index + 1}`),
@@ -342,14 +342,14 @@ describe("IslandBlueprint V2", () => {
         visualToken,
       })),
     );
-    expect(validateIslandBlueprintV2(first)).toEqual([]);
-    expect(validateIslandBlueprintV2(second)).toEqual([]);
+    expect(validateIslandBlueprint(first)).toEqual([]);
+    expect(validateIslandBlueprint(second)).toEqual([]);
   });
 
   it("keeps unit visual tokens stable within a unit and distinct without relying on colour", () => {
-    const tokenA = unitVisualTokenV2(INPUT.studyId, INPUT.courseId, "unit-a", 0);
-    const tokenB = unitVisualTokenV2(INPUT.studyId, INPUT.courseId, "unit-b", 1);
-    expect(tokenA).toEqual(unitVisualTokenV2(INPUT.studyId, INPUT.courseId, "unit-a", 0));
+    const tokenA = unitVisualToken(INPUT.studyId, INPUT.courseId, "unit-a", 0);
+    const tokenB = unitVisualToken(INPUT.studyId, INPUT.courseId, "unit-b", 1);
+    expect(tokenA).toEqual(unitVisualToken(INPUT.studyId, INPUT.courseId, "unit-a", 0));
     expect(
       tokenA.sigil !== tokenB.sigil ||
         tokenA.motionVariant !== tokenB.motionVariant ||

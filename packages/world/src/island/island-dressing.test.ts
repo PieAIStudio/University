@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { islandBlueprintV2, sampleIslandSurfaceV2 } from "./island-blueprint-v2.js";
+import { islandBlueprint, sampleIslandSurface } from "./island-blueprint.js";
 import {
-  distanceToIslandRouteV2,
-  islandDressingSafetyZonesV2,
-  planIslandDressingV2,
-} from "./island-dressing-v2.js";
-import { sampleIslandTerrainTopV2 } from "./island-geometry-v2.js";
+  distanceToIslandRoute,
+  islandDressingSafetyZones,
+  planIslandDressing,
+} from "./island-dressing.js";
+import { sampleIslandTerrainTop } from "./island-geometry.js";
 import { islandThemeSelectionForCourse, recipeById, type IslandRecipe } from "./kenney-recipes.js";
 
 const selection = islandThemeSelectionForCourse("turing-pact", "foundations-before-zero");
@@ -15,7 +15,7 @@ const WORLD_MINOR_ASSETS = new Set(["lantern", "wall", "wall-corner"]);
 const ROOF_ASSETS = new Set(["roof", "roof-gable"]);
 
 function makeBlueprint(unitIds?: readonly string[]) {
-  return islandBlueprintV2({
+  return islandBlueprint({
     studyId: "turing-pact",
     courseId: "foundations-before-zero",
     lessonIds: Array.from({ length: 41 }, (_, index) => `lesson-${index + 1}`),
@@ -25,11 +25,11 @@ function makeBlueprint(unitIds?: readonly string[]) {
   });
 }
 
-describe("Island V2 dressing", () => {
+describe("Island dressing", () => {
   it("builds a deterministic, curated R01 composition inside the island", () => {
     const blueprint = makeBlueprint();
-    const first = planIslandDressingV2(blueprint, "course");
-    const second = planIslandDressingV2(blueprint, "course");
+    const first = planIslandDressing(blueprint, "course");
+    const second = planIslandDressing(blueprint, "course");
     expect(first).toEqual(second);
     expect(first.placements.length).toBeGreaterThan(45);
     expect(first.placements.some((placement) => placement.packId === "nature-kit")).toBe(true);
@@ -70,12 +70,12 @@ describe("Island V2 dressing", () => {
     }
 
     for (const placement of first.placements) {
-      const surface = sampleIslandSurfaceV2(blueprint, placement.x, placement.z);
-      const renderedTop = sampleIslandTerrainTopV2(blueprint, "course", placement.x, placement.z);
+      const surface = sampleIslandSurface(blueprint, placement.x, placement.z);
+      const renderedTop = sampleIslandTerrainTop(blueprint, "course", placement.x, placement.z);
       expect(surface.inside, placement.id).toBe(true);
       expect(placement.y, placement.id).toBeCloseTo(renderedTop.y + (placement.lift ?? 0), 8);
       expect(placement.height).toBeGreaterThan(0);
-      expect(distanceToIslandRouteV2(blueprint, placement)).toBeGreaterThan(
+      expect(distanceToIslandRoute(blueprint, placement)).toBeGreaterThan(
         blueprint.route.roadWidth / 2,
       );
       expect(
@@ -94,11 +94,11 @@ describe("Island V2 dressing", () => {
   });
 
   it("derives conservative grass aprons from the same authored placements", () => {
-    const plan = planIslandDressingV2(makeBlueprint(), "course");
-    const zones = islandDressingSafetyZonesV2(plan);
+    const plan = planIslandDressing(makeBlueprint(), "course");
+    const zones = islandDressingSafetyZones(plan);
     expect(zones.length).toBeGreaterThan(0);
     expect(zones.every((zone) => zone.kind === "landmark" && zone.radius > 0)).toBe(true);
-    expect(zones).toEqual(islandDressingSafetyZonesV2(plan));
+    expect(zones).toEqual(islandDressingSafetyZones(plan));
   });
 
   it("keeps the authored courtyard inside route and radial clearances", () => {
@@ -109,25 +109,25 @@ describe("Island V2 dressing", () => {
       "switchback",
       "serpentine",
     ] as const) {
-      const blueprint = islandBlueprintV2({
+      const blueprint = islandBlueprint({
         studyId: "turing-pact",
         courseId: "foundations-before-zero",
         lessonCount: 41,
         routeArchetype,
         themeSelection: selection,
       });
-      const accentPlacements = planIslandDressingV2(blueprint, "course").placements.filter(
+      const accentPlacements = planIslandDressing(blueprint, "course").placements.filter(
         (placement) => placement.packId === "fantasy-town-kit",
       );
       expect(new Set(accentPlacements.map((placement) => placement.assetId))).toEqual(
         new Set(r01.accentRoles.flatMap((role) => role.assetIds)),
       );
       for (const placement of accentPlacements) {
-        const surface = sampleIslandSurfaceV2(blueprint, placement.x, placement.z);
+        const surface = sampleIslandSurface(blueprint, placement.x, placement.z);
         const label = `${routeArchetype}/${placement.id}`;
         expect(surface.inside, label).toBe(true);
         expect(surface.radial, label).toBeLessThanOrEqual(0.88);
-        expect(distanceToIslandRouteV2(blueprint, placement)).toBeGreaterThan(
+        expect(distanceToIslandRoute(blueprint, placement)).toBeGreaterThan(
           blueprint.route.roadWidth / 2,
         );
         expect(
@@ -139,7 +139,7 @@ describe("Island V2 dressing", () => {
 
   it("stages the academy kit as arrival, journey, and summit beats", () => {
     const blueprint = makeBlueprint();
-    const accents = planIslandDressingV2(blueprint, "course").placements.filter(
+    const accents = planIslandDressing(blueprint, "course").placements.filter(
       (placement) => placement.packId === "fantasy-town-kit",
     );
     const segments = new Map<string, typeof accents>();
@@ -184,8 +184,8 @@ describe("Island V2 dressing", () => {
 
   it("makes the world plan a semantic subset, not a second random island", () => {
     const blueprint = makeBlueprint();
-    const course = planIslandDressingV2(blueprint, "course");
-    const world = planIslandDressingV2(blueprint, "world");
+    const course = planIslandDressing(blueprint, "course");
+    const world = planIslandDressing(blueprint, "world");
     const courseById = new Map(course.placements.map((placement) => [placement.id, placement]));
     expect(world.placements.length).toBeGreaterThan(4);
     expect(world.placements.length).toBeLessThanOrEqual(12);
@@ -212,14 +212,12 @@ describe("Island V2 dressing", () => {
     const manyUnits = makeBlueprint(
       Array.from({ length: 41 }, (_, index) => `unit-${Math.floor(index / 6) + 1}`),
     );
-    expect(planIslandDressingV2(oneUnit, "course")).toEqual(
-      planIslandDressingV2(manyUnits, "course"),
-    );
+    expect(planIslandDressing(oneUnit, "course")).toEqual(planIslandDressing(manyUnits, "course"));
   });
 
   it("refuses a recipe that does not match the blueprint physical-pack budget", () => {
     const blueprint = makeBlueprint();
     const starport = recipeById("R03-starport") as IslandRecipe;
-    expect(() => planIslandDressingV2(blueprint, "course", starport)).toThrow(/does not match/);
+    expect(() => planIslandDressing(blueprint, "course", starport)).toThrow(/does not match/);
   });
 });

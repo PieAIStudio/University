@@ -4,7 +4,7 @@ import type { ProgressSource } from "@pieai/university-core";
 
 import { placeCourse, placeWorld } from "./Maps.js";
 import type { Course, CourseNode } from "./course/course.js";
-import { islandGeometryProjectionV2 } from "./island/island-blueprint-v2.js";
+import { islandGeometryProjection } from "./island/island-blueprint.js";
 
 const source: ProgressSource = {
   completionOf: () => ({ exercisesPassed: false, readConfirmed: false }),
@@ -68,7 +68,7 @@ function summaryNode(): CourseNode {
   };
 }
 
-describe("Maps V2 projection contract", () => {
+describe("Maps  projection contract", () => {
   it("keeps real lesson and unit identities in one shared blueprint", () => {
     const lessons = placeCourse("turing-pact", course, source);
     const blueprint = lessons[0]?.blueprint;
@@ -97,8 +97,8 @@ describe("Maps V2 projection contract", () => {
 
     expect(worldBlueprint).toBeDefined();
     expect(courseBlueprint).toBeDefined();
-    expect(islandGeometryProjectionV2(worldBlueprint!)).toEqual(
-      islandGeometryProjectionV2(courseBlueprint!),
+    expect(islandGeometryProjection(worldBlueprint!)).toEqual(
+      islandGeometryProjection(courseBlueprint!),
     );
     expect(worldBlueprint!.nodes.map((node) => node.id)).toEqual([
       "foundations-before-zero/fixture-lesson-1",
