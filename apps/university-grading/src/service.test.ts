@@ -257,7 +257,7 @@ describe("University metered grading service", () => {
 
     expect(response.status).toBe(502);
     expect(body).toMatchObject({ code: "model_failed" });
-    expect(body.error).toMatch(/额度已退回/);
+    expect(body.error).toMatch(/次数已退回/);
     expect(events).toEqual(["reserve", "model", "refund"]);
     expect(refundCall).toHaveBeenCalledTimes(1);
     expect(commit).not.toHaveBeenCalled();
@@ -334,7 +334,9 @@ describe("University metered grading service", () => {
       code: "insufficient_balance",
       requiredPowerUnits: "100",
     });
-    expect(body.error).toMatch(/还剩 50.*需要 100/);
+    expect(body.error).toBe(
+      "AI 批改余额不足：你的钱包还不够一次了，这次需要 1 次。请先充值后再试。",
+    );
     expect(complete).not.toHaveBeenCalled();
     expect(events).toEqual(["reserve"]);
   });
@@ -491,5 +493,22 @@ describe("University metered grading service", () => {
     expect(fixtureState.complete).not.toHaveBeenCalled();
     expect(fixtureState.reserve).not.toHaveBeenCalled();
     expect(fixtureState.getBalance).not.toHaveBeenCalled();
+  });
+
+  it("says the free balance is not enough for one attempt when only a remainder is left", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events, "50");
+    fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
+
+    const response = await handleGradeRequest(requestFor("valid-token", "free"), fixtureState.deps);
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(429);
+    expect(body).toMatchObject({
+      code: "free_quota_exhausted",
+      error: "今天剩余的免费 AI 批改次数还不够一次了，明天恢复。",
+      remainingPowerUnits: "50",
+    });
+    expect(fixtureState.complete).not.toHaveBeenCalled();
   });
 });

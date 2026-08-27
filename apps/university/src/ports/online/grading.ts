@@ -6,6 +6,7 @@
  * learner already read, never the answer.
  */
 import {
+  gradingAttemptsFromPowerUnits,
   METERED_GRADING_COST_POWER_UNITS,
   gradeDeterministically,
   type AnswerKey,
@@ -22,6 +23,11 @@ import { readJson } from "@pieai/university-ui/api/client.js";
 import { isRepositoryAnchor, peekCourse } from "../../content/library";
 import type { Lesson } from "../../content/library";
 import { normalise } from "../../lesson/grading";
+
+function gradingAttemptText(powerUnits: string): string {
+  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
+  return attempts === 0n ? "不够一次了" : `${attempts} 次`;
+}
 
 /**
  * The lesson an answer is about, found from the address rather than handed in.
@@ -204,7 +210,7 @@ async function submitToMeteredService(options: {
   } catch (error) {
     if (
       error instanceof Error &&
-      /^(?:AI 批改|登录凭证|计量钱包|这个 commandId|AI 语义批改)/.test(error.message)
+      /^(?:AI 批改|登录凭证|AI 批改钱包|这个 commandId|AI 语义批改)/.test(error.message)
     ) {
       throw error;
     }
@@ -227,7 +233,7 @@ async function readMeteredGradingOffer(options: {
     return unavailableOffer({
       title: "AI 语义批改可以选择，但需要登录",
       whyUnavailable:
-        "当前没有登录账号，服务端无法把这次计量批改绑定到你的钱包；免费提示仍然可用。",
+        "当前没有登录账号，服务端无法把这次 AI 批改绑定到你的钱包；免费提示仍然可用。",
       futureSupport: "登录后，这里会读取同一个账号的 AI 批改余额，再由你决定是否使用。",
     });
   }
@@ -251,10 +257,10 @@ async function readMeteredGradingOffer(options: {
     return offer;
   } catch {
     return unavailableOffer({
-      title: "AI 批改费用与额度暂时读不到",
+      title: "AI 批改费用与次数暂时读不到",
       whyUnavailable:
-        "这次没有读到服务端的每日免费额度或钱包余额，所以不会发起可能扣费的请求；tier-1 免费提示仍然可用。",
-      futureSupport: "服务恢复后，重新提交这道题就会再次读取每日免费额度和付费余额。",
+        "这次没有读到服务端的每日免费批改次数或钱包余额，所以不会发起可能扣费的请求；tier-1 免费提示仍然可用。",
+      futureSupport: "服务恢复后，重新提交这道题就会再次读取每日免费批改次数和付费余额。",
     });
   }
 }
@@ -268,7 +274,7 @@ function unavailableOffer(options: {
   const explanation: MeteredGradingExplanation = {
     kind: "explanation",
     title: options.title,
-    whatItDoes: `它会在确定性判题无法判断的开放题上提供一次结构化 AI 评估，本次约消耗 ${METERED_GRADING_COST_POWER_UNITS} power units。`,
+    whatItDoes: `它会在确定性判题无法判断的开放题上提供一次结构化 AI 评估，本次会使用 ${gradingAttemptText(METERED_GRADING_COST_POWER_UNITS)}。`,
     whyUnavailable: options.whyUnavailable,
     futureSupport: options.futureSupport,
   };

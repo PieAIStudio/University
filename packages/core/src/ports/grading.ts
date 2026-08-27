@@ -10,8 +10,20 @@
 
 import type { LessonRef } from "../progress/contract.js";
 
-/** The provisional charge for one structured tier-two grading request. */
+/** The internal accounting cost for one structured tier-two grading request. */
 export const METERED_GRADING_COST_POWER_UNITS = "100";
+
+/**
+ * Convert internal wallet units into complete learner-facing AI grading
+ * attempts. BigInt keeps the floor exact even when a wallet balance is larger
+ * than JavaScript's safe integer range.
+ */
+export function gradingAttemptsFromPowerUnits(powerUnits: string): bigint {
+  if (!/^\d+$/.test(powerUnits)) {
+    throw new Error("The accounting balance must be a non-negative integer.");
+  }
+  return BigInt(powerUnits) / BigInt(METERED_GRADING_COST_POWER_UNITS);
+}
 
 /** An AI host's verdict, written back through the CLI or returned immediately. */
 export interface HostExerciseGrade {

@@ -96,6 +96,6 @@ describe("PlansScreen purchase entry", () => {
 
     const dialog = document.querySelector<HTMLDialogElement>("dialog");
     expect(dialog?.textContent).toContain("购买入口还没接好");
-    expect(dialog?.textContent).toContain("浏览器不会直连支付 SDK");
+    expect(dialog?.textContent).toContain("浏览器不会直接连接支付服务");
   });
 });

@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-27T12:14:52.059Z
+generated_at: 2026-08-27T12:48:12.172Z
 generator_version: doc-gov@0.9.5
-docs_count: 53
+docs_count: 54
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -276,6 +276,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-26
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-KEEP-INTERNAL-POWER-UNIT-ACCOUNTING-BEHIND-ONE-EXACT-LEARNER-ATTEMPT-CONVERSION
+    path: docs/reference/learnings/workflow-issues/keep-internal-power-unit-accounting-behind-one-exact-learner-attempt-conversion.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-27
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-LONG-DOM-OVERLAY-CARDS-NEED-A-VIEWPORT-SAFE-FALLBACK-ON-NARROW-SCREENS
     path: docs/reference/learnings/workflow-issues/long-dom-overlay-cards-need-a-viewport-safe-fallback-on-narrow-screens.md

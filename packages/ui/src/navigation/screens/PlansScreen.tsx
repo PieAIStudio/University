@@ -1,6 +1,7 @@
 import { GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
   createUnavailablePaymentPort,
+  gradingAttemptsFromPowerUnits,
   PLANS,
   type EntitlementReadModel,
   type PaymentExplanation,
@@ -128,6 +129,11 @@ function planNameOf(entitlement: EntitlementReadModel): string {
   return PLANS.find((plan) => plan.id === entitlement.planId)?.name ?? entitlement.planId;
 }
 
+function walletBalanceText(powerUnits: string): string {
+  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
+  return attempts === 0n ? "钱包余额还不够一次了" : `钱包还够 ${attempts} 次`;
+}
+
 function PaymentSummary({
   balance,
   entitlement,
@@ -143,7 +149,9 @@ function PaymentSummary({
       </p>
       <p>
         钱包余额：
-        {balance?.kind === "value" ? `${balance.value.balancePowerUnits} 个额度单位` : "登录后读取"}
+        {balance?.kind === "value"
+          ? walletBalanceText(balance.value.availablePowerUnits)
+          : "登录后读取"}
       </p>
     </div>
   );

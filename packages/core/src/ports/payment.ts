@@ -101,7 +101,7 @@ const DEFAULT_NO_CHANNEL_EXPLANATION: PaymentExplanation = {
   whatItDoes:
     "接通后，这里会为你的账号生成一个订单号，并把你交给服务端选择可用的支付渠道；付款成功后，服务端才会更新钱包和权益。",
   whyUnavailable:
-    "当前还没有发布给 University 使用的服务端订单入口。浏览器不会直连支付 SDK，也不会自己给钱包加额度。",
+    "当前还没有发布给 University 使用的服务端订单入口。浏览器不会直接连接支付服务，也不会自己给钱包加余额。",
   futureSupport:
     "价格已经确定；服务端订单入口接通海外支付渠道后，会验证付款回调，按订单幂等结算，再让这里刷新权益。",
 };
@@ -128,7 +128,7 @@ const ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION: PaymentExplanation = {
 const BALANCE_UNAVAILABLE_EXPLANATION: PaymentExplanation = {
   kind: "explanation",
   title: "钱包余额暂时读不到",
-  whatItDoes: "它只读取服务端的钱包余额，不会在浏览器里改变额度。",
+  whatItDoes: "它只读取服务端的钱包余额，不会在浏览器里改变钱包余额。",
   whyUnavailable: "当前环境没有可用的钱包读取服务；这不代表余额是 0，也不会用猜出来的数字代替它。",
   futureSupport: "连接到 SwimmerBackend 并登录后，这里会读取服务端返回的余额。",
 };

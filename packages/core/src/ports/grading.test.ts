@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { createMemoryGradingPort } from "./grading.js";
+import { createMemoryGradingPort, gradingAttemptsFromPowerUnits } from "./grading.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -33,5 +33,23 @@ describe("GradingPort", () => {
     });
     expect(result.hostGrade?.passed).toBe(true);
     expect(port.submissions).toHaveLength(1);
+  });
+});
+
+describe("gradingAttemptsFromPowerUnits", () => {
+  it("converts an exactly divisible balance", () => {
+    expect(gradingAttemptsFromPowerUnits("400")).toBe(4n);
+  });
+
+  it("floors a balance with a remainder", () => {
+    expect(gradingAttemptsFromPowerUnits("350")).toBe(3n);
+  });
+
+  it("does not claim an attempt when the balance is below the cost", () => {
+    expect(gradingAttemptsFromPowerUnits("99")).toBe(0n);
+  });
+
+  it("returns zero for an empty balance", () => {
+    expect(gradingAttemptsFromPowerUnits("0")).toBe(0n);
   });
 });

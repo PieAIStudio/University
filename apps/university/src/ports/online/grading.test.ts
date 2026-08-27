@@ -309,7 +309,7 @@ describe("createOnlineGradingPort", () => {
         new Response(
           JSON.stringify({
             code: "insufficient_balance",
-            error: "AI 批改余额不足：还剩 50 power units，这次需要 100。",
+            error: "AI 批改余额不足：你的钱包还不够一次了，这次需要 1 次。请先充值后再试。",
           }),
           { status: 402, headers: { "Content-Type": "application/json" } },
         ),

@@ -137,19 +137,20 @@ describe("ExerciseBlock metered grading choice", () => {
 
     expect(submitExercise.mock.calls[0]?.[0].allowMetered).toBe(false);
     expect(meteredGradingOffer).toHaveBeenCalledTimes(1);
-    expect(container.textContent).toContain("100 power units");
-    expect(container.textContent).toContain("900 power units");
-    expect(container.textContent).toContain("只有点“使用 AI 批改”才会扣钱包额度");
-    expect(buttonWith("只看 tier‑1 免费提示（不花钱包额度）")).toBeTruthy();
+    expect(container.textContent).toContain("这次会使用 1 次");
+    expect(container.textContent).toContain("你的钱包还够 9 次");
+    expect(container.textContent).toContain("只有点“使用 AI 批改”才会从钱包扣除这次批改");
+    expect(container.textContent).not.toContain("power units");
+    expect(buttonWith("只看 tier‑1 免费提示（不使用钱包）")).toBeTruthy();
 
     await act(async () => {
-      buttonWith("只看 tier‑1 免费提示（不花钱包额度）")?.click();
+      buttonWith("只看 tier‑1 免费提示（不使用钱包）")?.click();
     });
-    expect(container.textContent).toContain("已选择 tier‑1 免费提示（不花钱包额度）");
+    expect(container.textContent).toContain("已选择 tier‑1 免费提示（不使用钱包）");
     expect(submitExercise).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      buttonWith("使用 AI 批改（消耗 100）")?.click();
+      buttonWith("使用 AI 批改（使用 1 次）")?.click();
     });
     expect(submitExercise.mock.calls[1]?.[0].allowMetered).toBe(true);
     expect(submitExercise.mock.calls[1]?.[0].meteredFunding).toBe("wallet");
@@ -173,15 +174,16 @@ describe("ExerciseBlock metered grading choice", () => {
     await answerAndSubmit();
 
     expect(container.textContent).toContain("今天的免费 AI 批改还可用");
-    expect(container.textContent).toContain("每日免费 AI 额度");
+    expect(container.textContent).toContain("今天免费 AI 批改里的 1 次");
+    expect(container.textContent).toContain("今天还剩 3 次");
     expect(container.textContent).toContain("不会扣钱包");
-    expect(container.textContent).not.toContain("会使用额度");
+    expect(container.textContent).not.toContain("power units");
     expect(container.textContent).not.toContain("钱包还剩");
-    expect(buttonWith("使用今日免费 AI 批改（占用 100）")).toBeTruthy();
-    expect(buttonWith("只看 tier‑1 免费提示（不占 AI 额度）")).toBeTruthy();
+    expect(buttonWith("使用今日免费 AI 批改（使用 1 次）")).toBeTruthy();
+    expect(buttonWith("只看 tier‑1 免费提示（不占今天的免费次数）")).toBeTruthy();
 
     await act(async () => {
-      buttonWith("使用今日免费 AI 批改（占用 100）")?.click();
+      buttonWith("使用今日免费 AI 批改（使用 1 次）")?.click();
     });
 
     expect(submitExercise.mock.calls[1]?.[0].allowMetered).toBe(true);
@@ -195,7 +197,7 @@ describe("ExerciseBlock metered grading choice", () => {
       meteredGradingOffer: vi.fn(async () => ({
         kind: "unavailable" as const,
         costPowerUnits: "100",
-        availablePowerUnits: null,
+        availablePowerUnits: "50",
         explanation: {
           kind: "explanation" as const,
           title: "AI 语义批改服务还没接通",
@@ -210,8 +212,10 @@ describe("ExerciseBlock metered grading choice", () => {
     await answerAndSubmit();
 
     expect(container.textContent).toContain("AI 语义批改服务还没接通");
+    expect(container.textContent).toContain("你的钱包还不够一次了");
+    expect(container.textContent).not.toContain("0 次");
     expect(buttonWith("查看 AI 批改说明")).toBeTruthy();
-    expect(buttonWith("只看 tier‑1 免费提示（不花钱包额度）")).toBeTruthy();
+    expect(buttonWith("只看 tier‑1 免费提示（不使用钱包）")).toBeTruthy();
   });
 
   it("opens the shared explanation and links anonymous learners to email binding", async () => {
@@ -265,7 +269,7 @@ describe("ExerciseBlock metered grading choice", () => {
           title: "今天的免费 AI 批改用完了",
           whatItDoes: "它会给开放题提供额外的结构化评估。",
           whyUnavailable: freeQuotaMessage,
-          futureSupport: "明天免费额度恢复。",
+          futureSupport: "明天的免费 AI 批改次数恢复。",
         },
       })),
     };
@@ -274,7 +278,7 @@ describe("ExerciseBlock metered grading choice", () => {
     await answerAndSubmit();
 
     expect(container.textContent).toContain(freeQuotaMessage);
-    const tierOneButton = buttonWith("只看 tier‑1 免费提示（不花钱包额度）");
+    const tierOneButton = buttonWith("只看 tier‑1 免费提示（不使用钱包）");
     expect(tierOneButton).toBeTruthy();
     expect(tierOneButton?.disabled).toBe(false);
     expect(buttonWith("查看 AI 批改说明")).toBeTruthy();

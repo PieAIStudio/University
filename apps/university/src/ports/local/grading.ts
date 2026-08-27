@@ -65,9 +65,9 @@ export function createLocalGradingPort(options: {
         explanation: {
           kind: "explanation",
           title: "这端使用本机 AI 宿主",
-          whatItDoes: "在线学习里的 AI 语义批改会先展示费用和余额，再由你决定是否使用计量服务。",
+          whatItDoes: "在线学习里的 AI 语义批改会先展示费用和余额，再由你决定是否使用。",
           whyUnavailable:
-            "当前是 authoring 工作台；开放题会交给本机 AI 宿主，不在这里连接线上计量钱包。",
+            "当前是 authoring 工作台；开放题会交给本机 AI 宿主，不在这里连接线上 AI 批改服务。",
           futureSupport: "切到 delivery 学习端并登录后，页面会显示线上服务的费用、余额和选择。",
         },
       };

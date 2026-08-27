@@ -71,6 +71,7 @@ export {
 } from "./reader.js";
 export {
   METERED_GRADING_COST_POWER_UNITS,
+  gradingAttemptsFromPowerUnits,
   createMemoryGradingPort,
   type CoachingPacket,
   type ExerciseAttemptResult,
