@@ -19,6 +19,7 @@ import type {
   MeteredGradingOffer,
   MeteredGradingResponse,
 } from "@pieai/university-core";
+import { toPath } from "@pieai/university-core";
 import {
   FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY,
   METERED_GRADING,
@@ -35,7 +36,15 @@ const ANONYMOUS_FREE_GRADING_EXPLANATION: MeteredGradingExplanation = {
   whyUnavailable:
     "它每次都要真的花钱，而现在这个身份只存在这台浏览器里——换个浏览器或者清一次数据就找不回来了。",
   futureSupport: "在个人档案绑定邮箱就能用；这台设备上已经学的进度会跟着你走。",
-  action: { label: "去绑定邮箱", href: "/me" },
+  /*
+    The href comes from `toPath`, not from the string "/me".
+
+    `packages/core/src/index.ts` says `toPath`/`fromPath` are the only two
+    functions allowed to know what an address looks like, and it means the
+    server too: a route spelled out here would keep working after the route
+    table changed, and would go stale without anything failing.
+  */
+  action: { label: "去绑定邮箱", href: toPath({ kind: "me" }) },
 };
 
 const GradeRequestSchema = z
