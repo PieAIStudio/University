@@ -68,9 +68,37 @@ export const BILLING_CONFIG = {
       // can sync without waiting for a future price decision.
       sync: { included: true, seats: 1 },
       lines: [
-        "全部已发布课程，全部关卡，不锁课",
-        "确定性判题",
-        "登录且有远端时同步进度；没有远端时继续本机学习",
+        "全部已发布课程、全部关卡，课文永远不收费",
+        "答案对不对，能当场判的当场判",
+        "登录后进度存进账号；没登录也能一直学下去",
+      ],
+    },
+    /*
+      The paid plan's rights are already decided by the journey; only its price
+      is not. `pricing: "pending"` is what that state looks like, and the page
+      renders the rights with 「待产品确认」 where the number will go — which is
+      more honest than an empty page and lets a learner see what they would be
+      buying before anyone has to name a number.
+
+      `openTutoringTurnsPerDay: null` is not "unlimited". Open tutoring is
+      metered against the wallet, so the wallet is the cap; a second turn cap
+      here would be a limit nobody had a reason for.
+    */
+    {
+      id: "member",
+      name: "会员",
+      pricing: { kind: "pending" },
+      ai: {
+        deterministicGrading: true,
+        structuredGrading: true,
+        openTutoring: true,
+        openTutoringTurnsPerDay: null,
+      },
+      sync: { included: true, seats: 3 },
+      lines: [
+        "AI 读得懂你用中文写的答案，告诉你哪一步想岔了",
+        "卡住时可以一直追问，直到这件事真的弄明白",
+        "换手机、换电脑接着学，进度和复习计划都跟着走",
       ],
     },
   ],
