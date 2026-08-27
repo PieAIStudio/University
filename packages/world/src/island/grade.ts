@@ -78,7 +78,7 @@ export const WORLD_GRADE = defineGrade("diorama", {
   tiltShift: false,
   grain: 0,
   saturation: 1.06,
-  contrast: 1.28,
+  contrast: 1.24,
   contrastPivot: srgbToDisplayLinear(WORLD_GRADE_PIVOT_SRGB8),
   coolShadow: {
     amount: 0.26,

@@ -26,7 +26,7 @@ export const WORLD_SUN = {
   keyIntensity: 9.0,
   keyColor: 0xffefd2,
   hemisphereIntensity: 0.95,
-  hemisphereGround: 0x556068,
+  hemisphereGround: 0x7f8b8e,
   ambientIntensity: 0.3,
   ambientColor: 0x9bb8d0,
   /** Light distance as a multiple of the shadowed ground radius. */

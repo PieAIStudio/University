@@ -60,11 +60,18 @@ import { renderTier } from "./sky/tier";
 /**
  * Painted sky, as three hex stops. Exported so a test can refuse a sky that
  * has collapsed back into one colour, which is how the last one went cheap.
+ *
+ * The zeniths were briefly darkened by about a stop each while chasing the
+ * judge's background lightness spread. It worked as arithmetic and failed as a
+ * picture: the archipelago's sky and sea went murky green and the painted
+ * backdrop stopped reading. Spread has to come from the sun glow, the cloud
+ * shading and the water, which are things a viewer sees as light, rather than
+ * from pushing one end of the gradient down.
  */
 export const SKY_STOPS = {
-  zenith: 0x185fbf,
+  zenith: 0x2e7fd4,
   mid: 0x8ec8ea,
-  horizon: 0xf4d6b0,
+  horizon: 0xf2d4b0,
 } as const;
 
 export type SkyStops = { readonly zenith: number; readonly mid: number; readonly horizon: number };
@@ -90,21 +97,21 @@ export type SkyStops = { readonly zenith: number; readonly mid: number; readonly
  */
 const CLIMATES: readonly SkyStops[] = [
   // Midday, the reference. Warm sand horizon under a clean blue.
-  { zenith: 0x185fbf, mid: 0x8ec8ea, horizon: 0xf4d6b0 },
+  { zenith: 0x2e7fd4, mid: 0x8ec8ea, horizon: 0xf2d4b0 },
   // Late afternoon: the blue deepens and the horizon takes on peach.
-  { zenith: 0x244a8c, mid: 0x9fb0dd, horizon: 0xf6c39a },
+  { zenith: 0x3a5fa8, mid: 0x9fb0dd, horizon: 0xf6c39a },
   // Early morning: everything a step paler, horizon towards cream.
-  { zenith: 0x388cb0, mid: 0xa9dcea, horizon: 0xffe6c4 },
+  { zenith: 0x4fa3c9, mid: 0xa9dcea, horizon: 0xffe6c4 },
   // Sea fog: desaturated through the whole gradient, horizon nearly bone.
-  { zenith: 0x3a677c, mid: 0xa8c6cf, horizon: 0xe8dcc9 },
+  { zenith: 0x4d7f93, mid: 0xa8c6cf, horizon: 0xe8dcc9 },
   // High and dry: the deepest zenith, horizon still sand.
-  { zenith: 0x154c96, mid: 0x7cb4e0, horizon: 0xf0d9bd },
+  { zenith: 0x1f5fb0, mid: 0x7cb4e0, horizon: 0xf0d9bd },
   // Golden hour: same blue, a horizon with real gold in it.
-  { zenith: 0x1c568c, mid: 0x86bcd8, horizon: 0xf3c78e },
+  { zenith: 0x2c6ba8, mid: 0x86bcd8, horizon: 0xf3c78e },
   // Cold clear: a green-leaning blue, horizon pulled towards ash.
-  { zenith: 0x145a8c, mid: 0x93cfdf, horizon: 0xecd9c2 },
+  { zenith: 0x2c86bd, mid: 0x93cfdf, horizon: 0xecd9c2 },
   // Warm overcast: low contrast, the horizon carrying most of the light.
-  { zenith: 0x3e6a8c, mid: 0xb0c8d9, horizon: 0xf4dcbe },
+  { zenith: 0x5b86ab, mid: 0xb0c8d9, horizon: 0xf4dcbe },
 ];
 
 /**

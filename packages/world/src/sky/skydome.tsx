@@ -84,7 +84,7 @@ export function SkyDome({ stops }: { stops: SkyDomeStops }) {
       uZenith: { value: new THREE.Color(stops.zenith) },
       uMid: { value: new THREE.Color(stops.mid) },
       uHorizon: { value: new THREE.Color(stops.horizon) },
-      uNadir: { value: new THREE.Color(0x0b2438) },
+      uNadir: { value: new THREE.Color(0x3a7f92) },
       uSunDirection: { value: new THREE.Vector3(...sunDirection) },
       uSunColor: { value: new THREE.Color(WORLD_SUN.keyColor) },
       uSunGlowColor: { value: new THREE.Color(0xffc56a) },
