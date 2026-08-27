@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { ONLINE_ORIGIN } from "./ports.js";
 
 import { defineConfig } from "@playwright/test";
 
@@ -45,7 +46,7 @@ export default defineConfig({
   webServer: {
     command: "node e2e/start-servers.mjs",
     cwd: ROOT,
-    url: "http://127.0.0.1:18093",
+    url: ONLINE_ORIGIN,
     reuseExistingServer: false,
     timeout: 180_000,
     stdout: "pipe",
