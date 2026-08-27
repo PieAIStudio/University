@@ -8,13 +8,29 @@
  * become a required service.
  */
 
-import type { IdentityPort, IdentityStatus, PaymentPort } from "@pieai/university-core";
+import type {
+  IdentityPort,
+  IdentityStatus,
+  PaymentPort,
+  ProgressPort,
+} from "@pieai/university-core";
 import type { ReviewCardPort } from "@pieai/university-ui/review/ports.js";
 
 import { AUTHORING } from "../mode";
 
 export type AnalyticsExerciseTier = "tier-1" | "tier-2";
 export type AnalyticsReviewRating = "again" | "hard" | "good" | "easy";
+/**
+ * Which shelf a graded card came from.
+ *
+ * `review_graded` counted every rating as one number, which cannot answer the
+ * question the teach-back card exists to answer: a learner writes an
+ * explanation in their own words on the promise that it comes back, and
+ * without this discriminant a returning vocabulary card and a returning
+ * teach-back card are the same event. The locator already carries `kind`, so
+ * this adds a stable enum and no new learner content.
+ */
+export type AnalyticsCardKind = "course-card" | "recap-card" | "knowledge-card";
 
 export type AnalyticsEvent =
   | { name: "app_open" }
@@ -43,7 +59,13 @@ export type AnalyticsEvent =
       lessonId: string;
     }
   | { name: "review_due_opened"; cardCount: number }
-  | { name: "review_graded"; rating: AnalyticsReviewRating; cardCount: number }
+  | {
+      name: "review_graded";
+      rating: AnalyticsReviewRating;
+      cardCount: number;
+      cardKind: AnalyticsCardKind;
+    }
+  | { name: "recap_saved"; studyId: string; courseId: string; lessonId: string }
   | { name: "account_sign_up_started" }
   | { name: "account_sign_up_completed" }
   | { name: "account_sign_in" }
@@ -62,7 +84,8 @@ const ALLOWLIST: Record<AnalyticsEventName, readonly string[]> = {
   exercise_result: ["studyId", "courseId", "lessonId", "passed", "attemptCount"],
   settlement_shown: ["studyId", "courseId", "lessonId"],
   review_due_opened: ["cardCount"],
-  review_graded: ["rating", "cardCount"],
+  review_graded: ["rating", "cardCount", "cardKind"],
+  recap_saved: ["studyId", "courseId", "lessonId"],
   account_sign_up_started: [],
   account_sign_up_completed: [],
   account_sign_in: [],
@@ -243,8 +266,43 @@ export function withProductAnalyticsReview(
     async rate(card, rating) {
       const cardCount = cardCountOf();
       const result = await review.rate(card, rating);
-      trackEvent({ name: "review_graded", rating: reviewRatingOf(rating), cardCount });
+      trackEvent({
+        name: "review_graded",
+        rating: reviewRatingOf(rating),
+        cardCount,
+        cardKind: card.kind,
+      });
       return result;
+    },
+  };
+}
+
+/**
+ * Keep the one write that creates a teach-back card observable.
+ *
+ * The card is created by `RecapPrompt`, which `LessonReader` and
+ * `SettlementHost` both render — so tracking at a call site would count one of
+ * them and miss the other. The port is where the write actually happens, and
+ * there is one of it.
+ *
+ * Only a card that did not exist before and does exist after is a save. The
+ * port validates its input and returns without writing when it is malformed,
+ * and re-saving is not something the prompt offers, so this reports first
+ * saves and nothing else.
+ */
+export function withProductAnalyticsProgress(progress: ProgressPort): ProgressPort {
+  return {
+    ...progress,
+    createRecapCard(input) {
+      const existed = progress.recapCard(input.locator) !== undefined;
+      progress.createRecapCard(input);
+      if (existed || progress.recapCard(input.locator) === undefined) return;
+      trackEvent({
+        name: "recap_saved",
+        studyId: input.locator.studyId,
+        courseId: input.locator.courseId,
+        lessonId: input.locator.lessonId,
+      });
     },
   };
 }

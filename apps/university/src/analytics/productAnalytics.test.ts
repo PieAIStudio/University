@@ -1,4 +1,10 @@
-import { createMemoryIdentityPort, createPaymentPort } from "@pieai/university-core";
+import {
+  createMemoryIdentityPort,
+  createPaymentPort,
+  RECAP_CARD_ID,
+  type ProgressPort,
+  type RecapCardInput,
+} from "@pieai/university-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -7,6 +13,7 @@ import {
   trackEvent,
   withProductAnalyticsIdentity,
   withProductAnalyticsPayment,
+  withProductAnalyticsProgress,
   withProductAnalyticsReview,
 } from "./productAnalytics";
 
@@ -159,6 +166,83 @@ describe("product analytics", () => {
     expect(posthogCapture).toHaveBeenCalledWith("review_graded", {
       rating: "good",
       cardCount: 3,
+      cardKind: "course-card",
+    });
+  });
+
+  it("separates a returning teach-back card from every other returning card", async () => {
+    setAnalyticsClientForTesting({ capture: posthogCapture });
+    const review = withProductAnalyticsReview(
+      {
+        async reveal() {
+          return { back: null };
+        },
+        async rate() {
+          return { dueAt: "2026-08-28T00:00:00.000Z" };
+        },
+      },
+      () => 1,
+    );
+
+    await review.rate(
+      {
+        kind: "recap-card",
+        studyId: "study-1",
+        courseId: "course-1",
+        unitId: "unit-1",
+        lessonId: "lesson-1",
+        cardId: RECAP_CARD_ID,
+        front: "the unit capability sentence",
+        contentRevision: 1,
+      },
+      3,
+    );
+
+    expect(posthogCapture).toHaveBeenCalledWith("review_graded", {
+      rating: "good",
+      cardCount: 1,
+      cardKind: "recap-card",
+    });
+  });
+
+  it("reports a teach-back save once, and never its text", () => {
+    setAnalyticsClientForTesting({ capture: posthogCapture });
+    const locator = {
+      studyId: "study-1",
+      courseId: "course-1",
+      unitId: "unit-1",
+      lessonId: "lesson-1",
+    };
+    let stored: string | undefined;
+    // Only the two methods the wrapper touches. A full port here would be a
+    // second implementation of the store, which is what the wrapper exists to
+    // avoid needing.
+    const progress = withProductAnalyticsProgress({
+      createRecapCard(input: RecapCardInput) {
+        stored = input.answer;
+      },
+      recapCard: () => (stored === undefined ? undefined : ({ answer: stored } as never)),
+    } as unknown as ProgressPort);
+
+    progress.createRecapCard({
+      locator,
+      contentRevision: 1,
+      commandId: "command-1",
+      answer: "在我自己的话里，这一单元讲的是……",
+    });
+    progress.createRecapCard({
+      locator,
+      contentRevision: 1,
+      commandId: "command-2",
+      answer: "第二次保存不该再算一次",
+    });
+
+    const saves = posthogCapture.mock.calls.filter(([name]) => name === "recap_saved");
+    expect(saves).toHaveLength(1);
+    expect(saves[0]?.[1]).toEqual({
+      studyId: "study-1",
+      courseId: "course-1",
+      lessonId: "lesson-1",
     });
   });
 

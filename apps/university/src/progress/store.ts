@@ -34,10 +34,18 @@ import { createBrowserProgressPort } from "@pieai/university-ui/progress/store.j
 
 import { swimmerBackendClient } from "../account/identity";
 import { createSupabaseProgressRemoteStore } from "../account/progress-remote";
+import { withProductAnalyticsProgress } from "../analytics/productAnalytics";
 
 export { lessonKey };
 
-export const progressPort: ProgressPort = createBrowserProgressPort();
+/**
+ * The analytics wrapper goes here, on the singleton, and not at a call site.
+ *
+ * `RecapPrompt` is rendered by both the lesson reader and the settlement
+ * screen, so a `trackEvent` beside either one would count half the saves.
+ * Wrapping the port once is the only place that sees all of them.
+ */
+export const progressPort: ProgressPort = withProductAnalyticsProgress(createBrowserProgressPort());
 export const progressRemoteStore: ProgressRemoteStore | null = swimmerBackendClient
   ? createSupabaseProgressRemoteStore(swimmerBackendClient)
   : null;
