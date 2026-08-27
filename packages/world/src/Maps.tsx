@@ -41,7 +41,7 @@ import {
 } from "./island/island-blueprint.js";
 import { buildBlueprintIsland } from "./island/island-geometry.js";
 import { PropField, type Placement, type Role } from "./kit";
-import { PlayerMarker, type AvatarRecipe } from "./avatar/index.js";
+import { hopPose, PlayerMarker, type AvatarRecipe } from "./avatar/index.js";
 import { layoutCourse, layoutStudyRoad, radiusForLessons } from "./course/layout";
 import { stoneRadius } from "./labels/path-overlay";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
@@ -542,6 +542,29 @@ function LiveRing({ radius, lift = 0.08 }: { radius: number; lift?: number }) {
   );
 }
 
+const MARKER_ORIGIN = new THREE.Vector3(0, 0, 0);
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+/**
+ * The learner's avatar hops to the node it was sent to.
+ *
+ * Two groups, because the ring and the avatar want different halves of the
+ * motion: the ring is a mark on the ground and must stay on it, while only the
+ * avatar leaves it. The squash also lives on its own group so it composes with
+ * the scale `PlayerMarker` derives from the recipe's height instead of
+ * overwriting it — a taller avatar would otherwise be normalised twice.
+ *
+ * Picking a node opens the card that offers to enter, not the lesson itself,
+ * so this plays over a step the learner was taking anyway and never sits
+ * between a click and its answer.
+ */
 function LearnerMarker({
   position,
   recipe,
@@ -551,13 +574,52 @@ function LearnerMarker({
   readonly recipe: AvatarRecipe | null;
   readonly signedIn: boolean;
 }) {
+  const travel = useRef<THREE.Group>(null);
+  const lift = useRef<THREE.Group>(null);
+  const from = useRef(position.clone());
+  const target = useRef(position.clone());
+  const startedAt = useRef<number | null>(null);
+
+  useFrame(({ clock }) => {
+    const ground = travel.current;
+    const body = lift.current;
+    if (!ground || !body) return;
+
+    if (!target.current.equals(position)) {
+      /*
+        Retarget from wherever the avatar is now rather than from the node it
+        set out from. A learner who picks a third island mid-flight should see
+        one continuous move, not a rewind.
+      */
+      from.current.copy(ground.position);
+      target.current.copy(position);
+      startedAt.current = clock.elapsedTime;
+    }
+    if (startedAt.current === null) {
+      ground.position.copy(position);
+      return;
+    }
+
+    const elapsedMs = (clock.elapsedTime - startedAt.current) * 1000;
+    const pose = hopPose({
+      from: from.current,
+      to: target.current,
+      elapsedMs,
+      reducedMotion: prefersReducedMotion(),
+    });
+    ground.position.set(pose.position.x, pose.position.y, pose.position.z);
+    body.position.y = pose.lift;
+    body.scale.set(1, pose.stretch, 1);
+    if (pose.done) startedAt.current = null;
+  });
+
   return (
-    <group>
-      <PlayerMarker position={position} recipe={recipe} signedIn={signedIn} />
-      {/* The ring is a navigation cue; avatar motion stays inside the kit. */}
-      <group position={position}>
-        <LiveRing radius={0.72} />
+    <group ref={travel} position={position}>
+      <group ref={lift}>
+        <PlayerMarker position={MARKER_ORIGIN} recipe={recipe} signedIn={signedIn} />
       </group>
+      {/* The ring is a navigation cue on the ground; only the avatar leaves it. */}
+      <LiveRing radius={0.72} />
     </group>
   );
 }
