@@ -67,6 +67,7 @@ export interface IdentityAuth {
   signInAnonymously(options?: { captchaToken?: string }): Promise<IdentityAuthSession | null>;
   signInWithEmail(email: string, password: string): Promise<IdentityAuthSession | null>;
   signUpWithEmail(email: string, password: string): Promise<IdentityAuthSession | null>;
+  requestMagicLink(email: string, redirectTo: string): Promise<void>;
   linkEmail(email: string, password: string): Promise<IdentityAuthSession | null>;
   signOut(): Promise<void>;
 }
@@ -77,6 +78,7 @@ export interface IdentityPort {
   signInAnonymously(options?: { captchaToken?: string }): Promise<void>;
   signInWithEmail(email: string, password: string): Promise<void>;
   signUpWithEmail(email: string, password: string): Promise<{ confirmationRequired: boolean }>;
+  requestMagicLink(email: string, redirectTo: string): Promise<void>;
   linkEmail(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
   readAccessToken(): Promise<string | null>;
@@ -196,6 +198,23 @@ export function createIdentityPort(auth: IdentityAuth | null): IdentityPort {
         return { confirmationRequired: false };
       }
     },
+    async requestMagicLink(email, redirectTo) {
+      if (status.kind === "anonymous") {
+        throw new Error("匿名学习会话请用邮箱和密码绑定，这样当前进度不会丢失。");
+      }
+      if (status.kind === "signed_in") return;
+      explicitOperationStarted = true;
+      // Requesting a link does not change the session. Keep the signed-out
+      // form mounted so it can show the confirmation after the mail request
+      // completes; the form owns its short-lived submit lock.
+      try {
+        await configuredAuth.requestMagicLink(email, redirectTo);
+        setStatus({ kind: "signed_out" });
+      } catch {
+        setStatus({ kind: "error", message: "登录链接没有发出去，请稍后再试。" });
+        throw new Error("登录链接没有发出去，请稍后再试。");
+      }
+    },
     linkEmail,
     async signOut() {
       explicitOperationStarted = true;
@@ -240,6 +259,7 @@ function createUnconfiguredIdentityPort(): IdentityPort {
     subscribe: () => () => undefined,
     signInWithEmail: async () => undefined,
     signUpWithEmail: async () => ({ confirmationRequired: false }),
+    requestMagicLink: async () => undefined,
     signInAnonymously: async () => undefined,
     linkEmail: async () => undefined,
     signOut: async () => undefined,
@@ -299,6 +319,10 @@ export function createMemoryIdentityPort(initial?: IdentityUser): IdentityPort {
       current = { id: `memory:${trimmed}`, email: trimmed };
       setStatus({ kind: "signed_in", user: current });
       return { confirmationRequired: false };
+    },
+    async requestMagicLink() {
+      // The in-memory port has no mailbox. Callers only need a completed
+      // action in tests; browser delivery is covered by the injected auth port.
     },
     async linkEmail(email, password) {
       if (!anonymous || !current) throw new Error("只有匿名账号可以绑定邮箱。");

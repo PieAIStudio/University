@@ -1,4 +1,4 @@
-import { useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import {
   GameButton,
   GameCallout,
@@ -36,19 +36,31 @@ const ACCOUNT_SIGNED_IN_DESCRIPTION =
 export const ACCOUNT_PENDING_LABEL = "正在登录…";
 export const ACCOUNT_SIGN_IN = "登录";
 const ACCOUNT_SIGN_UP = "创建账号";
+export const ACCOUNT_MAGIC_LINK = "免密码登录";
+export const ACCOUNT_SEND_MAGIC_LINK = "发送登录链接";
 export const ACCOUNT_SIGN_OUT = "退出登录";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 const MIN_PASSWORD_LENGTH = 8;
 
-type AuthMode = "login" | "register";
+type AuthMode = "login" | "register" | "magic";
 
 const AUTH_TABS = [
   { id: "login", label: ACCOUNT_SIGN_IN, panelId: "account-form-panel" },
   { id: "register", label: ACCOUNT_SIGN_UP, panelId: "account-form-panel" },
+  { id: "magic", label: ACCOUNT_MAGIC_LINK, panelId: "account-form-panel" },
 ] as const;
 
-export function AccountPanel({ identity }: { readonly identity: IdentityPort }) {
+const PASSWORD_AUTH_TABS = AUTH_TABS.slice(0, 2);
+
+export function AccountPanel({
+  identity,
+  authRedirectTo,
+}: {
+  readonly identity: IdentityPort;
+  /** The current shell's allow-listed Supabase Auth redirect URL. */
+  readonly authRedirectTo?: string;
+}) {
   const status = useSyncExternalStore(identity.subscribe, identity.status, identity.status);
 
   if (status.kind === "unconfigured") {
@@ -94,6 +106,7 @@ export function AccountPanel({ identity }: { readonly identity: IdentityPort }) 
       identity={identity}
       error={status.kind === "error" ? status.message : null}
       anonymous={status.kind === "anonymous"}
+      authRedirectTo={authRedirectTo ?? currentPageOrigin()}
     />
   );
 }
@@ -102,20 +115,31 @@ function UnsignedAccountForm({
   identity,
   error,
   anonymous,
+  authRedirectTo,
 }: {
   readonly identity: IdentityPort;
   readonly error: string | null;
   readonly anonymous: boolean;
+  readonly authRedirectTo: string;
 }) {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(error);
   const emailId = useId();
   const passwordId = useId();
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const tabs = anonymous ? PASSWORD_AUTH_TABS : AUTH_TABS;
+
+  useEffect(() => {
+    if (!anonymous || mode !== "magic") return;
+    setMode("login");
+    setFieldError(null);
+    setNotice(null);
+  }, [anonymous, mode]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -125,14 +149,24 @@ function UnsignedAccountForm({
       emailRef.current?.focus();
       return;
     }
-    if (password.length < MIN_PASSWORD_LENGTH) {
+    if (mode !== "magic" && password.length < MIN_PASSWORD_LENGTH) {
       setFieldError("密码至少需要 8 个字符。");
       passwordRef.current?.focus();
       return;
     }
     setFieldError(null);
     setNotice(null);
+    setIsSubmitting(true);
     try {
+      if (mode === "magic") {
+        if (!authRedirectTo) {
+          setFieldError("当前页面还没有可用的登录回跳地址。");
+          return;
+        }
+        await identity.requestMagicLink(trimmed, authRedirectTo);
+        setNotice("登录链接已经发到邮箱，请在这个浏览器里打开邮件中的链接；链接短时间有效。");
+        return;
+      }
       if (mode === "login") {
         await identity.signInWithEmail(trimmed, password);
         return;
@@ -147,6 +181,8 @@ function UnsignedAccountForm({
       }
     } catch (reason: unknown) {
       setFieldError(reason instanceof Error ? reason.message : "这次操作没有完成，请稍后再试。");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -157,7 +193,7 @@ function UnsignedAccountForm({
         <GameTabs
           id="account-mode"
           activeId={mode}
-          tabs={AUTH_TABS}
+          tabs={tabs}
           onSelect={(id) => {
             setMode(id as AuthMode);
             setFieldError(null);
@@ -189,24 +225,34 @@ function UnsignedAccountForm({
                 onChange={(event) => setEmail(event.currentTarget.value)}
               />
             </GameField>
-            <GameField label="密码" required>
-              <GameInput
-                ref={passwordRef}
-                id={passwordId}
-                type="password"
-                name="password"
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
-                value={password}
-                invalid={Boolean(fieldError)}
-                onChange={(event) => setPassword(event.currentTarget.value)}
-              />
-            </GameField>
-            <GameButton variant="primary" type="submit">
-              {mode === "login" ? ACCOUNT_SIGN_IN : ACCOUNT_SIGN_UP}
+            {mode === "magic" ? null : (
+              <GameField label="密码" required>
+                <GameInput
+                  ref={passwordRef}
+                  id={passwordId}
+                  type="password"
+                  name="password"
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  value={password}
+                  invalid={Boolean(fieldError)}
+                  onChange={(event) => setPassword(event.currentTarget.value)}
+                />
+              </GameField>
+            )}
+            <GameButton variant="primary" type="submit" disabled={isSubmitting}>
+              {mode === "login"
+                ? ACCOUNT_SIGN_IN
+                : mode === "register"
+                  ? ACCOUNT_SIGN_UP
+                  : ACCOUNT_SEND_MAGIC_LINK}
             </GameButton>
           </form>
         </div>
       </div>
     </div>
   );
+}
+
+function currentPageOrigin(): string {
+  return typeof window === "undefined" ? "" : window.location.origin;
 }
