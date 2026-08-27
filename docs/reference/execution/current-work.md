@@ -32,6 +32,21 @@ The short, current handoff. **What is true now, never how it got that way.**
 > `apps/local` 现在只剩那台读磁盘的 Node 服务（4317），没有被改动。
 > 经过、踩过的坑和验收数字都在 [One App Handoff](./one-app-handoff.md)。
 
+> **课程岛观感，进行中（2026-08-28）**：两座并存的岛屿实现已合并成一份；
+> 判官（`pnpm e2e:island-look`）会在固定 seed / 固定机位下输出
+> `SHOTS/island-look/metrics.json`，逐项给出实测值与门槛。合同在
+> [Island Look Contract](./island-look-contract.md)，门槛全部量自 donor
+> `elemental-serenity` 的白天场景与三张参考图。
+>
+> **当前 23 项挂 15 项**，其中最上游的一条是 `sceneLinearRange` = 1.77（门槛 4.0）：
+> 那是 `window.measureScene()` 读到的**调色之前**的场景亮度比，不到一档光圈。
+> **在任何调色之前，场景本身就没有明暗。**
+>
+> 三条已经用运行时实验排除的死路，不要再走：加主光强度（2.1→6.0，指标纹丝不动）、
+> 只放大阴影相机（±15.8→±40，完全无效）、动 `gl.toneMappingExposure`
+> （那个旋钮是死的，颜色管线在 `grade.ts` 的 blit 里）。唯一有效的是**降低太阳仰角**
+> （55.9°→17°，落差 5.2→18.8）。
+
 Reversals live in `docs/adr/` as decision records with `supersedes` links.
 Nothing on this page explains what a rule used to be — if you need that, an ADR
 has it, and you only need it when you are about to argue a rule should change.
