@@ -6,7 +6,12 @@ import {
 
 let dependencies: GradeDependencies | undefined;
 
-export default function vercelGradeHandler(request: Request): Promise<Response> {
+export function vercelGradeHandler(request: Request): Promise<Response> {
   dependencies ??= createProductionGradeDependencies();
   return handleGradeRequest(request, dependencies);
 }
+
+/** Vercel's Node runtime supplies the Web Request through the `fetch` export. */
+export default {
+  fetch: vercelGradeHandler,
+};
