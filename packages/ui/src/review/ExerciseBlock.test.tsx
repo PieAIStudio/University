@@ -61,6 +61,16 @@ let root: Root;
 
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  if (!HTMLDialogElement.prototype.showModal) {
+    HTMLDialogElement.prototype.showModal = function showModal() {
+      this.setAttribute("open", "");
+    };
+  }
+  if (!HTMLDialogElement.prototype.close) {
+    HTMLDialogElement.prototype.close = function close() {
+      this.removeAttribute("open");
+    };
+  }
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -202,6 +212,42 @@ describe("ExerciseBlock metered grading choice", () => {
     expect(container.textContent).toContain("AI 语义批改服务还没接通");
     expect(buttonWith("查看 AI 批改说明")).toBeTruthy();
     expect(buttonWith("只看 tier‑1 免费提示（不花钱包额度）")).toBeTruthy();
+  });
+
+  it("opens the shared explanation and links anonymous learners to email binding", async () => {
+    const grading: GradingPort = {
+      submitExercise: vi.fn(async () => TIER_ONE_RESULT),
+      meteredGradingOffer: vi.fn(async () => ({
+        kind: "unavailable" as const,
+        costPowerUnits: "100",
+        availablePowerUnits: null,
+        explanation: {
+          kind: "explanation" as const,
+          title: "今天的免费 AI 批改要先绑定邮箱",
+          whatItDoes: "AI 会读懂你用中文写的答案，告诉你哪一步想岔了。",
+          whyUnavailable:
+            "它每次都要真的花钱，而现在这个身份只存在这台浏览器里——换个浏览器或者清一次数据就找不回来了。",
+          futureSupport: "在个人档案绑定邮箱就能用；这台设备上已经学的进度会跟着你走。",
+          action: { label: "去绑定邮箱", href: "/me" },
+        },
+      })),
+    };
+
+    await renderBlock(grading);
+    await answerAndSubmit();
+
+    const explanationButton = buttonWith("查看 AI 批改说明");
+    expect(explanationButton).toBeTruthy();
+    await act(async () => {
+      explanationButton?.click();
+    });
+
+    const dialog = document.querySelector<HTMLDialogElement>(".capability-explanation");
+    expect(dialog).toBeTruthy();
+    expect(dialog?.textContent).toContain("今天的免费 AI 批改要先绑定邮箱");
+    expect(dialog?.textContent).toContain("它每次都要真的花钱");
+    expect(dialog?.textContent).toContain("这台设备上已经学的进度会跟着你走");
+    expect(dialog?.querySelector('a[href="/me"]')?.textContent).toBe("去绑定邮箱");
   });
 
   it("keeps the tier-one control and tells the learner when the daily free quota is exhausted", async () => {

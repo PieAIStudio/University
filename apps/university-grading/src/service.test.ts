@@ -47,6 +47,8 @@ const RESERVATION_ID = "22222222-2222-4222-8222-222222222222";
 const FREE_RESERVATION_ID = "33333333-3333-4333-8333-333333333333";
 const REFUND_ENTRY_ID = "44444444-4444-4444-8444-444444444444";
 const COMMAND_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const ANONYMOUS_COMMAND_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+const LINKED_COMMAND_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 
 const reservation = {
   allowed: true,
@@ -83,7 +85,11 @@ const refund = {
   status: "refunded" as const,
 };
 
-function requestFor(token?: string, funding: "free" | "wallet" = "wallet"): Request {
+function requestFor(
+  token?: string,
+  funding: "free" | "wallet" = "wallet",
+  commandId = COMMAND_ID,
+): Request {
   const headers = new Headers({ "Content-Type": "application/json" });
   if (token) headers.set("Authorization", `Bearer ${token}`);
   return new Request("https://grading.example.test/api/grade", {
@@ -91,7 +97,7 @@ function requestFor(token?: string, funding: "free" | "wallet" = "wallet"): Requ
     headers,
     body: JSON.stringify({
       answer: "我的解释",
-      commandId: COMMAND_ID,
+      commandId,
       contentRevision: 1,
       exerciseId: "explain",
       prompt: "为什么？",
@@ -356,6 +362,93 @@ describe("University metered grading service", () => {
       day: "2026-08-26",
       quotaPowerUnits: "400",
     });
+  });
+
+  it("returns a capability explanation for anonymous free grading without reading quota", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
+    fixtureState.authenticate.mockResolvedValue({ userId: USER_ID, isAnonymous: true });
+
+    const response = await handleGradeRequest(
+      requestFor("valid-token", "free", ANONYMOUS_COMMAND_ID),
+      fixtureState.deps,
+    );
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      kind: "unavailable",
+      availablePowerUnits: null,
+      explanation: {
+        kind: "explanation",
+        title: "今天的免费 AI 批改要先绑定邮箱",
+        whatItDoes: "AI 会读懂你用中文写的答案，告诉你哪一步想岔了。",
+        whyUnavailable:
+          "它每次都要真的花钱，而现在这个身份只存在这台浏览器里——换个浏览器或者清一次数据就找不回来了。",
+        futureSupport: "在个人档案绑定邮箱就能用；这台设备上已经学的进度会跟着你走。",
+        action: { label: "去绑定邮箱", href: "/me" },
+      },
+    });
+    expect(quotaState.quote).not.toHaveBeenCalled();
+    expect(quotaState.reserve).not.toHaveBeenCalled();
+    expect(fixtureState.complete).not.toHaveBeenCalled();
+  });
+
+  it("returns the same unavailable explanation for an anonymous offer without quoting", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
+    fixtureState.authenticate.mockResolvedValue({ userId: USER_ID, isAnonymous: true });
+
+    const response = await handleGradeRequest(offerRequestFor("valid-token"), fixtureState.deps);
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      kind: "unavailable",
+      availablePowerUnits: null,
+      explanation: {
+        title: "今天的免费 AI 批改要先绑定邮箱",
+        action: { href: "/me" },
+      },
+    });
+    expect(quotaState.quote).not.toHaveBeenCalled();
+    expect(quotaState.reserve).not.toHaveBeenCalled();
+    expect(fixtureState.createWallet).not.toHaveBeenCalled();
+  });
+
+  it("allows the same user to use the daily free allowance immediately after email binding", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
+    fixtureState.authenticate
+      .mockResolvedValueOnce({ userId: USER_ID, isAnonymous: true })
+      .mockResolvedValueOnce({ userId: USER_ID, isAnonymous: false });
+
+    const anonymousResponse = await handleGradeRequest(
+      requestFor("valid-token", "free", ANONYMOUS_COMMAND_ID),
+      fixtureState.deps,
+    );
+    expect(anonymousResponse.status).toBe(200);
+    expect(quotaState.reserve).not.toHaveBeenCalled();
+
+    const linkedResponse = await handleGradeRequest(
+      requestFor("valid-token", "free", LINKED_COMMAND_ID),
+      fixtureState.deps,
+    );
+    const linkedBody = (await linkedResponse.json()) as Record<string, unknown>;
+
+    expect(linkedResponse.status).toBe(200);
+    expect(linkedBody).toMatchObject({
+      funding: "free",
+      freeQuota: { remainingPowerUnits: "300" },
+    });
+    expect(quotaState.reserve).toHaveBeenCalledTimes(1);
+    expect(quotaState.reserve).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: USER_ID, idempotencyKey: LINKED_COMMAND_ID }),
+    );
+    expect(fixtureState.events).toEqual(["free-reserve", "model", "free-commit"]);
   });
 
   it("uses the daily free allowance before the wallet for a structured grade", async () => {

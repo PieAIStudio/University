@@ -100,6 +100,11 @@ export interface MeteredGradingExplanation {
   readonly whatItDoes: string;
   readonly whyUnavailable: string;
   readonly futureSupport: string;
+  /** An existing learner-facing route, such as the account binding page. */
+  readonly action?: {
+    readonly label: string;
+    readonly href: string;
+  };
 }
 
 /** A quote is read before an explicit choice, never after a charge. */

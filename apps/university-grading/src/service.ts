@@ -15,6 +15,7 @@ import { z } from "zod";
 
 import type {
   MeteredGradingBalance,
+  MeteredGradingExplanation,
   MeteredGradingOffer,
   MeteredGradingResponse,
 } from "@pieai/university-core";
@@ -27,6 +28,15 @@ const MAX_PROMPT_BYTES = 8 * 1024;
 const MAX_ANSWER_BYTES = 8 * 1024;
 const MAX_EXERCISE_ID_BYTES = 256;
 const FREE_QUOTA_EXHAUSTED_MESSAGE = "今天的免费 AI 批改用完了，明天恢复。";
+const ANONYMOUS_FREE_GRADING_EXPLANATION: MeteredGradingExplanation = {
+  kind: "explanation",
+  title: "今天的免费 AI 批改要先绑定邮箱",
+  whatItDoes: "AI 会读懂你用中文写的答案，告诉你哪一步想岔了。",
+  whyUnavailable:
+    "它每次都要真的花钱，而现在这个身份只存在这台浏览器里——换个浏览器或者清一次数据就找不回来了。",
+  futureSupport: "在个人档案绑定邮箱就能用；这台设备上已经学的进度会跟着你走。",
+  action: { label: "去绑定邮箱", href: "/me" },
+};
 
 const GradeRequestSchema = z
   .object({
@@ -217,7 +227,9 @@ export async function handleGradeRequest(
     return unauthorized(deps.allowedOrigin);
   }
 
-  const freeGradingQuota = createFreeGradingQuota(deps, accessToken);
+  const freeGradingQuota = identity.isAnonymous
+    ? undefined
+    : createFreeGradingQuota(deps, accessToken);
   const now = deps.now?.() ?? new Date().toISOString();
   const day = calendarDay(now);
 
@@ -248,6 +260,9 @@ export async function handleGradeRequest(
   } as const;
 
   if (input.funding === "free") {
+    if (identity.isAnonymous) {
+      return jsonResponse(anonymousFreeGradingOffer(), 200, deps.allowedOrigin);
+    }
     return handleFreeGrading({
       deps,
       identity,
@@ -270,6 +285,10 @@ interface ReadGradingOfferInput {
 }
 
 async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response> {
+  if (input.identity.isAnonymous) {
+    return jsonResponse(anonymousFreeGradingOffer(), 200, input.deps.allowedOrigin);
+  }
+
   let freeQuote: FreeGradingQuotaQuote | null = null;
   if (input.freeGradingQuota) {
     try {
@@ -752,6 +771,15 @@ function unavailableOffer(options: {
           freeQuotaResetsAt: options.freeQuotaResetsAt,
         }
       : {}),
+  };
+}
+
+function anonymousFreeGradingOffer(): MeteredGradingOffer {
+  return {
+    kind: "unavailable",
+    costPowerUnits: METERED_GRADING.reservationPowerUnits,
+    availablePowerUnits: null,
+    explanation: ANONYMOUS_FREE_GRADING_EXPLANATION,
   };
 }
 
