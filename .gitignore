@@ -101,3 +101,4 @@ artifacts/
 # In-repository Codex worktrees. Parallel AI work must never appear as
 # nested untracked source, and must never be deleted by another agent.
 /.worktrees/
+.env*

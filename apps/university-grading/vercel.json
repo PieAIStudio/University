@@ -2,11 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "corepack pnpm@11.22.0 install --frozen-lockfile",
   "buildCommand": "corepack pnpm@11.22.0 run build",
+  "outputDirectory": "public",
   "regions": ["iad1"],
   "functions": {
     "api/grade.ts": {
-      "maxDuration": 60,
-      "runtime": "nodejs24.x"
+      "maxDuration": 60
     }
   }
 }
