@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-27T16:09:37.137Z
+generated_at: 2026-08-27T16:19:50.040Z
 generator_version: doc-gov@0.9.5
-docs_count: 55
+docs_count: 56
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -178,6 +178,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-08-27
+    pinned: false
+  - id: REF-ISLAND-LOOK-CONTRACT
+    path: docs/reference/execution/island-look-contract.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-08-28
     pinned: false
   - id: REF-ONE-APP-HANDOFF
     path: docs/reference/execution/one-app-handoff.md
