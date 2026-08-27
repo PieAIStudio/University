@@ -1769,7 +1769,7 @@ button.label:focus-visible {
 .today-hero > p.today-focus {
   margin: 10px 0 0;
   font-size: 0.92rem;
-  color: color-mix(in srgb, var(--game-ui-text-on-dark) 62%, transparent);
+  color: var(--game-ui-text-muted);
 }
 
 .today-focus strong {
@@ -1778,7 +1778,7 @@ button.label:focus-visible {
 }
 
 .today-focus span {
-  color: color-mix(in srgb, var(--game-ui-text-on-dark) 38%, transparent);
+  color: var(--game-ui-text-muted);
 }
 
 /*
@@ -1787,7 +1787,7 @@ button.label:focus-visible {
    qualifications rather than as three competing announcements.
 */
 .today-focus span.today-focus__detail {
-  color: color-mix(in srgb, var(--game-ui-text-on-dark) 55%, transparent);
+  color: var(--game-ui-text-muted);
 }
 
 /*
@@ -1799,7 +1799,7 @@ button.label:focus-visible {
 .today-hero h2 {
   max-width: 20ch;
   margin-top: 10px;
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-ink-title);
   font-family: var(--game-ui-font-display);
   font-size: clamp(2.1rem, 4.2vw, 3.4rem);
   line-height: 1.1;
@@ -1870,7 +1870,7 @@ button.label:focus-visible {
 }
 
 .today-metric > span {
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-ink-title);
   font-family: var(--game-ui-font-display);
   font-size: clamp(2.8rem, 4.4vw, 4rem);
   line-height: 1;
@@ -1906,7 +1906,7 @@ button.label:focus-visible {
 
 .review-card__question {
   margin-top: 30px;
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-ink-title);
   font-family: var(--game-ui-font-display);
   font-size: clamp(1.5rem, 3vw, 2.2rem);
   line-height: 1.25;
@@ -1927,7 +1927,7 @@ button.label:focus-visible {
   border: 1px solid var(--game-ui-border-subtle);
   border-radius: 12px;
   padding: 14px 15px;
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-text);
   background: color-mix(in srgb, var(--game-ui-panel-deep) 72%, transparent);
   line-height: 1.55;
 }
@@ -1938,7 +1938,7 @@ button.label:focus-visible {
 
 .answer-field textarea[readonly] {
   border-style: dashed;
-  color: color-mix(in srgb, var(--game-ui-text-on-dark) 72%, transparent);
+  color: var(--game-ui-text);
   background: color-mix(in srgb, var(--game-ui-panel-deep) 45%, transparent);
 }
 
@@ -1970,7 +1970,7 @@ button.label:focus-visible {
   grid-template-columns: auto 1fr;
   align-items: start;
   gap: 12px;
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-text);
   font-size: 1rem;
   line-height: 1.55;
   cursor: pointer;
@@ -2216,7 +2216,7 @@ button.label:focus-visible {
 }
 
 .study-evidence-status__metric strong {
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-ink-title);
   font-family: var(--game-ui-font-display);
   font-size: 1.75rem;
   line-height: 1;
@@ -2275,7 +2275,7 @@ button.label:focus-visible {
 }
 
 .study-analysis-panel__summary-copy strong {
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-ink-title);
   font-family: var(--game-ui-font-display);
   font-size: clamp(1.1rem, 2vw, 1.45rem);
   line-height: 1.15;
@@ -2399,7 +2399,7 @@ button.label:focus-visible {
 
 .formal-course__header h2 {
   margin: 7px 0 0;
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-ink-title);
   font-family: var(--game-ui-font-display);
   font-size: clamp(1.8rem, 4vw, 3rem);
   line-height: 1.08;
