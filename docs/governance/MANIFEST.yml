@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-27T13:37:06.750Z
+generated_at: 2026-08-27T14:47:08.732Z
 generator_version: doc-gov@0.9.5
-docs_count: 54
+docs_count: 53
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -121,7 +121,7 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-17
+    last_reviewed: 2026-08-27
     pinned: true
   - id: POLICY-SHARED-WEB3D-CAPABILITY-ALIGNMENT
     path: docs/policy/shared-rules/web3d-capability-alignment.md
@@ -276,13 +276,6 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-26
-    pinned: false
-  - id: REF-LEARNING-WORKFLOW-ISSUES-KEEP-INTERNAL-POWER-UNIT-ACCOUNTING-BEHIND-ONE-EXACT-LEARNER-ATTEMPT-CONVERSION
-    path: docs/reference/learnings/workflow-issues/keep-internal-power-unit-accounting-behind-one-exact-learner-attempt-conversion.md
-    type: reference
-    status: stable
-    canonical: true
-    last_reviewed: 2026-08-27
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-LONG-DOM-OVERLAY-CARDS-NEED-A-VIEWPORT-SAFE-FALLBACK-ON-NARROW-SCREENS
     path: docs/reference/learnings/workflow-issues/long-dom-overlay-cards-need-a-viewport-safe-fallback-on-narrow-screens.md
