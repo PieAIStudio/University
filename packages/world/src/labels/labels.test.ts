@@ -290,6 +290,33 @@ describe("placeLabels", () => {
     expect(byId(placed, "card").visible).toBe(true);
   });
 
+  it("keeps a tall overlay card inside a narrow viewport when no beside slot fits", () => {
+    const phone = { width: 390, height: 552 } as const;
+    const placed = placeLabels(
+      [
+        candidate({
+          id: "card",
+          x: 171,
+          y: 248,
+          width: 320,
+          height: 528,
+          anchor: "aside",
+          clearance: 56,
+          overlay: true,
+        }),
+      ],
+      phone,
+    );
+    const card = byId(placed, "card");
+    const box = labelBox({ x: card.x, y: card.y }, 320, 528);
+
+    expect(card.visible).toBe(true);
+    expect(box.left).toBeGreaterThanOrEqual(0);
+    expect(box.right).toBeLessThanOrEqual(phone.width);
+    expect(box.top).toBeGreaterThanOrEqual(0);
+    expect(box.bottom).toBeLessThanOrEqual(phone.height);
+  });
+
   it("flips an aside card to the left when the island is on the right edge", () => {
     const placed = placeLabels(
       [

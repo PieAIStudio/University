@@ -132,7 +132,16 @@ button.label:focus-visible {
   top: 0;
   left: 0;
   right: auto;
-  width: 260px;
+  width: min(20rem, calc(100vw - 24px));
+  max-width: calc(100% - 24px);
+  max-height: min(
+    calc(100dvh - 28px),
+    calc(100% - 24px),
+    calc(var(--follow-viewport-height, 100%) - 16px)
+  );
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
   margin: 0;
   padding: 0;
   border: 0;
@@ -333,8 +342,15 @@ button.label:focus-visible {
   top: 0;
   left: 0;
   right: auto;
-  width: 260px;
-  max-width: min(260px, calc(100% - 24px));
+  width: min(20rem, calc(100vw - 24px));
+  max-width: calc(100% - 24px);
+  max-height: min(
+    calc(100dvh - 28px),
+    calc(100% - 24px),
+    calc(var(--follow-viewport-height, 100%) - 16px)
+  );
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 @media (max-width: 720px) {

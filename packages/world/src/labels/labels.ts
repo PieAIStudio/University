@@ -311,6 +311,24 @@ function fitsInViewport(rect: LabelBox, viewport: LabelViewport): boolean {
   );
 }
 
+function clampedOverlaySlot(candidate: LabelCandidate, viewport: LabelViewport, gap: number): Slot {
+  const x =
+    candidate.width + gap * 2 >= viewport.width
+      ? viewport.width / 2
+      : Math.min(
+          Math.max(candidate.x, candidate.width / 2 + gap),
+          viewport.width - candidate.width / 2 - gap,
+        );
+  const y =
+    candidate.height + gap * 2 >= viewport.height
+      ? viewport.height / 2
+      : Math.min(
+          Math.max(candidate.y, candidate.height / 2 + gap),
+          viewport.height - candidate.height / 2 - gap,
+        );
+  return { x, y };
+}
+
 function anchorOnScreen(candidate: LabelCandidate, viewport: LabelViewport): boolean {
   return (
     candidate.x >= 0 &&
@@ -370,6 +388,18 @@ export function placeLabels(
       placed[index] = { id: candidate.id, x: slot.x, y: slot.y, visible: true };
       visibleCount += 1;
       break;
+    }
+
+    if (!placed[index]!.visible && candidate.overlay && anchor === "aside") {
+      /*
+        A long follow card can exhaust every beside/vertical slot on a phone.
+        It is scrollable by CSS, so a final viewport clamp keeps the control
+        present and readable instead of turning a real selection into nothing.
+        Overlay cards are allowed to cover the map; they do not reserve space.
+      */
+      const slot = clampedOverlaySlot(candidate, viewport, gap);
+      placed[index] = { id: candidate.id, x: slot.x, y: slot.y, visible: true };
+      visibleCount += 1;
     }
   }
 

@@ -459,6 +459,7 @@ export function LabelProbe({
   const { camera, gl, size } = useThree();
   const scratch = useRef(new THREE.Vector3());
   const chromeBoxesRef = useRef<readonly LabelBox[]>([]);
+  const followViewportHeightRef = useRef<number | null>(null);
   useEffect(() => {
     const stage = gl.domElement.closest<HTMLElement>(".stagewrap");
     const shell = stage?.closest<HTMLElement>(".app-shell");
@@ -466,6 +467,9 @@ export function LabelProbe({
 
     const update = () => {
       chromeBoxesRef.current = readChromeBoxes(stage, shell);
+      const tabBar = shell.querySelector<HTMLElement>(".tab-bar");
+      const tabBarBox = tabBar ? readRailBox(stage, tabBar) : null;
+      followViewportHeightRef.current = tabBarBox ? Math.max(0, tabBarBox.top) : null;
     };
     update();
     window.addEventListener("resize", update);
@@ -627,6 +631,13 @@ export function LabelProbe({
       if (!at) {
         hideFollow();
       } else {
+        const followViewport = {
+          width: viewport.width,
+          // The fixed mobile tab bar is inside the browser viewport but above
+          // the stage's visual floor. Keep the scrollable card above it.
+          height: followViewportHeightRef.current ?? viewport.height,
+        };
+        follow.style.setProperty("--follow-viewport-height", `${followViewport.height}px`);
         const width = Math.max(follow.offsetWidth, 260);
         const height = Math.max(follow.offsetHeight, 120);
         // The card is an overlay: it lands beside the island it is about and
@@ -651,7 +662,7 @@ export function LabelProbe({
               overlay: true,
             },
           ],
-          viewport,
+          followViewport,
           { maxVisible: 1, gap: 8 },
         );
         if (card?.visible) {
