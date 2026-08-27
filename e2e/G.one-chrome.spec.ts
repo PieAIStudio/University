@@ -212,6 +212,22 @@ async function walkToLesson(page: Page, origin: string, screenshotName: string) 
   await expect(page.locator("[data-parity-control='lesson-layer-coverage']")).toBeVisible({
     timeout: 30_000,
   });
+  /*
+    The end-of-lesson block, and why the snapshot waits for it.
+
+    The controls above come from the lesson the ContentPort returns; this one
+    comes from the *course*, which delivery has in the bundle and authoring
+    fetches from 4317. So the two builds reach a rendered reader at the same
+    moment and a rendered next-step block at different ones, and a snapshot
+    taken between those two moments compares a finished page with an
+    unfinished one. That reads as a one-sided control — the exact failure this
+    file exists to catch — while the control is simply still on its way.
+
+    Both states of the block carry `.lesson-next`: a lesson with somewhere to
+    go, and the last lesson of a course. Waiting for either is what makes
+    "the same moment" mean something.
+  */
+  await expect(page.locator(".lesson-next")).toBeVisible({ timeout: 30_000 });
   await parityScreenshot(page, screenshotName);
   return { ...path, lessonControls: await page.evaluate(learnerControlSnapshot) };
 }
