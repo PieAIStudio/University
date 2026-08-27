@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-27T08:14:46.223Z
+generated_at: 2026-08-27T08:17:59.093Z
 generator_version: doc-gov@0.9.5
-docs_count: 50
+docs_count: 51
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -143,6 +143,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-08-21
+    pinned: false
+  - id: REF-ADDRESSABLE-LESSONS-PRERENDER
+    path: docs/reference/execution/addressable-lessons-prerender-evaluation.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-08-27
     pinned: false
   - id: REF-COMMERCIAL-MODEL
     path: docs/reference/execution/commercial-model.md
