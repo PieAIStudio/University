@@ -1,5 +1,5 @@
 {
-  "importedAt": "2026-08-26",
+  "importedAt": "2026-08-27",
   "studies": [
     {
       "studyId": "buzz",
@@ -134,9 +134,9 @@
         {
           "courseId": "foundations-before-zero",
           "title": "《在开始之前：App、代码、和你》",
-          "sha256": "sha256:a14975509b67ef8fddad3525723bae6c392136cfc89a96e36a4674190b615022",
-          "packageBytes": 6884599,
-          "servedBytes": 356384,
+          "sha256": "sha256:63b8411d1625588d2cd3c416ab90e469710610c3cd25974f00065ed3a8525e7b",
+          "packageBytes": 6884519,
+          "servedBytes": 356304,
           "lessons": 41
         },
         {

@@ -21,8 +21,8 @@
   "courses": [
     {
       "courseId": "foundations-before-zero",
-      "file": "foundations-before-zero.a14975509b67ef8fddad3525723bae6c392136cfc89a96e36a4674190b615022.recovery.json",
-      "sha256": "sha256:a14975509b67ef8fddad3525723bae6c392136cfc89a96e36a4674190b615022"
+      "file": "foundations-before-zero.63b8411d1625588d2cd3c416ab90e469710610c3cd25974f00065ed3a8525e7b.recovery.json",
+      "sha256": "sha256:63b8411d1625588d2cd3c416ab90e469710610c3cd25974f00065ed3a8525e7b"
     },
     {
       "courseId": "foundations-terrain",
