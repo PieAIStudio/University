@@ -1,4 +1,4 @@
-/** The shared browser Backend/Auth assembly, kept at the old import path. */
+/** The shared browser SwimmerBackend/Auth assembly, kept at the old import path. */
 import { createUniversityBackend, type BrowserEnv } from "@pieai/university-backend/browser.js";
 
 export {
@@ -6,11 +6,6 @@ export {
   readSwimmerBackendPublicEnv,
   SWIMMER_BACKEND_PUBLISHABLE_KEY_ENV,
   SWIMMER_BACKEND_SUPABASE_URL_ENV,
-} from "@pieai/university-backend/browser.js";
-export {
-  readSwimmerCorePublicEnv,
-  SWIMMER_CORE_PUBLISHABLE_KEY_ENV,
-  SWIMMER_CORE_URL_ENV,
 } from "@pieai/university-backend/browser.js";
 export type { BrowserEnv } from "@pieai/university-backend/browser.js";
 

@@ -4,10 +4,43 @@ import type { ChatCompletionRequest, ChatCompletionTransport } from "@pieai/swim
 import {
   createStructuredGrader,
   handleGradeRequest,
+  readProductionSupabaseConfig,
   type GradeDependencies,
   type FreeGradingQuota,
   type GradingWallet,
 } from "./service.js";
+
+describe("University server backend environment", () => {
+  it("prefers SwimmerBackend names and still reads the legacy aliases", () => {
+    expect(
+      readProductionSupabaseConfig(
+        (name) =>
+          ({
+            SWIMMER_BACKEND_SUPABASE_URL: "https://backend.example.supabase.co",
+            SWIMMER_CORE_SUPABASE_URL: "https://legacy.example.supabase.co",
+            SWIMMER_BACKEND_PUBLISHABLE_KEY: "sb_publishable_backend",
+            SWIMMER_CORE_PUBLISHABLE_KEY: "sb_publishable_legacy",
+          })[name],
+      ),
+    ).toEqual({
+      supabaseUrl: "https://backend.example.supabase.co",
+      publishableKey: "sb_publishable_backend",
+    });
+
+    expect(
+      readProductionSupabaseConfig(
+        (name) =>
+          ({
+            SWIMMER_CORE_SUPABASE_URL: "https://legacy.example.supabase.co",
+            SWIMMER_CORE_PUBLISHABLE_KEY: "sb_publishable_legacy",
+          })[name],
+      ),
+    ).toEqual({
+      supabaseUrl: "https://legacy.example.supabase.co",
+      publishableKey: "sb_publishable_legacy",
+    });
+  });
+});
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const RESERVATION_ID = "22222222-2222-4222-8222-222222222222";

@@ -992,6 +992,7 @@ function requiredEnv(envGet: EnvGet, name: string): string {
 
 function requiredPublicSupabaseKey(envGet: EnvGet): string {
   const value = firstDefinedEnv(envGet, [
+    "SWIMMER_BACKEND_PUBLISHABLE_KEY",
     "SWIMMER_CORE_PUBLISHABLE_KEY",
     "SUPABASE_PUBLISHABLE_KEY",
     "SUPABASE_ANON_KEY",
@@ -1001,6 +1002,24 @@ function requiredPublicSupabaseKey(envGet: EnvGet): string {
     throw new Error("Missing public Supabase key; secret keys are not valid here");
   }
   return value;
+}
+
+export function readProductionSupabaseConfig(envGet: EnvGet = processEnvGet): {
+  readonly supabaseUrl: string;
+  readonly publishableKey: string;
+} {
+  const supabaseUrl = firstDefinedEnv(envGet, [
+    "SWIMMER_BACKEND_SUPABASE_URL",
+    "SWIMMER_CORE_SUPABASE_URL",
+    "SUPABASE_URL",
+  ]);
+  if (!supabaseUrl) {
+    throw new Error("Missing server environment variable: SWIMMER_BACKEND_SUPABASE_URL");
+  }
+  return {
+    supabaseUrl,
+    publishableKey: requiredPublicSupabaseKey(envGet),
+  };
 }
 
 function serverSupabase(
@@ -1025,10 +1044,7 @@ function serverSupabase(
 export function createProductionGradeDependencies(
   envGet: EnvGet = processEnvGet,
 ): GradeDependencies {
-  const supabaseUrl = firstDefinedEnv(envGet, ["SWIMMER_CORE_SUPABASE_URL", "SUPABASE_URL"]);
-  if (!supabaseUrl)
-    throw new Error("Missing server environment variable: SWIMMER_CORE_SUPABASE_URL");
-  const publishableKey = requiredPublicSupabaseKey(envGet);
+  const { supabaseUrl, publishableKey } = readProductionSupabaseConfig(envGet);
   const appId = firstDefinedEnv(envGet, ["UNIVERSITY_WALLET_APP_ID"]) ?? "university";
   const allowedOrigin = firstDefinedEnv(envGet, ["UNIVERSITY_WEB_ORIGIN"]) ?? "*";
   let model: StructuredGrader | undefined;

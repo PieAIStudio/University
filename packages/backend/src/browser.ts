@@ -21,10 +21,13 @@ export const SWIMMER_BACKEND_PUBLISHABLE_KEY_ENV = "VITE_SWIMMER_BACKEND_PUBLISH
  * consumers still publish the old names, so removing these fallbacks would
  * make an otherwise unrelated deployment lose cloud access.
  */
+const LEGACY_SWIMMER_CORE_URL_ENV = "VITE_SWIMMER_CORE_SUPABASE_URL";
+const LEGACY_SWIMMER_CORE_PUBLISHABLE_KEY_ENV = "VITE_SWIMMER_CORE_PUBLISHABLE_KEY";
+
 /** @deprecated Use SWIMMER_BACKEND_SUPABASE_URL_ENV. */
-export const SWIMMER_CORE_URL_ENV = "VITE_SWIMMER_CORE_SUPABASE_URL";
+export const SWIMMER_CORE_URL_ENV = LEGACY_SWIMMER_CORE_URL_ENV;
 /** @deprecated Use SWIMMER_BACKEND_PUBLISHABLE_KEY_ENV. */
-export const SWIMMER_CORE_PUBLISHABLE_KEY_ENV = "VITE_SWIMMER_CORE_PUBLISHABLE_KEY";
+export const SWIMMER_CORE_PUBLISHABLE_KEY_ENV = LEGACY_SWIMMER_CORE_PUBLISHABLE_KEY_ENV;
 
 export type BrowserEnv = Record<string, string | boolean | undefined>;
 
@@ -69,8 +72,8 @@ export function readSwimmerBackendPublicEnv(env: BrowserEnv): {
       publishableKey: stringValue(env[SWIMMER_BACKEND_PUBLISHABLE_KEY_ENV]),
     },
     {
-      url: stringValue(env[SWIMMER_CORE_URL_ENV]),
-      publishableKey: stringValue(env[SWIMMER_CORE_PUBLISHABLE_KEY_ENV]),
+      url: stringValue(env[LEGACY_SWIMMER_CORE_URL_ENV]),
+      publishableKey: stringValue(env[LEGACY_SWIMMER_CORE_PUBLISHABLE_KEY_ENV]),
     },
   ].find((pair) => pair.url && pair.publishableKey);
   if (
