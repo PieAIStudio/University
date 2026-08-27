@@ -11,12 +11,14 @@ import {
 } from "./productAnalytics";
 
 const posthogCapture = vi.hoisted(() => vi.fn());
+const posthogIdentify = vi.hoisted(() => vi.fn());
 const posthogInit = vi.hoisted(() => vi.fn());
 const posthogRegister = vi.hoisted(() => vi.fn());
 
 vi.mock("posthog-js", () => ({
   default: {
     capture: posthogCapture,
+    identify: posthogIdentify,
     init: posthogInit,
   },
 }));
@@ -24,6 +26,7 @@ vi.mock("posthog-js", () => ({
 describe("product analytics", () => {
   beforeEach(() => {
     posthogCapture.mockReset();
+    posthogIdentify.mockReset();
     posthogInit.mockReset();
     posthogRegister.mockReset();
     setAnalyticsClientForTesting(null);
@@ -80,6 +83,46 @@ describe("product analytics", () => {
     ]);
     expect(JSON.stringify(posthogCapture.mock.calls)).not.toContain("learner@example.com");
     expect(JSON.stringify(posthogCapture.mock.calls)).not.toContain("password12");
+  });
+
+  it("identifies anonymous and formal sessions by auth user id, never email", async () => {
+    setAnalyticsClientForTesting({ capture: posthogCapture, identify: posthogIdentify });
+    const anonymous = createMemoryIdentityPort();
+    const analyticsAnonymous = withProductAnalyticsIdentity(anonymous);
+
+    await analyticsAnonymous.signInAnonymously();
+
+    const formal = createMemoryIdentityPort({
+      id: "00000000-0000-4000-8000-000000000001",
+      email: "learner@example.com",
+    });
+    withProductAnalyticsIdentity(formal);
+
+    expect(posthogIdentify.mock.calls).toEqual([
+      ["memory:anonymous"],
+      ["00000000-0000-4000-8000-000000000001"],
+    ]);
+    expect(JSON.stringify(posthogIdentify.mock.calls)).not.toContain("learner@example.com");
+  });
+
+  it("queues the auth user id until PostHog is ready", async () => {
+    const identity = createMemoryIdentityPort({
+      id: "00000000-0000-4000-8000-000000000003",
+      email: "queued@example.com",
+    });
+    withProductAnalyticsIdentity(identity);
+
+    posthogInit.mockImplementation((_key: string, options: unknown) => {
+      const loaded = (
+        options as { loaded?: (posthog: { register: typeof posthogRegister }) => void }
+      ).loaded;
+      loaded?.({ register: posthogRegister });
+    });
+
+    await initProductAnalytics();
+
+    expect(posthogIdentify).toHaveBeenCalledWith("00000000-0000-4000-8000-000000000003");
+    expect(JSON.stringify(posthogIdentify.mock.calls)).not.toContain("queued@example.com");
   });
 
   it("reports a review only after the rating is saved", async () => {

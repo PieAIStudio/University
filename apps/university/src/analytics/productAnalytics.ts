@@ -8,7 +8,7 @@
  * become a required service.
  */
 
-import type { IdentityPort, PaymentPort } from "@pieai/university-core";
+import type { IdentityPort, IdentityStatus, PaymentPort } from "@pieai/university-core";
 import type { ReviewCardPort } from "@pieai/university-ui/review/ports.js";
 
 import { AUTHORING } from "../mode";
@@ -72,12 +72,47 @@ const ALLOWLIST: Record<AnalyticsEventName, readonly string[]> = {
 
 interface PostHogLike {
   capture: (name: string, properties?: Record<string, unknown>) => void;
+  identify?: (distinctId: string) => void;
 }
 
 let client: PostHogLike | null = null;
 let state: "idle" | "loading" | "ready" | "disabled" = "idle";
 const pending: Array<{ name: string; properties: Record<string, unknown> }> = [];
 const MAX_PENDING = 24;
+let pendingIdentityId: string | null = null;
+let identifiedUserId: string | null = null;
+
+function identifyUser(userId: string): void {
+  if (!userId || (identifiedUserId === userId && pendingIdentityId === null)) return;
+  identifiedUserId = userId;
+  if (!client) {
+    if (state !== "disabled") pendingIdentityId = userId;
+    return;
+  }
+  pendingIdentityId = null;
+  try {
+    client.identify?.(userId);
+  } catch {
+    // Analytics must never break a learning action or surface an error.
+  }
+}
+
+function identifyStatus(status: IdentityStatus): void {
+  if (status.kind === "anonymous" || status.kind === "signed_in") {
+    identifyUser(status.user.id);
+  }
+}
+
+function flushPendingIdentity(): void {
+  if (!client || !pendingIdentityId) return;
+  const userId = pendingIdentityId;
+  pendingIdentityId = null;
+  try {
+    client.identify?.(userId);
+  } catch {
+    // Analytics must never break a learning action or surface an error.
+  }
+}
 
 /** Map the UI's numeric FSRS control to the stable product enum. */
 export function reviewRatingOf(rating: 1 | 2 | 3 | 4): AnalyticsReviewRating {
@@ -89,6 +124,7 @@ export async function initProductAnalytics(): Promise<void> {
   const enabled = import.meta.env.VITE_ENABLE_POSTHOG !== "false";
   if (!key || !enabled) {
     state = "disabled";
+    pendingIdentityId = null;
     return;
   }
 
@@ -110,6 +146,7 @@ export async function initProductAnalytics(): Promise<void> {
     });
     client = posthog;
     state = "ready";
+    flushPendingIdentity();
     while (pending.length > 0) {
       const item = pending.shift();
       if (item) client.capture(item.name, item.properties);
@@ -118,6 +155,7 @@ export async function initProductAnalytics(): Promise<void> {
     client = null;
     state = "disabled";
     pending.length = 0;
+    pendingIdentityId = null;
   }
 }
 
@@ -143,19 +181,43 @@ export function trackEvent(event: AnalyticsEvent): void {
 
 /** Keep account actions observable without exposing the email argument. */
 export function withProductAnalyticsIdentity(identity: IdentityPort): IdentityPort {
+  const identifyCurrent = () => identifyStatus(identity.status());
+  identity.subscribe(identifyCurrent);
+  identifyCurrent();
+
   return {
     ...identity,
+    subscribe(listener) {
+      return identity.subscribe(() => {
+        identifyCurrent();
+        listener();
+      });
+    },
+    async signInAnonymously(options) {
+      await identity.signInAnonymously(options);
+      identifyCurrent();
+    },
     async signInWithEmail(email, password) {
       await identity.signInWithEmail(email, password);
+      identifyCurrent();
       if (identity.status().kind === "signed_in") trackEvent({ name: "account_sign_in" });
     },
     async signUpWithEmail(email, password) {
       trackEvent({ name: "account_sign_up_started" });
       const result = await identity.signUpWithEmail(email, password);
+      identifyCurrent();
       if (result.confirmationRequired || identity.status().kind === "signed_in") {
         trackEvent({ name: "account_sign_up_completed" });
       }
       return result;
+    },
+    async linkEmail(email, password) {
+      await identity.linkEmail(email, password);
+      identifyCurrent();
+    },
+    async signOut() {
+      await identity.signOut();
+      identifyCurrent();
     },
   };
 }
@@ -192,4 +254,6 @@ export function setAnalyticsClientForTesting(next: PostHogLike | null): void {
   client = next;
   state = next ? "ready" : "idle";
   pending.length = 0;
+  pendingIdentityId = null;
+  identifiedUserId = null;
 }
