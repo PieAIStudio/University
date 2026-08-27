@@ -1040,7 +1040,6 @@ function requiredEnv(envGet: EnvGet, name: string): string {
 function requiredPublicSupabaseKey(envGet: EnvGet): string {
   const value = firstDefinedEnv(envGet, [
     "SWIMMER_BACKEND_PUBLISHABLE_KEY",
-    "SWIMMER_CORE_PUBLISHABLE_KEY",
     "SUPABASE_PUBLISHABLE_KEY",
     "SUPABASE_ANON_KEY",
     "SUPABASE_DEFAULT_KEY",
@@ -1055,11 +1054,7 @@ export function readProductionSupabaseConfig(envGet: EnvGet = processEnvGet): {
   readonly supabaseUrl: string;
   readonly publishableKey: string;
 } {
-  const supabaseUrl = firstDefinedEnv(envGet, [
-    "SWIMMER_BACKEND_SUPABASE_URL",
-    "SWIMMER_CORE_SUPABASE_URL",
-    "SUPABASE_URL",
-  ]);
+  const supabaseUrl = firstDefinedEnv(envGet, ["SWIMMER_BACKEND_SUPABASE_URL", "SUPABASE_URL"]);
   if (!supabaseUrl) {
     throw new Error("Missing server environment variable: SWIMMER_BACKEND_SUPABASE_URL");
   }

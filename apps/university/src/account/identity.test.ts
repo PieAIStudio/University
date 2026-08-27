@@ -42,19 +42,16 @@ describe("readSwimmerBackendPublicEnv", () => {
     });
   });
 
-  it("accepts the legacy env names while consumers migrate", () => {
+  it("ignores the retired SwimmerCore env names", () => {
     expect(
       readSwimmerBackendPublicEnv({
         VITE_SWIMMER_CORE_SUPABASE_URL: "https://legacy.example.supabase.co",
         VITE_SWIMMER_CORE_PUBLISHABLE_KEY: "sb_publishable_legacy",
       }),
-    ).toEqual({
-      url: "https://legacy.example.supabase.co",
-      publishableKey: "sb_publishable_legacy",
-    });
+    ).toBeNull();
   });
 
-  it("prefers canonical names when both generations are configured", () => {
+  it("uses canonical names when unrelated old values are present", () => {
     expect(
       readSwimmerBackendPublicEnv({
         VITE_SWIMMER_BACKEND_SUPABASE_URL: "https://new.example.supabase.co",
@@ -68,17 +65,14 @@ describe("readSwimmerBackendPublicEnv", () => {
     });
   });
 
-  it("does not mix a partial canonical pair with a legacy pair", () => {
+  it("does not complete a partial canonical pair with retired names", () => {
     expect(
       readSwimmerBackendPublicEnv({
         VITE_SWIMMER_BACKEND_SUPABASE_URL: "https://partial.example.supabase.co",
         VITE_SWIMMER_CORE_SUPABASE_URL: "https://legacy.example.supabase.co",
         VITE_SWIMMER_CORE_PUBLISHABLE_KEY: "sb_publishable_legacy",
       }),
-    ).toEqual({
-      url: "https://legacy.example.supabase.co",
-      publishableKey: "sb_publishable_legacy",
-    });
+    ).toBeNull();
   });
 });
 

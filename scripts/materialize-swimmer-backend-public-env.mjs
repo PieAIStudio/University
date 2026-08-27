@@ -108,22 +108,17 @@ function readEnvFile(path) {
   return values;
 }
 
-/*
- * An override replaces a whole alias pair, never half of one. Setting only the
- * canonical name would leave the legacy alias pointing at the shared project,
- * and `readAlias` rightly refuses a config that names two different backends.
- */
+/* An override replaces the canonical pair, never just one half. */
 function applyOverride(source, override) {
   if (Object.keys(override).length === 0) return source;
   const merged = { ...source };
-  for (const [canonical, legacy] of [
-    ['SWIMMER_BACKEND_SUPABASE_URL', 'SWIMMER_CORE_SUPABASE_URL'],
-    ['SWIMMER_BACKEND_PUBLISHABLE_KEY', 'SWIMMER_CORE_PUBLISHABLE_KEY'],
+  for (const canonical of [
+    'SWIMMER_BACKEND_SUPABASE_URL',
+    'SWIMMER_BACKEND_PUBLISHABLE_KEY',
   ]) {
-    const value = override[canonical] ?? override[legacy];
+    const value = override[canonical];
     if (value === undefined) continue;
     merged[canonical] = value;
-    merged[legacy] = value;
   }
   return merged;
 }
@@ -139,15 +134,11 @@ function analyticsLines(source) {
 }
 
 function readPublicConfig(source) {
-  const url = readAlias(source, 'SWIMMER_BACKEND_SUPABASE_URL', 'SWIMMER_CORE_SUPABASE_URL');
-  const publishableKey = readAlias(
-    source,
-    'SWIMMER_BACKEND_PUBLISHABLE_KEY',
-    'SWIMMER_CORE_PUBLISHABLE_KEY',
-  );
+  const url = source.SWIMMER_BACKEND_SUPABASE_URL?.trim() ?? '';
+  const publishableKey = source.SWIMMER_BACKEND_PUBLISHABLE_KEY?.trim() ?? '';
   if (!url || !publishableKey) {
     throw new Error(
-      'Central source must provide SWIMMER_BACKEND_* or legacy SWIMMER_CORE_* URL and publishable key.',
+      'Central source must provide SWIMMER_BACKEND_* URL and publishable key.',
     );
   }
   if (/^sb_secret_/i.test(publishableKey) || /service_role/i.test(publishableKey)) {
@@ -157,15 +148,6 @@ function readPublicConfig(source) {
     throw new Error('Central Supabase URL must be an http(s) URL.');
   }
   return { url, publishableKey };
-}
-
-function readAlias(source, canonicalName, legacyName) {
-  const canonical = source[canonicalName]?.trim() ?? '';
-  const legacy = source[legacyName]?.trim() ?? '';
-  if (canonical && legacy && canonical !== legacy) {
-    throw new Error(`Central aliases disagree: ${canonicalName} and ${legacyName}.`);
-  }
-  return canonical || legacy;
 }
 
 function writeProjection(path, body) {

@@ -12,8 +12,6 @@ export type { BrowserEnv } from "@pieai/university-backend/browser.js";
 const backend = createUniversityBackend(import.meta.env as unknown as BrowserEnv);
 
 export const swimmerBackendClient = backend.client;
-/** @deprecated Use swimmerBackendClient. */
-export const swimmerCoreClient = swimmerBackendClient;
 export const identityPort = backend.identityPort;
 /** Payment is shared account infrastructure, not a fourth mode-specific port. */
 export const paymentPort = backend.paymentPort;

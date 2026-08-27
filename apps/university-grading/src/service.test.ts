@@ -11,7 +11,7 @@ import {
 } from "./service.js";
 
 describe("University server backend environment", () => {
-  it("prefers SwimmerBackend names and still reads the legacy aliases", () => {
+  it("requires canonical SwimmerBackend names", () => {
     expect(
       readProductionSupabaseConfig(
         (name) =>
@@ -27,7 +27,7 @@ describe("University server backend environment", () => {
       publishableKey: "sb_publishable_backend",
     });
 
-    expect(
+    expect(() =>
       readProductionSupabaseConfig(
         (name) =>
           ({
@@ -35,10 +35,7 @@ describe("University server backend environment", () => {
             SWIMMER_CORE_PUBLISHABLE_KEY: "sb_publishable_legacy",
           })[name],
       ),
-    ).toEqual({
-      supabaseUrl: "https://legacy.example.supabase.co",
-      publishableKey: "sb_publishable_legacy",
-    });
+    ).toThrow("Missing server environment variable: SWIMMER_BACKEND_SUPABASE_URL");
   });
 });
 
