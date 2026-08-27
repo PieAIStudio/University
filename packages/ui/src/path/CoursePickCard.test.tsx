@@ -5,6 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CoursePickCard } from "./CoursePickCard.js";
+import type { CoursePickStats } from "./course-pick-stats.js";
 
 // Overlay class names, not this component's. The shared-styles ratchet
 // reads className="…" literals in packages/ui; a test that needs the
@@ -18,6 +19,14 @@ const overlay = {
 let container: HTMLDivElement;
 let root: Root;
 
+const OBJECTIVES = ["原样保留的第一条成果", "原样保留的第二条成果"];
+const COMPLETE_STATS: CoursePickStats = {
+  lessons: 9,
+  exercises: 4,
+  maxXp: 235,
+  evidenceCount: 7,
+};
+
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   container = document.createElement("div");
@@ -30,7 +39,17 @@ afterEach(async () => {
   container.remove();
 });
 
-async function renderCard(onDismiss = vi.fn(), onEnter = vi.fn()) {
+async function renderCard({
+  onDismiss = vi.fn(),
+  onEnter = vi.fn(),
+  objectives = OBJECTIVES,
+  stats = COMPLETE_STATS,
+}: {
+  readonly onDismiss?: ReturnType<typeof vi.fn<() => void>>;
+  readonly onEnter?: ReturnType<typeof vi.fn<() => void>>;
+  readonly objectives?: readonly string[];
+  readonly stats?: CoursePickStats;
+} = {}) {
   const cardRef: RefObject<HTMLElement | null> = createRef();
   await act(async () => {
     root.render(
@@ -48,9 +67,10 @@ async function renderCard(onDismiss = vi.fn(), onEnter = vi.fn()) {
         <CoursePickCard
           title="认识地形"
           studyTitle="图灵密约"
-          lessons={9}
           depth={0}
           prerequisiteCount={0}
+          objectives={objectives}
+          stats={stats}
           onEnter={onEnter}
           onDismiss={onDismiss}
           cardRef={cardRef}
@@ -62,6 +82,35 @@ async function renderCard(onDismiss = vi.fn(), onEnter = vi.fn()) {
 }
 
 describe("CoursePickCard", () => {
+  it("shows every authored outcome and the real content and XP preview", async () => {
+    await renderCard();
+
+    expect(container.textContent).toContain("学完这门课，你能：");
+    expect(
+      [...container.querySelectorAll(".picked__objectives li")].map((item) => item.textContent),
+    ).toEqual(OBJECTIVES);
+    expect(container.textContent).toContain("这些本事来自 7 段真实项目代码");
+    expect(container.textContent).toContain("课时数9");
+    expect(container.textContent).toContain("练习数4");
+    expect(container.textContent).toContain("最多可得 XP235");
+    expect(container.textContent).toContain("真实代码引用条数7");
+  });
+
+  it("omits the optional evidence statistics when the shelf cannot count them", async () => {
+    await renderCard({
+      stats: {
+        lessons: 9,
+        exercises: 4,
+        maxXp: 235,
+      },
+    });
+
+    expect(container.querySelector(".picked__evidence")).toBeNull();
+    expect(container.textContent).not.toContain("真实项目代码");
+    expect(container.textContent).not.toContain("真实代码引用");
+    expect(container.textContent).not.toMatch(/0/);
+  });
+
   it("Escape dismisses, a rail click dismisses, a canvas click does not", async () => {
     const { onDismiss } = await renderCard();
 

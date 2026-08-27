@@ -160,6 +160,7 @@ export { NodeCard, unlockedConceptIds, type PathLesson } from "./path/NodeCard.j
 export { pathLessonOf, pathUnitOf } from "./path/from-course-view.js";
 export { UnitCard, type PathUnit } from "./path/UnitCard.js";
 export { CoursePickCard } from "./path/CoursePickCard.js";
+export { coursePickStatsOf, type CoursePickStats } from "./path/course-pick-stats.js";
 
 // Shared surface — screen 09. A concept while the canvas is still empty.
 export {

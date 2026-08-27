@@ -16,26 +16,32 @@
 import { useEffect, useId, type RefObject } from "react";
 import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 
+import type { CoursePickStats } from "./course-pick-stats.js";
+
 export function CoursePickCard({
   title,
   studyTitle,
-  lessons,
   depth,
   prerequisiteCount,
+  objectives,
+  stats,
   onEnter,
   onDismiss,
   cardRef,
 }: {
   readonly title: string;
   readonly studyTitle: string;
-  readonly lessons: number;
   readonly depth: number;
   readonly prerequisiteCount: number;
+  readonly objectives: readonly string[];
+  readonly stats: CoursePickStats;
   readonly onEnter: () => void;
   readonly onDismiss: () => void;
   readonly cardRef: RefObject<HTMLElement | null>;
 }) {
   const headingId = useId();
+  const outcomesHeadingId = useId();
+  const inventoryHeadingId = useId();
 
   useEffect(() => {
     const card = cardRef.current;
@@ -87,17 +93,45 @@ export function CoursePickCard({
       <GamePanel tone="strong">
         <h3 id={headingId}>{title}</h3>
         <p className="picked__study">{studyTitle}</p>
-        <dl>
-          <dt>课时</dt>
-          <dd>{lessons}</dd>
+        <section className="picked__outcomes" aria-labelledby={outcomesHeadingId}>
+          <h4 id={outcomesHeadingId}>学完这门课，你能：</h4>
+          <ul className="picked__objectives">
+            {objectives.map((objective, index) => (
+              <li key={`${index}-${objective}`}>{objective}</li>
+            ))}
+          </ul>
+        </section>
+        {stats.evidenceCount !== undefined ? (
+          <p className="picked__evidence">这些本事来自 {stats.evidenceCount} 段真实项目代码</p>
+        ) : null}
+        <dl className="picked__meta">
           <dt>层</dt>
           <dd>{depth + 1}</dd>
           <dt>先修</dt>
           <dd>{prerequisiteCount || "无"}</dd>
         </dl>
-        <GameButton variant="primary" className="picked__enter" onClick={onEnter}>
-          进入这门课
-        </GameButton>
+        <div className="picked__action">
+          <section className="picked__inventory" aria-labelledby={inventoryHeadingId}>
+            <h4 id={inventoryHeadingId}>这门课有：</h4>
+            <dl className="picked__inventory-list">
+              <dt>课时数</dt>
+              <dd>{stats.lessons}</dd>
+              <dt>练习数</dt>
+              <dd>{stats.exercises}</dd>
+              <dt>最多可得 XP</dt>
+              <dd>{stats.maxXp}</dd>
+              {stats.evidenceCount !== undefined ? (
+                <>
+                  <dt>真实代码引用条数</dt>
+                  <dd>{stats.evidenceCount}</dd>
+                </>
+              ) : null}
+            </dl>
+          </section>
+          <GameButton variant="primary" className="picked__enter" onClick={onEnter}>
+            进入这门课
+          </GameButton>
+        </div>
       </GamePanel>
     </aside>
   );

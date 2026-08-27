@@ -51,6 +51,7 @@ import { StudySwitcher } from "@pieai/university-ui/navigation/StudySwitcher.js"
 import { SettingsSubnav } from "@pieai/university-ui/navigation/empty.js";
 import { LevelProgress } from "@pieai/university-ui/navigation/screens.js";
 import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
+import { coursePickStatsOf } from "@pieai/university-ui/path/course-pick-stats.js";
 import { CourseScene } from "@pieai/university-world/Maps.js";
 import { frameCourse } from "@pieai/university-world/course-map.js";
 import { type CourseNode } from "@pieai/university-world/course.js";
@@ -164,6 +165,8 @@ export function App() {
   const [mapFocus, setMapFocus] = useState<string | null | undefined>(undefined);
   const [hovered, setHovered] = useState<string | null>(null);
   const [picked, setPicked] = useState<CourseNode | null>(null);
+  const pickedCourse = picked ? courseOf(picked.studyId, picked.courseId) : null;
+  const pickedStats = pickedCourse ? coursePickStatsOf(pickedCourse) : null;
   // Screen 02/03: a path card sits on the course map. It is not a route —
   // confirming is what changes the URL, not pointing at a stone.
   const [pathOverlay, setPathOverlay] = useState<PathOverlay | null>(null);
@@ -687,13 +690,14 @@ export function App() {
                 </button>
               </aside>
             ) : null}
-            {view.kind === "world" && picked ? (
+            {view.kind === "world" && picked && pickedCourse && pickedStats ? (
               <CoursePickCard
                 title={picked.title}
                 studyTitle={picked.studyTitle}
-                lessons={picked.lessons}
                 depth={picked.depth}
                 prerequisiteCount={picked.prerequisiteCourseIds.length}
+                objectives={pickedCourse.objectives}
+                stats={pickedStats}
                 onEnter={() =>
                   setView({
                     kind: "course",

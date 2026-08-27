@@ -52,6 +52,7 @@
     "./notifications/ReviewReminderPrompt.js": "./src/notifications/ReviewReminderPrompt.tsx",
     "./notifications/review-reminders.css": "./src/notifications/review-reminders.css",
     "./path/CoursePickCard.js": "./src/path/CoursePickCard.tsx",
+    "./path/course-pick-stats.js": "./src/path/course-pick-stats.ts",
     "./path/CourseRouteQuiz.js": "./src/path/CourseRouteQuiz.tsx",
     "./path/NodeCard.js": "./src/path/NodeCard.tsx",
     "./path/UnitCard.js": "./src/path/UnitCard.tsx",
