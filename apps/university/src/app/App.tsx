@@ -734,6 +734,7 @@ export function App() {
       avatarRecipe={avatarRecipe}
       avatarSignedIn={avatarSignedIn}
       onAvatarRecipeChange={saveAvatarRecipe}
+      reviewReminderDismissedFor={reviewReminderDismissedFor}
       onDismissReviewReminder={setReviewReminderDismissedFor}
       identityPort={analyticsIdentityPort}
       paymentPort={analyticsPaymentPort}
