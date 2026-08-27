@@ -153,10 +153,11 @@ demo，University 不引入它的 renderer、World、GUI、第二 canvas、事�
 所以媒体从「不进入」改为**「隔离可用，来源待确认」**：进来的每一个文件必须登记进
 `packages/world/src/island/*-assets.json` 同款清单，带 `provenance: "author-permission-pending"`
 与登记日期，**和已确认 CC0 的 Kenney 分开放、分开记**，这样授权一旦有结论就能精确地拿掉或转正。
-只取 shader 实际用到的文件——实测它全部只有 8 个 GLB（约 260KB），其中 `grass_blade` /
-`leaf` / `bushEmitter` 合计 4.7KB 且是 shader 的几何载体（几个三角形，随时可用代码重生成），
-`bridge` / `camp` / `tent` 是它自己场景的道具，与课程岛无关。真正有价值的是
-`public/textures/{grass,bush,ground,water,noises}` 里的噪声与 ramp。**不要整目录搬。**
+实测它全部只有 8 个 GLB（约 260KB），**八个全要**：`bridge` / `camp` / `tent` / `rocks` /
+`treeTrunks` 是可用的岛上道具（owner 裁定：好看就是理由，桥和营地本来就是参考图里有的东西），
+`grass_blade` / `leaf` / `bushEmitter` 合计 4.7KB，是 shader 的几何载体。
+贴图按需取 `public/textures/{grass,bush,ground,water,noises}` 里 shader 和道具实际引用的文件，
+**不要整目录搬**——目录里有多少张没人用的图，就有多少条将来要回答的来源问题。
 
 仍待确认的关键事实不是「作者是否同意」，而是**「这些素材是作者自己做的，还是他从别处下载的」**。
 该仓库 README 没有任何 credits 章节；如果是下载来的，作者的许可不构成转授权。这条问题要问到答案，

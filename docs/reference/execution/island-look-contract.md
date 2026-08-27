@@ -107,10 +107,11 @@ donors.md 里已经写清楚了：它的地面是 **5×5 平面上的 fragment p
 
 1. 每个进来的文件登记进独立清单，带 `provenance: "author-permission-pending"` 与日期，
    **和已确认 CC0 的 Kenney 分开放**，授权有结论时能精确拿掉或转正。
-2. **只取 shader 实际用到的文件，不整目录搬。** 实测它一共只有 8 个 GLB（约 260KB），
-   其中 `bridge` / `camp` / `tent` 是它自己场景的道具，跟课程岛没关系；
-   `grass_blade` / `leaf` / `bushEmitter` 合计 4.7KB，是 shader 的几何载体，
-   几个三角形而已，随时能用代码重新生成。真正值钱的是
+2. **八个 GLB 全要，贴图按需取。** 它一共只有 8 个 GLB（约 260KB）：
+   `bridge` / `camp` / `tent` / `rocks` / `treeTrunks` 直接进道具库——桥和营地本来就是
+   参考构图里的东西；`grass_blade` / `leaf` / `bushEmitter` 合计 4.7KB，是 shader 的几何载体。
+   贴图只取 shader 和道具实际引用的那些，**不整目录搬**：目录里有多少张没人用的图，
+   将来就有多少条要回答的来源问题。真正值钱的是
    `public/textures/{grass,bush,ground,water,noises}` 里的噪声与 ramp。
 3. 丰富度的主力仍然是 **Kenney（CC0，逐包记了许可证与 sha256）+ billboard 植被**。
    donor 媒体是补充，不是地基——地基不能建在一个还没确认的授权上。
