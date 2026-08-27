@@ -5,10 +5,9 @@
  * published course; this file only describes the AI and sync rights that a
  * future commercial plan may grant.
  *
- * Keep prices as configuration in this module. Until the product decision is
- * made, the only configured plan is the free baseline. A paid plan can be
- * added by filling its rights and `pricing` object here; the reader and the
- * entitlement model do not need a second list.
+ * Keep prices as configuration in this module. A paid plan is added by filling
+ * its rights and `pricing` object here; the reader and the entitlement model do
+ * not need a second list.
  */
 
 export type PlanId = string;
@@ -74,11 +73,10 @@ export const BILLING_CONFIG = {
       ],
     },
     /*
-      The paid plan's rights are already decided by the journey; only its price
-      is not. `pricing: "pending"` is what that state looks like, and the page
-      renders the rights with 「待产品确认」 where the number will go — which is
-      more honest than an empty page and lets a learner see what they would be
-      buying before anyone has to name a number.
+      The overseas launch hypothesis is $19 monthly or $149 yearly. Keeping
+      the number beside the paid rights makes the membership page show the same
+      offer that entitlement checks describe; the yearly page can calculate its
+      effective monthly comparison from this source.
 
       `openTutoringTurnsPerDay: null` is not "unlimited". Open tutoring is
       metered against the wallet, so the wallet is the cap; a second turn cap
@@ -87,7 +85,12 @@ export const BILLING_CONFIG = {
     {
       id: "member",
       name: "会员",
-      pricing: { kind: "pending" },
+      pricing: {
+        kind: "configured",
+        currency: "USD",
+        monthlyCents: 1900,
+        yearlyCents: 14900,
+      },
       ai: {
         deterministicGrading: true,
         structuredGrading: true,

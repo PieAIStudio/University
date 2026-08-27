@@ -129,17 +129,19 @@ describe("PlansScreen", () => {
     expect(markup).toContain("免费");
   });
 
-  it("keeps a purchase CTA visible while the price is still a product decision", () => {
+  it("shows the configured member prices and keeps the purchase CTA visible", () => {
     const markup = renderToStaticMarkup(<PlansScreen />);
-    expect(markup).toContain("待产品确认");
-    expect(markup).toContain("查看购买入口");
+    expect(markup).toContain("$149.00");
+    expect(markup).toContain("$12.42");
+    expect(markup).toContain("购买");
+    expect(markup).not.toContain("待产品确认");
     expect(markup).not.toContain('disabled=""');
   });
 
-  it("does not promise a price or a paid tier before configuration", () => {
+  it("shows the billing-cycle choice once a paid price is configured", () => {
     const markup = renderToStaticMarkup(<PlansScreen />);
-    expect(markup).toContain("付费档位和价格尚未填入");
-    expect(markup).not.toContain("按年");
-    expect(markup).not.toContain("$95.99");
+    expect(markup).toContain("按年");
+    expect(markup).toContain("按月");
+    expect(markup).not.toContain("付费档位和价格尚未填入");
   });
 });

@@ -4,18 +4,21 @@ import { BILLING_CONFIG, defaultPlanOf, planById, PLANS } from "./plans.js";
 
 describe("billing configuration", () => {
   /*
-    The guard that matters is not how many plans exist — it is that nobody
-    invents a price. Rights and price are separate decisions: the paid plan's
-    rights come from the journey and are configured, while its price is still
-    the product's to name, which is what `pending` means. An earlier version of
-    this test asserted a plan count instead, which would have been satisfied by
-    a plan carrying a made-up number.
+    The overseas launch has a named price now. Keep the paid plan's currency
+    and both billing cycles pinned here so a future edit cannot silently turn
+    the membership page back into an unpriced offer. The free baseline remains
+    free and is intentionally not part of the paid pricing table.
   */
-  it("configures rights but never a price the product has not named", () => {
+  it("keeps the launch prices configured and the free baseline free", () => {
     expect(defaultPlanOf()).toBe(planById("free"));
     expect(planById("free")?.pricing).toEqual({ kind: "free" });
-    expect(planById("member")?.pricing).toEqual({ kind: "pending" });
-    expect(PLANS.some((plan) => plan.pricing.kind === "configured")).toBe(false);
+    expect(planById("member")?.pricing).toEqual({
+      kind: "configured",
+      currency: "USD",
+      monthlyCents: 1900,
+      yearlyCents: 14900,
+    });
+    expect(PLANS.some((plan) => plan.pricing.kind === "configured")).toBe(true);
   });
 
   it("sells the paid plan on what the free one cannot do", () => {

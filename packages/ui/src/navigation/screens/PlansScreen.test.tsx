@@ -54,7 +54,7 @@ describe("PlansScreen purchase entry", () => {
 
     await act(async () => root.render(<PlansScreen paymentPort={payment} />));
     const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
-      button.textContent?.includes("查看购买入口"),
+      button.textContent?.includes("购买"),
     );
     if (!cta) throw new Error("missing purchase CTA");
     expect(cta.disabled).toBe(false);
@@ -85,7 +85,7 @@ describe("PlansScreen purchase entry", () => {
 
     await act(async () => root.render(<PlansScreen paymentPort={payment} />));
     const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
-      button.textContent?.includes("查看购买入口"),
+      button.textContent?.includes("购买"),
     );
     if (!cta) throw new Error("missing purchase CTA");
     expect(cta.disabled).toBe(false);

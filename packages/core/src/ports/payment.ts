@@ -103,7 +103,7 @@ const DEFAULT_NO_CHANNEL_EXPLANATION: PaymentExplanation = {
   whyUnavailable:
     "当前还没有发布给 University 使用的服务端订单入口。浏览器不会直连支付 SDK，也不会自己给钱包加额度。",
   futureSupport:
-    "待产品确认价格后，服务端会统一接入国内和海外渠道，验证付款回调，按订单幂等结算，再让这里刷新权益。",
+    "价格已经确定；服务端订单入口接通海外支付渠道后，会验证付款回调，按订单幂等结算，再让这里刷新权益。",
 };
 
 const ACCOUNT_REQUIRED_EXPLANATION: PaymentExplanation = {

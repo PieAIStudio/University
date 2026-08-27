@@ -15,26 +15,28 @@ import { useEffect, useState } from "react";
 
 import { CapabilityExplanation } from "../../capability/CapabilityExplanation.js";
 
-/**
- * 会员 — this surface explains the entitlement boundary. Price and paid
- * tiers stay in the shared billing configuration until the product decision
- * exists; this offer is only the visible hand-off to that future decision.
- */
+/** 会员 — this surface explains the entitlement boundary and launch offer. */
 export const PLANS_TITLE = "会员";
 
-/** Not a priced plan. It keeps the purchase place visible before pricing exists. */
-export const PENDING_PURCHASE_OFFER_ID = "paid-entitlement-pending";
-
 const FALLBACK_PAYMENT_PORT = createUnavailablePaymentPort();
+
+function formatCurrency(cents: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(cents / 100);
+}
 
 function configuredPrice(pricing: PlanPricing, yearly: boolean): string | null {
   if (pricing.kind !== "configured") return null;
   const cents = yearly ? pricing.yearlyCents : pricing.monthlyCents;
   if (cents === null) return null;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: pricing.currency,
-  }).format(cents / 100);
+  return formatCurrency(cents, pricing.currency);
+}
+
+function configuredYearlyMonthlyPrice(pricing: PlanPricing): string | null {
+  if (pricing.kind !== "configured" || pricing.yearlyCents === null) return null;
+  return formatCurrency(pricing.yearlyCents / 12, pricing.currency);
 }
 
 function priceLabel(pricing: PlanPricing, yearly: boolean) {
@@ -44,13 +46,17 @@ function priceLabel(pricing: PlanPricing, yearly: boolean) {
 
   const price = configuredPrice(pricing, yearly);
   if (price === null) {
-    return <span className="plan-card__amount">待产品确认</span>;
+    return <span className="plan-card__amount">价格暂时无法显示</span>;
   }
 
+  const yearlyMonthlyPrice = yearly ? configuredYearlyMonthlyPrice(pricing) : null;
   return (
     <>
       <span className="plan-card__amount">{price}</span>
       <span className="plan-card__period">{yearly ? " / 年" : " / 月"}</span>
+      {yearlyMonthlyPrice ? (
+        <span className="plan-card__period">（折合 {yearlyMonthlyPrice} / 月）</span>
+      ) : null}
     </>
   );
 }
@@ -250,7 +256,7 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
       <header className="shell-screen__head">
         <h1>{PLANS_TITLE}</h1>
         <p className="shell-screen__lede">
-          课文不设付费墙，所有已发布课程都能学。权益只描述 AI 和同步；价格与具体档位等产品决定。
+          课文不设付费墙，所有已发布课程都能学。这里的权益只描述 AI 和同步，会员可按月或按年购买。
         </p>
       </header>
 
@@ -287,29 +293,6 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
             onPurchase={(offerId) => void startPurchase(offerId)}
           />
         ))}
-        <li className="plan-card plan-card--pending">
-          <GamePanel>
-            <div className="plan-card__head">
-              <h2 className="plan-card__name">付费权益</h2>
-            </div>
-            <p className="plan-card__price">
-              <span className="plan-card__amount">待产品确认</span>
-            </p>
-            <p className="plan-card__note">具体权益、价格和可用渠道都还没有定案。</p>
-            <ul className="plan-card__lines">
-              <li>购买请求只交给服务端处理</li>
-              <li>成功后从账号重新读取权益</li>
-            </ul>
-            <GameButton
-              variant="ghost"
-              type="button"
-              onClick={() => void startPurchase(PENDING_PURCHASE_OFFER_ID)}
-              disabled={busyOfferId === PENDING_PURCHASE_OFFER_ID}
-            >
-              {busyOfferId === PENDING_PURCHASE_OFFER_ID ? "正在检查…" : "查看购买入口"}
-            </GameButton>
-          </GamePanel>
-        </li>
       </ul>
 
       {order ? (
@@ -327,7 +310,7 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
 
       <GameCallout tone="info" heading="当前权益基线">
         现在只配置了免费基线：确定性判题继续可用；登录并且有远端时同步进度；没有远端时继续本机学习。
-        付费档位和价格尚未填入，所以这里不会先做购买承诺。
+        会员权益已列在上方；购买是否成功以账号里的服务端权益为准。
       </GameCallout>
 
       {explanation ? (
