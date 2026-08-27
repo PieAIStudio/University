@@ -51,15 +51,19 @@ export function islandGeometryScale(
  * single tone near L* 71. A light cannot rescue that, because a flat surface
  * lit from any angle returns a flat image.
  *
- * These constants deliberately reach from L* 38 to L* 82. The rock tones are
- * the important addition: they are selected by slope, so a hillside paints
- * itself darker than the meadow around it and the relief becomes visible as
- * shape rather than as a subtle gradient.
+ * The first four values come from the low-sun lighting work, which widened
+ * them to give the grass field a reachable highlight; `grassLight` is exported
+ * to the blade material as its tip colour, which is why it sits so far above
+ * the others. The remaining six were added for the terrain rule below. Between
+ * them the ladder now reaches from L* 40 to L* 89. The rock tones are the
+ * important addition: they are selected by slope, so a hillside paints itself
+ * darker than the meadow around it and relief becomes visible as shape rather
+ * than as a subtle gradient.
  */
-const GRASS = new THREE.Color(0x74a957); // L* 63.9, the meadow's anchor tone
-const GRASS_LIGHT = new THREE.Color(0x9cc66a); // L* 75.6
-const GRASS_DARK = new THREE.Color(0x507c4b); // L* 48.3
-const GRASS_WARM = new THREE.Color(0x87b85a); // L* 70.0
+const GRASS = new THREE.Color(0x7eb55c); // L* 67.9, the meadow's anchor tone
+const GRASS_LIGHT = new THREE.Color(0xd4ee88); // L* 89.4, the grass blade's tip
+const GRASS_DARK = new THREE.Color(0x4a6b42); // L* 41.9
+const GRASS_WARM = new THREE.Color(0xa6d064); // L* 79.1
 const MEADOW_LOW = new THREE.Color(0x8dba52); // L* 70.6, sunlit flats
 const MEADOW_DEEP = new THREE.Color(0x466c3d); // L* 41.6, hollows and north faces
 const HIGHLAND = new THREE.Color(0xa8b473); // L* 70.2, dry grass on the tops

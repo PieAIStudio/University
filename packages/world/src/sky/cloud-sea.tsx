@@ -313,11 +313,29 @@ export const CUTE_CLOUD_CONTRACT = {
 } as const;
 
 const CLOUD_TONES = {
-  pearl: 0xf8faf7,
-  ivory: 0xf1f1eb,
-  warm: 0xe8ddd0,
-  underbelly: 0xd7c7b5,
+  pearl: 0xfff7ee,
+  ivory: 0xe9eef6,
+  warm: 0xdccbb8,
+  underbelly: 0x8a7464,
 } as const;
+
+const CLOUD_ROLE_TONES: Readonly<
+  Record<CloudPuffRole, { readonly lift: number; readonly belly: number }>
+> = {
+  // Near clouds catch the low sun; distant banks stay cooler and darker so
+  // the field has a near/far, light/dark reading instead of one foam value.
+  "near-edge": { lift: 1.06, belly: 0x6f5c50 },
+  frame: { lift: 1, belly: 0x8a7464 },
+  background: { lift: 0.72, belly: 0x4d5968 },
+};
+
+function scaleHex(color: number, amount: number): number {
+  const clamped = Math.min(1.35, Math.max(0.35, amount));
+  const red = Math.min(255, Math.round(((color >> 16) & 255) * clamped));
+  const green = Math.min(255, Math.round(((color >> 8) & 255) * clamped));
+  const blue = Math.min(255, Math.round((color & 255) * clamped));
+  return (red << 16) | (green << 8) | blue;
+}
 
 type Tone = keyof typeof CLOUD_TONES;
 
@@ -469,7 +487,7 @@ export function cuteCloudLayout(
         ],
         scale: [sx * puff.scale, sy * puff.scale, sz * puff.scale],
         rotationY: yaw + variation * 0.06,
-        color: CLOUD_TONES[recipe.tone],
+        color: scaleHex(CLOUD_TONES[recipe.tone], CLOUD_ROLE_TONES[puff.role].lift),
         puffIndex,
       });
     });
@@ -484,7 +502,7 @@ export function cuteCloudLayout(
       ],
       scale: [0.94 * puff.scale, 0.28 * puff.scale, 0.72 * puff.scale],
       rotationY: yaw,
-      color: CLOUD_TONES.underbelly,
+      color: CLOUD_ROLE_TONES[puff.role].belly,
       puffIndex,
     });
   });
@@ -551,10 +569,10 @@ export function CuteCloudSea({ extent, level, quality, drift = true }: CuteCloud
         // for vertex colours as well would make SphereGeometry look for a
         // missing `color` attribute and collapse the cloud to black.
         color: 0xffffff,
-        roughness: 1,
+        roughness: 0.82,
         metalness: 0,
-        emissive: 0x2a3034,
-        emissiveIntensity: 0.16,
+        emissive: 0x3a4048,
+        emissiveIntensity: 0.1,
         transparent: false,
         fog: false,
         // Decorative cloud lobes overlap by design. Feeding those internal
@@ -571,10 +589,10 @@ export function CuteCloudSea({ extent, level, quality, drift = true }: CuteCloud
     () =>
       new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        roughness: 1,
+        roughness: 0.94,
         metalness: 0,
-        emissive: 0x302a27,
-        emissiveIntensity: 0.12,
+        emissive: 0x241c18,
+        emissiveIntensity: 0.04,
         transparent: false,
         fog: false,
         depthTest: true,

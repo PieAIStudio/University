@@ -150,70 +150,109 @@ export function createIslandGrassBladeGeometry(): THREE.BufferGeometry {
   return geometry;
 }
 
-const GRASS_VERTEX_SHADER = /* glsl */ `
-  uniform float uTime;
-  uniform float uWindStrength;
-  uniform float uWindSpeed;
-  uniform float uWindFrequency;
-  uniform vec2 uWindDirection;
-  varying float vBladeHeight;
-  varying float vBladeVariation;
+const GRASS_SHADER_MARKER = "/* university island grass lit v1 */";
 
-  void main() {
-    vBladeHeight = uv.y;
-    mat4 instanceWorldMatrix = modelMatrix * instanceMatrix;
-    vec3 baseWorldPosition = (instanceWorldMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-    vBladeVariation = fract(
-      sin(dot(baseWorldPosition.xz, vec2(127.1, 311.7))) * 43758.5453123
-    );
-    // A stable per-instance phase keeps the field from breathing in lockstep,
-    // while the shared frequency/speed remain one cheap material uniform.
-    float wave = sin(
-      dot(baseWorldPosition.xz, uWindDirection) * uWindFrequency +
-      uTime * uWindSpeed +
-      vBladeVariation * 6.28318 * 0.65
-    );
-    float tipMask = uv.y * uv.y;
-    vec4 worldPosition = instanceWorldMatrix * vec4(position, 1.0);
-    worldPosition.xz += uWindDirection * wave * uWindStrength * tipMask;
-    gl_Position = projectionMatrix * viewMatrix * worldPosition;
-  }
+/**
+ * Grass used to be an unlit ShaderMaterial. That capped land p95 at the
+ * albedo of the blade tip: no amount of sun could light a field that never
+ * asked the lights. The wind and height ramp stay; MeshStandardMaterial is
+ * the one lighting model the rest of the island already uses. Stage still
+ * owns ACES and the sRGB encode.
+ *
+ * Tip/root ramp is the donor idea from elemental-serenity
+ * `Shaders/Chunks/grass/grass.fragment_color_chunk.glsl` at
+ * `6b8cebefa0ee10e1bdd081dd342a01b3fe753e09`, without its displacement map.
+ */
+const GRASS_VERTEX_DECLARATIONS = `${GRASS_SHADER_MARKER}
+uniform float uTime;
+uniform float uWindStrength;
+uniform float uWindSpeed;
+uniform float uWindFrequency;
+uniform vec2 uWindDirection;
+varying float vBladeHeight;
+varying float vBladeVariation;
 `;
 
-const GRASS_FRAGMENT_SHADER = /* glsl */ `
-  uniform vec3 uGrassBottom;
-  uniform vec3 uGrassTop;
-  varying float vBladeHeight;
-  varying float vBladeVariation;
-
-  void main() {
-    vec3 grassColor = mix(uGrassBottom, uGrassTop, smoothstep(0.08, 1.0, vBladeHeight));
-    grassColor *= mix(0.86, 1.08, vBladeVariation);
-    grassColor *= mix(0.78, 1.02, smoothstep(0.0, 1.0, vBladeHeight));
-    gl_FragColor = vec4(grassColor, 1.0);
-  }
+const GRASS_VERTEX_WIND = `${GRASS_SHADER_MARKER}
+vBladeHeight = uv.y;
+#ifdef USE_INSTANCING
+  vec4 grassInstanceOrigin = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+  vec4 grassLocal = instanceMatrix * vec4(transformed, 1.0);
+#else
+  vec4 grassInstanceOrigin = vec4(0.0, 0.0, 0.0, 1.0);
+  vec4 grassLocal = vec4(transformed, 1.0);
+#endif
+vec3 grassBase = (modelMatrix * grassInstanceOrigin).xyz;
+vBladeVariation = fract(sin(dot(grassBase.xz, vec2(127.1, 311.7))) * 43758.5453123);
+float grassWave = sin(
+  dot(grassBase.xz, uWindDirection) * uWindFrequency +
+  uTime * uWindSpeed +
+  vBladeVariation * 6.28318 * 0.65
+);
+vec4 grassWorld = modelMatrix * grassLocal;
+grassWorld.xz += uWindDirection * grassWave * uWindStrength * uv.y * uv.y;
+vec4 mvPosition = viewMatrix * grassWorld;
+gl_Position = projectionMatrix * mvPosition;
 `;
 
-function createIslandGrassMaterial(style?: IslandGrassStyle): THREE.ShaderMaterial {
+const GRASS_FRAGMENT_DECLARATIONS = `${GRASS_SHADER_MARKER}
+uniform vec3 uGrassBottom;
+uniform vec3 uGrassTop;
+varying float vBladeHeight;
+varying float vBladeVariation;
+`;
+
+const GRASS_FRAGMENT_RAMP = `${GRASS_SHADER_MARKER}
+vec3 grassColor = mix(uGrassBottom, uGrassTop, smoothstep(0.08, 1.0, vBladeHeight));
+grassColor *= mix(0.9, 1.22, vBladeVariation);
+grassColor *= mix(0.82, 1.28, smoothstep(0.0, 1.0, vBladeHeight));
+diffuseColor.rgb = grassColor * 1.28;
+`;
+
+function createIslandGrassMaterial(style?: IslandGrassStyle): THREE.MeshStandardMaterial {
   const uniforms = createGrassUniforms(style);
-  const material = new THREE.ShaderMaterial({
-    uniforms,
-    vertexShader: GRASS_VERTEX_SHADER,
-    fragmentShader: GRASS_FRAGMENT_SHADER,
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    roughness: 0.62,
+    metalness: 0,
+    emissive: 0x6a8a3c,
+    emissiveIntensity: 0.08,
     side: THREE.DoubleSide,
-    depthWrite: true,
-    depthTest: true,
-    transparent: false,
     // Stage owns the one ACES/sRGB grade. Grass emits working-linear colour.
     toneMapped: false,
   });
   material.name = "IslandGrassMaterial";
+  material.userData.grassUniforms = uniforms;
+  material.customProgramCacheKey = () => "island-grass-lit-1";
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    if (!shader.vertexShader.includes(GRASS_SHADER_MARKER)) {
+      shader.vertexShader = shader.vertexShader.replace(
+        "#include <common>",
+        `#include <common>\n${GRASS_VERTEX_DECLARATIONS}`,
+      );
+      shader.vertexShader = shader.vertexShader.replace(
+        "#include <project_vertex>",
+        GRASS_VERTEX_WIND,
+      );
+    }
+    if (!shader.fragmentShader.includes(GRASS_SHADER_MARKER)) {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <common>",
+        `#include <common>\n${GRASS_FRAGMENT_DECLARATIONS}`,
+      );
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>\n${GRASS_FRAGMENT_RAMP}`,
+      );
+    }
+  };
   return material;
 }
 
 function materialUniforms(material: THREE.Material): GrassUniforms | null {
-  if (!(material instanceof THREE.ShaderMaterial)) return null;
-  return material.uniforms as unknown as GrassUniforms;
+  const uniforms = material.userData.grassUniforms as GrassUniforms | undefined;
+  return uniforms ?? null;
 }
 
 /** Resources made by IslandGrass only; never pass terrain resources here. */
@@ -257,7 +296,7 @@ function CourseIslandGrass({ blueprint, detail, targetRadius, style, options }: 
 
 interface IslandGrassOwnedResources {
   readonly geometry: THREE.BufferGeometry;
-  readonly material: THREE.ShaderMaterial;
+  readonly material: THREE.MeshStandardMaterial;
 }
 
 /**

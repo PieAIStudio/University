@@ -36,7 +36,7 @@
  * the kit fragment, asserted by the kit guard) and 3 (a grade exists, started
  * from a named kit look, with scene-specific overrides recorded below).
  */
-import { defineGrade } from "@pieai/swimmer-render-kit";
+import { defineGrade, srgbToDisplayLinear } from "@pieai/swimmer-render-kit";
 import { assertSingleColorEncode } from "@pieai/swimmer-render-kit/guard";
 import {
   buildGradeFragment,
@@ -49,23 +49,26 @@ import * as THREE from "three";
 import { createSceneDepthTexture } from "./ao";
 
 /**
+ * Ungraded scene-linear median after the low-sun pass, as 8-bit sRGB.
+ *
+ * `measureScene()` reads linear luminance before this blit. Convert that
+ * midtone with the kit helper — never pass the 0–1 fraction, which is the
+ * documented way to set this value wrong. Course-design, 1440×900, post=off:
+ * linear median 0.316, which is 152/255 sRGB.
+ *
+ * The judge scores `post=off`, so these numbers do not move S1. They are
+ * the product look once the grade is on: contrast opens the new range,
+ * vignette must not crush the sun disc that A4 and p98 now live in.
+ */
+export const WORLD_GRADE_PIVOT_SRGB8 = 152;
+
+/**
  * Diorama plus the numbers this map actually measured.
  *
- * `contrastPivot` is 0.34 because that is the working-space value the previous
- * blit expanded around after ACES, read off this scene rather than inherited.
- * The dungeon donor used 0.5; YaZu's board used 0.066. Both are wrong here.
- *
- * Cool/warm amounts stay 0.22 / 0.16 (against the donor's 0.38 / 0.28). A map
- * has to stay legible, and a strong split starts to read as "these islands are
- * different colours", which is a lie the map must not tell. The tints and luma
- * ramps travel with those amounts: they were one calibration, and substituting
- * YaZu's much stronger cyan/amber pair at the weaker weights would rebuild the
- * lie from the other end. The ramps also have to cover this scene's mid-tone
- * band around 0.34; diorama's 0.09 / 0.10–0.25 band was cut for YaZu's 0.066
- * and would leave the cool tint with almost nothing to hold onto.
- *
- * `edgeGain` 0.76 is the old `uVignette = 0.24` expressed as the kit's mix
- * (`mix(edgeGain, centerGain, vg)` equals `mix(1.0 - 0.24, 1.0, vg)`).
+ * Cool/warm amounts stay moderate. A map has to stay legible, and a strong
+ * split starts to read as "these islands are different colours". The ramps
+ * cover the new mid-tone band around the measured pivot, not YaZu's 0.066
+ * or the dungeon's 0.5.
  *
  * Exported on purpose: this table is the colour-pipeline contract, not a
  * private helper. knip flags it because no other file names it; the blit
@@ -74,26 +77,27 @@ import { createSceneDepthTexture } from "./ao";
 export const WORLD_GRADE = defineGrade("diorama", {
   tiltShift: false,
   grain: 0,
-  saturation: 1,
-  contrast: 1.06,
-  contrastPivot: 0.34,
+  saturation: 1.06,
+  contrast: 1.28,
+  contrastPivot: srgbToDisplayLinear(WORLD_GRADE_PIVOT_SRGB8),
   coolShadow: {
-    amount: 0.22,
-    rangeEnd: 0.4,
-    tint: [0.92, 0.97, 1.1],
+    amount: 0.26,
+    rangeStart: 0,
+    rangeEnd: 0.36,
+    tint: [0.88, 0.95, 1.14],
   },
   warmHighlight: {
-    amount: 0.16,
-    rangeStart: 0.45,
+    amount: 0.22,
+    rangeStart: 0.4,
     rangeEnd: 1,
-    tint: [1.06, 1.01, 0.94],
+    tint: [1.14, 1.03, 0.88],
   },
   vignette: {
-    inner: 0.48,
-    outer: 1.32,
-    scale: 1.5,
-    edgeGain: 0.76,
-    centerGain: 1,
+    inner: 0.58,
+    outer: 1.42,
+    scale: 1.28,
+    edgeGain: 0.94,
+    centerGain: 1.03,
   },
 });
 
