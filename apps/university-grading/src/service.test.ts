@@ -5,11 +5,13 @@ import {
   createStructuredGrader,
   handleGradeRequest,
   type GradeDependencies,
+  type FreeGradingQuota,
   type GradingWallet,
 } from "./service.js";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const RESERVATION_ID = "22222222-2222-4222-8222-222222222222";
+const FREE_RESERVATION_ID = "33333333-3333-4333-8333-333333333333";
 const REFUND_ENTRY_ID = "44444444-4444-4444-8444-444444444444";
 const COMMAND_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
@@ -48,7 +50,7 @@ const refund = {
   status: "refunded" as const,
 };
 
-function requestFor(token?: string): Request {
+function requestFor(token?: string, funding: "free" | "wallet" = "wallet"): Request {
   const headers = new Headers({ "Content-Type": "application/json" });
   if (token) headers.set("Authorization", `Bearer ${token}`);
   return new Request("https://grading.example.test/api/grade", {
@@ -60,7 +62,17 @@ function requestFor(token?: string): Request {
       contentRevision: 1,
       exerciseId: "explain",
       prompt: "为什么？",
+      funding,
     }),
+  });
+}
+
+function offerRequestFor(token?: string): Request {
+  const headers = new Headers();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return new Request("https://grading.example.test/api/grade", {
+    method: "GET",
+    headers,
   });
 }
 
@@ -93,18 +105,104 @@ function fixture() {
     events.push("refund");
     return refund;
   });
-  const wallet: GradingWallet = { reserve, commit, refund: refundCall };
+  const getBalance = vi.fn(async () => ({
+    availablePowerUnits: "1000",
+    balancePowerUnits: "1000",
+    reservedPowerUnits: "0",
+  }));
+  const wallet: GradingWallet = { getBalance, reserve, commit, refund: refundCall };
   const authenticate = vi.fn(async (token: string) =>
     token === "valid-token" ? { userId: USER_ID, isAnonymous: false } : null,
   );
+  const createWallet = vi.fn(() => wallet);
   const deps: GradeDependencies = {
     authenticate,
-    createWallet: () => wallet,
+    createWallet,
     grade: model.grade,
     now: () => "2026-08-26T00:00:00.000Z",
   };
 
-  return { authenticate, complete, deps, events, refundCall, reserve, commit };
+  return {
+    authenticate,
+    complete,
+    createWallet,
+    deps,
+    events,
+    getBalance,
+    refundCall,
+    reserve,
+    commit,
+  };
+}
+
+function freeQuotaFixture(events: string[], initialRemaining = "400") {
+  const state = { remainingPowerUnits: initialRemaining };
+  const resetsAt = "2026-08-27T00:00:00.000Z";
+  const quote = vi.fn<FreeGradingQuota["quote"]>(async () => ({
+    remainingPowerUnits: state.remainingPowerUnits,
+    resetsAt,
+  }));
+  const reserve = vi.fn<FreeGradingQuota["reserve"]>(async (input) => {
+    events.push("free-reserve");
+    if (BigInt(state.remainingPowerUnits) < BigInt(input.amountPowerUnits)) {
+      return {
+        allowed: false,
+        amountPowerUnits: input.amountPowerUnits,
+        remainingPowerUnits: state.remainingPowerUnits,
+        resetsAt,
+        idempotent: false,
+        insufficient: true,
+        reservationId: null,
+        status: "insufficient",
+      };
+    }
+    state.remainingPowerUnits = String(
+      BigInt(state.remainingPowerUnits) - BigInt(input.amountPowerUnits),
+    );
+    return {
+      allowed: true,
+      amountPowerUnits: input.amountPowerUnits,
+      remainingPowerUnits: state.remainingPowerUnits,
+      resetsAt,
+      idempotent: false,
+      insufficient: false,
+      reservationId: FREE_RESERVATION_ID,
+      status: "reserved",
+    };
+  });
+  const commit = vi.fn<FreeGradingQuota["commit"]>(async () => {
+    events.push("free-commit");
+    return {
+      allowed: true,
+      amountPowerUnits: "100",
+      remainingPowerUnits: state.remainingPowerUnits,
+      resetsAt,
+      reservationId: FREE_RESERVATION_ID,
+      status: "committed",
+    };
+  });
+  const refund = vi.fn<FreeGradingQuota["refund"]>(async () => {
+    events.push("free-refund");
+    state.remainingPowerUnits = String(BigInt(state.remainingPowerUnits) + 100n);
+    return {
+      allowed: true,
+      amountPowerUnits: "100",
+      remainingPowerUnits: state.remainingPowerUnits,
+      resetsAt,
+      reservationId: FREE_RESERVATION_ID,
+      status: "refunded",
+    };
+  });
+  const quota: FreeGradingQuota = { quote, reserve, commit, refund };
+  return {
+    commit,
+    get remainingPowerUnits() {
+      return state.remainingPowerUnits;
+    },
+    quota,
+    quote,
+    reserve,
+  };
 }
 
 describe("University metered grading service", () => {
@@ -200,5 +298,72 @@ describe("University metered grading service", () => {
     expect(body.error).toMatch(/还剩 50.*需要 100/);
     expect(complete).not.toHaveBeenCalled();
     expect(events).toEqual(["reserve"]);
+  });
+
+  it("quotes the daily free allowance without reading or reserving the wallet", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
+
+    const response = await handleGradeRequest(offerRequestFor("valid-token"), fixtureState.deps);
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      kind: "free",
+      costPowerUnits: "100",
+      remainingPowerUnits: "400",
+      resetsAt: "2026-08-27T00:00:00.000Z",
+    });
+    expect(fixtureState.createWallet).not.toHaveBeenCalled();
+    expect(fixtureState.getBalance).not.toHaveBeenCalled();
+    expect(fixtureState.events).toEqual([]);
+    expect(quotaState.quote).toHaveBeenCalledWith({
+      userId: USER_ID,
+      day: "2026-08-26",
+      quotaPowerUnits: "400",
+    });
+  });
+
+  it("uses the daily free allowance before the wallet for a structured grade", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
+
+    const response = await handleGradeRequest(requestFor("valid-token", "free"), fixtureState.deps);
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      funding: "free",
+      freeQuota: {
+        remainingPowerUnits: "300",
+        resetsAt: "2026-08-27T00:00:00.000Z",
+      },
+    });
+    expect(fixtureState.events).toEqual(["free-reserve", "model", "free-commit"]);
+    expect(fixtureState.reserve).not.toHaveBeenCalled();
+    expect(fixtureState.getBalance).not.toHaveBeenCalled();
+  });
+
+  it("returns an honest exhaustion signal without calling the model or wallet", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events, "0");
+    fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
+
+    const response = await handleGradeRequest(requestFor("valid-token", "free"), fixtureState.deps);
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(429);
+    expect(body).toMatchObject({
+      code: "free_quota_exhausted",
+      error: "今天的免费 AI 批改用完了，明天恢复。",
+      remainingPowerUnits: "0",
+      resetsAt: "2026-08-27T00:00:00.000Z",
+    });
+    expect(fixtureState.events).toEqual(["free-reserve"]);
+    expect(fixtureState.complete).not.toHaveBeenCalled();
+    expect(fixtureState.reserve).not.toHaveBeenCalled();
+    expect(fixtureState.getBalance).not.toHaveBeenCalled();
   });
 });

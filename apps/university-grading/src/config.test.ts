@@ -15,6 +15,6 @@ describe("metered grading configuration", () => {
       outputUsdPerMillion: 2.5,
       status: "待产品确认",
     });
-    expect(FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY).toBe("0");
+    expect(FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY).toBe("400");
   });
 });

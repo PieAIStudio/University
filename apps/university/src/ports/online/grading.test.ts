@@ -145,6 +145,7 @@ describe("createOnlineGradingPort", () => {
         contentRevision: 1,
         exerciseId: "explain",
         prompt: "为什么？",
+        funding: "wallet",
       });
       return new Response(
         JSON.stringify({
@@ -161,6 +162,7 @@ describe("createOnlineGradingPort", () => {
             balancePowerUnits: "1000",
             reservedPowerUnits: "100",
           },
+          funding: "wallet",
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       );
@@ -169,11 +171,6 @@ describe("createOnlineGradingPort", () => {
       fetchImpl,
       gradingUrl: "https://grading.example.test/api/grade",
       readAccessToken,
-      readBalance: async () => ({
-        availablePowerUnits: "1000",
-        balancePowerUnits: "1000",
-        reservedPowerUnits: "0",
-      }),
     });
     const result = await port.submitExercise({
       locator: { ...locator, lessonId: long.id },
@@ -194,16 +191,10 @@ describe("createOnlineGradingPort", () => {
       throw new Error("the free first pass must not call tier two");
     });
     const readAccessToken = vi.fn(async () => "learner-access-token");
-    const readBalance = vi.fn(async () => ({
-      availablePowerUnits: "1000",
-      balancePowerUnits: "1000",
-      reservedPowerUnits: "0",
-    }));
     const port = createOnlineGradingPort({
       fetchImpl,
       gradingUrl: "https://grading.example.test/api/grade",
       readAccessToken,
-      readBalance,
     });
 
     const result = await port.submitExercise(undecidableSubmission("free-first"));
@@ -213,30 +204,70 @@ describe("createOnlineGradingPort", () => {
     expect(result.meteredEligible).toBe(true);
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(readAccessToken).not.toHaveBeenCalled();
-    expect(readBalance).not.toHaveBeenCalled();
   });
 
-  it("quotes the cost and remaining balance without contacting the grading service", async () => {
-    const fetchImpl = vi.fn(async () => {
-      throw new Error("quoting must not submit an answer");
+  it("reads a free daily offer from the server without submitting an answer", async () => {
+    const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      expect(init?.method).toBe("GET");
+      expect(init?.headers).toEqual({ Authorization: "Bearer learner-access-token" });
+      return new Response(
+        JSON.stringify({
+          kind: "free",
+          costPowerUnits: "100",
+          remainingPowerUnits: "300",
+          resetsAt: "2026-08-28T00:00:00.000Z",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
     });
     const port = createOnlineGradingPort({
       fetchImpl,
       gradingUrl: "https://grading.example.test/api/grade",
       readAccessToken: async () => "learner-access-token",
-      readBalance: async () => ({
-        availablePowerUnits: "900",
-        balancePowerUnits: "1000",
-        reservedPowerUnits: "100",
-      }),
     });
 
     await expect(port.meteredGradingOffer()).resolves.toEqual({
-      kind: "available",
+      kind: "free",
       costPowerUnits: "100",
-      availablePowerUnits: "900",
+      remainingPowerUnits: "300",
+      resetsAt: "2026-08-28T00:00:00.000Z",
     });
-    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("silently falls back to tier one when the free daily quota is exhausted", async () => {
+    const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      expect(init?.method).toBe("POST");
+      const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      expect(body.funding).toBe("free");
+      return new Response(
+        JSON.stringify({
+          code: "free_quota_exhausted",
+          error: "今天的免费 AI 批改用完了，明天恢复。",
+        }),
+        { status: 429, headers: { "Content-Type": "application/json" } },
+      );
+    });
+    const port = createOnlineGradingPort({
+      fetchImpl,
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken: async () => "learner-access-token",
+    });
+
+    await expect(
+      port.submitExercise({
+        ...undecidableSubmission("red-free-exhausted"),
+        allowMetered: true,
+        meteredFunding: "free",
+      }),
+    ).resolves.toMatchObject({
+      hostGrade: {
+        host: "tier-1",
+        passed: false,
+        evaluation: expect.stringContaining("再看一眼你刚才读过的这句"),
+      },
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   it("falls back to the tier-one clue when the learner is signed out", async () => {
@@ -287,11 +318,6 @@ describe("createOnlineGradingPort", () => {
       fetchImpl,
       gradingUrl: "https://grading.example.test/api/grade",
       readAccessToken: async () => "learner-access-token",
-      readBalance: async () => ({
-        availablePowerUnits: "1000",
-        balancePowerUnits: "1000",
-        reservedPowerUnits: "0",
-      }),
     });
 
     await expect(
@@ -313,11 +339,6 @@ describe("createOnlineGradingPort", () => {
       fetchImpl,
       gradingUrl: "https://grading.example.test/api/grade",
       readAccessToken: async () => "learner-access-token",
-      readBalance: async () => ({
-        availablePowerUnits: "1000",
-        balancePowerUnits: "1000",
-        reservedPowerUnits: "0",
-      }),
     });
 
     await expect(

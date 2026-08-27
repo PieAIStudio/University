@@ -64,6 +64,8 @@ export interface ExerciseSubmitInput {
   readonly commandId: string;
   /** Safe by default: tier two needs an explicit learner choice. */
   readonly allowMetered?: boolean;
+  /** Which explicit funding choice the delivery server must honor. */
+  readonly meteredFunding?: "free" | "wallet";
 }
 
 /**
@@ -82,7 +84,13 @@ export interface MeteredGradingBalance {
 
 export interface MeteredGradingResponse {
   readonly hostGrade: HostExerciseGrade;
-  readonly balance: MeteredGradingBalance;
+  /** Present for wallet-funded grading; free-quota grading does not touch it. */
+  readonly balance?: MeteredGradingBalance;
+  readonly funding: "free" | "wallet";
+  readonly freeQuota?: {
+    readonly remainingPowerUnits: string;
+    readonly resetsAt: string;
+  };
 }
 
 /** The explanation shown when a metered grading capability is not available. */
@@ -94,18 +102,30 @@ export interface MeteredGradingExplanation {
   readonly futureSupport: string;
 }
 
-/** A quote is read before an explicit paid choice, never after a charge. */
+/** A quote is read before an explicit choice, never after a charge. */
 export type MeteredGradingOffer =
   | {
+      /** The next request is covered by today's free structured-grading quota. */
+      readonly kind: "free";
+      readonly costPowerUnits: string;
+      readonly remainingPowerUnits: string;
+      readonly resetsAt: string;
+    }
+  | {
+      /** The next request will reserve the learner's wallet after opt-in. */
       readonly kind: "available";
       readonly costPowerUnits: string;
       readonly availablePowerUnits: string;
+      readonly freeQuotaExhausted?: boolean;
+      readonly freeQuotaResetsAt?: string;
     }
   | {
       readonly kind: "unavailable";
       readonly costPowerUnits: string;
       readonly availablePowerUnits: string | null;
       readonly explanation: MeteredGradingExplanation;
+      readonly freeQuotaExhausted?: boolean;
+      readonly freeQuotaResetsAt?: string;
     };
 
 export interface GradingPort {

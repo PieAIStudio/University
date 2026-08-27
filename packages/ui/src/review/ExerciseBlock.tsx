@@ -72,7 +72,9 @@ export function ExerciseBlock({
   const [hostGrade, setHostGrade] = useState<HostExerciseGrade | null>(exercise.hostGrade ?? null);
   const [meteredOffer, setMeteredOffer] = useState<MeteredGradingOffer | null>(null);
   const [meteredOfferLoading, setMeteredOfferLoading] = useState(false);
-  const [meteredChoice, setMeteredChoice] = useState<"free" | "paid" | null>(null);
+  const [meteredChoice, setMeteredChoice] = useState<"tier-1" | "free-ai" | "wallet-ai" | null>(
+    null,
+  );
   const [meteredExplanation, setMeteredExplanation] = useState<MeteredGradingExplanation | null>(
     null,
   );
@@ -215,7 +217,7 @@ export function ExerciseBlock({
     }
   }
 
-  async function submit(allowMetered = false) {
+  async function submit(allowMetered = false, funding: "free" | "wallet" = "wallet") {
     setPending(true);
     setError(null);
     setPacketCopied(false);
@@ -223,7 +225,7 @@ export function ExerciseBlock({
     setPacketInfo(null);
     setResult(null);
     setMeteredOffer(null);
-    setMeteredChoice(allowMetered ? "paid" : null);
+    setMeteredChoice(allowMetered ? (funding === "free" ? "free-ai" : "wallet-ai") : null);
     try {
       const body: ExerciseAttemptResult = await grading.submitExercise({
         locator,
@@ -232,9 +234,11 @@ export function ExerciseBlock({
         answer,
         commandId: crypto.randomUUID(),
         allowMetered,
+        meteredFunding: allowMetered ? funding : undefined,
       });
       setResult(body);
       if (body.hostGrade) setHostGrade(body.hostGrade);
+      if (allowMetered && body.hostGrade?.host !== "tier-2") setMeteredChoice("tier-1");
       setGradeWatermark(body.hostGrade?.occurredAt ?? "");
       if (!body.hostGrade?.passed) await copyCoachingPacket();
       await onRefresh();
@@ -410,30 +414,81 @@ export function ExerciseBlock({
             <GameCallout heading="正在读取 AI 批改费用与余额" tone="neutral" role="status">
               先把这次大约要花多少、你的钱包还剩多少读清楚；读取完成前不会发起计量请求。
             </GameCallout>
-          ) : meteredOffer?.kind === "available" ? (
-            <GameCallout heading="AI 语义批改会使用额度" tone="warning" role="region">
+          ) : meteredOffer?.kind === "free" ? (
+            <GameCallout heading="今天的免费 AI 批改还可用" tone="neutral" role="region">
               <div className="metered-grading-choice__copy">
                 <p>
-                  这次约消耗 <strong>{meteredOffer.costPowerUnits} power units</strong>
-                  ；你的钱包还剩 <strong>{meteredOffer.availablePowerUnits} power units</strong>。
+                  这次使用 <strong>{meteredOffer.costPowerUnits} power units</strong> 的每日免费 AI
+                  额度；今天还剩 <strong>{meteredOffer.remainingPowerUnits} power units</strong>，
+                  不会扣钱包。
                 </p>
-                <p>只有点“使用 AI 批改”才会扣除额度；下面的 tier‑1 免费提示不花额度。</p>
+                <p>
+                  只有点“使用今日免费 AI 批改”才会占用每日免费额度；下面的 tier‑1 免费提示不占 AI
+                  额度。
+                </p>
               </div>
-              {meteredChoice === "free" ? (
+              {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  已选择免费提示（不花额度）。
+                  已选择 tier‑1 免费提示（不占 AI 额度）。
+                </p>
+              ) : meteredChoice === "free-ai" ? (
+                <p className="metered-grading-choice__selected" role="status">
+                  已选择今天的免费 AI 批改。
                 </p>
               ) : null}
               <div className="metered-grading-choice__actions">
-                <GameButton variant="primary" onClick={() => void submit(true)} disabled={pending}>
+                <GameButton
+                  variant="primary"
+                  onClick={() => void submit(true, "free")}
+                  disabled={pending}
+                >
+                  使用今日免费 AI 批改（占用 {meteredOffer.costPowerUnits}）
+                </GameButton>
+                <GameButton
+                  variant="ghost"
+                  onClick={() => setMeteredChoice("tier-1")}
+                  disabled={pending}
+                >
+                  只看 tier‑1 免费提示（不占 AI 额度）
+                </GameButton>
+              </div>
+            </GameCallout>
+          ) : meteredOffer?.kind === "available" ? (
+            <GameCallout heading="AI 语义批改会使用额度" tone="warning" role="region">
+              <div className="metered-grading-choice__copy">
+                {meteredOffer.freeQuotaExhausted ? (
+                  <p>
+                    今天的免费 AI 批改用完了，明天恢复。现在使用会从钱包扣除{" "}
+                    <strong>{meteredOffer.costPowerUnits} power units</strong>；你的钱包还剩{" "}
+                    <strong>{meteredOffer.availablePowerUnits} power units</strong>。
+                  </p>
+                ) : (
+                  <p>
+                    这次约消耗 <strong>{meteredOffer.costPowerUnits} power units</strong>
+                    ；你的钱包还剩 <strong>{meteredOffer.availablePowerUnits} power units</strong>。
+                  </p>
+                )}
+                <p>只有点“使用 AI 批改”才会扣钱包额度；下面的 tier‑1 免费提示不花钱包额度。</p>
+              </div>
+              {meteredChoice === "tier-1" ? (
+                <p className="metered-grading-choice__selected" role="status">
+                  已选择 tier‑1 免费提示（不花钱包额度）。
+                </p>
+              ) : null}
+              <div className="metered-grading-choice__actions">
+                <GameButton
+                  variant="primary"
+                  onClick={() => void submit(true, "wallet")}
+                  disabled={pending}
+                >
                   使用 AI 批改（消耗 {meteredOffer.costPowerUnits}）
                 </GameButton>
                 <GameButton
                   variant="ghost"
-                  onClick={() => setMeteredChoice("free")}
+                  onClick={() => setMeteredChoice("tier-1")}
                   disabled={pending}
                 >
-                  只看免费提示（不花额度）
+                  只看 tier‑1 免费提示（不花钱包额度）
                 </GameButton>
               </div>
             </GameCallout>
@@ -441,16 +496,18 @@ export function ExerciseBlock({
             <GameCallout heading={meteredOffer.explanation.title} tone="neutral" role="status">
               <div className="metered-grading-choice__copy">
                 <p>
-                  本次 AI 批改约消耗 <strong>{meteredOffer.costPowerUnits} power units</strong>。
+                  {meteredOffer.freeQuotaExhausted
+                    ? "今天的免费 AI 批改用完了，明天恢复。"
+                    : `本次 AI 批改约消耗 ${meteredOffer.costPowerUnits} power units。`}
                   {meteredOffer.availablePowerUnits !== null
                     ? ` 你的钱包还剩 ${meteredOffer.availablePowerUnits} power units。`
                     : " 钱包余额暂时读不到。"}
                 </p>
                 <p>{meteredOffer.explanation.whyUnavailable}</p>
               </div>
-              {meteredChoice === "free" ? (
+              {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  已选择免费提示（不花额度）。
+                  已选择 tier‑1 免费提示（不花钱包额度）。
                 </p>
               ) : null}
               <div className="metered-grading-choice__actions">
@@ -462,10 +519,10 @@ export function ExerciseBlock({
                 </GameButton>
                 <GameButton
                   variant="ghost"
-                  onClick={() => setMeteredChoice("free")}
+                  onClick={() => setMeteredChoice("tier-1")}
                   disabled={pending}
                 >
-                  只看免费提示（不花额度）
+                  只看 tier‑1 免费提示（不花钱包额度）
                 </GameButton>
               </div>
             </GameCallout>

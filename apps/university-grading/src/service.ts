@@ -13,12 +13,20 @@ import { firstDefinedEnv } from "@pieai/swimmer-ai-kit/env";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
-import type { MeteredGradingBalance, MeteredGradingResponse } from "@pieai/university-core";
-import { METERED_GRADING } from "./config.js";
+import type {
+  MeteredGradingBalance,
+  MeteredGradingOffer,
+  MeteredGradingResponse,
+} from "@pieai/university-core";
+import {
+  FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY,
+  METERED_GRADING,
+} from "./config.js";
 
 const MAX_PROMPT_BYTES = 8 * 1024;
 const MAX_ANSWER_BYTES = 8 * 1024;
 const MAX_EXERCISE_ID_BYTES = 256;
+const FREE_QUOTA_EXHAUSTED_MESSAGE = "今天的免费 AI 批改用完了，明天恢复。";
 
 const GradeRequestSchema = z
   .object({
@@ -34,6 +42,8 @@ const GradeRequestSchema = z
       .min(1)
       .max(MAX_PROMPT_BYTES)
       .refine((value) => value.trim().length > 0, "prompt must not be empty"),
+    /** The browser must say whether this explicit AI choice uses free or paid units. */
+    funding: z.enum(["free", "wallet"]).default("wallet"),
   })
   .strict();
 
@@ -54,12 +64,74 @@ export interface GradeIdentity {
   readonly isAnonymous: boolean;
 }
 
-/** Only the three server-side wallet actions needed by this endpoint. */
-export type GradingWallet = Pick<WalletClient, "reserve" | "commit" | "refund">;
+/** Only the server-side wallet actions needed by this endpoint. */
+export type GradingWallet = Pick<WalletClient, "getBalance" | "reserve" | "commit" | "refund">;
+
+export interface FreeGradingQuotaQuote {
+  readonly remainingPowerUnits: string;
+  readonly resetsAt: string;
+}
+
+export interface FreeGradingQuotaReservation extends FreeGradingQuotaQuote {
+  readonly allowed: boolean;
+  readonly amountPowerUnits: string;
+  readonly idempotent: boolean;
+  readonly insufficient: boolean;
+  readonly reservationId: string | null;
+  readonly status: "committed" | "insufficient" | "reserved";
+}
+
+export interface FreeGradingQuotaSettlement extends FreeGradingQuotaQuote {
+  readonly allowed: boolean;
+  readonly amountPowerUnits: string;
+  readonly idempotent: boolean;
+  readonly reservationId: string;
+  readonly status: "committed";
+}
+
+export interface FreeGradingQuotaRefund extends FreeGradingQuotaQuote {
+  readonly allowed: boolean;
+  readonly amountPowerUnits: string;
+  readonly idempotent: boolean;
+  readonly reservationId: string;
+  readonly status: "refunded";
+}
+
+/**
+ * Server-authoritative daily allowance. The production adapter below maps this
+ * to atomic SwimmerBackend RPCs; it must not be implemented with browser state
+ * or a serverless process-local counter.
+ */
+export interface FreeGradingQuota {
+  quote(input: {
+    readonly userId: string;
+    readonly day: string;
+    readonly quotaPowerUnits: string;
+  }): Promise<FreeGradingQuotaQuote>;
+  reserve(input: {
+    readonly userId: string;
+    readonly day: string;
+    readonly amountPowerUnits: string;
+    readonly quotaPowerUnits: string;
+    readonly idempotencyKey: string;
+    readonly metadata: Readonly<Record<string, unknown>>;
+  }): Promise<FreeGradingQuotaReservation>;
+  commit(input: {
+    readonly reservationId: string;
+    readonly idempotencyKey: string;
+    readonly metadata: Readonly<Record<string, unknown>>;
+  }): Promise<FreeGradingQuotaSettlement>;
+  refund(input: {
+    readonly reservationId: string;
+    readonly idempotencyKey: string;
+    readonly metadata: Readonly<Record<string, unknown>>;
+  }): Promise<FreeGradingQuotaRefund>;
+}
 
 export interface GradeDependencies {
   authenticate(accessToken: string): Promise<GradeIdentity | null>;
   createWallet(accessToken: string): GradingWallet;
+  createFreeGradingQuota?(accessToken: string): FreeGradingQuota;
   grade(input: GradeRequest): Promise<GradeDecision>;
   now?(): string;
   allowedOrigin?: string;
@@ -122,9 +194,9 @@ export async function handleGradeRequest(
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders(deps.allowedOrigin) });
   }
-  if (request.method !== "POST") {
+  if (request.method !== "GET" && request.method !== "POST") {
     return jsonResponse(
-      { error: "只接受 POST 批改请求。", code: "method_not_allowed" },
+      { error: "只接受 GET 报价或 POST 批改请求。", code: "method_not_allowed" },
       405,
       deps.allowedOrigin,
     );
@@ -145,6 +217,20 @@ export async function handleGradeRequest(
     return unauthorized(deps.allowedOrigin);
   }
 
+  const freeGradingQuota = createFreeGradingQuota(deps, accessToken);
+  const now = deps.now?.() ?? new Date().toISOString();
+  const day = calendarDay(now);
+
+  if (request.method === "GET") {
+    return readGradingOffer({
+      deps,
+      identity,
+      accessToken,
+      day,
+      freeGradingQuota,
+    });
+  }
+
   const input = await parseRequest(request);
   if (!input) {
     return jsonResponse(
@@ -154,36 +240,172 @@ export async function handleGradeRequest(
     );
   }
 
-  let wallet: GradingWallet;
-  try {
-    wallet = deps.createWallet(accessToken);
-  } catch {
-    return jsonResponse(
-      { error: "计量钱包暂时不可用，请稍后再试。", code: "wallet_unavailable" },
-      503,
-      deps.allowedOrigin,
-    );
-  }
-
   const metadata = {
     feature: "university-metered-grading",
     exerciseId: input.exerciseId,
     contentRevision: input.contentRevision,
+    funding: input.funding,
   } as const;
+
+  if (input.funding === "free") {
+    return handleFreeGrading({
+      deps,
+      identity,
+      input,
+      metadata,
+      day,
+      freeGradingQuota,
+    });
+  }
+
+  return handleWalletGrading({ deps, identity, accessToken, input, metadata });
+}
+
+interface ReadGradingOfferInput {
+  readonly deps: GradeDependencies;
+  readonly identity: GradeIdentity;
+  readonly accessToken: string;
+  readonly day: string;
+  readonly freeGradingQuota: FreeGradingQuota | undefined;
+}
+
+async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response> {
+  let freeQuote: FreeGradingQuotaQuote | null = null;
+  if (input.freeGradingQuota) {
+    try {
+      freeQuote = await input.freeGradingQuota.quote({
+        userId: input.identity.userId,
+        day: input.day,
+        quotaPowerUnits: FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY,
+      });
+    } catch {
+      // A missing quota RPC must not prevent a paying learner from seeing a
+      // wallet quote. The free path fails closed until its backend is ready.
+    }
+  }
+
+  if (
+    freeQuote &&
+    hasEnoughPowerUnits(freeQuote.remainingPowerUnits, METERED_GRADING.reservationPowerUnits)
+  ) {
+    const offer: MeteredGradingOffer = {
+      kind: "free",
+      costPowerUnits: METERED_GRADING.reservationPowerUnits,
+      remainingPowerUnits: freeQuote.remainingPowerUnits,
+      resetsAt: freeQuote.resetsAt,
+    };
+    return jsonResponse(offer, 200, input.deps.allowedOrigin);
+  }
+
+  const freeQuotaExhausted = freeQuote !== null;
+  let wallet: GradingWallet;
+  try {
+    wallet = input.deps.createWallet(input.accessToken);
+  } catch {
+    return jsonResponse(
+      unavailableOffer({
+        title: freeQuotaExhausted ? "今天的免费 AI 批改用完了" : "AI 批改额度暂时读不到",
+        whyUnavailable: freeQuotaExhausted
+          ? freeQuotaMessage(freeQuote!)
+          : "当前没有可用的钱包读取通道，所以页面不会猜一个余额，也不会直接发起可能扣费的请求。",
+        futureSupport: freeQuotaExhausted
+          ? "明天免费额度会恢复；如果你已有 AI 点数，钱包服务恢复后也可以选择付费批改。"
+          : "连接钱包服务后，这里会先显示本次费用和你的可用余额。",
+        freeQuotaExhausted,
+        freeQuotaResetsAt: freeQuote?.resetsAt,
+      }),
+      200,
+      input.deps.allowedOrigin,
+    );
+  }
+
+  let balance: MeteredGradingBalance;
+  try {
+    balance = balanceOf(await wallet.getBalance(input.identity.userId));
+  } catch {
+    return jsonResponse(
+      unavailableOffer({
+        title: freeQuotaExhausted ? "今天的免费 AI 批改用完了" : "AI 批改额度暂时读不到",
+        whyUnavailable: freeQuotaExhausted
+          ? `${freeQuotaMessage(freeQuote!)} 钱包余额目前也读不到。`
+          : "当前没有读到服务端钱包余额，所以页面不会把未知余额当成可用，也不会直接发起可能扣费的请求。",
+        futureSupport: freeQuotaExhausted
+          ? "明天免费额度会恢复；钱包服务恢复后再显示付费批改选项。"
+          : "钱包服务恢复后，这里会先显示本次费用和你的可用余额。",
+        freeQuotaExhausted,
+        freeQuotaResetsAt: freeQuote?.resetsAt,
+      }),
+      200,
+      input.deps.allowedOrigin,
+    );
+  }
+
+  if (hasEnoughPowerUnits(balance.availablePowerUnits, METERED_GRADING.reservationPowerUnits)) {
+    const offer: MeteredGradingOffer = {
+      kind: "available",
+      costPowerUnits: METERED_GRADING.reservationPowerUnits,
+      availablePowerUnits: balance.availablePowerUnits,
+      ...(freeQuotaExhausted
+        ? {
+            freeQuotaExhausted: true,
+            freeQuotaResetsAt: freeQuote?.resetsAt,
+          }
+        : {}),
+    };
+    return jsonResponse(offer, 200, input.deps.allowedOrigin);
+  }
+
+  return jsonResponse(
+    unavailableOffer({
+      title: freeQuotaExhausted ? "今天的免费 AI 批改用完了" : "这次 AI 批改的额度不够",
+      availablePowerUnits: balance.availablePowerUnits,
+      whyUnavailable: freeQuotaExhausted
+        ? `${freeQuotaMessage(freeQuote!)} 钱包还剩 ${balance.availablePowerUnits} power units，这次付费批改需要 ${METERED_GRADING.reservationPowerUnits}。`
+        : `你的钱包还剩 ${balance.availablePowerUnits} power units，这次约需要 ${METERED_GRADING.reservationPowerUnits}；不充值也不影响你查看下面的免费提示。`,
+      futureSupport: freeQuotaExhausted
+        ? "明天免费额度会恢复；充值 AI 点数后也可以随时重新选择付费批改。"
+        : "充值后重新打开这道题，页面会再次读取余额；免费提示始终可用。",
+      freeQuotaExhausted,
+      freeQuotaResetsAt: freeQuote?.resetsAt,
+    }),
+    200,
+    input.deps.allowedOrigin,
+  );
+}
+
+interface HandleWalletGradingInput {
+  readonly deps: GradeDependencies;
+  readonly identity: GradeIdentity;
+  readonly accessToken: string;
+  readonly input: GradeRequest;
+  readonly metadata: Readonly<Record<string, unknown>>;
+}
+
+async function handleWalletGrading(input: HandleWalletGradingInput): Promise<Response> {
+  let wallet: GradingWallet;
+  try {
+    wallet = input.deps.createWallet(input.accessToken);
+  } catch {
+    return jsonResponse(
+      { error: "计量钱包暂时不可用，请稍后再试。", code: "wallet_unavailable" },
+      503,
+      input.deps.allowedOrigin,
+    );
+  }
 
   let reservation: WalletReservationV1;
   try {
     reservation = await wallet.reserve({
       amountPowerUnits: METERED_GRADING.reservationPowerUnits,
-      idempotencyKey: input.commandId,
-      metadata,
-      userId: identity.userId,
+      idempotencyKey: input.input.commandId,
+      metadata: input.metadata,
+      userId: input.identity.userId,
     });
   } catch {
     return jsonResponse(
       { error: "计量钱包暂时不可用，请稍后再试。", code: "wallet_unavailable" },
       503,
-      deps.allowedOrigin,
+      input.deps.allowedOrigin,
     );
   }
 
@@ -199,7 +421,7 @@ export async function handleGradeRequest(
         topUpHint: "请在账户的钱包/充值页购买 AI 点数后，再重新提交这道题。",
       },
       402,
-      deps.allowedOrigin,
+      input.deps.allowedOrigin,
     );
   }
 
@@ -211,7 +433,7 @@ export async function handleGradeRequest(
         balance: balanceOf(reservation),
       },
       409,
-      deps.allowedOrigin,
+      input.deps.allowedOrigin,
     );
   }
 
@@ -219,55 +441,234 @@ export async function handleGradeRequest(
     return jsonResponse(
       { error: "计量钱包没有建立有效预留，请稍后再试。", code: "invalid_reservation" },
       503,
-      deps.allowedOrigin,
+      input.deps.allowedOrigin,
     );
   }
 
+  return gradeReservedRequest({
+    deps: input.deps,
+    input: input.input,
+    funding: {
+      kind: "wallet",
+      reservationId: reservation.reservationId,
+      commit: async (mutation) => {
+        const settled = await wallet.commit({
+          idempotencyKey: mutation.idempotencyKey,
+          metadata: input.metadata,
+          reservationId: reservation.reservationId!,
+        });
+        return {
+          allowed: settled.allowed,
+          status: settled.status,
+          balance: balanceOf(settled),
+        };
+      },
+      refund: async (mutation) => {
+        const refunded = await wallet.refund({
+          idempotencyKey: mutation.idempotencyKey,
+          metadata: input.metadata,
+          reservationId: reservation.reservationId!,
+        });
+        return {
+          allowed: refunded.allowed,
+          status: refunded.status,
+          balance: balanceOf(refunded),
+        };
+      },
+    },
+    metadata: input.metadata,
+  });
+}
+
+interface HandleFreeGradingInput {
+  readonly deps: GradeDependencies;
+  readonly identity: GradeIdentity;
+  readonly input: GradeRequest;
+  readonly metadata: Readonly<Record<string, unknown>>;
+  readonly day: string;
+  readonly freeGradingQuota: FreeGradingQuota | undefined;
+}
+
+async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Response> {
+  if (!input.freeGradingQuota) {
+    return jsonResponse(
+      {
+        error: "今天的免费 AI 批改暂时不可用，下面的 tier-1 免费提示仍然可用。",
+        code: "free_quota_unavailable",
+      },
+      503,
+      input.deps.allowedOrigin,
+    );
+  }
+
+  let reservation: FreeGradingQuotaReservation;
+  try {
+    reservation = await input.freeGradingQuota.reserve({
+      userId: input.identity.userId,
+      day: input.day,
+      amountPowerUnits: METERED_GRADING.reservationPowerUnits,
+      quotaPowerUnits: FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY,
+      idempotencyKey: input.input.commandId,
+      metadata: input.metadata,
+    });
+  } catch {
+    return jsonResponse(
+      {
+        error: "今天的免费 AI 批改暂时不可用，下面的 tier-1 免费提示仍然可用。",
+        code: "free_quota_unavailable",
+      },
+      503,
+      input.deps.allowedOrigin,
+    );
+  }
+
+  if (reservation.insufficient || reservation.status === "insufficient") {
+    return jsonResponse(
+      {
+        error: FREE_QUOTA_EXHAUSTED_MESSAGE,
+        code: "free_quota_exhausted",
+        remainingPowerUnits: reservation.remainingPowerUnits,
+        resetsAt: reservation.resetsAt,
+      },
+      429,
+      input.deps.allowedOrigin,
+    );
+  }
+
+  if (reservation.idempotent || reservation.status === "committed") {
+    return jsonResponse(
+      {
+        error: "这个 commandId 已经处理过，本次未再次消耗免费额度。",
+        code: "idempotent_replay",
+        freeQuota: {
+          remainingPowerUnits: reservation.remainingPowerUnits,
+          resetsAt: reservation.resetsAt,
+        },
+      },
+      409,
+      input.deps.allowedOrigin,
+    );
+  }
+
+  if (!reservation.allowed || reservation.status !== "reserved" || !reservation.reservationId) {
+    return jsonResponse(
+      { error: "免费 AI 批改没有建立有效预留，请稍后再试。", code: "invalid_free_reservation" },
+      503,
+      input.deps.allowedOrigin,
+    );
+  }
+
+  return gradeReservedRequest({
+    deps: input.deps,
+    input: input.input,
+    funding: {
+      kind: "free",
+      reservationId: reservation.reservationId,
+      commit: async (mutation) => {
+        const committed = await input.freeGradingQuota!.commit({
+          idempotencyKey: mutation.idempotencyKey,
+          metadata: input.metadata,
+          reservationId: reservation.reservationId!,
+        });
+        return {
+          allowed: committed.allowed,
+          status: committed.status,
+          freeQuota: {
+            remainingPowerUnits: committed.remainingPowerUnits,
+            resetsAt: committed.resetsAt,
+          },
+        };
+      },
+      refund: async (mutation) => {
+        const refunded = await input.freeGradingQuota!.refund({
+          idempotencyKey: mutation.idempotencyKey,
+          metadata: input.metadata,
+          reservationId: reservation.reservationId!,
+        });
+        return {
+          allowed: refunded.allowed,
+          status: refunded.status,
+          freeQuota: {
+            remainingPowerUnits: refunded.remainingPowerUnits,
+            resetsAt: refunded.resetsAt,
+          },
+        };
+      },
+    },
+    metadata: input.metadata,
+  });
+}
+
+interface FundingMutation {
+  readonly allowed: boolean;
+  readonly status: "committed" | "refunded";
+  readonly balance?: MeteredGradingBalance;
+  readonly freeQuota?: FreeGradingQuotaQuote;
+}
+
+interface GradeFunding {
+  readonly kind: "free" | "wallet";
+  readonly reservationId: string;
+  commit(input: {
+    readonly idempotencyKey: string;
+    readonly metadata: Readonly<Record<string, unknown>>;
+  }): Promise<FundingMutation>;
+  refund(input: {
+    readonly idempotencyKey: string;
+    readonly metadata: Readonly<Record<string, unknown>>;
+  }): Promise<FundingMutation>;
+}
+
+async function gradeReservedRequest(input: {
+  readonly deps: GradeDependencies;
+  readonly input: GradeRequest;
+  readonly metadata: Readonly<Record<string, unknown>>;
+  readonly funding: GradeFunding;
+}): Promise<Response> {
   let decision: GradeDecision;
   try {
-    decision = await deps.grade(input);
+    decision = await input.deps.grade(input.input);
   } catch {
     return refundAfterFailure({
-      deps,
-      input,
-      metadata,
-      wallet,
-      reservationId: reservation.reservationId,
+      deps: input.deps,
+      input: input.input,
+      metadata: input.metadata,
+      funding: input.funding,
       kind: "model",
     });
   }
 
-  const occurredAt = deps.now?.() ?? new Date().toISOString();
+  const occurredAt = input.deps.now?.() ?? new Date().toISOString();
   const hostGrade = {
     passed: decision.passed,
     evaluation: decision.evaluation,
     extensions: decision.extensions,
     host: "tier-2",
-    learnerAnswer: input.answer,
+    learnerAnswer: input.input.answer,
     occurredAt,
   } as const;
 
   try {
-    const settled = await wallet.commit({
-      idempotencyKey: `${input.commandId}:commit`,
-      metadata,
-      reservationId: reservation.reservationId,
+    const settled = await input.funding.commit({
+      idempotencyKey: `${input.input.commandId}:commit`,
+      metadata: input.metadata,
     });
     if (!settled.allowed || settled.status !== "committed") {
-      throw new Error("wallet commit did not commit");
+      throw new Error("grading funding commit did not commit");
     }
     const response: MeteredGradingResponse = {
       hostGrade,
-      balance: balanceOf(settled),
+      funding: input.funding.kind,
+      ...(settled.balance ? { balance: settled.balance } : {}),
+      ...(settled.freeQuota ? { freeQuota: settled.freeQuota } : {}),
     };
-    return jsonResponse(response, 200, deps.allowedOrigin);
+    return jsonResponse(response, 200, input.deps.allowedOrigin);
   } catch {
     return refundAfterFailure({
-      deps,
-      input,
-      metadata,
-      wallet,
-      reservationId: reservation.reservationId,
+      deps: input.deps,
+      input: input.input,
+      metadata: input.metadata,
+      funding: input.funding,
       kind: "settlement",
     });
   }
@@ -277,17 +678,15 @@ interface FailureInput {
   readonly deps: GradeDependencies;
   readonly input: GradeRequest;
   readonly metadata: Readonly<Record<string, unknown>>;
-  readonly wallet: GradingWallet;
-  readonly reservationId: string;
+  readonly funding: GradeFunding;
   readonly kind: "model" | "settlement";
 }
 
 async function refundAfterFailure(input: FailureInput): Promise<Response> {
   try {
-    const refunded = await input.wallet.refund({
+    const refunded = await input.funding.refund({
       idempotencyKey: `${input.input.commandId}:refund`,
       metadata: input.metadata,
-      reservationId: input.reservationId,
     });
     return jsonResponse(
       {
@@ -297,7 +696,8 @@ async function refundAfterFailure(input: FailureInput): Promise<Response> {
             : "AI 批改的余额结算没有完成，预留额度已退回，请稍后重试。",
         code: input.kind === "model" ? "model_failed" : "settlement_failed",
         refunded: true,
-        balance: balanceOf(refunded),
+        ...(refunded.balance ? { balance: refunded.balance } : {}),
+        ...(refunded.freeQuota ? { freeQuota: refunded.freeQuota } : {}),
       },
       input.kind === "model" ? 502 : 503,
       input.deps.allowedOrigin,
@@ -313,6 +713,60 @@ async function refundAfterFailure(input: FailureInput): Promise<Response> {
       input.deps.allowedOrigin,
     );
   }
+}
+
+function createFreeGradingQuota(
+  deps: GradeDependencies,
+  accessToken: string,
+): FreeGradingQuota | undefined {
+  if (!deps.createFreeGradingQuota) return undefined;
+  try {
+    return deps.createFreeGradingQuota(accessToken);
+  } catch {
+    return undefined;
+  }
+}
+
+function unavailableOffer(options: {
+  readonly title: string;
+  readonly whyUnavailable: string;
+  readonly futureSupport: string;
+  readonly availablePowerUnits?: string;
+  readonly freeQuotaExhausted?: boolean;
+  readonly freeQuotaResetsAt?: string;
+}): MeteredGradingOffer {
+  return {
+    kind: "unavailable",
+    costPowerUnits: METERED_GRADING.reservationPowerUnits,
+    availablePowerUnits: options.availablePowerUnits ?? null,
+    explanation: {
+      kind: "explanation",
+      title: options.title,
+      whatItDoes: `它会在确定性判题无法判断的开放题上提供一次结构化 AI 评估，本次约需要 ${METERED_GRADING.reservationPowerUnits} power units。`,
+      whyUnavailable: options.whyUnavailable,
+      futureSupport: options.futureSupport,
+    },
+    ...(options.freeQuotaExhausted
+      ? {
+          freeQuotaExhausted: true,
+          freeQuotaResetsAt: options.freeQuotaResetsAt,
+        }
+      : {}),
+  };
+}
+
+function freeQuotaMessage(quote: FreeGradingQuotaQuote): string {
+  return quote.remainingPowerUnits === "0"
+    ? FREE_QUOTA_EXHAUSTED_MESSAGE
+    : `今天剩余的免费 AI 批改额度只有 ${quote.remainingPowerUnits} power units，不足完成下一次批改；明天恢复。`;
+}
+
+function calendarDay(iso: string): string {
+  const timestamp = Date.parse(iso);
+  if (!Number.isFinite(timestamp)) {
+    throw new Error("grading clock returned an invalid timestamp");
+  }
+  return new Date(timestamp).toISOString().slice(0, 10);
 }
 
 async function parseRequest(request: Request): Promise<GradeRequest | null> {
@@ -349,10 +803,172 @@ function balanceOf(value: MeteredGradingBalance): MeteredGradingBalance {
   };
 }
 
+function hasEnoughPowerUnits(available: string, required: string): boolean {
+  try {
+    return BigInt(available) >= BigInt(required);
+  } catch {
+    return false;
+  }
+}
+
+const FREE_GRADING_QUOTA_RPC = {
+  quote: "university_free_grading_quota_quote",
+  reserve: "university_free_grading_quota_reserve",
+  commit: "university_free_grading_quota_commit",
+  refund: "university_free_grading_quota_refund",
+} as const;
+
+/**
+ * Backend adapter for the daily free allowance.
+ *
+ * The four RPCs are one atomic ledger contract owned by SwimmerBackend:
+ * `reserve` creates or reuses a `(user_id, UTC day, command_id)` reservation,
+ * refuses a request that would cross the configured daily cap, and never
+ * touches the wallet; `commit` and `refund` settle that reservation exactly
+ * once. Keeping this behind an injected interface means tests can use a fake
+ * ledger and a serverless instance never falls back to a process-local counter.
+ */
+export function createSupabaseFreeGradingQuota(client: SupabaseClient): FreeGradingQuota {
+  return {
+    async quote(input) {
+      const row = await quotaRpcRow(client, FREE_GRADING_QUOTA_RPC.quote, {
+        p_day: input.day,
+        p_quota_power_units: input.quotaPowerUnits,
+        p_user_id: input.userId,
+      });
+      return parseFreeQuotaQuote(row);
+    },
+    async reserve(input) {
+      const row = await quotaRpcRow(client, FREE_GRADING_QUOTA_RPC.reserve, {
+        p_amount_power_units: input.amountPowerUnits,
+        p_day: input.day,
+        p_idempotency_key: input.idempotencyKey,
+        p_metadata: input.metadata,
+        p_quota_power_units: input.quotaPowerUnits,
+        p_user_id: input.userId,
+      });
+      return parseFreeQuotaReservation(row);
+    },
+    async commit(input) {
+      const row = await quotaRpcRow(client, FREE_GRADING_QUOTA_RPC.commit, {
+        p_idempotency_key: input.idempotencyKey,
+        p_metadata: input.metadata,
+        p_reservation_id: input.reservationId,
+      });
+      return parseFreeQuotaSettlement(row);
+    },
+    async refund(input) {
+      const row = await quotaRpcRow(client, FREE_GRADING_QUOTA_RPC.refund, {
+        p_idempotency_key: input.idempotencyKey,
+        p_metadata: input.metadata,
+        p_reservation_id: input.reservationId,
+      });
+      return parseFreeQuotaRefund(row);
+    },
+  };
+}
+
+async function quotaRpcRow(
+  client: SupabaseClient,
+  functionName: string,
+  args: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const { data, error } = await client.rpc(functionName, args);
+  if (error) throw error;
+  const row = Array.isArray(data) ? (data.length === 1 ? data[0] : null) : data;
+  if (!isRecord(row)) throw new Error(`Free grading quota RPC ${functionName} returned no row.`);
+  return row;
+}
+
+function parseFreeQuotaQuote(row: Record<string, unknown>): FreeGradingQuotaQuote {
+  return {
+    remainingPowerUnits: powerUnitsField(row, "remaining_power_units"),
+    resetsAt: stringField(row, "resets_at"),
+  };
+}
+
+function parseFreeQuotaReservation(row: Record<string, unknown>): FreeGradingQuotaReservation {
+  return {
+    ...parseFreeQuotaQuote(row),
+    allowed: booleanField(row, "allowed"),
+    amountPowerUnits: powerUnitsField(row, "amount_power_units"),
+    idempotent: booleanField(row, "idempotent"),
+    insufficient: booleanField(row, "insufficient"),
+    reservationId: nullableStringField(row, "reservation_id"),
+    status: statusField(row, "status", ["committed", "insufficient", "reserved"]),
+  };
+}
+
+function parseFreeQuotaSettlement(row: Record<string, unknown>): FreeGradingQuotaSettlement {
+  return {
+    ...parseFreeQuotaQuote(row),
+    allowed: booleanField(row, "allowed"),
+    amountPowerUnits: powerUnitsField(row, "amount_power_units"),
+    idempotent: booleanField(row, "idempotent"),
+    reservationId: stringField(row, "reservation_id"),
+    status: statusField(row, "status", ["committed"]),
+  };
+}
+
+function parseFreeQuotaRefund(row: Record<string, unknown>): FreeGradingQuotaRefund {
+  return {
+    ...parseFreeQuotaQuote(row),
+    allowed: booleanField(row, "allowed"),
+    amountPowerUnits: powerUnitsField(row, "amount_power_units"),
+    idempotent: booleanField(row, "idempotent"),
+    reservationId: stringField(row, "reservation_id"),
+    status: statusField(row, "status", ["refunded"]),
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function stringField(row: Record<string, unknown>, key: string): string {
+  const value = row[key];
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`Free grading quota field ${key} is invalid.`);
+  }
+  return value;
+}
+
+function nullableStringField(row: Record<string, unknown>, key: string): string | null {
+  const value = row[key];
+  if (value === null) return null;
+  return stringField(row, key);
+}
+
+function booleanField(row: Record<string, unknown>, key: string): boolean {
+  const value = row[key];
+  if (typeof value !== "boolean") throw new Error(`Free grading quota field ${key} is invalid.`);
+  return value;
+}
+
+function powerUnitsField(row: Record<string, unknown>, key: string): string {
+  const value = row[key];
+  if (typeof value === "bigint") return value.toString();
+  if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) {
+    return String(value);
+  }
+  if (typeof value === "string" && /^(?:0|[1-9][0-9]*)$/.test(value)) return value;
+  throw new Error(`Free grading quota field ${key} is invalid.`);
+}
+
+function statusField<T extends string>(
+  row: Record<string, unknown>,
+  key: string,
+  allowed: readonly T[],
+): T {
+  const value = stringField(row, key);
+  if (!allowed.includes(value as T)) throw new Error(`Free grading quota field ${key} is invalid.`);
+  return value as T;
+}
+
 function corsHeaders(origin = "*"): Record<string, string> {
   return {
     "Access-Control-Allow-Headers": "Authorization, Content-Type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Origin": origin || "*",
     "Content-Type": "application/json; charset=utf-8",
   };
@@ -434,6 +1050,10 @@ export function createProductionGradeDependencies(
         supabase as unknown as Parameters<typeof createWalletClient>[0],
         appId,
       );
+    },
+    createFreeGradingQuota(accessToken) {
+      const supabase = serverSupabase(supabaseUrl, publishableKey, accessToken);
+      return createSupabaseFreeGradingQuota(supabase);
     },
     grade: (input) => {
       model ??= createStructuredGrader(

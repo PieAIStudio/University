@@ -125,7 +125,7 @@ pre b{color:var(--go);font-weight:600}
 <tr><td><code>GradingPort</code> 与 <code>SourceAccessPort</code> 只换端口能力，不复制学习者面</td><td>AI 来源、源码仓库可达性是边界；能力缺席时控件仍在，并打开解释</td></tr>
 <tr><td>可读文字在 DOM，3D 只负责世界、路径和反馈</td><td>TTS 四档已定；学习者口述的 ASR 仍是开放决定</td></tr>
 <tr><td>课程内容不设付费墙；AI 按既定成本层级走端口</td><td>打开 TTS 不等于同意上传学习者的声音</td></tr>
-<tr><td>tier-1 确定性判题先在浏览器免费完成</td><td>只有 tier-1 <code>undecided</code> 的练习答案，才在明确提交后进入带额度的 tier-2 服务</td></tr>
+<tr><td>tier-1 确定性判题先在浏览器免费完成</td><td>只有 tier-1 <code>undecided</code> 的练习答案，才在明确提交后进入带额度的 tier-2 服务；每日免费额度有余量时先用它，不提示钱包扣费</td></tr>
 </tbody>
 </table>
 </div>
@@ -140,6 +140,10 @@ pre b{color:var(--go);font-weight:600}
   <p>
     服务端验证 JWT 后才预留额度；模型成功才 commit，模型失败就 refund，并把余额不足、还剩多少、这次需要多少和充值方向说清楚。
     这条例外只覆盖明确提交的练习答案；课后「讲一遍」复述卡、阅读标记和 ASR 仍遵守本稿的本地默认与单独选择加入边界。
+  </p>
+  <p>
+    结构化 tier-2 还有一个按账号、按 UTC 自然日计算的免费额度：当前暂定每天 <code>400 power units</code>，按一天约四道需要语义判断的开放题、每道约 <code>100 power units</code> 估算；这个数字仍待产品确认。
+    报价有余量时，控件明确写「不会扣钱包」，只有学习者点击使用今日免费 AI 批改才会占用它。额度耗尽后，免费请求不报错也不锁住控件，而是安静回到 tier-1 提示，并诚实说明「今天的免费 AI 批改用完了，明天恢复」；若学习者另选钱包批改，才单独显示钱包扣除。
   </p>
 </div>
 
@@ -403,7 +407,7 @@ pre b{color:var(--go);font-weight:600}
   <li><b>落地「讲一遍」文字路径。</b>使用单元现有能力句，保存到学习者文档，接入已有 FSRS，不新增模型调用。</li>
   <li><b>保持 TTS 四档。</b>所有调用经过共享 <code>speech.ts</code> 的声音选择；自动存请求，手动降级可解释，高品质等钱包。</li>
   <li><b>单独设计 ASR 选择加入。</b>先做载荷、目的地、处理位置、保存和删除的决定；决定前不接麦克风，不把「开放」写成已上线。</li>
-  <li><b>加入计量 tier-2。</b>仍只通过 <code>GradingPort</code>；先过免费 tier-1，服务端验证 token 后 reserve → structured output → commit/refund，余额不足在现有答题控件里解释，不隐藏入口。</li>
+  <li><b>加入计量 tier-2。</b>仍只通过 <code>GradingPort</code>；先过免费 tier-1，服务端验证 token 后按账号和 UTC 自然日读取并原子 reserve 每日免费额度，走 structured output 后 commit/refund；额度用完安静回到 tier-1 并说明明日恢复，钱包只有在学习者另选付费时才 reserve，任何情况下都不隐藏入口或把它禁用。</li>
   <li><b>双模式逐屏对齐。</b>本地与交付模式共享学习者面、课后提示、文字输入、复习卡和 TTS 设置；AI 来源、课文材料来源、以及能否触达课文背后的源码仓库，分别留在 <code>GradingPort</code>、<code>ContentPort</code>/<code>ReaderPort</code>、<code>SourceAccessPort</code>。能力缺席时照常显示入口并解释原因与未来支持路径。</li>
 </ol>
 
@@ -416,7 +420,7 @@ pre b{color:var(--go);font-weight:600}
 <tr><td>讲一遍</td><td>文字复述生成 FSRS 卡，到期回来，显示历史答案，默认零模型调用</td></tr>
 <tr><td>TTS</td><td>四档设置真实可见；自动仍是 <code>auto</code> 请求；在线 TTS 只收到产品单词</td></tr>
 <tr><td>ASR</td><td>当前不默认收音；未来若打开，必须另有选择加入和数据生命周期说明</td></tr>
-<tr><td>tier-2 批改</td><td>tier-1 判不出的练习才请求服务；JWT / 钱包在服务端；余额不足有解释，reserve 后模型失败有 refund，重复 command 不重复扣费</td></tr>
+<tr><td>tier-2 批改</td><td>tier-1 判不出的练习才请求服务；每日免费额度内不动钱包，耗尽后静默回 tier-1 并说明明日恢复；钱包只在明确付费选择后由服务端 reserve，模型失败有 refund，重复 command 不重复消耗</td></tr>
 <tr><td>两模式</td><td>同一棵组件树、同一份学习者数据、同一套可见行为；不因为「本机」两个字复制一份功能</td></tr>
 </tbody>
 </table>
@@ -433,7 +437,7 @@ pre b{color:var(--go);font-weight:600}
 </div>
 
 <div class="foot">
-  V5 · 2026-08-26 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界<br>
+  V5 · 2026-08-27 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界、每日免费 AI 批改额度<br>
   事实依据：<code>packages/core/src/progress/contract.ts</code> ·
   <code>packages/ui/src/language/speech.ts</code> ·
   <code>packages/core/src/ports/account-data.ts</code> ·

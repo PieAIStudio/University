@@ -16,7 +16,6 @@ import {
   type MeteredGradingOffer,
   type MeteredGradingResponse,
   type ProgressPort,
-  type WalletBalance,
 } from "@pieai/university-core";
 import { readJson } from "@pieai/university-ui/api/client.js";
 
@@ -42,7 +41,6 @@ function lessonAt(locator: LessonRef): Lesson | undefined {
 export function createOnlineGradingPort(options: {
   readonly progress?: ProgressPort;
   readonly readAccessToken?: () => Promise<string | null>;
-  readonly readBalance?: () => Promise<WalletBalance | null>;
   readonly gradingUrl?: string;
   readonly fetchImpl?: typeof fetch;
 }): GradingPort {
@@ -58,7 +56,7 @@ export function createOnlineGradingPort(options: {
       return readMeteredGradingOffer({
         gradingUrl,
         readAccessToken,
-        readBalance: options.readBalance,
+        fetchImpl,
       });
     },
 
@@ -101,7 +99,6 @@ export function createOnlineGradingPort(options: {
             input,
             prompt: exercise.prompt,
             readAccessToken,
-            readBalance: options.readBalance,
             attemptCount: count,
           });
           recordAttempt(progress, input, result);
@@ -167,7 +164,6 @@ async function submitToMeteredService(options: {
   readonly input: Parameters<GradingPort["submitExercise"]>[0];
   readonly prompt: string;
   readonly readAccessToken: () => Promise<string | null>;
-  readonly readBalance: (() => Promise<WalletBalance | null>) | undefined;
   readonly attemptCount: number;
 }): Promise<ExerciseAttemptResult> {
   const accessToken = await options.readAccessToken();
@@ -177,19 +173,6 @@ async function submitToMeteredService(options: {
   if (!options.gradingUrl) {
     throw new Error("AI 语义批改服务尚未配置。确定性判题仍然免费；请联系产品管理员完成服务配置。");
   }
-  if (!options.readBalance) {
-    throw new Error("AI 批改额度暂时读不到。确定性判题仍然免费；请稍后再试。");
-  }
-  const balance = await options.readBalance();
-  if (
-    !balance ||
-    !hasEnoughPowerUnits(balance.availablePowerUnits, METERED_GRADING_COST_POWER_UNITS)
-  ) {
-    throw new Error(
-      `AI 批改余额不足：还剩 ${balance?.availablePowerUnits ?? "未知"} power units，这次需要 ${METERED_GRADING_COST_POWER_UNITS}。`,
-    );
-  }
-
   try {
     const response = await options.fetchImpl(options.gradingUrl, {
       method: "POST",
@@ -203,10 +186,11 @@ async function submitToMeteredService(options: {
         contentRevision: options.input.contentRevision,
         exerciseId: options.input.exerciseId,
         prompt: options.prompt,
+        funding: options.input.meteredFunding ?? "wallet",
       }),
     });
     const body = await readJson<MeteredGradingResponse>(response);
-    if (!body.hostGrade || !body.balance) {
+    if (!body.hostGrade) {
       throw new Error("AI 语义批改服务返回了不完整的结果。");
     }
     return {
@@ -231,7 +215,7 @@ async function submitToMeteredService(options: {
 async function readMeteredGradingOffer(options: {
   readonly gradingUrl: string | undefined;
   readonly readAccessToken: () => Promise<string | null>;
-  readonly readBalance: (() => Promise<WalletBalance | null>) | undefined;
+  readonly fetchImpl: typeof fetch;
 }): Promise<MeteredGradingOffer> {
   let accessToken: string | null;
   try {
@@ -255,42 +239,24 @@ async function readMeteredGradingOffer(options: {
       futureSupport: "服务部署后，这里会先展示费用和余额，再让你明确选择是否使用。",
     });
   }
-  if (!options.readBalance) {
-    return unavailableOffer({
-      title: "AI 批改额度暂时读不到",
-      whyUnavailable:
-        "当前没有可用的钱包读取通道，所以页面不会猜一个余额，也不会直接发起可能扣费的请求。",
-      futureSupport: "登录并连接钱包后，这里会显示服务端返回的可用余额。",
-    });
-  }
-
-  let balance: WalletBalance | null;
   try {
-    balance = await options.readBalance();
+    const response = await options.fetchImpl(options.gradingUrl, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const offer = await readJson<MeteredGradingOffer>(response);
+    if (offer.kind !== "free" && offer.kind !== "available" && offer.kind !== "unavailable") {
+      throw new Error("invalid grading offer");
+    }
+    return offer;
   } catch {
-    balance = null;
-  }
-  if (!balance) {
     return unavailableOffer({
-      title: "AI 批改额度暂时读不到",
+      title: "AI 批改费用与额度暂时读不到",
       whyUnavailable:
-        "当前没有读到服务端钱包余额，所以页面不会把未知余额当成可用，也不会直接发起可能扣费的请求。",
-      futureSupport: "钱包服务恢复后，这里会先显示本次费用和你的可用余额。",
+        "这次没有读到服务端的每日免费额度或钱包余额，所以不会发起可能扣费的请求；tier-1 免费提示仍然可用。",
+      futureSupport: "服务恢复后，重新提交这道题就会再次读取每日免费额度和付费余额。",
     });
   }
-  if (!hasEnoughPowerUnits(balance.availablePowerUnits, METERED_GRADING_COST_POWER_UNITS)) {
-    return unavailableOffer({
-      title: "这次 AI 批改的额度不够",
-      availablePowerUnits: balance.availablePowerUnits,
-      whyUnavailable: `你的钱包还剩 ${balance.availablePowerUnits} power units，这次约需要 ${METERED_GRADING_COST_POWER_UNITS}；不充值也不影响你查看下面的免费提示。`,
-      futureSupport: "充值后重新打开这道题，页面会再次读取余额；免费提示始终可用。",
-    });
-  }
-  return {
-    kind: "available",
-    costPowerUnits: METERED_GRADING_COST_POWER_UNITS,
-    availablePowerUnits: balance.availablePowerUnits,
-  };
 }
 
 function unavailableOffer(options: {
@@ -312,14 +278,6 @@ function unavailableOffer(options: {
     availablePowerUnits: options.availablePowerUnits ?? null,
     explanation,
   };
-}
-
-function hasEnoughPowerUnits(available: string, required: string): boolean {
-  try {
-    return BigInt(available) >= BigInt(required);
-  } catch {
-    return false;
-  }
 }
 
 /**

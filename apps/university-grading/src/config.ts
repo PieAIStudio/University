@@ -18,9 +18,13 @@ export const METERED_GRADING = {
 } as const;
 
 /**
- * The free baseline currently includes tier one only, so tier-two quota is
- * explicitly zero until the entitlement and product-pricing decision lands.
- * Keeping a named placeholder prevents a future free allowance from appearing
- * as an unexplained literal in the request path.
+ * Provisional daily free allowance for structured tier-two grading.
+ *
+ * The product journey budgets a serious learner's day at about four open
+ * answers that need semantic help. One request is currently estimated at 100
+ * power units, so 4 × 100 = 400 power units per UTC day. That is enough to
+ * complete a normal day's learning without a surprise wall, while the daily
+ * hard cap keeps the free tier from becoming an unmetered API. Product still
+ * needs to confirm this number before launch.
  */
-export const FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY = "0";
+export const FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY = "400";
