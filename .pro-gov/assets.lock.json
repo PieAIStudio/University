@@ -12,8 +12,8 @@
   "registryProvenance": {
     "schema": "agent-assets-registry",
     "version": 1,
-    "hash": "sha256:b935cbdc4664894e4d999f16b2a9b542aeffa31010973ee618d3580ec6688dcf",
-    "assetCount": 44
+    "hash": "sha256:6afccaafa669b7c18aa164aecc9f53f593cf096a750cd9b13cee0ee3367b4e3a",
+    "assetCount": 78
   },
   "assets": [
     {
@@ -181,7 +181,7 @@
       "id": "pie-rules/donors",
       "sourcePath": "rules/pie-rules/donors.md",
       "delivery": "snapshot",
-      "contentHash": "sha256:fb4b44a7bf9dc26c6b4384906fdbaa2ed5747697598bee40c60b2dd978684698",
+      "contentHash": "sha256:dc0f7ed8044ecfb0f0056a57f99fcdee961c1007f106b37c23bc42c23efad4bc",
       "targetPath": "docs/policy/shared-rules/donors.md"
     },
     {
@@ -323,6 +323,244 @@
       "delivery": "symlink",
       "contentHash": "sha256:e37419c24236cf2d983dcd39feb1907733a43f9567f8e5ad095d4c539ed851ba",
       "targetPath": ".agents/manual-skills/stitch-design-taste"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-atmosphere-aerial-perspective",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-atmosphere-aerial-perspective",
+      "delivery": "symlink",
+      "contentHash": "sha256:ceb4a389b365dec9d2f4870ed9c47fecb8f9d0f4c463050a5f24c7d79cc9ee4b",
+      "targetPath": ".agents/manual-skills/threejs-atmosphere-aerial-perspective"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-bloom",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-bloom",
+      "delivery": "symlink",
+      "contentHash": "sha256:37a505175d498f72ec5448eb26f4d3ee9c8d85a5fae1653d4d2782a1cce3cdc3",
+      "targetPath": ".agents/manual-skills/threejs-bloom"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-camera-direction",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-camera-direction",
+      "delivery": "symlink",
+      "contentHash": "sha256:cdc2f60978615e365b243e0e02d23dec535d38e1dc70fcf682cd4cb303279a54",
+      "targetPath": ".agents/manual-skills/threejs-camera-direction"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-exposure-color-grading",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-exposure-color-grading",
+      "delivery": "symlink",
+      "contentHash": "sha256:e061620a87201efa1ff02384207477cd952e464ef8f1223160835eb5efc6b9ca",
+      "targetPath": ".agents/manual-skills/threejs-exposure-color-grading"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-image-pipeline",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-image-pipeline",
+      "delivery": "symlink",
+      "contentHash": "sha256:5661fec89f6b97a6848369e4755a18c188e6f022760d96215a6db5fdcd5bdd9f",
+      "targetPath": ".agents/manual-skills/threejs-image-pipeline"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-parallax-occlusion-mapping",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-parallax-occlusion-mapping",
+      "delivery": "symlink",
+      "contentHash": "sha256:a7681e794d2d0cb12e1c46c6ab08fb14aa68d4950a9f95779e043358a9d9d5c4",
+      "targetPath": ".agents/manual-skills/threejs-parallax-occlusion-mapping"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-precipitation-surfaces",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-precipitation-surfaces",
+      "delivery": "symlink",
+      "contentHash": "sha256:92335b0452c03cfc9be318948dc6b563278eed7750dae0db63258726eb55469d",
+      "targetPath": ".agents/manual-skills/threejs-precipitation-surfaces"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-animation",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-animation",
+      "delivery": "symlink",
+      "contentHash": "sha256:2d0f352dabb170fd8314ce2a2cfa6f1b5601a8522ac53efedaac7d03503627b6",
+      "targetPath": ".agents/manual-skills/threejs-procedural-animation"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-architecture",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-architecture",
+      "delivery": "symlink",
+      "contentHash": "sha256:2951a522d79eee12958811612b250f5d526c466f704404c51d7be44eafd780d4",
+      "targetPath": ".agents/manual-skills/threejs-procedural-architecture"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-fields",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-fields",
+      "delivery": "symlink",
+      "contentHash": "sha256:fa90c7748d76723f2dbf4a0c2e0e2758b4e257f152fd1a3708e60b2c1c2231fa",
+      "targetPath": ".agents/manual-skills/threejs-procedural-fields"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-geometry",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-geometry",
+      "delivery": "symlink",
+      "contentHash": "sha256:b6f6f8f3eb2be5c4cb2f13b7f19b5887d1f9ca2a70ab5b647a28dd26a30e92e8",
+      "targetPath": ".agents/manual-skills/threejs-procedural-geometry"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-materials",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-materials",
+      "delivery": "symlink",
+      "contentHash": "sha256:ec933456db73582ca2c81d30a606bb14e57100799ba9fd16a26da5138958c5ac",
+      "targetPath": ".agents/manual-skills/threejs-procedural-materials"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-planets",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-planets",
+      "delivery": "symlink",
+      "contentHash": "sha256:527f3f5c251fd3c22fc79b84e501cb8b567d65ccf6703bf924a0e087ab6a0ff6",
+      "targetPath": ".agents/manual-skills/threejs-procedural-planets"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-vegetation",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-vegetation",
+      "delivery": "symlink",
+      "contentHash": "sha256:9c1f793fa28833ffc5de43bbfb4105ff544a7e61be1b21a6794077101e25cf46",
+      "targetPath": ".agents/manual-skills/threejs-procedural-vegetation"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-vfx",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-vfx",
+      "delivery": "symlink",
+      "contentHash": "sha256:eefc4c20b5afbe58fc8f8f3c67b0f32935e9c1c17fb8f2e1dd6aea0e2532c556",
+      "targetPath": ".agents/manual-skills/threejs-procedural-vfx"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-raymarched-space-effects",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-raymarched-space-effects",
+      "delivery": "symlink",
+      "contentHash": "sha256:f67a076dac71607669677abcf35c24144882d64dc1c94e301480a397b698c43b",
+      "targetPath": ".agents/manual-skills/threejs-raymarched-space-effects"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-screen-space-ambient-occlusion",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-screen-space-ambient-occlusion",
+      "delivery": "symlink",
+      "contentHash": "sha256:f5b385d0eaffbcd86585e9527f70b54b9aa3b42a91e8161de2a1ab32632a9816",
+      "targetPath": ".agents/manual-skills/threejs-screen-space-ambient-occlusion"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-shadow-systems",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-shadow-systems",
+      "delivery": "symlink",
+      "contentHash": "sha256:81c65c80681ffc3e0d2e94d2c0c06889360a63d0a0cf9c3c769b63cc4d10a167",
+      "targetPath": ".agents/manual-skills/threejs-shadow-systems"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-skill-router",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-skill-router",
+      "delivery": "symlink",
+      "contentHash": "sha256:29c7ab436f767cd2eaa8b9d7bc51574e00f50524b3a39f85e4d0d2664798e3e3",
+      "targetPath": ".agents/manual-skills/threejs-skill-router"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-spectral-ocean",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-spectral-ocean",
+      "delivery": "symlink",
+      "contentHash": "sha256:cc8a46762be1ac130664e278a2f8322f1907894fb7803464542b2623674b3b38",
+      "targetPath": ".agents/manual-skills/threejs-spectral-ocean"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-temporal-surfaces",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-temporal-surfaces",
+      "delivery": "symlink",
+      "contentHash": "sha256:f577babb0ed036569b191cd37c4ac8ed41cf24a92324cfcbc20de192926723c3",
+      "targetPath": ".agents/manual-skills/threejs-temporal-surfaces"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-visual-validation",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-visual-validation",
+      "delivery": "symlink",
+      "contentHash": "sha256:8eb8207520d7a31530c3b46ef0e3aba5d0546b9545ef48c194fe5d0ab8107858",
+      "targetPath": ".agents/manual-skills/threejs-visual-validation"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-volumetric-clouds",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-volumetric-clouds",
+      "delivery": "symlink",
+      "contentHash": "sha256:25c03cef5672bd37572ead97dc09a6653409a86c3a396ea7ecba2cb56f575054",
+      "targetPath": ".agents/manual-skills/threejs-volumetric-clouds"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-water-optics",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-water-optics",
+      "delivery": "symlink",
+      "contentHash": "sha256:c8238a9e5acd9d473894fb96d69275997048ddfc57e58b044dd0128eb37c3580",
+      "targetPath": ".agents/manual-skills/threejs-water-optics"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-animation",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-skills/threejs-animation",
+      "delivery": "symlink",
+      "contentHash": "sha256:23831fef312f9bfc7632f02546b7c22259bba942d104f08f30486fe5b8980f80",
+      "targetPath": ".agents/manual-skills/threejs-animation"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-fundamentals",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-skills/threejs-fundamentals",
+      "delivery": "symlink",
+      "contentHash": "sha256:3ba1fe1684692a56948099ea06005d2101d119bb6a4bd962c63f968d4430471c",
+      "targetPath": ".agents/manual-skills/threejs-fundamentals"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-geometry",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-skills/threejs-geometry",
+      "delivery": "symlink",
+      "contentHash": "sha256:da6f552d2ad8f1eac2c79866ecc9d1a8e3c5687ec62348040c3adaa4df122b41",
+      "targetPath": ".agents/manual-skills/threejs-geometry"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-interaction",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-skills/threejs-interaction",
+      "delivery": "symlink",
+      "contentHash": "sha256:85a4e18a6257092d287dfed37360365f1a3ed54c1bc2682e12fb8a4509d5f8bd",
+      "targetPath": ".agents/manual-skills/threejs-interaction"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-lighting",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-skills/threejs-lighting",
+      "delivery": "symlink",
+      "contentHash": "sha256:7b602e4753c55f3f50a81594777104761a3b60152e849a69751b8edafe4ca784",
+      "targetPath": ".agents/manual-skills/threejs-lighting"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-loaders",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-skills/threejs-loaders",
+      "delivery": "symlink",
+      "contentHash": "sha256:597cb7aa2f295988e647ff09c7e4aa2b4c9944f2b5633fc29edae86eecea5c3e",
+      "targetPath": ".agents/manual-skills/threejs-loaders"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-materials",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-skills/threejs-materials",
+      "delivery": "symlink",
+      "contentHash": "sha256:2db5f21e0f599625f2bf4271b1d26370d0aaff4c65b427a2c3305e54cd26e274",
+      "targetPath": ".agents/manual-skills/threejs-materials"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-postprocessing",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-skills/threejs-postprocessing",
+      "delivery": "symlink",
+      "contentHash": "sha256:388468712a735edf8952bb4050c328cd494f3982435d25dfb76b38f822517be6",
+      "targetPath": ".agents/manual-skills/threejs-postprocessing"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-shaders",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-skills/threejs-shaders",
+      "delivery": "symlink",
+      "contentHash": "sha256:88ea403027a31fa098e39d43c53152b869e2bd788a70eb85aeba364cc2ba8c10",
+      "targetPath": ".agents/manual-skills/threejs-shaders"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-textures",
+      "sourcePath": "skills/third-party-without-npx-skills/threejs-skills/threejs-textures",
+      "delivery": "symlink",
+      "contentHash": "sha256:68332d9704b46f1aab65114adebc63563f6905d2b3d0df7ec15e527df8f01b32",
+      "targetPath": ".agents/manual-skills/threejs-textures"
     }
   ]
 }
