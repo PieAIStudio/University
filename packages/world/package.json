@@ -15,6 +15,7 @@
     "./controls.js": "./src/camera/controls.tsx",
     "./course.js": "./src/course/course.ts",
     "./frame.js": "./src/camera/frame.ts",
+    "./island-look.js": "./src/island/island-look.ts",
     "./labels.js": "./src/labels/labels.ts",
     "./overlay.css": "./src/overlay.css",
     "./path-overlay.js": "./src/labels/path-overlay.ts",

@@ -9,6 +9,7 @@ import { islandDressingSafetyZones, planIslandDressing } from "./island-dressing
 import {
   createIslandSurfaceMaterialAdapter,
   DEFAULT_ISLAND_SURFACE_STYLE,
+  islandLookFrozen,
   resolveIslandSurfaceStyle,
   type IslandSurfaceTimeUniform,
   type IslandSurfaceRole,
@@ -168,6 +169,7 @@ function TechUnderside({
     glows.computeBoundingSphere();
   }, [podTransforms]);
   useFrame(({ clock }) => {
+    if (import.meta.env.DEV && islandLookFrozen()) return;
     const ring = ringRef.current;
     if (!ring) return;
     const material = ring.material;
@@ -255,6 +257,7 @@ function HeroLandmark({
     [blueprint, scale],
   );
   useFrame(({ clock }) => {
+    if (import.meta.env.DEV && islandLookFrozen()) return;
     const mesh = crystal.current;
     if (!mesh) return;
     mesh.rotation.y = clock.elapsedTime * 0.55;
@@ -342,7 +345,7 @@ export function IslandRender({
   useFrame(({ clock }) => {
     // The optional Elemental look is DEV-only. One shared uniform per island
     // keeps the terrain's procedural colour in phase without another loop.
-    if (import.meta.env.DEV && surfaceStyle === "elemental") {
+    if (import.meta.env.DEV && !islandLookFrozen() && surfaceStyle === "elemental") {
       surfaceTime.current.value = clock.elapsedTime;
     }
   });

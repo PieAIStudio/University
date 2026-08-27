@@ -328,6 +328,7 @@ function PartField({
       key={at.length}
       ref={mesh}
       args={[owned.geometry, owned.material, Math.max(at.length, 1)]}
+      userData={{ islandLookPlacementCount: at.length }}
       castShadow={castShadow}
       // Casting but not receiving, on purpose. A tree receiving its own shadow
       // map at this scale is the acne case; the shadow it throws on the island

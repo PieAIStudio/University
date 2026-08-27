@@ -44,3 +44,24 @@ export { frameWorld } from "./camera/frame.js";
 export { wheelIntent } from "./camera/wheel-intent.js";
 export { CompanionProbe, screenFromProjected } from "./companion/companion-probe.js";
 export type { CompanionAnchor } from "./companion/companion-probe.js";
+export {
+  islandLookCameraForShot,
+  islandLookDebugFromSearch,
+  islandLookSceneSource,
+  resolveIslandLookDebug,
+  ISLAND_LOOK_CONTRACT,
+  ISLAND_LOOK_SHOT_IDS,
+} from "./island/island-look.js";
+export type {
+  IslandLookCameraPose,
+  IslandLookDebugOptions,
+  IslandLookSceneSource,
+  IslandLookShotId,
+} from "./island/island-look.js";
+export type {
+  DomLabelContrastSample,
+  IslandLookBrowserReport,
+  IslandLookCodeMetrics,
+  IslandLookLayerDistribution,
+  IslandLookPixelMetrics,
+} from "./island/look-metrics.js";

@@ -108,6 +108,11 @@ import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
 import { watchThemePreference } from "@pieai/university-ui/theme.js";
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
+import {
+  islandLookCameraForShot,
+  islandLookSceneSource,
+  resolveIslandLookDebug,
+} from "@pieai/university-world/island-look.js";
 import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
 import { MainRouter } from "./MainRouter";
 import { usePageMetadata } from "./page-metadata";
@@ -155,8 +160,34 @@ export function App() {
     [],
   );
   const { shelf, studyNames, shelfError, studies, nodes, courseOf } = useShelf();
-  const { view, setView } = useRoute();
+  const { view: routeView, setView } = useRoute();
   const wide = useMinWidth(768);
+  // The look judge is a DEV-only URL input. A seed identifies the course whose
+  // existing blueprint should be measured; it never creates a second course or
+  // a second layout source.
+  const lookDebug = import.meta.env.DEV ? resolveIslandLookDebug() : null;
+  const lookSeedNode = useMemo(() => {
+    if (!import.meta.env.DEV || !lookDebug?.shot || !lookDebug.seed || !nodes) return null;
+    const routeMatch =
+      (routeView.kind === "course" ||
+        routeView.kind === "lesson" ||
+        routeView.kind === "settled") &&
+      routeView.courseId === lookDebug.seed
+        ? nodes.find(
+            (node) => node.studyId === routeView.studyId && node.courseId === routeView.courseId,
+          )
+        : undefined;
+    return routeMatch ?? nodes.find((node) => node.courseId === lookDebug.seed) ?? null;
+  }, [lookDebug?.seed, lookDebug?.shot, nodes, routeView]);
+  const view = useMemo(() => {
+    if (!import.meta.env.DEV || !lookSeedNode || !lookDebug?.shot) return routeView;
+    if (lookDebug.shot === "world-design") return { kind: "world" } as const;
+    return {
+      kind: "course",
+      studyId: lookSeedNode.studyId,
+      courseId: lookSeedNode.courseId,
+    } as const;
+  }, [lookDebug?.shot, lookSeedNode, routeView]);
   /**
    * The study the camera is looking at. `undefined` means "not chosen yet" —
    * fall back to the learner's next course so the name, the sky and the eye
@@ -278,7 +309,10 @@ export function App() {
     useWorldModel({
       courseProgress,
       lessonsDone,
-      mapFocus,
+      mapFocus:
+        import.meta.env.DEV && lookDebug?.shot === "world-design"
+          ? (lookSeedNode?.studyId ?? mapFocus)
+          : mapFocus,
       nodes,
       studies,
       todayNode,
@@ -578,6 +612,56 @@ export function App() {
     the delivery shell catching up to it.
   */
   const inCourse = view.kind === "course" || view.kind === "lesson";
+  const lookShotIsCourse = import.meta.env.DEV && (lookDebug?.shot?.startsWith("course-") ?? false);
+  const lookViewport = {
+    width: typeof window === "undefined" ? (wide ? 1440 : 390) : window.innerWidth,
+    // The phone shell gives the stage `min(70dvh, 720px)`, so the browser
+    // viewport is taller than the WebGL drawing surface used by the camera.
+    // Fit the debug shot to the actual stage envelope, not to the DOM below it.
+    height:
+      typeof window === "undefined"
+        ? wide
+          ? 900
+          : Math.min(844 * 0.7, 720)
+        : wide
+          ? window.innerHeight
+          : Math.min(window.innerHeight * 0.7, 720),
+  };
+  const lookBounds = lookShotIsCourse
+    ? {
+        halfX: lessons[0]?.blueprint.bounds.halfX ?? 1,
+        halfZ: lessons[0]?.blueprint.bounds.halfZ ?? 1,
+        outline: lessons[0]?.blueprint.outline,
+      }
+    : { halfX: world?.extent ?? 1, halfZ: world?.extent ?? 1 };
+  const fixedCamera =
+    import.meta.env.DEV &&
+    lookDebug?.shot &&
+    ((lookShotIsCourse && inCourse) || (lookDebug.shot === "world-design" && view.kind === "world"))
+      ? islandLookCameraForShot(lookDebug.shot, lookBounds, lookViewport)
+      : null;
+  const stageCameraFrom = fixedCamera?.cameraFrom ?? cameraFrom;
+  const stageLookAt = fixedCamera?.lookAt ?? lookAt;
+  const lookSource = useMemo(() => {
+    if (!import.meta.env.DEV || !lookDebug?.shot) return null;
+    if (lookShotIsCourse && inCourse) {
+      const blueprint = lessons[0]?.blueprint;
+      return blueprint
+        ? islandLookSceneSource(
+            "course",
+            [blueprint],
+            lessons.map((lesson) => ({ x: lesson.position.x, z: lesson.position.z })),
+          )
+        : null;
+    }
+    if (lookDebug.shot === "world-design" && view.kind === "world" && world) {
+      return islandLookSceneSource(
+        "world",
+        world.placements.map((entry) => entry.blueprint),
+      );
+    }
+    return null;
+  }, [inCourse, lessons, lookDebug?.shot, lookShotIsCourse, view.kind, world]);
   const stage =
     view.kind === "avatar-lab" ? null : (
       <WorldMapCanvas
@@ -588,8 +672,8 @@ export function App() {
         // No world in a course view: the path below replaces it rather than
         // sitting behind it.
         world={view.kind === "world" ? world : null}
-        cameraFrom={cameraFrom}
-        lookAt={lookAt}
+        cameraFrom={stageCameraFrom}
+        lookAt={stageLookAt}
         learnerAt={learnerAt}
         avatarRecipe={avatarRecipe}
         avatarSignedIn={avatarSignedIn}
@@ -611,6 +695,9 @@ export function App() {
         onSceneReady={onSceneReady}
         onSceneBusy={onSceneBusy}
         onPointerMissed={dismissPick}
+        fixedCamera={fixedCamera}
+        postProcessing={import.meta.env.DEV && lookDebug?.shot ? lookDebug.post : true}
+        lookSource={lookSource}
         stageChildren={
           <>
             {/*

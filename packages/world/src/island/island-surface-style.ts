@@ -284,9 +284,88 @@ export function parseIslandSurfaceStyle(value: unknown): IslandSurfaceStyleId | 
   return isIslandSurfaceStyleId(normalized) ? normalized : null;
 }
 
-function queryFromSearch(search: string | undefined): URLSearchParams {
+/** Keep URL parsing shared by every development-only island probe. */
+export function queryFromSearch(search: string | undefined): URLSearchParams {
   if (!search) return new URLSearchParams();
   return new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+}
+
+export const ISLAND_LOOK_SHOT_IDS = [
+  "course-design",
+  "course-near",
+  "course-far",
+  "world-design",
+] as const;
+export type IslandLookShotId = (typeof ISLAND_LOOK_SHOT_IDS)[number];
+
+export interface IslandLookDebugOptions {
+  readonly shot: IslandLookShotId | null;
+  readonly seed: string | null;
+  readonly freeze: boolean;
+  readonly post: boolean;
+}
+
+const DEFAULT_ISLAND_LOOK_DEBUG: IslandLookDebugOptions = {
+  shot: null,
+  seed: null,
+  freeze: false,
+  post: true,
+};
+
+function parseIslandLookShot(value: string | null): IslandLookShotId | null {
+  return value !== null && (ISLAND_LOOK_SHOT_IDS as readonly string[]).includes(value)
+    ? (value as IslandLookShotId)
+    : null;
+}
+
+/**
+ * Parse the DEV-only fixed-shot input. This shares `queryFromSearch` with the
+ * existing surface-style debug switch so a URL is the one place that names a
+ * capture. The seed is only an identity selector here; the blueprint remains
+ * the sole producer of geometry and receives it explicitly from the caller.
+ */
+export function islandLookDebugFromSearch(
+  search: string | undefined,
+  enabled = import.meta.env.DEV,
+): IslandLookDebugOptions {
+  if (!enabled) return DEFAULT_ISLAND_LOOK_DEBUG;
+  const params = queryFromSearch(search);
+  const seed = params.get("seed")?.trim() ?? "";
+  const shot = parseIslandLookShot(params.get("shot")?.trim().toLowerCase() ?? null);
+  return {
+    shot,
+    seed: seed.length > 0 ? seed : null,
+    // `post`, `freeze`, and `seed` are properties of a named shot. A stray
+    // query on a normal learner URL must not silently change that URL's scene.
+    freeze: shot !== null && params.get("freeze") === "1",
+    post: shot === null || params.get("post") !== "off",
+  };
+}
+
+let cachedIslandLookSearch: string | undefined;
+let cachedIslandLookDebug: IslandLookDebugOptions | undefined;
+
+/** Resolve URL controls only in a Vite DEV build; production always gets defaults. */
+export function resolveIslandLookDebug(
+  search: string | undefined = typeof window === "undefined" ? undefined : window.location?.search,
+): IslandLookDebugOptions {
+  if (!import.meta.env.DEV) return DEFAULT_ISLAND_LOOK_DEBUG;
+  if (cachedIslandLookDebug && cachedIslandLookSearch === search) return cachedIslandLookDebug;
+  cachedIslandLookSearch = search;
+  cachedIslandLookDebug = islandLookDebugFromSearch(search);
+  return cachedIslandLookDebug;
+}
+
+/** A shared, cached switch for all time-based island effects in a still shot. */
+export function islandLookFrozen(): boolean {
+  const debug = resolveIslandLookDebug();
+  return debug.shot !== null && debug.freeze;
+}
+
+/** A query seed belongs to the course whose id it names, never to every island. */
+export function islandLookSeedForCourse(courseId: string): string | undefined {
+  const debug = resolveIslandLookDebug();
+  return debug.shot !== null && debug.seed === courseId ? debug.seed : undefined;
 }
 
 /**

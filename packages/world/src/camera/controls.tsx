@@ -175,22 +175,31 @@ export const COURSE_LOOK_PULL = 6;
 export function Controls({
   target,
   polar,
+  fixedCamera,
 }: {
   target: readonly [number, number, number];
   /** The one tilt this view is allowed, in radians from straight down. */
   polar: number;
+  /** DEV-only fixed pose for a look-contract capture. */
+  fixedCamera?: {
+    readonly cameraFrom: readonly [number, number, number];
+    readonly lookAt: readonly [number, number, number];
+  } | null;
 }) {
   const { camera, gl } = useThree();
   const controls = useRef<MapControls | null>(null);
+  const fixedCameraRef = useRef(fixedCamera ?? null);
 
   const polarRef = useRef(polar);
   polarRef.current = polar;
+  fixedCameraRef.current = fixedCamera ?? null;
 
   useEffect(() => {
     const instance = new MapControls(camera, gl.domElement);
     instance.enableDamping = true;
     instance.dampingFactor = 0.08;
     instance.enableRotate = false;
+    instance.enabled = fixedCameraRef.current === null;
     instance.minDistance = WORLD_DISTANCE_MIN;
     instance.maxDistance = WORLD_DISTANCE_MAX;
     // Two fingers zoom. They do not also rotate, which is what DOLLY_ROTATE
@@ -283,19 +292,29 @@ export function Controls({
   useEffect(() => {
     const instance = controls.current;
     if (!instance) return;
-    instance.target.set(...target);
+    const fixed = fixedCameraRef.current;
+    instance.target.set(...(fixed?.lookAt ?? target));
     // The course road is laid out from −Z to +Z in teaching order. Pulling the
     // target along +Z keeps the live marker in the upper half while the next
     // lessons descend toward the viewer; it also keeps a world→course flight
     // from aiming at the old archipelago between two scenes.
-    if (Math.abs(polarRef.current - COURSE_POLAR) < 1e-6) {
+    if (!fixed && Math.abs(polarRef.current - COURSE_POLAR) < 1e-6) {
       instance.target.z += COURSE_LOOK_PULL;
     }
-  }, [target]);
+  }, [fixedCamera, target]);
 
   useFrame((_, delta) => {
     const instance = controls.current;
     if (!instance) return;
+    const fixed = fixedCameraRef.current;
+    if (fixed) {
+      instance.enabled = false;
+      instance.target.set(...fixed.lookAt);
+      camera.position.set(...fixed.cameraFrom);
+      camera.lookAt(new THREE.Vector3(...fixed.lookAt));
+      return;
+    }
+    instance.enabled = true;
     // Flight runs at priority 0 and snaps the eye to App.tsx's `from`, which
     // is ~65–76 units from the look target. MapControls then rebuilds position
     // from (target, distance, polar) — so the lever is distance, not height.
@@ -330,9 +349,12 @@ export function Controls({
 export function Flight({
   to,
   look,
+  fixed = false,
 }: {
   to: readonly [number, number, number];
   look: readonly [number, number, number];
+  /** DEV-only fixed-shot switch; the normal route flight is unchanged. */
+  fixed?: boolean;
 }) {
   const { camera } = useThree();
   const from = useRef({ position: new THREE.Vector3(), target: new THREE.Vector3(), elapsed: 0 });
@@ -358,6 +380,7 @@ export function Flight({
   }, [key, camera]);
 
   useFrame((_, delta) => {
+    if (fixed) return;
     const flight = from.current;
     if (flight.elapsed >= 1) return;
     // Arriving from a URL has no previous shot to fly out of, so there is

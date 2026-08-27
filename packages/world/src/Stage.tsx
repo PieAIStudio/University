@@ -42,20 +42,35 @@ import * as THREE from "three";
 import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
 import { createAoPass } from "./island/ao";
 import { assertWorldGradePipeline, createGradePass } from "./island/grade";
+import { measureIslandLookInBrowser, type IslandLookBrowserReport } from "./island/look-metrics.js";
+import type { IslandLookCameraPose, IslandLookSceneSource } from "./island/island-look.js";
+import { islandLookFrozen } from "./island/island-surface-style-v2.js";
 import { renderTier } from "./sky/tier";
 
-function Pipeline({ ambientOcclusion }: { readonly ambientOcclusion: boolean }) {
-  const { gl, scene, camera, size, viewport } = useThree();
-  const pass = useMemo(() => createGradePass(), []);
-  const ao = useMemo(() => (ambientOcclusion ? createAoPass() : null), [ambientOcclusion]);
+function Pipeline({
+  ambientOcclusion,
+  postProcessing,
+  lookSource,
+}: {
+  readonly ambientOcclusion: boolean;
+  readonly postProcessing: boolean;
+  readonly lookSource: IslandLookSceneSource | null;
+}) {
+  const { gl, scene, camera, size, viewport, invalidate, clock } = useThree();
+  const pass = useMemo(() => (postProcessing ? createGradePass() : null), [postProcessing]);
+  const ao = useMemo(
+    () => (postProcessing && ambientOcclusion ? createAoPass() : null),
+    [ambientOcclusion, postProcessing],
+  );
   // Recomputed each render is fine: the viewport does not change mid-frame,
   // and the mobile skip has to follow a rotate-to-landscape the way dpr does.
   const mobile = renderTier() === "mobile";
 
-  useEffect(() => () => pass.dispose(), [pass]);
+  useEffect(() => () => pass?.dispose(), [pass]);
   useEffect(() => () => ao?.dispose(), [ao]);
 
   useEffect(() => {
+    if (!pass) return;
     const width = size.width * viewport.dpr;
     const height = size.height * viewport.dpr;
     pass.resize(width, height);
@@ -67,14 +82,62 @@ function Pipeline({ ambientOcclusion }: { readonly ambientOcclusion: boolean }) 
   // NODE_ENV; a shipped build must not throw. The renderer is the live R3F
   // canvas, which is the configuration a wrong `outputOwner` would mis-count.
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
+    if (!import.meta.env.DEV || !postProcessing) return;
     assertWorldGradePipeline(gl);
-  }, [gl]);
+  }, [gl, postProcessing]);
 
   // Priority above zero: R3F stops rendering for us, and this is the loop.
   const measuring = useRef<((report: unknown) => void) | null>(null);
 
+  useEffect(() => {
+    if (!import.meta.env.DEV || !lookSource) return;
+    const bag = globalThis as unknown as {
+      __islandLookMetrics?: () => IslandLookBrowserReport;
+    };
+    const measure = () =>
+      measureIslandLookInBrowser({ canvas: gl.domElement, scene, source: lookSource });
+    bag.__islandLookMetrics = measure;
+    return () => {
+      if (bag.__islandLookMetrics === measure) delete bag.__islandLookMetrics;
+    };
+  }, [gl, lookSource, scene]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || !lookSource || !islandLookFrozen()) return;
+    // A demand frame lets kit-owned avatar callbacks run once while the
+    // capture is settling, then stops the clock from changing the pixels.
+    invalidate();
+  }, [invalidate, lookSource]);
+
+  useLayoutEffect(() => {
+    if (!import.meta.env.DEV || !lookSource || !islandLookFrozen()) return;
+    // R3F passes this delta to every useFrame subscriber, including the
+    // avatar kit. Returning zero freezes kit-owned breath/blink state as well
+    // as the island uniforms, while keeping the renderer's normal clock for
+    // every non-judge route. Restore the method when a shot is left.
+    const getDelta = clock.getDelta;
+    clock.getDelta = () => 0;
+    return () => {
+      clock.getDelta = getDelta;
+    };
+  }, [clock, lookSource]);
+
   useFrame(() => {
+    if (!pass) {
+      const previousColorSpace = gl.outputColorSpace;
+      const previousToneMapping = gl.toneMapping;
+      // `post=off` is the judge's raw scene path. The renderer owns the one
+      // normal sRGB encode here; no grade, AO blit, or bloom can move a pixel
+      // over a threshold.
+      gl.outputColorSpace = THREE.SRGBColorSpace;
+      gl.toneMapping = THREE.NoToneMapping;
+      gl.setRenderTarget(null);
+      gl.clear();
+      gl.render(scene, camera);
+      gl.outputColorSpace = previousColorSpace;
+      gl.toneMapping = previousToneMapping;
+      return;
+    }
     gl.setRenderTarget(pass.target);
     gl.clear();
     gl.render(scene, camera);
@@ -100,12 +163,16 @@ function Pipeline({ ambientOcclusion }: { readonly ambientOcclusion: boolean }) 
   // inherited. This is what makes that a measurement instead of a claim.
   // Development only, and called by hand: `await measureScene()`.
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
+    if (!import.meta.env.DEV || !pass) return;
     (globalThis as unknown as { measureScene?: () => Promise<unknown> }).measureScene = () =>
       new Promise((resolve) => {
         measuring.current = resolve;
       });
-  }, []);
+    return () => {
+      const bag = globalThis as unknown as { measureScene?: () => Promise<unknown> };
+      delete bag.measureScene;
+    };
+  }, [pass]);
 
   return null;
 }
@@ -219,6 +286,12 @@ interface StageProps {
    * for one scene.
    */
   readonly ambientOcclusion?: boolean;
+  /** DEV-only switch for the judge; normal scenes keep the grade enabled. */
+  readonly postProcessing?: boolean;
+  /** DEV-only source for the browser look judge. */
+  readonly lookSource?: IslandLookSceneSource | null;
+  /** DEV-only fixed pose for the browser look judge. */
+  readonly fixedCamera?: IslandLookCameraPose | null;
 }
 
 export function Stage({
@@ -230,8 +303,12 @@ export function Stage({
   onPointerMissed,
   paused = false,
   ambientOcclusion = true,
+  postProcessing = true,
+  lookSource = null,
+  fixedCamera = null,
 }: StageProps) {
   const tier = renderTier();
+  const frozenLook = import.meta.env.DEV && lookSource !== null && islandLookFrozen();
 
   useEffect(() => armSoundUnlock(), []);
 
@@ -241,7 +318,14 @@ export function Stage({
       dpr={tier === "mobile" ? [1, 1.5] : [1, 2]}
       // Antialiasing on the default framebuffer would be a second, redundant
       // resolve: the scene lands in a multisampled target instead.
-      gl={{ antialias: false, powerPreference: "high-performance", alpha: false }}
+      gl={{
+        antialias: false,
+        powerPreference: "high-performance",
+        alpha: false,
+        // Keep the DEV drawing buffer available for the in-browser judge. This
+        // does not alter a production renderer or any of the scene parameters.
+        preserveDrawingBuffer: import.meta.env.DEV,
+      }}
       // The element colour, before WebGL has a clear colour. Default WebGL
       // clear is #000; this matches the page so a frame that lands before
       // `onCreated` is a dark page, not a broken one. The DOM overlay still
@@ -251,7 +335,12 @@ export function Stage({
       // A slightly wider lens is the shared 3D safe-area treatment: it keeps
       // the same target and tilt, but fits the current island plus the next
       // few nodes into the unobscured middle instead of cropping both ends.
-      camera={{ position: [...cameraFrom], fov: tier === "mobile" ? 42 : 34, near: 0.5, far: 1200 }}
+      camera={{
+        position: [...cameraFrom],
+        fov: fixedCamera?.fov ?? (tier === "mobile" ? 42 : 34),
+        near: 0.5,
+        far: 1200,
+      }}
       onPointerMissed={onPointerMissed}
       onCreated={(state) => {
         state.gl.setClearColor(new THREE.Color(0x0d1019), 1);
@@ -283,9 +372,13 @@ export function Stage({
       // damp, and the clouds drift, so there is no settled state to stop at.
       // `never` the moment the canvas is hidden — that is the only thing here
       // that was ever burning frames for nobody.
-      frameloop={paused ? "never" : "always"}
+      frameloop={paused ? "never" : frozenLook ? "demand" : "always"}
     >
-      <Pipeline ambientOcclusion={ambientOcclusion} />
+      <Pipeline
+        ambientOcclusion={ambientOcclusion}
+        lookSource={lookSource}
+        postProcessing={postProcessing}
+      />
       {/*
         Sky, sun, fog and sea belong to the scene rather than to this file. The
         two map levels are the same world at two scales, and their fog has to

@@ -44,6 +44,7 @@ import {
 import { islandThemeSelectionForCourse } from "./island/kenney-recipes.js";
 import { IslandDressing } from "./island/island-dressing-render.js";
 import { IslandRender, UnitSigil } from "./island/island-render.js";
+import { islandLookFrozen, islandLookSeedForCourse } from "./island/island-surface-style.js";
 import { hopPose, PlayerMarker, type AvatarRecipe } from "./avatar/index.js";
 import { layoutStudyRoad, radiusForLessons } from "./course/layout";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
@@ -328,6 +329,7 @@ export function placeWorld(
       studyId: node.studyId,
       courseId: node.courseId,
       lessonCount: node.lessons,
+      seed: islandLookSeedForCourse(node.courseId),
       themeSelection: islandThemeSelectionForCourse(node.studyId, node.courseId),
     });
     const blueprint = projectIslandBlueprint(geometry);
@@ -451,6 +453,7 @@ function Island({
 function LiveRing({ radius, lift = 0.08 }: { radius: number; lift?: number }) {
   const mesh = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
+    if (islandLookFrozen()) return;
     const ring = mesh.current;
     if (!ring) return;
     const t = (Math.sin(clock.elapsedTime * 2.2) + 1) / 2;
@@ -506,6 +509,7 @@ function LearnerMarker({
   const startedAt = useRef<number | null>(null);
 
   useFrame(({ clock }) => {
+    if (islandLookFrozen()) return;
     const ground = travel.current;
     const body = lift.current;
     if (!ground || !body) return;
@@ -569,6 +573,7 @@ function SkyDome({ stops }: { stops: SkyStops }) {
   uniforms.uMid.value.setHex(stops.mid);
   uniforms.uHorizon.value.setHex(stops.horizon);
   useFrame(({ camera }) => {
+    if (islandLookFrozen()) return;
     mesh.current?.position.copy(camera.position);
   });
   return (
@@ -628,7 +633,11 @@ function AerialWorldPlate({ extent, level }: { extent: number; level: number }) 
   }, [gl, level, texture]);
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, level - 4, 0]}>
+    <mesh
+      name="island-look-aerial-plate"
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, level - 4, 0]}
+    >
       {/*
         A floor under the radius, not just a multiple of the world.
 
@@ -647,7 +656,12 @@ function AerialWorldPlate({ extent, level }: { extent: number; level: number }) 
 
 function AerialWorldPlateFallback({ extent, level }: { extent: number; level: number }) {
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, level - 4, 0]} receiveShadow>
+    <mesh
+      name="island-look-aerial-plate-fallback"
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, level - 4, 0]}
+      receiveShadow
+    >
       <circleGeometry args={[Math.max(extent * 3.2, WORLD_PLATE_MIN_RADIUS), 64]} />
       <meshStandardMaterial color={PALETTE.sea} roughness={0.72} metalness={0} />
     </mesh>
@@ -755,7 +769,7 @@ function Weather({
         <circleGeometry args={[extent * 3.4, 48]} />
         <meshBasicMaterial color={PALETTE.seaDeep} />
       </mesh>
-      <CuteCloudSea extent={extent} level={cloudLevel} />
+      <CuteCloudSea extent={extent} level={cloudLevel} drift={!islandLookFrozen()} />
     </>
   );
 }
@@ -856,6 +870,7 @@ export function placeCourse(
     studyId,
     courseId: course.id,
     lessonCount: flat.length,
+    seed: islandLookSeedForCourse(course.id),
     themeSelection: islandThemeSelectionForCourse(studyId, course.id),
   });
   const blueprint = projectIslandBlueprint(geometry, {

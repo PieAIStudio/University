@@ -19,6 +19,7 @@ import {
   type IslandGrassRenderTier,
 } from "./island-grass.js";
 import { islandGeometryScale, type IslandGeometryDetail } from "./island-geometry.js";
+import { islandLookFrozen } from "./island-surface-style.js";
 import type { IslandBlueprint } from "./island-blueprint.js";
 import { renderTier } from "../sky/tier.js";
 
@@ -321,6 +322,7 @@ function CourseIslandGrassField({
   }, [owned, plan, scale, style?.windStrength]);
 
   useFrame(({ clock }) => {
+    if (import.meta.env.DEV && islandLookFrozen()) return;
     const uniforms = owned ? materialUniforms(owned.material) : null;
     if (uniforms) uniforms.uTime.value = clock.elapsedTime;
   });

@@ -4,6 +4,7 @@ import { Controls, Flight, LabelProbe, WORLD_POLAR } from "./camera/controls.js"
 import { placeWorld, WorldScene, type Marker } from "./Maps.js";
 import type { AvatarRecipe } from "./avatar/index.js";
 import type { CourseNode } from "./course/course.js";
+import type { IslandLookCameraPose, IslandLookSceneSource } from "./island/island-look.js";
 import { Stage } from "./Stage.js";
 
 export type WorldMap = ReturnType<typeof placeWorld>;
@@ -42,6 +43,9 @@ export function WorldMapCanvas({
   paused = false,
   hidden = false,
   polar = WORLD_POLAR,
+  fixedCamera = null,
+  postProcessing = true,
+  lookSource = null,
 }: {
   readonly className?: string;
   readonly world: WorldMap | null;
@@ -91,6 +95,9 @@ export function WorldMapCanvas({
    * islands, which is the only thing the two scenes disagree about.
    */
   readonly polar?: number;
+  readonly fixedCamera?: IslandLookCameraPose | null;
+  readonly postProcessing?: boolean;
+  readonly lookSource?: IslandLookSceneSource | null;
 }) {
   const labelNodes = useRef(new Map<string, HTMLElement>());
   const draggedRef = useRef(false);
@@ -128,10 +135,13 @@ export function WorldMapCanvas({
         onSceneReady={onSceneReady}
         onSceneBusy={onSceneBusy}
         onPointerMissed={onPointerMissed}
+        fixedCamera={fixedCamera}
         paused={paused}
+        lookSource={lookSource}
+        postProcessing={postProcessing}
       >
-        <Controls target={lookAt} polar={polar} />
-        <Flight to={cameraFrom} look={lookAt} />
+        <Controls target={lookAt} polar={polar} fixedCamera={fixedCamera} />
+        <Flight to={cameraFrom} look={lookAt} fixed={fixedCamera !== null} />
         <LabelProbe
           markers={markers}
           limit={9}
