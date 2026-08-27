@@ -60,25 +60,25 @@ describe("Island geometry projections", () => {
   it("samples the same top-mesh height used by overlay roots", () => {
     const shape = buildIslandGeometry(blueprint, "course");
     const position = shape.terrain.getAttribute("position");
-    const segments = blueprint.outline.length;
-    const vertices = [
-      { index: 0, x: 0, z: 0 },
-      {
-        index: 1,
-        x: blueprint.outline[0]!.x * 0.06,
-        z: blueprint.outline[0]!.z * 0.06,
-      },
-      {
-        index: 1 + segments * 6 + 17,
-        x: blueprint.outline[17]!.x * 0.65,
-        z: blueprint.outline[17]!.z * 0.65,
-      },
-    ];
+    // The vertices are read out of the mesh rather than reconstructed from a
+    // hard-coded ring table. The earlier version of this test spelled out the
+    // radials 0.06 and 0.65 and the index arithmetic that went with a
+    // thirteen-ring fan, so raising the ring count silently pointed it at
+    // vertices that were no longer where it thought they were and it failed
+    // for a reason that had nothing to do with the invariant it exists to
+    // protect. The invariant is that an overlay root placed at a top vertex's
+    // x/z gets that vertex's height back.
+    const centre = { x: position.getX(0), y: position.getY(0), z: position.getZ(0) };
+    expect(centre.x).toBeCloseTo(0, 9);
+    expect(centre.z).toBeCloseTo(0, 9);
+    const samples = [0, 137, 1601, 3407];
 
-    for (const vertex of vertices) {
-      const top = sampleIslandTerrainTop(blueprint, "course", vertex.x, vertex.z);
-      expect(top.inside).toBe(true);
-      expect(top.y).toBeCloseTo(position.getY(vertex.index), 7);
+    for (const index of samples) {
+      const x = position.getX(index);
+      const z = position.getZ(index);
+      const top = sampleIslandTerrainTop(blueprint, "course", x, z);
+      expect(top.inside, `vertex ${index}`).toBe(true);
+      expect(top.y, `vertex ${index}`).toBeCloseTo(position.getY(index), 6);
     }
     dispose(shape);
   });

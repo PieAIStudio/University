@@ -310,11 +310,20 @@ describe("IslandBlueprint", () => {
   });
 
   it("gives medium and long islands visible macro relief", () => {
+    // The upper bound used to be 4.5, which is where it was set when the
+    // height rule clamped at 4.35. On a course island measured at 85 by 112
+    // units that ceiling made the tallest hill four percent of the island's
+    // width and about six degrees of slope, and six degrees is below the angle
+    // at which a light produces any readable difference between one face and
+    // another. The test was not wrong about wanting a bound; it was holding
+    // the island flat. Both bounds now scale with the island, which is also
+    // what the relief model does.
     for (const lessonCount of [24, 41]) {
       const blueprint = islandBlueprint({ ...INPUT, lessonCount, seed: `relief-${lessonCount}` });
       const relief = sampledRelief(blueprint);
-      expect(relief, `${lessonCount} relief`).toBeGreaterThanOrEqual(2.5);
-      expect(relief, `${lessonCount} relief`).toBeLessThanOrEqual(4.5);
+      const maxHalf = blueprint.bounds.maxHalf;
+      expect(relief, `${lessonCount} relief`).toBeGreaterThanOrEqual(maxHalf * 0.075);
+      expect(relief, `${lessonCount} relief`).toBeLessThanOrEqual(maxHalf * 0.235);
     }
   });
 
