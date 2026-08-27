@@ -108,10 +108,36 @@ function metricsFor(report: IslandLookBrowserReport): readonly MetricEntry[] {
   );
   const domLabelContrastMin = labelRatios.length > 0 ? Math.min(...labelRatios) : null;
   const common: MetricEntry[] = [
+    between(
+      "landMedianLightness",
+      pixels?.landMedianLightness ?? null,
+      ISLAND_LOOK_CONTRACT.landMedianLightnessMin,
+      ISLAND_LOOK_CONTRACT.landMedianLightnessMax,
+    ),
     atLeast(
-      "subjectBackgroundLightnessGap",
-      pixels?.subjectBackgroundLightnessGap ?? null,
-      ISLAND_LOOK_CONTRACT.subjectBackgroundLightnessGap,
+      "landP95Lightness",
+      pixels?.landP95Lightness ?? null,
+      ISLAND_LOOK_CONTRACT.landP95LightnessMin,
+    ),
+    atLeast(
+      "landLightnessRise",
+      pixels?.landLightnessRise ?? null,
+      ISLAND_LOOK_CONTRACT.landLightnessRiseMin,
+    ),
+    atLeast(
+      "backgroundLightnessSpread",
+      pixels?.backgroundLightnessSpread ?? null,
+      ISLAND_LOOK_CONTRACT.backgroundLightnessSpreadMin,
+    ),
+    atLeast(
+      "grassLightnessSpread",
+      pixels?.grassLightnessSpread ?? null,
+      ISLAND_LOOK_CONTRACT.grassLightnessSpreadMin,
+    ),
+    atLeast(
+      "grassLightnessP95",
+      pixels?.grassLightnessP95 ?? null,
+      ISLAND_LOOK_CONTRACT.grassLightnessP95Min,
     ),
     atMost("lightnessP2", pixels?.lightnessP2 ?? null, ISLAND_LOOK_CONTRACT.lightnessP2Max),
     atLeast("lightnessP98", pixels?.lightnessP98 ?? null, ISLAND_LOOK_CONTRACT.lightnessP98Min),
@@ -140,6 +166,8 @@ function metricsFor(report: IslandLookBrowserReport): readonly MetricEntry[] {
     informational("coursePropCount", code.coursePropCount),
   ];
 
+  if (code.detail !== "course") common.push(informational("landCoverage", pixels?.landCoverage ?? null));
+
   if (code.detail === "course") {
     common.push(
       atLeast(
@@ -148,6 +176,16 @@ function metricsFor(report: IslandLookBrowserReport): readonly MetricEntry[] {
         ISLAND_LOOK_CONTRACT.propsPerLessonNodeMin,
       ),
       atLeast("rimPropShare", code.rimPropShare, ISLAND_LOOK_CONTRACT.rimPropShareMin),
+      /*
+        Land coverage binds the course island only. The archipelago is supposed
+        to show many courses at once, so pushing its camera in to satisfy a
+        coverage floor would trade information for a number.
+      */
+      atLeast(
+        "landCoverage",
+        pixels?.landCoverage ?? null,
+        ISLAND_LOOK_CONTRACT.landCoverageMin,
+      ),
       atMost("nodeOcclusionShare", code.nodeOcclusionShare, ISLAND_LOOK_CONTRACT.nodeOcclusionMax),
     );
   } else {
