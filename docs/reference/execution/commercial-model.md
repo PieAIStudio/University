@@ -127,6 +127,37 @@ pay for education subscriptions, which is materially lower than a straight FX
 conversion of $19 would suggest. Do not derive it arithmetically. It is a
 second decision, taken when the domestic channel actually exists (below).
 
+### The launch blocker is not the price, it is what the price buys
+
+**Checked 2026-08-27, and this is the finding that matters most on this page.**
+The member plan advertises three lines. Against what the code actually grants:
+
+| Member plan says | Reality |
+| --- | --- |
+| 「AI 读得懂你用中文写的答案，告诉你哪一步想岔了」 | A signed-in free learner already gets this, four times a day |
+| 「卡住时可以一直追问，直到这件事真的弄明白」 | **Not built.** `openTutoring` exists as an entitlement flag with no implementation behind it — no endpoint, no surface |
+| 「换手机、换电脑接着学，进度和复习计划都跟着走」 | The free plan already carries `sync: { included: true }`. The real difference is seats, 1 versus 3 |
+
+So two of the three selling lines describe something the free tier already
+does, and the third describes something that does not exist. **Turning on
+charging in that state is selling nothing**, and the third line as written is
+close to misleading, because cross-device sync is not what the money buys.
+
+Two consequences, and neither is about the number:
+
+1. **Do not flip the switch that actually charges until the member plan has
+   something the free plan does not.** The honest candidate is already in the
+   cost ladder: open tutoring, metered, the tier that lets a learner keep
+   asking until the thing is understood. That is the line worth $19; the other
+   two are not.
+2. **The plan card's copy has to stop advertising what free already includes.**
+   Sync comes off the paid card. Seats can stay, described as seats.
+
+This also answers a question that looks like a pricing question and is not:
+whether four free gradings a day is too generous. It is not too generous —
+it costs ¥1.25 a month and it is the value demonstration. The problem was
+never that free gives too much; it is that paid, today, adds too little.
+
 ### What does not change
 
 Gross margin at this cost base is high in every scenario — a heavy paying
@@ -259,3 +290,5 @@ this compounding is kept.
   filing is the long pole and needs a company entity.
 - **Whether $19 / $149 survives first contact.** It is a hypothesis; the
   measurement to revise it (PostHog conversion events) is already in place.
+- **When to build open tutoring**, which is the real gate on charging at all —
+  see "The launch blocker is not the price" above.
