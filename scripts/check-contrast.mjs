@@ -18,56 +18,78 @@
 import { createRequire } from "node:module";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = resolve(import.meta.dirname, "..");
-const require = createRequire(join(ROOT, "packages", "ui", "package.json"));
-
-const TARGETS = [
-  "packages/ui/src",
-  "apps/university/src",
-];
-
-let kitBin;
-try {
-  kitBin = join(dirname(require.resolve("@pieai/swimmer-ui-kit/package.json")), "bin", "swimmer-ui-check.mjs");
-} catch {
-  console.error("check-contrast: @pieai/swimmer-ui-kit is not installed; nothing checked.");
-  process.exit(1);
+/** The same WCAG sRGB contrast calculation used by SwimmerUIKit's checker. */
+export function relativeLuminance([r, g, b]) {
+  const channel = (value) => {
+    const s = value / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 }
 
-let failed = 0;
-for (const target of TARGETS) {
-  let output = "";
+/** Shared by the repository checker and the runtime DOM-label judge. */
+export function contrastRatio(a, b) {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+function main() {
+  const ROOT = resolve(import.meta.dirname, "..");
+  const require = createRequire(join(ROOT, "packages", "ui", "package.json"));
+
+  const TARGETS = ["packages/ui/src", "apps/university/src"];
+
+  let kitBin;
   try {
-    output = execFileSync("node", [kitBin, join(ROOT, target)], {
-      encoding: "utf8",
-      // Capture the child's stderr too. Its broad raw-colour rule is not
-      // adopted here — this repository has hundreds of literals predating the
-      // kit; the scoped R5 ratchet lives in check-raw-colours.mjs — and letting
-      // that summary through would bury the finding that matters.
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-  } catch (error) {
-    output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+    kitBin = join(
+      dirname(require.resolve("@pieai/swimmer-ui-kit/package.json")),
+      "bin",
+      "swimmer-ui-check.mjs",
+    );
+  } catch {
+    console.error("check-contrast: @pieai/swimmer-ui-kit is not installed; nothing checked.");
+    process.exit(1);
   }
-  // Two of that CLI's three rules are adopted here. Its broad raw-colour rule
-  // remains separate: the R5 nine-file ratchet is explicit about every fixed
-  // material occurrence and every pending migration.
-  const found = output
-    .split("\n")
-    .filter((line) => line.includes("below AA") || line.includes("is not a token"));
-  for (const line of found) console.error(line.replace(`${ROOT}/`, ""));
-  failed += found.length;
+
+  let failed = 0;
+  for (const target of TARGETS) {
+    let output = "";
+    try {
+      output = execFileSync("node", [kitBin, join(ROOT, target)], {
+        encoding: "utf8",
+        // Capture the child's stderr too. Its broad raw-colour rule is not
+        // adopted here — this repository has hundreds of literals predating the
+        // kit; the scoped R5 ratchet lives in check-raw-colours.mjs — and letting
+        // that summary through would bury the finding that matters.
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+    } catch (error) {
+      output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+    }
+    // Two of that CLI's three rules are adopted here. Its broad raw-colour rule
+    // remains separate: the R5 nine-file ratchet is explicit about every fixed
+    // material occurrence and every pending migration.
+    const found = output
+      .split("\n")
+      .filter((line) => line.includes("below AA") || line.includes("is not a token"));
+    for (const line of found) console.error(line.replace(`${ROOT}/`, ""));
+    failed += found.length;
+  }
+
+  if (failed > 0) {
+    console.error(
+      `\ncheck-contrast: ${failed} finding(s).\n` +
+        "--game-ui-accent-contrast is the ink for the accent fill; --game-ui-accent-ink\n" +
+        "is accent-coloured ink for a surface. They are not interchangeable.\n" +
+        "A token this kit does not define never fails at runtime — var() falls back —\n" +
+        "which is exactly why six borders here were a cold blue-grey in a warm app.",
+    );
+    process.exit(1);
+  }
+  console.log(`check-contrast: ok (${TARGETS.length} trees)`);
 }
 
-if (failed > 0) {
-  console.error(
-    `\ncheck-contrast: ${failed} finding(s).\n` +
-      "--game-ui-accent-contrast is the ink for the accent fill; --game-ui-accent-ink\n" +
-      "is accent-coloured ink for a surface. They are not interchangeable.\n" +
-      "A token this kit does not define never fails at runtime — var() falls back —\n" +
-      "which is exactly why six borders here were a cold blue-grey in a warm app.",
-  );
-  process.exit(1);
-}
-console.log(`check-contrast: ok (${TARGETS.length} trees)`);
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

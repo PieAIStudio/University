@@ -63,6 +63,17 @@ pnpm start --lan
 pnpm verify
 ```
 
+要给课程岛画面打分，先生成本地课程包，再运行独立的非阻塞量尺：
+
+```bash
+UNIVERSITY_STUDIES_ROOT=/Users/yuanfei/PieAI/University/apps/local/studies pnpm content
+pnpm e2e:island-look
+```
+
+它只截 WebGL 画布，在桌面和 390×844 手机视口生成四组固定镜头，并把逐项结果写到
+`SHOTS/island-look/metrics.json`。红色指标是现状记录，不会让默认 e2e 或 `pnpm verify`
+失败；PNG 与报告目录已被忽略，不会进入提交。
+
 ## 给 AI 协作者
 
 入口是 `AGENTS.md`（`CLAUDE.md` 是它的符号链接）。不要从本文件开始工作。

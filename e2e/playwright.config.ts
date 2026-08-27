@@ -20,9 +20,16 @@ export default defineConfig({
   expect: { timeout: 20_000 },
   retries: 0,
   outputDir: "../SCRATCH/e2e/test-results",
-  reporter: [
-    ["list"],
-    ["html", { outputFolder: "../SCRATCH/e2e/report", open: "never" }],
+  reporter: [["list"], ["html", { outputFolder: "../SCRATCH/e2e/report", open: "never" }]],
+  projects: [
+    {
+      name: "default",
+      testIgnore: "**/J.island-look.spec.ts",
+    },
+    {
+      name: "island-look",
+      testMatch: "**/J.island-look.spec.ts",
+    },
   ],
   use: {
     locale: "zh-CN",
