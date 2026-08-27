@@ -12,7 +12,7 @@ export function WorldSourceControls({
 }) {
   if (!studyId) return null;
   return (
-    <div className="world-source-controls">
+    <div className="world-source-controls" data-game-ui-tone="glass">
       <UaDashboardButton studyId={studyId} sourceAccess={sourceAccess} />
     </div>
   );

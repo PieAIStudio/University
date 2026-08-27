@@ -225,8 +225,9 @@ button.label:focus-visible {
   The canvas is full-bleed now. Offsetting by the rail width was the old
   three-column habit: the hint sat in the canvas column's bottom-left.
   Centring it on the viewport is the sentence sitting on the map, not on
-  the chrome. Transparent on purpose — a chip here would be a third
-  floating object, and backdrop-filter over live WebGL is the grey-slab
+  the chrome. It uses the kit's official glass HUD surface so the sentence
+  stays readable over bright sea and dark island alike; the surface is opaque
+  rather than frosted because backdrop-filter over live WebGL is the grey-slab
   fault this overlay already refuses.
 
   Pointer-events stay none. A decorative caption that hit-tests would
@@ -242,9 +243,13 @@ button.label:focus-visible {
   display: flex;
   align-items: center;
   margin: 0;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-pill, 999px);
   font-size: 0.76rem;
-  color: var(--game-ui-text-muted, #9aa6bb);
-  background: transparent;
+  color: var(--game-ui-text);
+  background: var(--game-ui-panel);
+  box-shadow: var(--game-ui-shadow-panel);
   pointer-events: none;
   white-space: nowrap;
 }

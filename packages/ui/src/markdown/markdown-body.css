@@ -8,7 +8,7 @@
 .markdown-body h2,
 .markdown-body h3 {
   margin: 1.8em 0 0.7em;
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-ink-heading);
   font-family: var(--game-ui-font-display);
   line-height: 1.2;
 }
@@ -80,7 +80,7 @@
 }
 
 .markdown-body.lesson-prose > h2[data-role="takeaway"] + p {
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-text);
   font-size: 1.26em;
   line-height: 1.6;
 }
@@ -95,8 +95,8 @@
   overflow-wrap: anywhere;
   padding: 0.18em 0.38em;
   border-radius: 5px;
-  color: #f7c889;
-  background: rgb(12 8 6 / 65%);
+  color: var(--game-ui-border-ink);
+  background: color-mix(in srgb, var(--game-ui-ink-deep) 8%, transparent);
 }
 
 .markdown-body pre {
@@ -104,7 +104,7 @@
   padding: 18px;
   border: 1px solid var(--campus-rule);
   border-radius: 12px;
-  background: rgb(12 8 6 / 72%);
+  background: color-mix(in srgb, var(--game-ui-ink-deep) 8%, transparent);
 }
 
 .markdown-body table {

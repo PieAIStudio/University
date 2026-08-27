@@ -218,7 +218,11 @@ export function WorldMapCanvas({
         })}
       </nav>
       {overlay}
-      {hint ? <p className="hint">{hint}</p> : null}
+      {hint ? (
+        <p className="hint" data-game-ui-tone="glass">
+          {hint}
+        </p>
+      ) : null}
       {loading}
     </div>
   );

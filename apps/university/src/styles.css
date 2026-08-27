@@ -13,21 +13,18 @@
   --read-line: 1.9;
   --read-measure: 34em;
 
-  /* Tells the browser this page is dark, so everything it draws *itself* —
-     scrollbars, form controls, the flash before first paint — is drawn dark
-     too. Without it the UA keeps its light defaults and a bright scrollbar sits
-     against a near-black page, which is what a reader actually notices. */
-  color-scheme: dark;
+  /* SwimmerUIKit owns `color-scheme` and follows the theme attribute applied
+     by the shared theme controller, so browser-painted controls follow the
+     learner's current choice as well. */
 
   /* The standard properties, not `::-webkit-scrollbar`: `scrollbar-width` has
      been Baseline since Dec 2024 and `scrollbar-color` since Dec 2025, when
      Safari 18.2 shipped it. The vendor pseudo-elements are the older, non-
      standard path and would need a parallel Firefox rule anyway.
 
-     Thumb against track is 3.4:1, above the 3:1 WCAG 2.1 non-text contrast
-     floor — a scrollbar has to stay findable, which is also why the width is
-     left at `auto` rather than `thin`. */
-  scrollbar-color: rgb(247 211 160 / 32%) rgb(255 245 232 / 6%);
+     Both colours are semantic kit tokens. The thumb has to stay findable,
+     which is also why the width is left at `auto` rather than `thin`. */
+  scrollbar-color: var(--game-ui-border-ink) var(--game-ui-border-subtle);
 }
 
 /* Hovering a scrollable region is when its thumb is about to be aimed at, so
@@ -36,7 +33,7 @@
    every nested scroller on the page. */
 .lesson-rail:hover,
 pre:hover {
-  scrollbar-color: rgb(247 211 160 / 52%) rgb(255 245 232 / 6%);
+  scrollbar-color: var(--game-ui-ink-deep) var(--game-ui-border-subtle);
 }
 
 button,
@@ -1368,7 +1365,7 @@ button.label:focus-visible {
 }
 
 .catalog__gate--idle {
-  background: rgba(116, 128, 154, 0.15);
+  background: color-mix(in srgb, var(--game-ui-text-muted) 15%, transparent);
   color: var(--game-ui-text-muted);
 }
 
@@ -2151,7 +2148,7 @@ button.label:focus-visible {
   max-width: 100%;
   overflow-wrap: anywhere;
   margin-top: 7px;
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-ink-title);
   font-family: var(--game-ui-font-display);
   font-size: clamp(1.9rem, 4vw, 3.8rem);
   line-height: 1;
@@ -2726,6 +2723,21 @@ button.label:focus-visible {
 }
 
 /*
+ * MarkdownContent's night palette remains the base for the glass reader
+ * surfaces, but these controls sit on the page paper. Give their interactive
+ * labels the kit's text-safe accent ink in both themes; the theme decides the
+ * actual colour.
+ */
+.lesson-reader .lesson-detail summary,
+.lesson-reader .markdown-body.lesson-prose > h2[data-role="ask"] {
+  color: var(--game-ui-accent-ink);
+}
+
+.lesson-reader .markdown-body.lesson-prose > h2[data-role="reveal"]::before {
+  background: var(--game-ui-accent-ink);
+}
+
+/*
   Which version of the studied project this lesson is about, and a way to run
   it. Sits under the title with the layer line because that is where the reader
   has just been told the lesson is pinned to a date — the question "so where is
@@ -2866,7 +2878,7 @@ button.label:focus-visible {
 
 .lesson-completion h3 {
   margin: 6px 0 0;
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-ink-heading);
   font-size: 1.18rem;
 }
 
@@ -2930,7 +2942,7 @@ button.label:focus-visible {
 
 .lesson-next__title {
   margin: 10px 0 0;
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-ink-title);
   font-family: var(--game-ui-font-display);
   font-size: clamp(1.32rem, 2.2vw, 1.66rem);
   line-height: 1.28;
@@ -2959,7 +2971,7 @@ button.label:focus-visible {
 }
 
 .exercise-panel > p {
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-text);
   font-size: 1.08rem;
   line-height: 1.65;
 }
@@ -3028,7 +3040,7 @@ button.label:focus-visible {
 
 .lesson-practice > div:first-child h2 {
   margin: 7px 0 8px;
-  color: var(--game-ui-text-on-dark);
+  color: var(--game-ui-ink-title);
   font-size: clamp(1.7rem, 4vw, 2.8rem);
 }
 
@@ -4086,6 +4098,11 @@ blockquote {
 .world-source-controls {
   display: grid;
   gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-panel);
+  background: var(--game-ui-panel);
+  box-shadow: var(--game-ui-shadow-panel);
 }
 
 @media (max-width: 767px) {

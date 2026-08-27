@@ -61,12 +61,14 @@ describe("overlay.css .picked--follow", () => {
 });
 
 describe("overlay.css .hint", () => {
-  it("sits at the horizontal centre, near the bottom, with a transparent ground", () => {
+  it("sits at the horizontal centre, near the bottom, on the official glass HUD surface", () => {
     const hint = ruleBlock(CSS, ".hint");
     expect(hint).toMatch(/left:\s*50%/);
     expect(hint).toMatch(/translateX\(-50%\)/);
     expect(hint).toMatch(/bottom:/);
-    expect(hint).toMatch(/background:\s*transparent/);
+    expect(hint).toMatch(/background:\s*var\(--game-ui-panel\)/);
+    expect(hint).toMatch(/color:\s*var\(--game-ui-text\)/);
+    expect(hint).toMatch(/border:\s*1px solid var\(--game-ui-border-subtle\)/);
     expect(hint).not.toMatch(/left:\s*calc\(var\(--shell/);
   });
 });
