@@ -44,7 +44,7 @@ import { createAoPass } from "./island/ao";
 import { assertWorldGradePipeline, createGradePass } from "./island/grade";
 import { measureIslandLookInBrowser, type IslandLookBrowserReport } from "./island/look-metrics.js";
 import type { IslandLookCameraPose, IslandLookSceneSource } from "./island/island-look.js";
-import { islandLookFrozen } from "./island/island-surface-style-v2.js";
+import { islandLookFrozen } from "./island/island-surface-style.js";
 import { renderTier } from "./sky/tier";
 
 function Pipeline({

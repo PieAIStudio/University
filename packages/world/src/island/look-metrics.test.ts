@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
-import { islandBlueprintV2 } from "./island-blueprint-v2.js";
-import { planIslandDressingV2 } from "./island-dressing-v2.js";
+import { islandBlueprint } from "./island-blueprint.js";
+import { planIslandDressing } from "./island-dressing.js";
 import { islandLookCameraForShot, islandLookDebugFromSearch } from "./island-look.js";
 import { ISLAND_LOOK_CONTRACT } from "./look-contract.js";
 import {
@@ -16,7 +16,7 @@ const STUDY_ID = "turing-pact";
 const COURSE_ID = "foundations-before-zero";
 
 function blueprint(detailSeed = COURSE_ID) {
-  return islandBlueprintV2({
+  return islandBlueprint({
     studyId: STUDY_ID,
     courseId: COURSE_ID,
     lessonCount: 41,
@@ -57,8 +57,8 @@ describe("island look judge", () => {
 
   it("measures the same blueprint and dressing outputs that the renderer consumes", () => {
     const courseBlueprint = blueprint();
-    const coursePlan = planIslandDressingV2(courseBlueprint, "course");
-    const worldPlan = planIslandDressingV2(courseBlueprint, "world");
+    const coursePlan = planIslandDressing(courseBlueprint, "course");
+    const worldPlan = planIslandDressing(courseBlueprint, "world");
     const report = measureIslandCodeMetrics({
       detail: "course",
       blueprints: [courseBlueprint],

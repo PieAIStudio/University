@@ -1,11 +1,11 @@
 /** Deterministic camera and scene-data seams for the DEV-only island judge. */
-import { planIslandDressingV2, type IslandDressingPlanV2 } from "./island-dressing-v2.js";
-import type { IslandBlueprintV2, IslandPointV2 } from "./island-blueprint-v2.js";
+import { planIslandDressing, type IslandDressingPlan } from "./island-dressing.js";
+import type { IslandBlueprint, IslandPoint } from "./island-blueprint.js";
 import {
   ISLAND_LOOK_SHOT_IDS,
   type IslandLookDebugOptions,
   type IslandLookShotId,
-} from "./island-surface-style-v2.js";
+} from "./island-surface-style.js";
 
 export {
   islandLookDebugFromSearch,
@@ -13,7 +13,7 @@ export {
   ISLAND_LOOK_SHOT_IDS,
   type IslandLookDebugOptions,
   type IslandLookShotId,
-} from "./island-surface-style-v2.js";
+} from "./island-surface-style.js";
 export { ISLAND_LOOK_CONTRACT } from "./look-contract.js";
 
 export interface IslandLookCameraPose {
@@ -31,7 +31,7 @@ export interface IslandLookBounds {
   readonly halfX: number;
   readonly halfZ: number;
   /** The serialised outline lets the design shot fit the actual silhouette. */
-  readonly outline?: readonly IslandPointV2[];
+  readonly outline?: readonly IslandPoint[];
 }
 
 export interface IslandLookViewport {
@@ -64,7 +64,7 @@ function cameraOffset(distance: number, azimuth = 0): readonly [number, number, 
   ];
 }
 
-function designOutline(bounds: IslandLookBounds): readonly IslandPointV2[] {
+function designOutline(bounds: IslandLookBounds): readonly IslandPoint[] {
   if (bounds.outline && bounds.outline.length >= 3) return bounds.outline;
   // Tests and small callers may only have extents. An ellipse is a stable
   // fallback that keeps the camera helper deterministic without pretending a
@@ -177,21 +177,21 @@ export function shotIdOf(options: IslandLookDebugOptions): IslandLookShotId | nu
 
 export interface IslandLookSceneSource {
   readonly detail: "course" | "world";
-  readonly blueprints: readonly IslandBlueprintV2[];
-  readonly dressingPlans: readonly IslandDressingPlanV2[];
-  readonly nodePositions: readonly IslandPointV2[];
+  readonly blueprints: readonly IslandBlueprint[];
+  readonly dressingPlans: readonly IslandDressingPlan[];
+  readonly nodePositions: readonly IslandPoint[];
 }
 
 /** Build judge data from the same blueprint and dressing planner as the scene. */
 export function islandLookSceneSource(
   detail: "course" | "world",
-  blueprints: readonly IslandBlueprintV2[],
-  nodePositions: readonly IslandPointV2[] = [],
+  blueprints: readonly IslandBlueprint[],
+  nodePositions: readonly IslandPoint[] = [],
 ): IslandLookSceneSource {
   return {
     detail,
     blueprints,
-    dressingPlans: blueprints.map((blueprint) => planIslandDressingV2(blueprint, detail)),
+    dressingPlans: blueprints.map((blueprint) => planIslandDressing(blueprint, detail)),
     nodePositions,
   };
 }

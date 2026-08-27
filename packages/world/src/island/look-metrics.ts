@@ -1,8 +1,8 @@
 /** Browser and blueprint metrics for the DEV-only island look judge. */
 import * as THREE from "three";
 
-import type { IslandDressingPlacementV2, IslandDressingPlanV2 } from "./island-dressing-v2.js";
-import type { IslandBlueprintV2, IslandPointV2 } from "./island-blueprint-v2.js";
+import type { IslandDressingPlacement, IslandDressingPlan } from "./island-dressing.js";
+import type { IslandBlueprint, IslandPoint } from "./island-blueprint.js";
 import type { IslandLookSceneSource } from "./island-look.js";
 
 export interface IslandLookLayerDistribution {
@@ -39,9 +39,13 @@ export interface IslandLookPixelMetrics {
   readonly lightnessP2: number;
   readonly lightnessP98: number;
   readonly lightnessStdDev: number;
-  readonly subjectMedianLightness: number;
-  readonly backgroundMedianLightness: number;
-  readonly subjectBackgroundLightnessGap: number;
+  readonly landCoverage: number;
+  readonly landMedianLightness: number;
+  readonly landP95Lightness: number;
+  readonly landLightnessRise: number;
+  readonly backgroundLightnessSpread: number;
+  readonly grassLightnessSpread: number;
+  readonly grassLightnessP95: number;
   readonly grassHueCount: number;
   readonly grassHueSpread: number;
   readonly accentArea: number;
@@ -68,6 +72,13 @@ interface ImageRgb {
   readonly blue: number;
 }
 
+const LAND_HUE_MIN = 40;
+const LAND_HUE_MAX = 175;
+const LAND_SATURATION_MIN = 0.1;
+const LAND_WARM_HUE_MAX = 45;
+const LAND_WARM_SATURATION_MIN = 0.12;
+const SKY_HUE_MIN = 185;
+const SKY_HUE_MAX = 265;
 const HSL_GRASS_HUE_MIN = 45;
 const HSL_GRASS_HUE_MAX = 165;
 const HSL_GRASS_SATURATION_MIN = 0.18;
@@ -158,12 +169,12 @@ export function measureIslandImageData(
 ): IslandLookPixelMetrics {
   const stride = Math.max(1, Math.ceil(Math.sqrt((width * height) / IMAGE_SAMPLE_TARGET)));
   const allLightness: number[] = [];
-  const subjectLightness: number[] = [];
+  const landLightness: number[] = [];
   const backgroundLightness: number[] = [];
+  const grassLightness: number[] = [];
   const grassHues: number[] = [];
   let grassHueMinimum = Number.POSITIVE_INFINITY;
   let grassHueMaximum = Number.NEGATIVE_INFINITY;
-  let subjectPixels = 0;
   let accentPixels = 0;
 
   for (let y = 0; y < height; y += stride) {
@@ -171,28 +182,46 @@ export function measureIslandImageData(
       const rgb = imageRgb(data, (y * width + x) * 4);
       const lightness = lightnessLStar(rgb);
       allLightness.push(lightness);
-      const inSubject =
-        x >= width * 0.3 && x < width * 0.7 && y >= height * 0.3 && y < height * 0.7;
-      const inBackgroundRing =
-        x < width * 0.2 || x >= width * 0.8 || y < height * 0.2 || y >= height * 0.8;
-      if (inSubject) {
-        subjectPixels += 1;
-        subjectLightness.push(lightness);
-      }
-      if (inBackgroundRing) backgroundLightness.push(lightness);
-
       const hsl = hslFromSrgb(rgb);
-      if (
+
+      /*
+        Land is segmented by hue, not by where the pixel sits in the frame.
+        A centre crop against an outer ring measures composition: an island
+        that reaches the top of its frame scores as if it had no contrast at
+        all, and an archipelago view scores its own sea against its own sea.
+        Greens through to warm earth are land here; the blue sea and sky are
+        not. The renderer can hand over an exact mask later; this is what the
+        same numbers mean when read off donor art that has no mask.
+      */
+      const isLand =
+        (hsl.hue >= LAND_HUE_MIN &&
+          hsl.hue <= LAND_HUE_MAX &&
+          hsl.saturation >= LAND_SATURATION_MIN) ||
+        (hsl.hue < LAND_WARM_HUE_MAX && hsl.saturation >= LAND_WARM_SATURATION_MIN);
+      if (isLand) landLightness.push(lightness);
+      else backgroundLightness.push(lightness);
+
+      const isGrass =
         hsl.hue >= HSL_GRASS_HUE_MIN &&
         hsl.hue <= HSL_GRASS_HUE_MAX &&
-        hsl.saturation >= HSL_GRASS_SATURATION_MIN
-      ) {
+        hsl.saturation >= HSL_GRASS_SATURATION_MIN;
+      if (isGrass) {
         grassHues.push(hsl.hue);
+        grassLightness.push(lightness);
         grassHueMinimum = Math.min(grassHueMinimum, hsl.hue);
         grassHueMaximum = Math.max(grassHueMaximum, hsl.hue);
       }
+
+      /*
+        Accent is counted inside the land only, and sky blue is excluded even
+        there. Measured across the whole frame it reports the sky, which is how
+        an early version of this read 24.9% on a reference image whose accent
+        colour is nothing like that.
+      */
       if (
-        inSubject &&
+        isLand &&
+        !isGrass &&
+        !(hsl.hue >= SKY_HUE_MIN && hsl.hue <= SKY_HUE_MAX) &&
         hsl.saturation >= HSL_ACCENT_SATURATION_MIN &&
         hsl.lightness >= HSL_ACCENT_LIGHTNESS_MIN &&
         hsl.lightness <= HSL_ACCENT_LIGHTNESS_MAX
@@ -203,13 +232,16 @@ export function measureIslandImageData(
   }
 
   const sortedLightness = [...allLightness].sort((a, b) => a - b);
+  const sortedLand = [...landLightness].sort((a, b) => a - b);
+  const sortedBackground = [...backgroundLightness].sort((a, b) => a - b);
+  const sortedGrass = [...grassLightness].sort((a, b) => a - b);
   const average = allLightness.length
     ? allLightness.reduce((sum, value) => sum + value, 0) / allLightness.length
     : 0;
   const grassBins = new Set(grassHues.map((hue) => Math.floor(hue / HSL_GRASS_HUE_BIN_DEGREES)));
   const grassHueSpread = grassHues.length === 0 ? 0 : grassHueMaximum - grassHueMinimum;
-  const subjectMedian = median(subjectLightness);
-  const backgroundMedian = median(backgroundLightness);
+  const landMedian = quantile(sortedLand, 0.5);
+  const landP95 = quantile(sortedLand, 0.95);
   return {
     colorSpace: {
       lightness: "CIELAB L* D65 from sRGB",
@@ -219,23 +251,34 @@ export function measureIslandImageData(
     lightnessP2: round(quantile(sortedLightness, 0.02)),
     lightnessP98: round(quantile(sortedLightness, 0.98)),
     lightnessStdDev: round(standardDeviation(allLightness, average)),
-    subjectMedianLightness: round(subjectMedian),
-    backgroundMedianLightness: round(backgroundMedian),
-    subjectBackgroundLightnessGap: round(Math.abs(subjectMedian - backgroundMedian)),
+    landCoverage: allLightness.length === 0 ? 0 : round(landLightness.length / allLightness.length),
+    landMedianLightness: round(landMedian),
+    landP95Lightness: round(landP95),
+    /*
+      The pair that cannot be gamed. Speckling dark tufts into the albedo lifts
+      the grass spread without lighting anything; the whole ground's median
+      against its own 95th percentile does not move unless a light does.
+    */
+    landLightnessRise: round(landP95 - landMedian),
+    backgroundLightnessSpread: round(
+      quantile(sortedBackground, 0.95) - quantile(sortedBackground, 0.05),
+    ),
+    grassLightnessSpread: round(quantile(sortedGrass, 0.95) - quantile(sortedGrass, 0.05)),
+    grassLightnessP95: round(quantile(sortedGrass, 0.95)),
     grassHueCount: grassBins.size,
     grassHueSpread: round(grassHueSpread),
-    accentArea: subjectPixels === 0 ? 0 : round(accentPixels / subjectPixels),
+    accentArea: landLightness.length === 0 ? 0 : round(accentPixels / landLightness.length),
   };
 }
 
-function normalizedRadial(blueprint: IslandBlueprintV2, placement: IslandPointV2): number {
+function normalizedRadial(blueprint: IslandBlueprint, placement: IslandPoint): number {
   return Math.hypot(
     placement.x / Math.max(blueprint.bounds.halfX, Number.EPSILON),
     placement.z / Math.max(blueprint.bounds.halfZ, Number.EPSILON),
   );
 }
 
-function placementFootprintRadius(placement: IslandDressingPlacementV2): number {
+function placementFootprintRadius(placement: IslandDressingPlacement): number {
   if (placement.kind === "landmark") return Math.max(0.42, placement.height * 0.22);
   if (placement.kind === "prop") return Math.max(0.2, placement.height * 0.18);
   return Math.max(0.12, placement.height * 0.14);
@@ -273,9 +316,9 @@ function islandLookSceneReady(scene: THREE.Scene, source: IslandLookSceneSource)
 }
 
 function nodeIsConservativelyOccluded(
-  node: IslandPointV2,
-  blueprint: IslandBlueprintV2,
-  plan: IslandDressingPlanV2,
+  node: IslandPoint,
+  blueprint: IslandBlueprint,
+  plan: IslandDressingPlan,
 ): boolean {
   return plan.placements.some((placement) => {
     const distance = Math.hypot(node.x - placement.x, node.z - placement.z);
@@ -493,10 +536,16 @@ export function measureIslandLookInBrowser(args: {
 }
 
 export const ISLAND_LOOK_METRIC_NAMES = [
-  "subjectBackgroundLightnessGap",
+  "landCoverage",
+  "landMedianLightness",
+  "landP95Lightness",
+  "landLightnessRise",
+  "backgroundLightnessSpread",
   "lightnessP2",
   "lightnessP98",
   "lightnessStdDev",
+  "grassLightnessSpread",
+  "grassLightnessP95",
   "grassHueCount",
   "grassHueSpread",
   "accentArea",
