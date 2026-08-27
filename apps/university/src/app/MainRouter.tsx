@@ -71,6 +71,7 @@ interface MainRouterProps {
   readonly avatarRecipe: AvatarRecipe | null;
   readonly avatarSignedIn: boolean;
   readonly onAvatarRecipeChange: (recipe: AvatarRecipe) => void;
+  readonly onWorthwhileProgress?: () => void;
   readonly identityPort: IdentityPort;
   readonly paymentPort: PaymentPort;
   readonly mistakes: readonly Mistake[];
@@ -114,6 +115,7 @@ export function MainRouter({
   avatarRecipe,
   avatarSignedIn,
   onAvatarRecipeChange,
+  onWorthwhileProgress,
   identityPort,
   paymentPort,
   mistakes,
@@ -287,6 +289,7 @@ export function MainRouter({
                 lessonId: view.lessonId,
               })
             }
+            onWorthwhileProgress={onWorthwhileProgress}
           />
         </Suspense>
       ) : null}

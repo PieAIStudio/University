@@ -34,6 +34,7 @@ export function SettlementHost({
   onMap,
   onNext,
   onIncomplete,
+  onWorthwhileProgress,
 }: {
   readonly course: CourseView;
   readonly locator: LessonRef;
@@ -43,6 +44,7 @@ export function SettlementHost({
   readonly onMap: () => void;
   readonly onNext: (unitId: string, lessonId: string) => void;
   readonly onIncomplete: () => void;
+  readonly onWorthwhileProgress?: () => void;
 }) {
   const progress = useSyncExternalStore(subscribe, snapshot);
   const source = useMemo(() => progressSourceOf(progressPort), []);
@@ -165,6 +167,7 @@ export function SettlementHost({
           unitObjective={unit.objective}
           contentRevision={lesson.lesson.contentRevision}
           progress={progressPort}
+          onWorthwhileProgress={onWorthwhileProgress}
         />
       }
       tomorrowDueCount={tomorrowDueCount}

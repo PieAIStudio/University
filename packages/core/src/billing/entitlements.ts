@@ -54,13 +54,15 @@ export interface EntitlementReadModel {
  * Missing env, signed-out sessions, missing grants, and unknown grants all
  * have deterministic behavior: use the configured baseline, keep local
  * learning available, and never pretend that sync is active without both an
- * account and a remote adapter.
+ * authenticated identity and a remote adapter. Anonymous identities may sync
+ * the baseline document; only formal identities can receive a remote grant.
  */
 export function readEntitlements(
   input: EntitlementReadInput,
   config: BillingConfig = BILLING_CONFIG,
 ): EntitlementReadModel {
   const baseline = defaultPlanOf(config);
+  const authenticated = input.identity.kind === "anonymous" || input.identity.kind === "signed_in";
   const signedIn = input.identity.kind === "signed_in";
   const remoteGrant =
     signedIn && input.remoteAvailable && input.grant
@@ -69,7 +71,7 @@ export function readEntitlements(
   const plan = remoteGrant ?? baseline;
   const source: EntitlementSource = remoteGrant ? "remote" : "baseline";
 
-  const reason = !signedIn
+  const reason = !authenticated
     ? "not-signed-in"
     : !input.remoteAvailable
       ? "remote-unavailable"

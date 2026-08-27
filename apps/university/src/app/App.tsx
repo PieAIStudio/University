@@ -121,7 +121,7 @@ export function App() {
     identityPort.status,
     identityPort.status,
   );
-  const avatarSignedIn = identityStatus.kind === "signed_in";
+  const avatarSignedIn = identityStatus.kind === "anonymous" || identityStatus.kind === "signed_in";
   const avatarRecipe = useMemo(
     () => avatarRecipeFromAccount(progress.account.preferences.avatarRecipe),
     [progress.account.preferences.avatarRecipe],
@@ -180,6 +180,9 @@ export function App() {
   const source = useMemo(() => progressSourceOf(progressPort), []);
   const analyticsIdentityPort = useMemo(() => withProductAnalyticsIdentity(identityPort), []);
   const analyticsPaymentPort = useMemo(() => withProductAnalyticsPayment(paymentPort), []);
+  const onWorthwhileProgress = useCallback(() => {
+    void analyticsIdentityPort.signInAnonymously();
+  }, [analyticsIdentityPort]);
   const mistakes = useMemo(() => mistakesOf(progress), [progress]);
   const uncorrectedMistakeCount = useMemo(
     () => mistakes.filter((mistake) => !mistake.corrected).length,
@@ -734,6 +737,7 @@ export function App() {
       avatarRecipe={avatarRecipe}
       avatarSignedIn={avatarSignedIn}
       onAvatarRecipeChange={saveAvatarRecipe}
+      onWorthwhileProgress={onWorthwhileProgress}
       reviewReminderDismissedFor={reviewReminderDismissedFor}
       onDismissReviewReminder={setReviewReminderDismissedFor}
       identityPort={analyticsIdentityPort}
@@ -828,6 +832,7 @@ export function App() {
               setReturnStack([]);
               setView({ kind: "course", studyId: view.studyId, courseId: view.courseId });
             }}
+            onWorthwhileProgress={onWorthwhileProgress}
             onSettled={(doneBefore) => {
               const key = `${view.studyId}/${view.courseId}/${view.lessonId}`;
               setGrewFrom({ key, doneBefore });

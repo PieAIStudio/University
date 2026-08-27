@@ -85,6 +85,7 @@ export function LessonReader({
   onBackToCourse,
   onFollowLink,
   onReturn,
+  onWorthwhileProgress,
   toolbarExtras,
 }: {
   readonly locator: LessonRef;
@@ -108,6 +109,8 @@ export function LessonReader({
   readonly onFollowLink?: ((target: LessonLinkTarget) => void) | undefined;
   /** Present only when a cross-lesson link brought the reader here. */
   readonly onReturn?: (() => void) | undefined;
+  /** Called after this reader creates a learner-owned value worth preserving. */
+  readonly onWorthwhileProgress?: (() => void) | undefined;
   /** Shell-owned tools that sit with the reading controls, not a second toolbar. */
   readonly toolbarExtras?: ReactNode;
 }) {
@@ -607,6 +610,7 @@ export function LessonReader({
               contentRevision={view.lesson.contentRevision}
               progress={progress}
               onSaved={onLearningChanged}
+              onWorthwhileProgress={onWorthwhileProgress}
             />
           ) : null}
           {completed && view.lesson.cards.length > 0 ? (

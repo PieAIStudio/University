@@ -72,6 +72,7 @@ describe("RecapPrompt", () => {
 
   it("writes one answer to the shared progress document and then shows saved state", async () => {
     const onSaved = vi.fn(async () => undefined);
+    const onWorthwhileProgress = vi.fn();
     await act(async () => {
       root.render(
         <RecapPrompt
@@ -80,6 +81,7 @@ describe("RecapPrompt", () => {
           contentRevision={2}
           progress={progress}
           onSaved={onSaved}
+          onWorthwhileProgress={onWorthwhileProgress}
         />,
       );
     });
@@ -101,6 +103,7 @@ describe("RecapPrompt", () => {
       expect.objectContaining({ answer: "我能用自己的话讲清楚。 " }),
     ]);
     expect(onSaved).toHaveBeenCalledTimes(1);
+    expect(onWorthwhileProgress).toHaveBeenCalledTimes(1);
     expect(container.textContent).toContain("复习卡已保存");
     expect(container.textContent).toContain("到期时它会回来，请再讲一遍。");
     expect(container.querySelector("textarea")).toBeNull();

@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Course, Lesson } from "../content/library";
-import { toHash } from "@pieai/university-core";
+import { toHash, type HostExerciseGrade } from "@pieai/university-core";
 import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
 import { lessonKey, progressPort, resetAll } from "../progress/store";
 import { LessonScreen } from "./LessonScreen";
@@ -125,6 +125,15 @@ const LOCATOR = {
   lessonId: LESSON.id,
 };
 
+const PASSING_GRADE: HostExerciseGrade = {
+  passed: true,
+  evaluation: "通过",
+  extensions: [],
+  host: "test",
+  learnerAnswer: "答案",
+  occurredAt: "2026-08-27T00:00:00.000Z",
+};
+
 let container: HTMLDivElement;
 let root: Root;
 
@@ -193,7 +202,7 @@ function stubLessonRects(topsById: Readonly<Record<string, number>>): void {
   };
 }
 
-function renderHost(onBack = vi.fn()) {
+function renderHost(onBack = vi.fn(), onWorthwhileProgress?: () => void) {
   return act(async () => {
     root.render(
       <LessonScreen
@@ -201,6 +210,7 @@ function renderHost(onBack = vi.fn()) {
         course={SHELF_COURSE}
         returnDepth={0}
         onBack={onBack}
+        onWorthwhileProgress={onWorthwhileProgress}
         onSettled={() => undefined}
         onFollowLink={() => undefined}
         onOpenLesson={() => undefined}
@@ -244,6 +254,53 @@ describe("the shared lesson reader", () => {
     expect(container.textContent).toContain("练习通过后");
     expect(container.textContent).toContain("再次确认本次更新");
     expect(container.querySelector(".lesson-practice")).toBeNull();
+  });
+
+  it("does not treat opening an already completed lesson as a new value event", async () => {
+    const key = lessonKey(LOCATOR.studyId, LOCATOR.courseId, LOCATOR.lessonId);
+    progressPort.advanceLesson(key, 1);
+    progressPort.confirmLessonRead(key, LESSON.contentRevision);
+    progressPort.recordExerciseAttempt({
+      commandId: "completed-before-open",
+      locator: LOCATOR,
+      exerciseId: LESSON.exercises[0]!.id,
+      contentRevision: LESSON.contentRevision,
+      answer: "答案",
+      score: 1,
+      maxScore: 1,
+      hostGrade: PASSING_GRADE,
+      occurredAt: PASSING_GRADE.occurredAt,
+    });
+    const onWorthwhileProgress = vi.fn();
+
+    await renderHost(vi.fn(), onWorthwhileProgress);
+
+    expect(onWorthwhileProgress).not.toHaveBeenCalled();
+  });
+
+  it("starts account persistence when a new lesson completion is banked", async () => {
+    const key = lessonKey(LOCATOR.studyId, LOCATOR.courseId, LOCATOR.lessonId);
+    const onWorthwhileProgress = vi.fn();
+
+    await renderHost(vi.fn(), onWorthwhileProgress);
+    expect(onWorthwhileProgress).not.toHaveBeenCalled();
+
+    await act(async () => {
+      progressPort.confirmLessonRead(key, LESSON.contentRevision);
+      progressPort.recordExerciseAttempt({
+        commandId: "completed-during-open",
+        locator: LOCATOR,
+        exerciseId: LESSON.exercises[0]!.id,
+        contentRevision: LESSON.contentRevision,
+        answer: "答案",
+        score: 1,
+        maxScore: 1,
+        hostGrade: PASSING_GRADE,
+        occurredAt: "2026-08-27T00:01:00.000Z",
+      });
+    });
+
+    await vi.waitFor(() => expect(onWorthwhileProgress).toHaveBeenCalledTimes(1));
   });
 
   it("offers the unit capability sentence as a text recap after reading is confirmed", async () => {

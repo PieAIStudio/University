@@ -17,12 +17,14 @@ export function RecapPrompt({
   contentRevision,
   progress,
   onSaved,
+  onWorthwhileProgress,
 }: {
   readonly locator: LessonRef;
   readonly unitObjective: string;
   readonly contentRevision: number;
   readonly progress: ProgressPort;
   readonly onSaved?: () => Promise<void>;
+  readonly onWorthwhileProgress?: () => void;
 }) {
   const document = useSyncExternalStore(progress.subscribe, progress.snapshot);
   const [answer, setAnswer] = useState("");
@@ -46,6 +48,7 @@ export function RecapPrompt({
         answer,
       });
       if (!progress.recapCard(locator)) throw new Error("复习卡没有写入云端缓存");
+      onWorthwhileProgress?.();
       try {
         await onSaved?.();
       } catch {

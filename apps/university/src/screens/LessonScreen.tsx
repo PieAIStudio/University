@@ -59,6 +59,7 @@ export function LessonScreen({
   onOpenLesson,
   onReturn,
   onSettled,
+  onWorthwhileProgress,
 }: {
   readonly locator: LessonRef;
   /** The course's shape, for prev/next. Null while the shelf is still arriving. */
@@ -69,6 +70,8 @@ export function LessonScreen({
   readonly onOpenLesson: (next: LessonRef) => void;
   readonly onReturn: () => void;
   readonly onSettled: (doneBefore: number) => void;
+  /** Starts the optional account session after a new learner value is saved. */
+  readonly onWorthwhileProgress?: () => void;
 }) {
   const progress = useSyncExternalStore(progressPort.subscribe, progressPort.snapshot);
   const [view, setView] = useState<{ readonly key: string; readonly view: LessonView } | null>(
@@ -212,6 +215,7 @@ export function LessonScreen({
     // finished twice: the count does not move, and the subtraction invented a
     // step the map had not made.
     const doneBefore = readCourseProgress(courseShapeOf(course, locator.studyId), source).done;
+    const wasIncomplete = (progress.lessons[lessonKeyOf(locator)]?.progress ?? 0) < 1;
     progressPort.advanceLesson(lessonKeyOf(locator), 1);
     // The drop is the reason to come back tomorrow, so it happens the moment
     // the lesson is passed rather than on some later screen.
@@ -221,8 +225,19 @@ export function LessonScreen({
       locator.lessonId,
       (shown?.lesson.cards ?? []).map((card) => card.id),
     );
+    if (wasIncomplete) onWorthwhileProgress?.();
     onSettled(doneBefore);
-  }, [finished, course, requested, shown, locator, onSettled, source]);
+  }, [
+    finished,
+    course,
+    requested,
+    shown,
+    locator,
+    onSettled,
+    onWorthwhileProgress,
+    progress,
+    source,
+  ]);
 
   const overlaid = useMemo(
     () => (shown ? overlayCloudRecords(shown, locator) : null),

@@ -28,7 +28,7 @@ export function bindProgressToIdentity(
     tail = tail
       .catch(() => undefined)
       .then(() =>
-        status.kind === "signed_in"
+        status.kind === "anonymous" || status.kind === "signed_in"
           ? progress.bindAccount(status.user.id, syncRemote)
           : progress.bindAccount(null, null),
       );

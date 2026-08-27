@@ -9,6 +9,10 @@ const SIGNED_IN = {
   kind: "signed_in",
   user: { id: "learner-1", email: "learner@example.com" },
 } as const;
+const ANONYMOUS = {
+  kind: "anonymous",
+  user: { id: "anonymous-1", email: null },
+} as const;
 
 const CONFIG_WITH_PENDING_PLAN: BillingConfig = {
   ...BILLING_CONFIG,
@@ -66,6 +70,21 @@ describe("readEntitlements", () => {
     expect(model.planId).toBe("free");
     expect(model.source).toBe("baseline");
     expect(model.sync).toEqual({ entitled: true, available: false, reason: "not-signed-in" });
+  });
+
+  it("allows an anonymous session to sync baseline progress but never accepts paid rights", () => {
+    const model = readEntitlements(
+      {
+        identity: ANONYMOUS,
+        remoteAvailable: true,
+        grant: { planId: "studio" },
+      },
+      CONFIG_WITH_PENDING_PLAN,
+    );
+
+    expect(model.planId).toBe("free");
+    expect(model.source).toBe("baseline");
+    expect(model.sync).toEqual({ entitled: true, available: true, reason: "available" });
   });
 
   it("ignores a grant when the remote adapter is unavailable", () => {
