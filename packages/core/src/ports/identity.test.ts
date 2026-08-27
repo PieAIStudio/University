@@ -22,6 +22,7 @@ describe("createIdentityPort", () => {
       signInAnonymously: vi.fn(),
       signInWithEmail: vi.fn(),
       signUpWithEmail: vi.fn(),
+      requestMagicLink: vi.fn(),
       linkEmail: vi.fn(),
       signOut: vi.fn(),
     };
@@ -42,6 +43,7 @@ describe("createIdentityPort", () => {
       signInAnonymously: vi.fn(),
       signInWithEmail: vi.fn(),
       signUpWithEmail: vi.fn(),
+      requestMagicLink: vi.fn(),
       linkEmail: vi.fn(),
       signOut: vi.fn(),
     };
@@ -66,6 +68,7 @@ describe("createIdentityPort", () => {
       signInAnonymously,
       signInWithEmail: vi.fn(),
       signUpWithEmail: vi.fn(),
+      requestMagicLink: vi.fn(),
       linkEmail: vi.fn(),
       signOut: vi.fn(),
     };
@@ -79,6 +82,54 @@ describe("createIdentityPort", () => {
     expect(consoleWarn).not.toHaveBeenCalled();
   });
 
+  it("requests a magic link with the product redirect and stays signed out", async () => {
+    const requestMagicLink = vi.fn().mockResolvedValue(undefined);
+    const auth: IdentityAuth = {
+      getSession: vi.fn().mockResolvedValue(null),
+      getAccessToken: vi.fn().mockResolvedValue(null),
+      onAuthStateChange: vi.fn().mockReturnValue({ unsubscribe() {} }),
+      signInAnonymously: vi.fn(),
+      signInWithEmail: vi.fn(),
+      signUpWithEmail: vi.fn(),
+      requestMagicLink,
+      linkEmail: vi.fn(),
+      signOut: vi.fn(),
+    };
+
+    const port = createIdentityPort(auth);
+    await port.requestMagicLink("ada@example.com", "https://university.pieaistudio.com");
+
+    expect(requestMagicLink).toHaveBeenCalledWith(
+      "ada@example.com",
+      "https://university.pieaistudio.com",
+    );
+    expect(port.status()).toEqual({ kind: "signed_out" });
+  });
+
+  it("does not let an anonymous learner switch to a magic link", async () => {
+    const auth: IdentityAuth = {
+      getSession: vi.fn().mockResolvedValue({
+        user: { id: "anonymous-user", email: null, is_anonymous: true },
+      }),
+      getAccessToken: vi.fn().mockResolvedValue("anonymous-token"),
+      onAuthStateChange: vi.fn().mockReturnValue({ unsubscribe() {} }),
+      signInAnonymously: vi.fn(),
+      signInWithEmail: vi.fn(),
+      signUpWithEmail: vi.fn(),
+      requestMagicLink: vi.fn(),
+      linkEmail: vi.fn(),
+      signOut: vi.fn(),
+    };
+
+    const port = createIdentityPort(auth);
+    await vi.waitFor(() => expect(port.status().kind).toBe("anonymous"));
+
+    await expect(
+      port.requestMagicLink("ada@example.com", "https://university.pieaistudio.com"),
+    ).rejects.toThrow("匿名学习会话请用邮箱和密码绑定");
+    expect(auth.requestMagicLink).not.toHaveBeenCalled();
+  });
+
   it("links the email without changing the anonymous user id", async () => {
     const auth: IdentityAuth = {
       getSession: vi.fn().mockResolvedValue(null),
@@ -89,6 +140,7 @@ describe("createIdentityPort", () => {
       }),
       signInWithEmail: vi.fn(),
       signUpWithEmail: vi.fn(),
+      requestMagicLink: vi.fn(),
       linkEmail: vi.fn().mockResolvedValue({
         user: { id: "same-user", email: "learner@example.com", is_anonymous: false },
       }),
@@ -119,6 +171,7 @@ describe("createIdentityPort", () => {
       }),
       signInWithEmail,
       signUpWithEmail: vi.fn(),
+      requestMagicLink: vi.fn(),
       linkEmail,
       signOut: vi.fn(),
     };

@@ -164,6 +164,7 @@ describe("AccountPanel", () => {
     expect(markup).toContain(ACCOUNT_UNSIGNED_TITLE);
     expect(markup).toContain(ACCOUNT_UNSIGNED_DESCRIPTION);
     expect(markup).toContain(ACCOUNT_SIGN_IN);
+    expect(markup).toContain("免密码登录");
     expect(markup).toContain('type="password"');
     expect(markup).toContain("game-ui-input");
     expect(markup).toContain("game-ui-field");

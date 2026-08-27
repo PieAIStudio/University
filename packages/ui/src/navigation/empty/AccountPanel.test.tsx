@@ -58,4 +58,29 @@ describe("AccountPanel anonymous binding", () => {
     expect(linkEmail).toHaveBeenCalledWith("learner@example.com", "password12");
     expect(signUpWithEmail).not.toHaveBeenCalled();
   });
+
+  it("sends a magic link without asking for a password", async () => {
+    const identity = createMemoryIdentityPort();
+    const requestMagicLink = vi.spyOn(identity, "requestMagicLink");
+
+    await act(async () => root.render(<AccountPanel identity={identity} />));
+    const magicLink = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
+      button.textContent?.includes("免密码登录"),
+    );
+    if (!magicLink) throw new Error("missing magic link tab");
+    await act(async () => magicLink.click());
+
+    expect(container.querySelector('input[name="password"]')).toBeNull();
+    await act(async () => {
+      setInputValue('input[name="email"]', "learner@example.com");
+    });
+    const submit = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+      (button) => button.type === "submit",
+    );
+    if (!submit) throw new Error("missing magic link submit");
+    await act(async () => submit.click());
+
+    expect(requestMagicLink).toHaveBeenCalledWith("learner@example.com", window.location.origin);
+    expect(container.textContent).toContain("登录链接已经发到邮箱");
+  });
 });
