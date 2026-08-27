@@ -142,11 +142,6 @@ function quantile(sorted: readonly number[], share: number): number {
   return sorted[lower]! + (sorted[upper]! - sorted[lower]!) * amount;
 }
 
-function median(values: readonly number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  return quantile(sorted, 0.5);
-}
-
 function standardDeviation(values: readonly number[], average: number): number {
   if (values.length === 0) return 0;
   const variance = values.reduce((sum, value) => sum + (value - average) ** 2, 0) / values.length;
