@@ -72,6 +72,9 @@ export {
 export {
   METERED_GRADING_COST_POWER_UNITS,
   gradingAttemptsFromPowerUnits,
+  gradingAttemptText,
+  freeGradingRemainingText,
+  walletGradingBalanceText,
   createMemoryGradingPort,
   type CoachingPacket,
   type ExerciseAttemptResult,

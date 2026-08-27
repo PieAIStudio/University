@@ -14,8 +14,10 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import {
+  gradingAttemptText,
   gradingAttemptsFromPowerUnits,
   toPath,
+  walletGradingBalanceText,
   type MeteredGradingBalance,
   type MeteredGradingExplanation,
   type MeteredGradingOffer,
@@ -30,16 +32,6 @@ const MAX_PROMPT_BYTES = 8 * 1024;
 const MAX_ANSWER_BYTES = 8 * 1024;
 const MAX_EXERCISE_ID_BYTES = 256;
 const FREE_QUOTA_EXHAUSTED_MESSAGE = "今天的免费 AI 批改用完了，明天恢复。";
-
-function gradingAttemptText(powerUnits: string): string {
-  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
-  return attempts === 0n ? "不够一次了" : `${attempts} 次`;
-}
-
-function walletBalanceText(powerUnits: string): string {
-  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
-  return attempts === 0n ? "你的钱包还不够一次了" : `你的钱包还够 ${attempts} 次`;
-}
 
 const ANONYMOUS_FREE_GRADING_EXPLANATION: MeteredGradingExplanation = {
   kind: "explanation",
@@ -400,8 +392,8 @@ async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response>
       title: freeQuotaExhausted ? "今天的免费 AI 批改用完了" : "这次 AI 批改的次数不够",
       availablePowerUnits: balance.availablePowerUnits,
       whyUnavailable: freeQuotaExhausted
-        ? `${freeQuotaMessage(freeQuote!)} ${walletBalanceText(balance.availablePowerUnits)}，这次付费批改需要 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}。`
-        : `${walletBalanceText(balance.availablePowerUnits)}；这次 AI 批改需要 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}；不充值也不影响你查看下面的免费提示。`,
+        ? `${freeQuotaMessage(freeQuote!)} ${walletGradingBalanceText(balance.availablePowerUnits)}，这次付费批改需要 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}。`
+        : `${walletGradingBalanceText(balance.availablePowerUnits)}；这次 AI 批改需要 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}；不充值也不影响你查看下面的免费提示。`,
       futureSupport: freeQuotaExhausted
         ? "明天的免费 AI 批改次数会恢复；充值后也可以随时重新选择付费批改。"
         : "充值后重新打开这道题，页面会再次读取余额；免费提示始终可用。",
@@ -453,7 +445,7 @@ async function handleWalletGrading(input: HandleWalletGradingInput): Promise<Res
     return jsonResponse(
       {
         error:
-          `AI 批改余额不足：${walletBalanceText(reservation.availablePowerUnits)}，` +
+          `AI 批改余额不足：${walletGradingBalanceText(reservation.availablePowerUnits)}，` +
           `这次需要 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}。请先充值后再试。`,
         code: "insufficient_balance",
         availablePowerUnits: reservation.availablePowerUnits,
@@ -810,6 +802,7 @@ function anonymousFreeGradingOffer(): MeteredGradingOffer {
 function freeQuotaMessage(quote: FreeGradingQuotaQuote): string {
   if (quote.remainingPowerUnits === "0") return FREE_QUOTA_EXHAUSTED_MESSAGE;
   const attempts = gradingAttemptsFromPowerUnits(quote.remainingPowerUnits);
+  if (attempts === null) return FREE_QUOTA_EXHAUSTED_MESSAGE;
   return attempts === 0n
     ? "今天剩余的免费 AI 批改次数还不够一次了，明天恢复。"
     : `今天还剩 ${attempts} 次免费 AI 批改，明天恢复。`;

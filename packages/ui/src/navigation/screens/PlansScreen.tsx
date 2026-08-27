@@ -1,7 +1,7 @@
 import { GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
   createUnavailablePaymentPort,
-  gradingAttemptsFromPowerUnits,
+  walletGradingBalanceText,
   PLANS,
   type EntitlementReadModel,
   type PaymentExplanation,
@@ -129,11 +129,6 @@ function planNameOf(entitlement: EntitlementReadModel): string {
   return PLANS.find((plan) => plan.id === entitlement.planId)?.name ?? entitlement.planId;
 }
 
-function walletBalanceText(powerUnits: string): string {
-  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
-  return attempts === 0n ? "钱包余额还不够一次了" : `钱包还够 ${attempts} 次`;
-}
-
 function PaymentSummary({
   balance,
   entitlement,
@@ -148,10 +143,9 @@ function PaymentSummary({
         {entitlement?.kind === "value" ? planNameOf(entitlement.value) : "登录后读取"}
       </p>
       <p>
-        钱包余额：
         {balance?.kind === "value"
-          ? walletBalanceText(balance.value.availablePowerUnits)
-          : "登录后读取"}
+          ? walletGradingBalanceText(balance.value.availablePowerUnits)
+          : "钱包余额：登录后读取"}
       </p>
     </div>
   );
@@ -264,7 +258,8 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
       <header className="shell-screen__head">
         <h1>{PLANS_TITLE}</h1>
         <p className="shell-screen__lede">
-          课文不设付费墙，所有已发布课程都能学。这里的权益只描述 AI 和同步，会员可按月或按年购买。
+          课文不设付费墙，所有已发布课程都能学。这里的权益只描述 AI
+          和同步；会员按月或按年计价，购买入口接通之后才会真正扣款。
         </p>
       </header>
 

@@ -6,7 +6,7 @@
  * learner already read, never the answer.
  */
 import {
-  gradingAttemptsFromPowerUnits,
+  gradingAttemptText,
   METERED_GRADING_COST_POWER_UNITS,
   gradeDeterministically,
   type AnswerKey,
@@ -23,11 +23,6 @@ import { readJson } from "@pieai/university-ui/api/client.js";
 import { isRepositoryAnchor, peekCourse } from "../../content/library";
 import type { Lesson } from "../../content/library";
 import { normalise } from "../../lesson/grading";
-
-function gradingAttemptText(powerUnits: string): string {
-  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
-  return attempts === 0n ? "不够一次了" : `${attempts} 次`;
-}
 
 /**
  * The lesson an answer is about, found from the address rather than handed in.

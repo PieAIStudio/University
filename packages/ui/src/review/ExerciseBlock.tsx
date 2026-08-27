@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
-  gradingAttemptsFromPowerUnits,
+  freeGradingRemainingText,
+  gradingAttemptText,
   METERED_GRADING_COST_POWER_UNITS,
+  walletGradingBalanceText,
 } from "@pieai/university-core";
 import type {
   CoachingPacket,
@@ -25,21 +27,6 @@ import type { LessonRef, LessonView } from "../view/lesson-view.js";
  * still refreshes immediately.
  */
 const HOST_GRADE_POLL_LIMIT_MS = 10 * 60 * 1000;
-
-function gradingAttemptText(powerUnits: string): string {
-  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
-  return attempts === 0n ? "不够一次了" : `${attempts} 次`;
-}
-
-function freeRemainingText(powerUnits: string): string {
-  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
-  return attempts === 0n ? "今天还不够一次了" : `今天还剩 ${attempts} 次`;
-}
-
-function walletBalanceText(powerUnits: string): string {
-  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
-  return attempts === 0n ? "你的钱包还不够一次了" : `你的钱包还够 ${attempts} 次`;
-}
 
 const METERED_OFFER_READ_FAILURE: MeteredGradingOffer = {
   kind: "unavailable",
@@ -438,7 +425,7 @@ export function ExerciseBlock({
                 <p>
                   这次用掉今天免费 AI 批改里的{" "}
                   <strong>{gradingAttemptText(meteredOffer.costPowerUnits)}</strong>；
-                  <strong>{freeRemainingText(meteredOffer.remainingPowerUnits)}</strong>
+                  <strong>{freeGradingRemainingText(meteredOffer.remainingPowerUnits)}</strong>
                   ，不会扣钱包。
                 </p>
                 <p>
@@ -479,12 +466,12 @@ export function ExerciseBlock({
                   <p>
                     今天的免费 AI 批改用完了，明天恢复。现在使用会从钱包扣除{" "}
                     <strong>{gradingAttemptText(meteredOffer.costPowerUnits)}</strong>；
-                    <strong>{walletBalanceText(meteredOffer.availablePowerUnits)}</strong>。
+                    <strong>{walletGradingBalanceText(meteredOffer.availablePowerUnits)}</strong>。
                   </p>
                 ) : (
                   <p>
                     这次会使用 <strong>{gradingAttemptText(meteredOffer.costPowerUnits)}</strong>；
-                    <strong>{walletBalanceText(meteredOffer.availablePowerUnits)}</strong>。
+                    <strong>{walletGradingBalanceText(meteredOffer.availablePowerUnits)}</strong>。
                   </p>
                 )}
                 <p>
@@ -521,7 +508,7 @@ export function ExerciseBlock({
                     ? "今天的免费 AI 批改用完了，明天恢复。"
                     : `本次 AI 批改会使用 ${gradingAttemptText(meteredOffer.costPowerUnits)}。`}
                   {meteredOffer.availablePowerUnits !== null
-                    ? ` ${walletBalanceText(meteredOffer.availablePowerUnits)}。`
+                    ? ` ${walletGradingBalanceText(meteredOffer.availablePowerUnits)}。`
                     : " 钱包余额暂时读不到。"}
                 </p>
                 <p>{meteredOffer.explanation.whyUnavailable}</p>

@@ -17,12 +17,50 @@ export const METERED_GRADING_COST_POWER_UNITS = "100";
  * Convert internal wallet units into complete learner-facing AI grading
  * attempts. BigInt keeps the floor exact even when a wallet balance is larger
  * than JavaScript's safe integer range.
+ *
+ * A string that is not a plain non-negative integer returns `null` instead of
+ * throwing. These numbers arrive off the wire from the wallet service, and the
+ * three surfaces below call this while rendering: a throw there blanks the
+ * screen in the middle of a lesson, which is the one thing this product is not
+ * allowed to do with a number it could not read. `null` makes the surface say
+ * so instead.
  */
-export function gradingAttemptsFromPowerUnits(powerUnits: string): bigint {
-  if (!/^\d+$/.test(powerUnits)) {
-    throw new Error("The accounting balance must be a non-negative integer.");
-  }
+export function gradingAttemptsFromPowerUnits(powerUnits: string): bigint | null {
+  if (!/^\d+$/.test(powerUnits)) return null;
   return BigInt(powerUnits) / BigInt(METERED_GRADING_COST_POWER_UNITS);
+}
+
+/*
+  The learner only ever hears 「次」. These three sentences are the whole
+  learner-facing vocabulary for the accounting unit, and they live here — beside
+  the conversion — because the exercise page, the membership page, the online
+  grading port and the grading service all say them. Four copies of one sentence
+  is four places for the wording and the rounding to drift apart.
+
+  Each case rewrites the sentence rather than substituting a noun, which is why
+  these are sentences and not one formatter: 「你的钱包还够 0 次」 would be a lie
+  told with correct arithmetic.
+*/
+
+/** What one cost or balance buys, as a bare quantity: 「3 次」. */
+export function gradingAttemptText(powerUnits: string): string {
+  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
+  if (attempts === null) return "暂时读不到";
+  return attempts === 0n ? "不够一次了" : `${attempts} 次`;
+}
+
+/** Today's remaining free AI gradings. */
+export function freeGradingRemainingText(powerUnits: string): string {
+  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
+  if (attempts === null) return "今天还剩多少次暂时读不到";
+  return attempts === 0n ? "今天还不够一次了" : `今天还剩 ${attempts} 次`;
+}
+
+/** The wallet balance, counted in gradings rather than in accounting units. */
+export function walletGradingBalanceText(powerUnits: string): string {
+  const attempts = gradingAttemptsFromPowerUnits(powerUnits);
+  if (attempts === null) return "你的钱包余额暂时读不到";
+  return attempts === 0n ? "你的钱包还不够一次了" : `你的钱包还够 ${attempts} 次`;
 }
 
 /** An AI host's verdict, written back through the CLI or returned immediately. */
