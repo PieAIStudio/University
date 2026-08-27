@@ -155,11 +155,15 @@ describe("FeedbackNote in the rail", () => {
     expect(document.querySelector(".feedback-note__copy")?.textContent).toContain("已收到");
   });
 
-  it("does not claim delivery success or copy on a delivery error", async () => {
+  it("explains that a backend failure was copied to the clipboard", async () => {
     const port: FeedbackPort = {
       transport: "swimmer-backend",
       async submit() {
-        throw new Error("backend gap");
+        return {
+          id: null,
+          submittedAt: "2026-08-27T06:00:00.000Z",
+          transport: "clipboard",
+        };
       },
       async readMine() {
         return [];
@@ -174,7 +178,7 @@ describe("FeedbackNote in the rail", () => {
     const textarea = document.querySelector<HTMLTextAreaElement>(".feedback-note textarea")!;
     const setValue = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!;
     await act(async () => {
-      setValue.call(textarea, "送不出去也要说实话");
+      setValue.call(textarea, "后端坏了但这句话不能丢");
       textarea.dispatchEvent(new Event("input", { bubbles: true }));
     });
     await act(async () => {
@@ -182,8 +186,45 @@ describe("FeedbackNote in the rail", () => {
     });
 
     const panelText = document.querySelector(".feedback-note")?.textContent ?? "";
-    expect(panelText).toContain("反馈暂时没有送出");
-    expect(panelText).toContain("不会放进剪贴板");
+    expect(panelText).toContain("没有送到系统");
+    expect(panelText).toContain("已经复制到剪贴板");
     expect(panelText).not.toContain("已收到 ✓");
+    expect(document.querySelector<HTMLButtonElement>(".feedback-note__copy")?.textContent).toBe(
+      "已复制",
+    );
+  });
+
+  it("keeps the original words when both destinations fail", async () => {
+    const port: FeedbackPort = {
+      transport: "unavailable",
+      async submit() {
+        throw new Error("clipboard unavailable");
+      },
+      async readMine() {
+        return [];
+      },
+    };
+    await act(async () => {
+      root.render(<FeedbackNote shell="在线端" port={port} />);
+    });
+    await act(async () => {
+      dispatchPointerSequence(footer.querySelector("button")!);
+    });
+    const textarea = document.querySelector<HTMLTextAreaElement>(".feedback-note textarea")!;
+    const setValue = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!;
+    await act(async () => {
+      setValue.call(textarea, "完全失败也不能丢字");
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => {
+      document.querySelector<HTMLButtonElement>(".feedback-note__copy")!.click();
+    });
+
+    expect(textarea.value).toBe("完全失败也不能丢字");
+    expect(document.querySelector(".feedback-note")?.textContent).toContain("反馈没有送出");
+    expect(document.querySelector(".feedback-note")?.textContent).toContain("原话还在输入框里");
+    expect(document.querySelector<HTMLButtonElement>(".feedback-note__copy")?.textContent).toBe(
+      "再试一次",
+    );
   });
 });

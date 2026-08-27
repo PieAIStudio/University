@@ -7,10 +7,12 @@ export interface ClipboardFeedbackPortOptions {
   readonly writeText?: (text: string) => Promise<void>;
 }
 
-/** Authoring has no feedback database; its existing AI hand-off is the transport. */
+/** The shared clipboard destination for feedback when the account backend is absent or fails. */
 export function createClipboardFeedbackPort(options: ClipboardFeedbackPortOptions): FeedbackPort {
   const now = options.now ?? (() => new Date());
-  const writeText = options.writeText ?? ((text: string) => navigator.clipboard.writeText(text));
+  const writeText = options.writeText ?? browserClipboardWriter();
+
+  if (!writeText) return createUnavailableClipboardPort();
 
   return {
     transport: "clipboard",
@@ -34,6 +36,49 @@ export function createClipboardFeedbackPort(options: ClipboardFeedbackPortOption
     },
     // A clipboard hand-off has no local history to read. It is not a fake
     // empty database: the author can inspect the copied note in the AI host.
+    async readMine() {
+      return [];
+    },
+  };
+}
+
+/** One ordered destination chain, shared by authoring and delivery. */
+export function createFeedbackPort(options: {
+  readonly backend: FeedbackPort | null;
+  readonly clipboard: FeedbackPort;
+}): FeedbackPort {
+  return {
+    transport: options.backend?.transport ?? options.clipboard.transport,
+    async submit(input) {
+      if (options.backend) {
+        try {
+          return await options.backend.submit(input);
+        } catch {
+          // A missing table, rejected write, or network failure uses the same
+          // clipboard destination; the learner's message must not disappear.
+        }
+      }
+      return options.clipboard.submit(input);
+    },
+    async readMine() {
+      return options.backend ? options.backend.readMine() : [];
+    },
+  };
+}
+
+function browserClipboardWriter(): ((text: string) => Promise<void>) | null {
+  if (typeof navigator === "undefined" || typeof navigator.clipboard?.writeText !== "function") {
+    return null;
+  }
+  return (text) => navigator.clipboard.writeText(text);
+}
+
+function createUnavailableClipboardPort(): FeedbackPort {
+  return {
+    transport: "unavailable",
+    async submit() {
+      throw new Error("当前浏览器不提供复制功能。");
+    },
     async readMine() {
       return [];
     },

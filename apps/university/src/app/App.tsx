@@ -6,7 +6,7 @@
  * happens when a lesson is finished. None of that was forked on purpose — the
  * compositions simply lived in two app files neither app could import — and the
  * drift rate never fell, because there were two places one decision could be
- * made. There is one now, and the differences that survived are four ports in
+ * made. There is one now, and the differences that survived are three ports in
  * `src/ports/`, chosen by a build-time constant.
  *
  * Four surfaces and one rule about which is which: the canvas owns the world

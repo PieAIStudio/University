@@ -109,6 +109,10 @@
   color: var(--game-ui-success);
 }
 
+.feedback-note__meta.is-fallback {
+  color: var(--game-ui-warning);
+}
+
 .feedback-note__meta.is-error {
   color: var(--game-ui-danger-ink);
 }

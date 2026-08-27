@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { lessonRefKey, type FeedbackContext, type FeedbackPort } from "@pieai/university-core";
+import {
+  lessonRefKey,
+  type FeedbackContext,
+  type FeedbackPort,
+  type FeedbackReceipt,
+} from "@pieai/university-core";
 
 import { FeedbackIcon } from "../shell/icons.js";
 
@@ -14,9 +19,10 @@ import { FeedbackIcon } from "../shell/icons.js";
  * are exactly what gets forgotten and exactly what a machine can capture, so
  * the person only has to supply the sentence a machine cannot.
  *
- * The transport is injected. The authoring shell hands this note to its
- * existing clipboard/AI workflow; the delivery shell stores the same shape in
- * SwimmerBackend. The learner should not have to know which one happened.
+ * The transport is injected. Both modes use the same destination chain: try
+ * the account backend first, then hand the same note to the clipboard when
+ * the backend is absent or fails. The learner should not have to know which
+ * destination was available.
  */
 export function feedbackNote(args: {
   readonly shell: string;
@@ -174,13 +180,15 @@ export function FeedbackNote({
 }) {
   const [open, setOpen] = useState(false);
   const [said, setSaid] = useState("");
-  const [state, setState] = useState<"idle" | "busy" | "success" | "hand-copy" | "error">("idle");
+  const [state, setState] = useState<"idle" | "busy" | "success" | "error">("idle");
+  const [receiptTransport, setReceiptTransport] = useState<FeedbackReceipt["transport"] | null>(
+    null,
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const scrolling = useHiddenWhileScrolling();
   const host = useRailFooter();
 
   const submit = useCallback(async () => {
-    const at = new Date();
     const feedbackContext: FeedbackContext = {
       ...context,
       // `feedbackRouteOf` and not `hash || pathname`: lesson addresses are
@@ -188,72 +196,49 @@ export function FeedbackNote({
       route: feedbackRouteOf(window.location),
       viewport: [window.innerWidth, window.innerHeight],
     };
-    const note = feedbackNote({
-      shell,
-      route: feedbackContext.route,
-      viewport: feedbackContext.viewport,
-      theme:
-        document.documentElement.getAttribute("data-game-ui-theme") ??
-        document.querySelector("[data-game-ui-theme]")?.getAttribute("data-game-ui-theme") ??
-        "light",
-      at,
-      said,
-      locator: feedbackContext.locator,
-      contentRevision: feedbackContext.contentRevision,
-      exerciseAttemptCount: feedbackContext.exerciseAttemptCount,
-      signedIn: feedbackContext.signedIn,
-    });
     setState("busy");
+    setReceiptTransport(null);
     setErrorMessage(null);
     try {
-      await port.submit({ message: said, context: feedbackContext });
+      const receipt = await port.submit({ message: said, context: feedbackContext });
+      setReceiptTransport(receipt.transport);
       setState("success");
     } catch {
-      /*
-        A blocked clipboard is recoverable because the full note is in the
-        text area. A delivery failure is different: showing a checkmark or
-        silently copying would spend the learner's trust, so it stays an
-        explicit error and never falls back to the clipboard.
-      */
-      if (port.transport === "clipboard") {
-        setSaid(note);
-        setState("hand-copy");
-        return;
-      }
       setState("error");
-      setErrorMessage(
-        port.transport === "unavailable"
-          ? "反馈暂时没有送出：反馈通道还没有接好。这次不会放进剪贴板。"
-          : "反馈暂时没有送出，请稍后再试。这次不会放进剪贴板。",
-      );
+      setErrorMessage("反馈没有送出。原话还在输入框里，你可以稍后重试或手动复制。");
     }
   }, [context, port, said, shell]);
 
   const isBusy = state === "busy";
   const successMessage =
-    port.transport === "clipboard"
-      ? "已复制到剪贴板。作者可以把整条贴进 AI 对话。"
+    receiptTransport === "clipboard"
+      ? "这次没有送到系统，但已经复制到剪贴板。你可以把整条贴给课程作者。"
       : lessonTitle && context.contentRevision !== null
         ? `收到。这条记在《${lessonTitle}》第 ${context.contentRevision} 版上了。`
         : "收到。这条意见已经记下了。";
   const statusMessage =
-    state === "hand-copy"
-      ? "复制不了剪贴板，整条已经放进上面的框，手动全选复制。"
-      : state === "error"
-        ? errorMessage
-        : state === "success"
-          ? successMessage
-          : "路由、课定位、版本、练习尝试次数、登录状态、视口和时间会自动带上。";
-  const statusClass = state === "error" ? "is-error" : state === "success" ? "is-success" : "";
+    state === "error"
+      ? errorMessage
+      : state === "success"
+        ? successMessage
+        : "路由、课定位、版本、练习尝试次数、登录状态、视口和时间会自动带上。";
+  const statusClass =
+    state === "error"
+      ? "is-error"
+      : state === "success" && receiptTransport === "swimmer-backend"
+        ? "is-success"
+        : state === "success" && receiptTransport === "clipboard"
+          ? "is-fallback"
+          : "";
   const actionLabel =
     state === "busy"
       ? "正在发送…"
       : state === "success"
-        ? port.transport === "clipboard"
-          ? "已复制 ✓"
+        ? receiptTransport === "clipboard"
+          ? "已复制"
           : "已收到 ✓"
-        : port.transport === "clipboard"
-          ? "复制这条"
+        : state === "error"
+          ? "再试一次"
           : "发送意见";
 
   const panel = open ? (
@@ -267,6 +252,7 @@ export function FeedbackNote({
         onChange={(event) => {
           setSaid(event.target.value);
           setState("idle");
+          setReceiptTransport(null);
           setErrorMessage(null);
         }}
       />
@@ -288,6 +274,7 @@ export function FeedbackNote({
           onClick={() => {
             setOpen(false);
             setState("idle");
+            setReceiptTransport(null);
             setErrorMessage(null);
           }}
         >

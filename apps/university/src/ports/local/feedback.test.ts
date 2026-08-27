@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import type { FeedbackSubmission } from "@pieai/university-core";
+import type { FeedbackPort, FeedbackSubmission } from "@pieai/university-core";
 
-import { createClipboardFeedbackPort } from "./feedback";
+import { createClipboardFeedbackPort, createFeedbackPort } from "./feedback";
 
 const INPUT: FeedbackSubmission = {
   message: "作者看这里",
@@ -39,5 +39,26 @@ describe("clipboard feedback port", () => {
     expect(writeText.mock.calls[0]?.[0]).toContain("study/course/unit/lesson");
     expect(writeText.mock.calls[0]?.[0]).toContain("内容版本：7");
     expect(writeText.mock.calls[0]?.[0]).toContain("练习尝试次数：2");
+  });
+
+  it("falls back to the clipboard after a backend write fails without losing the learner's words", async () => {
+    const backendSubmit = vi
+      .fn<FeedbackPort["submit"]>()
+      .mockRejectedValue(new Error("table missing"));
+    const backend: FeedbackPort = {
+      transport: "swimmer-backend",
+      submit: backendSubmit,
+      async readMine() {
+        return [];
+      },
+    };
+    const writeText = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    const clipboard = createClipboardFeedbackPort({ shell: "在线端", writeText });
+    const port = createFeedbackPort({ backend, clipboard });
+
+    await expect(port.submit(INPUT)).resolves.toMatchObject({ transport: "clipboard" });
+    expect(backendSubmit).toHaveBeenCalledWith(INPUT);
+    expect(writeText).toHaveBeenCalledTimes(1);
+    expect(writeText.mock.calls[0]?.[0]).toContain(INPUT.message);
   });
 });
