@@ -25,6 +25,15 @@ export const ISLAND_LOOK_CONTRACT = {
   landLightnessRiseMin: 15,
   /** 背景 L* 跨度：天空和云海不是一块平涂。donor 74.5。 */
   backgroundLightnessSpreadMin: 40,
+  /**
+   * 场景线性亮度的 p95 / p05，**在调色之前**读（`window.measureScene()`）。
+   *
+   * 这是唯一一条调色动不了的指标，因为它读的是 grade 上游。实测现在是 1.77——
+   * 中间 90% 不到一档光圈，也就是说场景本身就没有明暗。这解释了为什么把主光
+   * 从 2.1 加到 6.0 完全无效：强度是乘法，同时放大分子和分母，比值不变。
+   * 一个有太阳有阴影的场景通常在 10:1 以上；4.0 是一个保守的地板。
+   */
+  sceneLinearRangeMin: 4,
   /** 全画面 L* 的 p2 / p98。挤在中间就是「灰蒙蒙」。donor 17.9 / 99.9。 */
   lightnessP2Max: 25,
   lightnessP98Min: 90,

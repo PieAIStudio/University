@@ -531,6 +531,7 @@ export function measureIslandLookInBrowser(args: {
 }
 
 export const ISLAND_LOOK_METRIC_NAMES = [
+  "sceneLinearRange",
   "landCoverage",
   "landMedianLightness",
   "landP95Lightness",

@@ -100,7 +100,10 @@ function informational(metric: string, value: unknown): MetricEntry {
   return { metric, value, threshold: null, pass: true };
 }
 
-function metricsFor(report: IslandLookBrowserReport): readonly MetricEntry[] {
+function metricsFor(
+  report: IslandLookBrowserReport,
+  sceneLinearRange: number | null,
+): readonly MetricEntry[] {
   const pixels = report.pixels;
   const code = report.code;
   const labelRatios = report.domLabelContrastSamples.map((sample) =>
@@ -108,6 +111,7 @@ function metricsFor(report: IslandLookBrowserReport): readonly MetricEntry[] {
   );
   const domLabelContrastMin = labelRatios.length > 0 ? Math.min(...labelRatios) : null;
   const common: MetricEntry[] = [
+    atLeast("sceneLinearRange", sceneLinearRange, ISLAND_LOOK_CONTRACT.sceneLinearRangeMin),
     between(
       "landMedianLightness",
       pixels?.landMedianLightness ?? null,
@@ -206,6 +210,25 @@ function shotUrl(shot: (typeof SHOT_IDS)[number]): string {
 
 async function readLookMetrics(page: Page): Promise<IslandLookBrowserReport | null> {
   return page.evaluate(() => window.__islandLookMetrics?.() ?? null);
+}
+
+/**
+ * The scene's own luminance range, read before the grade sees it.
+ *
+ * `measureScene` is Stage's development helper and it is the only reading here
+ * that grading cannot move, because it samples the linear render target
+ * upstream of the blit. Every pixel metric below it can be pushed around by a
+ * curve; this one only changes when the lighting changes.
+ */
+async function readSceneLinearRange(page: Page): Promise<number | null> {
+  return page.evaluate(async () => {
+    const measure = (globalThis as { measureScene?: () => Promise<unknown> }).measureScene;
+    if (typeof measure !== "function") return null;
+    const report = (await measure()) as { p05?: number; p95?: number } | null;
+    if (!report || typeof report.p05 !== "number" || typeof report.p95 !== "number") return null;
+    if (report.p05 <= 0) return null;
+    return Math.round((report.p95 / report.p05) * 1000) / 1000;
+  });
 }
 
 async function waitForLookReady(page: Page): Promise<void> {
@@ -314,7 +337,8 @@ test.describe("J island look judge · non-blocking measurement", () => {
         await waitForLookReady(page);
         const secondPixelHash = await waitForStableCanvas(page);
         const deterministic = firstPixelHash === secondPixelHash;
-        const metrics = metricsFor(report);
+        const sceneLinearRange = await readSceneLinearRange(page);
+        const metrics = metricsFor(report, sceneLinearRange);
         const run: JudgeRun = {
           shot,
           detail: report.code.detail,
