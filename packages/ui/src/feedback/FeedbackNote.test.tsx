@@ -107,7 +107,10 @@ describe("FeedbackNote in the rail", () => {
         return [];
       },
     };
-    window.location.hash = "#/lesson/study/course/unit/lesson";
+    // A lesson's address is a path now, not a hash. Setting the hash here and
+    // asserting it back is what the note used to do, and it reported "/" for
+    // every lesson in the real app.
+    window.history.replaceState(null, "", "/study/course/unit/lesson");
     Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 });
     Object.defineProperty(window, "innerHeight", { configurable: true, value: 844 });
     await act(async () => {
@@ -145,7 +148,7 @@ describe("FeedbackNote in the rail", () => {
         contentRevision: 3,
         exerciseAttemptCount: 4,
         signedIn: true,
-        route: "#/lesson/study/course/unit/lesson",
+        route: "/study/course/unit/lesson",
         viewport: [390, 844],
       },
     });
