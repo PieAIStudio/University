@@ -22,6 +22,52 @@ function identity() {
 }
 
 describe("createPaymentPort", () => {
+  it("requires a formal account for payment reads and writes while allowing anonymous progress elsewhere", async () => {
+    const identity = createMemoryIdentityPort();
+    await identity.signInAnonymously();
+    const readBalance = vi.fn(async () => BALANCE);
+    const readEntitlement = vi.fn(async () => ({ planId: "free" as const }));
+    const createOrder = vi.fn<NonNullable<PaymentTransport["createOrder"]>>(async (input) => ({
+      ...ORDER,
+      orderId: input.orderId,
+      offerId: input.offerId,
+    }));
+    const getOrderStatus = vi.fn<NonNullable<PaymentTransport["getOrderStatus"]>>(
+      async () => ORDER,
+    );
+    const payment = createPaymentPort({
+      identity,
+      transport: { readBalance, readEntitlement, createOrder, getOrderStatus },
+      orderIdFactory: () => ORDER_ID,
+    });
+
+    await expect(payment.readBalance()).resolves.toMatchObject({
+      kind: "explanation",
+      title: "购买前先绑定邮箱",
+    });
+    await expect(payment.readEntitlements()).resolves.toMatchObject({
+      kind: "explanation",
+      title: "购买前先绑定邮箱",
+    });
+    await expect(payment.refreshEntitlements()).resolves.toMatchObject({
+      kind: "explanation",
+      title: "购买前先绑定邮箱",
+    });
+    await expect(payment.initiatePurchase({ offerId: "paid-entitlement" })).resolves.toMatchObject({
+      kind: "explanation",
+      title: "购买前先绑定邮箱",
+    });
+    await expect(payment.getOrderStatus(ORDER_ID)).resolves.toMatchObject({
+      kind: "explanation",
+      title: "购买前先绑定邮箱",
+    });
+
+    expect(readBalance).not.toHaveBeenCalled();
+    expect(readEntitlement).not.toHaveBeenCalled();
+    expect(createOrder).not.toHaveBeenCalled();
+    expect(getOrderStatus).not.toHaveBeenCalled();
+  });
+
   it("generates a browser order id and coalesces repeated requests for that id", async () => {
     const createOrder = vi.fn<NonNullable<PaymentTransport["createOrder"]>>(async (input) => ({
       ...ORDER,

@@ -93,6 +93,7 @@ export function AccountPanel({ identity }: { readonly identity: IdentityPort }) 
     <UnsignedAccountForm
       identity={identity}
       error={status.kind === "error" ? status.message : null}
+      anonymous={status.kind === "anonymous"}
     />
   );
 }
@@ -100,9 +101,11 @@ export function AccountPanel({ identity }: { readonly identity: IdentityPort }) 
 function UnsignedAccountForm({
   identity,
   error,
+  anonymous,
 }: {
   readonly identity: IdentityPort;
   readonly error: string | null;
+  readonly anonymous: boolean;
 }) {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
@@ -129,13 +132,21 @@ function UnsignedAccountForm({
     }
     setFieldError(null);
     setNotice(null);
-    if (mode === "login") {
-      await identity.signInWithEmail(trimmed, password);
-      return;
-    }
-    const result = await identity.signUpWithEmail(trimmed, password);
-    if (result.confirmationRequired) {
-      setNotice("请去邮箱点开确认信，然后再回来登录。");
+    try {
+      if (mode === "login") {
+        await identity.signInWithEmail(trimmed, password);
+        return;
+      }
+      if (anonymous) {
+        await identity.linkEmail(trimmed, password);
+        return;
+      }
+      const result = await identity.signUpWithEmail(trimmed, password);
+      if (result.confirmationRequired) {
+        setNotice("请去邮箱点开确认信，然后再回来登录。");
+      }
+    } catch (reason: unknown) {
+      setFieldError(reason instanceof Error ? reason.message : "这次操作没有完成，请稍后再试。");
     }
   };
 

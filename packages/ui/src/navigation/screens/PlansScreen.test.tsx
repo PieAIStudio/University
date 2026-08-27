@@ -2,7 +2,7 @@
 
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createMemoryIdentityPort, createPaymentPort } from "@pieai/university-core";
 
@@ -35,6 +35,41 @@ afterEach(async () => {
 });
 
 describe("PlansScreen purchase entry", () => {
+  it("keeps the anonymous purchase CTA visible and points to email binding", async () => {
+    const identity = createMemoryIdentityPort();
+    await identity.signInAnonymously();
+    const createOrder = vi.fn();
+    const payment = createPaymentPort({
+      identity,
+      transport: {
+        readBalance: async () => ({
+          availablePowerUnits: "0",
+          balancePowerUnits: "0",
+          reservedPowerUnits: "0",
+        }),
+        createOrder,
+      },
+      orderIdFactory: () => "00000000-0000-4000-8000-000000000099",
+    });
+
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
+      button.textContent?.includes("查看购买入口"),
+    );
+    if (!cta) throw new Error("missing purchase CTA");
+    expect(cta.disabled).toBe(false);
+
+    await act(async () => {
+      cta.click();
+    });
+
+    const dialog = document.querySelector<HTMLDialogElement>("dialog");
+    expect(dialog?.textContent).toContain("购买前先绑定邮箱");
+    expect(dialog?.textContent).toContain("换设备和退款");
+    expect(dialog?.querySelector('a[href="#/me"]')?.textContent).toContain("去绑定邮箱");
+    expect(createOrder).not.toHaveBeenCalled();
+  });
+
   it("keeps the CTA usable and explains when the account has no channel", async () => {
     const payment = createPaymentPort({
       identity: createMemoryIdentityPort({ id: "user-1", email: "learner@example.com" }),

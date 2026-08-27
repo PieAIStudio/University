@@ -18,7 +18,7 @@ import {
   type EntitlementReadModel,
 } from "../billing/entitlements.js";
 import type { BillingConfig } from "../billing/plans.js";
-import { createIdentityPort, type IdentityPort } from "./identity.js";
+import { createIdentityPort, type IdentityPort, type IdentityStatus } from "./identity.js";
 
 export interface WalletBalance {
   readonly availablePowerUnits: string;
@@ -44,6 +44,10 @@ export interface PaymentExplanation {
   readonly whatItDoes: string;
   readonly whyUnavailable: string;
   readonly futureSupport: string;
+  readonly action?: {
+    readonly label: string;
+    readonly href: string;
+  };
 }
 
 export type PaymentResult<Value> =
@@ -110,6 +114,17 @@ const ACCOUNT_REQUIRED_EXPLANATION: PaymentExplanation = {
   futureSupport: "登录后，这个入口会使用同一个账号发起购买、查询订单，并在成功后刷新权益。",
 };
 
+const ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION: PaymentExplanation = {
+  kind: "explanation",
+  title: "购买前先绑定邮箱",
+  whatItDoes:
+    "钱包、订单和购买后的权益都属于正式账号；绑定邮箱后，服务端才能安全地查到同一份记录。",
+  whyUnavailable:
+    "当前是匿名账号。先加一个邮箱，这样换设备和退款才有依据；本地学习不会因此被挡住。",
+  futureSupport: "去个人档案绑定邮箱；绑定会保留当前身份和进度，再从这里购买。",
+  action: { label: "去绑定邮箱", href: "#/me" },
+};
+
 const BALANCE_UNAVAILABLE_EXPLANATION: PaymentExplanation = {
   kind: "explanation",
   title: "钱包余额暂时读不到",
@@ -143,6 +158,12 @@ const INVALID_ORDER_EXPLANATION: PaymentExplanation = {
   futureSupport: "重新从购买入口发起一次请求，浏览器会生成新的订单号。",
 };
 
+function accountRequiredExplanation(status: IdentityStatus): PaymentExplanation {
+  return status.kind === "anonymous"
+    ? ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION
+    : ACCOUNT_REQUIRED_EXPLANATION;
+}
+
 /**
  * One account-bound coordinator for both browser modes.
  *
@@ -166,6 +187,7 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
 
   const readEntitlementResult = async (): Promise<PaymentResult<EntitlementReadModel>> => {
     const status = options.identity.status();
+    if (status.kind === "anonymous") return ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION;
     let grant: EntitlementGrant | null | undefined;
     if (status.kind === "signed_in" && options.transport?.readEntitlement) {
       try {
@@ -190,8 +212,9 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
 
   return {
     async readBalance() {
+      const status = options.identity.status();
       const userId = userIdOf();
-      if (!userId) return ACCOUNT_REQUIRED_EXPLANATION;
+      if (!userId) return accountRequiredExplanation(status);
       const readBalance = options.transport?.readBalance;
       if (!readBalance) return BALANCE_UNAVAILABLE_EXPLANATION;
       try {
@@ -204,8 +227,9 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
     readEntitlements: readEntitlementResult,
 
     async initiatePurchase(input) {
+      const status = options.identity.status();
       const userId = userIdOf();
-      if (!userId) return ACCOUNT_REQUIRED_EXPLANATION;
+      if (!userId) return accountRequiredExplanation(status);
       const createOrder = options.transport?.createOrder;
       if (!createOrder) return DEFAULT_NO_CHANNEL_EXPLANATION;
 
@@ -243,8 +267,9 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
     async getOrderStatus(orderId) {
       const normalizedOrderId = orderId.trim();
       if (!normalizedOrderId) return INVALID_ORDER_EXPLANATION;
+      const status = options.identity.status();
       const userId = userIdOf();
-      if (!userId) return ACCOUNT_REQUIRED_EXPLANATION;
+      if (!userId) return accountRequiredExplanation(status);
       const getOrderStatus = options.transport?.getOrderStatus;
       if (!getOrderStatus) return ORDER_STATUS_UNAVAILABLE_EXPLANATION;
       try {
