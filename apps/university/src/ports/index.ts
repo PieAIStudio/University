@@ -37,7 +37,7 @@ import { createLocalContentPort } from "./local/content.js";
 import { createLocalGradingPort } from "./local/grading.js";
 import { createLocalReaderPort } from "./local/reader.js";
 import { createLocalSourceAccessPort } from "./local/source-access.js";
-import { createClipboardFeedbackPort, createFeedbackPort } from "./local/feedback.js";
+import { createClipboardFeedbackPort, createFeedbackPort } from "./feedback.js";
 import { createOnlineContentPort } from "./online/content.js";
 import { createOnlineGradingPort } from "./online/grading.js";
 import { createOnlineReaderPort } from "./online/reader.js";

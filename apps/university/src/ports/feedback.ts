@@ -1,3 +1,13 @@
+/**
+ * Feedback transport, and why it is not in `local/` or `online/`.
+ *
+ * Those two directories hold the mode adapters: the pair of answers to a
+ * question the two builds genuinely answer differently. Feedback is not one of
+ * those questions. Both builds run the same ordered chain — the account
+ * backend first, the clipboard when it is absent or fails — so a copy of this
+ * file under `local/` would say the opposite of what the code does, which is
+ * the misreading that put a fourth port in the constitution once already.
+ */
 import type { FeedbackPort, FeedbackReceipt } from "@pieai/university-core";
 import { feedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 
