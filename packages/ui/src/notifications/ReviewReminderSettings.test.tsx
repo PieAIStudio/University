@@ -78,4 +78,16 @@ describe("ReviewReminderSettings", () => {
 
     expect(container.textContent).toContain("已订阅，但服务端还没接上，暂时不会真的收到提醒");
   });
+
+  it("drops the caveat once the subscription has a sender that can reach it", async () => {
+    const reminders = reminder({
+      kind: "subscribed",
+      endpoint: "https://push.example/device",
+      serverConnected: true,
+    });
+    await act(async () => root.render(<ReviewReminderSettings reminders={reminders} />));
+
+    expect(container.textContent).toContain("已订阅。每天最多一条，有卡才提醒。");
+    expect(container.textContent).not.toContain("服务端还没接上");
+  });
 });

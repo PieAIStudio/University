@@ -94,9 +94,9 @@ function fakeSubscription(): FakePushSubscription {
   } as unknown as FakePushSubscription;
 }
 
-function createPort() {
+function createPort(vapidPublicKey?: string) {
   const progress = createProgressPort({ persistence: createMemoryPersistence() });
-  return { port: createBrowserReviewReminderPort({ progress }), progress };
+  return { port: createBrowserReviewReminderPort({ progress, vapidPublicKey }), progress };
 }
 
 describe("browser review reminders", () => {
@@ -123,6 +123,18 @@ describe("browser review reminders", () => {
       serverConnected: false,
     });
     expect(progress.pushSubscriptions()).toHaveLength(1);
+  });
+
+  it("reports a reachable subscription once a sender is configured", async () => {
+    const { port } = createPort("public-vapid-key");
+
+    await port.enable();
+
+    expect(port.snapshot()).toEqual({
+      kind: "subscribed",
+      endpoint: "https://push.example/device",
+      serverConnected: true,
+    });
   });
 
   it("never re-asks after the browser has denied permission", async () => {

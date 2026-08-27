@@ -14,7 +14,7 @@ import type { CourseView, LessonView } from "@pieai/university-ui/view/lesson-vi
 import { settlementSize } from "@pieai/university-world/Maps.js";
 
 import { Settlement, type SettledCard } from "../lesson/Settlement";
-import { contentPort, reviewReminderPort } from "../ports/index";
+import { contentPort, REVIEW_REMINDER_SENDER_CONFIGURED, reviewReminderPort } from "../ports/index";
 import { progressPort, snapshot, subscribe } from "../progress/store";
 
 /**
@@ -132,7 +132,12 @@ export function SettlementHost({
 
   const tomorrowDueCount = progressPort.dueTomorrow();
   const reminderKey = `${locator.studyId}/${course.id}/${summary.id}`;
-  const reminderEligible = grewFrom?.key === reminderKey;
+  // A fresh completion is what makes the moment honest; a configured sender is
+  // what makes it worth anything. Without the second, the pre-prompt would
+  // spend a permission that cannot be asked for twice on a reminder nothing
+  // can send. The settings toggle is unaffected — a learner who goes looking
+  // for it is asking on their own behalf.
+  const reminderEligible = grewFrom?.key === reminderKey && REVIEW_REMINDER_SENDER_CONFIGURED;
 
   // Both counts go through the map's own measurement, so the sentence about the
   // island can only say what the island did. With no observed "before" — a

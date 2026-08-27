@@ -78,7 +78,7 @@ export function createBrowserReviewReminderPort(
       setStatus({
         kind: "subscribed",
         endpoint: record.endpoint,
-        serverConnected: false,
+        serverConnected: senderReaches(record, options.vapidPublicKey),
       });
     } catch (error) {
       setStatus({ kind: "error", message: browserErrorMessage(error) });
@@ -151,7 +151,7 @@ export function createBrowserReviewReminderPort(
       setStatus({
         kind: "subscribed",
         endpoint: record.endpoint,
-        serverConnected: false,
+        serverConnected: senderReaches(record, options.vapidPublicKey),
       });
     } catch (error) {
       setStatus({ kind: "error", message: browserErrorMessage(error) });
@@ -256,6 +256,22 @@ export function createBrowserReviewReminderPort(
     if (typeof navigator.serviceWorker.getRegistration !== "function") return null;
     return (await navigator.serviceWorker.getRegistration(scope)) ?? null;
   }
+}
+
+/**
+ * A subscription is reachable only by the sender it was created against.
+ *
+ * `pushManager.subscribe` succeeds with no `applicationServerKey` at all, and
+ * the subscription it returns is one no VAPID sender can ever push to. The
+ * record keeps the key it was made with precisely so this comparison is
+ * possible instead of guessed.
+ */
+function senderReaches(
+  record: PushSubscriptionRecord,
+  vapidPublicKey: string | undefined,
+): boolean {
+  const configured = vapidPublicKey?.trim();
+  return Boolean(configured) && record.vapidPublicKey === configured;
 }
 
 function subscriptionRecordOf(

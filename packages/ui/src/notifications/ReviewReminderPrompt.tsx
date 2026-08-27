@@ -8,6 +8,12 @@ import type { ReviewReminderPort } from "@pieai/university-core";
  * This component deliberately knows nothing about `Notification`. The port's
  * `enable` method is called only by the 「好」 click, so rendering a settlement
  * or loading a page cannot spend the browser's one useful permission moment.
+ *
+ * It also does not decide whether the moment is worth spending at all. The
+ * host answers that through `eligible`, which now requires a configured push
+ * sender as well as a fresh completion — which is why this card no longer
+ * carries a line apologising that nothing will arrive. When it renders,
+ * something can.
  */
 export function ReviewReminderPrompt({
   dueTomorrow,
@@ -54,9 +60,6 @@ export function ReviewReminderPrompt({
       <p className="review-reminder-prompt__eyebrow">明天的复习</p>
       <h2>明天有 {dueTomorrow} 张复习卡回来</h2>
       <p>要我提醒你吗？每天最多一条，有卡才提醒，随时可以在设置里关掉。</p>
-      <p className="review-reminder-prompt__note">
-        当前服务端还没接上；打开后会先登记这台设备，暂时不会真的收到提醒。
-      </p>
       <div className="review-reminder-prompt__actions">
         <GameButton
           variant="primary"

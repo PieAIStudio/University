@@ -59,7 +59,30 @@ export const sourceAccessPort: SourceAccessPort = AUTHORING
   ? createLocalSourceAccessPort()
   : createOnlineSourceAccessPort();
 
+const vapidPublicKey = import.meta.env.VITE_UNIVERSITY_VAPID_PUBLIC_KEY;
+
 export const reviewReminderPort: ReviewReminderPort = createBrowserReviewReminderPort({
   progress: progressPort,
-  vapidPublicKey: import.meta.env.VITE_UNIVERSITY_VAPID_PUBLIC_KEY,
+  vapidPublicKey,
 });
+
+/**
+ * Whether anything can actually deliver a reminder, and therefore whether the
+ * settlement may spend the browser's permission moment on one.
+ *
+ * The public VAPID key is the honest signal: it is the sender's identity, so
+ * configuring it is the deliberate act of saying a sender exists. Without it
+ * `pushManager.subscribe` still succeeds and still stores a subscription that
+ * nothing in the world can push to.
+ *
+ * That matters because notification permission is a one-shot, effectively
+ * irreversible resource — Chrome remembers a denial and stops asking, and the
+ * settlement is documented never to re-ask after one. Spending it on a
+ * known-zero return, in the minute after someone finishes a lesson, is a bad
+ * trade no matter how honest the copy is. The settings toggle stays available
+ * the whole time: a learner who goes looking is asking on their own behalf.
+ *
+ * When SwimmerBackend grows the sender, set the key and the pre-prompt comes
+ * back on its own. Nothing about it needs rewriting.
+ */
+export const REVIEW_REMINDER_SENDER_CONFIGURED = Boolean(vapidPublicKey?.trim());

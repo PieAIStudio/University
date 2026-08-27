@@ -36,7 +36,3 @@
   color: var(--game-ui-danger-ink) !important;
   font-size: 0.86rem;
 }
-
-.review-reminder-prompt__note {
-  font-size: 0.82rem;
-}

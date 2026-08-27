@@ -41,8 +41,17 @@ export type ReviewReminderStatus =
   | {
       readonly kind: "subscribed";
       readonly endpoint: string;
-      /** The server-side VAPID sender is deliberately not part of this release. */
-      readonly serverConnected: false;
+      /**
+       * Whether a sender exists that can actually push to *this* subscription.
+       *
+       * Not a constant, and not merely "is a key configured". A subscription
+       * created while no public VAPID key was configured is bound to no sender,
+       * so configuring one later does not make that older subscription
+       * reachable. Comparing the key stored on the record with the one in use
+       * is the only way the settings page can tell a learner the truth in both
+       * directions.
+       */
+      readonly serverConnected: boolean;
     }
   | { readonly kind: "pending" }
   | { readonly kind: "error"; readonly message: string };

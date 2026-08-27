@@ -17,6 +17,12 @@ const UNIT_ID = "what-is-an-app";
 const EXERCISE_ID = `${LESSON_ID}-exercise-0`;
 
 vi.mock("../ports/index", () => ({
+  // No sender is configured in this suite, which is also the product's default
+  // and the reason the settlement's reminder pre-prompt stays off: a browser
+  // permission that cannot be asked for twice is not spent on a reminder
+  // nothing can deliver. The two rendered states are covered where the card
+  // itself lives, in ReviewReminderPrompt.test.tsx.
+  REVIEW_REMINDER_SENDER_CONFIGURED: false,
   contentPort: {
     async lesson() {
       return {

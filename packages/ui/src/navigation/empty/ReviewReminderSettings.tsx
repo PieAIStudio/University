@@ -82,7 +82,9 @@ export function ReviewReminderSettings({ reminders }: { readonly reminders: Revi
       ) : null}
       {status.kind === "subscribed" ? (
         <p className="settings-screen__hint">
-          已订阅，但服务端还没接上，暂时不会真的收到提醒。每天最多一条，有卡才提醒。
+          {status.serverConnected
+            ? "已订阅。每天最多一条，有卡才提醒。"
+            : "已订阅，但服务端还没接上，暂时不会真的收到提醒。每天最多一条，有卡才提醒。"}
         </p>
       ) : null}
       {explanation ? (
