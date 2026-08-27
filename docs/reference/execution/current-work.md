@@ -514,6 +514,35 @@ the list below contains the remaining implementation and authority boundaries.
    Reasoning and the rest of the v5 re-read are in
    [V5 Journey Review](./v5-journey-review.md).
 
+19. **The daily free AI allowance now needs an email (2026-08-27).** The
+   grading service had `is_anonymous` on the verified identity and never read
+   it, so an anonymous session drew the same per-account daily allowance —
+   and an anonymous session's only credential is in localStorage, which every
+   browser has a button to erase. The allowance reset for free, and each reset
+   left an auth row nothing cleans up. Anonymous keeps every lesson, every
+   exercise, deterministic grading, saved progress and review cards; it loses
+   only the calls that spend real money. Binding an email keeps the same user
+   id, so the same day's allowance works immediately. Designed in
+   [v5 §10](../player-journey/v5/index.html); orphan cleanup is still a
+   SwimmerBackend gap in [Payment Backend Gap](./payment-backend-gap.md).
+
+20. **Price and payment channel are named (2026-08-27).** US$19/month,
+   US$149/year for the overseas launch, sold through Paddle as merchant of
+   record. The reasoning, the fee arithmetic that makes the annual plan worth
+   more than its discount, and the entity constraint that is still the owner's
+   to answer are in [Commercial Model](./commercial-model.md). The
+   learner-facing unit is 「次」; "power units" is an internal accounting unit
+   and must not reach a screen.
+
+21. **Dictation cleanup is designed, not built (2026-08-27).** University does
+   not do speech recognition — every phone keyboard already dictates, and
+   better. What it will do is repair what dictation broke: the model returns
+   replacements over spans of the learner's own text, never a rewritten
+   paragraph, so "do not rewrite" is a type constraint rather than a request
+   in a prompt. The glossary is the lesson, not the learner. Metered through
+   the existing tier-2 lane, deliberately not a separate SKU. Designed in
+   [v5 §11](../player-journey/v5/index.html).
+
 ## Refactor Program
 
 Structural work is a program, not a change. The audit behind it, the evidence
