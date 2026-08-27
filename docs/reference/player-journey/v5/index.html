@@ -699,7 +699,68 @@ pre b{color:var(--go);font-weight:600}
   这些提交没有改 SwimmerBackend、数据库迁移或部署；回滚不会触碰云端已有数据，只会停止新客户端的匿名建会话 / 绑定 / 支付分流行为。
 </p>
 
-<h2 class="alt"><span class="n">07</span>世界里的小人是学习者本人，路从上往下</h2>
+<h2 class="gold"><span class="n">07</span>主题由学习者选择，默认跟随系统</h2>
+<p class="lede">
+  学习面不应该因为机器换了颜色就像换了一个产品。主题是学习者的账号偏好：第一次打开时跟随设备的浅色 / 深色设置，
+  也可以在设置里明确选择浅色或深色；两种模式显示同一组控件、同一套阅读面和同一条保存路径。
+</p>
+
+<div class="dec">
+  <h4>决定 A · 一个偏好字段，三种请求，不新增浏览器存储</h4>
+  <p>
+    <code>AccountPreferences.theme</code> 只保存学习者的请求：<code>system</code>、<code>light</code> 或 <code>dark</code>。
+    老账号没有这个字段时按 <code>system</code> 读取；选择会写回现有的学习者进度 / 账号文档，沿用同一套离线缓存、outbox、云端合并和逐字段时间戳。
+    不新增 localStorage key，也不另造一个只在设置页活着的主题状态。
+  </p>
+</div>
+
+<div class="dec sky">
+  <h4>决定 B · 应用只给 kit 一个当前主题，颜色仍归 SwimmerUIKit</h4>
+  <p>
+    共享主题控制器把请求解析成 <code>data-game-ui-theme="light"</code> 或 <code>"night"</code>，交给 SwimmerUIKit 的 <code>:root</code> 与 night 覆盖层。
+    <code>color-scheme</code> 也由 kit 随当前属性变成 <code>light</code> / <code>dark</code>，所以浏览器自己画的滚动条、表单控件和首屏过渡不会停在旧主题。
+    University 不复制第二套调色板；kit 缺角色时才回 kit 补角色。
+  </p>
+  <p>
+    「跟随系统」监听 <code>prefers-color-scheme</code> 的变化；明确选择浅色或深色时不被系统抢回去。
+    主题按钮在 authoring / delivery 都存在，因为这是学习者面，不是两个端口的答案。
+  </p>
+</div>
+
+<div class="dec hm">
+  <h4>决定 C · 3D 世界仍是场景，主题不把它涂成另一张地图</h4>
+  <p>
+    世界地图的海、天空、地形和悬浮在场景上的 HUD 玻璃属于 <code>packages/world</code> 的场景 / glass 边界，继续使用它们已有的 donor 与 kit 材料；
+    主题切换负责学习者能读的 2D chrome、路径、正文、代码和结算面。这样明亮主题下地图仍有稳定的景深与可读标签，正文也不会被强行塞进 canvas。
+    视觉验收若发现某个场景控件与当前主题冲突，先判断它是 kit 的主题角色还是场景固定材料，再决定是否向 kit 提案；不在 University 里临时加色。
+  </p>
+</div>
+
+<div class="fig">
+  <div class="t">线框 · 请求、解析、呈现</div>
+<pre>账号文档
+  theme: system | light | dark
+       │
+       ├─ system → prefers-color-scheme
+       ├─ light  → light
+       └─ dark   → night
+                    │
+                    └─ data-game-ui-theme → SwimmerUIKit tokens + color-scheme
+</pre>
+</div>
+
+<h4>怎么验</h4>
+<ul class="chk">
+  <li><b>默认：</b>新文档与旧文档都从 <code>system</code> 开始；系统为暗时首屏是 night，系统为亮时首屏是 light。</li>
+  <li><b>显式选择：</b>设置里能选浅色、深色、跟随系统；选择写入已有账号偏好，刷新、换模式和再次登录后仍保持。</li>
+  <li><b>系统变化：</b>跟随系统时切换 OS 偏好会立即换主题；显式主题不被系统变化覆盖。</li>
+  <li><b>浏览器绘制：</b>当前主题的计算 <code>color-scheme</code> 与页面一致；滚动条、输入控件和首屏没有反色闪烁。</li>
+  <li><b>正文：</b>正文、内联代码、证据代码块、结算、复习卡、设置和个人档案在两种主题都通过对比度检查并由真实浏览器截图复核。</li>
+  <li><b>双模式：</b>9998 / 9999 使用同一学习者组件树；主题只在账号偏好、系统解析和 SwimmerUIKit 主题属性这一条边界上变化。</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="alt"><span class="n">08</span>世界里的小人是学习者本人，路从上往下</h2>
 <p class="lede">
   这次修订来自同一组地图截图：第一座岛看起来像被手工布置过，课程系列的岛屿链和课程路径都把当前关放在画面下方，
   而代表学习者的小人只能露出后脑勺。三件事都发生在学习者面上，所以先在这里定行为，
