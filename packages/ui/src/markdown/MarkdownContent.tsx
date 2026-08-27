@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm";
 
 import type { LanguageLayer, TermRange } from "@pieai/university-core/domain/lesson-marks.js";
 import type { LexiconEntry } from "@pieai/university-core/domain/schemas.js";
+import { shouldInlineEvidence } from "../evidence/display-policy.js";
 import { EvidenceInlineSource } from "../evidence/EvidenceInlineSource.js";
 import { CopyLocatorButton } from "../evidence/CopyLocatorButton.js";
 import type { EvidenceSource } from "../evidence/load-evidence-snippet.js";
@@ -222,6 +223,27 @@ function markdownText(children: ReactNode): string {
     .trim();
 }
 
+function EvidenceAnchorButton({
+  children,
+  location,
+  onOpen,
+}: {
+  readonly children?: ReactNode;
+  readonly location: string;
+  readonly onOpen: (trigger: HTMLElement) => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="evidence-anchor"
+      title={location}
+      onClick={(event) => onOpen(event.currentTarget)}
+    >
+      {children}
+    </button>
+  );
+}
+
 /**
  * Authoring content must not make an unprompted third-party network request.
  * The shell itself may sync learner data to SwimmerBackend, but lesson and
@@ -408,6 +430,14 @@ export function MarkdownContent({
     () => new Map(sections.map((section) => [section.title, section.id])),
     [sections],
   );
+  const inlineEvidenceIndices = useMemo(() => {
+    const indices = new Set<number>();
+    if (!evidenceBasePath) return indices;
+    for (const [index, reference] of (evidence ?? []).entries()) {
+      if (shouldInlineEvidence(reference)) indices.add(index);
+    }
+    return indices;
+  }, [evidence, evidenceBasePath]);
 
   const components = useMemo<Components>(
     () => ({
@@ -469,15 +499,13 @@ export function MarkdownContent({
         const evidenceIndex =
           typeof properties?.evidenceIndex === "number" ? properties.evidenceIndex : null;
         return (
-          <button
-            type="button"
-            className="evidence-anchor"
-            title={location}
-            onClick={(event) =>
+          <EvidenceAnchorButton
+            location={location}
+            onOpen={(trigger) =>
               toggleReference({
                 kind: "evidence",
                 title: location,
-                trigger: event.currentTarget,
+                trigger,
                 sourcePath,
                 lines,
                 evidenceIndex,
@@ -486,7 +514,78 @@ export function MarkdownContent({
             }
           >
             {children}
-          </button>
+          </EvidenceAnchorButton>
+        );
+      },
+      "evidence-inline-source"({
+        node,
+        children: _children,
+      }: {
+        readonly node?: {
+          readonly properties?: {
+            readonly sourcePath?: unknown;
+            readonly lines?: unknown;
+            readonly evidenceIndex?: unknown;
+            readonly broken?: unknown;
+          };
+        };
+        readonly children?: ReactNode;
+      }) {
+        const properties = node?.properties;
+        const broken = properties?.broken !== undefined;
+        const sourcePath = String(properties?.sourcePath ?? "");
+        const lines = String(properties?.lines ?? "");
+        const location = `${sourcePath}:${lines}`;
+        const evidenceIndex =
+          typeof properties?.evidenceIndex === "number" ? properties.evidenceIndex : null;
+        const cited = evidenceIndex !== null ? (evidence?.[evidenceIndex] ?? null) : null;
+        if (
+          !broken &&
+          evidenceIndex !== null &&
+          evidenceBasePath &&
+          cited &&
+          !isUrlEvidenceView(cited) &&
+          shouldInlineEvidence(cited)
+        ) {
+          return (
+            <EvidenceInlineSource
+              index={evidenceIndex}
+              basePath={evidenceBasePath}
+              sourcePath={sourcePath}
+              lines={lines}
+              sourceCommit={cited.sourceCommit}
+              ua={placeTellsThemApart ? (cited.ua ?? null) : null}
+              onOpenEvidence={onOpenEvidence}
+            />
+          );
+        }
+        if (broken) {
+          return (
+            <span
+              className="evidence-anchor evidence-anchor--broken"
+              title="这个位置不在本课引用的证据范围内"
+            >
+              {_children}
+            </span>
+          );
+        }
+        return (
+          <EvidenceAnchorButton
+            location={location}
+            onOpen={(trigger) =>
+              toggleReference({
+                kind: "evidence",
+                title: location,
+                trigger,
+                sourcePath,
+                lines,
+                evidenceIndex,
+                resolved: true,
+              })
+            }
+          >
+            {_children}
+          </EvidenceAnchorButton>
         );
       },
       "lesson-link"({
@@ -675,6 +774,8 @@ export function MarkdownContent({
       evidenceBasePath,
       evidence,
       onOpenEvidence,
+      inlineEvidenceIndices,
+      placeTellsThemApart,
       assetsById,
       sectionsByTitle,
       detailMode,
@@ -691,13 +792,13 @@ export function MarkdownContent({
       list.push([remarkLessonLinks, { ranges: lessonLinks }]);
     }
     if (evidenceAnchors && evidenceAnchors.length > 0) {
-      list.push([remarkEvidenceAnchors, { ranges: evidenceAnchors }]);
+      list.push([remarkEvidenceAnchors, { ranges: evidenceAnchors, inlineEvidenceIndices }]);
     }
     if (termAnchors && termAnchors.length > 0) {
       list.push([remarkTermLinks, { ranges: termAnchors }]);
     }
     return list;
-  }, [active, lessonLinks, evidenceAnchors, termAnchors]);
+  }, [active, lessonLinks, evidenceAnchors, inlineEvidenceIndices, termAnchors]);
 
   let fullPage: (() => void) | undefined;
   if (openReference?.kind === "lesson" && openReference.target && onFollowLink) {
@@ -801,6 +902,7 @@ function ReferenceBody({
         basePath={evidenceBasePath}
         sourcePath={reference.sourcePath}
         lines={reference.lines}
+        sourceCommit={cited && !isUrlEvidenceView(cited) ? cited.sourceCommit : undefined}
         ua={placeTellsThemApart ? (cited?.ua ?? null) : null}
       />
     );

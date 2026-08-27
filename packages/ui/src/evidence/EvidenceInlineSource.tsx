@@ -21,9 +21,10 @@ function parseLineRange(lines: string): { readonly start: number; readonly end: 
 }
 
 /**
- * Renders a resolved `[[evidence:…]]` token as the real pinned source, inline
- * in the lesson body. The rail keeps its own chip/expand behaviour; this is
- * only for the in-prose anchor.
+ * Renders a resolved `[[evidence:…]]` token as the real pinned source. The
+ * lesson body uses it for short citations; the reference panel also reuses it
+ * after a reader opens a longer citation. The rail keeps its own chip/expand
+ * behaviour.
  */
 export function EvidenceInlineSource({
   index,
@@ -31,6 +32,7 @@ export function EvidenceInlineSource({
   sourcePath,
   lines,
   ua,
+  sourceCommit,
   onOpenEvidence,
 }: {
   readonly index: number;
@@ -38,6 +40,8 @@ export function EvidenceInlineSource({
   readonly sourcePath: string;
   readonly lines: string;
   readonly ua?: EvidenceUaView | null;
+  /** The manifest pin is visible before the snippet request resolves. */
+  readonly sourceCommit?: string;
   readonly onOpenEvidence?: (index: number, trigger: HTMLElement) => void;
 }) {
   const triggerId = useId();
@@ -73,6 +77,7 @@ export function EvidenceInlineSource({
   const displayEnd = snippet?.highlightEndLine ?? snippet?.endLine ?? cited.end;
   const lineLabel = formatLineRange(displayStart, displayEnd);
   const pathLabel = sourcePath || snippet?.sourcePath || "源码";
+  const commit = sourceCommit ?? snippet?.sourceCommit;
   const estimatedLines = Math.max(1, cited.end - cited.start + 1);
   // Reserve roughly cited-line height plus a little context so arrival does not
   // shove the rest of the lesson. Context is approximate; the real snippet may
@@ -92,6 +97,18 @@ export function EvidenceInlineSource({
           <span className="evidence-inline-source__lines" aria-hidden="true">
             · {lineLabel}
           </span>
+          {snippet?.language ? (
+            <span className="evidence-inline-source__language">· {snippet.language}</span>
+          ) : null}
+          {commit ? (
+            <span
+              className="evidence-inline-source__commit"
+              title={`固定提交 ${commit}`}
+              data-source-commit={commit}
+            >
+              · 固定提交 <code>{commit.slice(0, 8)}</code>
+            </span>
+          ) : null}
         </span>
         {onOpenEvidence ? (
           <button

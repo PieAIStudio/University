@@ -87,15 +87,16 @@ pre b{color:var(--go);font-weight:600}
 <div class="wrap">
 
 <header class="top">
-  <p class="eyebrow">Player Journey · V5 · 2026-08-26</p>
+  <p class="eyebrow">Player Journey · V5 · 2026-08-27</p>
   <h1>产品挑的词可以，<br>学习者说的话不行</h1>
   <p class="tagline">
     V4 定下了地图、双模式和共享阅读器；当前执行记录又把「讲一遍」分成作者知识笔记与学习者复述卡。V5 只把其中一条还会被误读的边界钉牢：
     <b>语音输出已经定了，语音输入仍然开放。</b>这不是重画世界地图，也不是给两个模式再加一个差异。
+    本次 amendment 再把真实源码引文的可见性钉牢：短引文贴在正文旁，长引文留在芯片和侧栏。
   </p>
   <p class="supersede">
     <b>承接</b> <a href="../v4/index.html">V4</a>：V4 没有被本文推翻的地图、组件、商业和双模式决定继续有效。
-    <b>本稿新增</b> 读完与答对分开、学习者复述进 FSRS、TTS 与 ASR 的边界。<b>读法</b> 先看裁决，再看为什么，最后看怎么验。
+    <b>本稿新增</b> 读完与答对分开、学习者复述进 FSRS、TTS / ASR 的边界，以及源码证据按长度选择呈现形状。<b>读法</b> 先看裁决，再看为什么，最后看怎么验。
   </p>
 </header>
 
@@ -112,8 +113,8 @@ pre b{color:var(--go);font-weight:600}
 <!-- ═══════════════════════════════════════════ -->
 <h2 class="warn"><span class="n">00</span>这一版到底改什么</h2>
 <p class="lede">
-  V4 的大部分决定已经是产品骨架，不需要因为语音再开一套架构。V5 只处理一条用户会实际遇到的路径：
-  读一节课、答练习、用自己的话复述，以及想不想把这段话说出来。
+  V4 的大部分决定已经是产品骨架，不需要因为语音或证据呈现再开一套架构。V5 处理两条用户会实际遇到的路径：
+  读一节课、答练习、用自己的话复述，以及想不想把这段话说出来；读到真实源码时，证据是否应该直接可见。
 </p>
 
 <div class="tw">
@@ -126,9 +127,56 @@ pre b{color:var(--go);font-weight:600}
 <tr><td>可读文字在 DOM，3D 只负责世界、路径和反馈</td><td>TTS 四档已定；学习者口述的 ASR 仍是开放决定</td></tr>
 <tr><td>课程内容不设付费墙；AI 按既定成本层级走端口</td><td>打开 TTS 不等于同意上传学习者的声音</td></tr>
 <tr><td>tier-1 确定性判题先在浏览器免费完成</td><td>只有 tier-1 <code>undecided</code> 的练习答案，才在明确提交后进入带额度的 tier-2 服务；每日免费额度有余量时先用它，不提示钱包扣费</td></tr>
+<tr><td>证据是学习者读课文时的真实源码，不是藏起来的附录</td><td>引用范围 ≤16 行直接在正文旁展开；长范围、整文件和公共网页保留芯片与侧栏</td></tr>
 </tbody>
 </table>
 </div>
+
+<div class="dec sky">
+  <h4>裁决 C · 引文就该看得见，长源码才收进侧栏</h4>
+  <p>
+    产品卖点是「你正在读真实项目的代码」。所以短引用不能先变成一个要不要点击的决定：仓库行号范围不超过
+    <code>INLINE_EVIDENCE_MAX_LINES = 16</code> 时，源码、行号、语法高亮、语言和固定提交直接贴在引用它的正文旁。
+    这条规则在 <code>packages/ui/src/evidence/display-policy.ts</code> 只有一个权威住处。
+  </p>
+  <p>
+    16 不是把所有代码塞进正文的许可，而是阅读节奏的边界：当前 1,597 条仓库行号引用的中位数是 9 行，P75 是
+    17 行；第 17 行起进入最长四分之一，读者已经从一句话切换到一块代码。更长的引用、整文件引用和公共网页引用继续走原有芯片、reference panel 与完整源码查看器。
+  </p>
+  <ul class="chk">
+    <li><b>同一学习者面：</b>authoring / delivery 都渲染同一个内联组件与同一个侧栏回退，模式只更换端口。</li>
+    <li><b>可读性：</b>源码仍是 DOM 文本，保留行号与高亮；手机上代码块自己横向滚动，页面不横向溢出。</li>
+    <li><b>原有路径：</b>复制定位、跳完整文件、固定提交和 <code>EvidenceRail</code> / <code>EvidenceSourceSheet</code> 不因内联而消失。</li>
+  </ul>
+</div>
+
+<h3>数据审计 · 先统计，再定阈值</h3>
+<p>
+  2026-08-27 先扫描发布包中的课程 JSON，只统计有仓库路径和起止行号的 1,597 条 evidence anchor；100 条公共网页引文没有行数，不能混入这个分布。
+  这里的行数是 <code>lineEnd - lineStart + 1</code>，不把阅读器为了上下文而加载的相邻行算进阈值。
+</p>
+<div class="tw">
+<table>
+<thead><tr><th>引用行数</th><th>条数</th><th>占 1,597 条</th><th>呈现</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>153</td><td>9.6%</td><td>内联</td></tr>
+<tr><td>2</td><td>76</td><td>4.8%</td><td>内联</td></tr>
+<tr><td>3</td><td>111</td><td>7.0%</td><td>内联</td></tr>
+<tr><td>4</td><td>99</td><td>6.2%</td><td>内联</td></tr>
+<tr><td>5–8</td><td>351</td><td>22.0%</td><td>内联</td></tr>
+<tr><td>9–16</td><td>403</td><td>25.2%</td><td>内联</td></tr>
+<tr><td>17–32</td><td>315</td><td>19.7%</td><td>芯片 + 侧栏</td></tr>
+<tr><td>33–64</td><td>74</td><td>4.6%</td><td>芯片 + 侧栏</td></tr>
+<tr><td>65–104</td><td>15</td><td>0.9%</td><td>芯片 + 侧栏</td></tr>
+<tr><td>105+</td><td>0</td><td>0.0%</td><td>—</td></tr>
+</tbody>
+</table>
+</div>
+<p>
+  分位点是：最小 1、P10 2、P25 4、中位数 9、P75 17、P90 27、P95 35、最大 104。
+  因此把 <code>INLINE_EVIDENCE_MAX_LINES</code> 定为 16：它是 P75=17 之前的最后一个完整行数，恰好让 1,193 条（74.7%）短引文直接可见，把 404 条（25.3%）较长引文留给侧栏。
+  这不是魔法数字；分布变化到影响阅读节奏时，重新跑同一审计并改这一个常量。
+</p>
 
 <div class="dec sky">
   <h4>裁决 B · 练习的 tier-2 是窄例外，不是「学习者文字自动出网」</h4>
@@ -409,6 +457,7 @@ pre b{color:var(--go);font-weight:600}
   <li><b>单独设计 ASR 选择加入。</b>先做载荷、目的地、处理位置、保存和删除的决定；决定前不接麦克风，不把「开放」写成已上线。</li>
   <li><b>加入计量 tier-2。</b>仍只通过 <code>GradingPort</code>；先过免费 tier-1，服务端验证 token 后按账号和 UTC 自然日读取并原子 reserve 每日免费额度，走 structured output 后 commit/refund；额度用完安静回到 tier-1 并说明明日恢复，钱包只有在学习者另选付费时才 reserve，任何情况下都不隐藏入口或把它禁用。</li>
   <li><b>双模式逐屏对齐。</b>本地与交付模式共享学习者面、课后提示、文字输入、复习卡和 TTS 设置；AI 来源、课文材料来源、以及能否触达课文背后的源码仓库，分别留在 <code>GradingPort</code>、<code>ContentPort</code>/<code>ReaderPort</code>、<code>SourceAccessPort</code>。能力缺席时照常显示入口并解释原因与未来支持路径。</li>
+  <li><b>按证据长度呈现。</b>短仓库引文在正文中直接展开；长引文保留芯片、reference panel 和 full-source sheet。切分由共享策略常量决定，不能在两个模式各写一套。</li>
 </ol>
 
 <h3>完成线</h3>
@@ -421,10 +470,55 @@ pre b{color:var(--go);font-weight:600}
 <tr><td>TTS</td><td>四档设置真实可见；自动仍是 <code>auto</code> 请求；在线 TTS 只收到产品单词</td></tr>
 <tr><td>ASR</td><td>当前不默认收音；未来若打开，必须另有选择加入和数据生命周期说明</td></tr>
 <tr><td>tier-2 批改</td><td>tier-1 判不出的练习才请求服务；每日免费额度内不动钱包，耗尽后静默回 tier-1 并说明明日恢复；钱包只在明确付费选择后由服务端 reserve，模型失败有 refund，重复 command 不重复消耗</td></tr>
+<tr><td>源码证据</td><td>≤16 行的仓库引文默认可见；>16 行、整文件和 URL 引用仍可打开但不淹没正文；两模式和手机都保留同一条路径</td></tr>
 <tr><td>两模式</td><td>同一棵组件树、同一份学习者数据、同一套可见行为；不因为「本机」两个字复制一份功能</td></tr>
 </tbody>
 </table>
 </div>
+
+<h3>真实浏览器验收 · 2026-08-27</h3>
+<p>
+  未运行 <code>pnpm e2e</code>（按任务要求）。用真实浏览器分别打开同一条 authoring / delivery 学习路线：短引文取
+  <code>agent-member-equality</code>，长引文取 <code>mention-becomes-queue</code> 的
+  <code>crates/buzz-acp/src/lib.rs:2476-2505</code>。桌面截图保留各自当前浏览器窗口尺寸；手机截图用 390×844 视口。
+  以下文件都在 <code>SCRATCH/</code>，是验收证据，不进入提交。
+</p>
+<div class="tw">
+<table>
+<thead><tr><th>模式</th><th>内联 · 桌面</th><th>内联 · 手机</th><th>长引文侧栏 · 桌面</th><th>长引文侧栏 · 手机</th></tr></thead>
+<tbody>
+<tr>
+  <td>delivery</td>
+  <td><code>/Users/yuanfei/PieAI/University-wt-inline/SCRATCH/inline-evidence/delivery-desktop-short-inline.jpg</code></td>
+  <td><code>/Users/yuanfei/PieAI/University-wt-inline/SCRATCH/inline-evidence/delivery-mobile-short-inline.jpg</code></td>
+  <td><code>/Users/yuanfei/PieAI/University-wt-inline/SCRATCH/inline-evidence/delivery-desktop-long-side-panel.jpg</code></td>
+  <td><code>/Users/yuanfei/PieAI/University-wt-inline/SCRATCH/inline-evidence/delivery-mobile-long-side-panel.jpg</code></td>
+</tr>
+<tr>
+  <td>authoring</td>
+  <td><code>/Users/yuanfei/PieAI/University-wt-inline/SCRATCH/inline-evidence/authoring-desktop-short-inline.jpg</code></td>
+  <td><code>/Users/yuanfei/PieAI/University-wt-inline/SCRATCH/inline-evidence/authoring-mobile-short-inline.jpg</code></td>
+  <td><code>/Users/yuanfei/PieAI/University-wt-inline/SCRATCH/inline-evidence/authoring-desktop-long-side-panel.jpg</code></td>
+  <td><code>/Users/yuanfei/PieAI/University-wt-inline/SCRATCH/inline-evidence/authoring-mobile-long-side-panel.jpg</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul class="chk">
+  <li><b>分流：</b>两模式的短课文都显示 3 个内联源码块、0 个证据芯片；混合课文都显示 1 个内联源码块、2 个长引用芯片。</li>
+  <li><b>DOM 与无障碍：</b>源码在 <code>pre &gt; code &gt; span</code> 的 DOM 文本中，行号有语义标签，源码区域可聚焦和选中；没有把代码画进 canvas。</li>
+  <li><b>手机滚动：</b>两个模式下首个内联代码块均为 <code>scrollWidth=2,927</code>、<code>clientWidth=356</code>、<code>overflow-x=auto</code>；真实横向滚动后 <code>scrollLeft=572</code>，页面根宽仍等于 390，未产生整页横向滚动条。</li>
+  <li><b>侧栏能力：</b>长引文芯片仍打开共享 reference panel；“查看完整页”继续进入 <code>EvidenceSourceSheet</code>，其中固定提交、引用范围、源码搜索、复制源码、复制定位、上一条 / 下一条和关闭都在。</li>
+  <li><b>上一轮取舍：</b>8 个工作树改动文件全部保留：策略常量与测试、remark 分流与段落拆分、共享 Markdown 接线、内联 DOM 组件与 CSS、以及 v5 设计记录。没有发现需要丢弃的错误实现；旧的忽略截图虽保留在工作区，但因实际字节是 JPEG 而扩展名写成 PNG，本轮重新生成并只在报告中引用新的 <code>.jpg</code> 证据。<code>imported.json</code> 没有改动，<code>packages/ui</code> 仍为零 <code>three</code>。</li>
+</ul>
+
+<h3>回滚路径</h3>
+<p>
+  本轮不提交、不合并、不 push，所以回滚点仍是当前 <code>HEAD</code>；先用 <code>git diff</code> 检查，再恢复这 6 个已跟踪文件：
+  <code>docs/reference/player-journey/v5/index.html</code>、<code>packages/ui/src/evidence/EvidenceInlineSource.tsx</code>、<code>packages/ui/src/evidence/evidence-inline-source.css</code>、<code>packages/ui/src/markdown/MarkdownContent.tsx</code>、<code>packages/ui/src/markdown/MarkdownContent.test.tsx</code>、<code>packages/ui/src/markdown/remark-lesson-links.ts</code>；同时删除本轮新增的
+  <code>packages/ui/src/evidence/display-policy.ts</code> 和 <code>display-policy.test.ts</code>。截图在 <code>SCRATCH/</code>，删除它们不会影响源码回滚。
+  本轮未找到任务所称的 <code>brief-inline.md</code>，因此实现和验收依据是用户重述与仓库现有的 v5 / 端口契约。
+</p>
 
 <div class="fig">
   <div class="t">回到完整旅程</div>
@@ -437,7 +531,7 @@ pre b{color:var(--go);font-weight:600}
 </div>
 
 <div class="foot">
-  V5 · 2026-08-27 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界、每日免费 AI 批改额度<br>
+  V5 · 2026-08-27 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界、每日免费 AI 批改额度、源码证据呈现边界<br>
   事实依据：<code>packages/core/src/progress/contract.ts</code> ·
   <code>packages/ui/src/language/speech.ts</code> ·
   <code>packages/core/src/ports/account-data.ts</code> ·

@@ -9,6 +9,7 @@ import {
   highlightEvidenceCode,
   type LessonAssetView,
   type LessonSectionView,
+  type EvidenceView,
 } from "../view/lesson-view.js";
 import { isLocalUrl, MarkdownContent } from "./MarkdownContent.js";
 
@@ -76,6 +77,18 @@ const diagramAsset: LessonAssetView = {
 };
 
 const section: LessonSectionView = { id: "foundation", title: "Foundation" };
+
+function repositoryEvidence(lineStart: number | null, lineEnd: number | null): EvidenceView {
+  return {
+    kind: "repository",
+    sourcePath: "src/app.ts",
+    lineStart,
+    lineEnd,
+    sourceCommit: "a".repeat(40),
+    nodeIds: [],
+    note: null,
+  };
+}
 
 /**
  * `vi.waitFor` with a budget that is about the assertion rather than about the
@@ -376,6 +389,133 @@ describe("local-only link and image policy", () => {
       detailMode: "all",
     });
     expect(container.querySelector("details")?.open).toBe(true);
+  });
+
+  it("renders a short pinned source beside its sentence with readable metadata", async () => {
+    const markdown = "前面一句：[[evidence:src/app.ts:4-5]] 后面一句。";
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          sourcePath: "src/app.ts",
+          sourceCommit: "a".repeat(40),
+          startLine: 4,
+          endLine: 5,
+          highlightStartLine: 4,
+          highlightEndLine: 5,
+          language: "typescript",
+          code: "const first = true;\nconst second = false;\n",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const onOpenEvidence = vi.fn();
+    await renderMarkdown(markdown, {
+      evidence: [repositoryEvidence(4, 5)],
+      evidenceBasePath: "/api/lesson",
+      onOpenEvidence,
+      evidenceAnchors: [
+        {
+          start: markdown.indexOf("[["),
+          end: markdown.indexOf("]]", markdown.indexOf("[[")) + 2,
+          sourcePath: "src/app.ts",
+          lineStart: 4,
+          lineEnd: 5,
+          resolved: true,
+          evidenceIndex: 0,
+        },
+      ],
+    });
+
+    await waitFor(() =>
+      expect(container.querySelector(".evidence-inline-source .evidence-code")).not.toBeNull(),
+    );
+    const source = container.querySelector<HTMLElement>(".evidence-inline-source");
+    expect(source).not.toBeNull();
+    expect(fetchMock).toHaveBeenCalledWith("/api/lesson/evidence/0");
+    expect(source?.querySelector(".evidence-inline-source__path")?.textContent).toBe("src/app.ts");
+    expect(source?.querySelector(".evidence-inline-source__lines")?.textContent).toContain("L4–5");
+    expect(source?.querySelector(".evidence-inline-source__language")?.textContent).toContain(
+      "typescript",
+    );
+    expect(source?.querySelector(".evidence-inline-source__commit")?.textContent).toContain(
+      "aaaaaaaa",
+    );
+    expect(
+      source?.querySelector<HTMLSpanElement>(".evidence-inline-source__commit")?.dataset
+        .sourceCommit,
+    ).toBe("a".repeat(40));
+    expect(source?.querySelector(".evidence-code__line-number")?.textContent).toBe("4");
+    expect(source?.querySelector(".evidence-code__line--highlighted")).not.toBeNull();
+    expect(source?.querySelector("pre")?.getAttribute("tabindex")).toBe("0");
+    expect(container.querySelector("p .evidence-inline-source")).toBeNull();
+    expect(container.querySelector("p pre")).toBeNull();
+    expect([...container.querySelectorAll("p")].map((node) => node.textContent)).toEqual([
+      "前面一句：",
+      " 后面一句。",
+    ]);
+
+    const fullButton = source?.querySelector<HTMLButtonElement>(".evidence-inline-source__open");
+    expect(fullButton).not.toBeNull();
+    await act(async () => {
+      fullButton!.click();
+    });
+    expect(onOpenEvidence).toHaveBeenCalledWith(0, fullButton);
+  });
+
+  it("keeps a long citation behind the chip and shared reference panel", async () => {
+    const markdown = "证据：[[evidence:src/app.ts:4-21]]";
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          sourcePath: "src/app.ts",
+          sourceCommit: "a".repeat(40),
+          startLine: 4,
+          endLine: 21,
+          highlightStartLine: 4,
+          highlightEndLine: 21,
+          language: "typescript",
+          code: Array.from({ length: 18 }, (_, index) => `const line${index + 4} = true;`).join(
+            "\n",
+          ),
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await renderMarkdown(markdown, {
+      evidence: [repositoryEvidence(4, 21)],
+      evidenceBasePath: "/api/lesson",
+      evidenceAnchors: [
+        {
+          start: markdown.indexOf("[["),
+          end: markdown.length,
+          sourcePath: "src/app.ts",
+          lineStart: 4,
+          lineEnd: 21,
+          resolved: true,
+          evidenceIndex: 0,
+        },
+      ],
+    });
+
+    const mark = container.querySelector<HTMLButtonElement>(".evidence-anchor");
+    expect(mark).not.toBeNull();
+    expect(container.querySelector(".evidence-inline-source")).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      mark!.click();
+    });
+    await waitFor(() =>
+      expect(document.querySelector(".reference-panel .evidence-code")).not.toBeNull(),
+    );
+    expect(fetchMock).toHaveBeenCalledWith("/api/lesson/evidence/0");
+    expect(
+      document.querySelector(".reference-panel .evidence-code__line-number")?.textContent,
+    ).toBe("4");
   });
 
   it("opens fetched pinned source in the shared panel, without leaving the lesson", async () => {

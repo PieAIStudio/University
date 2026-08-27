@@ -129,3 +129,25 @@
   color: color-mix(in srgb, var(--game-ui-text-muted) 52%, transparent);
   font-size: 0.92em;
 }
+
+.evidence-inline-source,
+.evidence-inline-source > .evidence-code {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.evidence-inline-source > .evidence-code {
+  overflow-x: auto;
+}
+
+.evidence-inline-source__language,
+.evidence-inline-source__commit {
+  color: color-mix(in srgb, var(--game-ui-text-on-dark) 62%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+
+.evidence-inline-source__commit code {
+  color: color-mix(in srgb, var(--game-ui-text-on-dark) 82%, transparent);
+  font: inherit;
+}

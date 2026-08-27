@@ -1,4 +1,4 @@
-import type { Root, Text } from "mdast";
+import type { PhrasingContent, Root, RootContent, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
 import type {
@@ -21,7 +21,9 @@ export type {
  */
 const LESSON_LINK_TAG = "lesson-link";
 const EVIDENCE_ANCHOR_TAG = "evidence-anchor";
+const EVIDENCE_INLINE_SOURCE_TAG = "evidence-inline-source";
 const TERM_LINK_TAG = "term-link";
+type EvidenceAnchorTag = typeof EVIDENCE_ANCHOR_TAG | typeof EVIDENCE_INLINE_SOURCE_TAG;
 
 interface LessonLinkNode {
   readonly type: "lessonLink";
@@ -43,7 +45,7 @@ interface EvidenceAnchorNode {
   readonly type: "evidenceAnchor";
   readonly value: string;
   readonly data: {
-    readonly hName: typeof EVIDENCE_ANCHOR_TAG;
+    readonly hName: EvidenceAnchorTag;
     readonly hProperties: {
       readonly sourcePath: string;
       readonly lines: string;
@@ -88,6 +90,8 @@ declare module "mdast" {
  */
 export function remarkEvidenceAnchors(options: {
   readonly ranges: readonly EvidenceAnchorRange[];
+  /** Repository evidence indices short enough to render in the lesson flow. */
+  readonly inlineEvidenceIndices?: ReadonlySet<number>;
 }) {
   const sorted = [...options.ranges].sort((left, right) => left.start - right.start);
   return (tree: Root): void => {
@@ -118,7 +122,14 @@ export function remarkEvidenceAnchors(options: {
           type: "evidenceAnchor",
           value: label,
           data: {
-            hName: EVIDENCE_ANCHOR_TAG,
+            hName:
+              hit.resolved &&
+              hit.evidenceIndex !== null &&
+              hit.evidenceIndex !== undefined &&
+              parent.type === "paragraph" &&
+              options.inlineEvidenceIndices?.has(hit.evidenceIndex)
+                ? EVIDENCE_INLINE_SOURCE_TAG
+                : EVIDENCE_ANCHOR_TAG,
             hProperties: {
               sourcePath: hit.sourcePath,
               lines,
@@ -138,7 +149,51 @@ export function remarkEvidenceAnchors(options: {
       parent.children.splice(index, 1, ...replacement);
       return index + replacement.length;
     });
+    splitInlineEvidenceParagraphs(tree);
   };
+}
+
+function isInlineEvidenceNode(node: unknown): node is EvidenceAnchorNode {
+  if (typeof node !== "object" || node === null) return false;
+  const candidate = node as {
+    readonly type?: unknown;
+    readonly data?: { readonly hName?: unknown };
+  };
+  return (
+    candidate.type === "evidenceAnchor" && candidate.data?.hName === EVIDENCE_INLINE_SOURCE_TAG
+  );
+}
+
+/**
+ * A source viewer owns block content (`div`, `pre`, and sometimes `p`). Keep it
+ * out of a prose paragraph so the browser never has to repair `p > div > pre`.
+ * Evidence nested inside emphasis or a link remains the old phrasing chip; only
+ * a direct paragraph child gets this block treatment.
+ */
+function splitInlineEvidenceParagraphs(tree: Root): void {
+  visit(tree, "paragraph", (node, index, parent) => {
+    if (parent === undefined || index === undefined) return;
+    if (!node.children.some(isInlineEvidenceNode)) return;
+
+    const replacement: RootContent[] = [];
+    let prose: PhrasingContent[] = [];
+    const flushProse = () => {
+      if (prose.length > 0) replacement.push({ type: "paragraph", children: prose });
+      prose = [];
+    };
+
+    for (const child of node.children) {
+      if (isInlineEvidenceNode(child)) {
+        flushProse();
+        replacement.push(child);
+      } else {
+        prose.push(child);
+      }
+    }
+    flushProse();
+    parent.children.splice(index, 1, ...replacement);
+    return index + replacement.length;
+  });
 }
 
 /**
