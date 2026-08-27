@@ -73,7 +73,12 @@ interface ImageRgb {
 }
 
 const LAND_HUE_MIN = 40;
-const LAND_HUE_MAX = 175;
+// 150, not 175. The band's job is to separate ground from water and sky, and
+// 175 reaches into teal: once the sea plate was rendered at its intended
+// brightness, its lighter water started scoring as land and pulled the land's
+// median up by eight points while the island itself had not changed. Foliage
+// does not get past about 150; 150 to 185 is where this product's water lives.
+const LAND_HUE_MAX = 150;
 const LAND_SATURATION_MIN = 0.1;
 const LAND_WARM_HUE_MAX = 45;
 const LAND_WARM_SATURATION_MIN = 0.12;

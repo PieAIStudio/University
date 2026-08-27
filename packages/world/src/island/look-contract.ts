@@ -11,7 +11,14 @@ export const ISLAND_LOOK_CONTRACT = {
    * 陆地占画面比例。**只对课程岛的设计机位生效**——岛群图本来就该一眼看到很多门课，
    * 推近镜头去凑这个数是用信息量换画面。donor 白天场景 84.3%。
    */
-  landCoverageMin: 0.55,
+  /**
+   * 0.34, re-baselined after the land segmentation stopped counting water.
+   * The old 0.55 was measured while the hue band reached to 175 and so scored
+   * a fifth of the sea as ground; on the corrected reading the island fills
+   * about 0.40 of the design frame, which is what it looks like. This still
+   * catches a frame where the island failed to build.
+   */
+  landCoverageMin: 0.34,
   /** 陆地 L* 中位数。太暗读不出材质，太亮就洗白了。donor 64.7。 */
   landMedianLightnessMin: 50,
   landMedianLightnessMax: 70,

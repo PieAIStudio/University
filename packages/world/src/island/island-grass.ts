@@ -1,10 +1,11 @@
 /**
- * Deterministic, bounded ground-cover planning for an IslandBlueprint .
+ * Deterministic, bounded ground-cover planning for an IslandBlueprint.
  *
  * The sampler deliberately consumes the blueprint's continuous surface rule,
  * rather than a terrain mesh. A blade is accepted only when
  * `sampleIslandSurface` says that its x/z point is inside the authored top
  * surface. It never samples the cliff, underside, or a caller-owned geometry.
+ * An accepted placement is one clump of leaves, not one rendered blade.
  *
  * Algorithm provenance: the area-weighted rejection shape and seeded sample
  * stream were studied from cortiz2894/stylized-components, exact HEAD
@@ -16,11 +17,12 @@
 import { sampleIslandSurface, type IslandBlueprint, type IslandPoint } from "./island-blueprint.js";
 import { sampleIslandTerrainTop } from "./island-geometry.js";
 import { distanceToIslandRoute } from "./island-dressing.js";
-import { seeded } from "./random.js";
+import { hash, seeded } from "./random.js";
 
-export const ISLAND_GRASS_VERSION = 1 as const;
+export const ISLAND_GRASS_VERSION = 2 as const;
 export type IslandGrassDetail = "course" | "world";
 export type IslandGrassRenderTier = "desktop" | "mobile";
+export type IslandGrassDistanceTier = "near" | "mid" | "far";
 
 /**
  * The outer 17% of the authored silhouette is the continuous shore/cliff
@@ -37,11 +39,76 @@ export const ISLAND_GRASS_TOP_MAX_RADIAL = 0.81;
 export const ISLAND_GRASS_LIMITS: Readonly<
   Record<IslandGrassDetail, Readonly<Record<IslandGrassRenderTier, number>>>
 > = {
-  // The field is one instanced batch, so a denser silhouette costs almost no
-  // scene-graph overhead. Keep a separate mobile ceiling for fill-rate.
-  course: { desktop: 2200, mobile: 760 },
+  // One instance is a five-leaf clump. 16,000 clumps × 45 triangles gives
+  // 720,000 grass triangles before the small terrain/dressing overhead, while
+  // the 4,500 mobile ceiling protects fill-rate and vertex work.
+  // Measured in the local Chromium/ANGLE Metal session on an Apple M1 Max:
+  // 16,000 clumps rendered at 120.2 FPS (1440 × 900, 100 calls, 777,008 total
+  // triangles) and 4,500 clumps at 120.0 FPS (390 × 590, 125 calls, 383,996
+  // total triangles), both with the live wind loop enabled.
+  course: { desktop: 16000, mobile: 4500 },
   world: { desktop: 0, mobile: 0 },
 };
+
+/** Camera-distance LOD bands, measured in the course island's world units. */
+export const ISLAND_GRASS_LOD_THRESHOLDS = {
+  nearToMid: 48,
+  midToNear: 42,
+  midToFar: 92,
+  farToMid: 82,
+} as const;
+
+/**
+ * The middle shot keeps 45% of the deterministic clump prefix and lifts it
+ * 15% so a smaller silhouette still has readable vertical rhythm. Far is
+ * deliberately empty: at the aerial distance, the terrain's meadow colour
+ * carries the surface and leaf-sized pixels would only become noise.
+ */
+export const ISLAND_GRASS_LOD_PROFILES: Readonly<
+  Record<
+    IslandGrassDistanceTier,
+    { readonly densityMultiplier: number; readonly heightMultiplier: number }
+  >
+> = {
+  near: { densityMultiplier: 1, heightMultiplier: 1 },
+  mid: { densityMultiplier: 0.45, heightMultiplier: 1.15 },
+  far: { densityMultiplier: 0, heightMultiplier: 1.15 },
+};
+
+/**
+ * Resolve a distance band without storing state. `previous` is the last band
+ * held by the renderer; the separated enter/exit thresholds are the
+ * hysteresis that prevents camera easing from making the field pop.
+ */
+export function islandGrassLodForDistance(
+  distance: number,
+  previous: IslandGrassDistanceTier | null = null,
+): IslandGrassDistanceTier {
+  const normalizedDistance = Number.isFinite(distance) ? Math.max(0, distance) : Infinity;
+  if (previous === "near") {
+    return normalizedDistance >= ISLAND_GRASS_LOD_THRESHOLDS.nearToMid ? "mid" : "near";
+  }
+  if (previous === "mid") {
+    if (normalizedDistance < ISLAND_GRASS_LOD_THRESHOLDS.midToNear) return "near";
+    return normalizedDistance >= ISLAND_GRASS_LOD_THRESHOLDS.midToFar ? "far" : "mid";
+  }
+  if (previous === "far") {
+    return normalizedDistance <= ISLAND_GRASS_LOD_THRESHOLDS.farToMid ? "mid" : "far";
+  }
+  if (normalizedDistance < ISLAND_GRASS_LOD_THRESHOLDS.nearToMid) return "near";
+  return normalizedDistance < ISLAND_GRASS_LOD_THRESHOLDS.midToFar ? "mid" : "far";
+}
+
+/** Number of already-planned clumps drawn by one distance LOD. */
+export function islandGrassInstanceCountForLod(
+  plan: Pick<IslandGrassPlan, "placements">,
+  distanceTier: IslandGrassDistanceTier,
+): number {
+  return Math.min(
+    plan.placements.length,
+    Math.round(plan.placements.length * ISLAND_GRASS_LOD_PROFILES[distanceTier].densityMultiplier),
+  );
+}
 
 export interface IslandGrassSafetyZone extends IslandPoint {
   /** Radius is measured in unscaled blueprint units. */
@@ -49,11 +116,12 @@ export interface IslandGrassSafetyZone extends IslandPoint {
   readonly kind?: "node" | "hero" | "zone" | "accent" | "landmark";
 }
 
-export interface IslandGrassBlade extends IslandPoint {
+export interface IslandGrassClump extends IslandPoint {
   /** Height of the rendered course top mesh at this x/z sample. */
   readonly y: number;
-  /** Low-model dimensions in unscaled blueprint units. */
+  /** Approximate clump footprint diameter in unscaled blueprint units. */
   readonly width: number;
+  /** Base clump height in unscaled blueprint units. */
   readonly height: number;
   readonly rotation: number;
   /** Stable phase for a future wind/material style, never a random runtime id. */
@@ -61,6 +129,9 @@ export interface IslandGrassBlade extends IslandPoint {
   /** Retained for pure tests and diagnostics; this is the sampler's top check. */
   readonly radial: number;
 }
+
+/** Compatibility name for consumers that still call a placement a blade. */
+export type IslandGrassBlade = IslandGrassClump;
 
 export interface IslandGrassPlan {
   readonly version: typeof ISLAND_GRASS_VERSION;
@@ -70,7 +141,7 @@ export interface IslandGrassPlan {
   readonly density: number;
   readonly maxCount: number;
   readonly topMaxRadial: number;
-  readonly placements: readonly IslandGrassBlade[];
+  readonly placements: readonly IslandGrassClump[];
 }
 
 export interface IslandGrassPlanOptions {
@@ -94,6 +165,11 @@ export interface IslandGrassPlanOptions {
 
 const TAU = Math.PI * 2;
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+/** A nine-unit lattice wavelength makes broad groves instead of per-instance noise. */
+export const ISLAND_GRASS_DENSITY_WAVELENGTH = 9;
+const ISLAND_GRASS_DENSITY_THRESHOLD = 0.26;
+/** The measured course top is about 4,900 square units inside its 85 × 112 grid. */
+const MEASURED_COURSE_TOP_AREA = 4900;
 const DEFAULT_DENSITY: Readonly<Record<IslandGrassRenderTier, number>> = {
   desktop: 3.6,
   mobile: 1.2,
@@ -124,6 +200,47 @@ function nonEmptySeed(value: unknown): string {
 
 function distanceBetween(first: IslandPoint, second: IslandPoint): number {
   return Math.hypot(first.x - second.x, first.z - second.z);
+}
+
+function smoothUnit(value: number): number {
+  const amount = Math.min(1, Math.max(0, value));
+  return amount * amount * (3 - 2 * amount);
+}
+
+function lerp(first: number, second: number, amount: number): number {
+  return first + (second - first) * amount;
+}
+
+function valueNoise2d(seed: string, x: number, z: number, wavelength: number): number {
+  const gridX = x / wavelength;
+  const gridZ = z / wavelength;
+  const left = Math.floor(gridX);
+  const top = Math.floor(gridZ);
+  const xAmount = smoothUnit(gridX - left);
+  const zAmount = smoothUnit(gridZ - top);
+  const lattice = (offsetX: number, offsetZ: number): number =>
+    hash(`${seed}/grass-density/${left + offsetX}/${top + offsetZ}`);
+  const topRow = lerp(lattice(0, 0), lattice(1, 0), xAmount);
+  const bottomRow = lerp(lattice(0, 1), lattice(1, 1), xAmount);
+  return lerp(topRow, bottomRow, zAmount);
+}
+
+/**
+ * Stable macro density in [0, 1]. The primary nine-unit field and a softer
+ * eighteen-unit envelope are both derived from the blueprint seed, so high
+ * values form groves while the low tail remains visibly bare ground.
+ */
+export function islandGrassDensityAt(seed: string, x: number, z: number): number {
+  if (!Number.isFinite(x) || !Number.isFinite(z)) return 0;
+  const local = valueNoise2d(seed, x, z, ISLAND_GRASS_DENSITY_WAVELENGTH);
+  const broad = valueNoise2d(`${seed}/broad`, x, z, ISLAND_GRASS_DENSITY_WAVELENGTH * 2);
+  return Math.min(1, Math.max(0, local * 0.72 + broad * 0.28));
+}
+
+function densityAcceptance(density: number): number {
+  return smoothUnit(
+    (density - ISLAND_GRASS_DENSITY_THRESHOLD) / (0.68 - ISLAND_GRASS_DENSITY_THRESHOLD),
+  );
 }
 
 function defaultSafetyZones(
@@ -218,11 +335,15 @@ function resolvePlanOptions(
 }
 
 function approximateTopArea(blueprint: IslandBlueprint): number {
-  return (
+  const blueprintArea =
     Math.PI *
     Math.abs(blueprint.bounds.halfX * blueprint.bounds.halfZ) *
-    ISLAND_GRASS_TOP_MAX_RADIAL ** 2
-  );
+    ISLAND_GRASS_TOP_MAX_RADIAL ** 2;
+  // The serialised envelope is intentionally conservative for some generated
+  // courses. Calibrate the default meadow against the measured 85 × 112
+  // course surface so a legitimate blueprint does not silently fall back to
+  // the old 2,200-instance scale; larger blueprints still use their own area.
+  return Math.max(blueprintArea, MEASURED_COURSE_TOP_AREA);
 }
 
 function clearanceToSafetyZones(
@@ -259,10 +380,10 @@ function isAvailable(
 }
 
 /**
- * Plan bounded, deterministic blades. Sampling a disk with `sqrt(u)` is the
+ * Plan bounded, deterministic clumps. Sampling a disk with `sqrt(u)` is the
  * same area-uniform correction used by the donor's triangle sampler; rejecting
- * against the authored outline and safety envelopes leaves a stable uniform
- * distribution over the eligible top surface.
+ * against the authored outline, density field, and safety envelopes leaves a
+ * stable, seed-addressable distribution over the eligible top surface.
  */
 export function planIslandGrass(
   blueprint: IslandBlueprint,
@@ -298,26 +419,35 @@ export function planIslandGrass(
   }
 
   for (let attempt = 0; attempt < maxAttempts && placements.length < targetCount; attempt += 1) {
-    // The low-discrepancy angular progression avoids visible clumps while the
-    // jitter keeps the stream seed-sensitive. `sqrt` is essential: a linear
-    // radial draw would overpopulate the centre and leave a bald outer field.
+    // The low-discrepancy angular progression avoids accidental bands while
+    // the jitter keeps the stream seed-sensitive. `sqrt` is essential: a
+    // linear radial draw would overpopulate the centre and leave a bald outer
+    // field. The separate macro field below is what intentionally creates
+    // groves; this stream remains the reproducible point source inside them.
     const radial = ISLAND_GRASS_TOP_MAX_RADIAL * Math.sqrt(random());
     const angle = (attempt * GOLDEN_ANGLE + random() * TAU) % TAU;
     const point = {
       x: Math.cos(angle) * blueprint.bounds.halfX * radial,
       z: Math.sin(angle) * blueprint.bounds.halfZ * radial,
     };
+    const density = islandGrassDensityAt(resolved.seed, point.x, point.z);
+    const acceptance = densityAcceptance(density);
+    if (acceptance <= 0 || random() > acceptance) continue;
     if (!isAvailable(blueprint, point, radial, resolved.safetyZones, routeClearance)) continue;
     const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
-    // A slightly broader tuft keeps enough projected area under the course
-    // camera to read as ground cover instead of black needles. All values
-    // remain deterministic and instance-local; density is not increased.
+    // One placement is a 5–8-leaf clump. A 0.72–1.0 footprint leaves small
+    // seams between clumps at low field values, while the 0.72–1.06 height
+    // range gives close views enough volume without multiplying instances.
     placements.push({
       x: point.x,
       z: point.z,
       y: surface.y,
-      width: 0.15 + random() * 0.14,
-      height: 0.26 + random() * 0.32,
+      // A clump 0.72 to 1.06 tall stands roughly waist high against the
+      // lesson markers on this island: the near camera came back looking
+      // through undergrowth rather than across a meadow. Two thirds of that
+      // keeps the clumped silhouette and puts the horizon back.
+      width: 0.6 + random() * 0.24,
+      height: 0.42 + random() * 0.22,
       rotation: random() * TAU,
       phase: random(),
       radial: surface.radial,

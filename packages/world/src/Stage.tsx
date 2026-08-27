@@ -65,17 +65,32 @@ function Pipeline({
   // Recomputed each render is fine: the viewport does not change mid-frame,
   // and the mobile skip has to follow a rotate-to-landscape the way dpr does.
   const mobile = renderTier() === "mobile";
+  // The judge scores `post=off`, but S1 has to read the linear scene *before*
+  // the canvas sRGB encode. Demand-loop freeze also means measureScene must
+  // invalidate, or the promise never sees a frame.
+  const sampleTarget = useMemo(() => {
+    if (!import.meta.env.DEV || postProcessing) return null;
+    return new THREE.WebGLRenderTarget(1, 1, {
+      depthBuffer: true,
+      stencilBuffer: false,
+      type: THREE.HalfFloatType,
+      colorSpace: THREE.LinearSRGBColorSpace,
+    });
+  }, [postProcessing]);
 
   useEffect(() => () => pass?.dispose(), [pass]);
   useEffect(() => () => ao?.dispose(), [ao]);
+  useEffect(() => () => sampleTarget?.dispose(), [sampleTarget]);
 
   useEffect(() => {
-    if (!pass) return;
-    const width = size.width * viewport.dpr;
-    const height = size.height * viewport.dpr;
-    pass.resize(width, height);
-    ao?.resize(width, height);
-  }, [pass, ao, size.width, size.height, viewport.dpr]);
+    const width = Math.max(1, Math.floor(size.width * viewport.dpr));
+    const height = Math.max(1, Math.floor(size.height * viewport.dpr));
+    if (pass) {
+      pass.resize(width, height);
+      ao?.resize(width, height);
+    }
+    sampleTarget?.setSize(width, height);
+  }, [pass, ao, sampleTarget, size.width, size.height, viewport.dpr]);
 
   // The kit guard is the reason the package exists: double tone-map / double
   // sRGB encode fails silently. Gate on DEV because the kit does not sniff
@@ -126,6 +141,15 @@ function Pipeline({
     if (!pass) {
       const previousColorSpace = gl.outputColorSpace;
       const previousToneMapping = gl.toneMapping;
+      if (measuring.current && sampleTarget) {
+        gl.outputColorSpace = THREE.LinearSRGBColorSpace;
+        gl.toneMapping = THREE.NoToneMapping;
+        gl.setRenderTarget(sampleTarget);
+        gl.clear();
+        gl.render(scene, camera);
+        measuring.current(sample(gl, sampleTarget));
+        measuring.current = null;
+      }
       // `post=off` is the judge's raw scene path. The renderer owns the one
       // normal sRGB encode here; no grade, AO blit, or bloom can move a pixel
       // over a threshold.
@@ -163,16 +187,17 @@ function Pipeline({
   // inherited. This is what makes that a measurement instead of a claim.
   // Development only, and called by hand: `await measureScene()`.
   useEffect(() => {
-    if (!import.meta.env.DEV || !pass) return;
-    (globalThis as unknown as { measureScene?: () => Promise<unknown> }).measureScene = () =>
+    if (!import.meta.env.DEV) return;
+    const bag = globalThis as unknown as { measureScene?: () => Promise<unknown> };
+    bag.measureScene = () =>
       new Promise((resolve) => {
         measuring.current = resolve;
+        invalidate();
       });
     return () => {
-      const bag = globalThis as unknown as { measureScene?: () => Promise<unknown> };
-      delete bag.measureScene;
+      if (bag.measureScene) delete bag.measureScene;
     };
-  }, [pass]);
+  }, [invalidate]);
 
   return null;
 }

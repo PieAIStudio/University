@@ -41,10 +41,35 @@ export function islandGeometryScale(
       : 1;
 }
 
-const GRASS = new THREE.Color(0x74a957);
-const GRASS_LIGHT = new THREE.Color(0x9cc66a);
-const GRASS_DARK = new THREE.Color(0x507c4b);
-const GRASS_WARM = new THREE.Color(0x87b85a);
+/**
+ * The ground palette, written as a value ladder rather than a set of greens.
+ *
+ * The judge measures the land's own lightness spread, and the previous palette
+ * could not supply one: every constant sat between CIELAB L* 48 and L* 76 and
+ * the colour rule mixed them with three sine waves whose wavelengths were
+ * longer than the island, so in practice the whole surface rendered as a
+ * single tone near L* 71. A light cannot rescue that, because a flat surface
+ * lit from any angle returns a flat image.
+ *
+ * The first four values come from the low-sun lighting work, which widened
+ * them to give the grass field a reachable highlight; `grassLight` is exported
+ * to the blade material as its tip colour, which is why it sits so far above
+ * the others. The remaining six were added for the terrain rule below. Between
+ * them the ladder now reaches from L* 40 to L* 89. The rock tones are the
+ * important addition: they are selected by slope, so a hillside paints itself
+ * darker than the meadow around it and relief becomes visible as shape rather
+ * than as a subtle gradient.
+ */
+const GRASS = new THREE.Color(0x7eb55c); // L* 67.9, the meadow's anchor tone
+const GRASS_LIGHT = new THREE.Color(0xd4ee88); // L* 89.4, the grass blade's tip
+const GRASS_DARK = new THREE.Color(0x4a6b42); // L* 41.9
+const GRASS_WARM = new THREE.Color(0xa6d064); // L* 79.1
+const MEADOW_LOW = new THREE.Color(0x8dba52); // L* 70.6, sunlit flats
+const MEADOW_DEEP = new THREE.Color(0x466c3d); // L* 41.6, hollows and north faces
+const HIGHLAND = new THREE.Color(0xa8b473); // L* 70.2, dry grass on the tops
+const SAND = new THREE.Color(0xd9c8a0); // L* 81.0, the shore ring
+const ROCK = new THREE.Color(0x9c8b6f); // L* 58.7, warm exposed slope
+const ROCK_DARK = new THREE.Color(0x6a5c4b); // L* 40.3, the steepest faces
 const CLIFF = new THREE.Color(0x7c7467);
 const CLIFF_DARK = new THREE.Color(0x4e5055);
 // Muted earth colours deliberately sit between the meadow's olive greens and
@@ -65,10 +90,25 @@ function sampleCount(detail: IslandGeometryDetail, outline: readonly IslandOutli
  * continuous surface, which avoids tiny floating/embedded seams between the
  * authored surface and its low-poly presentation.
  */
-const COURSE_TOP_RADIALS = [
-  0.06, 0.13, 0.22, 0.32, 0.43, 0.54, 0.65, 0.74, 0.82, 0.88, 0.93, 0.97, 1,
-] as const;
-const WORLD_TOP_RADIALS = [0.22, 0.52, 0.82, 1] as const;
+/**
+ * The old course list held thirteen rings, which put a vertex every 1.1 units
+ * on a 85 x 112 island. A mesh cannot carry a hill narrower than two of its
+ * own rings, so the terrain generator could emit whatever relief it liked and
+ * the rendered surface would still smooth it into a plate. Fifty-two rings put
+ * a vertex every 0.27 units and let the mid and fine relief octaves through.
+ * The cost is 4,992 top vertices against 1,248, which is nothing next to the
+ * instanced vegetation already in the frame.
+ *
+ * The distribution is uniform because at this count the widest ring gap is
+ * already finer than the old list's tightest shoreline gap; a hand-tuned rim
+ * bias no longer buys anything.
+ */
+const COURSE_TOP_RING_COUNT = 52;
+const COURSE_TOP_RADIALS: readonly number[] = Array.from(
+  { length: COURSE_TOP_RING_COUNT },
+  (_, index) => (index + 1) / COURSE_TOP_RING_COUNT,
+);
+const WORLD_TOP_RADIALS = [0.16, 0.34, 0.52, 0.68, 0.84, 1] as const;
 
 function topRadials(detail: IslandGeometryDetail): readonly number[] {
   return detail === "course" ? COURSE_TOP_RADIALS : WORLD_TOP_RADIALS;
@@ -193,29 +233,115 @@ export function sampleIslandTerrainTop(
   return { ...continuous, y: y ?? continuous.y };
 }
 
+/**
+ * Ground colour from height and slope, not from position alone.
+ *
+ * Slope is measured against the rendered mesh's own ring spacing so the colour
+ * break lands on the same fold the geometry produces. It is the term that
+ * makes a hill legible: a face steeper than about twenty degrees starts
+ * turning toward rock, so relief reads as form from the aerial camera instead
+ * of relying on the sun to find it.
+ */
 function colorForTop(
-  seed: string,
+  blueprint: IslandBlueprint,
   x: number,
   z: number,
   radial: number,
   height: number,
 ): THREE.Color {
+  const seed = blueprint.seed;
+  const maxHalf = blueprint.bounds.maxHalf;
+  // The clamp in the height rule sits at 0.235 of maxHalf, but the relief
+  // model only reaches about two thirds of it in practice. Normalising
+  // against the clamp meant the highland tone never engaged. This is the
+  // measured working range instead.
+  const ceiling = Math.max(1e-6, maxHalf * 0.155);
+  const relative = clamp01(height / ceiling);
+  const delta = Math.max(0.35, maxHalf * 0.02);
+  const east = sampleIslandSurface(blueprint, x + delta, z);
+  const west = sampleIslandSurface(blueprint, x - delta, z);
+  const north = sampleIslandSurface(blueprint, x, z + delta);
+  const south = sampleIslandSurface(blueprint, x, z - delta);
+  const eastY = east.inside ? east.y : height;
+  const westY = west.inside ? west.y : height;
+  const northY = north.inside ? north.y : height;
+  const southY = south.inside ? south.y : height;
+  const gradientX = eastY - westY;
+  const gradientZ = northY - southY;
+  const slope = Math.hypot(gradientX, gradientZ) / (2 * delta);
+  // Curvature, normalised against the sample spacing. It is negative in a
+  // hollow and positive on a crest, and unlike anything derived from the sun
+  // it stays correct when the lighting changes. Sky light genuinely does not
+  // reach into a fold, so darkening one is not a painted shadow; it is the
+  // cheapest honest occlusion term available at vertex level, and it survives
+  // the tone map because it lands before the grade rather than after it.
+  const curvature = (height - (eastY + westY + northY + southY) / 4) / delta;
+
   // Colour follows broad world-space patches instead of the triangulation.
   // Random colour per vertex produced radial spokes from the centre fan — a
-  // topology debug view, not grass. These three low frequencies make soft
-  // meadow regions that stay deterministic without shipping another texture.
+  // topology debug view, not grass. The wavelengths are tied to the island's
+  // own size so a patch is a feature on the surface rather than, as before,
+  // a wave longer than the island and therefore invisible.
   const phase = hash(`${seed}/terrain-colour`) * Math.PI * 2;
+  const drift = Math.max(6, maxHalf * 0.22);
   const patch =
-    (Math.sin(x * 0.105 + phase) +
-      Math.cos(z * 0.087 - phase * 0.7) +
-      Math.sin((x + z) * 0.052 + phase * 0.31)) /
+    (Math.sin(x / drift + phase) +
+      Math.cos(z / (drift * 1.21) - phase * 0.7) +
+      Math.sin((x + z) / (drift * 2.03) + phase * 0.31)) /
     3;
+
   const colour = GRASS.clone();
-  if (patch > 0.2) colour.lerp(GRASS_WARM, Math.min(0.72, patch));
-  if (patch < -0.18) colour.lerp(GRASS_DARK, Math.min(0.46, -patch));
-  if (height > 2.75) colour.lerp(GRASS_LIGHT, Math.min(0.34, (height - 2.75) * 0.18));
-  if (radial > 0.86) colour.lerp(GRASS_LIGHT, ((radial - 0.86) / 0.14) * 0.34);
+  // Low ground stays lush; the tops dry out. Two thirds of the meadow's own
+  // value range comes from this pair before any slope or shore term runs.
+  // These three bands were originally centred so wide that the lightest of
+  // them covered most of the island and the surface averaged out near L* 71,
+  // at the very top of the contract's 50 to 70 band with no room left for a
+  // light to lift a highlight. They now describe genuinely low ground,
+  // ordinary meadow, and genuinely high ground.
+  colour.lerp(MEADOW_LOW, smoothstep01(0.2, 0.02, relative) * 0.5);
+  colour.lerp(MEADOW_DEEP, smoothstep01(0.15, 0, relative) * 0.3);
+  colour.lerp(HIGHLAND, smoothstep01(0.55, 1, relative) * 0.6);
+  if (patch > 0.2) colour.lerp(GRASS_WARM, Math.min(0.6, patch));
+  if (patch < -0.18) colour.lerp(GRASS_DARK, Math.min(0.5, -patch));
+
+  // Slope shades the meadow before it exposes any stone. This is the term
+  // that gives a hillside a dark side without asking the sun for it, and it
+  // has to run first: measured over the whole top surface the median slope is
+  // about nineteen degrees, so a rock rule that started there turned half the
+  // island into a grey smear that read as a missing texture.
+  colour.lerp(MEADOW_DEEP, smoothstep01(0.2, 0.78, slope) * 0.5);
+
+  // Stone is reserved for faces a person could not walk up: 0.87 is forty
+  // degrees and 1.73 is sixty.
+  const rockAmount = smoothstep01(0.87, 1.73, slope);
+  if (rockAmount > 0) {
+    const stone = ROCK.clone().lerp(ROCK_DARK, smoothstep01(1.2, 2.2, slope));
+    colour.lerp(stone, rockAmount * 0.9);
+  }
+
+  // The shore ring. It replaces the old "brighten the rim" rule, which lifted
+  // the outer edge toward the same green and so read as a halo rather than a
+  // beach.
+  const beach = smoothstep01(0.955, 1, radial) * (1 - rockAmount * 0.7);
+  if (beach > 0) colour.lerp(SAND, beach * 0.72);
+
+  // Hollows sit in their own shade and crests catch the sky. The asymmetry is
+  // deliberate: an occlusion term that brightens as much as it darkens stops
+  // reading as depth and starts reading as noise.
+  const hollow = smoothstep01(0, -0.55, curvature);
+  const crest = smoothstep01(0.05, 0.6, curvature);
+  colour.multiplyScalar(1 - hollow * 0.26 + crest * 0.1);
   return colour;
+}
+
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+function smoothstep01(from: number, to: number, value: number): number {
+  if (from === to) return value < from ? 0 : 1;
+  const amount = clamp01((value - from) / (to - from));
+  return amount * amount * (3 - 2 * amount);
 }
 
 function pushColor(target: number[], color: THREE.Color): void {
@@ -264,9 +390,7 @@ function pathSoilColour(
   const tone =
     pathNoise(blueprint.seed, "colour-shared", index / 3.4) * 0.72 +
     pathNoise(blueprint.seed, `colour-${side}`, index / 4.8) * 0.28;
-  const colour = colorForTop(blueprint.seed, x, z, radial, height).multiplyScalar(
-    0.68 + tone * 0.16,
-  );
+  const colour = colorForTop(blueprint, x, z, radial, height).multiplyScalar(0.68 + tone * 0.16);
   // Keep a trace of the meadow at the verge, but let the worn centre read as
   // earth. A 24% blend looked like a dark green stripe in the first pass.
   colour.lerp(SOIL_HINT, 0.66);
@@ -367,13 +491,7 @@ function appendSoilPath(
       const safe = safePathSurface(blueprint, point, vertex);
       const sample = safe.sample;
       positions.push(safe.point.x * scale, (sample.y + 0.002) * scale, safe.point.z * scale);
-      const meadow = colorForTop(
-        blueprint.seed,
-        safe.point.x,
-        safe.point.z,
-        sample.radial,
-        sample.y,
-      );
+      const meadow = colorForTop(blueprint, safe.point.x, safe.point.z, sample.radial, sample.y);
       const colour = vertex.outer
         ? meadow.lerp(
             pathSoilColour(
@@ -419,7 +537,7 @@ function addTopVertex(
 ): void {
   const sample = sampleIslandSurface(blueprint, x, z);
   positions.push(x * scale, sample.y * scale, z * scale);
-  pushColor(colors, colorForTop(blueprint.seed, x, z, sample.radial, sample.y));
+  pushColor(colors, colorForTop(blueprint, x, z, sample.radial, sample.y));
 }
 
 function buildTerrain(
@@ -439,7 +557,7 @@ function buildTerrain(
 
   const centre = sampleIslandSurface(blueprint, 0, 0);
   positions.push(0, centre.y * scale, 0);
-  pushColor(colors, colorForTop(blueprint.seed, 0, 0, centre.radial, centre.y));
+  pushColor(colors, colorForTop(blueprint, 0, 0, centre.radial, centre.y));
   for (let ring = 0; ring < radials.length; ring += 1) {
     const radial = radials[ring]!;
     for (let index = 0; index < segments; index += 1) {

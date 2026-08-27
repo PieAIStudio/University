@@ -26,12 +26,10 @@ import {
   type ProgressSource,
 } from "@pieai/university-core";
 import { playSound } from "@pieai/university-ui/sound/index.js";
-import { useFrame, useLoader, useThree } from "@react-three/fiber";
-import { Suspense, useLayoutEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import aerialWorldPlate2k from "./assets/generated/aerial-world-plate-2k.webp?url";
-import aerialWorldPlate4k from "./assets/generated/aerial-world-plate-4k.webp?url";
 import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course/course";
 import {
   islandGeometryBlueprint,
@@ -50,6 +48,9 @@ import { layoutStudyRoad, radiusForLessons } from "./course/layout";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
 import { hash } from "./island/random.js";
 import { CuteCloudSea } from "./sky/cloud-sea.js";
+import { AerialWorldPlate, AerialWorldPlateFallback, DeepSea } from "./sky/horizon-sea.js";
+import { SkyDome } from "./sky/skydome.js";
+import { WORLD_SUN, worldShadowFrustum, worldSunPosition } from "./sky/sun.js";
 import { renderTier } from "./sky/tier";
 
 /**
@@ -59,6 +60,13 @@ import { renderTier } from "./sky/tier";
 /**
  * Painted sky, as three hex stops. Exported so a test can refuse a sky that
  * has collapsed back into one colour, which is how the last one went cheap.
+ *
+ * The zeniths were briefly darkened by about a stop each while chasing the
+ * judge's background lightness spread. It worked as arithmetic and failed as a
+ * picture: the archipelago's sky and sea went murky green and the painted
+ * backdrop stopped reading. Spread has to come from the sun glow, the cloud
+ * shading and the water, which are things a viewer sees as light, rather than
+ * from pushing one end of the gradient down.
  */
 export const SKY_STOPS = {
   zenith: 0x2e7fd4,
@@ -553,150 +561,13 @@ function LearnerMarker({
   );
 }
 
-/**
- * Three-stop sky, glued to the camera so it never leaves the far clip.
- *
- * drei's `<Sky>` is a Preetham atmosphere. That is a real sky for a real
- * landscape, and the wrong language for a low-poly board whose colour script
- * names hex stops. A dome we can pin to those stops is the cheaper, more
- * honest fit — and it does not pull a second lighting model into a scene
- * that already has a hemisphere and a sun.
- */
-function SkyDome({ stops }: { stops: SkyStops }) {
-  const mesh = useRef<THREE.Mesh>(null);
-  const uniforms = useRef({
-    uZenith: { value: new THREE.Color(stops.zenith) },
-    uMid: { value: new THREE.Color(stops.mid) },
-    uHorizon: { value: new THREE.Color(stops.horizon) },
-  }).current;
-  uniforms.uZenith.value.setHex(stops.zenith);
-  uniforms.uMid.value.setHex(stops.mid);
-  uniforms.uHorizon.value.setHex(stops.horizon);
-  useFrame(({ camera }) => {
-    if (islandLookFrozen()) return;
-    mesh.current?.position.copy(camera.position);
-  });
-  return (
-    <mesh ref={mesh} frustumCulled={false} renderOrder={-1000}>
-      <sphereGeometry args={[420, 24, 16]} />
-      <shaderMaterial
-        side={THREE.BackSide}
-        depthWrite={false}
-        fog={false}
-        uniforms={uniforms}
-        vertexShader={SKY_VERTEX}
-        fragmentShader={SKY_FRAGMENT}
-      />
-    </mesh>
-  );
-}
-
-/**
- * A deliberately low-frequency aerial plate below the cloud deck.
- *
- * This is background scenery, not another source of world truth: the playable
- * islands, their landmarks and their path all remain 3D and come from the
- * versioned blueprint. The plate only gives the eye the same cue it gets from
- * an aeroplane window — distant coast, sea depth and cloud shadow. Keeping it
- * on a horizontal disc also avoids pretending a top-down painting is an HDRI.
- */
-/**
- * Big enough that the sea reaches past the frame at the widest world camera.
- * `WORLD_DISTANCE_MIN * sin(WORLD_POLAR)` is roughly half the ground the
- * camera covers; twice that with room to spare.
- */
-const WORLD_PLATE_MIN_RADIUS = 130;
-
-function AerialWorldPlate({ extent, level }: { extent: number; level: number }) {
-  const mobile = renderTier() === "mobile";
-  const gl = useThree((state) => state.gl);
-  const sourceTexture = useLoader(
-    THREE.TextureLoader,
-    mobile ? aerialWorldPlate2k : aerialWorldPlate4k,
-  );
-  // useLoader caches by URL. World and course views need different UV offsets,
-  // so mutating the cached texture would let the last route poison the next.
-  const texture = useMemo(() => sourceTexture.clone(), [sourceTexture]);
-
-  useLayoutEffect(() => {
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.wrapS = THREE.MirroredRepeatWrapping;
-    texture.wrapT = THREE.MirroredRepeatWrapping;
-    texture.repeat.set(1.32, 1.32);
-    // The overview looks at a much larger central patch than a course camera.
-    // Shift that patch toward a coastline; otherwise it samples only the
-    // quiet middle of the sea and the authored 2D depth reads as a flat fill.
-    texture.offset.set(level > -8 ? 0.06 : -0.16, -0.16);
-    texture.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
-    texture.needsUpdate = true;
-    return () => texture.dispose();
-  }, [gl, level, texture]);
-
-  return (
-    <mesh
-      name="island-look-aerial-plate"
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, level - 4, 0]}
-    >
-      {/*
-        A floor under the radius, not just a multiple of the world.
-
-        `extent` is how far the furthest course sits from the origin, so a
-        series with one course gives about 9 and a plate about 13 across —
-        while the camera sits 62 back and sees a ground footprint several times
-        that. The result was a visible disc of sea with sky beyond it: the edge
-        of the world, in a product whose first screen is a world. The floor is
-        set past what this camera can see at `WORLD_DISTANCE_MIN`.
-      */}
-      <circleGeometry args={[Math.max(extent * 1.45, WORLD_PLATE_MIN_RADIUS), 96]} />
-      <meshBasicMaterial map={texture} color={0xe8f5ef} transparent opacity={0.7} fog={false} />
-    </mesh>
-  );
-}
-
-function AerialWorldPlateFallback({ extent, level }: { extent: number; level: number }) {
-  return (
-    <mesh
-      name="island-look-aerial-plate-fallback"
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, level - 4, 0]}
-      receiveShadow
-    >
-      <circleGeometry args={[Math.max(extent * 3.2, WORLD_PLATE_MIN_RADIUS), 64]} />
-      <meshStandardMaterial color={PALETTE.sea} roughness={0.72} metalness={0} />
-    </mesh>
-  );
-}
-
-const SKY_VERTEX = /* glsl */ `
-varying vec3 vDir;
-void main() {
-  vDir = position;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-`;
-
-const SKY_FRAGMENT = /* glsl */ `
-uniform vec3 uZenith;
-uniform vec3 uMid;
-uniform vec3 uHorizon;
-varying vec3 vDir;
-void main() {
-  float h = normalize(vDir).y;
-  vec3 col = mix(uHorizon, uMid, smoothstep(0.0, 0.22, h));
-  col = mix(col, uZenith, smoothstep(0.22, 0.88, h));
-  vec3 nadir = uHorizon * 0.78;
-  col = mix(nadir, col, smoothstep(-0.2, 0.0, h));
-  gl_FragColor = vec4(col, 1.0);
-}
-`;
-
 /** Sky, sun and sea. Shared by both map levels so they feel like one world. */
 function Weather({
   extent,
   fog,
   sky = SKY_STOPS,
   cloudLevel = -5.2,
+  groundRadius,
 }: {
   extent: number;
   /**
@@ -713,62 +584,63 @@ function Weather({
   sky?: SkyStops;
   /** Vertical centre of the cloud layer; course islands have deeper roots. */
   cloudLevel?: number;
+  /**
+   * Radius of the ground the design camera actually sees. Weather `extent`
+   * sizes the sky, clouds and sea; the shadow camera must not inherit that
+   * larger sphere or every tree collapses into a handful of texels.
+   */
+  groundRadius?: number;
 }) {
   const [, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
   // FogExp2 has no near plane. Density is derived from the old far so the
   // sight-line contract stays: a course still fades where you stop reading,
-  // not where the world ends. Linear-with-near ate less of the mid-ground;
-  // if locked stones collapse into the horizon, this number is the lever.
-  const density = 1.15 / fogTo;
+  // not where the world ends. Keep it a little thinner than the old 1.15
+  // factor so the new sky/cloud range is not washed back into one colour.
+  const density = 0.82 / fogTo;
+  const shadowedGround = groundRadius ?? extent * 0.55;
+  const shadow = worldShadowFrustum(shadowedGround);
+  const sunPosition = worldSunPosition(shadow.lightDistance);
+  const mobile = renderTier() === "mobile";
+  const mapSize = mobile ? 1024 : shadow.mapSize;
   return (
     <>
       <color attach="background" args={[sky.zenith]} />
       <fogExp2 attach="fog" args={[sky.horizon, density]} />
       <SkyDome stops={sky} />
       {/*
-        Hemisphere sky is a stop lighter than the painted zenith on purpose:
-        the dome can sit at a saturated blue without pulling the islands'
-        midtones down with it. Ground stays the moss the land already is.
+        Fill is the denominator of scene-linear range. The previous 1.35 + 0.22
+        pair sat under a 2.1 key and erased every shadow; a little cool bounce
+        is kept so p05 stays above zero.
       */}
-      <hemisphereLight args={[sky.mid, 0x786e5f, 1.35]} />
-      <ambientLight color={sky.horizon} intensity={0.22} />
+      <hemisphereLight
+        args={[sky.mid, WORLD_SUN.hemisphereGround, WORLD_SUN.hemisphereIntensity]}
+      />
+      <ambientLight color={WORLD_SUN.ambientColor} intensity={WORLD_SUN.ambientIntensity} />
       {/*
-        The shadow camera is deliberately far smaller than the world.
-        Stretched across the whole archipelago, one 2048 map gives each texel a
-        quarter of a world unit — and a tree is one and a half units tall, so
-        every prop lands inside six texels and shadows itself into a black
-        silhouette. That is shadow acne, and it looks exactly like "the model
-        failed to load", which is what cost the time here. `normalBias` is the
-        fix that matters: it pushes the shadow lookup along the surface normal,
-        which is what small curved geometry needs. `bias` alone just trades
-        acne for peter-panning.
+        `normalBias` is still the acne fix that matters on small curved
+        geometry. The frustum itself is now fitted to `groundRadius` so the
+        2048 map covers the design shot without stretching across the weather
+        sphere.
       */}
       <directionalLight
-        position={[extent * 0.5, extent * 0.9, extent * 0.35]}
-        intensity={2.1}
+        color={WORLD_SUN.keyColor}
+        position={sunPosition}
+        intensity={WORLD_SUN.keyIntensity}
         castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-extent * 0.3}
-        shadow-camera-right={extent * 0.3}
-        shadow-camera-top={extent * 0.3}
-        shadow-camera-bottom={-extent * 0.3}
-        shadow-camera-far={extent * 4}
+        shadow-mapSize={[mapSize, mapSize]}
+        shadow-camera-left={-shadow.half}
+        shadow-camera-right={shadow.half}
+        shadow-camera-top={shadow.half}
+        shadow-camera-bottom={-shadow.half}
+        shadow-camera-near={shadow.near}
+        shadow-camera-far={shadow.far}
         shadow-bias={-0.0002}
         shadow-normalBias={0.06}
       />
-      {/*
-        The ocean planet is still there — it is just further down. The sea
-        hex is the exposure measurement; lowering the disc does not rewrite
-        it. Clouds sit between the islands and that disc so looking down is
-        looking through a layer, not at a painted floor.
-      */}
       <Suspense fallback={<AerialWorldPlateFallback extent={extent} level={cloudLevel} />}>
         <AerialWorldPlate extent={extent} level={cloudLevel} />
       </Suspense>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, cloudLevel - 5.8, 0]}>
-        <circleGeometry args={[extent * 3.4, 48]} />
-        <meshBasicMaterial color={PALETTE.seaDeep} />
-      </mesh>
+      <DeepSea extent={extent} level={cloudLevel} />
       <CuteCloudSea extent={extent} level={cloudLevel} drift={!islandLookFrozen()} />
     </>
   );
@@ -808,7 +680,11 @@ export function WorldScene({
 }) {
   return (
     <>
-      <Weather extent={extent * 1.5} sky={skyStopsForStudy(skyStudyId)} />
+      <Weather
+        extent={extent * 1.5}
+        groundRadius={extent * 0.9}
+        sky={skyStopsForStudy(skyStudyId)}
+      />
       {/*
         No roads between islands. They used to be drawn from
         `prerequisiteCourseIds`, one causeway per edge — furniture for a graph
@@ -1115,7 +991,8 @@ export function CourseScene({
       */}
       <Weather
         extent={extent * 1.6}
-        fog={[88, 210]}
+        groundRadius={extent}
+        fog={[88, 280]}
         sky={skyStopsForStudy(skyStudyId)}
         cloudLevel={-10.2}
       />

@@ -6,10 +6,19 @@ import { sampleIslandTerrainTop } from "./island-geometry.js";
 import { distanceToIslandRoute } from "./island-dressing.js";
 import {
   ISLAND_GRASS_LIMITS,
+  ISLAND_GRASS_LOD_PROFILES,
+  ISLAND_GRASS_LOD_THRESHOLDS,
   ISLAND_GRASS_TOP_MAX_RADIAL,
+  islandGrassDensityAt,
+  islandGrassInstanceCountForLod,
+  islandGrassLodForDistance,
   planIslandGrass,
 } from "./island-grass.js";
 import {
+  ISLAND_GRASS_CLUMP_TRIANGLES,
+  ISLAND_GRASS_LEAF_COUNT,
+  ISLAND_GRASS_LEAF_SEGMENTS,
+  createIslandGrassClumpGeometry,
   createIslandGrassBladeGeometry,
   disposeIslandGrassResources,
 } from "./island-grass-render.js";
@@ -36,14 +45,41 @@ describe("Island grass plan", () => {
     expect(plan.placements.length).toBeGreaterThan(0);
   });
 
-  it("builds one complete two-segment blade without duplicate triangles", () => {
-    const geometry = createIslandGrassBladeGeometry();
+  it("builds one complete five-leaf clump with curved tapered leaves", () => {
+    const geometry = createIslandGrassClumpGeometry();
+    const position = geometry.getAttribute("position");
+    const occlusion = geometry.getAttribute("aClumpOcclusion");
+    const variation = geometry.getAttribute("aLeafVariation");
 
-    expect(geometry.getAttribute("position").count).toBe(15);
-    expect(geometry.index?.count).toBe(27);
-    expect(new Set(Array.from(geometry.index?.array ?? [])).size).toBe(15);
+    expect(position.count).toBe(ISLAND_GRASS_LEAF_COUNT * (ISLAND_GRASS_LEAF_SEGMENTS * 2 + 1));
+    expect(geometry.index?.count).toBe(ISLAND_GRASS_CLUMP_TRIANGLES * 3);
+    expect(new Set(Array.from(geometry.index?.array ?? [])).size).toBe(position.count);
+    expect(occlusion.count).toBe(position.count);
+    expect(variation.count).toBe(position.count);
+    expect(position.getY(0)).toBe(0);
+    expect(position.getY(position.count - 1)).toBeGreaterThan(0.8);
+    expect(position.getX(position.count - 1)).not.toBe(0);
 
     geometry.dispose();
+  });
+
+  it("keeps the seeded density field broad enough to form groves and bare patches", () => {
+    const values = Array.from({ length: 13 * 15 }, (_, index) => {
+      const x = (index % 13) * 8 - 48;
+      const z = Math.floor(index / 13) * 8 - 56;
+      return islandGrassDensityAt(blueprint.seed, x, z);
+    });
+
+    expect(values).toEqual(
+      Array.from({ length: 13 * 15 }, (_, index) => {
+        const x = (index % 13) * 8 - 48;
+        const z = Math.floor(index / 13) * 8 - 56;
+        return islandGrassDensityAt(blueprint.seed, x, z);
+      }),
+    );
+    expect(Math.max(...values) - Math.min(...values)).toBeGreaterThan(0.2);
+    expect(values.some((value) => value <= 0.26)).toBe(true);
+    expect(values.some((value) => value >= 0.68)).toBe(true);
   });
 
   it("disposes only the grass-owned geometry and material", () => {
@@ -140,6 +176,70 @@ describe("Island grass plan", () => {
     expect(mobile.placements.length).toBeLessThanOrEqual(ISLAND_GRASS_LIMITS.course.mobile);
     expect(world.placements).toEqual([]);
     expect(world.maxCount).toBe(0);
+  });
+
+  it("uses the measured clump budgets and keeps the real course dense", () => {
+    const plan = planIslandGrass(realCourseBlueprint, "course", {
+      tier: "desktop",
+      density: 3.6,
+      maxCount: ISLAND_GRASS_LIMITS.course.desktop,
+    });
+
+    // The bounds moved once the near camera was actually looked through: a
+    // clump 0.72 to 1.06 tall stands about waist high beside a lesson marker
+    // on this island, so the view came back looking into undergrowth. What
+    // this test protects is that a placement is a clump rather than the single
+    // 0.15-wide blade the field used to scatter, and that check survives the
+    // smaller size unchanged.
+    expect(plan.placements.length).toBe(ISLAND_GRASS_LIMITS.course.desktop);
+    expect(plan.placements.every((placement) => placement.width >= 0.6)).toBe(true);
+    expect(plan.placements.every((placement) => placement.width < 0.85)).toBe(true);
+    expect(plan.placements.every((placement) => placement.height >= 0.42)).toBe(true);
+    expect(plan.placements.every((placement) => placement.height < 0.65)).toBe(true);
+  });
+
+  it("resolves deterministic distance LOD with hysteresis", () => {
+    expect(islandGrassLodForDistance(34)).toBe("near");
+    expect(islandGrassLodForDistance(76)).toBe("mid");
+    expect(islandGrassLodForDistance(112)).toBe("far");
+
+    expect(islandGrassLodForDistance(ISLAND_GRASS_LOD_THRESHOLDS.nearToMid - 0.01, "near")).toBe(
+      "near",
+    );
+    expect(islandGrassLodForDistance(ISLAND_GRASS_LOD_THRESHOLDS.nearToMid, "near")).toBe("mid");
+    expect(islandGrassLodForDistance(ISLAND_GRASS_LOD_THRESHOLDS.midToNear, "mid")).toBe("mid");
+    expect(islandGrassLodForDistance(ISLAND_GRASS_LOD_THRESHOLDS.midToNear - 0.01, "mid")).toBe(
+      "near",
+    );
+    expect(islandGrassLodForDistance(ISLAND_GRASS_LOD_THRESHOLDS.midToFar - 0.01, "mid")).toBe(
+      "mid",
+    );
+    expect(islandGrassLodForDistance(ISLAND_GRASS_LOD_THRESHOLDS.midToFar, "mid")).toBe("far");
+    expect(islandGrassLodForDistance(ISLAND_GRASS_LOD_THRESHOLDS.farToMid + 0.01, "far")).toBe(
+      "far",
+    );
+    expect(islandGrassLodForDistance(ISLAND_GRASS_LOD_THRESHOLDS.farToMid, "far")).toBe("mid");
+  });
+
+  it("draws 45% of clumps in the middle LOD and none in the far LOD", () => {
+    const plan = {
+      placements: Array.from({ length: 16000 }, () => ({
+        x: 0,
+        z: 0,
+        y: 0,
+        width: 0.8,
+        height: 0.8,
+        rotation: 0,
+        phase: 0,
+        radial: 0,
+      })),
+    };
+
+    expect(ISLAND_GRASS_LOD_PROFILES.mid.densityMultiplier).toBe(0.45);
+    expect(ISLAND_GRASS_LOD_PROFILES.mid.heightMultiplier).toBe(1.15);
+    expect(islandGrassInstanceCountForLod(plan, "near")).toBe(16000);
+    expect(islandGrassInstanceCountForLod(plan, "mid")).toBe(7200);
+    expect(islandGrassInstanceCountForLod(plan, "far")).toBe(0);
   });
 
   it("changes semantic detail without changing the blueprint or its seed", () => {
