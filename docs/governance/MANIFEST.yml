@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-27T16:07:14.565Z
+generated_at: 2026-08-27T04:04:10.104Z
 generator_version: doc-gov@0.9.5
-docs_count: 54
+docs_count: 49
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -88,6 +88,13 @@ docs:
     canonical: true
     last_reviewed: 2026-07-13
     pinned: true
+  - id: PLAN-ISLAND-V2-VERTICAL-SLICE
+    path: docs/plans/active/island-v2-vertical-slice.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-08-27
+    pinned: false
   - id: POLICY-PROJECT-BEST-PRACTICE
     path: docs/policy/best-practice-for-this-project.md
     type: policy
@@ -121,7 +128,7 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-27
+    last_reviewed: 2026-08-17
     pinned: true
   - id: POLICY-SHARED-WEB3D-CAPABILITY-ALIGNMENT
     path: docs/policy/shared-rules/web3d-capability-alignment.md
@@ -144,34 +151,13 @@ docs:
     canonical: true
     last_reviewed: 2026-08-21
     pinned: false
-  - id: REF-ADDRESSABLE-LESSONS-PRERENDER
-    path: docs/reference/execution/addressable-lessons-prerender-evaluation.md
-    type: reference
-    status: active
-    canonical: true
-    last_reviewed: 2026-08-27
-    pinned: false
-  - id: REF-COMMERCIAL-MODEL
-    path: docs/reference/execution/commercial-model.md
-    type: reference
-    status: active
-    canonical: true
-    last_reviewed: 2026-08-27
-    pinned: false
   - id: REF-CURRENT-WORK
     path: docs/reference/execution/current-work.md
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-27
+    last_reviewed: 2026-08-26
     pinned: true
-  - id: REF-FEEDBACK-BACKEND-GAP
-    path: docs/reference/execution/feedback-backend-gap.md
-    type: reference
-    status: active
-    canonical: true
-    last_reviewed: 2026-08-27
-    pinned: false
   - id: REF-ONE-APP-HANDOFF
     path: docs/reference/execution/one-app-handoff.md
     type: reference
@@ -184,7 +170,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-27
+    last_reviewed: 2026-08-26
     pinned: false
   - id: REF-PUBLISH-LANE
     path: docs/reference/execution/publish-lane.md
@@ -206,13 +192,6 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-08-26
-    pinned: false
-  - id: REF-V5-JOURNEY-REVIEW
-    path: docs/reference/execution/v5-journey-review.md
-    type: reference
-    status: active
-    canonical: true
-    last_reviewed: 2026-08-27
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-BACKDROP-FILTER-OVER-A-LIVE-WEBGL-CANVAS-GREYS-OUT-WIDE-HUD-PANELS
     path: docs/reference/learnings/workflow-issues/backdrop-filter-over-a-live-webgl-canvas-greys-out-wide-hud-panels.md
@@ -276,20 +255,6 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-26
-    pinned: false
-  - id: REF-LEARNING-WORKFLOW-ISSUES-KEEP-INTERNAL-POWER-UNIT-ACCOUNTING-BEHIND-ONE-EXACT-LEARNER-ATTEMPT-CONVERSION
-    path: docs/reference/learnings/workflow-issues/keep-internal-power-unit-accounting-behind-one-exact-learner-attempt-conversion.md
-    type: reference
-    status: stable
-    canonical: true
-    last_reviewed: 2026-08-27
-    pinned: false
-  - id: REF-LEARNING-WORKFLOW-ISSUES-LONG-DOM-OVERLAY-CARDS-NEED-A-VIEWPORT-SAFE-FALLBACK-ON-NARROW-SCREENS
-    path: docs/reference/learnings/workflow-issues/long-dom-overlay-cards-need-a-viewport-safe-fallback-on-narrow-screens.md
-    type: reference
-    status: stable
-    canonical: true
-    last_reviewed: 2026-08-27
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-ONE-COLUMN-RAIL-MUST-RESET-CHILD-GRID-PLACEMENT
     path: docs/reference/learnings/workflow-issues/one-column-rail-must-reset-child-grid-placement.md
