@@ -24,7 +24,7 @@ import { renderTier } from "./tier.js";
 
 export const SEA_COLORS = {
   shallow: 0x2f89a0,
-  deep: 0x0e2f40,
+  deep: 0x1a5a70,
   plateTint: 0xd7ebe6,
 } as const;
 
@@ -65,13 +65,13 @@ void main() {
   float glint = spec * (0.32 + 0.68 * fresnel);
   float dist = length(vWorldPosition.xz);
   float deep = smoothstep(28.0, 140.0, dist);
-  vec3 color = mix(albedo, uDeep, deep * 0.42);
-  color *= 0.38 + ndotl * 0.9;
+  vec3 color = mix(albedo, uDeep, deep * 0.3);
+  color *= 0.52 + ndotl * 0.86;
   vec2 sunXZ = normalize(uSunDirection.xz);
   float sunFacing = max(dot(normalize(vWorldPosition.xz + vec2(0.001)), sunXZ), 0.0);
-  color += uSunColor * pow(sunFacing, 7.0) * 0.09;
-  color += uSunColor * glint * 2.25;
-  color += vec3(1.16, 1.08, 0.92) * hotSpec * 1.25;
+  color += uSunColor * pow(sunFacing, 7.0) * 0.05;
+  color += uSunColor * glint * 0.9;
+  color += vec3(1.16, 1.08, 0.92) * hotSpec * 0.45;
   float rim = smoothstep(0.78, 1.0, dist / max(uPlateRadius, 1.0));
   color = mix(color, uHorizon, rim);
   gl_FragColor = vec4(color, 1.0);
@@ -96,7 +96,7 @@ export function AerialWorldPlate({ extent, level }: { extent: number; level: num
       uDeep: { value: new THREE.Color(SEA_COLORS.deep) },
       uSunDirection: { value: new THREE.Vector3(...sunDirection) },
       uSunColor: { value: new THREE.Color(WORLD_SUN.keyColor) },
-      uHorizon: { value: new THREE.Color(0xf2d4b0) },
+      uHorizon: { value: new THREE.Color(0xdfe6de) },
       uPlateRadius: { value: plateRadius },
     }),
     [plateRadius, sunDirection, texture],

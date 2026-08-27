@@ -16,18 +16,18 @@
  * appear in the far sky (contre-jour) without becoming a centred flare.
  */
 export const WORLD_SUN = {
-  elevationDeg: 24,
+  elevationDeg: 28,
   /**
    * From +Z, clockwise in XZ the same way three's spherical azimuth is. The
    * course-design camera sits at 65°, looking toward 245°. 210° is a side-back
    * sun: long shadows stay, but more of the visible dome faces the key.
    */
   azimuthDeg: 210,
-  keyIntensity: 4.95,
+  keyIntensity: 9.0,
   keyColor: 0xffefd2,
-  hemisphereIntensity: 0.2,
+  hemisphereIntensity: 0.95,
   hemisphereGround: 0x556068,
-  ambientIntensity: 0.08,
+  ambientIntensity: 0.3,
   ambientColor: 0x9bb8d0,
   /** Light distance as a multiple of the shadowed ground radius. */
   distanceFactor: 2.65,
