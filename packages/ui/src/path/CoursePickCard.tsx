@@ -101,6 +101,12 @@ export function CoursePickCard({
             ))}
           </ul>
         </section>
+        {/*
+          The evidence count is said once, in the sentence, and not repeated as
+          a row below. It is the one number here that is not an inventory
+          figure — it is the claim the product is making — and a card that
+          prints it twice reads as padding rather than as a promise.
+        */}
         {stats.evidenceCount !== undefined ? (
           <p className="picked__evidence">这些本事来自 {stats.evidenceCount} 段真实项目代码</p>
         ) : null}
@@ -120,12 +126,6 @@ export function CoursePickCard({
               <dd>{stats.exercises}</dd>
               <dt>最多可得 XP</dt>
               <dd>{stats.maxXp}</dd>
-              {stats.evidenceCount !== undefined ? (
-                <>
-                  <dt>真实代码引用条数</dt>
-                  <dd>{stats.evidenceCount}</dd>
-                </>
-              ) : null}
             </dl>
           </section>
           <GameButton variant="primary" className="picked__enter" onClick={onEnter}>

@@ -93,7 +93,8 @@ describe("CoursePickCard", () => {
     expect(container.textContent).toContain("课时数9");
     expect(container.textContent).toContain("练习数4");
     expect(container.textContent).toContain("最多可得 XP235");
-    expect(container.textContent).toContain("真实代码引用条数7");
+    // Said once, in the sentence above, and not repeated as an inventory row.
+    expect(container.textContent).not.toContain("真实代码引用条数");
   });
 
   it("omits the optional evidence statistics when the shelf cannot count them", async () => {
