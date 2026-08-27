@@ -18,6 +18,13 @@ const secretsRoot = resolveSecretsRoot(args.secretsRoot);
 const sourcePath = join(secretsRoot, 'swimmer-backend', 'local.server.env');
 const outputPath = join(secretsRoot, 'university', 'local.public.env');
 const analyticsPath = join(secretsRoot, 'university', 'analytics.env');
+/*
+ * Optional local override, so a developer's browser can talk to a staging
+ * project while every other consumer keeps the shared one. Absent by default:
+ * without this file the projection is exactly the central source, which is
+ * what CI and a fresh clone must see.
+ */
+const overridePath = join(secretsRoot, 'university', 'backend-override.env');
 const appEnvPath = join(PROJECT_ROOT, 'apps', 'university', '.env.local');
 const ANALYTICS_VARIABLES = [
   'VITE_POSTHOG_KEY',
@@ -26,7 +33,8 @@ const ANALYTICS_VARIABLES = [
 ];
 
 const source = readEnvFile(sourcePath);
-const publicConfig = readPublicConfig(source);
+const override = readOptionalEnvFile(overridePath);
+const publicConfig = readPublicConfig(applyOverride(source, override));
 const analytics = readOptionalEnvFile(analyticsPath);
 const expectedBody = [
   `VITE_SWIMMER_BACKEND_SUPABASE_URL=${publicConfig.url}`,
@@ -98,6 +106,26 @@ function readEnvFile(path) {
     values[key] = rawValue.replace(/^['"]|['"]$/g, '');
   }
   return values;
+}
+
+/*
+ * An override replaces a whole alias pair, never half of one. Setting only the
+ * canonical name would leave the legacy alias pointing at the shared project,
+ * and `readAlias` rightly refuses a config that names two different backends.
+ */
+function applyOverride(source, override) {
+  if (Object.keys(override).length === 0) return source;
+  const merged = { ...source };
+  for (const [canonical, legacy] of [
+    ['SWIMMER_BACKEND_SUPABASE_URL', 'SWIMMER_CORE_SUPABASE_URL'],
+    ['SWIMMER_BACKEND_PUBLISHABLE_KEY', 'SWIMMER_CORE_PUBLISHABLE_KEY'],
+  ]) {
+    const value = override[canonical] ?? override[legacy];
+    if (value === undefined) continue;
+    merged[canonical] = value;
+    merged[legacy] = value;
+  }
+  return merged;
 }
 
 function readOptionalEnvFile(path) {
