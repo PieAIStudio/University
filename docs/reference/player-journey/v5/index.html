@@ -92,11 +92,11 @@ pre b{color:var(--go);font-weight:600}
   <p class="tagline">
     V4 定下了地图、双模式和共享阅读器；当前执行记录又把「讲一遍」分成作者知识笔记与学习者复述卡。V5 只把其中一条还会被误读的边界钉牢：
     <b>语音输出已经定了，语音输入仍然开放。</b>这不是重画世界地图，也不是给两个模式再加一个差异。
-    本次 amendment 再把真实源码引文的可见性钉牢：短引文贴在正文旁，长引文留在芯片和侧栏；并补上一条学习者会遇到的路径：复习卡明天回来时，提醒要在价值兑现之后、用户点头之后才出现；并把地图上三件事钉牢：第一座岛不享有装饰特权，世界里的小人是学习者本人，课程路径从上往下走。
+    本次 amendment 再把真实源码引文的可见性钉牢：短引文贴在正文旁，长引文留在芯片和侧栏；并补上一条学习者会遇到的路径：复习卡明天回来时，提醒要在价值兑现之后、用户点头之后才出现；账号也反过来处理：先在有价值的学习动作发生后静默保存，再在需要付费或跨设备保障时进入邮箱绑定路径；并把地图上三件事钉牢：第一座岛不享有装饰特权，世界里的小人是学习者本人，课程路径从上往下走。
   </p>
   <p class="supersede">
     <b>承接</b> <a href="../v4/index.html">V4</a>：V4 没有被本文推翻的地图、组件、商业和双模式决定继续有效。
-    <b>本稿新增</b> 读完与答对分开、学习者复述进 FSRS、TTS / ASR 的边界，源码证据按长度选择呈现形状，以及复习提醒的时机、权限和平台边界。<b>读法</b> 先看裁决，再看为什么，最后看怎么验。
+    <b>本稿新增</b> 读完与答对分开、学习者复述进 FSRS、TTS / ASR 的边界，源码证据按长度选择呈现形状，复习提醒的时机、权限和平台边界，以及价值事件后的匿名保存、邮箱绑定 / 合并、匿名付费闸门和会话诚实边界。<b>读法</b> 先看裁决，再看为什么，最后看怎么验。
   </p>
 </header>
 
@@ -129,6 +129,7 @@ pre b{color:var(--go);font-weight:600}
 <tr><td>tier-1 确定性判题先在浏览器免费完成</td><td>只有 tier-1 <code>undecided</code> 的练习答案，才在明确提交后进入带额度的 tier-2 服务；每日免费额度有余量时先用它，不提示钱包扣费</td></tr>
 <tr><td>证据是学习者读课文时的真实源码，不是藏起来的附录</td><td>引用范围 ≤16 行直接在正文旁展开；长范围、整文件和公共网页保留芯片与侧栏</td></tr>
 <tr><td>提醒是复习价值的延伸，不是首页的欢迎词</td><td>先在结算页说明明天有几张卡，再由学习者选择是否打开；浏览器权限只在点「好」后请求</td></tr>
+<tr><td>账号数据跟同一份云端学习者文档走</td><td>第一次产生值得保存的学习数据时才静默匿名登录；匿名态不能购买付费权益，绑定邮箱保留当前身份与进度</td></tr>
 </tbody>
 </table>
 </div>
@@ -474,6 +475,7 @@ pre b{color:var(--go);font-weight:600}
 <tr><td>tier-2 批改</td><td>tier-1 判不出的练习才请求服务；每日免费额度内不动钱包，耗尽后静默回 tier-1 并说明明日恢复；钱包只在明确付费选择后由服务端 reserve，模型失败有 refund，重复 command 不重复消耗</td></tr>
 <tr><td>源码证据</td><td>≤16 行的仓库引文默认可见；>16 行、整文件和 URL 引用仍可打开但不淹没正文；两模式和手机都保留同一条路径</td></tr>
 <tr><td>两模式</td><td>同一棵组件树、同一份学习者数据、同一套可见行为；不因为「本机」两个字复制一份功能</td></tr>
+<tr><td>账号时刻</td><td>不在加载时打断；完成新课程或第一次保存复习卡后静默建立匿名会话；匿名购买入口仍可见但只解释并引导绑定邮箱</td></tr>
 </tbody>
 </table>
 </div>
@@ -600,12 +602,101 @@ pre b{color:var(--go);font-weight:600}
   <li><b>上一轮取舍：</b>8 个工作树改动文件全部保留：策略常量与测试、remark 分流与段落拆分、共享 Markdown 接线、内联 DOM 组件与 CSS、以及 v5 设计记录。没有发现需要丢弃的错误实现；旧的忽略截图虽保留在工作区，但因实际字节是 JPEG 而扩展名写成 PNG，本轮重新生成并只在报告中引用新的 <code>.jpg</code> 证据。<code>imported.json</code> 没有改动，<code>packages/ui</code> 仍为零 <code>three</code>。</li>
 </ul>
 
-<h3>回滚路径</h3>
+<h3>回滚路径 · 引文呈现 amendment</h3>
 <p>
-  本轮不提交、不合并、不 push，所以回滚点仍是当前 <code>HEAD</code>；先用 <code>git diff</code> 检查，再恢复这 6 个已跟踪文件：
+  引文呈现 amendment 与下面的账号地基是两个独立单元。若只回滚引文呈现，先用 <code>git diff</code> 检查，再恢复这 6 个已跟踪文件：
   <code>docs/reference/player-journey/v5/index.html</code>、<code>packages/ui/src/evidence/EvidenceInlineSource.tsx</code>、<code>packages/ui/src/evidence/evidence-inline-source.css</code>、<code>packages/ui/src/markdown/MarkdownContent.tsx</code>、<code>packages/ui/src/markdown/MarkdownContent.test.tsx</code>、<code>packages/ui/src/markdown/remark-lesson-links.ts</code>；同时删除本轮新增的
   <code>packages/ui/src/evidence/display-policy.ts</code> 和 <code>display-policy.test.ts</code>。截图在 <code>SCRATCH/</code>，删除它们不会影响源码回滚。
-  本轮未找到任务所称的 <code>brief-inline.md</code>，因此实现和验收依据是用户重述与仓库现有的 v5 / 端口契约。
+  该 amendment 未找到任务所称的 <code>brief-inline.md</code>，因此实现和验收依据是当时的用户重述与仓库现有的 v5 / 端口契约。
+</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 class="hm"><span class="n">06A</span>先保存价值，再问邮箱</h2>
+<p class="lede">
+  本轮只把账号地基接上：学习者先完成有价值的学习动作，进度才在后台建立匿名会话并静默保存；邮箱什么时候被主动询问、那句话怎么写，留给下一轮。
+  这不是把匿名会话说成跨设备安全，而是让“以后绑定邮箱”有一份不会先丢掉的服务器进度。
+</p>
+
+<div class="dec sky">
+  <h4>决定 A · <code>IdentityStatus</code> 把匿名单列</h4>
+  <p>
+    <code>IdentityPort</code> 直接承接 SwimmerBackend <code>AuthClient</code> 已有的
+    <code>signInAnonymously()</code> 与 <code>linkEmail(email, password)</code>；不创建第二套 auth 包装。
+    <code>IdentityStatus</code> 有独立的 <code>anonymous</code> 分支，不把“已认证但还没有邮箱”降格成
+    <code>signed_out</code>。状态 registry 用 <code>satisfies Record&lt;IdentityStatusKind, true&gt;</code> 守住穷举面，新增身份状态必须先补它。
+  </p>
+  <p>
+    静默登录只挂在两个真正会写入学习者文档的事件上：一是课程从未完成变为完成（读确认和全部练习通过都成立），二是第一张复习卡成功保存。
+    不是页面加载，不是打开课程，也不是出现登录页。调用不传 <code>captchaToken</code>；缺少后端、登录失败或网络失败都不报错、不弹窗，学习者继续使用本机进度。
+  </p>
+</div>
+
+<div class="dec hm">
+  <h4>决定 B · 邮箱占用时保住两边的文档</h4>
+  <p>
+    匿名身份绑定邮箱成功后，Supabase 保留同一个 user id，当前文档自然跟着走。若邮箱已被另一个账号占用，绑定失败只恢复匿名状态；学习者转而登录已有账号时，进度绑定器调用现有的
+    <code>mergeProgress</code>，把当前设备文档合入目标账号，而不是覆盖或丢弃其中一边。
+  </p>
+  <p>
+    合并不是简单的“最后一次上传获胜”：课程进度取较大值，卡片按 FSRS 的 reps、复习时间和到期时间选择较完整的一份，答题记录和批注按各自 id / 时间规则合并。
+    这轮没有另造 FSRS 冲突政策；如果产品以后要改排期语义，必须先单独设计并补验证。
+  </p>
+  <ul class="chk">
+    <li><b>红证据：</b>已有邮箱导致 <code>linkEmail</code> 失败，匿名状态仍在，随后才能登录已有账号。</li>
+    <li><b>绿证据：</b><code>apps/university/src/account/session.test.ts</code> 验证合并后匿名侧和已有账号侧的复习卡、答题记录、阅读批注都仍存在。</li>
+  </ul>
+</div>
+
+<div class="dec no">
+  <h4>决定 C · 匿名能同步基线，但不能购买</h4>
+  <p>
+    匿名会话可以把免费基线进度绑定到服务器；它不能读取或拥有正式账号的付费权益，不能读钱包、创建订单或查询订单。
+    会员页的购买控件照常渲染，不通过隐藏控件制造“没有这个能力”的错觉；点击后打开能力说明，说明购买前要绑定邮箱，并指向个人档案的绑定入口。
+    绑定成功之前不调用支付 transport，也不授予付费权益。
+  </p>
+  <p>
+    authoring 与 delivery 都经过同一个 <code>PaymentPort</code>、同一个 <code>IdentityPort</code> 和同一个账号进度绑定器；差异仍只留在既有的 AI 来源、课文材料来源和源码仓库可达性三个端口。
+  </p>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th>状态</th><th>可以发生什么</th><th>不能从状态推导什么</th></tr></thead>
+<tbody>
+<tr><td><code>unconfigured</code> / <code>signed_out</code></td><td>本机继续学习；没有价值事件就不尝试匿名登录</td><td>不能说已经有云端同步，也不能把失败当成学习错误</td></tr>
+<tr><td><code>anonymous</code></td><td>有价值事件后把当前文档同步到匿名 user id；可以在个人档案绑定邮箱</td><td>不能买、不能读正式付费权益；也不能承诺清除浏览器数据后找回</td></tr>
+<tr><td><code>signed_in</code></td><td>正式账号可继续同步、读取其正式权益并走购买路径</td><td>不能把另一个账号的进度直接覆盖当前文档；邮箱占用要先走合并</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="dec">
+  <h4>两个必须说实话的边界</h4>
+  <ol>
+    <li>
+      <b>匿名会话仍在 localStorage。</b>清掉浏览器数据、换一台尚未绑定的设备或退出匿名会话后，这个匿名 user id 没有可供学习者重新登录的凭据。
+      所以本轮换来的是“服务器上已有一份、以后绑定邮箱时不丢当前身份和进度”，不是跨设备安全；下一轮文案不能把它说成已经安全找回。
+    </li>
+    <li>
+      <b>孤儿匿名用户会累积。</b>放弃设备、清除 localStorage 或只学习一次，都会留下可能没有邮箱的 Auth 用户和进度文档；Supabase 的匿名用户不会自动清理。
+      定期清理、保留期、进度行的级联与审计属于 SwimmerBackend 运维缺口，已登记在 <code>payment-backend-gap.md</code>，本轮不在 University 里偷偷补迁移或删除。
+    </li>
+  </ol>
+</div>
+
+<h4>怎么验</h4>
+<ul class="chk">
+  <li><b>身份：</b><code>packages/core/src/ports/identity.test.ts</code> 验证匿名态与正式态不同、绑定保留 user id、绑定失败保留匿名态；无后端路径不发出网络动作。</li>
+  <li><b>价值事件：</b><code>apps/university/src/screens/LessonScreen.test.tsx</code> 验证新完成触发一次、打开已完成课程不重复触发；<code>packages/ui/src/review/RecapPrompt.test.tsx</code> 验证复习卡写入后才触发。</li>
+  <li><b>支付：</b><code>packages/core/src/ports/payment.test.ts</code> 与 <code>packages/ui/src/navigation/screens/PlansScreen.test.tsx</code> 验证匿名 CTA 仍在、只显示绑定说明、不会调用支付服务。</li>
+  <li><b>埋点：</b><code>apps/university/src/analytics/productAnalytics.test.ts</code> 验证 PostHog 只收到 auth user id，不收到邮箱；客户端未 ready 时只排队 id。</li>
+  <li><b>双模式：</b>delivery / authoring 均通过同一组件树和共享端口；本轮没有新 mode 分支、后端迁移或部署。</li>
+</ul>
+
+<h3>本轮账号地基的回滚路径</h3>
+<p>
+  代码按连贯单元提交。若整组回滚，可用 <code>git revert</code> 按时间逆序：先回滚本次文档提交 <code>8d977b4</code>，再回滚埋点提交 <code>cb85547</code>，再回滚匿名支付闸 <code>9374386</code>，再回滚匿名进度保存 <code>5b7a54d</code>，最后按需要回滚身份端口 <code>3c1b364</code>；若只回滚代码，则从 <code>cb85547</code> 开始按同样的代码逆序即可。
+  这些提交没有改 SwimmerBackend、数据库迁移或部署；回滚不会触碰云端已有数据，只会停止新客户端的匿名建会话 / 绑定 / 支付分流行为。
 </p>
 
 <h2 class="alt"><span class="n">07</span>世界里的小人是学习者本人，路从上往下</h2>
@@ -631,7 +722,7 @@ pre b{color:var(--go);font-weight:600}
   <h4>决定 B · 玩家标记直接使用账号头像</h4>
   <p>
     世界选课层与进入课程后的路径层都调用同一个 SwimmerAvatarKit 头像标记实现。
-    未登录使用 <code>guestAvatarRecipe()</code> 的稳定默认头像；登录后读取账号保存的头像配方，
+    没有云端身份时使用 <code>guestAvatarRecipe()</code> 的稳定默认头像；anonymous 或正式账号都读取账号文档保存的头像配方，
     配方变化时两个场景都重新渲染同一个头像。头像配方属于学习者账号数据，不能只存在某个页面的临时 React state。
   </p>
   <p>
@@ -663,11 +754,11 @@ pre b{color:var(--go);font-weight:600}
   同一棵学习者组件树
   只通过既有端口回答材料、AI、源码从哪里来</pre>
   <li><b>第一岛：</b>飞翔的岛屿层不再加载第一课程专属装饰；它和其他岛使用同一套生成规则，小人仍在当前岛。</li>
-  <li><b>头像：</b>未登录看到稳定默认头像；登录后看到账号自己的配方，改配方后世界层和课程路径层同时更新。</li>
+  <li><b>头像：</b>没有云端身份时看到稳定默认头像；anonymous 或正式账号看到账号自己的配方，改配方后世界层和课程路径层同时更新。</li>
   <li><b>正面：</b>世界层与课程路径层都能辨认头像正面，不接受只有路径翻转、脸仍背向学习者的结果。</li>
   <li><b>岛屿链与路径：</b>所有系列课的岛屿链、以及每门课的关卡路径都从上往下；当前岛 / 当前关、后续节点和单元标签仍对应同一教学顺序。</li>
   <li><b>标签：</b>桌面与手机视口下没有可见标签互相压叠；标签不遮导航栏，放不下的标签按既有规则隐藏。</li>
-  <li><b>双模式：</b>delivery 与 authoring 在登录 / 未登录、桌面 / 手机矩阵下都呈现同一学习者面；不能用模式分支隐藏能力。</li>
+  <li><b>双模式：</b>delivery 与 authoring 在 signed_out / anonymous / signed_in、桌面 / 手机矩阵下都呈现同一学习者面；不能用模式分支隐藏能力。</li>
 </ul>
 
 <div class="fig">
@@ -677,14 +768,18 @@ pre b{color:var(--go);font-weight:600}
     <a href="../v4/index.html">V4 用户旅程</a>；当前执行索引只保留指针，见
     <a href="../../execution/current-work.md">current-work</a>。
   </p>
-  <p>本稿只新增一个提醒：<b>产品挑的词可以，学习者说的话不行；前半句已定，后半句正因为它成立而仍开放。</b></p>
+  <p>本稿最后再提醒：<b>产品挑的词可以，学习者说的话不行；匿名会话可以先保存学习价值，但不能被说成跨设备安全。</b></p>
 </div>
 
 <div class="foot">
-  V5 · 2026-08-27 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界、每日免费 AI 批改额度、源码证据呈现边界、复习提醒边界、世界头像与路径方向<br>
+  V5 · 2026-08-27 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界、每日免费 AI 批改额度、源码证据呈现边界、复习提醒边界、匿名保存 / 邮箱绑定 / 合并 / 付费边界、世界头像与路径方向<br>
   事实依据：<code>packages/core/src/progress/contract.ts</code> ·
   <code>packages/ui/src/language/speech.ts</code> ·
   <code>packages/core/src/ports/account-data.ts</code> ·
+  <code>packages/core/src/ports/identity.ts</code> ·
+  <code>packages/core/src/ports/payment.ts</code> ·
+  <code>packages/core/src/progress/merge.ts</code> ·
+  <code>apps/university/src/analytics/productAnalytics.ts</code> ·
   <code>apps/university/src/ports/online/grading.ts</code> ·
   <code>apps/university-grading/src/config.ts</code> ·
   <code>docs/specs/active/SPEC-0001-universitylocal-parity-contract.md</code>
