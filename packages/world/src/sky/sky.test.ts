@@ -1,6 +1,9 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import { SKY_STOPS, skyStopsForStudy } from "../Maps";
+import { WORLD_SUN } from "./sun.js";
 
 function luma(hex: number) {
   const r = ((hex >> 16) & 255) / 255;
@@ -42,5 +45,15 @@ describe("sky stops", () => {
     expect(turing.zenith).not.toBe(SKY_STOPS.zenith);
     expect(turing.zenith).not.toBe(buzz.zenith);
     expect(luma(turing.mid) - luma(turing.zenith)).toBeGreaterThan(0.05);
+  });
+
+  it("draws a sun disc on the one skydome, keyed to the shared world sun", () => {
+    const source = readFileSync(new URL("./skydome.tsx", import.meta.url), "utf8");
+    expect(source).toMatch(/uSunDirection/);
+    expect(source).toMatch(/uSunGlowColor/);
+    expect(source).not.toMatch(/uIsNight|uMoonPosition|uStarDensity/);
+    expect(WORLD_SUN.keyIntensity).toBeGreaterThan(
+      WORLD_SUN.hemisphereIntensity + WORLD_SUN.ambientIntensity,
+    );
   });
 });
