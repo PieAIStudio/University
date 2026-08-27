@@ -9,7 +9,7 @@ import type {
 export type CapabilityExplanationData =
   | SourceAccessExplanation
   | PaymentExplanation
-  | MeteredGradingExplanation;
+  | MeteredGradingExplanation
   | NotificationExplanation;
 
 /**
