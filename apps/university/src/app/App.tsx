@@ -6,7 +6,7 @@
  * happens when a lesson is finished. None of that was forked on purpose — the
  * compositions simply lived in two app files neither app could import — and the
  * drift rate never fell, because there were two places one decision could be
- * made. There is one now, and the differences that survived are three ports in
+ * made. There is one now, and the differences that survived are four ports in
  * `src/ports/`, chosen by a build-time constant.
  *
  * Four surfaces and one rule about which is which: the canvas owns the world
@@ -38,8 +38,10 @@ import {
 import {
   activeIdForView,
   isBareView,
+  lessonRefKey,
   mistakesOf,
   progressSourceOf,
+  type FeedbackContext,
   type LessonRef,
 } from "@pieai/university-core";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
@@ -59,8 +61,8 @@ import {
   type AvatarRecipe,
 } from "@pieai/university-world/avatar.js";
 
-import { AUTHORING } from "../mode";
-import { contentPort, reviewReminderPort } from "../ports/index";
+import { AUTHORING, CAMPUS_NAME, EMPTY_SHELF_HINT } from "../mode";
+import { contentPort, feedbackPort, reviewReminderPort } from "../ports/index";
 import { identityPort } from "../account/identity";
 import { paymentPort } from "../account/payment";
 import { bindProgressToIdentity } from "../account/session";
@@ -73,6 +75,7 @@ import {
   subscribe,
 } from "../progress/store";
 import { LessonScreen, RouteFallback } from "../screens/lazy";
+import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 
 import {
   todayCtaLabel,
@@ -88,7 +91,6 @@ import {
 } from "@pieai/university-ui/review/scheduler-ports.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
 import { LEXICON } from "../lesson/language";
-import { EMPTY_SHELF_HINT } from "../mode";
 import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
 import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
 import { CourseIsland } from "./CourseIsland.js";
@@ -115,6 +117,11 @@ import {
   withProductAnalyticsReview,
   type AnalyticsEvent,
 } from "../analytics/productAnalytics";
+
+type FeedbackContextSeed = Pick<
+  FeedbackContext,
+  "locator" | "contentRevision" | "exerciseAttemptCount" | "signedIn"
+>;
 
 export function App() {
   const progress = useSyncExternalStore(subscribe, snapshot);
@@ -223,6 +230,38 @@ export function App() {
       ? courseOf(view.studyId, view.courseId)
       : null;
   usePageMetadata(view, course);
+
+  const feedbackLocator: LessonRef | null =
+    view.kind === "lesson" || view.kind === "settled"
+      ? {
+          studyId: view.studyId,
+          courseId: view.courseId,
+          unitId: view.unitId,
+          lessonId: view.lessonId,
+        }
+      : null;
+  const feedbackLesson = feedbackLocator
+    ? (course?.units
+        .find((unit) => unit.id === feedbackLocator.unitId)
+        ?.lessons.find((lesson) => lesson.id === feedbackLocator.lessonId) ?? null)
+    : null;
+  const feedbackContext = useMemo<FeedbackContextSeed>(() => {
+    const contentRevision = feedbackLesson?.contentRevision ?? null;
+    const exerciseAttemptCount =
+      feedbackLocator && contentRevision !== null
+        ? Object.values(progress.exerciseAttempts).filter(
+            (attempt) =>
+              lessonRefKey(attempt.locator) === lessonRefKey(feedbackLocator) &&
+              attempt.contentRevision === contentRevision,
+          ).length
+        : 0;
+    return {
+      locator: feedbackLocator,
+      contentRevision,
+      exerciseAttemptCount,
+      signedIn: avatarSignedIn,
+    };
+  }, [avatarSignedIn, feedbackLesson, feedbackLocator, progress.exerciseAttempts]);
 
   const { lessonsDone, courseProgress, lessons, viewedProgress, nextUpProgress, todayNode } =
     useCourseProgress({ course, courseOf, nodes, progress, source, view });
@@ -775,6 +814,14 @@ export function App() {
       wide={wide}
     />
   );
+  const feedbackSurface = (
+    <FeedbackNote
+      shell={CAMPUS_NAME}
+      port={feedbackPort}
+      context={feedbackContext}
+      lessonTitle={feedbackLesson?.title ?? null}
+    />
+  );
   /*
     An empty shelf, after every hook rather than before some of them.
 
@@ -787,10 +834,13 @@ export function App() {
   */
   if (shelfError || (shelf && shelf.studies.length === 0)) {
     return (
-      <main className="empty">
-        <h1>{shelfError ? "课程读不出来" : "书架上还没有课"}</h1>
-        <p>{shelfError ?? EMPTY_SHELF_HINT}</p>
-      </main>
+      <>
+        <main className="empty">
+          <h1>{shelfError ? "课程读不出来" : "书架上还没有课"}</h1>
+          <p>{shelfError ?? EMPTY_SHELF_HINT}</p>
+        </main>
+        {feedbackSurface}
+      </>
     );
   }
 
@@ -802,91 +852,97 @@ export function App() {
       lessonId: view.lessonId,
     };
     return (
-      <div className="app">
-        <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
-        <Suspense fallback={<RouteFallback />}>
-          <LessonScreen
-            locator={reading}
-            course={course}
-            returnDepth={returnStack.length}
-            onFollowLink={(target) => {
-              /*
+      <>
+        <div className="app">
+          <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
+          <Suspense fallback={<RouteFallback />}>
+            <LessonScreen
+              locator={reading}
+              course={course}
+              returnDepth={returnStack.length}
+              onFollowLink={(target) => {
+                /*
                 A detour is a detour. Jumping to the lesson about how browsers
                 parse HTML has to be able to come back, or the reader stops
                 clicking and the feature costs nothing but ink.
               */
-              setReturnStack((current) => [...current, reading].slice(-LINK_RETURN_DEPTH));
-              setView({
-                kind: "lesson",
-                studyId: view.studyId,
-                courseId: target.courseId,
-                unitId: target.unitId,
-                lessonId: target.lessonId,
-              });
-            }}
-            onReturn={() => {
-              const previous = returnStack.at(-1);
-              if (!previous) return;
-              setReturnStack((current) => current.slice(0, -1));
-              setView({ kind: "lesson", ...previous });
-            }}
-            onOpenLesson={(next) => {
-              // Prev/next is a decision to move on, not a detour, so the offer
-              // to go back stops pointing at something nobody is thinking about.
-              setReturnStack([]);
-              setView({ kind: "lesson", ...next });
-            }}
-            onBack={() => {
-              setReturnStack([]);
-              setView({ kind: "course", studyId: view.studyId, courseId: view.courseId });
-            }}
-            onWorthwhileProgress={onWorthwhileProgress}
-            onSettled={(doneBefore) => {
-              const key = `${view.studyId}/${view.courseId}/${view.lessonId}`;
-              setGrewFrom({ key, doneBefore });
-              setReviewReminderDismissedFor(null);
-              setView({
-                kind: "settled",
-                studyId: view.studyId,
-                courseId: view.courseId,
-                unitId: view.unitId,
-                lessonId: view.lessonId,
-              });
-            }}
-          />
-        </Suspense>
-      </div>
+                setReturnStack((current) => [...current, reading].slice(-LINK_RETURN_DEPTH));
+                setView({
+                  kind: "lesson",
+                  studyId: view.studyId,
+                  courseId: target.courseId,
+                  unitId: target.unitId,
+                  lessonId: target.lessonId,
+                });
+              }}
+              onReturn={() => {
+                const previous = returnStack.at(-1);
+                if (!previous) return;
+                setReturnStack((current) => current.slice(0, -1));
+                setView({ kind: "lesson", ...previous });
+              }}
+              onOpenLesson={(next) => {
+                // Prev/next is a decision to move on, not a detour, so the offer
+                // to go back stops pointing at something nobody is thinking about.
+                setReturnStack([]);
+                setView({ kind: "lesson", ...next });
+              }}
+              onBack={() => {
+                setReturnStack([]);
+                setView({ kind: "course", studyId: view.studyId, courseId: view.courseId });
+              }}
+              onWorthwhileProgress={onWorthwhileProgress}
+              onSettled={(doneBefore) => {
+                const key = `${view.studyId}/${view.courseId}/${view.lessonId}`;
+                setGrewFrom({ key, doneBefore });
+                setReviewReminderDismissedFor(null);
+                setView({
+                  kind: "settled",
+                  studyId: view.studyId,
+                  courseId: view.courseId,
+                  unitId: view.unitId,
+                  lessonId: view.lessonId,
+                });
+              }}
+            />
+          </Suspense>
+        </div>
+        {feedbackSurface}
+      </>
     );
   }
 
   return (
-    <div className="app">
-      <UniversityShell
-        activeId={activeIdForView(view)}
-        /*
+    <>
+      <div className="app">
+        <UniversityShell
+          activeId={activeIdForView(view)}
+          /*
           The workbench's own way in, behind 更多 and only where there is a
           workbench. `G` compares the rail's own destinations between the two
           builds and deliberately excludes what sits behind 更多 — that is the
           one place a real difference between them is allowed to show.
         */
-        {...(AUTHORING ? { extraMoreItems: [STUDIO_MORE_ITEM] } : {})}
-        counters={counters}
-        identity={
-          <>
-            <RailIdentity
-              recipe={avatarRecipe}
-              signedIn={avatarSignedIn}
-              onOpen={() => setView({ kind: "me" })}
-            />
-            <LevelProgress totalXp={progress.totalXp} rail />
-          </>
-        }
-        aside={aside}
-        asideLabel={view.kind === "settings" ? "设置" : view.kind === "planet" ? "选课" : "今天"}
-      >
-        <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
-        {main}
-      </UniversityShell>
-    </div>
+          {...(AUTHORING ? { extraMoreItems: [STUDIO_MORE_ITEM] } : {})}
+          counters={counters}
+          identity={
+            <>
+              <RailIdentity
+                recipe={avatarRecipe}
+                signedIn={avatarSignedIn}
+                onOpen={() => setView({ kind: "me" })}
+              />
+              <LevelProgress totalXp={progress.totalXp} rail />
+            </>
+          }
+          aside={aside}
+          asideLabel={view.kind === "settings" ? "设置" : view.kind === "planet" ? "选课" : "今天"}
+        >
+          <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
+          {main}
+        </UniversityShell>
+      </div>
+      {feedbackSurface}
+    </>
   );
 }

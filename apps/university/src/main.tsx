@@ -7,7 +7,6 @@ import "@pieai/swimmer-ui-kit/styles.css";
 import "@pieai/university-ui/catalog/catalog.css";
 import "@pieai/university-ui/capability/capability.css";
 import { App } from "./app/App";
-import { CAMPUS_NAME } from "./mode";
 /*
   Every stylesheet `packages/ui` ships, in both shells, always.
 
@@ -27,7 +26,6 @@ import "@pieai/university-ui/entry/entry-page.css";
 import "@pieai/university-ui/entry/style-sample.css";
 import "@pieai/university-ui/evidence/evidence.css";
 import "@pieai/university-ui/feedback/feedback-note.css";
-import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 import "@pieai/university-ui/favourites/favourites.css";
 import "@pieai/university-ui/language/word-layer.css";
 import "@pieai/university-ui/lesson/lesson-reader.css";
@@ -73,10 +71,5 @@ void initProductAnalytics().then(() => trackEvent({ name: "app_open" }));
 createRoot(container).render(
   <StrictMode>
     <App />
-    {/*
-      Review scaffolding, not a product surface. `import.meta.env.DEV`
-      keeps it out of a build; see FeedbackNote.tsx for why that matters.
-    */}
-    {import.meta.env.DEV ? <FeedbackNote shell={CAMPUS_NAME} /> : null}
   </StrictMode>,
 );

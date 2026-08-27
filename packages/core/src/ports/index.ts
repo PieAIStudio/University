@@ -105,3 +105,13 @@ export {
   type PaymentTransport,
   type WalletBalance,
 } from "./payment.js";
+export type {
+  FeedbackAnswerAggregate,
+  FeedbackContext,
+  FeedbackPort,
+  FeedbackReceipt,
+  FeedbackRecord,
+  FeedbackReviewSource,
+  FeedbackSubmission,
+  FeedbackTransport,
+} from "./feedback.js";

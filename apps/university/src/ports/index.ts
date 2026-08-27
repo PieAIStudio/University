@@ -1,10 +1,14 @@
 /**
- * The three permitted differences, chosen once, at build time.
+ * The four permitted differences, chosen once, at build time.
  *
  * The learner surface is one implementation. The only questions the two
  * builds answer differently are where the AI comes from, where the lesson
- * material comes from, and whether this side can reach the repository behind
- * the lesson. Keeping all three choices here prevents a UI component from
+ * material comes from, whether this side can reach the repository behind
+ * the lesson, and how a learner feedback note is transported. The fourth is
+ * deliberately a transport boundary, not a second learner surface: the same
+ * control and context exist in both builds, while authoring hands the note to
+ * its existing clipboard/AI workflow and delivery stores it in SwimmerBackend.
+ * Keeping all four choices here prevents a UI component from
  * growing an `AUTHORING ? ... : null` branch when a capability is missing.
  *
  * `AUTHORING` is a build-time constant, so Rollup keeps one branch and drops
@@ -18,6 +22,7 @@
  * read off the shared document now, by the one screen that owns the reward.
  */
 import type {
+  FeedbackPort,
   GradingPort,
   ReaderPort,
   ReviewReminderPort,
@@ -25,17 +30,20 @@ import type {
 } from "@pieai/university-core";
 import type { ContentPort } from "@pieai/university-ui/content/port.js";
 
-import { identityPort } from "../account/identity";
+import { createSupabaseFeedbackPort } from "@pieai/university-backend";
 import { AUTHORING } from "../mode.js";
+import { identityPort, swimmerBackendClient } from "../account/identity";
 import { progressPort } from "../progress/store.js";
 import { createLocalContentPort } from "./local/content.js";
 import { createLocalGradingPort } from "./local/grading.js";
 import { createLocalReaderPort } from "./local/reader.js";
 import { createLocalSourceAccessPort } from "./local/source-access.js";
+import { createClipboardFeedbackPort } from "./local/feedback.js";
 import { createOnlineContentPort } from "./online/content.js";
 import { createOnlineGradingPort } from "./online/grading.js";
 import { createOnlineReaderPort } from "./online/reader.js";
 import { createOnlineSourceAccessPort } from "./online/source-access.js";
+import { createUnavailableFeedbackPort } from "./online/feedback.js";
 import { createBrowserReviewReminderPort } from "./notifications.js";
 
 /** One shelf per document. Both implementations are stateless above their caches. */
@@ -58,6 +66,20 @@ export const gradingPort: GradingPort = AUTHORING
 export const sourceAccessPort: SourceAccessPort = AUTHORING
   ? createLocalSourceAccessPort()
   : createOnlineSourceAccessPort();
+
+/** Feedback is the fourth technical boundary; the learner-facing contract stays shared. */
+export const feedbackPort: FeedbackPort = AUTHORING
+  ? createClipboardFeedbackPort({ shell: "本地端" })
+  : swimmerBackendClient
+    ? createSupabaseFeedbackPort(swimmerBackendClient, {
+        readUserId: () => {
+          const status = identityPort.status();
+          return status.kind === "signed_in" ? status.user.id : null;
+        },
+      })
+    : createUnavailableFeedbackPort(
+        "反馈暂时没有送出：SwimmerBackend 的反馈表还没有接好。这次不会放进剪贴板。",
+      );
 
 const vapidPublicKey = import.meta.env.VITE_UNIVERSITY_VAPID_PUBLIC_KEY;
 

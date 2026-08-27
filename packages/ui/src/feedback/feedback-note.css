@@ -105,6 +105,14 @@
   font-size: var(--game-ui-font-xs);
 }
 
+.feedback-note__meta.is-success {
+  color: var(--game-ui-success);
+}
+
+.feedback-note__meta.is-error {
+  color: var(--game-ui-danger-ink);
+}
+
 .feedback-note__actions {
   display: flex;
   gap: 8px;
@@ -123,6 +131,11 @@
   border: 0;
   background: var(--game-ui-accent);
   color: var(--game-ui-accent-contrast);
+}
+
+.feedback-note__copy:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .feedback-note__close {

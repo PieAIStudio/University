@@ -117,13 +117,16 @@ Each shell may adapt its content source — published packages online, local
 study views while authoring — but the learner-facing directory, expansion
 behaviour and lesson links are one implementation.
 
-The runtime boundaries in that shared learner surface are the three ports:
+The runtime boundaries in that shared learner surface are the four ports:
 `GradingPort` for the AI source, `ContentPort` / `ReaderPort` for lesson
-material, and `SourceAccessPort` for reaching the repository behind a lesson.
-The local shell obtains the AI verdict and source actions from local adapters;
-the delivery shell uses metered online grading, published material and
-structured source-capability explanations. The learner controls and their
-shared composition remain the same.
+material, `SourceAccessPort` for reaching the repository behind a lesson, and
+`FeedbackPort` for the transport of an explicitly submitted learner note. The
+local shell obtains the AI verdict and source actions from local adapters and
+hands feedback to its existing clipboard workflow; the delivery shell uses
+metered online grading, published material, structured source-capability
+explanations and the SwimmerBackend feedback table. The learner controls,
+payload allowlist and shared composition remain the same; a missing feedback
+table keeps its control visible and explains the failed send.
 
 ## The One Behaviour That Must Change In The Delivery Shell
 

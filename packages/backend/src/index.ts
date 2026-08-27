@@ -19,4 +19,10 @@ export {
   createSupabasePaymentRemote,
   UNIVERSITY_PAYMENT_APP_ID,
 } from "./payment.js";
+export {
+  createSupabaseFeedbackPort,
+  createSupabaseFeedbackReviewSource,
+  FEEDBACK_COLUMNS,
+  type SupabaseFeedbackPortOptions,
+} from "./feedback.js";
 export { bindProgressToIdentity } from "./session.js";

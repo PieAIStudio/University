@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { lessonRefKey, type FeedbackContext, type FeedbackPort } from "@pieai/university-core";
 
 import { FeedbackIcon } from "../shell/icons.js";
 
@@ -13,16 +14,9 @@ import { FeedbackIcon } from "../shell/icons.js";
  * are exactly what gets forgotten and exactly what a machine can capture, so
  * the person only has to supply the sentence a machine cannot.
  *
- * The clipboard is the transport on purpose. The authoring shell already
- * grades through it, there is no server to post to, and a note that needs an
- * account before it can be written is a note that does not get written.
- *
- * **This is scaffolding for a review pass, not a product feature.** Both
- * shells pass `import.meta.env.DEV`, so it does not exist in a build. A
- * permanent feedback surface is a real design job — where it lives, whether it
- * interrupts, what happens to what it collects — and none of that has been
- * done. Shipping this quietly into production would be deciding all of it by
- * accident.
+ * The transport is injected. The authoring shell hands this note to its
+ * existing clipboard/AI workflow; the delivery shell stores the same shape in
+ * SwimmerBackend. The learner should not have to know which one happened.
  */
 export function feedbackNote(args: {
   readonly shell: string;
@@ -31,6 +25,10 @@ export function feedbackNote(args: {
   readonly theme: string;
   readonly at: Date;
   readonly said: string;
+  readonly locator?: FeedbackContext["locator"];
+  readonly contentRevision?: number | null;
+  readonly exerciseAttemptCount?: number;
+  readonly signedIn?: boolean;
 }): string {
   const [width, height] = args.viewport;
   return [
@@ -38,6 +36,10 @@ export function feedbackNote(args: {
     "",
     `- 壳：${args.shell}`,
     `- 路由：${args.route}`,
+    `- 课程定位：${args.locator ? lessonRefKey(args.locator) : "未定位到具体课程"}`,
+    `- 内容版本：${args.contentRevision ?? "未定位到具体课程"}`,
+    `- 练习尝试次数：${args.exerciseAttemptCount ?? 0}`,
+    `- 登录状态：${args.signedIn ? "已登录" : "未登录"}`,
     `- 视口：${width}×${height}`,
     `- 主题：${args.theme}`,
     `- 时间：${args.at.toISOString()}`,
@@ -55,7 +57,7 @@ export function feedbackRouteOf(location: {
 /**
  * Finds the rail footer without living in the rail's tree.
  *
- * The note is mounted next to `App` (DEV-only, in each shell's `main.tsx`) so
+ * The note is mounted next to `App` (in each shell's `main.tsx`) so
  * it still exists on routes that drop UniversityShell. The footer is an empty
  * host the rail always renders. Watching the body is how a sibling finds a
  * node it does not own, and how it lets go when a lesson route removes it.
@@ -138,44 +140,121 @@ function FeedbackTrigger({
   );
 }
 
-export function FeedbackNote({ shell }: { readonly shell: string }) {
+const unavailableFeedbackPort: FeedbackPort = {
+  transport: "unavailable",
+  async submit() {
+    throw new Error("反馈通道还没有接好。");
+  },
+  async readMine() {
+    throw new Error("反馈通道还没有接好。");
+  },
+};
+
+type FeedbackNoteContext = Pick<
+  FeedbackContext,
+  "locator" | "contentRevision" | "exerciseAttemptCount" | "signedIn"
+>;
+
+export function FeedbackNote({
+  shell,
+  port = unavailableFeedbackPort,
+  context = {
+    locator: null,
+    contentRevision: null,
+    exerciseAttemptCount: 0,
+    signedIn: false,
+  },
+  lessonTitle = null,
+}: {
+  readonly shell: string;
+  readonly port?: FeedbackPort;
+  readonly context?: FeedbackNoteContext;
+  /** Display-only title; the submitted payload uses the canonical locator. */
+  readonly lessonTitle?: string | null;
+}) {
   const [open, setOpen] = useState(false);
   const [said, setSaid] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [handCopy, setHandCopy] = useState(false);
+  const [state, setState] = useState<"idle" | "busy" | "success" | "hand-copy" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const scrolling = useHiddenWhileScrolling();
   const host = useRailFooter();
 
-  const copy = useCallback(async () => {
-    const note = feedbackNote({
-      shell,
+  const submit = useCallback(async () => {
+    const at = new Date();
+    const feedbackContext: FeedbackContext = {
+      ...context,
+      // `feedbackRouteOf` and not `hash || pathname`: lesson addresses are
+      // paths now, and reading the hash first reported "/" for every lesson.
       route: feedbackRouteOf(window.location),
       viewport: [window.innerWidth, window.innerHeight],
+    };
+    const note = feedbackNote({
+      shell,
+      route: feedbackContext.route,
+      viewport: feedbackContext.viewport,
       theme:
         document.documentElement.getAttribute("data-game-ui-theme") ??
         document.querySelector("[data-game-ui-theme]")?.getAttribute("data-game-ui-theme") ??
         "light",
-      at: new Date(),
+      at,
       said,
+      locator: feedbackContext.locator,
+      contentRevision: feedbackContext.contentRevision,
+      exerciseAttemptCount: feedbackContext.exerciseAttemptCount,
+      signedIn: feedbackContext.signedIn,
     });
+    setState("busy");
+    setErrorMessage(null);
     try {
-      await navigator.clipboard.writeText(note);
-      setCopied(true);
-      setHandCopy(false);
+      await port.submit({ message: said, context: feedbackContext });
+      setState("success");
     } catch {
       /*
-        A blocked clipboard is where this could have quietly failed. The
-        sentence is in the box, but the route, width and theme — the entire
-        reason this exists — live only inside the note. So on failure the note
-        replaces the box's contents and the panel says to copy it by hand.
-        Leaving the person with their own sentence and none of the context
-        would be the same as not having the button.
+        A blocked clipboard is recoverable because the full note is in the
+        text area. A delivery failure is different: showing a checkmark or
+        silently copying would spend the learner's trust, so it stays an
+        explicit error and never falls back to the clipboard.
       */
-      setSaid(note);
-      setHandCopy(true);
-      setCopied(false);
+      if (port.transport === "clipboard") {
+        setSaid(note);
+        setState("hand-copy");
+        return;
+      }
+      setState("error");
+      setErrorMessage(
+        port.transport === "unavailable"
+          ? "反馈暂时没有送出：反馈通道还没有接好。这次不会放进剪贴板。"
+          : "反馈暂时没有送出，请稍后再试。这次不会放进剪贴板。",
+      );
     }
-  }, [shell, said]);
+  }, [context, port, said, shell]);
+
+  const isBusy = state === "busy";
+  const successMessage =
+    port.transport === "clipboard"
+      ? "已复制到剪贴板。作者可以把整条贴进 AI 对话。"
+      : lessonTitle && context.contentRevision !== null
+        ? `收到。这条记在《${lessonTitle}》第 ${context.contentRevision} 版上了。`
+        : "收到。这条意见已经记下了。";
+  const statusMessage =
+    state === "hand-copy"
+      ? "复制不了剪贴板，整条已经放进上面的框，手动全选复制。"
+      : state === "error"
+        ? errorMessage
+        : state === "success"
+          ? successMessage
+          : "路由、课定位、版本、练习尝试次数、登录状态、视口和时间会自动带上。";
+  const statusClass = state === "error" ? "is-error" : state === "success" ? "is-success" : "";
+  const actionLabel =
+    state === "busy"
+      ? "正在发送…"
+      : state === "success"
+        ? port.transport === "clipboard"
+          ? "已复制 ✓"
+          : "已收到 ✓"
+        : port.transport === "clipboard"
+          ? "复制这条"
+          : "发送意见";
 
   const panel = open ? (
     <div className="feedback-note" role="dialog" aria-label="提意见">
@@ -187,25 +266,29 @@ export function FeedbackNote({ shell }: { readonly shell: string }) {
         placeholder="这一屏哪里不对？"
         onChange={(event) => {
           setSaid(event.target.value);
-          setCopied(false);
-          setHandCopy(false);
+          setState("idle");
+          setErrorMessage(null);
         }}
       />
-      <p className="feedback-note__meta">
-        {handCopy
-          ? "复制不了剪贴板，整条已经放进上面的框，手动全选复制。"
-          : "路由、宽度、主题和时间会自动带上。"}
+      <p className={`feedback-note__meta ${statusClass}`} role="status">
+        {statusMessage}
       </p>
       <div className="feedback-note__actions">
-        <button type="button" className="feedback-note__copy" onClick={copy}>
-          {copied ? "已复制 ✓" : "复制这条"}
+        <button
+          type="button"
+          className="feedback-note__copy"
+          onClick={submit}
+          disabled={isBusy || said.trim().length === 0}
+        >
+          {actionLabel}
         </button>
         <button
           type="button"
           className="feedback-note__close"
           onClick={() => {
             setOpen(false);
-            setCopied(false);
+            setState("idle");
+            setErrorMessage(null);
           }}
         >
           收起

@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-08-26
+last_reviewed: 2026-08-27
 domain: execution
 tags:
   - current-work
@@ -19,6 +19,7 @@ related:
   - ADR-0004
   - ADR-0005
   - ADR-0007
+  - REF-FEEDBACK-BACKEND-GAP
 ---
 
 # Current Work
@@ -41,7 +42,7 @@ apps/university  the product. One source tree, built twice:
                  --mode delivery   3D archipelago, progress, review   (9998)
                  --mode authoring  the same, plus #/studio and 4317   (9999)
                  src/ports/        the only place the two builds differ:
-                                  Grading, Content/Reader, SourceAccess
+                                  Grading, Content/Reader, SourceAccess, Feedback
                  src/authoring/    workbench only; eliminated from delivery
 apps/local       the authoring Node server. Filesystem, CLI, no UI.   (4317)
 packages/core    the domain model. No React, no fs, no network.
@@ -123,8 +124,10 @@ recovery packages when source content changes.
   ADR-0001), `ContentPort`/`ReaderPort` (a loopback server reading the disk, or
   a published package), and `SourceAccessPort` (real checkout and UA actions
   locally, an explanation with a future desktop/manual/mobile path in
-  delivery). The learner surface remains one implementation; an unavailable
-  capability keeps its control and explains itself.
+  delivery), and `FeedbackPort` (clipboard hand-off in authoring, the same
+  payload stored in SwimmerBackend in delivery). The learner surface remains
+  one implementation; an unavailable capability keeps its control and explains
+  itself.
 - The disk stays the source of truth only for `apps/local/studies/` — registered
   private repositories and prose being written. It is not the learner-data
   source of truth.
@@ -477,6 +480,19 @@ the list below contains the remaining implementation and authority boundaries.
     document parsing live in the existing progress document; the sender,
     scheduler, VAPID secret and cleanup remain a SwimmerBackend gap — see
     [Review Reminders Backend Gap](./review-reminders-backend-gap.md).
+
+16. **Feedback loop, browser framework complete (2026-08-27).** The shared
+   `FeedbackPort` keeps one learner control and one allowlisted context: lesson
+   locator, content revision, current-lesson exercise-attempt count, login
+   state, route and viewport. Authoring keeps its clipboard/AI hand-off;
+   delivery writes to the future `university.feedback` table and never falls
+   back to a misleading copied checkmark. `#/studio` groups real feedback by
+   course and content revision and has a separate owner-only answer-aggregate
+   interface beside it; missing feedback or answer data has an explicit
+   capability/empty state. Deterministic grouping is complete; the backend
+   answer aggregate, offline fixed categories and any course edit remain future
+   work. The SQL, owner RLS and hand-off sequence are in
+   [Feedback Backend Gap](./feedback-backend-gap.md).
 
 ## Refactor Program
 

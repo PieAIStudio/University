@@ -37,6 +37,13 @@ vi.mock("../ports/index", () => ({
   },
   readerPort: {},
   gradingPort: {},
+  feedbackPort: {
+    transport: "unavailable",
+    submit: async () => {
+      throw new Error("feedback unavailable");
+    },
+    readMine: async () => [],
+  },
   reviewReminderPort: {
     snapshot: () => ({ kind: "unsupported", reason: "notifications" }),
     subscribe: () => () => undefined,
