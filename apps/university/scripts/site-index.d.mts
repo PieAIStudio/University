@@ -18,5 +18,6 @@ export function buildSiteIndex(
   options: {
     readonly publicOrigin: string;
     readonly pathForLesson: (ref: LessonRef) => string;
+    readonly expectedLessonCount: number;
   },
 ): SiteIndex;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { checkShelfData } from "./check-shelf.mjs";
 import { buildSiteIndex, lessonRefsForShelf } from "./site-index.mjs";
 
 const SHELF = {
@@ -16,8 +17,14 @@ const SHELF = {
   ],
 };
 
+const MANIFEST = {
+  studies: [{ studyId: "study&one", courses: [{ courseId: "course", lessons: 2 }] }],
+};
+
 const pathForLesson = ({ studyId, courseId, unitId, lessonId }) =>
   `/${studyId}/${courseId}/${unitId}/${lessonId}`;
+
+const publishedLessonCount = checkShelfData(MANIFEST, SHELF).lessons;
 
 describe("site index", () => {
   it("flattens the generated shelf and emits one sitemap URL per lesson", () => {
@@ -25,6 +32,7 @@ describe("site index", () => {
     const result = buildSiteIndex(SHELF, {
       publicOrigin: "https://university.pieaistudio.com/ignored",
       pathForLesson,
+      expectedLessonCount: publishedLessonCount,
     });
 
     expect(result.lessonCount).toBe(2);
@@ -43,13 +51,25 @@ describe("site index", () => {
       buildSiteIndex(SHELF, {
         publicOrigin: "https://university.pieaistudio.com",
         pathForLesson: () => "/same",
+        expectedLessonCount: publishedLessonCount,
       }),
     ).toThrow("duplicate lesson URL");
     expect(() =>
       buildSiteIndex(SHELF, {
         publicOrigin: "https://university.pieaistudio.com",
         pathForLesson: () => "#/same",
+        expectedLessonCount: publishedLessonCount,
       }),
     ).toThrow("not canonical");
+  });
+
+  it("rejects a sitemap whose lesson count is not the published count", () => {
+    expect(() =>
+      buildSiteIndex(SHELF, {
+        publicOrigin: "https://university.pieaistudio.com",
+        pathForLesson,
+        expectedLessonCount: 579,
+      }),
+    ).toThrow("sitemap lesson count 2 != published lesson count 579");
   });
 });

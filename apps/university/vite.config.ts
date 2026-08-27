@@ -15,6 +15,7 @@ import react from "@vitejs/plugin-react";
 import { toPath } from "@pieai/university-core";
 import { defineConfig, type Plugin } from "vite";
 
+import { checkShelfData } from "./scripts/check-shelf.mjs";
 import { buildSiteIndex } from "./scripts/site-index.mjs";
 
 /**
@@ -182,17 +183,26 @@ function emitSiteIndex(mode: string): Plugin {
     generateBundle() {
       if (mode !== "delivery") return;
       const shelfPath = resolve(import.meta.dirname, "content", "shelf.json");
+      const manifestPath = resolve(import.meta.dirname, "content", "manifest.json");
       if (!existsSync(shelfPath)) {
         throw new Error(
           "apps/university/content/shelf.json is missing — run `pnpm content` before building.",
         );
       }
+      if (!existsSync(manifestPath)) {
+        throw new Error(
+          "apps/university/content/manifest.json is missing — run `pnpm content` before building.",
+        );
+      }
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
       const shelf = JSON.parse(readFileSync(shelfPath, "utf8"));
+      const published = checkShelfData(manifest, shelf);
       const siteIndex = buildSiteIndex(shelf, {
         publicOrigin:
           process.env["UNIVERSITY_PUBLIC_ORIGIN"] ?? "https://university.pieaistudio.com",
         pathForLesson: ({ studyId, courseId, unitId, lessonId }) =>
           toPath({ kind: "lesson", studyId, courseId, unitId, lessonId }),
+        expectedLessonCount: published.lessons,
       });
       this.emitFile({ type: "asset", fileName: "robots.txt", source: siteIndex.robots });
       this.emitFile({ type: "asset", fileName: "sitemap.xml", source: siteIndex.sitemap });

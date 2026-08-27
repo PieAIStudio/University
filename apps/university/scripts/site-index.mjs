@@ -55,12 +55,20 @@ export function lessonRefsForShelf(shelf) {
  * `pathForLesson` is required so callers cannot quietly invent a second URL
  * spelling here.
  */
-export function buildSiteIndex(shelf, { publicOrigin, pathForLesson }) {
+export function buildSiteIndex(shelf, { publicOrigin, pathForLesson, expectedLessonCount }) {
   if (typeof pathForLesson !== "function") {
     throw new Error("site-index: a canonical lesson path function is required");
   }
+  if (!Number.isInteger(expectedLessonCount) || expectedLessonCount < 0) {
+    throw new Error("site-index: the published lesson count is required");
+  }
   const origin = publicOriginOf(publicOrigin);
   const refs = lessonRefsForShelf(shelf);
+  if (refs.length !== expectedLessonCount) {
+    throw new Error(
+      `site-index: sitemap lesson count ${refs.length} != published lesson count ${expectedLessonCount}`,
+    );
+  }
   const locations = refs.map((ref) => {
     const path = pathForLesson(ref);
     if (!path.startsWith("/") || path.includes("#")) {
