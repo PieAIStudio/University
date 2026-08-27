@@ -23,6 +23,9 @@ export interface AccountForeignSettings {
 /** The learner's requested voice quality; `auto` is resolved at read time. */
 export type SpeechQuality = "auto" | "local" | "online" | "premium";
 
+/** The learner's theme request; `system` is resolved by the browser at read time. */
+export type ThemePreference = "system" | "light" | "dark";
+
 export type AccountPreferenceKey =
   | "foreignSettings"
   | "foreignLanguageMode"
@@ -30,7 +33,8 @@ export type AccountPreferenceKey =
   | "soundEnabled"
   | "sharesPresence"
   | "speechQuality"
-  | "avatarRecipe";
+  | "avatarRecipe"
+  | "theme";
 
 export interface AccountPreferences {
   readonly version: 1;
@@ -40,6 +44,7 @@ export interface AccountPreferences {
   readonly soundEnabled: boolean;
   readonly sharesPresence: boolean;
   readonly speechQuality: SpeechQuality;
+  readonly theme: ThemePreference;
   /** Serialized SwimmerAvatarKit recipe; null means the learner has not saved one. */
   readonly avatarRecipe: string | null;
   /** Per-field timestamps make two devices' independent setting changes merge. */
@@ -75,6 +80,7 @@ export const DEFAULT_ACCOUNT_PREFERENCES: AccountPreferences = {
   soundEnabled: true,
   sharesPresence: true,
   speechQuality: "auto",
+  theme: "system",
   avatarRecipe: null,
   updatedAt: {},
 };
@@ -128,6 +134,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       "sharesPresence",
       "speechQuality",
       "avatarRecipe",
+      "theme",
     ] as const) {
       const timestamp = value.updatedAt[key];
       if (validTimestamp(timestamp)) updatedAt[key] = timestamp;
@@ -147,6 +154,10 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       value.speechQuality === "premium"
         ? value.speechQuality
         : "auto",
+    theme:
+      value.theme === "light" || value.theme === "dark" || value.theme === "system"
+        ? value.theme
+        : "system",
     avatarRecipe: typeof value.avatarRecipe === "string" ? value.avatarRecipe : null,
     updatedAt,
   };
@@ -178,6 +189,8 @@ export function mergeAccountPreferences(
   const rightSpeechQuality = timestampMs(right.updatedAt.speechQuality);
   const leftAvatarRecipe = timestampMs(left.updatedAt.avatarRecipe);
   const rightAvatarRecipe = timestampMs(right.updatedAt.avatarRecipe);
+  const leftTheme = timestampMs(left.updatedAt.theme);
+  const rightTheme = timestampMs(right.updatedAt.theme);
   const newer = (leftAt: number, rightAt: number) => rightAt >= leftAt;
   const updatedAt = { ...left.updatedAt };
   const result: AccountPreferences = {
@@ -197,6 +210,7 @@ export function mergeAccountPreferences(
     avatarRecipe: newer(leftAvatarRecipe, rightAvatarRecipe)
       ? right.avatarRecipe
       : left.avatarRecipe,
+    theme: newer(leftTheme, rightTheme) ? right.theme : left.theme,
     updatedAt,
   };
   for (const key of [
@@ -207,6 +221,7 @@ export function mergeAccountPreferences(
     "sharesPresence",
     "speechQuality",
     "avatarRecipe",
+    "theme",
   ] as const) {
     if (
       right.updatedAt[key] &&

@@ -312,6 +312,32 @@ describe("mergeProgress", () => {
     expect(mergeProgress(laptop, phone).account.preferences.avatarRecipe).toBe("laptop-recipe");
   });
 
+  it("merges the requested theme as one timestamped account preference", () => {
+    const phone = doc({
+      account: {
+        ...emptyAccountData(),
+        preferences: {
+          ...DEFAULT_ACCOUNT_PREFERENCES,
+          theme: "light",
+          updatedAt: { theme: "2026-08-24T08:00:00.000Z" },
+        },
+      },
+    });
+    const laptop = doc({
+      account: {
+        ...emptyAccountData(),
+        preferences: {
+          ...DEFAULT_ACCOUNT_PREFERENCES,
+          theme: "dark",
+          updatedAt: { theme: "2026-08-24T09:00:00.000Z" },
+        },
+      },
+    });
+
+    expect(mergeProgress(phone, laptop).account.preferences.theme).toBe("dark");
+    expect(mergeProgress(laptop, phone).account.preferences.theme).toBe("dark");
+  });
+
   it("keeps a newer favourite deletion tombstone over an older device copy", () => {
     const favourite = {
       senseId: "shared-sense",

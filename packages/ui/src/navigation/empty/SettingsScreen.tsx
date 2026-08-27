@@ -5,6 +5,7 @@ import type {
   ProgressPort,
   ReviewReminderPort,
   SpeechQuality,
+  ThemePreference,
 } from "@pieai/university-core";
 
 import { ForeignSettingsPanel } from "../../language/ForeignSettingsPanel.js";
@@ -20,7 +21,15 @@ import {
 } from "../../language/speech.js";
 import { writeSharesPresence } from "../../presence/shares-presence.js";
 import { SoundToggle } from "../../sound/SoundToggle.js";
+import {
+  resolvedThemeOf,
+  subscribeSystemTheme,
+  systemPrefersDark,
+  THEME_PREFERENCE_OPTIONS,
+} from "../../theme.js";
 import { ReviewReminderSettings } from "./ReviewReminderSettings.js";
+
+const NO_SYSTEM_SUBSCRIPTION = () => () => undefined;
 
 /**
  * Settings is not an empty page. Sound and the language layer already exist;
@@ -48,6 +57,7 @@ export function SettingsScreen({
   return (
     <div className="settings-screen">
       <h1 className="settings-screen__title">偏好设置</h1>
+      <ThemePreferenceControl progress={progress} />
       <section className="settings-screen__block" aria-labelledby="settings-sound">
         <h2 id="settings-sound" className="settings-screen__heading">
           声音
@@ -78,6 +88,63 @@ export function SettingsScreen({
         />
       </section>
     </div>
+  );
+}
+
+function ThemePreferenceControl({ progress }: { readonly progress?: ProgressPort }) {
+  const [theme, setTheme] = useState<ThemePreference>(
+    () => progress?.accountData().preferences.theme ?? "system",
+  );
+  useEffect(() => {
+    if (!progress) return;
+    return progress.subscribe(() => setTheme(progress.accountData().preferences.theme));
+  }, [progress]);
+
+  function choose(next: ThemePreference): void {
+    setTheme(next);
+    if (progress) {
+      progress.setAccountPreferences({
+        ...progress.accountData().preferences,
+        theme: next,
+      });
+    }
+  }
+
+  const systemDark = useSyncExternalStore(
+    theme === "system" ? subscribeSystemTheme : NO_SYSTEM_SUBSCRIPTION,
+    systemPrefersDark,
+    () => false,
+  );
+  const resolved = resolvedThemeOf(theme, systemDark);
+  const resolvedLabel = resolved === "dark" ? "深色" : "浅色";
+
+  return (
+    <section className="settings-screen__block" aria-labelledby="settings-theme">
+      <h2 id="settings-theme" className="settings-screen__heading">
+        外观
+      </h2>
+      <div className="theme-preference-control">
+        <div className="theme-preference-control__options" role="group" aria-label="主题">
+          {THEME_PREFERENCE_OPTIONS.map((option) => (
+            <GameButton
+              key={option.id}
+              className="theme-preference-control__option"
+              type="button"
+              variant={theme === option.id ? "primary" : "secondary"}
+              aria-pressed={theme === option.id}
+              title={option.description}
+              onClick={() => choose(option.id)}
+            >
+              {option.label}
+            </GameButton>
+          ))}
+        </div>
+        <p className="settings-screen__hint">
+          当前生效：{resolvedLabel}。选择“跟随系统”后，会按设备的深色模式设置自动切换。
+        </p>
+        <p className="settings-screen__hint">偏好会随学习者账号保存，在其他设备继续使用。</p>
+      </div>
+    </section>
   );
 }
 

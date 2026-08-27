@@ -58,6 +58,16 @@ export {
 export { EvidenceRail } from "./evidence/EvidenceRail.js";
 export { EvidenceCode } from "./evidence/EvidenceCode.js";
 export { Tip } from "./Tip.js";
+export {
+  applyThemePreference,
+  resolvedThemeOf,
+  subscribeSystemTheme,
+  SYSTEM_THEME_QUERY,
+  systemPrefersDark,
+  THEME_PREFERENCE_OPTIONS,
+  watchThemePreference,
+  type ResolvedTheme,
+} from "./theme.js";
 
 // Shared surface — reference collections and structured entries. The delivery
 // shell imports these from this barrel; the authoring shell can, and must

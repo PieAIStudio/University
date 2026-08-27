@@ -67,9 +67,13 @@ describe("empty destinations", () => {
     expect(withoutNavigation).not.toContain("回到学习");
   });
 
-  it("renders settings as a real page with sound and language controls", () => {
+  it("renders settings as a real page with theme, sound and language controls", () => {
     const markup = renderToStaticMarkup(<SettingsScreen />);
     expect(markup).toContain("偏好设置");
+    expect(markup).toContain("外观");
+    expect(markup).toContain("浅色");
+    expect(markup).toContain("深色");
+    expect(markup).toContain("跟随系统");
     expect(markup).toContain("声音");
     expect(markup).toContain("自动");
     expect(markup).toContain("本机");

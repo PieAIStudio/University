@@ -86,6 +86,7 @@
     "./sound/index.js": "./src/sound/index.ts",
     "./sound/sound-toggle.css": "./src/sound/sound-toggle.css",
     "./text/spaced-name.js": "./src/text/spaced-name.ts",
+    "./theme.js": "./src/theme.ts",
     "./today/TodaySection.js": "./src/today/TodaySection.tsx",
     "./today/today.css": "./src/today/today.css",
     "./view/lesson-view.js": "./src/view/lesson-view.ts"

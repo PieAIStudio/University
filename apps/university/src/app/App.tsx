@@ -103,6 +103,7 @@ import { useWorldMarkers, useWorldModel, type PathOverlay } from "./world-model"
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
+import { watchThemePreference } from "@pieai/university-ui/theme.js";
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
 import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
 import { MainRouter } from "./MainRouter";
@@ -191,6 +192,11 @@ export function App() {
   );
 
   useEffect(() => bindProgressToIdentity(progressPort, identityPort, progressRemoteStore), []);
+
+  useEffect(
+    () => watchThemePreference(progress.account.preferences.theme),
+    [progress.account.preferences.theme],
+  );
 
   useEffect(() => {
     if (view.kind !== "course") setPathOverlay(null);

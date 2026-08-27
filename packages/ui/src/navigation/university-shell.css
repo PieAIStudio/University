@@ -112,6 +112,21 @@ a.linkish {
   flex: 1 1 7rem;
 }
 
+.theme-preference-control {
+  display: grid;
+  gap: 8px;
+}
+
+.theme-preference-control__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.theme-preference-control__option {
+  flex: 1 1 7rem;
+}
+
 .settings-screen__hint {
   margin: 0;
   font-size: 0.85rem;

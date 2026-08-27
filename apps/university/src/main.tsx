@@ -58,7 +58,12 @@ import "@pieai/university-ui/lesson/word-list.css";
 import "@pieai/university-ui/lesson/mark-list.css";
 import "@pieai/university-world/overlay.css";
 import "./styles.css";
+import { applyThemePreference } from "@pieai/university-ui/theme.js";
 import { initProductAnalytics, trackEvent } from "./analytics/productAnalytics";
+import { progressPort } from "./progress/store";
+
+// Resolve the cached account preference before React paints the learner surface.
+applyThemePreference(progressPort.accountData().preferences.theme);
 
 const container = document.getElementById("root");
 if (!container) throw new Error("Missing #root container in index.html");
