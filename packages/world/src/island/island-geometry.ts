@@ -41,10 +41,10 @@ export function islandGeometryScale(
       : 1;
 }
 
-const GRASS = new THREE.Color(0x74a957);
-const GRASS_LIGHT = new THREE.Color(0x9cc66a);
-const GRASS_DARK = new THREE.Color(0x507c4b);
-const GRASS_WARM = new THREE.Color(0x87b85a);
+const GRASS = new THREE.Color(0x7eb55c);
+const GRASS_LIGHT = new THREE.Color(0xd4ee88);
+const GRASS_DARK = new THREE.Color(0x4a6b42);
+const GRASS_WARM = new THREE.Color(0xa6d064);
 const CLIFF = new THREE.Color(0x7c7467);
 const CLIFF_DARK = new THREE.Color(0x4e5055);
 // Muted earth colours deliberately sit between the meadow's olive greens and

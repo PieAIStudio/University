@@ -29,7 +29,7 @@ const GRASS_LOOKS: Readonly<
   >
 > = {
   diorama: {
-    style: { bottom: 0x6b984d, top: 0xa7cd73 },
+    style: { bottom: 0x4e8038, top: 0xeef9b8 },
     options: { density: 3.6 },
   },
   elemental: {
@@ -391,7 +391,7 @@ export function IslandRender({
           role="terrain"
           style={surfaceStyle}
           vertexColors
-          roughness={0.9}
+          roughness={0.68}
           metalness={0}
           timeUniform={surfaceTime.current}
         />
