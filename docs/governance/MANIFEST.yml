@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-27T16:19:50.040Z
+generated_at: 2026-08-27T16:48:13.062Z
 generator_version: doc-gov@0.9.5
 docs_count: 56
 docs:
@@ -128,7 +128,7 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-27
+    last_reviewed: 2026-08-28
     pinned: true
   - id: POLICY-SHARED-WEB3D-CAPABILITY-ALIGNMENT
     path: docs/policy/shared-rules/web3d-capability-alignment.md
