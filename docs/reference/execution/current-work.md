@@ -20,6 +20,7 @@ related:
   - ADR-0005
   - ADR-0007
   - REF-FEEDBACK-BACKEND-GAP
+  - REF-V5-JOURNEY-REVIEW
 ---
 
 # Current Work
@@ -496,6 +497,23 @@ the list below contains the remaining implementation and authority boundaries.
    remain future work. The SQL, owner RLS and hand-off sequence are in
    [Feedback Backend Gap](./feedback-backend-gap.md).
 
+17. **The teach-back card is now measurable (2026-08-27).** `recap_saved` fires
+   from the progress port, not a call site, because `RecapPrompt` renders in
+   both the reader and the settlement; `review_graded` carries `cardKind`, so a
+   returning teach-back card is no longer the same number as a returning
+   vocabulary card. Until there is real data here, arguments about investing
+   further in teach-back — AI grading, voice input, authored prompts — are
+   arguments about a number nobody has.
+
+18. **The reminder pre-prompt waits for a sender (2026-08-27).** The settlement
+   only offers it when a public VAPID key is configured, because notification
+   permission is one-shot and a denial is effectively permanent. The settings
+   toggle is unaffected. `serverConnected` is now computed by comparing the key
+   a subscription was made against with the one in use, so a subscription
+   created during the keyless period is correctly reported as unreachable.
+   Reasoning and the rest of the v5 re-read are in
+   [V5 Journey Review](./v5-journey-review.md).
+
 ## Refactor Program
 
 Structural work is a program, not a change. The audit behind it, the evidence
@@ -633,6 +651,17 @@ still one 4,896-line file is paving a moving road.
   learner's own cloned repository. It passed everywhere it was written and
   tested, because those machines had no studies registered. Any new source
   scan needs `apps/local/studies` excluded.
+- **`apps/university/content/` is gitignored, so `pnpm verify` is only as
+  current as the last `pnpm content` in *that* checkout.** The delivery
+  packages are generated output, not tracked files, and every worktree carries
+  its own copy at whatever age it happens to be. On 2026-08-27 a branch was
+  verified green in a worktree whose copy had just been regenerated, merged,
+  and then `check-content-revisions` failed on `main`, whose copy was twelve
+  hours old — a red that looked exactly like a bad merge and was not one. It
+  goes the other way too: a worktree with no generated content at all makes
+  the same check pass while counting nothing. Run `pnpm content` before
+  trusting either colour, and read the counts it prints
+  (currently 5 studies, 53 courses, 4.0 MB, 1,597 evidence snippets).
 - **This file is pinned.** A commit touching it needs
   `Pinned-Override: REF-CURRENT-WORK` in the message. SPEC-0001 needs its own.
 
