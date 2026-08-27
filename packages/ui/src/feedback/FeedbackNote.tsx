@@ -44,6 +44,14 @@ export function feedbackNote(args: {
   ].join("\n");
 }
 
+/** The route in a note follows the app's path-based address, including query. */
+export function feedbackRouteOf(location: {
+  readonly pathname: string;
+  readonly search: string;
+}): string {
+  return `${location.pathname}${location.search}`;
+}
+
 /**
  * Finds the rail footer without living in the rail's tree.
  *
@@ -141,7 +149,7 @@ export function FeedbackNote({ shell }: { readonly shell: string }) {
   const copy = useCallback(async () => {
     const note = feedbackNote({
       shell,
-      route: window.location.hash || window.location.pathname,
+      route: feedbackRouteOf(window.location),
       viewport: [window.innerWidth, window.innerHeight],
       theme:
         document.documentElement.getAttribute("data-game-ui-theme") ??

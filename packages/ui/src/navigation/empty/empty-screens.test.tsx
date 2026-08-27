@@ -26,6 +26,7 @@ import {
   LEAGUE_EMPTY_DESCRIPTION,
   LEAGUE_EMPTY_TITLE,
 } from "./LeagueEmpty.js";
+import { NextStepEmpty } from "./NextStepEmpty.js";
 import { ProfileScreen } from "./ProfileScreen.js";
 import {
   QuestsEmpty,
@@ -37,17 +38,33 @@ import { SettingsScreen, SettingsSubnav } from "./SettingsScreen.js";
 
 describe("empty destinations", () => {
   it("keeps the league copy verbatim", () => {
-    const markup = renderToStaticMarkup(<LeagueEmpty />);
+    const markup = renderToStaticMarkup(<LeagueEmpty onNavigate={() => undefined} />);
     expect(markup).toContain(LEAGUE_EMPTY_TITLE);
     expect(markup).toContain(LEAGUE_EMPTY_DESCRIPTION);
     expect(markup).toContain(LEAGUE_EMPTY_ACTION);
+    expect(markup).not.toContain("等账号上线");
   });
 
   it("keeps the quests copy verbatim", () => {
-    const markup = renderToStaticMarkup(<QuestsEmpty />);
+    const markup = renderToStaticMarkup(<QuestsEmpty onNavigate={() => undefined} />);
     expect(markup).toContain(QUESTS_EMPTY_TITLE);
     expect(markup).toContain(QUESTS_EMPTY_DESCRIPTION);
     expect(markup).toContain(QUESTS_EMPTY_ACTION);
+  });
+
+  it("renders an empty-state action only when the shell supplies navigation", () => {
+    const withNavigation = renderToStaticMarkup(
+      <NextStepEmpty
+        title="还没有内容"
+        description="先回到学习页。"
+        onNavigate={() => undefined}
+      />,
+    );
+    const withoutNavigation = renderToStaticMarkup(
+      <NextStepEmpty title="还没有内容" description="暂时没有可看的内容。" />,
+    );
+    expect(withNavigation).toContain("回到学习");
+    expect(withoutNavigation).not.toContain("回到学习");
   });
 
   it("renders settings as a real page with sound and language controls", () => {

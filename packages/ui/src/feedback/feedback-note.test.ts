@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { feedbackNote } from "./FeedbackNote.js";
+import { feedbackNote, feedbackRouteOf } from "./FeedbackNote.js";
 
 /**
  * The point of this note is the context nobody remembers to write down. If it
@@ -13,14 +13,14 @@ describe("feedbackNote", () => {
   it("carries where you were, not only what you said", () => {
     const note = feedbackNote({
       shell: "在线端",
-      route: "#/turing-pact/foundations-before-zero",
+      route: "/turing-pact/foundations-before-zero",
       viewport: [375, 812],
       theme: "night",
       at,
       said: "这块面板挡住了地图",
     });
     expect(note).toContain("这块面板挡住了地图");
-    expect(note).toContain("#/turing-pact/foundations-before-zero");
+    expect(note).toContain("/turing-pact/foundations-before-zero");
     expect(note).toContain("375×812");
     expect(note).toContain("night");
     expect(note).toContain("在线端");
@@ -29,7 +29,7 @@ describe("feedbackNote", () => {
   it("still produces a usable note when nothing was typed", () => {
     const note = feedbackNote({
       shell: "本地端",
-      route: "#/",
+      route: "/",
       viewport: [1440, 900],
       theme: "night",
       at,
@@ -38,6 +38,15 @@ describe("feedbackNote", () => {
     // An empty note is a mis-click, and it should read as one rather than as a
     // heading with nothing under it.
     expect(note).toContain("(没写内容)");
-    expect(note).toContain("#/");
+    expect(note).toContain("- 路由：/");
+  });
+
+  it("keeps the canonical pathname and query, without the retired hash route", () => {
+    expect(
+      feedbackRouteOf({
+        pathname: "/turing-pact/foundations-before-zero",
+        search: "?from=review",
+      }),
+    ).toBe("/turing-pact/foundations-before-zero?from=review");
   });
 });

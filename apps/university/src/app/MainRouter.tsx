@@ -374,7 +374,9 @@ export function MainRouter({
           onOpenLesson={(locator) => setView({ kind: "lesson", ...locator })}
         />
       ) : null}
-      {view.kind === "league" ? <LeagueScreen document={progress} /> : null}
+      {view.kind === "league" ? (
+        <LeagueScreen document={progress} signedIn={avatarSignedIn} />
+      ) : null}
       {view.kind === "quests" ? <QuestsScreen document={progress} /> : null}
       {view.kind === "plans" ? <PlansScreen paymentPort={paymentPort} /> : null}
       {view.kind === "settings" ? (
