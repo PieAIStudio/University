@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-28T14:24:33.019Z
+generated_at: 2026-08-28T14:37:46.656Z
 generator_version: doc-gov@0.9.6
-docs_count: 60
+docs_count: 61
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -55,6 +55,13 @@ docs:
     pinned: false
   - id: ADR-0008
     path: docs/adr/ADR-0008-one-locked-technique-per-island-element.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-08-28
+    pinned: false
+  - id: ADR-0009
+    path: docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md
     type: decision
     status: accepted
     canonical: true
