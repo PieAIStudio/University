@@ -33,12 +33,12 @@ import { renderTier } from "../sky/tier.js";
 // These are authored sRGB endpoints before the shared renderer grade:
 // #2d5c2f is CIELAB L* 34.8 and #b0df83 is CIELAB L* 83.8. Keeping a full
 // value ramp in each card makes a blade read even when the key light is flat.
-const DEFAULT_GRASS_BOTTOM = new THREE.Color(0x2d5c2f);
+const DEFAULT_GRASS_BOTTOM = new THREE.Color(0x3f7138);
 const DEFAULT_GRASS_TOP = new THREE.Color(0xb0df83);
-const DEFAULT_GRASS_SHADOW = new THREE.Color(0x1d3b25);
-const GRASS_BOTTOM_LSTAR = 35; // CIELAB L* at each blade root.
+const DEFAULT_GRASS_SHADOW = new THREE.Color(0x2d5c2f);
+const GRASS_BOTTOM_LSTAR = 43; // CIELAB L* at each blade root.
 const GRASS_TOP_LSTAR = 88; // CIELAB L* at the brightest blade tips.
-const GRASS_SHADOW_LSTAR = 22; // Non-linear root shadow endpoint.
+const GRASS_SHADOW_LSTAR = 30; // Non-linear root shadow endpoint.
 
 export interface IslandGrassStyle {
   readonly bottom?: THREE.ColorRepresentation;
@@ -95,7 +95,9 @@ function normalizeColorLStar(
 
 function styleValues(style: IslandGrassStyle | undefined) {
   const direction = style?.windDirection ?? [0.78, 0.62];
-  const length = Math.hypot(direction[0] ?? 0, direction[1] ?? 0) || 1;
+  const directionLength = Math.hypot(direction[0] ?? 0, direction[1] ?? 0);
+  const safeDirection = directionLength > Number.EPSILON ? direction : ([1, 0] as const);
+  const length = directionLength > Number.EPSILON ? directionLength : 1;
   return {
     // Theme styles retain their hue/chroma but share the same perceptual
     // endpoint values: the meadow's identity comes from value first here.
@@ -105,7 +107,10 @@ function styleValues(style: IslandGrassStyle | undefined) {
     windStrength: Math.max(0, finiteOr(style?.windStrength, 0.065)),
     windSpeed: Math.max(0, finiteOr(style?.windSpeed, 1.15)),
     windFrequency: Math.max(0, finiteOr(style?.windFrequency, 0.24)),
-    windDirection: new THREE.Vector2((direction[0] ?? 0) / length, (direction[1] ?? 0) / length),
+    windDirection: new THREE.Vector2(
+      (safeDirection[0] ?? 0) / length,
+      (safeDirection[1] ?? 0) / length,
+    ),
   };
 }
 
@@ -187,7 +192,11 @@ uniform float uGroundNormalStrength;
 attribute vec3 aGrassGroundNormal;
 varying float vBladeHeight;
 vec2 grassWindAt(vec3 grassBaseWorld) {
-  vec2 grassDirection = normalize(uWindDirection);
+  vec2 grassDirection = uWindDirection;
+  float grassDirectionLength = length(grassDirection);
+  grassDirection = grassDirectionLength > 0.0001
+    ? grassDirection / grassDirectionLength
+    : vec2(1.0, 0.0);
   vec2 grassCross = vec2(-grassDirection.y, grassDirection.x);
   float grassWavePhase = dot(grassBaseWorld.xz, grassDirection) * uWindFrequency;
   float grassGustPhase = dot(grassBaseWorld.xz, grassCross) * uWindFrequency * 0.58;
@@ -304,8 +313,11 @@ export function createIslandGrassMaterial(style?: IslandGrassStyle): THREE.MeshS
     color: 0xffffff,
     roughness: 0.68,
     metalness: 0,
-    emissive: 0x000000,
-    emissiveIntensity: 0,
+    // A small working-linear lift keeps receiveShadow roots from collapsing
+    // into black on the near camera; the donor ramp and the island light still
+    // provide the actual colour and value range.
+    emissive: 0x3d5f24,
+    emissiveIntensity: 0.11,
     side: THREE.FrontSide,
     // Stage owns the one ACES/sRGB grade. Grass emits working-linear colour.
     toneMapped: false,

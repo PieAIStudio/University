@@ -80,9 +80,7 @@ describe("Island grass plan", () => {
     expect(shader.vertexShader).toContain("grassBillboardAngle");
     expect(shader.vertexShader).toContain("grassRotateAxis");
     expect(shader.vertexShader).toContain("uGroundNormalStrength");
-    expect(shader.fragmentShader).toContain(
-      "pow(smoothstep(0.2, 0.98, grassBladeMask), 0.5)",
-    );
+    expect(shader.fragmentShader).toContain("pow(smoothstep(0.2, 0.98, grassBladeMask), 0.5)");
     expect(shader.fragmentShader).toContain("uGrassShadow");
 
     material.dispose();
@@ -229,6 +227,16 @@ describe("Island grass plan", () => {
     expect(plan.placements.every((placement) => placement.height < 0.65)).toBe(true);
   }, 30000);
 
+  it("keeps the donor blade budget below one quarter of the old clump cost", () => {
+    const legacyGrassTriangles = 16_000 * 45;
+    const desktopGrassTriangles = ISLAND_GRASS_LIMITS.course.desktop * ISLAND_GRASS_BLADE_TRIANGLES;
+    const mobileGrassTriangles = ISLAND_GRASS_LIMITS.course.mobile * ISLAND_GRASS_BLADE_TRIANGLES;
+
+    expect(desktopGrassTriangles).toBe(80_000);
+    expect(desktopGrassTriangles).toBeLessThan(legacyGrassTriangles / 4);
+    expect(mobileGrassTriangles).toBeLessThan(desktopGrassTriangles);
+  });
+
   it("resolves deterministic distance LOD with hysteresis", () => {
     expect(islandGrassLodForDistance(34)).toBe("near");
     expect(islandGrassLodForDistance(76)).toBe("mid");
@@ -252,7 +260,7 @@ describe("Island grass plan", () => {
     expect(islandGrassLodForDistance(ISLAND_GRASS_LOD_THRESHOLDS.farToMid, "far")).toBe("mid");
   });
 
-  it("draws 45% of clumps in the middle LOD and none in the far LOD", () => {
+  it("draws 45% of blades in the middle LOD and none in the far LOD", () => {
     const plan = {
       placements: Array.from({ length: 16000 }, () => ({
         x: 0,

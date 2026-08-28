@@ -41,11 +41,13 @@ export const ISLAND_GRASS_TOP_MAX_RADIAL = 0.81;
 export const ISLAND_GRASS_LIMITS: Readonly<
   Record<IslandGrassDetail, Readonly<Record<IslandGrassRenderTier, number>>>
 > = {
-  // One instance is one three-vertex billboard blade. The desktop ceiling
-  // matches the donor's nine-tile upper bound while staying below one quarter
-  // of the previous 16,000 five-leaf clumps × 45 triangles. Mobile keeps a
-  // smaller resident field for fill-rate and vertex work.
-  course: { desktop: 112500, mobile: 30000 },
+  // One instance is one three-vertex billboard blade. The donor's nine-tile
+  // upper bound is 112,500, but the first visual pass deliberately spends only
+  // 80,000 on desktop and 24,000 on mobile: that is roughly the old 16,000
+  // clumps × five visible leaves, without immediately spending the whole
+  // triangle saving on denser grass. Both remain below one quarter of the old
+  // 16,000 five-leaf clumps × 45 triangles.
+  course: { desktop: 80000, mobile: 24000 },
   world: { desktop: 0, mobile: 0 },
 };
 
