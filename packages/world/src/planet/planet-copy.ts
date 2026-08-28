@@ -1,3 +1,5 @@
+import { hash } from "../island/random.js";
+
 /**
  * The only "introduction" a study is allowed to have on this page.
  *
@@ -28,6 +30,37 @@ export interface StudyMarkerColor {
   readonly outlineHex: number;
 }
 
+function hueToRgb(p: number, q: number, t: number): number {
+  let value = t;
+  if (value < 0) value += 1;
+  if (value > 1) value -= 1;
+  if (value < 1 / 6) return p + (q - p) * 6 * value;
+  if (value < 1 / 2) return q;
+  if (value < 2 / 3) return p + (q - p) * (2 / 3 - value) * 6;
+  return p;
+}
+
+/** Convert the one stable id-derived hue into the hex shape the renderer needs. */
+function hslToHex(hue: number, saturation: number, lightness: number): number {
+  if (saturation === 0) {
+    const channel = Math.round(lightness * 255);
+    return (channel << 16) | (channel << 8) | channel;
+  }
+  const q =
+    lightness < 0.5
+      ? lightness * (1 + saturation)
+      : lightness + saturation - lightness * saturation;
+  const p = 2 * lightness - q;
+  const red = hueToRgb(p, q, hue + 1 / 3);
+  const green = hueToRgb(p, q, hue);
+  const blue = hueToRgb(p, q, hue - 1 / 3);
+  return (Math.round(red * 255) << 16) | (Math.round(green * 255) << 8) | Math.round(blue * 255);
+}
+
+function cssHex(hex: number): string {
+  return `#${hex.toString(16).padStart(6, "0")}`;
+}
+
 const FALLBACK_MARKER_COLORS: readonly StudyMarkerColor[] = [
   { hex: 0xd49a62, css: "#d49a62", outlineHex: 0x4c352a },
   { hex: 0x7d9a62, css: "#7d9a62", outlineHex: 0x30432b },
@@ -35,7 +68,26 @@ const FALLBACK_MARKER_COLORS: readonly StudyMarkerColor[] = [
   { hex: 0xa77768, css: "#a77768", outlineHex: 0x4c302d },
 ];
 
+/**
+ * The published study shape has no `theme` field yet. Keep the four existing
+ * authored marker colours byte-for-byte stable; only the missing fifth study
+ * and future studies use this deterministic id-derived hue. The saturation
+ * and lightness are deliberately muted so this remains a continuation of the
+ * existing identity system, not a second neon palette invented by the planet.
+ */
+function markerColorFromStudyId(studyId: string): StudyMarkerColor {
+  const hue = hash(`study-marker-hue:${studyId}`);
+  const saturation = 0.28 + hash(`study-marker-saturation:${studyId}`) * 0.1;
+  const lightness = 0.49 + hash(`study-marker-lightness:${studyId}`) * 0.08;
+  const hex = hslToHex(hue, saturation, lightness);
+  const outlineHex = hslToHex(hue, saturation * 0.78, lightness * 0.46);
+  return { hex, css: cssHex(hex), outlineHex };
+}
+
 const MARKER_COLORS_BY_STUDY: Readonly<Record<string, StudyMarkerColor>> = {
+  // 通用课 was added after the first four-study marker table. There is no
+  // stored study-level hue to reuse, so its stable id is the source of truth.
+  general: markerColorFromStudyId("general"),
   "turing-pact": FALLBACK_MARKER_COLORS[0]!,
   buzz: FALLBACK_MARKER_COLORS[1]!,
   supaluv: FALLBACK_MARKER_COLORS[2]!,
@@ -46,10 +98,52 @@ const MARKER_COLORS_BY_STUDY: Readonly<Record<string, StudyMarkerColor>> = {
 export function studyMarkerColor(studyId: string): StudyMarkerColor {
   const known = MARKER_COLORS_BY_STUDY[studyId];
   if (known) return known;
+  return markerColorFromStudyId(studyId);
+}
 
-  let value = 0;
-  for (const character of studyId) value = (value * 31 + character.charCodeAt(0)) | 0;
-  return FALLBACK_MARKER_COLORS[Math.abs(value) % FALLBACK_MARKER_COLORS.length]!;
+export type StudyClusterShape = "wide" | "compact" | "elongated" | "faceted" | "tall";
+
+export interface StudyClusterStyle {
+  readonly studyId: string;
+  readonly profile: number;
+  readonly shape: StudyClusterShape;
+  readonly accentHex: number;
+  readonly outlineHex: number;
+}
+
+const STUDY_CLUSTER_SHAPES: readonly StudyClusterShape[] = [
+  "wide",
+  "compact",
+  "elongated",
+  "faceted",
+  "tall",
+];
+
+/**
+ * Shape is a named identity cue, not a hand-tuned island layout. The five
+ * known studies get one stable profile each; an unlisted study hashes into
+ * the same small vocabulary, so content order can never reshuffle a cluster.
+ */
+const STUDY_CLUSTER_PROFILE_BY_ID: Readonly<Record<string, number>> = {
+  general: 0,
+  buzz: 1,
+  supaluv: 2,
+  "turing-pact": 3,
+  "university-local": 4,
+};
+
+export function studyClusterStyle(studyId: string): StudyClusterStyle {
+  const profile =
+    STUDY_CLUSTER_PROFILE_BY_ID[studyId] ??
+    Math.floor(hash(`study-cluster-shape:${studyId}`) * STUDY_CLUSTER_SHAPES.length);
+  const marker = studyMarkerColor(studyId);
+  return {
+    studyId,
+    profile,
+    shape: STUDY_CLUSTER_SHAPES[profile]!,
+    accentHex: marker.hex,
+    outlineHex: marker.outlineHex,
+  };
 }
 
 /**

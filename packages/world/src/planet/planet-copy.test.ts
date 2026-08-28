@@ -4,6 +4,7 @@ import {
   STUDY_STAGE_LABEL,
   studyCounts,
   studyCourseList,
+  studyClusterStyle,
   studyMarkerColor,
   studyPercent,
   studyStage,
@@ -100,5 +101,31 @@ describe("studyMarkerColor", () => {
 
   it("assigns an unknown series a deterministic palette entry", () => {
     expect(studyMarkerColor("new-series")).toEqual(studyMarkerColor("new-series"));
+  });
+
+  it("covers the fifth real study without reusing one of the four legacy hues", () => {
+    const ids = ["general", "buzz", "supaluv", "turing-pact", "university-local"];
+    const colours = ids.map((id) => studyMarkerColor(id).hex);
+    expect(new Set(colours).size).toBe(ids.length);
+    expect(studyMarkerColor("general")).toEqual(studyMarkerColor("general"));
+  });
+});
+
+describe("studyClusterStyle", () => {
+  it("gives the five real studies stable, distinct silhouette cues", () => {
+    const ids = ["general", "buzz", "supaluv", "turing-pact", "university-local"];
+    const styles = ids.map(studyClusterStyle);
+    expect(new Set(styles.map((style) => style.profile)).size).toBe(ids.length);
+    expect(styles.map((style) => style.shape)).toEqual([
+      "wide",
+      "compact",
+      "elongated",
+      "faceted",
+      "tall",
+    ]);
+  });
+
+  it("does not let catalogue order decide an unlisted study's shape", () => {
+    expect(studyClusterStyle("future-study")).toEqual(studyClusterStyle("future-study"));
   });
 });
