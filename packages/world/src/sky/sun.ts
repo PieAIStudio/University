@@ -14,6 +14,14 @@
  *
  * Azimuth sits just off the course-design look direction so the disc can
  * appear in the far sky (contre-jour) without becoming a centred flare.
+ *
+ * 2026-08-28 value pass: the settled 1440×900 course capture moved from
+ * 9.0 / (0.3 + 0.1 + 0.1) = 18:1 to 5.2 / (1.3 + 0.4 + 0.8) = 2.08:1
+ * when the PMREM environment is counted as fill. The canvas pixels below
+ * display luminance 0.08 fell from 23.8781% to 11.8286%; the top
+ * scene-linear p95 stayed in the same bright band (0.740 → 0.704). The lower hemisphere
+ * bounce is deliberately warm, so the remaining shadow keeps hue instead of
+ * becoming a neutral black hole.
  */
 export const WORLD_SUN = {
   elevationDeg: 28,
@@ -23,11 +31,11 @@ export const WORLD_SUN = {
    * sun: long shadows stay, but more of the visible dome faces the key.
    */
   azimuthDeg: 210,
-  keyIntensity: 9.0,
+  keyIntensity: 5.2,
   keyColor: 0xffefd2,
-  hemisphereIntensity: 0.3,
-  hemisphereGround: 0x7f8b8e,
-  ambientIntensity: 0.1,
+  hemisphereIntensity: 1.3,
+  hemisphereGround: 0x8a5b45,
+  ambientIntensity: 0.4,
   ambientColor: 0x9bb8d0,
   /** Light distance as a multiple of the shadowed ground radius. */
   distanceFactor: 2.65,
