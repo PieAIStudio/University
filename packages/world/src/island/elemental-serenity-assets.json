@@ -24,10 +24,7 @@
       "embeddedImageCount": 0,
       "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": [
-        "outpost",
-        "bridge"
-      ]
+      "roles": ["outpost", "bridge"]
     },
     {
       "type": "model",
@@ -42,10 +39,7 @@
       "embeddedImageCount": 0,
       "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": [
-        "outpost",
-        "bush"
-      ]
+      "roles": ["outpost", "bush"]
     },
     {
       "type": "model",
@@ -60,10 +54,7 @@
       "embeddedImageCount": 0,
       "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": [
-        "outpost",
-        "camp"
-      ]
+      "roles": ["outpost", "camp"]
     },
     {
       "type": "model",
@@ -78,10 +69,7 @@
       "embeddedImageCount": 0,
       "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": [
-        "grass",
-        "future-use"
-      ]
+      "roles": ["grass", "future-use"]
     },
     {
       "type": "model",
@@ -96,10 +84,7 @@
       "embeddedImageCount": 0,
       "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": [
-        "foliage",
-        "future-use"
-      ]
+      "roles": ["foliage", "future-use"]
     },
     {
       "type": "model",
@@ -114,10 +99,7 @@
       "embeddedImageCount": 0,
       "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": [
-        "outpost",
-        "stone-ring"
-      ]
+      "roles": ["outpost", "stone-ring"]
     },
     {
       "type": "model",
@@ -132,10 +114,7 @@
       "embeddedImageCount": 0,
       "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": [
-        "outpost",
-        "camp"
-      ]
+      "roles": ["outpost", "camp"]
     },
     {
       "type": "model",
@@ -150,10 +129,7 @@
       "embeddedImageCount": 1,
       "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": [
-        "outpost",
-        "tree-trunks"
-      ]
+      "roles": ["outpost", "tree-trunks"]
     }
   ],
   "summary": {

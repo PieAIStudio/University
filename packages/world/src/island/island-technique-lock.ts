@@ -76,7 +76,8 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
     budget: "near <= 6 tris/blade, mid = 1, far = 0",
     rejected: [
       {
-        option: "Shipping elemental-serenity's grass_blade.glb directly, now that media is permitted",
+        option:
+          "Shipping elemental-serenity's grass_blade.glb directly, now that media is permitted",
         why:
           "Permitted since 2026-08-28 and still not chosen: the blade is three vertices. " +
           "Generating it costs one function and no fetch, no decoder and no 1.2 KB, and " +

@@ -124,16 +124,11 @@ describe("Island technique lock", () => {
   });
 
   it("keeps every shipped decoration mesh under the ceiling", () => {
-    const root = resolve(
-      import.meta.dirname,
-      "../../../../apps/university/public/kenney/r01",
-    );
+    const root = resolve(import.meta.dirname, "../../../../apps/university/public/kenney/r01");
     const models = walkGlb(root);
     expect(models.length).toBeGreaterThan(0);
     for (const model of models) {
-      expect(glbTriangles(model), model).toBeLessThanOrEqual(
-        ISLAND_DECORATION_TRIANGLE_CEILING,
-      );
+      expect(glbTriangles(model), model).toBeLessThanOrEqual(ISLAND_DECORATION_TRIANGLE_CEILING);
     }
   });
 });

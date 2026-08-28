@@ -251,10 +251,12 @@ function TechUnderside({
         />
       </mesh>
       <mesh position={[0, -depth * 0.86, 0]}>
-        <sphereGeometry
-          args={[Math.max(0.18, Math.min(ringRadiusX, ringRadiusZ) * 0.1), 8, 6]}
+        <sphereGeometry args={[Math.max(0.18, Math.min(ringRadiusX, ringRadiusZ) * 0.1), 8, 6]} />
+        <meshBasicMaterial
+          color={dimmed ? TECH : CYAN}
+          transparent
+          opacity={dimmed ? 0.35 : 0.95}
         />
-        <meshBasicMaterial color={dimmed ? TECH : CYAN} transparent opacity={dimmed ? 0.35 : 0.95} />
       </mesh>
     </group>
   );
