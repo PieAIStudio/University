@@ -105,7 +105,7 @@ describe("Island grass plan", () => {
       }),
     );
     expect(Math.max(...values) - Math.min(...values)).toBeGreaterThan(0.2);
-    expect(values.some((value) => value <= 0.26)).toBe(true);
+    expect(values.some((value) => value <= 0.38)).toBe(true);
     expect(values.some((value) => value >= 0.68)).toBe(true);
   });
 
@@ -227,8 +227,8 @@ describe("Island grass plan", () => {
     expect(plan.placements.length).toBe(ISLAND_GRASS_LIMITS.course.desktop);
     expect(plan.placements.every((placement) => placement.width >= 0.6)).toBe(true);
     expect(plan.placements.every((placement) => placement.width < 0.85)).toBe(true);
-    expect(plan.placements.every((placement) => placement.height >= 0.42)).toBe(true);
-    expect(plan.placements.every((placement) => placement.height < 0.65)).toBe(true);
+    expect(plan.placements.every((placement) => placement.height >= 0.28)).toBe(true);
+    expect(plan.placements.every((placement) => placement.height < 0.75)).toBe(true);
   }, 30000);
 
   it("keeps the donor blade budget below one quarter of the old clump cost", () => {
@@ -237,8 +237,8 @@ describe("Island grass plan", () => {
     const mobileGrassTriangles = ISLAND_GRASS_LIMITS.course.mobile * ISLAND_GRASS_BLADE_TRIANGLES;
 
     expect(ISLAND_GRASS_BLADE_DENSITY_MULTIPLIER).toBe(1);
-    expect(ISLAND_GRASS_DENSITY_THRESHOLD).toBe(0.68);
-    expect(desktopGrassTriangles).toBe(24_000);
+    expect(ISLAND_GRASS_DENSITY_THRESHOLD).toBe(0.41);
+    expect(desktopGrassTriangles).toBe(30_000);
     expect(desktopGrassTriangles).toBeLessThan(legacyGrassTriangles / 4);
     expect(mobileGrassTriangles).toBeLessThan(desktopGrassTriangles);
 

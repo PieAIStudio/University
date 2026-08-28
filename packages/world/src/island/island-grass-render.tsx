@@ -33,8 +33,8 @@ import { renderTier } from "../sky/tier.js";
 // These are authored sRGB endpoints before the shared renderer grade:
 // #2d5c2f is CIELAB L* 34.8 and #b0df83 is CIELAB L* 83.8. Keeping a full
 // value ramp in each card makes a blade read even when the key light is flat.
-const DEFAULT_GRASS_BOTTOM = new THREE.Color(0x3f7138);
-const DEFAULT_GRASS_TOP = new THREE.Color(0xb0df83);
+const DEFAULT_GRASS_BOTTOM = new THREE.Color(0x2d6e32);
+const DEFAULT_GRASS_TOP = new THREE.Color(0x5daa3c);
 const DEFAULT_GRASS_SHADOW = new THREE.Color(0x2d5c2f);
 const GRASS_BOTTOM_LSTAR = 43; // CIELAB L* at each blade root.
 const GRASS_TOP_LSTAR = 88; // CIELAB L* at the brightest blade tips.

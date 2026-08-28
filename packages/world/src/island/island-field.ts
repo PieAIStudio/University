@@ -24,8 +24,14 @@ export const ISLAND_FIELD_MASK_CHANNELS = {
   rock: 3,
 } as const;
 
-/** Shared visual boundary between meadow blades and exposed ground. */
-export const ISLAND_FIELD_GRASS_CUTOFF = 0.68;
+/**
+ * Shared visual boundary between meadow blades and exposed ground.
+ *
+ * This is deliberately a middle-band boundary. A high global cutoff makes
+ * every meadow thinner at once; the structural route/slope/shore terms below
+ * are what create local absences.
+ */
+export const ISLAND_FIELD_GRASS_CUTOFF = 0.41;
 
 export type IslandFieldMaskChannel = keyof typeof ISLAND_FIELD_MASK_CHANNELS;
 
@@ -294,13 +300,20 @@ export function compileIslandField(
         : 0;
       // Low ground and modest AO shading drive this value. The independent
       // noise contributes at most five percentage points either way.
+      // The field is the one compiled opinion about where a meadow can live.
+      // Route, slope and shore are structural absences: the first is worn by
+      // feet, the second cannot hold a meadow, and the third is the beach
+      // transition. Keeping all three in this channel makes grass placement
+      // and exposed ground agree without a second noise source.
+      const routeDryness = smoothstep(0.08, 0.82, routeStrength);
       const grassDensity = surfaceInside
-        ? 0.46 +
-          lowland * 0.42 -
-          steepness * 0.55 +
+        ? 0.5 +
+          lowland * 0.38 -
+          steepness * 0.6 +
           (variation - 0.5) * 0.1 +
-          (1 - aoValues[index]!) * 0.08 -
-          shoreDryness * 0.08
+          (1 - aoValues[index]!) * 0.06 -
+          shoreDryness * 0.18 -
+          routeDryness * 0.28
         : 0;
       const shoreMask = surfaceInside ? currentRadial : 1;
       writeMask(mask, index, ISLAND_FIELD_MASK_CHANNELS.route, routeStrength);

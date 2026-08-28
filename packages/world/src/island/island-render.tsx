@@ -29,8 +29,8 @@ const GRASS_LOOKS: Readonly<
   >
 > = {
   diorama: {
-    style: { bottom: 0x4e8038, top: 0xeef9b8 },
-    options: { density: 3.6 },
+    style: { bottom: 0x2d6e32, top: 0x5daa3c },
+    options: { density: 4.95 },
   },
   elemental: {
     style: {

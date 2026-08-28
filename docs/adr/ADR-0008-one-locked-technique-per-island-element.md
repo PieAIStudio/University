@@ -208,3 +208,46 @@ The before capture did not reproduce the earlier "near zero" bare-ground
 claim: it was already 22.678% under this reproducible criterion. The change
 still increases it to 36.259% and, more importantly, exposes the warm field-led
 soil regions in the image.
+
+## Amendment 2026-08-29: local grass openings, not a sand-dune rerender
+
+The previous grass amendment proved that the one-triangle card was cheap, but
+its two field decisions were visually unsafe. Raising the global grass cutoff
+from 0.26 to 0.68 made the meadow uniformly thinner, and allowing the exposed
+ground mix to reach 1.0 turned the main hill into a beige dirt surface. The
+second pass keeps the same generated card, the same compiled `IslandField`, and
+the same scene technique; it changes only the field boundary and the structural
+gate that is allowed to reveal the existing soil colours.
+
+The selected B parameters are now the default:
+
+- `ISLAND_FIELD_GRASS_CUTOFF = 0.41`, back in the middle band. Route wear,
+  steep slope and shore proximity already live in the compiled field and now
+  drive local absence; no new noise field was added.
+- `ISLAND_EXPOSED_GROUND_MIX_MAX = 0.86`. Ground colour is
+  `min(maxMix, structuralGate * grassAbsence)`, so a low field value by itself
+  cannot repaint a hill. Steep openings lean toward the existing rock colour;
+  route and shore openings retain the existing warm soil/sand family.
+- The desktop/mobile semantic caps are `30,000 / 9,000`; the cap remains a
+  ceiling, not a target. Per-instance height varies from a short meadow blade to
+  a taller tuft, with small lifts from the existing shore and slope channels.
+  The card remains one indexed triangle, so this does not add geometry.
+
+The fixed measurement is the same 41-lesson
+`turing-pact/foundations-before-zero` course, 1440 × 900, same camera and seed,
+no post-processing, and a canvas-only CDP PNG. The baseline scene was 432,404
+triangles and its adjacent-pixel gradient energy was 2.8635303 L* per pair.
+The exact candidate measurements are:
+
+| candidate | density | cutoff | max ground mix | desktop blades | bare island | gradient reduction | green fraction / before | mean grass saturation / before | dark canvas | scene triangles |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| A conservative | 5.0 | 0.405 | 0.85 | 24,500 | 27.1005% | 35.1976% | 88.9478% | 132.3174% | 1.8468% | 373,800 |
+| **B default** | **4.95** | **0.41** | **0.86** | **24,255** | **27.4432%** | **36.2914%** | **87.9686%** | **132.4024%** | **1.8643%** | **373,555** |
+| C bold | 4.9 | 0.42 | 0.88 | 24,010 | 27.6306% | 37.3810% | 85.8920% | 132.3960% | 1.7929% | 373,310 |
+
+All three stay inside the agreed bare-ground, gradient, green-retention,
+saturation, instance, dark-pixel and triangle rails. Their 16 × 16 locality
+histogram and the full acceptance table live in
+`docs/reference/execution/island-look-contract.md`. The A and C values are
+recorded here so changing the default is a few-number edit, not a new technique
+decision.

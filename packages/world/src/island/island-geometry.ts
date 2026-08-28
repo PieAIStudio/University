@@ -78,6 +78,14 @@ const DIRT_LIGHT = new THREE.Color(0xd5b878);
 const DIRT_DARK = new THREE.Color(0x83603f);
 const SOIL_HINT = new THREE.Color(0xd1b479);
 
+/**
+ * Maximum vertex-colour contribution from structural exposed ground.
+ *
+ * The value is intentionally below 1: a field boundary should reveal a
+ * green island's route, slope or beach, not repaint a whole hill as dirt.
+ */
+export const ISLAND_EXPOSED_GROUND_MIX_MAX = 0.86;
+
 function sampleCount(detail: IslandGeometryDetail, outline: readonly IslandOutlinePoint[]) {
   return detail === "course" ? outline.length : Math.min(32, Math.max(16, outline.length));
 }
@@ -304,15 +312,28 @@ function colorForTop(
   if (patch < -0.18) colour.lerp(GRASS_DARK, Math.min(0.5, -patch));
 
   // The same compiled field that admits a blade also paints the exposed
-  // ground below it. Low meadow density is a soil opening, not an invitation
-  // to leave a second green opinion underneath the grass; using the field here
-  // makes the blade/ground boundary agree without adding another noise source.
+  // ground below it. A low grass value is only allowed to modulate this mix
+  // after a structural reason has opened the land: route wear, steep slope or
+  // shoreline. Low field density on its own must remain green.
   const fieldSample = sampleIslandField(islandFieldFor(blueprint), x, z);
+  const routeGround = smoothstep01(0.08, 0.42, fieldSample.route);
+  const slopeGround = smoothstep01(0.22, 0.52, fieldSample.rock);
+  const shoreGround = smoothstep01(0.72, 0.92, fieldSample.shore);
+  const structuralGround = Math.max(routeGround, slopeGround, shoreGround);
+  const structuralGate = smoothstep01(0.12, 0.4, structuralGround);
+  const grassAbsence = smoothstep01(ISLAND_FIELD_GRASS_CUTOFF, 0.22, fieldSample.grass);
   const exposedGround = fieldSample.inside
-    ? smoothstep01(ISLAND_FIELD_GRASS_CUTOFF, 0.36, fieldSample.grass)
+    ? Math.min(ISLAND_EXPOSED_GROUND_MIX_MAX, structuralGate * grassAbsence)
     : 0;
   if (exposedGround > 0) {
-    const soilTone = DIRT.clone().lerp(DIRT_LIGHT, 0.35 + relative * 0.2);
+    const slopeStone = smoothstep01(0.3, 0.52, fieldSample.rock);
+    const soilTone = DIRT.clone()
+      .lerp(DIRT_LIGHT, 0.35 + relative * 0.2)
+      .lerp(SAND, 0.28 + relative * 0.1);
+    // A steep opening is warm exposed stone, while route and shore openings
+    // stay sandy. The source remains the same rock channel; this only keeps a
+    // low-grass cliff from reading as a pale green meadow.
+    soilTone.lerp(ROCK, slopeStone * 0.75);
     colour.lerp(soilTone, exposedGround);
   }
 

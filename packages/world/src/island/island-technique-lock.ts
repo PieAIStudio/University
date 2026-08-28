@@ -69,7 +69,8 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "camera-facing Y rotation and terrain-normal replacement all happen in the " +
       "vertex shader, so a single instance is one triangle. LOD varies instance " +
       "count, not segment count. The course planner masks the shared field at " +
-      "density 0.68, and the root-to-tip lightness ramp is load-bearing.",
+      "the middle-band cutoff 0.41, then opens route, slope and shore locally; " +
+      "the root-to-tip lightness ramp is load-bearing.",
     source:
       "Our own geometry. Techniques adapted narrowly from elemental-serenity " +
       "(single-triangle billboard, non-linear root shadow, two-layer FBM wind) and " +
@@ -77,7 +78,7 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "neither donates media.",
     budget:
       "1 tri/blade at every band; near <= 6 stays the ceiling, not the shape; " +
-      "course cap <=24,000 desktop / <=7,200 mobile",
+      "course cap <=30,000 desktop / <=9,000 mobile",
     rejected: [
       {
         option:

@@ -54,10 +54,9 @@ export const ISLAND_GRASS_LIMITS: Readonly<
 > = {
   // One instance is one three-vertex billboard blade, not a five-leaf clump.
   // The cap leaves room for a readable near meadow while keeping the field
-  // open: the corrected one-card multiplier produces about 17,640 desktop
-  // placements at the shipped diorama density, so this is a ceiling rather
-  // than an instruction to fill the island.
-  course: { desktop: 24000, mobile: 7200 },
+  // open: the B candidate uses 24,255 desktop placements, so this is a
+  // ceiling rather than an instruction to fill the island.
+  course: { desktop: 30000, mobile: 9000 },
   world: { desktop: 0, mobile: 0 },
 };
 
@@ -539,14 +538,20 @@ export function planIslandGrass(
     // One placement is one billboard blade. Its wider root and deterministic
     // height variation keep the field readable after the five-leaf geometry is
     // removed; the shader supplies the taper and wind bend.
+    // Shore and slope add a small structural lift, so clumps near the water
+    // and on rough ground break the carpet without adding triangles.
+    const fieldSample = sampleIslandField(field, point.x, point.z);
     placements.push({
       x: point.x,
       z: point.z,
       y: surface.y,
-      // A blade 0.42 to 0.64 tall remains a ground-cover accent beside the
-      // lesson markers while the higher instance count supplies density.
+      // A blade varies from a short meadow accent to a visibly taller tuft.
       width: 0.6 + random() * 0.24,
-      height: 0.42 + random() * 0.22,
+      height:
+        0.28 +
+        random() * 0.34 +
+        smoothUnit(fieldSample.shore) * 0.08 +
+        smoothUnit(fieldSample.rock) * 0.08,
       rotation: random() * TAU,
       phase: random(),
       radial: surface.radial,

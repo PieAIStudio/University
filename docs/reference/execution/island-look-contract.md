@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-08-28
+last_reviewed: 2026-08-29
 domain: web3d
 tags:
   - island
@@ -630,3 +630,75 @@ pass 负责；阴影、68°/36 单位相机和 `island-grass*` 均未改。`envi
 
 中等补光实验仍留下约 17%–19% 的课程画面低于阈值；最终选择这一组 2.08:1 参数，是因为
 它把黑洞减半，同时把地图、星球页和课程岛的受光面保持在可读范围内。
+
+## 九、视觉阈值元规则与草地第二轮（2026-08-29）
+
+> **every visual threshold must be a RANGE, never a bare floor or a bare ceiling**
+
+这是一条执行元规则，不是一个新的画面目标。8 月 28 日的 lighting run 只执行了
+「key 要高于 fill」这个下限，没有上限；key/fill 被推到 **18:1**，最终把课程画面
+**23.88%** 的像素压进黑色。草地的上一轮（commit `6a77137`）则命中了每一个下限，
+却因为全局 cutoff `0.68` 和低密度端 `1.0` 的地表混合，把主山坡变成了沙丘。数字
+通过而画面失败，正是“护栏不是目标”的证据。
+
+### 草地回合的验收包络
+
+下面保留本回合的完整验收护栏；含 `≥` 或 `≤` 的原始表达同时写成了可执行范围，
+这样它们不会被误读成调参目标。绿色比例的上界是 BEFORE 本身的 100%；饱和度的上界
+是 HSL 可表示的 1.0；黑像素和三角形的下界是自然的零。
+
+| 指标 | 允许范围 |
+| --- | --- |
+| bare（非草）岛屿像素 | **22%–32%** |
+| 相邻像素 gradient-energy reduction vs before | **35%–60%** |
+| island green fraction（HSL hue 70–160，sat ≥ 0.15） | **78%–100% of BEFORE**（原始护栏：≥78%） |
+| grass-coloured island pixels 的平均饱和度 | **HSL 0.2772–1.0000**（相当于 ≥92% of BEFORE；原始护栏：≥92%） |
+| desktop grass instances | **24,000–30,000** |
+| canvas dark pixels（luminance < 0.08） | **0%–13%**（原始护栏：≤13%） |
+| total frame triangles | **0–432,404**（原始护栏：不高于 BEFORE） |
+
+测量继续使用 `6a77137` 的同一套代码和定义：固定
+`turing-pact/foundations-before-zero`、41 lessons、1440 × 900、同一镜头与 seed，
+no-post 的 canvas-only CDP PNG。BEFORE 的基线是 bare **22.6782%**、gradient energy
+**2.8635303 L* / pair**、green fraction **92.6966%**、mean grass saturation
+**0.301354**、dark **6.2480%**、scene triangles **432,404**。16 × 16 locality grid
+只纳入 land 像素至少占 tile 10% 的 tile；每个 tile 按 bare fraction 计入下列 10 个
+区间。`mostly-green` 是 `<10%` bare，`mostly-bare` 是 `>60%` bare。
+
+### A / B / C 实测
+
+| 指标 | A conservative | B default（采用） | C bold |
+| --- | ---: | ---: | ---: |
+| parameters（density / cutoff / exposed mix max） | 5.0 / 0.405 / 0.85 | **4.95 / 0.41 / 0.86** | 4.9 / 0.42 / 0.88 |
+| bare island pixels | 27.1005% | **27.4432%** | 27.6306% |
+| gradient energy（L* / pair） | 1.8556352 | **1.8243143** | 1.7931136 |
+| gradient reduction vs BEFORE | 35.1976% | **36.2914%** | 37.3810% |
+| island green fraction | 82.4516%（BEFORE 的 88.9478%） | **81.5440%（87.9686%）** | 79.6190%（85.8920%） |
+| mean grass saturation | 0.398744（BEFORE 的 132.3174%） | **0.399000（132.4024%）** | 0.398980（132.3960%） |
+| desktop grass instances | 24,500 | **24,255** | 24,010 |
+| dark canvas pixels | 1.8468% | **1.8643%** | 1.7929% |
+| total frame triangles | 373,800 | **373,555** | 373,310 |
+| mostly-green land tiles | 95 / 247 = **38.4615%** | 91 / 247 = **36.8421%** | 93 / 247 = **37.6518%** |
+| mostly-bare land tiles | 40 / 247 = **16.1943%** | 41 / 247 = **16.5992%** | 46 / 247 = **18.6235%** |
+
+### 16 × 16 bare-fraction histogram
+
+| bare fraction bin | A | B | C |
+| --- | ---: | ---: | ---: |
+| 0.0–0.1 | 95 | 91 | 93 |
+| 0.1–0.2 | 52 | 55 | 56 |
+| 0.2–0.3 | 24 | 24 | 19 |
+| 0.3–0.4 | 12 | 12 | 13 |
+| 0.4–0.5 | 14 | 14 | 12 |
+| 0.5–0.6 | 10 | 9 | 8 |
+| 0.6–0.7 | 5 | 6 | 9 |
+| 0.7–0.8 | 2 | 3 | 4 |
+| 0.8–0.9 | 7 | 7 | 4 |
+| 0.9–1.0 | 26 | 26 | 29 |
+| eligible land tiles | **247** | **247** | **247** |
+
+A 是更密、更稳的 meadow；C 的开口最多，但仍有超过三分之一的 land tiles 几乎全绿，
+而且绝对绿色比例仍是 BEFORE 的 85.8920%，所以没有滑向沙地。B 在密度、局部裸地
+和绿色连续性之间最好：裸地是路线/肩部、陡坡和岸线的成片结构，不是全岛均匀变薄。
+三张候选都在截图后用 `view_image` 复核；六项数值护栏（以及 triangle 上限）都通过，
+目视也没有重现前一轮的 beige sand dune。最终采用 B。
