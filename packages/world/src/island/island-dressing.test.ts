@@ -36,8 +36,12 @@ describe("Island dressing", () => {
     expect(first.placements.some((placement) => placement.packId === "fantasy-town-kit")).toBe(
       true,
     );
+    expect(first.placements.length).toBeGreaterThanOrEqual(41 * 7);
+    expect(
+      new Set(first.placements.map((placement) => placement.outpostId).filter(Boolean)).size,
+    ).toBe(4);
     const accentPlacements = first.placements.filter(
-      (placement) => placement.packId === "fantasy-town-kit",
+      (placement) => placement.packId === "fantasy-town-kit" && !placement.outpostId,
     );
     const expectedAccentAssets = new Set(
       r01.accentRoles
@@ -81,7 +85,7 @@ describe("Island dressing", () => {
       expect(
         Math.hypot(placement.x - blueprint.hero.x, placement.z - blueprint.hero.z),
       ).toBeGreaterThanOrEqual(blueprint.hero.radius + 1.4);
-      if (ROOF_ASSETS.has(placement.assetId)) {
+      if (!placement.outpostId && ROOF_ASSETS.has(placement.assetId)) {
         expect(placement.lift, placement.id).toBeGreaterThan(2);
         expect(placement.y, placement.id).toBeGreaterThan(surface.y);
       } else {
@@ -101,6 +105,62 @@ describe("Island dressing", () => {
     expect(zones).toEqual(islandDressingSafetyZones(plan));
   });
 
+  it("builds four to six grouped route outposts outside every lesson node", () => {
+    const blueprint = makeBlueprint();
+    const plan = planIslandDressing(blueprint, "course");
+    const outposts = new Map<string, Array<(typeof plan.placements)[number]>>();
+    for (const placement of plan.placements) {
+      if (!placement.outpostId) continue;
+      const entries = outposts.get(placement.outpostId) ?? [];
+      entries.push(placement);
+      outposts.set(placement.outpostId, entries);
+      const footprint =
+        placement.kind === "landmark"
+          ? Math.max(0.42, placement.height * 0.22)
+          : Math.max(0.2, placement.height * 0.18);
+      expect(
+        blueprint.nodes.every(
+          (node) =>
+            Math.hypot(placement.x - node.x, placement.z - node.z) >=
+            blueprint.route.nodeRadius + footprint + 0.62,
+        ),
+        placement.id,
+      ).toBe(true);
+    }
+    expect(outposts.size).toBeGreaterThanOrEqual(4);
+    expect(outposts.size).toBeLessThanOrEqual(6);
+    expect([...outposts.values()].every((placements) => placements.length >= 2)).toBe(true);
+    expect(new Set([...outposts.values()].map(([placement]) => placement.segment)).size).toBe(3);
+  });
+
+  it("keeps at least three grouped outposts across the supported route shapes", () => {
+    for (const [index, routeArchetype] of (
+      ["arc", "horseshoe", "loop-around-hill", "switchback", "serpentine"] as const
+    ).entries()) {
+      const blueprint = islandBlueprint({
+        studyId: "turing-pact",
+        courseId: `outpost-route-${index}`,
+        lessonCount: 41,
+        routeArchetype,
+        themeSelection: selection,
+      });
+      const plan = planIslandDressing(blueprint, "course");
+      const outposts = new Map<string, Array<(typeof plan.placements)[number]>>();
+      for (const placement of plan.placements) {
+        if (!placement.outpostId) continue;
+        const entries = outposts.get(placement.outpostId) ?? [];
+        entries.push(placement);
+        outposts.set(placement.outpostId, entries);
+      }
+      expect(outposts.size, routeArchetype).toBeGreaterThanOrEqual(3);
+      expect(outposts.size, routeArchetype).toBeLessThanOrEqual(6);
+      expect(
+        [...outposts.values()].every((placements) => placements.length >= 2),
+        routeArchetype,
+      ).toBe(true);
+    }
+  });
+
   it("keeps the authored courtyard inside route and radial clearances", () => {
     for (const routeArchetype of [
       "arc",
@@ -117,7 +177,7 @@ describe("Island dressing", () => {
         themeSelection: selection,
       });
       const accentPlacements = planIslandDressing(blueprint, "course").placements.filter(
-        (placement) => placement.packId === "fantasy-town-kit",
+        (placement) => placement.packId === "fantasy-town-kit" && !placement.outpostId,
       );
       expect(new Set(accentPlacements.map((placement) => placement.assetId))).toEqual(
         new Set(r01.accentRoles.flatMap((role) => role.assetIds)),
@@ -140,7 +200,7 @@ describe("Island dressing", () => {
   it("stages the academy kit as arrival, journey, and summit beats", () => {
     const blueprint = makeBlueprint();
     const accents = planIslandDressing(blueprint, "course").placements.filter(
-      (placement) => placement.packId === "fantasy-town-kit",
+      (placement) => placement.packId === "fantasy-town-kit" && !placement.outpostId,
     );
     const segments = new Map<string, typeof accents>();
     for (const placement of accents) {
@@ -188,7 +248,7 @@ describe("Island dressing", () => {
     const world = planIslandDressing(blueprint, "world");
     const courseById = new Map(course.placements.map((placement) => [placement.id, placement]));
     expect(world.placements.length).toBeGreaterThan(4);
-    expect(world.placements.length).toBeLessThanOrEqual(12);
+    expect(world.placements.length).toBeLessThanOrEqual(8);
     expect(world.placements.some((placement) => ROOF_ASSETS.has(placement.assetId))).toBe(true);
     expect(world.placements.some((placement) => placement.assetId === "fountain-round")).toBe(true);
     expect(world.placements.some((placement) => placement.kind === "tree")).toBe(true);

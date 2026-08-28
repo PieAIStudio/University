@@ -7,7 +7,9 @@
  * inventory and the much smaller, art-directed recipes that a renderer may
  * request.  A recipe always has Nature as its shared base and one or two
  * physical accent packs.  A logical family label is descriptive only; it
- * cannot hide a third physical pack from the budget.
+ * cannot hide a third physical pack from the budget. Runtime availability is
+ * resolved by the island asset registry, which can apply an explicit manifest
+ * fallback while this catalog remains complete.
  */
 
 import type { IslandThemeSelection } from "./island-blueprint.js";
@@ -320,6 +322,37 @@ export interface IslandRecipe {
   }[];
   readonly excluded: readonly { readonly packId: KenneyPackId; readonly reason: string }[];
   readonly rawGlbBudget: number;
+}
+
+export interface IslandRecipeRuntimeReference {
+  readonly packId: KenneyPackId;
+  readonly assetId: string;
+  readonly source: "base" | "accent";
+}
+
+/**
+ * Return only the asset IDs the island dressing renderer can load. Candidate
+ * characters are catalog intent for a future avatar/NPC port, not dressing
+ * references; including them here would pretend that the current scene owns
+ * the character pipeline.
+ */
+export function islandRecipeRuntimeReferences(
+  recipe: IslandRecipe,
+): readonly IslandRecipeRuntimeReference[] {
+  return [
+    ...recipe.base.assetIds.map((assetId) => ({
+      packId: recipe.base.packId,
+      assetId,
+      source: "base" as const,
+    })),
+    ...recipe.accentRoles.flatMap((role) =>
+      role.assetIds.map((assetId) => ({
+        packId: role.packId,
+        assetId,
+        source: "accent" as const,
+      })),
+    ),
+  ];
 }
 
 const natureBase = {

@@ -13,6 +13,298 @@
     "rawGlbBudget": 14,
     "whitelistPolicy": "explicit filenames only; no donor glob"
   },
+  "runtimeFallbacks": {
+    "fantasy-town-kit/cart": {
+      "pack": "fantasy-town-kit",
+      "assetId": "stall",
+      "reason": "The recipe catalog entry is not present in the checked-in Fantasy Town runtime whitelist."
+    },
+    "fantasy-town-kit/watermill": {
+      "pack": "fantasy-town-kit",
+      "assetId": "fountain-round",
+      "reason": "The recipe catalog entry is not present in the checked-in Fantasy Town runtime whitelist."
+    },
+    "watercraft-pack/boat-house-a": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "watercraft-pack/boat-row-small": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "watercraft-pack/buoy": {
+      "pack": "fantasy-town-kit",
+      "assetId": "fountain-round",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "watercraft-pack/cargo-container-a": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "modular-space-kit/gate": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "modular-space-kit/corridor-intersection": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-corner",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "modular-space-kit/platform-large": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "space-kit/satelliteDish_large": {
+      "pack": "fantasy-town-kit",
+      "assetId": "roof",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "space-kit/machine_generatorLarge": {
+      "pack": "fantasy-town-kit",
+      "assetId": "fountain-round",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "space-kit/rover": {
+      "pack": "fantasy-town-kit",
+      "assetId": "stall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "space-station-kit/wall": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "space-station-kit/floor": {
+      "pack": "fantasy-town-kit",
+      "assetId": "roof",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "space-station-kit/pipe": {
+      "pack": "fantasy-town-kit",
+      "assetId": "lantern",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "modular-space-kit/room": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "modular-space-kit/corridor": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-corner",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "modular-space-kit/gate-lasers": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "tower-defense-kit/tower": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "tower-defense-kit/detail-crystal": {
+      "pack": "fantasy-town-kit",
+      "assetId": "fountain-round",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "space-kit/enemy-ufo-a": {
+      "pack": "fantasy-town-kit",
+      "assetId": "roof",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "space-kit/enemy-ufo-b": {
+      "pack": "fantasy-town-kit",
+      "assetId": "roof-gable",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "castle-kit/wall": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "castle-kit/tower": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "castle-kit/gate": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "mini-forest/bridge": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-corner",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "mini-forest/tent": {
+      "pack": "fantasy-town-kit",
+      "assetId": "stall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "mini-forest/character-archer": {
+      "pack": "fantasy-town-kit",
+      "assetId": "lantern",
+      "reason": "The recipe accent slot is runtime-visible, but this character asset is not shipped in the current whitelist."
+    },
+    "mini-arena/floor": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "mini-arena/wall": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "mini-arena/statue": {
+      "pack": "fantasy-town-kit",
+      "assetId": "fountain-round",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "platformer-kit/platform": {
+      "pack": "fantasy-town-kit",
+      "assetId": "roof",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "platformer-kit/marker": {
+      "pack": "fantasy-town-kit",
+      "assetId": "lantern",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "modular-dungeon-kit/room": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "modular-dungeon-kit/corridor": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-corner",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "modular-dungeon-kit/door": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "mini-dungeon/torch": {
+      "pack": "fantasy-town-kit",
+      "assetId": "lantern",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "mini-dungeon/chest": {
+      "pack": "fantasy-town-kit",
+      "assetId": "stall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "mini-dungeon/character-human": {
+      "pack": "fantasy-town-kit",
+      "assetId": "lantern",
+      "reason": "The recipe accent slot is runtime-visible, but this character asset is not shipped in the current whitelist."
+    },
+    "graveyard-kit/crypt": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "graveyard-kit/gravestone": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-corner",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "graveyard-kit/keeper": {
+      "pack": "fantasy-town-kit",
+      "assetId": "lantern",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "modular-cave-kit/room": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "modular-cave-kit/gate-rock": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-corner",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "pirate-kit/dock": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "pirate-kit/tower": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "pirate-kit/ship": {
+      "pack": "fantasy-town-kit",
+      "assetId": "stall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "holiday-kit/cabin": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall-doorway-square",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "holiday-kit/snow": {
+      "pack": "fantasy-town-kit",
+      "assetId": "roof",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "holiday-kit/lights": {
+      "pack": "fantasy-town-kit",
+      "assetId": "lantern",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "survival-kit/tent": {
+      "pack": "fantasy-town-kit",
+      "assetId": "stall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "survival-kit/campfire": {
+      "pack": "fantasy-town-kit",
+      "assetId": "fountain-round",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "survival-kit/resource": {
+      "pack": "fantasy-town-kit",
+      "assetId": "stall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "minigolf-kit/spline": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "minigolf-kit/ramp": {
+      "pack": "fantasy-town-kit",
+      "assetId": "roof",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "minigolf-kit/flag": {
+      "pack": "fantasy-town-kit",
+      "assetId": "lantern",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "mini-skate/rail": {
+      "pack": "fantasy-town-kit",
+      "assetId": "wall",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    },
+    "mini-skate/half-pipe": {
+      "pack": "fantasy-town-kit",
+      "assetId": "roof",
+      "reason": "The requested Kenney pack is catalogued but not shipped in this runtime whitelist."
+    }
+  },
   "packs": [
     {
       "id": "nature-kit",

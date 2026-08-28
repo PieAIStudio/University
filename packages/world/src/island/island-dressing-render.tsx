@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import * as THREE from "three";
 
 import { AssetField, type Placement } from "../kit.js";
-import manifestJson from "./kenney-r01-assets.json";
+import { resolveIslandRuntimeAsset, type IslandAssetPackId } from "./island-asset-registry.js";
 import {
   planIslandDressing,
   type IslandDressingDetail,
@@ -12,26 +12,9 @@ import {
 import { islandGeometryScale } from "./island-geometry.js";
 import type { IslandBlueprint } from "./island-blueprint.js";
 
-interface RuntimeAsset {
-  readonly type: "model";
-  readonly assetId: string;
-  readonly src: string;
-  readonly pack: string;
-}
-
-interface RuntimeManifest {
-  readonly assetSet: string;
-  readonly assets: readonly RuntimeAsset[];
-}
-
-const manifest = manifestJson as RuntimeManifest;
-const runtimeAssets = new Map<string, RuntimeAsset>(
-  manifest.assets.map((asset) => [`${asset.pack}/${asset.assetId}`, asset] as const),
-);
-
 export interface IslandDressingField {
   readonly key: string;
-  readonly pack: string;
+  readonly pack: IslandAssetPackId;
   readonly src: string;
   readonly at: readonly Placement[];
 }
@@ -45,12 +28,16 @@ export function islandDressingFields(
   scale: number,
   heightMultiplier = 1,
 ): readonly IslandDressingField[] {
-  const grouped = new Map<string, { pack: string; src: string; at: Placement[] }>();
+  const grouped = new Map<string, { pack: IslandAssetPackId; src: string; at: Placement[] }>();
   for (const placement of plan.placements) {
-    const key = `${placement.packId}/${placement.assetId}`;
-    const asset = runtimeAssets.get(key);
-    if (!asset) continue;
-    const field = grouped.get(key) ?? { pack: asset.pack, src: asset.src, at: [] };
+    const resolution = resolveIslandRuntimeAsset(placement.packId, placement.assetId);
+    if (!resolution) continue;
+    const key = `${resolution.pack}/${resolution.assetId}`;
+    const field = grouped.get(key) ?? {
+      pack: resolution.pack,
+      src: resolution.src,
+      at: [],
+    };
     field.at.push({
       position: new THREE.Vector3(placement.x * scale, placement.y * scale, placement.z * scale),
       height: placement.height * scale * heightMultiplier,

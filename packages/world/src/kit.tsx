@@ -26,7 +26,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 // three-stdlib rather than three/examples: drei's GLTFLoader is the stdlib one,
 // and `setKTX2Loader` will only accept the loader from the same package.
-import { KTX2Loader } from "three-stdlib";
+import { DRACOLoader, KTX2Loader } from "three-stdlib";
 
 import manifest from "./kit.json";
 import {
@@ -163,6 +163,12 @@ interface Part {
  * so the loader is created on first use inside the canvas, not at import time.
  */
 let ktx2Loader: KTX2Loader | null = null;
+// Elemental-Serenity's supplied GLBs use KHR_draco_mesh_compression. Keep the
+// decoder on the same shared AssetField path as the existing KTX2 loader and
+// serve its three small decoder files locally, so a donor never creates a
+// second ad-hoc loading pipeline or reaches for a CDN at runtime.
+const dracoLoader = new DRACOLoader().setDecoderPath("/draco/");
+
 function useKtx2() {
   const gl = useThree((state) => state.gl);
   return useMemo(() => {
@@ -176,7 +182,10 @@ function useKtx2() {
  */
 function usePartsFromSource(src: string, preserveMap = false): readonly Part[] {
   const ktx2 = useKtx2();
-  const gltf = useGLTF(src, false, true, (loader) => loader.setKTX2Loader(ktx2));
+  const gltf = useGLTF(src, false, true, (loader) => {
+    loader.setDRACOLoader(dracoLoader);
+    loader.setKTX2Loader(ktx2);
+  });
   const parts = useMemo(() => {
     const root = gltf.scene;
     root.updateMatrixWorld(true);

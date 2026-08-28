@@ -205,6 +205,20 @@ const STALE_OUTPUTS = Object.freeze([
   "nature/ground_pathStraight.glb",
 ]);
 
+/**
+ * Runtime fallback metadata is hand-reviewed alongside the manifest. Preserve
+ * it when refreshing the binary whitelist; the catalog importer must not turn
+ * a valid recipe into a silent missing-asset branch on the next import.
+ */
+function readRuntimeFallbacks() {
+  try {
+    const existing = JSON.parse(readFileSync(MANIFEST_PATH, "utf8"));
+    return existing.runtimeFallbacks ?? {};
+  } catch {
+    return {};
+  }
+}
+
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
@@ -312,6 +326,7 @@ function resolveDonorRoot(requestedRoot) {
 export function runImport({ donorRoot = process.env.KENNEY_DONOR_ROOT } = {}) {
   const sourceRoot = resolveDonorRoot(donorRoot);
   const licenseByPack = new Map();
+  const runtimeFallbacks = readRuntimeFallbacks();
 
   for (const outputRelative of STALE_OUTPUTS) {
     const stalePath = join(OUTPUT_ROOT, outputRelative);
@@ -446,6 +461,7 @@ export function runImport({ donorRoot = process.env.KENNEY_DONOR_ROOT } = {}) {
       rawGlbBudget: 14,
       whitelistPolicy: "explicit filenames only; no donor glob",
     },
+    runtimeFallbacks,
     packs: Object.values(PACKS).map((pack) => ({
       id: pack.id,
       folder: pack.folder,
