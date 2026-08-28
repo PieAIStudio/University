@@ -1,8 +1,10 @@
+import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
 import { islandBlueprint } from "./island-blueprint.js";
 import {
   buildIslandGeometry,
+  ISLAND_GEOMETRY_PALETTE,
   islandGeometryKey,
   sampleIslandTerrainTop,
 } from "./island-geometry.js";
@@ -24,6 +26,27 @@ function dispose(shape: ReturnType<typeof buildIslandGeometry>): void {
 }
 
 describe("Island geometry projections", () => {
+  it("keeps meadow, route soil, and rock in separate warm value bands", () => {
+    const meadow = new THREE.Color(ISLAND_GEOMETRY_PALETTE.grass);
+    const soil = new THREE.Color(ISLAND_GEOMETRY_PALETTE.soilHint);
+    const rock = new THREE.Color(ISLAND_GEOMETRY_PALETTE.rock);
+    const meadowHsl = { h: 0, s: 0, l: 0 };
+    const soilHsl = { h: 0, s: 0, l: 0 };
+    const rockHsl = { h: 0, s: 0, l: 0 };
+    meadow.getHSL(meadowHsl);
+    soil.getHSL(soilHsl);
+    rock.getHSL(rockHsl);
+
+    // These are broad art-direction guards, not exact screenshots: the route
+    // must be the light cream band and exposed slopes must be visibly brown.
+    expect(soilHsl.l).toBeGreaterThan(meadowHsl.l);
+    expect(soilHsl.h).toBeGreaterThan(0.06);
+    expect(soilHsl.h).toBeLessThan(0.16);
+    expect(rockHsl.h).toBeGreaterThan(0.03);
+    expect(rockHsl.h).toBeLessThan(0.1);
+    expect(rockHsl.s).toBeGreaterThan(0.25);
+  });
+
   it("compiles one finite terrain mesh with the route colour baked into its surface", () => {
     const shape = buildIslandGeometry(blueprint, "course");
     const position = shape.terrain.getAttribute("position");

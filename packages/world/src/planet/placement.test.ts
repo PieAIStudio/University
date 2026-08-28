@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 
 import {
+  ATMOSPHERE_RADIUS,
   applyYawPitch,
   placeStudies,
   planetPoints,
@@ -12,7 +13,8 @@ import {
 } from "./placement.js";
 
 function angularGap(left: SpherePoint, right: SpherePoint): number {
-  const dot = left.x * right.x + left.y * right.y + left.z * right.z;
+  const lengthProduct = unitLength(left) * unitLength(right) || 1;
+  const dot = (left.x * right.x + left.y * right.y + left.z * right.z) / lengthProduct;
   return Math.acos(Math.min(1, Math.max(-1, dot)));
 }
 
@@ -80,15 +82,19 @@ describe("pointForStudy / placeStudies", () => {
     }
   });
 
-  it("keeps N=4 real ids and N=40 generated ids from sitting on top of each other", () => {
+  it("keeps N=4 real ids and N=40 generated ids from sitting on top of each other in the atmosphere", () => {
     const four = [...placeStudies(FOUR).values()];
     const forty = [...placeStudies(FORTY).values()];
-    expect(four.every((point) => Math.abs(unitLength(point) - 1) < 1e-10)).toBe(true);
-    expect(forty.every((point) => Math.abs(unitLength(point) - 1) < 1e-10)).toBe(true);
+    expect(four.every((point) => Math.abs(unitLength(point) - ATMOSPHERE_RADIUS) < 1e-10)).toBe(
+      true,
+    );
+    expect(forty.every((point) => Math.abs(unitLength(point) - ATMOSPHERE_RADIUS) < 1e-10)).toBe(
+      true,
+    );
     // Four real ids use a narrow front-facing ring; generated ids use the
     // larger cap but stay above the horizon so every entry remains findable.
-    expect(four.every((point) => point.z > 0.9)).toBe(true);
-    expect(forty.every((point) => point.z > 0.4)).toBe(true);
+    expect(four.every((point) => point.z > 0.9 * ATMOSPHERE_RADIUS)).toBe(true);
+    expect(forty.every((point) => point.z > 0.4 * ATMOSPHERE_RADIUS)).toBe(true);
     expect(minGap(four)).toBeGreaterThan(0.35);
     expect(minGap(forty)).toBeGreaterThan(0.02);
   });
@@ -102,7 +108,7 @@ describe("rotationFor", () => {
       const facing = applyYawPitch(point, yaw, pitch);
       expect(facing.x).toBeCloseTo(0, 5);
       expect(facing.y).toBeCloseTo(0, 5);
-      expect(facing.z).toBeCloseTo(1, 5);
+      expect(facing.z).toBeCloseTo(ATMOSPHERE_RADIUS, 5);
       // Nested groups, not a single Euler: inner pitch, outer yaw. A
       // default XYZ Euler on one object was 2.5° off and would have left
       // the island beside the camera rather than on it.
@@ -117,7 +123,7 @@ describe("rotationFor", () => {
       );
       expect(throughThree.x).toBeCloseTo(0, 5);
       expect(throughThree.y).toBeCloseTo(0, 5);
-      expect(throughThree.z).toBeCloseTo(1, 5);
+      expect(throughThree.z).toBeCloseTo(ATMOSPHERE_RADIUS, 5);
     }
   });
 });

@@ -1,9 +1,12 @@
 /**
  * R3F adapter for the bounded IslandGrass plan.
  *
- * One course owns one low-poly blade geometry, one material, and one
- * InstancedMesh. Wind updates the material's uniform through the Stage-owned
- * `useFrame` loop; this component never creates a renderer or a second loop.
+ * One course owns one three-vertex blade geometry, one material, and one
+ * InstancedMesh. The vertex shader supplies the taper, wind bend, camera-facing
+ * rotation, and terrain-normal replacement; the CPU only supplies roots and
+ * deterministic per-instance transforms. Wind updates the material's uniform
+ * through the Stage-owned `useFrame` loop; this component never creates a
+ * renderer or a second loop.
  * The blueprint and any terrain geometry remain caller-owned and are never
  * disposed here.
  */
@@ -29,15 +32,18 @@ import { renderTier } from "../sky/tier.js";
 
 // These are authored sRGB endpoints before the shared renderer grade:
 // #2d5c2f is CIELAB L* 34.8 and #b0df83 is CIELAB L* 83.8. Keeping a full
-// value ramp in the clump makes volume read even when the key light is flat.
-const DEFAULT_GRASS_BOTTOM = new THREE.Color(0x2d5c2f);
+// value ramp in each card makes a blade read even when the key light is flat.
+const DEFAULT_GRASS_BOTTOM = new THREE.Color(0x3f7138);
 const DEFAULT_GRASS_TOP = new THREE.Color(0xb0df83);
-const GRASS_BOTTOM_LSTAR = 35; // CIELAB L* at each leaf root.
-const GRASS_TOP_LSTAR = 88; // CIELAB L* at the brightest leaf tips.
+const DEFAULT_GRASS_SHADOW = new THREE.Color(0x2d5c2f);
+const GRASS_BOTTOM_LSTAR = 43; // CIELAB L* at each blade root.
+const GRASS_TOP_LSTAR = 88; // CIELAB L* at the brightest blade tips.
+const GRASS_SHADOW_LSTAR = 30; // Non-linear root shadow endpoint.
 
 export interface IslandGrassStyle {
   readonly bottom?: THREE.ColorRepresentation;
   readonly top?: THREE.ColorRepresentation;
+  readonly shadow?: THREE.ColorRepresentation;
   readonly windStrength?: number;
   readonly windSpeed?: number;
   readonly windFrequency?: number;
@@ -62,7 +68,9 @@ interface GrassUniforms extends Record<string, THREE.IUniform<unknown>> {
   uWindDirection: THREE.IUniform<THREE.Vector2>;
   uGrassBottom: THREE.IUniform<THREE.Color>;
   uGrassTop: THREE.IUniform<THREE.Color>;
+  uGrassShadow: THREE.IUniform<THREE.Color>;
   uGrassHeightScale: THREE.IUniform<number>;
+  uGroundNormalStrength: THREE.IUniform<number>;
 }
 
 function finiteOr(value: number | undefined, fallback: number): number {
@@ -87,16 +95,22 @@ function normalizeColorLStar(
 
 function styleValues(style: IslandGrassStyle | undefined) {
   const direction = style?.windDirection ?? [0.78, 0.62];
-  const length = Math.hypot(direction[0] ?? 0, direction[1] ?? 0) || 1;
+  const directionLength = Math.hypot(direction[0] ?? 0, direction[1] ?? 0);
+  const safeDirection = directionLength > Number.EPSILON ? direction : ([1, 0] as const);
+  const length = directionLength > Number.EPSILON ? directionLength : 1;
   return {
     // Theme styles retain their hue/chroma but share the same perceptual
     // endpoint values: the meadow's identity comes from value first here.
     bottom: normalizeColorLStar(style?.bottom, DEFAULT_GRASS_BOTTOM, GRASS_BOTTOM_LSTAR),
     top: normalizeColorLStar(style?.top, DEFAULT_GRASS_TOP, GRASS_TOP_LSTAR),
+    shadow: normalizeColorLStar(style?.shadow, DEFAULT_GRASS_SHADOW, GRASS_SHADOW_LSTAR),
     windStrength: Math.max(0, finiteOr(style?.windStrength, 0.065)),
     windSpeed: Math.max(0, finiteOr(style?.windSpeed, 1.15)),
     windFrequency: Math.max(0, finiteOr(style?.windFrequency, 0.24)),
-    windDirection: new THREE.Vector2((direction[0] ?? 0) / length, (direction[1] ?? 0) / length),
+    windDirection: new THREE.Vector2(
+      (safeDirection[0] ?? 0) / length,
+      (safeDirection[1] ?? 0) / length,
+    ),
   };
 }
 
@@ -110,7 +124,9 @@ function createGrassUniforms(style?: IslandGrassStyle): GrassUniforms {
     uWindDirection: { value: values.windDirection },
     uGrassBottom: { value: values.bottom },
     uGrassTop: { value: values.top },
+    uGrassShadow: { value: values.shadow },
     uGrassHeightScale: { value: 1 },
+    uGroundNormalStrength: { value: 0.72 },
   };
 }
 
@@ -122,147 +138,24 @@ function updateGrassUniforms(uniforms: GrassUniforms, style?: IslandGrassStyle):
   uniforms.uWindDirection.value.copy(values.windDirection);
   uniforms.uGrassBottom.value.copy(values.bottom);
   uniforms.uGrassTop.value.copy(values.top);
+  uniforms.uGrassShadow.value.copy(values.shadow);
 }
 
-export const ISLAND_GRASS_LEAF_COUNT = 5 as const;
-export const ISLAND_GRASS_LEAF_SEGMENTS = 5 as const;
-export const ISLAND_GRASS_CLUMP_TRIANGLES =
-  ISLAND_GRASS_LEAF_COUNT * (ISLAND_GRASS_LEAF_SEGMENTS * 2 - 1);
+/** Compatibility names retained for diagnostics; one instance is one blade. */
+export const ISLAND_GRASS_LEAF_COUNT = 1 as const;
+export const ISLAND_GRASS_LEAF_SEGMENTS = 1 as const;
+export const ISLAND_GRASS_BLADE_TRIANGLES = 1 as const;
+export const ISLAND_GRASS_CLUMP_TRIANGLES = ISLAND_GRASS_BLADE_TRIANGLES;
 
-interface GrassLeafRecipe {
-  readonly angle: number;
-  readonly offsetX: number;
-  readonly offsetZ: number;
-  readonly height: number;
-  readonly width: number;
-  /** Horizontal tip displacement; atan(bend / height) is 20–35°. */
-  readonly bend: number;
-  readonly variation: number;
-}
-
-/**
- * A single instance contains five curved ribbons. Their roots occupy roughly
- * a 0.8-unit disc and their normals face five different azimuths, including
- * opposing directions, so no camera sees only an edge-on card.
- */
-const GRASS_LEAF_RECIPES: readonly GrassLeafRecipe[] = [
-  { angle: 0.12, offsetX: 0, offsetZ: 0, height: 1.0, width: 1.0, bend: 0.46, variation: 0.18 },
-  {
-    angle: 1.28,
-    offsetX: 0.25,
-    offsetZ: -0.04,
-    height: 0.9,
-    width: 0.9,
-    bend: 0.4,
-    variation: 0.42,
-  },
-  {
-    angle: 2.53,
-    offsetX: -0.22,
-    offsetZ: 0.12,
-    height: 1.06,
-    width: 0.92,
-    bend: 0.54,
-    variation: 0.72,
-  },
-  {
-    angle: 3.72,
-    offsetX: 0.04,
-    offsetZ: 0.25,
-    height: 0.95,
-    width: 0.86,
-    bend: 0.5,
-    variation: 0.9,
-  },
-  {
-    angle: 5.05,
-    offsetX: -0.08,
-    offsetZ: -0.23,
-    height: 0.84,
-    width: 0.96,
-    bend: 0.43,
-    variation: 0.3,
-  },
-];
-
-/** One shared five-leaf, five-segment clump geometry for every instance. */
+/** One shared three-vertex triangle card for every instance. */
 export function createIslandGrassClumpGeometry(): THREE.BufferGeometry {
-  const verticesPerLeaf = ISLAND_GRASS_LEAF_SEGMENTS * 2 + 1;
-  const vertexCount = GRASS_LEAF_RECIPES.length * verticesPerLeaf;
-  const positions = new Float32Array(vertexCount * 3);
-  const uvs = new Float32Array(vertexCount * 2);
-  const occlusions = new Float32Array(vertexCount);
-  const variations = new Float32Array(vertexCount);
-  const indices: number[] = [];
-
-  for (const [leafIndex, recipe] of GRASS_LEAF_RECIPES.entries()) {
-    const growthX = Math.cos(recipe.angle);
-    const growthZ = Math.sin(recipe.angle);
-    const widthAxisX = -growthZ;
-    const widthAxisZ = growthX;
-    const leafVertex = leafIndex * verticesPerLeaf;
-    const outerness = Math.min(1, Math.hypot(recipe.offsetX, recipe.offsetZ) / 0.34);
-    const bendAngle = Math.atan2(recipe.bend, recipe.height);
-
-    for (let row = 0; row < ISLAND_GRASS_LEAF_SEGMENTS; row += 1) {
-      const t = row / ISLAND_GRASS_LEAF_SEGMENTS;
-      const height = t * recipe.height;
-      const width = 0.17 * recipe.width * (1 - t) ** 0.88;
-      const curve = recipe.bend * t ** 1.72;
-      const centreX = recipe.offsetX + growthX * curve;
-      const centreZ = recipe.offsetZ + growthZ * curve;
-      const vertex = leafVertex + row * 2;
-      positions.set(
-        [
-          centreX - widthAxisX * width,
-          height,
-          centreZ - widthAxisZ * width,
-          centreX + widthAxisX * width,
-          height,
-          centreZ + widthAxisZ * width,
-        ],
-        vertex * 3,
-      );
-      uvs.set([0, t, 1, t], vertex * 2);
-      occlusions[vertex] = outerness;
-      occlusions[vertex + 1] = outerness;
-      variations[vertex] = recipe.variation;
-      variations[vertex + 1] = recipe.variation;
-      if (row < ISLAND_GRASS_LEAF_SEGMENTS - 1) {
-        indices.push(vertex, vertex + 2, vertex + 1, vertex + 1, vertex + 2, vertex + 3);
-      }
-    }
-
-    const tip = leafVertex + ISLAND_GRASS_LEAF_SEGMENTS * 2;
-    positions.set(
-      [
-        recipe.offsetX + growthX * recipe.bend,
-        recipe.height,
-        recipe.offsetZ + growthZ * recipe.bend,
-      ],
-      tip * 3,
-    );
-    uvs.set([0.5, 1], tip * 2);
-    occlusions[tip] = outerness;
-    variations[tip] = recipe.variation;
-    const finalLeft = leafVertex + (ISLAND_GRASS_LEAF_SEGMENTS - 1) * 2;
-    indices.push(finalLeft, tip, finalLeft + 1);
-
-    // Keep the angle calculation live in the recipe rather than burying a
-    // magic bend in the shader; this assertion is also useful when recipes
-    // are tuned by eye. Every leaf stays in the requested 20–35° envelope.
-    if (bendAngle < THREE.MathUtils.degToRad(20) || bendAngle > THREE.MathUtils.degToRad(35)) {
-      throw new RangeError("Island grass leaf bend must stay between 20 and 35 degrees");
-    }
-  }
-
+  const positions = new Float32Array([-0.14, 0, 0, 0.14, 0, 0, 0, 1, 0]);
+  const uvs = new Float32Array([0, 0, 1, 0, 0.5, 1]);
   const geometry = new THREE.BufferGeometry();
-  geometry.name = "IslandGrassClumpGeometry";
+  geometry.name = "IslandGrassBladeGeometry";
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-  geometry.setAttribute("aClumpOcclusion", new THREE.Float32BufferAttribute(occlusions, 1));
-  geometry.setAttribute("aLeafVariation", new THREE.Float32BufferAttribute(variations, 1));
-  geometry.setIndex(indices);
+  geometry.setIndex([0, 1, 2]);
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
   return geometry;
@@ -271,20 +164,18 @@ export function createIslandGrassClumpGeometry(): THREE.BufferGeometry {
 /** Compatibility export for code that has not renamed the old placement yet. */
 export const createIslandGrassBladeGeometry = createIslandGrassClumpGeometry;
 
-const GRASS_SHADER_MARKER = "/* university island clump grass, lit */";
+const GRASS_SHADER_MARKER = "/* university island donor grass, lit */";
 
 /**
- * The clump shader, injected into a lit material rather than replacing one.
+ * The billboard shader, injected into a lit material rather than replacing one.
  *
- * Two rewrites met here. One turned a scatter of flat blades into clumps with
- * a root-to-tip ramp and cheap self-occlusion; the other moved grass off an
- * unlit ShaderMaterial, because an unlit field caps the land's p95 at the
- * albedo of a blade tip and no amount of sun can raise a surface that never
- * asks the lights. Both were right, and neither is much use without the other:
- * clumps under no light are a flat green mat, and lit flat blades are lit
- * confetti. MeshStandardMaterial supplies the lighting the rest of the island
- * already uses, and the clump geometry, wind and ramp ride in through
- * onBeforeCompile.
+ * The donor architecture is intentionally narrow: one triangle gets its
+ * taper, wind bend, camera-facing Y rotation, and normal replacement in the
+ * vertex shader. MeshStandardMaterial supplies the lighting the rest of the
+ * island already uses, and the card, wind, normal, and ramp ride in through
+ * onBeforeCompile. This keeps a single instance at one triangle instead of
+ * paying for a five-leaf clump that is only a few pixels wide in the aerial
+ * shot.
  *
  * The tip/root ramp is the donor idea from elemental-serenity
  * `Shaders/Chunks/grass/grass.fragment_color_chunk.glsl` at
@@ -297,36 +188,104 @@ uniform float uWindSpeed;
 uniform float uWindFrequency;
 uniform vec2 uWindDirection;
 uniform float uGrassHeightScale;
-attribute float aClumpOcclusion;
-attribute float aLeafVariation;
+uniform float uGroundNormalStrength;
+attribute vec3 aGrassGroundNormal;
 varying float vBladeHeight;
-varying float vClumpOcclusion;
-varying float vLeafVariation;
+vec2 grassWindAt(vec3 grassBaseWorld) {
+  vec2 grassDirection = uWindDirection;
+  float grassDirectionLength = length(grassDirection);
+  grassDirection = grassDirectionLength > 0.0001
+    ? grassDirection / grassDirectionLength
+    : vec2(1.0, 0.0);
+  vec2 grassCross = vec2(-grassDirection.y, grassDirection.x);
+  float grassWavePhase = dot(grassBaseWorld.xz, grassDirection) * uWindFrequency;
+  float grassGustPhase = dot(grassBaseWorld.xz, grassCross) * uWindFrequency * 0.58;
+  float grassWave =
+    sin(grassWavePhase + uTime * uWindSpeed) * 0.78 +
+    sin(grassGustPhase + uTime * uWindSpeed * 0.72 + 1.7) * 0.22;
+  float grassGust = sin(grassGustPhase + uTime * uWindSpeed * 0.51 + 0.9) * 0.2;
+  return (grassDirection * grassWave + grassCross * grassGust) * uWindStrength;
+}
+
+vec3 grassRotateAxis(vec3 point, vec3 axis, float angle) {
+  float cosine = cos(angle);
+  float sine = sin(angle);
+  return point * cosine + cross(axis, point) * sine + axis * dot(axis, point) * (1.0 - cosine);
+}
+`;
+
+const GRASS_VERTEX_NORMAL = `${GRASS_SHADER_MARKER}
+#ifdef USE_INSTANCING
+  mat4 grassNormalInstanceWorld = modelMatrix * instanceMatrix;
+#else
+  mat4 grassNormalInstanceWorld = modelMatrix;
+#endif
+vec3 grassNormalBase = (grassNormalInstanceWorld * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+vec3 grassNormalToCamera = cameraPosition - grassNormalBase;
+vec3 grassBillboardNormal = vec3(0.0, 1.0, 0.0);
+if (length(grassNormalToCamera.xz) > 0.0001) {
+  vec2 grassCameraDirection = normalize(grassNormalToCamera.xz);
+  grassBillboardNormal = vec3(grassCameraDirection.x, 0.0, grassCameraDirection.y);
+}
+vec3 grassTerrainNormal = aGrassGroundNormal;
+if (dot(grassTerrainNormal, grassTerrainNormal) < 0.0001) {
+  grassTerrainNormal = vec3(0.0, 1.0, 0.0);
+}
+vec3 grassWorldNormal = normalize(
+  mix(grassBillboardNormal, normalize(grassTerrainNormal), uGroundNormalStrength)
+);
+float grassNormalHeight = clamp(position.y, 0.0, 1.0);
+vec2 grassNormalWind = grassWindAt(grassNormalBase);
+vec3 grassNormalWindDirection = vec3(grassNormalWind.x, 0.0, grassNormalWind.y);
+float grassNormalWindAmount = length(grassNormalWindDirection);
+if (grassNormalWindAmount > 0.0001) {
+  vec3 grassNormalBendAxis = normalize(cross(vec3(0.0, 1.0, 0.0), grassNormalWindDirection));
+  grassWorldNormal = grassRotateAxis(
+    grassWorldNormal,
+    grassNormalBendAxis,
+    grassNormalWindAmount * grassNormalHeight * grassNormalHeight * 2.4
+  );
+}
+transformedNormal = normalize(mat3(viewMatrix) * grassWorldNormal);
 `;
 
 const GRASS_VERTEX_WIND = `${GRASS_SHADER_MARKER}
-vBladeHeight = uv.y;
-vClumpOcclusion = aClumpOcclusion;
-vLeafVariation = aLeafVariation;
+float grassHeight = clamp(position.y, 0.0, 1.0);
+vBladeHeight = grassHeight;
 #ifdef USE_INSTANCING
-  mat4 grassInstanceWorld = modelMatrix * instanceMatrix;
+  mat4 grassProjectInstanceWorld = modelMatrix * instanceMatrix;
+  float grassProjectInstanceYaw = atan(instanceMatrix[2].x, instanceMatrix[2].z);
 #else
-  mat4 grassInstanceWorld = modelMatrix;
+  mat4 grassProjectInstanceWorld = modelMatrix;
+  float grassProjectInstanceYaw = 0.0;
 #endif
-vec3 grassBase = (grassInstanceWorld * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-// The phase is world-space, never instance-id space: nearby clumps lean
-// together and the two crossed waves read as one sweep over the meadow.
-vec2 grassCross = vec2(-uWindDirection.y, uWindDirection.x);
-float grassWavePhase = dot(grassBase.xz, uWindDirection) * uWindFrequency;
-float grassGustPhase = dot(grassBase.xz, grassCross) * uWindFrequency * 0.58;
-float grassWave =
-  sin(grassWavePhase + uTime * uWindSpeed) * 0.78 +
-  sin(grassGustPhase + uTime * uWindSpeed * 0.72 + 1.7) * 0.22;
-float grassTipMask = smoothstep(0.04, 1.0, uv.y) * uv.y;
+vec3 grassBase = (grassProjectInstanceWorld * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
 vec3 grassLocal = transformed;
 grassLocal.y *= uGrassHeightScale;
-vec4 grassWorld = grassInstanceWorld * vec4(grassLocal, 1.0);
-grassWorld.xz += uWindDirection * grassWave * uWindStrength * grassTipMask;
+float grassTaper = max(0.08, pow(max(0.0, 1.0 - grassHeight), 0.72));
+grassLocal.xz *= grassTaper;
+float grassBillboardAngle = atan(cameraPosition.x - grassBase.x, cameraPosition.z - grassBase.z);
+float grassLocalBillboardAngle = grassBillboardAngle - grassProjectInstanceYaw;
+float grassBillboardCosine = cos(grassLocalBillboardAngle);
+float grassBillboardSine = sin(grassLocalBillboardAngle);
+vec2 grassBillboardXZ = vec2(
+  grassLocal.x * grassBillboardCosine + grassLocal.z * grassBillboardSine,
+  -grassLocal.x * grassBillboardSine + grassLocal.z * grassBillboardCosine
+);
+grassLocal.xz = grassBillboardXZ;
+vec3 grassWorldOffset = (grassProjectInstanceWorld * vec4(grassLocal, 0.0)).xyz;
+vec2 grassWind = grassWindAt(grassBase);
+vec3 grassWindDirection = vec3(grassWind.x, 0.0, grassWind.y);
+float grassWindAmount = length(grassWindDirection);
+if (grassWindAmount > 0.0001) {
+  vec3 grassBendAxis = normalize(cross(vec3(0.0, 1.0, 0.0), grassWindDirection));
+  grassWorldOffset = grassRotateAxis(
+    grassWorldOffset,
+    grassBendAxis,
+    grassWindAmount * grassHeight * grassHeight * 2.4
+  );
+}
+vec4 grassWorld = vec4(grassBase + grassWorldOffset, 1.0);
 vec4 mvPosition = viewMatrix * grassWorld;
 gl_Position = projectionMatrix * mvPosition;
 `;
@@ -334,46 +293,48 @@ gl_Position = projectionMatrix * mvPosition;
 const GRASS_FRAGMENT_DECLARATIONS = `${GRASS_SHADER_MARKER}
 uniform vec3 uGrassBottom;
 uniform vec3 uGrassTop;
+uniform vec3 uGrassShadow;
 varying float vBladeHeight;
-varying float vClumpOcclusion;
-varying float vLeafVariation;
 `;
 
 const GRASS_FRAGMENT_RAMP = `${GRASS_SHADER_MARKER}
-vec3 grassColor = mix(uGrassBottom, uGrassTop, smoothstep(0.04, 0.96, vBladeHeight));
-grassColor *= mix(0.94, 1.06, vLeafVariation);
-// Cheap self-AO: inner roots begin at 0.64, while outer and taller tips open
-// toward the full ramp. This darkens the centre and the lower leaflets without
-// a shadow pass or a second material.
-float grassSelfOcclusion = mix(
-  0.64,
-  1.0,
-  clamp(vClumpOcclusion + smoothstep(0.18, 1.0, vBladeHeight) * 0.42, 0.0, 1.0)
-);
-diffuseColor.rgb = grassColor * grassSelfOcclusion;
+float grassBladeMask = clamp(vBladeHeight, 0.0, 1.0);
+vec3 grassColor = mix(uGrassBottom, uGrassTop, smoothstep(0.04, 0.96, grassBladeMask));
+// Donor-aligned nonlinear root shadow: roots stay dark while the card opens
+// into the full bright ramp toward its tip.
+float grassRootToTip = pow(smoothstep(0.2, 0.98, grassBladeMask), 0.5);
+grassColor = mix(uGrassShadow, grassColor, grassRootToTip);
+diffuseColor.rgb = grassColor;
 `;
 
-function createIslandGrassMaterial(style?: IslandGrassStyle): THREE.MeshStandardMaterial {
+export function createIslandGrassMaterial(style?: IslandGrassStyle): THREE.MeshStandardMaterial {
   const uniforms = createGrassUniforms(style);
   const material = new THREE.MeshStandardMaterial({
     color: 0xffffff,
-    roughness: 0.62,
+    roughness: 0.68,
     metalness: 0,
-    emissive: 0x6a8a3c,
-    emissiveIntensity: 0.08,
-    side: THREE.DoubleSide,
+    // A small working-linear lift keeps receiveShadow roots from collapsing
+    // into black on the near camera; the donor ramp and the island light still
+    // provide the actual colour and value range.
+    emissive: 0x3d5f24,
+    emissiveIntensity: 0.11,
+    side: THREE.FrontSide,
     // Stage owns the one ACES/sRGB grade. Grass emits working-linear colour.
     toneMapped: false,
   });
   material.name = "IslandGrassMaterial";
   material.userData.grassUniforms = uniforms;
-  material.customProgramCacheKey = () => "island-grass-clump-lit-1";
+  material.customProgramCacheKey = () => "island-grass-billboard-triangle-lit-1";
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
     if (!shader.vertexShader.includes(GRASS_SHADER_MARKER)) {
       shader.vertexShader = shader.vertexShader.replace(
         "#include <common>",
         `#include <common>\n${GRASS_VERTEX_DECLARATIONS}`,
+      );
+      shader.vertexShader = shader.vertexShader.replace(
+        "#include <defaultnormal_vertex>",
+        `#include <defaultnormal_vertex>\n${GRASS_VERTEX_NORMAL}`,
       );
       shader.vertexShader = shader.vertexShader.replace(
         "#include <project_vertex>",
@@ -486,6 +447,7 @@ function CourseIslandGrassField({
     const target = mesh.current;
     if (!target) return;
     const dummy = new THREE.Object3D();
+    const groundNormals = new Float32Array(plan.placements.length * 3);
     lodRef.current = null;
     target.count = plan.placements.length;
     for (const [index, placement] of plan.placements.entries()) {
@@ -498,7 +460,14 @@ function CourseIslandGrassField({
       );
       dummy.updateMatrix();
       target.setMatrixAt(index, dummy.matrix);
+      groundNormals[index * 3] = placement.groundNormal[0];
+      groundNormals[index * 3 + 1] = placement.groundNormal[1];
+      groundNormals[index * 3 + 2] = placement.groundNormal[2];
     }
+    target.geometry.setAttribute(
+      "aGrassGroundNormal",
+      new THREE.InstancedBufferAttribute(groundNormals, 3),
+    );
     target.instanceMatrix.needsUpdate = true;
     target.computeBoundingSphere();
     if (target.boundingSphere) {
@@ -530,8 +499,8 @@ function CourseIslandGrassField({
 
   if (!owned) return null;
   return (
-    // Receives the island's shadows, casts none of its own. Sixteen thousand
-    // small casters in one 2048 map buys moire and dark speckle, not shadow;
+    // Receives the island's shadows, casts none of its own. A dense field of
+    // tiny casters in one 2048 map buys moire and dark speckle, not shadow;
     // the donor's grass makes the same trade. Without the receive side the
     // meadow sat outside the lighting entirely — a tree's shadow crossed the
     // ground and stopped at the grass.

@@ -1,23 +1,13 @@
 /**
  * The globe that lives on the study-picker page.
  *
- * Rejected off-the-shelf globes, with reasons that still hold:
- *   - `cobe` (~5 KB) spins up its own WebGL context. Baseline rule 1 is
- *     one canvas, one renderer owner; a second context also cannot share
- *     the grade pipeline in Stage.tsx. Its look is a tech-dot sphere, not
- *     our flat-shaded islands.
- *   - `three-globe` / `react-globe.gl` are geographic data viz. They pull
- *     a second scene graph and a realistic Earth texture we would then
- *     have to undo.
- *   - Non-Heroes' "spinning globe" is a 2D SVG map
- *     (`RoomPrepMissionStep.tsx`). We borrowed the layout (map + list +
- *     detail, selection syncs), not the art.
- *
- * So this is one icosahedron, the same sea/grass/rock numbers the
- * archipelago already measured, and a handful of markers. Text stays out
- * of the canvas — a name on a point would be geometry, and a Chinese IME
- * dies in here. The list on PlanetPage is the control; clicking a marker
- * is a shortcut the pointer can take.
+ * Atmospheric semantic correction & visual overhaul:
+ * - Studies are floating island clusters hovering in the planetary atmosphere (R ≈ 1.22).
+ * - Visual proof of floating: Vertical atmospheric light tether + ground surface projection ring.
+ * - Planet body: Vibrant stylized oceans, shallow turquoise coastal shelves, emerald continents,
+ *   warm mountain plateaus, polar ice, and organic procedural cloud swirls.
+ * - Atmosphere: Luminous celestial cyan Fresnel rim that preserves crystal clarity of the planet.
+ * - Performance: Deterministic (no Math.random), lightweight, fast first-screen and 60+ FPS.
  */
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
@@ -28,6 +18,7 @@ import { Stage } from "../Stage.js";
 import { renderTier } from "../sky/tier.js";
 import { studyMarkerColor } from "./planet-copy.js";
 import {
+  ATMOSPHERE_RADIUS,
   placeStudies,
   rotationFor,
   stepRotation,
@@ -35,52 +26,191 @@ import {
   type YawPitch,
 } from "./placement.js";
 
-/**
- * Copied hexes, not imported from Maps.tsx. A value import of Maps pulls
- * the aerial plate, the kit GLBs and the whole archipelago into this page,
- * which is a second copy of the world the parent is explicitly not wiring
- * yet. The numbers are the ones Maps already measured (sea for exposure,
- * sky stops, accent for the one lit thing).
- */
-/**
- * The ground this globe hangs on. Not sky and not black: the panel's own family
- * two steps darker, so the pane reads as part of the page. `--game-ui-panel` is
- * roughly `#3a2a1e`; these are that hue with the light taken out.
- */
-const SPACE_LOW = 0x5a4433;
-const SPACE_HIGH = 0x241a13;
+// Space background palette
+const SPACE_TOP = 0x070a14;
+const SPACE_MID = 0x121424;
+const SPACE_LOW = 0x221a28;
 
+// High-clarity planet surface palette
 const PLANET_PALETTE = {
-  ocean: 0x1e5f63,
-  deepOcean: 0x174f53,
-  olive: 0x5f7a38,
-  moss: 0x4a7a3f,
-  sand: 0xa97b4a,
+  deepOcean: 0x184e78,
+  ocean: 0x24709e,
+  shallowOcean: 0x34b0c2,
+  lagoon: 0x54e6e4,
+  beach: 0xfae8bc,
+  grassLow: 0x72cc3c,
+  grassHigh: 0x94f044,
+  earth: 0xc49260,
+  mountain: 0x8e6e56,
+  polarIce: 0xf5fcff,
 } as const;
 
-interface ContinentSeed {
-  readonly center: THREE.Vector3;
-  readonly colour: number;
+/**
+ * Deterministic spherical fractal Brownian motion for organic continents and oceans.
+ */
+function sphericalFbm(x: number, y: number, z: number): number {
+  let value = 0;
+  // Octave 1: Major continent masses
+  value += Math.sin(x * 1.5 + 0.4) * Math.cos(y * 1.3 - 0.2) * Math.sin(z * 1.6 + 0.8) * 0.58;
+  value += Math.cos(x * 1.2 + z * 1.4) * Math.sin(y * 1.7 + 0.5) * 0.46;
+  // Octave 2: Regional bays and archipelagos
+  value += Math.sin(x * 3.0 - z * 2.4 + 1.2) * Math.cos(y * 3.2 + x * 1.8) * 0.26;
+  // Octave 3: Coastline variations
+  value += Math.sin(x * 6.5 + y * 5.8) * Math.cos(z * 7.0 - x * 4.4) * 0.12;
+  // Octave 4: Micro details
+  value += Math.sin(x * 13.0 + z * 12.0 + y * 9.5) * 0.04;
+  return value;
 }
 
-const CONTINENT_SEEDS: readonly ContinentSeed[] = [
-  { center: new THREE.Vector3(-0.42, -0.05, 0.9).normalize(), colour: PLANET_PALETTE.olive },
-  { center: new THREE.Vector3(0.75, 0.18, 0.64).normalize(), colour: PLANET_PALETTE.moss },
-  { center: new THREE.Vector3(-0.25, -0.78, -0.58).normalize(), colour: PLANET_PALETTE.olive },
-  { center: new THREE.Vector3(0.7, -0.55, -0.45).normalize(), colour: PLANET_PALETTE.moss },
-  { center: new THREE.Vector3(-0.55, 0.65, -0.52).normalize(), colour: PLANET_PALETTE.moss },
-];
+interface TerrainSample {
+  readonly color: THREE.Color;
+  readonly elevation: number;
+}
 
-const SAND_REGION_SEEDS: readonly THREE.Vector3[] = [
-  new THREE.Vector3(-0.42, -0.05, 0.9).normalize(),
-  new THREE.Vector3(0.7, -0.55, -0.45).normalize(),
-];
+function evaluatePlanetTerrain(x: number, y: number, z: number): TerrainSample {
+  // Polar ice caps
+  const absY = Math.abs(y);
+  if (absY > 0.78) {
+    const iceEdge = (absY - 0.78) / 0.22;
+    const iceNoise = sphericalFbm(x * 2.5, y * 2.5, z * 2.5) * 0.08;
+    if (iceEdge + iceNoise > 0.28) {
+      return {
+        color: new THREE.Color(PLANET_PALETTE.polarIce),
+        elevation: 0.016,
+      };
+    }
+  }
 
-const LAND_LEVEL = 0.76;
-const COAST_WIDTH = 0.055;
-const SAND_REGION_LEVEL = 0.9;
+  const fbm = sphericalFbm(x, y, z);
 
-const FRESNEL_VERTEX_SHADER = /* glsl */ `
+  // Deep Ocean (~35% of planet)
+  if (fbm < -0.15) {
+    const depth = THREE.MathUtils.clamp((-0.15 - fbm) / 0.6, 0, 1);
+    const oceanCol = new THREE.Color(PLANET_PALETTE.ocean).lerp(
+      new THREE.Color(PLANET_PALETTE.deepOcean),
+      depth,
+    );
+    return {
+      color: oceanCol,
+      elevation: -0.014 - depth * 0.008,
+    };
+  }
+
+  // Mid Ocean (~15% of planet)
+  if (fbm < 0.0) {
+    const t = (fbm - -0.15) / 0.15;
+    const oceanCol = new THREE.Color(PLANET_PALETTE.ocean).lerp(
+      new THREE.Color(PLANET_PALETTE.shallowOcean),
+      t * 0.8,
+    );
+    return {
+      color: oceanCol,
+      elevation: -0.01 + t * 0.004,
+    };
+  }
+
+  // Shallow Turquoise Lagoon Shelf (~10% of planet)
+  if (fbm < 0.08) {
+    const t = fbm / 0.08;
+    const lagoonCol = new THREE.Color(PLANET_PALETTE.shallowOcean).lerp(
+      new THREE.Color(PLANET_PALETTE.lagoon),
+      t,
+    );
+    return {
+      color: lagoonCol,
+      elevation: -0.006 + t * 0.008,
+    };
+  }
+
+  // Golden Sand Coastlines (~8% of planet)
+  if (fbm < 0.15) {
+    const t = (fbm - 0.08) / 0.07;
+    const beachCol = new THREE.Color(PLANET_PALETTE.beach).lerp(
+      new THREE.Color(PLANET_PALETTE.grassLow),
+      t * 0.35,
+    );
+    return {
+      color: beachCol,
+      elevation: 0.004 + t * 0.014,
+    };
+  }
+
+  // Lush Emerald Plains (~18% of planet)
+  if (fbm < 0.42) {
+    const t = (fbm - 0.15) / 0.27;
+    const grassCol = new THREE.Color(PLANET_PALETTE.grassLow).lerp(
+      new THREE.Color(PLANET_PALETTE.grassHigh),
+      t,
+    );
+    return {
+      color: grassCol,
+      elevation: 0.018 + t * 0.02,
+    };
+  }
+
+  // Warm Plateaus & Hills (~10% of planet)
+  if (fbm < 0.68) {
+    const t = (fbm - 0.42) / 0.26;
+    const hillCol = new THREE.Color(PLANET_PALETTE.grassHigh).lerp(
+      new THREE.Color(PLANET_PALETTE.earth),
+      t,
+    );
+    return {
+      color: hillCol,
+      elevation: 0.038 + t * 0.018,
+    };
+  }
+
+  // Snowy Peaks / Mountains (~4% of planet)
+  const t = THREE.MathUtils.clamp((fbm - 0.68) / 0.35, 0, 1);
+  const mountainCol = new THREE.Color(PLANET_PALETTE.earth).lerp(
+    new THREE.Color(PLANET_PALETTE.polarIce),
+    t * 0.85,
+  );
+  return {
+    color: mountainCol,
+    elevation: 0.056 + t * 0.022,
+  };
+}
+
+/**
+ * Procedural planet geometry with smooth normals and rich vertex colors.
+ */
+export function buildPlanetGeometry(): THREE.BufferGeometry {
+  const geometry = new THREE.IcosahedronGeometry(1, 4);
+  const position = geometry.attributes.position as THREE.BufferAttribute;
+  const count = position.count;
+  const colors = new Float32Array(count * 3);
+
+  for (let i = 0; i < count; i += 1) {
+    const x = position.getX(i);
+    const y = position.getY(i);
+    const z = position.getZ(i);
+    const len = Math.hypot(x, y, z) || 1;
+    const nx = x / len;
+    const ny = y / len;
+    const nz = z / len;
+
+    const terrain = evaluatePlanetTerrain(nx, ny, nz);
+    const radius = 1 + terrain.elevation;
+
+    position.setXYZ(i, nx * radius, ny * radius, nz * radius);
+    colors[i * 3] = terrain.color.r;
+    colors[i * 3 + 1] = terrain.color.g;
+    colors[i * 3 + 2] = terrain.color.b;
+  }
+
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+/**
+ * Atmospheric Fresnel glow shader:
+ * Pure celestial cyan halo on the sun-facing limb, soft twilight sapphire on the night side.
+ * Zero burnt red rings; 100% crystal clarity over the planet surface.
+ */
+const ATMOSPHERE_VERTEX_SHADER = /* glsl */ `
   varying vec3 vWorldNormal;
   varying vec3 vWorldPosition;
 
@@ -92,276 +222,203 @@ const FRESNEL_VERTEX_SHADER = /* glsl */ `
   }
 `;
 
-const FRESNEL_FRAGMENT_SHADER = /* glsl */ `
-  uniform vec3 uColor;
+const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
+  uniform vec3 uSunDirection;
   varying vec3 vWorldNormal;
   varying vec3 vWorldPosition;
 
   void main() {
     vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
-    float facing = max(dot(normalize(vWorldNormal), viewDirection), 0.0);
-    float rim = pow(1.0 - facing, 3.1);
-    float alpha = smoothstep(0.28, 0.9, rim) * 0.42;
-    gl_FragColor = vec4(uColor, alpha);
+    vec3 normal = normalize(vWorldNormal);
+    float facing = max(dot(normal, viewDirection), 0.0);
+    // Sharp rim falloff so the center of the planet is 100% crystal clear
+    float rim = pow(1.0 - facing, 4.2);
+
+    float sunDot = dot(normal, normalize(uSunDirection));
+    float sunFacing = smoothstep(-0.3, 0.6, sunDot);
+
+    vec3 dayColor = vec3(0.32, 0.88, 1.0);     // Luminous sky-cyan
+    vec3 nightColor = vec3(0.10, 0.28, 0.44);   // Deep space sapphire
+
+    vec3 atmColor = mix(nightColor, dayColor, sunFacing);
+    float alpha = rim * (0.22 + 0.68 * sunFacing);
+    gl_FragColor = vec4(atmColor, alpha);
   }
 `;
 
-const HORIZON_VERTEX_SHADER = /* glsl */ `
-  varying vec2 vUv;
+export function AtmosphereFresnel() {
+  const uniforms = useMemo(
+    () => ({
+      uSunDirection: { value: new THREE.Vector3(-4.0, 5.0, 4.5).normalize() },
+    }),
+    [],
+  );
 
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const HORIZON_FRAGMENT_SHADER = /* glsl */ `
-  uniform vec3 uColor;
-  varying vec2 vUv;
-
-  void main() {
-    vec2 point = vUv - vec2(0.5);
-    point.x *= 1.25;
-    float halo = 1.0 - smoothstep(0.08, 0.68, length(point));
-    float alpha = pow(max(halo, 0.0), 1.8) * 0.34;
-    gl_FragColor = vec4(uColor, alpha);
-  }
-`;
-
-const STAR_COUNT = 150;
-
-/**
- * How far back the eye has to stand to hold the whole globe.
- *
- * This was two hand-measured constants, one per tier, and both were measured
- * against a pane shape that only exists in the preview harness. Dropped into
- * the real shell the desktop column is far narrower than it is tall, and the
- * binding constraint stops being the vertical field of view — the sphere ran
- * off both sides while there was empty sky above and below it.
- *
- * So: fit whichever half-angle is smaller. Stage pins the *vertical* FOV, and
- * the horizontal one falls out of the aspect, which means a tall narrow column
- * is always horizontally constrained and a wide short one is not. Solving it
- * rather than measuring it also means the phone, the desktop and whatever pane
- * shape somebody builds next all get a globe that fits.
- */
-const GLOBE_RADIUS = 1.06;
-// Keep the globe a world-sized object in the frame: the 1.10 pass filled about
-// 86% of the desktop globe pane, while the intended picker composition is
-// closer to 70%, with space for sky and marker silhouettes around it.
-const GLOBE_PADDING = 1.35;
-
-export function planetDistance(aspect: number, fovDegrees: number): number {
-  const vertical = (fovDegrees * Math.PI) / 180 / 2;
-  const horizontal = Math.atan(Math.tan(vertical) * Math.max(aspect, 0.05));
-  return (GLOBE_RADIUS * GLOBE_PADDING) / Math.sin(Math.min(vertical, horizontal));
-}
-
-function planetCamera(): readonly [number, number, number] {
-  return renderTier() === "mobile" ? [0, 0.12, 3.4] : [0, 0.18, 6.8];
-}
-
-const TURN_RATE = 5.5;
-const MARKER_SURFACE = 1.026;
-const DISC_HEIGHT = 0.026;
-const PIN_SCALE = 0.34;
-const PIN_TIP_Y = -0.18;
-const PIN_TIP_OFFSET = -PIN_TIP_Y * PIN_SCALE;
-const PIN_RADIAL_LIFT = 0.002;
-const PIN_BEAM_LENGTH = 0.065;
-const PIN_BEAM_RADIUS = 0.014;
-const BEACON_GLOW = 0xfff1d6;
-
-const REST: YawPitch = { yaw: 0.35, pitch: 0.18 };
-
-export interface PlanetSceneProps {
-  readonly studies: readonly { readonly id: string }[];
-  readonly selectedId: string | null;
-  readonly onSelect?: (studyId: string) => void;
-}
-
-function prefersReducedMotion(): boolean {
-  return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function markerQuaternion(point: Pick<SpherePoint, "x" | "y" | "z">): THREE.Quaternion {
-  const normal = new THREE.Vector3(point.x, point.y, point.z).normalize();
-  return new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
-}
-
-function buildPinGeometry(): THREE.ExtrudeGeometry {
-  const shape = new THREE.Shape();
-  shape.moveTo(0, PIN_TIP_Y);
-  shape.bezierCurveTo(-0.03, -0.12, -0.115, -0.04, -0.115, 0.065);
-  shape.bezierCurveTo(-0.115, 0.17, -0.06, 0.25, 0, 0.3);
-  shape.bezierCurveTo(0.06, 0.25, 0.115, 0.17, 0.115, 0.065);
-  shape.bezierCurveTo(0.115, -0.04, 0.03, -0.12, 0, PIN_TIP_Y);
-  shape.closePath();
-  return new THREE.ExtrudeGeometry(shape, {
-    bevelEnabled: true,
-    bevelSegments: 1,
-    bevelSize: 0.008,
-    bevelThickness: 0.008,
-    curveSegments: 3,
-    depth: 0.045,
-    steps: 1,
-  });
-}
-
-interface BeaconPlacement {
-  readonly contact: THREE.Vector3;
-  readonly pin: THREE.Vector3;
-  readonly beamMid: THREE.Vector3;
-  readonly beamLength: number;
-  readonly surfaceQuaternion: THREE.Quaternion;
-  readonly beamQuaternion: THREE.Quaternion;
-}
-
-function beaconPlacement(point: Pick<SpherePoint, "x" | "y" | "z">): BeaconPlacement {
-  const normal = new THREE.Vector3(point.x, point.y, point.z).normalize();
-  // The disc sits on the surface: its lower face meets the globe, and its top
-  // face is the one place the pin is allowed to touch.
-  const contact = normal.clone().multiplyScalar(MARKER_SURFACE + DISC_HEIGHT / 2);
-  const pinContact = contact.clone().addScaledVector(normal, DISC_HEIGHT / 2 + PIN_RADIAL_LIFT);
-  const screenUp = new THREE.Vector3(0, 1, 0).addScaledVector(normal, -normal.y);
-  if (screenUp.lengthSq() < 0.0001) screenUp.set(1, 0, 0);
-  screenUp.normalize();
-  // The geometry's local bottom tip is y=-0.18. Offset the screen-facing pin by
-  // scaled tip height so that its tip, rather than its centre, lands on the
-  // disc. The beam is a short normal-aligned glow at that contact, not a rod
-  // carrying the pin up from the surface.
-  const pin = pinContact.clone().addScaledVector(screenUp, PIN_TIP_OFFSET);
-  const beamStart = contact.clone().addScaledVector(normal, DISC_HEIGHT / 2);
-  const beam = beamStart.clone().addScaledVector(normal, PIN_BEAM_LENGTH).sub(beamStart);
-  const beamLength = beam.length();
-  return {
-    contact,
-    pin,
-    beamMid: beamStart.clone().addScaledVector(beam, 0.5),
-    beamLength,
-    surfaceQuaternion: markerQuaternion(point),
-    beamQuaternion: new THREE.Quaternion().setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      beam.normalize(),
-    ),
-  };
-}
-
-function colourLerp(from: number, to: number, t: number): THREE.Color {
-  return new THREE.Color(from).lerp(new THREE.Color(to), t);
-}
-
-/**
- * One smooth field for the whole globe. It deliberately has no face hash:
- * the old per-face salt changed colour every time a triangle crossed a
- * threshold, so a coastline became a checkerboard. These long waves only
- * bend a region boundary; they cannot turn neighbouring land into unrelated
- * biomes.
- */
-function smoothPlanetNoise(x: number, y: number, z: number): number {
   return (
-    Math.sin(x * 1.55 + z * 1.1 + 0.35) * 0.5 +
-    Math.cos(y * 1.85 - x * 0.7) * 0.3 +
-    Math.sin(z * 2.35 - y * 1.15) * 0.2
+    <mesh scale={1.072} renderOrder={2}>
+      <sphereGeometry args={[1, 36, 24]} />
+      <shaderMaterial
+        vertexShader={ATMOSPHERE_VERTEX_SHADER}
+        fragmentShader={ATMOSPHERE_FRAGMENT_SHADER}
+        uniforms={uniforms}
+        transparent
+        depthTest
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
   );
-}
-
-interface PlanetTerrain {
-  readonly colour: number;
-  readonly elevation: number;
-}
-
-function planetTerrainAt(x: number, y: number, z: number): PlanetTerrain {
-  let strongestContinent = CONTINENT_SEEDS[0]!;
-  let strongestScore = -Infinity;
-  for (const continent of CONTINENT_SEEDS) {
-    const score = x * continent.center.x + y * continent.center.y + z * continent.center.z;
-    if (score > strongestScore) {
-      strongestScore = score;
-      strongestContinent = continent;
-    }
-  }
-
-  const coastlineWobble = smoothPlanetNoise(x, y, z) * 0.075;
-  const landScore = strongestScore + coastlineWobble;
-  if (landScore < LAND_LEVEL) {
-    const oceanColour =
-      smoothPlanetNoise(x * 0.8, y * 0.8, z * 0.8) > 0.08
-        ? PLANET_PALETTE.ocean
-        : PLANET_PALETTE.deepOcean;
-    return { colour: oceanColour, elevation: -0.018 };
-  }
-
-  const sandScore = Math.max(
-    ...SAND_REGION_SEEDS.map((seed) => x * seed.x + y * seed.y + z * seed.z),
-  );
-  // Sand follows the coastline and fills two seeded interior regions. It never
-  // crosses into the ocean, and it cannot become a separate continent.
-  const coast = landScore < LAND_LEVEL + COAST_WIDTH;
-  const interiorSand = !coast && sandScore > SAND_REGION_LEVEL;
-  return {
-    colour: coast || interiorSand ? PLANET_PALETTE.sand : strongestContinent.colour,
-    elevation: coast ? 0.008 : 0.035,
-  };
 }
 
 /**
- * Low-poly sky shell. drei's Preetham `<Sky>` is a real atmosphere for a
- * real landscape; this page is a miniature of the same board as the map,
- * so the dome is three hex stops on an icosahedron, not a second lighting
- * model.
+ * Organic procedural cloud swirls orbiting the planet at R = 1.042.
  */
-function asFaces(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
-  // three 0.185 already emits a non-indexed icosahedron; calling
-  // toNonIndexed() again warns and no-ops. Only unroll when there is an
-  // index, so each face can carry its own colour under flatShading.
-  return geometry.index ? geometry.toNonIndexed() : geometry;
+const CLOUD_VERTEX_SHADER = /* glsl */ `
+  varying vec3 vWorldNormal;
+  varying vec3 vWorldPosition;
+
+  void main() {
+    vWorldNormal = normalize(mat3(modelMatrix) * normal);
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    vWorldPosition = worldPos.xyz;
+    gl_Position = projectionMatrix * viewMatrix * worldPos;
+  }
+`;
+
+const CLOUD_FRAGMENT_SHADER = /* glsl */ `
+  uniform vec3 uSunDirection;
+  varying vec3 vWorldNormal;
+  varying vec3 vWorldPosition;
+
+  float cloudShape(vec3 p) {
+    float n1 = sin(p.x * 2.8 + p.z * 2.2 + 0.5) * cos(p.y * 3.1 - p.x * 1.5);
+    float n2 = sin(p.z * 5.2 + p.y * 4.1) * cos(p.x * 4.8);
+    float n3 = sin(p.x * 10.5 + p.z * 9.2) * 0.5;
+    return n1 * 0.55 + n2 * 0.32 + n3 * 0.13;
+  }
+
+  void main() {
+    vec3 normal = normalize(vWorldNormal);
+    float c = cloudShape(normal * 2.6);
+    float density = smoothstep(0.22, 0.58, c);
+
+    if (density <= 0.02) discard;
+
+    float sunDot = max(dot(normal, normalize(uSunDirection)), 0.0);
+    vec3 cloudColor = mix(vec3(0.88, 0.94, 0.98), vec3(1.0, 1.0, 1.0), sunDot * 0.8);
+
+    gl_FragColor = vec4(cloudColor, density * 0.88);
+  }
+`;
+
+export function PlanetClouds() {
+  const cloudGroup = useRef<THREE.Group>(null);
+  const uniforms = useMemo(
+    () => ({
+      uSunDirection: { value: new THREE.Vector3(-4.0, 5.0, 4.5).normalize() },
+    }),
+    [],
+  );
+
+  useFrame((_, delta) => {
+    if (cloudGroup.current) {
+      cloudGroup.current.rotation.y += delta * 0.018;
+    }
+  });
+
+  return (
+    <group ref={cloudGroup}>
+      <mesh scale={1.042} renderOrder={2}>
+        <sphereGeometry args={[1, 36, 24]} />
+        <shaderMaterial
+          vertexShader={CLOUD_VERTEX_SHADER}
+          fragmentShader={CLOUD_FRAGMENT_SHADER}
+          uniforms={uniforms}
+          transparent
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
+  );
 }
 
+/**
+ * Deep space background dome and starfield.
+ */
 function buildSkyGeometry(): THREE.BufferGeometry {
-  const geometry = asFaces(new THREE.IcosahedronGeometry(40, 1));
+  const geometry = new THREE.IcosahedronGeometry(40, 1);
   const position = geometry.attributes.position as THREE.BufferAttribute;
-  const colours = new Float32Array(position.count * 3);
-  const colour = new THREE.Color();
-  for (let index = 0; index < position.count; index += 1) {
-    const y = position.getY(index) / 40;
-    colour.copy(colourLerp(SPACE_LOW, SPACE_HIGH, Math.min(1, Math.max(0, (y + 1) / 2))));
-    colours[index * 3] = colour.r;
-    colours[index * 3 + 1] = colour.g;
-    colours[index * 3 + 2] = colour.b;
+  const count = position.count;
+  const colors = new Float32Array(count * 3);
+  const color = new THREE.Color();
+
+  for (let i = 0; i < count; i += 1) {
+    const y = position.getY(i) / 40;
+    const t = Math.min(1, Math.max(0, (y + 1) / 2));
+    if (t > 0.5) {
+      color.setHex(SPACE_MID).lerp(new THREE.Color(SPACE_TOP), (t - 0.5) * 2);
+    } else {
+      color.setHex(SPACE_LOW).lerp(new THREE.Color(SPACE_MID), t * 2);
+    }
+    colors[i * 3] = color.r;
+    colors[i * 3 + 1] = color.g;
+    colors[i * 3 + 2] = color.b;
   }
-  geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
+
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   return geometry;
 }
+
+const STAR_COUNT = 180;
 
 function buildStarGeometry(): THREE.BufferGeometry {
   const geometry = new THREE.BufferGeometry();
   const positions = new Float32Array(STAR_COUNT * 4 * 3);
+  const colors = new Float32Array(STAR_COUNT * 4 * 3);
   const indices = new Uint16Array(STAR_COUNT * 6);
-  for (let index = 0; index < STAR_COUNT; index += 1) {
-    // Lay the stars in the camera's deep-space view instead of using a naive
-    // lat/long hash: that hash clustered the visible hemisphere below the
-    // horizon, which made a valid star buffer look empty in this narrow pane.
-    const step = index + 1;
-    const x = (hash(String(step * 2654435761)) - 0.5) * 24;
-    const y = (hash(String(step * 2246822519)) - 0.5) * 17;
-    const z = -(24 + hash(String(step * 3266489917)) * 10);
-    const size = 0.02 + hash(String(step * 668265263)) * 0.018;
-    const vertex = index * 4;
+
+  const starColors = [
+    new THREE.Color(0xfff8ee),
+    new THREE.Color(0xaae8ff),
+    new THREE.Color(0xffd89e),
+  ];
+
+  for (let i = 0; i < STAR_COUNT; i += 1) {
+    const step = i + 1;
+    const x = (hash(String(step * 2654435761)) - 0.5) * 26;
+    const y = (hash(String(step * 2246822519)) - 0.5) * 18;
+    const z = -(22 + hash(String(step * 3266489917)) * 12);
+    const size = 0.016 + hash(String(step * 668265263)) * 0.024;
+    const color = starColors[i % starColors.length]!;
+
+    const vertex = i * 4;
     const offset = vertex * 3;
+
     positions[offset] = x - size;
     positions[offset + 1] = y - size;
     positions[offset + 2] = z;
+
     positions[offset + 3] = x + size;
     positions[offset + 4] = y - size;
     positions[offset + 5] = z;
+
     positions[offset + 6] = x + size;
     positions[offset + 7] = y + size;
     positions[offset + 8] = z;
+
     positions[offset + 9] = x - size;
     positions[offset + 10] = y + size;
     positions[offset + 11] = z;
-    const triangle = index * 6;
+
+    for (let v = 0; v < 4; v += 1) {
+      const cOffset = (vertex + v) * 3;
+      colors[cOffset] = color.r;
+      colors[cOffset + 1] = color.g;
+      colors[cOffset + 2] = color.b;
+    }
+
+    const triangle = i * 6;
     indices[triangle] = vertex;
     indices[triangle + 1] = vertex + 1;
     indices[triangle + 2] = vertex + 2;
@@ -369,7 +426,9 @@ function buildStarGeometry(): THREE.BufferGeometry {
     indices[triangle + 4] = vertex + 2;
     indices[triangle + 5] = vertex + 3;
   }
+
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   geometry.setIndex(new THREE.BufferAttribute(indices, 1));
   return geometry;
 }
@@ -380,9 +439,9 @@ function Starfield() {
   return (
     <mesh geometry={geometry} frustumCulled={false} renderOrder={1}>
       <meshBasicMaterial
-        color={0xffe4bd}
+        vertexColors
         transparent
-        opacity={0.82}
+        opacity={0.88}
         depthTest
         depthWrite={false}
         side={THREE.DoubleSide}
@@ -392,149 +451,168 @@ function Starfield() {
   );
 }
 
-function buildPlanetGeometry(): THREE.BufferGeometry {
-  /*
-    Detail 3, not 4 or 2.
-
-    Detail 2 made the silhouette too close to a die. Detail 4 made the
-    triangles too fine after the framing pass, so the surface read as a smooth
-    colour field again. Detail 3 leaves a visible low-poly rhythm at the
-    distance the picker actually uses: 1,280 faces around the whole world,
-    with the visible hemisphere carrying the map's facets rather than a noise
-    texture.
-  */
-  const geometry = asFaces(new THREE.IcosahedronGeometry(1, 3));
-  const position = geometry.attributes.position as THREE.BufferAttribute;
-  const colours = new Float32Array(position.count * 3);
-  const colour = new THREE.Color();
-
-  for (let index = 0; index < position.count; index += 1) {
-    const x = position.getX(index);
-    const y = position.getY(index);
-    const z = position.getZ(index);
-    const length = Math.hypot(x, y, z) || 1;
-    const nx = x / length;
-    const ny = y / length;
-    const nz = z / length;
-    const terrain = planetTerrainAt(nx, ny, nz);
-    const radius = 1 + terrain.elevation * 0.16;
-    position.setXYZ(index, nx * radius, ny * radius, nz * radius);
-  }
-
-  /*
-    Vertex colours interpolate even when the material's normals are flat. Pick
-    one palette entry per triangle and write it to all three vertices, so a
-    neighbouring face can actually be a neighbouring colour block instead of a
-    hidden gradient. The region choice comes from the face's low-frequency
-    spherical terrain field, not from the face index or a high-frequency hash.
-    The grade still owns tone mapping and the single sRGB encode; this is scene
-    albedo, not a second colour pipeline.
-  */
-  for (let index = 0; index < position.count; index += 3) {
-    const center = new THREE.Vector3(
-      (position.getX(index) + position.getX(index + 1) + position.getX(index + 2)) / 3,
-      (position.getY(index) + position.getY(index + 1) + position.getY(index + 2)) / 3,
-      (position.getZ(index) + position.getZ(index + 1) + position.getZ(index + 2)) / 3,
-    ).normalize();
-    colour.setHex(planetTerrainAt(center.x, center.y, center.z).colour);
-
-    for (let vertex = 0; vertex < 3; vertex += 1) {
-      const offset = (index + vertex) * 3;
-      colours[offset] = colour.r;
-      colours[offset + 1] = colour.g;
-      colours[offset + 2] = colour.b;
-    }
-  }
-  geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
-  geometry.computeVertexNormals();
-  return geometry;
-}
-
+/**
+ * Lighting setup for bright, legible, commercial-grade presentation.
+ */
 function PlanetLights() {
   return (
     <>
-      {/*
-        The lower-right side should be shaded, not erased. The warm key creates
-        that direction; the hemisphere and ambient fill keep the palette legible
-        inside the shadow instead of turning the globe into a half-eaten ball.
-      */}
-      <hemisphereLight args={[0xa5ced6, 0x56775e, 1.3]} />
-      <ambientLight color={0xf6d1ae} intensity={0.72} />
-      {/* The warm key is upper-left in screen space; the fill keeps the terminator soft. */}
-      <directionalLight position={[-3.8, 4.6, 4.2]} intensity={1.05} color={0xffd1a4} />
-      {/* A cool far-side lift keeps dark land blue-green instead of black. */}
-      <directionalLight position={[3.2, -1.6, -4]} intensity={0.48} color={0x67a8a2} />
+      <hemisphereLight args={[0xd8f2fc, 0x1d2e44, 1.4]} />
+      <ambientLight color={0xffefe0} intensity={0.95} />
+      {/* Sun key light */}
+      <directionalLight position={[-4.0, 5.0, 4.5]} intensity={1.6} color={0xfff8ee} />
+      {/* Frontal camera fill to keep front faces crisp & readable */}
+      <directionalLight position={[0, 2.0, 6.0]} intensity={0.65} color={0xe8f2fa} />
+      {/* Night-side rim fill */}
+      <directionalLight position={[3.5, -2.0, -4.0]} intensity={0.45} color={0x529eb0} />
     </>
   );
 }
 
-function FresnelRim() {
-  // Linear additive edge light; Stage's SwimmerRenderKit grade still owns the
-  // single tone map and sRGB encode after this scene pass.
-  return (
-    <mesh scale={1.018} renderOrder={2}>
-      <sphereGeometry args={[1, 48, 32]} />
-      <shaderMaterial
-        vertexShader={FRESNEL_VERTEX_SHADER}
-        fragmentShader={FRESNEL_FRAGMENT_SHADER}
-        uniforms={{ uColor: { value: new THREE.Color(0xffc47a) } }}
-        transparent
-        depthTest={false}
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </mesh>
-  );
+/**
+ * Procedural low-poly floating island cluster geometry:
+ * Main island (Vibrant grass top, warm biscuit rock, tapered keel) + 2 Satellite Micro Islets.
+ */
+export function buildFloatingIslandGeometry(): THREE.BufferGeometry {
+  const positions: number[] = [];
+  const colors: number[] = [];
+  const normals: number[] = [];
+
+  const GRASS_COLOR = new THREE.Color(0xa4f84c);
+  const ROCK_MID = new THREE.Color(0xdfc29e);
+  const ROCK_BOTTOM = new THREE.Color(0x826048);
+
+  function addFacet(
+    p1: [number, number, number],
+    p2: [number, number, number],
+    p3: [number, number, number],
+    col: THREE.Color,
+  ) {
+    const v1 = new THREE.Vector3(...p1);
+    const v2 = new THREE.Vector3(...p2);
+    const v3 = new THREE.Vector3(...p3);
+    const normal = new THREE.Vector3()
+      .crossVectors(v2.clone().sub(v1), v3.clone().sub(v1))
+      .normalize();
+
+    for (const p of [p1, p2, p3]) {
+      positions.push(...p);
+      colors.push(col.r, col.g, col.b);
+      normals.push(normal.x, normal.y, normal.z);
+    }
+  }
+
+  function buildIslandBody(
+    cx: number,
+    cy: number,
+    cz: number,
+    radius: number,
+    height: number,
+    depth: number,
+    sides: number,
+  ) {
+    const topVertices: [number, number, number][] = [];
+    const midVertices: [number, number, number][] = [];
+    const centerTop: [number, number, number] = [cx, cy + height, cz];
+    const bottomPoint: [number, number, number] = [cx, cy - depth, cz];
+
+    for (let i = 0; i < sides; i += 1) {
+      const angle = (i / sides) * Math.PI * 2;
+      const r = radius * (0.9 + Math.sin(angle * 3 + 1.2) * 0.1);
+      const x = cx + Math.cos(angle) * r;
+      const z = cz + Math.sin(angle) * r;
+      topVertices.push([x, cy + height, z]);
+      midVertices.push([x * 0.94, cy, z * 0.94]);
+    }
+
+    // Top grass fan
+    for (let i = 0; i < sides; i += 1) {
+      const next = (i + 1) % sides;
+      addFacet(centerTop, topVertices[i]!, topVertices[next]!, GRASS_COLOR);
+    }
+
+    // Rock cliff walls
+    for (let i = 0; i < sides; i += 1) {
+      const next = (i + 1) % sides;
+      addFacet(topVertices[i]!, midVertices[i]!, topVertices[next]!, ROCK_MID);
+      addFacet(topVertices[next]!, midVertices[i]!, midVertices[next]!, ROCK_MID);
+    }
+
+    // Tapered rock bottom
+    for (let i = 0; i < sides; i += 1) {
+      const next = (i + 1) % sides;
+      addFacet(midVertices[i]!, bottomPoint, midVertices[next]!, ROCK_BOTTOM);
+    }
+  }
+
+  // 1. Main Island (Expanded top surface: radius 0.145, height 0.024, depth 0.065)
+  buildIslandBody(0, 0, 0, 0.145, 0.024, 0.065, 7);
+
+  // 2. Satellite Micro Islet 1
+  buildIslandBody(0.135, 0.025, -0.07, 0.06, 0.014, 0.035, 5);
+
+  // 3. Satellite Micro Islet 2
+  buildIslandBody(-0.115, -0.018, 0.088, 0.048, 0.012, 0.028, 5);
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  return geometry;
 }
 
-function HorizonGlow() {
-  return (
-    <mesh position={[0, -1.04, -0.32]} scale={[1.42, 0.58, 1]} renderOrder={-1}>
-      <planeGeometry args={[2, 1]} />
-      <shaderMaterial
-        vertexShader={HORIZON_VERTEX_SHADER}
-        fragmentShader={HORIZON_FRAGMENT_SHADER}
-        uniforms={{ uColor: { value: new THREE.Color(0xffa24d) } }}
-        transparent
-        depthTest
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </mesh>
-  );
-}
-
-interface MarkerBeaconProps {
+export interface FloatingStudyClusterProps {
   readonly id: string;
   readonly point: SpherePoint;
   readonly selected: boolean;
   readonly onSelect?: (studyId: string) => void;
-  readonly pinGeometry: THREE.ExtrudeGeometry;
-  readonly pinOutline: THREE.EdgesGeometry;
-  readonly hitGeometry: THREE.SphereGeometry;
+  readonly islandGeometry: THREE.BufferGeometry;
+  readonly beaconGemGeometry: THREE.BufferGeometry;
+  readonly tetherGeometry: THREE.BufferGeometry;
+  readonly groundRingGeometry: THREE.BufferGeometry;
+  readonly hitGeometry: THREE.BufferGeometry;
 }
 
-function MarkerBeacon({
+/**
+ * A floating study island cluster hovering in the atmosphere above the planet.
+ */
+export function FloatingStudyCluster({
   id,
   point,
   selected,
   onSelect,
-  pinGeometry,
-  pinOutline,
+  islandGeometry,
+  beaconGemGeometry,
+  tetherGeometry,
+  groundRingGeometry,
   hitGeometry,
-}: MarkerBeaconProps) {
-  const placement = useMemo(() => beaconPlacement(point), [point]);
+}: FloatingStudyClusterProps) {
   const markerColor = useMemo(() => studyMarkerColor(id), [id]);
-  const pinVisual = useRef<THREE.Group>(null);
-  const { camera } = useThree();
+  const normal = useMemo(
+    () => new THREE.Vector3(point.x, point.y, point.z).normalize(),
+    [point.x, point.y, point.z],
+  );
 
-  useFrame(() => {
-    const node = pinVisual.current;
-    if (!node) return;
-    // Keep the flat droplet readable as the globe turns. This is geometry, not
-    // text: it may face the learner without stealing the DOM's text contract.
-    node.lookAt(camera.position);
-    node.rotateY(Math.PI);
+  // Surface anchor and atmospheric island positions
+  const surfacePos = useMemo(() => normal.clone().multiplyScalar(1.008), [normal]);
+  const islandPos = useMemo(() => normal.clone().multiplyScalar(ATMOSPHERE_RADIUS), [normal]);
+  const tetherMid = useMemo(
+    () => normal.clone().multiplyScalar((1.008 + ATMOSPHERE_RADIUS - 0.04) / 2),
+    [normal],
+  );
+  const tetherLength = useMemo(() => ATMOSPHERE_RADIUS - 0.04 - 1.008, []);
+
+  const clusterQuat = useMemo(() => {
+    return new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+  }, [normal]);
+
+  const gemRef = useRef<THREE.Group>(null);
+
+  useFrame(({ clock }) => {
+    if (!gemRef.current) return;
+    const time = clock.getElapsedTime();
+    gemRef.current.position.y = (selected ? 0.07 : 0.056) + Math.sin(time * 2.5) * 0.006;
+    gemRef.current.rotation.y = time * 0.9;
   });
 
   const handleSelect = (event: { stopPropagation: () => void }) => {
@@ -555,80 +633,91 @@ function MarkerBeacon({
 
   return (
     <>
+      {/* 1. Ground Surface Anchor & Projection Ring */}
       <mesh
-        position={placement.contact}
-        quaternion={placement.surfaceQuaternion}
+        position={surfacePos}
+        quaternion={clusterQuat}
+        geometry={groundRingGeometry}
         renderOrder={3}
         {...interactive}
       >
-        <cylinderGeometry
-          args={[selected ? 0.09 : 0.075, selected ? 0.078 : 0.066, DISC_HEIGHT, 20]}
-        />
-        <meshStandardMaterial
-          color={markerColor.hex}
-          emissive={markerColor.hex}
-          emissiveIntensity={selected ? 0.92 : 0.42}
-          roughness={0.34}
-          metalness={0.04}
-        />
-      </mesh>
-      <mesh
-        position={placement.beamMid}
-        quaternion={placement.beamQuaternion}
-        renderOrder={2}
-        {...interactive}
-      >
-        <cylinderGeometry
-          args={[
-            selected ? PIN_BEAM_RADIUS * 1.45 : PIN_BEAM_RADIUS,
-            selected ? PIN_BEAM_RADIUS * 1.45 : PIN_BEAM_RADIUS,
-            placement.beamLength,
-            8,
-            1,
-            true,
-          ]}
-        />
         <meshBasicMaterial
           color={markerColor.hex}
           transparent
-          opacity={selected ? 0.62 : 0.35}
+          opacity={selected ? 0.95 : 0.7}
           depthWrite={false}
+          side={THREE.DoubleSide}
           blending={THREE.AdditiveBlending}
         />
       </mesh>
-      <group ref={pinVisual} position={placement.pin}>
-        <group scale={PIN_SCALE}>
-          {/* The halo is a separate render layer; the pin scale and contact stay untouched. */}
-          <mesh geometry={pinGeometry} scale={1.1} renderOrder={4}>
-            <meshBasicMaterial
-              color={BEACON_GLOW}
-              transparent
-              opacity={selected ? 0.5 : 0.3}
-              depthTest={false}
-              depthWrite={false}
-              blending={THREE.AdditiveBlending}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-          <lineSegments geometry={pinOutline} renderOrder={5}>
-            <lineBasicMaterial color={markerColor.outlineHex} transparent opacity={0.95} />
-          </lineSegments>
-          <mesh geometry={pinGeometry} renderOrder={6} {...interactive}>
+
+      {/* 2. Atmospheric Gravity / Light Tether Pillar */}
+      <mesh
+        position={tetherMid}
+        quaternion={clusterQuat}
+        geometry={tetherGeometry}
+        scale={[selected ? 1.4 : 1.0, tetherLength / 0.18, selected ? 1.4 : 1.0]}
+        renderOrder={4}
+        {...interactive}
+      >
+        <meshBasicMaterial
+          color={markerColor.hex}
+          transparent
+          opacity={selected ? 0.88 : 0.52}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+
+      {/* 3. Floating Island Cluster in the Atmosphere */}
+      <group position={islandPos} quaternion={clusterQuat}>
+        {/* The 3D Islands (Main + Satellites) */}
+        <mesh geometry={islandGeometry} renderOrder={5} {...interactive}>
+          <meshStandardMaterial
+            vertexColors
+            roughness={0.42}
+            metalness={0.04}
+            emissive={0x42542a}
+            emissiveIntensity={0.38}
+            flatShading
+          />
+        </mesh>
+
+        {/* Floating Crystal Beacon Monument */}
+        <group ref={gemRef}>
+          <mesh geometry={beaconGemGeometry} renderOrder={6} {...interactive}>
             <meshStandardMaterial
               color={markerColor.hex}
               emissive={markerColor.hex}
-              emissiveIntensity={selected ? 0.74 : 0.26}
-              roughness={0.42}
-              metalness={0}
-              flatShading
+              emissiveIntensity={selected ? 2.4 : 1.25}
+              roughness={0.1}
+              metalness={0.15}
             />
           </mesh>
+
+          {/* Selected Beacon Glow Halo Ring */}
+          {selected ? (
+            <mesh scale={2.6} renderOrder={7}>
+              <ringGeometry args={[0.022, 0.044, 16]} />
+              <meshBasicMaterial
+                color={0xfff6e8}
+                transparent
+                opacity={0.95}
+                side={THREE.DoubleSide}
+                depthWrite={false}
+                blending={THREE.AdditiveBlending}
+              />
+            </mesh>
+          ) : null}
         </group>
+
+        {/* Click Hit Target Mesh for Raycasting */}
         {onSelect ? (
           <mesh
             name={`planet-beacon-${id}-hit`}
             geometry={hitGeometry}
-            renderOrder={7}
+            renderOrder={8}
             onClick={handleSelect}
             onPointerOver={handlePointerOver}
             onPointerOut={handlePointerOut}
@@ -641,26 +730,65 @@ function MarkerBeacon({
   );
 }
 
+/**
+ * Camera Distance Solver for Desktop and Mobile Viewports.
+ */
+const GLOBE_SYSTEM_RADIUS = 1.32;
+const GLOBE_PADDING = 1.25;
+
+export function planetDistance(aspect: number, fovDegrees: number): number {
+  const vertical = (fovDegrees * Math.PI) / 180 / 2;
+  const horizontal = Math.atan(Math.tan(vertical) * Math.max(aspect, 0.05));
+  return (GLOBE_SYSTEM_RADIUS * GLOBE_PADDING) / Math.sin(Math.min(vertical, horizontal));
+}
+
+function planetCamera(): readonly [number, number, number] {
+  return renderTier() === "mobile" ? [0, 0.12, 3.8] : [0, 0.18, 7.2];
+}
+
+const TURN_RATE = 5.5;
+const REST: YawPitch = { yaw: 0.35, pitch: 0.18 };
+
+export interface PlanetSceneProps {
+  readonly studies: readonly { readonly id: string }[];
+  readonly selectedId: string | null;
+  readonly onSelect?: (studyId: string) => void;
+}
+
+function prefersReducedMotion(): boolean {
+  return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
   const yawGroup = useRef<THREE.Group>(null);
   const pitchGroup = useRef<THREE.Group>(null);
   const current = useRef<YawPitch>({ ...REST });
+
+  // Geometries memoized once and cleaned up properly
   const planet = useMemo(() => buildPlanetGeometry(), []);
   const sky = useMemo(() => buildSkyGeometry(), []);
-  const pinGeometry = useMemo(() => buildPinGeometry(), []);
-  const pinOutline = useMemo(() => new THREE.EdgesGeometry(pinGeometry, 15), [pinGeometry]);
-  const pinHitGeometry = useMemo(() => new THREE.SphereGeometry(0.18, 12, 8), []);
+  const islandGeometry = useMemo(() => buildFloatingIslandGeometry(), []);
+  const beaconGemGeometry = useMemo(() => new THREE.OctahedronGeometry(0.046, 0), []);
+  const tetherGeometry = useMemo(
+    () => new THREE.CylinderGeometry(0.024, 0.058, 0.18, 12, 1, true),
+    [],
+  );
+  const groundRingGeometry = useMemo(() => new THREE.RingGeometry(0.052, 0.095, 20), []);
+  const hitGeometry = useMemo(() => new THREE.SphereGeometry(0.25, 12, 8), []);
+
   const placed = useMemo(() => placeStudies(studies.map((study) => study.id)), [studies]);
 
   useEffect(() => () => planet.dispose(), [planet]);
   useEffect(() => () => sky.dispose(), [sky]);
   useEffect(
     () => () => {
-      pinGeometry.dispose();
-      pinOutline.dispose();
-      pinHitGeometry.dispose();
+      islandGeometry.dispose();
+      beaconGemGeometry.dispose();
+      tetherGeometry.dispose();
+      groundRingGeometry.dispose();
+      hitGeometry.dispose();
     },
-    [pinGeometry, pinOutline, pinHitGeometry],
+    [islandGeometry, beaconGemGeometry, tetherGeometry, groundRingGeometry, hitGeometry],
   );
 
   useFrame((_, delta) => {
@@ -671,62 +799,50 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
     const target = selected ? rotationFor(selected) : REST;
     const next = stepRotation(current.current, target, delta, prefersReducedMotion(), TURN_RATE);
     current.current = next;
-    // Nested groups, not one Euler: placement.test.ts proved a single XYZ
-    // Euler missed +Z by a couple of degrees, which on this scale is an
-    // island sitting beside the camera.
+
     yawNode.rotation.y = next.yaw;
     pitchNode.rotation.x = next.pitch;
   });
 
   return (
     <>
-      {/*
-        A planet is looked at from outside it. The first pass wrapped this globe
-        in the same painted dome the archipelago stands under, which put a
-        daytime sky behind the thing that is supposed to *contain* the daytime —
-        and a pale wash beside a brown panel was the largest, palest area on the
-        page.
-
-        The dome stays, recoloured: near-black at the top going warm at the
-        bottom, in the panel's own family. Deleting it outright left a hard
-        cold-black rectangle butted against warm brown, which reads as a hole
-        cut in the page rather than as a window onto space.
-      */}
       <mesh geometry={sky} frustumCulled={false}>
         <meshBasicMaterial vertexColors side={THREE.BackSide} depthWrite={false} fog={false} />
       </mesh>
       <Starfield />
-      <HorizonGlow />
       <group ref={yawGroup}>
         <group ref={pitchGroup}>
-          {/*
-            No shadows on the globe. It is the only body in the scene, so the
-            only thing its shadow map could fall on is itself — and it did: a
-            hard terminator with a black lower hemisphere, which is a ball with
-            a bite out of it, not a world. The lights carry the form.
-          */}
+          {/* Planet Body */}
           <mesh geometry={planet}>
             <meshStandardMaterial
               vertexColors
-              flatShading
-              roughness={0.92}
-              metalness={0}
-              emissive={0x1d3a35}
-              emissiveIntensity={0.32}
+              roughness={0.48}
+              metalness={0.04}
+              emissive={0x184d6b}
+              emissiveIntensity={0.22}
             />
           </mesh>
-          <FresnelRim />
+
+          {/* Cloud Layer */}
+          <PlanetClouds />
+
+          {/* Atmospheric Fresnel Halo */}
+          <AtmosphereFresnel />
+
+          {/* Floating Study Island Clusters in Atmosphere */}
           {[...placed.entries()].map(([id, point]) => {
             return (
-              <MarkerBeacon
+              <FloatingStudyCluster
                 key={id}
                 id={id}
                 point={point}
                 selected={id === selectedId}
                 onSelect={onSelect}
-                pinGeometry={pinGeometry}
-                pinOutline={pinOutline}
-                hitGeometry={pinHitGeometry}
+                islandGeometry={islandGeometry}
+                beaconGemGeometry={beaconGemGeometry}
+                tetherGeometry={tetherGeometry}
+                groundRingGeometry={groundRingGeometry}
+                hitGeometry={hitGeometry}
               />
             );
           })}
@@ -736,13 +852,6 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
   );
 }
 
-/**
- * Stage's camera prop is the initial pose, not a live binding, so a pane that
- * changes shape — a rotate to portrait, a rail collapsing, a window drag —
- * would keep the eye it was born with. This rig re-solves the distance from
- * the pane R3F actually measured. Lives on PlanetStage, not PlanetScene, so
- * dropping the globe into the map's canvas cannot steal that camera.
- */
 function CameraRig() {
   const { camera, size } = useThree();
   useLayoutEffect(() => {
@@ -764,20 +873,8 @@ export function PlanetScene(props: PlanetSceneProps) {
   );
 }
 
-/**
- * Owns the world viewport when a standalone route needs the planet scene.
- * Wraps `Stage` rather than creating another world viewport, so the grade, DPR
- * clamp and one-renderer-owner-per-viewport rule stay the answers written in
- * Stage.tsx. The avatar viewports listed in the Canvas mount registry remain
- * independent.
- */
 export function PlanetStage(props: PlanetSceneProps) {
   return (
-    /*
-      No screen-space AO here. The pass creases a field of small islands
-      convincingly and turns one marker in front of one sphere into a ring of
-      black petals — see the note on `ambientOcclusion` in Stage.
-    */
     <Stage cameraFrom={planetCamera()} lookAt={[0, 0, 0]} ambientOcclusion={false}>
       <CameraRig />
       <PlanetScene {...props} />

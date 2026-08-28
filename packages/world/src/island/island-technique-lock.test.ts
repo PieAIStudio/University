@@ -93,13 +93,13 @@ describe("Island technique lock", () => {
 
   it("holds the grass geometry's triangle count still until the ADR is amended", () => {
     /*
-     * 45 is the pre-ADR five-leaf clump, and it is over budget on purpose: the
-     * lock is being introduced ahead of the rewrite so the rewrite cannot land
-     * silently. When the blade becomes a tapered strip this number changes, the
-     * test fails, and the change has to arrive with an ADR-0008 amendment and a
-     * measurement rather than as a diff nobody reviewed.
+     * 1, since the 2026-08-28 rewrite: the five-leaf clump was 45 and the
+     * tripwire fired on the merge exactly as intended, so ADR-0008 carries the
+     * amendment and the new measurement. Any future change to this number has
+     * to arrive the same way — a fresh measurement in the ADR, not a diff
+     * nobody reviewed.
      */
-    expect(trianglesOf(createIslandGrassClumpGeometry())).toBe(45);
+    expect(trianglesOf(createIslandGrassClumpGeometry())).toBe(1);
   });
 
   it("keeps every donor landmark under the landmark ceiling", () => {

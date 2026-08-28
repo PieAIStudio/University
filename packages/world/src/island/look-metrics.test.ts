@@ -49,10 +49,14 @@ describe("island look judge", () => {
     const first = islandLookCameraForShot("course-design", input, viewport);
     const second = islandLookCameraForShot("course-design", input, viewport);
     expect(first).toEqual(second);
-    expect(first.polar).toBeCloseTo(THREE.MathUtils.degToRad(54));
+    expect(first.polar).toBeCloseTo(THREE.MathUtils.degToRad(68));
     expect(first.azimuth).toBeCloseTo(THREE.MathUtils.degToRad(65));
     expect(first.fov).toBe(34);
     expect(first.distance).toBeGreaterThan(34);
+
+    const near = islandLookCameraForShot("course-near", input, viewport);
+    expect(near.distance).toBe(36);
+    expect(near.polar).toBeCloseTo(THREE.MathUtils.degToRad(68));
   });
 
   it("measures the same blueprint and dressing outputs that the renderer consumes", () => {

@@ -223,14 +223,13 @@ describe("PlanetPage", () => {
     expect(rows.map((node) => node.getAttribute("data-study-id"))).toEqual(["buzz", "turing-pact"]);
   });
 
-  it("keeps the beacon contract in geometry and the project colour in the DOM", () => {
-    expect(SCENE_SRC).toContain("buildPinGeometry");
-    expect(SCENE_SRC).toContain("PIN_BEAM_RADIUS");
-    expect(SCENE_SRC).toContain("const PIN_SCALE = 0.34");
-    expect(SCENE_SRC).toContain("const PIN_BEAM_LENGTH = 0.065");
-    expect(SCENE_SRC).toContain("PIN_TIP_OFFSET");
-    expect(SCENE_SRC).toContain("pinContact");
-    expect(SCENE_SRC).toContain("beaconPlacement");
+  it("keeps the floating atmospheric cluster contract in geometry and the project colour in the DOM", () => {
+    expect(SCENE_SRC).toContain("buildFloatingIslandGeometry");
+    expect(SCENE_SRC).toContain("FloatingStudyCluster");
+    expect(SCENE_SRC).toContain("AtmosphereFresnel");
+    expect(SCENE_SRC).toContain("PlanetClouds");
+    expect(SCENE_SRC).toContain("ATMOSPHERE_RADIUS");
+    expect(SCENE_SRC).toContain("buildPlanetGeometry");
     expect(SCENE_SRC).not.toMatch(
       /PIN_PROFILE|PIN_SCREEN_LIFT|PIN_BEAM_HEIGHT|latheGeometry|MARKER_QUIET/,
     );
