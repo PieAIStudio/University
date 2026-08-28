@@ -18,6 +18,12 @@ describe("world sun", () => {
     expect(worldKeyToFillRatio()).toBeGreaterThanOrEqual(3);
   });
 
+  it("leaves exposure room for the environment map", () => {
+    expect(WORLD_SUN.hemisphereIntensity).toBeLessThan(0.95);
+    expect(WORLD_SUN.ambientIntensity).toBeLessThan(0.3);
+    expect(WORLD_SUN.hemisphereIntensity + WORLD_SUN.ambientIntensity).toBe(0.6);
+  });
+
   it("places the light on a unit direction whose elevation matches the contract", () => {
     const [x, y, z] = worldSunDirection();
     const length = Math.hypot(x, y, z);
