@@ -26,7 +26,7 @@ INPUT_DIR = ROOT / "tmp" / "island-textures-input"
 OUTPUT_DIR = ROOT / "packages" / "world" / "public" / "island-textures"
 TILING_PATH = ROOT / "island-texture-tiling-4x4.png"
 FLATNESS_PATH = ROOT / "island-texture-flatness-8x8.png"
-METRICS_PATH = ROOT / "island-texture-processing.json"
+METRICS_PATH = ROOT / "packages/world/texture-demo/processing-metrics.json"
 
 TEXTURES = {
     "grass-albedo": {"input": "grass-generated.png", "target": (126, 185, 72), "contrast": 0.68},

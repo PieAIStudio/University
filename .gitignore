@@ -107,3 +107,8 @@ artifacts/
 # evidence; source renders stay out of the runtime asset budget.
 /tmp/island-textures-input/
 .env*
+
+# Agent evidence screenshots belong in the review, not in the repository root.
+# Every branch that captured before/after shots kept them in its own worktree;
+# the decisions they justified are written into the commit messages instead.
+/*.png
