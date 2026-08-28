@@ -421,7 +421,7 @@ export function IslandRender({
           : undefined
       }
     >
-      <mesh geometry={shape.terrain} castShadow receiveShadow>
+      <mesh name="island-terrain" geometry={shape.terrain} castShadow receiveShadow>
         <IslandSurfaceMaterial
           role="terrain"
           style={surfaceStyle}

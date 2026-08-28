@@ -411,6 +411,7 @@ export function App() {
     [],
   );
   const showMap = SHOWS_THE_MAP.has(view.kind);
+  const studioMap = view.kind === "studio" && view.section === "map";
   const reviewVisible = showMap || view.kind === "review";
 
   useEffect(() => {
@@ -663,7 +664,7 @@ export function App() {
     return null;
   }, [inCourse, lessons, lookDebug?.shot, lookShotIsCourse, view.kind, world]);
   const stage =
-    view.kind === "avatar-lab" ? null : (
+    view.kind === "avatar-lab" || studioMap ? null : (
       <WorldMapCanvas
         hidden={!SHOWS_THE_MAP.has(view.kind)}
         paused={!showMap}
@@ -895,6 +896,10 @@ export function App() {
       setPathOverlay={setPathOverlay}
       setView={setView}
       shelf={shelf}
+      studies={studies}
+      nodes={nodes}
+      world={world}
+      courseProgress={courseProgress}
       showMap={showMap}
       stage={stage}
       studyNames={studyNames}

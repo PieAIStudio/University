@@ -227,6 +227,25 @@ export default defineConfig(({ mode }) => ({
     import.meta.dirname,
     `node_modules/.vite-${mode}${process.env.UNIVERSITY_E2E === "1" ? "-e2e" : ""}`,
   ),
+  resolve: {
+    /*
+      The map workbench is an authoring-only surface. A static import is useful
+      here because the authoring route should be available immediately, but it
+      would otherwise retain Leva and the workbench stylesheet in delivery
+      through module side effects. Resolve the same boundary to a typed-empty
+      component for the customer build; the route itself is already guarded by
+      AUTHORING in MainRouter.
+    */
+    alias:
+      mode === "delivery"
+        ? [
+            {
+              find: /^\.\.\/authoring\/map-studio$/,
+              replacement: resolve(import.meta.dirname, "src/authoring/map-studio.delivery.ts"),
+            },
+          ]
+        : {},
+  },
   plugins: [react(), serveImportedContent(mode), emitSiteIndex(mode), analyzeChunks()],
   build: {
     outDir: `dist/${mode}`,

@@ -1248,11 +1248,11 @@ export function sampleIslandSurface(
  * maxHalf, so a six-lesson island and a forty-lesson island get the same
  * relief character rather than the same absolute bumps.
  */
-const BASE_PLATEAU_HEIGHT = 2.35;
-const PATCH_GAIN = 3.4;
-const MAX_HEIGHT_RATIO = 0.235;
-const TERRACE_STEP_RATIO = 0.0125;
-const RELIEF_AMPLITUDE_RATIO = 0.165;
+export const BASE_PLATEAU_HEIGHT = 2.35;
+export const PATCH_GAIN = 3.4;
+export const MAX_HEIGHT_RATIO = 0.235;
+export const TERRACE_STEP_RATIO = 0.0125;
+export const RELIEF_AMPLITUDE_RATIO = 0.165;
 const RELIEF_OCTAVES = [
   { wavelength: 0.3, amplitude: 1, corridor: 0.34, ridge: 0.55, turn: 0 },
   { wavelength: 0.13, amplitude: 0.38, corridor: 0.6, ridge: 0.35, turn: 0.9 },
