@@ -530,7 +530,14 @@ function CourseIslandGrassField({
 
   if (!owned) return null;
   return (
+    // Receives the island's shadows, casts none of its own. Sixteen thousand
+    // small casters in one 2048 map buys moire and dark speckle, not shadow;
+    // the donor's grass makes the same trade. Without the receive side the
+    // meadow sat outside the lighting entirely — a tree's shadow crossed the
+    // ground and stopped at the grass.
     <instancedMesh
+      castShadow={false}
+      receiveShadow
       ref={mesh}
       args={[owned.geometry, owned.material, plan.placements.length]}
       frustumCulled
