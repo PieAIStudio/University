@@ -48,7 +48,8 @@ superseded_by: null
 | threejs-skills | https://github.com/CloudAI-X/threejs-skills.git | main | threejs-skills | MIT |
 
 `_donors/Kenney` 和 `_donors/buzz` 是非 git 的资产缓存，不进这张表。Kenney 的
-模型是 CC0。
+模型是 CC0。只服务单个仓库的 donor 放 `<portfolio-root>/_donors-individual/`，
+也不进这张表。
 
 发版时唯一要做的事：MIT 的 donor 在产品的第三方声明里保留它的版权行。除此之外
 没有任何限制。
