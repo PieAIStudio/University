@@ -4,8 +4,10 @@ import * as THREE from "three";
 
 import { AssetField, type Placement } from "../kit.js";
 import { resolveIslandRuntimeAsset, type IslandAssetPackId } from "./island-asset-registry.js";
+import { IslandCardVegetation } from "./island-card-vegetation-render.js";
 import {
   planIslandDressing,
+  type IslandDressingPlacement,
   type IslandDressingDetail,
   type IslandDressingPlan,
 } from "./island-dressing.js";
@@ -68,20 +70,46 @@ export function IslandDressing({
     () => islandDressingFields(plan, scale, heightMultiplier),
     [heightMultiplier, plan, scale],
   );
+  const vegetationPlacements = useMemo(
+    () =>
+      plan.placements.filter(
+        (placement): placement is IslandDressingPlacement =>
+          placement.kind === "tree" || placement.kind === "bush",
+      ),
+    [plan],
+  );
+  const vegetationFieldKeys = useMemo(
+    () =>
+      new Set(
+        vegetationPlacements.flatMap((placement) => {
+          const resolution = resolveIslandRuntimeAsset(placement.packId, placement.assetId);
+          return resolution ? [`${resolution.pack}/${resolution.assetId}`] : [];
+        }),
+      ),
+    [vegetationPlacements],
+  );
   return (
     <>
-      {fields.map((field) => (
-        <AssetField
-          key={field.key}
-          src={field.src}
-          at={field.at}
-          preserveMap={field.pack !== "nature-kit"}
-          // Bushes are crossed leaf cards. Their silhouette is useful, but a
-          // directional shadow turns those cards into black starbursts across
-          // the turf. Trees and architecture still cast the grounding shadow.
-          castShadow={detail === "course" && !field.key.endsWith("/plant_bushDetailed")}
-        />
-      ))}
+      <IslandCardVegetation
+        placements={vegetationPlacements}
+        seed={plan.seed}
+        scale={scale}
+        heightMultiplier={heightMultiplier}
+      />
+      {fields.map((field) =>
+        vegetationFieldKeys.has(field.key) ? null : (
+          <AssetField
+            key={field.key}
+            src={field.src}
+            at={field.at}
+            preserveMap={field.pack !== "nature-kit"}
+            // Bushes are crossed leaf cards. Their silhouette is useful, but a
+            // directional shadow turns those cards into black starbursts across
+            // the turf. Trees and architecture still cast the grounding shadow.
+            castShadow={detail === "course" && !field.key.endsWith("/plant_bushDetailed")}
+          />
+        ),
+      )}
     </>
   );
 }

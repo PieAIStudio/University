@@ -146,7 +146,9 @@ const NATURAL_RULES: readonly CandidateRule[] = [
   {
     assets: ["tree_default", "tree_detailed", "tree_pineDefaultB"],
     kind: "tree",
-    count: 74,
+    // Fewer full trunks leave room for a visible leaf-card silhouette while
+    // keeping the same course prop floor; the undergrowth rule fills the gaps.
+    count: 32,
     minSpacing: 1.02,
     radial: [0.24, 0.86],
     height: [2.35, 4.15],
@@ -163,7 +165,7 @@ const NATURAL_RULES: readonly CandidateRule[] = [
     // aerial camera. The starburst came from the size, not the count: a bush
     // as tall as 0.72 on this island is a small tree. Kept shorter, they fill
     // the gaps under the groves the way undergrowth does.
-    count: 46,
+    count: 78,
     minSpacing: 0.58,
     radial: [0.2, 0.88],
     height: [0.26, 0.46],
@@ -923,7 +925,7 @@ function naturalPlacements(
         importance: rule.importance[0] + (rule.importance[1] - rule.importance[0]) * amount,
       };
       if (
-        rule.kind === "bush" &&
+        (rule.kind === "tree" || rule.kind === "bush") &&
         blueprint.nodes.some(
           (node) =>
             Math.hypot(point.x - node.x, point.z - node.z) <
