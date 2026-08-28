@@ -8,6 +8,11 @@
 import { sampleIslandSurface, type IslandBlueprint, type IslandPoint } from "./island-blueprint.js";
 import { sampleIslandTerrainTop } from "./island-geometry.js";
 import {
+  islandFieldFor,
+  sampleIslandField,
+  type IslandFieldSample,
+} from "./island-field.js";
+import {
   recipeById,
   validateIslandRecipe,
   type IslandRecipe,
@@ -140,7 +145,8 @@ const ELEMENTAL_SERENITY_PACK = "elemental-serenity" as const;
  * Rather than raise every ceiling to the same number, each rule states the
  * slope it prefers, so trees settle on the shoulders and flats, rock gathers
  * where the ground is too steep to hold soil, and neither has to be placed by
- * hand.
+ * hand. The radial ranges form the tree ring: the route and its lesson nodes
+ * cut the readable opening through its middle.
  */
 const NATURAL_RULES: readonly CandidateRule[] = [
   {
@@ -148,11 +154,11 @@ const NATURAL_RULES: readonly CandidateRule[] = [
     kind: "tree",
     count: 74,
     minSpacing: 1.02,
-    radial: [0.24, 0.86],
+    radial: [0.68, 0.97],
     height: [2.35, 4.15],
     importance: [0.62, 0.92],
     maxSlope: 0.88,
-    clustered: true,
+    clustered: false,
     prefersSlope: -0.7,
   },
   {
@@ -165,7 +171,7 @@ const NATURAL_RULES: readonly CandidateRule[] = [
     // the gaps under the groves the way undergrowth does.
     count: 46,
     minSpacing: 0.58,
-    radial: [0.2, 0.88],
+    radial: [0.52, 0.92],
     height: [0.26, 0.46],
     importance: [0.3, 0.58],
     maxSlope: 1.05,
@@ -177,7 +183,7 @@ const NATURAL_RULES: readonly CandidateRule[] = [
     kind: "rock",
     count: 58,
     minSpacing: 0.68,
-    radial: [0.2, 0.9],
+    radial: [0.58, 0.97],
     height: [0.42, 1.35],
     importance: [0.42, 0.78],
     maxSlope: 1.9,
@@ -484,15 +490,6 @@ export function distanceToIslandRoute(blueprint: IslandBlueprint, point: IslandP
   return distance;
 }
 
-function slopeAt(blueprint: IslandBlueprint, point: IslandPoint): number {
-  const step = 0.42;
-  const left = sampleIslandSurface(blueprint, point.x - step, point.z).y;
-  const right = sampleIslandSurface(blueprint, point.x + step, point.z).y;
-  const before = sampleIslandSurface(blueprint, point.x, point.z - step).y;
-  const after = sampleIslandSurface(blueprint, point.x, point.z + step).y;
-  return Math.atan(Math.hypot((right - left) / (step * 2), (after - before) / (step * 2)));
-}
-
 function routeClearance(blueprint: IslandBlueprint): number {
   // Centreline distance already covers every lesson node because every node
   // lies on that line. Adding nodeRadius again left a sterile several-metre
@@ -504,12 +501,16 @@ function routeClearance(blueprint: IslandBlueprint): number {
 function available(
   blueprint: IslandBlueprint,
   point: IslandPoint,
+  surface: IslandFieldSample,
   placements: readonly IslandDressingPlacement[],
   minSpacing: number,
   maxSlope: number,
 ): boolean {
-  const surface = sampleIslandSurface(blueprint, point.x, point.z);
-  if (!surface.inside || surface.radial > 0.91) return false;
+  const slopeLimit = Math.min(1, Math.max(0, maxSlope / (Math.PI / 2)));
+  // B is the shared shoreline/radial mask and A is the height-grid slope.
+  // Keep the outermost shoreline out of the placement pool; the remaining
+  // radial rule supplies the broad tree ring without sampling the surface.
+  if (!surface.inside || surface.shore > 0.975 || surface.rock > slopeLimit) return false;
   if (distanceToIslandRoute(blueprint, point) < routeClearance(blueprint)) return false;
   if (
     Math.hypot(point.x - blueprint.hero.x, point.z - blueprint.hero.z) <
@@ -517,7 +518,6 @@ function available(
   ) {
     return false;
   }
-  if (slopeAt(blueprint, point) > maxSlope) return false;
   return placements.every(
     (placement) => Math.hypot(point.x - placement.x, point.z - placement.z) >= minSpacing,
   );
@@ -872,16 +872,26 @@ function candidatePoint(
  * where things gather, not whether they exist.
  */
 function slopePreferred(
-  blueprint: IslandBlueprint,
-  point: IslandPoint,
+  surface: IslandFieldSample,
   rule: CandidateRule,
   random: () => number,
 ): boolean {
   const preference = rule.prefersSlope ?? 0;
   if (preference === 0) return true;
-  const steepness = Math.min(1, slopeAt(blueprint, point) / 1.1);
+  const steepness = surface.rock;
   const wanted = preference > 0 ? steepness : 1 - steepness;
   return random() < 0.22 + wanted * Math.abs(preference) * 0.78;
+}
+
+function densityAcceptanceForRule(
+  surface: IslandFieldSample,
+  rule: CandidateRule,
+): number {
+  // Vegetation follows meadow density; exposed rock follows the same field's
+  // A channel. A modest floor keeps a rule from disappearing on an unusual
+  // but valid seed while the dominant term still shapes where it settles.
+  const density = rule.kind === "rock" ? surface.rock : surface.grass;
+  return 0.34 + density * 0.66;
 }
 
 function naturalPlacements(
@@ -894,6 +904,7 @@ function naturalPlacements(
   const occupied: IslandDressingPlacement[] = [...reserved];
   const bushOccupied: IslandDressingPlacement[] = [...reserved];
   const centres = clusterCentres(blueprint);
+  const field = islandFieldFor(blueprint);
   const density = Math.min(1.78, Math.max(0.9, 0.72 + Math.sqrt(blueprint.lessonCount) / 6.8));
   for (const rule of NATURAL_RULES) {
     const assets = rule.assets.filter((asset) => allowed.has(asset));
@@ -905,8 +916,21 @@ function naturalPlacements(
       if (placements.length - start >= targetCount) break;
       const point = candidatePoint(blueprint, rule, centres, random);
       const spacingOccupied = rule.kind === "bush" ? bushOccupied : occupied;
-      if (!available(blueprint, point, spacingOccupied, rule.minSpacing, rule.maxSlope)) continue;
-      if (!slopePreferred(blueprint, point, rule, random)) continue;
+      const fieldSample = sampleIslandField(field, point.x, point.z);
+      if (random() > densityAcceptanceForRule(fieldSample, rule)) continue;
+      if (
+        !available(
+          blueprint,
+          point,
+          fieldSample,
+          spacingOccupied,
+          rule.minSpacing,
+          rule.maxSlope,
+        )
+      ) {
+        continue;
+      }
+      if (!slopePreferred(fieldSample, rule, random)) continue;
       const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
       const assetId = assets[Math.floor(random() * assets.length)]!;
       const amount = random();

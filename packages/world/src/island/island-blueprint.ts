@@ -1304,7 +1304,7 @@ const ROUTE_CORRIDOR_OUTER = 7.4;
 const CORRIDOR_GRID_CELL = 1.2;
 const CORRIDOR_SAMPLE_STRIDE = 3;
 
-interface CorridorField {
+export interface IslandCorridorField {
   readonly cells: Float32Array;
   readonly countX: number;
   readonly countZ: number;
@@ -1313,9 +1313,9 @@ interface CorridorField {
   readonly cell: number;
 }
 
-const corridorFields = new WeakMap<IslandGeometryBlueprint, CorridorField>();
+const corridorFields = new WeakMap<IslandGeometryBlueprint, IslandCorridorField>();
 
-function corridorFieldFor(blueprint: IslandGeometryBlueprint): CorridorField {
+export function corridorFieldFor(blueprint: IslandGeometryBlueprint): IslandCorridorField {
   const existing = corridorFields.get(blueprint);
   if (existing !== undefined) return existing;
   const spanX = blueprint.bounds.halfX * 1.08;
@@ -1342,7 +1342,7 @@ function corridorFieldFor(blueprint: IslandGeometryBlueprint): CorridorField {
       cells[iz * countX + ix] = Math.sqrt(nearest);
     }
   }
-  const field: CorridorField = {
+  const field: IslandCorridorField = {
     cells,
     countX,
     countZ,
@@ -1354,7 +1354,7 @@ function corridorFieldFor(blueprint: IslandGeometryBlueprint): CorridorField {
   return field;
 }
 
-function routeDistanceAt(blueprint: IslandGeometryBlueprint, x: number, z: number): number {
+export function routeDistanceAt(blueprint: IslandGeometryBlueprint, x: number, z: number): number {
   const field = corridorFieldFor(blueprint);
   const gx = clamp((x - field.minX) / field.cell, 0, field.countX - 1.0001);
   const gz = clamp((z - field.minZ) / field.cell, 0, field.countZ - 1.0001);
