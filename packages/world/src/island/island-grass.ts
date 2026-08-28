@@ -7,12 +7,14 @@
  * surface. It never samples the cliff, underside, or a caller-owned geometry.
  * An accepted placement is one clump of leaves, not one rendered blade.
  *
- * Algorithm provenance: the area-weighted rejection shape and seeded sample
+ * Sampler provenance: the area-weighted rejection shape and seeded sample
  * stream were studied from cortiz2894/stylized-components, exact HEAD
  * `8eb0dde5a8e7eae985d69f923b627b0cf253bed5` (MIT), especially its grass
- * surface sampler. This is a small University adapter: no donor renderer,
- * shader, app, or media is copied. The donor's unbounded density is
- * intentionally replaced by the hard semantic budgets below.
+ * surface sampler. The live mesh is a University-authored camera-facing card:
+ * elemental-serenity's `grass_blade.glb` is a three-vertex shader carrier, not
+ * a visible model. Neither donor renderer, app, or unbounded density is
+ * copied. The hard semantic budgets below replace both donors' "fill the
+ * tile" defaults.
  */
 import { sampleIslandSurface, type IslandBlueprint, type IslandPoint } from "./island-blueprint.js";
 import { sampleIslandTerrainTop } from "./island-geometry.js";
@@ -39,14 +41,10 @@ export const ISLAND_GRASS_TOP_MAX_RADIAL = 0.81;
 export const ISLAND_GRASS_LIMITS: Readonly<
   Record<IslandGrassDetail, Readonly<Record<IslandGrassRenderTier, number>>>
 > = {
-  // One instance is a five-leaf clump. 16,000 clumps × 45 triangles gives
-  // 720,000 grass triangles before the small terrain/dressing overhead, while
-  // the 4,500 mobile ceiling protects fill-rate and vertex work.
-  // Measured in the local Chromium/ANGLE Metal session on an Apple M1 Max:
-  // 16,000 clumps rendered at 120.2 FPS (1440 × 900, 100 calls, 777,008 total
-  // triangles) and 4,500 clumps at 120.0 FPS (390 × 590, 125 calls, 383,996
-  // total triangles), both with the live wind loop enabled.
-  course: { desktop: 16000, mobile: 4500 },
+  // A short unshadowed field, not 16k shadowed cards. World stays empty.
+  // The terrain shader carries the meadow colour; these blades are the
+  // silhouette you can actually count in a near shot.
+  course: { desktop: 800, mobile: 280 },
   world: { desktop: 0, mobile: 0 },
 };
 
@@ -433,6 +431,9 @@ export function planIslandGrass(
     const density = islandGrassDensityAt(resolved.seed, point.x, point.z);
     const acceptance = densityAcceptance(density);
     if (acceptance <= 0 || random() > acceptance) continue;
+    const densityHeight = smoothUnit(
+      Math.min(1, Math.max(0, (density - ISLAND_GRASS_DENSITY_THRESHOLD) / 0.42)),
+    );
     if (!isAvailable(blueprint, point, radial, resolved.safetyZones, routeClearance)) continue;
     const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
     // One placement is a 5–8-leaf clump. A 0.72–1.0 footprint leaves small
@@ -446,8 +447,11 @@ export function planIslandGrass(
       // lesson markers on this island: the near camera came back looking
       // through undergrowth rather than across a meadow. Two thirds of that
       // keeps the clumped silhouette and puts the horizon back.
-      width: 0.6 + random() * 0.24,
-      height: 0.42 + random() * 0.22,
+      width: 0.1 + random() * 0.06,
+      // Looked down on, donor-height blades are skyscrapers. Keep them short
+      // enough that the diorama camera sees a field, not a palisade; the
+      // density field still makes lush patches a little taller.
+      height: (0.34 + random() * 0.16) * (0.82 + densityHeight * 0.4),
       rotation: random() * TAU,
       phase: random(),
       radial: surface.radial,

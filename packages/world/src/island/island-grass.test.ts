@@ -14,13 +14,17 @@ import {
   islandGrassLodForDistance,
   planIslandGrass,
 } from "./island-grass.js";
+import elementalManifest from "./elemental-serenity-assets.json";
 import {
+  ISLAND_GRASS_CARD_WIDTH,
   ISLAND_GRASS_CLUMP_TRIANGLES,
   ISLAND_GRASS_LEAF_COUNT,
   ISLAND_GRASS_LEAF_SEGMENTS,
+  createIslandGrassCardGeometry,
   createIslandGrassClumpGeometry,
   createIslandGrassBladeGeometry,
   disposeIslandGrassResources,
+  projectDonorGrassBladeGeometry,
 } from "./island-grass-render.js";
 
 const blueprint = islandBlueprint({
@@ -37,12 +41,55 @@ const realCourseBlueprint = islandBlueprint({
 });
 
 describe("Island grass plan", () => {
-  it("keeps the real generated TuringPact course eligible for ground cover", () => {
+  it("plans a short unshadowed field under the course cap", () => {
     const plan = planIslandGrass(realCourseBlueprint, "course", {
       tier: "desktop",
     });
 
     expect(plan.placements.length).toBeGreaterThan(0);
+    expect(plan.placements.length).toBeLessThanOrEqual(ISLAND_GRASS_LIMITS.course.desktop);
+    expect(plan.maxCount).toBe(ISLAND_GRASS_LIMITS.course.desktop);
+  });
+
+  it("keeps the elemental-serenity blade on the grass lane, not as future-use", () => {
+    const blade = elementalManifest.assets.find((asset) => asset.assetId === "grass_blade");
+    expect(blade?.roles).toEqual(["grass"]);
+    expect(blade?.src).toBe("/models/elemental-serenity/grass_blade.glb");
+  });
+
+  it("projects a donor blade onto the unit-height kit contract", () => {
+    const source = new THREE.BoxGeometry(0.4, 2, 0.05);
+    source.translate(3, 4, 5);
+    const geometry = projectDonorGrassBladeGeometry(source);
+    const position = geometry.getAttribute("position");
+    let minY = Infinity;
+    let maxY = -Infinity;
+    let minX = Infinity;
+    let maxX = -Infinity;
+    for (let index = 0; index < position.count; index += 1) {
+      minY = Math.min(minY, position.getY(index));
+      maxY = Math.max(maxY, position.getY(index));
+      minX = Math.min(minX, position.getX(index));
+      maxX = Math.max(maxX, position.getX(index));
+    }
+    expect(minY).toBeCloseTo(0, 5);
+    expect(maxY).toBeCloseTo(1, 5);
+    expect((minX + maxX) / 2).toBeCloseTo(0, 5);
+    expect(geometry.getAttribute("aClumpOcclusion").count).toBe(position.count);
+    expect(geometry.getAttribute("uv").getY(0)).toBeGreaterThanOrEqual(0);
+    source.dispose();
+    geometry.dispose();
+  });
+
+  it("builds a unit-height camera-facing card instead of the three-vertex donor stub", () => {
+    const geometry = createIslandGrassCardGeometry();
+    const position = geometry.getAttribute("position");
+    expect(position.count).toBe(3);
+    expect(geometry.index?.count).toBe(3);
+    expect(position.getY(0)).toBe(0);
+    expect(position.getY(2)).toBe(1);
+    expect(Math.abs(position.getX(1) - position.getX(0))).toBeCloseTo(ISLAND_GRASS_CARD_WIDTH, 5);
+    geometry.dispose();
   });
 
   it("builds one complete five-leaf clump with curved tapered leaves", () => {
@@ -178,24 +225,15 @@ describe("Island grass plan", () => {
     expect(world.maxCount).toBe(0);
   });
 
-  it("uses the measured clump budgets and keeps the real course dense", () => {
+  it("hard-caps a caller asking for more blades than the course budget", () => {
     const plan = planIslandGrass(realCourseBlueprint, "course", {
       tier: "desktop",
       density: 3.6,
-      maxCount: ISLAND_GRASS_LIMITS.course.desktop,
+      maxCount: 5000,
     });
 
-    // The bounds moved once the near camera was actually looked through: a
-    // clump 0.72 to 1.06 tall stands about waist high beside a lesson marker
-    // on this island, so the view came back looking into undergrowth. What
-    // this test protects is that a placement is a clump rather than the single
-    // 0.15-wide blade the field used to scatter, and that check survives the
-    // smaller size unchanged.
-    expect(plan.placements.length).toBe(ISLAND_GRASS_LIMITS.course.desktop);
-    expect(plan.placements.every((placement) => placement.width >= 0.6)).toBe(true);
-    expect(plan.placements.every((placement) => placement.width < 0.85)).toBe(true);
-    expect(plan.placements.every((placement) => placement.height >= 0.42)).toBe(true);
-    expect(plan.placements.every((placement) => placement.height < 0.65)).toBe(true);
+    expect(plan.placements.length).toBeLessThanOrEqual(ISLAND_GRASS_LIMITS.course.desktop);
+    expect(plan.maxCount).toBe(ISLAND_GRASS_LIMITS.course.desktop);
   });
 
   it("resolves deterministic distance LOD with hysteresis", () => {
@@ -250,6 +288,7 @@ describe("Island grass plan", () => {
     expect(course.seed).toBe(blueprint.seed);
     expect(course.detail).toBe("course");
     expect(world.detail).toBe("world");
-    expect(course.placements.length).toBeGreaterThan(world.placements.length);
+    expect(course.placements.length).toBeGreaterThan(0);
+    expect(world.placements).toEqual([]);
   });
 });

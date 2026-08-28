@@ -4,8 +4,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { buildIslandGeometry, type IslandGeometryDetail } from "./island-geometry.js";
-import { IslandGrass, type IslandGrassStyle } from "./island-grass-render.js";
 import { islandDressingSafetyZones, planIslandDressing } from "./island-dressing.js";
+import { IslandGrass } from "./island-grass-render.js";
 import {
   createIslandSurfaceMaterialAdapter,
   DEFAULT_ISLAND_SURFACE_STYLE,
@@ -13,7 +13,6 @@ import {
   resolveIslandSurfaceStyle,
   type IslandSurfaceTimeUniform,
   type IslandSurfaceRole,
-  type IslandSurfaceStyleId,
 } from "./island-surface-style.js";
 import type { IslandBlueprint, IslandUnitSigil } from "./island-blueprint.js";
 
@@ -21,35 +20,6 @@ const TECH = 0x5a6572;
 const TECH_DARK = 0x303a46;
 const CYAN = 0x55d9ff;
 const HERO_GOLD = 0xffc75a;
-
-const GRASS_LOOKS: Readonly<
-  Record<
-    IslandSurfaceStyleId,
-    { readonly style: IslandGrassStyle; readonly options: { readonly density: number } }
-  >
-> = {
-  diorama: {
-    style: { bottom: 0x4e8038, top: 0xeef9b8 },
-    options: { density: 3.6 },
-  },
-  elemental: {
-    style: {
-      bottom: 0x5b9163,
-      top: 0xb9df91,
-      windStrength: 0.085,
-      windSpeed: 1.3,
-    },
-    options: { density: 3.8 },
-  },
-  mossy: {
-    style: { bottom: 0x527e46, top: 0x8fb65c, windSpeed: 0.92 },
-    options: { density: 4.2 },
-  },
-  desert: {
-    style: { bottom: 0x8a754b, top: 0xc6ad6c, windStrength: 0.05 },
-    options: { density: 0.9 },
-  },
-};
 
 export interface IslandRenderProps {
   readonly blueprint: IslandBlueprint;
@@ -81,7 +51,7 @@ function IslandSurfaceMaterial({
   readonly timeUniform: IslandSurfaceTimeUniform;
 }) {
   const adapter = useMemo(
-    () => createIslandSurfaceMaterialAdapter(role, style, import.meta.env.DEV, timeUniform),
+    () => createIslandSurfaceMaterialAdapter(role, style, true, timeUniform),
     [role, timeUniform],
   );
   useLayoutEffect(() => {
@@ -326,11 +296,7 @@ export function IslandRender({
   const surfaceStyle = import.meta.env.DEV
     ? resolveIslandSurfaceStyle()
     : DEFAULT_ISLAND_SURFACE_STYLE;
-  const grassLook = GRASS_LOOKS[surfaceStyle];
   const surfaceTime = useRef<IslandSurfaceTimeUniform>({ value: 0 });
-  // Grass and dressing are rendered by sibling components in Maps.tsx. Build
-  // the pure dressing plan once here as well so the grass planner can reserve
-  // the exact authored landmark/prop aprons instead of guessing positions.
   const dressingPlan = useMemo(
     () =>
       detail === "course" && blueprint.themeSelection.recipeId
@@ -397,15 +363,12 @@ export function IslandRender({
         />
       </mesh>
       {detail === "course" ? (
-        <>
-          <IslandGrass
-            blueprint={blueprint}
-            detail="course"
-            targetRadius={targetRadius}
-            style={grassLook.style}
-            options={{ ...grassLook.options, safetyZones: grassSafetyZones }}
-          />
-        </>
+        <IslandGrass
+          blueprint={blueprint}
+          detail="course"
+          targetRadius={targetRadius}
+          options={{ safetyZones: grassSafetyZones }}
+        />
       ) : null}
       <TechUnderside
         blueprint={blueprint}

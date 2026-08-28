@@ -1,16 +1,25 @@
 /**
  * R3F adapter for the bounded IslandGrass plan.
  *
- * One course owns one low-poly blade geometry, one material, and one
- * InstancedMesh. Wind updates the material's uniform through the Stage-owned
- * `useFrame` loop; this component never creates a renderer or a second loop.
- * The blueprint and any terrain geometry remain caller-owned and are never
- * disposed here.
+ * One course owns one blade geometry, one material, and one InstancedMesh.
+ * The live mesh is a unit-height camera-facing card. Elemental-Serenity's
+ * `grass_blade.glb` is a three-vertex shader carrier, not a visible model, so
+ * instancing that file produced 16,000 invisible triangles. The donor idea
+ * that actually reads is the billboard yaw plus the root-to-tip mask, rewritten
+ * here as a MeshStandardMaterial `onBeforeCompile` adapter. Their displacement
+ * map, density cull, unbounded tile mesh and second renderer stay behind.
+ *
+ * This component never creates a renderer or a second loop. The blueprint and
+ * any terrain geometry remain caller-owned and are never disposed here.
  */
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
+import { cloneOwnedPartGeometry } from "../kit-resources.js";
+import { renderTier } from "../sky/tier.js";
+import type { IslandBlueprint } from "./island-blueprint.js";
+import { islandGeometryScale, type IslandGeometryDetail } from "./island-geometry.js";
 import {
   planIslandGrass,
   islandGrassInstanceCountForLod,
@@ -22,10 +31,7 @@ import {
   type IslandGrassDistanceTier,
   type IslandGrassRenderTier,
 } from "./island-grass.js";
-import { islandGeometryScale, type IslandGeometryDetail } from "./island-geometry.js";
 import { islandLookFrozen } from "./island-surface-style.js";
-import type { IslandBlueprint } from "./island-blueprint.js";
-import { renderTier } from "../sky/tier.js";
 
 // These are authored sRGB endpoints before the shared renderer grade:
 // #2d5c2f is CIELAB L* 34.8 and #b0df83 is CIELAB L* 83.8. Keeping a full
@@ -185,6 +191,33 @@ const GRASS_LEAF_RECIPES: readonly GrassLeafRecipe[] = [
   },
 ];
 
+/**
+ * A vertical card the donor blade was supposed to be. Width is a fraction of
+ * the unit height so 16,000 instances read as a field, not as hay tufts and
+ * not as a single-pixel speckle.
+ */
+export const ISLAND_GRASS_CARD_WIDTH = 0.18;
+
+export function createIslandGrassCardGeometry(): THREE.BufferGeometry {
+  const half = ISLAND_GRASS_CARD_WIDTH / 2;
+  // A tapered blade, not a door. From the course camera this is a diorama
+  // looked down on; a rectangle facing the lens became a tower block.
+  const positions = new Float32Array([-half, 0, 0, half, 0, 0, 0, 1, 0]);
+  const uvs = new Float32Array([0, 0, 1, 0, 0.5, 1]);
+  const occlusions = new Float32Array([0.7, 0.7, 1]);
+  const variations = new Float32Array([0.38, 0.62, 0.5]);
+  const geometry = new THREE.BufferGeometry();
+  geometry.name = "IslandGrassCardGeometry";
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setAttribute("aClumpOcclusion", new THREE.Float32BufferAttribute(occlusions, 1));
+  geometry.setAttribute("aLeafVariation", new THREE.Float32BufferAttribute(variations, 1));
+  geometry.setIndex([0, 1, 2]);
+  geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
 /** One shared five-leaf, five-segment clump geometry for every instance. */
 export function createIslandGrassClumpGeometry(): THREE.BufferGeometry {
   const verticesPerLeaf = ISLAND_GRASS_LEAF_SEGMENTS * 2 + 1;
@@ -271,24 +304,59 @@ export function createIslandGrassClumpGeometry(): THREE.BufferGeometry {
 /** Compatibility export for code that has not renamed the old placement yet. */
 export const createIslandGrassBladeGeometry = createIslandGrassClumpGeometry;
 
-const GRASS_SHADER_MARKER = "/* university island clump grass, lit */";
+/**
+ * Project one donor blade mesh onto the same unit-height contract the Kenney
+ * kit uses: base at y=0, height 1, centred on xz. The live field then asks
+ * for a world-unit height per placement. Attributes the clump shader already
+ * reads are filled from the normalised Y so the same material can light
+ * either mesh.
+ */
+export function projectDonorGrassBladeGeometry(
+  source: THREE.BufferGeometry,
+  matrixWorld: THREE.Matrix4 = new THREE.Matrix4(),
+): THREE.BufferGeometry {
+  const geometry = cloneOwnedPartGeometry(source);
+  geometry.applyMatrix4(matrixWorld);
+  geometry.computeBoundingBox();
+  const box = geometry.boundingBox ?? new THREE.Box3().setFromBufferAttribute(
+    geometry.getAttribute("position") as THREE.BufferAttribute,
+  );
+  const size = box.getSize(new THREE.Vector3());
+  const centre = box.getCenter(new THREE.Vector3());
+  const height = size.y || 1;
+  geometry.applyMatrix4(
+    new THREE.Matrix4()
+      .makeScale(1 / height, 1 / height, 1 / height)
+      .multiply(new THREE.Matrix4().makeTranslation(-centre.x, -box.min.y, -centre.z)),
+  );
+  const position = geometry.getAttribute("position");
+  const occlusions = new Float32Array(position.count);
+  const variations = new Float32Array(position.count);
+  const uvs = new Float32Array(position.count * 2);
+  for (let index = 0; index < position.count; index += 1) {
+    const y = Math.min(1, Math.max(0, position.getY(index)));
+    occlusions[index] = 0.72 + y * 0.28;
+    variations[index] = 0.5;
+    uvs[index * 2] = 0.5;
+    uvs[index * 2 + 1] = y;
+  }
+  geometry.setAttribute("aClumpOcclusion", new THREE.Float32BufferAttribute(occlusions, 1));
+  geometry.setAttribute("aLeafVariation", new THREE.Float32BufferAttribute(variations, 1));
+  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
+  geometry.name = "IslandGrassDonorBladeGeometry";
+  return geometry;
+}
+
+const GRASS_SHADER_MARKER = "/* university island donor blade grass, lit */";
 
 /**
- * The clump shader, injected into a lit material rather than replacing one.
+ * The blade shader, injected into a lit material rather than replacing one.
  *
- * Two rewrites met here. One turned a scatter of flat blades into clumps with
- * a root-to-tip ramp and cheap self-occlusion; the other moved grass off an
- * unlit ShaderMaterial, because an unlit field caps the land's p95 at the
- * albedo of a blade tip and no amount of sun can raise a surface that never
- * asks the lights. Both were right, and neither is much use without the other:
- * clumps under no light are a flat green mat, and lit flat blades are lit
- * confetti. MeshStandardMaterial supplies the lighting the rest of the island
- * already uses, and the clump geometry, wind and ramp ride in through
- * onBeforeCompile.
- *
- * The tip/root ramp is the donor idea from elemental-serenity
- * `Shaders/Chunks/grass/grass.fragment_color_chunk.glsl` at
- * `6b8cebefa0ee10e1bdd081dd342a01b3fe753e09`, without its displacement map.
+ * Lighting stays on MeshStandardMaterial so the meadow can receive the
+ * island's sun and shadows. The donor's colour idea is the root-to-tip ramp
+ * and tip mask; their displacement map and second renderer stay behind.
  */
 const GRASS_VERTEX_DECLARATIONS = `${GRASS_SHADER_MARKER}
 uniform float uTime;
@@ -314,8 +382,10 @@ vLeafVariation = aLeafVariation;
   mat4 grassInstanceWorld = modelMatrix;
 #endif
 vec3 grassBase = (grassInstanceWorld * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-// The phase is world-space, never instance-id space: nearby clumps lean
-// together and the two crossed waves read as one sweep over the meadow.
+// This camera looks down onto a diorama. Donor grass billboards toward an
+// eye-level walk camera; facing ours turns every blade into a standing
+// rectangle and the meadow reads as a city of blocks. Keep authored yaw
+// and only wind the tip.
 vec2 grassCross = vec2(-uWindDirection.y, uWindDirection.x);
 float grassWavePhase = dot(grassBase.xz, uWindDirection) * uWindFrequency;
 float grassGustPhase = dot(grassBase.xz, grassCross) * uWindFrequency * 0.58;
@@ -367,7 +437,7 @@ function createIslandGrassMaterial(style?: IslandGrassStyle): THREE.MeshStandard
   });
   material.name = "IslandGrassMaterial";
   material.userData.grassUniforms = uniforms;
-  material.customProgramCacheKey = () => "island-grass-clump-lit-1";
+  material.customProgramCacheKey = () => "island-grass-diorama-blade-2";
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
     if (!shader.vertexShader.includes(GRASS_SHADER_MARKER)) {
@@ -466,7 +536,7 @@ function CourseIslandGrassField({
 
   useLayoutEffect(() => {
     const resources: IslandGrassOwnedResources = {
-      geometry: createIslandGrassClumpGeometry(),
+      geometry: createIslandGrassCardGeometry(),
       material: createIslandGrassMaterial(style),
     };
     ownedRef.current = resources;
@@ -490,10 +560,10 @@ function CourseIslandGrassField({
     target.count = plan.placements.length;
     for (const [index, placement] of plan.placements.entries()) {
       dummy.position.set(placement.x * scale, (placement.y + 0.008) * scale, placement.z * scale);
-      dummy.rotation.set(0, placement.rotation + placement.phase * 0.08, 0);
+      dummy.rotation.set(0, placement.rotation, 0);
       dummy.scale.set(
         placement.width * scale,
-        placement.height * scale * (0.86 + placement.phase * 0.28),
+        placement.height * scale * (0.92 + placement.phase * 0.16),
         placement.width * scale,
       );
       dummy.updateMatrix();
@@ -537,7 +607,7 @@ function CourseIslandGrassField({
     // ground and stopped at the grass.
     <instancedMesh
       castShadow={false}
-      receiveShadow
+      receiveShadow={false}
       ref={mesh}
       args={[owned.geometry, owned.material, plan.placements.length]}
       frustumCulled

@@ -13,7 +13,7 @@ export type IslandSurfaceStyleId = (typeof ISLAND_SURFACE_STYLE_IDS)[number];
 export type IslandSurfaceRole = "terrain";
 
 export const DEFAULT_ISLAND_SURFACE_STYLE: IslandSurfaceStyleId = "diorama";
-export const ISLAND_SURFACE_SHADER_VARIANT = "island-surface-uniforms-1";
+export const ISLAND_SURFACE_SHADER_VARIANT = "island-surface-meadow-grain-3";
 
 export interface IslandSurfaceStylePreset {
   readonly id: IslandSurfaceStyleId;
@@ -45,13 +45,13 @@ export const ISLAND_SURFACE_STYLE_PRESETS: Readonly<
   diorama: {
     id: "diorama",
     variant: 0,
-    tint: [0.96, 1.02, 0.9],
-    saturation: 1.02,
-    contrast: 1.035,
+    tint: [0.42, 0.58, 0.2],
+    saturation: 1.04,
+    contrast: 1.04,
     brightness: 0,
-    macroAmount: 0.22,
+    macroAmount: 0.4,
     shimmer: 0,
-    strength: { terrain: 0.22 },
+    strength: { terrain: 0.78 },
   },
   elemental: {
     id: "elemental",
@@ -176,54 +176,41 @@ float islandStyleRoleAmount = clamp(
   0.0,
   0.70
 );
-vec3 islandStyleGrassTone = mix(
-  vec3(1.04, 1.08, 0.96),
-  min(
-    vec3(1.1),
-    max(vec3(0.0), uIslandStyleTint * 0.42 + vec3(0.62, 0.66, 0.56))
-  ),
-  0.24
+// Meadow grain, not a height-map. The previous paint mixed yellow and rust
+// at island-sized wavelengths, so each terrain triangle read as a contour.
+// Donor grass is two close greens at blade scale. Path/rock keep vertex colour
+// because their green channel is not dominant.
+float islandStyleMeadowMask = smoothstep(
+  0.02,
+  0.10,
+  diffuseColor.g - max(diffuseColor.r, diffuseColor.b) * 0.62
+) * (1.0 - islandStyleSlopeLayer);
+float islandStyleGrain = mix(
+  universityIslandStyleNoise(vIslandStyleWorldPosition.xz * 16.0),
+  universityIslandStyleNoise(vIslandStyleWorldPosition.xz * 42.0 + vec2(3.1, 8.8)),
+  0.45
 );
-vec3 islandStyleSoilTone = mix(
-  vec3(0.96, 0.90, 0.78),
-  vec3(0.82, 0.74, 0.62),
-  0.36 + (1.0 - islandStyleHeightLayer) * 0.32
+vec3 islandStyleMeadow = mix(
+  vec3(0.28, 0.46, 0.16),
+  vec3(0.52, 0.66, 0.22),
+  islandStyleGrain
 );
-vec3 islandStyleSlopeTone = mix(
-  vec3(0.94, 0.97, 0.88),
-  vec3(0.64, 0.69, 0.62),
-  islandStyleSlopeLayer
+islandStyleColour = mix(islandStyleColour, islandStyleMeadow, islandStyleMeadowMask);
+islandStyleColour = mix(
+  islandStyleColour,
+  islandStyleColour * vec3(0.82, 0.74, 0.62),
+  islandStyleSoilLayer * islandStyleRoleAmount * 0.35
 );
 islandStyleColour = mix(
   islandStyleColour,
-  islandStyleColour * islandStyleGrassTone,
-  islandStyleGrassLayer * islandStyleRoleAmount
-);
-islandStyleColour = mix(
-  islandStyleColour,
-  islandStyleColour * islandStyleSoilTone,
-  islandStyleSoilLayer * islandStyleRoleAmount * 0.90
-);
-islandStyleColour = mix(
-  islandStyleColour,
-  islandStyleColour * islandStyleSlopeTone,
+  islandStyleColour * mix(vec3(0.94, 0.97, 0.88), vec3(0.64, 0.69, 0.62), islandStyleSlopeLayer),
   islandStyleSlopeLayer * islandStyleRoleAmount
 );
-// A restrained micro layer keeps the procedural top from reading like one
-// untextured card. It is analytic (no donor bitmap or extra texture upload)
-// and remains a subtle modulation of the baked vertex colours, without
-// introducing a second material or draw.
-float islandStyleMicro = universityIslandStyleNoise(
-  vIslandStyleWorldPosition.xz * 0.52 + vec2(4.2, 9.1)
-);
-float islandStyleMicroTone = mix(0.91, 1.09, islandStyleMicro);
-float islandStyleMicroAmount = clamp(0.16 + uIslandStyleMacroAmount * 0.6, 0.0, 1.0);
-islandStyleColour *= mix(1.0, islandStyleMicroTone, islandStyleMicroAmount);
 islandStyleColour += vec3(
   sin(uIslandStyleTime * 1.7 + dot(vIslandStyleWorldPosition.xz, vec2(0.14, 0.09)))
   * uIslandStyleShimmer
 );
-diffuseColor.rgb = mix(diffuseColor.rgb, islandStyleColour, clamp(uIslandStyleStrength, 0.0, 1.0));`;
+diffuseColor.rgb = mix(diffuseColor.rgb, islandStyleColour, clamp(uIslandStyleStrength, 0.0, 1.0) * max(islandStyleMeadowMask, islandStyleSlopeLayer * 0.35));`;
 
 const SURFACE_STYLE_VERTEX_PATCH = `${SURFACE_STYLE_UNIFORM_MARKER}
 varying vec3 vIslandStyleWorldPosition;

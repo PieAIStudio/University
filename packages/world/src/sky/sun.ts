@@ -25,9 +25,13 @@ export const WORLD_SUN = {
   azimuthDeg: 210,
   keyIntensity: 9.0,
   keyColor: 0xffefd2,
-  hemisphereIntensity: 0.95,
+  // Dense vegetation now supplies the darks. The 0.95 / 0.3 pair left the
+  // forest floor at scene-linear ~0 once trees started to catch the key, which
+  // is the opposite of the donor: Elemental-Serenity stays high-key even in
+  // winter. Fill has to bounce or the play camera (grade on) reads as a cave.
+  hemisphereIntensity: 1.65,
   hemisphereGround: 0x7f8b8e,
-  ambientIntensity: 0.3,
+  ambientIntensity: 0.55,
   ambientColor: 0x9bb8d0,
   /** Light distance as a multiple of the shadowed ground radius. */
   distanceFactor: 2.65,

@@ -224,15 +224,24 @@ const MAX_GENERATED_LESSONS = 4096;
 const MAX_ACCENT_PACKS = 2;
 
 // These are part of the route contract, not a renderer-specific style tune.
+/**
+ * Route furniture and island extent stay in the same units. Shrinking this
+ * to 0.48 packed Kenney cubes into a dark wall (2026-08-28): the camera
+ * followed the island in, every prop doubled on screen, and the donor's
+ * negative space disappeared. Donor trees get their silhouette from leaf
+ * cards, not from squeezing the map.
+ */
+export const ISLAND_ROUTE_SCALE = 1;
+
 const DEFAULT_ROUTE_WIDTHS = {
   // The road is connective tissue, not a second chain of white geometry.
   // Its warm centre is ~35% of a node diameter; even after the darker natural
   // shoulder is added the whole path stays near 55%.  That leaves visible
   // meadow between forty-one lesson stones instead of drawing one pale tube.
-  roadWidth: 0.44,
-  shoulderWidth: 0.12,
-  nodeRadius: 0.62,
-  clearance: 0.38,
+  roadWidth: 0.44 * ISLAND_ROUTE_SCALE,
+  shoulderWidth: 0.12 * ISLAND_ROUTE_SCALE,
+  nodeRadius: 0.62 * ISLAND_ROUTE_SCALE,
+  clearance: 0.38 * ISLAND_ROUTE_SCALE,
 } as const;
 const HERO_RADIUS = 1.2;
 /**
@@ -824,7 +833,7 @@ function routePhase(seed: string, layoutRevision: string): number {
  * only slightly with course size: large courses gain folds, not giant lawns.
  */
 function desiredNodeSpacing(lessonCount: number): number {
-  return 2.18 + Math.min(0.3, Math.sqrt(lessonCount) * 0.047);
+  return (2.18 + Math.min(0.3, Math.sqrt(lessonCount) * 0.047)) * ISLAND_ROUTE_SCALE;
 }
 
 function routeLengthFactor(archetype: IslandRouteArchetype): number {

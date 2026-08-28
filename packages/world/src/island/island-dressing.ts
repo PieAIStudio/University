@@ -5,7 +5,12 @@
  * the composition. It builds one full course plan, then the world projection
  * removes low-importance detail; it never rolls a second island.
  */
-import { sampleIslandSurface, type IslandBlueprint, type IslandPoint } from "./island-blueprint.js";
+import {
+  ISLAND_ROUTE_SCALE,
+  sampleIslandSurface,
+  type IslandBlueprint,
+  type IslandPoint,
+} from "./island-blueprint.js";
 import { sampleIslandTerrainTop } from "./island-geometry.js";
 import {
   recipeById,
@@ -146,7 +151,11 @@ const NATURAL_RULES: readonly CandidateRule[] = [
   {
     assets: ["tree_default", "tree_detailed", "tree_pineDefaultB"],
     kind: "tree",
-    count: 74,
+    // These slots are the donor canopy, not Kenney cubes. The renderer swaps
+    // each placement for an Elemental-Serenity trunk plus leaf cards. Forty
+    // five trees leave groves and clearings; one hundred and twenty eight
+    // filled the island and turned the floor black.
+    count: 45,
     minSpacing: 1.02,
     radial: [0.24, 0.86],
     height: [2.35, 4.15],
@@ -163,7 +172,7 @@ const NATURAL_RULES: readonly CandidateRule[] = [
     // aerial camera. The starburst came from the size, not the count: a bush
     // as tall as 0.72 on this island is a small tree. Kept shorter, they fill
     // the gaps under the groves the way undergrowth does.
-    count: 46,
+    count: 65,
     minSpacing: 0.58,
     radial: [0.2, 0.88],
     height: [0.26, 0.46],
@@ -324,9 +333,27 @@ function recipeOutpostPart(
  * Route-side compositions are deliberately small and semantic. The first
  * four are guaranteed attempts on every island; two optional compositions
  * make the route feel less templated while remaining seed-driven. The donor
- * set is isolated here: all eight files are registered, while grass_blade is
- * intentionally left for the grass lane owned by the other worktree.
+ * set is isolated here: all eight files are registered. `grass_blade` is
+ * consumed by the grass renderer, not by dressing.
  */
+/**
+ * How far off the route the authored courtyard looks for its footing.
+ *
+ * These were 5.2, 4.35 and 6.1, measured when the island was fitted loosely
+ * around its route. They are route furniture — the courtyard is anchored to a
+ * route beat — so they move with the route's own scale; otherwise the anchor
+ * hunts for ground that is now past the coast on one side and inside the next
+ * switchback arm on the other, and the arrival beat stops placing entirely.
+ * The buildings themselves keep their authored size, so the courtyard is
+ * proportionally tighter on the ground, which is the same trade every other
+ * prop on this island is making.
+ */
+const ACCENT_ANCHOR_OFFSETS = [
+  5.2 * ISLAND_ROUTE_SCALE,
+  4.35 * ISLAND_ROUTE_SCALE,
+  6.1 * ISLAND_ROUTE_SCALE,
+] as const;
+
 const OUTPOST_LAYOUTS: readonly OutpostLayout[] = [
   {
     id: "trail-camp",
@@ -508,19 +535,27 @@ function available(
   minSpacing: number,
   maxSlope: number,
 ): boolean {
+  // Order matters here, and it started to matter a lot once the island got
+  // smaller and the counts went up. `slopeAt` costs four surface samples and
+  // was running before the spacing scan, which needs none; on a 364-prop
+  // island that is roughly sixteen thousand attempts paying for gradients at
+  // points a cheaper test was about to reject anyway. Dressing one island had
+  // reached 470ms. The tests below are ordered cheapest-first, and the slope
+  // gradient is now the last thing anything pays for.
+  const spacingSquared = minSpacing * minSpacing;
+  for (const placement of placements) {
+    const dx = point.x - placement.x;
+    const dz = point.z - placement.z;
+    if (dx * dx + dz * dz < spacingSquared) return false;
+  }
+  const heroX = point.x - blueprint.hero.x;
+  const heroZ = point.z - blueprint.hero.z;
+  const heroReach = blueprint.hero.radius + 1.4;
+  if (heroX * heroX + heroZ * heroZ < heroReach * heroReach) return false;
   const surface = sampleIslandSurface(blueprint, point.x, point.z);
   if (!surface.inside || surface.radial > 0.91) return false;
   if (distanceToIslandRoute(blueprint, point) < routeClearance(blueprint)) return false;
-  if (
-    Math.hypot(point.x - blueprint.hero.x, point.z - blueprint.hero.z) <
-    blueprint.hero.radius + 1.4
-  ) {
-    return false;
-  }
-  if (slopeAt(blueprint, point) > maxSlope) return false;
-  return placements.every(
-    (placement) => Math.hypot(point.x - placement.x, point.z - placement.z) >= minSpacing,
-  );
+  return slopeAt(blueprint, point) <= maxSlope;
 }
 
 function radialPoint(
@@ -553,7 +588,7 @@ function routeClusterCandidate(
   const tangentLength = Math.hypot(tangentX, tangentZ) || 1;
   const normal = { x: -tangentZ / tangentLength, z: tangentX / tangentLength };
   for (const side of [preferredSide, -preferredSide]) {
-    for (const offset of [5.2, 4.35, 6.1]) {
+    for (const offset of ACCENT_ANCHOR_OFFSETS) {
       const candidate = {
         x: point.x + normal.x * offset * side,
         z: point.z + normal.z * offset * side,
@@ -636,7 +671,7 @@ function routeBeatAnchor(
     score: number;
   } | null = null;
   for (const side of [preferredSide, -preferredSide]) {
-    for (const offset of [5.2, 4.35, 6.1]) {
+    for (const offset of ACCENT_ANCHOR_OFFSETS) {
       const point = {
         x: routePoint.x + baseNormal.x * offset * side,
         z: routePoint.z + baseNormal.z * offset * side,
