@@ -70,8 +70,8 @@ const HIGHLAND = new THREE.Color(0xa8b473); // L* 70.2, dry grass on the tops
 const SAND = new THREE.Color(0xd9c8a0); // L* 81.0, the shore ring
 const ROCK = new THREE.Color(0x9c8b6f); // L* 58.7, warm exposed slope
 const ROCK_DARK = new THREE.Color(0x6a5c4b); // L* 40.3, the steepest faces
-const CLIFF = new THREE.Color(0x7c7467);
-const CLIFF_DARK = new THREE.Color(0x4e5055);
+const CLIFF = new THREE.Color(0x9d9481); // L* 61.0, sunlit rock face
+const CLIFF_DARK = new THREE.Color(0x615c58); // L* 39.8, the root the sky cannot reach
 // Muted earth colours deliberately sit between the meadow's olive greens and
 // the cliff: they describe exposed soil without becoming a painted brown line.
 const DIRT = new THREE.Color(0x806d4e);
@@ -586,12 +586,22 @@ function buildTerrain(
   // A broad, faceted cliff and a tapered root are the silhouette cue that the
   // island is flying.  The tech ring is a separate component so it can be LOD
   // switched without rebuilding the terrain mesh.
+  // Depth, not a fixed colour per ring.
+  //
+  // The old table painted the lip GRASS_DARK and everything below it two
+  // greys, which under a 28-degree sun gave a near-vertical face almost no key
+  // light and left a black band all the way round the coast — the one thing in
+  // the frame with no detail in it at all. The lip now carries the ground's own
+  // colour so grass rolls over the edge instead of stopping at a dark line,
+  // and the rock below fades with depth the way a face does when less of the
+  // sky can reach it. It is the same honest occlusion argument as the
+  // curvature term on the top surface.
   const rings = [
-    { radial: 1, depth: 0, color: GRASS_DARK },
-    { radial: 0.99, depth: -depth * 0.18, color: CLIFF },
-    { radial: 0.82, depth: -depth * 0.43, color: CLIFF },
-    { radial: 0.55, depth: -depth * 0.75, color: CLIFF_DARK },
-    { radial: 0.22, depth: -depth * 0.98, color: CLIFF_DARK },
+    { radial: 1, depth: 0, sky: 1 },
+    { radial: 0.99, depth: -depth * 0.18, sky: 0.82 },
+    { radial: 0.82, depth: -depth * 0.43, sky: 0.58 },
+    { radial: 0.55, depth: -depth * 0.75, sky: 0.34 },
+    { radial: 0.22, depth: -depth * 0.98, sky: 0.16 },
   ] as const;
   const cliffStart = positions.length / 3;
   for (let ring = 0; ring < rings.length; ring += 1) {
@@ -604,7 +614,13 @@ function buildTerrain(
         (sample.y + profile.depth) * scale,
         point.z * profile.radial * scale,
       );
-      pushColor(colors, profile.color);
+      const ground = colorForTop(blueprint, point.x, point.z, sample.radial, sample.y);
+      const stone = CLIFF.clone().lerp(CLIFF_DARK, 1 - profile.sky);
+      // The very lip keeps most of the meadow; one ring down is already rock.
+      const rockAmount = profile.sky >= 1 ? 0.18 : 0.86;
+      const colour = ground.lerp(stone, rockAmount);
+      colour.multiplyScalar(0.62 + profile.sky * 0.38);
+      pushColor(colors, colour);
     }
   }
   for (let ring = 0; ring < rings.length - 1; ring += 1) {
