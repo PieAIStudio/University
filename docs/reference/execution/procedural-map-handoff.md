@@ -25,28 +25,59 @@ pinned: false
 
 ---
 
-## 零、交接那一刻先做这三件事
+## 零、交接那一刻：两个子代理等着你重派
 
-**这份文档交接时，有 5 个子代理正在后台跑。** 它们不属于你的 session，
-你接手时它们可能已经结束、可能还在跑、也可能被杀掉了。
+上一轮派了五个子代理。**三个做完并已合并/提交，两个被 Codex 额度耗尽掐断。**
 
-1. **先查还有谁活着：**
-   ```bash
-   for p in $(pgrep -f "codex exec"); do lsof -a -p $p -d cwd 2>/dev/null | tail -1 | awk '{print $NF}'; done | sort -u
-   ```
-2. **再查每个 worktree 交了什么：**
-   ```bash
-   cd /Users/yuanfei/PieAI/University
-   for w in grass2 foliage mapconfig liquid; do
-     printf "%-10s " $w
-     echo "commits:$(git -C ../University-wt-$w log --oneline main..HEAD 2>/dev/null|wc -l) dirty:$(git -C ../University-wt-$w status --porcelain 2>/dev/null|wc -l)"
-   done
-   git -C ../SwimmerUIKit-wt-move log --oneline main..HEAD | wc -l
-   ```
-3. **第五节有每个代理的任务和验收标准。** 已经交了的按那里的标准判；
-   还在跑的就等；被杀掉的按那里的 brief 重发。
+| 任务 | 状态 |
+| --- | --- |
+| 植被（Kenney 方块树 → donor 画意叶丛） | ✅ 已合并 `bf6575a` |
+| 配置台（`#/studio/map`） | ✅ 已合并 `1c82c6f` |
+| 液体误用修复（kit story + XP 球） | ✅ 已提交，见第九节 |
+| **草的美术（第二版）** | ❌ **被掐断，零进度，要重派** |
+| **吸收 donor 的 Move 效果** | ❌ **被掐断，零进度，要重派** |
 
----
+**中断没有造成任何损坏**——那两个死在读取/测量阶段，一个字节都没写。
+`University-wt-grass2` 只有第一版那个过头的提交，工作区干净；
+`SwimmerUIKit-wt-move` 完全是空的。直接重派即可，不需要清理。
+
+### 重派之前必须知道的两个坑（不知道会原地卡两小时）
+
+**坑 1：后台派 codex 必须 `< /dev/null`。**
+后台启动的命令 stdin 是一个一直开着的管道，codex 卡在
+`Reading additional input from stdin...` 等一个永远不来的 EOF。
+上一轮三个代理这样挂了将近两小时，CPU 时间 0.05 秒——**它们不是在思考，是卡死了**。
+派完之后**一定要回头确认 CPU 时间在涨**：
+```bash
+ps -o pid,etime,time -p $(pgrep -f "codex exec" | tr '\n' ',' | sed 's/,$//')
+```
+
+**坑 2：用 `-i` 附图时，提示词必须走 stdin，不能当参数传。**
+`-i, --image <FILE>...` 是可变参数，最后一个 `-i` 会把**提示词本身也吃成图片路径**，
+然后报 `No prompt provided via stdin.` 3 秒就"成功"退出。正确写法见下面。
+
+### 重派命令（原样抄）
+
+**草（带三张参照图，提示词走 stdin）：**
+```bash
+cd /Users/yuanfei/PieAI/University-wt-grass2
+codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' \
+  --dangerously-bypass-approvals-and-sandbox \
+  -i /Users/yuanfei/PieAI/_donors/elemental-serenity/elemental_serenity.jpg \
+  -i /tmp/grass2-before-course-near-1440x900.png \
+  -i /tmp/grass2-after-course-near-1440x900.png \
+  < <草的任务书>
+```
+（如果 `/tmp` 里那两张图没了，就先按第五节的机位重截一遍再派。）
+
+**Move（无附图，提示词可以当参数，但仍要 `< /dev/null`）：**
+```bash
+cd /Users/yuanfei/PieAI/SwimmerUIKit-wt-move
+codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' \
+  --dangerously-bypass-approvals-and-sandbox "<Move 的任务书>" < /dev/null
+```
+
+两份任务书的完整内容在第五节，照着写就行。
 
 ## 一、你的角色
 
@@ -63,8 +94,16 @@ pinned: false
 ### 子代理命令（原样抄，不要「升级」模型名）
 
 ```bash
-codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' --dangerously-bypass-approvals-and-sandbox "<任务>"
+codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' --dangerously-bypass-approvals-and-sandbox "<任务>" < /dev/null
 ```
+
+**`< /dev/null` 不是可选的。** 后台启动时 stdin 是一个一直开着的管道，
+少了它 codex 会卡在 `Reading additional input from stdin...` 上一动不动。
+派完回头查一次 CPU 时间，确认它真的在跑：
+```bash
+ps -o pid,etime,time -p $(pgrep -f "codex exec" | tr '\n' ',' | sed 's/,$//')
+```
+跑了半小时而 CPU 时间还是 0:00.0x，就是卡死了，不是在思考。
 
 ```bash
 agy -p "<任务>" --model gemini-3.7-flash-high --effort high --dangerously-skip-permissions --print-timeout 90m
@@ -190,6 +229,26 @@ main 在 `76070b3`，`pnpm verify` 全绿。**main 当前有未提交的改动
 - **有颜色的暗部**。主光比从 18:1 降到 **2.08:1**，暖棕色下半球反弹
   （`hemisphereGround: 0x8a5b45`），课程画面暗像素 23.88% → 11.83%。
   完整测量在 [Island Look Contract](./island-look-contract.md) 第八节。
+- **donor 画意植被**（2026-08-29 合并 `bf6575a`）。Kenney 的
+  `tree_default` / `tree_detailed` / `tree_pineDefaultB` / `plant_bushDetailed`
+  已从仓库删除，树改成 donor `treeTrunks.glb` + 12 张 2 三角形叶片卡片，
+  颜色由暗/中/亮三段色按法线插值算出。灌木同技术。叶片 alpha 遮罩是
+  **着色器程序化生成**的，没有引入未登记的媒体文件，同一遮罩装进
+  `customDepthMaterial` 所以阴影正确。世界视角零叶片实例，只画树干剪影
+  + 12 三角形冠层。课程视角三角形 355,172 → 340,880（降了）。
+  **石头保留 Kenney**：同机位 A/B 量出 donor `rocks.glb` 多花 63.4% 三角形
+  且重复的浅色石块更吵。规则定为**自然元素用 donor，建筑用 Kenney**，
+  `player-journey/v5` 的决定 F 已同步更新。
+- **地图配方台**（2026-08-29 合并 `1c82c6f`）。authoring 路由 `#/studio/map`，
+  三个 tab（行星 · 群岛 · 课程岛），左侧实时画面复用真跑的组件，
+  右侧检视面板**每一行参数都标出处**（文件路径 + 导出常量），
+  顶上有「导出配置 JSON」和「复制修改说明」。
+  可实时调的挂绿色「实时预览」徽章，改不动的挂「只读」并注明
+  「要改技术锁必须先修订 ADR-0008」。`packages/world/src/inspector/`
+  的 `descriptions.test.ts` 钉死了必须从真模块 import，禁止抄字面量。
+  delivery 构建里这个页面解析成空壳，leva 和它的 CSS 不进学习者的包。
+  **已知不足：左侧画面被挤成竖条（规格是 60%，实际 35%），
+  出处路径在词中间断行。功能对了版式没对，留待收尾返工。**
 - **行星页的学域身份**。五个学域各有确定性色相和轮廓 profile：
   general `#7C64B3`、Buzz `#7D9A62`、SupaLuv `#5C9B99`、
   TuringPact `#D49A62`、UniversityLocal `#A77768`；
@@ -207,20 +266,36 @@ raw/island-card-vegetation      donor 卡片树，612 行。不是被否，是�
 
 ---
 
-## 五、正在跑的五个代理（交接时的状态）
+## 五、两份等着重派的任务书
 
-任务 brief 全文在
-`/private/tmp/claude-501/-Users-yuanfei-PieAI-University/91850ce5-9000-4af4-82d2-911f5fc73729/scratchpad/task-*.md`
-（scratchpad 是 session 级的，可能已经没了；下面写了每个的核心要求，够你重发）。
+上一轮五个代理里，这两个被额度掐断，零进度。下面是完整任务书，
+照着派即可（命令见第零节，**别忘了 `< /dev/null` 和 stdin 传提示词**）。
 
-### 1. `University-wt-grass2` / `work/grass2` —— 草的美术
+### 任务书 A：草的美术（第二版）
 
-**已有提交 `6a77137`（第一版，过头了，不要 revert，在它上面改）。**
+worktree `/Users/yuanfei/PieAI/University-wt-grass2`，分支 `work/grass2`，
+**已有提交 `6a77137`（第一版，过头了，在它上面改，不要 revert）**。
 
-第一版把 80,000 实例降到 17,640，裸地做到 36.3%，梯度能量降 72%——
-**每个指标都达标，画面塌了**（见铁律 1）。
+**第一版发生了什么**：把 80,000 实例降到 17,640，裸地做到 36.3%，
+梯度能量降 72%——**每个指标都达标，画面塌了**：整座岛秃成米黄色沙丘，
+低多边形切面裸露，塑料感比改造前更强，而且这座岛不再是绿色的了。
+原因见第二节铁律 1：我给的是只有下限的指标。
 
-第二版正在跑，带 `-i` 三张参照图，要三个候选。验收：
+**附三张图**（`-i`，提示词走 stdin）：
+1. `/Users/yuanfei/PieAI/_donors/elemental-serenity/elemental_serenity.jpg` —— **目标**
+2. `/tmp/grass2-before-course-near-1440x900.png` —— 改造前（绿色毛毯）
+3. `/tmp/grass2-after-course-near-1440x900.png` —— **第一版失败的样子（沙丘）**
+
+**要求代理先用文字写出三张图的差别，再动代码。** 这一步不是形式：
+上一版跑偏就是因为它从头到尾没看过自己改出来的图。
+
+**交三个候选，不是一个**：保守（偏密）/ 居中（它认为的最佳）/ 大胆（偏疏，
+但必须仍然是绿色的岛）。同机位同尺寸同 seed 各截一张，存
+`/tmp/grass2-v3-A.png` `-B.png` `-C.png`。三组参数沿**同一条轴**变化
+（草量 × 露土强度）。代码里提交它认为最好的那组（默认 B），
+另外两组的参数值写进提交信息，这样换一组只要改几个数字。
+
+**护栏区间（不是目标，目标是第 1 张图）：**
 
 | 指标 | 区间 |
 | --- | --- |
@@ -231,89 +306,77 @@ raw/island-card-vegetation      donor 卡片树，612 行。不是被否，是�
 | 画布暗像素占比（亮度 <0.08） | ≤ 13% |
 | 帧内三角形总数 | 不高于改造前 |
 
-**比数字更重要的结构要求**：裸地必须**有意义**——长在路线沿线、近岸坡脚、
-陡坡、岩石露头周围，用 `island-blueprint.ts` / `island-field.ts` 里已有的
-route mask 和坡度。**不是「草长得稀」，是「这里本来就不长草」**（看 donor 图）。
+**比数字更重要的结构要求**：裸地必须**有意义**——长在路线沿线及两侧、
+近岸坡脚、陡坡、岩石露头周围。参照 donor：它的裸地是**沙滩和小路**，
+有形状、有位置、有理由，**不是「草长得稀」**。
+用 `island-blueprint.ts` / `island-field.ts` 里已有的 route mask 和坡度，
+不许新造噪声场（`island-pipeline.test.ts` 会拦）。
 
-参照图：
-- 目标：`/Users/yuanfei/PieAI/_donors/elemental-serenity/elemental_serenity.jpg`
-- 改造前：`/tmp/grass2-before-course-near-1440x900.png`
-- 失败的：`/tmp/grass2-after-course-near-1440x900.png`
+**第一版的两个具体错误**：
+1. 把 `island-field.ts` 的草密度 cutoff 从 0.26 一刀切到 0.68，
+   所以草是**整体变稀**而不是**局部消失**。cutoff 该回到中间值，
+   靠 route / 坡度 / 近岸做局部剔除。
+2. field-led exposed-ground mix 在低密度端取 1.0，把整座岛染成 DIRT 色。
+   强度要降，且只在真正没草的地方生效。
 
-### 2. `University-wt-foliage` / `work/foliage` —— 把 Kenney 方块树换成 donor 植被
+**硬约束**：不许改灯光（`packages/world/src/sky/`）；不许改
+`island-dressing*.ts` / `island-foliage-render.tsx`（植被已经合并了，
+现在树是 donor 叶丛，草的密度变了之后树的比例观感也会变——**这是留给
+整体调和那一轮的，不是草这一轮的**）；密度必须继续读 `island-field.ts`
+编译出来的那张共享场；技术锁要改先在 ADR-0008 写带实测数字的修订。
 
-课程岛的树现在是 Kenney Nature Kit 的 `tree_default` / `tree_detailed` /
-`tree_pineDefaultB`，灌木是 `plant_bushDetailed`。几何感太强，和画意风格的草、
-地形、天光互相打架。
+**还要做一件事**：把「所有视觉阈值必须是区间」这条元规则写进
+`docs/reference/execution/island-look-contract.md`，并把上面这张表连同
+实测值作为草这一项的正式条目写进去。
 
-**已定的规则：自然元素（树、灌木）走 donor 画意路线，Kenney 只留给建筑**
-（fantasy-town 那套墙 / 屋顶 / 摊位 / 灯，donor 没有对应物，也不打架）。
+**验证**：9971 端口，CDP 截图（见第十一节坑），goto 之后等 20–35 秒。
+截图放 `/tmp`。最后 `pnpm verify`。
+**brief 结尾必须写上**：「交之前自己先看一眼图。六个数都在区间里但你觉得
+画面还是不对，以你的眼睛为准，把情况写进报告，不要为了凑数字交一张难看的图。」
 
-donor 的技术在
-`_donors/elemental-serenity/src/Game/World/Managers/BushManager/BushManager.class.js`
-和 `src/Shaders/Materials/bush/*.glsl`：`MeshSurfaceSampler` 在发射器网格
-（`bushEmitter.glb`）表面采样，每点放一张叶片卡片，颜色由 shadow / mid /
-highlight **三段色**按法线插值算出来——这就是那种「画出来的」质感的来源。
-容易漏的一点：它给 InstancedMesh 配了 `customDepthMaterial`，
-否则 alpha 剪裁的叶片会投出方块影子。
+### 任务书 B：吸收 donor 的 Move 效果
 
-已合法引入并登记在 `packages/world/src/island/elemental-serenity-assets.json`
-的模型：`treeTrunks.glb`、`leaf.glb`、`bushEmitter.glb`、`rocks.glb`、
-`grass_blade.glb`、`bridge.glb`、`camp.glb`、`tent.glb`。
-**叶片 alpha 贴图 `leave_alpha_map_256x256.png` 还没登记**，
-要用就走同样的登记流程（sha256 / bytes / provenance / registeredOn），
-不许偷偷引用 donor 目录。能用着色器程序化生成叶形遮罩就更好。
+worktree `/Users/yuanfei/PieAI/SwimmerUIKit-wt-move`，分支 `work/liquid-move`。
+**完全是空的，从零开始。**
 
-验收：课程视角和世界视角各要前后对比图，两个视角的三角形数和 draw call
-前后对比。**世界视角一座岛约 40px，只需要剪影，绝不能在那里跑叶片实例。**
+**⚠️ 只在这个 worktree 里工作。** 主仓库 `/Users/yuanfei/PieAI/SwimmerUIKit`
+的工作区正被老板另一个会话占用（在改 CI、AGENTS.md、donors-individual.md）。
+两个会话同时写一个工作区，丢的是没提交的那份。
 
-### 3. `University-wt-mapconfig` / `work/mapconfig` —— 程序化地图配置台
+**背景与政策**见第九节。一句话：donor `liquid-gooey` 的 Move 效果
+（元素移动时液体表面追不上它，被拉出橡皮尾巴，甩出小液滴再聚拢），
+物理主要在 `_donors-individual/for_SwimmerUIKit/packages/liquid-gooey/src/observer.ts`
+（2223 行，`MOVE_DEFAULTS` / `MoveOptions`）配合 `LiquidItem.tsx` 的 `MoveTuning`。
+演示见 https://gooey.jakubantalik.com/ 页面中间那个滑块。
 
-老板不是 3D 工程师，他现在不知道哪棵树是哪个包里的、草怎么分布、
-参数在哪个文件的哪个常量里，所以没法和我们精确沟通。
+**吸收方式**：MIT，可以直接拿代码，**不需要净室重写**（物理数学重写只会引入 bug）。
+文件头保留 MIT 归属，然后**接进 SwimmerUIKit 已有的架构**——这一步不能省：
+设计令牌（不写死数值）、`src/liquidGooeyBudget.ts` 的进程级预算（Move 也要计入）、
+空闲休眠的共享时钟（没东西动时测量循环必须完全停）。
+命名和导出跟随现有 `liquidGooey*` 模块。**这一批只要 Move**，
+Bend / dissolve / imageMelt 以后单独评估。
 
-做一个 authoring 模式下的路由（走 `#/studio` 那条已有的作者工作台分支，
-建议 `#/studio/map`），三个 tab：**行星 · 群岛 · 课程岛**。每个 tab：
-左侧是这一层的实时画面（**必须复用 `packages/world` 里真跑的组件**，
-不许为这个页面复制简化版场景），右侧是检视面板。
+**落到两个真实组件**（只要两个，这是克制）：
+`GameSegmentedControl` 的选中指示器、`GameProgress` 的进度前端。
+每个都要 story，且**子元素不许自带 border / outline / box-shadow / background**
+——边框阴影通过 `<LiquidGroup>` 的 `stroke` / `shadow` 传。
+改完打开控制台确认没有 `LiquidGroup.Item children should not have...` 警告。
+（这个坑上一轮刚踩过，见第九节。）
 
-面板要逐个资源列出：资源名、来自哪个包、**具体文件路径**、字节数、
-单模型三角形数、这一层当前画了多少实例、用的哪条技术锁。
+**动效语义**（第九节那张词汇表）要写进 `LiquidGroup` 的组件级文档注释。
 
-**这个页面最重要的功能不是滑块，是「每一行参数都显示它的出处」**
-（哪个文件、哪个导出常量），加上一个「复制修改说明」按钮，输出形如：
+**治理文件必须同步**：`donors-individual.md` 的 adoption boundary
+（那里现在还写着「deliberately did not take Move」，不改它下一个会话读到的
+就是过期的决定）、`NOTICE`、`donors-individual-lock.json`、
+`CHANGELOG.md` 的 1.9.0 条目（**不要新起版本号**，1.9.0 还没发布）。
 
-```
-packages/world/src/island/island-grass.ts
-  ISLAND_GRASS_LIMITS.course.desktop: 80000 -> 24000
-```
+**硬约束**：不加任何新运行时依赖；不改 `docs/policy/shared-rules/` 的 symlink；
+`pnpm docs:check` 可能因为上游 bug 失败，那不是它造成的，其余必须全绿。
+静止时测量循环必须休眠，要给出「静止 1 秒内 rAF 回调次数」的数据证明。
 
-老板可以直接把这段贴给 AI 说「照这个改」。
-
-三条硬性数据规则：
-1. **面板里每个数都必须从真跑的模块 import 进来算，不许抄字面量。**
-   要有测试钉住这一点。
-2. 在 `packages/world/src/inspector/` 下为每层导出
-   `describePlanetLayer()` / `describeWorldLayer()` / `describeIslandLayer()`，
-   UI 只负责渲染这份描述。
-3. **`packages/ui` 必须保持 zero `three` 依赖**（AGENTS.md 规则）。
-
-交互分三类，界面上要**明确区分**：可实时调（数值）、可替换模型（下拉框列出
-`island-asset-registry.ts` 里所有已登记资源）、只读（技术锁——标注「要改这个
-必须先修订 ADR-0008」）。**诚实比功能多重要。**
-
-控件层用 `leva`（2026 年 R3F 生态的既成方案），不要自己造滑块。
-表格用 SwimmerUIKit 的组件和令牌（brand-kit-first）。
-
-### 4. `University-wt-liquid` / `work/liquid-in-app` —— XP 球 + 修 LiquidGroup 误用
-
-见第九节。
-
-### 5. `SwimmerUIKit-wt-move` / `work/liquid-move` —— 吸收 donor 的 Move 效果
-
-见第九节。
-
----
+**验证**：`pnpm storybook --port 9977 --no-open`，用 CDP 对切 tab 和进度增长
+各录 10 帧（每 60–100ms 一帧）存 `/tmp/liquid-move/`，**截完自己看图**，
+回答：尾巴出来了吗？聚拢自然吗？有没有残留硬边？不好看就调完再交。
 
 ## 六、还开着的视觉问题
 
@@ -378,6 +441,19 @@ gh workflow run npm-publish.yml --ref main
 ---
 
 ## 九、SwimmerUIKit 的液体动效语言（并行主线）
+
+### ✅ 已修（2026-08-29）
+
+- SwimmerUIKit `904d6f6`：demo 按钮 reset 掉浏览器默认边框，
+  新增 `StrokeAndShadow` story（2px 强调色轮廓 + 阴影都画在融合剪影上），
+  三处 JSDoc 加了「不要给子元素加边框」的警告。**已实机验证**：
+  融合体现在是一条连续轮廓准确绕过中间的颈部，内部无接缝，控制台无警告。
+  版本仍是 1.9.0（未发布）。
+- University `bbc3986`（分支 `work/liquid-in-app`）：`XpOrbAnimator` 拿掉了
+  `background` 和 `borderRadius`。**但还欠一次真 App 里的 10 帧验证**——
+  1.9.0 没发到 npm，跑不起来。发包解封后补。
+
+下面是当时的诊断，保留作为背景。
 
 ### 已经查实的事：融合是对的，用法是错的
 
@@ -498,6 +574,18 @@ AGENTS.md。**不要往主 worktree 派写任务**，开 worktree
 
 ## 十一、坑（都真的踩过）
 
+- **后台派 codex 不加 `< /dev/null` 会卡死。** 见第一节。上一轮三个代理
+  这样挂了近两小时，CPU 时间 0.05 秒，日志停在
+  `Reading additional input from stdin...`。
+- **`-i` 是可变参数，会把提示词吃成图片路径。**
+  `-i 图1 -i 图2 -i 图3 "<提示词>"` → 最后那个 `-i` 收下了图 3 **和提示词**，
+  然后报 `No prompt provided via stdin.` 3 秒"成功"退出。
+  附图时提示词必须走 stdin：`... -i 图1 -i 图2 -i 图3 < 任务书.md`。
+- **Codex 有额度上限，会在半夜把所有并行代理同时掐断。**
+  上一轮五个里三个在同一秒死于
+  `You've hit your usage limit ... try again at 3:29 AM`。
+  好消息是它们死在写文件之前，worktree 没有损坏。
+  **判断依据：worktree `git status` 干净 + 没有新提交 = 零进度，直接重派。**
 - **在没有 `apps/local/studies/*` 的 worktree 里跑 `pnpm content` 会静默污染
   `imported.json`**，每门课的 `servedBytes` 缩水，退出码 0，`pnpm verify` 照样绿。
   已经加了防缩水断言，但别去试探。缺内容就 symlink。
