@@ -26,15 +26,19 @@ import {
   type SkyDomeStops,
 } from "./skydome.js";
 
+import { renderTier } from "./tier.js";
+
 export const WORLD_ENVIRONMENT = {
   /** Sky radiance is low-frequency; a larger capture only spends first-frame time. */
-  cubeSize: 64,
+  get cubeSize() {
+    return renderTier() === "mobile" ? 32 : 64;
+  },
   /**
    * Three passes this scene value to every Standard/Physical material as its
    * `envMapIntensity` when the material uses `scene.environment`. One global
    * number is the tuning point; material files do not grow scattered copies.
    */
-  intensity: 0.4,
+  intensity: 0.1,
 } as const;
 
 /** A Stage without a visible map sky (the planet picker) still shares this IBL. */
@@ -59,7 +63,8 @@ export type EnvironmentTextureMemory = {
 export function estimateEnvironmentTextureMemory(
   requestedCubeSize = WORLD_ENVIRONMENT.cubeSize,
 ): EnvironmentTextureMemory {
-  const safeSize = Number.isFinite(requestedCubeSize) && requestedCubeSize >= 1 ? requestedCubeSize : 1;
+  const safeSize =
+    Number.isFinite(requestedCubeSize) && requestedCubeSize >= 1 ? requestedCubeSize : 1;
   const cubeSize = 2 ** Math.floor(Math.log2(safeSize));
   const atlasWidth = 3 * Math.max(cubeSize, 16 * 7);
   const atlasHeight = 4 * cubeSize;
@@ -149,6 +154,7 @@ function buildEnvironment(
     cubeCamera.update(renderer, captureScene);
     output = pmrem.fromCubemap(cubeTarget.texture);
     output.texture.name = `WorldEnvironment.pmrem.${key}`;
+    output.texture.colorSpace = THREE.LinearSRGBColorSpace;
     return {
       key,
       target: output,

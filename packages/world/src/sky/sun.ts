@@ -25,7 +25,7 @@ export const WORLD_SUN = {
   azimuthDeg: 210,
   keyIntensity: 9.0,
   keyColor: 0xffefd2,
-  hemisphereIntensity: 0.5,
+  hemisphereIntensity: 0.3,
   hemisphereGround: 0x7f8b8e,
   ambientIntensity: 0.1,
   ambientColor: 0x9bb8d0,
