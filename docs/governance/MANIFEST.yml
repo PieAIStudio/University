@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-28T18:04:39.922Z
+generated_at: 2026-08-28T18:23:26.829Z
 generator_version: doc-gov@0.9.9
 docs_count: 61
 docs:
@@ -58,7 +58,7 @@ docs:
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-08-28
+    last_reviewed: 2026-08-29
     pinned: false
   - id: ADR-0009
     path: docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md

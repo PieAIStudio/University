@@ -178,14 +178,23 @@ function useKtx2() {
 }
 
 /**
- * Flatten a model to a list of instanceable parts, normalised to unit height.
+ * Keep every compressed island GLB on the same decoder/transcoder path. The
+ * foliage projection needs the raw scene to choose a donor trunk variant and
+ * to sample the donor emitter, but it must not create a second loader stack.
  */
-function usePartsFromSource(src: string, preserveMap = false): readonly Part[] {
+export function useIslandGLTF(src: string) {
   const ktx2 = useKtx2();
-  const gltf = useGLTF(src, false, true, (loader) => {
+  return useGLTF(src, false, true, (loader) => {
     loader.setDRACOLoader(dracoLoader);
     loader.setKTX2Loader(ktx2);
   });
+}
+
+/**
+ * Flatten a model to a list of instanceable parts, normalised to unit height.
+ */
+function usePartsFromSource(src: string, preserveMap = false): readonly Part[] {
+  const gltf = useIslandGLTF(src);
   const parts = useMemo(() => {
     const root = gltf.scene;
     root.updateMatrixWorld(true);

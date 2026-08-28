@@ -9,6 +9,7 @@ import manifest from "./kenney-r01-assets.json";
 import { resolveIslandRuntimeAsset } from "./island-asset-registry.js";
 import { islandBlueprint } from "./island-blueprint.js";
 import { islandDressingFields } from "./island-dressing-render.js";
+import { isIslandFoliagePlacement } from "./island-foliage-render.js";
 import { planIslandDressing } from "./island-dressing.js";
 import {
   islandRecipeRuntimeReferences,
@@ -25,13 +26,24 @@ describe("R01 Kenney runtime whitelist", () => {
   it("contains exactly the recipe budget with portable provenance", () => {
     expect(manifest.selection.naturalBasePackId).toBe("nature-kit");
     expect(manifest.selection.accentPackIds).toEqual(["fantasy-town-kit"]);
-    expect(manifest.selection.rawGlbBudget).toBe(14);
-    expect(manifest.assets).toHaveLength(14);
-    expect(new Set(manifest.assets.map((asset) => `${asset.pack}/${asset.assetId}`)).size).toBe(14);
+    expect(manifest.selection.rawGlbBudget).toBe(10);
+    expect(manifest.assets).toHaveLength(10);
+    expect(new Set(manifest.assets.map((asset) => `${asset.pack}/${asset.assetId}`)).size).toBe(10);
     expect(manifest.dependencies).toHaveLength(1);
     expect(Object.keys(manifest.runtimeFallbacks)).toHaveLength(58);
     expect(JSON.stringify(manifest)).not.toContain("/Users/");
     expect(manifest.sourceRoot).toBe("local-donor:Kenney");
+    for (const retiredNaturalFile of [
+      "tree_default.glb",
+      "tree_detailed.glb",
+      "tree_pineDefaultB.glb",
+      "plant_bushDetailed.glb",
+    ]) {
+      expect(
+        existsSync(resolve(publicRoot, "kenney/r01/nature", retiredNaturalFile)),
+        retiredNaturalFile,
+      ).toBe(false);
+    }
   });
 
   it("resolves every generated R01 placement through the shared asset adapter", () => {
@@ -44,7 +56,7 @@ describe("R01 Kenney runtime whitelist", () => {
     const plan = planIslandDressing(blueprint, "course");
     const fields = islandDressingFields(plan, 1);
     expect(fields.reduce((count, field) => count + field.at.length, 0)).toBe(
-      plan.placements.length,
+      plan.placements.filter((placement) => !isIslandFoliagePlacement(placement)).length,
     );
     expect(fields.some((field) => field.src.startsWith("/models/elemental-serenity/"))).toBe(true);
     expect(
@@ -92,7 +104,7 @@ describe("R01 Kenney runtime whitelist", () => {
       expect(
         fields.reduce((count, field) => count + field.at.length, 0),
         recipe.id,
-      ).toBe(plan.placements.length);
+      ).toBe(plan.placements.filter((placement) => !isIslandFoliagePlacement(placement)).length);
     }
   });
 
@@ -114,6 +126,9 @@ describe("R01 Kenney runtime whitelist", () => {
     );
     expect(elementalManifest.dependencies).toHaveLength(0);
     expect(elementalManifest.summary.externalTextureCount).toBe(0);
+    expect(
+      elementalManifest.assets.some((asset) => asset.assetId === "leave_alpha_map_256x256.png"),
+    ).toBe(false);
     for (const asset of elementalManifest.assets) {
       expect(existsSync(resolve(publicRoot, asset.src.replace(/^\/+/, ""))), asset.assetId).toBe(
         true,

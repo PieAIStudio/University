@@ -131,4 +131,16 @@ describe("Island technique lock", () => {
       expect(glbTriangles(model), model).toBeLessThanOrEqual(ISLAND_DECORATION_TRIANGLE_CEILING);
     }
   });
+
+  it("pins the donor foliage split and the measured rock decision", () => {
+    expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain("treeTrunks.glb");
+    expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain("never leaf instances");
+    expect(ISLAND_TECHNIQUE_LOCK.bush.technique).toContain("MeshSurfaceSampler");
+    expect(ISLAND_TECHNIQUE_LOCK.bush.technique).toContain("customDepthMaterial");
+    expect(
+      ISLAND_TECHNIQUE_LOCK.decoration.rejected.some((rejection) =>
+        rejection.option.includes("elemental-serenity rocks.glb"),
+      ),
+    ).toBe(true);
+  });
 });

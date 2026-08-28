@@ -110,31 +110,58 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
     ],
   },
   decoration: {
-    technique: "Instanced Kenney GLBs placed by island-dressing against the island field.",
-    source: "kenney nature-kit and fantasy-town-kit, CC0, shipped under public/kenney/r01.",
+    technique:
+      "Instanced Kenney GLBs for fantasy-town architecture and the retained rock choice, " +
+      "placed by island-dressing against the island field; natural tree/bush IDs are not drawn.",
+    source:
+      "Kenney fantasy-town-kit and the compared nature-kit rocks, CC0, shipped under " +
+      "public/kenney/r01; elemental-serenity foliage is locked in the tree/bush entries.",
     budget: `<= ${ISLAND_DECORATION_TRIANGLE_CEILING} tris per asset`,
     rejected: [
       {
-        option: "Rewriting trees before the grass, on the theory that they were the cost",
+        option: "Keeping Kenney's block trees and plant_bushDetailed as natural vegetation",
         why:
-          "Measured: the whole shipped Kenney kit is 2,518 triangles across fourteen " +
-          "models, against grass's 720,000. Trees were 0.3% of the frame and two rounds " +
-          "were spent on them. Order the work by what the measurement says is expensive.",
-        on: "2026-08-28",
+          "The 114/402/246-triangle cones and 104-triangle bush are cheaper, but their " +
+          "hard stacked geometry visibly conflicts with the already painterly terrain and " +
+          "grass. The donor construction stays below 408 triangles per tree and 24 per " +
+          "bush, so the visual mismatch—not raw triangles—decides this switch.",
+        on: "2026-08-29",
+      },
+      {
+        option: "Replacing the retained Kenney rocks with elemental-serenity rocks.glb",
+        why:
+          "Same 1440x900 course shot: donor rocks raised the frame from 340,880 to " +
+          "556,944 triangles (+63.4%) and the repeated pale assembled clusters read as " +
+          "noise beside the painterly foliage; Kenney stayed quieter at 80/16 triangles.",
+        on: "2026-08-29",
       },
     ],
   },
   tree: {
     technique:
-      "Trunk mesh plus billboarded leaf cards, the elemental-serenity construction. " +
-      "The switch from Kenney's solid cones lands with a measured before/after at the " +
-      "low camera; the grass rewrite is what pays for it.",
+      "One selected mesh from elemental-serenity treeTrunks.glb plus 12 instanced " +
+      "procedural PlaneGeometry leaf cards around its crown in course view; world view " +
+      "keeps the trunk silhouette and a single low-poly canopy, never leaf instances.",
     source:
-      "elemental-serenity treeTrunks.glb (2,032 tris across three trunks) and leaf.glb " +
-      "(16 tris per card). Author permission granted 2026-08-28.",
+      "elemental-serenity treeTrunks.glb (six variants: 288/304/384/288/384/384 tris) " +
+      "plus the donor BushManager PlaneGeometry(1,1) card (2 tris per card); author " +
+      "permission granted 2026-08-28.",
     budget:
-      "<= 900 tris per tree. At ~128 trees that is ~115,000, affordable only against " +
-      "the ~640,000 the grass rewrite returns — so it does not land before the grass does.",
+      "course <= 408 tris/tree (384-tri trunk max + 12 x 2-tri cards); world <= 396 " +
+      "tris/tree (384-tri trunk + 12-tri canopy silhouette); trunk shadow pass omitted " +
+      "in course to keep the measured frame budget",
+    rejected: [],
+  },
+  bush: {
+    technique:
+      "MeshSurfaceSampler points from bushEmitter.glb become 12 oriented PlaneGeometry " +
+      "leaf cards with a procedural UV alpha mask; shadow/mid/highlight colours are a " +
+      "normal ramp and customDepthMaterial repeats the mask for correct shadows.",
+    source:
+      "elemental-serenity BushManager.class.js and bush vertex/fragment GLSL, using " +
+      "bushEmitter.glb (192-tri emitter only) and the shared 2-triangle leaf-card technique; " +
+      "author permission granted 2026-08-28.",
+    budget: "course <= 24 tris/bush (12 x 2-tri cards); world = 0 leaf cards",
     rejected: [],
   },
   landmark: {

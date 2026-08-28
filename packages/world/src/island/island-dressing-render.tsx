@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 import { AssetField, type Placement } from "../kit.js";
 import { resolveIslandRuntimeAsset, type IslandAssetPackId } from "./island-asset-registry.js";
+import { IslandFoliage, isIslandFoliagePlacement } from "./island-foliage-render.js";
 import {
   planIslandDressing,
   type IslandDressingDetail,
@@ -30,6 +31,7 @@ export function islandDressingFields(
 ): readonly IslandDressingField[] {
   const grouped = new Map<string, { pack: IslandAssetPackId; src: string; at: Placement[] }>();
   for (const placement of plan.placements) {
+    if (isIslandFoliagePlacement(placement)) continue;
     const resolution = resolveIslandRuntimeAsset(placement.packId, placement.assetId);
     if (!resolution) continue;
     const key = `${resolution.pack}/${resolution.assetId}`;
@@ -76,12 +78,17 @@ export function IslandDressing({
           src={field.src}
           at={field.at}
           preserveMap={field.pack !== "nature-kit"}
-          // Bushes are crossed leaf cards. Their silhouette is useful, but a
-          // directional shadow turns those cards into black starbursts across
-          // the turf. Trees and architecture still cast the grounding shadow.
-          castShadow={detail === "course" && !field.key.endsWith("/plant_bushDetailed")}
+          // The world projection is a silhouette/value read at roughly 40px
+          // per island. Its props do not need a second shadow-map pass.
+          castShadow={detail === "course"}
         />
       ))}
+      <IslandFoliage
+        plan={plan}
+        detail={detail}
+        scale={scale}
+        heightMultiplier={heightMultiplier}
+      />
     </>
   );
 }

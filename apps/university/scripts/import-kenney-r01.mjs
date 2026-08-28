@@ -7,10 +7,12 @@
  * the first island needs, and the runtime should only ship what the recipe
  * actually asks for.
  *
- * R01 is Nature (global base) + Fantasy Town (one physical accent).  Fantasy
- * Town GLBs use one external `Textures/colormap.png`; the output keeps that
- * relative dependency beside the copied models so GLTFLoader can resolve it
- * without a special runtime path rewrite.
+ * R01 keeps the Nature pack's two compared rocks plus Fantasy Town (one
+ * physical accent). Trees and bushes are intentionally absent from this
+ * Kenney whitelist: their natural projection is registered separately under
+ * elemental-serenity. Fantasy Town GLBs use one external `Textures/colormap.png`;
+ * the output keeps that relative dependency beside the copied models so
+ * GLTFLoader can resolve it without a special runtime path rewrite.
  *
  *   pnpm --filter @pieai/university-app kenney:r01
  */
@@ -72,30 +74,6 @@ const PACKS = Object.freeze({
  */
 const ASSETS = Object.freeze([
   {
-    id: "nature-tree_default",
-    assetId: "tree_default",
-    packId: "nature-kit",
-    file: "tree_default.glb",
-    outputDirectory: "nature",
-    roles: ["vegetation", "canopy"],
-  },
-  {
-    id: "nature-tree_detailed",
-    assetId: "tree_detailed",
-    packId: "nature-kit",
-    file: "tree_detailed.glb",
-    outputDirectory: "nature",
-    roles: ["vegetation", "hero-vegetation"],
-  },
-  {
-    id: "nature-tree_pineDefaultB",
-    assetId: "tree_pineDefaultB",
-    packId: "nature-kit",
-    file: "tree_pineDefaultB.glb",
-    outputDirectory: "nature",
-    roles: ["vegetation", "silhouette"],
-  },
-  {
     id: "nature-rock_largeA",
     assetId: "rock_largeA",
     packId: "nature-kit",
@@ -110,14 +88,6 @@ const ASSETS = Object.freeze([
     file: "rock_smallA.glb",
     outputDirectory: "nature",
     roles: ["rock", "terrain-dressing"],
-  },
-  {
-    id: "nature-plant_bushDetailed",
-    assetId: "plant_bushDetailed",
-    packId: "nature-kit",
-    file: "plant_bushDetailed.glb",
-    outputDirectory: "nature",
-    roles: ["vegetation", "shore-dressing"],
   },
   {
     id: "fantasy-town-wall",
@@ -458,7 +428,7 @@ export function runImport({ donorRoot = process.env.KENNEY_DONOR_ROOT } = {}) {
       naturalBasePackId: "nature-kit",
       accentPackIds: ["fantasy-town-kit"],
       physicalAccentCount: 1,
-      rawGlbBudget: 14,
+      rawGlbBudget: 10,
       whitelistPolicy: "explicit filenames only; no donor glob",
     },
     runtimeFallbacks,

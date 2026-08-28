@@ -54,6 +54,21 @@ export interface KenneyPackRecord {
   readonly additionalCredits?: readonly string[];
 }
 
+/** Natural media may be drawn by a donor-specific projection while the
+ * recipe's physical base pack remains the procedural Nature slot. */
+export type IslandNaturalPackId = "nature-kit" | "elemental-serenity";
+
+export interface IslandNaturalAssetRef {
+  readonly packId: IslandNaturalPackId;
+  readonly assetId: string;
+}
+
+export interface IslandNaturalAssetSelection {
+  readonly tree: IslandNaturalAssetRef;
+  readonly bush: IslandNaturalAssetRef;
+  readonly rocks: readonly IslandNaturalAssetRef[];
+}
+
 /** All unique unpacked packs found under `_donors/Kenney`. */
 interface KenneyPackRow {
   readonly id: KenneyPackId;
@@ -301,8 +316,9 @@ export interface IslandRecipe {
   readonly base: {
     readonly packId: "nature-kit";
     readonly roleIds: readonly string[];
-    /** Exact reusable base assets; catalog presence does not imply runtime loading. */
+    /** Exact Kenney base assets; donor natural media is listed in naturalAssets. */
     readonly assetIds: readonly string[];
+    readonly naturalAssets: IslandNaturalAssetSelection;
     readonly proceduralTerrain: true;
   };
   readonly accentPackIds: readonly KenneyPackId[];
@@ -325,9 +341,9 @@ export interface IslandRecipe {
 }
 
 export interface IslandRecipeRuntimeReference {
-  readonly packId: KenneyPackId;
+  readonly packId: IslandNaturalPackId | KenneyPackId;
   readonly assetId: string;
-  readonly source: "base" | "accent";
+  readonly source: "base" | "natural" | "accent";
 }
 
 /**
@@ -339,12 +355,17 @@ export interface IslandRecipeRuntimeReference {
 export function islandRecipeRuntimeReferences(
   recipe: IslandRecipe,
 ): readonly IslandRecipeRuntimeReference[] {
-  return [
+  const references: IslandRecipeRuntimeReference[] = [
     ...recipe.base.assetIds.map((assetId) => ({
       packId: recipe.base.packId,
       assetId,
       source: "base" as const,
     })),
+    ...[
+      recipe.base.naturalAssets.tree,
+      recipe.base.naturalAssets.bush,
+      ...recipe.base.naturalAssets.rocks,
+    ].map((asset) => ({ ...asset, source: "natural" as const })),
     ...recipe.accentRoles.flatMap((role) =>
       role.assetIds.map((assetId) => ({
         packId: role.packId,
@@ -353,19 +374,27 @@ export function islandRecipeRuntimeReferences(
       })),
     ),
   ];
+  const seen = new Set<string>();
+  return references.filter((reference) => {
+    const key = `${reference.packId}/${reference.assetId}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 const natureBase = {
   packId: "nature-kit" as const,
-  roleIds: ["tree", "pine", "bush", "flower", "rock", "cliff"] as const,
-  assetIds: [
-    "tree_default",
-    "tree_detailed",
-    "tree_pineDefaultB",
-    "rock_largeA",
-    "rock_smallA",
-    "plant_bushDetailed",
-  ] as const,
+  roleIds: ["rock", "cliff"] as const,
+  assetIds: ["rock_largeA", "rock_smallA"] as const,
+  naturalAssets: {
+    tree: { packId: "elemental-serenity", assetId: "treeTrunks" },
+    bush: { packId: "elemental-serenity", assetId: "bushEmitter" },
+    rocks: [
+      { packId: "nature-kit", assetId: "rock_largeA" },
+      { packId: "nature-kit", assetId: "rock_smallA" },
+    ],
+  } as const satisfies IslandNaturalAssetSelection,
   proceduralTerrain: true as const,
 };
 
@@ -408,7 +437,7 @@ export const KENNEY_ISLAND_RECIPES: readonly IslandRecipe[] = [
     // The route is baked into the procedural terrain; no Fantasy Town road
     // tile is loaded. Keeping the whitelist honest prevents a model strip
     // from quietly returning when this recipe is expanded.
-    rawGlbBudget: 14,
+    rawGlbBudget: 10,
   },
   {
     id: "R02-river-market",
@@ -713,6 +742,20 @@ export function validateIslandRecipe(recipe: IslandRecipe): IslandRecipeValidati
   if (recipe.base.assetIds.length === 0) errors.push("base.assetIds must not be empty");
   if (new Set(recipe.base.assetIds).size !== recipe.base.assetIds.length) {
     errors.push("base.assetIds must be unique");
+  }
+  const naturalAssets = [
+    recipe.base.naturalAssets.tree,
+    recipe.base.naturalAssets.bush,
+    ...recipe.base.naturalAssets.rocks,
+  ];
+  if (recipe.base.naturalAssets.rocks.length === 0) {
+    errors.push("base.naturalAssets.rocks must not be empty");
+  }
+  for (const asset of naturalAssets) {
+    if (!asset.assetId) errors.push("base.naturalAssets assetId must not be empty");
+    if (asset.packId !== "nature-kit" && asset.packId !== "elemental-serenity") {
+      errors.push(`unknown natural pack: ${asset.packId}`);
+    }
   }
   if (recipe.accentPackIds.length < 1 || recipe.accentPackIds.length > 2) {
     errors.push("accentPackIds must contain one or two physical packs");
