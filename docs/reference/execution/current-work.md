@@ -30,7 +30,7 @@ The short, current handoff. **What is true now, never how it got that way.**
 > **合成一套代码，已完成（2026-08-25）**：`apps/local` 与 `apps/online` 已合并为
 > `apps/university` 一个浏览器应用，用 `vite --mode authoring | delivery` 区分。
 > `apps/local` 现在只剩那台读磁盘的 Node 服务（4317），没有被改动。
-> 经过、踩过的坑和验收数字都在 [One App Handoff](./one-app-handoff.md)。
+> 经过、踩过的坑和验收数字在 git 历史里（2026-08-25 的合并提交）。
 
 > **课程岛观感，进行中（2026-08-28）**：两座并存的岛屿实现已合并成一份；
 > 判官（`pnpm e2e:island-look`）会在固定 seed / 固定机位下输出
@@ -252,7 +252,7 @@ Done, and verified in a browser rather than by a passing suite:
   rate had not moved. The delivery build's duplicate lesson reader is gone, one `View`
   parses one address for both, and four review-port factories are two. The
   count that made it the right time and the traps paid for are in
-  [One App Handoff](./one-app-handoff.md).
+  the 2026-08-25 merge commits.
 - **ContentPort, and the duplicate reader deleted** (was 6). `ContentPort` and
   `ReaderPort` are where a lesson's text and its evidence come from; both live
   in `apps/university/src/ports/` beside `GradingPort` and `SourceAccessPort`,

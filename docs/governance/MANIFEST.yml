@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-28T10:59:40.124Z
+generated_at: 2026-08-28T11:02:19.357Z
 generator_version: doc-gov@0.9.5
 docs_count: 59
 docs:
@@ -193,19 +193,19 @@ docs:
     canonical: true
     last_reviewed: 2026-08-28
     pinned: false
-  - id: REF-ONE-APP-HANDOFF
-    path: docs/reference/execution/one-app-handoff.md
-    type: reference
-    status: active
-    canonical: true
-    last_reviewed: 2026-08-26
-    pinned: false
   - id: REF-PAYMENT-BACKEND-GAP
     path: docs/reference/execution/payment-backend-gap.md
     type: reference
     status: active
     canonical: true
     last_reviewed: 2026-08-27
+    pinned: false
+  - id: REF-PROCEDURAL-MAP-HANDOFF
+    path: docs/reference/execution/procedural-map-handoff.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-08-28
     pinned: false
   - id: REF-PUBLISH-LANE
     path: docs/reference/execution/publish-lane.md
