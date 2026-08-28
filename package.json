@@ -36,8 +36,8 @@
     "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm check:canvas && pnpm check:review-cards && pnpm build && pnpm check:shelf && pnpm check:content-revisions && pnpm check:lesson-links && pnpm bundle && pnpm docs:check"
   },
   "devDependencies": {
-    "@pieai/doc-gov": "0.9.7",
-    "@pieai/pro-gov": "0.9.7",
+    "@pieai/doc-gov": "0.9.8",
+    "@pieai/pro-gov": "0.9.8",
     "@playwright/test": "^1.62.1",
     "lefthook": "^2.1.10"
   },
