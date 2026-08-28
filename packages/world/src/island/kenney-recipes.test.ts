@@ -32,7 +32,15 @@ describe("Kenney island recipe catalog", () => {
     expect(first.accentPackIds).toEqual(["fantasy-town-kit"]);
     expect(
       new Set([...first.base.assetIds, ...first.accentRoles.flatMap((role) => role.assetIds)]).size,
-    ).toBe(14);
+    ).toBe(10);
+    expect(first.base.naturalAssets.tree).toEqual({
+      packId: "elemental-serenity",
+      assetId: "treeTrunks",
+    });
+    expect(first.base.naturalAssets.bush).toEqual({
+      packId: "elemental-serenity",
+      assetId: "bushEmitter",
+    });
   });
 
   it("assigns every physical accent pack to a coherent island recipe", () => {

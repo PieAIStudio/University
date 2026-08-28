@@ -17,6 +17,7 @@ import {
   recipeById,
   validateIslandRecipe,
   type IslandRecipe,
+  type IslandNaturalAssetRef,
   type KenneyPackId,
 } from "./kenney-recipes.js";
 import type { IslandAssetPackId } from "./island-asset-registry.js";
@@ -68,7 +69,7 @@ export interface IslandDressingSafetyZone extends IslandPoint {
 }
 
 interface CandidateRule {
-  readonly assets: readonly string[];
+  readonly assetRole: "tree" | "bush" | "rock";
   readonly kind: IslandDressingKind;
   readonly count: number;
   readonly minSpacing: number;
@@ -151,7 +152,7 @@ const ELEMENTAL_SERENITY_PACK = "elemental-serenity" as const;
  */
 const NATURAL_RULES: readonly CandidateRule[] = [
   {
-    assets: ["tree_default", "tree_detailed", "tree_pineDefaultB"],
+    assetRole: "tree",
     kind: "tree",
     count: 74,
     minSpacing: 1.02,
@@ -163,7 +164,7 @@ const NATURAL_RULES: readonly CandidateRule[] = [
     prefersSlope: -0.7,
   },
   {
-    assets: ["plant_bushDetailed"],
+    assetRole: "bush",
     kind: "bush",
     // This donor shrub is a crossed-card silhouette, and a previous pass held
     // it to eight because dozens of them turned into dark starbursts at the
@@ -180,7 +181,7 @@ const NATURAL_RULES: readonly CandidateRule[] = [
     prefersSlope: -0.25,
   },
   {
-    assets: ["rock_largeA", "rock_smallA"],
+    assetRole: "rock",
     kind: "rock",
     count: 58,
     minSpacing: 0.68,
@@ -913,15 +914,16 @@ function naturalPlacements(
   reserved: readonly IslandDressingPlacement[] = [],
   field: IslandField = islandFieldFor(blueprint),
 ): IslandDressingPlacement[] {
-  const allowed = new Set(recipe.base.assetIds);
   const placements: IslandDressingPlacement[] = [];
   const occupied: IslandDressingPlacement[] = [...reserved];
   const bushOccupied: IslandDressingPlacement[] = [...reserved];
   const centres = clusterCentres(blueprint, field);
   const density = Math.min(1.78, Math.max(0.9, 0.72 + Math.sqrt(blueprint.lessonCount) / 6.8));
   for (const rule of NATURAL_RULES) {
-    const assets = rule.assets.filter((asset) => allowed.has(asset));
-    if (assets.length === 0) continue;
+    const assets: readonly IslandNaturalAssetRef[] =
+      rule.assetRole === "rock"
+        ? recipe.base.naturalAssets.rocks
+        : [recipe.base.naturalAssets[rule.assetRole]];
     const random = seeded(`${blueprint.seed}/${blueprint.layoutRevision}/dressing/${rule.kind}`);
     const start = placements.length;
     const targetCount = Math.round(rule.count * density);
@@ -949,12 +951,12 @@ function naturalPlacements(
       }
       if (!slopePreferred(fieldSample, rule, random)) continue;
       const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
-      const assetId = assets[Math.floor(random() * assets.length)]!;
+      const asset = assets[Math.floor(random() * assets.length)]!;
       const amount = random();
       const placement: IslandDressingPlacement = {
         id: `nature-${rule.kind}-${placements.length + 1}`,
-        packId: recipe.base.packId,
-        assetId,
+        packId: asset.packId,
+        assetId: asset.assetId,
         kind: rule.kind,
         x: point.x,
         y: surface.y,

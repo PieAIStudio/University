@@ -6,6 +6,7 @@ import {
   islandDressingSafetyZones,
   planIslandDressing,
 } from "./island-dressing.js";
+import { isIslandFoliagePlacement } from "./island-foliage-render.js";
 import { sampleIslandTerrainTop } from "./island-geometry.js";
 import { islandFieldFor, sampleIslandField } from "./island-field.js";
 import { islandThemeSelectionForCourse, recipeById, type IslandRecipe } from "./kenney-recipes.js";
@@ -110,7 +111,8 @@ describe("Island dressing", () => {
     const blueprint = makeBlueprint();
     const field = islandFieldFor(blueprint);
     const natural = planIslandDressing(blueprint, "course").placements.filter(
-      (placement) => placement.packId === "nature-kit",
+      (placement) =>
+        placement.kind === "tree" || placement.kind === "bush" || placement.kind === "rock",
     );
     const foliage = natural.filter(
       (placement) => placement.kind === "tree" || placement.kind === "bush",
@@ -125,6 +127,8 @@ describe("Island dressing", () => {
     expect(natural.length).toBeGreaterThan(0);
     expect(foliage.length).toBeGreaterThan(0);
     expect(rocks.length).toBeGreaterThan(0);
+    expect(foliage.every(isIslandFoliagePlacement)).toBe(true);
+    expect(rocks.every((placement) => placement.packId === "nature-kit")).toBe(true);
     expect(average(foliage, "grass")).toBeGreaterThan(average(rocks, "grass"));
     expect(average(rocks, "rock")).toBeGreaterThan(average(foliage, "rock"));
     for (const placement of natural) {

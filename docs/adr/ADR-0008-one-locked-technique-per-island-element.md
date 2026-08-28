@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-08-28
+last_reviewed: 2026-08-29
 domain: architecture
 tags:
   - 3d
@@ -80,10 +80,16 @@ owner on 2026-08-28, which changes two entries and not the third:
   fixed mesh cannot. Permission removed the obstacle and the answer did not
   change — which is worth recording, or someone will "fix" it later.
 - **Trees become the donor's trunk-plus-leaf-card construction**, which is what
-  the product owner has wanted since the first comparison. It costs roughly 900
-  triangles a tree against Kenney's 114–402, so it is affordable only out of the
-  ~640,000 the grass rewrite returns. It therefore lands *after* the grass, not
-  beside it.
+  the product owner has wanted since the first comparison. The measured
+  implementation is capped at 408 triangles per course tree (384-triangle trunk
+  plus twelve 2-triangle procedural leaf cards) against Kenney's 114–402, so it is
+  affordable only out of the ~640,000 the grass rewrite returns. It therefore
+  lands *after* the grass, not beside it.
+- **Rocks stay an explicit comparison, not an automatic donor import.** The
+  natural-rock rule is not changed by permission alone: Kenney's two shipped
+  rocks are measured at 80 and 16 triangles, while `rocks.glb` is a 1,120-triangle
+  assembled donor scene. The same course camera and the same foliage environment
+  must decide whether that extra geometry buys a quieter silhouette.
 - **Landmarks become possible at all.** Bridge, camp, tent and rocks are large
   authored props, and a handful of large things is exactly the scale hierarchy
   the art reference has and this island lacks. They get their own ceiling
@@ -99,8 +105,9 @@ in this repository; only the product-local asset manifest is updated here.
   chosen by the existing LOD tier: a curved blade near the learner, a single
   triangle in the middle band, nothing at the aerial distance. One
   implementation, one parameter, both donors' techniques, no donated media.
-- Trees, rocks and buildings stay Kenney CC0 and stay out of the argument until
-  a measurement says otherwise. They are 0.3% of the budget.
+- Tree trunks and leaf cards use the elemental-serenity projection below; rocks
+  remain Kenney until the paired comparison below says otherwise. Buildings stay
+  Kenney CC0. The natural assets are still placed from the one IslandField.
 - The archipelago underside is locked to silhouette, a value break, and one
   bright pixel. Structure is not renderable at the size that projection draws.
 - `CLAUDE.md`'s 3D routing row points here, so the lock is loaded before any
@@ -142,3 +149,51 @@ The `island-field` merge landed in the same integration and is the reason the
 density number is now safe to tune: grass, dressing and ground colour read one
 compiled field, so raising or lowering grass no longer silently disagrees with
 where the terrain is painted green.
+
+## Amendment 2026-08-29: painterly donor foliage, with the world projection kept cheap
+
+The product owner changed the natural-element direction: Kenney remains for the
+fantasy-town architecture, while trees and bushes use elemental-serenity's
+painted-card construction. This amendment is written before the implementation
+lock changes, with the source mesh counts measured from the checked-in GLBs and
+the frame baseline captured on the 41-lesson `turing-pact / foundations-before-zero`
+course at 1440x900, DPR 1, `post=off`, fixed seed and the same camera:
+
+| projection | baseline triangles | baseline draw calls | source measurement used by the new lock |
+| --- | ---: | ---: | --- |
+| course | 355,172 | 305 | Kenney tree 114/402/246, bush 104; donor trunk variant max 384 + 12 × procedural PlaneGeometry 2 = 408 per tree; 12 cards × 2 = 24 per bush |
+| world | 438,964 | 638 | no leaf instances; one donor trunk silhouette plus one 12-triangle canopy silhouette for the selected tree |
+
+The six donor trunk meshes measure 288, 304, 384, 288, 384 and 384 triangles
+(2,032 in the assembled `treeTrunks.glb`). `bushEmitter.glb` measures 192
+triangles, but it is an emitter only and is never submitted to the renderer.
+The foliage cards use the donor's `MeshSurfaceSampler` pattern: bush emitter
+surface points provide the position and normal, and tree cards use the same
+instanced `PlaneGeometry(1,1)` around the selected trunk crown. The fragment shader
+keeps the donor's shadow/mid/highlight normal ramp. The unregistered donor alpha
+PNG is intentionally not imported; a procedural UV leaf mask is shared by the
+colour and custom depth shaders, so cut-out foliage casts a cut-out shadow
+without adding an untracked media dependency.
+
+The world projection is a separate screen-pixel budget: it retains the donor
+trunk only as part of the tree silhouette and uses no leaf-card instances. The
+course projection is the only place that pays for the 12 leaf cards per tree.
+Neither projection creates placement noise; `island-dressing.ts` still reads
+the compiled `IslandField`, so this amendment changes stages 3/4 (projection and
+style), not stage 2 (the field/data source).
+
+The course shadow pass keeps alpha-aware shadows on both instanced leaf fields,
+but omits a second pass for the low-pixel trunk faces. The measured pressure
+course therefore renders 340,880 triangles and 288 calls, below the original
+355,172 and 305, while retaining the shadow/mid/highlight leaf treatment. This
+is a render-budget decision, not a change to the donor trunk geometry.
+
+The rock comparison was then run in the same 1440x900 course shot after the
+procedural 2-triangle cards landed and the trunk shadow pass was removed.
+Retaining Kenney produced 340,880 triangles and 288 calls; replacing the two
+small rock references with the assembled donor `rocks.glb` produced 556,944
+triangles and 280 calls (+63.4% triangles). The donor version also repeated
+pale assembled clusters across the meadow, which read as noise next to the new
+foliage, while Kenney's 80/16-triangle rocks stayed quiet. Kenney is therefore
+retained; `rocks.glb` remains registered for landmark use but is not promoted
+to the scattered natural-rock projection.

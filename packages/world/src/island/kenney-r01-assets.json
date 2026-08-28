@@ -10,7 +10,7 @@
     "naturalBasePackId": "nature-kit",
     "accentPackIds": ["fantasy-town-kit"],
     "physicalAccentCount": 1,
-    "rawGlbBudget": 14,
+    "rawGlbBudget": 10,
     "whitelistPolicy": "explicit filenames only; no donor glob"
   },
   "runtimeFallbacks": {
@@ -340,90 +340,6 @@
   "assets": [
     {
       "type": "model",
-      "id": "nature-tree_default",
-      "assetId": "tree_default",
-      "src": "/kenney/r01/nature/tree_default.glb",
-      "bytes": 9428,
-      "sha256": "562d29638c902de3c7bee465d3a53bb77117efbc392ae04ed894faf6b5dc691d",
-      "source": "kenney_nature-kit/Models/GLTF format/tree_default.glb",
-      "pack": "nature-kit",
-      "version": "2.1",
-      "license": {
-        "spdx": "CC0-1.0",
-        "file": "kenney_nature-kit/License.txt",
-        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
-        "textCheck": "Creative Commons Zero, CC0 + commercial use",
-        "commercialUse": true
-      },
-      "roles": ["vegetation", "canopy"],
-      "dependencies": [],
-      "provenance": {
-        "sourceRoot": "local-donor:Kenney",
-        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_default.glb",
-        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
-        "recipe": "R01-forest-academy",
-        "status": "prototype/local donor; PGS donor registered",
-        "notes": null
-      }
-    },
-    {
-      "type": "model",
-      "id": "nature-tree_detailed",
-      "assetId": "tree_detailed",
-      "src": "/kenney/r01/nature/tree_detailed.glb",
-      "bytes": 31412,
-      "sha256": "c041daf2f0fb1d49e4325227cbcd58667adbe51e9b55e8c1f0a94b74cc521b3b",
-      "source": "kenney_nature-kit/Models/GLTF format/tree_detailed.glb",
-      "pack": "nature-kit",
-      "version": "2.1",
-      "license": {
-        "spdx": "CC0-1.0",
-        "file": "kenney_nature-kit/License.txt",
-        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
-        "textCheck": "Creative Commons Zero, CC0 + commercial use",
-        "commercialUse": true
-      },
-      "roles": ["vegetation", "hero-vegetation"],
-      "dependencies": [],
-      "provenance": {
-        "sourceRoot": "local-donor:Kenney",
-        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_detailed.glb",
-        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
-        "recipe": "R01-forest-academy",
-        "status": "prototype/local donor; PGS donor registered",
-        "notes": null
-      }
-    },
-    {
-      "type": "model",
-      "id": "nature-tree_pineDefaultB",
-      "assetId": "tree_pineDefaultB",
-      "src": "/kenney/r01/nature/tree_pineDefaultB.glb",
-      "bytes": 18180,
-      "sha256": "a752ea5775c6fb17513f764d57ead534f44dfdd85188b842995ac9ba0e7065c1",
-      "source": "kenney_nature-kit/Models/GLTF format/tree_pineDefaultB.glb",
-      "pack": "nature-kit",
-      "version": "2.1",
-      "license": {
-        "spdx": "CC0-1.0",
-        "file": "kenney_nature-kit/License.txt",
-        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
-        "textCheck": "Creative Commons Zero, CC0 + commercial use",
-        "commercialUse": true
-      },
-      "roles": ["vegetation", "silhouette"],
-      "dependencies": [],
-      "provenance": {
-        "sourceRoot": "local-donor:Kenney",
-        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_pineDefaultB.glb",
-        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
-        "recipe": "R01-forest-academy",
-        "status": "prototype/local donor; PGS donor registered",
-        "notes": null
-      }
-    },
-    {
-      "type": "model",
       "id": "nature-rock_largeA",
       "assetId": "rock_largeA",
       "src": "/kenney/r01/nature/rock_largeA.glb",
@@ -472,34 +388,6 @@
       "provenance": {
         "sourceRoot": "local-donor:Kenney",
         "sourceRelative": "kenney_nature-kit/Models/GLTF format/rock_smallA.glb",
-        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
-        "recipe": "R01-forest-academy",
-        "status": "prototype/local donor; PGS donor registered",
-        "notes": null
-      }
-    },
-    {
-      "type": "model",
-      "id": "nature-plant_bushDetailed",
-      "assetId": "plant_bushDetailed",
-      "src": "/kenney/r01/nature/plant_bushDetailed.glb",
-      "bytes": 10172,
-      "sha256": "2e0487020d68ccf664435db9d829c78ae00e6d2785ee3ec10b9f89cc70a10406",
-      "source": "kenney_nature-kit/Models/GLTF format/plant_bushDetailed.glb",
-      "pack": "nature-kit",
-      "version": "2.1",
-      "license": {
-        "spdx": "CC0-1.0",
-        "file": "kenney_nature-kit/License.txt",
-        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
-        "textCheck": "Creative Commons Zero, CC0 + commercial use",
-        "commercialUse": true
-      },
-      "roles": ["vegetation", "shore-dressing"],
-      "dependencies": [],
-      "provenance": {
-        "sourceRoot": "local-donor:Kenney",
-        "sourceRelative": "kenney_nature-kit/Models/GLTF format/plant_bushDetailed.glb",
         "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
         "recipe": "R01-forest-academy",
         "status": "prototype/local donor; PGS donor registered",
@@ -757,8 +645,8 @@
     }
   ],
   "summary": {
-    "modelCount": 14,
+    "modelCount": 10,
     "dependencyCount": 1,
-    "totalBytes": 238643
+    "totalBytes": 169451
   }
 }
