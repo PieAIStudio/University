@@ -235,6 +235,16 @@ const DEFAULT_ROUTE_WIDTHS = {
   clearance: 0.38,
 } as const;
 const HERO_RADIUS = 1.2;
+/**
+ * How much land the coastline keeps beyond the route, in blueprint units.
+ *
+ * Road, shoulder, node, clearance and the hero's own radius come to 3.14, so
+ * this is that plus a little cliff. It is exported because decoration places
+ * things relative to the route and needs the same number: an authored
+ * courtyard anchored at a hard-coded 5.2 units off the route was reaching past
+ * the coast on every island once the shoreline started following the route.
+ */
+export const ISLAND_ROUTE_SHORE_BAND = 3.6;
 const HERO_EXTRA_GAP = 0.6;
 
 const UNIT_SIGILS: readonly IslandUnitSigil[] = [
@@ -446,6 +456,23 @@ function rotate(point: RawPoint, angle: number): RawPoint {
   };
 }
 
+/**
+ * A gentle lateral wander that grows with the course.
+ *
+ * The unfolded archetypes are one continuous sweep, so all of a long course's
+ * walking distance goes into making that sweep bigger. Since the coastline now
+ * follows the route's reach, that produced an island roughly twice the size of
+ * the one a folded archetype makes for the same lesson count. This adds a
+ * little wander at the same amplitude the arc already has, so a long arc still
+ * reads as a single sweep and stops enclosing a lake.
+ */
+function longCourseDrift(lessonCount: number, t: number, phase: number): number {
+  if (lessonCount <= 14) return 0;
+  const strength = Math.min(0.34, (lessonCount - 14) / 78);
+  const cycles = lessonCount <= 26 ? 0.85 : 1.35;
+  return strength * Math.sin(TAU * cycles * t + phase * 0.45);
+}
+
 function routeShapePoint(
   archetype: IslandRouteArchetype,
   t: number,
@@ -458,11 +485,18 @@ function routeShapePoint(
 
   switch (archetype) {
     case "arc":
-      x = 0.74 * Math.sin(Math.PI * (t - 0.5));
-      z = 1.18 * u;
+      // Rounder than it was, and it drifts for a long course. At 0.74 across
+      // and 2.36 deep this was a sliver, and now that the coastline is drawn
+      // around the route's reach, an unfolded route spends its whole length
+      // going one way: a forty-one lesson arc came out 44 by 54 units, roughly
+      // twice the island the other archetypes make for the same course, with
+      // the authored town falling off the ends of the crescent. The drift
+      // keeps the single sweep legible while bounding what it encloses.
+      x = 0.96 * Math.sin(Math.PI * (t - 0.5)) + longCourseDrift(lessonCount, t, phase);
+      z = 1.0 * u;
       break;
     case "horseshoe":
-      x = 0.94 * Math.sin(Math.PI * t);
+      x = 0.94 * Math.sin(Math.PI * t) + longCourseDrift(lessonCount, t, phase * 0.6);
       z = 1.15 * u;
       break;
     case "loop-around-hill": {
@@ -475,17 +509,23 @@ function routeShapePoint(
       // Spend a long course's distance in several legible folds instead of one
       // sixty-unit lateral sweep. z remains monotonic, so the extra bends are
       // visual composition rather than semantic branches.
+      // Fewer, wider folds than before. At 2.5 cycles a forty-one lesson route
+      // doubled back on itself within half a unit, so the land between two
+      // arms was too narrow to put anything in — measured at the arrival beat,
+      // the inland side ran out of clearance at five units while the seaward
+      // side ran out of island. Coverage no longer depends on folding tightly,
+      // because the coastline is drawn around the route's reach.
       const cycles =
-        lessonCount <= 8 ? 0.75 : lessonCount <= 18 ? 1.25 : lessonCount <= 30 ? 1.8 : 2.5;
-      x = 0.82 * Math.sin(TAU * cycles * t + phase * 0.22);
+        lessonCount <= 8 ? 0.6 : lessonCount <= 18 ? 0.95 : lessonCount <= 30 ? 1.25 : 1.6;
+      x = 0.94 * Math.sin(TAU * cycles * t + phase * 0.22);
       z = 0.95 * u;
       break;
     }
     case "serpentine": {
       const cycles =
-        lessonCount <= 8 ? 0.65 : lessonCount <= 18 ? 1.05 : lessonCount <= 30 ? 1.55 : 2.1;
+        lessonCount <= 8 ? 0.55 : lessonCount <= 18 ? 0.85 : lessonCount <= 30 ? 1.15 : 1.45;
       x =
-        0.78 * Math.sin(TAU * cycles * t + phase * 0.32) +
+        0.9 * Math.sin(TAU * cycles * t + phase * 0.32) +
         0.1 * Math.sin(TAU * cycles * 2 * t - phase);
       z = 1.05 * u;
       break;
@@ -494,6 +534,24 @@ function routeShapePoint(
 
   return { x, z };
 }
+
+/**
+ * Stretch a route shape so it fills its own unit box before anything scales it.
+ *
+ * The archetypes are hand-written in a rough [-1, 1] box, and several of them
+ * are slivers in it: the arc spans 0.74 across and 2.36 deep. That shape is
+ * then normalised by arc length, and the island is sized from its bounding box
+ * and grown until its furthest point sits at a fixed fraction of the ellipse
+ * radius. A sliver drives that growth from its long axis and takes the short
+ * axis along for the ride, so the island ends up much wider than the walk
+ * across it. Measured on four courses, the lesson markers spanned half the
+ * island's width and 0.59 of its depth — a bounding box under thirty percent
+ * of the island, which is what someone looking at the map sees as a route that
+ * visits a corner of it.
+ *
+ * Filling the box first costs nothing: arc length is renormalised immediately
+ * afterwards, so this changes where a route goes, not how far a lesson walks.
+ */
 
 function cumulativePath(points: readonly RawPoint[]): ResampledPath {
   const cumulative: number[] = [0];
@@ -570,6 +628,27 @@ function pointInsideOutline(point: IslandPoint, outline: readonly IslandPoint[])
   return inside;
 }
 
+/**
+ * The coastline is drawn around the route, not fitted to its bounding box.
+ *
+ * The old rule took the path's extents, added a margin, made an ellipse, and
+ * then grew that ellipse until the path's furthest point sat at 0.7 of its
+ * radius. A route whose footprint is anything but a circle has its corners far
+ * out along that elliptical radius, so the growth step ran hard, and the
+ * island came out much larger than the walk across it: measured on four
+ * courses, the lesson markers spanned about half the island's width and 0.59
+ * of its depth, a bounding box under thirty percent of the island. That is
+ * what a reader sees as a route that visits one corner of the map.
+ *
+ * Reversing it — asking, for every direction, how far the route actually goes
+ * that way, and putting the shore a fixed band beyond — makes coverage a
+ * property of the construction rather than something to be tuned back in. It
+ * also stops producing ellipses. The shape now follows the route's own reach,
+ * which is irregular, and the noise below turns that into headlands and bays
+ * rather than a coin with a slightly wavy edge.
+ */
+const OUTLINE_MIN_HALF = 13;
+
 function createOutline(
   path: readonly RawPoint[],
   seed: string,
@@ -578,43 +657,97 @@ function createOutline(
   readonly halfX: number;
   readonly halfZ: number;
 } {
-  const pathHalfX = path.reduce((maximum, point) => Math.max(maximum, Math.abs(point.x)), 0);
-  const pathHalfZ = path.reduce((maximum, point) => Math.max(maximum, Math.abs(point.z)), 0);
-  const margin = Math.max(5.5, Math.min(9.5, Math.max(pathHalfX, pathHalfZ) * 0.23));
-  // Short courses previously hit an identical 18×18 minimum, so every world
-  // icon became the same green coin even though its seed and route differed.
-  // A restrained seeded aspect belongs to the blueprint (and therefore both
-  // projections), while the route-fit pass below remains the authority that
-  // prevents a decorative silhouette from crowding the road.
-  const identityAspect = 0.78 + hash(`${seed}/identity-aspect`) * 0.44;
-  const aspectX = Math.sqrt(identityAspect);
-  const aspectZ = 1 / aspectX;
-  const candidateHalfX = Math.max(14, pathHalfX + margin) * aspectX;
-  const candidateHalfZ = Math.max(14, pathHalfZ + margin) * aspectZ;
-  // Keep the route at roughly 70% of the ellipse radius so a hero can move to
-  // a local normal without leaving the authored shoreline.
-  const maximumRouteRadius = path.reduce(
-    (maximum, point) =>
-      Math.max(maximum, Math.hypot(point.x / candidateHalfX, point.z / candidateHalfZ)),
-    0,
-  );
-  const fit = Math.max(1, maximumRouteRadius / 0.7);
-  const halfX = candidateHalfX * fit;
-  const halfZ = candidateHalfZ * fit;
   const phase = hash(`${seed}/outline`) * TAU;
-  const outline = Array.from({ length: OUTLINE_SAMPLES }, (_, index) => {
+  const bayPhase = hash(`${seed}/outline-bays`) * TAU;
+  const headlandPhase = hash(`${seed}/outline-headlands`) * TAU;
+  // How many broad lobes the coast gets. Two reads as a peanut and six as a
+  // starfish; three to five is where a coastline stops looking generated.
+  const lobes = 3 + Math.floor(hash(`${seed}/outline-lobes`) * 3);
+
+  // Support function of the route: for each direction, the furthest the route
+  // reaches that way. It describes the convex hull, which is the right
+  // generosity here — a bay should be something the coast does, not a place
+  // the road runs into.
+  const reach = Array.from({ length: OUTLINE_SAMPLES }, (_, index) => {
     const angle = (index / OUTLINE_SAMPLES) * TAU;
-    const scale =
-      1 +
-      Math.sin(angle * 2 + phase) * 0.08 +
-      Math.sin(angle * 3 - phase * 0.71) * 0.04 +
-      Math.sin(angle * 5 + phase * 0.37) * 0.018;
-    return {
-      angle,
-      scale,
-      x: Math.cos(angle) * halfX * scale,
-      z: Math.sin(angle) * halfZ * scale,
-    };
+    const dirX = Math.cos(angle);
+    const dirZ = Math.sin(angle);
+    let far = 0;
+    for (const point of path) {
+      const projection = point.x * dirX + point.z * dirZ;
+      if (projection > far) far = projection;
+    }
+    return far;
+  });
+  // A support function can turn a corner faster than a coast should. One pass
+  // of circular smoothing keeps the shape following the route without letting
+  // a single sharp bend cut a notch into the land.
+  const smoothed = reach.map((value, index) => {
+    const before = reach[(index - 1 + OUTLINE_SAMPLES) % OUTLINE_SAMPLES]!;
+    const after = reach[(index + 1) % OUTLINE_SAMPLES]!;
+    return value * 0.5 + before * 0.25 + after * 0.25;
+  });
+
+  // The noise only ever adds land. A bay that cuts inward would eat the band
+  // the route needs, and the band is not decoration: it is road, shoulder,
+  // node, clearance and hero radius, 3.14 units of it. So headlands push out
+  // from a floor rather than a mean, and a bay is the absence of a headland.
+  const radii: number[] = smoothed.map((value, index) => {
+    const angle = (index / OUTLINE_SAMPLES) * TAU;
+    const relief =
+      Math.sin(angle * lobes + headlandPhase) * 0.5 +
+      Math.sin(angle * (lobes * 2 + 1) - phase * 0.71) * 0.32 +
+      Math.sin(angle * (lobes * 3 + 2) + bayPhase) * 0.18;
+    const headland = clamp(relief * 0.5 + 0.5, 0, 1);
+    const floor = value + ISLAND_ROUTE_SHORE_BAND;
+    return Math.max(OUTLINE_MIN_HALF * 0.55, floor + ISLAND_ROUTE_SHORE_BAND * 1.35 * headland);
+  });
+
+  // The support function bounds the route inside a half-plane per direction,
+  // which is not the same as a radial graph clearing it everywhere: where the
+  // route turns a corner, the polygon between two support directions can pass
+  // closer than the band. Measured before this pass, one twenty-four lesson
+  // island came back with 1.1 units of shoreline against 3.14 required. Push
+  // any vertex that is too close, then smooth, so the repair reads as a wider
+  // headland rather than a spike.
+  for (let pass = 0; pass < 3; pass += 1) {
+    let moved = false;
+    for (let index = 0; index < OUTLINE_SAMPLES; index += 1) {
+      const angle = (index / OUTLINE_SAMPLES) * TAU;
+      const vertex = { x: Math.cos(angle) * radii[index]!, z: Math.sin(angle) * radii[index]! };
+      const distance = pointToPolylineDistance(vertex, path);
+      if (distance >= ISLAND_ROUTE_SHORE_BAND) continue;
+      radii[index] = radii[index]! + (ISLAND_ROUTE_SHORE_BAND - distance);
+      moved = true;
+    }
+    if (!moved) break;
+    const relaxed = radii.map((value, index) => {
+      const before = radii[(index - 1 + OUTLINE_SAMPLES) % OUTLINE_SAMPLES]!;
+      const after = radii[(index + 1) % OUTLINE_SAMPLES]!;
+      return value * 0.6 + before * 0.2 + after * 0.2;
+    });
+    for (let index = 0; index < OUTLINE_SAMPLES; index += 1) radii[index] = relaxed[index]!;
+  }
+
+  let halfX = 0;
+  let halfZ = 0;
+  for (let index = 0; index < OUTLINE_SAMPLES; index += 1) {
+    const angle = (index / OUTLINE_SAMPLES) * TAU;
+    halfX = Math.max(halfX, Math.abs(Math.cos(angle)) * radii[index]!);
+    halfZ = Math.max(halfZ, Math.abs(Math.sin(angle)) * radii[index]!);
+  }
+  halfX = Math.max(OUTLINE_MIN_HALF, halfX);
+  halfZ = Math.max(OUTLINE_MIN_HALF, halfZ);
+
+  const outline = radii.map((radius, index) => {
+    const angle = (index / OUTLINE_SAMPLES) * TAU;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    // `scale` stays the multiplier on the ellipse radius at this angle, which
+    // is the contract `outlineScaleAt` and `sampleIslandSurface` are written
+    // against; only the shape it describes has changed.
+    const ellipse = Math.hypot(Math.cos(angle) * halfX, Math.sin(angle) * halfZ);
+    return { angle, scale: ellipse <= 1e-6 ? 1 : radius / ellipse, x, z };
   });
   return { outline, halfX, halfZ };
 }
@@ -625,6 +758,7 @@ function createTerrainPatches(
   layoutRevision: string,
   halfX: number,
   halfZ: number,
+  outline: readonly IslandOutlinePoint[],
 ): readonly IslandTerrainPatch[] {
   const count = lessonCount <= 6 ? 2 : lessonCount <= 18 ? 3 : 4;
   const random = seeded(`${seed}/${layoutRevision}/terrain-patches`);
@@ -636,20 +770,29 @@ function createTerrainPatches(
     for (let attempt = 0; attempt < 80 && point === undefined; attempt += 1) {
       const angle = random() * TAU;
       const radial = 0.18 + random() * 0.4;
+      // Scale against the authored coast rather than the ellipse. The outline
+      // is no longer an ellipse, so 0.58 of halfX in the direction of a bay
+      // could land in the water; the blueprint validator caught it.
+      const edge = outlineScaleAt(outline, angle);
       const candidate = {
-        x: Math.cos(angle) * halfX * radial,
-        z: Math.sin(angle) * halfZ * radial,
+        x: Math.cos(angle) * halfX * radial * edge,
+        z: Math.sin(angle) * halfZ * radial * edge,
       };
-      if (patches.every((patch) => distanceBetween(candidate, patch) >= minimumSeparation)) {
+      if (
+        pointInsideOutline(candidate, outline) &&
+        patches.every((patch) => distanceBetween(candidate, patch) >= minimumSeparation)
+      ) {
         point = candidate;
       }
     }
     // A deterministic fallback is preferable to two hills accidentally
     // occupying the same patch of ground, which visually cancels the terrain
     // system even though its numeric relief remains non-zero.
+    const fallbackAngle = (index / count) * TAU;
+    const fallbackEdge = outlineScaleAt(outline, fallbackAngle);
     point ??= {
-      x: Math.cos((index / count) * TAU) * halfX * 0.42,
-      z: Math.sin((index / count) * TAU) * halfZ * 0.42,
+      x: Math.cos(fallbackAngle) * halfX * 0.42 * fallbackEdge,
+      z: Math.sin(fallbackAngle) * halfZ * 0.42 * fallbackEdge,
     };
     const sign = index % 2 === 0 ? 1 : -1;
     const magnitude = sign > 0 ? 1.08 + random() * 0.46 : 0.58 + random() * 0.34;
@@ -797,7 +940,14 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
     return { ...pointAtDistance(raw, t), t };
   });
   const { outline, halfX, halfZ } = createOutline(rawPath, `${seed}/${layoutRevision}`);
-  const terrainPatches = createTerrainPatches(lessonCount, seed, layoutRevision, halfX, halfZ);
+  const terrainPatches = createTerrainPatches(
+    lessonCount,
+    seed,
+    layoutRevision,
+    halfX,
+    halfZ,
+    outline,
+  );
   const route: IslandRoute = {
     semantic: "linear",
     archetype,
