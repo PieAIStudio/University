@@ -225,6 +225,7 @@ function setButtonState(state: DemoState): void {
       (control === "projection" && value === state.projection) ||
       (control === "view" && value === state.view);
     button.dataset.active = String(active);
+    button.setAttribute("aria-pressed", String(active));
   }
 }
 

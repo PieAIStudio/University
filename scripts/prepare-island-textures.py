@@ -31,7 +31,7 @@ METRICS_PATH = ROOT / "island-texture-processing.json"
 TEXTURES = {
     "grass-albedo": {"input": "grass-generated.png", "target": (126, 185, 72), "contrast": 0.68},
     "route-albedo": {"input": "path-generated.png", "target": (232, 214, 166), "contrast": 0.48},
-    "rock-albedo": {"input": "rock-generated.png", "target": (163, 103, 70), "contrast": 0.58},
+    "rock-albedo": {"input": "rock-generated-v2.png", "target": (163, 103, 70), "contrast": 0.58},
     "surface-detail": {"input": "detail-generated.png", "target": (128, 128, 128), "contrast": 0.24},
 }
 
@@ -144,10 +144,11 @@ def palette_flatten(image: Image.Image, target: tuple[int, int, int], contrast: 
             luma = 0.2126 * r + 0.7152 * g + 0.0722 * b
             blur_luma = max(1.0, 0.2126 * br + 0.7152 * bg + 0.0722 * bb)
 
-            # Divide out only the broad, illumination-shaped component. The
-            # narrow clamp prevents a generator's local blotch from becoming
-            # an artificial halo after division.
-            correction = clamp(luma / blur_luma, 0.91, 1.09)
+            # Divide out only the broad, illumination-shaped component. A
+            # broad bright region has blur_luma > mean_luma, so the correction
+            # must go below one; the narrow clamp prevents a local blotch from
+            # becoming an artificial halo after division.
+            correction = clamp(mean_luma / blur_luma, 0.91, 1.09)
             corrected_luma = luma * correction
             variation = clamp(corrected_luma / mean_luma - 1.0, -0.16, 0.16)
             factor = 1.0 + variation * contrast
@@ -185,14 +186,26 @@ def seam_metrics(image: Image.Image) -> dict[str, float]:
     pixels = image.load()
     vertical = []
     horizontal = []
+    full_luma = []
     for index in range(SIZE):
-        vertical.append(sum(abs(a - b) for a, b in zip(pixels[0, index], pixels[SIZE - 1, index])) / 3)
-        horizontal.append(sum(abs(a - b) for a, b in zip(pixels[index, 0], pixels[index, SIZE - 1])) / 3)
+        vertical.append(
+            sum(abs(a - b) for a, b in zip(pixels[0, index], pixels[SIZE - 1, index])) / 3
+        )
+        horizontal.append(
+            sum(abs(a - b) for a, b in zip(pixels[index, 0], pixels[index, SIZE - 1])) / 3
+        )
+        for x in range(SIZE):
+            full_luma.append(luma(pixels[x, index]))
     small = image.resize((8, 8), Image.Resampling.BOX)
     small_luma = [luma(small.getpixel((x, y))) for y in range(8) for x in range(8)]
+    full_mean = sum(full_luma) / len(full_luma)
+    full_variance = sum((value - full_mean) ** 2 for value in full_luma) / len(full_luma)
     return {
         "edgeMeanAbsDifference": round((sum(vertical) + sum(horizontal)) / (len(vertical) + len(horizontal)), 4),
         "edgeMaxAbsDifference": round(max(vertical + horizontal), 4),
+        "fullResolutionLumaMean": round(full_mean, 4),
+        "fullResolutionLumaRange": round(max(full_luma) - min(full_luma), 4),
+        "fullResolutionLumaStd": round(full_variance**0.5, 4),
         "downsample8x8LumaMin": round(min(small_luma), 4),
         "downsample8x8LumaMax": round(max(small_luma), 4),
         "downsample8x8LumaRange": round(max(small_luma) - min(small_luma), 4),
@@ -247,6 +260,7 @@ def main() -> None:
         texture_metrics = seam_metrics(decoded)
         texture_metrics.update(
             {
+                "sourceInput": str(spec["input"]),
                 "path": str(output_path.relative_to(ROOT)),
                 "bytes": output_path.stat().st_size,
                 "sha256": sha256(output_path),
